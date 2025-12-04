@@ -1,73 +1,74 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89668333421
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 09:00:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D371A248881
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 09:04:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764838829; cv=none; b=ewCJeIpXaEQ1xFJ93MTvcFDR91tQjjJhm9pfukAxgaW2S79NMKfrrEx4do9xYhXoH5eJZlb1iOKGrdiciU273O/OMfQRDHLkuX8aDAkI6L5wli/758X5ZGMi5KYSkj2z6Slqwfxo8Dhy+2Y0Vl+lVWnytf3UjcXGabyVCdIFTLo=
+	t=1764839096; cv=none; b=CEKL3bW+vt92KxmZvC4fdI4pKHHEkeWrtC2WYaSJWXwDQwwVg9aTp/UvoNl/KDjV2shczTugCYb7wctiBTDX03MCSaxfF6oXZi506qHsdrmtaqSBczDIoWE5hLKajTOCI3EyJvsQJ4AYh1w4irkfuQzzG2KiSOD7qls8r2d1eHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764838829; c=relaxed/simple;
-	bh=72GPm1ULAj1WA2GXdfhiS+jYjGnUAprwyZKKNmKV62I=;
+	s=arc-20240116; t=1764839096; c=relaxed/simple;
+	bh=9SkH5euyM73xk7P/E0OpUAc7UFJFGl6fHiZY90xPnLI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KToNWI1/BHEhDOM5YoLDnmG221Q9yyGYfgSgaKjN9i4ty9+eK6ZhOdPl6uj6ONRVwiuW7eSEguhDdfXPcbCyRhXNGyxiaOUyj+MKVIbl2ttDo3iPiXaN9EhLe7ZYl03eIVO9i3IjlWSkvPZsWS+u4FZ5uWOuNokOcTpnhashOuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=d8/pFBj4; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=kETX8n7XCp9oDsPTvoaqqJvv4q2wt3kNrrHBgIJ+r8FLdEYcAo15KAvIrS9Ps/bVRkRZPFKo+00vQAVk0CBuKDJPDpfiQpEUMjVydD3YRAToWbWIJLNh1M/IbKl2b9HV9aR2Jco6woKul9A6RPQ8T54La1afH0RXGgaIA4uhZao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=rjcKb81u; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="d8/pFBj4"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-7bc0cd6a13aso457413b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Dec 2025 01:00:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="rjcKb81u"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-7bab7c997eeso807504b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Dec 2025 01:04:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1764838827; x=1765443627; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1764839094; x=1765443894; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=72GPm1ULAj1WA2GXdfhiS+jYjGnUAprwyZKKNmKV62I=;
-        b=d8/pFBj4FGRkH7QWlN8rQvDV6IlMWDUg605KeQ1gBOCr/BEoQshoR8T5DQFy2RO8N8
-         c1k88JauWrYBi7WblT4cyXW3T8XrmXYkhRGNoUs0oap8m4ffw1QHEx0JRoB0N1OO1qs4
-         MSivUcGmKJE03vLOq+EJGofaw+BYOBYJHGMn0=
+        bh=BiZoIGPb2JMTczJoLpKCpG+3kTA2fYAxm37HrUVvshw=;
+        b=rjcKb81u+1tdpSIyk2qLxPE8hm1biDsDIaA6MXkg7+/xdwEhOipj3pO5fZWzXGbwJD
+         jefxOYPNEdPzEHiN4PfXLrWeIAcWiAcNUS9Frp2MRzRUxx549sNhISXyEzEygP4+yyI9
+         +hbpxO+mIPptmEw88Rj6ao2VVQpZF4BCJsFxWiN4SrfxAPOEkFbi399FTCOTVfotlcJ4
+         ZeIs+BEdrVvRKpCrrkPLtwRtRQq5mzFxTQFrFnGw8uDNX/kV4UsGQc6SwSei8DPL7bVy
+         apR0ch1QfxIQdKk55lk1fbUodd9NVo1joH4sbHpJ7eAQ0EHdvBwaXvAdT1KrID2z0i5W
+         50OQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764838827; x=1765443627;
+        d=1e100.net; s=20230601; t=1764839094; x=1765443894;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=72GPm1ULAj1WA2GXdfhiS+jYjGnUAprwyZKKNmKV62I=;
-        b=lgV8OAxgloU3P+urLidDbDNwx9wpZlf8t/4VIV0S+czgEAt+fkDlsRVmR9DSGKVrol
-         w4KO8EkBwpo1Me5NBsCfXRjFh3h06uT0X4nGeGv4UwfTMgOKZtSVte78OtVnhGMynsFN
-         TzSApsAujoFBkCQ8ZnAB2+gcZKkBnAxWvw8N8XUnRrODEWuNv3rjtc6BqJHPpu2zPW1e
-         szY5YO/KPCLWofSvzdxsYKpQVpw+o2ulKZMBiGfDP+QtrtwmLqTIYYk+poWvNKk8p/Vv
-         DKn2Wi1rGu2ZIpklmeoIjN62PPgcCmloqsiMIhxOqSvcCFE84cDi81QIuO9ulyQLp9oh
-         oR5Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUFqWtjjTWhNM6lC6IQYs83QnqBq3SL57eP7aUNjKnhfMRp0Ew+1W2qek5y8A+Bf4CViIY+R8KU0/I=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyOdH+lQWBXAQYpT3vlhzzFg+wEcU45MU0wYH9YSIc5yXp7ixRc
-	EFVTz0ebpIqwZ8ZmeYAlursa6bXfHcSX9i04IhRVAKskzw4q//9nubt+GEUXDbZxZQ==
-X-Gm-Gg: ASbGncsRmfqJ6wKEjEO9hWNICE2g6VEq8DUs3m0qykRGKQqJ0SSw3i25uKnHisYYpxM
-	v2sWFWFdW5fMdexlqziph1z5mZ2WrBpLytO4BBSJJyZsL93jPAjc0XQ6gJuDFkU24lZm04WuF9V
-	zLWGtq7WE+Mx61tAgISkhQn5vcsy8iVpZpP4ee3SN0vOxBi8UTyOzcrLMvfSOH7mz3aqUd3qE/4
-	knWhm8t4/G75evtpHUOgjzjgncwmOskeKajiqbL/y100I8uePbfijgPNuj8n80Vl9jQ9plz3rRt
-	LMhAS1j8XQKX4YHt+unOn1/iApSGQOOelF9WMSoB/dhge34fQHZ9fm9gtEwI72IhGGR+UERY5kr
-	OHiNkSGsrs90kUoCxuUglPM/xolGJ6thLd/SXNUWehj+14SDBgFgBXKBKVpcFbjDved4dYpEzjY
-	bI1sTqICxWYQkado24eCDWAG2bCaQMt80A/EWIdL4qq/szMeZcy20=
-X-Google-Smtp-Source: AGHT+IGrCmJXKAQtdU3NALKnC/NLtRATjkDSaaivHemq5nPaEpusucmf2NZ3eoouqNk9cTRRShNDMA==
-X-Received: by 2002:a05:6a00:6fcd:b0:77d:c625:f5d3 with SMTP id d2e1a72fcca58-7e2020650a4mr2076684b3a.1.1764838826661;
-        Thu, 04 Dec 2025 01:00:26 -0800 (PST)
-Received: from google.com ([2a00:79e0:2031:6:803c:ee65:39d6:745e])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7e29f2ece66sm1483482b3a.13.2025.12.04.01.00.23
+        bh=BiZoIGPb2JMTczJoLpKCpG+3kTA2fYAxm37HrUVvshw=;
+        b=emM8ggHKFYYeFJAjIFkDdt6hc4GiLXYclFivKjz1QLYtHBeeE1MDVaWczBe8B5dykB
+         5d1IYo8Bd2y828rWen7WnASm9wIU3+xjYZo0maU4pXU17RR1gnMO8FdgLWeH8MBTG19q
+         By2GxfS4+5csi/1eLIygghh1xhqzvBW63pbsAe+vvQrMMM+HGK8BKj3zmrUnkusnHLYh
+         +bZNOeoY/vJY+NZFslMIfYvVuwsysYqZnTE6haOwJjRtTptBME7at5Wt/MXHkHR9ibVk
+         muWNE2Shz85UNixoqKQxGBw2KQqe78aKXc3WpjRzKTuzWhqOnTuevZ0N864MSwTP/Yku
+         UK4w==
+X-Forwarded-Encrypted: i=1; AJvYcCWz5SMCY3/mgtRhxV4Dpuk47R1CR+0sa0jZU2YDuRn9FAEj5OmkdHKe77iTtUOH6rCcfJGsWeMSbdU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwpS3LIvKbod1hTl7BGJ54XmUHGIfc/RvahpxrBLgLJP5PVkNRt
+	FAGP59mCa9MVtOdeF5wkUS4M92H9UZgTHICfSXMh8qL1/GZnaoZTD8PLVvMFpGJ3yC4=
+X-Gm-Gg: ASbGncu1HRykleHIDAsyP1YCa9Eq6A23/Gu81haAxvGYvOMXR/6ixj/GYDuHQA6QmVd
+	pVxBU4tNlx/ivZgm+4VAJCJllvNNolSbISFpzrFhfRyfGFwoZ9tijcydkvlgrdSQ4+5i84Ut4SI
+	XgU0YnGSyWvU+P6OxUTpo8vtC3IJxM0r+TvH3Fkc5RTA0okaIh4o5kD6WDgQi8MZUpQQxm7MbNY
+	esGEAOe9SL2cjgAp1yb7xgiDTRUvHAk7V1PdFM6GPcvNn6Jf0TfgLBY25zwmFIH0bE3vMO0Z2pw
+	bcP/bqs187wB86Z8GQxH/DPLifbGsyURBQQx1y9N5gQZIx0uNcjRKYP5VZcblK2fC4iRhFG5bo2
+	hskTT/BM9WgoMx0c17cyC56PqgZXYwpchW3rvt4cUSAw94AfUqA24wUU3DGUDxmK9G2mscD1DTk
+	oksiRPDMaoTJyWC0FKku/cjyfz+PBQr2QaANtMq749STCmoLz20rtmBxxIS81LtivpLXiiYRor
+X-Google-Smtp-Source: AGHT+IFNorj6zWqImhwwWOjeI9J8R98k1B5lKWbTueXGpH/Yi6prYwzd5ttspjMV2U34vx4aVZp67Q==
+X-Received: by 2002:a05:6a20:9184:b0:352:eede:89cd with SMTP id adf61e73a8af0-363f5d24cabmr7398247637.17.1764839094004;
+        Thu, 04 Dec 2025 01:04:54 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7e2aead366fsm1445222b3a.51.2025.12.04.01.04.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Dec 2025 01:00:26 -0800 (PST)
-Date: Thu, 4 Dec 2025 18:00:21 +0900
-From: Sergey Senozhatsky <senozhatsky@chromium.org>
-To: zhangshida <starzhangzsd@gmail.com>
-Cc: Johannes.Thumshirn@wdc.com, hch@infradead.org, agruenba@redhat.com, 
-	ming.lei@redhat.com, hsiangkao@linux.alibaba.com, csander@purestorage.com, 
-	linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, nvdimm@lists.linux.dev, 
-	virtualization@lists.linux.dev, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, zhangshida@kylinos.cn
-Subject: Re: [PATCH v3 8/9] zram: Replace the repetitive bio chaining code
- patterns
-Message-ID: <d3du6mmazbygxo2zkxqjxamfg44ovrfiilbof6rnllfjzxnnby@becwubn7keqe>
-References: <20251129090122.2457896-1-zhangshida@kylinos.cn>
- <20251129090122.2457896-9-zhangshida@kylinos.cn>
+        Thu, 04 Dec 2025 01:04:53 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vR5Gc-00000001rbZ-2gzZ;
+	Thu, 04 Dec 2025 20:04:50 +1100
+Date: Thu, 4 Dec 2025 20:04:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH, RFC] rename xfs.h
+Message-ID: <aTFOsmgaPOhtaDeL@dread.disaster.area>
+References: <20251202133723.1928059-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,15 +77,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251129090122.2457896-9-zhangshida@kylinos.cn>
+In-Reply-To: <20251202133723.1928059-1-hch@lst.de>
 
-On (25/11/29 17:01), zhangshida wrote:
-> Replace duplicate bio chaining logic with the common
-> bio_chain_and_submit helper function.
+On Tue, Dec 02, 2025 at 02:37:19PM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> currently one of the biggest difference between the kernel and xfsprogs
+> for the shared libxfs files is that the all kernel source files first
+> include xfs.h, while in xfsprogs they first include libxfs_priv.h.  The
+> reason for that is that there is a public xfs.h header in xfsprogs that
+> causes a namespace collision.
+> 
+> This patch renames xfs.h in the kernel tree to xfs_priv.h, a name that
+> is still available in xfsprogs.h.  Any other name fitting that criteria
+> should work just as well, I'm open to better suggestion if there are
+> any.
 
-A friendly hint: Cc-ing maintainers doesn't hurt, mostly.
+fs/xfs/xfs.h is just a thin shim around fs/xfs/xfs_linux.h. Rather
+than rename it, why not get rid of it and include xfs_linux.h
+directly instead?  I don't think userspace has a xfs_linux.h header
+file anywhere...
 
-Looks good to me, there is a slight chance of a conflict with
-another pending zram patches, but it's quite trivial to resolve.
-
-Acked-by: Sergey Senozhatsky <senozhatsky@chromium.org>
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
