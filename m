@@ -1,144 +1,158 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229A63446AA
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:04:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1555347FDE
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:06:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764947082; cv=none; b=fe9jxKmv/n5h4amh4WQFpI3Du7VuXMl7mhn37VpERtia91K+D7W0MbaLbL0VSebEIZQBXsmG3kRakZ1AH/Gqufq4NaxoW3H4u3JW6yBZFOm1BSkN0KNje9hSaDyWkWdXUmXjPvqAMO8SBkC24CFxWrZLQEtVHbA8GZLw16s0FZk=
+	t=1764947221; cv=none; b=d4KolGy5PVha9YdyZIOxSB3A/Xfo0J+y8qcpX9S7FRAd34+j4WI8kcI5ZglPXBN3hAYaD7BIbcPKRsDzZI37xKFInpPNKo1wVhNuaJsgn7K5shQvEblO7EajkSQo0lkVMmR7y05QQGm60b1zGg5G+9uZVERX+gb8DbsuGcsM1QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764947082; c=relaxed/simple;
-	bh=Y3/Ez2xF2X7RvpEKSW825Mp3reyM+ed2oszdU9U7vOo=;
-	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r4FPc6u1zEAawrZUgVYemy+4BIS6xmGNCdvJs5lhK4rWpE3AwMOK4uczst/tea/4LRhdGqzGJ9ECOyb/EcUE79iPRwN0cwRx0KyNnoWYWCUuTXrYH1ENKa7xPPL4lYEfYllY+tnP/GLNDf2ji/YfccY8di0k7Sp97CFRrwoePfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YzkJ/719; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ugf8lfaN; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1764947221; c=relaxed/simple;
+	bh=ObQ2X9ThdBrjKR7wJuZMnmGuUGrVagP55M6+38I/80Y=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mk8EvOK4HQMhNcYdJfBCV7BB+P6ytBVGODVMckuMcrJZGtiFqQP6hCmeyTCUE0sDqfmrvTOtZSwKQTqs/Z3G9EdSTU3sTGyVCBvlNuEubqu5UDYLGJlruatSIa2LaqX+KnVC321hBg8FufCs/91hCstvO6iuzEzqd6R5Oij6Q50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AawMen6f; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=W9VWRlC4; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YzkJ/719";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ugf8lfaN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AawMen6f";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="W9VWRlC4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764947077;
+	s=mimecast20190719; t=1764947217;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cob4u7mtS8QUgMEpOn/0Juck29I7WqGCT0WHW0VRKsA=;
-	b=YzkJ/719ysKMuY1sdy1FciN5juMTBIAAcqGT7q+LQCjw2nVC8H9YXCJl6GQSCjWlyGex0Z
-	mJ9i4Jbb4u3mhkXv9SqG98+0PEDyaIXRNQ9r6ND9TlfpRDZOKwOkhjJAMezt+u8ywlHhNz
-	zwcc5/5XslfpufO6odjissBNItld9wc=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=eGnyO8y3nti4MaZashmhkl/6VE1hWdw//hZw52s3X+w=;
+	b=AawMen6fdMFe3nCFTRMf/JtTBFYyZ5Dr7W4haDwcqMCkrqC/BvoWQNN3HOOo1qMxRCRhD5
+	l5WyEwOZphoYSeJrJrdc+raDd6FeRh+nkCf2zTIgh7eUg0IRSaMkMu5Vzu3H7pCCBP6JTV
+	/vvwlC24eUEwE8fRwBssBh16xzuOSWY=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-327-tAnyHbBZPSipDY7oONlYQA-1; Fri, 05 Dec 2025 10:04:36 -0500
-X-MC-Unique: tAnyHbBZPSipDY7oONlYQA-1
-X-Mimecast-MFC-AGG-ID: tAnyHbBZPSipDY7oONlYQA_1764947075
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-42e2e448d01so2208204f8f.1
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:04:36 -0800 (PST)
+ us-mta-369-lv622QisNh6cgQERXlR87A-1; Fri, 05 Dec 2025 10:06:54 -0500
+X-MC-Unique: lv622QisNh6cgQERXlR87A-1
+X-Mimecast-MFC-AGG-ID: lv622QisNh6cgQERXlR87A_1764947213
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-42e2973a812so1354233f8f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:06:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764947075; x=1765551875; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=cob4u7mtS8QUgMEpOn/0Juck29I7WqGCT0WHW0VRKsA=;
-        b=Ugf8lfaNF6UJV/uAVmp1ed65sYBJc2HqZK+L6PUqv9nnDkLocvN2kolzGRutyKkltO
-         gvUA/B0XVRxs3/S7HQm4RI1jCd5d69I96n9ybA72scYPcEJryUt5XM4KFU2vV/TeZT5G
-         FlZeVTJEI2VCcJCAYT7sO5eMaZ1SY/OXKocNA2Z6P3sopqw+/QisfX1FcsaKakXeXhcH
-         cUojS3cKq9wK7RIyYTT8tGMl+5QOEx7J00WhWgAM5FoMFQVtMpxNciXs9CAi2VvXOteb
-         HUkZ24WP8q003KOKyp3OEppgcQUfxWXTb2kUACXEZtDnRYBvLp0s5eDAz8X8GLbbNZQw
-         4TOA==
+        d=redhat.com; s=google; t=1764947213; x=1765552013; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:to:from:date:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eGnyO8y3nti4MaZashmhkl/6VE1hWdw//hZw52s3X+w=;
+        b=W9VWRlC4JcArhyBlk+cH3qNxT9Dpp7MW620IfnYHGqlx0Jz/0mDcSUNv0uur+LLjZ2
+         oPjdqaUAXK9Ta1f581J9nvQMlEqVGoNAQcdS+ugoTBwhurdUQcqarc0eoBGpUbUlvmXD
+         jG94/LFuciEgaw/2sLMxUZZETdun7HdUegbH7Q0wMij+Z5EuqRiy+Dqtw7vR9F4OAqJa
+         lscN+PZoSu/kg+Hubxtj70Txa+i9wwPhdIC+bjrHBShH7HELBIsFxF95e8irwiUelEb2
+         RUFkmJ5d8980+JGsLHVjtqDiB/PCo3GNEtoMEEeApl4gs+Xj8Tte6wRjNCqPO957KcLU
+         74eA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764947075; x=1765551875;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=cob4u7mtS8QUgMEpOn/0Juck29I7WqGCT0WHW0VRKsA=;
-        b=Hc1w4KF4iuPcorHIqcwP9qTywBJT16dSMuQ0dTiiMwcAK6YoEIi1mdxP+Y/GTscbDY
-         jeaDwZDWxQG6R6TX8VfuRtAOym8cGpcYPtpDRmZ3AHoAGM+fXI0A/BSBJ082BnM8XBcn
-         +Sy4Wz4FTl8L82oBpiZpAAqFsW055flu/gmj4S+sNtkER7tAPBCN9atYM+S7+iJl7X/J
-         b2jZsRPbEAxu/ClZABoLAVhYc03E6ZzCpyzu4DHrZsiFKLXw9ILCaw+aPH7e+DoZEASY
-         mpuRMaOjyb4+BMM0zO1Xfp6+k6qhM3PmLIy4sss6UWVJml3rHi7u2irn3B8k0aiXK3Dl
-         UEWw==
-X-Gm-Message-State: AOJu0YyZP3y4Tq9AcVI81VagDz6IdTYns6Nxjk/QiKO4mMN9GayrBdS6
-	q8/9gEoGTaQiIwFadZaYYrFs6V5s6nf4cILAECJKbyGCnRxRzYlrLCkRwzdNUXItf0zsydVBywk
-	2ugpM8NFW32fpH86xtoyOoKIsUv8uXvlEbdxIgvIi03hxWRZwt39G38gjikCOEjuqiuuJSdh5Uc
-	gEZU2tpxc/nGqChwbeIj71LCSAW6D4YMYD6FPIpqPh7AlJ
-X-Gm-Gg: ASbGncvec8e6S5Q7x7qkm6Dpm2RskmL3SKqYOt/H3CldCTFHBG180EZOnT4HtTCI/t1
-	+Pu3I3g4MNnEzg1dt3Vw+LBEl2pr+BzoGG4HXisCkqGzHLDUyOLJ2RXZJguOiDApr97BS5nJT7K
-	wJB3vldTx+pFVzDyhkRXjZe694BJkD/eB+2mzxpZDzjEY2vwWxvk95nQDf7RaZz9DAacYBd4mWE
-	0SbZK34Vcer6/LRjcnlnRhfJpgoKM3N4lTJudEfPo7N62bh8YgWRI7QpNy9fWT1AxNk5663utee
-	aU4Ozo6bbdxQFFvdsKnZ7eZDZ2Lmka8bTxyGnmEWf7RPqTdl9THF4dJHK5F0zPpAJiZn7/21sAg
+        d=1e100.net; s=20230601; t=1764947213; x=1765552013;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=eGnyO8y3nti4MaZashmhkl/6VE1hWdw//hZw52s3X+w=;
+        b=bwqLcJUwNUQmu6Ixyi/+lF3fctF1vlPi7su+ab/Y44QTU1Dt+DLM+7Ep40ii1KOCce
+         INjbwYNuQZVhqqSIWwHx6I1d5a4kyaMzVDH/WPSKXP9+OjyImSB4RZhxTEElF82vUvgW
+         0nPd8+MJ8yxpuybF9bss+bOHftwOR6UKSFOUxABst+lQl6NfkP5Anhi1W5nvvaszmhsk
+         2CGYEW2S+5Dttz4XvCfw1sjf5oQ0ezax57lFukqYqN6DrpMUPVdK25/k9k/QkMHofSGW
+         q3wlTOGud82Ad6MFuM24WYiLg8CYqx1vEmp3dfasrBkNwL/aOSpGoDj9QUXL9QDNBzm6
+         1Q3A==
+X-Gm-Message-State: AOJu0Yx15HbuYpcxo9fyts1DOUUnlswGxT63Rp5aIEx/omCTkxHBbIH2
+	gVYBPbf+iMtggmPR0rKivfxFqLtMRHDqpNnI/nNeHAyIbpHGSbPTn2JUmpzUclOxwCMlgjNVLNc
+	y4Qh0ZRJ2aBTUR26HdrRPrqbHzYWYuT5gbaxG87LlvLEnGFRKHlQNYUW0nuOfLt+bbXH4bn8KSW
+	eVk41ABFf5ZrFiS/nj1tS2Z5mkgNre1jmDIV3DC5epLH2U
+X-Gm-Gg: ASbGncui7bEuJNKF3JfS7gPrQCvMRfBhzRbH3lmNJ40C3jhuki4GEPiSbOsMd18T3A5
+	9vMzk7scMYFnEMumx+HUYE4QwAWNbcYHBeqF+Qv6peR9Nz6zMIGxYOnbKLIUNNtTNB2AweVYEvP
+	IypML6Lzn0VQvdwejhFDssFP3PTWxlfCaAQkDQ8cIm6IOLBTtugfyZfKHcUcW9GpSqSvpmW2Bnw
+	KQFx1SZSf9eok36fk0lMT0X/R2WtrqAUW+5DdOG0hAc3aY5PVlxeJjImqvWzrLb7mNNfEs/Di8x
+	mogDE3O2UH48keVdkYhbDyVrftdJ+MwgU4B7W4ZqJ6id+NuGbI9wuJwp6Nm/KxNtobOHqXd8qvg
 	=
-X-Received: by 2002:a05:6000:4014:b0:42b:39d0:6377 with SMTP id ffacd0b85a97d-42f797fdf66mr6570431f8f.17.1764947074902;
-        Fri, 05 Dec 2025 07:04:34 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFQy9Yk1ElEGS6iIOT5O4/Ul9bOW8Whv6JOJ4WJ1gkcmobgeuz3nLyq7DtPkRbI5eI6oym/iQ==
-X-Received: by 2002:a05:6000:4014:b0:42b:39d0:6377 with SMTP id ffacd0b85a97d-42f797fdf66mr6570378f8f.17.1764947074271;
-        Fri, 05 Dec 2025 07:04:34 -0800 (PST)
+X-Received: by 2002:a05:6000:18a6:b0:42b:2eb3:c92a with SMTP id ffacd0b85a97d-42f881e51dfmr531431f8f.12.1764947212576;
+        Fri, 05 Dec 2025 07:06:52 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFYOLVd+858ZiJt1LBIvzlQse8WPFZ5D2t4TBmoxBGVAoI34ouHl+XC0uLPA6BvTrHoHWKQHA==
+X-Received: by 2002:a05:6000:18a6:b0:42b:2eb3:c92a with SMTP id ffacd0b85a97d-42f881e51dfmr531369f8f.12.1764947211956;
+        Fri, 05 Dec 2025 07:06:51 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbfee71sm9057057f8f.15.2025.12.05.07.04.33
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbe8f85sm9393061f8f.5.2025.12.05.07.06.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 07:04:34 -0800 (PST)
+        Fri, 05 Dec 2025 07:06:51 -0800 (PST)
+Date: Fri, 5 Dec 2025 16:06:51 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
-X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 5 Dec 2025 16:04:33 +0100
-To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
-	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
-	hch@lst.de, preichl@redhat.com
-Subject: [PATCH v2 33/33] xfs: prevent gc from picking the same zone twice
-Message-ID: <mxn6l2o4hpyi22ulbgn7zfpe6az26wajhnbfqzz6uzdj7kzrwt@fsqqxljhnuc6>
-References: <cover.1764946339.patch-series@thinky>
+To: linux-xfs@vger.kernel.org, arekm@maven.pl
+Subject: Re: [PATCH] libfrog: fix incorrect FS_IOC_FSSETXATTR argument to
+ ioctl()
+Message-ID: <5i6vygbgclhg2u25yjmfzl6oac3l6mohvjqwszosj3s7av23pi@gjylrkdzcevs>
+References: <20251205143154.366055-2-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <cover.1764946339.patch-series@thinky>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251205143154.366055-2-aalbersh@kernel.org>
 
-From: Christoph Hellwig <hch@lst.de>
+ops, git didn't use From:
 
-Source kernel commit: 83bac569c762651ac6dff9a86f54ecc13d911f7d
+adding arekm@maven.pl
 
-When we are picking a zone for gc it might already be in the pipeline
-which can lead to us moving the same data twice resulting in in write
-amplification and a very unfortunate case where we keep on garbage
-collecting the zone we just filled with migrated data stopping all
-forward progress.
-
-Fix this by introducing a count of on-going GC operations on a zone, and
-skip any zone with ongoing GC when picking a new victim.
-
-Fixes: 080d01c41 ("xfs: implement zoned garbage collection")
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-Co-developed-by: Hans Holmberg <hans.holmberg@wdc.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- libxfs/xfs_rtgroup.h | 6 ++++++
- 1 file changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index d36a6ae0ab..d4fcf591e6 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -50,6 +50,12 @@
- 		uint8_t			*rtg_rsum_cache;
- 		struct xfs_open_zone	*rtg_open_zone;
- 	};
-+
-+	/*
-+	 * Count of outstanding GC operations for zoned XFS.  Any RTG with a
-+	 * non-zero rtg_gccount will not be picked as new GC victim.
-+	 */
-+	atomic_t		rtg_gccount;
- };
- 
- /*
+On 2025-12-05 15:31:48, Andrey Albershteyn wrote:
+> From: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> 
+> xfsprogs 6.17.0 has broken project quota due to incorrect argument
+> passed to FS_IOC_FSSETXATTR ioctl(). Instead of passing struct fsxattr,
+> struct file_attr was passed.
+> 
+> # LC_ALL=C /usr/sbin/xfs_quota -x -c "project -s -p /home/xxx 389701" /home
+> Setting up project 389701 (path /home/xxx)...
+> xfs_quota: cannot set project on /home/xxx: Invalid argument
+> Processed 1 (/etc/projects and cmdline) paths for project 389701 with
+> recursion depth infinite (-1).
+> 
+> ioctl(5, FS_IOC_FSSETXATTR, {fsx_xflags=FS_XFLAG_PROJINHERIT|FS_XFLAG_HASATTR, fsx_extsize=0, fsx_projid=0, fsx_cowextsize=389701}) = -1 EINVAL (Invalid argument)
+> 
+> There seems to be a double mistake which hides the original ioctl()
+> argument bug on old kernel with xfsprogs built against it. The size of
+> fa_xflags was also wrong in xfsprogs's linux.h header. This way when
+> xfsprogs is compiled on newer kernel but used with older kernel this bug
+> uncovers.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
+>  include/linux.h     | 2 +-
+>  libfrog/file_attr.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux.h b/include/linux.h
+> index cea468d2b9..3ea9016272 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -214,7 +214,7 @@
+>   * fsxattr
+>   */
+>  struct file_attr {
+> -	__u32	fa_xflags;
+> +	__u64	fa_xflags;
+>  	__u32	fa_extsize;
+>  	__u32	fa_nextents;
+>  	__u32	fa_projid;
+> diff --git a/libfrog/file_attr.c b/libfrog/file_attr.c
+> index c2cbcb4e14..6801c54588 100644
+> --- a/libfrog/file_attr.c
+> +++ b/libfrog/file_attr.c
+> @@ -114,7 +114,7 @@
+>  
+>  	file_attr_to_fsxattr(fa, &fsxa);
+>  
+> -	error = ioctl(fd, FS_IOC_FSSETXATTR, fa);
+> +	error = ioctl(fd, FS_IOC_FSSETXATTR, &fsxa);
+>  	close(fd);
+>  
+>  	return error;
 
 -- 
 - Andrey
