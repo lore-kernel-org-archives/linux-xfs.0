@@ -1,89 +1,89 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6306232ED53
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:02:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8079246782
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:02:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764946931; cv=none; b=Ie0tyZFGKEcNG98NHlLTjCGv1Lbs7fLEe12GFIS8/X3KAVe9Vx68WSJHMKq5K21WxBhPYEXpGaIfbIoifYu5y5GlVIxY4fdi9RQjwgR9h4H9mRUkQa3ayDZmsJBbgOIVOqBNvft91RvzqrzZZzHwyFzScOtcNb4JkF/7Dm3ZlDw=
+	t=1764946936; cv=none; b=K/i06LLktVETeX31ITZnAtXIo3kOveSBbuLRduTX4qgHJhK2XBMv8jmjCzhgrpCImQYbWJZS3wnirD/BlZWaa4ww8sh38H587gjAMUFa/H7k+957cB5amix/pXDni8wqH/iP4804tM+mYzDxXmLJUX2c4WYFpYZSFyfUGrZQIU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764946931; c=relaxed/simple;
-	bh=HCGc+jyBaTo2k4m6E8HaTGJOrT0q6UuYwZZEaeRxO0Y=;
+	s=arc-20240116; t=1764946936; c=relaxed/simple;
+	bh=pifI4awGNR1L3Isp1ApnbrAGiU+HEWUkDRf3TT+p4eo=;
 	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rjt4nK3vZPtbsQQmB44j/AZKOrKJj7BmlEtyAFUnP5dvJr/n6s0j74bbcNrhgiDYhpf128GctMagfPMprKjuU3kbDYdKErL4pgIRpdcz0s9ZpZKWr7+LnWRCCYx6SEOW4F4V8a0sE4pv0Uwd/Ul3h1TQTyXYtXXVGTohmzpBqxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UC/qgXUm; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=S///8XUT; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=YMflHJlH+JZbQX/HwTthA3+SieBEWhdD60hitAca0SAQIsZGhbwHQMS3HO1xGyMycJknHaYjL+BN28CWa0DbAp/ogE3qpV7DBRcNwRpJs5+wvfDZz0bE+pGGUrrY54eEXPed8GDlmcu5xxzME6hlRh9zy+QQ2cUaAHmFed+QpuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gcHwVOC4; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fErfLBWE; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UC/qgXUm";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="S///8XUT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gcHwVOC4";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fErfLBWE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764946920;
+	s=mimecast20190719; t=1764946926;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=oVyEjDSIBaiL5PEBIKOWVWF/FzTrTtfHlD9Dc8oevOo=;
-	b=UC/qgXUmVOlTq242BOD8ZPxwrNHh3EvxkV1KK0NGncuKIVsX/UUBuCLKy3cmQR3Ozpdtcm
-	O2sQELVB78Owi7jXJZYtlc10jzHO98O/jDoSeOwnPfhAMkZscxFprgQNa1cfeINNcBFB85
-	noNuUUATVzVY9+NpRdHNAWgZmSa/+Qg=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=+nwM3WIm2x1p0jjWY2I9X/VD27ZK3kvVY+RHEjCWOmM=;
+	b=gcHwVOC4ls+iOABt8a2/6oupM2Jh5noT3Nb0lLw3uhtN0dFs+UdQUc9eA1K8cXgYCB7obf
+	+WOxWipGrdkACiJIJ2RMXSa+k2FGH6O4OVzEQYTc2ZPLBYxzmRAKQ4UxsDEOa0TmUmBSE0
+	3fqLbu3yuhGZff1QBSPDAlpZGD9P8vY=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-177-rHCWpdVBMtS7vcL7YM5YfA-1; Fri, 05 Dec 2025 10:01:58 -0500
-X-MC-Unique: rHCWpdVBMtS7vcL7YM5YfA-1
-X-Mimecast-MFC-AGG-ID: rHCWpdVBMtS7vcL7YM5YfA_1764946918
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-42b487cda00so1254915f8f.3
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:58 -0800 (PST)
+ us-mta-583-ZARbBpAdOGWDO2ufMRxyww-1; Fri, 05 Dec 2025 10:02:04 -0500
+X-MC-Unique: ZARbBpAdOGWDO2ufMRxyww-1
+X-Mimecast-MFC-AGG-ID: ZARbBpAdOGWDO2ufMRxyww_1764946924
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-42b366a76ffso1265695f8f.1
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:02:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764946917; x=1765551717; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1764946923; x=1765551723; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=oVyEjDSIBaiL5PEBIKOWVWF/FzTrTtfHlD9Dc8oevOo=;
-        b=S///8XUTmQx4yfVsWTYWg+iDsh8a0okQEcaRlUlOVetT4Tj7RvrGpV2+e24J6t3Opo
-         e4aDeIeB3xLTl1aRIH50PwHsAoNyvBFkf8Qw5/mcXhol5qVyFgretrCqZ0IjOiR3qB5z
-         U0OmRsrjLKQZSxYU8VIFXVqLuYXiH5ZxDlAf7GynIkLCTb2WGRYf52UvMW29M7w99z9J
-         CX3LXifHGFu94/S81B92phOnZguQnVN1TBqPJZWDsr22l77kNM866b0ELgSlfEOe+hES
-         YKTqvQrgiN4Ws5a8WRLBallj4M12Ts75rVDYjzSBBZlaeYIwEHOHxIh0u7mQMOjQKtub
-         Fb0g==
+        bh=+nwM3WIm2x1p0jjWY2I9X/VD27ZK3kvVY+RHEjCWOmM=;
+        b=fErfLBWEw1UGAM9WkevI8vL2G7HUzycQZvWq2Qj0Uf26SZmpkZJ/rToo7GuN4qQ3LV
+         43WtIV8WVgVG8x4yFc/oPbytNJTgDy7kqTZoMJeXQUoqhVUtdk3jL9zIF5U78ZEbIszh
+         YO5FZj6gDZwYHE67vAkXfElzLPL8tYGTJh0Vc60nxJC2E3WgCVUnRIq5L5ypaHEtijfR
+         q3grML++HwJumTqZj9/Ntqkvavl4HzdZQFmHQU+qKGicM+do1gvh5qBxibdV4LszyEdk
+         WngfsjbFkgCjh+NqRzMxQWnUfUE/jxhJK8GKMfgDJ9Nn5N7o88KjT8/DFxqlPNT3e+aU
+         6dkA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764946917; x=1765551717;
+        d=1e100.net; s=20230601; t=1764946923; x=1765551723;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=oVyEjDSIBaiL5PEBIKOWVWF/FzTrTtfHlD9Dc8oevOo=;
-        b=wUVyCU+yqRx2R8FXZvDKnE+48H55kbh7AVTCR77z/nVTj45Pqp1e3Oo8aXl766QvgL
-         y6/OnriF5/QNrRZu3I2G2rYbRWQVJHlWHW5n4k1RmYHlS16o9NvAg3AsOoINo8oUyx0Q
-         +eFnIGDV1Ar5C5qtP5NyxP5PgY51mZklZxWJD8a6K8fkO+WsOhHku4GxhIjaVXQdPSEH
-         JVlp5sLACu7XcBVqWv0KoMYfPkfZBecGSDJQSvl9XKHmF9DCFfFi1d6Yn55KKIhT+iNN
-         UIPh5gg0XaiFw1A/ea6cgSjZjy+Z8NjYatJhFllNzK+juBIpX++tBoHg27KqJ92GmrKI
-         vnxw==
-X-Gm-Message-State: AOJu0Yw2n+z3D/KLZqajlcDmEbYbtQJ2viYtyjeLuSeIHDEkoeC97LIS
-	iSby4QGUB3TPy93YL4g+ZUcb9+SOPBK+RNmyXKs2G8Dk3Fcm2ozlgb6XgH2Y1EGbYxbkY54j+1p
-	CZtuIB3HHUuDR8XNLMB0rKt5MjGrnYCZo5sLZzEa7RRZfcWJDIGm/Z6wf43N5wY25Cr6onxpynB
-	uuPxWR8VwILH3o+vSPVyNJKNoPqR1WFemTCtcAuXsgEFBK
-X-Gm-Gg: ASbGncsDyGveLOYqcxr8EPGvdlvcsLYIO1PmkA5nyyN4PEO8FVpCnqA/hkUQXnOCV1e
-	ddezb2sSIzIAHVOhmd0nI2WjfMufIRntlXbX2DDFAN0eKTDbCFJ+Kg85XcTEACP3g3m/R4QewUp
-	lEKLFpEb0e5oG34IECg4e1t0yHojwSxSElI/IlSenLH3yB2jrZqbmmSuyXjF0jzNZ5qssP2AYZz
-	37TipiReh5CmfDC87ordfhmK/fxgYe0VpOgMS3OTEUD1lm+B/4H1sefE01ks6FsrdKRMG2+6e13
-	la1/XhjtYCFN38ucW8Etb2SA6aMADqmMAzp/TF+oohykQGVWwOutFrv7k/74DG8Cgvwa8lqxWok
+        bh=+nwM3WIm2x1p0jjWY2I9X/VD27ZK3kvVY+RHEjCWOmM=;
+        b=ogxkXjE/q5duG54EIxBxbR9BFXixrs4+sQxfVUyEZLH1fVtMyfn5t81Lk5PyhCPHXq
+         qFjB7sgPUc4SR1gq0NcIfwZjQHL5Hc2CffLk06ZLu3Hucsu7vOOObem7qEQk7Mz26JAb
+         b+oC6OVCx/fE20WP5sbpoUYlAUJhfpglYQPigkBMDcxDLH3jrmxsN16iD6d8SfR9Vrjy
+         2CIGapXOlCcXBSxWSFQt/MUGkcAk6Plkn41OGjlfEmBowsOJeex2ZwgMpai8Y0VlvBy7
+         oNnPM0qPa7ObXCpst46aZR6CipqFAuYBGsFVGkRk4SEZNwgowKtbdXzQcTK3mU1+CKP4
+         2AZA==
+X-Gm-Message-State: AOJu0YyX2NBnGA/jYi9NR/PGCgzf1hQOlF8QTHABPzmi0DaWx3DcjaX7
+	BWGTWxooDjHsftopojG/ailW+aY4vQDRX7TJ6WGIDY2p79fdVn+2vw3d3NWmVbkVFhmi+LNWu7C
+	TW8FFVDcUHZXHp3G2ous8hCiDJGD3O2ECfGbfPu9xQQ7WhZAe+xdPROcC6L/bl33B3oQrAlH89e
+	gJOMiRgqAo7A8zKH4eFZikrWdz4Ez3tNAhkGs9dvkg+2MJ
+X-Gm-Gg: ASbGncv4zHQrmVnNk+sy0MhEoS35rtfI7rxbkVwkX2Kd5/Po3O0Bq0LLMQ8KfGhzPim
+	VSdQY3IzXUQHPevmUI2t58yCWI9bNlJCEMYn67ttrpUxKV2SZx056rki9C0oFZwZ0CLbxYf6VCb
+	cGLxKKI7NT4Fo/qBYFjvLjYbPI9n/dWkxo2t1ohUY4uOx+6smCJi1AV+DGRINVxgkNs969e4wj8
+	pNuX3M/Nnu6yUeCcbVmx9NuL7VtXX9Gn40CWHyQ1tPlo5HSJh+OE9iYYOpyhSYyItXnN21NJrbH
+	a0cjrJzVGrzgvFDgKP2jG9uoVidecpMPlZ6ZeoONvCZzgLyx6EKtgeXVcvnr7RRX/vMh4FtQxLE
 	=
-X-Received: by 2002:a05:6000:2dc4:b0:42b:41dc:1b60 with SMTP id ffacd0b85a97d-42f731a4d45mr10894170f8f.29.1764946916787;
-        Fri, 05 Dec 2025 07:01:56 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFe9Zulz9CubOW5jPRArEyDziwKZFwTVasS/SlWcFfbnO3ZRosz4mwZ2rmrzpi67mUt0nMsRQ==
-X-Received: by 2002:a05:6000:2dc4:b0:42b:41dc:1b60 with SMTP id ffacd0b85a97d-42f731a4d45mr10894114f8f.29.1764946916152;
-        Fri, 05 Dec 2025 07:01:56 -0800 (PST)
+X-Received: by 2002:a05:6000:4308:b0:42f:8816:7911 with SMTP id ffacd0b85a97d-42f88167cbamr549819f8f.62.1764946923258;
+        Fri, 05 Dec 2025 07:02:03 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH+0iqAP6rbatEVoGaDWlm9IZmEJp+dHIczoMxWYWqbUfCX9awOwaCbP/KRShXxC+PTAK/HvA==
+X-Received: by 2002:a05:6000:4308:b0:42f:8816:7911 with SMTP id ffacd0b85a97d-42f88167cbamr549753f8f.62.1764946922582;
+        Fri, 05 Dec 2025 07:02:02 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbe9065sm9205283f8f.8.2025.12.05.07.01.55
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbfee66sm9093290f8f.11.2025.12.05.07.02.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 07:01:55 -0800 (PST)
+        Fri, 05 Dec 2025 07:02:02 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 5 Dec 2025 16:01:55 +0100
+Date: Fri, 5 Dec 2025 16:02:01 +0100
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
 	hch@lst.de, preichl@redhat.com
-Subject: [PATCH v2 6/33] xfs: convert xfs_log_iovec_t typedef to struct
-Message-ID: <xjfd2yyn5fw7agajtnpwffuuo67nnzgb3slfxraujiy74xnjyx@x2dbbwobaavv>
+Subject: [PATCH v2 7/33] xfs: convert xfs_qoff_logformat_t typedef to struct
+Message-ID: <3ys53ywcdvrcmakwax4gudczafeoso4phnz7gaez4qawfc7odq@t3m3igm3rvio>
 References: <cover.1764946339.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -97,24 +97,28 @@ In-Reply-To: <cover.1764946339.patch-series@thinky>
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- libxlog/xfs_log_recover.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ logprint/log_print_all.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-index 83d12df656..3e7bbf08af 100644
---- a/libxlog/xfs_log_recover.c
-+++ b/libxlog/xfs_log_recover.c
-@@ -1112,8 +1112,8 @@
- 		}
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 0920c4871c..1d6cee99ba 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -181,11 +181,11 @@
  
- 		item->ri_total = in_f->ilf_size;
--		item->ri_buf = kzalloc(item->ri_total * sizeof(xfs_log_iovec_t),
--				    0);
-+		item->ri_buf = kzalloc(
-+			item->ri_total * sizeof(struct xfs_log_iovec), 0);
- 	}
- 	ASSERT(item->ri_total > item->ri_cnt);
- 	/* Description region is ri_buf[0] */
+ STATIC void
+ xlog_recover_print_quotaoff(
+-	struct xlog_recover_item *item)
++	struct xlog_recover_item	*item)
+ {
+-	xfs_qoff_logformat_t	*qoff_f;
++	struct xfs_qoff_logformat	*qoff_f;
+ 
+-	qoff_f = (xfs_qoff_logformat_t *)item->ri_buf[0].iov_base;
++	qoff_f = (struct xfs_qoff_logformat *)item->ri_buf[0].iov_base;
+ 
+ 	ASSERT(qoff_f);
+ 	printf(_("\tQUOTAOFF: #regs:%d   type:"), qoff_f->qf_size);
 
 -- 
 - Andrey
