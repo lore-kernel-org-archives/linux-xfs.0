@@ -1,90 +1,88 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC9530595B
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:01:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E805133BBCC
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:01:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764946910; cv=none; b=u0gDX2Uo9R36FNInEcF0HbN6kJBWPcSLAEPChZUoe0KZW1g9W/LcWwxBKSj94d3JvTxHO+OXVsoPIo8vxl4fDuIPanhsgeRGa96JsaWixFeLCd2a0JRWB84eOINJSssTWIfZKuymYknffsUVoSoHi2VK/2LBkzZoeBIo8Ry8WEs=
+	t=1764946916; cv=none; b=nAQ5ArQ/Y6k64Y+KFyvmUzqioCLg0hStrpngLsQWdfB/zPI6niR7J5isrYnxHRwGDR2hp7/SaAs0EOCt/EWPbn5uK9wNhpPNN4lyxozqarWXOjcKi+rhqrdICCjEQMUXi0NJVtkczVstT3EX+GBKIFFjhCkza3XLIa1PbSUY1yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764946910; c=relaxed/simple;
-	bh=W6LYl/ClOgnfGA2SoeKv0w5/4i3UBSi70YUs3pfb788=;
-	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M5hTyY16PRMpG3zbWTCpknJoZyr83pClDUYpK9UAeTnbpHUaTmvbw++Rq6Ki2J3MD5wjablWFi4WAIQGoqM01DA3tnnjqDz/MGCepXRxX66yvaoFzz3kbZORRVdGjcKeh2x55nAqXtWbEdzRTa3fDs7v52ww603iWS/dM/OA+Gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SpGDsT/u; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=BABWmRak; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1764946916; c=relaxed/simple;
+	bh=Rq7P1uOlHFBmEXkIBOBzTVK4a+xqA2H0Wlm5iWY1gQE=;
+	h=From:Date:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=lT42ShMZlwwnSnJ32zg+ih+ozo7lydToRqLFMriEFKvdxwhb8POWua+7skqxNEwF8G3Gwu6l3e8Oc8vNBipvf7F656ODXLJc81quBGK143w5nB2+WhzPwueMMyVWaaea1l3dPX559RIAYpl3WqL5wfckBAPUKh6I5xnuNdQJBMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iCQECTF5; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=F7nPnVKn; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SpGDsT/u";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="BABWmRak"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iCQECTF5";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="F7nPnVKn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764946901;
+	s=mimecast20190719; t=1764946890;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
-	b=SpGDsT/udvzh6IYJ1S9xclxmjUxJm95IWpVWKLnOOCasJIO0dwKF6gGT1cb6jFl7MFbJfn
-	kH9Rq08x6chiEgVv0wfQVMGwlLjXltotPoDbbarp6xKe8KDEmJnkidIcCT2EvGxkCNnO9b
-	MaQqNyfd+unNQO4MhF76BzP29DsH050=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	 to:to:cc:mime-version:mime-version:content-type:content-type;
+	bh=FfFYJwXyR60fbWNNYL0ZlNE7PC4PHOHPG5MSkL6eawY=;
+	b=iCQECTF5E1xzuxDdSO3D4PfrpkAigxX/VjZi3WTMkq4oGFGmq5jgfDZvcDodqQOYxb4loj
+	YDghJqcPT+kasA0k/rzBNXbdvn2TUJJOu/B0jmp2lnKUX0JfEt4LXxWsZe5Zs1Yq2Md/BF
+	kosdsUGVo9hNiAHPULETcc3UViK588c=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-297-VVHLsn1mPoCNSbsUW6-4QA-1; Fri, 05 Dec 2025 10:01:40 -0500
-X-MC-Unique: VVHLsn1mPoCNSbsUW6-4QA-1
-X-Mimecast-MFC-AGG-ID: VVHLsn1mPoCNSbsUW6-4QA_1764946898
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-42b3086a055so2077770f8f.3
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:39 -0800 (PST)
+ us-mta-235-jSnCOpzPMOK9TS_Jk3J8Qw-1; Fri, 05 Dec 2025 10:01:29 -0500
+X-MC-Unique: jSnCOpzPMOK9TS_Jk3J8Qw-1
+X-Mimecast-MFC-AGG-ID: jSnCOpzPMOK9TS_Jk3J8Qw_1764946888
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-47918084ac1so18537805e9.2
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764946898; x=1765551698; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
-        b=BABWmRakzqzEHoLO9H2LLIEqEyt+YQ4TBdcz/jr3gNDzBQj5av9DyDDBGvjzUynXJu
-         4b8NA6XuDdiC2H2aZvHy1rnYiYQbQc0EM6x6BjXDBAExkT2pmDwp2MgqMBZP7hvx3hTO
-         0HWTGueJhAmYU87GYB0LLKIg3bnz4UWFX+EkSi5vzEmA3k1SL6G12EjPQQJL8Ad04len
-         +l/U7FkJhECFIoKAnluKDWYmAIBQXc+nJcJlSBEnnbP1m7q5t2Z33ujSWoJss09y+9h2
-         WSbDcr28dzMtPPJ9JCoP6Qxo05QvXNn2llO86IqqlnS5aize8zNzo80bMhC0iWUfm3pJ
-         Tzeg==
+        d=redhat.com; s=google; t=1764946887; x=1765551687; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:to:date:from
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FfFYJwXyR60fbWNNYL0ZlNE7PC4PHOHPG5MSkL6eawY=;
+        b=F7nPnVKn9pPTSlX3nxQdEGojbVCOLrfcY3PzWKvogtGjQ6UXL1qKMLTcT0EObGPGFV
+         uVdQXZefWi1VsJCFF5jjOX+J6oMpnXbylG0b4Ee611h2pGdIhejvjxvrOG4c6INQUScB
+         vFoiBJFEjKhJovS5xpihEPUyUTAwDwNJgnXsep2tJQzT1H6kUAFPuMc4MVIn351TRYYK
+         AgRQ6iCXPgZ7ZBmDHnxesCEYkDQPxADinA9lHWA+ExCUIWcuR1zpwSikN8/6UKogmMpe
+         Oaz9GHNXKTJIGDP4d9R90u6Em/Roga4txzkpsjQctY4cclmQHq4aFeUlMqay3zvTGqcn
+         V9PQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764946898; x=1765551698;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
-        b=kn20C3Nq4SN692v3uThy7VxGxsp0kQD2btRLLdSW65yjVSCZNuQaqHMty3P2Gk/5mv
-         NxUl/IZrVol1KQwt046jGJSOOsoK2E8g05Cc2oQiSzc9WgJlkJXvXr0YDTfFKeywAqaR
-         gpY6JQlRPhj9KWTJaCkqMy6sAV0wYyJbrBvmXOrzAkvHvc8EbF604YxiArNSRM0mPczF
-         fGoTXtDJK5ZK2fQziptnjbOGcoat+m+93GluSvc++57/LSaaq5Bpd1vfFcB9kx/okwhY
-         noxc2pKJCJMa3F3DpLlbq5gtAsyi4AwENLWNcia78TkGjut5HhIXYb+R16XKNG/uRqyR
-         6omQ==
-X-Gm-Message-State: AOJu0YwsL/M/ZXihp9w5+uNRXOERhyR0E9tB1eVotrK9bIA9AOFfdhdu
-	qbzFGLSaUnATFE0dPINr5kA+X/ieWOinA4aCxVNE0C1QUbrrg5S2TYKKbL2cft554bt3rL/MmXk
-	gUIqk3Q0SxXdLDjBhiY7T1a7jpw7lS6iKfIdYlFJjz2j5TRDP27s4B9bWFrqhCS+jc8+jHgFQs7
-	V2F2B2LQMY2EuKeUiAUBJYbfKLhisNz1qPpumP/AByPump
-X-Gm-Gg: ASbGncu/sUBOtoOK84h1YjhhaPdB9E1/tSSVrFa0fA1PJndNXc4JNh77M3EiCNU3ruO
-	2OsUIYKmA8bgz50pSWNNOL5bmibhoKXVVnCf5ra25A8IZ7gn4wwfyZHvqHo0y75OQ3rbjHUHqg1
-	1RHQxE8pLdDD3QZe1WYZ1I78Pvoeg9xVvfPxnBV6EaAATVUp9qfR2xIKetEGU3ksfkLvi3no6+x
-	8sMpeV+mdNtI/FsI1pu0eHwAyH0/9tU1wbRQTcM1yAUAW4vbJWR8EKi6QrpYksCTp1IA+KPOQGk
-	R2eGj8WU+Ze2BSh0+5KskP+h2hIA57PqrDeCHKsX3v6yFZ+4iNfLXdYuxKsLnfFn6oU1IBszzo8
+        d=1e100.net; s=20230601; t=1764946887; x=1765551687;
+        h=content-disposition:mime-version:message-id:subject:to:date:from
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FfFYJwXyR60fbWNNYL0ZlNE7PC4PHOHPG5MSkL6eawY=;
+        b=v4exhk9wxq4bop9xp486naQdn1si4FJjIKRCfQjJ9C935NJvbqK2liTJof9/6RS7vb
+         DVKo4GYrZlqozm+tQ/OqNSKwJXC0zbIlT/d8ZztNPAqb3FSbUCO1TxcIds7x9LEIRKBG
+         gNCvyCebZodfxcJGlMU2Lo1htY2jqgBE6d9czKs4jUQuJEwcAdr0cRhGQapnn70Kl1xi
+         mNPxJh3dXw0uRvIBChbBxxBC6BlUU7YDT05Pv1rw1qOrQxl4VAZTifWvbYe42h2+Qcpq
+         MV1Kocu69AE5apJCVLyz/yBYUkfvXRYEXdid099+FO0n6Z0d2EZjqB7LyYVCDnKuf7Zo
+         BG1g==
+X-Gm-Message-State: AOJu0YyOSUo5FOhMVZ8tJaoTM1WLAcOPHA8BMgBqYYUMvhZWdMnFDaOQ
+	K4A3wx+4K3jYPK8uRXbFUhf6C+j9N2mRA+P2Nzp1i2ZeWbCoydo6wp/dcmqLOQDi786Bsm0YW+z
+	LNexB1ZNAh8lGp8DtS3c8d4CKwIbbdFQXuu/5WR6Bg7n5o5IE4fW3Rj1PrQmG1haoCStYsnyJ7L
+	xT1E/Y2XcpuZEKqqxI2n9Rgp3NBPr4bG+T/A13b0biBHd+
+X-Gm-Gg: ASbGncvLZiOfHu3UMIGKyu3Fnh6B2kj1Q9eUPRLGK+Y6b0enSO1sA2ONiogUMbhe8Nk
+	oFLUXGPp4DSE/Epjb6Yv6KDNpSSqRZnwJE5Z0m/p17qkiCtzw9rakbYAF1gCXwJSDDO3Hhp0PpF
+	f4Pxn3bSF2Iqbq0a51+dNO8Ig8xQ1bLyJ2Ps8+886kIsP1x1Ho6dVmAh/+WeIK+Agm13flAIEf1
+	VgRCW14ud0dFe/x9u8DsWi/tiyk3dD7M9Cj0IprEdOv1SaFSg0Ed+f5J1vifsKdQPeRF9QlvDd1
+	UbUPwKSaXvdSeqPWMKMDuWDFTCeDEOy5bLPTbit4uLftffBvV2C7rXu58JoDzShNkGwfUdl6G28
 	=
-X-Received: by 2002:a5d:5846:0:b0:42b:3366:632a with SMTP id ffacd0b85a97d-42f79854639mr7900809f8f.39.1764946897605;
-        Fri, 05 Dec 2025 07:01:37 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHOq7MwRUFwxhd3azs4mj6I55Tbgx0DKmoWeflEGWEKYH5Ay+Mjdb3kZ2Yr3isR+UWIpp3d7w==
-X-Received: by 2002:a5d:5846:0:b0:42b:3366:632a with SMTP id ffacd0b85a97d-42f79854639mr7900721f8f.39.1764946896819;
-        Fri, 05 Dec 2025 07:01:36 -0800 (PST)
+X-Received: by 2002:a05:600c:1c2a:b0:477:8985:4039 with SMTP id 5b1f17b1804b1-4792af1b697mr126327605e9.17.1764946887432;
+        Fri, 05 Dec 2025 07:01:27 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHbaYa8Ws9aKWeNVd+cpiYDo1+nqkFgQypqkQ2FTLkgTtmfxpx/ukBuB3zKTNBq6MNzRVEPfw==
+X-Received: by 2002:a05:600c:1c2a:b0:477:8985:4039 with SMTP id 5b1f17b1804b1-4792af1b697mr126326725e9.17.1764946886779;
+        Fri, 05 Dec 2025 07:01:26 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbe8fdcsm9290962f8f.6.2025.12.05.07.01.36
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4792b04e1c1sm60331165e9.5.2025.12.05.07.01.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 07:01:36 -0800 (PST)
+        Fri, 05 Dec 2025 07:01:26 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 5 Dec 2025 16:01:35 +0100
+Date: Fri, 5 Dec 2025 16:01:25 +0100
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
 	hch@lst.de, preichl@redhat.com
-Subject: [PATCH v2 2/33] xfs: remove deprecated sysctl knobs
-Message-ID: <puzvf44mor4sfwrjrs3hzwzrqbcatazo5otyjtud4uqqj6aczt@f46eq5wthvdk>
-References: <cover.1764946339.patch-series@thinky>
+Subject: [PATCH v2 0/34] xfsprogs: libxfs sync v6.18
+Message-ID: <cover.1764946339.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -93,44 +91,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1764946339.patch-series@thinky>
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Source kernel commit: 21d59d00221e4ecbcb597eec0021c667477d3335
+This is libxfs sync for v6.18. A lot of typedef cleanups mostly.
 
-These sysctl knobs were scheduled for removal in September 2025.  That
-time has come, so remove them.
+I replaced removed typedefs throughout xfsprogs and adjusted formating a
+bit around these changes, and updated XFS_TEST_ERROR() macro in the
+original commit to ignore expr argument. Nothing else changed.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- libxfs/xfs_inode_util.c | 11 -----------
- 1 file changed, 0 insertions(+), 11 deletions(-)
+v2:
+- Moved all newly added "convert ... typedef to struct" before typedef
+  removal commits
+- Remove some retabs to not interfere with futher typedef cleanups
 
-diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-index 2a7988d774..85d4af41d5 100644
---- a/libxfs/xfs_inode_util.c
-+++ b/libxfs/xfs_inode_util.c
-@@ -296,17 +296,6 @@
- 		} else {
- 			inode_init_owner(args->idmap, inode, dir, args->mode);
- 		}
--
--		/*
--		 * If the group ID of the new file does not match the effective
--		 * group ID or one of the supplementary group IDs, the S_ISGID
--		 * bit is cleared (and only if the irix_sgid_inherit
--		 * compatibility variable is set).
--		 */
--		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
--		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
--			inode->i_mode &= ~S_ISGID;
--
- 		ip->i_projid = xfs_get_initial_prid(pip);
- 	}
- 
+Andrey Albershteyn <aalbersh@kernel.org>:
+  xfs: remove deprecated mount options
+  xfs: remove deprecated sysctl knobs
+  xfs: convert xfs_buf_log_format_t typedef to struct
+  xfs: convert xlog_op_header_t typedef to struct
+  xfs: convert xfs_trans_header_t typdef to struct
+  xfs: convert xfs_log_iovec_t typedef to struct
+  xfs: convert xfs_qoff_logformat_t typedef to struct
+  xfs: convert xfs_dq_logformat_t typedef to struct
+  xfs: convert xfs_efi_log_format typedef to struct
+  xfs: convert xfs_efd_log_format_t typedef to struct
+  xfs: convert xfs_efi_log_format_32_t typedef to struct
+  xfs: convert xfs_extent_t typedef to struct
+  xfs: convert xfs_efi_log_format_64_t typedef to struct
+  xfs: remove the xlog_op_header_t typedef
+  xfs: remove the xfs_trans_header_t typedef
+  xfs: remove the xfs_extent_t typedef
+  xfs: remove the xfs_extent32_t typedef
+  xfs: remove the xfs_extent64_t typedef
+  xfs: remove the xfs_efi_log_format_t typedef
+  xfs: remove the xfs_efi_log_format_32_t typedef
+  xfs: remove the xfs_efi_log_format_64_t typedef
+  xfs: remove the xfs_efd_log_format_t typedef
+  xfs: remove the unused xfs_efd_log_format_32_t typedef
+  xfs: remove the unused xfs_efd_log_format_64_t typedef
+  xfs: remove the unused xfs_buf_log_format_t typedef
+  xfs: remove the unused xfs_dq_logformat_t typedef
+  xfs: remove the unused xfs_qoff_logformat_t typedef
+  xfs: remove the unused xfs_log_iovec_t typedef
+  xfs: fix log CRC mismatches between i386 and other architectures
+  xfs: move the XLOG_REG_ constants out of xfs_log_format.h
+  xfs: remove the expr argument to XFS_TEST_ERROR
+  xfs: improve default maximum number of open zones
+  xfs: prevent gc from picking the same zone twice
+
+Diffstat:
+  include/xfs_trans.h       |   2 +-
+  libxfs/defer_item.c       |   2 +-
+  libxfs/libxfs_priv.h      |   2 +-
+  libxfs/rdwr.c             |   4 ++--
+  libxfs/util.c             |  10 +++++-----
+  libxfs/xfs_ag_resv.c      |   7 +++----
+  libxfs/xfs_alloc.c        |   5 ++---
+  libxfs/xfs_attr_leaf.c    |  25 ++++++-------------------
+  libxfs/xfs_bmap.c         |  31 +++++++++++--------------------
+  libxfs/xfs_btree.c        |   2 +-
+  libxfs/xfs_da_btree.c     |   2 +-
+  libxfs/xfs_dir2.c         |   2 +-
+  libxfs/xfs_exchmaps.c     |   4 ++--
+  libxfs/xfs_ialloc.c       |   6 +++---
+  libxfs/xfs_inode_buf.c    |   4 ++--
+  libxfs/xfs_inode_fork.c   |   3 +--
+  libxfs/xfs_inode_util.c   |  11 -----------
+  libxfs/xfs_log_format.h   | 150 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--------------------------------------------------------------------------------
+  libxfs/xfs_log_recover.h  |   2 +-
+  libxfs/xfs_metafile.c     |   2 +-
+  libxfs/xfs_ondisk.h       |   2 ++
+  libxfs/xfs_refcount.c     |   7 +++----
+  libxfs/xfs_rmap.c         |   2 +-
+  libxfs/xfs_rtbitmap.c     |   2 +-
+  libxfs/xfs_rtgroup.h      |   6 ++++++
+  libxfs/xfs_sb.c           |   9 +++------
+  libxfs/xfs_zones.h        |   7 +++++++
+  libxlog/xfs_log_recover.c |  20 ++++++++++----------
+  logprint/log_print_all.c  |  14 +++++++-------
+  logprint/log_redo.c       |  89 +++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------
+  logprint/logprint.h       |   2 +-
+  31 files changed, 203 insertions(+), 233 deletions(-)
 
 -- 
 - Andrey
