@@ -1,147 +1,137 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4B02F0C48
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 14:33:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC9530595B
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:01:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764945214; cv=none; b=bivf5D6HkoYMoCXfxIitGrgj/w1bX+RdZxjxsLTY555blo4M2xJepjxYq94504pC3CwHVx5VDxqaiLWiRdpOgW+Eak+rHFw7DkhUS+nqVGXgioM0/dVaTYRMRLdxVIWyRTU7xVWr+6fHbVeya9GKa1D9vAY4/6Qir6pP08O8rXc=
+	t=1764946910; cv=none; b=u0gDX2Uo9R36FNInEcF0HbN6kJBWPcSLAEPChZUoe0KZW1g9W/LcWwxBKSj94d3JvTxHO+OXVsoPIo8vxl4fDuIPanhsgeRGa96JsaWixFeLCd2a0JRWB84eOINJSssTWIfZKuymYknffsUVoSoHi2VK/2LBkzZoeBIo8Ry8WEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764945214; c=relaxed/simple;
-	bh=cBX2Dfe8+w0KhWNzJXHFLGerpFC0sx5Ws8pQaHRsu7s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dn0HvuYp7Qcihhz/2iL9ZAEErAjlP7UCCsNSEAl7NEpsHRM4JGIj1yIcqEZ5jUx8dNjEMxwlHv4HbYxD3Mld57OFPbf63/Dc9ETZZxmH6QV+HLAM6H8FN0wQFGP/gJQqN57aK09Jbue0YjTg41yi4uY9mWrmhCPb83HvwCqTp+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GidbRiyW; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=oyCEAtvs; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1764946910; c=relaxed/simple;
+	bh=W6LYl/ClOgnfGA2SoeKv0w5/4i3UBSi70YUs3pfb788=;
+	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M5hTyY16PRMpG3zbWTCpknJoZyr83pClDUYpK9UAeTnbpHUaTmvbw++Rq6Ki2J3MD5wjablWFi4WAIQGoqM01DA3tnnjqDz/MGCepXRxX66yvaoFzz3kbZORRVdGjcKeh2x55nAqXtWbEdzRTa3fDs7v52ww603iWS/dM/OA+Gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SpGDsT/u; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=BABWmRak; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GidbRiyW";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="oyCEAtvs"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SpGDsT/u";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="BABWmRak"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764945207;
+	s=mimecast20190719; t=1764946901;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=46sfcgBm/v2MHE7c+9yQUdlqktAkzr+1+1VVFVNVbyM=;
-	b=GidbRiyWcz5Rc58H12Qevn7HVSiJRtxGzIl02qpYWSf4OqliIxHtXNzTcbDcj5f84q2icu
-	v52GXcew1ih7BBTYYjzS6azeLHbqZoyzi7wMYYvAocgiwtg2ndCuEOnY4TVpQuN/ok9P/L
-	hqBBkUoIQy4nGIP9xliWBUbpaievtvk=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
+	b=SpGDsT/udvzh6IYJ1S9xclxmjUxJm95IWpVWKLnOOCasJIO0dwKF6gGT1cb6jFl7MFbJfn
+	kH9Rq08x6chiEgVv0wfQVMGwlLjXltotPoDbbarp6xKe8KDEmJnkidIcCT2EvGxkCNnO9b
+	MaQqNyfd+unNQO4MhF76BzP29DsH050=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-176-BKWRaiQqMLy0xvzM1OC_ng-1; Fri, 05 Dec 2025 09:33:26 -0500
-X-MC-Unique: BKWRaiQqMLy0xvzM1OC_ng-1
-X-Mimecast-MFC-AGG-ID: BKWRaiQqMLy0xvzM1OC_ng_1764945205
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-42e2e2389aeso1183348f8f.1
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 06:33:26 -0800 (PST)
+ us-mta-297-VVHLsn1mPoCNSbsUW6-4QA-1; Fri, 05 Dec 2025 10:01:40 -0500
+X-MC-Unique: VVHLsn1mPoCNSbsUW6-4QA-1
+X-Mimecast-MFC-AGG-ID: VVHLsn1mPoCNSbsUW6-4QA_1764946898
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-42b3086a055so2077770f8f.3
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764945205; x=1765550005; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=46sfcgBm/v2MHE7c+9yQUdlqktAkzr+1+1VVFVNVbyM=;
-        b=oyCEAtvsJayw+SPI87wm0qXsQ+vzxoVO1UN1fyv+pOAvWJUUH/LHTOHHvrcN0XG+AU
-         GHrY0LqteB/WWhTWOL1ar9O0H5g96AbfHbXAzzvNrTzMoPUMV1QkR392Z6MQLAEDUXmx
-         iYTz6gmM4If2+x/Jms6XjywlOqBw7rfNins/bpBWHB9PlNIt8YB6hh0a1V83BMe93DSC
-         XALLgnpcyLJuNmClwBz5zNGWznS5LLFVDu+O34xInBoe7gY6ad8NU/m472xxsM+bHqi7
-         v+H6C/PL0BCrbvYM0CQjxxWd+0tuvLAyj6kKiC7AqG91rRKfBJ+9kMw1B2EJZ2n/D1BT
-         o7BQ==
+        d=redhat.com; s=google; t=1764946898; x=1765551698; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
+        b=BABWmRakzqzEHoLO9H2LLIEqEyt+YQ4TBdcz/jr3gNDzBQj5av9DyDDBGvjzUynXJu
+         4b8NA6XuDdiC2H2aZvHy1rnYiYQbQc0EM6x6BjXDBAExkT2pmDwp2MgqMBZP7hvx3hTO
+         0HWTGueJhAmYU87GYB0LLKIg3bnz4UWFX+EkSi5vzEmA3k1SL6G12EjPQQJL8Ad04len
+         +l/U7FkJhECFIoKAnluKDWYmAIBQXc+nJcJlSBEnnbP1m7q5t2Z33ujSWoJss09y+9h2
+         WSbDcr28dzMtPPJ9JCoP6Qxo05QvXNn2llO86IqqlnS5aize8zNzo80bMhC0iWUfm3pJ
+         Tzeg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764945205; x=1765550005;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=46sfcgBm/v2MHE7c+9yQUdlqktAkzr+1+1VVFVNVbyM=;
-        b=daTjxQPLG8Pq5bvpdNu3I/DKnuA+gd9xXD7ucMXl5js3Mv9MKMf5EWIkbz//9k0JwD
-         ZsW00PeuC0I4ajt6+T7IbbzB2hA0N1x8R2/O1lnf+GKwA0ra5W1R/Qx4Lz8RAcSQOSUu
-         TlZ4EvlFt4sZSB5K4eNZP3tSz5qG9P2eIhqtTJU8LtxePh6APAB6EMvVhGuVxrGR7Luh
-         lC/yxXDKFIRXoVZyh9Z+9TcApk8BnKgXWAUjPyoKRDIvxlJtbKxB/rEgsir36L70Zj0I
-         5MTtCdAsdrGTAAKrdOcVcpJFLT1aM4X1pPKjmJXwFMHSBYhG+4ANbxatuOXI/FpXkocR
-         uXWQ==
-X-Gm-Message-State: AOJu0YwGN6DDp8Q84qWo/skia7PNSTTB/YurSo1MeBFK9j8BTN727L0k
-	QOeA6ANU5VOTZEqd1DkCcwz27tAWozHqR+Q3QKFO+er+FD43qFDKGWmwcFbZ6fPEilwsis3fxKd
-	wlqcGJ/SvEdFIVJgQj0tVbE8hUbZ9DOyafRr6EHiXM3T8ypRiwSRiWMv/qPHB/b/IW83J6Hkczo
-	7C9yxQl7br/L3gFxQrOsq9viqTiPlF0m1yMZGFkXevWJLf
-X-Gm-Gg: ASbGncug4YPL8tyqFll5M4l80G3YWCqOo/nnUYU8JfC7GtqBGnT18/hGo+aOOx3+MhZ
-	ilLNVWsZUmRR8CsUhinZRoXnbjUg5KJzsBI2tBUql3NoiNsxGDAMDIHEr50KRGqgMa8nC8qpDhV
-	rAOqVd0tetYVrW1xV7hBBbbuRSD5Kjetspbf1seIqkV5EBXVRiRFElz3MmtEmkKF90FmKWd+u7k
-	hAcvGwXxox0HPybmz55WEXDnzNWmwXvtweDRFxY/rF1Jvaz5cakqbNcrx36qrHKDnPohsEiOwOt
-	O+yqpobsp5EdQYIyIRGDYdX+eWpgTNnix98QDffGFpT66pczYNVWjbZKIIOwqISuTeml/gXOVM5
-	nTbmmcFpotpCCjT5Cx9VkMcs=
-X-Received: by 2002:a5d:5d87:0:b0:42b:2b07:8630 with SMTP id ffacd0b85a97d-42f731a5541mr10913559f8f.31.1764945204657;
-        Fri, 05 Dec 2025 06:33:24 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF1m+Wfi1YCJ7yMF6ZTRvIaIHLzPZjg1tnU5ADHU5sDDUm11aiEGIn/N/QBPZ4yIrR2AdDUng==
-X-Received: by 2002:a5d:5d87:0:b0:42b:2b07:8630 with SMTP id ffacd0b85a97d-42f731a5541mr10913509f8f.31.1764945203901;
-        Fri, 05 Dec 2025 06:33:23 -0800 (PST)
-Received: from thinky.door.alberand.com ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbe8a7bsm9078733f8f.4.2025.12.05.06.33.23
+        d=1e100.net; s=20230601; t=1764946898; x=1765551698;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=oF37ATwdoYAwLqRZkqLFYSkCSkROHaEUWhLnsJiIeVU=;
+        b=kn20C3Nq4SN692v3uThy7VxGxsp0kQD2btRLLdSW65yjVSCZNuQaqHMty3P2Gk/5mv
+         NxUl/IZrVol1KQwt046jGJSOOsoK2E8g05Cc2oQiSzc9WgJlkJXvXr0YDTfFKeywAqaR
+         gpY6JQlRPhj9KWTJaCkqMy6sAV0wYyJbrBvmXOrzAkvHvc8EbF604YxiArNSRM0mPczF
+         fGoTXtDJK5ZK2fQziptnjbOGcoat+m+93GluSvc++57/LSaaq5Bpd1vfFcB9kx/okwhY
+         noxc2pKJCJMa3F3DpLlbq5gtAsyi4AwENLWNcia78TkGjut5HhIXYb+R16XKNG/uRqyR
+         6omQ==
+X-Gm-Message-State: AOJu0YwsL/M/ZXihp9w5+uNRXOERhyR0E9tB1eVotrK9bIA9AOFfdhdu
+	qbzFGLSaUnATFE0dPINr5kA+X/ieWOinA4aCxVNE0C1QUbrrg5S2TYKKbL2cft554bt3rL/MmXk
+	gUIqk3Q0SxXdLDjBhiY7T1a7jpw7lS6iKfIdYlFJjz2j5TRDP27s4B9bWFrqhCS+jc8+jHgFQs7
+	V2F2B2LQMY2EuKeUiAUBJYbfKLhisNz1qPpumP/AByPump
+X-Gm-Gg: ASbGncu/sUBOtoOK84h1YjhhaPdB9E1/tSSVrFa0fA1PJndNXc4JNh77M3EiCNU3ruO
+	2OsUIYKmA8bgz50pSWNNOL5bmibhoKXVVnCf5ra25A8IZ7gn4wwfyZHvqHo0y75OQ3rbjHUHqg1
+	1RHQxE8pLdDD3QZe1WYZ1I78Pvoeg9xVvfPxnBV6EaAATVUp9qfR2xIKetEGU3ksfkLvi3no6+x
+	8sMpeV+mdNtI/FsI1pu0eHwAyH0/9tU1wbRQTcM1yAUAW4vbJWR8EKi6QrpYksCTp1IA+KPOQGk
+	R2eGj8WU+Ze2BSh0+5KskP+h2hIA57PqrDeCHKsX3v6yFZ+4iNfLXdYuxKsLnfFn6oU1IBszzo8
+	=
+X-Received: by 2002:a5d:5846:0:b0:42b:3366:632a with SMTP id ffacd0b85a97d-42f79854639mr7900809f8f.39.1764946897605;
+        Fri, 05 Dec 2025 07:01:37 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHOq7MwRUFwxhd3azs4mj6I55Tbgx0DKmoWeflEGWEKYH5Ay+Mjdb3kZ2Yr3isR+UWIpp3d7w==
+X-Received: by 2002:a5d:5846:0:b0:42b:3366:632a with SMTP id ffacd0b85a97d-42f79854639mr7900721f8f.39.1764946896819;
+        Fri, 05 Dec 2025 07:01:36 -0800 (PST)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbe8fdcsm9290962f8f.6.2025.12.05.07.01.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 06:33:23 -0800 (PST)
+        Fri, 05 Dec 2025 07:01:36 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH] libfrog: fix incorrect FS_IOC_FSSETXATTR argument to ioctl()
-Date: Fri,  5 Dec 2025 15:31:48 +0100
-Message-ID: <20251205143154.366055-2-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.50.1
+Date: Fri, 5 Dec 2025 16:01:35 +0100
+To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
+	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
+	hch@lst.de, preichl@redhat.com
+Subject: [PATCH v2 2/33] xfs: remove deprecated sysctl knobs
+Message-ID: <puzvf44mor4sfwrjrs3hzwzrqbcatazo5otyjtud4uqqj6aczt@f46eq5wthvdk>
+References: <cover.1764946339.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1764946339.patch-series@thinky>
 
-From: Arkadiusz Miśkiewicz <arekm@maven.pl>
+From: Darrick J. Wong <djwong@kernel.org>
 
-xfsprogs 6.17.0 has broken project quota due to incorrect argument
-passed to FS_IOC_FSSETXATTR ioctl(). Instead of passing struct fsxattr,
-struct file_attr was passed.
+Source kernel commit: 21d59d00221e4ecbcb597eec0021c667477d3335
 
-# LC_ALL=C /usr/sbin/xfs_quota -x -c "project -s -p /home/xxx 389701" /home
-Setting up project 389701 (path /home/xxx)...
-xfs_quota: cannot set project on /home/xxx: Invalid argument
-Processed 1 (/etc/projects and cmdline) paths for project 389701 with
-recursion depth infinite (-1).
+These sysctl knobs were scheduled for removal in September 2025.  That
+time has come, so remove them.
 
-ioctl(5, FS_IOC_FSSETXATTR, {fsx_xflags=FS_XFLAG_PROJINHERIT|FS_XFLAG_HASATTR, fsx_extsize=0, fsx_projid=0, fsx_cowextsize=389701}) = -1 EINVAL (Invalid argument)
-
-There seems to be a double mistake which hides the original ioctl()
-argument bug on old kernel with xfsprogs built against it. The size of
-fa_xflags was also wrong in xfsprogs's linux.h header. This way when
-xfsprogs is compiled on newer kernel but used with older kernel this bug
-uncovers.
-
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- include/linux.h     | 2 +-
- libfrog/file_attr.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ libxfs/xfs_inode_util.c | 11 -----------
+ 1 file changed, 0 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux.h b/include/linux.h
-index cea468d2b9..3ea9016272 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -214,7 +214,7 @@
-  * fsxattr
-  */
- struct file_attr {
--	__u32	fa_xflags;
-+	__u64	fa_xflags;
- 	__u32	fa_extsize;
- 	__u32	fa_nextents;
- 	__u32	fa_projid;
-diff --git a/libfrog/file_attr.c b/libfrog/file_attr.c
-index c2cbcb4e14..6801c54588 100644
---- a/libfrog/file_attr.c
-+++ b/libfrog/file_attr.c
-@@ -114,7 +114,7 @@
+diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
+index 2a7988d774..85d4af41d5 100644
+--- a/libxfs/xfs_inode_util.c
++++ b/libxfs/xfs_inode_util.c
+@@ -296,17 +296,6 @@
+ 		} else {
+ 			inode_init_owner(args->idmap, inode, dir, args->mode);
+ 		}
+-
+-		/*
+-		 * If the group ID of the new file does not match the effective
+-		 * group ID or one of the supplementary group IDs, the S_ISGID
+-		 * bit is cleared (and only if the irix_sgid_inherit
+-		 * compatibility variable is set).
+-		 */
+-		if (irix_sgid_inherit && (inode->i_mode & S_ISGID) &&
+-		    !vfsgid_in_group_p(i_gid_into_vfsgid(args->idmap, inode)))
+-			inode->i_mode &= ~S_ISGID;
+-
+ 		ip->i_projid = xfs_get_initial_prid(pip);
+ 	}
  
- 	file_attr_to_fsxattr(fa, &fsxa);
- 
--	error = ioctl(fd, FS_IOC_FSSETXATTR, fa);
-+	error = ioctl(fd, FS_IOC_FSSETXATTR, &fsxa);
- 	close(fd);
- 
- 	return error;
+
+-- 
+- Andrey
 
