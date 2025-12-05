@@ -1,39 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D95F319860
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 12:37:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B12F3148DB;
+	Fri,  5 Dec 2025 13:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764938264; cv=none; b=FgRa3mzG70mTuCNdT4RNQu3pCBBv9fRlLkzQ6dLoPaOJUX6vykXRW8ZTL5RywGP57vLMT5uh1oh4PDgvxxOVZhZ26r7WAr/MyPAyP12/1d/bmPOMD7feo9eAo5mWCIZkHFZn7zpiOKWAJrEmrfKLUM+ERkpHw+QrhtuoZIwY2F0=
+	t=1764940194; cv=none; b=QsfBP2oXtSZEnVdCG0YMIpiA3UAgB2+TZVbuksQwGnAbKC/9HrrrEtGLJ3PemECNC0LrNYiqWHNbC4SDj23TYuN6jojTtXJXBtBIV59SJ+uk1QuCvi0gkkwjiq0lA1Ce2Mi68jUPPKL8kjiC7hf7bxE6dtlgkiujMgTOx/eDmBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764938264; c=relaxed/simple;
-	bh=vSRUqDGj3C5m35z4OVNmPkrTdccl/ybmdLyNVQEMp6g=;
+	s=arc-20240116; t=1764940194; c=relaxed/simple;
+	bh=9RNU4p5uFmDusX++mA9qmxru388NNiGnDSKeKxa8cHs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qISVaERh0o5JLfmMuKdbn5r/jOhlSlh55pcRiYXhKmF3S+nI8DAi6EyjEYLhtIqYPYliWywTvnz6J5ss2u5sh33CXrqV2l6QZl6KSSGoVdmX0a50ERvdfzK+9ehVlNDBsFq+p9m2JDv/SEQWBOLWo+0amC7gESN/3gFrJltcdMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mQeMXhVh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=D9NCZ3LdpuqatC6fKbTGAwg9KmBcquD3z7708KBbL8DGMn+3Hxjdso51MeoxM03HysNXHu3XNCaE7969SRSl28s6g90YG7z70kOaUqdZiplvFxDxvc6+vMTfCSjGQfDKizlJEoLLW3CwXkpfret2Mpc35mp7RBQPAY9MxmDBTjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M6blm17K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mQeMXhVh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DEE2C113D0;
-	Fri,  5 Dec 2025 12:37:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M6blm17K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5E58C4CEF1;
+	Fri,  5 Dec 2025 13:09:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764938263;
-	bh=vSRUqDGj3C5m35z4OVNmPkrTdccl/ybmdLyNVQEMp6g=;
+	s=k20201202; t=1764940192;
+	bh=9RNU4p5uFmDusX++mA9qmxru388NNiGnDSKeKxa8cHs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mQeMXhVhEOT6LHxCgkxpcSS+y5jBkvShkz1IHWRRq8U75i40Bxbhq1h8ZhNTpC3OM
-	 pZv26QYVuCLvZ/SsWT+ksXOnoImOSqGAdr47evqS2WK8yzV8ecB0jtUUIhTiZ4sgVI
-	 IBe82+eUnz2JXmUVmNz6QdqdocTF1D+73e4YZ3u+MrJ8zcIRjqHuZyHbAfj5ZsZG+U
-	 NYHzHAhZdBBB88pz6rfjdvgRlcglLczJKi5V1g76eBt4tZL5i8I85LsKh/6DYRZokP
-	 enn98FMKDWFw160EOn+57xOv4YI0iH868N6Aa4Ok8GgJhtY2/AwhegbWV0PBB51dKD
-	 odcFJr0sYD6dA==
-Date: Fri, 5 Dec 2025 13:37:39 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix stupid compiler warning
-Message-ID: <cnnktwv253eglupmgrl5ywmc5tqf5pookssb7vfr2kiz432u2q@qr6ger4o3vj5>
-References: <Khc6xOetpuN9dzi_PRxPss-T6HOWuFeASPJz6c_HH-WpdNt2jmHRGSStcQp5-bVTxhzrcz4OYSMOr5phJDh9Ng==@protonmail.internalid>
- <20251204214415.GN89472@frogsfrogsfrogs>
+	b=M6blm17KY/7Fq4E/y+hGFEVsLYFddZCYcUxIBMzoPfppxfvFklHuno+W5dLVHbLyU
+	 w2jwooxrs+UVERpIVLszZHqL8Ehl2H1cjiNIE3120zTvz03YpYRpaTeqOkLaINb/nb
+	 zuErmpPjOVfOjq2IQ2/soZP8Vdopaynk4/ICCE3cnwdaEHJy6HejOOPNUOMxSc74Yw
+	 ZPD0ECuy7uAqjgJeho3o8qTmC7FN+47xrgd02l8E2C+BxMzHiQf/qgbHuZFjALtAYT
+	 pnfnQsV5rOHOvHXwVprjTt2IuqljVra8/M62hXIPRouHbjdqZataGSgGdRwLlo5TtA
+	 cbn/WwSlmrBMg==
+Date: Fri, 5 Dec 2025 14:09:41 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Amir Goldstein <amir73il@gmail.com>, 
+	NeilBrown <neil@brown.name>, Val Packett <val@packett.cool>, Jan Kara <jack@suse.cz>, 
+	linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>, 
+	David Sterba <dsterba@suse.com>, David Howells <dhowells@redhat.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>, 
+	Chuck Lever <chuck.lever@oracle.com>, Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
+	Carlos Maiolino <cem@kernel.org>, John Johansen <john.johansen@canonical.com>, 
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Stefan Berger <stefanb@linux.ibm.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev, 
+	ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org
+Subject: Re: [PATCH] fuse: fix conversion of fuse_reverse_inval_entry() to
+ start_removing()
+Message-ID: <20251205-unmoralisch-jahrtausend-cca02ad0e4fa@brauner>
+References: <20251113002050.676694-1-neilb@ownmail.net>
+ <20251113002050.676694-7-neilb@ownmail.net>
+ <6713ea38-b583-4c86-b74a-bea55652851d@packett.cool>
+ <176454037897.634289.3566631742434963788@noble.neil.brown.name>
+ <CAOQ4uxjihcBxJzckbJis8hGcWO61QKhiqeGH+hDkTUkDhu23Ww@mail.gmail.com>
+ <20251201083324.GA3538@ZenIV>
+ <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,48 +65,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251204214415.GN89472@frogsfrogsfrogs>
+In-Reply-To: <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
 
-On Thu, Dec 04, 2025 at 01:44:15PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Dec 01, 2025 at 03:03:08PM +0100, Miklos Szeredi wrote:
+> On Mon, 1 Dec 2025 at 09:33, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> >
+> > On Mon, Dec 01, 2025 at 09:22:54AM +0100, Amir Goldstein wrote:
+> >
+> > > I don't think there is a point in optimizing parallel dir operations
+> > > with FUSE server cache invalidation, but maybe I am missing
+> > > something.
+> >
+> > The interesting part is the expected semantics of operation;
+> > d_invalidate() side definitely doesn't need any of that cruft,
+> > but I would really like to understand what that function
+> > is supposed to do.
+> >
+> > Miklos, could you post a brain dump on that?
 > 
-> gcc 14.2 warns about:
+> This function is supposed to invalidate a dentry due to remote changes
+> (FUSE_NOTIFY_INVAL_ENTRY).  Originally it was supplied a parent ID and
+> a name and called d_invalidate() on the looked up dentry.
 > 
-> xfs_attr_item.c: In function ‘xfs_attr_recover_work’:
-> xfs_attr_item.c:785:9: warning: ‘ip’ may be used uninitialized [-Wmaybe-uninitialized]
->   785 |         xfs_trans_ijoin(tp, ip, 0);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~
-> xfs_attr_item.c:740:42: note: ‘ip’ was declared here
->   740 |         struct xfs_inode                *ip;
->       |                                          ^~
+> Then it grew a variant (FUSE_NOTIFY_DELETE) that was also supplied a
+> child ID, which was matched against the looked up inode.  This was
+> commit 451d0f599934 ("FUSE: Notifying the kernel of deletion."),
+> Apparently this worked around the fact that at that time
+> d_invalidate() returned -EBUSY if the target was still in use and
+> didn't unhash the dentry in that case.
 > 
-> I think this is bogus since xfs_attri_recover_work either returns a real
-> pointer having initialized ip or an ERR_PTR having not touched it, but
-> the tools are smarter than me so let's just null-init the variable
-> anyway.
+> That was later changed by commit bafc9b754f75 ("vfs: More precise
+> tests in d_invalidate") to unconditionally unhash the target, which
+> effectively made FUSE_NOTIFY_INVAL_ENTRY and FUSE_NOTIFY_DELETE
+> equivalent and the code in question unnecessary.
 > 
-> Cc: <stable@vger.kernel.org> # v6.8
-> Fixes: e70fb328d52772 ("xfs: recreate work items when recovering intent items")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_attr_item.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> For the future, we could also introduce FUSE_NOTIFY_MOVE, that would
+> differentiate between a delete and a move, while
+> FUSE_NOTIFY_INVAL_ENTRY would continue to be the common (deleted or
+> moved) notification.
 > 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index c3a593319bee71..e8fa326ac995bc 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -737,7 +737,7 @@ xfs_attr_recover_work(
->  	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
->  	struct xfs_attr_intent		*attr;
->  	struct xfs_mount		*mp = lip->li_log->l_mp;
-> -	struct xfs_inode		*ip;
-> +	struct xfs_inode		*ip = NULL;
->  	struct xfs_da_args		*args;
->  	struct xfs_trans		*tp;
->  	struct xfs_trans_res		resv;
+> Attaching untested patch to remove this cruft.
 
-Looks good
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Should we revert the fuse specific bits of c9ba789dad15 ("VFS: introduce
+start_creating_noperm() and start_removing_noperm()") and then apply
+your changes afterwards?
