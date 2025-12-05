@@ -1,90 +1,89 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC3A2E0938
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DFB217C77
 	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:02:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764946962; cv=none; b=YlwMlsnEezfX9uaKGSPVf96qBVk6uoXzuZmA/nMl4Lp6CUEhQruQD/B/4jKx5dEVAZFsXXvIm2mHvskpHItueOxmV7TM8CY1qOvzAP2CuMYdgl9UDCFQ3DHiOdNItfGcyGloZ0jFI/Qma1j3wFsJe1Rbraggn80SKa3LRwgfkgs=
+	t=1764946962; cv=none; b=MoZ8H8wno+8F3rrZdpg6TTeZxgp0pTk1ilPaHn0yqLTO3YXkT4b+rYQP6oeccQxOcKte0NiE++NtnPenIo9MZaMGPsacSzmUxm141qvKj3ZVLUQaFjKMXbHeNrWaz3GvrwLQfz2swyAoX8BOB+akFpycjyakeHXiTciDB67AahM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1764946962; c=relaxed/simple;
-	bh=5aUbd8uf5XjYJM70XH6qz2dvQ+Jvc2K0PjqtK53wIPE=;
+	bh=7jzFRfVs3JHds9sFjDq/pICjKV2QinhYbNIykzoOTwA=;
 	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j7/rUwXFNlNUj5GxZ/zXycF04P6ofutZwDi73kdCWMTYKAG3GBNlDhCLVEVMM6+VSz390ALHGO0BgnMQlx9l2lM9eqTwUNPClmsI0+HMv8oTpPf9Zik5d8pBBME+hxwwAFqPiTG2MmJmP2/5KD9o4FCi0RXnJU+kn0bmn6GXKf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dgvjLpZv; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ht5IGyI+; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=t/lzchT2o77MbHiFaNz6swPrRtAwlETCIFluGfvh6cNIMlPJSwJ8K+o3rMTlEFPesacb3xXLqRcqidoehYfid6+j0ymIh5ZZ4UHs7J+ASnXfjdHsR9gC4uFW+gOByjEuzS+Dq812J5eLMePXCbISBUyCc4HIw8OC//w2HcGGF7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XAs5qn5K; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=hWn/L9xH; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dgvjLpZv";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ht5IGyI+"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XAs5qn5K";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="hWn/L9xH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764946956;
+	s=mimecast20190719; t=1764946957;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=efZRdx4ZQLXz3OLC++pAwrom0TtNXp7VSb4ff7FmP+w=;
-	b=dgvjLpZvOiaGwka+w0eZbqcf6WAX/vTFOtJnaJri/IcvzI9qFLzcv4Sh0i8JKXCdii/UwE
-	oAH4pO7dZnd5uGF7mYDv0+gllJMxSoyRMy9sUgU1PjrVstRILTD8aAxgYxPYEeU+s6yB+h
-	NbKpayHP3cILqXfe6CxTmqqBoI4e/7k=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=XkRDtY6pvQ3qJ9XWvbvb76SJ9q5MbCo6ppVxJHYsJpM=;
+	b=XAs5qn5KZkIdkjaj0yPwQ7ySpRP6tg+NBLyJwpFcQIpcSbpfhGxqm+h6NphcsFu6jsJrLQ
+	mBt+dVzwFOeNpaOBWdT1feJTgR/yzy69DlSYDp2w8H0b4b8LkeEVFRLyGqSBokHBpm8lUy
+	EVOlGWkL8aEWWzBAw9e86ugKfPDEkbQ=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-90-to92zpTCM2iBDE9Cm8mD7w-1; Fri, 05 Dec 2025 10:02:30 -0500
-X-MC-Unique: to92zpTCM2iBDE9Cm8mD7w-1
-X-Mimecast-MFC-AGG-ID: to92zpTCM2iBDE9Cm8mD7w_1764946949
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4775f51ce36so17741035e9.1
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:02:30 -0800 (PST)
+ us-mta-614-nC_WYD7dP6-QeyGD27YDAQ-1; Fri, 05 Dec 2025 10:02:36 -0500
+X-MC-Unique: nC_WYD7dP6-QeyGD27YDAQ-1
+X-Mimecast-MFC-AGG-ID: nC_WYD7dP6-QeyGD27YDAQ_1764946955
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-42b478551a6so1208706f8f.1
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:02:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764946949; x=1765551749; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1764946954; x=1765551754; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=efZRdx4ZQLXz3OLC++pAwrom0TtNXp7VSb4ff7FmP+w=;
-        b=Ht5IGyI+xpjBtRtSueVzAeKKtmE2FruC0olzfmnHxOalE4R2zBq1o/ovgxFL4G1DVH
-         wEbUl4lR+sMllGgv7xVMmPau0A8+QEM+rJpQ2PyHfg7blS80XmBRtqYdlXj/eb+wO7sp
-         t6UHPCp9iVqdTBGN2u4IOhGBF/w7BP181Rlv0/fX8i5iZxoiBYan74mgHuDGRsexvYYk
-         vXCwfMRMk8qGrYwMOkYKaQHKMtu7k+pqV+qJ/IgH+apGAAsDtAHXgXHvgGqBamRpmDnB
-         aIZa9QLRWvHJ/Ih69TOjgpLoqXS1aqlD0u6wU5j+RmTJm8EIwOIjgtGGvRQ5wmp01gcV
-         J/4A==
+        bh=XkRDtY6pvQ3qJ9XWvbvb76SJ9q5MbCo6ppVxJHYsJpM=;
+        b=hWn/L9xHY/zezBg/K1kdhAej72Z1U7gCQfTYoaOt3lgswFlp7EoUoUYJ4FP7X8//ur
+         TXsGQH4qwYWEt0KcGUk1A1rMGC5Z61djD8U6oYl8uuPMvllgFCPT6bQ2K1M6pE7Dzwgg
+         ci/3UbHUexwrXQCFP5j/swf1VKdjhqHN6Mk5IDbgGSKf/SvvK7mwk1+UtfX1TvzDjRST
+         F7m8j0AJ4X9CpL3/Fd3fE+9VfQcKg8j+YEit3P7jt2cI+0FLE1pLCzX8EfTwqXGC5jBs
+         ln6euzj+seHijd6bbABXxn5Uvj/wzWiNfeTBNb4RSwE8F2gCo04fDqq8EXXLij21y+Ud
+         8rqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764946949; x=1765551749;
+        d=1e100.net; s=20230601; t=1764946954; x=1765551754;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=efZRdx4ZQLXz3OLC++pAwrom0TtNXp7VSb4ff7FmP+w=;
-        b=tDx8gywKB/QvgvRuWCjPZY5RriOyiU1Rj3rjYkayjtdj1QLIu7b6TzfQXEqn4zDqUW
-         nLj20f+IUipkqNxHZ9iSXqEkWkUn4BfOjYSmx1tjmG3mTHhBOKsy3XqR7R1WJDAXU5lJ
-         gWTtozwl/O7AUdKykNPItbsic0Ya2nmxCv0XErH4q9EOCJf0kGqounFNvxVBaxWaGvMD
-         CLBajK0FvtWYi3fkMarsiTg91U8HETjn7FyeOFdc6a7CPZDTGQd2ZuMNLSCCBP+0Wv29
-         JQRhLeLF0DVQYLhg1nn414yXdW12tjNSoSTn/TQfJCA6qdK8qylSHpQ4B0mFZJpWTK3/
-         jWKw==
-X-Gm-Message-State: AOJu0Yw/2CMy1XowUZs9laZl/oWKwHxI23j0eDLaW9YWbxYrjtA0XX33
-	nw8B7NB9hS11CDl9IcMpa0FH6tDbRR5IzDCPDaIEgwsrudeOOTfBZzvxDzAM1rGB2MC+kT/L8QV
-	azS7yRFN+yN9pQIId5J4+q4EVhWe5YIqJTNJkXefPXAhbfQPbkX85NQq3uZYFVcCrGxecxG67yI
-	jgxoxscB/VOmF+DW0kVgotbckQtqurgdlftFY6ontN9Yzv
-X-Gm-Gg: ASbGncvEbyno8f5XwtvYnd/Ib4RyDmxb82cQB9YDlocApkSin2RDh/NMMwbz1hlRMjv
-	28zG4zKucj9sbFDUQdlRF0lPLbMWYMEm0oA+J3g7RdKC81EByDZ/2n50It8zudMfrfberZXcrPZ
-	eNyKYSTZtFGny34NVJZab2rAr5x+5umVQh470bNuT5dL0p1aQQEKwNcERZ8zgeHziBcw8N9V/Rz
-	Rou9P4gmLhSKicDJszRtQaWn24w+0Tr0Q0pZJNEFfsRmIt9s3QaqW82urPRUBRqLPWH62Huo11F
-	vL9ToKnwcQHTAuQAQfyiW9oKxA7CtYpxbYz/Euds/xwCt2g9YeexQ4Tx8IKk+3n2gMBdp3lWvJc
+        bh=XkRDtY6pvQ3qJ9XWvbvb76SJ9q5MbCo6ppVxJHYsJpM=;
+        b=YP0ElVlFZPk6vv/4GdSn8B2pO0FHpylqjZy2s8SU3hsU08Zh1bsL6O8SpScFBGEVU2
+         IwHCYw/hStwFSHlRG3OLD76a3YumPL1iP5oBaInKyauCM00+keTVaKKpxqoN4kjg53AG
+         s0AEr6AzMJ1Bhya1rVrYmvLtHZfGXjZl98f5UYOsSIN18qIDgKm3wu5IIf+Xy8YmMBU7
+         3it3c7gXH6eBW2WhhqYZi0AQiW4l2NAd1tEQgmeDoduXLuo8vLoWarMMv8lRtXCAx9ni
+         /jRFa7HB+VfRW0exgdPwJKmMoog6RMQM+FG4mHyAL7WfVCJzJVelw/nqVmY/VKMOfUQd
+         Kqyg==
+X-Gm-Message-State: AOJu0YwE4yHzpenpwLk3BP4HwGyE3Ddk4rxSXXULuddPV87DZkkiR8j3
+	S47B/UvLLfPi4sa4eV1RG8zs9A019bx1rreFRkt45xFzH+d39hqBtCaT50CFzqmFycTifqxGVsE
+	a8z+ciatt7g1IoaDXpHcgX6gEcIOHnLNlvRF2C8ZuUF3926lNqG6Hc9aHItSFb9pAy4qCxt3EYP
+	vbMyLpyH+jOgtVX5s+eapaVMcCuwgULVRvHJM3V73x7+Rf
+X-Gm-Gg: ASbGncvwpFg6wVhUYLn1UyTHorgdGzXnD27V0SD3vAN3Nx3zfHYqKUay2PoGCJVxLDd
+	gT1Uo0mdfHBvyDeB0XWE6hNXNwv0raNgQvgUfy2s+BRLUF+8CiMNttm+NCKEJjN++/gG3ihxPKI
+	14yZsLkpQB9uxW+iN1DwKD1Mwyg9YvirkLF0JVkcKWbI65zflf4Od2Tgn9RBXcHbkf/suGxhhpU
+	3Jyuxa90+YAKO/9mVkVFFi5wkP0rwiNmOmKWaC4pYq48DCnr3Wcw/MBj779td7YtD1N5JqYxXLE
+	qdQpc9qa1izdiXh3e+3NVrzSN8nzTHWGNDD7B7wlVEJyKILkAYTRtKSJwfB81+r8gCWHdTlW+sc
 	=
-X-Received: by 2002:a05:600c:3152:b0:475:dae5:d972 with SMTP id 5b1f17b1804b1-4792af3dedfmr94231725e9.23.1764946948766;
-        Fri, 05 Dec 2025 07:02:28 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IG4pte4Nj6Ei6yf7Enuk8Q9XZPfuHrR6M/eDzk6DNUJLfPvuzT8TfdfvxSDtTf+FAly1TadHw==
-X-Received: by 2002:a05:600c:3152:b0:475:dae5:d972 with SMTP id 5b1f17b1804b1-4792af3dedfmr94231315e9.23.1764946948233;
-        Fri, 05 Dec 2025 07:02:28 -0800 (PST)
+X-Received: by 2002:a05:6000:1868:b0:42b:5567:857f with SMTP id ffacd0b85a97d-42f731ced45mr8945394f8f.50.1764946953704;
+        Fri, 05 Dec 2025 07:02:33 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH8tO7ZqdOe2keuKn5MgHZLi4+SuTtHcM4PI1lT17dsblGi77j0z8eLgeqgCIJMyksAg85MMg==
+X-Received: by 2002:a05:6000:1868:b0:42b:5567:857f with SMTP id ffacd0b85a97d-42f731ced45mr8945335f8f.50.1764946952983;
+        Fri, 05 Dec 2025 07:02:32 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-479310b693csm85868685e9.4.2025.12.05.07.02.27
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7d222478sm9103920f8f.20.2025.12.05.07.02.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 07:02:27 -0800 (PST)
+        Fri, 05 Dec 2025 07:02:32 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 5 Dec 2025 16:02:27 +0100
+Date: Fri, 5 Dec 2025 16:02:32 +0100
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
 	hch@lst.de, preichl@redhat.com
-Subject: [PATCH v2 11/33] xfs: convert xfs_efi_log_format_32_t typedef to
- struct
-Message-ID: <offbmnhbrqimwq3damk62zdqt4omlye4mven4awvdboi72idsm@saf7fi7uplyd>
+Subject: [PATCH v2 12/33] xfs: convert xfs_extent_t typedef to struct
+Message-ID: <6rjslpkxq73hh5rqgutct7wfklwq6c2gs3kmeoorm57bp7lqcz@gvgkzk2k2xv2>
 References: <cover.1764946339.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -98,23 +97,40 @@ In-Reply-To: <cover.1764946339.patch-series@thinky>
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- logprint/log_redo.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ logprint/log_redo.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/logprint/log_redo.c b/logprint/log_redo.c
-index b957056c87..cabf5ad470 100644
+index cabf5ad470..cdd6e8b763 100644
 --- a/logprint/log_redo.c
 +++ b/logprint/log_redo.c
-@@ -28,7 +28,8 @@
- 		memcpy((char *)dst_efi_fmt, buf, len);
- 		return 0;
- 	} else if (len == len32) {
--		xfs_efi_log_format_32_t *src_efi_fmt_32 = (xfs_efi_log_format_32_t *)buf;
-+		struct xfs_efi_log_format_32 *src_efi_fmt_32 =
-+			(struct xfs_efi_log_format_32 *)buf;
+@@ -71,7 +71,7 @@
+ 	const char			*item_name = "EFI?";
+ 	struct xfs_efi_log_format	*src_f, *f = NULL;
+ 	uint				dst_len;
+-	xfs_extent_t			*ex;
++	struct xfs_extent		*ex;
+ 	int				i;
+ 	int				error = 0;
+ 	int				core_size = offsetof(
+@@ -141,7 +141,7 @@
+ {
+ 	const char			*item_name = "EFI?";
+ 	struct xfs_efi_log_format	*f, *src_f;
+-	xfs_extent_t			*ex;
++	struct xfs_extent		*ex;
+ 	int				i;
+ 	uint				src_len, dst_len;
  
- 		dst_efi_fmt->efi_type	 = src_efi_fmt_32->efi_type;
- 		dst_efi_fmt->efi_size	 = src_efi_fmt_32->efi_size;
+@@ -154,7 +154,7 @@
+ 	 * Need to convert to native format.
+ 	 */
+ 	dst_len = sizeof(struct xfs_efi_log_format) +
+-		(src_f->efi_nextents) * sizeof(xfs_extent_t);
++		(src_f->efi_nextents) * sizeof(struct xfs_extent);
+ 	if ((f = (struct xfs_efi_log_format *)malloc(dst_len)) == NULL) {
+ 		fprintf(stderr, _("%s: xlog_recover_print_efi: malloc failed\n"),
+ 			progname);
 
 -- 
 - Andrey
