@@ -1,89 +1,89 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 402C9325720
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF563242D4
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Dec 2025 15:01:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764946921; cv=none; b=LYQ2Zwxw4Og0E2vwAHgtFbfa24AALNSIDFanbFijC2YRMeRcPy5Qnx16Y+HAsjyBLT7drMROKenmajK8pZbFDaj3VT71KwrTH0zR4jFqd9wLsMoC0d41RaqKbAU/F9L5VezU/N1UUli32cV7UllgqpmLIh+40a43rUm/6n0zFkw=
+	t=1764946921; cv=none; b=uSsHAS9TJzgoQhyiJsR+jdj2RrzvUHo+VVdidiKi33UNTgwTPRzh4uMbODXbn+WU28K7UWN2/bvXKlq67g6PKZ6ri2mLsZfXzUqWj+z5dt6n7lMegTVwo1hn6DvNlBTzFmaCXovQtVRQ3EgD3Iis6FRcWtd+p+/I9Dp66fLfpfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1764946921; c=relaxed/simple;
-	bh=QvZ+vqATg39Xja4qeF7RjHWZdlohdmUKl8AuhNhUvBo=;
+	bh=CoSeJzpu/cjs8H3WgA/DtNed8P7XQ/vuXK5yTcFjzbY=;
 	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Byn95jh957jwdL/gQPriTj2kWIqpWBcYA/Bki7DowpGLLHMADlhMieoCcVQvx84OqwOrPZPzTxL8yhQqy/daqXeDMFGaOC0IOveiNTv5u4gIf15v+arIvVTHQAQrsQV4y74Npr86oxUBqHfk6snyUUu01A3cfHLivN4S66nu+tY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ILQLT2TJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=dsKDccmw; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=qjBpxtL1xV/4MrkcuHNBgeCNnsWkOvGAKb9ssmzaaB3z4FGkmk84fhNGKS3MUzWL8huavf/puLuqmjnJwYZi5q/cijFQHpbbZy3ecmPCA29EqN3Dx6SpLUMFHKXMB/2t7y/djm5GbrYfiRe/4+cR2GxpYT1wimE/Bh8kc2US8tc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ISUx+srq; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=LEzAmtiL; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ILQLT2TJ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="dsKDccmw"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ISUx+srq";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="LEzAmtiL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764946904;
+	s=mimecast20190719; t=1764946895;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=akLaZDADCj9/ycco+JK5dqgVdweLnPNSgjp9u15I1so=;
-	b=ILQLT2TJwYOI54jOkS2Z5KL3M6A0D/FMOWrFJ4EhCFacEQuG1qC8LGPZs+j2QqD8gE9K32
-	1sJuO5W633p/Cb/EZVZcbXOBuwN45h/czOPKHeHiCb8/ydsiL4R5txxF7MXB/bQHARuEwS
-	mzVe1Nz3luqRvuad6zSbEOUR9pBgfsw=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=mmhs6dlR/8De5ziSffJI7ycR4b8pRoK97kyNKJv8+Vk=;
+	b=ISUx+srqlDzrsk1/1CqaZEoZgmY2+j97/mHMPLTFnGwlqbHH+X5iDroFeRgI75sBSVMLPf
+	wgKh+wGjozZk19ir650oVlX4wRPMGAhT9kPe8VnzNfUI7Bg3iNfeg/3AZzrMu1GV1jfdLg
+	FMZf1qQLP7F02XFB9suF1XYYeowqwl4=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-270-gH7wtrrfN6eTyeMhV84e9w-1; Fri, 05 Dec 2025 10:01:43 -0500
-X-MC-Unique: gH7wtrrfN6eTyeMhV84e9w-1
-X-Mimecast-MFC-AGG-ID: gH7wtrrfN6eTyeMhV84e9w_1764946902
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-477bf8c1413so13869825e9.1
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:43 -0800 (PST)
+ us-mta-359-MXCqyTDHP1SKgZzWeEokAw-1; Fri, 05 Dec 2025 10:01:34 -0500
+X-MC-Unique: MXCqyTDHP1SKgZzWeEokAw-1
+X-Mimecast-MFC-AGG-ID: MXCqyTDHP1SKgZzWeEokAw_1764946893
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-477c49f273fso21682335e9.3
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Dec 2025 07:01:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764946902; x=1765551702; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1764946892; x=1765551692; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=akLaZDADCj9/ycco+JK5dqgVdweLnPNSgjp9u15I1so=;
-        b=dsKDccmwEyRtPVRrvzuK7X1quJ/3u+1iLNYj1KzMG4KsVG1BKZP54E3e6TYe5fOJ/m
-         C/8AIaGrBEHJNopVYv0aOC2t1Alpcx4YLSRh8pvS10ln/2mv+jVBrwJhdZITn7b7jAHq
-         kNHJRjbSleuKSjXnET5iEevjDk2aRnGk0jEeiQX6Hm5yXplAfA7EC2xLScfEJGdmYk2i
-         //gpAjDuEu9mHtL78Lrxs1ct4DN7hsads2STvycUbnPJc/PwqwUs7AgAjIkCI7LGcb0F
-         ataU5Aq6YLEThK4LezT2yrWACP/Kprs92YoCEkGxzpZMvqgfnLGjJ3sfjRVxTfiORfsf
-         y1qQ==
+        bh=mmhs6dlR/8De5ziSffJI7ycR4b8pRoK97kyNKJv8+Vk=;
+        b=LEzAmtiLlEgfTrWKdS9T2JpDWV26aG1cyredrUr1IPy+AEQcw0Zz8Q9bI8hY2BZjBe
+         Jhsg7gVyiJDFXVKRztaIYilk9nqjV0w7uoEf/uFWwEO/+OCPddbfWK8Qb1CxVSHmWoNo
+         gcjc8tNvfyzVltwG1v582hQPKUlAyOhWmF4aX4zIxGtNBg3O7caYMwBs7BFSf1J/vPnx
+         KSe5UgrK13h03j+7quMJE7EN5jG/OlZeaPRm7pANL25Btwle+z02tT2t2+jKHmlN9tKn
+         n1DeB+qcj/20jnJgecJTLn71UivNJAP2MKTpfB7uxfDlmQpEZnGbSUadOTQxznz/KuPv
+         eIvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764946902; x=1765551702;
+        d=1e100.net; s=20230601; t=1764946892; x=1765551692;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=akLaZDADCj9/ycco+JK5dqgVdweLnPNSgjp9u15I1so=;
-        b=YvmMlNIoznDYuOx3FVG+NyPdsLay/WqoQsnZ2n/RqOCUna+feDHieS7S7e+fLfhyUF
-         ZK3kgefk+4Vz2L1YxhEPHShL21L2yep9iwRkorzlqgrKneU3gWKdqq0m3KYM7y3Qv1Pi
-         Dlz4QKK990NelNHB5YkBxbbSALI53dTQs6gZyKhtYdrcjoMzcGVv5N6HfLV0Ubn3NRqZ
-         dDNjybvHaza8qGCmUUYp4xZ3heMD2W0Pv+ijC6UuT4dwSliltuwPkpYSzTgGpHyO3suB
-         UfncA2gNjdoP57jePPsoxGbnt9Er1uTL+BMMU4JrhA5iN9byix9YlTulkpHgcXV4deQm
-         lc8Q==
-X-Gm-Message-State: AOJu0YwZrmn73vxgdk4GIz9B3MO1v6Qs/04yl9xE1cX21C1DivhqUFoF
-	gUXnwIUU0MJIWgyyvexR5Iq212VDY0+SWe4Dm5+Bcvp5XVp7tl2T7BcIGTON4gtnJfGlPV1tv6e
-	JvshAs4k9v9DdOVALhrsSpGc3alE68t1Bj99oe7eiOIpsPyjj6Gz18oWlm+n5LTfmtLl4eVcJqT
-	/HvHM7wd3TEDuSjjEi2dyw84cMjSTaSMXgZ1Nk09bNtqeY
-X-Gm-Gg: ASbGnctnS6taUOcibJDeThkoHHXDykGL0tkVcHACdfksdHQLw1EUg9N69jctle/dnZg
-	hkFMbn3E49ypASnf8u/CwsUDCzJ2qq1faRL5csPwKXVg0o2FtA1znHpoa6tERIIajnhTgPu+Hev
-	85n3Fs/vklxgU/OyaHO6fedURqrgRwqQC4c+RHWYXSjFIHL5dq/nxXE6fwtrMmjAQChOs3phm9f
-	zk0UcVmPpdaJRGA/EonKNY24vJ41USelxnSt3qKNUUEMQnUq0VArYhicJmIr3dlqfHltrABVlYG
-	Cr0SXtb8d3+0jqF/eZ8ljiqW0L8g4zVNtzXdIvAI+NwmrFqMMvgtZAHiQusxyOAQm29qVUrgc8M
+        bh=mmhs6dlR/8De5ziSffJI7ycR4b8pRoK97kyNKJv8+Vk=;
+        b=KVSg/86ClPaqRk/z9nMdejiYkJrZO0otDWoJXnK68asNzFVojNALTKprCQQXnp5E8Q
+         72Vf79Zz7t/Id00EMus0YQ2iLcTYbIqBTOJfAwmJHKg7oEo4m5fKefKTpZSXL4KyUGte
+         VrbqpoEEtgqlhcfLYbADQmipW5Inr4xSCY45X/gFV6ggqbT/D4o8086aNK24Nkr7VxHD
+         I194UCmc9w/JsamDR6X3lAeGEbBUE42uAXLbexmFNdkvpMLVw7j2OroNMLhzajlutGqT
+         JyQaXy7+G8fCgwsqTvO/KR34yML2qlKrT/WDR9GY3KV/BZCtOuN2rbVEK4EV5FakGHWv
+         6rtQ==
+X-Gm-Message-State: AOJu0YwMdFG8xT2gjLDTliPD3NfrVCNzs3gLWFAuP+XcwjPOPhF019Ra
+	28bVbjCzwETQ2fm2cWiC/+3VIwakzoIRfFDTmHKwP890nyMMpLLpF7WHn4c05xVn2MOjLj0JCmH
+	FLQmgjxq2Nrkm8bQjAezTuXmrCWodyTihY+S4RGlO40X9nwg9MKZf8qEjgrgf1Dr5Zz/pDbc4uc
+	cVcwI7tHHqdNKevXXqVB+duW9vfpW9mRBAqHbdwCZ0u2tM
+X-Gm-Gg: ASbGncuRCaK6V2SrhNAJzZm/g6vB3MTzDpfZ6KoFUdCDBNr6aTowUX7xwsx3skOIUbY
+	ZB9HCt1iZyvqRlHNAsY/CHAEa7mxRfIcdu4SVvmhhq9QTRtdjCzd830wUhqfK9/PWgwD1/KKAiO
+	A+34eradiO0X3KvEP53iOMCN1eB071kj0lZBUZ8xvzbduMbLwq53Pzwrfa6ck6NXltR2rAgiOPJ
+	Kdx+gAjp9eaC49yJ/2GrmCYqZZ5uJRRx4XqZqq7/7Ha0ZYI7gDmcUn32FX4NcNqnCyd1GV9sTx6
+	85gp78jXqNNFbaBjK1xCTT49UElz3ZBokahLfU1rw2wyznxHkzAcdkerqH4BQHdUzuejcG+Yuz0
 	=
-X-Received: by 2002:a05:600c:1c81:b0:477:7af8:c88b with SMTP id 5b1f17b1804b1-4792aeea8b2mr114126285e9.11.1764946902016;
-        Fri, 05 Dec 2025 07:01:42 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IG4I2rzAWdVZJqZGkGtz2RxJVZnJ1sv4LWxoF9ZGcrav9UGcxKuiKuZDZh+9YH9AU+ML+zTJQ==
-X-Received: by 2002:a05:600c:1c81:b0:477:7af8:c88b with SMTP id 5b1f17b1804b1-4792aeea8b2mr114125865e9.11.1764946901510;
-        Fri, 05 Dec 2025 07:01:41 -0800 (PST)
+X-Received: by 2002:a05:600c:4f90:b0:477:5af7:6fa with SMTP id 5b1f17b1804b1-4792af43aa3mr97331775e9.32.1764946892403;
+        Fri, 05 Dec 2025 07:01:32 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEsAUyy1txeo4bEVjuVQxIceWV+SU1Xl928lAeSIsv9rlvcHM8GhgU/Q8dZIQu00IYc5xCaUA==
+X-Received: by 2002:a05:600c:4f90:b0:477:5af7:6fa with SMTP id 5b1f17b1804b1-4792af43aa3mr97331265e9.32.1764946891786;
+        Fri, 05 Dec 2025 07:01:31 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7d222506sm10074360f8f.28.2025.12.05.07.01.40
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-479310b8e70sm87671735e9.5.2025.12.05.07.01.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 07:01:41 -0800 (PST)
+        Fri, 05 Dec 2025 07:01:31 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 5 Dec 2025 16:01:40 +0100
+Date: Fri, 5 Dec 2025 16:01:30 +0100
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, 
 	hch@lst.de, preichl@redhat.com
-Subject: [PATCH v2 3/33] xfs: convert xfs_buf_log_format_t typedef to struct
-Message-ID: <vtmdkqiumavvm6tv4ggtxd52iphiumgsw6ao7pq67yjamqxevf@y26jmzl52xyj>
+Subject: [PATCH v2 1/33] xfs: remove deprecated mount options
+Message-ID: <pwizqjwj3k4xfzelw3ghdvqkxufiivlzyw7iooetyokwp5ltsn@adxus3izf4ze>
 References: <cover.1764946339.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -95,45 +95,223 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1764946339.patch-series@thinky>
 
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- include/xfs_trans.h      | 2 +-
- logprint/log_print_all.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+From: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index d7d3904119..d4b546a0e3 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -50,7 +50,7 @@
- 	struct xfs_buf		*bli_buf;	/* real buffer pointer */
- 	unsigned int		bli_flags;	/* misc flags */
- 	unsigned int		bli_recur;	/* recursion count */
--	xfs_buf_log_format_t	__bli_format;	/* in-log header */
-+	struct xfs_buf_log_format	__bli_format;	/* in-log header */
- } xfs_buf_log_item_t;
+Source kernel commit: b9a176e54162f890aaf50ac8a467d725ed2f00df
+
+These four mount options were scheduled for removal in September 2025,
+so remove them now.
+
+Cc: preichl@redhat.com
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ libxfs/xfs_attr_leaf.c | 23 +++++------------------
+ libxfs/xfs_bmap.c      | 14 +++-----------
+ libxfs/xfs_ialloc.c    |  4 ++--
+ libxfs/xfs_sb.c        |  9 +++------
+ 4 files changed, 13 insertions(+), 37 deletions(-)
+
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 01a87b45a6..cfb8d40e51 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -664,12 +664,8 @@
  
- #define XFS_BLI_DIRTY			(1<<0)
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index 39946f32d4..0920c4871c 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -72,13 +72,13 @@
+ 	/*
+ 	 * For attr2 we can try to move the forkoff if there is space in the
+-	 * literal area, but for the old format we are done if there is no
+-	 * space in the fixed attribute fork.
++	 * literal area
+ 	 */
+-	if (!xfs_has_attr2(mp))
+-		return 0;
+-
+ 	dsize = dp->i_df.if_bytes;
+ 
+ 	switch (dp->i_df.if_format) {
+@@ -720,22 +716,16 @@
+ }
+ 
+ /*
+- * Switch on the ATTR2 superblock bit (implies also FEATURES2) unless:
+- * - noattr2 mount option is set,
+- * - on-disk version bit says it is already set, or
+- * - the attr2 mount option is not set to enable automatic upgrade from attr1.
++ * Switch on the ATTR2 superblock bit (implies also FEATURES2) unless
++ * on-disk version bit says it is already set
+  */
+ STATIC void
+ xfs_sbversion_add_attr2(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp)
  {
- 	xfs_agi_t		*agi;
- 	xfs_agf_t		*agf;
--	xfs_buf_log_format_t	*f;
-+	struct xfs_buf_log_format	*f;
- 	char			*p;
- 	int			len, num, i;
- 	xfs_daddr_t		blkno;
- 	struct xfs_disk_dquot	*ddq;
+-	if (xfs_has_noattr2(mp))
+-		return;
+ 	if (mp->m_sb.sb_features2 & XFS_SB_VERSION2_ATTR2BIT)
+ 		return;
+-	if (!xfs_has_attr2(mp))
+-		return;
  
--	f = (xfs_buf_log_format_t *)item->ri_buf[0].iov_base;
-+	f = (struct xfs_buf_log_format*)item->ri_buf[0].iov_base;
- 	printf("	");
- 	ASSERT(f->blf_type == XFS_LI_BUF);
- 	printf(_("BUF:  #regs:%d   start blkno:0x%llx   len:%d   bmap size:%d   flags:0x%x\n"),
+ 	spin_lock(&mp->m_sb_lock);
+ 	xfs_add_attr2(mp);
+@@ -886,7 +876,7 @@
+ 	/*
+ 	 * Fix up the start offset of the attribute fork
+ 	 */
+-	if (totsize == sizeof(struct xfs_attr_sf_hdr) && xfs_has_attr2(mp) &&
++	if (totsize == sizeof(struct xfs_attr_sf_hdr) &&
+ 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
+ 	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE)) &&
+ 	    !xfs_has_parent(mp)) {
+@@ -897,7 +887,6 @@
+ 		ASSERT(dp->i_forkoff);
+ 		ASSERT(totsize > sizeof(struct xfs_attr_sf_hdr) ||
+ 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
+-				!xfs_has_attr2(mp) ||
+ 				dp->i_df.if_format == XFS_DINODE_FMT_BTREE ||
+ 				xfs_has_parent(mp));
+ 		xfs_trans_log_inode(args->trans, dp,
+@@ -1037,8 +1026,7 @@
+ 		bytes += xfs_attr_sf_entsize_byname(name_loc->namelen,
+ 					be16_to_cpu(name_loc->valuelen));
+ 	}
+-	if (xfs_has_attr2(dp->i_mount) &&
+-	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
++	if ((dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
+ 	    (bytes == sizeof(struct xfs_attr_sf_hdr)))
+ 		return -1;
+ 	return xfs_attr_shortform_bytesfit(dp, bytes);
+@@ -1158,7 +1146,6 @@
+ 		 * this case.
+ 		 */
+ 		if (!(args->op_flags & XFS_DA_OP_REPLACE)) {
+-			ASSERT(xfs_has_attr2(dp->i_mount));
+ 			ASSERT(dp->i_df.if_format != XFS_DINODE_FMT_BTREE);
+ 			xfs_attr_fork_remove(dp, args->trans);
+ 		}
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 99f5e6f9d5..e6a1922abb 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -991,8 +991,7 @@
+ static int
+ xfs_bmap_set_attrforkoff(
+ 	struct xfs_inode	*ip,
+-	int			size,
+-	int			*version)
++	int			size)
+ {
+ 	int			default_size = xfs_default_attroffset(ip) >> 3;
+ 
+@@ -1006,8 +1005,6 @@
+ 		ip->i_forkoff = xfs_attr_shortform_bytesfit(ip, size);
+ 		if (!ip->i_forkoff)
+ 			ip->i_forkoff = default_size;
+-		else if (xfs_has_attr2(ip->i_mount) && version)
+-			*version = 2;
+ 		break;
+ 	default:
+ 		ASSERT(0);
+@@ -1029,7 +1026,6 @@
+ 	int			rsvd)		/* xact may use reserved blks */
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+-	int			version = 1;	/* superblock attr version */
+ 	int			logflags;	/* logging flags */
+ 	int			error;		/* error return value */
+ 
+@@ -1039,7 +1035,7 @@
+ 	ASSERT(!xfs_inode_has_attr_fork(ip));
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	error = xfs_bmap_set_attrforkoff(ip, size, &version);
++	error = xfs_bmap_set_attrforkoff(ip, size);
+ 	if (error)
+ 		return error;
+ 
+@@ -1063,16 +1059,12 @@
+ 		xfs_trans_log_inode(tp, ip, logflags);
+ 	if (error)
+ 		return error;
+-	if (!xfs_has_attr(mp) ||
+-	   (!xfs_has_attr2(mp) && version == 2)) {
++	if (!xfs_has_attr(mp)) {
+ 		bool log_sb = false;
+ 
+ 		spin_lock(&mp->m_sb_lock);
+ 		if (!xfs_has_attr(mp)) {
+ 			xfs_add_attr(mp);
+-			log_sb = true;
+-		}
+-		if (!xfs_has_attr2(mp) && version == 2) {
+ 			xfs_add_attr2(mp);
+ 			log_sb = true;
+ 		}
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 8fd149e184..0efad4cfda 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -2135,7 +2135,7 @@
+ 	 * remove the chunk if the block size is large enough for multiple inode
+ 	 * chunks (that might not be free).
+ 	 */
+-	if (!xfs_has_ikeep(mp) && rec.ir_free == XFS_INOBT_ALL_FREE &&
++	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
+ 	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
+ 		xic->deleted = true;
+ 		xic->first_ino = xfs_agino_to_ino(pag, rec.ir_startino);
+@@ -2281,7 +2281,7 @@
+ 	 * enough for multiple chunks. Leave the finobt record to remain in sync
+ 	 * with the inobt.
+ 	 */
+-	if (!xfs_has_ikeep(mp) && rec.ir_free == XFS_INOBT_ALL_FREE &&
++	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
+ 	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
+ 		error = xfs_btree_delete(cur, &i);
+ 		if (error)
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 078c75febf..dd14c3ab3b 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -140,8 +140,6 @@
+ 	if (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) {
+ 		if (sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT)
+ 			features |= XFS_FEAT_LAZYSBCOUNT;
+-		if (sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT)
+-			features |= XFS_FEAT_ATTR2;
+ 		if (sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT)
+ 			features |= XFS_FEAT_PROJID32;
+ 		if (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE)
+@@ -153,7 +151,7 @@
+ 
+ 	/* Always on V5 features */
+ 	features |= XFS_FEAT_ALIGN | XFS_FEAT_LOGV2 | XFS_FEAT_EXTFLG |
+-		    XFS_FEAT_LAZYSBCOUNT | XFS_FEAT_ATTR2 | XFS_FEAT_PROJID32 |
++		    XFS_FEAT_LAZYSBCOUNT | XFS_FEAT_PROJID32 |
+ 		    XFS_FEAT_V3INODES | XFS_FEAT_CRC | XFS_FEAT_PQUOTINO;
+ 
+ 	/* Optional V5 features */
+@@ -1522,7 +1520,8 @@
+ 	geo->version = XFS_FSOP_GEOM_VERSION;
+ 	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+ 		     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+-		     XFS_FSOP_GEOM_FLAGS_EXTFLG;
++		     XFS_FSOP_GEOM_FLAGS_EXTFLG |
++		     XFS_FSOP_GEOM_FLAGS_ATTR2;
+ 	if (xfs_has_attr(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
+ 	if (xfs_has_quota(mp))
+@@ -1535,8 +1534,6 @@
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
+ 	if (xfs_has_lazysbcount(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
+-	if (xfs_has_attr2(mp))
+-		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
+ 	if (xfs_has_projid32(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
+ 	if (xfs_has_crc(mp))
 
 -- 
 - Andrey
