@@ -1,120 +1,77 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E69C16D9C2;
-	Sat,  6 Dec 2025 18:01:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EEC239562
+	for <linux-xfs@vger.kernel.org>; Sat,  6 Dec 2025 19:54:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765044121; cv=none; b=FXUh7iOc2wd+/eSSyFMsuwi7MZbsbO0mgnPHfCsCwJftfRR8smk8j00rXb6evsY68PsTB/bVLhHjX1werznskTmXVOuuRz/3bs5tLouT+3BoxUavOMc3i7zIFj2DL18GCkrkdP93kAJtZwiyVD+SY8VhkTqoNJLld2Ud8Y9IrN0=
+	t=1765050845; cv=none; b=qXancbhYYotOblF3V4BR6/SMW8xJ5qjb6HRTvlmwPgZ3enr4lFe+gtkdFfKqTjthVT/HjybwGX+c6yikM+uEVBBvgZmtEm9+BE00SA/5LDni5rGdzhopb8xeXhuzahJL/AwSbVGR5Ydj7LgHMXTl2/JY9ccXE+V0e4r/JqwiqIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765044121; c=relaxed/simple;
-	bh=YoHW8PPiN2rSkIW/NA0mZkSslyiXwDxRxy8s45eKEus=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dqx1uUVb4TpGc6N+SxOq5PKNO8oHcU1Nw0LTlREpu+KEtA0PzFyZLRWxUJ65hG/H3GrlczCT4FRjli8cF4IkRMYQ97QfjgziQ9cfCQYP2N/ZcGkz4Nrkq515HeDqW3N1yEiv7g8hZX8yTAV3ezDhnvhN2X4W9CaJWildNdFhMso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fKU+BuyT; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fKU+BuyT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1765044120; x=1796580120;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=YoHW8PPiN2rSkIW/NA0mZkSslyiXwDxRxy8s45eKEus=;
-  b=fKU+BuyTcRZYfPX1wBgEcT7VV7298DM2/MPx6qzmaRk1Z9hYBONZAL8L
-   ERE+I/pjLVnuR9TlgTf68egGrZE7Bgv/IYA9/3rYb6EJe4E84fjsj8i0d
-   mUXsaD0s/NyWT66WwhE4nMq1xcrFaCovvpbFXsZbeS6zIYYgyU09yNxuL
-   Zjvhdm4rimAJH8bZMf48ih7t+r2nj0jQWvfzLhncc4W8LputEzM9qwK4v
-   6o4joRuZqZHQluQg9OVqrr5cosqXXOwDa+0LgCyPYQq0SnG+8ng45vxJa
-   5f0keV9AQcfpbI69kupQJTOwmeYd3rHJIefdvJcGQ+c6FQEjXZLZx2yhD
-   Q==;
-X-CSE-ConnectionGUID: nkc6KcnARWCfKH5mzIPZNg==
-X-CSE-MsgGUID: Lhckcrc2TT6CdnAoWqvO5Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11634"; a="70896809"
-X-IronPort-AV: E=Sophos;i="6.20,255,1758610800"; 
-   d="scan'208";a="70896809"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2025 10:01:59 -0800
-X-CSE-ConnectionGUID: mbVIpTMvSQGcpHRVZsdDmg==
-X-CSE-MsgGUID: s4k9r/igRSCDKCoEwdGvBg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.20,255,1758610800"; 
-   d="scan'208";a="195384340"
-Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 06 Dec 2025 10:01:55 -0800
-Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vRwbP-00000000IeP-3eOd;
-	Sat, 06 Dec 2025 18:01:51 +0000
-Date: Sun, 7 Dec 2025 02:01:45 +0800
-From: kernel test robot <lkp@intel.com>
-To: zhangshida <starzhangzsd@gmail.com>, Johannes.Thumshirn@wdc.com,
-	hch@infradead.org, agruenba@redhat.com, ming.lei@redhat.com,
-	hsiangkao@linux.alibaba.com, csander@purestorage.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
-	linux-bcache@vger.kernel.org, nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev, ntfs3@lists.linux.dev,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	zhangshida@kylinos.cn, starzhangzsd@gmail.com
-Subject: Re: [PATCH v3 3/9] block: prevent race condition on bi_status in
- __bio_chain_endio
-Message-ID: <202512070122.my7vkR7A-lkp@intel.com>
-References: <20251129090122.2457896-4-zhangshida@kylinos.cn>
+	s=arc-20240116; t=1765050845; c=relaxed/simple;
+	bh=g7c1MXDOxBT+UEnnv60eRig7h88JVCaSiWb/CIMfpfk=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=KpX9lmV4Ou512xOm7r2NscHY8FM3DNxJGDo3FoJ/plBtcY/ePxgN0Rob33acFYbOIwaZyET2ZQfxsqIb/luaVAtzRBZCzlN6pEVCsB+CqV9eSTg9IjS3NtAM0+faIL/p3lHdRKMys7l6cM83g+saq3rCuiFM6RawuJuJ29w8GKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-65997ee5622so1549730eaf.1
+        for <linux-xfs@vger.kernel.org>; Sat, 06 Dec 2025 11:54:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765050843; x=1765655643;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/7ZTbcXkFeTJgPKb5pSyPef7lfMct4EiFIfkMP3W7XY=;
+        b=UDlWmTNbJxo9hQqeajm+uLPo1v7uu8sWgCFQEX/25MHWoJn52rHqt8n9P6qhzZlR0m
+         snJnWIhuk1PTTYYaaSqtNQKVYRHG92qpL27qESSgqx5Su/y8m0CyqRUDE4xT+Fk8BnWc
+         KzlejCPFBkMe1z8ISO6ZF3uht2cgdFDFXo2ilPJsxm15caZwLbf9/Qi/WqZpJRGk4Ctw
+         KhxCnn+pjZOClNMo+/ZZ5duyPZ1xA9RBZXYFPVttGpjRJzI6Sgyc7HxL5lDec1k2Qb2R
+         tb7I1Kx3H1d6tMvSqj4Q/HnHGOY8Bc0Dhz4QOATodOToU3GYH0MXOztDvQOs5S1qm99n
+         zmDw==
+X-Forwarded-Encrypted: i=1; AJvYcCWTxqKoSm25/dKVc6jkLd+bowcDdZSQG5wi/7SRLahqA7I7Dp8f3+YU9tXeCN05nE4CrsHpjyH+iAc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVxe2lcY9uUr6IL1GFv8mXOnUjFHPpQccwb0uyh1xRJRZHQ3hI
+	iavtGqNHYDY+eGnAVh3XDGZaLZNetjamHzIg4bUi1tQT3ivkOUY3eXy7fB0PAEsppvXtWIGZFhM
+	RRRUcyynC2Y8YvlXS9qItw8V0znaXmLjzhVwa82MPhmeiiZiQlxBWK6kPP5o=
+X-Google-Smtp-Source: AGHT+IHU0DXLCq+hpfsS7Fg8vMPv8EChZ7ujTnOYQ+JmHStVSW2Iji8d1hA8XrZ+hd1ons7o6MDYWQAugtLBAkfVQ5claDSDuLLp
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251129090122.2457896-4-zhangshida@kylinos.cn>
+X-Received: by 2002:a4a:edcb:0:b0:659:9a49:8e8e with SMTP id
+ 006d021491bc7-6599a8c0c00mr1307396eaf.18.1765050843136; Sat, 06 Dec 2025
+ 11:54:03 -0800 (PST)
+Date: Sat, 06 Dec 2025 11:54:03 -0800
+In-Reply-To: <686ea916.050a0220.385921.0012.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <693489db.a70a0220.38f243.0037.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_setfilesize
+From: syzbot <syzbot+d42ea321837890ff464b@syzkaller.appspotmail.com>
+To: anna.luese@v-bien.de, cem@kernel.org, cmaiolino@redhat.com, corbet@lwn.net, 
+	dchinner@redhat.com, djwong@kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi zhangshida,
+syzbot suspects this issue was fixed by commit:
 
-kernel test robot noticed the following build warnings:
+commit b9a176e54162f890aaf50ac8a467d725ed2f00df
+Author: Darrick J. Wong <djwong@kernel.org>
+Date:   Tue Sep 2 21:33:53 2025 +0000
 
-[auto build test WARNING on axboe/for-next]
-[also build test WARNING on xfs-linux/for-next nvdimm/libnvdimm-for-next linus/master brauner-vfs/vfs.all v6.18 next-20251205]
-[cannot apply to nvdimm/dax-misc]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+    xfs: remove deprecated mount options
 
-url:    https://github.com/intel-lab-lkp/linux/commits/zhangshida/md-bcache-fix-improper-use-of-bi_end_io/20251129-170348
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux.git for-next
-patch link:    https://lore.kernel.org/r/20251129090122.2457896-4-zhangshida%40kylinos.cn
-patch subject: [PATCH v3 3/9] block: prevent race condition on bi_status in __bio_chain_endio
-config: loongarch-randconfig-r133-20251130 (https://download.01.org/0day-ci/archive/20251207/202512070122.my7vkR7A-lkp@intel.com/config)
-compiler: loongarch64-linux-gcc (GCC) 14.3.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251207/202512070122.my7vkR7A-lkp@intel.com/reproduce)
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=178cc21a580000
+start commit:   d006330be3f7 Merge tag 'sound-6.16-rc6' of git://git.kerne..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=b309c907eaab29da
+dashboard link: https://syzkaller.appspot.com/bug?extid=d42ea321837890ff464b
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10a87f70580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=16602a8c580000
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512070122.my7vkR7A-lkp@intel.com/
+If the result looks correct, please mark the issue as fixed by replying with:
 
-sparse warnings: (new ones prefixed by >>)
->> block/bio.c:319:17: sparse: sparse: cast from restricted blk_status_t
->> block/bio.c:319:17: sparse: sparse: cast from restricted blk_status_t
->> block/bio.c:319:17: sparse: sparse: cast to restricted blk_status_t
+#syz fix: xfs: remove deprecated mount options
 
-vim +319 block/bio.c
-
-   313	
-   314	static struct bio *__bio_chain_endio(struct bio *bio)
-   315	{
-   316		struct bio *parent = bio->bi_private;
-   317	
-   318		if (bio->bi_status)
- > 319			cmpxchg(&parent->bi_status, 0, bio->bi_status);
-   320	
-   321		bio_put(bio);
-   322		return parent;
-   323	}
-   324	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
