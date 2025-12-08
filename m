@@ -1,117 +1,142 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A40713B8D65
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Dec 2025 15:16:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE9BA199230;
+	Mon,  8 Dec 2025 17:34:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765207022; cv=none; b=AHUdL/PZR5eGQmuxDGxVkunwFW+9vqlfnrKSppnuMFKUkSRYH0TjPfiZrUnUwmL/sXARtHuxvZr0LX+MOkPPF49t1gfEfrmeEi0rzZpNL0HZsyH4qtlmL6SkZ/EiO2GqInbXpltl3rRvNENq+XIWvXvIGO0WdOXyF/KASHPOWdA=
+	t=1765215298; cv=none; b=jBJmQH7+xSUQ5Gi7+spBq+TsidaYranXm8hV5IJCJxB9PmCgQX5x9+7OfFS/D66RgCVQKF66PainK7ckNkKmOwheg6JTPufiHfLuAwt5tIYyKXRVdbGDgI8m38JkNT3aWgRhfXJxY4aN7kwOuAlqabwmKbPvQDl48yS+Q4axgwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765207022; c=relaxed/simple;
-	bh=kJeM1B0lFo01CY7l9nbNudHozdt7DIONrCyQbVDiV8o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AHp6+c52MZ8q5HRk7WFXemPViE2x2jo/RZl/J/8yNyIU8WbdD5E+fq/Ub9+ZBiiz2r3s0U6P7uW2Edc5rETNhHMshSyFX9HcMYX0CxGA8mS2PPUDz8gmKU+aGhRYNUEuaN6Vva9AckRzoUseRPp6pz6D/ZOATp6pzEaCjkFWIYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kGxQZPp0; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1765215298; c=relaxed/simple;
+	bh=nSV9WPDb5UtOwVi/S/3KhRv+j/yGjhBj3v8LR+2z7FM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DGpd8SQGp9LKCNGK3hVW25B8HaHZ6NDGhDoPHuh4Sh+/i1CXcki+PCZmnJFwHTeY3qx+jE9ltwmmyXpKaY/EM1b+H/nI/OJPfPqJUUSq+GJSN0+f1rfq6sEfURfXZvmmGTdWNaAp+R6sj4cU68FyuDIHs8qvuVp5tWyiYNzxfmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pL2vTawS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kGxQZPp0"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7aace33b75bso4439609b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Dec 2025 07:16:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765207018; x=1765811818; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MZwJOhnXjR9RH7Jlcrg7Vv/LBvLsIAP2Sb2ddg+1+Lg=;
-        b=kGxQZPp053M9tiS6frkUvqophDLDHmEZW+CWc+K51aZBoHI7pU9Fd6B9SK2g1trWhX
-         nLRBXh2TOuKd3KWsvffS+Ez5jMKx436GvHikqMqIh/IaRd1eIjoH0jkL8bXcIPFPXPjn
-         tmy7RI9FoGg6Q0f4JtSGG1uLzHMkrsfk7o2n+0kyk+KxE8GSrifkM2QZstoNNKGEcnJJ
-         DnkcrWtlDVARfyfxjpmRYmhrjHaK4kcO+2NfeXvVVrGkC+qosI+3fl8ws1xq55Jg2g/F
-         Mhnq2s6KTInUxR+5l7he3uJi+SZ5CaCTkRuvBlXZWuzQ4/A2v00+ntvZTMuZczAMHEIZ
-         IaVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765207018; x=1765811818;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MZwJOhnXjR9RH7Jlcrg7Vv/LBvLsIAP2Sb2ddg+1+Lg=;
-        b=spWfVvyUGOIOaU2V5oW3r3MqXOcTaILm2KZ7IIz41z/VrbtcO7t0kyjj7zJs59AIBG
-         Kn2XtFB52gmETsgIfI4ZjLr2G25glwYGMwNMww9Vr389oHMePvsN01FVrGt8aW80qfIY
-         fYDuLW4AmgqETHNN7euMlDE2gpKawOW2s1wMPH5YoMxHPiFRDPUsr891QVHJUwpLpSPh
-         dtN8McCdRaGine5HV4b/m9xVg80EUEUHJ2YCs6jnuckbcjyghU46boqa4dFipzdgGL2z
-         By7xrEN8CACm9Sj0secbz8fRD49Izn/NC5QfNcL7CyeEEQ235UvF81fKoTTliL8lNGwb
-         OAJA==
-X-Gm-Message-State: AOJu0YwOiwABZvMhh5sCmrjnoek21RpYFUBwDXcyYl/sXPHnSoB1EXid
-	E4bZragH5JMo7RXTLfw5u1FqxehL1OB6vaxdVqr9poyTcj2rF5+Jv3MbCAv6Qg==
-X-Gm-Gg: ASbGncvpmVYCOk03bCLBUZSEq2YDfrVD1y3ZawSilLy/ODnDNkS73EWeUjcNGL7XrXB
-	3ziQ+OvH7sDKTbCOEsNSswclwmNd0kYrzK20ZfcMrpzSd8B78+JcgTAKMepqoTJwai7fBsAlhHe
-	g7O+N0t5UPuw3mHD7d3Nk9UfNk8VSwyT+UEX14Lfu5RN0+huQzdrlZmYN+MIbxar+LcDv+SQNbc
-	pTOJlelsqDx4TD2rW5zwMsTtcp5S+wLKPY5u+eqP3scexTtQv1iALU/mLkmARAgwlwrTnJVr4cv
-	yjzfMiMVgnuD0PyP/umyWAeEVdpTnlw4BhzdWVxmAuYw1JMgDCWLdRW6owzuSJgXw/V6yV3Rkx2
-	SARkIy0JK0dWUKHcAsbe42nqFVkME7sH4HReXit7Sv/gAfJYCuSTimkAZNk/0mrqtYACQPtGVlg
-	356NoZnsmd1bpr3OfAJ0saVJEiJNnMB2J4+w/gOv82clBitps3UsxeCoasqqrivTgg
-X-Google-Smtp-Source: AGHT+IF4kLgFxpove754PNuUtZvXylfVAXL+I8whI3Rofz5cA5SO+NozMZfGOzysE2VCmiEyVbmhDw==
-X-Received: by 2002:a05:6a00:399c:b0:7e8:43f5:bd30 with SMTP id d2e1a72fcca58-7e8c60d9e48mr6752166b3a.69.1765207018310;
-        Mon, 08 Dec 2025 07:16:58 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.204.153])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7e29ff6b55fsm13586437b3a.17.2025.12.08.07.16.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Dec 2025 07:16:57 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	hch@infradead.org,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v1] xfs: Fix rgcount/rgsize value reported in XFS_IOC_FSGEOMETRY ioctl
-Date: Mon,  8 Dec 2025 20:46:11 +0530
-Message-ID: <50441ebab613e02219545cca9caec58aacf77446.1765206687.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pL2vTawS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E863C4CEF1;
+	Mon,  8 Dec 2025 17:34:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765215298;
+	bh=nSV9WPDb5UtOwVi/S/3KhRv+j/yGjhBj3v8LR+2z7FM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pL2vTawSgxCZusiciHH+TQyh7QxomFau7qh9b7Z7xEzTAZA30L5mA2UKQtjZJkRz4
+	 g9dUwJ/JLGbkt/FUrXOIq+K96vFmehWZ3lbxHxrLrFiIWJuZwmkDh0iWO3HkyYnYT+
+	 7wj60OgyooKBR1ndodDilfoi+r3T0eeObTFgXqFdKXCZafZvXtTD0+KRMipWXnFNGb
+	 zBHtxj8ljMcMDMVhSG2Oq8Cxcftbi+K5t0hsJcJBhTzZIAIdid+H87hnh9FwMLe4Zk
+	 8YHDm8iOdxrFlBK+vqyGykd+rxpLK+xwunNM9do+aRjCF5DiPTp3L6DyIEYECnfU2e
+	 BeI57GIUj9gjQ==
+Date: Mon, 8 Dec 2025 09:34:57 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Su Yue <glass.su@suse.com>
+Cc: fstests@vger.kernel.org, l@damenly.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH v2] generic: use _qmount_option and _qmount
+Message-ID: <20251208173457.GH89454@frogsfrogsfrogs>
+References: <20251208065829.35613-1-glass.su@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251208065829.35613-1-glass.su@suse.com>
 
-With mkfs.xfs -m dir=0 i.e, with XFS_SB_FEAT_INCOMPAT_METADIR
-disabled, number of realtime groups should be reported as 1 and
-the size of it should be equal to total number of realtime
-extents since this the entire realtime filesystem has only 1
-realtime group.
+On Mon, Dec 08, 2025 at 02:58:29PM +0800, Su Yue wrote:
+> This commit touches generic tests call `_scratch_mount -o usrquota`
+> then chmod 777, quotacheck and quotaon. They can be simpilfied
+> to _qmount_option and _qmount. _qmount already calls quotacheck,
+> quota and chmod ugo+rwx. The conversions can save a few lines.
+> 
+> Signed-off-by: Su Yue <glass.su@suse.com>
+> ---
+> Changelog:
+> v2:
+>   Only convert the tests calling chmod 777.
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- fs/xfs/libxfs/xfs_sb.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+LGTM
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index cdd16dd805d7..989553e7ec02 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -875,7 +875,7 @@ __xfs_sb_from_disk(
- 	} else {
- 		to->sb_metadirino = NULLFSINO;
- 		to->sb_rgcount = 1;
--		to->sb_rgextents = 0;
-+		to->sb_rgextents = to->sb_rextents;
- 	}
- 
- 	if (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED) {
-@@ -1586,10 +1586,8 @@ xfs_fs_geometry(
- 
- 	geo->version = XFS_FSOP_GEOM_VERSION_V5;
- 
--	if (xfs_has_rtgroups(mp)) {
--		geo->rgcount = sbp->sb_rgcount;
--		geo->rgextents = sbp->sb_rgextents;
--	}
-+	geo->rgcount = sbp->sb_rgcount;
-+	geo->rgextents = sbp->sb_rgextents;
- 	if (xfs_has_zoned(mp)) {
- 		geo->rtstart = sbp->sb_rtstart;
- 		geo->rtreserved = sbp->sb_rtreserved;
--- 
-2.43.5
+--D
 
+> ---
+>  tests/generic/231 | 6 ++----
+>  tests/generic/232 | 6 ++----
+>  tests/generic/233 | 6 ++----
+>  tests/generic/270 | 6 ++----
+>  4 files changed, 8 insertions(+), 16 deletions(-)
+> 
+> diff --git a/tests/generic/231 b/tests/generic/231
+> index ce7e62ea1886..02910523d0b5 100755
+> --- a/tests/generic/231
+> +++ b/tests/generic/231
+> @@ -47,10 +47,8 @@ _require_quota
+>  _require_user
+>  
+>  _scratch_mkfs >> $seqres.full 2>&1
+> -_scratch_mount "-o usrquota,grpquota"
+> -chmod 777 $SCRATCH_MNT
+> -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> +_qmount_option "usrquota,grpquota"
+> +_qmount
+>  
+>  if ! _fsx 1; then
+>  	_scratch_unmount 2>/dev/null
+> diff --git a/tests/generic/232 b/tests/generic/232
+> index c903a5619045..21375809d299 100755
+> --- a/tests/generic/232
+> +++ b/tests/generic/232
+> @@ -44,10 +44,8 @@ _require_scratch
+>  _require_quota
+>  
+>  _scratch_mkfs > $seqres.full 2>&1
+> -_scratch_mount "-o usrquota,grpquota"
+> -chmod 777 $SCRATCH_MNT
+> -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> +_qmount_option "usrquota,grpquota"
+> +_qmount
+>  
+>  _fsstress
+>  _check_quota_usage
+> diff --git a/tests/generic/233 b/tests/generic/233
+> index 3fc1b63abb24..4606f3bde2ab 100755
+> --- a/tests/generic/233
+> +++ b/tests/generic/233
+> @@ -59,10 +59,8 @@ _require_quota
+>  _require_user
+>  
+>  _scratch_mkfs > $seqres.full 2>&1
+> -_scratch_mount "-o usrquota,grpquota"
+> -chmod 777 $SCRATCH_MNT
+> -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> +_qmount_option "usrquota,grpquota"
+> +_qmount
+>  setquota -u $qa_user 32000 32000 1000 1000 $SCRATCH_MNT 2>/dev/null
+>  
+>  _fsstress
+> diff --git a/tests/generic/270 b/tests/generic/270
+> index c3d5127a0b51..9ac829a7379f 100755
+> --- a/tests/generic/270
+> +++ b/tests/generic/270
+> @@ -62,10 +62,8 @@ _require_command "$SETCAP_PROG" setcap
+>  _require_attrs security
+>  
+>  _scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+> -_scratch_mount "-o usrquota,grpquota"
+> -chmod 777 $SCRATCH_MNT
+> -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> +_qmount_option "usrquota,grpquota"
+> +_qmount
+>  
+>  if ! _workout; then
+>  	_scratch_unmount 2>/dev/null
+> -- 
+> 2.50.1 (Apple Git-155)
+> 
+> 
