@@ -1,296 +1,117 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5DF25CC74
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Dec 2025 14:05:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A40713B8D65
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Dec 2025 15:16:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765202757; cv=none; b=PaztM/WlAe7FpY5GknOSajKMYwvoCXYXBNpaNRMv6b7stQIO7KBRp7ovlXJvLc6DHVas/KydVLbnUKF+4pUtBmbzL7Chd80edne+1VNp645I640gjdEc4zrG3CNbbaXg0eZxwVSvIOEuQLSJSJ9b4ryOooPY/xNKM/14LaxqO7E=
+	t=1765207022; cv=none; b=AHUdL/PZR5eGQmuxDGxVkunwFW+9vqlfnrKSppnuMFKUkSRYH0TjPfiZrUnUwmL/sXARtHuxvZr0LX+MOkPPF49t1gfEfrmeEi0rzZpNL0HZsyH4qtlmL6SkZ/EiO2GqInbXpltl3rRvNENq+XIWvXvIGO0WdOXyF/KASHPOWdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765202757; c=relaxed/simple;
-	bh=U5wy0phZ6BhhPbnU0U4zhH7JGKlSHCoOzc7QTpSGmcQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WYlSAFZHBXvh5cajN1cyXvFqEf05OdbCdUk0m4ip8fmhqTiJL8WMpMARMNQbAVutuTT5QF6JlP5k8LszcWhMbzfkoWS8n6wPatKwT5aifCIGEVmZ6khUeBDh31feGvDTqOHlLeJP/g3tief2kbztU2Y83jna7Wc66CbwFzhT2C4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YbU7OsKN; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1765207022; c=relaxed/simple;
+	bh=kJeM1B0lFo01CY7l9nbNudHozdt7DIONrCyQbVDiV8o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AHp6+c52MZ8q5HRk7WFXemPViE2x2jo/RZl/J/8yNyIU8WbdD5E+fq/Ub9+ZBiiz2r3s0U6P7uW2Edc5rETNhHMshSyFX9HcMYX0CxGA8mS2PPUDz8gmKU+aGhRYNUEuaN6Vva9AckRzoUseRPp6pz6D/ZOATp6pzEaCjkFWIYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kGxQZPp0; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YbU7OsKN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1765202754;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=LmzkcCqtp5fD2y3FuZzSaPD+oUN26ELFoTK4lOab2es=;
-	b=YbU7OsKNfLnmnYeHaYzy3VzIDsFbmoYqBNlFWGISILrt1e/jPn0AUxaqR/LPxQ+hzi+hQo
-	dhVQJSct5NzT3vEFFefmVNEfclVQXNHpCe1/ZyGcs2sVDXl9z/hcPVlF638xT9S4jakVwf
-	Z2s3kss+2605nZrmOIjzmvgGsW1jC1g=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-649-h6U97B35OWKlQ-CQ9ZAtjA-1; Mon,
- 08 Dec 2025 09:05:52 -0500
-X-MC-Unique: h6U97B35OWKlQ-CQ9ZAtjA-1
-X-Mimecast-MFC-AGG-ID: h6U97B35OWKlQ-CQ9ZAtjA_1765202751
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7899D18002F5;
-	Mon,  8 Dec 2025 14:05:51 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.64.2])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F17651956095;
-	Mon,  8 Dec 2025 14:05:49 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Christian Brauner <brauner@kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v3] iomap: replace folio_batch allocation with stack allocation
-Date: Mon,  8 Dec 2025 09:05:48 -0500
-Message-ID: <20251208140548.373411-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kGxQZPp0"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7aace33b75bso4439609b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 08 Dec 2025 07:16:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1765207018; x=1765811818; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=MZwJOhnXjR9RH7Jlcrg7Vv/LBvLsIAP2Sb2ddg+1+Lg=;
+        b=kGxQZPp053M9tiS6frkUvqophDLDHmEZW+CWc+K51aZBoHI7pU9Fd6B9SK2g1trWhX
+         nLRBXh2TOuKd3KWsvffS+Ez5jMKx436GvHikqMqIh/IaRd1eIjoH0jkL8bXcIPFPXPjn
+         tmy7RI9FoGg6Q0f4JtSGG1uLzHMkrsfk7o2n+0kyk+KxE8GSrifkM2QZstoNNKGEcnJJ
+         DnkcrWtlDVARfyfxjpmRYmhrjHaK4kcO+2NfeXvVVrGkC+qosI+3fl8ws1xq55Jg2g/F
+         Mhnq2s6KTInUxR+5l7he3uJi+SZ5CaCTkRuvBlXZWuzQ4/A2v00+ntvZTMuZczAMHEIZ
+         IaVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765207018; x=1765811818;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MZwJOhnXjR9RH7Jlcrg7Vv/LBvLsIAP2Sb2ddg+1+Lg=;
+        b=spWfVvyUGOIOaU2V5oW3r3MqXOcTaILm2KZ7IIz41z/VrbtcO7t0kyjj7zJs59AIBG
+         Kn2XtFB52gmETsgIfI4ZjLr2G25glwYGMwNMww9Vr389oHMePvsN01FVrGt8aW80qfIY
+         fYDuLW4AmgqETHNN7euMlDE2gpKawOW2s1wMPH5YoMxHPiFRDPUsr891QVHJUwpLpSPh
+         dtN8McCdRaGine5HV4b/m9xVg80EUEUHJ2YCs6jnuckbcjyghU46boqa4dFipzdgGL2z
+         By7xrEN8CACm9Sj0secbz8fRD49Izn/NC5QfNcL7CyeEEQ235UvF81fKoTTliL8lNGwb
+         OAJA==
+X-Gm-Message-State: AOJu0YwOiwABZvMhh5sCmrjnoek21RpYFUBwDXcyYl/sXPHnSoB1EXid
+	E4bZragH5JMo7RXTLfw5u1FqxehL1OB6vaxdVqr9poyTcj2rF5+Jv3MbCAv6Qg==
+X-Gm-Gg: ASbGncvpmVYCOk03bCLBUZSEq2YDfrVD1y3ZawSilLy/ODnDNkS73EWeUjcNGL7XrXB
+	3ziQ+OvH7sDKTbCOEsNSswclwmNd0kYrzK20ZfcMrpzSd8B78+JcgTAKMepqoTJwai7fBsAlhHe
+	g7O+N0t5UPuw3mHD7d3Nk9UfNk8VSwyT+UEX14Lfu5RN0+huQzdrlZmYN+MIbxar+LcDv+SQNbc
+	pTOJlelsqDx4TD2rW5zwMsTtcp5S+wLKPY5u+eqP3scexTtQv1iALU/mLkmARAgwlwrTnJVr4cv
+	yjzfMiMVgnuD0PyP/umyWAeEVdpTnlw4BhzdWVxmAuYw1JMgDCWLdRW6owzuSJgXw/V6yV3Rkx2
+	SARkIy0JK0dWUKHcAsbe42nqFVkME7sH4HReXit7Sv/gAfJYCuSTimkAZNk/0mrqtYACQPtGVlg
+	356NoZnsmd1bpr3OfAJ0saVJEiJNnMB2J4+w/gOv82clBitps3UsxeCoasqqrivTgg
+X-Google-Smtp-Source: AGHT+IF4kLgFxpove754PNuUtZvXylfVAXL+I8whI3Rofz5cA5SO+NozMZfGOzysE2VCmiEyVbmhDw==
+X-Received: by 2002:a05:6a00:399c:b0:7e8:43f5:bd30 with SMTP id d2e1a72fcca58-7e8c60d9e48mr6752166b3a.69.1765207018310;
+        Mon, 08 Dec 2025 07:16:58 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.204.153])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7e29ff6b55fsm13586437b3a.17.2025.12.08.07.16.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Dec 2025 07:16:57 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	hch@infradead.org,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v1] xfs: Fix rgcount/rgsize value reported in XFS_IOC_FSGEOMETRY ioctl
+Date: Mon,  8 Dec 2025 20:46:11 +0530
+Message-ID: <50441ebab613e02219545cca9caec58aacf77446.1765206687.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Zhang Yi points out that the dynamic folio_batch allocation in
-iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
-that is under development because it doesn't sufficiently handle the
-allocation failure case (by allowing a retry, for example). We've
-also seen lockdep (via syzbot) complain recently about the scope of
-the allocation.
+With mkfs.xfs -m dir=0 i.e, with XFS_SB_FEAT_INCOMPAT_METADIR
+disabled, number of realtime groups should be reported as 1 and
+the size of it should be equal to total number of realtime
+extents since this the entire realtime filesystem has only 1
+realtime group.
 
-The dynamic allocation was initially added for simplicity and to
-help indicate whether the batch was used or not by the calling fs.
-To address these issues, put the batch on the stack of
-iomap_zero_range() and use a flag to control whether the batch
-should be used in the iomap folio lookup path. This keeps things
-simple and eliminates allocation issues with lockdep and for ext4 on
-iomap.
-
-While here, also clean up the fill helper signature to be more
-consistent with the underlying filemap helper. Pass through the
-return value of the filemap helper (folio count) and update the
-lookup offset via an out param.
-
-Fixes: 395ed1ef0012 ("iomap: optional zero range dirty folio processing")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Acked-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 ---
+ fs/xfs/libxfs/xfs_sb.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-v3:
-- Added Fixes: tag, tweak commit log.
-v2: https://lore.kernel.org/linux-fsdevel/20251113135404.553339-1-bfoster@redhat.com/
-- Reworked fill function to return folio count and pass flags as param.
-- Updated commit log to note function signature changes.
-v1: https://lore.kernel.org/linux-fsdevel/20251111175047.321869-1-bfoster@redhat.com/
-
- fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++++++-------------
- fs/iomap/iter.c        |  6 ++---
- fs/xfs/xfs_iomap.c     | 11 +++++-----
- include/linux/iomap.h  |  8 +++++--
- 4 files changed, 50 insertions(+), 25 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e5c1ca440d93..fd9a2cf95620 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -832,7 +832,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
- 	if (!mapping_large_folio_support(iter->inode->i_mapping))
- 		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
- 
--	if (iter->fbatch) {
-+	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
- 		struct folio *folio = folio_batch_next(iter->fbatch);
- 
- 		if (!folio)
-@@ -929,7 +929,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
- 	 * process so return and let the caller iterate and refill the batch.
- 	 */
- 	if (!folio) {
--		WARN_ON_ONCE(!iter->fbatch);
-+		WARN_ON_ONCE(!(iter->iomap.flags & IOMAP_F_FOLIO_BATCH));
- 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index cdd16dd805d7..989553e7ec02 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -875,7 +875,7 @@ __xfs_sb_from_disk(
+ 	} else {
+ 		to->sb_metadirino = NULLFSINO;
+ 		to->sb_rgcount = 1;
+-		to->sb_rgextents = 0;
++		to->sb_rgextents = to->sb_rextents;
  	}
  
-@@ -1544,23 +1544,39 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 	return status;
- }
+ 	if (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED) {
+@@ -1586,10 +1586,8 @@ xfs_fs_geometry(
  
--loff_t
-+/**
-+ * iomap_fill_dirty_folios - fill a folio batch with dirty folios
-+ * @iter: Iteration structure
-+ * @start: Start offset of range. Updated based on lookup progress.
-+ * @end: End offset of range
-+ * @iomap_flags: Flags to set on the associated iomap to track the batch.
-+ *
-+ * Returns the folio count directly. Also returns the associated control flag if
-+ * the the batch lookup is performed and the expected offset of a subsequent
-+ * lookup via out params. The caller is responsible to set the flag on the
-+ * associated iomap.
-+ */
-+unsigned int
- iomap_fill_dirty_folios(
- 	struct iomap_iter	*iter,
--	loff_t			offset,
--	loff_t			length)
-+	loff_t			*start,
-+	loff_t			end,
-+	unsigned int		*iomap_flags)
- {
- 	struct address_space	*mapping = iter->inode->i_mapping;
--	pgoff_t			start = offset >> PAGE_SHIFT;
--	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
-+	pgoff_t			pstart = *start >> PAGE_SHIFT;
-+	pgoff_t			pend = (end - 1) >> PAGE_SHIFT;
-+	unsigned int		count;
+ 	geo->version = XFS_FSOP_GEOM_VERSION_V5;
  
--	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
--	if (!iter->fbatch)
--		return offset + length;
--	folio_batch_init(iter->fbatch);
-+	if (!iter->fbatch) {
-+		*start = end;
-+		return 0;
-+	}
- 
--	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
--	return (start << PAGE_SHIFT);
-+	count = filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
-+	*start = (pstart << PAGE_SHIFT);
-+	*iomap_flags |= IOMAP_F_FOLIO_BATCH;
-+	return count;
- }
- EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
- 
-@@ -1569,17 +1585,21 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		const struct iomap_ops *ops,
- 		const struct iomap_write_ops *write_ops, void *private)
- {
-+	struct folio_batch fbatch;
- 	struct iomap_iter iter = {
- 		.inode		= inode,
- 		.pos		= pos,
- 		.len		= len,
- 		.flags		= IOMAP_ZERO,
- 		.private	= private,
-+		.fbatch		= &fbatch,
- 	};
- 	struct address_space *mapping = inode->i_mapping;
- 	int ret;
- 	bool range_dirty;
- 
-+	folio_batch_init(&fbatch);
-+
- 	/*
- 	 * To avoid an unconditional flush, check pagecache state and only flush
- 	 * if dirty and the fs returns a mapping that might convert on
-@@ -1590,11 +1610,11 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 	while ((ret = iomap_iter(&iter, ops)) > 0) {
- 		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
- 
--		if (WARN_ON_ONCE(iter.fbatch &&
-+		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
- 				 srcmap->type != IOMAP_UNWRITTEN))
- 			return -EIO;
- 
--		if (!iter.fbatch &&
-+		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
- 		    (srcmap->type == IOMAP_HOLE ||
- 		     srcmap->type == IOMAP_UNWRITTEN)) {
- 			s64 status;
-diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-index 8692e5e41c6d..c04796f6e57f 100644
---- a/fs/iomap/iter.c
-+++ b/fs/iomap/iter.c
-@@ -8,10 +8,10 @@
- 
- static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
- {
--	if (iter->fbatch) {
-+	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
- 		folio_batch_release(iter->fbatch);
--		kfree(iter->fbatch);
--		iter->fbatch = NULL;
-+		folio_batch_reinit(iter->fbatch);
-+		iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
- 	}
- 
- 	iter->status = 0;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 04f39ea15898..37a1b33e9045 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1831,7 +1831,6 @@ xfs_buffered_write_iomap_begin(
- 	 */
- 	if (flags & IOMAP_ZERO) {
- 		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
--		u64 end;
- 
- 		if (isnullstartblock(imap.br_startblock) &&
- 		    offset_fsb >= eof_fsb)
-@@ -1851,12 +1850,14 @@ xfs_buffered_write_iomap_begin(
- 		 */
- 		if (imap.br_state == XFS_EXT_UNWRITTEN &&
- 		    offset_fsb < eof_fsb) {
--			loff_t len = min(count,
--					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-+			loff_t foffset = offset, fend;
- 
--			end = iomap_fill_dirty_folios(iter, offset, len);
-+			fend = offset +
-+			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
-+			iomap_fill_dirty_folios(iter, &foffset, fend,
-+						&iomap_flags);
- 			end_fsb = min_t(xfs_fileoff_t, end_fsb,
--					XFS_B_TO_FSB(mp, end));
-+					XFS_B_TO_FSB(mp, foffset));
- 		}
- 
- 		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 520e967cb501..6bb941707d12 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -88,6 +88,9 @@ struct vm_fault;
- /*
-  * Flags set by the core iomap code during operations:
-  *
-+ * IOMAP_F_FOLIO_BATCH indicates that the folio batch mechanism is active
-+ * for this operation, set by iomap_fill_dirty_folios().
-+ *
-  * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
-  * has changed as the result of this write operation.
-  *
-@@ -95,6 +98,7 @@ struct vm_fault;
-  * range it covers needs to be remapped by the high level before the operation
-  * can proceed.
-  */
-+#define IOMAP_F_FOLIO_BATCH	(1U << 13)
- #define IOMAP_F_SIZE_CHANGED	(1U << 14)
- #define IOMAP_F_STALE		(1U << 15)
- 
-@@ -352,8 +356,8 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops,
- 		const struct iomap_write_ops *write_ops);
--loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
--		loff_t length);
-+unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
-+		loff_t end, unsigned int *iomap_flags);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, const struct iomap_ops *ops,
- 		const struct iomap_write_ops *write_ops, void *private);
+-	if (xfs_has_rtgroups(mp)) {
+-		geo->rgcount = sbp->sb_rgcount;
+-		geo->rgextents = sbp->sb_rgextents;
+-	}
++	geo->rgcount = sbp->sb_rgcount;
++	geo->rgextents = sbp->sb_rgextents;
+ 	if (xfs_has_zoned(mp)) {
+ 		geo->rtstart = sbp->sb_rtstart;
+ 		geo->rtreserved = sbp->sb_rtreserved;
 -- 
-2.51.1
+2.43.5
 
