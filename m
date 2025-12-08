@@ -1,80 +1,43 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8185623BF83
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Dec 2025 04:30:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0677155326
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Dec 2025 06:43:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765168220; cv=none; b=XelA2j4992ICMTkuYRmysQL7pWc92sUoZ8BKCSIqJMGM5fNRn25s216Cer6KnAXJReNjr9ahh1/RdoVzrg17DzCqH0jwRw6XJmJoA6YuFelXDstHfoUmmoCrwFIIRbqrJDATb6nQAwZ44yDftKtvozY5SvNYGo2UldBP0HV50lQ=
+	t=1765176222; cv=none; b=cmTirI72war73V1iFj/fbQesC4YOqP7d9Fzw4FiS67ColMY5+yNszpV75HMNX0vvnJFTax2aYzB79x6p+UPbcSTosg2R0okTuX7Khb0w1x7hhy+VU49X5LWINwfd1n+O35jKbaXqsYeeyfdMrwBnIuvilNAPEspZsxXG5lK2MVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765168220; c=relaxed/simple;
-	bh=eZCCvYQToVmBxbAbt2lQE5EqqWAflUIJbtQ4xunVH0I=;
+	s=arc-20240116; t=1765176222; c=relaxed/simple;
+	bh=2/Px50wuebIB4XGhh5tXJk9aNCzSmtaaPPHvgJW/27o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uQt4u3ECWNYPvaB03oLxjob6TKLC+VeD//VRx6Am+IdP6/NbXIIJF9vSYBJX24x4E4AXVZFKTaseHyB8+7cDrGiU4sIssTuJMp4JpJzJV/qVIrPfeNCsX4uO61kLTWBmz2iShAUoh9jv/96T0tyuW8Ce+0WTy2DoxmFW1yRC/Ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=fLCb6Z/m; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=Oky6kXYIFJhrkKvmSbfexSRF88QpMrIHbJhzSG0fNzFLKfIFAkbF8X40p54w2goT0gybn3QN7TAfJJf49YxHkF8i8iJAzS1Qrp76yIQdGUpnArE33Jj2w/yM0I73IoiGCtT15hxOpprPuqix5C48Gz68a/X4DqJtZDugDdBRG5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3S5akQMC; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="fLCb6Z/m"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-343806688c5so3113687a91.0
-        for <linux-xfs@vger.kernel.org>; Sun, 07 Dec 2025 20:30:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1765168217; x=1765773017; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nv7k4jy894O1RwRGQhzgAtY3y+ajSbQvSL7BZDIaDhU=;
-        b=fLCb6Z/m4sdZ2vFhwI/UY6gbxoQqKxK3CpXgwuDkG0jPUvuihHxlK1Oe3q2GjjvKTX
-         zLVR68ZEYIh1iuehsFPbzrxRifgvW4AsQeiATW4Cz3CL1uahA+ALYD+L6fON7dxmAQHU
-         y30gSJgCj13txiU4nrbNfu8XTnyQ6DDvrfOv3QuKcf+wsMxRcABJmSqSZWMmpRg0NIVI
-         flSHsiKyxC24OR6ZwN4M2veA+KcQ0ZtkcEWsEUlndCnqOw+WL4PmoeFikrb1uJ8H347b
-         3MPbRouIO/BM+ywObZ4IqM+wdMh+8uyQastR8z3Jn2xv+HyqUcXuw2nr4UvQHnadpTam
-         sVRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765168217; x=1765773017;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nv7k4jy894O1RwRGQhzgAtY3y+ajSbQvSL7BZDIaDhU=;
-        b=UnS0dYPcABikdcqeI3IYaD71sV40KhHEjtcfBA3PFvQCKnzuJBCNrowhBBC2P59ffC
-         FBP8yVec0V7lDfWWOST29lmzWAvk5gSxrF5tS+mecmlWfxSowPWqNlORA1GmZLMw7eqG
-         47TEvj1dJ/lxqLUQTLXl8IUxXoNpEpiVTlcmJPSGzm3FLH3jvhwBu+TmvMbZXf6MTIoA
-         nzFQUI9BH2Qyt8uwTMOFXdHCKdErKrkNWy/bltrjUBRPUpbEddu8j8gLvZ+D/yo0lUG/
-         IKNmsOcs8ll7VuW8zQldE2bn05B5LMiz62fH/q1Lim3QnNByt2HYoxpknzBzwjZPi0AF
-         MCvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWu69wNhkbLBfoRY/5Q8qgrCN3epC36qCU2xg+IWUJE7mLgHm9cCgKOftGH4slBtV8tsKYyzDdnMbs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCVAsl3/38chPNHfKzygfYeALER72xGsFlm/vczEbQCbJgAhe/
-	4LUCv5qsJ7pP+kKReHdsmPNBfa/5K4JuhdzizyJAQ5E34Syke/QrmwnbX4bDQr/Xa9nTcIsirtk
-	djFYR
-X-Gm-Gg: ASbGncuvIHehauFPa0hBXW2Uli0FG7a/RtRZnmUBI5BOcYMGJNePfvBL8Zw5CUTGAYr
-	eBWq3EeIQ7qLsR9OuMmU6bPBHqypD3mcu+TaXYf+yqNCFr/7UqRyz+WXF9JV8q+AhMhrkFSfrdk
-	8OPRGql2hQthKGaiFRB8LPWy1memPkauuzm9bbX28gYil9JU7AbUuWw/ESyhEy48jqCUuH2FeMg
-	WHiOEId60ACQbxBvdhOYZQkJ22riAlrEEAfOgrY5ThZPc16wD84baL6MWX2EC6ycB+WeC7wbQse
-	jhK5yTzn7sEhLkYBSkufZnnRoZgjnBX4Ng1ledCMiT5dOkeIYx0Ki1cAR7aaGiPToAAHaMP8/ns
-	GgXC3NYfXOR6YoJAhMJsxxD34zFEnRXq0GxrSCms3VScpe70ACOGwWRuWGM3H/VRbYY5h/BiKIb
-	h1RLSPjl8YYtPQPOvS+HGqTAKOfOrk5qiU0cjGd4u9SBJTuDflh/S4Qwhja9A=
-X-Google-Smtp-Source: AGHT+IFI/TFbhGZUTQnCDv2NnMnyA+B0AiJlnGhcyEr8Y2P8DlMdwc11rta+EgURcc0IcYEdkdwp+w==
-X-Received: by 2002:a17:90b:3b92:b0:340:4abf:391d with SMTP id 98e67ed59e1d1-349a250c3acmr5117256a91.16.1765168217118;
-        Sun, 07 Dec 2025 20:30:17 -0800 (PST)
-Received: from dread.disaster.area (pa49-195-10-63.pa.nsw.optusnet.com.au. [49.195.10.63])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3499ddae025sm2628066a91.5.2025.12.07.20.30.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Dec 2025 20:30:16 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vSSt3-000000009e7-39of;
-	Mon, 08 Dec 2025 15:30:13 +1100
-Date: Mon, 8 Dec 2025 15:30:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH, RFC] rename xfs.h
-Message-ID: <aTZUVTH4pMITncqc@dread.disaster.area>
-References: <20251202133723.1928059-1-hch@lst.de>
- <aTFOsmgaPOhtaDeL@dread.disaster.area>
- <20251204092340.GA19866@lst.de>
- <20251204172158.GJ89472@frogsfrogsfrogs>
- <20251205081224.GA21377@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3S5akQMC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=7KiJ0SleYr1KUdtASkzitgBUP81yNKqLc8etgcPyJaA=; b=3S5akQMCL3bpHkTlpIXjKp2gcb
+	xYuoaNDjuSuX4XwpI84WiwFBka0Ff6lHC8QsE3xAzU9PLb8qnRn+2NZ0VLhMo3ELvYWFe3R8Gn4zE
+	RpwbZxddoAEo4g+NzzStf1HRF32LNfPwUMYurv/8V9d4ymc4RYZm6keRAOUMvhZ71DSpMQhG0mRBB
+	Y6AHbpmjKIrKJKGSIZCr4rExp49prAeYnksWBiF7Wo+kKER2RojmnlfnZLROsGQXz3+027ctA3N44
+	5Di3AcpGnDDC5GTcgT8uXKbm2+D/tQfeksOquWzJHub1p8h9zhujFz0sOTJHism7d5/cbt3bCFn2w
+	8KRZFckA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vSUyA-0000000CiEz-03Eb;
+	Mon, 08 Dec 2025 06:43:38 +0000
+Date: Sun, 7 Dec 2025 22:43:37 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-xfs@vger.kernel.org, arekm@maven.pl
+Subject: Re: [PATCH] libfrog: fix incorrect FS_IOC_FSSETXATTR argument to
+ ioctl()
+Message-ID: <aTZzmatuLCSx2ATh@infradead.org>
+References: <20251205143154.366055-2-aalbersh@kernel.org>
+ <5i6vygbgclhg2u25yjmfzl6oac3l6mohvjqwszosj3s7av23pi@gjylrkdzcevs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,30 +46,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251205081224.GA21377@lst.de>
+In-Reply-To: <5i6vygbgclhg2u25yjmfzl6oac3l6mohvjqwszosj3s7av23pi@gjylrkdzcevs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Dec 05, 2025 at 09:12:24AM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 04, 2025 at 09:21:58AM -0800, Darrick J. Wong wrote:
-> > > Fine with me if that name is ok for shared code.
-> > 
-> > Why not merge the xfs_linux.h stuff into xfs_priv.h?  It's not like xfs
-> > supports any other operating systems now.
+On Fri, Dec 05, 2025 at 04:06:51PM +0100, Andrey Albershteyn wrote:
+> ops, git didn't use From:
 > 
-> We should merge them anyway, but I understood Dave in that he preferred
-> the xfs_linux.h name over xfs_priv.h one.
+> adding arekm@maven.pl
 
-Yeah, that. It's really the include file for the platform specific
-definitions, not anything "private" to XFS. If we want the same name
-for userspace and kernel, then maybe xfs_platform.h is best, and
-userspace can then include whatever OS/library specific platform
-headers it needs from that.
+Kinda useful as this really needs Arkadiusz's signoff.
 
-> I don't really care either
-> way, I just don't want to redo the patch too many times.
+With that:
 
-*nod*
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
