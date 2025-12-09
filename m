@@ -1,237 +1,125 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E462E540C
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Dec 2025 22:25:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDFC2F8BEE
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Dec 2025 22:58:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765319129; cv=none; b=bFMyxYRymDsYQrOuotWBqvhu57MQZRx560FOVAL/22xZM2i9NBjwIkA07ttfw0TSxiAyNW6jhzUHQRiMR9YJtyA3Xg+zmX81ceLqiQ7r9XU7WPth5jTrhakU6G73HS0kYSSy+w2F632QOJJqg1HAJ4XOSG50x5TEYYAc00xEniY=
+	t=1765321140; cv=none; b=mdorE8Mno7uBJQflIP/kkZbeGVnTZoCBn6QOrnS7/1Uw7MEjdUG8xzMNC7Oi3vC1PofhEnbU0AQSLgEwNG2/LufYdRlMQxatLYRWcVGg/jAGCjJTpHxxWHDggSeTsR5BzV1kqCCx2jUGM5Vtid4Rxu50C/xOOZvmwcddfQ3ui6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765319129; c=relaxed/simple;
-	bh=QFnHuXxD4HYu3D/GJM45spLxccXvEZxhwmTRv2exHbc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ncQ58j84Q7TA7cxOduK//pb8RsXWqHgMX4g0moGI2FKq1M5fi75+C6JFoKP7p8Nr+jO6gF9WTSGslvi+2joDiuBjNJ4JPQopoTv6komDAzL4ixOmTCvJ6e7OAYRjt6fFgUtx4GYaByCAY6x3u9Re8jM0uKmXeVcPCqfvZgxF+bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Wuu4S1mT; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1765321140; c=relaxed/simple;
+	bh=sFVdAkgFOINhzK560Out4EbgCov5DZCMN4hZSisa95Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lBT6V3/JST7PchFKD10cYTipsmdoDhLXjpxfkvV/TwtVFC8FitUmmbKvbJkbuyiIIBNWN2g8ckFrJRgIwT/evTcQg/tbwVvbjDSkcgMyb2YoRQufEryBjv/l+QvoOmSgtu6Wudhw/ZXWXe4CbBhmzw/+5wL3/TRcQBJtXhzF+QA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CdxKXdW5; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=sfnRJay7; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Wuu4S1mT"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-297d4a56f97so77934955ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Dec 2025 14:25:27 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CdxKXdW5";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="sfnRJay7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1765321138;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sx2N030kHDU3OMlQAIVaDUGrGe8VrOBIheVyKBS03xQ=;
+	b=CdxKXdW5gDQVAi5nnsTMliZi4gQMkh+2dN1CKiwDkELyylJg3NMA6wZQVLqCeMY8bskwYO
+	InoU0dfY9sYNFUGozm85gfh5a6PT0BTjptOsAErNrOS/VETms3YZFzsfdm8dDeTVL1T2zO
+	qeV7juzPznJMAH6T/gu0LT5twe6qax0=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-211-ZCF1acqUO22-YVtZ1UHNoQ-1; Tue, 09 Dec 2025 17:58:56 -0500
+X-MC-Unique: ZCF1acqUO22-YVtZ1UHNoQ-1
+X-Mimecast-MFC-AGG-ID: ZCF1acqUO22-YVtZ1UHNoQ_1765321135
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4775e00b16fso39306895e9.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Dec 2025 14:58:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1765319127; x=1765923927; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ClZUkbKvWzK2TOu2ajyMleFd5hnpInlMGggKqMUhh30=;
-        b=Wuu4S1mTZ0p0+cY08jZX5vJ/Ai67GntgpoAZ6sNW6OxpjdXoYMIJs8pF7/XG5JJqNk
-         Uq+fcc3gd7IdplEHhvAXgcQbeCjIR2ctRsYTabNHdfFWvP5Ea2DTyR6XAd3f4YE4yWFQ
-         gbAcCKJGY0apjTRbZ3ZVLSICsWMZDIvnaoMjBs2B+3SySiZlKzUvxXfQNRfXBlOtPDZd
-         GmpcvJeCEZwv42x1d24O6ChGgagmG4pQbYCZW1gCdeWO0P9NYQqw5S6iZWh4KBRsuGYO
-         fsE8tINg6IQzXxu3922bj9DNWKRTYn3iBbxnbV3wkBZwR1p+rfBiQcyqNrvh7Pi/KKF8
-         Dk9A==
+        d=redhat.com; s=google; t=1765321135; x=1765925935; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=sx2N030kHDU3OMlQAIVaDUGrGe8VrOBIheVyKBS03xQ=;
+        b=sfnRJay7Cihy0V/2R7l6ArlRCKipta9eQI7JO59nCqWkfNp992KA0WGm7rZCO8cIx5
+         U//fwVvft3qmV9vJ1SMEOFzNAGJ9LcZ1YlKny+B6ZhGCHNnd6xZAGD1GWJKOuOw5CB4F
+         aatRfYXEbdH2x0Fe7F1Q8uDIPozlxohsJA8TsWL4Jmhwv9iY+TAJW0wJyREZm0IAQwHf
+         7Rac4ugMxyVa969WV3ovtbVOcL2xBzq9GsA28/xOh3yKb7Abkj8NsBXmsLxHOHuMBMrO
+         7+Sr1bmRLFeXRgtrsYQ125LoDNGG/k2I/jPHPmQPKpG1nb53HApzKZNkl68O3+q3dgac
+         lGHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765319127; x=1765923927;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ClZUkbKvWzK2TOu2ajyMleFd5hnpInlMGggKqMUhh30=;
-        b=BlWCto+LGB86VuWT9q3yOHgn9yoM7AsH20iUB9okMPZK3M1DWfqBDy4j1N765SETTQ
-         KA2oQaIDK7uMk2LKyRCG6Hqq8O8m78f3TawZqwDQn1B0/AKgj3XsvdIzfZ5FfJv0YpHq
-         yGxHLzEpEWyAUfHL7Vi7xwuoQPICzVwCF6iMKLq1ZlJIqFNkJwRWaZnoGmYZlYpfrMpi
-         O8Z862Ab7fdEZJodZ7+7nWTCXDFfLPcV2IdccDH0gh3CtriLQWQB2YprENaa0hWKbnFR
-         S06idhbD6+xN0t/qavvtPM5sOJlcAsanR/7s04kHl1K4Ct2cpAhLsXpCfu45rbDrP8kp
-         fNcA==
-X-Forwarded-Encrypted: i=1; AJvYcCVO6zQNdnaSq6q6dbus7cgEJmS6UaGg75yr61g55GlyX4gD4cOccjwpoWcowfsLSXj7ghsjnrro1Gs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyOjNrlDcLOtaZUYjCvH0vQuklPkDUXvG5W2aPSxZM9kpcrtbcD
-	HdUKnYPxcrbc9KZ2r/75OwGOysA+WrloQI+qH0/7ME52vk3rST/GKU+sgh7zSYH3enr3K7lxH/J
-	MTbVi
-X-Gm-Gg: AY/fxX6Ka57QmzJnBt2OEcEEeJZ9gL4UCirBgSWZVu7rZjKliwaY6wP0JeCRINWQ1Qr
-	MwoAePTFZ0xKj+8+vxFWzXUARyVfo8jZHJArV+sYYvaNaWE72MeguxJv1+ypIlEOGTshgqsxAH5
-	HOsy+Me+HyD3Tw5jGPCzaRw8USidZi4GLdXqhFmKXBUTWF7nHY5TyaADwDbwObN5CXoNWUp4y5U
-	cEpX2FG+XA/swP+1KwFCNOpqJ2qXS5+w8sHwSKGfUsaAq145uxHZEXbDS2fFVq089hEMICQAXUE
-	mF8G7o8yrt/WLmJBycMf6/rLCEH2O2nWvCW1iW3jW+bEG+jCVJXXarw1JZ9btvGw6tIuHsk06ds
-	ik4UbJrPWGlfAj461QCmWMJ/Ux4WRcXuiXThBPsdwPJ6ruUjOQPhjnj8zvM1Ixg5EIq6ZycGn69
-	VNKQL+3UsCJSXFaWOmmHT5gv4tFUv+K7Z9+iTG9DIka/v28gvYLfX4nujPVFY=
-X-Google-Smtp-Source: AGHT+IFjBtnot29WyDAxriNFV/Uwi7UY7TrDOPyWKKOYB5BU3jbo6y/034rF1+vBI87SyIFOSR7u5Q==
-X-Received: by 2002:a17:902:da85:b0:298:43f4:cc4b with SMTP id d9443c01a7336-29ec22f1764mr3487715ad.26.1765319127122;
-        Tue, 09 Dec 2025 14:25:27 -0800 (PST)
-Received: from dread.disaster.area (pa49-195-10-63.pa.nsw.optusnet.com.au. [49.195.10.63])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29daeae6d75sm165910475ad.98.2025.12.09.14.25.26
+        d=1e100.net; s=20230601; t=1765321135; x=1765925935;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sx2N030kHDU3OMlQAIVaDUGrGe8VrOBIheVyKBS03xQ=;
+        b=pcVgU8HVqhHGKxBKPes3XNPWHcNN3gJsw+VXYhYpREGNd7d+zV3unJvLcv2lw709mg
+         o3lpIyJL1+TqJgMBJavDSZBXJzHbz8RmMORdGkIOFldQ4D1NV4eX1fYrQ7Nl8JC2SLMi
+         3XNrXagNSY4Mp2DQ6phJD9bEA0IEiBhPi/sxAh94K96DYNWuwRr0HBSD8FZcFL3FiMC3
+         uzzm/W7MtxsfaxyWIYZZzIleC22iY/7Hqa7TMmRn4N34vk5FUQXFjBm/U1W9q81cHbDt
+         QnNEhaTAyZjaDmGr76atiAN7zHqMcB7ZzhY5kajUR2LAVIXbfFTTLCfwc7NGrBD0s7gk
+         qCSg==
+X-Gm-Message-State: AOJu0YwEj1GxYv2jGptPAoTaseT3iHJ0jLwRnOfC5b5QddLM2JschEgP
+	C7zO68CohFtwCvoPc0Nywpmx+wb6GYBLXl72eJnbzkJipEFqnygsKCoGSM+s2ryP+Lx/kb+IN/L
+	CuT8CiK7MUnX/4IiAj+QbDaecQy5gFsDlwnvHihnTd8faNW1e+1yjADKxPYoqUwox9ZHu+tLSXh
+	dd7kBbfXgqBgehl9rd+EmWH7+91ofvTP7iI6XDkSd5/7c4
+X-Gm-Gg: ASbGncutqvmOqA6B1MTFuLi0SpuRnkacL6rLuJzW8VhbKnrvsh1viheIt1t39EmOKH8
+	5iQDEC/2S1ayOfyyF/NjX3eLjbUFieXAPwqEj/7PdyqZzyQOMVL+NtRA36f8RzHp+F/Dx0kYjoJ
+	EOG/nmDBQeaVhIwNnUoGJh8iZ1jAS1jnWuUpKjtPYuQYwaJfPVABPQPoWN7F+atafQIRgQYAaGl
+	4z9kOkGN7nGe7xx6baiaPHU/eJFlcytk9O/igt8BbpS1DtcANMTdXhqE7UWdVP9XSrfaUi/SsUB
+	mVfRx0/f01YpIsO+ovkFBKk2FbhNpSneDBlMlNRga7efQT2pdwSNweyYxX9TF+SteYSfjx/7ucQ
+	tjHuysHYMSjCxuQitFzo77fi9CUBl8zF26sglTf8aJKq3VIw=
+X-Received: by 2002:a05:600c:b85:b0:477:abea:9028 with SMTP id 5b1f17b1804b1-47a8376e3c3mr3833255e9.6.1765321134845;
+        Tue, 09 Dec 2025 14:58:54 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFgACqwu12HVyVQL7/vLC000z365P1m3zXNRJvxuudFHdeJ0m2Cwpd0xQjFFuE18f+whO93Lg==
+X-Received: by 2002:a05:600c:b85:b0:477:abea:9028 with SMTP id 5b1f17b1804b1-47a8376e3c3mr3833165e9.6.1765321134445;
+        Tue, 09 Dec 2025 14:58:54 -0800 (PST)
+Received: from fedora.redhat.com (gw20-pha-stl-mmo-2.avonet.cz. [131.117.213.219])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7d353f8bsm34575522f8f.43.2025.12.09.14.58.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 14:25:26 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vT696-00000000ryc-0JXS;
-	Wed, 10 Dec 2025 09:25:24 +1100
-Date: Wed, 10 Dec 2025 09:25:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] mkfs: enable new features by default
-Message-ID: <aTih1FDXt8fMrIb4@dread.disaster.area>
-References: <176529676119.3974899.4941979844964370861.stgit@frogsfrogsfrogs>
- <176529676146.3974899.6119777261763784206.stgit@frogsfrogsfrogs>
+        Tue, 09 Dec 2025 14:58:53 -0800 (PST)
+From: Pavel Reichl <preichl@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org,
+	chandanbabu@kernel.org,
+	aalbersh@redhat.com
+Subject: [PATCH v2 0/1] mdrestore: fix restore_v2() superblock length check
+Date: Tue,  9 Dec 2025 23:58:51 +0100
+Message-ID: <20251209225852.1536714-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <176529676146.3974899.6119777261763784206.stgit@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Dec 09, 2025 at 08:16:08AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Since the LTS is coming up, enable parent pointers and exchange-range by
-> default for all users.  Also fix up an out of date comment.
-> 
-> I created a really stupid benchmarking script that does:
-> 
-> #!/bin/bash
-> 
-> # pptr overhead benchmark
-> 
-> umount /opt /mnt
-> rmmod xfs
-> for i in 1 0; do
-> 	umount /opt
-> 	mkfs.xfs -f /dev/sdb -n parent=$i | grep -i parent=
-> 	mount /dev/sdb /opt
-> 	mkdir -p /opt/foo
-> 	for ((i=0;i<5;i++)); do
-> 		time fsstress -n 100000 -p 4 -z -f creat=1 -d /opt/foo -s 1
-> 	done
-> done
+Hi all,
 
-Hmmm. fsstress is an interesting choice here...
+On s390x (big-endian), running xfstests -g metadump currently fails
+6 out of 9 tests. The failure is triggered by the superblock
+extent-length validation in restore_v2(). The code rejects
+xme_len == 1, but a length of 1 is the correct and expected value,
+since the superblock fits within a single 512-byte sector.
 
-> This is the result of creating an enormous number of empty files in a
-> single directory:
-> 
-> # ./dumb.sh
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-> real    0m18.807s
-> user    0m2.169s
-> sys     0m54.013s
+On big-endian systems, this length decodes to 1 and the check aborts
+the restore. On little-endian systems, the same on-disk bytes are
+interpreted as 16777216, so the faulty logic never triggers there.
 
-> 
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> real    0m20.654s
-> user    0m2.374s
-> sys     1m4.441s
+The patch removes the incorrect rejection of a valid extent length of
+1 and applies proper logic so that the superblock extent length is
+validated consistently across all architectures.
 
-Yeah, that's only creating 20,000 files/sec. That's a lot less than
-expect a single thread to be able to do - why is the kernel burning
-all 4 CPUs on this workload?
+The outline of the fix was discussed with Chandan (thanks).
 
-i.e. i'd expect a pure create workload to run at about 40,000
-files/s with sleeping contention on the i_rwsem, but this is much
-slower than I'd expect and contention is on a spinning lock...
+v2:
+- xme.xme_len is an ondisk value so use be32_to_cpu() instead of
+  cpu_to_be32()
 
-Also, parent pointers add about 20% more system time overhead (54s
-sys time to 64.4s sys time). Where does this come from? Do you have
-kernel profiles? Is it PP overhead, a change in the contention
-point, or just worse contention on the same resource?
+Pavel Reichl (1):
+  mdrestore: fix restore_v2() superblock length check
 
-> As you can see, there's a 10% increase in runtime here.  If I make the
-> workload a bit more representative by changing the -f argument to
-> include a directory tree workout:
-> 
-> -f creat=1,mkdir=1,mknod=1,rmdir=1,unlink=1,link=1,rename=1
-> 
-> 
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> real    0m12.742s
-> user    0m28.074s
-> sys     0m10.839s
-> 
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-> real    0m12.782s
-> user    0m28.892s
-> sys     0m8.897s
+ mdrestore/xfs_mdrestore.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Again, that's way slower than I'd expect a 4p metadata workload to
-run through 400k modification ops. i.e. it's running at about 35k
-ops/s, and I'd be expecting the baseline to be upwards of 100k
-ops/s.
-
-Ah, look at the amount of time spent in userspace - 28-20s vs 9-11s
-spent in the kernel filesystem code.
-
-Ok, performance is limited by the usrespace code, not the kernel
-code. I would expect a decent fs benchmark to be at most 10%
-userspace CPU time, with >90% of the time being spent in the kernel
-doing filesystem operations.
-
-IOWs, there is way too much userspace overhead in this worklaod to
-draw useful conclusions about the impact of the kernel side changes.
-
-System time went up from 9s to 11s when parent pointers are turned
-on - a 20% increase in CPU overhead - but that additional overhead
-isn't reflected in the wall time results because the CPU overehad is
-dominated by the userspace program, not the kernel code that is
-being "measured".
-
-> Almost no difference here.
-
-Ah, no. Again, system time went up by ~20%, even though elapsed time
-was unchanged. That implies there is some amount of sleeping
-contention occurring between processes doing work, and the
-additional CPU overhead of the PP code simply resulted in less sleep
-time.
-
-Again, this is not noticable because the workload is dominated by
-userspace CPU overhead, not the kernel/filesystem operation
-overhead...
-
-
-> If I then actually write to the regular
-> files by adding:
-> 
-> -f write=1
-> 
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> real    0m16.668s
-> user    0m21.709s
-> sys     0m15.425s
-> 
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-> real    0m15.562s
-> user    0m21.740s
-> sys     0m12.927s
-> 
-> So that's about a 2% difference.
-
-Same here - system time went up by 25%, even though wall time didn't
-change. Also, 15.5s to 16.6s increase in wall time is actually
-a 7% difference in runtime, not 2%.
-
-----
-
-Overall, I don't think the benchmarking documented here is
-sufficient to justify the conclusion that "parent pointers have
-little real world overhead so we can turn them on by default".
-
-I would at least like to see the "will-it-scale" impact on a 64p
-machine with a hundred GB of RAM and IO subsystem at least capable
-of a million IOPS and a filesystem optimised for max performance
-(e.g. highly parallel fsmark based workloads). This will push the
-filesystem and CPU usage to their actual limits and directly expose
-additional overhead and new contention points in the results.
-
-This is also much more representative of the sorts of high
-performance, high end deployments that we expect XFS to be deployed
-on, and where performance impact actually matters to users.
-
-i.e. we need to know what the impact of the change is on the high
-end as well as low end VM/desktop configs before any conclusion can
-be drawn w.r.t. changing the parent pointer default setting....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.52.0
+
