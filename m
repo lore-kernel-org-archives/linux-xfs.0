@@ -1,124 +1,237 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DDDE3148B1
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Dec 2025 21:05:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E462E540C
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Dec 2025 22:25:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765314337; cv=none; b=PkYoxMlop5wv3qqll7I/di601k5gNs8+gZCb8nQPkQ68RggzaMOL7oBAqu8iW7L/m7wcxbmFPa8FTDS0LbOw1aGHgXsAV3EhGusPKM4yEg+zMEhQASRlkAK6H96dZ7ZnGJhLPcRtSYr+VFFLW2qnTgGyTq8Kf7nHrCRggtisPW4=
+	t=1765319129; cv=none; b=bFMyxYRymDsYQrOuotWBqvhu57MQZRx560FOVAL/22xZM2i9NBjwIkA07ttfw0TSxiAyNW6jhzUHQRiMR9YJtyA3Xg+zmX81ceLqiQ7r9XU7WPth5jTrhakU6G73HS0kYSSy+w2F632QOJJqg1HAJ4XOSG50x5TEYYAc00xEniY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765314337; c=relaxed/simple;
-	bh=ydHiuDxIrW5FazFjw0AZzylfnfdPPZlpeSRd2sqLG7o=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=lK4lHlZyju9kB5WYMtFma/JdqpufjybH8fiN7Vsq66HWNwkFFzkcLplaOONesx1D95D6nyiLX/U5VgRcZEGws1BYQkocmGzU+sWh9y6jNuGNFJjcYUOrQq/eSDe2ZU+ROk961ywaz7Gf945zYVdG6N7hiFI3rhX8pZX1gvwzbTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=is7gMYUa; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=JqB4XQIF; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1765319129; c=relaxed/simple;
+	bh=QFnHuXxD4HYu3D/GJM45spLxccXvEZxhwmTRv2exHbc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ncQ58j84Q7TA7cxOduK//pb8RsXWqHgMX4g0moGI2FKq1M5fi75+C6JFoKP7p8Nr+jO6gF9WTSGslvi+2joDiuBjNJ4JPQopoTv6komDAzL4ixOmTCvJ6e7OAYRjt6fFgUtx4GYaByCAY6x3u9Re8jM0uKmXeVcPCqfvZgxF+bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Wuu4S1mT; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="is7gMYUa";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="JqB4XQIF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1765314335;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5JtO+/e6kTnIf7NZZ+Q5LHQ9Py7x/v7ASju/lUvZ3DY=;
-	b=is7gMYUawmI0EZJw1HoshFPbtTO/10JlRSrT8GapIffJCZH17i1lNkia3vGMPlBWz1xFVf
-	SK283/2Mdk9zNPDAPRS981lO6CUouuOXXuFXDPblZPvH3MrEjxA/QcquHPUjo7EU4uIJDn
-	V8HZaJ/QBEwAxIwSfASfFTqbWESoyZQ=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-329-S4wZ1WgSORmhr0bwYaeleQ-1; Tue, 09 Dec 2025 16:05:29 -0500
-X-MC-Unique: S4wZ1WgSORmhr0bwYaeleQ-1
-X-Mimecast-MFC-AGG-ID: S4wZ1WgSORmhr0bwYaeleQ_1765314328
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-477cf25ceccso50659055e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Dec 2025 13:05:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Wuu4S1mT"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-297d4a56f97so77934955ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Dec 2025 14:25:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1765314327; x=1765919127; darn=vger.kernel.org;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5JtO+/e6kTnIf7NZZ+Q5LHQ9Py7x/v7ASju/lUvZ3DY=;
-        b=JqB4XQIFQTMDBo0DM9hXP0OoRD2O4EH7EYjvfgjVC0YCqnd9vYOrPFw4iskOwCseVD
-         U8IXJn4eY/Q7VfYTdtVOdIv8Objaf4gV3K4TOJYQZ28ENc63Wdbm0u9hzE7KyDiKmedW
-         3p+Z7FonGNHXQ1JFI2oGWRJ8KizyW9OsTb3wV7WxcoouBCz8bVzrSmubhXLYUQD2KUAq
-         ndCj9HVuLEfGDrRR11BLEIw7JiAuOlHX4NsArnaGQeXo8f5f8aVZE85qhKEK5B/6t/zi
-         dKteimW8El5Hy/9qdPw/PmTpRtTMS13yvwtacnIWVE5U3GmCSaYhd/l6gmL5j+teQKxv
-         +9rg==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1765319127; x=1765923927; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ClZUkbKvWzK2TOu2ajyMleFd5hnpInlMGggKqMUhh30=;
+        b=Wuu4S1mTZ0p0+cY08jZX5vJ/Ai67GntgpoAZ6sNW6OxpjdXoYMIJs8pF7/XG5JJqNk
+         Uq+fcc3gd7IdplEHhvAXgcQbeCjIR2ctRsYTabNHdfFWvP5Ea2DTyR6XAd3f4YE4yWFQ
+         gbAcCKJGY0apjTRbZ3ZVLSICsWMZDIvnaoMjBs2B+3SySiZlKzUvxXfQNRfXBlOtPDZd
+         GmpcvJeCEZwv42x1d24O6ChGgagmG4pQbYCZW1gCdeWO0P9NYQqw5S6iZWh4KBRsuGYO
+         fsE8tINg6IQzXxu3922bj9DNWKRTYn3iBbxnbV3wkBZwR1p+rfBiQcyqNrvh7Pi/KKF8
+         Dk9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765314327; x=1765919127;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5JtO+/e6kTnIf7NZZ+Q5LHQ9Py7x/v7ASju/lUvZ3DY=;
-        b=PmTCmSvHRbzSzzmufYO+xGULuxivkhqiPh+YWYN4UvrUb1tNLvFNJpXgtYCK/GDoCa
-         qniRsVmRRJIAlnN7OvuJuZWcvEh9664tmXMqJ+0ANaPzz1pW1DJwmtNWMSZ0tQwI69Wg
-         wPMiW58uUDNAhWFgbKJAH0mFSPqZ0GLE04JQZvqFlWy0Ot5f59P3RmREl6e+u4jTIdQF
-         1OXAU6ySCWH8Hp/Z+lvgVSbdmBBh+fayus+4nrE146DSkxZaZvPgZSztpBCGfUaWEgBN
-         ze8Hip9Yh+tclJz7s6OYNYr39ZzfOzKuk626HrleQrJ8aVFv6Adq0n1hRPsxT5c5FYNZ
-         AJUw==
-X-Forwarded-Encrypted: i=1; AJvYcCWaaJ0+y4A7r6qWwmWu8zADeW2/bpkgtuL2qYMTH1YZbeRgt/x7+rvfrwHOEYkx78loGFuA4/J0KAo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHIGFd7wZG3OQQ1mMQJw+CM0/wOyepVIRZzz/hhzM8I67pwlmk
-	iSt3P1jpUMsfOV6TdEdBGDQl0mL7JiUVhOIF4dBFDjZl8AUb+D3BJ0P4P7rKXNkjLNX6uzKLdWv
-	8zKp9fqSsEWD0n1F94dTkH18C93u6vn/yVZiBfBrXuiFYOskcMMzOTjD0FNZs/w==
-X-Gm-Gg: ASbGncs7NDn/Eq8IwfRi/9TpIEUgi/2mDF/NjryHLDettX/yoVBqpG4iOvUl3ke2ppS
-	Qwc7+hDCApZ3wm85SsiFcPsNT0npgs3crQIgEfbStR8i9QtaWlTooKJVu97f7DDnMxof7+m+/QM
-	t3VDo2iyowyz05AB0jRmE+N8NSwvY2FQuRxRXdg9I29vTM6dJjBdRzdydJWWN3U+yPMrUcvYUyV
-	DdR85FdKFDWDaQ/gR0mMw14ZA2EhwA2qFA6PeNJGn972qcgmX5Wm3v4JAQpO/rLzVryAw7Z3gUj
-	phSX08iNhXTQqKP+n9R1z2C37ElkMPvvlxGmiLTQQIjVFEiBvJosuFn4k97fXvqHmiY1LsG0m7A
-	xDU0DCtbcXGyeRn/Blqp5LuEaM7XTV/pxeYB1wBukev0pzmbxx4KoAx8KoSc=
-X-Received: by 2002:a05:600c:34d1:b0:477:76c2:49c9 with SMTP id 5b1f17b1804b1-47a83744a33mr2306395e9.2.1765314327652;
-        Tue, 09 Dec 2025 13:05:27 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEtCAFhErGwzqpGWe7IpcJT0+41Hr+cUdeizf5PIDHvpAkbhAflBzeSLnGEysOKGluXPZLr/A==
-X-Received: by 2002:a05:600c:34d1:b0:477:76c2:49c9 with SMTP id 5b1f17b1804b1-47a83744a33mr2306225e9.2.1765314327245;
-        Tue, 09 Dec 2025 13:05:27 -0800 (PST)
-Received: from rh (p200300f6af498100e5be2e2bdb5254b6.dip0.t-ipconnect.de. [2003:f6:af49:8100:e5be:2e2b:db52:54b6])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47a82cb12fbsm10202915e9.0.2025.12.09.13.05.26
+        d=1e100.net; s=20230601; t=1765319127; x=1765923927;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ClZUkbKvWzK2TOu2ajyMleFd5hnpInlMGggKqMUhh30=;
+        b=BlWCto+LGB86VuWT9q3yOHgn9yoM7AsH20iUB9okMPZK3M1DWfqBDy4j1N765SETTQ
+         KA2oQaIDK7uMk2LKyRCG6Hqq8O8m78f3TawZqwDQn1B0/AKgj3XsvdIzfZ5FfJv0YpHq
+         yGxHLzEpEWyAUfHL7Vi7xwuoQPICzVwCF6iMKLq1ZlJIqFNkJwRWaZnoGmYZlYpfrMpi
+         O8Z862Ab7fdEZJodZ7+7nWTCXDFfLPcV2IdccDH0gh3CtriLQWQB2YprENaa0hWKbnFR
+         S06idhbD6+xN0t/qavvtPM5sOJlcAsanR/7s04kHl1K4Ct2cpAhLsXpCfu45rbDrP8kp
+         fNcA==
+X-Forwarded-Encrypted: i=1; AJvYcCVO6zQNdnaSq6q6dbus7cgEJmS6UaGg75yr61g55GlyX4gD4cOccjwpoWcowfsLSXj7ghsjnrro1Gs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOjNrlDcLOtaZUYjCvH0vQuklPkDUXvG5W2aPSxZM9kpcrtbcD
+	HdUKnYPxcrbc9KZ2r/75OwGOysA+WrloQI+qH0/7ME52vk3rST/GKU+sgh7zSYH3enr3K7lxH/J
+	MTbVi
+X-Gm-Gg: AY/fxX6Ka57QmzJnBt2OEcEEeJZ9gL4UCirBgSWZVu7rZjKliwaY6wP0JeCRINWQ1Qr
+	MwoAePTFZ0xKj+8+vxFWzXUARyVfo8jZHJArV+sYYvaNaWE72MeguxJv1+ypIlEOGTshgqsxAH5
+	HOsy+Me+HyD3Tw5jGPCzaRw8USidZi4GLdXqhFmKXBUTWF7nHY5TyaADwDbwObN5CXoNWUp4y5U
+	cEpX2FG+XA/swP+1KwFCNOpqJ2qXS5+w8sHwSKGfUsaAq145uxHZEXbDS2fFVq089hEMICQAXUE
+	mF8G7o8yrt/WLmJBycMf6/rLCEH2O2nWvCW1iW3jW+bEG+jCVJXXarw1JZ9btvGw6tIuHsk06ds
+	ik4UbJrPWGlfAj461QCmWMJ/Ux4WRcXuiXThBPsdwPJ6ruUjOQPhjnj8zvM1Ixg5EIq6ZycGn69
+	VNKQL+3UsCJSXFaWOmmHT5gv4tFUv+K7Z9+iTG9DIka/v28gvYLfX4nujPVFY=
+X-Google-Smtp-Source: AGHT+IFjBtnot29WyDAxriNFV/Uwi7UY7TrDOPyWKKOYB5BU3jbo6y/034rF1+vBI87SyIFOSR7u5Q==
+X-Received: by 2002:a17:902:da85:b0:298:43f4:cc4b with SMTP id d9443c01a7336-29ec22f1764mr3487715ad.26.1765319127122;
+        Tue, 09 Dec 2025 14:25:27 -0800 (PST)
+Received: from dread.disaster.area (pa49-195-10-63.pa.nsw.optusnet.com.au. [49.195.10.63])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29daeae6d75sm165910475ad.98.2025.12.09.14.25.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 13:05:26 -0800 (PST)
-Date: Tue, 9 Dec 2025 22:05:25 +0100 (CET)
-From: Sebastian Ott <sebott@redhat.com>
-To: Robin Murphy <robin.murphy@arm.com>
-cc: linux-nvme@lists.infradead.org, iommu@lists.linux.dev, 
-    linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-    linux-xfs@vger.kernel.org, Jens Axboe <axboe@fb.com>, 
-    Christoph Hellwig <hch@lst.de>, Will Deacon <will@kernel.org>, 
-    Carlos Maiolino <cem@kernel.org>
-Subject: Re: WARNING: drivers/iommu/io-pgtable-arm.c:639
-In-Reply-To: <4386e0f7-9e45-41d2-8236-7133d6d00610@arm.com>
-Message-ID: <99e12a04-d23f-f9e7-b02e-770e0012a794@redhat.com>
-References: <170120f7-dd2c-4d2a-d6fc-ac4c82afefd7@redhat.com> <4386e0f7-9e45-41d2-8236-7133d6d00610@arm.com>
+        Tue, 09 Dec 2025 14:25:26 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vT696-00000000ryc-0JXS;
+	Wed, 10 Dec 2025 09:25:24 +1100
+Date: Wed, 10 Dec 2025 09:25:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] mkfs: enable new features by default
+Message-ID: <aTih1FDXt8fMrIb4@dread.disaster.area>
+References: <176529676119.3974899.4941979844964370861.stgit@frogsfrogsfrogs>
+ <176529676146.3974899.6119777261763784206.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <176529676146.3974899.6119777261763784206.stgit@frogsfrogsfrogs>
 
-On Tue, 9 Dec 2025, Robin Murphy wrote:
-> On 2025-12-09 11:43 am, Sebastian Ott wrote:
->>  Hi,
->>
->>  got the following warning after a kernel update on Thurstday, leading to a
->>  panic and fs corruption. I didn't capture the first warning but I'm pretty
->>  sure it was the same. It's reproducible but I didn't bisect since it
->>  borked my fs. The only hint I can give is that v6.18 worked. Is this a
->>  known issue? Anything I should try?
->
-> nvme_unmap_data() is attempting to unmap an IOVA that was never mapped, or 
-> has already been unmapped by someone else. That's a usage bug.
+On Tue, Dec 09, 2025 at 08:16:08AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Since the LTS is coming up, enable parent pointers and exchange-range by
+> default for all users.  Also fix up an out of date comment.
+> 
+> I created a really stupid benchmarking script that does:
+> 
+> #!/bin/bash
+> 
+> # pptr overhead benchmark
+> 
+> umount /opt /mnt
+> rmmod xfs
+> for i in 1 0; do
+> 	umount /opt
+> 	mkfs.xfs -f /dev/sdb -n parent=$i | grep -i parent=
+> 	mount /dev/sdb /opt
+> 	mkdir -p /opt/foo
+> 	for ((i=0;i<5;i++)); do
+> 		time fsstress -n 100000 -p 4 -z -f creat=1 -d /opt/foo -s 1
+> 	done
+> done
 
-OK, that's what I suspected - thanks for the confirmation!
+Hmmm. fsstress is an interesting choice here...
 
-I did another repro and tried:
+> This is the result of creating an enormous number of empty files in a
+> single directory:
+> 
+> # ./dumb.sh
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> real    0m18.807s
+> user    0m2.169s
+> sys     0m54.013s
 
-good: 44fc84337b6e Merge tag 'arm64-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux
-bad:  cc25df3e2e22 Merge tag 'for-6.19/block-20251201' of git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux
+> 
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
+> real    0m20.654s
+> user    0m2.374s
+> sys     1m4.441s
 
-I'll start bisecting between these 2 - hoping it doesn't fork up my root
-fs again...
+Yeah, that's only creating 20,000 files/sec. That's a lot less than
+expect a single thread to be able to do - why is the kernel burning
+all 4 CPUs on this workload?
 
-Thanks,
-Sebastian
+i.e. i'd expect a pure create workload to run at about 40,000
+files/s with sleeping contention on the i_rwsem, but this is much
+slower than I'd expect and contention is on a spinning lock...
 
+Also, parent pointers add about 20% more system time overhead (54s
+sys time to 64.4s sys time). Where does this come from? Do you have
+kernel profiles? Is it PP overhead, a change in the contention
+point, or just worse contention on the same resource?
+
+> As you can see, there's a 10% increase in runtime here.  If I make the
+> workload a bit more representative by changing the -f argument to
+> include a directory tree workout:
+> 
+> -f creat=1,mkdir=1,mknod=1,rmdir=1,unlink=1,link=1,rename=1
+> 
+> 
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
+> real    0m12.742s
+> user    0m28.074s
+> sys     0m10.839s
+> 
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> real    0m12.782s
+> user    0m28.892s
+> sys     0m8.897s
+
+Again, that's way slower than I'd expect a 4p metadata workload to
+run through 400k modification ops. i.e. it's running at about 35k
+ops/s, and I'd be expecting the baseline to be upwards of 100k
+ops/s.
+
+Ah, look at the amount of time spent in userspace - 28-20s vs 9-11s
+spent in the kernel filesystem code.
+
+Ok, performance is limited by the usrespace code, not the kernel
+code. I would expect a decent fs benchmark to be at most 10%
+userspace CPU time, with >90% of the time being spent in the kernel
+doing filesystem operations.
+
+IOWs, there is way too much userspace overhead in this worklaod to
+draw useful conclusions about the impact of the kernel side changes.
+
+System time went up from 9s to 11s when parent pointers are turned
+on - a 20% increase in CPU overhead - but that additional overhead
+isn't reflected in the wall time results because the CPU overehad is
+dominated by the userspace program, not the kernel code that is
+being "measured".
+
+> Almost no difference here.
+
+Ah, no. Again, system time went up by ~20%, even though elapsed time
+was unchanged. That implies there is some amount of sleeping
+contention occurring between processes doing work, and the
+additional CPU overhead of the PP code simply resulted in less sleep
+time.
+
+Again, this is not noticable because the workload is dominated by
+userspace CPU overhead, not the kernel/filesystem operation
+overhead...
+
+
+> If I then actually write to the regular
+> files by adding:
+> 
+> -f write=1
+> 
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
+> real    0m16.668s
+> user    0m21.709s
+> sys     0m15.425s
+> 
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> real    0m15.562s
+> user    0m21.740s
+> sys     0m12.927s
+> 
+> So that's about a 2% difference.
+
+Same here - system time went up by 25%, even though wall time didn't
+change. Also, 15.5s to 16.6s increase in wall time is actually
+a 7% difference in runtime, not 2%.
+
+----
+
+Overall, I don't think the benchmarking documented here is
+sufficient to justify the conclusion that "parent pointers have
+little real world overhead so we can turn them on by default".
+
+I would at least like to see the "will-it-scale" impact on a 64p
+machine with a hundred GB of RAM and IO subsystem at least capable
+of a million IOPS and a filesystem optimised for max performance
+(e.g. highly parallel fsmark based workloads). This will push the
+filesystem and CPU usage to their actual limits and directly expose
+additional overhead and new contention points in the results.
+
+This is also much more representative of the sorts of high
+performance, high end deployments that we expect XFS to be deployed
+on, and where performance impact actually matters to users.
+
+i.e. we need to know what the impact of the change is on the high
+end as well as low end VM/desktop configs before any conclusion can
+be drawn w.r.t. changing the parent pointer default setting....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
