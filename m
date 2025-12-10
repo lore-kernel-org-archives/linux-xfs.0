@@ -1,134 +1,73 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAE7830F819
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 05:55:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D035F10E3
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 06:00:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765346115; cv=none; b=ORMYsARzQOSg23sTkHGgwZ0YaUD2MH6JeTtyqP8NZnPvDVNqbkSgxB3TuaHCSggA10f6tHXmbtcg8SZWjpHo5JOUmiwJep4l1HhXwegxEg+FsUxcOURKl2e5WYI4ibqmW5xGlqkWMaxyX9ct+71gJWmuGhNstiI5lD1jdUI1iuc=
+	t=1765346436; cv=none; b=NL8Jo+9m+BjzMcKMuO47X2ycQb040jRaedUDB+KK47CRoUJi27vPUWO6cxzSYcMSuL/pzoKr8iBt6YlEh9rXA5HnX0K4QyQGF80RCheVUuOcw6XzZ408NpNgT4gOtpS9rCbWDWWrvn4n/L7qDhfQkAipJsCK/VIl1DHNA+la+D4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765346115; c=relaxed/simple;
-	bh=8KOFsjjlnMI18GlOboM+7dPxBvcRizI74vh3Pm5lyCc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JVczGPpZ/ZSmzJU5sKpMxaUjCS+KN7XUtTCR8rJQLJur1d8rN8uJveoPoerWrxkjJ4l8sO81ZDATPet1wQP+hzoHsCSv+Ogs3MIisELPhMIe1GdsxVKclI5KUAaRtiOhOG/gAUBPRJf0RwJGZb5QQ9mrNbYm9c42Qm83QW+Cey4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uJzTHjZ+; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1765346436; c=relaxed/simple;
+	bh=x3Va1FN7afjb0PeIo/t8a3xQK8NeEL/y1OT8qG2E4UY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sM+XYKm/1VNs/+f7khb8i49IrZavnyB9dDYyX5gYUMgT7xPUNK4vwEPOnOwqn+3KUDSQp5dAiTW6KicLcbc9eMBV98zoo1IhOx+yaeMIF6fobv3av4In5EKSMOm8TqvkWuQdxBF9LapzlSJqYxw/uAOXlih1Vz1vu2PP/2JAh2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yWMWBvf0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uJzTHjZ+"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yWMWBvf0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=O9BECtxoZ9V4vUD+c07yeSEryZbV+d/J2B0kqob+xjs=; b=uJzTHjZ+D00SE0JkkB+StUufHZ
-	8y08JwtuzVfUOzSV2rdcTrY8vWTemMmw2nzNuTjOuLUC8P7WvZlrgJs4hghneL/R80d0dNDGq3Jpz
-	2Ve+6DHThP3z21pL58jJOjGADhN97+ngjJm9Z7vjjFUDW/+5gXfPeF/D/NWyqQicGM9acU57doOMN
-	3FmyY8Jsuh/gO1Tlwc1klY635napphahM/NoQ3lh99ZM5eWWvgcZ9j645+g/tgGfubUsdv57hW/Ys
-	Q63GIP5GPKVgrDwkoZilIXw670/RCX8x8fyBqJWtYupeGEVrwO1h62JTY4KEtgBawbbmeycClTO9F
-	t+QyND5Q==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vTDAO-0000000F9PY-3GKp;
-	Wed, 10 Dec 2025 05:55:13 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cmaiolino@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] repair: enhance process_dinode_metafile
-Date: Wed, 10 Dec 2025 06:54:41 +0100
-Message-ID: <20251210055455.3479288-5-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251210055455.3479288-1-hch@lst.de>
-References: <20251210055455.3479288-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=vJOmm4m/tpS3NMNAGKCxV85jnqjBkdmoLwPHv/jo8yE=; b=yWMWBvf0dpeNloZKhv6etvULMu
+	yHOmwwP5DqijEGCDaRW8OCQmCszRq6S32FdRWUYw1qua5aMqP1/v0ppEGhRg/rmruhYfbKH905gk7
+	Pm5HWEUy7tQqyahpeCtwrCHj1zbuizPO77Rt3dFpDL04fEfYhvrRBjNvFV+jFykmR/1LoES0Ui7AP
+	0c5J27/xm4kjhBDLo+LJPxJiXht5rL1GOwzg+qtOFGqrvvKKbT5Q9Ne2PdMUPWINdQv86TB7nWcqf
+	kCaFiGZX3BE/h3y8iK+WR6hS6aiEjdNpkDIyx+5k9WGm1r0g5c5ZewGzpA5Lt+9T9jsoKgJiZZYQb
+	PPVGZdoQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vTDFY-0000000F9aa-1nkz;
+	Wed, 10 Dec 2025 06:00:32 +0000
+Date: Tue, 9 Dec 2025 22:00:32 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org,
+	chandanbabu@kernel.org, sandeen@redhat.com, zlang@redhat.com,
+	aalbersh@redhat.com
+Subject: Re: [PATCH 1/1] mdrestore: fix restore_v2() superblock length check
+Message-ID: <aTkMgBUQcp-AmkaC@infradead.org>
+References: <20251209202700.1507550-1-preichl@redhat.com>
+ <20251209202700.1507550-2-preichl@redhat.com>
+ <20251209205017.GX89472@frogsfrogsfrogs>
+ <aTkFC2EWf5UX5y9w@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aTkFC2EWf5UX5y9w@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Explicitly list the destiny of each metafile inode type, and warn about
-unexpected types instead of just silently zapping them.
+On Tue, Dec 09, 2025 at 09:28:43PM -0800, Christoph Hellwig wrote:
+> On Tue, Dec 09, 2025 at 12:50:17PM -0800, Darrick J. Wong wrote:
+> > > -	if (xme.xme_addr != 0 || xme.xme_len == 1 ||
+> > > +	if (xme.xme_addr != 0 || cpu_to_be32(xme.xme_len) != 1 ||
+> > 
+> > xme.xme_len is the ondisk value, so that should be be32_to_cpu().
+> > 
+> > Otherwise the patch looks ok.
+> 
+> We really need to bring back regular sparse runs on the userspace
+> code.  Let's see if I can get it back working..
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- repair/dinode.c | 36 +++++++++++++++++++++++-------------
- 1 file changed, 23 insertions(+), 13 deletions(-)
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 2e8728594ead..48939f8bd159 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2965,7 +2965,8 @@ process_dinode_metafile(
- 	xfs_agnumber_t		agno,
- 	xfs_agino_t		agino,
- 	xfs_ino_t		lino,
--	enum xr_ino_type	type)
-+	enum xr_ino_type	type,
-+	bool			*zap_metadata)
- {
- 	struct ino_tree_node	*irec = find_inode_rec(mp, agno, agino);
- 	int			off = get_inode_offset(mp, lino, irec);
-@@ -2973,16 +2974,6 @@ process_dinode_metafile(
- 	set_inode_is_meta(irec, off);
- 
- 	switch (type) {
--	case XR_INO_RTBITMAP:
--	case XR_INO_RTSUM:
--		/*
--		 * RT bitmap and summary files are always recreated when
--		 * rtgroups are enabled.  For older filesystems, they exist at
--		 * fixed locations and cannot be zapped.
--		 */
--		if (xfs_has_rtgroups(mp))
--			return true;
--		return false;
- 	case XR_INO_UQUOTA:
- 	case XR_INO_GQUOTA:
- 	case XR_INO_PQUOTA:
-@@ -2991,7 +2982,25 @@ process_dinode_metafile(
- 		 * preserve quota inodes and their contents for later.
- 		 */
- 		return false;
-+	case XR_INO_DIR:
-+	case XR_INO_RTBITMAP:
-+	case XR_INO_RTSUM:
-+	case XR_INO_RTRMAP:
-+	case XR_INO_RTREFC:
-+		/*
-+		 * These are always recreated.  Note that for pre-metadir file
-+		 * systems, the RT bitmap and summary inodes need to be
-+		 * preserved, but we'll never end up here for them.
-+		 */
-+		*zap_metadata = true;
-+		return false;
- 	default:
-+		do_warn(_("unexpected %s inode %" PRIu64 " with metadata flag"),
-+				xr_ino_type_name[type], lino);
-+		if (!no_modify)
-+			do_warn(_(" will zap\n"));
-+		else
-+			do_warn(_(" would zap\n"));
- 		return true;
- 	}
- }
-@@ -3612,8 +3621,9 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	if (dino->di_version >= 3 &&
- 	    (dino->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))) {
- 		is_meta = true;
--		if (process_dinode_metafile(mp, agno, ino, lino, type))
--			zap_metadata = true;
-+		if (process_dinode_metafile(mp, agno, ino, lino, type,
-+				&zap_metadata))
-+			goto bad_out;
- 	}
- 
- 	/*
--- 
-2.47.3
+I just gave it a try, and make CC=cgcc still works in theory.
+But between the urcu headers making it throw up, issues in the
+Linux UAPI headers and our own redefinition of the __be32/__be16
+types it generates so much noise that it stops reporting before
+any real issues including this one.  Sigh.  I'll see if there
+is a way to clean some of this up and get useful results.
 
