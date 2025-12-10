@@ -1,30 +1,39 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D222F39A5
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 15:40:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D40E325736
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 15:44:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765381222; cv=none; b=IvYY9yhi2BxNHWhWpJVSShqrEz4to1hq3utD+fBoBDbLTKwra+M0S/4T3UESZDjFW/hSbEJU4gs/ycEs8+xKQ83o31+zdgkmJ9PATaLoCwMlsG/jHORN/+V6ldsvKG52Xfs2fhIgwl/IQmRLJ1OHcdufmWVUl1/gJ2bG9tQ0ZzE=
+	t=1765381481; cv=none; b=Y8w620TRM9I77DyA+zz9WDp8HDwxMr2LsFZ+e3+0uLvsSYcPYLXJFPEDRB1Bc7f32ClWIM8urEjchOh2YpBfMJ4KRbGoJezzDnE7BNAZ8MoaEBxGah1QYW7kggbVFG5URRwSTJFBQs96piEbeL/78U1EloNeiVqRTLj5jI51YjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765381222; c=relaxed/simple;
-	bh=FnjrLaX/twMAs3lfht2TzeU0+9b+8Bbt7bSJnis37V8=;
+	s=arc-20240116; t=1765381481; c=relaxed/simple;
+	bh=z+Sz2E9pYLf9jPEH2pW5uAAuf09MVQlBMOZYSusGLa8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dkbo2HVFPJuDM1TQiU6Yyfq2ujIPNMZD7b08FLL/k7G7RKscIMCh72sW7rlWLonyEos1h7q7H50NoKf71M7d6mfYULrBUzV21+bwRKVqcrjNVTZ26YVI2kElMXeF9rCKO1oZ5I2sYESqFbr6i2N/o+ChxUu+AiAtNPtWJhENFaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 58DB3227A87; Wed, 10 Dec 2025 16:40:16 +0100 (CET)
-Date: Wed, 10 Dec 2025 16:40:16 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file
- system
-Message-ID: <20251210154016.GA3851@lst.de>
-References: <20251210090400.3642383-1-hch@lst.de> <aTmTl_khrrNz9yLY@bfoster>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cq1ikF0sJf8L8+q3t2Zy79TdugS90lNc6pkd/WvsPkI2hdPNKbDvo/kIWqgvvGwfwM4Xnvwm4o0SjiuSajk/ZM5+9kS1e3pAc7rYKlwt0hRXktIDz1kHdb3vNwQ4/C1X4tEeIq4QymtzpIdyicjHHYaMj/NFWpd1ESFJHCQG2wk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iMQkspE4; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iMQkspE4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF912C4CEF1;
+	Wed, 10 Dec 2025 15:44:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765381480;
+	bh=z+Sz2E9pYLf9jPEH2pW5uAAuf09MVQlBMOZYSusGLa8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iMQkspE42dlHm66h2e4t/L4jHu2LhhIvWhhJXS9om7w9PT7Vd7BrWncTe44dd8loT
+	 /rvUuJoACKgDaPm3cswfiS9N3gilS+No2hBMjdiXbINuAILJ2UdEhrFJaQPwX7qQ0B
+	 O0tyyrUEhnf3QW+pu/Qr+x1xkhRAAvnQORnVSfe9aSrSEHHTCuLYkzEQB34BDL0iwU
+	 syPv22DtIyOKhGe8TlgPPvhjKGBF/InGkGBVV13B/zZF9/v7x/V3v+kbexvyd009S4
+	 xLzz/riNsZMu1yYRWBidLYiOy+AvIL+ortMXh5wEJcEuznePJJEmQknaVZrTYHIwO7
+	 4mAOo2FIEaX5A==
+Date: Wed, 10 Dec 2025 07:44:40 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_logprint: fix pointer bug
+Message-ID: <20251210154440.GA7725@frogsfrogsfrogs>
+References: <20251209205738.GY89472@frogsfrogsfrogs>
+ <twgfncanrsgunjvdrijj3lhyjbemeybtjidplfxnjmjmzukchh@mhlm543xexwp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,34 +42,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aTmTl_khrrNz9yLY@bfoster>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <twgfncanrsgunjvdrijj3lhyjbemeybtjidplfxnjmjmzukchh@mhlm543xexwp>
 
-On Wed, Dec 10, 2025 at 10:36:55AM -0500, Brian Foster wrote:
-> Is there a reason in particular for testing this with the zone mode?
-> It's just a DEBUG thing for the zeroing mechanism. Why not just filter
-> out the is_zoned_inode() case at the injection site?
+On Wed, Dec 10, 2025 at 12:10:08PM +0100, Andrey Albershteyn wrote:
+> On 2025-12-09 12:57:38, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > generic/055 captures a crash in xfs_logprint due to an incorrect
+> > refactoring trying to increment a pointer-to-pointer whereas before it
+> > incremented a pointer.
+> > 
+> > Fixes: 5a9b7e95140893 ("logprint: factor out a xlog_print_op helper")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  logprint/log_misc.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+> > index 16353ebd728f35..8e0589c161b871 100644
+> > --- a/logprint/log_misc.c
+> > +++ b/logprint/log_misc.c
+> > @@ -992,7 +992,7 @@ xlog_print_op(
+> >  			printf("0x%02x ", (unsigned int)**ptr);
+> >  			if (n % 16 == 15)
+> >  				printf("\n");
+> > -			ptr++;
+> > +			(*ptr)++;
+> >  		}
+> >  		printf("\n");
+> >  		return true;
+> > 
+> 
+> Hmm, checking the results I also see the segfauls in 055.full but
+> test is passing. Is there any xfstests setting to make it fail on
+> coredumps/segfaults?
 
-Because I also want to be able to test the zeroing code for zoned
-file systems, especially given zeroing is a bit of painful area
-for out of place write file systems like zoned XFS.
+Well in theory it already captures coredumps ... if they're named "core"
+and get written to $here.  But then coredumpctl intervenes and whisks
+them all away so fstests never sees them.
 
-> I suppose you could argue there is a point if we have separate zoned
-> mode iomap callbacks and whatnot, but I agree the factoring here is a
-> little unfortunate. I wonder if it would be nicer if we could set a flag
-> or something on an ac and toggle the zone mode off that, but on a quick
-> look I don't see a flag field in the zone ctx.
+Starting Nov 2025, fstests can query coredumps from systemd:
+https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/commit/?id=9886baabdec372387b5e874fdcaf59390a75f4a9
 
-I don't really follow what you mean here.
+though obviously this isn't compatible with check-parallel because
+there's no good way to tag a process tree for coredumpctl so that you
+can query dumps only from that tree later.
 
-> Hmm.. I wonder if we could still do something more clever where the zone
-> mode has its own injection site to bump the res, and then the lower
-> level logic just checks whether the reservation is sufficient for a full
-> zero..? I'm not totally sure if that's ultimately cleaner, but maybe
-> worth a thought..
+--D
 
-We could have a different site for that injection, but we'd still need
-to move the current one or at least make it conditional so that it
-can't trigger for zoned mode.  I doubt that's less ugly than this
-version.
-
+> -- 
+> - Andrey
+> 
+> 
