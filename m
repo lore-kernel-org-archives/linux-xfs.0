@@ -1,122 +1,303 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B9732C236B
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 22:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F4326B2AD;
+	Wed, 10 Dec 2025 22:51:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765407082; cv=none; b=d3euaxO585MgHbQvGvJbJizsT824ygQLhO/NywgTK04LVRC0n8/J0VTBx1WlU0hZDWBXoXesTXhSYVCWe3e8b6fMxuWT0lPKCaVaSw4FmYDfKGeCtGG04rw/462xA9Ht86Zlymaf8m8d/KcBApROS5hkgK9/xWVwnGGYhbeLW5Q=
+	t=1765407101; cv=none; b=MxKDk5yqB1pAOv5z+HCPHNkegVJvDzV6sR0H8+4LUtu7Z/K2PeGRYmTctiziwwSMnxkZU4UN2BWtw0ZlxfsMmN25D2Xr78xouY0eNTb4Cur4MpViJANtXfnQ3qs3DsV8u1ryGSqHabhaOSJuWPqOl3A5s/ltBncHstmlRCsZmdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765407082; c=relaxed/simple;
-	bh=exJHbaxdK/MsRM048rGe5MokmGXSEZZ4zaAYw06cZG8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XThVgd3a1hxoJFCUgK4GgYO2RVB4dg0k69FgiAwX2GOKPDz10uCspkYqZrsf7d3H6DzaElxtaN+TfZXMmFqmWyovXsJPTYd15agbIS85RfcBEIW5cMx3R9JEcZZPP4NK0sYPcplI8SBl2xEn3gf4hSJGZCflqIEk3oRQXm+Q988=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H+/gJoER; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=nRrxzWz2; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1765407101; c=relaxed/simple;
+	bh=6+OTmDA56r3rOvPdzz6DwIpQPdzycSjWoPU2qFHwzm4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qn1G0ogxJWbOoLUgBuJYHV3/VpHISkwjg7fvKILIIlojQuhkNLEdeNA2W8OXN6fcqlpOv/APCOHt2SHGQIYXWayPm1LyopGWn177H7A26lXB71nLQYpkmh/YJk5NW+O2jNlhe7PZntKaS5EPb8nt6dFgvIjNJM+l7anGw7zE6jY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BcL6AisX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H+/gJoER";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="nRrxzWz2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1765407080;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sfGt0kZTy1oSWc/9yXuGuY0HC5OpMM6HjYeYgFfHkes=;
-	b=H+/gJoER+I7avCAtNTMo+0I0Iac9kuIdeSv24xcTvWBcWVxMKeW2Kf2OCsMEJ6IbDf0k1I
-	s8/vpZ5Pw7zZHS7OaU2DQdeGnrw+xAz/DuJpKiO4o2snTH9cw1qewGBIeP3BPdvdrbSGTd
-	nXIhUN0bBhi4zRpGnejK6oAmkZc74kI=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-546-MekY0Q5sPZ6ratrA27Sjlw-1; Wed, 10 Dec 2025 17:51:18 -0500
-X-MC-Unique: MekY0Q5sPZ6ratrA27Sjlw-1
-X-Mimecast-MFC-AGG-ID: MekY0Q5sPZ6ratrA27Sjlw_1765407078
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8b2e19c8558so90977285a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 14:51:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1765407078; x=1766011878; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=sfGt0kZTy1oSWc/9yXuGuY0HC5OpMM6HjYeYgFfHkes=;
-        b=nRrxzWz2DbI4y3s1IknFB5OHmOwB4VHNvEWcQPnfQ+fdBzD+Yn3w5UtF7H/YYM4ljl
-         v1D8rKBVnhD8zzj7uRBxWeVUv3JmH76ILU2j6VIvnO6HVgnPfQ1NgGVj/ILPgJnjxGeR
-         fn7wQWql8ooNYYsJQhkSoBgjnBIO/zfHE0j174JbWlCLdHA6JH76/r1slB7bqgeznv4r
-         /au2nsFYoFEJ34fTiJ6H1QpUVmOkm39GoroiH77Jp6v2k1CxcxpTLuuUGViSv64ZfKJJ
-         msxm9C98ysH0Bse0QqadaxoyHieGGGkeiyWb0IaNz102/h+DmiCKdQWzbKXmuh5eIuXM
-         X5MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765407078; x=1766011878;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sfGt0kZTy1oSWc/9yXuGuY0HC5OpMM6HjYeYgFfHkes=;
-        b=fyKvzxgit4dCtbHl8bDVmgpCLUpV791bhtFk+RbCRD/J7YIWga7OXa8OIVo+AH3ZpS
-         /e1RROM9JzGiiJ7uvQ1qn6rMnRBh4hehk85Waaz/tJUUyFm0cMOxz4TNJNWUvzfBFq+7
-         YItcMXLptrR2+ais1yGnfyMEzQ+pgKWgEJhEGDmmS2wzI1MTnlxW1/w3HzPkDcXLK3Wg
-         tULsKhvetmma0wWXjSHwT5yIhRoNhycMxtU+KNgbMNgIyLu3UmXGnYsPYFhYCE5PubfF
-         Qev+JdYPdETrec8YrK0XZKkCQYaB0/RaDwLQMHS1nFSbbHruY6KqB4oPDLcxakKpsz4F
-         2XBw==
-X-Forwarded-Encrypted: i=1; AJvYcCW2mJt9ersnM3WXBbNwJbnLrNtWOcj/9dlE5mbMqp4mnqmv39+b/Joei5N03mHq+lG7ZOCEP/jGLF4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyuPln4OWrocDlg9eSuy4Kjjl0EkE54NNjqO6UTcxTXrqSvsZ4/
-	V9zqQLGqM7pGesP+TvzJWTijPaIjPLuE5UCGIdnhFQuow0s8BFTPigK2C+I4nuqsRzoJS3Ed+FS
-	M0DfGGkvoQd2E/IDSfjL29qcYbFpr+FiWBPEadaSviJ6F/9a2tstR8iiGjKgSfA==
-X-Gm-Gg: ASbGncstqU9NMh2kxYQr+KE9gc5gkFuQaEJf6xjo+4mF/5FrWRdrRi0747wuP6ulCJh
-	bHMb1bz7NDnMn15Eu5Dxafr7qvzfY5Mfh7B7AeQhXNs9dFdYNvI93T7smbWCt+a2pmgzpMpDYL6
-	2qqlFZkkOqoioPW7S/DCkYBIsdd7h4Z4hAn2wWXFM4K8pOp3mnNQicBFoeEX5hVN67mpSSdQxlH
-	9sGSOYJIpBrhpUtwQv7tVC+QuuLHPQTVGRGKKxtKUojGUHMGDP2+tkZEDVRR0TjqFI0rz1i3oHc
-	vH4GCNH+KoZzX8yq7TtmI5P2lP446uSUSYHx4FicrWPbK/d9VVaSn1yxGoLmUfYjmtzIrnQV8Bb
-	ir5N2LyhiPE2chkHuyHxk/47TF517B1H7+HhGyw5uajQcvoO+HKs=
-X-Received: by 2002:ac8:6f1a:0:b0:4e8:b4d1:ece2 with SMTP id d75a77b69052e-4f1b1a50733mr48016821cf.18.1765407078330;
-        Wed, 10 Dec 2025 14:51:18 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFH/v2FUJz2Xneo2jAP5plJf261kiG0anIVPVxavFAT98zWxcBDwWZNf1Tyk04eu/KlT4BSxA==
-X-Received: by 2002:ac8:6f1a:0:b0:4e8:b4d1:ece2 with SMTP id d75a77b69052e-4f1b1a50733mr48016641cf.18.1765407077919;
-        Wed, 10 Dec 2025 14:51:17 -0800 (PST)
-Received: from [10.0.0.82] (97-127-77-149.mpls.qwest.net. [97.127.77.149])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8bab5c3c77asm62088585a.27.2025.12.10.14.51.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Dec 2025 14:51:17 -0800 (PST)
-Message-ID: <a3d76365-d256-42f6-8251-659fc578cdec@redhat.com>
-Date: Wed, 10 Dec 2025 16:51:16 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BcL6AisX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61E2BC4CEF1;
+	Wed, 10 Dec 2025 22:51:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765407100;
+	bh=6+OTmDA56r3rOvPdzz6DwIpQPdzycSjWoPU2qFHwzm4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BcL6AisX1nfLdjmBXsiFhauCPqw7IP/l+Wno+opOqhHWrkIC0/lcJAlplh1ohpS9m
+	 LFKHOFN6PwMgSmdWOlYfTv8899U2SeWyVE7Y1GIqv/ghiqVWI67F9BUX0VrQpK97Io
+	 JKa3khXJ26z1BiR6DEiXGV0r5aP5hhCDERXqVV6ho/qX97vml/j9LN5gAsjYxEyZpd
+	 6dFVMXCNq03e73jbCSWpUrIJKYG21PvMVnTcXcGsqxPm5W+q2bU6QqaWoUFSAR34Uz
+	 Bg3vmAFUuuSeX65VyT7k1EWpSjoBNxwrP6bUcgbhgDhvRZoH0WQHQEJgN88HGOcskH
+	 VYijlLtWZYZRA==
+Date: Wed, 10 Dec 2025 14:51:39 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, Anand Jain <anand.jain@oracle.com>,
+	Filipe Manana <fdmanana@suse.com>, fstests@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/12] generic/590: split XFS RT specific bits out
+Message-ID: <20251210225139.GJ94594@frogsfrogsfrogs>
+References: <20251210054831.3469261-1-hch@lst.de>
+ <20251210054831.3469261-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Good name for xfs.h/libxfs_priv.h in libxfs
-To: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Andrey Albershteyn
- <aalbersh@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- Chandan Babu R <chandanbabu@kernel.org>, linux-xfs@vger.kernel.org
-References: <20251202133723.1928059-1-hch@lst.de>
- <aTFOsmgaPOhtaDeL@dread.disaster.area> <20251210060848.GA31741@lst.de>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@redhat.com>
-In-Reply-To: <20251210060848.GA31741@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251210054831.3469261-6-hch@lst.de>
 
-On 12/10/25 12:08 AM, Christoph Hellwig wrote:
-> Trying to bring this up again.  I want a common name for
-> xfs.h/libxfs_priv.h so that sharing libxfs code is easier.
+On Wed, Dec 10, 2025 at 06:46:51AM +0100, Christoph Hellwig wrote:
+> Currently generic/590 runs a very different test on XFS that creates
+> a lot device and so on.  Split that out into a new XFS-specific test,
+> and let generic/590 always run using the file system parameter specified
+> in the config even for XFS.
 > 
-> My initial proposal was xfs_priv.h, which Dave didn't like for a valid
-> reason.  His counter proposal was to just use xfs_linux.h, which is
-> fine with me.  Another option would be xfs_plaform.h to be more system
-> independent.  Both are fine with me, as is any other reasonable option.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Yeah, that sounds like a good idea.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ---
+>  tests/generic/590 |  68 ++-------------------------
+>  tests/xfs/650     | 117 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/650.out |   2 +
+>  3 files changed, 123 insertions(+), 64 deletions(-)
+>  create mode 100755 tests/xfs/650
+>  create mode 100644 tests/xfs/650.out
 > 
-> I've added our regulars to ask if there are any strong preferences
-> or dislikes for any of the names, or a suggestion for an even better
-> one.
+> diff --git a/tests/generic/590 b/tests/generic/590
+> index ba1337a856f1..54c26f2ae5ed 100755
+> --- a/tests/generic/590
+> +++ b/tests/generic/590
+> @@ -4,27 +4,15 @@
+>  #
+>  # FS QA Test 590
+>  #
+> -# Test commit 0c4da70c83d4 ("xfs: fix realtime file data space leak") and
+> -# 69ffe5960df1 ("xfs: don't check for AG deadlock for realtime files in
+> -# bunmapi"). On XFS without the fixes, truncate will hang forever. On other
+> -# filesystems, this just tests writing into big fallocates.
+> +# Tests writing into big fallocates.
+> +#
+> +# Based on an XFS RT subvolume specific test now split into xfs/650.
+>  #
+>  . ./common/preamble
+>  _begin_fstest auto prealloc preallocrw
+>  
+> -# Override the default cleanup function.
+> -_cleanup()
+> -{
+> -	_scratch_unmount &>/dev/null
+> -	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+> -	cd /
+> -	rm -f $tmp.*
+> -	rm -f "$TEST_DIR/$seq"
+> -}
+> -
+>  . ./common/filter
+>  
+> -_require_scratch_nocheck
+>  _require_xfs_io_command "falloc"
+>  
+>  maxextlen=$((0x1fffff))
+> @@ -32,54 +20,7 @@ bs=4096
+>  rextsize=4
+>  filesz=$(((maxextlen + 1) * bs))
+>  
+> -must_disable_feature() {
+> -	local feat="$1"
+> -
+> -	# If mkfs doesn't know about the feature, we don't need to disable it
+> -	$MKFS_XFS_PROG --help 2>&1 | grep -q "${feat}=0" || return 1
+> -
+> -	# If turning the feature on works, we don't need to disable it
+> -	_scratch_mkfs_xfs_supported -m "${feat}=1" "${disabled_features[@]}" \
+> -		> /dev/null 2>&1 && return 1
+> -
+> -	# Otherwise mkfs knows of the feature and formatting with it failed,
+> -	# so we do need to mask it.
+> -	return 0
+> -}
+> -
+> -extra_options=""
+> -# If we're testing XFS, set up the realtime device to reproduce the bug.
+> -if [[ $FSTYP = xfs ]]; then
+> -	# If we don't have a realtime device, set up a loop device on the test
+> -	# filesystem.
+> -	if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
+> -		_require_test
+> -		loopsz="$((filesz + (1 << 26)))"
+> -		_require_fs_space "$TEST_DIR" $((loopsz / 1024))
+> -		$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
+> -		loop_dev="$(_create_loop_device "$TEST_DIR/$seq")"
+> -		USE_EXTERNAL=yes
+> -		SCRATCH_RTDEV="$loop_dev"
+> -		disabled_features=()
+> -
+> -		# disable reflink if not supported by realtime devices
+> -		must_disable_feature reflink &&
+> -			disabled_features=(-m reflink=0)
+> -
+> -		# disable rmap if not supported by realtime devices
+> -		must_disable_feature rmapbt &&
+> -			disabled_features+=(-m rmapbt=0)
+> -	fi
+> -	extra_options="$extra_options -r extsize=$((bs * rextsize))"
+> -	extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
+> -
+> -	_scratch_mkfs $extra_options "${disabled_features[@]}" >>$seqres.full 2>&1
+> -	_try_scratch_mount >>$seqres.full 2>&1 || \
+> -		_notrun "mount failed, kernel doesn't support realtime?"
+> -	_scratch_unmount
+> -else
+> -	_scratch_mkfs $extra_options >>$seqres.full 2>&1
+> -fi
+> +_scratch_mkfs >>$seqres.full 2>&1
+>  _scratch_mount
+>  _require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
+>  
+> @@ -112,7 +53,6 @@ $XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
+>  # Truncate the extents.
+>  $XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
+>  
+> -# We need to do this before the loop device gets torn down.
+>  _scratch_unmount
+>  _check_scratch_fs
+>  
+> diff --git a/tests/xfs/650 b/tests/xfs/650
+> new file mode 100755
+> index 000000000000..d8f70539665f
+> --- /dev/null
+> +++ b/tests/xfs/650
+> @@ -0,0 +1,117 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2019 Facebook.  All Rights Reserved.
+> +#
+> +# FS QA Test 650
+> +#
+> +# Test commit 0c4da70c83d4 ("xfs: fix realtime file data space leak") and
+> +# 69ffe5960df1 ("xfs: don't check for AG deadlock for realtime files in
+> +# bunmapi"). On XFS without the fixes, truncate will hang forever.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto prealloc preallocrw
+> +
+> +# Override the default cleanup function.
+> +_cleanup()
+> +{
+> +	_scratch_unmount &>/dev/null
+> +	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
+> +	cd /
+> +	rm -f $tmp.*
+> +	rm -f "$TEST_DIR/$seq"
+> +}
+> +
+> +. ./common/filter
+> +
+> +_require_scratch_nocheck
+> +_require_xfs_io_command "falloc"
+> +
+> +maxextlen=$((0x1fffff))
+> +bs=4096
+> +rextsize=4
+> +filesz=$(((maxextlen + 1) * bs))
+> +
+> +must_disable_feature() {
+> +	local feat="$1"
+> +
+> +	# If mkfs doesn't know about the feature, we don't need to disable it
+> +	$MKFS_XFS_PROG --help 2>&1 | grep -q "${feat}=0" || return 1
+> +
+> +	# If turning the feature on works, we don't need to disable it
+> +	_scratch_mkfs_xfs_supported -m "${feat}=1" "${disabled_features[@]}" \
+> +		> /dev/null 2>&1 && return 1
+> +
+> +	# Otherwise mkfs knows of the feature and formatting with it failed,
+> +	# so we do need to mask it.
+> +	return 0
+> +}
+> +
+> +extra_options=""
+> +# Set up the realtime device to reproduce the bug.
+> +
+> +# If we don't have a realtime device, set up a loop device on the test
+> +# filesystem.
+> +if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
+> +	_require_test
+> +	loopsz="$((filesz + (1 << 26)))"
+> +	_require_fs_space "$TEST_DIR" $((loopsz / 1024))
+> +	$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
+> +	loop_dev="$(_create_loop_device "$TEST_DIR/$seq")"
+> +	USE_EXTERNAL=yes
+> +	SCRATCH_RTDEV="$loop_dev"
+> +	disabled_features=()
+> +
+> +	# disable reflink if not supported by realtime devices
+> +	must_disable_feature reflink &&
+> +		disabled_features=(-m reflink=0)
+> +
+> +	# disable rmap if not supported by realtime devices
+> +	must_disable_feature rmapbt &&
+> +		disabled_features+=(-m rmapbt=0)
+> +fi
+> +extra_options="$extra_options -r extsize=$((bs * rextsize))"
+> +extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
+> +
+> +_scratch_mkfs $extra_options "${disabled_features[@]}" >>$seqres.full 2>&1
+> +_try_scratch_mount >>$seqres.full 2>&1 || \
+> +	_notrun "mount failed, kernel doesn't support realtime?"
+> +_scratch_unmount
+> +_scratch_mount
+> +_require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
+> +
+> +# Allocate maxextlen + 1 blocks. As long as the allocator does something sane,
+> +# we should end up with two extents that look something like:
+> +#
+> +# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
+> +# 0:[0,0,2097148,1]
+> +# 1:[2097148,2097148,4,1]
+> +#
+> +# Extent 0 has blockcount = ALIGN_DOWN(maxextlen, rextsize). Extent 1 is
+> +# adjacent and has blockcount = rextsize. Both are unwritten.
+> +$XFS_IO_PROG -c "falloc 0 $filesz" -c fsync -f "$SCRATCH_MNT/file"
+> +
+> +# Write extent 0 + one block of extent 1. Our extents should end up like so:
+> +#
+> +# u3.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
+> +# 0:[0,0,2097149,0]
+> +# 1:[2097149,2097149,3,1]
+> +#
+> +# Extent 0 is written and has blockcount = ALIGN_DOWN(maxextlen, rextsize) + 1,
+> +# Extent 1 is adjacent, unwritten, and has blockcount = rextsize - 1 and
+> +# startblock % rextsize = 1.
+> +#
+> +# The -b is just to speed things up (doing GBs of I/O in 4k chunks kind of
+> +# sucks).
+> +$XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
+> +	"$SCRATCH_MNT/file" >> "$seqres.full"
+> +
+> +# Truncate the extents.
+> +$XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
+> +
+> +# We need to do this before the loop device gets torn down.
+> +_scratch_unmount
+> +_check_scratch_fs
+> +
+> +echo "Silence is golden"
+> +status=0
+> +exit
+> diff --git a/tests/xfs/650.out b/tests/xfs/650.out
+> new file mode 100644
+> index 000000000000..d7a3e4b63483
+> --- /dev/null
+> +++ b/tests/xfs/650.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 650
+> +Silence is golden
+> -- 
+> 2.47.3
 > 
-
-I also have no strong preference. linux.h sounds a bit redundant, so
-maybe a slight preference for platform.h.
-
--Eric
-
+> 
