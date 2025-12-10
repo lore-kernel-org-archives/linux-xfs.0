@@ -1,87 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93438306D49
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 11:10:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F85A26ED39;
+	Wed, 10 Dec 2025 11:21:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765365016; cv=none; b=noby+SngTHf7CxMfl9BYMknFUT6cCEgYcv/yZUvmScL0MEaE/Gb86dz9ZqwohfMBXtQ3Y+GmltPHag5K38aApRaws1f/9Sbh3vudMzku4MQK5HKP1RDAv/vsipLmnrWRh8/zBY9hQ1JCfKQnJq7/dzRBHUnxXARfWIQEn2Hu6ds=
+	t=1765365695; cv=none; b=BqyiHXfeq3XHkHPyFk0FeKb3EJH2RKuQjdU6FTHMo7eP3o+XUQRA5izkUfHFjyArDTFETI1r6f6SZNdt0HjgCl7FTCPmplG/+ffDrktyp+8FZKc9J/lNu1UlGpXhQBjIFZbjo5KTt687qdw0ATXFdoTzPdB5Pn75sM9PkIBCCAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765365016; c=relaxed/simple;
-	bh=GnOKlSBZGXmZxgcXwqV2a7fKoOZp/0C0hnA0ab959uw=;
+	s=arc-20240116; t=1765365695; c=relaxed/simple;
+	bh=02TJf16fnJk3ighp6vgdi/0FMeoZ8SlIQNCacUajNgU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qpKg+DuewpwdCUpWoMMgqFn9HsKgwJLliiVn9qedpGHBwZFleF80mpMrelBN3VkL71WTxLfQy7is6GvUyNekiD/Qq8JxPvOjG2U7gDgcESziciIfiOU2M+HbDirWJBZURBrUSgW0L49SGUlhM2vxB8En7DBrzmRKcovE3vyIhyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cXq7Kb4d; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=dMJpHUUG; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=INJwcAiREKlH5qQ2+rJwp9RIZ2zujPz57T8p27Zl1JuL3oGIg0JCNmxpYAXywci9pQcm1nF9+bytgxz0A9V4YNahaQmIkj2jnvlg6KO7IijoyRPvfCL1H/ZQuGj2nN8DjeeTQnumisuSp8pJ3LkwJKYRRYFg5y0Lsg9statIm4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qVwGVVZp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cXq7Kb4d";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="dMJpHUUG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1765365013;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZTdf9NBDcg2h2xHZM9Og6ZlBWU9/XGdNn8Bb0lySuqU=;
-	b=cXq7Kb4dow8fDWNs4DpdGzjnVIQBYzYmJn3ABQ1CM+30ku2qxxLyc/p8Bg16YEkWzJxy6u
-	1kSlB6+aWaInZvBn2h9T0zxa0AND13tggjF/jaoxUontdTrBV2bXg3tIB0FVKj1rulAYkK
-	SzFGYlM91djP7PDXiuTkmxD10d3Yxgw=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-492-KEs9pBCoN-qMFzLxS3Kgrw-1; Wed, 10 Dec 2025 06:10:12 -0500
-X-MC-Unique: KEs9pBCoN-qMFzLxS3Kgrw-1
-X-Mimecast-MFC-AGG-ID: KEs9pBCoN-qMFzLxS3Kgrw_1765365011
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4779ecc3cc8so40843525e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Dec 2025 03:10:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1765365011; x=1765969811; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZTdf9NBDcg2h2xHZM9Og6ZlBWU9/XGdNn8Bb0lySuqU=;
-        b=dMJpHUUGGorl7y+DVt2CVtpR87potYFmiNI89jm8eRROrPMEDMyZDlwwCDeSoRpg/A
-         iUGKccla41mnhA5ntiWHTFHuFVWBAWWncbKmD6AZcB57wQlR6nNoClbKDJNpQYPMf4sS
-         ZtuXUAShoK27LFo0X4rIaAs5Zfiopm4fz1WXtUGVY/aXQlK6z88etv3+N1XKuxYgGiSp
-         GAbZHfCsZEbmK6r5Wfnp+lOYXJ6MP4meno19Rx3K9+G4+xlA8CuJjssLUhXXSv552bQs
-         E4W6uEyDYyzPIknClkA5RVw3RX+jP/Z8byntk/Il1Ko0Bvs2XnDgkKu3XiRgLA9mk+n9
-         Wkag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765365011; x=1765969811;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZTdf9NBDcg2h2xHZM9Og6ZlBWU9/XGdNn8Bb0lySuqU=;
-        b=OSh8gH1ehZ/gJEsHFGNFRuhBaB6bmz8X5JYmQQRuyF504+K5VFDOVTt0wfOcdSuuTg
-         VV+BzDoBL4wo0/dwT6f7lKyRvTWjVW6Opy7rTsa7UG1F1OS2rqwx/PKxLN79IOuvoovZ
-         /KWNDkYDnVPjNZllWubRkpkC5592xWR7skpMKzHZvd7wY9YqXIfV3uV8K8VmZ3tB0HY8
-         a/5zo98TUekCXPkvOOevMv4NjnRfE/zIG9YjeneVGSi9LB8tzQBQNA3Z0DTZkKqVq6bF
-         fI1C3nDbdOU8nzcrS31x0mUuSUJpatB3IAWfyEq+Tv0OgRpyLFIKK9FkcdJvCC10GCrK
-         BX1A==
-X-Gm-Message-State: AOJu0YwWVJzzPyCIDCltjfp1iA+S8Uvxk4IgSshi6tzkN5ZVKRcUfU0A
-	c+T5FRnLP2+SyRFFzG7CK3ioLyLZIwWhlaVJVdffJTeoW68al1VJcACxEd1Zw5bqPo0OkxGX9DZ
-	bD6sEz4Z6m3zk8+Kr+N4DPQoA6cFfqJl7HLfIF1fczgvWd3O9A1ZWebkEgSiF
-X-Gm-Gg: ASbGnct9uhhNbk251hP4rPLWX3Q3kvQinmou3r3fh1pq7xw+kIFi73qrdlvC1OPsoYK
-	sCWwZbG1uYFphCFu1ejmItBVVFRkXhedVScjeUvzMkwlEpGIwJwqGtOdn0Cfy46797ab/OxJP8B
-	QFq7HKBePHzlh36kBATWtMFiDScm0ZG0FxMZWDBhnJllYy5/PiZLhDWGIJEjZ2d7B96jozuwXJo
-	y8MwOnWpWKUB+Fo9tFOUDbzXdUIzmOR5aWPTVGmHR6aE925RUcG5IaAjv4JdsKSCohkylR98WT3
-	X3VWidCIHB471IudgfxNHiPAV5hs1p+ZGpdXEOlw64RI/gD7DguJYuAZguvNaTr5Z5S4XIrs1KA
-	=
-X-Received: by 2002:a05:600c:4fd5:b0:475:e067:f23d with SMTP id 5b1f17b1804b1-47a8379581dmr21160165e9.25.1765365010603;
-        Wed, 10 Dec 2025 03:10:10 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHy9w5aXAuO0/d1G6MxscVHJdgzog9OhsxJv7hcLetbtNbRzM41JgPq556ZMXZieTAqKh7Fxg==
-X-Received: by 2002:a05:600c:4fd5:b0:475:e067:f23d with SMTP id 5b1f17b1804b1-47a8379581dmr21159635e9.25.1765365009893;
-        Wed, 10 Dec 2025 03:10:09 -0800 (PST)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47a82d1d497sm38402515e9.4.2025.12.10.03.10.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Dec 2025 03:10:09 -0800 (PST)
-Date: Wed, 10 Dec 2025 12:10:08 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_logprint: fix pointer bug
-Message-ID: <twgfncanrsgunjvdrijj3lhyjbemeybtjidplfxnjmjmzukchh@mhlm543xexwp>
-References: <20251209205738.GY89472@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qVwGVVZp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 538DBC4CEF1;
+	Wed, 10 Dec 2025 11:21:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765365695;
+	bh=02TJf16fnJk3ighp6vgdi/0FMeoZ8SlIQNCacUajNgU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qVwGVVZpPeY58SfN5rAE+y4vep7KmrLCjyhECcDA/28CraNn3LqLDFaAtH5r2cPhV
+	 VY8i0KcS02ZfXJGzmXCxFKclwNhiZbedhrtb7GeLcF8KmNAbbIL7Z+tsTfNs2xF/hm
+	 gcTOb4e85Q7y6gl7wJjXOrd2QLggNdZ670UirSSgeBNfkMfbYWmkxTJV4/BuP4upOp
+	 drToIyNGT4CAiuR3mGqXiSsvqESoeHtNNeTD8DiuTUEwJgBGfKfuKiOAqxwE7wK9Q/
+	 nzNrN9kg2CoFgi4OFX5nwkkyJwdVd3CxxC66L9dxKsDKAPuialzI83fK7Lkh8M8L3d
+	 xgGkj+6BO8qWQ==
+Date: Wed, 10 Dec 2025 20:21:30 +0900
+From: Keith Busch <kbusch@kernel.org>
+To: Sebastian Ott <sebott@redhat.com>
+Cc: linux-nvme@lists.infradead.org, iommu@lists.linux.dev,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Jens Axboe <axboe@fb.com>,
+	Christoph Hellwig <hch@lst.de>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Carlos Maiolino <cem@kernel.org>
+Subject: Re: WARNING: drivers/iommu/io-pgtable-arm.c:639
+Message-ID: <aTlXuhmsil7YFKTR@kbusch-mbp>
+References: <170120f7-dd2c-4d2a-d6fc-ac4c82afefd7@redhat.com>
+ <aTj-8-_tHHY7q5C0@kbusch-mbp>
+ <acb053b0-fc08-91c6-c166-eebf26b5987e@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -90,40 +48,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251209205738.GY89472@frogsfrogsfrogs>
+In-Reply-To: <acb053b0-fc08-91c6-c166-eebf26b5987e@redhat.com>
 
-On 2025-12-09 12:57:38, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Dec 10, 2025 at 12:08:36PM +0100, Sebastian Ott wrote:
+> On Wed, 10 Dec 2025, Keith Busch wrote:
+> > On Tue, Dec 09, 2025 at 12:43:31PM +0100, Sebastian Ott wrote:
+> > > got the following warning after a kernel update on Thurstday, leading to a
+> > > panic and fs corruption. I didn't capture the first warning but I'm pretty
+> > > sure it was the same. It's reproducible but I didn't bisect since it
+> > > borked my fs. The only hint I can give is that v6.18 worked. Is this a
+> > > known issue? Anything I should try?
+> > 
+> > Could you check if your nvme device supports SGLs? There are some new
+> > features in 6.19 that would allow merging IO that wouldn't have happened
+> > before. You can check from command line:
+> > 
+> >  # nvme id-ctrl /dev/nvme0 | grep sgl
 > 
-> generic/055 captures a crash in xfs_logprint due to an incorrect
-> refactoring trying to increment a pointer-to-pointer whereas before it
-> incremented a pointer.
-> 
-> Fixes: 5a9b7e95140893 ("logprint: factor out a xlog_print_op helper")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  logprint/log_misc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index 16353ebd728f35..8e0589c161b871 100644
-> --- a/logprint/log_misc.c
-> +++ b/logprint/log_misc.c
-> @@ -992,7 +992,7 @@ xlog_print_op(
->  			printf("0x%02x ", (unsigned int)**ptr);
->  			if (n % 16 == 15)
->  				printf("\n");
-> -			ptr++;
-> +			(*ptr)++;
->  		}
->  		printf("\n");
->  		return true;
-> 
+> # nvme id-ctrl /dev/nvme0n1 | grep sgl
+> sgls      : 0xf0002
 
-Hmm, checking the results I also see the segfauls in 055.full but
-test is passing. Is there any xfstests setting to make it fail on
-coredumps/segfaults?
+Oh neat, so you *do* support SGL. Not that it was required as arm64
+can support iommu granularities larger than the NVMe PRP unit, so the
+bug was possible to hit in either case for you (assuming the smmu was
+configured with 64k io page size).
 
--- 
-- Andrey
-
+Anyway, thanks for the report, and sorry for the fs trouble the bug
+caused you. I'm working on a blktest to specifically target this
+condition so we don't regress again. I just need to make sure to run it
+on a system with iommu enabled (usually it's off on my test machine).
