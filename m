@@ -1,29 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7862F1FDA61
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Dec 2025 05:04:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DB923817E;
+	Thu, 11 Dec 2025 09:18:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765429463; cv=none; b=DVnt4fzQor75+P9Y+O8Q7gTMyLNr96qn6eQMHkpw1lC04SM5aZGNbuHsOdPXU4VQSiUGon/Z2i579rLP1M1rfnLvgjgci1BrDVSE71IeGJ0dEWrOz60It6DU/FOR6DmNKDjQRxtzZut4umTMdm1GvTe5dWHAoFq5ZJgxuCYgUfo=
+	t=1765444733; cv=none; b=ErzsYyI40EtApwCWqlRWzIv9j7hQgUJij+sOkPOfP7b6nAncLBN/YmOnbDvBK27u/r8aNWakRO5BFFlqacT2riUAnAeSA47FsXIPzkzQTNDFIVY/ucBwrqI/gmKEP4taI1faslZ0k1nO1zkoJ2JyiEPdi7tO7c9ZweY0EMfn1eI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765429463; c=relaxed/simple;
-	bh=cfrfDZE2szvkfuDH7and7mfh4tJoHtHg85C065qtess=;
+	s=arc-20240116; t=1765444733; c=relaxed/simple;
+	bh=WE2U7wyVzJcyGyArkxgph0mtkBEOqRv2JkAvIN8bJjc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dV2hJUu18k9bsm5l+yrkiJ7OccMUQVN5gmYF3x2vvmkhMok4/rTIiCXV7kTQnvFeYEtuimCGclfPe7yVN1ih5o9X15N99GZo8kl+8uf6VF3DbnNF6COOEMX9EzgaBOXbOgu+a4pos//rOexccuDhaOOML4xRQOeIUQMcptWQkV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DD66C227A87; Thu, 11 Dec 2025 06:04:17 +0100 (CET)
-Date: Thu, 11 Dec 2025 06:04:17 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: validate that zoned RT devices are zone aligned
-Message-ID: <20251211050417.GA26597@lst.de>
-References: <20251210142305.3660710-1-hch@lst.de> <20251210164859.GB7725@frogsfrogsfrogs> <20251210165438.GA9489@lst.de> <20251210191825.GD7725@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=C+Bp55yXidE/h4Hoct8jrGL1MUbI59t1R+hLqusQIxpwMqUYUqegQ9iPD8vammEEdv34bPk2odxeTJdCVWlbNw0y7CfgJtKxQf+P3PaZnTy2bEnMFLaxwyYSb6KS6N3to3pi3W0Dw2cxwKbQ2QVDRtKlgmUNc3riP2/lXvywuwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mmc4HqbN; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mmc4HqbN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B021AC4CEF7;
+	Thu, 11 Dec 2025 09:18:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765444733;
+	bh=WE2U7wyVzJcyGyArkxgph0mtkBEOqRv2JkAvIN8bJjc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Mmc4HqbNS8Y3J38ZInXf63r+bmRZ9tHRW4BRDyXIJfE8rYNliM9tkDiDUy0i6/1nY
+	 diJPf/vZnKS+dOvMqTwOWZ/kXdqhF7YV6yu6BpXyxZ0/Ulf+dNzZhPTt7yfMktoa8q
+	 22F4XJb8qP719+YUPjOhdrrhcOinHOpowANFNO2LDXQoHPhHlKXdVX0FSeE5W1eZVq
+	 GnSU65NfB4gZ6+xe6j28g41B8Zcb/hEDBrF5yMdeb6j/Zp07+0eAFe9UsYfoV+WHe7
+	 ykk2wdX0hwlXOAYe1Gw6V4Lk5qJ7dDAsp9veKcy6cqIw1V5gc0SwQLO7QomViX38yc
+	 8RcIdRZjMD6qQ==
+Date: Thu, 11 Dec 2025 10:18:48 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: Fix a memory leak in xfs_buf_item_init()
+Message-ID: <ojskmuuwjgieezp3zrff6ub5ihgr5buk6gtgqrm5gnr2zzcolk@ret4ukkxzcfo>
+References: <JtqOvUhdDjJQGig4S3xReSdQeTJx9dge5OmgMD6FmzXiRntc00kZDqCOczMDCKG0zvW1TWYcDPkxMXDZ2MocWw==@protonmail.internalid>
+ <20251210090601.69688-1-lihaoxiang@isrc.iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,35 +43,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251210191825.GD7725@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251210090601.69688-1-lihaoxiang@isrc.iscas.ac.cn>
 
-On Wed, Dec 10, 2025 at 11:18:25AM -0800, Darrick J. Wong wrote:
-> How nasty is it, exactly?  AFAICT,
+On Wed, Dec 10, 2025 at 05:06:01PM +0800, Haoxiang Li wrote:
+> xfs_buf_item_get_format() may allocate memory for bip->bli_formats,
+> free the memory in the error path.
 > 
->  * The zone targetting code (aka the zone we copy into) then has to
->    know to avoid a runt endzone?
+> Fixes: c3d5f0c2fb85 ("xfs: complain if anyone tries to create a too-large buffer log item")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+> Changes in v2:
+> - Modify the patch subject. Thanks, Christoph!
+> ---
+>  fs/xfs/xfs_buf_item.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
 
-Yes.  And I don't really have a good idea how to do that.
+We have a cosmetic 'rule' to not use an Upper case character for the
+subject, I'll fix that during commit time, no need to send it again.
 
->  * Thresholding gets weird because they don't apply right to the runt
->    zone, which means the victim selection is also off.
+for the patch itself:
 
-Yes.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
->  * The code that reserves zones for gc or other ENOSPC handling then has
->    to ensure it never picks a runt zone to avoid corner case problems
 
-This is what is needed for 1) above with all the same issues.
-
-> Any other reasons?  Given that zoned is still experimental I think I'm
-> ok with adding this restriction, but only after some more thorough
-> understanding. :)
-
-Yeah.
-
-> Also does growfs need patching so that it doesn't create a runt zone?
-
-I think we run the buffer verifier there, but a nicer check to abort
-early would be helpful.  As would be a test case.
-
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 8d85b5eee444..f4c5be67826e 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -896,6 +896,7 @@ xfs_buf_item_init(
+>  		map_size = DIV_ROUND_UP(chunks, NBWORD);
+> 
+>  		if (map_size > XFS_BLF_DATAMAP_SIZE) {
+> +			xfs_buf_item_free_format(bip);
+>  			kmem_cache_free(xfs_buf_item_cache, bip);
+>  			xfs_err(mp,
+>  	"buffer item dirty bitmap (%u uints) too small to reflect %u bytes!",
+> --
+> 2.25.1
+> 
