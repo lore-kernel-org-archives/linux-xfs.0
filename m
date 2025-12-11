@@ -1,31 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA423277013;
-	Thu, 11 Dec 2025 05:00:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7862F1FDA61
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Dec 2025 05:04:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765429214; cv=none; b=LTG2Oc0DszjYiroMmaNWi7kw6kgsLa5fwqnLm8i5eWkO3yO4ZUIauyqJaNYBg9UeR89s9dfAI8yVCTksj2dhRjPGPjCGjssfCRDelaVk3xTqq3sFSAuCUALFbfjW03r/od5qsnN8obPg9KlozCRAouwepL+L3dE8NLM7C6PFRbk=
+	t=1765429463; cv=none; b=DVnt4fzQor75+P9Y+O8Q7gTMyLNr96qn6eQMHkpw1lC04SM5aZGNbuHsOdPXU4VQSiUGon/Z2i579rLP1M1rfnLvgjgci1BrDVSE71IeGJ0dEWrOz60It6DU/FOR6DmNKDjQRxtzZut4umTMdm1GvTe5dWHAoFq5ZJgxuCYgUfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765429214; c=relaxed/simple;
-	bh=Df52MrnJ5ShXHc8s3+kKaf8lAobhtiiDjznj55lw3ts=;
+	s=arc-20240116; t=1765429463; c=relaxed/simple;
+	bh=cfrfDZE2szvkfuDH7and7mfh4tJoHtHg85C065qtess=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uxl7DxWbwAtdS4OMSPS8UHcf3JgsX8sF+N5nruHYvdUXR499UNFlHuk929H6SOL8mRH9TvudUpS2801MR4W0ZpBa0Kk5rxt1f2mlnNlDOzbcsBpTarlbFahCT4Tt9zC4pkAjvo5t14Afv1LxHcuPZ58Yx8PM3cdxmsPc96d1j1E=
+	 Content-Type:Content-Disposition:In-Reply-To; b=dV2hJUu18k9bsm5l+yrkiJ7OccMUQVN5gmYF3x2vvmkhMok4/rTIiCXV7kTQnvFeYEtuimCGclfPe7yVN1ih5o9X15N99GZo8kl+8uf6VF3DbnNF6COOEMX9EzgaBOXbOgu+a4pos//rOexccuDhaOOML4xRQOeIUQMcptWQkV4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id F0A62227A87; Thu, 11 Dec 2025 06:00:09 +0100 (CET)
-Date: Thu, 11 Dec 2025 06:00:08 +0100
+	id DD66C227A87; Thu, 11 Dec 2025 06:04:17 +0100 (CET)
+Date: Thu, 11 Dec 2025 06:04:17 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	Anand Jain <anand.jain@oracle.com>,
-	Filipe Manana <fdmanana@suse.com>, fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/12] xfs/185: don't use SCRATCH_{,RT}DEV helpers
-Message-ID: <20251211050008.GF26257@lst.de>
-References: <20251210054831.3469261-1-hch@lst.de> <20251210054831.3469261-8-hch@lst.de> <20251210200248.GG94594@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: validate that zoned RT devices are zone aligned
+Message-ID: <20251211050417.GA26597@lst.de>
+References: <20251210142305.3660710-1-hch@lst.de> <20251210164859.GB7725@frogsfrogsfrogs> <20251210165438.GA9489@lst.de> <20251210191825.GD7725@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,21 +32,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251210200248.GG94594@frogsfrogsfrogs>
+In-Reply-To: <20251210191825.GD7725@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Dec 10, 2025 at 12:02:48PM -0800, Darrick J. Wong wrote:
-> > -_scratch_mkfs >> $seqres.full
-> > -_try_scratch_mount >> $seqres.full || \
-> > +$MKFS_XFS_PROG -r rtdev=$rtloop $ddloop  >> $seqres.full
-> > +mount -o rtdev=$rtloop $ddloop $SCRATCH_MNT >> $seqres.full || \
-> >  	_notrun "mount with injected rt device failed"
+On Wed, Dec 10, 2025 at 11:18:25AM -0800, Darrick J. Wong wrote:
+> How nasty is it, exactly?  AFAICT,
 > 
-> What happens if SCRATCH_LOGDEV is set?  I guess we ignore it, and
-> everything is good?  I suppose the logdev configuration isn't really
-> relevant here anyway.
-> 
-> If the answers are 'nothing' and 'yes' then
+>  * The zone targetting code (aka the zone we copy into) then has to
+>    know to avoid a runt endzone?
 
-Yes, this now ignores the SCRATCH_* config entirely.
+Yes.  And I don't really have a good idea how to do that.
+
+>  * Thresholding gets weird because they don't apply right to the runt
+>    zone, which means the victim selection is also off.
+
+Yes.
+
+>  * The code that reserves zones for gc or other ENOSPC handling then has
+>    to ensure it never picks a runt zone to avoid corner case problems
+
+This is what is needed for 1) above with all the same issues.
+
+> Any other reasons?  Given that zoned is still experimental I think I'm
+> ok with adding this restriction, but only after some more thorough
+> understanding. :)
+
+Yeah.
+
+> Also does growfs need patching so that it doesn't create a runt zone?
+
+I think we run the buffer verifier there, but a nicer check to abort
+early would be helpful.  As would be a test case.
 
