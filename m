@@ -1,160 +1,171 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057DD30F7E3;
-	Fri, 12 Dec 2025 08:23:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB1DE2DF15B
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Dec 2025 12:24:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765527805; cv=none; b=oOVHPv8UkS4kK03xMO5t8I5LoQY7Ay7AsLcX0Rs6pyU4oz8X6IpKb/iMCQkl9MEjErCU7JauC+oTNv2DVEC87unVTQ/4IAeYYU6iOQOrLk9u8833Wg9h/R1OEW0SZ3UcBi6unL37a718fsRCLEZMZflXJHXl2ZWsvkSOuvuy8aY=
+	t=1765542301; cv=none; b=ihedDfdi404ZDY++Kpi369FljvmWrluSTFedVueBmgxglxmCGbdak0Qr5P0XLih9XsxEgNI8yigverYk7sBLGd0lGzP8b9h2QrjZCesE7hxxbztllPu3AMz9+gN73Fpa7tixrwdkdE86p4F872YHLDzFgoh6/ssUdxIIlPKd+Wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765527805; c=relaxed/simple;
-	bh=aGiamXkn1VF0z2lGTZ3ubs0hl83g4dJpt6xBwhMGWW4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rt8t4YVH0TzcySKhy5gy5v6ao7Kqr2YOrqxiWOeav4jKNZow6Q+Nsu5FtdDTG3tcFzxwW7kCukV4bDwYZurkYnZ01PDGtlkWMny+mANn0R9PbpmY/liY8IMKFP12lVUTzFplY+Rblt9KXeP+btLmAu9PNb+33V441SX4DC6gzJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VFdkGOqW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1765542301; c=relaxed/simple;
+	bh=NO1iFKrmKQcZzu+3V+BumcB8ZwMuHFgWkOQU25IF9pU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kjB84sZSLlgsVgsj/Oe+H2Cr4At3GCWFtBmLmXxLKlyJO02rYxcOOKYL7+eBqxIrzV/G9sY8FtEKIlLKnb4gP59/kDoTWquID230RpvIwRukSMtXQoKefqgvfFcGIrUbcPnSaBNM/b+KIm2Jl1uvjGfR7XuOtXHdsb2I56+q+tI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LX9Ab3ir; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VFdkGOqW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=elD0+ujFEGaCtAGB28tzo6uCe9uXllSkts/kMeVnkX0=; b=VFdkGOqWCQZ2itXGtmhsgJaQrg
-	GUBahu7wmxG/XrAyRkhRoB/Gkim1WsWPsxOSmwPWEa7EOe8+RfNhKkFk69wi+SHrcA+0uyza1HYUN
-	1ob0sfjsxaTVcwqfxBTf58y7fEFsHzT3o+2AFhXGAC3DXBO3jYFoNxgcd9DYKh8mB0ohrZWsFM2sw
-	hoYCyXxqX1KYDC337YO7y73bM7IQb/jpAuI1By/FOhdl9hEEDwambwOWXWcUw9wDIVmEh5+pCDgWj
-	zf7Q6XN/8FTHonW2w8SNDGJnn5neQQKiR4vo/CYDydJ5Y8X+/kpJdRJT94N2jHgQm9pCoEPA0FPdb
-	49a4MD2w==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vTyQs-00000000GGL-46NW;
-	Fri, 12 Dec 2025 08:23:23 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: Anand Jain <asj@kernel.org>,
-	Filipe Manana <fdmanana@suse.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 13/13] xfs/650: require a real SCRATCH_RTDEV
-Date: Fri, 12 Dec 2025 09:22:01 +0100
-Message-ID: <20251212082210.23401-14-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251212082210.23401-1-hch@lst.de>
-References: <20251212082210.23401-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LX9Ab3ir"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1765542298;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V6uNUdyRLE5MdUl0IH/UQNcxOSiD4sqw1D/xu3u1Rk4=;
+	b=LX9Ab3irLKD34Kn3pQ+8mjiayQcjsG5ylGbk4OwWf7fabP7Wh9lXjyucqSAKUq4UPQNRXQ
+	9IXmJTajjq61GoyUyDE0l/gYh7btmt4ju+QJn56r9qHGiHwbCMH7qzHrRfZbOvfi0wN3eR
+	YBJnTB3mLBoxRbe8ry1SH4IGoqL7Sbo=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-199-2pVXFB39OGaYP6eet0ChiQ-1; Fri,
+ 12 Dec 2025 07:24:57 -0500
+X-MC-Unique: 2pVXFB39OGaYP6eet0ChiQ-1
+X-Mimecast-MFC-AGG-ID: 2pVXFB39OGaYP6eet0ChiQ_1765542296
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4B655180028B;
+	Fri, 12 Dec 2025 12:24:56 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.2])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 965F8180045B;
+	Fri, 12 Dec 2025 12:24:55 +0000 (UTC)
+Date: Fri, 12 Dec 2025 07:24:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file
+ system
+Message-ID: <aTwJlR6K04iD2E1L@bfoster>
+References: <20251210090400.3642383-1-hch@lst.de>
+ <aTmTl_khrrNz9yLY@bfoster>
+ <20251210154016.GA3851@lst.de>
+ <aTmqe3lDL2BkZe3b@bfoster>
+ <20251212073937.GA30172@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251212073937.GA30172@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Require a real SCRATCH_RTDEV instead of faking one up using a loop
-device, as otherwise the options specified in MKFS_OPTIONS might
-not actually work the configuration.
+On Fri, Dec 12, 2025 at 08:39:37AM +0100, Christoph Hellwig wrote:
+> On Wed, Dec 10, 2025 at 12:14:35PM -0500, Brian Foster wrote:
+> > Well yeah, it would look something like this at the current site:
+> > 
+> > 	if (!is_inode_zoned() && XFS_TEST_ERROR(...) ||
+> > 	    ac->reserved_blocks == magic_default_res + len)
+> > 		xfs_zero_range(...);
+> > 	else
+> > 		xfs_free_file_space(...);
+> > 
+> > ... and the higher level zoned code would clone the XFS_TEST_ERROR() to
+> > create the block reservation condition to trigger it.
+> > 
+> > Alternatively perhaps you could make that check look something like:
+> > 
+> > 	if (XFS_TEST_ERROR() && (!ac || ac->res > len))
+> > 		...
+> > 	else
+> > 		...
+> 
+> I had to juggle this a bit to not trigger the wrong way and add a
+> helper.  The changes are a bit bigger than the original version,
+> but I guess you'll probably prefer it because it keeps things more
+> contained in the zoned code?
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/650 | 63 +++++----------------------------------------------
- 1 file changed, 6 insertions(+), 57 deletions(-)
+Thanks for taking a stab at this. I agree that the whole indirect logic
+trigger based on res thing is a wart/tradeoff, but even still I think I
+like this better probably for the reasons you stated. It feels more
+encapsulated, and is still limited to DEBUG mode so doesn't worry me as
+much.
 
-diff --git a/tests/xfs/650 b/tests/xfs/650
-index d8f70539665f..418a1e7aae7c 100755
---- a/tests/xfs/650
-+++ b/tests/xfs/650
-@@ -9,21 +9,11 @@
- # bunmapi"). On XFS without the fixes, truncate will hang forever.
- #
- . ./common/preamble
--_begin_fstest auto prealloc preallocrw
--
--# Override the default cleanup function.
--_cleanup()
--{
--	_scratch_unmount &>/dev/null
--	[ -n "$loop_dev" ] && _destroy_loop_device $loop_dev
--	cd /
--	rm -f $tmp.*
--	rm -f "$TEST_DIR/$seq"
--}
-+_begin_fstest auto prealloc preallocrw realtime
- 
- . ./common/filter
- 
--_require_scratch_nocheck
-+_require_realtime
- _require_xfs_io_command "falloc"
- 
- maxextlen=$((0x1fffff))
-@@ -31,51 +21,11 @@ bs=4096
- rextsize=4
- filesz=$(((maxextlen + 1) * bs))
- 
--must_disable_feature() {
--	local feat="$1"
--
--	# If mkfs doesn't know about the feature, we don't need to disable it
--	$MKFS_XFS_PROG --help 2>&1 | grep -q "${feat}=0" || return 1
--
--	# If turning the feature on works, we don't need to disable it
--	_scratch_mkfs_xfs_supported -m "${feat}=1" "${disabled_features[@]}" \
--		> /dev/null 2>&1 && return 1
--
--	# Otherwise mkfs knows of the feature and formatting with it failed,
--	# so we do need to mask it.
--	return 0
--}
--
--extra_options=""
--# Set up the realtime device to reproduce the bug.
-+_scratch_mkfs \
-+	-d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1 \
-+	-r extsize=$((bs * rextsize)) \
-+	>>$seqres.full 2>&1
- 
--# If we don't have a realtime device, set up a loop device on the test
--# filesystem.
--if [[ $USE_EXTERNAL != yes || -z $SCRATCH_RTDEV ]]; then
--	_require_test
--	loopsz="$((filesz + (1 << 26)))"
--	_require_fs_space "$TEST_DIR" $((loopsz / 1024))
--	$XFS_IO_PROG -c "truncate $loopsz" -f "$TEST_DIR/$seq"
--	loop_dev="$(_create_loop_device "$TEST_DIR/$seq")"
--	USE_EXTERNAL=yes
--	SCRATCH_RTDEV="$loop_dev"
--	disabled_features=()
--
--	# disable reflink if not supported by realtime devices
--	must_disable_feature reflink &&
--		disabled_features=(-m reflink=0)
--
--	# disable rmap if not supported by realtime devices
--	must_disable_feature rmapbt &&
--		disabled_features+=(-m rmapbt=0)
--fi
--extra_options="$extra_options -r extsize=$((bs * rextsize))"
--extra_options="$extra_options -d agsize=$(((maxextlen + 1) * bs / 2)),rtinherit=1"
--
--_scratch_mkfs $extra_options "${disabled_features[@]}" >>$seqres.full 2>&1
--_try_scratch_mount >>$seqres.full 2>&1 || \
--	_notrun "mount failed, kernel doesn't support realtime?"
--_scratch_unmount
- _scratch_mount
- _require_fs_space "$SCRATCH_MNT" $((filesz / 1024))
- 
-@@ -108,7 +58,6 @@ $XFS_IO_PROG -c "pwrite -b 1M -W 0 $(((maxextlen + 2 - rextsize) * bs))" \
- # Truncate the extents.
- $XFS_IO_PROG -c "truncate 0" -c fsync "$SCRATCH_MNT/file"
- 
--# We need to do this before the loop device gets torn down.
- _scratch_unmount
- _check_scratch_fs
- 
--- 
-2.47.3
+A few minor comments below, but otherwise if this works for you and
+there aren't strong opinions to the contrary:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 6108612182e2..d70c8e0d802b 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1240,6 +1240,28 @@ xfs_falloc_insert_range(
+>  	return xfs_insert_file_space(XFS_I(inode), offset, len);
+>  }
+>  
+> +#define XFS_ZONED_ZERO_RANGE_SPACE_RES		2
+> +
+
+This 2 block res isn't purely a zero range thing, right? It looks like
+it's for a few different falloc ops.. perhaps ZONED_FALLOC_SPACE_RES (or
+whatever else that is less zero specific)..?
+
+> +/*
+> + * Zero range implements a full zeroing mechanism but is only used in limited
+> + * situations. It is more efficient to allocate unwritten extents than to
+> + * perform zeroing here, so use an errortag to randomly force zeroing on DEBUG
+> + * kernels for added test coverage.
+> + *
+> + * On zoned file systems, the error is already injected by
+> + * xfs_file_zoned_fallocate, which then reserves the additional space needed.
+> + * We only check for this extra space reservation here.
+> + */
+> +static inline bool
+> +xfs_falloc_force_zero(
+> +	struct xfs_inode		*ip,
+> +	struct xfs_zone_alloc_ctx	*ac)
+> +{
+> +	if (ac)
+> +		return ac->reserved_blocks > XFS_ZONED_ZERO_RANGE_SPACE_RES;
+
+Random thought: I wonder if doing something like:
+
+	if (!IS_ENABLED(CONFIG_XFS_DEBUG))
+		return false;
+
+... in this helper would shore up the logic a bit? Just a bit of
+defensive logic against the indirection since the helper already exists.
+I also wonder if that would help the compiler optimize this out on
+!DEBUG builds.
+
+> +	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
+> +}
+> +
+>  /*
+>   * Punch a hole and prealloc the range.  We use a hole punch rather than
+>   * unwritten extent conversion for two reasons:
+...
+> @@ -1423,13 +1438,26 @@ xfs_file_zoned_fallocate(
+>  {
+>  	struct xfs_zone_alloc_ctx ac = { };
+>  	struct xfs_inode	*ip = XFS_I(file_inode(file));
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_filblks_t		count_fsb;
+>  	int			error;
+>  
+> -	error = xfs_zoned_space_reserve(ip->i_mount, 2, XFS_ZR_RESERVED, &ac);
+> +	/*
+> +	 * If full zeroing is forced by the error injection nob, we need a space
+
+s/nob/knob/ ;)
+
+Thanks!
+
+Brian
 
