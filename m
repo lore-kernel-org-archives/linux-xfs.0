@@ -1,180 +1,80 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC343280023
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 11:55:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EBD533E36E;
+	Mon, 15 Dec 2025 14:18:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765799732; cv=none; b=RJeVLv33hV/2GDKiqtXPbg0Zr38c47MpAj1oB+WkzPrTczAYHZ5ARkcZdggkpP3KsbsN7aHa6PDppgqpq5esKMJWqxeMYzm5THbz72db8PwAvZr7rD7yFAqOZUgtydsUGbtqxiwOVcWnugLvu4wzg1C9tNJz9ET5uowX311jJTs=
+	t=1765808282; cv=none; b=drDL8X4D0vSbrXHGvu33q/wIDSaaTmKcfertusDtboupgaToUf8wLHGYCnsJI/xYoyhkekJlIO/FNbBTHPAqBp+F6T0OqMuT6QaX2d23SbUWsDFGNDpVgxWGc8PYUaEyHOFth+q4oHDx5/pVTS12aLnN62sL/8vnLIhkd5RoHBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765799732; c=relaxed/simple;
-	bh=H9ns3XGur8mvcLyiNacD4/0+5YyVkM5rXgCXDQzfnYg=;
+	s=arc-20240116; t=1765808282; c=relaxed/simple;
+	bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VJi43Ku7ktH7fgWXaIerXKhzQgw77zhGAyd2siLrNXAqEDrE4bzksuYL8cyMfllzD4pqiyQMaiBQrFD5ZBZMGMwVanDgEsaqLMf5lbKB2JD1bTY4x5/UhHtYzFK6+rdTHpxRkFGPjRXw9KW88tir20cvBRVohHUCAgIIydIS76A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id AAFD2180F2C9;
-	Mon, 15 Dec 2025 12:49:17 +0100 (CET)
-Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id l+7qIr31P2kbmhcAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Mon, 15 Dec 2025 12:49:17 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v6] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base 
-Date: Mon, 15 Dec 2025 12:48:12 +0100
-Message-ID: <20251215114811.40090-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <aRdco1GtU5BK2z6C@infradead.org>
-References: <aRdco1GtU5BK2z6C@infradead.org>
+	 MIME-Version:Content-Type; b=Z79WaH+BcI9k/qUEKjQ0sKOcmsL5jRRR6fCVIt2kaQFt/wsNQzARUHSiIMRR+akkU+XC6mzQYFVKQrFCEFpO8HQzOR/CVr0GoTFb0MCPpqV1w4KipgRkJj4tDNpqEbyTiM+rObNpiZW23hBoXwLMk5y+KguKjmgnEzE2m63bJ/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EnzJVDvd; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EnzJVDvd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70FEEC19422;
+	Mon, 15 Dec 2025 14:17:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765808281;
+	bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=EnzJVDvdhaBM6DbRPOiK20Pwhk3RmDR4M/3dDxLssxXJ5qWYXDw7jWCyZcHwqIcSl
+	 Mo1gNWDJn9R3ZGFYSMHaXb+fmQF08aK2aq9IXp5zSTnVlsvo+0O9/xapbjTHaioq26
+	 6OIK49f3JWsRdso+mtZ2U048xG2O9ElypG7IeiiMvRu4C5z5ibrNdJEQqNwDgLetlU
+	 f3atL9mG7gaMYDODjXTR/iKYY8LCFSGaoLbFtW+IABVepdEIir0nGiQc2T/PnxDCpC
+	 eS9KUAZEjYNfefVp4+Hno4j0apiYOMbQTfRxOj8ZxsKbgd3yeHDdcnc0oO4AaH3+WD
+	 Nnsire0rnO7Tw==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Brian Foster <bfoster@redhat.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v3] iomap: replace folio_batch allocation with stack allocation
+Date: Mon, 15 Dec 2025 15:17:54 +0100
+Message-ID: <20251215-asketisch-funde-601bd5a5cbbd@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251208140548.373411-1-bfoster@redhat.com>
+References: <20251208140548.373411-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1212; i=brauner@kernel.org; h=from:subject:message-id; bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ6SEyx23XdXaNOQ2vvvbnR29Uj62O9y30WnU7POjfNo qD7fTVTRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwETyaxgZ1hznvKcxaeqR8/4v E+/t3NnzdrZcrJLm11Vb6vdtn5tl8JCR4Z7Jn3eiYpd73qj9F3y7PWcb9zPvngmTd4TvyFw0d7/ sSUYA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation.
+On Mon, 08 Dec 2025 09:05:48 -0500, Brian Foster wrote:
+> Zhang Yi points out that the dynamic folio_batch allocation in
+> iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
+> that is under development because it doesn't sufficiently handle the
+> allocation failure case (by allowing a retry, for example). We've
+> also seen lockdep (via syzbot) complain recently about the scope of
+> the allocation.
+> 
+> [...]
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
-v6 changes:
-    formating to follow recomendation
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
- fs/xfs/xfs_bmap_util.c | 10 ++++++++--
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
- 3 files changed, 28 insertions(+), 9 deletions(-)
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06ca11731e430..ee5765bf52944 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -642,11 +642,17 @@ xfs_free_eofblocks(
- 	return error;
- }
- 
-+/*
-+ * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
-+ * further checks whether the hard ware supports and it can fallback to
-+ * software zeroing.
-+ */
- int
- xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	uint32_t		bmapi_flags)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -748,7 +754,7 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-+				allocatesize_fsb, bmapi_flags, 0, imapp,
- 				&nimaps);
- 		if (error) {
- 			if (error != -ENOSR)
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b33616304..2895cc97a5728 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+		xfs_off_t len, uint32_t bmapi_flags);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c99..040e4407a8a07 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
- 	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	unsigned int		blksize = i_blocksize(inode);
- 	loff_t			new_size = 0;
- 	int			error;
- 
--	trace_xfs_zero_file_space(XFS_I(inode));
-+	trace_xfs_zero_file_space(ip);
- 
- 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+	error = xfs_free_file_space(ip, offset, len, ac);
- 	if (error)
- 		return error;
- 
- 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
- 	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	if (mode & FALLOC_FL_WRITE_ZEROES) {
-+		if (xfs_is_always_cow_inode(ip) ||
-+		    !bdev_write_zeroes_unmap_sectors(
-+				xfs_inode_buftarg(ip)->bt_bdev))
-+			return -EOPNOTSUPP;
-+		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
-+	} else {
-+		error = xfs_alloc_file_space(ip, offset, len,
-+				XFS_BMAPI_PREALLOC);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
- 	case FALLOC_FL_ZERO_RANGE:
- 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
--- 
-2.51.1
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] iomap: replace folio_batch allocation with stack allocation
+      https://git.kernel.org/vfs/vfs/c/ed61378b4dc6
