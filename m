@@ -1,80 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EBD533E36E;
-	Mon, 15 Dec 2025 14:18:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA65B3451D9;
+	Mon, 15 Dec 2025 14:20:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765808282; cv=none; b=drDL8X4D0vSbrXHGvu33q/wIDSaaTmKcfertusDtboupgaToUf8wLHGYCnsJI/xYoyhkekJlIO/FNbBTHPAqBp+F6T0OqMuT6QaX2d23SbUWsDFGNDpVgxWGc8PYUaEyHOFth+q4oHDx5/pVTS12aLnN62sL/8vnLIhkd5RoHBA=
+	t=1765808401; cv=none; b=Uz/ULNkROUSRhpVbfpWDpmGr7rc+aSqYkuhZUQpXW2ca5s5v5GaCVfYrEHsTV21OrRLyo9H5EpnPv6NYtiV8WnaaNUYPk2w8VhG+NJCq8ji1GqJCOBp+mEhJrNq/q+LXzfX4xw7wjogdm0Ols8d/MTQzcgr/XqW2gPqaqketfJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765808282; c=relaxed/simple;
-	bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z79WaH+BcI9k/qUEKjQ0sKOcmsL5jRRR6fCVIt2kaQFt/wsNQzARUHSiIMRR+akkU+XC6mzQYFVKQrFCEFpO8HQzOR/CVr0GoTFb0MCPpqV1w4KipgRkJj4tDNpqEbyTiM+rObNpiZW23hBoXwLMk5y+KguKjmgnEzE2m63bJ/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EnzJVDvd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765808401; c=relaxed/simple;
+	bh=SOKNAp3KlXqmQkYAHiY1KnI5hmWZlwxQAhzfS0nZwp0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kIoEB+n1sPAcQgcbWZrUiLBH+jZQZY3o6jxGUMLFjiuxGX500ACkKSve6XLqihOQw8EGfPHDOGNnKS8OpLkaOFF+tBdZQb1xKhsgLoTGcgp1JuPnzZ7c67KaxgVeZHXxsXIsLIC2cP2eGx2RBcmLvjW8qVe5gMficrmvqbPcgfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DFCKKO8Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EnzJVDvd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70FEEC19422;
-	Mon, 15 Dec 2025 14:17:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DFCKKO8Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0605C4CEF5;
+	Mon, 15 Dec 2025 14:19:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765808281;
-	bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EnzJVDvdhaBM6DbRPOiK20Pwhk3RmDR4M/3dDxLssxXJ5qWYXDw7jWCyZcHwqIcSl
-	 Mo1gNWDJn9R3ZGFYSMHaXb+fmQF08aK2aq9IXp5zSTnVlsvo+0O9/xapbjTHaioq26
-	 6OIK49f3JWsRdso+mtZ2U048xG2O9ElypG7IeiiMvRu4C5z5ibrNdJEQqNwDgLetlU
-	 f3atL9mG7gaMYDODjXTR/iKYY8LCFSGaoLbFtW+IABVepdEIir0nGiQc2T/PnxDCpC
-	 eS9KUAZEjYNfefVp4+Hno4j0apiYOMbQTfRxOj8ZxsKbgd3yeHDdcnc0oO4AaH3+WD
-	 Nnsire0rnO7Tw==
+	s=k20201202; t=1765808400;
+	bh=SOKNAp3KlXqmQkYAHiY1KnI5hmWZlwxQAhzfS0nZwp0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DFCKKO8Y56kGcvgU39JK+toyUpk4jGwiPG6HyglacSq1MKmKkenC3jKNS9/HS5ipp
+	 B6NSOx8wBgq7Am6EMfMeh1PNOzsczwCgxkrjC6/z42Hk9J8i+SuYZOm6VUp9ou3SV9
+	 dgItcJM7Pf5rvLbJn9iHf33BlNlYry5yy3lCZ7IwJ+0MJKNGUTfNv5fUXEn1llrPl4
+	 EdZzX8EDySvcR9aLsG+tR4I+BaJYILYt8x/3OPDwPDyv8kLUOno34+gcWfYODinh1u
+	 qnMHAYCJBYMihFLwg4WxBl6Nw3qxa68g95/milv0l5zl+UvAMcycihLDuAxNErOEg+
+	 Xu0/K5zP9ANjw==
+Date: Mon, 15 Dec 2025 15:19:49 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Brian Foster <bfoster@redhat.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3] iomap: replace folio_batch allocation with stack allocation
-Date: Mon, 15 Dec 2025 15:17:54 +0100
-Message-ID: <20251215-asketisch-funde-601bd5a5cbbd@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251208140548.373411-1-bfoster@redhat.com>
-References: <20251208140548.373411-1-bfoster@redhat.com>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Amir Goldstein <amir73il@gmail.com>, 
+	NeilBrown <neil@brown.name>, Val Packett <val@packett.cool>, Jan Kara <jack@suse.cz>, 
+	linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>, 
+	David Sterba <dsterba@suse.com>, David Howells <dhowells@redhat.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>, 
+	Chuck Lever <chuck.lever@oracle.com>, Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
+	Carlos Maiolino <cem@kernel.org>, John Johansen <john.johansen@canonical.com>, 
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Stefan Berger <stefanb@linux.ibm.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev, 
+	ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org
+Subject: Re: [PATCH] fuse: fix conversion of fuse_reverse_inval_entry() to
+ start_removing()
+Message-ID: <20251215-immens-hurtig-1f0b23aa4bf3@brauner>
+References: <20251113002050.676694-1-neilb@ownmail.net>
+ <20251113002050.676694-7-neilb@ownmail.net>
+ <6713ea38-b583-4c86-b74a-bea55652851d@packett.cool>
+ <176454037897.634289.3566631742434963788@noble.neil.brown.name>
+ <CAOQ4uxjihcBxJzckbJis8hGcWO61QKhiqeGH+hDkTUkDhu23Ww@mail.gmail.com>
+ <20251201083324.GA3538@ZenIV>
+ <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
+ <20251205-unmoralisch-jahrtausend-cca02ad0e4fa@brauner>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1212; i=brauner@kernel.org; h=from:subject:message-id; bh=jvGfyeRPYJpR0xeP/qNszMAHQlTZr4ehS/J2PA7MOMg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ6SEyx23XdXaNOQ2vvvbnR29Uj62O9y30WnU7POjfNo qD7fTVTRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwETyaxgZ1hznvKcxaeqR8/4v E+/t3NnzdrZcrJLm11Vb6vdtn5tl8JCR4Z7Jn3eiYpd73qj9F3y7PWcb9zPvngmTd4TvyFw0d7/ sSUYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20251205-unmoralisch-jahrtausend-cca02ad0e4fa@brauner>
 
-On Mon, 08 Dec 2025 09:05:48 -0500, Brian Foster wrote:
-> Zhang Yi points out that the dynamic folio_batch allocation in
-> iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
-> that is under development because it doesn't sufficiently handle the
-> allocation failure case (by allowing a retry, for example). We've
-> also seen lockdep (via syzbot) complain recently about the scope of
-> the allocation.
+On Fri, Dec 05, 2025 at 02:09:41PM +0100, Christian Brauner wrote:
+> On Mon, Dec 01, 2025 at 03:03:08PM +0100, Miklos Szeredi wrote:
+> > On Mon, 1 Dec 2025 at 09:33, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> > >
+> > > On Mon, Dec 01, 2025 at 09:22:54AM +0100, Amir Goldstein wrote:
+> > >
+> > > > I don't think there is a point in optimizing parallel dir operations
+> > > > with FUSE server cache invalidation, but maybe I am missing
+> > > > something.
+> > >
+> > > The interesting part is the expected semantics of operation;
+> > > d_invalidate() side definitely doesn't need any of that cruft,
+> > > but I would really like to understand what that function
+> > > is supposed to do.
+> > >
+> > > Miklos, could you post a brain dump on that?
+> > 
+> > This function is supposed to invalidate a dentry due to remote changes
+> > (FUSE_NOTIFY_INVAL_ENTRY).  Originally it was supplied a parent ID and
+> > a name and called d_invalidate() on the looked up dentry.
+> > 
+> > Then it grew a variant (FUSE_NOTIFY_DELETE) that was also supplied a
+> > child ID, which was matched against the looked up inode.  This was
+> > commit 451d0f599934 ("FUSE: Notifying the kernel of deletion."),
+> > Apparently this worked around the fact that at that time
+> > d_invalidate() returned -EBUSY if the target was still in use and
+> > didn't unhash the dentry in that case.
+> > 
+> > That was later changed by commit bafc9b754f75 ("vfs: More precise
+> > tests in d_invalidate") to unconditionally unhash the target, which
+> > effectively made FUSE_NOTIFY_INVAL_ENTRY and FUSE_NOTIFY_DELETE
+> > equivalent and the code in question unnecessary.
+> > 
+> > For the future, we could also introduce FUSE_NOTIFY_MOVE, that would
+> > differentiate between a delete and a move, while
+> > FUSE_NOTIFY_INVAL_ENTRY would continue to be the common (deleted or
+> > moved) notification.
+> > 
+> > Attaching untested patch to remove this cruft.
 > 
-> [...]
+> Should we revert the fuse specific bits of c9ba789dad15 ("VFS: introduce
+> start_creating_noperm() and start_removing_noperm()") and then apply
+> your changes afterwards?
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/1] iomap: replace folio_batch allocation with stack allocation
-      https://git.kernel.org/vfs/vfs/c/ed61378b4dc6
+I think we shouldn't have this sitting around indefinitely so it would
+be good if we'd get a nod that this is ok or someone sending revert +
+fix that I can pick up. :)
