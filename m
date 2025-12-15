@@ -1,88 +1,56 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8065830DED5
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 07:19:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF1732B98D
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 09:48:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765783193; cv=none; b=Wl0Qa+OkXlu6SIrc4jEW15Nhfn6eHJeyJe3nFQszK1vo4ZqJtQzBYLR96uxTTpi7Mz6WC/PdDjKqJiy/K5lBny8hO6cV4Rat35x8ezuxHL49cjRT2cUOBVP2BAMLKzx5SFcAEA6tSlZ2RDWTm6XY+Hle341HddSLZfdnBa9Yrl0=
+	t=1765792134; cv=none; b=m42p4Uk5AeMz5k4tJGFKa3R/wlbhL12+ZnjeASCeUxEmCm5Epn2hKic0jXwx2PpHrKTeU/8E1JhIoTZgI64b7KMBqFJgxPTsZLWhC650t1eiDGehpPKDdyZ8UqNnhPwENm7Ya510Bg5rFJGcD09kmTnaekAB6j17R/x6GrIP06A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765783193; c=relaxed/simple;
-	bh=o+2oGiDBxH53w41dLB4bot2y8w78tANclabDJh4lEYE=;
-	h=Subject:To:References:Cc:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=ms/Zz9AoAT2RYF0hPZ6QEN25zQYCr2+SIT/rll1yK4BVgX4KaFrhUQXaG2FOI9+mneArs1j1gSjL/aXO7exZEQdnhq2AzmXdTlioYL3b1y221kAnDqX8/Bf+PKIBeIuWzdt2xNMZIpBZp3d0Wz9puy8X+PJ4Y32OD8Fi21Wz4jQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dVBJs3hQnzKHLwH
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 15:19:41 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3B9731A0847
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 15:19:47 +0800 (CST)
-Received: from [10.174.178.185] (unknown [10.174.178.185])
-	by APP4 (Coremail) with SMTP id gCh0CgDXOPmPtj9poFoCAQ--.59862S3;
-	Mon, 15 Dec 2025 15:19:45 +0800 (CST)
-Subject: Re: [PATCH 0/2] Fix two issues about swapext
-To: Christoph Hellwig <hch@infradead.org>
-References: <20251213035951.2237214-1-yebin@huaweicloud.com>
- <aT-eo76enT15FKkr@infradead.org>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
- dchinner@redhat.com, yebin10@huawei.com
-From: yebin <yebin@huaweicloud.com>
-Message-ID: <693FB68F.50400@huaweicloud.com>
-Date: Mon, 15 Dec 2025 15:19:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+	s=arc-20240116; t=1765792134; c=relaxed/simple;
+	bh=/yl04L9dZuO8BNcbvTuWc/MTFeUcLisozW+1XCF2R8E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Yn2/Z0laJMUQoDY0VfJNjYD8QBmdNXtFcHSqrXNRLwss6MVDUEofRdGxuB3TE2NEob7haQARAtUjoacxU34gpU2i53hz5gN/YgkBzos5tvb9TI81AZ5I9dY4hkety9qFrYw4/05azck+uHKXQzfnz+AnPakCSWxl6NOyymz4qhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b/19kh3X; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b/19kh3X"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=gzQCini5jiyhrAZaO8/rMI/T/Ae62i0ChKpGRdIYWqk=; b=b/19kh3XXEpP0TVB7eMTO+p0yY
+	Sex5t7XUeIAEQvjax/OUCpaezWJh7Dpoonr7NAUPgIjhKU0AgFtNJ1Fa4PNWVB/m+fVxfpZ3SaJ+C
+	WLetZcIZE3HQYm0va72K1+DmffJIWHYtIL8rzMlnzn7W09pc5cPx8UPCIu0S/5qo4ivyCXMYXibEe
+	8nBiNuBkgTKUHw3MsQhCVqhsACt5DmBZDOkBhMUgOgistxOj6cm0CKbDGlXYTIHHvNzb0y5ePtYmf
+	/En9znFnUXCLNGAm6EjxrnQt9FmOpEA7ePefjEPzRBt9qb3hq4ul7lti6J1jmI/jFKVbLOjPi/fkR
+	fpDkAq/w==;
+Received: from [2001:4bb8:2d3:f4f4:dcee:db:50a:ae71] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vV5CC-00000003OkX-0El6;
+	Mon, 15 Dec 2025 09:48:48 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: reject non-zone aligned RT subvolumes
+Date: Mon, 15 Dec 2025 10:48:35 +0100
+Message-ID: <20251215094843.537721-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <aT-eo76enT15FKkr@infradead.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgDXOPmPtj9poFoCAQ--.59862S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7JFWDAw4rArWruF1rAry8AFb_yoWDXFgE9F
-	n3Wr9xCa1DJw1xWr4kKFs8ZF1DCrsakrykX3y5JF17Kry7Z39rKF4vkr90q3ykGw4SyrZx
-	KrnYqryfXF4akjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4AYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AK
-	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
-	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHD
-	UUUUU==
-X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Hi all,
 
+this rejects not-aligned zoned RT volumes in the SB verifier and in growfs.
 
-On 2025/12/15 13:37, Christoph Hellwig wrote:
-> Can you add a sentence or two here how you found the issue?
->
-
-First, we encountered the issue described in 
-https://access.redhat.com/solutions/6095011 in our production 
-environment.The triggered scenario is that after performing fragmented 
-organization, the system suddenly lost power and reset, and then 
-encountered a panic when mounting the XFS file system.
-After analyzing the vmcore, we identified the cause of the issue. 
-Subsequently, while reproducing the issue on linux-next, we also 
-discovered the problem described in PATCH[1].
-
-> Any chance you could add a reproducer to xfstests?
->
-Yes, this issue is quite reproducible. It occurs inevitably when 
-following certain steps. This problem has existed for a long time. I 
-think the reason it's not easily detected is that the XFS_IOC_SWAPEXT 
-IOCTL command is generally used during defragmentation. Therefore, it is 
-almost never included in typical log replay scenarios.
->
-
+Diffstat:
+ libxfs/xfs_sb.c |   13 +++++++++++++
+ xfs_rtalloc.c   |   14 ++++++++------
+ 2 files changed, 21 insertions(+), 6 deletions(-)
