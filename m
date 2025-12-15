@@ -1,70 +1,102 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7A3F345CBF
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 14:29:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E200341661
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 14:45:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765808993; cv=none; b=t++xODVjEiUd4lUGBGltUtQnrDsu+tYvsJvfnkADcOInocTtoT5tcys+C0SVSY1oTZNp9S5FlNEOThj85VsiahlE5dHdi0ko7m1niSuB2byxCujmi8D7yy6ggCSA3M7wfEJRyT5u5eWMQlMF7t4HCwmU4co/3p4aEJHW18Sg8jw=
+	t=1765809923; cv=none; b=oIEqaXmdG128vcEOAce+rDct0NsS4ZQm0ZyjJRrJRh5wR/V0hHdgy4MFfctrFtmTbTuoV/V83/bNIWWgNznNzo7hnkAeHi5gpwNMZdNdju/QpBZrxKCd7lVrP15RsV0R9WLRerQGVo4htM5e8fBqsrv2f/7zhn5IYBMZxsmc6fE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765808993; c=relaxed/simple;
-	bh=b7G/vWA3uaZblMeS6TDUkIwjMDCYyFObWisEy3vjINA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ULFf+ywmG+DgoqO1aAT4IzIzikdVOLROovCGfz5EltftrSrgS7504EWTNZQkIpK/NmhRJle4SPt/nTiCEoX9MLyFOCwpYN0m9/eP2hszPRlmiyeYN39RQUYMLQptJwQzhyYJxoQL4/bgWpnoqnj/gCv2aVjq6dshu1crrFrOKUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GaiIf6pY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1765809923; c=relaxed/simple;
+	bh=wG+8C9GqbiGgyzVT0S6iMdvLngbulJhjjZuh3aKtGew=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=H6IJvNiTCwpnDOySgLhAMj1j9RgDn3mwqwcZL8dIidfqvRJvwoOxUjGNJ/WwJXeZkYCsAVLNoo/hwKeZnLkUWRbzUF82WQjIyyM0tZWLVAbnpd4WKQmAv46IAumB35j5PinTnF8lGcR0JUkJv7v8tYZ9dpKttb1xRYxyFlYUN2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LlbspmP3; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GaiIf6pY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=cCz879FCRdsNCiGbs8i4htwfMnPPM45h1G0s5DmTdNc=; b=GaiIf6pYxvKvHGqWPvcOjOmW9F
-	GRHBvW182IcuocXEn3YZEe4Sev8JYQqSWU4i0f3mETdmKpquLE5SJZbaDRM0aC/hPj7YxFG32zFuP
-	KS32e1p8vs812HCHkS17IT6T2eOdtQO4IXSOputXSz+vAqlmuXqqiYUTwmcjhnkQhKjEd8/7F6Pic
-	Bjlu5/ROSSlRfvT0zdFPmHvouHilw3QajU3YMjw5pA5fGxAV4kVvySmYHWYSGpK4RDwl3EdO9JBLI
-	825SYvc8qabeCrD4j9k3xdrjBzfxTD1AXNamsVk6BsINzts+i+gcjH0imRvmg6ktnCl13kTAUEX3h
-	2s+IcPGw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vV9a8-00000003naO-3Q9x;
-	Mon, 15 Dec 2025 14:29:48 +0000
-Date: Mon, 15 Dec 2025 06:29:48 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: yebin <yebin@huaweicloud.com>
-Cc: Christoph Hellwig <hch@infradead.org>, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
-	dchinner@redhat.com, yebin10@huawei.com
-Subject: Re: [PATCH 0/2] Fix two issues about swapext
-Message-ID: <aUAbXIkQ_LfYuPJc@infradead.org>
-References: <20251213035951.2237214-1-yebin@huaweicloud.com>
- <aT-eo76enT15FKkr@infradead.org>
- <693FB68F.50400@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LlbspmP3"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4777771ed1aso26926715e9.2
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Dec 2025 06:45:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1765809920; x=1766414720; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=wG+8C9GqbiGgyzVT0S6iMdvLngbulJhjjZuh3aKtGew=;
+        b=LlbspmP3j2m2L/KsnOCwlLLZIcBUUsg5wWUfEJA42N06wwsAmcVzT8o1bLfOmtrp54
+         nrngZWS1fgsWGZmxM5UARRzc8g8MG8lc6E+ar0VmQxelBEO8IeVfXdgnWi9JsKFUQkey
+         qCnexXHUISTcRjPjaWKfas1dtVoPodZBzhXxmBYD1Kr/NdjtL+N/SXv+guNaWRW8kvon
+         TUH1iTVEkiJ/OG5nti1yRGSXp8CTOOCF72oQn1v+ox4vX3f922i7s9wfUkYvMA82pxMe
+         +Q/rTpAt1ujxbS1Ur6kcghcD+nXmK5c0c2ltiBHKvsVZq21rmPcpfStw7MEd6JofQfZE
+         c7uA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765809920; x=1766414720;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wG+8C9GqbiGgyzVT0S6iMdvLngbulJhjjZuh3aKtGew=;
+        b=eLX2jx9peaz7xNkpieGHjFEScTZIABvo4ujktINh6wMoZxESwwFR3ZL68RVEqqupvD
+         5WZyDv8mB5pVn6qZhJsRzMIBgy1U928fux0HazhSVoWzoFBjBQnFDWtKf8Wa3md7GzLp
+         1ICyN4wn3FprUo2Yh8Hecao3s1hrkXvyi1gwDacFIsIX6C3nLXmE5gVZy5c4uv/YxFFZ
+         fs1GZeiGouE4fIyTz282z6OTtM59i8rMulrHC4ucOMpMcaE26vQgnYC51nNTMca76f0S
+         YduTcLv5wpz6dgBYdxqjti0XCUVokZ31w+uvqskFtgtz0ANvFfscnCdzDD6aCxCwyYVv
+         pnZg==
+X-Gm-Message-State: AOJu0YzmeDe9OqidPlqSxJaF1V3ANDWNkoEhmDUVyrbLB96VUQygukeY
+	WAxgyu2NUT+EtMvyQQwUM4TxHtb3XybOT7vG1vRZpzMO9fAMb0N7QJYh607d9g==
+X-Gm-Gg: AY/fxX4EoTmYxTXohovjyqXd9xiLIgc6wwlpR/ugBumIKwtVyFTDPlWWPkfXrDqKRZW
+	3/BWuDcCIFJdt84g4xBmXxWs7ouFGRZdwx4DDjwySr3KwvxwgBekR/Hj+w6BEMSF3HrlFnnEA/c
+	SkiW8B4epapEO8pMPpUq6bQIzFQ2R/Hm0c5j/3fhn1oUIbH5aeCkEE09K08/t+vvgSu8yRCpy1s
+	xPOncxOKy/2IonW3/FDBmYp97D+mK7xObqP2kQ1CSic3tlvhi/5/0mCbr90vzXb1QTt095NcfzQ
+	YnIdEIXIPWQXJg5DRW95eyzWY3EhPQyMiSHT4xUglepiwatIXOICLVDsd/QDdKlM9bwkKbOB02Z
+	6NC75aGNMFztw6GarWADyH7fW2KHo61jgBr/UjE9+f0muw5s42eLlo9KskUHBqyiqFuGAaPmnku
+	XCGJvmRyQzi3U0f719cvZSZA==
+X-Google-Smtp-Source: AGHT+IGcZMsE71+RlgnlxNEVmFDTwtNK2CwCj2ulj7mz8b620/wSfwqdpoGq4Cyj95p2LqjIiKwAng==
+X-Received: by 2002:a05:600c:3b8d:b0:477:55ce:f3c3 with SMTP id 5b1f17b1804b1-47a8f89c8a3mr125317335e9.5.1765809920209;
+        Mon, 15 Dec 2025 06:45:20 -0800 (PST)
+Received: from [10.171.116.235] ([78.213.157.103])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47a8f74b188sm187116625e9.1.2025.12.15.06.45.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Dec 2025 06:45:19 -0800 (PST)
+Message-ID: <24ed3227da4b2c23222cc1790196202168dc8f40.camel@gmail.com>
+Subject: Re: [PATCH v1] xfs: test reproducible builds
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
+	smoser@chainguard.dev, djwong@kernel.org
+Date: Mon, 15 Dec 2025 15:45:18 +0100
+In-Reply-To: <aT-eKSYrB_MFQeZY@infradead.org>
+References: <20251211172531.334474-1-luca.dimaio1@gmail.com>
+	 <aTun4Qs_X1NpNoij@infradead.org>
+	 <hxcrjuiglg4qjn4qzgnwdtxpcv6v47rpjrkxaxhmanhxvvwzpx@rz4ytlnsjlcm>
+	 <aTvOQqfpiJDCw7e5@infradead.org>
+	 <sgb56cw7mzdeebmugn5czivs7ei3g23bfosir6bb66pytuidyo@4irrwmmz4rel>
+	 <aT-eKSYrB_MFQeZY@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <693FB68F.50400@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Dec 15, 2025 at 03:19:43PM +0800, yebin wrote:
-> First, we encountered the issue described in
-> https://access.redhat.com/solutions/6095011 in our production
+On Sun, 2025-12-14 at 21:35 -0800, Christoph Hellwig wrote:
+> On Fri, Dec 12, 2025 at 05:56:02PM +0100, Luca Di Maio wrote:
+> > > I mean stick to md5sum for now.=C2=A0 We should eventually migrate
+> > > all md5sum user over when introducing a new dependency anyway.
+> > > Combine that with proper helpers.=C2=A0 If that's something you want
+> > > to do it would be great work, but it should not be requirement
+> > > for this.
+> > >=20
+> >=20
+> > Sorry read this too late and v2 I've moved to sha256sum
+> > Hopefully it's ok?
+>=20
+> Let's ask Zorro as the maintainer.=C2=A0 My main issue would be adding a
+> new dependency, but it seems both md5sum and sha256sum are part of
+> coreutil and have been for a while, so we should be ok.
 
-That's behind a paywall unfortunately.
-
-> > Any chance you could add a reproducer to xfstests?
-> > 
-> Yes, this issue is quite reproducible. It occurs inevitably when following
-> certain steps. This problem has existed for a long time. I think the reason
-> it's not easily detected is that the XFS_IOC_SWAPEXT IOCTL command is
-> generally used during defragmentation. Therefore, it is almost never
-> included in typical log replay scenarios.
-
-Can you send out an xfstests for this?  Or at least a shell script
-fragment?
-
+Yes, at least on Fedora and Debian both are part of the same coreutils
+package.=20
