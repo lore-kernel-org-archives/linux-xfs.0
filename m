@@ -1,109 +1,53 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB41239E79;
-	Tue, 16 Dec 2025 17:30:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C64301FF1AE
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 17:31:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765906232; cv=none; b=Xu+9CwFr0avdRXN2iMtPDh7fwlqPxqhWzZaRDxwsGOqNxzoNUhyD9+uqqQUkGJtwS2Sh2XRrJ7fM4t04IxZCdmR5l0Q0jKoRGt7rbWtv93uYIA1x3GkzELOs/Lahg7r71Hw+NsuQoUa2F8Cnq4oFU5UaKfph4oX2vhYNMK98xDY=
+	t=1765906297; cv=none; b=Cvi1dziqK/ODuDt7Mm67UCnjEWW+kvwuFRiPf3Tz3vilQt3hsk9wnZCRYJSTzqxJbYpXitYdbWITOjPSRMpSK2Qgiw6IXL49uLGYxKV3z+JJhPKfVoLNNt+IudIV4VNJDFT5qOSnod8iWfu7sLodbGrg5i+JLjAm59BdW23fpDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765906232; c=relaxed/simple;
-	bh=61Lwl7zv4haxPqHfSqiilbhWMNHGecr1ePxw9uQzKOI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZeVOXlTfPtwpcfk6YI/EN86vuStZXv2ib6JXgwhO9u9AB6DF3xeFw7V/BUZzm1geW55ErfB63NmeN90kr9wY/3ZqPx0CVYU9pBhdzKV4k7A1ZAVbMaoR7v6vgK1fIpWmQH44018dr/6/x932LlfjgP/CUhAKQPfXi4ZLTHty3Mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uqOJClMo; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uqOJClMo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=SdXPrR69PiW1QRePlnjbjr3is4+sa0ZSjp8rFZYxSTs=; b=uqOJClMoEr6DuCRkSS/Mqp64HB
-	vKlbKweACwbPVG7NdDwQsGWAwCUOYiGCuNN88a5dlGneCi4GCnugk9Gk1m5NK1CElc/896LlI8ov3
-	bPa0Nd5MIiZoiz9iAoF60xcI8w7u9SbzdK2c4Q1fuPP21GbKoWiB8MgbMKVw/mRJOfPtZ4gNfa6wM
-	JmlUDyk/+q3jzAPmVhms3P3LWDLWVXu9piesk+BpCE/8/v9CpHvGydyN8E8CRM7M8/EJ9VUDMsJCx
-	ZDTdOfW0JUbC2ja+xBGkwNSOp47NmEBZXmG3oTa9xxCRGyRESl/iFsJde9vPHg27Wr6z1In51eh6U
-	0Rjg4qgg==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vVYsY-00000005cDG-1OuB;
-	Tue, 16 Dec 2025 17:30:30 +0000
+	s=arc-20240116; t=1765906297; c=relaxed/simple;
+	bh=BPauXPiImvahaaUEY80SOXLLUZYXxiUdJFU/+OrhkfM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oLxYtcN3S1RYy4ZX/mKFY7g7cDNL4bEmxZIjdziQQBCjcNvOJb8GueeuzVxOzn0mFSw1UsmgX6O5mJkn38FgPKmo3qG++U1nzLFfYVlGiYg/0ptO9bE9sTnh02vmTTAAUjlmqoIst7bHH6VDb2m5isD4k0XzOPuMpgd0KbjUZ1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1C642227A87; Tue, 16 Dec 2025 18:31:30 +0100 (CET)
+Date: Tue, 16 Dec 2025 18:31:29 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH 2/2] xfs: fix the zoned RT growfs check for zone alignment
-Date: Tue, 16 Dec 2025 18:30:09 +0100
-Message-ID: <20251216173014.844835-3-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251216173014.844835-1-hch@lst.de>
-References: <20251216173014.844835-1-hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	bfoster@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file
+ system
+Message-ID: <20251216173129.GA14116@lst.de>
+References: <P_OCd7pNcLvRe038VeBLKmIi6KSgitIcPVyjn56Ucs9A34-ckTtKbjGP08W5TLKsAjB8PriOequE0_FNUOny-Q==@protonmail.internalid> <20251215060654.478876-1-hch@lst.de> <ffgi6wyu52fnaprwf3yh55zu7w54jnzeujfqhojpevntzfd4an@bpjnajccspt2> <5Jo2Clb8CI-sXH9HcivM7ax5k7r_sSb5fXgPjIiDorMYb_ZPsX3AUGt5g3YOaaTH1rFgjRwXz_FjIVfkIe2ViQ==@protonmail.internalid> <20251216080618.GA3453@lst.de> <tbzmh2fl7vchasnqvosujidfttyftmkhmdt5odmzscdbj2x6qo@ln7n6m5aw7k3> <20251216155431.GP7725@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251216155431.GP7725@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-The grofs code for zoned RT subvolums already tries to check for zone
-alignment, but gets it wrong by using the old instead of the new mount
-structure.
+On Tue, Dec 16, 2025 at 07:54:31AM -0800, Darrick J. Wong wrote:
+> The original version is correct.  If you have 4k fsblocks and a
+> zerorange request for 8GB - 2 bytes starting at 4097, you'll have to
+> actually zero 4097-8191 and 8589930496 - 8589934591.  (Almost) one block
+> each, at each end.
+> 
+> That said, "one block at each end" conveys that adquately in modern day
+> English usage and people think I'm old fashioned even for uttering the
+> first version. ;)
+> 
+> (Old fashioned being 1960s :P)
 
-Fixes: 01b71e64bb87 ("xfs: support growfs on zoned file systems")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Cc: <stable@vger.kernel.org> # v6.15
----
- fs/xfs/xfs_rtalloc.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 6907e871fa15..e063f4f2f2e6 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1255,12 +1255,10 @@ xfs_growfs_check_rtgeom(
- 	min_logfsbs = min_t(xfs_extlen_t, xfs_log_calc_minimum_size(nmp),
- 			nmp->m_rsumblocks * 2);
- 
--	kfree(nmp);
--
- 	trace_xfs_growfs_check_rtgeom(mp, min_logfsbs);
- 
- 	if (min_logfsbs > mp->m_sb.sb_logblocks)
--		return -EINVAL;
-+		goto out_inval;
- 
- 	if (xfs_has_zoned(mp)) {
- 		uint32_t	gblocks = mp->m_groups[XG_TYPE_RTG].blocks;
-@@ -1268,16 +1266,20 @@ xfs_growfs_check_rtgeom(
- 
- 		if (rextsize != 1)
- 			return -EINVAL;
--		div_u64_rem(mp->m_sb.sb_rblocks, gblocks, &rem);
-+		div_u64_rem(nmp->m_sb.sb_rblocks, gblocks, &rem);
- 		if (rem) {
- 			xfs_warn(mp,
- "new RT volume size (%lld) not aligned to RT group size (%d)",
--				mp->m_sb.sb_rblocks, gblocks);
--			return -EINVAL;
-+				nmp->m_sb.sb_rblocks, gblocks);
-+			goto out_inval;
- 		}
- 	}
- 
-+	kfree(nmp);
- 	return 0;
-+out_inval:
-+	kfree(nmp);
-+	return -EINVAL;
- }
- 
- /*
--- 
-2.47.3
+You're the only native speaker, so I'll defer to you.  A little
+old-school is always good anyway.
 
