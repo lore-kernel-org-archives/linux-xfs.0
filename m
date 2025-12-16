@@ -1,30 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60D328DB52;
-	Tue, 16 Dec 2025 05:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79EA333750;
+	Tue, 16 Dec 2025 05:18:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765862029; cv=none; b=JMxzdhQuzLlWKiZHwkQ2O+sQ8ODLz0sCLZ8ZKXxK4uG9agzZjLc1333OXS6+LhCEcdgkJTbn8DhEnedLIFB4PjwbHwdmMGOohO3Dd1oePmtJcwkveUEO34KnfSNAoN9h6iVMSa7hEwxwdVLdN/2XnUwoNXLqj+9QjBd1UcWEOeg=
+	t=1765862323; cv=none; b=fLex2k8Wu148cYLmXBkCqW5T4bMGC96DO6U0TjhUlnU53/zhMvSQe0CBVB+5tzeBep89rraMnSjAXCq3KwD3veauiGT8RyZPm11GMvv8CAPBy7FThanposvYxsDlIBR0J2OxAM1bo2HLZZC4VrRVz0xJV7nMH2AQY3/iVbF6WQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765862029; c=relaxed/simple;
-	bh=h54qrPqKsrlyFXzqvRM4PJXFknKWw+3Kar/Cr7Y7P3U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IFXDL2G8oEGxsobwQTkf2ayC+akHWJmVGxijLo8ljyHv2KYEv0cyCZD/0n+TBd9JqzHtxJBamlN8q08D0Ls7z3PW+OZn8us29wZCK+njPQy9amiKcxvdNTKoOMgkuCQdZqv5lNe7XbZv9AatYZM9MNOY4F2nReTEYWLcDiE14ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3A244227A87; Tue, 16 Dec 2025 06:13:29 +0100 (CET)
-Date: Tue, 16 Dec 2025 06:13:28 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: add a test that mkfs round up realtime
- subvolume sizes to the zone size
-Message-ID: <20251216051328.GD26237@lst.de>
-References: <20251215095036.537938-1-hch@lst.de> <20251215095036.537938-4-hch@lst.de> <20251215192552.GK7725@frogsfrogsfrogs>
+	s=arc-20240116; t=1765862323; c=relaxed/simple;
+	bh=ie/dAP2vSxyUypNyqwbPenj8vlG7eJDf1SvMYeaD6tU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=r2hFdPbLgLFktlpR8Xcmboq62nipck7pqFdM2YGt4O1Xt4WcF3kpeKOuhQVToiRnVAxYZZvtaXnRQkOEN93ctR0bO5ioDolPwemBlvbWLTx43ElcYrrguVwmuMXsgBJeUCOAb5FU2VR4fwIuYbO8SYP43CAHDw/DnXPSS3z8K54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=u5p4/Imh; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u5p4/Imh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding
+	:Content-ID:Content-Description:References;
+	bh=i7kcAGFIMdwm+ifemQukojlEG7GE8Z0FP+IV/+ttZfk=; b=u5p4/ImhwKqO+p6zApsBAmR5H5
+	nTfl9oSUeSDVauPi+gv6Y+LMJa2yxl8m4LMIrIYvqSXN6WiqBLzWBthHLCgD06GN04uIKV5BCxNwY
+	TsTo+40lpX8op/jU2QQwe3nLAw0izRWuU2PzAZzFKsWhWkRLiV5k+odW00qbWgRuvLV5gfLOudBc7
+	NCBySHjyfIj5v7pQeejmKFEBJegTMTlaMDXABLQcVSYUvBb3vyG7SAXk/13KsAcPtAdC4N5BtoVmn
+	j9XNSJACncsOBi8TFtwqITrYs8y0iEidcaSdii8MQ7sgB9NVMCKvtNgUIc11IHR8d4Z2tWZLcc/X+
+	obMmViCQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vVNS6-00000004i6E-3R2G;
+	Tue, 16 Dec 2025 05:18:26 +0000
+Date: Mon, 15 Dec 2025 21:18:26 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Luca Di Maio <luca.dimaio1@gmail.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v4] xfs: test reproducible builds
+Message-ID: <aUDrohDpd-QqxwXS@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,21 +43,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251215192552.GK7725@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251215193313.2098088-1-luca.dimaio1@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Dec 15, 2025 at 11:25:52AM -0800, Darrick J. Wong wrote:
-> > +# the zone size to create mountable file systems.
-> 
-> What size rt volume does this create?  It looks like you're specifying
-> an rt zone size of ... (1GB + 52K)?
+[adding the fstests list where this really should be sent.  Sorry for
+not noticing earlier.]
 
-Yes.
+On Mon, Dec 15, 2025 at 08:33:13PM +0100, Luca Di Maio wrote:
+> With the addition of the `-p` populate option, SOURCE_DATE_EPOCH and
+> DETERMINISTIC_SEED support, it is possible to create fully reproducible
+> pre-populated filesystems. We should test them here.
 
-> And testing that mkfs rounds the
-> rt volume size down to some multiple of that?  Or is it rounding the
-> *zone* size down to 1G?
+Looks good:
 
-That's it is rounding the RT device sizse down to a multiple of the
-zone size, for which we default to 256MiB if not specified.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
