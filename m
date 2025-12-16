@@ -1,94 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578A92248B8;
-	Tue, 16 Dec 2025 00:53:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F60031A051
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 05:10:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765846434; cv=none; b=q8/Mm7GDbXzjAkRTVflLAZ8WRv2Snc18xLZh0FIviS8flrNG/MukvpyZhmUZqAuh+c7BP8nnSKBdnIMutKl39fxugqXYpgwSELb2LH3faUEJvFsHwDGlK9adkocgQrnq7NYblARkxyWF6h6pgwpCb0cxmU5LcERBPeV54tEygMM=
+	t=1765861817; cv=none; b=ufleLg/znQQHGJj0YCCJQUGPQWVsPRE2ZL4WZcPMxRDvq1/cH+pCMop7Vg9xX6Nhfm0R9xhIPMfym8Yk2UKHD2NO9WwcgQxwiHeUM7DR2mNdxtYonOPn2Rla0YZ67eFf1hbR+yhL6S/1VK5G6n7yM0UfO1ullaO1QXDxk+cKpyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765846434; c=relaxed/simple;
-	bh=KVybdq2V+565NkdvIZa4ZXWTv3pqp1aoH6+zdj49hO8=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=bf8mRoQ7zsQjtb0IfCgHW+HyQBGnAkjRbgikNHRGtyDQEoXRXFcwuJM6G4GHmqlSAVWYnOtryD/TsjD07UQ7yU0BXe8HW39Y78PgiOD41jvU731Q1jojwTFQ0Oj49i95WNRiacsqKteoSeF2ieOZ0KLac/+xoXjdRA/3N0W66n0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gZff/+3l; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gZff/+3l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E73A2C4CEF5;
-	Tue, 16 Dec 2025 00:53:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765846434;
-	bh=KVybdq2V+565NkdvIZa4ZXWTv3pqp1aoH6+zdj49hO8=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=gZff/+3lrh30ypg/VcLwZ8dRm0LNcxTDJ/Mx1GXevfJSAU6NFwEpZdQTp2J6ONVPd
-	 +AdQwfUX76x71Y4SSX4BrmlVOasK87yGpCFZvB1HBuGm/PeH/V5Btry53nccgykKoy
-	 cKJIgtKxyNg36L/XJwFtJVik0BkDLCKZZsThmyoAh69+GI3eGTSaNGgT4AHRavSmvs
-	 e1OsiNZlUvbzr8wq30dL8qzKmfmUNRbLCypjy/Au26sc+kebX+Vx41y8he60N8SSKU
-	 WSgGgtuAnEq0r69RkNJjQF2xDDdsmEzO9kJeBl5zFdG0TBSXZiEjaJMFdUgIjABEwy
-	 snfQFZiawb5Hw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 3B6D0380AAFA;
-	Tue, 16 Dec 2025 00:50:46 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	s=arc-20240116; t=1765861817; c=relaxed/simple;
+	bh=q7zVisZUp5as9bfAAlcnDMOHvhgpSCXfWxhrJQw1iVw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LlF+2Ytxu+S48x1icgK9GFwwOsbhnpkqu4ZYGbhnRH556q+amDDvibsELKDxjpu/xISwNCLYF2GFdNumTKyf5jdLgAH5hCiI4ZQeGnsBcpMPLFCEPHILAE3eCDw0tzIyqHSVfHxOpFf2zSAHIwVGXNJS2ouShw2bro/jA4dYGVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id A7483227A87; Tue, 16 Dec 2025 06:10:03 +0100 (CET)
+Date: Tue, 16 Dec 2025 06:10:02 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: validate that zoned RT devices are zone
+ aligned
+Message-ID: <20251216051002.GA26237@lst.de>
+References: <20251215094843.537721-1-hch@lst.de> <20251215094843.537721-2-hch@lst.de> <20251215191506.GI7725@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH V3 0/6] block: ignore __blkdev_issue_discard()
- ret value
-From: patchwork-bot+f2fs@kernel.org
-Message-Id: 
- <176584624503.387072.9496719293644511831.git-patchwork-notify@kernel.org>
-Date: Tue, 16 Dec 2025 00:50:45 +0000
-References: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
-In-Reply-To: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
-To: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Cc: axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
- song@kernel.org, yukuai@fnnas.com, hch@lst.de, sagi@grimberg.me,
- kch@nvidia.com, jaegeuk@kernel.org, chao@kernel.org, cem@kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
- bpf@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251215191506.GI7725@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hello:
-
-This series was applied to jaegeuk/f2fs.git (dev)
-by Mikulas Patocka <mpatocka@redhat.com>:
-
-On Mon, 24 Nov 2025 15:48:00 -0800 you wrote:
-> Hi,
+On Mon, Dec 15, 2025 at 11:15:06AM -0800, Darrick J. Wong wrote:
+> > +	if (xfs_sb_is_v5(sbp) &&
+> > +	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED)) {
+> > +		uint32_t		mod;
+> > +
+> > +		/*
+> > +		 * Zoned RT devices must be aligned to the rtgroup size, because
+> > +		 * garbage collection can't deal with rump RT groups.
 > 
-> __blkdev_issue_discard() only returns value 0, that makes post call
-> error checking code dead. This patch series revmoes this dead code at
-> all the call sites and adjust the callers.
+> I've decided that I'm ok with imposing this new restriction after the
+> fact, but only because actual zoned hardware will never expose a runt
+> group, so the only way you could end up with one now is if you formatted
+> with zoned=1 without a hardware-zoned storage device.
 > 
-> Please note that it doesn't change the return type of the function from
-> int to void in this series, it will be done once this series gets merged
-> smoothly.
-> 
-> [...]
+> Could this comment be expanded to say that explicitly?
 
-Here is the summary with links:
-  - [f2fs-dev,V3,1/6] block: ignore discard return value
-    (no matching commit)
-  - [f2fs-dev,V3,2/6] md: ignore discard return value
-    (no matching commit)
-  - [f2fs-dev,V3,3/6] dm: ignore discard return value
-    https://git.kernel.org/jaegeuk/f2fs/c/f4412c7d5a5a
-  - [f2fs-dev,V3,4/6] nvmet: ignore discard return value
-    (no matching commit)
-  - [f2fs-dev,V3,5/6] f2fs: ignore discard return value
-    (no matching commit)
-  - [f2fs-dev,V3,6/6] xfs: ignore discard return value
-    (no matching commit)
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+That comment would not actually be true.  The hardware specs do allow
+for runt zones.  No shipping hardware that I know of does that, and
+mkfs protects against it, but the statement would be at best misleading
+if not outright wrong.  The real reason why this is fine is because
+mkfs rounds the capacity down to the zone size.
