@@ -1,67 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B0B347BCA
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 08:11:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13673155C82
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 09:31:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765872677; cv=none; b=vEq+v5jlezlPdtCkZUEdAMUZgTpt/QzmxMt8FeH4fnR1CS3q1WnsHcH7L8QJYGtyeQMeQhTnFfDJbYdWE7yUJbRgKXR8jKLeDUCmCowW9jJ+E6K/RcYgaviLFoIuB/jbnotMfooiQrBhMdQKEcUO4WtOHpFUVGC/CTe10K15lwU=
+	t=1765877481; cv=none; b=jrS+EtcQVBatTSigBEPUegD0edogb+IoA/uqrDkVyIbMgUdUG+x5WUIWZIIsGNsdjWzAH4HDZm8/PZuJZ4phEEfO2eA6GlLzkzxReEacvOLzRTvA5Kd8TjA7GuoGkgC24lErmZY2k7Zy83AbcojVBJqZgZv0dxdZjRMG1/TgLsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765872677; c=relaxed/simple;
-	bh=kJMyatMtt9TAPxxhYkwYZazEt7Tn3vs+HSEwzZGK9z4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NNeFN925on9eAF+8cn0PyJXqO0poEwsujiezMUw1EPKaPD3szYKIRiA5FcLDpURJNgqcG1AzRvbFlIgBGlAqK9zt7o2Cq1GUIuPThIaL2XuDWwhkWBw6EZprc6yYVsgPZn6NYxgSM0YLtXgXK2d5t4lLg0KvbMsux6yQPRNQajk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sc9lFvkN; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sc9lFvkN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80D1CC113D0;
-	Tue, 16 Dec 2025 08:11:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765872677;
-	bh=kJMyatMtt9TAPxxhYkwYZazEt7Tn3vs+HSEwzZGK9z4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sc9lFvkNjJz13DWrynVGwtFHmYrMPPB5NHvpIHuVhQaQJMOfx6o0wo69eWw3bHOYc
-	 eup1X5YpAcmcfGtkYHMLGTr6HAXdpdL493Bvgv2iPi2NvwolPBE0LPAmLydSXyp1Cw
-	 /wGi3cIqrBeDsQXwce9Ia0SDHYwJro0wOdc1iXFWLJ6uZdLsDHfEKcgxqx01IdHI1+
-	 EQGFqBAXJXuxJ18wRzekeg1wSQzF5RphJLBFx6Nc+cMgue5Qsba5h0KmCCY7X4K76a
-	 U2dhTxEbvElu7U1KrDafwDiPNfRXTLZuz+FKI25vcVd/KNOE5Y4TwmfOQXaUW1MQFS
-	 +HIb1+vdW+lww==
-Date: Tue, 16 Dec 2025 09:11:13 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: bfoster@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file
- system
-Message-ID: <tbzmh2fl7vchasnqvosujidfttyftmkhmdt5odmzscdbj2x6qo@ln7n6m5aw7k3>
-References: <P_OCd7pNcLvRe038VeBLKmIi6KSgitIcPVyjn56Ucs9A34-ckTtKbjGP08W5TLKsAjB8PriOequE0_FNUOny-Q==@protonmail.internalid>
- <20251215060654.478876-1-hch@lst.de>
- <ffgi6wyu52fnaprwf3yh55zu7w54jnzeujfqhojpevntzfd4an@bpjnajccspt2>
- <5Jo2Clb8CI-sXH9HcivM7ax5k7r_sSb5fXgPjIiDorMYb_ZPsX3AUGt5g3YOaaTH1rFgjRwXz_FjIVfkIe2ViQ==@protonmail.internalid>
- <20251216080618.GA3453@lst.de>
+	s=arc-20240116; t=1765877481; c=relaxed/simple;
+	bh=lJjRS4xzL1YJmHvxk54qXOnOWNae51TlZ3pYeTOblb4=;
+	h=Subject:To:References:Cc:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=IB2vHSy5622PPeWFHsKuPAFAQ4g+WrmO/i7Ky8icUzpXrdhTnRsN8mkZgTLr0oEHMycgQHhCoTx9Sny/Amw+LEV8zjGWLKu/A3LLguv2NpEfGH9dxCkZnSSHjxEvEDv3L6qbYvUpaf6STtJdvtM1gcffWyKdWfts1+rHxbbmztE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dVs9z2jkTzKHMhV
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 17:31:03 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id B91BD1A07C0
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 17:31:10 +0800 (CST)
+Received: from [10.174.178.185] (unknown [10.174.178.185])
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPnaJkFpkwqFAQ--.25136S3;
+	Tue, 16 Dec 2025 17:31:07 +0800 (CST)
+Subject: Re: [PATCH 0/2] Fix two issues about swapext
+To: Christoph Hellwig <hch@infradead.org>
+References: <20251213035951.2237214-1-yebin@huaweicloud.com>
+ <aT-eo76enT15FKkr@infradead.org> <693FB68F.50400@huaweicloud.com>
+ <aUAbXIkQ_LfYuPJc@infradead.org>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
+ dchinner@redhat.com, yebin10@huawei.com
+From: yebin <yebin@huaweicloud.com>
+Message-ID: <694126DA.5010203@huaweicloud.com>
+Date: Tue, 16 Dec 2025 17:31:06 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
+ Thunderbird/38.1.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251216080618.GA3453@lst.de>
+In-Reply-To: <aUAbXIkQ_LfYuPJc@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgD3WPnaJkFpkwqFAQ--.25136S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw4DtrWrKF1fXFW3ZF18Xwb_yoW8Xw4rpF
+	4rCF4DKrWrKr1DW34xua1IqF10qFW5X34Fgr40q34UCw13JFnagrs2kF4jqFWYqFZ5ZryS
+	va4Iv343Zry7ZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
+	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2N
+	tUUUUU=
+X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
 
-On Tue, Dec 16, 2025 at 09:06:18AM +0100, Christoph Hellwig wrote:
-> On Tue, Dec 16, 2025 at 09:03:42AM +0100, Carlos Maiolino wrote:
-> > >
-> > > +/*
-> > > + * For various operations we need to zero up to one block each at each end of
-> >
-> > 							^^^
-> > 					Is this correct? Or should have it been
-> > 					"one block at each end..." ?
-> >
-> > Not native English speaker so just double checking. I can update it when
-> > applying if it is not correct.
-> 
-> Your version sounds correct.
-> 
 
-o>
+
+On 2025/12/15 22:29, Christoph Hellwig wrote:
+> On Mon, Dec 15, 2025 at 03:19:43PM +0800, yebin wrote:
+>> First, we encountered the issue described in
+>> https://access.redhat.com/solutions/6095011 in our production
+>
+> That's behind a paywall unfortunately.
+>
+In fact, the root cause of the problem was not identified.
+>>> Any chance you could add a reproducer to xfstests?
+>>>
+>> Yes, this issue is quite reproducible. It occurs inevitably when following
+>> certain steps. This problem has existed for a long time. I think the reason
+>> it's not easily detected is that the XFS_IOC_SWAPEXT IOCTL command is
+>> generally used during defragmentation. Therefore, it is almost never
+>> included in typical log replay scenarios.
+>
+> Can you send out an xfstests for this?  Or at least a shell script
+> fragment?
+>
+You can reproduce issue as follow steps:
+mkfs.xfs -f /dev/sdb
+mount  /dev/sdb /home/test
+fallocate -l1m  /home/test/file1
+for i in `seq 1 127`;do fallocate -p -o $((8192*i)) -l 4096 
+/home/test/file1;done
+fallocate -l1m  /home/test/file2
+for i in `seq 1 127`;do fallocate -p -o $((8192*i)) -l 4096 
+/home/test/file2;done
+umount /home/test
+mount /dev/sdb /home/test
+xfs_io -c "swapext /home/test/file1" /home/test/file2
+truncate -s 81920 /home/test/file1
+truncate -s 81920 /home/test/file2
+// wait for iclog submit to disk
+echo offline > /sys/class/scsi_disk/0\:0\:0\:1/device/state && umount 
+/home/test
+echo running > /sys/class/scsi_disk/0\:0\:0\:1/device/state
+mount /dev/sdb /home/test  //will trigger issue
+
