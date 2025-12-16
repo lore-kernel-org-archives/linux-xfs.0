@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E017F328B78;
-	Tue, 16 Dec 2025 18:29:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54A6F334692;
+	Tue, 16 Dec 2025 18:29:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765909782; cv=none; b=KJ7XmUdXkaR5kQQiJmy6jeWTzK8g/+BTwobthVgAdFSDy4UIE/uI1fKTBzMqurDXTad1Fo6s3KterQ0ZEVqMisEJAgP0EKXoc5IBY3X3Q7OFdOsWIzdePJ61ZAOx311od6fzuGMTsv8Ihb9Zqk2scG7arndoslbEpDmUpCg3YhU=
+	t=1765909797; cv=none; b=EdFCt6SJc3FffZrUHGVPiGjWIvXknQ0Ky9OmVZx9n3ZNUtaGQVxtndrjvSIa+1wMCQ7NLq0yqbjrcACnWxE9JzcuADCsFIY7pFWlCaJIUDSk2QhWfbjLGylq809dzb2Bl5MDjW7Q0xdpEGqEjQyKlQaYgEdIgXfNl4wlKFKz2/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765909782; c=relaxed/simple;
-	bh=ruv2/BI/Gy2hQsXVH6MoVtmXQqND3LA0wptaX/jUCjM=;
+	s=arc-20240116; t=1765909797; c=relaxed/simple;
+	bh=C2kpIORsZRV6tdd2EnJC8r441dzUXpzD3XkFlV7Xpd4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nZLH0KIsikeLgjE+gjEfkgav2s0zyz6Ezd8zrzqWBU248lOgEHLZDyBMTKwpZ9DZGtETP9aOmMRT9/6L1Z040VYQTvPbWGl22ENywfEaieuoRkPfpj+LGUl9psz7cYjjvKzUqiyVl3jwNtKZjfH+ROJGZZVphSAO6Dz3F2iHuBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p+z80O+9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TC6gxWnRnmbX6gzUmRplb0Yx0V4yujk78DBXtm28T+CL/cv7r2bPnj+unh1Oik5IGsOFy/9ukF+h/CH6Pr5zN/vqpJSuzZqwRQapVx8DowzvQJFnpKBfgW0gRjQsFKEpod+eudeG7AZCA7Ll5IJvA5+cYpaSiDFf8NnQyPyNwvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m1BeKq7s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p+z80O+9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 754DCC4CEF1;
-	Tue, 16 Dec 2025 18:29:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m1BeKq7s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213A8C4CEF1;
+	Tue, 16 Dec 2025 18:29:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765909781;
-	bh=ruv2/BI/Gy2hQsXVH6MoVtmXQqND3LA0wptaX/jUCjM=;
+	s=k20201202; t=1765909797;
+	bh=C2kpIORsZRV6tdd2EnJC8r441dzUXpzD3XkFlV7Xpd4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=p+z80O+9Yh9yYQElM5kz8vqrEjvh+u/m1vR4Dkiym4xrxxD8nnsL+Lb10kZSJCabd
-	 rOhatJg2waYMVI5enhFhpXY2eCY+iPLY5n2Qf8hT1RIFb0poxTjzhuoJiMZlciNsba
-	 QsffjIYkoXLz9W8Fb9Mk9pEhTASnZoArx8qFb+NqNRKxOXMN9mZ1ri7Rtmwkp/Vbuz
-	 jBaT7w+RklxZcm60VsmdATWvYkl0B+kkF8mj3UfOmSfrJZ+y6JWnsabibh9gtm9uan
-	 YGjolowxouOONFFAWMY/qGtCBkhqEdmckAiqgFjPbyNNsEoRLcJPzWavZYjAWmya3R
-	 EtCbpZALrTJ3Q==
-Date: Tue, 16 Dec 2025 10:29:41 -0800
-Subject: [PATCH 2/3] common/rc: fix _xfs_is_realtime_file for internal rt
- devices
+	b=m1BeKq7srCgLh8oDBWqwGGL0M74D5oAkG3tvakeTvzyN7R9sC9570Pa9sImm+36lm
+	 NSSFLhWl3qaisNsg39gOvTX8oGWaG7o+sJ7IOq9BwwtuuVX+1V/n7hb69rJXLNnZ2Q
+	 ekiHnCfpXx8gJkL4L31/1HaTbA3A5eq0zMN1bFfstkB1bMuOlC3NL8Ot/ua0t6SQpq
+	 g/PPXycQRlObEaQO2f0LiQeROIh9GFpOexY18OUPROIGnrv2KHbpOJHwWDr2MGC8pu
+	 XLxZKmLDNrQLWcYC7fHR+8IVnqEYJfRRzMtSK5BR1zjtGCj1JoyiHXG8lwnkfCgitP
+	 7nSeDknf/vq8w==
+Date: Tue, 16 Dec 2025 10:29:56 -0800
+Subject: [PATCH 3/3] xfs/649: fix various problems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Message-ID: <176590971755.3745129.1885534255261064844.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+ fstests@vger.kernel.org
+Message-ID: <176590971773.3745129.6098946861687047333.stgit@frogsfrogsfrogs>
 In-Reply-To: <176590971706.3745129.3551344923809888340.stgit@frogsfrogsfrogs>
 References: <176590971706.3745129.3551344923809888340.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +46,53 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we can have internal realtime devices, it's possible to have a
-realtime filesystem without setting USE_EXTERNAL=yes or SCRATCH_RTDEV.
-Use the existing _xfs_has_feature helper to figure out if the given path
-points to a filesystem with an online realtime volume.
+Fix a couple of problems with this new test:
 
+First, the comment for the $attr_size_bytes check says that the maximum
+size of a single xattr value is 64k.  This is true, but the check
+triggers the warning even when the size is exactly 64k.
+
+Second, the test fails to format with 32k and 64k fsblock size
+filesystems because the scsi_debug device size is 128M, and that's not
+large enough for the minimum log size.  Raise that to 320M.
+
+Cc: <fstests@vger.kernel.org> # v2025.12.09
+Fixes: 5760b2105985bf ("xfs: test case for handling io errors when reading extended attributes")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ tests/xfs/649 |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 
-diff --git a/common/xfs b/common/xfs
-index ffdb82e6c970ba..8b1b87413659ad 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -253,9 +253,9 @@ _xfs_get_dir_blocksize()
- # Decide if this path is a file on the realtime device
- _xfs_is_realtime_file()
- {
--	if [ "$USE_EXTERNAL" != "yes" ] || [ -z "$SCRATCH_RTDEV" ]; then
--		return 1
--	fi
-+	local mntpt="$(findmnt --target "$1" --noheadings --output TARGET)"
-+
-+	_xfs_has_feature $mntpt realtime || return 1
- 	$XFS_IO_PROG -c 'stat -v' "$1" | grep -q -w realtime
- }
+diff --git a/tests/xfs/649 b/tests/xfs/649
+index f7b559f72fe913..56277c62932e16 100755
+--- a/tests/xfs/649
++++ b/tests/xfs/649
+@@ -48,14 +48,15 @@ _require_attrs user
+ # If SELinux is enabled common/config sets a default context, which breaks this test.
+ export SELINUX_MOUNT_OPTIONS=""
+ 
+-scsi_debug_dev=$(_get_scsi_debug_dev)
++# need at least 320m to format with 32/64k fsblock size
++scsi_debug_dev=$(_get_scsi_debug_dev 512 512 0 321)
+ scsi_debug_opt_noerror=0
+ scsi_debug_opt_error=${scsi_debug_opt_error:=2}
+ test -b $scsi_debug_dev || _notrun "Failed to initialize scsi debug device"
+ echo "SCSI debug device $scsi_debug_dev" >>$seqres.full
+ 
+ SCRATCH_DEV=$scsi_debug_dev
+-_scratch_mkfs >> $seqres.full
++_scratch_mkfs >> $seqres.full || _notrun "could not format filesystem"
+ _scratch_mount
+ 
+ block_size=$(_get_file_block_size $SCRATCH_MNT)
+@@ -77,7 +78,7 @@ test_attr()
+ 	# The maximum size for a single value is ATTR_MAX_VALUELEN (64*1024)
+ 	# If we wanted to test a larger range of extent combinations the test
+ 	# would need to use multiple values.
+-	[[ $attr_size_bytes -ge 65536 ]] && echo "Test would need to be modified to support > 64k values for $attr_blocks blocks".
++	[[ $attr_size_bytes -gt 65536 ]] && echo "Test would need to be modified to support > 64k values for $attr_blocks blocks".
+ 
+ 	echo $scsi_debug_opt_noerror > /sys/module/scsi_debug/parameters/opts
  
 
