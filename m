@@ -1,75 +1,74 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E6B33A027
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 21:33:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6816C33EB00
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 21:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765920837; cv=none; b=debYEMt6DblffaGHxrbJy5jXVo9aTz4fErY8cZdrIP1Ozs8hVpLDUrE7S2B5DDCT+3pMRIG8n4L/jteHNE3hrmOdM5Qt3yQV7DQdVTQ0h6+L+8fv7Kj3+yJ+Ksf0r1FwgaNcDVutzH4sgZpaqCh7TgBO26Wk3x6G5aZl4ecdF2I=
+	t=1765921443; cv=none; b=QzrkHsPOV+C7NA8m6BYwW8H27jCdaCkem6lKyFdIDjYKTFcw2byaELP9equnWDjGa5mDB/bgESBVlttMhvsgqtSJifRUISFihG+Awk2OdRYATpDFvpeW+OK2nlf4q7CbOiLxAhDRQrsubdVzxGodxeujlbbnPAGLBllu6ldkqks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765920837; c=relaxed/simple;
-	bh=wZaXf039VWSmJCJFa8lF9O5x2D3JUq8UNo6b6d51bN0=;
+	s=arc-20240116; t=1765921443; c=relaxed/simple;
+	bh=XtZ5GgYk1HRptYsA0TXx3Glj4YELW22rS8Yfaw2xZTM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FYxpup2Ml4Rhg2Yzbgl13SYUSxyjLPJ5ot+sDr0bv4tSxwYfHAFmE3X0gAj+nREZuV/cOLnqay3R52SMOfEac/mAxpggo9+88fqESYE+WH6VwjT8goxEL1lwGS4lI4CvomHHEo6pmzvD2brEBnTTh750qQ/hBcETbxyfgcKqxGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=a9SzKSxo; arc=none smtp.client-ip=209.85.210.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=KM9y3B/ihhwfKXlwVMlBs/tsJKSGce9Yx2Cmd3rfB0uGAOrMu03DScHo7iCQZxcvkxmJ8LkVJ4seiZBhxJ8xWTiVhxqJ5Dd57JaYYuhzyVg/2GMvvZfagXPRWyafCLjuaQkgJMBrzg/6nLK2elRH7mfp8UJs11T+4jtxO0Vk44U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=tJOqLuqQ; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="a9SzKSxo"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-7acd9a03ba9so5801687b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 13:33:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="tJOqLuqQ"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2a0833b5aeeso54980175ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 13:43:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1765920834; x=1766525634; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1765921431; x=1766526231; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=m7yAZPkwxszj+No3xxGU9I0OwUlCrp2m8jom5MWirYQ=;
-        b=a9SzKSxo0MxYBtZzOMhZ89bZYVwN+Jei4Zw7zG5L+pcobpPMSAX/VTy561qzQoXRoc
-         OKacuQaY9zsNTmvsBM2TYpUdnNktPuV4Uj5sVHAWT5Ty7wFozWFkn//fIMNPnwa781XZ
-         4nT5+QhsIzOH3rNIOAGK1TYtOqX1oHJJTSsLDsVKCGo8u8ZTxkpqfWexvKStljFqk5pB
-         v/5FFd3JIvMG6/UeQqF0CDA6+SNrtpZkQ6+q3249DLMBfpavGaANina7ir3we83b8A5J
-         DpV70U0Zk8B72Vbyj54XBBnDNeluEL3rf2QPZlPM5Q7P1DLysLIYq5qnZmLbs9jiggik
-         N+ng==
+        bh=0F/gzJpNzc7Lwar204iZEdU4283haW9z1mGqUFJA0/Y=;
+        b=tJOqLuqQLC0OKmWkZMCzK9SiMt25yyJiLFuyrqu0iRzHEXItBJ7Jy42ONdRZvj7ORt
+         WHIgdZC7z5wn5gzCaXSefQVwqMmBKrauS/W52OWo/+mpHZsEfGaDBUxZyw0F9h8DPNPV
+         chFTsMtLFe8eWqWsDIydwdiPM4lNL+WPuCg1pK2rhEBgB0NNEcblO0CEZKMyEEYrAKe/
+         eKhehRiUMCRvDXdJT0qQ7PbA2uVHbLhRT6FVaZMCCxMbkQKukaoAhpndfK8PcQbecj0g
+         p/fqC8A5kf3dx2+7TWRrAxTuvOYx423OR+6GeWUG1jq+SY4Dtz5KmfvgtinR1MSXH69s
+         juJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765920834; x=1766525634;
+        d=1e100.net; s=20230601; t=1765921431; x=1766526231;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=m7yAZPkwxszj+No3xxGU9I0OwUlCrp2m8jom5MWirYQ=;
-        b=eIrqOCZpfw8BvYEatYR1fvXeWGQJh1uVfPAfVFlDPf44N74mAcbJuOFShMtVaSRWT1
-         CrGc2quCRvHyOCl3etTkhDvotE1mn31Gv5iaUIaoprsVpSeHccu7UOBKytRbU7aF5g1X
-         DR8Hd9dqzdKD0ZPEsVeXSaeNxmAora5OS8KQ6ydYXlwnpeklpYw4xtHMYCaFoiHo3ocJ
-         3bhBMYtMFbJs5hE/PgekNqd2NADaPPt1GCKTtnxx9YYNaMHhJvnJRxPW902lKrNASYMV
-         GNnKSK4svtcxws/wR2f2hNsKu72HdL7A3NIk+alsw2ch3c5LHoNriYsyqJPvsCBVDGxE
-         9ukQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVur0vr0BGTkHKQzTaF06nOgoMhQk7b3/qUUduOkNGyHYkakDLBqeI2kY77aBr5SvIXz/XtUj2jpR8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmC34Sm8Fyg5PL7xfxLcyXx7yDUgPmhN8h8qVfG/qZqVyAiUnM
-	4cIxR4NWUeftKZxANn7S7M/MAnRIK2fyrmwmNEY4Buj6dh8x9IR/Jg2gU75y6951kdBUAlT856f
-	YhzYg
-X-Gm-Gg: AY/fxX643Dtdf2+wtdJV5kObTl8BUAMZ+/K1bN624WPWrdpBSmHld4AtEcBxIIb60SN
-	HyNeUJsKI56tWlvUxGIEOobDmqtRflssQf/8QgHw1kve+cdmfcQM586PUtwyzgbNbG8jofODa4n
-	UWoe13fPLdXrE7L3SETpLJVEyGm6Xy9QivoVrbndpVmAIbVLhwxPZ5B28GhHCs+GT0n4Y7RehNp
-	0vZvkS+MlOoTIzZBH0dVsLxdVXRUPyHhjZojrsTNQyqNggVcSDepGxzRqY0lkH8lkYoXfpLi4pf
-	TbmXg5GKDAlFf2NJRdk+ILBKdznaQIE5ve0hkmbAOSeBvzqbk2ZkxV9BsEoXxacC6/AoAKANTv6
-	SAH8KJuDTKjTleNDXrb8j3hO4Vc0kKuHHa7xf71w49IBEcQom4olLfy1TqR9VfQLcyhmLtEPrjG
-	72IFyZNDeW7Q5g5ZyeZnk67UYJeYQzbLOznPD3SgazQOB+mFAQAMhDpHFYWps=
-X-Google-Smtp-Source: AGHT+IGivr8KL2buP0xUxIAO/vvp3R1op6uoHlLnNT4X3v0UtvhA3grgR5xKfYl6X0U1DIxGeI4JvQ==
-X-Received: by 2002:a05:6a00:4388:b0:7ab:6fdb:1d1f with SMTP id d2e1a72fcca58-7f667d1ff24mr14250071b3a.29.1765920834046;
-        Tue, 16 Dec 2025 13:33:54 -0800 (PST)
+        bh=0F/gzJpNzc7Lwar204iZEdU4283haW9z1mGqUFJA0/Y=;
+        b=b4p2mu1pYsE/7WlL+wt+UkW8TSK0yZWlll6sLZlmiIXishTD90ZCImexOi2zx/fEpl
+         4giLeNri4nRT7RVoWiIdtu2lpld+ZCzI+ln/l/mpV6DvZYKF204ver4uHvtbYjNLLEqW
+         6hHy4ti9qNt+3tJbJpWOc5OGtibY5HyETDQ8+fg/2f8dtQqssV/kj1ajaKP9/sGF52CZ
+         +Ftt7YrWSUnuyDPm022sDnfJjMGHufVgyQsc60UTNxjPCE5CAm+N9vROLlmfA8QJ1Z2U
+         K3mrKOQ4oV/qLFeqjaW2hj/vk57w3u3I42flA+m8KiPyA3DOpJ/cxHEH5tZgaOzFDRzJ
+         BiGw==
+X-Forwarded-Encrypted: i=1; AJvYcCUUAy6H+4ekNnmhN/k7efWVvQrrRkBGSUogNf9oQg2WQILCI1SDRgxSYmElAPgNKIiikuocVvr4cdc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWFHojL0lHyR8n/qzsYu34pLhG7PWdU6GCeASUclmfhpi8cNRi
+	mZEFI5FbcSoOWWEKjdIYiYMjqAiJBnOUljZufa0YD76zkTzjkFDmwJNNGsJBIuS4clw=
+X-Gm-Gg: AY/fxX67QX7F0Zp98XWQ6OZPs5hlgvYfOeTrqXzjjzF7nIRBiAPsaHWO3OKe3lBYho2
+	VTAl4Xba264Hb4iu4h4IkSTRZGRiKAEUwZ+2mvEsdAzDbtt/3p6/TyMkin2gT7i0O8x5gtJhh58
+	PVEqT29WAPQAyuOo4nUF9Zvy3iB2uDChtd6HWTVbDOCuNSvN6NpWCjke52RnBTTtaKyDe+0vIkf
+	jkoKHZaxPpbtrzKzNsNhryec/EPmUsbBC5qtYhUxfP122aks9bwpkGjPbP1gmodq0jWs6RuTg3s
+	We7B8kapBkFTJE2nFfeUSdOlJoOgFLwNatlXzPqmdR76AbSjUaucCky/XqAPtvBp2WBrRVF5dhH
+	C6BnW4SfbmPThdO8jzyhhCzXpQusiaK8Kp19bzaqzWdEiHOeOkXaBELXfeycbT9ekwO7wY/AA5B
+	XbVcpaMTRNOxiXS/xtN2iECvCiMLKq2ksnq7ZY/1w20tlNcgQf
+X-Google-Smtp-Source: AGHT+IEORefIx7V5vOCcRI8oHBRWbgC5qLt37LqT5Hfblo+QC1sBoQsfdaAytBu56gcdUrpk+bzSuA==
+X-Received: by 2002:a17:903:8cc:b0:295:2276:6704 with SMTP id d9443c01a7336-29f24385a97mr134400745ad.51.1765921430519;
+        Tue, 16 Dec 2025 13:43:50 -0800 (PST)
 Received: from dread.disaster.area (pa49-195-10-63.pa.nsw.optusnet.com.au. [49.195.10.63])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7fcb8742a77sm508766b3a.12.2025.12.16.13.33.53
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29ee9d38ad1sm173298785ad.29.2025.12.16.13.43.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Dec 2025 13:33:53 -0800 (PST)
+        Tue, 16 Dec 2025 13:43:50 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1vVcg3-00000003ind-03Ts;
-	Wed, 17 Dec 2025 08:33:51 +1100
-Date: Wed, 17 Dec 2025 08:33:50 +1100
+	id 1vVcpf-00000003iuA-3qPp;
+	Wed, 17 Dec 2025 08:43:47 +1100
+Date: Wed, 17 Dec 2025 08:43:47 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Luca Di Maio <luca.dimaio1@gmail.com>, linux-xfs@vger.kernel.org,
 	djwong@kernel.org
 Subject: Re: [PATCH v4] xfs: test reproducible builds
-Message-ID: <aUHQPh3QX6Q9CT4Y@dread.disaster.area>
+Message-ID: <aUHSk4SqAS2RS0Xy@dread.disaster.area>
 References: <20251215193313.2098088-1-luca.dimaio1@gmail.com>
  <aUCSSuowzrs480pw@dread.disaster.area>
  <aUDryjk9wdZZQ5dz@infradead.org>
@@ -96,23 +95,10 @@ On Mon, Dec 15, 2025 at 09:19:06PM -0800, Christoph Hellwig wrote:
 > _cleanup()-using tests that I've looked at recently hooks into any
 > kind of generic cleanup routine.
 
-Oh, I forgot that was one of the huge cleanups I have sitting around
-in my local fstests tree. i.e.  making all the tests in fstests do
-custom _cleanup() operations consistently and sanely.
-
-It factors the _cleanup() function in common/preamble into
-_generic_cleanup(), then fixes all the custom test _cleanup()
-functions to do the custom test cleanup then call
-_generic_cleanup() to do the rest.
-
-The patch fixes a -lot- of random test cleanup failures when
-cancelling a test run with ctrl-c because custom cleanup functions
-are rarely tested....
-
-Not a small patch, though, and likely needs to be updated because I
-haven't touched it in a while:
-
-278 files changed, 326 insertions(+), 1037 deletions(-)
+I forgot to mention: the lack of _generic_cleanup() doesn't mean my
+review comment should be ignored - the new custom _cleanup()
+function above still needs to do the relevant generic cleanup work
+that is done in common/preamble::_cleanup()...
 
 -Dave.
 -- 
