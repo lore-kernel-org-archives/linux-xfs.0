@@ -1,79 +1,55 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC80535FF68
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 15:59:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940C43101B5
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Dec 2025 17:30:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765900742; cv=none; b=hFUHSYGxJFdu3Hxyo2xcjL5fNCFnLSz205ydUGlA2iaTCcd1rq7MWOXy3glVRlvipBhAl1L5NKSRjFnCc/uzf3puTt9hDW/BkzfvB8k1fe6H/CaW/lJP+ImEQgEv2eWkmyRJcba/anLc+OCUKLjXYrcoIftxASr09UTavKKK5us=
+	t=1765906228; cv=none; b=kbzxZmNERPSnYgThW92+NvEXPyJ9Tc6dFcvw0hkB0T6Z/LqUqxISH+wOtGTJ09+mbDnXm8bTxk+fVJrN35gfEihQhcyRBBlJQzFswauJXojQku6FRvUNq1S6y78IToN+NNZpCylCx6d6Mw3UOYgcYT4Rl0eh0+VaJaA24sCaYX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765900742; c=relaxed/simple;
-	bh=ZMi3spAiKyJlSM4q6JLNsf9baRJRTntfWd+OaPTKOsY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NTQw3a6qWwC2ndi+IYtDqdx/VuldeDE2eHsI5aCn5ofpCW39lOXi1jQKZYGx1w4fsHF5jhYQGw/kOK6gW2JtTM2d1FuniRMhbbbIvW0k/+8tT6R4Uhx/zfUs/6uBz8FcjKXcouUfHnIoh9lzVN7YZ2yJRCY12A4uI2pKcOOI2P8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oYaAnyni; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765906228; c=relaxed/simple;
+	bh=lua3pQFonBFnE3jvuy56//6S61KkHcMOGMBuBbXUZL4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JLD0CJlzd2uwuuiiEsksMK9dXIsPLRnyb9yd16Fot9Okxf0DiWCr0k6jEaBsSiI2PWt0MAKBbH5vhri1vYQvb0emXPfWE9nh7fMmX9W/NKp6ozk4qWSv5t9r3OYRByfdVvcAz859h6mShGgQFnPob0sSQkr40J2lM76dIQP74Qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VinDgaNj; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oYaAnyni"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4015CC113D0;
-	Tue, 16 Dec 2025 15:59:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765900741;
-	bh=ZMi3spAiKyJlSM4q6JLNsf9baRJRTntfWd+OaPTKOsY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oYaAnyniaiqsMfMCPeBAxONcOlrCDBtCNYcCaBn/z69Fd+t8wwLVyvIsw+hZs+TBp
-	 jrGl74nJeFFyREz28MurBk7y0DcyYphKqqNLofFJqVCufFC6sxIygngOPJfrLBxXNT
-	 led1TXTnPUU0l6eIQLQeZ1LHzQtajRguJO8BaCF6+6vaUgGdEVm8zDYRn32nI+fTcE
-	 v+bnTjcKBn70lCY7GVYtGhIItSzTQmNNJ18FwLzcJWkUbPCIFhQFqcn+FODNdn4cPG
-	 PzmytwBO2DPr8jeozylNHc5Khg5kcrXwAUklhogmspCim1FNt9OE/tQmdBdXMyzhBJ
-	 +ST5pxbhSb63g==
-Date: Tue, 16 Dec 2025 07:59:00 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: validate that zoned RT devices are zone aligned
-Message-ID: <20251216155900.GQ7725@frogsfrogsfrogs>
-References: <20251215094843.537721-1-hch@lst.de>
- <20251215094843.537721-2-hch@lst.de>
- <20251215191506.GI7725@frogsfrogsfrogs>
- <20251216051002.GA26237@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VinDgaNj"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=lua3pQFonBFnE3jvuy56//6S61KkHcMOGMBuBbXUZL4=; b=VinDgaNjQ572fa/AnnP6ufnOhI
+	o9yLE3yXpVIpJUDvai5GOyrfduUDUvAMqrkKo0AoCmRn0nP47WSIWW4DPQpWQbeGVi19HXn015zKM
+	kz6Xs3rJr+n8ZpYC4d+ZdQKMXVVRpB4asru/umuK1YOjxnO/5mefqbHqQXefYNKBDIWhdPrr8Rdut
+	H3b4fHP1t9DtL/tQxcKdI6LLx0ed/xuYNoBdYVZUwVGwU7HrxzLdQ4haoKLCuct1eq8UD3jMmmg/A
+	GD+8HFUvFk/0W9UlnAluOXPVK0xD9aZs1tW3r/fjJyb3Ie2LB+2EuLQ+zgN9bDQg3hK//lrEoAJZN
+	dXAUm6SQ==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vVYsP-00000005cCr-30De;
+	Tue, 16 Dec 2025 17:30:22 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: reject non-zone aligned RT subvolumes v2
+Date: Tue, 16 Dec 2025 18:30:07 +0100
+Message-ID: <20251216173014.844835-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251216051002.GA26237@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Dec 16, 2025 at 06:10:02AM +0100, Christoph Hellwig wrote:
-> On Mon, Dec 15, 2025 at 11:15:06AM -0800, Darrick J. Wong wrote:
-> > > +	if (xfs_sb_is_v5(sbp) &&
-> > > +	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED)) {
-> > > +		uint32_t		mod;
-> > > +
-> > > +		/*
-> > > +		 * Zoned RT devices must be aligned to the rtgroup size, because
-> > > +		 * garbage collection can't deal with rump RT groups.
-> > 
-> > I've decided that I'm ok with imposing this new restriction after the
-> > fact, but only because actual zoned hardware will never expose a runt
-> > group, so the only way you could end up with one now is if you formatted
-> > with zoned=1 without a hardware-zoned storage device.
-> > 
-> > Could this comment be expanded to say that explicitly?
-> 
-> That comment would not actually be true.  The hardware specs do allow
-> for runt zones.
+Hi all,
 
-Bah.  That figures. :(
+this rejects not-aligned zoned RT volumes in the SB verifier and in growfs.
 
-> No shipping hardware that I know of does that, and
-> mkfs protects against it, but the statement would be at best misleading
-> if not outright wrong.  The real reason why this is fine is because
-> mkfs rounds the capacity down to the zone size.
-
-"...garbage collection won't deal with rump RT groups because the size
-increase isn't worth the corner case complexity.", then? :D
-
---D
+Changes since v1:
+ - adjust a comment
+ - add stable Cc tags
