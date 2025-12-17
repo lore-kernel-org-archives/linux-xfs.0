@@ -1,126 +1,295 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AE92D3ECF
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 11:05:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB621313E34
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 11:08:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765969537; cv=none; b=nfCdxhPBVNsDJUt7XWQuAA/xpFU1+Q01jRiIcNmf1IJLlmOwCjpa9kfRKW09lmHz3AOui1YMXn6R2sHRj04WqJEtIAocd3KDradsbRoBShzDVZDxRqdMJZEaGvYO+Q14XuULWaDm5ut2hg4O9pR8KTY+di+oa2lNshppZ8kl+2E=
+	t=1765969692; cv=none; b=pH2fylVdcdK33TimBw4EoUkjjUdmNGlMtOhYRXTF4QAKt3yAx+5SV4XE6/IPPI45jonuRTduE+QMYahV3tsyJMl6IQ4m6CSmoM0m9yPLar/BlxVqUnK18sizIKI7uOl/E1mj071LCahQiNABnIVWsqeKiLgcv5IX+EYMNil7K5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765969537; c=relaxed/simple;
-	bh=jOOzeFuskF0b3zMzCDtJ6Ai0vdEn2bofpH4NBDxvHuw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EP9LfbB+PbiMrC6+PbukZun6wwtYd/xbzbLfqMOlVnF1dZ3NwcZZ1dmKXnV0bbc+OWOPouZrV6ggSGigcN3y8W+fQtkJqkplsLTwKX2PolU0yyZrxXeBxLLFgtJPAvIp77tBgUKsiVJS++/+K/nvNEhZa+lRW0mc7oPwN8RFlYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CKBLNqIN; arc=none smtp.client-ip=209.85.221.43
+	s=arc-20240116; t=1765969692; c=relaxed/simple;
+	bh=/Hamfa+ksUPdhkEmwzS5MOtzi1jBdH0AppoWRU6R3rU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=unJs7E/dBTAtXLBmEmAwyLbyIC0Veq5HPqYgaZ57/grzy0+l0vlG2Pj+0LoXpCJ8uCjB1zC9G5BHiHIxIFmFYaIShz0zbhB8KCJnUf+vEWVA2rwieh5Im2bitiTW9npqchVQns+pRbrcqO/NS1061YWQ0Sp7BEEyPKxSgmZTfHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gyQhGvcK; arc=none smtp.client-ip=209.85.221.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CKBLNqIN"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-42fb3801f7eso2939540f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 03:05:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyQhGvcK"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-42e33956e76so2594918f8f.3
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 03:08:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765969534; x=1766574334; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:autocrypt
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=45cJBFn49fooodTuJeINIViCiKdrVjM2e94b8Jp9iuM=;
-        b=CKBLNqINHOxpoNdDxHXlnmwFubhwPo9JmMYPyYMnV8ItEcGUK5cuG5CQxTKaOytXYu
-         aM6AA2Hjs5iGJjoOc4CJoGaU4foaicYrePyZvpjn/1LFtcx1UMySmWSe/QSkLtyUpQrY
-         iHh02InvyIv+3gd9KGIYHS6ztDKlTBttvQJaNo8F6ETxVNiVFxBMKn892Dlz5NNMFXPh
-         MEMse/tHCvi9hST53kX5Lqjrxt49c5ljja6ZfPUzF41sSKmMKIsvy8GbLQ5Fcf4KILou
-         9vw4IzdNcN4B4ayGr7BXmtTAyYJUU/cyuOoexa2ThTsSts33hIIYdcYM8J6HteFuPcx7
-         wJJg==
+        d=gmail.com; s=20230601; t=1765969689; x=1766574489; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=w2KXIuUHTxG+9PFYORsRCGlcPMBrjzhW5oYcDljb92E=;
+        b=gyQhGvcKxDEXQCDLsSLxEWmkprkPU6qYX+C+Cd3fL/lqHE54xpTnZ7UUh1wXIxflAb
+         sWTp73fZYVhymrGuSbvXhSlCQ/Huv1xbRKxgn1fIqYyMbvLcnqOlTSLrTF7JaxLZThEV
+         sv6C7gQdOo4ErDQ0F79zvaQ+W+FH5Hh8Wr/PsLJ/zFl9VDcMu0+VVNnf7AiertFxgdLv
+         NYtsoJNjNl2Fy6+kUq+rO2uxVQ5yomceqW9ETJunz7in47TIeylYOckhVZoi219jcG15
+         h6IALuizX6irbnmPoxGJyjpsbkfabTZQ8uvL76f86PgaWNluRMUSj5ssxgHa1rhPyrYr
+         GF/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765969534; x=1766574334;
-        h=mime-version:user-agent:content-transfer-encoding:autocrypt
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=45cJBFn49fooodTuJeINIViCiKdrVjM2e94b8Jp9iuM=;
-        b=ACQfU75OhrlwXUON46+E7pE+7FufKuqe7a0WfWOWPtYPWfES9bInVmbTkNgOBLS4Fk
-         eIvOGE6phQgnmOKdUGHjTh8ZIHpLg3NG6GSWyKdffykwxq7qFEdjxbBLp6oF3/1pS4B9
-         Ql+SmWR3bwZZQGwJ/8eIMH5CDvsaTt1rv7n7vXmez+hQhgwMxGddeIEa8/6pRu3ZrCQ1
-         UovVM9FJN1hD10bvhPIfeCjsN6TnScQb89AMjRrWam0T52ZOIuyphQay1XtDKjqGUTqr
-         yxslT5qeJmAZyzL6BcNB3lxzH9BuQawni6PF1oIXLH6LVVe9OnT5SnNxJNrBZMNqjd+8
-         qiEg==
-X-Gm-Message-State: AOJu0YzdVq5uitf4Inoc9GjyKjVx9hbdx6yq3VMV9DTTX2k/rmwpzHGp
-	5SbexTZPQV4QjvWqgtz0yMj9UP4a06hhw8PP63hF5Kn/C76elWmt4qE4
-X-Gm-Gg: AY/fxX5qIxiw9XXwkS9GLwwYsnWFp7ljAsdFvCVdWJhWl+AvoklUekgPe/AGejPHmoH
-	DaMu8znwtoujP/8WoVIOvexBEXp+OxKa4aoNaxWaw0fQw9QIeQT1PgZ0rqClrtvjju9v6QlKo9L
-	Kn2hp/rKHwl0S2aNKDsb0QRrwRpi+8muZxLBZuZNzS+FB5Co9d+pCs/7HF9e9XDPkn8SyorHhUv
-	EK7i6+ZMhTFry9PBDgGMO9Orjmcx6zujYmeoPY4ofjlO/ucVgGz8ZwaMpat01+I0Xw7X+AkkYYZ
-	oU9jrAV4p0DcR1wbUlap/Qs+lHbWLZpP63ueWJ2CPnn2zEkRMXGsH4SW6lU1nRTWlQMfnIvjxfu
-	nKnGHgcZrI75yhenTircB8CVq1P3PytUGEAeiTdPJfMOpISeowPvISfbMKtIu1U9M/iXDSkxokr
-	S+4xdT8HWX/wars1tOeMklVDlcdXoDbTdSqIujCnSmNE0SpZ9mxitdHs0=
-X-Google-Smtp-Source: AGHT+IHydv075/K0K8RdjWg6S1iUJcEnm5byGWJgVTrHrILSp8ZictR/JV8yGOvpJnBppEnDrbh8ag==
-X-Received: by 2002:a05:6000:2f83:b0:431:907:f307 with SMTP id ffacd0b85a97d-4310907f51bmr4603411f8f.48.1765969533610;
-        Wed, 17 Dec 2025 03:05:33 -0800 (PST)
-Received: from ?IPv6:2a01:e11:3:1ff0:8936:c18c:c9ea:69ff? ([2a01:e11:3:1ff0:8936:c18c:c9ea:69ff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4310ade7fc2sm4100677f8f.22.2025.12.17.03.05.33
+        d=1e100.net; s=20230601; t=1765969689; x=1766574489;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=w2KXIuUHTxG+9PFYORsRCGlcPMBrjzhW5oYcDljb92E=;
+        b=EVB+wmTmNf2qVUSSofo4q7qvHuR5mxddm571Mltg/dbhSVK7aWn77wdAFRCuJsYb0O
+         CPoDBkmQsaMpX8dTy6IYOttnbZVhzkj7eKJt0HY00bVe109HOXraBxRd/r57PyZjgpoK
+         unXI/JDHBrva26psUC0D7MISBycWW1Zs0iOpFTzg12z3u0mXcGj0eCyjQaB0waknPqPN
+         HFtz2u/Wm/VhKNyN7TMtp0dsboeyv7pLSG3JV/bf1ylleJuNmhKE6CciFOeSiTbtKLS+
+         l7yvQGPJYvHnMsIWM9hPxViBkGO/cy8eitmB7IA9EhqzAYWxJakyD2raX0XToeT/Ym8G
+         Cnbw==
+X-Gm-Message-State: AOJu0YxWnP5VsmxMA15jAusK+jggNeGQIKHaiudMkRXQ84eTTzovV4p0
+	pqoLZ3lx1RbhU+6TdtsqfXyi3CA+geYKlMOuZTSWJUFiqmJtjE7TVZqbTBHMmvue
+X-Gm-Gg: AY/fxX57XLaCfe89ehQ0PPLFeAQxYdBFMlO0Db38mvOQm3V2gq/jKQm0EzeBQ2fH24g
+	X3YidwjfPLgRsJ+IifUvtrHSd2/Smrg+Y7t2yQVx4dhX0vBCNsav2Ds8YyGe7XiVwrlR3yzw9al
+	5DcxmBghe5MWncFcp+WaecXR7bzrH9a/+JOadeRYYd6QwuiRJTAKNKbmy4y9TTFu611yQrLQvu9
+	XZZwDcpKXadREWeMQpB4FEapAU+vVv/40xhD3+/GO4HpjykMPknogH+S/zPd+gtCql8Kjw5uojP
+	CNUufyzfzciQ5R5ZYa033kZrOwNtUXacZRLCGE/48UqyrK1bYvFOnW+O2XWxhZAV42bdy+IVoFS
+	rALmwcYUR7+732WJB8id+3zVYAXi3LSJslmqzWYfha6ickHpYXM9shWLG3fnZw9Uptc999T6mow
+	TIwkzuiJ3xUMh8jihhQfuvux5W
+X-Google-Smtp-Source: AGHT+IEcVr9Um4oTkJrJR6C/4as1vBkK1dDxZbVqhSEpOXb+50QRnO5wuBPyVokXqzgeKOhKUSrNrA==
+X-Received: by 2002:a05:6000:4205:b0:431:66a:cbc2 with SMTP id ffacd0b85a97d-431066acffcmr5774700f8f.44.1765969688839;
+        Wed, 17 Dec 2025 03:08:08 -0800 (PST)
+Received: from f13.tail696c1.ts.net ([2a01:e11:3:1ff0:513a:a454:7a0:65ba])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4310adf6eabsm3945879f8f.38.2025.12.17.03.08.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Dec 2025 03:05:33 -0800 (PST)
-Message-ID: <d2ca8c4a0e268821ed0268c8d6613215ed5a6499.camel@gmail.com>
-Subject: Re: [PATCH v4] xfs: test reproducible builds
+        Wed, 17 Dec 2025 03:08:08 -0800 (PST)
 From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
-Date: Wed, 17 Dec 2025 12:05:31 +0100
-In-Reply-To: <aUHSk4SqAS2RS0Xy@dread.disaster.area>
-References: <20251215193313.2098088-1-luca.dimaio1@gmail.com>
-	 <aUCSSuowzrs480pw@dread.disaster.area> <aUDryjk9wdZZQ5dz@infradead.org>
-	 <aUHSk4SqAS2RS0Xy@dread.disaster.area>
-Autocrypt: addr=luca.dimaio1@gmail.com; prefer-encrypt=mutual;
- keydata=mQINBGGqRu4BEACybdvi9+LqKuWA/P9HW7+wzGtIbFL2PR/vgJZqLzAscGrJB3ZvpdT2h
- daDdjRX7Maod9EAZceZYl2YVLZ6Q54qhm1hlEp4Iw6/adryfzulrJPX39mvqpJNE6gSkatwUDekhC
- AJpBbpq2aB79wOF08++KofqNW1r0xMIQ/KVoPryE4jNL2y99bEvUpe4S9TEyWTwsv/I0nEIX4SMgf
- VmW9XY842p9Bj6lws5U2dENIU8OD3cgK4uhfueb/ggkYg/5ZcblIBdVY0xDiFCqyTDr8+TVK2Algr
- M+r5MDPUKQXpIxh+gD84PcX8VXDHsmZaWsZmdkryiZ5RFammebqoIdxLF0oqwgUpaA8Ed4hlPAzmd
- TdVjMwFo01IHzFkZvS0g90qVXTf1fTSVG4JZU2gAasKVl0VDh4yJlzK3c1rWueqISv6AiD+BA6sPu
- 4zscdBckK6diftYINuGV6Bfw+v+2AFvjCq8isfCQPXY8XHTg+5lktGN6+45SUEghDpeacSM+G/q25
- qCLKbi6dzAtjCDeR8b6o0lRQ645/5fMU4CSyanfsf7YRkw2RqA6pRM3q/i4nlvznMLxR42iNc1BMY
- A3t1jv6RIEE36eke9Ube0p0TsEisGGYo4NTVO4RUeMeSG3waYfLB0eXHe9Ph/K0FrTBq6XE65KwRO
- Bwk0tB6lU0+jwARAQABtCVMdWNhIERpIE1haW8gPGx1Y2EuZGltYWlvMUBnbWFpbC5jb20+iQJOBB
- MBCgA4FiEECdpUF1+FXVXQxDERHMOHTl7ICj4FAmGqRu4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgE
- CF4AACgkQHMOHTl7ICj5gag/+JtIKsPwWRJWnnexbGS/gGaZ81GtZ4skW/UHhQqfc44//ntToy3uw
- 2PFaPB+5WLlA/XAzpLBFjLD5ZscFtHW7/ICGxrBqB/Q6AULoz0zsDhJ8YmO68A5YYNkGCLbWzando
- vrY/GykUEMT1EsReaIHhLpL/+3jsXGyIsztFi6qkjfDsFT+306+llIhIxgY+ZI/B/wlI41BKmSae+
- 5WOR4oZb080Famy/5hjx/Mi0AYu2A6cRpw2k+l2/u+aEvunmkgkgB186tA/JhoOPYQvT5xVQ5GYRu
- vcX1kHscYD+Tgx3DhkMS1XqZihH4UE9Ec6QeOJTWrK1czRFTJpTOgPAMmksMdgU8YKKHj0dafCNl3
- /2gld0Q2s5/tAGPpPuOPJf5GUtcOn1Qxr7Re2pyrQdcdr/jUdy1GVHAldzOZlBID3u0dTUGWLsPDA
- dvwGyiwdZiNgnHxTEWchpFo0mwi5S/3+sWcPWAJO2zEVfkqyNhmHSW5EBrwe9nhCT5uqF8dEKb4tf
- FxAAgPAiFfnLhweVxkPIvPK6/rIZo8F6t6qSXibbTIjdi9pLSDMY0m8u/fRZ06DsciFIfrWG1LXlu
- 14mDpr4zQSUELe1RRU1NEfD87TyYehjPvEewM6bZlRJ4SLaWQFoRW3OKH7IN1ODUn7T9TIx1uuzs4
- 4ViZ2BeR0ow9RQc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.2 (by Flathub.org) 
+To: linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
+	djwong@kernel.org,
+	hch@infradead.org,
+	david@fromorbit.com
+Subject: [PATCH v5] xfs: test reproducible builds
+Date: Wed, 17 Dec 2025 12:06:53 +0100
+Message-ID: <20251217110653.2969069-1-luca.dimaio1@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, 2025-12-17 at 08:43 +1100, Dave Chinner wrote:
-> On Mon, Dec 15, 2025 at 09:19:06PM -0800, Christoph Hellwig wrote:
-> > On Tue, Dec 16, 2025 at 09:57:14AM +1100, Dave Chinner wrote:
-> > > > +_cleanup() {
-> > > > +	rm -r -f "$PROTO_DIR" "$IMG_FILE"
-> > > > +}
-> > >=20
-> > > After test specific cleanup, this needs to call
-> > > _generic_cleanup()
-> > > to handle all the internal test state cleanup requirements.
-> >=20
-> > There's no such thing as _generic_cleanup, and none of the
-> > _cleanup()-using tests that I've looked at recently hooks into any
-> > kind of generic cleanup routine.
->=20
-> I forgot to mention: the lack of _generic_cleanup() doesn't mean my
-> review comment should be ignored - the new custom _cleanup()
-> function above still needs to do the relevant generic cleanup work
-> that is done in common/preamble::_cleanup()...
->=20
-> -Dave.
+With the addition of the `-p` populate option, SOURCE_DATE_EPOCH and
+DETERMINISTIC_SEED support, it is possible to create fully reproducible
+pre-populated filesystems. We should test them here.
 
-Ack, incoming thanks for the review
-L.
+v1 -> v2:
+- Changed test group from parent to mkfs
+- Fixed PROTO_DIR to point to a new dir
+- Populate PROTO_DIR with relevant file types
+- Move from md5sum to sha256sum
+v2 -> v3
+- Properly check if mkfs.xfs supports SOURCE_DATE_EPOCH and
+  DETERMINISTIC_SEED
+- use fsstress program to generate the PROTO_DIR content
+- simplify test output
+v3 -> v4
+- Add _cleanup function
+v4 -> v5
+- copy _cleanup from common/preamble
+
+Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+---
+ tests/xfs/841     | 173 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/841.out |   3 +
+ 2 files changed, 176 insertions(+)
+ create mode 100755 tests/xfs/841
+ create mode 100644 tests/xfs/841.out
+
+diff --git a/tests/xfs/841 b/tests/xfs/841
+new file mode 100755
+index 00000000..60982a41
+--- /dev/null
++++ b/tests/xfs/841
+@@ -0,0 +1,173 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2025 Chainguard, Inc. All Rights Reserved.
++#
++# FS QA Test No. 841
++#
++# Test that XFS filesystems created with reproducibility options produce
++# identical images across multiple runs. This verifies that the combination
++# of SOURCE_DATE_EPOCH, DETERMINISTIC_SEED, and -m uuid= options result in
++# bit-for-bit reproducible filesystem images.
++
++. ./common/preamble
++_begin_fstest auto quick mkfs
++
++# Image file settings
++IMG_SIZE="512M"
++IMG_FILE="$TEST_DIR/xfs_reproducible_test.img"
++PROTO_DIR="$TEST_DIR/proto"
++
++# Fixed values for reproducibility
++FIXED_UUID="12345678-1234-1234-1234-123456789abc"
++FIXED_EPOCH="1234567890"
++
++_cleanup() {
++	cd /
++	command -v _kill_fsstress &>/dev/null && _kill_fsstress
++	rm -r -f $tmp.* "$PROTO_DIR" "$IMG_FILE"
++}
++
++# Check if mkfs.xfs supports required options
++_check_mkfs_xfs_options()
++{
++	local check_img="$TEST_DIR/mkfs_check.img"
++	truncate -s 64M "$check_img" || return 1
++
++	# Check -m uuid support
++	$MKFS_XFS_PROG -m uuid=00000000-0000-0000-0000-000000000000 \
++		-N "$check_img" &> /dev/null
++	local uuid_support=$?
++
++	# Check -p support (protofile/directory population)
++	$MKFS_XFS_PROG 2>&1 | grep populate &> /dev/null
++	local proto_support=$?
++
++	grep -q SOURCE_DATE_EPOCH "$MKFS_XFS_PROG"
++	local reproducible_support=$?
++
++	rm -f "$check_img"
++
++	if [ $uuid_support -ne 0 ]; then
++		_notrun "mkfs.xfs does not support -m uuid= option"
++	fi
++	if [ $proto_support -ne 0 ]; then
++		_notrun "mkfs.xfs does not support -p option for directory population"
++	fi
++	if [ $reproducible_support -ne 0 ]; then
++		_notrun "mkfs.xfs does not support env options for reproducibility"
++	fi
++}
++
++# Create a prototype directory with all file types supported by mkfs.xfs -p
++_create_proto_dir()
++{
++	rm -rf "$PROTO_DIR"
++	mkdir -p "$PROTO_DIR"
++
++	$FSSTRESS_PROG -d $PROTO_DIR -s 1 $F -n 2000 -p 2 -z \
++		-f creat=15 \
++		-f mkdir=8 \
++		-f write=15 \
++		-f truncate=5 \
++		-f symlink=8 \
++		-f link=8 \
++		-f setfattr=12 \
++		-f chown=3 \
++		-f rename=5 \
++		-f unlink=2 \
++		-f rmdir=1
++
++
++	# FIFO (named pipe)
++	mkfifo "$PROTO_DIR/fifo"
++
++	# Unix socket
++	$here/src/af_unix "$PROTO_DIR/socket" 2> /dev/null || true
++
++	# Block device (requires root)
++	mknod "$PROTO_DIR/blockdev" b 1 0 2> /dev/null || true
++
++	# Character device (requires root)
++	mknod "$PROTO_DIR/chardev" c 1 3 2> /dev/null || true
++}
++
++_require_test
++_check_mkfs_xfs_options
++
++# Create XFS filesystem with full reproducibility options
++# Uses -p to populate from directory during mkfs (no mount needed)
++_mkfs_xfs_reproducible()
++{
++	local img=$1
++
++	# Create fresh image file
++	rm -f "$img"
++	truncate -s $IMG_SIZE "$img" || return 1
++
++	# Set environment variables for reproducibility:
++	# - SOURCE_DATE_EPOCH: fixes all inode timestamps to this value
++	# - DETERMINISTIC_SEED: uses fixed seed (0x53454544) instead of
++	#   getrandom()
++	#
++	# mkfs.xfs options:
++	# - -m uuid=: fixed filesystem UUID
++	# - -p dir: populate filesystem from directory during creation
++	SOURCE_DATE_EPOCH=$FIXED_EPOCH \
++	DETERMINISTIC_SEED=1 \
++	$MKFS_XFS_PROG \
++		-f \
++		-m uuid=$FIXED_UUID \
++		-p "$PROTO_DIR" \
++		"$img" >> $seqres.full 2>&1
++
++	return $?
++}
++
++# Compute hash of the image file
++_hash_image()
++{
++	sha256sum "$1" | awk '{print $1}'
++}
++
++# Run a single reproducibility test iteration
++_run_iteration()
++{
++	local iteration=$1
++
++	echo "Iteration $iteration: Creating filesystem with -p $PROTO_DIR" >> $seqres.full
++	if ! _mkfs_xfs_reproducible "$IMG_FILE"; then
++		echo "mkfs.xfs failed" >> $seqres.full
++		return 1
++	fi
++
++	local hash=$(_hash_image "$IMG_FILE")
++	echo "Iteration $iteration: Hash = $hash" >> $seqres.full
++
++	echo $hash
++}
++
++# Create the prototype directory with various file types
++_create_proto_dir
++
++echo "Test: XFS reproducible filesystem image creation"
++
++# Run three iterations
++hash1=$(_run_iteration 1)
++[ -z "$hash1" ] && _fail "Iteration 1 failed"
++
++hash2=$(_run_iteration 2)
++[ -z "$hash2" ] && _fail "Iteration 2 failed"
++
++hash3=$(_run_iteration 3)
++[ -z "$hash3" ] && _fail "Iteration 3 failed"
++
++# Verify all hashes match
++if [ "$hash1" = "$hash2" ] && [ "$hash2" = "$hash3" ]; then
++	echo "All filesystem images are identical."
++else
++	echo "ERROR: Filesystem images differ!"
++fi
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/841.out b/tests/xfs/841.out
+new file mode 100644
+index 00000000..3bdfbfda
+--- /dev/null
++++ b/tests/xfs/841.out
+@@ -0,0 +1,3 @@
++QA output created by 841
++Test: XFS reproducible filesystem image creation
++All filesystem images are identical.
+-- 
+2.52.0
+
