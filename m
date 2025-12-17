@@ -1,43 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21B043590D7;
-	Wed, 17 Dec 2025 10:22:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72BDE387B29;
+	Wed, 17 Dec 2025 10:25:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765966966; cv=none; b=lfAu87/dawDj+Jx1Gve9GCqHb1TI5/PufC4XtleEHBBMPqQkcACyT/HBJch7ZOHmzwTdv10fgR/2kRQitfjeg8UNQ2Ol45sHJcddBgpvZJCSvapriMP1G46DR6IwUWYB6aAwr5BROEHzqe+CJvB8Abn+y1HiOArdB5pE5ylz+AY=
+	t=1765967113; cv=none; b=RM4z/0nZpD5IhErMaywTVvvVho5MzCGDY93xB3MX5/vo87JhSFi6Jx9gl0Bwbk1j2QXH3QMw71V6pDnuNUrNuHyGEr2Gt7NYPO9esINzXnZda2uhJysaRtWgfKKgZw9ti13U286AvZ0aolfw6GfWCjXNbPXHsLr41fq0Z1dZjcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765966966; c=relaxed/simple;
-	bh=2S7GwXTbTdXDk52t2DqlWlpY5EWylsBBw1/dJeF1IpQ=;
+	s=arc-20240116; t=1765967113; c=relaxed/simple;
+	bh=Pb0j4dCJ2fyXl5MvjNhWT4QsGYjM8MvxdvpespVWVLE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GxgJzs7tmUXlGZ2ddqnmmOjts85hqa+ms7bEZhRH26Zqqjw+H6nSPPFDyjI05sdHKbL2xhy12WeQoplynzdBEKYknXh8SYeLUiFwrSvoijdfXI7RXnZlujuF83IL4VuLVAmQe2e+8CAGnmZfriRANWXsecYmZa4X8AE5EqdJxSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=A4id2xxg; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=OcUjjLZHWImsHsvlixu/KqUtsf8vzIXLPX8wnqCoFuJI2jTvyvd5VRYmFKcGrW5p3tnG0/aXzZ1AGW9j9SXppjTtRyntmSOMC/JM6kH0+iOIjnyMFLZMOxEZkxM4KHksamTNctUNsoO1anFCE/fsYp4/5K6r+pV2hdhxLYIfZYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WJ5bvWe+; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A4id2xxg"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WJ5bvWe+"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=wGqEpqPRPF7cDvkClG0aPFQ9WZwyRMe4EuYdkYsdS6o=; b=A4id2xxg8NePUizjzUCYe2L1b6
-	tXk0BHDaWCSxwuMdY3AqgKlwBMbSvJJkSkw48cNp8xFGIOfkQm0LDTvMHbcWbIArazp9LWOfhDqtS
-	YgPtbL87Ft8e3Z5Vl56HJnwUnSyG2BVhmGROs47aSt2ix0zZfSpcVYpPQR+oJiNHei4lKtrwQdbo0
-	is0tK61oIeY69RnrbJZhAKMns9VLv2dxB/MXDHXCvZiTTs8nOFB8CZVB3OEKsJqrF9vVevxGdl4X6
-	RrHVIhwgGOHMX601b/3+CCB8K92R7L05bN8WYBsuJ8g6/5npgdP4RfFumEDFNMWTneixRrmZ07kF/
-	rinlvdhQ==;
+	bh=KLVf30kTD7z41p5OwfhOQe8fcJDkzS4OklSVdyFkSI4=; b=WJ5bvWe+5xCjdz+DmUAnBzaGiQ
+	lFEbIvaHIBXMrPdBYaV79UM43JsajOnSL40eCTAYGqD+I/3LacrBIPMgr85ZvkSXVKKOBGzu44k3B
+	q2iRkCuSv7bXQZv+HTafUsbog9a8APmX5ytgFEchJLHPSGspLg+ePBSjGkBwxviSGczX3/GAplHaF
+	cfwSYieTuCpHsV4KfjGb9oaZSdNydWpxsAf8jciFAKMG3aNEbId4K9I3jmX4rYx5BTP+hLJ2oIgLS
+	l7SCW4fuyBMSdUYJsWpO/ElHlc236k1uOQvZF1kNcQtFfHz+PQGxlhtVnRxABjn/gXRdDcutzLuUi
+	fs0sGguw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vVog7-00000006dN8-03Cb;
-	Wed, 17 Dec 2025 10:22:43 +0000
-Date: Wed, 17 Dec 2025 02:22:42 -0800
+	id 1vVoiV-00000006dpH-3f5Y;
+	Wed, 17 Dec 2025 10:25:11 +0000
+Date: Wed, 17 Dec 2025 02:25:11 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/3] common/rc: fix _xfs_is_realtime_file for internal rt
- devices
-Message-ID: <aUKEcqYKliEhcAtT@infradead.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs/649: fix various problems
+Message-ID: <aUKFBx09MGp4Z2bu@infradead.org>
 References: <176590971706.3745129.3551344923809888340.stgit@frogsfrogsfrogs>
- <176590971755.3745129.1885534255261064844.stgit@frogsfrogsfrogs>
+ <176590971773.3745129.6098946861687047333.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,18 +45,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176590971755.3745129.1885534255261064844.stgit@frogsfrogsfrogs>
+In-Reply-To: <176590971773.3745129.6098946861687047333.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Dec 16, 2025 at 10:29:41AM -0800, Darrick J. Wong wrote:
+On Tue, Dec 16, 2025 at 10:29:56AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that we can have internal realtime devices, it's possible to have a
-> realtime filesystem without setting USE_EXTERNAL=yes or SCRATCH_RTDEV.
-> Use the existing _xfs_has_feature helper to figure out if the given path
-> points to a filesystem with an online realtime volume.
+> Fix a couple of problems with this new test:
 
-Looks good:
+It looks like this patch got dropped again?  While my git repository
+has the commit ID, I can't find the test in the patches-in-queue or
+for-next branches.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The changes themselves look sane to me.
 
