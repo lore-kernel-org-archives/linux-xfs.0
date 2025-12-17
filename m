@@ -1,36 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C45C3346A0E
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 09:51:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE3C184;
+	Wed, 17 Dec 2025 10:21:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765965073; cv=none; b=I+ZTXYZWwpNSI7oSDhYG73yngfFdVi1r8ccvc2ybrFmGhFUExeylvPleK9Vjqv7mNBgXKmn/SoxpcRzaPUPOOn3wJnM4CFMl+0ealaEqHRp45uHm+fBAlV7B0M6hpUj5j6SxCh93XNjWV2C2j4QHqvwvpH1+hzuNTHH0coBmRRQ=
+	t=1765966898; cv=none; b=SMFAiQ0Ua1i9ZhycFl0iE0KCNnpq1JGKMvZcYO32cmy08Z1aZIHOrfGmaRduNK1g0dyiIq03I5Iq8tgsXDMcyvv0gg41zd4EsC9Exa5QjKQVgIfPbr5wSnnRfLigadBlusdeVHNYGKgnOH9skzVldqw28iGqfTuCsaSDr4TkH4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765965073; c=relaxed/simple;
-	bh=KrFTDy9r0W6KxFMAeWGNaHfFbo9S4PqJ/K1n0gKJvBY=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=n9cSI1iaQ5t0RHKPejmkEv4Gcs8v1jvFKnu4T7XvyOcAEFLqAQALbPv5Qteb6quQ56n1tiaNMjeiqMrFTygY/qwPeUc5l90HUkJ6W4rcoQ9+Z0gm65nxrGdb2P2gH1zGw0MVADc2DpFA6/awP9/+nCqDShRJQr4bunl1vNXQzjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WvYiUpkr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765966898; c=relaxed/simple;
+	bh=ANOvcozK8eWFLwOeyvSQ9Fshz9Dg84EcB19LObAbmfs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PomB5P+T+9YtinHKG7Mi/ZlKrSkAtmLcWDc5F7cpVfOIiyHaWCw3wYEs4m0wa8UvRunbGm+7YR3ZlOqVWArVOWVFUCKv+Hq9PA7LMRmulhPU0HYrP4pHUL8y3bj+lAPKJXziBML0Y4FUIThCvHoJsQtdhqRBkPMogkN9HaCWm6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=brC0Oepy; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WvYiUpkr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A54D1C4CEF5
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 09:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765965073;
-	bh=KrFTDy9r0W6KxFMAeWGNaHfFbo9S4PqJ/K1n0gKJvBY=;
-	h=Date:From:To:Subject:From;
-	b=WvYiUpkrae0HUFgFkGOSRlFaTbOsSmDLfu2cE0kAaHpaPZwLdZyMmc5EdznayjfuS
-	 /yBY8PcrrAo4eGLOWTX1UjRqVK7Dtz2Q65Oc1FGWFa/Uvttm0MrkBWsgkVRxzjQevr
-	 5nQ9FJZhpuS/BKmiQj716lDuvR2m/1v6b4DxY10w2AS4zY7cMduzFC2ytfpPnMGfUE
-	 /CgkrQUYUUh5/z99+fFztgV7sdBKjhMouI4q52/yEAvwq8pNMoC9JABbv2Esni7r8D
-	 VqtW/z/SvoWGD0lu0W+Wa6Jk9307QOS7Cxz3T/bytE9FclGUoSyjvtMOhj1nqozmQU
-	 q3XVSDTwJ6vFw==
-Date: Wed, 17 Dec 2025 10:51:09 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to f401306d72f2
-Message-ID: <bn373xetzspynudrs7vxikq7fcrf5vljraazztkzrz7hgvhdbg@lragoe5jucwf>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="brC0Oepy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=fpkm6EceW2lwEfW+KYaLXqwTZ2Rbo+YFDFZ8IaZPUQ4=; b=brC0Oepy95i++1L8OFRk9OkCIB
+	W8MhMK/rHJYupP0vWuNpItVDKom1L+n3vjiWCT5XW5ncGtMSRX+MrSkJXiNGuFq7AJHPXuU4zvk2X
+	4u/5nk1H+ouK6PocSwQcsKuKUwaLSSqebJijLofCJixZV900Ye6b9xcMJfJOSmpxnhT+g5RlDidaE
+	B3bQ5Qhe0s+fLbbvMSntyYe3xSakDczx+yxEcedeoQORsUVuMqVLZAdSX6Ljrx4C3Wr6A5u1DsnY+
+	wKfs8+9u5uUxmxV69vonDVpFFdTxfYF7DkpDTgH2vsovbkQwplhctNy4BD876fBfa9oAC91j38Y8f
+	BFEVALRw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vVof2-00000006d9g-1ohV;
+	Wed, 17 Dec 2025 10:21:36 +0000
+Date: Wed, 17 Dec 2025 02:21:36 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/3] check: put temporary files in TMPDIR, not /tmp
+Message-ID: <aUKEMFM_a8yU4CJb@infradead.org>
+References: <176590971706.3745129.3551344923809888340.stgit@frogsfrogsfrogs>
+ <176590971736.3745129.17863225958624907500.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,74 +45,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <176590971736.3745129.17863225958624907500.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+On Tue, Dec 16, 2025 at 10:29:25AM -0800, Darrick J. Wong wrote:
+> Allow system administrators or fstests runners to set TMPDIR to a
+> directory that won't get purged, and make fstests follow that.  Fix up
+> generic/002 so that it doesn't use $tmp for paths on the test
+> filesystem.
 
-Hi folks,
+The second part feels like it's worth a separate patch to make it more
+clearly stand out.  Either way all the changes looks good:
 
-The for-next branch of the xfs-linux repository at:
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-f401306d72f2 xfs: factor out a xlog_write_space_advance helper
-
-17 new commits:
-
-Chaitanya Kulkarni (1):
-      [2145f447b79a] xfs: ignore discard return value
-
-Christoph Hellwig (13):
-      [8dc15b7a6e59] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file system
-      [982d2616a290] xfs: validate that zoned RT devices are zone aligned
-      [dc68c0f60169] xfs: fix the zoned RT growfs check for zone alignment
-      [4846ee1098ee] xfs: add a xlog_write_one_vec helper
-      [3215ad1d5183] xfs: set lv_bytes in xlog_write_one_vec
-      [36a032902569] xfs: improve the ->iop_format interface
-      [0782c1c41deb] xfs: move struct xfs_log_iovec to xfs_log_priv.h
-      [1a3a3b917d22] xfs: move struct xfs_log_vec to xfs_log_priv.h
-      [72f573863f96] xfs: regularize iclog space accounting in xlog_write_partial
-      [2d394d9a73c9] xfs: improve the calling convention for the xlog_write helpers
-      [998d1ac52da7] xfs: add a xlog_write_space_left helper
-      [f1e948b51c93] xfs: improve the iclog space assert in xlog_write_iovec
-      [f401306d72f2] xfs: factor out a xlog_write_space_advance helper
-
-Darrick J. Wong (2):
-      [5990fd756943] xfs: fix a UAF problem in xattr repair
-      [f06725052098] xfs: fix stupid compiler warning
-
-Haoxiang Li (1):
-      [fc40459de825] xfs: fix a memory leak in xfs_buf_item_init()
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_log_format.h |   7 -
- fs/xfs/libxfs/xfs_sb.c         |  15 +++
- fs/xfs/scrub/attr_repair.c     |   2 +-
- fs/xfs/xfs_attr_item.c         |  29 ++--
- fs/xfs/xfs_bmap_item.c         |  10 +-
- fs/xfs/xfs_buf_item.c          |  20 ++-
- fs/xfs/xfs_discard.c           |  27 +---
- fs/xfs/xfs_discard.h           |   2 +-
- fs/xfs/xfs_dquot_item.c        |   9 +-
- fs/xfs/xfs_exchmaps_item.c     |  11 +-
- fs/xfs/xfs_extfree_item.c      |  10 +-
- fs/xfs/xfs_file.c              |  58 ++++++--
- fs/xfs/xfs_icreate_item.c      |   6 +-
- fs/xfs/xfs_inode_item.c        |  49 ++++---
- fs/xfs/xfs_log.c               | 292 ++++++++++++++++-------------------------
- fs/xfs/xfs_log.h               |  65 ++-------
- fs/xfs/xfs_log_cil.c           | 111 ++++++++++++++--
- fs/xfs/xfs_log_priv.h          |  20 +++
- fs/xfs/xfs_refcount_item.c     |  10 +-
- fs/xfs/xfs_rmap_item.c         |  10 +-
- fs/xfs/xfs_rtalloc.c           |  14 +-
- fs/xfs/xfs_trans.h             |   4 +-
- 22 files changed, 393 insertions(+), 388 deletions(-)
