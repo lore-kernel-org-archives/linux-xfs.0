@@ -1,104 +1,208 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-oo1-f79.google.com (mail-oo1-f79.google.com [209.85.161.79])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 043B336CE02
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 14:41:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A455735F8DA
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 15:06:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.79
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765982519; cv=none; b=LVrt21M4IgpXH9H4LRSMjBuJbDV9/FAJWYQyKkAnaQC7GDEpicols3mxmRWouU/DhriW6BkjgSmhCv/rmWBWIx0gqSj2iGv0qnd7D1chzl0SPYu4PXl4NNem6THkbs/GsVCcKhXBdKZidI2qXlKgy+GOwVG9Avu83a93mlhCYxI=
+	t=1765983993; cv=none; b=Nxod5w0cJC/vI+TdKMEwWV4o9+9uNKy0UHBCJ0YWBqht8YHLLzrD5iIh3V/szbBXkGqFUTnHfop/MuR9B/jKzLgcPlQvdF9J5EPof1JGfsweDY+FpW4FhorltRL0WqyGuteU0WxS3U9cfDRUpJad9rwF7P+7SgcaVOoifDgg2sw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765982519; c=relaxed/simple;
-	bh=5SzQPt2tmUp7e95QFU8h05fUZ9+ifiUggg68rkvF/UU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cA8JzlK1GaLQOmjHiPbU0dILqqv0uTm7O9empioMC7wna10PQCl/PpZgUN99I8i82Sh7OPGCeVtGBtuRNcGkQKanKalInn/oTVQfhYM0lCMatuc6KN5GwhyhKqmNI7p20Cce7NEuYNOCqfiC7dM71gecKE9gKA7criaGGtPsolc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ltj/jeq7; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ltj/jeq7"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2a0b4320665so53465745ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 06:41:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765982517; x=1766587317; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=l0wZpduSA/Xljb/4OZQf98r4uBlmoIJOoY3MO9Qodo0=;
-        b=ltj/jeq7zwcxW42dDddmV7hK8CrDx4eiuQBHaPw8T9dgXgOftkJa5VJsE8sJenytav
-         QQTpiqFlB3Bb/fZUuQlpXxoKTMkR5cDjOdjuzmBbRYQy1c/piADMNAOzmbDzCSerL8W3
-         g9UMmlYhSt8BdMKeoZ992n8K8RVlOm8cr+9U3nERz1oL3LJOl/epZf2TFHYBft5eH+hC
-         jX5lSb+em/uz4Lu7zMJwsYZtmloHtJ9IqEbJzqPVQ4Q3y4BfP1XiRL0CxtN498rkTocF
-         m4RFSgGC0Bz+i2HS/lOSLB/rxZ91MuRsu7KcA+NmDrWlvwC/+kFY4gWuUL4EuOSRId4Y
-         JRPQ==
+	s=arc-20240116; t=1765983993; c=relaxed/simple;
+	bh=guTVx0EHN1D1Uhou4Rx7F0yW/ZXIS6CzojBXCRNbR1g=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=NQSBysv9swUxJ++ko0Jf5Brnw9tJ20cFCtUFYTM4ghJTnUoJ30BhKvokMbeEEJS9uTu0y/uxMzFkox1r/u97kL+CUeqPVTsCw49qrMsQbsB4PUxjOMbbaZAXWZi5o2aAqhVgWJV/Lx3+fhlAAOrlC3yaWMgx45gKlDkiiQ3SBZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f79.google.com with SMTP id 006d021491bc7-656b2edce07so9199985eaf.0
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 07:06:30 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765982517; x=1766587317;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l0wZpduSA/Xljb/4OZQf98r4uBlmoIJOoY3MO9Qodo0=;
-        b=Rw+e3+TvHGpSHHWlxq6Hz8h5fqQfd2365ZJT17zCHUQRQhzLbHb7Id0G4+EfIMCWVt
-         Lzznd3sABjvXobn7oWsMWQ/LcCR0S7yyf2ToW0e8XgkhdhCk1Nq50UQ5ikDs/VzEtCNE
-         v5bYg1B1T78EviE5EYkNa5Efxf5pz86H6lW1Jen8EHl8F7VRGMhv2RagLJ1PcYt1X/TE
-         eoo90WyF20e/T5sC+bvqTpnGESjLrqeJdHK9au5M5lRGhNAaWUyMrI9DvE0vDKKWFoJf
-         ypITdg0LYV2ta0v1aJPrdDXFwOivGeW/PSJzbD3Fgo0wilyN6tfg/nWbrIUjHX/UlIls
-         cx8g==
-X-Gm-Message-State: AOJu0YwiVau/0KnJ42WQJuKkEd25sZJMa+SiJoWsnY/QqobdmVtG+2hg
-	MKk4uR3pYVMcCvjZEEimXdMrQxrEdfORzpacaiZrZs2Nzrz9btZj9y+b9xs6AQ==
-X-Gm-Gg: AY/fxX7d8fGt0eYcGCr5YzoWA0AWwyP4okpXb51ZDu2YNIOZPAF4Q0J9xCDFaN5HbfR
-	cOCR8t06X3Ajqp80cBApyajyLX3rfhRw1akhtnvT4FDUV+VDYp7KRMijgB4172FVnlu2m9Y/Ak4
-	JzNCl9i+l8x7doHVaH+JIe2eXYP3v5Wa6i20J3q9/BJKiAX1LLZiNl3bCicrVr+p1RVLsu7oNe6
-	3RiL1e02Yx9kD/gSkpS7q5VRpe2jPA8aykXd+R/aG6smEFNTcHcqdx2oPwLdPg17Vvj0DWz5vkK
-	07DiKVktbXQ7VBTv9zMOzVLWPBXybEXPkg8pyuXawNoCyrtV2W9R1KUmnQzkBfcpMRJTECKIGve
-	7WFGnf5sWHivrX7aZ5lApFZo6thqgmPpuknn8HIjzMRSWrygOoMHO1LpbI88RBtDwPI2101bHFF
-	rA1QwMQkle4SSgkMUdGW396UC458CbmbEu7JBwBeclBv2VphxPt0aydfr2gBYyoyY9
-X-Google-Smtp-Source: AGHT+IE4VabQn7etKn9BYvxqGeRLFlB3Ckx97QEvjagYODhd9lpSnuVxR1b/+RmWFyibI4XFRY5EAA==
-X-Received: by 2002:a17:902:cccb:b0:2a0:97d2:a25d with SMTP id d9443c01a7336-2a097d2a470mr152636395ad.15.1765982516706;
-        Wed, 17 Dec 2025 06:41:56 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.205.246])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a110f6374asm85914065ad.63.2025.12.17.06.41.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Dec 2025 06:41:56 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	hch@infradead.org,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v2] xfs: Fix the return value of xfs_rtcopy_summary()
-Date: Wed, 17 Dec 2025 20:11:33 +0530
-Message-ID: <c6b04ec9ae584af62317d4c1bcf3f84dfab74be0.1765982438.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
+        d=1e100.net; s=20230601; t=1765983989; x=1766588789;
+        h=content-transfer-encoding:to:from:subject:message-id:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+LXp+/OiwgJFK4+HBN1KxSKPTjJfUuQ79kirzdSqjQA=;
+        b=ME5rmq+9jcI8R7P3IzrVUB4xZsO37WeQLwHq5Ra10hbzsO18DrbFULtZfTYoFMUF9n
+         aoNK12l4MO+5enolZql5DJKyls/BawGa9B2WwPS6E7UkOKrjTnofm2xV7jKP7jdag8rJ
+         ouND22VrumN+6lXgttduSlAJ7PXdH1KlZxTzaddVIiGWFL8sKnCDw/si3hPYYiMe8vqb
+         Dtsas9jrVow8jFNgM1ksdR2V2aGtoHuJ64Lzl1AQO9+N2lFL3XoSXsb3qd6IXBDbDq8/
+         UFvFX1yp90Z/39no8kfzvV5JQqwXwJ+RGLaHduzElO0AvfCskboQKcvSb6sgRBL6yHF3
+         gsgw==
+X-Forwarded-Encrypted: i=1; AJvYcCXefqFLSNIb46wFkHeg12Nwve8VZMJIidVsVK7kK3RT44arkc0q2e1e9NvSwsY8uL5AJjhcsCuJPx0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxjrpW4acMfK69SqwyJZpZ1MVj2chbFaBcdLvMNXW4k/QnO1R2e
+	zwi9Lx9F7/uxRb21RXk/Hauz5/9HOmZULayvQRS9iIR+3jBvCAOslFTEYbP7iNU/DtvktbuSrtx
+	CU/gH0WibUQMJ/HXLKxi+T9S90JylHPNPUmecmWNQ6KJQ8SljUlQ2BIyz0p8=
+X-Google-Smtp-Source: AGHT+IEepE1vOkZRfZw65Yq1mLKX8fjSXWFd+RCC7vexsDa9QIOBmOOjGkoOx7rg/oWkXOnGdoUhwKHlpGYWuc7/8UmLqU7NJZSW
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6820:4df7:b0:659:9a49:8f11 with SMTP id
+ 006d021491bc7-65b45151581mr7967725eaf.34.1765983989465; Wed, 17 Dec 2025
+ 07:06:29 -0800 (PST)
+Date: Wed, 17 Dec 2025 07:06:29 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6942c6f5.a70a0220.207337.0063.GAE@google.com>
+Subject: [syzbot] [xfs] general protection fault in workingset_refault (3)
+From: syzbot <syzbot+ccf9f05f06b4b951f3cd@syzkaller.appspotmail.com>
+To: akpm@linux-foundation.org, axelrasmussen@google.com, cem@kernel.org, 
+	david@kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, lorenzo.stoakes@oracle.com, 
+	mhocko@kernel.org, shakeel.butt@linux.dev, syzkaller-bugs@googlegroups.com, 
+	weixugc@google.com, yuanchu@google.com, zhengqi.arch@bytedance.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-xfs_rtcopy_summary() should return the appropriate error code
-instead of always returning 0. The caller of this function which is
-xfs_growfs_rt_bmblock() is already handling the error.
+Hello,
 
-Fixes: e94b53ff699c ("xfs: cache last bitmap block in realtime allocator")
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+syzbot found the following issue on:
+
+HEAD commit:    ea1013c15392 Merge tag 'bpf-fixes' of git://git.kernel.org.=
+.
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=3D16a839b4580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3D513255d80ab78f2=
+b
+dashboard link: https://syzkaller.appspot.com/bug?extid=3Dccf9f05f06b4b951f=
+3cd
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-=
+1~exp1~20250708183702.136), Debian LLD 20.1.8
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d90=
+0f083ada3/non_bootable_disk-ea1013c1.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/ea4d0b50128d/vmlinux-=
+ea1013c1.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/f2e7f1524121/bzI=
+mage-ea1013c1.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit=
+:
+Reported-by: syzbot+ccf9f05f06b4b951f3cd@syzkaller.appspotmail.com
+
+Zero length message leads to an empty skb
+loop0: detected capacity change from 0 to 32768
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+WARNING: The mand mount option has been deprecated and
+         and is ignored by this kernel. Remove the mand
+         option from the mount to silence this warning.
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+xfs: Unknown parameter '=EF=BF=BD=04'
+Oops: general protection fault, probably for non-canonical address 0xdffffc=
+00000009c0: 0000 [#1] SMP KASAN NOPTI
+KASAN: probably user-memory-access in range [0x0000000000004e00-0x000000000=
+0004e07]
+CPU: 0 UID: 0 PID: 5343 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full=
+)=20
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16=
+.3-2~bpo12+1 04/01/2014
+RIP: 0010:mem_cgroup_lruvec include/linux/memcontrol.h:720 [inline]
+RIP: 0010:lru_gen_test_recent mm/workingset.c:275 [inline]
+RIP: 0010:lru_gen_refault mm/workingset.c:296 [inline]
+RIP: 0010:workingset_refault+0x3f8/0x1170 mm/workingset.c:546
+Code: 74 0c 48 c7 c7 e0 6a a2 8f e8 04 05 1d 00 4c 8b 35 3d c7 95 0d 49 81 =
+c6 78 0c 00 00 4d 8d bd 00 4e 00 00 4c 89 f8 48 c1 e8 03 <42> 0f b6 04 20 8=
+4 c0 0f 85 ce 05 00 00 49 63 07 4d 8d 34 c6 4c 89
+RSP: 0018:ffffc9000a7b7880 EFLAGS: 00010206
+RAX: 00000000000009c0 RBX: 0000000000000383 RCX: 0000000000100000
+RDX: ffffc900208d2000 RSI: 0000000000000472 RDI: 0000000000000473
+RBP: ffffc9000a7b7998 R08: ffff88801f7524c0 R09: 0000000000000002
+R10: 0000000000000406 R11: 0000000000000002 R12: dffffc0000000000
+R13: 0000000000000000 R14: ffff88801baf8c78 R15: 0000000000004e00
+FS:  00007fbc75e8f6c0(0000) GS:ffff88808d22a000(0000) knlGS:000000000000000=
+0
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000200000000040 CR3: 000000001234e000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ filemap_add_folio+0x33f/0x540 mm/filemap.c:981
+ do_read_cache_folio+0x32e/0x590 mm/filemap.c:4063
+ freader_get_folio+0x3c7/0x830 lib/buildid.c:58
+ freader_fetch+0xa3/0x750 lib/buildid.c:101
+ __build_id_parse+0x133/0x7d0 lib/buildid.c:289
+ do_procmap_query fs/proc/task_mmu.c:733 [inline]
+ procfs_procmap_ioctl+0x76f/0xce0 fs/proc/task_mmu.c:813
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0xf80 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fbc74f8f7c9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 =
+48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff f=
+f 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fbc75e8f038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007fbc751e5fa0 RCX: 00007fbc74f8f7c9
+RDX: 0000200000000180 RSI: 00000000c0686611 RDI: 000000000000000d
+RBP: 00007fbc75013f91 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007fbc751e6038 R14: 00007fbc751e5fa0 R15: 00007fff29f355e8
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:mem_cgroup_lruvec include/linux/memcontrol.h:720 [inline]
+RIP: 0010:lru_gen_test_recent mm/workingset.c:275 [inline]
+RIP: 0010:lru_gen_refault mm/workingset.c:296 [inline]
+RIP: 0010:workingset_refault+0x3f8/0x1170 mm/workingset.c:546
+Code: 74 0c 48 c7 c7 e0 6a a2 8f e8 04 05 1d 00 4c 8b 35 3d c7 95 0d 49 81 =
+c6 78 0c 00 00 4d 8d bd 00 4e 00 00 4c 89 f8 48 c1 e8 03 <42> 0f b6 04 20 8=
+4 c0 0f 85 ce 05 00 00 49 63 07 4d 8d 34 c6 4c 89
+RSP: 0018:ffffc9000a7b7880 EFLAGS: 00010206
+RAX: 00000000000009c0 RBX: 0000000000000383 RCX: 0000000000100000
+RDX: ffffc900208d2000 RSI: 0000000000000472 RDI: 0000000000000473
+RBP: ffffc9000a7b7998 R08: ffff88801f7524c0 R09: 0000000000000002
+R10: 0000000000000406 R11: 0000000000000002 R12: dffffc0000000000
+R13: 0000000000000000 R14: ffff88801baf8c78 R15: 0000000000004e00
+FS:  00007fbc75e8f6c0(0000) GS:ffff88808d22a000(0000) knlGS:000000000000000=
+0
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f9f4cc08120 CR3: 000000001234e000 CR4: 0000000000352ef0
+----------------
+Code disassembly (best guess):
+   0:	74 0c                	je     0xe
+   2:	48 c7 c7 e0 6a a2 8f 	mov    $0xffffffff8fa26ae0,%rdi
+   9:	e8 04 05 1d 00       	call   0x1d0512
+   e:	4c 8b 35 3d c7 95 0d 	mov    0xd95c73d(%rip),%r14        # 0xd95c752
+  15:	49 81 c6 78 0c 00 00 	add    $0xc78,%r14
+  1c:	4d 8d bd 00 4e 00 00 	lea    0x4e00(%r13),%r15
+  23:	4c 89 f8             	mov    %r15,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 0f b6 04 20       	movzbl (%rax,%r12,1),%eax <-- trapping instruct=
+ion
+  2f:	84 c0                	test   %al,%al
+  31:	0f 85 ce 05 00 00    	jne    0x605
+  37:	49 63 07             	movslq (%r15),%rax
+  3a:	4d 8d 34 c6          	lea    (%r14,%rax,8),%r14
+  3e:	4c                   	rex.WR
+  3f:	89                   	.byte 0x89
+
+
 ---
- fs/xfs/xfs_rtalloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 6907e871fa15..bc88b965e909 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -126,7 +126,7 @@ xfs_rtcopy_summary(
- 	error = 0;
- out:
- 	xfs_rtbuf_cache_relse(oargs);
--	return 0;
-+	return error;
- }
- /*
-  * Mark an extent specified by start and len allocated.
--- 
-2.43.5
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
