@@ -1,67 +1,67 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62EC8337BBD
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 16:59:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775632C375E
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 17:01:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765990795; cv=none; b=E8eD+bbhpEw43mOr22YuGbglR5/Mz/X9jsn2Mg2hXZJTwUYrt2AbuYiPLEThAUtfMJkc8Sr8LbDU6TVyIWlPBM/bJqf617lV8iVDt4GqKNtTm/Y7w9W6TqJlXCeYJKQo/QZg1Qy+wwIlWKbD0Go0QstUNg4cQMU3gsvdLAFGocM=
+	t=1765990895; cv=none; b=Lg217HnvYmXKAD61cuIo8W5DaFDaKc+71S/LOxuSjHre2iO0u0e2VqRFjPxRpl2bgCTVZgukI3VWLN+fqxID737zD0URsZKZKh2p55jFr+a9BRPTDIDat06RYvZVe8iDTlQYG54FL6hXMjWKiK9LV1WUGdnq4/cxMw0g6dBx2OU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765990795; c=relaxed/simple;
-	bh=4nT3eL+nqqlKXmzFJdFVnTOdEBe7d+tIOLCTKsUwt94=;
+	s=arc-20240116; t=1765990895; c=relaxed/simple;
+	bh=fpFnDzhZoXXWC4Kp8cec3dL+gf7xE0QtOfAURsHF3rM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=npF6bpHapjhDmwq5EJTJpbqvWqxDvqBvBxOSMzC6fa0kZsXoUHjTACgxt9H9vaXBJ5JwMNVtsxUjKV/JW63fkP5R4sC6B6Y5Y9whIAMFwBJO2V4Ia8canSr+0a8UhOBuQ3iykAMHzr4p21ebngjwSmiBJI+SG7GvjRGyJpPILK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FQ91WYlr; arc=none smtp.client-ip=209.85.214.180
+	 In-Reply-To:Content-Type; b=o3Du6MVh7bwZ8sIg0+jkecJjdHER+4H7oEL/uAfnNnGg/q35udHatoQPvsoQW6bLVi3oqM6znmjjg/xjjblvCL4DJojCegLccvy80p4KWgi+6djipRwJMkI3HzCXzJqA++a50HnHee5Vou7V0KkaRnhwD/2r2AEjUymOMmlmorg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JRNXm6df; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FQ91WYlr"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-29f102b013fso73607045ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 08:59:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JRNXm6df"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-7aa2170adf9so4912963b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 09:01:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765990793; x=1766595593; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1765990893; x=1766595693; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=0JZV4ZTKPnvVOohyqVtnOMKthFN4WCJ75pI/pYQsXF0=;
-        b=FQ91WYlrlb3ZNT2Y346nixu0QlqkDboGLvyhaNMUZ8dYVjcO+eA9CSsnPouB3awBFI
-         ih/Emu3ORhfKb4Cz9185hKIKT37ySgTcqzLRxCZae46WcNukaR3PiuBY1mBY7HUSTMpz
-         wJ669cQUKh5aNIyMPniNwaGCfGkX0hrb2tfRbAlP6w/YlfzWSX0vJtkxntBSTQq2btbL
-         XNcLtBIvRujfs81wv2VRkZAIlaNHy5rV6yO5Kw/057FRH1rojLIoVgHNYvnmn1V7gRxh
-         fZQppAAVFmtHGmhm563AhC7Wuj/cgutgNiYvdSg3B4T6j4o2pH8rJ3jSs0RJszSjcb45
-         DryQ==
+        bh=M+FQObq4BlmA1znanAjBgJXenx2Op3zd07yw7QPGN50=;
+        b=JRNXm6dfFTxJU7MeiG6VfAxetUn2Yymb8CujQpCWkCS5so955BfghZ5PbbwGBsvvxN
+         6Bl7BjhAXs5zuEHUEm3AJYCpUKHdOIDVvLeY+G+yB0lsui8K/R9d4F5vzYYc3q2R9JJF
+         sF0wdZvx46yWUQR1LKZX4GxT4h8+Plr3qElmcP/ai1ph/AnWVWz68ay67R8mSxBqv6tu
+         GbVebgvwy0NXhLmHqz2WQ1cIVuSTWicbJZC2BCo7YIB6QpI+cMCBEHSPAMQdaSCgNPqI
+         ym2dT9H6I8RitVl7RqleKcr7NdEC4XhT+6KMy6kQBwtyuPlP512n/Q5QWHydjYXCIuz0
+         1JeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765990793; x=1766595593;
+        d=1e100.net; s=20230601; t=1765990893; x=1766595693;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=0JZV4ZTKPnvVOohyqVtnOMKthFN4WCJ75pI/pYQsXF0=;
-        b=YzsEQwhee6PgrzMeC2Jd4f4UApbOzOBfuHLIF5DSDdgvDhfwH+nsu+lLk7qypHQNsq
-         aakAIn9+p8wZAwmC/PexgBUjvyqvveRUs5L6RoGoKH9uA2V98O+O8N1h+FBvqopY9An+
-         cFrVgmCPSQN7hxswcr7EE1rpbPCCFYrk36JciXAuzaDcN0thyuSWQQpT/ZAcYpl0cAwo
-         zlJJUWl/BNG5lrO6WOum7a0WWw0i09WluHX5Y1v1t0TZ7/kQMdPy6StRS0vGMwxMkb1K
-         7vboaM3geBnINS8y7uxBVCRxhGkvaZ1w9OoUpqRkPaD6xgxR1Sg1lgI2XYIgvpKnwR7i
-         jfxA==
-X-Forwarded-Encrypted: i=1; AJvYcCXSRrQbAzHHqB72e2UUiTmD/UCX3BtGF4lkVHEgDxsznLETRCw8KvMjbjgYy24JIIU33AAOU1A5ObA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLK5XqxYdr+VkElndImLBctXsxQeVpdRW/C0SNTn+h+Lp2z93f
-	XQoCsjhjPSazGl/yez6NBSFl0joME9Zx8PrJCjj59IhSRoeRb8/l56Ta
-X-Gm-Gg: AY/fxX7GluQdvMnRZCSqXPN3frNaCDnqHCoe8V38zITgmN4esaiJXexbrVEIZRBnTd5
-	HTIF+6WA8wgo6ZwRWhAPGeiGmXsAFfGwd0Z2jC0yz70JLh0H6RuXX1+4I2+feWhIjwoz96Sg+TI
-	ycXoBJ9B6TgWPyzxS3xLymGWLiD+b/RJ+1VD5C0dkEkPAVOFv+XE5xLITQ3lCf2Dj0q9xqs3E5i
-	OihyVYDaZ/d8GEOZq9UNv+cjliYCFziS36Q2cLjBfcm8ry5+QO3My8BHTWk6GdCGl2WukdXEDyv
-	K2MzPf/RsyexksdRfVmYRZG5NQIWna946pSptPIm8RKvB9fPpmJ43vzFCe0Cis7TzUVLxhlWXrE
-	ewW6VvNIpRDte4BHXiQs2aKedJqPjsViCVa68orOA2UCZAynU4kH68bL/8LZsgaN+QAw/vO+gI0
-	nI7LNfR7PjER/gHbQ=
-X-Google-Smtp-Source: AGHT+IFoKMbJ9xsJocF+/SOztzH9OTtMgNQkpOw51+pBJHLXYHTp4rBAb77rmGPybXMBIEZgWFijkA==
-X-Received: by 2002:a17:903:458d:b0:29f:135c:5f25 with SMTP id d9443c01a7336-29f23de670cmr175716925ad.4.1765990793498;
-        Wed, 17 Dec 2025 08:59:53 -0800 (PST)
+        bh=M+FQObq4BlmA1znanAjBgJXenx2Op3zd07yw7QPGN50=;
+        b=Lj3ob+jL4a/vXVznByPxgqfvFqeXKOH5/6RJ+D724/Rk1goKUOotjAnEmOZ5aWzVIF
+         7BZJyDRbjJKw1eMcdE+6ve9v7+XW5JemdTyWM7chBCnuj8M8G6vOd7dHgVHMklLAD2gM
+         +ID8xPMk8baUA1sN5KjPCNHG3POGYYVVrgIdUaX4eDKyPlpzXh5u9okSWFe/MCo1CbPR
+         mgiMKRZBm/w51an20k9OWjd+0tm+lHHSbgOHRd+zmB24rVKd89y5O3yn31bHUlDjpnHV
+         W0rq+Htvd5/Vq/3l0Zj7qSksi3yn23dfOueFhfb9mLcAAGRDo1HFHpPDT0iAholplVEj
+         iNzA==
+X-Forwarded-Encrypted: i=1; AJvYcCXL+hQ2/CejfnGLnRSgKDgZhVvaXFGAR2dWEBsXvmPqVCzD9vQ6jWhwfkx2Uxj7CwCDIuuycIvBBZE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqQCTiqdYLGa/Fk2ZKAzLKE+X0b2RMvI6I2N19Ea7DFkugzFXX
+	iXaxF1msub7RMqdBpyoS50LFpWSkcnmZZnXbj0N4Nd854IaPUeoM5mrQ
+X-Gm-Gg: AY/fxX7V72I+lviQb8PhkYUfobrM+n/aWj2LEFTZl9bUwNzxufaZT6LC272e8vB2Zeh
+	A3iQ215HM0f9ICnUewoStwS+aJ1IorD1XVzmZQjzLrT+R4439dXswBLC95IrEG5KbHKdczuyNso
+	TEVIJKpw5XUL9dz/zPB4mUfseT83PmtOSi0JcmJLawK1Uv8Jfq4PzpsEDaHP63edgeprXRQ09S6
+	aNQhUXE0ENNOakYw3asm6CzKZ6wuw66oiN0osjkyDjMtx+/EVLirzwVtVwbV5cpwZGwXMIza6Np
+	R6BubhQfECj7VKtrsbvlvM8dNMqWYs9dicLLDObcxKLCwZQ1eqeDZ+/BbjVr7fOVOMjrW1FxwK3
+	7pHrXYUqbXpBsKVHhTK4U6awWliZIuXGmi8kWvEVG5+x8TXThAVdBKFv9G/cWy7RBZJkbewj+ZP
+	jLMh9qpI7OSZa/6OQ=
+X-Google-Smtp-Source: AGHT+IGDtgBQ4KQcHdb1LBCvEWJkZILPcU9I11r/0S4sbvgYuq/WsKBoqpiccDIsNUdDum5ypziV5Q==
+X-Received: by 2002:a05:6a00:2993:b0:781:4f0b:9c58 with SMTP id d2e1a72fcca58-7f667935e19mr19497642b3a.15.1765990892447;
+        Wed, 17 Dec 2025 09:01:32 -0800 (PST)
 Received: from [192.168.50.70] ([49.245.38.171])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a2ccdc62f6sm107615ad.29.2025.12.17.08.59.51
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7fe12316e60sm12290b3a.30.2025.12.17.09.01.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Dec 2025 08:59:53 -0800 (PST)
-Message-ID: <62945fac-eab8-4e42-8f3b-dfdee66a1b15@gmail.com>
-Date: Thu, 18 Dec 2025 00:59:50 +0800
+        Wed, 17 Dec 2025 09:01:32 -0800 (PST)
+Message-ID: <f9913843-07c1-4750-9545-a5af47f5fbd3@gmail.com>
+Date: Thu, 18 Dec 2025 01:01:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -69,42 +69,46 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/13] dmflakey: override SCRATCH_DEV in _init_flakey
+Subject: Re: [PATCH 02/13] ext4/006: call e2fsck directly
 To: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>
 Cc: Anand Jain <asj@kernel.org>, Filipe Manana <fdmanana@suse.com>,
  "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
  linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 References: <20251212082210.23401-1-hch@lst.de>
- <20251212082210.23401-2-hch@lst.de>
+ <20251212082210.23401-3-hch@lst.de>
 Content-Language: en-US
 From: Anand Jain <anajain.sg@gmail.com>
-In-Reply-To: <20251212082210.23401-2-hch@lst.de>
+In-Reply-To: <20251212082210.23401-3-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
- > where to create the custome dm table.
-
-typo
-s/custome/custom/
-
-
->   _cleanup_flakey()
->   {
->   	# If dmsetup load fails then we need to make sure to do resume here
->   	# otherwise the umount will hang
->   	test -n "$NON_FLAKEY_LOGDEV" && $DMSETUP_PROG resume $FLAKEY_LOGNAME &> /dev/null
->   	test -n "$NON_FLAKEY_RTDEV" && $DMSETUP_PROG resume $FLAKEY_RTNAME &> /dev/null
-
-
-> -	$DMSETUP_PROG resume flakey-test > /dev/null 2>&1
-> +	test -n "$NON_FLAKEY_DEV" && $DMSETUP_PROG resume flakey-test > /dev/null 2>&1
-
-flakey-test target? Appears to be a typo for $FLAKEY_NAME;
-I'll send a separate patch fixing the existing bug.
-
-The rest looks good.
+Looks good
 
 Reviewed-by: Anand Jain <asj@kernel.org>
 
-Thanks.
+Thanks
+
+On 12/12/25 16:21, Christoph Hellwig wrote:
+> _check_scratch_fs takes an optional device name, but no optional
+> arguments.  Call e2fsck directly for this extN-specific test instead.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   tests/ext4/006 | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/ext4/006 b/tests/ext4/006
+> index 2ece22a4bd1e..ab78e79d272d 100755
+> --- a/tests/ext4/006
+> +++ b/tests/ext4/006
+> @@ -44,7 +44,7 @@ repair_scratch() {
+>   	res=$?
+>   	if [ "${res}" -eq 0 ]; then
+>   		echo "++ allegedly fixed, reverify" >> "${FSCK_LOG}"
+> -		_check_scratch_fs -n >> "${FSCK_LOG}" 2>&1
+> +		e2fsck -n "${SCRATCH_DEV}" >> "${FSCK_LOG}" 2>&1
+>   		res=$?
+>   	fi
+>   	echo "++ fsck returns ${res}" >> "${FSCK_LOG}"
+
