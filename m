@@ -1,295 +1,305 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB621313E34
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 11:08:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEAAE32572F
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 12:23:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765969692; cv=none; b=pH2fylVdcdK33TimBw4EoUkjjUdmNGlMtOhYRXTF4QAKt3yAx+5SV4XE6/IPPI45jonuRTduE+QMYahV3tsyJMl6IQ4m6CSmoM0m9yPLar/BlxVqUnK18sizIKI7uOl/E1mj071LCahQiNABnIVWsqeKiLgcv5IX+EYMNil7K5k=
+	t=1765974236; cv=none; b=hIHNaDjBuT9MO67nQ2akqG/tNDp7cyiu/PPznY79zZ4XrafjFdKRSSDwUxNlC90a5GDMbFdI0UcrN2RV9GSD4Re2VB7ZSMrhkgGOueLtuKa6klfyIMyxh6zi7KquKNiRnanctrzS6PHIaDpSxBR4yABwki6b8fphZN7cXCgHnRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765969692; c=relaxed/simple;
-	bh=/Hamfa+ksUPdhkEmwzS5MOtzi1jBdH0AppoWRU6R3rU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=unJs7E/dBTAtXLBmEmAwyLbyIC0Veq5HPqYgaZ57/grzy0+l0vlG2Pj+0LoXpCJ8uCjB1zC9G5BHiHIxIFmFYaIShz0zbhB8KCJnUf+vEWVA2rwieh5Im2bitiTW9npqchVQns+pRbrcqO/NS1061YWQ0Sp7BEEyPKxSgmZTfHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gyQhGvcK; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1765974236; c=relaxed/simple;
+	bh=6+NHnw9iJyLKGMs0iTEF9pIQd9u6Gerh+nYPcNRAirE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=h2dPt76mbHHT8Tof/3Qsb7M5i6M4ylSbi3v4SzjX3Fmi1kMCKcKFQFrODjHpHdpLG0yZAk1//PYqXPMGD1pIiHiKHS2t5vOqqQZcpRejq6Bb9HMBkm7wkNA3FNMwfZ1g+WCoGbanb+rw9k0Ew4LDHtov7nbOkUeuY7wnrirL6AM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=q66cb5Lr; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Mvv88HZj; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=A9sXhjHy; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=lFVMxk77; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyQhGvcK"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-42e33956e76so2594918f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 03:08:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765969689; x=1766574489; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=w2KXIuUHTxG+9PFYORsRCGlcPMBrjzhW5oYcDljb92E=;
-        b=gyQhGvcKxDEXQCDLsSLxEWmkprkPU6qYX+C+Cd3fL/lqHE54xpTnZ7UUh1wXIxflAb
-         sWTp73fZYVhymrGuSbvXhSlCQ/Huv1xbRKxgn1fIqYyMbvLcnqOlTSLrTF7JaxLZThEV
-         sv6C7gQdOo4ErDQ0F79zvaQ+W+FH5Hh8Wr/PsLJ/zFl9VDcMu0+VVNnf7AiertFxgdLv
-         NYtsoJNjNl2Fy6+kUq+rO2uxVQ5yomceqW9ETJunz7in47TIeylYOckhVZoi219jcG15
-         h6IALuizX6irbnmPoxGJyjpsbkfabTZQ8uvL76f86PgaWNluRMUSj5ssxgHa1rhPyrYr
-         GF/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765969689; x=1766574489;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=w2KXIuUHTxG+9PFYORsRCGlcPMBrjzhW5oYcDljb92E=;
-        b=EVB+wmTmNf2qVUSSofo4q7qvHuR5mxddm571Mltg/dbhSVK7aWn77wdAFRCuJsYb0O
-         CPoDBkmQsaMpX8dTy6IYOttnbZVhzkj7eKJt0HY00bVe109HOXraBxRd/r57PyZjgpoK
-         unXI/JDHBrva26psUC0D7MISBycWW1Zs0iOpFTzg12z3u0mXcGj0eCyjQaB0waknPqPN
-         HFtz2u/Wm/VhKNyN7TMtp0dsboeyv7pLSG3JV/bf1ylleJuNmhKE6CciFOeSiTbtKLS+
-         l7yvQGPJYvHnMsIWM9hPxViBkGO/cy8eitmB7IA9EhqzAYWxJakyD2raX0XToeT/Ym8G
-         Cnbw==
-X-Gm-Message-State: AOJu0YxWnP5VsmxMA15jAusK+jggNeGQIKHaiudMkRXQ84eTTzovV4p0
-	pqoLZ3lx1RbhU+6TdtsqfXyi3CA+geYKlMOuZTSWJUFiqmJtjE7TVZqbTBHMmvue
-X-Gm-Gg: AY/fxX57XLaCfe89ehQ0PPLFeAQxYdBFMlO0Db38mvOQm3V2gq/jKQm0EzeBQ2fH24g
-	X3YidwjfPLgRsJ+IifUvtrHSd2/Smrg+Y7t2yQVx4dhX0vBCNsav2Ds8YyGe7XiVwrlR3yzw9al
-	5DcxmBghe5MWncFcp+WaecXR7bzrH9a/+JOadeRYYd6QwuiRJTAKNKbmy4y9TTFu611yQrLQvu9
-	XZZwDcpKXadREWeMQpB4FEapAU+vVv/40xhD3+/GO4HpjykMPknogH+S/zPd+gtCql8Kjw5uojP
-	CNUufyzfzciQ5R5ZYa033kZrOwNtUXacZRLCGE/48UqyrK1bYvFOnW+O2XWxhZAV42bdy+IVoFS
-	rALmwcYUR7+732WJB8id+3zVYAXi3LSJslmqzWYfha6ickHpYXM9shWLG3fnZw9Uptc999T6mow
-	TIwkzuiJ3xUMh8jihhQfuvux5W
-X-Google-Smtp-Source: AGHT+IEcVr9Um4oTkJrJR6C/4as1vBkK1dDxZbVqhSEpOXb+50QRnO5wuBPyVokXqzgeKOhKUSrNrA==
-X-Received: by 2002:a05:6000:4205:b0:431:66a:cbc2 with SMTP id ffacd0b85a97d-431066acffcmr5774700f8f.44.1765969688839;
-        Wed, 17 Dec 2025 03:08:08 -0800 (PST)
-Received: from f13.tail696c1.ts.net ([2a01:e11:3:1ff0:513a:a454:7a0:65ba])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4310adf6eabsm3945879f8f.38.2025.12.17.03.08.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Dec 2025 03:08:08 -0800 (PST)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	djwong@kernel.org,
-	hch@infradead.org,
-	david@fromorbit.com
-Subject: [PATCH v5] xfs: test reproducible builds
-Date: Wed, 17 Dec 2025 12:06:53 +0100
-Message-ID: <20251217110653.2969069-1-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="q66cb5Lr";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Mvv88HZj";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="A9sXhjHy";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="lFVMxk77"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E01B35BCF6;
+	Wed, 17 Dec 2025 12:23:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1765974232; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+KXbxG00KylL9Jx4UXbfEWiE2yGrlSZ5Ct4ZfTRaRr0=;
+	b=q66cb5Lr/+mGepj7IKoPjBLkpB6KaOtn7SEz7dvm45cGZNY3VfoOz7AbZQobQUg5C0O0WO
+	4pfQyP7U5rb2KoJxNTBkbkDOxINiegMFDIqbg54iO4hdbuolqcwHtu++RkkVlzc97wEytJ
+	UbeYZyPD4mMX7C7p3Cwi8mMk5VCC9Lc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1765974232;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+KXbxG00KylL9Jx4UXbfEWiE2yGrlSZ5Ct4ZfTRaRr0=;
+	b=Mvv88HZjFE2s5uBPp/B+pktpF11rBOPtuu6/K2EapyNO8Ewy8MDZjEY5H/QOWIpWL7TwRn
+	tuFZjLz5b5jL2SAg==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1765974231; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+KXbxG00KylL9Jx4UXbfEWiE2yGrlSZ5Ct4ZfTRaRr0=;
+	b=A9sXhjHy+rYYrLaLfZ6gkG5/YGksPNEJqgye+HKCh3fSt5S/pnu9snpaoxaUJr8tgIrq55
+	4WyuZrcMUamQZiKN4jgFymAVUJVH7jJ6k44Sjz6nAA6WI5gEQ7ZBBdglHO7J2o9lw9QZwJ
+	GkBFmW14IKONB4m34e51tgYRlAnb4Yk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1765974231;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+KXbxG00KylL9Jx4UXbfEWiE2yGrlSZ5Ct4ZfTRaRr0=;
+	b=lFVMxk77ZSL+qZ99xkNGBGiWTKPc3h2DLxR/fwTvkg99QcGsfpeBLPlu41ew/YKvJF4n15
+	r9d97yvAy0RakXDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C6FCA3EA63;
+	Wed, 17 Dec 2025 12:23:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id BcaKMNegQml4FAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 17 Dec 2025 12:23:51 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 4155CA0927; Wed, 17 Dec 2025 13:23:43 +0100 (CET)
+Date: Wed, 17 Dec 2025 13:23:43 +0100
+From: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, 
+	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, Jan Kara <jack@suse.cz>, 
+	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, 
+	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>, Jeff Layton <jlayton@kernel.org>, 
+	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	gfs2@lists.linux.dev, io-uring@vger.kernel.org, devel@lists.orangefs.org, 
+	linux-unionfs@vger.kernel.org, linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
+	linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 05/10] fs: allow error returns from
+ inode_update_timestamps
+Message-ID: <j47ue7pzvtbg76hs5z7wov2ftjh2nnr4xxsslliiqjks5cmpwf@vz275nqw2bqb>
+References: <20251217061015.923954-1-hch@lst.de>
+ <20251217061015.923954-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251217061015.923954-6-hch@lst.de>
+X-Spam-Flag: NO
+X-Spam-Score: -3.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.991];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[20];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.com:email,imap1.dmz-prg2.suse.org:helo]
 
-With the addition of the `-p` populate option, SOURCE_DATE_EPOCH and
-DETERMINISTIC_SEED support, it is possible to create fully reproducible
-pre-populated filesystems. We should test them here.
+On Wed 17-12-25 07:09:38, Christoph Hellwig wrote:
+> Change flags to a by reference argument so that it can be updated so that
+> the return value can be used for error returns.  This will be used to
+> implement non-blocking timestamp updates.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Jeff Layton <jlayton@kernel.org>
 
-v1 -> v2:
-- Changed test group from parent to mkfs
-- Fixed PROTO_DIR to point to a new dir
-- Populate PROTO_DIR with relevant file types
-- Move from md5sum to sha256sum
-v2 -> v3
-- Properly check if mkfs.xfs supports SOURCE_DATE_EPOCH and
-  DETERMINISTIC_SEED
-- use fsstress program to generate the PROTO_DIR content
-- simplify test output
-v3 -> v4
-- Add _cleanup function
-v4 -> v5
-- copy _cleanup from common/preamble
+Looks good. Feel free to add:
 
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- tests/xfs/841     | 173 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/841.out |   3 +
- 2 files changed, 176 insertions(+)
- create mode 100755 tests/xfs/841
- create mode 100644 tests/xfs/841.out
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-diff --git a/tests/xfs/841 b/tests/xfs/841
-new file mode 100755
-index 00000000..60982a41
---- /dev/null
-+++ b/tests/xfs/841
-@@ -0,0 +1,173 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Chainguard, Inc. All Rights Reserved.
-+#
-+# FS QA Test No. 841
-+#
-+# Test that XFS filesystems created with reproducibility options produce
-+# identical images across multiple runs. This verifies that the combination
-+# of SOURCE_DATE_EPOCH, DETERMINISTIC_SEED, and -m uuid= options result in
-+# bit-for-bit reproducible filesystem images.
-+
-+. ./common/preamble
-+_begin_fstest auto quick mkfs
-+
-+# Image file settings
-+IMG_SIZE="512M"
-+IMG_FILE="$TEST_DIR/xfs_reproducible_test.img"
-+PROTO_DIR="$TEST_DIR/proto"
-+
-+# Fixed values for reproducibility
-+FIXED_UUID="12345678-1234-1234-1234-123456789abc"
-+FIXED_EPOCH="1234567890"
-+
-+_cleanup() {
-+	cd /
-+	command -v _kill_fsstress &>/dev/null && _kill_fsstress
-+	rm -r -f $tmp.* "$PROTO_DIR" "$IMG_FILE"
-+}
-+
-+# Check if mkfs.xfs supports required options
-+_check_mkfs_xfs_options()
-+{
-+	local check_img="$TEST_DIR/mkfs_check.img"
-+	truncate -s 64M "$check_img" || return 1
-+
-+	# Check -m uuid support
-+	$MKFS_XFS_PROG -m uuid=00000000-0000-0000-0000-000000000000 \
-+		-N "$check_img" &> /dev/null
-+	local uuid_support=$?
-+
-+	# Check -p support (protofile/directory population)
-+	$MKFS_XFS_PROG 2>&1 | grep populate &> /dev/null
-+	local proto_support=$?
-+
-+	grep -q SOURCE_DATE_EPOCH "$MKFS_XFS_PROG"
-+	local reproducible_support=$?
-+
-+	rm -f "$check_img"
-+
-+	if [ $uuid_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support -m uuid= option"
-+	fi
-+	if [ $proto_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support -p option for directory population"
-+	fi
-+	if [ $reproducible_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support env options for reproducibility"
-+	fi
-+}
-+
-+# Create a prototype directory with all file types supported by mkfs.xfs -p
-+_create_proto_dir()
-+{
-+	rm -rf "$PROTO_DIR"
-+	mkdir -p "$PROTO_DIR"
-+
-+	$FSSTRESS_PROG -d $PROTO_DIR -s 1 $F -n 2000 -p 2 -z \
-+		-f creat=15 \
-+		-f mkdir=8 \
-+		-f write=15 \
-+		-f truncate=5 \
-+		-f symlink=8 \
-+		-f link=8 \
-+		-f setfattr=12 \
-+		-f chown=3 \
-+		-f rename=5 \
-+		-f unlink=2 \
-+		-f rmdir=1
-+
-+
-+	# FIFO (named pipe)
-+	mkfifo "$PROTO_DIR/fifo"
-+
-+	# Unix socket
-+	$here/src/af_unix "$PROTO_DIR/socket" 2> /dev/null || true
-+
-+	# Block device (requires root)
-+	mknod "$PROTO_DIR/blockdev" b 1 0 2> /dev/null || true
-+
-+	# Character device (requires root)
-+	mknod "$PROTO_DIR/chardev" c 1 3 2> /dev/null || true
-+}
-+
-+_require_test
-+_check_mkfs_xfs_options
-+
-+# Create XFS filesystem with full reproducibility options
-+# Uses -p to populate from directory during mkfs (no mount needed)
-+_mkfs_xfs_reproducible()
-+{
-+	local img=$1
-+
-+	# Create fresh image file
-+	rm -f "$img"
-+	truncate -s $IMG_SIZE "$img" || return 1
-+
-+	# Set environment variables for reproducibility:
-+	# - SOURCE_DATE_EPOCH: fixes all inode timestamps to this value
-+	# - DETERMINISTIC_SEED: uses fixed seed (0x53454544) instead of
-+	#   getrandom()
-+	#
-+	# mkfs.xfs options:
-+	# - -m uuid=: fixed filesystem UUID
-+	# - -p dir: populate filesystem from directory during creation
-+	SOURCE_DATE_EPOCH=$FIXED_EPOCH \
-+	DETERMINISTIC_SEED=1 \
-+	$MKFS_XFS_PROG \
-+		-f \
-+		-m uuid=$FIXED_UUID \
-+		-p "$PROTO_DIR" \
-+		"$img" >> $seqres.full 2>&1
-+
-+	return $?
-+}
-+
-+# Compute hash of the image file
-+_hash_image()
-+{
-+	sha256sum "$1" | awk '{print $1}'
-+}
-+
-+# Run a single reproducibility test iteration
-+_run_iteration()
-+{
-+	local iteration=$1
-+
-+	echo "Iteration $iteration: Creating filesystem with -p $PROTO_DIR" >> $seqres.full
-+	if ! _mkfs_xfs_reproducible "$IMG_FILE"; then
-+		echo "mkfs.xfs failed" >> $seqres.full
-+		return 1
-+	fi
-+
-+	local hash=$(_hash_image "$IMG_FILE")
-+	echo "Iteration $iteration: Hash = $hash" >> $seqres.full
-+
-+	echo $hash
-+}
-+
-+# Create the prototype directory with various file types
-+_create_proto_dir
-+
-+echo "Test: XFS reproducible filesystem image creation"
-+
-+# Run three iterations
-+hash1=$(_run_iteration 1)
-+[ -z "$hash1" ] && _fail "Iteration 1 failed"
-+
-+hash2=$(_run_iteration 2)
-+[ -z "$hash2" ] && _fail "Iteration 2 failed"
-+
-+hash3=$(_run_iteration 3)
-+[ -z "$hash3" ] && _fail "Iteration 3 failed"
-+
-+# Verify all hashes match
-+if [ "$hash1" = "$hash2" ] && [ "$hash2" = "$hash3" ]; then
-+	echo "All filesystem images are identical."
-+else
-+	echo "ERROR: Filesystem images differ!"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/841.out b/tests/xfs/841.out
-new file mode 100644
-index 00000000..3bdfbfda
---- /dev/null
-+++ b/tests/xfs/841.out
-@@ -0,0 +1,3 @@
-+QA output created by 841
-+Test: XFS reproducible filesystem image creation
-+All filesystem images are identical.
+								Honza
+
+> ---
+>  fs/btrfs/inode.c    |  8 +++++---
+>  fs/inode.c          | 24 ++++++++++++++++--------
+>  fs/nfs/inode.c      |  4 ++--
+>  fs/orangefs/inode.c |  5 ++++-
+>  fs/ubifs/file.c     |  2 +-
+>  include/linux/fs.h  |  2 +-
+>  6 files changed, 29 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index 317db7d10a21..3ca8d294770e 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -6349,13 +6349,15 @@ static int btrfs_dirty_inode(struct btrfs_inode *inode)
+>  static int btrfs_update_time(struct inode *inode, int flags)
+>  {
+>  	struct btrfs_root *root = BTRFS_I(inode)->root;
+> -	bool dirty;
+> +	int error;
+>  
+>  	if (btrfs_root_readonly(root))
+>  		return -EROFS;
+>  
+> -	dirty = inode_update_timestamps(inode, flags);
+> -	return dirty ? btrfs_dirty_inode(BTRFS_I(inode)) : 0;
+> +	error = inode_update_timestamps(inode, &flags);
+> +	if (error || !flags)
+> +		return error;
+> +	return btrfs_dirty_inode(BTRFS_I(inode));
+>  }
+>  
+>  /*
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 17ecb7bb5067..2c0d69f7fd01 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2095,14 +2095,18 @@ static bool relatime_need_update(struct vfsmount *mnt, struct inode *inode,
+>   * attempt to update all three of them. S_ATIME updates can be handled
+>   * independently of the rest.
+>   *
+> - * Returns a set of S_* flags indicating which values changed.
+> + * Updates @flags to contain the S_* flags which actually need changing.  This
+> + * can drop flags from the input when they don't need an update, or can add
+> + * S_VERSION when the version needs to be bumped.
+> + *
+> + * Returns 0 or a negative errno.
+>   */
+> -int inode_update_timestamps(struct inode *inode, int flags)
+> +int inode_update_timestamps(struct inode *inode, int *flags)
+>  {
+>  	int updated = 0;
+>  	struct timespec64 now;
+>  
+> -	if (flags & (S_MTIME|S_CTIME|S_VERSION)) {
+> +	if (*flags & (S_MTIME | S_CTIME | S_VERSION)) {
+>  		struct timespec64 ctime = inode_get_ctime(inode);
+>  		struct timespec64 mtime = inode_get_mtime(inode);
+>  
+> @@ -2119,7 +2123,7 @@ int inode_update_timestamps(struct inode *inode, int flags)
+>  		now = current_time(inode);
+>  	}
+>  
+> -	if (flags & S_ATIME) {
+> +	if (*flags & S_ATIME) {
+>  		struct timespec64 atime = inode_get_atime(inode);
+>  
+>  		if (!timespec64_equal(&now, &atime)) {
+> @@ -2127,7 +2131,9 @@ int inode_update_timestamps(struct inode *inode, int flags)
+>  			updated |= S_ATIME;
+>  		}
+>  	}
+> -	return updated;
+> +
+> +	*flags = updated;
+> +	return 0;
+>  }
+>  EXPORT_SYMBOL(inode_update_timestamps);
+>  
+> @@ -2145,10 +2151,12 @@ EXPORT_SYMBOL(inode_update_timestamps);
+>   */
+>  int generic_update_time(struct inode *inode, int flags)
+>  {
+> -	flags = inode_update_timestamps(inode, flags);
+> -	if (flags)
+> +	int error;
+> +
+> +	error = inode_update_timestamps(inode, &flags);
+> +	if (!error && flags)
+>  		mark_inode_dirty_time(inode, flags);
+> -	return 0;
+> +	return error;
+>  }
+>  EXPORT_SYMBOL(generic_update_time);
+>  
+> diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+> index 84049f3cd340..221816524c66 100644
+> --- a/fs/nfs/inode.c
+> +++ b/fs/nfs/inode.c
+> @@ -671,8 +671,8 @@ static void nfs_set_timestamps_to_ts(struct inode *inode, struct iattr *attr)
+>  
+>  static void nfs_update_timestamps(struct inode *inode, unsigned int ia_valid)
+>  {
+> -	enum file_time_flags time_flags = 0;
+>  	unsigned int cache_flags = 0;
+> +	int time_flags = 0;
+>  
+>  	if (ia_valid & ATTR_MTIME) {
+>  		time_flags |= S_MTIME | S_CTIME;
+> @@ -682,7 +682,7 @@ static void nfs_update_timestamps(struct inode *inode, unsigned int ia_valid)
+>  		time_flags |= S_ATIME;
+>  		cache_flags |= NFS_INO_INVALID_ATIME;
+>  	}
+> -	inode_update_timestamps(inode, time_flags);
+> +	inode_update_timestamps(inode, &time_flags);
+>  	NFS_I(inode)->cache_validity &= ~cache_flags;
+>  }
+>  
+> diff --git a/fs/orangefs/inode.c b/fs/orangefs/inode.c
+> index d7275990ffa4..3b58f31bd54f 100644
+> --- a/fs/orangefs/inode.c
+> +++ b/fs/orangefs/inode.c
+> @@ -875,11 +875,14 @@ int orangefs_permission(struct mnt_idmap *idmap,
+>  int orangefs_update_time(struct inode *inode, int flags)
+>  {
+>  	struct iattr iattr;
+> +	int error;
+>  
+>  	gossip_debug(GOSSIP_INODE_DEBUG, "orangefs_update_time: %pU\n",
+>  	    get_khandle_from_ino(inode));
+>  
+> -	flags = inode_update_timestamps(inode, flags);
+> +	error = inode_update_timestamps(inode, &flags);
+> +	if (error || !flags)
+> +		return error;
+>  
+>  	memset(&iattr, 0, sizeof iattr);
+>          if (flags & S_ATIME)
+> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+> index ec1bb9f43acc..71540644a931 100644
+> --- a/fs/ubifs/file.c
+> +++ b/fs/ubifs/file.c
+> @@ -1387,7 +1387,7 @@ int ubifs_update_time(struct inode *inode, int flags)
+>  		return err;
+>  
+>  	mutex_lock(&ui->ui_mutex);
+> -	inode_update_timestamps(inode, flags);
+> +	inode_update_timestamps(inode, &flags);
+>  	release = ui->dirty;
+>  	__mark_inode_dirty(inode, I_DIRTY_SYNC);
+>  	mutex_unlock(&ui->ui_mutex);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 66d3d18cf4e3..75d5f38b08c9 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -2399,7 +2399,7 @@ static inline void super_set_sysfs_name_generic(struct super_block *sb, const ch
+>  extern void ihold(struct inode * inode);
+>  extern void iput(struct inode *);
+>  void iput_not_last(struct inode *);
+> -int inode_update_timestamps(struct inode *inode, int flags);
+> +int inode_update_timestamps(struct inode *inode, int *flags);
+>  int generic_update_time(struct inode *inode, int flags);
+>  
+>  /* /sys/fs */
+> -- 
+> 2.47.3
+> 
 -- 
-2.52.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
