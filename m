@@ -1,197 +1,104 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA0D350A1B
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 12:42:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 043B336CE02
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 14:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765975351; cv=none; b=YHPSCv2W63N0dUEOlmnPaSo1tw7m+yxlMyqIonUMFkCggOdVvMy0PMNWMfgBLoj3k7ajBRq+0F/XP/PBw1AXA5C4pzlt6Y7VQR5Nm/EuXLuLEsPvsitviRXbot92vCwnxOOAeWHuyke+zcrI8g0bv67+OGefoMGlU7RoN/KnfPg=
+	t=1765982519; cv=none; b=LVrt21M4IgpXH9H4LRSMjBuJbDV9/FAJWYQyKkAnaQC7GDEpicols3mxmRWouU/DhriW6BkjgSmhCv/rmWBWIx0gqSj2iGv0qnd7D1chzl0SPYu4PXl4NNem6THkbs/GsVCcKhXBdKZidI2qXlKgy+GOwVG9Avu83a93mlhCYxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765975351; c=relaxed/simple;
-	bh=BgyZH9Lq6PUbACHJrPVyiXxQg8gNucfjWaGUktOVPvA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CC0vIs2+SRu+rH1vhYVeDQWFK3rIXorS6hv9I2bYgF3VDJ+r0YOuBDILIW6IGDl3ldH/Qefa7IPWfZi300xP/N9rayPC0QoKFa+zoh0r6T0KOUmIKEO/gW1tW4rPYCQXM52wQDFXf/f/BpnJTMjnGtTA340Gahjd4gCE5II6dOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=a56aVGMj; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=EM2At4C2; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=a56aVGMj; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=EM2At4C2; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1765982519; c=relaxed/simple;
+	bh=5SzQPt2tmUp7e95QFU8h05fUZ9+ifiUggg68rkvF/UU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cA8JzlK1GaLQOmjHiPbU0dILqqv0uTm7O9empioMC7wna10PQCl/PpZgUN99I8i82Sh7OPGCeVtGBtuRNcGkQKanKalInn/oTVQfhYM0lCMatuc6KN5GwhyhKqmNI7p20Cce7NEuYNOCqfiC7dM71gecKE9gKA7criaGGtPsolc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ltj/jeq7; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="a56aVGMj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="EM2At4C2";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="a56aVGMj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="EM2At4C2"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 186F85BCF8;
-	Wed, 17 Dec 2025 12:42:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1765975345; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MvZL3WPwwLagDUEBdiS3N24cxsJRy97UBGLmu0SgiWg=;
-	b=a56aVGMj0kst528k5fM83MBSiUUP1ExJ6+hm7lKF4DuthbszXMhLRK/4prA/Xi3veetPsL
-	1FxXQGEYI6xeyYruR72CLCodkv7S0DG7gCJocLY2hiU3g32mscOCAVLKTQfytgbtlvc/h3
-	N3zyCJl7agpHI8TlOxMklJ9D7MzAOPA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1765975345;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MvZL3WPwwLagDUEBdiS3N24cxsJRy97UBGLmu0SgiWg=;
-	b=EM2At4C2BKWwLeD76Gc7lnI11b5w81+nDNLjgylvh8PQ29xLBA5OEhNJCJw0CzZQrz9PFD
-	EowZTDQSfM684EDA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=a56aVGMj;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=EM2At4C2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1765975345; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MvZL3WPwwLagDUEBdiS3N24cxsJRy97UBGLmu0SgiWg=;
-	b=a56aVGMj0kst528k5fM83MBSiUUP1ExJ6+hm7lKF4DuthbszXMhLRK/4prA/Xi3veetPsL
-	1FxXQGEYI6xeyYruR72CLCodkv7S0DG7gCJocLY2hiU3g32mscOCAVLKTQfytgbtlvc/h3
-	N3zyCJl7agpHI8TlOxMklJ9D7MzAOPA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1765975345;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MvZL3WPwwLagDUEBdiS3N24cxsJRy97UBGLmu0SgiWg=;
-	b=EM2At4C2BKWwLeD76Gc7lnI11b5w81+nDNLjgylvh8PQ29xLBA5OEhNJCJw0CzZQrz9PFD
-	EowZTDQSfM684EDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E58B43EA63;
-	Wed, 17 Dec 2025 12:42:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ZTlhNzClQmnEJQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 17 Dec 2025 12:42:24 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 3CC90A0927; Wed, 17 Dec 2025 13:42:20 +0100 (CET)
-Date: Wed, 17 Dec 2025 13:42:20 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, Jan Kara <jack@suse.cz>, 
-	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, 
-	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>, Jeff Layton <jlayton@kernel.org>, 
-	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	gfs2@lists.linux.dev, io-uring@vger.kernel.org, devel@lists.orangefs.org, 
-	linux-unionfs@vger.kernel.org, linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 08/10] fs: add support for non-blocking timestamp updates
-Message-ID: <2hnq54zc4x2fpxkpuprnrutrwfp3yi5ojntu3e3xfcpeh6ztei@2fwwsemx4y5z>
-References: <20251217061015.923954-1-hch@lst.de>
- <20251217061015.923954-9-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ltj/jeq7"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2a0b4320665so53465745ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 06:41:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1765982517; x=1766587317; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=l0wZpduSA/Xljb/4OZQf98r4uBlmoIJOoY3MO9Qodo0=;
+        b=ltj/jeq7zwcxW42dDddmV7hK8CrDx4eiuQBHaPw8T9dgXgOftkJa5VJsE8sJenytav
+         QQTpiqFlB3Bb/fZUuQlpXxoKTMkR5cDjOdjuzmBbRYQy1c/piADMNAOzmbDzCSerL8W3
+         g9UMmlYhSt8BdMKeoZ992n8K8RVlOm8cr+9U3nERz1oL3LJOl/epZf2TFHYBft5eH+hC
+         jX5lSb+em/uz4Lu7zMJwsYZtmloHtJ9IqEbJzqPVQ4Q3y4BfP1XiRL0CxtN498rkTocF
+         m4RFSgGC0Bz+i2HS/lOSLB/rxZ91MuRsu7KcA+NmDrWlvwC/+kFY4gWuUL4EuOSRId4Y
+         JRPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765982517; x=1766587317;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=l0wZpduSA/Xljb/4OZQf98r4uBlmoIJOoY3MO9Qodo0=;
+        b=Rw+e3+TvHGpSHHWlxq6Hz8h5fqQfd2365ZJT17zCHUQRQhzLbHb7Id0G4+EfIMCWVt
+         Lzznd3sABjvXobn7oWsMWQ/LcCR0S7yyf2ToW0e8XgkhdhCk1Nq50UQ5ikDs/VzEtCNE
+         v5bYg1B1T78EviE5EYkNa5Efxf5pz86H6lW1Jen8EHl8F7VRGMhv2RagLJ1PcYt1X/TE
+         eoo90WyF20e/T5sC+bvqTpnGESjLrqeJdHK9au5M5lRGhNAaWUyMrI9DvE0vDKKWFoJf
+         ypITdg0LYV2ta0v1aJPrdDXFwOivGeW/PSJzbD3Fgo0wilyN6tfg/nWbrIUjHX/UlIls
+         cx8g==
+X-Gm-Message-State: AOJu0YwiVau/0KnJ42WQJuKkEd25sZJMa+SiJoWsnY/QqobdmVtG+2hg
+	MKk4uR3pYVMcCvjZEEimXdMrQxrEdfORzpacaiZrZs2Nzrz9btZj9y+b9xs6AQ==
+X-Gm-Gg: AY/fxX7d8fGt0eYcGCr5YzoWA0AWwyP4okpXb51ZDu2YNIOZPAF4Q0J9xCDFaN5HbfR
+	cOCR8t06X3Ajqp80cBApyajyLX3rfhRw1akhtnvT4FDUV+VDYp7KRMijgB4172FVnlu2m9Y/Ak4
+	JzNCl9i+l8x7doHVaH+JIe2eXYP3v5Wa6i20J3q9/BJKiAX1LLZiNl3bCicrVr+p1RVLsu7oNe6
+	3RiL1e02Yx9kD/gSkpS7q5VRpe2jPA8aykXd+R/aG6smEFNTcHcqdx2oPwLdPg17Vvj0DWz5vkK
+	07DiKVktbXQ7VBTv9zMOzVLWPBXybEXPkg8pyuXawNoCyrtV2W9R1KUmnQzkBfcpMRJTECKIGve
+	7WFGnf5sWHivrX7aZ5lApFZo6thqgmPpuknn8HIjzMRSWrygOoMHO1LpbI88RBtDwPI2101bHFF
+	rA1QwMQkle4SSgkMUdGW396UC458CbmbEu7JBwBeclBv2VphxPt0aydfr2gBYyoyY9
+X-Google-Smtp-Source: AGHT+IE4VabQn7etKn9BYvxqGeRLFlB3Ckx97QEvjagYODhd9lpSnuVxR1b/+RmWFyibI4XFRY5EAA==
+X-Received: by 2002:a17:902:cccb:b0:2a0:97d2:a25d with SMTP id d9443c01a7336-2a097d2a470mr152636395ad.15.1765982516706;
+        Wed, 17 Dec 2025 06:41:56 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.205.246])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a110f6374asm85914065ad.63.2025.12.17.06.41.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Dec 2025 06:41:56 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	hch@infradead.org,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v2] xfs: Fix the return value of xfs_rtcopy_summary()
+Date: Wed, 17 Dec 2025 20:11:33 +0530
+Message-ID: <c6b04ec9ae584af62317d4c1bcf3f84dfab74be0.1765982438.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251217061015.923954-9-hch@lst.de>
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Rspamd-Queue-Id: 186F85BCF8
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[20];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim,lst.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Level: 
+Content-Transfer-Encoding: 8bit
 
-On Wed 17-12-25 07:09:41, Christoph Hellwig wrote:
-> Currently file_update_time_flags unconditionally returns -EAGAIN if any
-> timestamp needs to be updated and IOCB_NOWAIT is passed.  This makes
-> non-blocking direct writes impossible on file systems with granular
-> enough timestamps.
-> 
-> Add a S_NOWAIT to ask for timestamps to not block, and return -EAGAIN in
-> all methods for now.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Jeff Layton <jlayton@kernel.org>
+xfs_rtcopy_summary() should return the appropriate error code
+instead of always returning 0. The caller of this function which is
+xfs_growfs_rt_bmblock() is already handling the error.
 
-...
+Fixes: e94b53ff699c ("xfs: cache last bitmap block in realtime allocator")
+Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_rtalloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> @@ -2110,12 +2110,26 @@ int inode_update_timestamps(struct inode *inode, int *flags)
->  		now = inode_set_ctime_current(inode);
->  		if (!timespec64_equal(&now, &ctime))
->  			updated |= S_CTIME;
-> -		if (!timespec64_equal(&now, &mtime)) {
-> -			inode_set_mtime_to_ts(inode, now);
-> +		if (!timespec64_equal(&now, &mtime))
->  			updated |= S_MTIME;
-> +
-> +		if (IS_I_VERSION(inode)) {
-> +			if (*flags & S_NOWAIT) {
-> +				/*
-> +				 * Error out if we'd need timestamp updates, as
-> +				 * the generally requires blocking to dirty the
-> +				 * inode in one form or another.
-> +				 */
-> +				if (updated && inode_iversion_need_inc(inode))
-> +					goto bail;
-
-I'm confused here. What the code does is that if S_NOWAIT is set and
-i_version needs increment we bail. However the comment as well as the
-changelog speaks about timestamps needing update and not about i_version.
-And intuitively I agree that if any timestamp is updated, inode needs
-dirtying and thus we should bail regardless of whether i_version is updated
-as well or not. What am I missing?
-
-								Honza
-
-> +			} else {
-> +				if (inode_maybe_inc_iversion(inode, updated))
-> +					updated |= S_VERSION;
-> +			}
->  		}
-> -		if (IS_I_VERSION(inode) && inode_maybe_inc_iversion(inode, updated))
-> -			updated |= S_VERSION;
-> +
-> +		if (updated & S_MTIME)
-> +			inode_set_mtime_to_ts(inode, now);
->  	} else {
->  		now = current_time(inode);
->  	}
-> @@ -2131,6 +2145,9 @@ int inode_update_timestamps(struct inode *inode, int *flags)
->  
->  	*flags = updated;
->  	return 0;
-> +bail:
-> +	*flags = 0;
-> +	return -EAGAIN;
->  }
->  EXPORT_SYMBOL(inode_update_timestamps);
->  
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 6907e871fa15..bc88b965e909 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -126,7 +126,7 @@ xfs_rtcopy_summary(
+ 	error = 0;
+ out:
+ 	xfs_rtbuf_cache_relse(oargs);
+-	return 0;
++	return error;
+ }
+ /*
+  * Mark an extent specified by start and len allocated.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.43.5
+
