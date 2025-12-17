@@ -1,106 +1,126 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78A43596FC
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 10:49:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AE92D3ECF
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 11:05:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765968557; cv=none; b=YeJHke6gRvmu+ab4C1aya0LHW0JP9ly2HAMq7TqUdtzWcNpk74k4JbaLcgIZdQvFbz5NAsBYzLK8elURfxw+Jvba4OxJfqpQPvSxKW8WXF2q7RVdww8mnRRf3Pafaymw5r40iBbYjdRJw8sgz1hn06L+BDkzt9uNP+74DSRuxog=
+	t=1765969537; cv=none; b=nfCdxhPBVNsDJUt7XWQuAA/xpFU1+Q01jRiIcNmf1IJLlmOwCjpa9kfRKW09lmHz3AOui1YMXn6R2sHRj04WqJEtIAocd3KDradsbRoBShzDVZDxRqdMJZEaGvYO+Q14XuULWaDm5ut2hg4O9pR8KTY+di+oa2lNshppZ8kl+2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765968557; c=relaxed/simple;
-	bh=TJsmgrNKCp3mOAfDQSATdQkVVrKng36NCfwYBU5/fQI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=S+eJe6rtrjRaDsc/Jcy2Jp8DXwOzOSPp0yW+l8KVgt4rJXl2FBc/SE0D6LbD/UmOasAPdzY0ADthTWDhywHwiwMzRNEbA8z9VjzdacAsusI1YmH90ixlB/OFKZGu8t899l8Nc+NlOIZlJRaVDFxf/jU5eMrq7avjZ9//JL7DA7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MWn0BG5P; arc=none smtp.client-ip=209.85.214.175
+	s=arc-20240116; t=1765969537; c=relaxed/simple;
+	bh=jOOzeFuskF0b3zMzCDtJ6Ai0vdEn2bofpH4NBDxvHuw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EP9LfbB+PbiMrC6+PbukZun6wwtYd/xbzbLfqMOlVnF1dZ3NwcZZ1dmKXnV0bbc+OWOPouZrV6ggSGigcN3y8W+fQtkJqkplsLTwKX2PolU0yyZrxXeBxLLFgtJPAvIp77tBgUKsiVJS++/+K/nvNEhZa+lRW0mc7oPwN8RFlYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CKBLNqIN; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MWn0BG5P"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2a0c09bb78cso3327865ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 02:49:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CKBLNqIN"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-42fb3801f7eso2939540f8f.3
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 03:05:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765968555; x=1766573355; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=vLqnSS6gtLB3nL6UnV05h1/DvCy9WcKXVda4tImQ7Xs=;
-        b=MWn0BG5POJ/j+R+r7Dea/j+wH+9A2X3xy+tuRmTBxjgBhZeEKCvc+cAAS0SbZX7wTz
-         R15a3z7Gv0uS0UF2WxUTBoWe13AVbdIiYOWMiu0JSGMBzht0IHIZxEL8pvKvQxCj2QGJ
-         0F5oXB5AXspPCCQTV2uEwoC8eRXcHkpEopEXH4Dcss81voRoY2MqubKKeYaFS3hpqR7B
-         /L/q3I8eqZLthEekwXRIjuXHiV2WM/XF5gcdzAZ5AmHTJELmoT9nsqa6h/i/yr0gHsj/
-         K4aNPeVm31ln7DJZD8wenDLXDax/fGYbxYBy85TBmCuLkuvA/ODMBx7wDD3J7GZEXSJa
-         XW/Q==
+        d=gmail.com; s=20230601; t=1765969534; x=1766574334; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=45cJBFn49fooodTuJeINIViCiKdrVjM2e94b8Jp9iuM=;
+        b=CKBLNqINHOxpoNdDxHXlnmwFubhwPo9JmMYPyYMnV8ItEcGUK5cuG5CQxTKaOytXYu
+         aM6AA2Hjs5iGJjoOc4CJoGaU4foaicYrePyZvpjn/1LFtcx1UMySmWSe/QSkLtyUpQrY
+         iHh02InvyIv+3gd9KGIYHS6ztDKlTBttvQJaNo8F6ETxVNiVFxBMKn892Dlz5NNMFXPh
+         MEMse/tHCvi9hST53kX5Lqjrxt49c5ljja6ZfPUzF41sSKmMKIsvy8GbLQ5Fcf4KILou
+         9vw4IzdNcN4B4ayGr7BXmtTAyYJUU/cyuOoexa2ThTsSts33hIIYdcYM8J6HteFuPcx7
+         wJJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765968555; x=1766573355;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vLqnSS6gtLB3nL6UnV05h1/DvCy9WcKXVda4tImQ7Xs=;
-        b=njSZKr0orYiZBhoYFEJ+dn1HWLz9pQpxLUv3SxCFe4Z39j9jbK7i1/3X9BiLBaR7Vq
-         Fyz/aXyptL/19YNSfxlEq6jdgnRHSWXYX7fWgBBHWPmg5xB/InbqlL9YiMyJaz9Sy8fH
-         lkzxvU2rLnzzSgKpvRQczdXUDis20tmuK4dYZ1T7XBXtsCqk5WNRSLU+59IGXGfomQ/n
-         M9GaHfGYN7aMS/EJ3wcfyg8WIe6nAp+oqTd7guQN4hk7H/GqQbcUUkID/b0ybQpPZUwt
-         gJkGY1QvDvQ2+0/7BendIzjUqvQixGeyN5Znzl2riHoMys/aZHA/VjmpfISTGK5SbmPD
-         EMXg==
-X-Gm-Message-State: AOJu0Ywnu0QwfYc0LEGVDZ3bMDFrywQJSDfllO3/SkFU5n5NIeQFY2Vw
-	+2UIv+dwC2G81sV9zDXFQcaOOHfXRGwJrTPteSvtI6hoc9ZHGViohDV3
-X-Gm-Gg: AY/fxX6JF2T9xNYBXy741xyLcUPFMzCOQMmHwVU8q70+qB6whVgjgWVxlKTpRqwFaLz
-	5asHpTxZEhZi/l/gwSSDNniuN3giVdy1yPwwEut8Isk7tKC26SJkZMeMXoIKxwWJLZMY5znI/ek
-	n1KC2/IQy7ExVE4pGZ7pe82ZKUuvyDc+pyvym8ibNFM4TbPY0qw4L00uM5Vj7vRIPC25j0zb7Ex
-	Rx4u3teby6WR+/uU69HS34hQpxyoRqtosrSGSRSQIHSPD7RPBxq946LhT7HcinFPmUCXFn7saBu
-	KM32SHaYpNBH7mAFg1QeTo6fq57L8O08QFRm60wau5R+VDiRv+ibGtClKb7Au1XFDg8/3OvHlla
-	afqn6uwqDhAQZagrU90MkMfcK0st3dhh+UUAS542zYYyxSV/pNd9+PyxauyPhxAtAtd6yrTr959
-	B86jy1bMVXAOGJeLGPdga6fl8oIbefMNs8
-X-Google-Smtp-Source: AGHT+IEo7PYVcwyr+PwZYdWLkyvB1XQ/83TJfMGa5mNmB04X2YQ4PElCABT8jeq6uAlV7LpDCk6bRw==
-X-Received: by 2002:a17:903:3804:b0:29e:e642:95dc with SMTP id d9443c01a7336-29eeea041bamr219846535ad.12.1765968555009;
-        Wed, 17 Dec 2025 02:49:15 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.205.246])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a08cae24d4sm137186665ad.15.2025.12.17.02.49.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Dec 2025 02:49:14 -0800 (PST)
-Message-ID: <95693000-79b9-4c9f-a304-e4a18bd3a880@gmail.com>
-Date: Wed, 17 Dec 2025 16:19:10 +0530
+        d=1e100.net; s=20230601; t=1765969534; x=1766574334;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=45cJBFn49fooodTuJeINIViCiKdrVjM2e94b8Jp9iuM=;
+        b=ACQfU75OhrlwXUON46+E7pE+7FufKuqe7a0WfWOWPtYPWfES9bInVmbTkNgOBLS4Fk
+         eIvOGE6phQgnmOKdUGHjTh8ZIHpLg3NG6GSWyKdffykwxq7qFEdjxbBLp6oF3/1pS4B9
+         Ql+SmWR3bwZZQGwJ/8eIMH5CDvsaTt1rv7n7vXmez+hQhgwMxGddeIEa8/6pRu3ZrCQ1
+         UovVM9FJN1hD10bvhPIfeCjsN6TnScQb89AMjRrWam0T52ZOIuyphQay1XtDKjqGUTqr
+         yxslT5qeJmAZyzL6BcNB3lxzH9BuQawni6PF1oIXLH6LVVe9OnT5SnNxJNrBZMNqjd+8
+         qiEg==
+X-Gm-Message-State: AOJu0YzdVq5uitf4Inoc9GjyKjVx9hbdx6yq3VMV9DTTX2k/rmwpzHGp
+	5SbexTZPQV4QjvWqgtz0yMj9UP4a06hhw8PP63hF5Kn/C76elWmt4qE4
+X-Gm-Gg: AY/fxX5qIxiw9XXwkS9GLwwYsnWFp7ljAsdFvCVdWJhWl+AvoklUekgPe/AGejPHmoH
+	DaMu8znwtoujP/8WoVIOvexBEXp+OxKa4aoNaxWaw0fQw9QIeQT1PgZ0rqClrtvjju9v6QlKo9L
+	Kn2hp/rKHwl0S2aNKDsb0QRrwRpi+8muZxLBZuZNzS+FB5Co9d+pCs/7HF9e9XDPkn8SyorHhUv
+	EK7i6+ZMhTFry9PBDgGMO9Orjmcx6zujYmeoPY4ofjlO/ucVgGz8ZwaMpat01+I0Xw7X+AkkYYZ
+	oU9jrAV4p0DcR1wbUlap/Qs+lHbWLZpP63ueWJ2CPnn2zEkRMXGsH4SW6lU1nRTWlQMfnIvjxfu
+	nKnGHgcZrI75yhenTircB8CVq1P3PytUGEAeiTdPJfMOpISeowPvISfbMKtIu1U9M/iXDSkxokr
+	S+4xdT8HWX/wars1tOeMklVDlcdXoDbTdSqIujCnSmNE0SpZ9mxitdHs0=
+X-Google-Smtp-Source: AGHT+IHydv075/K0K8RdjWg6S1iUJcEnm5byGWJgVTrHrILSp8ZictR/JV8yGOvpJnBppEnDrbh8ag==
+X-Received: by 2002:a05:6000:2f83:b0:431:907:f307 with SMTP id ffacd0b85a97d-4310907f51bmr4603411f8f.48.1765969533610;
+        Wed, 17 Dec 2025 03:05:33 -0800 (PST)
+Received: from ?IPv6:2a01:e11:3:1ff0:8936:c18c:c9ea:69ff? ([2a01:e11:3:1ff0:8936:c18c:c9ea:69ff])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4310ade7fc2sm4100677f8f.22.2025.12.17.03.05.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Dec 2025 03:05:33 -0800 (PST)
+Message-ID: <d2ca8c4a0e268821ed0268c8d6613215ed5a6499.camel@gmail.com>
+Subject: Re: [PATCH v4] xfs: test reproducible builds
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
+Date: Wed, 17 Dec 2025 12:05:31 +0100
+In-Reply-To: <aUHSk4SqAS2RS0Xy@dread.disaster.area>
+References: <20251215193313.2098088-1-luca.dimaio1@gmail.com>
+	 <aUCSSuowzrs480pw@dread.disaster.area> <aUDryjk9wdZZQ5dz@infradead.org>
+	 <aUHSk4SqAS2RS0Xy@dread.disaster.area>
+Autocrypt: addr=luca.dimaio1@gmail.com; prefer-encrypt=mutual;
+ keydata=mQINBGGqRu4BEACybdvi9+LqKuWA/P9HW7+wzGtIbFL2PR/vgJZqLzAscGrJB3ZvpdT2h
+ daDdjRX7Maod9EAZceZYl2YVLZ6Q54qhm1hlEp4Iw6/adryfzulrJPX39mvqpJNE6gSkatwUDekhC
+ AJpBbpq2aB79wOF08++KofqNW1r0xMIQ/KVoPryE4jNL2y99bEvUpe4S9TEyWTwsv/I0nEIX4SMgf
+ VmW9XY842p9Bj6lws5U2dENIU8OD3cgK4uhfueb/ggkYg/5ZcblIBdVY0xDiFCqyTDr8+TVK2Algr
+ M+r5MDPUKQXpIxh+gD84PcX8VXDHsmZaWsZmdkryiZ5RFammebqoIdxLF0oqwgUpaA8Ed4hlPAzmd
+ TdVjMwFo01IHzFkZvS0g90qVXTf1fTSVG4JZU2gAasKVl0VDh4yJlzK3c1rWueqISv6AiD+BA6sPu
+ 4zscdBckK6diftYINuGV6Bfw+v+2AFvjCq8isfCQPXY8XHTg+5lktGN6+45SUEghDpeacSM+G/q25
+ qCLKbi6dzAtjCDeR8b6o0lRQ645/5fMU4CSyanfsf7YRkw2RqA6pRM3q/i4nlvznMLxR42iNc1BMY
+ A3t1jv6RIEE36eke9Ube0p0TsEisGGYo4NTVO4RUeMeSG3waYfLB0eXHe9Ph/K0FrTBq6XE65KwRO
+ Bwk0tB6lU0+jwARAQABtCVMdWNhIERpIE1haW8gPGx1Y2EuZGltYWlvMUBnbWFpbC5jb20+iQJOBB
+ MBCgA4FiEECdpUF1+FXVXQxDERHMOHTl7ICj4FAmGqRu4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgE
+ CF4AACgkQHMOHTl7ICj5gag/+JtIKsPwWRJWnnexbGS/gGaZ81GtZ4skW/UHhQqfc44//ntToy3uw
+ 2PFaPB+5WLlA/XAzpLBFjLD5ZscFtHW7/ICGxrBqB/Q6AULoz0zsDhJ8YmO68A5YYNkGCLbWzando
+ vrY/GykUEMT1EsReaIHhLpL/+3jsXGyIsztFi6qkjfDsFT+306+llIhIxgY+ZI/B/wlI41BKmSae+
+ 5WOR4oZb080Famy/5hjx/Mi0AYu2A6cRpw2k+l2/u+aEvunmkgkgB186tA/JhoOPYQvT5xVQ5GYRu
+ vcX1kHscYD+Tgx3DhkMS1XqZihH4UE9Ec6QeOJTWrK1czRFTJpTOgPAMmksMdgU8YKKHj0dafCNl3
+ /2gld0Q2s5/tAGPpPuOPJf5GUtcOn1Qxr7Re2pyrQdcdr/jUdy1GVHAldzOZlBID3u0dTUGWLsPDA
+ dvwGyiwdZiNgnHxTEWchpFo0mwi5S/3+sWcPWAJO2zEVfkqyNhmHSW5EBrwe9nhCT5uqF8dEKb4tf
+ FxAAgPAiFfnLhweVxkPIvPK6/rIZo8F6t6qSXibbTIjdi9pLSDMY0m8u/fRZ06DsciFIfrWG1LXlu
+ 14mDpr4zQSUELe1RRU1NEfD87TyYehjPvEewM6bZlRJ4SLaWQFoRW3OKH7IN1ODUn7T9TIx1uuzs4
+ 4ViZ2BeR0ow9RQc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] xfs: Fix the return value of xfs_rtcopy_summary()
-Content-Language: en-US
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org
-References: <d4209ce013895f53809467ec6728e7a68dfe0438.1765949786.git.nirjhar.roy.lists@gmail.com>
- <aUKFFyGAOEIclGTs@infradead.org>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <aUKFFyGAOEIclGTs@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
+On Wed, 2025-12-17 at 08:43 +1100, Dave Chinner wrote:
+> On Mon, Dec 15, 2025 at 09:19:06PM -0800, Christoph Hellwig wrote:
+> > On Tue, Dec 16, 2025 at 09:57:14AM +1100, Dave Chinner wrote:
+> > > > +_cleanup() {
+> > > > +	rm -r -f "$PROTO_DIR" "$IMG_FILE"
+> > > > +}
+> > >=20
+> > > After test specific cleanup, this needs to call
+> > > _generic_cleanup()
+> > > to handle all the internal test state cleanup requirements.
+> >=20
+> > There's no such thing as _generic_cleanup, and none of the
+> > _cleanup()-using tests that I've looked at recently hooks into any
+> > kind of generic cleanup routine.
+>=20
+> I forgot to mention: the lack of _generic_cleanup() doesn't mean my
+> review comment should be ignored - the new custom _cleanup()
+> function above still needs to do the relevant generic cleanup work
+> that is done in common/preamble::_cleanup()...
+>=20
+> -Dave.
 
-On 12/17/25 15:55, Christoph Hellwig wrote:
-> On Wed, Dec 17, 2025 at 11:07:42AM +0530, Nirjhar Roy (IBM) wrote:
->> xfs_rtcopy_summary() should return the appropriate error code
->> instead of always returning 0. The caller of this function which is
->> xfs_growfs_rt_bmblock() is already handling the error.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> Fixes tag?
-
-Fixes e94b53ff699c ("xfs: cache last bitmap block in realtime allocator")
-
-I will send a v2 with the fixes tag and Darrick's RB. Thank you for 
-pointing this out.
-
---NR
-
-
->
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
-
+Ack, incoming thanks for the review
+L.
