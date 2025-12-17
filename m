@@ -1,118 +1,112 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BDCA2D7D59;
-	Wed, 17 Dec 2025 06:11:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C45C3346A0E
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 09:51:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765951906; cv=none; b=JqIupl4UAipgLq5sk9iz4skLjQwhhlVe5JQKryH48JwLXghDD2LtCApYWL2GofgXoug63v47d4ZtkzQd2Mme0iWkDev2qi5DBTEZzsUrCu687pxb1iZc4z9iRoF9ZsX0foybRpEa5SFB/EYHZv55byHomx3DgmA3VAvr6j6r8NQ=
+	t=1765965073; cv=none; b=I+ZTXYZWwpNSI7oSDhYG73yngfFdVi1r8ccvc2ybrFmGhFUExeylvPleK9Vjqv7mNBgXKmn/SoxpcRzaPUPOOn3wJnM4CFMl+0ealaEqHRp45uHm+fBAlV7B0M6hpUj5j6SxCh93XNjWV2C2j4QHqvwvpH1+hzuNTHH0coBmRRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765951906; c=relaxed/simple;
-	bh=SrA7qsD1ZHCG6NpygoKeYJhfW6+gPDS881cuKnQ9DtY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gugJ7gmGeVclnv+3eFYRtVu8J22OsaHtX+0bhqti7ibvUpnZExmA6BVRkPX7tWoItOgxGOsVlIIFpEZltnKe3/HE46HQ9dv75w1xQFNiTNVlxCyikbu9XPkumDJbRAxyBsVPjyFsERWFgEXZrl2/f8GhicJCm244Ts1u5NjqO1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fukiHv2S; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1765965073; c=relaxed/simple;
+	bh=KrFTDy9r0W6KxFMAeWGNaHfFbo9S4PqJ/K1n0gKJvBY=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=n9cSI1iaQ5t0RHKPejmkEv4Gcs8v1jvFKnu4T7XvyOcAEFLqAQALbPv5Qteb6quQ56n1tiaNMjeiqMrFTygY/qwPeUc5l90HUkJ6W4rcoQ9+Z0gm65nxrGdb2P2gH1zGw0MVADc2DpFA6/awP9/+nCqDShRJQr4bunl1vNXQzjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WvYiUpkr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fukiHv2S"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=k3MKL94CqBOtbHrV9HTrqEtgonR+Dmw6W5Z34uX7xSQ=; b=fukiHv2Sx7+LWvTgtx6FV6JF/L
-	lDw11PwhtR12JQZZn6hFFhedENF10/NlrWisUiJBbF2Ry2j7SVDWcmYgoSNgtfRYUdIkRpHHVLtOd
-	+9KsBGMXBVLMN7wOMD70KN2ZmoYfdi/k8Mdve6k0/RDxVpEVfKpEmqJgu+DwPs+G1YmHX2EJBZ3OY
-	zUi8RMoiMPEblNMX2k22DTa1oC1f6Hi/SprYgFZFCmIW9dj0f06gTvDdCVfzoNS0vUGYyvuWY3hQ/
-	DIamRgfunUBt3ovzB3etmj8CK9H50D8pTvpb8JBN1dQYGsP9pl44oj0XWLi55M0jFn0tSdWD5ZLbW
-	pH5C86kQ==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vVklD-00000006E7T-1Ptj;
-	Wed, 17 Dec 2025 06:11:43 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	io-uring@vger.kernel.org,
-	devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: [PATCH 10/10] xfs: enable non-blocking timestamp updates
-Date: Wed, 17 Dec 2025 07:09:43 +0100
-Message-ID: <20251217061015.923954-11-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251217061015.923954-1-hch@lst.de>
-References: <20251217061015.923954-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WvYiUpkr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A54D1C4CEF5
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Dec 2025 09:51:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765965073;
+	bh=KrFTDy9r0W6KxFMAeWGNaHfFbo9S4PqJ/K1n0gKJvBY=;
+	h=Date:From:To:Subject:From;
+	b=WvYiUpkrae0HUFgFkGOSRlFaTbOsSmDLfu2cE0kAaHpaPZwLdZyMmc5EdznayjfuS
+	 /yBY8PcrrAo4eGLOWTX1UjRqVK7Dtz2Q65Oc1FGWFa/Uvttm0MrkBWsgkVRxzjQevr
+	 5nQ9FJZhpuS/BKmiQj716lDuvR2m/1v6b4DxY10w2AS4zY7cMduzFC2ytfpPnMGfUE
+	 /CgkrQUYUUh5/z99+fFztgV7sdBKjhMouI4q52/yEAvwq8pNMoC9JABbv2Esni7r8D
+	 VqtW/z/SvoWGD0lu0W+Wa6Jk9307QOS7Cxz3T/bytE9FclGUoSyjvtMOhj1nqozmQU
+	 q3XVSDTwJ6vFw==
+Date: Wed, 17 Dec 2025 10:51:09 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to f401306d72f2
+Message-ID: <bn373xetzspynudrs7vxikq7fcrf5vljraazztkzrz7hgvhdbg@lragoe5jucwf>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-The lazytime path using the generic helpers can never block in XFS
-because there is no ->dirty_inode method that could block.  Allow
-non-blocking timestamp updates for this case by replacing
-generic_update_times with the open coded version without the S_NOWAIT
-check.
 
-Fixes: 66fa3cedf16a ("fs: Add async write file modification handling.")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jeff Layton <jlayton@kernel.org>
----
- fs/xfs/xfs_iops.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+Hi folks,
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e12c6e6d313e..7b6aa438cebc 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1195,16 +1195,24 @@ xfs_vn_update_time(
- 
- 	trace_xfs_update_time(ip);
- 
--	if (flags & S_NOWAIT)
--		return -EAGAIN;
--
- 	if (inode->i_sb->s_flags & SB_LAZYTIME) {
--		if (!((flags & S_VERSION) &&
--		      inode_maybe_inc_iversion(inode, false)))
--			return generic_update_time(inode, flags);
-+		int updated = flags;
-+
-+		error = inode_update_timestamps(inode, &updated);
-+		if (error)
-+			return error;
-+
-+		if (!(updated & S_VERSION)) {
-+			if (updated)
-+				mark_inode_dirty_time(inode, updated);
-+			return 0;
-+		}
- 
- 		/* Capture the iversion update that just occurred */
- 		log_flags |= XFS_ILOG_CORE;
-+	} else {
-+		if (flags & S_NOWAIT)
-+			return -EAGAIN;
- 	}
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
--- 
-2.47.3
+The for-next branch of the xfs-linux repository at:
 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+f401306d72f2 xfs: factor out a xlog_write_space_advance helper
+
+17 new commits:
+
+Chaitanya Kulkarni (1):
+      [2145f447b79a] xfs: ignore discard return value
+
+Christoph Hellwig (13):
+      [8dc15b7a6e59] xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file system
+      [982d2616a290] xfs: validate that zoned RT devices are zone aligned
+      [dc68c0f60169] xfs: fix the zoned RT growfs check for zone alignment
+      [4846ee1098ee] xfs: add a xlog_write_one_vec helper
+      [3215ad1d5183] xfs: set lv_bytes in xlog_write_one_vec
+      [36a032902569] xfs: improve the ->iop_format interface
+      [0782c1c41deb] xfs: move struct xfs_log_iovec to xfs_log_priv.h
+      [1a3a3b917d22] xfs: move struct xfs_log_vec to xfs_log_priv.h
+      [72f573863f96] xfs: regularize iclog space accounting in xlog_write_partial
+      [2d394d9a73c9] xfs: improve the calling convention for the xlog_write helpers
+      [998d1ac52da7] xfs: add a xlog_write_space_left helper
+      [f1e948b51c93] xfs: improve the iclog space assert in xlog_write_iovec
+      [f401306d72f2] xfs: factor out a xlog_write_space_advance helper
+
+Darrick J. Wong (2):
+      [5990fd756943] xfs: fix a UAF problem in xattr repair
+      [f06725052098] xfs: fix stupid compiler warning
+
+Haoxiang Li (1):
+      [fc40459de825] xfs: fix a memory leak in xfs_buf_item_init()
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_log_format.h |   7 -
+ fs/xfs/libxfs/xfs_sb.c         |  15 +++
+ fs/xfs/scrub/attr_repair.c     |   2 +-
+ fs/xfs/xfs_attr_item.c         |  29 ++--
+ fs/xfs/xfs_bmap_item.c         |  10 +-
+ fs/xfs/xfs_buf_item.c          |  20 ++-
+ fs/xfs/xfs_discard.c           |  27 +---
+ fs/xfs/xfs_discard.h           |   2 +-
+ fs/xfs/xfs_dquot_item.c        |   9 +-
+ fs/xfs/xfs_exchmaps_item.c     |  11 +-
+ fs/xfs/xfs_extfree_item.c      |  10 +-
+ fs/xfs/xfs_file.c              |  58 ++++++--
+ fs/xfs/xfs_icreate_item.c      |   6 +-
+ fs/xfs/xfs_inode_item.c        |  49 ++++---
+ fs/xfs/xfs_log.c               | 292 ++++++++++++++++-------------------------
+ fs/xfs/xfs_log.h               |  65 ++-------
+ fs/xfs/xfs_log_cil.c           | 111 ++++++++++++++--
+ fs/xfs/xfs_log_priv.h          |  20 +++
+ fs/xfs/xfs_refcount_item.c     |  10 +-
+ fs/xfs/xfs_rmap_item.c         |  10 +-
+ fs/xfs/xfs_rtalloc.c           |  14 +-
+ fs/xfs/xfs_trans.h             |   4 +-
+ 22 files changed, 393 insertions(+), 388 deletions(-)
