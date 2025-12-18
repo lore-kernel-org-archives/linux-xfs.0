@@ -1,88 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F697237163;
-	Thu, 18 Dec 2025 19:49:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB411D5CD4
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Dec 2025 21:27:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766087398; cv=none; b=Y2jffSOuSHwCeht0aKmxzqdqm6Bz0tuSCSiicMUJxPv8DPtVxgeq/s/OUBJVrNRs/NXE6JH934QfvKN55NGiLoBQdeDwDOKMSTNWOWXOBEfomCi1ePj/39kSNJmQ2mSW1LPtCV5itsyWHE7YWmEoDkvSLi9lzlWD5cWiwbnEMZA=
+	t=1766093265; cv=none; b=S79S11B9cvboMZSnfivI6lmJg5SWL/uWbLwaIuBlogHAmIQbQ5YzZgBlEshe4hB6CFNB8G9iWVoBsUHNirdxefuAu/ryidROeu/6vKsUPr9ZwUXcOrDg5j0jWVxUdqDgIb+d/hS55PIPvwsCy6t/A/l6qtXXpNDN5zFjgA+tJx0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766087398; c=relaxed/simple;
-	bh=tkqO3vpCZantWcHwrnUs6vVfsh10cw+iHhymLHph53M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M4FVWqriyXasBAQEostUwGFgde0ns4jBesFwbrfzfvx07pJaIXaa1RPo92cbrOgnH2DNXxVF9eLhFAxTNVyLVP2+nwLWbfooUljpJor6UopQLV4HKK9IJ7G9doU8IlpBhRzRL64wf1EsNO24kvC9J+w2fSE4VvWGzF1NTy3Mj4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nwy2M4z+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766093265; c=relaxed/simple;
+	bh=ssp6MgaMGnnKdoqFisDTFr9/zz2YnKqd/trrmdIJETQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Dt2F9xKTH+Gy/iu/yQ2gweJtEucOIJQMyrFKANqqmKV+9d+zTSSUy0wprPPxOWda+wxp1xrSlKvz6jWAaTNuidBjC7qvBkU8qtvCMkWqylshCNrhXM4wGinasgXlKEW43gIv+PZluWSI1JcGl9WT4iVNtBS9ZEhr0UWzJ/qCOoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IpjYr05S; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nwy2M4z+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 240CFC4CEFB;
-	Thu, 18 Dec 2025 19:49:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766087398;
-	bh=tkqO3vpCZantWcHwrnUs6vVfsh10cw+iHhymLHph53M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nwy2M4z+cTH1GbJEDPiCXP0zgAMzJlC2B4QVH9pcB4WCGESbf+kGMkqvJ3ABgthZK
-	 AeUkmbksp6gw4pTGczouI6d5eDMmZCqzvkCkwwTdzGR6jaPlL3suqrIYwOmZuL8uyC
-	 nk8Mt5qW8DQ+F/DR64NNI6q1VVZ6HpZTDsFZwav7b41pe4DBIx2hzzr73TH2fUjw6W
-	 RAu33WPR88XMvbHgnYx4XVNHBbyvHLuGPcUh1U8TEIYMT54Ac3htoWKdzpNSTCPfZz
-	 iVZR9x9Qs+tgXp02sa74xtIxNnif1y77fNoRGW2tks194k541C6tS1HPithZZsZjU2
-	 DH35id2+NynoQ==
-Date: Thu, 18 Dec 2025 11:49:57 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: brauner@kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/4] fs: send uevents for filesystem mount events
-Message-ID: <20251218194957.GZ7725@frogsfrogsfrogs>
-References: <176602332484.688213.11232314346072982565.stgit@frogsfrogsfrogs>
- <176602332527.688213.9644123318095990966.stgit@frogsfrogsfrogs>
- <aUOQkY3s_D_REIsH@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IpjYr05S"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2a0a33d0585so10797735ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Dec 2025 13:27:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1766093263; x=1766698063; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mtKlcFT+8oac25TBdlE/6dhf/oQjmi8HEpnZr0zN7f8=;
+        b=IpjYr05Sawiov8nyEBLLYIFxseaYcVcYw+kEAWNIRNBYXQnNs2xxUCG1Zr77hbk3uo
+         mjbufBIrqT+dofy0t21RZAZJQSgXAxZbc7pgBx0kujOEHJKWkUARgbiPgFAcbtsYgmHR
+         zfVGJaOcfMspIN9CY3ZayoO355IXWKcEQKzpY1I4R6CRwijqXR5WlY1CiJ2LGTYE6Q8G
+         8HM0AMK6fygecu/1nw3jcCC9qWz5mJNJPlFhxNcGwi9sj2E3YMiFFCFCA8D8RhUXuaH8
+         +FdtY3Xa1BkY/slmg/dtUKYydgIvtfJD3CEm86PjtTNWVR6O/wX/sgchkBdTMCluEIQx
+         Xm7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766093263; x=1766698063;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mtKlcFT+8oac25TBdlE/6dhf/oQjmi8HEpnZr0zN7f8=;
+        b=xIcf0sVU9Vq1FDwEBHE8gQOktiWAr1GD8jz/pjnMzMH9Gq+84CZkEPZT91R4uMJn1S
+         vAiSlZQpvCg12lV96kF9T/ZYwadlBO4dI2BI9ogcFoH+En0P8dCxJv+FzLgnLml2sutP
+         Ku+y4BXaQbmdq1obe18Td0mml5YJj7kpIOi1/xEgDg2AaHfxLMgq/gSUjIbDMk/JMnau
+         Z/U92sJBgOoJsnPBpm7FfEXKuOtgnKo+C+oUanBMYKx3QmzpCBOUXEbImZ1e4kCp0c1x
+         fcObsg7k1QsTZY8cEr0k6ZBFVrbPDSpemxdExrkww0l1rYcBE4CU0YZaptnjXlYSaZ32
+         YywA==
+X-Forwarded-Encrypted: i=1; AJvYcCUEqgrhSLCYWzAZVrnJh9DbakGZdGPm0No1q8LWkrA2qsGmbzSupylGyvN+fQkhYMJM99nWRrRwq1o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBDdAxOiYHwqldENAtgn2FQtjhHt8fLvQ7Pt8X+syQvLOJ5e4A
+	0/eLSVfa6oFytK9MX51sQ8LxY1pwWaBSybHz+fNpvGMA10O7hR5kb82u
+X-Gm-Gg: AY/fxX5zIDUzkL8gcT20MCXDiB4A/CUa9ki2xlsYmGfsOCSZhaGUdT9re1rqgaqHCD7
+	FeoXmNSrb5B8Yn0aEjw4vwdeBQi9UsbQgW8RrjqzlR9Ql7KfgeJTev6IP2S1fMlGaVtiL3kdMc3
+	kCD74rORQimCSwk7/FEYiJcNq+fBCTjAit3zESes/L5Lg1uUpW3D7j/T+yBfHWXubU6Au8R0Jwy
+	CFcQVAZ8xoI7vNn6+LDxL/mHUVjcBe1Lj8nL/BEp7BUlfnVTJ7v5jqR2fK6LfprbM+IAjtqJKE7
+	AWDvDOOLDgtAY3NW/GriqOGRXwDulzx4ChNrqJtHYypb6Tf5MmeFcJjk+vfgWUHDwALdboc4/St
+	o5zSIw6AzsrwurcWJSDwe1AESLCY7oR8anrFN86UFphFKN34uLFgtH1CW9IXaYGBX0M2Ts6tBj9
+	PzsW6Ku4jVgsVqjuM=
+X-Google-Smtp-Source: AGHT+IFy7ceREQxfkIyUxi+oyD4JXaH5EBPvU1D27q3jSDSQbKE1yT3afkwTKTiOeRnMobUoeH8j8g==
+X-Received: by 2002:a17:903:2ac5:b0:2a1:3ee7:cc7a with SMTP id d9443c01a7336-2a2f2223616mr6333525ad.17.1766093263501;
+        Thu, 18 Dec 2025 13:27:43 -0800 (PST)
+Received: from [192.168.50.70] ([49.245.38.171])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a2f3d76ce3sm2079125ad.90.2025.12.18.13.27.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 18 Dec 2025 13:27:43 -0800 (PST)
+Message-ID: <3286164e-71b5-4111-8c63-c6f9856a9dd7@gmail.com>
+Date: Fri, 19 Dec 2025 05:27:40 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aUOQkY3s_D_REIsH@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/13] dmflakey: override SCRATCH_DEV in _init_flakey
+To: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>
+Cc: Anand Jain <asj@kernel.org>, Filipe Manana <fdmanana@suse.com>,
+ "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20251218073023.1547648-1-hch@lst.de>
+ <20251218073023.1547648-2-hch@lst.de>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <20251218073023.1547648-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Dec 17, 2025 at 09:26:41PM -0800, Christoph Hellwig wrote:
-> > +#define ADVANCE_ENV(envp, buf, buflen, written) \
-> > +	do { \
-> > +		ssize_t __written = (written); \
-> > +\
-> > +		WARN_ON((buflen) < (__written) + 1); \
-> > +		*(envp) = (buf); \
-> > +		(envp)++; \
-> > +		(buf) += (__written) + 1; \
-> > +		(buflen) -= (__written) + 1; \
-> > +	} while (0)
+
+
+On 18/12/25 15:29, Christoph Hellwig wrote:
+> _init_flakey already overrides SCRATCH_LOGDEV and SCRATCH_RTDEV so that
+> the XFS-specific helpers work fine with external devices.  Do the same
+> for SCRATCH_DEV itself, so that _scratch_mount and _scratch_unmount just
+> work, and so that _check_scratch_fs does not need to override the main
+> device.
 > 
-> Any reason this is a macro vs an (inline?) function?  Looking at this a
-> bit more, could this simply use a seq_buf?
+> This requires some small adjustments in how generic/741 checks that
+> mounting the underlying device fails, but the new version actually is
+> simpler than the old one, and in xfs/438 where we need to be careful
+> where to create the custom dm table.
+> 
 
-I'll change it to something like this:
+Reviewed-by: Anand Jain <asj@kernel.org>
 
-	seq_buf_init(&sbuf, buf, buflen);
-	envp = env;
-
-	/*
-	 * Add a second null terminator on the end so the next printf can start
-	 * printing at the second null terminator.
-	 */
-	seq_buf_get_buf(&sbuf, envp++);
-	seq_buf_printf(&sbuf, "TYPE=filesystem");
-	seq_buf_putc(&sbuf, 0);
-
-	seq_buf_get_buf(&sbuf, envp++);
-	seq_buf_printf(&sbuf, "SID=%s", sb->s_id);
-	seq_buf_putc(&sbuf, 0);
-
-	...
-
-	/* Add null terminator to strings array */
-	*envp = NULL;
-
-That does look a lot cleaner than opencoding it.
-
---D
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
