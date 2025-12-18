@@ -1,94 +1,113 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AF2D274FD3;
-	Wed, 17 Dec 2025 21:06:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 966BF1D5CD4;
+	Thu, 18 Dec 2025 02:02:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766005587; cv=none; b=bsq1raSUKJFWwi10IZF7RiUmelI1zbPpZXhYXzxsEE2jrwqraIcZv3m8fSc28AuG4HNqjoGO1Q2UKihhVRMCA0tMUFmGcDk71DM/0dLbMWZJlnBIJtJEN8ZyR7TTE6ooHuw8qNRkQsVziEUeP9mpdpdOETwWiWFjCI0Ls+WkGro=
+	t=1766023365; cv=none; b=tPPBp7x9tMWZRMejqz4+KUX6q1dxL491J9m0jEtRuE6H5L78H1bnV5alcISc4HzHC5iAphwfovhHsZfc9zk97vsjvgRvMpfmWtLpnwW+NRTz75Wo+W4vuFQI1Wi0OsUFAG0jX8CC4EPSRAZ1zWAL+Dvw3vX4hp3+DfufN3137b8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766005587; c=relaxed/simple;
-	bh=3R/Ppo+CWmLEoeE4yj1pi1svYkaPa9aVgxENvjF8Mw0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=UM13YmDLu7LsAA8/kNaMIypabOsTSZJpw1Bp1UQvgkxmB+84FK7A4NPSRZyY8EMYlM2aqj+pFm3qRZNBArqGetplYGEBmhF3Du6p2trMrjF5r75cKZQ7vze1MnF1JMDKgd9AIuPhis/tAsr33AaBsrXgVI7lQpp7aZvaB5Xhovk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=XFEPIkng; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
+	s=arc-20240116; t=1766023365; c=relaxed/simple;
+	bh=u76OWdWN5eeNBkvlN2MC7QTcfUrXbEvUqPLzjrIxIdQ=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=KNHL9vw//uCuGYKRdfjVWukXCxTbfMrWYnyTDgfMbegdYm8mfXV21VDkUR7rK4CMRTSfrJySclklCgb7HXYwfqHPCu5nQBiGF6cqQFFKGtSTRyVrlfLtT2OUzF+4ezf2m30t7m4i8OTuOXa6j103bl+8imBK/C203gNblIMgkio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p+j1uXJM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="XFEPIkng"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-	s=202503; t=1766005580;
-	bh=4e6qfyQUfexepA3mnQqRKDxCCmoXp4HRzpDLQinwmME=;
-	h=Date:From:To:Cc:Subject:From;
-	b=XFEPIkngsPCRtUxvYCpaP7MjAjdXNTy2UgI0a/u2UNNatP1BWV8Eu4UzY26GsxJP5
-	 w4EExf0Lf2xKg4uLdimk5P8/uhEx4LFZQypoggQ/VprmakxZ2CzofsQ+4wOawddNwG
-	 fCi0pIw/TQrwpwLyDVuYsDsfzQGrg16EE1Tp2m+shSp/r0JtmmzJqlYcDSDoLw7WWi
-	 ey5b8Z8HYhfaELnf2KBvwlftlsAwssH3/sSPMi69smLgNJeI+FQe86pYVOiMu/RECt
-	 kujC5DdTOfSNvlkUv12VDg0pNfVkghAPoKCPz81o9bN61CdfSAH8sIDomaFtxVxqwE
-	 9IBBF1hzX8m4A==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange secp256r1 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4dWmYl3sDNz4wBJ;
-	Thu, 18 Dec 2025 08:06:19 +1100 (AEDT)
-Date: Thu, 18 Dec 2025 08:06:18 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, <linux-xfs@vger.kernel.org>, Linux
- Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List
- <linux-next@vger.kernel.org>
-Subject: linux-next: Fixes tag needs some work in the xfs tree
-Message-ID: <20251218080618.2e214d02@canb.auug.org.au>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p+j1uXJM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 185CAC116B1;
+	Thu, 18 Dec 2025 02:02:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1766023365;
+	bh=u76OWdWN5eeNBkvlN2MC7QTcfUrXbEvUqPLzjrIxIdQ=;
+	h=Date:Subject:From:To:Cc:From;
+	b=p+j1uXJMSevQnBN9YQCxDFxiW3b9URZnH3oHaYi6tA8aRxPrMUFiZN8dB5g8KTaxJ
+	 g4idxaHWo6DFhmLnlXk/cbandUV2vYdoVUUa5o/3RoFUhnsSfSy0ycil2QNzn/54yh
+	 aEy0Gui8Vno5cTq9dltljvgwSLYKD4ZQZhAPFGN0yHQKVGX1q1EPE0t8LZ3N9+y4Pf
+	 emy6y270WMS2NFOzcwSgQM/bUMagTcUpgk8zC68g3ZXosLDI9z7St/QX1Ec5/I/b6U
+	 yfKGB3C1zIGRxtOGV2bGyFu8YrqGZ4tJhFOGu513jPnCU+BUI7cDgpJzd1fj25Hw1B
+	 puwQqWIJSWeig==
+Date: Wed, 17 Dec 2025 18:02:44 -0800
+Subject: [PATCHSET V4 1/2] fs: generic file IO error reporting
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: brauner@kernel.org, djwong@kernel.org
+Cc: linux-api@vger.kernel.org, hch@lst.de, linux-ext4@vger.kernel.org,
+ jack@suse.cz, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ gabriel@krisman.be, hch@lst.de, amir73il@gmail.com
+Message-ID: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/484kIumJ4yaWBLDABjtIQeR";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-
---Sig_/484kIumJ4yaWBLDABjtIQeR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-In commit
+This patchset adds some generic helpers so that filesystems can report
+errors to fsnotify in a standard way.  Then it adapts iomap to use the
+generic helpers so that any iomap-enabled filesystem can report I/O
+errors through this mechanism as well.  Finally, it makes XFS report
+metadata errors through this mechanism in much the same way that ext4
+does now.
 
-  8dc15b7a6e59 ("xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file system=
-")
+These are a prerequisite for the XFS self-healing V4 series which will
+come at a later time.
 
-Fixes tag
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-  Fixes: ea9989668081 ("xfs: error tag to force zeroing on debug kernels")
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
-has these problem(s):
+--D
 
-  - Target SHA1 does not exist
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=filesystem-error-reporting
 
-Maybe you meant
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=filesystem-error-reporting
+---
+Commits in this patchset:
+ * uapi: promote EFSCORRUPTED and EUCLEAN to errno.h
+ * fs: report filesystem and file I/O errors to fsnotify
+ * iomap: report file I/O errors to the VFS
+ * xfs: report fs metadata errors via fsnotify
+ * xfs: translate fsdax media errors into file "data lost" errors when convenient
+ * ext4: convert to new fserror helpers
+---
+ arch/alpha/include/uapi/asm/errno.h        |    2 
+ arch/mips/include/uapi/asm/errno.h         |    2 
+ arch/parisc/include/uapi/asm/errno.h       |    2 
+ arch/sparc/include/uapi/asm/errno.h        |    2 
+ fs/erofs/internal.h                        |    2 
+ fs/ext2/ext2.h                             |    1 
+ fs/ext4/ext4.h                             |    3 -
+ fs/f2fs/f2fs.h                             |    3 -
+ fs/minix/minix.h                           |    2 
+ fs/udf/udf_sb.h                            |    2 
+ fs/xfs/xfs_linux.h                         |    2 
+ include/linux/fs/super_types.h             |    7 +
+ include/linux/fserror.h                    |   93 ++++++++++++++++
+ include/linux/jbd2.h                       |    3 -
+ include/uapi/asm-generic/errno.h           |    2 
+ tools/arch/alpha/include/uapi/asm/errno.h  |    2 
+ tools/arch/mips/include/uapi/asm/errno.h   |    2 
+ tools/arch/parisc/include/uapi/asm/errno.h |    2 
+ tools/arch/sparc/include/uapi/asm/errno.h  |    2 
+ tools/include/uapi/asm-generic/errno.h     |    2 
+ fs/Makefile                                |    2 
+ fs/ext4/ioctl.c                            |    2 
+ fs/ext4/super.c                            |   13 ++
+ fs/fserror.c                               |  168 ++++++++++++++++++++++++++++
+ fs/iomap/buffered-io.c                     |   23 ++++
+ fs/iomap/direct-io.c                       |   12 ++
+ fs/iomap/ioend.c                           |    6 +
+ fs/super.c                                 |    3 +
+ fs/xfs/xfs_fsops.c                         |    4 +
+ fs/xfs/xfs_health.c                        |   14 ++
+ fs/xfs/xfs_notify_failure.c                |    4 +
+ 31 files changed, 365 insertions(+), 24 deletions(-)
+ create mode 100644 include/linux/fserror.h
+ create mode 100644 fs/fserror.c
 
-Fixes: 66d78a11479c ("xfs: error tag to force zeroing on debug kernels")
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/484kIumJ4yaWBLDABjtIQeR
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmlDG0oACgkQAVBC80lX
-0GzMogf+LNkgB4SD0BST1SUWl8csVFJs1bT0J/J6Nsh5zghMaTDsGVq/Vnh1555I
-oHDgXC8Ih350PCsnIXlqJs6n/6vDtXhA2uWKkjvUVfSOjRw7w0jX0gjH+zc8HSwK
-r7peQRLHUBY4BEZrCfW7IGqgPPnFJVf2qoQy9SGPslqcMxL5z/z8UnM7ibo7yDba
-EQDEzI8q5lmsTJibUVJMYsTWSHoNv7gEeWmtsW6pyCdR9hzL3tZSg5xK9yp1ez8E
-e4AHzLc/gWd4qaQpza/uV1z+3Hp4qS4sAMZUa+F3cHlFFyPNGX/ZzbxhHHNSVsIY
-WmlDlgze6gLsV82r8Mnc+uFCxkMrag==
-=B4+3
------END PGP SIGNATURE-----
-
---Sig_/484kIumJ4yaWBLDABjtIQeR--
