@@ -1,97 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14C0263C8C;
-	Thu, 18 Dec 2025 17:52:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 102BB2FFDE4;
+	Thu, 18 Dec 2025 18:44:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766080345; cv=none; b=ivAAWhSqHi8UQq/Aw2zbzitiQwtEV11h44Jf9T/DgwNRb4souhQsj0LAracV4P23jbyBS8j4+tIvg64PRUtLOCWl9EjAAXEcte+7bi7ik+tfPgdc/HgJQ8WF2eIt5rDpxAhK8mZ8hHsdSEygWmDLtEKJSWbRIiZ9SfN9e2YRd6Q=
+	t=1766083470; cv=none; b=Rf0ePP2UMR+XTQ21ci2mS7JUqtS9C0qU12m9Ehj5MpbvZcKATp4aUMQFelzJiVrtaNFEz2r5uyIuyPhybMDJOxbW5sr1KVyUrrBF2eylX/yzKrSBIOOhaoCCQOl8mQ1D9DL0BlvTDLVeveZcdhXtz+2MrYejHMVLB/dKd/42cJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766080345; c=relaxed/simple;
-	bh=GjRj8GD9Ct5gFbZm6q4oGHIUirMQ9WFABQyjT5hk/8c=;
+	s=arc-20240116; t=1766083470; c=relaxed/simple;
+	bh=JzKypX1p1kuMtIsMz+Vfwf5mXNthFZpyVSu3eHGQbWc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cdn29/CG6HPedVn++6OkqG/gSHJgs902f/vQvJvpSlB2gMiQlun04zvKLpz0x2lJ9BrRKNxM2RV9/t/6zQbcIfxpIfAUAHZPDXjtI1uSrjCyjaAE1PkKgEtp2CCU79PcylDnY7RvmMfB9z4y1jmiETc4ovYjL+4rBWE+OQqYP6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kQBQJgmT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fE7cA2AajSZaJ5xz/40K5fi/BuRiZupBtsiDXLSL8yTA0ZhZb5XLzAxQknzXuoAWDG3CrRUk1+ayA/WflPthNylpyOQoZNsl2C8SXSp+DV+5usfcZS3qDvMwaYtyTQZDR+rDiAG5zozeS+ETAOWwNkjV/dDZeg42Sl78qtNfg6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=He0Y5l/t; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kQBQJgmT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4A5CC4CEFB;
-	Thu, 18 Dec 2025 17:52:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="He0Y5l/t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BA17C4CEFB;
+	Thu, 18 Dec 2025 18:44:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766080345;
-	bh=GjRj8GD9Ct5gFbZm6q4oGHIUirMQ9WFABQyjT5hk/8c=;
+	s=k20201202; t=1766083469;
+	bh=JzKypX1p1kuMtIsMz+Vfwf5mXNthFZpyVSu3eHGQbWc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kQBQJgmT/Mx2fvuJyG1dgT7PQ50moCTuiJkwykU7l8MLHoPXdfihZLmS7XhlBUaEd
-	 pcvXsvoBILIBD5Z+/ASRm8/wS7Xd+mpju6+XGKxzF+q7u56r6L/DMeVSL9Llo0OlAD
-	 FcylYfoziAht4aFfWGZmXJ3ZyTb3B4HFfTxvH9JbYKdsZUR3c+QgLO36UKBakR63mA
-	 cu1NeU/u3Qb7ViYyKS5atFmFttLWirxWiCet5sU4FBy4UH5lFikkwlekDfetRVwgZQ
-	 pKvEA5u/QJMnPnw6KwmC0OxoWP6MZWWMLEl2fBNRUMi/f9LEkylzxXhEtgbWTH/CHk
-	 QU9gjKcD220HA==
-Date: Thu, 18 Dec 2025 12:52:23 -0500
-From: Sasha Levin <sashal@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: patches@lists.linux.dev, stable@vger.kernel.org,
-	syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18-6.6] iomap: adjust read range correctly for
- non-block-aligned positions
-Message-ID: <aUQ_V2O7yDhT1ynN@laps>
-References: <20251203202839.819850-1-sashal@kernel.org>
- <CAJnrk1aSf+bTiRE40BSM72y8p_0CZjeJ4AHF78QbxxPicmPMXw@mail.gmail.com>
+	b=He0Y5l/tWAiEFFRnAceQSIlONvqXcTAPmJCulG7gXITCvP7T4egN9Ipw+oc7RzFKo
+	 S595MEgGyyM9PkM7fZAUybEnFBrrbjfjy4QxBWYe2lljf4yGW5VAqpgYJrCqi9fiI2
+	 Z7Anfrgr+lIrQUWStEhtd49bj+M04HpF3Z6YRAcfeclKWRExJkBe/DyPQYxjPdnROi
+	 4k8hSnmh2jQFbOEb54mz7LloiSsJFZ8UXFdDyy3H+YndaW6ljIxefbES8AfrrX5ud5
+	 M2wBw7IErOtAG4392kdHgjMX/sTxY7LiGAu4XAq8womtGNjdALko7m0VE40Ah6sJeJ
+	 wxGCJgDWcoG5Q==
+Date: Thu, 18 Dec 2025 10:44:29 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: brauner@kernel.org, linux-ext4@vger.kernel.org, jack@suse.cz,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gabriel@krisman.be, amir73il@gmail.com
+Subject: Re: [PATCH 2/6] fs: report filesystem and file I/O errors to fsnotify
+Message-ID: <20251218184429.GX7725@frogsfrogsfrogs>
+References: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
+ <176602332171.686273.14690243193639006055.stgit@frogsfrogsfrogs>
+ <aUOPcNNR1oAxa1hC@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1aSf+bTiRE40BSM72y8p_0CZjeJ4AHF78QbxxPicmPMXw@mail.gmail.com>
+In-Reply-To: <aUOPcNNR1oAxa1hC@infradead.org>
 
-On Wed, Dec 03, 2025 at 03:07:12PM -0800, Joanne Koong wrote:
->On Wed, Dec 3, 2025 at 12:28 PM Sasha Levin <sashal@kernel.org> wrote:
->>
->> From: Joanne Koong <joannelkoong@gmail.com>
->>
->> [ Upstream commit 7aa6bc3e8766990824f66ca76c19596ce10daf3e ]
->>
->> iomap_adjust_read_range() assumes that the position and length passed in
->> are block-aligned. This is not always the case however, as shown in the
->> syzbot generated case for erofs. This causes too many bytes to be
->> skipped for uptodate blocks, which results in returning the incorrect
->> position and length to read in. If all the blocks are uptodate, this
->> underflows length and returns a position beyond the folio.
->>
->> Fix the calculation to also take into account the block offset when
->> calculating how many bytes can be skipped for uptodate blocks.
->>
->> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
->> Tested-by: syzbot@syzkaller.appspotmail.com
->> Reviewed-by: Brian Foster <bfoster@redhat.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Christian Brauner <brauner@kernel.org>
->> Signed-off-by: Sasha Levin <sashal@kernel.org>
->> ---
->>
->> LLM Generated explanations, may be completely bogus:
->>
->> Now I have all the information needed for a comprehensive analysis. Let
->> me compile my findings.
->>
->> ---
->
->I don't think any filesystems had repercussions from this. afaik only
->inlined mappings are non-block-aligned and the underflow of length and
->the overflow of position when added together offset each other when
->determining how much to advance the iter for the next iteration. But I
->have no objection to this being backported to stable. I think if this
->gets backported, then we should also backport this one as well
->(https://lore.kernel.org/linux-fsdevel/20251111193658.3495942-3-joannelkoong@gmail.com/).
+On Wed, Dec 17, 2025 at 09:21:52PM -0800, Christoph Hellwig wrote:
+> >  	long					s_min_writeback_pages;
+> > +
+> > +	/* number of fserrors that are being sent to fsnotify/filesystems */
+> > +	refcount_t		s_pending_errors;
+> 
+> Use the same tab-alignment as the fields above?  Also is this really
 
-Sure, I'll grab that one too. Thanks!
+Will fix.
 
--- 
-Thanks,
-Sasha
+> a refcount?  It's a counter, but not really a reference?  I guess
+> that doesn't matter too much.
+
+<shrug> It does count pending events, but you could also look upon it as
+a count of weak "references" to the super_block since the fserror_event
+object does point to the super_block.
+
+(Not sure what happens if we get more than 2^31 errors...)
+
+> > +static inline void fserror_unmount(struct super_block *sb)
+> > +{
+> > +	/*
+> > +	 * If we don't drop the pending error count to zero, then wait for it
+> > +	 * to drop below 1, which means that the pending errors cleared or
+> > +	 * that we saturated the system with 1 billion+ concurrent events.
+> > +	 */
+> > +	if (!refcount_dec_and_test(&sb->s_pending_errors))
+> > +		wait_var_event(&sb->s_pending_errors,
+> > +			       refcount_read(&sb->s_pending_errors) < 1);
+> > +}
+> 
+> Should this be out of line?
+
+Yes, it's better to hide these details (particularly since there's a fat
+comment about the refcount bias) in fserror.c.
+
+> > +/**
+> > + * fserror_report - report a filesystem error of some kind
+> > + *
+> > + * Report details of a filesystem error to the super_operations::report_error
+> > + * callback if present; and to fsnotify for distribution to userspace.  @sb,
+> > + * @gfp, @type, and @error must all be specified.  For file I/O errors, the
+> > + * @inode, @pos, and @len fields must also be specified.  For file metadata
+> > + * errors, @inode must be specified.  If @inode is not NULL, then @inode->i_sb
+> > + * must point to @sb.
+> > + *
+> > + * Reporting work is deferred to a workqueue to ensure that ->report_error is
+> > + * called from process context without any locks held.  An active reference to
+> > + * the inode is maintained until event handling is complete, and unmount will
+> > + * wait for queued events to drain.
+> > + *
+> > + * @sb:		superblock of the filesystem
+> 
+> The normal convention is to have the arguments documented above the
+> long description.  Any reason to deviate from that here?
+
+Nope.  Fixed.
+
+--D
