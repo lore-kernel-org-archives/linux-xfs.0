@@ -1,40 +1,31 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90B71624C5;
-	Thu, 18 Dec 2025 04:12:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 638281624E9;
+	Thu, 18 Dec 2025 05:09:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766031154; cv=none; b=ACqqTWm530LSDMSb4+VZ7wShkE/NlTW0Hq6NHSHkcuPqM1/sI8nUcCXqmCRDe/VCYXR0v+uq8F8ghlxihuKwz1yK6bRg+WncI2Eypp646odlJZXj6LgljMZ0U6LM16NKZoMo3jifN2pGsrHLn902kWf6UsyiqopTtRe9GbzKYmM=
+	t=1766034580; cv=none; b=pYl2wDnVcsubfqR2iP8tbnlp62PgeDzGukr1+3EYRnOVHmvQ3RazMWO+QSpU7t0dxxaf3eJWHfFPC561u77bDrTQceMOifuKKT44Q1BF/nWiWpb+z5VXhsjas/KYAjSh0hd3JG5FEtPYspxh9ZXvlM67XyJG74C79nwUz0gRuj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766031154; c=relaxed/simple;
-	bh=X9aZiq5TPCCR3pfb5ByiaDaiFXS82MJv8O4ohs17Lyw=;
+	s=arc-20240116; t=1766034580; c=relaxed/simple;
+	bh=L7cRCh9XfiweJ1Paw9yyzJ6Nb1yyIuKHaR3qh2dwQB4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ez/qczoVujsRigy1axiLa6lvOcX4mWtH75zgFW5ZMDcKRpHscq84z4EDqp1F6vVPsltLVr0jLFOXyh6AqikkPDYTqfOYeRCKkp9giL//4IWFsgAVIj6bxj0tYfM8n97HF2XzUbsNBZQpzBJDLJ+YfXktH+KfaOvnfdEUR3Dq7ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NRLcKrYF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NRLcKrYF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30774C4CEFB;
-	Thu, 18 Dec 2025 04:12:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766031153;
-	bh=X9aZiq5TPCCR3pfb5ByiaDaiFXS82MJv8O4ohs17Lyw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NRLcKrYFwhSGiu5Q5+cUjPvVa8rivq1A1st0nIKxkgxFc6DOp/0kNdE7v9uK912lZ
-	 LF3SCmSyk5PWsK+fs6u5yrSPH3F5MuK0O43ZtNYcqeETE6qV4j/Oq8u279FPnLrQJm
-	 UUPNfRFDMYTFtKx8hIownXUsGxIAWP/tG/l8glE9cdc9ZGKHMwi6sL81UR+JtKGq7q
-	 ggi9OGJ91wlh0cQ8xlgGduFr/iZnBfNHK++V371bZtP5emlMMjupaBrudw78LJI+ad
-	 D+Vytnq0KCqfBwWVQtOMl630Nd3H65PiLXBbWaX6ObnXtKr0Z7Xp9oBJyvDeFrTDyQ
-	 TmwWEiwNjGlaw==
-Date: Wed, 17 Dec 2025 20:12:32 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs/649: fix various problems
-Message-ID: <20251218041232.GW7725@frogsfrogsfrogs>
-References: <176590971706.3745129.3551344923809888340.stgit@frogsfrogsfrogs>
- <176590971773.3745129.6098946861687047333.stgit@frogsfrogsfrogs>
- <aUKFBx09MGp4Z2bu@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=T0CM08UyY3wXp5dfvMGiBuIle3ocHaqaZtsN8jkIEIPSrGw1MgeiWDKf+HJKIc3sOFwxqvrWc7UugnkCCGIxTv1Wo56Us1L7bUPU7Ua7le5vsvVoGaQXUBKVbPt8U+JBRIEesKVcvSDzK8J3+LK5Q+RpDU7j7r2JE9SQrGtjoaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1C77667373; Thu, 18 Dec 2025 06:09:27 +0100 (CET)
+Date: Thu, 18 Dec 2025 06:09:26 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: Re: linux-next: Fixes tag needs some work in the xfs tree
+Message-ID: <20251218050926.GA1764@lst.de>
+References: <20251218080618.2e214d02@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,21 +34,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aUKFBx09MGp4Z2bu@infradead.org>
+In-Reply-To: <20251218080618.2e214d02@canb.auug.org.au>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Dec 17, 2025 at 02:25:11AM -0800, Christoph Hellwig wrote:
-> On Tue, Dec 16, 2025 at 10:29:56AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Fix a couple of problems with this new test:
+On Thu, Dec 18, 2025 at 08:06:18AM +1100, Stephen Rothwell wrote:
+> Hi all,
 > 
-> It looks like this patch got dropped again?  While my git repository
-> has the commit ID, I can't find the test in the patches-in-queue or
-> for-next branches.
+> In commit
 > 
-> The changes themselves look sane to me.
+>   8dc15b7a6e59 ("xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file system")
+> 
+> Fixes tag
+> 
+>   Fixes: ea9989668081 ("xfs: error tag to force zeroing on debug kernels")
+> 
+> has these problem(s):
+> 
+>   - Target SHA1 does not exist
+> 
+> Maybe you meant
+> 
+> Fixes: 66d78a11479c ("xfs: error tag to force zeroing on debug kernels")
 
-You might've pulled my for-next branch.  IIRC I've never sent this one
-to the list, so Zorro has never seen it.
+Yes, that's correct.
 
---D
