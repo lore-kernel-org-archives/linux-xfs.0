@@ -1,44 +1,38 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1909A309EFA;
-	Thu, 18 Dec 2025 05:27:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E6331064A;
+	Thu, 18 Dec 2025 06:13:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766035665; cv=none; b=gGPdhs23JY4d0K8KhMLLm+2JlyyqYeJT8eT5itS7hTT7I2bmh5JqA3JdRseOJqFynByLFipI0O9c9qz2iPsmuk9UcVdXtFek0x4kpzhMJpMo+EfD8KTM/RVBDPljbiyrDUrXdftAY3bTRujwnycoOSgJGWLIywOf+JF79G0NouM=
+	t=1766038406; cv=none; b=S6z4KtidsSbGTwiuhX/Xx7ebcXKPCO/MMV3CEZVBh7vckMzX5srM0aOsisBiPmq6khIus1q/su2LNIZS6vKb0VtGBypIqg/Wp3jaoi36Q1uNBnYnCnfJ+j/GnE6kcmpQM6/YxpvMXsROyO8JmGp5hJE6gCqGn6/GKkw7HWnAkGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766035665; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1766038406; c=relaxed/simple;
+	bh=ZBYUW2in9iDytsK8dgp3TVcKqNV9Uzw5cFn++gKN9gs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eMR6LMpV8Jz//uXOsvXwRPWax6GPbdwf+69xl31WjiqWs8qmMjIWl8JBJkuA4mOaIaiKzA1Di+Rr8C8zfdTFTuy4sPKD7GHgqKkGQeEjLUmNCV9nSP57ylL57bDfLUzSzQVgO2PCZFaVYTxqdv9pHbNC6XUmK9BWLBdQdSb62SM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=28KBAo7H; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="28KBAo7H"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=28KBAo7HjnbWTuL3xfxsPubFMH
-	qR+Zk76X4m+bjyA2KAn42hNsd7ppN+9KKZtijFhiLrsSOnAeullz7c6e9Fl2NEb6v0IAEKTQOEGXZ
-	WwsT/fjIkzvlk1B/JdSe+nORW1SodVt8szzS5Fraqn4uRmfPEqA7Tlby4B3BcC291JEvfZeDzg0/Z
-	BMKlC23TruU8bcJv6UHb+pyHNE6Ypbbd6YI1m4M6abcd7+9UgeSD6tBdACNHKL6VMJMXWXNVKMTq1
-	so1bXtxrEO6VoLaq5gg4LSnTwwvuzEcahgJ8UdFSTXhozLRBgauzbfSm0wjZ1TuJrXe8hFF58G3Vm
-	mFxfW0yQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vW6YB-00000007qSx-2Utb;
-	Thu, 18 Dec 2025 05:27:43 +0000
-Date: Wed, 17 Dec 2025 21:27:43 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 4/4] ext4: send uevents when major filesystem events
- happen
-Message-ID: <aUOQz41_6_D7PF3Y@infradead.org>
-References: <176602332484.688213.11232314346072982565.stgit@frogsfrogsfrogs>
- <176602332590.688213.9240067999700074165.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=utHtM6b62jquGsWm+1BwtCC7vgId7eN5rL4rwGVCjjmi/HIdTYlbqStrIF39UEqIwjtXO1Zi5Y7w0sYp/+VVBhsIKSjv1+MkTtei+IjBBfmYUxO18I5Bc7XF+/+6nWHTl8pYJMkN7SrQI2pHGMCm1E6x0x/gO22B67iFhvwnpeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 41DC7227A88; Thu, 18 Dec 2025 07:13:18 +0100 (CET)
+Date: Thu, 18 Dec 2025 07:13:17 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>,
+	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gfs2@lists.linux.dev, io-uring@vger.kernel.org,
+	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 07/10] fs: add a ->sync_lazytime method
+Message-ID: <20251218061317.GA2775@lst.de>
+References: <20251217061015.923954-1-hch@lst.de> <20251217061015.923954-8-hch@lst.de> <ghtgokkzdo7owrkfkpittqlc6xvjhr5w4eprbq5gcszqpmy7z3@7m3ecvlqfrzu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,10 +41,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176602332590.688213.9240067999700074165.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ghtgokkzdo7owrkfkpittqlc6xvjhr5w4eprbq5gcszqpmy7z3@7m3ecvlqfrzu>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Wed, Dec 17, 2025 at 01:30:18PM +0100, Jan Kara wrote:
+> >  	if (flags & I_DIRTY_INODE) {
+> > +		bool was_dirty_time =
+> > +			inode_state_read_once(inode) & I_DIRTY_TIME;
+> > +
+> >  		/*
+> >  		 * Inode timestamp update will piggback on this dirtying.
+> >  		 * We tell ->dirty_inode callback that timestamps need to
+> >  		 * be updated by setting I_DIRTY_TIME in flags.
+> >  		 */
+> > -		if (inode_state_read_once(inode) & I_DIRTY_TIME) {
+> > +		if (was_dirty_time) {
+> >  			spin_lock(&inode->i_lock);
+> >  			if (inode_state_read(inode) & I_DIRTY_TIME) {
+> >  				inode_state_clear(inode, I_DIRTY_TIME);
+> >  				flags |= I_DIRTY_TIME;
+> > +				was_dirty_time = true;
+> 
+> This looks bogus. was_dirty_time is already true here. What I think you
+> wanted here is to set it to false if locked I_DIRTY_TIME check failed.
+> Otherwise the patch looks good.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+Or better set it to false at initialization time and only set it to
+true here to simply things a bit.  But otherwise: yes.
