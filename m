@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31B7E23ABA1
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 09:17:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FCB23ABA1
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 09:17:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766135823; cv=none; b=t91Tav1aZxj4Ax6pNfjWjQhwYa4q8TFztUc4Euko4trDIPVRbFQ62qmPnCfG6s8EnBe0d6+Qe9RHNHOzj9H/S2QFYAJQlOPNYX+XPmKwodeAVrEvYSTshnmnBfcyTRfublN5mMHPw7/jk7xzr9s8w5kmbXefWPa2yHnJ2NBnOE0=
+	t=1766135823; cv=none; b=Ybd57JLIIlzs99IvO2LsmH/EFAJ1c1ucl0pOvwdDWcaR+SscTQAbg9Y3fllZ73Xaa8jIgwE0tFTQsv1ZSnl27MUI4eB+erC/a7KkC3s1tGbQ72W3nVQtMqs/ab8mafe1nZrx+l3oMIYRb65w8exG1j8DrHshap4ZSfk945WLeVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766135823; c=relaxed/simple;
-	bh=91SIQIPdHhmqbQak2n20UiSXXVlkl8Q6FSIHssnLkqM=;
+	bh=+hv4twYuy3JjmcpR8sNktuCkRnKr4VZXDDU9GtPFxWQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YmG1lN2ExrrTiEd3u1JtFLFxgK22zrmGi9+Dvlyfstg4dAKtIVHmXWPb+CWUvsCiQXe2rOzHYYkib+s1WjXBBaTmz0T2V36MTMtCYKY5fERqHWK0oLL5FxSCTa1UqvfNEzxLJwPog8ITG7U5f9h/ACoqfjQpGIciXeQYQttNNjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bVM5VZN+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=MxLFUrbMQxI5QZlK6nsAbjOlwSKS1fWUt/cpaIgNNE6mtJoR9/A4xEp75aq8VrWzKTwxhdkbZ7onLLI3b8FxmH6S1x8fXlOroyYU2VMKwCGLz82OQh6GXwQWHFLgihwHwRvPFTeFYowjdhLFkaZcqDunYtjEpKbH0KTiGtPxM5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=slWltDXT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bVM5VZN+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EBC5C16AAE;
-	Fri, 19 Dec 2025 09:17:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="slWltDXT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B2DDC116B1;
+	Fri, 19 Dec 2025 09:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766135822;
-	bh=91SIQIPdHhmqbQak2n20UiSXXVlkl8Q6FSIHssnLkqM=;
+	s=k20201202; t=1766135823;
+	bh=+hv4twYuy3JjmcpR8sNktuCkRnKr4VZXDDU9GtPFxWQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=bVM5VZN+Km1V+muVJs7QslKbEuiro8cRtq0sYqJeCxfCSj63OzfK/X+jC0RDsk5JM
-	 TZK1GJJrLuAfgVXZBTl9zIkrtWDssitppEZ7WCZvAU2xDnYoGkFQmc8rH63cmI9ukJ
-	 BaxQ/tc88gQodcA7E2tNzVn/tHpvymSY/CUsBdR7Tne+DsRd39Vu8j8qWa7qWDaF5P
-	 I7seqprsdUtr+xdMtLKCPCcZOqoQK7l8r7dI5sU1GoOCYwcwQQa7PYbX3Vxs+IJih1
-	 myGngfVxyun45/ufht0f6LfCQXbaPVJogu/dPV7cjMTKcwMYUiVPHNEdersBBkPhJJ
-	 evYRZQNKWKq1w==
+	b=slWltDXT9vJ8moBVPOhbbH54eUew8OjzINcmo8uW+i23AF7kRth2pfespsbSkgeSG
+	 X20Js2PKbHF/72f6PZm6KLwPsRFAtzEqmRJN7HaxfxwyuFS6HmDH3Yj8GDKKcZ6p6l
+	 V3dARRPNBG824cM29/AXjKFonmvFofdJasxm12sS/9D7J62XftJSRHiwpmcFomsXSq
+	 GhnddgISyAEK6uP6CgGYaFt43Hs+Vl1DkBNVhr5oYu1n7I4PqJ9offn2pAvCV2jJ72
+	 kRcRyxtMl6yEfRtMCOlX7Yxqbqff2BEn+leUQbPJ39blJGE/wG17wvmvJf3BO2GVqe
+	 r3k7KvQA2TA3g==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	Andrey Albershteyn <aalbersh@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>,
 	Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH 2/3] mkfs: use cached report zone
-Date: Fri, 19 Dec 2025 18:12:31 +0900
-Message-ID: <20251219091232.529097-3-dlemoal@kernel.org>
+Subject: [PATCH 3/3] repair: use cached report zone
+Date: Fri, 19 Dec 2025 18:12:32 +0900
+Message-ID: <20251219091232.529097-4-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20251219091232.529097-1-dlemoal@kernel.org>
 References: <20251219091232.529097-1-dlemoal@kernel.org>
@@ -51,18 +51,16 @@ BLKREPORTZONE ioctl() which is slower as it uses the device to get the
 zone report.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-[hch: split out BLKREPORTZONEV2 and BLK_ZONE_REP_CACHED definition into
-another patch]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/xfs_mkfs.c | 7 ++++++-
+ repair/zoned.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index bc6a28b63c24..7088823b3f54 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2623,8 +2623,13 @@ _("Failed to allocate memory for zone reporting.\n"));
+diff --git a/repair/zoned.c b/repair/zoned.c
+index 206b0158f95f..84018a104208 100644
+--- a/repair/zoned.c
++++ b/repair/zoned.c
+@@ -82,8 +82,13 @@ check_zones(
  		memset(rep, 0, rep_size);
  		rep->sector = sector;
  		rep->nr_zones = ZONES_PER_IOCTL;
@@ -75,8 +73,8 @@ index bc6a28b63c24..7088823b3f54 100644
 +			ret = ioctl(fd, BLKREPORTZONE, rep);
 +		}
  		if (ret) {
- 			fprintf(stderr,
- _("ioctl(BLKREPORTZONE) failed: %d!\n"), -errno);
+ 			do_error(_("ioctl(BLKREPORTZONE) failed: %d!\n"), ret);
+ 			goto out_free;
 -- 
 2.52.0
 
