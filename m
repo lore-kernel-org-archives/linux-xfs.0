@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBA42F7ADE
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 15:41:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5588E1F4606
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 23:53:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766158915; cv=none; b=PX+F+ptCh9i/fLq4YIZ/Z/ZsPYkfCElAcIHpZSiGoCbRYUUOUARYUvWi/JIHQK3ya7J3fU+d/vJ4EH6tNz9c0bXWcADTnO9giv0zVx/1PjNtEZMCWxmcPPT09IbHRF4kTPQKsCV/NnAKVoVLcv92BKahP6/5G9yUs88Pz9BYAmg=
+	t=1766188398; cv=none; b=XK2uEz0H3FzM3bTwBh1i7xBZhN4PIa/tfuvtAyq1M+Q58eQtDW5SHtJTFWKt722pxB2EBCfrVS7n1by+mAHsDSEBXxyK1a2XWnBQuEXhYELeFRDu2Qhq5jNiIVcrDpiMONlSW7D9wibUnCPgGRUYQNS9cuT/3CGtULVnuYHwYjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766158915; c=relaxed/simple;
-	bh=qF6k4JDNvTsvU03wQenjry9LLeWf3OtdzZr+yLBinE0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=qFxU/3qpd3lf33gl5OX6OaSQ7Z3g7xKhQEbvGKGIvdW/+dognOzc7V+OfOZmTJFz9PffEeYtbA4fItqI3jw2EZvM5sgikfA8YMmzRNFut33uATnj2F0BxWzvlhjXKvQbo8pn0JxW6Z9pZBWswQvNPINrMuGVoD/4nylQ4YXu8xg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BU1XtyG2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766188398; c=relaxed/simple;
+	bh=Cm3gB/bov9gTjphm6DHwBEGUE/e/QPR7RBUwI2Lr3kM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YsggeUAOv4eGO9AHES9zwDSyaEDnxc3Q+Zl1cxiPRCChZTQQvro9WyRkN7wIhzeNapJ6TE2dl7G84CZ7QAzzMn1pw7A37vATJGM6rNY8S+hL1g8pSfaFK6mpI4dkSMF6MnHkJXwtHXUUCX0SV5shnImXwks7QPmmdZYsm+8eNgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJh0Y9MU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BU1XtyG2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33CCCC4CEF1;
-	Fri, 19 Dec 2025 15:41:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJh0Y9MU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6E8CC4CEF1;
+	Fri, 19 Dec 2025 23:53:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766158915;
-	bh=qF6k4JDNvTsvU03wQenjry9LLeWf3OtdzZr+yLBinE0=;
-	h=Date:From:To:Cc:Subject:From;
-	b=BU1XtyG2FveyMLjWwrx6DrAaXBbUQ6LEZh0NN1Wags5GYLHD6hya0y1OMWldTQWit
-	 rhXHtczvJ9KbRdIJsd2YMxvQbb9uEb/CWbAnnRDcwoE6Y9FRDi9+8XHyj9lQl0IHE6
-	 0pNcEUwYLC/pNtjc0Ihro2kdaDfcqWGTEUuTxDnbN9FBY3J+39gY/BW+GlcSESPXMx
-	 MRpykmPahF9YzMqp87DiE5TN5H5osxcpMJIIeaQgx3SKNsW7dty0CEZP9hvRNz+RVf
-	 hbxOHQ9vPocMRiTmaHvAAmnGHh+YBR5T35437Tgs7w442ux7PYp74OMS5Sr74Fpnt0
-	 QMtodXEmare+A==
-Date: Fri, 19 Dec 2025 07:41:54 -0800
+	s=k20201202; t=1766188397;
+	bh=Cm3gB/bov9gTjphm6DHwBEGUE/e/QPR7RBUwI2Lr3kM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iJh0Y9MUgnKOewoqsYYsfap5+nRKp0RoUX1iM+SLFVz0F0o6EGBt31Sqi1mXGSbmZ
+	 mA6QJz6Wzqof2MuQFszhSvekTUsyWX7kf2KWvAMQP1qk2xT0CgFavNT7nzWD24YzN+
+	 hxl8bVeQRgQrFSR7N8nK4PtUmo0tcXECdSYonRI9pMcfOLLZiScXlK+FnCb3+JwZw8
+	 h5yLbFakNOVa0pnjht95k4cX3iykyvR5oSvb463qnMsFwDLAIFJiXluxCGPfNrsxNL
+	 9UyWWcXC7tQk793Zr0E1SyTn/cl4fHLVZsg5ObBMwn82CTFhNgHWABmqhGh9Hgufoq
+	 +MiUdFhtpb2TQ==
+Date: Fri, 19 Dec 2025 15:53:17 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH] xfs: speed up parent pointer operations
-Message-ID: <20251219154154.GP7753@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Andrey Albershteyn <aalbersh@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] rename xfs.h
+Message-ID: <20251219235317.GF7725@frogsfrogsfrogs>
+References: <20251219054202.1773441-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,183 +44,222 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20251219054202.1773441-1-hch@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Dec 19, 2025 at 06:41:43AM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> currently one of the biggest difference between the kernel and xfsprogs
+> for the shared libxfs files is that the all kernel source files first
+> include xfs.h, while in xfsprogs they first include libxfs_priv.h.  The
+> reason for that is that there is a public xfs.h header in xfsprogs that
+> causes a namespace collision.
+> 
+> This patch renames xfs.h in the kernel tree to xfs_plaform.h, a name that
+> is still available in xfsprogs.  Any other name fitting that criteria
+> should work just as well, I'm open to better suggestion if there are
+> any.
 
-After a recent fsmark benchmarking run, I observed that the overhead of
-parent pointers on file creation and deletion can be a bit high.  On a
-machine with 20 CPUs, 128G of memory, and an NVME SSD capable of pushing
-750000iops, I see the following results:
+I'm cool with this, so
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
- $ mkfs.xfs -f -l logdev=/dev/nvme1n1,size=1g /dev/nvme0n1 -n parent=0
- meta-data=/dev/nvme0n1           isize=512    agcount=40, agsize=9767586 blks
-          =                       sectsz=4096  attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-          =                       exchange=0   metadir=0
- data     =                       bsize=4096   blocks=390703440, imaxpct=5
-          =                       sunit=0      swidth=0 blks
- naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
- log      =/dev/nvme1n1           bsize=4096   blocks=262144, version=2
-          =                       sectsz=4096  sunit=1 blks, lazy-count=1
- realtime =none                   extsz=4096   blocks=0, rtextents=0
-          =                       rgcount=0    rgsize=0 extents
-          =                       zoned=0      start=0 reserved=0
+--D
 
-So we created 40 AGs, one per CPU.  Now we create 40 directories and run
-fsmark:
-
- $ time fs_mark  -D  10000  -S  0  -n  100000  -s  0  -L  8 -d ...
- # Version 3.3, 40 thread(s) starting at Wed Dec 10 14:22:07 2025
- # Sync method: NO SYNC: Test does not issue sync() or fsync() calls.
- # Directories:  Time based hash between directories across 10000 subdirectories with 180 seconds per subdirectory.
- # File names: 40 bytes long, (16 initial bytes of time stamp with 24 random bytes at end of name)
- # Files info: size 0 bytes, written with an IO size of 16384 bytes per write
- # App overhead is time in microseconds spent in the test not doing file writing related system calls.
-
- parent=0               parent=1
- ==================     ==================
- real    0m57.573s      real    1m2.934s
- user    3m53.578s      user    3m53.508s
- sys     19m44.440s     sys     25m14.810s
-
- $ time rm -rf ...
-
- parent=0               parent=1
- ==================     ==================
- real    0m59.649s      real    1m12.505s
- user    0m41.196s      user    0m47.489s
- sys     13m9.566s      sys     20m33.844s
-
-Parent pointers increase the system time by 28% overhead to create 32
-million files that are totally empty.  Removing them incurs a system
-time increase of 56%.  Wall time increases by 9% and 22%.
-
-For most filesystems, each file tends to have a single owner and not
-that many xattrs.  If the xattr structure is shortform, then all xattr
-changes are logged with the inode and do not require the the xattr
-intent mechanism to persist the parent pointer.
-
-Therefore, we can speed up parent pointer operations by calling the
-shortform xattr functions directly if the child's xattr is in short
-format.  Now the overhead looks like:
-
- $ time fs_mark  -D  10000  -S  0  -n  100000  -s  0  -L  8 -d ...
-
- parent=0               parent=1
- ==================     ==================
- real    0m58.030s      real    1m0.983s
- user    3m54.141s      user    3m53.758s
- sys     19m57.003s     sys     21m30.605s
-
- $ time rm -rf ...
-
- parent=0               parent=1
- ==================     ==================
- real    0m58.911s      real    1m4.420s
- user    0m41.329s      user    0m45.169s
- sys     13m27.857s     sys     15m58.564s
-
-Now parent pointers only increase the system time by 8% for creation and
-19% for deletion.  Wall time increases by 5% and 9%.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_attr_leaf.h |    1 +
- fs/xfs/libxfs/xfs_attr.c      |    2 +-
- fs/xfs/libxfs/xfs_parent.c    |   36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index 589f810eedc0d8..da95de8199dd24 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -49,6 +49,7 @@ void	xfs_attr_shortform_create(struct xfs_da_args *args);
- void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
- int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
- int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-+int	xfs_attr_try_sf_addname(struct xfs_da_args *args);
- int	xfs_attr_sf_removename(struct xfs_da_args *args);
- struct xfs_attr_sf_entry *xfs_attr_sf_findname(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 9d1e5ccab106ca..6ca0ee538131a8 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -349,7 +349,7 @@ xfs_attr_set_resv(
-  * xfs_attr_shortform_addname() will convert to leaf format and return -ENOSPC.
-  * to use.
-  */
--STATIC int
-+int
- xfs_attr_try_sf_addname(
- 	struct xfs_da_args	*args)
- {
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index 69366c44a70159..40db7042a30975 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -29,6 +29,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_attr_item.h"
- #include "xfs_health.h"
-+#include "xfs_attr_leaf.h"
- 
- struct kmem_cache		*xfs_parent_args_cache;
- 
-@@ -202,6 +203,16 @@ xfs_parent_addname(
- 	xfs_inode_to_parent_rec(&ppargs->rec, dp);
- 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
- 			child->i_ino, parent_name);
-+
-+	if (xfs_inode_has_attr_fork(child) &&
-+	    xfs_attr_is_shortform(child)) {
-+		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME;
-+
-+		error = xfs_attr_try_sf_addname(&ppargs->args);
-+		if (error != -ENOSPC)
-+			return error;
-+	}
-+
- 	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_SET);
- 	return 0;
- }
-@@ -224,6 +235,10 @@ xfs_parent_removename(
- 	xfs_inode_to_parent_rec(&ppargs->rec, dp);
- 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
- 			child->i_ino, parent_name);
-+
-+	if (xfs_attr_is_shortform(child))
-+		return xfs_attr_sf_removename(&ppargs->args);
-+
- 	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_REMOVE);
- 	return 0;
- }
-@@ -250,6 +265,27 @@ xfs_parent_replacename(
- 			child->i_ino, old_name);
- 
- 	xfs_inode_to_parent_rec(&ppargs->new_rec, new_dp);
-+
-+	if (xfs_attr_is_shortform(child)) {
-+		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
-+
-+		error = xfs_attr_sf_removename(&ppargs->args);
-+		if (error)
-+			return error;
-+
-+		xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->new_rec,
-+				child, child->i_ino, new_name);
-+		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME;
-+
-+		error = xfs_attr_try_sf_addname(&ppargs->args);
-+		if (error == -ENOSPC) {
-+			xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_SET);
-+			return 0;
-+		}
-+
-+		return error;
-+	}
-+
- 	ppargs->args.new_name = new_name->name;
- 	ppargs->args.new_namelen = new_name->len;
- 	ppargs->args.new_value = &ppargs->new_rec;
+> Diffstat:
+>  b/fs/xfs/libxfs/xfs_ag.c               |    2 -
+>  b/fs/xfs/libxfs/xfs_ag_resv.c          |    2 -
+>  b/fs/xfs/libxfs/xfs_alloc.c            |    2 -
+>  b/fs/xfs/libxfs/xfs_alloc_btree.c      |    2 -
+>  b/fs/xfs/libxfs/xfs_attr.c             |    2 -
+>  b/fs/xfs/libxfs/xfs_attr_leaf.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_attr_remote.c      |    2 -
+>  b/fs/xfs/libxfs/xfs_bit.c              |    2 -
+>  b/fs/xfs/libxfs/xfs_bmap.c             |    2 -
+>  b/fs/xfs/libxfs/xfs_bmap_btree.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_btree.c            |    2 -
+>  b/fs/xfs/libxfs/xfs_btree_mem.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_btree_staging.c    |    2 -
+>  b/fs/xfs/libxfs/xfs_da_btree.c         |    2 -
+>  b/fs/xfs/libxfs/xfs_defer.c            |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2.c             |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2_block.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2_data.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2_leaf.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2_node.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_dir2_sf.c          |    2 -
+>  b/fs/xfs/libxfs/xfs_dquot_buf.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_exchmaps.c         |    2 -
+>  b/fs/xfs/libxfs/xfs_group.c            |    2 -
+>  b/fs/xfs/libxfs/xfs_ialloc.c           |    2 -
+>  b/fs/xfs/libxfs/xfs_ialloc_btree.c     |    2 -
+>  b/fs/xfs/libxfs/xfs_iext_tree.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_inode_buf.c        |    2 -
+>  b/fs/xfs/libxfs/xfs_inode_fork.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_inode_util.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_log_rlimit.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_metadir.c          |    2 -
+>  b/fs/xfs/libxfs/xfs_metafile.c         |    2 -
+>  b/fs/xfs/libxfs/xfs_parent.c           |    2 -
+>  b/fs/xfs/libxfs/xfs_refcount.c         |    2 -
+>  b/fs/xfs/libxfs/xfs_refcount_btree.c   |    2 -
+>  b/fs/xfs/libxfs/xfs_rmap.c             |    2 -
+>  b/fs/xfs/libxfs/xfs_rmap_btree.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_rtbitmap.c         |    2 -
+>  b/fs/xfs/libxfs/xfs_rtgroup.c          |    2 -
+>  b/fs/xfs/libxfs/xfs_rtrefcount_btree.c |    2 -
+>  b/fs/xfs/libxfs/xfs_rtrmap_btree.c     |    2 -
+>  b/fs/xfs/libxfs/xfs_sb.c               |    2 -
+>  b/fs/xfs/libxfs/xfs_symlink_remote.c   |    2 -
+>  b/fs/xfs/libxfs/xfs_trans_inode.c      |    2 -
+>  b/fs/xfs/libxfs/xfs_trans_resv.c       |    2 -
+>  b/fs/xfs/libxfs/xfs_trans_space.c      |    2 -
+>  b/fs/xfs/libxfs/xfs_types.c            |    2 -
+>  b/fs/xfs/libxfs/xfs_zones.c            |    2 -
+>  b/fs/xfs/scrub/agb_bitmap.c            |    2 -
+>  b/fs/xfs/scrub/agheader.c              |    2 -
+>  b/fs/xfs/scrub/agheader_repair.c       |    2 -
+>  b/fs/xfs/scrub/alloc.c                 |    2 -
+>  b/fs/xfs/scrub/alloc_repair.c          |    2 -
+>  b/fs/xfs/scrub/attr.c                  |    2 -
+>  b/fs/xfs/scrub/attr_repair.c           |    2 -
+>  b/fs/xfs/scrub/bitmap.c                |    2 -
+>  b/fs/xfs/scrub/bmap.c                  |    2 -
+>  b/fs/xfs/scrub/bmap_repair.c           |    2 -
+>  b/fs/xfs/scrub/btree.c                 |    2 -
+>  b/fs/xfs/scrub/common.c                |    2 -
+>  b/fs/xfs/scrub/cow_repair.c            |    2 -
+>  b/fs/xfs/scrub/dabtree.c               |    2 -
+>  b/fs/xfs/scrub/dir.c                   |    2 -
+>  b/fs/xfs/scrub/dir_repair.c            |    2 -
+>  b/fs/xfs/scrub/dirtree.c               |    2 -
+>  b/fs/xfs/scrub/dirtree_repair.c        |    2 -
+>  b/fs/xfs/scrub/dqiterate.c             |    2 -
+>  b/fs/xfs/scrub/findparent.c            |    2 -
+>  b/fs/xfs/scrub/fscounters.c            |    2 -
+>  b/fs/xfs/scrub/fscounters_repair.c     |    2 -
+>  b/fs/xfs/scrub/health.c                |    2 -
+>  b/fs/xfs/scrub/ialloc.c                |    2 -
+>  b/fs/xfs/scrub/ialloc_repair.c         |    2 -
+>  b/fs/xfs/scrub/inode.c                 |    2 -
+>  b/fs/xfs/scrub/inode_repair.c          |    2 -
+>  b/fs/xfs/scrub/iscan.c                 |    2 -
+>  b/fs/xfs/scrub/listxattr.c             |    2 -
+>  b/fs/xfs/scrub/metapath.c              |    2 -
+>  b/fs/xfs/scrub/newbt.c                 |    2 -
+>  b/fs/xfs/scrub/nlinks.c                |    2 -
+>  b/fs/xfs/scrub/nlinks_repair.c         |    2 -
+>  b/fs/xfs/scrub/orphanage.c             |    2 -
+>  b/fs/xfs/scrub/parent.c                |    2 -
+>  b/fs/xfs/scrub/parent_repair.c         |    2 -
+>  b/fs/xfs/scrub/quota.c                 |    2 -
+>  b/fs/xfs/scrub/quota_repair.c          |    2 -
+>  b/fs/xfs/scrub/quotacheck.c            |    2 -
+>  b/fs/xfs/scrub/quotacheck_repair.c     |    2 -
+>  b/fs/xfs/scrub/rcbag.c                 |    2 -
+>  b/fs/xfs/scrub/rcbag_btree.c           |    2 -
+>  b/fs/xfs/scrub/readdir.c               |    2 -
+>  b/fs/xfs/scrub/reap.c                  |    2 -
+>  b/fs/xfs/scrub/refcount.c              |    2 -
+>  b/fs/xfs/scrub/refcount_repair.c       |    2 -
+>  b/fs/xfs/scrub/repair.c                |    2 -
+>  b/fs/xfs/scrub/rgsuper.c               |    2 -
+>  b/fs/xfs/scrub/rmap.c                  |    2 -
+>  b/fs/xfs/scrub/rmap_repair.c           |    2 -
+>  b/fs/xfs/scrub/rtbitmap.c              |    2 -
+>  b/fs/xfs/scrub/rtbitmap_repair.c       |    2 -
+>  b/fs/xfs/scrub/rtrefcount.c            |    2 -
+>  b/fs/xfs/scrub/rtrefcount_repair.c     |    2 -
+>  b/fs/xfs/scrub/rtrmap.c                |    2 -
+>  b/fs/xfs/scrub/rtrmap_repair.c         |    2 -
+>  b/fs/xfs/scrub/rtsummary.c             |    2 -
+>  b/fs/xfs/scrub/rtsummary_repair.c      |    2 -
+>  b/fs/xfs/scrub/scrub.c                 |    2 -
+>  b/fs/xfs/scrub/stats.c                 |    2 -
+>  b/fs/xfs/scrub/symlink.c               |    2 -
+>  b/fs/xfs/scrub/symlink_repair.c        |    2 -
+>  b/fs/xfs/scrub/tempfile.c              |    2 -
+>  b/fs/xfs/scrub/trace.c                 |    2 -
+>  b/fs/xfs/scrub/xfarray.c               |    2 -
+>  b/fs/xfs/scrub/xfblob.c                |    2 -
+>  b/fs/xfs/scrub/xfile.c                 |    2 -
+>  b/fs/xfs/xfs_acl.c                     |    2 -
+>  b/fs/xfs/xfs_aops.c                    |    2 -
+>  b/fs/xfs/xfs_attr_inactive.c           |    2 -
+>  b/fs/xfs/xfs_attr_item.c               |    2 -
+>  b/fs/xfs/xfs_attr_list.c               |    2 -
+>  b/fs/xfs/xfs_bio_io.c                  |    2 -
+>  b/fs/xfs/xfs_bmap_item.c               |    2 -
+>  b/fs/xfs/xfs_bmap_util.c               |    2 -
+>  b/fs/xfs/xfs_buf.c                     |    2 -
+>  b/fs/xfs/xfs_buf_item.c                |    2 -
+>  b/fs/xfs/xfs_buf_item_recover.c        |    2 -
+>  b/fs/xfs/xfs_buf_mem.c                 |    2 -
+>  b/fs/xfs/xfs_dahash_test.c             |    2 -
+>  b/fs/xfs/xfs_dir2_readdir.c            |    2 -
+>  b/fs/xfs/xfs_discard.c                 |    2 -
+>  b/fs/xfs/xfs_dquot.c                   |    2 -
+>  b/fs/xfs/xfs_dquot_item.c              |    2 -
+>  b/fs/xfs/xfs_dquot_item_recover.c      |    2 -
+>  b/fs/xfs/xfs_drain.c                   |    2 -
+>  b/fs/xfs/xfs_error.c                   |    2 -
+>  b/fs/xfs/xfs_exchmaps_item.c           |    2 -
+>  b/fs/xfs/xfs_exchrange.c               |    2 -
+>  b/fs/xfs/xfs_export.c                  |    2 -
+>  b/fs/xfs/xfs_extent_busy.c             |    2 -
+>  b/fs/xfs/xfs_extfree_item.c            |    2 -
+>  b/fs/xfs/xfs_file.c                    |    2 -
+>  b/fs/xfs/xfs_filestream.c              |    2 -
+>  b/fs/xfs/xfs_fsmap.c                   |    2 -
+>  b/fs/xfs/xfs_fsops.c                   |    2 -
+>  b/fs/xfs/xfs_globals.c                 |    2 -
+>  b/fs/xfs/xfs_handle.c                  |    2 -
+>  b/fs/xfs/xfs_health.c                  |    2 -
+>  b/fs/xfs/xfs_hooks.c                   |    2 -
+>  b/fs/xfs/xfs_icache.c                  |    2 -
+>  b/fs/xfs/xfs_icreate_item.c            |    2 -
+>  b/fs/xfs/xfs_inode.c                   |    2 -
+>  b/fs/xfs/xfs_inode_item.c              |    2 -
+>  b/fs/xfs/xfs_inode_item_recover.c      |    2 -
+>  b/fs/xfs/xfs_ioctl.c                   |    2 -
+>  b/fs/xfs/xfs_ioctl32.c                 |    2 -
+>  b/fs/xfs/xfs_iomap.c                   |    2 -
+>  b/fs/xfs/xfs_iops.c                    |    2 -
+>  b/fs/xfs/xfs_itable.c                  |    2 -
+>  b/fs/xfs/xfs_iunlink_item.c            |    2 -
+>  b/fs/xfs/xfs_iwalk.c                   |    2 -
+>  b/fs/xfs/xfs_log.c                     |    2 -
+>  b/fs/xfs/xfs_log_cil.c                 |    2 -
+>  b/fs/xfs/xfs_log_recover.c             |    2 -
+>  b/fs/xfs/xfs_message.c                 |    2 -
+>  b/fs/xfs/xfs_mount.c                   |    2 -
+>  b/fs/xfs/xfs_mru_cache.c               |    2 -
+>  b/fs/xfs/xfs_notify_failure.c          |    2 -
+>  b/fs/xfs/xfs_platform.h                |   46 ++++++++++++++++++++-------------
+>  b/fs/xfs/xfs_pnfs.c                    |    2 -
+>  b/fs/xfs/xfs_pwork.c                   |    2 -
+>  b/fs/xfs/xfs_qm.c                      |    2 -
+>  b/fs/xfs/xfs_qm_bhv.c                  |    2 -
+>  b/fs/xfs/xfs_qm_syscalls.c             |    2 -
+>  b/fs/xfs/xfs_quotaops.c                |    2 -
+>  b/fs/xfs/xfs_refcount_item.c           |    2 -
+>  b/fs/xfs/xfs_reflink.c                 |    2 -
+>  b/fs/xfs/xfs_rmap_item.c               |    2 -
+>  b/fs/xfs/xfs_rtalloc.c                 |    2 -
+>  b/fs/xfs/xfs_stats.c                   |    2 -
+>  b/fs/xfs/xfs_super.c                   |    2 -
+>  b/fs/xfs/xfs_symlink.c                 |    2 -
+>  b/fs/xfs/xfs_sysctl.c                  |    2 -
+>  b/fs/xfs/xfs_sysfs.c                   |    2 -
+>  b/fs/xfs/xfs_trace.c                   |    2 -
+>  b/fs/xfs/xfs_trans.c                   |    2 -
+>  b/fs/xfs/xfs_trans_ail.c               |    2 -
+>  b/fs/xfs/xfs_trans_buf.c               |    2 -
+>  b/fs/xfs/xfs_trans_dquot.c             |    2 -
+>  b/fs/xfs/xfs_xattr.c                   |    2 -
+>  b/fs/xfs/xfs_zone_alloc.c              |    2 -
+>  b/fs/xfs/xfs_zone_gc.c                 |    2 -
+>  b/fs/xfs/xfs_zone_info.c               |    2 -
+>  b/fs/xfs/xfs_zone_space_resv.c         |    2 -
+>  fs/xfs/xfs.h                           |   28 --------------------
+>  195 files changed, 222 insertions(+), 238 deletions(-)
+> 
