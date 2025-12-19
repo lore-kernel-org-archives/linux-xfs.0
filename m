@@ -1,81 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60AEA2FF147
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 09:42:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93122D7394
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 10:33:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766137362; cv=none; b=hq+Rlv0xZphE5BDIEaCOXaFUzL/T8dtoUMu4nJMbssbBs8udlal+x2svVBCi7c/61RYt3qNoHn0zZLWdbQlemebs7/rLwzKFVv+v4jLOtJ0q8UhEDB4VrukXEIcy8d6V6oe/PVtv1+DgqvGlhoR2Cx/s7ZTV0upgxMuMivNCRG4=
+	t=1766140438; cv=none; b=mfCjMHB8CTpbt1KJDiMWJbhUq2CSj+vXJOievIr6JDsuuHWXhdWWbY1tniKmb3KH4VfEMQmoBx7Iwn0V/c0Pm/XljvgbNJ8cD5JqDnFmOH+s0dCNFA0kv5Hmhnc49ioAGkdOtOc9CNbe93jvlVQw56zxALKeA17Oui8etJBCay0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766137362; c=relaxed/simple;
-	bh=5YENZ+jIWB1IhUegHACL5MtUuqDlBKHzPu9sENRlb9A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nneC10vCKBq7RQ10YQZCdULFa3f/5eZvQzWlMtzqEchxN+QK7cDyp+PsXDBN+SHa1ra7tWxazgev2iIi96345fNPNsfX/+TZMa5CImx+20NenKyGfsfJnBUL1Elx/2up9CvPT8js4dRLr+89AdUY0unbDVJ54yWw9sOcsjGpFq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G3lSGIZp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766140438; c=relaxed/simple;
+	bh=UDuRjaW4UHD1XjxUMKeFo2Bc9z32SZef334KEZG0PAA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=VvHcFEfXMnCeifLINV5qEMXW7XhjqdG4A+gKIwRiEnMBs7zmePrTLTYoOc/Og4Bsi5tGGSM6LAdY1VxvDK7IxCluD+ACaejTJpsvFRlNGOPOWyeJorqy1ruJ7QHfCUF6pGIl5DZP9rLqtVlDhHBHqI/+EYULZcojO7TpA7YhYhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=h6shGhl6; arc=none smtp.client-ip=209.85.128.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G3lSGIZp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50309C116D0;
-	Fri, 19 Dec 2025 09:42:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766137361;
-	bh=5YENZ+jIWB1IhUegHACL5MtUuqDlBKHzPu9sENRlb9A=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=G3lSGIZp50RYr4GEpNS8FzvCzsRl5iGz70oOD7cbHO0Z7rg/fF/vLM8xOldcOmRZK
-	 B4aAA/TcE2YQvbNbiYUXENru0aPG62W+sbfwwtdT44jl0tEV6KqU2RfcDETwf/wyQN
-	 WM/+ZdRhefu7pVBMTX+1W+o5U0WhYPUmLd473yeDfd9FWkHZHq0SvDUfiEa6TZuYxQ
-	 017BvMkh+ru7BV6BpSKhvt3shcQbEcUBvFASYGgiieUpx29w2R8Gn+Gtzb18HfLk2u
-	 BCQeMi0UMj40xZcajkG3KxMePmJ3r6BmIDUjqTxZORElESmbXUJI9I+GjBpDi2EE4Y
-	 NOiMZl6neqs7Q==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH v2 3/3] repair: use cached report zone
-Date: Fri, 19 Dec 2025 18:38:10 +0900
-Message-ID: <20251219093810.540437-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20251219093810.540437-1-dlemoal@kernel.org>
-References: <20251219093810.540437-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="h6shGhl6"
+Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-477ba2c1ca2so16225335e9.2
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 02:33:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1766140434; x=1766745234; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1wJvVM05EsH+BpysKJZDNgRttkxy9i5ad4KGF/bGMt0=;
+        b=h6shGhl6QEoWm4MS5sh5sy9Q1Cc3fX/9lpKauzQ6MdJNL3KNWrxlqFT3Y94E1UlXj8
+         XdmHjZ1pEGjXK5oLSGjv904z2dm7UQ076knPCUPMyfs9Jr0SCH+P6QU/gT507lf93jsL
+         FOceCe9WjUYLMRNL4RoVr2rX5De+DEvVeflIWGcUbOiiLrv8Gpk1KeL5tBU3gPdsQYiP
+         dnzBPq5jgVQVuF/IJAEHZd1V9sSX1bVK2uP/rtB6PhZEMq6VhzU30uDuSSVrtz+f61JO
+         RyBdtZQ4BEXZGcp3p4B+TEtZ/CHTX8VP/o0Ed5mU2epMjbHJjDn9qbJDqMmryEbmpsKs
+         d8tw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766140434; x=1766745234;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1wJvVM05EsH+BpysKJZDNgRttkxy9i5ad4KGF/bGMt0=;
+        b=THNH/79DSBrDRj9js/LUWkM01I1rV7yjN2He4hGin44VAtOAVD0CGb5m8Db5RnPRM+
+         Qp2plEHUoZd/KZbAzfjFVshTZEPOeRiBtEt/I++gftMyMilVK3FqTzXLAkfpEIJcscop
+         gUN50gkjKDS+4r1pRHU+o8eQTLhwvAnyCSZI2zzjPDyntt4x1xxS6CpUo6+yJSlM8KNy
+         xzbF3oCr6VoKKBfdArey58jGIDyX2zU+EoxDooweEbK6M5+kSwXDwXsUwHg5e2+1nt8E
+         K2axmFo3WPqf7CCd+eI5i2mz266DFirs5v6/iJyuvRS8ssnWrXtTiRcSpYt2A5johS6a
+         j7CQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU3qs84jE4OW+aJLfQtpwApVDZ81hqptMkPpVaHovkeitFFG3hbFPXqnDTp9YCxXRv+JNuf4OWXEMI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLUTqSVAuW38hZGC6gt2R5c8q0QcNEkLKYjLNFtjSs9d+RoyHH
+	3GG8RnJXdCyAh0WU1qt4J1LZcLNnaFQDEkvV6w5TdY1G1aal8Alk2s53dCXH01d1iF0=
+X-Gm-Gg: AY/fxX6pzIewOYrHekmHxHXnUuVooDX/DxQ1CW56BuP93/O8Y8HhnTR0BF3QFBxjE2U
+	0CD3tr2we3ZOvZgxLPtFj9cvMslIPPGgqlHCys0z9hKTw6yAscbibEnysyoiN2XcWojO8/QEAKE
+	zbQQM2lyxdf54ftb3E+Gm/ffmR/lXvJQh6Jywu1Mvx3POZH/0GVC1NNIKGD871o2AJD+c2DhnRy
+	giW6/QDR4WuF5yYD5FNQ/RHO6ng4BpKsW3YyMzEoaEeYzzcC7L7dMKOkrx7P50p/Uh0bvQfLPSh
+	ne2CIGTtR/MNlv5Q/0XR9G7TQDNtPcU93C0rADBY0bKwp7VhjV7Sbbhs1QzO+1Zvn0nzEKq/t8c
+	Qp2o8YjAlKY4sB93MkIKSns2qpGO7hgwEAArWuz6SnoWOCYlocaeA/1wfaeaj9a09m5SsUnCKVg
+	c+jKyk3DJCG5+enm4Y
+X-Google-Smtp-Source: AGHT+IHiqVq0rJ/auLlAHgLqJJMP2FoFH8HfQSTnPppwr65hFDgnc6phLfstgUGrNAed4ocU7KP+rg==
+X-Received: by 2002:a05:600c:3b8f:b0:475:e09c:960e with SMTP id 5b1f17b1804b1-47d19593d0dmr26265495e9.32.1766140434206;
+        Fri, 19 Dec 2025 02:33:54 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d19346e48sm36722545e9.2.2025.12.19.02.33.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Dec 2025 02:33:53 -0800 (PST)
+Date: Fri, 19 Dec 2025 13:33:50 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH next] xfs: fix memory leak in xfs_growfs_check_rtgeom()
+Message-ID: <aUUqDiGqwfmDcY_p@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 
-Use BLKREPORTZONEV2 ioctl with the BLK_ZONE_REP_CACHED flag set to
-speed up zone reports. If this fails, fallback to the legacy
-BLKREPORTZONE ioctl() which is slower as it uses the device to get the
-zone report.
+Free the "nmp" allocation before returning -EINVAL.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: dc68c0f60169 ("xfs: fix the zoned RT growfs check for zone alignment")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
 ---
- repair/zoned.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_rtalloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/repair/zoned.c b/repair/zoned.c
-index 206b0158f95f..1e4891c483ee 100644
---- a/repair/zoned.c
-+++ b/repair/zoned.c
-@@ -82,8 +82,13 @@ check_zones(
- 		memset(rep, 0, rep_size);
- 		rep->sector = sector;
- 		rep->nr_zones = ZONES_PER_IOCTL;
-+		rep->flags = BLK_ZONE_REP_CACHED;
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index e063f4f2f2e6..167298ad88dd 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1265,7 +1265,7 @@ xfs_growfs_check_rtgeom(
+ 		uint32_t	rem;
  
--		ret = ioctl(fd, BLKREPORTZONE, rep);
-+		ret = ioctl(fd, BLKREPORTZONEV2, rep);
-+		if (ret < 0 && errno == ENOTTY) {
-+			rep->flags = 0;
-+			ret = ioctl(fd, BLKREPORTZONE, rep);
-+		}
- 		if (ret) {
- 			do_error(_("ioctl(BLKREPORTZONE) failed: %d!\n"), ret);
- 			goto out_free;
+ 		if (rextsize != 1)
+-			return -EINVAL;
++			goto out_inval;
+ 		div_u64_rem(nmp->m_sb.sb_rblocks, gblocks, &rem);
+ 		if (rem) {
+ 			xfs_warn(mp,
 -- 
-2.52.0
+2.51.0
 
