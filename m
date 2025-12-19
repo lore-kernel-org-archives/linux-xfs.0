@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C660224677B
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Dec 2025 02:10:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C791F7569;
+	Fri, 19 Dec 2025 02:12:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766110205; cv=none; b=aG5OCV+TjkXE7gE1OfrbP3cs5c7rZ0xBRX4tsyy/SJu6krEWE/Bo2ahw7u4S6hEnNWgbvda2UsCnJ5W5AMeiYnX9l4VbebCQwSbNCKHps36g8AAvDzcmIrZJvL9melAFV01BElAyln0OCyn82bkogN3IKxv0tURZXqxZJctudkc=
+	t=1766110355; cv=none; b=q6BzDnTDgMXmGFAJESRDm10uYk8/jXYOH4JoPL7Qmg5F75uCyFStkTPE0uxtSCly3vtPFIPGSIFFLmpGtSK6n5kyYzucSm9hvpIm9K8UQeLz3xRd6rimYlrKQGJHC/YPzNc8o/phN+p7XfZPe/dpN5RSrttD5a4snhITqJqTIEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766110205; c=relaxed/simple;
-	bh=CTjJ0mtQuUn8WafNeDRT9gdB6AlgdfYaiYO7ewItQQs=;
+	s=arc-20240116; t=1766110355; c=relaxed/simple;
+	bh=0ctNJhmp0LNmO9SGc4CC5odslRfahlKWcYvZYBv+1QQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jHv0wshJ1ZqkxdLuuP4Qb6qFk/h0QKqOJoJSLeXzHjI5SGG2HBbQPB2LHLmZNv1AToRiqdN+nXQwDfmnzZp8kKaFeh/Rz+jE7Qe8WmW0QTo76oio9URjHjbUOANWqsF+7uvdQz1fywy4sTKFo/TSALDaj2d2hZ28vd418PNdnzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SlIqAIVC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rv3BPoCldRQgj6NOZwevyyF5rU9uCSDH38apA+SOj2Qyt7b41l2hJGImgk+HY7FZRec0PHWB7bqwV+RoKjOoV+ZE1pFp1P/c3KHqRtrswSKJ+tbq7YjshxiGMIsx9/9BfWmqvWIKEc8lrG9zGHLfr8GWYtIThmgBeGOWw1JafBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=prdncJ26; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SlIqAIVC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CA2EC4CEFB;
-	Fri, 19 Dec 2025 02:10:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="prdncJ26"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3714DC4CEFB;
+	Fri, 19 Dec 2025 02:12:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766110202;
-	bh=CTjJ0mtQuUn8WafNeDRT9gdB6AlgdfYaiYO7ewItQQs=;
+	s=k20201202; t=1766110355;
+	bh=0ctNJhmp0LNmO9SGc4CC5odslRfahlKWcYvZYBv+1QQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SlIqAIVCgBI/lyRjbzCj2TvgjJIzsn58PXssqnhyx7DQK8qAHBawYy3n+TUzvHFvJ
-	 SVIwJLc8h39yNCGu2r1MAajli6PKrjB4sj5rwzEjOKjPHEcz4EP1gR2gzEGpj5bqZF
-	 pBWPp6QK7DGdYVvAVT/FUCSGjgBe7f7Q8/OPc0F9+qf/R5BWq6vVX2MD4L3h3WwymL
-	 gU/RJ0hwakf8O6pewPQAQUF2/0Xhl14n2/cr1/p/G0GaSnKhdRfBcPSL8rasFr6HjB
-	 gKA2mn1gT9vhtYIxv/FUpA54wFd5+LqTT0vM6MlfgaasLppWEkEygl3HUccnza46Zo
-	 p6dvP3+oLFktg==
-Date: Thu, 18 Dec 2025 18:10:01 -0800
+	b=prdncJ26GQuWeeHQpSQCxBRyDpyDeCrohWD5Dn/xptUGithwKE+RvVpmWpzpcwsZD
+	 HKeL7M8Aepfrx4ocN4Sf7W3FZ/7BM+sWrOnfXrQ6yWYXq7CcxVLnaRMR8SxrfIC8Rv
+	 e9OeaoukoSr7EUwB898F0wkin5f45l11LBK/jFg0L2oiJ+q7z8LlC6vgzvuO2stapc
+	 ZwUEzO7+BW6xuqigPL8bpxQgY+aIxCCdX/A1C24coiO8EhSjx2+5Gkie9OKgfbfNWU
+	 MFHmQ8U9Y2iA0b+wCrKRH7IiXuok7R4ytlJrEbfaeTFve3/PfTx9Aodd1hfzSFle6l
+	 0eSskFk9BlGog==
+Date: Thu, 18 Dec 2025 18:12:34 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: aalbersh@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com,
+Cc: Zorro Lang <zlang@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs: adjust_nr_zones for zoned file system on
- conventional devices
-Message-ID: <20251219021001.GA7725@frogsfrogsfrogs>
-References: <20251218160932.1652588-1-hch@lst.de>
+Subject: Re: [PATCH 1/3] xfs: add a test that zoned file systems with rump
+ RTG can't be mounted
+Message-ID: <20251219021234.GB7725@frogsfrogsfrogs>
+References: <20251218161045.1652741-1-hch@lst.de>
+ <20251218161045.1652741-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,62 +45,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251218160932.1652588-1-hch@lst.de>
+In-Reply-To: <20251218161045.1652741-2-hch@lst.de>
 
-On Thu, Dec 18, 2025 at 05:09:32PM +0100, Christoph Hellwig wrote:
-> When creating zoned file systems on conventional devices, mkfs doesn't
-> currently align the RT device size to the zone size, which can create
-> unmountable file systems.  Fix this by moving the rgcount modification
-> to account for reserved zoned and then calling adjust_nr_zones
-> unconditionally, and thus ensuring that the rtblocks and rtextents values
-> are guaranteed to always be a multiple of the zone size.
+On Thu, Dec 18, 2025 at 05:10:16PM +0100, Christoph Hellwig wrote:
+> Garbage collection assumes all zones contain the full amount of blocks.
+> Mkfs already ensures this happens, but the kernel mount code did not
+> verify this.  Instead such a file system would eventually fail scrub.
+> 
+> Add a test to verify the new superblock verifier check.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  mkfs/xfs_mkfs.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
+>  tests/xfs/651     | 33 +++++++++++++++++++++++++++++++++
+>  tests/xfs/651.out |  2 ++
+>  2 files changed, 35 insertions(+)
+>  create mode 100755 tests/xfs/651
+>  create mode 100644 tests/xfs/651.out
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 8db51217016e..b34407725f76 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -4558,8 +4558,6 @@ adjust_nr_zones(
->  		max_zones = DTOBT(cli->xi->rt.size, cfg->blocklog) /
->  				cfg->rgsize;
->  
-> -	if (!cli->rgcount)
-> -		cfg->rgcount += XFS_RESERVED_ZONES;
->  	if (cfg->rgcount > max_zones) {
->  		fprintf(stderr,
->  _("Warning: not enough zones (%lu/%u) for backing requested rt size due to\n"
-> @@ -4652,9 +4650,9 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
->  		}
->  	}
->  
-> -	if (cli->rtsize || cli->rgcount)
-> -		adjust_nr_zones(cfg, cli, zt);
-> -
-> +	if (cli->rtsize)
-> +		cfg->rgcount += XFS_RESERVED_ZONES;
+> diff --git a/tests/xfs/651 b/tests/xfs/651
+> new file mode 100755
+> index 000000000000..1e36fec408ff
+> --- /dev/null
+> +++ b/tests/xfs/651
+> @@ -0,0 +1,33 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 Christoph Hellwig.
+> +#
+> +# FS QA Test No. 651
+> +#
+> +# Test that the sb verifier rejects zoned file system with rump RTGs.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick zone
+> +
+> +. ./common/zoned
+> +
+> +# we intentionally corrupt the superblock
+> +_require_scratch_nocheck
+> +
+> +_try_scratch_mkfs_xfs -r zoned=1 >> $seqres.full 2>&1 || \
+> +	_notrun "Can't create zoned file system"
+> +
+> +# adjust rblocks/rextents to not be zone aligned
+> +blocks=$(_scratch_xfs_get_sb_field rblocks)
+> +blocks=$((blocks - 4096))
+> +_scratch_xfs_set_sb_field rblocks ${blocks} >> $seqres.full 2>&1
+> +_scratch_xfs_set_sb_field rextents ${blocks} >> $seqres.full 2>&1
+> +
+> +if _try_scratch_mount >/dev/null 2>&1; then
+> +	echo "Mounted rump RTG file system (bad)"
+> +fi
+> +
+> +echo "Can't mount rump RTG file system (good)"
 
-Hrm.  So we're moving the XFS_RESERVED_ZONES addition code out of
-adjust_nr_zones to here.  The conditional changes to rtsize because
-previously the only way we'd do the addition is if !rgcount, which means
-we were really only doing it if rtsize != 0.
+In theory this should be in an else clause, but as extra lines in the
+golden output is enough to fail the test, this code flow is correct.
 
-And now that we always call adjust_nr_zones that part needed to be moved
-up.
-
-I think I understand what's going on here, so
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-
-> +	adjust_nr_zones(cfg, cli, zt);
->  	if (cfg->rgcount < XFS_MIN_ZONES)  {
->  		fprintf(stderr,
->  _("realtime group count (%llu) must be greater than the minimum zone count (%u)\n"),
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/651.out b/tests/xfs/651.out
+> new file mode 100644
+> index 000000000000..5d491b1894ea
+> --- /dev/null
+> +++ b/tests/xfs/651.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 651
+> +Can't mount rump RTG file system (good)
 > -- 
 > 2.47.3
 > 
