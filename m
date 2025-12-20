@@ -1,83 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0CB257459
-	for <linux-xfs@vger.kernel.org>; Sat, 20 Dec 2025 02:59:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622B8156678
+	for <linux-xfs@vger.kernel.org>; Sat, 20 Dec 2025 10:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766199592; cv=none; b=iHDqd2nwDXgyXL2RIj8R6TZuH3PoVI9APDlk5UcVe87Rg1de/unkEWistdZFOluvH7Vi6cO7ltw/dq210R88gNFj45Zmgyl09hEoAdr53a00qI2RuXRLL8CN966dWLTaQ0z6i/tD52iR8jaHpg/vgIlk8T++tY8Ezhy4vhatRHg=
+	t=1766227560; cv=none; b=KpLEJ/HZijDAVxpmp/gAbmUEht/XMdPcvlbmjwAixeyZkAyDh4I/FVlKv5QJypv8t+LXStCwNXDuyg4PYWB8VOhmIabrRqwp7LJp3rs2xXXmJE1Dg9vrnN39BDyHoAu2C/EzPCow+pzpuwRh2GHwv6acag1Yj02U9V//C2xPzvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766199592; c=relaxed/simple;
-	bh=yonR0CRx6Byj3JUwH8rvGYF40XkAVmSGIzX4bCxiZ28=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KPloo3tyz4j9mAO+90Eg+ZABR/jYbrADSJTNluguZyqU43GPl/0Xzt41vC1gYmWAagBTYfqgO+1Slq6WeFnpUwBstDYBUuY+LYUHd4jw7qO+rQwBcOVFNsFP3qRFtGot5Xi/mH+CDZj1nisOiUtX+e6vnuyDJoboZkijmG+e0Qs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pRJ9hRrO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766227560; c=relaxed/simple;
+	bh=cxK5o9QKCipYnvMIU+bZYocUFJLgGWgq5A/Ng/vSQXI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N4iuiNyNWcEALnSoYEyIKhOE7D8FwQOR84xfVadZHzJAp+Eps5EXztFqZw6JbnvHfEmK9Y6xx4GY/Yj3aqgPUj3CjvFzHkl9fSTjseXtO6CB4pacfeSer0GNkTk5p8B0v1XFQp5TcVQRx507e0a67mB1wGsPydbYr5GDvUlNPpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQk/CkLY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pRJ9hRrO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F8FC116C6;
-	Sat, 20 Dec 2025 02:59:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQk/CkLY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1440C4CEF5;
+	Sat, 20 Dec 2025 10:45:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766199590;
-	bh=yonR0CRx6Byj3JUwH8rvGYF40XkAVmSGIzX4bCxiZ28=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pRJ9hRrO6rGvvQYI8zx+rKQ0drGVISyL16MnJgbBDne8sBXNXRFrjeZhmCd0PTTfP
-	 2TtPUETCHmRfv38OYq96KHkS1f0sGd/ckWaZ85JDbxKsH9oGtnPGhA8Y4mJa68QqhN
-	 exgwvQCOePAvuQ2Uj8EDF9xu9u97R8XqVUJoa30Gm4hJdrALVPAQB3GSWV9QzrUPVo
-	 ZV0yClHx3f38LP6sSGipmUljqN36uKAOVCwCMUtXgoKlyrqGeedo5NyOlU493dXku8
-	 lcr1GLGMSlF3P83e1TYl8y0Wdmgi3nPQWDIo6ZsY33ovLcYQFnK6QB0amABmJzcDQx
-	 ezDWAVCdQPCMA==
-Message-ID: <a2f5f0ff-6fe8-44c6-813b-ebc162b4f025@kernel.org>
-Date: Sat, 20 Dec 2025 11:59:48 +0900
+	s=k20201202; t=1766227559;
+	bh=cxK5o9QKCipYnvMIU+bZYocUFJLgGWgq5A/Ng/vSQXI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=JQk/CkLY9yCEWmQvH1ZGICY5L07xp2xrgB0yKhdcetPm1hIRDZ6p4/oYzFPiVYyNq
+	 yCNTRsTo770KZcDQTBsGQucqvW/AiiWhRhzueFnmO+wTBTqQKGCa/pHlqamQHxitCj
+	 n22clvhBh9PP66/JveMjeZGrzGMlF4X0EnJ+LpSgRW0AvwzF6V2T6Agwp1b/XSNqA8
+	 M90z+gm0r9AwcsozGvlF2Z6X0kfCdQ+yumnJcywYP+JpkdeScjMy8tt3EMSP9t3vWi
+	 EM8EVcEMJteh/CvTG+/g21KGxVLUDOmwq+CujASTSo3SyVXkIRwI+V7kVoYVoj2D0m
+	 8Oct2ISzNUEmg==
+Date: Sat, 20 Dec 2025 11:45:55 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL] XFS: Fixes for v6.19-rc2
+Message-ID: <cx4tzqmz7gy4oq2uksdjklfhbnonfaho47yvseann4oxh2vqph@2te74dxeofdz>
+References: <pag7wbggnlzzdfkzykoyck4nnjldvyayqzf7qzchvduisffytd@manm5agx5c63>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/3] Enable cached zone report
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
-References: <20251219093810.540437-1-dlemoal@kernel.org>
- <20251219235602.GG7725@frogsfrogsfrogs>
- <1f635a17-adf3-424f-b504-71a97562d226@kernel.org>
- <20251220015404.GB1390736@frogsfrogsfrogs>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251220015404.GB1390736@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <pag7wbggnlzzdfkzykoyck4nnjldvyayqzf7qzchvduisffytd@manm5agx5c63>
 
-On 12/20/25 10:54, Darrick J. Wong wrote:
-> On Sat, Dec 20, 2025 at 09:00:10AM +0900, Damien Le Moal wrote:
->> On 12/20/25 08:56, Darrick J. Wong wrote:
->>> On Fri, Dec 19, 2025 at 06:38:07PM +0900, Damien Le Moal wrote:
->>>> Enable cached zone report to speed up mkfs and repair on a zoned block
->>>> device (e.g. an SMR disk). Cached zone report support was introduced in
->>>> the kernel with version 6.19-rc1.  This was co-developped with
->>>> Christoph.
->>>
->>> Just out of curiosity, do you see any xfsprogs build problems with
->>> BLK_ZONE_COND_ACTIVE if the kernel headers are from 6.18?
->>
->> Nope, I do not, at least not with my Fedora 6.17.12 headers (which do not have
->> BLK_ZONE_COND_ACTIVE defined). Do you see any problem ?
+Cc'ing linux-xfs because I initially forgot to, my apologies.
+
+
+On Sat, Dec 20, 2025 at 11:44:05AM +0100, Carlos Maiolino wrote:
+> Hello Linus,
 > 
-> I see it, but only if I ./tools/libxfs-apply the 6.19-rc libxfs/ changes
-> to the xfsprogs codebase first.  I came up with an ugly workaround:
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=libxfs-6.19-sync&id=a448911c20ec0d3482361b2287266abd76d9f979
+> Could you please pull patches included in the tag below?
 > 
-> that sloppily #defines it if it doesn't exist.
-
-I addressed this in the v3 series I just posted. Much cleaner I think with the
-common xfrog_report_zones() helper.
-
-I am not used to xfsprogs code style though, so please review !
-
-Cheers.
-
--- 
-Damien Le Moal
-Western Digital Research
+> An attempt merge against your current TOT has been successful.
+> 
+> This contains a few fixes for zoned devices support, an UAF and
+> a compiler warning, and some cleaning up.
+> 
+> Thanks,
+> Carlos
+> 
+> "The following changes since commit 8f0b4cce4481fb22653697cced8d0d04027cb1e8:
+> 
+>   Linux 6.19-rc1 (2025-12-14 16:05:07 +1200)
+> 
+> are available in the Git repository at:
+> 
+>   git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.19-rc2
+> 
+> for you to fetch changes up to dc68c0f601691010dd5ae53442f8523f41a53131:
+> 
+>   xfs: fix the zoned RT growfs check for zone alignment (2025-12-17 10:27:02 +0100)
+> 
+> ----------------------------------------------------------------
+> Fixes for 6.19-rc2
+> 
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> 
+> ----------------------------------------------------------------
+> Chaitanya Kulkarni (1):
+>       xfs: ignore discard return value
+> 
+> Christoph Hellwig (3):
+>       xfs: fix XFS_ERRTAG_FORCE_ZERO_RANGE for zoned file system
+>       xfs: validate that zoned RT devices are zone aligned
+>       xfs: fix the zoned RT growfs check for zone alignment
+> 
+> Darrick J. Wong (2):
+>       xfs: fix a UAF problem in xattr repair
+>       xfs: fix stupid compiler warning
+> 
+> Haoxiang Li (1):
+>       xfs: fix a memory leak in xfs_buf_item_init()
+> 
+>  fs/xfs/libxfs/xfs_sb.c     | 15 ++++++++++++
+>  fs/xfs/scrub/attr_repair.c |  2 +-
+>  fs/xfs/xfs_attr_item.c     |  2 +-
+>  fs/xfs/xfs_buf_item.c      |  1 +
+>  fs/xfs/xfs_discard.c       | 27 ++++-----------------
+>  fs/xfs/xfs_discard.h       |  2 +-
+>  fs/xfs/xfs_file.c          | 58 ++++++++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_rtalloc.c       | 14 ++++++-----
+>  8 files changed, 80 insertions(+), 41 deletions(-)"
