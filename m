@@ -1,140 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9211C84A0
-	for <linux-xfs@vger.kernel.org>; Sat, 20 Dec 2025 02:58:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0CB257459
+	for <linux-xfs@vger.kernel.org>; Sat, 20 Dec 2025 02:59:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766199483; cv=none; b=aJz4kN4C0wgQ4muNxv/8Y63l9EP+/IOnUf+BZu6Sv7LzanysjcjWVjeKJWHnQx6IndZyZPVAB2p9lanJx6ZUHjD4/vNYdEx6jcqJI/lNhwKyJXgG3H5yxvx8rQyLI6JDiMHSmXgnwEk9aDFkugpGP7acK1Z/PekQGSw8wRlJAdQ=
+	t=1766199592; cv=none; b=iHDqd2nwDXgyXL2RIj8R6TZuH3PoVI9APDlk5UcVe87Rg1de/unkEWistdZFOluvH7Vi6cO7ltw/dq210R88gNFj45Zmgyl09hEoAdr53a00qI2RuXRLL8CN966dWLTaQ0z6i/tD52iR8jaHpg/vgIlk8T++tY8Ezhy4vhatRHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766199483; c=relaxed/simple;
-	bh=rOQIlJnt7D8agvlPsVrbAGVofv4lX2DJBi2OwaufFQU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oYSSu26Dow0W3nXKJm+RYSlYmao0ZtB9C+yosBK4vwHGOCVVFY1iiTIyS+YQAeLFvB88Jghx6LgrJIJk1SZqvK0EK3qOeagf11pIk40/A0PItVOkbujR29vdH6EIdnKUfTXiCUE2xczmQh8HmNS17WSgE21E6uYnaR1m+3xTEUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BGYyu+qd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766199592; c=relaxed/simple;
+	bh=yonR0CRx6Byj3JUwH8rvGYF40XkAVmSGIzX4bCxiZ28=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KPloo3tyz4j9mAO+90Eg+ZABR/jYbrADSJTNluguZyqU43GPl/0Xzt41vC1gYmWAagBTYfqgO+1Slq6WeFnpUwBstDYBUuY+LYUHd4jw7qO+rQwBcOVFNsFP3qRFtGot5Xi/mH+CDZj1nisOiUtX+e6vnuyDJoboZkijmG+e0Qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pRJ9hRrO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BGYyu+qd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF932C16AAE;
-	Sat, 20 Dec 2025 02:58:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pRJ9hRrO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F8FC116C6;
+	Sat, 20 Dec 2025 02:59:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766199483;
-	bh=rOQIlJnt7D8agvlPsVrbAGVofv4lX2DJBi2OwaufFQU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BGYyu+qd0PgM/nxVozKa7GpXJDR7GjYco/PXjfEM1oojjS/OW7YrRN6jZjtSYFuDM
-	 k+G7+YQ4rEwpD56H6jSBiCi65v3BORoxufkBXfbbs/bMtLN8ILOWfjf+9kOQfMO3fT
-	 +9RYstfQgCn8+w8txYO/5tk0ioH8X/YSptTbO96vcDMLROD0kj2L+pCI6MTqY9ZBwr
-	 P4P+wvdG8s5ZWlDd7epSc5BGwt2+SnAiPfXLoggkuTp6uAi8ThgFW8s3MDvaGBEIpx
-	 Th10QEZIaYAuo7WLcZvtO7ePch9F6WrJurybr3HUKdUeqFS17hEBZlUWZ+jP6zS5sd
-	 JmI4NX0Qd58Yw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH v3 6/6] libfrog: enable cached report zones
-Date: Sat, 20 Dec 2025 11:53:26 +0900
-Message-ID: <20251220025326.209196-7-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20251220025326.209196-1-dlemoal@kernel.org>
-References: <20251220025326.209196-1-dlemoal@kernel.org>
+	s=k20201202; t=1766199590;
+	bh=yonR0CRx6Byj3JUwH8rvGYF40XkAVmSGIzX4bCxiZ28=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=pRJ9hRrO6rGvvQYI8zx+rKQ0drGVISyL16MnJgbBDne8sBXNXRFrjeZhmCd0PTTfP
+	 2TtPUETCHmRfv38OYq96KHkS1f0sGd/ckWaZ85JDbxKsH9oGtnPGhA8Y4mJa68QqhN
+	 exgwvQCOePAvuQ2Uj8EDF9xu9u97R8XqVUJoa30Gm4hJdrALVPAQB3GSWV9QzrUPVo
+	 ZV0yClHx3f38LP6sSGipmUljqN36uKAOVCwCMUtXgoKlyrqGeedo5NyOlU493dXku8
+	 lcr1GLGMSlF3P83e1TYl8y0Wdmgi3nPQWDIo6ZsY33ovLcYQFnK6QB0amABmJzcDQx
+	 ezDWAVCdQPCMA==
+Message-ID: <a2f5f0ff-6fe8-44c6-813b-ebc162b4f025@kernel.org>
+Date: Sat, 20 Dec 2025 11:59:48 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/3] Enable cached zone report
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
+References: <20251219093810.540437-1-dlemoal@kernel.org>
+ <20251219235602.GG7725@frogsfrogsfrogs>
+ <1f635a17-adf3-424f-b504-71a97562d226@kernel.org>
+ <20251220015404.GB1390736@frogsfrogsfrogs>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20251220015404.GB1390736@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Modify the function xfrog_report_zones() to default to always trying
-first a cached report zones using the BLKREPORTZONEV2 ioctl.
-If the kernel does not support BLKREPORTZONEV2, fall back to the
-(slower) regular report zones BLKREPORTZONE ioctl.
+On 12/20/25 10:54, Darrick J. Wong wrote:
+> On Sat, Dec 20, 2025 at 09:00:10AM +0900, Damien Le Moal wrote:
+>> On 12/20/25 08:56, Darrick J. Wong wrote:
+>>> On Fri, Dec 19, 2025 at 06:38:07PM +0900, Damien Le Moal wrote:
+>>>> Enable cached zone report to speed up mkfs and repair on a zoned block
+>>>> device (e.g. an SMR disk). Cached zone report support was introduced in
+>>>> the kernel with version 6.19-rc1.  This was co-developped with
+>>>> Christoph.
+>>>
+>>> Just out of curiosity, do you see any xfsprogs build problems with
+>>> BLK_ZONE_COND_ACTIVE if the kernel headers are from 6.18?
+>>
+>> Nope, I do not, at least not with my Fedora 6.17.12 headers (which do not have
+>> BLK_ZONE_COND_ACTIVE defined). Do you see any problem ?
+> 
+> I see it, but only if I ./tools/libxfs-apply the 6.19-rc libxfs/ changes
+> to the xfsprogs codebase first.  I came up with an ugly workaround:
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=libxfs-6.19-sync&id=a448911c20ec0d3482361b2287266abd76d9f979
+> 
+> that sloppily #defines it if it doesn't exist.
 
-TO enable this feature even if xfsprogs is compiled on a system where
-linux/blkzoned.h does not define BLKREPORTZONEV2, this ioctl is defined
-in libfrog/zones.h, together with the BLK_ZONE_REP_CACHED flag and the
-BLK_ZONE_COND_ACTIVE zone condition.
+I addressed this in the v3 series I just posted. Much cleaner I think with the
+common xfrog_report_zones() helper.
 
-Since a cached report zone  always return the condition
-BLK_ZONE_COND_ACTIVE for any zone that is implicitly open, explicitly
-open or closed, the function xfs_zone_validate_seq() is modified to
-handle this new condition as being equivalent to the implicit open,
-explicit open or closed conditions.
+I am not used to xfsprogs code style though, so please review !
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- libfrog/zones.c    | 11 ++++++++++-
- libfrog/zones.h    |  9 +++++++++
- libxfs/xfs_zones.c |  3 ++-
- 3 files changed, 21 insertions(+), 2 deletions(-)
+Cheers.
 
-diff --git a/libfrog/zones.c b/libfrog/zones.c
-index 0187edce5fa4..8b45066de176 100644
---- a/libfrog/zones.c
-+++ b/libfrog/zones.c
-@@ -27,10 +27,19 @@ _("Failed to allocate memory for reporting zones.\n"));
- 		return NULL;
- 	}
- 
-+	/*
-+	 * Try cached report zones first. If this fails, fallback to the regular
-+	 * (slower) report zones.
-+	 */
- 	rep->sector = sector;
- 	rep->nr_zones = ZONES_PER_REPORT;
-+	rep->flags = BLK_ZONE_REP_CACHED;
- 
--	ret = ioctl(fd, BLKREPORTZONE, rep);
-+	ret = ioctl(fd, BLKREPORTZONEV2, rep);
-+	if (ret < 0 && errno == ENOTTY) {
-+		rep->flags = 0;
-+		ret = ioctl(fd, BLKREPORTZONE, rep);
-+	}
- 	if (ret) {
- 		fprintf(stderr,
- _("ioctl(BLKREPORTZONE) failed: %d!\n"), -errno);
-diff --git a/libfrog/zones.h b/libfrog/zones.h
-index 66df7a426a27..4605aea93114 100644
---- a/libfrog/zones.h
-+++ b/libfrog/zones.h
-@@ -8,6 +8,15 @@
- #include <stdint.h>
- #include <linux/blkzoned.h>
- 
-+/*
-+ * Cached report ioctl (/usr/include/linux/blkzoned.h)
-+ */
-+#ifndef BLKREPORTZONEV2
-+#define BLKREPORTZONEV2		_IOWR(0x12, 142, struct blk_zone_report)
-+#define BLK_ZONE_REP_CACHED	(1U << 31)
-+#define BLK_ZONE_COND_ACTIVE	0xff
-+#endif
-+
- struct blk_zone_report	*xfrog_report_zones(int	fd, uint64_t sector);
- 
- #endif /* __LIBFROG_ZONE_H__ */
-diff --git a/libxfs/xfs_zones.c b/libxfs/xfs_zones.c
-index 7a81d83f5b3e..3c89a89ca21e 100644
---- a/libxfs/xfs_zones.c
-+++ b/libxfs/xfs_zones.c
-@@ -3,7 +3,7 @@
-  * Copyright (c) 2023-2025 Christoph Hellwig.
-  * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
-  */
--#include <linux/blkzoned.h>
-+#include <libfrog/zones.h>
- #include "libxfs_priv.h"
- #include "xfs.h"
- #include "xfs_fs.h"
-@@ -97,6 +97,7 @@ xfs_zone_validate_seq(
- 	case BLK_ZONE_COND_IMP_OPEN:
- 	case BLK_ZONE_COND_EXP_OPEN:
- 	case BLK_ZONE_COND_CLOSED:
-+	case BLK_ZONE_COND_ACTIVE:
- 		return xfs_zone_validate_wp(zone, rtg, write_pointer);
- 	case BLK_ZONE_COND_FULL:
- 		return xfs_zone_validate_full(zone, rtg, write_pointer);
 -- 
-2.52.0
-
+Damien Le Moal
+Western Digital Research
