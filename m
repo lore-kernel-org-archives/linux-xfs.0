@@ -1,86 +1,39 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 004EC22A7E4
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Dec 2025 15:36:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47BE9305E28;
+	Mon, 22 Dec 2025 23:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766417780; cv=none; b=SfyuDzIuYkX+bLjWKwZStGMcRphEXl0xMRxXGhiMm4Fapc+ETCxYq+A2Yp8JQzF7cLs7sCXa77tZLR8abmu9knuzWxaDogTiiuObUwlj49j5JAOsHvZdc/gu1SQG7I5vk+7pjUP5AjVlohneli+V2pqlSN2FNjduw4/4Qhd3lEY=
+	t=1766446924; cv=none; b=tfcGTZMD6Rhwih8nkfX/ndXJa4iiLNnojeG2EfrvH96w3+sRJgp6D611Z9iZnLsNBqnTMTTcFEjPxi9Vt1+Z6S6Y+XPFbOIu5qH7iBTeTowN3IE6mLiCYA9gBhbzlP4xuGpEVNzAoCXgG9+U7HhB9HLTNjQYEmcYbE52VBM8g6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766417780; c=relaxed/simple;
-	bh=lOqQG2EGhBnybfgMFM30ZXJMDMi1J18t4+jGfujyHr8=;
+	s=arc-20240116; t=1766446924; c=relaxed/simple;
+	bh=Skm04jZcbADh4Zt8DegTtfd9R0gBaHlcvWzGRPA2vI0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U27jLsIX+/Ez2Yzmiel10goM8YN2gjbnrqQc6GPynQSJMmpYx4q9MH88MQ5l5DSlXUC78ptyKEQxuVX6WIzOxg0xf1erVHCgg3zayAtxYIMCXYvLKPlJGynsrmUBYOFY2grIEmi0w1vkgbOUbfO4lXFdwWmxYsNz3cgx0N+pIYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xGclTYGz; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=znIS3dyE; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=r1x6ydTJ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=n6mwVSJT; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xGclTYGz";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="znIS3dyE";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="r1x6ydTJ";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="n6mwVSJT"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 37D90336A0;
-	Mon, 22 Dec 2025 15:36:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1766417777; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h5h7+A5awHzkqbIHTSYYSLcXY7sXSCMhj2UcviA/ZOg=;
-	b=xGclTYGzxgCAiGf2rsY5NSDnd662HC7W5T+5haLCTzllg0JJziFeZXZE0jdHW+fSve1nQj
-	oWRKF6I9r+qz2BMeG9sChxD0HV7O1gMnDsorZvKgYVymvHYoUmnr7R0GfHAnwuieUKmnci
-	bLaPLj55hKVQKfg/NUTHnX+Lr4+RxPQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1766417777;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h5h7+A5awHzkqbIHTSYYSLcXY7sXSCMhj2UcviA/ZOg=;
-	b=znIS3dyEfdCGy/1NWT2t/Ae9DNQ6Y8fM6cJTddTiYnJ/oAcZL+cZXxKxmYGBmvoB4oFfCe
-	ST60pL4AsrjrMaBw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1766417775; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h5h7+A5awHzkqbIHTSYYSLcXY7sXSCMhj2UcviA/ZOg=;
-	b=r1x6ydTJgRcyBOIqB9Y/qfRXG4JZwju7cDb7a4aAcNuhn9xtWepTqRjpCI9AzqZr38+ju6
-	Rjmd9L6FPfcp+qTn6nYatl2KvMjL8+htiY+SemGC7V+D0b5v7p9tK6+g5Vbz+mXFhEAcI2
-	8Pe0LVxH6EKm5OIQgM0k8vAuHMSf0Kg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1766417775;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h5h7+A5awHzkqbIHTSYYSLcXY7sXSCMhj2UcviA/ZOg=;
-	b=n6mwVSJTG3c7QIMaJFXCa9AuExDQWPM6eY4OJlyDPsIPRUDwEErF/MqsdOyavH/GU1hW/L
-	gUV6CARDiHuCSCBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2DDA51364B;
-	Mon, 22 Dec 2025 15:36:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id QEgvC29lSWl9DgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 22 Dec 2025 15:36:15 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id E7058A09CB; Mon, 22 Dec 2025 16:36:14 +0100 (CET)
-Date: Mon, 22 Dec 2025 16:36:14 +0100
-From: Jan Kara <jack@suse.cz>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, linux-ext4@vger.kernel.org, 
-	jack@suse.cz, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	gabriel@krisman.be, amir73il@gmail.com
-Subject: Re: [PATCH 2/6] fs: report filesystem and file I/O errors to fsnotify
-Message-ID: <cunesvp5k37ocmz2nbkdov7ssu3djqvdii26d4gn6sj7sgtnca@b5mokxhvneay>
-References: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
- <176602332171.686273.14690243193639006055.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=t/UrlFEac+yaMPrqP+i5K5os110Fow+C8FRlTUY0kMe9hSWBRZOMgmvqzw0oiHx+PUbLT4kzK0QY4kP4Bam0f5CF1WjHnyEZhAf15fRcAznuX5oPGAEPvAjNKo35jp4BO3Adu3cM71ug9dkxNjWngw+AEaidEEsQUWnohzavpvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E236368B05; Tue, 23 Dec 2025 00:41:56 +0100 (CET)
+Date: Tue, 23 Dec 2025 00:41:56 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>,
+	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gfs2@lists.linux.dev, io-uring@vger.kernel.org,
+	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 08/10] fs: add support for non-blocking timestamp
+ updates
+Message-ID: <20251222234156.GA19230@lst.de>
+References: <20251217061015.923954-1-hch@lst.de> <20251217061015.923954-9-hch@lst.de> <2hnq54zc4x2fpxkpuprnrutrwfp3yi5ojntu3e3xfcpeh6ztei@2fwwsemx4y5z> <20251218061900.GB2775@lst.de> <wynhubqgvknr3fl4umfst62xyacck3avmg6qnbp2na6w7ee3qf@odetcif4kozl>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -89,144 +42,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176602332171.686273.14690243193639006055.stgit@frogsfrogsfrogs>
-X-Spam-Flag: NO
-X-Spam-Score: -3.80
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_TLS_LAST(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FREEMAIL_CC(0.00)[kernel.org,lst.de,vger.kernel.org,suse.cz,krisman.be,gmail.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+In-Reply-To: <wynhubqgvknr3fl4umfst62xyacck3avmg6qnbp2na6w7ee3qf@odetcif4kozl>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed 17-12-25 18:03:11, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Create some wrapper code around struct super_block so that filesystems
-> have a standard way to queue filesystem metadata and file I/O error
-> reports to have them sent to fsnotify.
-> 
-> If a filesystem wants to provide an error number, it must supply only
-> negative error numbers.  These are stored internally as negative
-> numbers, but they are converted to positive error numbers before being
-> passed to fanotify, per the fanotify(7) manpage.  Implementations of
-> super_operations::report_error are passed the raw internal event data.
-> 
-> Note that we have to play some shenanigans with mempools and queue_work
-> so that the error handling doesn't happen outside of process context,
-> and the event handler functions (both ->report_error and fsnotify) can
-> handle file I/O error messages without having to worry about whatever
-> locks might be held.  This asynchronicity requires that unmount wait for
-> pending events to clear.
-> 
-> Add a new callback to the superblock operations structure so that
-> filesystem drivers can themselves respond to file I/O errors if they so
-> desire.  This will be used for an upcoming self-healing patchset for
-> XFS.
-> 
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+On Fri, Dec 19, 2025 at 04:12:01PM +0100, Jan Kara wrote:
+> Ah, I see now. Thanks for explanation. This interplay between filesystem's
+> .update_time() helper and inode_update_timestamps() is rather subtle.
+> Cannot we move the SB_LAZYTIME checking from .update_time() to
+> inode_update_timestamps() to have it all in one function? The hunk you're
+> adding to xfs_vn_update_time() later in the series looks like what the
+> other filesystems using it will want as well?
 
-Looks good to me. Besides the nits Christoph commented on just two comments:
+XFS is a bit special as it requires the ilock for timestamp updates
+(I'm actually not sure how they are properly serialized for others,
+but let's open that can of worms after this one is dealt with..).
 
-> +static inline struct fserror_event *fserror_alloc_event(struct super_block *sb,
-> +							gfp_t gfp_flags)
-> +{
-> +	struct fserror_event *event = NULL;
-> +
-> +	/*
-> +	 * If pending_errors already reached zero or is no longer active,
-> +	 * the superblock is being deactivated so there's no point in
-> +	 * continuing.
-> +	 */
-> +	if (!refcount_inc_not_zero(&sb->s_pending_errors))
-> +		return NULL;
+But I came up with a way to make this a bit more obvious, which is
+by moving the flags selection from mark_inode_dirty_time into
+inode_update_timestamps.
 
-It would be good here or in the above comment explicitely mention that the
-ordering of s_pending_errors check and SB_ACTIVE check is mandated by the
-ordering in generic_shutdown_super() and that the barriers are implicitely
-provided by the refcount manipulations here and in fserror_unmount().
+> BTW, I've noticed that ovl_update_time() and fat_update_time() should be
+> safe wrt NOWAIT IO so perhaps you don't have to disable it in your patch
+> (or maybe reenable explicitly?).
 
-> +	if (!(sb->s_flags & SB_ACTIVE))
-> +		goto out_pending;
-> +
-> +	event = mempool_alloc(&fserror_events_pool, gfp_flags);
-> +	if (!event)
-> +		goto out_pending;
-> +
-> +	/* mempool_alloc doesn't support GFP_ZERO */
-> +	memset(event, 0, sizeof(*event));
-> +	event->sb = sb;
-> +	INIT_WORK(&event->work, fserror_worker);
-> +
-> +	return event;
-> +
-> +out_pending:
-> +	fserror_pending_dec(sb);
-> +	return NULL;
-> +}
-> +
-> +/**
-> + * fserror_report - report a filesystem error of some kind
-> + *
-> + * Report details of a filesystem error to the super_operations::report_error
-> + * callback if present; and to fsnotify for distribution to userspace.  @sb,
-> + * @gfp, @type, and @error must all be specified.  For file I/O errors, the
-> + * @inode, @pos, and @len fields must also be specified.  For file metadata
-> + * errors, @inode must be specified.  If @inode is not NULL, then @inode->i_sb
-> + * must point to @sb.
-> + *
-> + * Reporting work is deferred to a workqueue to ensure that ->report_error is
-> + * called from process context without any locks held.  An active reference to
-> + * the inode is maintained until event handling is complete, and unmount will
-> + * wait for queued events to drain.
-> + *
-> + * @sb:		superblock of the filesystem
-> + * @inode:	inode within that filesystem, if applicable
-> + * @type:	type of error encountered
-> + * @pos:	start of inode range affected, if applicable
-> + * @len:	length of inode range affected, if applicable
-> + * @error:	error number encountered, must be negative
-> + * @gfp:	memory allocation flags for conveying the event to a worker,
-> + *		since this function can be called from atomic contexts
-> + */
-> +void fserror_report(struct super_block *sb, struct inode *inode,
-> +		    enum fserror_type type, loff_t pos, u64 len, int error,
-> +		    gfp_t gfp)
-> +{
-> +	struct fserror_event *event;
-> +
-> +	/* sb and inode must be from the same filesystem */
-> +	WARN_ON_ONCE(inode && inode->i_sb != sb);
-> +
-> +	/* error number must be negative */
-> +	WARN_ON_ONCE(error >= 0);
+fat is safe.  overlayfs is not, touch_atime might sleep in the lower fs.
 
-Since the error reporting is kind of expensive now (allocation & queueing
-work) it would be nice to check somebody actually cares about the error
-events at all. We can provide a helper from fsnotify for that, I'm not sure
-about ->report_error hook since it didn't get used in this series at all in
-the end...
+> And I don't really now what orangefs_update_time() is trying to do with its
+> __orangefs_setattr() call which just copies the zeroed-out timestamps from
+> iattr into the inode? Mike?
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I'll leave that to Mike.
+
