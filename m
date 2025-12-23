@@ -1,68 +1,67 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1B252F39C1
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Dec 2025 05:38:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A34D2E228D
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Dec 2025 05:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766468313; cv=none; b=drD5sP7FtUQugMBLUNldp8Fz7oJAJr4t7+e3cLsaCwJJxiohnMBlRbWq3qd/pKafEFnm5D+/bzq7WM6mCYbzc2MD33FlWU7y/5R7pMeEsYcY4y8Hb4FV4iJpfQSY4jCVK5ulQ6VS0Y5jhk8p1Q2SBfUAvfpf0zHGbb+YAmxev30=
+	t=1766468349; cv=none; b=RAIoS1czxRrVYKz4QP8QdBG+lrAEkadwIrVas7VdlAC3JT9XT/Hoc6g3GA9tONHpCplmmsv/5fO7M/hS2DQT2cJQ90vHe6uuCSu/taC/TLS7wNrm8etbzVI2B5hRVWs1k3u2itavYHMlc2vf6qZ2CxwdMiuTNF7VsRaEf0KDIZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766468313; c=relaxed/simple;
-	bh=zTV5Fl6uJEq6bikfRl+2GZKAfKdgBpPPlmOrmzDQ1Sc=;
+	s=arc-20240116; t=1766468349; c=relaxed/simple;
+	bh=4EYwI5dt6aXRXkl+FSZUrQuoyCBEuH9OaUQ78T0nqW0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KpwCRtqu2dKmc6HVqG6bP5Kec4xqk7He0ajvg84Ayi1ZBYDyOl5Jgy5cSyRHYh+DryP9+PP6mkvrnV0e5ZiDxTDTV9G19l9SiGNFoXoT1fKZRyVX3snP8C2SUChejFaB6WaijuT2/mHdioja2ebA1J/JmqW1+lrto6fhLeMbA/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k/39yZPJ; arc=none smtp.client-ip=209.85.216.42
+	 In-Reply-To:Content-Type; b=mq0ej06I5EbCSr+AOFj2rB3vaiAW5XRJMBgMC3BnVZU4W3jyBa2X08KsBgBNPKbS2GsYxWgv2e1QmO08monNELKkwMsKb+Ub/DZENrWAKC7IxZTA3+EKUNYzCZYrVvBGKj+hYpTZHQHQCILM7rrmd33c57xlEDUJuWADWKyy7eA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AmuGU0S3; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k/39yZPJ"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-34c21417781so4579267a91.3
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Dec 2025 21:38:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AmuGU0S3"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2a099233e8dso40146415ad.3
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Dec 2025 21:39:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1766468311; x=1767073111; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1766468347; x=1767073147; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=2eUzqzQcRAv7TL9i3u7rXqYthkznBqBfs67/HNYTk8I=;
-        b=k/39yZPJRd/lUcRJkV7mXQEWc1+ntOQZ3mgr8kFI765nq8VXzciXpYKgKPQG/tmkAM
-         owjPUkIe3CFME/oQ1dh1e+schfxGr1GebTc60fpUHpvMD21xSXHx1R6rHRmQnGi7e77b
-         K8gWq0Odf6lE5z7xabI1OfkODM0SiBVhCyDtkdpfiQCqP28IV5iuZ3X2EFOvRV2Gg7UZ
-         OwnNQdnzXvu1PxMtIuBAX2FJOYDAFMzk3ZDVkCoSbErCXRMukkSvcsMp9nWx55EwuwEJ
-         7Pdlo1cgbWzgOgds7F9Lpvihye3j+92iv8K2QF0XqTlcbb/5O/MwGRalD5ldn/b0XsSo
-         WZGA==
+        bh=V0Oa5NOGMRC1AJFdH7RGft89mUSkkZqf9Qovy9KVtFo=;
+        b=AmuGU0S3tNTq4XtJ8CPVuHsrup5GslR4U1PsfZM5q7Es9j9PRoBOtcmrNZjZY9bYX2
+         UKR+5USfuLaeedQBq8VdFeWlSpdtJwj9cUx0XSPWF6iw2+/Dx0Y5UVucH/qMMErYNCo2
+         DmPMJSCgLNX8OFyioDFMPSDOCAjVz+YVUY/Iz/KUSFGJ2xhlgSyingmuGzIf1Ot4VcrN
+         bRMe9e6HU5DXOTn41IlUPOezYioUBfH4sOmBJ/VJV2wbgRChwx/8WJgiqq1vVmt2UJG1
+         sPq57LHY2hmsktX2yrFZnu8K5GlUfYr80BrqjJruZXf92pssdcqPz8wFkvEzjVdz2E5K
+         tIhg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766468311; x=1767073111;
+        d=1e100.net; s=20230601; t=1766468347; x=1767073147;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=2eUzqzQcRAv7TL9i3u7rXqYthkznBqBfs67/HNYTk8I=;
-        b=E1s+0Hhqv3b10dDXHKw6MkS0lkosxFEEwz/tSdu3IKKSWj4MNulRGZXspcCCytun+N
-         YhNZYGyW5idh112zPa552I05vYdTy/CXQ7+wCAgAVJb06Q8wHWVhHKm53eC/wLtRLm4/
-         LicxqohqfULOJwB7nMyPZhVdVUIPu2v6IJuWwZg6gdSY0UeVHURVxw/Qa03v9MVORNcR
-         5b/S4kyizb7OOQBz2qfSlZNZ2jEba1ywLRRE8+dp9+2KTsIEyHAiAX88euCk2dSUUupo
-         jtlCK923rZWeqk3gr8+L5QY18XXj9RIyEM1sTy0sKfVPqSkTJpawhLQIJBzWhHTDcuUE
-         eL4A==
-X-Forwarded-Encrypted: i=1; AJvYcCU9iyAVGR+du3olYgr22nT2lDZk2lsKIJaVkmneGfBtIvIFhY23tGVXHwCCHDDLcRi8afJrRrt67mI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywmw57uxp08yb4ezRV+lOSCV2PHyAArQW65Joi90/QwuaiKLo5v
-	Qu+/2oR6+9ue+UdXgMSp8Mz/ReaEDbd0aWxkyidt3C9MRV5LD3sRRB8i
-X-Gm-Gg: AY/fxX6PkV3y8tIK58Xdi4UZ4An9uuYkDbCdCbvchEFJ7KXSiZziD84fofmyhYErNzJ
-	QsW9WDpeOaYZIpSfRPwN3PC+Qz4EI/aAwEPSWNqmrc96jz9CQ2GrKNb9uGWHH7kV4izK7GkX0Zb
-	E881riwl2A4CPXGRm774iimmEkx6plEbAftfLFic8A5uRLiEd2NjzYuR6NsSn+sXUSpWqryXA7S
-	KbN8CLG7a96jGzHznqG6u8jnDAYcTwIahZpuVuEWiLmnayS+ZXpDeBgiObFgN5XdI9c40iW2/Wb
-	6opu3vYWqpjJVamALT0aU1VxmfCOvHb5w276/L19fKvPdZEYhmX4JCcAv2nb9Dbc9wyQTxBDcIg
-	4UfXdm5WeoBNlTCDP0JINxLku4kZdH4emuSsQEMJXO+G3gssoixeAjIsTuL3fYC/dHgFzz/x4Dh
-	m0vSsdcspXDtdXU+MQhN3WTTtr0E9mWeUjRvNWs6o4AHMZd43zXcupn+/BZFJChNG3GdJKNWCzY
-	fk=
-X-Google-Smtp-Source: AGHT+IFwAZOrVWcdz0GU+cDO+t7ewKrgjzgkHtOiGD0/poJQvRMMxSdMeBecD46MhF4AsSDjM1RyIA==
-X-Received: by 2002:a05:7022:799:b0:119:e56b:957e with SMTP id a92af1059eb24-121722ac244mr18354800c88.3.1766468311123;
-        Mon, 22 Dec 2025 21:38:31 -0800 (PST)
+        bh=V0Oa5NOGMRC1AJFdH7RGft89mUSkkZqf9Qovy9KVtFo=;
+        b=v8CJH/px4KDtWrk9av/w4fgwes1HFgNOPeFzozAUuU4IqEK34g924/JWEuU3Il0r7T
+         oUrj1D5pmmDnaW2TXFEE/O/puOPjW+Q8c+eLd8eVU1kHNSOczn0BqlpoSYpheS74QGKi
+         h50sbf/YIh83tfM07qZR9X5VPEXLYTwqIfQlI/FV5kkdXZHc/wa91Qjn6b6vlDi7tjPL
+         D+a2sFiS46ulAYp7r6TdiqHpUM70ck7nQnSzpK4Hu2TnanSgJVk0qEKUwV3GoOJv+Jae
+         QBzhlsAs07e9Fdfvcoab6pYE4liOg7+iGSMK2TlcHow8f2ZJJror7/4IwkI8ZYGdd+Fc
+         YszA==
+X-Forwarded-Encrypted: i=1; AJvYcCUC09rUKHubd23ljmnJIrIqs4qpscoZJemKVrCACWd05sDUGCF4X92RAvxMj3c9QcvpSdv2ZZisU48=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4VJZNCeWVw2Mz8sBhQfZ2DoFAfsrXNH//1sUEClRrHr9TSRYn
+	eAnkRq3mhg4SVYRadjLRlsG5QhLG6UVcU85R4xbEgayAh486aC+AeeLj
+X-Gm-Gg: AY/fxX72kU+NKZzSUNWsAG2fPG8E6P23pQ/5rwSmKI3iBlpvo5DTwjd4r9qNgebN4P8
+	h+ghy4twLEFeF+FAt18IrxzZcQjNVgjIkVYKSlU5tDgj/Y4yqsoKTYQ6KmjtE+OPbFLIg03+TQs
+	JdWphzcpCeO+VwtEbT+VxgPV3JYqYDlJRnK+hWWXhSqZLQhoOZ/p9h7TfM7QVDNHtDrvP53vj82
+	1lrR4DDzyMMvzeC9UO0lt5XoxeBmvAxHuwAwDzi0yOQRkmgsQfrQWHQ70qeI3J9ATBzcCcz4882
+	APjLLSlJ+xEcKyiRfqe4JmmKVg4gC4jY8ffEQQalNmksx9s+l5mV/QGwQxVHJTJ3Ap1aVvtwXb4
+	rjBFLvNf841JBvilafDWyXImgWf+hrVeliVjP6GHgsXhFC8lm+GtcdotB65TeH4tk+U7C7gpTKu
+	GiNwZlfacbT/unOOmb9hKEJ2twu1CNLy/T/EFo2qFcEgzqwSZZqflNUgrHG2ohEmyf
+X-Google-Smtp-Source: AGHT+IFzlCLo+BvPmOwaQvXqt6LlTFpUSJebHNJribHXa7k68xn/ydFompByNLrYdKm0zAa3YWAnPw==
+X-Received: by 2002:a05:7022:793:b0:11b:9386:8257 with SMTP id a92af1059eb24-12172302180mr11142291c88.44.1766468347292;
+        Mon, 22 Dec 2025 21:39:07 -0800 (PST)
 Received: from ?IPV6:2600:8802:b00:9ce0:637f:5cdc:9df0:d9ab? ([2600:8802:b00:9ce0:637f:5cdc:9df0:d9ab])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1217254d369sm56187439c88.16.2025.12.22.21.38.30
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121724de268sm40285157c88.8.2025.12.22.21.39.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Dec 2025 21:38:30 -0800 (PST)
-Message-ID: <37febb65-038e-47a7-9a5b-3b4c2773994f@gmail.com>
-Date: Mon, 22 Dec 2025 21:38:29 -0800
+        Mon, 22 Dec 2025 21:39:06 -0800 (PST)
+Message-ID: <bc999618-1f1a-4ae7-a81c-57062d57614d@gmail.com>
+Date: Mon, 22 Dec 2025 21:39:05 -0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,7 +69,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/11] fs: add support for non-blocking timestamp updates
+Subject: Re: [PATCH 11/11] xfs: enable non-blocking timestamp updates
 To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
 Cc: Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
  Jan Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>,
@@ -82,24 +81,24 @@ Cc: Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
  linux-unionfs@vger.kernel.org, linux-mtd@lists.infradead.org,
  linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
 References: <20251223003756.409543-1-hch@lst.de>
- <20251223003756.409543-9-hch@lst.de>
+ <20251223003756.409543-12-hch@lst.de>
 Content-Language: en-US
 From: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-In-Reply-To: <20251223003756.409543-9-hch@lst.de>
+In-Reply-To: <20251223003756.409543-12-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 12/22/25 16:37, Christoph Hellwig wrote:
-> Currently file_update_time_flags unconditionally returns -EAGAIN if any
-> timestamp needs to be updated and IOCB_NOWAIT is passed.  This makes
-> non-blocking direct writes impossible on file systems with granular
-> enough timestamps.
+> The lazytime path using the generic helpers can never block in XFS
+> because there is no ->dirty_inode method that could block.  Allow
+> non-blocking timestamp updates for this case by replacing
+> generic_update_time with the open coded version without the S_NOWAIT
+> check.
 >
-> Add a S_NOWAIT to ask for timestamps to not block, and return -EAGAIN in
-> all methods for now.
->
+> Fixes: 66fa3cedf16a ("fs: Add async write file modification handling.")
 > Signed-off-by: Christoph Hellwig<hch@lst.de>
 > Reviewed-by: Jeff Layton<jlayton@kernel.org>
+
 
 Looks good.
 
