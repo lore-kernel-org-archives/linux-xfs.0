@@ -1,117 +1,75 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com [209.85.161.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF49A2BE02A;
-	Tue, 23 Dec 2025 00:39:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14F1027F754
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Dec 2025 01:33:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766450346; cv=none; b=qK8tkF6yNjVFSf0Bwv/y31+fzUvkEATk74BUy1gkp7S6YBGVEO0PRVxtIa9siYicF999UR6NpX55kqjFSlOEMjh4Et3L1oCd1yLC8s/CBtytYArUh+TdIIa9cCpwkYFsEk+LKlvL+i4MIA9YPIQETeYYA27aP4upUqeUdqT+vbQ=
+	t=1766453587; cv=none; b=L+ynXHRtH1PDLbUnpGMJlnnezcWfIuMPC8N3BjKEV2RED8ShP+rbpeDaQLjN4zTThHiX1BxAzBS1D7OTfRHaphHv3qOAnIoEt4caURgQcOcmCYMLE6hJ0gMyEnY/aXVMvjgqAxCV6gYJb8ouG7U1smKmc+U4jNVhUS3OKFxvIQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766450346; c=relaxed/simple;
-	bh=IfaqT1FwkkPlvNK+9vGxPt7qaaBRmNYbdSrLiNl4lts=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Pa/lfHHeaNQsE4fOt7A5O5Ep6SkVC6NVRcRLKi+b15bjPCtLV0KH2+lxTsQDBsWIZ+3WA8WFYVNK9AlvFKF7FFqv5S/W1XtqYdl+SuOkBYGwRTAgEY3ac26x+8VXolsS9IlUl+uuc5w08WWGMnWZwgIgyHqfOgQmhBw2ClLAkaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oXZJEA/h; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oXZJEA/h"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Lz/gfojNOQEzMThjbhxxwMo5vvQbozdveVwLBNNNNnk=; b=oXZJEA/hdSIzf0iL/xwwzU2XeN
-	y6JNAEkZaTdObxRLRp8qxhRgWk0aodtccieMOE9EVHp3l0zdFfDYvY5aVaRFmvTtwk/xnjdFnt0Dr
-	zjpnn7bJ7AvJ+zwtZHUEOdLt24kYLHGabI/dgIwidLsTlkuX5yTFemkdjVxfVQTtoAoxbUyQim7vK
-	TddAydZ471UHgfhGtmKLX2iBlJfdlF9+/hORm53QKBi5hYBYCdxZxzLw3FBpFlS/ur7NcR65Aj1xU
-	EtzqFzaU91OeX+9ULM2Pn9lOE9IpAtNZZL/M4my9/GauNm+lzY79VeTweMsG++ZTZ8DmgCVwzKuYA
-	KnTHZB7w==;
-Received: from s58.ghokkaidofl2.vectant.ne.jp ([202.215.7.58] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vXqQY-0000000EJD0-2O8m;
-	Tue, 23 Dec 2025 00:39:02 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	io-uring@vger.kernel.org,
-	devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: [PATCH 11/11] xfs: enable non-blocking timestamp updates
-Date: Tue, 23 Dec 2025 09:37:54 +0900
-Message-ID: <20251223003756.409543-12-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251223003756.409543-1-hch@lst.de>
-References: <20251223003756.409543-1-hch@lst.de>
+	s=arc-20240116; t=1766453587; c=relaxed/simple;
+	bh=SP+GaiCYuN2M2+xFFnDwK4yIuut+xKCKAjpjpumTHY4=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=ALSPu7lOtI0IKD2qZb8fq62hXp739/UX4nef/7zdr5casiBruR1nDpYMK5SMG9dKERuo2DF0SLZiisXM95P7X20GyECYyaykjlO7hPqew3p786b9uUJG2LEmOPPWDEJPjxsqotopwb8zkIpKx+8mXQ5gtlDx6Co8A6V94MurlbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-65d12f446c2so6135317eaf.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Dec 2025 17:33:04 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766453584; x=1767058384;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=U0m2ApQPISoQ1H75VqhHliy3dNQn6hllI/yvhM5v7Lk=;
+        b=EohSxmGHKQq6rvcJ/hOaZuglydLdd+ZMwc3dBPVZReGm1cxLT6BxNbKzjPHsrU23EU
+         QM3nGL1oRFNy7xWFpmjpKP7jmoEKNAUdAFIEQu9hYxB2Fvu0gqiZbl3Zu9JtflY2Moiy
+         YlZyZhtzUSkZFEIaVuBIG3+vrP/nbP8dKwL5ou3FQvkm8MEVkWxsvQYeM3jQWJOJXQQO
+         r4zSExbqFH/N1IR7BQP0j/lwzlRfD0EvSDQf5RIN4R9exSoymAqzL0XU/RRfREjMBFUE
+         t7BrfWukCCokb6pbkBox0cujwxhcidQEQNHDJT7jYz1Ol/XNigU7cnQXikFu78/PiEah
+         GQbw==
+X-Forwarded-Encrypted: i=1; AJvYcCXE/HqAWEq5e4eZm2duUAELOvk2tTcXWSstkSqLDY98Nz4vb1xRkEgm8O7i+Ou5gci3Cql0bR3cl9k=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+am2Y6DAOSUg0L/syS1ftay+TV1jewK12O+DDKX0F1E9hTlHj
+	kEAqxpLi9lrUx8mIF3e/kw4XaXJQ7ckEE0T76gGWNWjLIH3pko7/V50zPRa357nFCOds4ce6MkP
+	hfgZssT3LaPfp7YJORsIsqh8ajiIJ/AI+aqhB92yEReA/HsNJJjTFpic/vQs=
+X-Google-Smtp-Source: AGHT+IHtP2DOlHW6k5FdZTWgBmECBIw/OVxec6XgeB1Npqd5Hqrut3nMJycncDEhBsjAgRsyhcPFqGYdeJHUNcDSIVN5kWigJN6G
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Received: by 2002:a05:6820:1c9e:b0:659:9a49:8e8a with SMTP id
+ 006d021491bc7-65d0e9f3b7emr5999684eaf.14.1766453583902; Mon, 22 Dec 2025
+ 17:33:03 -0800 (PST)
+Date: Mon, 22 Dec 2025 17:33:03 -0800
+In-Reply-To: <6841da10.a00a0220.68b4a.0018.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6949f14f.050a0220.19928e.0013.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] INFO: task hung in vfs_setxattr (7)
+From: syzbot <syzbot+3d0a18cd22695979a7c6@syzkaller.appspotmail.com>
+To: akpm@linux-foundation.org, cem@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com, urezki@gmail.com, 
+	vishal.moola@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-The lazytime path using the generic helpers can never block in XFS
-because there is no ->dirty_inode method that could block.  Allow
-non-blocking timestamp updates for this case by replacing
-generic_update_time with the open coded version without the S_NOWAIT
-check.
+syzbot suspects this issue was fixed by commit:
 
-Fixes: 66fa3cedf16a ("fs: Add async write file modification handling.")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jeff Layton <jlayton@kernel.org>
----
- fs/xfs/xfs_iops.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+commit a0615780439938e8e61343f1f92a4c54a71dc6a5
+Author: Vishal Moola (Oracle) <vishal.moola@gmail.com>
+Date:   Tue Oct 21 19:44:56 2025 +0000
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e12c6e6d313e..1fba10281e54 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1195,16 +1195,23 @@ xfs_vn_update_time(
- 
- 	trace_xfs_update_time(ip);
- 
--	if (flags & S_NOWAIT)
--		return -EAGAIN;
--
- 	if (inode->i_sb->s_flags & SB_LAZYTIME) {
--		if (!((flags & S_VERSION) &&
--		      inode_maybe_inc_iversion(inode, false)))
--			return generic_update_time(inode, flags);
-+		int dirty_flags;
-+
-+		error = inode_update_timestamps(inode,
-+				flags | S_CAN_NOWAIT_LAZYTIME, &dirty_flags);
-+		if (error)
-+			return error;
-+		if (dirty_flags == I_DIRTY_TIME) {
-+			__mark_inode_dirty(inode, I_DIRTY_TIME);
-+			return 0;
-+		}
- 
- 		/* Capture the iversion update that just occurred */
- 		log_flags |= XFS_ILOG_CORE;
-+	} else {
-+		if (flags & S_NOWAIT)
-+			return -EAGAIN;
- 	}
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
--- 
-2.47.3
+    mm/vmalloc: request large order pages from buddy allocator
 
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12ce0bb4580000
+start commit:   f83ec76bf285 Linux 6.17-rc6
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=4d8792ecb6308d0f
+dashboard link: https://syzkaller.appspot.com/bug?extid=3d0a18cd22695979a7c6
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13e15762580000
+
+If the result looks correct, please mark the issue as fixed by replying with:
+
+#syz fix: mm/vmalloc: request large order pages from buddy allocator
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
