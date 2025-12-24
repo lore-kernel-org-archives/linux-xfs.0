@@ -1,113 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D5F93446C3;
-	Wed, 24 Dec 2025 13:11:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06CA8340D93
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Dec 2025 15:16:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766581901; cv=none; b=RsdRHRkvZExFwpmJpgKdGAxaJn7P05GJ5J0936+/5Q60lzPjjB6S8NWqfYuwguHwhf6a9EwsHX3oSYD/Ox87pmSyEdrJgBP0D4AQppkPqAhLOXztG5IqJdIxyLpTjNgBEX0Ij3M2XDPAgvqeJckSZ7zJai9BU4XAtUJxFveg920=
+	t=1766589401; cv=none; b=XGnDvFdCbtthI81se6Cj1y30bvm2yAPDxponqDkTZEa/J0QtSBKJoz2yqFePR56eTN3s1lq8LVdCr9qzom+msP0scXbkW+CUu9kimfD02D0sJ+1sl66bE6T3ILI49OZbcOFeXwK7pYDcGSTlIhSxj5BHKk9ezBu9FXkRcOXra7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766581901; c=relaxed/simple;
-	bh=xkzFLbJE3Yl6/KjE/bhEo+uzD1k3qFUB9hXgXJmvF9c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RGUzqlQy1F4hYBgN3P8T5fuigJxYyfFACMjxYwRBfR42La5ZD7fcF3T9BdTy47CZvwDpJ5DkbdajmE1LhmmuJWj6DykdrsXS5bw9CuhSmv+5J53lCSqUgpjfj44LMsXk+rTG6SthMC+eehUJ9kTGX2T7qIT94pTYH+cfLAiRWqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H4jCnbzM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766589401; c=relaxed/simple;
+	bh=uOnsWUrYxVkCst/5nq/Nhiz6uqnGuM4W0ppeyUNFdjs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=LCwj4FDNdWJZmQJK2zPLzgei5EYfPLJGOq1LBebEdTIHGe9dRc1T/W9XdxJ3d4c9fwKXC4qaLL+h4L/+oBGsg7rORMYzuM4tjDe8j/B8xQ8khRRsqr7NT/59ei0pbdTjyOdpCDPwn01k4GyWUG1tl+Ems+r1a00KXACUz8j642I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VRf9qqJA; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=sbldBWnf; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H4jCnbzM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FD69C4CEFB;
-	Wed, 24 Dec 2025 13:11:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766581900;
-	bh=xkzFLbJE3Yl6/KjE/bhEo+uzD1k3qFUB9hXgXJmvF9c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=H4jCnbzM3mOgqWIdxR3C3K2n3HI1lcBsgb+Ru/Qb0aCw/VL9DX9Lb5CnzIiQswF4A
-	 pJKR6nkrEuWDuCES+6pMYluaUXGp0D6J54b5f05m7vMlV0UP2/7BVwL7fzFFwZxcCI
-	 nxeWBMa0oQONvUuGckHG2Zg8KqjTzfhVsUT7bJ0zAljCq8un6sQqsNzV1zt5fxX25n
-	 JzJIRtOUgTqTb4yxYV1o1KWaRd9nJ0IppElaoiZjpm2unGrwAuLay1lKbTeqC0EFAV
-	 G612qY5Z0BsJe6l0vVzhPtIMUOJQgCg40oz5KXe2WIxN6a84IhK91JRBQqaIUzg8vU
-	 WjAhNRNhlSJZA==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	io-uring@vger.kernel.org,
-	devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: Re: re-enable IOCB_NOWAIT writes to files v4
-Date: Wed, 24 Dec 2025 14:11:29 +0100
-Message-ID: <20251224-zusah-emporsteigen-764a9185a0a1@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251223003756.409543-1-hch@lst.de>
-References: <20251223003756.409543-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VRf9qqJA";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="sbldBWnf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1766589397;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=C1lJkthoAooSzwBvnedDyZOt6AVbfRteQQ4N8O9IwHQ=;
+	b=VRf9qqJArLVoZUwaWWyaYl5qACtrQU+slaDEdso2dbUiIV6+AGVcep1CgM6x72g9yDewEU
+	7Ujue3PNsmBHpdGpoPPFFelntrgPSUZ9xFK4QQpW0ZBbG1XY2SQszIzJx38Azc52APPKTo
+	YRmQlIsscJDHrjxdQ3x3rbI8axK6z8E=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-402-1o3C8p0eMuyTHkdZ-7rVFA-1; Wed, 24 Dec 2025 10:16:36 -0500
+X-MC-Unique: 1o3C8p0eMuyTHkdZ-7rVFA-1
+X-Mimecast-MFC-AGG-ID: 1o3C8p0eMuyTHkdZ-7rVFA_1766589395
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4779d8fd4ecso31676785e9.1
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Dec 2025 07:16:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1766589394; x=1767194194; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=C1lJkthoAooSzwBvnedDyZOt6AVbfRteQQ4N8O9IwHQ=;
+        b=sbldBWnfvxKO+8hgg6ECUqrFOcadvuC6I7sxtu0kDeQ0aEactpXscDE4JztTwHaWg8
+         ya61AprzJ+RzMDPkrteqXVIbu346chAb16AkWt2yCRUi99efBpabNee8/cDupKpjKjMH
+         4N4vo64fhWv9tZSiBtWh4Hg3u0Y+/BLJPYQ/fgmxZAICYMMelZNofeca4zCvfwEDxsE3
+         M8cKMCnccJM4CHUdYBmFJGELiRxb/xNtPqvQgbDW7cx/BOQIMjeIc4esPpycKLlFoY5k
+         YAl9T5vSLuEtK+yNnonWNLm4f+KT4ZEd/fNjRaeQgFuKaKzTYV0kjzzemk0RjYQxTgWP
+         EAHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766589394; x=1767194194;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=C1lJkthoAooSzwBvnedDyZOt6AVbfRteQQ4N8O9IwHQ=;
+        b=EFrrSAMiyGJpY5D3KUa4HklYSwc0GtaDVpvY7ldNcysEKQpsWKuaPlvcZ4FIKRgnGf
+         fSqvhbzhrP3Bb4AN7+Y2f8iij9/TMsZ0Kou8OX7q57M7bvwC4k3/OnAPbZqI6TWl663v
+         n44FI7eRJlxOHiiEGn66hBM3fjsC5P4QQHfHm7yRLLWRsBhr4yfhq1NTKtkcFGfIWQxn
+         HWD3g18l/jAJseHPp4keDls1vUXCrKx4gAOsvpOcXdYkaOKk7aWKKjKnwsC4TMMXfi76
+         pk3cNUCzhwHeuuNEMxpQiCwXqw64OkujcHtD2inGv4YU+1ajofhXojFPqtJ+X8w/Ge9J
+         XKvQ==
+X-Gm-Message-State: AOJu0Yw8IPVJCnlqmN5UrLeKfx1hsQGRLzwNUfg2U5tXJjUjCpmIOmaT
+	Wk9sJtST6aHOAQd27DZfwc4akeexoPDTolL0krh+c8eS1NFH/fzo4JMZtqVyhD9TgMndAeFt6rL
+	k6MhvLNM9bLAF+3DySmgetHAyH33o3t1Vxx92CDOCcOjcma17CHZxZuepkvCHCRv6RP6vWkDMUF
+	hs+SDGtLqK7U2y1nDvY9JckO9JPQSa2nY5c+Hs2Yn0OXLx
+X-Gm-Gg: AY/fxX6Uh2bsCbhAN95yV5iaR6v1XKbHdvQJolQ0ebuKRWR2PiTVXz6Or/vzFOqHFaD
+	t3EuX2SHbOEAoDObGc0q09wIsy67jwcVDuOSNwY0tDflCuXXu5EGrGyQQnl+GOp5EBtHX3Rghi5
+	2oTeh52XAjen65votyfeh2pcrLOr1DzWBstcvYQXU+cx0APYfygXbtiXA97IUDvW/JlpgTuvsda
+	CMt4vlt9VEoBSpLuLszflPFPJsMiEyKu1mrk440nF2df/zoIsGQDwuZBwHi2RbWLLYQggoBifQt
+	qe+ik8TEECoafhGVzsdFGtB0X+dr37NwDGHjT8CY4THmveVRSl1cteBPbHRbeIvnkPP+UuATB8f
+	KHw==
+X-Received: by 2002:a05:600c:c04b:10b0:47d:333d:99c with SMTP id 5b1f17b1804b1-47d333d09b9mr63772775e9.18.1766589394556;
+        Wed, 24 Dec 2025 07:16:34 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHvGP70oIJ6NxGVVnsJUwYh3C9P1YifOmy8w6rVZn6n/Jwe3ZQcHPIkFbdkEsAbX+vRouB4kA==
+X-Received: by 2002:a05:600c:c04b:10b0:47d:333d:99c with SMTP id 5b1f17b1804b1-47d333d09b9mr63772495e9.18.1766589394036;
+        Wed, 24 Dec 2025 07:16:34 -0800 (PST)
+Received: from thinky ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d193cbe58sm299596805e9.9.2025.12.24.07.16.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Dec 2025 07:16:33 -0800 (PST)
+Date: Wed, 24 Dec 2025 16:16:32 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: chandanbabu@kernel.org, cmaiolino@redhat.com, djwong@kernel.org, 
+	hch@lst.de, preichl@redhat.com
+Subject: [ANNOUNCE] xfsprogs: for-next updated to b5d372d96db1
+Message-ID: <2ibkjb3kqbic5blhmojz3mv3ehmdxhdw6fzj6myx5vlivtclwb@r5disaw6rrhc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2451; i=brauner@kernel.org; h=from:subject:message-id; bh=xkzFLbJE3Yl6/KjE/bhEo+uzD1k3qFUB9hXgXJmvF9c=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR6P2u9P8NC4Oknl7n+KaseXU9zXzhvZm2QvLrO6W3vJ 6tuyLhc21HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCR7BkM/9RVShfZSa156/bx 1eXNz6SeJXfd3dXamjphTqX5hxVNKosZ/lcvu/A9Llf0x8MWnStxfpW3xBwCVpVM83e7znXwGHP 8YRYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Tue, 23 Dec 2025 09:37:43 +0900, Christoph Hellwig wrote:
-> commit 66fa3cedf16a ("fs: Add async write file modification handling.")
-> effectively disabled IOCB_NOWAIT writes as timestamp updates currently
-> always require blocking, and the modern timestamp resolution means we
-> always update timestamps.  This leads to a lot of context switches from
-> applications using io_uring to submit file writes, making it often worse
-> than using the legacy aio code that is not using IOCB_NOWAIT.
-> 
-> [...]
+Hi folks,
 
-Applied to the vfs-7.0.nonblocking_timestamps branch of the vfs/vfs.git tree.
-Patches in the vfs-7.0.nonblocking_timestamps branch should appear in linux-next soon.
+The xfsprogs for-next branch in repository at:
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+has just been updated.
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.0.nonblocking_timestamps
+The for-next branch has also been updated to match the state of master.
 
-[01/11] fs: remove inode_update_time
-        https://git.kernel.org/vfs/vfs/c/a3c5dc04be9f
-[02/11] fs: allow error returns from generic_update_time
-        https://git.kernel.org/vfs/vfs/c/829f055d68ee
-[03/11] fs: exit early in generic_update_time when there is no work
-        https://git.kernel.org/vfs/vfs/c/3c5f7a9696fa
-[04/11] fs: delay the actual timestamp updates in inode_update_timestamps
-        https://git.kernel.org/vfs/vfs/c/6e827e32c6ae
-[05/11] fs: return I_DIRTY_* and allow error returns from inode_update_timestamps
-        https://git.kernel.org/vfs/vfs/c/b79904581c69
-[06/11] fs: factor out a sync_lazytime helper
-        https://git.kernel.org/vfs/vfs/c/0cd53e2011e2
-[07/11] fs: add a ->sync_lazytime method
-        https://git.kernel.org/vfs/vfs/c/641284ff9133
-[08/11] fs: add support for non-blocking timestamp updates
-        https://git.kernel.org/vfs/vfs/c/3cb9ff38ddaf
-[09/11] fat: enable non-blocking timestamp updates
-        https://git.kernel.org/vfs/vfs/c/1736c77f0834
-[10/11] xfs: implement ->sync_lazytime
-        https://git.kernel.org/vfs/vfs/c/831c93b34fa4
-[11/11] xfs: enable non-blocking timestamp updates
-        https://git.kernel.org/vfs/vfs/c/bafbe984c54e
+The new head of the for-next branch is commit:
+
+b5d372d96db1adb316c91a058dddffb38ef6d166
+
+New commits:
+
+Christoph Hellwig (5):
+      [0c6d67befe98] repair: add a enum for the XR_INO_* values
+      [5d157c568e3d] repair: add canonical names for the XR_INO_ constants
+      [a439b4155fd5] repair: factor out a process_dinode_metafile helper
+      [f4b5df44edd8] repair: enhance process_dinode_metafile
+      [b5d372d96db1] mkfs: adjust_nr_zones for zoned file system on conventional devices
+
+Darrick J. Wong (1):
+      [20796eec31f8] xfs_logprint: fix pointer bug
+
+Pavel Reichl (1):
+      [98f05de13e78] mdrestore: fix restore_v2() superblock length check
+
+Code Diffstat:
+
+ logprint/log_misc.c       |   2 +-
+ mdrestore/xfs_mdrestore.c |   2 +-
+ mkfs/xfs_mkfs.c           |   8 +-
+ repair/dinode.c           | 300 ++++++++++++++++++++++------------------------
+ repair/incore.h           |  19 ---
+ 5 files changed, 145 insertions(+), 186 deletions(-)
+
+-- 
+- Andrey
+
