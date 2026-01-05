@@ -1,236 +1,135 @@
-Received: from mail-oo1-f77.google.com (mail-oo1-f77.google.com [209.85.161.77])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7782B314D22
-	for <linux-xfs@vger.kernel.org>; Mon,  5 Jan 2026 02:40:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.77
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB4C31ED94
+	for <linux-xfs@vger.kernel.org>; Mon,  5 Jan 2026 09:28:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767580826; cv=none; b=eh3DlWb9sS7ZrQwwNuk7NpjrNvR2SjBY4Vn6HGmFCoyKw2BHahSpFdzd3FaSon8QnqV0UzcVCyzBQ1bBmBCExJaGUAmxl+H+QKZHgeOA1jmBVg6LyvUmjnrwnTJ28AaUn7KbkXcdR43H98aeT9O4cSSQM2kQrbfIlgPQl77iRW0=
+	t=1767605286; cv=none; b=slnAo4KKsaKxhWWbB+a+OIKrouNxFg7LZx/gzZVfowSKb8Uldu6O3J/O9XMVrDZONsWq9fceqikOnJQsR10PcmUoHQc96tdo+Cbq1PKURz2PZV8bJqKPZKAeaFjwOMzRrCUFP7Prkoxah3FMosK1fM0Y0W0Zt3jwsuu7I9aXp8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767580826; c=relaxed/simple;
-	bh=U6wpLQ5Z5cIMEIYzqwLob6eG48a4avIrKV82ACwivZk=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=rXst1JjlFLV0rPvl9hFxj1BHgKxpuDTpW2xFfzVzxPgse2s5vfZuWJu5cj1fj0Kx4CC/1ncTTL9hZ4iPZ6eXABZY/9zw1f7DCnXFx2XrjSRroNL7GLz6f2sef3D4b6I2aRYOkNj8vUAwxWkw/9f1hnyOiykwu/EnGJI3WuerSVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f77.google.com with SMTP id 006d021491bc7-65b31ec93e7so28064434eaf.3
-        for <linux-xfs@vger.kernel.org>; Sun, 04 Jan 2026 18:40:22 -0800 (PST)
+	s=arc-20240116; t=1767605286; c=relaxed/simple;
+	bh=LUBqn4Ylu7k53HZu4lQqsEMpRTV2mIhD9a8O6isq6MA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l1CPKZ1UEMuEBgLrtyeBN9Bx1Bf2SB3EH3gIN+XapbAcqiSJLvKe4EaHkW6+sYOCmn+LSSL+9mZXlJIOLYTg1eCjYW+0mA5f659pwdfP8XsFF0bMoLl8JFNr1NOzI5j9QpvHaw+ERhlwyBrGGLTNWmsL3VR4j5AmZgLRZjGDSGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YWC0/LoN; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YWC0/LoN"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-7e1651ae0d5so10632405b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Jan 2026 01:28:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1767605279; x=1768210079; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nQIZ452wZXIK57t7CDqSPjoLHYNUHDQ+2nk1XIU16DM=;
+        b=YWC0/LoNZnVjPDkmZYt659X7a3/xGc7NTkbSVt2F+3qfqjywE77kamuzBv6ilMNIF3
+         lmrd9s7+Ff+8RGWcwfHBMp0t6+HqJYpVxLPisdrX5bWIp1eMC9qaR2/RB0JMvSnOcvMT
+         JdHpd/QeY0GmxewsMsePEz8qRnXxKEJqL8f/aQeRGPHZomNSM9riYAhSIrVBeq6ap2kx
+         Qg8U2L3S63ZFvIy0ZLT4Iq48Kti5L4PQuWuiNjzkE6DjI4OOd+Qrwz1kMzQx9qxngBgC
+         o9zjXe4q+BJrAtj4lpCeuqjecZoKLAYaawBHQyaxv1J3LqMRHQgYGraCBbMTm86QLWtV
+         iZsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767580821; x=1768185621;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+        d=1e100.net; s=20230601; t=1767605279; x=1768210079;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=hXSps325Kn9v9njQEqlL312GyfBWNt0qMpATKIhnVCI=;
-        b=lL90yAU0UWjcFfgRLoIf6JyqtnRa91YI132+xJ+17Nw1XPJKMrqMNOnVJIkL1L8H/S
-         /Pdpu27KxlLTH7TIMY4y8gd7Fhx9iQQ0ViLv0gEKbgzqp/hGkM0MiSgecYTSVMXtTWUE
-         f5Qt6OIQXwEYUrlROL2KkjxweMPmzCCARCpQXfwXW9/xU9yIxFU+Cc1c2/uwzSzN431f
-         Tf8w66aSbiCxghc442NK65Jmi7nmqOgKfXZtsCJuNkGz+7QpAyfKod4M82XzvM27rNn5
-         CFGUqfi9rJ80yUrFIrWvCEbXU4SEXNq9Lv8rIxJE6uMYnJRczm9J/74hW7WLjTPrgM+t
-         cbRw==
-X-Forwarded-Encrypted: i=1; AJvYcCX/LRj6fMBam4Lr3dZF8tE7py+zqrx29ljh3gzGPTJY40R2aONZcCzhFioHa8kBYU480/orLYb4iEo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxsBLTaJTk2qEQEqLKtKsKrF2c7MPx+lmKbLNqR7svaik2eHzHw
-	b8nTHgy/8Wyhhyk5jVSHbAMKbZAap7XegZ7/ILSzwkj3mTpKm2vRNXLrk6fLmVI4/6alk4I9fkC
-	UomQSNh5w6LRKlAcGQ3iYjB/EddMNVWmTSdTAYvNXCVpLCIKpLkfdRbTsrTY=
-X-Google-Smtp-Source: AGHT+IHh2vqQ7FCk/k4TQlEycq8hpvKA+bmfSi5ukxkDD7ipuG+7JDa9oplXJHs7ZJBBBRD72u/nUnJEh4X2iUgYpDSlp5qqW4J4
+        bh=nQIZ452wZXIK57t7CDqSPjoLHYNUHDQ+2nk1XIU16DM=;
+        b=Lasu9lphxRxOuc1GmIJtjfLKePQd6w37AXnTBgp/YAh5jso4mLt+hZkybRsTQjiUK6
+         7CZC4L0D2dZT6xcpmIbEh+unqoWlCDAkIyIxy4KmHtr2t9Na3W38hsZOr2vs2r01xrMy
+         yzGmtsJ9Qbirv8IZp9O/KoyNrS73MfqiLEREgV3Devw2guAGAMEJQBleZZIFSbqihx5f
+         JihUZW/hvoGWy3Y7IULGiFfM89gywb7ONHy2L+9M7frOVnSfYv9u5bxd1E5maIk7wWvN
+         iilhPORSPT7Z/An/LIoRz+94fucDWTezna28OsFWPzcpgHEfO9HLPd35q//UJKyR5Zb3
+         /jtg==
+X-Forwarded-Encrypted: i=1; AJvYcCW8RNR8/p/N+Uq1JG9s7QxNFVYRmuxIhEkiBNnEpVD8PxtVn3DUqRqVj5QxvTXVlgsb+bZeMzuE2UM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQ1rrhcAMz4mDOv64Sxlb8Dnrn0B1VHxi0ywgKh50o+OxSh30T
+	JaMdS2dKYfwl4bg5mDj5MNYjxAj/Vk0DY5SJkKxrJmScXyo1Nlk51jkW
+X-Gm-Gg: AY/fxX5wrJK3blqmz8KKwDGTrsFe2LOcnpgpCWVrXTkPSo9n9bFgGPz0vR75ytI1x4h
+	2paoRidrUonPSTKWRLaA/ApyaOXi1mgtpKtvfW0lUkDn8mJLfYpbsHRojTPJv1hgHaNjADTKM0O
+	Vu0ZYLIIhJrBEOKtG8oSfayQ+QzvroBp8EB4rwWMBcOghtSyTEul4EXUd46iil1x3+xcumtF6Qi
+	2JBZLZ1QquBAKBl5UR2gQWNsGN+N6uT/llkakMeyPDZRacMazo79zzGTAQumjZWrZza/+S0EJUG
+	S8gDSSGXVJbh8gdOWCOKutNKeDpAciepfbfQwwQphA0VjBxXP2vuFZiiUNVvLLDlPE5NsswRLSm
+	YEO6+axU+qdMsv1ykklcrfQtQAUplRlUhAjLkjtg15jG8tZj70J7jA6sOg8OdXTOwOt7MB3jC6u
+	lr5NDbgr6zdP1OFDwJiWZFpS5b2loqnxGu
+X-Google-Smtp-Source: AGHT+IEZmNkq8Gl/dnJOg3s3RWvfca6b9cqNrss8LiqWrUnkpu+7dey1SrWISomWv3jO23drZv2kBA==
+X-Received: by 2002:a05:6a00:4509:b0:7e8:4587:e8c1 with SMTP id d2e1a72fcca58-7ff6647983bmr40451269b3a.52.1767605279080;
+        Mon, 05 Jan 2026 01:27:59 -0800 (PST)
+Received: from [10.4.111.0] ([139.177.225.226])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7ff7af35f37sm47508520b3a.18.2026.01.05.01.27.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Jan 2026 01:27:58 -0800 (PST)
+Message-ID: <dc92f814-043c-45b2-8d2a-403f462434d4@gmail.com>
+Date: Mon, 5 Jan 2026 17:27:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a4a:b905:0:b0:65d:1e7:9526 with SMTP id
- 006d021491bc7-65d0e94d6a3mr15991857eaf.10.1767580821132; Sun, 04 Jan 2026
- 18:40:21 -0800 (PST)
-Date: Sun, 04 Jan 2026 18:40:21 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <695b2495.050a0220.1c9965.0020.GAE@google.com>
-Subject: [syzbot] [xfs?] possible deadlock in xfs_ilock (4)
-From: syzbot <syzbot+c628140f24c07eb768d8@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-
-Hello,
-
-syzbot found the following issue on:
-
-HEAD commit:    8f0b4cce4481 Linux 6.19-rc1
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=1481d792580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8a8594efdc14f07a
-dashboard link: https://syzkaller.appspot.com/bug?extid=c628140f24c07eb768d8
-compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-userspace arch: arm64
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/cd4f5f43efc8/disk-8f0b4cce.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/aafb35ac3a3c/vmlinux-8f0b4cce.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/d221fae4ab17/Image-8f0b4cce.gz.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+c628140f24c07eb768d8@syzkaller.appspotmail.com
-
-WARNING: possible circular locking dependency detected
-syzkaller #0 Not tainted
-------------------------------------------------------
-syz.3.4/6790 is trying to acquire lock:
-ffff80008fb56c80 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:317 [inline]
-ffff80008fb56c80 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:4904 [inline]
-ffff80008fb56c80 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:5239 [inline]
-ffff80008fb56c80 (fs_reclaim){+.+.}-{0:0}, at: __kmalloc_cache_noprof+0x58/0x698 mm/slub.c:5771
-
-but task is already holding lock:
-ffff0000f77f5b18 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_ilock+0x1d8/0x3d0 fs/xfs/xfs_inode.c:165
-
-which lock already depends on the new lock.
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] iomap: add allocation cache for iomap_dio
+To: Christoph Hellwig <hch@infradead.org>
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ guzebing <guzebing@bytedance.com>, Fengnan Chang <changfengnan@bytedance.com>
+References: <20251121090052.384823-1-guzebing1612@gmail.com>
+ <aSA9VTO8vDPYZxNx@infradead.org>
+From: guzebing <guzebing1612@gmail.com>
+In-Reply-To: <aSA9VTO8vDPYZxNx@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
-the existing dependency chain (in reverse order) is:
 
--> #1 (&xfs_nondir_ilock_class){++++}-{4:4}:
-       down_write_nested+0x58/0xcc kernel/locking/rwsem.c:1706
-       xfs_ilock+0x1d8/0x3d0 fs/xfs/xfs_inode.c:165
-       xfs_reclaim_inode fs/xfs/xfs_icache.c:1035 [inline]
-       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1727 [inline]
-       xfs_icwalk_ag+0xe4c/0x16a4 fs/xfs/xfs_icache.c:1809
-       xfs_icwalk fs/xfs/xfs_icache.c:1857 [inline]
-       xfs_reclaim_inodes_nr+0x1b4/0x268 fs/xfs/xfs_icache.c:1101
-       xfs_fs_free_cached_objects+0x68/0x7c fs/xfs/xfs_super.c:1282
-       super_cache_scan+0x2f0/0x380 fs/super.c:228
-       do_shrink_slab+0x638/0x11b0 mm/shrinker.c:437
-       shrink_slab+0xc68/0xfb8 mm/shrinker.c:664
-       shrink_node_memcgs mm/vmscan.c:6022 [inline]
-       shrink_node+0xe18/0x20bc mm/vmscan.c:6061
-       kswapd_shrink_node mm/vmscan.c:6901 [inline]
-       balance_pgdat+0xb60/0x13b8 mm/vmscan.c:7084
-       kswapd+0x6d0/0xe64 mm/vmscan.c:7354
-       kthread+0x5fc/0x75c kernel/kthread.c:463
-       ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:844
+在 2025/11/21 18:22, Christoph Hellwig 写道:
+> On Fri, Nov 21, 2025 at 05:00:52PM +0800, guzebing wrote:
+>> From: guzebing <guzebing@bytedance.com>
+>>
+>> As implemented by the bio structure, we do the same thing on the
+>> iomap-dio structure. Add a per-cpu cache for iomap_dio allocations,
+>> enabling us to quickly recycle them instead of going through the slab
+>> allocator.
+>>
+>> By making such changes, we can reduce memory allocation on the direct
+>> IO path, so that direct IO will not block due to insufficient system
+>> memory. In addition, for direct IO, the read performance of io_uring
+>> is improved by about 2.6%.
+> 
+> Have you checked how much of that you'd get by using a dedicated
+> slab cache that should also do per-cpu allocations?  Note that even
+> if we had a dedicated per-cpu cache we'd probably still want that.
+I’m sorry for the long delay in replying to your email due to some other 
+matters. I hope you still remember this revision. First, thank you for 
+your response.
 
--> #0 (fs_reclaim){+.+.}-{0:0}:
-       check_prev_add kernel/locking/lockdep.c:3165 [inline]
-       check_prevs_add kernel/locking/lockdep.c:3284 [inline]
-       validate_chain kernel/locking/lockdep.c:3908 [inline]
-       __lock_acquire+0x1774/0x30a4 kernel/locking/lockdep.c:5237
-       lock_acquire+0x140/0x2e0 kernel/locking/lockdep.c:5868
-       __fs_reclaim_acquire mm/page_alloc.c:4301 [inline]
-       fs_reclaim_acquire+0x8c/0x118 mm/page_alloc.c:4315
-       might_alloc include/linux/sched/mm.h:317 [inline]
-       slab_pre_alloc_hook mm/slub.c:4904 [inline]
-       slab_alloc_node mm/slub.c:5239 [inline]
-       __kmalloc_cache_noprof+0x58/0x698 mm/slub.c:5771
-       kmalloc_noprof include/linux/slab.h:957 [inline]
-       iomap_fill_dirty_folios+0xf0/0x218 fs/iomap/buffered-io.c:1557
-       xfs_buffered_write_iomap_begin+0x8b4/0x1668 fs/xfs/xfs_iomap.c:1857
-       iomap_iter+0x528/0xefc fs/iomap/iter.c:110
-       iomap_zero_range+0x17c/0x8ec fs/iomap/buffered-io.c:1590
-       xfs_zero_range+0x98/0xfc fs/xfs/xfs_iomap.c:2289
-       xfs_reflink_zero_posteof+0x110/0x2f0 fs/xfs/xfs_reflink.c:1619
-       xfs_reflink_remap_prep+0x314/0x5e4 fs/xfs/xfs_reflink.c:1699
-       xfs_file_remap_range+0x1f4/0x758 fs/xfs/xfs_file.c:1518
-       vfs_clone_file_range+0x62c/0xb68 fs/remap_range.c:403
-       ioctl_file_clone fs/ioctl.c:239 [inline]
-       ioctl_file_clone_range fs/ioctl.c:257 [inline]
-       do_vfs_ioctl+0xb84/0x1834 fs/ioctl.c:544
-       __do_sys_ioctl fs/ioctl.c:595 [inline]
-       __se_sys_ioctl fs/ioctl.c:583 [inline]
-       __arm64_sys_ioctl+0xe4/0x1c4 fs/ioctl.c:583
-       __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
-       invoke_syscall+0x98/0x254 arch/arm64/kernel/syscall.c:49
-       el0_svc_common+0xe8/0x23c arch/arm64/kernel/syscall.c:132
-       do_el0_svc+0x48/0x58 arch/arm64/kernel/syscall.c:151
-       el0_svc+0x5c/0x26c arch/arm64/kernel/entry-common.c:724
-       el0t_64_sync_handler+0x84/0x12c arch/arm64/kernel/entry-common.c:743
-       el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:596
+Yes, I try to use a dedicated kmem cache to allocate cache for iomap-dio 
+structure. However, when system memory is sufficient, kmalloc and kmem 
+cache deliver identical performance.
 
-other info that might help us debug this:
+For direct I/O reads on the ext4 file system, the test command is:
 
- Possible unsafe locking scenario:
+./t/io_uring -p0 -d128 -b4096 -s32 -c32 -F1 -B1 -R1 -X1 -n1 -P1 /mnt/004.txt
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(&xfs_nondir_ilock_class);
-                               lock(fs_reclaim);
-                               lock(&xfs_nondir_ilock_class);
-  lock(fs_reclaim);
+The measured performance is:
 
- *** DEADLOCK ***
+kmalloc: 750K IOPS
+kmem cache: 750K IOPS
+per-CPU cache: 770K IOPS
+> 
+> Also any chance you could factor this into common code?
+> 
+For a mempool, we first allocate with kmalloc or kmem cache and finally 
+fall back to a reserved cache—this is for reliability. It’s not a great 
+fit for our high‑performance scenario.
 
-4 locks held by syz.3.4/6790:
- #0: ffff0000dceca420 (sb_writers#13){.+.+}-{0:0}, at: ioctl_file_clone fs/ioctl.c:239 [inline]
- #0: ffff0000dceca420 (sb_writers#13){.+.+}-{0:0}, at: ioctl_file_clone_range fs/ioctl.c:257 [inline]
- #0: ffff0000dceca420 (sb_writers#13){.+.+}-{0:0}, at: do_vfs_ioctl+0xb84/0x1834 fs/ioctl.c:544
- #1: ffff0000f77f5d30 (&sb->s_type->i_mutex_key#27){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:1027 [inline]
- #1: ffff0000f77f5d30 (&sb->s_type->i_mutex_key#27){+.+.}-{4:4}, at: xfs_iolock_two_inodes_and_break_layout fs/xfs/xfs_inode.c:2716 [inline]
- #1: ffff0000f77f5d30 (&sb->s_type->i_mutex_key#27){+.+.}-{4:4}, at: xfs_ilock2_io_mmap+0x1a4/0x64c fs/xfs/xfs_inode.c:2792
- #2: ffff0000f77f5ed0 (mapping.invalidate_lock#3){++++}-{4:4}, at: filemap_invalidate_lock_two+0x3c/0x84 mm/filemap.c:1032
- #3: ffff0000f77f5b18 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_ilock+0x1d8/0x3d0 fs/xfs/xfs_inode.c:165
+Additionally, the current need for frequent allocation/free (hundreds of 
+thousands to millions of times per second) may be more suitable for the 
+bio or dio structures; beyond those, I’m not sure whether similar 
+scenarios exist.
 
-stack backtrace:
-CPU: 0 UID: 0 PID: 6790 Comm: syz.3.4 Not tainted syzkaller #0 PREEMPT 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/03/2025
-Call trace:
- show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:499 (C)
- __dump_stack+0x30/0x40 lib/dump_stack.c:94
- dump_stack_lvl+0xd8/0x12c lib/dump_stack.c:120
- dump_stack+0x1c/0x28 lib/dump_stack.c:129
- print_circular_bug+0x324/0x32c kernel/locking/lockdep.c:2043
- check_noncircular+0x154/0x174 kernel/locking/lockdep.c:2175
- check_prev_add kernel/locking/lockdep.c:3165 [inline]
- check_prevs_add kernel/locking/lockdep.c:3284 [inline]
- validate_chain kernel/locking/lockdep.c:3908 [inline]
- __lock_acquire+0x1774/0x30a4 kernel/locking/lockdep.c:5237
- lock_acquire+0x140/0x2e0 kernel/locking/lockdep.c:5868
- __fs_reclaim_acquire mm/page_alloc.c:4301 [inline]
- fs_reclaim_acquire+0x8c/0x118 mm/page_alloc.c:4315
- might_alloc include/linux/sched/mm.h:317 [inline]
- slab_pre_alloc_hook mm/slub.c:4904 [inline]
- slab_alloc_node mm/slub.c:5239 [inline]
- __kmalloc_cache_noprof+0x58/0x698 mm/slub.c:5771
- kmalloc_noprof include/linux/slab.h:957 [inline]
- iomap_fill_dirty_folios+0xf0/0x218 fs/iomap/buffered-io.c:1557
- xfs_buffered_write_iomap_begin+0x8b4/0x1668 fs/xfs/xfs_iomap.c:1857
- iomap_iter+0x528/0xefc fs/iomap/iter.c:110
- iomap_zero_range+0x17c/0x8ec fs/iomap/buffered-io.c:1590
- xfs_zero_range+0x98/0xfc fs/xfs/xfs_iomap.c:2289
- xfs_reflink_zero_posteof+0x110/0x2f0 fs/xfs/xfs_reflink.c:1619
- xfs_reflink_remap_prep+0x314/0x5e4 fs/xfs/xfs_reflink.c:1699
- xfs_file_remap_range+0x1f4/0x758 fs/xfs/xfs_file.c:1518
- vfs_clone_file_range+0x62c/0xb68 fs/remap_range.c:403
- ioctl_file_clone fs/ioctl.c:239 [inline]
- ioctl_file_clone_range fs/ioctl.c:257 [inline]
- do_vfs_ioctl+0xb84/0x1834 fs/ioctl.c:544
- __do_sys_ioctl fs/ioctl.c:595 [inline]
- __se_sys_ioctl fs/ioctl.c:583 [inline]
- __arm64_sys_ioctl+0xe4/0x1c4 fs/ioctl.c:583
- __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
- invoke_syscall+0x98/0x254 arch/arm64/kernel/syscall.c:49
- el0_svc_common+0xe8/0x23c arch/arm64/kernel/syscall.c:132
- do_el0_svc+0x48/0x58 arch/arm64/kernel/syscall.c:151
- el0_svc+0x5c/0x26c arch/arm64/kernel/entry-common.c:724
- el0t_64_sync_handler+0x84/0x12c arch/arm64/kernel/entry-common.c:743
- el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:596
+If we were to extract a generic implementation solely for this, would it 
+yield significant benefits? Do you have any good suggestions?
 
+I’d appreciate your review.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
