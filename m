@@ -1,54 +1,114 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCFA2F1FE7;
-	Tue,  6 Jan 2026 06:30:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6692C22127E;
+	Tue,  6 Jan 2026 07:10:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767681016; cv=none; b=vE9Qc21VhZ1VG2jlJvvuk5aMd7koCatzXiNbDxPcmOlUzuiEjCYnwehdApBwqqlq9Gmhb4B/WPQPq/71NEN/igAsR7wJD292WU6YZZQSZ3bkd6tadjhPQoZPRt9fsB7LXu3oYDd3pmcB6+WtgWGhpXSsLnDB1m2cqDt4yfOGvr8=
+	t=1767683449; cv=none; b=W7XYY2c0La7qxJmFDX2rENtlzCgDIWHPOwCH/ZCaNkc3J0Dbh3WsxJPA9mCZ6r1SsQ22hZUIm75jfmqcVu/1ZhtfAtVawLbITyRX56ricZrcf9qULwvzlj91syeWImAbocKzXIkGBrtCCc9DFE4DEC+QArCkTzBy5S19sp7eUlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767681016; c=relaxed/simple;
-	bh=VN0aR/sI5/HACoqCm9oQtgesdAo+T/d7wc4FxYsMtSw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fZZEJ/f9R3s+OuSfssLzy909K48zc6hmVvbkBOHQr/MErPzdszFvRW4wUul4BSBU7Bk6MjURtIPN36Vdzrn3cPrEz01ir6cO3eFzllgyncJBZibJlkGuhWHmc9cjz4nfmK8U/GyI6w0aJox/By9q6pvYmtvi5QNq+05MtNiUtzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 630CF6732A; Tue,  6 Jan 2026 07:24:09 +0100 (CET)
-Date: Tue, 6 Jan 2026 07:24:09 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>, Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev, io-uring@vger.kernel.org,
-	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: Re: re-enable IOCB_NOWAIT writes to files v4
-Message-ID: <20260106062409.GA16998@lst.de>
-References: <20251223003756.409543-1-hch@lst.de> <20251224-zusah-emporsteigen-764a9185a0a1@brauner>
+	s=arc-20240116; t=1767683449; c=relaxed/simple;
+	bh=uGeBDr9C7T4irA07dxIpHgCfKWMA9RRFiR5WqFfCgkU=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=kAA33NvKeeD9ghLMxASUY39G0n7cGZIZNgI3PNeuwnSUaPAlB9mv+8iCUWAGNmO4mkt7UoYQihRfIZYsl3DEp4+ygYsAuNBLjVwYUwTDZCn6fqkSuZ7eGSJN8bGoT8MBNe1IIDPlcvqtCOZyIb+2ivNi5JxqAzFnL04yqQLW0KI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Of+5DpMO; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Of+5DpMO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ECD3C116C6;
+	Tue,  6 Jan 2026 07:10:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767683447;
+	bh=uGeBDr9C7T4irA07dxIpHgCfKWMA9RRFiR5WqFfCgkU=;
+	h=Date:Subject:From:To:Cc:From;
+	b=Of+5DpMOxn0/3RXJ9+Sxd1nfkiSxQHBAcqelDdX4lUi8osBTxrfTkOYGjUNjlyRK0
+	 BJcH3UdQEiiuxteYA+HTiuSMaKGsda2HRdvWDjKy+cz9ee/L0jPR3mK9dhhs3GU10Q
+	 eMfQRZYmebSuZQB9ArQieajFc8S7jK4j0IrTQuusdagfjc8qsZQT77xgLIgtYXvwiR
+	 9BeP8LIg9q3QO9FqcYjSuA3E0JUAck5/qhQx8dpYkHpgi7zS1B2UhABci7/jWVoMBl
+	 oKPyk/PGr/urYXkVbKxU8Ns1B2DH+fn1wzWeIQnOmKlJ8/b03bdMC14auxFj/7z1+7
+	 IMDxxeALfpdwQ==
+Date: Mon, 05 Jan 2026 23:10:47 -0800
+Subject: [PATCHSET V4] xfs: autonomous self healing of filesystems
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org
+Message-ID: <176766637179.774337.3663793412524347917.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251224-zusah-emporsteigen-764a9185a0a1@brauner>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-> Applied to the vfs-7.0.nonblocking_timestamps branch of the vfs/vfs.git tree.
-> Patches in the vfs-7.0.nonblocking_timestamps branch should appear in linux-next soon.
+Hi all,
 
-Umm, as in my self reply just before heading out for vacation, Julia
-found issues in it using static type checking tools.  I have a new
-version that fixes that and sorts out the S_* mess.  So please drop
-it again for now, I'll resend the fixed version ASAP.
+This patchset builds new functionality to deliver live information about
+filesystem health events to userspace.  This is done by creating an
+anonymous file that can be read() for events by userspace programs.
+Events are captured by hooking various parts of XFS and iomap so that
+metadata health failures, file I/O errors, and major changes in
+filesystem state (unmounts, shutdowns, etc.) can be observed by
+programs.
+
+When an event occurs, the hook functions queue an event object to each
+event anonfd for later processing.  Programs must have CAP_SYS_ADMIN
+to open the anonfd and there's a maximum event lag to prevent resource
+overconsumption.  The events themselves can be read() from the anonfd
+as C structs for the xfs_healer daemon.
+
+In userspace, we create a new daemon program that will read the event
+objects and initiate repairs automatically.  This daemon is managed
+entirely by systemd and will not block unmounting of the filesystem
+unless repairs are ongoing.  They are auto-started by a starter
+service that uses fanotify.
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-monitoring
+---
+Commits in this patchset:
+ * docs: discuss autonomous self healing in the xfs online repair design doc
+ * xfs: start creating infrastructure for health monitoring
+ * xfs: create event queuing, formatting, and discovery infrastructure
+ * xfs: convey filesystem unmount events to the health monitor
+ * xfs: convey metadata health events to the health monitor
+ * xfs: convey filesystem shutdown events to the health monitor
+ * xfs: convey externally discovered fsdax media errors to the health monitor
+ * xfs: convey file I/O errors to the health monitor
+ * xfs: allow reconfiguration of the health monitoring device
+ * xfs: check if an open file is on the health monitored fs
+ * xfs: add media error reporting ioctl
+---
+ fs/xfs/libxfs/xfs_fs.h                             |  178 +++
+ fs/xfs/libxfs/xfs_health.h                         |    5 
+ fs/xfs/xfs_healthmon.h                             |  181 +++
+ fs/xfs/xfs_mount.h                                 |    4 
+ fs/xfs/xfs_notify_failure.h                        |    4 
+ fs/xfs/xfs_trace.h                                 |  414 ++++++
+ .../filesystems/xfs/xfs-online-fsck-design.rst     |  218 +++
+ fs/xfs/Makefile                                    |    7 
+ fs/xfs/xfs_fsops.c                                 |   15 
+ fs/xfs/xfs_health.c                                |  124 ++
+ fs/xfs/xfs_healthmon.c                             | 1305 ++++++++++++++++++++
+ fs/xfs/xfs_ioctl.c                                 |    7 
+ fs/xfs/xfs_mount.c                                 |    2 
+ fs/xfs/xfs_notify_failure.c                        |  195 +++
+ fs/xfs/xfs_super.c                                 |   12 
+ fs/xfs/xfs_trace.c                                 |    5 
+ 16 files changed, 2657 insertions(+), 19 deletions(-)
+ create mode 100644 fs/xfs/xfs_healthmon.h
+ create mode 100644 fs/xfs/xfs_healthmon.c
 
