@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643E341C63;
-	Tue,  6 Jan 2026 07:59:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E34CC26C3BE;
+	Tue,  6 Jan 2026 07:59:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767686368; cv=none; b=kZ8Ia+7GGFYZd29BmaMWLNYAL16ZEPa3KJjmAylJvPKVLdUJnwo6OBCabfO2FU3jad1nwLnXePeO8rtxS6JGXuXNvNnAI2sTSytXJDZ3kTIY9WLCMLOKLtUQuFqZWuhgL7wScAfovPKvkS4DYtODE7C9kt39Feo8RBh+ct8Er2A=
+	t=1767686373; cv=none; b=CQLVrnVNym8LhE0qLvzNmA1iLnFnvotbmEL93eTr+RkZUHhgjp89vJE4IiJCCVs8c6+1aOGHKKrBIA0YjOz+akMiRviNlvl25DvGPjYr5fpgOWQxlxqiJIUJKArFPRSqYPLOxRmzZ76RPIx2OHBj8tO1+BrgGDxLfkCe/EuV108=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767686368; c=relaxed/simple;
-	bh=0v9yWPs+yHWK4iiW8p9izCkKrvmns8085k+84jYaOk8=;
+	s=arc-20240116; t=1767686373; c=relaxed/simple;
+	bh=alMxi2mn/Ws1pat4hsN58ET+7G8vWIaSHjfnstSQx7I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qzRG6909yAYXuQtU1NlQ7FqhMcsghXajNmxfo4maW8y5GPuCj/m5+kVKd/zstOwwXdh3+pvVQl5XjIuz3u1J44Ij9aOsW2r9uV3m/IJlf0ilhoJKvYgN5XaE7wUhia/hY4eKD/2pFj+m4zzvZkpt0wqydba9qrcPMuhZc3OIYyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RMSqNf/O; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=J57fQQPZVmJPfUxonlObSCAE7FVPQIIR82xbVIHQP4B1XucB/mBRoI1hNMZ3HRy5/lL7cPgrChJ5Kbknok3R7KpVGsBo8qadeV6yOZ+Iy69Tkwl3ffnHgceTxxDnnJcokomSXZD9STI9+z+o2nof/Fpfr9cRlLv/EgkJhR5iIxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GSAAGyjk; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RMSqNf/O"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GSAAGyjk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=FfK9Guwbm3HohVsqN5y5A24/KOcBOMTAkHCqPmYJ0BI=; b=RMSqNf/OZ1wIK7LO6LQXVhV9iQ
-	ymtnCWsq3wictXs3HggtoFWAuPftGN4VB9+A0d5uGpt+JH6GV+uclZvU6AxY9tpuJhnUiZwochh+z
-	B90+W3FrIp8bBHyeedETTIdVB8E7lMyRTN8pTRiWG7YHS8YVAtdK1cZvbmMHWA73YuV9hWWiwRTaB
-	p3NaauUxcSu9X1t2SZUzppaKAiWxiCVrz4d4g1xDJsajHqfZnVjw6PxgEsxecZDEI3ODh8FNxEGzl
-	Oa6avQNjeAaiv0/dVgeOUlWThyyhNTajNhp00u4eY1zVEMTNzrdaXh3HJEItwkfA38uYEj06oQkic
-	mHZA54uw==;
+	bh=BvkGodNvyABANn7wnM6ncUGXv6MX6uivNR2B3hSPhig=; b=GSAAGyjkCknZDFtG2/x1RcUkTd
+	w5TGAve6VlQlnCnZeGiKDAKGVSFfsOEQMZJoQqOAyO+iYvyb1audzovhVXDBCq31XKir/SlMg5HQp
+	YfmhXCy25ISsLs1yHeuxSBKzyp5zNB3CVD2iBMGN3Smmh7QBRvGUDSEu6C87/NB4oXX4t9be75fL5
+	KnwF5V/UT86Uzn00ipXqwkKeRrifzBNeKNgeYhxGYMF0ygXDduw+2CU2Tn2DhZXhJiCs3+lkMeRgA
+	Se6+5kd6edFTZ0A89ZFJZZLd625o+b6EmgFGPxSMEiIfAZkzSl+7EuazpuEBnRV6P6YBVMiKefdi1
+	/eg4EFWQ==;
 Received: from [2001:4bb8:2af:87cb:5562:685f:c094:6513] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vd1yQ-0000000Ca0M-1obF;
-	Tue, 06 Jan 2026 07:59:26 +0000
+	id 1vd1yV-0000000Ca0w-0Xxd;
+	Tue, 06 Jan 2026 07:59:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Carlos Maiolino <cem@kernel.org>
@@ -37,9 +37,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/3] block: add a bio_reuse helper
-Date: Tue,  6 Jan 2026 08:58:52 +0100
-Message-ID: <20260106075914.1614368-2-hch@lst.de>
+Subject: [PATCH 2/3] xfs: use bio_reuse in the zone GC code
+Date: Tue,  6 Jan 2026 08:58:53 +0100
+Message-ID: <20260106075914.1614368-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260106075914.1614368-1-hch@lst.de>
 References: <20260106075914.1614368-1-hch@lst.de>
@@ -52,69 +52,41 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a helper to allow an existing bio to be resubmitted withtout
-having to re-add the payload.
+Replace our somewhat fragile code to reuse the bio, which caused a
+regression in the past with the block layer bio_reuse helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/bio.c         | 29 +++++++++++++++++++++++++++++
- include/linux/bio.h |  1 +
- 2 files changed, 30 insertions(+)
+ fs/xfs/xfs_zone_gc.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index e726c0e280a8..ed99368c662f 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -311,6 +311,35 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf)
- }
- EXPORT_SYMBOL(bio_reset);
- 
-+/**
-+ * bio_reuse - reuse a bio with the payload left intact
-+ * @bio bio to reuse
-+ *
-+ * Allow reusing an existing bio for another operation with all set up
-+ * fields including the payload, device and end_io handler left intact.
-+ *
-+ * Typically used for bios first used to read data which is then written
-+ * to another location without modification.  This must be used by the
-+ * I/O submitter on an bio that is not in flight.  Can't be used for
-+ * cloned bios.
-+ */
-+void bio_reuse(struct bio *bio)
-+{
-+	unsigned short vcnt = bio->bi_vcnt, i;
-+	bio_end_io_t *end_io = bio->bi_end_io;
-+	void *private = bio->bi_private;
-+
-+	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
-+
-+	bio_reset(bio, bio->bi_bdev, bio->bi_opf);
-+	for (i = 0; i < vcnt; i++)
-+		bio->bi_iter.bi_size += bio->bi_io_vec[i].bv_len;
-+	bio->bi_vcnt = vcnt;
-+	bio->bi_private = private;
-+	bio->bi_end_io = end_io;
-+}
-+EXPORT_SYMBOL_GPL(bio_reuse);
-+
- static struct bio *__bio_chain_endio(struct bio *bio)
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index 3c52cc1497d4..40408b1132e0 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -811,8 +811,6 @@ xfs_zone_gc_write_chunk(
  {
- 	struct bio *parent = bio->bi_private;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index ad2d57908c1c..c0190f8badde 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -414,6 +414,7 @@ static inline void bio_init_inline(struct bio *bio, struct block_device *bdev,
- }
- extern void bio_uninit(struct bio *);
- void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
-+void bio_reuse(struct bio *bio);
- void bio_chain(struct bio *, struct bio *);
+ 	struct xfs_zone_gc_data	*data = chunk->data;
+ 	struct xfs_mount	*mp = chunk->ip->i_mount;
+-	phys_addr_t		bvec_paddr =
+-		bvec_phys(bio_first_bvec_all(&chunk->bio));
+ 	struct xfs_gc_bio	*split_chunk;
  
- int __must_check bio_add_page(struct bio *bio, struct page *page, unsigned len,
+ 	if (chunk->bio.bi_status)
+@@ -825,10 +823,7 @@ xfs_zone_gc_write_chunk(
+ 	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
+ 	list_move_tail(&chunk->entry, &data->writing);
+ 
+-	bio_reset(&chunk->bio, mp->m_rtdev_targp->bt_bdev, REQ_OP_WRITE);
+-	bio_add_folio_nofail(&chunk->bio, chunk->scratch->folio, chunk->len,
+-			offset_in_folio(chunk->scratch->folio, bvec_paddr));
+-
++	bio_reuse(&chunk->bio);
+ 	while ((split_chunk = xfs_zone_gc_split_write(data, chunk)))
+ 		xfs_zone_gc_submit_write(data, split_chunk);
+ 	xfs_zone_gc_submit_write(data, chunk);
 -- 
 2.47.3
 
