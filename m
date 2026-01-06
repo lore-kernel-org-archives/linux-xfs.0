@@ -1,70 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F89358D35
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Jan 2026 18:53:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2667E280CE5;
+	Tue,  6 Jan 2026 21:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767725618; cv=none; b=Kjh4ZQS7gaa7Cs7mr/3YUEmIoRcD7e0SdY70AINrGjIOTZYRkuQhyFiLoeYXFfXK7jwcCTR8k+3yX5CoozODotSAE6maIyaWgyxinvrFYgumklWRc5ieuEjQF8sYVWNv8AOD8+6NeVl5cJ38QNkI6ExNG3+EsEzmohssmmgSKos=
+	t=1767735836; cv=none; b=qltDaDFyREiZ9xF3VGqLoAedLYc0tiAk45VUlsTRMVwtHT+Q/YstYSK5a41Qw8D0piAoNA/LdBmIiWy5+9HbBZrI1Cq1Cn78L1799BprZVKPa/WQN9b5McyeyDIZ0HSNITec3DIc/trxdNlPo7jTkGUGeQzI831kmm4OQycgKTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767725618; c=relaxed/simple;
-	bh=LnYNHeouMDv9t1cpPOCV4I3Zgks/PUwDn1hsp+U3Lhw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JIqI8cly0vrtMm3jpjqXFpQN2ki+YkdlLveFMommcWhjSrnhL86uZXvWaKbyt6SighC8Fl+oPk5vuM2sTx01XEo8ZcFMqFP+TZunoJMI+QI+UnlaGI41Yb1Okrj9q7b3zDuo88HX15GyDk0hk1yRVaH/s/FtKeTK1nEgL3bv3J8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cLK5pK8Z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767735836; c=relaxed/simple;
+	bh=oy0nq2zmkLlQ8H2hYCSqLD1m9F9tLj75bp9TRPzk9nM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o36bnFxdAIupFG7fafTi0tRe88jo5oYCrGHtC7AWb7pEN4zAeiY9mbon+VrxQ6vrcRv+b6K7QUSJnsJ1Ls2+jIOhDxxwMzIl2qkcmBWp6G3TUluROFHAHH3zL22bsqHsRkbEmQTUCijXxTmx/g0Ttj6yMJJhcO0nRgq/ECKGR+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sxvm20hE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLK5pK8Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4024C116C6;
-	Tue,  6 Jan 2026 18:53:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sxvm20hE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1127C116C6;
+	Tue,  6 Jan 2026 21:43:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767725617;
-	bh=LnYNHeouMDv9t1cpPOCV4I3Zgks/PUwDn1hsp+U3Lhw=;
-	h=Date:From:To:Cc:Subject:From;
-	b=cLK5pK8Zufw/9bJ7p1SjMLAQ1YxcYmTeNLRLU2FCj/jOyp9K2xYsqbenVzXxANvGH
-	 WHWKXzPuT2YayhqEuYyy+plwJtfPXf9prf05d0PoHsRSFDW85q5j7M00PjTNjkKQQL
-	 Mg+IqkOfHlO38mXnTmSvs2BfCFBEN7YfgVs9LSNK43rJqbgGfA/At6rx278PcBX+hS
-	 n7lmEH4TVocvN9dfO17lcmXNXcuIksU/a3I7XJfSlss+Gc5OwErE61yAYhjjOR9vlC
-	 cYOA1B7elKpE3eCK82BkavW+5rQv7VzOhTwrgsHmZIzrf9SfK8IO2VKh60nvbILPs6
-	 VG0SuO9zBsf6A==
-Date: Tue, 6 Jan 2026 10:53:37 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs_logprint: print log data to the screen in host-endian
- order
-Message-ID: <20260106185337.GK191501@frogsfrogsfrogs>
+	s=k20201202; t=1767735835;
+	bh=oy0nq2zmkLlQ8H2hYCSqLD1m9F9tLj75bp9TRPzk9nM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=sxvm20hE+Y7hNroZuQmjk2Hk3ZkHX6MDfP9oEcQv2V8VwA6ijnWVVjdCIUkpvBFm8
+	 GDImaxG+L4xFILzUiX5hvqWw+uQSanWkyG4HZLd6jLk+FbSbAsUtzi6I/+PyE4HMLU
+	 rcuCeMAqaqP73xT9SNOxAUIeaBr+I1iLvMFBIHhkrdKyW3ZsKbQF51b1RsuHqoMa9L
+	 3Ybt9gkFk4x2VPZ9ZpZWF2XzVkjTqmobY6LBgjg33uYVWLB0M4T82oejV3ON7Y9PiR
+	 8al5v9sdVf6qKwJRzzRzNQNHsrCJIKkf6wlcNffIiwlbTPk/2ww0YF4quW5B4zpuZ7
+	 x5Kf4szM/lVMw==
+Date: Tue, 6 Jan 2026 22:43:49 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, 
+	Jan Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>, 
+	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev, io-uring@vger.kernel.org, 
+	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: re-enable IOCB_NOWAIT writes to files v4
+Message-ID: <20260106-bequem-albatros-3c747261974f@brauner>
+References: <20251223003756.409543-1-hch@lst.de>
+ <20251224-zusah-emporsteigen-764a9185a0a1@brauner>
+ <20260106062409.GA16998@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+In-Reply-To: <20260106062409.GA16998@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jan 06, 2026 at 07:24:09AM +0100, Christoph Hellwig wrote:
+> > Applied to the vfs-7.0.nonblocking_timestamps branch of the vfs/vfs.git tree.
+> > Patches in the vfs-7.0.nonblocking_timestamps branch should appear in linux-next soon.
+> 
+> Umm, as in my self reply just before heading out for vacation, Julia
+> found issues in it using static type checking tools.  I have a new
+> version that fixes that and sorts out the S_* mess.  So please drop
+> it again for now, I'll resend the fixed version ASAP.
 
-Don't make support have to byteswap u32 values when they're digging
-through broken logs on x86 systems.  Also make it more obvious which
-column is the offset and which are the byte(s).
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- logprint/log_print_all.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index 0afad597bb6ce0..9c3cd5fb5cfb31 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -55,8 +55,8 @@ xlog_recover_print_data(
- 
- 		while (j < nums) {
- 			if ((j % 8) == 0)
--				printf("%2x ", j);
--			printf("%8x ", *dp);
-+				printf("%2x: ", j);
-+			printf("%08x ", be32_to_cpu(*dp));
- 			dp++;
- 			j++;
- 			if ((j % 8) == 0)
+It has never been pushed nor applied as I saw your mail right before all
+of that.
