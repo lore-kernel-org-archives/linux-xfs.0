@@ -1,64 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2667E280CE5;
-	Tue,  6 Jan 2026 21:43:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF84DAD24;
+	Tue,  6 Jan 2026 23:33:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767735836; cv=none; b=qltDaDFyREiZ9xF3VGqLoAedLYc0tiAk45VUlsTRMVwtHT+Q/YstYSK5a41Qw8D0piAoNA/LdBmIiWy5+9HbBZrI1Cq1Cn78L1799BprZVKPa/WQN9b5McyeyDIZ0HSNITec3DIc/trxdNlPo7jTkGUGeQzI831kmm4OQycgKTY=
+	t=1767742430; cv=none; b=LdaNsbISPFyoD2MGJqXoPW4CoLo2jywCugqDOCF4PwhOe+pdA/JO1/48jPPd+jo7w2YFbRoOlA+YCOJS30sOkclaaWde/CBVS1lDNjM4o9eVHChB4f4Xp10uT8CKL7Q52EJe9vsBw/IMh5g+jiGB4Wb5kLp+kfkZ4hSR0lUKsRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767735836; c=relaxed/simple;
-	bh=oy0nq2zmkLlQ8H2hYCSqLD1m9F9tLj75bp9TRPzk9nM=;
+	s=arc-20240116; t=1767742430; c=relaxed/simple;
+	bh=51Mf1jtyugfdrBHzcpwBgck3+J4uCtDVXn8KnskGVIc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o36bnFxdAIupFG7fafTi0tRe88jo5oYCrGHtC7AWb7pEN4zAeiY9mbon+VrxQ6vrcRv+b6K7QUSJnsJ1Ls2+jIOhDxxwMzIl2qkcmBWp6G3TUluROFHAHH3zL22bsqHsRkbEmQTUCijXxTmx/g0Ttj6yMJJhcO0nRgq/ECKGR+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sxvm20hE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YyI4LQjCgrLtvh5qXrATFoY/wnCjqhzim2ykOAELibSu8rwf2Av/XfNlxtloVq5rmqvwCYELvnl7Z4ecJYi0gRgZ1Q90hbxK/TsatRramxt7VB+0CEs3iv5rP6RtUE3/zNkAN2UcN1vetwzTO+nGhxErDdao64gzIMF1vgjocK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IHIGLAWB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sxvm20hE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1127C116C6;
-	Tue,  6 Jan 2026 21:43:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IHIGLAWB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20794C116C6;
+	Tue,  6 Jan 2026 23:33:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767735835;
-	bh=oy0nq2zmkLlQ8H2hYCSqLD1m9F9tLj75bp9TRPzk9nM=;
+	s=k20201202; t=1767742430;
+	bh=51Mf1jtyugfdrBHzcpwBgck3+J4uCtDVXn8KnskGVIc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sxvm20hE+Y7hNroZuQmjk2Hk3ZkHX6MDfP9oEcQv2V8VwA6ijnWVVjdCIUkpvBFm8
-	 GDImaxG+L4xFILzUiX5hvqWw+uQSanWkyG4HZLd6jLk+FbSbAsUtzi6I/+PyE4HMLU
-	 rcuCeMAqaqP73xT9SNOxAUIeaBr+I1iLvMFBIHhkrdKyW3ZsKbQF51b1RsuHqoMa9L
-	 3Ybt9gkFk4x2VPZ9ZpZWF2XzVkjTqmobY6LBgjg33uYVWLB0M4T82oejV3ON7Y9PiR
-	 8al5v9sdVf6qKwJRzzRzNQNHsrCJIKkf6wlcNffIiwlbTPk/2ww0YF4quW5B4zpuZ7
-	 x5Kf4szM/lVMw==
-Date: Tue, 6 Jan 2026 22:43:49 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, 
-	Jan Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>, 
-	Martin Brandenburg <martin@omnibond.com>, Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>, 
-	Jeff Layton <jlayton@kernel.org>, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev, io-uring@vger.kernel.org, 
-	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: re-enable IOCB_NOWAIT writes to files v4
-Message-ID: <20260106-bequem-albatros-3c747261974f@brauner>
-References: <20251223003756.409543-1-hch@lst.de>
- <20251224-zusah-emporsteigen-764a9185a0a1@brauner>
- <20260106062409.GA16998@lst.de>
+	b=IHIGLAWBckTuW90Tqk9AwWGKjF2td8rqovwg0NRbguo2bIlxwGpBGzsf1NLvMUILi
+	 BQoWFioS862+nXI2dd8mWKpoXaJJ1YWihNNSbfnN5KPg9hqcMRvsKDOpqV4CPEorYY
+	 5k4soKXZgcFh4/+7DO0jYUjkOFfrT4QBt41+h1q4KuL73AWbgVyQ+kIsfuEhj7rUSN
+	 NTAm6kdG9jmZ0/CYsQaP/SRQ2kEhUibnKmP4QypshaRpk5WPy+MeWmqOyUXsvufo3I
+	 6XAJSSfoKz67Z5XGzg3bxR5KXG5l1dB4Phf1Aujw4wJcFiq9b4bQHdjN9FgVMgfKEY
+	 j9N30nD73TzCA==
+Date: Tue, 6 Jan 2026 15:33:49 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: jack@suse.cz, brauner@kernel.org
+Cc: linux-api@vger.kernel.org, hch@lst.de, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gabriel@krisman.be, amir73il@gmail.com
+Subject: [PATCH 7/6] fs: improve comment in fserror_alloc_event
+Message-ID: <20260106233349.GL191501@frogsfrogsfrogs>
+References: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260106062409.GA16998@lst.de>
+In-Reply-To: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
 
-On Tue, Jan 06, 2026 at 07:24:09AM +0100, Christoph Hellwig wrote:
-> > Applied to the vfs-7.0.nonblocking_timestamps branch of the vfs/vfs.git tree.
-> > Patches in the vfs-7.0.nonblocking_timestamps branch should appear in linux-next soon.
-> 
-> Umm, as in my self reply just before heading out for vacation, Julia
-> found issues in it using static type checking tools.  I have a new
-> version that fixes that and sorts out the S_* mess.  So please drop
-> it again for now, I'll resend the fixed version ASAP.
+From: Darrick J. Wong <djwong@kernel.org>
 
-It has never been pushed nor applied as I saw your mail right before all
-of that.
+Document the ordering requirements between SB_ACTIVE and
+s_pending_errors in the new fserror code.
+
+Cc: jack@suse.cz
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/fserror.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/fs/fserror.c b/fs/fserror.c
+index ec92f5a6db59ce..06ca86adab9b76 100644
+--- a/fs/fserror.c
++++ b/fs/fserror.c
+@@ -79,6 +79,11 @@ static inline struct fserror_event *fserror_alloc_event(struct super_block *sb,
+ 	 * If pending_errors already reached zero or is no longer active,
+ 	 * the superblock is being deactivated so there's no point in
+ 	 * continuing.
++	 *
++	 * The order of the check of s_pending_errors and SB_ACTIVE are
++	 * mandated by order of accesses in generic_shutdown_super and
++	 * fserror_unmount.  Barriers are implicitly provided by the refcount
++	 * manipulations in this function and fserror_unmount.
+ 	 */
+ 	if (!refcount_inc_not_zero(&sb->s_pending_errors))
+ 		return NULL;
