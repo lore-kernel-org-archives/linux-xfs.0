@@ -1,174 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B95312FF169;
-	Tue,  6 Jan 2026 17:35:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0309136A016;
+	Tue,  6 Jan 2026 17:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.171.160.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767720913; cv=none; b=fSVYitgqD7TlsEDZ2BMftXDozzhe69Emnzw3zAtVf8m7N4TcRbKHQ/LjjGKGpS841biV0FFO9esFRxlDX3b44JzvjM9GnpjEdygrtl7Hlntctu53cy7++DSese8XCvPJ9xPUwBdo0B9ekIQB37Wjpccndbg2YRou1pTpDzPWVCA=
+	t=1767722114; cv=none; b=lSuQDNp3K7k46fBEbP8bobZJK6X0O7bKjcWOu4k5IaMeze7VXqLgajn68bLxINUT6dkFY8BEC/FkfuaDM3dy4THDj+onYN7bgvxEAb5VjRmYufk3IlFMBLhpobRBy9KB6iEF2x8XvRXKNjmC738NnZrKR9pUBoRenK8PxhjzcEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767720913; c=relaxed/simple;
-	bh=dW7umfsK1VacKIp4oUBWq7npbj36ith8MtnWEdP0dz8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XHiAObAvOJ39GYYRJuBo3c+QuCjEXgriXkxf0smQZwUZWQ8PT4Kc/uruTPK7RYb59EhSIHDj2WNSlgZIVkJRayAY97m9PGCGjZm9//TyzhuQAS6dy8ObH+CJNYk6XwIz6fOL3uzBaWzSTUiSbzrosf42LSR/A7hvl/CGK2lPlV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UwjQKP0w; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767722114; c=relaxed/simple;
+	bh=/RKmnJVAgf9DEnLf0VDPfSnHGuDA98Ne/+QXtIcqxPg=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Zilk+VIuuJ9dXOKVpQfLHkxnUte/aTaMej3y9hqciw5fqdRkfqqofL961DHxGRKY+izXZFfWnmz+6eKSglEU0PVW042gZcxzUBxlHvcnCvygKUHG0eZnLF2+XbShEaVoJQjRfrdTNkEdGFdh82zdZ8CwuXtaulOfv/837f2LveM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp; spf=pass smtp.mailfrom=parknet.co.jp; dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=DMDcHKE8; dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=dngp0wuD; arc=none smtp.client-ip=210.171.160.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=parknet.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UwjQKP0w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D796C16AAE;
-	Tue,  6 Jan 2026 17:35:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767720913;
-	bh=dW7umfsK1VacKIp4oUBWq7npbj36ith8MtnWEdP0dz8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UwjQKP0wi0NCe8UvgeBnhmboEr1ZVKCBj9yoKOwNRRNobWZa26Utn/Kwz5fUK74LB
-	 jBnrdmzxZ61pgjiDoZVAOVFdnANX/ojPrpM8aCLnEtB/ezUT/TU+3JtBhT6h+XeD0h
-	 EwB5un8tvMQm4nMjZtXXABxtbQ7GQLlBCGhFAl60cWXj2QbLqGQY9ugIBspdBZsM+j
-	 fLi0r11KYqGwIRr6fs0P9GcP7RbsN26h18XgFlyJDjREHjyAMn2lZS7AFhYT1vtK5R
-	 cRzPjQehRPbvfjq9PYYel5iboMhXedVqMKGmjaYOMyCrGSo9Nb5qmeddtlA//D9/j3
-	 Q0M/AMaxGDf1A==
-Date: Tue, 6 Jan 2026 09:35:13 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: brauner@kernel.org, hch@lst.de, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	gabriel@krisman.be, amir73il@gmail.com
-Subject: Re: [PATCH 2/6] fs: report filesystem and file I/O errors to fsnotify
-Message-ID: <20260106173513.GD191481@frogsfrogsfrogs>
-References: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
- <176602332171.686273.14690243193639006055.stgit@frogsfrogsfrogs>
- <cunesvp5k37ocmz2nbkdov7ssu3djqvdii26d4gn6sj7sgtnca@b5mokxhvneay>
+	dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="DMDcHKE8";
+	dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="dngp0wuD"
+Received: from ibmpc.myhome.or.jp (server.parknet.ne.jp [210.171.168.39])
+	by mail.parknet.co.jp (Postfix) with ESMTPSA id C17DB209655A;
+	Wed,  7 Jan 2026 02:55:08 +0900 (JST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=parknet.co.jp;
+	s=20250114; t=1767722109;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XLoEpn8SbUq3M2bDjtG0l+ipy2NNHSDPPhecVpaZDKI=;
+	b=DMDcHKE8vaT2nF69Dzn4q+ho0MObOvhdMIutxH4dRXqQs6X87wOOdePiyxIeGejkYbMQW1
+	agTnNi+nGCJqANPlGmcyL4Y83s7mCcIe2QfhTiADX2/XrHwMssPp2gWrF/WkEcks48ltAl
+	Nd746sbKtao8pfysbRLLut8tmEcN9HEo2Kot7rslLBqgtCaUIT4DaEjqXk4tynEH7tL4Vq
+	7eJH9x/Zbr9gBFZ3Cm7BKNg1bMki91oudMaw+DblGX7Qn2GFrNEdkZ8Og0gQNTa8q0yW57
+	CPQJzMRQqVls91Pawc8VvRVlwgfL3kYre0P2qPk5KBJWys+tnBTEPovCNZqtnA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=parknet.co.jp;
+	s=20250114-ed25519; t=1767722109;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XLoEpn8SbUq3M2bDjtG0l+ipy2NNHSDPPhecVpaZDKI=;
+	b=dngp0wuDXWPBjKoTj+/Ya8vAvMGFu8eZAaXjdaBi/UhOklp9rQ98ohqhfi3hRRmWaQyEzW
+	Wl3vPwJbxIX/wfAA==
+Received: from devron.myhome.or.jp (foobar@devron.myhome.or.jp [192.168.0.3])
+	by ibmpc.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 606Ht7F5232027
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 7 Jan 2026 02:55:08 +0900
+Received: from devron.myhome.or.jp (foobar@localhost [127.0.0.1])
+	by devron.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 606Ht7Mw551463
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 7 Jan 2026 02:55:07 +0900
+Received: (from hirofumi@localhost)
+	by devron.myhome.or.jp (8.18.1/8.18.1/Submit) id 606Ht6aI551461;
+	Wed, 7 Jan 2026 02:55:06 +0900
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, Al Viro
+ <viro@zeniv.linux.org.uk>,
+        David Sterba <dsterba@suse.com>, Jan Kara
+ <jack@suse.cz>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg
+ <martin@omnibond.com>,
+        Carlos Maiolino <cem@kernel.org>, Stefan Roesch
+ <shr@fb.com>,
+        Jeff Layton <jlayton@kernel.org>,
+        Trond Myklebust
+ <trondmy@kernel.org>,
+        Anna Schumaker <anna@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        gfs2@lists.linux.dev, io-uring@vger.kernel.org,
+        devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 04/11] fat: cleanup the flags for fat_truncate_time
+In-Reply-To: <87cy3nrpdu.fsf@mail.parknet.co.jp>
+References: <20260106075008.1610195-1-hch@lst.de>
+	<20260106075008.1610195-5-hch@lst.de>
+	<87cy3nrpdu.fsf@mail.parknet.co.jp>
+Date: Wed, 07 Jan 2026 02:55:06 +0900
+Message-ID: <878qeask1x.fsf@mail.parknet.co.jp>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cunesvp5k37ocmz2nbkdov7ssu3djqvdii26d4gn6sj7sgtnca@b5mokxhvneay>
+Content-Type: text/plain
 
-On Mon, Dec 22, 2025 at 04:36:14PM +0100, Jan Kara wrote:
-> On Wed 17-12-25 18:03:11, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Create some wrapper code around struct super_block so that filesystems
-> > have a standard way to queue filesystem metadata and file I/O error
-> > reports to have them sent to fsnotify.
-> > 
-> > If a filesystem wants to provide an error number, it must supply only
-> > negative error numbers.  These are stored internally as negative
-> > numbers, but they are converted to positive error numbers before being
-> > passed to fanotify, per the fanotify(7) manpage.  Implementations of
-> > super_operations::report_error are passed the raw internal event data.
-> > 
-> > Note that we have to play some shenanigans with mempools and queue_work
-> > so that the error handling doesn't happen outside of process context,
-> > and the event handler functions (both ->report_error and fsnotify) can
-> > handle file I/O error messages without having to worry about whatever
-> > locks might be held.  This asynchronicity requires that unmount wait for
-> > pending events to clear.
-> > 
-> > Add a new callback to the superblock operations structure so that
-> > filesystem drivers can themselves respond to file I/O errors if they so
-> > desire.  This will be used for an upcoming self-healing patchset for
-> > XFS.
-> > 
-> > Suggested-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Looks good to me. Besides the nits Christoph commented on just two comments:
-> 
-> > +static inline struct fserror_event *fserror_alloc_event(struct super_block *sb,
-> > +							gfp_t gfp_flags)
-> > +{
-> > +	struct fserror_event *event = NULL;
-> > +
-> > +	/*
-> > +	 * If pending_errors already reached zero or is no longer active,
-> > +	 * the superblock is being deactivated so there's no point in
-> > +	 * continuing.
-> > +	 */
-> > +	if (!refcount_inc_not_zero(&sb->s_pending_errors))
-> > +		return NULL;
-> 
-> It would be good here or in the above comment explicitely mention that the
-> ordering of s_pending_errors check and SB_ACTIVE check is mandated by the
-> ordering in generic_shutdown_super() and that the barriers are implicitely
-> provided by the refcount manipulations here and in fserror_unmount().
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp> writes:
 
-Ok.  I'll send a follow-on patch, though I don't see vfs-7.0.fserror on
-vfs.git so I'm confused about where things are right now.
+> Christoph Hellwig <hch@lst.de> writes:
+>
+>> Fat only has a single on-disk timestamp covering ctime and mtime.  Add
+>> fat-specific flags that indicate which timestamp fat_truncate_time should
+>> update to make this more clear.  This allows removing no-op
+>> fat_truncate_time calls with the S_CTIME flag and prepares for removing
+>> the S_* flags.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> This breaks fat_update_time() by calling fat_truncate_time() with old
+> S_* flags (later patch looks like fixing though). Please add the commit
+> comment about it, or fix it in this patch.
+>
+> Thanks.
 
-> > +	if (!(sb->s_flags & SB_ACTIVE))
-> > +		goto out_pending;
-> > +
-> > +	event = mempool_alloc(&fserror_events_pool, gfp_flags);
-> > +	if (!event)
-> > +		goto out_pending;
-> > +
-> > +	/* mempool_alloc doesn't support GFP_ZERO */
-> > +	memset(event, 0, sizeof(*event));
-> > +	event->sb = sb;
-> > +	INIT_WORK(&event->work, fserror_worker);
-> > +
-> > +	return event;
-> > +
-> > +out_pending:
-> > +	fserror_pending_dec(sb);
-> > +	return NULL;
-> > +}
-> > +
-> > +/**
-> > + * fserror_report - report a filesystem error of some kind
-> > + *
-> > + * Report details of a filesystem error to the super_operations::report_error
-> > + * callback if present; and to fsnotify for distribution to userspace.  @sb,
-> > + * @gfp, @type, and @error must all be specified.  For file I/O errors, the
-> > + * @inode, @pos, and @len fields must also be specified.  For file metadata
-> > + * errors, @inode must be specified.  If @inode is not NULL, then @inode->i_sb
-> > + * must point to @sb.
-> > + *
-> > + * Reporting work is deferred to a workqueue to ensure that ->report_error is
-> > + * called from process context without any locks held.  An active reference to
-> > + * the inode is maintained until event handling is complete, and unmount will
-> > + * wait for queued events to drain.
-> > + *
-> > + * @sb:		superblock of the filesystem
-> > + * @inode:	inode within that filesystem, if applicable
-> > + * @type:	type of error encountered
-> > + * @pos:	start of inode range affected, if applicable
-> > + * @len:	length of inode range affected, if applicable
-> > + * @error:	error number encountered, must be negative
-> > + * @gfp:	memory allocation flags for conveying the event to a worker,
-> > + *		since this function can be called from atomic contexts
-> > + */
-> > +void fserror_report(struct super_block *sb, struct inode *inode,
-> > +		    enum fserror_type type, loff_t pos, u64 len, int error,
-> > +		    gfp_t gfp)
-> > +{
-> > +	struct fserror_event *event;
-> > +
-> > +	/* sb and inode must be from the same filesystem */
-> > +	WARN_ON_ONCE(inode && inode->i_sb != sb);
-> > +
-> > +	/* error number must be negative */
-> > +	WARN_ON_ONCE(error >= 0);
-> 
-> Since the error reporting is kind of expensive now (allocation & queueing
-> work) it would be nice to check somebody actually cares about the error
-> events at all. We can provide a helper from fsnotify for that, I'm not sure
-> about ->report_error hook since it didn't get used in this series at all in
-> the end...
+Ah, I was overlooking that new value is using same value with S_*.
+So
 
-I didn't quite get to posting that patchset before vacation, but it's
-posted now in "xfs: convey file I/O errors to the health monitor":
+Acked-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
 
-https://lore.kernel.org/linux-fsdevel/176766637421.774337.94510884010750487.stgit@frogsfrogsfrogs/T/#Z2e.:..:176766637421.774337.94510884010750487.stgit::40frogsfrogsfrogs:1fs:xfs:xfs_super.c
-
---D
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-> 
+Thanks.
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
