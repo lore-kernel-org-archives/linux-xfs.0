@@ -1,151 +1,155 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F59200C2
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Jan 2026 16:34:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1235E254B18;
+	Tue,  6 Jan 2026 16:36:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767717270; cv=none; b=SHw/5ragtxkCj8abixvvITKp1OnsRVqzjq1/mRPGkJsVOE1rFlRS1ZxE09or3mhAKKJKs/lf3bJU416QElF5C+CZFQv1tkc/oXqLbc01DHDxyuS4i1ZjT6kujIzwMSEiNAYOFz96HitQaRC0al+TV6diaNnU7qGh4UlY0RGcrmg=
+	t=1767717390; cv=none; b=aizXYf2kNFA8ARG2hC4avrxIJKUQDQfucfYGeLJHNQE8Je/UXbCKdWWCGEDVacg8fbOji1X4knbHaPJnHy81DZsqX+ivxjkO+USz84G8qfVHMBYsAHAIG0iQT2xFRD7bGbEthfg8r0YLEK3mTWNURFtM6amYfnxHAiImcR+irkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767717270; c=relaxed/simple;
-	bh=yIgA4csgcQh//5YP/NCFEuAmEc3v5RpzsbcoQdtK3lU=;
+	s=arc-20240116; t=1767717390; c=relaxed/simple;
+	bh=YDUnswj3zAgAUBPNvL5Nb8UuwiZt0aAYaBYhGEo5Wpo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oYKPCq0f5e92mHc+ZLLZumAlDASfQIVK4pBMtNhvpTcNHGd9FdD/JZaj+u87L+Z5PDOWmr1t+ffkQ7iI4pxVIc59BQCIzdi/Q/4xFfay42O0uLDvayMFHqMAUitcDf6jMcToypLDa7qHjpyo7WBGXjeEyBSZdUE00mYXLrMcZKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=poqzzDkv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Om4uNb4f1OQMmf0jZOaVKRJeEuNRjkXm1+eaSVHXdcvdREyCuASTWrDy6hLiKGK76QvCY16p8GOjYFeKUEb/dpQJUa/DKPQ/AMbrbZqxuhIDlLGBObVFomWH6nzEckQEnrCWdddAdDLQFCUfP0iPiVdMKnwzH1BpTnAkdnyYwK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qjeJIvMN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="poqzzDkv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15E0DC16AAE;
-	Tue,  6 Jan 2026 16:34:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qjeJIvMN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 992A3C116C6;
+	Tue,  6 Jan 2026 16:36:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767717270;
-	bh=yIgA4csgcQh//5YP/NCFEuAmEc3v5RpzsbcoQdtK3lU=;
+	s=k20201202; t=1767717389;
+	bh=YDUnswj3zAgAUBPNvL5Nb8UuwiZt0aAYaBYhGEo5Wpo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=poqzzDkvZJqpwav7vQvfK9CtGRgw3F7l4i6ClXT3cGwrZVCMgc9txc9aKg+dKufcI
-	 VTjkcNzCVMrbFPQH36qKDIlye6Jrd12R5AOz6ZT7+zrtqN6hDs27EacHubp1ygJ61f
-	 VnI3JGojzJsS4VbXBQwbmGdrfBpGsD0WGxUX4Qzn5Gz4ocD67rSethquVcs7WTUEQ5
-	 SrdZWSScrUNfgb3UuAfGpB22NQsTA2DLrQsNzIKXwFoA7Cy2cFvo3WNT2UikIXPM59
-	 TwJwu7AQjs2IomXvc6E0WvELflLQfWFkb9E63i6BMRP2+fIVUMFbjH/o30bqRBP/ej
-	 Xp64OuPp350kw==
-Date: Tue, 6 Jan 2026 08:34:29 -0800
+	b=qjeJIvMNg6jnKhydM4JuG9jsMqRnNoxCZore3iLgl3x8Y/u5DpZboEX9itnoF2a+R
+	 Ubd4o47RWoD59pucylomgfEV2oEFyaONZM6IwP6gxzKdN9QXoTjF3c3dsD83vUB+wc
+	 YPoes1suckunEtoINFoG0QL0VQiwara6qrg2tpKPQYALELodxqsX6HKWLGPxOu2szS
+	 VzfKKGk5L1QPn7sEXkFHU2RCuqX1mH3If1eSV2r0A990hZceo4kMZ99pe7/rdFzlhD
+	 0NuHHufj+vgDf2uro/qMYcDTskbInjrjT6Wc3fuQOmMptI7RIVZUMUqn5B4KDRr0fT
+	 H6UzN45FGp5ng==
+Date: Tue, 6 Jan 2026 08:36:29 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH v3 6/6] libfrog: enable cached report zones
-Message-ID: <20260106163429.GF191501@frogsfrogsfrogs>
-References: <20251220025326.209196-1-dlemoal@kernel.org>
- <20251220025326.209196-7-dlemoal@kernel.org>
+To: Glass Su <glass.su@suse.com>
+Cc: fstests@vger.kernel.org, Su Yue <l@damenly.org>,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	zlang@redhat.com
+Subject: Re: [PATCH v2] generic: use _qmount_option and _qmount
+Message-ID: <20260106163629.GG191501@frogsfrogsfrogs>
+References: <20251208065829.35613-1-glass.su@suse.com>
+ <F1D7CB58-C22E-436C-B8C9-26A3F83CA018@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20251220025326.209196-7-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <F1D7CB58-C22E-436C-B8C9-26A3F83CA018@suse.com>
 
-On Sat, Dec 20, 2025 at 11:53:26AM +0900, Damien Le Moal wrote:
-> Modify the function xfrog_report_zones() to default to always trying
-> first a cached report zones using the BLKREPORTZONEV2 ioctl.
-> If the kernel does not support BLKREPORTZONEV2, fall back to the
-> (slower) regular report zones BLKREPORTZONE ioctl.
+On Tue, Dec 23, 2025 at 02:41:50PM +0800, Glass Su wrote:
 > 
-> TO enable this feature even if xfsprogs is compiled on a system where
-> linux/blkzoned.h does not define BLKREPORTZONEV2, this ioctl is defined
-> in libfrog/zones.h, together with the BLK_ZONE_REP_CACHED flag and the
-> BLK_ZONE_COND_ACTIVE zone condition.
 > 
-> Since a cached report zone  always return the condition
-> BLK_ZONE_COND_ACTIVE for any zone that is implicitly open, explicitly
-> open or closed, the function xfs_zone_validate_seq() is modified to
-> handle this new condition as being equivalent to the implicit open,
-> explicit open or closed conditions.
+> > On Dec 8, 2025, at 14:58, Su Yue <glass.su@suse.com> wrote:
+> > 
+> > This commit touches generic tests call `_scratch_mount -o usrquota`
+> > then chmod 777, quotacheck and quotaon. They can be simpilfied
+> > to _qmount_option and _qmount. _qmount already calls quotacheck,
+> > quota and chmod ugo+rwx. The conversions can save a few lines.
+> > 
+> > Signed-off-by: Su Yue <glass.su@suse.com>
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  libfrog/zones.c    | 11 ++++++++++-
->  libfrog/zones.h    |  9 +++++++++
->  libxfs/xfs_zones.c |  3 ++-
->  3 files changed, 21 insertions(+), 2 deletions(-)
-> 
-> diff --git a/libfrog/zones.c b/libfrog/zones.c
-> index 0187edce5fa4..8b45066de176 100644
-> --- a/libfrog/zones.c
-> +++ b/libfrog/zones.c
-> @@ -27,10 +27,19 @@ _("Failed to allocate memory for reporting zones.\n"));
->  		return NULL;
->  	}
->  
-> +	/*
-> +	 * Try cached report zones first. If this fails, fallback to the regular
-> +	 * (slower) report zones.
-> +	 */
->  	rep->sector = sector;
->  	rep->nr_zones = ZONES_PER_REPORT;
-> +	rep->flags = BLK_ZONE_REP_CACHED;
->  
-> -	ret = ioctl(fd, BLKREPORTZONE, rep);
-> +	ret = ioctl(fd, BLKREPORTZONEV2, rep);
-> +	if (ret < 0 && errno == ENOTTY) {
-> +		rep->flags = 0;
-> +		ret = ioctl(fd, BLKREPORTZONE, rep);
-> +	}
->  	if (ret) {
->  		fprintf(stderr,
->  _("ioctl(BLKREPORTZONE) failed: %d!\n"), -errno);
-> diff --git a/libfrog/zones.h b/libfrog/zones.h
-> index 66df7a426a27..4605aea93114 100644
-> --- a/libfrog/zones.h
-> +++ b/libfrog/zones.h
-> @@ -8,6 +8,15 @@
->  #include <stdint.h>
->  #include <linux/blkzoned.h>
->  
-> +/*
-> + * Cached report ioctl (/usr/include/linux/blkzoned.h)
-> + */
-> +#ifndef BLKREPORTZONEV2
-> +#define BLKREPORTZONEV2		_IOWR(0x12, 142, struct blk_zone_report)
-> +#define BLK_ZONE_REP_CACHED	(1U << 31)
-> +#define BLK_ZONE_COND_ACTIVE	0xff
+> Gentle ping.
 
-Of these three definitions, only BLK_ZONE_COND_ACTIVE is actually used
-outside of libfrog/zones.c, right?  I suggest defining BLKREPORTZONEV2
-and BLK_ZONE_REP_CACHED there instead of zones.h to reduce the number of
-symbols floating around.
+Sorry, I've been on vacation.
 
-(The rest of the code changes look ok to me)
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +#endif
-> +
->  struct blk_zone_report	*xfrog_report_zones(int	fd, uint64_t sector);
->  
->  #endif /* __LIBFROG_ZONE_H__ */
-> diff --git a/libxfs/xfs_zones.c b/libxfs/xfs_zones.c
-> index 7a81d83f5b3e..3c89a89ca21e 100644
-> --- a/libxfs/xfs_zones.c
-> +++ b/libxfs/xfs_zones.c
-> @@ -3,7 +3,7 @@
->   * Copyright (c) 2023-2025 Christoph Hellwig.
->   * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
->   */
-> -#include <linux/blkzoned.h>
-> +#include <libfrog/zones.h>
->  #include "libxfs_priv.h"
->  #include "xfs.h"
->  #include "xfs_fs.h"
-> @@ -97,6 +97,7 @@ xfs_zone_validate_seq(
->  	case BLK_ZONE_COND_IMP_OPEN:
->  	case BLK_ZONE_COND_EXP_OPEN:
->  	case BLK_ZONE_COND_CLOSED:
-> +	case BLK_ZONE_COND_ACTIVE:
->  		return xfs_zone_validate_wp(zone, rtg, write_pointer);
->  	case BLK_ZONE_COND_FULL:
->  		return xfs_zone_validate_full(zone, rtg, write_pointer);
-> -- 
-> 2.52.0
+> — 
+> Su
+> > ---
+> > Changelog:
+> > v2:
+> >  Only convert the tests calling chmod 777.
+> > ---
+> > tests/generic/231 | 6 ++----
+> > tests/generic/232 | 6 ++----
+> > tests/generic/233 | 6 ++----
+> > tests/generic/270 | 6 ++----
+> > 4 files changed, 8 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/tests/generic/231 b/tests/generic/231
+> > index ce7e62ea1886..02910523d0b5 100755
+> > --- a/tests/generic/231
+> > +++ b/tests/generic/231
+> > @@ -47,10 +47,8 @@ _require_quota
+> > _require_user
+> > 
+> > _scratch_mkfs >> $seqres.full 2>&1
+> > -_scratch_mount "-o usrquota,grpquota"
+> > -chmod 777 $SCRATCH_MNT
+> > -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> > -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> > +_qmount_option "usrquota,grpquota"
+> > +_qmount
+> > 
+> > if ! _fsx 1; then
+> > _scratch_unmount 2>/dev/null
+> > diff --git a/tests/generic/232 b/tests/generic/232
+> > index c903a5619045..21375809d299 100755
+> > --- a/tests/generic/232
+> > +++ b/tests/generic/232
+> > @@ -44,10 +44,8 @@ _require_scratch
+> > _require_quota
+> > 
+> > _scratch_mkfs > $seqres.full 2>&1
+> > -_scratch_mount "-o usrquota,grpquota"
+> > -chmod 777 $SCRATCH_MNT
+> > -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> > -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> > +_qmount_option "usrquota,grpquota"
+> > +_qmount
+> > 
+> > _fsstress
+> > _check_quota_usage
+> > diff --git a/tests/generic/233 b/tests/generic/233
+> > index 3fc1b63abb24..4606f3bde2ab 100755
+> > --- a/tests/generic/233
+> > +++ b/tests/generic/233
+> > @@ -59,10 +59,8 @@ _require_quota
+> > _require_user
+> > 
+> > _scratch_mkfs > $seqres.full 2>&1
+> > -_scratch_mount "-o usrquota,grpquota"
+> > -chmod 777 $SCRATCH_MNT
+> > -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> > -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> > +_qmount_option "usrquota,grpquota"
+> > +_qmount
+> > setquota -u $qa_user 32000 32000 1000 1000 $SCRATCH_MNT 2>/dev/null
+> > 
+> > _fsstress
+> > diff --git a/tests/generic/270 b/tests/generic/270
+> > index c3d5127a0b51..9ac829a7379f 100755
+> > --- a/tests/generic/270
+> > +++ b/tests/generic/270
+> > @@ -62,10 +62,8 @@ _require_command "$SETCAP_PROG" setcap
+> > _require_attrs security
+> > 
+> > _scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full 2>&1
+> > -_scratch_mount "-o usrquota,grpquota"
+> > -chmod 777 $SCRATCH_MNT
+> > -quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+> > -quotaon -u -g $SCRATCH_MNT 2>/dev/null
+> > +_qmount_option "usrquota,grpquota"
+> > +_qmount
+> > 
+> > if ! _workout; then
+> > _scratch_unmount 2>/dev/null
+> > -- 
+> > 2.50.1 (Apple Git-155)
+> > 
 > 
 > 
