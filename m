@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB5521E5724
-	for <linux-xfs@vger.kernel.org>; Tue,  6 Jan 2026 14:08:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBCA247280
+	for <linux-xfs@vger.kernel.org>; Tue,  6 Jan 2026 14:31:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767708532; cv=none; b=ZcCAaTgUr+J/CaIqfmT64LoB+/qkL2PFcR+6MzGd1w5uAj6MSfiEsCE7gWERdYRDkLkobx05S18iM0iakwNBMuC56NVrsNWB7YwX1KTj6c5eA8ClLdBT/60pOPrh0I3GqZAx/x2C5185+Oev5pf1SUOZ5Dp/57IVBeJoE2/5yI4=
+	t=1767709861; cv=none; b=aQ0des16Q2ghcA7DFBfPfdmH2nAHbPbaB+Jvd96F1/p/plep1w9q2YxAkb2T/waqXQW45yKg+wxXSP41P7N0yALiiR2wEmUeOAcKJYG2skTioq5vDWBDTY3OpcisibL3rgPjEtFILoS6zjYOMVSo4es7bcELUhLhOyKP1Ku3Hg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767708532; c=relaxed/simple;
-	bh=Qs1x48BlNh6IqSiAxBvmOFVOSefYqe6x68PMgVJ8ZgM=;
+	s=arc-20240116; t=1767709861; c=relaxed/simple;
+	bh=nLZM6d3aQnvu3oMoq/JtCsUdfyJUsxHul+AnMG/iFt4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lo0GuduBk08qbTsm4me62pKmhNaA2PoQnMSN+ghrOu8qwOcV8P/mJdhSpa7zGKMVBxXVF9XCtC3mnYnaDg6DxFF8Ae99MbmynhN7gF9Yp9yiRsCay9YVb+jRbzvyQZvnro6+Z7w4V68xfWUNiC9l4czr2vaVkvR1QihuoppZ+Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L/ad+KSi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IiHXj64HNOAGplp7Pnm2WovKLkvJ0IC7ZpYrufAWUbMP1aW8SCuQT8I+OJB+emoH7iIR4W96eIs3j3z+iq9cy8pttW+p/clku1Rq9MYt2BQiZ+LFQpOkz3T/E8xpTrCuDEcaWYLPVoh+tSijCX3o6pA6dSdftA+terBLBWIVY/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GVUOe27p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L/ad+KSi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95588C116C6;
-	Tue,  6 Jan 2026 14:08:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GVUOe27p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FF93C116C6;
+	Tue,  6 Jan 2026 14:31:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767708532;
-	bh=Qs1x48BlNh6IqSiAxBvmOFVOSefYqe6x68PMgVJ8ZgM=;
+	s=k20201202; t=1767709860;
+	bh=nLZM6d3aQnvu3oMoq/JtCsUdfyJUsxHul+AnMG/iFt4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=L/ad+KSinPiWK0WznIhL+A2iiv3c6vPToaIlICu/UIgqW94B3EUaK4okF215fI32I
-	 ncV9G4kqymteZv6Q+KLDEP2+mZtbw6sGy8wvm62DvcS2+weI51WsvjtpVOAHjRWoby
-	 7zbAc01prJgIFU3dGPSCIHWDV+jdOOIb1nNYEsmshe7F7UB31iHI/v1gG9IwlpIfNI
-	 R5U8K41xfUk2y8soMtb+0Y4dm9xNmRFptURfVwZ5dxbeq52Asl5lPRd+QgLsj5H4ZW
-	 PtLgAhxs2ZuAj7kKgKyK2hjCfzS2YueenZuzDubJV3hlgUDh1kZow1JMvsNF7LcwIr
-	 2yfzbklM802CQ==
-Date: Tue, 6 Jan 2026 15:08:48 +0100
+	b=GVUOe27putZSkx3yYacc6yNeiaGaUx/XqYkMXfz4/PQ5dSMJfaKI3XwOLqKSlBmc7
+	 EJkABPv27IujX7p/yld5/4BwSUsIo9ffQEOYuhMhU+ZVKwy4mAzR2KC6fwD5+WRjWK
+	 FToYrPdbh2YLDepqI15M20C1W7NP+naE6elLL2xnF24GmEXqL/aM1tFzxCBIpHujMs
+	 p2FbgyE+tO8XGf8FBf1y0/6iHyHZ/v6WJmQi7DxcWsEcY8CMoIkMHsmw77JLHuUtAi
+	 feY70jFaUPbwj0owNQv+BRBT8l0BcusJZiSvkrNB0uNDcMgsczJ7EkmpuFc2bA0ILb
+	 TNIekYGm2nOdw==
+Date: Tue, 6 Jan 2026 15:30:57 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: Dmitry Antipov <dmantipov@yandex.ru>
 Cc: linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/2] xfs: use memparse() when parsing mount options
-Message-ID: <aV0UcoXBKMwpt1Ea@nidhogg.toxiclabs.cc>
+Message-ID: <aV0bA8uiVR2Zxn6g@nidhogg.toxiclabs.cc>
 References: <20251225144138.150882-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -170,6 +170,24 @@ On Thu, Dec 25, 2025 at 05:41:37PM +0300, Dmitry Antipov wrote:
 > +			return -ERANGE;
 > +		size = v;
 >  		parsing_mp->m_allocsize_log = ffs(size) - 1;
+
+This will force the allocsize to be set to the lowest power of two set.
+If we pass a bogus number to allocsize, it will round down to the lowest
+power of two.
+
+While I agree with adding an explicit check, currently we print out an
+error message when something other than a power of two is set:
+
+E.g. XFS (vdb1): invalid log iosize: 11 [not 12-30]
+
+With this patch we lose such information and nothing is printed back to
+the user. I think we should still inform the user a bogus value has been
+passed.
+
+FWIW, we silently truncate down bogus value, so the current behavior
+ain't the best either.
+
+
 >  		parsing_mp->m_features |= XFS_FEAT_ALLOCSIZE;
 >  		return 0;
 > @@ -1570,12 +1509,10 @@ xfs_fs_parse_param(
@@ -183,19 +201,6 @@ On Thu, Dec 25, 2025 at 05:41:37PM +0300, Dmitry Antipov wrote:
 > +		v = memparse(param->string, &end);
 > +		if (*end != 0 || v == 0)
 >  			return -EINVAL;
-
-
-The patch looks mostly fine, but it changes max_atomic_write semantics.
-So far the option accepts 0 as a valid value, and this patch forbids it.
-
-I'm not sure how useful setting it to 0 would be, but I *think* perhaps
-it can be used to explicitly prevent atomic writes. Anyway, if we opt to
-change the semantics, that should be done in a different patch, not one
-that is updating API usage.
-
-Cheers,
-Carlos
-
 > -		}
 > +		parsing_mp->m_awu_max_bytes = v;
 >  		return 0;
