@@ -1,133 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from forward202d.mail.yandex.net (forward202d.mail.yandex.net [178.154.239.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E63C318B97
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Jan 2026 18:22:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2DF313E07;
+	Wed,  7 Jan 2026 18:43:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767810163; cv=none; b=Ww/rvOa63STaFXiao2QFFXVE2Rc6oh061ji6eQzb0GlFZcbq/QXv2ftat7enk9zjAQo3g27BloXlFoPa9BvrifU1eXKUS6yVDfDP4RfehCzS9T9GPQwD7N+Is1Ua8zTr/oIfiVBJbbX5+GkG5PIFyVjtNz2oAAr2nrV0eP8eYB0=
+	t=1767811416; cv=none; b=EIjzRq16jnYgOzqMyS8hVzevIHhyDhcwgmj/9E2WzWt2xtKJFyKkVgyTCTmtkYoAKxod0egXv6PF/KjZC1Nrn+8oVAl8IdeOfAy32dfT+Hp/eoXW0R1syFyAbeWTurb/kMshPpzeLxyBH9vEh3gxC9yRYLdo2FpQG/URzvD/SKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767810163; c=relaxed/simple;
-	bh=H4HWARRoLh2qBgqBmASn3afgcSKRwurOHuNopMgArPc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gvFKfDx2Ecmg0GrU9WmptvYceAWe1hMtr+OXr32SSZ7AqVpkw8965EWIrofbh/GAoFjT3Yv2C0uWcY6Ysh2DPGmaGIRZUftNFFxaKay2DhzftqIfc3Y6W+jlili0byyQX+6fD3dYVFn/MfiTbgjKIiPTrC6FjIr3+wgl1y51wQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OWX9K+8m; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767811416; c=relaxed/simple;
+	bh=a90Z8nQ2W052PHISezo3OIlyc6anDAZ5L4dIv147JsI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DuhNE1rYARZhr4ixWBICtS9Z/La4nhaLR3CbXlzmn1fiVKZFPlQaw97kiLkxETGrUO1Itb5pkfGD9FD7T7BGc906OYyOz6lkdE/YqeJdIS0DUODmcgbnDKVDatwKYAJarHfISBC2btjmLJcIZet3/6Sl9NZLUCSH9S3hnfo/Mkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=qRHJX/Go; arc=none smtp.client-ip=178.154.239.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OWX9K+8m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2867C4CEF7;
-	Wed,  7 Jan 2026 18:22:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767810163;
-	bh=H4HWARRoLh2qBgqBmASn3afgcSKRwurOHuNopMgArPc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OWX9K+8m6Qs8HSAipuggB8IkGbanO+p48WgaDfW2YHtz0aP0hSWP2vbJRYWUZo/gO
-	 r/h/b9mxt18oGLsIRGVT5T30CXP2+PZHb2wccVWUfdgisPce6obdCwxL20sRHP8O81
-	 w9edctu2wTtS2SGCdJFMv9260ce3CVu92qqcdTib3fCEKQOR84wgjghtdHLBPkyD9d
-	 9TegtU+q9r1nOd8Il5Hj2dBBkq0gWSZBkyZr/IhFZhSkSPKfXe+9V3UoV9S4dSM/+q
-	 EK7g7ehShsvHkeKCvZT+GYgNYdBcrB1wsBS9Y7YDyzJkmQHKlHoDmq9slct8CikRjN
-	 WqHdcbbj5JAOQ==
-Date: Wed, 7 Jan 2026 10:22:42 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH] xfs: speed up parent pointer operations
-Message-ID: <20260107182242.GB15583@frogsfrogsfrogs>
-References: <20251219154154.GP7753@frogsfrogsfrogs>
- <aVzE-5gMi1IHOLTW@infradead.org>
- <20260107000907.GM191501@frogsfrogsfrogs>
- <aV33flV7zsiAeh7C@infradead.org>
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="qRHJX/Go"
+Received: from forward100d.mail.yandex.net (forward100d.mail.yandex.net [IPv6:2a02:6b8:c41:1300:1:45:d181:d100])
+	by forward202d.mail.yandex.net (Yandex) with ESMTPS id C3D5486E01;
+	Wed, 07 Jan 2026 21:36:38 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-59.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-59.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:2dcb:0:640:715b:0])
+	by forward100d.mail.yandex.net (Yandex) with ESMTPS id 26157C0051;
+	Wed, 07 Jan 2026 21:36:30 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-59.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id SaSuiV7Gl8c0-3UejPh7x;
+	Wed, 07 Jan 2026 21:36:29 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1767810989; bh=CNwylmWZiMvqp9zMGa86ZSqv3JoZzXkcWAYbmEN7tbs=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=qRHJX/GoFBFqqLdNW9P7i9hUsNhXHX+18Z7k2/s9wl1yNxb6yZau7KE+jB29AFWOH
+	 +9z/rt7Z2AbP1KoUy077xr/QCLu7mDBirkgIEvL/+4+jOy6fRXMwzLL+Lrw2kTI9+S
+	 ooYTEHYqL1rFbQQ6urFid7SHmrzOAlhqPGiORm+E=
+Authentication-Results: mail-nwsmtp-smtp-production-main-59.klg.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Carlos Maiolino <cem@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Kees Cook <kees@kernel.org>,
+	Andy Shevchenko <andy@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-hardening@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] lib: introduce simple error-checking wrapper for memparse()
+Date: Wed,  7 Jan 2026 21:36:13 +0300
+Message-ID: <20260107183614.782245-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aV33flV7zsiAeh7C@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 06, 2026 at 10:04:46PM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 06, 2026 at 04:09:07PM -0800, Darrick J. Wong wrote:
-> > In principle, yes.  For a generic xattr version you'd probably want to
-> > check for a large valuelen on the set side so that we don't waste time
-> > scanning the sf structure when we're just going to end up in remote
-> > value territory anyway.
-> 
-> Yeah.
-> 
-> > 
-> > >         It might be nice to just do this for set and remove in
-> > > xfs_attr_defer_add and have it handle all attr operations.
-> > 
-> > Yeah.  I think it's more logical to put these new shortcut calls in
-> > xfs_attr_set because we're be deciding /not/ to invoke the deferred
-> > xattr mechanism.
-> 
-> Or that, yes.
+Introduce 'memvalue()' which uses 'memparse()' to parse a string with
+optional memory suffix into a number and returns this number or ULLONG_MAX
+if the number is negative or an unrecognized character was encountered.
 
-It turns out that for replace, it's more convenient to do it separately
-in the xattr and parent pointer code because parent pointer replacements
-require switching new_name -> name and new_value -> value after the
-remove step; and the rename optimization is different for parent
-pointers vs. every other xattr.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ include/linux/string.h |  1 +
+ lib/cmdline.c          | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-> > > And for replace we should be able to optimize this even further
-> > > by adding a new xfs_attr_sf_replacename that just checks if the new
-> > > version would fit, and then memmove everything behind the changed
-> > > attr and update it in place.  This should improve the operation a lot
-> > > more.
-> > 
-> > That would depends on the frequency of non-parent pointer xattr
-> > operations where the value doesn't change size modulo the rounding
-> > factor.
-> 
-> Well, the same applies to value changes - in the shortform format name
-> and value are basically one blob, split by namelen.  So anything
-> replacing an existing attr with a new one, either due to a name change
-> for parent pointers, or due to a value change otherwise can just move
-> things beyond the attribute and update in place trivially.  For
-> replacing values with values of the same size things are even simpler.
+diff --git a/include/linux/string.h b/include/linux/string.h
+index 1b564c36d721..c63bcff820a1 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -319,6 +319,7 @@ DEFINE_FREE(argv_free, char **, if (!IS_ERR_OR_NULL(_T)) argv_free(_T))
+ extern int get_option(char **str, int *pint);
+ extern char *get_options(const char *str, int nints, int *ints);
+ extern unsigned long long memparse(const char *ptr, char **retptr);
++extern unsigned long long memvalue(const char *ptr);
+ extern bool parse_option_str(const char *str, const char *option);
+ extern char *next_arg(char *args, char **param, char **val);
+ 
+diff --git a/lib/cmdline.c b/lib/cmdline.c
+index 90ed997d9570..e2455a6d17ff 100644
+--- a/lib/cmdline.c
++++ b/lib/cmdline.c
+@@ -190,6 +190,27 @@ unsigned long long memparse(const char *ptr, char **retptr)
+ }
+ EXPORT_SYMBOL(memparse);
+ 
++/**
++ *	memvalue -  Wrap memparse() with simple error detection
++ *	@ptr: Where parse begins
++ *
++ *	Unconditionally returns ULLONG_MAX for a presumably negative value.
++ *	Otherwise uses memparse() to parse a string into a number and returns
++ *	this number or ULLONG_MAX if an unrecognized character was encountered.
++ */
++
++unsigned long long memvalue(const char *ptr)
++{
++	unsigned long long ret;
++	char *end;
++
++	if (*ptr == '-')
++		return ULLONG_MAX;
++	ret = memparse(ptr, &end);
++	return *end ? ULLONG_MAX : ret;
++}
++EXPORT_SYMBOL(memvalue);
++
+ /**
+  *	parse_option_str - Parse a string and check an option is set or not
+  *	@str: String to be parsed
+-- 
+2.52.0
 
-Yes it is pretty simple:
-
-int
-xfs_attr_shortform_replace(
-	struct xfs_da_args		*args)
-{
-	struct xfs_attr_sf_entry	*sfe;
-
-	ASSERT(args->dp->i_af.if_format == XFS_DINODE_FMT_LOCAL);
-
-	trace_xfs_attr_sf_replace(args);
-
-	sfe = xfs_attr_sf_findname(args);
-	if (!sfe)
-		return -ENOATTR;
-
-	if (sfe->valuelen != args->valuelen)
-		return -ENOSPC;
-
-	memcpy(&sfe->nameval[sfe->namelen], args->value, args->valuelen);
-	xfs_trans_log_inode(args->trans, args->dp,
-			XFS_ILOG_CORE | XFS_ILOG_ADATA);
-	return 0;
-}
-
-(parent pointers are a tad more difficult because we have to copy the
-new name as well as the new value)
-
-IIRC there's no rounding applied to shortform attr entries, so we have
-to have an exact match on the value length.
-
-> > I also wonder how much benefit anyone really gets from doing this to
-> > regular xattrs, but once I'm more convinced that it's solid w.r.t.
-> > parent pointers it's trivial to move it to xattrs too.
-> 
-> Not sure what counts as regular, but I'm pretty sure it would help
-> quite a bit for inheriting xattrs or other security attributes.
-
-Here, by "regular" I meant "not parent pointers" but yeah.  It'll
-probably help everyone to implement the shortcuts.
-
---D
