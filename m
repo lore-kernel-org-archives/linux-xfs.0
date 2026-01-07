@@ -1,60 +1,42 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1832D8379;
-	Wed,  7 Jan 2026 19:24:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62BB7333431;
+	Wed,  7 Jan 2026 20:08:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767813847; cv=none; b=LmJiu93fOsjsQobOcsg6/ritEC3BvyxyXMGZe2jUMIlW0Sg+ud0+JKKofikuKRQM8JVN2XmWg7bjE4leR7tZYfdlWoFH5Rb2svzESHdhB/CTpPd2Qto4lwzEGnBkCoSjMhAe0ovXTwBDMh5aa/qWtXGg2r2QSebbpSMsdywYLgQ=
+	t=1767816535; cv=none; b=PFhogYU86JTy9cLRIOOnohgaAuEpuMY/r3NK/cuvJGORzGTFJf6CWVCFL9+Tmx3DgtxjS9RDMfgbUVpRVJ83vtuy5XtO6QmOfc6i/IzQleWDUQfT4s0vBSBwjatcDSkXKC824De/88m6ZexRj0R6IQy8+wj/J1g9/mDU8et1iIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767813847; c=relaxed/simple;
-	bh=nkvcnuEz7LgQCkeM4N08MVDybDHuaWJOttOWf6ddTwk=;
+	s=arc-20240116; t=1767816535; c=relaxed/simple;
+	bh=suiBVf8rdljWGmCx6x7pZWDICn1WiNPdKfSGtKjr49M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EhUdQD1lqPx4llX9E8WUxDz59asJsy5mL27WY+7cJW3egsXCc9FaRycCPirq9RlOINbM7b3WIbHX9v8uw/RBWG3MPuPn8v8siCMBK9bhM6CflY2RdvKVxJsfQsgCO5jW5FspIVBtTwXvYE9rdsQfMFJ2nZQHoGzTg4wn71HV8rY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KF1EN0K2; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=DplkjgQrwcg5ViKFnJfa2WweHvc+X2G5yDdrfKAr1ctzLYlJRXoSifO2Yr0gzR6nElwa6if3gxfZUmG0Q093b9ccNicrK74U85RzyB6ULHmr2gZmAXKayWkSum+OvohyV55FWpu/MFDH4AOq0Jc6tAmohs5L+Mv51ruc7gNs3Zg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g9OGphUD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KF1EN0K2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1767813846; x=1799349846;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nkvcnuEz7LgQCkeM4N08MVDybDHuaWJOttOWf6ddTwk=;
-  b=KF1EN0K2ozPc8Xpd2OyaitJFoMv/LSsybAUlQpqx7QLi1lbR012FO/Tw
-   vs8uSzwJDBfBW7mFotwhWJlmoowH9zXvHzasHZpN+dQI3W+OaBApU0JcD
-   4+/9Fsr6gGUYics81DN3uXTDOgqpn/wpCjJhhpCFWvseibOSBiL/p10HU
-   XyBN9ztZCI6xWCUjsoOiSH0RL35HjIfMJa6/sfvTRfAd8eUZs5ShDde3O
-   dOnpf4kV6RN0wMD1OFeu6wm3TOzZD9j2T4f4ATz3nd3G3Qx6tVraIEC1l
-   TvFbFQ5PvpSzP1dUBog0dXX1+dCssSGe36xiy+9gpIRgwffHEdhcVlivd
-   Q==;
-X-CSE-ConnectionGUID: 4o173SpSQruAM/aoxLQN4w==
-X-CSE-MsgGUID: 8fyMTuPiTPy7kOMJdXsj1w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11664"; a="73040033"
-X-IronPort-AV: E=Sophos;i="6.21,208,1763452800"; 
-   d="scan'208";a="73040033"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2026 11:24:05 -0800
-X-CSE-ConnectionGUID: 5DR1U/byTiWKayPogs1Xng==
-X-CSE-MsgGUID: UrDP6L4jRCGx26ARfpnN7Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,208,1763452800"; 
-   d="scan'208";a="207150799"
-Received: from egrumbac-mobl6.ger.corp.intel.com (HELO localhost) ([10.245.245.168])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jan 2026 11:24:04 -0800
-Date: Wed, 7 Jan 2026 21:24:01 +0200
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g9OGphUD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF9D2C16AAE;
+	Wed,  7 Jan 2026 20:08:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767816534;
+	bh=suiBVf8rdljWGmCx6x7pZWDICn1WiNPdKfSGtKjr49M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=g9OGphUD6tlLyT6hyKyk204VkOZ9TJBG75kizlc6h8C1Rtbr5JlUoxrMDKCDWINiC
+	 lcYocZm7gtlA95MRspXWf8MOG7/S8UAPhMJiwc/zYNNSmdg6Qp5KinSVHHasT4WOF2
+	 gz5hahXMxLC2BsTcogQq9VisyUrSZ1niriyAucP/E30JMsIrx1Za5ZiJ8xO2RngVEg
+	 D1i5+bzs5mE+osk8Tdjwn3Mhlcg8NCCJz7WVC4fRTgD1DPokWpUQBz4TjGnuay99lc
+	 XqNKwrDBnp/HuAkVApxDHApPGC1WTSESYpxcL3turcXvR1QYRO5LIcBEif7gPjMbiA
+	 bz5qdh92H39fw==
+Date: Wed, 7 Jan 2026 12:08:54 -0800
+From: Kees Cook <kees@kernel.org>
 To: Dmitry Antipov <dmantipov@yandex.ru>
 Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>,
-	Kees Cook <kees@kernel.org>, Andy Shevchenko <andy@kernel.org>,
+	Andy Shevchenko <andy@kernel.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org
 Subject: Re: [PATCH] lib: introduce simple error-checking wrapper for
  memparse()
-Message-ID: <aV6y0VTYbQKnHMqk@smile.fi.intel.com>
+Message-ID: <202601071206.87F85EF2C@keescook>
 References: <20260107183614.782245-1-dmantipov@yandex.ru>
- <aV6ye_vv_0N-SsLu@smile.fi.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -63,36 +45,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aV6ye_vv_0N-SsLu@smile.fi.intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+In-Reply-To: <20260107183614.782245-1-dmantipov@yandex.ru>
 
-On Wed, Jan 07, 2026 at 09:22:39PM +0200, Andy Shevchenko wrote:
-> On Wed, Jan 07, 2026 at 09:36:13PM +0300, Dmitry Antipov wrote:
-> > Introduce 'memvalue()' which uses 'memparse()' to parse a string with
-> > optional memory suffix into a number and returns this number or ULLONG_MAX
-> > if the number is negative or an unrecognized character was encountered.
-> 
-> Reading the second patch in the series I do not think this one even needed. The
-> problem in the original code is that
-> 
-> 	int *res, _res;
-> 	...
-> 	*res = _res << something;
-> 
-> This is a UB for _res < 0. So, the code should never handle negative numbers to
-> begin with. That said the existing memparse() can be used directly.
-> 
-> If I missed something, it's because the commit message here is poorly written
-> in regard to negative number parsing.
+On Wed, Jan 07, 2026 at 09:36:13PM +0300, Dmitry Antipov wrote:
+> Introduce 'memvalue()' which uses 'memparse()' to parse a string with
+> optional memory suffix into a number and returns this number or ULLONG_MAX
+> if the number is negative or an unrecognized character was encountered.
 
-Also note, when do a series, make sure you have the same version for all
-patches and the cover letter provided. You can use `b4` tool for that or
-supply `git format-patch -v<X> --cover-letter ...`, where <X> is the desired
-version number.
+ULLONG_MAX is a valid address, though. I don't like this as an error
+canary. How about using __must_check with 0/negative return value and
+put the parsed value into a passed-by-reference variable instead? This
+has the benefit of also performing type checking on the variable so that
+a returned value can never be truncated accidentally:
+
+
+int __must_check memvalue(const char *ptr, unsigned long long *addr);
 
 -- 
-With Best Regards,
-Andy Shevchenko
-
-
+Kees Cook
