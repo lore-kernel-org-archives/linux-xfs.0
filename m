@@ -1,40 +1,30 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E722275AFD;
-	Wed,  7 Jan 2026 07:43:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB652C3242;
+	Wed,  7 Jan 2026 09:08:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767771832; cv=none; b=ng8yAqkn6PdDsRKiPXCZJu47y4mpnYddH2yWyvXreNh3kVj+SBEdFM0HBFDVqUwY+YVpzPRisRpIspi0rVUSKALNV6AdrUzkj6OCiDfU+EJEJoHFLm18GMa8UV7YJdoQp+GcQUt4cfZa7U2pRbTp2aqeE1cwtyGEbHYg10hmvDw=
+	t=1767776930; cv=none; b=JP/XKd9ypvmXYbAvrYG1EKJPvHwQPTNbN7i2zchuJ//2WkVgTXDpR5TxWVouGmxuyziVfiqGoXC8Ar8IBr5UhE5z4gQTPLkW9xQh+oxdHxiLWTt5fa5egJd2qZuzhUkdqW/EWKGekFOnYVb0CFQP5i5lnsAMRHtXzsQgROPKpt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767771832; c=relaxed/simple;
-	bh=VTimgj/MzK6aQnK9Xw5c5SKi0aFWlJKWsBW7pxOxiQU=;
+	s=arc-20240116; t=1767776930; c=relaxed/simple;
+	bh=DXdYcAGfp1+pkcUUk1rRAN5+D0I2gQcz4uFbIOTNuMY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E3ph/71Ss0eq0+nRfO3yLXe8Ki+S7KfpEN9RrKMFu1Nn5jErdo8K1bgT8SwRA9V4smkXKY5raZGXcHm+FzXtXQpH+6IvV9MNIcJnOuZCTbxt0F7hJlbW3ZbKRDv8Sjm1T685gumCWeAVJ8lZVj+h5O87haYjS/vqxX99ykrtwmg=
+	 Content-Type:Content-Disposition:In-Reply-To; b=rf3FNKoRjgQ0+FPGYxs92q+dRu00DNNgiRCCVXGUAuy6uhbDz//oBQSjxlBy8KxCO7bkMBstfu9BA1b1LeWuxZoCgGxSfUJn+4iXIqVedEaKEKyjkyz89aBqFVg4SNpVQo6AvId1D+KhxNEd3d9zec9yUsW9zt6Aey0I/E5l1N8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7108E227A87; Wed,  7 Jan 2026 08:43:46 +0100 (CET)
-Date: Wed, 7 Jan 2026 08:43:46 +0100
+	id 1DB9E6732A; Wed,  7 Jan 2026 10:08:45 +0100 (CET)
+Date: Wed, 7 Jan 2026 10:08:44 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev, io-uring@vger.kernel.org,
-	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 04/11] fat: cleanup the flags for fat_truncate_time
-Message-ID: <20260107074346.GA18258@lst.de>
-References: <20260106075008.1610195-1-hch@lst.de> <20260106075008.1610195-5-hch@lst.de> <87cy3nrpdu.fsf@mail.parknet.co.jp> <878qeask1x.fsf@mail.parknet.co.jp>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 01/11] docs: discuss autonomous self healing in the xfs
+ online repair design doc
+Message-ID: <20260107090844.GA22838@lst.de>
+References: <176766637179.774337.3663793412524347917.stgit@frogsfrogsfrogs> <176766637268.774337.4525804382445415752.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,20 +33,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <878qeask1x.fsf@mail.parknet.co.jp>
+In-Reply-To: <176766637268.774337.4525804382445415752.stgit@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jan 07, 2026 at 02:55:06AM +0900, OGAWA Hirofumi wrote:
-> > Thanks.
-> 
-> Ah, I was overlooking that new value is using same value with S_*.
+On Mon, Jan 05, 2026 at 11:10:52PM -0800, Darrick J. Wong wrote:
+> +The filesystem must therefore create event objects in response to stimuli
+> +(metadata corruption, file I/O errors, etc.) and dispatch these events to
+> +downstream consumers.
+> +Downstream consumers that are in the kernel itself are easy to implement with
+> +the ``xfs_hooks`` infrastructure created for other parts of online repair; these
+> +are basically indirect function calls.
 
-Still not a good idea to not create a bisection hazard.  I've added
-a local fat_flags variable and a translation for this patch, even
-if that will go away in the next patch to be 100% sane.
+These hooks mostly went away, didn't they?
 
-> Acked-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+> +Being private gives the kernel and ``xfs_healer`` the flexibility to change
+> +or update the event format in the future without worrying about backwards
+> +compatibility.
 
-But I've kept the ACK.  Let me know if I should drop it for now with
-the change instead.
+I think that ship has sailed once the ABI is out in the wild.
+
+This whole why not use XYZ discussion seems vaguely interesting for a
+commit log, but does it belong into the main documentation?
+
+> +*Answer*: Yes.
+> +fanotify is much more careful about filtering out events to processes that
+> +aren't running with privileges.
+> +These processes should have a means to receive simple notifications about
+> +file errors.
+> +However, this will require coordination between fanotify, ext4, and XFS, and
+> +is (for now) outside the scope of this project.
+
+Didn't this already get merged by Christian, and thus this information
+is stale already?
+
+> +When a filesystem mounts, the Linux kernel initiates a uevent describing the
+> +mount and the path to the data device.
+
+This also isn't true anymore, is it?
 
