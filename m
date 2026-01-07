@@ -1,40 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D992DDAB
-	for <linux-xfs@vger.kernel.org>; Wed,  7 Jan 2026 00:09:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 296B719CD1D;
+	Wed,  7 Jan 2026 06:01:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767744548; cv=none; b=YLVJgN8vdzdCzfyfaacDkLnttknGpPpsZ0ztAO7GNsXwifs9VM6Grg+SkG0i4EzRJ/cbhYHwhFDmt0qtu2d9qvzSdwiM0JT6qiBAZ0gxnNdYoC2vsnBwkZFeDctaz5WuytPKwic88wy/UHAVQV5q9dHSskqDpl98OGvEY0zCqzQ=
+	t=1767765667; cv=none; b=NXNQZnOQlb+UMg854oQqpEKwpWeD+MzF7z4XleUDinKlK5pUiQHKvVrF3bqioZ7SnyJbMjGtEJPH/aGxIfYWd1/lbpbZiC/Y5Iu8c1SNSjlhi/P81dEfsOZdA1CU8jIGx//HHbn0pWPlYlCFBh8ADRGFlwIFfG31Q97Rz0jemnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767744548; c=relaxed/simple;
-	bh=9Bj08OadzVnpTvOQmSUKiKcePeo5yRefxKMh1MRaELM=;
+	s=arc-20240116; t=1767765667; c=relaxed/simple;
+	bh=iNpHSrqM/YKGUxmGPvsJTfoCyukWxzgImYsjJ1yX85s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ArVt1ba7HUZAMPOHkr5ZWaNb+9PIeaVlTOENwl3eTq6yMp6YIua1dJXHI2C6ht59s/rhPdLwR41PxiiDCA3CGkbetGd+uaUYe1OLXUcbVJdEemysQ161gB49wVxxEh7VIooce2hKmRmSE/QhubkNmWFLIj+UYAx8D37a9Q7hA+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WiQCREoe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XwkquqVGV96BHNAiOyM8aYMCtWI7rdBz0jbxd+Yb2tRyWwzIZ1rqs58cEl9Wv/0/+A/+rol4J3Bp+MKJMSIPj4ZLy8C4T2UHmsZujRdue/eY5QhAFP8hYE3FoQQOW8d9mADCRAamBkLSXq9mIXcB34UO8P7zaw2QDi1K8MS5Sm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TpLo7KN4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WiQCREoe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B95F4C116C6;
-	Wed,  7 Jan 2026 00:09:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767744547;
-	bh=9Bj08OadzVnpTvOQmSUKiKcePeo5yRefxKMh1MRaELM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WiQCREoeMNCoob4G21ijtI1g+Z+14UIU3CehlkCVhGdIw5MuoIYDCLZmVrEXsvKGP
-	 zE1dyi2kV/FnH4SZw1K3NeHTutXl2xIjEeaGNVAW6h00mPGlA9iUX/Y6UPoq8as2Gf
-	 JAavYu3qLnpAao9zyspBEqnLlwGAeV8F+v/e7eEElH0qqcXlhQxzNjmKHlSpAknFvu
-	 VWIYkDA6ZLh6cb+dtjdNqJjeLoog6Og9Guyv6zNfVhefb8PsrQ8sN8TggA5dUwj6m2
-	 NW2gRpqE0nojG6bPWdW9A1TRtkFROAtvs4PLQh2D4n8JtDiLRKlX3FVlIHUQjxSJAp
-	 WLTy6MpQDJBaw==
-Date: Tue, 6 Jan 2026 16:09:07 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH] xfs: speed up parent pointer operations
-Message-ID: <20260107000907.GM191501@frogsfrogsfrogs>
-References: <20251219154154.GP7753@frogsfrogsfrogs>
- <aVzE-5gMi1IHOLTW@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TpLo7KN4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=HX+RWCYcvyaGxDKA7PAvcLWAk3L5YhLDhSqHG6WWoBI=; b=TpLo7KN4Frey8UY+NrKMURiJ4C
+	F/FMXh/Z7EBYQapcK44342v/P0WmiXhDPhtnfldSOo2Ili5mtiCe5QXhZZYtcs6n81ZA746pTJuTq
+	jjm5yRE9heX99LKaK2t30JbClNKJ4EViv60ezp2b/v7C5RlM4hNJEV/0JNHLVPjUH4hky05Ndz7+9
+	6GMNOlnCkCBwYAa5TCqYV6K0YxAQteWPQRlBiq8gss2DbzdavdKXUrx7Y+jF7v9a4qzA/u45CiR4C
+	Z30Bmk6yj5S/pujjvrB1yxNGyB51pCEzacNIVnd66/RW0c6uEpZkRkRbXubp4CmmgH7ts2PEQ/ANJ
+	C6ycFX3w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vdMbN-0000000EC84-17nD;
+	Wed, 07 Jan 2026 06:01:01 +0000
+Date: Tue, 6 Jan 2026 22:01:01 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Mark Tinguely <mark.tinguely@oracle.com>, linux-xfs@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix NULL ptr in xfs_attr_leaf_get
+Message-ID: <aV32nTIWTacVXqIw@infradead.org>
+References: <20251230190029.32684-1-mark.tinguely@oracle.com>
+ <17cd5bef-e787-4dc9-9536-112d1e2cda2d@oracle.com>
+ <aVzDNYiygzgjMAkA@infradead.org>
+ <20260106154026.GA191501@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,75 +49,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aVzE-5gMi1IHOLTW@infradead.org>
+In-Reply-To: <20260106154026.GA191501@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jan 06, 2026 at 12:16:59AM -0800, Christoph Hellwig wrote:
-> On Fri, Dec 19, 2025 at 07:41:54AM -0800, Darrick J. Wong wrote:
-> > Now parent pointers only increase the system time by 8% for creation and
-> > 19% for deletion.  Wall time increases by 5% and 9%.
+On Tue, Jan 06, 2026 at 07:40:26AM -0800, Darrick J. Wong wrote:
+> > > Fixes v5.8-rc4-95-g07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
+> > > No reproducer.
+> > 
+> > Eww, what a mess.  I think we're better off to always leave releasing
+> > bp to the caller.  Something like the patch below.  Only compile tested
+> > for now, but I'll kick off an xfstests run.
+> > 
+> > Or maybe we might just kill off xfs_attr_leaf_hasname entirely and open
+> > code it in the three callers, which might end up being more readable?
 > 
-> Nice!
-> 
-> > @@ -202,6 +203,16 @@ xfs_parent_addname(
-> >  	xfs_inode_to_parent_rec(&ppargs->rec, dp);
-> >  	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
-> >  			child->i_ino, parent_name);
-> > +
-> > +	if (xfs_inode_has_attr_fork(child) &&
-> > +	    xfs_attr_is_shortform(child)) {
-> > +		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME;
-> > +
-> > +		error = xfs_attr_try_sf_addname(&ppargs->args);
-> > +		if (error != -ENOSPC)
-> > +			return error;
-> > +	}
-> > +
-> >  	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_SET);
-> 
-> We should be able to do this for all attrs, not just parent pointers,
-> right?
+> ...unless this is yet another case of the block layer returning ENODATA,
+> which is then mistaken for returning ENOATTR-but-here's-your-buffer by
+> the xfs_attr code?
 
-In principle, yes.  For a generic xattr version you'd probably want to
-check for a large valuelen on the set side so that we don't waste time
-scanning the sf structure when we're just going to end up in remote
-value territory anyway.
+Not really and unless.  This patch (and the full removal that I've
+prepared in the meantime) still fix the missing buffer release in that
+case and make the code easier to follow.  But yes, they would not fix
+the underlying issue, which is why I still think we should not blindly
+propagate block layer errors into b_error.
 
->         It might be nice to just do this for set and remove in
-> xfs_attr_defer_add and have it handle all attr operations.
-
-Yeah.  I think it's more logical to put these new shortcut calls in
-xfs_attr_set because we're be deciding /not/ to invoke the deferred
-xattr mechanism.
-
-> > +	if (xfs_attr_is_shortform(child)) {
-> > +		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
-> > +
-> > +		error = xfs_attr_sf_removename(&ppargs->args);
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->new_rec,
-> > +				child, child->i_ino, new_name);
-> > +		ppargs->args.op_flags |= XFS_DA_OP_ADDNAME;
-> > +
-> > +		error = xfs_attr_try_sf_addname(&ppargs->args);
-> > +		if (error == -ENOSPC) {
-> > +			xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_SET);
-> > +			return 0;
-> > +		}
-> 
-> And for replace we should be able to optimize this even further
-> by adding a new xfs_attr_sf_replacename that just checks if the new
-> version would fit, and then memmove everything behind the changed
-> attr and update it in place.  This should improve the operation a lot
-> more.
-
-That would depends on the frequency of non-parent pointer xattr
-operations where the value doesn't change size modulo the rounding
-factor.
-
-I also wonder how much benefit anyone really gets from doing this to
-regular xattrs, but once I'm more convinced that it's solid w.r.t.
-parent pointers it's trivial to move it to xattrs too.
-
---D
