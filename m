@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1953733032C;
-	Wed,  7 Jan 2026 18:50:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F268E4A35;
+	Wed,  7 Jan 2026 19:01:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767811857; cv=none; b=ljIwzTmwzC+h08hx3JrLGbT6Mqpf6XUavpKNxdTpnoV9Z/QCnjP6rp+0aQtUzRYfuqFjwpUPbQARtb8JYFIhATLaWYA77EgPOlX7I15a4gHVztLx1zR0fqZzCjp7EAcZEPpTIo7/+cHwTp34LDLmFwY+xjar97nrQl31Ow3/HxQ=
+	t=1767812503; cv=none; b=cqxR9++KdI6i6/xl9PPQjBPGZWa02RrUIg20Xk9f0vcvTWfIk6hEGGeQ00AGZIq91FI/miIEGdA4Y9B0h/jq1thjVc/2JHAMpfI8xOZ0RE6YeMHjoeUR5RXIDDpedDZKkZZZv6RjsC3UNQnJgn6OeWYbiEYy4EJ7yPMZRH8aVH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767811857; c=relaxed/simple;
-	bh=dcntz5yo7TL16JzdRfI26eb3bdr9fVlucOOmZVw+5l4=;
+	s=arc-20240116; t=1767812503; c=relaxed/simple;
+	bh=sDwOAC6+V6ZXqreGwzXX4jWEdA8kLtRlRj+GspvBufE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K8dsjCbWKQgqnTUz8jl7q9z5F8ZqjM3CDSRAjDDMH+xBzm0gz6M+Dq7h/XImzwWKQEPFKKLQxkAQoWBT3rPuBx//2h2wc2+Nx5eoHavLvaeIA+JmoDNjqXZfBF1Lyc0XgkQj9/cVHhzzlCcluzYTeKwqY3r62wW8ai/WL+3ziZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eepL2e8b; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=h/iPiXAhCE7S6L3cGKuBTCq22/9bOxZcQBbisQ6TGfrSUdo+y1PI66m9l4fIX/MSn+cSCsUyL9orJZ2iZC3l0//RDqGfXLQuTHAjOq+0Js1oaVXFA+L/Kn9l6ZhXm9RYfP2UKOgoiuc5zvbYIBh/Vt34MaaJZok1Bh7IV2y9LfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BZt+HrHx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eepL2e8b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76A10C4CEF1;
-	Wed,  7 Jan 2026 18:50:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BZt+HrHx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90E7CC4CEF1;
+	Wed,  7 Jan 2026 19:01:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767811856;
-	bh=dcntz5yo7TL16JzdRfI26eb3bdr9fVlucOOmZVw+5l4=;
+	s=k20201202; t=1767812502;
+	bh=sDwOAC6+V6ZXqreGwzXX4jWEdA8kLtRlRj+GspvBufE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eepL2e8bw2rgHoVt+eomHM3ZWROeuFY38JxwVluacU6ST9E0H+v0VnE77fEv+yfhJ
-	 jl8+08QKkQBEBipmIiLNhZ++Innn113kyyycBKdQoY8NB0QIebnvPu+extxnMv388j
-	 yXcN+GRtBsHb3KkUk2EizWAuWjLnMTyFgUYoAhPyBbfymWXcJPQFItk59mOZvozVE1
-	 +BvzPN5tGoY4rVg9jv/1PiOHyaN4f49Ub+zFxzBW2B1f6VG4WAz6VtR4DSfM82aNH1
-	 O2DT+E2eR+DbSTa97hVcAi284Cf9HMc5HoOySj29UEYE/NlXR1QZDRhrqQf9zrDKWf
-	 M6qriGzhJz56A==
-Date: Wed, 7 Jan 2026 10:50:55 -0800
+	b=BZt+HrHx+NIIU27/Mr1fJd0yYiPwLtsorAI1K1Bc4mlkjGEuoRN2Gx1Kguhl9YEHo
+	 nt4DRW3LD01LlZDKqBsDbBu+57mgUZgWhGHfkIulX0TqnPG4XNs9tCHZwGPtTlo40r
+	 JeqfELCbL2F30a9TUAzBYMTtpbMQPCl5VONiqw8yrGIwZFY9dCiZ9LdcvohFXin5qj
+	 NycZMVRmYgIoZuGRRmWrChznG2kvomVIUaut/DqAnxauuymdDU3mI35+Rd84p0Ud8n
+	 ULZGipvlKfzh4A07VhPFtRyEzX3NSj2+9eYdgpaRsto6ZaX1+y21HGga06qTcQ0VVg
+	 Mb3qKBCBoZj4w==
+Date: Wed, 7 Jan 2026 11:01:41 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 02/11] xfs: start creating infrastructure for health
- monitoring
-Message-ID: <20260107185055.GE15551@frogsfrogsfrogs>
+Subject: Re: [PATCH 03/11] xfs: create event queuing, formatting, and
+ discovery infrastructure
+Message-ID: <20260107190141.GF15551@frogsfrogsfrogs>
 References: <176766637179.774337.3663793412524347917.stgit@frogsfrogsfrogs>
- <176766637289.774337.11016648296945814848.stgit@frogsfrogsfrogs>
- <20260107091713.GB22838@lst.de>
+ <176766637311.774337.2635132516714726157.stgit@frogsfrogsfrogs>
+ <20260107093245.GA24264@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,190 +45,147 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260107091713.GB22838@lst.de>
+In-Reply-To: <20260107093245.GA24264@lst.de>
 
-On Wed, Jan 07, 2026 at 10:17:13AM +0100, Christoph Hellwig wrote:
-> On Mon, Jan 05, 2026 at 11:11:08PM -0800, Darrick J. Wong wrote:
-> > +struct xfs_health_monitor {
-> > +	__u64	flags;		/* flags */
-> > +	__u8	format;		/* output format */
-> > +	__u8	pad1[7];	/* zeroes */
-> > +	__u64	pad2[2];	/* zeroes */
-> > +};
+On Wed, Jan 07, 2026 at 10:32:45AM +0100, Christoph Hellwig wrote:
+> On Mon, Jan 05, 2026 at 11:11:24PM -0800, Darrick J. Wong wrote:
+> > diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+> > index 3fdac72b478f3f..799e0687ae3263 100644
+> > --- a/fs/xfs/xfs_healthmon.c
+> > +++ b/fs/xfs/xfs_healthmon.c
+> > @@ -45,6 +45,13 @@
+> >  /* sign of a detached health monitor */
+> >  #define DETACHED_MOUNT_COOKIE		((uintptr_t)0)
+> >  
+> > +/* Constrain the number of event objects that can build up in memory. */
+> > +#define XFS_HEALTHMON_MAX_EVENTS \
+> > +		(SZ_32K / sizeof(struct xfs_healthmon_event))
 > 
-> Why not use a single __u8-based padding field?
-
-Ok.
-
-> > +struct xfs_healthmon {
-> > +	/*
-> > +	 * Weak reference to the xfs filesystem that is being monitored.  It
-> > +	 * will be set to zero when the filesystem detaches from the monitor.
-> > +	 * Do not dereference this pointer.
-> > +	 */
-> > +	uintptr_t			mount_cookie;
-> > +
-> > +	/*
-> > +	 * Device number of the filesystem being monitored.  This is for
-> > +	 * consistent tracing even after unmount.
-> > +	 */
-> > +	dev_t				dev;
+> The double tab indent here looks a bit weird.
 > 
-> It isn't really used for tracking, but just in a single print, right?
-
-It's used for tracepoints and fdinfo.
-
-> > + * be parsed easily by userspace.  Then we hook various parts of the filesystem
-> 
-> Is the hooking terminology still right?
-
-I still think of the entry points as hooks, but I'll reword it to avoid
-confusion with the actual xfs_hooks:
-
-"When those internal events occur, the filesystem will call this health
-monitor to convey them to userspace."
-
-> > + * The healthmon abstraction has a weak reference to the host filesystem mount
-> > + * so that the queueing and processing of the events do not pin the mount and
-> > + * cannot slow down the main filesystem.  The healthmon object can exist past
-> > + * the end of the filesystem mount.
-> > + */
-> > +
-> > +/* sign of a detached health monitor */
-> > +#define DETACHED_MOUNT_COOKIE		((uintptr_t)0)
-> 
-> This almost looks like a not performance optimized version of hazard
-> pointers.  Not that we care much about performance here.
-
-Yep.  AFAIK the kernel doesn't have an actual hazard pointer
-implementation that we could latch onto, right?
-
-> > +/*
-> > + * Free the health monitor after an RCU grace period to eliminate possibility
-> > + * of races with xfs_healthmon_get.
-> > + */
-> > +static inline void
-> > +xfs_healthmon_free(
+> > +/* Free all events */
+> > +STATIC void
+> > +xfs_healthmon_free_events(
 > > +	struct xfs_healthmon		*hm)
 > > +{
-> > +	kfree_rcu_mightsleep(hm);
+> > +	struct xfs_healthmon_event	*event, *next;
+> > +
+> > +	event = hm->first_event;
+> > +	while (event != NULL) {
+> > +		trace_xfs_healthmon_drop(hm, event);
+> > +		next = event->next;
+> > +		kfree(event);
+> > +		event = next;
+> > +	}
+> 
+> This could be simplified a bit to:
+> 
+> 	struct xfs_healthmon_event	*event = hm->first_event;
+> 
+> 	while (event) {
+> 		struct xfs_healthmon_event	*next = event->next;
+> 
+> 		trace_xfs_healthmon_drop(hm, event);
+> 		kfree(event);
+> 		event = next;
+> 	}
+> 
+> or alternatively:
+> 	
+> 	struct xfs_healthmon_event	*event, *next = hm->first_event;
+> 
+> 	while ((event = next) != NULL) {
+> 		trace_xfs_healthmon_drop(hm, event);
+> 		next = event->next;
+> 		kfree(event);
+> 	}
+
+Changed.
+
+> > +	hm->first_event = hm->last_event = NULL;
+> 
+> Always personal preference, but I always hate decoding double assignments
+> like this vs the more verbose:
+> 
+> 	hm->first_event = NULL;
+> 	hm->last_event = NULL;
+> 
+> that beeing said, do we even need to zero these given that hm gets freed
+> right after?
+
+Nope.
+
+> > +		return false;
+> > +
+> > +	switch (existing->type) {
+> > +	case XFS_HEALTHMON_RUNNING:
+> > +		/* should only ever be one of these events anyway */
+> > +		return false;
+> > +
+> > +	case XFS_HEALTHMON_LOST:
+> > +		existing->lostcount += new->lostcount;
+> > +		return true;
+> > +	}
+> > +
+> > +	return false;
+> 
+> I think the XFS_HEALTHMON_RUNNING check here is redundant, so you could
+> just special case XFS_HEALTHMON_LOST with an if instead of the switch
+> statement.
+
+The switch statement fills out as we add more event types, and with the
+way it's written now, gcc will complain if someone enlarges the enum
+without adding a switch case here.  So I'd prefer to keep this the way
+it is now.
+
+> > +/* Make a stack event dynamic so we can put it on the list. */
+> > +static inline struct xfs_healthmon_event *
+> > +xfs_healthmon_event_dup(
+> > +	const struct xfs_healthmon_event	*event)
+> > +{
+> > +	return kmemdup(event, sizeof(struct xfs_healthmon_event), GFP_NOFS);
 > > +}
 > 
-> Is there much of a point in this wrapper vs just open coding the call to
-> kfree_rcu_mightsleep in the only caller?
+> The callers of this and and xfs_healthmon_merge_events seem to share
+> the same logic.  Maybe add a helper for the two calls and the
+> XFS_HEALTHMON_MAX_EVENTS check, and fold at least xfs_healthmon_event_dup
+> (and maybe xfs_healthmon_merge_events if it works out) into that?
 
-No, and indeed this could be compressed into _healthmon_put:
+_event_dup can be folded into its callers.
 
-	if (refcount_dec_and_test(&hm->ref)) {
-		while (hm->first_event) {
-			/* free hm->first_event */
-		}
-		kfree(hm->buffer);
-		mutex_destroy(&hm->lock);
-		kfree_rcu_mightsleep(hm);
+I'm less sure about _merge_events -- it would be pretty easy to
+opencode its logic in _clear_lost_prev:
+
+	if (hm->last_event &&
+	    hm->last_event->type == XFS_HEALTHMON_LOST &&
+	    hm->last_event->domain == XFS_HEALTHMON_MOUNT) {
+		hm->last_event->lostcount += hm->lost_prev_event;
+		trace_xfs_healthmon_merge(hm, hm->last_event);
+		wake_up(&hm->wait);
+		goto cleared;
 	}
 
-which would be much easier to think about.
+But the downside is that either we leave the dead XFS_HEALTHMON_LOST
+case in the switch statement in _merge_events to avoid giving up the
+compiler checking, or we add a default: case which then means that
+authors of future extensions can miss things without noticing.
 
-> > +/* Is this health monitor active? */
-> > +static inline bool
-> > +xfs_healthmon_activated(
-> > +	struct xfs_healthmon	*hm)
-> > +{
-> > +	return hm->mount_cookie != DETACHED_MOUNT_COOKIE;
-> > +}
-> > +
-> > +/* Is this health monitor watching the given filesystem? */
-> > +static inline bool
-> > +xfs_healthmon_covers_fs(
-> > +	struct xfs_healthmon	*hm,
-> > +	struct super_block	*sb)
-> > +{
-> > +	return hm->mount_cookie == (uintptr_t)sb;
-> > +}
-> 
-> Is there much of a point in these helpers vs open coding them in the callers?
-> (no caller yet in this patch of the second one anyway).  Especially as we
-> need to hold a lock for them to be safe.
+I think I'll remove _event_dup but leave the merge function.
 
-The only one really worth keeping is _healthmon_activated because it
-gets called from various places.  And even then, it now only has three
-callsites so maybe it'll just go away.
-
-> > +
-> > +/* Attach a health monitor to an xfs_mount.  Only one allowed at a time. */
-> > +STATIC int
-> > +xfs_healthmon_attach(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_healthmon	*hm)
-> > +{
-> > +	int			ret = 0;
-> > +
-> > +	spin_lock(&xfs_healthmon_lock);
-> > +	if (mp->m_healthmon == NULL) {
-> > +		mp->m_healthmon = hm;
-> > +		hm->mount_cookie = (uintptr_t)mp->m_super;
-> > +		refcount_inc(&hm->ref);
+> > +	if (file->f_flags & O_NONBLOCK) {
+> > +		if (!xfs_healthmon_has_eventdata(hm))
+> > +			return -EAGAIN;
 > > +	} else {
-> > +		ret = -EEXIST;
+> > +		ret = wait_event_interruptible(hm->wait,
+> > +				xfs_healthmon_has_eventdata(hm));
+> > +		if (ret)
+> > +			return ret;
 > > +	}
-> > +	spin_unlock(&xfs_healthmon_lock);
 > > +
-> > +	return ret;
+> > +	inode_lock(inode);
 > 
-> Maybe just me, but I'd do away with the ret variable and just handle the
-> EEXIST case directly:
-> 
-> 	spin_lock(&xfs_healthmon_lock);
-> 	if (mp->m_healthmon) {
-> 		spin_unlock(&xfs_healthmon_lock);
-> 		return -EEXIST;
-> 	}
-> 	refcount_inc(&hm->ref);
-> 	mp->m_healthmon = hm;
-> 	hm->mount_cookie = (uintptr_t)mp->m_super;
-> 	spin_unlock(&xfs_healthmon_lock);
-> 	return 0;
-> 
-> > +/* Detach a xfs mount from a specific healthmon instance. */
-> > +STATIC void
-> > +xfs_healthmon_detach(
-> > +	struct xfs_healthmon	*hm)
-> > +{
-> > +	spin_lock(&xfs_healthmon_lock);
-> > +	if (xfs_healthmon_activated(hm)) {
-> > +		struct xfs_mount	*mp =
-> > +			XFS_M((struct super_block *)hm->mount_cookie);
-> > +
-> > +		mp->m_healthmon = NULL;
-> > +		hm->mount_cookie = DETACHED_MOUNT_COOKIE;
-> > +	} else {
-> > +		hm = NULL;
-> > +	}
-> > +	spin_unlock(&xfs_healthmon_lock);
-> > +
-> > +	if (hm)
-> > +		xfs_healthmon_put(hm);
-> > +}
-> 
-> Kinda similar here:
-> 
-> 	struct xfs_mount	*mp;
-> 
-> 	spin_lock(&xfs_healthmon_lock);
-> 	if (hm->mount_cookie == DETACHED_MOUNT_COOKIE) {
-> 		spin_unlock(&xfs_healthmon_lock);
-> 		return;
-> 	}
-> 
-> 	XFS_M((struct super_block *)hm->mount_cookie)->m_healthmon = NULL;
-> 	hm->mount_cookie = DETACHED_MOUNT_COOKIE;
-> 	spin_unlock(&xfs_healthmon_lock);
-> 
-> 	xfs_healthmon_put(hm);
+> should this be a trylock + -EAGAIN for O_NONBLOCK?
 
-Will change.  And get rid of some of the mount cookie helpers.
-
-Thanks for reading!
+Oops yes.
 
 --D
