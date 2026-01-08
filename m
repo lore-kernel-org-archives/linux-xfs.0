@@ -1,81 +1,130 @@
-Received: from forward501d.mail.yandex.net (forward501d.mail.yandex.net [178.154.239.209])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A00FA218821;
-	Thu,  8 Jan 2026 13:22:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3F938B62F
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Jan 2026 14:11:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767878554; cv=none; b=BUNJmcekDnDMwsCy259ZC4WLFN3IylkashB6UfSUzfLD4lEIYAJqD03jg/yMrMed7OMZ5quCYkgSjm+c/y3t+k+aslP8fSYSjGjvEUm1kbux3cAMX4b/WvlLY7xCPfcEY1SHT+l/hq4jiQ+wemIQx6OKL/gth3s5aHFbLODyFmM=
+	t=1767881499; cv=none; b=gVTDqYFZ6E4xMwrY6iyqFgLdVxGwVu733UqULrZZjmKEbrD2kVX+5h/gQuIe8nBp2/58czxSNTCMCaAvab96dP14SJtjyOx+7m/1tZBIRSCQKpZa2IDwYfkjlMAQ6YmMY4NJRRrfMClu228qvnYATVdtFCVyIMkwbvrE3JYw1/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767878554; c=relaxed/simple;
-	bh=rB/7dBYnjsXJysIoFU+ZXW1TEz/5v5zPCYllT69IJ6s=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=VZamc5+3tEhOha5Yjkj8wpuIqsmowxzlfWlibrjJUnHPtTxIpjvzqB1rJsHtBto1NBNhm5CyrEbUQe53lsFrSt0b8Qz3AJMx18K/+dBgbU/Q9V01tfxgjww6GG2PzFeofwiiOVEHQ8f0Z8gsewWr3rqcQZKs3vB58xwKVi4FIpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=SWiqU7Bs; arc=none smtp.client-ip=178.154.239.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1767881499; c=relaxed/simple;
+	bh=9mYq7ZlYVWLh9EdC3XIG6Rrrnw/gUs3HUuaOEy9KNYg=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KLtdY5+lkG3HarUVlX2t7eOk7sa1r21xIVgGBhB+rvvYOZvgA2gCugSfNDeTHpVy0uthLPhA0AvKoGCfEYOR960AouOR4/Lt++hff8DPjdmlU8Wo+9MYVmXDz/a9FyvbKNsRXcAdG4NrmcSGqSOW16IG89L5/8JiWIufDU/MoV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eQXkowvu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="SWiqU7Bs"
-Received: from mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:2a21:0:640:9c41:0])
-	by forward501d.mail.yandex.net (Yandex) with ESMTPS id 58B1C81129;
-	Thu, 08 Jan 2026 16:14:37 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id ZEOOH9EGkeA0-4RhGBvzp;
-	Thu, 08 Jan 2026 16:14:37 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1767878077; bh=rB/7dBYnjsXJysIoFU+ZXW1TEz/5v5zPCYllT69IJ6s=;
-	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
-	b=SWiqU7Bs11vrs8iEB5XaFT4NM6iTYpBgr2tTvrP+i3WY6inLkzZWovhUuRSCRhLhO
-	 Uo/kNop5LzoioAtP1cqRqR+ginwO2OiM5xYyhBMvQucdjnmhFtLygRKm1Jka0QCsx8
-	 uPVQbh5EFgOITOtkUa6AI0kAQ7dQ6JQR34RmtFgw=
-Authentication-Results: mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-Message-ID: <5d38ad4fa77fc9c3c6a0c28d649d852ee889a172.camel@yandex.ru>
-Subject: Re: [PATCH] lib: introduce simple error-checking wrapper for
- memparse()
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>,
-  Kees Cook <kees@kernel.org>, Andy Shevchenko <andy@kernel.org>,
- linux-xfs@vger.kernel.org, 	linux-hardening@vger.kernel.org
-Date: Thu, 08 Jan 2026 16:14:35 +0300
-In-Reply-To: <20260107104802.91735989425034c858730b8f@linux-foundation.org>
-References: <20260107183614.782245-1-dmantipov@yandex.ru>
-	 <20260107104802.91735989425034c858730b8f@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.2 (3.58.2-1.fc43) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eQXkowvu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1767881493;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=QjJC0nmzOhDTHWBt8AQQ/wKnb4PAhpbsej6git41FYQ=;
+	b=eQXkowvurZ9IFGidUcPlSIBUX2WCcr9dqkYzZL4eVfdB34RBKkf8+mHKuQBhDjMJAGp7it
+	iwTndMmmLzvIMswOx6D+BAX4QwoIgxmcNaJ3zFxksy63+wQwsujVyUfVCt8dLdVloD2jJI
+	2o0BHidl1C6c9fhstQQ1s9ulrqXLD4U=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-443-xHAyR3_DMpWuBug63pYOzg-1; Thu,
+ 08 Jan 2026 09:11:31 -0500
+X-MC-Unique: xHAyR3_DMpWuBug63pYOzg-1
+X-Mimecast-MFC-AGG-ID: xHAyR3_DMpWuBug63pYOzg_1767881490
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9859C1956096
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Jan 2026 14:11:30 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.88.127])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3325230002D1
+	for <linux-xfs@vger.kernel.org>; Thu,  8 Jan 2026 14:11:30 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: set max_agbno to allow sparse alloc of last full inode chunk
+Date: Thu,  8 Jan 2026 09:11:29 -0500
+Message-ID: <20260108141129.7765-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, 2026-01-07 at 10:48 -0800, Andrew Morton wrote:
+Sparse inode cluster allocation sets min/max agbno values to avoid
+allocating an inode cluster that might map to an invalid inode
+chunk. For example, we can't have an inode record mapped to agbno 0
+or that extends past the end of a runt AG of misaligned size.
 
-> I'm not understanding why negative numbers get this treatment - could
-> you please add the reasoning to the code comment?
+The initial calculation of max_agbno is unnecessarily conservative,
+however. This has triggered a corner case allocation failure where a
+small runt AG (i.e. 2063 blocks) is mostly full save for an extent
+to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
+case, which happens to be the offset of the last possible valid
+inode chunk in the AG. In practice, we should be able to allocate
+the 4-block cluster at agbno 2052 to map to the parent inode record
+at agbno 2048, but the max_agbno value precludes it.
 
-Hm. I suppose that memvalue() may (and hopefully will) be used to parse
-and return an amount of "actually used" (for some particular task) memory,
-allowing 0 with possible "use some default value" treatment in the caller.
-Negative values just introduces some confusion (and possible weird effects
-caused by an erroneous conversion of negative values to huge positive ones)=
-.=20
-If someone needs some special treatment of, say, "memsize=3D-32M" somewhere=
-,
-there should be a kind of an extra handling beyond memvalue().=20
+Note that this can result in filesystem shutdown via dirty trans
+cancel on stable kernels prior to commit 9eb775968b68 ("xfs: walk
+all AGs if TRYLOCK passed to xfs_alloc_vextent_iterate_ags") because
+the tail AG selection by the allocator sets t_highest_agno on the
+transaction. If the inode allocator spins around and finds an inode
+chunk with free inodes in an earlier AG, the subsequent dir name
+creation path may still fail to allocate due to the AG restriction
+and cancel.
 
-> Presumably it's because memvalue() returns ULL, presumably because
-> memparse() returns ULL?=C2=A0 Maybe that's all wrong, and memparse() shou=
-ld
-> have returned LL - negative numbers are a bit odd, but why deny that
-> option.=C2=A0 With the new memvalue() we get to partially address that?
+To avoid this problem, update the max_agbno calculation to the agbno
+prior to the last chunk aligned agbno in the AG. This is not
+necessarily the last valid allocation target for a sparse chunk, but
+since inode chunks (i.e. records) are chunk aligned and sparse
+allocs are cluster sized/aligned, this allows the sb_spino_align
+alignment restriction to take over and round down the max effective
+agbno to within the last valid inode chunk in the AG.
 
-I would rather try
+Note that even though the allocator improvements in the
+aforementioned commit seem to avoid this particular dirty trans
+cancel situation, the max_agbno logic improvement still applies as
+we should be able to allocate from an AG that has been appropriately
+selected. The more important target for this patch however are
+older/stable kernels prior to this allocator rework/improvement.
 
-int __must_check memvalue(const char *ptr, unsigned long long *addr);
+Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-as suggested by Kees.=20
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d97295eaebe6..c19d6d713780 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -848,15 +848,16 @@ xfs_ialloc_ag_alloc(
+ 		 * invalid inode records, such as records that start at agbno 0
+ 		 * or extend beyond the AG.
+ 		 *
+-		 * Set min agbno to the first aligned, non-zero agbno and max to
+-		 * the last aligned agbno that is at least one full chunk from
+-		 * the end of the AG.
++		 * Set min agbno to the first chunk aligned, non-zero agbno and
++		 * max to one less than the last chunk aligned agbno from the
++		 * end of the AG. We subtract 1 from max so that the cluster
++		 * allocation alignment takes over and allows allocation within
++		 * the last full inode chunk in the AG.
+ 		 */
+ 		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
+ 		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
+ 							pag_agno(pag)),
+-					    args.mp->m_sb.sb_inoalignmt) -
+-				 igeo->ialloc_blks;
++					    args.mp->m_sb.sb_inoalignmt) - 1;
+ 
+ 		error = xfs_alloc_vextent_near_bno(&args,
+ 				xfs_agbno_to_fsb(pag,
+-- 
+2.52.0
 
-Dmitry
