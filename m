@@ -1,30 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACD34884E9;
-	Thu,  8 Jan 2026 10:21:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DAEF48DA5B;
+	Thu,  8 Jan 2026 10:26:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767867669; cv=none; b=pRM72bAxonsCpwnuHIMh5q/kWgQ5/krwUHqr5aPtfPaczqIoe1Ytx0th9v6sU5ma1vimw2raiIg14wG/fSZHD/Kzyz4Z1Vo8ErKrIpNeea/xg7VHQw+J3nqCjiREsO6zP3Zd6b6L8WksnhuZxqfg3poUC9Hz3ZN0rfuGa1LtSMI=
+	t=1767867971; cv=none; b=CSy5pWGO9SdTsm7JkekOt4D4aktFaGFMoidk2IWEEy8mQfpj2E2ctt+xZosu1Co1yYEqj5CNY3khc0xizZH67nVP4XHgattb20VHNE6LxCu2/BLYKUcdZr31dnfSOVXs3wW/l5BRQ0uEPMhIVu64vjyWFqJ0zpyFwQiyc0nxuOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767867669; c=relaxed/simple;
-	bh=9NSMKlbYrqLjViN3gL1U4PaHv62SXFFxEg7DL5e3LT4=;
+	s=arc-20240116; t=1767867971; c=relaxed/simple;
+	bh=ferKa+yhyaZf3e38F8hXpHzLzfFzNGff8gsEgv5YzvE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VLGWP565W4bnsJ51urlVlZWn9Ek2OZhPuP0yykfnNCQUmc9qHAqiRsYMuiw2ggjaz2iviwY4q36zxVEL8LdlWm8HFlIsmMPbDnZewW0i4KF1JY08oza37579r6IwRMyYaKU5gpUvZZ1IbKb0Uw5qndxlryU9olCUUfuY8cR7hqw=
+	 Content-Type:Content-Disposition:In-Reply-To; b=T0ozIkVPZ4TPSciIDlNVeQydizw45+DPyiPcsLLKUQC+XSjh7qm8wDxq5h/8hIMQQjZjzI6Zi0GdSBJ/uEFF/XlYpM4xQzxdVZFV3CFqrsVLsee3X1n35T8mn6LfjB7fyKuDr19LO9+s25stqnZYkfTCM4fBc4g91vvYqLT5V4w=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 04AC8227A87; Thu,  8 Jan 2026 11:21:03 +0100 (CET)
-Date: Thu, 8 Jan 2026 11:21:02 +0100
+	id 83381227A87; Thu,  8 Jan 2026 11:25:59 +0100 (CET)
+Date: Thu, 8 Jan 2026 11:25:59 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 02/11] xfs: start creating infrastructure for health
- monitoring
-Message-ID: <20260108102102.GA25039@lst.de>
-References: <176766637179.774337.3663793412524347917.stgit@frogsfrogsfrogs> <176766637289.774337.11016648296945814848.stgit@frogsfrogsfrogs> <20260107091713.GB22838@lst.de> <20260107185055.GE15551@frogsfrogsfrogs>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [PATCH 11/11] xfs: add media error reporting ioctl
+Message-ID: <20260108102559.GA25394@lst.de>
+References: <176766637179.774337.3663793412524347917.stgit@frogsfrogsfrogs> <176766637485.774337.16716764027357885673.stgit@frogsfrogsfrogs> <20260107093611.GC24264@lst.de> <20260107163035.GA15551@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,16 +32,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260107185055.GE15551@frogsfrogsfrogs>
+In-Reply-To: <20260107163035.GA15551@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jan 07, 2026 at 10:50:55AM -0800, Darrick J. Wong wrote:
-> > This almost looks like a not performance optimized version of hazard
-> > pointers.  Not that we care much about performance here.
+On Wed, Jan 07, 2026 at 08:30:35AM -0800, Darrick J. Wong wrote:
+> > FYI, I'd much prefer adding the kernel support than relying in userspace
+> > doing it, which will be hard to move away from.
 > 
-> Yep.  AFAIK the kernel doesn't have an actual hazard pointer
-> implementation that we could latch onto, right?
+> Hrm.  I wonder, does the block layer use iomap for directio?  Now that
+> the fserror reporting has been hooked up to iomap, I wonder if it's
+> possible for xfs_healer to listen for file IO errors on a block device?
+> 
+> Oh.  block/fops.c doesn't actually call iomap_dio_* so I guess that's
+> not yet possible.  Would it be easier to convert blockdevs to use iomap,
+> or should I bite the bullet and convert the legacy direct_IO code?
 
-It's in the works.  And probably complete overkill here, it your
-code just reminded me of a presentation Paul gave on it.
+The block code basically has it's own simplified copy of the iomap
+direct I/O code.
+
+> Or I guess one of us should go figure out a reasonable verify command
+> that would call fserror_* on media errors.
+
+Hmm, I would expect the verify command to be issued by fs/xfs/scrub/
+in the kernel, so that it can be directly tied into the in-kernel
+logical to physical and rmap.  But you are more well versed there,
+so maybe I'm missing something.
 
