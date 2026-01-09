@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B64C3148D9
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Jan 2026 15:03:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71381311C35;
+	Fri,  9 Jan 2026 15:03:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767971028; cv=none; b=oNDbyhMn+g7+8j/658QvZK6Gjth1RN2hvmQip0dCfQuLMs4Rb58FLCbhl0hNcuAxmJtWk7stfAOGmSbiYvsx63htqokVkg06EIJ/7fVpqQxZiIX9qvFgJoTsgmfdFcCl7ZKbRFLeCSHZaS+jXpevW/roIlw5VOrcEnEv52RmmdI=
+	t=1767971032; cv=none; b=LL2WS/G6tMr1Y1YnBCZQybw0CWhiw+BsOK216Sv7u9mTGefS5/PuQW86dKsQZK3mDvaoIvBuKnRw3P7RWcTjPOXGa88QdteEf/ivyP1ju8BxY/8q18jOXpN11oqo+XCfWdh7B1opbEOKZHeh6AktUQDhLghcrqohY43uBaIX8W4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767971028; c=relaxed/simple;
-	bh=DThXqpqjTPzM+BiNAfAickooeE5Kud+oTDOSD26gHq0=;
+	s=arc-20240116; t=1767971032; c=relaxed/simple;
+	bh=pbLPYpzdk8kWolx7kwYDUbVMxRo563GXMNxZLBos7v8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=YrkeQ3oP0BKsCwjCLwz06xJKuEUFg+Cio8TZS4fSiU/7Ek7A7Wc2aYcpOeGi1onE9j0E3n3AQCxJkzC4/UOjsgwz2w7pALdWe8AaGQWoLZIVJb+g+MVKlhYXB4i4hboolY9yoUyeLEnU03+OLeb4fbBC5QgBNQ+beA3S8EnOwK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kxBtuXRW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=dJcnz73uOMAXy4zvkpHdrR7Rhwjr3ClNbEp4OyboWrM33Dz02frwuwNfnJO+3iM3ZHs1O7mb0R3RRO79LYBoLMuyPoZjE3PCE59xnKJ/mDCVhEuQDshVo1MVyM2WDl0/UAJfuHrssfiPAT6S3lDHOU++6QyRbbHnm+93fJHVZPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bGStLacL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kxBtuXRW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5AFC19422;
-	Fri,  9 Jan 2026 15:03:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bGStLacL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC1F9C19423;
+	Fri,  9 Jan 2026 15:03:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767971028;
-	bh=DThXqpqjTPzM+BiNAfAickooeE5Kud+oTDOSD26gHq0=;
+	s=k20201202; t=1767971030;
+	bh=pbLPYpzdk8kWolx7kwYDUbVMxRo563GXMNxZLBos7v8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=kxBtuXRW/OsvgJ+3oJpgdBCybZSmMpWOtSVFfw0+h5FBbr8GM0QUDUr7+qpBtV5mf
-	 s0zrKkXigOI6NQT2RkXVqaQCRh4CSmqdv4RsrFTbivZ6/pnt06my9LIS2Gkqu2h1zC
-	 TGorpIzfGsi1h+SOxW9uknuv3YfKUE50viZ1yqc05ZHYnzcoT/ZSuge177EM84/64h
-	 em1vpN/S6Zu6AcyyBRyNLqjwsRnjD4lUqboEuY6Fw0Mvo3r0eP/Rds7zIPOuAT8EvA
-	 ggi/CrhlNsfaIVJ3jdvA3bM3DTDryNmDZBlkRhweMs2RHtzcFtHq1fcr33dis2wzos
-	 u6f4BzlgBSE7Q==
+	b=bGStLacL2eAXuy5dfayU8ActyXU5RGx7zxaxPlVpNFg5V8fvyWjC+kylkp04ftClo
+	 aODHLSIF6V2N933W1wEUxN2S0ONnAW8psGtJQOG2CU+DA1Vlk4V9VuKtvB92J4d1t5
+	 GY5ASkuWtlIeCDV6LleDF6C/77hoW7t0RO6VHxlxUkMCUUUoG040/qkHb0smp8eRXt
+	 SHwevsTN8MP2Y+aLzTBP40iSsCAxl93vGVEk8YpeZrvJYKeuDdHW5rOB4hAR8s792A
+	 OOOQRiMsNpxDrJnhkP+aEGHyThsFGhnXqHm0/JvGEWLLNVIs6dVz/qPnl0+HoWdtR1
+	 xm1ux6tMLBEqQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, 
- "Darrick J . Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, 
- Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-In-Reply-To: <20251219054202.1773441-1-hch@lst.de>
-References: <20251219054202.1773441-1-hch@lst.de>
-Subject: Re: [PATCH v2] rename xfs.h
-Message-Id: <176797102661.430235.17111864790326075242.b4-ty@kernel.org>
-Date: Fri, 09 Jan 2026 16:03:46 +0100
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, 
+ Hans Holmberg <hans.holmberg@wdc.com>, linux-block@vger.kernel.org, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260106075914.1614368-1-hch@lst.de>
+References: <20260106075914.1614368-1-hch@lst.de>
+Subject: Re: improve zoned XFS GC buffer management v2
+Message-Id: <176797102841.430235.1465892466150330026.b4-ty@kernel.org>
+Date: Fri, 09 Jan 2026 16:03:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,30 +46,24 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Fri, 19 Dec 2025 06:41:43 +0100, Christoph Hellwig wrote:
-> currently one of the biggest difference between the kernel and xfsprogs
-> for the shared libxfs files is that the all kernel source files first
-> include xfs.h, while in xfsprogs they first include libxfs_priv.h.  The
-> reason for that is that there is a public xfs.h header in xfsprogs that
-> causes a namespace collision.
-> 
-> This patch renames xfs.h in the kernel tree to xfs_plaform.h, a name that
-> is still available in xfsprogs.  Any other name fitting that criteria
-> should work just as well, I'm open to better suggestion if there are
-> any.
+On Tue, 06 Jan 2026 08:58:51 +0100, Christoph Hellwig wrote:
+> the zoned XFS GC code currently uses a weird bank switching strategy to
+> manage the scratch buffer.  The reason for that was that I/O could be
+> proceed out of order in the early days, but that actually changed before
+> the code was upstreamed to avoid fragmentation.  This replaced the logic
+> with a simple ring buffer, which makes the buffer space utilization much
+> more efficient.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/4] xfs: rename xfs_linux.h to xfs_platform.h
-      commit: 24bb56d025e315230af06389e46a8b15dfb71c00
-[2/4] xfs: include global headers first in xfs_platform.h
-      commit: c21d7553f83571411bfdd9d49d0682cdf79d396d
-[3/4] xfs: move the remaining content from xfs.h to xfs_platform.h
-      commit: e382d25fea024874f5e6687f85016e6bfc4dd75e
-[4/4] xfs: directly include xfs_platform.h
-      commit: d6e7819ce63f9fc5de59e2f508e1692a4a2969ee
+[1/3] block: add a bio_reuse helper
+      commit: 8b7b3fa4c5dffef6cef56fad42d0d4bc525200a8
+[2/3] xfs: use bio_reuse in the zone GC code
+      commit: ac6d78b0277ba32b8b60c4cf02dd4d7b77fdfe94
+[3/3] xfs: rework zone GC buffer management
+      commit: 07e59f94f4d2a01e1858ef5e872f16c75665568c
 
 Best regards,
 -- 
