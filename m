@@ -1,38 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D3132222C0
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Jan 2026 16:29:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7574D271456;
+	Fri,  9 Jan 2026 16:30:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767976152; cv=none; b=kWRnvzBCT4Yx+vdlcTlCb5lvoz+5mFoMSjU97ukDukeBDtUcDroKDAYoHmvafObXP9l33FBIwA2Z/1oyMfvr1/1UH/a5TPwSVvxpjH07kbVE8YAiowFykwy1I0p3HOPcIIaAXjJcPGOhOoKyimZMLTg1J6P49vMoq8sToRolWHA=
+	t=1767976224; cv=none; b=ASPBPcG7JrScNWT9o1J2k03UKHViDHTTK1gmUEsoxsxeeHjmMs840sSGze21T9xu5DGCSzqGFq893jjDIs8uOc2AIAfiRM0MO1gHnu4rozGc810+pxuWZ75JFuV+vSKYGzVJeuAhve5FLJKhICqQ2TSZAVHzVjwhZyV1LrRxj/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767976152; c=relaxed/simple;
-	bh=fwpwuxMvPTe/6g6kCDy9lf0zdppbVwlvbf0pr/j0Pj8=;
+	s=arc-20240116; t=1767976224; c=relaxed/simple;
+	bh=M/yqtirED+VcZXJl8nGUr340RjD4PMfUeZjAFFhLUXc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DIbxFycWgDSdUjDm+9+xizpIoRVZGpLKux5TNfa4akJZLynxTgM53UKcziTmOKqnCNFHu9ENruHA1YSoCZcibwu4yWP4ohCMgIOtU1axynuT5dpEvNsRToLh15P3riWmu0LgB4mqrmke67vf/uEEVG3qKuqwz1tK7Wsgoydw9/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TB/owMzO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lb+FQc1ZdzlzooC5MR3+6olFVRnyoN2Xdb2RjAox0pHcYqCdCHXJ0TxFK0RHPPFsdWGvMaX3s+T6rdbFKfgLbIW4VEmkN5OCiILx8pNQ1OrnuV8NgmAhU9vnMPp0CJZ+8yFys/5+XJFK0NDno8IOEBDFCQkDcinMH35I8IIfbJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/U7JDPc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TB/owMzO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B72CEC4CEF1;
-	Fri,  9 Jan 2026 16:29:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/U7JDPc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A752C4CEF1;
+	Fri,  9 Jan 2026 16:30:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767976151;
-	bh=fwpwuxMvPTe/6g6kCDy9lf0zdppbVwlvbf0pr/j0Pj8=;
+	s=k20201202; t=1767976224;
+	bh=M/yqtirED+VcZXJl8nGUr340RjD4PMfUeZjAFFhLUXc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TB/owMzODmN538aOUAgDTxH22I/3DiS64ICDA7ivAMAqMghldchUlrFkHIZ2sw0vj
-	 1Esb6B9fq/tiCwohm5CPnXUFBw+OK3qX1y1O8GNhtyJqTjzXaF4YcmHsEQuLFV9b5I
-	 H56xE6g5HgxLqwI1sHZy2groCJs/zb+R7alWS1yNI3lUfIG310mtg8vUUjqXpMWxDs
-	 hkyqOt+Mv4msnk/9w0hhTN2R7qEzBqTMyF59RqYJ16BbG3ec1OxHFxYzSglswQsBFq
-	 t/S+D1mxmrI8gKEfP6J7JrfVE7QhmIZ1ddaOZ8tdx7cJePlXDArsfziMAHKKsq3RRU
-	 tDeWK57o+0FXw==
-Date: Fri, 9 Jan 2026 08:29:11 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
+	b=X/U7JDPcI3gDeG/lO+XatA9a1MUfcw6mC9hHjEnoCsCUSyKcNCZXE8Wq431i8u/AU
+	 PWfo6VRPb48tAZMiYcrxq7Xm17DH08MNEMvJB5PL2VKvr4PeVJ3+G3A3KwByaHvjM/
+	 mpRAHzTuIN+z2EW+k5CSQXijCW7mg8Vx/89X2erDBel0741s1MRKmX/kUqog7gOsUN
+	 LZaCqzTwn1QuoNflw+PkgELKDVkb4vrbYzSEWZPGEnHFpT7r0IukVt8za2KRPqtSsA
+	 b0/4zvgGT1oLPrOIlqDZ83toKm47I7Son8LVxpr4uMd24Lw8FiCa1sbJtrnDnTL8La
+	 nXlwa1AHy0ffA==
+Date: Fri, 9 Jan 2026 17:30:19 +0100
+From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, mark.tinguely@oracle.com
-Subject: Re: [PATCH] xfs: remove xfs_attr_leaf_hasname
-Message-ID: <20260109162911.GR15551@frogsfrogsfrogs>
-References: <20260109151741.2376835-1-hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Damien Le Moal <dlemoal@kernel.org>, 
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] block: add a bio_reuse helper
+Message-ID: <aWEst_dAEWFO3JYd@nidhogg.toxiclabs.cc>
+References: <20260106075914.1614368-1-hch@lst.de>
+ <20260106075914.1614368-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,163 +43,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260109151741.2376835-1-hch@lst.de>
+In-Reply-To: <20260106075914.1614368-2-hch@lst.de>
 
-On Fri, Jan 09, 2026 at 04:17:40PM +0100, Christoph Hellwig wrote:
-> The calling convention of xfs_attr_leaf_hasname() is problematic, because
-> it returns a NULL buffer when xfs_attr3_leaf_read fails, a valid buffer
-> when xfs_attr3_leaf_lookup_int returns -ENOATTR or -EEXIST, and a
-> non-NULL buffer pointer for an already released buffer when
-> xfs_attr3_leaf_lookup_int fails with other error values.
+On Tue, Jan 06, 2026 at 08:58:52AM +0100, Christoph Hellwig wrote:
+> Add a helper to allow an existing bio to be resubmitted withtout
+> having to re-add the payload.
 > 
-> Fix this by simply open coding xfs_attr_leaf_hasname in the callers, so
-> that the buffer release code is done by each caller of
-> xfs_attr3_leaf_read.
-> 
-> X-Cc: stable@vger.kernel.org # v5.19+
-> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> Reported-by: Mark Tinguely <mark.tinguely@oracle.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Blerrgh, xfs_attr3_leaf_lookup_int encoding results with error numbers
-makes my brain hurt every time I look at the xattr code... but this
-patch is (afaict) a correct way to avoid the **bp state confusion
-presented by xfs_attr_leaf_hasname.
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
+> Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 75 +++++++++++++---------------------------
->  1 file changed, 24 insertions(+), 51 deletions(-)
+>  block/bio.c         | 29 +++++++++++++++++++++++++++++
+>  include/linux/bio.h |  1 +
+>  2 files changed, 30 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 8c04acd30d48..b88e65c7e45d 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -50,7 +50,6 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
->   */
->  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
-> -STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
->  
->  /*
->   * Internal routines when attribute list is more than one block.
-> @@ -979,11 +978,12 @@ xfs_attr_lookup(
->  		return error;
->  
->  	if (xfs_attr_is_leaf(dp)) {
-> -		error = xfs_attr_leaf_hasname(args, &bp);
-> -
-> -		if (bp)
-> -			xfs_trans_brelse(args->trans, bp);
-> -
-> +		error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner,
-> +				0, &bp);
-> +		if (error)
-> +			return error;
-> +		error = xfs_attr3_leaf_lookup_int(bp, args);
-> +		xfs_trans_brelse(args->trans, bp);
->  		return error;
->  	}
->  
-> @@ -1222,27 +1222,6 @@ xfs_attr_shortform_addname(
->   * External routines when attribute list is one block
->   *========================================================================*/
->  
-> -/*
-> - * Return EEXIST if attr is found, or ENOATTR if not
-> - */
-> -STATIC int
-> -xfs_attr_leaf_hasname(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_buf		**bp)
-> -{
-> -	int                     error = 0;
-> -
-> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, bp);
-> -	if (error)
-> -		return error;
-> -
-> -	error = xfs_attr3_leaf_lookup_int(*bp, args);
-> -	if (error != -ENOATTR && error != -EEXIST)
-> -		xfs_trans_brelse(args->trans, *bp);
-> -
-> -	return error;
-> -}
-> -
->  /*
->   * Remove a name from the leaf attribute list structure
->   *
-> @@ -1253,25 +1232,22 @@ STATIC int
->  xfs_attr_leaf_removename(
->  	struct xfs_da_args	*args)
->  {
-> -	struct xfs_inode	*dp;
-> -	struct xfs_buf		*bp;
-> +	struct xfs_inode	*dp = args->dp;
->  	int			error, forkoff;
-> +	struct xfs_buf		*bp;
->  
->  	trace_xfs_attr_leaf_removename(args);
->  
-> -	/*
-> -	 * Remove the attribute.
-> -	 */
-> -	dp = args->dp;
-> -
-> -	error = xfs_attr_leaf_hasname(args, &bp);
-> -	if (error == -ENOATTR) {
-> +	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-> +	if (error)
-> +		return error;
-> +	error = xfs_attr3_leaf_lookup_int(bp, args);
-> +	if (error != -EEXIST) {
->  		xfs_trans_brelse(args->trans, bp);
-> -		if (args->op_flags & XFS_DA_OP_RECOVERY)
-> +		if (error == -ENOATTR && (args->op_flags & XFS_DA_OP_RECOVERY))
->  			return 0;
->  		return error;
-> -	} else if (error != -EEXIST)
-> -		return error;
-> +	}
->  
->  	xfs_attr3_leaf_remove(bp, args);
->  
-> @@ -1295,23 +1271,20 @@ xfs_attr_leaf_removename(
->   * Returns 0 on successful retrieval, otherwise an error.
->   */
->  STATIC int
-> -xfs_attr_leaf_get(xfs_da_args_t *args)
-> +xfs_attr_leaf_get(
-> +	struct xfs_da_args	*args)
->  {
-> -	struct xfs_buf *bp;
-> -	int error;
-> +	struct xfs_buf		*bp;
-> +	int			error;
->  
->  	trace_xfs_attr_leaf_get(args);
->  
-> -	error = xfs_attr_leaf_hasname(args, &bp);
-> -
-> -	if (error == -ENOATTR)  {
-> -		xfs_trans_brelse(args->trans, bp);
-> -		return error;
-> -	} else if (error != -EEXIST)
-> +	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-> +	if (error)
->  		return error;
-> -
-> -
-> -	error = xfs_attr3_leaf_getvalue(bp, args);
-> +	error = xfs_attr3_leaf_lookup_int(bp, args);
-> +	if (error == -EEXIST)
-> +		error = xfs_attr3_leaf_getvalue(bp, args);
->  	xfs_trans_brelse(args->trans, bp);
->  	return error;
+> diff --git a/block/bio.c b/block/bio.c
+> index e726c0e280a8..ed99368c662f 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+
+Jens, would you be ok if I pull it through XFS tree, giving it's tightly
+connected to xfs?
+
+I have it in our for-next for now so that it can be tested, but I plan
+to update it once you pull the patch. If you're ok with this going
+through xfs tree, I'll just leave it as-is.
+
+Carlos
+
+> @@ -311,6 +311,35 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf)
 >  }
+>  EXPORT_SYMBOL(bio_reset);
+>  
+> +/**
+> + * bio_reuse - reuse a bio with the payload left intact
+> + * @bio bio to reuse
+> + *
+> + * Allow reusing an existing bio for another operation with all set up
+> + * fields including the payload, device and end_io handler left intact.
+> + *
+> + * Typically used for bios first used to read data which is then written
+> + * to another location without modification.  This must be used by the
+> + * I/O submitter on an bio that is not in flight.  Can't be used for
+> + * cloned bios.
+> + */
+> +void bio_reuse(struct bio *bio)
+> +{
+> +	unsigned short vcnt = bio->bi_vcnt, i;
+> +	bio_end_io_t *end_io = bio->bi_end_io;
+> +	void *private = bio->bi_private;
+> +
+> +	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+> +
+> +	bio_reset(bio, bio->bi_bdev, bio->bi_opf);
+> +	for (i = 0; i < vcnt; i++)
+> +		bio->bi_iter.bi_size += bio->bi_io_vec[i].bv_len;
+> +	bio->bi_vcnt = vcnt;
+> +	bio->bi_private = private;
+> +	bio->bi_end_io = end_io;
+> +}
+> +EXPORT_SYMBOL_GPL(bio_reuse);
+> +
+>  static struct bio *__bio_chain_endio(struct bio *bio)
+>  {
+>  	struct bio *parent = bio->bi_private;
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index ad2d57908c1c..c0190f8badde 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -414,6 +414,7 @@ static inline void bio_init_inline(struct bio *bio, struct block_device *bdev,
+>  }
+>  extern void bio_uninit(struct bio *);
+>  void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
+> +void bio_reuse(struct bio *bio);
+>  void bio_chain(struct bio *, struct bio *);
+>  
+>  int __must_check bio_add_page(struct bio *bio, struct page *page, unsigned len,
 > -- 
 > 2.47.3
 > 
