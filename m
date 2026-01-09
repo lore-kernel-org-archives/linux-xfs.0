@@ -1,41 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C471EEA31
-	for <linux-xfs@vger.kernel.org>; Fri,  9 Jan 2026 16:32:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C74363C52
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Jan 2026 16:32:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767976356; cv=none; b=pKQnsDXRjmccZdSVVvGTbylBQCtUeFY2jQfow0zEYAWKMRq44xbj7airmjXnQyG4OJhEc+jsfU5rbWivs8vqRwnmxubmQ6i45gSLlomLQ0EZVrni4KlyFJn71UlGsqQtQSbo/F2h2BSZvwgmBGoRa3g6Wg1ESK9QkTYnIPzwAVk=
+	t=1767976376; cv=none; b=TPwN0MrOjU6kjj9B8+TAhI7EHfv6JXNOKroUKXUi2+ljIF+/ZCUQiv985v5b1CVphMjQ3Nq3fs2NyfRo9s/3WbFYOE87T/XuDpKFeHnN9uRSHlj+WitO9G/fdh2uU36y35nFfVBOf7bGT0oc9PPkPj7t0Y57dxC3oua1tQ/y3NY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767976356; c=relaxed/simple;
-	bh=UIvk0hvVqRfNK+023NbEKK56ydAgxoi5b9vLs4lLq+g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f9KxsutvtpgIXSs1R6Xnsk8lnKHB459ZHrKrztmr30T1X33dKxF/dZl93RzTUzPWDn4jTyvDKPokZ7zQHBJQB6rBuZDz2H3277yXY6coV9/AyLghx1h/2Y9qIU55YYf6CcdyN2RjKXjkUf/pSs0QlcIZcCPZoRRb3YE1rfJ6Cc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z3T1sKcN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767976376; c=relaxed/simple;
+	bh=vGke0QeJG2RcqCalV0bVVQq3+XPcCO0IRCujwzdzdfU=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qt/5xs+KvfmuzPpzvHEw2h3pDobOb/k7sQymgQFrMhFRJ/146HQ4ki6AcoLhn4OD4Buv0nVKfXIpND0Z1i4yl0bWNmooT56Tk2rsjscOE3LuJCtmzq9KIBSdw3vrODwt/KB/sk3UmWXccV8ma+F7dSa5irTS7BIaXpLWeLp8bXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h0GnsnXO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z3T1sKcN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B540EC4CEF1;
-	Fri,  9 Jan 2026 16:32:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h0GnsnXO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E00CC4CEF1
+	for <linux-xfs@vger.kernel.org>; Fri,  9 Jan 2026 16:32:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767976355;
-	bh=UIvk0hvVqRfNK+023NbEKK56ydAgxoi5b9vLs4lLq+g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Z3T1sKcNCtDi/mFgRb62n30d8pD6j2/tCQ+/48rM0r0t/4pJqnBHk+5l3KSFL0dij
-	 FFj2VNV+22oy1vXzmwaCHwCQnifVCa9MUIYuCYQ+M2uqmiMcEEzqHbsm1hoyQufE0g
-	 yYJuEBb/AKuWOP8KIf39dRoAtbAXsXCXzLPJHyie8KZ1V76c5h3fm61+RJKWSH+znc
-	 ADsymJsSsnBuUv4mOO6ZvhEe5TTCDiVpN8emXF4YzWBQiRFG+74jtc7wA7unP+gymC
-	 fDcGB/iY5eJ2Cym/kPz0sbccYGAAYVxPPvcy8eXKbUD+vgaxY59l/YqdWmrLq7TFcw
-	 VuNVNHvoXxt/A==
-Date: Fri, 9 Jan 2026 08:32:35 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] libfrog: enable cached report zones
-Message-ID: <20260109163235.GT15551@frogsfrogsfrogs>
-References: <20260109162324.2386829-1-hch@lst.de>
- <20260109162324.2386829-5-hch@lst.de>
+	s=k20201202; t=1767976375;
+	bh=vGke0QeJG2RcqCalV0bVVQq3+XPcCO0IRCujwzdzdfU=;
+	h=Date:From:To:Subject:References:In-Reply-To:From;
+	b=h0GnsnXOPfnjEvIClwjSNQpUPPz5vRs5bvSr68Y6IMWzT4+kIHoQ1wMD4dXhUI3x0
+	 l+PEf1OuHI8wPWSt72N17siexDfmQ+z39kimCjKZvU30oQjj/9JpjNdgsQLC7bn+Ol
+	 GjZ76qPdGAd1kpucj418OhB1W+WtuqQqaGlYDyEqpyBbFXizdWORdpBFzWSvha0D1r
+	 JgiUdugjDK/dgg1Auehx2lGZ5nxWrq0BSHvvZzoHMqtlEcA0DIBGPFSWMc6VY9Q0v5
+	 2kU3iRKEV0HYvBYbqQjocyJCAcMo066//pKmjHvtEKBB4g/3qhlu1xdDdGZGgR5k0N
+	 Tw/q95MdheTlA==
+Date: Fri, 9 Jan 2026 17:32:52 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to ea44380376cc
+Message-ID: <aWEtMHieNaaVcuQt@nidhogg.toxiclabs.cc>
+References: <aWEYhUztCe4kW3tE@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,99 +40,252 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260109162324.2386829-5-hch@lst.de>
+In-Reply-To: <aWEYhUztCe4kW3tE@nidhogg.toxiclabs.cc>
 
-On Fri, Jan 09, 2026 at 05:22:55PM +0100, Christoph Hellwig wrote:
-> From: Damien Le Moal <dlemoal@kernel.org>
+On Fri, Jan 09, 2026 at 04:03:37PM +0100, Carlos Maiolino wrote:
 > 
-> Modify the function xfrog_report_zones() to default to always trying
-> first a cached report zones using the BLKREPORTZONEV2 ioctl.
-> If the kernel does not support BLKREPORTZONEV2, fall back to the
-> (slower) regular report zones BLKREPORTZONE ioctl.
+> Hi folks,
 > 
-> TO enable this feature even if xfsprogs is compiled on a system where
-> linux/blkzoned.h does not define BLKREPORTZONEV2, this ioctl is defined
-> in libfrog/zones.h, together with the BLK_ZONE_REP_CACHED flag and the
-> BLK_ZONE_COND_ACTIVE zone condition.
+> The for-next branch of the xfs-linux repository at:
 > 
-> Since a cached report zone  always return the condition
-> BLK_ZONE_COND_ACTIVE for any zone that is implicitly open, explicitly
-> open or closed, the function xfs_zone_validate_seq() is modified to
-> handle this new condition as being equivalent to the implicit open,
-> explicit open or closed conditions.
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> [hch: don't try cached reporting again if not supported]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> has just been updated.
+> 
+> Patches often get missed, so please check if your outstanding patches
+> were in this update. If they have not been in this update, please
+> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+> the next update.
+> 
+> The new head of the for-next branch is commit:
+> 
+> ea44380376cc Merge branch 'xfs-6.19-fixes' into for-next
+> 
+> 9 new commits:
 
-That's an amusing use of atomic_t :)
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I forgot to mention while writing the announce that this also contains a
+block patch (which my script ignored to add to the status):
 
---D
+8b7b3fa4c5df block: add a bio_reuse helper
 
-> ---
->  libfrog/zones.c | 31 ++++++++++++++++++++++++++++++-
->  1 file changed, 30 insertions(+), 1 deletion(-)
+I'm not sure if this can go through xfs trees or not, but I opted to put
+add it by now, so the zoned GC changes can be tested sooner. And I'll
+update it accordingly.
+
+
 > 
-> diff --git a/libfrog/zones.c b/libfrog/zones.c
-> index 2276c56bec9c..f1ef0b24c564 100644
-> --- a/libfrog/zones.c
-> +++ b/libfrog/zones.c
-> @@ -3,12 +3,24 @@
->   * Copyright (c) 2025, Western Digital Corporation or its affiliates.
->   */
->  #include "platform_defs.h"
-> +#include "atomic.h"
->  #include "libfrog/zones.h"
->  #include <sys/ioctl.h>
->  
-> +/*
-> + * Cached report ioctl (/usr/include/linux/blkzoned.h).
-> + * Add in Linux 6.19.
-> + */
-> +#ifndef BLKREPORTZONEV2
-> +#define BLKREPORTZONEV2		_IOWR(0x12, 142, struct blk_zone_report)
-> +#define BLK_ZONE_REP_CACHED	(1U << 31)
-> +#endif /* BLKREPORTZONEV2 */
-> +
->  /* random size that allows efficient processing */
->  #define ZONES_PER_REPORT		16384
->  
-> +static atomic_t cached_reporting_disabled;
-> +
->  struct xfrog_zone_report *
->  xfrog_report_zones(
->  	int			fd,
-> @@ -24,10 +36,27 @@ _("Failed to allocate memory for reporting zones."));
->  		}
->  	}
->  
-> +	/*
-> +	 * Try cached report zones first. If this fails, fallback to the regular
-> +	 * (slower) report zones.
-> +	 */
->  	rep->rep.sector = sector;
->  	rep->rep.nr_zones = ZONES_PER_REPORT;
->  
-> -	if (ioctl(fd, BLKREPORTZONE, &rep->rep)) {
-> +	if (atomic_read(&cached_reporting_disabled))
-> +		goto uncached;
-> +
-> +	rep->rep.flags = BLK_ZONE_REP_CACHED;
-> +	if (ioctl(fd, BLKREPORTZONEV2, &rep->rep)) {
-> +		atomic_inc(&cached_reporting_disabled);
-> +		goto uncached;
-> +	}
-> +
-> +	return rep;
-> +
-> +uncached:
-> +	rep->rep.flags = 0;
-> +	if (ioctl(fd, BLKREPORTZONE, rep)) {
->  		fprintf(stderr, "%s %s\n",
->  _("ioctl(BLKREPORTZONE) failed:\n"),
->  			strerror(-errno));
-> -- 
-> 2.47.3
+> Carlos Maiolino (1):
+>       [ea44380376cc] Merge branch 'xfs-6.19-fixes' into for-next
 > 
+> Christoph Hellwig (6):
+>       [24bb56d025e3] xfs: rename xfs_linux.h to xfs_platform.h
+>       [c21d7553f835] xfs: include global headers first in xfs_platform.h
+>       [e382d25fea02] xfs: move the remaining content from xfs.h to xfs_platform.h
+>       [d6e7819ce63f] xfs: directly include xfs_platform.h
+>       [ac6d78b0277b] xfs: use bio_reuse in the zone GC code
+>       [07e59f94f4d2] xfs: rework zone GC buffer management
+> 
+> Dan Carpenter (1):
+>       [8dad31f85c7b] xfs: fix memory leak in xfs_growfs_check_rtgeom()
+> 
+> Code Diffstat:
+> 
+>  fs/xfs/libxfs/xfs_ag.c                 |   2 +-
+>  fs/xfs/libxfs/xfs_ag_resv.c            |   2 +-
+>  fs/xfs/libxfs/xfs_alloc.c              |   2 +-
+>  fs/xfs/libxfs/xfs_alloc_btree.c        |   2 +-
+>  fs/xfs/libxfs/xfs_attr.c               |   2 +-
+>  fs/xfs/libxfs/xfs_attr_leaf.c          |   2 +-
+>  fs/xfs/libxfs/xfs_attr_remote.c        |   2 +-
+>  fs/xfs/libxfs/xfs_bit.c                |   2 +-
+>  fs/xfs/libxfs/xfs_bmap.c               |   2 +-
+>  fs/xfs/libxfs/xfs_bmap_btree.c         |   2 +-
+>  fs/xfs/libxfs/xfs_btree.c              |   2 +-
+>  fs/xfs/libxfs/xfs_btree_mem.c          |   2 +-
+>  fs/xfs/libxfs/xfs_btree_staging.c      |   2 +-
+>  fs/xfs/libxfs/xfs_da_btree.c           |   2 +-
+>  fs/xfs/libxfs/xfs_defer.c              |   2 +-
+>  fs/xfs/libxfs/xfs_dir2.c               |   2 +-
+>  fs/xfs/libxfs/xfs_dir2_block.c         |   2 +-
+>  fs/xfs/libxfs/xfs_dir2_data.c          |   2 +-
+>  fs/xfs/libxfs/xfs_dir2_leaf.c          |   2 +-
+>  fs/xfs/libxfs/xfs_dir2_node.c          |   2 +-
+>  fs/xfs/libxfs/xfs_dir2_sf.c            |   2 +-
+>  fs/xfs/libxfs/xfs_dquot_buf.c          |   2 +-
+>  fs/xfs/libxfs/xfs_exchmaps.c           |   2 +-
+>  fs/xfs/libxfs/xfs_group.c              |   2 +-
+>  fs/xfs/libxfs/xfs_ialloc.c             |   2 +-
+>  fs/xfs/libxfs/xfs_ialloc_btree.c       |   2 +-
+>  fs/xfs/libxfs/xfs_iext_tree.c          |   2 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c          |   2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c         |   2 +-
+>  fs/xfs/libxfs/xfs_inode_util.c         |   2 +-
+>  fs/xfs/libxfs/xfs_log_rlimit.c         |   2 +-
+>  fs/xfs/libxfs/xfs_metadir.c            |   2 +-
+>  fs/xfs/libxfs/xfs_metafile.c           |   2 +-
+>  fs/xfs/libxfs/xfs_parent.c             |   2 +-
+>  fs/xfs/libxfs/xfs_refcount.c           |   2 +-
+>  fs/xfs/libxfs/xfs_refcount_btree.c     |   2 +-
+>  fs/xfs/libxfs/xfs_rmap.c               |   2 +-
+>  fs/xfs/libxfs/xfs_rmap_btree.c         |   2 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.c           |   2 +-
+>  fs/xfs/libxfs/xfs_rtgroup.c            |   2 +-
+>  fs/xfs/libxfs/xfs_rtrefcount_btree.c   |   2 +-
+>  fs/xfs/libxfs/xfs_rtrmap_btree.c       |   2 +-
+>  fs/xfs/libxfs/xfs_sb.c                 |   2 +-
+>  fs/xfs/libxfs/xfs_symlink_remote.c     |   2 +-
+>  fs/xfs/libxfs/xfs_trans_inode.c        |   2 +-
+>  fs/xfs/libxfs/xfs_trans_resv.c         |   2 +-
+>  fs/xfs/libxfs/xfs_trans_space.c        |   2 +-
+>  fs/xfs/libxfs/xfs_types.c              |   2 +-
+>  fs/xfs/libxfs/xfs_zones.c              |   2 +-
+>  fs/xfs/scrub/agb_bitmap.c              |   2 +-
+>  fs/xfs/scrub/agheader.c                |   2 +-
+>  fs/xfs/scrub/agheader_repair.c         |   2 +-
+>  fs/xfs/scrub/alloc.c                   |   2 +-
+>  fs/xfs/scrub/alloc_repair.c            |   2 +-
+>  fs/xfs/scrub/attr.c                    |   2 +-
+>  fs/xfs/scrub/attr_repair.c             |   2 +-
+>  fs/xfs/scrub/bitmap.c                  |   2 +-
+>  fs/xfs/scrub/bmap.c                    |   2 +-
+>  fs/xfs/scrub/bmap_repair.c             |   2 +-
+>  fs/xfs/scrub/btree.c                   |   2 +-
+>  fs/xfs/scrub/common.c                  |   2 +-
+>  fs/xfs/scrub/cow_repair.c              |   2 +-
+>  fs/xfs/scrub/dabtree.c                 |   2 +-
+>  fs/xfs/scrub/dir.c                     |   2 +-
+>  fs/xfs/scrub/dir_repair.c              |   2 +-
+>  fs/xfs/scrub/dirtree.c                 |   2 +-
+>  fs/xfs/scrub/dirtree_repair.c          |   2 +-
+>  fs/xfs/scrub/dqiterate.c               |   2 +-
+>  fs/xfs/scrub/findparent.c              |   2 +-
+>  fs/xfs/scrub/fscounters.c              |   2 +-
+>  fs/xfs/scrub/fscounters_repair.c       |   2 +-
+>  fs/xfs/scrub/health.c                  |   2 +-
+>  fs/xfs/scrub/ialloc.c                  |   2 +-
+>  fs/xfs/scrub/ialloc_repair.c           |   2 +-
+>  fs/xfs/scrub/inode.c                   |   2 +-
+>  fs/xfs/scrub/inode_repair.c            |   2 +-
+>  fs/xfs/scrub/iscan.c                   |   2 +-
+>  fs/xfs/scrub/listxattr.c               |   2 +-
+>  fs/xfs/scrub/metapath.c                |   2 +-
+>  fs/xfs/scrub/newbt.c                   |   2 +-
+>  fs/xfs/scrub/nlinks.c                  |   2 +-
+>  fs/xfs/scrub/nlinks_repair.c           |   2 +-
+>  fs/xfs/scrub/orphanage.c               |   2 +-
+>  fs/xfs/scrub/parent.c                  |   2 +-
+>  fs/xfs/scrub/parent_repair.c           |   2 +-
+>  fs/xfs/scrub/quota.c                   |   2 +-
+>  fs/xfs/scrub/quota_repair.c            |   2 +-
+>  fs/xfs/scrub/quotacheck.c              |   2 +-
+>  fs/xfs/scrub/quotacheck_repair.c       |   2 +-
+>  fs/xfs/scrub/rcbag.c                   |   2 +-
+>  fs/xfs/scrub/rcbag_btree.c             |   2 +-
+>  fs/xfs/scrub/readdir.c                 |   2 +-
+>  fs/xfs/scrub/reap.c                    |   2 +-
+>  fs/xfs/scrub/refcount.c                |   2 +-
+>  fs/xfs/scrub/refcount_repair.c         |   2 +-
+>  fs/xfs/scrub/repair.c                  |   2 +-
+>  fs/xfs/scrub/rgsuper.c                 |   2 +-
+>  fs/xfs/scrub/rmap.c                    |   2 +-
+>  fs/xfs/scrub/rmap_repair.c             |   2 +-
+>  fs/xfs/scrub/rtbitmap.c                |   2 +-
+>  fs/xfs/scrub/rtbitmap_repair.c         |   2 +-
+>  fs/xfs/scrub/rtrefcount.c              |   2 +-
+>  fs/xfs/scrub/rtrefcount_repair.c       |   2 +-
+>  fs/xfs/scrub/rtrmap.c                  |   2 +-
+>  fs/xfs/scrub/rtrmap_repair.c           |   2 +-
+>  fs/xfs/scrub/rtsummary.c               |   2 +-
+>  fs/xfs/scrub/rtsummary_repair.c        |   2 +-
+>  fs/xfs/scrub/scrub.c                   |   2 +-
+>  fs/xfs/scrub/stats.c                   |   2 +-
+>  fs/xfs/scrub/symlink.c                 |   2 +-
+>  fs/xfs/scrub/symlink_repair.c          |   2 +-
+>  fs/xfs/scrub/tempfile.c                |   2 +-
+>  fs/xfs/scrub/trace.c                   |   2 +-
+>  fs/xfs/scrub/xfarray.c                 |   2 +-
+>  fs/xfs/scrub/xfblob.c                  |   2 +-
+>  fs/xfs/scrub/xfile.c                   |   2 +-
+>  fs/xfs/xfs.h                           |  28 --------
+>  fs/xfs/xfs_acl.c                       |   2 +-
+>  fs/xfs/xfs_aops.c                      |   2 +-
+>  fs/xfs/xfs_attr_inactive.c             |   2 +-
+>  fs/xfs/xfs_attr_item.c                 |   2 +-
+>  fs/xfs/xfs_attr_list.c                 |   2 +-
+>  fs/xfs/xfs_bio_io.c                    |   2 +-
+>  fs/xfs/xfs_bmap_item.c                 |   2 +-
+>  fs/xfs/xfs_bmap_util.c                 |   2 +-
+>  fs/xfs/xfs_buf.c                       |   2 +-
+>  fs/xfs/xfs_buf_item.c                  |   2 +-
+>  fs/xfs/xfs_buf_item_recover.c          |   2 +-
+>  fs/xfs/xfs_buf_mem.c                   |   2 +-
+>  fs/xfs/xfs_dahash_test.c               |   2 +-
+>  fs/xfs/xfs_dir2_readdir.c              |   2 +-
+>  fs/xfs/xfs_discard.c                   |   2 +-
+>  fs/xfs/xfs_dquot.c                     |   2 +-
+>  fs/xfs/xfs_dquot_item.c                |   2 +-
+>  fs/xfs/xfs_dquot_item_recover.c        |   2 +-
+>  fs/xfs/xfs_drain.c                     |   2 +-
+>  fs/xfs/xfs_error.c                     |   2 +-
+>  fs/xfs/xfs_exchmaps_item.c             |   2 +-
+>  fs/xfs/xfs_exchrange.c                 |   2 +-
+>  fs/xfs/xfs_export.c                    |   2 +-
+>  fs/xfs/xfs_extent_busy.c               |   2 +-
+>  fs/xfs/xfs_extfree_item.c              |   2 +-
+>  fs/xfs/xfs_file.c                      |   2 +-
+>  fs/xfs/xfs_filestream.c                |   2 +-
+>  fs/xfs/xfs_fsmap.c                     |   2 +-
+>  fs/xfs/xfs_fsops.c                     |   2 +-
+>  fs/xfs/xfs_globals.c                   |   2 +-
+>  fs/xfs/xfs_handle.c                    |   2 +-
+>  fs/xfs/xfs_health.c                    |   2 +-
+>  fs/xfs/xfs_hooks.c                     |   2 +-
+>  fs/xfs/xfs_icache.c                    |   2 +-
+>  fs/xfs/xfs_icreate_item.c              |   2 +-
+>  fs/xfs/xfs_inode.c                     |   2 +-
+>  fs/xfs/xfs_inode_item.c                |   2 +-
+>  fs/xfs/xfs_inode_item_recover.c        |   2 +-
+>  fs/xfs/xfs_ioctl.c                     |   2 +-
+>  fs/xfs/xfs_ioctl32.c                   |   2 +-
+>  fs/xfs/xfs_iomap.c                     |   2 +-
+>  fs/xfs/xfs_iops.c                      |   2 +-
+>  fs/xfs/xfs_itable.c                    |   2 +-
+>  fs/xfs/xfs_iunlink_item.c              |   2 +-
+>  fs/xfs/xfs_iwalk.c                     |   2 +-
+>  fs/xfs/xfs_log.c                       |   2 +-
+>  fs/xfs/xfs_log_cil.c                   |   2 +-
+>  fs/xfs/xfs_log_recover.c               |   2 +-
+>  fs/xfs/xfs_message.c                   |   2 +-
+>  fs/xfs/xfs_mount.c                     |   2 +-
+>  fs/xfs/xfs_mru_cache.c                 |   2 +-
+>  fs/xfs/xfs_notify_failure.c            |   2 +-
+>  fs/xfs/{xfs_linux.h => xfs_platform.h} |  46 ++++++++-----
+>  fs/xfs/xfs_pnfs.c                      |   2 +-
+>  fs/xfs/xfs_pwork.c                     |   2 +-
+>  fs/xfs/xfs_qm.c                        |   2 +-
+>  fs/xfs/xfs_qm_bhv.c                    |   2 +-
+>  fs/xfs/xfs_qm_syscalls.c               |   2 +-
+>  fs/xfs/xfs_quotaops.c                  |   2 +-
+>  fs/xfs/xfs_refcount_item.c             |   2 +-
+>  fs/xfs/xfs_reflink.c                   |   2 +-
+>  fs/xfs/xfs_rmap_item.c                 |   2 +-
+>  fs/xfs/xfs_rtalloc.c                   |   4 +-
+>  fs/xfs/xfs_stats.c                     |   2 +-
+>  fs/xfs/xfs_super.c                     |   2 +-
+>  fs/xfs/xfs_symlink.c                   |   2 +-
+>  fs/xfs/xfs_sysctl.c                    |   2 +-
+>  fs/xfs/xfs_sysfs.c                     |   2 +-
+>  fs/xfs/xfs_trace.c                     |   2 +-
+>  fs/xfs/xfs_trans.c                     |   2 +-
+>  fs/xfs/xfs_trans_ail.c                 |   2 +-
+>  fs/xfs/xfs_trans_buf.c                 |   2 +-
+>  fs/xfs/xfs_trans_dquot.c               |   2 +-
+>  fs/xfs/xfs_xattr.c                     |   2 +-
+>  fs/xfs/xfs_zone_alloc.c                |   2 +-
+>  fs/xfs/xfs_zone_gc.c                   | 115 +++++++++++++++++----------------
+>  fs/xfs/xfs_zone_info.c                 |   2 +-
+>  fs/xfs/xfs_zone_space_resv.c           |   2 +-
+>  195 files changed, 283 insertions(+), 292 deletions(-)
+>  delete mode 100644 fs/xfs/xfs.h
+>  rename fs/xfs/{xfs_linux.h => xfs_platform.h} (95%)
 > 
