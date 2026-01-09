@@ -1,97 +1,72 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from forward501a.mail.yandex.net (forward501a.mail.yandex.net [178.154.239.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942083064A0;
-	Fri,  9 Jan 2026 11:18:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3782B33A9E9;
+	Fri,  9 Jan 2026 11:42:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767957516; cv=none; b=mw01ZDYPLr84n4+m9vBV6Lvzj+bKtHQzi5NipRQupyTkIAQzM5zBILyNDlN9+9NSWo9xsordjMPGCMusaXANZs4e/o2BLQSEr8dh6n5977qfbrnxVPoXoraLlU/lA6mvHfHRF/LBZa58hYKGQhfj237pYsrbmY3h5di6vQ3ZbwU=
+	t=1767958925; cv=none; b=ppVhyAR9sLhvRhCNJecpUKhNec76PYAtReFUK2s+hxDJIYggtmjqtWWyTRx5fhXMd9WHTY7v61fRZ1bg9hYClpFS/782/OawmnmW0dwTMeZ5km2UpYAlPzI6nWEtH7BNQ/hVDJPX8U9KyLv7lkwFS6Z28ygxZSmvh716XKZFgcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767957516; c=relaxed/simple;
-	bh=4/lc83qxAkVLYxiIGuX+LsZ/QHlhERKyuCDn58h7lcM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kqy4B0Xa9k42CwtSBSCHuscdfg3/35nsF+j4qi/8UN6P0HbNmrQznben0xlTxnilfs73ENZ0elrNXhEluVqtXizUn0N5xVgAP+uDPJRTUBKAiFEHWmSPmVf8ci4+qw20NNqzjufPnC58wmJ7o5xjGznQngR2l+OhzFrMWM1sq5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dEnGiEGZ; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1767958925; c=relaxed/simple;
+	bh=OJ5+kCVHrwZ7qcAY/9cMyrPlfB4uDznlIyDNF5f25aE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=NzpKs6rYw5JEGNtEWFD588MKP1uaqTP56Nksmsh4G9acJAfuHoHLjJ2fgiU8+q0WeLP0sOl0umoewGZmp/dWBmEsgIbQb/wlKZ4RPVfjyWjmgQA/Kb7CWSD7YSca3gyj83yO3GIrm0jV+cNQRPzL9vM1H1VqjZ7fhEG2M2HNtNs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=IK7brvHG; arc=none smtp.client-ip=178.154.239.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dEnGiEGZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1767957515; x=1799493515;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=4/lc83qxAkVLYxiIGuX+LsZ/QHlhERKyuCDn58h7lcM=;
-  b=dEnGiEGZ49D50qEeRbQ3m83fibOHovD9jvqsM7nsO6/8NWgSOQV/TJL2
-   CzmSZkBqTt0ciMcJhZ1LiZ7cID0P/LxZsPtudjvXvI0EZFMWPxXTRr3N7
-   i5VC+RilGzrP3lpm5DXHD1tdkBVICqtARMdSULyMwJJJ9/LxasmKDOatN
-   eY1E3v6i9z5E1jqxFdo6yZklSUR2vQ2bAP73LxdEvCun6HtIl9ArRbDpf
-   83EWSR8bjsZ6yPNXlW6KUuZEIs10TILQY/UDjwd0oa2S2x7dmrsiOzEbd
-   YfxH9t2LDniACdNhmp3Ay8TBR6O1XKCeQQGarNYChgg08ag8UwbnGsN2x
-   A==;
-X-CSE-ConnectionGUID: 3djP5VXgR1mBgKtBFZdHbg==
-X-CSE-MsgGUID: JpfzstWFQCqxJlZa9p+dsA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11665"; a="68536240"
-X-IronPort-AV: E=Sophos;i="6.21,212,1763452800"; 
-   d="scan'208";a="68536240"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2026 03:18:34 -0800
-X-CSE-ConnectionGUID: Ztc0uIr6SnWnGtUG/PUiQw==
-X-CSE-MsgGUID: ik644AYnTPanoo+R8LsQtQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,212,1763452800"; 
-   d="scan'208";a="208503873"
-Received: from abityuts-desk.ger.corp.intel.com (HELO localhost) ([10.245.244.157])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2026 03:18:31 -0800
-Date: Fri, 9 Jan 2026 13:18:29 +0200
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Dmitry Antipov <dmantipov@yandex.ru>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>,
-	Kees Cook <kees@kernel.org>, Andy Shevchenko <andy@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="IK7brvHG"
+Received: from mail-nwsmtp-smtp-production-main-92.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-92.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:251b:0:640:cb7f:0])
+	by forward501a.mail.yandex.net (Yandex) with ESMTPS id 74852809E7;
+	Fri, 09 Jan 2026 14:41:57 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-92.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id tfNaxHQGnmI0-iEHs3OFX;
+	Fri, 09 Jan 2026 14:41:56 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1767958916; bh=OJ5+kCVHrwZ7qcAY/9cMyrPlfB4uDznlIyDNF5f25aE=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=IK7brvHGbQgKX1TIdz7jqAaGhPPWGx1a8curZGGbSIRC1luMHqt7vHUl9Tp3ZJ3MI
+	 YX405XCZTmh7fU3zvozQmvWK0TlcJtoCwqac6DexsI9PFghtEAlDVsl/i7e0/jpFPa
+	 REH6W5/emR02cFC7NyrBvY4pDw6ufJSAg9o8BIq8=
+Authentication-Results: mail-nwsmtp-smtp-production-main-92.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Message-ID: <a0fb5777b167803debb2c6b77f41e82967fba3b7.camel@yandex.ru>
 Subject: Re: [PATCH v3 1/2] lib: introduce simple error-checking wrapper for
  memparse()
-Message-ID: <aWDkBUss5o0FerOv@smile.fi.intel.com>
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Andy Shevchenko <andriy.shevchenko@intel.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+  Kees Cook <kees@kernel.org>, Andy Shevchenko <andy@kernel.org>, Andrew
+ Morton	 <akpm@linux-foundation.org>, linux-xfs@vger.kernel.org, 
+	linux-hardening@vger.kernel.org
+Date: Fri, 09 Jan 2026 14:41:55 +0300
+In-Reply-To: <aWAOJwMURdOl_lqG@smile.fi.intel.com>
 References: <20260108165216.1054625-1-dmantipov@yandex.ru>
- <aWAPOyJwhpfKpqPy@smile.fi.intel.com>
- <89207e33051803a21b0703987bf2a91208e8cf70.camel@yandex.ru>
+	 <aWAOJwMURdOl_lqG@smile.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (3.58.2-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <89207e33051803a21b0703987bf2a91208e8cf70.camel@yandex.ru>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Fri, Jan 09, 2026 at 02:05:41PM +0300, Dmitry Antipov wrote:
-> On Thu, 2026-01-08 at 22:10 +0200, Andy Shevchenko wrote:
-> 
-> > Hmm... Why not -ERANGE (IIRC this what kstrto*() returns when it doesn't match
-> > the given range).
-> 
-> Well, I've always treated -ERANGE closer to formal math, i.e. "return -ERANGE
-> if X is not in [A:B)", rather than using it to denote something which makes
-> no practical sense in some particular context, like negative amount of memory
-> or negative string length.
+On Thu, 2026-01-08 at 22:05 +0200, Andy Shevchenko wrote:
 
-Well, I'm not talking about your preferences, I'm talking about the change you
-made. First of all,
+> 1) inherited one with strange indentation;
 
-	        if (rv & KSTRTOX_OVERFLOW)
-                return -ERANGE;
+Hm...where? AFAICS everything is properly indented with TABs.
 
-is in the original kstrtox implementation that suggests that the code is
-already established for the purpose. Second, the bigger issue, the two
-semantically different error paths return the same error code when it can
-be easily avoided.
+> 2) missing Return section (run kernel-doc validator with -Wreturn,
+> for example).
 
--- 
-With Best Regards,
-Andy Shevchenko
+Good point. Should checkpatch.pl call kernel-doc (always or perhaps
+if requested using command-line option)?
 
+OTOH 1) lib/cmdline.c violates kernel-doc -Wreturn almost everywhere
+:-( and 2) IIUC this patch is already queued by Andrew. I would
+prefer to fix kernel-doc glitches immediately after memvalue() and
+its first real use case (presumably XFS) both reaches an upstream.
 
+Dmitry
