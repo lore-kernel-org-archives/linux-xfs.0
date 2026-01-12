@@ -1,116 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CF522D47E3;
-	Mon, 12 Jan 2026 13:02:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1614358D12;
+	Mon, 12 Jan 2026 13:17:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768222932; cv=none; b=Rekm7lgVLXBgiAAMQ+om4GvmNEqGwDMrGEcoOPYQkAQB6J1eLtUeH1KwGlQqPLBNDdaXzmAwLeJ/HYiheTPATAj932eKnQa5PR0ZvypZURKgJp5zlaQpNfbFc6BKgAJI/fFNLiyMmJDrJVv+hOO4c7EQ32FjaxQ1B/BhBPE6qB0=
+	t=1768223839; cv=none; b=rGel3aZyzwBSLt9h54DqnuFWEQYBzOIOqPhs+BsITpK4f4jLiS+24CYVenQjVRU+Ya5O0jOyirQUnxcndHOtc+6oHxuku+Ou/DKwNhz+MDm6hz6fE3OMm8t7S8l4hNbfOaKmOkidvfJnrT8BP+UhzCkkIjwFJ4RtU63YNeKRb8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768222932; c=relaxed/simple;
-	bh=RIH5DGw9iaODSe+GboFTs0O7c0cEBRdRfN8567Qvz9A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pOdeLo4ZbMxZPciLiPUTxU9M4D5eXoSJujLY5srCHZjYqK7q9yjLCK8ERKKfwMOzFzgrSm3Gt3Rtv1r2wcEkzKy1wr7lPzdMK5QJTm5knd7IxPVTio/m1vyhqgx98T/YNe0fBtqOgy2IQMPxWGzmrojMTfIBxE3u4CiE0CNjj+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GuBawYgi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768223839; c=relaxed/simple;
+	bh=8RzV/DaxjV6VPb5h4RXY9LxLtYziQ2yXGU7rPDp397s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=O+Hfuw0kI8frdDvg4CyOeuUmbrFXvu8LuzkBp8fE5IpEJOBfUAyV+0xCZqGxEyRQ0ocJMJclQULl1jQRq/cBU8FfZOKOCA5jr/5U71TWwLL6ctPzhTg3fMDs6DUpUJ8f6PkVR1Df4z9TCCC7udsgAwJgz/W8xUZVMm1Fdr+j1kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p74UuvgV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GuBawYgi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34EF4C16AAE;
-	Mon, 12 Jan 2026 13:02:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p74UuvgV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9DE0C16AAE;
+	Mon, 12 Jan 2026 13:17:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768222932;
-	bh=RIH5DGw9iaODSe+GboFTs0O7c0cEBRdRfN8567Qvz9A=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GuBawYgiub2dv2qsF9RKZVhe0V/aSnkEu4nPJWorZt+trDE7QgUWV0DL+v3F9lYFb
-	 S8jkjZescwZ86TegZq0zHtZhaq9OiP/XT4Ek5oC6djgknJE1zX7QEA/iqpuP2EIHYd
-	 i/AUasa7Z7UImS/J0tHpsy/U9HlOS5XOAxCNzfi5lx8vhyf2Wb4IsdXz0HYl/2ybgd
-	 zyMbLaIzdD+bTqh0IYPV9h+8sw3TKlpbpGyacEvIK+RA3MswzE5pZ8VVVdUD7aZwhB
-	 Xj9stBjtg4cBkuHHRQP3fuSvhrKmcBkeAARfw51Fmp9ppfpQRplOXvMpP4uYYgpMYD
-	 hcqUp5Kh8q71w==
+	s=k20201202; t=1768223838;
+	bh=8RzV/DaxjV6VPb5h4RXY9LxLtYziQ2yXGU7rPDp397s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p74UuvgVS9LVkcETZgJVUUMgaI464b8atZz9SSPWvXq0TMyxJRTy0e/gaFuIGHzxL
+	 kfjOAYCiHI54+t3mT07vKtcaiS3XyADck45peOL6/iJZN6v89PgNlG0WAr6hanZ7a6
+	 QosFUIb+BlAlJR0Sm8qn7SHUk6E9W9bR8e9MUr2121SRoVrbRWwRHmhvApOTECRilU
+	 VTtZUBOu5wvJ8omVyc0iM7+mIR3k5Y0Q+bmC7Nz6xKsDwmp2NiZ7kyXWOZwAc+zSwv
+	 tdLjXPkXsrdlRQcPMKPSXZKgf3BucbjIF1UKKo1kiW998Jq6usCniCHeo7JbK+Oqlq
+	 EjoigDUokHT2w==
+Date: Mon, 12 Jan 2026 14:17:14 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	io-uring@vger.kernel.org,
-	devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: Re: re-enable IOCB_NOWAIT writes to files v6
-Date: Mon, 12 Jan 2026 14:02:02 +0100
-Message-ID: <20260112-geben-ausrichten-20a6cad7e163@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260108141934.2052404-1-hch@lst.de>
-References: <20260108141934.2052404-1-hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, 
+	jack@suse.cz, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	gabriel@krisman.be, amir73il@gmail.com
+Subject: Re: [PATCH 2/6] fs: report filesystem and file I/O errors to fsnotify
+Message-ID: <20260112-anpassen-konglomerat-fce55d3de81b@brauner>
+References: <176602332085.686273.7564676516217176769.stgit@frogsfrogsfrogs>
+ <176602332171.686273.14690243193639006055.stgit@frogsfrogsfrogs>
+ <aUOPcNNR1oAxa1hC@infradead.org>
+ <20251218184429.GX7725@frogsfrogsfrogs>
+ <20251224-nippen-ganoven-fc2db4d34d9f@brauner>
+ <20260106164230.GH191501@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2358; i=brauner@kernel.org; h=from:subject:message-id; bh=RIH5DGw9iaODSe+GboFTs0O7c0cEBRdRfN8567Qvz9A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSmfDgTzOJR2bBdxfHs4lPvNzr2Vs6TUNwx6US+esA93 wOa+bFsHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABN5dI2R4ZP6ftH/fWt4PbWW uef2Z5wtW9WpnhlzeM35ddH5pfqvghj+lxkqrN5Xtz+j/JXujQs9eTrzbzdP4Od/964lr1hHb7E MCwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260106164230.GH191501@frogsfrogsfrogs>
 
-On Thu, 08 Jan 2026 15:19:00 +0100, Christoph Hellwig wrote:
-> commit 66fa3cedf16a ("fs: Add async write file modification handling.")
-> effectively disabled IOCB_NOWAIT writes as timestamp updates currently
-> always require blocking, and the modern timestamp resolution means we
-> always update timestamps.  This leads to a lot of context switches from
-> applications using io_uring to submit file writes, making it often worse
-> than using the legacy aio code that is not using IOCB_NOWAIT.
+On Tue, Jan 06, 2026 at 08:42:30AM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 24, 2025 at 01:29:21PM +0100, Christian Brauner wrote:
+> > > Nope.  Fixed.
+> > 
+> > I've pulled this from the provided branch which already contains the
+> > mentioned fixes. It now lives in vfs-7.0.fserror. As an aside, the
+> > numbering for this patch series was very odd which tripped b4 so I
+> > applied it with manual massaging. Let me know if there are any issues. 
 > 
-> [...]
+> Thank you!  But, uh... do you want me to fix the things that hch and jan
+> mentioned?  Or have you already fixed them?  I don't see a
+> vfs-7.0.fserror branch on the vfs tree[1]...
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/refs/heads
 
-Applied to the vfs-7.0.nonblocking_timestamps branch of the vfs/vfs.git tree.
-Patches in the vfs-7.0.nonblocking_timestamps branch should appear in linux-next soon.
+Before Christmas and the new year I didn't push anything out so we don't
+end up in a situation where -next is broken but half the people are
+still on vacation or are busy catching up.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.0.nonblocking_timestamps
-
-[01/11] fs: remove inode_update_time
-        https://git.kernel.org/vfs/vfs/c/20b781834ea0
-[02/11] fs: allow error returns from generic_update_time
-        https://git.kernel.org/vfs/vfs/c/dc9629faef0a
-[03/11] nfs: split nfs_update_timestamps
-        https://git.kernel.org/vfs/vfs/c/b8b3002fbfef
-[04/11] fat: cleanup the flags for fat_truncate_time
-        https://git.kernel.org/vfs/vfs/c/1cbc82281675
-[05/11] fs: refactor ->update_time handling
-        https://git.kernel.org/vfs/vfs/c/761475268fa8
-[06/11] fs: factor out a sync_lazytime helper
-        https://git.kernel.org/vfs/vfs/c/188344c8ac0b
-[07/11] fs: add a ->sync_lazytime method
-        https://git.kernel.org/vfs/vfs/c/5cf06ea56ee6
-[08/11] fs: add support for non-blocking timestamp updates
-        https://git.kernel.org/vfs/vfs/c/85c871a02b03
-[09/11] fs: refactor file_update_time_flags
-        https://git.kernel.org/vfs/vfs/c/2d72003ba244
-[10/11] xfs: implement ->sync_lazytime
-        https://git.kernel.org/vfs/vfs/c/f92f8eddbbfb
-[11/11] xfs: enable non-blocking timestamp updates
-        https://git.kernel.org/vfs/vfs/c/08489c4f4133
+I'm back now. Please just send a version with the fixes now.
