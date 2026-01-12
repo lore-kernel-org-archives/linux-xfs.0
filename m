@@ -1,136 +1,119 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A24DE340D91
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 08:40:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4FF26FDBF;
+	Mon, 12 Jan 2026 09:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768207207; cv=none; b=gJEt6Cdk5ommy9IVTxEFqi7FG6ViNVQja79r21kJRkBo/JxHCxf0NKVm27AKYxt0/bd1W4gY++V7myunSioM41VBQ9JzTK9c45J4n6cXrTmugIvsx7KNRAO05Hy3UUz77uKwF3U65+NWdyvwewJnonrFujz9AaRMTswTicrbfo4=
+	t=1768211146; cv=none; b=Zpu7aumk7FrxXDUkusCAL/axkiNItv9nqcLPB8t4GW0Q3XzwKZ0SnJ4G0QdNPFA8x8SSwuQFAmLcNXMuxASAuxI4q5sSMzvPye9+Y7LZe06KvoxocWT14itzbYRu/YjaGfwpKnASrlHYQUHUthtF1uP3Kc4R91heqCtc/Tm8cMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768207207; c=relaxed/simple;
-	bh=mk1PYn9ZCos0Aodqn/zrjYsdqZ5Db1tajXBnpL1haL4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HD1zF74cx6HdlYfxXbiN4kcDvEqfLdmlpFbbi/5jLOCtrxMP2A/FyrZCszCS9BLZPhovZsjA/FCIWooUWd8SXgITts1aCgX7LfPq47t8DMwxs05SJA/5YOGXXfSZlmupFI1sGdmy4qQIGHoKUiijL1rsNAvhFQBuVQ2NXjDmNe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j3P7/p3w; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768211146; c=relaxed/simple;
+	bh=DxZZGzK74wIR5W3ofx2JM6E8wyCgaH8nZoYwWgX+eR8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KK1tySqf/RA2cpWWpA/AZWNYS5ClU0Ec5mWt++mHODuOMLxjX150D8O8RPeSzenEA3mDr25wXGT98Mz3Punj9E8NZrutLYCB4QaYvBDQFqMtGTzSAh/JmQvaCe59tVU3pCWs0ojhjAD/gTsyGSeRSd8RNGueyT+4+HRKfGBtk24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qUeEQbxO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j3P7/p3w"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-81dbc0a99d2so1315174b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 00:40:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768207206; x=1768812006; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tU0wQjiRm2BYbqGoBRaETp4TyN4fHsJRCq3BTqCggdA=;
-        b=j3P7/p3w+XHuu93H2j6gif2zbGoOomHZMyYayXHQI5/A28Mm9CGeulu3MXZrxAsiyT
-         epdjIPke+vekd7GzHvlyKKYctNCbuUCzPhaDgLpHJbh4JDwvd6GS/he1Q7z6QieYuyRj
-         V3c1KZaducfmZisQLq0fdS/euFCPEV1YUc18wgs676U2vo0pLFvGGhK9O0UFKeE+ahyQ
-         ZJtjbWB8o208y5OjKcMVydHDMs2MkRYYc8kqI+s4zwBQDk+XRfUVySwc/Fbfj+0wyJWl
-         Hsu55YKT4aMVKnBk/1nggxe0ext+TL1e6rR7jXLEkLraaROpiOQnlBT0KorRM0uXgKNF
-         59cw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768207206; x=1768812006;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tU0wQjiRm2BYbqGoBRaETp4TyN4fHsJRCq3BTqCggdA=;
-        b=n/4GAeOZ2Y7rwCeb8aBHON3ZW4eS+XsPwBMOd7RH6jGW2UI7DAsdn6aMNP2NRn094H
-         cBdCKXOplHqqLGftIBd7PZy2DOs4QTvUdK7Zz5F4ZQyk1RIDa3ctXAhWsyulDPiz80/W
-         SZ9wNawU8aybPvnLZdiJfrVp3WwX0f12K2CgQ/PQ9zS7udfpY5U972QDV0dgQsaU5YxF
-         nIp5wKRUFgcrKHHsNt6Q6ol2i3T9dxxlnjw9BKlshQayohVcAKIvgpyqECVKo8UKcduc
-         Wl+Hsfn2GB4u1X1C4Jcx0k0ybQ3ijQOYRqQv+HUH56+8NHhvfDcPPN9eUN8PfSszGZmS
-         aD1Q==
-X-Gm-Message-State: AOJu0Yz5QVBoN6QwvWx7GzxyJruZ1wQq2rV21hsvdQ5O2igsNDx0CWMS
-	cd4I/YUrE2QcVHIT7jd8jiOqhTcoUYIOwSa3Rh9pLfwlrwfI0gJxiQGxoyzeFw==
-X-Gm-Gg: AY/fxX7Cm48KoLeh6ywNUnLGwl2f3QnK42Md1zccp8kKn7vOYEZPSdJb6T7HF1MFxHF
-	UTCtUQQM3Zpm1/PIaGwXtT096QG/3vbYoOF/71Q7sLs3XVdf0/+A+T819ABYws4HgbHcwOE4hFD
-	AmNthHFqu6l3dw09vAcFR3jBlUBg41yEpJOq7hR7sSNRwlrwT+4L+P6H6UVs/OCusFeL8gcwnlu
-	HDVbPmTKTb47dVNRnWQfj9rSqh9ZLp3meTAQEa8y5M6Kqh3j7+vY67MAWJDwcjD9qYsfDkU6yTN
-	14YFPzCOdEv2aYzel4eD5LH5J47/DZgXGITKJDs9J54jd48VdOM5OI7KyRfJBccJgY2vhKhRCk1
-	OAodZg/tHlhB7tVhQKY4zVSkiK/fN3SkZ+fAUcW2sLidpeloN8301dEBVKUYxtlZ6ReHcE617Ls
-	2jziLvcVu/kU2SiPnpCgKdSA==
-X-Google-Smtp-Source: AGHT+IFbjwhiByHe21oyRNxTDNpmOPtHu9tPrKBkyGL6O0PH958/DIrvvdl1Ov0qvU97NXLuWGX+fg==
-X-Received: by 2002:a05:6a20:a11e:b0:366:14af:9bbd with SMTP id adf61e73a8af0-3898fa11762mr16153809637.71.1768207205680;
-        Mon, 12 Jan 2026 00:40:05 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.232.254])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c50347bc321sm14533111a12.18.2026.01.12.00.40.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Jan 2026 00:40:05 -0800 (PST)
-Message-ID: <8316699b-5ba4-402c-a0c0-17cdd0838347@gmail.com>
-Date: Mon, 12 Jan 2026 14:10:01 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qUeEQbxO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05681C19422;
+	Mon, 12 Jan 2026 09:45:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768211146;
+	bh=DxZZGzK74wIR5W3ofx2JM6E8wyCgaH8nZoYwWgX+eR8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=qUeEQbxO/1bJOSJmWeCdO+VjleNy8B0ViluvHBno5gr59qB8VEEYWEF1rbAie3EAq
+	 0lBRAdHEvYyqkAHaFwEQSYJO7qICSgJMwVU+ZEnKnom6kmsD+MVv/kP2W50TNqRina
+	 kmDueNMdchfAb950mTM+K2bF8wYvPkz2bL6iZxf1vIrUkGWdBvVMPGbx9pJEtEUBfV
+	 IM3Dxy7GJeSsVnoP849ryUv7V8KBbcs5OYRuU/u3ZZJmvVfKYLY9RHyEOjm2pR6/Iw
+	 silI5tXIpzTrN8O2PvgT967TZ9iXPpt9mOUwWRmfeNSwvLi1wbJ+xb2XzRmSgGte9Z
+	 9hI9tmM6jxdEA==
+From: Christian Brauner <brauner@kernel.org>
+To: NeilBrown <neilb@ownmail.net>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org,
+	Jeff Layton <jlayton@kernel.org>,
+	Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Tyler Hicks <code@tyhicks.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Steve French <smfrench@gmail.com>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>,
+	James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Stephen Smalley <stephen.smalley.work@gmail.com>,
+	Ondrej Mosnacek <omosnace@redhat.com>,
+	Mateusz Guzik <mjguzik@gmail.com>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Stefan Berger <stefanb@linux.ibm.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	netfs@lists.linux.dev,
+	ecryptfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-unionfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-security-module@vger.kernel.org,
+	selinux@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Val Packett <val@packett.cool>
+Subject: Re: [PATCH] fuse: fix conversion of fuse_reverse_inval_entry() to start_removing()
+Date: Mon, 12 Jan 2026 10:45:29 +0100
+Message-ID: <20260112-sonnen-diagramm-ae37279f315f@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <176454037897.634289.3566631742434963788@noble.neil.brown.name>
+References: <176454037897.634289.3566631742434963788@noble.neil.brown.name>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] xfs: Fix the return value of xfs_rtcopy_summary()
-Content-Language: en-US
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-References: <83545465b4db39db08d669f9a0a736fdac473f4a.1765989198.git.nirjhar.roy.lists@gmail.com>
- <aUONoL924Sw_su9J@infradead.org>
- <d9cc2f24-6c06-41ab-835e-453a4856fd0b@gmail.com>
- <aWSryrkF2_6oxU9f@nidhogg.toxiclabs.cc>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <aWSryrkF2_6oxU9f@nidhogg.toxiclabs.cc>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1363; i=brauner@kernel.org; h=from:subject:message-id; bh=DxZZGzK74wIR5W3ofx2JM6E8wyCgaH8nZoYwWgX+eR8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSmHNp3YLliou6j/3Ff/idODOBi2hrnHJFm6HLce0lit usnvUPLO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbStoDhf+ApldVTH+9ump0Q 4sQyPVufZcfFQim/qg0H5pYcsWTsvsPIsItlrpnjleU7v1yNkzy16KEws3jZzJDTbjWb3t+wXH5 wHicA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
+On Mon, 01 Dec 2025 09:06:18 +1100, NeilBrown wrote:
+> The recent conversion of fuse_reverse_inval_entry() to use
+> start_removing() was wrong.
+> As Val Packett points out the original code did not call ->lookup
+> while the new code does.  This can lead to a deadlock.
+> 
+> Rather than using full_name_hash() and d_lookup() as the old code
+> did, we can use try_lookup_noperm() which combines these.  Then
+> the result can be given to start_removing_dentry() to get the required
+> locks for removal.  We then double check that the name hasn't
+> changed.
+> 
+> [...]
 
-On 1/12/26 13:40, Carlos Maiolino wrote:
-> On Mon, Jan 12, 2026 at 11:43:53AM +0530, Nirjhar Roy (IBM) wrote:
->> On 12/18/25 10:44, Christoph Hellwig wrote:
->>> On Wed, Dec 17, 2025 at 10:04:32PM +0530, Nirjhar Roy (IBM) wrote:
->>>> xfs_rtcopy_summary() should return the appropriate error code
->>>> instead of always returning 0. The caller of this function which is
->>>> xfs_growfs_rt_bmblock() is already handling the error.
->>>>
->>>> Fixes: e94b53ff699c ("xfs: cache last bitmap block in realtime allocator")
->>>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->>>> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
->>>> Cc: <stable@vger.kernel.org> # v6.7
->>> Looks good:
->>>
->>> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Hi Carlos,
->>
->> Are this and [1] getting picked up?
->>
->> [1] https://lore.kernel.org/all/aTFWJrOYXEeFX1kY@infradead.org/
-> Hello.
->
-> I can't find a new version on my mbox. Christoph asked you to fix the
-> commit log on the patch you mentioned.
->
-> If you sent a new version and I missed it, please let me know.
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-Sorry, I have re-sent it now [1]. Anything about [2]?
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-[1] 
-https://lore.kernel.org/all/9b2e055a1e714dacf37b4479e2aab589f3cec7f6.1768205975.git.nirjhar.roy.lists@gmail.com/
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-[2] https://lore.kernel.org/all/aUONoL924Sw_su9J@infradead.org/
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
---NR
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
 
->
-> Carlos
->   
->> --NR
->>
->> -- 
->> Nirjhar Roy
->> Linux Kernel Developer
->> IBM, Bangalore
->>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
-
+[1/1] fuse: fix conversion of fuse_reverse_inval_entry() to start_removing()
+      https://git.kernel.org/vfs/vfs/c/cab012375122
