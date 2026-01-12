@@ -1,92 +1,90 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E0362D061C
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 14:51:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D13382BDC34
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 14:51:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768229492; cv=none; b=Sy7l7JwJSL0rgFlIeWZlLOb6O4b/cXhbyHoZLVpSSOmbovcDrV8DrYQ9BWCPA8yivcSTEElPzWwgx9fyxDXO4B30EhYWrY3Or26oybVAJQ/KZYw+Ypn6kAw03vxle4n5kSghVTLnl1QLMDeqTjQtZhBgm47L76WlJOuIC3hVkTc=
+	t=1768229497; cv=none; b=kZH4hf3Xjeb5F3pq44pJQdtMizHfLe7G+aK5Yv3dKH6c4dfAvoA5zBlSFuDjOkwKi3gZmm3K/417eAkMXm8Hbcb0IrOv4r8ltk8XTF40wvITJxcZazuMNLCsCe82ta6uzR3s4uPLeQCs3BFbAwLJxzLlMpEoVHhCgn6xcFZkCGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768229492; c=relaxed/simple;
-	bh=G0tanH7Ti+k9Untiwo28pq9nTnDMDuydjlfNBKCMaYI=;
+	s=arc-20240116; t=1768229497; c=relaxed/simple;
+	bh=MxgptwcHFi+z4ifrlUMeCFEAHWtj2SNcmezFtEHqDpM=;
 	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RKYM9x65NWHQbCu8r3SPyZfBDvvCpAXQJnvR06vWP718pZgruAbyL+u7EKTs4vFzs0RaijlR8lGdxCHDbMqjX/38yEZAY1J0OZf7t/rYT/cRjXRMjqGXuCxQQ/QQnXdO8BoBfa4tMR0WiiwTF7NVaN8liQizL8kZvbR65waEpMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EejVCpM1; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=rAx8cLJa; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=ANn98wYy3okrZjE3aKAhaFmcpen0wqumqoxo/sK1rD2EMrRCwlvrVBnToIEf5URENHuOY46+j+k1ZGLWgKp7s8TGNoOH3c5i+I/4iYqKFAiMqrVKcnStR66/ZvWcp8duqJ1Lxg3ar4QmMsu+5F7Ypzpufv+ZyZvEbwrqtATXVFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=e/MpJ+Lo; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ijykuOZE; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EejVCpM1";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="rAx8cLJa"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e/MpJ+Lo";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ijykuOZE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768229490;
+	s=mimecast20190719; t=1768229495;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=dq6aVc2SBP1ULPYVZkGBkgSZtTVfOp/X5bD2Y/FWtBU=;
-	b=EejVCpM1DttRCo0lZI0vjL6p+0uFBgNOi9CJaIsh1Z4UssWd+A6e9WQYOnH5agRsa4hyBg
-	mfH2HD4kEsumju5f47rWYfIkk3fSPuSevH+DNk+rKKPFbhPNWPWPYgcEar+C5KH7KkHHjg
-	EJcMzXPjvQydun3F29LJpIZQDtdK3Iw=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=wL9J1kXYNGpo3omk75dIbnVKK7rJ+xh/+WBR5nbHReI=;
+	b=e/MpJ+LoVOlS+XORsJ+B06gpX6467c5Fr3AESpySf5a6A1OlJWFgcxLcRdxkR7/5bE4yFe
+	iIZgZWi3RDj8gaBRGBMx1SPhSQP9medSQBaquH7u2dDq3SNQncSMiM/Xwu4V42dOB1axxd
+	5DcCoi604fnWoR1wB/tcCycq3XJDTh4=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-658-c-gqLe9UMJacU2iZGeTDWg-1; Mon, 12 Jan 2026 09:51:28 -0500
-X-MC-Unique: c-gqLe9UMJacU2iZGeTDWg-1
-X-Mimecast-MFC-AGG-ID: c-gqLe9UMJacU2iZGeTDWg_1768229487
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-64ba13b492aso8033687a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 06:51:28 -0800 (PST)
+ us-mta-374-ytAekTDJNe2ICtfNkuHHKw-1; Mon, 12 Jan 2026 09:51:23 -0500
+X-MC-Unique: ytAekTDJNe2ICtfNkuHHKw-1
+X-Mimecast-MFC-AGG-ID: ytAekTDJNe2ICtfNkuHHKw_1768229481
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-b871e14de77so147497766b.2
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 06:51:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768229487; x=1768834287; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:date:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=dq6aVc2SBP1ULPYVZkGBkgSZtTVfOp/X5bD2Y/FWtBU=;
-        b=rAx8cLJavccIY1kk9PRM9Lb6TuVaQ6b+Tgqe5vFOEO2U3jmA5WV3mSnrZFQnmudnaC
-         DrLnlH7lTLVRMn797BBtcDdIcUOe7jjQmhAYKEd1sDF1Gue5rkshxAMUGacTL3Xbv7Xu
-         biZUExEatzFJl4Yno+uiY6hl6OBuKOW4V/RnJkfw+NcZsFKrhNX6G0LBeZTbs3fWwSxt
-         BTjf827KfkH3/Oi9JmFzLtpqEX0ovlLCDc4yD2ooHfhZkJo51g0RhMAmJERTF6ePioLc
-         rJfnrTiFY6YVQ6mh1CqsOXmDYhvShAMnbZI26uvOSas6ZOrZnWa9ZL2aVGr6j3//Rj5c
-         Bt6A==
+        d=redhat.com; s=google; t=1768229481; x=1768834281; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wL9J1kXYNGpo3omk75dIbnVKK7rJ+xh/+WBR5nbHReI=;
+        b=ijykuOZEHrc4IJ9SxNOKtnblMmzn+NRbtnxf5B+HVJiVhgAP9JefXe3Dgm3TPRLn57
+         1hPdUgVvFhHbCnxwyNjrQ70M9Lb6ZqEzN+eYHbp8Er/f4e8RteInKM0s06Bj0VcRwz3s
+         xlaETzvX1bJVIXWD9Ym4MbCdlAjyq+gbBLWT2E81rr01u7SJP9ZSgCRaPB7JaOWvT5ho
+         HVuvO9+WVReFiBghApWiaGwgDPkS4KTsXFn9rsnqED3/+IMj8120LoqEAGHOMewdt8O2
+         2MR++MnYPK2xpiGCWM8Tkm/J9pwRT8965tHx3dJhZF/otGGfJdEHfW81/aeK30YEI0JM
+         hpwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768229487; x=1768834287;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dq6aVc2SBP1ULPYVZkGBkgSZtTVfOp/X5bD2Y/FWtBU=;
-        b=YvEjHSL6YbdVvCIYJyqaoKnYJSlZ+8OqHv8p5FeelXCNdCmUSNWOpTiH1tZ3GUawYN
-         BGEpFBArBLhwcYyg5FLrmNrGVhEVdIo1DIo85vBOTBlOAxbzP7JcRDZ4Hmc8Sccw5i3y
-         N+TdgDjygznMhP4bRw1rLxokbKJxICAgsszsuTDV/p5fe2cZJ3vdgcsJU30D2UPwNRZl
-         1dh6ZmSlUyQI/Cde8zrzqBdK6oM0+uclWFJ6EzwOhwg1CL7a/SsV3mbq9upQKXhZDASI
-         LYaE7Seh+rA1YuibaFXTGakVBZFWRP+E75ATpyUo+sYZ6Qr0u/NJPA51CTlFpmYHmoDl
-         ztAQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV+1fT8VDzaSnkdd4qZVNk/UVI0i+hX725Rma0RaAmrkJroaPsef8EldfnF7lwOjCf7tt3EVPv6Scg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzl1sP/R3udq7O5We5YX6Qk9bh0KIML9qMxfWM9JMyPyH0zlGC5
-	dI7EH5Vd2Lrh21vIf7dKJuHwGR9M8xB08JmkH36FWcc8R6/tqqcw2EHO3V3umxCFfD/PdsOxjji
-	fA3Kql8m/KMpGLY0C3sdLAdNBynme48QzbiBWZ+GJ6+jLRFa5HAhutUrdcbdG8mDsC/J8
-X-Gm-Gg: AY/fxX4oabPAld/kJwsbUakKGs1PWm1djE5sL5cUsvfmCWd5hXAHGO7aBSsngPdpoXU
-	10p5Nx3TZfUV19rz5kENwflmtFbkh7eciGAozoiBoyrEB+U0vXg/5CoUa8zoZNc148R0/eODYP7
-	/dtbtidh8xwJHuiWDFjhp9p9b9+RDm2sj37QQJ2GIz/otfGuoSnG9urbaxbEePzgT3sDhYlOOgL
-	V8McBHvHXxInYLN79RqC+ajHN16Nm7ooESp/6sr3MHYhNTqUzAdck8ubcU1Xj6Clnv+ze7IR8r+
-	KSXg6EkoaXiBCuPJSZCvsV7jmus2vxLoy2cghwkzexcOv44tqvJhvb/JCFXMhgl1o0VbYQESvgs
+        d=1e100.net; s=20230601; t=1768229481; x=1768834281;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wL9J1kXYNGpo3omk75dIbnVKK7rJ+xh/+WBR5nbHReI=;
+        b=fnE0RRCrS2IX8vL6r6ZZCEqzSvpu40/zbY6Bu5fnBa5tCia5X5WsrLAfzPXa/QITdC
+         zBdESxoW2esRtKEs12Up2atsyMrzSTBZ9wt5BzxS9JsDsWOnfWbBGwlxrCSwyx/TXGE3
+         k96B2/r1MhvEjJ0Tt5aT75ZcDePXwNZZG+WOOoSsXcmIGvpagRP2wCxJbGt7cDut8oFF
+         30ene3XUYDrYeMBJ6DOkVppiDbSZh+mCtynMrYy1T50r/wb9HQo+o3vxqCN+fv9yDN29
+         i/xP3ggu7hkaSlYWEh9BqkyPTZJoXoL0n1J5F9xrY/9bjsQwKnOvByh6vmnz9us31MEC
+         v/7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUmJsZuwtj+js/A65XAcDueD2VeoYU5dj1lvjY0UG019qs+yp0G8fccB3GT9cbyeOTOSXV7LY+z+xg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwM655jqf/LsgiqK0JV3QsNs0UGAdMH+S+ppLq42b6gDv6SqlG9
+	zJ83rKflNFnWk362HN/2CxPKIbQJDhevXLpQ3UAsB0QEOTqYE+R5hooQE+Jrj3hsHIxSoV9RaJ3
+	wDCUxsLnQGFi7sX/OGiW5D1NpcUBGVPlWSzmesd7P720mAaD1/tscKdyX5s9KxVbMNS03
+X-Gm-Gg: AY/fxX4Ku4ULB9/16gHrzr3KU1gYhoEDt7UJrZZflYJ8zdlqAbLvflThgRNKtMaUAVi
+	MxyIVkem4Uksfgb48eikqzmaRGxWpb/UuszHJEPIwmTkPjxcaBOE74SHLVQrf1jE9yELarx19v/
+	yAUkMQz/uVj6fEitncKTTFYNJs9P0EJk5QNCFF0z9f/nO91scPGYpsidUdAR9SMEI2dPbyuR40t
+	7NaGiDxzSxMVo7KAXXB2IyUqUKxq4/+h6+cyInVOjcJKdSgVg8d17KjGT8BkEyz6cgvFM0IxukL
+	zduMhawfZN8m3tkBfUP+UianOzNNlGmmMuHAYJPPcuws18sdo30nkdaKK1XQaEmhLuw7tCb2UjY
 	=
-X-Received: by 2002:a05:6402:358f:b0:651:1107:d3cb with SMTP id 4fb4d7f45d1cf-6511107d7acmr3282592a12.24.1768229487183;
-        Mon, 12 Jan 2026 06:51:27 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHfxvOxfxzdEBvJzPLysHOh9QzRSHooaY9jamBd0ngvYg8b3UMPNPIM3r/hBbc0eI3X4Vj7fQ==
-X-Received: by 2002:a05:6402:358f:b0:651:1107:d3cb with SMTP id 4fb4d7f45d1cf-6511107d7acmr3282573a12.24.1768229486750;
-        Mon, 12 Jan 2026 06:51:26 -0800 (PST)
+X-Received: by 2002:a17:907:7f90:b0:b87:33f3:605b with SMTP id a640c23a62f3a-b8733f37289mr5217266b.27.1768229481033;
+        Mon, 12 Jan 2026 06:51:21 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFMB0JxHgMWzT9jlMyCtL8Tarhm33xjovmcnmuqowqS/Fr0c7wyM0JTrOTtbi8ZoddZMgmNgg==
+X-Received: by 2002:a17:907:7f90:b0:b87:33f3:605b with SMTP id a640c23a62f3a-b8733f37289mr5215566b.27.1768229480682;
+        Mon, 12 Jan 2026 06:51:20 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6507b9d4c0asm17933810a12.9.2026.01.12.06.51.26
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b842a2338cbsm1914558166b.14.2026.01.12.06.51.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jan 2026 06:51:26 -0800 (PST)
+        Mon, 12 Jan 2026 06:51:20 -0800 (PST)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Mon, 12 Jan 2026 15:51:25 +0100
+Date: Mon, 12 Jan 2026 15:51:16 +0100
 To: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
 	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, aalbersh@kernel.org, 
 	aalbersh@redhat.com, djwong@kernel.org
 Cc: djwong@kernel.org, david@fromorbit.com, hch@lst.de
-Subject: [PATCH v2 13/22] xfs: introduce XFS_FSVERITY_REGION_START constant
-Message-ID: <qwtd222f5dtszwvacl5ywnommg2xftdtunco2eq4sni4pyyps7@ritrh57jm2eg>
+Subject: [PATCH v2 12/22] xfs: introduce XFS_FSVERITY_CONSTRUCTION inode flag
+Message-ID: <bfcg5hug75qtvc2psw5yymfoudnz2uda3gg5dfzgnze46hwt6n@u67n3rdzzuo4>
 References: <cover.1768229271.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -94,50 +92,34 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 In-Reply-To: <cover.1768229271.patch-series@thinky>
 
-This constant defines location of fsverity metadata in page cache of
-an inode.
+Add new flag meaning that merkle tree is being build on the inode.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/libxfs/xfs_fs.h | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_inode.h | 6 ++++++
+ 1 file changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 12463ba766..b73458a7c2 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -1106,4 +1106,26 @@
- #define BBTOB(bbs)	((bbs) << BBSHIFT)
- #endif
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index f149cb1eb5..9373bf146a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -420,6 +420,12 @@
+  */
+ #define XFS_IREMAPPING		(1U << 15)
  
-+/* Merkle tree location in page cache. We take memory region from the inode's
-+ * address space for Merkle tree.
-+ *
-+ * At maximum of 8 levels with 128 hashes per block (32 bytes SHA-256) maximum
-+ * tree size is ((128^8 − 1)/(128 − 1)) = 567*10^12 blocks. This should fit in 53
-+ * bits address space.
-+ *
-+ * At this Merkle tree size we can cover 295EB large file. This is much larger
-+ * than the currently supported file size.
-+ *
-+ * For sha512 the largest file we can cover ends at 1 << 50 offset, this is also
-+ * good.
-+ *
-+ * The metadata is stored on disk as follows:
-+ *
-+ *	[merkle tree...][descriptor.............desc_size]
-+ *	^ (1 << 53)     ^ (block border)                 ^ (end of the block)
-+ *	                ^--------------------------------^
-+ *	                Can be FS_VERITY_MAX_DESCRIPTOR_SIZE
++/*
++ * fs-verity's Merkle tree is under construction. The file is read-only, the
++ * only writes happening is the ones with Merkle tree blocks.
 + */
-+#define XFS_FSVERITY_REGION_START (1ULL << 53)
++#define XFS_VERITY_CONSTRUCTION	(1U << 16)
 +
- #endif	/* __XFS_FS_H__ */
+ /* All inode state flags related to inode reclaim. */
+ #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
+ 				 XFS_IRECLAIM | \
 
 -- 
 - Andrey
