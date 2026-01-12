@@ -1,89 +1,90 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C342BE058
-	for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 14:52:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15FEE2D5C6C
+	for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 14:52:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768229532; cv=none; b=feUs0kzpq/sV1gMa1ax00/FJEEWpPttZDR6eQrfpk68jvVTSgX5UhU/IGJ6w9jLeKuxVi+Q7R1HZaD2xWAdvmS5nN09kg9tvYTPqdVyGdhTUqTgoh4kkCbaQJBA+THYPox4zTuIoAC1Z97KlQ3PAC57QmGQTvA55ZKJdM/pyQNA=
+	t=1768229542; cv=none; b=WulRiU3QEFCjO36QJ0lmbjqdaUgF5hVZqezic8y/4S7elehHx7IB34EQ5o2BlU87zArHjEdsPdXvfVS/VpcReex/lLrLu5e+23c3TSW3VhhUWVTVFVtzotNa2XER+5+lTTwtWdJdK87SGqBdtzBtCgJKj1DnsHoNRr3GGoKP0jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768229532; c=relaxed/simple;
-	bh=C/MDGxOkNIvgHTaqTYSxlFYphLb/jo2tJvmNmF9aQAw=;
+	s=arc-20240116; t=1768229542; c=relaxed/simple;
+	bh=DqGbPHihgvouI+HlmdtnScxnStrH4+HE2WznQSyP4j4=;
 	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Aq12JURwtjt9tHHlVeMZD3XPXfg/14qZUZoL8Qc+FtRt+jrHPPLu51EU5m1VfMBLs4lrWOjeUK4peoo+fvwbXPs4DutIfhMZl5MPRYy2wsKQwCDdWaW2/CG3CFmH3Vxolu8M7AI4JjSHzBtyaXpdyVT1tN/IpkL1aS2FKLKt1v4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ldm9jta4; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=QdOigMSq; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=MFUXWsCJBcEKScY3IkCh/noguXP7WAyS3ptaOEbg666G607OqT52Vdm35ZZ3uCiy/M2I8xfr96RBPPaTZ/nLeSrwXC8kyquSh6bY8n84y8G1iqvglQcNJI3A5bnksqIqXRtABqLRdH7aZ1526AZrxxDzVdwPLSmbgwWdJC6YDZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K8ExZSbI; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=b4v30Tzm; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ldm9jta4";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="QdOigMSq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K8ExZSbI";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="b4v30Tzm"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768229530;
+	s=mimecast20190719; t=1768229540;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=i3zHW5WG2189QuRGw972bnhsFeepbkuRDbwilr8y5Bg=;
-	b=Ldm9jta4kYhcU+jyTZApH/c1AMj25JGodYdxgStz9QNvX4P2KhCawco1Fij2Bck6w4RB3B
-	uE1K0it0Y1WHgc9YQ1PnUwlLBSc25+vx9thjNQ6C/aHquPugJv00ERGwA9b80wPHiTvJJ5
-	1WYYPpCNMqYAuMZxHtMlZJhqqeR26kM=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=xPYPAB6be13BNA+rNTQIlJZgdC6UYp82gudM/SKVgcg=;
+	b=K8ExZSbIwk4ICjnjy3BLJYRO0xIA+XLCOsv9MEnDdIXEAbWzvVOK6Ckck6z0Fb8Egp6KEa
+	sjzHh6rs7g+N9YlnDbZwnBTko7x5r+rvfAzp9VTSUT9dhl5az9HW3gWutMbuBGxUt7fVO4
+	ZZ2GhbZrPdgVE/3LRv+RQ+e1+Qcv6rk=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-213-9D6U23rvO7WpyCjbAM1zUQ-1; Mon, 12 Jan 2026 09:52:09 -0500
-X-MC-Unique: 9D6U23rvO7WpyCjbAM1zUQ-1
-X-Mimecast-MFC-AGG-ID: 9D6U23rvO7WpyCjbAM1zUQ_1768229528
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-64d29b6e198so6795741a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 06:52:09 -0800 (PST)
+ us-mta-21-BBItgpJxOVe5QD9TmlnhcA-1; Mon, 12 Jan 2026 09:52:17 -0500
+X-MC-Unique: BBItgpJxOVe5QD9TmlnhcA-1
+X-Mimecast-MFC-AGG-ID: BBItgpJxOVe5QD9TmlnhcA_1768229536
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-b7a29e6f9a0so646377466b.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jan 2026 06:52:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768229528; x=1768834328; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1768229536; x=1768834336; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=i3zHW5WG2189QuRGw972bnhsFeepbkuRDbwilr8y5Bg=;
-        b=QdOigMSq4u7c0OKwET8MczVo7K7sH95ZPRb4ZNJCPyBMX8GLcnuWksLHdt4NkajdzY
-         mL+Ft28+Wm5w393Lytn8dDevJHpyUVI3pFtteSJeOLGNImGok1G3RaSACcuA4saf2dwH
-         QwlV5MgDTiGL4ClwMXjtY3B0XCe2uRjosiGJ8zvP9fHOQmDyztp9Lj6eLZw5tW6EbZKu
-         T/3JsbyWbI0wvAnhj/fZ7yJZqhM1bB6Sf8kbQfKrsn9nbR8p2goStFZOQmSwVMNGiUUx
-         Yaf5c5Q/QvKVGhf0+pJ/Dh111okgiWEZpu89v4HKIoUvVKbiwE9qzEMVkn1FexCEYnAQ
-         0W2Q==
+        bh=xPYPAB6be13BNA+rNTQIlJZgdC6UYp82gudM/SKVgcg=;
+        b=b4v30TzmZAiJn9WiNu5L73uSDOfZ8yG/XQDvq4YGLnx58I2mO9hW4/h0lyYlpAa6WV
+         PtEtHKpmF9nKzCOGvUjunvMp0dsTUhOppjIwAqf6GwyTbg5MhKpeYrLjT/XyeuWNKOSg
+         ybexhQQ3A3V1xsDi6QR0LaS3gZpE9qMwBNfj1tBHYg1CSQYbf60oYW5HPw6XmsygnFU1
+         sgpXaait7Xy+s+b52HCSX8NOq8GHYoUEBQsj1KsDbdeqHqL0AdkJGIPenH3/gQX1rtLR
+         lxlaw6/Bc86cihJPxWwzDTlBrGHpD0ujVejNiU7GQb8ZV5U0Uqm2UIqxOBe54FAW0N5a
+         7N2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768229528; x=1768834328;
+        d=1e100.net; s=20230601; t=1768229536; x=1768834336;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:date:from:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=i3zHW5WG2189QuRGw972bnhsFeepbkuRDbwilr8y5Bg=;
-        b=A53YRoN08P05R8RyrXlGJM5kxt/dFQB57I9tQ6bSCXBUez+z2NNj2cq5nvIrNiVL7Q
-         Od2z8E/jNrRxE3FBDDUEiL/XUFyVobwR2LVi/ia/QGHmd4VJRR9E2tQJBj6bSPHgrxeT
-         e4wQyqQayI+hDRZNkB70cM49NqIc4sxl1tcQ/XiM+vjcVwFVYgUgtLRuXnU0qPvCwCT5
-         X3929VnrYMzglAU07xHizilCojgDd8kIJZqY+S+sTJqddIWf7fd1UtxPQCqyzZq+zHzC
-         kiaRQWgEa+CRo1av5AJtam9Yjucys/UQcGgacIfquNv0gLeUavBr2yHesrdVuZw3JpJY
-         uvyA==
-X-Forwarded-Encrypted: i=1; AJvYcCUKqCNpyLe2e6Kt5fCOAz125HPnc/WwBAo7dNiB3Zm/FSYK/LNuUQxAemjMZSjRhxp5UekP2X2zFiw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyVciQ6kKMjh02hZOFko0FEw/L0XSQa9HB/dGLwOOGfn8/Qvwc0
-	3c5CuI070AjWKp4DIigQI7kFM2mAHdPT+212rYxe4aUFCANMXiQ3B6aTXOoFc/ZD7xyQOS8iMIW
-	2mG8N2up41MLQlgLrdO/8GhjHR2Omz8fYtkSgnctP8OwPbRlCqP2QR2oDXvmR
-X-Gm-Gg: AY/fxX4a3+K3blhfN0P5E35aLqbQOdShzWQKTM341dC1B90uklfYjCU3RJvm7tTh0kV
-	2o/r9zHcv89fxgkuicnMZO0fXVNLgFN0G7jzPfBd4swEh+H5N9HXrJ/nHPlyax8ZQONTGnehQd8
-	8ykC/iKCHqERpAqxLkXONY+YehuzL647NXdPHEEaJsnG49Z/b0Etz/XKZ4TG/f+VFPcxlYHXYmA
-	JjYjyqYnjBFgU0lK/SpgXD2TO7DzCTe7YuiXnmA/c5If+R7enaz0akxFVbSCBkiCCeHKizy4DE2
-	a/rmVhTs5zK9T3zI0ZD8UK6kAZXTVvYdp11l3QP1q2xJpUiKEiIMocwNJpn8kPyvp0d/J8sZ
-X-Received: by 2002:a17:907:c03:b0:b87:2f29:2054 with SMTP id a640c23a62f3a-b872f29385amr133945466b.8.1768229527781;
-        Mon, 12 Jan 2026 06:52:07 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGB1AHBE/+Mhlwy/JWYn8W4wq+O4YUYCcO2vyBAd8+kNj160C4mXDrZOC7LbzVnSCFekrxpzA==
-X-Received: by 2002:a17:907:c03:b0:b87:2f29:2054 with SMTP id a640c23a62f3a-b872f29385amr133942266b.8.1768229527346;
-        Mon, 12 Jan 2026 06:52:07 -0800 (PST)
+        bh=xPYPAB6be13BNA+rNTQIlJZgdC6UYp82gudM/SKVgcg=;
+        b=kIPDo9X4BAvtjUi7AuvKquP1onzNM8ZAuzSa039Mjf6qxzhty495mMMkfoYC3RSFT9
+         cg5NLLIPHgG8HG0hnzXPEAQ7Oyoq/Zsr0JGQxkFwftjbSfQMzGiqGyLIKa5mZPjg+NJh
+         tKLH06Z3W/97nv7CE4ckGdotd4yiQLdgC0zYyy7wEnz3Ile9udCO3xbT+YcEkFS+4ppt
+         b3aBQA5p+fKDu+9nElpMXzWX5n4QaBWjX0jOjBb1S8oSiNQlmsfUgURirFV6C/p3VZZO
+         ZI5qXXs+AAD6RjMUJ7HlLAr5rbIllz4TBeofgl4IJ9cPXubcb32XEQFOEk0JolA2KtCX
+         ykYw==
+X-Forwarded-Encrypted: i=1; AJvYcCW8aAUaRu7BLVlflD2/e/upHPDPiOQIGHG/TRtGVr45IaeS1fqUWPQvppMfqsgw1evHMyb48pI7PVw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwL3vU584AxoFSJRnxRWV3h4e9s1wxepdNBnWgqcwi4P8PkL+I0
+	u7a4Db4RW5K6QWwZAfzFk3dAjN/MoO5tXaR1aIhkJBXZW8v1NQ9AhJ8Tg9KVECgGeG2ScquBUvb
+	FjVPn8G/5gf4aUfoh4qC1+UoxLzLf7LOszda8Q7+GyAPhbJydQAg7UntpMN7U
+X-Gm-Gg: AY/fxX5xOgUh6cGHWsXQEEoN5a4sNVMxtNvOPHDGuGflO6SRVMrQ22ftnBYlgDG0r50
+	CCQTYqho3Mj+OASP94tyBcKLqIwuPiQgVFeifnIiklf8LFCa5FsVo1ujxNXZIY1tPjGBSpFgv0K
+	lZSXv/zYB+inukXu67v7IP5Ri3+5QNchI5YFyY6AJbyOTB6E81TuQOB4u9j3HzuCLI5tvaRMYLl
+	fX7HYdan6G7TAAQTXO9NHwrPjThSSMF+cJFSYcgrY4WXIBZtzEUrJ1Aoph4lefawE9z5rgxWpSF
+	wWwUk469HUCndC3eHTWz5cEGBskEsENF+HrsOayOYXv6y5iDeoAJcNaXUlJW8UCCA+KH5BzY
+X-Received: by 2002:a17:907:841:b0:b83:9767:c8ba with SMTP id a640c23a62f3a-b84451b5d1dmr1635823466b.17.1768229535751;
+        Mon, 12 Jan 2026 06:52:15 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH+AXG1fXAqNi7crMM7QiDNAwZR8bNUqqDvj5BznuxA4nKTk8GLk6KKY85CmsHuZWbeWD797w==
+X-Received: by 2002:a17:907:841:b0:b83:9767:c8ba with SMTP id a640c23a62f3a-b84451b5d1dmr1635820866b.17.1768229535247;
+        Mon, 12 Jan 2026 06:52:15 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b86f88f90a4sm670365066b.37.2026.01.12.06.52.06
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8429fdf4e7sm1985599466b.0.2026.01.12.06.52.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jan 2026 06:52:06 -0800 (PST)
+        Mon, 12 Jan 2026 06:52:14 -0800 (PST)
 From: "Darrick J. Wong" <aalbersh@redhat.com>
 X-Google-Original-From: "Darrick J. Wong" <djwong@kernel.org>
-Date: Mon, 12 Jan 2026 15:52:06 +0100
+Date: Mon, 12 Jan 2026 15:52:13 +0100
 To: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
 	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, aalbersh@kernel.org, 
 	aalbersh@redhat.com, djwong@kernel.org
 Cc: djwong@kernel.org, david@fromorbit.com, hch@lst.de
-Subject: [PATCH v2 19/22] xfs: check and repair the verity inode flag state
-Message-ID: <wtj4hy43eq3dzl4txfnt5ury5eygcaocafmp632jpvmytrk7sn@xcumewz64tkd>
+Subject: [PATCH v2 20/22] xfs: report verity failures through the health
+ system
+Message-ID: <i4tsa4dqqhjfutocdlk6mqm6ovvzea7ki2w32j6mcew66aegay@tsllwgeogm3f>
 References: <cover.1768229271.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -95,215 +96,98 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1768229271.patch-series@thinky>
 
-If an inode has the incore verity iflag set, make sure that we can
-actually activate fsverity on that inode.  If activation fails due to
-a fsverity metadata validation error, clear the flag.  The usage model
-for fsverity requires that any program that cares about verity state is
-required to call statx/getflags to check that the flag is set after
-opening the file, so clearing the flag will not compromise that model.
+Record verity failures and report them through the health system.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/scrub/attr.c         |  7 ++++++
- fs/xfs/scrub/common.c       | 53 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h       |  2 +
- fs/xfs/scrub/inode.c        |  7 ++++++
- fs/xfs/scrub/inode_repair.c | 36 +++++++++++++++++++++++++++++++
- 5 files changed, 105 insertions(+), 0 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h     |  1 +
+ fs/xfs/libxfs/xfs_health.h |  4 +++-
+ fs/xfs/xfs_fsverity.c      | 11 +++++++++++
+ fs/xfs/xfs_health.c        |  1 +
+ 4 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 708334f9b2..b1448832ae 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -646,6 +646,13 @@
- 	if (!xfs_inode_hasattr(sc->ip))
- 		return -ENOENT;
- 
-+	/*
-+	 * If this is a verity file that won't activate, we cannot check the
-+	 * merkle tree geometry.
-+	 */
-+	if (xchk_inode_verity_broken(sc->ip))
-+		xchk_set_incomplete(sc);
-+
- 	/* Allocate memory for xattr checking. */
- 	error = xchk_setup_xattr_buf(sc, 0);
- 	if (error == -ENOMEM)
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 7bfa37c994..41bbf4648f 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -45,6 +45,8 @@
- #include "scrub/health.h"
- #include "scrub/tempfile.h"
- 
-+#include <linux/fsverity.h>
-+
- /* Common code for the metadata scrubbers. */
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 3db9beb579..b82fef9a1f 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -422,6 +422,7 @@
+ #define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
+ #define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
+ #define XFS_BS_SICK_DIRTREE	(1 << 8)  /* directory tree structure */
++#define XFS_BS_SICK_DATA	(1 << 9)  /* file data */
  
  /*
-@@ -1736,3 +1738,54 @@
- 	return xfs_bmap_count_blocks(sc->tp, sc->ip, whichfork, nextents,
- 			count);
- }
-+
-+/*
-+ * If this inode has S_VERITY set on it, read the verity info. If the reading
-+ * fails with anything other than ENOMEM, the file is corrupt, which we can
-+ * detect later with fsverity_active.
-+ *
-+ * Callers must hold the IOLOCK and must not hold the ILOCK of sc->ip because
-+ * activation reads inode data.
-+ */
-+int
-+xchk_inode_setup_verity(
-+	struct xfs_scrub	*sc)
-+{
-+	int			error;
-+
-+	if (!IS_VERITY(VFS_I(sc->ip)))
-+		return 0;
-+
-+	error = fsverity_ensure_verity_info(VFS_I(sc->ip));
-+	switch (error) {
-+	case 0:
-+		/* fsverity is active */
-+		break;
-+	case -ENODATA:
-+	case -EMSGSIZE:
-+	case -EINVAL:
-+	case -EFSCORRUPTED:
-+	case -EFBIG:
-+		/*
-+		 * The nonzero errno codes above are the error codes that can
-+		 * be returned from fsverity on metadata validation errors.
-+		 */
-+		return 0;
-+	default:
-+		/* runtime errors */
-+		return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Is this a verity file that failed to activate?  Callers must have tried to
-+ * activate fsverity via xchk_inode_setup_verity.
-+ */
-+bool
-+xchk_inode_verity_broken(
-+	struct xfs_inode	*ip)
-+{
-+	return IS_VERITY(VFS_I(ip)) && !fsverity_active(VFS_I(ip));
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index ddbc065c79..36d6a33337 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -289,6 +289,8 @@
- 		bool *inuse);
- int xchk_inode_count_blocks(struct xfs_scrub *sc, int whichfork,
- 		xfs_extnum_t *nextents, xfs_filblks_t *count);
-+int xchk_inode_setup_verity(struct xfs_scrub *sc);
-+bool xchk_inode_verity_broken(struct xfs_inode *ip);
+  * Project quota id helpers (previously projid was 16bit only
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index b31000f719..fa91916ad0 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -104,6 +104,7 @@
+ /* Don't propagate sick status to ag health summary during inactivation */
+ #define XFS_SICK_INO_FORGET	(1 << 12)
+ #define XFS_SICK_INO_DIRTREE	(1 << 13)  /* directory tree structure */
++#define XFS_SICK_INO_DATA	(1 << 14)  /* file data */
  
- bool xchk_inode_is_dirtree_root(const struct xfs_inode *ip);
- bool xchk_inode_is_sb_rooted(const struct xfs_inode *ip);
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index bb3f475b63..1e7cfef00a 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -36,6 +36,10 @@
+ /* Primary evidence of health problems in a given group. */
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+@@ -140,7 +141,8 @@
+ 				 XFS_SICK_INO_XATTR | \
+ 				 XFS_SICK_INO_SYMLINK | \
+ 				 XFS_SICK_INO_PARENT | \
+-				 XFS_SICK_INO_DIRTREE)
++				 XFS_SICK_INO_DIRTREE | \
++				 XFS_SICK_INO_DATA)
  
- 	xchk_ilock(sc, XFS_IOLOCK_EXCL);
+ #define XFS_SICK_INO_ZAPPED	(XFS_SICK_INO_BMBTD_ZAPPED | \
+ 				 XFS_SICK_INO_BMBTA_ZAPPED | \
+diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+index 691dc60778..f53a404578 100644
+--- a/fs/xfs/xfs_fsverity.c
++++ b/fs/xfs/xfs_fsverity.c
+@@ -18,6 +18,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_fsverity.h"
+ #include "xfs_iomap.h"
++#include "xfs_health.h"
+ #include <linux/fsverity.h>
+ #include <linux/pagemap.h>
  
-+	error = xchk_inode_setup_verity(sc);
-+	if (error)
-+		return error;
-+
- 	error = xchk_trans_alloc(sc, 0);
- 	if (error)
- 		return error;
-@@ -833,6 +837,9 @@
- 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
- 		xchk_inode_check_reflink_iflag(sc, sc->ip->i_ino);
- 
-+	if (xchk_inode_verity_broken(sc->ip))
-+		xchk_ino_set_corrupt(sc, sc->sm->sm_ino);
-+
- 	xchk_inode_check_unlinked(sc);
- 
- 	xchk_inode_xref(sc, sc->ip->i_ino, &di);
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index 4f7040c9dd..846a47286e 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -573,6 +573,8 @@
- 		dip->di_nrext64_pad = 0;
- 	else if (dip->di_version >= 3)
- 		dip->di_v3_pad = 0;
-+	if (!xfs_has_verity(mp) || !S_ISREG(mode))
-+		flags2 &= ~XFS_DIFLAG2_VERITY;
- 
- 	if (flags2 & XFS_DIFLAG2_METADATA) {
- 		xfs_failaddr_t	fa;
-@@ -1613,6 +1615,10 @@
- 	if (iget_error)
- 		return iget_error;
- 
-+	error = xchk_inode_setup_verity(sc);
-+	if (error)
-+		return error;
-+
- 	error = xchk_trans_alloc(sc, 0);
- 	if (error)
- 		return error;
-@@ -2032,6 +2038,27 @@
- 	return 0;
+@@ -363,6 +364,15 @@
+ 	return xfs_fsverity_write(ip, position, size, buf);
  }
  
-+/*
-+ * If this file is a fsverity file, xchk_prepare_iscrub or xrep_dinode_core
-+ * should have activated it.  If it's still not active, then there's something
-+ * wrong with the verity descriptor and we should turn it off.
-+ */
-+STATIC int
-+xrep_inode_verity(
-+	struct xfs_scrub	*sc)
++static void
++xfs_fsverity_file_corrupt(
++	struct inode		*inode,
++	loff_t			pos,
++	size_t			len)
 +{
-+	struct inode		*inode = VFS_I(sc->ip);
-+
-+	if (xchk_inode_verity_broken(sc->ip)) {
-+		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_VERITY;
-+		inode->i_flags &= ~S_VERITY;
-+
-+		xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE);
-+	}
-+
-+	return 0;
++	xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_DATA);
 +}
 +
- /* Repair an inode's fields. */
- int
- xrep_inode(
-@@ -2081,6 +2108,15 @@
- 			return error;
- 	}
+ const ptrdiff_t info_offs = (int)offsetof(struct xfs_inode, i_verity_info) -
+ 			    (int)offsetof(struct xfs_inode, i_vnode);
  
-+	/*
-+	 * Disable fsverity if it cannot be activated.  Activation failure
-+	 * prohibits the file from being opened, so there cannot be another
-+	 * program with an open fd to what it thinks is a verity file.
-+	 */
-+	error = xrep_inode_verity(sc);
-+	if (error)
-+		return error;
-+
- 	/* Reconnect incore unlinked list */
- 	error = xrep_inode_unlinked(sc);
- 	if (error)
+@@ -373,4 +383,5 @@
+ 	.get_verity_descriptor		= xfs_fsverity_get_descriptor,
+ 	.read_merkle_tree_page		= xfs_fsverity_read_merkle,
+ 	.write_merkle_tree_block	= xfs_fsverity_write_merkle,
++	.file_corrupt			= xfs_fsverity_file_corrupt,
+ };
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 3c1557fb1c..b851651c02 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -487,6 +487,7 @@
+ 	{ XFS_SICK_INO_DIR_ZAPPED,	XFS_BS_SICK_DIR },
+ 	{ XFS_SICK_INO_SYMLINK_ZAPPED,	XFS_BS_SICK_SYMLINK },
+ 	{ XFS_SICK_INO_DIRTREE,	XFS_BS_SICK_DIRTREE },
++	{ XFS_SICK_INO_DATA,	XFS_BS_SICK_DATA },
+ };
+ 
+ /* Fill out bulkstat health info. */
 
 -- 
 - Andrey
