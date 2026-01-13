@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF8E38FF04;
-	Tue, 13 Jan 2026 13:10:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A40B38FEF9;
+	Tue, 13 Jan 2026 13:10:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768309843; cv=none; b=AVrJHJXz8ZmE2jTHgiYUAqjAWDJnvhNtEuatERkADeE9oPvQBQ+5gZ9FidH5+rsQHitcJvv9uWnG0iCF659AnSAW3wpeR0jsHE7hNb0IIhO18xzXFbk5O5yLA2WD465Ul5XgVTs4DNJ/+zCn8h2EL+WdlMms6mpZCiFl44s/rPw=
+	t=1768309845; cv=none; b=DeKBI7u0oOBCvyrc+qL1rxV9rIiWS8BbKvNhLcV2PzF0fXzr97lryjAE8lLxKbqwpvNCrC+7323MSgfAHY6wRJXlfCq99EVSplTS4V5l+j1NUNPTh6iYzs+XkOp2aDmfT+MDhfh4ma++Lm/Xz3D2toDg3Ngn2OyFSyNIsGhjzKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768309843; c=relaxed/simple;
-	bh=SAkRW3R4HH1/+qn76DfyQKdUBBdSRD5KY0q/RfLTWoM=;
+	s=arc-20240116; t=1768309845; c=relaxed/simple;
+	bh=zgQotarsYa5tOkHAEXUEfGGDqnjkLPWC74gcOV3qQn0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Akwu98X8VfOujc4OmBQbj1VGoFtTgAV0i6C5qNYsqgFsd9iXd9WVe1EPUokjCd7bTPvQRweGcLb2EmcU97kIR474hMEtqPibcmNuPSYqQ4rpRpjK5vLQsJOacL+czKrIKxNhyTTSwh/7aMINP8wA9R2lgyiTZ4n5wiJXjTsK4Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9LbziVm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IwcxnnIVuE2JhY+wdjnR5rfuLUPWcda97wysS1O9iI31N7DiwE4iB5ug45woZetD7Q4wEkIXthNxKyYLnZZh/UaUU5iPoMA+Dbl4WRklLHdfokUzKXaMPQiUJJnerYoWEoEc+Mja0XN+cFqxGySyVk4pFQF2Xc4VuHOTg1XuQY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kXTAuVO5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9LbziVm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A4E9C116C6;
-	Tue, 13 Jan 2026 13:10:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kXTAuVO5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D4FC19422;
+	Tue, 13 Jan 2026 13:10:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768309843;
-	bh=SAkRW3R4HH1/+qn76DfyQKdUBBdSRD5KY0q/RfLTWoM=;
+	s=k20201202; t=1768309845;
+	bh=zgQotarsYa5tOkHAEXUEfGGDqnjkLPWC74gcOV3qQn0=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=Z9LbziVmoGZsMZ4kMlb0RHoplfC38I4R5qhEJyRagyDQW+74slBZmIr7movRcxev3
-	 lAtp4jJy+xpnWN1j34uQpufmbWMFJz5e+0MuE1m7kIDdGWN57sJs9NCUv3u2BXKwQj
-	 zPVar+ByyhMggwM9nzoXnZtA0H/eGOSA7XK4G2TqNF+LNIjQUNsDntmYIVB3soYSAQ
-	 1tXcYBEyGF8tbjyegAU1oeku845FzUtv/e6JbVBGNyg8meb57hvKr7zt9fukpGDXGZ
-	 04yXpIZ1zaFjMVrmLDy3ACxw6rFJBN95S6YDj4tl6jPaHNM+vdiwpLrg83UwBVsWZR
-	 HneQOggHiWxxQ==
+	b=kXTAuVO59JOJz5uO4WSCQp0fp8T7d59MvpAsABLhUDlwR4WNC+eUvU+O85ZyBx5LR
+	 sK2PzOXQ0eNd6Hooj4WrnY0s7RXpnTHBiAvi3gYY2IC8HO11E5OOh8mS1xRybx3yZm
+	 YwDjosZfZMdsBvdB6xq+C6Oc82IsVB/8MT3jAuEw7KlJH43G7OUzWMhxsbjnn5bcRt
+	 52N/VpFe1NMoqNHX9kt7JbVQCSTHuSkbns68YSC3rrx3gO+Ep8DFZKr6fyeWmGmFKQ
+	 V1kSEMNEjhDwfFrmARl/klKhrCLHFht9dg9Nu2yKKKBfRCWmcvMKsLiOHkRsATMY1S
+	 ProJwRnQNliwg==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
-Cc: stable@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-In-Reply-To: <20260109174905.26372-1-bfoster@redhat.com>
-References: <20260109174905.26372-1-bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: set max_agbno to allow sparse alloc of last
- full inode chunk
-Message-Id: <176830984207.127908.986837300693754685.b4-ty@kernel.org>
-Date: Tue, 13 Jan 2026 14:10:42 +0100
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, 
+ Hans Holmberg <hans.holmberg@wdc.com>, linux-block@vger.kernel.org, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260113071912.3158268-1-hch@lst.de>
+References: <20260113071912.3158268-1-hch@lst.de>
+Subject: Re: improve zoned XFS GC buffer management v3
+Message-Id: <176830984350.127908.17552778347104756275.b4-ty@kernel.org>
+Date: Tue, 13 Jan 2026 14:10:43 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,27 +46,24 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Fri, 09 Jan 2026 12:49:05 -0500, Brian Foster wrote:
-> Sparse inode cluster allocation sets min/max agbno values to avoid
-> allocating an inode cluster that might map to an invalid inode
-> chunk. For example, we can't have an inode record mapped to agbno 0
-> or that extends past the end of a runt AG of misaligned size.
-> 
-> The initial calculation of max_agbno is unnecessarily conservative,
-> however. This has triggered a corner case allocation failure where a
-> small runt AG (i.e. 2063 blocks) is mostly full save for an extent
-> to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
-> case, which happens to be the offset of the last possible valid
-> inode chunk in the AG. In practice, we should be able to allocate
-> the 4-block cluster at agbno 2052 to map to the parent inode record
-> at agbno 2048, but the max_agbno value precludes it.
+On Tue, 13 Jan 2026 08:19:00 +0100, Christoph Hellwig wrote:
+> the zoned XFS GC code currently uses a weird bank switching strategy to
+> manage the scratch buffer.  The reason for that was that I/O could be
+> proceed out of order in the early days, but that actually changed before
+> the code was upstreamed to avoid fragmentation.  This replaced the logic
+> with a simple ring buffer, which makes the buffer space utilization much
+> more efficient.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: set max_agbno to allow sparse alloc of last full inode chunk
-      commit: c360004c0160dbe345870f59f24595519008926f
+[1/3] block: add a bio_reuse helper
+      commit: ba9891cb95ebe8bef380aa267eab593bb9e4bd51
+[2/3] xfs: use bio_reuse in the zone GC code
+      commit: fc7ef2519a8cba4b017cf4063db2a96f12d41a2c
+[3/3] xfs: rework zone GC buffer management
+      commit: 716ad858cbeea165e1faa102211dd14b6571e8a1
 
 Best regards,
 -- 
