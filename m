@@ -1,78 +1,87 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B5B3939CA;
-	Tue, 13 Jan 2026 15:39:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6446E3033FE;
+	Tue, 13 Jan 2026 15:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768318796; cv=none; b=NJprii0he0csWsEBg3AGXXrYlxd376fDrCEPt+Rslc5+/sZZxofHgjGCmuBdvl14LDKwF9iIvthH9kqL1bBk6dw8GMmJnTlQD39W1H1+rsQj/1Y7DLN9uMRgbCv8YniGlmdrycI8ZAJO4N2IUzwZrHxLYzKMx+yYPd7eKCPL4+s=
+	t=1768319337; cv=none; b=Bfovnnut9rWKGTN6T8dtx4ZMEnMczFyLEblvJAiY4uGhmobkNT8wJtfUSY+Ks/U52eZ9QjSgoYRwsRRMsXxs1g8CYZlXKLmwXohxlPBK63nuK0goNC4jtAi/QbXj9ldd2By1fiHVJGf/smuTS+IbA31TNYWLB4Z7MKyUGE0PqBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768318796; c=relaxed/simple;
-	bh=ru/29rNt06MvB1INLVO7jrWbbFewBOEUIER+YhQ4+wI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RmKT/HjIMGg5b4IAitTwfwAMpUCQCJm8kxuy8Z8yvoojcm9Bw61OG1MnDsG4zvuiuvCgiMn2rDGFdghdI1SsDQTAp+qUbt/l/n8X2nWGbUi8rL2fWqlZBqqTFHSRno/vkvAygMwsq2T0+byKBgQWICPDDUzm3MxWMPxSoUrWo/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rresUmZj; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1768319337; c=relaxed/simple;
+	bh=ioqawy1jaBtw650mwYkMf22BmHRepy+95f08DFuvNvs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=maSokjHdxiGPcFbpqq5TrTPZiBf7eXzWWf0+DwHhBuKZ33TkgDydM+o3sHbWNFoz3rrw59HpEBLLwwFsCc07/Yhh1m6fFT8MrIOA1UOeJ8Ut0r+viVKqJFUEDgZbDb9f8XXjf6z6vp5TE6v8+zph2qyTTG4Tb0PyF5S9EKuJr+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iCQjwVTm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rresUmZj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=7VLyLNf6NbqRM45hHt21uKpq7YSonqiuDKYfxbHru3w=; b=rresUmZjl2SLvfa9UCxfTQm0Tl
-	HXwLoho5xF+bca7AxNK1o7+Qf5YjTepOU5tC2tfqi/rWpyRUvKCA2hxgrfxxUjTiHNoB3nAzC2+F9
-	gVEcYHSo6DhWCGyxXm73zb8aedpHvF/U/0Gmql8t3aa2pabLdYdRuIPPlVgJA6z7r6/WTyawDfisj
-	/68n2NGGktKOMkIEZISWmUcdorSQ/zU0eXV3Ljgtsg79s12NAClJK3Imu+mugTPycYdstvof/9U0P
-	MCeSkngIOofVR1idhL8Y7+oUmw5+zUiWS7EZOQS2eRFPx1Yd5oeORXQNt/d45LpAZUzlW2qniuSwn
-	Tn1n/yyA==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vfgUl-00000007Olm-3iEU;
-	Tue, 13 Jan 2026 15:39:48 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: brauner@kernel.org,
-	djwong@kernel.org
-Cc: bfoster@redhat.com,
-	linux-xfs@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iCQjwVTm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83A06C116C6;
+	Tue, 13 Jan 2026 15:48:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768319336;
+	bh=ioqawy1jaBtw650mwYkMf22BmHRepy+95f08DFuvNvs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iCQjwVTm9M+gc5PjZ4MeZAQD1VGblUPkHG6mH6z3VdSOzYRQ3ZjPWXcyszc3w/64m
+	 FFrjphgobeaqsObunVLjPkIjTHq5zowMbV5VnwAq2sf9c85FX5Zj3TeDxCP9QhV0Lc
+	 /g9lhmbeOnw9eU+g2xGhgMKYqianh+J4Nf+xNP/tqsKrykF5LrAm6bwZ/AU23seB4q
+	 IFXk3Jg/f0GfLjE+Ec4i9/RGsqFJonSxZKPsWDcyJVMJwlib+Jdwv40gtmJTBXq2gj
+	 xxQEKYSVH8YiR2X39BsfUDumvfGGKi+oFHWGZMHdMteSo80ddCaOP4wEE4s2KTu2lr
+	 LtvOkVFyLI9gg==
+Date: Tue, 13 Jan 2026 07:48:55 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: brauner@kernel.org, bfoster@redhat.com, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: [PATCH] iomap: wait for batched folios to be stable in __iomap_get_folio
-Date: Tue, 13 Jan 2026 16:39:17 +0100
-Message-ID: <20260113153943.3323869-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+Subject: Re: [PATCH] iomap: wait for batched folios to be stable in
+ __iomap_get_folio
+Message-ID: <20260113154855.GH15583@frogsfrogsfrogs>
+References: <20260113153943.3323869-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260113153943.3323869-1-hch@lst.de>
 
-__iomap_get_folio needs to wait for writeback to finish if the file
-requires folios to be stable for writes.  For the regular path this is
-taken care of by __filemap_get_folio, but for the newly added batch
-lookup it has to be done manually.
+On Tue, Jan 13, 2026 at 04:39:17PM +0100, Christoph Hellwig wrote:
+> __iomap_get_folio needs to wait for writeback to finish if the file
+> requires folios to be stable for writes.  For the regular path this is
+> taken care of by __filemap_get_folio, but for the newly added batch
+> lookup it has to be done manually.
+> 
+> This fixes xfs/131 failures when running on PI-capable hardware.
+> 
+> Fixes: 395ed1ef0012 ("iomap: optional zero range dirty folio processing")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index fd9a2cf95620..6beb876658c0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -851,6 +851,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
+>  		}
+>  
+>  		folio_get(folio);
+> +		folio_wait_stable(folio);
 
-This fixes xfs/131 failures when running on PI-capable hardware.
+Heh, oops.  That's a little too easy to miss. :(
 
-Fixes: 395ed1ef0012 ("iomap: optional zero range dirty folio processing")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 1 +
- 1 file changed, 1 insertion(+)
+I wonder if we ought to have a filemap_fbatch_next() that would take
+care of the relocking, revalidation, and stabilization... but this spot
+fix is good as-is.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index fd9a2cf95620..6beb876658c0 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -851,6 +851,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
- 		}
- 
- 		folio_get(folio);
-+		folio_wait_stable(folio);
- 		return folio;
- 	}
- 
--- 
-2.47.3
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
+--D
+
+>  		return folio;
+>  	}
+>  
+> -- 
+> 2.47.3
+> 
