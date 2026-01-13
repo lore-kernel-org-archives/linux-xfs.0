@@ -1,32 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4775D23C51D;
-	Tue, 13 Jan 2026 16:23:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4263329D27D;
+	Tue, 13 Jan 2026 16:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768321401; cv=none; b=LAIKWwOKHrEYd/YMW4IJIqlg3c/1c8xDJyigmE8mQJVOYsxu0jYDFUj8SJk/spFTF6FU7pBVWwqOeeBxXsyDepfSPl7bZihtuU1eoICkxKARCfCSjWYWU384Vpxokcdy2Ox/1W5J601/1cBoMW3eMHlifPtzVFTho4weeTQO6J0=
+	t=1768322209; cv=none; b=J4zKVxogWJrVbaaop+gXZM+G5Q4YPRhEDAKfXVO3gkMfVIsdSz9twoYZndbW6TR4viwau77ODDLNfdDkDuINuQk8QA7Z+krn+ixP0LHfbQcniqoecBJsqa1J2USTIobNnYpdx/B0mDMbzSgY8cOx4AFzttzs+mEfnxAHXSStt2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768321401; c=relaxed/simple;
-	bh=EKdDkyhlyLijiT46I+rcfNN+S+4lL5ce4km5513Ve5I=;
+	s=arc-20240116; t=1768322209; c=relaxed/simple;
+	bh=IMkOO6Zc4yhuZg1yzQK+w2Bp/BdGAWInBxXY74VNhMw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MpOuBFywgkDlKt+RCS2hq0AH2VNNWXwuXCSyQoNO0CRfJVP0GGIMLVXNqBhDToSSbv56a6yk7WOknEI5+pjyc0aQuIvnaS7YUC5hq9yxsA9bfs7Sjhpm3EB9Lbgr8EKKCfW3fA5IHJMqkeq48DhTGYl44pyKaeG3XJ0P3hscfRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7591767373; Tue, 13 Jan 2026 17:23:16 +0100 (CET)
-Date: Tue, 13 Jan 2026 17:23:15 +0100
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=q9oZ0/U5suU8VpGjW3DZimT6QjLzUW1ThEGV1NbF+cXLgwoRI+SG2JXDx31r+NNlE+6u/HH9teA+tXbUKSqmfj52G88Gn6tO2ENSWu1rdWjk/1IxrEDhSBkdmleNsgtx1Yi5uflTgchf/n1gISbTC3wza4U/x9ksajFZtUABlog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=q3jmgY0T; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q3jmgY0T"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=bUxWTnK1QbCgjrUYIs0Qsd9Vhlvn6TGbfq2LUKED7So=; b=q3jmgY0TlCA0o7WFV5Z39f2vBH
+	tp2ge+v5hF1mwyBqCHQmMEyauJ/QfDxHLhpTWnirEq6aIGShClfknmGziM70L8dVCySvqcY+0AdQo
+	SPMbTRFYVpA906vH8DYHVudTdmJN3gerGQAFqyCmEZLQqEXn3kZHw5gLAMM2aDbtOcndfDrN1zR+6
+	C4VXGvpan09WJMqIielGkLpdh0TNNX8HTg62JGCqxuS8EzDOHLxlSUP4X9R4hh2Zf2EhhKlFHwvGT
+	OGqNcW3dSNXKO/gyap5ZgALhQU2ArysHYCcsE3HuJisdiHIxaVKYBaVqCSOvfsnhDnNtSy7i5ec02
+	aNxdsbgQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vfhNs-00000004y8Y-2UsQ;
+	Tue, 13 Jan 2026 16:36:44 +0000
+Date: Tue, 13 Jan 2026 16:36:44 +0000
+From: Matthew Wilcox <willy@infradead.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, fsverity@lists.linux.dev,
-	linux-xfs@vger.kernel.org, ebiggers@kernel.org,
-	linux-fsdevel@vger.kernel.org, aalbersh@kernel.org,
-	david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH v2 5/22] iomap: integrate fs-verity verification into
- iomap's read path
-Message-ID: <20260113162315.GB5287@lst.de>
-References: <cover.1768229271.patch-series@thinky> <fm6mhsjqpa4tgpubffqp6rdeinvjkp6ugdmpafzelydx6sxep2@vriwphnloylb> <20260112223555.GL15551@frogsfrogsfrogs> <vwx7hktpfbdbstxloryrfwcbk373pugjeqcozm7nuvl3uykr5z@gdgmpr7pgp34>
+Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org,
+	aalbersh@kernel.org, djwong@kernel.org, david@fromorbit.com,
+	hch@lst.de
+Subject: Re: [PATCH v2 0/23] fs-verity support for XFS with post EOF merkle
+ tree
+Message-ID: <aWZ0nJNVTnyuFTmM@casper.infradead.org>
+References: <cover.1768229271.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,30 +48,11 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <vwx7hktpfbdbstxloryrfwcbk373pugjeqcozm7nuvl3uykr5z@gdgmpr7pgp34>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <cover.1768229271.patch-series@thinky>
 
-On Tue, Jan 13, 2026 at 12:16:45PM +0100, Andrey Albershteyn wrote:
-> > Also, when do we get the combination of BEYOND_EOF && HOLE?  Is that for
-> > sparse regions in only the merkle tree?  IIRC (and I could be wrong)
-> > fsverity still wants to checksum sparse holes in the regular file data,
-> > right?
-> 
-> The _BEYOUND_EOF is only for fsverity metadata. This case handles
-> the merkle tree tail case/end of tree. 1k fs bs 4k page 1k fsverity
-> blocks, fsverity requests the page with a tree which is smaller than
-> 4 fsverity blocks (e.g. 3072b). The last 1k block in the page will
-> be hole. So, just zero out the rest and mark uptodate.
+On Mon, Jan 12, 2026 at 03:49:44PM +0100, Andrey Albershteyn wrote:
+> The tree is read by iomap into page cache at offset 1 << 53. This is far
+> enough to handle any supported file size.
 
-Can you add a comment explaining this?
-
-> > > +#define IOMAP_POOL_SIZE		(4 * (PAGE_SIZE / SECTOR_SIZE))
-> > 
-> > How do we arrive at this pool size?  How is it important to have a
-> > larger bio reserve pool for *larger* base page sizes?
-> 
-> Well, this is just a one which iomap uses by default for read pool.
-> I'm not sure I know enough to optimize pool size here :)
-
-Note that all this would go away when using ioends.
-
+What happens on 32-bit systems?  (I presume you mean "offset" as
+"index", so this is 1 << 65 bytes on machines with a 4KiB page size)
