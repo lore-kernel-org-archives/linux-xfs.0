@@ -1,39 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6446E3033FE;
-	Tue, 13 Jan 2026 15:48:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150662C0298
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 15:50:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768319337; cv=none; b=Bfovnnut9rWKGTN6T8dtx4ZMEnMczFyLEblvJAiY4uGhmobkNT8wJtfUSY+Ks/U52eZ9QjSgoYRwsRRMsXxs1g8CYZlXKLmwXohxlPBK63nuK0goNC4jtAi/QbXj9ldd2By1fiHVJGf/smuTS+IbA31TNYWLB4Z7MKyUGE0PqBQ=
+	t=1768319445; cv=none; b=njFGAcoGMIDT1uPFq6eFN8Axe4pBk+8nm4f9mxkgxCqeLQyfw3QJg+WckzNaAhlbJAo6DrVmKT52pTYor82lys+8i/eABW3TTVihQ0FP+VbrpwOlef4CmLF+xcMw7KKUhahIsn1yTtuKGKAmkLUcwG5QijZJHCChRV0X6pl+IiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768319337; c=relaxed/simple;
-	bh=ioqawy1jaBtw650mwYkMf22BmHRepy+95f08DFuvNvs=;
+	s=arc-20240116; t=1768319445; c=relaxed/simple;
+	bh=vHQ0rA1StG1Zgy0F9ndqwnzle817CayfuFLY5oSanMI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=maSokjHdxiGPcFbpqq5TrTPZiBf7eXzWWf0+DwHhBuKZ33TkgDydM+o3sHbWNFoz3rrw59HpEBLLwwFsCc07/Yhh1m6fFT8MrIOA1UOeJ8Ut0r+viVKqJFUEDgZbDb9f8XXjf6z6vp5TE6v8+zph2qyTTG4Tb0PyF5S9EKuJr+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iCQjwVTm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=R06plDcx3uwJXAlXOAMEySl9UTjKBaQlNaEVJtGUcKh0Iwt2gYAUyTBftEvIs0kyi0n8HakYSt1ztfCfmZIjHjgMRTLFutnLe6JcIgOLRUSgyi+8THmuqtkCeFAhQN4qdhKMXaUIJ4XeVcsM6P6B+Sn2tFhnRoac1DP/GnmgXYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fAmOIHrq; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iCQjwVTm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83A06C116C6;
-	Tue, 13 Jan 2026 15:48:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768319336;
-	bh=ioqawy1jaBtw650mwYkMf22BmHRepy+95f08DFuvNvs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iCQjwVTm9M+gc5PjZ4MeZAQD1VGblUPkHG6mH6z3VdSOzYRQ3ZjPWXcyszc3w/64m
-	 FFrjphgobeaqsObunVLjPkIjTHq5zowMbV5VnwAq2sf9c85FX5Zj3TeDxCP9QhV0Lc
-	 /g9lhmbeOnw9eU+g2xGhgMKYqianh+J4Nf+xNP/tqsKrykF5LrAm6bwZ/AU23seB4q
-	 IFXk3Jg/f0GfLjE+Ec4i9/RGsqFJonSxZKPsWDcyJVMJwlib+Jdwv40gtmJTBXq2gj
-	 xxQEKYSVH8YiR2X39BsfUDumvfGGKi+oFHWGZMHdMteSo80ddCaOP4wEE4s2KTu2lr
-	 LtvOkVFyLI9gg==
-Date: Tue, 13 Jan 2026 07:48:55 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fAmOIHrq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768319443;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9/IkhXXqC9yhLNjAsgGulI/lesQyYUk6T6XwvSKOyC4=;
+	b=fAmOIHrqkkSXA1zLyFMB/Rs6cB9vw5FUcGzFMLwOjo/j6unQWtmFN+eXQfvijuxQY1DTEm
+	fALli/HFfp0ieZFfDe5zEksjpZ22Xe9PA8YQIFpJSWwKRIRH/93lIUyj8TnKOSQA5ag90o
+	1d+PRi8X+Tyr/8ZSgA0SRZzufotoR9o=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-hBZV14KXMWi7exVOkR9Pgg-1; Tue,
+ 13 Jan 2026 10:50:38 -0500
+X-MC-Unique: hBZV14KXMWi7exVOkR9Pgg-1
+X-Mimecast-MFC-AGG-ID: hBZV14KXMWi7exVOkR9Pgg_1768319437
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9591F18003FC;
+	Tue, 13 Jan 2026 15:50:37 +0000 (UTC)
+Received: from bfoster (unknown [10.22.90.9])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AD2CE19560AB;
+	Tue, 13 Jan 2026 15:50:36 +0000 (UTC)
+Date: Tue, 13 Jan 2026 10:50:34 -0500
+From: Brian Foster <bfoster@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
-Cc: brauner@kernel.org, bfoster@redhat.com, linux-xfs@vger.kernel.org,
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH] iomap: wait for batched folios to be stable in
  __iomap_get_folio
-Message-ID: <20260113154855.GH15583@frogsfrogsfrogs>
+Message-ID: <aWZpyuaG86LdtmVm@bfoster>
 References: <20260113153943.3323869-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -44,6 +59,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20260113153943.3323869-1-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
 On Tue, Jan 13, 2026 at 04:39:17PM +0100, Christoph Hellwig wrote:
 > __iomap_get_folio needs to wait for writeback to finish if the file
@@ -56,6 +72,9 @@ On Tue, Jan 13, 2026 at 04:39:17PM +0100, Christoph Hellwig wrote:
 > Fixes: 395ed1ef0012 ("iomap: optional zero range dirty folio processing")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 >  fs/iomap/buffered-io.c | 1 +
 >  1 file changed, 1 insertion(+)
 > 
@@ -68,20 +87,11 @@ On Tue, Jan 13, 2026 at 04:39:17PM +0100, Christoph Hellwig wrote:
 >  
 >  		folio_get(folio);
 > +		folio_wait_stable(folio);
-
-Heh, oops.  That's a little too easy to miss. :(
-
-I wonder if we ought to have a filemap_fbatch_next() that would take
-care of the relocking, revalidation, and stabilization... but this spot
-fix is good as-is.
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
 >  		return folio;
 >  	}
 >  
 > -- 
 > 2.47.3
 > 
+> 
+
