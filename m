@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F9DF1FC110;
-	Tue, 13 Jan 2026 18:08:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FFCC342CB1;
+	Tue, 13 Jan 2026 18:26:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768327734; cv=none; b=PCKn+QDHs5ZiSiGNKX+SDYO8+zJ1KETvr4GRTWrN1V15EYC3kCOmJityP6ZZMPXkoCnU1HUUgrayi8hnt2PklQReSWKHOtyEpYXFDq7ZxwiHJr8Hp907P4cU0yhOb5tMJ8TdnsMBTjRrl6WTMDWMZwrtf2vN54aMnmrjzBmqv5M=
+	t=1768328798; cv=none; b=XB6fE0hMcUCrIe051rEVZkaLNJivtuiQeYMaYIHBq9z5AgBl+PQXWeMGlTkQjth9O6V8pHMBQr55O42smlOC1x8aY+WSXwhrAMBKN8ZXlfVSAUBM110agnCC2e3YjVhCCFV+BX5vdJHhZVwi5UNUwWoqOKyRJ8hFSa1SbPSaQFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768327734; c=relaxed/simple;
-	bh=Z7UFeJxH9fAu0zwJC/E6Z0wszNyDx4E5zPTxEkKMBnQ=;
+	s=arc-20240116; t=1768328798; c=relaxed/simple;
+	bh=jh7/eYIHMILsLEFfo4BthZi8zyqYrl3uhdHXbRUAmFk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kN1zFKeKne12xgMkVd2RNYi32atqEjYwZyxRez68j+uoXLpARmiRQy77egPxeuwbePNg9X20uLTZP6hANQAq/fy3AYAZ77V9Cqzu3r76xE7PZBlF2KKfpDY6v7ik4UDnphu+yYTSU8h70QnLn19ypcC40ukydW8V5hvbO4BX0vk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pqG7ZMVW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GLi/6fAM7CspknX/4ymlb9wSHclxL5kqcvfbUpeGYXwtD4dtldJHugRm6R2LViOx0sD4v1LcpVToWI2gA0jh3tZqXnIO0Z578q41L+EDgSWPyH8vJSIyNwQ2KH3IgbZYo9HuH17VEbaVZtwG/piTUL6O8lINa7tuqZ+abfk3xrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q6GrqHA/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pqG7ZMVW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 413A1C116C6;
-	Tue, 13 Jan 2026 18:08:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q6GrqHA/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 738B5C116C6;
+	Tue, 13 Jan 2026 18:26:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768327734;
-	bh=Z7UFeJxH9fAu0zwJC/E6Z0wszNyDx4E5zPTxEkKMBnQ=;
+	s=k20201202; t=1768328797;
+	bh=jh7/eYIHMILsLEFfo4BthZi8zyqYrl3uhdHXbRUAmFk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pqG7ZMVWRlROjpw2vDnWsG5+VCxvCwEyM+f8R+asXvoByf73fFiXXUIjPMb1AZc1E
-	 BS2p00QB8ufXUNCR38H46pTtJMsEMyaUgh1OlpyhXGNg/Aea1BofwH2M/iWDv6T9MN
-	 XQDwGsqS6skiOK32x/lB0ZUY4LVEU5zM6N1DnXtDglAk54D3uFiDurOpYFJohNZRPO
-	 /rrFz4SsnGC0G1BxR4cinSclqCEBatsuIQVAvFpUKJDoRPn5Ir7DGATyqBJkxA0xhh
-	 nxFl9D3T1/FSMa2+wZsqt4FlJCuB0BJ+HbNQpgrnKRISK7jWEy8Rqo4R+uUtnCcSYX
-	 9SQxOBPIj7egQ==
-Date: Tue, 13 Jan 2026 10:08:53 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: wait for batched folios to be stable in
- __iomap_get_folio
-Message-ID: <20260113180853.GZ15551@frogsfrogsfrogs>
-References: <20260113153943.3323869-1-hch@lst.de>
- <20260113154855.GH15583@frogsfrogsfrogs>
- <20260113155805.GA3726@lst.de>
- <aWZu0TxyoyHFTqXi@bfoster>
+	b=q6GrqHA/OZD057vy4y74WtcRaDgTQi3SIuatkLJSpIHyflAegUY6dFYIwZ5ai3eTh
+	 jIdeRNbMHYj5Rf8MERPbP6inJiiQ4XKXlLgvdSAdpElCehCb9t5OJnhRgjDmuanuQP
+	 6UBAb8aDTtf1qztmjbMS3KV8yDs7E59ceiiWnx0Bo8y5X6/ojKxoQiJVGvOg/L+X/U
+	 FZTBlQaYn5RcNm2HgzUHNbc9Va1JcIPJDZIcAuRBLwVRxSs3ObeeJg0Pu2/bcDBJjA
+	 CxdU6s+lNtDE1jkYzmjAymDOCYRWFZGVKihKab3XcSwSfTFOm19i9quV5nDxFP5Zq/
+	 Hpghpz1dWm78Q==
+Date: Tue, 13 Jan 2026 11:26:35 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: use bio_reuse in the zone GC code
+Message-ID: <aWaOW-mjk7uuEcyW@kbusch-mbp>
+References: <20260113071912.3158268-1-hch@lst.de>
+ <20260113071912.3158268-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,27 +45,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aWZu0TxyoyHFTqXi@bfoster>
+In-Reply-To: <20260113071912.3158268-3-hch@lst.de>
 
-On Tue, Jan 13, 2026 at 11:12:01AM -0500, Brian Foster wrote:
-> On Tue, Jan 13, 2026 at 04:58:05PM +0100, Christoph Hellwig wrote:
-> > On Tue, Jan 13, 2026 at 07:48:55AM -0800, Darrick J. Wong wrote:
-> > > I wonder if we ought to have a filemap_fbatch_next() that would take
-> > > care of the relocking, revalidation, and stabilization... but this spot
-> > > fix is good as-is.
-> > 
-> > Let's wait until we have another user or two.  Premature refactoring
-> > tends to backfire.
-> > 
-> 
-> I agree on not being too aggressive on that... I do like the idea
-> though, so I'll try to keep it in mind if this happens to expand down
-> the road. Thanks for the fix.
+On Tue, Jan 13, 2026 at 08:19:02AM +0100, Christoph Hellwig wrote:
+> @@ -825,10 +823,7 @@ xfs_zone_gc_write_chunk(
+>  	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
+>  	list_move_tail(&chunk->entry, &data->writing);
+>  
+> -	bio_reset(&chunk->bio, mp->m_rtdev_targp->bt_bdev, REQ_OP_WRITE);
+> -	bio_add_folio_nofail(&chunk->bio, chunk->scratch->folio, chunk->len,
+> -			offset_in_folio(chunk->scratch->folio, bvec_paddr));
+> -
+> +	bio_reuse(&chunk->bio);
 
-<nod> Making the second user do the refactoring is ok with me. :)
-
---D
-
-> Brian
-> 
-> 
+bio_reuse() uses the previous bio->bi_opf value, so don't you need to
+explicitly override it to REQ_OP_WRITE here? Or maybe bio_reuse() should
+take the desired op as a parameter so it doesn't get doubly initialized
+by the caller.
