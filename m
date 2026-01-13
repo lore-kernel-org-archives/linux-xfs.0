@@ -1,67 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451383904D7
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 13:36:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3DC3921E9;
+	Tue, 13 Jan 2026 13:58:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768311392; cv=none; b=H4+QpMvBoxrwoiRM0KnWucHiY98OXbfjRzUC/mvSs9CA4nLKFncKWHlaosOtalmM/ti5aKD0ttLu3oAlLjP+cP8jlg/+PhV6GOJXpm7okSAAHn9ZRpmkW8ExaIvf1kmRTUXrrWliyC/+U1+/7DmxVR6nDGcr+o1PEkQADVPoQY4=
+	t=1768312735; cv=none; b=tprG+Jd2ALHQhbat6iA6+yVmg9Ayo94d2zlD3fvn/t1uVuzhuG1mW24qQPomHxY5VqG3/toMP0Rnho19feNH+0lUmSPOLKlQ6T77W9khWcISqSWeyO2JVl5oDksJwTvqTRaFxnrlb0SJdeZo37L4c+2s2u/iTbiIyLFFkDbX4uo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768311392; c=relaxed/simple;
-	bh=PpWYvaGTcxGfEgc3oOhnT3ttz/DamcU+gE2mF5+9314=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UC43P9Y2XpDbeIYKPtSADbUbc54X710VrxjCBgvNnZMutK76bOudnS5giBR1Sya/OVRSXQbkyqWpRfU5pgDXIU3vYM5ZMJRHnHR3zCPpXwFEu6Cv7a2kyGPJRvDqWmUiRaMD7aehHC3GHKiySoiyXa4+rh55QNRtPpiaoWlMbuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tKP5N5lG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768312735; c=relaxed/simple;
+	bh=Mdtt2cEJZpAolbsyohBBtRFFKdaOQF7vilJVbgvlUGo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=smhH7rzVL/WLtxRLJ2NREqx0NSzCmVj6Vqr0hvD5xfCKEktUmXDdGjBlOuTLAtUYpWS0s1l7wFxrmdQOX+hzP+K6WVOm2a+BAQW+8Dqa7Aa5+fCq3gew3idzL5ZS8XMwwF829UtyUElqCa/jVJ/1GZHJjHLIx9BDV79zINTQE18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IHCBTIj9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tKP5N5lG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CBE2C116C6;
-	Tue, 13 Jan 2026 13:36:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IHCBTIj9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9631AC116C6;
+	Tue, 13 Jan 2026 13:58:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768311391;
-	bh=PpWYvaGTcxGfEgc3oOhnT3ttz/DamcU+gE2mF5+9314=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tKP5N5lGXihjLKj0XtuihVS4FSehAbNBLkrMH1PXSWhg6Uak76aCs2qfiQ/9AM/2H
-	 PiWkrVkzMRHpOf8MiRP23LZCA8bnk0LQEK15Qbx7ZFZ+1dtjuZcchs3KbOf9klnCRp
-	 IWyuBqC1etasXIZkks3IxciMLkLnUAAFBJ0GgY8zPJ9oHa9yl3F4DBFC9qLNOjg9VQ
-	 026nZrxvJ9TnyJ8gRjPPknM0TfyuPaxCGJ/8bvQBpB/dNnHbMdV5uWBD3NhmKxrrh2
-	 M1RnEFK+HPAYar7Mnh2Nzbc+uTvQkwgUQ9ZC6bR1qwc1lzz5r0WXEpYCXbnsTWwAAe
-	 wy/jlinexnCEQ==
-Date: Tue, 13 Jan 2026 14:36:07 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, mark.tinguely@oracle.com
-Subject: Re: [PATCH] xfs: remove xfs_attr_leaf_hasname
-Message-ID: <aWZKR16It8Lm2Uvp@ryzen>
-References: <20260109151741.2376835-1-hch@lst.de>
+	s=k20201202; t=1768312734;
+	bh=Mdtt2cEJZpAolbsyohBBtRFFKdaOQF7vilJVbgvlUGo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=IHCBTIj9UNV7zFILfsvU9XgyRBUFUE6V1XXitdJsXV4An6QT0u9i2rDGeRj289vt4
+	 WkiQzfDRs5U6wYFLdweectESwFc4BRcilU+itHS6DCLfB7DAhWRozee85uqhuEjqlF
+	 Prv9Hfrz6iNh61KNTwvjFiJs3keHSxpck+Gwzx2D8YrMgW+dctCS7kPQk2sR+wY3Ye
+	 LVdXdKWUHDiQx93VDVxTV8xlHdDI5QYAJcuuO/W8J/CHNXaaxZsTvPy16ArXawSW3w
+	 k9kverbXLU/aJEA2C9xjImlMARaL5kA/oeRmR1ID5IDE6jpqCg9Q35w4USUFRQJJvu
+	 tdxB439zhtF1w==
+Message-ID: <774aac29-837d-4692-b744-e168d969a221@kernel.org>
+Date: Tue, 13 Jan 2026 08:58:45 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260109151741.2376835-1-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 00/16] Exposing case folding behavior
+To: Christian Brauner <brauner@kernel.org>
+Cc: vira@so61, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, hirofumi@mail.parknet.co.jp,
+ linkinjeon@kernel.org, sj1557.seo@samsung.com, yuezhang.mo@sony.com,
+ almaz.alexandrovich@paragon-software.com, slava@dubeyko.com,
+ glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu,
+ adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org,
+ pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com,
+ trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org, chao@kernel.org,
+ hansg@kernel.org, senozhatsky@chromium.org,
+ Chuck Lever <chuck.lever@oracle.com>
+References: <20260112174629.3729358-1-cel@kernel.org>
+ <20260113-vorort-pudding-ef90f426d5cf@brauner>
+From: Chuck Lever <cel@kernel.org>
+Content-Language: en-US
+Organization: kernel.org
+In-Reply-To: <20260113-vorort-pudding-ef90f426d5cf@brauner>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jan 09, 2026 at 04:17:40PM +0100, Christoph Hellwig wrote:
-> The calling convention of xfs_attr_leaf_hasname() is problematic, because
-> it returns a NULL buffer when xfs_attr3_leaf_read fails, a valid buffer
-> when xfs_attr3_leaf_lookup_int returns -ENOATTR or -EEXIST, and a
-> non-NULL buffer pointer for an already released buffer when
-> xfs_attr3_leaf_lookup_int fails with other error values.
+On 1/13/26 4:04 AM, Christian Brauner wrote:
+> On Mon, Jan 12, 2026 at 12:46:13PM -0500, Chuck Lever wrote:
+>> From: Chuck Lever <chuck.lever@oracle.com>
+>>
+>> Following on from
+>>
+>> https://lore.kernel.org/linux-nfs/20251021-zypressen-bazillus-545a44af57fd@brauner/T/#m0ba197d75b7921d994cf284f3cef3a62abb11aaa
+>>
+>> I'm attempting to implement enough support in the Linux VFS to
+>> enable file services like NFSD and ksmbd (and user space
+>> equivalents) to provide the actual status of case folding support
+>> in local file systems. The default behavior for local file systems
+>> not explicitly supported in this series is to reflect the usual
+>> POSIX behaviors:
+>>
+>>   case-insensitive = false
+>>   case-preserving = true
+>>
+>> The case-insensitivity and case-preserving booleans can be consumed
+>> immediately by NFSD. These two booleans have been part of the NFSv3
+>> and NFSv4 protocols for decades, in order to support NFS clients on
+>> non-POSIX systems.
+>>
+>> Support for user space file servers is why this series exposes case
+>> folding information via a user-space API. I don't know of any other
+>> category of user-space application that requires access to case
+>> folding info.
 > 
-> Fix this by simply open coding xfs_attr_leaf_hasname in the callers, so
-> that the buffer release code is done by each caller of
-> xfs_attr3_leaf_read.
-> 
-> X-Cc: stable@vger.kernel.org # v5.19+
+> This all looks good to me.
+> Just one question: This reads like you are exposing the new file attr
+> bits via userspace but I can only see changes to the kernel internal
+> headers not the uapi headers. So are you intentionally not exposing this
+> as a new uapi extension to file attr or is this an accident?
 
-This looks like a typo. (Thus stable is not on cc:)
-
-Probably not enough reson to resend,
-(since the stable scripts backport anything with a Fixes-tag anyway),
-but perhaps s/X-Cc/Cc/ when applying.
+The intention is to expose the new bits to user space. IIRC those got
+removed from uapi headers when I converted from using statx. I can fix
+that up and post a v4.
 
 
-Kind regards,
-Niklas
+-- 
+Chuck Lever
