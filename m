@@ -1,169 +1,127 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2347223336
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 12:23:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 351181A840A
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 12:31:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768306993; cv=none; b=Bq8fXF4kWUSCuKo3BYMrOszo6mXHP90djLpCeRIxGagQzgi96W3H+pFs2GQdqN5suiqxLM5tqtx1l9iNUuYcrNV/44D9u4oj9RW8IRY/C6JEPTIxxeTL8Lyps6i85QfBOvYkN42ich6jHz9s6ufHscRujJs3IOIOEQedj1YZR/g=
+	t=1768307472; cv=none; b=W19Wx0H6Y9ByzNGmRL4Jx7CgL7PqecesfpDPNpemuoUVhM4TP6WuFXRlIAxFBDv5padvIokDUtN84+mqvwYB7cmc+B13ZrQj5UooV29gkDeWHI3yvOIYAZh1uYfBN+ARiflkva/NiRFaP8mDQ4RIXHwJMMYsY4nuutVLrbngiqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768306993; c=relaxed/simple;
-	bh=Tg/j/+VkXSR2euQ1Kk7x1AhIGsUY+p/+rckmcuTxqY4=;
+	s=arc-20240116; t=1768307472; c=relaxed/simple;
+	bh=dr/deaXgcA6wPeq1B6ILKvHv9WqvrG3xbYZ2Dadm3hk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GVYjnEqIABh62y4iWTxyVnME0I17bzGao8XEnVkACxf+8uRkUcY7BVymaVNIwAdYQKNoPgb3K5ntY6i3JCaHsi+KZ+PGpBowBE6n6+IE54VRq08+06yDA6HdhikwnEC42Rp8ia9N1alHQjEMen2fBOTQfDJRCMOViMJrJn7p+qU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O+K/JfSE; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=F4hupmd2; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=JktHSlhqMhsUirB5s0XGUVGE0OeaGF35JmZlXEDpyGo9U+MukHYUh8UTEX7pbLYAVGLkAVgl8H2BwGqK4mj1nA2j/O/mQJzUcljRo9hndYVybjRep7iXm7yWwwQb6hal3vLugtPySUrrfWJVma2ItiapX/ZUmQhrUO+JyLON7Hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Tx5Oh18A; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=TkhUijY5; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O+K/JfSE";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="F4hupmd2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Tx5Oh18A";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="TkhUijY5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768306990;
+	s=mimecast20190719; t=1768307465;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/TuVoqMaQZ1pYUPaWYEfmSsILrC0krVKandDz6n8dcw=;
-	b=O+K/JfSEZGG2C+3c03NcYtbnfnJcCRqVkym9h7KBE1D+4e3ZLcWhlc6/UoXNe5dFR0zpp8
-	ObVFWgsOsDSlN5CwRu8ULWYFRRV+8CP+I6wyTQmpRmi29RBUe04/8VSVRcvaQ9uEicGP0G
-	qTzoDpgnAcS6u6MKGWubZESUQK1b854=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=1kRCPW/g/RoIM20GSJuVNzuIhcgaphVA4TMkA/x3UKo=;
+	b=Tx5Oh18AU9H+Fl4CdfL5Xx9gU2lQP03tk32TrkCuBTDWZpDEVg+fWNF3dHFAS0nwAb1JJE
+	MWpwlUGRwiC6Yc5+W6FvV3jPffzmHj8HUTKWb0+KJmq9sqgrVmciqwud2hLkX7UliExWta
+	RfYbvNruOKDpcwxNjX0INFsCmuirhRQ=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-449-YDHqVCdaMRmhbduP4f-_mQ-1; Tue, 13 Jan 2026 07:23:09 -0500
-X-MC-Unique: YDHqVCdaMRmhbduP4f-_mQ-1
-X-Mimecast-MFC-AGG-ID: YDHqVCdaMRmhbduP4f-_mQ_1768306989
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-477964c22e0so45520935e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 04:23:09 -0800 (PST)
+ us-mta-107-EwLzt-cWOGyrqME8JVWtgQ-1; Tue, 13 Jan 2026 07:31:04 -0500
+X-MC-Unique: EwLzt-cWOGyrqME8JVWtgQ-1
+X-Mimecast-MFC-AGG-ID: EwLzt-cWOGyrqME8JVWtgQ_1768307463
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-47918084ac1so69920575e9.2
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 04:31:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768306988; x=1768911788; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=/TuVoqMaQZ1pYUPaWYEfmSsILrC0krVKandDz6n8dcw=;
-        b=F4hupmd2A58xwE+7th8f+rw7Kl3fmtKnCy6/j9HDMF64XD9T4y8hl1tuxgzTa83KNA
-         /SjJjNy6Uiz5nfOcl9srkDmtYGpjGe0QUT88Vx8eBAAzFCD2s/IRh6YrAJ4L72fQkTcY
-         pmdquOSz0L9reOLv4U6h8gpFVL54sSR/YSUraBkoERbaU6069diIzqFFAim1/zt2go1c
-         QJr5HVpnjbNzEWmI/MvR4q2GI7E64u+guop4a0tvl4wTl/Vavm8ufJsBq3NU6fBz92Ud
-         JRGW/8LZOqWwGpM5nGAaxzH0jfFVJW2S6Sj8W89fCJoLGVYB9bKoP0cD7tsWT2fYuJMK
-         ke4g==
+        d=redhat.com; s=google; t=1768307463; x=1768912263; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1kRCPW/g/RoIM20GSJuVNzuIhcgaphVA4TMkA/x3UKo=;
+        b=TkhUijY52sbTXLlVuHE/KfkS4yiurmXJ6BgH4PE5RhfanczDl91acbveYX2itYPZI1
+         EoybkJD5KcGuU9vTj5AYhh9q1EB9ADtfKUgrQpq1mR4yMNFaOvVlE4SghsFVBPIi2OpV
+         oVzwifHVduH77ZaqLkHKKGBVGHkg/gmZX7oRttkcCE5K6b/wVwzB3/VB2cEf61kYlRqU
+         tqbPjqlL7T+DG4xHiVXVY05f0F+8JiGpx0/SFPpcJa9q0Dd0zZyZ3/5RMgACCNHCLURj
+         +lyGGCM6Ly3Pq5xjgwi/73EMcgabkmwV1SEeW0CYnUIsk9dxrVieDmHNlhDF4Vo4ETzA
+         vYoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768306988; x=1768911788;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/TuVoqMaQZ1pYUPaWYEfmSsILrC0krVKandDz6n8dcw=;
-        b=CRtkbu/z2++HydGnHY+Lazq1RtkI1Z+MvJk0MOnKMn4GDEmm/npIq/xLkLFAOWAAQd
-         kpRpHjyyc4AW8nCQAkognmA4qG0TV3MEEDJKBHXkqXlu6g4f9KbNsC4gIongSsnRBR0H
-         YtBvRFmLfai5g+PTfS/+Z4uX0PeDjqRiyVEwIb8zTLj5hjRNW2GnqoRGVhk85V2Xhne2
-         9oDmffUWp9ENzeiInqGrr9Jw7HJYcaxCsOQvBokdEi6WODgilA/QX31R0G/HvqtbfkQL
-         11l/MYWassR7u/Q0kTEWuG1n25mrdX0rDkWSZBO9mQys4rmXYgyifhWBswUxAwvpId4z
-         jvBw==
-X-Forwarded-Encrypted: i=1; AJvYcCXegQPWTEZAXsHkoKfRAdWW6WrAVZ8elAR28Xr/UsMm8QgeCJrTzQh+ZPMypa8tRc8maii25AD9Vgc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzcuqhvaf68NNyaR9OtrG/Nu9BSrJ2rQiOhoUgoOiTAmKp9YgBG
-	qEgAQZ7pXkq6WY7EDyukRMbHYATPvORbbUZISDBb2QJn/nOsTxsKlaTx6NBAqst4g4dZcbz2rhE
-	EXUhCzipy6Slah75P5jw73TI6wpal/ZRiggKSbBR8RpBfSEmbJ4fj87Au8dOHVo4vtGFe
-X-Gm-Gg: AY/fxX5p8V58XWhAFh5GdFuWe2qLo379YMtvgKfowxlFyc98411WKBTqzy5HbGo16ap
-	jkRW81eewy1vCNFp2UkzJn2b3A6mjdosGoJOMfXSpRLvPdmSmYgtw1iXyymj1Qw+Hip0jktqij5
-	aBv9/Ov3RUOR1XSBXkMnpiiFrFQJjXDITXIoLc8tQcTsF1N6Jhkcb6mAj2irUjB9Pw7jMaRUxnv
-	XP0cbppvazlV1MFds20PFNj1+H8J5+aUGggbFuDxe29tKvvY+yPmRb2NPFg/MTUQdk8ziiHX+Ex
-	ne/nmpCfc9U5qKPz6nKVekrSyqKEN1cFTUhvp5hF9U3GkWaSBJHwAwZrWjJ7OsHfjWWxHnkex1Y
+        d=1e100.net; s=20230601; t=1768307463; x=1768912263;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1kRCPW/g/RoIM20GSJuVNzuIhcgaphVA4TMkA/x3UKo=;
+        b=sYvGKDAvG7fsMrY681fLaJozXXO7t+oN7Tyh8itOdhXy3fd7BkGDjX69KCFCQeCYuu
+         jP3/6MIY2a5chvT2wrIBHsPEM8oCX++Cimn8h/SRWTm5ZcYfVKHh33R0C2iF2i8J5fFs
+         9rc282oWozMC3KSBgSHa0lV4rjK8nokEVqVsxp5SeIYYdAgOnyc1OtnB73t/VyWut82r
+         B1Wy6QR5UyDtbbeulG/wvYLw5NH+jbj6UWmUOTEZ7CXm9pvuicJzNzFpyEnqO/qzvSIf
+         tRyvjB//CUSCzKocQ6YMFSQ0gpQgvUQCCe+fOgjB/2SRVMhclcIIRvoqFYZQDRsySXhT
+         YBWA==
+X-Forwarded-Encrypted: i=1; AJvYcCUb7DMpgEMVNLPdExhzWBDi/N9LyZkckIbRq8klrGEUoXqHEFZrG/u9oiO1ZMLPfRGM9J0zcguSklw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXCtPnknDheAi2i3oD/Q+lmsrK8GY0BDCja6WfXxlTHc6rgmdF
+	uQyTBZEmoGXeXn7LVZtJx8ckUtWW11MVVSuXQsKgx5kh+Ldg5pSrEtf2jyRW2S3vW/Q8M1nmT2O
+	WQB2UFV7N7TRVKbdovIk+rpDdvWbV0mkx00Ey/OjNiLPCBh7Isoq/kkxbh/nn
+X-Gm-Gg: AY/fxX7XQySNCelCf4OclHJZ4ZxzR3tV9qyAs+OFEY12HpxGjWU1AKMv7MtQ47VcJRp
+	cX+Vc+EiJtjr/3kZCaK+h0gh6hNjfg//3W0rLPtU0SGstH9fM52cz0Iibo/v1PSSrZ1xWmljy4S
+	ijhS/4+bffGKGF1wYHW0usxNhX13E4pbuT7Y2d06I/wyL5tA+tnyD14tHSOpgdCURwwnjWVLSya
+	+s8ICMULeddroR5HeVegGEErNWpgWbBv5BHfyTinhi7X8mfTdKsWtyTw2IiZswu11Ni0EHwW1Mt
+	sobFXCwvPXd6ddI7VUVWo5X58vaUcsik9ZQml2SCM5pbNaIceYFyU6/n1VxqgW4Vb3GVLSqQFFo
 	=
-X-Received: by 2002:a05:600c:c48f:b0:47d:403a:277 with SMTP id 5b1f17b1804b1-47ed7bfd511mr35482125e9.4.1768306988356;
-        Tue, 13 Jan 2026 04:23:08 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEr0RACpmZBlMe7kT+6LC1QjSW7gAHd8MZ6pSzcyVRIgTjA8m3UJl2GbG2kQczOY+RVn3cfeA==
-X-Received: by 2002:a05:600c:c48f:b0:47d:403a:277 with SMTP id 5b1f17b1804b1-47ed7bfd511mr35481655e9.4.1768306987799;
-        Tue, 13 Jan 2026 04:23:07 -0800 (PST)
+X-Received: by 2002:a05:600c:4fd0:b0:477:8a2a:1244 with SMTP id 5b1f17b1804b1-47d84b17e75mr242698185e9.11.1768307462725;
+        Tue, 13 Jan 2026 04:31:02 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEEv+vamH9clJci/VsanC5PjfTDujMWW6wmVj/wH+rxud84JLfRUY3cNQgVFJ6VRoHnSpduKw==
+X-Received: by 2002:a05:600c:4fd0:b0:477:8a2a:1244 with SMTP id 5b1f17b1804b1-47d84b17e75mr242697885e9.11.1768307462317;
+        Tue, 13 Jan 2026 04:31:02 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd5edd51sm43942503f8f.29.2026.01.13.04.23.07
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47eda45ad38sm13548765e9.14.2026.01.13.04.31.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Jan 2026 04:23:07 -0800 (PST)
-Date: Tue, 13 Jan 2026 13:23:06 +0100
+        Tue, 13 Jan 2026 04:31:01 -0800 (PST)
+Date: Tue, 13 Jan 2026 13:31:01 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, aalbersh@kernel.org, 
-	david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH v2 13/22] xfs: introduce XFS_FSVERITY_REGION_START
- constant
-Message-ID: <5ax7476dl472kpg3djnlojoxo2k4pmfbzwzsw4mo4jnaoqumeh@t3l4aesjfhwz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, 
+	aalbersh@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v2 15/22] xfs: add writeback and iomap reading of Merkle
+ tree pages
+Message-ID: <6m2lpjl2rgwbil2yixs5s77qzidvyvsrws2x4utvkqyd2exi4u@hqijtifezoob>
 References: <cover.1768229271.patch-series@thinky>
- <qwtd222f5dtszwvacl5ywnommg2xftdtunco2eq4sni4pyyps7@ritrh57jm2eg>
- <20260112224631.GO15551@frogsfrogsfrogs>
+ <bkwfiiwnqleh3rr3mcge2fx6uucvvj2qzyl3sbzgb4b4sbjm27@nw2i3bz7xvrr>
+ <20260112225121.GQ15551@frogsfrogsfrogs>
+ <20260113082317.GG30809@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260112224631.GO15551@frogsfrogsfrogs>
+In-Reply-To: <20260113082317.GG30809@lst.de>
 
-On 2026-01-12 14:46:31, Darrick J. Wong wrote:
-> On Mon, Jan 12, 2026 at 03:51:25PM +0100, Andrey Albershteyn wrote:
-> > This constant defines location of fsverity metadata in page cache of
-> > an inode.
+On 2026-01-13 09:23:17, Christoph Hellwig wrote:
+> On Mon, Jan 12, 2026 at 02:51:21PM -0800, Darrick J. Wong wrote:
+> > > +			wpc.ctx.iomap.flags |= IOMAP_F_BEYOND_EOF;
 > > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h | 22 ++++++++++++++++++++++
-> >  1 file changed, 22 insertions(+), 0 deletions(-)
+> > But won't xfs_map_blocks reset wpc.ctx.iomap.flags?
+
+It will, this one is only for the initial run. This is what allows
+to pass that check in iomap_writeback_folio(), the
+iomap_writeback_handle_eof() call. Further folios would have this
+flag set in xfs_map_blocks().
+
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 12463ba766..b73458a7c2 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -1106,4 +1106,26 @@
-> >  #define BBTOB(bbs)	((bbs) << BBSHIFT)
-> >  #endif
-> >  
-> > +/* Merkle tree location in page cache. We take memory region from the inode's
+> > /me realizes that you /are/ using writeback for writing the fsverity
+> > metadata now, so he'll go back and look at the iomap patches a little
+> > closer.
 > 
-> Dumb nit: new line after opening the multiline comment.
+> The real question to me is why we're doing that, instead of doing a
+> simple direct I/O-style I/O (or even doing actual dio using a bvec
+> buffer)?
 > 
-> /*
->  * Merkle tree location in page cache...
-> 
-> also, isn't (1U<<53) the location of the Merkle tree ondisk in addition
-> to its location in the page cache?
 
-yes, it's file offset
-
-> 
-> That occurs to me, what happens on 32-bit systems where the pagecache
-> can only address up to 16T of data?  Maybe we just don't allow fsverity
-> on 32-bit xfs.
-
-hmm right, check in begin_enable() will be probably enough
-
-> 
-> > + * address space for Merkle tree.
-> > + *
-> > + * At maximum of 8 levels with 128 hashes per block (32 bytes SHA-256) maximum
-> > + * tree size is ((128^8 − 1)/(128 − 1)) = 567*10^12 blocks. This should fit in 53
-> > + * bits address space.
-> > + *
-> > + * At this Merkle tree size we can cover 295EB large file. This is much larger
-> > + * than the currently supported file size.
-> > + *
-> > + * For sha512 the largest file we can cover ends at 1 << 50 offset, this is also
-> > + * good.
-> > + *
-> > + * The metadata is stored on disk as follows:
-> > + *
-> > + *	[merkle tree...][descriptor.............desc_size]
-> > + *	^ (1 << 53)     ^ (block border)                 ^ (end of the block)
-> > + *	                ^--------------------------------^
-> > + *	                Can be FS_VERITY_MAX_DESCRIPTOR_SIZE
-> > + */
-> > +#define XFS_FSVERITY_REGION_START (1ULL << 53)
-> 
-> Is this in fsblocks or in bytes?  I think the comment should state that
-> explicitly.
-
-sure, will add it
+fs-verity uses page cache for caching verified status via setting
+flag on the verified pages.
 
 -- 
 - Andrey
