@@ -1,31 +1,32 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472FC2E974D;
-	Tue, 13 Jan 2026 16:22:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4775D23C51D;
+	Tue, 13 Jan 2026 16:23:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768321327; cv=none; b=LmgpQ2mvhcs0+WOd5Ys5MKXPLUHQUFGTK/GIi0gR3uTVbcJM0Cz/jhnQDZCYrn6NvC08AAqdHtGgaOTdY6B68FlbA2zfx+c55ZHhz/nB0jqDkhFuj6Ze5zAnZ7r49R0XHL6G+f3SLCC5jjeh9ghp3NQ8YwuyDNqx4antyPjBf4E=
+	t=1768321401; cv=none; b=LAIKWwOKHrEYd/YMW4IJIqlg3c/1c8xDJyigmE8mQJVOYsxu0jYDFUj8SJk/spFTF6FU7pBVWwqOeeBxXsyDepfSPl7bZihtuU1eoICkxKARCfCSjWYWU384Vpxokcdy2Ox/1W5J601/1cBoMW3eMHlifPtzVFTho4weeTQO6J0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768321327; c=relaxed/simple;
-	bh=wthBqmrQmaUEJnsiczcnnaEjm9eYruj7qmaIOeScPzY=;
+	s=arc-20240116; t=1768321401; c=relaxed/simple;
+	bh=EKdDkyhlyLijiT46I+rcfNN+S+4lL5ce4km5513Ve5I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J6ER+xOWod3FheS7BEnZ3uRrrcMk2IQ/nGAyCOIpyXlYRxhiZvw3bmW1AoOy/iCwcggsi4pNnFFe/JzusH7o4F6tP+HNxHr/TvhLOUk04QmrdyhVnKwzXP3iMtFYOPamTird8E80Ovx+RTbbQjjYeL7ys5gzQq+eIrc+0xIzEaU=
+	 Content-Type:Content-Disposition:In-Reply-To; b=MpOuBFywgkDlKt+RCS2hq0AH2VNNWXwuXCSyQoNO0CRfJVP0GGIMLVXNqBhDToSSbv56a6yk7WOknEI5+pjyc0aQuIvnaS7YUC5hq9yxsA9bfs7Sjhpm3EB9Lbgr8EKKCfW3fA5IHJMqkeq48DhTGYl44pyKaeG3XJ0P3hscfRs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id E5E93227AA8; Tue, 13 Jan 2026 17:22:02 +0100 (CET)
-Date: Tue, 13 Jan 2026 17:22:02 +0100
+	id 7591767373; Tue, 13 Jan 2026 17:23:16 +0100 (CET)
+Date: Tue, 13 Jan 2026 17:23:15 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org,
-	aalbersh@kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v2 3/22] iomap: introduce IOMAP_F_BEYOND_EOF
-Message-ID: <20260113162202.GA5287@lst.de>
-References: <cover.1768229271.patch-series@thinky> <d5fc72ldfwyzbgiypzlhn5diiqyijxaicpa3w6obx4iismuko3@kttpcgqjy6i5> <20260112221853.GI15551@frogsfrogsfrogs> <20260113081220.GB30809@lst.de> <xjz5a35ypk3am6fbhkfdeeeilu54lhbcymginjv6srjve4qfjn@uucfin46ylhj>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, ebiggers@kernel.org,
+	linux-fsdevel@vger.kernel.org, aalbersh@kernel.org,
+	david@fromorbit.com, hch@lst.de
+Subject: Re: [PATCH v2 5/22] iomap: integrate fs-verity verification into
+ iomap's read path
+Message-ID: <20260113162315.GB5287@lst.de>
+References: <cover.1768229271.patch-series@thinky> <fm6mhsjqpa4tgpubffqp6rdeinvjkp6ugdmpafzelydx6sxep2@vriwphnloylb> <20260112223555.GL15551@frogsfrogsfrogs> <vwx7hktpfbdbstxloryrfwcbk373pugjeqcozm7nuvl3uykr5z@gdgmpr7pgp34>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,18 +35,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <xjz5a35ypk3am6fbhkfdeeeilu54lhbcymginjv6srjve4qfjn@uucfin46ylhj>
+In-Reply-To: <vwx7hktpfbdbstxloryrfwcbk373pugjeqcozm7nuvl3uykr5z@gdgmpr7pgp34>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jan 13, 2026 at 11:50:07AM +0100, Andrey Albershteyn wrote:
+On Tue, Jan 13, 2026 at 12:16:45PM +0100, Andrey Albershteyn wrote:
+> > Also, when do we get the combination of BEYOND_EOF && HOLE?  Is that for
+> > sparse regions in only the merkle tree?  IIRC (and I could be wrong)
+> > fsverity still wants to checksum sparse holes in the regular file data,
+> > right?
 > 
-> Hmm not sure how you see this, the verity pages need to get written
-> somehow and as they are beyond EOF they will be zeroed out here.
-> 
-> Regarding your comment in the thread to use direct IO, fsverity
-> wants to use page cache as cache for verified pages (already
-> verified page will have "verified" flag set, freshly read won't).
+> The _BEYOUND_EOF is only for fsverity metadata. This case handles
+> the merkle tree tail case/end of tree. 1k fs bs 4k page 1k fsverity
+> blocks, fsverity requests the page with a tree which is smaller than
+> 4 fsverity blocks (e.g. 3072b). The last 1k block in the page will
+> be hole. So, just zero out the rest and mark uptodate.
 
-Ok, I guess we need to stick to the pagecache based path then.
-The upside is less differences from the existing file systems.
+Can you add a comment explaining this?
+
+> > > +#define IOMAP_POOL_SIZE		(4 * (PAGE_SIZE / SECTOR_SIZE))
+> > 
+> > How do we arrive at this pool size?  How is it important to have a
+> > larger bio reserve pool for *larger* base page sizes?
+> 
+> Well, this is just a one which iomap uses by default for read pool.
+> I'm not sure I know enough to optimize pool size here :)
+
+Note that all this would go away when using ioends.
 
