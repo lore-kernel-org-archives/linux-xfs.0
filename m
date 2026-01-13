@@ -1,32 +1,32 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B31FA314A89;
-	Tue, 13 Jan 2026 08:19:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C340537C11D;
+	Tue, 13 Jan 2026 08:20:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768292365; cv=none; b=VN8c0sIXeK1GUWE+CPWB5oBd8j3lssOyOQ8K5H7eRyuarUfjC+KAPnjZrAFDtKZC9lRYaVVFe1LntKBQC4Wz8hFQ1NT1gGZ8DlnZKAdEF9xqSWcVjcCejiGhav2R2SutYrIJ/SutbUJk2mwauHv3n/FqSZNZHPTiWjDAAyQaLQM=
+	t=1768292444; cv=none; b=dZEr9BPyFpw7Mt50nz4CGsvQdJYY4JzAXUe1xbwGJ253RYoZy/B0eULXBP2od/v99IFjwYCiqlpA8Rgo6mx2k2wPC9ljJVEimY0isxvDI3zf3gG8zpFvBBDCl1Rsze34rO9Li8Du23NqOk//glKHmagbWbY1B28r61Dn68d8Yo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768292365; c=relaxed/simple;
-	bh=T+M+EGT+9LnhHqqz3Q8jSpsMKlvQE918eUy35nbwZNk=;
+	s=arc-20240116; t=1768292444; c=relaxed/simple;
+	bh=ItblKe1dpBNtiNh/o2vkCVVVDmYDKNW5eds1PrHJgOY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iual2SRzeyoYLkF0IL1LUhGId2kwi/MAY5og1SxQ6btUgLVeGdLdLkppuO/ZpHDRVc94Oj4/FS5aFceiiRmMo8OHFAHyIk80qm5Q0qx5ZTmsw0bwNtvX3FpKjQ9Ikvbu/0Vl1WLS2sBUiVwsFOV24ALeJBtw+2/SAeQNlmefAa0=
+	 Content-Type:Content-Disposition:In-Reply-To; b=G/zWFbWHMHHxmZb9a5ugdIxt2bWQSIbzeIREyh9SDdgYY8GHMFVdRSmT9QLB+UBS/z4nzYX4zapR3GlMSGjiErL4wjtgHSpqxg6cgXAJ2LqmVlEgLW+pcb9pSMRup/IxUD+m2EI1H/VGs7EVep8YCRSzICNrAFQZADD/9j55BLo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8FAC5227AA8; Tue, 13 Jan 2026 09:19:20 +0100 (CET)
-Date: Tue, 13 Jan 2026 09:19:20 +0100
+	id DEA34227AA8; Tue, 13 Jan 2026 09:20:39 +0100 (CET)
+Date: Tue, 13 Jan 2026 09:20:39 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
 	ebiggers@kernel.org, linux-fsdevel@vger.kernel.org,
 	aalbersh@kernel.org, djwong@kernel.org, david@fromorbit.com,
 	hch@lst.de
-Subject: Re: [PATCH v2 5/22] iomap: integrate fs-verity verification into
- iomap's read path
-Message-ID: <20260113081920.GD30809@lst.de>
-References: <cover.1768229271.patch-series@thinky> <fm6mhsjqpa4tgpubffqp6rdeinvjkp6ugdmpafzelydx6sxep2@vriwphnloylb>
+Subject: Re: [PATCH v2 10/22] xfs: disable direct read path for fs-verity
+ files
+Message-ID: <20260113082039.GE30809@lst.de>
+References: <cover.1768229271.patch-series@thinky> <6rsqoybslyv6cguyk4usq5k2noetozrj3k67ygv5ko5fc57lvn@zv67vcnds7ts>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,26 +35,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fm6mhsjqpa4tgpubffqp6rdeinvjkp6ugdmpafzelydx6sxep2@vriwphnloylb>
+In-Reply-To: <6rsqoybslyv6cguyk4usq5k2noetozrj3k67ygv5ko5fc57lvn@zv67vcnds7ts>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jan 12, 2026 at 03:50:26PM +0100, Andrey Albershteyn wrote:
-> +#ifdef CONFIG_FS_VERITY
-> +static void
-> +iomap_read_fsverify_end_io_work(struct work_struct *work)
-> +{
-> +	struct iomap_fsverity_bio *fbio =
-> +		container_of(work, struct iomap_fsverity_bio, work);
-> +
-> +	fsverity_verify_bio(&fbio->bio);
-> +	iomap_read_end_io(&fbio->bio);
-> +}
+On Mon, Jan 12, 2026 at 03:51:03PM +0100, Andrey Albershteyn wrote:
+>  	if (IS_DAX(inode))
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +	else if ((iocb->ki_flags & IOCB_DIRECT) && !fsverity_active(inode))
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> +	else {
+> +		/*
+> +		 * In case fs-verity is enabled, we also fallback to the
+> +		 * buffered read from the direct read path. Therefore,
+> +		 * IOCB_DIRECT is set and need to be cleared (see
+> +		 * generic_file_read_iter())
+> +		 */
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+>  		ret = xfs_file_buffered_read(iocb, to);
+> +	}
 
-I'd much rather use the ioend processing infrastructure for this rather
-the reinventing another deferral method.  This series:
+I think this might actuall be easier as:
 
-https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/iomap-pi
+	if (fsverity_active(inode))
+		iocb->ki_flags &= ~IOCB_DIRECT;
 
-has the small patches enabling it for reads, and I will post a rebased
-and updated version soon.
+	...
+	<existing if/else>
 
