@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03C0C38F928
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 13:10:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF8E38FF04;
+	Tue, 13 Jan 2026 13:10:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768309842; cv=none; b=M6W/V2omarzegwYdHPsG5UnQ62wQk7ajn7VSP8/ifEpMmXcYBMXxWQGmfPhW26vEiEjpky49qitWoA6hs1/pRCi5+Uj0Ahu9SEWNnFxwdiIJ4FUJe78Prw4U+OueydloiCZOXCiy8MdQdvnxzF1QsOpp9ojjKWjkjukOepzok6U=
+	t=1768309843; cv=none; b=AVrJHJXz8ZmE2jTHgiYUAqjAWDJnvhNtEuatERkADeE9oPvQBQ+5gZ9FidH5+rsQHitcJvv9uWnG0iCF659AnSAW3wpeR0jsHE7hNb0IIhO18xzXFbk5O5yLA2WD465Ul5XgVTs4DNJ/+zCn8h2EL+WdlMms6mpZCiFl44s/rPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768309842; c=relaxed/simple;
-	bh=XQCBqYh3+cjYCEYXGQ3b6Jgx5WGmrSU26M+fPDW9G0c=;
+	s=arc-20240116; t=1768309843; c=relaxed/simple;
+	bh=SAkRW3R4HH1/+qn76DfyQKdUBBdSRD5KY0q/RfLTWoM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=a1jYwijotTJNxMAEt61FkyDg++OwDNVHD1NPq2/VEQNUneLY3jqSDlEoNRG0z0sWaSZTJThGZfoTzK0KH3lqHOjBeQhTIfeLb54+yD0oK1t+bgXdCvmB2iV54z0fXgFqcG3yX16XsNCRL58BvnhuZZMO84+4K82bq7p1v2MPWpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q6LMIIH8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Akwu98X8VfOujc4OmBQbj1VGoFtTgAV0i6C5qNYsqgFsd9iXd9WVe1EPUokjCd7bTPvQRweGcLb2EmcU97kIR474hMEtqPibcmNuPSYqQ4rpRpjK5vLQsJOacL+czKrIKxNhyTTSwh/7aMINP8wA9R2lgyiTZ4n5wiJXjTsK4Kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9LbziVm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q6LMIIH8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87740C116C6;
-	Tue, 13 Jan 2026 13:10:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9LbziVm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A4E9C116C6;
+	Tue, 13 Jan 2026 13:10:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768309841;
-	bh=XQCBqYh3+cjYCEYXGQ3b6Jgx5WGmrSU26M+fPDW9G0c=;
+	s=k20201202; t=1768309843;
+	bh=SAkRW3R4HH1/+qn76DfyQKdUBBdSRD5KY0q/RfLTWoM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=q6LMIIH8A4Hzeqc+kfvq5oK5bRI8Jzn2ZXdJaKu12SeXVAtfsoOgQFMa32akHVfkP
-	 kXbOPjs+bvWqQmFZY69SgfSLDgRiZlKSNm0l1RMsKz9vJ8l41PkE+wC6cZ86fF9o3D
-	 SOa1hKeYMIymE6/f5lEakEU8cl3Ja+aXBvQLvT4uNPTXwrNWEfzCLNPEqXfIjcNPhr
-	 87S6Kr4b6Q0lITG5VRGuHvHE1tEvS+wx9uoepMD7SoVKOqzTWFG9bMfCry3eEgw4Fr
-	 qbjibT78WuzMNvoaW+CZb/7NTFjZKwqTCdXKoM377ts8gcG0LEuWCyPtyrwwbh1Qar
-	 hYZyoXGF9MUDA==
+	b=Z9LbziVmoGZsMZ4kMlb0RHoplfC38I4R5qhEJyRagyDQW+74slBZmIr7movRcxev3
+	 lAtp4jJy+xpnWN1j34uQpufmbWMFJz5e+0MuE1m7kIDdGWN57sJs9NCUv3u2BXKwQj
+	 zPVar+ByyhMggwM9nzoXnZtA0H/eGOSA7XK4G2TqNF+LNIjQUNsDntmYIVB3soYSAQ
+	 1tXcYBEyGF8tbjyegAU1oeku845FzUtv/e6JbVBGNyg8meb57hvKr7zt9fukpGDXGZ
+	 04yXpIZ1zaFjMVrmLDy3ACxw6rFJBN95S6YDj4tl6jPaHNM+vdiwpLrg83UwBVsWZR
+	 HneQOggHiWxxQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, 
- "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org, 
- hch@infradead.org
-In-Reply-To: <9b2e055a1e714dacf37b4479e2aab589f3cec7f6.1768205975.git.nirjhar.roy.lists@gmail.com>
-References: <9b2e055a1e714dacf37b4479e2aab589f3cec7f6.1768205975.git.nirjhar.roy.lists@gmail.com>
-Subject: Re: [PATCH v2] xfs: Fix xfs_grow_last_rtg()
-Message-Id: <176830984026.127908.1608705723447538666.b4-ty@kernel.org>
-Date: Tue, 13 Jan 2026 14:10:40 +0100
+To: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Cc: stable@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+In-Reply-To: <20260109174905.26372-1-bfoster@redhat.com>
+References: <20260109174905.26372-1-bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: set max_agbno to allow sparse alloc of last
+ full inode chunk
+Message-Id: <176830984207.127908.986837300693754685.b4-ty@kernel.org>
+Date: Tue, 13 Jan 2026 14:10:42 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,25 +45,27 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 12 Jan 2026 13:54:02 +0530, Nirjhar Roy (IBM) wrote:
-> The last rtg should be able to grow when the size of the last is less
-> than (and not equal to) sb_rgextents. xfs_growfs with realtime groups
-> fails without this patch. The reason is that, xfs_growfs_rtg() tries
-> to grow the last rt group even when the last rt group is at its
-> maximal size i.e, sb_rgextents. It fails with the following messages:
+On Fri, 09 Jan 2026 12:49:05 -0500, Brian Foster wrote:
+> Sparse inode cluster allocation sets min/max agbno values to avoid
+> allocating an inode cluster that might map to an invalid inode
+> chunk. For example, we can't have an inode record mapped to agbno 0
+> or that extends past the end of a runt AG of misaligned size.
 > 
-> XFS (loop0): Internal error block >= mp->m_rsumblocks at line 253 of file fs/xfs/libxfs/xfs_rtbitmap.c.  Caller xfs_rtsummary_read_buf+0x20/0x80
-> XFS (loop0): Corruption detected. Unmount and run xfs_repair
-> XFS (loop0): Internal error xfs_trans_cancel at line 976 of file fs/xfs/xfs_trans.c.  Caller xfs_growfs_rt_bmblock+0x402/0x450
-> XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x10a/0x1f0 (fs/xfs/xfs_trans.c:977).  Shutting down filesystem.
-> XFS (loop0): Please unmount the filesystem and rectify the problem(s)
+> The initial calculation of max_agbno is unnecessarily conservative,
+> however. This has triggered a corner case allocation failure where a
+> small runt AG (i.e. 2063 blocks) is mostly full save for an extent
+> to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
+> case, which happens to be the offset of the last possible valid
+> inode chunk in the AG. In practice, we should be able to allocate
+> the 4-block cluster at agbno 2052 to map to the parent inode record
+> at agbno 2048, but the max_agbno value precludes it.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: Fix xfs_grow_last_rtg()
-      commit: a65fd81207669367504b6da7758e130ee23a7dfe
+[1/1] xfs: set max_agbno to allow sparse alloc of last full inode chunk
+      commit: c360004c0160dbe345870f59f24595519008926f
 
 Best regards,
 -- 
