@@ -1,29 +1,38 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABA8138F939
-	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 13:27:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451383904D7
+	for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 13:36:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768310827; cv=none; b=He1WgdQMIXoQarGQaFMGa54/xLrMMuvy2Q3Nb12lKJ6HQXd6nPtCUp1N7u0M3bYVrRvXtQfSnwykdkpTnY4+IaqTfTzB8nG5/zVkzN/8DDpdzVoL3EhpDzTEazZFA/wTQfXjmhdhZiGoYaOoBp/LniqBqr6uVjh+1VmY6o+p7Rk=
+	t=1768311392; cv=none; b=H4+QpMvBoxrwoiRM0KnWucHiY98OXbfjRzUC/mvSs9CA4nLKFncKWHlaosOtalmM/ti5aKD0ttLu3oAlLjP+cP8jlg/+PhV6GOJXpm7okSAAHn9ZRpmkW8ExaIvf1kmRTUXrrWliyC/+U1+/7DmxVR6nDGcr+o1PEkQADVPoQY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768310827; c=relaxed/simple;
-	bh=8R5U9T9cwYECi/RiAeuRxSSmjx1X02no/ZZMjJ6yiAo=;
+	s=arc-20240116; t=1768311392; c=relaxed/simple;
+	bh=PpWYvaGTcxGfEgc3oOhnT3ttz/DamcU+gE2mF5+9314=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NX20W64j7s5Hp8R2uUJGT2sancKgywfgMy7W9qPeGj6Iaok1QA81qWMw4e0dMfyXxadX0mzuq7FbfT4s4nDwOp2T1JRW+4hAU6sGyt2k4Hv294O+RN3nQasdzqCTZDOkKcVY5XxhVe1GzPRd3G3vTfMJrQ+Qgkj0P0cxdftJ4sA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 93EA5227AA8; Tue, 13 Jan 2026 14:26:56 +0100 (CET)
-Date: Tue, 13 Jan 2026 14:26:56 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org, mark.tinguely@oracle.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=UC43P9Y2XpDbeIYKPtSADbUbc54X710VrxjCBgvNnZMutK76bOudnS5giBR1Sya/OVRSXQbkyqWpRfU5pgDXIU3vYM5ZMJRHnHR3zCPpXwFEu6Cv7a2kyGPJRvDqWmUiRaMD7aehHC3GHKiySoiyXa4+rh55QNRtPpiaoWlMbuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tKP5N5lG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tKP5N5lG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CBE2C116C6;
+	Tue, 13 Jan 2026 13:36:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768311391;
+	bh=PpWYvaGTcxGfEgc3oOhnT3ttz/DamcU+gE2mF5+9314=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tKP5N5lGXihjLKj0XtuihVS4FSehAbNBLkrMH1PXSWhg6Uak76aCs2qfiQ/9AM/2H
+	 PiWkrVkzMRHpOf8MiRP23LZCA8bnk0LQEK15Qbx7ZFZ+1dtjuZcchs3KbOf9klnCRp
+	 IWyuBqC1etasXIZkks3IxciMLkLnUAAFBJ0GgY8zPJ9oHa9yl3F4DBFC9qLNOjg9VQ
+	 026nZrxvJ9TnyJ8gRjPPknM0TfyuPaxCGJ/8bvQBpB/dNnHbMdV5uWBD3NhmKxrrh2
+	 M1RnEFK+HPAYar7Mnh2Nzbc+uTvQkwgUQ9ZC6bR1qwc1lzz5r0WXEpYCXbnsTWwAAe
+	 wy/jlinexnCEQ==
+Date: Tue, 13 Jan 2026 14:36:07 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, mark.tinguely@oracle.com
 Subject: Re: [PATCH] xfs: remove xfs_attr_leaf_hasname
-Message-ID: <20260113132656.GA23871@lst.de>
-References: <20260109151741.2376835-1-hch@lst.de> <20260109162911.GR15551@frogsfrogsfrogs> <20260109163706.GA16131@lst.de> <20260109174127.GF15583@frogsfrogsfrogs> <aWYSdZFviucuzeK0@nidhogg.toxiclabs.cc>
+Message-ID: <aWZKR16It8Lm2Uvp@ryzen>
+References: <20260109151741.2376835-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,27 +41,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aWYSdZFviucuzeK0@nidhogg.toxiclabs.cc>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260109151741.2376835-1-hch@lst.de>
 
-On Tue, Jan 13, 2026 at 10:38:25AM +0100, Carlos Maiolino wrote:
-> On Fri, Jan 09, 2026 at 09:41:27AM -0800, Darrick J. Wong wrote:
-> > On Fri, Jan 09, 2026 at 05:37:06PM +0100, Christoph Hellwig wrote:
-> > > On Fri, Jan 09, 2026 at 08:29:11AM -0800, Darrick J. Wong wrote:
-> > > > Blerrgh, xfs_attr3_leaf_lookup_int encoding results with error numbers
-> > > > makes my brain hurt every time I look at the xattr code...
-> > > 
-> > > Same.  I've been really tempted to pass a separate bool multiple times.
-> > > Maybe we should finally go for it?  That would also remove most (but
-> > > all of the issues) due to the block layer -ENODATA leak.
-> > 
-> > I support that.
+On Fri, Jan 09, 2026 at 04:17:40PM +0100, Christoph Hellwig wrote:
+> The calling convention of xfs_attr_leaf_hasname() is problematic, because
+> it returns a NULL buffer when xfs_attr3_leaf_read fails, a valid buffer
+> when xfs_attr3_leaf_lookup_int returns -ENOATTR or -EEXIST, and a
+> non-NULL buffer pointer for an already released buffer when
+> xfs_attr3_leaf_lookup_int fails with other error values.
 > 
-> +1.
+> Fix this by simply open coding xfs_attr_leaf_hasname in the callers, so
+> that the buffer release code is done by each caller of
+> xfs_attr3_leaf_read.
 > 
-> Should I pick this patch and you send and incremental one or should I
-> just wait for a new one?
+> X-Cc: stable@vger.kernel.org # v5.19+
 
-Please pick it up.  Fixing up the attr/dir calling conventions will
-be a big project that'll take a while and produce a lot of patches.
+This looks like a typo. (Thus stable is not on cc:)
 
+Probably not enough reson to resend,
+(since the stable scripts backport anything with a Fixes-tag anyway),
+but perhaps s/X-Cc/Cc/ when applying.
+
+
+Kind regards,
+Niklas
