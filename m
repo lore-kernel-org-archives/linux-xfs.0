@@ -1,55 +1,83 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0050D286A9;
-	Wed, 14 Jan 2026 13:01:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C5139341C;
+	Wed, 14 Jan 2026 13:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768395676; cv=none; b=jsEnX+qnjInVbiw5aC8jCAIxlGN3ggmmqUciab7Oe5HJXKqlleygOaCNigFaOtMv/jBzlmyRgccb9frbcPRlOqoct5K96T135/XzNA7xQL28kLOxpI9Jxm+VKNn+ooFBPUKSIuxNrthPhuoH/O6/HpiQxVmmuwQyrZ047Go/7QI=
+	t=1768396021; cv=none; b=YR041WuUqVQCSAGIqMEKTfn1VB45OtijmuyY58ePB9gGxeXKyEENDyCZwnLHq8/Nz1K39yGzSoAjKbYDQx/1O8Utq/AYRKtBVi+CigLrmlzdvCEItd7Wf8ipakpQK+7YnAn9pdHgC4ZYm/qni/Xc9Wd+VwKiSFMLHfzdqKr1wj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768395676; c=relaxed/simple;
-	bh=pqnPdtGOmy4dMCy+5meBWTXgr3Lr9Iqe3Z2a5rpOcog=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EJlcsTrH7PGycMIUfMctqOx9RvnbqpUK7naW1LyPrBT1VrjmyepiiOcoO4/pfuSKjG4s3lILD8kkX2IGj8uX/t1gCQV5tAxfh2wHtDIU3BavQhrmQLrkCJTiBzxtfesG0ungd/kDN+YlVXyuPp2ptK9r//K2tfQQ7M3imELvz74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3CC26227AA8; Wed, 14 Jan 2026 14:01:10 +0100 (CET)
-Date: Wed, 14 Jan 2026 14:01:09 +0100
-From: hch <hch@lst.de>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: hch <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, WenRuo Qu <wqu@suse.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 02/14] block: open code bio_add_page and fix handling
- of mismatching P2P ranges
-Message-ID: <20260114130109.GA6321@lst.de>
-References: <20260114074145.3396036-1-hch@lst.de> <20260114074145.3396036-3-hch@lst.de> <e9ac4917-ed9b-43ec-8628-bd664c9b7e13@wdc.com>
+	s=arc-20240116; t=1768396021; c=relaxed/simple;
+	bh=KymYalqCGHQHjWj6dfcrk/7AJKNS/yERAh28tLYuKt4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QkjHkJjCwbL6usxguD0+Nk/jN+XgV1TOrl5uloefIEmQEdcwMyH4fdi1wA8jpphe4o8OjYISe4AtCadT/Cg7+kakFsAJsr8IT0OxVlIHBsRTtfaM46hipgGuWExXBzyQZJGllFw6UjRqwkb2fjUsvStDd8q5zwk9ms2OcbljG2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AzP7Bly9; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AzP7Bly9"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=LXqA28y9Oig2YRTtApztW4Fds2gfaCixYRqICaxHRCY=; b=AzP7Bly9T9HM559Km+K+oRv3aS
+	OjTWs4v4ge3We+t18M6qF0Apo9WyGZGWnarGGQ13RcSs+hwp+4ZXoOVteOqWb9F+xsZgBuE+FT0Qi
+	jSN/CCq8MokaM3rEdhE+vNubc/bMyBPofCXGYPwcR51uUb4lgnr1PO4LVwU6q7NMB2cp/QXcywRzq
+	VNYNm4KcsFMkk6fyu1Vam6mPF67czDc0FnfKpmwz2eIdYVu+5lQgohyKoS7AGSY5ytSoZeIIc6NWZ
+	oDPp1WkTbmMEx3YhgnOW5BSeOnHxiVLlJuJFl+FozXwxrVPyB/TYKcaHbIhLJUvsDc8oCGJc3jIeU
+	LnNTdcPg==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vg0aP-00000009Gy0-2vZz;
+	Wed, 14 Jan 2026 13:06:58 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	Keith Busch <kbusch@kernel.org>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: improve zoned XFS GC buffer management v4
+Date: Wed, 14 Jan 2026 14:06:40 +0100
+Message-ID: <20260114130651.3439765-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e9ac4917-ed9b-43ec-8628-bd664c9b7e13@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jan 14, 2026 at 12:46:06PM +0000, Johannes Thumshirn wrote:
-> > +		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
-> > +		__bio_add_page(bio, pages[i], len, offset);
-> 
-> Can you add a comment here, that this is a deliberately nearly a 
-> duplication of bio_add_page()? Otherwise someone thinking he/she is 
-> smart will de-duplicate it later again.
+Hi all,
 
-This gets morphed into a function not taking a bio in lib/ right after
-this, at which point that should be obvious :)
+the zoned XFS GC code currently uses a weird bank switching strategy to
+manage the scratch buffer.  The reason for that was that I/O could be
+proceed out of order in the early days, but that actually changed before
+the code was upstreamed to avoid fragmentation.  This replaced the logic
+with a simple ring buffer, which makes the buffer space utilization much
+more efficient.
 
+Before that, two patches  makes the reuse of the bios a lot less fragile,
+and for that we need a new block layer helper that should eventually also
+be useful in other places.
+
+Changes since v3:
+ - pass an op to bio_reuse and fix GC on conventional zones/devices
+
+Changes since v2:
+ - fix a commit message typo
+ - fix a missing : in the bio_reuse kerneldoc comment
+ - warn about bios with integrity and crypto context, and add some
+   documentation about this
+
+Changes since v1:
+ - assert that the reused bio is not cloned, and update the comments for
+   bio_reuse a bit
+
+Diffstat:
+ block/bio.c          |   34 +++++++++++++++
+ fs/xfs/xfs_zone_gc.c |  113 +++++++++++++++++++++++++++------------------------
+ include/linux/bio.h  |    1 
+ 3 files changed, 95 insertions(+), 53 deletions(-)
