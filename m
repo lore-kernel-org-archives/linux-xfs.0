@@ -1,114 +1,91 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51305302151;
-	Wed, 14 Jan 2026 04:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3370314A61;
+	Wed, 14 Jan 2026 04:49:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768365177; cv=none; b=jBuNv1JGlHhTx/3GqKtv57aic1M3/o36Mz406r/CFpqkAvgr/FwrCKIyWEtVOY2Rxe6vJZAcK+5/lqRWn8sxsRyJYx/3p9JBBpoLqjeYSkiC/Cp06lAohIqcLK3x24XpbYo2O5xRfgiohG2/qcfHSsqYEKKNu1upC4EFvjZYCjQ=
+	t=1768366208; cv=none; b=EczAl0qwSfBn7iwjAh9pO1wixFJvhe1zuh+oEr3c1Mqr8vwzgzk+2XJez3vob8BlUL/eKPKPpA7c/3uEMMQ7N9+pUAfaCVAhJVLQdcGxjOQNWBV6l+0Ne75bT8qFvH/rNcm/+ycLG7lC+QOdxqJAX/jENmCLWZI70nsK8DbANWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768365177; c=relaxed/simple;
-	bh=Gaqat4jw+piMBKROSNm/Id/kd9FzARkuhkgXExJAHe4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Yzxva9tL0u9F2CMds5Q0YDUeTsBtRCq8wg2X0QuBH2wktsn9xFm4SQqCAKjuplDMk77M3Kub6Lw7lsfoNmo6/PaGsJDu/eg9tQFawEdFz1Hul57Rn2384ff+XWFbgbHWeXujqRcypqdcq5hkxvwOL1ejabFhKh0xuT25SY9+B1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=dSBOj4wQ; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1768366208; c=relaxed/simple;
+	bh=zV4f8H5Axw5y7PX5oxaqR32N7N6x1IHRZCt4jHST8rM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XtgIz8QKmXKPSk7EW+9uYjTJ6037hVFyTv43tcXnsjev8W2qsjBIAadW9FjxYkNXcPSmFpI0UUU6MyAoaQ7Ep2njc90riG7e/m0VXfdVowagvcX6Zj1SmTVp84WYiUWJ3VbKekTxK0xFs4z2GLVssHpySdA6wEiMfGqG9kVi44s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z1hVU+SL; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="dSBOj4wQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Cc:To:In-Reply-To:References:Message-Id:
-	Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:Date:From:Sender:
-	Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender
-	:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=C4IGWB9h4YXDBFwtQ7Qk1rJLaL0FHlCcZCE95extF/o=; b=dSBOj4wQBA9FpAH4NpK+TpFUYR
-	y5DcsbjLUVm51q80Z01h1w35kjdDQR1hj12yNi3PqiQPksYCuu4/SmtgxbrTi4LhQNc4lofS5bf0S
-	hn9rR9DJmdQC58QGOTtTvVYqaoL07iiBINhuDiwoS6GyH3tOyEmvF0p2aFot4GlMLcpUo6u8My9Qh
-	/lyCoG6eqxbR5UaTizfRFYjds1mZLZXYKn5eD3kXDuZ8/jhjhxJcMvlGBXH8dPS/d6hZi+blw9s7w
-	fsx5cBS1/MjQVp1EN3kCkki9gTDWmAr16KlgiKXT3Q4zB2f7bOicFnhaYrw/e71TlSTeKZXGFNPcl
-	NkfNI8vA==;
-Received: from [177.139.22.247] (helo=[192.168.15.100])
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1vfsYe-0057lT-2r; Wed, 14 Jan 2026 05:32:36 +0100
-From: =?utf-8?q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-Date: Wed, 14 Jan 2026 01:31:43 -0300
-Subject: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z1hVU+SL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=IP+nt6hD0O0/EB/beIlzLBVMr0+7HCcw1mvVyCPM45Q=; b=Z1hVU+SLBG8v7sqGjxR4xeQ465
+	hc5v85RX/6rCGtnSrQMmEqmVEyKWmM4r3vF3AMUSbHCDU7CtEP3vRKm2HX/RY5hN5EQ30WZeG40aP
+	DnOdqEecPyxP3Rk0DmGeXAi3aq+zbfoSdl+HmdvqiahuWuWhsebbk2tnFOgf07wA82krGjC34YxZW
+	3mcpKVrhEJ8R31k1uESVNM58sfp3Y8iEgIAxgCIyxFIbdSUVhlgriXxPhY3/Mlj65E+Fd4wiX9cK/
+	0bgbMprLAYZIrh9gCBbPcLFdKVGVt9nL+dfKE6LieLD4FhxzhmhlbHoWFh7q77WKAi0tW9Oilr9UW
+	lGz8ZMng==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vfspK-00000005hRc-3fQF;
+	Wed, 14 Jan 2026 04:49:50 +0000
+Date: Wed, 14 Jan 2026 04:49:50 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-xfs@vger.kernel.org, ebiggers@kernel.org,
+	linux-fsdevel@vger.kernel.org, aalbersh@kernel.org,
+	david@fromorbit.com
+Subject: Re: [PATCH v2 4/22] iomap: allow iomap_file_buffered_write() take
+ iocb without file
+Message-ID: <aWcgbov1FmPTO2LD@casper.infradead.org>
+References: <cover.1768229271.patch-series@thinky>
+ <kibhid6bipmrndfn774tlbm6wcitya5qydhjws3n6tnjvbd4a3@bui63p535b3q>
+ <20260112222215.GJ15551@frogsfrogsfrogs>
+ <20260113081535.GC30809@lst.de>
+ <aWZ2RL3oBQGUmLvF@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
-In-Reply-To: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
-To: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>, 
- Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>, 
- Amir Goldstein <amir73il@gmail.com>, Chris Mason <clm@fb.com>, 
- David Sterba <dsterba@suse.com>, Miklos Szeredi <miklos@szeredi.hu>, 
- Christian Brauner <brauner@kernel.org>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>
-Cc: linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
- kernel-dev@igalia.com, 
- =?utf-8?q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aWZ2RL3oBQGUmLvF@casper.infradead.org>
 
-Some filesystem, like btrfs, supports mounting cloned images, but assign
-random UUIDs for them to avoid conflicts. This breaks overlayfs "index"
-check, given that every time the same image is mounted, it get's
-assigned a new UUID.
+On Tue, Jan 13, 2026 at 04:43:48PM +0000, Matthew Wilcox wrote:
+> On Tue, Jan 13, 2026 at 09:15:35AM +0100, Christoph Hellwig wrote:
+> > On Mon, Jan 12, 2026 at 02:22:15PM -0800, Darrick J. Wong wrote:
+> > > > +		iter.inode = iocb->ki_filp->f_mapping->host;
+> > > > +	} else {
+> > > > +		iter.inode = (struct inode *)private;
+> > > 
+> > > @private is for the filesystem implementation to access, not the generic
+> > > iomap code.  If this is intended for fsverity, then shouldn't merkle
+> > > tree construction be the only time that fsverity writes to the file?
+> > > And shouldn't fsverity therefore have access to the struct file?
+> > 
+> > It's not passed down, but I think it could easily.
+> 
+> willy@deadly:~/kernel/linux$ git grep ki_filp |grep file_inode | wc
+>     109     575    7766
+> willy@deadly:~/kernel/linux$ git grep ki_filp |wc
+>     367    1920   23371
+> 
+> I think there's a pretty strong argument for adding ki_inode to
+> struct kiocb.  What do you think?
 
-Fix this assigning the disk UUID for filesystem that implements the
-export operation get_disk_uuid(), so overlayfs check is also against the
-same value.
+Regardless of this, I think it's an architectural mistake to not have
+struct file available for reading fsverity metadata.  We do have it in
+fsverity_ioctl_read_metadata but we don't have it in verify_bh().
 
-Signed-off-by: André Almeida <andrealmeid@igalia.com>
----
- fs/overlayfs/copy_up.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+But reading the merkel tree block from the verify_bh() completion handler
+is bad for performance anyway.  We should submit the metadata reads at
+the same time we submit the data reads.  And there, we would have the
+struct file.
 
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 758611ee4475..8551681fffd3 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -421,8 +421,26 @@ struct ovl_fh *ovl_encode_real_fh(struct ovl_fs *ofs, struct inode *realinode,
- 	struct ovl_fh *fh;
- 	int fh_type, dwords;
- 	int buflen = MAX_HANDLE_SZ;
--	uuid_t *uuid = &realinode->i_sb->s_uuid;
--	int err;
-+	struct super_block *real_sb = realinode->i_sb;
-+	uuid_t *uuid = &real_sb->s_uuid, real_uuid;
-+	u32 len = sizeof(uuid_t);
-+	int err, ret;
-+	u64 offset;
-+
-+	/*
-+	 * Some filesystems that support cloned devices may expose random UUIDs
-+	 * for userspace, which will cause the upper root origin check to fail
-+	 * during a remount. To avoid this, store the real disk UUID.
-+	 *
-+	 * ENODATA means that the filesystem implements get_disk_uuid(), but
-+	 * this instance is using the real UUID so we can skip the operation.
-+	 */
-+	if (real_sb->s_export_op && real_sb->s_export_op->get_disk_uuid) {
-+		ret = real_sb->s_export_op->get_disk_uuid(real_sb, real_uuid.b, &len, &offset);
-+
-+		if (!ret || ret != ENODATA)
-+			uuid = &real_uuid;
-+	}
- 
- 	/* Make sure the real fid stays 32bit aligned */
- 	BUILD_BUG_ON(OVL_FH_FID_OFFSET % 4);
-
--- 
-2.52.0
-
+If we ever have ambitions to support merkel trees on network filesystems,
+we'll need to figure out some way to pass the struct file in, so maybe
+we should just bite the bullet and do this now?
