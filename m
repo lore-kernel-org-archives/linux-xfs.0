@@ -1,191 +1,150 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6759237F730
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 09:52:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 961A5325709
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 09:53:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768384359; cv=none; b=HXOGwO5WAwTD9/CfxWdK6wj49nP0xRUr3ysXxZ0kaYNXIb6DWWfPToqkasAaLaK0CNbl0Ndi1et+XkmIEnEbu9agthQs1fo95jhklqGXrZcuiqOIR3MeqHyNgJhwAMcUVGBP4o7mZPIyuZ/dGslaJY2gL4oXLaLfGmJiby9Ir+g=
+	t=1768384387; cv=none; b=pACSdRs1e7HtvgdfWUDGJ5ss4p7KaqVTxu9tEkW0yF65Erdwo3dO/msIuK5hS4Yi/a5jLUHuwCwCcCxZ42vhOvE3TNb7awp6mn/AVWqTbUCQbj51RfPYQPe0nVF2ZigR2azqAg07AcK/gsle8RNhm/qHAfD6ONDSrdSBeUtUTz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768384359; c=relaxed/simple;
-	bh=J4dz6kKuytMo2H9dr0wYUS9WBbX2v/mYRV9CdF8Grc8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uOYrMG6rTu4CNib5y+/S6W2GU0ZmEf9iNJqORAqIoO1Q57blopuYveAz7oV9OLPWaQ3RMKTvWBBca1i/dzI/yq2ZOUMf5VabQ2itan6p93Stv5ZqqH7/Ck9WlZUXCkQX/xNajDjsoeac9/V4fKpr14VJ00BBw6R2PRnEkzT6unk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Z3iBphex; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1768384387; c=relaxed/simple;
+	bh=j5dIhiNJiGy1Qtc22ykR0iIEoSppbe3oLD7npilDfdY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WFITvS2MsRQkgKZHDw5q9InJiCVi5R6sL7Rx/ouz8X01314PolNic3OQQSivKRZ6fX+gOSeuIXsknyjaEDAPXVDIPB4wbjWcRVxBKY6zLJotTuCNas8+XosvvpEnPWMQN950gHkcipIKVmObup3QUJbcYYIBOlSchZ5v2dFDQiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PjDjfTps; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=iXvH81Rp; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Z3iBphex"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47edffe5540so11238995e9.0
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 01:52:37 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PjDjfTps";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="iXvH81Rp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768384385;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aSFGgkgkpAF2fQrg8Gq7zIy2TZqVfBWhEA5o4HTAphk=;
+	b=PjDjfTpsTWOsBOmTZ7nUGJ0gMKYxueyBwzsCprD0eC1i7Wx02mlKMfd/bGhHJtcP5VxfX+
+	3awtW+624kRS3jZeKRIEdOGB6gF5TeND+S22knHbeaOU4ZIO37W3je0NvYy9FG2t2F63rf
+	yEkpwHY+y5NQ1NdWTIRI6fcsNw+q2ag=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-480-wKaSX-L2M0SN5dDWeSwrcA-1; Wed, 14 Jan 2026 04:53:04 -0500
+X-MC-Unique: wKaSX-L2M0SN5dDWeSwrcA-1
+X-Mimecast-MFC-AGG-ID: wKaSX-L2M0SN5dDWeSwrcA_1768384383
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-42fd46385c0so4731931f8f.0
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 01:53:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1768384356; x=1768989156; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=KpGGSGXQLjgoeWNiePO4dkZ0AztAG/JhaIZwvTGrYOs=;
-        b=Z3iBphexqbdY2HetGRPcrtkfPFcXj6HtcBSIGBdA1smtgc3s5yGbylgYjQNhOkz4bL
-         DD5z5oeNasvOnv4R57yu/AbHb7TzWIXM6z6/3zujXub5e8l392BhYiTS+XUxu75/I3X6
-         5KornKBOlapQ3w/dxGt2BLDxWmzFX4oPx6wrmpv437rWfXTgaeyg2ch5IoyO5jXmCTfN
-         mVM2VcybbsUxB/27hQ7gEjjnOY2rFl55SxVp73hX4/WYslcmA21ADBFpPkvAYlTo4GsA
-         WiTpETz+8NZL1Ro3SyfL8Oerg1lewVHClmnp5SALiVevtTF0y91CR0RZk7emkfclNFBA
-         0V3A==
+        d=redhat.com; s=google; t=1768384383; x=1768989183; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=aSFGgkgkpAF2fQrg8Gq7zIy2TZqVfBWhEA5o4HTAphk=;
+        b=iXvH81RpV/62GVRd7EvSFBHup8D8LC0/TmitVHYA+8uurzjqbaO1LDFN/otyZDiaES
+         iOKhlo+AI3PP30gu+ET0Q4dT/YdHkDMfNT1Zv+CiD4eANOquUGxae6x4JmzaAxhDcmwP
+         GPgeP9WpZN4WYS7WjeoErv/bv7SH7S5HjSh9gKcNMQTuxi2sfvTjTtX0Uvlc0mHXY4K6
+         nXAkhWBvDGn71sA6sQNgopzcgYYzcM2lBCdtxSIkkEMqCz3FYcLTXGKPEuNxaUnFWiKC
+         E7JCu79O0znukhJGIn1jbvOVs0nrOh+OoNwTIItByH9TyIWY9vKLoLxHu7c+S45p7YpT
+         WJgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768384356; x=1768989156;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KpGGSGXQLjgoeWNiePO4dkZ0AztAG/JhaIZwvTGrYOs=;
-        b=Cx9ONF9tyiLASodfkIm4v3FMrwr97PeRvrjYW5+HEZh+73B6y1vwhqV3DaQ4mSw+hF
-         5pScf2rawzcwKaInwn90BTFWQLN6IT28uks1e8nEKX01K6cDU7q0wm4wTqSIrwVoctGH
-         i4SMGCBMoL4+GqmewOJo94Te6VdC6KfhmXTt7TCh3nYDNqgEDYm5a8+P/NSCb5k/fEFS
-         BQagmx/wgHHFDB2wNjqg4pjP1GxntkBEohzh8UdkPEPAmOffQDBZE4dgBhz92am4othy
-         7IJwsNWPJAyypGZ2i1LnmP4c5IQNMyq/qynv+NRSHbsZmCmM3Mga2ZeGnfJrSpZRLsi9
-         U/uQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVN1RreypIh+qJJ5xq8f4icubzTsvospg7mlTRGDp7LG72CZOMME3UlQQbMDtGLqIHDK0S5ZrD0P5g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8Q4wVFc7cEitWfL6J3wde4ZObxg/CEZGZ6/MtupeYv3h8Omqs
-	vRTXmsz5nFjVoZ7MKlClGmPMm9lnwcB/GhjUSSYMR+u3aqg2HcVPQSHe0Z/R/KKPfMs=
-X-Gm-Gg: AY/fxX7Sj9zkZMqJ1HaVpJ1uFz9mljZRZ76gZqDWY9LVoPgE8LJ9AuK/qg5yRqvQxz1
-	1Z9p2niCKbSUtKY4ihzRmgPwMU+W/BVtoNyX9QReWpXx4A4yyYnpZ2Unr5f+uwzuGORkSq2BI8w
-	+DifETkrghwb+zW7f9mzqPUC64MdrSGiYSkgBnyOg3wNr6vTly0BtFlxrp7wD7OXGnOc0AxxEBt
-	1JMUQ+YiPA2y3p0F8sJOi/jUgFlulr/9vKcV94IC8sBxJlHk/fc93AnqWnPlLXnnPXVYMxJ3OZg
-	uKTSphmREKJOxwICjQMKqAnl1EQi02mcekKSSUi6KvmDsr4vn3AQOPpE0aVZ2fBs32+E97Gs1Rg
-	UhrCSOtKPl15ktWBcrmYlp7oYUcz5wJ8YuZT2IJmqrRBZOe445yYP+f4HDqqL7gDygK+nZgGgp7
-	shWYR5ELu9OJKgy63dXRdO00kFd2GpmlkE/Vt3ZrI=
-X-Received: by 2002:a05:600c:46cd:b0:476:4efc:8ed4 with SMTP id 5b1f17b1804b1-47ee3305a18mr19473755e9.11.1768384355673;
-        Wed, 14 Jan 2026 01:52:35 -0800 (PST)
-Received: from ?IPV6:2403:580d:fda1::299? (2403-580d-fda1--299.ip6.aussiebb.net. [2403:580d:fda1::299])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a3e3cc88cdsm222064405ad.73.2026.01.14.01.52.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Jan 2026 01:52:34 -0800 (PST)
-Message-ID: <f5568a83-75df-4e84-8cf0-01df6dd4e810@suse.com>
-Date: Wed, 14 Jan 2026 20:22:27 +1030
+        d=1e100.net; s=20230601; t=1768384383; x=1768989183;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=aSFGgkgkpAF2fQrg8Gq7zIy2TZqVfBWhEA5o4HTAphk=;
+        b=kWvshhLt0zjnrHq0I12c24IZJuPJ2CPB+wYmOddEbCoT0F71E8biIAqfrZZCt+leX5
+         NH1Z8jV/mVCR+e5v66Mgz9/CaB16tsjAR5FTtp0CoE5ImIi1kek3Ws5uAP2DKUqFKaCJ
+         tuAE0J49OQKSsg+0E696Lxxs13mn6BPS1FLLul6R4O7z3kYn3Q1NL6vFUPabxgc2iN19
+         8HbBmitMw0ZvoegVSZoZuSo62/e6sYUxTR7nd93gC24d9gRZIs18xLyNv41XRVAKf63e
+         S3BMrYKIJmr3nCstOYh9Rm9JumggNDdCqZcoUSfoDNN92ur2AYdP3yJ392gQA4feMnMK
+         Y6XQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWhAvt+H+UifUVE8n/5TrFVWZmxRRr9TgihQ9GSKFqmyc0RcVXGQc+L+rZLRIbJM/4nC+9H5N5zzrU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1k3aVT+rKUXuWT23JV3WF7pmeGYO0Sq0BfZ4SMYU2N1Ak/Q51
+	uQgT97WY9AYiblDUHk3DDJWOTPCcEp5Sx9EQUXhCQpSXgy6uhdAaoSmYLXxPeM2KhtIJ7E3sEbV
+	gLEiEEeJu7DTrxm3se3BJ0QWqjfPgueY2ZU1bvesXC2enHNTPzBlWktfyIoQb
+X-Gm-Gg: AY/fxX6vevGw5eGaNhKtsUlirnYbwwtSACSfAye4x3FUq1+0DG/9qKQK3nY4HNKBjxg
+	94uvfQcDHZCorF75rRY6bMCKjfiXRMbEmiUAEBAUAl9J43Z7Z79N7JglO2FUNXp0HyoV0Drs0ma
+	mHusjDI+8wsl33lJHz7PIrpat5LLqTKB++ndb0c4dyiPpqkVqxmx7wrrAsoEh1ZQI16SQ3tC1ID
+	b7pAdVaihgqpAZtbdLamrtSFWl6lH7sr2JFcH+lr4eqZrlt/mdryDnc2ASSOcl7uNn/cLTX+mqm
+	3GzsD0DBM4E30RiLky2kG7FynWnWyeWD2Ajj8VUJjppCm5ksrWfSrivuiNVN3VBekAx0JL2MTg4
+	=
+X-Received: by 2002:a5d:584e:0:b0:430:f790:99d7 with SMTP id ffacd0b85a97d-4342c504f28mr2510669f8f.27.1768384383081;
+        Wed, 14 Jan 2026 01:53:03 -0800 (PST)
+X-Received: by 2002:a5d:584e:0:b0:430:f790:99d7 with SMTP id ffacd0b85a97d-4342c504f28mr2510645f8f.27.1768384382674;
+        Wed, 14 Jan 2026 01:53:02 -0800 (PST)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd0e19bfsm48777428f8f.18.2026.01.14.01.53.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jan 2026 01:53:01 -0800 (PST)
+Date: Wed, 14 Jan 2026 10:53:00 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, ebiggers@kernel.org, linux-fsdevel@vger.kernel.org, 
+	aalbersh@kernel.org, david@fromorbit.com, hch@lst.de
+Subject: Re: [PATCH v2 0/23] fs-verity support for XFS with post EOF merkle
+ tree
+Message-ID: <6r24wj3o3gctl3vz4n3tdrfjx5ftkybdjmmye2hejdcdl6qseh@c2yvpd5d4ocf>
+References: <cover.1768229271.patch-series@thinky>
+ <aWZ0nJNVTnyuFTmM@casper.infradead.org>
+ <op5poqkjoachiv2qfwizunoeg7h6w5x2rxdvbs4vhryr3aywbt@cul2yevayijl>
+ <aWci_1Uu5XndYNkG@casper.infradead.org>
+ <20260114061536.GG15551@frogsfrogsfrogs>
+ <5z5r6jizgxqz5axvzwbdmtkadehgdf7semqy2oxsfytmzzu6ik@zfvhexcp3fz2>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: bounce buffer direct I/O when stable pages are required
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20260114074145.3396036-1-hch@lst.de>
-Content-Language: en-US
-From: Qu Wenruo <wqu@suse.com>
-Autocrypt: addr=wqu@suse.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
- FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
- Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
- fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
- 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
- V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
- rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
- rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
- Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
- E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
- vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
- g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
- AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
- cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
- qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
- /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
- o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
- JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
-In-Reply-To: <20260114074145.3396036-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5z5r6jizgxqz5axvzwbdmtkadehgdf7semqy2oxsfytmzzu6ik@zfvhexcp3fz2>
 
+On 2026-01-14 09:20:34, Andrey Albershteyn wrote:
+> On 2026-01-13 22:15:36, Darrick J. Wong wrote:
+> > On Wed, Jan 14, 2026 at 05:00:47AM +0000, Matthew Wilcox wrote:
+> > > On Tue, Jan 13, 2026 at 07:45:47PM +0100, Andrey Albershteyn wrote:
+> > > > On 2026-01-13 16:36:44, Matthew Wilcox wrote:
+> > > > > On Mon, Jan 12, 2026 at 03:49:44PM +0100, Andrey Albershteyn wrote:
+> > > > > > The tree is read by iomap into page cache at offset 1 << 53. This is far
+> > > > > > enough to handle any supported file size.
+> > > > > 
+> > > > > What happens on 32-bit systems?  (I presume you mean "offset" as
+> > > > > "index", so this is 1 << 65 bytes on machines with a 4KiB page size)
+> > > > > 
+> > > > it's in bytes, yeah I missed 32-bit systems, I think I will try to
+> > > > convert this offset to something lower on 32-bit in iomap, as
+> > > > Darrick suggested.
+> > > 
+> > > Hm, we use all 32 bits of folio->index on 32-bit plaftorms.  That's
+> > > MAX_LFS_FILESIZE.  Are you proposing reducing that?
+> > > 
+> > > There are some other (performance) penalties to using 1<<53 as the lowest
+> > > index for metadata on 64-bit.  The radix tree is going to go quite high;
+> > > we use 6 bits at each level, so if you have a folio at 0 and a folio at
+> > > 1<<53, you'll have a tree of height 9 and use 17 nodes.
+> > > 
+> > > That's going to be a lot of extra cache misses when walking the XArray
+> > > to find any given folio.  Allowing the filesystem to decide where the
+> > > metadata starts for any given file really is an important optimisation.
+> > > Even if it starts at index 1<<29, you'll almost halve the number of
+> > > nodes needed.
+> 
+> Thanks for this overview!
+> 
+> > 
+> > 1<<53 is only the location of the fsverity metadata in the ondisk
+> > mapping.  For the incore mapping, in theory we could load the fsverity
+> > anywhere in the post-EOF part of the pagecache to save some bits.
+> > 
+> > roundup(i_size_read(), 1<<folio_max_order)) would work, right?
+> 
+> Then, there's probably no benefits to have ondisk mapping differ,
+> no?
 
+oh, the fixed ondisk offset will help to not break if filesystem
+would be mounted by machine with different page size.
 
-在 2026/1/14 18:10, Christoph Hellwig 写道:
-> Hi all,
-> 
-> this series tries to address the problem that under I/O pages can be
-> modified during direct I/O, even when the device or file system require
-> stable pages during I/O to calculate checksums, parity or data
-> operations.  It does so by adding block layer helpers to bounce buffer
-> an iov_iter into a bio, then wires that up in iomap and ultimately
-> XFS.
-> 
-> The reason that the file system even needs to know about it, is because
-> reads need a user context to copy the data back, and the infrastructure
-> to defer ioends to a workqueue currently sits in XFS.  I'm going to look
-> into moving that into ioend and enabling it for other file systems.
-> Additionally btrfs already has it's own infrastructure for this, and
-> actually an urgent need to bounce buffer, so this should be useful there
-> and could be wire up easily.  In fact the idea comes from patches by
-> Qu that did this in btrfs.
-
-I guess the final reason to bounce other than falling back to buffered 
-IO is still performance, especially for AIO cases?
-
-If iomap is going to handle the page bouncing I guess we btrfs people 
-will be pretty happy to use that, without implementing our own bouncing 
-code.
-
-My previous tests didn't result much difference between falling back to 
-buffered and bouncing pages, although in that case no AIO/io_uring involved.
-
-Thanks,
-Qu
-
-> 
-> This patch fixes all but one xfstests failures on T10 PI capable devices
-> (generic/095 seems to have issues with a mix of mmap and splice still,
-> I'm looking into that separate), and make qemu VMs running Windows,
-> or Linux with swap enabled fine on an XFS file on a device using PI.
-> 
-> Performance numbers on my (not exactly state of the art) NVMe PI test
-> setup:
-> 
->    Sequential reads using io_uring, QD=16.
->    Bandwidth and CPU usage (usr/sys):
-> 
->    | size |        zero copy         |          bounce          |
->    +------+--------------------------+--------------------------+
->    |   4k | 1316MiB/s (12.65/55.40%) | 1081MiB/s (11.76/49.78%) |
->    |  64K | 3370MiB/s ( 5.46/18.20%) | 3365MiB/s ( 4.47/15.68%) |
->    |   1M | 3401MiB/s ( 0.76/23.05%) | 3400MiB/s ( 0.80/09.06%) |
->    +------+--------------------------+--------------------------+
-> 
->    Sequential writes using io_uring, QD=16.
->    Bandwidth and CPU usage (usr/sys):
-> 
->    | size |        zero copy         |          bounce          |
->    +------+--------------------------+--------------------------+
->    |   4k |  882MiB/s (11.83/33.88%) |  750MiB/s (10.53/34.08%) |
->    |  64K | 2009MiB/s ( 7.33/15.80%) | 2007MiB/s ( 7.47/24.71%) |
->    |   1M | 1992MiB/s ( 7.26/ 9.13%) | 1992MiB/s ( 9.21/19.11%) |
->    +------+--------------------------+--------------------------+
-> 
-> Note that the 64k read numbers look really odd to me for the baseline
-> zero copy case, but are reproducible over many repeated runs.
-> 
-> The bounce read numbers should further improve when moving the PI
-> validation to the file system and removing the double context switch,
-> which I have patches for that will sent as soon as we are done with
-> this series.
-> 
-> Diffstat:
->   block/bio.c           |  323 ++++++++++++++++++++++++++++++--------------------
->   block/blk.h           |   11 -
->   fs/iomap/direct-io.c  |  189 +++++++++++++++--------------
->   fs/iomap/ioend.c      |    8 +
->   fs/xfs/xfs_aops.c     |    8 -
->   fs/xfs/xfs_file.c     |   41 +++++-
->   include/linux/bio.h   |   26 ++++
->   include/linux/iomap.h |    9 +
->   include/linux/uio.h   |    3
->   lib/iov_iter.c        |   98 +++++++++++++++
->   10 files changed, 490 insertions(+), 226 deletions(-)
+-- 
+- Andrey
 
