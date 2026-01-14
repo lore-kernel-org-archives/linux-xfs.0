@@ -1,79 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F00B184;
-	Wed, 14 Jan 2026 16:06:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C90D39E6E3;
+	Wed, 14 Jan 2026 16:17:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768406777; cv=none; b=CJPyZZJcXvp0vVJdlPBNlCwOtse+Lnwwgl/GAUB99fH+ifBaQ3KsTWzXukDXnHs6u4m08ATGnfutd04gViYFMbcHXE1wAGp7hXjNfND9admBiEV4fz7XppLyqBfA5oUnjCwNNB2vt+PX2dGPb2y9+Mo08rbpHJnRsmwP5HoznsI=
+	t=1768407475; cv=none; b=YY2PiJVTFvacqy44wq2FsY0rhcZURWf/Afh9utYFC/+F90mybXVwsZqyOSWiLwQ4sprkVdei+iNlJrS2n4L6Oabr6UnwUhMe0keXB2VHdvMznZRfn1b8kgSMrEwazA1gy2TXsXARKjI5HAWbTXxJ+3e4j/GyG7+LUKSMENNvmqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768406777; c=relaxed/simple;
-	bh=GyDq+6eaoZkVZqBLxT6jqTugU3KCXYVJYLg9IeFm+ek=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gcHxfW/8iQbtMD/ks+ylC9FQo17+aBWROqzKOxb0VytIQ/DKM/oieb0qJw8mezClFKvv0zwrwQzGpnWyiXWcD+H01ZgqPg/2II0VI0CElvK195aKoeMFdBFSDmZ++glkyY/bnPmPLwLTJjLEu2n42V4GUnrzNGxR+Qj+MO9Q3ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PW2wSB5h; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768407475; c=relaxed/simple;
+	bh=avV6DdjDrtuFKREDh7dX8ULQNvaPCX6uL3Qy8HX2D5U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d6jvvkoJbOBNsKQ26q8r3gmP58ljqyweB6jd2XWoPHLssNiHblcow48rPYT84kXwe4zkjZP58MMc1d/78H301jq6EBwkr2g4GAhoFnKog2bebEfeW6VSXbGyPW0P4BfxqUp113/jviE1XOwkUdMqKoizB1CLm607U4GBjPUHPVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=OcsDdENr; arc=none smtp.client-ip=213.97.179.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PW2wSB5h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DCA8C4CEF7;
-	Wed, 14 Jan 2026 16:06:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768406777;
-	bh=GyDq+6eaoZkVZqBLxT6jqTugU3KCXYVJYLg9IeFm+ek=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PW2wSB5h/YUGeuN8mZBP0EIeN1h0JdZEWtHrU4S6iRqcMv9jTmOeKhP4M95MhqEch
-	 S/sBK3qq+pV/2Lx/gPWJpQgIqHsp+wj/mvb4FKYBZBMRw2gx1KCGSLkPvU1oi+B3kB
-	 gst/5hg1EL0KkFQRgHG3Y3xZOzl/7G6eWANn848TdJd8gPZbNXEZrSSOvPZjb7nIdI
-	 JH/rNfE/kskLg7r1Sy50KoP5HQZm/J0bwyCmUJmollx3DsgK5MlGR+eefUqiGlZJR5
-	 Ro3FqBDbmSgaV1bqpJ3iWb24zX2IH5fnYVf5hhLjyWl3iV1cCnV5Gw77RP/zGTP5Mz
-	 gXQ+TMZuPsH1w==
-From: Christian Brauner <brauner@kernel.org>
-To: djwong@kernel.org,
-	Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	bfoster@redhat.com,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: wait for batched folios to be stable in __iomap_get_folio
-Date: Wed, 14 Jan 2026 17:06:12 +0100
-Message-ID: <20260114-abmessungen-pyjama-0d0b08449efc@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260113153943.3323869-1-hch@lst.de>
-References: <20260113153943.3323869-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="OcsDdENr"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=HpQaoCUPT6wdxz4f7lIznu8aR6PeVr63P5GrMsQT2F8=; b=OcsDdENrSHsJ/1ut8FlIWKp2QS
+	C+gkAkCbSozPUltRTogIib69+Q5pTZgaYnmchsaNUB1Y2ktTb6eGJQKJ6uSjGxrupnZqUHe18jucF
+	9BR8mgKVtOpjOzK0ycGaD/bdztc9CFSWKUesUYAgwOkM9egQvkw0yKhN/yKa4gLzBO+/LRkD1I+mX
+	Epzc4LTzPUeXlCLromTD02rQ6ZFZuWT6JUDbf8XdGpOE6Zuz1QuI4QgW5jIur4uKYJFQ/OSJa7Hqs
+	WnQjg2ZQjkVw1nYS7Io5VyF+6EFgfBHV0YXFO76+H80STX38GdWrtlWSuFEVkYdo1laJpaBKS88K9
+	XcCDdWDg==;
+Received: from [177.139.22.247] (helo=[192.168.15.100])
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
+	id 1vg3Yi-005Lm6-3R; Wed, 14 Jan 2026 17:17:24 +0100
+Message-ID: <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
+Date: Wed, 14 Jan 2026 13:17:15 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1180; i=brauner@kernel.org; h=from:subject:message-id; bh=GyDq+6eaoZkVZqBLxT6jqTugU3KCXYVJYLg9IeFm+ek=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSm7/sqP3FFgUQ3e/xigUORU3qeHHgUfe/iyZhb5azz9 npuPR7D2lHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCReXyMDJt4JQ369DemFm2P OLJtVc31hIcbZ7J1hW1l3LZo4kQjJm6gig2MM9PdNjxxbIqKUu5boLV6LkPwzFfyS2Yu5t/k/y2 RCQA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>,
+ Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+ Carlos Maiolino <cem@kernel.org>, Amir Goldstein <amir73il@gmail.com>,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
+ kernel-dev@igalia.com
+References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
+ <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
+ <20260114062608.GB10805@lst.de>
+Content-Language: en-US
+From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
+In-Reply-To: <20260114062608.GB10805@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On Tue, 13 Jan 2026 16:39:17 +0100, Christoph Hellwig wrote:
-> __iomap_get_folio needs to wait for writeback to finish if the file
-> requires folios to be stable for writes.  For the regular path this is
-> taken care of by __filemap_get_folio, but for the newly added batch
-> lookup it has to be done manually.
+Em 14/01/2026 03:26, Christoph Hellwig escreveu:
+> On Wed, Jan 14, 2026 at 01:31:43AM -0300, André Almeida wrote:
+>> Some filesystem, like btrfs, supports mounting cloned images, but assign
+>> random UUIDs for them to avoid conflicts. This breaks overlayfs "index"
+>> check, given that every time the same image is mounted, it get's
+>> assigned a new UUID.
 > 
-> This fixes xfs/131 failures when running on PI-capable hardware.
+> ... and the fix is to not assign random uuid, but to assign a new uuid
+> to the cloned image that is persisted.  That might need a new field
+> to distintguish the stamped into the format uuid from the visible
+> uuid like the xfs metauuid, but not hacks like this.
 > 
-> [...]
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/1] iomap: wait for batched folios to be stable in __iomap_get_folio
-      https://git.kernel.org/vfs/vfs/c/561940a7ee81
+How can I create this non random and persisting UUID? I was thinking of 
+doing some operation on top the original UUID, like a circular shift, 
+some sort of rearrangement of the original value that we can always 
+reproduce. Is this in the right direction do you think?
