@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FB337417E
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 06:54:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE6133F8A7
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 06:54:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768373649; cv=none; b=orb7I5Nwb536lyuH352Uy7bVxgrxZRqfw2OBMHWqpf+dKXpokKG9JK0qOZe8JEMavQaLMHYWJgG9PzjXGsAeVih4qVgBV6DN3gESC7pWYk/ZB7E67wgyT1TJJzr0SXg7LTcOJTt3Y8k9ai2cw14q7FJD0IWU47jyh6QFfU+qqB8=
+	t=1768373658; cv=none; b=DuJ166n+sbBbvTeZoyB1mHL+oE06a5Oty6u3R0FB3MXhVzICDVd+PjyFoJXR7MkkVH+Pm6U7wZrFfwwerJTznMOBE3gHi698VoBMGBEMI8SSKN1W8azWAYHVyjtfkhy6Ab3qbYdS12Z2EVPjKEKPCG6kWVQqx+wVuVQrWVWNMIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768373649; c=relaxed/simple;
-	bh=LeOoI7Dsdt0rzs87kv42OUmtQfBAdzKK/RNoj7jZUks=;
+	s=arc-20240116; t=1768373658; c=relaxed/simple;
+	bh=7LERgt4zcqhs9Y3p6osnZNCGtS2Nemf9y/lm6s3meJU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H68YrXmrKcdInsD40fe4bmJTWKPBi7Pjw4If+zU1YR0hO/OzwYcV954GgXu/7mZSba11qn8xdyNTriVznK8vQiOFXwhKq+cZpXE1Ey2Kydhc/PI6J5Dvzq9JZQ3MZstIaLnYqKlWfclFz1Q7AeuW1isqWmEplneIBjweLpmZYVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fCvyPycC; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ZCkAijOka+xyvgItBnNXtOYpcFMKzpkfborbUXez4g6o4RM3oYDgn1wOmIL/cumChfBf0ESAvP3yrLlOi7Bk6jexAW9aloQDc8BwWCBH+IVghZRLGh83duB9mDTSeiJWJVw/cvNg9IdxTKCz8r3gcCDFOYtfbx0c3hjma5JS10U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DD8hTFEK; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fCvyPycC"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DD8hTFEK"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=dAV6IS2SHGvBqNXsgd8RnynRzhDUxXIFn4QM3dF6Vvc=; b=fCvyPycCTkDaoXnC5PaHN1L/QU
-	wb/xuUkYEmWq6UQ21gwavjqWlML8wPKNjQi+GhgxMQCL19mt7/MIJou5q4CYKduED0aDbOOShki90
-	UzQwlyyCCkzhqHktmxIEhEjoXPmu/COzzdRIzlE1GFlxlrrHRxzrKuec+rytekzXC3zMb8PW4kuu8
-	ZzumNXxjKbP1CGIGdC9euuWAxqzz0sCHUafQ7pU6NObM3opQmP5HUbdjHmQBNRSA+UiMQ+FrhepFe
-	jecnoWyoMWWJK8783HTbf8iSCZHw/6QmnHII/lESu8heH19ugeKrFk5szwZ2eEcMNyke4nv87FTsS
-	It4kufnQ==;
+	bh=UFkznxLUX7SE3vtwNee+t57DxsbRIidc76+maVOcOyo=; b=DD8hTFEKzeL/32nIreCCdc91og
+	YcttDlH1XhHk4QOwElvJFbf82rtuyEE9UcTt14QmmEmvSVf2jPgORBYGZ9zCXtVbcMSGcKbV1jQqs
+	s/MSRdhJlmtOmTBZajFUvib2HevNtUb8vG09WQ0N83PeLpUi5KhZr5zW6VKCRvU6pjOby5ynOFz37
+	C3qSOMBLjFqfCu3v8zWJOAtjzrG6NxS7+ULC1iQxuMBvPCNtCkOjPMivR0uKuMNlFHeX7ZXzlMeko
+	hqxkn6hqPFFNSfzqsII8EPFvI7FbpcS/slJ5BzAWO6mJh/DJwz0Ti+K4fQk6TEeq5LnJkzahSUpns
+	YfZY9+Rg==;
 Received: from 85-127-106-146.dsl.dynamic.surfer.at ([85.127.106.146] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vfulU-000000089hu-2pxC;
-	Wed, 14 Jan 2026 06:54:01 +0000
+	id 1vfuld-000000089iS-2rzX;
+	Wed, 14 Jan 2026 06:54:10 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/6] xfs: split and refactor zone validation
-Date: Wed, 14 Jan 2026 07:53:27 +0100
-Message-ID: <20260114065339.3392929-5-hch@lst.de>
+Subject: [PATCH 6/6] xfs: use blkdev_get_zone_info to simplify zone reporting
+Date: Wed, 14 Jan 2026 07:53:29 +0100
+Message-ID: <20260114065339.3392929-7-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260114065339.3392929-1-hch@lst.de>
 References: <20260114065339.3392929-1-hch@lst.de>
@@ -50,320 +50,191 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Currently xfs_zone_validate mixes validating the software zone state in
-the XFS realtime group with validating the hardware state reported in
-struct blk_zone and deriving the write pointer from that.
-
-Move all code that works on the realtime group to xfs_init_zone, and only
-keep the hardware state validation in xfs_zone_validate.  This makes the
-code more clear, and allows for better reuse in userspace.
+Unwind the callback based programming model by querying the cached
+zone information using blkdev_get_zone_info.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_zones.c | 149 ++++++++++----------------------------
- fs/xfs/libxfs/xfs_zones.h |   5 +-
- fs/xfs/xfs_zone_alloc.c   |  28 ++++++-
- 3 files changed, 68 insertions(+), 114 deletions(-)
+ fs/xfs/xfs_zone_alloc.c | 114 ++++++++++++++++++----------------------
+ 1 file changed, 50 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_zones.c b/fs/xfs/libxfs/xfs_zones.c
-index 8c3c67caf64e..24e350c31933 100644
---- a/fs/xfs/libxfs/xfs_zones.c
-+++ b/fs/xfs/libxfs/xfs_zones.c
-@@ -15,173 +15,102 @@
- #include "xfs_zones.h"
- 
- static bool
--xfs_zone_validate_empty(
-+xfs_validate_blk_zone_seq(
-+	struct xfs_mount	*mp,
- 	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg,
-+	unsigned int		zone_no,
- 	xfs_rgblock_t		*write_pointer)
- {
--	struct xfs_mount	*mp = rtg_mount(rtg);
--
--	if (rtg_rmap(rtg)->i_used_blocks > 0) {
--		xfs_warn(mp, "empty zone %u has non-zero used counter (0x%x).",
--			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
--		return false;
--	}
--
--	*write_pointer = 0;
--	return true;
--}
--
--static bool
--xfs_zone_validate_wp(
--	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg,
--	xfs_rgblock_t		*write_pointer)
--{
--	struct xfs_mount	*mp = rtg_mount(rtg);
--	xfs_rtblock_t		wp_fsb = xfs_daddr_to_rtb(mp, zone->wp);
--
--	if (rtg_rmap(rtg)->i_used_blocks > rtg->rtg_extents) {
--		xfs_warn(mp, "zone %u has too large used counter (0x%x).",
--			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
--		return false;
--	}
--
--	if (xfs_rtb_to_rgno(mp, wp_fsb) != rtg_rgno(rtg)) {
--		xfs_warn(mp, "zone %u write pointer (0x%llx) outside of zone.",
--			 rtg_rgno(rtg), wp_fsb);
--		return false;
--	}
--
--	*write_pointer = xfs_rtb_to_rgbno(mp, wp_fsb);
--	if (*write_pointer >= rtg->rtg_extents) {
--		xfs_warn(mp, "zone %u has invalid write pointer (0x%x).",
--			 rtg_rgno(rtg), *write_pointer);
--		return false;
--	}
--
--	return true;
--}
--
--static bool
--xfs_zone_validate_full(
--	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg,
--	xfs_rgblock_t		*write_pointer)
--{
--	struct xfs_mount	*mp = rtg_mount(rtg);
--
--	if (rtg_rmap(rtg)->i_used_blocks > rtg->rtg_extents) {
--		xfs_warn(mp, "zone %u has too large used counter (0x%x).",
--			 rtg_rgno(rtg), rtg_rmap(rtg)->i_used_blocks);
--		return false;
--	}
--
--	*write_pointer = rtg->rtg_extents;
--	return true;
--}
--
--static bool
--xfs_zone_validate_seq(
--	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg,
--	xfs_rgblock_t		*write_pointer)
--{
--	struct xfs_mount	*mp = rtg_mount(rtg);
--
- 	switch (zone->cond) {
- 	case BLK_ZONE_COND_EMPTY:
--		return xfs_zone_validate_empty(zone, rtg, write_pointer);
-+		*write_pointer = 0;
-+		return true;
- 	case BLK_ZONE_COND_IMP_OPEN:
- 	case BLK_ZONE_COND_EXP_OPEN:
- 	case BLK_ZONE_COND_CLOSED:
- 	case BLK_ZONE_COND_ACTIVE:
--		return xfs_zone_validate_wp(zone, rtg, write_pointer);
-+		if (zone->wp < zone->start ||
-+		    zone->wp >= zone->start + zone->capacity) {
-+			xfs_warn(mp,
-+	"zone %u write pointer (%llu) outside of zone.",
-+				zone_no, zone->wp);
-+			return false;
-+		}
-+
-+		*write_pointer = XFS_BB_TO_FSB(mp, zone->wp - zone->start);
-+		return true;
- 	case BLK_ZONE_COND_FULL:
--		return xfs_zone_validate_full(zone, rtg, write_pointer);
-+		*write_pointer = XFS_BB_TO_FSB(mp, zone->capacity);
-+		return true;
- 	case BLK_ZONE_COND_NOT_WP:
- 	case BLK_ZONE_COND_OFFLINE:
- 	case BLK_ZONE_COND_READONLY:
- 		xfs_warn(mp, "zone %u has unsupported zone condition 0x%x.",
--			rtg_rgno(rtg), zone->cond);
-+			zone_no, zone->cond);
- 		return false;
- 	default:
- 		xfs_warn(mp, "zone %u has unknown zone condition 0x%x.",
--			rtg_rgno(rtg), zone->cond);
-+			zone_no, zone->cond);
- 		return false;
- 	}
- }
- 
- static bool
--xfs_zone_validate_conv(
-+xfs_validate_blk_zone_conv(
-+	struct xfs_mount	*mp,
- 	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg)
-+	unsigned int		zone_no)
- {
--	struct xfs_mount	*mp = rtg_mount(rtg);
--
- 	switch (zone->cond) {
- 	case BLK_ZONE_COND_NOT_WP:
- 		return true;
- 	default:
- 		xfs_warn(mp,
- "conventional zone %u has unsupported zone condition 0x%x.",
--			 rtg_rgno(rtg), zone->cond);
-+			 zone_no, zone->cond);
- 		return false;
- 	}
- }
- 
- bool
--xfs_zone_validate(
-+xfs_validate_blk_zone(
-+	struct xfs_mount	*mp,
- 	struct blk_zone		*zone,
--	struct xfs_rtgroup	*rtg,
-+	unsigned int		zone_no,
-+	uint32_t		expected_size,
-+	uint32_t		expected_capacity,
- 	xfs_rgblock_t		*write_pointer)
- {
--	struct xfs_mount	*mp = rtg_mount(rtg);
--	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
--	uint32_t		expected_size;
--
- 	/*
- 	 * Check that the zone capacity matches the rtgroup size stored in the
- 	 * superblock.  Note that all zones including the last one must have a
- 	 * uniform capacity.
- 	 */
--	if (XFS_BB_TO_FSB(mp, zone->capacity) != g->blocks) {
-+	if (XFS_BB_TO_FSB(mp, zone->capacity) != expected_capacity) {
- 		xfs_warn(mp,
--"zone %u capacity (0x%llx) does not match RT group size (0x%x).",
--			rtg_rgno(rtg), XFS_BB_TO_FSB(mp, zone->capacity),
--			g->blocks);
-+"zone %u capacity (%llu) does not match RT group size (%u).",
-+			zone_no, XFS_BB_TO_FSB(mp, zone->capacity),
-+			expected_capacity);
- 		return false;
- 	}
- 
--	if (g->has_daddr_gaps) {
--		expected_size = 1 << g->blklog;
--	} else {
--		if (zone->len != zone->capacity) {
--			xfs_warn(mp,
--"zone %u has capacity != size ((0x%llx vs 0x%llx)",
--				rtg_rgno(rtg),
--				XFS_BB_TO_FSB(mp, zone->len),
--				XFS_BB_TO_FSB(mp, zone->capacity));
--			return false;
--		}
--		expected_size = g->blocks;
--	}
--
- 	if (XFS_BB_TO_FSB(mp, zone->len) != expected_size) {
- 		xfs_warn(mp,
--"zone %u length (0x%llx) does match geometry (0x%x).",
--			rtg_rgno(rtg), XFS_BB_TO_FSB(mp, zone->len),
-+"zone %u length (%llu) does not match geometry (%u).",
-+			zone_no, XFS_BB_TO_FSB(mp, zone->len),
- 			expected_size);
-+		return false;
- 	}
- 
- 	switch (zone->type) {
- 	case BLK_ZONE_TYPE_CONVENTIONAL:
--		return xfs_zone_validate_conv(zone, rtg);
-+		return xfs_validate_blk_zone_conv(mp, zone, zone_no);
- 	case BLK_ZONE_TYPE_SEQWRITE_REQ:
--		return xfs_zone_validate_seq(zone, rtg, write_pointer);
-+		return xfs_validate_blk_zone_seq(mp, zone, zone_no,
-+				write_pointer);
- 	default:
- 		xfs_warn(mp, "zoned %u has unsupported type 0x%x.",
--			rtg_rgno(rtg), zone->type);
-+			zone_no, zone->type);
- 		return false;
- 	}
- }
-diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-index df10a34da71d..c16089c9a652 100644
---- a/fs/xfs/libxfs/xfs_zones.h
-+++ b/fs/xfs/libxfs/xfs_zones.h
-@@ -37,7 +37,8 @@ struct blk_zone;
-  */
- #define XFS_DEFAULT_MAX_OPEN_ZONES	128
- 
--bool xfs_zone_validate(struct blk_zone *zone, struct xfs_rtgroup *rtg,
--	xfs_rgblock_t *write_pointer);
-+bool xfs_validate_blk_zone(struct xfs_mount *mp, struct blk_zone *zone,
-+	unsigned int zone_no, uint32_t expected_size,
-+	uint32_t expected_capacity, xfs_rgblock_t *write_pointer);
- 
- #endif /* _LIBXFS_ZONES_H */
 diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 87243644d88e..889a681d50b6 100644
+index 5ad9ae368996..211ec08cb508 100644
 --- a/fs/xfs/xfs_zone_alloc.c
 +++ b/fs/xfs/xfs_zone_alloc.c
-@@ -977,13 +977,15 @@ xfs_free_open_zones(
+@@ -976,7 +976,6 @@ xfs_free_open_zones(
+ }
  
  struct xfs_init_zones {
- 	struct xfs_mount	*mp;
-+	uint32_t		zone_size;
-+	uint32_t		zone_capacity;
+-	struct xfs_mount	*mp;
+ 	uint32_t		zone_size;
+ 	uint32_t		zone_capacity;
  	uint64_t		available;
- 	uint64_t		reclaimable;
- };
+@@ -994,19 +993,52 @@ struct xfs_init_zones {
+  * the most recently written ones got deleted again before unmount, but this is
+  * the best we can do without hardware support.
+  */
+-static xfs_rgblock_t
+-xfs_rmap_estimate_write_pointer(
+-	struct xfs_rtgroup	*rtg)
++static int
++xfs_query_write_pointer(
++	struct xfs_init_zones	*iz,
++	struct xfs_rtgroup	*rtg,
++	xfs_rgblock_t		*write_pointer)
+ {
++	struct xfs_mount	*mp = rtg_mount(rtg);
++	struct block_device	*bdev = mp->m_rtdev_targp->bt_bdev;
++	sector_t		start = xfs_gbno_to_daddr(&rtg->rtg_group, 0);
+ 	xfs_rgblock_t		highest_rgbno;
++	struct blk_zone		zone = {};
++	int			error;
++
++	if (bdev_is_zoned(bdev)) {
++		error = blkdev_get_zone_info(bdev, start, &zone);
++		if (error)
++			return error;
++		if (zone.start != start) {
++			xfs_warn(mp, "mismatched zone start: 0x%llx/0x%llx.",
++				zone.start, start);
++			return -EFSCORRUPTED;
++		}
++
++		if (!xfs_validate_blk_zone(mp, &zone, rtg_rgno(rtg),
++				iz->zone_size, iz->zone_capacity,
++				write_pointer))
++			return -EFSCORRUPTED;
++
++		/*
++		 * Use the hardware write pointer returned by
++		 * xfs_validate_blk_zone for sequential write required zones,
++		 * else fall through to the rmap-based estimation below.
++		 */
++		if (zone.cond != BLK_ZONE_COND_NOT_WP)
++			return 0;
++	}
  
+ 	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+ 	highest_rgbno = xfs_rtrmap_highest_rgbno(rtg);
+ 	xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
+ 
+ 	if (highest_rgbno == NULLRGBLOCK)
+-		return 0;
+-	return highest_rgbno + 1;
++		*write_pointer = 0;
++	else
++		*write_pointer = highest_rgbno + 1;
++	return 0;
+ }
+ 
+ static int
+@@ -1084,43 +1116,6 @@ xfs_init_zone(
+ 	return 0;
+ }
+ 
+-static int
+-xfs_get_zone_info_cb(
+-	struct blk_zone		*zone,
+-	unsigned int		idx,
+-	void			*data)
+-{
+-	struct xfs_init_zones	*iz = data;
+-	struct xfs_mount	*mp = iz->mp;
+-	xfs_fsblock_t		zsbno = xfs_daddr_to_rtb(mp, zone->start);
+-	xfs_rgnumber_t		rgno;
+-	xfs_rgblock_t		write_pointer;
+-	struct xfs_rtgroup	*rtg;
+-	int			error;
+-
+-	if (xfs_rtb_to_rgbno(mp, zsbno) != 0) {
+-		xfs_warn(mp, "mismatched zone start 0x%llx.", zsbno);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	rgno = xfs_rtb_to_rgno(mp, zsbno);
+-	rtg = xfs_rtgroup_grab(mp, rgno);
+-	if (!rtg) {
+-		xfs_warn(mp, "realtime group not found for zone %u.", rgno);
+-		return -EFSCORRUPTED;
+-	}
+-	if (!xfs_validate_blk_zone(mp, zone, idx, iz->zone_size,
+-			iz->zone_capacity, &write_pointer)) {
+-		xfs_rtgroup_rele(rtg);
+-		return -EFSCORRUPTED;
+-	}
+-	if (zone->cond == BLK_ZONE_COND_NOT_WP)
+-		write_pointer = xfs_rmap_estimate_write_pointer(rtg);
+-	error = xfs_init_zone(iz, rtg, write_pointer);
+-	xfs_rtgroup_rele(rtg);
+-	return error;
+-}
+-
  /*
-  * For sequential write required zones, we restart writing at the hardware write
-- * pointer returned by xfs_zone_validate().
-+ * pointer returned by xfs_validate_blk_zone().
-  *
-  * For conventional zones or conventional devices we have query the rmap to
-  * find the highest recorded block and set the write pointer to the block after
-@@ -1018,6 +1020,25 @@ xfs_init_zone(
- 	uint32_t		used = rtg_rmap(rtg)->i_used_blocks;
- 	int			error;
- 
-+	if (write_pointer > rtg->rtg_extents) {
-+		xfs_warn(mp, "zone %u has invalid write pointer (0x%x).",
-+			 rtg_rgno(rtg), write_pointer);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (used > rtg->rtg_extents) {
-+		xfs_warn(mp,
-+"zone %u has used counter (0x%x) larger than zone capacity (0x%llx).",
-+			 rtg_rgno(rtg), used, rtg->rtg_extents);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (write_pointer == 0 && used != 0) {
-+		xfs_warn(mp, "empty zone %u has non-zero used counter (0x%x).",
-+			rtg_rgno(rtg), used);
-+		return -EFSCORRUPTED;
-+	}
-+
- 	/*
- 	 * If there are no used blocks, but the zone is not in empty state yet
- 	 * we lost power before the zoned reset.  In that case finish the work
-@@ -1081,7 +1102,8 @@ xfs_get_zone_info_cb(
- 		xfs_warn(mp, "realtime group not found for zone %u.", rgno);
- 		return -EFSCORRUPTED;
- 	}
--	if (!xfs_zone_validate(zone, rtg, &write_pointer)) {
-+	if (!xfs_validate_blk_zone(mp, zone, idx, iz->zone_size,
-+			iz->zone_capacity, &write_pointer)) {
- 		xfs_rtgroup_rele(rtg);
- 		return -EFSCORRUPTED;
- 	}
-@@ -1227,6 +1249,8 @@ xfs_mount_zones(
+  * Calculate the max open zone limit based on the of number of backing zones
+  * available.
+@@ -1255,15 +1250,13 @@ xfs_mount_zones(
+ 	struct xfs_mount	*mp)
  {
  	struct xfs_init_zones	iz = {
- 		.mp		= mp,
-+		.zone_capacity	= mp->m_groups[XG_TYPE_RTG].blocks,
-+		.zone_size	= xfs_rtgroup_raw_size(mp),
+-		.mp		= mp,
+ 		.zone_capacity	= mp->m_groups[XG_TYPE_RTG].blocks,
+ 		.zone_size	= xfs_rtgroup_raw_size(mp),
  	};
- 	struct xfs_buftarg	*bt = mp->m_rtdev_targp;
- 	xfs_extlen_t		zone_blocks = mp->m_groups[XG_TYPE_RTG].blocks;
+-	struct xfs_buftarg	*bt = mp->m_rtdev_targp;
+-	xfs_extlen_t		zone_blocks = mp->m_groups[XG_TYPE_RTG].blocks;
++	struct xfs_rtgroup	*rtg = NULL;
+ 	int			error;
+ 
+-	if (!bt) {
++	if (!mp->m_rtdev_targp) {
+ 		xfs_notice(mp, "RT device missing.");
+ 		return -EINVAL;
+ 	}
+@@ -1291,7 +1284,7 @@ xfs_mount_zones(
+ 		return -ENOMEM;
+ 
+ 	xfs_info(mp, "%u zones of %u blocks (%u max open zones)",
+-		 mp->m_sb.sb_rgcount, zone_blocks, mp->m_max_open_zones);
++		 mp->m_sb.sb_rgcount, iz.zone_capacity, mp->m_max_open_zones);
+ 	trace_xfs_zones_mount(mp);
+ 
+ 	/*
+@@ -1315,25 +1308,18 @@ xfs_mount_zones(
+ 	 * or beneficial.
+ 	 */
+ 	mp->m_super->s_min_writeback_pages =
+-		XFS_FSB_TO_B(mp, min(zone_blocks, XFS_MAX_BMBT_EXTLEN)) >>
++		XFS_FSB_TO_B(mp, min(iz.zone_capacity, XFS_MAX_BMBT_EXTLEN)) >>
+ 			PAGE_SHIFT;
+ 
+-	if (bdev_is_zoned(bt->bt_bdev)) {
+-		error = blkdev_report_zones_cached(bt->bt_bdev,
+-				XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart),
+-				mp->m_sb.sb_rgcount, xfs_get_zone_info_cb, &iz);
+-		if (error < 0)
++	while ((rtg = xfs_rtgroup_next(mp, rtg))) {
++		xfs_rgblock_t		write_pointer;
++
++		error = xfs_query_write_pointer(&iz, rtg, &write_pointer);
++		if (!error)
++			error = xfs_init_zone(&iz, rtg, write_pointer);
++		if (error) {
++			xfs_rtgroup_rele(rtg);
+ 			goto out_free_zone_info;
+-	} else {
+-		struct xfs_rtgroup	*rtg = NULL;
+-
+-		while ((rtg = xfs_rtgroup_next(mp, rtg))) {
+-			error = xfs_init_zone(&iz, rtg,
+-					xfs_rmap_estimate_write_pointer(rtg));
+-			if (error) {
+-				xfs_rtgroup_rele(rtg);
+-				goto out_free_zone_info;
+-			}
+ 		}
+ 	}
+ 
 -- 
 2.47.3
 
