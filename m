@@ -1,173 +1,131 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7BDA34A771;
-	Wed, 14 Jan 2026 13:06:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 897421487E9;
+	Wed, 14 Jan 2026 13:07:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768396021; cv=none; b=fzNvVPesYt9XS9IybPaICM1kOX7KDxqaf6inXgmqj36dGl1eghSnGvtqKRO81wl8KV0g3ozBemNTX9YyMndtUI50IoS/xlJiY3/Me2OGxbjscUBUFk3v8tqBgRoUWcgBnfQXJpIGMiNTzIyTt/Cnqk6V+YBqCtkVN+wtUAgT8JE=
+	t=1768396028; cv=none; b=isPJWYDtf/hXJ5BwohRzS6H/VkFSGqgG/n/811pzIGZhImiKvvFX4+U4nIGmihi+cli9S0PAnExk0lr/nhMl3BEy+H4lCKFZroo/t7XY5d1JUA0vSnziruUchSGvNgYKaYZQ0CQSULtWpHutHHufg706csxz1lnwK97QxcJLP3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768396021; c=relaxed/simple;
-	bh=swA2Z+cvI7i5nnmNw9LviIKuh4fmhAEhMcaz35sVbIE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UlJDm21/lq0s/5RKvuUEVZSKxvNE+lqDEW5S3AMXWdNj/e1Hq2gQvx+FxM19ij8w4aj7q8QpoL3vRxcnY3vm7G/N4iinQo7wKmR13wJnhFFei1LNYu+j5F8p50sgMRFSaUZJdjpomlVH8vSpm4qhk7AaWNrvo3mKyFRcgQqjOaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CsUTToet; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1768396028; c=relaxed/simple;
+	bh=kfZVP5I9ETfRnGl2Uu23WU+sJbAjbUDGpzQT/szNy0c=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qzrF/Ney0LkQbU9vkl80/NHbWa18bDA5pXQYHSjnQYI/9gbcDQVm9scS4heTJncT//ArsQYUukDbm6o+jEVkWxz1iFfo7PcTONxKK2kXVEmbA0m/m1NDtA9ysuXT26zPhVZfhrtwd1iyQuQJT2MFKCSXvI/WlPKZlWp8KsEmJ4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FLLWMo2H; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CsUTToet"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FLLWMo2H"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=frpDmmp1i4r1AZelS3CVor2fKx/lP0Tq5j8/mhEG/8s=; b=CsUTToetKF+Id6BSRt8PfLBnAS
-	Y0ul3yOPNvK2EqLosGUY3uqxb0rBGjpkb3pFkF+nzL0tn0KOBAl2xhlehcW9SbJloDYCaYos/fI+R
-	/3mikrJStWJrWeOJzR2PeycF0eBRtBI6m7fleAVeDpZJmAWb5/mhUGXdyVHOSGGKP+FgMpRotCkGe
-	U4rxrSW9vdcoJ/4xvbYl6nQLLy/pVnBBXwulC6bpAsoSvSw4Aw1pxxyPY2C1RxEdi/vm7DGCPqLOa
-	XPJH2SpQwhbv/9XjUm+ADr7Kr9Po4kKl3x0XMHBhpwdVI/FJYFR2ISU4AMVB1IFKkKKX1rv/bPqoF
-	Uf0wlX6w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vg0Zb-00000009Gnt-0ut4;
-	Wed, 14 Jan 2026 13:06:07 +0000
-Date: Wed, 14 Jan 2026 05:06:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>, Jan Kara <jack@suse.cz>,
-	Luis de Bethencourt <luisbg@kernel.org>,
-	Salah Triki <salah.triki@gmail.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Anders Larsen <al@alarsen.net>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>, Chris Mason <clm@fb.com>,
-	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Chunhai Guo <guochunhai@vivo.com>, Jan Kara <jack@suse.com>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Richard Weinberger <richard@nod.at>,
-	Dave Kleikamp <shaggy@kernel.org>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	Viacheslav Dubeyko <slava@dubeyko.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Phillip Lougher <phillip@squashfs.org.uk>,
-	Carlos Maiolino <cem@kernel.org>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Yuezhang Mo <yuezhang.mo@sony.com>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>, Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-	Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>,
-	Bharath SM <bharathsm@microsoft.com>,
-	Hans de Goede <hansg@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-mtd@lists.infradead.org, jfs-discussion@lists.sourceforge.net,
-	linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-	ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, gfs2@lists.linux.dev, linux-doc@vger.kernel.org,
-	v9fs@lists.linux.dev, ceph-devel@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-	samba-technical@lists.samba.org
-Subject: Re: [PATCH 00/24] vfs: require filesystems to explicitly opt-in to
- lease support
-Message-ID: <aWeUv2UUJ_NdgozS@infradead.org>
-References: <8af369636c32b868f83669c49aea708ca3b894ac.camel@kernel.org>
- <CAOQ4uxgD+Sgbbg9K2U0SF9TyUOBb==Z6auShUWc4FfPaDCQ=rg@mail.gmail.com>
- <ec78bf021fa1f6243798945943541ba171e337e7.camel@kernel.org>
- <cb5d2da6-2090-4639-ad96-138342bba56d@oracle.com>
- <ce700ee20834631eceededc8cd15fc5d00fee28e.camel@kernel.org>
- <20260113-mondlicht-raven-82fc4eb70e9d@brauner>
- <aWZcoyQLvbJKUxDU@infradead.org>
- <ce418800f06aa61a7f47f0d19394988f87a3da07.camel@kernel.org>
- <aWc3mwBNs8LNFN4W@infradead.org>
- <CAOQ4uxhMjitW_DC9WK9eku51gE1Ft+ENhD=qq3uehwrHO=RByA@mail.gmail.com>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=HNgQc1J72eegVEEArFeOvGbHIypQWARfY8kFIx/qx3E=; b=FLLWMo2HlhE+ytUZ8v3tkybzPv
+	Y48fr1SJUcZdU1UeNpMYGWOVxBZ9BaPMDMs3T1jYR+t4p9WOzQEPgSHfeARNtMMOkNSMm187fFrDl
+	qTC3/Cn3zIaMvhU9oiafx7aWmKr0EIFJrIdxrmaWt2tgJZaw0Q/r5Mf8/6aQJJeMdhfciqHkHZqvM
+	lKFrC7NZI436/Uxp8Xr9daETO4HEtaa+P2I7KSFIkYjMTbNTrDMS+nEhzaPnSBFrwOqgK2S4urozr
+	T5WYmU9I6sqxatbqKSx/8c8103kGrGNeNwscP16FP/XFFyL/CULVVScWGsc5hZWdJulbtoWz2X2pQ
+	SutDB0pw==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vg0aU-00000009Gz9-00W3;
+	Wed, 14 Jan 2026 13:07:03 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	Keith Busch <kbusch@kernel.org>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cmaiolino@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 1/3] block: add a bio_reuse helper
+Date: Wed, 14 Jan 2026 14:06:41 +0100
+Message-ID: <20260114130651.3439765-2-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260114130651.3439765-1-hch@lst.de>
+References: <20260114130651.3439765-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxhMjitW_DC9WK9eku51gE1Ft+ENhD=qq3uehwrHO=RByA@mail.gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jan 14, 2026 at 10:34:04AM +0100, Amir Goldstein wrote:
-> On Wed, Jan 14, 2026 at 7:28 AM Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > On Tue, Jan 13, 2026 at 12:06:42PM -0500, Jeff Layton wrote:
-> > > Fair point, but it's not that hard to conceive of a situation where
-> > > someone inadvertantly exports cgroupfs or some similar filesystem:
-> >
-> > Sure.  But how is this worse than accidentally exporting private data
-> > or any other misconfiguration?
-> >
-> 
-> My POV is that it is less about security (as your question implies), and
-> more about correctness.
+Add a helper to allow an existing bio to be resubmitted without
+having to re-add the payload.
 
-I was just replying to Jeff.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ block/bio.c         | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/bio.h |  1 +
+ 2 files changed, 35 insertions(+)
 
-> The special thing about NFS export, as opposed to, say, ksmbd, is
-> open by file handle, IOW, the export_operations.
-> 
-> I perceive this as a very strange and undesired situation when NFS
-> file handles do not behave as persistent file handles.
-
-That is not just very strange, but actually broken (discounting the
-obscure volatile file handles features not implemented in Linux NFS
-and NFSD).  And the export ops always worked under the assumption
-that these file handles are indeed persistent.  If they're not we
-do have a problem.
-
-> 
-> cgroupfs, pidfs, nsfs, all gained open_by_handle_at() capability for
-> a known reason, which was NOT NFS export.
-> 
-> If the author of open_by_handle_at() support (i.e. brauner) does not
-> wish to imply that those fs should be exported to NFS, why object?
-
-Because "want to export" is a stupid category.
-
-OTOH "NFS exporting doesn't actually properly work because someone
-overloaded export_ops with different semantics" is a valid category.
-
-> We could have the opt-in/out of NFS export fixes per EXPORT_OP_
-> flags and we could even think of allowing admin to make this decision
-> per vfsmount (e.g. for cgroupfs).
-> 
-> In any case, I fail to see how objecting to the possibility of NFS export
-> opt-out serves anyone.
-
-You're still think of it the wrong way.  If we do have file systems
-that break the original exportfs semantics we need to fix that, and
-something like a "stable handles" flag will work well for that.  But
-a totally arbitrary "is exportable" flag is total nonsense.
+diff --git a/block/bio.c b/block/bio.c
+index e726c0e280a8..40f690985bfb 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -311,6 +311,40 @@ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf)
+ }
+ EXPORT_SYMBOL(bio_reset);
+ 
++/**
++ * bio_reuse - reuse a bio with the payload left intact
++ * @bio:	bio to reuse
++ * @opf:	operation and flags for the next I/O
++ *
++ * Allow reusing an existing bio for another operation with all set up
++ * fields including the payload, device and end_io handler left intact.
++ *
++ * Typically used when @bio is first used to read data which is then written
++ * to another location without modification.  @bio must not be in-flight and
++ * owned by the caller.  Can't be used for cloned bios.
++ *
++ * Note: Can't be used when @bio has integrity or blk-crypto contexts for now.
++ * Feel free to add that support when you need it, though.
++ */
++void bio_reuse(struct bio *bio, blk_opf_t opf)
++{
++	unsigned short vcnt = bio->bi_vcnt, i;
++	bio_end_io_t *end_io = bio->bi_end_io;
++	void *private = bio->bi_private;
++
++	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
++	WARN_ON_ONCE(bio_integrity(bio));
++	WARN_ON_ONCE(bio_has_crypt_ctx(bio));
++
++	bio_reset(bio, bio->bi_bdev, opf);
++	for (i = 0; i < vcnt; i++)
++		bio->bi_iter.bi_size += bio->bi_io_vec[i].bv_len;
++	bio->bi_vcnt = vcnt;
++	bio->bi_private = private;
++	bio->bi_end_io = end_io;
++}
++EXPORT_SYMBOL_GPL(bio_reuse);
++
+ static struct bio *__bio_chain_endio(struct bio *bio)
+ {
+ 	struct bio *parent = bio->bi_private;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index ad2d57908c1c..8a0b9baa2d0e 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -414,6 +414,7 @@ static inline void bio_init_inline(struct bio *bio, struct block_device *bdev,
+ }
+ extern void bio_uninit(struct bio *);
+ void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
++void bio_reuse(struct bio *bio, blk_opf_t opf);
+ void bio_chain(struct bio *, struct bio *);
+ 
+ int __must_check bio_add_page(struct bio *bio, struct page *page, unsigned len,
+-- 
+2.47.3
 
