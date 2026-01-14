@@ -1,42 +1,29 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5414433F38C;
-	Wed, 14 Jan 2026 05:40:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CE8934D3B6;
+	Wed, 14 Jan 2026 06:02:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768369224; cv=none; b=tkMfnSfkW5NhPdFf3tblotDPRUbhuDCCMUD73lKZMszSN/1bSJkWdT8g4Q57C9vDYyDTXqP9Xan6TCk0E7GZIf72icUlheOxNqjvHJg2+BXrPPbvPQbwOQXoxnkLqAoOPSsaeBAGxKa0+EB2RQc1UusDj7lS2NZBGYKtrxqy94c=
+	t=1768370547; cv=none; b=OPd7PLcTh/cFp7kxjA4HxW2J9Py/o6tYgbgR5CPyxHPJDDJLydUuY4tHmnyFTdncm0CE+Pvjl4x84Kaaltk3g4vu3W4TldSGAuohej74nDM6/TwIxwvMYOIt7ukZge9SVy7PRB/8KOBaTJOSLLgD0TvpqvSTzIpNNAtp7q1eOvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768369224; c=relaxed/simple;
-	bh=9vLvCSTWKCZ5vGof7ihP7jdqhcsELpmSAiSLQXvIb8w=;
+	s=arc-20240116; t=1768370547; c=relaxed/simple;
+	bh=mhOChSG+AU7XbWnntZlRA9SUUTijr6y6Q+4tfIQ3ugQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ke3gfOJ4IWXxcn2reOsP+PUxeBxLxvF1Loo4SvANGsmRXa17ZCd8UJnFf8Mw821Vn1c9DlpMgK2wZ9myTG72BvSMhf2yzOw0DrZEzlMCifpjvUbI1HyAZi0oRksoV3U7TLgPJ9Eg82jmdg8jIlfreXSYjdX2UWtDHwh2yO3JV/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JzCxjfCo; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JzCxjfCo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0950C4CEF7;
-	Wed, 14 Jan 2026 05:40:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768369222;
-	bh=9vLvCSTWKCZ5vGof7ihP7jdqhcsELpmSAiSLQXvIb8w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JzCxjfCoq6WKmkStJwPnGYJYoHj/W3a+myxk7BP+TN0lDcucBaD5wutCsrx1Xu5TP
-	 kGAZ9FuUpZUiZMlYCD7Jk/9sxXpWI55dHLrLvDAO+XKjkGWvnPAPMpCwHtTtvYHoXa
-	 glKZb1W3D5vDa8oU2wJ5Wr1XxBANfbpIz2lv6nc8p4nzAxMspwJpNt+SW79p7qDtmQ
-	 Ab9TrNsMwMqtolXUlp7RrvWk4j2QY0eqeR1cXZ2aovIQxCmMG+fjI+noHOuTz8lwtT
-	 AaWRwd2DUMpB/iSl4jGn9tXfY/xO4frF5syflaz6YT4Q+sFq0qDx3FmrkbqnpZDyxJ
-	 CHkyYxFcS9XGw==
-Date: Tue, 13 Jan 2026 21:40:21 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=DZPAtxpUmMc/2ClYEBmDxo6w2FbkyGuyhZxD8TrCgbnXNiQ8/w8NpBk27CNbgMJq6JtF8KsUsgm+/Je3enyOn6dsbxePWfAS7Jlqe2tGC+IFLjFUqgSqn9mnLIWAm7x3hAGEXzm/n7VWxXbhQva1cmG/qppnIt8pZy0R7QAIKS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 61DB7227A8E; Wed, 14 Jan 2026 07:02:14 +0100 (CET)
+Date: Wed, 14 Jan 2026 07:02:14 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 11/11] xfs: add media verification ioctl
-Message-ID: <20260114054021.GE15551@frogsfrogsfrogs>
-References: <176826412644.3493441.536177954776056129.stgit@frogsfrogsfrogs>
- <176826412941.3493441.8359506127711497025.stgit@frogsfrogsfrogs>
- <20260113155701.GA3489@lst.de>
- <20260113232113.GD15551@frogsfrogsfrogs>
+Message-ID: <20260114060214.GA10372@lst.de>
+References: <176826412644.3493441.536177954776056129.stgit@frogsfrogsfrogs> <176826412941.3493441.8359506127711497025.stgit@frogsfrogsfrogs> <20260113155701.GA3489@lst.de> <20260113232113.GD15551@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,32 +33,88 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20260113232113.GD15551@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
 On Tue, Jan 13, 2026 at 03:21:13PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 13, 2026 at 04:57:01PM +0100, Christoph Hellwig wrote:
-> > On Mon, Jan 12, 2026 at 04:35:25PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Add a new privileged ioctl so that xfs_scrub can ask the kernel to
-> > > verify the media of the devices backing an xfs filesystem, and have any
-> > > resulting media errors reported to fsnotify and xfs_healer.
+> > > +#define XFS_VERIFY_TO_EOD	(~0ULL)	/* end of disk */
 > > 
-> > Hmm, the description is a bit sparse?
-> > 
-> > > +/* Verify the media of the underlying devices */
-> > > +struct xfs_verify_media {
-> > > +	__u32	dev;		/* I: XFS_VERIFY_*DEV */
-> > 
-> > This should probably use the enum xfs_device values?
+> > Is there much of a point in this flag?  scrub/healer really should
+> > know the device size, shouldn't they?
 > 
-> Yes, that's a good point.
+> Yes, scrub and healer both know the size they want to verify.  I put
+> that in for the sake of xfs_io so that it wouldn't have to figure out
+> the device size, but as the ioctl always decreases @end_daddr to the
+> actual EOD, I think it'd be ok if xfs_io blindly wrote in ~0ULL.
 
-FYI, today's draft of this ioctl can be read here:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=health-monitoring_2026-01-13&id=e3fee7d7ead8b3e630845304b9030b5c7c5f27da
+That's the best of both worlds.
 
-It contains all the alterations I talked about earlier today.
+> > > +	const unsigned int	iosize = BIO_MAX_VECS << PAGE_SHIFT;
+> > > +	unsigned int		bufsize = iosize;
+> > 
+> > That's a pretty gigantic buffer size.  In general a low number of
+> > MB should max out most current devices, and for a background scrub
+> > you generally do not want to actually max out the device..
+> 
+> 256 * 4k (= 1MB) is too large a buffer?
 
-(I might be coming down with a cold, so I thought it best to git push
-now and find out if I'm at all coherent tomorrow.)
+No, my reading comprehension just sucks :)  And of course the way
+it's written isn't very helpful either.
 
---D
+> I guess that /is/ 16M on a 64k-page system.
+
+Yeah, just stick to SZ_1M.
+
+> > > +				min(nr_sects, bufsize >> SECTOR_SHIFT);
+> > > +
+> > > +			bio_add_folio_nofail(bio, folio,
+> > > +					vec_sects << SECTOR_SHIFT, 0);
+> > > +
+> > > +			bio_daddr += vec_sects;
+> > > +			bio_bbcount -= vec_sects;
+> > > +			bio_submitted += vec_sects;
+> > > +		}
+> > 
+> > A single folio is always just a single vetor in the bio.  No need
+> > for any of the looping here.
+> 
+> If we have to fall back to a single base page, shouldn't we still try to
+> create a larger bio?
+
+How do you create a larger bio if you only have a single bio available?
+
+> A subtle assumption here is that it's ok to have
+> all the bvecs pointing to the same memory, and that the device won't
+> screw up if someone asks it to DMA to the same page simultaneously.
+
+Ooooh.  Yes, that will screw up badly when using PI.
+
+> > > +		/* Don't let too many IOs accumulate */
+> > > +		if (bio_submitted > SZ_256M >> SECTOR_SHIFT) {
+> > > +			blk_finish_plug(&plug);
+> > > +			error = submit_bio_wait(bio);
+> > 
+> > Also the building up and chaining here seems harmful.  If you're
+> > on SSDs you want to fire things off ASAP if you have large I/O.
+> > On a HDD we'll take care of it below, but the bios will usually
+> > actually be split, not merged anyway as they are beyond the
+> > supported I/O size of the HBAs.
+> 
+> Hrm, maybe I should query the block device for max_sectors_kb then?
+
+No.  max_sectors_kb is kida stupid.  I think a sensible default and
+a tunable is a better choice here at least for now.
+
+> However, in the case where memory is fragmented and we can only get
+> (say) a single base page, it'll still try to load up the bio with as
+> many vecs as it can to try to keep the io size large, because issuing
+> 256x 4k IOs is a lot slower than issuing 1x 1M IO with the same page
+> added 256 times.
+
+Yeah.  But seriously, if the MM is pretty good and is getting better
+at finding large allocations.  We need to start relying on that.
+
+> I wonder if nr_vecs ought to be capped by queue_max_segments?
+
+No, leave all that splitting to the block layer.  max_segments is
+an implementation detail.
+
