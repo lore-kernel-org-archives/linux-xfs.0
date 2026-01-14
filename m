@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DB6334E760;
-	Wed, 14 Jan 2026 07:42:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AF735FF41;
+	Wed, 14 Jan 2026 07:42:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768376528; cv=none; b=JLLdmU+3sF0b6zOvZJWK4bG/i0Bq0GuZlqAZRxDqiTj51graqHWXrTvC5KI8vjg4lyYccJY273AdC3EVxBubYIIG6ruXKDtAdXPtxzAToWXDvceGDKnc+BdiYWePJ7Jpu6XDK25ehspIRNMorH7B5akvNFCx3lHa2Bvab0X8H2U=
+	t=1768376529; cv=none; b=DvrF17mophDzirXLscQbZKFcMhfHYrPDl8IDAL80x++ykF9HvgKPz+SdQ2sslUhGFV/XWEDir1aoHjuAQK5yS57mI1l+UISXjxGVeZ1/9zCYVdEgqt4L9kwLWQ2Z7qaNAE6CQQuY0Z6M0Gb9hih4XZV6NtJysd4AquN2SA43bBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768376528; c=relaxed/simple;
-	bh=GJ1oKmnDP37Jb9BXKyvzbmVhZbftS+PHr8QRwOZFqOg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oGOTTInld2CoCvlENcLQUsf0Cf0w0COhtxa3D9m45d4ZLBqjmULej7M17iYsZoMHIz9GWBclaKQp3WsUWFHsnVNKkYJZuCr3g8iYEnTkf+G76vLimUamnYaryz66Rj5q1ZWBwKs8qG5sBDqXlJ6zGuyhI/jLVf/vaKy6R75cvYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WFFnBPut; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1768376529; c=relaxed/simple;
+	bh=3QI2OO74LcnVbEedP0aMj12D2ZfFiFKrrb/nAJ0+f7E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tArt4QFjmZzoL8v4nsxnRY2+hwkfBiFMgW7QhZdLjAdacPbNKiIBO/IYG2SoA2L7DgMy3AoPnh9qMduYERm6UJdIiXZS5bohEj+MvartwvtCKOy8u6/+UoMzpITfClGdmAB3OPprbzxC6uzlHNZwFwO1Ppq3vQhm4aYEKWlxEfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CkoxT4l0; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WFFnBPut"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CkoxT4l0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=szw3/B/ne+BABndo/Nl4eMPVvDooE6ItKnVO892TolQ=; b=WFFnBPutI/FhEKhnqaoVq7VNao
-	K/+dOD0ZT3FzQsiBozAnZcBdr4DY/elIzCZy3FTp+JUQArMVAMwRD/BeUg3IYZ+zHluyPfkj5t27v
-	VIYjLQmqrS+P77pCynze7oOytXfuLhfOssWFGaq1Sq7vs4On/SqMxsljCpQkuE2D1nCAbIkzDn8Gp
-	ywOwXXSL4QI/WH9xOzgCijCG3mY/hMFKDUNbGnkA5QQJS4RO5QxUV1ubgm1b1SgpXZyEutRTm+AsE
-	/J8wCDoAaOrcgIyC93/pipJ/f3MtiI/yltWcEptvpyWM6piQKwyFOTuNVrjfOkTAVigZD6nxOrHj/
-	c4/8Ez/Q==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=xhB7qOXlkIRSnyXgwM2xYIn6O20yDEwPG+xHcKOTJb8=; b=CkoxT4l0D7vsNGv3IEQ4D+8oLq
+	aZOhLbLNlWWO7jQYen9htChc2L3OsMKzEfPUlAYE1WSxyN6+yMo4yuPPU1swkKBnCC8gkgyZCSJK+
+	pNcIVYBgKPmiQcwEsAECmUrFTQzOuU5NqCWuKAD1zjK2TRo/RWzdQ44+ZsS7iznJM+WOq8B13u1am
+	QQtsaMB2AmS6oRMF+awEeh7+wTDQaQ4A89D84hKDtsOKiTluWdOyAjB6UNw7dKrhz2/XodjGDxFLP
+	sqX8e6AIBTRKn18Fi/QCfvuIojmZ3UhvNmWg9kZBzjZ00TlimRNfj4wJGZQILG0UpsLHzIMnr4RAh
+	ck/0DnRg==;
 Received: from 85-127-106-146.dsl.dynamic.surfer.at ([85.127.106.146] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vfvVm-00000008DlJ-33DA;
-	Wed, 14 Jan 2026 07:41:51 +0000
+	id 1vfvVy-00000008Dnu-2jG2;
+	Wed, 14 Jan 2026 07:42:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>
@@ -39,10 +40,12 @@ Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org
-Subject: bounce buffer direct I/O when stable pages are required
-Date: Wed, 14 Jan 2026 08:40:58 +0100
-Message-ID: <20260114074145.3396036-1-hch@lst.de>
+Subject: [PATCH 02/14] block: open code bio_add_page and fix handling of mismatching P2P ranges
+Date: Wed, 14 Jan 2026 08:41:00 +0100
+Message-ID: <20260114074145.3396036-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260114074145.3396036-1-hch@lst.de>
+References: <20260114074145.3396036-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,69 +55,110 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+bio_add_page fails to add data to the bio when mixing P2P with non-P2P
+ranges, or ranges that map to different P2P providers.  In that case
+it will trigger that WARN_ON and return an error up the chain instead of
+simply starting a new bio as intended.  Fix this by open coding
+bio_add_page and handling this case explicitly.  While doing so, stop
+merging physical contiguous data that belongs to multiple folios.  While
+this merge could lead to more efficient bio packing in some case,
+dropping will allow to remove handling of this corner case in other
+places and make the code more robust.
 
-this series tries to address the problem that under I/O pages can be
-modified during direct I/O, even when the device or file system require
-stable pages during I/O to calculate checksums, parity or data
-operations.  It does so by adding block layer helpers to bounce buffer
-an iov_iter into a bio, then wires that up in iomap and ultimately
-XFS.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c | 37 +++++++++++++------------------------
+ 1 file changed, 13 insertions(+), 24 deletions(-)
 
-The reason that the file system even needs to know about it, is because
-reads need a user context to copy the data back, and the infrastructure
-to defer ioends to a workqueue currently sits in XFS.  I'm going to look
-into moving that into ioend and enabling it for other file systems.
-Additionally btrfs already has it's own infrastructure for this, and
-actually an urgent need to bounce buffer, so this should be useful there
-and could be wire up easily.  In fact the idea comes from patches by
-Qu that did this in btrfs.
+diff --git a/block/bio.c b/block/bio.c
+index e22b7cf9b2bc..48d9f1592313 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1213,7 +1213,7 @@ static unsigned int get_contig_folio_len(struct page **pages,
+  * For a multi-segment *iter, this function only adds pages from the next
+  * non-empty segment of the iov iterator.
+  */
+-static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
++static ssize_t __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ {
+ 	iov_iter_extraction_t extraction_flags = 0;
+ 	unsigned short nr_pages = bio->bi_max_vecs - bio->bi_vcnt;
+@@ -1223,7 +1223,6 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	ssize_t size;
+ 	unsigned int i = 0;
+ 	size_t offset, left, len;
+-	int ret = 0;
+ 
+ 	/*
+ 	 * Move page array up in the allocated memory for the bio vecs as far as
+@@ -1244,37 +1243,26 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 
+ 	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
+ 	for (left = size; left > 0; left -= len) {
+-		unsigned int old_vcnt = bio->bi_vcnt;
+ 		unsigned int nr_to_add;
+ 
+-		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
+-		if (!bio_add_page(bio, pages[i], len, offset)) {
+-			WARN_ON_ONCE(1);
+-			ret = -EINVAL;
+-			goto out;
+-		}
++		if (bio->bi_vcnt > 0) {
++			struct bio_vec *prev = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 
+-		if (bio_flagged(bio, BIO_PAGE_PINNED)) {
+-			/*
+-			 * We're adding another fragment of a page that already
+-			 * was part of the last segment.  Undo our pin as the
+-			 * page was pinned when an earlier fragment of it was
+-			 * added to the bio and __bio_release_pages expects a
+-			 * single pin per page.
+-			 */
+-			if (offset && bio->bi_vcnt == old_vcnt)
+-				unpin_user_folio(page_folio(pages[i]), 1);
++			if (!zone_device_pages_have_same_pgmap(prev->bv_page,
++					pages[i]))
++				break;
+ 		}
++
++		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
++		__bio_add_page(bio, pages[i], len, offset);
+ 		i += nr_to_add;
+ 		offset = 0;
+ 	}
+ 
+ 	iov_iter_revert(iter, left);
+-out:
+ 	while (i < nr_pages)
+ 		bio_release_page(bio, pages[i++]);
+-
+-	return ret;
++	return size - left;
+ }
+ 
+ /*
+@@ -1334,7 +1322,7 @@ static int bio_iov_iter_align_down(struct bio *bio, struct iov_iter *iter,
+ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
+ 			   unsigned len_align_mask)
+ {
+-	int ret = 0;
++	ssize_t ret;
+ 
+ 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+ 		return -EIO;
+@@ -1347,9 +1335,10 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
+ 
+ 	if (iov_iter_extract_will_pin(iter))
+ 		bio_set_flag(bio, BIO_PAGE_PINNED);
++
+ 	do {
+ 		ret = __bio_iov_iter_get_pages(bio, iter);
+-	} while (!ret && iov_iter_count(iter) && !bio_full(bio, 0));
++	} while (ret > 0 && iov_iter_count(iter) && !bio_full(bio, 0));
+ 
+ 	if (bio->bi_vcnt)
+ 		return bio_iov_iter_align_down(bio, iter, len_align_mask);
+-- 
+2.47.3
 
-This patch fixes all but one xfstests failures on T10 PI capable devices
-(generic/095 seems to have issues with a mix of mmap and splice still,
-I'm looking into that separate), and make qemu VMs running Windows,
-or Linux with swap enabled fine on an XFS file on a device using PI.
-
-Performance numbers on my (not exactly state of the art) NVMe PI test
-setup:
-
-  Sequential reads using io_uring, QD=16.
-  Bandwidth and CPU usage (usr/sys):
-
-  | size |        zero copy         |          bounce          |
-  +------+--------------------------+--------------------------+
-  |   4k | 1316MiB/s (12.65/55.40%) | 1081MiB/s (11.76/49.78%) |
-  |  64K | 3370MiB/s ( 5.46/18.20%) | 3365MiB/s ( 4.47/15.68%) |
-  |   1M | 3401MiB/s ( 0.76/23.05%) | 3400MiB/s ( 0.80/09.06%) |
-  +------+--------------------------+--------------------------+
-
-  Sequential writes using io_uring, QD=16.
-  Bandwidth and CPU usage (usr/sys):
-
-  | size |        zero copy         |          bounce          |
-  +------+--------------------------+--------------------------+
-  |   4k |  882MiB/s (11.83/33.88%) |  750MiB/s (10.53/34.08%) |
-  |  64K | 2009MiB/s ( 7.33/15.80%) | 2007MiB/s ( 7.47/24.71%) |
-  |   1M | 1992MiB/s ( 7.26/ 9.13%) | 1992MiB/s ( 9.21/19.11%) |
-  +------+--------------------------+--------------------------+
-
-Note that the 64k read numbers look really odd to me for the baseline
-zero copy case, but are reproducible over many repeated runs.
-
-The bounce read numbers should further improve when moving the PI
-validation to the file system and removing the double context switch,
-which I have patches for that will sent as soon as we are done with
-this series.
-
-Diffstat:
- block/bio.c           |  323 ++++++++++++++++++++++++++++++--------------------
- block/blk.h           |   11 -
- fs/iomap/direct-io.c  |  189 +++++++++++++++--------------
- fs/iomap/ioend.c      |    8 +
- fs/xfs/xfs_aops.c     |    8 -
- fs/xfs/xfs_file.c     |   41 +++++-
- include/linux/bio.h   |   26 ++++
- include/linux/iomap.h |    9 +
- include/linux/uio.h   |    3 
- lib/iov_iter.c        |   98 +++++++++++++++
- 10 files changed, 490 insertions(+), 226 deletions(-)
