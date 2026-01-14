@@ -1,72 +1,51 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D773624C8
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 07:41:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43263328B6A;
+	Wed, 14 Jan 2026 07:42:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768376518; cv=none; b=AcELtSld98I/ETkV6qIUku37bNjPhOYLUIw/usTmYWRAC6Ul0gikhfXpT3kKHjwmYasa8mK/6WoiObcX9Cdc3AhF5kZJEOzbYF/WfBYTrZERocUhERlhHMCLvEL3TDgNeW4McUuR0B7f/rEJ2PUXcOfOxn/IZEUpxqKR+7Uw9m8=
+	t=1768376528; cv=none; b=Ty3zksWkZrkvOU4XbvlICgnhYdUBo4pG3mA50xqGWBaDnGWfcNMD69rD4gpRfS//zpLjRVog2p7/UXLDtRVgcNSYiMZ6p25hI3i99Ut0Z4hoZXMI3LNH38/z6YQQ4RDACRkTRJ8RQpo9UKXSbRasz9dbC1PR6Msco77omG8dUtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768376518; c=relaxed/simple;
-	bh=+H3aAh+H9MYWBdA3obltdIOF5BErV3p/RdjTsRHDREA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZMzqfr5AKU2l6gROisygyDiR7BgGzLgBZPkdzjvy54OkJBpKusamC+J/FLhpP2+qzDmV2vnzwacb+twsvntVJa/NiBTsbIas4lquuOEsbgn/fEm0qMjerj7gTRhxESS3PJ0jXLT6WuLbALo/75RtGVghZHA3eu3F/e4EDugKnyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ICkBm14S; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768376528; c=relaxed/simple;
+	bh=maB5/GPSmi2l7kagwVdpBl9mnqgF2594JGrtgDOb4x0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=jEvej3mtL5a3+HTLjFP1hpUQ1PZ5mn35IqSCDHYE2ghbw24X4bc+7vr0CJ4DOvLuZmxENK8Nm1C4zIsx3IYdHM1TgClUPzqcdUKtKn5+mIC1xNi5nMd1xixcZjWbteYkOz3d6ej0T3Jj1VHfdKfAC3hZW3fs6Zn6wUWEqFOAtSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0b5LLbjH; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ICkBm14S"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-29f102b013fso76537185ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Jan 2026 23:41:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768376505; x=1768981305; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=snBrbkipsnG2NrPPSCJsD8qwO3TtVqHYjFPmR+kbTww=;
-        b=ICkBm14SWIotz6yZrsGoMpdITnqLw483a4lo4R7iflmomOVI5ibeA/69PxFJJwuq0M
-         ZBYwMdF14IzJLYOfdWNrsV8wXzLHBPI5+vRvdrtvv1iwfHu/8UiBQMvQi8nRaz95W/99
-         H6LA0p4EiucanWHc5Sd1tjuB95X8TrL6bZp7jHFuer0plZJabBfEVpCevxIKYBZYymoF
-         WiC8pC2CqkOiDuBbADjI8ApJXno/nMgPgPArpkxM7txXvzdHOhk2Lb1VypkLhDtOxbW2
-         zZ5l2MaSPivQJiD7JSfXf40doDhf6SJBEZGJOOh9gKI7uIItwpJsbF0wbEnSBvJ8EvpR
-         LfTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768376505; x=1768981305;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=snBrbkipsnG2NrPPSCJsD8qwO3TtVqHYjFPmR+kbTww=;
-        b=ZpfipQAIdypexbd1YI8GKAhVRGQX/nm2AAVrKaZsOygN1gWs0yPT7EBxiaR3SQ21Am
-         Nxgkk8wrNuppeVx9oaZO7Q072s4bqYz0Vao7TTv4vkOsw+5ZzUxxj/QzToWIb58uHZP9
-         C06+8hOTX+47vB1rDXJOepsIwx+Ehy420ztcY68v9YgDRZqpLN/MNao3XT2ooS5qV7qq
-         l0vsuDgNjGldspObzLfzDFwo0UjwQ63Rzw/Z2tbDUQfI70877ZCiLRmbVa5Fpi15yzL5
-         aibGIZ0wOfRswfom7D3F0OYzGSeKs+NZa/hQAAdgvgEqPAz3rnqzQodGKv2ge3DN1NQd
-         zs5A==
-X-Gm-Message-State: AOJu0YxARKPdgSKV9cdBqYchPooP3YoTsB3SvYchlnroK35qGN1h79eQ
-	iLmLB+gfbpaNp4CVFsennxw8YYdF3qouICQuqxKaHGo6RZIUpkaJaUCj
-X-Gm-Gg: AY/fxX6i3P91g6z9F893PhNA3e+Nl4ne5Vup3V6N8LY3Xq2i2Wn9LPQFSsTvkfHe5oh
-	vCOg6/3geAbJ6kRbdDRHHwUtkeAgMCL9hTnLN4+Vz7uhHRE7MsGJ8WWtmt/ZfcJ0uk18FRXhonO
-	Z7va5s+CjA1TfLd0xHBHF9UzosKacawLAVl3MyhWzO2TCbvfJk0A+Ek4DCCZ4Lz5Lr4G9GtKgjd
-	7zIct9dzjoS52umNJ1lhQY5HAknf/oWN6RYIacVwTiQS5cJJwUJu6uoeSkMY40lMUs4qjm1buh7
-	VYEqfwrfBJ1tkYzjEU6SjqpOsfl7c6ZdD5Ji4fHbHVnYaBb1eg2z79xSjH5sxF7bg5M7dkIweDg
-	uW5hFHujoNFTQqAALw3KBe/FBqIzNP12DjmcXvyXRXHDa5wcDPWNzAyoy66Qt2JcyW49uZpQilb
-	2ayV9KMJZOvaozYNqiWY7io/d8+Ag7kw==
-X-Received: by 2002:a17:902:d506:b0:2a5:99e9:569d with SMTP id d9443c01a7336-2a599e9579amr22476575ad.18.1768376505152;
-        Tue, 13 Jan 2026 23:41:45 -0800 (PST)
-Received: from n232-175-066.byted.org ([36.110.163.107])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a3e3cb2debsm221476875ad.65.2026.01.13.23.41.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Jan 2026 23:41:44 -0800 (PST)
-From: guzebing <guzebing1612@gmail.com>
-To: brauner@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	guzebing <guzebing1612@gmail.com>,
-	Fengnan Chang <changfengnan@bytedance.com>
-Subject: [PATCH v2] iomap: add allocation cache for iomap_dio
-Date: Wed, 14 Jan 2026 15:41:13 +0800
-Message-Id: <20260114074113.151089-1-guzebing1612@gmail.com>
-X-Mailer: git-send-email 2.20.1
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0b5LLbjH"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=7Ut16tkEOCcj980qUp1bVamKVu6n2WjZb4ANJhSlfn0=; b=0b5LLbjHhYehh/qe0EKKId5qex
+	KK3lM/ACGyK1KSGh6cjhotCiJNWn7VzhZDYK1zCCxZEVyDL0BQyYBgKu06H5T5ZGyMVJyciSSZjSn
+	i6iagCoFovSAxSq78ZIkOGm58LAS7dhegFBQKuf672eJus2L2tdKCVQ3rLIULmK3Kb5IUTInn3UPC
+	IjB49yu+JojKRM5SriLPlP3lo+Oe/Q5JjHr286dtpMl0eV0P2ZKOudT49+fUId5WkUxF8ZQ+KRuS5
+	IY6vHx+qt9wYige0SSB/z4vqE9cwTMoR7gB9FUwJ8nEU9x7c8phzXoHE3YljIQKC5tV8TnFUO02zJ
+	5YZ21gTg==;
+Received: from 85-127-106-146.dsl.dynamic.surfer.at ([85.127.106.146] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vfvVq-00000008DmT-2rQR;
+	Wed, 14 Jan 2026 07:41:57 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Qu Wenruo <wqu@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: [PATCH 01/14] block: refactor get_contig_folio_len
+Date: Wed, 14 Jan 2026 08:40:59 +0100
+Message-ID: <20260114074145.3396036-2-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260114074145.3396036-1-hch@lst.de>
+References: <20260114074145.3396036-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,203 +53,123 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-As implemented by the bio structure, we do the same thing on the
-iomap-dio structure. Add a per-cpu cache for iomap_dio allocations,
-enabling us to quickly recycle them instead of going through the slab
-allocator.
+Move all of the logic to find the contigous length inside a folio into
+get_contig_folio_len instead of keeping some of it in the caller.
 
-By making such changes, we can reduce memory allocation on the direct
-IO path, so that direct IO will not block due to insufficient system
-memory. In addition, for direct IO, the read performance of io_uring
-is improved by about 2.6%.
-
-v2:
-Factor percpu cache into common code and the iomap module uses it.
-
-v1:
-https://lore.kernel.org/all/20251121090052.384823-1-guzebing1612@gmail.com/
-
-Suggested-by: Fengnan Chang <changfengnan@bytedance.com>
-Signed-off-by: guzebing <guzebing1612@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/direct-io.c | 135 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 132 insertions(+), 3 deletions(-)
+ block/bio.c | 62 +++++++++++++++++++++++------------------------------
+ 1 file changed, 27 insertions(+), 35 deletions(-)
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 5d5d63efbd57..b152fd2c7042 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -56,6 +56,132 @@ struct iomap_dio {
- 	};
- };
+diff --git a/block/bio.c b/block/bio.c
+index e726c0e280a8..e22b7cf9b2bc 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1169,33 +1169,35 @@ void bio_iov_bvec_set(struct bio *bio, const struct iov_iter *iter)
+ 	bio_set_flag(bio, BIO_CLONED);
+ }
  
-+#define PCPU_CACHE_IRQ_THRESHOLD	16
-+#define PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list) \
-+	(sizeof(struct pcpu_cache_element) + pcpu_cache_list->element_size)
-+#define PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload) \
-+	((struct pcpu_cache_element *)((unsigned long)(payload) - \
-+				       sizeof(struct pcpu_cache_element)))
-+#define PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(head) \
-+	((void *)((unsigned long)(head) + sizeof(struct pcpu_cache_element)))
-+
-+struct pcpu_cache_element {
-+	struct pcpu_cache_element	*next;
-+	char	payload[];
-+};
-+struct pcpu_cache {
-+	struct pcpu_cache_element	*free_list;
-+	struct pcpu_cache_element	*free_list_irq;
-+	int		nr;
-+	int		nr_irq;
-+};
-+struct pcpu_cache_list {
-+	struct pcpu_cache __percpu *cache;
-+	size_t element_size;
-+	int max_nr;
-+};
-+
-+static struct pcpu_cache_list *pcpu_cache_list_create(int max_nr, size_t size)
-+{
-+	struct pcpu_cache_list *pcpu_cache_list;
-+
-+	pcpu_cache_list = kmalloc(sizeof(struct pcpu_cache_list), GFP_KERNEL);
-+	if (!pcpu_cache_list)
-+		return NULL;
-+
-+	pcpu_cache_list->element_size = size;
-+	pcpu_cache_list->max_nr = max_nr;
-+	pcpu_cache_list->cache = alloc_percpu(struct pcpu_cache);
-+	if (!pcpu_cache_list->cache) {
-+		kfree(pcpu_cache_list);
-+		return NULL;
-+	}
-+	return pcpu_cache_list;
-+}
-+
-+static void pcpu_cache_list_destroy(struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	free_percpu(pcpu_cache_list->cache);
-+	kfree(pcpu_cache_list);
-+}
-+
-+static void irq_cache_splice(struct pcpu_cache *cache)
-+{
-+	unsigned long flags;
-+
-+	/* cache->free_list must be empty */
-+	if (WARN_ON_ONCE(cache->free_list))
-+		return;
-+
-+	local_irq_save(flags);
-+	cache->free_list = cache->free_list_irq;
-+	cache->free_list_irq = NULL;
-+	cache->nr += cache->nr_irq;
-+	cache->nr_irq = 0;
-+	local_irq_restore(flags);
-+}
-+
-+static void *pcpu_cache_list_alloc(struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	struct pcpu_cache *cache;
-+	struct pcpu_cache_element *cache_element;
-+
-+	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
-+	if (!cache->free_list) {
-+		if (READ_ONCE(cache->nr_irq) >= PCPU_CACHE_IRQ_THRESHOLD)
-+			irq_cache_splice(cache);
-+		if (!cache->free_list) {
-+			cache_element = kmalloc(PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list),
-+									GFP_KERNEL);
-+			if (!cache_element) {
-+				put_cpu();
-+				return NULL;
-+			}
-+			put_cpu();
-+			return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
-+		}
-+	}
-+
-+	cache_element = cache->free_list;
-+	cache->free_list = cache_element->next;
-+	cache->nr--;
-+	put_cpu();
-+	return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
-+}
-+
-+static void pcpu_cache_list_free(void *payload, struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	struct pcpu_cache *cache;
-+	struct pcpu_cache_element *cache_element;
-+
-+	cache_element = PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload);
-+
-+	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
-+	if (READ_ONCE(cache->nr_irq) + cache->nr >= pcpu_cache_list->max_nr)
-+		goto out_free;
-+
-+	if (in_task()) {
-+		cache_element->next = cache->free_list;
-+		cache->free_list = cache_element;
-+		cache->nr++;
-+	} else if (in_hardirq()) {
-+		lockdep_assert_irqs_disabled();
-+		cache_element->next = cache->free_list_irq;
-+		cache->free_list_irq = cache_element;
-+		cache->nr_irq++;
-+	} else {
-+		goto out_free;
-+	}
-+	put_cpu();
-+	return;
-+out_free:
-+	put_cpu();
-+	kfree(cache_element);
-+}
-+
-+#define DIO_ALLOC_CACHE_MAX		256
-+static struct pcpu_cache_list *dio_pcpu_cache_list;
-+
- static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
- 		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
+-static unsigned int get_contig_folio_len(unsigned int *num_pages,
+-					 struct page **pages, unsigned int i,
+-					 struct folio *folio, size_t left,
++static unsigned int get_contig_folio_len(struct page **pages,
++					 unsigned int *num_pages, size_t left,
+ 					 size_t offset)
  {
-@@ -135,7 +261,7 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 			ret += dio->done_before;
+-	size_t bytes = left;
+-	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, bytes);
+-	unsigned int j;
++	struct folio *folio = page_folio(pages[0]);
++	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, left);
++	unsigned int max_pages, i;
++	size_t folio_offset, len;
++
++	folio_offset = PAGE_SIZE * folio_page_idx(folio, pages[0]) + offset;
++	len = min(folio_size(folio) - folio_offset, left);
+ 
+ 	/*
+-	 * We might COW a single page in the middle of
+-	 * a large folio, so we have to check that all
+-	 * pages belong to the same folio.
++	 * We might COW a single page in the middle of a large folio, so we have
++	 * to check that all pages belong to the same folio.
+ 	 */
+-	bytes -= contig_sz;
+-	for (j = i + 1; j < i + *num_pages; j++) {
+-		size_t next = min_t(size_t, PAGE_SIZE, bytes);
++	left -= contig_sz;
++	max_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
++	for (i = 1; i < max_pages; i++) {
++		size_t next = min_t(size_t, PAGE_SIZE, left);
+ 
+-		if (page_folio(pages[j]) != folio ||
+-		    pages[j] != pages[j - 1] + 1) {
++		if (page_folio(pages[i]) != folio ||
++		    pages[i] != pages[i - 1] + 1)
+ 			break;
+-		}
+ 		contig_sz += next;
+-		bytes -= next;
++		left -= next;
  	}
- 	trace_iomap_dio_complete(iocb, dio->error, ret);
--	kfree(dio);
-+	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
- 	return ret;
+-	*num_pages = j - i;
+ 
++	*num_pages = i;
+ 	return contig_sz;
  }
- EXPORT_SYMBOL_GPL(iomap_dio_complete);
-@@ -620,7 +746,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (!iomi.len)
- 		return NULL;
  
--	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
-+	dio = pcpu_cache_list_alloc(dio_pcpu_cache_list);
- 	if (!dio)
- 		return ERR_PTR(-ENOMEM);
+@@ -1219,8 +1221,8 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
+ 	struct page **pages = (struct page **)bv;
+ 	ssize_t size;
+-	unsigned int num_pages, i = 0;
+-	size_t offset, folio_offset, left, len;
++	unsigned int i = 0;
++	size_t offset, left, len;
+ 	int ret = 0;
  
-@@ -804,7 +930,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return dio;
+ 	/*
+@@ -1241,23 +1243,12 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 		return size ? size : -EFAULT;
  
- out_free_dio:
--	kfree(dio);
-+	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
- 	if (ret)
- 		return ERR_PTR(ret);
- 	return NULL;
-@@ -834,6 +960,9 @@ static int __init iomap_dio_init(void)
- 	if (!zero_page)
- 		return -ENOMEM;
+ 	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
+-	for (left = size, i = 0; left > 0; left -= len, i += num_pages) {
+-		struct page *page = pages[i];
+-		struct folio *folio = page_folio(page);
++	for (left = size; left > 0; left -= len) {
+ 		unsigned int old_vcnt = bio->bi_vcnt;
++		unsigned int nr_to_add;
  
-+	dio_pcpu_cache_list = pcpu_cache_list_create(DIO_ALLOC_CACHE_MAX, sizeof(struct iomap_dio));
-+	if (!dio_pcpu_cache_list)
-+		return -ENOMEM;
- 	return 0;
- }
- fs_initcall(iomap_dio_init);
+-		folio_offset = ((size_t)folio_page_idx(folio, page) <<
+-			       PAGE_SHIFT) + offset;
+-
+-		len = min(folio_size(folio) - folio_offset, left);
+-
+-		num_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
+-
+-		if (num_pages > 1)
+-			len = get_contig_folio_len(&num_pages, pages, i,
+-						   folio, left, offset);
+-
+-		if (!bio_add_folio(bio, folio, len, folio_offset)) {
++		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
++		if (!bio_add_page(bio, pages[i], len, offset)) {
+ 			WARN_ON_ONCE(1);
+ 			ret = -EINVAL;
+ 			goto out;
+@@ -1272,8 +1263,9 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 			 * single pin per page.
+ 			 */
+ 			if (offset && bio->bi_vcnt == old_vcnt)
+-				unpin_user_folio(folio, 1);
++				unpin_user_folio(page_folio(pages[i]), 1);
+ 		}
++		i += nr_to_add;
+ 		offset = 0;
+ 	}
+ 
 -- 
-2.20.1
+2.47.3
 
