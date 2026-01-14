@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF26C3570B5;
-	Wed, 14 Jan 2026 22:51:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8F8357717;
+	Wed, 14 Jan 2026 22:53:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768431084; cv=none; b=IQ09rr882ZYTZxJBTUzEI3nj6BNHpW4Zz2CWcCadSlsJb7KqF2w+DKMn5nl2yIKSfwWiFCiptQWdRdyyxORpV0GxRixaXAxkjfpSfMSSS4BqjtValiyuQxAx/dEZcNGgnBggkFolxR/7gJ5MWh88jlJzKYWR012iZvZ5q2A58FI=
+	t=1768431190; cv=none; b=hE/4/qHqXVxKX8JqxjteoU8e2lzQYyRgBD/hC/s6P3XzwPf434fW2W9eHu6rSsJlPO35BKUrx4X+uGRqLct4IhBWdDAeKFO7FdL+C87IYps5i1jyc7+Wz7FE2SfQvHGNZklbF2W+f0IcwDCJ29c/3lz5guUghW10wURMA/iIwME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768431084; c=relaxed/simple;
-	bh=OTQcvC5QOKg2dM9Eb5MLUnNT5D5bNgLD+5Wp/6fZIoo=;
+	s=arc-20240116; t=1768431190; c=relaxed/simple;
+	bh=D6cWMLCFZeYG7UPck1IPGCPG+no2dqQfeInh8wTtbrs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YYnCxRuDxnSly2IwmqNdL/w/rLdpNbh/ZhyvVxFPTsvtJA4WDhVK4Q2kteqyl0nB1M/J3o8AHjzM5NQOKG/xBjku7H9z6n+3zELGmuy20xHfedUeDaZT8UvVJpTU8TwRrzbkE5ICflvCBvczooeym8DC3h0/zFS1Ai3P9o5Atug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Frtu++b7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hNveejymWEEx7Q0zDLNbphIJmLDNpYbILYJE2qqX3pEmJFt8QzwRRrH0MHLLQE/WkyabEgVNL4fCjYjjJrP7EmBjW/83nzogcCVmFi+VyRBWdhdC8DEk7dukQpXYlwABy7GiCO1AiGexftTxwkyF1w6CHmlfi11ph5jztQ9kJWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYN1whVE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Frtu++b7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC38C4CEF7;
-	Wed, 14 Jan 2026 22:51:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYN1whVE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAD3EC4CEF7;
+	Wed, 14 Jan 2026 22:53:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768431084;
-	bh=OTQcvC5QOKg2dM9Eb5MLUnNT5D5bNgLD+5Wp/6fZIoo=;
+	s=k20201202; t=1768431189;
+	bh=D6cWMLCFZeYG7UPck1IPGCPG+no2dqQfeInh8wTtbrs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Frtu++b73hUs8hMopCDmeY+6Hbv03oPJy6s6IKYV+v1EI5DqMruIcjtlujhUDgww7
-	 3rh9erffqMXSkV5Sj081I7R9q1Up6rU3zWY3bDoSwbCui9ptXq72AGPTq5ype7jfDy
-	 0+zOdf+rAvEpvoCSzth0HnRC1DleXHJ5G6wvixJFWp6dEBU0dUzjoDAWqB7oCLCWmY
-	 3Rw56e6uepAtTYUjCvxWKxJx8GwnxWnM4lbt18OHcWcAj2zbwZ86qBlhm2kzNVLUqx
-	 Q2b0jqvVdSsbnf5AXHQ6IP5CS1qKFw9mYW0ztU0HCKHSbQkK3z3GE++/o0vJCA4TE3
-	 E69WsY6V6xD/A==
-Date: Wed, 14 Jan 2026 14:51:23 -0800
+	b=dYN1whVEo6d7lnaGmd7EOD5pO+6NGupcI9heFEfvdq49e4PA6cLCPs381k/lDDCxQ
+	 7PlE95FuoCXhZVAjHCZKChbl3uDIANLQwb2Ki9CFJA03LVrCGuiK0QZzcGh29eTc00
+	 CfUBqrCTj2mnV3iE0bmjlsQyZxK1XG5rDSLy601nWKdQAso1oueBKQmzIXpoIxhpdw
+	 +vM3R5Nm7jRe43bd40zdS/BzwUCv9hDY2HNKTDcrSBHOPY3kOeAAi9ayncqO1VBOe3
+	 H0dQeSXOTRkOzaB3BPvAkc4k/XX7JV255faWZZ761Ixt948Hn188MZHb0JvCP+jPe5
+	 uEVamrISOzoyQ==
+Date: Wed, 14 Jan 2026 14:53:07 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
 	Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 07/14] iomap: simplify iomap_dio_bio_iter
-Message-ID: <20260114225123.GL15551@frogsfrogsfrogs>
+Subject: Re: [PATCH 08/14] iomap: split out the per-bio logic from
+ iomap_dio_bio_iter
+Message-ID: <20260114225307.GM15551@frogsfrogsfrogs>
 References: <20260114074145.3396036-1-hch@lst.de>
- <20260114074145.3396036-8-hch@lst.de>
+ <20260114074145.3396036-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,86 +46,182 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260114074145.3396036-8-hch@lst.de>
+In-Reply-To: <20260114074145.3396036-9-hch@lst.de>
 
-On Wed, Jan 14, 2026 at 08:41:05AM +0100, Christoph Hellwig wrote:
-> Use iov_iter_count to check if we need to continue as that just reads
-> a field in the iov_iter, and only use bio_iov_vecs_to_alloc to calculate
-> the actual number of vectors to allocate for the bio.
+On Wed, Jan 14, 2026 at 08:41:06AM +0100, Christoph Hellwig wrote:
+> Factor out a separate helper that builds and submits a single bio.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Huh, interesting.  bio_iov_vecs_to_alloc returns 0 if the iov_iter is of
-type bvec, so I guess we'd only run the loop body once before, and with
-zero pages?  Hrmm, that doesn't seem right.
-
-Does that mean that we could always construct a bio for the entire bvec?
-Or does that just mean that directio doesn't get called with a bvec
-iterator?
-
-Or, basic question: what the heck is a bvec?  A bio_vec?  So perhaps
-iomap_dio_bio_iter can't be called with a bio_vec because we're
-constructing a bio, not dealing with an existing one?
-
-<have the cold meds kicked in yet?>
+Looks like a reasonable straightforward hoist,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/iomap/direct-io.c | 13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
+>  fs/iomap/direct-io.c | 111 +++++++++++++++++++++++--------------------
+>  1 file changed, 59 insertions(+), 52 deletions(-)
 > 
 > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 6ec4940e019c..1acdab7cf5f1 100644
+> index 1acdab7cf5f1..63374ba83b55 100644
 > --- a/fs/iomap/direct-io.c
 > +++ b/fs/iomap/direct-io.c
-> @@ -311,7 +311,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+> @@ -301,6 +301,56 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
+>  	return 0;
+>  }
+>  
+> +static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
+> +		struct iomap_dio *dio, loff_t pos, unsigned int alignment,
+> +		blk_opf_t op)
+> +{
+> +	struct bio *bio;
+> +	ssize_t ret;
+> +
+> +	bio = iomap_dio_alloc_bio(iter, dio,
+> +			bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS),
+> +			op);
+> +	fscrypt_set_bio_crypt_ctx(bio, iter->inode,
+> +			pos >> iter->inode->i_blkbits, GFP_KERNEL);
+> +	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
+> +	bio->bi_write_hint = iter->inode->i_write_hint;
+> +	bio->bi_ioprio = dio->iocb->ki_ioprio;
+> +	bio->bi_private = dio;
+> +	bio->bi_end_io = iomap_dio_bio_end_io;
+> +
+> +	ret = bio_iov_iter_get_pages(bio, dio->submit.iter, alignment - 1);
+> +	if (unlikely(ret))
+> +		goto out_put_bio;
+> +	ret = bio->bi_iter.bi_size;
+> +
+> +	/*
+> +	 * An atomic write bio must cover the complete length.  If it doesn't,
+> +	 * error out.
+> +	 */
+> +	if ((op & REQ_ATOMIC) && WARN_ON_ONCE(ret != iomap_length(iter))) {
+> +		ret = -EINVAL;
+> +		goto out_put_bio;
+> +	}
+> +
+> +	if (dio->flags & IOMAP_DIO_WRITE)
+> +		task_io_account_write(ret);
+> +	else if (dio->flags & IOMAP_DIO_DIRTY)
+> +		bio_set_pages_dirty(bio);
+> +
+> +	/*
+> +	 * We can only poll for single bio I/Os.
+> +	 */
+> +	if (iov_iter_count(dio->submit.iter))
+> +		dio->iocb->ki_flags &= ~IOCB_HIPRI;
+> +	iomap_dio_submit_bio(iter, dio, bio, pos);
+> +	return ret;
+> +
+> +out_put_bio:
+> +	bio_put(bio);
+> +	return ret;
+> +}
+> +
+>  static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  {
+>  	const struct iomap *iomap = &iter->iomap;
+> @@ -309,12 +359,11 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	const loff_t length = iomap_length(iter);
+>  	loff_t pos = iter->pos;
 >  	blk_opf_t bio_opf = REQ_SYNC | REQ_IDLE;
->  	struct bio *bio;
+> -	struct bio *bio;
 >  	bool need_zeroout = false;
-> -	int nr_pages, ret = 0;
-> +	int ret = 0;
+> -	int ret = 0;
 >  	u64 copied = 0;
 >  	size_t orig_count;
 >  	unsigned int alignment;
-> @@ -439,7 +439,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  			goto out;
->  	}
->  
-> -	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_VECS);
->  	do {
->  		size_t n;
->  
-> @@ -452,7 +451,9 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  			goto out;
->  		}
->  
-> -		bio = iomap_dio_alloc_bio(iter, dio, nr_pages, bio_opf);
-> +		bio = iomap_dio_alloc_bio(iter, dio,
-> +				bio_iov_vecs_to_alloc(dio->submit.iter,
-> +						BIO_MAX_VECS), bio_opf);
->  		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
->  					  GFP_KERNEL);
->  		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-> @@ -494,16 +495,14 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  		dio->size += n;
->  		copied += n;
->  
-> -		nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter,
-> -						 BIO_MAX_VECS);
->  		/*
->  		 * We can only poll for single bio I/Os.
->  		 */
-> -		if (nr_pages)
-> +		if (iov_iter_count(dio->submit.iter))
->  			dio->iocb->ki_flags &= ~IOCB_HIPRI;
->  		iomap_dio_submit_bio(iter, dio, bio, pos);
->  		pos += n;
-> -	} while (nr_pages);
-> +	} while (iov_iter_count(dio->submit.iter));
+> +	ssize_t ret = 0;
 >  
 >  	/*
->  	 * We need to zeroout the tail of a sub-block write if the extent type
+>  	 * File systems that write out of place and always allocate new blocks
+> @@ -440,68 +489,27 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	}
+>  
+>  	do {
+> -		size_t n;
+> -
+>  		/*
+>  		 * If completions already occurred and reported errors, give up now and
+>  		 * don't bother submitting more bios.
+>  		 */
+> -		if (unlikely(data_race(dio->error))) {
+> -			ret = 0;
+> +		if (unlikely(data_race(dio->error)))
+>  			goto out;
+> -		}
+>  
+> -		bio = iomap_dio_alloc_bio(iter, dio,
+> -				bio_iov_vecs_to_alloc(dio->submit.iter,
+> -						BIO_MAX_VECS), bio_opf);
+> -		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+> -					  GFP_KERNEL);
+> -		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+> -		bio->bi_write_hint = inode->i_write_hint;
+> -		bio->bi_ioprio = dio->iocb->ki_ioprio;
+> -		bio->bi_private = dio;
+> -		bio->bi_end_io = iomap_dio_bio_end_io;
+> -
+> -		ret = bio_iov_iter_get_pages(bio, dio->submit.iter,
+> -					     alignment - 1);
+> -		if (unlikely(ret)) {
+> +		ret = iomap_dio_bio_iter_one(iter, dio, pos, alignment, bio_opf);
+> +		if (unlikely(ret < 0)) {
+>  			/*
+>  			 * We have to stop part way through an IO. We must fall
+>  			 * through to the sub-block tail zeroing here, otherwise
+>  			 * this short IO may expose stale data in the tail of
+>  			 * the block we haven't written data to.
+>  			 */
+> -			bio_put(bio);
+> -			goto zero_tail;
+> -		}
+> -
+> -		n = bio->bi_iter.bi_size;
+> -		if (WARN_ON_ONCE((bio_opf & REQ_ATOMIC) && n != length)) {
+> -			/*
+> -			 * An atomic write bio must cover the complete length,
+> -			 * which it doesn't, so error. We may need to zero out
+> -			 * the tail (complete FS block), similar to when
+> -			 * bio_iov_iter_get_pages() returns an error, above.
+> -			 */
+> -			ret = -EINVAL;
+> -			bio_put(bio);
+> -			goto zero_tail;
+> +			break;
+>  		}
+> -		if (dio->flags & IOMAP_DIO_WRITE)
+> -			task_io_account_write(n);
+> -		else if (dio->flags & IOMAP_DIO_DIRTY)
+> -			bio_set_pages_dirty(bio);
+> -
+> -		dio->size += n;
+> -		copied += n;
+> -
+> -		/*
+> -		 * We can only poll for single bio I/Os.
+> -		 */
+> -		if (iov_iter_count(dio->submit.iter))
+> -			dio->iocb->ki_flags &= ~IOCB_HIPRI;
+> -		iomap_dio_submit_bio(iter, dio, bio, pos);
+> -		pos += n;
+> +		dio->size += ret;
+> +		copied += ret;
+> +		pos += ret;
+> +		ret = 0;
+>  	} while (iov_iter_count(dio->submit.iter));
+>  
+>  	/*
+> @@ -510,7 +518,6 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  	 * the block tail in the latter case, we can expose stale data via mmap
+>  	 * reads of the EOF block.
+>  	 */
+> -zero_tail:
+>  	if (need_zeroout ||
+>  	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+>  		/* zero out from the end of the write to the end of the block */
 > -- 
 > 2.47.3
 > 
