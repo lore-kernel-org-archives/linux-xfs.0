@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE7F376BE4
-	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 06:53:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99610368264
+	for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 06:53:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768373637; cv=none; b=OYldLEYlHdIJvxkavOK54MYmUtQWuACKYjTt07g1aANmHBYdBjKQ0aang5b0QeoNQ7fsf+gvP3XtYMl4nQovQggZX21glnngeIRiZRV+O16ghkg1Rtmd7c+UtnpOzHSCEwDuZimar4WHZ//lOP717KoNlv+U16uIjI2Xd8TPOpE=
+	t=1768373644; cv=none; b=KJiKzMsAEZsK067Yu5ZtidvjBWjh9OSBbRfyKWszgFy4QCKStiSs6KqEfUEDUgtnwiVWkojp1oP1ajwSxUu15rmUHsL2t5052rlrtvvCSgnAHbj0mAI0auJCI1U4ydsekQsuR56dURiJMG5gJZGnB2O1iQM1Ll1z1SJQwOWfA/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768373637; c=relaxed/simple;
-	bh=Dgq4kfHmHdoNwk6SH+EhX4LYLeVjoY8Mo8rVJviZ6Cc=;
+	s=arc-20240116; t=1768373644; c=relaxed/simple;
+	bh=dwCPuovAlxhiurDhpEVVW5vP96DxmK9g5nbiL+q1EGY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=feZ0wZayjBSh/3f9dBC6UJqY9CtBqF8YkKqDkY930JZIAfxvjzdGdG/its7nMZ8lQ9BA+KKBudxLTDmqOZ0OH5GTrzfNYB6F9mT2Fiku5GR1iEFlaRXQQsqzZxgcGtp4RlKGABzJKDD0Qsx+uk66BVIoKKDnPEUdU73YezUHjf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=o4rWSuCV; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=jkgkRGeOqieYk95UD+1N7LM7QEaOWrU2O5ywlAlEyBq5ZWvVJ5zZhHP/Kld3+Imp+jHtoxpCZ5yeFzn+hiLeeAWKhHgYev/EZrd4KkK0Ap4pc6WxFS8zb4EVl1wyZB6Jak2hwRinWMKUhdXvyzQovv0ZDLIZKp3r1k7+b5RbjTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xAWkU1Cy; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o4rWSuCV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xAWkU1Cy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=GRjfvZcx9oH+aFMgLw81BPynfuIwOrj0k1UxPVYcbiE=; b=o4rWSuCVY9nB+YQG2mmdc0/2xD
-	MmbrdgMXajnMN7Vm81GeFzMPhMc2s6X7+tbTeiEKfDWf8Px7GFlPZMUPxkDiTBBEV9wRjoqNpbUYA
-	gpVIS7hqU7r4yOGyojijCWJk6wEVRrc0gl6mBregOoTTT+iERru7s0/9hDQxBEgIl/DBewnb6DC5+
-	RhFpZ6qLmM5rn90nAjEjJY5JxLPwlho3G8OSEqFRRRjCv1vD6Iyx8AXJmlDULxef8Hts2igZCX934
-	H9+M0bq9Vt/78ZkFK6qPYmKto2Nyuv3sxWtI0CwkD29BURpAKxA9+4MFtoS6LorG9bOFqZ7SvIfNv
-	K2wOjKog==;
+	bh=MkhU8I+Jb0r9et8izHhCVYyUzXeCdyXR+au2IclXKq8=; b=xAWkU1CyswGemMHNF281bl5g/g
+	D1jPIS1CJyp42p3DSmpdzRkvvFsFwis7KLsMd2XOYHUkaTPw2xdQ2kJbwfsZm51gXQVAGGgxTxfsP
+	J2rDTjL3MCuafgx6ERVXcNFG/MZ4rGRzl90YP6pLUxHRpeMpW3wEt559O91wjZB0rnCFT0yQSuIz7
+	B/s1/j3PtPBhSoms4jQ06/vf455Ja7ic3iQ4dQukzejzQ8gOGhjukB0VlRU0iChiWKgfcQyYr0eBq
+	fkm2njsfeFnrKdwnZ/wJGIohZf0cxAgghIpHRiLaQq8qew5aNkXHfHGcTNYp03S4FnLye9KTPAnAf
+	5P3jctTg==;
 Received: from 85-127-106-146.dsl.dynamic.surfer.at ([85.127.106.146] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vfulH-000000089h7-1gtC;
-	Wed, 14 Jan 2026 06:53:47 +0000
+	id 1vfulK-000000089hF-1hmy;
+	Wed, 14 Jan 2026 06:53:50 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/6] xfs: add missing forward declaration in xfs_zones.h
-Date: Wed, 14 Jan 2026 07:53:24 +0100
-Message-ID: <20260114065339.3392929-2-hch@lst.de>
+Subject: [PATCH 2/6] xfs: add a xfs_rtgroup_raw_size helper
+Date: Wed, 14 Jan 2026 07:53:25 +0100
+Message-ID: <20260114065339.3392929-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260114065339.3392929-1-hch@lst.de>
 References: <20260114065339.3392929-1-hch@lst.de>
@@ -50,31 +50,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Damien Le Moal <dlemoal@kernel.org>
+Add a helper to figure the on-disk size of a group, accounting for the
+XFS_SB_FEAT_INCOMPAT_ZONE_GAPS feature if needed.
 
-Add the missing forward declaration for struct blk_zone in xfs_zones.h.
-This avoids headaches with the order of header file inclusion to avoid
-compilation errors.
-
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_zones.h | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/libxfs/xfs_rtgroup.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-index 5fefd132e002..df10a34da71d 100644
---- a/fs/xfs/libxfs/xfs_zones.h
-+++ b/fs/xfs/libxfs/xfs_zones.h
-@@ -3,6 +3,7 @@
- #define _LIBXFS_ZONES_H
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+index 73cace4d25c7..c0b9f9f2c413 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.h
++++ b/fs/xfs/libxfs/xfs_rtgroup.h
+@@ -371,4 +371,19 @@ xfs_rtgs_to_rfsbs(
+ 	return xfs_groups_to_rfsbs(mp, nr_groups, XG_TYPE_RTG);
+ }
  
- struct xfs_rtgroup;
-+struct blk_zone;
- 
- /*
-  * In order to guarantee forward progress for GC we need to reserve at least
++/*
++ * Return the "raw" size of a group on the hardware device.  This includes the
++ * daddr gaps present for XFS_SB_FEAT_INCOMPAT_ZONE_GAPS file systems.
++ */
++static inline xfs_rgblock_t
++xfs_rtgroup_raw_size(
++	struct xfs_mount	*mp)
++{
++	struct xfs_groups	*g = &mp->m_groups[XG_TYPE_RTG];
++
++	if (g->has_daddr_gaps)
++		return 1U << g->blklog;
++	return g->blocks;
++}
++
+ #endif /* __LIBXFS_RTGROUP_H */
 -- 
 2.47.3
 
