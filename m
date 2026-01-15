@@ -1,283 +1,455 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD88624468C
-	for <linux-xfs@vger.kernel.org>; Thu, 15 Jan 2026 02:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754A929D287
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Jan 2026 05:02:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768443078; cv=none; b=VcREouaWXRTv5fzmQke700SDv45o4UUtJZzhmvfV1sm8uR+y/EV7Jj/lngnpUmuBWg7GH5sUoRUi+55Q+AhW1ICA8d+EJU+nZF/rtxwm+yDJoiYMQFQ2fuzhH5/3G9M9H4k2m8MPwWJD0tczqb8lilfpgJ0mp+i4E4LNcEF2n9E=
+	t=1768453366; cv=none; b=Fo6BINkmtIGJvfUdgCYyxelrWl3si1gUuftlVIW02Ck6wlSJZfNHHBLP+iYAzCBi0XzScndOakRE9nvt0xTqhsFBp9MsydFIfoduLAkS77pVFOidQ2OWOAHcXeiv7K+f/FYJjtRo8h6H3DenoWaFgT7ol5rHJ23dduAWNfcG+io=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768443078; c=relaxed/simple;
-	bh=f2QVeCiI4AcBvJ/Yo8FFrUl6c3QtkngGKO6/iFCBZrw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ln+mdfAkPryZit997/V+OBNV3Mq5ZouT8tebNcqS3c1uVfAW9GSG2HDX/gBlKrSzKxRhJF+BsLkwGL85izR9kJbbzNIvXEDxppxiBB9PpsN1vUId/iydXA4JZmlJuVhiAKNj4uIEj89jdaO4LJM+3ONbDtPIBHcdUY3UphXcz9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nAZFPIJO; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768453366; c=relaxed/simple;
+	bh=96QnO8GhnSDi6D4+gV1BRh5HhaYdMV8l6XsKY5zu23E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZyHOTKhQ4BhX/5Ag90K73kGNBgHPYCiFvfZF8WEgHjI/31Myax5RxtHXtBFRN/TiPT34w7ymrgPS0W4g2PERGrHN8wCChZGXm7rqZp1rWXDFGvZP66oYxMtGU3vBl1UPTeCdcWOpLSLq/B36fLKQGRlqtSh82d55CrIeYg9jAfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YsDtZ6JY; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nAZFPIJO"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-81f4f4d4822so149955b3a.3
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 18:11:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YsDtZ6JY"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-81ef4b87291so257612b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 21:02:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768443076; x=1769047876; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/Lu4KyXAr/aCUF1cDLxpvAhnKtVcWm2yDkvteqB5wj8=;
-        b=nAZFPIJOE5FXHjIoGbrSAtAxZNjL3G9YrVKtqDBkmDcCC8+OI8TWLuw0bA7utGQO7Z
-         jH97PLs5WfFiFQKQ+gEkn73E9HOkVdU1zYAoVgiCQurDWIF+95tDkPGCnSsZ/kVcZyx1
-         CuPhHUptfSbtFAy//68LNgyE2ZGM+klQ7JpSdwRQun5KZ7ogW3ocpO57x0wNdyTxsMVv
-         /iSXGX8UJvSrLqqLO4v/q58U4C4Txu5qlUKzlML6IDFpaA591w0OOnTWBVnAdwXu+Ylb
-         519v/eg1x1doB6qNQHG6VsZ/IkMiNV/Y5WiSeAFTa63M9TQcQAAyg2lLWdKFSlPYEwfS
-         jDow==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1768453364; x=1769058164; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=uHtMZy+1Hf+5CFrdMNdv7JLbvIeaLMOR/Q+6FgomzqM=;
+        b=YsDtZ6JYlo32u0xjTir32KmOQHqbYQmnBSRqLoN745hs7qJFVCVV1Tm8hD1Wh2GFdW
+         uN0c3yZoDUAKpBm9rd7HfCaeDgtsdu3ZAHBu55JoAfHu+qMRwFa7NVd7MbKzJWWmtzbA
+         eLuriJi5GAml1iMXqXohCgCFosonStBs0mTtwpGwgXMGne3bYI6n7Vzgb9zEWNZOi7U9
+         VfXaoqK3SNiVCR9T/A69Q79kjIvwuWo2cUZPBZpzJL743RjI735Rsp/tdXPHN3dxqvnc
+         Jt4TFVzsdDv5OzqPGMrakbwUJYLpJCGBLOiiVMXlLHiBwXVyw9RkdOTYRq95/OUNFEys
+         Mh8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768443076; x=1769047876;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/Lu4KyXAr/aCUF1cDLxpvAhnKtVcWm2yDkvteqB5wj8=;
-        b=FIcB92rG1fVLvJBVNYRU4sZeUqrcVOnI0ejyYkGQx5fujnPYtkGELzpMvsNOAyh3rR
-         G054g4NwIpSY5pJiIjc34eW+4N+jgFFeI7sQpK4QhjnoPFc1MiFkzgzdEhpGgj6bUCR7
-         7VwRZYPwI+Q4RStEd2DZoWuWqspRPgTt7Fgp3z9RwZ0mSmn8pw0eak0rGEtFgVJ+89Qm
-         O46sr9LtIHMsAQ3FHULANvv2mnD/Fq3YfOrFlNZwRzINi9yI8w2BwKLG2Jicg2FsJ+mK
-         x0lCjgMKem+1eDmWA3GrMMuLk+EPnavtTqmCyqylEw63cxj1x4au582hVd6r12gITtpN
-         cqqQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWhgnYUAvZ6s3OEfXA1wLdShOA7l6QKjHxjZGmV6SXTo3kSPR8xdq+9omffb6MH2Dt5tvXEsG4Gul8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzkKaIMEYt2BCp+oTM8TjNwIlJU1prOKvxQh1QWfXmu9gti7yL5
-	fEROcbIK44+GnTUyFcRaIT0+dmPkU00sLmQMvvrMbGabGiN0aV9XjP4b
-X-Gm-Gg: AY/fxX4ChXrMnsglSUtUmpF27sox7oF4aS1D+ZHCx8Oosf7jYDvcmFl9Rc9jBYoWXmj
-	68yzqcdd+Dx8Ei3pb7WUZHbFW7sdsj6JaOOi+9++1G5BHg300YX9WdctBoxc/fjVXfCYVADMzM6
-	AUUOiCd9gSQfiziGChiSzV3dmrqiE9HR4WbwowOOPrlFQpRQyGQ2yjb2l0ZET6PiXNLL8Ui5cmP
-	NAftrPh+sKZbfWRtg0WCg32da/E+xjRIFA19tXjSY3DA+CpIrRruIYdIydDDLNFzVv8jMapgSlb
-	0b84hOmAYVxeKaXuFT6YYSYf6rRPDu9pKymaiJ4gEah8z1QfZvXpXNHq7PaZVTgwYy7T7EHKD4r
-	YSYzuZ0w5p6GzTfOS5S1bLv1rZLVejWov4V6qC8BW/LpN2RPtc4VABLKJMxRyI3AI9I5UPXnhoJ
-	CnJSk7alpGVorV18s0IVMaM+yvXv4a
-X-Received: by 2002:a05:6a00:6c81:b0:81d:e9b1:b6d9 with SMTP id d2e1a72fcca58-81f81d33b9fmr4200239b3a.15.1768443075965;
-        Wed, 14 Jan 2026 18:11:15 -0800 (PST)
-Received: from n232-175-066.byted.org ([36.110.163.97])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81f8e65097asm806159b3a.37.2026.01.14.18.11.12
+        d=1e100.net; s=20230601; t=1768453364; x=1769058164;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uHtMZy+1Hf+5CFrdMNdv7JLbvIeaLMOR/Q+6FgomzqM=;
+        b=VjQihNLSQp6Zn7HSwEwl77DyxKayFAcEPGRCMlEgphf8ZLpRV6Pxw32bDxww+ZX8bS
+         ODR9YtmFOILrXS82C84h7Xtw5S3PgPWrTXZVAWVxaUVyCwniDIo/oRolVbGa486LUPHS
+         eGSAnIWUzve/I4UVBWjaS9KnctEDTb6Hi62xwLGdG9xKr8VWhCqEXv/kY+0u6qyOLSas
+         A7YBCgudA0cBf+ZUusZbtsSBT/xbl2drgD1Tc45jX/nUiPgGDrfqwfbpnX+9bMI9HLJ0
+         OOnefh97M52XZ4PhS7HRMgeWC4qP9aoe/OIQDkSVoUKtgUAkSnDvN7NoQgVvY6yT9Vqj
+         DMqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXOTTLoLgmjlx/KlwMRDpbvboDTMLvHGdMliayeVzd3XzZ2SyKAfxUEA6A/6WR6eEyUsVutiuTT9sI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPcRMTbfvvyycRg1OwW8XFfKgyWum9+unTmM3QbuUqLJcyJalJ
+	sh7qguLNjYQEyg7Z/1juDrLFsNF+eUBNdIuxVi3iPQd+lCHrgrZmTnzR2Sr2gAAxkrs=
+X-Gm-Gg: AY/fxX6mNX04PaF3GMBQC7Onpp2zM5UzGBKWu6slJkPtY4eQROCw6O0fyXcpS85TFPh
+	qiR5wBubGtgJmD2t8y9Jt1nrN9+q+m8qCJi96pC8YKdarCt6mxXudM/YrZqnO0R3PNuR+FNqbIC
+	Iawc4qbJQpDot1wjiXC+EgNclm09TynC99nipDi0m7E90X/xuw9i/oWJxSYj9VYZ8eGqT1dmu/m
+	RmX0IETzieImz9PUZORyZQadc8EIDWhExVdU6wz/DJ8T9r3vXriUkYaNNByEOaBhd7bvCOQ2kmj
+	36ol5rn9maOocqkrO/4wBOjU1f1EqLlmoLA61qSWr4HteFHVFPIJth2Bk9xr1guC/G6SifafVU7
+	df5jZkFcSDdtdmOlt842w3da0dqa4tM4bvxom8xZMrpemkUffnbzjgsTwO4yeTXDm+PSEoy/fKg
+	4qwaBwEEIeB7YEPM2aR+Y3WwuW7BG3u84/85ukvndzomkDDU6fsJKEUL5SeK8uPmo=
+X-Received: by 2002:a05:6a20:9191:b0:341:262f:6510 with SMTP id adf61e73a8af0-38befbcabdamr4401639637.41.1768453363467;
+        Wed, 14 Jan 2026 21:02:43 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c4cc95d5dbfsm23665476a12.27.2026.01.14.21.02.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Jan 2026 18:11:15 -0800 (PST)
-From: guzebing <guzebing1612@gmail.com>
-To: brauner@kernel.org,
-	djwong@kernel.org
-Cc: hch@infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	guzebing@bytedance.com,
-	guzebing <guzebing1612@gmail.com>,
+        Wed, 14 Jan 2026 21:02:43 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.99.1)
+	(envelope-from <david@fromorbit.com>)
+	id 1vgFVB-00000003cVO-2mpR;
+	Thu, 15 Jan 2026 16:02:33 +1100
+Date: Thu, 15 Jan 2026 16:02:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: guzebing <guzebing1612@gmail.com>
+Cc: brauner@kernel.org, djwong@kernel.org, hch@infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, guzebing@bytedance.com,
 	syzbot@syzkaller.appspotmail.com,
-	Fengnan Chang <changfengnan@bytedance.com>
-Subject: [PATCH v3] iomap: add allocation cache for iomap_dio
-Date: Thu, 15 Jan 2026 10:11:08 +0800
-Message-Id: <20260115021108.1913695-1-guzebing1612@gmail.com>
-X-Mailer: git-send-email 2.20.1
+	Fengnan Chang <changfengnan@bytedance.com>, linux-mm@kvack.org,
+	Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [PATCH v3] iomap: add allocation cache for iomap_dio
+Message-ID: <aWh06YoiJrR3-J-X@dread.disaster.area>
+References: <20260115021108.1913695-1-guzebing1612@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260115021108.1913695-1-guzebing1612@gmail.com>
 
-As implemented by the bio structure, we do the same thing on the
-iomap-dio structure. Add a per-cpu cache for iomap_dio allocations,
-enabling us to quickly recycle them instead of going through the slab
-allocator.
+[cc linux-mm]
 
-By making such changes, we can reduce memory allocation on the direct
-IO path, so that direct IO will not block due to insufficient system
-memory. In addition, for direct IO, the read performance of io_uring
-is improved by about 2.6%.
+On Thu, Jan 15, 2026 at 10:11:08AM +0800, guzebing wrote:
+> As implemented by the bio structure, we do the same thing on the
+> iomap-dio structure. Add a per-cpu cache for iomap_dio allocations,
+> enabling us to quickly recycle them instead of going through the slab
+> allocator.
+> 
+> By making such changes, we can reduce memory allocation on the direct
+> IO path, so that direct IO will not block due to insufficient system
+> memory. In addition, for direct IO, the read performance of io_uring
+> is improved by about 2.6%.
 
-v3:
-kmalloc now is called outside the get_cpu/put_cpu code section.
+Honestly, this just feels wrong.
 
-v2:
-Factor percpu cache into common code and the iomap module uses it.
+If heap memory allocation has performance issues, then the right
+solution is to fix the memory allocator.
 
-v1:
-https://lore.kernel.org/all/20251121090052.384823-1-guzebing1612@gmail.com/
+Oh, wait, you're copy-pasting the hacky per-cpu bio allocator cache
+lists into the iomap DIO code.
 
-Tested-by: syzbot@syzkaller.appspotmail.com
+IMO, this really should be part of the generic memory allocation
+APIs, not repeatedly tacked on the outside of specific individual
+object allocations.
 
-Suggested-by: Fengnan Chang <changfengnan@bytedance.com>
-Signed-off-by: guzebing <guzebing1612@gmail.com>
----
- fs/iomap/direct-io.c | 133 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 130 insertions(+), 3 deletions(-)
+<thinks a bit>
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 5d5d63efbd57..4421e4ad3a8f 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -56,6 +56,130 @@ struct iomap_dio {
- 	};
- };
- 
-+#define PCPU_CACHE_IRQ_THRESHOLD	16
-+#define PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list) \
-+	(sizeof(struct pcpu_cache_element) + pcpu_cache_list->element_size)
-+#define PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload) \
-+	((struct pcpu_cache_element *)((unsigned long)(payload) - \
-+				       sizeof(struct pcpu_cache_element)))
-+#define PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(head) \
-+	((void *)((unsigned long)(head) + sizeof(struct pcpu_cache_element)))
-+
-+struct pcpu_cache_element {
-+	struct pcpu_cache_element	*next;
-+	char	payload[];
-+};
-+struct pcpu_cache {
-+	struct pcpu_cache_element	*free_list;
-+	struct pcpu_cache_element	*free_list_irq;
-+	int		nr;
-+	int		nr_irq;
-+};
-+struct pcpu_cache_list {
-+	struct pcpu_cache __percpu *cache;
-+	size_t element_size;
-+	int max_nr;
-+};
-+
-+static struct pcpu_cache_list *pcpu_cache_list_create(int max_nr, size_t size)
-+{
-+	struct pcpu_cache_list *pcpu_cache_list;
-+
-+	pcpu_cache_list = kmalloc(sizeof(struct pcpu_cache_list), GFP_KERNEL);
-+	if (!pcpu_cache_list)
-+		return NULL;
-+
-+	pcpu_cache_list->element_size = size;
-+	pcpu_cache_list->max_nr = max_nr;
-+	pcpu_cache_list->cache = alloc_percpu(struct pcpu_cache);
-+	if (!pcpu_cache_list->cache) {
-+		kfree(pcpu_cache_list);
-+		return NULL;
-+	}
-+	return pcpu_cache_list;
-+}
-+
-+static void pcpu_cache_list_destroy(struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	free_percpu(pcpu_cache_list->cache);
-+	kfree(pcpu_cache_list);
-+}
-+
-+static void irq_cache_splice(struct pcpu_cache *cache)
-+{
-+	unsigned long flags;
-+
-+	/* cache->free_list must be empty */
-+	if (WARN_ON_ONCE(cache->free_list))
-+		return;
-+
-+	local_irq_save(flags);
-+	cache->free_list = cache->free_list_irq;
-+	cache->free_list_irq = NULL;
-+	cache->nr += cache->nr_irq;
-+	cache->nr_irq = 0;
-+	local_irq_restore(flags);
-+}
-+
-+static void *pcpu_cache_list_alloc(struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	struct pcpu_cache *cache;
-+	struct pcpu_cache_element *cache_element;
-+
-+	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
-+	if (!cache->free_list) {
-+		if (READ_ONCE(cache->nr_irq) >= PCPU_CACHE_IRQ_THRESHOLD)
-+			irq_cache_splice(cache);
-+		if (!cache->free_list) {
-+			put_cpu();
-+			cache_element = kmalloc(PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list),
-+									GFP_KERNEL);
-+			if (!cache_element)
-+				return NULL;
-+			return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
-+		}
-+	}
-+
-+	cache_element = cache->free_list;
-+	cache->free_list = cache_element->next;
-+	cache->nr--;
-+	put_cpu();
-+	return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
-+}
-+
-+static void pcpu_cache_list_free(void *payload, struct pcpu_cache_list *pcpu_cache_list)
-+{
-+	struct pcpu_cache *cache;
-+	struct pcpu_cache_element *cache_element;
-+
-+	cache_element = PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload);
-+
-+	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
-+	if (READ_ONCE(cache->nr_irq) + cache->nr >= pcpu_cache_list->max_nr)
-+		goto out_free;
-+
-+	if (in_task()) {
-+		cache_element->next = cache->free_list;
-+		cache->free_list = cache_element;
-+		cache->nr++;
-+	} else if (in_hardirq()) {
-+		lockdep_assert_irqs_disabled();
-+		cache_element->next = cache->free_list_irq;
-+		cache->free_list_irq = cache_element;
-+		cache->nr_irq++;
-+	} else {
-+		goto out_free;
-+	}
-+	put_cpu();
-+	return;
-+out_free:
-+	put_cpu();
-+	kfree(cache_element);
-+}
-+
-+#define DIO_ALLOC_CACHE_MAX		256
-+static struct pcpu_cache_list *dio_pcpu_cache_list;
-+
- static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
- 		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
- {
-@@ -135,7 +259,7 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 			ret += dio->done_before;
- 	}
- 	trace_iomap_dio_complete(iocb, dio->error, ret);
--	kfree(dio);
-+	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dio_complete);
-@@ -620,7 +744,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (!iomi.len)
- 		return NULL;
- 
--	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
-+	dio = pcpu_cache_list_alloc(dio_pcpu_cache_list);
- 	if (!dio)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -804,7 +928,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return dio;
- 
- out_free_dio:
--	kfree(dio);
-+	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
- 	if (ret)
- 		return ERR_PTR(ret);
- 	return NULL;
-@@ -834,6 +958,9 @@ static int __init iomap_dio_init(void)
- 	if (!zero_page)
- 		return -ENOMEM;
- 
-+	dio_pcpu_cache_list = pcpu_cache_list_create(DIO_ALLOC_CACHE_MAX, sizeof(struct iomap_dio));
-+	if (!dio_pcpu_cache_list)
-+		return -ENOMEM;
- 	return 0;
- }
- fs_initcall(iomap_dio_init);
+Huh. per-cpu free lists is the traditional SLAB allocator
+architecture. That was removed a while back because SLUB performs
+better in most cases....
+
+<thinks a bit more>
+
+ISTR somebody was already working to optimise the SLUB allocator to
+address these corner case shortcomings w.r.t. traditional SLABs.
+
+Yup:
+
+
+commit 2d517aa09bbc4203f10cdee7e1d42f3bbdc1b1cd
+Author: Vlastimil Babka <vbabka@suse.cz>
+Date:   Wed Sep 3 14:59:45 2025 +0200
+
+    slab: add opt-in caching layer of percpu sheaves
+
+    Specifying a non-zero value for a new struct kmem_cache_args field
+    sheaf_capacity will setup a caching layer of percpu arrays called
+    sheaves of given capacity for the created cache.
+
+    Allocations from the cache will allocate via the percpu sheaves (main or
+    spare) as long as they have no NUMA node preference. Frees will also
+    put the object back into one of the sheaves.
+
+    When both percpu sheaves are found empty during an allocation, an empty
+    sheaf may be replaced with a full one from the per-node barn. If none
+    are available and the allocation is allowed to block, an empty sheaf is
+    refilled from slab(s) by an internal bulk alloc operation. When both
+    percpu sheaves are full during freeing, the barn can replace a full one
+    with an empty one, unless over a full sheaves limit. In that case a
+    sheaf is flushed to slab(s) by an internal bulk free operation. Flushing
+    sheaves and barns is also wired to the existing cpu flushing and cache
+    shrinking operations.
+
+    The sheaves do not distinguish NUMA locality of the cached objects. If
+    an allocation is requested with kmem_cache_alloc_node() (or a mempolicy
+    with strict_numa mode enabled) with a specific node (not NUMA_NO_NODE),
+    the sheaves are bypassed.
+
+    The bulk operations exposed to slab users also try to utilize the
+    sheaves as long as the necessary (full or empty) sheaves are available
+    on the cpu or in the barn. Once depleted, they will fallback to bulk
+    alloc/free to slabs directly to avoid double copying.
+
+    The sheaf_capacity value is exported in sysfs for observability.
+
+    Sysfs CONFIG_SLUB_STATS counters alloc_cpu_sheaf and free_cpu_sheaf
+    count objects allocated or freed using the sheaves (and thus not
+    counting towards the other alloc/free path counters). Counters
+    sheaf_refill and sheaf_flush count objects filled or flushed from or to
+    slab pages, and can be used to assess how effective the caching is. The
+    refill and flush operations will also count towards the usual
+    alloc_fastpath/slowpath, free_fastpath/slowpath and other counters for
+    the backing slabs.  For barn operations, barn_get and barn_put count how
+    many full sheaves were get from or put to the barn, the _fail variants
+    count how many such requests could not be satisfied mainly  because the
+    barn was either empty or full. While the barn also holds empty sheaves
+    to make some operations easier, these are not as critical to mandate own
+    counters.  Finally, there are sheaf_alloc/sheaf_free counters.
+
+    Access to the percpu sheaves is protected by local_trylock() when
+    potential callers include irq context, and local_lock() otherwise (such
+    as when we already know the gfp flags allow blocking). The trylock
+    failures should be rare and we can easily fallback. Each per-NUMA-node
+    barn has a spin_lock.
+
+    When slub_debug is enabled for a cache with sheaf_capacity also
+    specified, the latter is ignored so that allocations and frees reach the
+    slow path where debugging hooks are processed. Similarly, we ignore it
+    with CONFIG_SLUB_TINY which prefers low memory usage to performance.
+
+    [boot failure: https://lore.kernel.org/all/583eacf5-c971-451a-9f76-fed0e341b815@linux.ibm.com/ ]
+
+    Reported-and-tested-by: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
+    Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
+    Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+    Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
+
+Yeah, recent code, functionality is not enabled by default yet. So,
+kmem_cache_alloc() with:
+
+struct kmem_cache_args {
+.....
+        /**
+         * @sheaf_capacity: Enable sheaves of given capacity for the cache.
+         *
+         * With a non-zero value, allocations from the cache go through caching
+         * arrays called sheaves. Each cpu has a main sheaf that's always
+         * present, and a spare sheaf that may be not present. When both become
+         * empty, there's an attempt to replace an empty sheaf with a full sheaf
+         * from the per-node barn.
+         *
+         * When no full sheaf is available, and gfp flags allow blocking, a
+         * sheaf is allocated and filled from slab(s) using bulk allocation.
+         * Otherwise the allocation falls back to the normal operation
+         * allocating a single object from a slab.
+         *
+         * Analogically when freeing and both percpu sheaves are full, the barn
+         * may replace it with an empty sheaf, unless it's over capacity. In
+         * that case a sheaf is bulk freed to slab pages.
+         *
+         * The sheaves do not enforce NUMA placement of objects, so allocations
+         * via kmem_cache_alloc_node() with a node specified other than
+         * NUMA_NO_NODE will bypass them.
+         *
+         * Bulk allocation and free operations also try to use the cpu sheaves
+         * and barn, but fallback to using slab pages directly.
+         *
+         * When slub_debug is enabled for the cache, the sheaf_capacity argument
+         * is ignored.
+         *
+         * %0 means no sheaves will be created.
+         */
+        unsigned int sheaf_capacity;
+}
+
+set to the value required is all we need. i.e. something like this
+in iomap_dio_init():
+
+
+	struct kmem_cache_args kmem_args = {
+		.sheaf_capacity = 256,
+	};
+
+	dio_kmem_cache = kmem_cache_create("iomap_dio", sizeof(struct iomap_dio),
+			&kmem_args, SLAB_PANIC | SLAB_ACCOUNT
+
+And changing the allocation to kmem_cache_alloc(dio_kmem_cache,
+GFP_KERNEL) should provide the same sort of performance improvement
+as this patch does.
+
+Can you test this, please?
+
+If it doesn't provide any performance improvment, then I suspect
+that Vlastimil will be interested to find out why....
+
+Also, if it does work, it is likely the bioset mempools (which are
+slab based) can be initialised similarly, removing the need for
+custom per-cpu free lists in the block layer, too.
+
+-Dave.
+
+> 
+> v3:
+> kmalloc now is called outside the get_cpu/put_cpu code section.
+> 
+> v2:
+> Factor percpu cache into common code and the iomap module uses it.
+> 
+> v1:
+> https://lore.kernel.org/all/20251121090052.384823-1-guzebing1612@gmail.com/
+> 
+> Tested-by: syzbot@syzkaller.appspotmail.com
+> 
+> Suggested-by: Fengnan Chang <changfengnan@bytedance.com>
+> Signed-off-by: guzebing <guzebing1612@gmail.com>
+> ---
+>  fs/iomap/direct-io.c | 133 ++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 130 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 5d5d63efbd57..4421e4ad3a8f 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -56,6 +56,130 @@ struct iomap_dio {
+>  	};
+>  };
+>  
+> +#define PCPU_CACHE_IRQ_THRESHOLD	16
+> +#define PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list) \
+> +	(sizeof(struct pcpu_cache_element) + pcpu_cache_list->element_size)
+> +#define PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload) \
+> +	((struct pcpu_cache_element *)((unsigned long)(payload) - \
+> +				       sizeof(struct pcpu_cache_element)))
+> +#define PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(head) \
+> +	((void *)((unsigned long)(head) + sizeof(struct pcpu_cache_element)))
+> +
+> +struct pcpu_cache_element {
+> +	struct pcpu_cache_element	*next;
+> +	char	payload[];
+> +};
+> +struct pcpu_cache {
+> +	struct pcpu_cache_element	*free_list;
+> +	struct pcpu_cache_element	*free_list_irq;
+> +	int		nr;
+> +	int		nr_irq;
+> +};
+> +struct pcpu_cache_list {
+> +	struct pcpu_cache __percpu *cache;
+> +	size_t element_size;
+> +	int max_nr;
+> +};
+> +
+> +static struct pcpu_cache_list *pcpu_cache_list_create(int max_nr, size_t size)
+> +{
+> +	struct pcpu_cache_list *pcpu_cache_list;
+> +
+> +	pcpu_cache_list = kmalloc(sizeof(struct pcpu_cache_list), GFP_KERNEL);
+> +	if (!pcpu_cache_list)
+> +		return NULL;
+> +
+> +	pcpu_cache_list->element_size = size;
+> +	pcpu_cache_list->max_nr = max_nr;
+> +	pcpu_cache_list->cache = alloc_percpu(struct pcpu_cache);
+> +	if (!pcpu_cache_list->cache) {
+> +		kfree(pcpu_cache_list);
+> +		return NULL;
+> +	}
+> +	return pcpu_cache_list;
+> +}
+> +
+> +static void pcpu_cache_list_destroy(struct pcpu_cache_list *pcpu_cache_list)
+> +{
+> +	free_percpu(pcpu_cache_list->cache);
+> +	kfree(pcpu_cache_list);
+> +}
+> +
+> +static void irq_cache_splice(struct pcpu_cache *cache)
+> +{
+> +	unsigned long flags;
+> +
+> +	/* cache->free_list must be empty */
+> +	if (WARN_ON_ONCE(cache->free_list))
+> +		return;
+> +
+> +	local_irq_save(flags);
+> +	cache->free_list = cache->free_list_irq;
+> +	cache->free_list_irq = NULL;
+> +	cache->nr += cache->nr_irq;
+> +	cache->nr_irq = 0;
+> +	local_irq_restore(flags);
+> +}
+> +
+> +static void *pcpu_cache_list_alloc(struct pcpu_cache_list *pcpu_cache_list)
+> +{
+> +	struct pcpu_cache *cache;
+> +	struct pcpu_cache_element *cache_element;
+> +
+> +	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
+> +	if (!cache->free_list) {
+> +		if (READ_ONCE(cache->nr_irq) >= PCPU_CACHE_IRQ_THRESHOLD)
+> +			irq_cache_splice(cache);
+> +		if (!cache->free_list) {
+> +			put_cpu();
+> +			cache_element = kmalloc(PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list),
+> +									GFP_KERNEL);
+> +			if (!cache_element)
+> +				return NULL;
+> +			return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
+> +		}
+> +	}
+> +
+> +	cache_element = cache->free_list;
+> +	cache->free_list = cache_element->next;
+> +	cache->nr--;
+> +	put_cpu();
+> +	return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
+> +}
+> +
+> +static void pcpu_cache_list_free(void *payload, struct pcpu_cache_list *pcpu_cache_list)
+> +{
+> +	struct pcpu_cache *cache;
+> +	struct pcpu_cache_element *cache_element;
+> +
+> +	cache_element = PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload);
+> +
+> +	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
+> +	if (READ_ONCE(cache->nr_irq) + cache->nr >= pcpu_cache_list->max_nr)
+> +		goto out_free;
+> +
+> +	if (in_task()) {
+> +		cache_element->next = cache->free_list;
+> +		cache->free_list = cache_element;
+> +		cache->nr++;
+> +	} else if (in_hardirq()) {
+> +		lockdep_assert_irqs_disabled();
+> +		cache_element->next = cache->free_list_irq;
+> +		cache->free_list_irq = cache_element;
+> +		cache->nr_irq++;
+> +	} else {
+> +		goto out_free;
+> +	}
+> +	put_cpu();
+> +	return;
+> +out_free:
+> +	put_cpu();
+> +	kfree(cache_element);
+> +}
+> +
+> +#define DIO_ALLOC_CACHE_MAX		256
+> +static struct pcpu_cache_list *dio_pcpu_cache_list;
+> +
+>  static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
+>  		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
+>  {
+> @@ -135,7 +259,7 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  			ret += dio->done_before;
+>  	}
+>  	trace_iomap_dio_complete(iocb, dio->error, ret);
+> -	kfree(dio);
+> +	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_dio_complete);
+> @@ -620,7 +744,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	if (!iomi.len)
+>  		return NULL;
+>  
+> -	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
+> +	dio = pcpu_cache_list_alloc(dio_pcpu_cache_list);
+>  	if (!dio)
+>  		return ERR_PTR(-ENOMEM);
+>  
+> @@ -804,7 +928,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	return dio;
+>  
+>  out_free_dio:
+> -	kfree(dio);
+> +	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
+>  	if (ret)
+>  		return ERR_PTR(ret);
+>  	return NULL;
+> @@ -834,6 +958,9 @@ static int __init iomap_dio_init(void)
+>  	if (!zero_page)
+>  		return -ENOMEM;
+>  
+> +	dio_pcpu_cache_list = pcpu_cache_list_create(DIO_ALLOC_CACHE_MAX, sizeof(struct iomap_dio));
+> +	if (!dio_pcpu_cache_list)
+> +		return -ENOMEM;
+>  	return 0;
+>  }
+>  fs_initcall(iomap_dio_init);
+> -- 
+> 2.20.1
+> 
+> 
+> 
+
 -- 
-2.20.1
-
+Dave Chinner
+david@fromorbit.com
