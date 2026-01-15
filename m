@@ -1,208 +1,283 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498BF43AA4;
-	Wed, 14 Jan 2026 23:07:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD88624468C
+	for <linux-xfs@vger.kernel.org>; Thu, 15 Jan 2026 02:11:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768432050; cv=none; b=ev7uX7WCX6zKM2giHk7B+GEitGgyPgmygHRxMAOnXYsaXVPS+3cRm0+/wPBAWRRNyfZVqBsGDmjKB2j5wTv6d9wCSQ2cEv9ysVyqgAKgmOWsmmZe5RAkQO8ZuM08wmcUZZ8JzJJBH0LIfzoJNjNe/UG/fVO3OtmY3zM7np/J3nU=
+	t=1768443078; cv=none; b=VcREouaWXRTv5fzmQke700SDv45o4UUtJZzhmvfV1sm8uR+y/EV7Jj/lngnpUmuBWg7GH5sUoRUi+55Q+AhW1ICA8d+EJU+nZF/rtxwm+yDJoiYMQFQ2fuzhH5/3G9M9H4k2m8MPwWJD0tczqb8lilfpgJ0mp+i4E4LNcEF2n9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768432050; c=relaxed/simple;
-	bh=MmRMnONimKR3VDLK+nHIP/fZEo9OsD82HxQSy/6hNe0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A+ougOSVvN36mKaCMolmh5dJbIS8GKAKEMYp5ss17lEx6xu/dbYQwxrBmcnhAx8fps8LMat2Onpo+aMamBNJNVwgywVkwksY6Pc3hiUcDgNiSl4el1XQOFpjX1FwIKcZe7JZ8Cqht0x2vmWiO7qotZuuVxrJonMlxqYV08D1Fak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ipDz0e50; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768443078; c=relaxed/simple;
+	bh=f2QVeCiI4AcBvJ/Yo8FFrUl6c3QtkngGKO6/iFCBZrw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ln+mdfAkPryZit997/V+OBNV3Mq5ZouT8tebNcqS3c1uVfAW9GSG2HDX/gBlKrSzKxRhJF+BsLkwGL85izR9kJbbzNIvXEDxppxiBB9PpsN1vUId/iydXA4JZmlJuVhiAKNj4uIEj89jdaO4LJM+3ONbDtPIBHcdUY3UphXcz9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nAZFPIJO; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ipDz0e50"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34FF0C16AAE;
-	Wed, 14 Jan 2026 23:07:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768432049;
-	bh=MmRMnONimKR3VDLK+nHIP/fZEo9OsD82HxQSy/6hNe0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ipDz0e50AzttcrjDdJqj0KoQ/njzbR/g0MrrmyB3My1i+G0RYFMMPwzb5qJ+FYElM
-	 KJv3F7U7r6al8qcBD5ZByl30Oc/Pkt/O21aHEZnlSPPPn+XSWSiuRU3gAZG7RAqGso
-	 UKBSRbWUZ6XRLLxty+91N9pkE6TIEobs5/srMmpC3/ZBg7CCZ1kLFA+33u2fWdV/cV
-	 lan83rlpI4KLPZ1AodqWXtRE0eRQp3tcxOKoSY+wJQB19jvMkavMW/HmouuszvTtel
-	 A5UTKUoPaxtxlCQA50PXWnTRLkStoU9mlB8+gpKCRwBzxA5B8a15uofAxhwhAwzHou
-	 V1EExXtn0GLbg==
-Date: Wed, 14 Jan 2026 15:07:28 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
-	Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 14/14] xfs: use bounce buffering direct I/O when the
- device requires stable pages
-Message-ID: <20260114230728.GS15551@frogsfrogsfrogs>
-References: <20260114074145.3396036-1-hch@lst.de>
- <20260114074145.3396036-15-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nAZFPIJO"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-81f4f4d4822so149955b3a.3
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jan 2026 18:11:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768443076; x=1769047876; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/Lu4KyXAr/aCUF1cDLxpvAhnKtVcWm2yDkvteqB5wj8=;
+        b=nAZFPIJOE5FXHjIoGbrSAtAxZNjL3G9YrVKtqDBkmDcCC8+OI8TWLuw0bA7utGQO7Z
+         jH97PLs5WfFiFQKQ+gEkn73E9HOkVdU1zYAoVgiCQurDWIF+95tDkPGCnSsZ/kVcZyx1
+         CuPhHUptfSbtFAy//68LNgyE2ZGM+klQ7JpSdwRQun5KZ7ogW3ocpO57x0wNdyTxsMVv
+         /iSXGX8UJvSrLqqLO4v/q58U4C4Txu5qlUKzlML6IDFpaA591w0OOnTWBVnAdwXu+Ylb
+         519v/eg1x1doB6qNQHG6VsZ/IkMiNV/Y5WiSeAFTa63M9TQcQAAyg2lLWdKFSlPYEwfS
+         jDow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768443076; x=1769047876;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/Lu4KyXAr/aCUF1cDLxpvAhnKtVcWm2yDkvteqB5wj8=;
+        b=FIcB92rG1fVLvJBVNYRU4sZeUqrcVOnI0ejyYkGQx5fujnPYtkGELzpMvsNOAyh3rR
+         G054g4NwIpSY5pJiIjc34eW+4N+jgFFeI7sQpK4QhjnoPFc1MiFkzgzdEhpGgj6bUCR7
+         7VwRZYPwI+Q4RStEd2DZoWuWqspRPgTt7Fgp3z9RwZ0mSmn8pw0eak0rGEtFgVJ+89Qm
+         O46sr9LtIHMsAQ3FHULANvv2mnD/Fq3YfOrFlNZwRzINi9yI8w2BwKLG2Jicg2FsJ+mK
+         x0lCjgMKem+1eDmWA3GrMMuLk+EPnavtTqmCyqylEw63cxj1x4au582hVd6r12gITtpN
+         cqqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWhgnYUAvZ6s3OEfXA1wLdShOA7l6QKjHxjZGmV6SXTo3kSPR8xdq+9omffb6MH2Dt5tvXEsG4Gul8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzkKaIMEYt2BCp+oTM8TjNwIlJU1prOKvxQh1QWfXmu9gti7yL5
+	fEROcbIK44+GnTUyFcRaIT0+dmPkU00sLmQMvvrMbGabGiN0aV9XjP4b
+X-Gm-Gg: AY/fxX4ChXrMnsglSUtUmpF27sox7oF4aS1D+ZHCx8Oosf7jYDvcmFl9Rc9jBYoWXmj
+	68yzqcdd+Dx8Ei3pb7WUZHbFW7sdsj6JaOOi+9++1G5BHg300YX9WdctBoxc/fjVXfCYVADMzM6
+	AUUOiCd9gSQfiziGChiSzV3dmrqiE9HR4WbwowOOPrlFQpRQyGQ2yjb2l0ZET6PiXNLL8Ui5cmP
+	NAftrPh+sKZbfWRtg0WCg32da/E+xjRIFA19tXjSY3DA+CpIrRruIYdIydDDLNFzVv8jMapgSlb
+	0b84hOmAYVxeKaXuFT6YYSYf6rRPDu9pKymaiJ4gEah8z1QfZvXpXNHq7PaZVTgwYy7T7EHKD4r
+	YSYzuZ0w5p6GzTfOS5S1bLv1rZLVejWov4V6qC8BW/LpN2RPtc4VABLKJMxRyI3AI9I5UPXnhoJ
+	CnJSk7alpGVorV18s0IVMaM+yvXv4a
+X-Received: by 2002:a05:6a00:6c81:b0:81d:e9b1:b6d9 with SMTP id d2e1a72fcca58-81f81d33b9fmr4200239b3a.15.1768443075965;
+        Wed, 14 Jan 2026 18:11:15 -0800 (PST)
+Received: from n232-175-066.byted.org ([36.110.163.97])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81f8e65097asm806159b3a.37.2026.01.14.18.11.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jan 2026 18:11:15 -0800 (PST)
+From: guzebing <guzebing1612@gmail.com>
+To: brauner@kernel.org,
+	djwong@kernel.org
+Cc: hch@infradead.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	guzebing@bytedance.com,
+	guzebing <guzebing1612@gmail.com>,
+	syzbot@syzkaller.appspotmail.com,
+	Fengnan Chang <changfengnan@bytedance.com>
+Subject: [PATCH v3] iomap: add allocation cache for iomap_dio
+Date: Thu, 15 Jan 2026 10:11:08 +0800
+Message-Id: <20260115021108.1913695-1-guzebing1612@gmail.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260114074145.3396036-15-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 14, 2026 at 08:41:12AM +0100, Christoph Hellwig wrote:
-> Fix direct I/O on devices that require stable pages by asking iomap
-> to bounce buffer.  To support this, ioends are used for direct reads
-> in this case to provide a user context for copying data back from the
-> bounce buffer.
-> 
-> This fixes qemu when used on devices using T10 protection information
-> and probably other cases like iSCSI using data digests.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c |  8 ++++++--
->  fs/xfs/xfs_file.c | 41 ++++++++++++++++++++++++++++++++++++++---
->  2 files changed, 44 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 56a544638491..c3c1e149fff4 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -103,7 +103,7 @@ xfs_ioend_put_open_zones(
->   * IO write completion.
->   */
->  STATIC void
-> -xfs_end_ioend(
-> +xfs_end_ioend_write(
->  	struct iomap_ioend	*ioend)
->  {
->  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> @@ -202,7 +202,11 @@ xfs_end_io(
->  			io_list))) {
->  		list_del_init(&ioend->io_list);
->  		iomap_ioend_try_merge(ioend, &tmp);
-> -		xfs_end_ioend(ioend);
-> +		if (bio_op(&ioend->io_bio) == REQ_OP_READ)
-> +			iomap_finish_ioends(ioend,
-> +				blk_status_to_errno(ioend->io_bio.bi_status));
-> +		else
-> +			xfs_end_ioend_write(ioend);
->  		cond_resched();
->  	}
->  }
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7874cf745af3..f6cc63dcf961 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -224,12 +224,34 @@ xfs_ilock_iocb_for_write(
->  	return 0;
->  }
->  
-> +/*
-> + * Bounce buffering dio reads need a user context to copy back the data.
-> + * Use an ioend to provide that.
-> + */
-> +static void
-> +xfs_dio_read_bounce_submit_io(
-> +	const struct iomap_iter	*iter,
-> +	struct bio		*bio,
-> +	loff_t			file_offset)
-> +{
-> +	iomap_init_ioend(iter->inode, bio, file_offset, IOMAP_IOEND_DIRECT);
-> +	bio->bi_end_io = xfs_end_bio;
-> +	submit_bio(bio);
-> +}
-> +
-> +static const struct iomap_dio_ops xfs_dio_read_bounce_ops = {
-> +	.submit_io	= xfs_dio_read_bounce_submit_io,
-> +	.bio_set	= &iomap_ioend_bioset,
-> +};
-> +
->  STATIC ssize_t
->  xfs_file_dio_read(
->  	struct kiocb		*iocb,
->  	struct iov_iter		*to)
->  {
->  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
-> +	unsigned int		dio_flags = 0;
-> +	const struct iomap_dio_ops *dio_ops = NULL;
->  	ssize_t			ret;
->  
->  	trace_xfs_file_direct_read(iocb, to);
-> @@ -242,7 +264,12 @@ xfs_file_dio_read(
->  	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
->  	if (ret)
->  		return ret;
-> -	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0, NULL, 0);
-> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
-> +		dio_ops = &xfs_dio_read_bounce_ops;
-> +		dio_flags |= IOMAP_DIO_BOUNCE;
-> +	}
-> +	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, dio_ops, dio_flags,
+As implemented by the bio structure, we do the same thing on the
+iomap-dio structure. Add a per-cpu cache for iomap_dio allocations,
+enabling us to quickly recycle them instead of going through the slab
+allocator.
 
-Now that I've gotten to the final patch, one thing strikes me as a
-little strange -- we pass the iocb to iomap_dio_rw, which means that in
-theory iomap could set IOMAP_DIO_BOUNCE for us, instead of XFS having to
-do that on its own.
+By making such changes, we can reduce memory allocation on the direct
+IO path, so that direct IO will not block due to insufficient system
+memory. In addition, for direct IO, the read performance of io_uring
+is improved by about 2.6%.
 
-I think the only barrier to that is the little bit with
-xfs_dio_read_bounce_submit_io where we have to kick the direct read
-completion to a place where we can copy the bounce buffer contents to
-the pages that the caller gave us in the iov_iter, right?
+v3:
+kmalloc now is called outside the get_cpu/put_cpu code section.
 
-Directio already has a mechanism for doing completions from
-s_dio_done_wq, so can't we reuse that?  Or is the gamble here that
-things like btrfs might want to do something further with the bounce
-buffer (like verifying checksums before copying to the caller's pages)
-so we might as well make the fs responsible for setting IOMAP_DIO_BOUNCE
-and taking control of the bio completion?
+v2:
+Factor percpu cache into common code and the iomap module uses it.
 
---D
+v1:
+https://lore.kernel.org/all/20251121090052.384823-1-guzebing1612@gmail.com/
 
-> +			NULL, 0);
->  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->  
->  	return ret;
-> @@ -703,6 +730,8 @@ xfs_file_dio_write_aligned(
->  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
->  		iolock = XFS_IOLOCK_SHARED;
->  	}
-> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-> +		dio_flags |= IOMAP_DIO_BOUNCE;
->  	trace_xfs_file_direct_write(iocb, from);
->  	ret = iomap_dio_rw(iocb, from, ops, dops, dio_flags, ac, 0);
->  out_unlock:
-> @@ -750,6 +779,7 @@ xfs_file_dio_write_atomic(
->  {
->  	unsigned int		iolock = XFS_IOLOCK_SHARED;
->  	ssize_t			ret, ocount = iov_iter_count(from);
-> +	unsigned int		dio_flags = 0;
->  	const struct iomap_ops	*dops;
->  
->  	/*
-> @@ -777,8 +807,10 @@ xfs_file_dio_write_atomic(
->  	}
->  
->  	trace_xfs_file_direct_write(iocb, from);
-> -	ret = iomap_dio_rw(iocb, from, dops, &xfs_dio_write_ops,
-> -			0, NULL, 0);
-> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-> +		dio_flags |= IOMAP_DIO_BOUNCE;
-> +	ret = iomap_dio_rw(iocb, from, dops, &xfs_dio_write_ops, dio_flags,
-> +			NULL, 0);
->  
->  	/*
->  	 * The retry mechanism is based on the ->iomap_begin method returning
-> @@ -867,6 +899,9 @@ xfs_file_dio_write_unaligned(
->  	if (flags & IOMAP_DIO_FORCE_WAIT)
->  		inode_dio_wait(VFS_I(ip));
->  
-> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-> +		flags |= IOMAP_DIO_BOUNCE;
-> +
->  	trace_xfs_file_direct_write(iocb, from);
->  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
->  			   &xfs_dio_write_ops, flags, NULL, 0);
-> -- 
-> 2.47.3
-> 
-> 
+Tested-by: syzbot@syzkaller.appspotmail.com
+
+Suggested-by: Fengnan Chang <changfengnan@bytedance.com>
+Signed-off-by: guzebing <guzebing1612@gmail.com>
+---
+ fs/iomap/direct-io.c | 133 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 130 insertions(+), 3 deletions(-)
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 5d5d63efbd57..4421e4ad3a8f 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -56,6 +56,130 @@ struct iomap_dio {
+ 	};
+ };
+ 
++#define PCPU_CACHE_IRQ_THRESHOLD	16
++#define PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list) \
++	(sizeof(struct pcpu_cache_element) + pcpu_cache_list->element_size)
++#define PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload) \
++	((struct pcpu_cache_element *)((unsigned long)(payload) - \
++				       sizeof(struct pcpu_cache_element)))
++#define PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(head) \
++	((void *)((unsigned long)(head) + sizeof(struct pcpu_cache_element)))
++
++struct pcpu_cache_element {
++	struct pcpu_cache_element	*next;
++	char	payload[];
++};
++struct pcpu_cache {
++	struct pcpu_cache_element	*free_list;
++	struct pcpu_cache_element	*free_list_irq;
++	int		nr;
++	int		nr_irq;
++};
++struct pcpu_cache_list {
++	struct pcpu_cache __percpu *cache;
++	size_t element_size;
++	int max_nr;
++};
++
++static struct pcpu_cache_list *pcpu_cache_list_create(int max_nr, size_t size)
++{
++	struct pcpu_cache_list *pcpu_cache_list;
++
++	pcpu_cache_list = kmalloc(sizeof(struct pcpu_cache_list), GFP_KERNEL);
++	if (!pcpu_cache_list)
++		return NULL;
++
++	pcpu_cache_list->element_size = size;
++	pcpu_cache_list->max_nr = max_nr;
++	pcpu_cache_list->cache = alloc_percpu(struct pcpu_cache);
++	if (!pcpu_cache_list->cache) {
++		kfree(pcpu_cache_list);
++		return NULL;
++	}
++	return pcpu_cache_list;
++}
++
++static void pcpu_cache_list_destroy(struct pcpu_cache_list *pcpu_cache_list)
++{
++	free_percpu(pcpu_cache_list->cache);
++	kfree(pcpu_cache_list);
++}
++
++static void irq_cache_splice(struct pcpu_cache *cache)
++{
++	unsigned long flags;
++
++	/* cache->free_list must be empty */
++	if (WARN_ON_ONCE(cache->free_list))
++		return;
++
++	local_irq_save(flags);
++	cache->free_list = cache->free_list_irq;
++	cache->free_list_irq = NULL;
++	cache->nr += cache->nr_irq;
++	cache->nr_irq = 0;
++	local_irq_restore(flags);
++}
++
++static void *pcpu_cache_list_alloc(struct pcpu_cache_list *pcpu_cache_list)
++{
++	struct pcpu_cache *cache;
++	struct pcpu_cache_element *cache_element;
++
++	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
++	if (!cache->free_list) {
++		if (READ_ONCE(cache->nr_irq) >= PCPU_CACHE_IRQ_THRESHOLD)
++			irq_cache_splice(cache);
++		if (!cache->free_list) {
++			put_cpu();
++			cache_element = kmalloc(PCPU_CACHE_ELEMENT_SIZE(pcpu_cache_list),
++									GFP_KERNEL);
++			if (!cache_element)
++				return NULL;
++			return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
++		}
++	}
++
++	cache_element = cache->free_list;
++	cache->free_list = cache_element->next;
++	cache->nr--;
++	put_cpu();
++	return PCPU_CACHE_ELEMENT_GET_PAYLOAD_FROM_HEAD(cache_element);
++}
++
++static void pcpu_cache_list_free(void *payload, struct pcpu_cache_list *pcpu_cache_list)
++{
++	struct pcpu_cache *cache;
++	struct pcpu_cache_element *cache_element;
++
++	cache_element = PCPU_CACHE_ELEMENT_GET_HEAD_FROM_PAYLOAD(payload);
++
++	cache = per_cpu_ptr(pcpu_cache_list->cache, get_cpu());
++	if (READ_ONCE(cache->nr_irq) + cache->nr >= pcpu_cache_list->max_nr)
++		goto out_free;
++
++	if (in_task()) {
++		cache_element->next = cache->free_list;
++		cache->free_list = cache_element;
++		cache->nr++;
++	} else if (in_hardirq()) {
++		lockdep_assert_irqs_disabled();
++		cache_element->next = cache->free_list_irq;
++		cache->free_list_irq = cache_element;
++		cache->nr_irq++;
++	} else {
++		goto out_free;
++	}
++	put_cpu();
++	return;
++out_free:
++	put_cpu();
++	kfree(cache_element);
++}
++
++#define DIO_ALLOC_CACHE_MAX		256
++static struct pcpu_cache_list *dio_pcpu_cache_list;
++
+ static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
+ 		struct iomap_dio *dio, unsigned short nr_vecs, blk_opf_t opf)
+ {
+@@ -135,7 +259,7 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 			ret += dio->done_before;
+ 	}
+ 	trace_iomap_dio_complete(iocb, dio->error, ret);
+-	kfree(dio);
++	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_complete);
+@@ -620,7 +744,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (!iomi.len)
+ 		return NULL;
+ 
+-	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
++	dio = pcpu_cache_list_alloc(dio_pcpu_cache_list);
+ 	if (!dio)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -804,7 +928,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return dio;
+ 
+ out_free_dio:
+-	kfree(dio);
++	pcpu_cache_list_free(dio, dio_pcpu_cache_list);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 	return NULL;
+@@ -834,6 +958,9 @@ static int __init iomap_dio_init(void)
+ 	if (!zero_page)
+ 		return -ENOMEM;
+ 
++	dio_pcpu_cache_list = pcpu_cache_list_create(DIO_ALLOC_CACHE_MAX, sizeof(struct iomap_dio));
++	if (!dio_pcpu_cache_list)
++		return -ENOMEM;
+ 	return 0;
+ }
+ fs_initcall(iomap_dio_init);
+-- 
+2.20.1
+
