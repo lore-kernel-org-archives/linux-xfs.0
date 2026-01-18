@@ -1,161 +1,121 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lithops.sigma-star.at (mailout.nod.at [116.203.167.152])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD95238D27
-	for <linux-xfs@vger.kernel.org>; Sat, 17 Jan 2026 06:53:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58331288D6;
+	Sun, 18 Jan 2026 15:42:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.167.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768632801; cv=none; b=OWIO5jml75F94jnSEc3NKs0Ykj6C70H/5tyDFpdgzH5qj1nKx3w497RAB2oJlXbACuO+AQ9yydggDk9+Nwr2EXlXZWPIEUkRjhZPLFaQRkxRRTv1XMuqYIPUgMM+MJdB/ujltK6B0AFMZFTbQtNTOMNVTdJx6DURRk+456nY7As=
+	t=1768750973; cv=none; b=k1z7f31q48O+MTV0oOzpLVzrCBRDQV2K6lmvWwTTVZBizTtqG80KgcEKDbuyjsgEO/idzxVOmrMgSWcyywUGiIZzqh3kzjGYx57pPkbA0SUfz2jy+x+n6LPB8pdz+KCeY5fssUO5KBlGfbVgEd4rjPDS37gY8W6pKcQCKQHhjVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768632801; c=relaxed/simple;
-	bh=FQ/qq5KMxmdZdm2S7ODZUYhaQMrFdtI1ATUBACChUUk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CnvjSQUOnBf6SgyLC3IrOXa33gS5VrDtweHR+shh9OUuneI+NqMCifZNFEA/sm/TccngARQUYTOT0sHAun3+KrV/YZcY2Nlf/lFeBEp4donoLq2bWwypC/3L9kFMdRcCJW573mzOLnmohslEGl4tKfDTzar8g17O4UHs67pPF1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UZJyCbOm; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UZJyCbOm"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-7b90db89b09so185900b3a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Jan 2026 22:53:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768632799; x=1769237599; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=iNPthM/2J3s6u6G74sY618LrTm9RqvGIDJ93kLM8Zfc=;
-        b=UZJyCbOmV+WKFYGfMkjZP1i6wK2kcTWNvvgLVebrh2JBYV8urKHRKixzTGz9S5ooYR
-         6vyqb7ciUBgRqWGOduucYiZkEdoJ3ZMxzdFnifcAfT8omfImeKFPX9xUVZWCZqhO+JYh
-         ys5CpFatrojIzn7xEEJ0pH17rw3NpF3IO6a/nb+cbQnsgDpSLMo9CR+R7cGe+TXN9gSR
-         Zzv2qKFgqIaYOZRVtwnq+q6kS4Aghqh3PLI8MxgOY8Bohp2FHZpg7duCtM4Sm6ji3aDE
-         sN9LVjNaAcdDXRh9UiYLfKYMi6b6Yci0ON9Gto7S8UVKOIH4ISaTL5qYwd1+l5Wrjg7E
-         YX/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768632799; x=1769237599;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=iNPthM/2J3s6u6G74sY618LrTm9RqvGIDJ93kLM8Zfc=;
-        b=DapajX2Lu4kbkKbV9rAukoSuCClleJBd/VYKXg8BxPqBV6N7GCABHZNCEVPXtYo8dE
-         1LmNpes9Q/65yYFEMyktlPjp1cAVsXWNk6htd441ykaZzc5Fzd6t0JBGvyspm1QUOfEM
-         bjGTN7/OMlMITA5y3ieypQGgsp7Q9FYkEdbHp5LUwIP2H04oSMguuhkjARFjqo8AOPEM
-         8/OVH0FL57avqgiz6ZYS4Lb6n2SXRORlfZvk0D6RUEH7eeyRNIPD+tuqbwaORb2IbDIi
-         vHCeiWoHpXm/GKsFRkMm0xMiT01mtQSCl4gJGyHDK1OqEwqQuI3PL3q+cg3nF2S0eA4A
-         W0iQ==
-X-Gm-Message-State: AOJu0YzbLfrcusQPxxvn6WIOwOgdCTAeFcPKY21Vk1WcqdUA2oepDem3
-	S6EC1VMFcqbH1/mHNipXwcDWM8xMVA7Nmf/oul7HR37QxZy1JlRdsuPBcoHFY3YWVlQ=
-X-Gm-Gg: AY/fxX5BF0/F6uj+F6aUrHRDmoQ6zORmP3BRKAsdPNx5GpkJtOhkApu05aHtkB81Voc
-	/Z8CwuFNGMksAnaMV2xtj8U+R99UmGrSfNKwzfF8npLDZ9n8zB6cRJc3VH1E2y79JJPfDJFfxFB
-	QnXb7+05FXiJ06JXWBmfXJCsQf8AiGk9vXJKWIbP0RMAYN8ubn5R2Z3zBSpp554yuY00B3/2r6X
-	zo+DcwUNXl5gO1t9MBWWNyIVqKvMB8xHFcXMPhWb0r5M4PeVZ8xmfiW9tBbSxqlzh9yDO3KuLIl
-	4TzAicAh5XRKEkMhbvHx/Oy6e/qBGiXhOywoxgKDp+qj37d/TKHckWjXFZSw1/HlQl8070tGvDS
-	5y/cpCuJOmRSlbSChb5lXCznCwvbaGEi/+6Kp4/dVug/LRwAoh5izNfH3zoSmHrGRslPDZoPisp
-	3cAfcMli1QrlWXPY1sEH5/i/Oh5V488ooRXBgZY7HWP/8V
-X-Received: by 2002:a17:90b:4f8b:b0:341:8bda:f04b with SMTP id 98e67ed59e1d1-35272fcef56mr3055763a91.7.1768632799338;
-        Fri, 16 Jan 2026 22:53:19 -0800 (PST)
-Received: from LAPTOP-FNOERNUQ.localdomain ([2a12:f8c6:d99:e7b2:15ff:4df2:c898:8bf4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-352741cc52asm1758122a91.3.2026.01.16.22.53.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Jan 2026 22:53:18 -0800 (PST)
-From: Wenwu Hou <hwenwur@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	dchinner@redhat.com,
-	hch@infradead.org,
-	Wenwu Hou <hwenwur@gmail.com>
-Subject: [PATCH v2] xfs: fix incorrect context handling in xfs_trans_roll
-Date: Sat, 17 Jan 2026 14:52:43 +0800
-Message-Id: <20260117065243.42955-1-hwenwur@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	s=arc-20240116; t=1768750973; c=relaxed/simple;
+	bh=7o8IJfB7ac3jZiXayX/iEYSCvbbdHx+mVAVSDEiNdGc=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=LDDue4+mUwzYjUswgDOBJQGC8zcsfTsIaSQZ9JzPxmv8ldM1o0jXvyxW8oXJByJuJ9WjRH/ZO4BAgXyjRAxnTfMMruuJ9D4hyAcT1IO4BkvvcDdCNC4OULFio89jbtAiE7gmTE3rkjOjqMxzAfaW56F5/yKUShaB1PaF6HtnUGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at; spf=fail smtp.mailfrom=nod.at; arc=none smtp.client-ip=116.203.167.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nod.at
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id 6720229ABCA;
+	Sun, 18 Jan 2026 16:36:05 +0100 (CET)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id f1jux-Dqp4vA; Sun, 18 Jan 2026 16:36:04 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id 9282529859D;
+	Sun, 18 Jan 2026 16:36:04 +0100 (CET)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id HokZmavtm8SI; Sun, 18 Jan 2026 16:36:04 +0100 (CET)
+Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
+	by lithops.sigma-star.at (Postfix) with ESMTP id 04C202918DC;
+	Sun, 18 Jan 2026 16:36:04 +0100 (CET)
+Date: Sun, 18 Jan 2026 16:36:03 +0100 (CET)
+From: Richard Weinberger <richard@nod.at>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+	chuck lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
+	Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+	Amir Goldstein <amir73il@gmail.com>, hughd <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, tytso <tytso@mit.edu>, 
+	Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, 
+	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
+	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
+	Sandeep Dhavale <dhavale@google.com>, 
+	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, 
+	Carlos Maiolino <cem@kernel.org>, Ilya Dryomov <idryomov@gmail.com>, 
+	Alex Markuze <amarkuze@redhat.com>, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, 
+	David Sterba <dsterba@suse.com>, 
+	Luis de Bethencourt <luisbg@kernel.org>, 
+	Salah Triki <salah.triki@gmail.com>, 
+	Phillip Lougher <phillip@squashfs.org.uk>, 
+	Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, 
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+	Shyam <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, 
+	Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, 
+	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
+	Joseph Qi <joseph.qi@linux.alibaba.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
+	Trond Myklebust <trondmy@kernel.org>, anna <anna@kernel.org>, 
+	Dave Kleikamp <shaggy@kernel.org>, 
+	David Woodhouse <dwmw2@infradead.org>, Jan Kara <jack@suse.cz>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, 
+	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jaegeuk Kim <jaegeuk@kernel.org>, 
+	Christoph Hellwig <hch@infradead.org>, 
+	linux-nfs <linux-nfs@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>, 
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
+	linux-mm <linux-mm@kvack.org>, 
+	linux-ext4 <linux-ext4@vger.kernel.org>, 
+	linux-erofs <linux-erofs@lists.ozlabs.org>, 
+	linux-xfs <linux-xfs@vger.kernel.org>, 
+	ceph-devel <ceph-devel@vger.kernel.org>, 
+	linux-btrfs <linux-btrfs@vger.kernel.org>, 
+	linux-cifs <linux-cifs@vger.kernel.org>, 
+	samba-technical <samba-technical@lists.samba.org>, 
+	linux-unionfs <linux-unionfs@vger.kernel.org>, 
+	devel <devel@lists.orangefs.org>, 
+	ocfs2-devel <ocfs2-devel@lists.linux.dev>, 
+	ntfs3 <ntfs3@lists.linux.dev>, 
+	linux-nilfs <linux-nilfs@vger.kernel.org>, 
+	jfs-discussion <jfs-discussion@lists.sourceforge.net>, 
+	linux-mtd <linux-mtd@lists.infradead.org>, 
+	gfs2 <gfs2@lists.linux.dev>, 
+	linux-f2fs-devel <linux-f2fs-devel@lists.sourceforge.net>
+Message-ID: <2119146172.135240.1768750563673.JavaMail.zimbra@nod.at>
+In-Reply-To: <20260115-exportfs-nfsd-v1-23-8e80160e3c0c@kernel.org>
+References: <20260115-exportfs-nfsd-v1-0-8e80160e3c0c@kernel.org> <20260115-exportfs-nfsd-v1-23-8e80160e3c0c@kernel.org>
+Subject: Re: [PATCH 23/29] jffs2: add EXPORT_OP_STABLE_HANDLES flag to
+ export operations
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Zimbra 8.8.12_GA_3807 (ZimbraWebClient - FF146 (Linux)/8.8.12_GA_3809)
+Thread-Topic: jffs2: add EXPORT_OP_STABLE_HANDLES flag to export operations
+Thread-Index: pUsbo+Kg1d9ytlyubsob1wi+Ql8B0A==
 
-The memalloc_nofs_save() and memalloc_nofs_restore() calls are
-incorrectly paired in xfs_trans_roll.
+----- Urspr=C3=BCngliche Mail -----
+> Add the EXPORT_OP_STABLE_HANDLES flag to jffs2 export operations to indic=
+ate
+> that this filesystem can be exported via NFS.
+>=20
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+> fs/jffs2/super.c | 1 +
+> 1 file changed, 1 insertion(+)
 
-Call path:
-xfs_trans_alloc()
-    __xfs_trans_alloc()
-	// tp->t_pflags = memalloc_nofs_save();
-	xfs_trans_set_context()
-...
-xfs_defer_trans_roll()
-    xfs_trans_roll()
-        xfs_trans_dup()
-            // old_tp->t_pflags = 0;
-            xfs_trans_switch_context()
-        __xfs_trans_commit()
-            xfs_trans_free()
-                // memalloc_nofs_restore(tp->t_pflags);
-                xfs_trans_clear_context()
+Acked-by: Richard Weinberger <richard@nod.at>
 
-The code passes 0 to memalloc_nofs_restore() when committing the original
-transaction, but memalloc_nofs_restore() should always receive the
-flags returned from the paired memalloc_nofs_save() call.
-
-Before commit 3f6d5e6a468d ("mm: introduce memalloc_flags_{save,restore}"),
-calling memalloc_nofs_restore(0) would unset the PF_MEMALLOC_NOFS flag,
-which could cause memory allocation deadlocks[1].
-Fortunately, after that commit, memalloc_nofs_restore(0) does nothing,
-so this issue is currently harmless.
-
-Fixes: 756b1c343333 ("xfs: use current->journal_info for detecting transaction recursion")
-Link: https://lore.kernel.org/linux-xfs/20251104131857.1587584-1-leo.lilong@huawei.com [1]
-Signed-off-by: Wenwu Hou <hwenwur@gmail.com>
----
-v2: add comment from Christoph Hellwig
-
- fs/xfs/xfs_trans.c | 8 ++++++--
- fs/xfs/xfs_trans.h | 9 ---------
- 2 files changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 474f5a04ec63..dbe92bf9f031 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -124,8 +124,6 @@ xfs_trans_dup(
- 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
- 	tp->t_rtx_res = tp->t_rtx_res_used;
- 
--	xfs_trans_switch_context(tp, ntp);
--
- 	/* move deferred ops over to the new tp */
- 	xfs_defer_move(ntp, tp);
- 
-@@ -1043,6 +1041,12 @@ xfs_trans_roll(
- 	 * locked be logged in the prior and the next transactions.
- 	 */
- 	tp = *tpp;
-+	/*
-+	 * __xfs_trans_commit cleared the NOFS flag by calling into
-+	 * xfs_trans_free.  Set it again here before doing memory
-+	 * allocations.
-+	 */
-+	xfs_trans_set_context(tp);
- 	error = xfs_log_regrant(tp->t_mountp, tp->t_ticket);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7fb860f645a3..f7fcb95afe41 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -278,13 +278,4 @@ xfs_trans_clear_context(
- 	memalloc_nofs_restore(tp->t_pflags);
- }
- 
--static inline void
--xfs_trans_switch_context(
--	struct xfs_trans	*old_tp,
--	struct xfs_trans	*new_tp)
--{
--	new_tp->t_pflags = old_tp->t_pflags;
--	old_tp->t_pflags = 0;
--}
--
- #endif	/* __XFS_TRANS_H__ */
--- 
-2.39.5
-
+Thanks,
+//richard
