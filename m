@@ -1,300 +1,91 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50B82253EF
-	for <linux-xfs@vger.kernel.org>; Sun, 18 Jan 2026 19:18:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2397D2253EF
+	for <linux-xfs@vger.kernel.org>; Sun, 18 Jan 2026 19:19:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768763913; cv=none; b=RrLDjm030tetwbtYLO8BKN0hqvDdTNLfJ1uOVSU32xFNfiJ24f6pmwAO/CxAaNqrHfj5ZnRS4NgcrtwK1BYhtG6IEVR2dV4ekjIGhrpul4lngivo4eH9n0YMcS59Bb3oAp0Jb+nrHVIxnZSveA0ZFYWKkg5Yruqy53P+rVU32iU=
+	t=1768763953; cv=none; b=ChI7NPcfl0uD+CxTcfzsORlkMQZ6MIf5Q5VKWv6ayKkc0yJIlUmpBIqPLdi76WqLnvkLNglftJHImC4Rz7ZYg7OEGCcTDn+37emtMID0qiRcjoqYY1TERhh8xzu9/onTMU+wxu/V02FMGw1HbBS2Suoy3u8WzOTZFhW3/K/DpFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768763913; c=relaxed/simple;
-	bh=HwAjIbwgoh7+sEP7Bh4D4N1zateilLLQ1qr4qfEyiMo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qweySAYvH59UjRScgQGttz4zM5eqjjMXd9DkFYtiEmdLsuSe6yckrlhjCi2Jnh9/L2mpl8mPO5T3UXB/1yQZGfI3aG8/7kvPauMUBtrrq9uObM0s1mpDb1BnzLMqbwX9z/eRfC4G5RLTNwfBzCjXvHRIbqhHTtaLWLj4QI4TU10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=im9jkZr8; arc=none smtp.client-ip=209.85.221.43
+	s=arc-20240116; t=1768763953; c=relaxed/simple;
+	bh=82Mf2NJeAvt2o3n0VPrMIXZfLa8qYg+zAv5mNLENzcA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sog1Da1UJm3HUW4gemIvCsYaB8ggreTdCfUKM9E1y7KIkiXwYU5F9TQdXMBpuQer2cOe73eoLBVecxvOrQPweVKlj8NI5CUc6l1Nkj/GtcCmhNcOEerUX8Od6U3cKfvlHh202DWqPV9P21mugyi6dxPiAnExk5etScWkALxtXoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NXUFoe2l; arc=none smtp.client-ip=209.85.128.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="im9jkZr8"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-432d2c96215so2972966f8f.3
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Jan 2026 11:18:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NXUFoe2l"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47ee974e230so29602345e9.2
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Jan 2026 11:19:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768763910; x=1769368710; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=CtmORjNTrE4g7l2ECOXWpp2iAzgvLNSGbf1oku8deUw=;
-        b=im9jkZr8EWspf56ObRiALL81EgJVp21x/tvWTT8+NHgJU0vQPGfurkVBb5eP1+5mrf
-         yhThy3kVt07Mxuwc9/7iB90jypFcsLzp3zzU8Nt9Tnj5vZaV4g+4LrkKu5HUY98x6+Op
-         NJlY+5RW6BSU5K+kbyLUepnBmxFQy5Rd6T4RfoG/aMPIut1tPOf5eMVyMwo79cIe6eRn
-         HMcN3BeMs9z9CjKxJ02i+L9vU7nu6EWzKm2AiLZLWRXkx7Zz7lN7TJC477Tmk7JcMPl5
-         r/o7UL2KAJeAdDX5l3WW1ycjvPGOW6ZqjgmceLlsndwK6G9TUjpe293LthflEZCdzeG4
-         ju3Q==
+        d=gmail.com; s=20230601; t=1768763950; x=1769368750; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=UFArAHFNDsmlr0nPHwPIpxNTvQE9baTRoexdP9gjAwk=;
+        b=NXUFoe2l/q48oIfFkHDTgsGf5X0bpBIIibEIhW6Mu6S4SiU2qkEqqrRnZEgiYtYbNy
+         I5dcDGNFQYMqX7Jc3COF3LCUZYP3vX4G4ZEnPpK+1KR9hWnG+b7I4gZM6fvXkgpstrgC
+         kMaXIF5h4444GkXuaOxtIHUwh2LLVQlGxrTv3JAsV7qn0cPDAlQdsAbv41/6E5IAf9Nv
+         t6TppIg05qGauklRMl2Tx5IhVXe3d6WedpykRvskiaOMfq/s8tVsTJkNbvxAFrk1c+cG
+         +9E35LB3BIjxxxugfc5bj588OzrsYtKX7Jr3k/Y/hjOkqYgbJ1NWSKMtEkzYal8Z69m6
+         0JFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768763910; x=1769368710;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CtmORjNTrE4g7l2ECOXWpp2iAzgvLNSGbf1oku8deUw=;
-        b=JhbtLnLwhguw8jF87CC/yrIJDmLjImEwXkHVL4uGjzBuhWhZ2JTUcWidWffWBLMsZR
-         Aty5I/auM6cuBXfLQJWgo4KekL5FJf5OSn004cCO9LyoQhoC0wDHJ78X4W5yecrAtjeA
-         QbGuHM/s4yU1jd+MTi+4VN5TPje7zZF/44vNEN+DLp0DdFVM7zZaMNys9Dk5Y3plaiHz
-         1IPMzkffi12gMmf1kKy/Ylly57c3SqgJi9u4P6HlUBnkJx43HW65IYQFS3olMv0Yh3iy
-         th97e6jO5TtQ3kG5QNUqqM8y71gvArxLRNuuGc5RM9reUe9I0NqKeJchPAQ5913n8v/P
-         BkzA==
-X-Gm-Message-State: AOJu0YwFMMz8sxPTmXBbzD66dygqyZDOx58lhZbXQhy7IrjZe/3Xbh0D
-	JSzjAVOts9h/VBHUCwPCRwBG13lmbESVu+NAQmSozDIapqoPpohPvoG+czSHZQ==
-X-Gm-Gg: AY/fxX7HBty1HiBdHVPSTzCcU3cvUR1YSWTQBzYUV0J2eO+X7Nxh0YNwShPiSUCwCc3
-	+Z96DQ/kcrurE0rpXv2u0lsaxd1hk4aeuAMGuFKX8R15q1NuKycZlUCvdfN5yqqn1JtKR1bAjxJ
-	TEWf3gS/EHw9AhuBa/1IaBHj0qg1ql7nb/0SdqlbHZCmMOtuaxBGuPPYb7GVeUjdyfwVzqIzxxA
-	zhJeBZe2RN73z+j2tzfSHej14EgcTti3qlWrGvTBQlus6dhGrv8v7U2CnKqdyn/VTxacb+jhSRU
-	0o36nYwrhOX9RtCSO2GhGC7evf0s2OEhyCof7v1x1he2bIFjKILbkkgD+VboVl/Lwehy9vzPAyC
-	Vbu6P62WQpNrRDWM0KHR9Sn0ZumF7gJ4y27pMeFPw55bvekxkaPpfWveFpWvVEnhNPgVJtSsuxH
-	jYKy2Xa0dTPT0dLhbUWJvvlHD2Dg==
-X-Received: by 2002:a05:6000:200b:b0:430:fbe1:382a with SMTP id ffacd0b85a97d-43569bd49e1mr12027072f8f.54.1768763909888;
-        Sun, 18 Jan 2026 11:18:29 -0800 (PST)
-Received: from f13.tail696c1.ts.net ([2a01:e11:3:1ff0:f108:9c47:a37e:e4a4])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4356996cf58sm18391193f8f.22.2026.01.18.11.18.29
+        d=1e100.net; s=20230601; t=1768763950; x=1769368750;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UFArAHFNDsmlr0nPHwPIpxNTvQE9baTRoexdP9gjAwk=;
+        b=l6WLFxBvI10iEPQt2Ae0lVfOblWDKWkKj+anKaKWj/En8gtOgsc33x1rTyKvMa/wIY
+         8WNiJaleIrDVR63l90de2xWggddNTU3sQLFHBQPflviTvJJQzDuE2iyObTeUby/fJEBH
+         eREBvwmTC3Ldz2ZjQBlimoQopOLHaBfX2wiCS2bFmD/DGg9BgQVyOebHlEpKLoU7/tft
+         WmwkNHp77hveVf38zIkiADFBAwhL/b0nYjpVE22nsX54g+jBOqTCMzv69WiwVOCPZ5qE
+         4v+rXA+mDhJplMHPfXaPQmMdO177p4sZViMoMQR9c53ZUMSL1KutOhh1LqIY4swV3Yy1
+         So5Q==
+X-Gm-Message-State: AOJu0YzKVldr/DQ3/Pzw/dQWvO7SlDmcTHEeGj1mOhZ8kaUCQ+C2dYZO
+	1moM7HoFQr373n46qxrnYMXZyVRbxj3qB/nE39fNXqN1KvMmLJtN67Mb8cP8qA==
+X-Gm-Gg: AY/fxX5RKfMgFYDCjRB5vhc5SIDDtyk1ZrUOeXGIcT7inCzNG5en6bmN5GkCm0fjBTg
+	S+Q2+xoYIKFkbsd4FFqjdDCXDMnfrmjkAYIhtbMW6x4wzQAJNx8RODjPWUcHmzxTjfoYO4q+93K
+	bDeL+XLeBLVVxcnHCmdtAnbELFqtC1Y261Wdc7krKFGwMGeuxiuuZ6AaWWgERVrZps/1srUE4bR
+	aeXZb7yKzqg20jbdrO4kZLRUJ99GndeONcsNgKiSydtVdlCLGYpNjuiY/n2qGfsxBjfJOzRXmk5
+	b6LeXZAQWqnbU1lTPVZl+C4C4VKVT036VXHom2PLHCH+wV0NEHebujeIKBaS6QS+okA9+5scfYV
+	3HgdOnd5A+ZqbFf2wO605vx+QHL96rRHKNQkvIqhphiuZodLMtw/yziv5zOzecCsTeSJTym6BMO
+	D44rg=
+X-Received: by 2002:a05:600c:19d3:b0:479:2651:3f9c with SMTP id 5b1f17b1804b1-480215e207cmr100616015e9.14.1768763950359;
+        Sun, 18 Jan 2026 11:19:10 -0800 (PST)
+Received: from f13 ([2a01:e11:3:1ff0:f108:9c47:a37e:e4a4])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4801e8caceesm152849235e9.13.2026.01.18.11.19.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Jan 2026 11:18:29 -0800 (PST)
+        Sun, 18 Jan 2026 11:19:10 -0800 (PST)
+Date: Sun, 18 Jan 2026 20:19:08 +0100
 From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	djwong@kernel.org,
-	hch@infradead.org,
-	david@fromorbit.com,
-	zlang@redhat.com
-Subject: [PATCH v7] xfs: test reproducible builds
-Date: Sun, 18 Jan 2026 20:17:21 +0100
-Message-ID: <20260118191721.1354833-1-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.51.0
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org, 
+	hch@infradead.org, david@fromorbit.com
+Subject: Re: [PATCH v6] xfs: test reproducible builds
+Message-ID: <aW0x4lXOhO0g1_wm@f13>
+References: <20260108142222.37304-1-luca.dimaio1@gmail.com>
+ <20260118175327.hdevfpau7uifdsb7@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260118175327.hdevfpau7uifdsb7@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-With the addition of the `-p` populate option, SOURCE_DATE_EPOCH and
-DETERMINISTIC_SEED support, it is possible to create fully reproducible
-pre-populated filesystems. We should test them here.
+On Mon, Jan 19, 2026 at 01:53:27AM +0800, Zorro Lang wrote:
+> On Thu, Jan 08, 2026 at 03:22:22PM +0100, Luca Di Maio wrote:
+> I think it's not good to be commit log, better to move this part ->
+> 
+> > 
+> > Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+> > ---
+> 
+>   -> here
+> 
 
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
+Thanks Zorro, sent a v7 with the correction
 
-v1 -> v2:
-- Changed test group from parent to mkfs
-- Fixed PROTO_DIR to point to a new dir
-- Populate PROTO_DIR with relevant file types
-- Move from md5sum to sha256sum
-v2 -> v3
-- Properly check if mkfs.xfs supports SOURCE_DATE_EPOCH and
-  DETERMINISTIC_SEED
-- use fsstress program to generate the PROTO_DIR content
-- simplify test output
-v3 -> v4
-- Add _cleanup function
-v4 -> v5
-- copy _cleanup from common/preamble
-v5 -> v6
-- remove debug typo/leftover
-v6 -> v7
-- adjust commit message
-
- tests/xfs/841     | 173 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/841.out |   3 +
- 2 files changed, 176 insertions(+)
- create mode 100755 tests/xfs/841
- create mode 100644 tests/xfs/841.out
-
-diff --git a/tests/xfs/841 b/tests/xfs/841
-new file mode 100755
-index 00000000..5f981d0a
---- /dev/null
-+++ b/tests/xfs/841
-@@ -0,0 +1,173 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Chainguard, Inc. All Rights Reserved.
-+#
-+# FS QA Test No. 841
-+#
-+# Test that XFS filesystems created with reproducibility options produce
-+# identical images across multiple runs. This verifies that the combination
-+# of SOURCE_DATE_EPOCH, DETERMINISTIC_SEED, and -m uuid= options result in
-+# bit-for-bit reproducible filesystem images.
-+
-+. ./common/preamble
-+_begin_fstest auto quick mkfs
-+
-+# Image file settings
-+IMG_SIZE="512M"
-+IMG_FILE="$TEST_DIR/xfs_reproducible_test.img"
-+PROTO_DIR="$TEST_DIR/proto"
-+
-+# Fixed values for reproducibility
-+FIXED_UUID="12345678-1234-1234-1234-123456789abc"
-+FIXED_EPOCH="1234567890"
-+
-+_cleanup() {
-+	cd /
-+	command -v _kill_fsstress &>/dev/null && _kill_fsstress
-+	rm -r -f $tmp.* "$PROTO_DIR" "$IMG_FILE"
-+}
-+
-+# Check if mkfs.xfs supports required options
-+_check_mkfs_xfs_options()
-+{
-+	local check_img="$TEST_DIR/mkfs_check.img"
-+	truncate -s 64M "$check_img" || return 1
-+
-+	# Check -m uuid support
-+	$MKFS_XFS_PROG -m uuid=00000000-0000-0000-0000-000000000000 \
-+		-N "$check_img" &> /dev/null
-+	local uuid_support=$?
-+
-+	# Check -p support (protofile/directory population)
-+	$MKFS_XFS_PROG 2>&1 | grep populate &> /dev/null
-+	local proto_support=$?
-+
-+	grep -q SOURCE_DATE_EPOCH "$MKFS_XFS_PROG"
-+	local reproducible_support=$?
-+
-+	rm -f "$check_img"
-+
-+	if [ $uuid_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support -m uuid= option"
-+	fi
-+	if [ $proto_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support -p option for directory population"
-+	fi
-+	if [ $reproducible_support -ne 0 ]; then
-+		_notrun "mkfs.xfs does not support env options for reproducibility"
-+	fi
-+}
-+
-+# Create a prototype directory with all file types supported by mkfs.xfs -p
-+_create_proto_dir()
-+{
-+	rm -rf "$PROTO_DIR"
-+	mkdir -p "$PROTO_DIR"
-+
-+	$FSSTRESS_PROG -d $PROTO_DIR -s 1 -n 2000 -p 2 -z \
-+		-f creat=15 \
-+		-f mkdir=8 \
-+		-f write=15 \
-+		-f truncate=5 \
-+		-f symlink=8 \
-+		-f link=8 \
-+		-f setfattr=12 \
-+		-f chown=3 \
-+		-f rename=5 \
-+		-f unlink=2 \
-+		-f rmdir=1
-+
-+
-+	# FIFO (named pipe)
-+	mkfifo "$PROTO_DIR/fifo"
-+
-+	# Unix socket
-+	$here/src/af_unix "$PROTO_DIR/socket" 2> /dev/null || true
-+
-+	# Block device (requires root)
-+	mknod "$PROTO_DIR/blockdev" b 1 0 2> /dev/null || true
-+
-+	# Character device (requires root)
-+	mknod "$PROTO_DIR/chardev" c 1 3 2> /dev/null || true
-+}
-+
-+_require_test
-+_check_mkfs_xfs_options
-+
-+# Create XFS filesystem with full reproducibility options
-+# Uses -p to populate from directory during mkfs (no mount needed)
-+_mkfs_xfs_reproducible()
-+{
-+	local img=$1
-+
-+	# Create fresh image file
-+	rm -f "$img"
-+	truncate -s $IMG_SIZE "$img" || return 1
-+
-+	# Set environment variables for reproducibility:
-+	# - SOURCE_DATE_EPOCH: fixes all inode timestamps to this value
-+	# - DETERMINISTIC_SEED: uses fixed seed (0x53454544) instead of
-+	#   getrandom()
-+	#
-+	# mkfs.xfs options:
-+	# - -m uuid=: fixed filesystem UUID
-+	# - -p dir: populate filesystem from directory during creation
-+	SOURCE_DATE_EPOCH=$FIXED_EPOCH \
-+	DETERMINISTIC_SEED=1 \
-+	$MKFS_XFS_PROG \
-+		-f \
-+		-m uuid=$FIXED_UUID \
-+		-p "$PROTO_DIR" \
-+		"$img" >> $seqres.full 2>&1
-+
-+	return $?
-+}
-+
-+# Compute hash of the image file
-+_hash_image()
-+{
-+	sha256sum "$1" | awk '{print $1}'
-+}
-+
-+# Run a single reproducibility test iteration
-+_run_iteration()
-+{
-+	local iteration=$1
-+
-+	echo "Iteration $iteration: Creating filesystem with -p $PROTO_DIR" >> $seqres.full
-+	if ! _mkfs_xfs_reproducible "$IMG_FILE"; then
-+		echo "mkfs.xfs failed" >> $seqres.full
-+		return 1
-+	fi
-+
-+	local hash=$(_hash_image "$IMG_FILE")
-+	echo "Iteration $iteration: Hash = $hash" >> $seqres.full
-+
-+	echo $hash
-+}
-+
-+# Create the prototype directory with various file types
-+_create_proto_dir
-+
-+echo "Test: XFS reproducible filesystem image creation"
-+
-+# Run three iterations
-+hash1=$(_run_iteration 1)
-+[ -z "$hash1" ] && _fail "Iteration 1 failed"
-+
-+hash2=$(_run_iteration 2)
-+[ -z "$hash2" ] && _fail "Iteration 2 failed"
-+
-+hash3=$(_run_iteration 3)
-+[ -z "$hash3" ] && _fail "Iteration 3 failed"
-+
-+# Verify all hashes match
-+if [ "$hash1" = "$hash2" ] && [ "$hash2" = "$hash3" ]; then
-+	echo "All filesystem images are identical."
-+else
-+	echo "ERROR: Filesystem images differ!"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/841.out b/tests/xfs/841.out
-new file mode 100644
-index 00000000..3bdfbfda
---- /dev/null
-+++ b/tests/xfs/841.out
-@@ -0,0 +1,3 @@
-+QA output created by 841
-+Test: XFS reproducible filesystem image creation
-+All filesystem images are identical.
--- 
-2.51.0
-
+L.
