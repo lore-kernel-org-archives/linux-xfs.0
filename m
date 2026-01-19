@@ -1,53 +1,105 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F5B271A6D
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 07:44:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF74C33067F;
+	Mon, 19 Jan 2026 07:44:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768808688; cv=none; b=shmdGstJU7pSkHJo4PGMhfMGK7L//yJQIo4WEmTn8WprevekD2l8x1ZBgkvsMf4PAE9+cKriJran5nH0AKnS0xfTUA/7xRFW8lPvekKrEyp14S7Icwg59R1/DYe57qNMu99GvqheTST5+2AeWed4ULc0apCR8An//6B6pltImsU=
+	t=1768808688; cv=none; b=aypjRndt1pW7uJVFM0nEr6Pvk0c//rhZ444AJqU0OLdH0Q5BAHdR0aMAslj+xwmmb+c6n5bE9yvwk3WCD7xUa+0SgixcS+MQCzVZAFe7KYvxiW/wwkuOEbsosbYCVKPdcCmdPkhCm+RG442FrWelKZuxpbAkzuFTQEuJT1WI550=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768808688; c=relaxed/simple;
-	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sPs+blG06UDIU3BoMemO5nT3wU3NV+pqJyM+4AbiuwMgXA7h6ZwoiK/v3iy7CveEQSGipMFd/Q4ZZuEFW5SV3d0c2NjjJY/L5cJ1rumNMYGc5HsppL/QfAYM17m/zKIwsVaCGmOipowT+U92Btf97f/Nlpa0ESMgrgRslPzb9ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KGVb0T6M; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+	bh=J+KBiBEpqOXmUetU9CsIrd2dVIUKC3jcOklxrWqsEV8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=bWlFlJObQWbP1qHVmhIpSqq7sA8+pnyQaHzYGzF2Ynt02IIUAqRx56tE94PB2IlNqXjNVPSENTglymHjSgCNzFiizDUp496bNP8HngNzQzNHkbLhMYR/FCGzxwIR8LjmtqZcwce2sCc9oU2JhLbpOFmeU4EnRlkLL32HM4/ghTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YCbzFiBg; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KGVb0T6M"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YCbzFiBg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=; b=KGVb0T6M+5PgFPSB/YbJNt2LFA
-	UzfpWnW154k9VQ23ZOxFEFgOSs2Wf9pnK6jCkMqS4CcYzQXoEgnpLMXtuN6rIeRRviSvYomXVZjA9
-	FXoPHefN82ZD4xXv4l9SvonGwJGY2JWO6B1Sj4L9slZaUlmvsswN6u9qTRcksnNnk2ACVZQqbPgx0
-	niR2MeWXrdC3x4D+gO0+qDAEigRLgG4AcHdPXjySLl5otmC1vCyrunHmBn2C9ouyBfmjT4UQrymfW
-	Q7vkIvjDMQZAQ6xRfeEiL0T52xWpfOaJWWVaGjpSNSnoddoXlVJP/UAZmRfnJd7/CY50bBccK8u9w
-	r6hLTRoQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vhjwK-00000001WAu-1XBk;
-	Mon, 19 Jan 2026 07:44:44 +0000
-Date: Sun, 18 Jan 2026 23:44:44 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Cc: linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] Monthly xfs report (Oct 2025)
-Message-ID: <aW3g7G_dWk4cbx0_@infradead.org>
-References: <6901e360.050a0220.32483.0208.GAE@google.com>
- <aQMPqDAxyM3i3pQk@infradead.org>
- <aQMbZoAAVWxxx6wc@infradead.org>
- <aW3J5Cc3ezll_601@infradead.org>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=gpoY2tjfq2znL/riDumaQTv31IJvykNZ6zAT3janN6U=; b=YCbzFiBgzNDKha8Zru+miESPNp
+	g0xm5pJxKRGCbZtVkk6AhkQDfUCI5uDdhATLaIyRHCxwAz7JxjcUxq4YLTjvWovzTe8W50a8s89kf
+	VJ/fMi4frwxD/M/k02cUwdYMN8bXNQpbmj0vsSceh4E/N4xeVUBI7Ej8GVlELi38JzjM98qgLqM+o
+	hmHf+pxN1XVWQdpFJ2s/x1zHvvq6VP3dOdf+wIXEnprcoU85mC+lWh6JHHGbeeHyNa2jjfp1aDaDn
+	qpHqGHrYmqxykZH4git4ZJes65cj63NCSRrXuLjUHSCHDZTNGZPOD3VEPbBAfuicg3z3LkuCqYV6C
+	CwVRljiQ==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vhjwM-00000001WAj-0OqD;
+	Mon, 19 Jan 2026 07:44:46 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Qu Wenruo <wqu@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: [PATCH 04/14] block: remove bio_release_page
+Date: Mon, 19 Jan 2026 08:44:11 +0100
+Message-ID: <20260119074425.4005867-5-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260119074425.4005867-1-hch@lst.de>
+References: <20260119074425.4005867-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aW3J5Cc3ezll_601@infradead.org>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-#syz test git://git.infradead.org/users/hch/xfs.git xfs-buf-hash
+Merge bio_release_page into the only remaining caller.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c |  4 +++-
+ block/blk.h | 11 -----------
+ 2 files changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/block/bio.c b/block/bio.c
+index 12cd3c5f6d6d..c51b4e2470e2 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1195,7 +1195,9 @@ static int bio_iov_iter_align_down(struct bio *bio, struct iov_iter *iter,
+ 			break;
+ 		}
+ 
+-		bio_release_page(bio, bv->bv_page);
++		if (bio_flagged(bio, BIO_PAGE_PINNED))
++			unpin_user_page(bv->bv_page);
++
+ 		bio->bi_vcnt--;
+ 		nbytes -= bv->bv_len;
+ 	} while (nbytes);
+diff --git a/block/blk.h b/block/blk.h
+index 980eef1f5690..886238cae5f1 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -595,17 +595,6 @@ void bdev_set_nr_sectors(struct block_device *bdev, sector_t sectors);
+ 
+ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+ 		struct lock_class_key *lkclass);
+-
+-/*
+- * Clean up a page appropriately, where the page may be pinned, may have a
+- * ref taken on it or neither.
+- */
+-static inline void bio_release_page(struct bio *bio, struct page *page)
+-{
+-	if (bio_flagged(bio, BIO_PAGE_PINNED))
+-		unpin_user_page(page);
+-}
+-
+ struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id);
+ 
+ int disk_scan_partitions(struct gendisk *disk, blk_mode_t mode);
+-- 
+2.47.3
+
