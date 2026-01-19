@@ -1,360 +1,243 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D68531AAB8
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 16:33:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768840398; cv=none; b=Ic/hs0Sjm5cX/8BYW0sAJ/Zh4daA0FaVz7Xr7DD5GTVHNLjJFOpxnrdS2OVm06Fp2QWBaXIzLic7fIH0A79XXwGAcTpCMHOWLS2zhaZRyXtrKK0Nc2qVg7qWR8bTF3Im+OB5SyJHc0j9lPJqYxDl2DDXTBbwMJwnxUdNcjlTmVM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768840398; c=relaxed/simple;
-	bh=FI4NI8dl6jSoy/l8FdXI8/RsUN0G2gTdmtm2I6gBCHw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XprhlWU/J4vXn7h2wi6/0390DHcA6p2luSbpmIj9RE9fWiLgNxB8cf+lO9h+SKA8/D06ALSU5X4XQGZLELQunLWzvck83TdLzI7pDikL/4tP1e7eTabsaHDbmjar7p6VMb17Fh5lyNwfjW5GZ5pgjHCSuh0DTiDQ/z72/L0FlCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Owk1HS4j; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=WYKf2UZu; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A4B30C619
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 16:41:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768840895; cv=pass; b=b1FKvaV98mF60Oy3Xh7p/m7lBTOSnOk3OLlJdj81w9kFooybkBqb/tcR8QvOoSGXNVMCYAd0SRMBXk/+mRHoE/gkRO0XWiGyGUho3cI2EA2CRJW6wF0PtAYIiwlUVeCRd/28YPGFlLkSi99f94Shy9994lgJ71Xw2UVCbgu546o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768840895; c=relaxed/simple;
+	bh=uciaFAPM3zh+7wmp1MXpjWZDIMz+W0jcWQemczxhFSU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=S5/jkrqVjD04dGKTI/KqyywP3aC/3TcpL7SReUH34J7/Xv8S9ylfYJhS2e9oD6/hkwQestxRAbxzd+XYCpbxb/yDLbGVOAYpp4I9wsuBSDvMgJE1JgVCY0NyqOoSGD2fqkj/gsj0v+wUbGKMoNX/VILcU9/bG22uf4Qw++zUGE4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ab0Y4kSR; arc=pass smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Owk1HS4j";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="WYKf2UZu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768840396;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WYmk9fWhdbdmEwLS9xqb5br63pURTJxhKqjK/z9PohM=;
-	b=Owk1HS4jvr0kg50Fsev4o+vX+v6RbQ820HaZzw/1ejqBXIL8aW3yRYoIYT8IPYKBq6ctB4
-	YNMTu//GXMvtD0Tj+qZuwyX+EyZJotyIBlbK69Qm1h9d3LbzhJD5qMaHrfz9Sz1OKZbUPI
-	+0d+MgjwcLsrcFE7wObtWGGD2cyacBI=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-154-NenMcIwCOiyWkJNO4kx4Cw-1; Mon, 19 Jan 2026 11:33:14 -0500
-X-MC-Unique: NenMcIwCOiyWkJNO4kx4Cw-1
-X-Mimecast-MFC-AGG-ID: NenMcIwCOiyWkJNO4kx4Cw_1768840393
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-430f57cd2caso3863531f8f.0
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 08:33:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ab0Y4kSR"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6536e4d25e1so6711401a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 08:41:31 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1768840890; cv=none;
+        d=google.com; s=arc-20240605;
+        b=MukVy1SQvviL5QS/D8MTOnBLEUcCqZKyLgBCbzsRcwIVp8bpC/DCuEMMF9r52jYTsD
+         GcYUYiJp+pi91ZVqWy8J3mL26JjYdAepmohaibZVD0jnRweS/auXjnHPGhniVDwpx2Xq
+         y9Vi+uSQpT9yfSIkNSleplecJtqQ7IJWl31CTyFlzS9eYDB4wmlRL/S3D9S+X8Gx9sG+
+         qDl20q5Ys7wTEmZNHsJixzdN5E0Ix6On6Yg8Qj+rgNvFza/0h6L3BBCqEg6avu8BbIE5
+         8KpE6aWnQBI9KCGai43ZrAbep1YoPfcGR74qCo8x5Ilp1ZZCuwndHlj0z9hH+1mH5MUI
+         Fpdg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=fTdB35vgqJbH8V4J4HP1Mukd5M1Q72aH7//uMfZpgyU=;
+        fh=onaM5CRCRKnzQl5zWQHz7SbHcuT2GJjPYwSqG9LK/SY=;
+        b=Pclvn6DQnFp1pC6AR/+kGB/8JNQ9lT3QMh+IpT6e8JnApPrXoH7aet36YZxXzBRpNQ
+         HXeXnHRShjvPs7PFYqkz7Y2qXizuc4J17v9yaOj93pnuD+OsaDfmB3TjJecge4QsMHe+
+         +YEIVo0pt7BJnD2n6Bt87uE5k+J2vgyNWUW8lbvsRE62mWJ9nKkTEayRpyHiQ+wyzTNC
+         4gP7ZTWN63EXCoC2nFPcto0j2Px303At/qub3cMdjDX8RBWFxVlF4ktrEb2HoHRjcPie
+         OgeUdarAHVKmUjGhwJmZ6q6lpTOVj8Ks3bCCGR6irz2Q7eY8Pa/pSSnXkN5mGN6TVZ6X
+         +j3Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768840392; x=1769445192; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1768840890; x=1769445690; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WYmk9fWhdbdmEwLS9xqb5br63pURTJxhKqjK/z9PohM=;
-        b=WYKf2UZuVRWiuxpdVqMRGCrFanp8jdd9AMXt0IQejmi1df853jSJ1z+m3TKoByyCiC
-         Y4m+7orDhlvugQ86VcSmgAEoJ8mpK2zd27jXmvdWZRUCD/8sAZP8FXarUglX0Y1Pg7rM
-         1wq3LfpEb9QESy6HIKneTyktf0JuUXQKT3TAhx3Ibgel/Q5GyY/cpfYEvqOUjVPfyuJv
-         4gY4waMFfKQc5rMmw//pBgdPTl6/Myc5gZre+8fRMY0rtlhAjvqPvHR8V1uBkuXI0E4R
-         n8KwWrTobWklLDa1kBTJ9DVyEASwFXEWgbfwyCnKfrjWrCBNSV+rFcHm3iHnCv8glJJp
-         0R8g==
+        bh=fTdB35vgqJbH8V4J4HP1Mukd5M1Q72aH7//uMfZpgyU=;
+        b=Ab0Y4kSRdlCDzFDISOShNcLZDpfAcCeDBRvMi0cjAWQkJV+oRiv0css6DqzbACQwRd
+         3QH58xRjysSJXrwo/vyJS8BI3icg0//tqdqdc7tdiv0yFt43YGaicJoMqT2HZQSi9Tpr
+         +VgpXStxruBBNuK7BmmBKfEut7fdMIdnpIuMMw2Bn/Ut4URgpmZVrd1NymgfXN5lVOwO
+         DVfA7kE+ws0cPJd5q5GhICiAzb/7Zow85cmGC243uE1K9bifhPWgCHaw3G++YZlJLqE9
+         RXh4skbTnrcnUvc0HPuosOna55LWooi6u7kaX2u0TWmoyvYXWC5OTuYpfSVeYrwK5b9F
+         rzDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768840392; x=1769445192;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20230601; t=1768840890; x=1769445690;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=WYmk9fWhdbdmEwLS9xqb5br63pURTJxhKqjK/z9PohM=;
-        b=hNdyw9KDbiyn8ESWEXzQBNjmhlRmvKsSbGAgTqWoTYVFmUCk4QFYaZdDYGn7omaEdX
-         C09i2VIWT7TnwgQWXVUlyBErKJgyEiC5AtQZPmUvmeHr+U9B7aCS7yZraUHSmQeMpyv8
-         9vk6h50rNil7xL5VWU6a6UC6U5BGqLd0403Kv5fJW9NijR9ckWTD2B12NTjcgNO2oVfu
-         y3SSXGLmwy80OqJcphy8WGWNV+ObN2H4bnsW/FZZR+AsD8zxhIrz5H0zZei/ruP2NHGM
-         iD10+A80XY7srLHsno3nuNCAkQa8LbCV7sgRrIl/EwtZD9rTKiFOwPa5sbcHky0XwWZ7
-         knzQ==
-X-Gm-Message-State: AOJu0YypTcIe+HF4IdBynNMAxV2gAFr2O2WWfQxARCBViJJ9d9p+DoGo
-	StcT0tf7hr3SXMy7XC5vBiZNFeM2WTX+A8jcgoMXpXsyp9b6jjziRGVsLXcNt9gxfBFwn+dev7J
-	OUwblzaO+3ueYEEpCO9rWC7I+nBXdlyW41O7vem5Ql2+fipEYmvtalsZRVcTUNJ4AzM7f+pboL7
-	e/t4djbX6nxm+v41b7x/Yt3v3IkAf2fC6FVF9oX/em3wCZ
-X-Gm-Gg: AZuq6aKDcojtkkf0aACEHqBnbPcPiU/VZeElm8PcIpran08KyVeZNCgwZgf6IldS51W
-	LoL3lL2POBcjxtOqJufwrxsdLz5Oy7tAlloLfAt2rtyCNYYFXK/EBA6/s4+XoDvyAGvV0qzl29L
-	71es1YvDTeb/rV/czWzLGg0qiZijp/J3dYviK158R4vOKe6gRkLJH+HUPelmOi+L4+AyDFy0/Oi
-	BbJ7oMPGHbgClN7B69woqemesI72x2aocYbJ+Cv5HOGt2o2Z1+aOOLH+dw9R01qojSQp+KI14mJ
-	Zok+3fTB/SOD7SOEiA7S7G3eL8evpKtuzJ7f+WVITyIf4VHgwXJGgKCBTAkl/RuSIHS/7sG6pB6
-	imGzhMNMFTga3yw==
-X-Received: by 2002:a05:6000:26cf:b0:430:fa52:9ea9 with SMTP id ffacd0b85a97d-4356a089933mr17503094f8f.62.1768840392425;
-        Mon, 19 Jan 2026 08:33:12 -0800 (PST)
-X-Received: by 2002:a05:6000:26cf:b0:430:fa52:9ea9 with SMTP id ffacd0b85a97d-4356a089933mr17503038f8f.62.1768840391859;
-        Mon, 19 Jan 2026 08:33:11 -0800 (PST)
-Received: from thinky.redhat.com ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43569998240sm23524318f8f.43.2026.01.19.08.33.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jan 2026 08:33:11 -0800 (PST)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org,
-	ebiggers@kernel.org
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	djwong@kernel.org
-Subject: [PATCH v2 2/2] fsverity: add tracepoints
-Date: Mon, 19 Jan 2026 17:32:10 +0100
-Message-ID: <20260119163222.2937003-4-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260119163222.2937003-2-aalbersh@kernel.org>
-References: <20260119163222.2937003-2-aalbersh@kernel.org>
+        bh=fTdB35vgqJbH8V4J4HP1Mukd5M1Q72aH7//uMfZpgyU=;
+        b=XywJxgJkWZhNNtthJGExIyJFubHBak2BnxQ2rpEzLSBUKFTVL8kUVXo/ipKl8IZAlU
+         pltAFdIFkgsGpoTt/EyEo/CRU0eja+yIV+OTPKHPcaFte3YrUpj4Jax9jq89kycc2757
+         e4zIJX6RoI2CrfLn8dkIZJzN+XPJjBiyPixHZdfdI40ysapnZ2wTmHkXKGE54J/EWGEd
+         ltcxO/fs3ONA9/jQmLMk9QTNaqNe/fInADEelN/RJieAeoGoh7wWoHWYsIoGWFHbVKJl
+         qJSJtVX3AjYqZ6AEMnLL0WezK/s2jLxEt++d3/HnPf7boAk6/buDhubE4qrJFs8YGGn7
+         4WAA==
+X-Forwarded-Encrypted: i=1; AJvYcCVy917Q97Hgdz/PtIPBzVQsgPuUgv1g2d7dj2kCKXqvSWtYGk9Dzqe6kc2KomJ1gVpBHoGnAPFgyJo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDf38SMRrXOcxmYY4CYy4O0wxFkAS3XCAWCOhik3RUkq1llS8U
+	rCAoG7NCT8x7KW3No1gb81EftshTx9e+x9QVW2L1S0A9YYr/l4VBlnIF4kMb0GRge8v57kjWc9q
+	y9J+r+OFP3439cRBdPXY57ocmkc29ACc=
+X-Gm-Gg: AZuq6aIZmmi9jUY4KzkXyejHfsYchgYc7sX25i6sXmTgN+Z13ZXlor984Chn9kp06gr
+	WaBvQI+hF/ImAjWqrC54irCTUaz56VcxFl66sUQoR0PDnPyYUa3vl1ayhjRJeiUIbBQ13G3UP8O
+	GlXE9w75n6Bi32XKE+DPcENpjxM6TCVxresv7XYWznteEqqKYcbFx2IdLDxuo3fRdld8URgpIeO
+	Gxy26WdHko972AStc5RFM5OC2o40+N6TvvNENWw69YHF3JcuhhX2IgliUCyxLw1bLa70CVCY9Zz
+	dggwTj2m1HDBTdEJ7ktd9s58uUirmQ==
+X-Received: by 2002:a05:6402:518b:b0:64e:f6e1:e517 with SMTP id
+ 4fb4d7f45d1cf-65452cd98e9mr9387079a12.32.1768840889299; Mon, 19 Jan 2026
+ 08:41:29 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org> <20260119-exportfs-nfsd-v2-2-d93368f903bd@kernel.org>
+In-Reply-To: <20260119-exportfs-nfsd-v2-2-d93368f903bd@kernel.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 19 Jan 2026 17:41:16 +0100
+X-Gm-Features: AZwV_QgHvJ6NvIXON-eIYvnT5PkMvN0FHfW-0LujoZ3K-fhpCrZ1N6375iX4_4Y
+Message-ID: <CAOQ4uxjX8EcG5XssJ91u8Kn0gY9Rb0qCwnte_7j6Q6knvZ1shw@mail.gmail.com>
+Subject: Re: [PATCH v2 02/31] exportfs: add new EXPORT_OP_STABLE_HANDLES flag
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+	Hugh Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, "Theodore Ts'o" <tytso@mit.edu>, 
+	Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, Gao Xiang <xiang@kernel.org>, 
+	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
+	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, 
+	Carlos Maiolino <cem@kernel.org>, Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
+	Luis de Bethencourt <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, 
+	Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
+	Paulo Alcantara <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+	Shyam Prasad N <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
+	Joseph Qi <joseph.qi@linux.alibaba.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>, 
+	David Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jaegeuk Kim <jaegeuk@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
+	David Laight <david.laight.linux@gmail.com>, Dave Chinner <david@fromorbit.com>, 
+	Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, 
+	linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org, 
+	ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, 
+	linux-unionfs@vger.kernel.org, devel@lists.orangefs.org, 
+	ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev, 
+	linux-nilfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+	linux-mtd@lists.infradead.org, gfs2@lists.linux.dev, 
+	linux-f2fs-devel@lists.sourceforge.net, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-fs-verity previously had debug printk but it was removed. This patch
-adds trace points to similar places, as a better alternative.
+On Mon, Jan 19, 2026 at 5:27=E2=80=AFPM Jeff Layton <jlayton@kernel.org> wr=
+ote:
+>
+> At one time, nfsd could take the presence of struct export_operations to
+> be an indicator that a filesystem was exportable via NFS. Since then, a
+> lot of filesystems have grown export operations in order to provide
+> filehandle support. Some of those (e.g. kernfs, pidfs, and nsfs) are not
+> suitable for export via NFS since they lack filehandles that are
+> stable across reboot.
+>
+> Add a new EXPORT_OP_STABLE_HANDLES flag that indicates that the
+> filesystem supports perisistent filehandles,
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: fix formatting]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- MAINTAINERS                     |   1 +
- fs/verity/enable.c              |   4 +
- fs/verity/fsverity_private.h    |   2 +
- fs/verity/init.c                |   1 +
- fs/verity/verify.c              |   9 ++
- include/trace/events/fsverity.h | 143 ++++++++++++++++++++++++++++++++
- 6 files changed, 160 insertions(+)
- create mode 100644 include/trace/events/fsverity.h
+persistent still here?
+"...are stable across the lifetime of a file"?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 12f49de7fe03..17607340dfab 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10311,6 +10311,7 @@ T:	git https://git.kernel.org/pub/scm/fs/fsverity/linux.git
- F:	Documentation/filesystems/fsverity.rst
- F:	fs/verity/
- F:	include/linux/fsverity.h
-+F:	include/trace/events/fsverity.h
- F:	include/uapi/linux/fsverity.h
- 
- FT260 FTDI USB-HID TO I2C BRIDGE DRIVER
-diff --git a/fs/verity/enable.c b/fs/verity/enable.c
-index 95ec42b84797..8718d943b428 100644
---- a/fs/verity/enable.c
-+++ b/fs/verity/enable.c
-@@ -222,6 +222,8 @@ static int enable_verity(struct file *filp,
- 	if (err)
- 		goto out;
- 
-+	trace_fsverity_enable(inode, &params);
-+
- 	/*
- 	 * Start enabling verity on this file, serialized by the inode lock.
- 	 * Fail if verity is already enabled or is already being enabled.
-@@ -264,6 +266,8 @@ static int enable_verity(struct file *filp,
- 		goto rollback;
- 	}
- 
-+	trace_fsverity_tree_done(inode, vi, &params);
-+
- 	/*
- 	 * Tell the filesystem to finish enabling verity on the file.
- 	 * Serialized with ->begin_enable_verity() by the inode lock.
-diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
-index dd20b138d452..4b7ae1748f4e 100644
---- a/fs/verity/fsverity_private.h
-+++ b/fs/verity/fsverity_private.h
-@@ -161,4 +161,6 @@ static inline void fsverity_init_signature(void)
- 
- void __init fsverity_init_workqueue(void);
- 
-+#include <trace/events/fsverity.h>
-+
- #endif /* _FSVERITY_PRIVATE_H */
-diff --git a/fs/verity/init.c b/fs/verity/init.c
-index 6e8d33b50240..d65206608583 100644
---- a/fs/verity/init.c
-+++ b/fs/verity/init.c
-@@ -5,6 +5,7 @@
-  * Copyright 2019 Google LLC
-  */
- 
-+#define CREATE_TRACE_POINTS
- #include "fsverity_private.h"
- 
- #include <linux/ratelimit.h>
-diff --git a/fs/verity/verify.c b/fs/verity/verify.c
-index 86067c8b40cf..940b8b956d7e 100644
---- a/fs/verity/verify.c
-+++ b/fs/verity/verify.c
-@@ -135,6 +135,9 @@ static bool verify_data_block(struct inode *inode, struct fsverity_info *vi,
- 		/* Byte offset of the wanted hash relative to @addr */
- 		unsigned int hoffset;
- 	} hblocks[FS_VERITY_MAX_LEVELS];
-+
-+	trace_fsverity_verify_data_block(inode, params, data_pos);
-+
- 	/*
- 	 * The index of the previous level's block within that level; also the
- 	 * index of that block's hash within the current level.
-@@ -214,6 +217,9 @@ static bool verify_data_block(struct inode *inode, struct fsverity_info *vi,
- 			want_hash = _want_hash;
- 			kunmap_local(haddr);
- 			put_page(hpage);
-+			trace_fsverity_merkle_hit(inode, data_pos, hblock_idx,
-+					level,
-+					hoffset >> params->log_digestsize);
- 			goto descend;
- 		}
- 		hblocks[level].page = hpage;
-@@ -232,6 +238,9 @@ static bool verify_data_block(struct inode *inode, struct fsverity_info *vi,
- 		unsigned long hblock_idx = hblocks[level - 1].index;
- 		unsigned int hoffset = hblocks[level - 1].hoffset;
- 
-+		trace_fsverity_verify_merkle_block(inode, hblock_idx,
-+				level, hoffset >> params->log_digestsize);
-+
- 		fsverity_hash_block(params, haddr, real_hash);
- 		if (memcmp(want_hash, real_hash, hsize) != 0)
- 			goto corrupted;
-diff --git a/include/trace/events/fsverity.h b/include/trace/events/fsverity.h
-new file mode 100644
-index 000000000000..1825f87a00d6
---- /dev/null
-+++ b/include/trace/events/fsverity.h
-@@ -0,0 +1,143 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM fsverity
-+
-+#if !defined(_TRACE_FSVERITY_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_FSVERITY_H
-+
-+#include <linux/tracepoint.h>
-+
-+struct fsverity_descriptor;
-+struct merkle_tree_params;
-+struct fsverity_info;
-+
-+TRACE_EVENT(fsverity_enable,
-+	TP_PROTO(const struct inode *inode,
-+		 const struct merkle_tree_params *params),
-+	TP_ARGS(inode, params),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(u64, data_size)
-+		__field(unsigned int, block_size)
-+		__field(unsigned int, num_levels)
-+		__field(u64, tree_size)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->data_size = i_size_read(inode);
-+		__entry->block_size = params->block_size;
-+		__entry->num_levels = params->num_levels;
-+		__entry->tree_size = params->tree_size;
-+	),
-+	TP_printk("ino %lu data size %llu tree size %llu block size %u levels %u",
-+		(unsigned long) __entry->ino,
-+		__entry->data_size,
-+		__entry->tree_size,
-+		__entry->block_size,
-+		__entry->num_levels)
-+);
-+
-+TRACE_EVENT(fsverity_tree_done,
-+	TP_PROTO(const struct inode *inode, const struct fsverity_info *vi,
-+		 const struct merkle_tree_params *params),
-+	TP_ARGS(inode, vi, params),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(unsigned int, levels)
-+		__field(unsigned int, block_size)
-+		__field(u64, tree_size)
-+		__dynamic_array(u8, root_hash, params->digest_size)
-+		__dynamic_array(u8, file_digest, params->digest_size)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->levels = params->num_levels;
-+		__entry->block_size = params->block_size;
-+		__entry->tree_size = params->tree_size;
-+		memcpy(__get_dynamic_array(root_hash), vi->root_hash, __get_dynamic_array_len(root_hash));
-+		memcpy(__get_dynamic_array(file_digest), vi->file_digest, __get_dynamic_array_len(file_digest));
-+	),
-+	TP_printk("ino %lu levels %d block_size %d tree_size %lld root_hash %s digest %s",
-+		(unsigned long) __entry->ino,
-+		__entry->levels,
-+		__entry->block_size,
-+		__entry->tree_size,
-+		__print_hex_str(__get_dynamic_array(root_hash), __get_dynamic_array_len(root_hash)),
-+		__print_hex_str(__get_dynamic_array(file_digest), __get_dynamic_array_len(file_digest)))
-+);
-+
-+TRACE_EVENT(fsverity_verify_data_block,
-+	TP_PROTO(const struct inode *inode,
-+		 const struct merkle_tree_params *params,
-+		 u64 data_pos),
-+	TP_ARGS(inode, params, data_pos),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(u64, data_pos)
-+		__field(unsigned int, block_size)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->data_pos = data_pos;
-+		__entry->block_size = params->block_size;
-+	),
-+	TP_printk("ino %lu pos %lld merkle_blocksize %u",
-+		(unsigned long) __entry->ino,
-+		__entry->data_pos,
-+		__entry->block_size)
-+);
-+
-+TRACE_EVENT(fsverity_merkle_hit,
-+	TP_PROTO(const struct inode *inode, u64 data_pos,
-+		 unsigned long hblock_idx, unsigned int level,
-+		 unsigned int hidx),
-+	TP_ARGS(inode, data_pos, hblock_idx, level, hidx),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(u64, data_pos)
-+		__field(unsigned long, hblock_idx)
-+		__field(unsigned int, level)
-+		__field(unsigned int, hidx)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->data_pos = data_pos;
-+		__entry->hblock_idx = hblock_idx;
-+		__entry->level = level;
-+		__entry->hidx = hidx;
-+	),
-+	TP_printk("ino %lu data_pos %llu hblock_idx %lu level %u hidx %u",
-+		(unsigned long) __entry->ino,
-+		__entry->data_pos,
-+		__entry->hblock_idx,
-+		__entry->level,
-+		__entry->hidx)
-+);
-+
-+TRACE_EVENT(fsverity_verify_merkle_block,
-+	TP_PROTO(const struct inode *inode, unsigned long index,
-+		 unsigned int level, unsigned int hidx),
-+	TP_ARGS(inode, index, level, hidx),
-+	TP_STRUCT__entry(
-+		__field(ino_t, ino)
-+		__field(unsigned long, index)
-+		__field(unsigned int, level)
-+		__field(unsigned int, hidx)
-+	),
-+	TP_fast_assign(
-+		__entry->ino = inode->i_ino;
-+		__entry->index = index;
-+		__entry->level = level;
-+		__entry->hidx = hidx;
-+	),
-+	TP_printk("ino %lu hblock_idx %lu level %u hidx %u",
-+		(unsigned long) __entry->ino,
-+		__entry->index,
-+		__entry->level,
-+		__entry->hidx)
-+);
-+
-+#endif /* _TRACE_FSVERITY_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
--- 
-2.52.0
+> a requirement for nfs
+> export. While in there, switch to the BIT() macro for defining these
+> flags.
 
+Maybe you want to move that cleanup to patch 1 along with the
+export.rst sync? not a must.
+
+>
+> For now, the flag is not checked anywhere. That will come later after
+> we've added it to the existing filesystems that need to remain
+> exportable.
+>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  Documentation/filesystems/nfs/exporting.rst |  7 +++++++
+>  include/linux/exportfs.h                    | 16 +++++++++-------
+>  2 files changed, 16 insertions(+), 7 deletions(-)
+>
+> diff --git a/Documentation/filesystems/nfs/exporting.rst b/Documentation/=
+filesystems/nfs/exporting.rst
+> index 0583a0516b1e3a3e6a10af95ff88506cf02f7df4..0c29ee44e3484cef84d2d3d47=
+819acf172d275a3 100644
+> --- a/Documentation/filesystems/nfs/exporting.rst
+> +++ b/Documentation/filesystems/nfs/exporting.rst
+> @@ -244,3 +244,10 @@ following flags are defined:
+>      nfsd. A case in point is reexport of NFS itself, which can't be done
+>      safely without coordinating the grace period handling. Other cluster=
+ed
+>      and networked filesystems can be problematic here as well.
+> +
+> +  EXPORT_OP_STABLE_HANDLES - This filesystem provides filehandles that a=
+re
+> +    stable across the lifetime of a file. This is a hard requirement for=
+ export
+> +    via nfsd. Any filesystem that is eligible to be exported via nfsd mu=
+st
+> +    indicate this guarantee by setting this flag. Most disk-based filesy=
+stems
+> +    can do this naturally. Pseudofilesystems that are for local reportin=
+g and
+> +    control (e.g. kernfs, pidfs, nsfs) usually can't support this.
+> diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+> index f0cf2714ec52dd942b8f1c455a25702bd7e412b3..c4e0f083290e7e341342cf0b4=
+5b58fddda3af65e 100644
+> --- a/include/linux/exportfs.h
+> +++ b/include/linux/exportfs.h
+> @@ -3,6 +3,7 @@
+>  #define LINUX_EXPORTFS_H 1
+>
+>  #include <linux/types.h>
+> +#include <linux/bits.h>
+>  #include <linux/path.h>
+>
+>  struct dentry;
+> @@ -277,15 +278,16 @@ struct export_operations {
+>                              int nr_iomaps, struct iattr *iattr);
+>         int (*permission)(struct handle_to_path_ctx *ctx, unsigned int of=
+lags);
+>         struct file * (*open)(const struct path *path, unsigned int oflag=
+s);
+> -#define        EXPORT_OP_NOWCC                 (0x1) /* don't collect v3=
+ wcc data */
+> -#define        EXPORT_OP_NOSUBTREECHK          (0x2) /* no subtree check=
+ing */
+> -#define        EXPORT_OP_CLOSE_BEFORE_UNLINK   (0x4) /* close files befo=
+re unlink */
+> -#define EXPORT_OP_REMOTE_FS            (0x8) /* Filesystem is remote */
+> -#define EXPORT_OP_NOATOMIC_ATTR                (0x10) /* Filesystem cann=
+ot supply
+> +#define EXPORT_OP_NOWCC                        BIT(0) /* don't collect v=
+3 wcc data */
+> +#define EXPORT_OP_NOSUBTREECHK         BIT(1) /* no subtree checking */
+> +#define EXPORT_OP_CLOSE_BEFORE_UNLINK  BIT(2) /* close files before unli=
+nk */
+> +#define EXPORT_OP_REMOTE_FS            BIT(3) /* Filesystem is remote */
+> +#define EXPORT_OP_NOATOMIC_ATTR                BIT(4) /* Filesystem cann=
+ot supply
+>                                                   atomic attribute update=
+s
+>                                                 */
+> -#define EXPORT_OP_FLUSH_ON_CLOSE       (0x20) /* fs flushes file data on=
+ close */
+> -#define EXPORT_OP_NOLOCKS              (0x40) /* no file locking support=
+ */
+> +#define EXPORT_OP_FLUSH_ON_CLOSE       BIT(5) /* fs flushes file data on=
+ close */
+> +#define EXPORT_OP_NOLOCKS              BIT(6) /* no file locking support=
+ */
+> +#define EXPORT_OP_STABLE_HANDLES       BIT(7) /* fhs are stable across r=
+eboot */
+>         unsigned long   flags;
+>  };
+>
+>
+> --
+> 2.52.0
+>
