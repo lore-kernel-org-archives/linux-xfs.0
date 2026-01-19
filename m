@@ -1,193 +1,140 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E63213382CD;
-	Mon, 19 Jan 2026 07:45:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7812DC76D;
+	Mon, 19 Jan 2026 07:56:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768808745; cv=none; b=eOwjA/RIS97E2aveGqegR7h/KChHdQXbeC0DQ8gtxz6IcFpMrVfqqYelRwmemIZqLiJ8V7ScT5ovbxccxxQiAIKprFI7zYlpKWxToRNXXBuulK4AJwjH8l/aZLWsOkMPLhnC2nl83LoXMW1QPjM1ftCf/YNyzAhi28zb9/LFK+U=
+	t=1768809414; cv=none; b=nGQmHCcxhOC1OtLpWzn5ahbfUk81t//CLZ9qanD/L4R7I6hHBPk78uxuIddHJrSr7N1a3fHMr64trdk0R6+rM8NlcY6zgrW5TwyC5jx3N/mwK7UtOlkNT0dttlaHo4CIM6bE+LYXpiChOZ9MI60lEmY4zfcPeZCECuVw+8D9/4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768808745; c=relaxed/simple;
-	bh=fstN+ttGR1Tkx/SMD4pdGVMR3RICmjyBVfAOdypRaVs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uVVBejqckJdVfh2gYHKDjXDjBwOx4FtHYQJqtWu0ed2A8eTNvqRxwViexluzSNsZGZfjJg90TrKIRIpqtwzZlhdmTh5Nwok2NjtvIOa4ZYV06PlWSMPbZJZ6x5IFG2M9qXIslPfEnXQvmScE3CMCoEIu0YccGhr0Mzq2gB651Sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HmigF/rI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1768809414; c=relaxed/simple;
+	bh=TyODH02JlrUgOiq7qoJuRGh6ivM2P6auhUGOdg2p2XU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dlub6Yn8LhOeuZXXCskZMw3c1mDoLB+BZIj5droIrnXhNM7xiDLddtHLYuoZO14kKsxoQxx000CbVv4cOL6LYt6t1PhJKhg8ikkWj1DLKVFG8QqCY4linYtPGlkqp84iEhTvmCdIjKvyqhV2LpaTFBQWy1QdSfsnj1sFCd08Pws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dSF1IFL+; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HmigF/rI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dSF1IFL+"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Vs0qF2w8oC2H8MjhYecenftcyABjbWpdGAO4a8GAGaY=; b=HmigF/rIdev4qHiRIXdX1qGD7h
-	15u0t5OKZRJu2u29qXknxBf/H7MMB6QgyzVoBz14Qm0POs4b0OLBe6WDOXeqHaW+/I+7htf3Cz3bT
-	4GXOFox7cRwuKvQLPfbjnf5ZtZVvzvMiaEdYQhUPr+BoerXcYYwgidfiQkU5OC5QPkvrYLkrLEN5s
-	mYOoeC/FeVBABN0xmO3+waF3wxYeGL9KPfX7Vwn7ZA8RevylEOf2uOdj/E5zYHS4AM0iUa0Wh8sS/
-	3JnKH/MNzyxFH9K+BTMN16AbGwKl7xKiLupNxrAq6/HOlNY5VxTzvFUUUZ2pPJpwfxK+CPrEIHrOi
-	d6Y9anxA==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vhjxD-00000001WHG-44F0;
-	Mon, 19 Jan 2026 07:45:43 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Qu Wenruo <wqu@suse.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 14/14] xfs: use bounce buffering direct I/O when the device requires stable pages
-Date: Mon, 19 Jan 2026 08:44:21 +0100
-Message-ID: <20260119074425.4005867-15-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260119074425.4005867-1-hch@lst.de>
-References: <20260119074425.4005867-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Dkq9dFVnQ02ADyLqi7RRrcu9zIfz19y2EpNLAEqzuhU=; b=dSF1IFL+VEbufi9323VoWF6NEa
+	USB2BXBiaW7TjezbApRts+YAG9RNRYfhPamD4lev/bOGd62WvFVIL6sSe70b84ri0HQwV2wQR3fie
+	NHQfWzjRaVOmQbjja6GffvX4ybd0IoBxLkxlZm0WDdh5PD1BKJEEZN2XmKjJt0U9yUpYOoLXyNoKl
+	otc3GgIv/kotdkVdSchAlA4Bqh/5N1QYuwvhjeDy3jpLtEfduOvglzvDFa82EF8VLL3CFeM6qtHx/
+	hFOG9hVRMecn6BOFZagcxLAIBWCAy/KYZmHunHQQXYX+w/fhRGaYWCtIXaohApqoDtQ5t9IT0ZpBl
+	498p8SdQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vhk7V-00000001Wju-0c1a;
+	Mon, 19 Jan 2026 07:56:17 +0000
+Date: Sun, 18 Jan 2026 23:56:17 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chuck Lever <cel@kernel.org>, Amir Goldstein <amir73il@gmail.com>,
+	Jeff Layton <jlayton@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Hugh Dickins <hughd@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>,
+	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
+	Sandeep Dhavale <dhavale@google.com>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Chunhai Guo <guochunhai@vivo.com>, Carlos Maiolino <cem@kernel.org>,
+	Ilya Dryomov <idryomov@gmail.com>,
+	Alex Markuze <amarkuze@redhat.com>,
+	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>,
+	Luis de Bethencourt <luisbg@kernel.org>,
+	Salah Triki <salah.triki@gmail.com>,
+	Phillip Lougher <phillip@squashfs.org.uk>,
+	Steve French <sfrench@samba.org>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+	Shyam Prasad N <sprasad@microsoft.com>,
+	Bharath SM <bharathsm@microsoft.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org,
+	linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+	linux-unionfs@vger.kernel.org, devel@lists.orangefs.org,
+	ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev,
+	linux-nilfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+	linux-mtd@lists.infradead.org, gfs2@lists.linux.dev,
+	linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH 00/29] fs: require filesystems to explicitly opt-in to
+ nfsd export support
+Message-ID: <aW3joQQvz2t6xkzh@infradead.org>
+References: <20260115-exportfs-nfsd-v1-0-8e80160e3c0c@kernel.org>
+ <CAOQ4uxjOJMwv_hRVTn3tJHDLMQHbeaCGsdLupiZYcwm7M2rm3g@mail.gmail.com>
+ <d486fdb8-686c-4426-9fac-49b7dbc28765@app.fastmail.com>
+ <CAOQ4uxhnoTC6KBmRVx2xhvTXYg1hRkCJWrq2eoBQGHKC3sv3Hw@mail.gmail.com>
+ <4d9967cc-a454-46cf-909b-b8ab2d18358d@kernel.org>
+ <aWlXfBImnC_jhTw4@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aWlXfBImnC_jhTw4@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Fix direct I/O on devices that require stable pages by asking iomap
-to bounce buffer.  To support this, ioends are used for direct reads
-in this case to provide a user context for copying data back from the
-bounce buffer.
+On Fri, Jan 16, 2026 at 08:09:16AM +1100, Dave Chinner wrote:
+> > I think we can be a lot more precise about the guarantee: The file
+> > handle does not change for the life of the inode it represents. It
+> 
+> <pedantic mode engaged>
+> 
+> File handles most definitely change over the life of a /physical/
+> inode. Unlinking a file does not require ending the life of the
+> physical object that provides the persistent data store for the
+> file.
 
-This fixes qemu when used on devices using T10 protection information
-and probably other cases like iSCSI using data digests.
+> i.e. a free inode is still an -allocated, indexed inode- in the
+> filesystem, and until we physically remove it from the filesystem
+> the inode life cycle has not ended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c |  8 ++++++--
- fs/xfs/xfs_file.c | 41 ++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 44 insertions(+), 5 deletions(-)
+For other file systems like ext4 that have statically allocated
+inodes that is even more so the case.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 56a544638491..c3c1e149fff4 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -103,7 +103,7 @@ xfs_ioend_put_open_zones(
-  * IO write completion.
-  */
- STATIC void
--xfs_end_ioend(
-+xfs_end_ioend_write(
- 	struct iomap_ioend	*ioend)
- {
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-@@ -202,7 +202,11 @@ xfs_end_io(
- 			io_list))) {
- 		list_del_init(&ioend->io_list);
- 		iomap_ioend_try_merge(ioend, &tmp);
--		xfs_end_ioend(ioend);
-+		if (bio_op(&ioend->io_bio) == REQ_OP_READ)
-+			iomap_finish_ioends(ioend,
-+				blk_status_to_errno(ioend->io_bio.bi_status));
-+		else
-+			xfs_end_ioend_write(ioend);
- 		cond_resched();
- 	}
- }
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7874cf745af3..f6cc63dcf961 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -224,12 +224,34 @@ xfs_ilock_iocb_for_write(
- 	return 0;
- }
- 
-+/*
-+ * Bounce buffering dio reads need a user context to copy back the data.
-+ * Use an ioend to provide that.
-+ */
-+static void
-+xfs_dio_read_bounce_submit_io(
-+	const struct iomap_iter	*iter,
-+	struct bio		*bio,
-+	loff_t			file_offset)
-+{
-+	iomap_init_ioend(iter->inode, bio, file_offset, IOMAP_IOEND_DIRECT);
-+	bio->bi_end_io = xfs_end_bio;
-+	submit_bio(bio);
-+}
-+
-+static const struct iomap_dio_ops xfs_dio_read_bounce_ops = {
-+	.submit_io	= xfs_dio_read_bounce_submit_io,
-+	.bio_set	= &iomap_ioend_bioset,
-+};
-+
- STATIC ssize_t
- xfs_file_dio_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
- 	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
-+	unsigned int		dio_flags = 0;
-+	const struct iomap_dio_ops *dio_ops = NULL;
- 	ssize_t			ret;
- 
- 	trace_xfs_file_direct_read(iocb, to);
-@@ -242,7 +264,12 @@ xfs_file_dio_read(
- 	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
- 	if (ret)
- 		return ret;
--	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0, NULL, 0);
-+	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
-+		dio_ops = &xfs_dio_read_bounce_ops;
-+		dio_flags |= IOMAP_DIO_BOUNCE;
-+	}
-+	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, dio_ops, dio_flags,
-+			NULL, 0);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	return ret;
-@@ -703,6 +730,8 @@ xfs_file_dio_write_aligned(
- 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 		iolock = XFS_IOLOCK_SHARED;
- 	}
-+	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-+		dio_flags |= IOMAP_DIO_BOUNCE;
- 	trace_xfs_file_direct_write(iocb, from);
- 	ret = iomap_dio_rw(iocb, from, ops, dops, dio_flags, ac, 0);
- out_unlock:
-@@ -750,6 +779,7 @@ xfs_file_dio_write_atomic(
- {
- 	unsigned int		iolock = XFS_IOLOCK_SHARED;
- 	ssize_t			ret, ocount = iov_iter_count(from);
-+	unsigned int		dio_flags = 0;
- 	const struct iomap_ops	*dops;
- 
- 	/*
-@@ -777,8 +807,10 @@ xfs_file_dio_write_atomic(
- 	}
- 
- 	trace_xfs_file_direct_write(iocb, from);
--	ret = iomap_dio_rw(iocb, from, dops, &xfs_dio_write_ops,
--			0, NULL, 0);
-+	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-+		dio_flags |= IOMAP_DIO_BOUNCE;
-+	ret = iomap_dio_rw(iocb, from, dops, &xfs_dio_write_ops, dio_flags,
-+			NULL, 0);
- 
- 	/*
- 	 * The retry mechanism is based on the ->iomap_begin method returning
-@@ -867,6 +899,9 @@ xfs_file_dio_write_unaligned(
- 	if (flags & IOMAP_DIO_FORCE_WAIT)
- 		inode_dio_wait(VFS_I(ip));
- 
-+	if (mapping_stable_writes(iocb->ki_filp->f_mapping))
-+		flags |= IOMAP_DIO_BOUNCE;
-+
- 	trace_xfs_file_direct_write(iocb, from);
- 	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
- 			   &xfs_dio_write_ops, flags, NULL, 0);
--- 
-2.47.3
+> IOWs, the physical (persistent) inode lifetime can span the lifetime
+> of -many- files. However, the filesystem guarantees that the handle
+> generated for that inode is different for each file it represents
+> over the whole inode life time.
+> 
+> Hence I think that file handle stability/persistence needs to be
+> defined in terms of -file lifetimes-, not the lifetimes of the
+> filesystem objects implement the file's persistent data store.
+
+Agreed, although I bet that is what most folks think of for the
+inode - not a physical place on disk, but an object that gets
+invalidated on the last close after unlink.  Either way, that rules
+do need to be written down clearly.
 
