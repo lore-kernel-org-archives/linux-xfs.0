@@ -1,339 +1,53 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9856337BBF;
-	Mon, 19 Jan 2026 07:44:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F5B271A6D
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 07:44:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768808688; cv=none; b=RfeO1ZjKWipr+qsIXHF3dqq7kGcJ6fbiICD2r8KLybB0ldAPfVhJKGXqLK+Cwd3AOs1oNuMZAwelP1vUdqsMNEEqaXqjY8OxLPPzXtiei1danAD0EoNY6EZbQeXpqMnAsLHci1VovCkBuR9dVIZm3vmaCnR4FJoxqe0qtmvMDPQ=
+	t=1768808688; cv=none; b=shmdGstJU7pSkHJo4PGMhfMGK7L//yJQIo4WEmTn8WprevekD2l8x1ZBgkvsMf4PAE9+cKriJran5nH0AKnS0xfTUA/7xRFW8lPvekKrEyp14S7Icwg59R1/DYe57qNMu99GvqheTST5+2AeWed4ULc0apCR8An//6B6pltImsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768808688; c=relaxed/simple;
-	bh=HWZwGCXofkm3Jw7LjMx9onAwREW++4cFLB0Kr1r3fqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bVLOQ0x4qTpi+t48QphkwAGGE8gEW7PcBB7ASPv7w4mGrSK3yTQNfA5XsM4vNlFs4Ha8b4YsGtE9EikZHAShjPFlRCDQ+6l5tUnDG7y6VnLCMCBt/EmNld07ADsCLo+IHA5tq0IO7YSa4jkaFdGvsgWkl7kbQBZSmzvsMvf+H8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Cm9lFsaS; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sPs+blG06UDIU3BoMemO5nT3wU3NV+pqJyM+4AbiuwMgXA7h6ZwoiK/v3iy7CveEQSGipMFd/Q4ZZuEFW5SV3d0c2NjjJY/L5cJ1rumNMYGc5HsppL/QfAYM17m/zKIwsVaCGmOipowT+U92Btf97f/Nlpa0ESMgrgRslPzb9ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KGVb0T6M; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Cm9lFsaS"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KGVb0T6M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=+Nm9zyqzmAYI7shtLnBD5GEhoUKOhGSCb/FCXLXxqB8=; b=Cm9lFsaSjOC5nvo8gC3nbxvyLB
-	USe7WBzsBTPiQIS78qRklEZ+2GZX43I2C944Xf7QFl4TGjyiXv1JW8sdwDkxI2MYk7BqxVaG0pnj8
-	bnh4bLJsXHCUs/rCvTe/OgKzH8OJjNpOREVHjrXFGP0gX46gH9/U4VobdJPZLcx7cPPQkndwC4J6O
-	9X326Juyz9GVI11DVbhegtGOIm9yBg5sxO/0wlSQK+tQmsICZO2tPcqYN7ruZPwF24IiDD+gZV8HV
-	IRvJz4Aib18zJZX3n/DhcNYdtvJPOhtbp6qncNNLXJQQkj90Bm3K3B6oYoOxtPRqpbWcK1TB/42AA
-	6k8faxgQ==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vhjwH-00000001WA9-3gjP;
-	Mon, 19 Jan 2026 07:44:42 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Qu Wenruo <wqu@suse.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 03/14] iov_iter: extract a iov_iter_extract_bvecs helper from bio code
-Date: Mon, 19 Jan 2026 08:44:10 +0100
-Message-ID: <20260119074425.4005867-4-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260119074425.4005867-1-hch@lst.de>
-References: <20260119074425.4005867-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=; b=KGVb0T6M+5PgFPSB/YbJNt2LFA
+	UzfpWnW154k9VQ23ZOxFEFgOSs2Wf9pnK6jCkMqS4CcYzQXoEgnpLMXtuN6rIeRRviSvYomXVZjA9
+	FXoPHefN82ZD4xXv4l9SvonGwJGY2JWO6B1Sj4L9slZaUlmvsswN6u9qTRcksnNnk2ACVZQqbPgx0
+	niR2MeWXrdC3x4D+gO0+qDAEigRLgG4AcHdPXjySLl5otmC1vCyrunHmBn2C9ouyBfmjT4UQrymfW
+	Q7vkIvjDMQZAQ6xRfeEiL0T52xWpfOaJWWVaGjpSNSnoddoXlVJP/UAZmRfnJd7/CY50bBccK8u9w
+	r6hLTRoQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vhjwK-00000001WAu-1XBk;
+	Mon, 19 Jan 2026 07:44:44 +0000
+Date: Sun, 18 Jan 2026 23:44:44 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
+Cc: linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] Monthly xfs report (Oct 2025)
+Message-ID: <aW3g7G_dWk4cbx0_@infradead.org>
+References: <6901e360.050a0220.32483.0208.GAE@google.com>
+ <aQMPqDAxyM3i3pQk@infradead.org>
+ <aQMbZoAAVWxxx6wc@infradead.org>
+ <aW3J5Cc3ezll_601@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aW3J5Cc3ezll_601@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Massage __bio_iov_iter_get_pages so that it doesn't need the bio, and
-move it to lib/iov_iter.c so that it can be used by block code for
-other things than filling a bio and by other subsystems like netfs.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/bio.c         | 120 +++++++-------------------------------------
- include/linux/uio.h |   3 ++
- lib/iov_iter.c      |  98 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 119 insertions(+), 102 deletions(-)
-
-diff --git a/block/bio.c b/block/bio.c
-index 46ff33f4de04..12cd3c5f6d6d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1172,102 +1172,6 @@ void bio_iov_bvec_set(struct bio *bio, const struct iov_iter *iter)
- 	bio_set_flag(bio, BIO_CLONED);
- }
- 
--static unsigned int get_contig_folio_len(struct page **pages,
--					 unsigned int *num_pages, size_t left,
--					 size_t offset)
--{
--	struct folio *folio = page_folio(pages[0]);
--	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, left);
--	unsigned int max_pages, i;
--	size_t folio_offset, len;
--
--	folio_offset = PAGE_SIZE * folio_page_idx(folio, pages[0]) + offset;
--	len = min(folio_size(folio) - folio_offset, left);
--
--	/*
--	 * We might COW a single page in the middle of a large folio, so we have
--	 * to check that all pages belong to the same folio.
--	 */
--	left -= contig_sz;
--	max_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
--	for (i = 1; i < max_pages; i++) {
--		size_t next = min_t(size_t, PAGE_SIZE, left);
--
--		if (page_folio(pages[i]) != folio ||
--		    pages[i] != pages[i - 1] + 1)
--			break;
--		contig_sz += next;
--		left -= next;
--	}
--
--	*num_pages = i;
--	return contig_sz;
--}
--
--#define PAGE_PTRS_PER_BVEC     (sizeof(struct bio_vec) / sizeof(struct page *))
--
--/**
-- * __bio_iov_iter_get_pages - pin user or kernel pages and add them to a bio
-- * @bio: bio to add pages to
-- * @iter: iov iterator describing the region to be mapped
-- *
-- * Extracts pages from *iter and appends them to @bio's bvec array.  The pages
-- * will have to be cleaned up in the way indicated by the BIO_PAGE_PINNED flag.
-- * For a multi-segment *iter, this function only adds pages from the next
-- * non-empty segment of the iov iterator.
-- */
--static ssize_t __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
--{
--	iov_iter_extraction_t extraction_flags = 0;
--	unsigned short nr_pages = bio->bi_max_vecs - bio->bi_vcnt;
--	unsigned short entries_left = bio->bi_max_vecs - bio->bi_vcnt;
--	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
--	struct page **pages = (struct page **)bv;
--	ssize_t size;
--	unsigned int i = 0;
--	size_t offset, left, len;
--
--	/*
--	 * Move page array up in the allocated memory for the bio vecs as far as
--	 * possible so that we can start filling biovecs from the beginning
--	 * without overwriting the temporary page array.
--	 */
--	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
--	pages += entries_left * (PAGE_PTRS_PER_BVEC - 1);
--
--	if (bio->bi_bdev && blk_queue_pci_p2pdma(bio->bi_bdev->bd_disk->queue))
--		extraction_flags |= ITER_ALLOW_P2PDMA;
--
--	size = iov_iter_extract_pages(iter, &pages,
--				      UINT_MAX - bio->bi_iter.bi_size,
--				      nr_pages, extraction_flags, &offset);
--	if (unlikely(size <= 0))
--		return size ? size : -EFAULT;
--
--	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
--	for (left = size; left > 0; left -= len) {
--		unsigned int nr_to_add;
--
--		if (bio->bi_vcnt > 0) {
--			struct bio_vec *prev = &bio->bi_io_vec[bio->bi_vcnt - 1];
--
--			if (!zone_device_pages_have_same_pgmap(prev->bv_page,
--					pages[i]))
--				break;
--		}
--
--		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
--		__bio_add_page(bio, pages[i], len, offset);
--		i += nr_to_add;
--		offset = 0;
--	}
--
--	iov_iter_revert(iter, left);
--	while (i < nr_pages)
--		bio_release_page(bio, pages[i++]);
--	return size - left;
--}
--
- /*
-  * Aligns the bio size to the len_align_mask, releasing excessive bio vecs that
-  * __bio_iov_iter_get_pages may have inserted, and reverts the trimmed length
-@@ -1325,7 +1229,7 @@ static int bio_iov_iter_align_down(struct bio *bio, struct iov_iter *iter,
- int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
- 			   unsigned len_align_mask)
- {
--	ssize_t ret;
-+	iov_iter_extraction_t flags = 0;
- 
- 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
- 		return -EIO;
-@@ -1338,14 +1242,26 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter,
- 
- 	if (iov_iter_extract_will_pin(iter))
- 		bio_set_flag(bio, BIO_PAGE_PINNED);
-+	if (bio->bi_bdev && blk_queue_pci_p2pdma(bio->bi_bdev->bd_disk->queue))
-+		flags |= ITER_ALLOW_P2PDMA;
- 
- 	do {
--		ret = __bio_iov_iter_get_pages(bio, iter);
--	} while (ret > 0 && iov_iter_count(iter) && !bio_full(bio, 0));
-+		ssize_t ret;
-+
-+		ret = iov_iter_extract_bvecs(iter, bio->bi_io_vec,
-+				UINT_MAX - bio->bi_iter.bi_size, &bio->bi_vcnt,
-+				bio->bi_max_vecs, flags);
-+		if (ret <= 0) {
-+			if (!bio->bi_vcnt)
-+				return ret;
-+			break;
-+		}
-+		bio->bi_iter.bi_size += ret;
-+	} while (iov_iter_count(iter) && !bio_full(bio, 0));
- 
--	if (bio->bi_vcnt)
--		return bio_iov_iter_align_down(bio, iter, len_align_mask);
--	return ret;
-+	if (is_pci_p2pdma_page(bio->bi_io_vec->bv_page))
-+		bio->bi_opf |= REQ_NOMERGE;
-+	return bio_iov_iter_align_down(bio, iter, len_align_mask);
- }
- 
- static void submit_bio_wait_endio(struct bio *bio)
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 5b127043a151..a9bc5b3067e3 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -389,6 +389,9 @@ ssize_t iov_iter_extract_pages(struct iov_iter *i, struct page ***pages,
- 			       size_t maxsize, unsigned int maxpages,
- 			       iov_iter_extraction_t extraction_flags,
- 			       size_t *offset0);
-+ssize_t iov_iter_extract_bvecs(struct iov_iter *iter, struct bio_vec *bv,
-+		size_t max_size, unsigned short *nr_vecs,
-+		unsigned short max_vecs, iov_iter_extraction_t extraction_flags);
- 
- /**
-  * iov_iter_extract_will_pin - Indicate how pages from the iterator will be retained
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 896760bad455..545250507f08 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -1845,3 +1845,101 @@ ssize_t iov_iter_extract_pages(struct iov_iter *i,
- 	return -EFAULT;
- }
- EXPORT_SYMBOL_GPL(iov_iter_extract_pages);
-+
-+static unsigned int get_contig_folio_len(struct page **pages,
-+		unsigned int *num_pages, size_t left, size_t offset)
-+{
-+	struct folio *folio = page_folio(pages[0]);
-+	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, left);
-+	unsigned int max_pages, i;
-+	size_t folio_offset, len;
-+
-+	folio_offset = PAGE_SIZE * folio_page_idx(folio, pages[0]) + offset;
-+	len = min(folio_size(folio) - folio_offset, left);
-+
-+	/*
-+	 * We might COW a single page in the middle of a large folio, so we have
-+	 * to check that all pages belong to the same folio.
-+	 */
-+	left -= contig_sz;
-+	max_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
-+	for (i = 1; i < max_pages; i++) {
-+		size_t next = min_t(size_t, PAGE_SIZE, left);
-+
-+		if (page_folio(pages[i]) != folio ||
-+		    pages[i] != pages[i - 1] + 1)
-+			break;
-+		contig_sz += next;
-+		left -= next;
-+	}
-+
-+	*num_pages = i;
-+	return contig_sz;
-+}
-+
-+#define PAGE_PTRS_PER_BVEC     (sizeof(struct bio_vec) / sizeof(struct page *))
-+
-+/**
-+ * iov_iter_extract_bvecs - Extract bvecs from an iterator
-+ * @iter:	the iterator to extract from
-+ * @bv:		bvec return array
-+ * @max_size:	maximum size to extract from @iter
-+ * @nr_vecs:	number of vectors in @bv (on in and output)
-+ * @max_vecs:	maximum vectors in @bv, including those filled before calling
-+ * @extraction_flags: flags to qualify request
-+ *
-+ * Like iov_iter_extract_pages(), but returns physically contiguous ranges
-+ * contained in a single folio as a single bvec instead of multiple entries.
-+ *
-+ * Returns the number of bytes extracted when successful, or a negative errno.
-+ * If @nr_vecs was non-zero on entry, the number of successfully extracted bytes
-+ * can be 0.
-+ */
-+ssize_t iov_iter_extract_bvecs(struct iov_iter *iter, struct bio_vec *bv,
-+		size_t max_size, unsigned short *nr_vecs,
-+		unsigned short max_vecs, iov_iter_extraction_t extraction_flags)
-+{
-+	unsigned short entries_left = max_vecs - *nr_vecs;
-+	unsigned short nr_pages, i = 0;
-+	size_t left, offset, len;
-+	struct page **pages;
-+	ssize_t size;
-+
-+	/*
-+	 * Move page array up in the allocated memory for the bio vecs as far as
-+	 * possible so that we can start filling biovecs from the beginning
-+	 * without overwriting the temporary page array.
-+	 */
-+	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
-+	pages = (struct page **)(bv + *nr_vecs) +
-+		entries_left * (PAGE_PTRS_PER_BVEC - 1);
-+
-+	size = iov_iter_extract_pages(iter, &pages, max_size, entries_left,
-+			extraction_flags, &offset);
-+	if (unlikely(size <= 0))
-+		return size ? size : -EFAULT;
-+
-+	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
-+	for (left = size; left > 0; left -= len) {
-+		unsigned int nr_to_add;
-+
-+		if (*nr_vecs > 0 &&
-+		    !zone_device_pages_have_same_pgmap(bv[*nr_vecs - 1].bv_page,
-+				pages[i]))
-+			break;
-+
-+		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
-+		bvec_set_page(&bv[*nr_vecs], pages[i], len, offset);
-+		i += nr_to_add;
-+		(*nr_vecs)++;
-+		offset = 0;
-+	}
-+
-+	iov_iter_revert(iter, left);
-+	if (iov_iter_extract_will_pin(iter)) {
-+		while (i < nr_pages)
-+			unpin_user_page(pages[i++]);
-+	}
-+	return size - left;
-+}
-+EXPORT_SYMBOL_GPL(iov_iter_extract_bvecs);
--- 
-2.47.3
-
+#syz test git://git.infradead.org/users/hch/xfs.git xfs-buf-hash
