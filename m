@@ -1,70 +1,54 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E88DE29BD95;
-	Mon, 19 Jan 2026 09:03:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA59333ADBD
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 09:03:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768813405; cv=none; b=s1u/cSXJVcsg8wdiKevLePIh3B3IkHvg2ccUoDC7S2j0Amtn7/NdY1PZ6XV7RFvfBuCehVUQcEg2WKT5iy9fZMp+TVVj56a41RbYryATeXGJe7ODeieBk8o1kWr0Ncw1CGQOieHrd/6wXDMm4c5K/OnFY+IhOa7C+uREgYmq8WA=
+	t=1768813429; cv=none; b=hya0/2nOYrXRt/S2KU8ZH0mrdw+GDLZHstauowwOpg1qpTr9+wagHSs4n50cT88FagiJK7emYHW0vLTzqqemzy8uag68M4KNyoYzhtaN7QNwAAuTogTu9Z/bjZqH6VqRtID2rIPD7JowwD5Q6garY6mHkXN7a26ObTAVDTHroj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768813405; c=relaxed/simple;
-	bh=IOAdp2mvo3xJ64KuYq6nPuZwyvznxy49ypaVdGZETYs=;
+	s=arc-20240116; t=1768813429; c=relaxed/simple;
+	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mz6GNzBoaiHQcKmjYKLBNdOWIN3a7z2NtwuMV4DI4WmbTz21W04LrDuEGqRkynvidxZHGOcQ0od5OmSq+XgTZUgIQc6TbuLGH0msa10p8w9vomdpxR+eLiy64qX+K94uUC8yb+L+Ayq0VbBp134lh4WM6ten8TdDp29nHZxufow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NlCbga6g; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gp+wLEyzLyZFpeiFx4+St/5L57/ZcZJW5zQ+0RKsYUqVaM+uZnmlk1KtxKQOYug6UvlGM9hFTYRERExIxvh37nrz7RQO4saBe415iX8W6IPLH83VKToxl8Jm3jWiiGiNdmd24Ba8FAb42oUYLcvrTcS/Sn5BGJ1CUE6wVnku4/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=O7WBAqT8; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NlCbga6g"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O7WBAqT8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=VVF9Vwa2+xdjizaQLVvAuXkqoIAbS9mFpprw0iio9P8=; b=NlCbga6gKWsJh5pOcNpQ0oNZOy
-	AXjMIrGo7IT6Epnb3nS/kaJnr5Db/bYTNV9xfpkJB/4rsSj6fkCzWO7dLtTxitngNd3QAeKCJrDkd
-	zej/EyHbazj5LKUREibnBsfAxaIekA25id/UzNnpg5sVptQ4LWEz6GMGFU5o4XzqmZ+5S3kFCvrPa
-	QrE2HXbkOZUbhQHeQRAi/IYJkaZvnpfR2GaIFKidkGgjwLYccWOgpAXMQIMoUKoTIcbnRIVs55uYB
-	p4S7b9bH91/d7UtfDbLXE1kQNnVg8pRlLKgN5GSkO6Y6jiD70q7PwqWuBFfrxPh+BK5T2o1CAPGf2
-	orWUWBdA==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=I3u2Y6LR7bxaQuWTJZmWXONfo6WHa78LcNsuLgqcYbY=; b=O7WBAqT8k9on1r/cAw8lBLzwaG
+	sSfwnpgmVMHKKDDnXnv3rPjGLySpN+7qa6yUBbcTmR29eu6JmazGgMTqQQhcP3pYPCgd2Y3V49VkB
+	4/IU3XzlJs4YD3xUiGjAgHm/YhJfvBEEYtEoQ1BrkTsYIC/ae5yyB899S+3HsHcotYmV/j4bVY+Hp
+	V4ohkXJeBatMs8wzc/U3dXBDykgsPeUzVrPxWX0QlwApcq3Xy7Ds1tbNAPqhCk8jezMU8ww1MTREO
+	nBq11F4fI0jKzyV3bKYeC/ngsqkqOFBn3dzsbPUfcZ21vgGfMBqJfUjmNhVoqZxBwsAi5hxe1KliE
+	3WU5L+Yw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vhlAO-00000001bDv-36GG;
-	Mon, 19 Jan 2026 09:03:20 +0000
-Date: Mon, 19 Jan 2026 01:03:20 -0800
+	id 1vhlAo-00000001bFV-11RY;
+	Mon, 19 Jan 2026 09:03:46 +0000
+Date: Mon, 19 Jan 2026 01:03:46 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: Aleksandr Nogikh <nogikh@google.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	syzbot <syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com, Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_buf_rele
- (4)
-Message-ID: <aW3zWKJ4-ThpwT7Y@infradead.org>
-References: <aW3g7G_dWk4cbx0_@infradead.org>
- <696dec7b.a70a0220.34546f.043a.GAE@google.com>
- <aW3tX6aAAONC6zyr@infradead.org>
- <CANp29Y6PLo-Lr81SWp4qK9avLKpTGhXMAUDrZe3OYYgfWuaKVw@mail.gmail.com>
+To: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
+Cc: linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] Monthly xfs report (Oct 2025)
+Message-ID: <aW3zct8OHdx5QJpG@infradead.org>
+References: <6901e360.050a0220.32483.0208.GAE@google.com>
+ <aQMPqDAxyM3i3pQk@infradead.org>
+ <aQMbZoAAVWxxx6wc@infradead.org>
+ <aW3J5Cc3ezll_601@infradead.org>
+ <aW3g7G_dWk4cbx0_@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANp29Y6PLo-Lr81SWp4qK9avLKpTGhXMAUDrZe3OYYgfWuaKVw@mail.gmail.com>
+In-Reply-To: <aW3g7G_dWk4cbx0_@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jan 19, 2026 at 09:53:18AM +0100, Aleksandr Nogikh wrote:
-> On Mon, Jan 19, 2026 at 9:37 AM Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > So I'm not sure what this test does that it always triggers the lockdep
-> > keys, but that makes it impossible to validate the original xfs report.
-> >
-> > Is there a way to force running syzbot reproducers without lockdep?
-> 
-> Not directly, but you could explicitly modify lockdep's Kconfig in
-> your test patch to disable lockdep entirely.
-
-Already, I'll give it a try.
-
+#syz test git://git.infradead.org/users/hch/xfs.git xfs-buf-hash
