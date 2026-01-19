@@ -1,153 +1,116 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68CB233F8DD;
-	Mon, 19 Jan 2026 08:37:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE48345734
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 08:40:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768811873; cv=none; b=WuzOKi7U7Z9bGcwKkHLFoUXtlDJAouzXf2okDaYN7nIP8cHP9lyW652HYRk7a4W4y999gXTMvXjRzEn+EQgUjPhKX3IVQ5fKz4ZQ9c2CP64+QGqsL7jffBhumYxB52eX11gQ7y+wAWBYs03ryzD/yj4Sk//mWfpnl5B9flE0ea8=
+	t=1768812026; cv=none; b=YCVsR2GT94U+DcOXQ0TEHxPUCCEX1qaE7N7UCxWzq2oHIcmJd7GOfiFrKN4XG36PyGJ0nu093eeR4pvGI9dsS1BklULViEISr5cWAS5lzxdYhxnyrKjVjycaxoDZyYdvEZ7DYjDO6h1XjnIrCSLsfyOP7u8HMXCvUKyTGihYhUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768811873; c=relaxed/simple;
-	bh=nvXSpZVPmSNqCcksf0Mb/Bj2GLTvT7YypJ9jo8WmzXg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g9LNUEnH2eXQq4Ep/8YzqcyKr67P/57zPCa0uCZE1DyJgi1KPEFIibQ/F3bQK7RsTyxCWj0UFdVYPR/cwcPxMaq0oaEEzoKDe7HcvTz8e8g7hwfd7jv716lZ461nUrj6s+hEg1nhLUi3TWoEPw60YY2x9SQzMbWv19m48tCKovc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3MgsS1SC; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1768812026; c=relaxed/simple;
+	bh=KJoYOa5K18nqNKCWxkYAOdRPH4EyPY3p5tSvazTt+nc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Hx6xCs9ydWB3VpWr7bfr2reELP36xiV6xfKFPAMnFCfSKMWDK93ERR5RjJtMKxjDkzHBHzJAeM479+ATEUDgEjr1kGn0916aw+IAb7tvz8pJk9mjRUu74Pg+1mIop+kkxtqCqiNgDsazUq6farlJD6o20j3kjOyWMVddJ9zLgJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UuxGl/Kv; arc=none smtp.client-ip=209.85.208.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3MgsS1SC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=IQ6V0ML5fLmW+MdiPRFQIxhtChAdE9d0p5jwT47svtk=; b=3MgsS1SCbWrJEpGUtrvcV+HCnS
-	4SphTsmSPiJVjgqpGS+Un+r4AjPTbaLp4JFeQKOEWQAAwDc0oRzY6N6IecIwXKiSib53y55T1MIru
-	xs+wzjPJNK/Yx+BQTWMWgmbxDox3AJ3A7nvS26AbfXFy3GBFm1x6yNRjwO+X8W+w0Lx+wlOVPgWea
-	xGptrTJIv5v/FwlGfF1otbPIvEYnJVwuagPclmrYqdJItg4bC4/0UTJgdWMOFJEk9IEcvj/Zg43J9
-	aqtigqOZx/wbZNXjmn+lsW8cDPi6XhpTPPozij3jCd/sdGQdf2/WQhGYb6i2TXsOdSe1RtPxZqN6z
-	EKZwMEPQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vhklj-00000001ZGJ-3WwX;
-	Mon, 19 Jan 2026 08:37:51 +0000
-Date: Mon, 19 Jan 2026 00:37:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: syzbot <syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com>
-Cc: hch@infradead.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_buf_rele
- (4)
-Message-ID: <aW3tX6aAAONC6zyr@infradead.org>
-References: <aW3g7G_dWk4cbx0_@infradead.org>
- <696dec7b.a70a0220.34546f.043a.GAE@google.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UuxGl/Kv"
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-382fa663249so39093511fa.0
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 00:40:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768812015; x=1769416815; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KJoYOa5K18nqNKCWxkYAOdRPH4EyPY3p5tSvazTt+nc=;
+        b=UuxGl/Kv2qbGAjCEuVUsVj/4oQWOPGu5XmvQpfk1Drz9vatodzGETG9e+31hfYmt3n
+         ShdJ9cGy+7c9CgwMx4qNCOsEOk9b7rrbcW9sllSEaJR/ulmbCFLctH/tiveRVhVmQJZj
+         ZrQS/De/lTOaQvMCUNZ46O3ZwPI2hOtJTSCk476OkZmTVTYeDoCcH0QcYd74HbrVYGP5
+         dRxjA25g4F4+RYExRaQ85YPkw0VdL1A/Nqoc3cVOU/36LCP0N30pJwOygCxiPuv4wfnm
+         BmbGAhPj2faOMfQG3X54EB1BGuZFqNEdx1RUYWOLd+pHmqzJSVSsnNIpi2nsXvu5e3ka
+         PSZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768812015; x=1769416815;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=KJoYOa5K18nqNKCWxkYAOdRPH4EyPY3p5tSvazTt+nc=;
+        b=hPdhcozx/syjUHW/i4yGN7d4UtjBijwcgB6AskNXdaM1aAHYEHVNxR6tGgLZoC6/Ih
+         +JKjnnFN2mFlUiEKgCDQ+VK4UgeT5hzJRlWTGoRLDJmrtSHAHpLEHnU5HKFhBt1Zp7sc
+         XBtC0Htljiwi/fzf7+HVELyF7RtGgQdMI7sX/UedDm09JSgy2A6rVX+CCdaEVVUowe0p
+         Y3+JAazb3ZGcBH8Y0wC3TfDy3wnyo3BakX0aHPHlErotXjbpDZYfHiN2h49aUjGkA2uy
+         qe32RD7GYKZ8+R/iAVwbJ9kGvbOnZqoM5JlXxdwFbtm+FbLJy8xbFa3MrroyZqqbTuyr
+         ibgA==
+X-Forwarded-Encrypted: i=1; AJvYcCXMbawECrnNuHaZRliy9O7YX+xQqyZWtovNQqa79WmY7gQ7ocSbgvQgR9CawIP+ZUEfujfDZgnSTwU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYwIGC8lKM7dSaIqP0Ac7p7mDyQkV8byjBOdVtPvqrk804GNTx
+	GtVcxVyEEfq/3KK4X+7hiTO3o0Jd4+awClgV39xloTfJ0iTCVnSlTEeiJUMAxQcYKAwdKvX3UF+
+	SNbH7kDuyLCOa51QInXW1nNthFQBEHhQ=
+X-Gm-Gg: AY/fxX5kn/X8lL2oJDP9vb4jZqwWAQUM5VFiqQzduDdhqqk5kMNNgnUzVkFo0TXHGd1
+	xkmZ6F8i7ZpHdRA+1lNg3mqKGrH1WW0DiVA6rULv+kQtnWlm+ilwduNVYuWiytY24g3iu+jrpOk
+	M3xryMGkKwV8UKxFsR+awOIc/LoiQ/rPKUu46YYQ8toEbmVuURk57vaL5p9HZ/7aURpgtSxUfKe
+	GtbjQHlC4hj8JR6//6jO/qLKTJFDo7sS37iGq6zu1aqbL/ZuuYHnFzIpQ/qIkwPg4cd61wv
+X-Received: by 2002:a05:651c:31d3:b0:37b:9ab6:a071 with SMTP id
+ 38308e7fff4ca-383842a1f56mr38777111fa.28.1768812014411; Mon, 19 Jan 2026
+ 00:40:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <696dec7b.a70a0220.34546f.043a.GAE@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20260115-exportfs-nfsd-v1-0-8e80160e3c0c@kernel.org> <20260115-exportfs-nfsd-v1-20-8e80160e3c0c@kernel.org>
+In-Reply-To: <20260115-exportfs-nfsd-v1-20-8e80160e3c0c@kernel.org>
+From: Ryusuke Konishi <konishi.ryusuke@gmail.com>
+Date: Mon, 19 Jan 2026 17:39:57 +0900
+X-Gm-Features: AZwV_QgvoiJk-4c_7XszNQLNhAbjR94vrEkk8toY4eDKXl6u9TqMllUY3n06aqo
+Message-ID: <CAKFNMomS-8MMAjy8yuFwzuLBuQQA8r7gPJeJh1ci6RvVc9u4EA@mail.gmail.com>
+Subject: Re: [PATCH 20/29] nilfs2: add EXPORT_OP_STABLE_HANDLES flag to export operations
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+	Amir Goldstein <amir73il@gmail.com>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	"Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, 
+	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
+	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, 
+	Carlos Maiolino <cem@kernel.org>, Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
+	Luis de Bethencourt <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, 
+	Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
+	Paulo Alcantara <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+	Shyam Prasad N <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
+	Joseph Qi <joseph.qi@linux.alibaba.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
+	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>, 
+	David Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
+	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	samba-technical@lists.samba.org, linux-unionfs@vger.kernel.org, 
+	devel@lists.orangefs.org, ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev, 
+	linux-nilfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+	linux-mtd@lists.infradead.org, gfs2@lists.linux.dev, 
+	linux-f2fs-devel@lists.sourceforge.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-So I'm not sure what this test does that it always triggers the lockdep
-keys, but that makes it impossible to validate the original xfs report.
+On Fri, Jan 16, 2026 at 2:50=E2=80=AFAM Jeff Layton wrote:
+>
+> Add the EXPORT_OP_STABLE_HANDLES flag to nilfs2 export operations to indi=
+cate
+> that this filesystem can be exported via NFS.
+>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-Is there a way to force running syzbot reproducers without lockdep?
+Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>
 
-Note that I've also had it running locally for quite a while, an even
-with lockdep enabled I'm somehow not hitting the lockdep splat.
-Although that is using my normal debug config and not the provided
-one.
-
-On Mon, Jan 19, 2026 at 12:34:03AM -0800, syzbot wrote:
-> Hello,
-> 
-> syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-> BUG: MAX_LOCKDEP_KEYS too low!
-> 
-> BUG: MAX_LOCKDEP_KEYS too low!
-> turning off the locking correctness validator.
-> CPU: 1 UID: 0 PID: 7123 Comm: syz-executor Not tainted syzkaller #0 PREEMPT 
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/03/2025
-> Call trace:
->  show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:499 (C)
->  __dump_stack+0x30/0x40 lib/dump_stack.c:94
->  dump_stack_lvl+0xd8/0x12c lib/dump_stack.c:120
->  dump_stack+0x1c/0x28 lib/dump_stack.c:129
->  register_lock_class+0x310/0x348 kernel/locking/lockdep.c:1332
->  __lock_acquire+0xbc/0x30a4 kernel/locking/lockdep.c:5112
->  lock_acquire+0x140/0x2e0 kernel/locking/lockdep.c:5868
->  touch_wq_lockdep_map+0xa8/0x164 kernel/workqueue.c:3940
->  __flush_workqueue+0xfc/0x109c kernel/workqueue.c:3982
->  drain_workqueue+0xa4/0x310 kernel/workqueue.c:4146
->  destroy_workqueue+0xb4/0xd90 kernel/workqueue.c:5903
->  xfs_destroy_mount_workqueues+0xac/0xdc fs/xfs/xfs_super.c:649
->  xfs_fs_put_super+0x128/0x144 fs/xfs/xfs_super.c:1262
->  generic_shutdown_super+0x12c/0x2b8 fs/super.c:643
->  kill_block_super+0x44/0x90 fs/super.c:1722
->  xfs_kill_sb+0x20/0x58 fs/xfs/xfs_super.c:2297
->  deactivate_locked_super+0xc4/0x12c fs/super.c:474
->  deactivate_super+0xe0/0x100 fs/super.c:507
->  cleanup_mnt+0x31c/0x3ac fs/namespace.c:1318
->  __cleanup_mnt+0x20/0x30 fs/namespace.c:1325
->  task_work_run+0x1dc/0x260 kernel/task_work.c:233
->  resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
->  __exit_to_user_mode_loop kernel/entry/common.c:44 [inline]
->  exit_to_user_mode_loop+0x10c/0x18c kernel/entry/common.c:75
->  __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline]
->  exit_to_user_mode_prepare_legacy include/linux/irq-entry-common.h:242 [inline]
->  arm64_exit_to_user_mode arch/arm64/kernel/entry-common.c:81 [inline]
->  el0_svc+0x17c/0x26c arch/arm64/kernel/entry-common.c:725
->  el0t_64_sync_handler+0x84/0x12c arch/arm64/kernel/entry-common.c:743
->  el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:596
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> XFS (loop0): Unmounting Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-> 
-> 
-> Tested on:
-> 
-> commit:         3e548540 increase LOCKDEP_CHAINS_BITS
-> git tree:       git://git.infradead.org/users/hch/xfs.git xfs-buf-hash
-> console output: https://syzkaller.appspot.com/x/log.txt?x=101b0d22580000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=6c6138f827b10ea4
-> dashboard link: https://syzkaller.appspot.com/bug?extid=0391d34e801643e2809b
-> compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-> userspace arch: arm64
-> 
-> Note: no patches were applied.
----end quoted text---
+Thanks,
+Ryusuke Konishi
