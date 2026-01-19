@@ -1,116 +1,125 @@
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 360AF2FB0B4
-	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 07:38:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12F833710F;
+	Mon, 19 Jan 2026 07:44:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768808284; cv=none; b=DK+VHyPDTORYcs1Z8E6j6V0z2ja8OnHFDJ06WK0Qp2xtFRfwbX/46ZOzR2zAlaqen8NxB/yvS261LkrhRnIvJQD60hZRhIjd4Risf6fbevAjWCfFHn6QW+oDd/pckEdYQl4v/TOUvi0QV8UZH75IBlkEfYwkz1jYOCkF9XioXXk=
+	t=1768808673; cv=none; b=U9qlgoxhdBG09Wip4Y0kQP7iHVw3PtjqblAj7oDoTRFLDmuW/2Ce8CQI9EYEjYvIj9GWQHx0oS37cibqEJneIk/APuyQ2vpGuHmrbyy3JHfdCSlHDXsUIcyYVI2+m7Y9Rt3GY7sB1cEAAvPdIIoyL1hG3z59aYeRk2trk/AbRkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768808284; c=relaxed/simple;
-	bh=nXdpN0aAj2BV8Yiw0h/jk0Xc/rGaB4TF1HUcSKFeCvs=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=FCenLVW+Ljz1VL6O2BZYlSxc154w6VOzod1K8+trMH070PUOx20QZLwdBqdhXVs8Lq5ZZC4zFqa25kC66cLtAfDQyJXnHHNxxUr18jdmAmUqFPj+erujeRQ8W+SmRKMyFVLrrLTxj6Li3Sse+ONET/LMU+yJoslOrwo51PGNeVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7cfd12d8245so7904974a34.1
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Jan 2026 23:38:02 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768808282; x=1769413082;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=u17TDd0O2aRjgPGpyf9+kN3LRuqgAITfQio0IcMT/ZE=;
-        b=O1IHXO/djXQ6LHao/qJN4fbg6qTNwD/PdWPozwCidYc2X1R/wLWa6bilUOX4x4BWDG
-         VpdW4RBnDjPiJ9gJV/qW0FI36p7r/EaBj/mUbpPBibH4VcM6waNtHsgdMeA40kWK5Lh/
-         wCVH5zmuO/KHuYLa4fHmskyS6jDqbMro5y0Ko2GTM/2AItJbgQNCldp2/ar0sT+QbbC+
-         89gZLUhEaWWq0D4qL/vTZafU7iLgwqIwSCnqYKVn5/8kcEffYfzxeGHNXzwAi7Dp4XUp
-         ZoIT6jQ77YpTt9BUiFurZ4IV6KZypsjZlpTaEoSQv+tNdbb3X7vjCsfZGZVlwjzVt0m1
-         JuJg==
-X-Forwarded-Encrypted: i=1; AJvYcCVQ+n5lBYmgK1ZVB3WyxggCj0SfzgBUv6f+FKto5ciunTlpweT9PxaEBHxNw7p42sXBjbwRAYkzDn8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywqm/jDfxJQZcUF09aNc5yjW940or0ytySHyzVBxPUKBj7OF8B6
-	ZzE7fBsWhNiMEzjRwkeBDQWaTi8F51EvTVXOzbhoto0rLJzsluKLgzneLGiW0HNbJQ5GYvwOl6F
-	3juBfzjOvw7GAdhxmdLt7yocvzuictn64Aw/vKfxi1+maaazQcaJfc/A5Ldw=
+	s=arc-20240116; t=1768808673; c=relaxed/simple;
+	bh=l97McbaRZO3TQfukZUYzMAM6afrZCrKJrOB5BVWfk9M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ExVSfACiKJWCaS5TXnvAWeHjXr1k2yJRvJHrcH2qUHzomXI57x360vut04udQErPY60nZpTYLrdEjODqHIC9VT/h8ccM42Oja38DMng1MZGQFj7MGKpIf+hHwc46lRkOdOfWIak3H9eHgaAvN/YF3/QOzuCVpPTRBVLfBo2LFnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oBuhYEY5; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oBuhYEY5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=0jMumst/DKmc/sQa4zpacgepgiHuibSYZ04TsJOr/m0=; b=oBuhYEY5K6CRaVdSIpWd2LVorD
+	x7sLE2IecpZJ5K3Z1NeYP6rnQdQCPtd15oTVau4PRWC5yNFMhY9CGlC0txEY9Yb+WSL/c7tpycpze
+	dRpegUdk7qwfN51thGgIPw8FnCU1bSikKEegJZ0Hp9PiiZLpVqHi1KiemSarLrrbm+meTxKl00w/G
+	BgpdfHTy15CwfPrtVvJvMqmUF03NDKRwABqN6UXJOk9EUtKhouk0yfmkk3PeoGeAnXLd8teAXfIfp
+	AQouDLV9JKX/eLHZSXtUjADpAE9Q72nFc84DQQ6hipLA9GPRQPRJ0IBefCtPdTM2kv4mZ4sIL/miY
+	NAyOKtQA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vhjw6-00000001W8k-1Phr;
+	Mon, 19 Jan 2026 07:44:30 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Qu Wenruo <wqu@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: bounce buffer direct I/O when stable pages are required v2
+Date: Mon, 19 Jan 2026 08:44:07 +0100
+Message-ID: <20260119074425.4005867-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:229c:b0:65c:fa23:2d04 with SMTP id
- 006d021491bc7-661188d5c3amr3980306eaf.13.1768808282190; Sun, 18 Jan 2026
- 23:38:02 -0800 (PST)
-Date: Sun, 18 Jan 2026 23:38:02 -0800
-In-Reply-To: <aW3J5Cc3ezll_601@infradead.org>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <696ddf5a.050a0220.3390f1.003b.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: slab-use-after-free Read in xfs_buf_rele (4)
-From: syzbot <syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com>
-To: hch@infradead.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hello,
+Hi all,
 
-syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-BUG: MAX_LOCKDEP_CHAINS too low!
+this series tries to address the problem that under I/O pages can be
+modified during direct I/O, even when the device or file system require
+stable pages during I/O to calculate checksums, parity or data
+operations.  It does so by adding block layer helpers to bounce buffer
+an iov_iter into a bio, then wires that up in iomap and ultimately
+XFS.
 
-BUG: MAX_LOCKDEP_CHAINS too low!
-turning off the locking correctness validator.
-CPU: 0 UID: 0 PID: 1610 Comm: kworker/u8:6 Not tainted syzkaller #0 PREEMPT 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/03/2025
-Workqueue: xfs_iwalk-13497 xfs_pwork_work
-Call trace:
- show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:499 (C)
- __dump_stack+0x30/0x40 lib/dump_stack.c:94
- dump_stack_lvl+0xd8/0x12c lib/dump_stack.c:120
- dump_stack+0x1c/0x28 lib/dump_stack.c:129
- add_chain_cache kernel/locking/lockdep.c:-1 [inline]
- lookup_chain_cache_add kernel/locking/lockdep.c:3855 [inline]
- validate_chain kernel/locking/lockdep.c:3876 [inline]
- __lock_acquire+0xf9c/0x30a4 kernel/locking/lockdep.c:5237
- lock_acquire+0x140/0x2e0 kernel/locking/lockdep.c:5868
- __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
- _raw_spin_lock_irqsave+0x5c/0x7c kernel/locking/spinlock.c:162
- debug_object_activate+0x7c/0x460 lib/debugobjects.c:818
- debug_timer_activate kernel/time/timer.c:793 [inline]
- __mod_timer+0x8c4/0xd00 kernel/time/timer.c:1124
- add_timer_global+0x88/0xc0 kernel/time/timer.c:1283
- __queue_delayed_work+0x218/0x2c8 kernel/workqueue.c:2520
- queue_delayed_work_on+0xe4/0x194 kernel/workqueue.c:2555
- queue_delayed_work include/linux/workqueue.h:684 [inline]
- xfs_reclaim_work_queue+0x154/0x244 fs/xfs/xfs_icache.c:211
- xfs_perag_set_inode_tag+0x19c/0x4bc fs/xfs/xfs_icache.c:263
- xfs_inodegc_set_reclaimable+0x1e0/0x444 fs/xfs/xfs_icache.c:1917
- xfs_inode_mark_reclaimable+0x2c8/0x10f8 fs/xfs/xfs_icache.c:2252
- xfs_fs_destroy_inode+0x2fc/0x618 fs/xfs/xfs_super.c:712
- destroy_inode fs/inode.c:396 [inline]
- evict+0x7cc/0xa74 fs/inode.c:861
- iput_final fs/inode.c:1954 [inline]
- iput+0xc54/0xfdc fs/inode.c:2006
- xfs_irele+0xd0/0x2ac fs/xfs/xfs_inode.c:2662
- xfs_qm_dqusage_adjust+0x4f4/0x5b0 fs/xfs/xfs_qm.c:1411
- xfs_iwalk_ag_recs+0x404/0x7c8 fs/xfs/xfs_iwalk.c:209
- xfs_iwalk_run_callbacks+0x1c0/0x3e8 fs/xfs/xfs_iwalk.c:370
- xfs_iwalk_ag+0x6ac/0x82c fs/xfs/xfs_iwalk.c:473
- xfs_iwalk_ag_work+0xf8/0x1a0 fs/xfs/xfs_iwalk.c:620
- xfs_pwork_work+0x80/0x1a4 fs/xfs/xfs_pwork.c:47
- process_one_work+0x7c0/0x1558 kernel/workqueue.c:3257
- process_scheduled_works kernel/workqueue.c:3340 [inline]
- worker_thread+0x958/0xed8 kernel/workqueue.c:3421
- kthread+0x5fc/0x75c kernel/kthread.c:463
- ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:844
+The reason that the file system even needs to know about it, is because
+reads need a user context to copy the data back, and the infrastructure
+to defer ioends to a workqueue currently sits in XFS.  I'm going to look
+into moving that into ioend and enabling it for other file systems.
+Additionally btrfs already has it's own infrastructure for this, and
+actually an urgent need to bounce buffer, so this should be useful there
+and could be wire up easily.  In fact the idea comes from patches by
+Qu that did this in btrfs.
 
+This patch fixes all but one xfstests failures on T10 PI capable devices
+(generic/095 seems to have issues with a mix of mmap and splice still,
+I'm looking into that separate), and make qemu VMs running Windows,
+or Linux with swap enabled fine on an XFS file on a device using PI.
 
-Tested on:
+Performance numbers on my (not exactly state of the art) NVMe PI test
+setup:
 
-commit:         855e81db xfs: switch (back) to a per-buftarg buffer hash
-git tree:       git://git.infradead.org/users/hch/xfs.git xfs-buf-hash
-console output: https://syzkaller.appspot.com/x/log.txt?x=162bb63a580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=1707867b02964a26
-dashboard link: https://syzkaller.appspot.com/bug?extid=0391d34e801643e2809b
-compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-userspace arch: arm64
+  Sequential reads using io_uring, QD=16.
+  Bandwidth and CPU usage (usr/sys):
 
-Note: no patches were applied.
+  | size |        zero copy         |          bounce          |
+  +------+--------------------------+--------------------------+
+  |   4k | 1316MiB/s (12.65/55.40%) | 1081MiB/s (11.76/49.78%) |
+  |  64K | 3370MiB/s ( 5.46/18.20%) | 3365MiB/s ( 4.47/15.68%) |
+  |   1M | 3401MiB/s ( 0.76/23.05%) | 3400MiB/s ( 0.80/09.06%) |
+  +------+--------------------------+--------------------------+
+
+  Sequential writes using io_uring, QD=16.
+  Bandwidth and CPU usage (usr/sys):
+
+  | size |        zero copy         |          bounce          |
+  +------+--------------------------+--------------------------+
+  |   4k |  882MiB/s (11.83/33.88%) |  750MiB/s (10.53/34.08%) |
+  |  64K | 2009MiB/s ( 7.33/15.80%) | 2007MiB/s ( 7.47/24.71%) |
+  |   1M | 1992MiB/s ( 7.26/ 9.13%) | 1992MiB/s ( 9.21/19.11%) |
+  +------+--------------------------+--------------------------+
+
+Note that the 64k read numbers look really odd to me for the baseline
+zero copy case, but are reproducible over many repeated runs.
+
+The bounce read numbers should further improve when moving the PI
+validation to the file system and removing the double context switch,
+which I have patches for that will sent out soon.
+
+Changes since v1:
+ - spelling fixes
+ - add more details to some commit messages
+ - add a new code comment about freeing the bio early in the I/O
+   completion handler
+
+Diffstat:
+ block/bio.c           |  323 ++++++++++++++++++++++++++++++--------------------
+ block/blk.h           |   11 -
+ fs/iomap/direct-io.c  |  191 ++++++++++++++++-------------
+ fs/iomap/ioend.c      |    8 +
+ fs/xfs/xfs_aops.c     |    8 -
+ fs/xfs/xfs_file.c     |   41 +++++-
+ include/linux/bio.h   |   26 ++++
+ include/linux/iomap.h |    9 +
+ include/linux/uio.h   |    3 
+ lib/iov_iter.c        |   98 +++++++++++++++
+ 10 files changed, 492 insertions(+), 226 deletions(-)
