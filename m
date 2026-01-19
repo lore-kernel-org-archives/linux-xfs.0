@@ -1,224 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6691C3C1967;
-	Mon, 19 Jan 2026 16:31:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B10E231B13B
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 16:33:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768840263; cv=none; b=t/wJw3DUzP7MY9CpPmknPgBIw27N1lGdUfvpiVEI3uI0q8WwAkEdNGHPoWhYx6F4v4PDURRhUmUJgmIgk/HiqnFtvkEwJvPoFpjVle0LrYYyuRwJOMHbjO005N9kYL74iUDv5QRxhtMAE4Ji8af5af0ApNnPwhctth4de/rWRSw=
+	t=1768840396; cv=none; b=BifoRozt/lVDucC7MDW79+yAXMh4e6l6SmLJSKEQODm4xsKnYev20ql8zixGsCp3KO7QnPx+1AT9IUa/g++ogbFBJ49PgBn9SUSwBdHvXgKSOUkw1prwvaxQExTvejR1TrXYg5pMdTNeNEu4tV14/2SNzIoBx6Cv6zpXhxZI41Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768840263; c=relaxed/simple;
-	bh=YvhqTu858V2nHA/DvphvNPgy0WWoXV1XH8O4vHs3r6s=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=hQDsF9EttYuVcqT8VGo0T23Te8h7hyhWB+ID+1nhNfs2cCMleb14r4dNEPKVwNvSnWZN9hcufxapm2zr7hAgWCVrZ40sHUfu8oRRUrohOictb+wPc0VThHUP99HdU7h/3oqlm8fI9qN13xnlRFKg5P2FVE2SPS83/UW8tAraens=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2eWuvDH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768840396; c=relaxed/simple;
+	bh=Xowcft0xkXz2W3N0nUhU7g4atdzwl1x5G7ysxX9HdPI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s3gEayr+0QtSqQHM8Nl4zuDsNhANn0Fe/H/Jwqr0jC8Do9Ks0vuwZa66pAM9HbsWiar0V6mIl5Rv+J2p9NG+dJLuekwqFB5Em91OLgFU6OkyfGOb/X5wNa69WDJvdG8G5dv6xXg4byt1FQwho+Gw+4jwtfcCBsQUZVxovRahs74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=R4cbXzy0; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=SQtyYZXY; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2eWuvDH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4CBEC2BC86;
-	Mon, 19 Jan 2026 16:30:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768840263;
-	bh=YvhqTu858V2nHA/DvphvNPgy0WWoXV1XH8O4vHs3r6s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=h2eWuvDHO+FHNVWC0HtfYiwQLGD+wYaxR9D3B3Ed9tIu0JUYT/Du8NCPJr2Kni+6j
-	 FzBHjGuc/OLKKlytLlDDSMvG6K/lZ+1yYDEkp/N9zqPCokk75ZABfwL6avEwi42vps
-	 0f/64rbZnR08cTk3Jklqr4LP4IF+Xj2tBebaD1y0phkAa+Asd/Q4cqS9Zfs0k0IMkF
-	 Wcd+HNSs1kfJ+gcQ5lC7WEcMywntkKV3L2fJFu0mtjX/DfTm1UQD/RZLxzC0HuvTay
-	 SahYNV1qOWaAxchZUrdKt84Zn3hO16NvxYRmiTOmxr3zcnvDdJtPkIgDlJWEZ0vCK2
-	 XLTl9TlK3VJ0g==
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 19 Jan 2026 11:26:48 -0500
-Subject: [PATCH v2 31/31] nfsd: convert dprintks in check_export() to
- tracepoints
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R4cbXzy0";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="SQtyYZXY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768840393;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=L4aL0yBezLwure4s/o1FNp4K3UMiRrxxgbdH76Eri30=;
+	b=R4cbXzy0fqZCqAAf7p2keUtD4JtMdvfdQCZAYfel2Z1+VtNAVRtIGGWOlZc/SMOewBMJLR
+	uPPgfGcPYwEypbpKMQcfZzBvzHAHuaP2eCD4uREpKi9iHceZk4VDbcq6Rxh0g1e8JATq+t
+	seSN9AyFyuvuIs98+Dp6VEPbU0FO42Q=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-633-6kp7biLwMdOEiEjPL7SAKA-1; Mon, 19 Jan 2026 11:33:12 -0500
+X-MC-Unique: 6kp7biLwMdOEiEjPL7SAKA-1
+X-Mimecast-MFC-AGG-ID: 6kp7biLwMdOEiEjPL7SAKA_1768840391
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-4325b182e3cso2767258f8f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 08:33:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1768840391; x=1769445191; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=L4aL0yBezLwure4s/o1FNp4K3UMiRrxxgbdH76Eri30=;
+        b=SQtyYZXYrV9fdv4om7pMxNw9TjKjKcTq2cHsOqvcgtYClypO286zPG4T3JSdW/t3KB
+         hMXxlZs4Z/3EknO8KiO7i99AYagd2ox7BFwiiCLqDA8tiF8MHZziWBAG62byhQF+NXrP
+         qsQ7l0XEqkcGUjwj5v8ntZsJDAOcaojQQvAdmfgSOs8mzEQQDychfaBxwTk8P9llOwCw
+         mSH5dw8DI/iUnMH4G+8arSDoBZAcIGr478VKl7wN239X8fC7mbCIewE7+tm7D6gqt/H5
+         6m2kksOQfdTGLr+vJiz9jLfUU3thJiLCdpxPhXNk+UJgk3NaHQxjhMn718wYBXxkW306
+         p95A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768840391; x=1769445191;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L4aL0yBezLwure4s/o1FNp4K3UMiRrxxgbdH76Eri30=;
+        b=fhisdxwq8hbiyKr6QhnOWdzP7mQ5xdZsILYnxkZvr2Gg8RFykZWAvcz/i4TDyWQQPj
+         nv2MXny5dD0vJtW6pzUMOAO2m9YUrfwmX691z7gxUxItvfbkf+zRMug/yYzH44udtSjR
+         HrsSbx6ZjoWaV5CSr3bKfFR9XreC7uQYPWArLUPHQKyOgYhV245LX9QZfDjN169Jz6el
+         HQxrmEUlhIFkNjNpUAcbhHD2rLCGqKdwd9tpVEBQp+v4KQKpqOqOhKr0gaIaxaE7hcxT
+         sSMnNq/Yh12ZlY/bSOf9sdedeyitkl/UG1+mN0u6VWvCU8X9NhNgQ35sUe+UEcSFMBNH
+         yl0Q==
+X-Gm-Message-State: AOJu0Ywk23zU4wPmRN3fxRjiUn/IiVNgnnaJMxzQLtcT9awOQBjSCNHJ
+	1uAilFlByK6v/FPPF/FSJvNBd4wIl2aH+kFcZpflwvxyOdu4wvcnGkJpNG+8NWVk2NggQx4EFhM
+	w5X3wu0Tb8czCmsAsYreE9V9k3BU+TdDqmYJBfNkS441+O5nsnNxwBXxeTgeTh6nH5AWWfs1QPh
+	e8efmmeBp+5yGJqfKGzXdKKqe9NzowWEJZAn4boPEejwlW
+X-Gm-Gg: AZuq6aLh4lzTfkdYKDpZjOY5ysaxQPzKlLNPYRSpJh1r5dJA7h60ZFJJ7I2wc4MiaCV
+	KncCwE+LSBJZjjjpyLvR62ls85eMZUkA/PVfs0+dxjNL+8g4S14UvWmPhaQx43CPO8SPoZJ/SNf
+	0mPfNOue7h/pB2iJn/SfxmnyPlBKzV0Ka5/a88yMfigCUTtqZITxmKaJurZgFB4SRjRiG2Oztlq
+	wicBH3GPeh3eIUmdaywuGDUP+qiR0Qv2pmr5J6gyw3LIt28xKd1zKc4bmilzo1q/3HHOT1cnxlx
+	oIyaBD0jS5AqETaDFv7x77EYZDME5k9rH8vSKJvO75Y7cKLbP3VMC+7w3I4qaxB8CfkfLjNTlQ/
+	ryGsgzDz4tDqr4A==
+X-Received: by 2002:a05:6000:2389:b0:431:3ba:1188 with SMTP id ffacd0b85a97d-43569972ef3mr14458647f8f.3.1768840390751;
+        Mon, 19 Jan 2026 08:33:10 -0800 (PST)
+X-Received: by 2002:a05:6000:2389:b0:431:3ba:1188 with SMTP id ffacd0b85a97d-43569972ef3mr14458602f8f.3.1768840390290;
+        Mon, 19 Jan 2026 08:33:10 -0800 (PST)
+Received: from thinky.redhat.com ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43569998240sm23524318f8f.43.2026.01.19.08.33.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Jan 2026 08:33:09 -0800 (PST)
+From: Andrey Albershteyn <aalbersh@redhat.com>
+X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org,
+	ebiggers@kernel.org
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
+	djwong@kernel.org
+Subject: [PATCH v2 0/2] Add traces and file attributes for fs-verity
+Date: Mon, 19 Jan 2026 17:32:08 +0100
+Message-ID: <20260119163222.2937003-2-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260119-exportfs-nfsd-v2-31-d93368f903bd@kernel.org>
-References: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org>
-In-Reply-To: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org>
-To: Christian Brauner <brauner@kernel.org>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Tom Talpey <tom@talpey.com>, Amir Goldstein <amir73il@gmail.com>, 
- Hugh Dickins <hughd@google.com>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, 
- Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, 
- Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, 
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
- Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
- Chunhai Guo <guochunhai@vivo.com>, Carlos Maiolino <cem@kernel.org>, 
- Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
- Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, 
- David Sterba <dsterba@suse.com>, Luis de Bethencourt <luisbg@kernel.org>, 
- Salah Triki <salah.triki@gmail.com>, 
- Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
- Paulo Alcantara <pc@manguebit.org>, 
- Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
- Shyam Prasad N <sprasad@microsoft.com>, 
- Bharath SM <bharathsm@microsoft.com>, Miklos Szeredi <miklos@szeredi.hu>, 
- Mike Marshall <hubcap@omnibond.com>, 
- Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, 
- Joel Becker <jlbec@evilplan.org>, Joseph Qi <joseph.qi@linux.alibaba.com>, 
- Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
- Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
- Dave Kleikamp <shaggy@kernel.org>, David Woodhouse <dwmw2@infradead.org>, 
- Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
- Andreas Gruenbacher <agruenba@redhat.com>, 
- OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
- Jaegeuk Kim <jaegeuk@kernel.org>, Jonathan Corbet <corbet@lwn.net>
-Cc: David Laight <david.laight.linux@gmail.com>, 
- Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, 
- linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
- linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
- linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
- samba-technical@lists.samba.org, linux-unionfs@vger.kernel.org, 
- devel@lists.orangefs.org, ocfs2-devel@lists.linux.dev, 
- ntfs3@lists.linux.dev, linux-nilfs@vger.kernel.org, 
- jfs-discussion@lists.sourceforge.net, linux-mtd@lists.infradead.org, 
- gfs2@lists.linux.dev, linux-f2fs-devel@lists.sourceforge.net, 
- linux-doc@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4169; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=YvhqTu858V2nHA/DvphvNPgy0WWoXV1XH8O4vHs3r6s=;
- b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBpbltg7KaYG+cOnqGQwFogykRFEv2vvWPelc3rm
- NkydLb2mGCJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCaW5bYAAKCRAADmhBGVaC
- FWqbEACWyEMei5YgEgZwLPtZYTWHb8tmOW7eGn745dbexN721w1XJin+y0uFuiiEqpYtbB01+nV
- 8eGJXblAwZWOM56qXzH8kIp9IF0Do5UMXMJTyUb79WR1Vxz5+svm6rH4ORCbDMoohslm0Ey+odn
- Zx62FtcwzZ/STJY531c69lQu2bhr3cC/ykvj+MnpDF1L6iyuPTl056aSkCGs+2TRjxpwsRGp0tV
- 7FV1mQVZyW+b344OwsU12+VtzNEUh3CAPnxW20OYd9f0s9HFEpZK4Y9Ep/WsEqP0165/LeBaVXZ
- Tihw250Wgn1dTNDwYC3840yoGmtFEjRpYdrQxlR1fxUi+1e02u+G+A2z8VPXC2UMtR7HTpWR3kq
- 0gpbEU4+t6RXYZ2KSP1Qp1R60LWabc62qCpOU1l2LsxieR9zzMNQzgrLEkvEzam75nzR1SYp0M1
- MAZjAICvnrvk2txw2ibnrnHJErb9vl+kLuB3btLLAaMmNVQQO9QZiA3QpDitFCH5aU6ZVYP8fdD
- r/l2xb9t2bkCY+uL5zGtY5a9B+sKZHy6JRgOd3o/SiUBbmV6dnxq4JqqdXpdxKAPH7RgwPtK224
- H9hNJK7Mkv5H+8Si6seHr0qbAPwccoRdGVCztXQ1fdG5MLjNTJb3M6cVTt5Wicf6NlgjQa664oA
- Z9sNNAkM0OHYjQA==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
+Content-Transfer-Encoding: 8bit
 
-Get rid of the dprintk messages in check_export(). Instead add new
-tracepoints that show the terminal inode and the flags.
+Hi all,
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/nfsd/export.c | 11 ++++++-----
- fs/nfsd/trace.h  | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 58 insertions(+), 5 deletions(-)
+This two small patches grew from fs-verity XFS patchset. I think they're
+self-contained improvements which could go without XFS implementation.
 
-diff --git a/fs/nfsd/export.c b/fs/nfsd/export.c
-index bc703cf58bfa210c7c57d49f22f15bc10d7cfc91..3cc336b953b38573966c43000f31cd341380837b 100644
---- a/fs/nfsd/export.c
-+++ b/fs/nfsd/export.c
-@@ -435,31 +435,32 @@ static int check_export(const struct path *path, int *flags, unsigned char *uuid
- 	if (!(inode->i_sb->s_type->fs_flags & FS_REQUIRES_DEV) &&
- 	    !(*flags & NFSEXP_FSID) &&
- 	    uuid == NULL) {
--		dprintk("exp_export: export of non-dev fs without fsid\n");
-+		trace_nfsd_check_export_need_fsid(inode, *flags);
- 		return -EINVAL;
- 	}
- 
- 	if (!exportfs_can_decode_fh(inode->i_sb->s_export_op)) {
--		dprintk("exp_export: export of invalid fs type.\n");
-+		trace_nfsd_check_export_invalid_fstype(inode, *flags);
- 		return -EINVAL;
- 	}
- 
- 	if (!(inode->i_sb->s_export_op->flags & EXPORT_OP_STABLE_HANDLES)) {
--		dprintk("%s: fs does not provide stable filehandles!\n", __func__);
-+		trace_nfsd_check_export_no_stable_fh(inode, *flags);
- 		return -EINVAL;
- 	}
- 
- 	if (is_idmapped_mnt(path->mnt)) {
- 		dprintk("exp_export: export of idmapped mounts not yet supported.\n");
-+		trace_nfsd_check_export_idmapped(inode, *flags);
- 		return -EINVAL;
- 	}
- 
- 	if (inode->i_sb->s_export_op->flags & EXPORT_OP_NOSUBTREECHK &&
- 	    !(*flags & NFSEXP_NOSUBTREECHECK)) {
--		dprintk("%s: %s does not support subtree checking!\n",
--			__func__, inode->i_sb->s_type->name);
-+		trace_nfsd_check_export_subtree(inode, *flags);
- 		return -EINVAL;
- 	}
-+	trace_nfsd_check_export_success(inode, *flags);
- 	return 0;
- }
- 
-diff --git a/fs/nfsd/trace.h b/fs/nfsd/trace.h
-index 5ae2a611e57f4b4e51a4d9eb6e0fccb66ad8d288..e3f5fe1181b605b34cb70d53f32739c3ef9b82f6 100644
---- a/fs/nfsd/trace.h
-+++ b/fs/nfsd/trace.h
-@@ -339,6 +339,58 @@ DEFINE_EVENT_CONDITION(nfsd_fh_err_class, nfsd_##name,	\
- DEFINE_NFSD_FH_ERR_EVENT(set_fh_dentry_badexport);
- DEFINE_NFSD_FH_ERR_EVENT(set_fh_dentry_badhandle);
- 
-+#define show_export_flags(val)						\
-+	__print_flags(val, "|",						\
-+		{ NFSEXP_READONLY,		"READONLY" },		\
-+		{ NFSEXP_INSECURE_PORT,		"INSECURE" },		\
-+		{ NFSEXP_ROOTSQUASH,		"ROOTSQUASH" },		\
-+		{ NFSEXP_ALLSQUASH,		"ALLSQUASH" },		\
-+		{ NFSEXP_ASYNC,			"ASYNC" },		\
-+		{ NFSEXP_GATHERED_WRITES,	"GATHERED_WRITES" },	\
-+		{ NFSEXP_NOREADDIRPLUS,		"NOREADDIRPLUS" },	\
-+		{ NFSEXP_SECURITY_LABEL,	"SECURITY_LABEL" },	\
-+		{ NFSEXP_NOHIDE,		"NOHIDE" },		\
-+		{ NFSEXP_NOSUBTREECHECK,	"NOSUBTREECHECK" },	\
-+		{ NFSEXP_NOAUTHNLM,		"NOAUTHNLM" },		\
-+		{ NFSEXP_MSNFS,			"MSNFS" },		\
-+		{ NFSEXP_FSID,			"FSID" },		\
-+		{ NFSEXP_CROSSMOUNT,		"CROSSMOUNT" },		\
-+		{ NFSEXP_NOACL,			"NOACL" },		\
-+		{ NFSEXP_V4ROOT,		"V4ROOT" },		\
-+		{ NFSEXP_PNFS,			"PNFS" })
-+
-+DECLARE_EVENT_CLASS(nfsd_check_export_class,
-+	TP_PROTO(const struct inode *inode,
-+		 int flags),
-+	TP_ARGS(inode, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(ino_t, ino)
-+		__field(int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev=%u:%u:%lu flags=%s",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino, show_export_flags(__entry->flags))
-+)
-+
-+#define DEFINE_NFSD_CHECK_EXPORT_EVENT(name)			\
-+DEFINE_EVENT(nfsd_check_export_class, nfsd_check_export_##name,	\
-+	TP_PROTO(const struct inode *inode,			\
-+		 int flags),					\
-+	TP_ARGS(inode, flags))
-+
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(need_fsid);
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(invalid_fstype);
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(no_stable_fh);
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(idmapped);
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(subtree);
-+DEFINE_NFSD_CHECK_EXPORT_EVENT(success);
-+
- TRACE_EVENT(nfsd_exp_find_key,
- 	TP_PROTO(const struct svc_expkey *key,
- 		 int status),
+v2:
+- Update kernel version in the docs to v7.0
+- Move trace point before merkle tree block hash check
+- Update commit message in patch 2
+- Add VERITY to FS_COMMON_FL and FS_XFLAG_COMMON constants
+- Fix block index argument in the tree block hash trace point
+
+Andrey Albershteyn (2):
+  fs: add FS_XFLAG_VERITY for fs-verity files
+  fsverity: add tracepoints
+
+ Documentation/filesystems/fsverity.rst |  16 +++
+ MAINTAINERS                            |   1 +
+ fs/file_attr.c                         |   4 +
+ fs/verity/enable.c                     |   4 +
+ fs/verity/fsverity_private.h           |   2 +
+ fs/verity/init.c                       |   1 +
+ fs/verity/verify.c                     |   9 ++
+ include/linux/fileattr.h               |   6 +-
+ include/trace/events/fsverity.h        | 143 +++++++++++++++++++++++++
+ include/uapi/linux/fs.h                |   1 +
+ 10 files changed, 184 insertions(+), 3 deletions(-)
+ create mode 100644 include/trace/events/fsverity.h
 
 -- 
 2.52.0
