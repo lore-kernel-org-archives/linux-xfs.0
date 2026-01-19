@@ -1,29 +1,62 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 060D538BF97;
-	Mon, 19 Jan 2026 15:56:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 925D428B407
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 16:06:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768838204; cv=none; b=CGVLuijAqwFgsu+TxphUZ/qYkmNNSbYrafY5j+pvfkAkE2b+9xSOAghz6y2GXCwrMcI7RxKRZMuKlnB2njoOg7eeK1j1ZYZSJgdSQI/7begF6LLeVrlUIU/lEObjVG9MadduETIxIYzvA0DN+A7t1eKtBE8vlPV+wtqyWRirUrk=
+	t=1768838816; cv=none; b=FGZWX8oAgUHf31di6KY924zQNE5jw/U7J/0Tw39yc/xtIS9Tyjljr9JRY+IwzCDkkyaFQYIqI5C4jLxPp+86vpFDOrtepe0ljirrFBr2VShj8xjvfheW/On26n6U3g+7YyIFgNu+e8CGeo9PbZGqno5o8N+8h2f/tUx8kRzM/P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768838204; c=relaxed/simple;
-	bh=D+/mNA7x3bPUPssXz3x5ZzNDARVbZcReUJg4A05wgZg=;
+	s=arc-20240116; t=1768838816; c=relaxed/simple;
+	bh=iiTWFxVuXnU0mWiC21e5T+swlehvrN6/YzDkkSJAwcI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qIA+YEAQw9TGBiyz6P54slR+ZKx2z555STiSUzj0RnGINyNb6BPlspVW4ZSS72YWeWn6BD2ZXIyq3igL7JsPMJxhRNrfh17IhjLq84Ges4tggfelD+BGwUuKckqvnJ4oKghFi0ShU65sCjFpgvQOIYGpoyHeDxE5BgFI3Ry3KXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C9DE4227AA8; Mon, 19 Jan 2026 16:56:39 +0100 (CET)
-Date: Mon, 19 Jan 2026 16:56:39 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 11/11] xfs: add media verification ioctl
-Message-ID: <20260119155639.GA10822@lst.de>
-References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs> <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=JsdlVxqyWciqq1O0zrbQ2iG5ZKfjVsH+i64AkO5VtwHAYsBHEmGk9PSAJbv6l4lCvUlXk9tpNt0GD5mkxHVAyiN/BD7ZXJaTVHvA+8lp+V397h2BMeGhPrglZGkDmF9AVxawblXwYr5NkVtV32cO89FzgAt4n4o1phwLslof/5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C85O78v1; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C85O78v1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768838814; x=1800374814;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=iiTWFxVuXnU0mWiC21e5T+swlehvrN6/YzDkkSJAwcI=;
+  b=C85O78v154tKny/N3WAXLBFZdSRmY3rF4Aj8Ym6iEV0oR5pCWiCE+3Dn
+   v+CIa1h4GcdBdt52X4LElYZ8X+Txp3b6Fju3/r4IhkvXPEN+uxYzT5Txo
+   DxUEt+5yn9LrhCDYzoKTAy/+IY+LIW0qLmQYzB0SC3q7bTSROez+BpCA6
+   znO1yrh6bLDwLzceystxKPGQIQ49W4YDuT06fgXgOSFm+fTu+ybnAVLwl
+   bBmONPqxT+Lek28FuBuMK5zmkGptyzYuRIdAvxcHlqr5Lz29e4z+uXgxm
+   J13p3FdbVT8iH+zR5Nu7kcES+nMD70Dg8bIw8rrajZJEPRGHOcDrqp0Qa
+   Q==;
+X-CSE-ConnectionGUID: tVH2/FyvRya+RC2r8kDUTQ==
+X-CSE-MsgGUID: OVXwCV0zStO6lXlL8O6O3g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11676"; a="73912746"
+X-IronPort-AV: E=Sophos;i="6.21,238,1763452800"; 
+   d="scan'208";a="73912746"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2026 08:06:54 -0800
+X-CSE-ConnectionGUID: GQh7vyycS/eUQ0Wmmvj0lQ==
+X-CSE-MsgGUID: RuPkVJ3qTFq6VLUNkoUY/g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,238,1763452800"; 
+   d="scan'208";a="210389007"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 19 Jan 2026 08:06:52 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vhrmD-00000000O01-3hcG;
+	Mon, 19 Jan 2026 16:06:49 +0000
+Date: Tue, 20 Jan 2026 00:05:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	linux-xfs@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+	hch@infradead.org, nirjhar.roy.lists@gmail.com
+Subject: Re: [PATCH v1] xfs: Fix calculation of m_rtx_per_rbmblock
+Message-ID: <202601192312.dyXO6IrE-lkp@intel.com>
+References: <2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,223 +65,114 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists@gmail.com>
 
-On Thu, Jan 15, 2026 at 09:44:53PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Add a new privileged ioctl so that xfs_scrub can ask the kernel to
-> verify the media of the devices backing an xfs filesystem, and have any
-> resulting media errors reported to fsnotify and xfs_healer.
+Hi Nirjhar,
 
-I really wish this would explain the approach (reading data into a
-kernel buffer, and the choices of the buffer size and I/O pattern)
-and their rationale a bit better here.
+kernel test robot noticed the following build errors:
 
-> +
-> +struct xfs_group_data_lost {
-> +	xfs_agblock_t		startblock;
-> +	xfs_extlen_t		blockcount;
-> +};
-> +
-> +/* Report lost file data from rmap records */
-> +STATIC int
-> +xfs_verify_report_data_lost(
-> +	struct xfs_btree_cur		*cur,
-> +	const struct xfs_rmap_irec	*rec,
-> +	void				*data)
-> +{
-> +	struct xfs_mount		*mp = cur->bc_mp;
-> +	struct xfs_inode		*ip;
-> +	struct xfs_group_data_lost	*lost = data;
-> +	xfs_fileoff_t			fileoff = rec->rm_offset;
-> +	xfs_extlen_t			blocks = rec->rm_blockcount;
-> +	const bool			is_attr =
-> +			(rec->rm_flags & XFS_RMAP_ATTR_FORK);
-> +	const xfs_agblock_t		lost_end =
-> +			lost->startblock + lost->blockcount;
-> +	const xfs_agblock_t		rmap_end =
-> +			rec->rm_startblock + rec->rm_blockcount;
-> +	int				error = 0;
-> +
-> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
-> +	       return 0;
-> +
-> +	error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, 0, 0, &ip);
-> +	if (error)
-> +		return 0;
-> +
-> +	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
-> +		xfs_bmap_mark_sick(ip, is_attr ? XFS_ATTR_FORK : XFS_DATA_FORK);
-> +		goto out_rele;
-> +	}
-> +
-> +	if (is_attr) {
-> +		xfs_inode_mark_sick(ip, XFS_SICK_INO_XATTR);
-> +		goto out_rele;
-> +	}
-> +
-> +	if (lost->startblock > rec->rm_startblock) {
-> +		fileoff += lost->startblock - rec->rm_startblock;
-> +		blocks -= lost->startblock - rec->rm_startblock;
-> +	}
-> +	if (rmap_end > lost_end)
-> +		blocks -= rmap_end - lost_end;
-> +
-> +	fserror_report_data_lost(VFS_I(ip), XFS_FSB_TO_B(mp, fileoff),
-> +			XFS_FSB_TO_B(mp, blocks), GFP_NOFS);
-> +
-> +out_rele:
-> +	xfs_irele(ip);
-> +	return 0;
-> +}
-> +
-> +/* Walk reverse mappings to look for all file data loss */
-> +STATIC int
-> +xfs_verify_report_losses(
-> +	struct xfs_mount	*mp,
-> +	enum xfs_group_type	type,
-> +	xfs_daddr_t		daddr,
-> +	u64			bblen)
-> +{
-> +	struct xfs_group	*xg = NULL;
-> +	struct xfs_trans	*tp;
-> +	xfs_fsblock_t		start_bno, end_bno;
-> +	uint32_t		start_gno, end_gno;
-> +	int			error;
-> +
-> +	if (type == XG_TYPE_RTG) {
-> +		start_bno = xfs_daddr_to_rtb(mp, daddr);
-> +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
-> +	} else {
-> +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
-> +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
-> +	}
-> +
-> +	tp = xfs_trans_alloc_empty(mp);
-> +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
-> +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
-> +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
-> +		struct xfs_buf		*agf_bp = NULL;
-> +		struct xfs_rtgroup	*rtg = NULL;
-> +		struct xfs_btree_cur	*cur;
-> +		struct xfs_rmap_irec	ri_low = { };
-> +		struct xfs_rmap_irec	ri_high;
-> +		struct xfs_group_data_lost lost;
-> +
-> +		if (type == XG_TYPE_AG) {
-> +			struct xfs_perag	*pag = to_perag(xg);
-> +
-> +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-> +			if (error) {
-> +				xfs_perag_put(pag);
-> +				break;
-> +			}
-> +
-> +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
-> +		} else {
-> +			rtg = to_rtg(xg);
-> +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-> +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
-> +		}
-> +
-> +		/*
-> +		 * Set the rmap range from ri_low to ri_high, which represents
-> +		 * a [start, end] where we looking for the files or metadata.
-> +		 */
-> +		memset(&ri_high, 0xFF, sizeof(ri_high));
-> +		if (xg->xg_gno == start_gno)
-> +			ri_low.rm_startblock =
-> +				xfs_fsb_to_gbno(mp, start_bno, type);
-> +		if (xg->xg_gno == end_gno)
-> +			ri_high.rm_startblock =
-> +				xfs_fsb_to_gbno(mp, end_bno, type);
-> +
-> +		lost.startblock = ri_low.rm_startblock;
-> +		lost.blockcount = min(xg->xg_block_count,
-> +				      ri_high.rm_startblock + 1) -
-> +							ri_low.rm_startblock;
-> +
-> +		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
-> +				xfs_verify_report_data_lost, &lost);
-> +		xfs_btree_del_cursor(cur, error);
-> +		if (agf_bp)
-> +			xfs_trans_brelse(tp, agf_bp);
-> +		if (rtg)
-> +			xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
-> +		if (error) {
-> +			xfs_group_put(xg);
-> +			break;
-> +		}
-> +	}
-> +
-> +	xfs_trans_cancel(tp);
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Compute the desired verify IO size.
-> + *
-> + * To minimize command overhead, we'd like to create bios that are 1MB, though
-> + * we allow the user to ask for a smaller size.
-> + */
-> +STATIC unsigned int
-> +xfs_verify_iosize(
-> +	const struct xfs_verify_media	*me,
-> +	struct xfs_buftarg		*btp,
-> +	uint64_t			bbcount)
-> +{
-> +	unsigned int			iosize =
-> +			min_not_zero(SZ_1M, me->me_max_io_size);
-> +
-> +	BUILD_BUG_ON(BBSHIFT != SECTOR_SHIFT);
-> +	ASSERT(BBTOB(bbcount) >= bdev_logical_block_size(btp->bt_bdev));
-> +
-> +	return clamp(iosize, bdev_logical_block_size(btp->bt_bdev),
-> +			BBTOB(bbcount));
-> +}
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on linus/master v6.19-rc6 next-20260116]
+[cannot apply to riteshharjani/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> +/* Allocate as much memory as we can get for verification buffer. */
-> +STATIC struct folio *
+url:    https://github.com/intel-lab-lkp/linux/commits/Nirjhar-Roy-IBM/xfs-Fix-calculation-of-m_rtx_per_rbmblock/20260119-195408
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists%40gmail.com
+patch subject: [PATCH v1] xfs: Fix calculation of m_rtx_per_rbmblock
+config: i386-buildonly-randconfig-002-20260119 (https://download.01.org/0day-ci/archive/20260119/202601192312.dyXO6IrE-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260119/202601192312.dyXO6IrE-lkp@intel.com/reproduce)
 
-Can we please retired STATIC already?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202601192312.dyXO6IrE-lkp@intel.com/
 
-> +STATIC void
-> +xfs_verify_media_error(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_verify_media	*me,
-> +	struct xfs_buftarg	*btp,
-> +	xfs_daddr_t		daddr,
-> +	unsigned int		bio_bbcount,
-> +	blk_status_t		bio_status)
-> +{
-> +	trace_xfs_verify_media_error(mp, me, btp->bt_bdev->bd_dev, daddr,
-> +			bio_bbcount, bio_status);
-> +
-> +	/*
-> +	 * Pass any I/O error up to the caller if we didn't successfully verify
-> +	 * any bytes at all.
-> +	 */
-> +	if (me->me_start_daddr == daddr)
-> +		me->me_ioerror = -blk_status_to_errno(bio_status);
-> +
-> +	/*
-> +	 * PI validation failures, medium errors, or general IO errors are
-> +	 * treated as indicators of data loss.  Everything else are (hopefully)
-> +	 * transient errors and are not reported.
-> +	 */
+All errors (new ones prefixed by >>):
 
-But still left in me->me_ioerror.  Is that intentional?
+>> fs/xfs/libxfs/xfs_sb.c:1271:27: error: call to undeclared function 'xfs_rtbitmap_rtx_per_rbmblock'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+    1271 |         mp->m_rtx_per_rbmblock = xfs_rtbitmap_rtx_per_rbmblock(mp);
+         |                                  ^
+   1 error generated.
 
-> +	switch (me->me_dev) {
-> +	case XFS_DEV_DATA:
-> +		xfs_verify_report_losses(mp, XG_TYPE_AG, daddr, bio_bbcount);
-> +		break;
-> +	case XFS_DEV_RT:
-> +		xfs_verify_report_losses(mp, XG_TYPE_RTG, daddr, bio_bbcount);
-> +		break;
-> +	}
 
-At some point we really need dev_to_group_type and vice versa helpers.
+vim +/xfs_rtbitmap_rtx_per_rbmblock +1271 fs/xfs/libxfs/xfs_sb.c
 
+  1245	
+  1246	/*
+  1247	 * xfs_mount_common
+  1248	 *
+  1249	 * Mount initialization code establishing various mount
+  1250	 * fields from the superblock associated with the given
+  1251	 * mount structure.
+  1252	 *
+  1253	 * Inode geometry are calculated in xfs_ialloc_setup_geometry.
+  1254	 */
+  1255	void
+  1256	xfs_sb_mount_common(
+  1257		struct xfs_mount	*mp,
+  1258		struct xfs_sb		*sbp)
+  1259	{
+  1260		struct xfs_groups	*ags = &mp->m_groups[XG_TYPE_AG];
+  1261	
+  1262		mp->m_agfrotor = 0;
+  1263		atomic_set(&mp->m_agirotor, 0);
+  1264		mp->m_maxagi = mp->m_sb.sb_agcount;
+  1265		mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+  1266		mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+  1267		mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+  1268		mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
+  1269		mp->m_blockmask = sbp->sb_blocksize - 1;
+  1270		mp->m_blockwsize = xfs_rtbmblock_size(sbp) >> XFS_WORDLOG;
+> 1271		mp->m_rtx_per_rbmblock = xfs_rtbitmap_rtx_per_rbmblock(mp);
+  1272	
+  1273		ags->blocks = mp->m_sb.sb_agblocks;
+  1274		ags->blklog = mp->m_sb.sb_agblklog;
+  1275		ags->blkmask = xfs_mask32lo(mp->m_sb.sb_agblklog);
+  1276	
+  1277		xfs_sb_mount_rextsize(mp, sbp);
+  1278	
+  1279		mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1280		mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1281		mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
+  1282		mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
+  1283	
+  1284		mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1285		mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1286		mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
+  1287		mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
+  1288	
+  1289		mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1290		mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1291		mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
+  1292		mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
+  1293	
+  1294		mp->m_rtrmap_mxr[0] = xfs_rtrmapbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1295		mp->m_rtrmap_mxr[1] = xfs_rtrmapbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1296		mp->m_rtrmap_mnr[0] = mp->m_rtrmap_mxr[0] / 2;
+  1297		mp->m_rtrmap_mnr[1] = mp->m_rtrmap_mxr[1] / 2;
+  1298	
+  1299		mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1300		mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1301		mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
+  1302		mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
+  1303	
+  1304		mp->m_rtrefc_mxr[0] = xfs_rtrefcountbt_maxrecs(mp, sbp->sb_blocksize,
+  1305				true);
+  1306		mp->m_rtrefc_mxr[1] = xfs_rtrefcountbt_maxrecs(mp, sbp->sb_blocksize,
+  1307				false);
+  1308		mp->m_rtrefc_mnr[0] = mp->m_rtrefc_mxr[0] / 2;
+  1309		mp->m_rtrefc_mnr[1] = mp->m_rtrefc_mxr[1] / 2;
+  1310	
+  1311		mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+  1312		mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+  1313		mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+  1314	}
+  1315	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
