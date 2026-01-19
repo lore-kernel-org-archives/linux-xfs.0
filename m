@@ -1,131 +1,180 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2C932E6BD;
-	Mon, 19 Jan 2026 16:29:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE823A9D8F
+	for <linux-xfs@vger.kernel.org>; Mon, 19 Jan 2026 16:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768840197; cv=none; b=YiV4JhQRnTg/EQb20cOheFSNpa8uZqHacMCXXJoT026HsG5VhMie44qtxui0AcngiSV6C0760lLOB097LLPlH3goC4p7YX8JKsid9Z2r7Ozlx2jeDgOirj+tEX9CU1DgcbzyBSR2c5L1VDgTz1Pc9Ok+4kUk/PsAJAaquXxbr7o=
+	t=1768840200; cv=none; b=HRnVsr9tj66dT3OCsHakodTpSWjQkzzk4NvIqGlvIv4LLB/XlSKdyTPHAPC3CRn+o3kb1CvU06oW1HLQ6m9x65Ypoq4N3vEaUcE7hfdv2u7BbEhcDgaKhb/FATvoi20fF7S5wM9v0IVAzEwmLuM/yc1ykQdwUzY4Ylys6mDyDPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768840197; c=relaxed/simple;
-	bh=ksDOdJgrlY0p5ZvKqSnF6dLYZLuuHG/nH15DeY9s8Cc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=U4sdeunL01MR1tCWN26lGCBb42RoLOzcYcU+PBNX73h0I+lALw9WFbE5ejSGAHfi6c0okb8d2lxhy4mhoWZizUdq7U4cUe4vh+iZI7TfshKii+xAKDRmzGLy41prqYu8RUdRt/8a4VBmEJca0MKqoXrKt+4Qo+pxRSsqxvUmLeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t2r46v+9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768840200; c=relaxed/simple;
+	bh=9SnA7U1kOlcGyRa7RgTDJgJmZH6Pf9hQjZQvclzvfAc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M5aSxuO2QzENUD9lBdMCl+6Xw9iZGQiO9YDuR5rHu0VH0TMoUajPSy4H4iLTlYKQfTwkqJj+3BT96kO6B+05kFgD3ow8K0w0ytLxCucCt6IFcAJ8/+02R3ODIYd0EvWJbzH6kWTWFRI2MJ9RNFjdeYvqKzWQFQmo1d07WmaneuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IPMPTrY/; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t2r46v+9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41230C116C6;
-	Mon, 19 Jan 2026 16:29:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768840197;
-	bh=ksDOdJgrlY0p5ZvKqSnF6dLYZLuuHG/nH15DeY9s8Cc=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=t2r46v+9jsw3j0ykHvirXoon1iQeU5Fue4C2CsU43TaWml76meAChiFKMjw87LUdG
-	 juk0q7Rh6yG59pa9K6QokouNNIzjCWmAeqPOvgr1EYnvaF5nOQITGaHkvHrt/rUvgA
-	 fEXYEQAyRL3L8oXx3tbS1XeHAc6XZBuQGGIJVyzvBKwidBPPL8Fcsqa5DRBg9TQReL
-	 UvqAZHhiaBCIIft95WmbFLD5gtkRNbUXauR8+FuRE+pVkpVRB+y3xG5HnZ0I9sh++R
-	 BeJ0YEeVv3b119rg8K2AhsU3ALBbIRiuZsKHtJdlxfj4WLjPW4U0lYNo9Sp8RIRQ7F
-	 lMzepaVQcyGbA==
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 19 Jan 2026 11:26:39 -0500
-Subject: [PATCH v2 22/31] nfs: add EXPORT_OP_STABLE_HANDLES flag to export
- operations
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IPMPTrY/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768840199; x=1800376199;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=9SnA7U1kOlcGyRa7RgTDJgJmZH6Pf9hQjZQvclzvfAc=;
+  b=IPMPTrY/OrH0Tu5oOIBRU9PuyqONKKuLRWFmk0jwrk+++JaSP/QgBYHl
+   QZQN7Hs4nbSFhbsaLrBqI0Gazf1uEKcrBo3GSkrVr0dKkZBsF/8YOKojw
+   OuiGWPq5IVwlMe/mwzHnkIvZDKoipocxksZzSv2WGnGh+5kNsR6vRWPMJ
+   IXaZDsQ5upQ5fBUFSYZBzh1nHxy4aXpjcFCaQt/FQ4C/1AyWtoqWr3LAw
+   kAB2OKOm3VaJ8ejM8p1yCpXU5T3uM/Pl47kjRkKZNPHsKEuRe1WlAA6Qx
+   HCAA7xbw9PJjF9INZNTzhzDqAUyohtL02E0ODNaoQvez/r4sMfKroVLVb
+   Q==;
+X-CSE-ConnectionGUID: QuQaPAI6RqKSHiQim8sHfg==
+X-CSE-MsgGUID: Z3MqTR73S26RgzXEX9DqMw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11676"; a="70026120"
+X-IronPort-AV: E=Sophos;i="6.21,238,1763452800"; 
+   d="scan'208";a="70026120"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2026 08:29:58 -0800
+X-CSE-ConnectionGUID: 5rceCgnBTNe8nw7dduJovw==
+X-CSE-MsgGUID: R7AclV/ZRa+rxSGJOlghoQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,238,1763452800"; 
+   d="scan'208";a="205809037"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa006.fm.intel.com with ESMTP; 19 Jan 2026 08:29:55 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vhs8X-00000000O2d-2rK3;
+	Mon, 19 Jan 2026 16:29:53 +0000
+Date: Tue, 20 Jan 2026 00:29:28 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	linux-xfs@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, djwong@kernel.org, hch@infradead.org,
+	nirjhar.roy.lists@gmail.com
+Subject: Re: [PATCH v1] xfs: Fix calculation of m_rtx_per_rbmblock
+Message-ID: <202601200031.0j1vAGWr-lkp@intel.com>
+References: <2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260119-exportfs-nfsd-v2-22-d93368f903bd@kernel.org>
-References: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org>
-In-Reply-To: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org>
-To: Christian Brauner <brauner@kernel.org>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
- Tom Talpey <tom@talpey.com>, Amir Goldstein <amir73il@gmail.com>, 
- Hugh Dickins <hughd@google.com>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, 
- Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, 
- Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, 
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
- Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
- Chunhai Guo <guochunhai@vivo.com>, Carlos Maiolino <cem@kernel.org>, 
- Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
- Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, 
- David Sterba <dsterba@suse.com>, Luis de Bethencourt <luisbg@kernel.org>, 
- Salah Triki <salah.triki@gmail.com>, 
- Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
- Paulo Alcantara <pc@manguebit.org>, 
- Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
- Shyam Prasad N <sprasad@microsoft.com>, 
- Bharath SM <bharathsm@microsoft.com>, Miklos Szeredi <miklos@szeredi.hu>, 
- Mike Marshall <hubcap@omnibond.com>, 
- Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, 
- Joel Becker <jlbec@evilplan.org>, Joseph Qi <joseph.qi@linux.alibaba.com>, 
- Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
- Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
- Dave Kleikamp <shaggy@kernel.org>, David Woodhouse <dwmw2@infradead.org>, 
- Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
- Andreas Gruenbacher <agruenba@redhat.com>, 
- OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
- Jaegeuk Kim <jaegeuk@kernel.org>, Jonathan Corbet <corbet@lwn.net>
-Cc: David Laight <david.laight.linux@gmail.com>, 
- Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, 
- linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
- linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
- linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
- samba-technical@lists.samba.org, linux-unionfs@vger.kernel.org, 
- devel@lists.orangefs.org, ocfs2-devel@lists.linux.dev, 
- ntfs3@lists.linux.dev, linux-nilfs@vger.kernel.org, 
- jfs-discussion@lists.sourceforge.net, linux-mtd@lists.infradead.org, 
- gfs2@lists.linux.dev, linux-f2fs-devel@lists.sourceforge.net, 
- linux-doc@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=710; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=ksDOdJgrlY0p5ZvKqSnF6dLYZLuuHG/nH15DeY9s8Cc=;
- b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBpbltejvI4uCVHlIS2T5Sg9AWKXFFFdc6UAKuPC
- yIPRMUKgvmJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCaW5bXgAKCRAADmhBGVaC
- FTCUEACsqv/PKTuNRCX5fxjg+TwKNxbmij5eOneoSqEsTfckElQdAtODhSPDDyCNar8QgaQs7M+
- VXuPS2EI2WkFUsZI2CLVekpCYCUQndqX9wrbqzSuzjy3vnSINM2TO4exNBnjO/erVYxwQjhirKH
- 3oI0cBXBHOqDbxYZ4BxvKKL3EzoSapKOG1AycaqjVaS7tSGkd8ErvvpNO5ge1DKKhaFv6SnQv9b
- FER7dx88BVVl6o3/9b2pbxTozggAgRisZBNKhc0V++Nc0TlEUM19Apu+O6ylzKOheaU7DfAYTN1
- Bi0vYNSlhHuDe0mO4uiKEVt13bdyxhSBAqAYffzWra5kfampsjGglFiw4wyUTuPHY7YKYvrU0th
- QLKaE8bFWcJDloaj2gdWRXjNlFnN7noHKGGzh9LK6PoKAYTXHy1j/63W2/O8uQ0OnC+WIuB3e2f
- AIeR7L3FB8HIZilZbF+zOUQ720FHIpZkOvqTxQUcwVKkjXjR5QmK7gBuOJJ3lH0dd7c+uTGqBLe
- LbF6IxDrakDOoOKLHOatndkjqZ78EMx2uzRvgnILErXqa3CLcNn0R943ZowUFuAOh6ZiFn9AV76
- 4iQzASFRmeFhWX+P/KS3X4VpLpdTttEFY/0yzEN4+pHCkqJjhtY45bpC7kvUVo6crazXPily8NU
- THxmvjP1Wo0foqQ==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists@gmail.com>
 
-Add the EXPORT_OP_STABLE_HANDLES flag to nfs export operations to indicate
-that this filesystem can be exported via NFS.
+Hi Nirjhar,
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/nfs/export.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/fs/nfs/export.c b/fs/nfs/export.c
-index a10dd5f9d0786eb111113bf524a1af8b7da0fb6e..7592ef347a2eae5d6305b64effd22537d5ef5e74 100644
---- a/fs/nfs/export.c
-+++ b/fs/nfs/export.c
-@@ -162,5 +162,6 @@ const struct export_operations nfs_export_ops = {
- 		 EXPORT_OP_REMOTE_FS		|
- 		 EXPORT_OP_NOATOMIC_ATTR	|
- 		 EXPORT_OP_FLUSH_ON_CLOSE	|
--		 EXPORT_OP_NOLOCKS,
-+		 EXPORT_OP_NOLOCKS		|
-+		 EXPORT_OP_STABLE_HANDLES,
- };
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on linus/master v6.19-rc6 next-20260116]
+[cannot apply to riteshharjani/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Nirjhar-Roy-IBM/xfs-Fix-calculation-of-m_rtx_per_rbmblock/20260119-195408
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/2e0f36968b112303466c5e07a88c7e9949f769fe.1768822986.git.nirjhar.roy.lists%40gmail.com
+patch subject: [PATCH v1] xfs: Fix calculation of m_rtx_per_rbmblock
+config: riscv-randconfig-001-20260119 (https://download.01.org/0day-ci/archive/20260120/202601200031.0j1vAGWr-lkp@intel.com/config)
+compiler: riscv64-linux-gcc (GCC) 8.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260120/202601200031.0j1vAGWr-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202601200031.0j1vAGWr-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   fs/xfs/libxfs/xfs_sb.c: In function 'xfs_sb_mount_common':
+>> fs/xfs/libxfs/xfs_sb.c:1271:27: error: implicit declaration of function 'xfs_rtbitmap_rtx_per_rbmblock'; did you mean 'xfs_rtx_to_rbmblock'? [-Werror=implicit-function-declaration]
+     mp->m_rtx_per_rbmblock = xfs_rtbitmap_rtx_per_rbmblock(mp);
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                              xfs_rtx_to_rbmblock
+   cc1: some warnings being treated as errors
+
+
+vim +1271 fs/xfs/libxfs/xfs_sb.c
+
+  1245	
+  1246	/*
+  1247	 * xfs_mount_common
+  1248	 *
+  1249	 * Mount initialization code establishing various mount
+  1250	 * fields from the superblock associated with the given
+  1251	 * mount structure.
+  1252	 *
+  1253	 * Inode geometry are calculated in xfs_ialloc_setup_geometry.
+  1254	 */
+  1255	void
+  1256	xfs_sb_mount_common(
+  1257		struct xfs_mount	*mp,
+  1258		struct xfs_sb		*sbp)
+  1259	{
+  1260		struct xfs_groups	*ags = &mp->m_groups[XG_TYPE_AG];
+  1261	
+  1262		mp->m_agfrotor = 0;
+  1263		atomic_set(&mp->m_agirotor, 0);
+  1264		mp->m_maxagi = mp->m_sb.sb_agcount;
+  1265		mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+  1266		mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+  1267		mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+  1268		mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
+  1269		mp->m_blockmask = sbp->sb_blocksize - 1;
+  1270		mp->m_blockwsize = xfs_rtbmblock_size(sbp) >> XFS_WORDLOG;
+> 1271		mp->m_rtx_per_rbmblock = xfs_rtbitmap_rtx_per_rbmblock(mp);
+  1272	
+  1273		ags->blocks = mp->m_sb.sb_agblocks;
+  1274		ags->blklog = mp->m_sb.sb_agblklog;
+  1275		ags->blkmask = xfs_mask32lo(mp->m_sb.sb_agblklog);
+  1276	
+  1277		xfs_sb_mount_rextsize(mp, sbp);
+  1278	
+  1279		mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1280		mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1281		mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
+  1282		mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
+  1283	
+  1284		mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1285		mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1286		mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
+  1287		mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
+  1288	
+  1289		mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1290		mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1291		mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
+  1292		mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
+  1293	
+  1294		mp->m_rtrmap_mxr[0] = xfs_rtrmapbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1295		mp->m_rtrmap_mxr[1] = xfs_rtrmapbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1296		mp->m_rtrmap_mnr[0] = mp->m_rtrmap_mxr[0] / 2;
+  1297		mp->m_rtrmap_mnr[1] = mp->m_rtrmap_mxr[1] / 2;
+  1298	
+  1299		mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, true);
+  1300		mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize, false);
+  1301		mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
+  1302		mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
+  1303	
+  1304		mp->m_rtrefc_mxr[0] = xfs_rtrefcountbt_maxrecs(mp, sbp->sb_blocksize,
+  1305				true);
+  1306		mp->m_rtrefc_mxr[1] = xfs_rtrefcountbt_maxrecs(mp, sbp->sb_blocksize,
+  1307				false);
+  1308		mp->m_rtrefc_mnr[0] = mp->m_rtrefc_mxr[0] / 2;
+  1309		mp->m_rtrefc_mnr[1] = mp->m_rtrefc_mxr[1] / 2;
+  1310	
+  1311		mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+  1312		mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+  1313		mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+  1314	}
+  1315	
 
 -- 
-2.52.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
