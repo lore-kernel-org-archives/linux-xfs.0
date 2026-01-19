@@ -1,221 +1,304 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0148F2DFA40;
-	Mon, 19 Jan 2026 16:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C0A329C69;
+	Mon, 19 Jan 2026 17:35:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768841829; cv=none; b=pyPKJ3WPohBMtEvSj90uazm0OT+gu1lGX9dIoulfLW/87QbNdmjeQQ8RMSHCgwHHiUu8sjgRECtt/K3oU/oKBg9XKh9tdRxMk4qKGAon9UTc8V3SSzR3+SymIQJUl7qSwrKg/FtM3FQwH9z4DR9uP8lY7m5LAPug2VvA3g26X5M=
+	t=1768844144; cv=none; b=CUW5jhNw3KNuIel6Z5zMlJqk+fN2VTCWFiU3+wp2VvwhpwCxek7iJDrqxfx3fNmyFwuvR2cXV/PZ7jJloGTrer1kgwvWF5+A8542aJSiI/ncRN8867As8/oXxMgDmSDy0VfhBAiBgqleOJdXAQQfkyHloVIoU4rg0v61GPOtbBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768841829; c=relaxed/simple;
-	bh=MGyFqH8L+YjLuBcfjOJFi3mIAQwqi18e46X6Vl525qA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I0s+wt3O8/27oJz4m/UfsGpvKDSpkEDpi2aCNBGXRf0MfaDtAb5G9AlGK49dXu33YXwGyprBRjDzlBkav+ltBlVJfqBdldnyHelG4LQjpamkWMdid4yprDho8XnMQOmRLoooRZqU114GN7rcCoHN2JOmQZ7sPQ91+qNblDtVMMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=d85uxIci; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1768844144; c=relaxed/simple;
+	bh=kFzynpRCnZlst/3w4DM3gAbVgknggmBfSxxX45P6hyk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I04Qx1CKqnOarlYu4weglBFscUw7heQYr1YQien6CHgPDvzNqcDMgDiNxP09De/N4Qf8ehp+ilWsYweuug8tVHSoRcqFfWiQ0ZVeweNYuJEwH33Gr4fDzraMTxNawDDID0Y8ZmdfZr7pFN+lEwBGdpRRW2la61bQQlpHUb6AaLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vpfo5gjG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="d85uxIci"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=P88t41E8krgosvMB/MCVHfZybEjwTBXqed9m6H1WG6c=; b=d85uxIciOlWnBSKk0pPQaN2N6P
-	MDQYopqIeTRKkxj+QaVKJ9AoWIt4929zZgGSr+r1Md50skhrHSXPbg4RzJVXtFgU52jMjF0fIn2iD
-	BtdMGwR6JOLkm5hD7hGtOAQ/8e8lsqswQbIUh8DiVt9cMrsqbY+4nUAJPvxwf7R0UhECnAXie1aOH
-	ImYT9zQ4OdWAEjZXOnqzFusqQ4QuMF2QA0x4REGVZtB+DCuhVolLJvx9LLBZaBg+AlhJtY+i4+mKR
-	1rw0phHBec+pMUsx9iLLYUl3mGCNE1DNOb9KmexI0bmxgWRQaXDO6KAAMhSzurHXY0u2Jmw5bMpf1
-	y+EtolGg==;
-Received: from [177.139.22.247] (helo=[192.168.15.100])
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
-	id 1vhsYP-007EXi-GW; Mon, 19 Jan 2026 17:56:37 +0100
-Message-ID: <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
-Date: Mon, 19 Jan 2026 13:56:30 -0300
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vpfo5gjG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 118AAC116C6;
+	Mon, 19 Jan 2026 17:35:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768844144;
+	bh=kFzynpRCnZlst/3w4DM3gAbVgknggmBfSxxX45P6hyk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Vpfo5gjGsJb2tHajhvEt4uwdisXhw46NJqGqMX2ZRgEGIRcmgaS63W1sDmCK/YHlk
+	 7LpuSzd8grFFfNSAh0E3sx5CjZRLEERsd4HXK8jFmYirKsqzamQpWmHk1ZwuUMvgka
+	 WzDDRML2+tFTQqZ1T9UgmFlMqHzp+IegWvgiqOiWr5wBTMADSnsr70MDEmYAulF2Df
+	 sU0XiYiD4qan1c1unIHqk6s/ZcwLumgVxwu+n4IfABaLeSEYB52HIaDEgu/vqSyXHN
+	 S3Az+rsX/yNHI7ckWG1pCZJbhXESJd/N6Z9a0gbrptdAOqQOwH3y+1IgKUi/SoZLxA
+	 HQ3xKqkMmuRLg==
+Date: Mon, 19 Jan 2026 09:35:43 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 11/11] xfs: add media verification ioctl
+Message-ID: <20260119173543.GZ15551@frogsfrogsfrogs>
+References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs>
+ <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
+ <20260119155639.GA10822@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
- Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
- Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
- Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
- Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
- linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
- Ludovico de Nittis <ludovico.denittis@collabora.com>
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
- <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
- <20260114062608.GB10805@lst.de>
- <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
- <20260115062944.GA9590@lst.de>
- <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
- <20260115072311.GA10352@lst.de>
- <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
- <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
- <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
- <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
- <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
- <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
-Content-Language: en-US
-From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-In-Reply-To: <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260119155639.GA10822@lst.de>
 
-Em 16/01/2026 14:06, Amir Goldstein escreveu:
-> On Fri, Jan 16, 2026 at 2:28 PM André Almeida <andrealmeid@igalia.com> wrote:
->>
->> [+CC SteamOS developers]
->>
->> Em 16/01/2026 06:55, Amir Goldstein escreveu:
->>> On Thu, Jan 15, 2026 at 7:55 PM André Almeida <andrealmeid@igalia.com> wrote:
->>>>
->>>> Em 15/01/2026 13:07, Amir Goldstein escreveu:
->>>>> On Thu, Jan 15, 2026 at 4:42 PM André Almeida <andrealmeid@igalia.com> wrote:
->>>>>>
->>>>>> Em 15/01/2026 04:23, Christoph Hellwig escreveu:
->>>>>>
->>>>>> [...]
->>>>>>
->>>>>>>
->>>>>>> I still wonder what the use case is here.  Looking at André's original
->>>>>>> mail it states:
->>>>>>>
->>>>>>> "However, btrfs mounts may have volatiles UUIDs. When mounting the exact same
->>>>>>> disk image with btrfs, a random UUID is assigned for the following disks each
->>>>>>> time they are mounted, stored at temp_fsid and used across the kernel as the
->>>>>>> disk UUID. `btrfs filesystem show` presents that. Calling statfs() however
->>>>>>> shows the original (and duplicated) UUID for all disks."
->>>>>>>
->>>>>>> and this doesn't even talk about multiple mounts, but looking at
->>>>>>> device_list_add it seems to only set the temp_fsid flag when set
->>>>>>> same_fsid_diff_dev is set by find_fsid_by_device, which isn't documented
->>>>>>> well, but does indeed seem to be done transparently when two file systems
->>>>>>> with the same fsid are mounted.
->>>>>>>
->>>>>>> So André, can you confirm this what you're worried about?  And btrfs
->>>>>>> developers, I think the main problem is indeed that btrfs simply allows
->>>>>>> mounting the same fsid twice.  Which is really fatal for anything using
->>>>>>> the fsid/uuid, such NFS exports, mount by fs uuid or any sb->s_uuid user.
->>>>>>>
->>>>>>
->>>>>> Yes, I'm would like to be able to mount two cloned btrfs images and to
->>>>>> use overlayfs with them. This is useful for SteamOS A/B partition scheme.
->>>>>>
->>>>>>>> If so, I think it's time to revert the behavior before it's too late.
->>>>>>>> Currently the main usage of such duplicated fsids is for Steam deck to
->>>>>>>> maintain A/B partitions, I think they can accept a new compat_ro flag for
->>>>>>>> that.
->>>>>>>
->>>>>>> What's an A/B partition?  And how are these safely used at the same time?
->>>>>>>
->>>>>>
->>>>>> The Steam Deck have two main partitions to install SteamOS updates
->>>>>> atomically. When you want to update the device, assuming that you are
->>>>>> using partition A, the updater will write the new image in partition B,
->>>>>> and vice versa. Then after the reboot, the system will mount the new
->>>>>> image on B.
->>>>>>
->>>>>
->>>>> And what do you expect to happen wrt overlayfs when switching from
->>>>> image A to B?
->>>>>
->>>>> What are the origin file handles recorded in overlayfs index from image A
->>>>> lower worth when the lower image is B?
->>>>>
->>>>> Is there any guarantee that file handles are relevant and point to the
->>>>> same objects?
->>>>>
->>>>> The whole point of the overlayfs index feature is that overlayfs inodes
->>>>> can have a unique id across copy-up.
->>>>>
->>>>> Please explain in more details exactly which overlayfs setup you are
->>>>> trying to do with index feature.
->>>>>
->>>>
->>>> The problem happens _before_ switching from A to B, it happens when
->>>> trying to install the same image from A on B.
->>>>
->>>> During the image installation process, while running in A, the B image
->>>> will be mounted more than once for some setup steps, and overlayfs is
->>>> used for this. Because A have the same UUID, each time B is remouted
->>>> will get a new UUID and then the installation scripts fails mounting the
->>>> image.
->>>
->>> Please describe the exact overlayfs setup and specifically,
->>> is it multi lower or single lower layer setup?
->>> What reason do you need the overlayfs index for?
->>> Can you mount with index=off which should relax the hard
->>> requirement for match with the original lower layer uuid.
->>>
->>
->> The setup has a single lower layer. This is how the mount command looks
->> like:
->>
->> mount -t overlay -o
->> "lowerdir=${DEV_DIR}/etc,upperdir=${DEV_DIR}/var/lib/overlays/etc/upper,workdir=${DEV_DIR}/var/lib/overlays/etc/work"
->> none "${DEV_DIR}/etc"
->>
->> They would rather not disable index, to avoid mounting the wrong layers
->> and to avoid corner cases with hardlinks.
+On Mon, Jan 19, 2026 at 04:56:39PM +0100, Christoph Hellwig wrote:
+> On Thu, Jan 15, 2026 at 09:44:53PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+> > verify the media of the devices backing an xfs filesystem, and have any
+> > resulting media errors reported to fsnotify and xfs_healer.
 > 
-> IIUC you have all the layers on the same fs ($DEV_DIR)?
-> 
-> See mount option uuid=off, created for this exact use case:
-> 
-> Documentation/filesystems/overlayfs.rst:
-> Note: the mount option uuid=off can be used to replace UUID of the underlying
-> filesystem in file handles with null, and effectively disable UUID checks. This
-> can be useful in case the underlying disk is copied and the UUID of this copy
-> is changed. This is only applicable if all lower/upper/work directories are on
-> the same filesystem, otherwise it will fallback to normal behaviour.
-> 
-> commit 5830fb6b54f7167cc7c9d43612eb01c24312c7ca
-> Author: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-> Date:   Tue Oct 13 17:59:54 2020 +0300
-> 
->      ovl: introduce new "uuid=off" option for inodes index feature
-> 
->      This replaces uuid with null in overlayfs file handles and thus relaxes
->      uuid checks for overlay index feature. It is only possible in case there is
->      only one filesystem for all the work/upper/lower directories and bare file
->      handles from this backing filesystem are unique. In other case when we have
->      multiple filesystems lets just fallback to "uuid=on" which is and
->      equivalent of how it worked before with all uuid checks.
-> 
->      This is needed when overlayfs is/was mounted in a container with index
->      enabled ...
-> 
->      If you just change the uuid of the backing filesystem, overlay is not
->      mounting any more. In Virtuozzo we copy container disks (ploops) when
->      create the copy of container and we require fs uuid to be unique for a new
->      container.
-> 
-> TBH, I am trying to remember why we require upper/work to be on the
-> same fs as lower for uuid=off,index=on and I can't remember.
-> If this is important I can look into it.
-> 
+> I really wish this would explain the approach (reading data into a
+> kernel buffer, and the choices of the buffer size and I/O pattern)
+> and their rationale a bit better here.
 
-Actually they are not in the same fs, upper and lower are coming from 
-different fs', so when trying to mount I get the fallback to 
-`uuid=null`. A quick hack circumventing this check makes the mount work.
+How about:
 
-If you think this is the best way to solve this issue (rather than 
-following the VFS helper path for instance), please let me know how can 
-I safely lift this restriction, like maybe adding a new flag for this?
+"Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+verify the media of the devices backing an xfs filesystem, and have any
+resulting media errors reported to fsnotify and xfs_healer.
 
-> Thanks,
-> Amir.
+"To accomplish this, the kernel allocates a folio between the base page
+size and 1MB, and issues read IOs to a gradually incrementing range of
+one of the storage devices underlying an xfs filesystem.  If any error
+occurs, that raw error is reported to the calling process.  If the error
+happens to be one of the ones that the kernel considers indicative of
+data loss, then it will also be reported to xfs_healthmon and fsnotify.
 
+"Driving the verification from the kernel enables xfs (and by extension
+xfs_scrub) to have precise control over the size and error handling of
+IOs that are issued to the underlying block device, and to emit
+notifications about problems to other relevant kernel subsystems
+immediately.
+
+"Note that the caller is also allowed to reduce the size of the IO and
+to ask for a relaxation period after each IO."
+
+> > +
+> > +struct xfs_group_data_lost {
+> > +	xfs_agblock_t		startblock;
+> > +	xfs_extlen_t		blockcount;
+> > +};
+> > +
+> > +/* Report lost file data from rmap records */
+> > +STATIC int
+> > +xfs_verify_report_data_lost(
+> > +	struct xfs_btree_cur		*cur,
+> > +	const struct xfs_rmap_irec	*rec,
+> > +	void				*data)
+> > +{
+> > +	struct xfs_mount		*mp = cur->bc_mp;
+> > +	struct xfs_inode		*ip;
+> > +	struct xfs_group_data_lost	*lost = data;
+> > +	xfs_fileoff_t			fileoff = rec->rm_offset;
+> > +	xfs_extlen_t			blocks = rec->rm_blockcount;
+> > +	const bool			is_attr =
+> > +			(rec->rm_flags & XFS_RMAP_ATTR_FORK);
+> > +	const xfs_agblock_t		lost_end =
+> > +			lost->startblock + lost->blockcount;
+> > +	const xfs_agblock_t		rmap_end =
+> > +			rec->rm_startblock + rec->rm_blockcount;
+> > +	int				error = 0;
+> > +
+> > +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
+> > +	       return 0;
+> > +
+> > +	error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, 0, 0, &ip);
+> > +	if (error)
+> > +		return 0;
+> > +
+> > +	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
+> > +		xfs_bmap_mark_sick(ip, is_attr ? XFS_ATTR_FORK : XFS_DATA_FORK);
+> > +		goto out_rele;
+> > +	}
+> > +
+> > +	if (is_attr) {
+> > +		xfs_inode_mark_sick(ip, XFS_SICK_INO_XATTR);
+> > +		goto out_rele;
+> > +	}
+> > +
+> > +	if (lost->startblock > rec->rm_startblock) {
+> > +		fileoff += lost->startblock - rec->rm_startblock;
+> > +		blocks -= lost->startblock - rec->rm_startblock;
+> > +	}
+> > +	if (rmap_end > lost_end)
+> > +		blocks -= rmap_end - lost_end;
+> > +
+> > +	fserror_report_data_lost(VFS_I(ip), XFS_FSB_TO_B(mp, fileoff),
+> > +			XFS_FSB_TO_B(mp, blocks), GFP_NOFS);
+> > +
+> > +out_rele:
+> > +	xfs_irele(ip);
+> > +	return 0;
+> > +}
+> > +
+> > +/* Walk reverse mappings to look for all file data loss */
+> > +STATIC int
+> > +xfs_verify_report_losses(
+> > +	struct xfs_mount	*mp,
+> > +	enum xfs_group_type	type,
+> > +	xfs_daddr_t		daddr,
+> > +	u64			bblen)
+> > +{
+> > +	struct xfs_group	*xg = NULL;
+> > +	struct xfs_trans	*tp;
+> > +	xfs_fsblock_t		start_bno, end_bno;
+> > +	uint32_t		start_gno, end_gno;
+> > +	int			error;
+> > +
+> > +	if (type == XG_TYPE_RTG) {
+> > +		start_bno = xfs_daddr_to_rtb(mp, daddr);
+> > +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
+> > +	} else {
+> > +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
+> > +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
+> > +	}
+> > +
+> > +	tp = xfs_trans_alloc_empty(mp);
+> > +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
+> > +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
+> > +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
+> > +		struct xfs_buf		*agf_bp = NULL;
+> > +		struct xfs_rtgroup	*rtg = NULL;
+> > +		struct xfs_btree_cur	*cur;
+> > +		struct xfs_rmap_irec	ri_low = { };
+> > +		struct xfs_rmap_irec	ri_high;
+> > +		struct xfs_group_data_lost lost;
+> > +
+> > +		if (type == XG_TYPE_AG) {
+> > +			struct xfs_perag	*pag = to_perag(xg);
+> > +
+> > +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+> > +			if (error) {
+> > +				xfs_perag_put(pag);
+> > +				break;
+> > +			}
+> > +
+> > +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
+> > +		} else {
+> > +			rtg = to_rtg(xg);
+> > +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+> > +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
+> > +		}
+> > +
+> > +		/*
+> > +		 * Set the rmap range from ri_low to ri_high, which represents
+> > +		 * a [start, end] where we looking for the files or metadata.
+> > +		 */
+> > +		memset(&ri_high, 0xFF, sizeof(ri_high));
+> > +		if (xg->xg_gno == start_gno)
+> > +			ri_low.rm_startblock =
+> > +				xfs_fsb_to_gbno(mp, start_bno, type);
+> > +		if (xg->xg_gno == end_gno)
+> > +			ri_high.rm_startblock =
+> > +				xfs_fsb_to_gbno(mp, end_bno, type);
+> > +
+> > +		lost.startblock = ri_low.rm_startblock;
+> > +		lost.blockcount = min(xg->xg_block_count,
+> > +				      ri_high.rm_startblock + 1) -
+> > +							ri_low.rm_startblock;
+> > +
+> > +		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
+> > +				xfs_verify_report_data_lost, &lost);
+> > +		xfs_btree_del_cursor(cur, error);
+> > +		if (agf_bp)
+> > +			xfs_trans_brelse(tp, agf_bp);
+> > +		if (rtg)
+> > +			xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
+> > +		if (error) {
+> > +			xfs_group_put(xg);
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> > +	xfs_trans_cancel(tp);
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Compute the desired verify IO size.
+> > + *
+> > + * To minimize command overhead, we'd like to create bios that are 1MB, though
+> > + * we allow the user to ask for a smaller size.
+> > + */
+> > +STATIC unsigned int
+> > +xfs_verify_iosize(
+> > +	const struct xfs_verify_media	*me,
+> > +	struct xfs_buftarg		*btp,
+> > +	uint64_t			bbcount)
+> > +{
+> > +	unsigned int			iosize =
+> > +			min_not_zero(SZ_1M, me->me_max_io_size);
+> > +
+> > +	BUILD_BUG_ON(BBSHIFT != SECTOR_SHIFT);
+> > +	ASSERT(BBTOB(bbcount) >= bdev_logical_block_size(btp->bt_bdev));
+> > +
+> > +	return clamp(iosize, bdev_logical_block_size(btp->bt_bdev),
+> > +			BBTOB(bbcount));
+> > +}
+> 
+> > +/* Allocate as much memory as we can get for verification buffer. */
+> > +STATIC struct folio *
+> 
+> Can we please retired STATIC already?
+
+Ok.
+
+> > +STATIC void
+> > +xfs_verify_media_error(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_verify_media	*me,
+> > +	struct xfs_buftarg	*btp,
+> > +	xfs_daddr_t		daddr,
+> > +	unsigned int		bio_bbcount,
+> > +	blk_status_t		bio_status)
+> > +{
+> > +	trace_xfs_verify_media_error(mp, me, btp->bt_bdev->bd_dev, daddr,
+> > +			bio_bbcount, bio_status);
+> > +
+> > +	/*
+> > +	 * Pass any I/O error up to the caller if we didn't successfully verify
+
+"Pass any error, I/O or otherwise, up to the caller..."
+
+> > +	 * any bytes at all.
+> > +	 */
+> > +	if (me->me_start_daddr == daddr)
+> > +		me->me_ioerror = -blk_status_to_errno(bio_status);
+> > +
+> > +	/*
+> > +	 * PI validation failures, medium errors, or general IO errors are
+> > +	 * treated as indicators of data loss.  Everything else are (hopefully)
+> > +	 * transient errors and are not reported.
+> > +	 */
+> 
+> But still left in me->me_ioerror.  Is that intentional?
+
+Yeah.  All errors are reported to the ioctl caller, but only the ones
+that sound like data loss get passed to healthmon/fsnotify.
+
+> > +	switch (me->me_dev) {
+> > +	case XFS_DEV_DATA:
+> > +		xfs_verify_report_losses(mp, XG_TYPE_AG, daddr, bio_bbcount);
+> > +		break;
+> > +	case XFS_DEV_RT:
+> > +		xfs_verify_report_losses(mp, XG_TYPE_RTG, daddr, bio_bbcount);
+> > +		break;
+> > +	}
+> 
+> At some point we really need dev_to_group_type and vice versa helpers.
+
+Heh, yes.  Do you want that /now/ or when we add a second user?
+
+It also occurs to me that I could probably speed up the verify code a
+tiny bit more by hoisting the bio variable scope outside the loop and
+using bio_reuse to reset bi_iter and bi_sector, rather than freeing it
+and allocating a new one.
+
+--D
