@@ -1,52 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44F0B2C326A;
-	Tue, 20 Jan 2026 17:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53CDE33439F;
+	Tue, 20 Jan 2026 17:27:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768929969; cv=none; b=ehw1rCVbftTCxZWEtbQ3zlZgajHxUOLuQIPbSo3/zL8H6/IdP98Y+4B/xLO4VcgctUHmThzASD2OILzQbDKY1icn+mMCh2tU1pL6r/w1NFZZ8gFnthMKYrYEgCZBRUyilwa9YHmf5BcUcqPxIkzb6zDMTigeiP3ZguTFEVkaOiw=
+	t=1768930020; cv=none; b=Zx7JAxDOwgles5SWlSabgAqJ9u/ZttSGkOZR7ugABLvLwlzmd0Qc5PRJIR6ZuhHm4lgeqiCZAHtQu6lgCjoX4/wLpvkKv900+DdFpHmmh/kBm2ia4XP2isWFWpQBV7ZsFNBbeoV/y6lzVsvUwRN9Byr1rdXFCmPfAw3xdVwP1o8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768929969; c=relaxed/simple;
-	bh=FIUbtAnKi1f9Ixtwf6Hj98EMVx/0loFgVG2T3r6WF14=;
+	s=arc-20240116; t=1768930020; c=relaxed/simple;
+	bh=bc9vokYqyjabIGtTQIBJIXCFeY5ewweEqWg1TjCb27A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uuqKHIxlQgongijrSMsYLa9qqvlCvGf6CbZMUhabkAdHuBoBpnGXI2z6nSm9aqvT3wLwPGALnVVz/ZFCy3tfmyBsv+i2rz+XO8s8gPxhjGNiLjYiTFI4jSX2dDwCPDlftpd1pvHPGlHP4Ssz49ywwylX+UvvlRusc9D9gmIOpkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oQAOvnfH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jihvTaBUPPok04mnaSdYKzqa2nfxKcYrB/GMW5Gz/h591yy/XeewWhnumPhHtnJbVe2Imo4e7312besmNeDbOSX64h3/phKL1GTzXbevjYaU7MG+KRTVDFvspFmrtq5SbXINnr5FYikE10gMoCU/cUr32w15VdWtFH8NnLZjMGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FYsT7x58; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oQAOvnfH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B773DC16AAE;
-	Tue, 20 Jan 2026 17:26:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FYsT7x58"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8117C16AAE;
+	Tue, 20 Jan 2026 17:26:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768929968;
-	bh=FIUbtAnKi1f9Ixtwf6Hj98EMVx/0loFgVG2T3r6WF14=;
+	s=k20201202; t=1768930020;
+	bh=bc9vokYqyjabIGtTQIBJIXCFeY5ewweEqWg1TjCb27A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oQAOvnfHwE78eIgKAIRtjx3D0fJsMFdeUHLCzYJaYSbsVMAoIf8DavjI4p9Ig8W+r
-	 orNBrgopcnEGNUsPOjBzAw3CY8JmSYEyPwonLuWljP12QZDK9k3MWDBh53R+AWXwZ6
-	 zhJoY9tYkeJqyfT9hbLB93MtK5Q0MgWiSkMhTjBy0ekfYujLfB+lI9+/dM3OQagJx3
-	 KpaO7nNxt5kXF7WpJGeywfLb2Ddy67/JvMP7PRrIPh6x0xVzraeG5oEBBV3YCDNXaG
-	 xu0rFDdtGxZHncy0o74bYgvxpzKcenLojcGLkF/BiK1TaFC4mzmUTGPYzxyaBxt7im
-	 NwSokwvhiUT7A==
-Date: Tue, 20 Jan 2026 09:26:08 -0800
+	b=FYsT7x58kimq/jRPuq+W7AWYsEzNI1Ctiv+YFo2IzrzLION8Ada5lXUnMvl59uht/
+	 jhfI6N6vkDD24p8VGh3TH39Gp5V4VTgeUpkY83OPyY5EMZWgQq9TbNDmzHXG50Bqn5
+	 4mLj+C/C5tyNO+5JHD41g+49CVdk+AkT0bv9JLJ+KaiYBAt03KfuVvx3cdCcwrJIy0
+	 66VShfBsfVYbShV7C6dbHuhMyUX0WHmhwnexU5BElx5UgiQjzcyTvde77JhGorRWMT
+	 JSjambYHWMOX82hTu7wF8JtwmBBwY8+oVRNcyHTP3jghMfW36cm99Vjnvn7lhsAs+i
+	 L2q48nshwZsrA==
+Date: Tue, 20 Jan 2026 09:26:59 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chuck Lever <cel@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	hirofumi@mail.parknet.co.jp, linkinjeon@kernel.org,
-	sj1557.seo@samsung.com, yuezhang.mo@sony.com,
-	almaz.alexandrovich@paragon-software.com, slava@dubeyko.com,
-	glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu,
-	adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org,
-	pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com,
-	trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org,
-	chao@kernel.org, hansg@kernel.org, senozhatsky@chromium.org,
-	Chuck Lever <chuck.lever@oracle.com>
-Subject: Re: [PATCH v6 01/16] fs: Add case sensitivity flags to file_kattr
-Message-ID: <20260120172608.GQ15551@frogsfrogsfrogs>
-References: <20260120142439.1821554-1-cel@kernel.org>
- <20260120142439.1821554-2-cel@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Subject: Re: [PATCH 6.12.y] xfs: set max_agbno to allow sparse alloc of last
+ full inode chunk
+Message-ID: <20260120172659.GR15551@frogsfrogsfrogs>
+References: <2026012006-doorway-print-237d@gregkh>
+ <20260120164038.137155-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,155 +44,90 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120142439.1821554-2-cel@kernel.org>
+In-Reply-To: <20260120164038.137155-1-bfoster@redhat.com>
 
-On Tue, Jan 20, 2026 at 09:24:24AM -0500, Chuck Lever wrote:
-> From: Chuck Lever <chuck.lever@oracle.com>
+On Tue, Jan 20, 2026 at 11:40:38AM -0500, Brian Foster wrote:
+> Sparse inode cluster allocation sets min/max agbno values to avoid
+> allocating an inode cluster that might map to an invalid inode
+> chunk. For example, we can't have an inode record mapped to agbno 0
+> or that extends past the end of a runt AG of misaligned size.
 > 
-> Enable upper layers such as NFSD to retrieve case sensitivity
-> information from file systems by adding FS_XFLAG_CASEFOLD and
-> FS_XFLAG_CASENONPRESERVING flags.
+> The initial calculation of max_agbno is unnecessarily conservative,
+> however. This has triggered a corner case allocation failure where a
+> small runt AG (i.e. 2063 blocks) is mostly full save for an extent
+> to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
+> case, which happens to be the offset of the last possible valid
+> inode chunk in the AG. In practice, we should be able to allocate
+> the 4-block cluster at agbno 2052 to map to the parent inode record
+> at agbno 2048, but the max_agbno value precludes it.
 > 
-> Filesystems report case-insensitive or case-nonpreserving behavior
-> by setting these flags directly in fa->fsx_xflags. The default
-> (flags unset) indicates POSIX semantics: case-sensitive and
-> case-preserving. These flags are read-only; userspace cannot set
-> them via ioctl.
+> Note that this can result in filesystem shutdown via dirty trans
+> cancel on stable kernels prior to commit 9eb775968b68 ("xfs: walk
+> all AGs if TRYLOCK passed to xfs_alloc_vextent_iterate_ags") because
+> the tail AG selection by the allocator sets t_highest_agno on the
+> transaction. If the inode allocator spins around and finds an inode
+> chunk with free inodes in an earlier AG, the subsequent dir name
+> creation path may still fail to allocate due to the AG restriction
+> and cancel.
 > 
-> Relocate struct file_kattr initialization from fileattr_fill_xflags()
-> and fileattr_fill_flags() to vfs_fileattr_get() and the ioctl/syscall
-> call sites. This allows filesystem ->fileattr_get() callbacks to set
-> flags directly in fa->fsx_xflags before invoking the fill functions,
-> which previously would have zeroed those values. Callers that bypass
-> vfs_fileattr_get() must now zero-initialize the struct themselves.
+> To avoid this problem, update the max_agbno calculation to the agbno
+> prior to the last chunk aligned agbno in the AG. This is not
+> necessarily the last valid allocation target for a sparse chunk, but
+> since inode chunks (i.e. records) are chunk aligned and sparse
+> allocs are cluster sized/aligned, this allows the sb_spino_align
+> alignment restriction to take over and round down the max effective
+> agbno to within the last valid inode chunk in the AG.
 > 
-> Case sensitivity information is exported to userspace via the
-> fa_xflags field in the FS_IOC_FSGETXATTR ioctl and file_getattr()
-> system call.
+> Note that even though the allocator improvements in the
+> aforementioned commit seem to avoid this particular dirty trans
+> cancel situation, the max_agbno logic improvement still applies as
+> we should be able to allocate from an AG that has been appropriately
+> selected. The more important target for this patch however are
+> older/stable kernels prior to this allocator rework/improvement.
 > 
-> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
-> ---
->  fs/file_attr.c           | 14 ++++++--------
->  fs/xfs/xfs_ioctl.c       |  2 +-
->  include/linux/fileattr.h |  3 ++-
->  include/uapi/linux/fs.h  |  2 ++
+> Cc: stable@vger.kernel.org # v4.2
+> Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> (cherry picked from commit c360004c0160dbe345870f59f24595519008926f)
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-This ought to go to linux-api because you're changing the userspace api.
-Granted it's only adding a flag definition to an existing ioctl, but
-FS_XFLAG_CASEFOLD /does/ collide with Andrey's fsverity xflag patch...
-
-(The rest of the changes looks ok to me.)
+Looks like a correct backport to me,
+Acked-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  4 files changed, 11 insertions(+), 10 deletions(-)
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/file_attr.c b/fs/file_attr.c
-> index 13cdb31a3e94..2700200c5b9c 100644
-> --- a/fs/file_attr.c
-> +++ b/fs/file_attr.c
-> @@ -15,12 +15,10 @@
->   * @fa:		fileattr pointer
->   * @xflags:	FS_XFLAG_* flags
->   *
-> - * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).  All
-> - * other fields are zeroed.
-> + * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).
->   */
->  void fileattr_fill_xflags(struct file_kattr *fa, u32 xflags)
->  {
-> -	memset(fa, 0, sizeof(*fa));
->  	fa->fsx_valid = true;
->  	fa->fsx_xflags = xflags;
->  	if (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)
-> @@ -46,11 +44,9 @@ EXPORT_SYMBOL(fileattr_fill_xflags);
->   * @flags:	FS_*_FL flags
->   *
->   * Set ->flags, ->flags_valid and ->fsx_xflags (translated flags).
-> - * All other fields are zeroed.
->   */
->  void fileattr_fill_flags(struct file_kattr *fa, u32 flags)
->  {
-> -	memset(fa, 0, sizeof(*fa));
->  	fa->flags_valid = true;
->  	fa->flags = flags;
->  	if (fa->flags & FS_SYNC_FL)
-> @@ -84,6 +80,8 @@ int vfs_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
->  	struct inode *inode = d_inode(dentry);
->  	int error;
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 6258527315f2..8223464e23e7 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -850,15 +850,16 @@ xfs_ialloc_ag_alloc(
+>  		 * invalid inode records, such as records that start at agbno 0
+>  		 * or extend beyond the AG.
+>  		 *
+> -		 * Set min agbno to the first aligned, non-zero agbno and max to
+> -		 * the last aligned agbno that is at least one full chunk from
+> -		 * the end of the AG.
+> +		 * Set min agbno to the first chunk aligned, non-zero agbno and
+> +		 * max to one less than the last chunk aligned agbno from the
+> +		 * end of the AG. We subtract 1 from max so that the cluster
+> +		 * allocation alignment takes over and allows allocation within
+> +		 * the last full inode chunk in the AG.
+>  		 */
+>  		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
+>  		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
+>  							pag->pag_agno),
+> -					    args.mp->m_sb.sb_inoalignmt) -
+> -				 igeo->ialloc_blks;
+> +					    args.mp->m_sb.sb_inoalignmt) - 1;
 >  
-> +	memset(fa, 0, sizeof(*fa));
-> +
->  	if (!inode->i_op->fileattr_get)
->  		return -ENOIOCTLCMD;
->  
-> @@ -323,7 +321,7 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
->  {
->  	struct mnt_idmap *idmap = file_mnt_idmap(file);
->  	struct dentry *dentry = file->f_path.dentry;
-> -	struct file_kattr fa;
-> +	struct file_kattr fa = {};
->  	unsigned int flags;
->  	int err;
->  
-> @@ -355,7 +353,7 @@ int ioctl_fssetxattr(struct file *file, void __user *argp)
->  {
->  	struct mnt_idmap *idmap = file_mnt_idmap(file);
->  	struct dentry *dentry = file->f_path.dentry;
-> -	struct file_kattr fa;
-> +	struct file_kattr fa = {};
->  	int err;
->  
->  	err = copy_fsxattr_from_user(&fa, argp);
-> @@ -434,7 +432,7 @@ SYSCALL_DEFINE5(file_setattr, int, dfd, const char __user *, filename,
->  	struct filename *name __free(putname) = NULL;
->  	unsigned int lookup_flags = 0;
->  	struct file_attr fattr;
-> -	struct file_kattr fa;
-> +	struct file_kattr fa = {};
->  	int error;
->  
->  	BUILD_BUG_ON(sizeof(struct file_attr) < FILE_ATTR_SIZE_VER0);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 59eaad774371..f0417c4d1fca 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -496,7 +496,7 @@ xfs_ioc_fsgetxattra(
->  	xfs_inode_t		*ip,
->  	void			__user *arg)
->  {
-> -	struct file_kattr	fa;
-> +	struct file_kattr	fa = {};
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	xfs_fill_fsxattr(ip, XFS_ATTR_FORK, &fa);
-> diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
-> index f89dcfad3f8f..709de829659f 100644
-> --- a/include/linux/fileattr.h
-> +++ b/include/linux/fileattr.h
-> @@ -16,7 +16,8 @@
->  
->  /* Read-only inode flags */
->  #define FS_XFLAG_RDONLY_MASK \
-> -	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR)
-> +	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR | \
-> +	 FS_XFLAG_CASEFOLD | FS_XFLAG_CASENONPRESERVING)
->  
->  /* Flags to indicate valid value of fsx_ fields */
->  #define FS_XFLAG_VALUES_MASK \
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index 66ca526cf786..919148beaa8c 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -253,6 +253,8 @@ struct file_attr {
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
->  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
-> +#define FS_XFLAG_CASEFOLD	0x00020000	/* case-insensitive lookups */
-> +#define FS_XFLAG_CASENONPRESERVING 0x00040000	/* case not preserved */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  /* the read-only stuff doesn't really belong here, but any other place is
+>  		error = xfs_alloc_vextent_near_bno(&args,
+>  				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
 > -- 
 > 2.52.0
 > 
