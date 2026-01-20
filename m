@@ -1,428 +1,259 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013051.outbound.protection.outlook.com [40.93.201.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A6247B433
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 15:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8DD824BD;
+	Tue, 20 Jan 2026 15:22:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768921979; cv=pass; b=h0bHXWo4qb527FGq1XaVgZtUFqHvUzGbSNRhwfhw8r3ZfFOzRf5C7MJ15f/nphYt1nsnzIjFVYnkcm9415GOUaHOd20IlBYvId1XDqUd6eG4ebELxmdczGUK1bUYl/OG7Lv3+if8wdTCg7RlqjCHyZdRXFco/ZYEe7m3vAEBN74=
+	t=1768922576; cv=fail; b=RzkNh6S02f+NVP9niB8YYpZQMmqpDSr9JwSbAgnY8FOX/dQmPXhNOWSbMWo1yWIyK1iDoY2x24SVDFRskTWf2ZxyMTcywlXZuA1FxqAJmGIqMz1VC2BDTmKyFGV/Kn2uk8UpsnTuvSvmgvjpswLOg1gY6uuD0pbtL/tb/tavMF4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768921979; c=relaxed/simple;
-	bh=Xnjuhtir64eVTIEfdUmhiDcTr/ARUdXCTWH26MCgUOU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kyNVaNtMwYDqfNDXdqe0PH5oXP3XI6aUTMiYkvg0Vpm8/CUUe83qWinvY6wK5wsQQgHHjJCf2xIUoV+zW2kzk2BzEDke2Scs4Qb/PhZzZ4WlYcBMxsDNVMS5eyiqvdLPPdosUk44HzbeA+osaaskdh5EsYAcgQhGzBTkS5ppkbk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wf9H/ICM; arc=pass smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768922576; c=relaxed/simple;
+	bh=Zfpw0BAdWcsBrkrTSfWCb0EbBxH4gC9djyubW6XVUHw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=PKGOpfUe5kDUdnIT6ZilXhEvGiKdbs4PVWZoze+h+GmSe1nRr4eC+k1LYip9ARyqJFzq079Ez4bDz5hyo7bK3WMMmJpywYT0o4WXf3MTDt/+bwAV2z2LH2+y9lnM8jd1caCAkVPLOlHjcRJaq3ngipZBt3QmL88NTvwc9Vfqra8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=BatpiT5w; arc=fail smtp.client-ip=40.93.201.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wf9H/ICM"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-64b92abe63aso10869435a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 07:12:56 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1768921975; cv=none;
-        d=google.com; s=arc-20240605;
-        b=HOcERxDSyjwtNIi3ZvmK5AZ+vauo5EqmLxTk6YKztkOUP7Zn6q0VXJoAabPS6jajtF
-         BPhtEae1LAGEVDMaTm1vGW0il3d3M93WU6PIQHgp7o2mwZnYVE3R5qElxccbYq7JLEir
-         CpD2q/g+jUcytvzgvNxQ+qVMPOU2KEveWjtKZdt977aMXNjP7Oe4+NMrjb9NXrCQsU/W
-         tRC8Lk7lj4qnmBb0/TE+2EeO/Bb95Ivhd0yLrk4sw1ih/AwiXhXfvBYA/u8yiNNRIh/B
-         QUhR3HFp8uuppjjAX2IvspetaSINWsLS8A4oF7i31SrbZ+z24tXkXUYpR0gF3aGzkfEb
-         nCCA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=rp3Cco0V7YWfsBRnrN7YWiXeWxd2p0Ss5nTS/91MVtk=;
-        fh=gNMBhcLtb1OMHk5qdfjbUU3ZNd+CVD5iZbbYiKeFKdg=;
-        b=ZFKyCOcLzdQIQds0iAWQgeXV5AxVW/ZiduZBd+AdstsafyMhD6hwz8skE46GwK1oBW
-         5jwIcsgKKxFeZzQ+VSX3cl1N1KZaRsaQJI7oRiL6YyZPx9QjxIvaVUGRN3zW45Qvbz7o
-         8oAoo7x7XjjoavdTxFqgTXDlbrELuov+QusahntxC5tElsjZiPw3OOl8uZSTDdsT5iGn
-         j7B7gkDjvKtMlJ2cQQxfit/sg6kajJ8S3ymDpSF4JX4szo9QyqIWs4d0x8ghmxD1mK4Q
-         pnbLI/aOdRFkA+r1OwSLBB3PW9lNw7l7C36TwCSEZNni7mWXiOLtegkmTHLPpPccYkqS
-         mp0w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768921975; x=1769526775; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=rp3Cco0V7YWfsBRnrN7YWiXeWxd2p0Ss5nTS/91MVtk=;
-        b=Wf9H/ICMG/H9XmWjFGBJVy+WoCGIsBR+YwbkyuZq8rtMe0BdUguFDH98FrE5iYUD9F
-         +F3KgChkA5F5EmGdD3RSSI/qh/z5wsNFxTK6gDkb09/dVJS7yJ/JT0g9KeQSJ3r9ayRd
-         2Dsk8Kmh2qrXd6ip//1wleiPePY2NPHxaW1LNS90/p/z2GqHJ5wQEj4GLpEQaomK+iSY
-         gOLCPfXwccmH4V5JGp2xXtpnJtmzoqCEyPJROemcc+Gmi1m+pJ0n4B3C8jdwTQkhSXEo
-         RyCChFmSgVzGIgzI6RFIiH88JzqB4VoD1/dRz32ysqBPyiPguE08hGHdNtfoHzDcDq2K
-         p9Jg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768921975; x=1769526775;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rp3Cco0V7YWfsBRnrN7YWiXeWxd2p0Ss5nTS/91MVtk=;
-        b=sFD9Z68uMfbXspg1+cR9VkkotS3Rv1RXJ/98SOtLhYeJlbIzvm55N2XoQg1EKV1pr/
-         U8HGqYoV+++wVGIVj5Gxkt0rUjZLW5ESLpaLdDHnD+WDqJ9DwIU3DDt23WSVR7dALt1W
-         lQt5tTBReebdaKaUK+Dq36Gjs7e9NhWQ5QublBTWqYbXjwF+KTUzgegPM+cDO1biiRqP
-         eqDVKEJfRkaySTrtXmKacfaWZ3PuDtU3pdpqKCQipM6IbJQ0pGFWhHRLHU/IDY9rIhMI
-         6uvTs8CNiXz0zEF+VvMoJNzX3SBpOUvVaKq3oCXvSPCrYxMBxvDZ0LAqvPllxY5xCXUt
-         UVSw==
-X-Forwarded-Encrypted: i=1; AJvYcCVlcybAolJ9dz/qj+ZaA/lQ8ueGlZwQMq5ykl+Cm+mSM0l96RfoAOMt61m29hwUX6+qCFqgQRLfS+k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJF8AmxJi0F+xcYU/X4GTKltBlFwQWjALKmyxceRnQJVf3j/O5
-	0KHUnGzkMDeiho/EG5igAOT8bVQnFCpIZRo0hxQGwABsniP/01e2icJk08Bb2SHgWo5EPMQ+JtA
-	ORdwxIgM54VZELz0VOrCRwvDiCtREEOc=
-X-Gm-Gg: AZuq6aJ/XOhRq52bIsGEWzgGF0Cvg2s8A6YpVGj8Nroy18AdLQ35adf/gxgjpiE3GJ9
-	vTxNg/cqO6u9IJzso7DQwWaHdV+q05kSvqE9t0bdJfvKf36z6QR4ApPGFSq1aVGhe0udocU3ucX
-	AZAqu15iP8QCm6I2dT75+QoAiY36C/H3+86HbcTDYpgJecxCGTodzWCxT10l0d3jaBdzZcPIlPe
-	VqPWJ4aiu0HOb5fPX9YdqXJ+dQsFsFJQkbzpn7Pu4UpSfd5AHUrY11RdCn32UDC8lNCwjUT1j8r
-	5hjMlG+YTFu4B/L3p/IZQ/5CbZiidA==
-X-Received: by 2002:a17:907:7b9a:b0:b87:115:a724 with SMTP id
- a640c23a62f3a-b879324398bmr1329515266b.34.1768921974511; Tue, 20 Jan 2026
- 07:12:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="BatpiT5w"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=zRuq5sr9xXC59IWTzbSZs2WcRHIbfaoPX3RynLIXA/FZOlgvdugioIW37KPo2/tS77hqfOFhnb95EqAv4n7hzsgwzI+OE2N5A1DBxUKZhoUA5eHc+YqqVUU9+tO3WvCoVQcGhBxlUwb0FlS2muROC8Jk2OsqtCuNww4OrTRorUxKFbc563nvQDebyUSCUruKaxmuxD3ieAcNiMKH6VdoqRKVeUH9hjthk/ZePhDiHWJ5qMM83+Yu33FrVhhfnlXHb31d/GWmkSPYhI9YnovdfstOaBD9Nx7BSo6Xe/0biNgjJ4uKq3C0tmtnRmTIrdhOtspxIq13LqRIOJEkgvXenA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XS/Jw3z4S8CbDr8yBFqBv2BWH8NsIXN4rY4iWcszBm8=;
+ b=TEGC4lALJwBwE/9Zt+ay17nHtvZZbjfMDFDbhNbO6gRBPcjj6ohQ+M377j1LzvzCmdKKLKjUeHSl9jPnPzjk0eXcrxHl7T0B3Dk1/v0g8aXHM3+vbTQBdScT/c2xsUgK6Gb86JMpBg28uOrdw4RFZDHG2/HqQFlTy0xT9TnVrMQSVs/qEseCbu8bhZcIP09WMBkh0PGbdmMqQU22c6oQAr7FWfHzTtz9RIFvVRTk1VgKtmM0A0RnQb2VSiFzsKH5USXrhwWTqpeSVzLi5/wsOSXj2LOAhU2P4HbdGu3k4CYzDPV1LtYV1qKrvPReHWQY9C6deGwoyc05iLoyGozqWA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XS/Jw3z4S8CbDr8yBFqBv2BWH8NsIXN4rY4iWcszBm8=;
+ b=BatpiT5wxfqvOok1Q6llgVzWiOEqlxOiVXaD9CRKdqRlof5jySxNAC6qiyNKQF1NzjBRRgLjLaYibwrKpuM2nJoL16JnbxHxhWjrSh0C3m4bC22HsT1MCppZdfCF0iFrTt85eTUsc0yt/43blY+iT/iNtbX0ZpuTmu7+4HP1Ena//EtuScTQ5naZH9WNKsBSE195mJUGk5VljULtVviJ6fGO7oJDX/KUiNO6D8juKJKeGOcH01BcNjdZE+WkNPhTXwHlG8w8gFop2cAjzwge2T1qDoB27ZQbpjros62/yu/n8wpkR3maR6EZpptGaC04iPJbREvYOgeT92b748TMvg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by PH8PR12MB6721.namprd12.prod.outlook.com (2603:10b6:510:1cc::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Tue, 20 Jan
+ 2026 15:22:46 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::1b59:c8a2:4c00:8a2c]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::1b59:c8a2:4c00:8a2c%3]) with mapi id 15.20.9542.008; Tue, 20 Jan 2026
+ 15:22:46 +0000
+Date: Tue, 20 Jan 2026 11:22:45 -0400
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	"H . Peter Anvin" <hpa@zytor.com>, Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Christian Koenig <christian.koenig@amd.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Matthew Auld <matthew.auld@intel.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Benjamin LaHaise <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>,
+	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>,
+	Sandeep Dhavale <dhavale@google.com>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>,
+	Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	David Hildenbrand <david@kernel.org>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dave Martin <Dave.Martin@arm.com>,
+	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>, Hugh Dickins <hughd@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Zi Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>,
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>,
+	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
+	David Howells <dhowells@redhat.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E . Hallyn" <serge@hallyn.com>,
+	Yury Norov <yury.norov@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-sgx@vger.kernel.org, linux-kernel@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+	linux-fsdevel@vger.kernel.org, linux-aio@kvack.org,
+	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+	linux-mm@kvack.org, ntfs3@lists.linux.dev, devel@lists.orangefs.org,
+	linux-xfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-security-module@vger.kernel.org
+Subject: Re: [PATCH RESEND 09/12] mm: make vm_area_desc utilise vma_flags_t
+ only
+Message-ID: <20260120152245.GC1134360@nvidia.com>
+References: <cover.1768857200.git.lorenzo.stoakes@oracle.com>
+ <baac396f309264c6b3ff30465dba0fbd63f8479c.1768857200.git.lorenzo.stoakes@oracle.com>
+ <20260119231403.GS1134360@nvidia.com>
+ <36abc616-471b-4c7b-82f5-db87f324d708@lucifer.local>
+ <20260120133619.GZ1134360@nvidia.com>
+ <488a0fd8-5d64-4907-873b-60cefee96979@lucifer.local>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <488a0fd8-5d64-4907-873b-60cefee96979@lucifer.local>
+X-ClientProxiedBy: BLAPR03CA0088.namprd03.prod.outlook.com
+ (2603:10b6:208:329::33) To LV8PR12MB9620.namprd12.prod.outlook.com
+ (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
- <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
- <20260114062608.GB10805@lst.de> <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
- <20260115062944.GA9590@lst.de> <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
- <20260115072311.GA10352@lst.de> <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
- <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
- <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com> <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
- <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com> <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
- <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
-In-Reply-To: <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 20 Jan 2026 16:12:41 +0100
-X-Gm-Features: AZwV_QghbBNAoP8paOdiNoqpwmmKM3bWt4If2fMAFv5l9zx2CG_D1s9roNDQ-Gs
-Message-ID: <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
-To: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, 
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
-	Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	kernel-dev@igalia.com, vivek@collabora.com, 
-	Ludovico de Nittis <ludovico.denittis@collabora.com>
-Content-Type: multipart/mixed; boundary="000000000000edabef0648d33d95"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|PH8PR12MB6721:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0f23315a-38ff-446d-dcf2-08de5837c3c9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?r7/Chpr1IksxhPJwyfuAbHS5ygCLDBPt3GBXthlBe6RpZEgxhZDvK/EeXGxY?=
+ =?us-ascii?Q?oC/10jmPbTFepyeay+zIJL80Jil+3Z4vza/iRF8KuWN+6nMaCJF/lv9xpTSH?=
+ =?us-ascii?Q?lQkpWtN3LctlXMe0rIfTKjOxvdoElVZ3qwJnmDJ5y3/i6xnxEIomBWJw6h/z?=
+ =?us-ascii?Q?de7BsZ7aCLTA+oVeYluyyM1roYB51VrjvZhchUJIOQdHl+pNJ9NrzsKkz0B1?=
+ =?us-ascii?Q?Wj9TtOXC1dUGoIdZALrlcudCpkLyogrTU/pXYcUagZ66z7N//trTn/AkzM9w?=
+ =?us-ascii?Q?ABdXafmkX410To8JNxpPoseSKGP6DY2pPiHs02nd0Y1fZlKZBzx2fwgeMGNt?=
+ =?us-ascii?Q?vh830RlY9EWbFjWf+BM9afSTmgL4sVgSAF4bmnDS1StzyDZHgVpJC5VofvgE?=
+ =?us-ascii?Q?wA+/s68acWDgmDnSfgSnBu2J8IBGaxpkpIdAQRa0Ilf/sQkZtkKWoYQdg9fC?=
+ =?us-ascii?Q?HxaFfpyC+7gRsjPRMdcAnGHtW+pY+MdN9l7uB/xK0HzXkMUyW7CUzuyTf5HO?=
+ =?us-ascii?Q?STc/fio2Gdnmq0i7wb8lWBT5wTACfWfOjLfsKIU7eS3hIOshP6lfrn8jKiI2?=
+ =?us-ascii?Q?LNxiatqpGtCbjALHlLlWFGYm7FCUesDnBeC6ADwJhzMCIB1jjXXAqkLk2Pxs?=
+ =?us-ascii?Q?MRYCWFodXBj7lKQd1oB601eySZKPv8cEsUaMSR8X6WSLwh31Gc6XEqo3CIBI?=
+ =?us-ascii?Q?mHBZILNttaOhZtqdgb/BQ3/M2uSHUeKhhBi+7IQmFLdM3HG2ZXFf8iTzFT6H?=
+ =?us-ascii?Q?wbwzEadcBgY7Zj86zSA4gbNa/x2vbSMAGSAG0FH/K/xL/DYf9L12yl6O9I/6?=
+ =?us-ascii?Q?sMzYIQL6yE8PqedOeKV4wmHLucAuRrn/tiPsUgH7EMXselvhW26zICU9GIw+?=
+ =?us-ascii?Q?Kl+KmHU/4Yuj597FdeaSh+AIVgCYYZoWkPSAEGLr7XAbVbgrzpGHZWA/xWMq?=
+ =?us-ascii?Q?KRzpiF6SOX9DxBJe6JskMwXY9p9/MsEmX/jUx4HrpfjV2lkLJm04o9PTl+c+?=
+ =?us-ascii?Q?JZco1lxEZdnGQY0Z+okRwbd/QdjZ6OzPGPc7Rcfqpxmz/RZtFiIxg253Jt9L?=
+ =?us-ascii?Q?qduu76k5nvng9g7whsgXVWJzpy04EY8ALHfwrv2F1kEuVdRpIBZO1Y6/4o7B?=
+ =?us-ascii?Q?AtN8neBpLaPuPgJ2VO/clt8vXv0jCI+cTWUzZ4bk0hZ1mwmTJJN5Vu5ODnUE?=
+ =?us-ascii?Q?ZsxNezFcyj9q8zcOyXQJeRj3jeh9iplYgKvWQAqK4gkl8t7qJkXvkCPawdoi?=
+ =?us-ascii?Q?XVtQgm1v1tvqiTBpwLCCmozkRnzbnlmzqqMwHAfrw/ptTu619PcC9j8GHG/H?=
+ =?us-ascii?Q?p4kOU3HEDzEwFaw5lECO5pp/3BA5eRBfemBf7MasT14pB+MYqrJaSC/nt4+T?=
+ =?us-ascii?Q?L/i3JzM3M1zY45ykCZE1Ubb+uyqH1x0bpnE5wf4I6GTsca0aGri8rpxO3XXJ?=
+ =?us-ascii?Q?ApAtfRwSeV4iM0waUe1oK/XI6/l+sSmVZLVTzUNwJ8Zbc9Srb0fH+wxud06N?=
+ =?us-ascii?Q?jpTZ47xCQlKlrNrMyzR57AX0I2wktbpt1uPEn1PopWme6fnrtG4xAUt7+Bs6?=
+ =?us-ascii?Q?6cthP1EFkageLU4YZGU=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?/kJlt45gk9FgL+tTa7H+v4SFi+ZNQ9RsaoVOCXb/xzD3J64tWrLguNA96P6G?=
+ =?us-ascii?Q?7SST+nPcDjISbyhaWneiUsBduaQhlMxHIRTYpCbkR5ghoXHbmRxp0h6Y0rI8?=
+ =?us-ascii?Q?5I1vPqVYKd9wyrlZvuBYCEHNhzb8v02soHih+e1jcOYjHaM8tmxBOxxdGYhD?=
+ =?us-ascii?Q?ZOvK6ARaLitcB4xpNvAjr5WcziN3Yr5+LnScixjM7B8SG6vvlppcWDjnjCbd?=
+ =?us-ascii?Q?dUFEizcOiryu8cA0F7idsAn1PHnIIOnG0f09A6dWPRzW4bI8FLBmcfjwGNGK?=
+ =?us-ascii?Q?XUfqdoiwjYbYi7nv4/ewu5UoaVa+xrXof2sLeBHA6i1Q4cMcGcn5Ns1MVEaY?=
+ =?us-ascii?Q?4LHrXFFwn4EzKMdl11tiuzU7ktcWjcpYVN6aGiu83kuICgyBCWqLm2UnD/Ap?=
+ =?us-ascii?Q?6opnmBFoui1CWXhSu14dgJHnnc6tYBgtKn2g71qXeMTGH96nqb8NkyBTkHYE?=
+ =?us-ascii?Q?N7iuF0p3z7zMq7DAiKKcoduoxlaIu2q2gmPqXDH5rgb5Gwy/xX4pkEHiFwov?=
+ =?us-ascii?Q?Ms7jzTk1126qiDQH85lAo1hw7WXFfXgWnGiMNz4OhxT3f47Hjrqu+WkfWWvH?=
+ =?us-ascii?Q?1zdj4r8o+5da5bqEmu/ewgOARhZNK5vMQPKXU9UBWpD7I2wkhUo0UcmlJajN?=
+ =?us-ascii?Q?69fzw/1I8B62NTd052ztVbYcJGHxljEp95ctXYYKZAseaqIGERg3gFk7xcLk?=
+ =?us-ascii?Q?GrMs8EL1aHmD6z4FTIqWFRsG2dhH/cJzSqk80BTXXcYLSW3WRtZmA5kLg8Ax?=
+ =?us-ascii?Q?oltduum7kR6adFTgODVGaw1VtaVUIaV7dTfwu5A3wRIR7ueMTZaKTwUTrOo5?=
+ =?us-ascii?Q?Kl8rixBk2M4PHmnHqWq4uDvsYc7xmy6lE2ZuNPiroHCGDnTfIxXE5eZHM7r4?=
+ =?us-ascii?Q?HpXYmhi80yWHHzWad8ys+ZW5UJ51atEMNawupsF8sC+7pYkI/Pa+vLwx+HcU?=
+ =?us-ascii?Q?FC8qKyyQ64BUxTQBraipnmobWvBdkRmJoPVdH3j0rLsPhaQ2Jb8+y0rGrnu0?=
+ =?us-ascii?Q?EzqOu2cYeTwB2EPwaYgPVnB8eQmDZbrT6uQuQpiizfYA3Do2zC0OOnH3MAgT?=
+ =?us-ascii?Q?vVkuIljFgae+LyGOTwJms0I/DFolgvgDKnUTJMq5GQn1msGNxq/0QT8MI5+s?=
+ =?us-ascii?Q?l+iI9fQt/UfCLcMXmbhMzHq9xUOFG5+p4xKU7fJ1hijPnvjebxCZk6z3SjV3?=
+ =?us-ascii?Q?gqmxfyCNLRswvbcFcnZdcLYfKeL3ZFYyHwZMno9SMSx6FJFekEg2n2pYrmSJ?=
+ =?us-ascii?Q?zgSjrVqnWokOEsj2ZaNfvG9DmXLgQkcb5lr4lw6JzJ4blJg4d+crgXKFj8Dy?=
+ =?us-ascii?Q?WHL1CvzXAOfcXDnziLm3lSiacKn8NBz05dU2yrrymizA1ZGf5KAGE8n6YGSf?=
+ =?us-ascii?Q?o1cx0OAhg1FACHHxiiPEA4Qg6i4p2+FQce47GILPV4Bjs53EZjUUO/cSI5hH?=
+ =?us-ascii?Q?xwQjiswzcAIpAbzs1JENx6Z66ms8wBiQkdk7sK7Z8sEi6k+4L/ogSYjdQWbz?=
+ =?us-ascii?Q?dDFz23ztYtWSvkerx3VZQLAhCTWihWjegdDVYo6cXSZHnbZNkqQBZ14TIkaH?=
+ =?us-ascii?Q?5CI53+w1ySmBL+MLVcOhhjff1gjyRGvkG2MxDfcq468g+7EJLfBBkJZEY3i2?=
+ =?us-ascii?Q?+I41IT+fn0OC9DAkgwtEmEA2gijr0p4+HUXrI49dpu46sp/u5EaCJCUfiwTA?=
+ =?us-ascii?Q?zBeVsIZh82CQ2QIBEdmjeEw41r1+NTsR0fDU/d9ClT3gSK1tKKDGwVswl9Ls?=
+ =?us-ascii?Q?rrTkETDyhg=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0f23315a-38ff-446d-dcf2-08de5837c3c9
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2026 15:22:46.6186
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: uM8t+KncR+kVgpD+4wjpPyVDfJmX+0Zujuw179fTvzYmv7LFNzC7aE8/u6m8O1mz
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6721
 
---000000000000edabef0648d33d95
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 20, 2026 at 03:10:54PM +0000, Lorenzo Stoakes wrote:
+> The natural implication of what you're saying is that we can no longer use this
+> from _anywhere_ because - hey - passing this by value is bad so now _everything_
+> has to be re-written as:
 
-On Mon, Jan 19, 2026 at 5:56=E2=80=AFPM Andr=C3=A9 Almeida <andrealmeid@iga=
-lia.com> wrote:
->
-> Em 16/01/2026 14:06, Amir Goldstein escreveu:
-> > On Fri, Jan 16, 2026 at 2:28=E2=80=AFPM Andr=C3=A9 Almeida <andrealmeid=
-@igalia.com> wrote:
-> >>
-> >> [+CC SteamOS developers]
-> >>
-> >> Em 16/01/2026 06:55, Amir Goldstein escreveu:
-> >>> On Thu, Jan 15, 2026 at 7:55=E2=80=AFPM Andr=C3=A9 Almeida <andrealme=
-id@igalia.com> wrote:
-> >>>>
-> >>>> Em 15/01/2026 13:07, Amir Goldstein escreveu:
-> >>>>> On Thu, Jan 15, 2026 at 4:42=E2=80=AFPM Andr=C3=A9 Almeida <andreal=
-meid@igalia.com> wrote:
-> >>>>>>
-> >>>>>> Em 15/01/2026 04:23, Christoph Hellwig escreveu:
-> >>>>>>
-> >>>>>> [...]
-> >>>>>>
-> >>>>>>>
-> >>>>>>> I still wonder what the use case is here.  Looking at Andr=C3=A9'=
-s original
-> >>>>>>> mail it states:
-> >>>>>>>
-> >>>>>>> "However, btrfs mounts may have volatiles UUIDs. When mounting th=
-e exact same
-> >>>>>>> disk image with btrfs, a random UUID is assigned for the followin=
-g disks each
-> >>>>>>> time they are mounted, stored at temp_fsid and used across the ke=
-rnel as the
-> >>>>>>> disk UUID. `btrfs filesystem show` presents that. Calling statfs(=
-) however
-> >>>>>>> shows the original (and duplicated) UUID for all disks."
-> >>>>>>>
-> >>>>>>> and this doesn't even talk about multiple mounts, but looking at
-> >>>>>>> device_list_add it seems to only set the temp_fsid flag when set
-> >>>>>>> same_fsid_diff_dev is set by find_fsid_by_device, which isn't doc=
-umented
-> >>>>>>> well, but does indeed seem to be done transparently when two file=
- systems
-> >>>>>>> with the same fsid are mounted.
-> >>>>>>>
-> >>>>>>> So Andr=C3=A9, can you confirm this what you're worried about?  A=
-nd btrfs
-> >>>>>>> developers, I think the main problem is indeed that btrfs simply =
-allows
-> >>>>>>> mounting the same fsid twice.  Which is really fatal for anything=
- using
-> >>>>>>> the fsid/uuid, such NFS exports, mount by fs uuid or any sb->s_uu=
-id user.
-> >>>>>>>
-> >>>>>>
-> >>>>>> Yes, I'm would like to be able to mount two cloned btrfs images an=
-d to
-> >>>>>> use overlayfs with them. This is useful for SteamOS A/B partition =
-scheme.
-> >>>>>>
-> >>>>>>>> If so, I think it's time to revert the behavior before it's too =
-late.
-> >>>>>>>> Currently the main usage of such duplicated fsids is for Steam d=
-eck to
-> >>>>>>>> maintain A/B partitions, I think they can accept a new compat_ro=
- flag for
-> >>>>>>>> that.
-> >>>>>>>
-> >>>>>>> What's an A/B partition?  And how are these safely used at the sa=
-me time?
-> >>>>>>>
-> >>>>>>
-> >>>>>> The Steam Deck have two main partitions to install SteamOS updates
-> >>>>>> atomically. When you want to update the device, assuming that you =
-are
-> >>>>>> using partition A, the updater will write the new image in partiti=
-on B,
-> >>>>>> and vice versa. Then after the reboot, the system will mount the n=
-ew
-> >>>>>> image on B.
-> >>>>>>
-> >>>>>
-> >>>>> And what do you expect to happen wrt overlayfs when switching from
-> >>>>> image A to B?
-> >>>>>
-> >>>>> What are the origin file handles recorded in overlayfs index from i=
-mage A
-> >>>>> lower worth when the lower image is B?
-> >>>>>
-> >>>>> Is there any guarantee that file handles are relevant and point to =
-the
-> >>>>> same objects?
-> >>>>>
-> >>>>> The whole point of the overlayfs index feature is that overlayfs in=
-odes
-> >>>>> can have a unique id across copy-up.
-> >>>>>
-> >>>>> Please explain in more details exactly which overlayfs setup you ar=
-e
-> >>>>> trying to do with index feature.
-> >>>>>
-> >>>>
-> >>>> The problem happens _before_ switching from A to B, it happens when
-> >>>> trying to install the same image from A on B.
-> >>>>
-> >>>> During the image installation process, while running in A, the B ima=
-ge
-> >>>> will be mounted more than once for some setup steps, and overlayfs i=
-s
-> >>>> used for this. Because A have the same UUID, each time B is remouted
-> >>>> will get a new UUID and then the installation scripts fails mounting=
- the
-> >>>> image.
-> >>>
-> >>> Please describe the exact overlayfs setup and specifically,
-> >>> is it multi lower or single lower layer setup?
-> >>> What reason do you need the overlayfs index for?
-> >>> Can you mount with index=3Doff which should relax the hard
-> >>> requirement for match with the original lower layer uuid.
-> >>>
-> >>
-> >> The setup has a single lower layer. This is how the mount command look=
-s
-> >> like:
-> >>
-> >> mount -t overlay -o
-> >> "lowerdir=3D${DEV_DIR}/etc,upperdir=3D${DEV_DIR}/var/lib/overlays/etc/=
-upper,workdir=3D${DEV_DIR}/var/lib/overlays/etc/work"
-> >> none "${DEV_DIR}/etc"
-> >>
-> >> They would rather not disable index, to avoid mounting the wrong layer=
-s
-> >> and to avoid corner cases with hardlinks.
-> >
-> > IIUC you have all the layers on the same fs ($DEV_DIR)?
-> >
-> > See mount option uuid=3Doff, created for this exact use case:
-> >
-> > Documentation/filesystems/overlayfs.rst:
-> > Note: the mount option uuid=3Doff can be used to replace UUID of the un=
-derlying
-> > filesystem in file handles with null, and effectively disable UUID chec=
-ks. This
-> > can be useful in case the underlying disk is copied and the UUID of thi=
-s copy
-> > is changed. This is only applicable if all lower/upper/work directories=
- are on
-> > the same filesystem, otherwise it will fallback to normal behaviour.
-> >
-> > commit 5830fb6b54f7167cc7c9d43612eb01c24312c7ca
-> > Author: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-> > Date:   Tue Oct 13 17:59:54 2020 +0300
-> >
-> >      ovl: introduce new "uuid=3Doff" option for inodes index feature
-> >
-> >      This replaces uuid with null in overlayfs file handles and thus re=
-laxes
-> >      uuid checks for overlay index feature. It is only possible in case=
- there is
-> >      only one filesystem for all the work/upper/lower directories and b=
-are file
-> >      handles from this backing filesystem are unique. In other case whe=
-n we have
-> >      multiple filesystems lets just fallback to "uuid=3Don" which is an=
-d
-> >      equivalent of how it worked before with all uuid checks.
-> >
-> >      This is needed when overlayfs is/was mounted in a container with i=
-ndex
-> >      enabled ...
-> >
-> >      If you just change the uuid of the backing filesystem, overlay is =
-not
-> >      mounting any more. In Virtuozzo we copy container disks (ploops) w=
-hen
-> >      create the copy of container and we require fs uuid to be unique f=
-or a new
-> >      container.
-> >
-> > TBH, I am trying to remember why we require upper/work to be on the
-> > same fs as lower for uuid=3Doff,index=3Don and I can't remember.
-> > If this is important I can look into it.
-> >
->
-> Actually they are not in the same fs, upper and lower are coming from
-> different fs', so when trying to mount I get the fallback to
-> `uuid=3Dnull`. A quick hack circumventing this check makes the mount work=
-.
->
-> If you think this is the best way to solve this issue (rather than
-> following the VFS helper path for instance),
+No, I'm not saying that, I'm saying this specific case where you are
+making an accessor to reach an unknown value located on the heap
+should be using a pointer as both a matter of style and to simplify
+life for the compiler.
 
-That's up to you if you want to solve the "all lower layers on same fs"
-or want to also allow lower layers on different fs.
-The former could be solved by relaxing the ovl rules.
+> 	vma_flags_t flags_to_set = mk_vma_flags(<flags>);
+> 
+> 	if (vma_flags_test(&flags, &flags_to_set)) { ... }
 
-> please let me know how can
-> I safely lift this restriction, like maybe adding a new flag for this?
+This is quite a different situation, it is a known const at compile
+time value located on the stack.
 
-I think the attached patch should work for you and should not
-break anything.
+> If it was just changing this one function I'd still object as it makes it differ
+> from _every other test predicate_ using vma_flags_t but maybe to humour you I'd
+> change it, but surely by this argument you're essentially objecting to the whole
+> series?
 
-It's only sanity tested and will need to write tests to verify it.
+I only think that if you are taking a heap input that is not of known
+value you should continue to pass by pointer as is generally expected
+in the C style we use.
 
-Thanks,
-Amir.
+And it isn't saying anything about the overall technique in the
+series, just a minor note about style.
 
---000000000000edabef0648d33d95
-Content-Type: text/x-patch; charset="US-ASCII"; 
-	name="0001-ovl-relax-requirement-for-uuid-off-index-on.patch"
-Content-Disposition: attachment; 
-	filename="0001-ovl-relax-requirement-for-uuid-off-index-on.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_mkmqeux30>
-X-Attachment-Id: f_mkmqeux30
+> I am not sure about this 'idiomatic kernel style' thing either, it feels rather
+> conjured. Yes you wouldn't ordinarily pass something larger than a register size
+> by-value, but here the intent is for it to be inlined anyway right?
 
-RnJvbSAxNDdlODhkODhiNWRmYmNkZDIzYWZmNzM2ZTRkMzgxYThhZjQ0NmY2IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWlyIEdvbGRzdGVpbiA8YW1pcjczaWxAZ21haWwuY29tPgpE
-YXRlOiBUdWUsIDIwIEphbiAyMDI2IDE1OjU4OjMxICswMTAwClN1YmplY3Q6IFtQQVRDSF0gb3Zs
-OiByZWxheCByZXF1aXJlbWVudCBmb3IgdXVpZD1vZmYsaW5kZXg9b24KCnV1aWQ9b2ZmLGluZGV4
-PW9uIHJlcXVpcmVkIHRoYXQgYWxsIHVwcGVyL2xvd2VyIGRpcmVjdG9yaWVzIGFyZSBvbiB0aGUK
-c2FtZSBmaWxlc3lzdGVtLgoKUmVsYXggdGhlIHJlcXVpcmVtZW50IHNvIHRoYXQgb25seSBhbGwg
-dGhlIGxvd2VyIGRpcmVjdG9yaWVzIG5lZWQgdG8gYmUKb24gdGhlIHNhbWUgZmlsZXN5c3RlbS4K
-ClNpZ25lZC1vZmYtYnk6IEFtaXIgR29sZHN0ZWluIDxhbWlyNzNpbEBnbWFpbC5jb20+Ci0tLQog
-RG9jdW1lbnRhdGlvbi9maWxlc3lzdGVtcy9vdmVybGF5ZnMucnN0IHwgIDIgKy0KIGZzL292ZXJs
-YXlmcy9uYW1laS5jICAgICAgICAgICAgICAgICAgICB8IDIxICsrKysrKysrKysrKystLS0tLS0t
-LQogZnMvb3ZlcmxheWZzL292ZXJsYXlmcy5oICAgICAgICAgICAgICAgIHwgIDIgKysKIGZzL292
-ZXJsYXlmcy9zdXBlci5jICAgICAgICAgICAgICAgICAgICB8IDEzICsrKysrLS0tLS0tLS0KIDQg
-ZmlsZXMgY2hhbmdlZCwgMjEgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvRG9jdW1lbnRhdGlvbi9maWxlc3lzdGVtcy9vdmVybGF5ZnMucnN0IGIvRG9jdW1lbnRh
-dGlvbi9maWxlc3lzdGVtcy9vdmVybGF5ZnMucnN0CmluZGV4IGFiOTg5ODA3YTJjYjYuLmQ0MDIw
-ZWFlMWRlYmEgMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vZmlsZXN5c3RlbXMvb3ZlcmxheWZz
-LnJzdAorKysgYi9Eb2N1bWVudGF0aW9uL2ZpbGVzeXN0ZW1zL292ZXJsYXlmcy5yc3QKQEAgLTc1
-NSw3ICs3NTUsNyBAQCByZWFkLXdyaXRlIG1vdW50IGFuZCB3aWxsIHJlc3VsdCBpbiBhbiBlcnJv
-ci4KIE5vdGU6IHRoZSBtb3VudCBvcHRpb24gdXVpZD1vZmYgY2FuIGJlIHVzZWQgdG8gcmVwbGFj
-ZSBVVUlEIG9mIHRoZSB1bmRlcmx5aW5nCiBmaWxlc3lzdGVtIGluIGZpbGUgaGFuZGxlcyB3aXRo
-IG51bGwsIGFuZCBlZmZlY3RpdmVseSBkaXNhYmxlIFVVSUQgY2hlY2tzLiBUaGlzCiBjYW4gYmUg
-dXNlZnVsIGluIGNhc2UgdGhlIHVuZGVybHlpbmcgZGlzayBpcyBjb3BpZWQgYW5kIHRoZSBVVUlE
-IG9mIHRoaXMgY29weQotaXMgY2hhbmdlZC4gVGhpcyBpcyBvbmx5IGFwcGxpY2FibGUgaWYgYWxs
-IGxvd2VyL3VwcGVyL3dvcmsgZGlyZWN0b3JpZXMgYXJlIG9uCitpcyBjaGFuZ2VkLiBUaGlzIGlz
-IG9ubHkgYXBwbGljYWJsZSBpZiBhbGwgbG93ZXIgZGlyZWN0b3JpZXMgYXJlIG9uCiB0aGUgc2Ft
-ZSBmaWxlc3lzdGVtLCBvdGhlcndpc2UgaXQgd2lsbCBmYWxsYmFjayB0byBub3JtYWwgYmVoYXZp
-b3VyLgogCiAKZGlmZiAtLWdpdCBhL2ZzL292ZXJsYXlmcy9uYW1laS5jIGIvZnMvb3ZlcmxheWZz
-L25hbWVpLmMKaW5kZXggZTlhNjljOTViZTkxOC4uNzRjNTE0NjAzYWMyMyAxMDA2NDQKLS0tIGEv
-ZnMvb3ZlcmxheWZzL25hbWVpLmMKKysrIGIvZnMvb3ZlcmxheWZzL25hbWVpLmMKQEAgLTE1OCw2
-ICsxNTgsMTggQEAgc3RhdGljIHN0cnVjdCBvdmxfZmggKm92bF9nZXRfZmgoc3RydWN0IG92bF9m
-cyAqb2ZzLCBzdHJ1Y3QgZGVudHJ5ICp1cHBlcmRlbnRyeSwKIAlnb3RvIG91dDsKIH0KIAorYm9v
-bCBvdmxfdXVpZF9tYXRjaChzdHJ1Y3Qgb3ZsX2ZzICpvZnMsIGNvbnN0IHN0cnVjdCBzdXBlcl9i
-bG9jayAqc2IsCisJCSAgICBjb25zdCB1dWlkX3QgKnV1aWQpCit7CisJLyoKKwkgKiBNYWtlIHN1
-cmUgdGhhdCB0aGUgc3RvcmVkIHV1aWQgbWF0Y2hlcyB0aGUgdXVpZCBvZiB0aGUgbG93ZXIKKwkg
-KiBsYXllciB3aGVyZSBmaWxlIGhhbmRsZSB3aWxsIGJlIGRlY29kZWQuCisJICogSW4gY2FzZSBv
-ZiB1dWlkPW9mZiBvcHRpb24ganVzdCBtYWtlIHN1cmUgdGhhdCBzdG9yZWQgdXVpZCBpcyBudWxs
-LgorCSAqLworCXJldHVybiBvdmxfb3JpZ2luX3V1aWQob2ZzKSA/IHV1aWRfZXF1YWwodXVpZCwg
-JnNiLT5zX3V1aWQpIDoKKwkJCQkgICAgICB1dWlkX2lzX251bGwodXVpZCk7Cit9CisKIHN0cnVj
-dCBkZW50cnkgKm92bF9kZWNvZGVfcmVhbF9maChzdHJ1Y3Qgb3ZsX2ZzICpvZnMsIHN0cnVjdCBv
-dmxfZmggKmZoLAogCQkJCSAgc3RydWN0IHZmc21vdW50ICptbnQsIGJvb2wgY29ubmVjdGVkKQog
-ewpAQCAtMTY3LDE0ICsxNzksNyBAQCBzdHJ1Y3QgZGVudHJ5ICpvdmxfZGVjb2RlX3JlYWxfZmgo
-c3RydWN0IG92bF9mcyAqb2ZzLCBzdHJ1Y3Qgb3ZsX2ZoICpmaCwKIAlpZiAoIWNhcGFibGUoQ0FQ
-X0RBQ19SRUFEX1NFQVJDSCkpCiAJCXJldHVybiBOVUxMOwogCi0JLyoKLQkgKiBNYWtlIHN1cmUg
-dGhhdCB0aGUgc3RvcmVkIHV1aWQgbWF0Y2hlcyB0aGUgdXVpZCBvZiB0aGUgbG93ZXIKLQkgKiBs
-YXllciB3aGVyZSBmaWxlIGhhbmRsZSB3aWxsIGJlIGRlY29kZWQuCi0JICogSW4gY2FzZSBvZiB1
-dWlkPW9mZiBvcHRpb24ganVzdCBtYWtlIHN1cmUgdGhhdCBzdG9yZWQgdXVpZCBpcyBudWxsLgot
-CSAqLwotCWlmIChvdmxfb3JpZ2luX3V1aWQob2ZzKSA/Ci0JICAgICF1dWlkX2VxdWFsKCZmaC0+
-ZmIudXVpZCwgJm1udC0+bW50X3NiLT5zX3V1aWQpIDoKLQkgICAgIXV1aWRfaXNfbnVsbCgmZmgt
-PmZiLnV1aWQpKQorCWlmICghb3ZsX3V1aWRfbWF0Y2gob2ZzLCBtbnQtPm1udF9zYiwgJmZoLT5m
-Yi51dWlkKSkKIAkJcmV0dXJuIE5VTEw7CiAKIAlieXRlcyA9IChmaC0+ZmIubGVuIC0gb2Zmc2V0
-b2Yoc3RydWN0IG92bF9mYiwgZmlkKSk7CmRpZmYgLS1naXQgYS9mcy9vdmVybGF5ZnMvb3Zlcmxh
-eWZzLmggYi9mcy9vdmVybGF5ZnMvb3ZlcmxheWZzLmgKaW5kZXggZjlhYzliZGRlODMwNS4uY2Yx
-MDY2MTUyMjEwNiAxMDA2NDQKLS0tIGEvZnMvb3ZlcmxheWZzL292ZXJsYXlmcy5oCisrKyBiL2Zz
-L292ZXJsYXlmcy9vdmVybGF5ZnMuaApAQCAtNzEwLDYgKzcxMCw4IEBAIHN0YXRpYyBpbmxpbmUg
-aW50IG92bF9jaGVja19maF9sZW4oc3RydWN0IG92bF9maCAqZmgsIGludCBmaF9sZW4pCiAJcmV0
-dXJuIG92bF9jaGVja19mYl9sZW4oJmZoLT5mYiwgZmhfbGVuIC0gT1ZMX0ZIX1dJUkVfT0ZGU0VU
-KTsKIH0KIAorYm9vbCBvdmxfdXVpZF9tYXRjaChzdHJ1Y3Qgb3ZsX2ZzICpvZnMsIGNvbnN0IHN0
-cnVjdCBzdXBlcl9ibG9jayAqc2IsCisJCSAgICBjb25zdCB1dWlkX3QgKnV1aWQpOwogc3RydWN0
-IGRlbnRyeSAqb3ZsX2RlY29kZV9yZWFsX2ZoKHN0cnVjdCBvdmxfZnMgKm9mcywgc3RydWN0IG92
-bF9maCAqZmgsCiAJCQkJICBzdHJ1Y3QgdmZzbW91bnQgKm1udCwgYm9vbCBjb25uZWN0ZWQpOwog
-aW50IG92bF9jaGVja19vcmlnaW5fZmgoc3RydWN0IG92bF9mcyAqb2ZzLCBzdHJ1Y3Qgb3ZsX2Zo
-ICpmaCwgYm9vbCBjb25uZWN0ZWQsCmRpZmYgLS1naXQgYS9mcy9vdmVybGF5ZnMvc3VwZXIuYyBi
-L2ZzL292ZXJsYXlmcy9zdXBlci5jCmluZGV4IGJhOTE0NmYyMmEyY2MuLjhmMGVjYjQ5MDVlOTMg
-MTAwNjQ0Ci0tLSBhL2ZzL292ZXJsYXlmcy9zdXBlci5jCisrKyBiL2ZzL292ZXJsYXlmcy9zdXBl
-ci5jCkBAIC05NDAsNyArOTQwLDcgQEAgc3RhdGljIGJvb2wgb3ZsX2xvd2VyX3V1aWRfb2soc3Ry
-dWN0IG92bF9mcyAqb2ZzLCBjb25zdCB1dWlkX3QgKnV1aWQpCiAJCSAqIGRpc2FibGUgbG93ZXIg
-ZmlsZSBoYW5kbGUgZGVjb2Rpbmcgb24gYWxsIG9mIHRoZW0uCiAJCSAqLwogCQlpZiAob2ZzLT5m
-c1tpXS5pc19sb3dlciAmJgotCQkgICAgdXVpZF9lcXVhbCgmb2ZzLT5mc1tpXS5zYi0+c191dWlk
-LCB1dWlkKSkgeworCQkgICAgb3ZsX3V1aWRfbWF0Y2gob2ZzLCBvZnMtPmZzW2ldLnNiLCB1dWlk
-KSkgewogCQkJb2ZzLT5mc1tpXS5iYWRfdXVpZCA9IHRydWU7CiAJCQlyZXR1cm4gZmFsc2U7CiAJ
-CX0KQEAgLTk1Miw2ICs5NTIsNyBAQCBzdGF0aWMgYm9vbCBvdmxfbG93ZXJfdXVpZF9vayhzdHJ1
-Y3Qgb3ZsX2ZzICpvZnMsIGNvbnN0IHV1aWRfdCAqdXVpZCkKIHN0YXRpYyBpbnQgb3ZsX2dldF9m
-c2lkKHN0cnVjdCBvdmxfZnMgKm9mcywgY29uc3Qgc3RydWN0IHBhdGggKnBhdGgpCiB7CiAJc3Ry
-dWN0IHN1cGVyX2Jsb2NrICpzYiA9IHBhdGgtPm1udC0+bW50X3NiOworCWNvbnN0IHV1aWRfdCAq
-dXVpZCA9IG92bF9vcmlnaW5fdXVpZChvZnMpID8gJnNiLT5zX3V1aWQgOiAmdXVpZF9udWxsOwog
-CXVuc2lnbmVkIGludCBpOwogCWRldl90IGRldjsKIAlpbnQgZXJyOwpAQCAtOTYzLDcgKzk2NCw3
-IEBAIHN0YXRpYyBpbnQgb3ZsX2dldF9mc2lkKHN0cnVjdCBvdmxfZnMgKm9mcywgY29uc3Qgc3Ry
-dWN0IHBhdGggKnBhdGgpCiAJCQlyZXR1cm4gaTsKIAl9CiAKLQlpZiAoIW92bF9sb3dlcl91dWlk
-X29rKG9mcywgJnNiLT5zX3V1aWQpKSB7CisJaWYgKCFvdmxfbG93ZXJfdXVpZF9vayhvZnMsIHV1
-aWQpKSB7CiAJCWJhZF91dWlkID0gdHJ1ZTsKIAkJaWYgKG9mcy0+Y29uZmlnLnhpbm8gPT0gT1ZM
-X1hJTk9fQVVUTykgewogCQkJb2ZzLT5jb25maWcueGlubyA9IE9WTF9YSU5PX09GRjsKQEAgLTk3
-Niw4ICs5NzcsNyBAQCBzdGF0aWMgaW50IG92bF9nZXRfZnNpZChzdHJ1Y3Qgb3ZsX2ZzICpvZnMs
-IGNvbnN0IHN0cnVjdCBwYXRoICpwYXRoKQogCQl9CiAJCWlmICh3YXJuKSB7CiAJCQlwcl93YXJu
-KCIlcyB1dWlkIGRldGVjdGVkIGluIGxvd2VyIGZzICclcGQyJywgZmFsbGluZyBiYWNrIHRvIHhp
-bm89JXMsaW5kZXg9b2ZmLG5mc19leHBvcnQ9b2ZmLlxuIiwKLQkJCQl1dWlkX2lzX251bGwoJnNi
-LT5zX3V1aWQpID8gIm51bGwiIDoKLQkJCQkJCQkgICAgImNvbmZsaWN0aW5nIiwKKwkJCQl1dWlk
-X2lzX251bGwodXVpZCkgPyAibnVsbCIgOiAiY29uZmxpY3RpbmciLAogCQkJCXBhdGgtPmRlbnRy
-eSwgb3ZsX3hpbm9fbW9kZSgmb2ZzLT5jb25maWcpKTsKIAkJfQogCX0KQEAgLTE0NjksMTAgKzE0
-NjksNyBAQCBzdGF0aWMgaW50IG92bF9maWxsX3N1cGVyX2NyZWRzKHN0cnVjdCBmc19jb250ZXh0
-ICpmYywgc3RydWN0IHN1cGVyX2Jsb2NrICpzYikKIAlpZiAoIW92bF91cHBlcl9tbnQob2ZzKSkK
-IAkJc2ItPnNfZmxhZ3MgfD0gU0JfUkRPTkxZOwogCi0JaWYgKCFvdmxfb3JpZ2luX3V1aWQob2Zz
-KSAmJiBvZnMtPm51bWZzID4gMSkgewotCQlwcl93YXJuKCJUaGUgdXVpZD1vZmYgcmVxdWlyZXMg
-YSBzaW5nbGUgZnMgZm9yIGxvd2VyIGFuZCB1cHBlciwgZmFsbGluZyBiYWNrIHRvIHV1aWQ9bnVs
-bC5cbiIpOwotCQlvZnMtPmNvbmZpZy51dWlkID0gT1ZMX1VVSURfTlVMTDsKLQl9IGVsc2UgaWYg
-KG92bF9oYXNfZnNpZChvZnMpICYmIG92bF91cHBlcl9tbnQob2ZzKSkgeworCWlmIChvdmxfaGFz
-X2ZzaWQob2ZzKSAmJiBvdmxfdXBwZXJfbW50KG9mcykpIHsKIAkJLyogVXNlIHBlciBpbnN0YW5j
-ZSBwZXJzaXN0ZW50IHV1aWQvZnNpZCAqLwogCQlvdmxfaW5pdF91dWlkX3hhdHRyKHNiLCBvZnMs
-ICZjdHgtPnVwcGVyKTsKIAl9Ci0tIAoyLjUyLjAKCg==
---000000000000edabef0648d33d95--
+Well, exactly, we don't normally pass things larger than an interger
+by value, that isn't the style, so I don't think it is such a great
+thing to introduce here kind of unnecessarily.
+
+The troubles I recently had were linked to odd things like gcov and
+very old still supported versions of gcc. Also I saw a power compiler
+make a very strange choice to not inline something that evaluated to a
+constant.
+
+Jason
