@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3B5944B662;
-	Tue, 20 Jan 2026 14:25:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D031444B662;
+	Tue, 20 Jan 2026 14:25:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768919112; cv=none; b=nc9pkTg0eAYevyjqC9RiEQXlJQRVr5Knqtk1WQl3t9JGVPFgqhwQkrUASI3WP9jkfWZ6gZNjUk7YyUAy8zTT8MUQ/1guk/X0mn10Re9he5mCxRRdQTzWUc11zxi7lGF5pDVpMVLiBWyBGtwjrKCJrhpsxxjLKe9OLecBzeebUvs=
+	t=1768919114; cv=none; b=bytnXTpeZfcArA5tXGXQL/0WM2K9VIjLIe7dmFWJfYWnUIj0o/GdCmArDuzLVsHdgaG6Z93YNLufiNs9KKTuYvNWHhdivK95ls3qhIhTUqHsrYZlMf6ab2/OchnaOhVtFCGxMsbpbb5hGLZftSjGJHbPJpmfBxN5p568kckoA0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768919112; c=relaxed/simple;
-	bh=S5yV0SBaUgD1R2/2tqPLqT6EpElAtlYalL7Zq8yyuus=;
+	s=arc-20240116; t=1768919114; c=relaxed/simple;
+	bh=lI5RsrikT42DtmkwiTYGrVz82Xk/jcZVtoeRyes8GA8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qjdz4knn0zWsBPdwCxoM2UDYJAwmWLDY3MkXkKkcA7c1K98wvjYC2jzt3ZBj/B2Nf6ZGjDv86GV0hd3jxmT4UsauCHCzXubBH7viW5y/YKnM/9xRfnz90bqz3gjFrM9Kdu7HVfHWamr05UMzPE7NFlvEzoso4VqPUgvwZjA5aWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKfQrAGU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=rk0e9BpCvDTVo1mV3RM3UF5HYZ5vCsJutKdhYlqgvz52OWiqDDLTKOQ8hiE8MznFEWfonL84JnsraxqdKbzsD96PuYy0vT+5isG7yTJ9C/L/JY/nrd57QdL1bkKlmbU6X92rYMH/NtTDYFU3gCM0YO+wXe+zGoEOKxrzxsRT9pY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brizaCx6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKfQrAGU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21A09C16AAE;
-	Tue, 20 Jan 2026 14:25:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brizaCx6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82FBEC19422;
+	Tue, 20 Jan 2026 14:25:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768919112;
-	bh=S5yV0SBaUgD1R2/2tqPLqT6EpElAtlYalL7Zq8yyuus=;
+	s=k20201202; t=1768919114;
+	bh=lI5RsrikT42DtmkwiTYGrVz82Xk/jcZVtoeRyes8GA8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=WKfQrAGUmkAKrxZVDlyTVZnDkya609rOZfNklpQMUDsfD5+aldCeO1Z2xhUwRcaBx
-	 5+SXqLqsptRBs4oxeBRrJDAuiicSoGrhDt/25+Q93IKiDBDOJ721iFpMX491crxvmu
-	 M0VLJl4XL6iqyqI4YFIF5Tu5iW1k9HDWguRy6VZyVCNAJg5uQLKjdNf4Lzn57cdK08
-	 q0v0PsPUxFTUOLk92FGlljOzyLg2L79OENnnps0NCpOoJH9ICGdM831FRgatIhKK1o
-	 UjmENv5BTT1EGRhbQcviEwx45TCP2xTnERj5mhPUlNuFBgPdZDbrWT24jF33GbJv3a
-	 JWUBEzgMEzlHw==
+	b=brizaCx6cC7SlJOOxhPatMDvM0bL8sR8qyl8HjQep1ZSs/tABs+xmnOiq14c4vJud
+	 hD00iXR8mor5vPSmJqesqDNnIe3PFiexqDasdiIHPk6dZiBfceYk+uTBiN3Ot6im+4
+	 NrDew4bfYkdM2taNqp9EmrdYoQ5cM5aUpB8ytRaAJ0+fXd3CzjkgY5/OYeLuxSMH5X
+	 4Wzsxp6T/qlGhmAd2+lMtd5R7oQVW/NK+6+a7VAdpbyY/VbA5mJw8HIQQASpiuJx4R
+	 9NJ5Ki1+JoOVLO/1lqJsHZnStPUv1gRTDzWo30NFJ9r1MzKp4xcJVa2AFeXr40616v
+	 eaWmNILxLiDsw==
 From: Chuck Lever <cel@kernel.org>
 To: Al Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -58,9 +58,9 @@ Cc: <linux-fsdevel@vger.kernel.org>,
 	hansg@kernel.org,
 	senozhatsky@chromium.org,
 	Chuck Lever <chuck.lever@oracle.com>
-Subject: [PATCH v6 12/16] vboxsf: Implement fileattr_get for case sensitivity
-Date: Tue, 20 Jan 2026 09:24:35 -0500
-Message-ID: <20260120142439.1821554-13-cel@kernel.org>
+Subject: [PATCH v6 13/16] isofs: Implement fileattr_get for case sensitivity
+Date: Tue, 20 Jan 2026 09:24:36 -0500
+Message-ID: <20260120142439.1821554-14-cel@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260120142439.1821554-1-cel@kernel.org>
 References: <20260120142439.1821554-1-cel@kernel.org>
@@ -75,150 +75,69 @@ Content-Transfer-Encoding: 8bit
 From: Chuck Lever <chuck.lever@oracle.com>
 
 Upper layers such as NFSD need a way to query whether a
-filesystem handles filenames in a case-sensitive manner. Report
-VirtualBox shared folder case handling behavior via the
-FS_XFLAG_CASEFOLD flag.
+filesystem handles filenames in a case-sensitive manner so
+they can provide correct semantics to remote clients. Without
+this information, NFS exports of ISO 9660 filesystems cannot
+properly advertise their filename case behavior.
 
-The case sensitivity property is queried from the VirtualBox host
-service at mount time and cached in struct vboxsf_sbi. The host
-determines case sensitivity based on the underlying host filesystem
-(for example, Windows NTFS is case-insensitive while Linux ext4 is
-case-sensitive).
+Implement isofs_fileattr_get() to report ISO 9660 case handling
+behavior via the FS_XFLAG_CASEFOLD flag. The 'check=r' (relaxed)
+mount option enables case-insensitive lookups, and this setting
+determines the value reported. By default, Joliet extensions
+operate in relaxed mode while plain ISO 9660 uses strict
+(case-sensitive) mode. All ISO 9660 variants are case-preserving,
+meaning filenames are stored exactly as they appear on the disc.
 
-VirtualBox shared folders always preserve filename case exactly
-as provided by the guest. The host interface does not expose a
-case_preserving property, so this is hardcoded to true.
+The callback is registered only on isofs_dir_inode_operations
+because isofs has no custom inode_operations for regular
+files, and symlinks use the generic page_symlink_inode_operations.
 
-The callback is registered in all three inode_operations
-structures (directory, file, and symlink) to ensure consistent
-reporting across all inode types.
-
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
 ---
- fs/vboxsf/dir.c    |  1 +
- fs/vboxsf/file.c   |  6 ++++--
- fs/vboxsf/super.c  |  4 ++++
- fs/vboxsf/utils.c  | 31 +++++++++++++++++++++++++++++++
- fs/vboxsf/vfsmod.h |  6 ++++++
- 5 files changed, 46 insertions(+), 2 deletions(-)
+ fs/isofs/dir.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/fs/vboxsf/dir.c b/fs/vboxsf/dir.c
-index 42bedc4ec7af..c5bd3271aa96 100644
---- a/fs/vboxsf/dir.c
-+++ b/fs/vboxsf/dir.c
-@@ -477,4 +477,5 @@ const struct inode_operations vboxsf_dir_iops = {
- 	.symlink = vboxsf_dir_symlink,
- 	.getattr = vboxsf_getattr,
- 	.setattr = vboxsf_setattr,
-+	.fileattr_get = vboxsf_fileattr_get,
- };
-diff --git a/fs/vboxsf/file.c b/fs/vboxsf/file.c
-index 4bebd947314a..06308e38a70d 100644
---- a/fs/vboxsf/file.c
-+++ b/fs/vboxsf/file.c
-@@ -223,7 +223,8 @@ const struct file_operations vboxsf_reg_fops = {
- 
- const struct inode_operations vboxsf_reg_iops = {
- 	.getattr = vboxsf_getattr,
--	.setattr = vboxsf_setattr
-+	.setattr = vboxsf_setattr,
-+	.fileattr_get = vboxsf_fileattr_get,
- };
- 
- static int vboxsf_read_folio(struct file *file, struct folio *folio)
-@@ -390,5 +391,6 @@ static const char *vboxsf_get_link(struct dentry *dentry, struct inode *inode,
- }
- 
- const struct inode_operations vboxsf_lnk_iops = {
--	.get_link = vboxsf_get_link
-+	.get_link = vboxsf_get_link,
-+	.fileattr_get = vboxsf_fileattr_get,
- };
-diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
-index 241647b060ee..fcabeca2a339 100644
---- a/fs/vboxsf/super.c
-+++ b/fs/vboxsf/super.c
-@@ -185,6 +185,10 @@ static int vboxsf_fill_super(struct super_block *sb, struct fs_context *fc)
- 	if (err)
- 		goto fail_unmap;
- 
-+	err = vboxsf_query_case_sensitive(sbi);
-+	if (err)
-+		goto fail_unmap;
-+
- 	sb->s_magic = VBOXSF_SUPER_MAGIC;
- 	sb->s_blocksize = 1024;
- 	sb->s_maxbytes = MAX_LFS_FILESIZE;
-diff --git a/fs/vboxsf/utils.c b/fs/vboxsf/utils.c
-index 9515bbf0b54c..658b8b0ebbd7 100644
---- a/fs/vboxsf/utils.c
-+++ b/fs/vboxsf/utils.c
-@@ -11,6 +11,7 @@
- #include <linux/sizes.h>
- #include <linux/pagemap.h>
- #include <linux/vfs.h>
+diff --git a/fs/isofs/dir.c b/fs/isofs/dir.c
+index 09df40b612fb..e1a708f219f7 100644
+--- a/fs/isofs/dir.c
++++ b/fs/isofs/dir.c
+@@ -13,6 +13,7 @@
+  */
+ #include <linux/gfp.h>
+ #include "isofs.h"
 +#include <linux/fileattr.h>
- #include "vfsmod.h"
  
- struct inode *vboxsf_new_inode(struct super_block *sb)
-@@ -567,3 +568,33 @@ int vboxsf_dir_read_all(struct vboxsf_sbi *sbi, struct vboxsf_dir_info *sf_d,
- 
- 	return err;
+ int isofs_name_translate(struct iso_directory_record *de, char *new, struct inode *inode)
+ {
+@@ -266,6 +267,19 @@ static int isofs_readdir(struct file *file, struct dir_context *ctx)
+ 	return result;
  }
-+
-+int vboxsf_query_case_sensitive(struct vboxsf_sbi *sbi)
+ 
++static int isofs_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
 +{
-+	struct shfl_volinfo volinfo = {};
-+	u32 buf_len;
-+	int err;
-+
-+	buf_len = sizeof(volinfo);
-+	err = vboxsf_fsinfo(sbi->root, 0, SHFL_INFO_GET | SHFL_INFO_VOLUME,
-+			    &buf_len, &volinfo);
-+	if (err)
-+		return err;
-+
-+	sbi->case_insensitive = !volinfo.properties.case_sensitive;
-+	return 0;
-+}
-+
-+int vboxsf_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
-+{
-+	struct vboxsf_sbi *sbi = VBOXSF_SBI(dentry->d_sb);
++	struct isofs_sb_info *sbi = ISOFS_SB(dentry->d_sb);
 +
 +	/*
-+	 * VirtualBox shared folders preserve filename case exactly as
-+	 * provided by the guest (the default). The host interface does
-+	 * not expose a case-preservation property.
++	 * FS_XFLAG_CASEFOLD indicates case-insensitive lookups.
++	 * When check=r (relaxed) is set, lookups ignore case.
 +	 */
-+	if (sbi->case_insensitive)
++	if (sbi->s_check == 'r')
 +		fa->fsx_xflags |= FS_XFLAG_CASEFOLD;
 +	return 0;
 +}
-diff --git a/fs/vboxsf/vfsmod.h b/fs/vboxsf/vfsmod.h
-index 05973eb89d52..b61afd0ce842 100644
---- a/fs/vboxsf/vfsmod.h
-+++ b/fs/vboxsf/vfsmod.h
-@@ -47,6 +47,7 @@ struct vboxsf_sbi {
- 	u32 next_generation;
- 	u32 root;
- 	int bdi_id;
-+	bool case_insensitive;
++
+ const struct file_operations isofs_dir_operations =
+ {
+ 	.llseek = generic_file_llseek,
+@@ -279,6 +293,7 @@ const struct file_operations isofs_dir_operations =
+ const struct inode_operations isofs_dir_inode_operations =
+ {
+ 	.lookup = isofs_lookup,
++	.fileattr_get = isofs_fileattr_get,
  };
  
- /* per-inode information */
-@@ -111,6 +112,11 @@ void vboxsf_dir_info_free(struct vboxsf_dir_info *p);
- int vboxsf_dir_read_all(struct vboxsf_sbi *sbi, struct vboxsf_dir_info *sf_d,
- 			u64 handle);
  
-+int vboxsf_query_case_sensitive(struct vboxsf_sbi *sbi);
-+
-+struct file_kattr;
-+int vboxsf_fileattr_get(struct dentry *dentry, struct file_kattr *fa);
-+
- /* from vboxsf_wrappers.c */
- int vboxsf_connect(void);
- void vboxsf_disconnect(void);
 -- 
 2.52.0
 
