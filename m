@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D74945107C;
-	Tue, 20 Jan 2026 15:51:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CBD01B4F2C
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 15:53:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768924297; cv=none; b=YvshMArMe5bzpvkCPu1wi9EvtPmVBR0LNokGYjgKuK8SOyKPFAtyw2lvhF8unEv2ydmqiIIfOV1mR9T0LzClw/d52FPLXEmJ00YA2oLRcdAN0ByrXWM4zPRtL5C2gRCysLk1jMpc/lOM3VbMfWdFnpX03hEMFbOq7NkSasjcgno=
+	t=1768924410; cv=none; b=geH+XIgVlQkQvjw2XY8z5nIgk+91UXtaNpVURL5OBj8RUEEn3UChGOprS1K4wwdUjidvvqJp8lIEnWwS/5dqPOEhtApG5U/yY+1KDizLoVpfiINGGs0/VJb7qvfsCcxL6xz9ReoeepEgApKe+m4WzJAB2nRmG12c9DjQO1C0vY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768924297; c=relaxed/simple;
-	bh=jROZ85ETsDmOP9e9A2kCANZwfCgDyYhPi/RblCZzBv8=;
+	s=arc-20240116; t=1768924410; c=relaxed/simple;
+	bh=GiZ2QTATZIeMZAtIsB1kbUzhoodwTZXnrzoWV+VFt0E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eqHtiK6ogSwc8BZIzR1NA9f2bRLD172YfWvHJf0JRmB9ZllvoDWXSyMk45F29kgjIDK99zSeYoLRbzy+WyDieZs71gVO5P4qbIX9Je2i6Seqra+CioLOWUgatjfnOirxj2yOUgyJCHIQGYEzwV32FxYzN/1cWtQCkOGoDuOQqpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NT2i+eXD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tPJZxUVsce6j8H81oSB9j8qollpz9JjjXxZelvrNxOXpGETJwtcINPk7GAO2fMRgfgB3K0thDKondAd80nwPrebySbzx2vKEVxjjlx56QesIeDNeNykXkl9r1GV2eeeozceqPglbu7zIZUkhKGTuYfeXySlaPuYW76FCzVKphaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t5tEurI9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NT2i+eXD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2AB2C16AAE;
-	Tue, 20 Jan 2026 15:51:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t5tEurI9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93A4C16AAE;
+	Tue, 20 Jan 2026 15:53:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768924296;
-	bh=jROZ85ETsDmOP9e9A2kCANZwfCgDyYhPi/RblCZzBv8=;
+	s=k20201202; t=1768924410;
+	bh=GiZ2QTATZIeMZAtIsB1kbUzhoodwTZXnrzoWV+VFt0E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NT2i+eXDINtcdiPip8d1gEnGcDSAP4sOqjsVVly2s0VMQZf4HKmF43Cw32Ai+WTrS
-	 ip+p650dFu1zLEczN0GPCLGxqRa2HcUg1TJwQdqgxssdj/94lYJIhzIKRUZe/DxHGI
-	 HJ1SlhuUsTKy/5AmNINEnociJxjTzlrNKIMR+S5DF0GcT/D3Va1PatI7lxqYN0QxZS
-	 tqicaQakx9SBNVu4CI2Wp5SwjEWZaQDt8FD+w10N1hL74lTUumbbBWsBuBnM6mepa1
-	 4hDxsQ8xr3Vs2AKWwQ6GbaXTwlVuG04ozZuT9oUQU9KqiCndRNdwQFfdm55kZHmWlp
-	 CXSOVPy8xlfbQ==
-Date: Tue, 20 Jan 2026 07:51:36 -0800
+	b=t5tEurI9Zt0E8w+oU6BXS9e3aDXhB89ie85Gbm4i7vtxwoGsNnHyUvZ47ypzuDtI7
+	 1D/rvSiOkkOkHTsBdfi7DO5PaDLmohBeQ6HpSaghrXZbJdCK01df6Kq4PwzIUfzZoA
+	 IqhqKgND3xLD3m5+lDg34nzfqNHWX2uZQRhLbz8z1dbteikYux5ip+0Ckh9sh3i91p
+	 e8boNz90locUwDF8bhmvHWqglWWKU2LckluNPes7rEauSxwWWQwWB8cYwM8Zp/hWFX
+	 DG+4pl26iNP3P6mLoHO+Wm1pmUpacWOanmI7Qo4Dk0GYYmvoA8iRhgAEc+N/2PgWeH
+	 LkSz/tCMLD2kg==
+Date: Tue, 20 Jan 2026 07:53:29 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, ebiggers@kernel.org
-Subject: Re: [PATCH v2 1/2] fs: add FS_XFLAG_VERITY for fs-verity files
-Message-ID: <20260120155136.GL15551@frogsfrogsfrogs>
-References: <20260119165644.2945008-1-aalbersh@kernel.org>
- <20260119165644.2945008-2-aalbersh@kernel.org>
+To: Hans Holmberg <hans.holmberg@wdc.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+	dlemoal@kernel.org, johannes.thumshirn@wdc.com
+Subject: Re: [PATCH] xfs: always allocate the free zone with the lowest index
+Message-ID: <20260120155329.GM15551@frogsfrogsfrogs>
+References: <20260120085746.29980-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,123 +43,117 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260119165644.2945008-2-aalbersh@kernel.org>
+In-Reply-To: <20260120085746.29980-1-hans.holmberg@wdc.com>
 
-On Mon, Jan 19, 2026 at 05:56:42PM +0100, Andrey Albershteyn wrote:
-> fs-verity introduced inode flag for inodes with enabled fs-verity on
-> them. This patch adds FS_XFLAG_VERITY file attribute which can be
-> retrieved with FS_IOC_FSGETXATTR ioctl() and file_getattr() syscall.
-> 
-> This flag is read-only and can not be set with corresponding set ioctl()
-> and file_setattr(). The FS_IOC_SETFLAGS requires file to be opened for
-> writing which is not allowed for verity files. The FS_IOC_FSSETXATTR and
-> file_setattr() clears this flag from the user input.
-> 
-> As this is now common flag for both flag interfaces (flags/xflags) add
-> it to overlapping flags list to exclude it from overwrite.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+On Tue, Jan 20, 2026 at 09:57:46AM +0100, Hans Holmberg wrote:
+> Zones in the beginning of the address space are typically mapped to
+> higer bandwidth tracks on HDDs than those at the end of the address
+> space. So, in stead of allocating zones "round robin" across the whole
+> address space, always allocate the zone with the lowest index.
 
-Technically this uapi change should be cc'd to linux-api, but adding
-a flag definition is fairly minor so:
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Does it make any difference if it's a zoned ssd?  I'd imagine not, but I
+wonder if there are any longer term side effects like lower-numbered
+zones filling up and getting gc'd more often?
 
 --D
 
-> ---
->  Documentation/filesystems/fsverity.rst | 16 ++++++++++++++++
->  fs/file_attr.c                         |  4 ++++
->  include/linux/fileattr.h               |  6 +++---
->  include/uapi/linux/fs.h                |  1 +
->  4 files changed, 24 insertions(+), 3 deletions(-)
+> This increases average write bandwidth for overwrite workloads
+> when less than the full capacity is being used. At ~50% utilization
+> this improves bandwidth for a random file overwrite benchmark
+> with 128MiB files and 256MiB zone capacity by 30%.
 > 
-> diff --git a/Documentation/filesystems/fsverity.rst b/Documentation/filesystems/fsverity.rst
-> index 412cf11e3298..22b49b295d1f 100644
-> --- a/Documentation/filesystems/fsverity.rst
-> +++ b/Documentation/filesystems/fsverity.rst
-> @@ -341,6 +341,22 @@ the file has fs-verity enabled.  This can perform better than
->  FS_IOC_GETFLAGS and FS_IOC_MEASURE_VERITY because it doesn't require
->  opening the file, and opening verity files can be expensive.
->  
-> +FS_IOC_FSGETXATTR
-> +-----------------
-> +
-> +Since Linux v7.0, the FS_IOC_FSGETXATTR ioctl sets FS_XFLAG_VERITY (0x00020000)
-> +in the returned flags when the file has verity enabled. Note that this attribute
-> +cannot be set with FS_IOC_FSSETXATTR as enabling verity requires input
-> +parameters. See FS_IOC_ENABLE_VERITY.
-> +
-> +file_getattr
-> +------------
-> +
-> +Since Linux v7.0, the file_getattr() syscall sets FS_XFLAG_VERITY (0x00020000)
-> +in the returned flags when the file has verity enabled. Note that this attribute
-> +cannot be set with file_setattr() as enabling verity requires input parameters.
-> +See FS_IOC_ENABLE_VERITY.
-> +
->  .. _accessing_verity_files:
->  
->  Accessing verity files
-> diff --git a/fs/file_attr.c b/fs/file_attr.c
-> index 13cdb31a3e94..f44c873af92b 100644
-> --- a/fs/file_attr.c
-> +++ b/fs/file_attr.c
-> @@ -37,6 +37,8 @@ void fileattr_fill_xflags(struct file_kattr *fa, u32 xflags)
->  		fa->flags |= FS_DAX_FL;
->  	if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
->  		fa->flags |= FS_PROJINHERIT_FL;
-> +	if (fa->fsx_xflags & FS_XFLAG_VERITY)
-> +		fa->flags |= FS_VERITY_FL;
+> Running the same benchmark with small 2-8 MiB files at 67% capacity
+> shows no significant difference in performance. Due to heavy
+> fragmentation the whole zone range is in use, greatly limiting the 
+> number of free zones with high bw.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> ---
+> 
+>  fs/xfs/xfs_zone_alloc.c | 47 +++++++++++++++--------------------------
+>  fs/xfs/xfs_zone_priv.h  |  1 -
+>  2 files changed, 17 insertions(+), 31 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index bbcf21704ea0..d6c97026f733 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -408,31 +408,6 @@ xfs_zone_free_blocks(
+>  	return 0;
 >  }
->  EXPORT_SYMBOL(fileattr_fill_xflags);
 >  
-> @@ -67,6 +69,8 @@ void fileattr_fill_flags(struct file_kattr *fa, u32 flags)
->  		fa->fsx_xflags |= FS_XFLAG_DAX;
->  	if (fa->flags & FS_PROJINHERIT_FL)
->  		fa->fsx_xflags |= FS_XFLAG_PROJINHERIT;
-> +	if (fa->flags & FS_VERITY_FL)
-> +		fa->fsx_xflags |= FS_XFLAG_VERITY;
->  }
->  EXPORT_SYMBOL(fileattr_fill_flags);
+> -static struct xfs_group *
+> -xfs_find_free_zone(
+> -	struct xfs_mount	*mp,
+> -	unsigned long		start,
+> -	unsigned long		end)
+> -{
+> -	struct xfs_zone_info	*zi = mp->m_zone_info;
+> -	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, start);
+> -	struct xfs_group	*xg;
+> -
+> -	xas_lock(&xas);
+> -	xas_for_each_marked(&xas, xg, end, XFS_RTG_FREE)
+> -		if (atomic_inc_not_zero(&xg->xg_active_ref))
+> -			goto found;
+> -	xas_unlock(&xas);
+> -	return NULL;
+> -
+> -found:
+> -	xas_clear_mark(&xas, XFS_RTG_FREE);
+> -	atomic_dec(&zi->zi_nr_free_zones);
+> -	zi->zi_free_zone_cursor = xg->xg_gno;
+> -	xas_unlock(&xas);
+> -	return xg;
+> -}
+> -
+>  static struct xfs_open_zone *
+>  xfs_init_open_zone(
+>  	struct xfs_rtgroup	*rtg,
+> @@ -472,13 +447,25 @@ xfs_open_zone(
+>  	bool			is_gc)
+>  {
+>  	struct xfs_zone_info	*zi = mp->m_zone_info;
+> +	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
+>  	struct xfs_group	*xg;
 >  
-> diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
-> index f89dcfad3f8f..3780904a63a6 100644
-> --- a/include/linux/fileattr.h
-> +++ b/include/linux/fileattr.h
-> @@ -7,16 +7,16 @@
->  #define FS_COMMON_FL \
->  	(FS_SYNC_FL | FS_IMMUTABLE_FL | FS_APPEND_FL | \
->  	 FS_NODUMP_FL |	FS_NOATIME_FL | FS_DAX_FL | \
-> -	 FS_PROJINHERIT_FL)
-> +	 FS_PROJINHERIT_FL | FS_VERITY_FL)
+> -	xg = xfs_find_free_zone(mp, zi->zi_free_zone_cursor, ULONG_MAX);
+> -	if (!xg)
+> -		xg = xfs_find_free_zone(mp, 0, zi->zi_free_zone_cursor);
+> -	if (!xg)
+> -		return NULL;
+> +	/*
+> +	 * Pick the free zone with lowest index. Zones in the beginning of the
+> +	 * address space typically provides higher bandwidth than those at the
+> +	 * end of the address space on HDDs.
+> +	 */
+> +	xas_lock(&xas);
+> +	xas_for_each_marked(&xas, xg, ULONG_MAX, XFS_RTG_FREE)
+> +		if (atomic_inc_not_zero(&xg->xg_active_ref))
+> +			goto found;
+> +	xas_unlock(&xas);
+> +	return NULL;
+> +
+> +found:
+> +	xas_clear_mark(&xas, XFS_RTG_FREE);
+> +	atomic_dec(&zi->zi_nr_free_zones);
+> +	xas_unlock(&xas);
 >  
->  #define FS_XFLAG_COMMON \
->  	(FS_XFLAG_SYNC | FS_XFLAG_IMMUTABLE | FS_XFLAG_APPEND | \
->  	 FS_XFLAG_NODUMP | FS_XFLAG_NOATIME | FS_XFLAG_DAX | \
-> -	 FS_XFLAG_PROJINHERIT)
-> +	 FS_XFLAG_PROJINHERIT | FS_XFLAG_VERITY)
+>  	set_current_state(TASK_RUNNING);
+>  	return xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
+> diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
+> index ce7f0e2f4598..8fbf9a52964e 100644
+> --- a/fs/xfs/xfs_zone_priv.h
+> +++ b/fs/xfs/xfs_zone_priv.h
+> @@ -72,7 +72,6 @@ struct xfs_zone_info {
+>  	/*
+>  	 * Free zone search cursor and number of free zones:
+>  	 */
+> -	unsigned long		zi_free_zone_cursor;
+>  	atomic_t		zi_nr_free_zones;
 >  
->  /* Read-only inode flags */
->  #define FS_XFLAG_RDONLY_MASK \
-> -	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR)
-> +	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR | FS_XFLAG_VERITY)
->  
->  /* Flags to indicate valid value of fsx_ fields */
->  #define FS_XFLAG_VALUES_MASK \
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index 66ca526cf786..70b2b661f42c 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -253,6 +253,7 @@ struct file_attr {
->  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
->  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
-> +#define FS_XFLAG_VERITY		0x00020000	/* fs-verity enabled */
->  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->  
->  /* the read-only stuff doesn't really belong here, but any other place is
+>  	/*
 > -- 
-> 2.52.0
+> 2.40.1
 > 
 > 
