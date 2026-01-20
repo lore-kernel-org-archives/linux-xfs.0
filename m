@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CBD01B4F2C
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 15:53:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 217DC314B83
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 15:57:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768924410; cv=none; b=geH+XIgVlQkQvjw2XY8z5nIgk+91UXtaNpVURL5OBj8RUEEn3UChGOprS1K4wwdUjidvvqJp8lIEnWwS/5dqPOEhtApG5U/yY+1KDizLoVpfiINGGs0/VJb7qvfsCcxL6xz9ReoeepEgApKe+m4WzJAB2nRmG12c9DjQO1C0vY8=
+	t=1768924673; cv=none; b=ix0eaZIAtBMfh9NX6BcUj9RJfTlv/fReQ7aZyx05Pf9vXreCxPJADHDtmJtJujQ8ZqjVGJKXcyyyjEY0eSlCFt8DefL0yA3Fmg0NV3FzlqoKJ4i29hmLf5qJm9OGOzMabTZ4yHYx9GqR7WI7JzqixqggrWuuPD/ZTlprWwWdExU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768924410; c=relaxed/simple;
-	bh=GiZ2QTATZIeMZAtIsB1kbUzhoodwTZXnrzoWV+VFt0E=;
+	s=arc-20240116; t=1768924673; c=relaxed/simple;
+	bh=1UswxSr/8ju25fUycxgQs8KNsdogT7eUPXXWSmeiMiE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tPJZxUVsce6j8H81oSB9j8qollpz9JjjXxZelvrNxOXpGETJwtcINPk7GAO2fMRgfgB3K0thDKondAd80nwPrebySbzx2vKEVxjjlx56QesIeDNeNykXkl9r1GV2eeeozceqPglbu7zIZUkhKGTuYfeXySlaPuYW76FCzVKphaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t5tEurI9; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=KnWH9eV8CJZ08zAu/jk+c4ovBYvAfwR24N85iNQDCrcD0IK86qxC7YjA7UqtFlHC7Jrz+X9StuNo+rLX5GL7wJ/uHx4bmc0JIZkyDg6VUrAF++I6I6wuFeaY941gi8OH69W6fm9EK/QXyltc/EqQpKhbgywtCjLlPuVqnDFJT34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SBrt4Kjo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t5tEurI9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E93A4C16AAE;
-	Tue, 20 Jan 2026 15:53:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SBrt4Kjo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAEB5C16AAE;
+	Tue, 20 Jan 2026 15:57:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768924410;
-	bh=GiZ2QTATZIeMZAtIsB1kbUzhoodwTZXnrzoWV+VFt0E=;
+	s=k20201202; t=1768924672;
+	bh=1UswxSr/8ju25fUycxgQs8KNsdogT7eUPXXWSmeiMiE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=t5tEurI9Zt0E8w+oU6BXS9e3aDXhB89ie85Gbm4i7vtxwoGsNnHyUvZ47ypzuDtI7
-	 1D/rvSiOkkOkHTsBdfi7DO5PaDLmohBeQ6HpSaghrXZbJdCK01df6Kq4PwzIUfzZoA
-	 IqhqKgND3xLD3m5+lDg34nzfqNHWX2uZQRhLbz8z1dbteikYux5ip+0Ckh9sh3i91p
-	 e8boNz90locUwDF8bhmvHWqglWWKU2LckluNPes7rEauSxwWWQwWB8cYwM8Zp/hWFX
-	 DG+4pl26iNP3P6mLoHO+Wm1pmUpacWOanmI7Qo4Dk0GYYmvoA8iRhgAEc+N/2PgWeH
-	 LkSz/tCMLD2kg==
-Date: Tue, 20 Jan 2026 07:53:29 -0800
+	b=SBrt4KjonGQUDRILxTFzTihsqiDWBY8nr6ly7Q7pcnU9Ad75GI5rYYJRr+h3NirB1
+	 JQOz7Z/nLEM+CS4PpDsZprApDJ445ubwPgLgKBecNECvYBzR3pJzs+cCf6BsWvd9bp
+	 r6qJJ5x3OCE8CTsZHj4Huurl41Km+ME0M/6VUvtIZKYlIBFTQ/KGzGtTr74+sIUwLa
+	 qvCJCkgJxSKR16/nJab5mesPZwmOJp9nwMllt8LMuRVcORGVIyiPOS2xKChUxLDahl
+	 XJcBSZNn8qVUTJyjydxomj6cdQJzEZr1Z1gIaeSa1F06dKvhwmwtpaDBWJvlzSJh/A
+	 WBWsIFkOQBYXA==
+Date: Tue, 20 Jan 2026 07:57:52 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
-	dlemoal@kernel.org, johannes.thumshirn@wdc.com
-Subject: Re: [PATCH] xfs: always allocate the free zone with the lowest index
-Message-ID: <20260120155329.GM15551@frogsfrogsfrogs>
-References: <20260120085746.29980-1-hans.holmberg@wdc.com>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, lukas@herbolt.com
+Subject: Re: [PATCH v7] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Message-ID: <20260120155752.GN15551@frogsfrogsfrogs>
+References: <20260120132056.534646-2-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,117 +41,166 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120085746.29980-1-hans.holmberg@wdc.com>
+In-Reply-To: <20260120132056.534646-2-cem@kernel.org>
 
-On Tue, Jan 20, 2026 at 09:57:46AM +0100, Hans Holmberg wrote:
-> Zones in the beginning of the address space are typically mapped to
-> higer bandwidth tracks on HDDs than those at the end of the address
-> space. So, in stead of allocating zones "round robin" across the whole
-> address space, always allocate the zone with the lowest index.
+On Tue, Jan 20, 2026 at 02:20:50PM +0100, cem@kernel.org wrote:
+> From: Lukas Herbolt <lukas@herbolt.com>
+> 
+> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+> the unmap write zeroes operation.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> [cem: rewrite xfs_falloc_zero_range() bits]
+> ---
+> 
+> Christoph, Darrick, could you please review/ack this patch again? I
+> needed to rewrite the xfs_falloc_zero_range() bits, because it
+> conflicted with 66d78a11479c and 8dc15b7a6e59. This version aims mostly
+> to remove one of the if-else nested levels to keep it a bit cleaner.
+> 
+> please let me know if you agree with this version, otherwise I'll ask
+> Lukas to rebase it on top of the new code.
+> 
+> Thanks!
+> 
+>  fs/xfs/xfs_bmap_util.c | 10 ++++++++--
+>  fs/xfs/xfs_bmap_util.h |  2 +-
+>  fs/xfs/xfs_file.c      | 38 +++++++++++++++++++++++++++-----------
+>  3 files changed, 36 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 0ab00615f1ad..74a7597d0998 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -642,11 +642,17 @@ xfs_free_eofblocks(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
+> + * further checks whether the hard ware supports and it can fallback to
+> + * software zeroing.
+> + */
+>  int
+>  xfs_alloc_file_space(
+>  	struct xfs_inode	*ip,
+>  	xfs_off_t		offset,
+> -	xfs_off_t		len)
+> +	xfs_off_t		len,
+> +	uint32_t		bmapi_flags)
+>  {
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	xfs_off_t		count;
+> @@ -748,7 +754,7 @@ xfs_alloc_file_space(
+>  		 * will eventually reach the requested range.
+>  		 */
+>  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+> +				allocatesize_fsb, bmapi_flags, 0, imapp,
+>  				&nimaps);
+>  		if (error) {
+>  			if (error != -ENOSR)
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index c477b3361630..2895cc97a572 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+>  
+>  /* preallocation and hole punch interface */
+>  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+> -		xfs_off_t len);
+> +		xfs_off_t len, uint32_t bmapi_flags);
+>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index d36a9aafa8ab..b23f1373116e 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1302,16 +1302,29 @@ xfs_falloc_zero_range(
+>  
+>  	if (xfs_falloc_force_zero(ip, ac)) {
+>  		error = xfs_zero_range(ip, offset, len, ac, NULL);
+> -	} else {
+> -		error = xfs_free_file_space(ip, offset, len, ac);
+> -		if (error)
+> -			return error;
+> +		goto out;
+> +	}
+>  
+> -		len = round_up(offset + len, blksize) -
+> -			round_down(offset, blksize);
+> -		offset = round_down(offset, blksize);
+> -		error = xfs_alloc_file_space(ip, offset, len);
+> +	error = xfs_free_file_space(ip, offset, len, ac);
+> +	if (error)
+> +		return error;
+> +
+> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+> +	offset = round_down(offset, blksize);
+> +
+> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
+> +		if (xfs_is_always_cow_inode(ip) ||
+> +		    !bdev_write_zeroes_unmap_sectors(
+> +				xfs_inode_buftarg(ip)->bt_bdev))
+> +			return -EOPNOTSUPP;
 
-Does it make any difference if it's a zoned ssd?  I'd imagine not, but I
-wonder if there are any longer term side effects like lower-numbered
-zones filling up and getting gc'd more often?
+Taking a second look -- this code allows ZERO_RANGE|WRITE_ZEROES to
+punch out the file space but then fail with EOPNOTSUPP.  I think if
+we're going to error out that way, we should do that at the top of the
+function before any changes are made.
 
 --D
 
-> This increases average write bandwidth for overwrite workloads
-> when less than the full capacity is being used. At ~50% utilization
-> this improves bandwidth for a random file overwrite benchmark
-> with 128MiB files and 256MiB zone capacity by 30%.
-> 
-> Running the same benchmark with small 2-8 MiB files at 67% capacity
-> shows no significant difference in performance. Due to heavy
-> fragmentation the whole zone range is in use, greatly limiting the 
-> number of free zones with high bw.
-> 
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-> ---
-> 
->  fs/xfs/xfs_zone_alloc.c | 47 +++++++++++++++--------------------------
->  fs/xfs/xfs_zone_priv.h  |  1 -
->  2 files changed, 17 insertions(+), 31 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index bbcf21704ea0..d6c97026f733 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -408,31 +408,6 @@ xfs_zone_free_blocks(
->  	return 0;
->  }
->  
-> -static struct xfs_group *
-> -xfs_find_free_zone(
-> -	struct xfs_mount	*mp,
-> -	unsigned long		start,
-> -	unsigned long		end)
-> -{
-> -	struct xfs_zone_info	*zi = mp->m_zone_info;
-> -	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, start);
-> -	struct xfs_group	*xg;
-> -
-> -	xas_lock(&xas);
-> -	xas_for_each_marked(&xas, xg, end, XFS_RTG_FREE)
-> -		if (atomic_inc_not_zero(&xg->xg_active_ref))
-> -			goto found;
-> -	xas_unlock(&xas);
-> -	return NULL;
-> -
-> -found:
-> -	xas_clear_mark(&xas, XFS_RTG_FREE);
-> -	atomic_dec(&zi->zi_nr_free_zones);
-> -	zi->zi_free_zone_cursor = xg->xg_gno;
-> -	xas_unlock(&xas);
-> -	return xg;
-> -}
-> -
->  static struct xfs_open_zone *
->  xfs_init_open_zone(
->  	struct xfs_rtgroup	*rtg,
-> @@ -472,13 +447,25 @@ xfs_open_zone(
->  	bool			is_gc)
->  {
->  	struct xfs_zone_info	*zi = mp->m_zone_info;
-> +	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
->  	struct xfs_group	*xg;
->  
-> -	xg = xfs_find_free_zone(mp, zi->zi_free_zone_cursor, ULONG_MAX);
-> -	if (!xg)
-> -		xg = xfs_find_free_zone(mp, 0, zi->zi_free_zone_cursor);
-> -	if (!xg)
-> -		return NULL;
-> +	/*
-> +	 * Pick the free zone with lowest index. Zones in the beginning of the
-> +	 * address space typically provides higher bandwidth than those at the
-> +	 * end of the address space on HDDs.
-> +	 */
-> +	xas_lock(&xas);
-> +	xas_for_each_marked(&xas, xg, ULONG_MAX, XFS_RTG_FREE)
-> +		if (atomic_inc_not_zero(&xg->xg_active_ref))
-> +			goto found;
-> +	xas_unlock(&xas);
-> +	return NULL;
+> +		error = xfs_alloc_file_space(ip, offset, len,
+> +					     XFS_BMAPI_ZERO);
+> +	} else {
+> +		error = xfs_alloc_file_space(ip, offset, len,
+> +					     XFS_BMAPI_PREALLOC);
+>  	}
 > +
-> +found:
-> +	xas_clear_mark(&xas, XFS_RTG_FREE);
-> +	atomic_dec(&zi->zi_nr_free_zones);
-> +	xas_unlock(&xas);
+> +out:
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1336,7 +1349,8 @@ xfs_falloc_unshare_range(
+>  	if (error)
+>  		return error;
 >  
->  	set_current_state(TASK_RUNNING);
->  	return xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
-> diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
-> index ce7f0e2f4598..8fbf9a52964e 100644
-> --- a/fs/xfs/xfs_zone_priv.h
-> +++ b/fs/xfs/xfs_zone_priv.h
-> @@ -72,7 +72,6 @@ struct xfs_zone_info {
->  	/*
->  	 * Free zone search cursor and number of free zones:
->  	 */
-> -	unsigned long		zi_free_zone_cursor;
->  	atomic_t		zi_nr_free_zones;
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1364,7 +1378,8 @@ xfs_falloc_allocate_range(
+>  	if (error)
+>  		return error;
 >  
->  	/*
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1374,7 +1389,7 @@ xfs_falloc_allocate_range(
+>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+> -		 FALLOC_FL_UNSHARE_RANGE)
+> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+>  
+>  STATIC long
+>  __xfs_file_fallocate(
+> @@ -1417,6 +1432,7 @@ __xfs_file_fallocate(
+>  	case FALLOC_FL_INSERT_RANGE:
+>  		error = xfs_falloc_insert_range(file, offset, len);
+>  		break;
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  	case FALLOC_FL_ZERO_RANGE:
+>  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+>  		break;
 > -- 
-> 2.40.1
+> 2.52.0
 > 
 > 
