@@ -1,197 +1,168 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 699FC3B8BB8
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 08:40:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEF173B8D4D
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 08:59:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768898412; cv=none; b=IHmkSb3XWPXW74Hi31TzPhc1rTno1WvL3NlZicxRleZqKYtGTf2NL2krdN8eA62GuqMZzSE8dH8MClFXCbvgvcBMyLr0dhCu113LBgQ93xdgafyasfA7CPlN3ShvwhXAmEqwml4eH173k3MyFFLmbfOtpar9zuOiQ2FbLzjG2GE=
+	t=1768899582; cv=none; b=AdOT17runx713VKhFAx+QZzu+jFLSq9YvTh9TW9PUNx430XJj16H4bsUPj+Nnn2LxYfMqZ8cphNnl1KUOOIOvzAADuTFs6Nb/ji8gR70z1QQQOfrzmZ1gtyRguO/4Z8z5UPjo5FqeFQo6v/jQBWpYxaEpBIO2zk5jXbXLy7LV2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768898412; c=relaxed/simple;
-	bh=8BR8FshNwnTtZve8kPjGIanAYuvxkiLgYA0voF5sQxA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D9r8ShTrCksjQFSR1XJkYf98P3LBmZTMAtv0X/8uK1jqUjHXjBCJZGrX1X33HNKygIZ73d53Wak0fsiElb9cNy1Sp8ALg7cO8tTK4BjrBbVVpOgcx3SQ6N2m902sS7bG/4taLpozg/hzw03A95Iy3y7crxqL8rw6QxrSxgTbR/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=lXbl/VQV; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=LDOUWFgZ; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=lXbl/VQV; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=LDOUWFgZ; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1768899582; c=relaxed/simple;
+	bh=frkIWxWwHmOR7sP+JQ/HlaoGphHGwMj/5LAifVYO19s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r33W8UrwL+u3brjhM3eTwjoScklkZpFY3H2XhdsGFpcmVt4CXKYwRfgUPONaIA50dT77+TGtsU4F4M0k5pAs9vR+73tHep0/v2yUAi84DL4cTSpnuHZhFTMU7uwZpPEPJ8mJwPBQ49lhHf8AYa01mrNOMHZpdkVCTj4p3SkPm9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=m2pl7N0v; arc=none smtp.client-ip=216.71.153.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="lXbl/VQV";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="LDOUWFgZ";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="lXbl/VQV";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="LDOUWFgZ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A132E337CA;
-	Tue, 20 Jan 2026 08:40:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1768898407; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=241NHzkrAsafry/49JFnJwfuSaj964PJNO6i4H5lhSI=;
-	b=lXbl/VQVuVPBPaq9av5smG5OFa/NhiwefeYAnKTxiTxM2QX9a0Jsbdpis0tVJFy+unWMtD
-	bNh/ywftBTm5m2O2e7f0QmCLthEIxPwfSwEbrsfum9UBevwRj24bv8DnE2XCtOBZOykvGt
-	AUYIB66up1nxz+RBb/9UrZZim7/aN7w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1768898407;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=241NHzkrAsafry/49JFnJwfuSaj964PJNO6i4H5lhSI=;
-	b=LDOUWFgZ9L1jfR2KXNRaliX4q7afY0RWN0QEnpzcnPdpU998Wx8+N3DLW81My4a1pFp2EE
-	dwI54JIvYwP/B5AA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="lXbl/VQV";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=LDOUWFgZ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1768898407; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=241NHzkrAsafry/49JFnJwfuSaj964PJNO6i4H5lhSI=;
-	b=lXbl/VQVuVPBPaq9av5smG5OFa/NhiwefeYAnKTxiTxM2QX9a0Jsbdpis0tVJFy+unWMtD
-	bNh/ywftBTm5m2O2e7f0QmCLthEIxPwfSwEbrsfum9UBevwRj24bv8DnE2XCtOBZOykvGt
-	AUYIB66up1nxz+RBb/9UrZZim7/aN7w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1768898407;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=241NHzkrAsafry/49JFnJwfuSaj964PJNO6i4H5lhSI=;
-	b=LDOUWFgZ9L1jfR2KXNRaliX4q7afY0RWN0QEnpzcnPdpU998Wx8+N3DLW81My4a1pFp2EE
-	dwI54JIvYwP/B5AA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 96D993EA63;
-	Tue, 20 Jan 2026 08:40:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id RJLPJGc/b2l6AwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 20 Jan 2026 08:40:07 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 47975A09DA; Tue, 20 Jan 2026 09:40:07 +0100 (CET)
-Date: Tue, 20 Jan 2026 09:40:07 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Layton <jlayton@kernel.org>, 
-	Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
-	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
-	Amir Goldstein <amir73il@gmail.com>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, 
-	Jan Kara <jack@suse.com>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
-	Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
-	Chunhai Guo <guochunhai@vivo.com>, Carlos Maiolino <cem@kernel.org>, 
-	Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
-	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
-	Luis de Bethencourt <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, 
-	Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
-	Paulo Alcantara <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
-	Shyam Prasad N <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Mike Marshall <hubcap@omnibond.com>, 
-	Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
-	Joseph Qi <joseph.qi@linux.alibaba.com>, Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
-	Anna Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>, 
-	David Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
-	Andreas Gruenbacher <agruenba@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
-	Jaegeuk Kim <jaegeuk@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
-	David Laight <david.laight.linux@gmail.com>, Dave Chinner <david@fromorbit.com>, linux-nfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org, 
-	ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
-	samba-technical@lists.samba.org, linux-unionfs@vger.kernel.org, devel@lists.orangefs.org, 
-	ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev, linux-nilfs@vger.kernel.org, 
-	jfs-discussion@lists.sourceforge.net, linux-mtd@lists.infradead.org, gfs2@lists.linux.dev, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v2 02/31] exportfs: add new EXPORT_OP_STABLE_HANDLES flag
-Message-ID: <56fr33ju43h6zzp6jrzrkyfag6r3jz6wpnk45oe5byy6fqyvti@d43hgikfuk7t>
-References: <20260119-exportfs-nfsd-v2-0-d93368f903bd@kernel.org>
- <20260119-exportfs-nfsd-v2-2-d93368f903bd@kernel.org>
- <aW8ztQ-RbhxwzMk7@infradead.org>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="m2pl7N0v"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1768899579; x=1800435579;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=frkIWxWwHmOR7sP+JQ/HlaoGphHGwMj/5LAifVYO19s=;
+  b=m2pl7N0vGbNr6gaQbApTEmAwvT1yw5WINA+dSLuUJn4pRtzaFFmMJZd8
+   sh5ZFfTkPcANLaFmoWzqSBiG1XjlkmvbSd0ndyhNbVO7GFpnqH5hM0kTI
+   aeoMVcLgyEnkilA/9mbN4N37ryrJkSDCk5pmTXqe6ayHY/np/c8MjY6DQ
+   RIzYbmqccrZJe6kYRWYFzN/e++4UwaIgOnwqpJqizdA05we0ITGPXsJjB
+   DL4pv9xTEczvlFuH04GSQsVQXyngXwvfDYrE9mxzoXhGy9NuyLaX/uwyv
+   sEj13v6lB+xc02gMW8lDSjx4Tt3HiKZqHeyun1lQl7IETeDstf6F3H6QH
+   g==;
+X-CSE-ConnectionGUID: UszLOPctR2SfQ1RlqJH1Wg==
+X-CSE-MsgGUID: 3s3OEuGoRHaunwQYoPFG8Q==
+X-IronPort-AV: E=Sophos;i="6.21,240,1763395200"; 
+   d="scan'208";a="139798825"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Jan 2026 16:59:32 +0800
+IronPort-SDR: 696f43f5_I6oQUJul9atHzJawAP0pCNs7u++yBqAwOqpXi6X5o86i5K6
+ 133/LuZir8L56trbdm9lg/UNfdOjln6g93+sQ2Q==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Jan 2026 00:59:33 -0800
+WDCIronportException: Internal
+Received: from b8vpy33.ad.shared (HELO gcv.wdc.com) ([10.224.20.2])
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Jan 2026 00:59:30 -0800
+From: Hans Holmberg <hans.holmberg@wdc.com>
+To: linux-xfs@vger.kernel.org
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	dlemoal@kernel.org,
+	johannes.thumshirn@wdc.com,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH] xfs: always allocate the free zone with the lowest index
+Date: Tue, 20 Jan 2026 09:57:46 +0100
+Message-ID: <20260120085746.29980-1-hans.holmberg@wdc.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aW8ztQ-RbhxwzMk7@infradead.org>
-X-Spam-Score: -2.51
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[kernel.org,zeniv.linux.org.uk,oracle.com,brown.name,redhat.com,talpey.com,gmail.com,google.com,linux.alibaba.com,linux-foundation.org,mit.edu,dilger.ca,suse.com,huawei.com,vivo.com,dubeyko.com,fb.com,squashfs.org.uk,samba.org,manguebit.org,microsoft.com,szeredi.hu,omnibond.com,fasheh.com,evilplan.org,paragon-software.com,infradead.org,nod.at,suse.cz,mail.parknet.co.jp,lwn.net,fromorbit.com,vger.kernel.org,kvack.org,lists.ozlabs.org,lists.samba.org,lists.orangefs.org,lists.linux.dev,lists.sourceforge.net,lists.infradead.org];
-	RCPT_COUNT_GT_50(0.00)[78];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	R_RATELIMIT(0.00)[to_ip_from(RLn1fby4ztoa71w9ewejbxf7et)];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Level: 
-X-Rspamd-Action: no action
-X-Rspamd-Queue-Id: A132E337CA
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
 
-On Mon 19-01-26 23:50:13, Christoph Hellwig wrote:
-> On Mon, Jan 19, 2026 at 11:26:19AM -0500, Jeff Layton wrote:
-> > +  EXPORT_OP_STABLE_HANDLES - This filesystem provides filehandles that are
-> > +    stable across the lifetime of a file. This is a hard requirement for export
-> > +    via nfsd. Any filesystem that is eligible to be exported via nfsd must
-> > +    indicate this guarantee by setting this flag. Most disk-based filesystems
-> > +    can do this naturally. Pseudofilesystems that are for local reporting and
-> > +    control (e.g. kernfs, pidfs, nsfs) usually can't support this.
-> 
-> Suggested rewording, taking some of the ideas from Dave Chinners earlier
-> comments into account:
-> 
->   EXPORT_OP_STABLE_HANDLES - This filesystem provides filehandles that are
->     stable across the lifetime of a file.  A file in this context is an
->     instantiated inode reachable by one or more file names, or still open after
->     the last name has been unlinked.  Reuses of the same on-disk inode structure
->     are considered new files and must provide different file handles from the
->     previous incarnation.  Most file systems designed to store user data
->     naturally provide this capability.  Pseudofilesystems that are for local
->     reporting and control (e.g. kernfs, pidfs, nsfs) usually can't support this.
-> 
->     This flags is a hard requirement for export via nfsd. Any filesystem that
->     is eligible to be exported via nfsd must indicate this guarantee by
->     setting this flag.
+Zones in the beginning of the address space are typically mapped to
+higer bandwidth tracks on HDDs than those at the end of the address
+space. So, in stead of allocating zones "round robin" across the whole
+address space, always allocate the zone with the lowest index.
 
-I like this. It certainly makes the requirement of stability clearer to me
-(with explanations before I couldn't quite see the difference between shmem
-and kernfs). I'd note that fat or shmem (which are both exportable)
-satisfy this only with reasonably high probability as they use
-get_random_u32() for initializing their i_generation but I guess it's as
-good as it gets for them.
+This increases average write bandwidth for overwrite workloads
+when less than the full capacity is being used. At ~50% utilization
+this improves bandwidth for a random file overwrite benchmark
+with 128MiB files and 256MiB zone capacity by 30%.
 
-								Honza
+Running the same benchmark with small 2-8 MiB files at 67% capacity
+shows no significant difference in performance. Due to heavy
+fragmentation the whole zone range is in use, greatly limiting the 
+number of free zones with high bw.
+
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
+
+ fs/xfs/xfs_zone_alloc.c | 47 +++++++++++++++--------------------------
+ fs/xfs/xfs_zone_priv.h  |  1 -
+ 2 files changed, 17 insertions(+), 31 deletions(-)
+
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index bbcf21704ea0..d6c97026f733 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -408,31 +408,6 @@ xfs_zone_free_blocks(
+ 	return 0;
+ }
+ 
+-static struct xfs_group *
+-xfs_find_free_zone(
+-	struct xfs_mount	*mp,
+-	unsigned long		start,
+-	unsigned long		end)
+-{
+-	struct xfs_zone_info	*zi = mp->m_zone_info;
+-	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, start);
+-	struct xfs_group	*xg;
+-
+-	xas_lock(&xas);
+-	xas_for_each_marked(&xas, xg, end, XFS_RTG_FREE)
+-		if (atomic_inc_not_zero(&xg->xg_active_ref))
+-			goto found;
+-	xas_unlock(&xas);
+-	return NULL;
+-
+-found:
+-	xas_clear_mark(&xas, XFS_RTG_FREE);
+-	atomic_dec(&zi->zi_nr_free_zones);
+-	zi->zi_free_zone_cursor = xg->xg_gno;
+-	xas_unlock(&xas);
+-	return xg;
+-}
+-
+ static struct xfs_open_zone *
+ xfs_init_open_zone(
+ 	struct xfs_rtgroup	*rtg,
+@@ -472,13 +447,25 @@ xfs_open_zone(
+ 	bool			is_gc)
+ {
+ 	struct xfs_zone_info	*zi = mp->m_zone_info;
++	XA_STATE		(xas, &mp->m_groups[XG_TYPE_RTG].xa, 0);
+ 	struct xfs_group	*xg;
+ 
+-	xg = xfs_find_free_zone(mp, zi->zi_free_zone_cursor, ULONG_MAX);
+-	if (!xg)
+-		xg = xfs_find_free_zone(mp, 0, zi->zi_free_zone_cursor);
+-	if (!xg)
+-		return NULL;
++	/*
++	 * Pick the free zone with lowest index. Zones in the beginning of the
++	 * address space typically provides higher bandwidth than those at the
++	 * end of the address space on HDDs.
++	 */
++	xas_lock(&xas);
++	xas_for_each_marked(&xas, xg, ULONG_MAX, XFS_RTG_FREE)
++		if (atomic_inc_not_zero(&xg->xg_active_ref))
++			goto found;
++	xas_unlock(&xas);
++	return NULL;
++
++found:
++	xas_clear_mark(&xas, XFS_RTG_FREE);
++	atomic_dec(&zi->zi_nr_free_zones);
++	xas_unlock(&xas);
+ 
+ 	set_current_state(TASK_RUNNING);
+ 	return xfs_init_open_zone(to_rtg(xg), 0, write_hint, is_gc);
+diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
+index ce7f0e2f4598..8fbf9a52964e 100644
+--- a/fs/xfs/xfs_zone_priv.h
++++ b/fs/xfs/xfs_zone_priv.h
+@@ -72,7 +72,6 @@ struct xfs_zone_info {
+ 	/*
+ 	 * Free zone search cursor and number of free zones:
+ 	 */
+-	unsigned long		zi_free_zone_cursor;
+ 	atomic_t		zi_nr_free_zones;
+ 
+ 	/*
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.40.1
+
