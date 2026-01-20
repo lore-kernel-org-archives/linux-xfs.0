@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA77035966
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 02:39:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9D62D6E71
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 02:53:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768876759; cv=none; b=hgTT6IB6slCgKDRjQw0kaw92a4teRz9FbdtR0mwbOqfgELryVQObh04cnu8Tci1HkffGnglX+oKkaLaZKxL81wvqLEPdlFoEstuB86Gjp0F6sdbu2IMDk5PFB2JEOUNJMQDFVRfvWoWht87hlojTo90KyPndZV7WvgI8/wVZ6Iw=
+	t=1768877596; cv=none; b=kB6Nk5SKRppAEkWbSjQkBQ3lQnXTXooUFbWQTllc/+6Tim3QeQL7mZZQKUGqYNTXorGSad2ZjHvZTHaCCjYLADOBGIZ99vzI6lBuE1xDxVf87647eUwUkfzS0BiaCMF1c1BCUls4Z3ZxjWuNkugN2SMmKAZh8Dt6mitMLAH5VZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768876759; c=relaxed/simple;
-	bh=eyYXrHULtUBod3ncnyFDEuJJmemUEeP3IbyBkmCz03s=;
+	s=arc-20240116; t=1768877596; c=relaxed/simple;
+	bh=6VgRxrvaljDFTvsDvnbTffQkW+5v+56L6QPbE5mWZMs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IKx7hfY2s+eBE7mZjSGE/QQxJxonPTuoLRIuLDrrT2UdA/3wNNhUAXXCqkXY4H12y6eqLY2LUPFOePPSvhGkEgP9YwF9E4gOLLTNYDwMmlbTzjo5khDWmJDtD3mL1nk8+y45iyoa/drmcWDUO0+Z2feQYmsskOpxt2NvpG+Notw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l6XRqAkq; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y8dzmFYxrzLDgoK2pAj094xY3ugq0tHqeq7jvn13OyFK1Ga0uDMnlGIIyJmZtL3bR74eiqZGpUu4/xZM6pc2AhBIsIOF1SxrwTb0qnrkPWZI5wawrk0Ia2E1XVon+3Jl8jfCos8FPoOgxeMaGflSugUH0ECPIaFChIdm5VZCLUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=me3cl9w5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l6XRqAkq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A091C116C6;
-	Tue, 20 Jan 2026 02:39:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="me3cl9w5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 152F2C116C6;
+	Tue, 20 Jan 2026 02:53:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768876759;
-	bh=eyYXrHULtUBod3ncnyFDEuJJmemUEeP3IbyBkmCz03s=;
+	s=k20201202; t=1768877596;
+	bh=6VgRxrvaljDFTvsDvnbTffQkW+5v+56L6QPbE5mWZMs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=l6XRqAkqA+A0d9FybtXDR6KaEPcLCMdrNCxeGo7mCSG/VxJYLr9tVPW43SPEeRNr6
-	 8pChAjIe8VpH6aeD+ZGm7DDFU7Fo9SEmIQna4yBJ/I5hotJDo0B73mU/b8plHRdMrI
-	 wzMF7XZ75L1Ue1+rFSIyW7hyCO5uuUDpb7pgF1MDcv6yt5XomvIBDgyKyoWGtA3aWT
-	 YEGR9djwyrUrhT0ou0gGX9gyBbDFelAGLnI3M06TxKnSn3KMPEyI1cmFfuEwPsOVW2
-	 xZsoFXrgRgR4V+s1M9FqL/MOAcGBAOmlHrmIikPAS6zKIptm1dhqJ9rGAQ8vPVRO3X
-	 M6zmxYBOt3jVA==
-Date: Mon, 19 Jan 2026 18:39:18 -0800
+	b=me3cl9w5ewGTKOHGCmfUD0VcdB0ZqNXtatLkgVU3+QLSw9Z/kH5wZWttUpasdqAhI
+	 ilulxtWSeJcpOF626rwDetqKzJl49at4YvSMIwkz9NWQFe7jZndtICk6r6VJ85lpku
+	 BCwj/aAQE0F8ClZ3PB2c8+mXhhPrSFHAPPt4ij27OKvDcRF9GQWYQIgMcbeQGYKk6Z
+	 W9AdQeWzNQKWNwHDS1yRe4fFpUFa1DFKbXbXsXWAEZJSZnBdrlU9BeAAkH4zyZjbRH
+	 AGGK9SyxIHSG/N2oHGdBsYaHAx2ZXAPHOVnrFVZaP8GtKTwRODTTS3uozkbw7Ya9s8
+	 Mo3y6SsX7awFw==
+Date: Mon, 19 Jan 2026 18:53:15 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org,
-	syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Subject: Re: [PATCH 3/3] xfs: switch (back) to a per-buftarg buffer hash
-Message-ID: <20260120023918.GG15551@frogsfrogsfrogs>
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: don't keep a reference for buffers on the LRU
+Message-ID: <20260120025315.GH15551@frogsfrogsfrogs>
 References: <20260119153156.4088290-1-hch@lst.de>
- <20260119153156.4088290-4-hch@lst.de>
+ <20260119153156.4088290-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,318 +43,322 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260119153156.4088290-4-hch@lst.de>
+In-Reply-To: <20260119153156.4088290-2-hch@lst.de>
 
-On Mon, Jan 19, 2026 at 04:31:37PM +0100, Christoph Hellwig wrote:
-> The per-AG buffer hashes were added when all buffer lookups took a
-> per-hash look.  Since then we've made lookups entirely lockless and
-> removed the need for a hash-wide lock for inserts and removals as
-> well.  With this there is no need to sharding the hash, so reduce the
-> used resources by using a per-buftarg hash for all buftargs.
+On Mon, Jan 19, 2026 at 04:31:35PM +0100, Christoph Hellwig wrote:
+> Currently the buffer cache adds a reference to b_hold for buffers that
+> are on the LRU.  This seems to go all the way back and allows releasing
+> buffers from the LRU using xfs_buf_rele.  But it makes xfs_buf_rele
+> really complicated in differs from how other LRUs are implemented in
+> Linux.
 
-Hey, not having all the per-ag buffer cache sounds neat!
+I'd noticed that.
 
-> Long after writing this initially, syzbot found a problem in the
-> buffer cache teardown order, which this happens to fix as well.
+So under the current code, a cached buffer gets created with b_hold=1
+and b_lru_ref=1.  Calling xfs_buf_hold can bump up b_hold.  Calling
+xfs_buf_rele immediately will either transfer ownership of the buf to
+the lru (if it wasn't on the lru ref) or decrement b_hold.
 
-What did we get wrong, specifically?
+Higher level xfs code might boost b_lru_ref for buffers that it thinks
+we should try to hang on to (e.g. AG headers).
 
-Also: Is there a simpler fix for this bug that we can stuff into old lts
-kernels?  Or is this fix independent of the b_hold and lockref changes
-in the previous patches?
+xfs_buftarg_isolate will decrement b_lru_ref unless it was already zero,
+in which case it'll actually free the buffer.  If xfs_buf_rele finds a
+buffer with b_lru_ref==0 it'll drop b_hold and try to free the buffer if
+b_hold drops to zero.
+
+Right?
+
+> Switch to not having a reference for buffers in the LRU, and use a
+> separate negative hold value to mark buffers as dead.  This simplifies
+> xfs_buf_rele, which now just deal with the last "real" reference,
+> and prepares for using the lockref primitive.
+
+And now, b_hold is the number of higher-level owners of the buffer.  If
+that drops to zero the buffer gets put on the lru list if it hasn't
+already run out of lru refs, in which case it's freed directly.  If a
+buffer on the lru list runs out of lru refs then it'll get freed.
+b_hodl < 0 means "headed for destruction".
+
+Is that also correct?
+
+If yes to both then I've understood what's going on here well enough to 
+say:
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Reported-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-> Tested-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_ag.c | 13 ++---------
->  fs/xfs/libxfs/xfs_ag.h |  2 --
->  fs/xfs/xfs_buf.c       | 51 +++++++++++-------------------------------
->  fs/xfs/xfs_buf.h       | 10 +--------
->  fs/xfs/xfs_buf_mem.c   | 11 ++-------
->  5 files changed, 18 insertions(+), 69 deletions(-)
+>  fs/xfs/xfs_buf.c | 140 ++++++++++++++++++-----------------------------
+>  fs/xfs/xfs_buf.h |   8 +--
+>  2 files changed, 54 insertions(+), 94 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 586918ed1cbf..a41d782e8e8c 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -110,10 +110,7 @@ xfs_perag_uninit(
->  	struct xfs_group	*xg)
->  {
->  #ifdef __KERNEL__
-> -	struct xfs_perag	*pag = to_perag(xg);
-> -
-> -	cancel_delayed_work_sync(&pag->pag_blockgc_work);
-> -	xfs_buf_cache_destroy(&pag->pag_bcache);
-> +	cancel_delayed_work_sync(&to_perag(xg)->pag_blockgc_work);
->  #endif
->  }
->  
-> @@ -235,10 +232,6 @@ xfs_perag_alloc(
->  	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
->  #endif /* __KERNEL__ */
->  
-> -	error = xfs_buf_cache_init(&pag->pag_bcache);
-> -	if (error)
-> -		goto out_free_perag;
-> -
->  	/*
->  	 * Pre-calculated geometry
->  	 */
-> @@ -250,12 +243,10 @@ xfs_perag_alloc(
->  
->  	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
->  	if (error)
-> -		goto out_buf_cache_destroy;
-> +		goto out_free_perag;
->  
->  	return 0;
->  
-> -out_buf_cache_destroy:
-> -	xfs_buf_cache_destroy(&pag->pag_bcache);
->  out_free_perag:
->  	kfree(pag);
->  	return error;
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 1f24cfa27321..f02323416973 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -85,8 +85,6 @@ struct xfs_perag {
->  	int		pag_ici_reclaimable;	/* reclaimable inodes */
->  	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
->  
-> -	struct xfs_buf_cache	pag_bcache;
-> -
->  	/* background prealloc block trimming */
->  	struct delayed_work	pag_blockgc_work;
->  #endif /* __KERNEL__ */
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 348c91335163..76eb7c5a73f1 100644
+> index db46883991de..aacdf080e400 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -363,20 +363,6 @@ static const struct rhashtable_params xfs_buf_hash_params = {
->  	.obj_cmpfn		= _xfs_buf_obj_cmp,
->  };
+> @@ -80,11 +80,8 @@ xfs_buf_stale(
 >  
-> -int
-> -xfs_buf_cache_init(
-> -	struct xfs_buf_cache	*bch)
-> -{
-> -	return rhashtable_init(&bch->bc_hash, &xfs_buf_hash_params);
-> -}
+>  	spin_lock(&bp->b_lock);
+>  	atomic_set(&bp->b_lru_ref, 0);
+> -	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
+> -	    (list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru)))
+> -		bp->b_hold--;
 > -
-> -void
-> -xfs_buf_cache_destroy(
-> -	struct xfs_buf_cache	*bch)
-> -{
-> -	rhashtable_destroy(&bch->bc_hash);
-> -}
-> -
->  static int
->  xfs_buf_map_verify(
->  	struct xfs_buftarg	*btp,
-> @@ -434,7 +420,7 @@ xfs_buf_find_lock(
->  
->  static inline int
->  xfs_buf_lookup(
-> -	struct xfs_buf_cache	*bch,
-> +	struct xfs_buftarg	*btp,
->  	struct xfs_buf_map	*map,
->  	xfs_buf_flags_t		flags,
->  	struct xfs_buf		**bpp)
-> @@ -443,7 +429,7 @@ xfs_buf_lookup(
->  	int			error;
->  
->  	rcu_read_lock();
-> -	bp = rhashtable_lookup(&bch->bc_hash, map, xfs_buf_hash_params);
-> +	bp = rhashtable_lookup(&btp->bt_hash, map, xfs_buf_hash_params);
->  	if (!bp || !lockref_get_not_dead(&bp->b_lockref)) {
->  		rcu_read_unlock();
->  		return -ENOENT;
-> @@ -468,7 +454,6 @@ xfs_buf_lookup(
->  static int
->  xfs_buf_find_insert(
->  	struct xfs_buftarg	*btp,
-> -	struct xfs_buf_cache	*bch,
->  	struct xfs_perag	*pag,
->  	struct xfs_buf_map	*cmap,
->  	struct xfs_buf_map	*map,
-> @@ -488,7 +473,7 @@ xfs_buf_find_insert(
->  	new_bp->b_pag = pag;
->  
->  	rcu_read_lock();
-> -	bp = rhashtable_lookup_get_insert_fast(&bch->bc_hash,
-> +	bp = rhashtable_lookup_get_insert_fast(&btp->bt_hash,
->  			&new_bp->b_rhash_head, xfs_buf_hash_params);
->  	if (IS_ERR(bp)) {
->  		rcu_read_unlock();
-> @@ -530,16 +515,6 @@ xfs_buftarg_get_pag(
->  	return xfs_perag_get(mp, xfs_daddr_to_agno(mp, map->bm_bn));
+> -	ASSERT(bp->b_hold >= 1);
+> +	if (bp->b_hold >= 0)
+> +		list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
+>  	spin_unlock(&bp->b_lock);
 >  }
 >  
-> -static inline struct xfs_buf_cache *
-> -xfs_buftarg_buf_cache(
-> -	struct xfs_buftarg		*btp,
-> -	struct xfs_perag		*pag)
-> -{
-> -	if (pag)
-> -		return &pag->pag_bcache;
-> -	return btp->bt_cache;
-> -}
-> -
->  /*
->   * Assembles a buffer covering the specified range. The code is optimised for
->   * cache hits, as metadata intensive workloads will see 3 orders of magnitude
-> @@ -553,7 +528,6 @@ xfs_buf_get_map(
->  	xfs_buf_flags_t		flags,
->  	struct xfs_buf		**bpp)
+> @@ -442,7 +439,7 @@ xfs_buf_try_hold(
+>  	struct xfs_buf		*bp)
 >  {
-> -	struct xfs_buf_cache	*bch;
->  	struct xfs_perag	*pag;
->  	struct xfs_buf		*bp = NULL;
->  	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
-> @@ -570,9 +544,8 @@ xfs_buf_get_map(
->  		return error;
+>  	spin_lock(&bp->b_lock);
+> -	if (bp->b_hold == 0) {
+> +	if (bp->b_hold == -1) {
+>  		spin_unlock(&bp->b_lock);
+>  		return false;
+>  	}
+> @@ -862,76 +859,24 @@ xfs_buf_hold(
+>  }
 >  
->  	pag = xfs_buftarg_get_pag(btp, &cmap);
-> -	bch = xfs_buftarg_buf_cache(btp, pag);
->  
-> -	error = xfs_buf_lookup(bch, &cmap, flags, &bp);
-> +	error = xfs_buf_lookup(btp, &cmap, flags, &bp);
->  	if (error && error != -ENOENT)
->  		goto out_put_perag;
->  
-> @@ -584,7 +557,7 @@ xfs_buf_get_map(
->  			goto out_put_perag;
->  
->  		/* xfs_buf_find_insert() consumes the perag reference. */
-> -		error = xfs_buf_find_insert(btp, bch, pag, &cmap, map, nmaps,
-> +		error = xfs_buf_find_insert(btp, pag, &cmap, map, nmaps,
->  				flags, &bp);
->  		if (error)
->  			return error;
-> @@ -848,11 +821,8 @@ xfs_buf_destroy(
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
->  
->  	if (!xfs_buf_is_uncached(bp)) {
-> -		struct xfs_buf_cache	*bch =
-> -			xfs_buftarg_buf_cache(bp->b_target, bp->b_pag);
+>  static void
+> -xfs_buf_rele_uncached(
+> -	struct xfs_buf		*bp)
+> -{
+> -	ASSERT(list_empty(&bp->b_lru));
 > -
-> -		rhashtable_remove_fast(&bch->bc_hash, &bp->b_rhash_head,
-> -				xfs_buf_hash_params);
-> +		rhashtable_remove_fast(&bp->b_target->bt_hash,
-> +				&bp->b_rhash_head, xfs_buf_hash_params);
+> -	spin_lock(&bp->b_lock);
+> -	if (--bp->b_hold) {
+> -		spin_unlock(&bp->b_lock);
+> -		return;
+> -	}
+> -	spin_unlock(&bp->b_lock);
+> -	xfs_buf_free(bp);
+> -}
+> -
+> -static void
+> -xfs_buf_rele_cached(
+> +xfs_buf_destroy(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_buftarg	*btp = bp->b_target;
+> -	struct xfs_perag	*pag = bp->b_pag;
+> -	struct xfs_buf_cache	*bch = xfs_buftarg_buf_cache(btp, pag);
+> -	bool			freebuf = false;
+> -
+> -	trace_xfs_buf_rele(bp, _RET_IP_);
+> -
+> -	spin_lock(&bp->b_lock);
+> -	ASSERT(bp->b_hold >= 1);
+> -	if (bp->b_hold > 1) {
+> -		bp->b_hold--;
+> -		goto out_unlock;
+> -	}
+> +	ASSERT(bp->b_hold < 0);
+> +	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
 >  
->  		if (bp->b_pag)
->  			xfs_perag_put(bp->b_pag);
-> @@ -1619,6 +1589,7 @@ xfs_destroy_buftarg(
->  	ASSERT(percpu_counter_sum(&btp->bt_readahead_count) == 0);
->  	percpu_counter_destroy(&btp->bt_readahead_count);
->  	list_lru_destroy(&btp->bt_lru);
-> +	rhashtable_destroy(&btp->bt_hash);
+> -	/* we are asked to drop the last reference */
+> -	if (atomic_read(&bp->b_lru_ref)) {
+> -		/*
+> -		 * If the buffer is added to the LRU, keep the reference to the
+> -		 * buffer for the LRU and clear the (now stale) dispose list
+> -		 * state flag, else drop the reference.
+> -		 */
+> -		if (list_lru_add_obj(&btp->bt_lru, &bp->b_lru))
+> -			bp->b_state &= ~XFS_BSTATE_DISPOSE;
+> -		else
+> -			bp->b_hold--;
+> -	} else {
+> -		bp->b_hold--;
+> -		/*
+> -		 * most of the time buffers will already be removed from the
+> -		 * LRU, so optimise that case by checking for the
+> -		 * XFS_BSTATE_DISPOSE flag indicating the last list the buffer
+> -		 * was on was the disposal list
+> -		 */
+> -		if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
+> -			list_lru_del_obj(&btp->bt_lru, &bp->b_lru);
+> -		} else {
+> -			ASSERT(list_empty(&bp->b_lru));
+> -		}
+> +	if (!xfs_buf_is_uncached(bp)) {
+> +		struct xfs_buf_cache	*bch =
+> +			xfs_buftarg_buf_cache(bp->b_target, bp->b_pag);
+>  
+> -		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+>  		rhashtable_remove_fast(&bch->bc_hash, &bp->b_rhash_head,
+>  				xfs_buf_hash_params);
+> -		if (pag)
+> -			xfs_perag_put(pag);
+> -		freebuf = true;
+> -	}
+>  
+> -out_unlock:
+> -	spin_unlock(&bp->b_lock);
+> +		if (bp->b_pag)
+> +			xfs_perag_put(bp->b_pag);
+> +	}
+>  
+> -	if (freebuf)
+> -		xfs_buf_free(bp);
+> +	xfs_buf_free(bp);
 >  }
 >  
+>  /*
+> @@ -942,10 +887,22 @@ xfs_buf_rele(
+>  	struct xfs_buf		*bp)
+>  {
+>  	trace_xfs_buf_rele(bp, _RET_IP_);
+> -	if (xfs_buf_is_uncached(bp))
+> -		xfs_buf_rele_uncached(bp);
+> -	else
+> -		xfs_buf_rele_cached(bp);
+> +
+> +	spin_lock(&bp->b_lock);
+> +	if (!--bp->b_hold) {
+> +		if (xfs_buf_is_uncached(bp) || !atomic_read(&bp->b_lru_ref))
+> +			goto kill;
+> +		list_lru_add_obj(&bp->b_target->bt_lru, &bp->b_lru);
+> +	}
+> +	spin_unlock(&bp->b_lock);
+> +	return;
+> +
+> +kill:
+> +	bp->b_hold = -1;
+> +	list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
+> +	spin_unlock(&bp->b_lock);
+> +
+> +	xfs_buf_destroy(bp);
+>  }
+>  
+>  /*
+> @@ -1254,9 +1211,11 @@ xfs_buf_ioerror_alert(
+>  
+>  /*
+>   * To simulate an I/O failure, the buffer must be locked and held with at least
+> - * three references. The LRU reference is dropped by the stale call. The buf
+> - * item reference is dropped via ioend processing. The third reference is owned
+> - * by the caller and is dropped on I/O completion if the buffer is XBF_ASYNC.
+> + * two references.
+> + *
+> + * The buf item reference is dropped via ioend processing. The second reference
+> + * is owned by the caller and is dropped on I/O completion if the buffer is
+> + * XBF_ASYNC.
+>   */
 >  void
-> @@ -1713,8 +1684,10 @@ xfs_init_buftarg(
->  	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
->  			     DEFAULT_RATELIMIT_BURST);
+>  xfs_buf_ioend_fail(
+> @@ -1514,19 +1473,14 @@ xfs_buftarg_drain_rele(
 >  
-> -	if (list_lru_init(&btp->bt_lru))
-> +	if (rhashtable_init(&btp->bt_hash, &xfs_buf_hash_params))
->  		return -ENOMEM;
-> +	if (list_lru_init(&btp->bt_lru))
-> +		goto out_destroy_hash;
->  	if (percpu_counter_init(&btp->bt_readahead_count, 0, GFP_KERNEL))
->  		goto out_destroy_lru;
+>  	if (!spin_trylock(&bp->b_lock))
+>  		return LRU_SKIP;
+> -	if (bp->b_hold > 1) {
+> +	if (bp->b_hold > 0) {
+>  		/* need to wait, so skip it this pass */
+>  		spin_unlock(&bp->b_lock);
+>  		trace_xfs_buf_drain_buftarg(bp, _RET_IP_);
+>  		return LRU_SKIP;
+>  	}
 >  
-> @@ -1732,6 +1705,8 @@ xfs_init_buftarg(
->  	percpu_counter_destroy(&btp->bt_readahead_count);
->  out_destroy_lru:
->  	list_lru_destroy(&btp->bt_lru);
-> +out_destroy_hash:
-> +	rhashtable_destroy(&btp->bt_hash);
->  	return -ENOMEM;
->  }
+> -	/*
+> -	 * clear the LRU reference count so the buffer doesn't get
+> -	 * ignored in xfs_buf_rele().
+> -	 */
+> -	atomic_set(&bp->b_lru_ref, 0);
+> -	bp->b_state |= XFS_BSTATE_DISPOSE;
+> +	bp->b_hold = -1;
+>  	list_lru_isolate_move(lru, item, dispose);
+>  	spin_unlock(&bp->b_lock);
+>  	return LRU_REMOVED;
+> @@ -1581,7 +1535,7 @@ xfs_buftarg_drain(
+>  "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
+>  					(long long)xfs_buf_daddr(bp));
+>  			}
+> -			xfs_buf_rele(bp);
+> +			xfs_buf_destroy(bp);
+>  		}
+>  		if (loop++ != 0)
+>  			delay(100);
+> @@ -1610,11 +1564,23 @@ xfs_buftarg_isolate(
+>  	struct list_head	*dispose = arg;
 >  
+>  	/*
+> -	 * we are inverting the lru lock/bp->b_lock here, so use a trylock.
+> -	 * If we fail to get the lock, just skip it.
+> +	 * We are inverting the lru lock vs bp->b_lock order here, so use a
+> +	 * trylock. If we fail to get the lock, just skip the buffer.
+>  	 */
+>  	if (!spin_trylock(&bp->b_lock))
+>  		return LRU_SKIP;
+> +
+> +	/*
+> +	 * If the buffer is in use, remove it from the LRU for now as we can't
+> +	 * free it.  It will be added to the LRU again when the reference count
+> +	 * hits zero.
+> +	 */
+> +	if (bp->b_hold > 0) {
+> +		list_lru_isolate(lru, &bp->b_lru);
+> +		spin_unlock(&bp->b_lock);
+> +		return LRU_REMOVED;
+> +	}
+> +
+>  	/*
+>  	 * Decrement the b_lru_ref count unless the value is already
+>  	 * zero. If the value is already zero, we need to reclaim the
+> @@ -1625,7 +1591,7 @@ xfs_buftarg_isolate(
+>  		return LRU_ROTATE;
+>  	}
+>  
+> -	bp->b_state |= XFS_BSTATE_DISPOSE;
+> +	bp->b_hold = -1;
+>  	list_lru_isolate_move(lru, item, dispose);
+>  	spin_unlock(&bp->b_lock);
+>  	return LRU_REMOVED;
+> @@ -1647,7 +1613,7 @@ xfs_buftarg_shrink_scan(
+>  		struct xfs_buf *bp;
+>  		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+>  		list_del_init(&bp->b_lru);
+> -		xfs_buf_rele(bp);
+> +		xfs_buf_destroy(bp);
+>  	}
+>  
+>  	return freed;
 > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 3a1d066e1c13..bf39d89f0f6d 100644
+> index e25cd2a160f3..1117cd9cbfb9 100644
 > --- a/fs/xfs/xfs_buf.h
 > +++ b/fs/xfs/xfs_buf.h
-> @@ -69,13 +69,6 @@ typedef unsigned int xfs_buf_flags_t;
+> @@ -68,11 +68,6 @@ typedef unsigned int xfs_buf_flags_t;
 >  	{ XBF_INCORE,		"INCORE" }, \
 >  	{ XBF_TRYLOCK,		"TRYLOCK" }
 >  
-> -struct xfs_buf_cache {
-> -	struct rhashtable	bc_hash;
-> -};
+> -/*
+> - * Internal state flags.
+> - */
+> -#define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
 > -
-> -int xfs_buf_cache_init(struct xfs_buf_cache *bch);
-> -void xfs_buf_cache_destroy(struct xfs_buf_cache *bch);
-> -
->  /*
->   * The xfs_buftarg contains 2 notions of "sector size" -
->   *
-> @@ -113,8 +106,7 @@ struct xfs_buftarg {
->  	unsigned int		bt_awu_min;
->  	unsigned int		bt_awu_max;
->  
-> -	/* built-in cache, if we're not using the perag one */
-> -	struct xfs_buf_cache	bt_cache[];
-> +	struct rhashtable	bt_hash;
+>  struct xfs_buf_cache {
+>  	struct rhashtable	bc_hash;
 >  };
+> @@ -159,6 +154,7 @@ struct xfs_buf {
 >  
->  struct xfs_buf_map {
-> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-> index 0106da0a9f44..86dbec5ee203 100644
-> --- a/fs/xfs/xfs_buf_mem.c
-> +++ b/fs/xfs/xfs_buf_mem.c
-> @@ -58,7 +58,7 @@ xmbuf_alloc(
->  	struct xfs_buftarg	*btp;
->  	int			error;
->  
-> -	btp = kzalloc(struct_size(btp, bt_cache, 1), GFP_KERNEL);
-> +	btp = kzalloc(sizeof(*btp), GFP_KERNEL);
->  	if (!btp)
->  		return -ENOMEM;
->  
-> @@ -81,10 +81,6 @@ xmbuf_alloc(
->  	/* ensure all writes are below EOF to avoid pagecache zeroing */
->  	i_size_write(inode, inode->i_sb->s_maxbytes);
->  
-> -	error = xfs_buf_cache_init(btp->bt_cache);
-> -	if (error)
-> -		goto out_file;
-> -
->  	/* Initialize buffer target */
->  	btp->bt_mount = mp;
->  	btp->bt_dev = (dev_t)-1U;
-> @@ -95,15 +91,13 @@ xmbuf_alloc(
->  
->  	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, descr);
->  	if (error)
-> -		goto out_bcache;
-> +		goto out_file;
->  
->  	trace_xmbuf_create(btp);
->  
->  	*btpp = btp;
->  	return 0;
->  
-> -out_bcache:
-> -	xfs_buf_cache_destroy(btp->bt_cache);
->  out_file:
->  	fput(file);
->  out_free_btp:
-> @@ -122,7 +116,6 @@ xmbuf_free(
->  	trace_xmbuf_free(btp);
->  
->  	xfs_destroy_buftarg(btp);
-> -	xfs_buf_cache_destroy(btp->bt_cache);
->  	fput(btp->bt_file);
->  	kfree(btp);
->  }
+>  	xfs_daddr_t		b_rhash_key;	/* buffer cache index */
+>  	int			b_length;	/* size of buffer in BBs */
+> +	spinlock_t		b_lock;		/* internal state lock */
+>  	unsigned int		b_hold;		/* reference count */
+>  	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+>  	xfs_buf_flags_t		b_flags;	/* status flags */
+> @@ -169,8 +165,6 @@ struct xfs_buf {
+>  	 * bt_lru_lock and not by b_sema
+>  	 */
+>  	struct list_head	b_lru;		/* lru list */
+> -	spinlock_t		b_lock;		/* internal state lock */
+> -	unsigned int		b_state;	/* internal state flags */
+>  	wait_queue_head_t	b_waiters;	/* unpin waiters */
+>  	struct list_head	b_list;
+>  	struct xfs_perag	*b_pag;
 > -- 
 > 2.47.3
 > 
