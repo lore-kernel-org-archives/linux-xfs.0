@@ -1,263 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54793B8BA3;
-	Tue, 20 Jan 2026 21:48:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C385336AB5D;
+	Tue, 20 Jan 2026 21:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768945739; cv=none; b=BnTu6vlGUNJNTDtaYkI+wYo8ifrdU5854GGiFoqCU7wVVoR2SBipnPtz/Vpx1o+/FHcbP5ePScw2RgzEcQhtPPYwIpK26yc5mWub5Z90yJr36+uNHLShC3ypw3gvgNxOp93ZcX3stv0fQc5z3om11cHwjm3Ypmrb8d7tr8w8V9U=
+	t=1768945782; cv=none; b=W0maBPT5B9omuWIYwOrdY29yPKlCPjNq5+sHTW3AFI0OnStspajwzlEJ/ery+ltnITnIxsAy5FCLPT7Cfrj+XIJ9771tIr+CfUtisp2To5KOLROFDF11Mie5GWO2SgvwIpskyJpg/l/GSOhiWtuDz8Ut++T8SSTORIJb6gTpPP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768945739; c=relaxed/simple;
-	bh=96b8Nubirwao54BkP50ZkP0NSv+GbSST6a8dD5+v4ms=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=FRyqL7YsIcCk3/LqjzLmDr6BRzoVVaHCii+uuXPmvlcfc+7CTsPxKuXFAj5KiCNS73lTjxfu5qBh+Dpb8APTDJIhONiJQKkyXo0q8cikYl0wVd/Q4ZPqGgVnOwQeUN/puRHPslTlvNbJ5V01JtHmMgJIG/RxWDapBO+3z2moItI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YSN+IBTl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768945782; c=relaxed/simple;
+	bh=qtWMjt2CUAO7zZ1FhakG4Yg4AXA0OAD51V6crO1692s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EZBrB0mPCdoNR4k9o327LB5mNym+4LIiYRFgcsTF8KcdK7P4OpTiRvp/Opt6v+z8Wr1upFuo6166oKZonXk9iWPPKDiTSzoScjhUufJqICDkUjbuL4h03r1TGCmEPuAQXxPFOg7gL5da11WEVzpIFeaGdU1sqlGSNxwbJslaQ0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=j/6IhVQ5; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YSN+IBTl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB88EC16AAE;
-	Tue, 20 Jan 2026 21:48:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768945738;
-	bh=96b8Nubirwao54BkP50ZkP0NSv+GbSST6a8dD5+v4ms=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=YSN+IBTls9vtdpn3pRtNBdf73N0qA/tQk3w4RgvlWzio2fknpGVb/a0o7P7flK/1y
-	 zzJtGo9wujbVTBo7Axx4HQ/eOiOPbO6DnlaRheiScvIv1C8xSZxJoQ9koobwUIo3/z
-	 bcm+sMkCuZPeonMVjryuEdKbJLcNDMKql+Ek0XSn5s5bTJgS271HmzsqC3P/8RVnbU
-	 03MMFgLCRnZ3UTWInrk2WkKm17NMBn3d1bcHjdTgKopkzmxW8tAteaboWwKj5BrV20
-	 Y92l4G1JtVIu1HmY5gXGwvqSrpdFYgSn3e/bU6+kNyrad4sDexNfki+wGKWiarbNRN
-	 562IzeWDAwUbg==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id C6BC1F40068;
-	Tue, 20 Jan 2026 16:48:56 -0500 (EST)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Tue, 20 Jan 2026 16:48:56 -0500
-X-ME-Sender: <xms:SPhvaQtWESY-A74K_HEn66lmVvpKNm5MFxR6oEthFHsJh9f_m8HVhg>
-    <xme:SPhvaYRYYoD8hzZ-gIklJVxdAnFdEQdnVq654EzYKHMt8mKFQ1HUDx-gqtBhm_VwW
-    y-Z6EZs6GGoSKSpdopfG6bYC-99jxEd1TpQw3BiJGcJttr32OeEtWRt>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddugeduheefucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedfvehhuhgt
-    khcunfgvvhgvrhdfuceotggvlheskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrh
-    hnpefhffekffeftdfgheeiveekudeuhfdvjedvfedvueduvdegleekgeetgfduhfefleen
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegthhhutg
-    hklhgvvhgvrhdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudeifeegleel
-    leehledqfedvleekgeegvdefqdgtvghlpeepkhgvrhhnvghlrdhorhhgsehfrghsthhmrg
-    hilhdrtghomhdpnhgspghrtghpthhtohepfedvpdhmohguvgepshhmthhpohhuthdprhgt
-    phhtthhopehsvghnohiihhgrthhskhihsegthhhrohhmihhumhdrohhrghdprhgtphhtth
-    hopegrughilhhgvghrrdhkvghrnhgvlhesughilhhgvghrrdgtrgdprhgtphhtthhopehs
-    lhgrvhgrseguuhgsvgihkhhordgtohhmpdhrtghpthhtoheprhhonhhnihgvshgrhhhlsg
-    gvrhhgsehgmhgrihhlrdgtohhmpdhrtghpthhtoheprghnnhgrsehkvghrnhgvlhdrohhr
-    ghdprhgtphhtthhopegsrhgruhhnvghrsehkvghrnhgvlhdrohhrghdprhgtphhtthhope
-    gtvghmsehkvghrnhgvlhdrohhrghdprhgtphhtthhopegthhgroheskhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtohepughjfihonhhgsehkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:SPhvaamXZA19JIcSMetmmNDyPupKYtpsGBX8RUilZqnOb0aJRtehUQ>
-    <xmx:SPhvaeTpcVU1Wim3vGB6ES93L_VTC352WS9ZxeyR0pY82SdQj2k7jQ>
-    <xmx:SPhvaf64sRrImZuiE0FT-3g9SeUWs7whMFXlvnbGOZ0KmNQDNm2Ajg>
-    <xmx:SPhvaVEUXZXhb9_ub-oDB-zXsCXaXQzldUQIcPSpt844LE_RlPLPmA>
-    <xmx:SPhvaZHRcYWU9BKUQSIRIo2WYqA9j8HDF7yWiIXBvkQ32EK5DSe3aB5a>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 89A9B780070; Tue, 20 Jan 2026 16:48:56 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="j/6IhVQ5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768945780; x=1800481780;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qtWMjt2CUAO7zZ1FhakG4Yg4AXA0OAD51V6crO1692s=;
+  b=j/6IhVQ54igch6Wcj4L43u4EZq9RASEhhze6WtnxyuQ50PSG/yMuSyv3
+   q5vIJyf4uQnSySjy8jhAM/GXNdf7jCA2K3gS1/7BWTqmqLpLJGA6Hs8Bl
+   Tm5e4QoKUIMgQt9o0iTzDk5tjGgLyOU7aE1jpJ8BS9YFSPtIcDNIJ2tWc
+   ibWXjS2B8XGqyx7qgLq1yx+Lolcp69zDxG0BamL0cWJUifxbWymJTz5tB
+   6PS60NhJlPrgq7oUQ2UCETOVQ/Q+tdxAkOLY7xR53dqDf5x3OxeDmOZVA
+   BF68vUSI6N3CNSFjZnTaAulPz2tnb9V/Vc4P+MP5tbbXe7/MXHi6Lk4Nu
+   Q==;
+X-CSE-ConnectionGUID: MzlkUkVbQRO0KL0fwV3bkg==
+X-CSE-MsgGUID: YjK6sHZGT+yKQPNuU6iX3A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="70221007"
+X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
+   d="scan'208";a="70221007"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:49:39 -0800
+X-CSE-ConnectionGUID: uLru6fozRzqJCiIrYeGajQ==
+X-CSE-MsgGUID: rzVwSywYQ6C0CRxh/LvfcA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
+   d="scan'208";a="206581546"
+Received: from dhhellew-desk2.ger.corp.intel.com (HELO localhost) ([10.245.244.240])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:49:37 -0800
+Date: Tue, 20 Jan 2026 23:49:35 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Dmitry Antipov <dmantipov@yandex.ru>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Kees Cook <kees@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] xfs: adjust handling of a few numerical mount
+ options
+Message-ID: <aW_4bxkLe4-g9teu@smile.fi.intel.com>
+References: <20260119160623.a762c3d64f230936198dc17e@linux-foundation.org>
+ <20260120141229.356513-1-dmantipov@yandex.ru>
+ <20260120141229.356513-3-dmantipov@yandex.ru>
+ <aW-YP7wCEvRJzyfR@smile.fi.intel.com>
+ <dd2b5f76c1acfb0ebb22585a5282d94e1d8c979e.camel@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AfQWKZtCjdVF
-Date: Tue, 20 Jan 2026 16:48:31 -0500
-From: "Chuck Lever" <cel@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>,
- "Christian Brauner" <brauner@kernel.org>
-Cc: "Alexander Viro" <viro@zeniv.linux.org.uk>, "Jan Kara" <jack@suse.cz>,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
- "OGAWA Hirofumi" <hirofumi@mail.parknet.co.jp>,
- "Namjae Jeon" <linkinjeon@kernel.org>,
- "Sungjong Seo" <sj1557.seo@samsung.com>,
- "Yuezhang Mo" <yuezhang.mo@sony.com>,
- almaz.alexandrovich@paragon-software.com,
- "Viacheslav Dubeyko" <slava@dubeyko.com>, glaubitz@physik.fu-berlin.de,
- frank.li@vivo.com, "Theodore Tso" <tytso@mit.edu>,
- adilger.kernel@dilger.ca, "Carlos Maiolino" <cem@kernel.org>,
- "Steve French" <sfrench@samba.org>, "Paulo Alcantara" <pc@manguebit.org>,
- "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
- "Shyam Prasad N" <sprasad@microsoft.com>,
- "Trond Myklebust" <trondmy@kernel.org>,
- "Anna Schumaker" <anna@kernel.org>, "Jaegeuk Kim" <jaegeuk@kernel.org>,
- "Chao Yu" <chao@kernel.org>, "Hans de Goede" <hansg@kernel.org>,
- senozhatsky@chromium.org, "Chuck Lever" <chuck.lever@oracle.com>
-Message-Id: <38bf1452-8cf8-477b-bcc3-9fe442033bc5@app.fastmail.com>
-In-Reply-To: <20260120172608.GQ15551@frogsfrogsfrogs>
-References: <20260120142439.1821554-1-cel@kernel.org>
- <20260120142439.1821554-2-cel@kernel.org>
- <20260120172608.GQ15551@frogsfrogsfrogs>
-Subject: Re: [PATCH v6 01/16] fs: Add case sensitivity flags to file_kattr
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dd2b5f76c1acfb0ebb22585a5282d94e1d8c979e.camel@yandex.ru>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
+On Tue, Jan 20, 2026 at 07:57:50PM +0300, Dmitry Antipov wrote:
+> On Tue, 2026-01-20 at 16:59 +0200, Andy Shevchenko wrote:
+> 
+> > With all this, I do not see the point of having a new API.
+> > Also, where are the test cases for it?
 
+> If there is no point, why worrying about tests?
 
-On Tue, Jan 20, 2026, at 12:26 PM, Darrick J. Wong wrote:
-> On Tue, Jan 20, 2026 at 09:24:24AM -0500, Chuck Lever wrote:
->> From: Chuck Lever <chuck.lever@oracle.com>
->> 
->> Enable upper layers such as NFSD to retrieve case sensitivity
->> information from file systems by adding FS_XFLAG_CASEFOLD and
->> FS_XFLAG_CASENONPRESERVING flags.
->> 
->> Filesystems report case-insensitive or case-nonpreserving behavior
->> by setting these flags directly in fa->fsx_xflags. The default
->> (flags unset) indicates POSIX semantics: case-sensitive and
->> case-preserving. These flags are read-only; userspace cannot set
->> them via ioctl.
->> 
->> Relocate struct file_kattr initialization from fileattr_fill_xflags()
->> and fileattr_fill_flags() to vfs_fileattr_get() and the ioctl/syscall
->> call sites. This allows filesystem ->fileattr_get() callbacks to set
->> flags directly in fa->fsx_xflags before invoking the fill functions,
->> which previously would have zeroed those values. Callers that bypass
->> vfs_fileattr_get() must now zero-initialize the struct themselves.
->> 
->> Case sensitivity information is exported to userspace via the
->> fa_xflags field in the FS_IOC_FSGETXATTR ioctl and file_getattr()
->> system call.
->> 
->> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
->> ---
->>  fs/file_attr.c           | 14 ++++++--------
->>  fs/xfs/xfs_ioctl.c       |  2 +-
->>  include/linux/fileattr.h |  3 ++-
->>  include/uapi/linux/fs.h  |  2 ++
->
-> This ought to go to linux-api because you're changing the userspace api.
-> Granted it's only adding a flag definition to an existing ioctl, but
-> FS_XFLAG_CASEFOLD /does/ collide with Andrey's fsverity xflag patch...
->
-> (The rest of the changes looks ok to me.)
+I don't know yet if there is a point or not, I provided my view.
+I think you know better than me the code in question. It might
+be that I'm mistaken, and if so the good justification in the
+(currently absent) cover letter may well help with that.
 
-Process question for Christian: Do you want to see a v7 of this
-series with Cc: linux-api before proceeding, or are you taking
-both Andrey's and mine and can resolve the conflict, or ... ?
+> Also, do you always communicate with the people
+> just like they're your (well-) paid personnel?
 
-
-> --D
->
->>  4 files changed, 11 insertions(+), 10 deletions(-)
->> 
->> diff --git a/fs/file_attr.c b/fs/file_attr.c
->> index 13cdb31a3e94..2700200c5b9c 100644
->> --- a/fs/file_attr.c
->> +++ b/fs/file_attr.c
->> @@ -15,12 +15,10 @@
->>   * @fa:		fileattr pointer
->>   * @xflags:	FS_XFLAG_* flags
->>   *
->> - * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).  All
->> - * other fields are zeroed.
->> + * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).
->>   */
->>  void fileattr_fill_xflags(struct file_kattr *fa, u32 xflags)
->>  {
->> -	memset(fa, 0, sizeof(*fa));
->>  	fa->fsx_valid = true;
->>  	fa->fsx_xflags = xflags;
->>  	if (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)
->> @@ -46,11 +44,9 @@ EXPORT_SYMBOL(fileattr_fill_xflags);
->>   * @flags:	FS_*_FL flags
->>   *
->>   * Set ->flags, ->flags_valid and ->fsx_xflags (translated flags).
->> - * All other fields are zeroed.
->>   */
->>  void fileattr_fill_flags(struct file_kattr *fa, u32 flags)
->>  {
->> -	memset(fa, 0, sizeof(*fa));
->>  	fa->flags_valid = true;
->>  	fa->flags = flags;
->>  	if (fa->flags & FS_SYNC_FL)
->> @@ -84,6 +80,8 @@ int vfs_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
->>  	struct inode *inode = d_inode(dentry);
->>  	int error;
->>  
->> +	memset(fa, 0, sizeof(*fa));
->> +
->>  	if (!inode->i_op->fileattr_get)
->>  		return -ENOIOCTLCMD;
->>  
->> @@ -323,7 +321,7 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
->>  {
->>  	struct mnt_idmap *idmap = file_mnt_idmap(file);
->>  	struct dentry *dentry = file->f_path.dentry;
->> -	struct file_kattr fa;
->> +	struct file_kattr fa = {};
->>  	unsigned int flags;
->>  	int err;
->>  
->> @@ -355,7 +353,7 @@ int ioctl_fssetxattr(struct file *file, void __user *argp)
->>  {
->>  	struct mnt_idmap *idmap = file_mnt_idmap(file);
->>  	struct dentry *dentry = file->f_path.dentry;
->> -	struct file_kattr fa;
->> +	struct file_kattr fa = {};
->>  	int err;
->>  
->>  	err = copy_fsxattr_from_user(&fa, argp);
->> @@ -434,7 +432,7 @@ SYSCALL_DEFINE5(file_setattr, int, dfd, const char __user *, filename,
->>  	struct filename *name __free(putname) = NULL;
->>  	unsigned int lookup_flags = 0;
->>  	struct file_attr fattr;
->> -	struct file_kattr fa;
->> +	struct file_kattr fa = {};
->>  	int error;
->>  
->>  	BUILD_BUG_ON(sizeof(struct file_attr) < FILE_ATTR_SIZE_VER0);
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 59eaad774371..f0417c4d1fca 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -496,7 +496,7 @@ xfs_ioc_fsgetxattra(
->>  	xfs_inode_t		*ip,
->>  	void			__user *arg)
->>  {
->> -	struct file_kattr	fa;
->> +	struct file_kattr	fa = {};
->>  
->>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->>  	xfs_fill_fsxattr(ip, XFS_ATTR_FORK, &fa);
->> diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
->> index f89dcfad3f8f..709de829659f 100644
->> --- a/include/linux/fileattr.h
->> +++ b/include/linux/fileattr.h
->> @@ -16,7 +16,8 @@
->>  
->>  /* Read-only inode flags */
->>  #define FS_XFLAG_RDONLY_MASK \
->> -	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR)
->> +	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR | \
->> +	 FS_XFLAG_CASEFOLD | FS_XFLAG_CASENONPRESERVING)
->>  
->>  /* Flags to indicate valid value of fsx_ fields */
->>  #define FS_XFLAG_VALUES_MASK \
->> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
->> index 66ca526cf786..919148beaa8c 100644
->> --- a/include/uapi/linux/fs.h
->> +++ b/include/uapi/linux/fs.h
->> @@ -253,6 +253,8 @@ struct file_attr {
->>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
->>  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
->>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
->> +#define FS_XFLAG_CASEFOLD	0x00020000	/* case-insensitive lookups */
->> +#define FS_XFLAG_CASENONPRESERVING 0x00040000	/* case not preserved */
->>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
->>  
->>  /* the read-only stuff doesn't really belong here, but any other place is
->> -- 
->> 2.52.0
->> 
->>
+What do you mean? Test cases is the requirement for the new APIs
+added to the lib/. It's really should be regular practice for
+the code development independently on the project. If you think
+frustrated by this, I can tell you that I was more than once in
+the past in the same situation until I learnt it very well and
+now when I submit anything to the lib I always add test cases.
 
 -- 
-Chuck Lever
+With Best Regards,
+Andy Shevchenko
+
+
