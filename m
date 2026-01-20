@@ -1,349 +1,260 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010014.outbound.protection.outlook.com [52.101.201.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D620296BBF
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 02:53:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768877636; cv=none; b=dWicVOUjhsC7Q3+NaRx4z+h9pmf8dghQIc7qcjQCNiNg8SecImmgwBNS3PT7CW3zQYRilnwRfvjhjlYeS1FPWrFpyf0stjnlpfywbge/wE9mKVMyfliKy+8ZzSKgNHlvmK/gWvllogmwTNQDdlkyGQyiVt8Azo6dtdM2zTRF4ws=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768877636; c=relaxed/simple;
-	bh=o0Iznb7A1zqAIDPaTiWqt5SVCP7afSD7kwjO5FBWYVQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rb1VU9NqjQ7/jeU2IQFspt7IJer5uotx0rRjpT8M2cLc1HCrbnsUnJ2qTo2Qwet09ZfaVxKH2e2Rjv2G/S934fcx8KFnP13XRFp0roRx0upNtomIe23Qe7MIkOCGMriEbtGJxznQ83vrQnT4+SjKe+lKHWVVmnza2hBJkyiGnEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SE2P6WjC; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51CF62F6928;
+	Tue, 20 Jan 2026 03:00:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768878010; cv=fail; b=dsUXJ59M1OzYN+BHSuaBqam8JrGvNC1Qp0DNTldAOv2i1g8fXDv7EHj+QJK7LziXvp76yNcJOFDJl1TWbV2JUKP790CztObiz76WmFZNXxnEdL2xpHwqBS04/9v3fogKf1J6xSEmSbE/FsODw9CUPR3uqG3H5dwW8KcQmJBU/wM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768878010; c=relaxed/simple;
+	bh=B4CcTu0NEn4teya+0PU1VqemnByb/0x884biC8KqZTc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=JEJGk9e/Xf1eCOLUsC+aLeA5IrgPHkpv7LoZdxNiHxzE0P2If8Lr5pAz2s8wiNlFq02Wz5vQF4JpwEukulj7SJBd57/fbENcgSive9ZcX8L3WRmDpreSV3e6NykJm0gOaXS8XtcLGXo4VP+wtb36is3rC3kTNxSWzs7Ojwuk5sU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RTv4TyDV; arc=fail smtp.client-ip=52.101.201.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SE2P6WjC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A2F1C116C6;
-	Tue, 20 Jan 2026 02:53:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768877636;
-	bh=o0Iznb7A1zqAIDPaTiWqt5SVCP7afSD7kwjO5FBWYVQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SE2P6WjCSF1oND2rb3vS57rKkWH7Ado5wuP/Y9CdVUI/s+TDvg5/aVTYPAdxQIGlJ
-	 FV/Chw8aVsWrQDE8nsBQRA1eOYwaQ9oI6O6wrBa0C96F+UfeK0lWvTTCV3Z7QXYn6p
-	 /k728hy90AJJjKguP7AvDLpnyk4keHOvTXOvp2a8bN9SE06GwpRXxtlRkmIj/nO+cX
-	 Q/5M0oiUScVFKpD0LjEzmC9pv4H2/qCtlQ6L6E04GtEMuuSQZ2wYu2v3rU29zkTg04
-	 O9W161zw8/0iwKAi5RA1XXz25c9mDooWTXlnbms3sULVBKpKTZ6CpHN1htgMig9u2j
-	 beENLNFbisbnQ==
-Date: Mon, 19 Jan 2026 18:53:55 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: use a lockref for the buffer reference count
-Message-ID: <20260120025355.GI15551@frogsfrogsfrogs>
-References: <20260119153156.4088290-1-hch@lst.de>
- <20260119153156.4088290-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RTv4TyDV"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KBdhBJfZq4Wxak7tjKaAfopsf34wdy3UCd2oqpvtxvJUrHo8GlCxOLjCqyT3+0LpJt8KAjKXavXWd+Vsb3zDst6tYH2h9bq1S98/4J4oMsaCTMhU0MpkJsOOP1aczAhLLb0Mt1j4utfI35DZENmRJ6F7K0JScJUGkVRpzGBjCLmjxmacGNdgtzk51qamJiICXKKu1nbxAjCihHhe7/q5GgNA6PpqDv8959rxbevx5YmE73c0iC6ime6t2Yaeb10hYTBcOVgC5jHKMOMshTUVfLWp2v95k9V5s3QcqRjrlOBeP5PaAtLanjNU7U8AyqX1VixmADR2FZft3sEl8ymaEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ifspOPvAHjHKumkbivxuWVDY4dH23AyrQ1x0wCeSl64=;
+ b=zF6CuOa8F6QGHuOWXPQmad+020WjuoikQWuidMtHPEBdKsh4EL6AaHf6yWVRBYuJbX/59cVrgx4H9aV320xgVJeAO/oF+v7freOaEThWiYWSh3+Gd23X5iTpSKe/M3a3CnPBRWLUqGQBaFUm7CsFdDJo+W1f9Dhg46qlvzFsxQAHI0gl04zVXbGTB7EliNF3N/p34LsAVGEl3lfu/mScIt/wDWfEC8CzTAhKZmWaaPB+JdkrFptfGpHYRXxaEAArwBu9U+48Z2ay8BUPKx3r4K7AIhwVPYAQ3PcJbfy8bgXnIeq42xwc1XNK42dSIssaukMWbuXL/hRycSw/W+23qw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ifspOPvAHjHKumkbivxuWVDY4dH23AyrQ1x0wCeSl64=;
+ b=RTv4TyDVNI6RFPgRL1p0CqxhK25TLZCM1m3ychl0DD2G7+vhB0lRDLXjW2nQOaZzm+Y3aZiMklqr4SnIq5Wh7MnOtJmP1yGCcZydGNYt4IA9QR//81SQ6iMnm27Bzxv7C57N9OBEuu3q0w+Z9+EMUA5CJ3jUMqrUqGEKtPJ0EQ6uTKrf9eTjEyhAEurGrIyYigE3bBYcn6C75wZNLOgIHopAcxDscE9oHcCzz3A1ItGPWw+yGXUGtKWfbSHNlSUahqgf993cFyBOE8wirRi7zwqJPHIIvo9VDrCwb5IctzZxvbYvlf7ms5SGAhXpQHVyKKi/dIMo2P+SAnj054faVg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS7PR12MB9473.namprd12.prod.outlook.com (2603:10b6:8:252::5) by
+ CH0PR12MB8461.namprd12.prod.outlook.com (2603:10b6:610:183::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.12; Tue, 20 Jan
+ 2026 03:00:05 +0000
+Received: from DS7PR12MB9473.namprd12.prod.outlook.com
+ ([fe80::f01d:73d2:2dda:c7b2]) by DS7PR12MB9473.namprd12.prod.outlook.com
+ ([fe80::f01d:73d2:2dda:c7b2%4]) with mapi id 15.20.9520.011; Tue, 20 Jan 2026
+ 03:00:05 +0000
+From: Zi Yan <ziy@nvidia.com>
+To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Jarkko Sakkinen <jarkko@kernel.org>,
+ Dave Hansen <dave.hansen@linux.intel.com>, Thomas Gleixner <tglx@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>,
+ Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>,
+ Matthew Auld <matthew.auld@intel.com>,
+ Matthew Brost <matthew.brost@intel.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+ Benjamin LaHaise <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>,
+ Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+ Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
+ Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>,
+ "Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>,
+ Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
+ David Hildenbrand <david@kernel.org>,
+ Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+ Mike Marshall <hubcap@omnibond.com>,
+ Martin Brandenburg <martin@omnibond.com>, Tony Luck <tony.luck@intel.com>,
+ Reinette Chatre <reinette.chatre@intel.com>,
+ Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
+ Babu Moger <babu.moger@amd.com>, Carlos Maiolino <cem@kernel.org>,
+ Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>,
+ Johannes Thumshirn <jth@kernel.org>, Matthew Wilcox <willy@infradead.org>,
+ "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+ Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>,
+ Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>,
+ Hugh Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Nico Pache <npache@redhat.com>, Ryan Roberts <ryan.roberts@arm.com>,
+ Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
+ Lance Yang <lance.yang@linux.dev>, Jann Horn <jannh@google.com>,
+ Pedro Falcato <pfalcato@suse.de>, David Howells <dhowells@redhat.com>,
+ Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+ "Serge E . Hallyn" <serge@hallyn.com>, Yury Norov <yury.norov@gmail.com>,
+ Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-sgx@vger.kernel.org,
+ linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ intel-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+ linux-aio@kvack.org, linux-erofs@lists.ozlabs.org,
+ linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev,
+ devel@lists.orangefs.org, linux-xfs@vger.kernel.org,
+ keyrings@vger.kernel.org, linux-security-module@vger.kernel.org,
+ Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH RESEND 08/12] mm: update all remaining mmap_prepare users
+ to use vma_flags_t
+Date: Mon, 19 Jan 2026 21:59:51 -0500
+X-Mailer: MailMate (2.0r6290)
+Message-ID: <34F72E48-5F22-4A20-BF32-917CDB898164@nvidia.com>
+In-Reply-To: <24317e6f6b71e8b439e672893da8d268880f7ada.1768857200.git.lorenzo.stoakes@oracle.com>
+References: <cover.1768857200.git.lorenzo.stoakes@oracle.com>
+ <24317e6f6b71e8b439e672893da8d268880f7ada.1768857200.git.lorenzo.stoakes@oracle.com>
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR05CA0091.namprd05.prod.outlook.com
+ (2603:10b6:a03:334::6) To DS7PR12MB9473.namprd12.prod.outlook.com
+ (2603:10b6:8:252::5)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260119153156.4088290-3-hch@lst.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR12MB9473:EE_|CH0PR12MB8461:EE_
+X-MS-Office365-Filtering-Correlation-Id: 88ff9f82-4c70-4599-06a7-08de57d002fc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?o6u8pGL/yFCvatiUOrPflzcBl3TmfzqDyeHJBJDRSNQEntPYpPaVbUil6NvN?=
+ =?us-ascii?Q?kpmbdniDXi7KPGwbZTXOdVDRuY8n4jQGX9thWhtkDTXEppUWgxpdMGH1Qvxd?=
+ =?us-ascii?Q?UFyZOlRp/bUX9IFBaZIzqS67dQwtPTtvDRqiSldCXxzPAy0LCJYLyCnMNrfc?=
+ =?us-ascii?Q?MexbsCYMsqOaeZCD5L5LwiaR3Qq8fI/R70bcPaEPb+RVYUB9EOHemjFJmLcq?=
+ =?us-ascii?Q?+fqTbPrIevdbB764L5Z9h6xmiBDSBUfuDV4IM5dJu8MXLg13yra5dqsAlYaf?=
+ =?us-ascii?Q?MEJcNSchj2/czLrLSs84o292XUfPj43O0QG1jAAfksUCFc3tc6BRFPml38Od?=
+ =?us-ascii?Q?drFFdohfJX6vmaOkG3emmkVzJU0bWTAFTcl/ReV5ryOgqaGl5yDbJDhUERqt?=
+ =?us-ascii?Q?CyyAv65F6e0UEectKUZjpDj3vm6zmNCrjBnTooMNYI7kSRNpWtGMt1sMU0A4?=
+ =?us-ascii?Q?Ivj+PNHX4ectUFl5/AsAI4pMUHpm8Aw9uFBbg/JljQGVorqYeG007T/YsQVt?=
+ =?us-ascii?Q?lBBTfJmmaf1sBE4j5VJghl4TcadX3j2vQGeaeuOuQPr+2dOpHs+6YzDUGGNi?=
+ =?us-ascii?Q?hCzeEEMvZBclxLWustXQw0Mc9RSDHaU/jTT7j5/GEmjb1sJgXdUZnvudaTVk?=
+ =?us-ascii?Q?utiKrDC27z3CRaGaDYrRdUigx0gDte8TPAI+EifizyhmzNTiiZ8xvI25r1ct?=
+ =?us-ascii?Q?hMuu9WviCFlIbH0Nk2hOa4uZ5HGyj5kmhcOA6wntdia6cc91y3Z/tqWvU4hn?=
+ =?us-ascii?Q?Rguvs6tXmp+cMPHgFV0UiZ3okaF5QyQUeNmrRObjHxqeByxZwoqOi84dEsWk?=
+ =?us-ascii?Q?uii4b+4Gy/ELFZGLBoWUjTDZRWP5uX1Sl3bV1Nttgifqm4FswwBHvaNBSoo9?=
+ =?us-ascii?Q?aPTZYAC4dfmHRWVNbruD5HF6eqUgZHAn8Ttgi2kNG1jx9auDfaCWIBApm3fF?=
+ =?us-ascii?Q?T2NJATQy5chzNV1kG5IbpQluEvBxRGlUVQyraKZuvcsPSGTp94eZCGP9UYnY?=
+ =?us-ascii?Q?2pbqs1O+ZXt0XaXTza9iu2aahHl8x7h5fT3czgwT25toAvNxZ7OI6lrft4sq?=
+ =?us-ascii?Q?SKaUQvoefF/xaz9wLzwCwg1dED6MQq2E6mBgkr8GIwkD8S5C5VXyVom4b8kP?=
+ =?us-ascii?Q?1wWZCWaqCuMvlC4SOxsmN9Fd2K/8tlfCga6a5l/h5Ksj+S+sdbUCpK+M3mzS?=
+ =?us-ascii?Q?xcMLxqfH9Q37sP562iNcHj733jP5A6chibJ5JA84YHTh84I9jIwenjqQ0GTZ?=
+ =?us-ascii?Q?v3ezLwf/9gfM5/1DnKLEQUFuUBp297mWh56pV9NfDlZH+LrTJgOtUtWS+3CP?=
+ =?us-ascii?Q?Fi3L15Qw62Vaz1sQEYup5eXBekq6sV0XfsTtwOrq2myoGEifh4eLwVqYo563?=
+ =?us-ascii?Q?SqDVUtTrAcpcRb7MC2OICjsID4oOcmcLY9q7d0MRmOcifOM+7NkhUtcK5+Q7?=
+ =?us-ascii?Q?amY6x+3HrsAvhOm9dGF5FQlhG4AEFCYLSyPe7t6BQKhC6H9KP97OGo4uAdOo?=
+ =?us-ascii?Q?df8NB4hKka9nt3al52sPoFlx8iZWC+okYvXZNUU/9pOeroxpZ9F7q/uFafVj?=
+ =?us-ascii?Q?vhA7nLr29yRO/zcFACc=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9473.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?jM1KVFEnXvSWWuDyNmgus2UW5CEhX/YbAcoXtiWiKhOc/y8YvPLjkVa3xAvw?=
+ =?us-ascii?Q?HKXBml1rRutYzvKKGU63F/FdqlljkIuicghrrReyfSb8NVAoyyERiQ4MI1Kv?=
+ =?us-ascii?Q?Ec2X6hwKWa0kaD9KnDqDbg7JdiBtHo47PSEMIbp5jRHd5+ihg8cMVfAQDeq7?=
+ =?us-ascii?Q?4DqWtTYxpG45orz/Ge4C1Bhlv4p9GYvB4czXqzmpXUvrK639Yrm/BXVqf8M2?=
+ =?us-ascii?Q?7j1ZwIRoWhDC5PCCDIjtKTRvEV3B5CTPU8BHMLlG4gsuMt138xiuhoOnWoBV?=
+ =?us-ascii?Q?yOVNF2amGkBqDapr7Q8D2WWD2dQdiK3WUP2uCp9h/Azc6X7OvkfqIkCQdY1B?=
+ =?us-ascii?Q?2dWgXHah6k6LfYWvUPbf/FXQIdUDXI1w2KWfKDq7OQVcBYFXI8PrWI6MArlC?=
+ =?us-ascii?Q?LUJbTY6z7lY60QgMkp+Cjecoxj9OoDfIqYhil3VGT8Gz5uyYZg3pO0EeQLmb?=
+ =?us-ascii?Q?dcpLqAHJsRfWBS4MxmVSgxElG3BXvm9YjSTnOX41q3jlEI6C/JY5o5K8sbDP?=
+ =?us-ascii?Q?sabPbUgzuwFtZCrNa1rwWChq5y1M/syEixb5iTtnO0JI0eKM7SirDFQOnpMb?=
+ =?us-ascii?Q?d+WOzs1CU3A5WgLm76OCdPUdgS9eShvjDaOvn+2bXIjj4Eb8zvBsbz4gxUQP?=
+ =?us-ascii?Q?Tu+IvX3CrJ036G3WaPyVKBQIpKfqEa+nkn8qcfr0Lrkx01TI2tW/5tuxLUBM?=
+ =?us-ascii?Q?ObtOmux6RQ+Uqj+S1t6vsA+2kPNo2zVH03CSpAG/1NI73sXHAJg1Lxewc0Ok?=
+ =?us-ascii?Q?5piqvA+7XWoGOUXEvwOlEvFS0uJ+a1T2/LXCCV1GQUYoWb857UfK2ELobI0r?=
+ =?us-ascii?Q?bJQfIPkddNYRCXGwYBub8rIZ/ubHf6tW5ct0Znr8JhWkSbzsS4DU2MDR0gyx?=
+ =?us-ascii?Q?fb/mt7nyCd/kKNh69FeQPmfxi4hG+Rw9fyf+OHX4zarNsHJUTR0SEUPaXUyV?=
+ =?us-ascii?Q?Zjz5WeLezEwrg5xNUKRtbLvmKVLjov0008gVvX0z8cszLWH7xMRPhwzEw8/d?=
+ =?us-ascii?Q?PR+D/m8ll9vvs9UrHiBwHlUPSKmTFy84JyxRI2foFltMQLiSiJ+ITjF6gEFw?=
+ =?us-ascii?Q?dHDq4fg6P/jdJBRG3+NfLoZb7rA2lnoDGofRVTUbEz9e+XdqPJvNm0sHDVkM?=
+ =?us-ascii?Q?BFLApngnYlQF8VF1/nTjYb26OJvmiKP4QfUaGe2ZodD1my5zJesbDbLyvtAc?=
+ =?us-ascii?Q?skOhCiV+L480gWzCpqJFW0uYToF6XkCYEShm2i9xTYmL4NmDNcH7Cyu7M2o1?=
+ =?us-ascii?Q?ea1n+RWdsDdjleOWqCL1RMCTiK7hnFYTJZKJZQitGHbS/untWr1M3Mj5fVAv?=
+ =?us-ascii?Q?/Cn2+EsgEf0KZoIKzW0vWndZ254RdjySA+g0IMLxZyiLJIHXTTGYlL8w2rV7?=
+ =?us-ascii?Q?NyZwq2IM8NTT5USI4ZZfav/NZWjPTH22osxSlvmrhpVsVdMAZVI3Kq5G7/Lg?=
+ =?us-ascii?Q?FKNFt1wDwGoqUJqOTGTVZUUW/f0rs4JR0+w/YYszh4n1WzlfChI3MmTgFawJ?=
+ =?us-ascii?Q?bWfz2EwZGsIKH1rHlE1i80i5Xxu41KeTmw8p3RcAghxkewHEVcC4hUJM/An2?=
+ =?us-ascii?Q?OAbEXBU8jEvqQW6sKx7GpLL/gExg/2lhI6WcOD3R97TbdVCffpXbB8d8JnsJ?=
+ =?us-ascii?Q?6WlhQ5wrlUncH2ydmwDFKQnAejFCI6sJnO/ohcdndz0bTBYjG5e3qtzgocAs?=
+ =?us-ascii?Q?1NzrTuS/BNJNkBsbdRWGseIblck7AHXYb60ma0LcvMo6BkmN?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 88ff9f82-4c70-4599-06a7-08de57d002fc
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9473.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2026 03:00:04.9626
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qXZQrpVwbUMltY4PA6HgiQTPadV/zydOLSvwnlPlZtemGz7wNFN1SHYYusXBQb7V
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8461
 
-On Mon, Jan 19, 2026 at 04:31:36PM +0100, Christoph Hellwig wrote:
-> The lockref structure allows incrementing/decrementing counters like
-> an atomic_t for the fast path, while still allowing complex slow path
-> operations as if the counter was protected by a lock.  The only slow
-> path operations that actually need to take the lock are the final
-> put, LRU evictions and marking a buffer stale.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 19 Jan 2026, at 16:19, Lorenzo Stoakes wrote:
 
-This looks like a pretty straightforward conversion so
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
+> We will be shortly removing the vm_flags_t field from vm_area_desc so we
+> need to update all mmap_prepare users to only use the dessc->vma_flags
+> field.
+>
+> This patch achieves that and makes all ancillary changes required to make
+> this possible.
+>
+> This lays the groundwork for future work to eliminate the use of vm_flags_t
+> in vm_area_desc altogether and more broadly throughout the kernel.
+>
+> While we're here, we take the opportunity to replace VM_REMAP_FLAGS with
+> VMA_REMAP_FLAGS, the vma_flags_t equivalent.
+>
+> No functional changes intended.
+>
+> Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
 > ---
->  fs/xfs/xfs_buf.c   | 79 ++++++++++++++++++----------------------------
->  fs/xfs/xfs_buf.h   |  4 +--
->  fs/xfs/xfs_trace.h | 10 +++---
->  3 files changed, 38 insertions(+), 55 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index aacdf080e400..348c91335163 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -31,20 +31,20 @@ struct kmem_cache *xfs_buf_cache;
->   *
->   * xfs_buf_stale:
->   *	b_sema (caller holds)
-> - *	  b_lock
-> + *	  b_lockref.lock
->   *	    lru_lock
->   *
->   * xfs_buf_rele:
-> - *	b_lock
-> + *	b_lockref.lock
->   *	  lru_lock
->   *
->   * xfs_buftarg_drain_rele
->   *	lru_lock
-> - *	  b_lock (trylock due to inversion)
-> + *	  b_lockref.lock (trylock due to inversion)
->   *
->   * xfs_buftarg_isolate
->   *	lru_lock
-> - *	  b_lock (trylock due to inversion)
-> + *	  b_lockref.lock (trylock due to inversion)
->   */
->  
->  static void xfs_buf_submit(struct xfs_buf *bp);
-> @@ -78,11 +78,11 @@ xfs_buf_stale(
->  	 */
->  	bp->b_flags &= ~_XBF_DELWRI_Q;
->  
-> -	spin_lock(&bp->b_lock);
-> +	spin_lock(&bp->b_lockref.lock);
->  	atomic_set(&bp->b_lru_ref, 0);
-> -	if (bp->b_hold >= 0)
-> +	if (!__lockref_is_dead(&bp->b_lockref))
->  		list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
-> -	spin_unlock(&bp->b_lock);
-> +	spin_unlock(&bp->b_lockref.lock);
->  }
->  
->  static void
-> @@ -274,10 +274,8 @@ xfs_buf_alloc(
->  	 * inserting into the hash table are safe (and will have to wait for
->  	 * the unlock to do anything non-trivial).
->  	 */
-> -	bp->b_hold = 1;
-> +	lockref_init(&bp->b_lockref);
->  	sema_init(&bp->b_sema, 0); /* held, no waiters */
-> -
-> -	spin_lock_init(&bp->b_lock);
->  	atomic_set(&bp->b_lru_ref, 1);
->  	init_completion(&bp->b_iowait);
->  	INIT_LIST_HEAD(&bp->b_lru);
-> @@ -434,20 +432,6 @@ xfs_buf_find_lock(
->  	return 0;
->  }
->  
-> -static bool
-> -xfs_buf_try_hold(
-> -	struct xfs_buf		*bp)
-> -{
-> -	spin_lock(&bp->b_lock);
-> -	if (bp->b_hold == -1) {
-> -		spin_unlock(&bp->b_lock);
-> -		return false;
-> -	}
-> -	bp->b_hold++;
-> -	spin_unlock(&bp->b_lock);
-> -	return true;
-> -}
-> -
->  static inline int
->  xfs_buf_lookup(
->  	struct xfs_buf_cache	*bch,
-> @@ -460,7 +444,7 @@ xfs_buf_lookup(
->  
->  	rcu_read_lock();
->  	bp = rhashtable_lookup(&bch->bc_hash, map, xfs_buf_hash_params);
-> -	if (!bp || !xfs_buf_try_hold(bp)) {
-> +	if (!bp || !lockref_get_not_dead(&bp->b_lockref)) {
->  		rcu_read_unlock();
->  		return -ENOENT;
->  	}
-> @@ -511,7 +495,7 @@ xfs_buf_find_insert(
->  		error = PTR_ERR(bp);
->  		goto out_free_buf;
->  	}
-> -	if (bp && xfs_buf_try_hold(bp)) {
-> +	if (bp && lockref_get_not_dead(&bp->b_lockref)) {
->  		/* found an existing buffer */
->  		rcu_read_unlock();
->  		error = xfs_buf_find_lock(bp, flags);
-> @@ -853,16 +837,14 @@ xfs_buf_hold(
->  {
->  	trace_xfs_buf_hold(bp, _RET_IP_);
->  
-> -	spin_lock(&bp->b_lock);
-> -	bp->b_hold++;
-> -	spin_unlock(&bp->b_lock);
-> +	lockref_get(&bp->b_lockref);
->  }
->  
->  static void
->  xfs_buf_destroy(
->  	struct xfs_buf		*bp)
->  {
-> -	ASSERT(bp->b_hold < 0);
-> +	ASSERT(__lockref_is_dead(&bp->b_lockref));
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
->  
->  	if (!xfs_buf_is_uncached(bp)) {
-> @@ -888,19 +870,20 @@ xfs_buf_rele(
->  {
->  	trace_xfs_buf_rele(bp, _RET_IP_);
->  
-> -	spin_lock(&bp->b_lock);
-> -	if (!--bp->b_hold) {
-> +	if (lockref_put_or_lock(&bp->b_lockref))
-> +		return;
-> +	if (!--bp->b_lockref.count) {
->  		if (xfs_buf_is_uncached(bp) || !atomic_read(&bp->b_lru_ref))
->  			goto kill;
->  		list_lru_add_obj(&bp->b_target->bt_lru, &bp->b_lru);
->  	}
-> -	spin_unlock(&bp->b_lock);
-> +	spin_unlock(&bp->b_lockref.lock);
->  	return;
->  
->  kill:
-> -	bp->b_hold = -1;
-> +	lockref_mark_dead(&bp->b_lockref);
->  	list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
-> -	spin_unlock(&bp->b_lock);
-> +	spin_unlock(&bp->b_lockref.lock);
->  
->  	xfs_buf_destroy(bp);
->  }
-> @@ -1471,18 +1454,18 @@ xfs_buftarg_drain_rele(
->  	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
->  	struct list_head	*dispose = arg;
->  
-> -	if (!spin_trylock(&bp->b_lock))
-> +	if (!spin_trylock(&bp->b_lockref.lock))
->  		return LRU_SKIP;
-> -	if (bp->b_hold > 0) {
-> +	if (bp->b_lockref.count > 0) {
->  		/* need to wait, so skip it this pass */
-> -		spin_unlock(&bp->b_lock);
-> +		spin_unlock(&bp->b_lockref.lock);
->  		trace_xfs_buf_drain_buftarg(bp, _RET_IP_);
->  		return LRU_SKIP;
->  	}
->  
-> -	bp->b_hold = -1;
-> +	lockref_mark_dead(&bp->b_lockref);
->  	list_lru_isolate_move(lru, item, dispose);
-> -	spin_unlock(&bp->b_lock);
-> +	spin_unlock(&bp->b_lockref.lock);
->  	return LRU_REMOVED;
->  }
->  
-> @@ -1564,10 +1547,10 @@ xfs_buftarg_isolate(
->  	struct list_head	*dispose = arg;
->  
->  	/*
-> -	 * We are inverting the lru lock vs bp->b_lock order here, so use a
-> -	 * trylock. If we fail to get the lock, just skip the buffer.
-> +	 * We are inverting the lru lock vs bp->b_lockref.lock order here, so
-> +	 * use a trylock. If we fail to get the lock, just skip the buffer.
->  	 */
-> -	if (!spin_trylock(&bp->b_lock))
-> +	if (!spin_trylock(&bp->b_lockref.lock))
->  		return LRU_SKIP;
->  
->  	/*
-> @@ -1575,9 +1558,9 @@ xfs_buftarg_isolate(
->  	 * free it.  It will be added to the LRU again when the reference count
->  	 * hits zero.
->  	 */
-> -	if (bp->b_hold > 0) {
-> +	if (bp->b_lockref.count > 0) {
->  		list_lru_isolate(lru, &bp->b_lru);
-> -		spin_unlock(&bp->b_lock);
-> +		spin_unlock(&bp->b_lockref.lock);
->  		return LRU_REMOVED;
->  	}
->  
-> @@ -1587,13 +1570,13 @@ xfs_buftarg_isolate(
->  	 * buffer, otherwise it gets another trip through the LRU.
->  	 */
->  	if (atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
-> -		spin_unlock(&bp->b_lock);
-> +		spin_unlock(&bp->b_lockref.lock);
->  		return LRU_ROTATE;
->  	}
->  
-> -	bp->b_hold = -1;
-> +	lockref_mark_dead(&bp->b_lockref);
->  	list_lru_isolate_move(lru, item, dispose);
-> -	spin_unlock(&bp->b_lock);
-> +	spin_unlock(&bp->b_lockref.lock);
->  	return LRU_REMOVED;
->  }
->  
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 1117cd9cbfb9..3a1d066e1c13 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -14,6 +14,7 @@
->  #include <linux/dax.h>
->  #include <linux/uio.h>
->  #include <linux/list_lru.h>
-> +#include <linux/lockref.h>
->  
->  extern struct kmem_cache *xfs_buf_cache;
->  
-> @@ -154,8 +155,7 @@ struct xfs_buf {
->  
->  	xfs_daddr_t		b_rhash_key;	/* buffer cache index */
->  	int			b_length;	/* size of buffer in BBs */
-> -	spinlock_t		b_lock;		/* internal state lock */
-> -	unsigned int		b_hold;		/* reference count */
-> +	struct lockref		b_lockref;	/* refcount + lock */
->  	atomic_t		b_lru_ref;	/* lru reclaim ref count */
->  	xfs_buf_flags_t		b_flags;	/* status flags */
->  	struct semaphore	b_sema;		/* semaphore for lockables */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index f70afbf3cb19..abf022d5ff42 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -736,7 +736,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
->  		__entry->dev = bp->b_target->bt_dev;
->  		__entry->bno = xfs_buf_daddr(bp);
->  		__entry->nblks = bp->b_length;
-> -		__entry->hold = bp->b_hold;
-> +		__entry->hold = bp->b_lockref.count;
->  		__entry->pincount = atomic_read(&bp->b_pin_count);
->  		__entry->lockval = bp->b_sema.count;
->  		__entry->flags = bp->b_flags;
-> @@ -810,7 +810,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
->  		__entry->bno = xfs_buf_daddr(bp);
->  		__entry->length = bp->b_length;
->  		__entry->flags = flags;
-> -		__entry->hold = bp->b_hold;
-> +		__entry->hold = bp->b_lockref.count;
->  		__entry->pincount = atomic_read(&bp->b_pin_count);
->  		__entry->lockval = bp->b_sema.count;
->  		__entry->caller_ip = caller_ip;
-> @@ -854,7 +854,7 @@ TRACE_EVENT(xfs_buf_ioerror,
->  		__entry->dev = bp->b_target->bt_dev;
->  		__entry->bno = xfs_buf_daddr(bp);
->  		__entry->length = bp->b_length;
-> -		__entry->hold = bp->b_hold;
-> +		__entry->hold = bp->b_lockref.count;
->  		__entry->pincount = atomic_read(&bp->b_pin_count);
->  		__entry->lockval = bp->b_sema.count;
->  		__entry->error = error;
-> @@ -898,7 +898,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
->  		__entry->buf_bno = xfs_buf_daddr(bip->bli_buf);
->  		__entry->buf_len = bip->bli_buf->b_length;
->  		__entry->buf_flags = bip->bli_buf->b_flags;
-> -		__entry->buf_hold = bip->bli_buf->b_hold;
-> +		__entry->buf_hold = bip->bli_buf->b_lockref.count;
->  		__entry->buf_pincount = atomic_read(&bip->bli_buf->b_pin_count);
->  		__entry->buf_lockval = bip->bli_buf->b_sema.count;
->  		__entry->li_flags = bip->bli_item.li_flags;
-> @@ -5181,7 +5181,7 @@ DECLARE_EVENT_CLASS(xfbtree_buf_class,
->  		__entry->xfino = file_inode(xfbt->target->bt_file)->i_ino;
->  		__entry->bno = xfs_buf_daddr(bp);
->  		__entry->nblks = bp->b_length;
-> -		__entry->hold = bp->b_hold;
-> +		__entry->hold = bp->b_lockref.count;
->  		__entry->pincount = atomic_read(&bp->b_pin_count);
->  		__entry->lockval = bp->b_sema.count;
->  		__entry->flags = bp->b_flags;
-> -- 
-> 2.47.3
-> 
-> 
+>  drivers/char/mem.c       |  6 +++---
+>  drivers/dax/device.c     | 10 +++++-----
+>  fs/aio.c                 |  2 +-
+>  fs/erofs/data.c          |  5 +++--
+>  fs/ext4/file.c           |  4 ++--
+>  fs/ntfs3/file.c          |  2 +-
+>  fs/orangefs/file.c       |  4 ++--
+>  fs/ramfs/file-nommu.c    |  2 +-
+>  fs/resctrl/pseudo_lock.c |  2 +-
+>  fs/romfs/mmap-nommu.c    |  2 +-
+>  fs/xfs/xfs_file.c        |  4 ++--
+>  fs/zonefs/file.c         |  3 ++-
+>  include/linux/dax.h      |  4 ++--
+>  include/linux/mm.h       | 24 +++++++++++++++++++-----
+>  kernel/relay.c           |  2 +-
+>  mm/memory.c              | 17 ++++++++---------
+>  16 files changed, 54 insertions(+), 39 deletions(-)
+>
+
+You missed one instance in !CONFIG_DAX:
+
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 162c19fe478c..48d20b790a7d 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -111,11 +111,11 @@ static inline void set_dax_nomc(struct dax_device *dax_dev)
+ static inline void set_dax_synchronous(struct dax_device *dax_dev)
+ {
+ }
+-static inline bool daxdev_mapping_supported(vm_flags_t vm_flags,
++static inline bool daxdev_mapping_supported(vma_flags_t flags,
+ 					    const struct inode *inode,
+ 					    struct dax_device *dax_dev)
+ {
+-	return !(vm_flags & VM_SYNC);
++	return !vma_flags_test(flags, VMA_SYNC_BIT);
+ }
+ static inline size_t dax_recovery_write(struct dax_device *dax_dev,
+ 		pgoff_t pgoff, void *addr, size_t bytes, struct iov_iter *i)
+
+
+Best Regards,
+Yan, Zi
