@@ -1,260 +1,743 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010014.outbound.protection.outlook.com [52.101.201.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51CF62F6928;
-	Tue, 20 Jan 2026 03:00:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768878010; cv=fail; b=dsUXJ59M1OzYN+BHSuaBqam8JrGvNC1Qp0DNTldAOv2i1g8fXDv7EHj+QJK7LziXvp76yNcJOFDJl1TWbV2JUKP790CztObiz76WmFZNXxnEdL2xpHwqBS04/9v3fogKf1J6xSEmSbE/FsODw9CUPR3uqG3H5dwW8KcQmJBU/wM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768878010; c=relaxed/simple;
-	bh=B4CcTu0NEn4teya+0PU1VqemnByb/0x884biC8KqZTc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=JEJGk9e/Xf1eCOLUsC+aLeA5IrgPHkpv7LoZdxNiHxzE0P2If8Lr5pAz2s8wiNlFq02Wz5vQF4JpwEukulj7SJBd57/fbENcgSive9ZcX8L3WRmDpreSV3e6NykJm0gOaXS8XtcLGXo4VP+wtb36is3rC3kTNxSWzs7Ojwuk5sU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RTv4TyDV; arc=fail smtp.client-ip=52.101.201.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 353F933A712;
+	Tue, 20 Jan 2026 04:12:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768882347; cv=none; b=hBQewxO5NXsspZUVcc3+PCNH4dOOY9GY2V06Ywsn1GK7PcEL+4CKRrizV8nySvBVUyDS006vxESvzkkM/16Tw9cX3SiHQ/NQuRe7owh35rtxfINygYfz4n3z10GrEVdFJzMkleXiM0rwCYFa91+vNP36z614goDePqZE5l5/ksg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768882347; c=relaxed/simple;
+	bh=Ll5FDFEB4My3Bnv1o96nWYyl7yWsT8Grtl+MK42594o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uIaWydkyWRyU6C830KsJ46nss43lPSy9u/qEdYh5On4O0xzUgzkncHIZixksT7HUJYS3rn55Ht1O3+WwZaTaSwswAhS6SzdtI0nABJ7oTLGIlQK5kwAPLBDq/mQ8LkMUjaVm3e9fo87YYoH8E7/eYYYdhGCLB5W/fK9ZV94s3YQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fz/ngKqF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RTv4TyDV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KBdhBJfZq4Wxak7tjKaAfopsf34wdy3UCd2oqpvtxvJUrHo8GlCxOLjCqyT3+0LpJt8KAjKXavXWd+Vsb3zDst6tYH2h9bq1S98/4J4oMsaCTMhU0MpkJsOOP1aczAhLLb0Mt1j4utfI35DZENmRJ6F7K0JScJUGkVRpzGBjCLmjxmacGNdgtzk51qamJiICXKKu1nbxAjCihHhe7/q5GgNA6PpqDv8959rxbevx5YmE73c0iC6ime6t2Yaeb10hYTBcOVgC5jHKMOMshTUVfLWp2v95k9V5s3QcqRjrlOBeP5PaAtLanjNU7U8AyqX1VixmADR2FZft3sEl8ymaEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ifspOPvAHjHKumkbivxuWVDY4dH23AyrQ1x0wCeSl64=;
- b=zF6CuOa8F6QGHuOWXPQmad+020WjuoikQWuidMtHPEBdKsh4EL6AaHf6yWVRBYuJbX/59cVrgx4H9aV320xgVJeAO/oF+v7freOaEThWiYWSh3+Gd23X5iTpSKe/M3a3CnPBRWLUqGQBaFUm7CsFdDJo+W1f9Dhg46qlvzFsxQAHI0gl04zVXbGTB7EliNF3N/p34LsAVGEl3lfu/mScIt/wDWfEC8CzTAhKZmWaaPB+JdkrFptfGpHYRXxaEAArwBu9U+48Z2ay8BUPKx3r4K7AIhwVPYAQ3PcJbfy8bgXnIeq42xwc1XNK42dSIssaukMWbuXL/hRycSw/W+23qw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ifspOPvAHjHKumkbivxuWVDY4dH23AyrQ1x0wCeSl64=;
- b=RTv4TyDVNI6RFPgRL1p0CqxhK25TLZCM1m3ychl0DD2G7+vhB0lRDLXjW2nQOaZzm+Y3aZiMklqr4SnIq5Wh7MnOtJmP1yGCcZydGNYt4IA9QR//81SQ6iMnm27Bzxv7C57N9OBEuu3q0w+Z9+EMUA5CJ3jUMqrUqGEKtPJ0EQ6uTKrf9eTjEyhAEurGrIyYigE3bBYcn6C75wZNLOgIHopAcxDscE9oHcCzz3A1ItGPWw+yGXUGtKWfbSHNlSUahqgf993cFyBOE8wirRi7zwqJPHIIvo9VDrCwb5IctzZxvbYvlf7ms5SGAhXpQHVyKKi/dIMo2P+SAnj054faVg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS7PR12MB9473.namprd12.prod.outlook.com (2603:10b6:8:252::5) by
- CH0PR12MB8461.namprd12.prod.outlook.com (2603:10b6:610:183::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.12; Tue, 20 Jan
- 2026 03:00:05 +0000
-Received: from DS7PR12MB9473.namprd12.prod.outlook.com
- ([fe80::f01d:73d2:2dda:c7b2]) by DS7PR12MB9473.namprd12.prod.outlook.com
- ([fe80::f01d:73d2:2dda:c7b2%4]) with mapi id 15.20.9520.011; Tue, 20 Jan 2026
- 03:00:05 +0000
-From: Zi Yan <ziy@nvidia.com>
-To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Jarkko Sakkinen <jarkko@kernel.org>,
- Dave Hansen <dave.hansen@linux.intel.com>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Jani Nikula <jani.nikula@linux.intel.com>,
- Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>,
- Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>,
- Matthew Auld <matthew.auld@intel.com>,
- Matthew Brost <matthew.brost@intel.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- Benjamin LaHaise <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>,
- Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
- Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>,
- Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>,
- "Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>,
- Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
- David Hildenbrand <david@kernel.org>,
- Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
- Mike Marshall <hubcap@omnibond.com>,
- Martin Brandenburg <martin@omnibond.com>, Tony Luck <tony.luck@intel.com>,
- Reinette Chatre <reinette.chatre@intel.com>,
- Dave Martin <Dave.Martin@arm.com>, James Morse <james.morse@arm.com>,
- Babu Moger <babu.moger@amd.com>, Carlos Maiolino <cem@kernel.org>,
- Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>,
- Johannes Thumshirn <jth@kernel.org>, Matthew Wilcox <willy@infradead.org>,
- "Liam R . Howlett" <Liam.Howlett@oracle.com>,
- Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>,
- Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>,
- Hugh Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>,
- Nico Pache <npache@redhat.com>, Ryan Roberts <ryan.roberts@arm.com>,
- Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
- Lance Yang <lance.yang@linux.dev>, Jann Horn <jannh@google.com>,
- Pedro Falcato <pfalcato@suse.de>, David Howells <dhowells@redhat.com>,
- Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
- "Serge E . Hallyn" <serge@hallyn.com>, Yury Norov <yury.norov@gmail.com>,
- Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-sgx@vger.kernel.org,
- linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
- intel-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-aio@kvack.org, linux-erofs@lists.ozlabs.org,
- linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev,
- devel@lists.orangefs.org, linux-xfs@vger.kernel.org,
- keyrings@vger.kernel.org, linux-security-module@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH RESEND 08/12] mm: update all remaining mmap_prepare users
- to use vma_flags_t
-Date: Mon, 19 Jan 2026 21:59:51 -0500
-X-Mailer: MailMate (2.0r6290)
-Message-ID: <34F72E48-5F22-4A20-BF32-917CDB898164@nvidia.com>
-In-Reply-To: <24317e6f6b71e8b439e672893da8d268880f7ada.1768857200.git.lorenzo.stoakes@oracle.com>
-References: <cover.1768857200.git.lorenzo.stoakes@oracle.com>
- <24317e6f6b71e8b439e672893da8d268880f7ada.1768857200.git.lorenzo.stoakes@oracle.com>
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR05CA0091.namprd05.prod.outlook.com
- (2603:10b6:a03:334::6) To DS7PR12MB9473.namprd12.prod.outlook.com
- (2603:10b6:8:252::5)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fz/ngKqF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACD9FC16AAE;
+	Tue, 20 Jan 2026 04:12:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768882346;
+	bh=Ll5FDFEB4My3Bnv1o96nWYyl7yWsT8Grtl+MK42594o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fz/ngKqFz3hKV2xlT8Dwld7xIAMOGYck0jRF5CnUcbKEdFlEo2vj6WQaHGLPKYRtM
+	 7bxw4TpzFkTCCxJ5RSORvPMk895MCDijsevptFrTEfKgKm717f5dsd8dvyj8A98Am6
+	 G/JKn8EyjERt6jTK1/s8I3zGmcBi/G9tUHLqUGs4BtqOqrsLfRkpm/PaWuVh16gBT8
+	 ofuViLkk1W5uELSA+bdWL4KeUj+0bV3P6n2ggkk1QVJneeQcwBgtOcjLjUW/+73rRQ
+	 pr29o9Hk9BkdeTqiYan9y9DBG18EvnBt7tt2ke2PtPrd9aSAKMTgtRoIPOfB1xsdEs
+	 +J5PikcUvDsXQ==
+Date: Mon, 19 Jan 2026 20:12:26 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org, hch@lst.de
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH v6.1 11/11] xfs: add media verification ioctl
+Message-ID: <20260120041226.GJ15551@frogsfrogsfrogs>
+References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs>
+ <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR12MB9473:EE_|CH0PR12MB8461:EE_
-X-MS-Office365-Filtering-Correlation-Id: 88ff9f82-4c70-4599-06a7-08de57d002fc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?o6u8pGL/yFCvatiUOrPflzcBl3TmfzqDyeHJBJDRSNQEntPYpPaVbUil6NvN?=
- =?us-ascii?Q?kpmbdniDXi7KPGwbZTXOdVDRuY8n4jQGX9thWhtkDTXEppUWgxpdMGH1Qvxd?=
- =?us-ascii?Q?UFyZOlRp/bUX9IFBaZIzqS67dQwtPTtvDRqiSldCXxzPAy0LCJYLyCnMNrfc?=
- =?us-ascii?Q?MexbsCYMsqOaeZCD5L5LwiaR3Qq8fI/R70bcPaEPb+RVYUB9EOHemjFJmLcq?=
- =?us-ascii?Q?+fqTbPrIevdbB764L5Z9h6xmiBDSBUfuDV4IM5dJu8MXLg13yra5dqsAlYaf?=
- =?us-ascii?Q?MEJcNSchj2/czLrLSs84o292XUfPj43O0QG1jAAfksUCFc3tc6BRFPml38Od?=
- =?us-ascii?Q?drFFdohfJX6vmaOkG3emmkVzJU0bWTAFTcl/ReV5ryOgqaGl5yDbJDhUERqt?=
- =?us-ascii?Q?CyyAv65F6e0UEectKUZjpDj3vm6zmNCrjBnTooMNYI7kSRNpWtGMt1sMU0A4?=
- =?us-ascii?Q?Ivj+PNHX4ectUFl5/AsAI4pMUHpm8Aw9uFBbg/JljQGVorqYeG007T/YsQVt?=
- =?us-ascii?Q?lBBTfJmmaf1sBE4j5VJghl4TcadX3j2vQGeaeuOuQPr+2dOpHs+6YzDUGGNi?=
- =?us-ascii?Q?hCzeEEMvZBclxLWustXQw0Mc9RSDHaU/jTT7j5/GEmjb1sJgXdUZnvudaTVk?=
- =?us-ascii?Q?utiKrDC27z3CRaGaDYrRdUigx0gDte8TPAI+EifizyhmzNTiiZ8xvI25r1ct?=
- =?us-ascii?Q?hMuu9WviCFlIbH0Nk2hOa4uZ5HGyj5kmhcOA6wntdia6cc91y3Z/tqWvU4hn?=
- =?us-ascii?Q?Rguvs6tXmp+cMPHgFV0UiZ3okaF5QyQUeNmrRObjHxqeByxZwoqOi84dEsWk?=
- =?us-ascii?Q?uii4b+4Gy/ELFZGLBoWUjTDZRWP5uX1Sl3bV1Nttgifqm4FswwBHvaNBSoo9?=
- =?us-ascii?Q?aPTZYAC4dfmHRWVNbruD5HF6eqUgZHAn8Ttgi2kNG1jx9auDfaCWIBApm3fF?=
- =?us-ascii?Q?T2NJATQy5chzNV1kG5IbpQluEvBxRGlUVQyraKZuvcsPSGTp94eZCGP9UYnY?=
- =?us-ascii?Q?2pbqs1O+ZXt0XaXTza9iu2aahHl8x7h5fT3czgwT25toAvNxZ7OI6lrft4sq?=
- =?us-ascii?Q?SKaUQvoefF/xaz9wLzwCwg1dED6MQq2E6mBgkr8GIwkD8S5C5VXyVom4b8kP?=
- =?us-ascii?Q?1wWZCWaqCuMvlC4SOxsmN9Fd2K/8tlfCga6a5l/h5Ksj+S+sdbUCpK+M3mzS?=
- =?us-ascii?Q?xcMLxqfH9Q37sP562iNcHj733jP5A6chibJ5JA84YHTh84I9jIwenjqQ0GTZ?=
- =?us-ascii?Q?v3ezLwf/9gfM5/1DnKLEQUFuUBp297mWh56pV9NfDlZH+LrTJgOtUtWS+3CP?=
- =?us-ascii?Q?Fi3L15Qw62Vaz1sQEYup5eXBekq6sV0XfsTtwOrq2myoGEifh4eLwVqYo563?=
- =?us-ascii?Q?SqDVUtTrAcpcRb7MC2OICjsID4oOcmcLY9q7d0MRmOcifOM+7NkhUtcK5+Q7?=
- =?us-ascii?Q?amY6x+3HrsAvhOm9dGF5FQlhG4AEFCYLSyPe7t6BQKhC6H9KP97OGo4uAdOo?=
- =?us-ascii?Q?df8NB4hKka9nt3al52sPoFlx8iZWC+okYvXZNUU/9pOeroxpZ9F7q/uFafVj?=
- =?us-ascii?Q?vhA7nLr29yRO/zcFACc=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR12MB9473.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?jM1KVFEnXvSWWuDyNmgus2UW5CEhX/YbAcoXtiWiKhOc/y8YvPLjkVa3xAvw?=
- =?us-ascii?Q?HKXBml1rRutYzvKKGU63F/FdqlljkIuicghrrReyfSb8NVAoyyERiQ4MI1Kv?=
- =?us-ascii?Q?Ec2X6hwKWa0kaD9KnDqDbg7JdiBtHo47PSEMIbp5jRHd5+ihg8cMVfAQDeq7?=
- =?us-ascii?Q?4DqWtTYxpG45orz/Ge4C1Bhlv4p9GYvB4czXqzmpXUvrK639Yrm/BXVqf8M2?=
- =?us-ascii?Q?7j1ZwIRoWhDC5PCCDIjtKTRvEV3B5CTPU8BHMLlG4gsuMt138xiuhoOnWoBV?=
- =?us-ascii?Q?yOVNF2amGkBqDapr7Q8D2WWD2dQdiK3WUP2uCp9h/Azc6X7OvkfqIkCQdY1B?=
- =?us-ascii?Q?2dWgXHah6k6LfYWvUPbf/FXQIdUDXI1w2KWfKDq7OQVcBYFXI8PrWI6MArlC?=
- =?us-ascii?Q?LUJbTY6z7lY60QgMkp+Cjecoxj9OoDfIqYhil3VGT8Gz5uyYZg3pO0EeQLmb?=
- =?us-ascii?Q?dcpLqAHJsRfWBS4MxmVSgxElG3BXvm9YjSTnOX41q3jlEI6C/JY5o5K8sbDP?=
- =?us-ascii?Q?sabPbUgzuwFtZCrNa1rwWChq5y1M/syEixb5iTtnO0JI0eKM7SirDFQOnpMb?=
- =?us-ascii?Q?d+WOzs1CU3A5WgLm76OCdPUdgS9eShvjDaOvn+2bXIjj4Eb8zvBsbz4gxUQP?=
- =?us-ascii?Q?Tu+IvX3CrJ036G3WaPyVKBQIpKfqEa+nkn8qcfr0Lrkx01TI2tW/5tuxLUBM?=
- =?us-ascii?Q?ObtOmux6RQ+Uqj+S1t6vsA+2kPNo2zVH03CSpAG/1NI73sXHAJg1Lxewc0Ok?=
- =?us-ascii?Q?5piqvA+7XWoGOUXEvwOlEvFS0uJ+a1T2/LXCCV1GQUYoWb857UfK2ELobI0r?=
- =?us-ascii?Q?bJQfIPkddNYRCXGwYBub8rIZ/ubHf6tW5ct0Znr8JhWkSbzsS4DU2MDR0gyx?=
- =?us-ascii?Q?fb/mt7nyCd/kKNh69FeQPmfxi4hG+Rw9fyf+OHX4zarNsHJUTR0SEUPaXUyV?=
- =?us-ascii?Q?Zjz5WeLezEwrg5xNUKRtbLvmKVLjov0008gVvX0z8cszLWH7xMRPhwzEw8/d?=
- =?us-ascii?Q?PR+D/m8ll9vvs9UrHiBwHlUPSKmTFy84JyxRI2foFltMQLiSiJ+ITjF6gEFw?=
- =?us-ascii?Q?dHDq4fg6P/jdJBRG3+NfLoZb7rA2lnoDGofRVTUbEz9e+XdqPJvNm0sHDVkM?=
- =?us-ascii?Q?BFLApngnYlQF8VF1/nTjYb26OJvmiKP4QfUaGe2ZodD1my5zJesbDbLyvtAc?=
- =?us-ascii?Q?skOhCiV+L480gWzCpqJFW0uYToF6XkCYEShm2i9xTYmL4NmDNcH7Cyu7M2o1?=
- =?us-ascii?Q?ea1n+RWdsDdjleOWqCL1RMCTiK7hnFYTJZKJZQitGHbS/untWr1M3Mj5fVAv?=
- =?us-ascii?Q?/Cn2+EsgEf0KZoIKzW0vWndZ254RdjySA+g0IMLxZyiLJIHXTTGYlL8w2rV7?=
- =?us-ascii?Q?NyZwq2IM8NTT5USI4ZZfav/NZWjPTH22osxSlvmrhpVsVdMAZVI3Kq5G7/Lg?=
- =?us-ascii?Q?FKNFt1wDwGoqUJqOTGTVZUUW/f0rs4JR0+w/YYszh4n1WzlfChI3MmTgFawJ?=
- =?us-ascii?Q?bWfz2EwZGsIKH1rHlE1i80i5Xxu41KeTmw8p3RcAghxkewHEVcC4hUJM/An2?=
- =?us-ascii?Q?OAbEXBU8jEvqQW6sKx7GpLL/gExg/2lhI6WcOD3R97TbdVCffpXbB8d8JnsJ?=
- =?us-ascii?Q?6WlhQ5wrlUncH2ydmwDFKQnAejFCI6sJnO/ohcdndz0bTBYjG5e3qtzgocAs?=
- =?us-ascii?Q?1NzrTuS/BNJNkBsbdRWGseIblck7AHXYb60ma0LcvMo6BkmN?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 88ff9f82-4c70-4599-06a7-08de57d002fc
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR12MB9473.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2026 03:00:04.9626
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qXZQrpVwbUMltY4PA6HgiQTPadV/zydOLSvwnlPlZtemGz7wNFN1SHYYusXBQb7V
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB8461
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
 
-On 19 Jan 2026, at 16:19, Lorenzo Stoakes wrote:
+From: Darrick J. Wong <djwong@kernel.org>
 
-> We will be shortly removing the vm_flags_t field from vm_area_desc so we
-> need to update all mmap_prepare users to only use the dessc->vma_flags
-> field.
->
-> This patch achieves that and makes all ancillary changes required to make
-> this possible.
->
-> This lays the groundwork for future work to eliminate the use of vm_flags_t
-> in vm_area_desc altogether and more broadly throughout the kernel.
->
-> While we're here, we take the opportunity to replace VM_REMAP_FLAGS with
-> VMA_REMAP_FLAGS, the vma_flags_t equivalent.
->
-> No functional changes intended.
->
-> Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-> ---
->  drivers/char/mem.c       |  6 +++---
->  drivers/dax/device.c     | 10 +++++-----
->  fs/aio.c                 |  2 +-
->  fs/erofs/data.c          |  5 +++--
->  fs/ext4/file.c           |  4 ++--
->  fs/ntfs3/file.c          |  2 +-
->  fs/orangefs/file.c       |  4 ++--
->  fs/ramfs/file-nommu.c    |  2 +-
->  fs/resctrl/pseudo_lock.c |  2 +-
->  fs/romfs/mmap-nommu.c    |  2 +-
->  fs/xfs/xfs_file.c        |  4 ++--
->  fs/zonefs/file.c         |  3 ++-
->  include/linux/dax.h      |  4 ++--
->  include/linux/mm.h       | 24 +++++++++++++++++++-----
->  kernel/relay.c           |  2 +-
->  mm/memory.c              | 17 ++++++++---------
->  16 files changed, 54 insertions(+), 39 deletions(-)
->
+Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+verify the media of the devices backing an xfs filesystem, and have any
+resulting media errors reported to fsnotify and xfs_healer.
 
-You missed one instance in !CONFIG_DAX:
+To accomplish this, the kernel allocates a folio between the base page
+size and 1MB, and issues read IOs to a gradually incrementing range of
+one of the storage devices underlying an xfs filesystem.  If any error
+occurs, that raw error is reported to the calling process.  If the error
+happens to be one of the ones that the kernel considers indicative of
+data loss, then it will also be reported to xfs_healthmon and fsnotify.
 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 162c19fe478c..48d20b790a7d 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -111,11 +111,11 @@ static inline void set_dax_nomc(struct dax_device *dax_dev)
- static inline void set_dax_synchronous(struct dax_device *dax_dev)
- {
- }
--static inline bool daxdev_mapping_supported(vm_flags_t vm_flags,
-+static inline bool daxdev_mapping_supported(vma_flags_t flags,
- 					    const struct inode *inode,
- 					    struct dax_device *dax_dev)
- {
--	return !(vm_flags & VM_SYNC);
-+	return !vma_flags_test(flags, VMA_SYNC_BIT);
- }
- static inline size_t dax_recovery_write(struct dax_device *dax_dev,
- 		pgoff_t pgoff, void *addr, size_t bytes, struct iov_iter *i)
+Driving the verification from the kernel enables xfs (and by extension
+xfs_scrub) to have precise control over the size and error handling of
+IOs that are issued to the underlying block device, and to emit
+notifications about problems to other relevant kernel subsystems
+immediately.
 
+Note that the caller is also allowed to reduce the size of the IO and
+to ask for a relaxation period after each IO.
 
-Best Regards,
-Yan, Zi
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+v6.1: improve commit message, clarify comments about error handling,
+      and reuse the bio instead of repeatedly allocating new ones
+---
+ fs/xfs/libxfs/xfs_fs.h    |   30 +++
+ fs/xfs/xfs_trace.h        |   98 ++++++++++
+ fs/xfs/xfs_verify_media.h |   13 +
+ fs/xfs/Makefile           |    1 
+ fs/xfs/xfs_ioctl.c        |    3 
+ fs/xfs/xfs_verify_media.c |  445 +++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 590 insertions(+)
+ create mode 100644 fs/xfs/xfs_verify_media.h
+ create mode 100644 fs/xfs/xfs_verify_media.c
+
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index a01303c5de6ce6..d165de607d179e 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -1160,6 +1160,34 @@ struct xfs_health_file_on_monitored_fs {
+ 	__u32		flags;	/* zero for now */
+ };
+ 
++/* Verify the media of the underlying devices */
++struct xfs_verify_media {
++	__u32	me_dev;		/* I: XFS_DEV_{DATA,LOG,RT} */
++	__u32	me_flags;	/* I: XFS_VERIFY_MEDIA_* */
++
++	/*
++	 * IO: inclusive start of disk range to verify, in 512b blocks.
++	 * Will be adjusted upwards as media verification succeeds.
++	 */
++	__u64	me_start_daddr;
++
++	/*
++	 * IO: exclusive end of the disk range to verify, in 512b blocks.
++	 * Can be adjusted downwards to match device size.
++	 */
++	__u64	me_end_daddr;
++
++	__u32	me_ioerror;	/* O: I/O error (positive) */
++	__u32	me_max_io_size;	/* I: maximum IO size in bytes */
++
++	__u32	me_rest_us;	/* I: rest time between IOs, usecs */
++	__u32	me_pad;		/* zero */
++};
++
++#define XFS_VERIFY_MEDIA_REPORT	(1 << 0)	/* report to fsnotify */
++
++#define XFS_VERIFY_MEDIA_FLAGS	(XFS_VERIFY_MEDIA_REPORT)
++
+ /*
+  * ioctl commands that are used by Linux filesystems
+  */
+@@ -1202,6 +1230,8 @@ struct xfs_health_file_on_monitored_fs {
+ #define XFS_IOC_HEALTH_MONITOR	_IOW ('X', 68, struct xfs_health_monitor)
+ #define XFS_IOC_HEALTH_FD_ON_MONITORED_FS \
+ 				_IOW ('X', 69, struct xfs_health_file_on_monitored_fs)
++#define XFS_IOC_VERIFY_MEDIA	_IOWR('X', 70, struct xfs_verify_media)
++
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+  */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 0cf4877753584f..3483461cf46255 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -6320,6 +6320,104 @@ TRACE_EVENT(xfs_healthmon_report_file_ioerror,
+ 		  __entry->error)
+ );
+ 
++TRACE_EVENT(xfs_verify_media,
++	TP_PROTO(const struct xfs_mount *mp, const struct xfs_verify_media *me,
++		 dev_t fdev, xfs_daddr_t daddr, uint64_t bbcount,
++		 const struct folio *folio),
++	TP_ARGS(mp, me, fdev, daddr, bbcount, folio),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(dev_t, fdev)
++		__field(xfs_daddr_t, start_daddr)
++		__field(xfs_daddr_t, end_daddr)
++		__field(unsigned int, flags)
++		__field(xfs_daddr_t, daddr)
++		__field(uint64_t, bbcount)
++		__field(unsigned int, bufsize)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_ddev_targp->bt_dev;
++		__entry->fdev = fdev;
++		__entry->start_daddr = me->me_start_daddr;
++		__entry->end_daddr = me->me_end_daddr;
++		__entry->flags = me->me_flags;
++		__entry->daddr = daddr;
++		__entry->bbcount = bbcount;
++		__entry->bufsize = folio_size(folio);
++	),
++	TP_printk("dev %d:%d fdev %d:%d start_daddr 0x%llx end_daddr 0x%llx flags 0x%x daddr 0x%llx bbcount 0x%llx bufsize 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  MAJOR(__entry->fdev), MINOR(__entry->fdev),
++		  __entry->start_daddr,
++		  __entry->end_daddr,
++		  __entry->flags,
++		  __entry->daddr,
++		  __entry->bbcount,
++		  __entry->bufsize)
++);
++
++TRACE_EVENT(xfs_verify_media_end,
++	TP_PROTO(const struct xfs_mount *mp, const struct xfs_verify_media *me,
++		 dev_t fdev),
++	TP_ARGS(mp, me, fdev),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(dev_t, fdev)
++		__field(xfs_daddr_t, start_daddr)
++		__field(xfs_daddr_t, end_daddr)
++		__field(int, ioerror)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_ddev_targp->bt_dev;
++		__entry->fdev = fdev;
++		__entry->start_daddr = me->me_start_daddr;
++		__entry->end_daddr = me->me_end_daddr;
++		__entry->ioerror = me->me_ioerror;
++	),
++	TP_printk("dev %d:%d fdev %d:%d start_daddr 0x%llx end_daddr 0x%llx ioerror %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  MAJOR(__entry->fdev), MINOR(__entry->fdev),
++		  __entry->start_daddr,
++		  __entry->end_daddr,
++		  __entry->ioerror)
++);
++
++TRACE_EVENT(xfs_verify_media_error,
++	TP_PROTO(const struct xfs_mount *mp, const struct xfs_verify_media *me,
++		 dev_t fdev, xfs_daddr_t daddr, uint64_t bbcount,
++		 blk_status_t status),
++	TP_ARGS(mp, me, fdev, daddr, bbcount, status),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(dev_t, fdev)
++		__field(xfs_daddr_t, start_daddr)
++		__field(xfs_daddr_t, end_daddr)
++		__field(unsigned int, flags)
++		__field(xfs_daddr_t, daddr)
++		__field(uint64_t, bbcount)
++		__field(int, error)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_ddev_targp->bt_dev;
++		__entry->fdev = fdev;
++		__entry->start_daddr = me->me_start_daddr;
++		__entry->end_daddr = me->me_end_daddr;
++		__entry->flags = me->me_flags;
++		__entry->daddr = daddr;
++		__entry->bbcount = bbcount;
++		__entry->error = blk_status_to_errno(status);
++	),
++	TP_printk("dev %d:%d fdev %d:%d start_daddr 0x%llx end_daddr 0x%llx flags 0x%x daddr 0x%llx bbcount 0x%llx error %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  MAJOR(__entry->fdev), MINOR(__entry->fdev),
++		  __entry->start_daddr,
++		  __entry->end_daddr,
++		  __entry->flags,
++		  __entry->daddr,
++		  __entry->bbcount,
++		  __entry->error)
++);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
+diff --git a/fs/xfs/xfs_verify_media.h b/fs/xfs/xfs_verify_media.h
+new file mode 100644
+index 00000000000000..dc6eee9c88636b
+--- /dev/null
++++ b/fs/xfs/xfs_verify_media.h
+@@ -0,0 +1,13 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_VERIFY_MEDIA_H__
++#define __XFS_VERIFY_MEDIA_H__
++
++struct xfs_verify_media;
++int xfs_ioc_verify_media(struct file *file,
++		struct xfs_verify_media __user *arg);
++
++#endif /* __XFS_VERIFY_MEDIA_H__ */
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index d14f5ae2b980fe..7eadc263f728a2 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -197,6 +197,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_symlink.o \
+ 				   xfs_sysfs.o \
+ 				   xfs_trans.o \
++				   xfs_verify_media.o \
+ 				   xfs_xattr.o
+ 
+ # low-level transaction/log code
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index c04c41ca924e37..80a005999d2df3 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -42,6 +42,7 @@
+ #include "xfs_handle.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_healthmon.h"
++#include "xfs_verify_media.h"
+ 
+ #include <linux/mount.h>
+ #include <linux/fileattr.h>
+@@ -1422,6 +1423,8 @@ xfs_file_ioctl(
+ 
+ 	case XFS_IOC_HEALTH_MONITOR:
+ 		return xfs_ioc_health_monitor(filp, arg);
++	case XFS_IOC_VERIFY_MEDIA:
++		return xfs_ioc_verify_media(filp, arg);
+ 
+ 	default:
+ 		return -ENOTTY;
+diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+new file mode 100644
+index 00000000000000..f4f620c98d92ca
+--- /dev/null
++++ b/fs/xfs/xfs_verify_media.c
+@@ -0,0 +1,445 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_bit.h"
++#include "xfs_btree.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
++#include "xfs_trans.h"
++#include "xfs_alloc.h"
++#include "xfs_ag.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_rtgroup.h"
++#include "xfs_rtrmap_btree.h"
++#include "xfs_health.h"
++#include "xfs_healthmon.h"
++#include "xfs_trace.h"
++#include "xfs_verify_media.h"
++
++#include <linux/fserror.h>
++
++struct xfs_group_data_lost {
++	xfs_agblock_t		startblock;
++	xfs_extlen_t		blockcount;
++};
++
++/* Report lost file data from rmap records */
++static int
++xfs_verify_report_data_lost(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec,
++	void				*data)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_inode		*ip;
++	struct xfs_group_data_lost	*lost = data;
++	xfs_fileoff_t			fileoff = rec->rm_offset;
++	xfs_extlen_t			blocks = rec->rm_blockcount;
++	const bool			is_attr =
++			(rec->rm_flags & XFS_RMAP_ATTR_FORK);
++	const xfs_agblock_t		lost_end =
++			lost->startblock + lost->blockcount;
++	const xfs_agblock_t		rmap_end =
++			rec->rm_startblock + rec->rm_blockcount;
++	int				error = 0;
++
++	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
++	       return 0;
++
++	error = xfs_iget(mp, cur->bc_tp, rec->rm_owner, 0, 0, &ip);
++	if (error)
++		return 0;
++
++	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
++		xfs_bmap_mark_sick(ip, is_attr ? XFS_ATTR_FORK : XFS_DATA_FORK);
++		goto out_rele;
++	}
++
++	if (is_attr) {
++		xfs_inode_mark_sick(ip, XFS_SICK_INO_XATTR);
++		goto out_rele;
++	}
++
++	if (lost->startblock > rec->rm_startblock) {
++		fileoff += lost->startblock - rec->rm_startblock;
++		blocks -= lost->startblock - rec->rm_startblock;
++	}
++	if (rmap_end > lost_end)
++		blocks -= rmap_end - lost_end;
++
++	fserror_report_data_lost(VFS_I(ip), XFS_FSB_TO_B(mp, fileoff),
++			XFS_FSB_TO_B(mp, blocks), GFP_NOFS);
++
++out_rele:
++	xfs_irele(ip);
++	return 0;
++}
++
++/* Walk reverse mappings to look for all file data loss */
++static int
++xfs_verify_report_losses(
++	struct xfs_mount	*mp,
++	enum xfs_group_type	type,
++	xfs_daddr_t		daddr,
++	u64			bblen)
++{
++	struct xfs_group	*xg = NULL;
++	struct xfs_trans	*tp;
++	xfs_fsblock_t		start_bno, end_bno;
++	uint32_t		start_gno, end_gno;
++	int			error;
++
++	if (type == XG_TYPE_RTG) {
++		start_bno = xfs_daddr_to_rtb(mp, daddr);
++		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
++	} else {
++		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
++		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
++	}
++
++	tp = xfs_trans_alloc_empty(mp);
++	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
++	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
++	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
++		struct xfs_buf		*agf_bp = NULL;
++		struct xfs_rtgroup	*rtg = NULL;
++		struct xfs_btree_cur	*cur;
++		struct xfs_rmap_irec	ri_low = { };
++		struct xfs_rmap_irec	ri_high;
++		struct xfs_group_data_lost lost;
++
++		if (type == XG_TYPE_AG) {
++			struct xfs_perag	*pag = to_perag(xg);
++
++			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
++			if (error) {
++				xfs_perag_put(pag);
++				break;
++			}
++
++			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
++		} else {
++			rtg = to_rtg(xg);
++			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
++			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
++		}
++
++		/*
++		 * Set the rmap range from ri_low to ri_high, which represents
++		 * a [start, end] where we looking for the files or metadata.
++		 */
++		memset(&ri_high, 0xFF, sizeof(ri_high));
++		if (xg->xg_gno == start_gno)
++			ri_low.rm_startblock =
++				xfs_fsb_to_gbno(mp, start_bno, type);
++		if (xg->xg_gno == end_gno)
++			ri_high.rm_startblock =
++				xfs_fsb_to_gbno(mp, end_bno, type);
++
++		lost.startblock = ri_low.rm_startblock;
++		lost.blockcount = min(xg->xg_block_count,
++				      ri_high.rm_startblock + 1) -
++							ri_low.rm_startblock;
++
++		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
++				xfs_verify_report_data_lost, &lost);
++		xfs_btree_del_cursor(cur, error);
++		if (agf_bp)
++			xfs_trans_brelse(tp, agf_bp);
++		if (rtg)
++			xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
++		if (error) {
++			xfs_group_put(xg);
++			break;
++		}
++	}
++
++	xfs_trans_cancel(tp);
++	return 0;
++}
++
++/*
++ * Compute the desired verify IO size.
++ *
++ * To minimize command overhead, we'd like to create bios that are 1MB, though
++ * we allow the user to ask for a smaller size.
++ */
++static unsigned int
++xfs_verify_iosize(
++	const struct xfs_verify_media	*me,
++	struct xfs_buftarg		*btp,
++	uint64_t			bbcount)
++{
++	unsigned int			iosize =
++			min_not_zero(SZ_1M, me->me_max_io_size);
++
++	BUILD_BUG_ON(BBSHIFT != SECTOR_SHIFT);
++	ASSERT(BBTOB(bbcount) >= bdev_logical_block_size(btp->bt_bdev));
++
++	return clamp(iosize, bdev_logical_block_size(btp->bt_bdev),
++			BBTOB(bbcount));
++}
++
++/* Allocate as much memory as we can get for verification buffer. */
++static struct folio *
++xfs_verify_alloc_folio(
++	const unsigned int	iosize)
++{
++	unsigned int		order = get_order(iosize);
++
++	while (order > 0) {
++		struct folio	*folio =
++			folio_alloc(GFP_KERNEL | __GFP_NORETRY, order);
++
++		if (folio)
++			return folio;
++		order--;
++	}
++
++	return folio_alloc(GFP_KERNEL, 0);
++}
++
++/* Report any kind of problem verifying media */
++static void
++xfs_verify_media_error(
++	struct xfs_mount	*mp,
++	struct xfs_verify_media	*me,
++	struct xfs_buftarg	*btp,
++	xfs_daddr_t		daddr,
++	unsigned int		bio_bbcount,
++	blk_status_t		bio_status)
++{
++	trace_xfs_verify_media_error(mp, me, btp->bt_bdev->bd_dev, daddr,
++			bio_bbcount, bio_status);
++
++	/*
++	 * Pass any error, I/O or otherwise, up to the caller if we didn't
++	 * successfully verify any bytes at all.
++	 */
++	if (me->me_start_daddr == daddr)
++		me->me_ioerror = -blk_status_to_errno(bio_status);
++
++	/*
++	 * PI validation failures, medium errors, or general IO errors are
++	 * treated as indicators of data loss.  Everything else are (hopefully)
++	 * transient errors and are not reported to healthmon or fsnotify.
++	 */
++	switch (bio_status) {
++	case BLK_STS_PROTECTION:
++	case BLK_STS_IOERR:
++	case BLK_STS_MEDIUM:
++		break;
++	default:
++		return;
++	}
++
++	if (!(me->me_flags & XFS_VERIFY_MEDIA_REPORT))
++		return;
++
++	xfs_healthmon_report_media(mp, me->me_dev, daddr, bio_bbcount);
++
++	if (!xfs_has_rmapbt(mp))
++		return;
++
++	switch (me->me_dev) {
++	case XFS_DEV_DATA:
++		xfs_verify_report_losses(mp, XG_TYPE_AG, daddr, bio_bbcount);
++		break;
++	case XFS_DEV_RT:
++		xfs_verify_report_losses(mp, XG_TYPE_RTG, daddr, bio_bbcount);
++		break;
++	}
++}
++
++/* Verify the media of an xfs device by submitting read requests to the disk. */
++static int
++xfs_verify_media(
++	struct xfs_mount	*mp,
++	struct xfs_verify_media	*me)
++{
++	struct xfs_buftarg	*btp = NULL;
++	struct bio		*bio;
++	struct folio		*folio;
++	xfs_daddr_t		daddr;
++	uint64_t		bbcount;
++	int			error = 0;
++
++	me->me_ioerror = 0;
++
++	switch (me->me_dev) {
++	case XFS_DEV_DATA:
++		btp = mp->m_ddev_targp;
++		break;
++	case XFS_DEV_LOG:
++		if (mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev)
++			btp = mp->m_logdev_targp;
++		break;
++	case XFS_DEV_RT:
++		btp = mp->m_rtdev_targp;
++		break;
++	}
++	if (!btp)
++		return -ENODEV;
++
++	/*
++	 * If the caller told us to verify beyond the end of the disk, tell the
++	 * user exactly where that was.
++	 */
++	if (me->me_end_daddr > btp->bt_nr_sectors)
++		me->me_end_daddr = btp->bt_nr_sectors;
++
++	/* start and end have to be aligned to the lba size */
++	if (!IS_ALIGNED(BBTOB(me->me_start_daddr | me->me_end_daddr),
++			bdev_logical_block_size(btp->bt_bdev)))
++		return -EINVAL;
++
++	/*
++	 * end_daddr is the exclusive end of the range, so if start_daddr
++	 * reaches there (or beyond), there's no work to be done.
++	 */
++	if (me->me_start_daddr >= me->me_end_daddr)
++		return 0;
++
++	/*
++	 * There are three ranges involved here:
++	 *
++	 *  - [me->me_start_daddr, me->me_end_daddr) is the range that the
++	 *    user wants to verify.  end_daddr can be beyond the end of the
++	 *    disk; we'll constrain it to the end if necessary.
++	 *
++	 *  - [daddr, me->me_end_daddr) is the range that we have not yet
++	 *    verified.  We update daddr after each successful read.
++	 *    me->me_start_daddr is set to daddr before returning.
++	 *
++	 *  - [daddr, daddr + bio_bbcount) is the range that we're currently
++	 *    verifying.
++	 */
++	daddr = me->me_start_daddr;
++	bbcount = min_t(sector_t, me->me_end_daddr, btp->bt_nr_sectors) -
++			  me->me_start_daddr;
++
++	folio = xfs_verify_alloc_folio(xfs_verify_iosize(me, btp, bbcount));
++	if (!folio)
++		return -ENOMEM;
++
++	trace_xfs_verify_media(mp, me, btp->bt_bdev->bd_dev, daddr, bbcount,
++			folio);
++
++	bio = bio_alloc(btp->bt_bdev, 1, REQ_OP_READ, GFP_KERNEL);
++	if (!bio) {
++		error = -ENOMEM;
++		goto out_folio;
++	}
++
++	while (bbcount > 0) {
++		unsigned int	bio_bbcount;
++		blk_status_t	bio_status;
++
++		bio_reset(bio, btp->bt_bdev, REQ_OP_READ);
++		bio->bi_iter.bi_sector = daddr;
++		bio_add_folio_nofail(bio, folio,
++				min(bbcount << SECTOR_SHIFT, folio_size(folio)),
++				0);
++
++		/*
++		 * Save the length of the bio before we submit it, because we
++		 * need the original daddr and length for reporting IO errors
++		 * if the bio fails.
++		 */
++		bio_bbcount = bio->bi_iter.bi_size >> SECTOR_SHIFT;
++		submit_bio_wait(bio);
++		bio_status = bio->bi_status;
++		if (bio_status != BLK_STS_OK) {
++			xfs_verify_media_error(mp, me, btp, daddr, bio_bbcount,
++					bio_status);
++			error = 0;
++			break;
++		}
++
++		daddr += bio_bbcount;
++		bbcount -= bio_bbcount;
++
++		if (bbcount == 0)
++			break;
++
++		if (me->me_rest_us) {
++			ktime_t	expires;
++
++			expires = ktime_add_ns(ktime_get(),
++					me->me_rest_us * 1000);
++			set_current_state(TASK_KILLABLE);
++			schedule_hrtimeout(&expires, HRTIMER_MODE_ABS);
++		}
++
++		if (fatal_signal_pending(current)) {
++			error = -EINTR;
++			break;
++		}
++
++		cond_resched();
++	}
++
++	bio_put(bio);
++out_folio:
++	folio_put(folio);
++
++	if (error)
++		return error;
++
++	/*
++	 * Advance start_daddr to the end of what we verified if there wasn't
++	 * an operational error.
++	 */
++	me->me_start_daddr = daddr;
++	trace_xfs_verify_media_end(mp, me, btp->bt_bdev->bd_dev);
++	return 0;
++}
++
++int
++xfs_ioc_verify_media(
++	struct file			*file,
++	struct xfs_verify_media __user	*arg)
++{
++	struct xfs_verify_media		me;
++	struct xfs_inode		*ip = XFS_I(file_inode(file));
++	struct xfs_mount		*mp = ip->i_mount;
++	int				error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	if (copy_from_user(&me, arg, sizeof(me)))
++		return -EFAULT;
++
++	if (me.me_pad)
++		return -EINVAL;
++	if (me.me_flags & ~XFS_VERIFY_MEDIA_FLAGS)
++		return -EINVAL;
++
++	switch (me.me_dev) {
++	case XFS_DEV_DATA:
++	case XFS_DEV_LOG:
++	case XFS_DEV_RT:
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	error = xfs_verify_media(mp, &me);
++	if (error)
++		return error;
++
++	if (copy_to_user(arg, &me, sizeof(me)))
++		return -EFAULT;
++
++	return 0;
++}
