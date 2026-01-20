@@ -1,134 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53CDE33439F;
-	Tue, 20 Jan 2026 17:27:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D88E314D3F
+	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 17:31:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768930020; cv=none; b=Zx7JAxDOwgles5SWlSabgAqJ9u/ZttSGkOZR7ugABLvLwlzmd0Qc5PRJIR6ZuhHm4lgeqiCZAHtQu6lgCjoX4/wLpvkKv900+DdFpHmmh/kBm2ia4XP2isWFWpQBV7ZsFNBbeoV/y6lzVsvUwRN9Byr1rdXFCmPfAw3xdVwP1o8=
+	t=1768930280; cv=none; b=DmWkR+BJixP3AFd7ZanI/6t+FJ7I+oMjY6p0Ll2ZgTRgaXg6NcC5XLPIwTwGSVhevydMKafFdvxjxdLah/Xu4IOHqygfOTkMiNCDlIiRMK1Q9yCaVc738v9oDv5+Pmock+al5Sw6B71eF7EALUP8GjHmEEwKPBVLNzOYt1XWclU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768930020; c=relaxed/simple;
-	bh=bc9vokYqyjabIGtTQIBJIXCFeY5ewweEqWg1TjCb27A=;
+	s=arc-20240116; t=1768930280; c=relaxed/simple;
+	bh=v7QSd+oLWueG4i84CVgl9lG8Swc1CRyse5IWPSCB0C4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jihvTaBUPPok04mnaSdYKzqa2nfxKcYrB/GMW5Gz/h591yy/XeewWhnumPhHtnJbVe2Imo4e7312besmNeDbOSX64h3/phKL1GTzXbevjYaU7MG+KRTVDFvspFmrtq5SbXINnr5FYikE10gMoCU/cUr32w15VdWtFH8NnLZjMGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FYsT7x58; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uDz9JTR8185scBz37pxanubIwtoW4//LN3rDo50ud+kBH5W8c7C3GA3qh/q2Mfuef/2Qn3OSJEJFlTMJDVnIk5ZFfdkLC8SUAQvSZ0deSHJQ/R9HBcn5pgVL07vH+FhnE/CR6xZ7ANNPsZa0PyFE68VGCLQQNB36wv3aF8yLvlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BJXvcXzd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FYsT7x58"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8117C16AAE;
-	Tue, 20 Jan 2026 17:26:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BJXvcXzd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7063C16AAE;
+	Tue, 20 Jan 2026 17:31:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768930020;
-	bh=bc9vokYqyjabIGtTQIBJIXCFeY5ewweEqWg1TjCb27A=;
+	s=k20201202; t=1768930279;
+	bh=v7QSd+oLWueG4i84CVgl9lG8Swc1CRyse5IWPSCB0C4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FYsT7x58kimq/jRPuq+W7AWYsEzNI1Ctiv+YFo2IzrzLION8Ada5lXUnMvl59uht/
-	 jhfI6N6vkDD24p8VGh3TH39Gp5V4VTgeUpkY83OPyY5EMZWgQq9TbNDmzHXG50Bqn5
-	 4mLj+C/C5tyNO+5JHD41g+49CVdk+AkT0bv9JLJ+KaiYBAt03KfuVvx3cdCcwrJIy0
-	 66VShfBsfVYbShV7C6dbHuhMyUX0WHmhwnexU5BElx5UgiQjzcyTvde77JhGorRWMT
-	 JSjambYHWMOX82hTu7wF8JtwmBBwY8+oVRNcyHTP3jghMfW36cm99Vjnvn7lhsAs+i
-	 L2q48nshwZsrA==
-Date: Tue, 20 Jan 2026 09:26:59 -0800
+	b=BJXvcXzdRv+Gn2KNO1OIGXunMYG2gNcPnh7pvs6Bj2yt1/92GVPG5gjDqzAu0s8p8
+	 Q9zB7tBTo+OvTQ31+6/j2/lkNSOs/vFbZAuEiQXkLvzypH/mIRHR0nhb6boQc3jQ+H
+	 warTm1lO2gB4iM8sIyUuT7of4TliS7jLr0u2GJ1dGt4cWjCaJRRdb1QdyTXsxfp20B
+	 L2izr4RRwiicI8H782QtS8syRGa38aetW3sZBTy2ypQUMuW451bJLJvuacHKXlfbJJ
+	 ybSM6NnZ4w2bk8mAHtGswcMmlj+fg9mReHEpOFvX5/AGxMTIIrNaOJINpX1KoeNFOo
+	 D5yXQ5CjbGBRA==
+Date: Tue, 20 Jan 2026 09:31:19 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH 6.12.y] xfs: set max_agbno to allow sparse alloc of last
- full inode chunk
-Message-ID: <20260120172659.GR15551@frogsfrogsfrogs>
-References: <2026012006-doorway-print-237d@gregkh>
- <20260120164038.137155-1-bfoster@redhat.com>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Andrey Albershteyn <aalbersh@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 1/4] xfs: use blkdev_report_zones_cached()
+Message-ID: <20260120173119.GS15551@frogsfrogsfrogs>
+References: <20260109162324.2386829-1-hch@lst.de>
+ <20260109162324.2386829-2-hch@lst.de>
+ <yw6bc76kuh56avbb5nxlvdkrattk57s5z65defzbdoohp5wtvt@h346oio32jdk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260120164038.137155-1-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <yw6bc76kuh56avbb5nxlvdkrattk57s5z65defzbdoohp5wtvt@h346oio32jdk>
 
-On Tue, Jan 20, 2026 at 11:40:38AM -0500, Brian Foster wrote:
-> Sparse inode cluster allocation sets min/max agbno values to avoid
-> allocating an inode cluster that might map to an invalid inode
-> chunk. For example, we can't have an inode record mapped to agbno 0
-> or that extends past the end of a runt AG of misaligned size.
+On Tue, Jan 20, 2026 at 03:28:29PM +0100, Andrey Albershteyn wrote:
+> On 2026-01-09 17:22:52, Christoph Hellwig wrote:
+> > From: Damien Le Moal <dlemoal@kernel.org>
+> > 
+> > Source kernel commit: e04ccfc28252f181ea8d469d834b48e7dece65b2
+> > 
+> > Modify xfs_mount_zones() to replace the call to blkdev_report_zones()
+> > with blkdev_report_zones_cached() to speed-up mount operations.
+> > Since this causes xfs_zone_validate_seq() to see zones with the
+> > BLK_ZONE_COND_ACTIVE condition, this function is also modified to acept
+> > this condition as valid.
+> > 
+> > With this change, mounting a freshly formatted large capacity (30 TB)
+> > SMR HDD completes under 2s compared to over 4.7s before.
+> > 
+> > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> > Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> > Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  include/platform_defs.h | 4 ++++
+> >  libxfs/xfs_zones.c      | 1 +
+> >  2 files changed, 5 insertions(+)
+> > 
+> > diff --git a/include/platform_defs.h b/include/platform_defs.h
+> > index da966490b0f5..cfdaca642645 100644
+> > --- a/include/platform_defs.h
+> > +++ b/include/platform_defs.h
+> > @@ -307,4 +307,8 @@ struct kvec {
+> >  	size_t iov_len;
+> >  };
+> >  
+> > +#ifndef BLK_ZONE_COND_ACTIVE /* added in Linux 6.19 */
+> > +#define BLK_ZONE_COND_ACTIVE	0xff
 > 
-> The initial calculation of max_agbno is unnecessarily conservative,
-> however. This has triggered a corner case allocation failure where a
-> small runt AG (i.e. 2063 blocks) is mostly full save for an extent
-> to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
-> case, which happens to be the offset of the last possible valid
-> inode chunk in the AG. In practice, we should be able to allocate
-> the 4-block cluster at agbno 2052 to map to the parent inode record
-> at agbno 2048, but the max_agbno value precludes it.
+> hmm I think #ifndef doesn't work for enum member. Compiling against
+> linux 6.19-rc6: 
 > 
-> Note that this can result in filesystem shutdown via dirty trans
-> cancel on stable kernels prior to commit 9eb775968b68 ("xfs: walk
-> all AGs if TRYLOCK passed to xfs_alloc_vextent_iterate_ags") because
-> the tail AG selection by the allocator sets t_highest_agno on the
-> transaction. If the inode allocator spins around and finds an inode
-> chunk with free inodes in an earlier AG, the subsequent dir name
-> creation path may still fail to allocate due to the AG restriction
-> and cancel.
-> 
-> To avoid this problem, update the max_agbno calculation to the agbno
-> prior to the last chunk aligned agbno in the AG. This is not
-> necessarily the last valid allocation target for a sparse chunk, but
-> since inode chunks (i.e. records) are chunk aligned and sparse
-> allocs are cluster sized/aligned, this allows the sb_spino_align
-> alignment restriction to take over and round down the max effective
-> agbno to within the last valid inode chunk in the AG.
-> 
-> Note that even though the allocator improvements in the
-> aforementioned commit seem to avoid this particular dirty trans
-> cancel situation, the max_agbno logic improvement still applies as
-> we should be able to allocate from an AG that has been appropriately
-> selected. The more important target for this patch however are
-> older/stable kernels prior to this allocator rework/improvement.
-> 
-> Cc: stable@vger.kernel.org # v4.2
-> Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Carlos Maiolino <cem@kernel.org>
-> (cherry picked from commit c360004c0160dbe345870f59f24595519008926f)
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ../include/platform_defs.h:311:33: error: expected identifier before numeric constant
+>   311 | #define BLK_ZONE_COND_ACTIVE    0xff
+>       |                                 ^~~~
+> /linux-headers-v6.19-rc6/include/linux/blkzoned.h:84:9: note: in expansion of macro ‘BLK_ZONE_COND_ACTIVE’
+>    84 |         BLK_ZONE_COND_ACTIVE    = 0xFF,
+>       |         ^~~~~~~~~~~~~~~~~~~~
 
-Looks like a correct backport to me,
-Acked-by: "Darrick J. Wong" <djwong@kernel.org>
+I hacked around this very crudely:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=djwong-wtf&id=d5d9b4bd2da95c7b9429112f1c1098a62f155270
+
+Though I think one of hch's fix patches fixed that.  I cannot post a
+lore link because the #@!%)*&!%!!! anubis b@%#%!!! is completely broken
+and will not let me in.  But we did the review for the kernel-side fixes
+within the last couple of weeks.
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 6258527315f2..8223464e23e7 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -850,15 +850,16 @@ xfs_ialloc_ag_alloc(
->  		 * invalid inode records, such as records that start at agbno 0
->  		 * or extend beyond the AG.
->  		 *
-> -		 * Set min agbno to the first aligned, non-zero agbno and max to
-> -		 * the last aligned agbno that is at least one full chunk from
-> -		 * the end of the AG.
-> +		 * Set min agbno to the first chunk aligned, non-zero agbno and
-> +		 * max to one less than the last chunk aligned agbno from the
-> +		 * end of the AG. We subtract 1 from max so that the cluster
-> +		 * allocation alignment takes over and allows allocation within
-> +		 * the last full inode chunk in the AG.
->  		 */
->  		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
->  		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
->  							pag->pag_agno),
-> -					    args.mp->m_sb.sb_inoalignmt) -
-> -				 igeo->ialloc_blks;
-> +					    args.mp->m_sb.sb_inoalignmt) - 1;
->  
->  		error = xfs_alloc_vextent_near_bno(&args,
->  				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
 > -- 
-> 2.52.0
+> - Andrey
 > 
 > 
