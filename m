@@ -1,36 +1,36 @@
 Received: from forward205a.mail.yandex.net (forward205a.mail.yandex.net [178.154.239.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887F243900A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E5D33F23DA;
 	Tue, 20 Jan 2026 14:23:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768919041; cv=none; b=Zm4BK2ObXllLevD6WHR5fGoXKaH7g2Sa2UXgkLo1OwFfERkgHeSPG8AuVJeq6uZCRw/1rMJB3hloXF1xpvIZ+l7r1FOnqy6Hn5UUN33MFFlF5xhlj/Cxem0JuPXd/DotViicJOADy6+1v03QU+Pj7Wzp0UN6LGDd5w4ZjTYUTcM=
+	t=1768919041; cv=none; b=UoROviz1AJyCzqI085udRYxGQ+7jOEixDFEiREaBRUt2MYDaAuVrRHQIr9Nfx+fu70kFaW2MEVWvyi+GfcbMCthAUkaccp/7/0QcwTJugzc91T+jf1HV0Xx2S/IjyF6S32OIwdpGxLg9IcZTXe6y7tB7315x2fiC5T+4aGG+8+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768919041; c=relaxed/simple;
-	bh=ujnImJ5exRe0yi5EUVA/wufB3t5SKHkOKVw66nKqbyo=;
+	bh=WzpMbZgQu3K4W6EDET40JNbZc+YN/FIy8TZFEuIAjBQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dmtlAf+QWXXUsqo9/hpUpoDUOym2mZwN/XlWSC+NZZwLOUxZ78brH7chmcuXAtGpbyMynUxoUJu76UNGXXLF93eylc4ZRue3YTJkzivDJz86Bedq2mdKKcFNTBkc0bjTODwvqcosWYtJ6x8QqTXCBbMZpfhhcPfuH4UUmuXk85U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=uY5EAuot; arc=none smtp.client-ip=178.154.239.88
+	 MIME-Version; b=X7kIWHBXkeq25Bch9avh0/y5uXxuVCgCvzInEWZcrb4dOAww6+5HvR2bubjlpUTpSV5U32fJ9Xh/9D7SIPiVf4aGHII8ueFO8WQo1LixzMzyQqfy9g9Cwb7qFqAcIYrTu/46XTRWGgT9FnWYR6dU70JNmTPLNg8MPE5MEV0JGdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=MEYNHT3C; arc=none smtp.client-ip=178.154.239.88
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="uY5EAuot"
-Received: from forward102a.mail.yandex.net (forward102a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d102])
-	by forward205a.mail.yandex.net (Yandex) with ESMTPS id 029D7C5413;
-	Tue, 20 Jan 2026 17:16:01 +0300 (MSK)
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="MEYNHT3C"
+Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d101])
+	by forward205a.mail.yandex.net (Yandex) with ESMTPS id D1D56C5308;
+	Tue, 20 Jan 2026 17:16:00 +0300 (MSK)
 Received: from mail-nwsmtp-smtp-production-main-97.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-97.vla.yp-c.yandex.net [IPv6:2a02:6b8:c15:2804:0:640:a3ea:0])
-	by forward102a.mail.yandex.net (Yandex) with ESMTPS id F1F75C0087;
-	Tue, 20 Jan 2026 17:15:52 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-97.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id nFbKhtwHIOs0-uZMNZjlQ;
-	Tue, 20 Jan 2026 17:15:52 +0300
+	by forward101a.mail.yandex.net (Yandex) with ESMTPS id 7ADF580E10;
+	Tue, 20 Jan 2026 17:15:51 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-97.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id nFbKhtwHIOs0-caNFhe1s;
+	Tue, 20 Jan 2026 17:15:50 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1768918552; bh=aObK7a76rOayb1EldDOWUMHoy31WU8xcXiWciGnAf/o=;
+	t=1768918551; bh=gvCcVnb5ucvM3yIsuEjtt+WPA1Hw2EKrLVQRUjzdFsQ=;
 	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-	b=uY5EAuoty449jVdFi2J9UPNOdMWbrP4ycnZG2yPM6/3/BiyhUUhp3rqTTRoL77q9g
-	 hOo8rNpSqhwBVFME/4slg2BahWfGI1ete28irkmRIFQJebPddSC5On+9O67ehqFm6s
-	 B0hQ7IUz3NB8LeeYSvji92Eh/5giGmlsp2hKzgxM=
+	b=MEYNHT3CiukRbKZY9+ySiswQ5e7dmOHv/LUJiCJPvhuy8jb4u7aipDJymfch4GiSn
+	 IcJd44hYojgzJMQJkO1B2mrd20wAUmhS3eYGu7UP+aa0uSeQWH+aRjm4PP8Y0kH9bQ
+	 ieJP+Bi1FpOcwJ27RBGjyJGF3LcgzGnwafWxN+C8=
 Authentication-Results: mail-nwsmtp-smtp-production-main-97.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
 From: Dmitry Antipov <dmantipov@yandex.ru>
 To: Andrew Morton <akpm@linux-foundation.org>,
@@ -41,13 +41,12 @@ Cc: Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-hardening@vger.kernel.org,
 	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH v4 3/3] xfs: adjust handling of a few numerical mount options
-Date: Tue, 20 Jan 2026 17:12:29 +0300
-Message-ID: <20260120141229.356513-3-dmantipov@yandex.ru>
+Subject: [PATCH v4 1/3] lib: introduce simple error-checking wrapper for memparse()
+Date: Tue, 20 Jan 2026 17:12:27 +0300
+Message-ID: <20260120141229.356513-1-dmantipov@yandex.ru>
 X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260120141229.356513-1-dmantipov@yandex.ru>
+In-Reply-To: <20260119160623.a762c3d64f230936198dc17e@linux-foundation.org>
 References: <20260119160623.a762c3d64f230936198dc17e@linux-foundation.org>
- <20260120141229.356513-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,200 +55,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Prefer recently introduced 'memvalue()' over an ad-hoc 'suffix_kstrtoint()'
-and 'suffix_kstrtoull()' to parse and basically validate the values passed
-via 'logbsize', 'allocsize', and 'max_atomic_write' mount options, and
-reject non-power-of-two values passed via the first and second one early
-in 'xfs_fs_parse_param()' rather than in 'xfs_fs_validate_params()'.
+Introduce 'memvalue()' which uses 'memparse()' to parse a string
+with optional memory suffix into a non-negative number. If parsing
+has succeeded, returns 0 and stores the result at the location
+specified by the second argument. Otherwise returns -EINVAL and
+leaves the location untouched.
 
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Suggested-by: Kees Cook <kees@kernel.org>
 Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
-v4: bump version to match the series
-v3: adjust to match new 'memvalue()' syntax
-v2: rely on 'memvalue()' as (well, IIUC) suggested by Christoph and
-    handle both 'logbsize' and 'allocsize' in 'xfs_fs_parse_param()'
+v4: adjust documentation to match kernel-doc -Wreturn's style
+v3: adjust as suggested by Kees and bump version to match the series
 ---
- fs/xfs/xfs_super.c | 127 +++++++++++----------------------------------
- 1 file changed, 29 insertions(+), 98 deletions(-)
+ include/linux/string.h |  1 +
+ lib/cmdline.c          | 26 ++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bc71aa9dcee8..4707cd3acf73 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1319,77 +1319,6 @@ static const struct super_operations xfs_super_operations = {
- 	.show_stats		= xfs_fs_show_stats,
- };
+diff --git a/include/linux/string.h b/include/linux/string.h
+index 1b564c36d721..470c7051c58b 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -319,6 +319,7 @@ DEFINE_FREE(argv_free, char **, if (!IS_ERR_OR_NULL(_T)) argv_free(_T))
+ extern int get_option(char **str, int *pint);
+ extern char *get_options(const char *str, int nints, int *ints);
+ extern unsigned long long memparse(const char *ptr, char **retptr);
++extern int __must_check memvalue(const char *ptr, unsigned long long *valptr);
+ extern bool parse_option_str(const char *str, const char *option);
+ extern char *next_arg(char *args, char **param, char **val);
  
--static int
--suffix_kstrtoint(
--	const char	*s,
--	unsigned int	base,
--	int		*res)
--{
--	int		last, shift_left_factor = 0, _res;
--	char		*value;
--	int		ret = 0;
--
--	value = kstrdup(s, GFP_KERNEL);
--	if (!value)
--		return -ENOMEM;
--
--	last = strlen(value) - 1;
--	if (value[last] == 'K' || value[last] == 'k') {
--		shift_left_factor = 10;
--		value[last] = '\0';
--	}
--	if (value[last] == 'M' || value[last] == 'm') {
--		shift_left_factor = 20;
--		value[last] = '\0';
--	}
--	if (value[last] == 'G' || value[last] == 'g') {
--		shift_left_factor = 30;
--		value[last] = '\0';
--	}
--
--	if (kstrtoint(value, base, &_res))
--		ret = -EINVAL;
--	kfree(value);
--	*res = _res << shift_left_factor;
--	return ret;
--}
--
--static int
--suffix_kstrtoull(
--	const char		*s,
--	unsigned int		base,
--	unsigned long long	*res)
--{
--	int			last, shift_left_factor = 0;
--	unsigned long long	_res;
--	char			*value;
--	int			ret = 0;
--
--	value = kstrdup(s, GFP_KERNEL);
--	if (!value)
--		return -ENOMEM;
--
--	last = strlen(value) - 1;
--	if (value[last] == 'K' || value[last] == 'k') {
--		shift_left_factor = 10;
--		value[last] = '\0';
--	}
--	if (value[last] == 'M' || value[last] == 'm') {
--		shift_left_factor = 20;
--		value[last] = '\0';
--	}
--	if (value[last] == 'G' || value[last] == 'g') {
--		shift_left_factor = 30;
--		value[last] = '\0';
--	}
--
--	if (kstrtoull(value, base, &_res))
--		ret = -EINVAL;
--	kfree(value);
--	*res = _res << shift_left_factor;
--	return ret;
--}
--
- static inline void
- xfs_fs_warn_deprecated(
- 	struct fs_context	*fc,
-@@ -1427,8 +1356,8 @@ xfs_fs_parse_param(
- {
- 	struct xfs_mount	*parsing_mp = fc->s_fs_info;
- 	struct fs_parse_result	result;
--	int			size = 0;
--	int			opt;
-+	int			opt, ret;
-+	unsigned long long	val;
- 
- 	BUILD_BUG_ON(XFS_QFLAGS_MNTOPTS & XFS_MOUNT_QUOTA_ALL);
- 
-@@ -1444,8 +1373,19 @@ xfs_fs_parse_param(
- 		parsing_mp->m_logbufs = result.uint_32;
- 		return 0;
- 	case Opt_logbsize:
--		if (suffix_kstrtoint(param->string, 10, &parsing_mp->m_logbsize))
-+		ret = memvalue(param->string, &val);
-+		if (ret)
-+			return ret;
-+		if (val != 0 &&
-+		    (val < XLOG_MIN_RECORD_BSIZE ||
-+		     val > XLOG_MAX_RECORD_BSIZE ||
-+		     !is_power_of_2(val))) {
-+			xfs_warn(parsing_mp,
-+				 "invalid logbsize %llu: not a power-of-two in [%u..%u]",
-+				 val, XLOG_MIN_RECORD_BSIZE, XLOG_MAX_RECORD_BSIZE);
- 			return -EINVAL;
-+		}
-+		parsing_mp->m_logbsize = val;
- 		return 0;
- 	case Opt_logdev:
- 		kfree(parsing_mp->m_logname);
-@@ -1460,9 +1400,18 @@ xfs_fs_parse_param(
- 			return -ENOMEM;
- 		return 0;
- 	case Opt_allocsize:
--		if (suffix_kstrtoint(param->string, 10, &size))
-+		ret = memvalue(param->string, &val);
-+		if (ret)
-+			return ret;
-+		if (val < (1ULL << XFS_MIN_IO_LOG) ||
-+		    val > (1ULL << XFS_MAX_IO_LOG) ||
-+		    !is_power_of_2(val)) {
-+			xfs_warn(parsing_mp,
-+				 "invalid allocsize %llu: not a power-of-two in [%u..%u]",
-+				 val, 1 << XFS_MIN_IO_LOG, 1 << XFS_MAX_IO_LOG);
- 			return -EINVAL;
--		parsing_mp->m_allocsize_log = ffs(size) - 1;
-+		}
-+		parsing_mp->m_allocsize_log = ffs(val) - 1;
- 		parsing_mp->m_features |= XFS_FEAT_ALLOCSIZE;
- 		return 0;
- 	case Opt_grpid:
-@@ -1570,12 +1519,13 @@ xfs_fs_parse_param(
- 		parsing_mp->m_features |= XFS_FEAT_NOLIFETIME;
- 		return 0;
- 	case Opt_max_atomic_write:
--		if (suffix_kstrtoull(param->string, 10,
--				     &parsing_mp->m_awu_max_bytes)) {
-+		ret = memvalue(param->string, &val);
-+		if (ret) {
- 			xfs_warn(parsing_mp,
-  "max atomic write size must be positive integer");
--			return -EINVAL;
-+			return ret;
- 		}
-+		parsing_mp->m_awu_max_bytes = val;
- 		return 0;
- 	default:
- 		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
-@@ -1629,25 +1579,6 @@ xfs_fs_validate_params(
- 		return -EINVAL;
- 	}
- 
--	if (mp->m_logbsize != -1 &&
--	    mp->m_logbsize !=  0 &&
--	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
--	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
--	     !is_power_of_2(mp->m_logbsize))) {
--		xfs_warn(mp,
--			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
--			mp->m_logbsize);
--		return -EINVAL;
--	}
--
--	if (xfs_has_allocsize(mp) &&
--	    (mp->m_allocsize_log > XFS_MAX_IO_LOG ||
--	     mp->m_allocsize_log < XFS_MIN_IO_LOG)) {
--		xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
--			mp->m_allocsize_log, XFS_MIN_IO_LOG, XFS_MAX_IO_LOG);
--		return -EINVAL;
--	}
--
- 	return 0;
+diff --git a/lib/cmdline.c b/lib/cmdline.c
+index 90ed997d9570..28048d05eb35 100644
+--- a/lib/cmdline.c
++++ b/lib/cmdline.c
+@@ -190,6 +190,32 @@ unsigned long long memparse(const char *ptr, char **retptr)
  }
+ EXPORT_SYMBOL(memparse);
  
++/**
++ *	memvalue -  Wrap memparse() with simple error detection
++ *	@ptr: Where parse begins
++ *	@valptr: Where to store result
++ *
++ *	Uses memparse() to parse a string into a number stored at
++ *	@valptr, leaving memory at @valptr untouched in case of error.
++ *
++ *	Return: -EINVAL for a presumably negative value or if an
++ *	unrecognized character was encountered, and 0 otherwise.
++ */
++int __must_check memvalue(const char *ptr, unsigned long long *valptr)
++{
++	unsigned long long ret;
++	char *end;
++
++	if (*ptr == '-')
++		return -EINVAL;
++	ret = memparse(ptr, &end);
++	if (*end)
++		return -EINVAL;
++	*valptr = ret;
++	return 0;
++}
++EXPORT_SYMBOL(memvalue);
++
+ /**
+  *	parse_option_str - Parse a string and check an option is set or not
+  *	@str: String to be parsed
 -- 
 2.52.0
 
