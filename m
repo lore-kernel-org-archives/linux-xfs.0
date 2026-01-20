@@ -1,142 +1,187 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from flow-b8-smtp.messagingengine.com (flow-b8-smtp.messagingengine.com [202.12.124.143])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02A77318EDC
-	for <linux-xfs@vger.kernel.org>; Tue, 20 Jan 2026 16:40:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 970412FF16F;
+	Tue, 20 Jan 2026 16:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.143
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768927248; cv=none; b=c5W0AyAgSnR8XMOFwzwE6u9jqcVvCXPFDf19IBMch3ZfzSiBodAa5zAwYM2uASTeaGT1Vgnw6Uyqg/3tlvGllvDCGETXrlTrwunjjgazizRkLiTDLRwlxPq/52mquJ0hkubm/3ejTVjlabvqkrYHPpLrdZK3ZnX9KniQo4u0LYQ=
+	t=1768927507; cv=none; b=h6gmqj/G5Vm3fpVJEM/9g33/XHZxMciIu2yAhP+bcTHTnbQn5nfQfZ2izqC2y5+nzIPhK4JSXfo7atXaj53VCe5Qh+T4VtcmXm3AQV0jEKGZKBsnEGIe/9BnDnCbYglLNWNr9/6rwL2uNqQIWnrrV8o9bplPAFfwnldkREvHoMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768927248; c=relaxed/simple;
-	bh=3jEVM0fSGdlcPmZDbuxkAFtGF0fcGhC0jUQpxgnM5v4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NCHy7oEp1Y8pyXLcL9Anu2xyL1VS15Nhhv5/R9oDx8E5HgBjRFHrZx56X5cFR66uQvNsuMInghF6HjWoG93tFxt6Cxy93QDCZLVKWq2MUPWu8EWAOzJHMBMQUf6EWOxy2FZK/F+0qGDPAL5UofvKVzJADNJ6u0a5Qa1jnwAts+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OhHOyVY7; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1768927507; c=relaxed/simple;
+	bh=kZcp2PHuxyss+VI4RFZDelap38d4uiw9WboOiWNBp1g=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=oeg1Q0hMG+V5ki2Y6eB7XKGtNlp+Lng1GjjasG8ujNxeaPhn+RT4SRjFwrSGpUKDj5eo2NScoHK6ZQpAYmYVDUUJRTiivd897vVxTf1voxwaOaaPvzuHT9BA79ef4F3H/d2UBkbze5bOs/1jofX65xx3MPmzdxvHYDPakoY85Ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=fhnYraYl; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=qWIXbyzO; arc=none smtp.client-ip=202.12.124.143
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OhHOyVY7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768927245;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=weJ5Q8NmI7MNAFeUd2SgLH+8zS7Ip+jkYCIzM55COyw=;
-	b=OhHOyVY7AhQFnQkrVpJ9dIdvuY5n7DpYpxpD2XGRmnX+EdUv3pJoOd6F1qltJaIs5MDJqb
-	SbM4j51uF3sgzEp2A6ktDRC2isgQpwr8izTUG+oT2tc7QbXmFBgWv5JGMu9PBm1j1H9zT/
-	y8X/I4JZnpl0Yl48TmLl1UW5vHU9kL8=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-Tyz-UouYPNetg-9uavTFqw-1; Tue,
- 20 Jan 2026 11:40:41 -0500
-X-MC-Unique: Tyz-UouYPNetg-9uavTFqw-1
-X-Mimecast-MFC-AGG-ID: Tyz-UouYPNetg-9uavTFqw_1768927240
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8ACD1180047F;
-	Tue, 20 Jan 2026 16:40:40 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.64.128])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B92721800665;
-	Tue, 20 Jan 2026 16:40:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH 6.12.y] xfs: set max_agbno to allow sparse alloc of last full inode chunk
-Date: Tue, 20 Jan 2026 11:40:38 -0500
-Message-ID: <20260120164038.137155-1-bfoster@redhat.com>
-In-Reply-To: <2026012006-doorway-print-237d@gregkh>
-References: <2026012006-doorway-print-237d@gregkh>
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="fhnYraYl";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="qWIXbyzO"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailflow.stl.internal (Postfix) with ESMTP id BC47F130057C;
+	Tue, 20 Jan 2026 11:45:02 -0500 (EST)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-04.internal (MEProxy); Tue, 20 Jan 2026 11:45:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1768927502;
+	 x=1768934702; bh=nxbkJAISpw9hnpQ7/ITBBIUz+TKq+iocNACRaG8UpNs=; b=
+	fhnYraYlrrq+RP9vqomjRQwsQ9mvhXiuGoV4zAKoX+FhTObAWpIa/drZeA1aUcS0
+	bGSjbl2pphX0I3WOvR7J1T5RQu306RrAZx1yxTQAzDYh+wjMAb2zsJ/Ru211VkD0
+	FFJ6j0oPV0gG3GS8DlU5g6mtmb2W4aXnwusi1bMFGWZzFtU2B+qpeOy/FH2ODMq0
+	vzYckmbQQCcqlugFQrAP8w49E3LWH4xUcJI/9pt685VYzTEzbryK3io8dNxcRsRU
+	EhDDmJvfexMY7ImJBBzrfKPqM5G7SS+YxvYcjwUWwySEYGHSbyvMjvAYz8htDnrB
+	YqpzDhH0ItWDCgYrVxYVug==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1768927502; x=
+	1768934702; bh=nxbkJAISpw9hnpQ7/ITBBIUz+TKq+iocNACRaG8UpNs=; b=q
+	WIXbyzOT6bq7HDqgS8ADTf9ZTfFpXm4Lk/scmRmwwLIqRtX4iWxKYlSw5YxYH6Jp
+	/dNbZVMVciC6c0ld15ThSY0vdpLcNdHNHO+A/EJnGIbQNONcPZhp0To5VUqLk0Z6
+	ZUZvoiQlGdbj5hePd+k9+rmMo18oFTujr6iQ+uVJWIQjwvKq5z3VTMhRyFyHmMtl
+	AsSyfsdcA8dTLYuwsyX/Nvn6HAZUNUI4puT89ClU7s0KSSEAUu2rbe6jtLpK1t0j
+	9uaHOe0inhxcQXuaVqU+R6SwOxCUKcnjtqIoRiAzP6V+iuafRLGaofHkcXXhBmC8
+	LHmEkyUOUc8uVEftPQ5LA==
+X-ME-Sender: <xms:DbFvaXr4c-86Yk4cy1FDNkTs5jtIv5zDtK6qsn0iIPj0fevKJtnXWA>
+    <xme:DbFvacc7pd2GFBJVN7Rx4wuUlNgidN6Lb0NpLsLVug_3gLwImcsW-JS6z0GmoznKw
+    7sfuZPlsawKzl0PZGtgn2t3ir6P5j3MTUBpyBnCsP5sbt2ZtbYaN70>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddugedtledvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrnhgu
+    uceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrthhtvg
+    hrnhephfdthfdvtdefhedukeetgefggffhjeeggeetfefggfevudegudevledvkefhvdei
+    necuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghrnh
+    gusegrrhhnuggsrdguvgdpnhgspghrtghpthhtohepgeefpdhmohguvgepshhmthhpohhu
+    thdprhgtphhtthhopehjrghnihdrnhhikhhulhgrsehlihhnuhigrdhinhhtvghlrdgtoh
+    hmpdhrtghpthhtohepjhhoohhnrghsrdhlrghhthhinhgvnheslhhinhhugidrihhnthgv
+    lhdrtghomhdprhgtphhtthhopehmrggrrhhtvghnrdhlrghnkhhhohhrshhtsehlihhnuh
+    igrdhinhhtvghlrdgtohhmpdhrtghpthhtohepghhrvghgkhhhsehlihhnuhigfhhouhhn
+    uggrthhiohhnrdhorhhgpdhrtghpthhtohepughrihdquggvvhgvlheslhhishhtshdrfh
+    hrvggvuggvshhkthhophdrohhrghdprhgtphhtthhopehinhhtvghlqdhgfhigsehlihhs
+    thhsrdhfrhgvvgguvghskhhtohhprdhorhhgpdhrtghpthhtohepnhhtfhhsfeeslhhish
+    htshdrlhhinhhugidruggvvhdprhgtphhtthhopehnvhguihhmmheslhhishhtshdrlhhi
+    nhhugidruggvvhdprhgtphhtthhopeguvghvvghlsehlihhsthhsrdhorhgrnhhgvghfsh
+    drohhrgh
+X-ME-Proxy: <xmx:DbFvaVjsaIBoCwQLmeUwd0lsKZv61M6naBb8iovN1Apy42D6gDYYoQ>
+    <xmx:DbFvaWXro2koE-VHeVm4FWVeO1IgJQVmKvbTjG72moOpuTbwbax8ug>
+    <xmx:DbFvaZw9P5oCYGc2UiGpsv86qoRgTlhwqCZGPNxFL95wr8ogXh9Wmg>
+    <xmx:DbFvaexZdjp0Zge5ynjLEvqdDZN9C_7oGW6WcBL8XKs1rkv1cSPqlw>
+    <xmx:DrFvadBndY7ACKn2QdkvHwHl4Yp28phKBg7OjiN7y5QfUc9wcmOqmx7_>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 13CA1700069; Tue, 20 Jan 2026 11:45:01 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-ThreadId: AWSx1lsrOtaB
+Date: Tue, 20 Jan 2026 17:44:29 +0100
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Lorenzo Stoakes" <lorenzo.stoakes@oracle.com>
+Cc: "Jason Gunthorpe" <jgg@nvidia.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Jarkko Sakkinen" <jarkko@kernel.org>,
+ "Dave Hansen" <dave.hansen@linux.intel.com>,
+ "Thomas Gleixner" <tglx@kernel.org>, "Ingo Molnar" <mingo@redhat.com>,
+ "Borislav Petkov" <bp@alien8.de>, x86@kernel.org,
+ "H. Peter Anvin" <hpa@zytor.com>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Dan Williams" <dan.j.williams@intel.com>,
+ "Vishal Verma" <vishal.l.verma@intel.com>,
+ "Dave Jiang" <dave.jiang@intel.com>,
+ "Maarten Lankhorst" <maarten.lankhorst@linux.intel.com>,
+ "Maxime Ripard" <mripard@kernel.org>,
+ "Thomas Zimmermann" <tzimmermann@suse.de>,
+ "Dave Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>,
+ "Jani Nikula" <jani.nikula@linux.intel.com>,
+ "Joonas Lahtinen" <joonas.lahtinen@linux.intel.com>,
+ "Rodrigo Vivi" <rodrigo.vivi@intel.com>,
+ "Tvrtko Ursulin" <tursulin@ursulin.net>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ "Huang Rui" <ray.huang@amd.com>, "Matthew Auld" <matthew.auld@intel.com>,
+ "Matthew Brost" <matthew.brost@intel.com>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ "Benjamin LaHaise" <bcrl@kvack.org>, "Gao Xiang" <xiang@kernel.org>,
+ "Chao Yu" <chao@kernel.org>, "Yue Hu" <zbestahu@gmail.com>,
+ "Jeffle Xu" <jefflexu@linux.alibaba.com>,
+ "Sandeep Dhavale" <dhavale@google.com>,
+ "Hongbo Li" <lihongbo22@huawei.com>, "Chunhai Guo" <guochunhai@vivo.com>,
+ "Theodore Ts'o" <tytso@mit.edu>,
+ "Andreas Dilger" <adilger.kernel@dilger.ca>,
+ "Muchun Song" <muchun.song@linux.dev>,
+ "Oscar Salvador" <osalvador@suse.de>,
+ "David Hildenbrand (Red Hat)" <david@kernel.org>,
+ "Konstantin Komarov" <almaz.alexandrovich@paragon-software.com>,
+ "Mike Marshall" <hubcap@omnibond.com>,
+ "Martin Brandenburg" <martin@omnibond.com>,
+ "Tony Luck" <tony.luck@intel.com>,
+ "Reinette Chatre" <reinette.chatre@intel.com>,
+ "Dave Martin" <Dave.Martin@arm.com>, "James Morse" <james.morse@arm.com>,
+ "Babu Moger" <babu.moger@amd.com>, "Carlos Maiolino" <cem@kernel.org>,
+ "Damien Le Moal" <dlemoal@kernel.org>,
+ "Naohiro Aota" <naohiro.aota@wdc.com>,
+ "Johannes Thumshirn" <jth@kernel.org>,
+ "Matthew Wilcox" <willy@infradead.org>,
+ "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+ "Vlastimil Babka" <vbabka@suse.cz>, "Mike Rapoport" <rppt@kernel.org>,
+ "Suren Baghdasaryan" <surenb@google.com>,
+ "Michal Hocko" <mhocko@suse.com>, "Hugh Dickins" <hughd@google.com>,
+ "Baolin Wang" <baolin.wang@linux.alibaba.com>, "Zi Yan" <ziy@nvidia.com>,
+ "Nico Pache" <npache@redhat.com>, "Ryan Roberts" <ryan.roberts@arm.com>,
+ "Dev Jain" <dev.jain@arm.com>, "Barry Song" <baohua@kernel.org>,
+ "Lance Yang" <lance.yang@linux.dev>, "Jann Horn" <jannh@google.com>,
+ "Pedro Falcato" <pfalcato@suse.de>,
+ "David Howells" <dhowells@redhat.com>,
+ "Paul Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>,
+ "Serge E. Hallyn" <serge@hallyn.com>,
+ "Yury Norov" <yury.norov@gmail.com>,
+ "Rasmus Villemoes" <linux@rasmusvillemoes.dk>, linux-sgx@vger.kernel.org,
+ linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ intel-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+ linux-aio@kvack.org, linux-erofs@lists.ozlabs.org,
+ linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev,
+ devel@lists.orangefs.org, linux-xfs@vger.kernel.org,
+ keyrings@vger.kernel.org, linux-security-module@vger.kernel.org
+Message-Id: <9ff58468-a72d-4984-95f4-d0a60554705d@app.fastmail.com>
+In-Reply-To: <44461883-a75c-466b-a278-97c4ab46b461@lucifer.local>
+References: <cover.1768857200.git.lorenzo.stoakes@oracle.com>
+ <baac396f309264c6b3ff30465dba0fbd63f8479c.1768857200.git.lorenzo.stoakes@oracle.com>
+ <20260119231403.GS1134360@nvidia.com>
+ <36abc616-471b-4c7b-82f5-db87f324d708@lucifer.local>
+ <20260120133619.GZ1134360@nvidia.com>
+ <488a0fd8-5d64-4907-873b-60cefee96979@lucifer.local>
+ <1617ac60-6261-483d-aeb5-13aba5f477af@app.fastmail.com>
+ <44461883-a75c-466b-a278-97c4ab46b461@lucifer.local>
+Subject: Re: [PATCH RESEND 09/12] mm: make vm_area_desc utilise vma_flags_t only
 Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Transfer-Encoding: 7bit
 
-Sparse inode cluster allocation sets min/max agbno values to avoid
-allocating an inode cluster that might map to an invalid inode
-chunk. For example, we can't have an inode record mapped to agbno 0
-or that extends past the end of a runt AG of misaligned size.
+On Tue, Jan 20, 2026, at 17:22, Lorenzo Stoakes wrote:
+> On Tue, Jan 20, 2026 at 05:00:28PM +0100, Arnd Bergmann wrote:
+>> On Tue, Jan 20, 2026, at 16:10, Lorenzo Stoakes wrote:
+>> >
+>> > It strikes me that the key optimisation here is the inlining, now if the issue
+>> > is that ye olde compiler might choose not to inline very small functions (seems
+>> > unlikely) we could always throw in an __always_inline?
+>>
+>> I can think of three specific things going wrong with structures passed
+>> by value:
+>
+> I mean now you seem to be talking about it _in general_ which, _in theory_,
+> kills the whole concept of bitmap VMA flags _altogether_ really, or at
+> least any workable version of them.
 
-The initial calculation of max_agbno is unnecessarily conservative,
-however. This has triggered a corner case allocation failure where a
-small runt AG (i.e. 2063 blocks) is mostly full save for an extent
-to the EOFS boundary: [2050,13]. max_agbno is set to 2048 in this
-case, which happens to be the offset of the last possible valid
-inode chunk in the AG. In practice, we should be able to allocate
-the 4-block cluster at agbno 2052 to map to the parent inode record
-at agbno 2048, but the max_agbno value precludes it.
+No, what I'm saying is "understand what the pitfalls are", not
+"don't do it". I think that is what Jason was also getting at.
 
-Note that this can result in filesystem shutdown via dirty trans
-cancel on stable kernels prior to commit 9eb775968b68 ("xfs: walk
-all AGs if TRYLOCK passed to xfs_alloc_vextent_iterate_ags") because
-the tail AG selection by the allocator sets t_highest_agno on the
-transaction. If the inode allocator spins around and finds an inode
-chunk with free inodes in an earlier AG, the subsequent dir name
-creation path may still fail to allocate due to the AG restriction
-and cancel.
-
-To avoid this problem, update the max_agbno calculation to the agbno
-prior to the last chunk aligned agbno in the AG. This is not
-necessarily the last valid allocation target for a sparse chunk, but
-since inode chunks (i.e. records) are chunk aligned and sparse
-allocs are cluster sized/aligned, this allows the sb_spino_align
-alignment restriction to take over and round down the max effective
-agbno to within the last valid inode chunk in the AG.
-
-Note that even though the allocator improvements in the
-aforementioned commit seem to avoid this particular dirty trans
-cancel situation, the max_agbno logic improvement still applies as
-we should be able to allocate from an AG that has been appropriately
-selected. The more important target for this patch however are
-older/stable kernels prior to this allocator rework/improvement.
-
-Cc: stable@vger.kernel.org # v4.2
-Fixes: 56d1115c9bc7 ("xfs: allocate sparse inode chunks on full chunk allocation failure")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-(cherry picked from commit c360004c0160dbe345870f59f24595519008926f)
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 6258527315f2..8223464e23e7 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -850,15 +850,16 @@ xfs_ialloc_ag_alloc(
- 		 * invalid inode records, such as records that start at agbno 0
- 		 * or extend beyond the AG.
- 		 *
--		 * Set min agbno to the first aligned, non-zero agbno and max to
--		 * the last aligned agbno that is at least one full chunk from
--		 * the end of the AG.
-+		 * Set min agbno to the first chunk aligned, non-zero agbno and
-+		 * max to one less than the last chunk aligned agbno from the
-+		 * end of the AG. We subtract 1 from max so that the cluster
-+		 * allocation alignment takes over and allows allocation within
-+		 * the last full inode chunk in the AG.
- 		 */
- 		args.min_agbno = args.mp->m_sb.sb_inoalignmt;
- 		args.max_agbno = round_down(xfs_ag_block_count(args.mp,
- 							pag->pag_agno),
--					    args.mp->m_sb.sb_inoalignmt) -
--				 igeo->ialloc_blks;
-+					    args.mp->m_sb.sb_inoalignmt) - 1;
- 
- 		error = xfs_alloc_vextent_near_bno(&args,
- 				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
--- 
-2.52.0
-
+     Arnd
