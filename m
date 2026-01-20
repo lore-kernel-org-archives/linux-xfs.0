@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E33941B340;
-	Tue, 20 Jan 2026 14:24:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E8D441036;
+	Tue, 20 Jan 2026 14:25:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768919098; cv=none; b=M0R+M3HPmi/ah1LLNt0UdCqvIb55IsPIG4Jks08hOa1u4V8KZ7evgfYWli9OkZ5ETjZSSDWCcpYc6rkSnXn9hb6P8JRK49IEUxmvjCFY4jnC9TykjyhW7TJRsj/mI8lxhX9s3pdiLizzM94taE/BwXXB6h7tAGkreOc8D3rYfJg=
+	t=1768919100; cv=none; b=eE5ecJHDggQVEu34WpArLRjZOkrv/6Y3Maj65YQeJSRIlTOUzQX58PTQ5hQ/8M7pjsaPLRn7xl2jyUlyH6A2gzWaqp4Pq8qdR38TsX+/6iYXMXG5mGWR/z72P6OF79bh5p2rdP3VtIvR4ckpEQOIWPZAy2JOJV8FfKvmB/8g3gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768919098; c=relaxed/simple;
-	bh=GXwc3T1dK/s1GVRYygy2LTGFyXzE5DUI3PzhaGSwy6Q=;
+	s=arc-20240116; t=1768919100; c=relaxed/simple;
+	bh=PrjBIgqMZlEiWazg7UCKbeIwEx1gUf+zQ+J1E5IoNSw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wb04inkutO3/IGzFfCNyBNkIHpLTF/BXcM2Fi/bkbq7z6AEFoaYtJWiZlkAOGSiqv9yZU1adWwzA+/GnvI3RsUOgg/LunCV4QweyM2M2PlYOclt+P5gFMTO8mu2h8ZOatDQ33mf4stzQEyZs8lmtTjGPhI2TCWJfEvyOUNEKyAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pTA9yAbU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Y0R6O0X0kbs/1QvmSnIr633QH/dSeWZUD9DbsrkOPSOFdFYZUt9uiX+iefXNzVK1jnadPhoDLifKvFPalyfyhm+/G/YAcTeu21Kv38uusX/yhRKoGZRbZAq+D5r+2vBA0lyc+ujNAmsYLLYwwdP1NgVBhIbPQT9TekXhSV/smUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=joErGhnM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pTA9yAbU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A962C16AAE;
-	Tue, 20 Jan 2026 14:24:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="joErGhnM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFC88C19423;
+	Tue, 20 Jan 2026 14:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768919097;
-	bh=GXwc3T1dK/s1GVRYygy2LTGFyXzE5DUI3PzhaGSwy6Q=;
+	s=k20201202; t=1768919100;
+	bh=PrjBIgqMZlEiWazg7UCKbeIwEx1gUf+zQ+J1E5IoNSw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pTA9yAbUwn+CZIgg5zL/BRZxIOTMXA43Z7/9aPQkdBpVjTfPuppGnr+he3ruExfNV
-	 2ADLLGiK8vhP6c6DVpLiGQcljW6t3Yg+bhGbqp7QZoa+sh97X6MZyabaktt+0iTz9P
-	 PVtiWL9CrVu7tsh850C/VwdcaWZErN9TzmYpD1nbcwP54wK8ln2hihNB+DFsthKWG8
-	 pzJzvsU64dUnqstAOJGDg66GvQLi43wjKqHCbszKcDBbILDv2qE9BsTfeTJGW9KVaG
-	 oTnKLTclX1TfouH4lWi0gK2JGJAnL3SNvyz6sW1/q1HluJkWXBm6cA+B4mGn6j6wkY
-	 qwfiU3jVbMpNw==
+	b=joErGhnMxpPDVNbFfZz/yvqUXpNYj0yDUZ36SZXRmjwptNnx7rlyWYJGaprbVCa6A
+	 pK+fVGp9+9jPa/TAKapKtpnlrOnO/YRTUyATmU8/RmgCd6TgbX06rUwfHw/9c+NO1B
+	 jXm9PxMAKF9A+9g2a7AsriizaCU3KXMhMULl9zYAbAtGxptwbtDrruBt4tFEMwvC13
+	 OisNXOB2ncqrbRFbRDFvczS2zn0Tf283mKmkdmG04lf66jj3h3TPvbLQLk/pvCYbfS
+	 zwqgTaPmqtyEWYTtHUq1xWCk3idQWCUxcHzb1d9KG0uuyIyGA/s14gZCkBZkdmsUPc
+	 lOomn0ulkxnsg==
 From: Chuck Lever <cel@kernel.org>
 To: Al Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -58,9 +58,9 @@ Cc: <linux-fsdevel@vger.kernel.org>,
 	hansg@kernel.org,
 	senozhatsky@chromium.org,
 	Chuck Lever <chuck.lever@oracle.com>
-Subject: [PATCH v6 06/16] hfsplus: Report case sensitivity in fileattr_get
-Date: Tue, 20 Jan 2026 09:24:29 -0500
-Message-ID: <20260120142439.1821554-7-cel@kernel.org>
+Subject: [PATCH v6 07/16] ext4: Report case sensitivity in fileattr_get
+Date: Tue, 20 Jan 2026 09:24:30 -0500
+Message-ID: <20260120142439.1821554-8-cel@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260120142439.1821554-1-cel@kernel.org>
 References: <20260120142439.1821554-1-cel@kernel.org>
@@ -74,42 +74,33 @@ Content-Transfer-Encoding: 8bit
 
 From: Chuck Lever <chuck.lever@oracle.com>
 
-Add case sensitivity reporting to the existing hfsplus_fileattr_get()
-function via the FS_XFLAG_CASEFOLD flag. HFS+ always preserves case
-at rest.
+Report ext4's case sensitivity behavior via the FS_XFLAG_CASEFOLD
+flag. ext4 always preserves case at rest.
 
-Case sensitivity depends on how the volume was formatted: HFSX
-volumes may be either case-sensitive or case-insensitive, indicated
-by the HFSPLUS_SB_CASEFOLD superblock flag.
+Case sensitivity is a per-directory setting in ext4. If the queried
+inode is a casefolded directory, report case-insensitive; otherwise
+report case-sensitive (standard POSIX behavior).
 
-Reviewed-by: Viacheslav Dubeyko <slava@dubeyko.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
 ---
- fs/hfsplus/inode.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ fs/ext4/ioctl.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 7ae6745ca7ae..ec9a144aac02 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -694,6 +694,7 @@ int hfsplus_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
- {
- 	struct inode *inode = d_inode(dentry);
- 	struct hfsplus_inode_info *hip = HFSPLUS_I(inode);
-+	struct hfsplus_sb_info *sbi = HFSPLUS_SB(inode->i_sb);
- 	unsigned int flags = 0;
- 
- 	if (inode->i_flags & S_IMMUTABLE)
-@@ -705,6 +706,13 @@ int hfsplus_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
- 
- 	fileattr_fill_flags(fa, flags);
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index 7ce0fc40aec2..462da7aadc80 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -996,6 +996,13 @@ int ext4_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
+ 	if (ext4_has_feature_project(inode->i_sb))
+ 		fa->fsx_projid = from_kprojid(&init_user_ns, ei->i_projid);
  
 +	/*
-+	 * HFS+ preserves case (the default). Case sensitivity depends
-+	 * on how the filesystem was formatted: HFSX volumes may be
-+	 * either case-sensitive or case-insensitive.
++	 * Case folding is a directory attribute in ext4. Set FS_XFLAG_CASEFOLD
++	 * for directories with the casefold attribute; all other inodes use
++	 * standard case-sensitive semantics.
 +	 */
-+	if (test_bit(HFSPLUS_SB_CASEFOLD, &sbi->flags))
++	if (IS_CASEFOLDED(inode))
 +		fa->fsx_xflags |= FS_XFLAG_CASEFOLD;
  	return 0;
  }
