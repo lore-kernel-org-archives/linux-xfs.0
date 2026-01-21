@@ -1,842 +1,382 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from flow-a3-smtp.messagingengine.com (flow-a3-smtp.messagingengine.com [103.168.172.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 784B917ADE0;
-	Wed, 21 Jan 2026 01:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 850C833D50C;
+	Wed, 21 Jan 2026 03:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768958821; cv=none; b=dDc6FLY0AJk8NK3CfSxG9JKsZrhobxWjgZuBJuA+Kji7vaR4S2zW/xl4M4NV94LetX5LuNaiXO4nkXXyBCW01pSkFPL7q39On2YczYxGLx8oTdtmvby4Mo3rwIG5asYPfEhfbV0Hj/rhuEDWjbXmQ3753oJAgFImLGdhIcjSJUs=
+	t=1768967944; cv=none; b=I23Syzi0ej0D3jBZBqNZ/ucl8HnU/f4IiUwD7gYFCMLvaHUYkoFXdexBx5SBm5AYhOz9fXHorIXnqiPqua3nJ/EUhoFqCJDyJg/Rf+8n40uEud/WiY7SLzihHzDMVzKB7Zb2KLtwLjyvKM3gNill0XtIX7r/Oy8QHOr5PXQn3MA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768958821; c=relaxed/simple;
-	bh=orwpS0Og+aCv0X+AgpJLEvXAQPvqmJrGRd4y2yw5pnI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=g5bP+GBUP4pNaOhLNjVZVXCrwU3dLtW/7ispBfAHVajx9wvwMyEYFicXKaXfvZYwvepgAJEl7Z6gnWFEbHTlrPqbs/ZBwt+2v9AuAZYWJMu8hl2hmQGf+w+FEnuGhM80JrleS007tOF9K04lNT8ekuVxrD8SaHKcnzoz4nq7hWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vImaTZRg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768967944; c=relaxed/simple;
+	bh=1DJQUEOUnj9KAwbZv2Hc+tLIGvXute4oJWQnX3cNwrY=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=HALgvbszliwKdW1S1peMfMZRqkAMwTsHf/WPCeOXOR1EB8QLrP3eZrUvmEhPs3Oi9JsK0UVtSHsV7VX5gUynery8lZX56Rp1mLEQMjXmIqg4RlTyIwLAl+tT+M400vC1KkQUNzoMBunL0DDfXP5fK2okok87kKczLmURvm4aMiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=YYEr2VjW; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Y4kSyYfn; arc=none smtp.client-ip=103.168.172.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vImaTZRg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A766C16AAE;
-	Wed, 21 Jan 2026 01:27:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768958820;
-	bh=orwpS0Og+aCv0X+AgpJLEvXAQPvqmJrGRd4y2yw5pnI=;
-	h=Date:From:To:Cc:Subject:From;
-	b=vImaTZRgYe+RRhL2qEZ1vrvHQPvDnhMD/nKsxcDvUGo+fAGmznkm0/uiWJEoekNHH
-	 4k2lw8ibjg4VhMin7dowglxDal8GgMr9lel584sa0LqkdhaNRB76KyX/U/OqxKOR2Z
-	 FU8LfMvrq+2U1pX25Xu73fTuOf8nV2Dy6EsK5Hsg2jlPDReqw7LleESrgj4RwN9Lk1
-	 leB31CCO+iPnTYmGKA4SGvj4aEeIOXaOFZHcYBfC3BnWaNXfrL/n0IHNOOtmGXMjLy
-	 ZzxcGO0PfRjUo1ON50C+aZB2JWj31p76if+ZKuqDmoaxp8G8vTMdz1I6is08JW9kZg
-	 61RVB+Hd7hRmA==
-Date: Tue, 20 Jan 2026 17:27:00 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs/614: fix test for parent pointers
-Message-ID: <20260121012700.GF15541@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="YYEr2VjW";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Y4kSyYfn"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailflow.phl.internal (Postfix) with ESMTP id 59F6C1380787;
+	Tue, 20 Jan 2026 22:58:51 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Tue, 20 Jan 2026 22:58:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to; s=fm2; t=
+	1768967931; x=1768975131; bh=HPgiNusZcZTF/ZTl66piD/9BsmWo5Gc2+jA
+	KaL+zbjo=; b=YYEr2VjWIaKtDqIQ9vfEWExooQB7WdoWCHPbIyCUEJI6BAxeQcQ
+	Lbk8vsbd4GXH0kYHJaGcChinGdfj9GfFjBP2dVOEb1g7c0vP40XWPDTq6qbmdX+f
+	q8U4adtBeg5EFoL6E5HUF62j7hOUy4j8XFCT0i4fYg4se8kZH51qgrZqOSAUlTga
+	rl7CFzO8J+PeDJ7M2JSUWHisN0sDH8S0NMXRz8qdtkwm9W98zD3C3gklDbkWIXrK
+	vRegxtY4BxrRjprMIjBdoVNMCKrXQqfmvm/+rjsgzuPUZ23gzBTcc6UXYC33cLAY
+	vFj8n0R7qJgD5zcyYlJT/0wZ8oNx4to8Sng==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1768967931; x=
+	1768975131; bh=HPgiNusZcZTF/ZTl66piD/9BsmWo5Gc2+jAKaL+zbjo=; b=Y
+	4kSyYfnUGNoNeVLU3ka40YnKW2sl+45SitUqyg7vTCZpQcxFqZev1sh8sHAo4DzB
+	LJJuIPm7kr1a2T2O/jCPPqyfpx1RyAZnMeJxrzQuzh0MJ2v9HwC0x1U/ypjUALTY
+	LkBS/sHDc8LkvX0vZjnTUcBNoleBEEaONsgjyNXSYbPCsyTNNhNqwnjeRYEYWhC0
+	Keyf4hXJLJ2uIP8nM1JZTI64DK90fYZcMdZmLKhtCiDOLF6zK0pOuLIFL3efcAnh
+	U7QNK8cCXtqL4iHqmwf38GI0o4feHmUs9gVmK1fgy3LCnOLy087fTAjf+2UjG0tL
+	Zxk2nmIhddHGej/ASyZkw==
+X-ME-Sender: <xms:9k5waa6xGMlhNWG7OiNFHfIpLvabWA1DAPtyEn94taKAb8B-mUoW7w>
+    <xme:9k5waRR7ItrMgf6WBso9qWSvOzTjS1gqDa4US3nP2_YPOGpBhCwjdwQRddvH-EWFV
+    V57p5_-4xzEl4CNusEssTAjoVs4ZFelbrYFxoXbJ50yHbQn>
+X-ME-Received: <xmr:9k5waeoZsLXtAC9WGWMpKfuL6jcuFf0eBU9OKagBSlfpxrmBa-z1UpdKQRgAi22TvEjMRNRptGtFkHbPbhda8VF8Vv99_8wlEjUQv-qrj4y4>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddugedvvdeiucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurheptgfgggfhvfevufgjfhffkfhrsehtqhertddttdejnecuhfhrohhmpefpvghilheu
+    rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
+    epleejtdefgeeukeeiteduveehudevfeffvedutefgteduhfegvdfgtdeigeeuudejnecu
+    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
+    esohifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohepjedvpdhmohguvgepshhmthhp
+    ohhuthdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpd
+    hrtghpthhtohepghhuohgthhhunhhhrghisehvihhvohdrtghomhdprhgtphhtthhopehl
+    ihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
+    hugidquhhnihhonhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehl
+    ihhnuhigqdhnihhlfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplh
+    hinhhugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhn
+    uhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlih
+    hnuhigqdhfshguvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohep
+    lhhinhhugidqvgigthegsehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:9k5waUhf0LUODlL_PQYsCPf5h1Hz9YtKoS8AL4OAL0YUoX9vGv32rg>
+    <xmx:905waSCsyLL7f6fuPyvb6LM-a8AMULf8pIsT5TNPUcN888plxn2vJQ>
+    <xmx:905waT9XbBSmLAgfzGT6kRdfvn_ApgSn62i1cNhe3-zAYtSYAOgBDQ>
+    <xmx:905waTEUm6W92v2m08NAsDI3Dm--lHbflm-x_CKDQ7Y36cOw-DiEBA>
+    <xmx:-05waa7eNM5AFWgAvsYRXTN-gn5rTHGxvGEPMtNHM76v4SM6_x2afNUS>
+Feedback-ID: iab3e480c:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 20 Jan 2026 22:58:29 -0500 (EST)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+From: NeilBrown <neilb@ownmail.net>
+To: "Jeff Layton" <jlayton@kernel.org>
+Cc: "Christian Brauner" <brauner@kernel.org>,
+ "Christoph Hellwig" <hch@infradead.org>,
+ "Amir Goldstein" <amir73il@gmail.com>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Chuck Lever" <chuck.lever@oracle.com>,
+ "Olga Kornievskaia" <okorniev@redhat.com>,
+ "Dai Ngo" <Dai.Ngo@oracle.com>, "Tom Talpey" <tom@talpey.com>,
+ "Hugh Dickins" <hughd@google.com>,
+ "Baolin Wang" <baolin.wang@linux.alibaba.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Theodore Ts'o" <tytso@mit.edu>,
+ "Andreas Dilger" <adilger.kernel@dilger.ca>, "Jan Kara" <jack@suse.com>,
+ "Gao Xiang" <xiang@kernel.org>, "Chao Yu" <chao@kernel.org>,
+ "Yue Hu" <zbestahu@gmail.com>, "Jeffle Xu" <jefflexu@linux.alibaba.com>,
+ "Sandeep Dhavale" <dhavale@google.com>,
+ "Hongbo Li" <lihongbo22@huawei.com>, "Chunhai Guo" <guochunhai@vivo.com>,
+ "Carlos Maiolino" <cem@kernel.org>, "Ilya Dryomov" <idryomov@gmail.com>,
+ "Alex Markuze" <amarkuze@redhat.com>,
+ "Viacheslav Dubeyko" <slava@dubeyko.com>, "Chris Mason" <clm@fb.com>,
+ "David Sterba" <dsterba@suse.com>,
+ "Luis de Bethencourt" <luisbg@kernel.org>,
+ "Salah Triki" <salah.triki@gmail.com>,
+ "Phillip Lougher" <phillip@squashfs.org.uk>,
+ "Steve French" <sfrench@samba.org>, "Paulo Alcantara" <pc@manguebit.org>,
+ "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
+ "Shyam Prasad N" <sprasad@microsoft.com>,
+ "Bharath SM" <bharathsm@microsoft.com>,
+ "Miklos Szeredi" <miklos@szeredi.hu>,
+ "Mike Marshall" <hubcap@omnibond.com>,
+ "Martin Brandenburg" <martin@omnibond.com>,
+ "Mark Fasheh" <mark@fasheh.com>, "Joel Becker" <jlbec@evilplan.org>,
+ "Joseph Qi" <joseph.qi@linux.alibaba.com>,
+ "Konstantin Komarov" <almaz.alexandrovich@paragon-software.com>,
+ "Ryusuke Konishi" <konishi.ryusuke@gmail.com>,
+ "Trond Myklebust" <trondmy@kernel.org>,
+ "Anna Schumaker" <anna@kernel.org>, "Dave Kleikamp" <shaggy@kernel.org>,
+ "David Woodhouse" <dwmw2@infradead.org>,
+ "Richard Weinberger" <richard@nod.at>, "Jan Kara" <jack@suse.cz>,
+ "Andreas Gruenbacher" <agruenba@redhat.com>,
+ "OGAWA Hirofumi" <hirofumi@mail.parknet.co.jp>,
+ "Jaegeuk Kim" <jaegeuk@kernel.org>, linux-nfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-ext4@vger.kernel.org,
+ linux-erofs@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+ ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org,
+ devel@lists.orangefs.org, ocfs2-devel@lists.linux.dev,
+ ntfs3@lists.linux.dev, linux-nilfs@vger.kernel.org,
+ jfs-discussion@lists.sourceforge.net, linux-mtd@lists.infradead.org,
+ gfs2@lists.linux.dev, linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH 00/29] fs: require filesystems to explicitly opt-in to
+ nfsd export support
+In-reply-to: <a35ac736d9ebc6c92a6e7d61aeb5198234102442.camel@kernel.org>
+References: <20260115-exportfs-nfsd-v1-0-8e80160e3c0c@kernel.org>,
+ <CAOQ4uxjOJMwv_hRVTn3tJHDLMQHbeaCGsdLupiZYcwm7M2rm3g@mail.gmail.com>,
+ <9c99197dde2eafa55a1b55dce2f0d4d02c77340a.camel@kernel.org>,
+ <176877859306.16766.15009835437490907207@noble.neil.brown.name>,
+ <aW3SAKIr_QsnEE5Q@infradead.org>,
+ <176880736225.16766.4203157325432990313@noble.neil.brown.name>,
+ <20260119-kanufahren-meerjungfrau-775048806544@brauner>,
+ <176885553525.16766.291581709413217562@noble.neil.brown.name>,
+ <20260120-entmilitarisieren-wanken-afd04b910897@brauner>,
+ <176890211061.16766.16354247063052030403@noble.neil.brown.name>,
+ <20260120-hacken-revision-88209121ac2c@brauner>,
+ <a35ac736d9ebc6c92a6e7d61aeb5198234102442.camel@kernel.org>
+Date: Wed, 21 Jan 2026 14:58:25 +1100
+Message-id: <176896790525.16766.11792073987699294594@noble.neil.brown.name>
+Reply-To: NeilBrown <neil@brown.name>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, 20 Jan 2026, Jeff Layton wrote:
+> On Tue, 2026-01-20 at 11:31 +0100, Christian Brauner wrote:
+> > On Tue, Jan 20, 2026 at 08:41:50PM +1100, NeilBrown wrote:
+> > > On Tue, 20 Jan 2026, Christian Brauner wrote:
+> > > > On Tue, Jan 20, 2026 at 07:45:35AM +1100, NeilBrown wrote:
+> > > > > On Mon, 19 Jan 2026, Christian Brauner wrote:
+> > > > > > On Mon, Jan 19, 2026 at 06:22:42PM +1100, NeilBrown wrote:
+> > > > > > > On Mon, 19 Jan 2026, Christoph Hellwig wrote:
+> > > > > > > > On Mon, Jan 19, 2026 at 10:23:13AM +1100, NeilBrown wrote:
+> > > > > > > > > > This was Chuck's suggested name. His point was that STABL=
+E means that
+> > > > > > > > > > the FH's don't change during the lifetime of the file.
+> > > > > > > > > >=20
+> > > > > > > > > > I don't much care about the flag name, so if everyone lik=
+es PERSISTENT
+> > > > > > > > > > better I'll roll with that.
+> > > > > > > > >=20
+> > > > > > > > > I don't like PERSISTENT.
+> > > > > > > > > I'd rather call a spade a spade.
+> > > > > > > > >=20
+> > > > > > > > >   EXPORT_OP_SUPPORTS_NFS_EXPORT
+> > > > > > > > > or
+> > > > > > > > >   EXPORT_OP_NOT_NFS_COMPATIBLE
+> > > > > > > > >=20
+> > > > > > > > > The issue here is NFS export and indirection doesn't bring =
+any benefits.
+> > > > > > > >=20
+> > > > > > > > No, it absolutely is not.  And the whole concept of calling s=
+omething
+> > > > > > > > after the initial or main use is a recipe for a mess.
+> > > > > > >=20
+> > > > > > > We are calling it for it's only use.  If there was ever another=
+ use, we
+> > > > > > > could change the name if that made sense.  It is not a public n=
+ame, it
+> > > > > > > is easy to change.
+> > > > > > >=20
+> > > > > > > >=20
+> > > > > > > > Pick a name that conveys what the flag is about, and document=
+ those
+> > > > > > > > semantics well.  This flag is about the fact that for a given=
+ file,
+> > > > > > > > as long as that file exists in the file system the handle is =
+stable.
+> > > > > > > > Both stable and persistent are suitable for that, nfs is ever=
+ything
+> > > > > > > > but.
+> > > > > > >=20
+> > > > > > > My understanding is that kernfs would not get the flag.
+> > > > > > > kernfs filehandles do not change as long as the file exist.
+> > > > > > > But this is not sufficient for the files to be usefully exporte=
+d.
+> > > > > > >=20
+> > > > > > > I suspect kernfs does re-use filehandles relatively soon after =
+the
+> > > > > > > file/object has been destroyed.  Maybe that is the real problem=
+ here:
+> > > > > > > filehandle reuse, not filehandle stability.
+> > > > > > >=20
+> > > > > > > Jeff: could you please give details (and preserve them in futur=
+e cover
+> > > > > > > letters) of which filesystems are known to have problems and wh=
+at
+> > > > > > > exactly those problems are?
+> > > > > > >=20
+> > > > > > > >=20
+> > > > > > > > Remember nfs also support volatile file handles, and other ap=
+plications
+> > > > > > > > might rely on this (I know of quite a few user space applicat=
+ions that
+> > > > > > > > do, but they are kinda hardwired to xfs anyway).
+> > > > > > >=20
+> > > > > > > The NFS protocol supports volatile file handles.  knfsd does no=
+t.
+> > > > > > > So maybe
+> > > > > > >   EXPORT_OP_NOT_NFSD_COMPATIBLE
+> > > > > > > might be better.  or EXPORT_OP_NOT_LINUX_NFSD_COMPATIBLE.
+> > > > > > > (I prefer opt-out rather than opt-in because nfsd export was the
+> > > > > > > original purpose of export_operations, but it isn't something
+> > > > > > > I would fight for)
+> > > > > >=20
+> > > > > > I prefer one of the variants you proposed here but I don't partic=
+ularly
+> > > > > > care. It's not a hill worth dying on. So if Christoph insists on =
+the
+> > > > > > other name then I say let's just go with it.
+> > > > > >=20
+> > > > >=20
+> > > > > This sounds like you are recommending that we give in to bullying.
+> > > > > I would rather the decision be made based on the facts of the case,=
+ not
+> > > > > the opinions that are stated most bluntly.
+> > > > >=20
+> > > > > I actually think that what Christoph wants is actually quite differ=
+ent
+> > > > > from what Jeff wants, and maybe two flags are needed.  But I don't =
+yet
+> > > > > have a clear understanding of what Christoph wants, so I cannot be =
+sure.
+> > > >=20
+> > > > I've tried to indirectly ask whether you would be willing to compromi=
+se
+> > > > here or whether you want to insist on your alternative name. Apparent=
+ly
+> > > > that didn't come through.
+> > >=20
+> > > This would be the "not a hill worthy dying on" part of your statement.
+> > > I think I see that implication now.
+> > > But no, I don't think compromise is relevant.  I think the problem
+> > > statement as originally given by Jeff is misleading, and people have
+> > > been misled to an incorrect name.
+> > >=20
+> > > >=20
+> > > > I'm unclear what your goal is in suggesting that I recommend "we" give
+> > > > into bullying. All it achieved was to further derail this thread.
+> > > >=20
+> > >=20
+> > > The "We" is the same as the "us" in "let's just go with it".
+> > >=20
+> > >=20
+> > > > I also think it's not very helpful at v6 of the discussion to start
+> > > > figuring out what the actual key rift between Jeff's and Christoph's
+> > > > position is. If you've figured it out and gotten an agreement and this
+> > > > is already in, send a follow-up series.
+> > >=20
+> > > v6?  v2 was posted today.  But maybe you are referring the some other
+> > > precursors.
+> > >=20
+> > > The introductory statement in v2 is
+> > >=20
+> > >    This patchset adds a flag that indicates whether the filesystem supp=
+orts
+> > >    stable filehandles (i.e. that they don't change over the life of the
+> > >    file). It then makes any filesystem that doesn't set that flag
+> > >    ineligible for nfsd export.
+> > >=20
+> > > Nobody else questioned the validity of that.  I do.
+> > > No evidence was given that there are *any* filesystems that don't
+> > > support stable filehandles.  The only filesystem mentioned is cgroups
+> > > and it DOES provide stable filehandles.
+> >=20
+>=20
+> Across reboot? Not really.
 
-Almost a decade ago, the initial rmap/reflink patches were merged with
-hugely overestimated log space reservations.  Although we adjusted the
-actual runtime reservations a few years ago, we left the minimum log
-size calculations in place to avoid compatibility problems between newer
-mkfs and older kernels.
+Across reboot all the files are deleted and then new ones are created.
+So there is nothing that needs to be stable.
 
-With the introduction of parent pointers, we can finally use the more
-accurate reservations for minlog computations and mkfs can format
-smaller logs as a result.  This causes the output of this test to
-change, though it wasn't needed until parent pointers were enabled by
-default.
+>=20
+> It's quite possible that we may end up with the same "id" numbers in
+> cgroupfs on a new incarnation of the filesystem after a reboot. The
+> files in there are not the same ones as the ones before, but their
+> filehandles may match because kernfs doesn't factor in an i_generation
+> number.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- common/xfs                       |    3 +
- tests/xfs/614                    |    1 
- tests/xfs/614.cfg                |    4 +
- tests/xfs/614.out.lba1024_parent |  177 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/614.out.lba2048_parent |  177 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/614.out.lba4096_parent |  177 ++++++++++++++++++++++++++++++++++++++
- tests/xfs/614.out.lba512_parent  |  177 ++++++++++++++++++++++++++++++++++++++
- 7 files changed, 716 insertions(+)
- create mode 100644 tests/xfs/614.out.lba1024_parent
- create mode 100644 tests/xfs/614.out.lba2048_parent
- create mode 100644 tests/xfs/614.out.lba4096_parent
- create mode 100644 tests/xfs/614.out.lba512_parent
+That is is about filehandle re-use, not about filehandle stability.
 
-diff --git a/common/xfs b/common/xfs
-index 8b1b87413659ad..7fa0db2e26b4c9 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1732,6 +1732,9 @@ _xfs_filter_mkfs()
- 		print STDERR "dirversion=$1\ndirbsize=$2\n";
- 		print STDOUT "naming   =VERN bsize=XXX\n";
- 	}
-+	if (/^naming\s+=.*parent=(\d+)/) {
-+		print STDERR "parent=$1\n";
-+	}
- 	if (/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+),\s+version=(\d+)/ ||
- 		/^log\s+=(internal log|[\w|\/.-]+)\s+bsize=(\d+)\s+blocks=(\d+)/) {
- 		print STDERR "ldev=\"$1\"\nlbsize=$2\nlblocks=$3\nlversion=$4\n";
-diff --git a/tests/xfs/614 b/tests/xfs/614
-index e182f073fddd64..21a4e205847fc3 100755
---- a/tests/xfs/614
-+++ b/tests/xfs/614
-@@ -32,6 +32,7 @@ rm -f "$loop_file"
- truncate -s 16M "$loop_file"
- $MKFS_XFS_PROG -f -N "$loop_file" | _filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
-+test "$parent" = 1 && sectsz="${sectsz}_parent"
- seqfull=$0
- _link_out_file "lba${sectsz}"
- 
-diff --git a/tests/xfs/614.cfg b/tests/xfs/614.cfg
-index 0678032432540b..e824a2feed9988 100644
---- a/tests/xfs/614.cfg
-+++ b/tests/xfs/614.cfg
-@@ -2,3 +2,7 @@ lba512: lba512
- lba1024: lba1024
- lba2048: lba2048
- lba4096: lba4096
-+lba512_parent: lba512_parent
-+lba1024_parent: lba1024_parent
-+lba2048_parent: lba2048_parent
-+lba4096_parent: lba4096_parent
-diff --git a/tests/xfs/614.out.lba1024_parent b/tests/xfs/614.out.lba1024_parent
-new file mode 100644
-index 00000000000000..90b9f8bd70a58f
---- /dev/null
-+++ b/tests/xfs/614.out.lba1024_parent
-@@ -0,0 +1,177 @@
-+QA output created by 614
-+sz 16M cpus 2 agcount 1 logblocks 1650
-+sz 16M cpus 4 agcount 1 logblocks 1650
-+sz 16M cpus 8 agcount 1 logblocks 1650
-+sz 16M cpus 16 agcount 1 logblocks 1650
-+sz 16M cpus 32 agcount 1 logblocks 1650
-+sz 16M cpus 40 agcount 1 logblocks 1650
-+sz 16M cpus 64 agcount 1 logblocks 1650
-+sz 16M cpus 96 agcount 1 logblocks 1650
-+sz 16M cpus 160 agcount 1 logblocks 1650
-+sz 16M cpus 512 agcount 1 logblocks 1650
-+-----------------
-+sz 512M cpus 2 agcount 4 logblocks 16384
-+sz 512M cpus 4 agcount 4 logblocks 16384
-+sz 512M cpus 8 agcount 4 logblocks 16384
-+sz 512M cpus 16 agcount 4 logblocks 16384
-+sz 512M cpus 32 agcount 4 logblocks 16384
-+sz 512M cpus 40 agcount 4 logblocks 16384
-+sz 512M cpus 64 agcount 4 logblocks 16384
-+sz 512M cpus 96 agcount 4 logblocks 16384
-+sz 512M cpus 160 agcount 4 logblocks 16384
-+sz 512M cpus 512 agcount 4 logblocks 16384
-+-----------------
-+sz 1G cpus 2 agcount 4 logblocks 16384
-+sz 1G cpus 4 agcount 4 logblocks 16384
-+sz 1G cpus 8 agcount 4 logblocks 16384
-+sz 1G cpus 16 agcount 4 logblocks 16384
-+sz 1G cpus 32 agcount 4 logblocks 25087
-+sz 1G cpus 40 agcount 4 logblocks 31359
-+sz 1G cpus 64 agcount 4 logblocks 50175
-+sz 1G cpus 96 agcount 4 logblocks 65524
-+sz 1G cpus 160 agcount 4 logblocks 65524
-+sz 1G cpus 512 agcount 4 logblocks 65524
-+-----------------
-+sz 2G cpus 2 agcount 4 logblocks 16384
-+sz 2G cpus 4 agcount 4 logblocks 16384
-+sz 2G cpus 8 agcount 4 logblocks 16384
-+sz 2G cpus 16 agcount 4 logblocks 16384
-+sz 2G cpus 32 agcount 4 logblocks 25087
-+sz 2G cpus 40 agcount 4 logblocks 31359
-+sz 2G cpus 64 agcount 4 logblocks 50175
-+sz 2G cpus 96 agcount 4 logblocks 75262
-+sz 2G cpus 160 agcount 4 logblocks 125437
-+sz 2G cpus 512 agcount 4 logblocks 131060
-+-----------------
-+sz 16G cpus 2 agcount 4 logblocks 16384
-+sz 16G cpus 4 agcount 4 logblocks 16384
-+sz 16G cpus 8 agcount 4 logblocks 16384
-+sz 16G cpus 16 agcount 4 logblocks 16384
-+sz 16G cpus 32 agcount 4 logblocks 25087
-+sz 16G cpus 40 agcount 4 logblocks 31359
-+sz 16G cpus 64 agcount 4 logblocks 50175
-+sz 16G cpus 96 agcount 4 logblocks 75262
-+sz 16G cpus 160 agcount 4 logblocks 125437
-+sz 16G cpus 512 agcount 4 logblocks 401400
-+-----------------
-+sz 64G cpus 2 agcount 4 logblocks 16384
-+sz 64G cpus 4 agcount 4 logblocks 16384
-+sz 64G cpus 8 agcount 8 logblocks 16384
-+sz 64G cpus 16 agcount 16 logblocks 16384
-+sz 64G cpus 32 agcount 16 logblocks 25087
-+sz 64G cpus 40 agcount 16 logblocks 31359
-+sz 64G cpus 64 agcount 16 logblocks 50175
-+sz 64G cpus 96 agcount 16 logblocks 75262
-+sz 64G cpus 160 agcount 16 logblocks 125437
-+sz 64G cpus 512 agcount 16 logblocks 401400
-+-----------------
-+sz 256G cpus 2 agcount 4 logblocks 32768
-+sz 256G cpus 4 agcount 4 logblocks 32768
-+sz 256G cpus 8 agcount 8 logblocks 32768
-+sz 256G cpus 16 agcount 16 logblocks 32768
-+sz 256G cpus 32 agcount 32 logblocks 32768
-+sz 256G cpus 40 agcount 40 logblocks 32767
-+sz 256G cpus 64 agcount 64 logblocks 50175
-+sz 256G cpus 96 agcount 64 logblocks 75262
-+sz 256G cpus 160 agcount 64 logblocks 125437
-+sz 256G cpus 512 agcount 64 logblocks 401400
-+-----------------
-+sz 512G cpus 2 agcount 4 logblocks 65536
-+sz 512G cpus 4 agcount 4 logblocks 65536
-+sz 512G cpus 8 agcount 8 logblocks 65536
-+sz 512G cpus 16 agcount 16 logblocks 65536
-+sz 512G cpus 32 agcount 32 logblocks 65536
-+sz 512G cpus 40 agcount 40 logblocks 65535
-+sz 512G cpus 64 agcount 64 logblocks 65536
-+sz 512G cpus 96 agcount 96 logblocks 75262
-+sz 512G cpus 160 agcount 128 logblocks 125437
-+sz 512G cpus 512 agcount 128 logblocks 401400
-+-----------------
-+sz 1T cpus 2 agcount 4 logblocks 131072
-+sz 1T cpus 4 agcount 4 logblocks 131072
-+sz 1T cpus 8 agcount 8 logblocks 131072
-+sz 1T cpus 16 agcount 16 logblocks 131072
-+sz 1T cpus 32 agcount 32 logblocks 131072
-+sz 1T cpus 40 agcount 40 logblocks 131071
-+sz 1T cpus 64 agcount 64 logblocks 131072
-+sz 1T cpus 96 agcount 96 logblocks 131071
-+sz 1T cpus 160 agcount 160 logblocks 131071
-+sz 1T cpus 512 agcount 256 logblocks 401400
-+-----------------
-+sz 2T cpus 2 agcount 4 logblocks 262144
-+sz 2T cpus 4 agcount 4 logblocks 262144
-+sz 2T cpus 8 agcount 8 logblocks 262144
-+sz 2T cpus 16 agcount 16 logblocks 262144
-+sz 2T cpus 32 agcount 32 logblocks 262144
-+sz 2T cpus 40 agcount 40 logblocks 262143
-+sz 2T cpus 64 agcount 64 logblocks 262144
-+sz 2T cpus 96 agcount 96 logblocks 262143
-+sz 2T cpus 160 agcount 160 logblocks 262143
-+sz 2T cpus 512 agcount 512 logblocks 401400
-+-----------------
-+sz 4T cpus 2 agcount 4 logblocks 521728
-+sz 4T cpus 4 agcount 4 logblocks 521728
-+sz 4T cpus 8 agcount 8 logblocks 521728
-+sz 4T cpus 16 agcount 16 logblocks 521728
-+sz 4T cpus 32 agcount 32 logblocks 521728
-+sz 4T cpus 40 agcount 40 logblocks 521728
-+sz 4T cpus 64 agcount 64 logblocks 521728
-+sz 4T cpus 96 agcount 96 logblocks 521728
-+sz 4T cpus 160 agcount 160 logblocks 521728
-+sz 4T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 16T cpus 2 agcount 16 logblocks 521728
-+sz 16T cpus 4 agcount 16 logblocks 521728
-+sz 16T cpus 8 agcount 16 logblocks 521728
-+sz 16T cpus 16 agcount 16 logblocks 521728
-+sz 16T cpus 32 agcount 32 logblocks 521728
-+sz 16T cpus 40 agcount 40 logblocks 521728
-+sz 16T cpus 64 agcount 64 logblocks 521728
-+sz 16T cpus 96 agcount 96 logblocks 521728
-+sz 16T cpus 160 agcount 160 logblocks 521728
-+sz 16T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 64T cpus 2 agcount 64 logblocks 521728
-+sz 64T cpus 4 agcount 64 logblocks 521728
-+sz 64T cpus 8 agcount 64 logblocks 521728
-+sz 64T cpus 16 agcount 64 logblocks 521728
-+sz 64T cpus 32 agcount 64 logblocks 521728
-+sz 64T cpus 40 agcount 64 logblocks 521728
-+sz 64T cpus 64 agcount 64 logblocks 521728
-+sz 64T cpus 96 agcount 96 logblocks 521728
-+sz 64T cpus 160 agcount 160 logblocks 521728
-+sz 64T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 256T cpus 2 agcount 256 logblocks 521728
-+sz 256T cpus 4 agcount 256 logblocks 521728
-+sz 256T cpus 8 agcount 256 logblocks 521728
-+sz 256T cpus 16 agcount 256 logblocks 521728
-+sz 256T cpus 32 agcount 256 logblocks 521728
-+sz 256T cpus 40 agcount 256 logblocks 521728
-+sz 256T cpus 64 agcount 256 logblocks 521728
-+sz 256T cpus 96 agcount 256 logblocks 521728
-+sz 256T cpus 160 agcount 256 logblocks 521728
-+sz 256T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 512T cpus 2 agcount 512 logblocks 521728
-+sz 512T cpus 4 agcount 512 logblocks 521728
-+sz 512T cpus 8 agcount 512 logblocks 521728
-+sz 512T cpus 16 agcount 512 logblocks 521728
-+sz 512T cpus 32 agcount 512 logblocks 521728
-+sz 512T cpus 40 agcount 512 logblocks 521728
-+sz 512T cpus 64 agcount 512 logblocks 521728
-+sz 512T cpus 96 agcount 512 logblocks 521728
-+sz 512T cpus 160 agcount 512 logblocks 521728
-+sz 512T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 1P cpus 2 agcount 1024 logblocks 521728
-+sz 1P cpus 4 agcount 1024 logblocks 521728
-+sz 1P cpus 8 agcount 1024 logblocks 521728
-+sz 1P cpus 16 agcount 1024 logblocks 521728
-+sz 1P cpus 32 agcount 1024 logblocks 521728
-+sz 1P cpus 40 agcount 1024 logblocks 521728
-+sz 1P cpus 64 agcount 1024 logblocks 521728
-+sz 1P cpus 96 agcount 1024 logblocks 521728
-+sz 1P cpus 160 agcount 1024 logblocks 521728
-+sz 1P cpus 512 agcount 1024 logblocks 521728
-+-----------------
-diff --git a/tests/xfs/614.out.lba2048_parent b/tests/xfs/614.out.lba2048_parent
-new file mode 100644
-index 00000000000000..b66afe566891ac
---- /dev/null
-+++ b/tests/xfs/614.out.lba2048_parent
-@@ -0,0 +1,177 @@
-+QA output created by 614
-+sz 16M cpus 2 agcount 1 logblocks 1650
-+sz 16M cpus 4 agcount 1 logblocks 1650
-+sz 16M cpus 8 agcount 1 logblocks 1650
-+sz 16M cpus 16 agcount 1 logblocks 1650
-+sz 16M cpus 32 agcount 1 logblocks 1650
-+sz 16M cpus 40 agcount 1 logblocks 1650
-+sz 16M cpus 64 agcount 1 logblocks 1650
-+sz 16M cpus 96 agcount 1 logblocks 1650
-+sz 16M cpus 160 agcount 1 logblocks 1650
-+sz 16M cpus 512 agcount 1 logblocks 1650
-+-----------------
-+sz 512M cpus 2 agcount 4 logblocks 16384
-+sz 512M cpus 4 agcount 4 logblocks 16384
-+sz 512M cpus 8 agcount 4 logblocks 16384
-+sz 512M cpus 16 agcount 4 logblocks 16384
-+sz 512M cpus 32 agcount 4 logblocks 16384
-+sz 512M cpus 40 agcount 4 logblocks 16384
-+sz 512M cpus 64 agcount 4 logblocks 16384
-+sz 512M cpus 96 agcount 4 logblocks 16384
-+sz 512M cpus 160 agcount 4 logblocks 16384
-+sz 512M cpus 512 agcount 4 logblocks 16384
-+-----------------
-+sz 1G cpus 2 agcount 4 logblocks 16384
-+sz 1G cpus 4 agcount 4 logblocks 16384
-+sz 1G cpus 8 agcount 4 logblocks 16384
-+sz 1G cpus 16 agcount 4 logblocks 16384
-+sz 1G cpus 32 agcount 4 logblocks 25087
-+sz 1G cpus 40 agcount 4 logblocks 31359
-+sz 1G cpus 64 agcount 4 logblocks 50175
-+sz 1G cpus 96 agcount 4 logblocks 65523
-+sz 1G cpus 160 agcount 4 logblocks 65523
-+sz 1G cpus 512 agcount 4 logblocks 65523
-+-----------------
-+sz 2G cpus 2 agcount 4 logblocks 16384
-+sz 2G cpus 4 agcount 4 logblocks 16384
-+sz 2G cpus 8 agcount 4 logblocks 16384
-+sz 2G cpus 16 agcount 4 logblocks 16384
-+sz 2G cpus 32 agcount 4 logblocks 25087
-+sz 2G cpus 40 agcount 4 logblocks 31359
-+sz 2G cpus 64 agcount 4 logblocks 50175
-+sz 2G cpus 96 agcount 4 logblocks 75262
-+sz 2G cpus 160 agcount 4 logblocks 125437
-+sz 2G cpus 512 agcount 4 logblocks 131059
-+-----------------
-+sz 16G cpus 2 agcount 4 logblocks 16384
-+sz 16G cpus 4 agcount 4 logblocks 16384
-+sz 16G cpus 8 agcount 4 logblocks 16384
-+sz 16G cpus 16 agcount 4 logblocks 16384
-+sz 16G cpus 32 agcount 4 logblocks 25087
-+sz 16G cpus 40 agcount 4 logblocks 31359
-+sz 16G cpus 64 agcount 4 logblocks 50175
-+sz 16G cpus 96 agcount 4 logblocks 75262
-+sz 16G cpus 160 agcount 4 logblocks 125437
-+sz 16G cpus 512 agcount 4 logblocks 401400
-+-----------------
-+sz 64G cpus 2 agcount 4 logblocks 16384
-+sz 64G cpus 4 agcount 4 logblocks 16384
-+sz 64G cpus 8 agcount 8 logblocks 16384
-+sz 64G cpus 16 agcount 16 logblocks 16384
-+sz 64G cpus 32 agcount 16 logblocks 25087
-+sz 64G cpus 40 agcount 16 logblocks 31359
-+sz 64G cpus 64 agcount 16 logblocks 50175
-+sz 64G cpus 96 agcount 16 logblocks 75262
-+sz 64G cpus 160 agcount 16 logblocks 125437
-+sz 64G cpus 512 agcount 16 logblocks 401400
-+-----------------
-+sz 256G cpus 2 agcount 4 logblocks 32768
-+sz 256G cpus 4 agcount 4 logblocks 32768
-+sz 256G cpus 8 agcount 8 logblocks 32768
-+sz 256G cpus 16 agcount 16 logblocks 32768
-+sz 256G cpus 32 agcount 32 logblocks 32768
-+sz 256G cpus 40 agcount 40 logblocks 32767
-+sz 256G cpus 64 agcount 64 logblocks 50175
-+sz 256G cpus 96 agcount 64 logblocks 75262
-+sz 256G cpus 160 agcount 64 logblocks 125437
-+sz 256G cpus 512 agcount 64 logblocks 401400
-+-----------------
-+sz 512G cpus 2 agcount 4 logblocks 65536
-+sz 512G cpus 4 agcount 4 logblocks 65536
-+sz 512G cpus 8 agcount 8 logblocks 65536
-+sz 512G cpus 16 agcount 16 logblocks 65536
-+sz 512G cpus 32 agcount 32 logblocks 65536
-+sz 512G cpus 40 agcount 40 logblocks 65535
-+sz 512G cpus 64 agcount 64 logblocks 65536
-+sz 512G cpus 96 agcount 96 logblocks 75262
-+sz 512G cpus 160 agcount 128 logblocks 125437
-+sz 512G cpus 512 agcount 128 logblocks 401400
-+-----------------
-+sz 1T cpus 2 agcount 4 logblocks 131072
-+sz 1T cpus 4 agcount 4 logblocks 131072
-+sz 1T cpus 8 agcount 8 logblocks 131072
-+sz 1T cpus 16 agcount 16 logblocks 131072
-+sz 1T cpus 32 agcount 32 logblocks 131072
-+sz 1T cpus 40 agcount 40 logblocks 131071
-+sz 1T cpus 64 agcount 64 logblocks 131072
-+sz 1T cpus 96 agcount 96 logblocks 131071
-+sz 1T cpus 160 agcount 160 logblocks 131071
-+sz 1T cpus 512 agcount 256 logblocks 401400
-+-----------------
-+sz 2T cpus 2 agcount 4 logblocks 262144
-+sz 2T cpus 4 agcount 4 logblocks 262144
-+sz 2T cpus 8 agcount 8 logblocks 262144
-+sz 2T cpus 16 agcount 16 logblocks 262144
-+sz 2T cpus 32 agcount 32 logblocks 262144
-+sz 2T cpus 40 agcount 40 logblocks 262143
-+sz 2T cpus 64 agcount 64 logblocks 262144
-+sz 2T cpus 96 agcount 96 logblocks 262143
-+sz 2T cpus 160 agcount 160 logblocks 262143
-+sz 2T cpus 512 agcount 512 logblocks 401400
-+-----------------
-+sz 4T cpus 2 agcount 4 logblocks 521728
-+sz 4T cpus 4 agcount 4 logblocks 521728
-+sz 4T cpus 8 agcount 8 logblocks 521728
-+sz 4T cpus 16 agcount 16 logblocks 521728
-+sz 4T cpus 32 agcount 32 logblocks 521728
-+sz 4T cpus 40 agcount 40 logblocks 521728
-+sz 4T cpus 64 agcount 64 logblocks 521728
-+sz 4T cpus 96 agcount 96 logblocks 521728
-+sz 4T cpus 160 agcount 160 logblocks 521728
-+sz 4T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 16T cpus 2 agcount 16 logblocks 521728
-+sz 16T cpus 4 agcount 16 logblocks 521728
-+sz 16T cpus 8 agcount 16 logblocks 521728
-+sz 16T cpus 16 agcount 16 logblocks 521728
-+sz 16T cpus 32 agcount 32 logblocks 521728
-+sz 16T cpus 40 agcount 40 logblocks 521728
-+sz 16T cpus 64 agcount 64 logblocks 521728
-+sz 16T cpus 96 agcount 96 logblocks 521728
-+sz 16T cpus 160 agcount 160 logblocks 521728
-+sz 16T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 64T cpus 2 agcount 64 logblocks 521728
-+sz 64T cpus 4 agcount 64 logblocks 521728
-+sz 64T cpus 8 agcount 64 logblocks 521728
-+sz 64T cpus 16 agcount 64 logblocks 521728
-+sz 64T cpus 32 agcount 64 logblocks 521728
-+sz 64T cpus 40 agcount 64 logblocks 521728
-+sz 64T cpus 64 agcount 64 logblocks 521728
-+sz 64T cpus 96 agcount 96 logblocks 521728
-+sz 64T cpus 160 agcount 160 logblocks 521728
-+sz 64T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 256T cpus 2 agcount 256 logblocks 521728
-+sz 256T cpus 4 agcount 256 logblocks 521728
-+sz 256T cpus 8 agcount 256 logblocks 521728
-+sz 256T cpus 16 agcount 256 logblocks 521728
-+sz 256T cpus 32 agcount 256 logblocks 521728
-+sz 256T cpus 40 agcount 256 logblocks 521728
-+sz 256T cpus 64 agcount 256 logblocks 521728
-+sz 256T cpus 96 agcount 256 logblocks 521728
-+sz 256T cpus 160 agcount 256 logblocks 521728
-+sz 256T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 512T cpus 2 agcount 512 logblocks 521728
-+sz 512T cpus 4 agcount 512 logblocks 521728
-+sz 512T cpus 8 agcount 512 logblocks 521728
-+sz 512T cpus 16 agcount 512 logblocks 521728
-+sz 512T cpus 32 agcount 512 logblocks 521728
-+sz 512T cpus 40 agcount 512 logblocks 521728
-+sz 512T cpus 64 agcount 512 logblocks 521728
-+sz 512T cpus 96 agcount 512 logblocks 521728
-+sz 512T cpus 160 agcount 512 logblocks 521728
-+sz 512T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 1P cpus 2 agcount 1024 logblocks 521728
-+sz 1P cpus 4 agcount 1024 logblocks 521728
-+sz 1P cpus 8 agcount 1024 logblocks 521728
-+sz 1P cpus 16 agcount 1024 logblocks 521728
-+sz 1P cpus 32 agcount 1024 logblocks 521728
-+sz 1P cpus 40 agcount 1024 logblocks 521728
-+sz 1P cpus 64 agcount 1024 logblocks 521728
-+sz 1P cpus 96 agcount 1024 logblocks 521728
-+sz 1P cpus 160 agcount 1024 logblocks 521728
-+sz 1P cpus 512 agcount 1024 logblocks 521728
-+-----------------
-diff --git a/tests/xfs/614.out.lba4096_parent b/tests/xfs/614.out.lba4096_parent
-new file mode 100644
-index 00000000000000..452891d1aa1270
---- /dev/null
-+++ b/tests/xfs/614.out.lba4096_parent
-@@ -0,0 +1,177 @@
-+QA output created by 614
-+sz 16M cpus 2 agcount 1 logblocks 1650
-+sz 16M cpus 4 agcount 1 logblocks 1650
-+sz 16M cpus 8 agcount 1 logblocks 1650
-+sz 16M cpus 16 agcount 1 logblocks 1650
-+sz 16M cpus 32 agcount 1 logblocks 1650
-+sz 16M cpus 40 agcount 1 logblocks 1650
-+sz 16M cpus 64 agcount 1 logblocks 1650
-+sz 16M cpus 96 agcount 1 logblocks 1650
-+sz 16M cpus 160 agcount 1 logblocks 1650
-+sz 16M cpus 512 agcount 1 logblocks 1650
-+-----------------
-+sz 512M cpus 2 agcount 4 logblocks 16384
-+sz 512M cpus 4 agcount 4 logblocks 16384
-+sz 512M cpus 8 agcount 4 logblocks 16384
-+sz 512M cpus 16 agcount 4 logblocks 16384
-+sz 512M cpus 32 agcount 4 logblocks 16384
-+sz 512M cpus 40 agcount 4 logblocks 16384
-+sz 512M cpus 64 agcount 4 logblocks 16384
-+sz 512M cpus 96 agcount 4 logblocks 16384
-+sz 512M cpus 160 agcount 4 logblocks 16384
-+sz 512M cpus 512 agcount 4 logblocks 16384
-+-----------------
-+sz 1G cpus 2 agcount 4 logblocks 16384
-+sz 1G cpus 4 agcount 4 logblocks 16384
-+sz 1G cpus 8 agcount 4 logblocks 16384
-+sz 1G cpus 16 agcount 4 logblocks 16384
-+sz 1G cpus 32 agcount 4 logblocks 25087
-+sz 1G cpus 40 agcount 4 logblocks 31359
-+sz 1G cpus 64 agcount 4 logblocks 50175
-+sz 1G cpus 96 agcount 4 logblocks 65521
-+sz 1G cpus 160 agcount 4 logblocks 65521
-+sz 1G cpus 512 agcount 4 logblocks 65521
-+-----------------
-+sz 2G cpus 2 agcount 4 logblocks 16384
-+sz 2G cpus 4 agcount 4 logblocks 16384
-+sz 2G cpus 8 agcount 4 logblocks 16384
-+sz 2G cpus 16 agcount 4 logblocks 16384
-+sz 2G cpus 32 agcount 4 logblocks 25087
-+sz 2G cpus 40 agcount 4 logblocks 31359
-+sz 2G cpus 64 agcount 4 logblocks 50175
-+sz 2G cpus 96 agcount 4 logblocks 75262
-+sz 2G cpus 160 agcount 4 logblocks 125437
-+sz 2G cpus 512 agcount 4 logblocks 131057
-+-----------------
-+sz 16G cpus 2 agcount 4 logblocks 16384
-+sz 16G cpus 4 agcount 4 logblocks 16384
-+sz 16G cpus 8 agcount 4 logblocks 16384
-+sz 16G cpus 16 agcount 4 logblocks 16384
-+sz 16G cpus 32 agcount 4 logblocks 25087
-+sz 16G cpus 40 agcount 4 logblocks 31359
-+sz 16G cpus 64 agcount 4 logblocks 50175
-+sz 16G cpus 96 agcount 4 logblocks 75262
-+sz 16G cpus 160 agcount 4 logblocks 125437
-+sz 16G cpus 512 agcount 4 logblocks 401400
-+-----------------
-+sz 64G cpus 2 agcount 4 logblocks 16384
-+sz 64G cpus 4 agcount 4 logblocks 16384
-+sz 64G cpus 8 agcount 8 logblocks 16384
-+sz 64G cpus 16 agcount 16 logblocks 16384
-+sz 64G cpus 32 agcount 16 logblocks 25087
-+sz 64G cpus 40 agcount 16 logblocks 31359
-+sz 64G cpus 64 agcount 16 logblocks 50175
-+sz 64G cpus 96 agcount 16 logblocks 75262
-+sz 64G cpus 160 agcount 16 logblocks 125437
-+sz 64G cpus 512 agcount 16 logblocks 401400
-+-----------------
-+sz 256G cpus 2 agcount 4 logblocks 32768
-+sz 256G cpus 4 agcount 4 logblocks 32768
-+sz 256G cpus 8 agcount 8 logblocks 32768
-+sz 256G cpus 16 agcount 16 logblocks 32768
-+sz 256G cpus 32 agcount 32 logblocks 32768
-+sz 256G cpus 40 agcount 40 logblocks 32767
-+sz 256G cpus 64 agcount 64 logblocks 50175
-+sz 256G cpus 96 agcount 64 logblocks 75262
-+sz 256G cpus 160 agcount 64 logblocks 125437
-+sz 256G cpus 512 agcount 64 logblocks 401400
-+-----------------
-+sz 512G cpus 2 agcount 4 logblocks 65536
-+sz 512G cpus 4 agcount 4 logblocks 65536
-+sz 512G cpus 8 agcount 8 logblocks 65536
-+sz 512G cpus 16 agcount 16 logblocks 65536
-+sz 512G cpus 32 agcount 32 logblocks 65536
-+sz 512G cpus 40 agcount 40 logblocks 65535
-+sz 512G cpus 64 agcount 64 logblocks 65536
-+sz 512G cpus 96 agcount 96 logblocks 75262
-+sz 512G cpus 160 agcount 128 logblocks 125437
-+sz 512G cpus 512 agcount 128 logblocks 401400
-+-----------------
-+sz 1T cpus 2 agcount 4 logblocks 131072
-+sz 1T cpus 4 agcount 4 logblocks 131072
-+sz 1T cpus 8 agcount 8 logblocks 131072
-+sz 1T cpus 16 agcount 16 logblocks 131072
-+sz 1T cpus 32 agcount 32 logblocks 131072
-+sz 1T cpus 40 agcount 40 logblocks 131071
-+sz 1T cpus 64 agcount 64 logblocks 131072
-+sz 1T cpus 96 agcount 96 logblocks 131071
-+sz 1T cpus 160 agcount 160 logblocks 131071
-+sz 1T cpus 512 agcount 256 logblocks 401400
-+-----------------
-+sz 2T cpus 2 agcount 4 logblocks 262144
-+sz 2T cpus 4 agcount 4 logblocks 262144
-+sz 2T cpus 8 agcount 8 logblocks 262144
-+sz 2T cpus 16 agcount 16 logblocks 262144
-+sz 2T cpus 32 agcount 32 logblocks 262144
-+sz 2T cpus 40 agcount 40 logblocks 262143
-+sz 2T cpus 64 agcount 64 logblocks 262144
-+sz 2T cpus 96 agcount 96 logblocks 262143
-+sz 2T cpus 160 agcount 160 logblocks 262143
-+sz 2T cpus 512 agcount 512 logblocks 401400
-+-----------------
-+sz 4T cpus 2 agcount 4 logblocks 521728
-+sz 4T cpus 4 agcount 4 logblocks 521728
-+sz 4T cpus 8 agcount 8 logblocks 521728
-+sz 4T cpus 16 agcount 16 logblocks 521728
-+sz 4T cpus 32 agcount 32 logblocks 521728
-+sz 4T cpus 40 agcount 40 logblocks 521728
-+sz 4T cpus 64 agcount 64 logblocks 521728
-+sz 4T cpus 96 agcount 96 logblocks 521728
-+sz 4T cpus 160 agcount 160 logblocks 521728
-+sz 4T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 16T cpus 2 agcount 16 logblocks 521728
-+sz 16T cpus 4 agcount 16 logblocks 521728
-+sz 16T cpus 8 agcount 16 logblocks 521728
-+sz 16T cpus 16 agcount 16 logblocks 521728
-+sz 16T cpus 32 agcount 32 logblocks 521728
-+sz 16T cpus 40 agcount 40 logblocks 521728
-+sz 16T cpus 64 agcount 64 logblocks 521728
-+sz 16T cpus 96 agcount 96 logblocks 521728
-+sz 16T cpus 160 agcount 160 logblocks 521728
-+sz 16T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 64T cpus 2 agcount 64 logblocks 521728
-+sz 64T cpus 4 agcount 64 logblocks 521728
-+sz 64T cpus 8 agcount 64 logblocks 521728
-+sz 64T cpus 16 agcount 64 logblocks 521728
-+sz 64T cpus 32 agcount 64 logblocks 521728
-+sz 64T cpus 40 agcount 64 logblocks 521728
-+sz 64T cpus 64 agcount 64 logblocks 521728
-+sz 64T cpus 96 agcount 96 logblocks 521728
-+sz 64T cpus 160 agcount 160 logblocks 521728
-+sz 64T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 256T cpus 2 agcount 256 logblocks 521728
-+sz 256T cpus 4 agcount 256 logblocks 521728
-+sz 256T cpus 8 agcount 256 logblocks 521728
-+sz 256T cpus 16 agcount 256 logblocks 521728
-+sz 256T cpus 32 agcount 256 logblocks 521728
-+sz 256T cpus 40 agcount 256 logblocks 521728
-+sz 256T cpus 64 agcount 256 logblocks 521728
-+sz 256T cpus 96 agcount 256 logblocks 521728
-+sz 256T cpus 160 agcount 256 logblocks 521728
-+sz 256T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 512T cpus 2 agcount 512 logblocks 521728
-+sz 512T cpus 4 agcount 512 logblocks 521728
-+sz 512T cpus 8 agcount 512 logblocks 521728
-+sz 512T cpus 16 agcount 512 logblocks 521728
-+sz 512T cpus 32 agcount 512 logblocks 521728
-+sz 512T cpus 40 agcount 512 logblocks 521728
-+sz 512T cpus 64 agcount 512 logblocks 521728
-+sz 512T cpus 96 agcount 512 logblocks 521728
-+sz 512T cpus 160 agcount 512 logblocks 521728
-+sz 512T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 1P cpus 2 agcount 1024 logblocks 521728
-+sz 1P cpus 4 agcount 1024 logblocks 521728
-+sz 1P cpus 8 agcount 1024 logblocks 521728
-+sz 1P cpus 16 agcount 1024 logblocks 521728
-+sz 1P cpus 32 agcount 1024 logblocks 521728
-+sz 1P cpus 40 agcount 1024 logblocks 521728
-+sz 1P cpus 64 agcount 1024 logblocks 521728
-+sz 1P cpus 96 agcount 1024 logblocks 521728
-+sz 1P cpus 160 agcount 1024 logblocks 521728
-+sz 1P cpus 512 agcount 1024 logblocks 521728
-+-----------------
-diff --git a/tests/xfs/614.out.lba512_parent b/tests/xfs/614.out.lba512_parent
-new file mode 100644
-index 00000000000000..b77659059abb9d
---- /dev/null
-+++ b/tests/xfs/614.out.lba512_parent
-@@ -0,0 +1,177 @@
-+QA output created by 614
-+sz 16M cpus 2 agcount 1 logblocks 2001
-+sz 16M cpus 4 agcount 1 logblocks 2001
-+sz 16M cpus 8 agcount 1 logblocks 2001
-+sz 16M cpus 16 agcount 1 logblocks 2001
-+sz 16M cpus 32 agcount 1 logblocks 2001
-+sz 16M cpus 40 agcount 1 logblocks 2001
-+sz 16M cpus 64 agcount 1 logblocks 2001
-+sz 16M cpus 96 agcount 1 logblocks 2001
-+sz 16M cpus 160 agcount 1 logblocks 2001
-+sz 16M cpus 512 agcount 1 logblocks 2001
-+-----------------
-+sz 512M cpus 2 agcount 4 logblocks 16384
-+sz 512M cpus 4 agcount 4 logblocks 16384
-+sz 512M cpus 8 agcount 4 logblocks 16384
-+sz 512M cpus 16 agcount 4 logblocks 16384
-+sz 512M cpus 32 agcount 4 logblocks 16384
-+sz 512M cpus 40 agcount 4 logblocks 16384
-+sz 512M cpus 64 agcount 4 logblocks 16384
-+sz 512M cpus 96 agcount 4 logblocks 16384
-+sz 512M cpus 160 agcount 4 logblocks 16384
-+sz 512M cpus 512 agcount 4 logblocks 16384
-+-----------------
-+sz 1G cpus 2 agcount 4 logblocks 16384
-+sz 1G cpus 4 agcount 4 logblocks 16384
-+sz 1G cpus 8 agcount 4 logblocks 16384
-+sz 1G cpus 16 agcount 4 logblocks 16384
-+sz 1G cpus 32 agcount 4 logblocks 25087
-+sz 1G cpus 40 agcount 4 logblocks 31359
-+sz 1G cpus 64 agcount 4 logblocks 50175
-+sz 1G cpus 96 agcount 4 logblocks 65524
-+sz 1G cpus 160 agcount 4 logblocks 65524
-+sz 1G cpus 512 agcount 4 logblocks 65524
-+-----------------
-+sz 2G cpus 2 agcount 4 logblocks 16384
-+sz 2G cpus 4 agcount 4 logblocks 16384
-+sz 2G cpus 8 agcount 4 logblocks 16384
-+sz 2G cpus 16 agcount 4 logblocks 16384
-+sz 2G cpus 32 agcount 4 logblocks 25087
-+sz 2G cpus 40 agcount 4 logblocks 31359
-+sz 2G cpus 64 agcount 4 logblocks 50175
-+sz 2G cpus 96 agcount 4 logblocks 75262
-+sz 2G cpus 160 agcount 4 logblocks 125437
-+sz 2G cpus 512 agcount 4 logblocks 131060
-+-----------------
-+sz 16G cpus 2 agcount 4 logblocks 16384
-+sz 16G cpus 4 agcount 4 logblocks 16384
-+sz 16G cpus 8 agcount 4 logblocks 16384
-+sz 16G cpus 16 agcount 4 logblocks 16384
-+sz 16G cpus 32 agcount 4 logblocks 25087
-+sz 16G cpus 40 agcount 4 logblocks 31359
-+sz 16G cpus 64 agcount 4 logblocks 50175
-+sz 16G cpus 96 agcount 4 logblocks 75262
-+sz 16G cpus 160 agcount 4 logblocks 125437
-+sz 16G cpus 512 agcount 4 logblocks 401400
-+-----------------
-+sz 64G cpus 2 agcount 4 logblocks 16384
-+sz 64G cpus 4 agcount 4 logblocks 16384
-+sz 64G cpus 8 agcount 8 logblocks 16384
-+sz 64G cpus 16 agcount 16 logblocks 16384
-+sz 64G cpus 32 agcount 16 logblocks 25087
-+sz 64G cpus 40 agcount 16 logblocks 31359
-+sz 64G cpus 64 agcount 16 logblocks 50175
-+sz 64G cpus 96 agcount 16 logblocks 75262
-+sz 64G cpus 160 agcount 16 logblocks 125437
-+sz 64G cpus 512 agcount 16 logblocks 401400
-+-----------------
-+sz 256G cpus 2 agcount 4 logblocks 32768
-+sz 256G cpus 4 agcount 4 logblocks 32768
-+sz 256G cpus 8 agcount 8 logblocks 32768
-+sz 256G cpus 16 agcount 16 logblocks 32768
-+sz 256G cpus 32 agcount 32 logblocks 32768
-+sz 256G cpus 40 agcount 40 logblocks 32767
-+sz 256G cpus 64 agcount 64 logblocks 50175
-+sz 256G cpus 96 agcount 64 logblocks 75262
-+sz 256G cpus 160 agcount 64 logblocks 125437
-+sz 256G cpus 512 agcount 64 logblocks 401400
-+-----------------
-+sz 512G cpus 2 agcount 4 logblocks 65536
-+sz 512G cpus 4 agcount 4 logblocks 65536
-+sz 512G cpus 8 agcount 8 logblocks 65536
-+sz 512G cpus 16 agcount 16 logblocks 65536
-+sz 512G cpus 32 agcount 32 logblocks 65536
-+sz 512G cpus 40 agcount 40 logblocks 65535
-+sz 512G cpus 64 agcount 64 logblocks 65536
-+sz 512G cpus 96 agcount 96 logblocks 75262
-+sz 512G cpus 160 agcount 128 logblocks 125437
-+sz 512G cpus 512 agcount 128 logblocks 401400
-+-----------------
-+sz 1T cpus 2 agcount 4 logblocks 131072
-+sz 1T cpus 4 agcount 4 logblocks 131072
-+sz 1T cpus 8 agcount 8 logblocks 131072
-+sz 1T cpus 16 agcount 16 logblocks 131072
-+sz 1T cpus 32 agcount 32 logblocks 131072
-+sz 1T cpus 40 agcount 40 logblocks 131071
-+sz 1T cpus 64 agcount 64 logblocks 131072
-+sz 1T cpus 96 agcount 96 logblocks 131071
-+sz 1T cpus 160 agcount 160 logblocks 131071
-+sz 1T cpus 512 agcount 256 logblocks 401400
-+-----------------
-+sz 2T cpus 2 agcount 4 logblocks 262144
-+sz 2T cpus 4 agcount 4 logblocks 262144
-+sz 2T cpus 8 agcount 8 logblocks 262144
-+sz 2T cpus 16 agcount 16 logblocks 262144
-+sz 2T cpus 32 agcount 32 logblocks 262144
-+sz 2T cpus 40 agcount 40 logblocks 262143
-+sz 2T cpus 64 agcount 64 logblocks 262144
-+sz 2T cpus 96 agcount 96 logblocks 262143
-+sz 2T cpus 160 agcount 160 logblocks 262143
-+sz 2T cpus 512 agcount 512 logblocks 401400
-+-----------------
-+sz 4T cpus 2 agcount 4 logblocks 521728
-+sz 4T cpus 4 agcount 4 logblocks 521728
-+sz 4T cpus 8 agcount 8 logblocks 521728
-+sz 4T cpus 16 agcount 16 logblocks 521728
-+sz 4T cpus 32 agcount 32 logblocks 521728
-+sz 4T cpus 40 agcount 40 logblocks 521728
-+sz 4T cpus 64 agcount 64 logblocks 521728
-+sz 4T cpus 96 agcount 96 logblocks 521728
-+sz 4T cpus 160 agcount 160 logblocks 521728
-+sz 4T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 16T cpus 2 agcount 16 logblocks 521728
-+sz 16T cpus 4 agcount 16 logblocks 521728
-+sz 16T cpus 8 agcount 16 logblocks 521728
-+sz 16T cpus 16 agcount 16 logblocks 521728
-+sz 16T cpus 32 agcount 32 logblocks 521728
-+sz 16T cpus 40 agcount 40 logblocks 521728
-+sz 16T cpus 64 agcount 64 logblocks 521728
-+sz 16T cpus 96 agcount 96 logblocks 521728
-+sz 16T cpus 160 agcount 160 logblocks 521728
-+sz 16T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 64T cpus 2 agcount 64 logblocks 521728
-+sz 64T cpus 4 agcount 64 logblocks 521728
-+sz 64T cpus 8 agcount 64 logblocks 521728
-+sz 64T cpus 16 agcount 64 logblocks 521728
-+sz 64T cpus 32 agcount 64 logblocks 521728
-+sz 64T cpus 40 agcount 64 logblocks 521728
-+sz 64T cpus 64 agcount 64 logblocks 521728
-+sz 64T cpus 96 agcount 96 logblocks 521728
-+sz 64T cpus 160 agcount 160 logblocks 521728
-+sz 64T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 256T cpus 2 agcount 256 logblocks 521728
-+sz 256T cpus 4 agcount 256 logblocks 521728
-+sz 256T cpus 8 agcount 256 logblocks 521728
-+sz 256T cpus 16 agcount 256 logblocks 521728
-+sz 256T cpus 32 agcount 256 logblocks 521728
-+sz 256T cpus 40 agcount 256 logblocks 521728
-+sz 256T cpus 64 agcount 256 logblocks 521728
-+sz 256T cpus 96 agcount 256 logblocks 521728
-+sz 256T cpus 160 agcount 256 logblocks 521728
-+sz 256T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 512T cpus 2 agcount 512 logblocks 521728
-+sz 512T cpus 4 agcount 512 logblocks 521728
-+sz 512T cpus 8 agcount 512 logblocks 521728
-+sz 512T cpus 16 agcount 512 logblocks 521728
-+sz 512T cpus 32 agcount 512 logblocks 521728
-+sz 512T cpus 40 agcount 512 logblocks 521728
-+sz 512T cpus 64 agcount 512 logblocks 521728
-+sz 512T cpus 96 agcount 512 logblocks 521728
-+sz 512T cpus 160 agcount 512 logblocks 521728
-+sz 512T cpus 512 agcount 512 logblocks 521728
-+-----------------
-+sz 1P cpus 2 agcount 1024 logblocks 521728
-+sz 1P cpus 4 agcount 1024 logblocks 521728
-+sz 1P cpus 8 agcount 1024 logblocks 521728
-+sz 1P cpus 16 agcount 1024 logblocks 521728
-+sz 1P cpus 32 agcount 1024 logblocks 521728
-+sz 1P cpus 40 agcount 1024 logblocks 521728
-+sz 1P cpus 64 agcount 1024 logblocks 521728
-+sz 1P cpus 96 agcount 1024 logblocks 521728
-+sz 1P cpus 160 agcount 1024 logblocks 521728
-+sz 1P cpus 512 agcount 1024 logblocks 521728
-+-----------------
+>=20
+> Could we fix it by adding a random i_generation value or something?
+> Possibly, but there really isn't a good use-case that I can see for
+> allowing cgroupfs to be exported via nfsd. Best to disallow it until
+> someone comes up with one.
+
+100% agree.
+
+>=20
+> > Oh yes we did. And this is a merry-go-round.
+> >=20
+> > It is very much fine for a filesystems to support file handles without
+> > wanting to support exporting via NFS. That is especially true for
+> > in-kernel pseudo filesystems.
+> >=20
+> > As I've said before multiple times I want a way to allow filesystems
+> > such as pidfs and nsfs to use file handles without supporting export.
+> > Whatever that fscking flag is called at this point I fundamentally don't
+> > care. And we are reliving the same arguments over and over.
+> >=20
+> > I will _hard NAK_ anything that starts mandating that export of
+> > filesystems must be allowed simply because their file handles fit export
+> > criteria. I do not care whether pidfs or nsfs file handles fit the bill.
+> > They will not be exported.
+>=20
+> I don't really care what we call the flag. I do care a little about
+> what its semantics are, but the effect should be to ensure that fs
+> maintainers make a conscious decision about whether nfsd export should
+> be allowed on the filesystem.=C2=A0
+
+Why do you need a conscious decision so much that you want to try to
+force it.
+Of course we want conscious decisions and hope they are always made, but
+trying to manipulate people to doing things often fails.  How sure are
+you that fs developers won't just copy-paste some other implementation
+and not think about the implications of the flag?
+
+What is the down side?  What is the harm from allowing export (should the
+admin attempt it)?
+If there were serious security concerns - then sure, make it harder to
+do the dangerous thing.
+But if it is just "it doesn't make sense", then there is no harm in
+letting people get away with not reading the documentation, and fixing
+things later as complaints arrive.  That is generally how the process
+works.
+
+But if you really really want to set this new flag on almost every
+export_operations, can I ask that you please set it on EVERY export
+operations, then allow maintainers to remove it as they see fit.
+I think that approach would be much easier to review.
+
+With your current series it is non-trivial to determine which
+export_operations you have chosen not to set the flag on.  If you had
+one patch that set it everywhere, then individual patches to remove it,
+that would be a lot easier to review.
+
+Thanks,
+NeilBrown
+
+
+>=20
+> At this point, maybe we should just go with Neil's=20
+> EXPORT_OP_SUPPORTS_NFS_EXPORT or something. It's much more arbitrary,
+> than trying to base this on criteria about filehandle stability, but it
+> would give us the effect we want.
+>=20
+> --=20
+> Jeff Layton <jlayton@kernel.org>
+>=20
+
