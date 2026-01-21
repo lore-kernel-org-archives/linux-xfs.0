@@ -1,42 +1,32 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD30243D4FF
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 07:09:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208833385B5
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 07:16:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768979373; cv=none; b=ANN9zE9A9ahtFrCAVIFB4Injeoytldm8K6VRrwx+Gwu00StCCau8KUHxK9PoxX3p8sVSnHm+vJoQid6oXyzdGiO8vXvkHSigWtG4uu+/Ib9G9AjFwHAFvnU6+Hk1CQiaxNWYj9WqPkeL14lkCa33fA1Q4sZiK5HlQeJt/Bl/L8M=
+	t=1768979785; cv=none; b=W9OTof0vwpLxpoxIlMy11RNw8Tuax372VbAZV5j7/H8lEt4QNJpwkjHvpFJZIghruiDt+bQIyUkbwCJ6tdqqEqD4xxhgn8h0/0Z8DDbSDx7t1dIFufE3ltQlqFzG6iCsRuJSp9pqTy0pnSO+HktuvjG+tGu+yPMVrRqIe0FCH1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768979373; c=relaxed/simple;
-	bh=gmSVlKryd3pamyzaLxdLdI8mQku0ETmbb9vGxuMxYyY=;
+	s=arc-20240116; t=1768979785; c=relaxed/simple;
+	bh=5aJulP/Ixd6TX6trPDKdqv+RUGspDF7LS3pY0w8BaW4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UwrtA3Ep0dHEH1E+tefA3+j0n3H8btmDMB6Ozkag6vZ1qU+QCMvoAff1SNun5vLVmiVwxXwrvSXUtv323VPgEex1fTCHPrRNn4usPz6CPYzXBauMiOT1nsZIjOyD2xuVD2j8Uqj7nqDiTF8+FFKAzW7lDNn5P+lS2ecmXWlsdfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0eb3n/jn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0eb3n/jn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=2Wg1q2TOWdXkI0t3d5q3qn+V7bC5PnEqLcknsiNQNAU=; b=0eb3n/jnxYhec3yCVh0yvy0Mhe
-	PE27JvvMcSgIizGV7eKp+DkomMRcnIcy1AO5cFddB9WsgoC36BuJh8DpYVuV/RGEHTOCNMfJr8I39
-	09xm800t5GRPbKOm21AO0eOARlxRa5s2bHIjwSBT4O4uhYQIMXVzyCkvmqQlJTRw7VJ5Y7MaMiNJp
-	K0S9Ovz+Gvc/uu37KPla94nxyrHcjjdrk/IGXpTyqmxngvJFAAwIj+upA4WSkUJGu3z5u1kiqB8os
-	yP9Y8WKcp6jVkbHfw1ZtWFP1jxFRyrcL1YMs+Y4AcKrhhSHL16rkvXHwIAXev5JPGU8ceADSa/0yY
-	0N6w4OFg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1viSLC-00000004zPQ-0g0E;
-	Wed, 21 Jan 2026 07:09:22 +0000
-Date: Tue, 20 Jan 2026 23:09:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=bLLGkeZDszjGpYNr1U6rsFKyEqWNcfLE1KRDy8sSQP2kkU0VgrGhwq+GteflKrlZahb/ciGS3/mpz5KGTjDGuhUWQOkDV+BaC8UmlMaiOvYyEFdJHItqYMBs22T2HLhvpeqYhhzq3Kv4v+1gdvF/XwkeZMyiirle9+4vidj88hg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 14D08227AAA; Wed, 21 Jan 2026 08:16:20 +0100 (CET)
+Date: Wed, 21 Jan 2026 08:16:19 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] debian: don't explicitly reload systemd from postinst
-Message-ID: <aXB7oqswW3EBFJMz@infradead.org>
-References: <176893137046.1079372.10421059565558082402.stgit@frogsfrogsfrogs>
- <176893137162.1079372.6375654891810082088.stgit@frogsfrogsfrogs>
+Cc: Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+	dlemoal@kernel.org, johannes.thumshirn@wdc.com
+Subject: Re: [PATCH] xfs: always allocate the free zone with the lowest
+ index
+Message-ID: <20260121071619.GA11963@lst.de>
+References: <20260120085746.29980-1-hans.holmberg@wdc.com> <20260120155329.GM15551@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,19 +35,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176893137162.1079372.6375654891810082088.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260120155329.GM15551@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jan 20, 2026 at 09:51:51AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jan 20, 2026 at 07:53:29AM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 20, 2026 at 09:57:46AM +0100, Hans Holmberg wrote:
+> > Zones in the beginning of the address space are typically mapped to
+> > higer bandwidth tracks on HDDs than those at the end of the address
+> > space. So, in stead of allocating zones "round robin" across the whole
+> > address space, always allocate the zone with the lowest index.
 > 
-> Now that we use dh_installsystemd, it's no longer necessary to run
-> systemctl daemon-reload explicitly from postinst because
-> dh_installsystemd will inject that into the DEBHELPER section on its
-> own.
+> Does it make any difference if it's a zoned ssd?  I'd imagine not, but I
+> wonder if there are any longer term side effects like lower-numbered
+> zones filling up and getting gc'd more often?
 
-I take your word for it, and given that the removal is obviously correct
-:)
+ZNS SSDs have to do wear leveling by mapping from logical to physical
+zones or even recombine the internal arrangement from NAND blocks to
+zones.  The interface does not expose wear counters, and for modern NAND
+the numbers might be different for different cells in the SSD anyway
+and/or depend on various other things.  Even read disturb where frequent
+reads require a rewrite is a very real problem now.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+So in short: no.  That's probably the biggest difference between the
+old Open Channel SSD concept and ZNS or other zoned interfaces, and
+what makes using them directly from a normal file system feasible.
 
