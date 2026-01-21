@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08EC5480DC0;
-	Wed, 21 Jan 2026 10:00:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D3B23A7F46;
+	Wed, 21 Jan 2026 10:01:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768989635; cv=none; b=O9RasQTm5xqiv3E6OEZecMDJwtIiXEV60Qqt3LgoOJP9zEiCQxsINP9YWXEy4BVEdzoH+D7Dt+JIERhuw+mTXsjpbm781Nhn5GA7jNgLM93tnRkxYPVduiI6yap+2tNSuJ4N5ddKqXaVOqT+/eiVbGzaY3/zbfBGXj5E6RmmpYc=
+	t=1768989701; cv=none; b=L4S81UsR4F1AUzNLSRl6LwzNrR7yG8eAxTKMP2GhFlhJOPvnkWqs5AJ3hvLK4zkHfs/MxPYFCO1pFew0ir37u6/IOf/nQLSYBDd1Ac9ez0Dbf+ybghRdh0NSrxLv4pchezubeTE2kOJogeQHSubd299kwMjqy5M8x6t8eo/cEg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768989635; c=relaxed/simple;
-	bh=3vbUGHF7n3G1eg75mXKdBZJGpcTXiwC4QvVWgG8Teh0=;
+	s=arc-20240116; t=1768989701; c=relaxed/simple;
+	bh=rW/nrcHdyHN+Nz1UWJ4iGjwnZPIEsMmN2vo9/PcnNi0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LndjlLHBRXeZLYKZutEZHbfswl4MYtRLr9aJbD5HRfcYtTcRTq6rCUDDsPE2yIIiyzdJnbAmlRENAYqUQV4TjiTXbncFs2/pHCHYxtX0D+OP9Q9jVBn0+xYnojU9cOGhlGmpsGAOSiPS7hhTecjZnp/SNOS8Nwh+EfYWf1XjIOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pQX0zA99; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=UrHxZTB3Eg8GGHea9NqyWXqMTEjK5nVkiGhIRRx0SkMCEMtmn1CfQGIZcIM8wIi1mMfKtA+ehcLvXrhn3hvC4M2gu7ufGafGs6lEdkgTOuMQCHq+o9E9UuApYDOfUuZ6kbOaQ7pgKWETZHLalOMyBRxYEfHkufW8/V1WV7w5M7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EaSvsuv1; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pQX0zA99"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EaSvsuv1"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=wMbWURXBKlERnmrf5QHs0kPUbIXlx/juA5w6FY/x4Mo=; b=pQX0zA99VzZEIlAcpAlPuQefUS
-	jy9CjjLBfeNNN1FNJitVD8JqerILO8jjC2fZiCCKiOnZ+AFbjn1TYpqjbQaKf+C8/KRnnpzD3SGrm
-	1PWJ9D0VnaLF05hqis2S5I41XDL1jyEKDnD+EFR38vRrwM8QPEg3EqDl695fgD/6Ar8xKBHcmKyax
-	7put0Wn3gyLR7YcoxmrK+vm9eU0JdOvfRB2prGJ/Am84hKoGOlEzX9X79ne8Tfk9prDNrEldtzRiA
-	ijbo3W0+o5oEyQQ0Ds62PvFNcq+zxEq6evP7CKwgfSi+8rKZW1NE7FntT3VSj7fEic6gmCvCHtw/f
-	BXWot+KA==;
+	bh=GioNW15OomQxHDkrEn0KiwooaQGMLNQRkXTreUFMIec=; b=EaSvsuv1TZU2mN64SuI/yRVvS1
+	3Rh/o5w7ffYW9KHMX3qJFZZJY4Zzl1PqNJPpWxGM180BKBkt1SVZFGf8QKJcPb0NWjtvv122nEg1H
+	OzFKwZ0gcBbQvObpgoOE/2S+Akn4EjCCUUrNtIIKyHvXpH4dzmYWnUtYA/DxyVwWVYhx9ZlF2yvok
+	Jrg9DRyKF5qf1NZ8Tm6yVvdUHQyxI2EoJTmHc6/BHt1VYfHI5t8QgU5fVVRxuVw0cApsiz1v6k8h0
+	KfPlNLRNbSqHEjiliAGF0iIZ/4UIT4AbAx2DF6R6e2q5SykjxB6n79Ri9aRji9M3oB2bi2qkRcfmf
+	m1yhErTQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1viV0b-00000005EMZ-1e4Z;
-	Wed, 21 Jan 2026 10:00:17 +0000
-Date: Wed, 21 Jan 2026 02:00:17 -0800
+	id 1viV1i-00000005ETt-0UQN;
+	Wed, 21 Jan 2026 10:01:26 +0000
+Date: Wed, 21 Jan 2026 02:01:26 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: Jeff Layton <jlayton@kernel.org>
 Cc: Christian Brauner <brauner@kernel.org>, NeilBrown <neil@brown.name>,
@@ -86,7 +86,7 @@ Cc: Christian Brauner <brauner@kernel.org>, NeilBrown <neil@brown.name>,
 	gfs2@lists.linux.dev, linux-f2fs-devel@lists.sourceforge.net
 Subject: Re: [PATCH 00/29] fs: require filesystems to explicitly opt-in to
  nfsd export support
-Message-ID: <aXCjsTBnHGuqTJdb@infradead.org>
+Message-ID: <aXCj9ooYaqsL9oyP@infradead.org>
 References: <9c99197dde2eafa55a1b55dce2f0d4d02c77340a.camel@kernel.org>
  <176877859306.16766.15009835437490907207@noble.neil.brown.name>
  <aW3SAKIr_QsnEE5Q@infradead.org>
@@ -109,22 +109,13 @@ In-Reply-To: <a35ac736d9ebc6c92a6e7d61aeb5198234102442.camel@kernel.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
 On Tue, Jan 20, 2026 at 07:50:32AM -0500, Jeff Layton wrote:
-> > > and it DOES provide stable filehandles.
-> > 
-> 
-> Across reboot? Not really.
-> 
-> It's quite possible that we may end up with the same "id" numbers in
-> cgroupfs on a new incarnation of the filesystem after a reboot. The
-> files in there are not the same ones as the ones before, but their
-> filehandles may match because kernfs doesn't factor in an i_generation
-> number.
-> 
-> Could we fix it by adding a random i_generation value or something?
-> Possibly, but there really isn't a good use-case that I can see for
-> allowing cgroupfs to be exported via nfsd. Best to disallow it until
-> someone comes up with one.
+> At this point, maybe we should just go with Neil's 
+> EXPORT_OP_SUPPORTS_NFS_EXPORT or something. It's much more arbitrary,
+> than trying to base this on criteria about filehandle stability, but it
+> would give us the effect we want.
 
-Yeah.  And I'm pretty sure everyone here will push back hard on any
-such use case.
+We'll still need a stable handles flag, and expose it to userspace
+to avoid applications being tricked into using broken non-stable
+file handles.  We should have caught that when they were added, but
+didn't unfortunately.
 
