@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DFB4266B1;
-	Wed, 21 Jan 2026 06:39:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E001E407560
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 06:39:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768977556; cv=none; b=ipkLbIzXzsV4p3j7jAfad3DDUIKcJtaJbZPfjVnl/epptIKSM+g9j//5O0U/IwQfDuA6ImN/lB0R4kmzwiqmHBCVXxi8KEPaCX2QLZEeSSu47+GiHT/WHXlhLDBcED+SC/c2XyTWwDoWPBQdK+en10EJ9zd0AYJ7PTt+1FJ6EHM=
+	t=1768977572; cv=none; b=hHvJil8/nXGYCbbkC/vuusQvnjPXh4WW20iETtAM4fjr/sX9OVUIsoowCbBOzcHV+HDLLmbz+9EYkY14qyL0BR/GVP6w6EuSpkCnR4nafdgva5DaHUkPOEFHXgAu5GsWDW2rcS+JsqqoSdWuZjIKXpDOW8+FGYv1voERU6URZRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768977556; c=relaxed/simple;
-	bh=qM4Dy+WX5SpLvVt3PkrNfzh2qSLNkaWSj8Dzb4ACTN4=;
+	s=arc-20240116; t=1768977572; c=relaxed/simple;
+	bh=RamkGgNGR4Eh3WUtTLfOmInwVTVZ73CmGTs2VCkC2aQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CBErmoaYbKs1vS8UReCMUwzWy/uAYMZqpLjrKI6FIMLBoX2HN0Oo8NLir3hMRitoSW1/CXcn1iiW5xI/he5Vs3eDLUNtscIVtbzliLMDrj3IAkIFvtl7vHVOciuO3aLHAH+AwI9AKXDVTSCWrqHnJfTpui8STaPE152ksna+wcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NYUGuCdJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uXGPsUh/K6dWMbwKWs3hyIFYk6gziwY2OQXXOY/D2ad18UUnJKe8aqhHVGbbtf+pkDvn1eTzPGuuh++TC3VJ+dGExmF8G3UEt8wwPinpRGL5SwQzqO6TIWl8BPyBuLvn0cGNtGyQD0cDVN+Q3Qw+otdhp3HNlKTJg0LvNXa1h2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lf7XuFi0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NYUGuCdJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE917C116D0;
-	Wed, 21 Jan 2026 06:39:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lf7XuFi0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C613C16AAE;
+	Wed, 21 Jan 2026 06:39:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768977555;
-	bh=qM4Dy+WX5SpLvVt3PkrNfzh2qSLNkaWSj8Dzb4ACTN4=;
+	s=k20201202; t=1768977571;
+	bh=RamkGgNGR4Eh3WUtTLfOmInwVTVZ73CmGTs2VCkC2aQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NYUGuCdJIMaRtilPdp+XrEFI8BN2go+hiUba2J1NTA+zI8rYim8kDP9HmrilmKsKj
-	 vzpYOGc884NkwMfmEv1VpuuLkdTh+kg6tkKtSptUt78ysesGtGFGLDlwjSWbts+a0m
-	 hSdVR6q8scYIzgd1mkTPXlISJOEXhI8AknvQhNbaLWu/lnA7rSf5GMdgAnQafFuXiq
-	 lzKVvsgboETwXdLbgh5A0/CpVP5ss4ZP+Ju4EBqsJlQ0erg3vPsyMkZfCDaqU+OzcN
-	 Rh0cfhc7e1GavqGQKgX1xO1W0Ai9MMSjYCdO6RNtF+jP9qlmiREcFlSDnNHWU0PBXP
-	 UVv1p0kyO9WHA==
-Date: Tue, 20 Jan 2026 22:39:15 -0800
-Subject: [PATCH 6/6] xfs: fix remote xattr valuelblk check
+	b=Lf7XuFi0KCSNmRiGIaX2j3m7u7l6X914X4w0lbBhuIZS7r4FLwoXDYfkTsls4WotL
+	 utiFmZ8VAjZ+5jIMDDiZWAipiejYrsJ5fl31NLyo9zXswBx9Y01pmbX0sDQcS7BdSo
+	 qpmcCGnsWKSnFu32NWFMPDkfEOKyz38l4eR6IjSQQmEXJRljU1zTdbdPyyHHeAzC0d
+	 wnskxssKjhVYW4DNW2k1HnG9DyAJ6R7x1GuaqQXMbgj920IJRRpz0tQLHryGAuEuQd
+	 mF8afPSOcsE1gwFvo9kiGBI6eYNqwfQ8FWMV7z85gZn2uqgigUTl+7bbAe9LqSpbHX
+	 IkR753uwpFSkw==
+Date: Tue, 20 Jan 2026 22:39:31 -0800
+Subject: [PATCH 1/3] xfs: reduce xfs_attr_try_sf_addname parameters
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176897695685.202569.16435015345442663590.stgit@frogsfrogsfrogs>
-In-Reply-To: <176897695523.202569.10735226881884087217.stgit@frogsfrogsfrogs>
-References: <176897695523.202569.10735226881884087217.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <176897695951.202851.14154735292129291258.stgit@frogsfrogsfrogs>
+In-Reply-To: <176897695913.202851.14051578860604932000.stgit@frogsfrogsfrogs>
+References: <176897695913.202851.14051578860604932000.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,33 +45,59 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In debugging other problems with generic/753, it turns out that it's
-possible for the system go to down in the middle of a remote xattr set
-operation such that the leaf block entry is marked incomplete and
-valueblk is set to zero.  Make this no longer a failure.
+The dp parameter to this function is an alias of args->dp, so remove it
+for clarity before we go adding new callers.
 
-Cc: <stable@vger.kernel.org> # v4.15
-Fixes: 13791d3b833428 ("xfs: scrub extended attribute leaf space")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/attr.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index ef299be01de5ea..a0878fdbcf3866 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -338,7 +338,10 @@ xchk_xattr_entry(
- 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
- 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
- 		name_end = (char *)rentry + namesize;
--		if (rentry->namelen == 0 || rentry->valueblk == 0)
-+		if (rentry->namelen == 0)
-+			xchk_da_set_corrupt(ds, level);
-+		if (rentry->valueblk == 0 &&
-+		    !(ent->flags & XFS_ATTR_INCOMPLETE))
- 			xchk_da_set_corrupt(ds, level);
- 	}
- 	if (name_end > buf_end)
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 8c04acd30d489c..c500fb6672f583 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -351,16 +351,14 @@ xfs_attr_set_resv(
+  */
+ STATIC int
+ xfs_attr_try_sf_addname(
+-	struct xfs_inode	*dp,
+ 	struct xfs_da_args	*args)
+ {
+-
+ 	int			error;
+ 
+ 	/*
+ 	 * Build initial attribute list (if required).
+ 	 */
+-	if (dp->i_af.if_format == XFS_DINODE_FMT_EXTENTS)
++	if (args->dp->i_af.if_format == XFS_DINODE_FMT_EXTENTS)
+ 		xfs_attr_shortform_create(args);
+ 
+ 	error = xfs_attr_shortform_addname(args);
+@@ -372,9 +370,9 @@ xfs_attr_try_sf_addname(
+ 	 * NOTE: this is also the error path (EEXIST, etc).
+ 	 */
+ 	if (!error)
+-		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
++		xfs_trans_ichgtime(args->trans, args->dp, XFS_ICHGTIME_CHG);
+ 
+-	if (xfs_has_wsync(dp->i_mount))
++	if (xfs_has_wsync(args->dp->i_mount))
+ 		xfs_trans_set_sync(args->trans);
+ 
+ 	return error;
+@@ -385,10 +383,9 @@ xfs_attr_sf_addname(
+ 	struct xfs_attr_intent		*attr)
+ {
+ 	struct xfs_da_args		*args = attr->xattri_da_args;
+-	struct xfs_inode		*dp = args->dp;
+ 	int				error = 0;
+ 
+-	error = xfs_attr_try_sf_addname(dp, args);
++	error = xfs_attr_try_sf_addname(args);
+ 	if (error != -ENOSPC) {
+ 		ASSERT(!error || error == -EEXIST);
+ 		attr->xattri_dela_state = XFS_DAS_DONE;
 
