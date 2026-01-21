@@ -1,37 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E8D144CF46
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 06:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0492543C05E;
+	Wed, 21 Jan 2026 06:45:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768977941; cv=none; b=qW8jYG4kE1ku8SNNTGymX0ocoASbcRCddCazsjZNZuDew8vuDKrDVZyczROPqi8yh7s1YiifXslXtqP0kY1P/Bq57jRvytiEZLd7DLaS+0/N20tsDMIjfIvBXgybcthDRM/l4LU8sG6d+x2NAY7jIahAfU6Bx5jzKNH5gofJ4Yg=
+	t=1768977953; cv=none; b=Hgc5dw6+qqsQiHv3lk2wpME49CL12+bu/neByvprYoT1tL8Yc0dtPSNmPSHmWZEYkaNPx9RfeRR1RPQE59WfwiG34ESugZ/QnBSgIHiow/7c9HZYyg7axrG2ixzOK5rqjfM1+DxyhWZwGMuZSvOdhsQhTY9uEBKmSViVa8kTX+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768977941; c=relaxed/simple;
-	bh=byVk9bF0UYd8FLKk2nKSJlhni2hickD32oSVRDjZ10w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=MkXgCy+/ByTNb1pKe85edL2FSSiEo5YJk2uudx41zSsu4WFTwbGdZ2uoqq1kpttkPP0Gnw7/dxg2HEn0dR4zxSQfItXTqUR27bnn3a7bHLKgYU+mkPl3VXwfzS+fAIbG+h0wY8TU0EaXdbs/vv4xYv8IlKY8lNhhNafEuW3BqvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ReEJ0//X; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768977953; c=relaxed/simple;
+	bh=zu6e2c0B2GxyaBE6fV53AJLob/hSPX8bUgVnvDJw3EM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eMtrok7VQT/W6+0P5D6ZbJGdH3QJ4wRy0DJTKPpcW228qbqT39J0kn/8AvwobqnGtQPROkRhFA32YEQEOl0bXfn4G2JeSgO6cC5AwvRN87XaHG+N3vc0SHXQKDlCqamcdhjBYluPJctkSJpnxKGxvDd4TLcXHVCgqk2YwHGVGHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2DavkoAB; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ReEJ0//X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42AEBC116D0;
-	Wed, 21 Jan 2026 06:45:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768977941;
-	bh=byVk9bF0UYd8FLKk2nKSJlhni2hickD32oSVRDjZ10w=;
-	h=Date:From:To:Cc:Subject:From;
-	b=ReEJ0//X8z0kcGV/a0NH+5LmIVkwh6MWmt13a+vSSLHPiic3DfIGTyYnc5FFaX1eF
-	 9QlcSTdKDGKcNxHW4gJaGNqH/KoGpQ95KMoac0PwLUpMGaFGt1j/AfMT0y6Sr4L+pW
-	 QGAb8QHhv9U374Wblq5oc6hPZBSUFoKd/YYWf56pvaRLls1IIBEUtW9JQX9i4K5eP+
-	 jj1oZGiC5F2CHPmHtYOf/SZtwmTMGAn0/h9GSt+DJKwaaSixAQdrb99hM2eIejQNRp
-	 Pp+sxj206qGPKBT1X1CkazsX3o55pBV0W65NuiTuTe2M5TBrJdXzdU/spAcYhAwTWI
-	 whUDcedEr1HQQ==
-Date: Tue, 20 Jan 2026 22:45:40 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: hch@lst.de, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: promote metadata directories and large block support
-Message-ID: <20260121064540.GA5945@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2DavkoAB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=U/QJo9QukllBSaIZPueXzZoW60o0xG/9xoDvoF8mCx4=; b=2DavkoABVIpfOj317AoUvUpv5u
+	X+HHkN1l9CgUh512quS+b8WLrBknQm6VhFKGAqX62K0+VlxT0pzh//8pcH9X62LG9aCwuLqH3Aqzw
+	UyTNzp0EyP0QNUaKFpuQwhtFsHBX9ZAreGYGxnmtv9RTlyYdhxpffbR04rkOH2Sd6ID8AJ2iG05nW
+	5FXfWxeGj7m4wL9C4cWw6FmxjR/n/sAJxoOokGhcTF4uoaijP/+TQtv/SWY9gsHTs4KmUz+YNPR8d
+	++LLNY+v4+l56qyYFBvZtcV6Ih34iZDb9nO/FG2YhaC+IGL/emTk3dJd6OirFI27A7+nYFqztZ9KQ
+	QjJlV9eg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1viRyR-00000004xpe-1HTX;
+	Wed, 21 Jan 2026 06:45:51 +0000
+Date: Tue, 20 Jan 2026 22:45:51 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] misc: allow zero duration for fsstress and fsx
+Message-ID: <aXB2Hwdp2eDIDptn@infradead.org>
+References: <20260121012621.GE15541@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,72 +45,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260121012621.GE15541@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jan 20, 2026 at 05:26:21PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Occasionally the common/fuzzy fuzz test helpers manage to time
+> something just right such that fsx or fsstress get invoked with a zero
+> second duration.  It's harmless to exit immediately without doing
+> anything, so allow this corner case.
 
-Large block support was merged upstream in 6.12 (Dec 2024) and metadata
-directories was merged in 6.13 (Jan 2025).  We've not received any
-serious complaints about the ondisk formats of these two features in the
-past year, so let's remove the experimental warnings.
+Looks good:
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_message.h |    2 --
- fs/xfs/xfs_message.c |    8 --------
- fs/xfs/xfs_super.c   |    4 ----
- 3 files changed, 14 deletions(-)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-index d68e72379f9dd5..49b0ef40d299de 100644
---- a/fs/xfs/xfs_message.h
-+++ b/fs/xfs/xfs_message.h
-@@ -93,8 +93,6 @@ void xfs_buf_alert_ratelimited(struct xfs_buf *bp, const char *rlmsg,
- enum xfs_experimental_feat {
- 	XFS_EXPERIMENTAL_SHRINK,
- 	XFS_EXPERIMENTAL_LARP,
--	XFS_EXPERIMENTAL_LBS,
--	XFS_EXPERIMENTAL_METADIR,
- 	XFS_EXPERIMENTAL_ZONED,
- 
- 	XFS_EXPERIMENTAL_MAX,
-diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
-index 19aba2c3d52544..5ac0ac3d4f39f9 100644
---- a/fs/xfs/xfs_message.c
-+++ b/fs/xfs/xfs_message.c
-@@ -149,14 +149,6 @@ xfs_warn_experimental(
- 			.opstate	= XFS_OPSTATE_WARNED_LARP,
- 			.name		= "logged extended attributes",
- 		},
--		[XFS_EXPERIMENTAL_LBS] = {
--			.opstate	= XFS_OPSTATE_WARNED_LBS,
--			.name		= "large block size",
--		},
--		[XFS_EXPERIMENTAL_METADIR] = {
--			.opstate	= XFS_OPSTATE_WARNED_METADIR,
--			.name		= "metadata directory tree",
--		},
- 		[XFS_EXPERIMENTAL_ZONED] = {
- 			.opstate	= XFS_OPSTATE_WARNED_ZONED,
- 			.name		= "zoned RT device",
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bc71aa9dcee8d6..1f432d6645898e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1835,8 +1835,6 @@ xfs_fs_fill_super(
- 			error = -ENOSYS;
- 			goto out_free_sb;
- 		}
--
--		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_LBS);
- 	}
- 
- 	/* Ensure this filesystem fits in the page cache limits */
-@@ -1922,8 +1920,6 @@ xfs_fs_fill_super(
- 			goto out_filestream_unmount;
- 		}
- 		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_ZONED);
--	} else if (xfs_has_metadir(mp)) {
--		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_METADIR);
- 	}
- 
- 	if (xfs_has_reflink(mp)) {
