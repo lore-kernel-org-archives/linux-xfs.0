@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ECC1407560;
-	Wed, 21 Jan 2026 06:40:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03AED421A17;
+	Wed, 21 Jan 2026 06:41:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768977655; cv=none; b=gYTLSW3/se3ApZ0MKQyPg4hgTIIIHYdGpg7ZX4Jr06y+GpXLMMjvftCepneMOwHIrJn8guz8PPg22UBdunG23BY5G0qaqpDygVtuaas7VeYHMeNoOcsghvfQdrQ+2eVYL/Q/0WB2YzHI6O7yCxIFdF4TTgag687/nZ7ec91uAzw=
+	t=1768977671; cv=none; b=SaJ6f8iH4h9gYPsS+RW6xJZG7bAWObkg+YCTXtjfsEhsjSQgCVMLkHh5qfD4mY8KxK9o4kW3ViS3gBjMRztRmlLgw173QhBD3Cc5hpYKujUGFDT+Llc7uM9aMSF2/R8LTmF1YtYzjHe1jYYSCl0PuttLKtjwmZtIrRX608GOKQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768977655; c=relaxed/simple;
-	bh=yFkUkGg491UWGrRY4Wb7QJvThY2Jll/D1DzMFSm+lWA=;
+	s=arc-20240116; t=1768977671; c=relaxed/simple;
+	bh=WCvy2J/5Yd+yxRCyIPIvWSJ5p2TjLbLiYQapWfLRGcM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pVPucGIcNz6+XDughljFQ9LhrvXb+01MBEhyrhZz5ylpwsMsoVX28O9btSCH90Rfr0bPV7pSjM+18rwLpdbJPZ30tlio45bYEbWNUf5851N7QKFVK0MdWH9aWdhJ1vTMDrCXI/8yA0lFvCS7FAS4UBnU3Q85qO+rsPuy2FdgbI0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6WBTMZx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N8eKxH57l79YYVfF6xSseotuMIiAzaZU7g5soIYnL6GYEhhK0zGHDz1dkWLk+9uapOLdOy4qFXzSR/sEtVCC7IgZjQBWaCCV2hGrh52B5vBYiGdN7WoNJmSH3YvIAuR23JAOTsi04vDN/GHLhTNQDW82vTvUbwVcDQ1AgMqYe7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=if01dR4a; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6WBTMZx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38B3BC116D0;
-	Wed, 21 Jan 2026 06:40:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="if01dR4a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A8BC116D0;
+	Wed, 21 Jan 2026 06:41:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768977655;
-	bh=yFkUkGg491UWGrRY4Wb7QJvThY2Jll/D1DzMFSm+lWA=;
+	s=k20201202; t=1768977670;
+	bh=WCvy2J/5Yd+yxRCyIPIvWSJ5p2TjLbLiYQapWfLRGcM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=W6WBTMZxcjWw4pnmm/xagYFOZ/RKIx4C47XsccyaYuJsxCGTSpvP+Q10hqDRan9BH
-	 CF9zA6ezV8k/yJ+oLouxfX8isN3yzevROIbnwyN5AWXZZquoBA/yTisP9ZQiJ8yN7E
-	 3oZEUSoi2o1c6IVzt3i4b7rw4jlQosjiLh/p8fpa3ojt7eAfhaJ5QNET+UTF2tm1Ju
-	 zno8jywo9U81IaptYo40J6Jii4jP8ARNCRoLtNAyviZXD5d6TOb0zzOpH1PeCPDPSM
-	 lkUBRNFvU+PxQHuj25/4HMwUTHK6wtIPDkL4Xje6pxpg3idRSt7iNCToi7U3GbU2ZB
-	 9LpivYQ2nRX3A==
-Date: Tue, 20 Jan 2026 22:40:54 -0800
-Subject: [PATCH 3/4] xfs: check return value of xchk_scrub_create_subord
+	b=if01dR4a36lhGw4bK3J9lMqAUb0JqKpnwU4SqNT/p1+Qjjxm7LQoB++WgbEunEYb2
+	 IhkkvxXz1WZ9AU1GCRlbPh3HSbw/FYNBg0/SldmyNLCjnJNXEIrU7CN5devt/E/UuU
+	 7fIMm7pRwUQIcJaWn3zKWMe3DJuC0MSDC6cy0L0ABGAtW/Yk1dCtSOpQ4OdbOdZtXL
+	 msQp0iha+ntVizwRaTAfhCXm23TaU7zQxw2Q15H3L9A+BgtgOFiyFtO0IoUr1quMWE
+	 s/BANk29cqlN6i53tfAtE0zQIKlNnMTlvZJqryFi9FTs63kS00tZLFg495Hb1+ivLr
+	 CKLsLgWp6RTgQ==
+Date: Tue, 20 Jan 2026 22:41:10 -0800
+Subject: [PATCH 4/4] xfs: fix UAF in xchk_btree_check_block_owner
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
 Cc: r772577952@gmail.com, stable@vger.kernel.org, r772577952@gmail.com,
  hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <176897723608.207608.5078916310150765504.stgit@frogsfrogsfrogs>
+Message-ID: <176897723630.207608.15659392786155037540.stgit@frogsfrogsfrogs>
 In-Reply-To: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
 References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,60 +46,52 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this function to return NULL instead of a mangled ENOMEM, then fix
-the callers to actually check for a null pointer and return ENOMEM.
-Most of the corrections here are for code merged between 6.2 and 6.10.
+We cannot dereference bs->cur when trying to determine if bs->cur
+aliases bs->sc->sa.{bno,rmap}_cur after the latter has been freed.
+Fix this by sampling before type before any freeing could happen.
+The correct temporal ordering was broken when we removed xfs_btnum_t.
 
 Cc: r772577952@gmail.com
-Cc: <stable@vger.kernel.org> # v6.12
-Fixes: 1a5f6e08d4e379 ("xfs: create subordinate scrub contexts for xchk_metadata_inode_subtype")
+Cc: <stable@vger.kernel.org> # v6.9
+Fixes: ec793e690f801d ("xfs: remove xfs_btnum_t")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.c |    3 +++
- fs/xfs/scrub/repair.c |    3 +++
- fs/xfs/scrub/scrub.c  |    2 +-
- 3 files changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/btree.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 7bfa37c99480f0..257aefd33d04ff 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -1395,6 +1395,9 @@ xchk_metadata_inode_subtype(
- 	int			error;
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index cd6f0ff382a7c8..acade92c5fce1a 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -370,12 +370,15 @@ xchk_btree_check_block_owner(
+ {
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
++	bool			is_bnobt, is_rmapbt;
+ 	bool			init_sa;
+ 	int			error = 0;
  
- 	sub = xchk_scrub_create_subord(sc, scrub_type);
-+	if (!sub)
-+		return -ENOMEM;
-+
- 	error = sub->sc.ops->scrub(&sub->sc);
- 	xchk_scrub_free_subord(sub);
- 	return error;
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index efd5a7ccdf624a..4d45d39e67f11e 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -1136,6 +1136,9 @@ xrep_metadata_inode_subtype(
- 	 * setup/teardown routines.
+ 	if (!bs->cur)
+ 		return 0;
+ 
++	is_bnobt = xfs_btree_is_bno(bs->cur->bc_ops);
++	is_rmapbt = xfs_btree_is_rmap(bs->cur->bc_ops);
+ 	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
+ 	agbno = xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
+ 
+@@ -398,11 +401,11 @@ xchk_btree_check_block_owner(
+ 	 * have to nullify it (to shut down further block owner checks) if
+ 	 * self-xref encounters problems.
  	 */
- 	sub = xchk_scrub_create_subord(sc, scrub_type);
-+	if (!sub)
-+		return -ENOMEM;
-+
- 	error = sub->sc.ops->scrub(&sub->sc);
- 	if (error)
- 		goto out;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 3c3b0d25006ff4..c312f0a672e65f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -634,7 +634,7 @@ xchk_scrub_create_subord(
+-	if (!bs->sc->sa.bno_cur && xfs_btree_is_bno(bs->cur->bc_ops))
++	if (!bs->sc->sa.bno_cur && is_bnobt)
+ 		bs->cur = NULL;
  
- 	sub = kzalloc(sizeof(*sub), XCHK_GFP_FLAGS);
- 	if (!sub)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
+ 	xchk_xref_is_only_owned_by(bs->sc, agbno, 1, bs->oinfo);
+-	if (!bs->sc->sa.rmap_cur && xfs_btree_is_rmap(bs->cur->bc_ops))
++	if (!bs->sc->sa.rmap_cur && is_rmapbt)
+ 		bs->cur = NULL;
  
- 	sub->old_smtype = sc->sm->sm_type;
- 	sub->old_smflags = sc->sm->sm_flags;
+ out_free:
 
