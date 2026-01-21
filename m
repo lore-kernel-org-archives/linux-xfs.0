@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34EB938756B
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 17:42:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2642633A71A;
+	Wed, 21 Jan 2026 17:46:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769017358; cv=none; b=ST7kIEtkOcjMQe061EK9fagduc6kJn+oxHZ8nj988XjJm1ApAx2pYkF1QPLim9j7JhmCQYzaDG8YApj/o20mLLavKKgoFAXJ5xWapGeMuRM0EuwtGzmL2IccjtSNK+gxYBWa0lLTH0PlnnxgwCYfVUE5tPUC9tDcVI+Qmuy9ORE=
+	t=1769017562; cv=none; b=mHFwdcdSFTSlfHyH7IwpjOqDQmUI751h6ybZXg3V10w9BvvjBQQ13cZkMZWedysIeey9hJf5Q2RyWD0p0XhxlG/SdEghwByLPxAUOuoDaZR+d/GuA2VdecHhHfS0fZhMZIg3yDmwPqi8S5g436MYb5ouZ8WRc576PSHGw2sYlwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769017358; c=relaxed/simple;
-	bh=6Yh8Jb/qLsftGcjXntNMbOM50FmyKKIpepjUlbq/bdo=;
+	s=arc-20240116; t=1769017562; c=relaxed/simple;
+	bh=Et9YqHBwaee9vvZTB5IBwg0x9iewIh5Y44GdK8LleJw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ojBI2mMsj5yXnIXIRlCyhw/WJ9AzlaUUfI/na+qZtg9IvqxTvDjKW5rIhyZDrJLToD8qrTvGN/O+kF7vlUgH6vs4aIBLeO310MEMNVL7XVCVUa7AJP12b7jBseahY3NS3h3yfczDGtZTRzh28oYm5etFXDl78VvXuBbcmLM9bMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SaO/G9ej; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OcuXbOFQCt2sFociJmQTS4QXatU6dzv4hcpTsbeVNzL01uxd8PoKJLVpE6LEtubkBXJ9Ml/Jqf9wqazKkflUiXoaMXIPk/KYiYCkcyZtNtDhVvjUDzB2QkmLv5i4OXxkeAVSUeKjI3c5VGbOGXhbfKIUmsUXjKP/5xVVWSBz8To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R9PWToMb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SaO/G9ej"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3B0DC4CEF1;
-	Wed, 21 Jan 2026 17:42:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R9PWToMb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92A9BC4CEF1;
+	Wed, 21 Jan 2026 17:46:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769017356;
-	bh=6Yh8Jb/qLsftGcjXntNMbOM50FmyKKIpepjUlbq/bdo=;
+	s=k20201202; t=1769017561;
+	bh=Et9YqHBwaee9vvZTB5IBwg0x9iewIh5Y44GdK8LleJw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SaO/G9ej1lx2xqvjaolLHSsTYDFIc0dDDmxtI4zi+VDMlo/YPAo3sxf50bK7WWajF
-	 XA7cRfWmAy7OObniuWMA2UgtviW8b3RngJs7TyjuJsdwmYGTekPkyK0zrtuHOFe45b
-	 pMCjQ0OXV7TsAetW01+VET87JH75aPavpdQXUhinm2dsXDJn0gf389pyoOI7d+2LQq
-	 g2+YhjGifeahvSYNKG0FDZI3Z1bwXMU/VYRBWWqwzhW/up9MV6lUWDeCJglKDSfOGJ
-	 Z/KA3tn/ll0Lq1wylkGQ28X4rRW5BNHka2jABHMRw8MBYmumBTWptZtM3FFa98K8iP
-	 ePKCYNVz3jPKg==
-Date: Wed, 21 Jan 2026 09:42:36 -0800
+	b=R9PWToMblqTuTSeoiy4t2vqPcWJdoAosIzEim1fscYv5L6fOEEbJMOC9lnpLi3OhV
+	 gBtMzqGcGR9XaBUvVGoe+lk0nMZgEW9+a1PG3fibeRgbIAEAekbpdiDiqXlTP3p2ZY
+	 HfsYt2NfnayDjlgKikKbxMB1bMtcXt2927Kd/zQD9tw0ORR1esLEg6CISG8IEk0Xhg
+	 uBcPw73oRjPcZGQHzwBFbEmFQmzDS8a/lzyIhT9kfQnHX3WuwiNhSacBEHzFaUPsBP
+	 CVJLQ5P5UDkFdtPE+N9tXY+cilM0+HzJAADy+khjQrt6GKxbfX4h0FPzH4RB+IuQDG
+	 /g3hyrGsm3Ehg==
+Date: Wed, 21 Jan 2026 09:46:01 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] libfrog: make xfrog_defragrange return a
- positive valued
-Message-ID: <20260121174236.GD5945@frogsfrogsfrogs>
-References: <20260119142724.284933-1-cem@kernel.org>
- <20260119142724.284933-2-cem@kernel.org>
- <NqW0yjXmDmicRQzL8BBvI3zJRK8Qmhm9mhV6AsYNCDn2zFHjCElMSAXi-jDCnnq8-zvHN_5Q8qsmw24M-wpFtg==@protonmail.internalid>
- <20260120172039.GO15551@frogsfrogsfrogs>
- <s3welc2n2qbdqdr4nuwgef4uwckjkq4lzzsnzp3vzxozpkoy6w@hym4evwdf63k>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] misc: allow zero duration for fsstress and fsx
+Message-ID: <20260121174601.GE5945@frogsfrogsfrogs>
+References: <20260121012621.GE15541@frogsfrogsfrogs>
+ <20260121155456.pf6jeprhzua3rdl3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,92 +42,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <s3welc2n2qbdqdr4nuwgef4uwckjkq4lzzsnzp3vzxozpkoy6w@hym4evwdf63k>
+In-Reply-To: <20260121155456.pf6jeprhzua3rdl3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Wed, Jan 21, 2026 at 09:57:51AM +0100, Carlos Maiolino wrote:
-> On Tue, Jan 20, 2026 at 09:20:39AM -0800, Darrick J. Wong wrote:
-> > On Mon, Jan 19, 2026 at 03:26:50PM +0100, cem@kernel.org wrote:
-> > > From: Carlos Maiolino <cem@kernel.org>
-> > >
-> > > Currently, the only user for xfrog_defragrange is xfs_fsr's packfile(),
-> > > which expects error to be a positive value.
-> > >
-> > > Whenever xfrog_defragrange fails, the switch case always falls into the
-> > > default clausule, making the error message pointless.
-> > >
-> > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > > ---
-> > >  libfrog/file_exchange.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/libfrog/file_exchange.c b/libfrog/file_exchange.c
-> > > index e6c3f486b0ff..31bbc6da60c3 100644
-> > > --- a/libfrog/file_exchange.c
-> > > +++ b/libfrog/file_exchange.c
-> > > @@ -232,7 +232,7 @@ xfrog_defragrange(
-> > >  	if (ret) {
-> > >  		if (errno == EOPNOTSUPP || errno != ENOTTY)
-> > >  			goto legacy_fallback;
-> > > -		return -errno;
-> > > +		return errno;
+On Wed, Jan 21, 2026 at 11:54:56PM +0800, Zorro Lang wrote:
+> On Tue, Jan 20, 2026 at 05:26:21PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Hrmm.  If you're going to change the polarity of the error numbers (e.g.
-> > negative to positive) then please update the comments.
+> > Occasionally the common/fuzzy fuzz test helpers manage to time
+> > something just right such that fsx or fsstress get invoked with a zero
+> > second duration.  It's harmless to exit immediately without doing
+> > anything, so allow this corner case.
 > 
-> Sorry, I did it quickly and didn't even pay attention there were
-> comments :)
+> Sure, duration=0 is harmless, I'm good with this patch.
 > 
-> > 
-> > That said, I'd prefer to keep the errno polarity the same at least
-> > within a .c file ... even though libfrog is a mess of different error
-> > number return strategies.  What if the callsite changed to:
-> > 
-> > 	/* Swap the extents */
-> > 	error = -xfrog_defragrange(...);
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
 > 
-> This looks to just add more confusion to it IMHO, it's not 'easy' for me
-> at least to notice the minus sign in front of it.
-> 
-> What about just changing the switch case to catch for -ERROR instead of
-> their positive counterparts? At least we stop playing the error sign
-> change and just catch what we already have.
+> Please excuse my nitpicking. I'm curious about the semantics of "--duration=0".
+> Looking at the output of `fsstress -v --duration=0`, it doesn't actually
+> 'do nothing.' Instead, it behaves similarly to duration=1, where fsstress
+> attempts to execute operations before timing out and exiting :-D
 
-Sure, do whatever you think is best.  This whole part of C is an
-unfixable mess as far as I'm concerned.
+Yeah, I suppose it's possible to do a very small amount of work.
+
+Would you mind changing that last sentence to read "It's harmless to
+exit almost immediately having done very little work, so allow this
+corner case." prior to commit?
 
 --D
 
+> Thanks,
+> Zorro
 > 
 > > 
-> > and
+> > Cc: <fstests@vger.kernel.org> # v2023.05.01
+> > Fixes: 3e85dd4fe4236d ("misc: add duration for long soak tests")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  ltp/fsstress.c |    2 +-
+> >  ltp/fsx.c      |    2 +-
+> >  2 files changed, 2 insertions(+), 2 deletions(-)
 > > 
-> > 	/* Snapshot file_fd before we start copying data... */
-> > 	error = -xfrog_defragrange_prep(...);
+> > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> > index c17ac440414325..b51bd8ada2a3be 100644
+> > --- a/ltp/fsstress.c
+> > +++ b/ltp/fsstress.c
+> > @@ -645,7 +645,7 @@ int main(int argc, char **argv)
+> >  				exit(87);
+> >  			}
+> >  			duration = strtoll(optarg, NULL, 0);
+> > -			if (duration < 1) {
+> > +			if (duration < 0) {
+> >  				fprintf(stderr, "%lld: invalid duration\n", duration);
+> >  				exit(88);
+> >  			}
+> > diff --git a/ltp/fsx.c b/ltp/fsx.c
+> > index 626976dd4f9f27..4f8a2d5ab1fc08 100644
+> > --- a/ltp/fsx.c
+> > +++ b/ltp/fsx.c
+> > @@ -3375,7 +3375,7 @@ main(int argc, char **argv)
+> >  				exit(87);
+> >  			}
+> >  			duration = strtoll(optarg, NULL, 0);
+> > -			if (duration < 1) {
+> > +			if (duration < 0) {
+> >  				fprintf(stderr, "%lld: invalid duration\n", duration);
+> >  				exit(88);
+> >  			}
 > > 
-> > (and I guess io/exchrange.c also needs a fix)
-> > 
-> > 	/* Snapshot the original file metadata in anticipation... */
-> > 	ret = -xfrog_commitrange_prep(...);
-> > 
-> > Hrm?
-> > 
-> > --D
-> > 
-> > >  	}
-> > >
-> > >  	return 0;
-> > > @@ -240,7 +240,7 @@ xfrog_defragrange(
-> > >  legacy_fallback:
-> > >  	ret = xfrog_ioc_swapext(file2_fd, xdf);
-> > >  	if (ret)
-> > > -		return -errno;
-> > > +		return errno;
-> > >
-> > >  	return 0;
-> > >  }
-> > > --
-> > > 2.52.0
-> > >
-> > >
-> > 
+> 
 > 
