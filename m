@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3545237E306
-	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 06:38:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E9D318EC7
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 06:38:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768977509; cv=none; b=EQdCQs1Ly2RtPaYmhNZcsuOI2sdTNDKgCXkZ9fV0Gdlkmd+XthUdqaQIwtds/zsjwTduwdu0wCK3IpjB8LkQofdEVdbqoPvL2srIwdu3VU71MQvzBxk1pMMlDXaqYeXe1kPRLm4gtsXXk/armDQkmiMmcvKdYS95WsCFt0P5Zr0=
+	t=1768977525; cv=none; b=QxMoEmsphuxzGOgFJgO4DvTv1nJ8HFZZ48VfGrNZ6LzIaQO0D0i/GTASRrM1QzxlAIHpJFXpA1qgyUmrW3/0qObcfKETV1fKpiak/Su6Cwdl/Yc/NZAzOz7tck7zlWQTwJsBsvjuXbmRedkctkKzSoolCo3MANY7bORpS57lWEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768977509; c=relaxed/simple;
-	bh=IUZEwLwydaeaIp3zhz5J1KnSKnycDSVIbgr+NUQF/EE=;
+	s=arc-20240116; t=1768977525; c=relaxed/simple;
+	bh=NJsmIt8RKgQltx4Zv0zec++n4hhtLfHefO24WuYgs9k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Pxmn+yPXRXu5RuOUK9stgiIEiG4hpUNKDPhEypAU0S2EowjlX3nzOdPm5w3BZqsV+apDpBCfkZ7a5El/80WvZDeUPYpgWWQlPbGWm9oCKANCpzKN0PswsVSA9xnHSV1nxhvqaGg80Be7BiAU3Qv8MMiIVpAUfWxeoMN4LsImip8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SpBrN5uO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VdHNP3JLcPEvVPzdij5Ak+jafs58cNetT0FAf3NP9qdaJty4aYZaaTY+Drbxl10gVNtqK6JRsNtMWu15iQvcs7OAMXWYh6C0BT86CpqDpha9RIit8CwpkkKmmGXd9NMHjd8X4FfVQZ6smj/nQHV3xw9w3pr2GNjxE4wrlnWHzEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i7LkMYyW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SpBrN5uO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7960C116D0;
-	Wed, 21 Jan 2026 06:38:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i7LkMYyW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 699B2C116D0;
+	Wed, 21 Jan 2026 06:38:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768977508;
-	bh=IUZEwLwydaeaIp3zhz5J1KnSKnycDSVIbgr+NUQF/EE=;
+	s=k20201202; t=1768977524;
+	bh=NJsmIt8RKgQltx4Zv0zec++n4hhtLfHefO24WuYgs9k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SpBrN5uOudvgB2IULIgkYIlXxuGsM5pnZu6dSt5nq6kT/JCEMdsQVVtYUDe7ahMDz
-	 CXuAxsK316WKPc189s3ARFp6CkPwbx3U6wkMVZ5iHE+9m92Yx1b7G5Md7fD/vRv5p1
-	 DLB5KJl7xgeTMSltXPxXrBeVIQ8B6L3QxZt2D8coXgi6oFLR4JT/cgoB4ienOtqCZb
-	 YiAQ6RNG5CH3jYb/fB8PeO5FIe8qDgJaRmlrHmr+6bmoN14laEj5V9DM0JzrbRIJBf
-	 02Q6jZF+UZ+auma8Yoeei3GuML2qsD7akfz0OtKUBj19PyEogTHtnhIsuEGOMHfTR2
-	 7bak7iWSuHT4w==
-Date: Tue, 20 Jan 2026 22:38:28 -0800
-Subject: [PATCH 3/6] xfs: refactor attr3 leaf table size computation
+	b=i7LkMYyWP4uiit5tW2xT5hMPwotOvfQ1DFTxR0XPrudN5YMWGLQU3hJh3X7mDE2Rs
+	 K2/81LpK2hIs2Fw2qrWerxf+IofyqnDJBUQK/kunlHSx2iugKGOscCIY+oQH2j+FxG
+	 psOSJQ0Lz6c2CafpYeor1UPW9Zyg+3kelrRsIv1ZAXfId+qEtx814ZQLPF4lZ3zc1W
+	 Bvb1xi1U32eEw7tjItXMUfr5VDQMjbkr3iB23/ktzuc4yeOaF5RC45l1vv+fhzZUT6
+	 BVlB+IJ1hf70FvB7/GWb5/v4omh9zAMEne51oGUiDScrDs2k3+htTZPH3M/Ap8/JIa
+	 QySmrvw71bbbQ==
+Date: Tue, 20 Jan 2026 22:38:43 -0800
+Subject: [PATCH 4/6] xfs: strengthen attr leaf block freemap checking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <176897695620.202569.7698466645036313818.stgit@frogsfrogsfrogs>
+Message-ID: <176897695642.202569.3013555748365939096.stgit@frogsfrogsfrogs>
 In-Reply-To: <176897695523.202569.10735226881884087217.stgit@frogsfrogsfrogs>
 References: <176897695523.202569.10735226881884087217.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,179 +45,112 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Replace all the open-coded callsites with a single static inline helper.
+Check for erroneous overlapping freemap regions and collisions between
+freemap regions and the xattr leaf entry array.
+
+Note that we must explicitly zero out the extra freemaps in
+xfs_attr3_leaf_compact so that the in-memory buffer has a correctly
+initialized freemap array to satisfy the new verification code, even if
+subsequent code changes the contents before unlocking the buffer.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_da_format.h |    2 +
- fs/xfs/libxfs/xfs_attr_leaf.c |   57 +++++++++++++++++++++--------------------
- 2 files changed, 30 insertions(+), 29 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c |   55 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 86de99e2f75707..7d55307e619fe9 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -746,7 +746,7 @@ struct xfs_attr3_leafblock {
- #define	XFS_ATTR_LEAF_NAME_ALIGN	((uint)sizeof(xfs_dablk_t))
- 
- static inline int
--xfs_attr3_leaf_hdr_size(struct xfs_attr_leafblock *leafp)
-+xfs_attr3_leaf_hdr_size(const struct xfs_attr_leafblock *leafp)
- {
- 	if (leafp->hdr.info.magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC))
- 		return sizeof(struct xfs_attr3_leaf_hdr);
 diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b858e3c2ad50a2..776064eac5a090 100644
+index 776064eac5a090..f10479bf0c8f2b 100644
 --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -75,6 +75,16 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
- 			int move_count);
- STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
+@@ -85,6 +85,49 @@ xfs_attr_leaf_entries_end(
+ 			xfs_attr3_leaf_hdr_size(leaf);
+ }
  
-+/* Compute the byte offset of the end of the leaf entry array. */
-+static inline int
-+xfs_attr_leaf_entries_end(
-+	unsigned int			hdrcount,
-+	const struct xfs_attr_leafblock	*leaf)
++static inline bool
++ichdr_freemaps_overlap(
++	const struct xfs_attr3_icleaf_hdr	*ichdr,
++	unsigned int				x,
++	unsigned int				y)
 +{
-+	return hdrcount * sizeof(struct xfs_attr_leaf_entry) +
-+			xfs_attr3_leaf_hdr_size(leaf);
++	const unsigned int			xend =
++		ichdr->freemap[x].base + ichdr->freemap[x].size;
++	const unsigned int			yend =
++		ichdr->freemap[y].base + ichdr->freemap[y].size;
++
++	/* empty slots do not overlap */
++	if (!ichdr->freemap[x].size || !ichdr->freemap[y].size)
++		return false;
++
++	return ichdr->freemap[x].base < yend && xend > ichdr->freemap[y].base;
++}
++
++static inline xfs_failaddr_t
++xfs_attr_leaf_ichdr_freemaps_verify(
++	const struct xfs_attr3_icleaf_hdr	*ichdr,
++	const struct xfs_attr_leafblock		*leaf)
++{
++	unsigned int				entries_end =
++		xfs_attr_leaf_entries_end(ichdr->count, leaf);
++	int					i;
++
++	if (ichdr_freemaps_overlap(ichdr, 0, 1))
++		return __this_address;
++	if (ichdr_freemaps_overlap(ichdr, 0, 2))
++		return __this_address;
++	if (ichdr_freemaps_overlap(ichdr, 1, 2))
++		return __this_address;
++
++	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
++		if (ichdr->freemap[i].size > 0 &&
++		    ichdr->freemap[i].base < entries_end)
++			return __this_address;
++	}
++
++	return NULL;
 +}
 +
  /*
   * attr3 block 'firstused' conversion helpers.
   *
-@@ -1409,8 +1419,7 @@ xfs_attr3_leaf_add(
- 	 * Search through freemap for first-fit on new name length.
- 	 * (may need to figure in size of entry struct too)
- 	 */
--	tablesize = (ichdr.count + 1) * sizeof(xfs_attr_leaf_entry_t)
--					+ xfs_attr3_leaf_hdr_size(leaf);
-+	tablesize = xfs_attr_leaf_entries_end(ichdr.count + 1, leaf);
- 	for (sum = 0, i = XFS_ATTR_LEAF_MAPSIZE - 1; i >= 0; i--) {
- 		if (tablesize > ichdr.firstused) {
- 			sum += ichdr.freemap[i].size;
-@@ -1569,8 +1578,7 @@ xfs_attr3_leaf_add_work(
- 	if (be16_to_cpu(entry->nameidx) < ichdr->firstused)
- 		ichdr->firstused = be16_to_cpu(entry->nameidx);
- 
--	new_end = ichdr->count * sizeof(struct xfs_attr_leaf_entry) +
--					xfs_attr3_leaf_hdr_size(leaf);
-+	new_end = xfs_attr_leaf_entries_end(ichdr->count, leaf);
- 	old_end = new_end - sizeof(struct xfs_attr_leaf_entry);
- 
- 	ASSERT(ichdr->firstused >= new_end);
-@@ -1807,8 +1815,8 @@ xfs_attr3_leaf_rebalance(
- 		/*
- 		 * leaf2 is the destination, compact it if it looks tight.
- 		 */
--		max  = ichdr2.firstused - xfs_attr3_leaf_hdr_size(leaf1);
--		max -= ichdr2.count * sizeof(xfs_attr_leaf_entry_t);
-+		max = ichdr2.firstused -
-+				xfs_attr_leaf_entries_end(ichdr2.count, leaf1);
- 		if (space > max)
- 			xfs_attr3_leaf_compact(args, &ichdr2, blk2->bp);
- 
-@@ -1836,8 +1844,8 @@ xfs_attr3_leaf_rebalance(
- 		/*
- 		 * leaf1 is the destination, compact it if it looks tight.
- 		 */
--		max  = ichdr1.firstused - xfs_attr3_leaf_hdr_size(leaf1);
--		max -= ichdr1.count * sizeof(xfs_attr_leaf_entry_t);
-+		max = ichdr1.firstused -
-+				xfs_attr_leaf_entries_end(ichdr1.count, leaf1);
- 		if (space > max)
- 			xfs_attr3_leaf_compact(args, &ichdr1, blk1->bp);
- 
-@@ -2043,9 +2051,7 @@ xfs_attr3_leaf_toosmall(
- 	blk = &state->path.blk[ state->path.active-1 ];
- 	leaf = blk->bp->b_addr;
- 	xfs_attr3_leaf_hdr_from_disk(state->args->geo, &ichdr, leaf);
--	bytes = xfs_attr3_leaf_hdr_size(leaf) +
--		ichdr.count * sizeof(xfs_attr_leaf_entry_t) +
--		ichdr.usedbytes;
-+	bytes = xfs_attr_leaf_entries_end(ichdr.count, leaf) + ichdr.usedbytes;
- 	if (bytes > (state->args->geo->blksize >> 1)) {
- 		*action = 0;	/* blk over 50%, don't try to join */
- 		return 0;
-@@ -2103,9 +2109,8 @@ xfs_attr3_leaf_toosmall(
- 		bytes = state->args->geo->blksize -
- 			(state->args->geo->blksize >> 2) -
- 			ichdr.usedbytes - ichdr2.usedbytes -
--			((ichdr.count + ichdr2.count) *
--					sizeof(xfs_attr_leaf_entry_t)) -
--			xfs_attr3_leaf_hdr_size(leaf);
-+			xfs_attr_leaf_entries_end(ichdr.count + ichdr2.count,
-+					leaf);
- 
- 		xfs_trans_brelse(state->args->trans, bp);
- 		if (bytes >= 0)
-@@ -2167,8 +2172,7 @@ xfs_attr3_leaf_remove(
- 
- 	ASSERT(ichdr.count > 0 && ichdr.count < args->geo->blksize / 8);
- 	ASSERT(args->index >= 0 && args->index < ichdr.count);
--	ASSERT(ichdr.firstused >= ichdr.count * sizeof(*entry) +
--					xfs_attr3_leaf_hdr_size(leaf));
-+	ASSERT(ichdr.firstused >= xfs_attr_leaf_entries_end(ichdr.count, leaf));
- 
- 	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
- 
-@@ -2181,8 +2185,7 @@ xfs_attr3_leaf_remove(
- 	 *    find smallest free region in case we need to replace it,
- 	 *    adjust any map that borders the entry table,
- 	 */
--	tablesize = ichdr.count * sizeof(xfs_attr_leaf_entry_t)
--					+ xfs_attr3_leaf_hdr_size(leaf);
-+	tablesize = xfs_attr_leaf_entries_end(ichdr.count, leaf);
- 	tmp = ichdr.freemap[0].size;
- 	before = after = -1;
- 	smallest = XFS_ATTR_LEAF_MAPSIZE - 1;
-@@ -2289,8 +2292,7 @@ xfs_attr3_leaf_remove(
- 	 * Check if leaf is less than 50% full, caller may want to
- 	 * "join" the leaf with a sibling if so.
- 	 */
--	tmp = ichdr.usedbytes + xfs_attr3_leaf_hdr_size(leaf) +
--	      ichdr.count * sizeof(xfs_attr_leaf_entry_t);
-+	tmp = ichdr.usedbytes + xfs_attr_leaf_entries_end(ichdr.count, leaf);
- 
- 	return tmp < args->geo->magicpct; /* leaf is < 37% full */
- }
-@@ -2613,11 +2615,11 @@ xfs_attr3_leaf_moveents(
- 	       ichdr_s->magic == XFS_ATTR3_LEAF_MAGIC);
- 	ASSERT(ichdr_s->magic == ichdr_d->magic);
- 	ASSERT(ichdr_s->count > 0 && ichdr_s->count < args->geo->blksize / 8);
--	ASSERT(ichdr_s->firstused >= (ichdr_s->count * sizeof(*entry_s))
--					+ xfs_attr3_leaf_hdr_size(leaf_s));
-+	ASSERT(ichdr_s->firstused >=
-+			xfs_attr_leaf_entries_end(ichdr_s->count, leaf_s));
- 	ASSERT(ichdr_d->count < args->geo->blksize / 8);
--	ASSERT(ichdr_d->firstused >= (ichdr_d->count * sizeof(*entry_d))
--					+ xfs_attr3_leaf_hdr_size(leaf_d));
-+	ASSERT(ichdr_d->firstused >=
-+			xfs_attr_leaf_entries_end(ichdr_d->count, leaf_d));
- 
- 	ASSERT(start_s < ichdr_s->count);
- 	ASSERT(start_d <= ichdr_d->count);
-@@ -2677,8 +2679,7 @@ xfs_attr3_leaf_moveents(
- 			ichdr_d->usedbytes += tmp;
- 			ichdr_s->count -= 1;
- 			ichdr_d->count += 1;
--			tmp = ichdr_d->count * sizeof(xfs_attr_leaf_entry_t)
--					+ xfs_attr3_leaf_hdr_size(leaf_d);
-+			tmp = xfs_attr_leaf_entries_end(ichdr_d->count, leaf_d);
- 			ASSERT(ichdr_d->firstused >= tmp);
- #ifdef GROT
+@@ -228,6 +271,8 @@ xfs_attr3_leaf_hdr_to_disk(
+ 			hdr3->freemap[i].base = cpu_to_be16(from->freemap[i].base);
+ 			hdr3->freemap[i].size = cpu_to_be16(from->freemap[i].size);
  		}
-@@ -2714,8 +2715,8 @@ xfs_attr3_leaf_moveents(
- 	/*
- 	 * Fill in the freemap information
- 	 */
--	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_d);
--	ichdr_d->freemap[0].base += ichdr_d->count * sizeof(xfs_attr_leaf_entry_t);
-+	ichdr_d->freemap[0].base =
-+		xfs_attr_leaf_entries_end(ichdr_d->count, leaf_d);
- 	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
- 	ichdr_d->freemap[1].base = 0;
- 	ichdr_d->freemap[2].base = 0;
++
++		ASSERT(xfs_attr_leaf_ichdr_freemaps_verify(from, to) == NULL);
+ 		return;
+ 	}
+ 	to->hdr.info.forw = cpu_to_be32(from->forw);
+@@ -243,6 +288,8 @@ xfs_attr3_leaf_hdr_to_disk(
+ 		to->hdr.freemap[i].base = cpu_to_be16(from->freemap[i].base);
+ 		to->hdr.freemap[i].size = cpu_to_be16(from->freemap[i].size);
+ 	}
++
++	ASSERT(xfs_attr_leaf_ichdr_freemaps_verify(from, to) == NULL);
+ }
+ 
+ static xfs_failaddr_t
+@@ -395,6 +442,10 @@ xfs_attr3_leaf_verify(
+ 			return __this_address;
+ 	}
+ 
++	fa = xfs_attr_leaf_ichdr_freemaps_verify(&ichdr, leaf);
++	if (fa)
++		return fa;
++
+ 	return NULL;
+ }
+ 
+@@ -1664,6 +1715,10 @@ xfs_attr3_leaf_compact(
+ 	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
+ 	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
+ 						ichdr_dst->freemap[0].base;
++	ichdr_dst->freemap[1].base = 0;
++	ichdr_dst->freemap[2].base = 0;
++	ichdr_dst->freemap[1].size = 0;
++	ichdr_dst->freemap[2].size = 0;
+ 
+ 	/* write the header back to initialise the underlying buffer */
+ 	xfs_attr3_leaf_hdr_to_disk(args->geo, leaf_dst, ichdr_dst);
 
