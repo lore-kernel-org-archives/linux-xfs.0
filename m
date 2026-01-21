@@ -1,97 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03AED421A17;
-	Wed, 21 Jan 2026 06:41:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE5F8428492;
+	Wed, 21 Jan 2026 06:43:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768977671; cv=none; b=SaJ6f8iH4h9gYPsS+RW6xJZG7bAWObkg+YCTXtjfsEhsjSQgCVMLkHh5qfD4mY8KxK9o4kW3ViS3gBjMRztRmlLgw173QhBD3Cc5hpYKujUGFDT+Llc7uM9aMSF2/R8LTmF1YtYzjHe1jYYSCl0PuttLKtjwmZtIrRX608GOKQ8=
+	t=1768977835; cv=none; b=krN5heXIPyC75+D4nR3Rm6veTdGP34wYCOlCZXL0MYCfu4fo7v4D7GcJk/8lHap4mqB/RnZO4Oz5/nqvWUmpZ1dEmLJq2EZIt/2+ccAkJWVsNAYHX/ngd3ZJHby4OPb6Wvo7MGoD6TuQZ690tdJbA5M8fCfkcCGWUrVsXUh5hBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768977671; c=relaxed/simple;
-	bh=WCvy2J/5Yd+yxRCyIPIvWSJ5p2TjLbLiYQapWfLRGcM=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N8eKxH57l79YYVfF6xSseotuMIiAzaZU7g5soIYnL6GYEhhK0zGHDz1dkWLk+9uapOLdOy4qFXzSR/sEtVCC7IgZjQBWaCCV2hGrh52B5vBYiGdN7WoNJmSH3YvIAuR23JAOTsi04vDN/GHLhTNQDW82vTvUbwVcDQ1AgMqYe7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=if01dR4a; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768977835; c=relaxed/simple;
+	bh=YLkrbSCKD+G/S3ONCodsuC3JodKBpiXQfNm4R2boeYs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M66yoG5TzN6bLGSL7B4w7KE18EFIFY+LbdGlZE3T4i+RZk8zljsthtcz+1Uu3QcA1JXaWr6MNf/jzeFaWH8pO387jYIOjoAQ2irNcc+RtYydtMB9x+I47d+3LYmsYd+SM3bBO/3rYusXZi90ytfoTWqJPME4kY5ct+OXjFmaDvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=C45hwxXp; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="if01dR4a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A8BC116D0;
-	Wed, 21 Jan 2026 06:41:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768977670;
-	bh=WCvy2J/5Yd+yxRCyIPIvWSJ5p2TjLbLiYQapWfLRGcM=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=if01dR4a36lhGw4bK3J9lMqAUb0JqKpnwU4SqNT/p1+Qjjxm7LQoB++WgbEunEYb2
-	 IhkkvxXz1WZ9AU1GCRlbPh3HSbw/FYNBg0/SldmyNLCjnJNXEIrU7CN5devt/E/UuU
-	 7fIMm7pRwUQIcJaWn3zKWMe3DJuC0MSDC6cy0L0ABGAtW/Yk1dCtSOpQ4OdbOdZtXL
-	 msQp0iha+ntVizwRaTAfhCXm23TaU7zQxw2Q15H3L9A+BgtgOFiyFtO0IoUr1quMWE
-	 s/BANk29cqlN6i53tfAtE0zQIKlNnMTlvZJqryFi9FTs63kS00tZLFg495Hb1+ivLr
-	 CKLsLgWp6RTgQ==
-Date: Tue, 20 Jan 2026 22:41:10 -0800
-Subject: [PATCH 4/4] xfs: fix UAF in xchk_btree_check_block_owner
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: r772577952@gmail.com, stable@vger.kernel.org, r772577952@gmail.com,
- hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <176897723630.207608.15659392786155037540.stgit@frogsfrogsfrogs>
-In-Reply-To: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
-References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C45hwxXp"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=OOSZ5lxgFSCxw3vOeo0QATToTC6dGMgPEe8IAbyjeS4=; b=C45hwxXpyIHpfLmfrch4W+CjAD
+	iBlgZ1r3Fsy5jBRqTWfl/SUWozYaN+3xzw0e/XkQ0azK4a2/OpJawzOq+unGsPEczju9gjLF8K2VQ
+	oXrDyuQdiu2RxfqqJVh2sgSIal6eUz0db0OWbmDYJRlXdc7kr/QZZptjJ0JEkDVDPTjv0r0K4J1Lg
+	8l2E09iqEfv1uPtPMDYfN/DiuYfwkt1oSH/xN8dlQK4dWgfFdiW4b3ajAmcDQesaXqRWe0r5K3Alh
+	DpxDQDuKs2lDJ0u3Bc5KV9WZr2Ta7C748h3f3MeL/TIjLOMDSfmXeVcTP5H/ah3gcnwum2XUGKH9f
+	/q+gz/MA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1viRwP-00000004xX9-3C4s;
+	Wed, 21 Jan 2026 06:43:46 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	linux-block@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: support file system generated / verified integrity information
+Date: Wed, 21 Jan 2026 07:43:08 +0100
+Message-ID: <20260121064339.206019-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-We cannot dereference bs->cur when trying to determine if bs->cur
-aliases bs->sc->sa.{bno,rmap}_cur after the latter has been freed.
-Fix this by sampling before type before any freeing could happen.
-The correct temporal ordering was broken when we removed xfs_btnum_t.
+this series adds support to generate and verify integrity information
+(aka T10 PI) in the file system, instead of the automatic below the
+covers support that is currently used.
 
-Cc: r772577952@gmail.com
-Cc: <stable@vger.kernel.org> # v6.9
-Fixes: ec793e690f801d ("xfs: remove xfs_btnum_t")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/scrub/btree.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+There two reasons for this:
 
+  a) to increase the protection enveloped.  Right now this is just a
+     minor step from the bottom of the block layer to the file system,
+     but it is required to support io_uring integrity data passthrough in
+     the file system similar to the currently existing support for block
+     devices, which will follow next.  It also allows the file system to
+     directly see the integrity error and act upon in, e.g. when using
+     RAID either integrated (as in btrfs) or by supporting reading
+     redundant copies through the block layer.
+  b) to make the PI processing more efficient.  This is primarily a
+     concern for reads, where the block layer auto PI has to schedule a
+     work item for each bio, and the file system them has to do it again
+     for bounce buffering.  Additionally the current iomap post-I/O
+     workqueue handling is a lot more efficient by supporting merging and
+     avoiding workqueue scheduling storms.
 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index cd6f0ff382a7c8..acade92c5fce1a 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -370,12 +370,15 @@ xchk_btree_check_block_owner(
- {
- 	xfs_agnumber_t		agno;
- 	xfs_agblock_t		agbno;
-+	bool			is_bnobt, is_rmapbt;
- 	bool			init_sa;
- 	int			error = 0;
- 
- 	if (!bs->cur)
- 		return 0;
- 
-+	is_bnobt = xfs_btree_is_bno(bs->cur->bc_ops);
-+	is_rmapbt = xfs_btree_is_rmap(bs->cur->bc_ops);
- 	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
- 	agbno = xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
- 
-@@ -398,11 +401,11 @@ xchk_btree_check_block_owner(
- 	 * have to nullify it (to shut down further block owner checks) if
- 	 * self-xref encounters problems.
- 	 */
--	if (!bs->sc->sa.bno_cur && xfs_btree_is_bno(bs->cur->bc_ops))
-+	if (!bs->sc->sa.bno_cur && is_bnobt)
- 		bs->cur = NULL;
- 
- 	xchk_xref_is_only_owned_by(bs->sc, agbno, 1, bs->oinfo);
--	if (!bs->sc->sa.rmap_cur && xfs_btree_is_rmap(bs->cur->bc_ops))
-+	if (!bs->sc->sa.rmap_cur && is_rmapbt)
- 		bs->cur = NULL;
- 
- out_free:
+The implementation is based on refactoring the existing block layer PI
+code to be reusable for this use case, and then adding relatively small
+wrappers for the file system use case.  These are then used in iomap
+to implement the semantics, and wired up in XFS with a small amount of
+glue code.
 
+Compared to the baseline (iomap-bounce branch), this does not change
+performance for writes, but increases read performance up to 15% for 4k
+I/O, with the benefit decreasing with larger I/O sizes as even the
+baseline maxes out the device quickly.  But even for larger I/O sizes,
+the number of context switches decreases and cpu usage sees a minor
+decrease.
+
+The patches both require the recent integrity changes in the block tree
+and the direct I/O bounce buffering series I previously sent out, so
+you're probably better off just using the git tree instead of applying
+the patches.
+
+Git tree:
+
+    git://git.infradead.org/users/hch/misc.git iomap-pi
+
+Gitweb:
+
+    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/iomap-pi
+
+Diffstat:
+ block/Makefile                |    2 
+ block/bio-integrity-auto.c    |   80 +++---------------------
+ block/bio-integrity-fs.c      |   81 +++++++++++++++++++++++++
+ block/bio-integrity.c         |   64 +++++++++++++++++++
+ block/bio.c                   |   17 +++--
+ block/blk-mq.c                |    6 +
+ block/blk-settings.c          |   13 ----
+ block/blk.h                   |    6 +
+ block/t10-pi.c                |   12 +--
+ drivers/nvdimm/btt.c          |    6 +
+ fs/fuse/file.c                |    5 -
+ fs/iomap/bio.c                |  135 ++++++++++++++++++++++++++++--------------
+ fs/iomap/buffered-io.c        |    8 +-
+ fs/iomap/direct-io.c          |   15 ++++
+ fs/iomap/internal.h           |   14 ++++
+ fs/iomap/ioend.c              |   28 +++++++-
+ fs/xfs/xfs_aops.c             |   47 +++++++++++++-
+ fs/xfs/xfs_iomap.c            |    9 +-
+ include/linux/bio-integrity.h |   12 ++-
+ include/linux/bio.h           |    2 
+ include/linux/blk-integrity.h |   21 ++++--
+ include/linux/blkdev.h        |   34 ++++++++--
+ include/linux/iomap.h         |   20 +++++-
+ 23 files changed, 456 insertions(+), 181 deletions(-)
