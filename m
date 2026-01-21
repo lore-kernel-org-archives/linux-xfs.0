@@ -1,556 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1FF3A1D10;
-	Wed, 21 Jan 2026 18:22:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769019729; cv=none; b=H1IGgW+4P84TACHyvyf0sOu+wJdE9lETcmZLL68TvemzUsKvIWoEa6CJvT/oSzx6bu+T+bN1YLiRrnGM5UArs3QrZaOn9tvjFdOZX9Vi8kIJtbERwN3NYT+5/6TvPpkxmyyNRMlOkZig6/09S36Xc6GQGdrU8pJjBfW5edKAK8Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769019729; c=relaxed/simple;
-	bh=GQuXdHq0BZvj7rXvGtnsPCvu85I758Quvzb9Xb/VmM4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mqzVz6OPApFWY/V5bXJuSdbdZuxy+TVx/WAd4SQqx1EPuAzi8bBDheFQgnj37+so/er5Q/PmTMYyiojnbFSHF91G0XfaTB9CW79GCjCM+KAnbiGx60tXtbSFEgOEa9o1qJiV4FbQ5K/rY3Pm0ZRLxIlAnTRxsyrdxyGjyo2alY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MkfiGixD; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E01266576
+	for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 19:00:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769022013; cv=pass; b=Crsd7Lf2KktGr4p4MHHKyh5ETCStY7IIPxo620EMqXPQQxLkxrfaVxTYwnDGeZJes08V+81VNJdttzcXyNh7OMBCtYbxv3YnVIv+Ev+KzzfmqJw/cHyU2jjoli8GgFFwTpZZfUjU76kwbS/n/jySS5VcjbvRA9ZNCd+eTo5xank=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769022013; c=relaxed/simple;
+	bh=P50vKKEGRcti/ilk0zXXEyTeAkMnj2pLP0nOzx4jcho=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lyzON5uLaYJ4YHtAKDdKhZeymxwrCU/kQyhiIewdg0Yrk/ZH/6VGYxX7DCxlaluQj0M04WgxsACJj5UDrcUULM7mXiYe/7tvFszbHbKUvSD51ouXHRpVcmVbqNGdWqBwMj9XpnKb4MwpGVhiNk3oUWpFlXC91aGODE7P4ogCMHo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ke3b0iRs; arc=pass smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MkfiGixD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3623AC4CEF1;
-	Wed, 21 Jan 2026 18:22:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769019729;
-	bh=GQuXdHq0BZvj7rXvGtnsPCvu85I758Quvzb9Xb/VmM4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MkfiGixDkj8vxJxc/mVANCswomQJPJ04WFw1WByVahbNHk6Z2xH2U207ANbquDMC+
-	 NZ7hLDxxCK4vjwbuajk5hml8KeM7WN/C/tyWCsa7O4pqkvZz2EUi1LxhuPAz/7E0Ks
-	 Xxc0nCGNHEGIx4E4BckmCRVYLdes/BLURzIolZkXO9qnxWIc8VSZC741HCx/MT8Kt/
-	 mUDpSntsxdEeczTJnqNDScnghvgoImOcAxstTvDeraANN3KY0Oha0x77Q55DCl8ea5
-	 4PPhztPQV3gIrL73GGNcuHWLJ2tWjkwGNdSpg3O5/Opj/9fIj2lIJ8H1+614N3a0tJ
-	 OS+o9HY2Rt2ZA==
-Date: Wed, 21 Jan 2026 10:22:08 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, r772577952@gmail.com, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: check the return value of xchk_xfile_*_descr
- calls
-Message-ID: <20260121182208.GH5945@frogsfrogsfrogs>
-References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
- <176897723563.207608.1472219452580720216.stgit@frogsfrogsfrogs>
- <20260121070323.GA11640@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ke3b0iRs"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-b87693c981fso20614166b.1
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jan 2026 11:00:09 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1769022008; cv=none;
+        d=google.com; s=arc-20240605;
+        b=CvcPTkM4G0b4lgoTWfgyHJZeXT7U3jHsCtCbc4WVF4WIWI3PRYQSivaVzAQeSFia8k
+         YjJ1UN5K0+wme0hUUfoTa2xIigeXzJFUoZEsDEZhwZ2JJiUGMic3cCObzvyvPJh3xFOf
+         EGhhQ51WIf2dZ2o96bHBJ0w2y3ILH6bWhf1Ce3Mc0NLQ4VWIoJexMnVbyT8DHlnPBtfe
+         q8YoUvqkkMHDsDdpJ65PZmsBBh6pXDS24zefBHtuMJUDu+Hoz/9lp3A2/N19T51A5RtX
+         +LXlCvvswxiZn9dHcS6+eFssYYTgjT1jqaVgYjqH6mysJj/aKyGlpS2g2hHlex5YN/l+
+         c9aQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=P50vKKEGRcti/ilk0zXXEyTeAkMnj2pLP0nOzx4jcho=;
+        fh=ktpq/jDXdWYxUsHiiPasVDsCXGAKoM/GPwg2n1+qOkA=;
+        b=VMOZZmnFEcWoRdUGHNhIqv9ZzEBDzd1gB4j7BGDYgPowCOfhU59Vr9Yrvh3ovW8Gpl
+         jZBgDYSw0CsRtnU/3JeyaDwoeH64p5UFAQAOOvFP3d7/8gt8CFhF7/YnyN/7t2LMx7UR
+         AZHe96pilAvWncC8dUidu84mXgwGACGR5qSIS++b0Bs6DOxgcdf4Br2a/fMqRQlft2NC
+         mjY2ycPG7E1EDmPlyxLkKNH2ztnyM3fbTu+DGhLki6LYh+EYyErWoHvBVebwtLyWXzVF
+         kF9CUrzwKODdiaRirC53kEH5EvC6l0cNfIIUMnPaE7s0+trigmomvS7uhCHTHv5bvTh8
+         gnCQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769022008; x=1769626808; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=P50vKKEGRcti/ilk0zXXEyTeAkMnj2pLP0nOzx4jcho=;
+        b=ke3b0iRsOPGdb9oGItiqf3p2ocGTfsItthso0F5B2fak03CUA0liWLn/Ve+kCx5qdQ
+         JombE0ayrWVRZQXIZl23qp9IKs0OR39m8RilvLRQvVGHRFm30KkpG++OotWZ92AwuCGc
+         mfAvUOj8NIFwo25zttpr2t9oiEAh7Td8L4n9JqF49lbt65BYqwZMpd8IuL+pjuR3w7Cx
+         uwF7vQXLdVLV63Ny5cgNkQ66Jb7r0JOenkZbCMRNua5Ow/a8OGWNheD6DVKMa3a6U1VX
+         hddDJM9Nq2Z5pHCrVaA1w4AG9WOs41axr0x1rUqjUrhki3bUl8DCRQXOnsnH+8mR9kKE
+         KgeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769022008; x=1769626808;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=P50vKKEGRcti/ilk0zXXEyTeAkMnj2pLP0nOzx4jcho=;
+        b=Zkse7+TYRZUtoVl+t2zyHqzOX79ztBY+qvlCluqExCtpIpLgfX49DFtmLHbkBNuiDw
+         k7pjv0dPa6Vs6ox9IoiDQzsQBSefCKXRAzF/IBw8dJYkAoI+8C62mAx33RYxJNjWClu+
+         yTCVZobWt+ze0ZLSZc+3VnDqHjrTE0BDXmc4mwRruVwUutEnEWw4QwBFsuunH2T69DSd
+         XU1LROkdNfOqhfdEEwSflhxiqN1BvbPKwhm8xm4li4hFjdV5Sh97fG/5/y8tIOGaglIP
+         1DEOvEUb9r16esQD3mc9dOt04Y3n8lxiUjEo53lcAY8ICk/Eh2S9pnlrW9diOKNs9Ths
+         Z6gA==
+X-Forwarded-Encrypted: i=1; AJvYcCWcMTfSKzjHI4xeEky7u/2NzZxj9fRkq2ih53ja416qIWDAQdx1NHQEApBciLg2wmffgTi+myOYAlc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMmyN9eXT+dCqOwCXg7zQ860MgHVTFLVA3cpdurtgBINtqR0OX
+	rZUb1+4Ls1ka7aeMRaRxM9yGcIzdNAEa/5OESXw98nAOHMsXmvDJYMYw96lKlZS3iqRcgMCTy1c
+	IUrjCi0yKUqhVCKkJYDhVH+zvcc4hUNA=
+X-Gm-Gg: AZuq6aLAKcd81SyNp4G5DV1HYPgu1+uJlpfarlVdm6T/F2+KO1VLU0Jntx4cT0to8cC
+	KedL538/+MJ/l5esLyE9xltU9dYO8o75AWuhwccSsDas8VxtZTRvThsc/eEO5pNdMzOhbfyRquB
+	uuX9DRiJsDiIifit9Ci8IyiQqcizb5JGLHex/Vq30Jtruw0tCvj3nJB72BeO5oo+80iB1K8cWkp
+	5HrVgIQqrFWESP+hhpyVE8Mv0vBjmrybMpq/JQB4crKKC2VEYcrs365CuWYBxuZONvTGw88nzvC
+	ZMECFpzXsCz547HCALkNYbJ1c4o=
+X-Received: by 2002:a17:906:6a13:b0:b87:206a:a23b with SMTP id
+ a640c23a62f3a-b8792f79852mr1477117366b.34.1769022007470; Wed, 21 Jan 2026
+ 11:00:07 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260121070323.GA11640@lst.de>
+References: <20260115-exportfs-nfsd-v1-0-8e80160e3c0c@kernel.org>
+ <CAOQ4uxjOJMwv_hRVTn3tJHDLMQHbeaCGsdLupiZYcwm7M2rm3g@mail.gmail.com>
+ <9c99197dde2eafa55a1b55dce2f0d4d02c77340a.camel@kernel.org>
+ <176877859306.16766.15009835437490907207@noble.neil.brown.name>
+ <aW3SAKIr_QsnEE5Q@infradead.org> <176880736225.16766.4203157325432990313@noble.neil.brown.name>
+ <20260119-kanufahren-meerjungfrau-775048806544@brauner> <176885553525.16766.291581709413217562@noble.neil.brown.name>
+ <20260120-entmilitarisieren-wanken-afd04b910897@brauner> <176890211061.16766.16354247063052030403@noble.neil.brown.name>
+ <20260120-hacken-revision-88209121ac2c@brauner> <a35ac736d9ebc6c92a6e7d61aeb5198234102442.camel@kernel.org>
+ <176896790525.16766.11792073987699294594@noble.neil.brown.name> <ccb32c576cc4ebf943d5ec35e3d7ba4ae8892acd.camel@kernel.org>
+In-Reply-To: <ccb32c576cc4ebf943d5ec35e3d7ba4ae8892acd.camel@kernel.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 21 Jan 2026 19:59:56 +0100
+X-Gm-Features: AZwV_Qh050IhjThhArfxNo-53HjJR0uLCcITEQOtntS-75Lw875opD6ONQssxps
+Message-ID: <CAOQ4uxg+dC1o+6V7Nvxf8UW3H=0OvsGjEe76LNY6q8ZcpGDDJw@mail.gmail.com>
+Subject: Re: [PATCH 00/29] fs: require filesystems to explicitly opt-in to
+ nfsd export support
+To: Jeff Layton <jlayton@kernel.org>
+Cc: NeilBrown <neil@brown.name>, Christian Brauner <brauner@kernel.org>, 
+	Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Chuck Lever <chuck.lever@oracle.com>, Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	"Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>, 
+	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
+	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, 
+	Carlos Maiolino <cem@kernel.org>, Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
+	Luis de Bethencourt <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, 
+	Phillip Lougher <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, 
+	Paulo Alcantara <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+	Shyam Prasad N <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
+	Joseph Qi <joseph.qi@linux.alibaba.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>, 
+	David Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>, Jan Kara <jack@suse.cz>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jaegeuk Kim <jaegeuk@kernel.org>, linux-nfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
+	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
+	linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org, devel@lists.orangefs.org, 
+	ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev, 
+	linux-nilfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+	linux-mtd@lists.infradead.org, gfs2@lists.linux.dev, 
+	linux-f2fs-devel@lists.sourceforge.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 21, 2026 at 08:03:23AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 20, 2026 at 10:40:23PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > The xchk_xfile_*_descr macros call kasprintf, which can fail to allocate
-> > memory if the formatted string is larger than 16 bytes (or whatever the
-> > nofail guarantees are nowadays).  Some of them could easily exceed that,
-> > so let's just add return value checking across the board.  Note that
-> > this patch touches a number of commits, most of which were merged
-> > between 6.6 and 6.14.
-> 
-> Hmm.  I think this goes back to a discussion we had before, and I fear I
-> forgot your answer:
-> 
-> xchk_xfile_*_descr is used to pass the name to xfarray_create or
-> xfblob_create.  I still think it would make this a lot more robust if
-> those took a format string and varags, and then we'd have wrappers for
-> the common types.  Even if that still ends up doing kasprintf underneath,
-> that would be isolated to the low-level functions that only need to
-> implement error handling and freeing once.
+On Wed, Jan 21, 2026 at 12:56=E2=80=AFPM Jeff Layton <jlayton@kernel.org> w=
+rote:
+>
+...
+> > But if you really really want to set this new flag on almost every
+> > export_operations, can I ask that you please set it on EVERY export
+> > operations, then allow maintainers to remove it as they see fit.
+> > I think that approach would be much easier to review.
+> >
+>
+> We could probably do that, but I think the main ones that excludes it
+> are kernfs, pidfs and nsfs. ovl and fuse also have export ops in
+> certain modes that exclude NFS access, so the flag was left off of
+> those as well.
+>
 
-Alternately we just drop all the helpers and kasprintf crap in favor of
-feeding the raw string ("iunlinked next pointers") all the way through
-to shmem_kernel_file_setup.  That reduces ease of observability but now
-there's one less way to fail.  Most people probably aren't going to
-ls -la /proc/$xfs_scrub_pid/fd/ and anyone looking at ftrace can figure
-out the group/inode/whatever from the other tracepoints.
+For the record, my comments regarding fuse_export_fid_operations
+and ovl_export_fid_operations variants were purely semantic -
+it did not make sense to mark them as _STABLE_HANDLE, but
+it does not matter if you set a flag on those ops, because they do
+not implement ->fh_to_dentry(), on purpose, they are not
+exportfs_can_decode_fh() by design.
 
---D
-
-> > 
-> > Cc: r772577952@gmail.com
-> > Cc: <stable@vger.kernel.org> # v6.12
-> > Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >  fs/xfs/scrub/agheader_repair.c   |    6 ++++++
-> >  fs/xfs/scrub/alloc_repair.c      |    5 +++++
-> >  fs/xfs/scrub/attr_repair.c       |   20 ++++++++++++++++++++
-> >  fs/xfs/scrub/bmap_repair.c       |    5 +++++
-> >  fs/xfs/scrub/dir.c               |   10 ++++++++++
-> >  fs/xfs/scrub/dir_repair.c        |    8 ++++++++
-> >  fs/xfs/scrub/dirtree.c           |   10 ++++++++++
-> >  fs/xfs/scrub/ialloc_repair.c     |    5 +++++
-> >  fs/xfs/scrub/nlinks.c            |    5 +++++
-> >  fs/xfs/scrub/parent.c            |    8 ++++++++
-> >  fs/xfs/scrub/parent_repair.c     |   20 ++++++++++++++++++++
-> >  fs/xfs/scrub/quotacheck.c        |   15 +++++++++++++++
-> >  fs/xfs/scrub/refcount_repair.c   |    8 ++++++++
-> >  fs/xfs/scrub/rmap_repair.c       |    3 +++
-> >  fs/xfs/scrub/rtbitmap_repair.c   |    3 +++
-> >  fs/xfs/scrub/rtrefcount_repair.c |    8 ++++++++
-> >  fs/xfs/scrub/rtrmap_repair.c     |    3 +++
-> >  fs/xfs/scrub/rtsummary.c         |    3 +++
-> >  18 files changed, 145 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> > index cd6f0223879f49..8d7762cf5daffd 100644
-> > --- a/fs/xfs/scrub/agheader_repair.c
-> > +++ b/fs/xfs/scrub/agheader_repair.c
-> > @@ -1743,6 +1743,9 @@ xrep_agi(
-> >  	sc->buf_cleanup = xrep_agi_buf_cleanup;
-> >  
-> >  	descr = xchk_xfile_ag_descr(sc, "iunlinked next pointers");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(xfs_agino_t),
-> >  			&ragi->iunlink_next);
-> >  	kfree(descr);
-> > @@ -1750,6 +1753,9 @@ xrep_agi(
-> >  		return error;
-> >  
-> >  	descr = xchk_xfile_ag_descr(sc, "iunlinked prev pointers");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(xfs_agino_t),
-> >  			&ragi->iunlink_prev);
-> >  	kfree(descr);
-> > diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-> > index bed6a09aa79112..2e1d62efba72a7 100644
-> > --- a/fs/xfs/scrub/alloc_repair.c
-> > +++ b/fs/xfs/scrub/alloc_repair.c
-> > @@ -877,6 +877,11 @@ xrep_allocbt(
-> >  
-> >  	/* Set up enough storage to handle maximally fragmented free space. */
-> >  	descr = xchk_xfile_ag_descr(sc, "free space records");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_ra;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, mp->m_sb.sb_agblocks / 2,
-> >  			sizeof(struct xfs_alloc_rec_incore),
-> >  			&ra->free_records);
-> > diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-> > index c7eb94069cafcd..73684ce9b81bc5 100644
-> > --- a/fs/xfs/scrub/attr_repair.c
-> > +++ b/fs/xfs/scrub/attr_repair.c
-> > @@ -1556,6 +1556,11 @@ xrep_xattr_setup_scan(
-> >  
-> >  	/* Set up some staging for salvaged attribute keys and values */
-> >  	descr = xchk_xfile_ino_descr(sc, "xattr keys");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_rx;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xrep_xattr_key),
-> >  			&rx->xattr_records);
-> >  	kfree(descr);
-> > @@ -1563,6 +1568,11 @@ xrep_xattr_setup_scan(
-> >  		goto out_rx;
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "xattr names");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_keys;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &rx->xattr_blobs);
-> >  	kfree(descr);
-> >  	if (error)
-> > @@ -1573,6 +1583,11 @@ xrep_xattr_setup_scan(
-> >  
-> >  		descr = xchk_xfile_ino_descr(sc,
-> >  				"xattr retained parent pointer entries");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_values;
-> > +		}
-> > +
-> >  		error = xfarray_create(descr, 0,
-> >  				sizeof(struct xrep_xattr_pptr),
-> >  				&rx->pptr_recs);
-> > @@ -1582,6 +1597,11 @@ xrep_xattr_setup_scan(
-> >  
-> >  		descr = xchk_xfile_ino_descr(sc,
-> >  				"xattr retained parent pointer names");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_pprecs;
-> > +		}
-> > +
-> >  		error = xfblob_create(descr, &rx->pptr_names);
-> >  		kfree(descr);
-> >  		if (error)
-> > diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-> > index 1084213b8e9b88..74df05142dcf4c 100644
-> > --- a/fs/xfs/scrub/bmap_repair.c
-> > +++ b/fs/xfs/scrub/bmap_repair.c
-> > @@ -947,6 +947,11 @@ xrep_bmap(
-> >  	max_bmbt_recs = xfs_iext_max_nextents(large_extcount, whichfork);
-> >  	descr = xchk_xfile_ino_descr(sc, "%s fork mapping records",
-> >  			whichfork == XFS_DATA_FORK ? "data" : "attr");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_rb;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, max_bmbt_recs,
-> >  			sizeof(struct xfs_bmbt_rec), &rb->bmap_records);
-> >  	kfree(descr);
-> > diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> > index c877bde71e6280..58346d54042b07 100644
-> > --- a/fs/xfs/scrub/dir.c
-> > +++ b/fs/xfs/scrub/dir.c
-> > @@ -1109,6 +1109,11 @@ xchk_directory(
-> >  		 * due to locking contention.
-> >  		 */
-> >  		descr = xchk_xfile_ino_descr(sc, "slow directory entries");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_sd;
-> > +		}
-> > +
-> >  		error = xfarray_create(descr, 0, sizeof(struct xchk_dirent),
-> >  				&sd->dir_entries);
-> >  		kfree(descr);
-> > @@ -1116,6 +1121,11 @@ xchk_directory(
-> >  			goto out_sd;
-> >  
-> >  		descr = xchk_xfile_ino_descr(sc, "slow directory entry names");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_entries;
-> > +		}
-> > +
-> >  		error = xfblob_create(descr, &sd->dir_names);
-> >  		kfree(descr);
-> >  		if (error)
-> > diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-> > index 8d3b550990b58a..50e0af4bdaa63a 100644
-> > --- a/fs/xfs/scrub/dir_repair.c
-> > +++ b/fs/xfs/scrub/dir_repair.c
-> > @@ -1789,6 +1789,9 @@ xrep_dir_setup_scan(
-> >  
-> >  	/* Set up some staging memory for salvaging dirents. */
-> >  	descr = xchk_xfile_ino_descr(sc, "directory entries");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xrep_dirent),
-> >  			&rd->dir_entries);
-> >  	kfree(descr);
-> > @@ -1796,6 +1799,11 @@ xrep_dir_setup_scan(
-> >  		return error;
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "directory entry names");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_xfarray;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &rd->dir_names);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-> > index 3a9cdf8738b6db..7f8ad41e3ec20e 100644
-> > --- a/fs/xfs/scrub/dirtree.c
-> > +++ b/fs/xfs/scrub/dirtree.c
-> > @@ -117,6 +117,11 @@ xchk_setup_dirtree(
-> >  	mutex_init(&dl->lock);
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "dirtree path steps");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_dl;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xchk_dirpath_step),
-> >  			&dl->path_steps);
-> >  	kfree(descr);
-> > @@ -124,6 +129,11 @@ xchk_setup_dirtree(
-> >  		goto out_dl;
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "dirtree path names");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_steps;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &dl->path_names);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-> > index 14e48d3f1912bf..3055380cf29271 100644
-> > --- a/fs/xfs/scrub/ialloc_repair.c
-> > +++ b/fs/xfs/scrub/ialloc_repair.c
-> > @@ -817,6 +817,11 @@ xrep_iallocbt(
-> >  	xfs_agino_range(mp, pag_agno(sc->sa.pag), &first_agino, &last_agino);
-> >  	last_agino /= XFS_INODES_PER_CHUNK;
-> >  	descr = xchk_xfile_ag_descr(sc, "inode index records");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_ri;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, last_agino,
-> >  			sizeof(struct xfs_inobt_rec_incore),
-> >  			&ri->inode_records);
-> > diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-> > index 091c79e432e592..c71b065ccb4c45 100644
-> > --- a/fs/xfs/scrub/nlinks.c
-> > +++ b/fs/xfs/scrub/nlinks.c
-> > @@ -1008,6 +1008,11 @@ xchk_nlinks_setup_scan(
-> >  	xfs_agino_range(mp, last_agno, &first_agino, &last_agino);
-> >  	max_inos = XFS_AGINO_TO_INO(mp, last_agno, last_agino) + 1;
-> >  	descr = xchk_xfile_descr(sc, "file link counts");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_teardown;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, min(XFS_MAXINUMBER + 1, max_inos),
-> >  			sizeof(struct xchk_nlink), &xnc->nlinks);
-> >  	kfree(descr);
-> > diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> > index 11d5de10fd567b..11c70e5d3e03de 100644
-> > --- a/fs/xfs/scrub/parent.c
-> > +++ b/fs/xfs/scrub/parent.c
-> > @@ -769,6 +769,9 @@ xchk_parent_pptr(
-> >  	 * due to locking contention.
-> >  	 */
-> >  	descr = xchk_xfile_ino_descr(sc, "slow parent pointer entries");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xchk_pptr),
-> >  			&pp->pptr_entries);
-> >  	kfree(descr);
-> > @@ -776,6 +779,11 @@ xchk_parent_pptr(
-> >  		goto out_pp;
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "slow parent pointer names");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_entries;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &pp->pptr_names);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/parent_repair.c b/fs/xfs/scrub/parent_repair.c
-> > index 2949feda627175..8683317f2342df 100644
-> > --- a/fs/xfs/scrub/parent_repair.c
-> > +++ b/fs/xfs/scrub/parent_repair.c
-> > @@ -1526,6 +1526,11 @@ xrep_parent_setup_scan(
-> >  
-> >  	/* Set up some staging memory for logging parent pointer updates. */
-> >  	descr = xchk_xfile_ino_descr(sc, "parent pointer entries");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_xattr_value;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xrep_pptr),
-> >  			&rp->pptr_recs);
-> >  	kfree(descr);
-> > @@ -1533,6 +1538,11 @@ xrep_parent_setup_scan(
-> >  		goto out_xattr_value;
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc, "parent pointer names");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_recs;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &rp->pptr_names);
-> >  	kfree(descr);
-> >  	if (error)
-> > @@ -1541,6 +1551,11 @@ xrep_parent_setup_scan(
-> >  	/* Set up some storage for copying attrs before the mapping exchange */
-> >  	descr = xchk_xfile_ino_descr(sc,
-> >  				"parent pointer retained xattr entries");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_names;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, 0, sizeof(struct xrep_parent_xattr),
-> >  			&rp->xattr_records);
-> >  	kfree(descr);
-> > @@ -1549,6 +1564,11 @@ xrep_parent_setup_scan(
-> >  
-> >  	descr = xchk_xfile_ino_descr(sc,
-> >  				"parent pointer retained xattr values");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_attr_keys;
-> > +	}
-> > +
-> >  	error = xfblob_create(descr, &rp->xattr_blobs);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/quotacheck.c b/fs/xfs/scrub/quotacheck.c
-> > index d412a8359784ee..7d0ad19ddf577d 100644
-> > --- a/fs/xfs/scrub/quotacheck.c
-> > +++ b/fs/xfs/scrub/quotacheck.c
-> > @@ -757,6 +757,11 @@ xqcheck_setup_scan(
-> >  	error = -ENOMEM;
-> >  	if (xfs_this_quota_on(sc->mp, XFS_DQTYPE_USER)) {
-> >  		descr = xchk_xfile_descr(sc, "user dquot records");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_teardown;
-> > +		}
-> > +
-> >  		error = xfarray_create(descr, max_dquots,
-> >  				sizeof(struct xqcheck_dquot), &xqc->ucounts);
-> >  		kfree(descr);
-> > @@ -766,6 +771,11 @@ xqcheck_setup_scan(
-> >  
-> >  	if (xfs_this_quota_on(sc->mp, XFS_DQTYPE_GROUP)) {
-> >  		descr = xchk_xfile_descr(sc, "group dquot records");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_teardown;
-> > +		}
-> > +
-> >  		error = xfarray_create(descr, max_dquots,
-> >  				sizeof(struct xqcheck_dquot), &xqc->gcounts);
-> >  		kfree(descr);
-> > @@ -775,6 +785,11 @@ xqcheck_setup_scan(
-> >  
-> >  	if (xfs_this_quota_on(sc->mp, XFS_DQTYPE_PROJ)) {
-> >  		descr = xchk_xfile_descr(sc, "project dquot records");
-> > +		if (!descr) {
-> > +			error = -ENOMEM;
-> > +			goto out_teardown;
-> > +		}
-> > +
-> >  		error = xfarray_create(descr, max_dquots,
-> >  				sizeof(struct xqcheck_dquot), &xqc->pcounts);
-> >  		kfree(descr);
-> > diff --git a/fs/xfs/scrub/refcount_repair.c b/fs/xfs/scrub/refcount_repair.c
-> > index 9c8cb5332da042..d53c9a5bb7809c 100644
-> > --- a/fs/xfs/scrub/refcount_repair.c
-> > +++ b/fs/xfs/scrub/refcount_repair.c
-> > @@ -127,6 +127,9 @@ xrep_setup_ag_refcountbt(
-> >  	int			error;
-> >  
-> >  	descr = xchk_xfile_ag_descr(sc, "rmap record bag");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xrep_setup_xfbtree(sc, descr);
-> >  	kfree(descr);
-> >  	return error;
-> > @@ -718,6 +721,11 @@ xrep_refcountbt(
-> >  
-> >  	/* Set up enough storage to handle one refcount record per block. */
-> >  	descr = xchk_xfile_ag_descr(sc, "reference count records");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_rr;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, mp->m_sb.sb_agblocks,
-> >  			sizeof(struct xfs_refcount_irec),
-> >  			&rr->refcount_records);
-> > diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
-> > index 17d4a38d735cb8..c619ba469e36de 100644
-> > --- a/fs/xfs/scrub/rmap_repair.c
-> > +++ b/fs/xfs/scrub/rmap_repair.c
-> > @@ -170,6 +170,9 @@ xrep_setup_ag_rmapbt(
-> >  	xchk_fsgates_enable(sc, XCHK_FSGATES_RMAP);
-> >  
-> >  	descr = xchk_xfile_ag_descr(sc, "reverse mapping records");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xrep_setup_xfbtree(sc, descr);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
-> > index 203a1a97c5026e..070347df717c46 100644
-> > --- a/fs/xfs/scrub/rtbitmap_repair.c
-> > +++ b/fs/xfs/scrub/rtbitmap_repair.c
-> > @@ -53,6 +53,9 @@ xrep_setup_rtbitmap(
-> >  
-> >  	/* Create an xfile to hold our reconstructed bitmap. */
-> >  	descr = xchk_xfile_rtgroup_descr(sc, "bitmap file");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfile_create(descr, blocks * mp->m_sb.sb_blocksize, &sc->xfile);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/rtrefcount_repair.c b/fs/xfs/scrub/rtrefcount_repair.c
-> > index 983362447826de..029e3e332f605e 100644
-> > --- a/fs/xfs/scrub/rtrefcount_repair.c
-> > +++ b/fs/xfs/scrub/rtrefcount_repair.c
-> > @@ -132,6 +132,9 @@ xrep_setup_rtrefcountbt(
-> >  	int			error;
-> >  
-> >  	descr = xchk_xfile_ag_descr(sc, "rmap record bag");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xrep_setup_xfbtree(sc, descr);
-> >  	kfree(descr);
-> >  	return error;
-> > @@ -723,6 +726,11 @@ xrep_rtrefcountbt(
-> >  
-> >  	/* Set up enough storage to handle one refcount record per rt extent. */
-> >  	descr = xchk_xfile_ag_descr(sc, "reference count records");
-> > +	if (!descr) {
-> > +		error = -ENOMEM;
-> > +		goto out_rr;
-> > +	}
-> > +
-> >  	error = xfarray_create(descr, mp->m_sb.sb_rextents,
-> >  			sizeof(struct xfs_refcount_irec),
-> >  			&rr->refcount_records);
-> > diff --git a/fs/xfs/scrub/rtrmap_repair.c b/fs/xfs/scrub/rtrmap_repair.c
-> > index 7561941a337a1f..c74d640068d1c8 100644
-> > --- a/fs/xfs/scrub/rtrmap_repair.c
-> > +++ b/fs/xfs/scrub/rtrmap_repair.c
-> > @@ -109,6 +109,9 @@ xrep_setup_rtrmapbt(
-> >  	xchk_fsgates_enable(sc, XCHK_FSGATES_RMAP);
-> >  
-> >  	descr = xchk_xfile_rtgroup_descr(sc, "reverse mapping records");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xrep_setup_xfbtree(sc, descr);
-> >  	kfree(descr);
-> >  	if (error)
-> > diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-> > index 4ac679c1bd29cd..bf2b96e51d070c 100644
-> > --- a/fs/xfs/scrub/rtsummary.c
-> > +++ b/fs/xfs/scrub/rtsummary.c
-> > @@ -71,6 +71,9 @@ xchk_setup_rtsummary(
-> >  	 * us to avoid pinning kernel memory for this purpose.
-> >  	 */
-> >  	descr = xchk_xfile_descr(sc, "realtime summary file");
-> > +	if (!descr)
-> > +		return -ENOMEM;
-> > +
-> >  	error = xfile_create(descr, XFS_FSB_TO_B(mp, mp->m_rsumblocks),
-> >  			&sc->xfile);
-> >  	kfree(descr);
-> ---end quoted text---
-> 
+Thanks,
+Amir.
