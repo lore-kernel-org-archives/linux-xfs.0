@@ -1,107 +1,114 @@
-Received: from mail-pl1-f193.google.com (mail-pl1-f193.google.com [209.85.214.193])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 790B12F9984
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 16:51:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D871436073C;
+	Thu, 22 Jan 2026 16:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769100707; cv=none; b=TAhMpIRVDrNcjqbEHdNHr9H49LFpvyRCFy07Wz+Zp2w1ywpM8aExuL+CEsm1W8G3HKdimcTvZavGwBnA9P5W8qqMl6UiTM0S0NgfIOSOaDzuRR7CcTJp0dpgclh1aUQ7zkZ3znPr1OHiXsrdw+9TppnOUg/VcXrW8FyGm85RFGE=
+	t=1769100966; cv=none; b=Hjqrm83FR62NlVnhmnf4StemeeqodUFEzJ16Sc5siy+bUf6+ye1kTB6FkpOPelBjr3xJ4n36VkR+BveN+PAekaWfD2AGN5z1de5AFSwBplPornlOlfiZG7YGiBlf/rnK+NtCB1IIyKqBRPcHgr328ku3s3UkcgkVAFi3nLJy8/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769100707; c=relaxed/simple;
-	bh=PLuMuVV8Xj07JSnx5F6Z3c/q9sbop32BYDCbOPaOa3k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=crnXFJ+g8KuhSCPsqywyCRupF+y2ccUtoypX4Luv5CMiJHIXmsplUU5kXoLdemlqLlAMVA2QJlV+9aPGpU5cz5GWfB29yf1VD30hyZCMSRanPBhmN1oNqhxOWJZY92CO+lSZ7z+uY58wd5+f3/VYymCHEuaqfMmsQvtdwNTwvlo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gA4e9s9/; arc=none smtp.client-ip=209.85.214.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769100966; c=relaxed/simple;
+	bh=jrjPF0WwvPZPRM6P6o/2VJJe4697MQWP7qZdUYFxSHY=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=FfzVpXMoC1VYD/UNUbYAS6OqiLIDmX2LDiqZ0fsF03BsaZfj4t6gidVSSOWQCaGMjucs4bvtbuSI2bj9cysB/eWfHaOByX5f5l+cxW186bh3a/fNgej54N1LBh0bZjRFmpfNB1weuUUOuUhSAVDcaiWQs8xfQArP5ddXJo0HE7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=UTEaHcdr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gA4e9s9/"
-Received: by mail-pl1-f193.google.com with SMTP id d9443c01a7336-2a743050256so7283075ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 08:51:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769100692; x=1769705492; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZYrI8gARDC5Yqn6zzY0mWIrBMcEM20q34PGnH9bzmcc=;
-        b=gA4e9s9/xyIaoSJaX7H38ZR4XbYbN7kj5IULhGUKHeNfCbwjmFddR+ZCqlyk7E4H4u
-         rfYO+ESJdqxUQ2ovQBuc8Yz7j0+MBguckWggwT4psCrxa0YEPlJCuDw0zt7eidorhZBo
-         8m4cPTNd39qmfNRbvDlIy5qx68+jcqqF0nfrnWYuMf2hupYHA2EeQoair+3pS3sRfvZS
-         6Vq46+R3secvVGMAEUHgAdbK+UE8oCY4wLkCWp94xFEMmcM6Am8nMmpbRDtKHdfaaJWJ
-         A0979yc955JTGD5dQHvIPL3fb6hi7AcqBfyF2se5/eFZjr0KxXvOlwU0fMyBHxmyklXy
-         LGOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769100692; x=1769705492;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZYrI8gARDC5Yqn6zzY0mWIrBMcEM20q34PGnH9bzmcc=;
-        b=LDS305x7bwldRiRpNeFHjK7/N4idnkJxm+77aj2Gf4+H0Qv1jS3JYwRW82Jvf03ska
-         8345nDd/LjiNqeicZtzKzhx+bDrWPTnVfDVus6aU0z8s9/diX2XMS18yLCQImTe1Xl7D
-         3sSG25Ww67PUybrMJJejUaAuug0osjNeH0MlrBGJWc0VxG6ktHKwwBgLauAjxNlTa+Cj
-         CSWriBe82EXW6HFFifdJMlDlRj/9SzPREv5erLB3SFWS5WLPOv4n0vxisHMXMSy26lz3
-         G95i4MliLfp67GJV7SSGf4+9Ts5KnU86mB0AYhV4eT8dd2mbOb8x+3xzsc+Fad1qPzHv
-         3Lxg==
-X-Gm-Message-State: AOJu0YzjELVoqgB4THELZfqA4etgKgp38zI24yKeZQarhm3BRi4zEeVF
-	Y7gqDJul7N2wVkfCbsN1aojSLS01VGVjekI4+X+Af1KlXvsP93CoedT11z4Nxvsk
-X-Gm-Gg: AZuq6aKU2+OI+9ZaxYgjhwSxrPBCQ5TLJZfC+V7P+IQJufakovHxams8W01lkDGy5hn
-	VkBuGmtuY0F7qKfQJ5tpA0FaRUtAymAvIgsB0nVDcE4GVi+Y7n0LoLBkkBJ2ND5+LlnGrkGC0Ni
-	ZT7M73ULoMpyf/mbqC/pZ7GK/8zu3/WfQwnbchkYf53w2SEd4bGVGhVOrFPXFfNBP7y/P0LKTe7
-	+yyQ2BEQdFKkXFtVGRT2n4uUcaVIA/Qw/MeTKvbkl0hsxxsSAPmkOQlO1ShXS6nr6HXcATb+cXL
-	+586rsgCudC4AtMLpNYeJkj00KHYQbyqn0UlBE2G4bFNCSyg/tS15lIzDOwlmD7pL/WbJU9gE4E
-	4URgOT+tLszH55udjCbomsIaIqk8rd8TKjAyQLwXxMALPiBfATAtpraHQT/JZQNA3EfNN1sDKCV
-	Tq4tHTLvNSG62FgDC5RBDK/v2+CfD5CRb5e99eR9sewRcAcqjDIDeRQpyX+ZdkmqAG
-X-Received: by 2002:a17:902:e784:b0:298:2637:800b with SMTP id d9443c01a7336-2a7fe625db2mr372225ad.31.1769100691769;
-        Thu, 22 Jan 2026 08:51:31 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.204.130])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a7190abcf0sm190609635ad.12.2026.01.22.08.51.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jan 2026 08:51:31 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	hch@infradead.org,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v1] xfs: Move ASSERTion location in xfs_rtcopy_summary()
-Date: Thu, 22 Jan 2026 22:20:35 +0530
-Message-ID: <044d2912a87f68f953efcb83607d5cf20b81798b.1769100528.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="UTEaHcdr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C451BC116C6;
+	Thu, 22 Jan 2026 16:56:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1769100964;
+	bh=jrjPF0WwvPZPRM6P6o/2VJJe4697MQWP7qZdUYFxSHY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=UTEaHcdr42aH4+na9j15KfpiqbAYafbC0X2iMUD6k4y/YtdzCCZ1DycwTLHJx0PPt
+	 +CS99+ai15VAAJyTlXJod09HI5BHg9DqD+81D8WgglFvTzCgDavAE+Qd9mUxEIoEfe
+	 6FnS53cyUDclSITvSvJ4wllykWndkBImnZdCxvZI=
+Date: Thu, 22 Jan 2026 08:56:01 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Jarkko Sakkinen <jarkko@kernel.org>, Dave Hansen
+ <dave.hansen@linux.intel.com>, Thomas Gleixner <tglx@kernel.org>, Ingo
+ Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+ "H . Peter Anvin" <hpa@zytor.com>, Arnd Bergmann <arnd@arndb.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams
+ <dan.j.williams@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Dave
+ Jiang <dave.jiang@intel.com>, Maarten Lankhorst
+ <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>,
+ Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi
+ <rodrigo.vivi@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, Christian
+ Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>, Matthew
+ Auld <matthew.auld@intel.com>, Matthew Brost <matthew.brost@intel.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner
+ <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Benjamin LaHaise
+ <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+ Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
+ Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>,
+ Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>, Andreas
+ Dilger <adilger.kernel@dilger.ca>, Muchun Song <muchun.song@linux.dev>,
+ Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>,
+ Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mike
+ Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>,
+ Tony Luck <tony.luck@intel.com>, Reinette Chatre
+ <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>, James Morse
+ <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>, Carlos Maiolino
+ <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota
+ <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, Matthew Wilcox
+ <willy@infradead.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+ Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>, Suren
+ Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Hugh
+ Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, Zi
+ Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>, Ryan Roberts
+ <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
+ <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Jann Horn
+ <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, David Howells
+ <dhowells@redhat.com>, Paul Moore <paul@paul-moore.com>, James Morris
+ <jmorris@namei.org>, "Serge E . Hallyn" <serge@hallyn.com>, Yury Norov
+ <yury.norov@gmail.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+ linux-sgx@vger.kernel.org, linux-kernel@vger.kernel.org,
+ nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+ linux-fsdevel@vger.kernel.org, linux-aio@kvack.org,
+ linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+ linux-mm@kvack.org, ntfs3@lists.linux.dev, devel@lists.orangefs.org,
+ linux-xfs@vger.kernel.org, keyrings@vger.kernel.org,
+ linux-security-module@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v2 00/13] mm: add bitmap VMA flag helpers and convert
+ all mmap_prepare to use them
+Message-Id: <20260122085601.4d40447ca2f9a060d3140212@linux-foundation.org>
+In-Reply-To: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
+References: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-We should ASSERT on a variable before using it, so that we
-don't end up using an illegal value.
+On Thu, 22 Jan 2026 16:06:09 +0000 Lorenzo Stoakes <lorenzo.stoakes@oracle.com> wrote:
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- fs/xfs/xfs_rtalloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> We introduced the bitmap VMA type vma_flags_t in the aptly named commit
+> 9ea35a25d51b ("mm: introduce VMA flags bitmap type") in order to permit
+> future growth in VMA flags and to prevent the asinine requirement that VMA
+> flags be available to 64-bit kernels only if they happened to use a bit
+> number about 32-bits.
+> 
+> This is a long-term project as there are very many users of VMA flags
+> within the kernel that need to be updated in order to utilise this new
+> type.
+> 
+> In order to further this aim, this series adds a number of helper functions
+> to enable ordinary interactions with VMA flags - that is testing, setting
+> and clearing them.
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index a12ffed12391..353a1af89f5d 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -112,6 +112,7 @@ xfs_rtcopy_summary(
- 			error = xfs_rtget_summary(oargs, log, bbno, &sum);
- 			if (error)
- 				goto out;
-+			ASSERT(sum >= 0);
- 			if (sum == 0)
- 				continue;
- 			error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
-@@ -120,7 +121,6 @@ xfs_rtcopy_summary(
- 			error = xfs_rtmodify_summary(nargs, log, bbno, sum);
- 			if (error)
- 				goto out;
--			ASSERT(sum > 0);
- 		}
- 	}
- 	error = 0;
--- 
-2.43.5
+Thanks, I updated mm.git to this version.
 
+I dropped the memfd_luo.c hunk due to today's inclusion of
+https://lkml.kernel.org/r/20260122151842.4069702-3-pratyush@kernel.org
+
+`get_maintainer --nogit' wants me to cc 72 people on this patchset.  I
+didn't ;)
