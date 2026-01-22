@@ -1,224 +1,107 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f193.google.com (mail-pl1-f193.google.com [209.85.214.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 986B83E10B0
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 16:15:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 790B12F9984
+	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 16:51:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769098526; cv=none; b=DuREaOVZWSdYBf3zfDC9+nDG+0lHRILlRyWvFglYi3HZ9lbSdQ4W91mhW0HuM9tYQdOS6xkSoCGiFA7Z0z2AREAas4Aoe+MbC+AH4s5HR4bKoJVnxNW5hwhqGy5sxA7313G10MrTG1gDhDhOdHcHDEKPPvTKYAtp04e4OZn3dNA=
+	t=1769100707; cv=none; b=TAhMpIRVDrNcjqbEHdNHr9H49LFpvyRCFy07Wz+Zp2w1ywpM8aExuL+CEsm1W8G3HKdimcTvZavGwBnA9P5W8qqMl6UiTM0S0NgfIOSOaDzuRR7CcTJp0dpgclh1aUQ7zkZ3znPr1OHiXsrdw+9TppnOUg/VcXrW8FyGm85RFGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769098526; c=relaxed/simple;
-	bh=GKqPPT1msj5aAzjfbXldBG3vJfA7dAUWRD1h/TRG8x4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=ZYWBrmLR6Ok0nIKYEwMSs7MdaC0llovgX3qXP/0E5NOUuL1HgYJ4Lboba/wdBLHgkW/yHMg6QSKS6sEMOwHh+7dR/4RrNmFB+qJtKK7O3y1lrhV8uDoQDh9CpIqbRe/PKMIMyncvlcj79RNFljYNZ6MFkKtI4UrLrs9qrsmzJRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=q1HlIrWN; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1769100707; c=relaxed/simple;
+	bh=PLuMuVV8Xj07JSnx5F6Z3c/q9sbop32BYDCbOPaOa3k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=crnXFJ+g8KuhSCPsqywyCRupF+y2ccUtoypX4Luv5CMiJHIXmsplUU5kXoLdemlqLlAMVA2QJlV+9aPGpU5cz5GWfB29yf1VD30hyZCMSRanPBhmN1oNqhxOWJZY92CO+lSZ7z+uY58wd5+f3/VYymCHEuaqfMmsQvtdwNTwvlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gA4e9s9/; arc=none smtp.client-ip=209.85.214.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="q1HlIrWN"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260122161515epoutp0428f1dcf363eba846d3bef670115e5b8f~NGboPMdqo2795227952epoutp04H
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 16:15:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260122161515epoutp0428f1dcf363eba846d3bef670115e5b8f~NGboPMdqo2795227952epoutp04H
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1769098515;
-	bh=Ut0PvNTFkBDARJX4qSO9056XGy5KdZ5rJS/cjW/7pRk=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=q1HlIrWNyqXlXJ8s7fdr+6FILnBgREtqtbL6tKRVnDJQDqNFP2+0kWYEsWdCFbTpY
-	 +Q/VOdgW4Pmp1Z0/7nsG/3bIUEvgFb8cmslFKPWLb5SKPakzqL1B2ApoYpixV7P4E1
-	 1lh6S8ZF86UVTN01KMmAKMW8lo42qiOHn4lGHGTE=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260122161514epcas5p2ece65e143be4209661a3f0354ecff169~NGbnfPXfZ2058720587epcas5p2o;
-	Thu, 22 Jan 2026 16:15:14 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4dxmPF5YJ7z2SSKY; Thu, 22 Jan
-	2026 16:15:13 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260122161513epcas5p2f245aaca490aadd994074f3fd52031e2~NGbmJDHS62060020600epcas5p2d;
-	Thu, 22 Jan 2026 16:15:13 +0000 (GMT)
-Received: from [107.111.86.57] (unknown [107.111.86.57]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260122161506epsmtip1e1a44b279ac7ac7ad390e8ab6dcb5c97~NGbgAiEqi0033200332epsmtip1T;
-	Thu, 22 Jan 2026 16:15:06 +0000 (GMT)
-Message-ID: <ca048ecf-5aec-4a0d-8faf-ad9fcd310e21@samsung.com>
-Date: Thu, 22 Jan 2026 21:45:05 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gA4e9s9/"
+Received: by mail-pl1-f193.google.com with SMTP id d9443c01a7336-2a743050256so7283075ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 08:51:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769100692; x=1769705492; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZYrI8gARDC5Yqn6zzY0mWIrBMcEM20q34PGnH9bzmcc=;
+        b=gA4e9s9/xyIaoSJaX7H38ZR4XbYbN7kj5IULhGUKHeNfCbwjmFddR+ZCqlyk7E4H4u
+         rfYO+ESJdqxUQ2ovQBuc8Yz7j0+MBguckWggwT4psCrxa0YEPlJCuDw0zt7eidorhZBo
+         8m4cPTNd39qmfNRbvDlIy5qx68+jcqqF0nfrnWYuMf2hupYHA2EeQoair+3pS3sRfvZS
+         6Vq46+R3secvVGMAEUHgAdbK+UE8oCY4wLkCWp94xFEMmcM6Am8nMmpbRDtKHdfaaJWJ
+         A0979yc955JTGD5dQHvIPL3fb6hi7AcqBfyF2se5/eFZjr0KxXvOlwU0fMyBHxmyklXy
+         LGOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769100692; x=1769705492;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZYrI8gARDC5Yqn6zzY0mWIrBMcEM20q34PGnH9bzmcc=;
+        b=LDS305x7bwldRiRpNeFHjK7/N4idnkJxm+77aj2Gf4+H0Qv1jS3JYwRW82Jvf03ska
+         8345nDd/LjiNqeicZtzKzhx+bDrWPTnVfDVus6aU0z8s9/diX2XMS18yLCQImTe1Xl7D
+         3sSG25Ww67PUybrMJJejUaAuug0osjNeH0MlrBGJWc0VxG6ktHKwwBgLauAjxNlTa+Cj
+         CSWriBe82EXW6HFFifdJMlDlRj/9SzPREv5erLB3SFWS5WLPOv4n0vxisHMXMSy26lz3
+         G95i4MliLfp67GJV7SSGf4+9Ts5KnU86mB0AYhV4eT8dd2mbOb8x+3xzsc+Fad1qPzHv
+         3Lxg==
+X-Gm-Message-State: AOJu0YzjELVoqgB4THELZfqA4etgKgp38zI24yKeZQarhm3BRi4zEeVF
+	Y7gqDJul7N2wVkfCbsN1aojSLS01VGVjekI4+X+Af1KlXvsP93CoedT11z4Nxvsk
+X-Gm-Gg: AZuq6aKU2+OI+9ZaxYgjhwSxrPBCQ5TLJZfC+V7P+IQJufakovHxams8W01lkDGy5hn
+	VkBuGmtuY0F7qKfQJ5tpA0FaRUtAymAvIgsB0nVDcE4GVi+Y7n0LoLBkkBJ2ND5+LlnGrkGC0Ni
+	ZT7M73ULoMpyf/mbqC/pZ7GK/8zu3/WfQwnbchkYf53w2SEd4bGVGhVOrFPXFfNBP7y/P0LKTe7
+	+yyQ2BEQdFKkXFtVGRT2n4uUcaVIA/Qw/MeTKvbkl0hsxxsSAPmkOQlO1ShXS6nr6HXcATb+cXL
+	+586rsgCudC4AtMLpNYeJkj00KHYQbyqn0UlBE2G4bFNCSyg/tS15lIzDOwlmD7pL/WbJU9gE4E
+	4URgOT+tLszH55udjCbomsIaIqk8rd8TKjAyQLwXxMALPiBfATAtpraHQT/JZQNA3EfNN1sDKCV
+	Tq4tHTLvNSG62FgDC5RBDK/v2+CfD5CRb5e99eR9sewRcAcqjDIDeRQpyX+ZdkmqAG
+X-Received: by 2002:a17:902:e784:b0:298:2637:800b with SMTP id d9443c01a7336-2a7fe625db2mr372225ad.31.1769100691769;
+        Thu, 22 Jan 2026 08:51:31 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.204.130])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a7190abcf0sm190609635ad.12.2026.01.22.08.51.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Jan 2026 08:51:31 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	hch@infradead.org,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v1] xfs: Move ASSERTion location in xfs_rtcopy_summary()
+Date: Thu, 22 Jan 2026 22:20:35 +0530
+Message-ID: <044d2912a87f68f953efcb83607d5cf20b81798b.1769100528.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/6] AG aware parallel writeback for XFS
-Content-Language: en-US
-To: Brian Foster <bfoster@redhat.com>
-Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	willy@infradead.org, mcgrof@kernel.org, clm@meta.com, david@fromorbit.com,
-	amir73il@gmail.com, axboe@kernel.dk, hch@lst.de, ritesh.list@gmail.com,
-	djwong@kernel.org, dave@stgolabs.net, cem@kernel.org, wangyufei@vivo.com,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, gost.dev@samsung.com, anuj20.g@samsung.com,
-	vishak.g@samsung.com, joshi.k@samsung.com
-From: Kundan Kumar <kundan.kumar@samsung.com>
-In-Reply-To: <aXEvAD5Rf5QLp4Ma@bfoster>
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260122161513epcas5p2f245aaca490aadd994074f3fd52031e2
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4
-References: <CGME20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4@epcas5p1.samsung.com>
-	<20260116100818.7576-1-kundan.kumar@samsung.com> <aXEvAD5Rf5QLp4Ma@bfoster>
 
-> 
-> Could you provide more detail on how you're testing here? I threw this
-> at some beefier storage I have around out of curiosity and I'm not
-> seeing much of a difference. It could be I'm missing some details or
-> maybe the storage outweighs the processing benefit. But for example, is
-> this a fio test command being used? Is there preallocation? What type of
-> storage? Is a particular fs geometry being targeted for this
-> optimization (i.e. smaller AGs), etc.?
+We should ASSERT on a variable before using it, so that we
+don't end up using an illegal value.
 
-Thanks Brian for the detailed review and for taking the time to
-look through the code.
+Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+---
+ fs/xfs/xfs_rtalloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The numbers quoted were from fio buffered write workloads on NVMe
-(Optane devices), using multiple files placed in different
-directories mapping to different AGs. Jobs were buffered
-randwrite with multiple jobs. This can be tested with both
-fallocate=none or otherwise.
-
-Sample script for 12 jobs to 12 directories(AGs) :
-
-mkfs.xfs -f -d agcount=12 /dev/nvme0n1
-mount /dev/nvme0n1 /mnt
-sync
-echo 3 > /proc/sys/vm/drop_caches
-
-for i in {1..12}; do
-   mkdir -p /mnt/dir$i
-done
-
-fio job.fio
-
-umount /mnt
-echo 3 > /proc/sys/vm/drop_caches
-
-The job file :
-
-[global]
-bs=4k
-iodepth=32
-rw=randwrite
-ioengine=io_uring
-fallocate=none
-nrfiles=12
-numjobs=1
-size=6G
-direct=0
-group_reporting=1
-create_on_open=1
-name=test
-
-[job1]
-directory=/mnt/dir1
-
-[job2]
-directory=/mnt/dir2
-...
-...
-[job12]
-directory=/mnt/dir12
-
-> 
-> FWIW, I skimmed through the code a bit and the main thing that kind of
-> stands out to me is the write time per-folio hinting. Writeback handling
-> for the overwrite (i.e. non-delalloc) case is basically a single lookup
-> per mapping under shared inode lock. The question that comes to mind
-> there is what is the value of per-ag batching as opposed to just adding
-> generic concurrency? It seems unnecessary to me to take care to shuffle
-> overwrites into per-ag based workers when the underlying locking is
-> already shared.
-> 
-
-That’s a fair point. For the overwrite (non-delalloc) case, the
-per-folio AG hinting is not meant to change allocation behavior, and
-I agree the underlying inode locking remains shared. The primary value
-I’m seeing there is the ability to partition writeback iteration and
-submission when dirty data spans multiple AGs.
-I will try routing overwrite writeback to workers irrespective of AG
-(e.g. hash/inode based), to compare between generic concurrency vs AG
-batching.
-
-> WRT delalloc, it looks like we're basically taking the inode AG as the
-> starting point and guessing based on the on-disk AGF free blocks counter
-> at the time of the write. The delalloc accounting doesn't count against
-> the AGF, however, so ISTM that in many cases this would just effectively
-> land on the inode AG for larger delalloc writes. Is that not the case?
-> 
-> Once we get to delalloc writeback, we're under exclusive inode lock and
-> fall into the block allocator. The latter trylock iterates the AGs
-> looking for a good candidate. So what's the advantage of per-ag
-> splitting delalloc at writeback time if we're sending the same inode to
-> per-ag workers that all 1. require exclusive inode lock and 2. call into
-> an allocator that is designed to be scalable (i.e. if one AG is locked
-> it will just move to the next)?
-> 
-
-The intent of per-AG splitting is not to parallelize allocation
-within a single inode or override allocator behavior, but to
-partition writeback scheduling so that inodes associated with
-different AGs are routed to different workers. This implicitly
-distributes inodes across AG workers, even though each inode’s
-delalloc conversion remains serialized.
-
-> Yet another consideration is how delalloc conversion works at the
-> xfs_bmapi_convert_delalloc() -> xfs_bmapi_convert_one_delalloc() level.
-> If you take a look at the latter, we look up the entire delalloc extent
-> backing the folio under writeback and attempt to allocate it all at once
-> (not just the blocks backing the folio). So in theory if we were to end
-> up tagging a sequence of contiguous delalloc backed folios at buffered
-> write time with different AGs, we're still going to try to allocate all
-> of that in one AG at writeback time. So the per-ag hinting also sort of
-> competes with this by shuffling writeback of the same potential extent
-> into different workers, making it a little hard to try and reason about.
-> 
-
-Agreed — delalloc conversion happens at extent granularity, so
-per-folio AG hints are not meant to steer final allocation. In this
-series the hints are used purely as writeback scheduling tokens;
-allocation still occurs once per extent under XFS_ILOCK_EXCL using
-existing allocator logic. The goal is to partition writeback work and
-avoid funneling multiple inodes through a single writeback path, not
-to influence extent placement.
-
-> So stepping back it kind of feels to me like the write time hinting has
-> so much potential for inaccuracy and unpredictability of writeback time
-> behavior (for the delalloc case), that it makes me wonder if we're
-> effectively just enabling arbitrary concurrency at writeback time and
-> perhaps seeing benefit from that. If so, that makes me wonder if the
-> associated value can be gained by somehow simplifying this to not
-> require write time hinting at all.
-> 
-> Have you run any experiments that perhaps rotors inodes to the
-> individual wb workers based on the inode AG (i.e. basically ignoring all
-> the write time stuff) by chance? Or anything that otherwise helps
-> quantify the value of per-ag batching over just basic concurrency? I'd
-> be interested to see if/how behavior changes with something like that.
-
-Yes, inode-AG based routing has been explored as part of earlier
-higher-level writeback work (link below), where inodes are affined to
-writeback contexts based on inode AG. That effectively provides
-generic concurrency and serves as a useful baseline.
-https://lore.kernel.org/all/20251014120845.2361-1-kundan.kumar@samsung.com/
-
-The motivation for this series is the complementary case where a
-single inode’s dirty data spans multiple AGs on aged/fragmented
-filesystems, where inode-AG affinity breaks down. The folio-level AG
-hinting here is intended to explore whether finer-grained partitioning
-provides additional benefit beyond inode-based routing.
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index a12ffed12391..353a1af89f5d 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -112,6 +112,7 @@ xfs_rtcopy_summary(
+ 			error = xfs_rtget_summary(oargs, log, bbno, &sum);
+ 			if (error)
+ 				goto out;
++			ASSERT(sum >= 0);
+ 			if (sum == 0)
+ 				continue;
+ 			error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
+@@ -120,7 +121,6 @@ xfs_rtcopy_summary(
+ 			error = xfs_rtmodify_summary(nargs, log, bbno, sum);
+ 			if (error)
+ 				goto out;
+-			ASSERT(sum > 0);
+ 		}
+ 	}
+ 	error = 0;
+-- 
+2.43.5
 
