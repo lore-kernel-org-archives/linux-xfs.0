@@ -1,665 +1,224 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D4321579F
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 11:31:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769081467; cv=pass; b=EINOvFxSPyyRVblz4BqL8IgCSrmr7Qwy8dyzWSiBHDY3dibNfSR68DFmBzte4UL35wugwCVCHzsiyr/u4iBfL7Wc0gNHYyyuhxEx/HwNETjN5ZiY9tiCWAH3Y2+Ag98jZLXyXztVSAt2Av3U+pISWT+cNkzJQG5A/bApMzEZS+s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769081467; c=relaxed/simple;
-	bh=d+Xew+gbyx4VrHyvMAvyddisktsQwI36cKp3kPEuHFM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Db9NpoFNn9S5+kQgbxZPQCYeuZDD8R911G7KjkXrubDSBa6uxMbD3eD7lh19IlwUK8t1jJ4S/PPcqqgDf09FTAHNM64TtlTyzg3YRiksaAbMvl6A8+I1MPZAIXFR+SVx6t7laEmojE5riJtFwHM6utyNH4w9bJWZb5yZE982yEI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CZ8Umpg7; arc=pass smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F32843CEE4;
+	Thu, 22 Jan 2026 12:12:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769083964; cv=none; b=DdKt690IAN3lU2U5bqmpsqrsCI0gep0KzHBpWdeWQ/sw6J+6PZS1x8rIBE1Uf1FZ0rVJ1l2+XhaFtRXhQbvbmSpg4ZpZIVKhb0wvEMoUtbIYnMgvPSKmvb4FR1JhXgpOCbxtc5EudBElccBrSTfyAaKcN6qsuXAc16V+8PYEbBM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769083964; c=relaxed/simple;
+	bh=1EyvdGvFteFxvvwdEjH2p9l5ziZSQoYEArisDE8vElA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=AtrmP2T7LkwYDbCIWL83fJQldLZ8RTzxfB7IpovzbSgJXL+ogw5nTi45yN57LBKXIgJ4NL0P13F8yB7uhPSJtT1hTBv0SRC8a8nYQvxk4udoaY6CsYqsCRHjcSRvU+hF1p8ENhPc4k1OLa0MFRLI1d5Pp4niaz4Q7ZCQ1cse6ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oKYitB6m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CZ8Umpg7"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-b876f3f603eso123239966b.0
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 03:31:03 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769081462; cv=none;
-        d=google.com; s=arc-20240605;
-        b=lyDjHNNJgvSN3kkvTl8y4LFIw1ohFOYh96bgTQWLK+4cQrP7NN/B9xT5Q3jAtYlJef
-         rFy8R3ZsuSpWTktRYNdTBIKUC7UVxSRC8O4D0YSIj1UvMxOXTYWC6AmWZu8y0n4Jr74v
-         QcFGp6kYMZvR9sBQzSxWCGxYmfK7ZGAhVzmn2CZaYL+3GlQtbRAtvHFd0wf7HCPJz5Ok
-         HNK0ZXWVARaoO/30NgKHku7xLPoHT8R1hKbwKy6M9n4/9irq51AkRh9KpXvyHAjaUa7A
-         DriaN9bYiGO0iYZ15R02qSrV3EGj2qpo8+uOkUgNkTfTC1wnhIBgfFzifvPN7aiVyPRk
-         8eZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Wt+75O1lxnD2O7mzionraEuj4eb+wL2Gvg7e+1XG5Hg=;
-        fh=h8Lf33UoIygiDOjZkO5g4whIQ3pM//zo+sUJ03PA5fc=;
-        b=ArVMB9fDv2NH4+yx4yoPM/k7fKl8xB/wEIXnIcwyzAiyWSzDvSMNCzlrdgaLB0QKBs
-         cdZAO0hgBzMEfXrPnEH3z0OvEYH+mHAmOiXvnIAX6fntqHm2RWoCENZQ1dP2RC7ON3tu
-         s2s2f84AJ1z6zAR3usYJp2yJy0PUZ1Ej2v+BvHWITlU2pOA8YnE7lLZfjIhscytzuuLW
-         FynsSqfskFVaOiGKylc0FOWpADjzDAPGA/Aipt9T3oelNBPPIj/Ek8uBTw7++GNFDi4P
-         x8yOjdff1n6fLL6AHNQVwJK0ABA6G+NHv7IDL5C4+62xlLRANXjqYufq7ks9WWkV/pVC
-         +Uiw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769081462; x=1769686262; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Wt+75O1lxnD2O7mzionraEuj4eb+wL2Gvg7e+1XG5Hg=;
-        b=CZ8Umpg7YK5e3G0AHNFgTWsPiORebeP4dLRiVono8OkoDlV2pXuWP8iBUgaCT4QPi8
-         RWiURrhW2fQ3dfM5M/Do4pijoSETaKVFMGD+adwqmZw7Y3/3aHKACqjmvSpsrjtcoswJ
-         5VV6KYpKy+lrkIcfo8bnT3fjuZcics3XGA+xhtiaD7xNOleigmh80nC7jcT5HcasZImP
-         B145tSglPkPRnQFe0t911/uHKuGpwSJ6a+r5RG/uddVrN/OMtN4XTpwKH6tiJxKdAm7T
-         vzVCS+j/PPos1CHoJsX6o4d8etm2jIWsbXaLKPtD+zLzbXOf5C+u0j9/i9kBMl6oTVyz
-         Ggvw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769081462; x=1769686262;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Wt+75O1lxnD2O7mzionraEuj4eb+wL2Gvg7e+1XG5Hg=;
-        b=f+vsx2o85EX5qpw/zSx3RO8s+ier+KbnzyVYNv4z6VGXsjKQ9/4u0i1SNlyMOfQvJl
-         +LwbNLNWTRqg3Ih6eEBBCTMHipVdf5t6bUq+3IAPmceleJOADpvCtMk4qNP+Mh+bA0Co
-         ibklsmU4E3at+zDB5E5dKLydtf8RK6S5H529wHn26GKp9uyThLwUGYf/DHKvzAnNNMMG
-         nUxqcnUOnXTln9Efq0Hw9JvJC7HZo+fsI0+8xOVxrwSd6YlpTr9aLSaNgCFYHQ4rsnjS
-         vsDDQ/mqisn5/7kvRZdzxp1vOqPkorJ9mrDW+XATh4Xbio6Ap+PBrIxdq/V8qIlW6Lav
-         hwXA==
-X-Forwarded-Encrypted: i=1; AJvYcCXp1lSjeVmgndRCXYl10EphLOOSd2/RGpRc6V0lsGwgmzfObB0YcpMMst9ElSFSvQbmOcBTmFjlz48=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwoUMvLVKRVMkDsB3OHGTq4fvT9Y2LoofvL/Ft7sLK6jchL5fa/
-	VpNkLVVSUdMvj+ukzekkB2vfJBP/E2hYvfppHtLOQnv5ofav9SXP05gTIqGtx4tpicFkkTqyTLP
-	AYJx6/twH80jM2jBs5Yn9BN0oSWVUhKjva5Yeqdmo6w==
-X-Gm-Gg: AZuq6aLWhgHK5TQqJlGY1JIDmZKg5Vso9XDLmaKfD+YRfNfs77Su8KbqoVlSBbi2hmR
-	KvTSKsMXXUp2h6PuAgcvB+nuFTK2iwgNmalcG5e1czk9Ml/7rqbvVKpef7sB0B9hLVxDMjXGTdv
-	0pLpg4zbHi9mpNZ+NbIJEA2lD50E6ujKHtFjBigNO62MqvuM5Oj8CzArS7ywNh+SL4aDPUAEHbC
-	v09DO3FxtddSr7N4hUgwtS14aD5n8VXpqyNdv77G+IqsiqVwo3pVlmVMXa+CG+bhYn1iwbzE2JC
-	ygIJqNcgmVBUcvQSglrq3DzBbIxnqA==
-X-Received: by 2002:a17:907:948f:b0:b87:3168:2cb9 with SMTP id
- a640c23a62f3a-b8796b2178dmr1931103666b.32.1769081460852; Thu, 22 Jan 2026
- 03:31:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oKYitB6m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2B24C116C6;
+	Thu, 22 Jan 2026 12:12:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769083964;
+	bh=1EyvdGvFteFxvvwdEjH2p9l5ziZSQoYEArisDE8vElA=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=oKYitB6mIx09h9xH28S627/eTtatzeFXSQrYn5yOhkNA+QEyx615WfYUotkkAVvuU
+	 LTATx1HBCykrKukMTUDi7aWs+0fZD4k5EXaYOinUP/XGMu94oKAeFZufjUvDT10ac2
+	 gtDncLpd1Mw6uKvM1TUPD39ZOLfLEUPPPK7tCo3k12YmdCtUgCGr0ncu+R0td/8YGS
+	 UVKHwOfVJN+Qk+wPN/afCe8gE1YU3uKt1OsgumwWbXPUprB1bsa5onv9/dSQntlR8r
+	 VSI78HLGfnbOWEIXaXvgDAYflmBis0SomniOyBCfTvO+pC7iFPfS2oosnX5m081Lcv
+	 xOPqjih3iSw2A==
+Message-ID: <b491335d12e976e1ea1c07b9c14164ac69d22aea.camel@kernel.org>
+Subject: Re: [PATCH 00/29] fs: require filesystems to explicitly opt-in to
+ nfsd export support
+From: Jeff Layton <jlayton@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: NeilBrown <neil@brown.name>, Christian Brauner <brauner@kernel.org>, 
+ Amir Goldstein <amir73il@gmail.com>, Alexander Viro
+ <viro@zeniv.linux.org.uk>, Chuck Lever	 <chuck.lever@oracle.com>, Olga
+ Kornievskaia <okorniev@redhat.com>, Dai Ngo	 <Dai.Ngo@oracle.com>, Tom
+ Talpey <tom@talpey.com>, Hugh Dickins <hughd@google.com>,  Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Theodore Ts'o	 <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>,
+ Jan Kara	 <jack@suse.com>, Gao Xiang <xiang@kernel.org>, Chao Yu
+ <chao@kernel.org>, Yue Hu	 <zbestahu@gmail.com>, Jeffle Xu
+ <jefflexu@linux.alibaba.com>, Sandeep Dhavale	 <dhavale@google.com>, Hongbo
+ Li <lihongbo22@huawei.com>, Chunhai Guo	 <guochunhai@vivo.com>, Carlos
+ Maiolino <cem@kernel.org>, Ilya Dryomov	 <idryomov@gmail.com>, Alex Markuze
+ <amarkuze@redhat.com>, Viacheslav Dubeyko	 <slava@dubeyko.com>, Chris Mason
+ <clm@fb.com>, David Sterba <dsterba@suse.com>,  Luis de Bethencourt	
+ <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, Phillip Lougher	
+ <phillip@squashfs.org.uk>, Steve French <sfrench@samba.org>, Paulo
+ Alcantara	 <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+ Shyam Prasad N	 <sprasad@microsoft.com>, Bharath SM
+ <bharathsm@microsoft.com>, Miklos Szeredi	 <miklos@szeredi.hu>, Mike
+ Marshall <hubcap@omnibond.com>, Martin Brandenburg	 <martin@omnibond.com>,
+ Mark Fasheh <mark@fasheh.com>, Joel Becker	 <jlbec@evilplan.org>, Joseph Qi
+ <joseph.qi@linux.alibaba.com>, Konstantin Komarov
+ <almaz.alexandrovich@paragon-software.com>, Ryusuke Konishi
+ <konishi.ryusuke@gmail.com>,  Trond Myklebust <trondmy@kernel.org>, Anna
+ Schumaker <anna@kernel.org>, Dave Kleikamp <shaggy@kernel.org>, David
+ Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>, Jan
+ Kara <jack@suse.cz>,  Andreas Gruenbacher	 <agruenba@redhat.com>, OGAWA
+ Hirofumi <hirofumi@mail.parknet.co.jp>, Jaegeuk Kim <jaegeuk@kernel.org>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-ext4@vger.kernel.org, 	linux-erofs@lists.ozlabs.org,
+ linux-xfs@vger.kernel.org, 	ceph-devel@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, 	linux-cifs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, 	devel@lists.orangefs.org,
+ ocfs2-devel@lists.linux.dev, ntfs3@lists.linux.dev, 
+	linux-nilfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
+	linux-mtd@lists.infradead.org, gfs2@lists.linux.dev, 
+	linux-f2fs-devel@lists.sourceforge.net
+Date: Thu, 22 Jan 2026 07:12:36 -0500
+In-Reply-To: <aXHFlF1tef68i2HU@infradead.org>
+References: <176880736225.16766.4203157325432990313@noble.neil.brown.name>
+	 <20260119-kanufahren-meerjungfrau-775048806544@brauner>
+	 <176885553525.16766.291581709413217562@noble.neil.brown.name>
+	 <aW8w2SRyFnmA2uqk@infradead.org>
+	 <176890126683.16766.5241619788613840985@noble.neil.brown.name>
+	 <aXCg-MqXH0E6IuwS@infradead.org>
+	 <176899164457.16766.16099772451425825775@noble.neil.brown.name>
+	 <364d2fd98af52a2e2c32ca286decbdc1fe1c80d3.camel@kernel.org>
+	 <aXDm8FPPOHs04w9m@infradead.org>
+	 <3210d04fa2c0b1f4312d10506cac30586cb49a3c.camel@kernel.org>
+	 <aXHFlF1tef68i2HU@infradead.org>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (3.58.2-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANypQFYN5YtfD7gMbOhe8Rt1+rfpCn2htSr_Sa+pesspWixhPQ@mail.gmail.com>
- <20260120191745.GX15551@frogsfrogsfrogs> <CANypQFYFxVVJzHGrxQYgC6Su50-OSLUhWuJ5X3viXTXpqCeikQ@mail.gmail.com>
- <20260121192346.GI5945@frogsfrogsfrogs>
-In-Reply-To: <20260121192346.GI5945@frogsfrogsfrogs>
-From: Jiaming Zhang <r772577952@gmail.com>
-Date: Thu, 22 Jan 2026 19:30:23 +0800
-X-Gm-Features: AZwV_QhUz-3UqSRJArOCd13eGZehw3INhLyVekU52Jg-kj-dmf60zAGqMxGLvdY
-Message-ID: <CANypQFYU5rRPkTy=iG5m1Lp4RWasSgrHXAh3p8YJojxV0X15dQ@mail.gmail.com>
-Subject: Re: [Linux Kernel Bugs] general protection fault in xchk_btree and
- another slab-use-after-free issue
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	pchelkin@ispras.ru, syzkaller@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Darrick J. Wong <djwong@kernel.org> =E4=BA=8E2026=E5=B9=B41=E6=9C=8822=E6=
-=97=A5=E5=91=A8=E5=9B=9B 03:23=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Wed, Jan 21, 2026 at 06:14:06PM +0800, Jiaming Zhang wrote:
-> > Darrick J. Wong <djwong@kernel.org> =E4=BA=8E2026=E5=B9=B41=E6=9C=8821=
-=E6=97=A5=E5=91=A8=E4=B8=89 03:17=E5=86=99=E9=81=93=EF=BC=9A
-> > >
-> > > On Tue, Jan 20, 2026 at 06:13:44PM +0800, Jiaming Zhang wrote:
-> > > > Dear Linux kernel developers and maintainers,
-> > > >
-> > > > We are writing to report a general protection fault discovered in t=
-he
-> > > > xfs subsystem with our generated syzkaller specifications. This iss=
-ue
-> > > > is reproducible on the latest version of linux (v6.19-rc6, commit
-> > > > 24d479d26b25bce5faea3ddd9fa8f3a6c3129ea7). The KASAN report from
-> > > > kernel is listed below (formatted by syz-symbolize):
-> > > >
-> > > > ---
-> > > >
-> > > > loop0: detected capacity change from 0 to 32768
-> > > > XFS (loop0): Mounting V5 Filesystem 9f91832a-3b79-45c3-9d6d-ed0bc73=
-57fe4
-> > > > XFS (loop0): Ending clean mount
-> > > > XFS (loop0): Injecting error at file fs/xfs/libxfs/xfs_btree.c, lin=
-e
-> > > > 309, on filesystem "loop0"
-> > > > Oops: general protection fault, probably for non-canonical address
-> > > > 0xdffffc0000000009: 0000 [#1] SMP KASAN NOPTI
-> > > > KASAN: null-ptr-deref in range [0x0000000000000048-0x00000000000000=
-4f]
-> > > > CPU: 1 UID: 0 PID: 9920 Comm: repro.out Not tainted 6.19.0-rc6 #24 =
-PREEMPT(full)
-> > > > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-=
-1 04/01/2014
-> > > > RIP: 0010:xchk_btree+0xb9/0x1380 fs/xfs/scrub/btree.c:701
-> > > > Code: f2 00 66 43 c7 44 35 0d f3 f3 43 c6 44 35 0f f3 e8 1c 44 39 f=
-e
-> > > > 48 89 5c 24 40 48 83 c3 48 48 89 d8 48 c1 e8 03 48 89 44 24 30 <42>=
- 0f
-> > > > b6 04 30 84 c0 0f 85 d6 11 00 00 44 0f b6 33 41 ff ce bf 53
-> > > > RSP: 0018:ffffc9000854f360 EFLAGS: 00010206
-> > > > RAX: 0000000000000009 RBX: 0000000000000048 RCX: ffff888020bebd80
-> > > > RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff888044710e00
-> > > > RBP: ffffc9000854f510 R08: ffffc9000854f540 R09: 0000000000000002
-> > > > R10: 0000000000000006 R11: 0000000000000000 R12: ffffffff837c5b20
-> > > > R13: 1ffff920010a9e88 R14: dffffc0000000000 R15: ffffffff8ba6c880
-> > > > FS:  000000001d1543c0(0000) GS:ffff8880ec5e0000(0000) knlGS:0000000=
-000000000
-> > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > CR2: 0000200000002700 CR3: 00000000229e4000 CR4: 0000000000752ef0
-> > > > PKRU: 55555554
-> > > > Call Trace:
-> > > >  <TASK>
-> > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
-> > > >  xrep_revalidate_allocbt+0xf3/0x160 fs/xfs/scrub/alloc_repair.c:930
-> > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
-> > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
-> > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
-> > > >  vfs_ioctl fs/ioctl.c:51 [inline]
-> > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
-> > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
-> > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
-> > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
-> > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> > > > RIP: 0033:0x45a879
-> > > > Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 31 18 00 00 90 48 89 f8 4=
-8
-> > > > 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48>=
- 3d
-> > > > 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-> > > > RSP: 002b:00007ffda72db7f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000=
-010
-> > > > RAX: ffffffffffffffda RBX: 00000000004004b8 RCX: 000000000045a879
-> > > > RDX: 00002000000000c0 RSI: 00000000c0285840 RDI: 0000000000000005
-> > > > RBP: 00007ffda72db860 R08: 0000000000000004 R09: 0000000000000005
-> > > > R10: 0000000000000004 R11: 0000000000000246 R12: 000000000040b990
-> > > > R13: 0000000000000000 R14: 00000000004ca018 R15: 00000000004004b8
-> > > >  </TASK>
-> > > > Modules linked in:
-> > > > ---[ end trace 0000000000000000 ]---
-> > > > RIP: 0010:xchk_btree+0xb9/0x1380 fs/xfs/scrub/btree.c:701
-> > > > Code: f2 00 66 43 c7 44 35 0d f3 f3 43 c6 44 35 0f f3 e8 1c 44 39 f=
-e
-> > > > 48 89 5c 24 40 48 83 c3 48 48 89 d8 48 c1 e8 03 48 89 44 24 30 <42>=
- 0f
-> > > > b6 04 30 84 c0 0f 85 d6 11 00 00 44 0f b6 33 41 ff ce bf 53
-> > > > RSP: 0018:ffffc9000854f360 EFLAGS: 00010206
-> > > > RAX: 0000000000000009 RBX: 0000000000000048 RCX: ffff888020bebd80
-> > > > RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff888044710e00
-> > > > RBP: ffffc9000854f510 R08: ffffc9000854f540 R09: 0000000000000002
-> > > > R10: 0000000000000006 R11: 0000000000000000 R12: ffffffff837c5b20
-> > > > R13: 1ffff920010a9e88 R14: dffffc0000000000 R15: ffffffff8ba6c880
-> > > > FS:  000000001d1543c0(0000) GS:ffff8880ec5e0000(0000) knlGS:0000000=
-000000000
-> > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > CR2: 00007fbbbc0430c8 CR3: 00000000229e4000 CR4: 0000000000752ef0
-> > > > PKRU: 55555554
-> > > > ----------------
-> > > > Code disassembly (best guess):
-> > > >    0: f2 00 66 43          repnz add %ah,0x43(%rsi)
-> > > >    4: c7 44 35 0d f3 f3 43 movl   $0xc643f3f3,0xd(%rbp,%rsi,1)
-> > > >    b: c6
-> > > >    c: 44 35 0f f3 e8 1c    rex.R xor $0x1ce8f30f,%eax
-> > > >   12: 44 39 fe              cmp    %r15d,%esi
-> > > >   15: 48 89 5c 24 40        mov    %rbx,0x40(%rsp)
-> > > >   1a: 48 83 c3 48          add    $0x48,%rbx
-> > > >   1e: 48 89 d8              mov    %rbx,%rax
-> > > >   21: 48 c1 e8 03          shr    $0x3,%rax
-> > > >   25: 48 89 44 24 30        mov    %rax,0x30(%rsp)
-> > > > * 2a: 42 0f b6 04 30        movzbl (%rax,%r14,1),%eax <-- trapping =
-instruction
-> > > >   2f: 84 c0                test   %al,%al
-> > > >   31: 0f 85 d6 11 00 00    jne    0x120d
-> > > >   37: 44 0f b6 33          movzbl (%rbx),%r14d
-> > > >   3b: 41 ff ce              dec    %r14d
-> > > >   3e: bf                    .byte 0xbf
-> > > >   3f: 53                    push   %rbx
-> > > >
-> > > > ---
-> > > >
-> > > > The root cause of this issue is that in xchk_btree(), where the
-> > > > argument cur can be NULL but the function assume cur is not NULL,
-> > > > leading to a NULL pointer dereference when accessing member
-> > > > (https://github.com/torvalds/linux/blob/v6.19-rc6/fs/xfs/scrub/btre=
-e.c#L701).
-> > > >
-> > > > We can add a NULL check at the beginning of xchk_btree() to fix thi=
-s issue:
-> > > > ```
-> > > > --- a/fs/xfs/scrub/btree.c
-> > > > +++ b/fs/xfs/scrub/btree.c
-> > > > @@ -693,6 +693,9 @@ xchk_btree(
-> > > >   int level;
-> > > >   int error =3D 0;
-> > > >
-> > > > + if (!cur)
-> > > > + return -EINVAL;
-> > >
-> > > Uh, no, don't just fling EINVAL up to userspace.  Line 930 is the cnt=
-bt
-> > > revalidation in xrep_revalidate_allocbt.  Why is that pointer
-> > > 0xdffffc0000000009?  Did we somehow fail to allocate a cntbt cursor i=
-n
-> > > xchk_ag_btcur_init?  Did that xchk_should_check_xref free it?  Did we
-> > > fail to attach the AGF to sc->sa.agf_bp?
-> >
-> > Thanks for the feedback! I dug deeper into the root cause as you
-> > suggested, here is what I found:
-> >
-> > (1) The program executes XFS_IOC_ERROR_INJECTION branch in
-> > xfs_file_ioctl(), causes xfs_btree_check_block() to return
-> > -EFSCORRUPTED, which consequently marks the AG as sick (via
-> > xfs_btree_mark_sick).
->
-> "marks the AG as sick" ... which structure, specifically?  I'm guessing
-> XFS_SICK_AG_CNTBT from context, but it'd be useful to state these things
-> from the data you've collected rather than relying on me to infer what's
-> going on.
->
-> > (2) Then, the program executes XFS_IOC_SCRUBV_METADATA branch in
-> > xfs_file_ioctl(), the setup function (xchk_setup_ag_allocbt())
->
-> Which scrub type is it calling, bnobt or cntbt?
->
-> > attempts to initialize the cursor. However, the sick flag makes kernel
-> > executes xchk_ag_btree_del_cursor_if_sick(), the cursor is freed and
-> > nullified.
->
-> Are you talking about the ->setup call after we've rebuilt both free
-> space btrees, just prior to step three?  When that happens,
-> xchk_ag_btree_del_cursor_if_sick will see the XREP_ALREADY_FIXED flag
-> and mask out sc->sick_mask from mask:
->
->         /*
->          * If we just repaired some AG metadata, sc->sick_mask will refle=
-ct all
->          * the per-AG metadata types that were repaired.  Exclude these f=
-rom
->          * the filesystem health query because we have not yet updated th=
-e
->          * health status and we want everything to be scanned.
->          */
->         if ((sc->flags & XREP_ALREADY_FIXED) &&
->             type_to_health_flag[sc->sm->sm_type].group =3D=3D XHG_AG)
->                 mask &=3D ~sc->sick_mask;
->
-> > (3) Lastly, the repair_eval function (xrep_revalidate_allocbt()) calls
-> > xchk_allocbt(). Since xchk_allocbt() assumes the cursor is valid, it
-> > passes the NULL pointer to xchk_btree, leading to the null-ptr-deref.
->
-> Sure, but xrep_allocbt sets sc->sick_mask to XFS_SICK_AG_BNOBT |
-> XFS_SICK_AG so any pre-existing bnobt or cntbt sick state in the
-> xfs_group will be ignored and neither cursor will be deleted when
-> setting up the revalidation.
->
-> > Based on above analysis, I think sc->sa.cnt_cur being NULL is expected
-> > when the AG is sick. I think the appropriate fix is to check NULL
-> > inside xchk_allocbt():
-> > ```
-> > --- a/fs/xfs/scrub/alloc.c
-> > +++ b/fs/xfs/scrub/alloc.c
-> > @@ -170,6 +170,9 @@ xchk_allocbt(
-> >         return -EIO;
-> >     }
-> >
-> > +   if (!cur)
-> > +       return -ENOENT;
->
-> This is not correct either.  We've just rebuilt the bnobt and cntbt for
-> the AG which means that cursors for both btrees should be loaded and
-> ready for revalidation.
->
-> I think you need to look into xchk_ag_btree_del_cursor_if_sick to figure
-> out exactly what the xfs_group's sick state is, what @mask is, and what
-> sc->sick_mask is, and from that figure out if it's really deleting the
-> cntbt cursor.  This is made more difficult because XFS error injection
-> is probabilistic so it could trigger on /any/ btree.
->
-> --D
->
-> > +
-> >     return xchk_btree(sc, cur, xchk_allocbt_rec, &XFS_RMAP_OINFO_AG, &c=
-a);
-> >  }
-> >  ```
-> > What do you think? :)
-> >
-> > >
-> > > >   /*
-> > > >   * Allocate the btree scrub context from the heap, because this
-> > > >   * structure can get rather large.  Don't let a caller feed us a
-> > > > ```
-> > > >
-> > > > After applying changes above and re-running reproducer, another iss=
-ues
-> > > > is triggered:
-> > > >
-> > > > ---
-> > > > TITLE: KASAN: slab-use-after-free Read in xchk_btree_check_block_ow=
-ner
-> > > >
-> > > > XFS (loop6): Mounting V5 Filesystem 9f91832a-3b79-45c3-9d6d-ed0bc73=
-57fe4
-> > > > XFS (loop6): Ending clean mount
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > > BUG: KASAN: slab-use-after-free in
-> > > > xchk_btree_check_block_owner+0x3a2/0x600 fs/xfs/scrub/btree.c:401
-> > > > Read of size 8 at addr ffff88806af035d8 by task syz.6.59/14096
-> > > >
-> > > > CPU: 1 UID: 0 PID: 14096 Comm: syz.6.59 Not tainted 6.19.0-rc6-dirt=
-y
-> > > > #30 PREEMPT(full)
-> > > > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-=
-1 04/01/2014
-> > > > Call Trace:
-> > > >  <TASK>
-> > > >  __dump_stack lib/dump_stack.c:94 [inline]
-> > > >  dump_stack_lvl+0x10e/0x190 lib/dump_stack.c:120
-> > > >  print_address_description mm/kasan/report.c:378 [inline]
-> > > >  print_report+0x17e/0x810 mm/kasan/report.c:482
-> > > >  kasan_report+0x147/0x180 mm/kasan/report.c:595
-> > > >  xchk_btree_check_block_owner+0x3a2/0x600 fs/xfs/scrub/btree.c:401
-> > > >  xchk_btree+0x57e/0x1320 fs/xfs/scrub/btree.c:797
-> > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
-> > > >  xrep_revalidate_allocbt+0x69/0x160 fs/xfs/scrub/alloc_repair.c:925
-> > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
-> > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
-> > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
-> > > >  vfs_ioctl fs/ioctl.c:51 [inline]
-> > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
-> > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
-> > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
-> > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
-> > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> > > > RIP: 0033:0x7f71bddb459d
-> > > > Code: 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa 48 89 f8 4=
-8
-> > > > 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48>=
- 3d
-> > > > 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-> > > > RSP: 002b:00007f71bed71f98 EFLAGS: 00000246 ORIG_RAX: 0000000000000=
-010
-> > > > RAX: ffffffffffffffda RBX: 00007f71be045fa0 RCX: 00007f71bddb459d
-> > > > RDX: 00002000000000c0 RSI: 00000000c0285840 RDI: 0000000000000005
-> > > > RBP: 00007f71bde52610 R08: 0000000000000000 R09: 0000000000000000
-> > > > R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-> > > > R13: 00007f71be046038 R14: 00007f71be045fa0 R15: 00007f71bed52000
-> > > >  </TASK>
-> > > >
-> > > > Allocated by task 14096:
-> > > >  kasan_save_stack mm/kasan/common.c:57 [inline]
-> > > >  kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
-> > > >  unpoison_slab_object mm/kasan/common.c:340 [inline]
-> > > >  __kasan_slab_alloc+0x6c/0x80 mm/kasan/common.c:366
-> > > >  kasan_slab_alloc include/linux/kasan.h:253 [inline]
-> > > >  slab_post_alloc_hook mm/slub.c:4953 [inline]
-> > > >  slab_alloc_node mm/slub.c:5263 [inline]
-> > > >  kmem_cache_alloc_noprof+0x37d/0x710 mm/slub.c:5270
-> > > >  xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:683 [inline]
-> > > >  xfs_bnobt_init_cursor+0x64/0x210 fs/xfs/libxfs/xfs_alloc_btree.c:4=
-85
-> > > >  xchk_ag_btcur_init+0xe0/0x5d0 fs/xfs/scrub/common.c:612
-> > > >  xchk_ag_init fs/xfs/scrub/common.c:698 [inline]
-> > > >  xchk_setup_ag_btree+0x295/0x310 fs/xfs/scrub/common.c:943
-> > > >  xchk_setup_ag_allocbt+0x70/0x190 fs/xfs/scrub/alloc.c:35
-> > > >  xfs_scrub_metadata+0xa9e/0x1920 fs/xfs/scrub/scrub.c:709
-> > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
-> > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
-> > > >  vfs_ioctl fs/ioctl.c:51 [inline]
-> > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
-> > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
-> > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
-> > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
-> > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> > > >
-> > > > Freed by task 14096:
-> > > >  kasan_save_stack mm/kasan/common.c:57 [inline]
-> > > >  kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
-> > > >  kasan_save_free_info+0x46/0x50 mm/kasan/generic.c:584
-> > > >  poison_slab_object mm/kasan/common.c:253 [inline]
-> > > >  __kasan_slab_free+0x58/0x80 mm/kasan/common.c:285
-> > > >  kasan_slab_free include/linux/kasan.h:235 [inline]
-> > > >  slab_free_hook mm/slub.c:2540 [inline]
-> > > >  slab_free mm/slub.c:6670 [inline]
-> > > >  kmem_cache_free+0x197/0x620 mm/slub.c:6781
-> > > >  xchk_should_check_xref+0xf9/0x420 fs/xfs/scrub/common.c:1351
-> > > >  xchk_xref_is_used_space+0x14b/0x210 fs/xfs/scrub/alloc.c:190
-> > > >  xchk_btree_check_block_owner+0x2fe/0x600 fs/xfs/scrub/btree.c:395
-> > > >  xchk_btree+0x57e/0x1320 fs/xfs/scrub/btree.c:797
-> > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
-> > > >  xrep_revalidate_allocbt+0x69/0x160 fs/xfs/scrub/alloc_repair.c:925
-> > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
-> > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
-> > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
-> > > >  vfs_ioctl fs/ioctl.c:51 [inline]
-> > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
-> > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
-> > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
-> > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
-> > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> > > >
-> > > > The buggy address belongs to the object at ffff88806af035c8
-> > > >  which belongs to the cache xfs_bnobt_cur of size 232
-> > > > The buggy address is located 16 bytes inside of
-> > > >  freed 232-byte region [ffff88806af035c8, ffff88806af036b0)
-> > > >
-> > > > The buggy address belongs to the physical page:
-> > > > page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:=
-0x6af03
-> > > > ksm flags: 0x4fff00000000000(node=3D1|zone=3D1|lastcpupid=3D0x7ff)
-> > > > page_type: f5(slab)
-> > > > raw: 04fff00000000000 ffff88801dd96a00 ffffea000094fdc0 00000000000=
-00003
-> > > > raw: 0000000000000000 00000000800d000d 00000000f5000000 00000000000=
-00000
-> > > > page dumped because: kasan: bad access detected
-> > > > page_owner tracks the page as allocated
-> > > > page last allocated via order 0, migratetype Unmovable, gfp_mask
-> > > > 0x1052c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOLO=
-CKDEP),
-> > > > pid 13126, tgid 13119 (syz.4.29), ts 58027826746, free_ts 579292028=
-22
-> > > >  set_page_owner include/linux/page_owner.h:32 [inline]
-> > > >  post_alloc_hook+0x234/0x290 mm/page_alloc.c:1884
-> > > >  prep_new_page mm/page_alloc.c:1892 [inline]
-> > > >  get_page_from_freelist+0x24e4/0x2580 mm/page_alloc.c:3945
-> > > >  __alloc_frozen_pages_noprof+0x181/0x370 mm/page_alloc.c:5240
-> > > >  alloc_pages_mpol+0x232/0x4a0 mm/mempolicy.c:2486
-> > > >  alloc_slab_page mm/slub.c:3075 [inline]
-> > > >  allocate_slab+0x86/0x3b0 mm/slub.c:3248
-> > > >  new_slab mm/slub.c:3302 [inline]
-> > > >  ___slab_alloc+0xe70/0x1860 mm/slub.c:4656
-> > > >  __slab_alloc+0x65/0x100 mm/slub.c:4779
-> > > >  __slab_alloc_node mm/slub.c:4855 [inline]
-> > > >  slab_alloc_node mm/slub.c:5251 [inline]
-> > > >  kmem_cache_alloc_noprof+0x40f/0x710 mm/slub.c:5270
-> > > >  xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:683 [inline]
-> > > >  xfs_cntbt_init_cursor+0x64/0x210 fs/xfs/libxfs/xfs_alloc_btree.c:5=
-11
-> > > >  xfs_free_ag_extent+0x570/0x1890 fs/xfs/libxfs/xfs_alloc.c:2149
-> > > >  __xfs_free_extent+0x2a7/0x460 fs/xfs/libxfs/xfs_alloc.c:4047
-> > > >  xfs_extent_free_finish_item+0x299/0x840 fs/xfs/xfs_extfree_item.c:=
-555
-> > > >  xfs_defer_finish_one+0x5a6/0xcc0 fs/xfs/libxfs/xfs_defer.c:595
-> > > >  xfs_defer_finish_noroll+0x94a/0x1300 fs/xfs/libxfs/xfs_defer.c:707
-> > > >  xfs_defer_finish+0x1e/0x270 fs/xfs/libxfs/xfs_defer.c:741
-> > > >  xrep_defer_finish+0x16e/0x240 fs/xfs/scrub/repair.c:242
-> > > > page last free pid 785 tgid 785 stack trace:
-> > > >  reset_page_owner include/linux/page_owner.h:25 [inline]
-> > > >  free_pages_prepare mm/page_alloc.c:1433 [inline]
-> > > >  __free_frozen_pages+0xbc4/0xd40 mm/page_alloc.c:2973
-> > > >  vfree+0x25a/0x400 mm/vmalloc.c:3466
-> > > >  delayed_vfree_work+0x55/0x80 mm/vmalloc.c:3385
-> > > >  process_one_work kernel/workqueue.c:3257 [inline]
-> > > >  process_scheduled_works+0xa45/0x1670 kernel/workqueue.c:3340
-> > > >  worker_thread+0x8a0/0xda0 kernel/workqueue.c:3421
-> > > >  kthread+0x711/0x8a0 kernel/kthread.c:463
-> > > >  ret_from_fork+0x510/0xa50 arch/x86/kernel/process.c:158
-> > > >  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
-> > > >
-> > > > Memory state around the buggy address:
-> > > >  ffff88806af03480: fc fc fc fc fa fb fb fb fb fb fb fb fb fb fb fb
-> > > >  ffff88806af03500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > > > >ffff88806af03580: fb fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb
-> > > >                                                     ^
-> > > >  ffff88806af03600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > > >  ffff88806af03680: fb fb fb fb fb fb fc fc fc fc fc fc fc fc fa fb
-> > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > > ---
-> > > >
-> > > > I also analyzed the root cause of this issue. In
-> > > > xchk_btree_check_block_owner(), bs->cur is an alias for
-> > > > bs->sc->sa.bnocur (or rmap_cur,
-> > > > https://github.com/torvalds/linux/blob/v6.19-rc6/fs/xfs/scrub/btree=
-.c#L396-L400).
-> > > > The issue occurs when error injection triggers a failure path:
-> > > >
-> > > > 1. xchk_btree_check_block_owner() calls xchk_xref_is_used_space()
-> > > > 2. In xchk_xref_is_used_space(), xfs_alloc_has_records() returns a
-> > > > non-zero error due to error injection
-> > > > 3. Non-zero error causes xchk_should_check_xref() to free curpp (wh=
-ich
-> > > > points to bs->sc->sa.bnocur).
-> > > > 4. Memory pointed to by bs->cur is freed.
-> > > >
-> > > > Control returns to xchk_btree_check_block_owner(), which subsequent=
-ly
-> > > > accesses bs->cur->bc_ops, triggering the UAF.
-> > > >
-> > > > P.S. this issue can also be triggered independently by syzkaller us=
-ing
-> > > > our generated specs.
-> > > >
-> > > > To fix this issue, we can cache values of
-> > > > xfs_btree_is_bno(bs->cur->bc_ops) and
-> > > > xfs_btree_is_rmap(bs->cur->bc_ops) at the beginning of the function=
-:
-> > > > ```
-> > > > --- a/fs/xfs/scrub/btree.c
-> > > > +++ b/fs/xfs/scrub/btree.c
-> > > > @@ -371,6 +371,8 @@ xchk_btree_check_block_owner(
-> > > >   xfs_agnumber_t agno;
-> > > >   xfs_agblock_t agbno;
-> > > >   bool init_sa;
-> > > > + bool is_bno;
-> > > > + bool is_rmap;
-> > > >   int error =3D 0;
-> > > >
-> > > >   if (!bs->cur)
-> > > > @@ -379,6 +381,9 @@ xchk_btree_check_block_owner(
-> > > >   agno =3D xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
-> > > >   agbno =3D xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
-> > > >
-> > > > + is_bno =3D xfs_btree_is_bno(bs->cur->bc_ops);
-> > > > + is_rmap =3D xfs_btree_is_rmap(bs->cur->bc_ops);
-> > > > +
-> > > >   /*
-> > > >   * If the btree being examined is not itself a per-AG btree, initi=
-alize
-> > > >   * sc->sa so that we can check for the presence of an ownership re=
-cord
-> > > > @@ -398,11 +403,11 @@ xchk_btree_check_block_owner(
-> > > >   * have to nullify it (to shut down further block owner checks) if
-> > > >   * self-xref encounters problems.
-> > > >   */
-> > > > - if (!bs->sc->sa.bno_cur && xfs_btree_is_bno(bs->cur->bc_ops))
-> > > > + if (!bs->sc->sa.bno_cur && is_bno)
-> > > >   bs->cur =3D NULL;
-> > > >
-> > > >   xchk_xref_is_only_owned_by(bs->sc, agbno, 1, bs->oinfo);
-> > > > - if (!bs->sc->sa.rmap_cur && xfs_btree_is_rmap(bs->cur->bc_ops))
-> > > > + if (!bs->sc->sa.rmap_cur && is_rmap)
-> > >
-> > > Indentation problems notwithstanding, that looks like a correct
-> > > resolution to the UAF problem.
-> > >
-> > > >   bs->cur =3D NULL;
-> > > >
-> > > >  out_free:
-> > > > ```
-> > > >
-> > > > After applying above changes, reproducer ran for ~35 minutes withou=
-t
-> > > > triggering any issues.
-> > > >
-> > > > If above solutions are acceptable, we are happy to submit patches :=
-)
-> > > >
-> > > > The kernel console output, kernel config, syzkaller reproducer, and=
- C
-> > > > reproducer are also attached to help with analysis.
-> > > >
-> > > > Please let me know if any further information is required.
-> > > >
-> > > > Best Regards,
-> > > > Jiaming Zhang
-> > >
-> > > Please just link to your dashboard, don't send a 1MB email to dozens
-> > > of people.
-> > >
-> > > --D
-> >
+On Wed, 2026-01-21 at 22:37 -0800, Christoph Hellwig wrote:
+> On Wed, Jan 21, 2026 at 10:18:00AM -0500, Jeff Layton wrote:
+> > > fat seems to be an exception as far as the 'real' file systems go.
+> > > And it did sound to me like some of the synthetic ones had similar
+> > > issues.
+> > >=20
+> >=20
+> > Not sure what we can do about FAT without changing the filehandle
+> > format in some fashion. The export ops just use
+> > generic_encode_ino32_fh, and FAT doesn't have stable inode numbers.
+> > The "nostale" ops seem sane enough but it looks like they only work
+> > with the fs in r/o mode.
+>=20
+> Yeah.  I guess we need to ignore this because of <history>
+>=20
 
-Hi Darrick,
+Yep. This is a case where the handles are not PERSISTENT but I don't
+think we can get away with making FAT unexportable. We're probably
+stuck with it.
 
-I checked the execution path again and I have to apologize, my
-analysis yesterday was partly incorrect.
+> > > I think Amirs patch would take care of that.  Although userland nfs
+> > > servers or other storage applications using the handle syscalls would
+> > > still see them.  Then again fixing the problem that some handles
+> > > did not fulfill the long standing (but not documented well enough)
+> > > semantics probably is a good fix on it's own.
+> >=20
+> > Agreed. We should try to ensure uniqueness and persistence in all
+> > filehandles both for nfsd and userland applications.
+>=20
+> Sounds good to me.
 
-I have new findings today that point how the cursor is nullified
-during the revalidation. I detailed below.
 
-In xrep_revalidate_allocbt(), xchk_allocbt() is called twice (first
-for BNOBT, second for CNTBT). The cause of this issue is that the
-first call nullified the cursor required by the second call.
+Unfortunately, there are already exceptions. Apparently pidfs and
+cgroupfs handles (at least) can't be extended because of userspace
+expectations:
 
-Let's first enter xrep_revalidate_allocbt() via following call chain:
+https://lore.kernel.org/linux-nfs/20260120-irrelevant-zeilen-b3c40a8e6c30@b=
+rauner/
 
-xfs_file_ioctl() ->
-xfs_ioc_scrubv_metadata() ->
-xfs_scrub_metadata() ->
-`sc->ops->repair_eval(sc)` ->
-xrep_revalidate_allocbt()
+My personal take is that we should try to make handle uniqueness a goal
+for most existing filesystems, but we're going to have some that can't
+achieve that. For them we probably want to be able to flag them so they
+can be id'ed by userland.
 
-xchk_allocbt() is called twice in this function. In the first call:
+So, we will need an export_operations flag of some sort
+(EXPORT_OP_UNIQUE_HANDLES?). At that point, we'll have to decide
+whether to deny nfsd export based on that flag:
 
-/* Note that sc->sm->sm_type is XFS_SCRUB_TYPE_BNOPT now */
-xchk_allocbt() ->
-xchk_btree() ->
-`bs->scrub_rec(bs, recp)` ->
-xchk_allocbt_rec() ->
-xchk_allocbt_xref() ->
-xchk_allocbt_xref_other()
+We could deny export of any fs that doesn't set the flag, but NFSv4
+actually allows the server to advertise that it can't guarantee handle
+uniqueness. There isn't much guidance for the client on how to handle
+that though and the attribute seems to have the scope of the entire NFS
+server.
 
-since sm_type is XFS_SCRUB_TYPE_BNOPT, pur is set to &sc->sa.cnt_cur.
-Kernel called xfs_alloc_get_rec() and returned -EFSCORRUPTED. Call
-chain:
-
-xfs_alloc_get_rec() ->
-xfs_btree_get_rec() ->
-xfs_btree_check_block() ->
-(XFS_IS_CORRUPT || XFS_TEST_ERROR), the former is false and the latter
-is true, return -EFSCORRUPTED. This should be caused by
-ioctl$XFS_IOC_ERROR_INJECTION I guess.
-
-Back to xchk_allocbt_xref_other(), after receiving -EFSCORRUPTED from
-xfs_alloc_get_rec(), kernel called xchk_should_check_xref(). In this
-function, *curpp (points to sc->sa.cnt_cur) is nullified.
-
-Back to xrep_revalidate_allocbt(), since sc->sa.cnt_cur has been
-nullified, it then triggered null-ptr-deref via xchk_allocbt() (second
-call) -> xchk_btree().
-
-I noticed that at the beginning of xchk_should_check_xref(), it
-checked whether xref should be skipped. Can this issue be fixed if
-kernel skips xref in this case? I'm not sure.
-
-I hope the analysis is helpful. Feel free to contact me if any further
-information is needed.
-
-Best Regards,
-Jiaming Zhang
+--=20
+Jeff Layton <jlayton@kernel.org>
