@@ -1,148 +1,575 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7A6837AA6E
-	for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 20:07:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769112467; cv=pass; b=s9V+rdAc310deH2EuaSx5mW5c7QnYc+83K0VlfRx1lM9l1YIhlwJg8PROQzRLhwzzV/xn0lvlLsdT/IAN8lJmvkBzit1EysinUzlKnIPVIhlxu4I9N+EyxVExXbigpWWS7+WPRXkHLHwUgKOdEbHhCSp+UtuBu04r0QGuDEtGe0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769112467; c=relaxed/simple;
-	bh=UeToXNeIZz9y9OvrlDazfYnO7oODJgQv05/I8arOeUU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GoIOtPDNMHGMh9Y2iWLc2FIgDD0OlPWQQRHXLywIr/FjQo5WjBWB2e3Lzhsx1OguICc6UTk3WC3z+abNfnqaQhFPGL4P6znrFFpU+Zh48B53l9DkOMkwqqDhXwPJegugwoAZz8s2iloyVY6nJKczqlqxDTQJ+41q41RcY4xxhQo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X/lWqrLz; arc=pass smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F74B3491E1;
+	Thu, 22 Jan 2026 23:10:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769123459; cv=none; b=o22BYC189lkPWXWKdtA32omqyxVU/OCMs8WpFN3T/bCRcyV00vkNn4Wg0P3F23N7lD3k/r54npDWciWbKydEgwE8hUVV1HdwV3qrq6paa94i/N+vsLohZ3L562rEGkOZ4/HZXisfznpBoTkYiNxMs06ErBoygMHK3y/+NMMFWsg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769123459; c=relaxed/simple;
+	bh=wltqXsha+2dpwHjr0BQKWwRJGndb7/H/03jgzzA8OO8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NjO/idas7hnEyiu3YMepUDaZTZeKiH66Poa1ZVIzTA2eina5y7oi+pdgzgb5msUa9Vomd2yYR0ryerLW4bsS0Jfe5mq2RXvMU6IjH6aq3h+41SVRWTN8Ij2gPcpqaH/GgdATNPzUuSGNgM61Pb38NmJrx2+E/gHOB0Zxu7cOqpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oV0i49BT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X/lWqrLz"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-65808bb859cso2402639a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jan 2026 12:07:43 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769112459; cv=none;
-        d=google.com; s=arc-20240605;
-        b=WJWeyYKxmKBfUUwSOPn7yHqkDPHHnHSdvs9lB3YbMvVFK4/usTrL79ug+59tiwpnEE
-         L83V1QXCK/rtlpM07H/J+NwOCtlj0tyW2h85Le9opF8GIj3VQ26q1qpZpbEm5Lwem9de
-         8LMWOMm0MvqOhhlwZiteNzx+NEcKEc4sOjByBs98axU4ESpHiQWI5PQROJZM5EKQBigb
-         Vnj523RUPgSL4bNohjBt6ZBf0CzlrR8GGBvOdYHiAT8sbDYqMGA50xpAzczYiMjOkwDD
-         332SLODTHSnLctLXM7xzibiaUBSUUdpoGnaP0k42j4Hhc8CqVNPjO39Qmc/d4mHhMu/v
-         3AWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UeToXNeIZz9y9OvrlDazfYnO7oODJgQv05/I8arOeUU=;
-        fh=R70DAMX4GkqpOTDaDm5c0zbZBhJDzvs50KefEN/gZVE=;
-        b=hbkrcABalR1rzDIIKiagPnNIiea7K2vG6z9H9nvKDo0o8ibjWBZMdN9rtPU+0HSivu
-         vVquEFkRJ6DBsKenFgpsewXOFpfMjDI1/WooLOLaPctthW9MHXBk9Lh1vkk+bTZRLMM7
-         Nx6yvUmdcGkvXh5LtQw+4kc3n8Qw2emGn5rZL8680/J2U+/ad5PxDP0FUlDALxZ1CGHS
-         PgYXqMSEZRQCLQnJgBrfJReWib1/uIajQa+TDuTzvDksfSdlOtuDU4t4Ge7KVHrdmoJ7
-         dbm1PMcHBDzweXIxMxmzMmN7FWLHpIHLtq/6tZe6lRxQwtfWHcoIzK9//Pdknbbrowrr
-         KmnA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769112459; x=1769717259; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UeToXNeIZz9y9OvrlDazfYnO7oODJgQv05/I8arOeUU=;
-        b=X/lWqrLz2bQ6qvlxMp7/4e7A3KNMkcvHPGvJrXvIoIFpAaXIC/J52gb0mTswrvGFCP
-         qSSVd1czapsgBn9o4IwsRwvrzkDyZFQx/Q7wv1QR4ekmsTMySm+kz1F5NgHYxohKdeQW
-         9UBy+879Kpi1tgCxNhjuYt8DS45VfiBkOyHJO/2HCOK97WnN26k3ENKaWBrgHO+JG8UL
-         BEq6qWIJt7oQcNqg684IBIHDoze+DmC0pRYl6PWRXWVulbGGtM+GXeZOX3icPwGLoZvy
-         F8yBwJU6ABDv/T7C8paHIdvH8dD98D8xBTj2IE6kxogY0Puri6AgRf99EEFaozcudOgy
-         Dzog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769112459; x=1769717259;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=UeToXNeIZz9y9OvrlDazfYnO7oODJgQv05/I8arOeUU=;
-        b=F3K8rvj6T9c0mqw1VOYf+eWqNP9aN8A5lBI+8mJGG8TXb7umtYEsAQfXeQ8H31KOPX
-         gsPkX4QConWjv0ii07dgCyTzWNI1Aeh8y/vM4XUvRVacTKqxjnY3kPZClu3VVY8Er7CM
-         Qvqt/Q9sddQhQNWAcfEpAwzxSqKjsgvDRRFpoA2zJGtp0BzVK1+SVUqmbdy65YXDcQvc
-         Hfon3+pS4n6VoP20oUKyMZZn2uLUWzOEcI8Q1yuHJPEvkBhSnxUkljpcq8WIHyw/P2eI
-         xgyPqa8IjbVGSTb0ecPKt+VVN0Kg3YxfOGgd2svH1KKc2RZpmP/ZbymOFPMXL3PiINjY
-         EClA==
-X-Forwarded-Encrypted: i=1; AJvYcCU/Zwt3YVebzRzfDqkJ4uwrfaA1nTttjZX/W4jWsSqcwMLL52REDclm5sBhdVVrt9MEn5k2YdLIjRA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNup2UQwTp7+8/4ljq6LvOyBaYVpYfJ5lIVO+lQ+qlZzTUjpL+
-	iobqSmJLcYBI9wXAnmbUgzngIFB32YPj/Q+SwDu/rioqgIXfnLAed3LgOLo18ohLOCrLUFyhvMT
-	g+q1kQlDk+APymre6CokDYu0fNtb6ww4=
-X-Gm-Gg: AZuq6aIpvXS3v4ytdu+IFwXSGoEY6eLjwLDp0TdCRbTeQiqmy6hFT0qmORAOJWzhGOA
-	pSjA9yIdiFTx7KyRUUAUqNXSFlkKcWA37858Ev9HvxY2Ho/ibZZDtNItRECVkXALdjlVUcgSm3x
-	b2mogEHH5Fv/sliH39CKP+Oq5HQeB8yFPsIRwEMXhESRUjtwKY9g5Ijo+LymX/97IZBuXB3x8EW
-	ADPd1nYFu2XjoYHrqcY9J0vqpkaV+UNT5kFQl3H6DBYteqZIDUQqdnh5vEvgZal/sdQLR2x2J7z
-	/zqqtf5aKgBJkp78Am0NeN0fh4ads5/6/3fEVQ6z
-X-Received: by 2002:a17:907:70a:b0:b84:42e5:2b7e with SMTP id
- a640c23a62f3a-b885ae682a6mr30056466b.51.1769112458391; Thu, 22 Jan 2026
- 12:07:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oV0i49BT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCF53C116C6;
+	Thu, 22 Jan 2026 23:10:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769123458;
+	bh=wltqXsha+2dpwHjr0BQKWwRJGndb7/H/03jgzzA8OO8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oV0i49BTrr7k9gQpR4HdBt+Xq2Zsw6tiPMDYehVQ1HZ+mUWWBdsx6ToYqDVV36ZOu
+	 TQZSb4b++1GM2ziRuAfWGU21YOrPjlNW3mhUgDzcgTq9EzApdALrIWkvDlnDjoz+7I
+	 HwScnCu2emcjjoL3Qn2cnrpJ/xSaThJf5sJUzofwPQ8ABOdfpSKfsMjvdGaw2XRMhm
+	 Jk4wGqjRq9H6W1wHA/N1TXCyg2E245oDBPbly0lzgw+wRoC64UO3GI0tFyvxXbSKHF
+	 V6+oM/RlOTL1ZvbEaAQSY3FIkmDyRATjrkbCLCS1+DfmP4dDSZXG1nk4pYh6Fod20G
+	 BuwW5PbBLfbPw==
+Date: Thu, 22 Jan 2026 15:10:58 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Jiaming Zhang <r772577952@gmail.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	pchelkin@ispras.ru, syzkaller@googlegroups.com
+Subject: Re: [Linux Kernel Bugs] general protection fault in xchk_btree and
+ another slab-use-after-free issue
+Message-ID: <20260122231058.GP5966@frogsfrogsfrogs>
+References: <CANypQFYN5YtfD7gMbOhe8Rt1+rfpCn2htSr_Sa+pesspWixhPQ@mail.gmail.com>
+ <20260120191745.GX15551@frogsfrogsfrogs>
+ <CANypQFYFxVVJzHGrxQYgC6Su50-OSLUhWuJ5X3viXTXpqCeikQ@mail.gmail.com>
+ <20260121192346.GI5945@frogsfrogsfrogs>
+ <CANypQFYU5rRPkTy=iG5m1Lp4RWasSgrHXAh3p8YJojxV0X15dQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
- <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
- <20260114062608.GB10805@lst.de> <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
- <20260115062944.GA9590@lst.de> <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
- <20260115072311.GA10352@lst.de> <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
- <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
- <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com> <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
- <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com> <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
- <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com> <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
-In-Reply-To: <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 22 Jan 2026 21:07:27 +0100
-X-Gm-Features: AZwV_Qj-Pre4XZbhvcFXr13YDWLuhkhhzBZFRQumTLtcoMVU1rOesRZLphknff4
-Message-ID: <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
-To: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, 
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
-	Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	kernel-dev@igalia.com, vivek@collabora.com, 
-	Ludovico de Nittis <ludovico.denittis@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANypQFYU5rRPkTy=iG5m1Lp4RWasSgrHXAh3p8YJojxV0X15dQ@mail.gmail.com>
 
-On Tue, Jan 20, 2026 at 4:12=E2=80=AFPM Amir Goldstein <amir73il@gmail.com>=
- wrote:
->
-> On Mon, Jan 19, 2026 at 5:56=E2=80=AFPM Andr=C3=A9 Almeida <andrealmeid@i=
-galia.com> wrote:
+On Thu, Jan 22, 2026 at 07:30:23PM +0800, Jiaming Zhang wrote:
+> Darrick J. Wong <djwong@kernel.org> 于2026年1月22日周四 03:23写道：
 > >
-...
-> > Actually they are not in the same fs, upper and lower are coming from
-> > different fs', so when trying to mount I get the fallback to
-> > `uuid=3Dnull`. A quick hack circumventing this check makes the mount wo=
-rk.
+> > On Wed, Jan 21, 2026 at 06:14:06PM +0800, Jiaming Zhang wrote:
+> > > Darrick J. Wong <djwong@kernel.org> 于2026年1月21日周三 03:17写道：
+> > > >
+> > > > On Tue, Jan 20, 2026 at 06:13:44PM +0800, Jiaming Zhang wrote:
+> > > > > Dear Linux kernel developers and maintainers,
+> > > > >
+> > > > > We are writing to report a general protection fault discovered in the
+> > > > > xfs subsystem with our generated syzkaller specifications. This issue
+> > > > > is reproducible on the latest version of linux (v6.19-rc6, commit
+> > > > > 24d479d26b25bce5faea3ddd9fa8f3a6c3129ea7). The KASAN report from
+> > > > > kernel is listed below (formatted by syz-symbolize):
+> > > > >
+> > > > > ---
+> > > > >
+> > > > > loop0: detected capacity change from 0 to 32768
+> > > > > XFS (loop0): Mounting V5 Filesystem 9f91832a-3b79-45c3-9d6d-ed0bc7357fe4
+> > > > > XFS (loop0): Ending clean mount
+> > > > > XFS (loop0): Injecting error at file fs/xfs/libxfs/xfs_btree.c, line
+> > > > > 309, on filesystem "loop0"
+> > > > > Oops: general protection fault, probably for non-canonical address
+> > > > > 0xdffffc0000000009: 0000 [#1] SMP KASAN NOPTI
+> > > > > KASAN: null-ptr-deref in range [0x0000000000000048-0x000000000000004f]
+> > > > > CPU: 1 UID: 0 PID: 9920 Comm: repro.out Not tainted 6.19.0-rc6 #24 PREEMPT(full)
+> > > > > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+> > > > > RIP: 0010:xchk_btree+0xb9/0x1380 fs/xfs/scrub/btree.c:701
+> > > > > Code: f2 00 66 43 c7 44 35 0d f3 f3 43 c6 44 35 0f f3 e8 1c 44 39 fe
+> > > > > 48 89 5c 24 40 48 83 c3 48 48 89 d8 48 c1 e8 03 48 89 44 24 30 <42> 0f
+> > > > > b6 04 30 84 c0 0f 85 d6 11 00 00 44 0f b6 33 41 ff ce bf 53
+> > > > > RSP: 0018:ffffc9000854f360 EFLAGS: 00010206
+> > > > > RAX: 0000000000000009 RBX: 0000000000000048 RCX: ffff888020bebd80
+> > > > > RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff888044710e00
+> > > > > RBP: ffffc9000854f510 R08: ffffc9000854f540 R09: 0000000000000002
+> > > > > R10: 0000000000000006 R11: 0000000000000000 R12: ffffffff837c5b20
+> > > > > R13: 1ffff920010a9e88 R14: dffffc0000000000 R15: ffffffff8ba6c880
+> > > > > FS:  000000001d1543c0(0000) GS:ffff8880ec5e0000(0000) knlGS:0000000000000000
+> > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > > CR2: 0000200000002700 CR3: 00000000229e4000 CR4: 0000000000752ef0
+> > > > > PKRU: 55555554
+> > > > > Call Trace:
+> > > > >  <TASK>
+> > > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
+> > > > >  xrep_revalidate_allocbt+0xf3/0x160 fs/xfs/scrub/alloc_repair.c:930
+> > > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
+> > > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
+> > > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
+> > > > >  vfs_ioctl fs/ioctl.c:51 [inline]
+> > > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
+> > > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+> > > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+> > > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
+> > > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > > > > RIP: 0033:0x45a879
+> > > > > Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 31 18 00 00 90 48 89 f8 48
+> > > > > 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
+> > > > > 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+> > > > > RSP: 002b:00007ffda72db7f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> > > > > RAX: ffffffffffffffda RBX: 00000000004004b8 RCX: 000000000045a879
+> > > > > RDX: 00002000000000c0 RSI: 00000000c0285840 RDI: 0000000000000005
+> > > > > RBP: 00007ffda72db860 R08: 0000000000000004 R09: 0000000000000005
+> > > > > R10: 0000000000000004 R11: 0000000000000246 R12: 000000000040b990
+> > > > > R13: 0000000000000000 R14: 00000000004ca018 R15: 00000000004004b8
+> > > > >  </TASK>
+> > > > > Modules linked in:
+> > > > > ---[ end trace 0000000000000000 ]---
+> > > > > RIP: 0010:xchk_btree+0xb9/0x1380 fs/xfs/scrub/btree.c:701
+> > > > > Code: f2 00 66 43 c7 44 35 0d f3 f3 43 c6 44 35 0f f3 e8 1c 44 39 fe
+> > > > > 48 89 5c 24 40 48 83 c3 48 48 89 d8 48 c1 e8 03 48 89 44 24 30 <42> 0f
+> > > > > b6 04 30 84 c0 0f 85 d6 11 00 00 44 0f b6 33 41 ff ce bf 53
+> > > > > RSP: 0018:ffffc9000854f360 EFLAGS: 00010206
+> > > > > RAX: 0000000000000009 RBX: 0000000000000048 RCX: ffff888020bebd80
+> > > > > RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff888044710e00
+> > > > > RBP: ffffc9000854f510 R08: ffffc9000854f540 R09: 0000000000000002
+> > > > > R10: 0000000000000006 R11: 0000000000000000 R12: ffffffff837c5b20
+> > > > > R13: 1ffff920010a9e88 R14: dffffc0000000000 R15: ffffffff8ba6c880
+> > > > > FS:  000000001d1543c0(0000) GS:ffff8880ec5e0000(0000) knlGS:0000000000000000
+> > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > > CR2: 00007fbbbc0430c8 CR3: 00000000229e4000 CR4: 0000000000752ef0
+> > > > > PKRU: 55555554
+> > > > > ----------------
+> > > > > Code disassembly (best guess):
+> > > > >    0: f2 00 66 43          repnz add %ah,0x43(%rsi)
+> > > > >    4: c7 44 35 0d f3 f3 43 movl   $0xc643f3f3,0xd(%rbp,%rsi,1)
+> > > > >    b: c6
+> > > > >    c: 44 35 0f f3 e8 1c    rex.R xor $0x1ce8f30f,%eax
+> > > > >   12: 44 39 fe              cmp    %r15d,%esi
+> > > > >   15: 48 89 5c 24 40        mov    %rbx,0x40(%rsp)
+> > > > >   1a: 48 83 c3 48          add    $0x48,%rbx
+> > > > >   1e: 48 89 d8              mov    %rbx,%rax
+> > > > >   21: 48 c1 e8 03          shr    $0x3,%rax
+> > > > >   25: 48 89 44 24 30        mov    %rax,0x30(%rsp)
+> > > > > * 2a: 42 0f b6 04 30        movzbl (%rax,%r14,1),%eax <-- trapping instruction
+> > > > >   2f: 84 c0                test   %al,%al
+> > > > >   31: 0f 85 d6 11 00 00    jne    0x120d
+> > > > >   37: 44 0f b6 33          movzbl (%rbx),%r14d
+> > > > >   3b: 41 ff ce              dec    %r14d
+> > > > >   3e: bf                    .byte 0xbf
+> > > > >   3f: 53                    push   %rbx
+> > > > >
+> > > > > ---
+> > > > >
+> > > > > The root cause of this issue is that in xchk_btree(), where the
+> > > > > argument cur can be NULL but the function assume cur is not NULL,
+> > > > > leading to a NULL pointer dereference when accessing member
+> > > > > (https://github.com/torvalds/linux/blob/v6.19-rc6/fs/xfs/scrub/btree.c#L701).
+> > > > >
+> > > > > We can add a NULL check at the beginning of xchk_btree() to fix this issue:
+> > > > > ```
+> > > > > --- a/fs/xfs/scrub/btree.c
+> > > > > +++ b/fs/xfs/scrub/btree.c
+> > > > > @@ -693,6 +693,9 @@ xchk_btree(
+> > > > >   int level;
+> > > > >   int error = 0;
+> > > > >
+> > > > > + if (!cur)
+> > > > > + return -EINVAL;
+> > > >
+> > > > Uh, no, don't just fling EINVAL up to userspace.  Line 930 is the cntbt
+> > > > revalidation in xrep_revalidate_allocbt.  Why is that pointer
+> > > > 0xdffffc0000000009?  Did we somehow fail to allocate a cntbt cursor in
+> > > > xchk_ag_btcur_init?  Did that xchk_should_check_xref free it?  Did we
+> > > > fail to attach the AGF to sc->sa.agf_bp?
+> > >
+> > > Thanks for the feedback! I dug deeper into the root cause as you
+> > > suggested, here is what I found:
+> > >
+> > > (1) The program executes XFS_IOC_ERROR_INJECTION branch in
+> > > xfs_file_ioctl(), causes xfs_btree_check_block() to return
+> > > -EFSCORRUPTED, which consequently marks the AG as sick (via
+> > > xfs_btree_mark_sick).
 > >
-> > If you think this is the best way to solve this issue (rather than
-> > following the VFS helper path for instance),
->
-> That's up to you if you want to solve the "all lower layers on same fs"
-> or want to also allow lower layers on different fs.
-> The former could be solved by relaxing the ovl rules.
->
-> > please let me know how can
-> > I safely lift this restriction, like maybe adding a new flag for this?
->
-> I think the attached patch should work for you and should not
-> break anything.
->
-> It's only sanity tested and will need to write tests to verify it.
->
+> > "marks the AG as sick" ... which structure, specifically?  I'm guessing
+> > XFS_SICK_AG_CNTBT from context, but it'd be useful to state these things
+> > from the data you've collected rather than relying on me to infer what's
+> > going on.
+> >
+> > > (2) Then, the program executes XFS_IOC_SCRUBV_METADATA branch in
+> > > xfs_file_ioctl(), the setup function (xchk_setup_ag_allocbt())
+> >
+> > Which scrub type is it calling, bnobt or cntbt?
+> >
+> > > attempts to initialize the cursor. However, the sick flag makes kernel
+> > > executes xchk_ag_btree_del_cursor_if_sick(), the cursor is freed and
+> > > nullified.
+> >
+> > Are you talking about the ->setup call after we've rebuilt both free
+> > space btrees, just prior to step three?  When that happens,
+> > xchk_ag_btree_del_cursor_if_sick will see the XREP_ALREADY_FIXED flag
+> > and mask out sc->sick_mask from mask:
+> >
+> >         /*
+> >          * If we just repaired some AG metadata, sc->sick_mask will reflect all
+> >          * the per-AG metadata types that were repaired.  Exclude these from
+> >          * the filesystem health query because we have not yet updated the
+> >          * health status and we want everything to be scanned.
+> >          */
+> >         if ((sc->flags & XREP_ALREADY_FIXED) &&
+> >             type_to_health_flag[sc->sm->sm_type].group == XHG_AG)
+> >                 mask &= ~sc->sick_mask;
+> >
+> > > (3) Lastly, the repair_eval function (xrep_revalidate_allocbt()) calls
+> > > xchk_allocbt(). Since xchk_allocbt() assumes the cursor is valid, it
+> > > passes the NULL pointer to xchk_btree, leading to the null-ptr-deref.
+> >
+> > Sure, but xrep_allocbt sets sc->sick_mask to XFS_SICK_AG_BNOBT |
+> > XFS_SICK_AG so any pre-existing bnobt or cntbt sick state in the
+> > xfs_group will be ignored and neither cursor will be deleted when
+> > setting up the revalidation.
+> >
+> > > Based on above analysis, I think sc->sa.cnt_cur being NULL is expected
+> > > when the AG is sick. I think the appropriate fix is to check NULL
+> > > inside xchk_allocbt():
+> > > ```
+> > > --- a/fs/xfs/scrub/alloc.c
+> > > +++ b/fs/xfs/scrub/alloc.c
+> > > @@ -170,6 +170,9 @@ xchk_allocbt(
+> > >         return -EIO;
+> > >     }
+> > >
+> > > +   if (!cur)
+> > > +       return -ENOENT;
+> >
+> > This is not correct either.  We've just rebuilt the bnobt and cntbt for
+> > the AG which means that cursors for both btrees should be loaded and
+> > ready for revalidation.
+> >
+> > I think you need to look into xchk_ag_btree_del_cursor_if_sick to figure
+> > out exactly what the xfs_group's sick state is, what @mask is, and what
+> > sc->sick_mask is, and from that figure out if it's really deleting the
+> > cntbt cursor.  This is made more difficult because XFS error injection
+> > is probabilistic so it could trigger on /any/ btree.
+> >
+> > --D
+> >
+> > > +
+> > >     return xchk_btree(sc, cur, xchk_allocbt_rec, &XFS_RMAP_OINFO_AG, &ca);
+> > >  }
+> > >  ```
+> > > What do you think? :)
+> > >
+> > > >
+> > > > >   /*
+> > > > >   * Allocate the btree scrub context from the heap, because this
+> > > > >   * structure can get rather large.  Don't let a caller feed us a
+> > > > > ```
+> > > > >
+> > > > > After applying changes above and re-running reproducer, another issues
+> > > > > is triggered:
+> > > > >
+> > > > > ---
+> > > > > TITLE: KASAN: slab-use-after-free Read in xchk_btree_check_block_owner
+> > > > >
+> > > > > XFS (loop6): Mounting V5 Filesystem 9f91832a-3b79-45c3-9d6d-ed0bc7357fe4
+> > > > > XFS (loop6): Ending clean mount
+> > > > > ==================================================================
+> > > > > BUG: KASAN: slab-use-after-free in
+> > > > > xchk_btree_check_block_owner+0x3a2/0x600 fs/xfs/scrub/btree.c:401
+> > > > > Read of size 8 at addr ffff88806af035d8 by task syz.6.59/14096
+> > > > >
+> > > > > CPU: 1 UID: 0 PID: 14096 Comm: syz.6.59 Not tainted 6.19.0-rc6-dirty
+> > > > > #30 PREEMPT(full)
+> > > > > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+> > > > > Call Trace:
+> > > > >  <TASK>
+> > > > >  __dump_stack lib/dump_stack.c:94 [inline]
+> > > > >  dump_stack_lvl+0x10e/0x190 lib/dump_stack.c:120
+> > > > >  print_address_description mm/kasan/report.c:378 [inline]
+> > > > >  print_report+0x17e/0x810 mm/kasan/report.c:482
+> > > > >  kasan_report+0x147/0x180 mm/kasan/report.c:595
+> > > > >  xchk_btree_check_block_owner+0x3a2/0x600 fs/xfs/scrub/btree.c:401
+> > > > >  xchk_btree+0x57e/0x1320 fs/xfs/scrub/btree.c:797
+> > > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
+> > > > >  xrep_revalidate_allocbt+0x69/0x160 fs/xfs/scrub/alloc_repair.c:925
+> > > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
+> > > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
+> > > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
+> > > > >  vfs_ioctl fs/ioctl.c:51 [inline]
+> > > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
+> > > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+> > > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+> > > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
+> > > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > > > > RIP: 0033:0x7f71bddb459d
+> > > > > Code: 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa 48 89 f8 48
+> > > > > 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
+> > > > > 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+> > > > > RSP: 002b:00007f71bed71f98 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> > > > > RAX: ffffffffffffffda RBX: 00007f71be045fa0 RCX: 00007f71bddb459d
+> > > > > RDX: 00002000000000c0 RSI: 00000000c0285840 RDI: 0000000000000005
+> > > > > RBP: 00007f71bde52610 R08: 0000000000000000 R09: 0000000000000000
+> > > > > R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+> > > > > R13: 00007f71be046038 R14: 00007f71be045fa0 R15: 00007f71bed52000
+> > > > >  </TASK>
+> > > > >
+> > > > > Allocated by task 14096:
+> > > > >  kasan_save_stack mm/kasan/common.c:57 [inline]
+> > > > >  kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
+> > > > >  unpoison_slab_object mm/kasan/common.c:340 [inline]
+> > > > >  __kasan_slab_alloc+0x6c/0x80 mm/kasan/common.c:366
+> > > > >  kasan_slab_alloc include/linux/kasan.h:253 [inline]
+> > > > >  slab_post_alloc_hook mm/slub.c:4953 [inline]
+> > > > >  slab_alloc_node mm/slub.c:5263 [inline]
+> > > > >  kmem_cache_alloc_noprof+0x37d/0x710 mm/slub.c:5270
+> > > > >  xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:683 [inline]
+> > > > >  xfs_bnobt_init_cursor+0x64/0x210 fs/xfs/libxfs/xfs_alloc_btree.c:485
+> > > > >  xchk_ag_btcur_init+0xe0/0x5d0 fs/xfs/scrub/common.c:612
+> > > > >  xchk_ag_init fs/xfs/scrub/common.c:698 [inline]
+> > > > >  xchk_setup_ag_btree+0x295/0x310 fs/xfs/scrub/common.c:943
+> > > > >  xchk_setup_ag_allocbt+0x70/0x190 fs/xfs/scrub/alloc.c:35
+> > > > >  xfs_scrub_metadata+0xa9e/0x1920 fs/xfs/scrub/scrub.c:709
+> > > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
+> > > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
+> > > > >  vfs_ioctl fs/ioctl.c:51 [inline]
+> > > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
+> > > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+> > > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+> > > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
+> > > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > > > >
+> > > > > Freed by task 14096:
+> > > > >  kasan_save_stack mm/kasan/common.c:57 [inline]
+> > > > >  kasan_save_track+0x3e/0x80 mm/kasan/common.c:78
+> > > > >  kasan_save_free_info+0x46/0x50 mm/kasan/generic.c:584
+> > > > >  poison_slab_object mm/kasan/common.c:253 [inline]
+> > > > >  __kasan_slab_free+0x58/0x80 mm/kasan/common.c:285
+> > > > >  kasan_slab_free include/linux/kasan.h:235 [inline]
+> > > > >  slab_free_hook mm/slub.c:2540 [inline]
+> > > > >  slab_free mm/slub.c:6670 [inline]
+> > > > >  kmem_cache_free+0x197/0x620 mm/slub.c:6781
+> > > > >  xchk_should_check_xref+0xf9/0x420 fs/xfs/scrub/common.c:1351
+> > > > >  xchk_xref_is_used_space+0x14b/0x210 fs/xfs/scrub/alloc.c:190
+> > > > >  xchk_btree_check_block_owner+0x2fe/0x600 fs/xfs/scrub/btree.c:395
+> > > > >  xchk_btree+0x57e/0x1320 fs/xfs/scrub/btree.c:797
+> > > > >  xchk_allocbt+0x112/0x190 fs/xfs/scrub/alloc.c:173
+> > > > >  xrep_revalidate_allocbt+0x69/0x160 fs/xfs/scrub/alloc_repair.c:925
+> > > > >  xfs_scrub_metadata+0xc08/0x1920 fs/xfs/scrub/scrub.c:-1
+> > > > >  xfs_ioc_scrubv_metadata+0x74a/0xaf0 fs/xfs/scrub/scrub.c:981
+> > > > >  xfs_file_ioctl+0x751/0x1560 fs/xfs/xfs_ioctl.c:1266
+> > > > >  vfs_ioctl fs/ioctl.c:51 [inline]
+> > > > >  __do_sys_ioctl fs/ioctl.c:597 [inline]
+> > > > >  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+> > > > >  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+> > > > >  do_syscall_64+0xe8/0xf80 arch/x86/entry/syscall_64.c:94
+> > > > >  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> > > > >
+> > > > > The buggy address belongs to the object at ffff88806af035c8
+> > > > >  which belongs to the cache xfs_bnobt_cur of size 232
+> > > > > The buggy address is located 16 bytes inside of
+> > > > >  freed 232-byte region [ffff88806af035c8, ffff88806af036b0)
+> > > > >
+> > > > > The buggy address belongs to the physical page:
+> > > > > page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x6af03
+> > > > > ksm flags: 0x4fff00000000000(node=1|zone=1|lastcpupid=0x7ff)
+> > > > > page_type: f5(slab)
+> > > > > raw: 04fff00000000000 ffff88801dd96a00 ffffea000094fdc0 0000000000000003
+> > > > > raw: 0000000000000000 00000000800d000d 00000000f5000000 0000000000000000
+> > > > > page dumped because: kasan: bad access detected
+> > > > > page_owner tracks the page as allocated
+> > > > > page last allocated via order 0, migratetype Unmovable, gfp_mask
+> > > > > 0x1052c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOLOCKDEP),
+> > > > > pid 13126, tgid 13119 (syz.4.29), ts 58027826746, free_ts 57929202822
+> > > > >  set_page_owner include/linux/page_owner.h:32 [inline]
+> > > > >  post_alloc_hook+0x234/0x290 mm/page_alloc.c:1884
+> > > > >  prep_new_page mm/page_alloc.c:1892 [inline]
+> > > > >  get_page_from_freelist+0x24e4/0x2580 mm/page_alloc.c:3945
+> > > > >  __alloc_frozen_pages_noprof+0x181/0x370 mm/page_alloc.c:5240
+> > > > >  alloc_pages_mpol+0x232/0x4a0 mm/mempolicy.c:2486
+> > > > >  alloc_slab_page mm/slub.c:3075 [inline]
+> > > > >  allocate_slab+0x86/0x3b0 mm/slub.c:3248
+> > > > >  new_slab mm/slub.c:3302 [inline]
+> > > > >  ___slab_alloc+0xe70/0x1860 mm/slub.c:4656
+> > > > >  __slab_alloc+0x65/0x100 mm/slub.c:4779
+> > > > >  __slab_alloc_node mm/slub.c:4855 [inline]
+> > > > >  slab_alloc_node mm/slub.c:5251 [inline]
+> > > > >  kmem_cache_alloc_noprof+0x40f/0x710 mm/slub.c:5270
+> > > > >  xfs_btree_alloc_cursor fs/xfs/libxfs/xfs_btree.h:683 [inline]
+> > > > >  xfs_cntbt_init_cursor+0x64/0x210 fs/xfs/libxfs/xfs_alloc_btree.c:511
+> > > > >  xfs_free_ag_extent+0x570/0x1890 fs/xfs/libxfs/xfs_alloc.c:2149
+> > > > >  __xfs_free_extent+0x2a7/0x460 fs/xfs/libxfs/xfs_alloc.c:4047
+> > > > >  xfs_extent_free_finish_item+0x299/0x840 fs/xfs/xfs_extfree_item.c:555
+> > > > >  xfs_defer_finish_one+0x5a6/0xcc0 fs/xfs/libxfs/xfs_defer.c:595
+> > > > >  xfs_defer_finish_noroll+0x94a/0x1300 fs/xfs/libxfs/xfs_defer.c:707
+> > > > >  xfs_defer_finish+0x1e/0x270 fs/xfs/libxfs/xfs_defer.c:741
+> > > > >  xrep_defer_finish+0x16e/0x240 fs/xfs/scrub/repair.c:242
+> > > > > page last free pid 785 tgid 785 stack trace:
+> > > > >  reset_page_owner include/linux/page_owner.h:25 [inline]
+> > > > >  free_pages_prepare mm/page_alloc.c:1433 [inline]
+> > > > >  __free_frozen_pages+0xbc4/0xd40 mm/page_alloc.c:2973
+> > > > >  vfree+0x25a/0x400 mm/vmalloc.c:3466
+> > > > >  delayed_vfree_work+0x55/0x80 mm/vmalloc.c:3385
+> > > > >  process_one_work kernel/workqueue.c:3257 [inline]
+> > > > >  process_scheduled_works+0xa45/0x1670 kernel/workqueue.c:3340
+> > > > >  worker_thread+0x8a0/0xda0 kernel/workqueue.c:3421
+> > > > >  kthread+0x711/0x8a0 kernel/kthread.c:463
+> > > > >  ret_from_fork+0x510/0xa50 arch/x86/kernel/process.c:158
+> > > > >  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
+> > > > >
+> > > > > Memory state around the buggy address:
+> > > > >  ffff88806af03480: fc fc fc fc fa fb fb fb fb fb fb fb fb fb fb fb
+> > > > >  ffff88806af03500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> > > > > >ffff88806af03580: fb fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb
+> > > > >                                                     ^
+> > > > >  ffff88806af03600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> > > > >  ffff88806af03680: fb fb fb fb fb fb fc fc fc fc fc fc fc fc fa fb
+> > > > > ==================================================================
+> > > > > ---
+> > > > >
+> > > > > I also analyzed the root cause of this issue. In
+> > > > > xchk_btree_check_block_owner(), bs->cur is an alias for
+> > > > > bs->sc->sa.bnocur (or rmap_cur,
+> > > > > https://github.com/torvalds/linux/blob/v6.19-rc6/fs/xfs/scrub/btree.c#L396-L400).
+> > > > > The issue occurs when error injection triggers a failure path:
+> > > > >
+> > > > > 1. xchk_btree_check_block_owner() calls xchk_xref_is_used_space()
+> > > > > 2. In xchk_xref_is_used_space(), xfs_alloc_has_records() returns a
+> > > > > non-zero error due to error injection
+> > > > > 3. Non-zero error causes xchk_should_check_xref() to free curpp (which
+> > > > > points to bs->sc->sa.bnocur).
+> > > > > 4. Memory pointed to by bs->cur is freed.
+> > > > >
+> > > > > Control returns to xchk_btree_check_block_owner(), which subsequently
+> > > > > accesses bs->cur->bc_ops, triggering the UAF.
+> > > > >
+> > > > > P.S. this issue can also be triggered independently by syzkaller using
+> > > > > our generated specs.
+> > > > >
+> > > > > To fix this issue, we can cache values of
+> > > > > xfs_btree_is_bno(bs->cur->bc_ops) and
+> > > > > xfs_btree_is_rmap(bs->cur->bc_ops) at the beginning of the function:
+> > > > > ```
+> > > > > --- a/fs/xfs/scrub/btree.c
+> > > > > +++ b/fs/xfs/scrub/btree.c
+> > > > > @@ -371,6 +371,8 @@ xchk_btree_check_block_owner(
+> > > > >   xfs_agnumber_t agno;
+> > > > >   xfs_agblock_t agbno;
+> > > > >   bool init_sa;
+> > > > > + bool is_bno;
+> > > > > + bool is_rmap;
+> > > > >   int error = 0;
+> > > > >
+> > > > >   if (!bs->cur)
+> > > > > @@ -379,6 +381,9 @@ xchk_btree_check_block_owner(
+> > > > >   agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
+> > > > >   agbno = xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
+> > > > >
+> > > > > + is_bno = xfs_btree_is_bno(bs->cur->bc_ops);
+> > > > > + is_rmap = xfs_btree_is_rmap(bs->cur->bc_ops);
+> > > > > +
+> > > > >   /*
+> > > > >   * If the btree being examined is not itself a per-AG btree, initialize
+> > > > >   * sc->sa so that we can check for the presence of an ownership record
+> > > > > @@ -398,11 +403,11 @@ xchk_btree_check_block_owner(
+> > > > >   * have to nullify it (to shut down further block owner checks) if
+> > > > >   * self-xref encounters problems.
+> > > > >   */
+> > > > > - if (!bs->sc->sa.bno_cur && xfs_btree_is_bno(bs->cur->bc_ops))
+> > > > > + if (!bs->sc->sa.bno_cur && is_bno)
+> > > > >   bs->cur = NULL;
+> > > > >
+> > > > >   xchk_xref_is_only_owned_by(bs->sc, agbno, 1, bs->oinfo);
+> > > > > - if (!bs->sc->sa.rmap_cur && xfs_btree_is_rmap(bs->cur->bc_ops))
+> > > > > + if (!bs->sc->sa.rmap_cur && is_rmap)
+> > > >
+> > > > Indentation problems notwithstanding, that looks like a correct
+> > > > resolution to the UAF problem.
+> > > >
+> > > > >   bs->cur = NULL;
+> > > > >
+> > > > >  out_free:
+> > > > > ```
+> > > > >
+> > > > > After applying above changes, reproducer ran for ~35 minutes without
+> > > > > triggering any issues.
+> > > > >
+> > > > > If above solutions are acceptable, we are happy to submit patches :)
+> > > > >
+> > > > > The kernel console output, kernel config, syzkaller reproducer, and C
+> > > > > reproducer are also attached to help with analysis.
+> > > > >
+> > > > > Please let me know if any further information is required.
+> > > > >
+> > > > > Best Regards,
+> > > > > Jiaming Zhang
+> > > >
+> > > > Please just link to your dashboard, don't send a 1MB email to dozens
+> > > > of people.
+> > > >
+> > > > --D
+> > >
+> 
+> Hi Darrick,
+> 
+> I checked the execution path again and I have to apologize, my
+> analysis yesterday was partly incorrect.
+> 
+> I have new findings today that point how the cursor is nullified
+> during the revalidation. I detailed below.
+> 
+> In xrep_revalidate_allocbt(), xchk_allocbt() is called twice (first
+> for BNOBT, second for CNTBT). The cause of this issue is that the
+> first call nullified the cursor required by the second call.
+> 
+> Let's first enter xrep_revalidate_allocbt() via following call chain:
+> 
+> xfs_file_ioctl() ->
+> xfs_ioc_scrubv_metadata() ->
+> xfs_scrub_metadata() ->
+> `sc->ops->repair_eval(sc)` ->
+> xrep_revalidate_allocbt()
+> 
+> xchk_allocbt() is called twice in this function. In the first call:
+> 
+> /* Note that sc->sm->sm_type is XFS_SCRUB_TYPE_BNOPT now */
+> xchk_allocbt() ->
+> xchk_btree() ->
+> `bs->scrub_rec(bs, recp)` ->
+> xchk_allocbt_rec() ->
+> xchk_allocbt_xref() ->
+> xchk_allocbt_xref_other()
+> 
+> since sm_type is XFS_SCRUB_TYPE_BNOPT, pur is set to &sc->sa.cnt_cur.
+> Kernel called xfs_alloc_get_rec() and returned -EFSCORRUPTED. Call
+> chain:
+> 
+> xfs_alloc_get_rec() ->
+> xfs_btree_get_rec() ->
+> xfs_btree_check_block() ->
+> (XFS_IS_CORRUPT || XFS_TEST_ERROR), the former is false and the latter
+> is true, return -EFSCORRUPTED. This should be caused by
+> ioctl$XFS_IOC_ERROR_INJECTION I guess.
 
-Andre,
+Ah, that's how it happens.  The error gets injected during the
+revalidation of a bnobt that involved the cntbt btree, so the cntbt
+cursor gets deleted.
 
-I tested the patch and it looks good on my side.
-If you want me to queue this patch for 7.0,
-please let me know if it addresses your use case.
+> Back to xchk_allocbt_xref_other(), after receiving -EFSCORRUPTED from
+> xfs_alloc_get_rec(), kernel called xchk_should_check_xref(). In this
+> function, *curpp (points to sc->sa.cnt_cur) is nullified.
+> 
+> Back to xrep_revalidate_allocbt(), since sc->sa.cnt_cur has been
+> nullified, it then triggered null-ptr-deref via xchk_allocbt() (second
+> call) -> xchk_btree().
 
-Thanks,
-Amir.
+Yep.  So you're right, the revalidation needs to check for
+sc->sa.cnt_cur==NULL before calling xchk_allocbt a second time.
+
+> I noticed that at the beginning of xchk_should_check_xref(), it
+> checked whether xref should be skipped. Can this issue be fixed if
+> kernel skips xref in this case? I'm not sure.
+> 
+> I hope the analysis is helpful. Feel free to contact me if any further
+> information is needed.
+
+That was very helpful.  Could you please take a look at the proposed
+fixes that I'm about to send?
+
+--D
+
+> 
+> Best Regards,
+> Jiaming Zhang
