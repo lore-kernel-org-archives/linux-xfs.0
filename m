@@ -1,179 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05CB34D4F7;
-	Fri, 23 Jan 2026 07:04:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7686D353EE5;
+	Fri, 23 Jan 2026 07:05:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769151865; cv=none; b=uSGDTp18UzjuCvrhMwRiRwXm5AOrqvm9Xh854f4bn9Bw2d4gKS4tHlc7JZ9GgEHgFOimvWHy/EBy3/dVxia2FmMLhakYcpwtKWpzCxP1MXz662mtuvVUmLbKiZZn5c67X1BWAWi3jU84pK+dDN95JpQo7dAju4ndX8rZyzPbibs=
+	t=1769151938; cv=none; b=JW6QylZh7F12i67hm1hwGiU0Qp9K5mlvFbWACeWOxGrJF33errYmF++4Zrusw773RE+GQe9YH4pU46fkqLHjFA1/H/tlnBow/0bEZw9m6MWyRDNc5jObqgCNiGnBNFbKOyoYQgRJTERAYtSVnqYNbfBmFl3arY/HIuzQ8zNGkyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769151865; c=relaxed/simple;
-	bh=9BZGIwBSFh4pJlO+TiFPXx4Li+I5oi9TyvMzkG1hidc=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LyX1AcismjvBp+lk0zCctEo7nfpDWjZYBScEPQ3UqUqRG0DQQdG7tm1LYG6VWdLK20VdEgetqfE/sewZ5N99PDuk+jzvj1LdYEK2ik1jD5VVOmnGQURQxmVypJVDH/z1Et4OIQeadwkpH0bIMDpglhiPu5JaBkEdMsAeIWWBhvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aCj05FET; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769151938; c=relaxed/simple;
+	bh=prCnkzVm6fO+8z3GY9lZ2HXlhvUz7mQRWkvGcn3TQqc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rJhYbiMpbJHOdIXHuTuNY6oDWNzjfgLFaIgsBEzrOWHtR7w2Sq1ZGyLBrtGbpSVGGzjFOCngN9W+AIQmtvH2SiUQmnTzQJxBQ0xlKiQ93Pd05Eq1YfdRdvrE5LSuS2NDm6IoCo5+abFpFP725yN8tN9AUG69Y8w5ThlGU3VqhLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FeSQZ5jI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aCj05FET"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CED60C4CEF1;
-	Fri, 23 Jan 2026 07:04:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FeSQZ5jI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F9FBC4CEF1;
+	Fri, 23 Jan 2026 07:05:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769151864;
-	bh=9BZGIwBSFh4pJlO+TiFPXx4Li+I5oi9TyvMzkG1hidc=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=aCj05FETMHBVQSzRiPoNCx+hSSEDWvTve0KanZah5hyuSZMLM/jeEWRYrGg4tyHl9
-	 g3eJEohSbW1W4R4F+pxonenX+9q5Mp4B4869uMx1qFYQMeVImNWFjkt9Cd++j7tnpi
-	 X0w10MQ7JTUrnYHb4XOHRN64pAkhlWiGCD2y47I/wOPe3Mc/Sllcann7EIPIFxvZsl
-	 tJtujIz+5Imr/r10/l3ofxX2T4d/oJ7q7+cgKV0bYV8cSDvf/l8Ic+3nvK2SNWXwXr
-	 bRn7ZJUSOfYPWrJ2hn5VUbBn1NGiwSJafrbroSNPN4Lz5qv8KNgKwTHZ5VOXKUDQfe
-	 FnjKcxRBTfBig==
-Date: Thu, 22 Jan 2026 23:04:24 -0800
-Subject: [PATCH 5/5] xfs: check for deleted cursors when revalidating two
- btrees
+	s=k20201202; t=1769151937;
+	bh=prCnkzVm6fO+8z3GY9lZ2HXlhvUz7mQRWkvGcn3TQqc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FeSQZ5jIKu5X570rU+hozIVgDsUiB9w5MldzlfSIfGs7PdpPGcgp0pm9n1OEL2OIL
+	 BPLy7aF+cSWx0G1x9oS5wHFphonilgt4tqgjHqHCFROndgPUCquvSElDq/ghKZ0PJe
+	 edMlgx/AztU/YghtW6sJ0x51KyLqUjjQSSGQ6YvKhw5zETrJdDV0IBeJFVWiyaXJS+
+	 1mXQLVWqGndMQ7igB3vm9xMVBZG/jTk8ZRMlIK/hNGewLRRc3u9ZlTFDRyS1czTJ/t
+	 evkIt/+rRExNw452WBl4XKya1qr2AvaDONDy2DpoL6UBQ3ZR7hdsYeUlz62+YompdF
+	 MRUV2d8EZbcZQ==
+Date: Thu, 22 Jan 2026 23:05:37 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: r772577952@gmail.com, stable@vger.kernel.org, linux-xfs@vger.kernel.org,
- r772577952@gmail.com, hch@lst.de
-Message-ID: <176915153803.1677852.3768821466518761768.stgit@frogsfrogsfrogs>
-In-Reply-To: <176915153667.1677852.8049980969235323328.stgit@frogsfrogsfrogs>
-References: <176915153667.1677852.8049980969235323328.stgit@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 02/14] block: open code bio_add_page and fix handling of
+ mismatching P2P ranges
+Message-ID: <20260123070537.GR5945@frogsfrogsfrogs>
+References: <20260119074425.4005867-1-hch@lst.de>
+ <20260119074425.4005867-3-hch@lst.de>
+ <20260122175908.GZ5945@frogsfrogsfrogs>
+ <20260123054314.GA24902@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260123054314.GA24902@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Jan 23, 2026 at 06:43:14AM +0100, Christoph Hellwig wrote:
+> On Thu, Jan 22, 2026 at 09:59:08AM -0800, Darrick J. Wong wrote:
+> > On Mon, Jan 19, 2026 at 08:44:09AM +0100, Christoph Hellwig wrote:
+> > > bio_add_page fails to add data to the bio when mixing P2P with non-P2P
+> > > ranges, or ranges that map to different P2P providers.  In that case
+> > > it will trigger that WARN_ON and return an error up the chain instead of
+> > > simply starting a new bio as intended.  Fix this by open coding
+> > 
+> > AFAICT we've already done all the other checks in bio_add_page, so
+> > calling __bio_add_page directly from within the loop is ok since you've
+> > explicitly handled the !zone_device_pages_have_same_pgmap() case.
+> > 
+> > > bio_add_page and handling this case explicitly.  While doing so, stop
+> > > merging physical contiguous data that belongs to multiple folios.  While
+> > > this merge could lead to more efficient bio packing in some case,
+> > > dropping will allow to remove handling of this corner case in other
+> > > places and make the code more robust.
+> > 
+> > That does sound like a landmine waiting to go off...
+> 
+> What?  Removing the handling?
 
-The free space and inode btree repair functions will rebuild both btrees
-at the same time, after which it needs to evaluate both btrees to
-confirm that the corruptions are gone.
+Urk, sorry.  I meant to say that the *old code* combining pages from
+multiple folios sounded like a landmine waiting to go off.
 
-However, Jiaming Zhang ran syzbot and produced a crash in the second
-xchk_allocbt call.  His root-cause analysis is as follows (with minor
-corrections):
-
- In xrep_revalidate_allocbt(), xchk_allocbt() is called twice (first
- for BNOBT, second for CNTBT). The cause of this issue is that the
- first call nullified the cursor required by the second call.
-
- Let's first enter xrep_revalidate_allocbt() via following call chain:
-
- xfs_file_ioctl() ->
- xfs_ioc_scrubv_metadata() ->
- xfs_scrub_metadata() ->
- `sc->ops->repair_eval(sc)` ->
- xrep_revalidate_allocbt()
-
- xchk_allocbt() is called twice in this function. In the first call:
-
- /* Note that sc->sm->sm_type is XFS_SCRUB_TYPE_BNOPT now */
- xchk_allocbt() ->
- xchk_btree() ->
- `bs->scrub_rec(bs, recp)` ->
- xchk_allocbt_rec() ->
- xchk_allocbt_xref() ->
- xchk_allocbt_xref_other()
-
- since sm_type is XFS_SCRUB_TYPE_BNOBT, pur is set to &sc->sa.cnt_cur.
- Kernel called xfs_alloc_get_rec() and returned -EFSCORRUPTED. Call
- chain:
-
- xfs_alloc_get_rec() ->
- xfs_btree_get_rec() ->
- xfs_btree_check_block() ->
- (XFS_IS_CORRUPT || XFS_TEST_ERROR), the former is false and the latter
- is true, return -EFSCORRUPTED. This should be caused by
- ioctl$XFS_IOC_ERROR_INJECTION I guess.
-
- Back to xchk_allocbt_xref_other(), after receiving -EFSCORRUPTED from
- xfs_alloc_get_rec(), kernel called xchk_should_check_xref(). In this
- function, *curpp (points to sc->sa.cnt_cur) is nullified.
-
- Back to xrep_revalidate_allocbt(), since sc->sa.cnt_cur has been
- nullified, it then triggered null-ptr-deref via xchk_allocbt() (second
- call) -> xchk_btree().
-
-So.  The bnobt revalidation failed on a cross-reference attempt, so we
-deleted the cntbt cursor, and then crashed when we tried to revalidate
-the cntbt.  Therefore, check for a null cntbt cursor before that
-revalidation, and mark the repair incomplete.  Also we can ignore the
-second tree entirely if the first tree was rebuilt but is already
-corrupt.
-
-Apply the same fix to xrep_revalidate_iallocbt because it has the same
-problem.
-
-Cc: r772577952@gmail.com
-Link: https://lore.kernel.org/linux-xfs/CANypQFYU5rRPkTy=iG5m1Lp4RWasSgrHXAh3p8YJojxV0X15dQ@mail.gmail.com/T/#m520c7835fad637eccf843c7936c200589427cc7e
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: dbfbf3bdf639a2 ("xfs: repair inode btrees")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/scrub/alloc_repair.c  |   15 +++++++++++++++
- fs/xfs/scrub/ialloc_repair.c |   20 +++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-index b6fe1f23819eb2..35035d02a23163 100644
---- a/fs/xfs/scrub/alloc_repair.c
-+++ b/fs/xfs/scrub/alloc_repair.c
-@@ -923,7 +923,22 @@ xrep_revalidate_allocbt(
- 	if (error)
- 		goto out;
- 
-+	/*
-+	 * If the bnobt is still corrupt, we've failed to repair the filesystem
-+	 * and should just bail out.
-+	 *
-+	 * If the bnobt fails cross-examination with the cntbt, the scan will
-+	 * free the cntbt cursor, so we need to mark the repair incomplete
-+	 * and avoid walking off the end of the NULL cntbt cursor.
-+	 */
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		goto out;
-+
- 	sc->sm->sm_type = XFS_SCRUB_TYPE_CNTBT;
-+	if (!sc->sa.cnt_cur) {
-+		xchk_set_incomplete(sc);
-+		goto out;
-+	}
- 	error = xchk_allocbt(sc);
- out:
- 	sc->sm->sm_type = old_type;
-diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-index b1d00167d263f4..f28459f58832f4 100644
---- a/fs/xfs/scrub/ialloc_repair.c
-+++ b/fs/xfs/scrub/ialloc_repair.c
-@@ -863,10 +863,24 @@ xrep_revalidate_iallocbt(
- 	if (error)
- 		goto out;
- 
--	if (xfs_has_finobt(sc->mp)) {
--		sc->sm->sm_type = XFS_SCRUB_TYPE_FINOBT;
--		error = xchk_iallocbt(sc);
-+	/*
-+	 * If the inobt is still corrupt, we've failed to repair the filesystem
-+	 * and should just bail out.
-+	 *
-+	 * If the inobt fails cross-examination with the finobt, the scan will
-+	 * free the finobt cursor, so we need to mark the repair incomplete
-+	 * and avoid walking off the end of the NULL finobt cursor.
-+	 */
-+	if (!xfs_has_finobt(sc->mp) ||
-+	    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+		goto out;
-+
-+	sc->sm->sm_type = XFS_SCRUB_TYPE_FINOBT;
-+	if (!sc->sa.fino_cur) {
-+		xchk_set_incomplete(sc);
-+		goto out;
- 	}
-+	error = xchk_iallocbt(sc);
- 
- out:
- 	sc->sm->sm_type = old_type;
-
+--D
