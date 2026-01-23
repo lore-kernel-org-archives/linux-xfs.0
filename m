@@ -1,113 +1,118 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B5A32D0E6
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 14:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF0601FE47C
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 15:04:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769180242; cv=none; b=C79Y4ICYabXVgDsGMM4tO7fyWyKOLWbgyYmxiaz3l5tR4tYnb/HZbaqbpaYiW1VzzSWyjkU95pTRFPGnSFEu37chKSpV2j1uy8gSxYDSR0ZBZy+Jep2cMQv4XYymHGCAUyVwF3JoLCUwPeTy54Fkfr956c4cS35CK514Wg0G6KQ=
+	t=1769180690; cv=none; b=WQhHwPW7WWGQg96AtYUtLzLwl93gpCz3bkvNhLI0LGcMS7LboeeIOiHoDHUmGE67QJDEsqHWmo/ubY01fkIOmGMthnYY41zG/Y665cpijH6DNnIFc33RdReZMdDPu9n0TqbjQcV3X8A5AtN2XW97oHs0/ZralvU1EQanu1hiEcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769180242; c=relaxed/simple;
-	bh=98gfQfTtpuQIK4SRjDriRs29SOaTPxKtPQ4zxBSwmD8=;
-	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
-	 Content-Type:Date:Message-ID; b=B9YJTCkXt2aVoera9QsnSfFgV/7arAq+U94DQ9xKiS4urCuEXpsMgC+xaV0JuItKzbEpNJvukBikwXX6vtOg51HZu8y59uSJa+1oS7CkZXxMWKaX+at6AgDp8k3QyYDJpbtM5XbmQe+voVzswMcQNQx73cotOR2lRDiyR3RrRjA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eoLJ2J7s; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1769180690; c=relaxed/simple;
+	bh=/ATyvFLD/XFlWucEDX6ChIDY7b9JzWG3as4IWIEPsQI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HqnFiGhkvd03t3zlIz9o5+sSfDoRQFN/mlwhGLQy5i9wZAlEEsHiueM2VU9eOT5LACv2o7SkztvwqiIJkavnrCAzSSslgvFyvXsRLIZn9yCuL+XW1Kasjz8gon/EpV/lq8R/anqtiDPMy4xWMDHHG5bOzjYYa1wD8ttIkfVv2K0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V52+abXg; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eoLJ2J7s"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1769180239;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=C9dje+sNIA+yLoiDKbDNtKWUYVXUn9yJ3J50p0rKaA0=;
-	b=eoLJ2J7skX1yxSOrQZnYoXA5Q2AwPWeYlP7pqY3d7BcZflShX1K8UaeFyY2W8HcTC5vT6M
-	UvSoIb/Ri89GTZoCaZWAOx/O5QK/FMFbqy5IYdYFANFcMjSdbiOm8k7BIZ+sfjQyyESU8O
-	N995gH3LmUAU3xpTcj9o1NHYFW/El0c=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-266-zQ3khed6Ng-AjKJiBdeFRg-1; Fri,
- 23 Jan 2026 09:57:13 -0500
-X-MC-Unique: zQ3khed6Ng-AjKJiBdeFRg-1
-X-Mimecast-MFC-AGG-ID: zQ3khed6Ng-AjKJiBdeFRg_1769180232
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C95F18005B6;
-	Fri, 23 Jan 2026 14:57:11 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.42.28.2])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 97B311800999;
-	Fri, 23 Jan 2026 14:57:07 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-	Kingdom.
-	Registered in England and Wales under Company Registration No. 3798903
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20260123135858.GA24386@lst.de>
-References: <20260123135858.GA24386@lst.de> <20260119074425.4005867-4-hch@lst.de> <20260119074425.4005867-1-hch@lst.de> <1754475.1769168237@warthog.procyon.org.uk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: dhowells@redhat.com, Jens Axboe <axboe@kernel.dk>,
-    Christian Brauner <brauner@kernel.org>,
-    "Darrick J. Wong" <djwong@kernel.org>,
-    Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
-    Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
-    linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-    Kundan Kumar <kundan.kumar@samsung.com>,
-    Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 03/14] iov_iter: extract a iov_iter_extract_bvecs helper from bio code
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V52+abXg"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2a77c1d5c3bso10220215ad.0
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 07:04:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769180689; x=1769785489; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=gIch1sPlj6hZeIUC2yrtD0SdJzY9LM5TQroC54GkKRM=;
+        b=V52+abXgyZBIQHGrajyJYqp+tmQICKuZmjc6/HYeaJIQCn0CeTJqUQaWbeQKLqhUG7
+         eJhp2U/xdHoaJAlqjB5W9ILcRNlbKz/OOxQHz1xM/eNF2DX4ZSEedg7kOGkbDgMWJyhe
+         4WW6ANMRoZKJpUTXzRBhwEYWiWa0CjDYMl8IclFeGR2UJD3kJFxHaDzpDgNZsK4AzI55
+         Lys3icQira/nKdFhNofAPLdQK9oBsrrQOrTtquwPBczcoK3JxZv4jPm+4khUggGqFiAg
+         KMm6PRnv3YmXWeg8IGO9FoGEr4JkT4JwExlKq1xAbOeV7YOHLzq2L/rCkqz4oqK+lc4F
+         fEbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769180689; x=1769785489;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gIch1sPlj6hZeIUC2yrtD0SdJzY9LM5TQroC54GkKRM=;
+        b=cXPhgx5QQO76J7iC2CxglSbIaU1yzT85910EqojXt5V3Ijt6iQV9wWF37I/WeOrGob
+         Jgkf7xqg4Mv07BlYGdBgqqZBSUQILsamG0wRm2EkXxPgd25SH4Vh1azSCeR1QhQ+YVLQ
+         eRxlcCo31GblazMj4nkX8BbGsrlIJJnT8z9zy6GscKymO5W2AA0zQjyzxq/cHfKqzmVY
+         1zvS8A3A46Xcgql0Q58edK+SIasztiSwza0TUBe4Zy+Fs4T67Yk8w+ss8yZMK8s1rX9Y
+         qZmKtcDNqhNQ9R7k1Q4R2j51BL0qMZ9UxNhxQPT2lhcaFGz2YTsIbF8phfhXfydEDaE9
+         ybfw==
+X-Gm-Message-State: AOJu0YykhHz0kzjpvnV660X5VW4jBLg5aqdIsVBHphf8TcPDafu1BLdJ
+	A1Ca+ga+jyTmMs7EScqwL5Cz4NSWmV2YvfG2pevSDFr5366nArA5EBOieg1d0Q==
+X-Gm-Gg: AZuq6aJRQkhaZc4x36xBvy4V5FYIqvaZREogTO9uxQ/9XKfX9y4wMIWog0MQily/CVm
+	sSfxQ2xuDFbQeVFDrcw3bDz1gH62jXTqeygSYJgkm747gc2C9TWngIgheWQdX/Il74Z1BgDtN4s
+	hJSTA58pI1pdFHMAPGGm14wsyJ1aaAqrCzPJPVbwzPyZN1SyuX/a+2Lfaw/BE2431ahjCzMY/ZI
+	6a6x7/SbPTsynV7dH80WO3U0rkcCWdH+ZlViM/Tb1ga1PUNLUstq07WGn+xgoYioouu96gT4S8x
+	aT7MixAoFQN5KE+/vNGGPx5RX4RNFVmrztlV2oAoqkgPKeRmfR3UrL7prlygg2xz5LQBLc0VS0s
+	WSeUCgt+bjLxzP83pNf0ReeumLyHLKiX1KBefoll230tcqL89rI0oxhQsmp4tP2UFjSitDVeoO1
+	dXrVPeZ8HanxS3q9v398jsVLrtH5bdIcaDR+3vxfQ01oeWO4Vu2x6IpxNG
+X-Received: by 2002:a17:90b:4ac1:b0:34c:9cec:dd83 with SMTP id 98e67ed59e1d1-35368f29c6fmr2704518a91.27.1769180686343;
+        Fri, 23 Jan 2026 07:04:46 -0800 (PST)
+Received: from localhost.localdomain ([119.207.118.73])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82318644bcasm2488146b3a.2.2026.01.23.07.04.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jan 2026 07:04:45 -0800 (PST)
+From: Shin Seong-jun <shinsj4653@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	sandeen@redhat.com,
+	willy@infradead.org,
+	djwong@kernel.org,
+	dchinner@redhat.com,
+	linux-kernel@vger.kernel.org,
+	Shin Seong-jun <shinsj4653@gmail.com>
+Subject: [PATCH] xfs: fix spacing style issues in xfs_alloc.c
+Date: Sat, 24 Jan 2026 00:04:32 +0900
+Message-ID: <20260123150432.184945-1-shinsj4653@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <1763224.1769180224.1@warthog.procyon.org.uk>
-Date: Fri, 23 Jan 2026 14:57:06 +0000
-Message-ID: <1763225.1769180226@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Transfer-Encoding: 8bit
 
-Christoph Hellwig <hch@lst.de> wrote:
+Fix checkpatch.pl errors regarding missing spaces around assignment
+operators in xfs_alloc_compute_diff() and xfs_alloc_fixup_trees().
 
-> On Fri, Jan 23, 2026 at 11:37:17AM +0000, David Howells wrote:
-> > Christoph Hellwig <hch@lst.de> wrote:
-> > 
-> > > +static unsigned int get_contig_folio_len(struct page **pages,
-> > > +		unsigned int *num_pages, size_t left, size_t offset)
-> > > +{
-> > > +	struct folio *folio = page_folio(pages[0]);
-> > 
-> > You can't do this.  You cannot assume that pages[0] is of folio type.
-> > vmsplice() is unfortunately a thing and the page could be a network read
-> > buffer.
-> 
-> Hmm, this just moves around existing code added in commit ed9832bc08db
-> ("block: introduce folio awareness and add a bigger size from folio").
-> 
-> How do we get these network read buffers into either a user address
-> space or a (non-bvec) iter passed to O_DIRECT reads/writes?
+Adhere to the Linux kernel coding style by ensuring spaces are placed
+around the assignment operator '='.
 
-Splice from TCP socket to pipe, vmsplice from there into process address
-space; DIO write() from there I think should do it.
+Signed-off-by: Shin Seong-jun <shinsj4653@gmail.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-What you might need to do is write page-sized chunks into one end of the TCP
-socket and flush it after each one so that vmsplice() sees page-sized chunks
-of data.  I'm not sure how well an external connection would work to get
-actual transmission buffers.  The problem is that the received packet is
-page-aligned, including the network headers (I think), so if you can, say,
-send 8K packets, you'd have to try and guess where the page boundaries are as
-vmsplice can only work on whole pages.
-
-Can we make vmsplice() just copy data?
-
-> Can we come up with testcase for xfstests or blktests for this?
-> 
-> How do we find out if a given page is a folio and that we can do this?
-
-That's a question for Willy.
-
-David
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index ad381c73abc4..c64e6c13f70d 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -376,8 +376,8 @@ xfs_alloc_compute_diff(
+ 	xfs_agblock_t	freeend;	/* end of freespace extent */
+ 	xfs_agblock_t	newbno1;	/* return block number */
+ 	xfs_agblock_t	newbno2;	/* other new block number */
+-	xfs_extlen_t	newlen1=0;	/* length with newbno1 */
+-	xfs_extlen_t	newlen2=0;	/* length with newbno2 */
++	xfs_extlen_t	newlen1 = 0;	/* length with newbno1 */
++	xfs_extlen_t	newlen2 = 0;	/* length with newbno2 */
+ 	xfs_agblock_t	wantend;	/* end of target extent */
+ 	bool		userdata = datatype & XFS_ALLOC_USERDATA;
+ 
+@@ -577,8 +577,8 @@ xfs_alloc_fixup_trees(
+ 	int		i;		/* operation results */
+ 	xfs_agblock_t	nfbno1;		/* first new free startblock */
+ 	xfs_agblock_t	nfbno2;		/* second new free startblock */
+-	xfs_extlen_t	nflen1=0;	/* first new free length */
+-	xfs_extlen_t	nflen2=0;	/* second new free length */
++	xfs_extlen_t	nflen1 = 0;	/* first new free length */
++	xfs_extlen_t	nflen2 = 0;	/* second new free length */
+ 	struct xfs_mount *mp;
+ 	bool		fixup_longest = false;
+ 
+-- 
+2.47.3
 
