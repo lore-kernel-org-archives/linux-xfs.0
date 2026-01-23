@@ -1,33 +1,35 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D05B38E5CC;
-	Fri, 23 Jan 2026 05:51:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1327839DB2D;
+	Fri, 23 Jan 2026 06:03:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769147497; cv=none; b=BH5xaz961VMEllnILW1HZQKiaEu0kEq46wHmj2vyd8coStbDFpNEyonSWPowYuuCG/CcsT+xhgGQ1SkhGVd5bSxVoKxiWcBDNGBT/Rszq46ffjeDAhAjnMcMhkiVlzQro9ksG3Em+/GkBTqP/IRGVrY1Oyw6W8/46enA3MqzjU0=
+	t=1769148220; cv=none; b=o0n/AL6j3tN0tTe7n6dwPDM4NaEZstLCKP/bt9y4HYe9h6C0pjBHwEvdKT4zd0Io0EjQNLfWyP/8GVV5xmZ6gsK9ewovFPSuvNqhfoJO+0Q/nAfwgSpwtqufL9zi3eqqpg6betCrAi5sleCWdi6j1XWYQebp3KVhStqtRWMKQQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769147497; c=relaxed/simple;
-	bh=cSfY0j5WNPVTLRhOpzWH7Htic2v0ucJ87L2Qiw27oGU=;
+	s=arc-20240116; t=1769148220; c=relaxed/simple;
+	bh=8zXevHCiQlwD1YM0UVR6IlpunPXzvwjAu7tMywiNfZQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uwyxpCZkc5RCFwxW45jjvWYWsXISH51bJz8AQgMPNj+hsPSdkmgOT8H0tlcDLQy3RGD767ewX/gkV8GuifWddztUxUuwgqzLpk/UPBXfKCn100t/i+OuNqgsR/+P/o7UGn43qF2ERk+vS8SuSzTUC0yXgJLRw1AUZL4ukTKgT84=
+	 Content-Type:Content-Disposition:In-Reply-To; b=TL9nD/WKHSE5Zqn7iwQzjZbFUgUnxWtBXe+O2JyGEVtCoKYSNgolvwyTfM6W0wgh72pM1upe3aqW7bMUXLSS7mkXgiyAiyfWZLtwKNdyFT4xfbTiLGUE5dkVaQRaVvD18JT9AUqRpQ6+0Pa7ICeP6HSyouFIOyAIe1x45mNIa2I=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 90792227AAE; Fri, 23 Jan 2026 06:51:28 +0100 (CET)
-Date: Fri, 23 Jan 2026 06:51:28 +0100
+	id D4C0C227AAF; Fri, 23 Jan 2026 07:03:24 +0100 (CET)
+Date: Fri, 23 Jan 2026 07:03:24 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
-	Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 05/14] block: add helpers to bounce buffer an iov_iter
- into bios
-Message-ID: <20260123055128.GC24902@lst.de>
-References: <20260119074425.4005867-1-hch@lst.de> <20260119074425.4005867-6-hch@lst.de> <20260122172556.GV5945@frogsfrogsfrogs>
+	Carlos Maiolino <cem@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/15] block: factor out a bio_integrity_action helper
+Message-ID: <20260123060324.GA25239@lst.de>
+References: <20260121064339.206019-1-hch@lst.de> <20260121064339.206019-2-hch@lst.de> <20260123000113.GF5945@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,79 +38,98 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122172556.GV5945@frogsfrogsfrogs>
+In-Reply-To: <20260123000113.GF5945@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jan 22, 2026 at 09:25:56AM -0800, Darrick J. Wong wrote:
-> Hrm.  Should we combine this with the slightly different version that is
-> in xfs_healthmon?
-
-Yes, but not now.  I'd rather not introduce a three-way cross tree
-dependency with bike shedding potential right now.  Let's look at this
-once we have the two versions in tree, and also look out for others.
-
-> > +static void bio_free_folios(struct bio *bio)
-> > +{
-> > +	struct bio_vec *bv;
-> > +	int i;
-> > +
-> > +	bio_for_each_bvec_all(bv, bio, i) {
-> > +		struct folio *folio = page_folio(bv->bv_page);
-> > +
-> > +		if (!is_zero_folio(folio))
-> > +			folio_put(page_folio(bv->bv_page));
+On Thu, Jan 22, 2026 at 04:01:13PM -0800, Darrick J. Wong wrote:
+> >  /**
+> >   * bio_integrity_prep - Prepare bio for integrity I/O
+> >   * @bio:	bio to prepare
+> > + * @action:	preparation action needed
 > 
-> Isn't folio_put's argument just @folio again?
-
-Yes, I'll clean this up.
-
-> > +		if (this_len > PAGE_SIZE * 2)
-> > +			this_len = rounddown_pow_of_two(this_len);
-> > +
-> > +		if (bio->bi_iter.bi_size > UINT_MAX - this_len)
-> 
-> Now that I've seen UINT_MAX appear twice in terms of limiting bio size,
-> I wonder if that ought to be encoded as a constant somewhere?
-> 
-> #define BIO_ITER_MAX_SIZE	(UINT_MAX)
-> 
-> (apologies if I'm digging up some horrible old flamewar from the 1830s)
-
-Heh.  I don't remember any flame wars, but maybe that's just because my
-memory sucks.  I guess this would be more like:
-
-define BVEC_ITER_MAX_SIZE	sizeof_field(struct bvec_iter, bi_size)
-
-though.
-	
-> > +	} while (len && bio->bi_vcnt < bio->bi_max_vecs - 1);
-> > +
-> > +	/*
-> > +	 * Set the folio directly here.  The above loop has already calculated
-> > +	 * the correct bi_size, and we use bi_vcnt for the user buffers.  That
-> > +	 * is safe as bi_vcnt is only for user by the submitter and not looked
-> 
-> "...for use by the submitter..." ?
+> What is @action?
 
 Yes.
 
-> > +	if (likely(!is_error)) {
-> > +		void *buf = bvec_virt(&bio->bi_io_vec[0]);
-> > +		struct iov_iter to;
-> > +
-> > +		iov_iter_bvec(&to, ITER_DEST, bio->bi_io_vec + 1, bio->bi_vcnt,
-> > +				len);
-> > +		WARN_ON_ONCE(copy_to_iter(buf, len, &to) != len);
-> 
-> I wonder, under what circumstances would the copy_to_iter come up short?
-> 
-> Something evil like $program initiates a directio read from a PI disk, a
-> BPF guy starts screaming in a datacenter to wobble the disk, and that
-> gives a compromised systemd enough time to attach to $program with
-> ptrace to unmap a page in the middle of the read buffer before
-> bio_iov_iter_unbounce_read gets called?
+> Is it a bitset of BI_ACT_* values?  If yes, then can
+> the comment please say that explicitly?
 
-I don't think it can at all.   Remember, this is not directly copying
-to the user iter, but to the bvec array pointing to pinned pages,
-which are not going away. 
+Is this good enough?
+
+ * @action:     preparation action needed (BI_ACT_*)
+
+> > +static bool bi_offload_capable(struct blk_integrity *bi)
+> > +{
+> > +	return bi->metadata_size == bi->pi_tuple_size;
+> > +}
+> 
+> Just out of curiosity, what happens if metadata_size > pi_tuple_size?
+
+Then we still have to provide a buffer as the automatic insert/strip
+doesn't work. (I find the offload name rather confusing for this)
+
+> Can it be the case that metadata_size < pi_tuple_size?
+
+No.  See blk_validate_integrity_limits:
+
+	if (bi->pi_offset + bi->pi_tuple_size > bi->metadata_size) {
+		pr_warn("pi_offset (%u) + pi_tuple_size (%u) exceeds metadata_size (%u)\n",
+			bi->pi_offset, bi->pi_tuple_size,
+			bi->metadata_size);
+		return -EINVAL;
+	}
+
+
+> 
+> > +unsigned int __bio_integrity_action(struct bio *bio)
+> 
+> Hrm, this function returns a bitset of BI_ACT_* flags, doesn't it?
+> 
+> Would be kinda nice if a comment could say that.
+
+Is this ok?
+
+/**
+ * bio_integrity_action - return the integrity action needed for a bio
+ * @bio:        bio to operate on
+ *
+ * Returns the mask of integrity actions (BI_ACT_*) that need to be performed
+ * for @bio.
+ */
+
+
+> > +		/*
+> > +		 * Zero the memory allocated to not leak uninitialized kernel
+> > +		 * memory to disk for non-integrity metadata where nothing else
+> > +		 * initializes the memory.
+> 
+> Er... does someone initialize it eventually?  Such as the filesystem?
+> Or maybe an io_uring caller?
+
+For integrity metadata?  The code called later fills it out.  But it
+doesn't fill non-integrity metadata, so we need to zero it.
+
+> > +		 */
+> > +		if (bi->flags & BLK_INTEGRITY_NOGENERATE) {
+> > +			if (bi_offload_capable(bi))
+> > +				return 0;
+> > +			return BI_ACT_BUFFER | BI_ACT_ZERO;
+> > +		}
+> > +
+> > +		if (bi->metadata_size > bi->pi_tuple_size)
+> > +			return BI_ACT_BUFFER | BI_ACT_CHECK | BI_ACT_ZERO;
+> > +		return BI_ACT_BUFFER | BI_ACT_CHECK;
+> 
+> "check" feels like a weird name for a write, where we're generating the
+> PI information.  It really means "block layer takes care of PI
+> generation and validation", right?  As opposed to whichever upper layer
+> is using the block device?
+> 
+> BI_ACT_YOUDOIT <snerk>
+> 
+> How about BI_ACT_BDEV /* block layer checks/validates PI */
+
+I think BI_ACT_BDEV is not very useful.  Check is supposed to
+include generate and verify, but I'm not sure how we could word this
+in a nice way.
 
