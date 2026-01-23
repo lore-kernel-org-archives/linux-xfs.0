@@ -1,109 +1,121 @@
-Received: from mail-ua1-f42.google.com (mail-ua1-f42.google.com [209.85.222.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B27B2DA750
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 13:23:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.222.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769174602; cv=pass; b=GqfnSpZyUgChqlPBQ1rJjUpQrdhN/89TU5CZWlKvkjVCZG0IGiuNKKt6BNsEakHoBnsh2WsQGAL8VCfBcNCTrNENmBmZPTYksd3IWgLeIe43y5qksV0aiDsHWiVLjj/63+TLfyxVnJzZN0FMqts3s62hVmK59ysfQ9XmnOZ9mto=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769174602; c=relaxed/simple;
-	bh=2yMX4KMIacTi5G1FaT6jVtT+6BVY1UFvsXDRT1eQCDg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Content-Type; b=MWQOoQqUS9gE7/J4rleJrBwWaZSpr63rO83Sc7hwJ0OXwzzPqrt76odrAiiLKqrtkzt2y3IVqr6AhApFYx2avFteVynHqWttHX2Kq6koELdhlwhuZPyQ5I12fw51u0lvjYkWxEVRMjH8c6S2K6zGSrAB3Avj7o5yPT4bnsUfSkU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NkoyQRiZ; arc=pass smtp.client-ip=209.85.222.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD53A2E6CAB;
+	Fri, 23 Jan 2026 13:25:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769174728; cv=none; b=ftvxTXbTwW5IdsGfIHmOu2fDm6LO2SqxCSCtC7bVLtocmWMP2juOfFHzikspdYC+iXFPZUUeShCivc8mPRLYZfCGHgfckWEH+et56ZPyUVdrhWJ/0shK8AqqsckF+jhbdsUkgA6QGFrd2ymJv7y/1r2t0tpAU1laGtNUlNOrOK8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769174728; c=relaxed/simple;
+	bh=COI1Vn0YHKV3OVPLgMROQ8SgPobrtuTwkqABWHq9GFY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hVUwPOelcaLY6q2esZKgoBRU2kTVKu26gAU6VCClG2hwzdy+6ePM4q71O4XaY0pfASXCF97c9QmL8g9QKuWATf08XsEM6+TXEiySgtrrgixPNIxP2wxaRfAWa6Ej0HFuIuF/kJqBEW5TSMLFNXKtN/TiF0ysatKJYB3oGG6la2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=F0TG+4Df; arc=none smtp.client-ip=213.97.179.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NkoyQRiZ"
-Received: by mail-ua1-f42.google.com with SMTP id a1e0cc1a2514c-93f573ba819so682695241.1
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 05:23:20 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769174599; cv=none;
-        d=google.com; s=arc-20240605;
-        b=f4IVOviOVc4aPHVUZNwnCu6roXfbxBi4mIpCJdNy3WJjmT50GaGz5XGWBLahdnL0+2
-         tfkF+n80OSzPcfvgoyQdnd5Sgz+k8YWR4raXEJI5DF/1L7CZfMakZRNPVq20vl+JkWxi
-         9SXB4ka3kwMnfKtRgwfX8h5Wo0Pew/LiZXexPCxqKg3/p1aPew5UVOPcykkQxmU8EpbL
-         a75zIfM3qozoLY+VGpKPcnDdR0wz0sQa0TcyT0zb/m9/y0b5FvG3y0OHOuxrKCoHkE4v
-         OCW5eCA6Zh2jBlEa1fTXdyufovgF5Y8FMtrch7fe9aeN3ExgIHtZLzydFD9i/jFGOzHW
-         h+zA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :dkim-signature;
-        bh=an5pupjXgIQPeCf/UmDnIpSea/cRkdaOPzIbp8qXmEc=;
-        fh=Db3JiawPL9Nhx/L08x38jP26+HOJUcgbxe8z9wxW+Wg=;
-        b=b6rZJbgSnezQT6ySs7CLmAbN/mvBD92A9mk0WA7IzHYKcVRJFmybyv1i+MA0XurbiF
-         NBWi5WsXEoL5Y1YkLB+0knvgO+x4fz96htxnkrdyNtkjSYwKSfYaqUMg4ohuQonsTpxk
-         RtG/stbwZ/Fi5r3FwMdhlIQB76e3u5BpRfZZsTd3CQqKvVZaWS7CESWA3+WWAUIzEY8H
-         /98Sa6k+x5N/lL20L6meofHwQkZ74w23A2kuM16Tz9lXFWywxsFA//UyEaoFQZAZF338
-         Rryf9zSIbolcFDkDCgyBl/W6i+P62IQIOEMItASzG8Z1NNTDthuL2Q3xbtQ9o004a3zU
-         BTRg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769174599; x=1769779399; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=an5pupjXgIQPeCf/UmDnIpSea/cRkdaOPzIbp8qXmEc=;
-        b=NkoyQRiZO9++ahzHH1OJ5cCT3E2o0WVv3qA2Qem70FoCG8ghW61cHe4bSRBatgsOm5
-         A9UVv1hPLOdqS7Om0j7zlcMFFBFxVAx1uBlswhWJlXn3OASJqKNdFhdsiFhkTqg9kX7H
-         xjegM32LrT1LO+E+NmFwksOsoU/PioZNNfbxLms6YJ73QwTqql0xy6uHu8v6t5HbKdX1
-         i9yLP0dUZ+jNxtpqiNPKX3OTx+CZM48wY44I/D/1o6pVuDZ/7wY+Jlkug/UcX9Oi+mCW
-         OqBmRXD2GC/fp3HrUbK+h4svEPIprnXIEdwdawESvoKrh/ycipkVN9urALaU/ZPu6A9e
-         gyBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769174599; x=1769779399;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=an5pupjXgIQPeCf/UmDnIpSea/cRkdaOPzIbp8qXmEc=;
-        b=VtZG0Vff86ROk5VP1+R7ZbQp3WGrmGaDGSYiLOSzmOYWMZQ+ydfyAHSG24bPxHofaE
-         zt9DsQQpQ47pTPfEam9kSdKSEUx3SW8GgO0NAnewp2OVbgE8N5oIW4d4FpfBrGWO3Mnd
-         /F8W56qA/pPQOYISXCLW/Sm0v/9Zb8B3fQWnZ7+burusMekPWA8t8nPdqjogYVegaRbe
-         4I28sSzZhPdp93ITFi44RKtYtNGULAx/H7SQP/vMfkGPiovtbdTsSCjIqpjmljHRXbOF
-         lSethdBiYD+/FB3p1aWzpq5joG9VBOls6Tfbm84i+vMzetEzupuT9DO7MNYaIUyrmEV1
-         p80g==
-X-Forwarded-Encrypted: i=1; AJvYcCX1KtcIGsaH0GIZfXtDMC+7Nsdb5AuSf+kJh4x/1k29UJps1qX8BMvzG1V2dDcUbcww9h0vX5cNhDU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFKOr9oRfTh1iHuoFmMnpUooP9ZRqnv4G++BDe1N03cR+HeljS
-	fxzyaT8TNx1ZboR12exFjVLnCcmJVgQzjeZRHYC2nVBVqc2HsR+Ph6cYGfzeAWOzJAWeAGG52mn
-	7s8hCVy5dnJYkcZ0ZRzjGKNlyXX1+aTs=
-X-Gm-Gg: AZuq6aKKN5DYSzmf2LsbFHtACFX+7pT5bv1qxFOAUYv6S0hGjj4pWqY7SozptZ9EEW/
-	dFm/jUIllAEy7F8/plIjMSLy1Av0E11XvmWEodrDLyNpMgdDskkddCChnEiO8dpFbEMYDzXt0PX
-	EfDE4qKJpBFyIj/9spoflM2Swtt/6g0ClB2mxInO950loPI3AaDNg2A9YDm1kVcpML2UhdSVN/d
-	kNtUY4U0+lctrdBih3vMNC8+J+mS5dcvGwewkKo6UtOoKUKXa1KBFLXGvviimQWnVUto0U=
-X-Received: by 2002:a05:6102:38cb:b0:5ef:7220:bca6 with SMTP id
- ada2fe7eead31-5f54bcbc2c0mr848495137.33.1769174599222; Fri, 23 Jan 2026
- 05:23:19 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="F0TG+4Df"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=NkmcwHGTXfF74rwBRnsbltvXcHCGT5Xzk4r/Sa5CsWE=; b=F0TG+4DfKYqxbC9mBgnQPVdnqb
+	SZ9Dc0np9ZEglfchr7h44jnjx+M9hFgLwhavB3Lz7ZlEKpl384mNcXOUSCu/24DIYNtLoMIC4xKc2
+	2p6/dSQBF/g6NEdKb32Ql5ZLv925WgIVF1iVGSp9+Yjd3CwyEfhu4nZc4jgchJSEC3KPxz8lhTDZB
+	te2x3kgzGQJyaxuECraVFbEzOcAJ9s4Hxe+1v+xsqk1xc7y1tUgaFFqYCVUuiA45ld4ZDSvQ4H8Sr
+	ugdw6NYOtwP6YrzD9rY1US4CssTN/SBYbSu8DqbX63lqEi5/PwsaSmQxqdLIkztNuYkTpvGUzBych
+	lUXKTx+g==;
+Received: from [179.98.220.182] (helo=[192.168.15.100])
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
+	id 1vjH9m-008tyb-VC; Fri, 23 Jan 2026 14:24:59 +0100
+Message-ID: <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
+Date: Fri, 23 Jan 2026 10:24:50 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260120142439.1821554-1-cel@kernel.org> <20260123-zwirn-verfassen-c93175b7a1ee@brauner>
-In-Reply-To: <20260123-zwirn-verfassen-c93175b7a1ee@brauner>
-From: Cedric Blancher <cedric.blancher@gmail.com>
-Date: Fri, 23 Jan 2026 14:22:43 +0100
-X-Gm-Features: AZwV_QjeaJNq0W-Cpcx_JErnCmrcMqvA53IgZ6NSy4KMyZ7YPDQ4CrxDdLy3saQ
-Message-ID: <CALXu0Uc3gkrCmFApP1xswew9AmfotgZXR4uZXr_RetyEtC2pPA@mail.gmail.com>
-Subject: Re: [PATCH v6 00/16] Exposing case folding behavior
-To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
-	linux-nfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
+ Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
+ Ludovico de Nittis <ludovico.denittis@collabora.com>
+References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
+ <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
+ <20260114062608.GB10805@lst.de>
+ <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
+ <20260115062944.GA9590@lst.de>
+ <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
+ <20260115072311.GA10352@lst.de>
+ <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
+ <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
+ <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
+ <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
+ <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
+ <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
+ <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
+ <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
+ <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
+In-Reply-To: <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Fri, 23 Jan 2026 at 13:12, Christian Brauner <brauner@kernel.org> wrote:
->
-> > Series based on v6.19-rc5.
->
-> We're starting to cut it close even with the announced -rc8.
-> So my current preference would be to wait for the 7.1 merge window.
 
-My preference would be to move forward with 6.19 as a target, as there
-are requests to have this in some distros using 6.x LTS kernels (Bosch
-for example).
+Em 22/01/2026 17:07, Amir Goldstein escreveu:
+> On Tue, Jan 20, 2026 at 4:12 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>>
+>> On Mon, Jan 19, 2026 at 5:56 PM André Almeida <andrealmeid@igalia.com> wrote:
+>>>
+> ...
+>>> Actually they are not in the same fs, upper and lower are coming from
+>>> different fs', so when trying to mount I get the fallback to
+>>> `uuid=null`. A quick hack circumventing this check makes the mount work.
+>>>
+>>> If you think this is the best way to solve this issue (rather than
+>>> following the VFS helper path for instance),
+>>
+>> That's up to you if you want to solve the "all lower layers on same fs"
+>> or want to also allow lower layers on different fs.
+>> The former could be solved by relaxing the ovl rules.
+>>
+>>> please let me know how can
+>>> I safely lift this restriction, like maybe adding a new flag for this?
+>>
+>> I think the attached patch should work for you and should not
+>> break anything.
+>>
+>> It's only sanity tested and will need to write tests to verify it.
+>>
+> 
+> Andre,
+> 
+> I tested the patch and it looks good on my side.
+> If you want me to queue this patch for 7.0,
+> please let me know if it addresses your use case.
+> 
 
-Ced
--- 
-Cedric Blancher <cedric.blancher@gmail.com>
-[https://plus.google.com/u/0/+CedricBlancher/]
-Institute Pasteur
+Hi Amir,
+
+I'm still testing it to make sure it works my case, I will return to you 
+ASAP. Thanks for the help!
+
+> Thanks,
+> Amir.
+
