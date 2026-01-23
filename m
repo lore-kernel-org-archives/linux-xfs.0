@@ -1,244 +1,142 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11DE02848A0
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 18:26:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769192770; cv=pass; b=tCXlSLJ28630yv5OGXk7Sro9pIvpDUhS+D8pjJfrCWHyBwIGXI2nRcVey/d3sQepFv3Jt+klbgaGeOJV4zTU++8K3jsPbNPmpqij8sV+AT5NJbgRpd6RqNNQsor1m0youmPPPAN9BvNWeUTI5i8ibMu1GgTfmxDy4jcJzSRZDFw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769192770; c=relaxed/simple;
-	bh=lw7xRpFw2x/KE4Twuxal1PcgEtMfTSjH8L5ZPbFVCDA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mNlTbaqtH6ZL1JYSOjIEJOkmk5hVDyuKIyKO+PdYPO5NxcVaWKoOT4gA1v/5Fl71BbPHNBI2EmRibmeUl2/ttzKBk/Rqv4Xp09sNTPthEo4l0XT4oEZK7RKBrrYsf2gTWqgLQwjuWYOkxb6kjin4xAX74UOb0pfTP8uTPWTfFwU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KagMOtgB; arc=pass smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC2FC2BD033;
+	Fri, 23 Jan 2026 20:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769198938; cv=none; b=hQfx4H9LFb/f9zyfriMHZXCcJwRSHwv+mFGJnRw9RFDhDWfSaJQ2MjThtA4HYngtge1zrMCiR/8avIrkN5uI/B3NrGpoLp8xltWjp7TK4skwVkS9Ii5IdhDc79LnPfZCJEK76sKNN4itu1urXJy4afFvLFz/blDwCAE3WuEbajE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769198938; c=relaxed/simple;
+	bh=yw2HWRH6pNHZTTAZOoeK52aKZQxm6K/tbztdUXquWbo=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=cS++bvi63edmVKX36rlsB93cuonEo9DL15vY0vOK0grjroAp2JRKNLycqDGkr3oz4q3FSmFkz/FwXfH36ts/jPy6eXsup9QDq6vv/YpwXp28ngTLyGFGHqwqoOR08aBuVuqy+8i4omWKJSnFqfB4Lul1qt7qVRqqsqZQzkwOMME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=LA+JHJHy; arc=none smtp.client-ip=213.97.179.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KagMOtgB"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-64b9dfc146fso4451491a12.0
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 10:26:08 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769192767; cv=none;
-        d=google.com; s=arc-20240605;
-        b=NTTH6LJ8Tt3n2OmD2tC5RdvYX580JhvnjOE21Cx1j3CFk+0Kjm2kn9WiaJnOjcQxvt
-         fhPVw8dt0kLgI0vZNX/ha6g2CexdMUpTNVHWHy2Wk/deAAZJbDJMhGKwwutyJLBZjjDl
-         Xe26uyBNHLTEx2zCjJ01DYNy+u2tIcsuqY9BmTVIwmBFyRdItGD3XsgCR9T3pdSorwTI
-         +WREpARnHA/dALc0tFFDaQASF3TZrMOz3R2ZVMec0tju+RmPZproOwYbI2/45uTxX798
-         27jzdbidjFDfV4p7GJvnteaPr8ZqS0v0NFp7cHq9Tplf4lbrDDyx1e5zMUNa90zZRGw6
-         g3ow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=plAFLPhHQxvfWQb9q1LZY3VXdudAWiQZEI4FNJSvCFk=;
-        fh=Li/bl5/bepfBC1z5vwDlBs6IpDEnRyAF/rnuJkufEsI=;
-        b=iDDSJq9aDsx2vjI/kB1cL86/jx1ChB6Xorbn++kmEV/yL2sxfHUkdYxOnMyhuPO0J2
-         0Cfv/4ykk5ArU8YO+Itk3fdqzkeNcnjrdhrR9tpdlYngd0EBsYy0IHt3FVlx5q8S7uhn
-         Zz8SFccTQLmHNNhrPnBsWtB21mqps9r+ilJyBE5PoZdarHPQfkax1US0EGgPsul9KDoy
-         TIbTZFYhvh3g113NTtzDa8HdpvQBqHmpWfHEl/FDGpscFcCBBHjBHKSrX5eSqaJsOxlx
-         O6/CdiQyflALr6qOwMDUKjMZ6raz/foBV/5E9y/YVTd5CwUP2Xu6Du6c+0Kv8xYnZuwx
-         EZvQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769192767; x=1769797567; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=plAFLPhHQxvfWQb9q1LZY3VXdudAWiQZEI4FNJSvCFk=;
-        b=KagMOtgBIzNT19/IwggUARHTCuAFoMwuZUw+R9oQt4HQh98o25YIDuGjqrY3G1lsoK
-         D8ERwZRhXa0VHkVajyQ5rxeYKThHJcQKtHB3an4wYOZ4XmEVdCACA4nLTMxQq6OSzvbB
-         fX77tdtkN2x47NxCuinyNzh+tZQglwuv7Q/7Rrl9SvLX5L7bgmihy+IDlNrR6rginXnC
-         pTIiXIcNZ8Ag5fvNpIxdPkhnXnX2JL/0PQYODNwLWkLtT8rrEh0WWRaPu414ZG60BYAP
-         GAaR5TmX8tQaV/Qb2YxK5+6Tgk/pZbFrfoKO61vM+9ecZA72YcVRz51rgCnQ7Mo1peeH
-         Qu5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769192767; x=1769797567;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=plAFLPhHQxvfWQb9q1LZY3VXdudAWiQZEI4FNJSvCFk=;
-        b=O5k7S00W0IkA/r9p0LBLkqdDyx403gz6phwm772HEqe9w/hWbGzpTM6G9aeFhwfB5g
-         6Cggrn7CWF/QuTmDRpysrwLc+41t1RJfQNo1DJRORFGeSrn2GlJrNn87gP+53EX0P8MK
-         4t5L1GCwiYRTFFQ9TPVP3eUXrG+CklRlkynHwXaPf/PRBeuiItp5y0mT2kcFj6mxSAtr
-         bHQ+mW5oLA6Nr88MEHud4ZPywQ1WHV0eCFwtGyPy0xhdauz/wiuPPEZbSZtkC8ySsaHn
-         BbpM78C8Wvsy2rHy/E66djAZ1HtLnPV4SNePeefS5KOJi8CyJdlXd0y66hFNTAc2Mm92
-         Upjg==
-X-Forwarded-Encrypted: i=1; AJvYcCVZNCPG6skd/7gkusFN0PNou6CoWV/SFWhCrZpXicHMJU0AhNVmIgxNwwyMqFGqU88kdPgHqdb1MRM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwWrh7XG89qvMFdddbpFKuMLJDh8JToXV6NgDdjhrobCouhQTAK
-	+wAxi6XtOT00CW5BQJ8t2hjCEdn8ccTWX46P9CSSTmsVUL1A49AHZJDMiIXYV4jamQU0R1M0ot2
-	1Oip/E6dLbnBM4jcHfbRMxypkMFGiZ84=
-X-Gm-Gg: AZuq6aIxQWa1O6PQKDzao/zQIq6aFpkdzkRtf3WmDtWdX6IMe+L7Zqkgn4qTlIoEdHj
-	iJ3P3TL0oZHW5Dd0xEbwrd5EPfHqDPhHe4LDd3bbMIrOjWGESqOQRrA2FznvsyKgtZxTqaRCLfE
-	t/WR8qLGywkAq95JMNp+PxdRkVoBWOzHUPEXpuVdOcYrMK1hD/XM/gQQ14UE7jAg9ptzVz26Su9
-	cjasp8QcHMxJmspXfBQpjB/hMkwSwnwJAuBHZbXcHs4WOCWrbXoWLWLSGDoquPKg54qSKXy4kSv
-	Et71hPJbzKNTydIh/QdcIUNBhSRz3w==
-X-Received: by 2002:a17:907:6e92:b0:b87:19ae:eb36 with SMTP id
- a640c23a62f3a-b8831afe0b1mr459407666b.7.1769192766467; Fri, 23 Jan 2026
- 10:26:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="LA+JHJHy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:
+	Cc:To:From:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=y2h4FKO/gqZGLIyqCMA1b/alWBeXTXRgrdUbRGvBD8A=; b=LA+JHJHy9q+ShI1ucA8baGdKFW
+	apfmJBwwbRyg/M0uStUWHdqrGP6Uq8oDQ6Qafq2DC3jjhsULMZgZMXbzjKDflefY4cu/+NSA/R5I3
+	43OKXh0Y9x6psWQsAzb3ZlsJVCqWLpbjO+QD/bPyzYhf2o089znqkibyqwr7IGbF2A8KKz+QAiTLP
+	6h4yUT8dgXFlF+XJ5sebPr3tuVdPcG1cortS3kxQYOk+7sAlhuYzHvbjHwYMlxJo3x1CFuT9nych9
+	CF31WIpq0da7Ro7d/1Mwv+C+UBBtpG8XahYjce/Eqx2Q9eS31trY5sH1K1S9laXQIXZK3ier//Umq
+	1zOMyPnA==;
+Received: from [179.98.220.182] (helo=[192.168.15.100])
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
+	id 1vjNSI-0092uX-KP; Fri, 23 Jan 2026 21:08:30 +0100
+Message-ID: <8ab387b1-c4aa-40a5-946f-f4510d8afd02@igalia.com>
+Date: Fri, 23 Jan 2026 17:08:23 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <176915153667.1677852.8049980969235323328.stgit@frogsfrogsfrogs> <176915153803.1677852.3768821466518761768.stgit@frogsfrogsfrogs>
-In-Reply-To: <176915153803.1677852.3768821466518761768.stgit@frogsfrogsfrogs>
-From: Jiaming Zhang <r772577952@gmail.com>
-Date: Sat, 24 Jan 2026 02:25:28 +0800
-X-Gm-Features: AZwV_QhbBhNCqFRaVEpuVLVGT8TSdILJLLQjzRGbrx3OvtrdQbvkTuWAsYL6jVU
-Message-ID: <CANypQFa-_VsQjs7Ep4USA_YHC6cD0kH8K_eBV2SjKm1yPH2J7A@mail.gmail.com>
-Subject: Re: [PATCH 5/5] xfs: check for deleted cursors when revalidating two btrees
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	hch@lst.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
+ Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
+ Ludovico de Nittis <ludovico.denittis@collabora.com>
+References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
+ <20260114-tonyk-get_disk_uuid-v1-3-e6a319e25d57@igalia.com>
+ <20260114062608.GB10805@lst.de>
+ <5334ebc6-ceee-4262-b477-6b161c5ca704@igalia.com>
+ <20260115062944.GA9590@lst.de>
+ <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
+ <20260115072311.GA10352@lst.de>
+ <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
+ <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
+ <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
+ <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
+ <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
+ <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
+ <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
+ <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
+ <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
+ <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
+Content-Language: en-US
+In-Reply-To: <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Darrick J. Wong <djwong@kernel.org> =E4=BA=8E2026=E5=B9=B41=E6=9C=8823=E6=
-=97=A5=E5=91=A8=E4=BA=94 15:04=E5=86=99=E9=81=93=EF=BC=9A
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> The free space and inode btree repair functions will rebuild both btrees
-> at the same time, after which it needs to evaluate both btrees to
-> confirm that the corruptions are gone.
->
-> However, Jiaming Zhang ran syzbot and produced a crash in the second
-> xchk_allocbt call.  His root-cause analysis is as follows (with minor
-> corrections):
->
->  In xrep_revalidate_allocbt(), xchk_allocbt() is called twice (first
->  for BNOBT, second for CNTBT). The cause of this issue is that the
->  first call nullified the cursor required by the second call.
->
->  Let's first enter xrep_revalidate_allocbt() via following call chain:
->
->  xfs_file_ioctl() ->
->  xfs_ioc_scrubv_metadata() ->
->  xfs_scrub_metadata() ->
->  `sc->ops->repair_eval(sc)` ->
->  xrep_revalidate_allocbt()
->
->  xchk_allocbt() is called twice in this function. In the first call:
->
->  /* Note that sc->sm->sm_type is XFS_SCRUB_TYPE_BNOPT now */
->  xchk_allocbt() ->
->  xchk_btree() ->
->  `bs->scrub_rec(bs, recp)` ->
->  xchk_allocbt_rec() ->
->  xchk_allocbt_xref() ->
->  xchk_allocbt_xref_other()
->
->  since sm_type is XFS_SCRUB_TYPE_BNOBT, pur is set to &sc->sa.cnt_cur.
->  Kernel called xfs_alloc_get_rec() and returned -EFSCORRUPTED. Call
->  chain:
->
->  xfs_alloc_get_rec() ->
->  xfs_btree_get_rec() ->
->  xfs_btree_check_block() ->
->  (XFS_IS_CORRUPT || XFS_TEST_ERROR), the former is false and the latter
->  is true, return -EFSCORRUPTED. This should be caused by
->  ioctl$XFS_IOC_ERROR_INJECTION I guess.
->
->  Back to xchk_allocbt_xref_other(), after receiving -EFSCORRUPTED from
->  xfs_alloc_get_rec(), kernel called xchk_should_check_xref(). In this
->  function, *curpp (points to sc->sa.cnt_cur) is nullified.
->
->  Back to xrep_revalidate_allocbt(), since sc->sa.cnt_cur has been
->  nullified, it then triggered null-ptr-deref via xchk_allocbt() (second
->  call) -> xchk_btree().
->
-> So.  The bnobt revalidation failed on a cross-reference attempt, so we
-> deleted the cntbt cursor, and then crashed when we tried to revalidate
-> the cntbt.  Therefore, check for a null cntbt cursor before that
-> revalidation, and mark the repair incomplete.  Also we can ignore the
-> second tree entirely if the first tree was rebuilt but is already
-> corrupt.
->
-> Apply the same fix to xrep_revalidate_iallocbt because it has the same
-> problem.
->
-> Cc: r772577952@gmail.com
-> Link: https://lore.kernel.org/linux-xfs/CANypQFYU5rRPkTy=3DiG5m1Lp4RWasSg=
-rHXAh3p8YJojxV0X15dQ@mail.gmail.com/T/#m520c7835fad637eccf843c7936c20058942=
-7cc7e
-> Cc: <stable@vger.kernel.org> # v6.8
-> Fixes: dbfbf3bdf639a2 ("xfs: repair inode btrees")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/scrub/alloc_repair.c  |   15 +++++++++++++++
->  fs/xfs/scrub/ialloc_repair.c |   20 +++++++++++++++++---
->  2 files changed, 32 insertions(+), 3 deletions(-)
->
->
-> diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-> index b6fe1f23819eb2..35035d02a23163 100644
-> --- a/fs/xfs/scrub/alloc_repair.c
-> +++ b/fs/xfs/scrub/alloc_repair.c
-> @@ -923,7 +923,22 @@ xrep_revalidate_allocbt(
->         if (error)
->                 goto out;
->
-> +       /*
-> +        * If the bnobt is still corrupt, we've failed to repair the file=
-system
-> +        * and should just bail out.
-> +        *
-> +        * If the bnobt fails cross-examination with the cntbt, the scan =
-will
-> +        * free the cntbt cursor, so we need to mark the repair incomplet=
-e
-> +        * and avoid walking off the end of the NULL cntbt cursor.
-> +        */
-> +       if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +               goto out;
-> +
->         sc->sm->sm_type =3D XFS_SCRUB_TYPE_CNTBT;
-> +       if (!sc->sa.cnt_cur) {
-> +               xchk_set_incomplete(sc);
-> +               goto out;
-> +       }
->         error =3D xchk_allocbt(sc);
->  out:
->         sc->sm->sm_type =3D old_type;
-> diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-> index b1d00167d263f4..f28459f58832f4 100644
-> --- a/fs/xfs/scrub/ialloc_repair.c
-> +++ b/fs/xfs/scrub/ialloc_repair.c
-> @@ -863,10 +863,24 @@ xrep_revalidate_iallocbt(
->         if (error)
->                 goto out;
->
-> -       if (xfs_has_finobt(sc->mp)) {
-> -               sc->sm->sm_type =3D XFS_SCRUB_TYPE_FINOBT;
-> -               error =3D xchk_iallocbt(sc);
-> +       /*
-> +        * If the inobt is still corrupt, we've failed to repair the file=
-system
-> +        * and should just bail out.
-> +        *
-> +        * If the inobt fails cross-examination with the finobt, the scan=
- will
-> +        * free the finobt cursor, so we need to mark the repair incomple=
-te
-> +        * and avoid walking off the end of the NULL finobt cursor.
-> +        */
-> +       if (!xfs_has_finobt(sc->mp) ||
-> +           (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> +               goto out;
-> +
-> +       sc->sm->sm_type =3D XFS_SCRUB_TYPE_FINOBT;
-> +       if (!sc->sa.fino_cur) {
-> +               xchk_set_incomplete(sc);
-> +               goto out;
->         }
-> +       error =3D xchk_iallocbt(sc);
->
->  out:
->         sc->sm->sm_type =3D old_type;
->
+Em 23/01/2026 10:24, André Almeida escreveu:
+> 
+> Em 22/01/2026 17:07, Amir Goldstein escreveu:
+>> On Tue, Jan 20, 2026 at 4:12 PM Amir Goldstein <amir73il@gmail.com> 
+>> wrote:
+>>>
+>>> On Mon, Jan 19, 2026 at 5:56 PM André Almeida 
+>>> <andrealmeid@igalia.com> wrote:
+>>>>
+>> ...
+>>>> Actually they are not in the same fs, upper and lower are coming from
+>>>> different fs', so when trying to mount I get the fallback to
+>>>> `uuid=null`. A quick hack circumventing this check makes the mount 
+>>>> work.
+>>>>
+>>>> If you think this is the best way to solve this issue (rather than
+>>>> following the VFS helper path for instance),
+>>>
+>>> That's up to you if you want to solve the "all lower layers on same fs"
+>>> or want to also allow lower layers on different fs.
+>>> The former could be solved by relaxing the ovl rules.
+>>>
+>>>> please let me know how can
+>>>> I safely lift this restriction, like maybe adding a new flag for this?
+>>>
+>>> I think the attached patch should work for you and should not
+>>> break anything.
+>>>
+>>> It's only sanity tested and will need to write tests to verify it.
+>>>
+>>
+>> Andre,
+>>
+>> I tested the patch and it looks good on my side.
+>> If you want me to queue this patch for 7.0,
+>> please let me know if it addresses your use case.
+>>
+> 
+> Hi Amir,
+> 
+> I'm still testing it to make sure it works my case, I will return to you 
+> ASAP. Thanks for the help!
+> 
 
-After applying patches and running the reproducer for ~10 minutes, no
-issues were triggered.
+So, your patch wasn't initially working in my setup here, and after some 
+debugging it turns out that on ovl_verify_fh() *fh would have a NULL 
+UUID, but *ofh would have a valid UUID, so the compare would then fail.
 
-Tested-by: Jiaming Zhang <r772577952@gmail.com>
+Adding this line at ovl_get_fh() fixed the issue for me and made the 
+patch work as I was expecting:
+
++       if (!ovl_origin_uuid(ofs))
++               fh->fb.uuid = uuid_null;
++
+         return fh;
+
+Please let me know if that makes sense to you.
+
+Thanks!
+	André
+
+
