@@ -1,181 +1,177 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD76308F2E;
-	Fri, 23 Jan 2026 07:47:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87ED72E265A;
+	Fri, 23 Jan 2026 08:32:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769154469; cv=none; b=htKTN3wJW7iqRpx6j5+C5e/jKOjwpkXfZT0CxpMgQ3wCeDbt3RaP7ecKfYFY+DPadVvpDuSCoL/JuvTJdlDa9nPOaAPGs1bhccm0B20luWseEh1kwMXjnpT1xqX0OzJ9MTfH3K/hfnnwbwV/UjVRHvwi622Iz7ZqAE9cRfHqj4M=
+	t=1769157129; cv=none; b=IVSWfXEwXcKDccKom66yNdndPokuPp4XleS+lyIhRgWVSBw32LsOhymlJPh6YMKsF/LlzeHO0Da41Gtky+E910CJtNlH0hx6oGXt/q1eL79n/DqOdibR10Gul2Mo/V0AI2EYd9FPrH1YYKvVVafirW7kdgZ7fWtcT+boEO5cXEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769154469; c=relaxed/simple;
-	bh=qZcCh8YaN75BaHxJI3n8DUClBttDVVefL2TarE8x2cs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lJsHFDrNLxQcn9mmJ0cV3XPS2T4Vd3l92YJIpk9Pgkk0W0skCQlV4my1lzyoeGCr3b4Vn8SIRgWnYA8xbLmPWo/jwFGpGzbe9AnuxVIlkkpSC4U3+yHF9xzJgLhJh8rFTXVaWu3oT0xOIExg6wiI4RkJBcW9/VO8yq2StIYGNKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dhz6ArAn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769157129; c=relaxed/simple;
+	bh=twK/F8qQbhX2/5NMWNxE616q9xKkGx76aZVXL7WTzTA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hHMoL73X+6/VXdhxpyRu0wB6STC0tHZHsLz6nOZRwwlvPrEjKKg0pnAODB6XUSgGhe19F6ZlDgYnNhs0086MbknIbBr955yRtIevVcXmxfX4yUgCfCGC5VS7bH3ANS4E6/JL/6OhIVun1EVw0Gdxg9Rt8S2RZZyME3g5vWEH0U0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qOPwLveg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dhz6ArAn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D6FAC2BC86;
-	Fri, 23 Jan 2026 07:47:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qOPwLveg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7688DC4CEF1;
+	Fri, 23 Jan 2026 08:32:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769154469;
-	bh=qZcCh8YaN75BaHxJI3n8DUClBttDVVefL2TarE8x2cs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Dhz6ArAnF4mrMgD2V9gaW0IOdAyt0UWHdcwmUQgrPBIWvnoaDzJtzmzMJxVck5gv+
-	 zEZgJOeFD/IJQzx2Up99SCKmemnDSbXrWZlm1SAK7ny61M8KuplDc84jbfdlgQwQR6
-	 +8Rb9fJ2j1Dh4UnsHETHjtBawHKcytU2E3ai7JjVMGK0KGDMhhcMz8n/3MAGSNlsTJ
-	 lel+3wVzQK3+jEYSZdvY/T5wo14jtYZ5i4jErLaZOvUngMzlLTTOeS1t4am1xi1tfP
-	 GskVtQYN+cTM93xV5bjb1azN9mPAsYErt+ynoEzLMYagl5talCo4C2ogUWa2ojcK07
-	 lGuDTmdB4UMCw==
-Date: Thu, 22 Jan 2026 23:47:48 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Jarkko Sakkinen <jarkko@kernel.org>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	"H . Peter Anvin" <hpa@zytor.com>, Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Christian Koenig <christian.koenig@amd.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Matthew Auld <matthew.auld@intel.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Benjamin LaHaise <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Muchun Song <muchun.song@linux.dev>,
-	Oscar Salvador <osalvador@suse.de>,
-	David Hildenbrand <david@kernel.org>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Dave Martin <Dave.Martin@arm.com>,
-	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
-	Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Zi Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>,
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
-	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>,
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
-	David Howells <dhowells@redhat.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E . Hallyn" <serge@hallyn.com>,
-	Yury Norov <yury.norov@gmail.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	linux-sgx@vger.kernel.org, linux-kernel@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-	linux-fsdevel@vger.kernel.org, linux-aio@kvack.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	linux-mm@kvack.org, ntfs3@lists.linux.dev, devel@lists.orangefs.org,
-	linux-xfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH v2 09/13] mm: update all remaining mmap_prepare users to
- use vma_flags_t
-Message-ID: <20260123074748.GX5945@frogsfrogsfrogs>
-References: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
- <fb1f55323799f09fe6a36865b31550c9ec67c225.1769097829.git.lorenzo.stoakes@oracle.com>
+	s=k20201202; t=1769157129;
+	bh=twK/F8qQbhX2/5NMWNxE616q9xKkGx76aZVXL7WTzTA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=qOPwLvegr0JFWBIblBpY7yep6nshdSNLVM+ae1XFz5zUKb5C9YSEM8fPt80FsWP2G
+	 QXor9itTjqrjLMxljbE3Z2QtrRmcvxytBUanArK5htz+6TxD22vmsvVZyB7m91tvUU
+	 q6SRrLSaohR61rPPzwr9S8GA7zZWuiskXGFp0PuvpW/N87QTuF1IQtZlYJooW1YkL3
+	 XOHVzDJe2JcIapqAGSmZcdbsyJGmxgJSyLhImvaZwYIYVoh7CNPK5jDwUXIAY8DybC
+	 RcbPITvDB70gohO4AgF+/hRABhAkUPqiec3QXzveN/AuW6wBDHB+4ltbz2eSD7B8xk
+	 UM34t2+BXscXw==
+Message-ID: <824538a6-ce9d-41e7-9485-10ff9e4d5334@kernel.org>
+Date: Fri, 23 Jan 2026 19:32:04 +1100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fb1f55323799f09fe6a36865b31550c9ec67c225.1769097829.git.lorenzo.stoakes@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/14] block: refactor get_contig_folio_len
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ Qu Wenruo <wqu@suse.com>, Al Viro <viro@zeniv.linux.org.uk>,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org
+References: <20260119074425.4005867-1-hch@lst.de>
+ <20260119074425.4005867-2-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260119074425.4005867-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 22, 2026 at 04:06:18PM +0000, Lorenzo Stoakes wrote:
-> We will be shortly removing the vm_flags_t field from vm_area_desc so we
-> need to update all mmap_prepare users to only use the dessc->vma_flags
-> field.
+On 2026/01/19 18:44, Christoph Hellwig wrote:
+> Move all of the logic to find the contigous length inside a folio into
+> get_contig_folio_len instead of keeping some of it in the caller.
 > 
-> This patch achieves that and makes all ancillary changes required to make
-> this possible.
-> 
-> This lays the groundwork for future work to eliminate the use of vm_flags_t
-> in vm_area_desc altogether and more broadly throughout the kernel.
-> 
-> While we're here, we take the opportunity to replace VM_REMAP_FLAGS with
-> VMA_REMAP_FLAGS, the vma_flags_t equivalent.
-> 
-> No functional changes intended.
-> 
-> Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/char/mem.c       |  6 +++---
->  drivers/dax/device.c     | 10 +++++-----
->  fs/aio.c                 |  2 +-
->  fs/erofs/data.c          |  5 +++--
->  fs/ext4/file.c           |  4 ++--
->  fs/ntfs3/file.c          |  2 +-
->  fs/orangefs/file.c       |  4 ++--
->  fs/ramfs/file-nommu.c    |  2 +-
->  fs/resctrl/pseudo_lock.c |  2 +-
->  fs/romfs/mmap-nommu.c    |  2 +-
->  fs/xfs/xfs_file.c        |  4 ++--
->  fs/zonefs/file.c         |  3 ++-
->  include/linux/dax.h      |  8 ++++----
->  include/linux/mm.h       | 24 +++++++++++++++++++-----
->  kernel/relay.c           |  2 +-
->  mm/memory.c              | 17 ++++++++---------
->  16 files changed, 56 insertions(+), 41 deletions(-)
+>  block/bio.c | 62 +++++++++++++++++++++++------------------------------
+>  1 file changed, 27 insertions(+), 35 deletions(-)
 > 
-
-<snip to xfs>
-
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7874cf745af3..1238ec018bc7 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1974,14 +1974,14 @@ xfs_file_mmap_prepare(
->  	 * We don't support synchronous mappings for non-DAX files and
->  	 * for DAX files if underneath dax_device is not synchronous.
->  	 */
-> -	if (!daxdev_mapping_supported(desc->vm_flags, file_inode(file),
-> +	if (!daxdev_mapping_supported(desc, file_inode(file),
->  				      target->bt_daxdev))
->  		return -EOPNOTSUPP;
->  
->  	file_accessed(file);
->  	desc->vm_ops = &xfs_file_vm_ops;
->  	if (IS_DAX(inode))
-> -		desc->vm_flags |= VM_HUGEPAGE;
-> +		vma_desc_set_flags(desc, VMA_HUGEPAGE_BIT);
-
-Looks good to me,
-Acked-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
->  	return 0;
+> diff --git a/block/bio.c b/block/bio.c
+> index 2359c0723b88..18dfdaba0c73 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -1172,33 +1172,35 @@ void bio_iov_bvec_set(struct bio *bio, const struct iov_iter *iter)
+>  	bio_set_flag(bio, BIO_CLONED);
 >  }
 >  
+> -static unsigned int get_contig_folio_len(unsigned int *num_pages,
+> -					 struct page **pages, unsigned int i,
+> -					 struct folio *folio, size_t left,
+> +static unsigned int get_contig_folio_len(struct page **pages,
+> +					 unsigned int *num_pages, size_t left,
+>  					 size_t offset)
+>  {
+> -	size_t bytes = left;
+> -	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, bytes);
+> -	unsigned int j;
+> +	struct folio *folio = page_folio(pages[0]);
+> +	size_t contig_sz = min_t(size_t, PAGE_SIZE - offset, left);
+> +	unsigned int max_pages, i;
+> +	size_t folio_offset, len;
+> +
+> +	folio_offset = PAGE_SIZE * folio_page_idx(folio, pages[0]) + offset;
+
+folio_page_idx(folio, pages[0]) is always going to be 0 here, no ?
+
+> +	len = min(folio_size(folio) - folio_offset, left);
+>  
+>  	/*
+> -	 * We might COW a single page in the middle of
+> -	 * a large folio, so we have to check that all
+> -	 * pages belong to the same folio.
+> +	 * We might COW a single page in the middle of a large folio, so we have
+> +	 * to check that all pages belong to the same folio.
+>  	 */
+> -	bytes -= contig_sz;
+> -	for (j = i + 1; j < i + *num_pages; j++) {
+> -		size_t next = min_t(size_t, PAGE_SIZE, bytes);
+> +	left -= contig_sz;
+> +	max_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
+> +	for (i = 1; i < max_pages; i++) {
+> +		size_t next = min_t(size_t, PAGE_SIZE, left);
+>  
+> -		if (page_folio(pages[j]) != folio ||
+> -		    pages[j] != pages[j - 1] + 1) {
+> +		if (page_folio(pages[i]) != folio ||
+> +		    pages[i] != pages[i - 1] + 1)
+>  			break;
+> -		}
+>  		contig_sz += next;
+> -		bytes -= next;
+> +		left -= next;
+>  	}
+> -	*num_pages = j - i;
+>  
+> +	*num_pages = i;
+>  	return contig_sz;
+>  }
+>  
+> @@ -1222,8 +1224,8 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>  	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
+>  	struct page **pages = (struct page **)bv;
+>  	ssize_t size;
+> -	unsigned int num_pages, i = 0;
+> -	size_t offset, folio_offset, left, len;
+> +	unsigned int i = 0;
+> +	size_t offset, left, len;
+>  	int ret = 0;
+>  
+>  	/*
+> @@ -1244,23 +1246,12 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>  		return size ? size : -EFAULT;
+>  
+>  	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
+> -	for (left = size, i = 0; left > 0; left -= len, i += num_pages) {
+> -		struct page *page = pages[i];
+> -		struct folio *folio = page_folio(page);
+> +	for (left = size; left > 0; left -= len) {
+>  		unsigned int old_vcnt = bio->bi_vcnt;
+> +		unsigned int nr_to_add;
+>  
+> -		folio_offset = ((size_t)folio_page_idx(folio, page) <<
+> -			       PAGE_SHIFT) + offset;
+> -
+> -		len = min(folio_size(folio) - folio_offset, left);
+> -
+> -		num_pages = DIV_ROUND_UP(offset + len, PAGE_SIZE);
+> -
+> -		if (num_pages > 1)
+> -			len = get_contig_folio_len(&num_pages, pages, i,
+> -						   folio, left, offset);
+> -
+> -		if (!bio_add_folio(bio, folio, len, folio_offset)) {
+> +		len = get_contig_folio_len(&pages[i], &nr_to_add, left, offset);
+> +		if (!bio_add_page(bio, pages[i], len, offset)) {
+>  			WARN_ON_ONCE(1);
+>  			ret = -EINVAL;
+>  			goto out;
+> @@ -1275,8 +1266,9 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>  			 * single pin per page.
+>  			 */
+>  			if (offset && bio->bi_vcnt == old_vcnt)
+> -				unpin_user_folio(folio, 1);
+> +				unpin_user_folio(page_folio(pages[i]), 1);
+>  		}
+> +		i += nr_to_add;
+>  		offset = 0;
+>  	}
+>  
+
+
+-- 
+Damien Le Moal
+Western Digital Research
