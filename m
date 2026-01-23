@@ -1,42 +1,113 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DC91E1A3D;
-	Fri, 23 Jan 2026 14:16:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B5A32D0E6
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 14:57:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769177786; cv=none; b=CB53jG3n5JfwAtmlLKOI4jYsJvX/lTTc6A0ovQCSqVbutSdlL0Ich308rdrFUaLIpTuIincU56KFQ3cxxured1Az7nV81fzCA6/91tj8l7EsUZiyu//hw9Y6NVAlKg5A4qJgygUuMj8DHizc7nlDqcpRDaOyQLOrwt44Ci+G3gk=
+	t=1769180242; cv=none; b=C79Y4ICYabXVgDsGMM4tO7fyWyKOLWbgyYmxiaz3l5tR4tYnb/HZbaqbpaYiW1VzzSWyjkU95pTRFPGnSFEu37chKSpV2j1uy8gSxYDSR0ZBZy+Jep2cMQv4XYymHGCAUyVwF3JoLCUwPeTy54Fkfr956c4cS35CK514Wg0G6KQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769177786; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E3vWOZt4HXOysJ8FZf7JVBYfBfQRlZZs+RQPV//Blzq7vqREV7Fdme17SXmBkBDYbs7/EWxedjlwY4PMgO1ZBvA0JFX6WGMxCzVSobnz1c//6CiOOggO7uxk5yxRIEA3DTfCasxn6c6QWSm44iyTqjtH3JYblmCBWiLM5Ppdpbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AC8A4227AAE; Fri, 23 Jan 2026 15:16:22 +0100 (CET)
-Date: Fri, 23 Jan 2026 15:16:22 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, r772577952@gmail.com, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 5/5] xfs: check for deleted cursors when revalidating
- two btrees
-Message-ID: <20260123141622.GA26012@lst.de>
-References: <176915153667.1677852.8049980969235323328.stgit@frogsfrogsfrogs> <176915153803.1677852.3768821466518761768.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1769180242; c=relaxed/simple;
+	bh=98gfQfTtpuQIK4SRjDriRs29SOaTPxKtPQ4zxBSwmD8=;
+	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
+	 Content-Type:Date:Message-ID; b=B9YJTCkXt2aVoera9QsnSfFgV/7arAq+U94DQ9xKiS4urCuEXpsMgC+xaV0JuItKzbEpNJvukBikwXX6vtOg51HZu8y59uSJa+1oS7CkZXxMWKaX+at6AgDp8k3QyYDJpbtM5XbmQe+voVzswMcQNQx73cotOR2lRDiyR3RrRjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eoLJ2J7s; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eoLJ2J7s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1769180239;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=C9dje+sNIA+yLoiDKbDNtKWUYVXUn9yJ3J50p0rKaA0=;
+	b=eoLJ2J7skX1yxSOrQZnYoXA5Q2AwPWeYlP7pqY3d7BcZflShX1K8UaeFyY2W8HcTC5vT6M
+	UvSoIb/Ri89GTZoCaZWAOx/O5QK/FMFbqy5IYdYFANFcMjSdbiOm8k7BIZ+sfjQyyESU8O
+	N995gH3LmUAU3xpTcj9o1NHYFW/El0c=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-266-zQ3khed6Ng-AjKJiBdeFRg-1; Fri,
+ 23 Jan 2026 09:57:13 -0500
+X-MC-Unique: zQ3khed6Ng-AjKJiBdeFRg-1
+X-Mimecast-MFC-AGG-ID: zQ3khed6Ng-AjKJiBdeFRg_1769180232
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C95F18005B6;
+	Fri, 23 Jan 2026 14:57:11 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.2])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 97B311800999;
+	Fri, 23 Jan 2026 14:57:07 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20260123135858.GA24386@lst.de>
+References: <20260123135858.GA24386@lst.de> <20260119074425.4005867-4-hch@lst.de> <20260119074425.4005867-1-hch@lst.de> <1754475.1769168237@warthog.procyon.org.uk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: dhowells@redhat.com, Jens Axboe <axboe@kernel.dk>,
+    Christian Brauner <brauner@kernel.org>,
+    "Darrick J. Wong" <djwong@kernel.org>,
+    Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
+    Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
+    linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+    Kundan Kumar <kundan.kumar@samsung.com>,
+    Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 03/14] iov_iter: extract a iov_iter_extract_bvecs helper from bio code
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <176915153803.1677852.3768821466518761768.stgit@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1763224.1769180224.1@warthog.procyon.org.uk>
+Date: Fri, 23 Jan 2026 14:57:06 +0000
+Message-ID: <1763225.1769180226@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Looks good:
+Christoph Hellwig <hch@lst.de> wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> On Fri, Jan 23, 2026 at 11:37:17AM +0000, David Howells wrote:
+> > Christoph Hellwig <hch@lst.de> wrote:
+> > 
+> > > +static unsigned int get_contig_folio_len(struct page **pages,
+> > > +		unsigned int *num_pages, size_t left, size_t offset)
+> > > +{
+> > > +	struct folio *folio = page_folio(pages[0]);
+> > 
+> > You can't do this.  You cannot assume that pages[0] is of folio type.
+> > vmsplice() is unfortunately a thing and the page could be a network read
+> > buffer.
+> 
+> Hmm, this just moves around existing code added in commit ed9832bc08db
+> ("block: introduce folio awareness and add a bigger size from folio").
+> 
+> How do we get these network read buffers into either a user address
+> space or a (non-bvec) iter passed to O_DIRECT reads/writes?
+
+Splice from TCP socket to pipe, vmsplice from there into process address
+space; DIO write() from there I think should do it.
+
+What you might need to do is write page-sized chunks into one end of the TCP
+socket and flush it after each one so that vmsplice() sees page-sized chunks
+of data.  I'm not sure how well an external connection would work to get
+actual transmission buffers.  The problem is that the received packet is
+page-aligned, including the network headers (I think), so if you can, say,
+send 8K packets, you'd have to try and guess where the page boundaries are as
+vmsplice can only work on whole pages.
+
+Can we make vmsplice() just copy data?
+
+> Can we come up with testcase for xfstests or blktests for this?
+> 
+> How do we find out if a given page is a folio and that we can do this?
+
+That's a question for Willy.
+
+David
 
