@@ -1,87 +1,78 @@
-Received: from n169-113.mail.139.com (n169-113.mail.139.com [120.232.169.113])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7B832F6935;
-	Fri, 23 Jan 2026 06:33:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=120.232.169.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88DB8318B80;
+	Fri, 23 Jan 2026 07:00:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769149990; cv=none; b=j6u2hNuGaQOegZQMjdEiEB7ysiDbwNRF7f4dWiL15NWCDeYJI0ZuxZ+b/Uuypqa9Go90fFH8lGNfrqJanXnMnjuavb0QKYqAWnebi4FPrVTn2/e4/RWFfL9JaMUcL8zxiGgz3v/Xzqx0dHW02OC5UUN8GoaQIxj9xVeTWg02LC0=
+	t=1769151620; cv=none; b=QXI1dP2DCW84tUrY9096YWwujgCzITPH7OZ+3udrgi38z7plku+umDkddRRwQiKp/lK/vM+BnjhiZFclnXXy8IpMuZbhtckgKwzMvtJXwmt6xqUr3ylU3saUUHxPXrXKA/eE/fKV65RC0g+sMkp/QweynWj2gmv6WMG0Xot/jFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769149990; c=relaxed/simple;
-	bh=hLyvoGo1gxEneRFAtCzpUF9dDEGT2F0SoHECw/cULd4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cf7PB3/4vKHDQY0PQpDZYWkl0iICVdXRh+JfoIHq/StR0PH54IdWEB8g8kZlw1KXeJBc/Z913axMF568jEEz6YQIlHdif5dmr5otA5uAK3Jblf8o0I6yYKwSpPr3yPpwOosE/CREv/bxfYccMkX4qL+tpiqUkXb7F46fM/CVwRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=139.com; spf=pass smtp.mailfrom=139.com; dkim=pass (1024-bit key) header.d=139.com header.i=@139.com header.b=IUf5e5JP; arc=none smtp.client-ip=120.232.169.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=139.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=139.com
+	s=arc-20240116; t=1769151620; c=relaxed/simple;
+	bh=xWJlC56ytp7VaBP2X6LppyLGFBh0JYwPRgjL1tBKTiU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jgio8ycgca8MS4pRk1acQPK99cfQ87L6Or1xeaGodvGngeIildkwmJMvPoaXcrhvyDngd5X4XNsrK3n9LUL66IR2m4Z91yoOdexQD1LQvUP9gPFXERgWIflfLyDaLfq55IKJUHEy9a9qltdxFCfZTL/URssvf+9u9lo7DO8+xqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LRxDrkNv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=139.com header.i=@139.com header.b="IUf5e5JP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=139.com; s=dkim; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=IUf5e5JPhXpUBIpobMAI9DisxIqHpqeCbXtRtRMCjYtMFYhYoTFKrTo5tV1x2Kd/gu3DFzc6c4xkE
-	 ke3YcfxuONzIeUvsQbV/dFBau3qu4NYf8bosGPLoflYkMnuHJvD9+pNk7TpR1vhJ7urcQ2ZvrdgQc1
-	 Y0J+7xgiDCSgcdLg=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM:                                                                                        
-X-RM-SPAM-FLAG:00000000
-Received:from NTT-kernel-dev (unknown[60.247.85.88])
-	by rmsmtp-lg-appmail-31-12045 (RichMail) with SMTP id 2f0d6973161f90b-0091b;
-	Fri, 23 Jan 2026 14:33:04 +0800 (CST)
-X-RM-TRANSID:2f0d6973161f90b-0091b
-From: Rajani Kantha <681739313@139.com>
-To: gregkh@linuxfoundation.org,
-	ritesh.list@gmail.com,
-	stable@vger.kernel.org
-Cc: djwong@kernel.org,
-	hch@infradead.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	patches@lists.linux.dev,
-	willy@infradead.org
-Subject: [PATCH 6.1.y] iomap: Fix possible overflow condition in iomap_write_delalloc_scan
-Date: Fri, 23 Jan 2026 14:33:00 +0800
-Message-Id: <20260123063300.3820420-1-681739313@139.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LRxDrkNv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 169F2C4CEF1;
+	Fri, 23 Jan 2026 07:00:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769151620;
+	bh=xWJlC56ytp7VaBP2X6LppyLGFBh0JYwPRgjL1tBKTiU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LRxDrkNv+iEOawQ+KOrhTYBVnCoBZ5Ccs4ihA9O0xmegSB+Ji2dSZ8oxELTtjurUh
+	 ifimLGe8WppqhN5k8M4ZutPBAC7kU/HDMWkKNNuf85M+SjF57S2cFq3qVq6R6Ysgfx
+	 zPjMKv/8pKqae8jRpuEh39UljJKsU0FjiyJY20zsFWhWNOPTq1MxB2osUY4FHU9z5H
+	 dkQYDvy/rZGMF/7dV9rktRcimnrOJXkvhoP4oV5rPbS5xwVfAf5nLUboxdeU1stkHE
+	 uEQlbICmKoqR2OS6CRwe7SDHVkRnVr6WGOFrVYE3EZwTs0NVz37jaAzCvnNzvNzcGk
+	 q9u92XrhTGmuw==
+Date: Thu, 22 Jan 2026 23:00:19 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, r772577952@gmail.com, stable@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: check the return value of xchk_xfile_*_descr
+ calls
+Message-ID: <20260123070019.GO5945@frogsfrogsfrogs>
+References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
+ <176897723563.207608.1472219452580720216.stgit@frogsfrogsfrogs>
+ <20260121070323.GA11640@lst.de>
+ <20260121182208.GH5945@frogsfrogsfrogs>
+ <20260122055748.GA23964@lst.de>
+ <20260122185701.GO5966@frogsfrogsfrogs>
+ <20260123053323.GA24680@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260123053323.GA24680@lst.de>
 
-From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+On Fri, Jan 23, 2026 at 06:33:23AM +0100, Christoph Hellwig wrote:
+> On Thu, Jan 22, 2026 at 10:57:01AM -0800, Darrick J. Wong wrote:
+> > > > Alternately we just drop all the helpers and kasprintf crap in favor of
+> > > > feeding the raw string ("iunlinked next pointers") all the way through
+> > > > to shmem_kernel_file_setup.
+> > > 
+> > > But wouldn't we get duplicate names for different inodes?
+> > 
+> > Yes, but that's only used for readlink of /proc/$pid/fd/* so (AFAICT) it
+> > makes tracing more confusing but doesn't affect functionality.
+> > xfs_healthmon just passes in "xfs_healthmon" and I can run healers on
+> > multiple filesystems just fine.
+> > 
+> > anon inodes are ... uh ... magic.
+> 
+> Ok, that certainly would simply things a lot, and I'd be ok with it.
+> 
+> My ideas didn't really work out.  The last idea I had was to be able
+> to specify a prefix in a new method in struct xchk_meta_ops, but
+> this starts to feel like severe overengineering.
 
-[ Upstream commit eee2d2e6ea5550118170dbd5bb1316ceb38455fb ]
+<nod> I just replaced them with static strings and everything seemed to
+work fine.  Will send a replacement patchset shortly.
 
-folio_next_index() returns an unsigned long value which left shifted
-by PAGE_SHIFT could possibly cause an overflow on 32-bit system. Instead
-use folio_pos(folio) + folio_size(folio), which does this correctly.
-
-Suggested-by: Matthew Wilcox <willy@infradead.org>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Rajani Kantha <681739313@139.com>
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 70e246f7e8fe..e4f58d1e12d4 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -903,7 +903,7 @@ static int iomap_write_delalloc_scan(struct inode *inode,
- 			 * the end of this data range, not the end of the folio.
- 			 */
- 			*punch_start_byte = min_t(loff_t, end_byte,
--					folio_next_index(folio) << PAGE_SHIFT);
-+					folio_pos(folio) + folio_size(folio));
- 		}
- 
- 		/* move offset to start of next folio in range */
--- 
-2.34.1
-
-
+--D
