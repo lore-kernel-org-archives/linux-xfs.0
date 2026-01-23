@@ -1,92 +1,83 @@
-Received: from out-186.mta1.migadu.com (out-186.mta1.migadu.com [95.215.58.186])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C59C7366DA3
-	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 09:36:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.186
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 586E8376472
+	for <linux-xfs@vger.kernel.org>; Fri, 23 Jan 2026 11:37:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769160998; cv=none; b=V5Z5nUS4xUSHWm2uJli3tX/LLBzt+tSGO8CWHdOBWnAIrFYvbBk8xmbHo/ozPRo1nhLzfssi/uqUwOMmTX1NtEkdA0tgdcJK1gOIOXbTLUZ6HC+74DkeE4YaIxaPR0NTMCVuYoGBUj0WL5vW9UAfrZ+RW8BCUkogYwp84KBQP0M=
+	t=1769168251; cv=none; b=HZMWVoL8l5Aga7mG4RLFz5azm5yoXJxGBzvK5MMo/1qvNwxBHwv5F2rKLSxB9TMn4g+yUmnl9FnbpVRa8yO42h1P7zseGsDCmnEW+qlEwd5AcB8KXdNEWZadWghaqrsI0+Gx7B2LbeShuFVwd6IU65HYqbSVFMii9veLnnkCWIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769160998; c=relaxed/simple;
-	bh=FsXlyiTXIFzIfD1Gako6qA+2/q+hBhpvj8eTNBZdjzU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nCHxEdP/wOHA1gF6/n71sbXaHBKBmTsOa2Nmc4ACzEn9y9N2jYU5OWn3w7ozAW2JUPIfCfh3U/HaTBDtsoqtQd4BPIsvaCUtt9+t5YjLvOOM08Sx2OR5Boef9dmNxG6YuDTih9uVaeNpIDAasRtJcO/hfThveb7cTJHO05HfZnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oufEqBUp; arc=none smtp.client-ip=95.215.58.186
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1769168251; c=relaxed/simple;
+	bh=e259cDOR2x8y2PNY1VZBUyduw1cVUirqqxjpTqnIsNA=;
+	h=In-Reply-To:References:To:Cc:Subject:MIME-Version:Content-Type:
+	 From:Date:Message-ID; b=EG21tPsDTtnFYDzP0dMNxly7y7gWCbs+VnT5Yis0fglve2VC+b1k6WDUxFwJrCmVmk+L64SP6kozYIC6b0r1Vyypw5ngN3t0DrMjL1srTV7ZoyhYPK0yfI3Rco41mPiFVjQsJV/1qJItFvcDJNA3zOwh7+XmM4QXzNfqpl4klWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AkyVd1NO; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oufEqBUp"
-Date: Fri, 23 Jan 2026 10:36:07 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1769160980;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AkyVd1NO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1769168247;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+raCG8SaitsTIi5zQQn9wM+Kv63F7dcRop2Be2n8BZ8=;
-	b=oufEqBUpveKXz9Nh2d6cKlwH+BjDtVHcS9ZSqv9FByEabAX9nSokfXDvQdt95Ox9bbeG1x
-	80qcTLshm81T8IUb72glXNWM/Fp0Ac79SH/DLLhbN/zurPao7LVaRJPX/FG5uVsw3onSMr
-	x5b+MPob0q36A5jrPwVgaudVpXFf30w=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Kundan Kumar <kundan.kumar@samsung.com>
-Cc: Brian Foster <bfoster@redhat.com>, viro@zeniv.linux.org.uk, 
-	brauner@kernel.org, jack@suse.cz, willy@infradead.org, mcgrof@kernel.org, 
-	clm@meta.com, david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk, 
-	hch@lst.de, ritesh.list@gmail.com, djwong@kernel.org, dave@stgolabs.net, 
-	cem@kernel.org, wangyufei@vivo.com, linux-fsdevel@vger.kernel.org, 
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, gost.dev@samsung.com, 
-	anuj20.g@samsung.com, vishak.g@samsung.com, joshi.k@samsung.com
-Subject: Re: [PATCH v3 0/6] AG aware parallel writeback for XFS
-Message-ID: <qkob3hnekz5wv3fkkjagwr5o2mr3rdplfzzmwutbhjwd34beez@hdgapt3jw7js>
-References: <CGME20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4@epcas5p1.samsung.com>
- <20260116100818.7576-1-kundan.kumar@samsung.com>
- <aXEvAD5Rf5QLp4Ma@bfoster>
- <ca048ecf-5aec-4a0d-8faf-ad9fcd310e21@samsung.com>
+	bh=xs0Vg5nji+dUGsW7zgyizne5BIyRwd0ccrRHXi+VavY=;
+	b=AkyVd1NOJMhkIYgiy3NFvv0LdBDETRExl4bJueTt98VYtRZOcRpRr0Ia2F1L4KHZyxfRug
+	CLE+r+iLWLfJwggx4sQUaR2QlY/EynAxoi94UbXw7d7w4O4SgHKqOEnoM7an9LlAL4vZW3
+	hdKLUt8HPhZ+gLQb9KoYvBSW2UQJLbs=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-303-cxzqkuf4OhGk9R5ZCIISSw-1; Fri,
+ 23 Jan 2026 06:37:23 -0500
+X-MC-Unique: cxzqkuf4OhGk9R5ZCIISSw-1
+X-Mimecast-MFC-AGG-ID: cxzqkuf4OhGk9R5ZCIISSw_1769168241
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4D8AD1800342;
+	Fri, 23 Jan 2026 11:37:21 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.2])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EDB1918001D5;
+	Fri, 23 Jan 2026 11:37:18 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+In-Reply-To: <20260119074425.4005867-4-hch@lst.de>
+References: <20260119074425.4005867-4-hch@lst.de> <20260119074425.4005867-1-hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: dhowells@redhat.com, Jens Axboe <axboe@kernel.dk>,
+    Christian Brauner <brauner@kernel.org>,
+    "Darrick J. Wong" <djwong@kernel.org>,
+    Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
+    Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
+    linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 03/14] iov_iter: extract a iov_iter_extract_bvecs helper from bio code
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ca048ecf-5aec-4a0d-8faf-ad9fcd310e21@samsung.com>
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1754439.1769168181.1@warthog.procyon.org.uk>
+From: David Howells <dhowells@redhat.com>
+Date: Fri, 23 Jan 2026 11:37:17 +0000
+Message-ID: <1754475.1769168237@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-> > So stepping back it kind of feels to me like the write time hinting has
-> > so much potential for inaccuracy and unpredictability of writeback time
-> > behavior (for the delalloc case), that it makes me wonder if we're
-> > effectively just enabling arbitrary concurrency at writeback time and
-> > perhaps seeing benefit from that. If so, that makes me wonder if the
-> > associated value can be gained by somehow simplifying this to not
-> > require write time hinting at all.
-> > 
-> > Have you run any experiments that perhaps rotors inodes to the
-> > individual wb workers based on the inode AG (i.e. basically ignoring all
-> > the write time stuff) by chance? Or anything that otherwise helps
-> > quantify the value of per-ag batching over just basic concurrency? I'd
-> > be interested to see if/how behavior changes with something like that.
-> 
-> Yes, inode-AG based routing has been explored as part of earlier
-> higher-level writeback work (link below), where inodes are affined to
-> writeback contexts based on inode AG. That effectively provides
-> generic concurrency and serves as a useful baseline.
-> https://lore.kernel.org/all/20251014120845.2361-1-kundan.kumar@samsung.com/
-> 
-> The motivation for this series is the complementary case where a
-> single inode’s dirty data spans multiple AGs on aged/fragmented
-> filesystems, where inode-AG affinity breaks down. The folio-level AG
-> hinting here is intended to explore whether finer-grained partitioning
-> provides additional benefit beyond inode-based routing.
-> 
+Christoph Hellwig <hch@lst.de> wrote:
 
-One thing that would be useful to see in the cover letter is to see how
-these patches work on an aged XFS filesystem as that was the main reason
-you moved to a different approach. And given that you have completely
-changed the design, it would have been better to see this series as an
-RFC as well.
+> +static unsigned int get_contig_folio_len(struct page **pages,
+> +		unsigned int *num_pages, size_t left, size_t offset)
+> +{
+> +	struct folio *folio = page_folio(pages[0]);
 
---
-Pankaj
+You can't do this.  You cannot assume that pages[0] is of folio type.
+vmsplice() is unfortunately a thing and the page could be a network read
+buffer.
+
+David
+
