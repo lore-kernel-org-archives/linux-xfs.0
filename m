@@ -1,45 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D7D2F25F5;
-	Fri, 23 Jan 2026 00:11:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336012BE7D2;
+	Fri, 23 Jan 2026 00:26:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769127113; cv=none; b=LD6drRrXcMPO9a1XKLnHKaDg70NaqD50KQFUXbQg0+I0manjznRPJe8Mpu2F5XDCGwyk4fq5lwU026vCMUill009wvM3Ho3fcNWhily+kQvcKP/kDPt8fXT8ymqMnRRnhZFiYxzB7uVXeROSJhR6DzDER0GgehtdR1kL4W8u12s=
+	t=1769128008; cv=none; b=G1HRtP9PyNMF4vMqzKi86y9rm63yu78pI1PhVdedtL7guJdRxAYjyvzvpQna11tEofLiylyB634YBtWRvA09HPIX9wGaehaSLuppstuf3rmnOvrcFW+2swWG3Swwji/4ZdL7hu1seDAgXsI0PuTmzRCNjcdhkFvImLGZXixXEM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769127113; c=relaxed/simple;
-	bh=W0l8rkdl/NphprkLF/MG7YFKFxORfE9biiB9GZtSY2Q=;
+	s=arc-20240116; t=1769128008; c=relaxed/simple;
+	bh=YfAXxf1cY4mpxIHAXBxlEMPMeobd0tAG5Xh8cUgRe68=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YeYcslNjFA/FfFHrbAWqulX+7VTyxdQwerE1HfTAw5CkeXjQv3b/lSgcX3n4B/aO7r7lRQC/JkQUQkwpSEYsxTE4rmXeFBBpvI8fDi7tQKt8R1BlvmoEOj+0+z0K6OLNDkB1zJzVMv43Mk935yo+u3HPcoBWX09eP8B8w8bTswM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dIiFnBTo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=slVTnW6cgtkCXYdSERI0lgIzfbvgP10OU8xm6LBxYLvnNLt/jEnAU55dmpQ4S+hCLPbgK1DYPtQ69ievZ+Bf+JCtKkrk4AgbepBoSRovG5ISa/kr+3/prY7UGzX5lKn2q9njaNKM4djlzeIdMtwd0NY5GrHef46g4EPCGgC9yCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sgUZWjFj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dIiFnBTo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 576F7C116C6;
-	Fri, 23 Jan 2026 00:11:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sgUZWjFj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FF66C116C6;
+	Fri, 23 Jan 2026 00:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769127111;
-	bh=W0l8rkdl/NphprkLF/MG7YFKFxORfE9biiB9GZtSY2Q=;
+	s=k20201202; t=1769128007;
+	bh=YfAXxf1cY4mpxIHAXBxlEMPMeobd0tAG5Xh8cUgRe68=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dIiFnBToxYE01ZXyMMjqfJy+5cYgiK8Xq2CVVUeoOPMSjn602pBJ75WRufgeQmmWq
-	 VO/A5qmTBPV5fHj0tS75TgiQBxdI3/vNJmx3X89C40BfxVcGvzhNLQ6K6905qRkZqd
-	 Zcb2u4YR/ZJDdWFFoMcJvmkh+JdxJifCGYFQTAk/Xp1x8YbP/vBpn/ARZG1jIWK31H
-	 YT4U1y3QM3cgXqxzbO2E5BNOG9yTb3vbVl3hKSBg25FiYvHi/0VR9NXHxQBT8BPim1
-	 dtc3GWbAAy0vf+4QFj3hv1DhE14gPq/IhQbIamSsjpsMvKPDClJWsye4MDUmyh8avV
-	 wE7a+nylyQJjQ==
-Date: Thu, 22 Jan 2026 16:11:50 -0800
+	b=sgUZWjFj8UxZ2ChZk6Og6wlP6cNdN3AVy1A3DaINVBfqqudi37G6Ax/h9H4aHnttZ
+	 VxxaqJkeguW43TyDiwz3QIb9/AwLqHYIJFQ2S3SUMkcnHV7u1il9CeCyhadfCXIO2W
+	 kXCIyEp1UPZusG031b3IWNGqsu/SWAwGjgCP558+XHHMvjhFAsn7A6EsNE0GmPyjF6
+	 zg280RvYUHGuhiLYpjOvN4WzN3vB2Mm0o0ph9ZdFEi3YMumUc8b0Y2wwVHk37JjNVm
+	 ZrqO6h+yfpWNbWwLGr/XNyxxcAiOqN8b4Flkim1K+Ijqq9bS3unUlg/xh+pZaGgUL3
+	 VP2yHzSNVOjGQ==
+Date: Thu, 22 Jan 2026 16:26:46 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/15] block: add fs_bio_integrity helpers
-Message-ID: <20260123001150.GK5945@frogsfrogsfrogs>
-References: <20260121064339.206019-1-hch@lst.de>
- <20260121064339.206019-7-hch@lst.de>
+To: Chuck Lever <cel@kernel.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, hirofumi@mail.parknet.co.jp,
+	linkinjeon@kernel.org, sj1557.seo@samsung.com, yuezhang.mo@sony.com,
+	almaz.alexandrovich@paragon-software.com, slava@dubeyko.com,
+	glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu,
+	adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org,
+	pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com,
+	trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org,
+	chao@kernel.org, hansg@kernel.org, senozhatsky@chromium.org,
+	Chuck Lever <chuck.lever@oracle.com>
+Subject: Re: [PATCH v7 01/16] fs: Add case sensitivity flags to file_kattr
+Message-ID: <20260123002646.GL5945@frogsfrogsfrogs>
+References: <20260122160311.1117669-1-cel@kernel.org>
+ <20260122160311.1117669-2-cel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,146 +55,151 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260121064339.206019-7-hch@lst.de>
+In-Reply-To: <20260122160311.1117669-2-cel@kernel.org>
 
-On Wed, Jan 21, 2026 at 07:43:14AM +0100, Christoph Hellwig wrote:
-> Add a set of helpers for file system initiated integrity information.
-> These include mempool backed allocations and verifying based on a passed
-> in sector and size which is often available from file system completion
-> routines.
+On Thu, Jan 22, 2026 at 11:02:56AM -0500, Chuck Lever wrote:
+> From: Chuck Lever <chuck.lever@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/Makefile                |  2 +-
->  block/bio-integrity-fs.c      | 81 +++++++++++++++++++++++++++++++++++
->  include/linux/bio-integrity.h |  6 +++
->  3 files changed, 88 insertions(+), 1 deletion(-)
->  create mode 100644 block/bio-integrity-fs.c
+> Enable upper layers such as NFSD to retrieve case sensitivity
+> information from file systems by adding FS_XFLAG_CASEFOLD and
+> FS_XFLAG_CASENONPRESERVING flags.
 > 
-> diff --git a/block/Makefile b/block/Makefile
-> index c65f4da93702..7dce2e44276c 100644
-> --- a/block/Makefile
-> +++ b/block/Makefile
-> @@ -26,7 +26,7 @@ bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
->  obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
->  
->  obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o \
-> -				   bio-integrity-auto.o
-> +				   bio-integrity-auto.o bio-integrity-fs.o
->  obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
->  obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
->  obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
-> diff --git a/block/bio-integrity-fs.c b/block/bio-integrity-fs.c
-> new file mode 100644
-> index 000000000000..c8b3c753965d
-> --- /dev/null
-> +++ b/block/bio-integrity-fs.c
-> @@ -0,0 +1,81 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2025 Christoph Hellwig.
-> + */
-> +#include <linux/blk-integrity.h>
-> +#include <linux/bio-integrity.h>
-> +#include "blk.h"
-> +
-> +struct fs_bio_integrity_buf {
-> +	struct bio_integrity_payload	bip;
-> +	struct bio_vec			bvec;
-> +};
-> +
-> +static struct kmem_cache *fs_bio_integrity_cache;
-> +static mempool_t fs_bio_integrity_pool;
-> +
-> +void fs_bio_integrity_alloc(struct bio *bio)
-> +{
-> +	struct fs_bio_integrity_buf *iib;
-> +	unsigned int action;
-> +
-> +	action = bio_integrity_action(bio);
-> +	if (!action)
-> +		return;
-> +
-> +	iib = mempool_alloc(&fs_bio_integrity_pool, GFP_NOIO);
-> +	bio_integrity_init(bio, &iib->bip, &iib->bvec, 1);
-> +
-> +	bio_integrity_alloc_buf(bio, action & BI_ACT_ZERO);
-> +	if (action & BI_ACT_CHECK)
-> +		bio_integrity_setup_default(bio);
-> +}
-> +
-> +void fs_bio_integrity_free(struct bio *bio)
-> +{
-> +	struct bio_integrity_payload *bip = bio_integrity(bio);
-> +
-> +	bio_integrity_free_buf(bip);
-> +	mempool_free(container_of(bip, struct fs_bio_integrity_buf, bip),
-> +			&fs_bio_integrity_pool);
-> +
-> +	bio->bi_integrity = NULL;
-> +	bio->bi_opf &= ~REQ_INTEGRITY;
-> +}
-> +
-> +void fs_bio_integrity_generate(struct bio *bio)
-> +{
-> +	fs_bio_integrity_alloc(bio);
-> +	bio_integrity_generate(bio);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_bio_integrity_generate);
-> +
-> +int fs_bio_integrity_verify(struct bio *bio, sector_t sector, unsigned int size)
-> +{
-> +	struct blk_integrity *bi = blk_get_integrity(bio->bi_bdev->bd_disk);
-> +	struct bio_integrity_payload *bip = bio_integrity(bio);
-> +
-> +	/*
-> +	 * Reinitialize bip->bit_iter.
+> Filesystems report case-insensitive or case-nonpreserving behavior
+> by setting these flags directly in fa->fsx_xflags. The default
+> (flags unset) indicates POSIX semantics: case-sensitive and
+> case-preserving. These flags are read-only; userspace cannot set
+> them via ioctl.
+> 
+> Remove struct file_kattr initialization from fileattr_fill_xflags()
+> and fileattr_fill_flags(). Callers at ioctl/syscall entry points
+> zero-initialize the struct themselves, which allows them to pass
+> hints (flags_valid, fsx_valid) to the filesystem's ->fileattr_get()
+> callback via the fa argument. Filesystem handlers that invoke these
+> fill functions can now set flags directly in fa->fsx_xflags before
+> calling them, without the fill functions zeroing those values.
 
-s/bit_iter/bip_iter/ ?
+In hindsight I regret not asking for the file_kattr initialization
+change to be in a separate patch.
 
-With that fixed, this looks fine to me;
+> Case sensitivity information is exported to userspace via the
+> fa_xflags field in the FS_IOC_FSGETXATTR ioctl and file_getattr()
+> system call.
+> 
+> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
+
+The UAPI changes still look ok to me.  AFAICT the file_kattr
+initialization now seem like they don't zap fields to confuse
+vfs_fileattr_get.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +	 *
-> +	 * This is for use in the submitter after the driver is done with the
-> +	 * bio. Requires the submitter to remember the sector and the size.
-> +	 */
-> +
-> +	memset(&bip->bip_iter, 0, sizeof(bip->bip_iter));
-> +	bip->bip_iter.bi_sector = sector;
-> +	bip->bip_iter.bi_size = bio_integrity_bytes(bi, size >> SECTOR_SHIFT);
-> +	return blk_status_to_errno(bio_integrity_verify(bio, &bip->bip_iter));
-> +}
-> +
-> +static int __init fs_bio_integrity_init(void)
-> +{
-> +	fs_bio_integrity_cache = kmem_cache_create("fs_bio_integrity",
-> +			sizeof(struct fs_bio_integrity_buf), 0,
-> +			SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
-> +	if (mempool_init_slab_pool(&fs_bio_integrity_pool, BIO_POOL_SIZE,
-> +			fs_bio_integrity_cache))
-> +		panic("fs_bio_integrity: can't create pool\n");
-> +	return 0;
-> +}
-> +fs_initcall(fs_bio_integrity_init);
-> diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrity.h
-> index 232b86b9bbcb..503dc9bc655d 100644
-> --- a/include/linux/bio-integrity.h
-> +++ b/include/linux/bio-integrity.h
-> @@ -145,4 +145,10 @@ void bio_integrity_alloc_buf(struct bio *bio, bool zero_buffer);
->  void bio_integrity_free_buf(struct bio_integrity_payload *bip);
->  void bio_integrity_setup_default(struct bio *bio);
+> ---
+>  fs/file_attr.c           | 12 ++++--------
+>  fs/xfs/xfs_ioctl.c       |  2 +-
+>  include/linux/fileattr.h |  3 ++-
+>  include/uapi/linux/fs.h  |  2 ++
+>  4 files changed, 9 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/file_attr.c b/fs/file_attr.c
+> index 13cdb31a3e94..6e37040fc5fa 100644
+> --- a/fs/file_attr.c
+> +++ b/fs/file_attr.c
+> @@ -15,12 +15,10 @@
+>   * @fa:		fileattr pointer
+>   * @xflags:	FS_XFLAG_* flags
+>   *
+> - * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).  All
+> - * other fields are zeroed.
+> + * Set ->fsx_xflags, ->fsx_valid and ->flags (translated xflags).
+>   */
+>  void fileattr_fill_xflags(struct file_kattr *fa, u32 xflags)
+>  {
+> -	memset(fa, 0, sizeof(*fa));
+>  	fa->fsx_valid = true;
+>  	fa->fsx_xflags = xflags;
+>  	if (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)
+> @@ -46,11 +44,9 @@ EXPORT_SYMBOL(fileattr_fill_xflags);
+>   * @flags:	FS_*_FL flags
+>   *
+>   * Set ->flags, ->flags_valid and ->fsx_xflags (translated flags).
+> - * All other fields are zeroed.
+>   */
+>  void fileattr_fill_flags(struct file_kattr *fa, u32 flags)
+>  {
+> -	memset(fa, 0, sizeof(*fa));
+>  	fa->flags_valid = true;
+>  	fa->flags = flags;
+>  	if (fa->flags & FS_SYNC_FL)
+> @@ -323,7 +319,7 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
+>  {
+>  	struct mnt_idmap *idmap = file_mnt_idmap(file);
+>  	struct dentry *dentry = file->f_path.dentry;
+> -	struct file_kattr fa;
+> +	struct file_kattr fa = {};
+>  	unsigned int flags;
+>  	int err;
 >  
-> +void fs_bio_integrity_alloc(struct bio *bio);
-> +void fs_bio_integrity_free(struct bio *bio);
-> +void fs_bio_integrity_generate(struct bio *bio);
-> +int fs_bio_integrity_verify(struct bio *bio, sector_t sector,
-> +		unsigned int size);
-> +
->  #endif /* _LINUX_BIO_INTEGRITY_H */
+> @@ -355,7 +351,7 @@ int ioctl_fssetxattr(struct file *file, void __user *argp)
+>  {
+>  	struct mnt_idmap *idmap = file_mnt_idmap(file);
+>  	struct dentry *dentry = file->f_path.dentry;
+> -	struct file_kattr fa;
+> +	struct file_kattr fa = {};
+>  	int err;
+>  
+>  	err = copy_fsxattr_from_user(&fa, argp);
+> @@ -434,7 +430,7 @@ SYSCALL_DEFINE5(file_setattr, int, dfd, const char __user *, filename,
+>  	struct filename *name __free(putname) = NULL;
+>  	unsigned int lookup_flags = 0;
+>  	struct file_attr fattr;
+> -	struct file_kattr fa;
+> +	struct file_kattr fa = {};
+>  	int error;
+>  
+>  	BUILD_BUG_ON(sizeof(struct file_attr) < FILE_ATTR_SIZE_VER0);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 59eaad774371..f0417c4d1fca 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -496,7 +496,7 @@ xfs_ioc_fsgetxattra(
+>  	xfs_inode_t		*ip,
+>  	void			__user *arg)
+>  {
+> -	struct file_kattr	fa;
+> +	struct file_kattr	fa = {};
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	xfs_fill_fsxattr(ip, XFS_ATTR_FORK, &fa);
+> diff --git a/include/linux/fileattr.h b/include/linux/fileattr.h
+> index f89dcfad3f8f..709de829659f 100644
+> --- a/include/linux/fileattr.h
+> +++ b/include/linux/fileattr.h
+> @@ -16,7 +16,8 @@
+>  
+>  /* Read-only inode flags */
+>  #define FS_XFLAG_RDONLY_MASK \
+> -	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR)
+> +	(FS_XFLAG_PREALLOC | FS_XFLAG_HASATTR | \
+> +	 FS_XFLAG_CASEFOLD | FS_XFLAG_CASENONPRESERVING)
+>  
+>  /* Flags to indicate valid value of fsx_ fields */
+>  #define FS_XFLAG_VALUES_MASK \
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index 66ca526cf786..919148beaa8c 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -253,6 +253,8 @@ struct file_attr {
+>  #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+>  #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+> +#define FS_XFLAG_CASEFOLD	0x00020000	/* case-insensitive lookups */
+> +#define FS_XFLAG_CASENONPRESERVING 0x00040000	/* case not preserved */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+>  /* the read-only stuff doesn't really belong here, but any other place is
 > -- 
-> 2.47.3
+> 2.52.0
 > 
 > 
