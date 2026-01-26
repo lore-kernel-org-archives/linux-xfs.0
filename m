@@ -1,34 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBFFE3314B9;
-	Mon, 26 Jan 2026 11:49:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68CF12F691A;
+	Mon, 26 Jan 2026 12:47:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769428166; cv=none; b=rW2RXU6W+aHmFG9u65kHuDB4SPtL37tzjU82Rhdr8IIxQjHQnreGUBxfBbmdOGlxwpvhUCoUqKejKZ62cA/6wg0cKV/sH5qhUZ1Ab2HZC0Wip/s0YhUC6nJ8o4Ep7lH3cT+sz6QvP71K6cB7PHefkexCTGnr5yTBgTvw1UNReuo=
+	t=1769431666; cv=none; b=r/ALa8BGBZWx7A4Y0JzU/P3fGxzieZ9jsDYxwmDt99OC0SBhCH9YA1pEjTLwLOh11dIwvoCrpGAEzAdvi3g1WMAjw+xTrkJ4wxPlJTM80r2prDFR56K7PcaTps42oEaiBAg9C8bAlBkpLVqxCXuSYEKK1Rzl/7RCwnKxNN/IhBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769428166; c=relaxed/simple;
-	bh=+6yDB44WLT2wxWGFozgz1t46XALOOvrPkLAvGhdLOlc=;
+	s=arc-20240116; t=1769431666; c=relaxed/simple;
+	bh=q4U70EY99U47cCnwnXIU3OxWzPgJ8CIws7VweKmxtHI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W1CyajYrQyOJcTJo135gh2PPUPngQHaF9AAjyTQHlqtptwUNKW1/s+rzl0dAANL/jeiXQ6tKQClGq964c7oJsCf99z2Fzb71+NDzxJc6dsRsQWL3VQhXYZjpLrpvw/2QGXAwliPzDo6t+YH8zuIzyBlXBZlc6mtfil8NgU7k/zg=
+	 Content-Type:Content-Disposition:In-Reply-To; b=ER39fHTB6jqkAla6IcqjoRRER6oyRAVAk+wyrFPJNXBdrDlvH9qyi8BkNNlm4x6dkRnRnEO8FFWv6fKl6wRNC81LIZ9CWvW7z3F+ottvmCYMAEn2EaU1QYgz8PZum8QOjU8vvV0AkKaQN3WotSqn5wMxDXdTg7/xLH0bvdqSP9U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 28070227A88; Mon, 26 Jan 2026 12:49:22 +0100 (CET)
-Date: Mon, 26 Jan 2026 12:49:21 +0100
+	id E4379227AAF; Mon, 26 Jan 2026 13:47:39 +0100 (CET)
+Date: Mon, 26 Jan 2026 13:47:38 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
+To: Anuj gupta <anuj1072538@gmail.com>
 Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>, Qu Wenruo <wqu@suse.com>,
 	Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Anuj Gupta <anuj20.g@samsung.com>
-Subject: Re: [PATCH 11/15] iomap: free the bio before completing the dio
-Message-ID: <20260126114921.GA23923@lst.de>
-References: <20260126055406.1421026-1-hch@lst.de> <20260126055406.1421026-12-hch@lst.de> <3360b495-b66d-40af-9274-bdb614455f6d@kernel.org>
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: bounce buffer direct I/O when stable pages are required v3
+Message-ID: <20260126124738.GA28035@lst.de>
+References: <20260126055406.1421026-1-hch@lst.de> <CACzX3At3fS19fmp8wOq29rHK-yw0KFp1bAvTdo9NC9eQj4E=pw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,22 +36,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3360b495-b66d-40af-9274-bdb614455f6d@kernel.org>
+In-Reply-To: <CACzX3At3fS19fmp8wOq29rHK-yw0KFp1bAvTdo9NC9eQj4E=pw@mail.gmail.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jan 26, 2026 at 03:22:41PM +0900, Damien Le Moal wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Repeated tag...
-> 
-> Looks good to me.
-> 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> 
-> (which I think I already sent :))
+On Mon, Jan 26, 2026 at 04:24:03PM +0530, Anuj gupta wrote:
+> As Keith suggested, here are the QD1 latency numbers (in usec)
 
-I guess I messed up and pasted Darricks' review again instead of yours,
-sorry.
+Thanks a gain for the benchmarks!
+
+I'd be curious what improvement you see with the iomap-pi series on
+Optane, as that drops one of the context switches on read again,
+and the less efficiently managed one at that:
+
+git://git.infradead.org/users/hch/misc.git iomap-pi
+https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/iomap-pi
+
+Otherwise the only thing we can do to get data integrity and performance
+is better interfaces.  I think for reads we could do that relatively
+easily with a version of Joanne's kernel-managed buffer rings that can
+only be mapped into userspace read-only.  Writes will be more difficult
+for anything that isn't a trust-worthy kernel provided buffer
+unfortunately, but then again the write degradation is less.
 
