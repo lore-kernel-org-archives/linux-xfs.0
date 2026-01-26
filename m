@@ -1,47 +1,48 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17CB1232395
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Jan 2026 05:38:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D278D29CE9;
+	Mon, 26 Jan 2026 05:54:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769405920; cv=none; b=lc4HX7daFcwIKS2Xcs1Rvd9FS4Lv3NFRhv2UseRjginZ0iUjO60h+YD6+nB3zWKJYFDrsg4b+1PF65I6MoAfDvr8A/WMM7gGxoJwUBPDESrmxSiR5KkwCLGPmFMUuXDXlCVwQrFFo45qF9IFoEpZancRH6/mX2YNUzle3NEUNeI=
+	t=1769406858; cv=none; b=RX5hYl/LlQGrmdA/vl+2xKyRVps4bRd+P1Moq1U1L1v88v9xj+wFGp4JT30P2U4FdNx6vMmvpqI4YtXO+uWvK1qIXmvdOPH5TyT+yT30a1OixlMu5H+LmmdDA6nRki5n/2bnV8e1SjV1sN4++Io4UNURYmZUxOzfUwEdXKTZktk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769405920; c=relaxed/simple;
-	bh=zZ9NGE4QC2YkhELc7TNZJbQZ52disZuF1kYuxsdOCmY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dCaOE8jJRUzxtfOQgQvbljQ+FiJrOMCCagiIz/h+9umgOqWtpAS3zI3J1q6bbxfmXPymQ8XwWEzFkTKFb2g+35kz2aZeY1TI7ujHpGJeAtd4qcQT9Xzbiq9SMFBhwsgrAo1IQqV0UbCqWlP/RkQlNft63aoNf+fYELAFBbdBJo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4J8ron6r; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1769406858; c=relaxed/simple;
+	bh=VyS1Vh/UcpixWSeTr8u8aTIsT1VL+92os2S3KJQ7OjU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=W+ldLH7ZS6OEfatoX0LaMduUlNbVCfwfHLkGxvcyg0iP2l8vypir3cd0jQ2t3jxH+NkXmYpQbfZmBV5kiBG48evrIGbMy0t7dJ7yg+2aE8kBZJhmFBoR9VxVR9caQqCJKm7EZ2WnSK6ngfxKP+2+5zRY8QC6D2Oo8Mfog+wfHZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=A1JvkzoV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4J8ron6r"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A1JvkzoV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=LlHsjryJK/gKioKu555mU8zPREtouI3a/JY1TvaQy1I=; b=4J8ron6rHE7Efwx0nuD/Tl5fnY
-	qv/Ut0umAD12xBzn1Rx9Rt/S+QgZ9jTdKotG3B+rl6P5NlErk/nj0CBibkzXwdbQ/r9CdtTHQBwgL
-	ZkzOcF/gVO8lQJqC3HL84zNI8xN5AiB02LJWv1ZNMO0R9KEE6QcZro2NH6qo4fE33+iw16F3v9s+C
-	lsXy4Ib2Xmuww11v5wh/V+iWeaOHPBTXIdL7Bf4yarfoG3DpQYslYG9I5c6w+fxTxOeWApHwhP6v+
-	15lpbHj54Xd3aLj9C7tE0uETmMHCgEQGPPfBTQHtQKF/GjxV+REmKaLXxpFg36Tkkpv20fm9uv1dT
-	P3Jthbjw==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=p04uGP/MTX7AmZ6atyztOPX6j2smbwyWbkVxRfOzqiQ=; b=A1JvkzoV80drvsknn3Khw+noXT
+	rsrPhH0Sr/SUwCOOu+mhU8JlMtnfxBfxKZyeq5rpKCgN/auSG/xJ1ez/G0Yx3Q995VcNYQoU9A7W3
+	poiLbJWn9n16uAhupsfCbNjZ4CkxV7MfhVzZ2uHMm05vqPBJ5LZ7BtYRHnItvIEDhHfEmTqct6R2d
+	z/YkQVOemAGzYk/iWHmKYwds8wuHj/H65Ki4zqo/5SoD4TE4P7GAFeam0SYUKbfSZcvW7ZF9RFjFV
+	l/XX0lpNRefuQ44IEq+m7NRpJ4DtJhcdQEcDjTX2OZgI1rZdWMg0V9ZLrOz2Ec5BtVwd/JeKDq9vd
+	1yxPTJMw==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vkFJ8-0000000BwVt-06lf;
-	Mon, 26 Jan 2026 05:38:38 +0000
+	id 1vkFYB-0000000BxEQ-1xYI;
+	Mon, 26 Jan 2026 05:54:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>,
-	Brian Foster <bfoster@redhat.com>,
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Qu Wenruo <wqu@suse.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
-	syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Subject: [PATCH 3/3] xfs: switch (back) to a per-buftarg buffer hash
-Date: Mon, 26 Jan 2026 06:38:02 +0100
-Message-ID: <20260126053825.1420158-4-hch@lst.de>
+	linux-fsdevel@vger.kernel.org
+Subject: bounce buffer direct I/O when stable pages are required v3
+Date: Mon, 26 Jan 2026 06:53:31 +0100
+Message-ID: <20260126055406.1421026-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260126053825.1420158-1-hch@lst.de>
-References: <20260126053825.1420158-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,308 +52,88 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The per-AG buffer hashes were added when all buffer lookups took a
-per-hash look.  Since then we've made lookups entirely lockless and
-removed the need for a hash-wide lock for inserts and removals as
-well.  With this there is no need to sharding the hash, so reduce the
-used resources by using a per-buftarg hash for all buftargs.
+Hi all,
 
-Long after writing this initially, syzbot found a problem in the buffer
-cache teardown order, which this happens to fix as well by doing the
-entire buffer cache teardown in one places instead of splitting it
-between destroying the buftarg and the perag structures.
+[note to maintainers:  we're ready to merge I think, and Christian
+already said he'd do on Friday.  If acceptable to everyone I'd like
+to merge it through the block tree, or topic branch in it due to
+pending work on top of this]
 
-Link: https://lore.kernel.org/linux-xfs/aLeUdemAZ5wmtZel@dread.disaster.area/
-Reported-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Tested-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_ag.c | 13 ++---------
- fs/xfs/libxfs/xfs_ag.h |  2 --
- fs/xfs/xfs_buf.c       | 51 +++++++++++-------------------------------
- fs/xfs/xfs_buf.h       | 10 +--------
- fs/xfs/xfs_buf_mem.c   | 11 ++-------
- 5 files changed, 18 insertions(+), 69 deletions(-)
+this series tries to address the problem that under I/O pages can be
+modified during direct I/O, even when the device or file system require
+stable pages during I/O to calculate checksums, parity or data
+operations.  It does so by adding block layer helpers to bounce buffer
+an iov_iter into a bio, then wires that up in iomap and ultimately
+XFS.
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 586918ed1cbf..a41d782e8e8c 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -110,10 +110,7 @@ xfs_perag_uninit(
- 	struct xfs_group	*xg)
- {
- #ifdef __KERNEL__
--	struct xfs_perag	*pag = to_perag(xg);
--
--	cancel_delayed_work_sync(&pag->pag_blockgc_work);
--	xfs_buf_cache_destroy(&pag->pag_bcache);
-+	cancel_delayed_work_sync(&to_perag(xg)->pag_blockgc_work);
- #endif
- }
- 
-@@ -235,10 +232,6 @@ xfs_perag_alloc(
- 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- #endif /* __KERNEL__ */
- 
--	error = xfs_buf_cache_init(&pag->pag_bcache);
--	if (error)
--		goto out_free_perag;
--
- 	/*
- 	 * Pre-calculated geometry
- 	 */
-@@ -250,12 +243,10 @@ xfs_perag_alloc(
- 
- 	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
- 	if (error)
--		goto out_buf_cache_destroy;
-+		goto out_free_perag;
- 
- 	return 0;
- 
--out_buf_cache_destroy:
--	xfs_buf_cache_destroy(&pag->pag_bcache);
- out_free_perag:
- 	kfree(pag);
- 	return error;
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 1f24cfa27321..f02323416973 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -85,8 +85,6 @@ struct xfs_perag {
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
- 
--	struct xfs_buf_cache	pag_bcache;
--
- 	/* background prealloc block trimming */
- 	struct delayed_work	pag_blockgc_work;
- #endif /* __KERNEL__ */
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 348c91335163..76eb7c5a73f1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -363,20 +363,6 @@ static const struct rhashtable_params xfs_buf_hash_params = {
- 	.obj_cmpfn		= _xfs_buf_obj_cmp,
- };
- 
--int
--xfs_buf_cache_init(
--	struct xfs_buf_cache	*bch)
--{
--	return rhashtable_init(&bch->bc_hash, &xfs_buf_hash_params);
--}
--
--void
--xfs_buf_cache_destroy(
--	struct xfs_buf_cache	*bch)
--{
--	rhashtable_destroy(&bch->bc_hash);
--}
--
- static int
- xfs_buf_map_verify(
- 	struct xfs_buftarg	*btp,
-@@ -434,7 +420,7 @@ xfs_buf_find_lock(
- 
- static inline int
- xfs_buf_lookup(
--	struct xfs_buf_cache	*bch,
-+	struct xfs_buftarg	*btp,
- 	struct xfs_buf_map	*map,
- 	xfs_buf_flags_t		flags,
- 	struct xfs_buf		**bpp)
-@@ -443,7 +429,7 @@ xfs_buf_lookup(
- 	int			error;
- 
- 	rcu_read_lock();
--	bp = rhashtable_lookup(&bch->bc_hash, map, xfs_buf_hash_params);
-+	bp = rhashtable_lookup(&btp->bt_hash, map, xfs_buf_hash_params);
- 	if (!bp || !lockref_get_not_dead(&bp->b_lockref)) {
- 		rcu_read_unlock();
- 		return -ENOENT;
-@@ -468,7 +454,6 @@ xfs_buf_lookup(
- static int
- xfs_buf_find_insert(
- 	struct xfs_buftarg	*btp,
--	struct xfs_buf_cache	*bch,
- 	struct xfs_perag	*pag,
- 	struct xfs_buf_map	*cmap,
- 	struct xfs_buf_map	*map,
-@@ -488,7 +473,7 @@ xfs_buf_find_insert(
- 	new_bp->b_pag = pag;
- 
- 	rcu_read_lock();
--	bp = rhashtable_lookup_get_insert_fast(&bch->bc_hash,
-+	bp = rhashtable_lookup_get_insert_fast(&btp->bt_hash,
- 			&new_bp->b_rhash_head, xfs_buf_hash_params);
- 	if (IS_ERR(bp)) {
- 		rcu_read_unlock();
-@@ -530,16 +515,6 @@ xfs_buftarg_get_pag(
- 	return xfs_perag_get(mp, xfs_daddr_to_agno(mp, map->bm_bn));
- }
- 
--static inline struct xfs_buf_cache *
--xfs_buftarg_buf_cache(
--	struct xfs_buftarg		*btp,
--	struct xfs_perag		*pag)
--{
--	if (pag)
--		return &pag->pag_bcache;
--	return btp->bt_cache;
--}
--
- /*
-  * Assembles a buffer covering the specified range. The code is optimised for
-  * cache hits, as metadata intensive workloads will see 3 orders of magnitude
-@@ -553,7 +528,6 @@ xfs_buf_get_map(
- 	xfs_buf_flags_t		flags,
- 	struct xfs_buf		**bpp)
- {
--	struct xfs_buf_cache	*bch;
- 	struct xfs_perag	*pag;
- 	struct xfs_buf		*bp = NULL;
- 	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
-@@ -570,9 +544,8 @@ xfs_buf_get_map(
- 		return error;
- 
- 	pag = xfs_buftarg_get_pag(btp, &cmap);
--	bch = xfs_buftarg_buf_cache(btp, pag);
- 
--	error = xfs_buf_lookup(bch, &cmap, flags, &bp);
-+	error = xfs_buf_lookup(btp, &cmap, flags, &bp);
- 	if (error && error != -ENOENT)
- 		goto out_put_perag;
- 
-@@ -584,7 +557,7 @@ xfs_buf_get_map(
- 			goto out_put_perag;
- 
- 		/* xfs_buf_find_insert() consumes the perag reference. */
--		error = xfs_buf_find_insert(btp, bch, pag, &cmap, map, nmaps,
-+		error = xfs_buf_find_insert(btp, pag, &cmap, map, nmaps,
- 				flags, &bp);
- 		if (error)
- 			return error;
-@@ -848,11 +821,8 @@ xfs_buf_destroy(
- 	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
- 
- 	if (!xfs_buf_is_uncached(bp)) {
--		struct xfs_buf_cache	*bch =
--			xfs_buftarg_buf_cache(bp->b_target, bp->b_pag);
--
--		rhashtable_remove_fast(&bch->bc_hash, &bp->b_rhash_head,
--				xfs_buf_hash_params);
-+		rhashtable_remove_fast(&bp->b_target->bt_hash,
-+				&bp->b_rhash_head, xfs_buf_hash_params);
- 
- 		if (bp->b_pag)
- 			xfs_perag_put(bp->b_pag);
-@@ -1619,6 +1589,7 @@ xfs_destroy_buftarg(
- 	ASSERT(percpu_counter_sum(&btp->bt_readahead_count) == 0);
- 	percpu_counter_destroy(&btp->bt_readahead_count);
- 	list_lru_destroy(&btp->bt_lru);
-+	rhashtable_destroy(&btp->bt_hash);
- }
- 
- void
-@@ -1713,8 +1684,10 @@ xfs_init_buftarg(
- 	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
- 			     DEFAULT_RATELIMIT_BURST);
- 
--	if (list_lru_init(&btp->bt_lru))
-+	if (rhashtable_init(&btp->bt_hash, &xfs_buf_hash_params))
- 		return -ENOMEM;
-+	if (list_lru_init(&btp->bt_lru))
-+		goto out_destroy_hash;
- 	if (percpu_counter_init(&btp->bt_readahead_count, 0, GFP_KERNEL))
- 		goto out_destroy_lru;
- 
-@@ -1732,6 +1705,8 @@ xfs_init_buftarg(
- 	percpu_counter_destroy(&btp->bt_readahead_count);
- out_destroy_lru:
- 	list_lru_destroy(&btp->bt_lru);
-+out_destroy_hash:
-+	rhashtable_destroy(&btp->bt_hash);
- 	return -ENOMEM;
- }
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 3a1d066e1c13..bf39d89f0f6d 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -69,13 +69,6 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_INCORE,		"INCORE" }, \
- 	{ XBF_TRYLOCK,		"TRYLOCK" }
- 
--struct xfs_buf_cache {
--	struct rhashtable	bc_hash;
--};
--
--int xfs_buf_cache_init(struct xfs_buf_cache *bch);
--void xfs_buf_cache_destroy(struct xfs_buf_cache *bch);
--
- /*
-  * The xfs_buftarg contains 2 notions of "sector size" -
-  *
-@@ -113,8 +106,7 @@ struct xfs_buftarg {
- 	unsigned int		bt_awu_min;
- 	unsigned int		bt_awu_max;
- 
--	/* built-in cache, if we're not using the perag one */
--	struct xfs_buf_cache	bt_cache[];
-+	struct rhashtable	bt_hash;
- };
- 
- struct xfs_buf_map {
-diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-index 0106da0a9f44..86dbec5ee203 100644
---- a/fs/xfs/xfs_buf_mem.c
-+++ b/fs/xfs/xfs_buf_mem.c
-@@ -58,7 +58,7 @@ xmbuf_alloc(
- 	struct xfs_buftarg	*btp;
- 	int			error;
- 
--	btp = kzalloc(struct_size(btp, bt_cache, 1), GFP_KERNEL);
-+	btp = kzalloc(sizeof(*btp), GFP_KERNEL);
- 	if (!btp)
- 		return -ENOMEM;
- 
-@@ -81,10 +81,6 @@ xmbuf_alloc(
- 	/* ensure all writes are below EOF to avoid pagecache zeroing */
- 	i_size_write(inode, inode->i_sb->s_maxbytes);
- 
--	error = xfs_buf_cache_init(btp->bt_cache);
--	if (error)
--		goto out_file;
--
- 	/* Initialize buffer target */
- 	btp->bt_mount = mp;
- 	btp->bt_dev = (dev_t)-1U;
-@@ -95,15 +91,13 @@ xmbuf_alloc(
- 
- 	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, descr);
- 	if (error)
--		goto out_bcache;
-+		goto out_file;
- 
- 	trace_xmbuf_create(btp);
- 
- 	*btpp = btp;
- 	return 0;
- 
--out_bcache:
--	xfs_buf_cache_destroy(btp->bt_cache);
- out_file:
- 	fput(file);
- out_free_btp:
-@@ -122,7 +116,6 @@ xmbuf_free(
- 	trace_xmbuf_free(btp);
- 
- 	xfs_destroy_buftarg(btp);
--	xfs_buf_cache_destroy(btp->bt_cache);
- 	fput(btp->bt_file);
- 	kfree(btp);
- }
--- 
-2.47.3
+The reason that the file system even needs to know about it, is because
+reads need a user context to copy the data back, and the infrastructure
+to defer ioends to a workqueue currently sits in XFS.  I'm going to look
+into moving that into ioend and enabling it for other file systems.
+Additionally btrfs already has it's own infrastructure for this, and
+actually an urgent need to bounce buffer, so this should be useful there
+and could be wire up easily.  In fact the idea comes from patches by
+Qu that did this in btrfs.
 
+This patch fixes all but one xfstests failures on T10 PI capable devices
+(generic/095 seems to have issues with a mix of mmap and splice still,
+I'm looking into that separate), and make qemu VMs running Windows,
+or Linux with swap enabled fine on an XFS file on a device using PI.
+
+Performance numbers on my (not exactly state of the art) NVMe PI test
+setup:
+
+  Sequential reads using io_uring, QD=16.
+  Bandwidth and CPU usage (usr/sys):
+
+  | size |        zero copy         |          bounce          |
+  +------+--------------------------+--------------------------+
+  |   4k | 1316MiB/s (12.65/55.40%) | 1081MiB/s (11.76/49.78%) |
+  |  64K | 3370MiB/s ( 5.46/18.20%) | 3365MiB/s ( 4.47/15.68%) |
+  |   1M | 3401MiB/s ( 0.76/23.05%) | 3400MiB/s ( 0.80/09.06%) |
+  +------+--------------------------+--------------------------+
+
+  Sequential writes using io_uring, QD=16.
+  Bandwidth and CPU usage (usr/sys):
+
+  | size |        zero copy         |          bounce          |
+  +------+--------------------------+--------------------------+
+  |   4k |  882MiB/s (11.83/33.88%) |  750MiB/s (10.53/34.08%) |
+  |  64K | 2009MiB/s ( 7.33/15.80%) | 2007MiB/s ( 7.47/24.71%) |
+  |   1M | 1992MiB/s ( 7.26/ 9.13%) | 1992MiB/s ( 9.21/19.11%) |
+  +------+--------------------------+--------------------------+
+
+Note that the 64k read numbers look really odd to me for the baseline
+zero copy case, but are reproducible over many repeated runs.
+
+The bounce read numbers should further improve when moving the PI
+validation to the file system and removing the double context switch,
+which I have patches for that will sent out soon.
+
+Changes since v2:
+ - add a BIO_MAX_SIZE constant and use it
+ - remove a pointless repeated page_folio call
+ - fix a comment typo
+ - add a new comment about copying to a pinned iter
+
+Changes since v1:
+ - spelling fixes
+ - add more details to some commit messages
+ - add a new code comment about freeing the bio early in the I/O
+   completion handler
+
+Diffstat:
+ block/bio.c               |  332 ++++++++++++++++++++++++++++------------------
+ block/blk-lib.c           |    9 -
+ block/blk-merge.c         |    8 -
+ block/blk.h               |   11 -
+ fs/iomap/direct-io.c      |  191 ++++++++++++++------------
+ fs/iomap/ioend.c          |    8 +
+ fs/xfs/xfs_aops.c         |    8 -
+ fs/xfs/xfs_file.c         |   41 +++++
+ include/linux/bio.h       |   26 +++
+ include/linux/blk_types.h |    3 
+ include/linux/iomap.h     |    9 +
+ include/linux/uio.h       |    3 
+ lib/iov_iter.c            |   98 +++++++++++++
+ 13 files changed, 507 insertions(+), 240 deletions(-)
