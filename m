@@ -1,43 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59CDC293B75;
-	Mon, 26 Jan 2026 20:30:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97B010F2
+	for <linux-xfs@vger.kernel.org>; Mon, 26 Jan 2026 23:05:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769459457; cv=none; b=glrHSR52whHQP0yZNJAixg4uhGo3fq5JgXpjGM/taze2FtP0Lt/IM6xOR1CO+x+oQo5LW4vrydbb2OIcIy+Gpym+whPO1A92F+8wjT4QcRo75PxNSSrOfULYUzIKbddXoOeqUeIJnwB2WwYLiSAI9glAS1j0LhTWyjNnVYol3to=
+	t=1769468731; cv=none; b=q6Kmpsa9JA/dqdiRWJ+ln3PDOCwy3Ww8b9DuCRPNXQqXPDGokMeq67dymdujUBXWwHVxem7Lv4XCuPmR/Nk7gPnHtb9gT29o0MxZJC8o4RnrZrqXa2Jeq9dnS9ycjmpBNiVAH96GOvLckc2ix7w7ODhqhkXsh3eGssYNn7V+h2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769459457; c=relaxed/simple;
-	bh=wcRS12150jQDMEIw41aY5AmWZmd5Z7+BTq28L69cujc=;
+	s=arc-20240116; t=1769468731; c=relaxed/simple;
+	bh=mT2BeWiw9kYkT94ehH+6RGyKnQvJ4GqAP08tkE6v3Q4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qow/q0jdssfLFa3T1k7hyfnQsLocDT1x+bxZgm61++eCMBS7vSWRjeofuSeNIJ335rZfbicVX6ymIKv5Ost5mLgIn1GC0XoGVlPdv9H2o6Fp0FqdVlfye+ZOckwHGlj8jsdvcEyRONrxtJKOEZkTAs7UE7B76HdMOB0J0pH3Y6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vGY88YJs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=gOhNrzFDY+cBHAMuUFItYo+iL0SVSXZsuN0ikP590z9Vve8WGVBHjYUXBYBzyn+7WPYiu39hXxAhp49faYyPG1wstwfGRFtWprgA/mzeF/G5BPoP8LTW8WaJVbKO2SpNdXp/81CTtZZQUbB4LUlnjdVigM5oGFXPPC0SFwBfTuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KOempiZa; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vGY88YJs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DF7BC116C6;
-	Mon, 26 Jan 2026 20:30:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769459457;
-	bh=wcRS12150jQDMEIw41aY5AmWZmd5Z7+BTq28L69cujc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vGY88YJsobn0/JQgNGlUIQOfFu5byl/b2ZdzMy1QxxkzyUnUHdgDYLMo2YpCXP33B
-	 TvAkDlcDwmTEi3NoRdYG/rAd6UnoFtygLlevYZNgPrxUWpTl+ZNmMosHxacOQ6d00Q
-	 mN4fDkKHX/T43yS0Df9hw4/aElYY2S5X1QN4wVPmRhxNvZ395CFB8Ikz4DCbBM7ETh
-	 jrA6kD6Lqaxnnf+AGDomvAHKpgnKaOPo9LUDYbnPFiOkKDNpB55VrTsNtHireLfGCV
-	 o2Qyj3+a4pKYElvCWead1n2qLc9hRvJHWRfF/nQtf8HpqxDkc7vqUk8DUqYB0Y5KYp
-	 KBvyo5sSH2VqA==
-Date: Mon, 26 Jan 2026 13:30:54 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Chris Mason <clm@meta.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: rework zone GC buffer management
-Message-ID: <aXfO_ghd0yoKK8dm@kbusch-mbp>
-References: <20260114130651.3439765-4-hch@lst.de>
- <20260125000314.561545-1-clm@meta.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KOempiZa"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-81f4e36512aso4908581b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Jan 2026 15:05:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1769468729; x=1770073529; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=K79P9yEEOhjx+zO5nMMghB4fcEf+uSORL+5ZaRYOorU=;
+        b=KOempiZa3Kq1mOC2IeeivJCxr6apeoOS72MjW7oBtp0R6gZM2g8rUZSxCcSpftoxjr
+         MWbqp8629J3AX+k44xP777A2XDTSMgCDqZ5T6yO/CYiJt2vtAx7ozvrIws10L65eVCrP
+         JqWmGR1UxrmQjV94EMbdY6KYBcUUfnypy2sbSvn4deoqdPfgfga8CMYn2Mf59F+Pulnb
+         /7mtloLXddE6fxN1yeOlwDWNp7o1xukba36L7zTT25Yh6dMIz1Y5MyrzRG6/Kx3+CXkB
+         8MDRl1qm02Vp1HxAgJVb3NjhIuoa8+qW04Wch+ekTIvjqaK2KTqrziYOAGXytdEFXtzr
+         Cn4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769468729; x=1770073529;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=K79P9yEEOhjx+zO5nMMghB4fcEf+uSORL+5ZaRYOorU=;
+        b=JQgODTjoX1hP9KSWxzvyHSa2Z6rUcpaeNjzBRt0Wb8aeycRcRPYdRDtjAH9OUKP1qB
+         okaAn+WolF7uh/cHqBkTMyKCpsJzN//uK4Pxu5HRJHPec349DtocRnt6bLI6tCXpLouf
+         aopGMUY13YG/T8Pkruhrh2fML8XyEmbaPkF/Y3oqFpCTzlSZSGSML/OUlZVK7SLn49+g
+         BG9LDqFLALoOyN/3RNooI4I/GKPh64EzqOaRCsyszLryKpu/IDX4uRUWsYHbdUr43KrB
+         8VQ0HxLxXVhy9FrkcFidxj0u9K60qE9f96yHYbQpv8yxOdgEz0tSiG/yDP1fMwv21jxW
+         ABcw==
+X-Forwarded-Encrypted: i=1; AJvYcCUCaP1UNgaZjOzmvrITzD0WAgUIaFRCPCW9Q3qUN2ikZy9Yomz+BVRhjmlJgLfaTDgYpL/T6rUtOPY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy6FmtNhvfdubrHi+tP0i2zn4uc6/UBf91skxb/3x9CXu714zbO
+	znrCQvXz4WORB7vf8g4lzg+7HnQVGMDRpuLpKtyiW+EbeVggfUNx7PgzR6h2CWeKWz4=
+X-Gm-Gg: AZuq6aLjDuQnPG8hSAVX8Z1/hrL9R3HoVqRhzHa/8iQtIZkqqnvvhSouItiI9GADe3V
+	IYvohwyzWvft0rMJh4qwESIPc4rUudP7htIdahAOjdcWexHSQBwx47O+eGmOgTGmMFiFzkNdnN0
+	fkS5fGBSETmcWEK+RCjllSZJ42/x9CotldAgxL8MIWSxWoTZw8CeRDfG4eG7Cxt/7rDfLCCV1tT
+	tyAvPIxRAmgnwftKETxJGHygwV8yIJRDJDKXMLWreSFCG12MYsMgo+5qnvAKc2BJPOtajJ62m2E
+	JqBpvELMVrrmjbB3pMB3eJCiYEQWKc2un83Cra1BP2seCT82rc5HRRB1ZL5xpbUoNgWH0d0XNqj
+	LJS7/y9PWnd5Oegq3aJe1/p8HJ1x6mWYgstTKVPu2zeQbpNcpudPsgBzt1ywdZWuxz2ShTm8sxs
+	JdfdWXbpoleuvHHDAouHRgV9USNr0flIwVtAB61pxS2M5Wvk7mGlNJKOLM3XpO/m1kAUIdymyTh
+	A==
+X-Received: by 2002:a05:6a00:808f:b0:81f:38f4:d774 with SMTP id d2e1a72fcca58-82341219750mr5263349b3a.27.1769468729066;
+        Mon, 26 Jan 2026 15:05:29 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82318671e1csm10235041b3a.27.2026.01.26.15.05.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Jan 2026 15:05:28 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.99.1)
+	(envelope-from <david@fromorbit.com>)
+	id 1vkVe9-00000008v0M-1zNf;
+	Tue, 27 Jan 2026 10:05:25 +1100
+Date: Tue, 27 Jan 2026 10:05:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "rcu@vger.kernel.org" <rcu@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>
+Subject: Re: rcu stalls during fstests runs for xfs
+Message-ID: <aXfzNW7cf2ReVDA4@dread.disaster.area>
+References: <aXdO52wh2rqTUi1E@shinmob>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,98 +79,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260125000314.561545-1-clm@meta.com>
+In-Reply-To: <aXdO52wh2rqTUi1E@shinmob>
 
-On Sat, Jan 24, 2026 at 04:03:04PM -0800, Chris Mason wrote:
-> On Wed, 14 Jan 2026 14:06:43 +0100 Christoph Hellwig <hch@lst.de> wrote:
-> > @@ -590,7 +578,12 @@ xfs_zone_gc_ensure_target(
-> >  xfs_zone_gc_scratch_available(
-> >  	struct xfs_zone_gc_data	*data)
-> >  {
-> > -	return XFS_GC_CHUNK_SIZE - data->scratch[data->scratch_idx].offset;
-> > +	if (!data->scratch_tail)
-> > +		return data->scratch_size - data->scratch_head;
-> > +
-> > +	if (!data->scratch_head)
-> > +		return data->scratch_tail;
-> > +	return (data->scratch_size - data->scratch_head) + data->scratch_tail;
-> >  }
+On Mon, Jan 26, 2026 at 11:30:17AM +0000, Shinichiro Kawasaki wrote:
+> Hello all,
 > 
-> Can this function correctly distinguish between an empty and full ring
-> buffer?
+> I regularly run fstests with the kernel at xfs/for-next branch tip to validate
+> the capability of zoned block device capability of xfs. Recently, I started
+> observing hangs of the test runs with the message:
 > 
-> When scratch_head wraps back to 0 and scratch_tail is also 0 (because no
-> I/O has completed yet), the first condition returns scratch_size (2MB),
-> indicating the buffer is empty.  But if the buffer just filled completely
-> and head wrapped to 0, the buffer is actually full, and the available
-> space should be 0.
+>   "rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:"
 > 
-> Consider this sequence in xfs_zone_gc_handle_work():
->   - Initial: head=0, tail=0, available=2MB (correct, empty)
->   - After 1MB chunk: head=1MB, tail=0, available=1MB (correct)
->   - After another 1MB chunk: head=0 (wrapped), tail=0, available=2MB (wrong)
+> The hangs occurred in different test cases, and simply rerunning the test cases
+> does not reproduce the hang. When I ran the whole fstests test cases, it also
+> fails to reproduce the hang. However, when the whole fstests is repeated the
+> hang is recreated. The hang looks rare, takes very long time to recreate and is
+> tough to chase down.
 > 
-> The buffer is full but the function reports it as empty.  The while loop
-> in xfs_zone_gc_handle_work() calling xfs_zone_gc_start_chunk() would then
-> continue adding more data, overwriting the buffer contents from the first
-> chunk before its I/O completes.
+> To tackle this problem, I would like to seek the expertise of rcu developers. I
+> have attached kernel message logs captured at the hangs for analysis [1][2][3].
+> Any insights or guidance on how to debug this problem will be appreciated.
+> 
 
-I think you're right that ring wrap can't distinguish full vs. empty here.
- 
-> A common solution is to track a separate count, or to sacrifice one slot
-> so head == tail always means empty, and head == tail-1 means full.
+Nothing XFS related in these. All the XFS traces are waiting on IO
+submission - the block layer below XFS is typically sleeping waiting
+for tags to be allocated.
 
-The buffer size is a power of two, so I suggest just let scratch_head
-and scratch_tail only increment without modulo, and rely on the unsigned
-int wrapping. We can get the actual offset by masking the head with the
-scratch size.
+> [1] hang observed on Jan/23/2026
+> 
+>      dmesg log file attached: generic_005_hang
+>      hanged test case: generic/005
+>      kernel: xfs/for-next, 51aba4ca399, v6.19-rc5+
+>      block device: dm-linear on HDD (non-zoned)
+>      xfs: zoned
 
----
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index ba4f8e011e36c..7d2bd0dc8b322 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -578,12 +578,7 @@ static unsigned int
- xfs_zone_gc_scratch_available(
- 	struct xfs_zone_gc_data	*data)
- {
--	if (!data->scratch_tail)
--		return data->scratch_size - data->scratch_head;
--
--	if (!data->scratch_head)
--		return data->scratch_tail;
--	return (data->scratch_size - data->scratch_head) + data->scratch_tail;
-+	return data->scratch_size - (data->scratch_head - data->scratch_tail);
- }
- 
- static bool
-@@ -663,7 +658,7 @@ xfs_zone_gc_add_data(
- {
- 	struct xfs_zone_gc_data	*data = chunk->data;
- 	unsigned int		len = chunk->len;
--	unsigned int		off = data->scratch_head;
-+	unsigned int		off = data->scratch_head & (data->scratch_size - 1);
- 
- 	do {
- 		unsigned int	this_off = off % XFS_GC_BUF_SIZE;
-@@ -729,7 +724,7 @@ xfs_zone_gc_start_chunk(
- 	bio->bi_iter.bi_sector = xfs_rtb_to_daddr(mp, chunk->old_startblock);
- 	bio->bi_end_io = xfs_zone_gc_end_io;
- 	xfs_zone_gc_add_data(chunk);
--	data->scratch_head = (data->scratch_head + len) % data->scratch_size;
-+	data->scratch_head = data->scratch_head + len;
- 
- 	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
- 	list_add_tail(&chunk->entry, &data->reading);
-@@ -860,8 +855,7 @@ xfs_zone_gc_finish_chunk(
- 		return;
- 	}
- 
--	data->scratch_tail =
--		(data->scratch_tail + chunk->len) % data->scratch_size;
-+	data->scratch_tail = data->scratch_tail + chunk->len;
- 
- 	/*
- 	 * Cycle through the iolock and wait for direct I/O and layouts to
+The block device has an expired rq so the timeout work is trying to
+run synchronise_rcu():
 
---
+> [272416.203262][  T167]  wait_for_completion_state+0x21/0x40
+> [272416.203719][  T167]  __wait_rcu_gp+0x1cd/0x410
+> [272416.204487][  T167]  synchronize_rcu_normal+0x4a8/0x510
+> [272416.207632][  T167]  blk_mq_timeout_work+0x4aa/0x5d0
+> [272416.209324][  T167]  process_one_work+0x86b/0x1490
+
+So that's possibly why IO is stuck. i.e. the block device is waiting
+on the RCU grace period to expire, and RCU processing has stalled
+for some reason. Hence the block device appears to be a victim of
+the issue, not the cause.
+
+> [2] hang observed on Jan/18/2026
+> 
+>      dmesg log file attached: xfs_598_hang
+>      hanged test case: xfs/598
+>      kernel: Christophs' xfs branch, ec6aea2a5 v6.19-rc1+
+>      block device: TCMU (non-zoned)
+>      xfs: non-zoned
+
+Looks like some kind of scheduler/static-key livelock or deadlock.
+There are a bunch of tasks all doing stuff like:
+
+> [164582.112175][   C10]  on_each_cpu_cond_mask+0x24/0x40
+> [164582.112179][   C10]  smp_text_poke_batch_finish+0x45c/0xd20
+> [164582.112218][   C10]  arch_jump_label_transform_apply+0x1c/0x30
+> [164582.112224][   C10]  static_key_enable_cpuslocked+0x16c/0x230
+> [164582.112230][   C10]  static_key_enable+0x1f/0x30
+> [164582.112235][   C10]  process_one_work+0x86b/0x1490
+
+Along with the rcu_preempt thread apparently spinning trying to
+reschedule:
+
+> [164661.054667][   C12] RIP: 0010:__pv_queued_spin_lock_slowpath+0x232/0xdc0
+> [164661.054745][   C12]  do_raw_spin_lock+0x1d9/0x270
+> [164661.054768][   C12]  raw_spin_rq_lock_nested+0x24/0x170
+> [164661.054774][   C12]  _raw_spin_rq_lock_irqsave+0x41/0x50
+> [164661.054778][   C12]  resched_cpu+0x62/0xf0
+> [164661.054783][   C12]  force_qs_rnp+0x67d/0xaa0
+> [164661.054799][   C12]  rcu_gp_fqs_loop+0x948/0x11b0
+> [164661.054841][   C12]  rcu_gp_kthread+0x4f2/0x660
+> [164661.054876][   C12]  kthread+0x3a4/0x760
+
+I can't find anything obvious in the block layer waiting on RCU.
+However, XFS is waiting in the block layer on mq tag allocation for
+submission (like the 005 hang above) or waiting on journal write IO
+completion, so the block may may well be hung on RCU again.
+
+> [3] hang observed on Jan/14/2026
+> 
+>      dmesg log file attached: generic_417_hang
+>      hanged test case: generic/417
+>      kernel: xfs/for-next, ea44380376c, v6.19-rc1+
+>      block device: null_blk (non-zoned)
+>      xfs: zoned
+
+Same static key pattern in on_each_cpu_cond_mask(), there's also a
+bunch of tlb flushes stcuk in on_each_cpu_cond_mask(). rcu_preempt
+thread is not waking from:
+
+> [74627.121083][    C2]  schedule+0xd1/0x250
+> [74627.121959][    C2]  schedule_timeout+0x103/0x260
+> [74627.128027][    C2]  rcu_gp_fqs_loop+0x208/0x11b0
+> [74627.135240][    C2]  rcu_gp_kthread+0x4f2/0x660
+
+There is nothing XFS or block related in the hung task traces
+at all.
+
+IOWs, this looks like some kind of RCU/static key/scheduler
+interaction which may propagate into the block layer if it needs RCU
+synchronisation. Hence it does not appear to have anything to do
+with the filesystem layers, and it is possible the block layer is
+colateral damage, too.
+
+Probably best to hand this over to the core kernel ppl.
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
