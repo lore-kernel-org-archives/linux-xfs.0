@@ -1,198 +1,189 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97B010F2
-	for <linux-xfs@vger.kernel.org>; Mon, 26 Jan 2026 23:05:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769468731; cv=none; b=q6Kmpsa9JA/dqdiRWJ+ln3PDOCwy3Ww8b9DuCRPNXQqXPDGokMeq67dymdujUBXWwHVxem7Lv4XCuPmR/Nk7gPnHtb9gT29o0MxZJC8o4RnrZrqXa2Jeq9dnS9ycjmpBNiVAH96GOvLckc2ix7w7ODhqhkXsh3eGssYNn7V+h2M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769468731; c=relaxed/simple;
-	bh=mT2BeWiw9kYkT94ehH+6RGyKnQvJ4GqAP08tkE6v3Q4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gOhNrzFDY+cBHAMuUFItYo+iL0SVSXZsuN0ikP590z9Vve8WGVBHjYUXBYBzyn+7WPYiu39hXxAhp49faYyPG1wstwfGRFtWprgA/mzeF/G5BPoP8LTW8WaJVbKO2SpNdXp/81CTtZZQUbB4LUlnjdVigM5oGFXPPC0SFwBfTuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=KOempiZa; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E18227CB0A;
+	Tue, 27 Jan 2026 01:38:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.144
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769477915; cv=fail; b=MFYSETEtb5fB2uxSTv8Gg6nISsfSK6uG2m4WY6cFIg5VR6xbcmGgO0hVkVhWex0YYYVpd6yNDftcxngjU8l6fzBBuH7LxWerZ2bt+VXe0mbkT8OYqPfr0uzVtyfQXS7pcSi2gM7URpyLCcFG1uWPB+6I6EN+UWrYhQGOiRhkpYk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769477915; c=relaxed/simple;
+	bh=jJ6FztQGi7EFCHmw2SHadEJ2tGsfyxqy1gpGbykYNlw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=GkmdQaNJmO5d9cJBhx3LxvHxS9/C/vbvpsESAL3FDAOvYGwQrhlS180O5XTPS7f/KfaZ0t2Gc2QI2QKqMwwKf0aFR5jZFeGeQVtdlND4qkjKU/dgCzeBs1u4M8RawHjtbkkjWM2+WiYp98JfYt2Bo+/8XSb8yCECpJyYPhFPumI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=RXIbLZPN; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=p2xyy21m; arc=fail smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KOempiZa"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-81f4e36512aso4908581b3a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Jan 2026 15:05:29 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="RXIbLZPN";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="p2xyy21m"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1769477913; x=1801013913;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=jJ6FztQGi7EFCHmw2SHadEJ2tGsfyxqy1gpGbykYNlw=;
+  b=RXIbLZPNzIZzwvAJydFcO3X0HshMBeeLa8G6INo/l5G1ZOTG4nCufYJk
+   f6ldQT0uvXc1F6vdqMqW3wyi9DvDMfLuySlBkAvHGitIIcGLlPxTmO6jV
+   wXg9kU/v0VDzA699AD4+x+UXaxlytSmeTyG7qyz6DeEBl16EWc8hm+52E
+   YwpM/FUH1tvrIGQwwQooss01fAIFAve0KTfn5aomJDkH1FKbv2fNDGJhR
+   9PWKRhaSVi+BpeS+mkM1XOmzNT7rIMqRt0mTNjFrsJAXDeL/IyJLoJe/S
+   bIiiEXmDVhokXFFl0XFEGPTIHxBFKEkLl9pDgD/z8Nq0Yq5FgL8vcYvXB
+   g==;
+X-CSE-ConnectionGUID: +EullI+7QRifv/tsZFHlfA==
+X-CSE-MsgGUID: 44Fkg2cOSHyy9o7WRJ4Yew==
+X-IronPort-AV: E=Sophos;i="6.21,256,1763395200"; 
+   d="scan'208";a="139249296"
+Received: from mail-westus3azon11012044.outbound.protection.outlook.com (HELO PH8PR06CU001.outbound.protection.outlook.com) ([40.107.209.44])
+  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jan 2026 09:38:32 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=e6pfvrNPsCz9A5A2i8qs4PJLYe6uOaKm4Vz67M0NERukQE/DYQmk5uvkzk0YVaZ2KlXwSnVOgq1lPidCLq+isXYh9taK0iQnla+a/kYVSaHvQs1Qt9zrt1VTvnHwkZSVyGUzxWTAg/wDkYJG7Hqe7Ta8iCy5rS9YQCZD0EPfzcNMwDq6cXrGgU8GAKpTzBqkw8Ka9fdwhnxr4c7IegveDJ3Y8EMH9UwJAdupP3/FRKcvnsub2hha3KmxK/4iyvDq6/8x2DsQ+Doz1690ocD2T1rhXvczygYADAjBJDdHXts4tqACmQIVIfY3Ggb+sLBwprP7KIfXVsaGs5ywiKVARg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jJ6FztQGi7EFCHmw2SHadEJ2tGsfyxqy1gpGbykYNlw=;
+ b=i96GAfUpyGno0THtjGXWysjMvcBMlNWOVAvhtQLXNWhrdlwCCkzWVo3qVQ2NDnobDSlNQbIt8SxulnQYNCHQuIA1wzgqyjhCwXJ9tP1SKGnfIF+XIG5H+QSMHZKpFf1BTB+n6FI7St1AqhcEZYfHpGxLX8upMyIcufYDGy0NEGlX0Ozy5j1hWbjgBg0tDb9YTB/npXepsGis2rU4x8DQolWyRgQDqmPt/TOxVirIcMwABA/gYJhHDxBuvES82yiV5GdCGhgo3AZsWD6S69N/8lz9Y0nUJr/V8Bio6FqMU6iMzK1ehzqEskdmb5soab7Eaf+Xs/X4mpL9jbdVT5v2Hg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1769468729; x=1770073529; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=K79P9yEEOhjx+zO5nMMghB4fcEf+uSORL+5ZaRYOorU=;
-        b=KOempiZa3Kq1mOC2IeeivJCxr6apeoOS72MjW7oBtp0R6gZM2g8rUZSxCcSpftoxjr
-         MWbqp8629J3AX+k44xP777A2XDTSMgCDqZ5T6yO/CYiJt2vtAx7ozvrIws10L65eVCrP
-         JqWmGR1UxrmQjV94EMbdY6KYBcUUfnypy2sbSvn4deoqdPfgfga8CMYn2Mf59F+Pulnb
-         /7mtloLXddE6fxN1yeOlwDWNp7o1xukba36L7zTT25Yh6dMIz1Y5MyrzRG6/Kx3+CXkB
-         8MDRl1qm02Vp1HxAgJVb3NjhIuoa8+qW04Wch+ekTIvjqaK2KTqrziYOAGXytdEFXtzr
-         Cn4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769468729; x=1770073529;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=K79P9yEEOhjx+zO5nMMghB4fcEf+uSORL+5ZaRYOorU=;
-        b=JQgODTjoX1hP9KSWxzvyHSa2Z6rUcpaeNjzBRt0Wb8aeycRcRPYdRDtjAH9OUKP1qB
-         okaAn+WolF7uh/cHqBkTMyKCpsJzN//uK4Pxu5HRJHPec349DtocRnt6bLI6tCXpLouf
-         aopGMUY13YG/T8Pkruhrh2fML8XyEmbaPkF/Y3oqFpCTzlSZSGSML/OUlZVK7SLn49+g
-         BG9LDqFLALoOyN/3RNooI4I/GKPh64EzqOaRCsyszLryKpu/IDX4uRUWsYHbdUr43KrB
-         8VQ0HxLxXVhy9FrkcFidxj0u9K60qE9f96yHYbQpv8yxOdgEz0tSiG/yDP1fMwv21jxW
-         ABcw==
-X-Forwarded-Encrypted: i=1; AJvYcCUCaP1UNgaZjOzmvrITzD0WAgUIaFRCPCW9Q3qUN2ikZy9Yomz+BVRhjmlJgLfaTDgYpL/T6rUtOPY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6FmtNhvfdubrHi+tP0i2zn4uc6/UBf91skxb/3x9CXu714zbO
-	znrCQvXz4WORB7vf8g4lzg+7HnQVGMDRpuLpKtyiW+EbeVggfUNx7PgzR6h2CWeKWz4=
-X-Gm-Gg: AZuq6aLjDuQnPG8hSAVX8Z1/hrL9R3HoVqRhzHa/8iQtIZkqqnvvhSouItiI9GADe3V
-	IYvohwyzWvft0rMJh4qwESIPc4rUudP7htIdahAOjdcWexHSQBwx47O+eGmOgTGmMFiFzkNdnN0
-	fkS5fGBSETmcWEK+RCjllSZJ42/x9CotldAgxL8MIWSxWoTZw8CeRDfG4eG7Cxt/7rDfLCCV1tT
-	tyAvPIxRAmgnwftKETxJGHygwV8yIJRDJDKXMLWreSFCG12MYsMgo+5qnvAKc2BJPOtajJ62m2E
-	JqBpvELMVrrmjbB3pMB3eJCiYEQWKc2un83Cra1BP2seCT82rc5HRRB1ZL5xpbUoNgWH0d0XNqj
-	LJS7/y9PWnd5Oegq3aJe1/p8HJ1x6mWYgstTKVPu2zeQbpNcpudPsgBzt1ywdZWuxz2ShTm8sxs
-	JdfdWXbpoleuvHHDAouHRgV9USNr0flIwVtAB61pxS2M5Wvk7mGlNJKOLM3XpO/m1kAUIdymyTh
-	A==
-X-Received: by 2002:a05:6a00:808f:b0:81f:38f4:d774 with SMTP id d2e1a72fcca58-82341219750mr5263349b3a.27.1769468729066;
-        Mon, 26 Jan 2026 15:05:29 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82318671e1csm10235041b3a.27.2026.01.26.15.05.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jan 2026 15:05:28 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.99.1)
-	(envelope-from <david@fromorbit.com>)
-	id 1vkVe9-00000008v0M-1zNf;
-	Tue, 27 Jan 2026 10:05:25 +1100
-Date: Tue, 27 Jan 2026 10:05:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "rcu@vger.kernel.org" <rcu@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	hch <hch@lst.de>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jJ6FztQGi7EFCHmw2SHadEJ2tGsfyxqy1gpGbykYNlw=;
+ b=p2xyy21mWFtMUcZA6qgF3/1mCcUN+p4GhN2+PIaQbWoVWV+e2deBwaliv5/SaBuU/eeBVWfhFfZ4ZJtKK9jR2lok1b4/H4q9oNOpSnSksb12sJytfIlN6/ZdW7EbL+jgFFMCsT8avXo+m7jm75SrAMjZWhD58xcERVh0LrScHzk=
+Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
+ by BL3PR04MB8010.namprd04.prod.outlook.com (2603:10b6:208:345::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.5; Tue, 27 Jan
+ 2026 01:38:24 +0000
+Received: from SN7PR04MB8532.namprd04.prod.outlook.com
+ ([fe80::4e14:94e7:a9b3:a4d4]) by SN7PR04MB8532.namprd04.prod.outlook.com
+ ([fe80::4e14:94e7:a9b3:a4d4%7]) with mapi id 15.20.9564.001; Tue, 27 Jan 2026
+ 01:38:24 +0000
+From: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: Dave Chinner <david@fromorbit.com>
+CC: "rcu@vger.kernel.org" <rcu@vger.kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, hch <hch@lst.de>
 Subject: Re: rcu stalls during fstests runs for xfs
-Message-ID: <aXfzNW7cf2ReVDA4@dread.disaster.area>
-References: <aXdO52wh2rqTUi1E@shinmob>
+Thread-Topic: rcu stalls during fstests runs for xfs
+Thread-Index: AQHcjrclowh1moKuUEq8Mwy02Ri3kbVlExSAgAAqxIA=
+Date: Tue, 27 Jan 2026 01:38:24 +0000
+Message-ID: <aXgVljuSfUomyikG@shinmob>
+References: <aXdO52wh2rqTUi1E@shinmob> <aXfzNW7cf2ReVDA4@dread.disaster.area>
+In-Reply-To: <aXfzNW7cf2ReVDA4@dread.disaster.area>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN7PR04MB8532:EE_|BL3PR04MB8010:EE_
+x-ms-office365-filtering-correlation-id: fd3a01ce-c901-438d-57bc-08de5d44c2dd
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|1800799024|19092799006|376014|38070700021;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?EZoBv6pTMRkJHxQ9TRRWfGhgJZhfYC0/nNinD0ITGdturBKBpgcGX+Tb25Ze?=
+ =?us-ascii?Q?ADRLfuzqPeJvQeBj6TiYVLypLYWybWbMPxb/7MAqdQLA8tg2leZWTTockXCc?=
+ =?us-ascii?Q?5+3zq1fslUv77xeI7TSI08tffh63Dp8ri37l91ACoBny6RPLZFT2CcLEPZw0?=
+ =?us-ascii?Q?d7lYI1kTjuCsio5bXUjS8qGv86BvQ6OY+xc0aIdJ26WLEh+Dq/hJVzS5Ayx8?=
+ =?us-ascii?Q?OXbqYTLY4S2ufCZ33dFzrRxQ1hvpxiis+Fe85zh9grkxihKUZoHwAjfzlYEa?=
+ =?us-ascii?Q?1RJjfcLLwqqMYj8sK8PYJfZaDDsGA01KJfaUtuT8Lsbfa7tckcxqJUrPTWLK?=
+ =?us-ascii?Q?KlWnG46KW2zY4zfPXpjfeN9afQUdLgXo7p1Q0V6MKbTCwiQzWejUPaYRUJEG?=
+ =?us-ascii?Q?BvnEc5UmxL6dTPN4PG/bByfoOw/SGJHkUNb988sdyPYGitXcH8B0PO+7OwDX?=
+ =?us-ascii?Q?Jz9LMCps5iqJXt9ohVLf/SE+DbeEehVx0PNI3kiQiYbhffZuiN9VKjK/TxB1?=
+ =?us-ascii?Q?nK0iICzo+Ni1uAz4hKteWPKcLrqDRWRgTfuVb6Cwy/Ja20Dew5m6xgJ7yFRJ?=
+ =?us-ascii?Q?tjk4sK/POb/shdfv9I5UB019JfXzbQtS5UFsPbFztacGBTFqUe1ErV6QJnnd?=
+ =?us-ascii?Q?TWPEmGzQkwi7PWwdJXLQxgt/kDtLVynVPkB2bDCXKIAGff/zTdDD7gmZH/gk?=
+ =?us-ascii?Q?h5uoX7u4KViHNIewMBnYxdoGQ0eszVnr0DL1wg4cbooOigQbmkr0+x5hUE6E?=
+ =?us-ascii?Q?+RpOfr4ZcHrO6MHQcgrfD4HSbvfBvOXK5OokE8oTKyN+oT1ufeSo62QKDVOy?=
+ =?us-ascii?Q?BrLXV8k1gpE4AWQGDCZNYtAZNOgcd7v9s+Snix07zIsRyoybypprV1wNMiHM?=
+ =?us-ascii?Q?hxEPpVVzn4tJ0B7F5erwH2S/2VhwLKDX8dU75D5fxt/QyDARKDbMGfM1iI9R?=
+ =?us-ascii?Q?qOoBkaDr/kGKVqPpDj/7ybF0HXKSn+5Nmz82YeSPE/keSMX9KWhT5rgFim/s?=
+ =?us-ascii?Q?JrNpLZKLZsKKJwYVuSEY1xPsEEv6fRiVW7w5Q+Miu9rNLqs1n2n0awkDTPWT?=
+ =?us-ascii?Q?j6XPy+d7JFaRt/bslDpGYac390wgGKUSIWZhUBBHIz9IUM36bxZOCtSmUl4r?=
+ =?us-ascii?Q?ZSlrfaamL+bu3til2Ve1OT00ocvWOKcVcKbEQ9zKxc4bqpz5gnPnS/9nDAYp?=
+ =?us-ascii?Q?k9U0YddMZs3LFfRso36gzrCCvLKVaIUrQQtjnjeq4WvdJQqYJkoHhzTqt2cu?=
+ =?us-ascii?Q?MWnQWtAYzo1SQX1ZxOGsAZF5N8qEpEKWuiZm+IPIzVTJ2Azy5OqtJkCGvdI+?=
+ =?us-ascii?Q?K+WMk4OxfEGkppDAXK/g3ycy8+2XPb9C/L9/I3acE16rgSVe2PJ7L3kJYdT4?=
+ =?us-ascii?Q?u9nAfhCK32mKwlb7fl2P3URBbRI+6xuTRrxtc6wYiHOTcp20Vmp73tgiTg1Q?=
+ =?us-ascii?Q?ZFVpWkZa5PG0rSzjcH3WWJvYfkGvog9GWz6NOHLkYFuMsl7pc5QHoG9sAJsq?=
+ =?us-ascii?Q?iIFwwpPLBq8mrt+jhNtrspcLOSwSUI8Wgy28OMronkzcbHdnwTKOiETvC/h6?=
+ =?us-ascii?Q?KnyBH6yNCnX7AhVF2LLikLuQEHPIhRQ0D2nWVaDdZPg7b2PXa6f+fiAvT1Hz?=
+ =?us-ascii?Q?xAjRug+R/uJrz7Pwr/eRuVY=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(19092799006)(376014)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?M+eLAUvd1+FemCNAgCnz76LYtAFoDFJcQw4wgxak32cB3j8DJiVOirPv9MFm?=
+ =?us-ascii?Q?6j6SKN3F7tGTiaMUaKT13IqeyZqO5EPZ8YFIbPZ2TVAZq9Pl5Wlz2QjNyJUz?=
+ =?us-ascii?Q?y0mNidXXFoi4YsJCGzsZ9t+bB2RdEOzi45FnYzhfqOcM9JWNU4erBg0s/vG4?=
+ =?us-ascii?Q?vv4PSShIP4rE+mGTkID0aCRvAooofVWt2hcehb85Vsc2UdoaxIGgXpUorQq9?=
+ =?us-ascii?Q?6BT0vx90ualFiTDw1XC07XuFUwQ8PdwQ4R9OgFxn4XcfNallA8WVDn3NceNY?=
+ =?us-ascii?Q?slgLg7LZKKxwZ3JlOhZTHw5QMxGp+OUy9SmCH9a+XSznQH3fY7Rkgh2qnBYs?=
+ =?us-ascii?Q?r2A6UXlVuEdA1/DbJ/E7jea48xfGda3fb8PKij1bu2Dgt2bAOiDyKIVyHOI1?=
+ =?us-ascii?Q?MAk5fnnSGTuvi2a1+AR4p/XIXBLPLsF9St9WI5CbgNat7iO2PqUVPdLID8ms?=
+ =?us-ascii?Q?LxWCG6Af31R1fqSiSwxITE00UlNBFBKH7944HNaI0qWcWw88Ya8rP6zWv6Kx?=
+ =?us-ascii?Q?V36DZHIPBNV2vkVG2mGOWlhrQHbkYM8Jg1fQk3De//UYlqYEwJ2+6hbuSBkB?=
+ =?us-ascii?Q?N7xmcUVyIu5kMfuknsoj2PVsRZEUDMHS3UQxaFI07r6eF8pCcAf5a/8XSk4P?=
+ =?us-ascii?Q?8qIUHn+xCK8MCh60Z44gbwbC3Jv48ah4PTZ3+fi6doex/ixYTYFDLW2GkiaO?=
+ =?us-ascii?Q?ICBS7HL2Sp9oyLlOvtLbUerKDz9LncK9iqCMZdjl9Luocr2OBsEe5JqhZQ7x?=
+ =?us-ascii?Q?D6mAI/CqvgZJp/bKNdVt7D4ozeHfzi92D8x4xg+fmY8rgQDoMwMhsajn8fq2?=
+ =?us-ascii?Q?Yav4cZTB3SwGMiTW1eDo1CJtldtrQUNV+cxqRkP81Hu2Wyhv9OVneY4gtd2F?=
+ =?us-ascii?Q?lnuPqbwwFy/xlV4wZAZ6+8c1yyXDCJUn1MtNMqmQ5ikt8WAv0bQmbND1geLm?=
+ =?us-ascii?Q?mMmN5hNYIV/qJ88E728mGVMA66xAVZr1crVz8VDdOR3LxfqVgGRYXai4fMKC?=
+ =?us-ascii?Q?tPjm06ywyhuVBoCtA9GFsAWI6VHZ0xKuz6UX5i9s2zgdJv9RIWRg3oltyjsk?=
+ =?us-ascii?Q?40BXhF2Oci6RAYI5n2nIUDGSugTMXR+NBplxPVECni0Lt6hCAN+DVvKXn2Sa?=
+ =?us-ascii?Q?FIj05Tg0GrliP/oMRFNX+xIKNXlU3DG1VD0sVESmnulPMquoYoET33Vz1MKD?=
+ =?us-ascii?Q?hNwCQ9iblPyBvG1ebMhGsibryrgj8coDWW/1MhB8UHxiRNhBdjvn49DoOXAC?=
+ =?us-ascii?Q?bAYCfDFNY0wCPAMZ58g1zXUmveT051tqzlB+7WNe3JckmVCL5WbWCnzb2Sdm?=
+ =?us-ascii?Q?qSYwixLMJP7+m7vfwrQ6+HET5Q7ICe8lMc+5/9RTg9v503NdNlZOJDoU54DP?=
+ =?us-ascii?Q?RFllNbciAGjnsW1uT/nIgIzpQc1I78qBXFZIqlCVCBYmdyYhCEU55AW76U8S?=
+ =?us-ascii?Q?J+UoXQMZEog0E/9nVDrCdgZoXfthZOCdlv5pEGJuYg7kDoHvqKEbL8LSxUPL?=
+ =?us-ascii?Q?XBGlFyN204Mr8uQLpY/z0qvuqvFtggdVLyKunDIHdsJjtz7z2w1/bcxEo+VQ?=
+ =?us-ascii?Q?FJFYmK71MWmZ5rcd2rrykUzgbymf04J4EZYymp9RXbM8iBC/jBd/6Qez9lIg?=
+ =?us-ascii?Q?Fza14jCLDJUmO1A1k5F8hYmTATQhrcBzQd86dfKmLxvLTxdXsHe9A6pdDq/f?=
+ =?us-ascii?Q?sB4sCDPstZmNYK8ieFOyxOrN7AvNSKf/x0GoF9eaxU7Imlt/2AzbFBNewpn/?=
+ =?us-ascii?Q?v8VRU9+ZcaBLZy07tngaJVP6+fUVomw=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <DA33CFE657B3ED4589BEA4D1B9E5A76E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aXdO52wh2rqTUi1E@shinmob>
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	CaGSNEpQOOOJGNxlbjice34LIq0TzeHZqWsvi4ig/iTYX34JugHQ6ZgoWKtBWMrz0ukr85R5aAMaLkBrTnOJbVV5F/TBGKIoXqmTdthl7asT/BRAMqQnx+HcTmgZaN5P3jgOSuWHcgeZgbRQ99RIf1EacLnxIJ2oJslKl65EEXOCdwTXM9gJXWhUosYAgwQEy4vmusRzd2qDDVdtoK+LriDaB0pO/wLBp12hMFkhEP4EtktHzY4NN1jy7XUXfwO08FlIrnxrCfX/BDODlA16tiF1YD2hB+0J0CCfAUGiNtvM/a4VhQUtZ8Z7igOcCeq7D/PykqD9kWMKSFgROi40vKeQqQqDY/MWQPyaWqt+++XgXa3zo82M2TyZcvrYuJ6dzG2jiVq+4Lk7COqKTpF9BiSot3FcqN+9n47/8oSSksdAqdRSOClRWu7yNK9M2utWB4wMUO0G9av6X2u8W5x/YjPf7VxFZnoWBvK3juU8xgzQSpnYpUyjqpsdVyXbNNIlN4QNQ19QNsURredlBRoXHpAugj11k2HNZX8aaN7H4m34lnpixGWcW0mutUA8egvFdjuvPlW6OB2DeXis/zcltuCzOXNBb0erSkCpu//tyfPNbAHJRh4GpaoYS1Po0ONY
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fd3a01ce-c901-438d-57bc-08de5d44c2dd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jan 2026 01:38:24.1416
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ms2AnA+Qv5xnbeCI0xwzqKGF/pOAr6Dm23CxCSJmpoQzDBG/ok91ALNxjx973ovHh0kBZwYvjPc1WObDEzh+C4EVmVLa/5li7C+R9aP7j3c=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR04MB8010
 
-On Mon, Jan 26, 2026 at 11:30:17AM +0000, Shinichiro Kawasaki wrote:
-> Hello all,
-> 
-> I regularly run fstests with the kernel at xfs/for-next branch tip to validate
-> the capability of zoned block device capability of xfs. Recently, I started
-> observing hangs of the test runs with the message:
-> 
->   "rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:"
-> 
-> The hangs occurred in different test cases, and simply rerunning the test cases
-> does not reproduce the hang. When I ran the whole fstests test cases, it also
-> fails to reproduce the hang. However, when the whole fstests is repeated the
-> hang is recreated. The hang looks rare, takes very long time to recreate and is
-> tough to chase down.
-> 
-> To tackle this problem, I would like to seek the expertise of rcu developers. I
-> have attached kernel message logs captured at the hangs for analysis [1][2][3].
-> Any insights or guidance on how to debug this problem will be appreciated.
-> 
+On Jan 27, 2026 / 10:05, Dave Chinner wrote:
+[...]
+> IOWs, this looks like some kind of RCU/static key/scheduler
+> interaction which may propagate into the block layer if it needs RCU
+> synchronisation. Hence it does not appear to have anything to do
+> with the filesystem layers, and it is possible the block layer is
+> colateral damage, too.
+>=20
+> Probably best to hand this over to the core kernel ppl.
 
-Nothing XFS related in these. All the XFS traces are waiting on IO
-submission - the block layer below XFS is typically sleeping waiting
-for tags to be allocated.
-
-> [1] hang observed on Jan/23/2026
-> 
->      dmesg log file attached: generic_005_hang
->      hanged test case: generic/005
->      kernel: xfs/for-next, 51aba4ca399, v6.19-rc5+
->      block device: dm-linear on HDD (non-zoned)
->      xfs: zoned
-
-The block device has an expired rq so the timeout work is trying to
-run synchronise_rcu():
-
-> [272416.203262][  T167]  wait_for_completion_state+0x21/0x40
-> [272416.203719][  T167]  __wait_rcu_gp+0x1cd/0x410
-> [272416.204487][  T167]  synchronize_rcu_normal+0x4a8/0x510
-> [272416.207632][  T167]  blk_mq_timeout_work+0x4aa/0x5d0
-> [272416.209324][  T167]  process_one_work+0x86b/0x1490
-
-So that's possibly why IO is stuck. i.e. the block device is waiting
-on the RCU grace period to expire, and RCU processing has stalled
-for some reason. Hence the block device appears to be a victim of
-the issue, not the cause.
-
-> [2] hang observed on Jan/18/2026
-> 
->      dmesg log file attached: xfs_598_hang
->      hanged test case: xfs/598
->      kernel: Christophs' xfs branch, ec6aea2a5 v6.19-rc1+
->      block device: TCMU (non-zoned)
->      xfs: non-zoned
-
-Looks like some kind of scheduler/static-key livelock or deadlock.
-There are a bunch of tasks all doing stuff like:
-
-> [164582.112175][   C10]  on_each_cpu_cond_mask+0x24/0x40
-> [164582.112179][   C10]  smp_text_poke_batch_finish+0x45c/0xd20
-> [164582.112218][   C10]  arch_jump_label_transform_apply+0x1c/0x30
-> [164582.112224][   C10]  static_key_enable_cpuslocked+0x16c/0x230
-> [164582.112230][   C10]  static_key_enable+0x1f/0x30
-> [164582.112235][   C10]  process_one_work+0x86b/0x1490
-
-Along with the rcu_preempt thread apparently spinning trying to
-reschedule:
-
-> [164661.054667][   C12] RIP: 0010:__pv_queued_spin_lock_slowpath+0x232/0xdc0
-> [164661.054745][   C12]  do_raw_spin_lock+0x1d9/0x270
-> [164661.054768][   C12]  raw_spin_rq_lock_nested+0x24/0x170
-> [164661.054774][   C12]  _raw_spin_rq_lock_irqsave+0x41/0x50
-> [164661.054778][   C12]  resched_cpu+0x62/0xf0
-> [164661.054783][   C12]  force_qs_rnp+0x67d/0xaa0
-> [164661.054799][   C12]  rcu_gp_fqs_loop+0x948/0x11b0
-> [164661.054841][   C12]  rcu_gp_kthread+0x4f2/0x660
-> [164661.054876][   C12]  kthread+0x3a4/0x760
-
-I can't find anything obvious in the block layer waiting on RCU.
-However, XFS is waiting in the block layer on mq tag allocation for
-submission (like the 005 hang above) or waiting on journal write IO
-completion, so the block may may well be hung on RCU again.
-
-> [3] hang observed on Jan/14/2026
-> 
->      dmesg log file attached: generic_417_hang
->      hanged test case: generic/417
->      kernel: xfs/for-next, ea44380376c, v6.19-rc1+
->      block device: null_blk (non-zoned)
->      xfs: zoned
-
-Same static key pattern in on_each_cpu_cond_mask(), there's also a
-bunch of tlb flushes stcuk in on_each_cpu_cond_mask(). rcu_preempt
-thread is not waking from:
-
-> [74627.121083][    C2]  schedule+0xd1/0x250
-> [74627.121959][    C2]  schedule_timeout+0x103/0x260
-> [74627.128027][    C2]  rcu_gp_fqs_loop+0x208/0x11b0
-> [74627.135240][    C2]  rcu_gp_kthread+0x4f2/0x660
-
-There is nothing XFS or block related in the hung task traces
-at all.
-
-IOWs, this looks like some kind of RCU/static key/scheduler
-interaction which may propagate into the block layer if it needs RCU
-synchronisation. Hence it does not appear to have anything to do
-with the filesystem layers, and it is possible the block layer is
-colateral damage, too.
-
-Probably best to hand this over to the core kernel ppl.
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Dave, thank you very much for looking in the logs and sharing your views.
+I will wait for comments from RCU experts and keep the effort to recreate
+the hangs.=
