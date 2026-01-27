@@ -1,36 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0E5235D60B;
-	Tue, 27 Jan 2026 15:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2B93563FD
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Jan 2026 15:25:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769526976; cv=none; b=g5q9V8PWSjlOC3zMAvzXOTxRAxZ26I/nP0LpL1VFpBDoWnOcAdpuAu+WPFYIb1gDqK+Su5Ln8sT010AVoiOm+IQx5Q4bA7kv715OvZx8AZn+oSkMGs8xwHo7VBCG7bT2ZnmbGarZjvoUgU9vKlNaOwg0aMU+zgGfVwsh48TyX7U=
+	t=1769527524; cv=none; b=Nj369wx5TayHvMNRPVGUu1XpNnh/9Pa8Lh17uuQ1W5TzR18clWw055lbIfzNzSOvmZ86EOwvDXdXBHDjZdJrJ6r3OXDwM3cRD1QSbIBCjtRvAhP1gDAWc3KZnFGOBdSa+d5qrJFlK1GyBQJDK1hWj+4e0SRLvRTkkbR2c6/jOUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769526976; c=relaxed/simple;
-	bh=pmEU1/GjeEWtU5JBXeKFHL6rzRm4Dv+qk3Ok9xl6wR4=;
+	s=arc-20240116; t=1769527524; c=relaxed/simple;
+	bh=liq94AI8EkksOnpd1jkRL4GMRcD3QFWOVjOep7JZs+U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DRgXNhTZZaYXacoqJXCorivUC6DrkVcPZ7vr423SLl7nNpYBPr9gHTmvpT49OopPkXGTQTbiTQN7QWb9xei6/ALMduS1nvt/gNNsoqucFq8d9ymSFA0anRxdEC8cA0IwR0c1n16aC59rcK/trBVyvtpMjupXnJLp5gXV6i39iQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3EEDB227AAA; Tue, 27 Jan 2026 16:16:10 +0100 (CET)
-Date: Tue, 27 Jan 2026 16:16:09 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Anuj gupta <anuj1072538@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	 Content-Type:Content-Disposition:In-Reply-To; b=vDtjd70v45LFwHa5OdINj+k1fZnaHSU7DjrR4fxTLFahqVBOiLAnyBtWR9HGp8ulvX12E5iPmXxrznJRZKBhKypPWGR9Bo88/zc2XarKWK+Pgh3HshMfaO1JPtVTWHVgNI6s8Usq0fYwd1mis/gz4OtAA/8/ZRgIJ+lyyB7gC/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YWs7b7cH; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YWs7b7cH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84DB1C116C6;
+	Tue, 27 Jan 2026 15:25:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769527523;
+	bh=liq94AI8EkksOnpd1jkRL4GMRcD3QFWOVjOep7JZs+U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YWs7b7cHfaEItIv4ykPS7jeTq53iorWU9wiMafL64Iqtsn/sd44a2/oTAoG+W6rro
+	 JzCz13B2Jk8ZvQe6LYIz5fhXi/dm9V9r0rB3Fyy2oLAwXh8j1ki0ibrPD8zrg6F1X3
+	 ZiZOpqmeHSWUXZEjp3frlZsg5CmYBYQ4Go/4JiDsXtgMsG8vLyrRPWs/wFN/CK1qE5
+	 6gynHd3QHGJLdsWQ8G/06+XRHB0Pj9PNIqGQv1p7UNqiIsFbJj7XZwN+1IPQE5UXZc
+	 UaVSzuIqk8BEcMSv3/35pL4YWZJ/hUvx6v79LGhL/IjQGK5SaGHpOzVzYX4/7V09nC
+	 o7KYDE4oYq4xg==
+Date: Tue, 27 Jan 2026 08:25:21 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@meta.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: support file system generated / verified integrity information
-Message-ID: <20260127151609.GA1883@lst.de>
-References: <20260121064339.206019-1-hch@lst.de> <CACzX3AuDkwEw3v0bNmYLk8updk1ghVJa-T9o=EHXor9FA7badw@mail.gmail.com>
+Subject: Re: zone GC ringbuffer fix and cleanup
+Message-ID: <aXjY4ZECqTxTQhTF@kbusch-mbp>
+References: <20260127151026.299341-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,29 +43,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACzX3AuDkwEw3v0bNmYLk8updk1ghVJa-T9o=EHXor9FA7badw@mail.gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260127151026.299341-1-hch@lst.de>
 
-On Tue, Jan 27, 2026 at 08:24:28PM +0530, Anuj gupta wrote:
-> Hi Christoph,
-> 
-> Here are the QD1 latency numbers (in usec)
+On Tue, Jan 27, 2026 at 04:10:19PM +0100, Christoph Hellwig wrote:
+> the first patch fixes the empty vs full condition detection in the ring
+> buffer as noted by Chris.  Keith had an alternative version that uses
+> overflowing unsigned integer arithmetics, but just having an addition
+> counter as in this version feels even simpler.  The second one is a
+> trivial cleanup in the same area.
 
-Thanks a lot!
+I checked out these patches earlier directly from your tree, and these
+look good to me.
 
-Adding in the baseline numbers, as I wanted to compare those:
-
-> Intel Optane:
-> 
-> Sequential read
->   | size | baseline | xfs-bounce |  xfs-pi  |
->   +------+----------+-----------+-----------+
->   |   4k |    7.18  |    13.62   |     7.20 |
->   |  64K |   36.40  |    99.66   |    34.16 |
->   |   1M |  206.38  |   258.88   |   306.23 |
->   +------+----------+------------+----------+
-
-So for 4k and 64k reads we basically get back to the baseline.
-The 1M numbers are puzzling, though.  I wonder if we need to
-add WQ_CPU_INTENSIVE or do some other tweaks to the XFS I/O
-completion workqueue so that we don't overload the scheduler.
+Reviewed-by: Keith Busch <kbusch@kernel.org>
