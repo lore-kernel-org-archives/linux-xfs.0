@@ -1,109 +1,47 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 287BB21CC7B
-	for <linux-xfs@vger.kernel.org>; Tue, 27 Jan 2026 16:39:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9357835EDC9
+	for <linux-xfs@vger.kernel.org>; Tue, 27 Jan 2026 16:42:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769531991; cv=none; b=B1nwuRLt9qmf39OTCBfEPUHtG06QPxfPXGs757EYboeMe0vIGsbBFzdS9osKizGJFtCNo8LGj9O6obj20iaX7d9mFVz1LaQ2G245ybHzMylh4plE8XTAYTL2CYT5rvLPxa1CmFa8gczB5c9N5epQqqMXCkGQE8fIeo9q0V2Irxs=
+	t=1769532134; cv=none; b=bv1nn+tohkxK3LiLE+yOFS7i317hoyJUgAMqxdP2tI5kA+C0+M/3p9XIrxYSTGXUx0z42Fj7Cxn0/kF/9vkKDhwBAUYNu5OsaznuM4/QLbmmaf3zpzqHPGhG11aL7naF3wCrMx+TfALQHGf/8F7liDabM70orwWq1r/MYyI3/KE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769531991; c=relaxed/simple;
-	bh=cZftfP6YCQML8iURw4M1QSDpsXDbC4+RwpZVVwJqAMk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eg3XLXCH6n1kHeoMYv8hR8Tga9Ax5wfQmXU7RRPLQUkWiOxRwsoTA4VREjSA4IWtki7EnnrVCRaRF9DaKI6VmcCE42cNi7T4JLj1/QAKuTbbr4jnXTRyNBCcPK/Tc5Fvl8PanP/fv9EzaPml6Xdi5fqRXkhZ3YmaumxAzZHHDZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FbbrzG5m; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FbbrzG5m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E586C116C6;
-	Tue, 27 Jan 2026 16:39:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769531990;
-	bh=cZftfP6YCQML8iURw4M1QSDpsXDbC4+RwpZVVwJqAMk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FbbrzG5mDihEa3iD0Ya3huTow0ev7weTvFAuBlavLSFSg8b1ecJIcjVHC/nbS/hOd
-	 /aZZPdMmT0b9jcrBwws61gw0JoqsXGuYlrRfD7KKrFbYP7xIIDkNHwgwzpA+pWB28d
-	 7q9HTBEZKBn7JNTV7A+kSOf/dbkKSyV/PhViBT+CtHf4FKMTM5kkkstM6EtRj+yeD8
-	 0ehZUI9Gn9O1O4oKJzmJuuQZolFVpGAOnIy0dqTZmjDn9auz7WGtgNqn+GQv6xi0Xf
-	 WfJgzxSCQeZO/xpU2l/mFu2mR6WuQr8k46PQa6jT95+gcZsY1ue1EVyZvFC3fuaszF
-	 DEjlP1tPNnD1Q==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: hch@lst.de,
-	linux-xfs@vger.kernel.org,
-	dlemoal@kernel.org
-Cc: Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH] libfrog: adjust header order for BLK_ZONE_COND_ACTIVE #ifndef check
-Date: Tue, 27 Jan 2026 17:39:29 +0100
-Message-ID: <20260127163934.871422-1-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260121064924.GA11068@lst.de>
-References: <20260121064924.GA11068@lst.de>
+	s=arc-20240116; t=1769532134; c=relaxed/simple;
+	bh=TmbzlUcuat7oVxMU8X7UFn3KDk2Tgls7t2uN2f+GyMQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PxYwjkM8+9fibLxJTssjgyt4hSjXVv5XINRuHYJ5P3VUnCyfLygEU9BlDflqZi7Idyu4s+SWEq+q1fO8fJGCLzG0Xc67ratfAN3P019SK1Beaxlngi5kFP00LXDkp10PGNcVfv1pG96XlTBPIJ2QeXm4TQvXRS+aiWHpwm14Zx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 450EA6732A; Tue, 27 Jan 2026 17:42:09 +0100 (CET)
+Date: Tue, 27 Jan 2026 17:42:08 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 1/3] xfs: don't keep a reference for buffers on the LRU
+Message-ID: <20260127164208.GA8761@lst.de>
+References: <20260126053825.1420158-1-hch@lst.de> <20260126053825.1420158-2-hch@lst.de> <aXe-EkVrEB-UhNy2@bfoster> <20260127052050.GB24364@lst.de> <aXjc2gsNToSSANmn@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aXjc2gsNToSSANmn@bfoster>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Even after kernel fix via defining BLK_ZONE_COND_ACTIVE the compiler
-is still failing on this with:
+On Tue, Jan 27, 2026 at 10:42:18AM -0500, Brian Foster wrote:
+> IOW, I'm not arguing for or against a change in buffer lifetime behavior
+> here, just that it should probably be done separately with some more
+> careful analysis. The secondary advantage is that if this behavior does
+> somehow uncover something problematic, we can bisect/revert back to
+> historical lifetime behavior without having to walk back these
+> functional changes.
 
-In file included from zones.c:5:
-../include/platform_defs.h:311:33: error: expected identifier before numeric constant
-  311 | #define BLK_ZONE_COND_ACTIVE    0xff
-      |                                 ^~~~
-/linux-headers-v6.19-rc7/include/linux/blkzoned.h:84:9: note: in expansion of macro ‘BLK_ZONE_COND_ACTIVE’
-   84 |         BLK_ZONE_COND_ACTIVE    = 0xFF, /* added in Linux 6.19 */
-      |         ^~~~~~~~~~~~~~~~~~~~
-In file included from ../libfrog/zones.h:8,
-                 from zones.c:7:
-/linux-headers-v6.19-rc7/include/linux/blkzoned.h:85:9: warning: ‘BLK_ZONE_COND_ACTIVE’ redefined
-   85 | #define BLK_ZONE_COND_ACTIVE    BLK_ZONE_COND_ACTIVE
-      |         ^~~~~~~~~~~~~~~~~~~~
-../include/platform_defs.h:311:9: note: this is the location of the previous definition
-  311 | #define BLK_ZONE_COND_ACTIVE    0xff
-      |         ^~~~~~~~~~~~~~~~~~~~
-
-This is because of the order of #ifndef (in platform_defs.h) and #define
-(in blkzoned.h). The platform_defs.h defines BLK_ZONE_COND_ACTIVE first
-and this causes enum to fail and macro being redefined. Fix this by
-including libfrog/zones.h first, which includes blkzoned.h. Add stdint.h for
-uint64_t in xfrog_report_zones().
-
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- libfrog/zones.c | 2 +-
- libfrog/zones.h | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/libfrog/zones.c b/libfrog/zones.c
-index f1ef0b24c564..68be7388172b 100644
---- a/libfrog/zones.c
-+++ b/libfrog/zones.c
-@@ -2,9 +2,9 @@
- /*
-  * Copyright (c) 2025, Western Digital Corporation or its affiliates.
-  */
-+#include "libfrog/zones.h"
- #include "platform_defs.h"
- #include "atomic.h"
--#include "libfrog/zones.h"
- #include <sys/ioctl.h>
- 
- /*
-diff --git a/libfrog/zones.h b/libfrog/zones.h
-index 33c1da7ef192..4cc4d15c4dab 100644
---- a/libfrog/zones.h
-+++ b/libfrog/zones.h
-@@ -6,6 +6,7 @@
- #define __LIBFROG_ZONES_H__
- 
- #include <linux/blkzoned.h>
-+#include <stdint.h>
- 
- struct xfrog_zone_report {
- 	struct blk_zone_report	rep;
--- 
-2.51.2
-
+Allright, I'll see if I can split it out.
