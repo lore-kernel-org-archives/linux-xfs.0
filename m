@@ -1,42 +1,64 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89DDC3009D2
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 05:56:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310A7335571
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 06:03:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769579786; cv=none; b=CMZnjfAvoPQMutpjeuGnT2GwDztKl63YFc+oTTWy2dQfVnju9Ez7T61ngk7wNNvpnjmtCIhO7wyGEokQWYYXEYSeet/T+IPSulXGrw1PgC7HH2VKLrrFxI1/NfbtJ5pjtq+/twPNmxEWq+Gj4W1c3q02OQjVUkJoXM+oMhXk1wc=
+	t=1769580202; cv=none; b=ZF50lovlo3WowDUP6WU49itYSn5lEdPJ/d6lfV2SebQHcncdUUQVME064kgiN2BPou4Y9rWWNI1obHNRWLc1uKGXi44L0BCQZ8JuIqAmg096xg3Od7js2ZEAI4rWYKKziznPJzr9rrhIZNIIWG0zjg/G42YMer+4JTznP49janM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769579786; c=relaxed/simple;
-	bh=rF6lhr9Jty7isQdNUALqLXJQl48mKnds/xqg+vaPBvU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RF7qo3VGwSfJW3fSFlzxiCjxlDZBrgc6jEebfuVGCzulT9s0mYUpexYHACTQ1XuXGBb45OZuLgHkWOPySHHwL2dXBEIRaLFblO4F4W17tCMh3xNLjp9pKykVjuAi0LhHnTC9liPP4aYWm4nRuGs9g+pNKuBcBwKkKn0ybo/gj8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1D99C227A8E; Wed, 28 Jan 2026 06:56:23 +0100 (CET)
-Date: Wed, 28 Jan 2026 06:56:22 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Hans Holmberg <hans.holmberg@wdc.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@meta.com>,
-	Keith Busch <kbusch@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: use a seprate member to track space availabe
- in the GC scatch buffer
-Message-ID: <20260128055622.GA1925@lst.de>
-References: <20260127151026.299341-1-hch@lst.de> <20260127151026.299341-2-hch@lst.de>
+	s=arc-20240116; t=1769580202; c=relaxed/simple;
+	bh=rKJNcXxQ7EZvQYDTLSDMqc4puj6f0yG1BSEXQTs+XFw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n6v42vdANLK0NHsyjzmxgNj3avjsMqptIAfct0AejoVYxRliYjaVKVI41mEusp75v0L5h/lGSw69JynyeCTn9b0bGHqj5JMxO1LZVyZ5jocjGEdES5vNMA39Rzq8nYUXD4zsXYugmLbDUkZLIgQsq+imM9k6ZEAi4YrM5Y+e258=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YnaZ8e1D; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YnaZ8e1D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03906C4CEF1;
+	Wed, 28 Jan 2026 06:03:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769580201;
+	bh=rKJNcXxQ7EZvQYDTLSDMqc4puj6f0yG1BSEXQTs+XFw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=YnaZ8e1DpOVVKa13iDr+Mf/EL1D3eWSUxz4PDnjj5dchRr2d8HBI7VpxFP0hys8aT
+	 sTjC+IHvTQYxNN1Y2pgZWhxbdCzbN9nVFpHq6FiAD3bnAA8EpmOzTFTU14tBaptK0H
+	 pCQpIjw9Gt/XYzK/+m++MMNDE3SqQvoH+7TQ8WO97KfQbMgPKomwGczOKPXSn5CsUV
+	 Uo8mkL1tTaR+9PmZ98rP+qc65l/UmiYwUUYrhKj83aHVYY/LCAaRWEWIsKlcYeLSv8
+	 bJYh8JkEv2WzGSvY4MdIyVpf3i0KKauIu6n47ZIFkSZWAXOREuLYdiCakTdRLbndvT
+	 zKs+x04o4zrIw==
+Message-ID: <82c9707f-7a79-4a81-b17a-be020f320640@kernel.org>
+Date: Wed, 28 Jan 2026 14:58:22 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260127151026.299341-2-hch@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] include blkzoned.h in platform_defs.h
+To: Christoph Hellwig <hch@lst.de>, Andrey Albershteyn <aalbersh@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ linux-xfs@vger.kernel.org
+References: <20260128043318.522432-1-hch@lst.de>
+ <20260128043318.522432-2-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260128043318.522432-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-... and I clearly can't spell "separate".  Carlos, if this goes
-ahead, can you fix it up?  Otherwise I'll do it for the next version.
+On 1/28/26 1:32 PM, Christoph Hellwig wrote:
+> We'll need to conditionally add definitions added in later version of
+> blkzoned.h soon.  The right place for that is platform_defs.h, which
+> means blkzoned.h needs to be included there for cpp trickery to work.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Thanks for fixing this.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+-- 
+Damien Le Moal
+Western Digital Research
