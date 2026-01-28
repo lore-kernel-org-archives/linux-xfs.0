@@ -1,102 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7632505AA
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 16:14:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEAE82417C6;
+	Wed, 28 Jan 2026 16:15:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769616888; cv=none; b=C1uQSOEJ6m3FRxs7mxaODPiT7ZDhjkFnvItEtErjW3jwiDKc5iMzVkJTHO+inWc2zO3Dt7530IRPILQlr7OfZOJ8EeUWhKc5pc23r8Cu5h/S8pDJpj/RJA8Ih+mOJszoTIw8IYz6yKGV+QfMavMXAYHYkTigG1+bc3awkL8ELU0=
+	t=1769616927; cv=none; b=ew4+kVHmH9chAcrHf8fRmvgCKEthkEju9UFNvUGH1CTygK4KHfk5joFRn+8c41AvCG6shlS+HO/QJepzLKIcqVhcsorykGE2A2w9fTysYgiC7JjewKyST/aRC6Abpl07fZS+pvWj+tcWM9s/ge2er00pLxsfnqTDSxMmLLg7BeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769616888; c=relaxed/simple;
-	bh=uEnAsUsFeeFm1FfLlwmUBwPH/hEqLJoJCSjv8V+gsUU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jDfDG6olcdgFAevZAQU9uO3iJK6YjDJVSjVeIFipfD+Qk3bkUyCsJvlMTBSVAqTh9L8+fD3f0jETqr2edehYiqHkdrx7fPFP1dUqoqczHyYs9+K5QVEEkD4yjZz4R8ZkC25JB/MWJijfdOpvFViIXrZ1WI7jf+DouDjBrkeALC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pNFO4xzl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769616927; c=relaxed/simple;
+	bh=Z9IlpsibwbBvhZo4mdX+K5yP0yoUy9h708PyAL/VTM0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ntfKOuxAXMIfOPHFakFICTWzZHW4Vya4iJmuzKvAKb3iG49lMWf4nl1+PiJQOxVM0cmznWu1qwJm4lcAyoiEGhqO+b2gKoFzn3pOsfy4Gvr0j6MzO47ubAVmtHELdsJp3qfvCPnOuXamJzW5FXFNDQrhJLEkOjHmob/O0TBQc80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=x0rS9/fz; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pNFO4xzl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 017BFC4CEF1;
-	Wed, 28 Jan 2026 16:14:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769616888;
-	bh=uEnAsUsFeeFm1FfLlwmUBwPH/hEqLJoJCSjv8V+gsUU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pNFO4xzlccHaNbmQiOMaHDy33glWyxPTyaJLndmYSsqkw130vs1Dg1lYSXGP/Oz+5
-	 8i1cSfp7tqGjXfYrg4Buda9sfVVKxeUcEzOu/vXBirhE3VxIQFFKvTmoE5FatBiK93
-	 19dn+5zKrCkbPU/4fqi1z+Sg5TtdWxiKcltFL2UBtL9bL6i/dMpAlkodacVtnKp3DI
-	 WDXuDNqB41q9KMvbMRSROiWZgdRxi18UWEyakhoxRjYz6TulyJLerGUEoIXGSN6grA
-	 e2CVBrYY9AxZybKDAKLyIX3O/5wGkjnOZPYKTwrpIjv0S4cWBs8df0Dq032hqj0EcX
-	 1OFAbmMrF+S+A==
-Date: Wed, 28 Jan 2026 08:14:47 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Alan Huang <mmpgouride@gmail.com>
-Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, hch@infradead.org
-Subject: Re: [PATCH v1 1/2] xfs: Move ASSERTion location in
- xfs_rtcopy_summary()
-Message-ID: <20260128161447.GV5945@frogsfrogsfrogs>
-References: <cover.1769613182.git.nirjhar.roy.lists@gmail.com>
- <a904c5bcb5b4fc2c7c2429646251a7f429a67d5a.1769613182.git.nirjhar.roy.lists@gmail.com>
- <AFEDD069-01DE-4DDF-B499-9B2C2C3F8778@gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x0rS9/fz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=Ojr5fLPlE/+baP20jupUrQPThSrd5cjXvZXLOq42KGo=; b=x0rS9/fzby+q6Avzon4H8fwVZ7
+	69Y8hTf1RfJ1sQOVIt2wsRMl61XpxhWafczEHifMxfb2AvgSGmVEeNScaVtXk9Fc712pmupzOSGyk
+	jH+GVeTih5kBRPIu0HMuuo4Pbe1f42CC3mrPI8CNilqgTZwKMfiS6VTC4L3PGdfKztMDTyGBdr/sH
+	1KluHOvoN7QFfUzqxNK3k3EgIbVzrhxKqHHdObU6wklmG9lLI9hhGVtr/zkTTIw0Qa3N0/QOMZ8eb
+	DHaZGrOFsjYPazkp1dRxVwoM5ufojDSdoL66AUiwgB6VRWZmoSHE0CiiOJ5ApmNHI/GHHghArWCVd
+	LjbXLCiA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vl8CP-0000000GMy5-4264;
+	Wed, 28 Jan 2026 16:15:22 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	linux-block@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: support file system generated / verified integrity information v2
+Date: Wed, 28 Jan 2026 17:14:55 +0100
+Message-ID: <20260128161517.666412-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <AFEDD069-01DE-4DDF-B499-9B2C2C3F8778@gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jan 28, 2026 at 11:25:17PM +0800, Alan Huang wrote:
-> On Jan 28, 2026, at 23:14, Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com> wrote:
-> > 
-> > We should ASSERT on a variable before using it, so that we
-> > don't end up using an illegal value.
-> > 
-> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> > ---
-> > fs/xfs/xfs_rtalloc.c | 6 +++++-
-> > 1 file changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index a12ffed12391..9fb975171bf8 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -112,6 +112,11 @@ xfs_rtcopy_summary(
-> > error = xfs_rtget_summary(oargs, log, bbno, &sum);
-> > if (error)
-> > goto out;
-> > + if (sum < 0) {
-> > + ASSERT(sum >= 0);
-> 
-> 
-> Does the ASSERT make sense under the if condition ?
+Hi all,
 
-Yes, it's logging that the function failed due to some sort of loop
-control problem, rather than the current behavior where it logs the
-assert failure and .... keeps going.
+this series adds support to generate and verify integrity information
+(aka T10 PI) in the file system, instead of the automatic below the
+covers support that is currently used.
 
---D
+There two reasons for this:
 
-> 
-> > + error = -EFSCORRUPTED;
-> > + goto out;
-> > + }
-> > if (sum == 0)
-> > continue;
-> > error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
-> > @@ -120,7 +125,6 @@ xfs_rtcopy_summary(
-> > error = xfs_rtmodify_summary(nargs, log, bbno, sum);
-> > if (error)
-> > goto out;
-> > - ASSERT(sum > 0);
-> > }
-> > }
-> > error = 0;
-> > -- 
-> > 2.43.5
-> > 
-> > 
-> 
-> 
+  a) to increase the protection enveloped.  Right now this is just a
+     minor step from the bottom of the block layer to the file system,
+     but it is required to support io_uring integrity data passthrough in
+     the file system similar to the currently existing support for block
+     devices, which will follow next.  It also allows the file system to
+     directly see the integrity error and act upon in, e.g. when using
+     RAID either integrated (as in btrfs) or by supporting reading
+     redundant copies through the block layer.
+  b) to make the PI processing more efficient.  This is primarily a
+     concern for reads, where the block layer auto PI has to schedule a
+     work item for each bio, and the file system them has to do it again
+     for bounce buffering.  Additionally the current iomap post-I/O
+     workqueue handling is a lot more efficient by supporting merging and
+     avoiding workqueue scheduling storms.
+
+The implementation is based on refactoring the existing block layer PI
+code to be reusable for this use case, and then adding relatively small
+wrappers for the file system use case.  These are then used in iomap
+to implement the semantics, and wired up in XFS with a small amount of
+glue code.
+
+Compared to the baseline (iomap-bounce branch), this does not change
+performance for writes, but increases read performance up to 15% for 4k
+I/O, with the benefit decreasing with larger I/O sizes as even the
+baseline maxes out the device quickly on my older enterprise SSD.
+
+Anuj gupta also measured a large decrease in QD1 latency on an
+Intel optane device for small I/O sizes, but also an increase for
+very large ones.
+
+The series is based on the for-7.0/block-stable-pages in Jens's tee.
+
+Git tree:
+
+    git://git.infradead.org/users/hch/misc.git iomap-pi
+
+Gitweb:
+
+    https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/iomap-pi
+
+Changes since v1:
+ - document usage of BI_ACT_*
+ - return the action from fs_bio_integrity_alloc and use it in
+   fs_bio_integrity_generation to be safe from misuse
+ - use the newly added BIO_MAX_SIZE
+ - rename bio_read_ops to xfs_bio_read_ops
+ - fix commit message and comment typos
+
+Diffstat:
+ block/Makefile                |    2 
+ block/bio-integrity-auto.c    |   80 +++---------------------
+ block/bio-integrity-fs.c      |   81 +++++++++++++++++++++++++
+ block/bio-integrity.c         |   64 +++++++++++++++++++
+ block/bio.c                   |   17 +++--
+ block/blk-mq.c                |    6 +
+ block/blk-settings.c          |   13 ----
+ block/blk.h                   |    6 +
+ block/t10-pi.c                |   12 +--
+ drivers/nvdimm/btt.c          |    6 +
+ fs/fuse/file.c                |    5 -
+ fs/iomap/bio.c                |  135 ++++++++++++++++++++++++++++--------------
+ fs/iomap/buffered-io.c        |    8 +-
+ fs/iomap/direct-io.c          |   15 ++++
+ fs/iomap/internal.h           |   14 ++++
+ fs/iomap/ioend.c              |   28 +++++++-
+ fs/xfs/xfs_aops.c             |   49 ++++++++++++++-
+ fs/xfs/xfs_iomap.c            |    9 +-
+ include/linux/bio-integrity.h |   12 ++-
+ include/linux/bio.h           |    2 
+ include/linux/blk-integrity.h |   28 +++++++-
+ include/linux/blkdev.h        |   34 ++++++++--
+ include/linux/iomap.h         |   20 +++++-
+ 23 files changed, 465 insertions(+), 181 deletions(-)
