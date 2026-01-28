@@ -1,68 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A644D3101DC
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 16:16:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769617001; cv=none; b=LOlIf6htaSsPjRr/l+kvcCbSU41jLg6P8MZs/vixNzO2M1qABpqPePd4SMf/EcpgPoGYvH3gCDf07mKfx9YyqNx869+v+GEAHL5eL4POimNfkYiUqHnMbwCVO4CPd9xnT7W/CUTKEvDejwx63Q28WmsnMP2Y6OWB4U8fG5QuEfI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769617001; c=relaxed/simple;
-	bh=nI07S4fsrBVIEkobGuWfpQcZDECVNUQVGjrtWTpcLT4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=satSbGwXB5Dwud137eHMFH63U0rc8vltNSYfbgc0MFmw2sUYCkvQX7rB95rchiAVE2Xhpkoaq4WJvgPKFFnZj+IviIr16ab4sutCqSehOP7cHeVifFwhPl9MDIUogGMoOLC9BNQYpQSaMEy1lKRWQd8NLL7NT2VTJsoURJnpa20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iR0kvcnL; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iR0kvcnL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81F1BC4CEF7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B98FE3093A8;
 	Wed, 28 Jan 2026 16:16:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769617001;
-	bh=nI07S4fsrBVIEkobGuWfpQcZDECVNUQVGjrtWTpcLT4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iR0kvcnLN7AD3ZI/SQyXiadad86R3VEILjhRUGryxd57c2rXO/jL93SSgMiA+riaW
-	 ThH4Cr8u16Urax125Et8EOd69aOaSXvSe2RJ3LZsFhfnX5OA817KvrhVunrcpa8Kn4
-	 r35Yl4wX0KZi6IuZQl6M64jemseLXiwTXfkXItpP5H2H+MwejnqvAJwg+KbaiVeBTl
-	 qlncOA4xdHGylypWi5ACufkS/fbHGk4oqLhQdlHdFrokcNVjVmu6aLgGqxOY7sBBCO
-	 CE1736Il3XXxCLMx4W6DcPTspfKfILgvHpcV2Qvo9+3jZRTthZD50mTsjahkMJf9G+
-	 rQ3sPdXS8Yg0Q==
-Date: Wed, 28 Jan 2026 08:16:41 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769617002; cv=none; b=cyBRdjL5Dn1HEzZnGMYhrZL1X9EjV66UvPuU3nCN6GdsoIlwP8K7udbW0c7toN7X26urMEcEpycWNp1K6Sc0zATFLI4O/FhJVUdraEyr9+jCTGNrJNtCMPgOl9o7KvkZsKdbH6TSE6K7IhFZFrR4Gv7UTl1XgD02t9tKiHaHJyQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769617002; c=relaxed/simple;
+	bh=HqvEHyvsh8JFh+oGy4J009I4RqSPT4FdfvRxt3nE7UA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=hyO0DZ9R7z/b21pZPSmboWxQruX6pCRSc0MioZNujMSGeXfQh2raTkTHqNBYzfMlLIR0idfDG2tgwwY5bOgFysRYuWbmuR6k8n7RJ1aDWbExPLZ5L3cg/fsMGeL4UF5NIgXrhlbkaofa2qCnfcJAot7ItVzRctDCFdPsL30iGTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Esgfg00P; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Esgfg00P"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=ZhFRZ+XgIG9F5vpX02p6cKkBJIRlITKQXrytAp6/Xs8=; b=Esgfg00PiC/jYu+ExdbEYV/KAz
+	bt+LgiTQ/dzZmfAGraLlmiyTdNnjKMW09YM1F3fQmUAxeIj80efDu6YSRfCzfPLvCo2YxtwiSfGkI
+	pZjzOzDLbjNmZa1gNypBuN+2CaYHCOnvBd19p+5+gtzMOR5jsyb/W8VBlvU7Kf7TAk7mOh+J2qdh3
+	1vwd/9ZcObQv2AdlKk1ToEvAnDgTdtJQQvI2FWDBSQrL3MFMcs/8m1H0mWkjzjWFwFnPAC8fwtX7I
+	b2Gi7VRDxsISDa8LJyU/1DKiNuHP+kH1INKFWVcbl5V4vdFmKfofylbEa+09ETDhgX3kHlRR6w093
+	pYzgGTFA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vl8Dg-0000000GN2Z-1ekP;
+	Wed, 28 Jan 2026 16:16:40 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	linux-block@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/10] xfs: allow setting errortags at mount time
-Message-ID: <20260128161641.GW5945@frogsfrogsfrogs>
-References: <20260127160619.330250-1-hch@lst.de>
- <20260127160619.330250-7-hch@lst.de>
- <aXnyfoEDhdHTIf-E@nidhogg.toxiclabs.cc>
- <20260128161142.GT5945@frogsfrogsfrogs>
- <20260128161351.GA12914@lst.de>
+Subject: [PATCH 13/15] iomap: support ioends for buffered reads
+Date: Wed, 28 Jan 2026 17:15:08 +0100
+Message-ID: <20260128161517.666412-14-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260128161517.666412-1-hch@lst.de>
+References: <20260128161517.666412-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260128161351.GA12914@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jan 28, 2026 at 05:13:51PM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 28, 2026 at 08:11:42AM -0800, Darrick J. Wong wrote:
-> > Should we explicitly state here that the errortag=XXX will /not/ be
-> > echoed back via /proc/mounts?
-> 
-> Sure, I'll add that.
-> 
-> > Seeing as we recently had bug reports
-> > about scripts encoding /proc/mounts into /etc/fstab.
-> 
-> WTF?
+Support using the ioend structure to defer I/O completion for
+buffered reads by calling into the buffered read I/O completion
+handler from iomap_finish_ioend.
 
-I tried to remove ikeep/noikeep/noattr2/attr2 and someone complained
-that we broke his initramfs because Gentoo or whatever has this dumb
-script that "generates" rootflags= (and maybe fstab too) from
-/proc/mounts.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Tested-by: Anuj Gupta <anuj20.g@samsung.com>
+---
+ fs/iomap/bio.c      | 19 ++++++++++++++++---
+ fs/iomap/internal.h |  1 +
+ fs/iomap/ioend.c    |  8 +++++---
+ 3 files changed, 22 insertions(+), 6 deletions(-)
 
---D
+diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+index 259a2bf95a43..b4de67bdd513 100644
+--- a/fs/iomap/bio.c
++++ b/fs/iomap/bio.c
+@@ -8,14 +8,27 @@
+ #include "internal.h"
+ #include "trace.h"
+ 
+-static void iomap_read_end_io(struct bio *bio)
++static u32 __iomap_read_end_io(struct bio *bio, int error)
+ {
+-	int error = blk_status_to_errno(bio->bi_status);
+ 	struct folio_iter fi;
++	u32 folio_count = 0;
+ 
+-	bio_for_each_folio_all(fi, bio)
++	bio_for_each_folio_all(fi, bio) {
+ 		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
++		folio_count++;
++	}
+ 	bio_put(bio);
++	return folio_count;
++}
++
++static void iomap_read_end_io(struct bio *bio)
++{
++	__iomap_read_end_io(bio, blk_status_to_errno(bio->bi_status));
++}
++
++u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend)
++{
++	return __iomap_read_end_io(&ioend->io_bio, ioend->io_error);
+ }
+ 
+ static void iomap_bio_submit_read(const struct iomap_iter *iter,
+diff --git a/fs/iomap/internal.h b/fs/iomap/internal.h
+index 3a4e4aad2bd1..b39dbc17e3f0 100644
+--- a/fs/iomap/internal.h
++++ b/fs/iomap/internal.h
+@@ -4,6 +4,7 @@
+ 
+ #define IOEND_BATCH_SIZE	4096
+ 
++u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend);
+ u32 iomap_finish_ioend_direct(struct iomap_ioend *ioend);
+ 
+ #ifdef CONFIG_BLOCK
+diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+index 800d12f45438..72f20e8c8893 100644
+--- a/fs/iomap/ioend.c
++++ b/fs/iomap/ioend.c
+@@ -36,7 +36,7 @@ EXPORT_SYMBOL_GPL(iomap_init_ioend);
+  * state, release holds on bios, and finally free up memory.  Do not use the
+  * ioend after this.
+  */
+-static u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
++static u32 iomap_finish_ioend_buffered_write(struct iomap_ioend *ioend)
+ {
+ 	struct inode *inode = ioend->io_inode;
+ 	struct bio *bio = &ioend->io_bio;
+@@ -68,7 +68,7 @@ static void ioend_writeback_end_bio(struct bio *bio)
+ 	struct iomap_ioend *ioend = iomap_ioend_from_bio(bio);
+ 
+ 	ioend->io_error = blk_status_to_errno(bio->bi_status);
+-	iomap_finish_ioend_buffered(ioend);
++	iomap_finish_ioend_buffered_write(ioend);
+ }
+ 
+ /*
+@@ -260,7 +260,9 @@ static u32 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 		return 0;
+ 	if (ioend->io_flags & IOMAP_IOEND_DIRECT)
+ 		return iomap_finish_ioend_direct(ioend);
+-	return iomap_finish_ioend_buffered(ioend);
++	if (bio_op(&ioend->io_bio) == REQ_OP_READ)
++		return iomap_finish_ioend_buffered_read(ioend);
++	return iomap_finish_ioend_buffered_write(ioend);
+ }
+ 
+ /*
+-- 
+2.47.3
+
