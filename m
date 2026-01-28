@@ -1,44 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB18719E97F
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 04:33:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E75C8CE
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 04:33:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769574810; cv=none; b=UNfq+KQAa51f5fmGN5GaHT4j8gxrH1X5X8um7E2Err88ICrroIWowzs4k9NSXbfp7loq80Iap7hQCHsqCcmcKdqQxB4FfgVCKzsdg4HntpXq+dnqspOq6WzlkMCf2Etj4PqBFpI172S/Ecrjq5w9gplQBvkNsGaKi5guwprB/dM=
+	t=1769574814; cv=none; b=MhmH7UcGghCbmGX8e1tK7F2vcw8mo2wHlicRW8QWDQQIpEtE5x3R51OjEePRTLAFO3c1mxJmjzlWwxDGol4ayJtHw61laH0Rb5NTT/sO2tbWxgojs8as03VUqBoGkeNUf8wDBCUdrMiefSLHVCK+BTh6uW8SFp+JTIAjCNOmfKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769574810; c=relaxed/simple;
-	bh=MlaWmnGFUPSjkWXdOvoxa9xGIEt9lGGZotOwV8tNuv0=;
+	s=arc-20240116; t=1769574814; c=relaxed/simple;
+	bh=VHeaSN2G39PvrTJbYydB7z97ytHve/EasEzS1yrIhEg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jd0UGKSIgJvNJPmKK5QlwX70KKVxBsuODgRsuO2A2aYNO+0ppkMcxEsnlerKh7/g0qP/cNwzam+U28h0pSH0I67hBbX6BRhND6wCFEFnPDaHKtqkhWunoBeDWi/Tb3FPvOzKusdj9KVySNEfBfS9+rtFa7nMNEb3fcCX0105m4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kUnskSkR; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=C4CNF61l1zAfGIkEXxtRRpLVdB7dsaKekiguFapsPnPc/qIwxA4RsgeGbeKx/Bt8QwK4Nyvznm+QjVfgezZ1cRrRC42yHJE71yeSRAHw+CsfVDZShH4CpxCmg5/7PJ2B246sCWQrLxf6pczxgaP6HOMbLoQcgGP0d1tzV3VuPzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tg5HwXPx; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kUnskSkR"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tg5HwXPx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=K19yzn7/Mk0oaI5SVEhkUDQovJ22cOUTUhGVJJdBMdA=; b=kUnskSkRk7lcBUe2bYeOyg7eGl
-	DqsYYCpwQFSKERhL+jTbL57nS2N0g9LJCkGM3CxQX6inFzL1aBZgo4vgK607KeYj/ng4C7IFf60OJ
-	5BSPT7kopFtOTSPIl/sbBI8I/N8qOgZOLk3Zh4OYWKkQRYmrlA0wsG0K2LI3hJJUNodPy/Sp2kTdV
-	zBSAJMP98aRuxOGAg1iN01cI6OjQ0pjhfRWbF6QGVzL4bLG7KF0iUxZ+w7EYRgjTP/B6FoqccIyHA
-	9e0INaW1R+NVbpPuDZuhcM5G28P+p695EaDR4LGwwnsGmGGeyN3aIuRqVn4M9vHYfpY5Epwo4MIrw
-	fiH1Ak7A==;
+	bh=+f/UbriC4kyOY/9LgK5JNDkIzJOW5ieZrgVB4hwdWYE=; b=tg5HwXPxvPey7tQrZhPH3oNlsU
+	m0gpjOlsspc0bJYHHOPcuIRw8ZDGRnOXIAZlMlBZLOSo/pGsZMLW6uUlITej2Qr/S/sXfYiIFTZtM
+	HIS6lQFNlkLBC3lmVoYkniWczG8ci/7bgd/BDg+NBUEkcUy3krJa0XnRQmDh3i5uIJA12I06Qi9OU
+	ybgxZxDhBSkyp6qUgpkQMPkCAoE7HetezPMmG2b/ZJYohP5p86idFll29Mo+RGo8jf5w3rqXtfxas
+	DhBLSVi6CzWlPdURCjAR25QwdCzcJxDPBVtBTPnlRrVznyX4HhpC1UQl3LCAcV8yUMTBLgyEor7n6
+	spG2IOVw==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vkxF8-0000000FQaj-3KUz;
-	Wed, 28 Jan 2026 04:33:27 +0000
+	id 1vkxFD-0000000FQar-2Hhf;
+	Wed, 28 Jan 2026 04:33:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	"Darrick J . Wong" <djwong@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] include blkzoned.h in platform_defs.h
-Date: Wed, 28 Jan 2026 05:32:55 +0100
-Message-ID: <20260128043318.522432-2-hch@lst.de>
+	linux-xfs@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH 2/5] xfs: use blkdev_report_zones_cached()
+Date: Wed, 28 Jan 2026 05:32:56 +0100
+Message-ID: <20260128043318.522432-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260128043318.522432-1-hch@lst.de>
 References: <20260128043318.522432-1-hch@lst.de>
@@ -51,79 +53,57 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-We'll need to conditionally add definitions added in later version of
-blkzoned.h soon.  The right place for that is platform_defs.h, which
-means blkzoned.h needs to be included there for cpp trickery to work.
+From: Damien Le Moal <dlemoal@kernel.org>
 
+Source kernel commit: e04ccfc28252f181ea8d469d834b48e7dece65b2
+
+Modify xfs_mount_zones() to replace the call to blkdev_report_zones()
+with blkdev_report_zones_cached() to speed-up mount operations.
+Since this causes xfs_zone_validate_seq() to see zones with the
+BLK_ZONE_COND_ACTIVE condition, this function is also modified to acept
+this condition as valid.
+
+With this change, mounting a freshly formatted large capacity (30 TB)
+SMR HDD completes under 2s compared to over 4.7s before.
+
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/platform_defs.h   | 1 +
- libxfs/xfs_zones.c        | 1 -
- mdrestore/xfs_mdrestore.c | 1 -
- mkfs/xfs_mkfs.c           | 1 -
- repair/zoned.c            | 1 -
- 5 files changed, 1 insertion(+), 4 deletions(-)
+ include/platform_defs.h | 8 ++++++++
+ libxfs/xfs_zones.c      | 1 +
+ 2 files changed, 9 insertions(+)
 
 diff --git a/include/platform_defs.h b/include/platform_defs.h
-index da966490b0f5..1152f0622ccf 100644
+index 1152f0622ccf..1a9f401fc11c 100644
 --- a/include/platform_defs.h
 +++ b/include/platform_defs.h
-@@ -24,6 +24,7 @@
- #include <stdbool.h>
- #include <libgen.h>
- #include <urcu.h>
-+#include <linux/blkzoned.h>
+@@ -308,4 +308,12 @@ struct kvec {
+ 	size_t iov_len;
+ };
  
- /* long and pointer must be either 32 bit or 64 bit */
- #define BITS_PER_LONG (sizeof(long) * CHAR_BIT)
++/*
++ * Local definitions for the new cached report zones added in Linux 6.19 in case
++ * the system <linux/blkzoned.h> doesn't provide them yet.
++ */
++#ifndef BLK_ZONE_COND_ACTIVE
++#define BLK_ZONE_COND_ACTIVE	0xff
++#endif
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
 diff --git a/libxfs/xfs_zones.c b/libxfs/xfs_zones.c
-index 7a81d83f5b3e..c1ad7075329c 100644
+index c1ad7075329c..90e2ba0908be 100644
 --- a/libxfs/xfs_zones.c
 +++ b/libxfs/xfs_zones.c
-@@ -3,7 +3,6 @@
-  * Copyright (c) 2023-2025 Christoph Hellwig.
-  * Copyright (c) 2024-2025, Western Digital Corporation or its affiliates.
-  */
--#include <linux/blkzoned.h>
- #include "libxfs_priv.h"
- #include "xfs.h"
- #include "xfs_fs.h"
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index b6e8a6196a79..eece58977f97 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -8,7 +8,6 @@
- #include "xfs_metadump.h"
- #include <libfrog/platform.h>
- #include "libfrog/div64.h"
--#include <linux/blkzoned.h>
- 
- union mdrestore_headers {
- 	__be32				magic;
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b34407725f76..46f4faf4de5a 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -6,7 +6,6 @@
- #include "libfrog/util.h"
- #include "libxfs.h"
- #include <ctype.h>
--#include <linux/blkzoned.h>
- #include "libxfs/xfs_zones.h"
- #include "xfs_multidisk.h"
- #include "libxcmd.h"
-diff --git a/repair/zoned.c b/repair/zoned.c
-index 206b0158f95f..49cc43984883 100644
---- a/repair/zoned.c
-+++ b/repair/zoned.c
-@@ -3,7 +3,6 @@
-  * Copyright (c) 2024 Christoph Hellwig.
-  */
- #include <ctype.h>
--#include <linux/blkzoned.h>
- #include "libxfs_priv.h"
- #include "libxfs.h"
- #include "xfs_zones.h"
+@@ -96,6 +96,7 @@ xfs_zone_validate_seq(
+ 	case BLK_ZONE_COND_IMP_OPEN:
+ 	case BLK_ZONE_COND_EXP_OPEN:
+ 	case BLK_ZONE_COND_CLOSED:
++	case BLK_ZONE_COND_ACTIVE:
+ 		return xfs_zone_validate_wp(zone, rtg, write_pointer);
+ 	case BLK_ZONE_COND_FULL:
+ 		return xfs_zone_validate_full(zone, rtg, write_pointer);
 -- 
 2.47.3
 
