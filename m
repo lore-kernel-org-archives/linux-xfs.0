@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 095B81D86DC;
-	Wed, 28 Jan 2026 05:05:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2827286418
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 05:07:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769576731; cv=none; b=JGCa9XvM3DfPSD8qXUXzKSwuovykJbNAGyC0ewqXtuCegNjva8CYVsnbEeWSptFIdsMRxfxggCalTk2YrA73IZjGybr/2PwLKO/5/eLpnOYhCqaYk03/8pI3Y0sMlsxw2CYivyCJRqOlOMORpPURJOsY5eHnAkasRj+P/CYzUvQ=
+	t=1769576832; cv=none; b=ZETX84Y0loAmieJ6HMrnmIKyiss2KiVE4Q9bR7qPBZAB3Mg6/WVH9T1ZF/lsm5jXaFZlv5S3w3inAvkUXyvHvvJOAbQi9DqO9sitGgehLayHOB0TmXtm393Pq2HyRmgUvgtQDZpn0NJ7ovSFtiENXll5CxrQHTeWq5d1dg3QSCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769576731; c=relaxed/simple;
-	bh=b/1XT9nyXAp8VF8G/YHRzh5mkMgIuALfVJRYBByMXMY=;
+	s=arc-20240116; t=1769576832; c=relaxed/simple;
+	bh=15/dLewMtv8A9c+e6iMGVSoJO148DPxnG3I4uLk9qOM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FD965SJ0durDzyo7HvYjl4kha6TeNRCIE6xAITKb5s9+WkuGJE5Ob/1nQ2WmGDISDee7XcBxKoaC65xOHNlTSKIsjxs62T5dzMHKxWzhlOVuRSZvlvsSc8vfBmG959iN9ISF6rVCw+vMvt2cXeqeFJCwt/8N/6at9+0NA9OTCSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dI03Ai9R; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=G6+SYCeDqmvUFVluWSxzEItosSxzQ+iEubvFNT73RlU2ctuaqrgv4VIbGauMpuDBqlMjDEyVCcWw/FnS78v/vlNkcsIyuIDCb2o01DWLPU+dFGnP0VXUM7icP0Tvk9dFPEYZc3o9lOjjNVftk09xKu7kE6vIan9yOV5Rn3C6JZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H0HAppYy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dI03Ai9R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 835C0C4CEF1;
-	Wed, 28 Jan 2026 05:05:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H0HAppYy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59AB3C4CEF1;
+	Wed, 28 Jan 2026 05:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769576730;
-	bh=b/1XT9nyXAp8VF8G/YHRzh5mkMgIuALfVJRYBByMXMY=;
+	s=k20201202; t=1769576831;
+	bh=15/dLewMtv8A9c+e6iMGVSoJO148DPxnG3I4uLk9qOM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dI03Ai9RvDUXTgc/87kkhUrp4tUQMjuddF0d5Y9xVI5jFgfN7/nXSVcAJbFWgnetC
-	 nXHCwvk13T92bxJHSrstm853q/34fVUEtWWuWGnUWTT5eThnfVWcUor27kMmOKMXma
-	 uWIjL6zanNABDMQ190tjRPGcnve07lJxwhZklTE3UBaO+Z7iZw6+lMycpdI2Ej3TjE
-	 YASytQ++LgGvzO3Hf/aArTBWnMGuXIu6ULmgiXXlyO3C3GqOB59NNodK+FPSQ5gpGy
-	 w8v3/nNdgyEGMyZeij/XoOm2WaUI/EteuQXnnuZxvqO9knXneheWHtzCa+VDIvDLkD
-	 QfX2XRWiZvzEQ==
-Date: Tue, 27 Jan 2026 21:05:29 -0800
+	b=H0HAppYyZAcMF34a8RDiXvUotn+zSTA+LjYPDOARWKlrz2xMh5IScxPLJcjGp8VPp
+	 k9XC52kc0MwjV8aezGMfm/ZjWQBbLtG4vmvqVnruYyce9iGMVdkxXepTxCnS4et+QC
+	 o6c+4+G4eDHC1Mao61YHkv7Ch4b9kS3O+/HTrt3T1c2RaH3kOoJRKerhouwUCG15Wf
+	 kSUMjw3U+Y93ljOb41E4qQ8yNVYoixNm+WheTQFo7gDUHIK5y70MPiTJMUmkcU7R0I
+	 /s8Il8cgdN9To0wIzI5LwuR3bJo01oYgzo3FtTSRTZpv6CnsNJD9m6SN5Xbc6AydVq
+	 w2k1yDMShE76w==
+Date: Tue, 27 Jan 2026 21:07:10 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, hans.holmberg@wdc.com, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs: test zone reset error handling
-Message-ID: <20260128050529.GM5945@frogsfrogsfrogs>
-References: <20260127160906.330682-1-hch@lst.de>
- <20260128014255.GK5945@frogsfrogsfrogs>
- <20260128033819.GA30962@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 06/10] xfs: allow setting errortags at mount time
+Message-ID: <20260128050710.GN5945@frogsfrogsfrogs>
+References: <20260127160619.330250-1-hch@lst.de>
+ <20260127160619.330250-7-hch@lst.de>
+ <20260128013730.GF5945@frogsfrogsfrogs>
+ <20260128034557.GC30989@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,20 +45,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260128033819.GA30962@lst.de>
+In-Reply-To: <20260128034557.GC30989@lst.de>
 
-On Wed, Jan 28, 2026 at 04:38:19AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 27, 2026 at 05:42:55PM -0800, Darrick J. Wong wrote:
-> > > +# try mounting with error injection still enabled.  This should fail.
-> > > +_try_scratch_mount && _fail "file system mounted despite zone reset errors"
+On Wed, Jan 28, 2026 at 04:45:57AM +0100, Christoph Hellwig wrote:
+> On Tue, Jan 27, 2026 at 05:37:30PM -0800, Darrick J. Wong wrote:
+> > > +  errortag=tagname
+> > > +	When specified, enables the error inject tag named "tagname" with the
+> > > +	default frequency.  Can be specified multiple times to enable multiple
+> > > +	errortags.  Specifying this option on remount will reset the error tag
+> > > +	to the default value if it was set to any other value before.
 > > 
-> > Is it necessary to _fail here explicitly?  Or could you just echo that
-> > string and let the golden output disturbance cause the test to fail?
+> > Any interest in allowing people to specify the value too?  Seeing as we
+> > allow that the sysfs version of the interface.
 > 
-> The echo would work to.  But why would that be prefable?  Is there some
-> hidden downside to _fail I haven't noticed in all the years?
+> I don't need it for my uses yet, but it would be nice in general.
+> The reason I didn't do it is because it adds complex non-standard
+> parsing, and I'd have to find a way to separate the tag and the value
+> that is not "=", which is already taken by the mount option parsing.
 
-Nah, I was just wondering what happens if the test keeps going instead
-of exiting immediately.
+Huh.  I could've sworn there was a way to do suboption parsing with the
+new mount api, but maybe I hallucinated that.
 
 --D
