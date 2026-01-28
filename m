@@ -1,44 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C93763090C2
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 16:09:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F1D730C60D
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 16:11:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769616577; cv=none; b=S0cSUeECOgcVOdZT5gj0OK5mEDHCzfNrHGuVtIoW7Fq4Lx0DBqZ+wxVtxvPab+COkQrxnpqLvViO5Wf9Dbfs2Vt8vvkV5hSxk+O0icQX2amRmKAkEwrAIPzD+1Tg8FYrd4tfD/hE0A1oU68sZOf6s1skkK0ZiaU2bTWY6oE7+eg=
+	t=1769616703; cv=none; b=GbYhzBbVIAAayytxRUlOYWLy+tExFdB1mfku9v00BPi2gAk0gEJA4T11dX1oHxLBGBP23nbK+SVGtAcls5g2UAVPiPNxXrh2pOdyiINz79tjYNDVEo/e4djygxizRdkIlsoi3Ble511UQArFVBPw08iEqshwipU+fBTuyk80iGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769616577; c=relaxed/simple;
-	bh=S6kFl2YnzRTcdGgK6BMKP1y68bKKsNZltT1vVYBuUXk=;
+	s=arc-20240116; t=1769616703; c=relaxed/simple;
+	bh=vWZJR6P7L+c1evG1MVybjAJ1Z9fyJNRwXZTK35yZurk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KDiIKpld8V0Svrp3LZ/tQsA6myzmco5UxzH+XcasBbe+H7PMIOGY4JSJN2p/61DdTd5R1Q2jT47tQy4EDidbFG0X/4oi7HLPnchjXD/0xZRejfMkMwCGfUhZzUJAjOui7bfa8bd22Cp+9YFiTGup6xG9s8h73rgoIMsA6csI+r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JgH32w3M; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dmthK2rOPak3oF31mUA0mAPErYI+DKeBFpmHQZCFa+mpbOAzATrzLBTOvLphvwFAZ7cGXox01uW8cnWU2ol19FY2CNHNG6ZHNcgFQUpjKcttJFv9iqgJ+JbShIcpIzJ6lMOrU/HBZNJUrVlX5hu0cE8rDliFomA4tL1FKpbI9Qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UxXFfUNG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JgH32w3M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4988C4CEF1;
-	Wed, 28 Jan 2026 16:09:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UxXFfUNG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3D82C4CEF1;
+	Wed, 28 Jan 2026 16:11:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769616577;
-	bh=S6kFl2YnzRTcdGgK6BMKP1y68bKKsNZltT1vVYBuUXk=;
+	s=k20201202; t=1769616702;
+	bh=vWZJR6P7L+c1evG1MVybjAJ1Z9fyJNRwXZTK35yZurk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JgH32w3MP587IgdMOGue1c5sWt4NHB7UfDlJOG4O6Zlsh0hOm2nDxXDh9it/da3pu
-	 Rf5iNeeMKq/FF4v6j7GmZp56yrA2uaxeSYVruAtTTehX7CjEZR44uFcah0hqO9oCcD
-	 8aPGAJBEX9qpJcfd6XkXOr/HskovhA3l7XELqAXQTxkqXr6jQsCL9rbUvMogf2SY3J
-	 0R1szxtwhDHLWAxWlgjkhcTOEd/mAFOomb+yo0/jP2aQj/6miyqZsXXnwMH9CdfPq+
-	 9F0dmIB1+VuiBsPalga9JiVTK97cX49EZqk0RdNbyGAly4MoWQCZbcatBGpot9ZW0W
-	 PiDogt+NMF4ZA==
-Date: Wed, 28 Jan 2026 08:09:37 -0800
+	b=UxXFfUNG0TkH3ifHsSe6jQG2uAiLyNTt55iyatA+7fZqqtcoFbVaCjWA/cSATQAVh
+	 t4B1rDdlUiYyxwNPgACYJQjnD9qd/1LNy448CFKwrL9EDrqv5exKaW2g5llZBIKJbg
+	 yZU/l8jq4QdSnsGukIual48hR6pKrnMb8Pf6FWhxLN1I3pEqY8+mNBo1gtu8ggz/wo
+	 Z/rhHh+i+3H1wOkm5YsOQnUU3YUM4txtaRVPZUFNYIW2Iael2vD+Bb718bkdEUFE+4
+	 DcCDupvZwtp7zBEDghM2HyGrsCUWDAPVpysoJs8LRTRuZGIcAJyWiADDN1qwp5Rni2
+	 HOizNHxbCHQzw==
+Date: Wed, 28 Jan 2026 08:11:42 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/10] xfs: move the guts of XFS_ERRORTAG_DELAY out of
- line
-Message-ID: <20260128160937.GS5945@frogsfrogsfrogs>
+Subject: Re: [PATCH 06/10] xfs: allow setting errortags at mount time
+Message-ID: <20260128161142.GT5945@frogsfrogsfrogs>
 References: <20260127160619.330250-1-hch@lst.de>
- <20260127160619.330250-5-hch@lst.de>
- <20260128013525.GD5945@frogsfrogsfrogs>
- <aXnv3tWiFlHwOheE@nidhogg.toxiclabs.cc>
- <20260128141016.GA2054@lst.de>
+ <20260127160619.330250-7-hch@lst.de>
+ <aXnyfoEDhdHTIf-E@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +44,184 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260128141016.GA2054@lst.de>
+In-Reply-To: <aXnyfoEDhdHTIf-E@nidhogg.toxiclabs.cc>
 
-On Wed, Jan 28, 2026 at 03:10:16PM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 28, 2026 at 12:18:38PM +0100, Carlos Maiolino wrote:
-> > I'm curious though if is there any reason why those are ratelimited?
-> > It's not like users would be running with error injection enabled or,
-> > they would be flooding the message ring buffer with it.
+On Wed, Jan 28, 2026 at 12:30:05PM +0100, Carlos Maiolino wrote:
+> On Tue, Jan 27, 2026 at 05:05:46PM +0100, Christoph Hellwig wrote:
+> > Add an errortag mount option that enables an errortag with the default
+> > injection frequency.  This allows injecting errors into the mount
+> > process instead of just on live file systems, and thus test mount
+> > error handling.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  Documentation/admin-guide/xfs.rst |  6 ++++++
+> >  fs/xfs/xfs_error.c                | 36 +++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_error.h                |  4 ++++
+> >  fs/xfs/xfs_super.c                |  8 ++++++-
+> >  4 files changed, 53 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+> > index c85cd327af28..cb8cd12660d7 100644
+> > --- a/Documentation/admin-guide/xfs.rst
+> > +++ b/Documentation/admin-guide/xfs.rst
+> > @@ -215,6 +215,12 @@ When mounting an XFS filesystem, the following options are accepted.
+> >  	inconsistent namespace presentation during or after a
+> >  	failover event.
+> >  
+> > +  errortag=tagname
+> > +	When specified, enables the error inject tag named "tagname" with the
+> > +	default frequency.  Can be specified multiple times to enable multiple
+> > +	errortags.  Specifying this option on remount will reset the error tag
+> > +	to the default value if it was set to any other value before.
+> > +
 > 
-> Good question.  I'd rather not open that can of worms in this series,
-> though.
+> I think this should include the fact it is only supported with DEBUG
+> enabled.
+> I'm sure we'll get user complains about why 'errortag=foo' is not working?
+> And, in some unfortunate case somebody has DEBUG enabled when they
+> shouldn't have, at least the documentation says so this shouldn't be
+> used...
 
-Well... activating an error injector /can/ trigger a lot of activations,
-and it's annoying to try to sift through pages and pages of the same
-message whilst trying to figure out why an fstest broke.  So I'd leave
-the ratelimiting in.
+Should we explicitly state here that the errortag=XXX will /not/ be
+echoed back via /proc/mounts?  Seeing as we recently had bug reports
+about scripts encoding /proc/mounts into /etc/fstab.
+
+(That's why I hate mount options)
 
 --D
+
+> I'm happy taking this patch though and we work on the above later, so...
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> >  Deprecation of V4 Format
+> >  ========================
+> >  
+> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> > index 53704f1ed791..d652240a1dca 100644
+> > --- a/fs/xfs/xfs_error.c
+> > +++ b/fs/xfs/xfs_error.c
+> > @@ -22,6 +22,12 @@
+> >  static const unsigned int xfs_errortag_random_default[] = { XFS_ERRTAGS };
+> >  #undef XFS_ERRTAG
+> >  
+> > +#define XFS_ERRTAG(_tag, _name, _default) \
+> > +        [XFS_ERRTAG_##_tag]	=  __stringify(_name),
+> > +#include "xfs_errortag.h"
+> > +static const char *xfs_errortag_names[] = { XFS_ERRTAGS };
+> > +#undef XFS_ERRTAG
+> > +
+> >  struct xfs_errortag_attr {
+> >  	struct attribute	attr;
+> >  	unsigned int		tag;
+> > @@ -189,6 +195,36 @@ xfs_errortag_add(
+> >  	return 0;
+> >  }
+> >  
+> > +int
+> > +xfs_errortag_add_name(
+> > +	struct xfs_mount	*mp,
+> > +	const char		*tag_name)
+> > +{
+> > +	unsigned int		i;
+> > +
+> > +	for (i = 0; i < XFS_ERRTAG_MAX; i++) {
+> > +		if (xfs_errortag_names[i] &&
+> > +		    !strcmp(xfs_errortag_names[i], tag_name))
+> > +			return xfs_errortag_add(mp, i);
+> > +	}
+> > +
+> > +	return -EINVAL;
+> > +}
+> > +
+> > +void
+> > +xfs_errortag_copy(
+> > +	struct xfs_mount	*dst_mp,
+> > +	struct xfs_mount	*src_mp)
+> > +{
+> > +	unsigned int		val, i;
+> > +
+> > +	for (i = 0; i < XFS_ERRTAG_MAX; i++) {
+> > +		val = READ_ONCE(src_mp->m_errortag[i]);
+> > +		if (val)
+> > +			WRITE_ONCE(dst_mp->m_errortag[i], val);
+> > +	}
+> > +}
+> > +
+> >  int
+> >  xfs_errortag_clearall(
+> >  	struct xfs_mount	*mp)
+> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > index b40e7c671d2a..05fc1d1cf521 100644
+> > --- a/fs/xfs/xfs_error.h
+> > +++ b/fs/xfs/xfs_error.h
+> > @@ -45,6 +45,8 @@ void xfs_errortag_delay(struct xfs_mount *mp, const char *file, int line,
+> >  #define XFS_ERRORTAG_DELAY(mp, tag)		\
+> >  	xfs_errortag_delay((mp), __FILE__, __LINE__, (tag))
+> >  int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+> > +int xfs_errortag_add_name(struct xfs_mount *mp, const char *tag_name);
+> > +void xfs_errortag_copy(struct xfs_mount *dst_mp, struct xfs_mount *src_mp);
+> >  int xfs_errortag_clearall(struct xfs_mount *mp);
+> >  #else
+> >  #define xfs_errortag_init(mp)			(0)
+> > @@ -52,6 +54,8 @@ int xfs_errortag_clearall(struct xfs_mount *mp);
+> >  #define XFS_TEST_ERROR(mp, tag)			(false)
+> >  #define XFS_ERRORTAG_DELAY(mp, tag)		((void)0)
+> >  #define xfs_errortag_add(mp, tag)		(-ENOSYS)
+> > +#define xfs_errortag_copy(dst_mp, src_mp)	((void)0)
+> > +#define xfs_errortag_add_name(mp, tag_name)	(-ENOSYS)
+> >  #define xfs_errortag_clearall(mp)		(-ENOSYS)
+> >  #endif /* DEBUG */
+> >  
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index ee335dbe5811..d5aec07c3a5b 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -40,6 +40,7 @@
+> >  #include "xfs_defer.h"
+> >  #include "xfs_attr_item.h"
+> >  #include "xfs_xattr.h"
+> > +#include "xfs_error.h"
+> >  #include "xfs_errortag.h"
+> >  #include "xfs_iunlink_item.h"
+> >  #include "xfs_dahash_test.h"
+> > @@ -112,7 +113,7 @@ enum {
+> >  	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+> >  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+> >  	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_max_open_zones,
+> > -	Opt_lifetime, Opt_nolifetime, Opt_max_atomic_write,
+> > +	Opt_lifetime, Opt_nolifetime, Opt_max_atomic_write, Opt_errortag,
+> >  };
+> >  
+> >  #define fsparam_dead(NAME) \
+> > @@ -171,6 +172,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+> >  	fsparam_flag("lifetime",	Opt_lifetime),
+> >  	fsparam_flag("nolifetime",	Opt_nolifetime),
+> >  	fsparam_string("max_atomic_write",	Opt_max_atomic_write),
+> > +	fsparam_string("errortag",	Opt_errortag),
+> >  	{}
+> >  };
+> >  
+> > @@ -1581,6 +1583,8 @@ xfs_fs_parse_param(
+> >  			return -EINVAL;
+> >  		}
+> >  		return 0;
+> > +	case Opt_errortag:
+> > +		return xfs_errortag_add_name(parsing_mp, param->string);
+> >  	default:
+> >  		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+> >  		return -EINVAL;
+> > @@ -2172,6 +2176,8 @@ xfs_fs_reconfigure(
+> >  	if (error)
+> >  		return error;
+> >  
+> > +	xfs_errortag_copy(mp, new_mp);
+> > +
+> >  	/* Validate new max_atomic_write option before making other changes */
+> >  	if (mp->m_awu_max_bytes != new_mp->m_awu_max_bytes) {
+> >  		error = xfs_set_max_atomic_write_opt(mp,
+> > -- 
+> > 2.47.3
+> > 
+> > 
+> 
