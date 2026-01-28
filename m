@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64EE123D7F5
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 01:39:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD3D23EA84
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 01:39:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769564349; cv=none; b=FriQvTGnpWbYXLR8S+XPKKka4n+JgYP6qeaw2Ge+qp6en+vaEplXncBwE+QZ9pYIqNFTosodw6itQn8LcKck5bUnDNSuQ64eJZUFWGg9AIKk5vHRFjTv89UO/G3CIKSswRmkvL30wEp0vuSccIUtWg37Ihs2GyzmxoumHPe64LA=
+	t=1769564389; cv=none; b=ZXYT8z1l3oYtUcdnI5FXzDIpnCpYN3N2UJ54vHXb1NeXzdSwrz0xUgytg5wmhPAzXtC/1hyJ7rYb98IuhH5ZsM9rkAzY+1o7io/66FWpTGT/Lefx5My5SBaL/POrVstnwIp4ddCMWPCbi0Phq41sH0/M8Vhbq3JQ8/x/tpa1yxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769564349; c=relaxed/simple;
-	bh=uBlZ2SUbEbcZJfrENYORUDGpreYqUqB9v46AT0XIxHU=;
+	s=arc-20240116; t=1769564389; c=relaxed/simple;
+	bh=9KGAjfCEiPgaCav1qrLh72aBIxL7BtyqaGyk0K3WSLo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HUEFmNjJX+qaL5iQPJbMRiljXAvjMi5GTvo/R2lE3NFI5PzdntVkIBFW1Ouyw3nVWmQTp1+3C/V6c8grZTfkKsc5HSuUKq5OuNKeYN9oSrIEgDP6oXKqEG28jy/BY60ggMqsXUj10CJ0YHD2MqIV3pqm+Vi6zYNhzIjCOCF5oMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qcMU9AYU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uBB5K1y3BB426Dk6bsLqHyXb4A4graQjH7eaAg18b5m2YQJ7QDI1HQL7ecNDDts3GdUsSuH9z/wBsoUQotSQlmu4bl5CIygE76HdDk48rPBWz89stsbJyFdD8mOGzpAH89DdJXr3fAnte8ctjrqIMipuHyb/4aV84rJSJmquEL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gyDcSmoT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qcMU9AYU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0D7DC116C6;
-	Wed, 28 Jan 2026 01:39:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gyDcSmoT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE256C116C6;
+	Wed, 28 Jan 2026 01:39:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769564348;
-	bh=uBlZ2SUbEbcZJfrENYORUDGpreYqUqB9v46AT0XIxHU=;
+	s=k20201202; t=1769564388;
+	bh=9KGAjfCEiPgaCav1qrLh72aBIxL7BtyqaGyk0K3WSLo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qcMU9AYUHXjhW0lx53tZKB+O6/85WXPvCnXU9rg6n8tDvDJd0aycoY9MBtKsr0++p
-	 XgTYKnQFk3l50vCWRjRUBAS5czxsLw2ngp4UYth2uqsn65vtt20uaj4Wxc9CXAJ2ty
-	 VSH/Sy4Xg4uI8lTWj0HWzRRVGHnssPrljjw0Xqb8d9YPf55RL6EE7bgr4Tteh20oRt
-	 aL2WS5GybBIV+WxkPqlp+GHZd+XqqUWxGH7RPYps7g40Vi6AQlgCgX8vJ07C9Xxmmi
-	 tepsPBVsCEOOO8sjcCBPDRU/7AHjfldgXu+J6hVJUBxmMsN14qAZYAytd9NNGIPR0N
-	 UXa/BjXj+uQHQ==
-Date: Tue, 27 Jan 2026 17:39:08 -0800
+	b=gyDcSmoTvuOLcvmCeVHiLPo3vo2Z1fgL5HQTprmcXM8AZzWrd4mXxkfJrk1W+BSUS
+	 gmKJYQQjYCZdhAFgys770iBzhEMilo3nHTl7RgXrNUA3lEAWdLsIGGNTAHty1Id5pq
+	 V8e3/v4lo6mzw+6HCmoIcaMW72qJ4DqYeMdzaVJpEHpo/J98QPlqHP6hSu52uZcuN6
+	 Vphxn/+cJNw/E4x9ebWI5ipSAONg+LOZDU2jSBGXdGRVMjuh4eSAO7lMNWrX+pPtyZ
+	 Pxu9d/X2OqrPVoKb6iFmDNnWmUmL/fzPmP3AqDc5WBaF3P+LDSTcc4ZVOKBHoZSn0s
+	 oZWjNKzd/5h5g==
+Date: Tue, 27 Jan 2026 17:39:48 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/10] xfs: refactor zone reset handling
-Message-ID: <20260128013908.GH5945@frogsfrogsfrogs>
+Subject: Re: [PATCH 09/10] xfs: add zone reset error injection
+Message-ID: <20260128013948.GI5945@frogsfrogsfrogs>
 References: <20260127160619.330250-1-hch@lst.de>
- <20260127160619.330250-9-hch@lst.de>
+ <20260127160619.330250-10-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,116 +43,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260127160619.330250-9-hch@lst.de>
+In-Reply-To: <20260127160619.330250-10-hch@lst.de>
 
-On Tue, Jan 27, 2026 at 05:05:48PM +0100, Christoph Hellwig wrote:
-> Include the actual bio submission in the common zone reset handler to
-> share more code and prepare for adding error injection for zone reset.
-> 
-> Note the I plan to refactor the block layer submit_bio_wait and
-> bio_await_chain code in the next merge window to remove some of the
-> code duplication added here.
+On Tue, Jan 27, 2026 at 05:05:49PM +0100, Christoph Hellwig wrote:
+> Add a new errortag to test that zone reset errors are handled correctly.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems fine to me...
+This seems pretty straightforward.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_zone_gc.c | 49 +++++++++++++++++++++++++-------------------
->  1 file changed, 28 insertions(+), 21 deletions(-)
+>  fs/xfs/libxfs/xfs_errortag.h |  6 ++++--
+>  fs/xfs/xfs_zone_gc.c         | 13 +++++++++++--
+>  2 files changed, 15 insertions(+), 4 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index b7d98471684b..6de207fed2d8 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -74,7 +74,8 @@
+>  #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
+>  #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
+>  #define XFS_ERRTAG_FORCE_ZERO_RANGE			46
+> -#define XFS_ERRTAG_MAX					47
+> +#define XFS_ERRTAG_ZONE_RESET				47
+> +#define XFS_ERRTAG_MAX					48
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -135,7 +136,8 @@ XFS_ERRTAG(WB_DELAY_MS,		wb_delay_ms,		3000) \
+>  XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
+>  XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
+>  XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
+> -XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4)
+> +XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4) \
+> +XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)
+>  #endif /* XFS_ERRTAG */
+>  
+>  #endif /* __XFS_ERRORTAG_H_ */
 > diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 60964c926f9f..4023448e85d1 100644
+> index 4023448e85d1..570102184904 100644
 > --- a/fs/xfs/xfs_zone_gc.c
 > +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -893,40 +893,55 @@ xfs_zone_gc_finish_reset(
->  	bio_put(&chunk->bio);
->  }
->  
-> -static bool
-> -xfs_zone_gc_prepare_reset(
-> -	struct bio		*bio,
-> -	struct xfs_rtgroup	*rtg)
-> +static void
-> +xfs_submit_zone_reset_bio(
-> +	struct xfs_rtgroup	*rtg,
-> +	struct bio		*bio)
+> @@ -16,6 +16,8 @@
+>  #include "xfs_rmap.h"
+>  #include "xfs_rtbitmap.h"
+>  #include "xfs_rtrmap_btree.h"
+> +#include "xfs_errortag.h"
+> +#include "xfs_error.h"
+>  #include "xfs_zone_alloc.h"
+>  #include "xfs_zone_priv.h"
+>  #include "xfs_zones.h"
+> @@ -898,9 +900,17 @@ xfs_submit_zone_reset_bio(
+>  	struct xfs_rtgroup	*rtg,
+>  	struct bio		*bio)
 >  {
+> +	struct xfs_mount	*mp = rtg_mount(rtg);
+> +
 >  	trace_xfs_zone_reset(rtg);
 >  
 >  	ASSERT(rtg_rmap(rtg)->i_used_blocks == 0);
+> +
+> +	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_ZONE_RESET)) {
+> +		bio_io_error(bio);
+> +		return;
+> +	}
+> +
 >  	bio->bi_iter.bi_sector = xfs_gbno_to_daddr(&rtg->rtg_group, 0);
 >  	if (!bdev_zone_is_seq(bio->bi_bdev, bio->bi_iter.bi_sector)) {
-> -		if (!bdev_max_discard_sectors(bio->bi_bdev))
-> -			return false;
-> +		/*
-> +		 * Also use the bio to drive the state machine when neither
-> +		 * zone reset nor discard is supported to keep things simple.
-> +		 */
-> +		if (!bdev_max_discard_sectors(bio->bi_bdev)) {
-> +			bio_endio(bio);
-> +			return;
-> +		}
+>  		/*
+> @@ -913,8 +923,7 @@ xfs_submit_zone_reset_bio(
+>  		}
 >  		bio->bi_opf &= ~REQ_OP_ZONE_RESET;
 >  		bio->bi_opf |= REQ_OP_DISCARD;
->  		bio->bi_iter.bi_size =
->  			XFS_FSB_TO_B(rtg_mount(rtg), rtg_blocks(rtg));
+> -		bio->bi_iter.bi_size =
+> -			XFS_FSB_TO_B(rtg_mount(rtg), rtg_blocks(rtg));
+> +		bio->bi_iter.bi_size = XFS_FSB_TO_B(mp, rtg_blocks(rtg));
 >  	}
 >  
-> -	return true;
-> +	submit_bio(bio);
-> +}
-> +
-> +static void xfs_bio_wait_endio(struct bio *bio)
-> +{
-> +	complete(bio->bi_private);
->  }
->  
->  int
->  xfs_zone_gc_reset_sync(
->  	struct xfs_rtgroup	*rtg)
->  {
-> -	int			error = 0;
-> +	DECLARE_COMPLETION_ONSTACK(done);
->  	struct bio		bio;
-> +	int			error;
->  
->  	bio_init(&bio, rtg_mount(rtg)->m_rtdev_targp->bt_bdev, NULL, 0,
-> -			REQ_OP_ZONE_RESET);
-> -	if (xfs_zone_gc_prepare_reset(&bio, rtg))
-> -		error = submit_bio_wait(&bio);
-> -	bio_uninit(&bio);
-> +			REQ_OP_ZONE_RESET | REQ_SYNC);
-> +	bio.bi_private = &done;
-> +	bio.bi_end_io = xfs_bio_wait_endio;
-> +	xfs_submit_zone_reset_bio(rtg, &bio);
-> +	wait_for_completion_io(&done);
->  
-> +	error = blk_status_to_errno(bio.bi_status);
-> +	bio_uninit(&bio);
->  	return error;
->  }
->  
-> @@ -961,15 +976,7 @@ xfs_zone_gc_reset_zones(
->  		chunk->data = data;
->  		WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
->  		list_add_tail(&chunk->entry, &data->resetting);
-> -
-> -		/*
-> -		 * Also use the bio to drive the state machine when neither
-> -		 * zone reset nor discard is supported to keep things simple.
-> -		 */
-> -		if (xfs_zone_gc_prepare_reset(bio, rtg))
-> -			submit_bio(bio);
-> -		else
-> -			bio_endio(bio);
-> +		xfs_submit_zone_reset_bio(rtg, bio);
->  	} while (next);
->  }
->  
+>  	submit_bio(bio);
 > -- 
 > 2.47.3
 > 
