@@ -1,317 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B81673148A6;
-	Wed, 28 Jan 2026 16:30:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43C0309EE7;
+	Wed, 28 Jan 2026 16:42:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769617825; cv=none; b=IOtyl/iRlA2BPvcmgKmJutt4MoutMEK4dj1CEHwgrEkXrU1IdMgM3Ak52eSwJmbfT5BQxxZSAYr/oKssmkuNc6Vy9x9tn2pXkqWDyVUeuAyExyMmjCnqMyFFckVeo+mhh3KU6xwhblE6/b+wxnFJ9TZH81yng33Aqc0RitlDaOI=
+	t=1769618540; cv=none; b=u2HpQP7Wk89a29z6YQ+X5Mw2eHkMqyKnvtsX9Cr5TAcKj6vQo1J63Tv0vpJQX9WWUb2MfZyKYk/eyQiAXthYa6yXpnTmpZ5mlY3E+SNErJoF4S1YSWlFMQzXulpdrbwUAVLndP0saMJRRYrK9YWhgolHeVvYOtJVGPIcpv6yMdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769617825; c=relaxed/simple;
-	bh=9DFeQhH17k3ORAyeTtciuBwXLMRcyeAQGqLayswUMTI=;
+	s=arc-20240116; t=1769618540; c=relaxed/simple;
+	bh=SNJXD35eVCt4afuRJtKKodF8fq4jg6LQVumkPLANIVk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jfFz7+GtBHbd/BuD57eJHoCrn56gMBs7gKp8yUqmes12hb2xDmP1/5b94vDQpuFRx/newaPGwt4euENdEYg8I8SJUivLbj5qbM5KMx4p89S9EAyTWD3eoW11q4jwvnFm3UHHedciWNzzPTwP7jdrq47Z+9Lc4U1oInVELQ+UBac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oFayFCeA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ic26fKsGJq8/zmsZlScZpp1kALvCf1U3MArA4RWcop2q1/RD1Arev9+pIAt3m8/UclJ+jJq+/M6JO7gZd+mJlVQCKMGHmOg03bOHE0d9WToRqZsUZ1tp9JKUH8KuKFfvTWi/IT8bwjDp9RoygPPkjS8MvNBIwSaXDxx6kne6/ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8s71D0J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oFayFCeA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FFC4C4CEF1;
-	Wed, 28 Jan 2026 16:30:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8s71D0J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46EDBC4CEF1;
+	Wed, 28 Jan 2026 16:42:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769617825;
-	bh=9DFeQhH17k3ORAyeTtciuBwXLMRcyeAQGqLayswUMTI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oFayFCeAFKw6YBRBmDr/dgQbBqzoJTVc2rPdB9AgOV8MpxXrvV1GUImqwmMheOwlo
-	 vF858e6IBSS2JxlH/O8xJGDkI+l3S8HMbxd4BP4MamPFtvGJ5t0tpZzPqi5PemOWws
-	 CFEAl+6q3CNPLWt1cmZ+7lLXCkC8FYyhPfpQjRmzbNgLJHZALWz76DYXALTgGNv5bM
-	 b29jn2BS56uuCU/zK+n1+7OftAYTeOHwXLPbVDSgaSgdRVvbHNOZVZXvFkwObKh8KB
-	 iKLLd0hfMyflzk6ZlSHNS9/KEJD65hjyJ8SSOCJwIRF87Y0nFWkrzWKLDAsEjh1Jdl
-	 waO5x09egalvA==
-Date: Wed, 28 Jan 2026 08:30:24 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/15] iomap: support T10 protection information
-Message-ID: <20260128163024.GY5945@frogsfrogsfrogs>
-References: <20260128161517.666412-1-hch@lst.de>
- <20260128161517.666412-15-hch@lst.de>
+	s=k20201202; t=1769618539;
+	bh=SNJXD35eVCt4afuRJtKKodF8fq4jg6LQVumkPLANIVk=;
+	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+	b=d8s71D0Jiri/HzOzxDfm7w2z1jRumfFJ14bBvzYde9c8zJqiAb5LTj+XghLRAS7HH
+	 YHCkFc5yG0DHf6DTYgSsqqFz9ZZOCMjzUhKZmiHnKOSESzxQJ+3qsH8wdfweznxUWZ
+	 ncgJIYjJ+1aObUj9/4ickMscagxE60xYCRYV1DMJLjbhpnbNqOfbJ1RaDB4z/Gp+N3
+	 N+B11xlar6E4awd1JoyOjYfXzcqJ38Kma4bnSU+63CdfeTeo6hLTQyzcXAkNWjJS55
+	 6fsVmCLNMmZAEi64md7uSARpC1eh2nwbn/LhUhJ4VXVx2h+lKP/rzw1raptZ7WnQY/
+	 0WDZqAv4ZB8cA==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+	id DF7C4CE1980; Wed, 28 Jan 2026 08:42:18 -0800 (PST)
+Date: Wed, 28 Jan 2026 08:42:18 -0800
+From: "Paul E. McKenney" <paulmck@kernel.org>
+To: Kunwu Chan <kunwu.chan@hotmail.com>
+Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	"rcu@vger.kernel.org" <rcu@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>
+Subject: Re: rcu stalls during fstests runs for xfs
+Message-ID: <fc611e8e-0da9-4b88-83ef-092d300307e3@paulmck-laptop>
+Reply-To: paulmck@kernel.org
+References: <aXdO52wh2rqTUi1E@shinmob>
+ <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260128161517.666412-15-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
 
-On Wed, Jan 28, 2026 at 05:15:09PM +0100, Christoph Hellwig wrote:
-> Add support for generating / verifying protection information in iomap.
-> This is done by hooking into the bio submission and then using the
-> generic PI helpers.  Compared to just using the block layer auto PI
-> this extends the protection envelope and also prepares for eventually
-> passing through PI from userspace at least for direct I/O.
+On Wed, Jan 28, 2026 at 05:55:01PM +0800, Kunwu Chan wrote:
+> On 1/26/26 19:30, Shinichiro Kawasaki wrote:
+> >  kernel: xfs/for-next, 51aba4ca399, v6.19-rc5+
+> >      block device: dm-linear on HDD (non-zoned)
+> >      xfs: zoned
 > 
-> To generate or verify PI, the file system needs to set the
-> IOMAP_F_INTEGRITY flag on the iomap for the request, and ensure the
-> ioends are used for all integrity I/O.  Additionally the file system
-> must defer read I/O completions to user context so that the guard
-> tag validation isn't run from interrupt context.
+> I had a quick look at the attached logs. Across the different runs, the
+> stall traces consistently show CPUs spending extended time in
+> |mm_get_cid()|along the mm/sched context switch path.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Tested-by: Anuj Gupta <anuj20.g@samsung.com>
+> This doesn’t seem to indicate an immediate RCU issue by itself, but it
+> raises the question of whether context switch completion can be delayed
+> for unusually long periods under these test configurations.
 
-Thanks for the commit message update;
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Thank you all!
 
---D
+Us RCU guys looked at this and it also looks to us that at least one
+part of this issue is that mm_get_cid() is spinning.  This is being
+investigated over here:
 
-> ---
->  fs/iomap/bio.c        | 24 +++++++++++++++++++++---
->  fs/iomap/direct-io.c  | 15 ++++++++++++++-
->  fs/iomap/internal.h   | 13 +++++++++++++
->  fs/iomap/ioend.c      | 20 ++++++++++++++++++--
->  include/linux/iomap.h |  7 +++++++
->  5 files changed, 73 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
-> index b4de67bdd513..f989ffcaac96 100644
-> --- a/fs/iomap/bio.c
-> +++ b/fs/iomap/bio.c
-> @@ -3,6 +3,7 @@
->   * Copyright (C) 2010 Red Hat, Inc.
->   * Copyright (C) 2016-2023 Christoph Hellwig.
->   */
-> +#include <linux/bio-integrity.h>
->  #include <linux/iomap.h>
->  #include <linux/pagemap.h>
->  #include "internal.h"
-> @@ -17,6 +18,8 @@ static u32 __iomap_read_end_io(struct bio *bio, int error)
->  		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
->  		folio_count++;
->  	}
-> +	if (bio_integrity(bio))
-> +		fs_bio_integrity_free(bio);
->  	bio_put(bio);
->  	return folio_count;
->  }
-> @@ -34,7 +37,11 @@ u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend)
->  static void iomap_bio_submit_read(const struct iomap_iter *iter,
->  		struct iomap_read_folio_ctx *ctx)
->  {
-> -	submit_bio(ctx->read_ctx);
-> +	struct bio *bio = ctx->read_ctx;
-> +
-> +	if (iter->iomap.flags & IOMAP_F_INTEGRITY)
-> +		fs_bio_integrity_alloc(bio);
-> +	submit_bio(bio);
->  }
->  
->  static struct bio_set *iomap_read_bio_set(struct iomap_read_folio_ctx *ctx)
-> @@ -91,6 +98,7 @@ int iomap_bio_read_folio_range(const struct iomap_iter *iter,
->  
->  	if (!bio ||
->  	    bio_end_sector(bio) != iomap_sector(&iter->iomap, iter->pos) ||
-> +	    bio->bi_iter.bi_size > iomap_max_bio_size(&iter->iomap) - plen ||
->  	    !bio_add_folio(bio, folio, plen, offset_in_folio(folio, iter->pos)))
->  		iomap_read_alloc_bio(iter, ctx, plen);
->  	return 0;
-> @@ -107,11 +115,21 @@ int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
->  		struct folio *folio, loff_t pos, size_t len)
->  {
->  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> +	sector_t sector = iomap_sector(srcmap, pos);
->  	struct bio_vec bvec;
->  	struct bio bio;
-> +	int error;
->  
->  	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
-> -	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
-> +	bio.bi_iter.bi_sector = sector;
->  	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
-> -	return submit_bio_wait(&bio);
-> +	if (srcmap->flags & IOMAP_F_INTEGRITY)
-> +		fs_bio_integrity_alloc(&bio);
-> +	error = submit_bio_wait(&bio);
-> +	if (srcmap->flags & IOMAP_F_INTEGRITY) {
-> +		if (!error)
-> +			error = fs_bio_integrity_verify(&bio, sector, len);
-> +		fs_bio_integrity_free(&bio);
-> +	}
-> +	return error;
->  }
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 952815eb5992..831378a6ced4 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -3,6 +3,7 @@
->   * Copyright (C) 2010 Red Hat, Inc.
->   * Copyright (c) 2016-2025 Christoph Hellwig.
->   */
-> +#include <linux/bio-integrity.h>
->  #include <linux/blk-crypto.h>
->  #include <linux/fscrypt.h>
->  #include <linux/pagemap.h>
-> @@ -215,6 +216,9 @@ static void __iomap_dio_bio_end_io(struct bio *bio, bool inline_completion)
->  {
->  	struct iomap_dio *dio = bio->bi_private;
->  
-> +	if (bio_integrity(bio))
-> +		fs_bio_integrity_free(bio);
-> +
->  	if (dio->flags & IOMAP_DIO_BOUNCE) {
->  		bio_iov_iter_unbounce(bio, !!dio->error,
->  				dio->flags & IOMAP_DIO_USER_BACKED);
-> @@ -325,8 +329,10 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
->  	bio->bi_private = dio;
->  	bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> +
->  	if (dio->flags & IOMAP_DIO_BOUNCE)
-> -		ret = bio_iov_iter_bounce(bio, dio->submit.iter, BIO_MAX_SIZE);
-> +		ret = bio_iov_iter_bounce(bio, dio->submit.iter,
-> +				iomap_max_bio_size(&iter->iomap));
->  	else
->  		ret = bio_iov_iter_get_pages(bio, dio->submit.iter,
->  					     alignment - 1);
-> @@ -343,6 +349,13 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
->  		goto out_put_bio;
->  	}
->  
-> +	if (iter->iomap.flags & IOMAP_F_INTEGRITY) {
-> +		if (dio->flags & IOMAP_DIO_WRITE)
-> +			fs_bio_integrity_generate(bio);
-> +		else
-> +			fs_bio_integrity_alloc(bio);
-> +	}
-> +
->  	if (dio->flags & IOMAP_DIO_WRITE)
->  		task_io_account_write(ret);
->  	else if ((dio->flags & IOMAP_DIO_USER_BACKED) &&
-> diff --git a/fs/iomap/internal.h b/fs/iomap/internal.h
-> index b39dbc17e3f0..74e898b196dc 100644
-> --- a/fs/iomap/internal.h
-> +++ b/fs/iomap/internal.h
-> @@ -4,6 +4,19 @@
->  
->  #define IOEND_BATCH_SIZE	4096
->  
-> +/*
-> + * Normally we can build bios as big as the data structure supports.
-> + *
-> + * But for integrity protected I/O we need to respect the maximum size of the
-> + * single contiguous allocation for the integrity buffer.
-> + */
-> +static inline size_t iomap_max_bio_size(const struct iomap *iomap)
-> +{
-> +	if (iomap->flags & IOMAP_F_INTEGRITY)
-> +		return max_integrity_io_size(bdev_limits(iomap->bdev));
-> +	return BIO_MAX_SIZE;
-> +}
-> +
->  u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend);
->  u32 iomap_finish_ioend_direct(struct iomap_ioend *ioend);
->  
-> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-> index 72f20e8c8893..a2931f8c454c 100644
-> --- a/fs/iomap/ioend.c
-> +++ b/fs/iomap/ioend.c
-> @@ -2,6 +2,7 @@
->  /*
->   * Copyright (c) 2016-2025 Christoph Hellwig.
->   */
-> +#include <linux/bio-integrity.h>
->  #include <linux/iomap.h>
->  #include <linux/list_sort.h>
->  #include <linux/pagemap.h>
-> @@ -59,6 +60,8 @@ static u32 iomap_finish_ioend_buffered_write(struct iomap_ioend *ioend)
->  		folio_count++;
->  	}
->  
-> +	if (bio_integrity(bio))
-> +		fs_bio_integrity_free(bio);
->  	bio_put(bio);	/* frees the ioend */
->  	return folio_count;
->  }
-> @@ -92,6 +95,8 @@ int iomap_ioend_writeback_submit(struct iomap_writepage_ctx *wpc, int error)
->  		return error;
->  	}
->  
-> +	if (wpc->iomap.flags & IOMAP_F_INTEGRITY)
-> +		fs_bio_integrity_generate(&ioend->io_bio);
->  	submit_bio(&ioend->io_bio);
->  	return 0;
->  }
-> @@ -113,10 +118,13 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
->  }
->  
->  static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
-> -		u16 ioend_flags)
-> +		unsigned int map_len, u16 ioend_flags)
->  {
->  	struct iomap_ioend *ioend = wpc->wb_ctx;
->  
-> +	if (ioend->io_bio.bi_iter.bi_size >
-> +	    iomap_max_bio_size(&wpc->iomap) - map_len)
-> +		return false;
->  	if (ioend_flags & IOMAP_IOEND_BOUNDARY)
->  		return false;
->  	if ((ioend_flags & IOMAP_IOEND_NOMERGE_FLAGS) !=
-> @@ -181,7 +189,7 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
->  	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
->  		ioend_flags |= IOMAP_IOEND_BOUNDARY;
->  
-> -	if (!ioend || !iomap_can_add_to_ioend(wpc, pos, ioend_flags)) {
-> +	if (!ioend || !iomap_can_add_to_ioend(wpc, pos, map_len, ioend_flags)) {
->  new_ioend:
->  		if (ioend) {
->  			error = wpc->ops->writeback_submit(wpc, 0);
-> @@ -258,6 +266,14 @@ static u32 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
->  
->  	if (!atomic_dec_and_test(&ioend->io_remaining))
->  		return 0;
-> +
-> +	if (!ioend->io_error &&
-> +	    bio_integrity(&ioend->io_bio) &&
-> +	    bio_op(&ioend->io_bio) == REQ_OP_READ) {
-> +		ioend->io_error = fs_bio_integrity_verify(&ioend->io_bio,
-> +			ioend->io_sector, ioend->io_size);
-> +	}
-> +
->  	if (ioend->io_flags & IOMAP_IOEND_DIRECT)
->  		return iomap_finish_ioend_direct(ioend);
->  	if (bio_op(&ioend->io_bio) == REQ_OP_READ)
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index de730970998f..f0e3ed8ad6a6 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -65,6 +65,8 @@ struct vm_fault;
->   *
->   * IOMAP_F_ATOMIC_BIO indicates that (write) I/O will be issued as an atomic
->   * bio, i.e. set REQ_ATOMIC.
-> + *
-> + * IOMAP_F_INTEGRITY indicates that the filesystems handles integrity metadata.
->   */
->  #define IOMAP_F_NEW		(1U << 0)
->  #define IOMAP_F_DIRTY		(1U << 1)
-> @@ -79,6 +81,11 @@ struct vm_fault;
->  #define IOMAP_F_BOUNDARY	(1U << 6)
->  #define IOMAP_F_ANON_WRITE	(1U << 7)
->  #define IOMAP_F_ATOMIC_BIO	(1U << 8)
-> +#ifdef CONFIG_BLK_DEV_INTEGRITY
-> +#define IOMAP_F_INTEGRITY	(1U << 9)
-> +#else
-> +#define IOMAP_F_INTEGRITY	0
-> +#endif /* CONFIG_BLK_DEV_INTEGRITY */
->  
->  /*
->   * Flag reserved for file system specific usage
-> -- 
-> 2.47.3
-> 
-> 
+https://lore.kernel.org/all/877bt29cgv.ffs@tglx/
+https://lore.kernel.org/all/bdfea828-4585-40e8-8835-247c6a8a76b0@linux.ibm.com/
+https://lore.kernel.org/all/87y0lh96xo.ffs@tglx/
+
+I have seen the static-key pattern called out by Dave Chinner when running
+KASAN on large systems.  We worked around this by disabling KASAN's use
+of static keys.  In case you were running KASAN in these tests.
+
+							Thanx, Paul
