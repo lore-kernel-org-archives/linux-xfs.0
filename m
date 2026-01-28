@@ -1,137 +1,142 @@
-Received: from mail-pf1-f195.google.com (mail-pf1-f195.google.com [209.85.210.195])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08F23242AA
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 17:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E1832470D
+	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 17:14:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769619658; cv=none; b=RX1ycsspmqlaaAW961txOThWHexGp1wzLUn75PKmj9syGvM4tDL3cr9NeX5faSkF60mmZgWPDBA++Qy2xTJMXC/ucltDCyrntgieyUnIFbs55qbl4KKenofNPKOZHFzofQUPhwX6ycqGAw4YBydQ5hXll6RMGhSU3mMDghjDWPw=
+	t=1769620484; cv=none; b=tjZ+yu9psqN8Z32R0+M2izOBBtiFPl6CrzMGpiY1kgPKEp9GkoWGbj0tbIcusP4GIe8DKhgAq4sW09FAN3hSlFzW2AOUCwaNRIZTdbIGkfNgOnxhGLvknv3teS3oK2xnEwxsODLQELxRY5njEKLHbeWQOUuHaTAjIxxWoONdT8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769619658; c=relaxed/simple;
-	bh=Tlb52YHNrDj99LsdsTBfFl+S50u6R5KH2CYpLX9J7yM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QkaVrzrPtxqQzKkesttr/jWZXeMblNNliMgOuPD5vW+QWJT2P5+Dc+KrP2p1EfV4dBCQaTuVn35bdT22PipB7X3mjF+1HrwY42QenM6mQUzBtD5npgovZMqEo7hMIMRHil3Ob+ZcTiLJ/n9sgTY9+v1nQ6M1gybXVeJl4Ebx2k4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hmdA56Ie; arc=none smtp.client-ip=209.85.210.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769620484; c=relaxed/simple;
+	bh=YxZyLPOTh/ndD6bOt2mwaGc8rlribDJA6mixclynYyU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nv5wbgswz/AXHP5J+xJCDgg4sloeom1fDRFhQi9faZy3xYyvA668hy/NyZzGJcFOwRgW7nOM8ljQkXHd1Za6Gn+AmgfEG5mPsAcu6NE6fJiNF+z9gXkW/H+7Vmdv3rftYN2cW2RJ2oVj+LtRSKNvk3Z5o9S4tIPFuoox+61dEO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aBHtFTg5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hmdA56Ie"
-Received: by mail-pf1-f195.google.com with SMTP id d2e1a72fcca58-81f47610542so22267b3a.0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 09:00:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769619656; x=1770224456; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ar4opeTIWzI6jKb4ZtfUSo/2Bh2d2vZYjlngqPaI3Ow=;
-        b=hmdA56IeMenWU1OATdSZb3GPBgj0AD1YJWjYHvY0OnQQdlhwqTsUpo/HeLr6xScG/m
-         jaVgZ/xlIC/m+cyj4HfPwWrnv0C1vS5tXxFW+9GX3bnjCBt2ktH1zFbhC46It0hAVOjg
-         8vjhuLQL6siDx8xK61G5KtqVrRfmBiy3iWILdctIQWtKRWu6OgFkAXzRfGWY7cx+WHVI
-         KZWbhcnjoCfr7oL6uaDmkLtlZjN05laUWgY2tYBUcxhq1wSZiU81HbZ3XeBMEBg2njJj
-         j3fK7JCHZW4TI8YktAEbhKB/bgmycgdxwey1TOCPT8dLVm3rkpbmfPPRRdCb7XyQxwmQ
-         f+7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769619656; x=1770224456;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ar4opeTIWzI6jKb4ZtfUSo/2Bh2d2vZYjlngqPaI3Ow=;
-        b=LxltMvO2lrXVH4tY+IABRv1LbbbUhygzHS36qsWQxNIviApRWG9PUBvhYiCdKM1nrN
-         S8adRaH7Yyr3hrmVdgpg2JUlM5LfLv56oPpTmoDyWXU3YgbMV7Zk4ez9qN9n0NHyeQmm
-         gTZbkL6+eFfI7E/1P7tacmn5Ixss8JuNtDChe7ZLeRX18lqsqofaC/aHDPXnAtkpapR+
-         ViKjPsYm2KHfjd6FaVZqSw8ghcSmCAxSovg8XmjhvVlL2ZOr44+GmHAZc/QB2parLCzn
-         K7fT+1iGi4Ez0wxNkZeSuShAJ0s557SfIvwrAsZLRcpxuinkk4cbcAs2xDQdQvYobj7l
-         AYZA==
-X-Gm-Message-State: AOJu0Yw2UzbQ2XG7szMDYNBCMC7gEDZTGTPttHt3Dx79eqQm/c3hPFJi
-	wzTPOdUHyutyq5Cy0ECdb1YrgmW8+N1W3dfwpzw2QORVkuIuoOer7LmVIsUWi/pv
-X-Gm-Gg: AZuq6aJhULRgkW2GuqSi0E9jKhRgO5ZZbE9z/P1iYjnUkAOBoa2ZgDdrPe0YM38xC15
-	mgjKtqOKtRuAt1FVdqtMNRL7R/Szd5kfBddpxku94/neheg651SEskPhNDwiOfDqWWM/NG2S0xk
-	ekcLs38sv65CiXi1GPP8LmSCyw/+tJRs/2y8/ffQqgcW3BRHCZt1RCoXIAUr79y2dtyD01Yaf0n
-	qXiH4ehlEb2tacXb//QkanyN+k7dhG1XAsk1jn1RA+MHd0gcxVopXRPaZbGKw0x/i0B90q6WrUz
-	Pv6llXOHrf8JVeptapUDb4g1PoOq9nQDaFStBs7b5IW4L/7v64brw09gbjvpEUIDTMnsznE8pXd
-	V26luF1UV3Kiz7/dsNyKkbIjTPIvhsBd9GlGR3OPgQhRwX+e/zgsyrzUhwmJ3196wzz/9bIhUcX
-	RPiL6dM54ij1YC9IZG/OdSxss1kuFeFGJF
-X-Received: by 2002:a17:90b:384e:b0:34a:4a8d:2e2e with SMTP id 98e67ed59e1d1-353fed7f348mr6029521a91.17.1769619656138;
-        Wed, 28 Jan 2026 09:00:56 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.208.177])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3541110e2e4sm144716a91.13.2026.01.28.09.00.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jan 2026 09:00:55 -0800 (PST)
-Message-ID: <94c5e9cc-5f60-4c74-a344-2dd868844352@gmail.com>
-Date: Wed, 28 Jan 2026 22:30:50 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aBHtFTg5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE7E1C4CEF1;
+	Wed, 28 Jan 2026 17:14:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769620483;
+	bh=YxZyLPOTh/ndD6bOt2mwaGc8rlribDJA6mixclynYyU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aBHtFTg5ByInyu4n/Tf4KdsKazf/9jpQZ9Mn2bHNL3M0FmJfwBD4rgnGHaVaMfWN+
+	 hlgZqt6gJYd0k3upDXgMrNjHJSlxj+twJ51CDX0sAEfC/Qo0TG24rke5zxJQGyRTJE
+	 C+iOKWzX8vbQHT+SW2e+56Cbow9VDoE+5u6FspzYOnMr9bYeiD9os10O2hQCxCMjYR
+	 2+nFh/ndlWQu/+dQu98dQ/iZPQNHMCXhWdMVVgPj4AqmM5y8olk9SKiSWS2XeWOtcF
+	 lrQmAKhnnDZECvY7oL6A2e2KkPypd2L4IVJD79bSUbk43I8QtcTlw1lpiEDemTlifl
+	 gkmHt1CLHEuOA==
+Date: Wed, 28 Jan 2026 09:14:43 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+	hch@infradead.org
+Subject: Re: [PATCH v1 2/2] xfs: Fix in xfs_rtalloc_query_range()
+Message-ID: <20260128171443.GL5966@frogsfrogsfrogs>
+References: <cover.1769613182.git.nirjhar.roy.lists@gmail.com>
+ <43e717d7864a2662c067d8013e462209c7b2952a.1769613182.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/2] xfs: Move ASSERTion location in
- xfs_rtcopy_summary()
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- hch@infradead.org, Carlos Maiolino <cem@kernel.org>
-References: <cover.1769613182.git.nirjhar.roy.lists@gmail.com>
- <a904c5bcb5b4fc2c7c2429646251a7f429a67d5a.1769613182.git.nirjhar.roy.lists@gmail.com>
- <20260128161324.GU5945@frogsfrogsfrogs>
-Content-Language: en-US
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20260128161324.GU5945@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <43e717d7864a2662c067d8013e462209c7b2952a.1769613182.git.nirjhar.roy.lists@gmail.com>
 
+On Wed, Jan 28, 2026 at 08:44:35PM +0530, Nirjhar Roy (IBM) wrote:
+> xfs_rtalloc_query_range() should not return 0 by doing a NOP when
+> start == end i.e, when the rtgroup size is 1. This causes incorrect
+> calculation of free rtextents i.e, the count is reduced by 1 since
+> the last rtgroup's rtextent count is not taken and hence xfs_scrub
+> throws false summary counter report (from xchk_fscounters()).
+> 
+> A simple way to reproduce the above bug:
+> 
+> $ mkfs.xfs -f -m metadir=1 \
+> 	-r rtdev=/dev/loop2,extsize=4096,rgcount=4,size=1G \
+> 	-d size=1G /dev/loop1
+> meta-data=/dev/loop1             isize=512    agcount=4, agsize=65536 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+>          =                       exchange=1   metadir=1
+> data     =                       bsize=4096   blocks=262144, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> log      =internal log           bsize=4096   blocks=16384, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =/dev/loop2             extsz=4096   blocks=262144, rtextents=262144
+>          =                       rgcount=4    rgsize=65536 extents
+>          =                       zoned=0      start=0 reserved=0
+> Discarding blocks...Done.
+> Discarding blocks...Done.
+> $ mount -o rtdev=/dev/loop2 /dev/loop1 /mnt1/scratch
+> $ xfs_growfs -R $(( 65536 * 4 + 1 ))  /mnt1/scratch
+> meta-data=/dev/loop1             isize=512    agcount=4, agsize=65536 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+>          =                       exchange=1   metadir=1
+> data     =                       bsize=4096   blocks=262144, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> log      =internal log           bsize=4096   blocks=16384, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =/dev/loop2             extsz=4096   blocks=262144, rtextents=262144
+>          =                       rgcount=4    rgsize=65536 extents
+>          =                       zoned=0      start=0 reserved=0
+> calling xfsctl with in.newblocks = 262145
+> realtime blocks changed from 262144 to 262145
+> $ xfs_scrub -n   -v /mnt1/scratch
+> Phase 1: Find filesystem geometry.
+> /mnt1/scratch: using 2 threads to scrub.
+> Phase 2: Check internal metadata.
+> Corruption: rtgroup 4 realtime summary: Repairs are required.
+> Phase 3: Scan all inodes.
+> Phase 5: Check directory tree.
+> Info: /mnt1/scratch: Filesystem has errors, skipping connectivity checks.
+> Phase 7: Check summary counters.
+> Corruption: filesystem summary counters: Repairs are required.
+> 125.0MiB data used;  8.0KiB realtime data used;  15 inodes used.
+> 64.3MiB data found; 4.0KiB realtime data found; 18 inodes found.
+> 18 inodes counted; 18 inodes checked.
+> Phase 8: Trim filesystem storage.
+> /mnt1/scratch: corruptions found: 2
+> /mnt1/scratch: Re-run xfs_scrub without -n.
+> 
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 
-On 1/28/26 21:43, Darrick J. Wong wrote:
-> On Wed, Jan 28, 2026 at 08:44:34PM +0530, Nirjhar Roy (IBM) wrote:
->> We should ASSERT on a variable before using it, so that we
->> don't end up using an illegal value.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->> ---
->>   fs/xfs/xfs_rtalloc.c | 6 +++++-
->>   1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
->> index a12ffed12391..9fb975171bf8 100644
->> --- a/fs/xfs/xfs_rtalloc.c
->> +++ b/fs/xfs/xfs_rtalloc.c
->> @@ -112,6 +112,11 @@ xfs_rtcopy_summary(
->>   			error = xfs_rtget_summary(oargs, log, bbno, &sum);
->>   			if (error)
->>   				goto out;
->> +			if (sum < 0) {
->> +				ASSERT(sum >= 0);
->> +				error = -EFSCORRUPTED;
->> +				goto out;
-> Thanks for making this a bailout case,
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Yeah, that looks right.  I can also reproduce it with:
 
-Thank you for your suggestion.
+# mkfs.xfs -m metadir=1 -r rtdev=/dev/sdb /dev/sda -r rgsize=65536b,size=131073b -f
+# mount /dev/sda /mnt -o rtdev=/dev/sdb
+# xfs_scrub -dTvn /mnt
 
---NR
+Cc: <stable@vger.kernel.org> # v6.13
+Fixes: e3088ae2dcae3c ("xfs: move RT bitmap and summary information to the rtgroup")
 
->
-> --D
->
->> +			}
->>   			if (sum == 0)
->>   				continue;
->>   			error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
->> @@ -120,7 +125,6 @@ xfs_rtcopy_summary(
->>   			error = xfs_rtmodify_summary(nargs, log, bbno, sum);
->>   			if (error)
->>   				goto out;
->> -			ASSERT(sum > 0);
->>   		}
->>   	}
->>   	error = 0;
->> -- 
->> 2.43.5
->>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
+--D
+> ---
+>  fs/xfs/libxfs/xfs_rtbitmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index 618061d898d4..8f552129ffcc 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -1170,7 +1170,7 @@ xfs_rtalloc_query_range(
+>  
+>  	if (start > end)
+>  		return -EINVAL;
+> -	if (start == end || start >= rtg->rtg_extents)
+> +	if (start >= rtg->rtg_extents)
+>  		return 0;
+>  
+>  	end = min(end, rtg->rtg_extents - 1);
+> -- 
+> 2.43.5
+> 
