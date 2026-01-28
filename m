@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE3624E4AF
-	for <linux-xfs@vger.kernel.org>; Wed, 28 Jan 2026 01:40:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8804A24DCE2;
+	Wed, 28 Jan 2026 01:42:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769564445; cv=none; b=gD96iuHGdYFP4RV/0OJ8vvYwOeCA/+iVBhlZvhgCn/eo1LMdEmMSlaVp3sMT4ZmWjflXAKnCk7TPBU2fg7vOhQ27cypy8DkKwjErvLhtWR7aDvOiLK/YHtvGmnnyis9X1V95uvgez3fd3ICyj6HRPx2hB+qn+WSHyGJ8kcZKdKY=
+	t=1769564576; cv=none; b=CDy2U0NmVxCbrFEx881Zq+Pme66+ED1Ogcbvl2QiaJbg2Yu1gNKNb+5abLtL5/MacjXoMKh3R1eBxXFXRoAXbMAFQpDPIK4L/uWBlYo3h/DTrAZzGhsbTBJeTtEtSeSVb7B1mflRV2znocNudlzXVtsNKToGqOPw6uISz6uOiXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769564445; c=relaxed/simple;
-	bh=cX71sceLLxxtosveaKlm9PJogSoOKTuCuorcox3FBnk=;
+	s=arc-20240116; t=1769564576; c=relaxed/simple;
+	bh=o6bobqa9ifM38ea0uEPiKBtaKssoMnhVgiRsC9iN2jk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qv/OvsTCHiTfsxf+q17Tuwb4NeUzXBkhubpKgMl4pJJXseJOK/XWQXKGBjFB4Q8VALjiYlMjk0SCNyHdidhYrwMCVkrp4hcMmunFeM2VUmZTc3OGFHLnGaIQ2Hvo8zDdGW0LqKMDd452Rqyoy2m2KdmAt+zVm432loDwhi/gKVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7C0cOyE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=h9K6O52Oy/nUwrGdaRqDEXPHk5CGjtxHCixj7EGfZHStNDMjQSKMjB3T+74d7cGp7k3X+vgsybsUN4Filp4DiYWx1y+qvkhBAaLKUYax+THskSAVWVZSkhTg/wM0xM7y+Z63qDUOYjhS+acJer0Hm0ZbnIsP1do6+Hmd0IYs19s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R6boIvUJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7C0cOyE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0642FC116C6;
-	Wed, 28 Jan 2026 01:40:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6boIvUJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13D96C116C6;
+	Wed, 28 Jan 2026 01:42:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769564445;
-	bh=cX71sceLLxxtosveaKlm9PJogSoOKTuCuorcox3FBnk=;
+	s=k20201202; t=1769564576;
+	bh=o6bobqa9ifM38ea0uEPiKBtaKssoMnhVgiRsC9iN2jk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F7C0cOyEQx03xrsSA12/XGo25wBSFY89WHMPZtTPoimGYTgnxaxQebG4lMr+vM20K
-	 MUtu+feuvaOGkWnISrrQUPD1m+phSsIttrvNT+6oCSGNbOUlB4b3mjZnrw25SZDWlQ
-	 KRH0tNy5vceqjtUTbYtNnCvI6pusMEtasnaq2pzm4fvOPmGyWexOWHKbd2v4/NUnAf
-	 oJ4DOXjfgVJ5b3+ifdnIiX25kDWtZ2DFqiHQ5afS31sKAlk36dahkMd7sQXHt/ESAX
-	 bO2DtdTVv+oOvX2Hz1pZlJ7BVwlgzW01RYXKv8G4AaKqL2WerCMIbOcLwqzwu8vHge
-	 JqZAVes9QrcNw==
-Date: Tue, 27 Jan 2026 17:40:44 -0800
+	b=R6boIvUJfAEZUX8FtoUKiAVDzxIr2RyJ37LbcnSFH0s8X0ekhSZdkCB/hdhbe3N5e
+	 FWV4jA+piRWqxmFsB36sBDAByLdPp17nY/A/NgMhVY7kJ9iipOsrVsFetmJYxxjBfM
+	 PSTiyj8km6QyZbI3mAzl6g8qD58JMqJmTjTF7Z7cAwQfxO989tNQe6k4xZe3G3CXjE
+	 tk0d4MCzf1+/0t78NG98kR3nH83N2ZcLY8/0BQVtGMDEDqJOtzzXp9S7/Kox5EQZir
+	 5d3dTdmcx4UVBfanRvkOfGRDjhY6MG/06GynihAOjuGO65FboShyDTUS3YmhonSTpv
+	 Qn5xjwOHHMiWg==
+Date: Tue, 27 Jan 2026 17:42:55 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/10] xfs: add sysfs stats for zoned GC
-Message-ID: <20260128014044.GJ5945@frogsfrogsfrogs>
-References: <20260127160619.330250-1-hch@lst.de>
- <20260127160619.330250-11-hch@lst.de>
+Cc: zlang@kernel.org, hans.holmberg@wdc.com, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: test zone reset error handling
+Message-ID: <20260128014255.GK5945@frogsfrogsfrogs>
+References: <20260127160906.330682-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,118 +42,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260127160619.330250-11-hch@lst.de>
+In-Reply-To: <20260127160906.330682-1-hch@lst.de>
 
-On Tue, Jan 27, 2026 at 05:05:50PM +0100, Christoph Hellwig wrote:
-> Add counters of read, write and zone_reset operations as well as
-> GC written bytes to sysfs.  This way they can be easily used for
-> monitoring tools and test cases.
+On Tue, Jan 27, 2026 at 05:09:06PM +0100, Christoph Hellwig wrote:
+> Add a test that exercises the zone gc error handling, aka shutting
+> down the file system or not mounting it using the new error
+> injection knob and stats.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/xfs/842     | 63 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/842.out |  2 ++
+>  2 files changed, 65 insertions(+)
+>  create mode 100755 tests/xfs/842
+>  create mode 100644 tests/xfs/842.out
+> 
+> diff --git a/tests/xfs/842 b/tests/xfs/842
+> new file mode 100755
+> index 000000000000..8f6c13f1b19c
+> --- /dev/null
+> +++ b/tests/xfs/842
+> @@ -0,0 +1,63 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Christoph Hellwig.
+> +#
+> +# FS QA Test No. 842
+> +#
+> +# Test that GC defragments sequentially written files.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick mount zone
+> +
+> +. ./common/filter
+> +. ./common/zoned
+> +
+> +_require_scratch
+> +_require_fs_sysfs stats/stats
+> +
+> +count_zone_resets() {
+> +	_get_fs_sysfs_attr $SCRATCH_DEV stats/stats | awk '/zoned/ {print $4}'
+> +}
+> +
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +
+> +# figure out how much space we need for 3 zones worth of user data...
+> +blocksize=`_scratch_xfs_get_sb_field blocksize`
+> +rgblocks=`_scratch_xfs_get_sb_field rgextents`
+> +rgsize=$((3 * rgblocks * blocksize))
+> +echo "blocksize=${blocksize}, rgblocks=${rgblocks}, rgsize=${rgsize}" >>$seqres.full 2>&1
+> +
+> +# .. and create a file system with that size
+> +_scratch_mkfs_sized $rgsize >>$seqres.full 2>&1
+> +
+> +SAVED_MOUNT_OPTIONS="$MOUNT_OPTIONS"
+> +export MOUNT_OPTIONS="$MOUNT_OPTIONS -o errortag=zone_reset"
+> +_try_scratch_mount || _notrun "mount option not supported"
+> +_require_xfs_scratch_zoned
+> +
+> +# fill the file system and remove the data again, this should trigger zone
+> +# resets that will fail due to the error detection
+> +dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M >/dev/null 2>&1
+> +sync $SCRATCH_MNT
+> +rm $SCRATCH_MNT/foo
+> +sync $SCRATCH_MNT
+> +sleep 1
+> +
+> +touch $SCRATCH_MNT/bar 2>/dev/null && _fail "file system not shutdown"
+> +
+> +# unmount the shutdown file system
+> +_scratch_unmount
+> +
+> +# try mounting with error injection still enabled.  This should fail.
+> +_try_scratch_mount && _fail "file system mounted despite zone reset errors"
 
-+1 for observability
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Is it necessary to _fail here explicitly?  Or could you just echo that
+string and let the golden output disturbance cause the test to fail?
 
 --D
 
-> ---
->  fs/xfs/xfs_stats.c   | 7 ++++++-
->  fs/xfs/xfs_stats.h   | 6 ++++++
->  fs/xfs/xfs_zone_gc.c | 7 +++++++
->  3 files changed, 19 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 9781222e0653..6d7f98afa31a 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -24,6 +24,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  	uint64_t	xs_write_bytes = 0;
->  	uint64_t	xs_read_bytes = 0;
->  	uint64_t	defer_relog = 0;
-> +	uint64_t	xs_gc_write_bytes = 0;
->  
->  	static const struct xstats_entry {
->  		char	*desc;
-> @@ -57,7 +58,8 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  		{ "rtrmapbt_mem",	xfsstats_offset(xs_rtrefcbt_2)	},
->  		{ "rtrefcntbt",		xfsstats_offset(xs_qm_dqreclaims)},
->  		/* we print both series of quota information together */
-> -		{ "qm",			xfsstats_offset(xs_xstrat_bytes)},
-> +		{ "qm",			xfsstats_offset(xs_gc_read_calls)},
-> +		{ "zoned",		xfsstats_offset(__pad1)},
->  	};
->  
->  	/* Loop over all stats groups */
-> @@ -77,6 +79,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  		xs_write_bytes += per_cpu_ptr(stats, i)->s.xs_write_bytes;
->  		xs_read_bytes += per_cpu_ptr(stats, i)->s.xs_read_bytes;
->  		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
-> +		xs_gc_write_bytes += per_cpu_ptr(stats, i)->s.xs_read_bytes;
->  	}
->  
->  	len += scnprintf(buf + len, PATH_MAX-len, "xpc %llu %llu %llu\n",
-> @@ -89,6 +92,8 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  #else
->  		0);
->  #endif
-> +	len += scnprintf(buf + len, PATH_MAX-len, "gc xpc %llu\n",
-> +			xs_gc_write_bytes);
->  
->  	return len;
->  }
-> diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-> index 15ba1abcf253..16dbbc0b72db 100644
-> --- a/fs/xfs/xfs_stats.h
-> +++ b/fs/xfs/xfs_stats.h
-> @@ -138,10 +138,16 @@ struct __xfsstats {
->  	uint32_t		xs_qm_dqwants;
->  	uint32_t		xs_qm_dquot;
->  	uint32_t		xs_qm_dquot_unused;
-> +/* Zone GC counters */
-> +	uint32_t		xs_gc_read_calls;
-> +	uint32_t		xs_gc_write_calls;
-> +	uint32_t		xs_gc_zone_reset_calls;
-> +	uint32_t		__pad1;
->  /* Extra precision counters */
->  	uint64_t		xs_xstrat_bytes;
->  	uint64_t		xs_write_bytes;
->  	uint64_t		xs_read_bytes;
-> +	uint64_t		xs_gc_write_bytes;
->  	uint64_t		defer_relog;
->  };
->  
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 570102184904..4bb647d3be41 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -712,6 +712,8 @@ xfs_zone_gc_start_chunk(
->  	data->scratch_head = (data->scratch_head + len) % data->scratch_size;
->  	data->scratch_available -= len;
->  
-> +	XFS_STATS_INC(mp, xs_gc_read_calls);
+> +# now try without the error injection
+> +MOUNT_OPTIONS="$SAVED_MOUNT_OPTIONS"
+> +_scratch_mount
 > +
->  	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
->  	list_add_tail(&chunk->entry, &data->reading);
->  	xfs_zone_gc_iter_advance(iter, irec.rm_blockcount);
-> @@ -815,6 +817,9 @@ xfs_zone_gc_write_chunk(
->  		return;
->  	}
->  
-> +	XFS_STATS_INC(mp, xs_gc_write_calls);
-> +	XFS_STATS_ADD(mp, xs_gc_write_bytes, chunk->len);
+> +# all three zones should be reset on mount
+> +nr_resets=$(count_zone_resets)
+> +echo "zone resets: $nr_resets"
 > +
->  	WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
->  	list_move_tail(&chunk->entry, &data->writing);
->  
-> @@ -911,6 +916,8 @@ xfs_submit_zone_reset_bio(
->  		return;
->  	}
->  
-> +	XFS_STATS_INC(mp, xs_gc_zone_reset_calls);
-> +
->  	bio->bi_iter.bi_sector = xfs_gbno_to_daddr(&rtg->rtg_group, 0);
->  	if (!bdev_zone_is_seq(bio->bi_bdev, bio->bi_iter.bi_sector)) {
->  		/*
+> +status=0
+> +exit
+> diff --git a/tests/xfs/842.out b/tests/xfs/842.out
+> new file mode 100644
+> index 000000000000..718805b5766e
+> --- /dev/null
+> +++ b/tests/xfs/842.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 842
+> +zone resets: 3
 > -- 
 > 2.47.3
 > 
