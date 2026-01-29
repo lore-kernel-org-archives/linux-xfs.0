@@ -1,140 +1,181 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f193.google.com (mail-pf1-f193.google.com [209.85.210.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 952E2313E39
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 15:50:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EA0E344DA6
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 17:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769701840; cv=none; b=uu9JVgZqlTMtfXF1dl3dNao5mwX6iecLsuTM7Rq5eYW7bm61PGAWKLzWse1CQAqKmQkkXOWy0Bb3l3jxDVVrj5yk6sRyBeorU/EbLNj6PjHlOZ+Haiwcd0iL84DOcCU7u4bijnV1CLnlteHhZOvV4Cfk0HecX4LIeAQ74F53cw4=
+	t=1769706643; cv=none; b=nTM9nMjs7z1/fWqT4yyYbL09TnI3L2U3HATQBjbMaqBW18uDI066V4pNQkIE0A1DPRv76Zi75RkAc3CdiFzFbQaOxyvB59096j6x855CIcqUUpsfzOukPLTyU7m+Z3Ni0KALEP3uMXjDX4NRzzOZualqsiV+bvTtwBdQYkDtC7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769701840; c=relaxed/simple;
-	bh=QiN6vhMYpKrmixvFZfsVjr03wit10DMQcKrz+pqH7Zg=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GZqO3Aq+sVCUWMxOST/0GFe+KHJVjk4MgB8ppUpT/SxZxhOS/KbBgM0detMyv+7hy0jZPJTmxJjBuwGk/qjjM61aHmnY2L3IB55ilhnzPYRmjo9KFZ604/NS8+fCVLJT5XX9QRYVYoqyqfvIE0DpB+0oLj1KupDhqQ1OTRxd1no=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YeUrBWYM; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1769706643; c=relaxed/simple;
+	bh=w/LNeWAXYVi9drVn8Wn8YDU6shA2Vgfehpd/XK7hKds=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=EEQou11Kbuw83SH/BvtOxURJ7S5LDC7Sl4VYb7Xb89kqAyzC0pYPjjnIouRndX6lbHZrX5bbGPNKA9ikqRENOagkfn0vdUU+6NhRK9AD16hwRfErfgYpzVaXRWy5VOPn8Ldxxxmwm0nMLkgUmlkuNbL0DjPNspD1eucGgTvKIR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mL1jyJjV; arc=none smtp.client-ip=209.85.210.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YeUrBWYM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1769701837;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ETxct+U0k1JHYnUxUYfwnBNddLgISExOM0VStlFt+sk=;
-	b=YeUrBWYM+mgL/2DT8yk/Jdpmzu/ASVi7ynyH2dmbSuBwUngLDm9SDl5TbYK8fDdAI+m64F
-	dafrdB131FOMok+Dj3ERXoBj4Iy4b65Y8pLsUAn6u0yuFKeMqbWH7ZmVeUau4HdX1CTvoK
-	Yqk07GsRY7k4dOqEaTOjdFfYQoAplQA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-648-yXc_ZFm0MKWitx72yWpE2w-1; Thu,
- 29 Jan 2026 10:50:33 -0500
-X-MC-Unique: yXc_ZFm0MKWitx72yWpE2w-1
-X-Mimecast-MFC-AGG-ID: yXc_ZFm0MKWitx72yWpE2w_1769701833
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E5B061956046;
-	Thu, 29 Jan 2026 15:50:32 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.81.70])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6A4681800840;
-	Thu, 29 Jan 2026 15:50:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v2 5/5] xfs: replace zero range flush with folio batch
-Date: Thu, 29 Jan 2026 10:50:28 -0500
-Message-ID: <20260129155028.141110-6-bfoster@redhat.com>
-In-Reply-To: <20260129155028.141110-1-bfoster@redhat.com>
-References: <20260129155028.141110-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mL1jyJjV"
+Received: by mail-pf1-f193.google.com with SMTP id d2e1a72fcca58-8230c839409so1120006b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 09:10:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769706640; x=1770311440; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=749boWrxR9GohsKOjzF9HdRImmXyhBe8V9MDPxWLjdQ=;
+        b=mL1jyJjVH9WwHLTxca4teM+ynT8doh3/IdKHAxO0t3X5ANmi+D754J/x9CeBuLRnZw
+         TM1y0bh7I1Xmxg46v1vlHYFqswjKbGxHNi9JCNQjielovt0cU7Ruy/tiy+pYS4bGIg6F
+         vs/WY6cOMoTDxaKFGbgGu7PfP9wqmZFcnpcAzJs6WJbH6Z8VRgITarBRZLjxIqEpi3En
+         C92cps3SvmoWbiv8sLidVxEq1KoHIUXRSVAvPfpqLxg/T97EwWoMp6uJ+XYqPuJ15pB7
+         O9i8tU8gCDByvP1aWk1FId07C0/MsjetGJLCrTTo1SMPK+wcIS7e+1obAUI8WQkKuMcD
+         syaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769706640; x=1770311440;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=749boWrxR9GohsKOjzF9HdRImmXyhBe8V9MDPxWLjdQ=;
+        b=OWcsI5kLSqSDpD7KM+cB6XmPwHhEBieq3p4tciERoQpHjNz66iR7qO2W4GBrsLnBzs
+         r9dh6f3C2b6VWwOONeRh6S50GJxaMZcejtq0N3nnLFSiU44bhRaj3Drq8noHZXHoOVRW
+         4pDhkiCSjRildcjpUIPu0LA4fYJIt5iWePaiwSM2Vomd8L4yEeTcu1YGBJGlh4tIoS6g
+         7d50N7WbVeZRkV03/2O0cLK1/XnHGWrBSm7LwoVRdFaN4jIYqSHMUk/adh7fioBbLeFn
+         xdgNOjrRZ8hPsrparALnzjgZBvpd6RFyb++SS8zjhV5X7Ke6/xbA2FbHfle7ulcm8boX
+         Y7Uw==
+X-Forwarded-Encrypted: i=1; AJvYcCWCCQMMVLrUNhvV+4nbe4O7cXVT9o+NENlpeHrmyfb6bTH786wF7yIyKl/K2awBifoxszhkkvNpkv0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxzT1dA3q7ZuWOZp0dH0YH9ruMfAH7wH3aONq5WTgqPDNmOnVEx
+	77CAZQ+n0SDulomTD+m2mMzq+Ltw9vqo6afAN/7QKBFfvdepeQOBeqHx
+X-Gm-Gg: AZuq6aI+OqhL53AGsZwaPsiDG0mwkWqoTtsr9r9xS3r5RPb1LEz7R7oJH0ghDzy4He7
+	cjOSqim9Ihcq7q+iyL1PVYXzPyXDMPsOLdB3FCqa08MvVs4tdTx+C2XrnvK0P3c1CPOjc5tXfcA
+	ZufmwWLBL54l55/hwOHV1nxPQMWyxql1r8dcHQWE+5UT31SlJAQBMw7G7z8i65XFQjSRcWvMyuO
+	sKK6CYQH1uANf5UHfn+gqjjs22apqJuIO0/zCOQaee6Ww5mgP3pTBbrJrmTClxFTUuwPNTxBWbb
+	eVi1VEGqmWvUnz9AO/DlrOpLjJRav0II6lkEuqh7YVPuTuvMk+HL7HKy5XWGg5MHRHNPiHJ2jcs
+	Aze9Vc2bs9lVGKfAglEoL2V1uV4wYEvqmC055ZpWfR2LZwD8v5kXGmflYh/Z6o3ZqPHE+xg==
+X-Received: by 2002:a05:6a00:761b:b0:81f:9bf3:6deb with SMTP id d2e1a72fcca58-823691975edmr6976256b3a.15.1769706640272;
+        Thu, 29 Jan 2026 09:10:40 -0800 (PST)
+Received: from smtpclient.apple ([2402:d0c0:11:86::1])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82379b4e96dsm5929316b3a.23.2026.01.29.09.10.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 29 Jan 2026 09:10:39 -0800 (PST)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.300.41.1.7\))
+Subject: Re: [PATCH v2 1/2] xfs: Move ASSERTion location in
+ xfs_rtcopy_summary()
+From: Alan Huang <mmpgouride@gmail.com>
+In-Reply-To: <aXtdDnpguPkytiPT@nidhogg.toxiclabs.cc>
+Date: Fri, 30 Jan 2026 01:10:23 +0800
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+ linux-xfs@vger.kernel.org,
+ ritesh.list@gmail.com,
+ ojaswin@linux.ibm.com,
+ djwong@kernel.org,
+ hch@infradead.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <E34A8CA9-5A01-4A2F-9660-209D5E8A6A56@gmail.com>
+References: <cover.1769625536.git.nirjhar.roy.lists@gmail.com>
+ <e9f8457440db64b07ab448bd7d426d3eb9d457d6.1769625536.git.nirjhar.roy.lists@gmail.com>
+ <aXse1lm9J66RTvwZ@nidhogg.toxiclabs.cc>
+ <aXsgia9chv4y91u3@nidhogg.toxiclabs.cc>
+ <d6020236-04e6-442f-af6f-0fd690442902@gmail.com>
+ <aXtdDnpguPkytiPT@nidhogg.toxiclabs.cc>
+To: Carlos Maiolino <cem@kernel.org>
+X-Mailer: Apple Mail (2.3864.300.41.1.7)
 
-Now that the zero range pagecache flush is purely isolated to
-providing zeroing correctness in this case, we can remove it and
-replace it with the folio batch mechanism that is used for handling
-unwritten extents.
+On Jan 29, 2026, at 21:29, Carlos Maiolino <cem@kernel.org> wrote:
+>=20
+> On Thu, Jan 29, 2026 at 06:04:20PM +0530, Nirjhar Roy (IBM) wrote:
+>>=20
+>> On 1/29/26 14:27, Carlos Maiolino wrote:
+>>> On Thu, Jan 29, 2026 at 09:52:02AM +0100, Carlos Maiolino wrote:
+>>>> On Thu, Jan 29, 2026 at 12:14:41AM +0530, Nirjhar Roy (IBM) wrote:
+>>>>> We should ASSERT on a variable before using it, so that we
+>>>>> don't end up using an illegal value.
+>>>>>=20
+>>>>> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+>>>>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>>>>> ---
+>>>>>  fs/xfs/xfs_rtalloc.c | 6 +++++-
+>>>>>  1 file changed, 5 insertions(+), 1 deletion(-)
+>>>>>=20
+>>>>> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+>>>>> index a12ffed12391..9fb975171bf8 100644
+>>>>> --- a/fs/xfs/xfs_rtalloc.c
+>>>>> +++ b/fs/xfs/xfs_rtalloc.c
+>>>>> @@ -112,6 +112,11 @@ xfs_rtcopy_summary(
+>>>>>   error =3D xfs_rtget_summary(oargs, log, bbno, &sum);
+>>>>>   if (error)
+>>>>>   goto out;
+>>>>> + if (sum < 0) {
+>>>>> + ASSERT(sum >=3D 0);
+>>>>> + error =3D -EFSCORRUPTED;
+>>>>> + goto out;
+>>>>> + }
+>>>> What am I missing here? This looks weird...
+>>>> We execute the block if sum is lower than 0, and then we assert =
+it's
+>>>> greater or equal than zero? This looks the assert will never fire =
+as it
+>>>> will only be checked when sum is always negative.
+>>> Ugh, nvm, I'll grab more coffee. On the other hand, this still looks
+>>> confusing, it would be better if we just ASSERT(0) there.
+>>=20
+>> Well, the idea (as discussed in [1] and [2]) was that we should log =
+that sum
+>> has been assigned an illegal negative value (using an ASSERT) and =
+then bail
+>> out.
+>=20
+>>=20
+>> [1] =
+https://lore.kernel.org/all/20260122181148.GE5945@frogsfrogsfrogs/
+>>=20
+>> [2] =
+https://lore.kernel.org/all/20260128161447.GV5945@frogsfrogsfrogs/
+>=20
+> I see. I honestly think this is really ugly, pointless, and confusing =
+at
+> a first glance (at least for me). The assert location is logged anyway
+> when it fire.
+>=20
+> If I'm the only one who finds this confusing, then fine, otherwise I'd
+> rather see ASSERT(0) in there.
 
-This is still slightly odd in that XFS reports a hole vs. a mapping
-that reflects the COW fork extents, but that has always been the
-case in this situation and so a separate issue. We drop the iomap
-warning that assumes the folio batch is always associated with
-unwritten mappings, but this is mainly a development assertion as
-otherwise the core iomap fbatch code doesn't care much about the
-mapping type if it's handed the set of folios to process.
+I had the same thought before, and I think ASSERT(0) would be less =
+confusing.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/iomap/buffered-io.c |  4 ----
- fs/xfs/xfs_iomap.c     | 16 ++++------------
- 2 files changed, 4 insertions(+), 16 deletions(-)
+>=20
+> Darrick, hch, thoughts?
+>=20
+>>=20
+>> --NR
+>>=20
+>>>=20
+>>>> What am I missing from this patch?
+>>>>=20
+>>>>>   if (sum =3D=3D 0)
+>>>>>   continue;
+>>>>>   error =3D xfs_rtmodify_summary(oargs, log, bbno, -sum);
+>>>>> @@ -120,7 +125,6 @@ xfs_rtcopy_summary(
+>>>>>   error =3D xfs_rtmodify_summary(nargs, log, bbno, sum);
+>>>>>   if (error)
+>>>>>   goto out;
+>>>>> - ASSERT(sum > 0);
+>>>>>   }
+>>>>>   }
+>>>>>   error =3D 0;
+>>>>> --=20
+>>>>> 2.43.5
+>>>>>=20
+>>>>>=20
+>> --=20
+>> Nirjhar Roy
+>> Linux Kernel Developer
+>> IBM, Bangalore
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 807384d72311..68eb4bc056b6 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1611,10 +1611,6 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 	while ((ret = iomap_iter(&iter, ops)) > 0) {
- 		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
- 
--		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
--				 srcmap->type != IOMAP_UNWRITTEN))
--			return -EIO;
--
- 		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
- 		    (srcmap->type == IOMAP_HOLE ||
- 		     srcmap->type == IOMAP_UNWRITTEN)) {
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 0e82b4ec8264..49ab4edf5ec3 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1760,7 +1760,6 @@ xfs_buffered_write_iomap_begin(
- {
- 	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
- 						     iomap);
--	struct address_space	*mapping = inode->i_mapping;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-@@ -1792,7 +1791,6 @@ xfs_buffered_write_iomap_begin(
- 	if (error)
- 		return error;
- 
--restart:
- 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
- 	if (error)
- 		return error;
-@@ -1868,16 +1866,10 @@ xfs_buffered_write_iomap_begin(
- 		xfs_trim_extent(&imap, offset_fsb,
- 			    cmap.br_startoff + cmap.br_blockcount - offset_fsb);
- 		start = XFS_FSB_TO_B(mp, imap.br_startoff);
--		end = XFS_FSB_TO_B(mp,
--				   imap.br_startoff + imap.br_blockcount) - 1;
--		if (filemap_range_needs_writeback(mapping, start, end)) {
--			xfs_iunlock(ip, lockmode);
--			error = filemap_write_and_wait_range(mapping, start,
--							     end);
--			if (error)
--				return error;
--			goto restart;
--		}
-+		end = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
-+		iomap_fill_dirty_folios(iter, &start, end, &iomap_flags);
-+		xfs_trim_extent(&imap, offset_fsb,
-+				XFS_B_TO_FSB(mp, start) - offset_fsb);
- 
- 		goto found_imap;
- 	}
--- 
-2.52.0
 
