@@ -1,96 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89B735503D;
-	Thu, 29 Jan 2026 17:46:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4BB30C378
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 18:54:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769708772; cv=none; b=RTZiwURQJxyIFYulNhCAn0HdpHq/7K0XGqycs9RGg+gas/2t2GfinPTBVQWzujLdoFQoz607FgQ7HMm7dU3qWI7nr+xTeI9GDZUzLHrystNYgiNtXSKu3rTj5on5u6MYu8ceRN+V8xdki2ZugWrvLeCUGjIyizB0Qp0kNDqVuIA=
+	t=1769712893; cv=none; b=hIQU5+awcpHmzozFkJs0V5fEhW35+ioyvk3a0DW0MYIz6C4wy54giGAEaoDy4yl9Uw8c3hZFcT7xAFeYoYpufkvhcBzHsOENM0OGjh8XnPcX5qmtNqNNwT1SD5LA+qrFbPxfBy7p61bjdrQ3uB/MPLskO+Dh/luC5hqq9q9mUz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769708772; c=relaxed/simple;
-	bh=DYYrQBJ6UjuWz2802Ozqo2cKwlvUysnujXA1Vy/5oco=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ETRqk+h5vi16XtQM9s7eGq9SYbpO99mWrx4AnszdSlSMtKhGmDtlQjYRSLWwuxIpgWH986ymtqHMsSVANMdtqyWh8GodBl8ssKkO4nHaGjYmtZ5BDAHATS/O2J1kXcO+wksAdvsHI7cNW0ZcA/1D8DutUZDa5AlqRoDVZbY0SjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XwENo6yT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769712893; c=relaxed/simple;
+	bh=Aw2wHVrexoVZGyhk0clT+2VM4+EmOe0HDf/6rdCKoyw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TviaeObPvkal1axeG9/6sKAARFSG/KoUxmzlGQzCd8NUwrAxPX7EbE5BydxfHuVBBQweIOglfeeQnAD61oQ1E7DW86un/1eVou2QhD3uUEnMHSKlb7uc4en3do0P/G8fsEAsIgOfsm9EzzXzqYSIOVY1/yFuHv6jINR6z8b9rlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UDAeG+N2; arc=none smtp.client-ip=209.85.160.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XwENo6yT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84BACC4CEF7;
-	Thu, 29 Jan 2026 17:46:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769708772;
-	bh=DYYrQBJ6UjuWz2802Ozqo2cKwlvUysnujXA1Vy/5oco=;
-	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-	b=XwENo6yTqu0LZZtmtkrvLHpCc/1ykWMQjQNNY9Kn9xJOt+cwHWEA/zna2zpg/r7mo
-	 rG2JYClPGPW/ghxyo2yf8/9crERy8eWhSSIiNm6vueVl12Qn7DQeRS6jpxkYgdCHQy
-	 1H+1glyGCI0xjwwPTGu8YPHc4zue3/SzkbskzV1/SNXRY04SE+HUI84vA/OoyTozhR
-	 Kxslvx58M8GWgh/9TaU7Nnn0jqOFqbOk0Fxr4HwswiPq41EXQXyp/vVDCTsaMZbBW+
-	 3vIAVRIV1zmdm5j6/0PmHXchhgRxtIY1JalLRSG2Ae6MHGbJjww+iaunV43yZVpUci
-	 g1lOLUrmrGp2w==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-	id 1D202CE0D17; Thu, 29 Jan 2026 09:46:12 -0800 (PST)
-Date: Thu, 29 Jan 2026 09:46:12 -0800
-From: "Paul E. McKenney" <paulmck@kernel.org>
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: Kunwu Chan <kunwu.chan@hotmail.com>,
-	"rcu@vger.kernel.org" <rcu@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	hch <hch@lst.de>
-Subject: Re: rcu stalls during fstests runs for xfs
-Message-ID: <13b25e07-d7b8-4b4e-a249-b6826b2eea39@paulmck-laptop>
-Reply-To: paulmck@kernel.org
-References: <aXdO52wh2rqTUi1E@shinmob>
- <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
- <fc611e8e-0da9-4b88-83ef-092d300307e3@paulmck-laptop>
- <aXrl46PxeHQSpYbX@shinmob>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UDAeG+N2"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-5013d163e2fso14567891cf.0
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 10:54:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769712889; x=1770317689; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=CTj4HpTxAxVEHWIobCBR+N5vCDEK+9mJIye5sdZ5jcc=;
+        b=UDAeG+N24OlON+D/eOO2AEu2She99jjb4a/w2AZTHCiH6JyndieJuuRk6yLPxU4WNP
+         dLVPm7iHO1MFWLWPssuhIC9AbUn3NaHE646tQQP6siWiQx7Zd8aGdFr+LB9SwC541dqq
+         ZRz7RwGYKqGzF82Vj6UAYdS48kDxcTwy8sAepwsg9qHz5tPp1xrob50TiedOpCVmB3ev
+         jhKkHXu3NcmK8IiaKNyWuCX+cTm6/F0r5LPIqa/ZaSOcmQu960LVcggSbE3JN6DCMXdv
+         RviN4rBWS39LaiaPJj/hsfHIDV2POncJxsVqRNVfsbMtsh1HX/L6m2NbYIgEHf9fQksM
+         2Jbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769712889; x=1770317689;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=CTj4HpTxAxVEHWIobCBR+N5vCDEK+9mJIye5sdZ5jcc=;
+        b=JYtYcjvcNJ1CjsdhoL9OjAx/dtZUkHxFG0AIJpmgeiQ7mRIZv0LMp1CF6uhjBAnNCF
+         l/JO0p6ibSgqf7zdx3e3J4UVW6xYnAuBhPijOuQoM60cYgvjZOKb9v3cCg5i09GzoJey
+         vQ4BSxlwBtRIoudjW8KsMqxF952ck2bK4ADh83Isg5wS3V1k1HsIJStMLIBzBLIjCxWR
+         wH/agecF1xakkcUyn3GnqAgH9zKmUvKkeYzWYq9ooY6iJdqFWsCY+qLxujLmH6MIb0Ej
+         24PLYkqCl+mVimVheh13ta+os7LZVMO4GUzFGx2Oyd4x33FbYyBJCT37vwKFwPIV//pj
+         m+Mg==
+X-Forwarded-Encrypted: i=1; AJvYcCWtPyhL/dAk/U/V28PyCUjMDmAJ2JwQKNUrochx3N1zMBeZ0YNUFVuHDkn2GKyI4p6qEEdD50vLJEE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5je4nje21OKAMw4zYZUNGZkNNjucuylAB4SFZrTSDzCdXMAZq
+	hoEJom8ISrnfC1mpcyP/+AnX+73OOPX4jzMDAsJ2/gLR2oV86W5M0kEz
+X-Gm-Gg: AZuq6aLyU9CcaC+ueO4R6L2VN33pEwSL6Nmu6YqU7WFK/WpPNTw9YYJic++yk8gcN/o
+	dXgXHb60DYP5//zUQdalzURYB6zLUES9bbwUHjSqT3/rvRIlrOClJxywqNOh+crBcV1SvAKI+Ya
+	7kkQUJJEDVvTf2DKZ2r1U9J+T1+4bVp8SCzCmM0g66Ly6qED4/VSXkDT/0c3qjzUFBw+YgmwRok
+	wzOXZAqiwxG5B5yVcpMmiKdxdmsCLbP1XMXp9gLHzJy3r7V7+ThtQogrlkW/P4A2jU1xpDXMy3y
+	FZtVkXx1UKC97L8OAJBWmC9+dSirwodiueFetQ86y8/t6n/hV99quimKPUr68luC6TjVdTHTyOy
+	F5OEutbjHd0Hn204Wza9V7kvp9DD6e7Klwqp5Dz8z5UsmOaDvQVEkZgeo7s3L1I+P2PwfR8g+LY
+	6PpbErbjhZ/1jt/o6Q7Dlv1z7R/Xbo+jY=
+X-Received: by 2002:a05:622a:11cd:b0:501:52c9:f19e with SMTP id d75a77b69052e-505d22751c1mr5050921cf.41.1769712889125;
+        Thu, 29 Jan 2026 10:54:49 -0800 (PST)
+Received: from rpthibeault-XPS-13-9305.. ([23.233.177.113])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-894d375eb4dsm43363356d6.46.2026.01.29.10.54.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Jan 2026 10:54:48 -0800 (PST)
+From: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>
+To: cem@kernel.org
+Cc: chandanbabu@kernel.org,
+	djwong@kernel.org,
+	bfoster@redhat.com,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>,
+	syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v6] xfs: validate log record version against superblock log version
+Date: Thu, 29 Jan 2026 13:50:21 -0500
+Message-ID: <20260129185020.679674-2-rpthibeault@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <aXrl46PxeHQSpYbX@shinmob>
 
-On Thu, Jan 29, 2026 at 05:27:04AM +0000, Shinichiro Kawasaki wrote:
-> On Jan 28, 2026 / 08:42, Paul E. McKenney wrote:
-> > On Wed, Jan 28, 2026 at 05:55:01PM +0800, Kunwu Chan wrote:
-> > > On 1/26/26 19:30, Shinichiro Kawasaki wrote:
-> > > >  kernel: xfs/for-next, 51aba4ca399, v6.19-rc5+
-> > > >      block device: dm-linear on HDD (non-zoned)
-> > > >      xfs: zoned
-> > > 
-> > > I had a quick look at the attached logs. Across the different runs, the
-> > > stall traces consistently show CPUs spending extended time in
-> > > |mm_get_cid()|along the mm/sched context switch path.
-> > > 
-> > > This doesn’t seem to indicate an immediate RCU issue by itself, but it
-> > > raises the question of whether context switch completion can be delayed
-> > > for unusually long periods under these test configurations.
-> > 
-> > Thank you all!
-> > 
-> > Us RCU guys looked at this and it also looks to us that at least one
-> > part of this issue is that mm_get_cid() is spinning.  This is being
-> > investigated over here:
-> > 
-> > https://lore.kernel.org/all/877bt29cgv.ffs@tglx/
-> > https://lore.kernel.org/all/bdfea828-4585-40e8-8835-247c6a8a76b0@linux.ibm.com/
-> > https://lore.kernel.org/all/87y0lh96xo.ffs@tglx/
-> 
-> Knuwu, Paul and RCU experts, thank you very much. It's good to know that the
-> similar issue is already under investigation. I hope that a fix gets available
-> in timely manner.
-> 
-> > I have seen the static-key pattern called out by Dave Chinner when running
-> > KASAN on large systems.  We worked around this by disabling KASAN's use
-> > of static keys.  In case you were running KASAN in these tests.
-> 
-> As to KASAN, yes, I enable it in my test runs. I find three static-keys under
-> mm/kasan/*. I will think if they can be disabled in my test runs. Thanks.
+Syzbot creates a fuzzed record where xfs_has_logv2() but the
+xlog_rec_header h_version != XLOG_VERSION_2. This causes a
+KASAN: slab-out-of-bounds read in xlog_do_recovery_pass() ->
+xlog_recover_process() -> xlog_cksum().
 
-There is a set of Kconfig options that disables static branches.  If you
-cannot find them quickly, please let me know and I can look them up.
+Fix by adding a check to xlog_valid_rec_header() to abort journal
+recovery if the xlog_rec_header h_version does not match the super
+block log version.
 
-							Thanx, Paul
+A file system with a version 2 log will only ever set
+XLOG_VERSION_2 in its headers (and v1 will only ever set V_1), so if
+there is any mismatch, either the journal or the superblock has been
+corrupted and therefore we abort processing with a -EFSCORRUPTED error
+immediately.
+
+Also, refactor the structure of the validity checks for better
+readability. At the default error level (LOW), XFS_IS_CORRUPT() emits
+the condition that failed, the file and line number it is
+located at, then dumps the stack. This gives us everything we need
+to know about the failure if we do a single validity check per
+XFS_IS_CORRUPT().
+
+Reported-by: syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=9f6d080dece587cfdd4c
+Tested-by: syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
+Fixes: 45cf976008dd ("xfs: fix log recovery buffer allocation for the legacy h_size fixup")
+Signed-off-by: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+Changelog
+v1 -> v2: 
+- reject the mount for h_size > XLOG_HEADER_CYCLE_SIZE && !XLOG_VERSION_2
+v2 -> v3: 
+- abort journal recovery if the xlog_rec_header h_version does not 
+match the super block log version
+v3 -> v4: 
+- refactor for readability
+v4 -> v5:
+- stop pretending h_version is a bitmap, remove check using
+XLOG_VERSION_OKBITS
+v5 -> v6:
+- added Reviewed-by tags
+
+It seems that this patch has fallen through the cracks, so I have
+resend'd with the Reviewed-by tags.
+Link to original thread:
+https://lore.kernel.org/all/20251112141032.2000891-3-rpthibeault@gmail.com/
+
+ fs/xfs/xfs_log_recover.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 03e42c7dab56..e9a3e21af34a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2953,18 +2953,23 @@ xlog_valid_rec_header(
+ 	xfs_daddr_t		blkno,
+ 	int			bufsize)
+ {
++	struct xfs_mount	*mp = log->l_mp;
++	u32			h_version = be32_to_cpu(rhead->h_version);
+ 	int			hlen;
+ 
+-	if (XFS_IS_CORRUPT(log->l_mp,
++	if (XFS_IS_CORRUPT(mp,
+ 			   rhead->h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM)))
+ 		return -EFSCORRUPTED;
+-	if (XFS_IS_CORRUPT(log->l_mp,
+-			   (!rhead->h_version ||
+-			   (be32_to_cpu(rhead->h_version) &
+-			    (~XLOG_VERSION_OKBITS))))) {
+-		xfs_warn(log->l_mp, "%s: unrecognised log version (%d).",
+-			__func__, be32_to_cpu(rhead->h_version));
+-		return -EFSCORRUPTED;
++
++	/*
++	 * The log version must match the superblock
++	 */
++	if (xfs_has_logv2(mp)) {
++		if (XFS_IS_CORRUPT(mp, h_version != XLOG_VERSION_2))
++			return -EFSCORRUPTED;
++	} else {
++		if (XFS_IS_CORRUPT(mp, h_version != XLOG_VERSION_1))
++			return -EFSCORRUPTED;
+ 	}
+ 
+ 	/*
+@@ -2972,12 +2977,12 @@ xlog_valid_rec_header(
+ 	 * and h_len must not be greater than LR buffer size.
+ 	 */
+ 	hlen = be32_to_cpu(rhead->h_len);
+-	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0 || hlen > bufsize))
++	if (XFS_IS_CORRUPT(mp, hlen <= 0 || hlen > bufsize))
+ 		return -EFSCORRUPTED;
+ 
+-	if (XFS_IS_CORRUPT(log->l_mp,
+-			   blkno > log->l_logBBsize || blkno > INT_MAX))
++	if (XFS_IS_CORRUPT(mp, blkno > log->l_logBBsize || blkno > INT_MAX))
+ 		return -EFSCORRUPTED;
++
+ 	return 0;
+ }
+ 
+-- 
+2.43.0
+
