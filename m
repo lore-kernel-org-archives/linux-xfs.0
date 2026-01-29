@@ -1,112 +1,160 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E34C37998A
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 09:27:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76A531ED88
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 11:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769678847; cv=none; b=dOo1y1Bwl2h2rk35RZarANelkEQUZOguXT0NgjVzUAU5lRmnOTyaeGwyoY9wxDS5+3feSf95ukFh8TVOr0SYwhPqgUjVf3PFoaA68HTLtaeHspWslQ6cn7Hs5zcOTT0oDtobT5IzcFY9KuunGs9qQJd2tTnMyRkwb+8kPiBu+kU=
+	t=1769686219; cv=none; b=V781Abg1Xkx26JTpNxT5v3wN85ujAYgNRileq8mcvKpXG+2tfi/MJOt1TrwCbQUmp23pREl1ssTWP7CMVzxwI2bTzxx/l71pys4hqbX6IOamHc473DQsdKj066c1I8YBblpZfu2eOFwLmwlRZ4JjapCw71FiioZRui9K9WKmwAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769678847; c=relaxed/simple;
-	bh=4bRaTgrCKseoLnMwWid7iSb2X5Y0CMnCnaMIQDLYSAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=XqWaTpnr6Xfbu8ZDDJ1+4Rdp13b3AGPYGUrDrFfnMlKURL9SjITQGu3mdWHb3C2gw/7a3RJYi8WwPC6aJmjNUYKN5SiKp6EPu869elS7hvPJXFpZIv16AMcTaj3zDYBfaQf8W61CfANPda3OF9ybXD6l7rq3WwQNHoRLpBqRTSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GzzAzzTV; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1769686219; c=relaxed/simple;
+	bh=BO18ZJDuAHier5uhcHcP3RoNgle4Exwy/lc4Cz24YTA=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=dA2Ljc0OaEtX6AlvWig91qVsIEvKjemxZ0ntcn6d5R+cS0+WQfbWavwajb1XycaFoel8lbbY0Xa4dqdzC3xD9IhEQ+yTdJkoGSJZdyreL9Vk8vcsXOkel+2YGLx0Xkxdo0FMaaKk+PoJ2I/1lM8Vnme3fUgjGRU1aQUyg/nKL8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SdvaByLk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GzzAzzTV"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260129092724epoutp03728b7353f70258682c23ee9b5703ef7a~PKYhnK9Sw0442204422epoutp03P
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 09:27:24 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260129092724epoutp03728b7353f70258682c23ee9b5703ef7a~PKYhnK9Sw0442204422epoutp03P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1769678844;
-	bh=HTJkzz/t9Yvine6k3rYUCcimE1lwu9jEJYFkbVE5xQA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=GzzAzzTVXzlBQLcffAa6J4diAS2/dcKB9/cCFco2XOO6/hCKRPCrjmuuLQsRxD/ZM
-	 lP73gbJdsDnsgnXQcfO6VHflm4/8wNP9Chs+Vvk4C0kWqEw/158wqIDR7IhE/8ylsf
-	 4tlt6ECACReaM66Pu2bEbcpp31HCX+4Er5ZCKhKQ=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260129092723epcas5p17ea68069b8cddc520c61ea4540435011~PKYhIRM8v2500625006epcas5p1j;
-	Thu, 29 Jan 2026 09:27:23 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.90]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4f1v1Q6K97z6B9mC; Thu, 29 Jan
-	2026 09:27:22 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260129092722epcas5p262db49c6db5e12931dc0433090b20e57~PKYfn3rZJ2444824448epcas5p2R;
-	Thu, 29 Jan 2026 09:27:22 +0000 (GMT)
-Received: from green245.gost (unknown [107.99.41.245]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260129092720epsmtip186b0b3daa7cec921ec0d647610f08fd1~PKYeDuLvH0871908719epsmtip1L;
-	Thu, 29 Jan 2026 09:27:20 +0000 (GMT)
-Date: Thu, 29 Jan 2026 14:53:06 +0530
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Anuj gupta <anuj1072538@gmail.com>, Jens Axboe <axboe@kernel.dk>,
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
-	<djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>,
-	linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: support file system generated / verified integrity information
-Message-ID: <20260129092306.7kxrizlwwk2ee756@green245.gost>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SdvaByLk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3E2FC4CEF7
+	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 11:30:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769686219;
+	bh=BO18ZJDuAHier5uhcHcP3RoNgle4Exwy/lc4Cz24YTA=;
+	h=Date:From:To:Subject:From;
+	b=SdvaByLkm+4Fji8AglMBq3DIFc65Rr8CExaNVtBBM8EvpojTVr1pTPvX/X9vjOWBZ
+	 4PRUD/9jZbpHqupwAiwnnnQMGi0/wFnMRopXvWcAovIOxf9fk7zjVx8KTrbuAWwUu6
+	 7axcLTAl0H83Xp0v3wxyNNqaYSBG7XbBbeBqbUn9u0agjpPmtdzBiGCUWawAeNly7B
+	 KxjMzK/mUE9V2Uwa61wqoJzVl6ohGC59s7m+6G1+FE6SMjjho1YUnX3FesK43H/zK1
+	 kLCOJ4n/g0xoMOYiLIjx1vHE7FEOvKnUjOeZfJc1AKm6VvvRQiTxgElneNX6E2HmXb
+	 5JlhQakfDHYpA==
+Date: Thu, 29 Jan 2026 12:30:15 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 0ead3b72469e
+Message-ID: <aXtEkInQa-oMQSZf@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260127151609.GA1883@lst.de>
-X-CMS-MailID: 20260129092722epcas5p262db49c6db5e12931dc0433090b20e57
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----bVwHse4Nykw-L2c5iRRXKf-G.8k0lxUwrpcTFjGaDb9lfltx=_136471_"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260129092722epcas5p262db49c6db5e12931dc0433090b20e57
-References: <20260121064339.206019-1-hch@lst.de>
-	<CACzX3AuDkwEw3v0bNmYLk8updk1ghVJa-T9o=EHXor9FA7badw@mail.gmail.com>
-	<20260127151609.GA1883@lst.de>
-	<CGME20260129092722epcas5p262db49c6db5e12931dc0433090b20e57@epcas5p2.samsung.com>
-
-------bVwHse4Nykw-L2c5iRRXKf-G.8k0lxUwrpcTFjGaDb9lfltx=_136471_
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-On 27/01/26 04:16PM, Christoph Hellwig wrote:
->On Tue, Jan 27, 2026 at 08:24:28PM +0530, Anuj gupta wrote:
->> Hi Christoph,
->>
->> Here are the QD1 latency numbers (in usec)
->
->Thanks a lot!
->
->Adding in the baseline numbers, as I wanted to compare those:
->
->> Intel Optane:
->>
->> Sequential read
->>   | size | baseline | xfs-bounce |  xfs-pi  |
->>   +------+----------+-----------+-----------+
->>   |   4k |    7.18  |    13.62   |     7.20 |
->>   |  64K |   36.40  |    99.66   |    34.16 |
->>   |   1M |  206.38  |   258.88   |   306.23 |
->>   +------+----------+------------+----------+
->
->So for 4k and 64k reads we basically get back to the baseline.
->The 1M numbers are puzzling, though.  I wonder if we need to
->add WQ_CPU_INTENSIVE or do some other tweaks to the XFS I/O
->completion workqueue so that we don't overload the scheduler.
 
-Tried adding WQ_CPU_INTENSIVE[1] but didn't see any change in the 1M
-latency. Looks like this needs something beyond just workqueue tuning.
+Hi folks,
 
-------bVwHse4Nykw-L2c5iRRXKf-G.8k0lxUwrpcTFjGaDb9lfltx=_136471_
-Content-Type: text/plain; charset="utf-8"
+The for-next branch of the xfs-linux repository at:
 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-------bVwHse4Nykw-L2c5iRRXKf-G.8k0lxUwrpcTFjGaDb9lfltx=_136471_--
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+0ead3b72469e xfs: fix spacing style issues in xfs_alloc.c
+
+38 new commits:
+
+Carlos Maiolino (4):
+      [04a65666a695] Merge tag 'health-monitoring-7.0_2026-01-20' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-7.0-merge
+      [2744d7adb262] Merge tag 'attr-leaf-freemap-fixes-7.0_2026-01-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-7.0-merge
+      [c04ed39d8578] Merge tag 'attr-pptr-speedup-7.0_2026-01-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-7.0-merge
+      [692243cac631] Merge tag 'scrub-syzbot-fixes-7.0_2026-01-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-7.0-merge
+
+Christoph Hellwig (2):
+      [c17a1c03493b] xfs: use a seprate member to track space availabe in the GC scatch buffer
+      [7da4ebea8332] xfs: remove xfs_zone_gc_space_available
+
+Darrick J. Wong (27):
+      [602544773763] uapi: promote EFSCORRUPTED and EUCLEAN to errno.h
+      [efd87a100729] xfs: report fs metadata errors via fsnotify
+      [94503211d2fd] xfs: translate fsdax media errors into file "data lost" errors when convenient
+      [a48373e7d35a] xfs: start creating infrastructure for health monitoring
+      [b3a289a2a939] xfs: create event queuing, formatting, and discovery infrastructure
+      [25ca57fa3624] xfs: convey filesystem unmount events to the health monitor
+      [5eb4cb18e445] xfs: convey metadata health events to the health monitor
+      [74c4795e50f8] xfs: convey filesystem shutdown events to the health monitor
+      [e76e0e3fc995] xfs: convey externally discovered fsdax media errors to the health monitor
+      [dfa8bad3a879] xfs: convey file I/O errors to the health monitor
+      [c0e719cb3667] xfs: allow toggling verbose logging on the health monitoring file
+      [8b85dc4090e1] xfs: check if an open file is on the health monitored fs
+      [b8accfd65d31] xfs: add media verification ioctl
+      [6f13c1d2a627] xfs: delete attr leaf freemap entries when empty
+      [3eefc0c2b784] xfs: fix freemap adjustments when adding xattrs to leaf blocks
+      [a165f7e7633e] xfs: refactor attr3 leaf table size computation
+      [27a0c41f33d8] xfs: strengthen attr leaf block freemap checking
+      [6fed8270448c] xfs: fix the xattr scrub to detect freemap/entries array collisions
+      [bd3138e8912c] xfs: fix remote xattr valuelblk check
+      [1ef7729df1f0] xfs: reduce xfs_attr_try_sf_addname parameters
+      [d693534513d8] xfs: speed up parent pointer operations when possible
+      [eaec8aeff31d] xfs: add a method to replace shortform attrs
+      [60382993a2e1] xfs: get rid of the xchk_xfile_*_descr calls
+      [ba408d299a3b] xfs: only call xf{array,blob}_destroy if we have a valid pointer
+      [ca27313fb3f2] xfs: check return value of xchk_scrub_create_subord
+      [1c253e11225b] xfs: fix UAF in xchk_btree_check_block_owner
+      [55e03b8cbe27] xfs: check for deleted cursors when revalidating two btrees
+
+Shin Seong-jun (1):
+      [0ead3b72469e] xfs: fix spacing style issues in xfs_alloc.c
+
+Code Diffstat:
+
+ fs/xfs/Makefile                  |    2 +
+ fs/xfs/libxfs/xfs_alloc.c        |    8 +-
+ fs/xfs/libxfs/xfs_attr.c         |  114 +++-
+ fs/xfs/libxfs/xfs_attr.h         |    6 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c    |  195 ++++--
+ fs/xfs/libxfs/xfs_attr_leaf.h    |    1 +
+ fs/xfs/libxfs/xfs_da_format.h    |    2 +-
+ fs/xfs/libxfs/xfs_fs.h           |  189 ++++++
+ fs/xfs/libxfs/xfs_health.h       |    5 +
+ fs/xfs/libxfs/xfs_parent.c       |   14 +-
+ fs/xfs/scrub/agheader_repair.c   |   21 +-
+ fs/xfs/scrub/alloc_repair.c      |   20 +-
+ fs/xfs/scrub/attr.c              |   59 +-
+ fs/xfs/scrub/attr_repair.c       |   26 +-
+ fs/xfs/scrub/bmap_repair.c       |    6 +-
+ fs/xfs/scrub/btree.c             |    7 +-
+ fs/xfs/scrub/common.c            |    3 +
+ fs/xfs/scrub/common.h            |   25 -
+ fs/xfs/scrub/dir.c               |   13 +-
+ fs/xfs/scrub/dir_repair.c        |   19 +-
+ fs/xfs/scrub/dirtree.c           |   19 +-
+ fs/xfs/scrub/ialloc_repair.c     |   25 +-
+ fs/xfs/scrub/nlinks.c            |    9 +-
+ fs/xfs/scrub/parent.c            |   11 +-
+ fs/xfs/scrub/parent_repair.c     |   23 +-
+ fs/xfs/scrub/quotacheck.c        |   13 +-
+ fs/xfs/scrub/refcount_repair.c   |   13 +-
+ fs/xfs/scrub/repair.c            |    3 +
+ fs/xfs/scrub/rmap_repair.c       |    5 +-
+ fs/xfs/scrub/rtbitmap_repair.c   |    6 +-
+ fs/xfs/scrub/rtrefcount_repair.c |   15 +-
+ fs/xfs/scrub/rtrmap_repair.c     |    5 +-
+ fs/xfs/scrub/rtsummary.c         |    7 +-
+ fs/xfs/scrub/scrub.c             |    2 +-
+ fs/xfs/xfs_fsops.c               |    6 +
+ fs/xfs/xfs_health.c              |  138 +++++
+ fs/xfs/xfs_healthmon.c           | 1255 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_healthmon.h           |  184 ++++++
+ fs/xfs/xfs_ioctl.c               |    7 +
+ fs/xfs/xfs_mount.c               |    2 +
+ fs/xfs/xfs_mount.h               |    4 +
+ fs/xfs/xfs_notify_failure.c      |   21 +-
+ fs/xfs/xfs_platform.h            |    2 -
+ fs/xfs/xfs_super.c               |   12 +
+ fs/xfs/xfs_trace.c               |    5 +
+ fs/xfs/xfs_trace.h               |  513 ++++++++++++++++
+ fs/xfs/xfs_verify_media.c        |  445 ++++++++++++++
+ fs/xfs/xfs_verify_media.h        |   13 +
+ fs/xfs/xfs_zone_gc.c             |   44 +-
+ 49 files changed, 3241 insertions(+), 301 deletions(-)
+ create mode 100644 fs/xfs/xfs_healthmon.c
+ create mode 100644 fs/xfs/xfs_healthmon.h
+ create mode 100644 fs/xfs/xfs_verify_media.c
+ create mode 100644 fs/xfs/xfs_verify_media.h
