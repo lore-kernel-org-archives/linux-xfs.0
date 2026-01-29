@@ -1,141 +1,246 @@
-Received: from muffat.debian.org (muffat.debian.org [209.87.16.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C5E361DDF
-	for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 22:19:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D54DE337B81;
+	Thu, 29 Jan 2026 22:21:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769725151; cv=none; b=BC9YhpDVxqruyEQbcBjcV79Ikh3IiIcxOKj/yt6GdEuTR0+dXlvZ04paiggP90t4cn1RbKHNY9H1b87/T4HsJXc3iEYwkoOh+CUK0Vup5u1A/RL60+1NwPIEolh1IqWWUSsa4RwK/moFGIL7m5JE2WttW+o5R65sUx2kuJngaSc=
+	t=1769725262; cv=none; b=RELHXjUW2rNwmZC1VVSkXuUXRColSMmSs1UjkxRgxrgoroPzS81YwsxK6RkC8cR49hvetgw1OsxrfDlv6aOkkAFFfr2Yh/vBvt9cRVUArKaasXbbwVPGFPQAyPyGfr+QbRbdNWavy4VKBAqzzQbGHfk7x7q35g13I4UysBwHAI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769725151; c=relaxed/simple;
-	bh=3j6YzFZbHS/Nn3nTDQ16oM+qso81i6ggF+zFdMAIguQ=;
-	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=YsV7VqnXOzN9aklZf9lPm9v8eacbuIgBqdl9sjtEtH8z0yNDt6M7QOsUtI4+vS+HeNv6mOPWz4dMBcakw7AGG4HtmC1mNUIE14t37IlVKVoOBsDhu0qq4s3eZ7c0Wju1qUqcXjnIAcGPBR+TQcqXiCSX07qS/g0GbWo+CT9Ndrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=WTNT3X7s; arc=none smtp.client-ip=209.87.16.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1769725262; c=relaxed/simple;
+	bh=Posmbe8NRA7G0It215WCxGe1hRREd15vgUGpBqnnnpo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A8C1vBHpmuBHOi+4J8Nk/jcs0fq/yAsHfjNa/5Tn26xlWzdEnUqGgtZOCNIhnu0+WzYnNJDQLO7ZAh/ySTVfUN1AUDkgr4VkC9DBNUcfdjRqExImwQq26vt/lUoc73EBydMWKpQbo0ZU72LvanyeevF7E7X8wOvSxXcQ7FqU4zE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H8vMkgeK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="WTNT3X7s"
-Received: from [192.91.235.231] (port=37534 helo=fasolo.debian.org)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1vlaM1-007SMI-1E
-	for linux-xfs@vger.kernel.org;
-	Thu, 29 Jan 2026 22:19:09 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
-	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
-	:Content-Description:In-Reply-To:References;
-	bh=bPuujfF70KaMm7eexQSIEo/yE58tLYp1MvNi1ZTLrSc=; b=WTNT3X7sQzwR2pBsKD2EYsJPW9
-	2017bn3w+dlDBrYuyyCZttKw1DeVCi7IpPpNnnK6NIkz5zE6/6IiCOaSDmvIlyieg3IUbDDrk6jZM
-	8dhoW0FLNNISzywj4XPsThPtsSakeZ9gyEkDi/uey15bbxTEvb/kA9y9iIIG8DxuBnFNCPC9sXehv
-	nS572CM4wsgNe1DBPkYqX/NZr/sKyt5M1cFNaFM/W/s57KO+suX5f/+pXc75eFk6F/e3VbWh8U6cb
-	VkdR5AS6K6aLHIi5+9V7OVwq+Vw15ojgVOim8VBRBS4brujc3A6/EeMe/Eq42tUXVxf2ZVPTYyfE0
-	0UzPoolg==;
-Received: from dak by fasolo.debian.org with local (Exim 4.98.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1vlaLx-0000000Aziq-2tvk;
-	Thu, 29 Jan 2026 22:19:05 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To: Bastian Germann <bage@debian.org>,
- XFS Development Team <linux-xfs@vger.kernel.org>
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Debian: DAK
-Debian-Changes: xfsprogs_6.18.0-3_source.changes
-Debian-Source: xfsprogs
-Debian-Version: 6.18.0-3
-Debian-Architecture: source
-Debian-Suite: unstable
-Debian-Archive-Action: accept
-Precedence: bulk
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H8vMkgeK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 721F6C4CEF7;
+	Thu, 29 Jan 2026 22:21:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769725262;
+	bh=Posmbe8NRA7G0It215WCxGe1hRREd15vgUGpBqnnnpo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H8vMkgeKVcy5lKEZp01o61YHZIl1gz4QvqJ2uEZB98oboavk2QUkITkulFzRfQYGW
+	 bRertZklRSKjj56tPjT/040aLWZN6AADFD4yT19hNqTk5XmpkCRnFaLA6IHxMTCueL
+	 aNW+xlVFo9tscW6gYv7yDevBTHF0g2RbkzG2/tK1/XiB93AsUFVtGpu5ibs8tS3/sW
+	 O+Lsi1nWrPQnfD/AOYB0zUr+QNFmLoT0L5+8qU6qPB9oOY/GxsFft+7ou+OMzlibmw
+	 M7s9AsVkvdJQO8DC7QbquohDjuhcre6fFC/Vp4IiQ+6nLxzdPyY0fjfEp6Enm9sNch
+	 2744U5MxvXBdw==
+Date: Thu, 29 Jan 2026 14:21:01 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Kundan Kumar <kundan.kumar@samsung.com>
+Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	willy@infradead.org, mcgrof@kernel.org, clm@meta.com,
+	david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk,
+	hch@lst.de, ritesh.list@gmail.com, dave@stgolabs.net,
+	cem@kernel.org, wangyufei@vivo.com, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, gost.dev@samsung.com,
+	anuj20.g@samsung.com, vishak.g@samsung.com, joshi.k@samsung.com
+Subject: Re: [PATCH v3 5/6] xfs: add per-AG writeback workqueue infrastructure
+Message-ID: <20260129222101.GD7712@frogsfrogsfrogs>
+References: <20260116100818.7576-1-kundan.kumar@samsung.com>
+ <CGME20260116101259epcas5p1cfa6ab02e5a01f7c46cc78df95c57ce0@epcas5p1.samsung.com>
+ <20260116100818.7576-6-kundan.kumar@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: xfsprogs_6.18.0-3_source.changes ACCEPTED into unstable
-Content-Type: multipart/signed; micalg="pgp-sha256";
- protocol="application/pgp-signature";
- boundary="===============7114662324644175105=="
-Message-Id: <E1vlaLx-0000000Aziq-2tvk@fasolo.debian.org>
-Date: Thu, 29 Jan 2026 22:19:05 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260116100818.7576-6-kundan.kumar@samsung.com>
 
---===============7114662324644175105==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Fri, Jan 16, 2026 at 03:38:17PM +0530, Kundan Kumar wrote:
+> Introduce per-AG writeback worker infrastructure at mount time.
+> This patch adds initialization and teardown only, without changing
+> writeback behavior.
+> 
+> Signed-off-by: Kundan Kumar <kundan.kumar@samsung.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> ---
+>  fs/xfs/xfs_aops.c  | 79 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_aops.h  |  3 ++
+>  fs/xfs/xfs_mount.c |  2 ++
+>  fs/xfs/xfs_mount.h | 10 ++++++
+>  fs/xfs/xfs_super.c |  2 ++
+>  5 files changed, 96 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index a26f79815533..9d5b65922cd2 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -23,6 +23,23 @@
+>  #include "xfs_zone_alloc.h"
+>  #include "xfs_rtgroup.h"
+>  
+> +#define XFS_AG_TASK_POOL_MIN 1024
+> +
+> +struct xfs_ag_wb_task {
+> +	struct list_head list;
+> +	struct xfs_inode *ip;
+> +	struct writeback_control wbc;
+> +	xfs_agnumber_t agno;
+> +};
+> +
+> +struct xfs_ag_wb {
+> +	struct delayed_work ag_work;
+> +	spinlock_t lock;
+> +	struct list_head task_list;
+> +	xfs_agnumber_t agno;
+> +	struct xfs_mount *mp;
+> +};
 
-Thank you for your contribution to Debian.
+Help me understand the data structures here ... for each AG there's an
+xfs_ag_wb object which can be run as a delayed workqueue item.  This
+xfs_ag_wb is the head of a list of xfs_ag_wb_task items?
 
+In turn, each xfs_ag_wb_task list item points to an inode and
+(redundantly?) the agnumber?  So in effect each AG has a kworker that
+can say "do all of this file's pagecache writeback for all dirty folios
+tagged with the same agnumber"?
 
+<shrug> It's hard to tell with no comments about how these two pieces of
+data relate to each other.
 
-Accepted:
+--D
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+>  struct xfs_writepage_ctx {
+>  	struct iomap_writepage_ctx ctx;
+>  	unsigned int		data_seq;
+> @@ -666,6 +683,68 @@ static const struct iomap_writeback_ops xfs_zoned_writeback_ops = {
+>  	.writeback_submit	= xfs_zoned_writeback_submit,
+>  };
+>  
+> +void
+> +xfs_init_ag_writeback(struct xfs_mount *mp)
+> +{
+> +	xfs_agnumber_t agno;
+> +
+> +	mp->m_ag_wq = alloc_workqueue("xfs-ag-wb", WQ_UNBOUND | WQ_MEM_RECLAIM,
+> +				      0);
+> +	if (!mp->m_ag_wq)
+> +		return;
+> +
+> +	mp->m_ag_wb = kcalloc(mp->m_sb.sb_agcount,
+> +				sizeof(struct xfs_ag_wb),
+> +				GFP_KERNEL);
+> +
+> +	if (!mp->m_ag_wb) {
+> +		destroy_workqueue(mp->m_ag_wq);
+> +		mp->m_ag_wq = NULL;
+> +		return;
+> +	}
+> +
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		struct xfs_ag_wb *awb = &mp->m_ag_wb[agno];
+> +
+> +		spin_lock_init(&awb->lock);
+> +		INIT_LIST_HEAD(&awb->task_list);
+> +		awb->agno = agno;
+> +		awb->mp = mp;
 
-Format: 1.8
-Date: Thu, 29 Jan 2026 23:05:48 +0100
-Source: xfsprogs
-Architecture: source
-Version: 6.18.0-3
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Changes:
- xfsprogs (6.18.0-3) unstable; urgency=3Dmedium
- .
-   * Disable exchange-range as well
-Checksums-Sha1:
- 0d11f075d1482d9deab9fd7eb955c882bc392b1b 2048 xfsprogs_6.18.0-3.dsc
- 6a581be1f6fbd0d6802d896969975a8b8bbe7324 12540 xfsprogs_6.18.0-3.debian.tar.=
-xz
- bc35898425b2610e81b4acd2ce75dbff2bae686f 5917 xfsprogs_6.18.0-3_source.build=
-info
-Checksums-Sha256:
- 87a54c722327bbcd9b01ae552e14dcbb89078ca0a3403e6bc8ac687dc2d165a8 2048 xfspro=
-gs_6.18.0-3.dsc
- f9d7ea09a36658297d75f874c553df4cb0f9b4c03e3503291b214df09adb2e31 12540 xfspr=
-ogs_6.18.0-3.debian.tar.xz
- fc9bd95d74ba2afb4cc9bfbb29da0f5079397f629d0fd16fc84434940e74eea6 5917 xfspro=
-gs_6.18.0-3_source.buildinfo
-Files:
- 615e23c3084c7d454742d8d38c30891d 2048 admin optional xfsprogs_6.18.0-3.dsc
- 97cf1223d2d7609da635a5c8a062ab04 12540 admin optional xfsprogs_6.18.0-3.debi=
-an.tar.xz
- c44aa118b07a553f79fedd39fd22933a 5917 admin optional xfsprogs_6.18.0-3_sourc=
-e.buildinfo
+Can't you stuff this information in struct xfs_perag instead of asking
+for a potentially huge allocation?
 
------BEGIN PGP SIGNATURE-----
-
-iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAml72esQHGJhZ2VAZGVi
-aWFuLm9yZwAKCRAfXHqLRVZDFJtHC/44/6LaIk3U2fSOjVMyrqHq8TOnBBMOd62c
-T/gv1XlkJkkbpM1kAFk50DIw1AXFwZ1cTGS4nBQeFW723L+kEPoKGgdIwx6kmn0q
-qtEjK8n40GnZPbjvfjACr3NeQd1X3uYX5xwLXyYHtMW9KPlQIoEXfPE2WA/EQcLp
-TRq8gcXsABiTcGPfnpvv3+KxUM1duYL4U/vx2e6NCo4ch/HPjeJcAxs0eKbWmdM8
-OB93itmQgB8/IUYW58YHYxroEeDIEgHvbUsPwAzX+22izCdTj2LYR5F9a7LGShBj
-Iccnqq/+zzatKoirK9CPuTV6h+xyo4PgO+sV63MNqt8UnAA3/rrCJIzJeAofg/+O
-AXfrRzT5spwiFwAefhM1kdyf0djywe68B37B4KL9SXncWjZb01KktLrzChIWDGOW
-l++gwq3hmYejLkHogkttS3ub9YQZyNPiTGUSO4UUe/737abhq2v768JKx+z7s8Nn
-0sUuFhaHUv7HwCwRaG0n3aoXcGuOrII=3D
-=3DYvW7
------END PGP SIGNATURE-----
-
-
---===============7114662324644175105==
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCaXvc2QAKCRCb9qggYcy5
-IV21AQCoea80hzFsA7XzpryLJZOwx+9ROI/pInOrFL2AbfoojwEAvrQ3BEDu2aMb
-uZycYo/bkyqrOcccXiKvCsFzkJZKNQs=
-=L+qE
------END PGP SIGNATURE-----
-
---===============7114662324644175105==--
+> +	}
+> +
+> +	mp->m_ag_task_cachep = kmem_cache_create("xfs_ag_wb_task",
+> +						sizeof(struct xfs_ag_wb_task),
+> +						0,
+> +						SLAB_RECLAIM_ACCOUNT,
+> +						NULL);
+> +
+> +	mp->m_ag_task_pool = mempool_create_slab_pool(XFS_AG_TASK_POOL_MIN,
+> +	mp->m_ag_task_cachep);
+> +
+> +	if (!mp->m_ag_task_pool) {
+> +		kmem_cache_destroy(mp->m_ag_task_cachep);
+> +		mp->m_ag_task_cachep = NULL;
+> +	}
+> +}
+> +
+> +void
+> +xfs_destroy_ag_writeback(struct xfs_mount *mp)
+> +{
+> +	if (mp->m_ag_wq) {
+> +		flush_workqueue(mp->m_ag_wq);
+> +		destroy_workqueue(mp->m_ag_wq);
+> +		mp->m_ag_wq = NULL;
+> +	}
+> +	kfree(mp->m_ag_wb);
+> +	mp->m_ag_wb = NULL;
+> +
+> +	mempool_destroy(mp->m_ag_task_pool);
+> +	mp->m_ag_task_pool = NULL;
+> +
+> +	kmem_cache_destroy(mp->m_ag_task_cachep);
+> +	mp->m_ag_task_cachep = NULL;
+> +}
+> +
+>  STATIC int
+>  xfs_vm_writepages(
+>  	struct address_space	*mapping,
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index 5a7a0f1a0b49..e84acb7e8ca8 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -12,4 +12,7 @@ extern const struct address_space_operations xfs_dax_aops;
+>  int xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+>  void xfs_end_bio(struct bio *bio);
+>  
+> +void xfs_init_ag_writeback(struct xfs_mount *mp);
+> +void xfs_destroy_ag_writeback(struct xfs_mount *mp);
+> +
+>  #endif /* __XFS_AOPS_H__ */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 0953f6ae94ab..26224503c4bf 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -1323,6 +1323,8 @@ xfs_unmountfs(
+>  
+>  	xfs_qm_unmount(mp);
+>  
+> +	xfs_destroy_ag_writeback(mp);
+> +
+>  	/*
+>  	 * Unreserve any blocks we have so that when we unmount we don't account
+>  	 * the reserved free space as used. This is really only necessary for
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index b871dfde372b..c44155de2883 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -342,6 +342,16 @@ typedef struct xfs_mount {
+>  
+>  	/* Hook to feed dirent updates to an active online repair. */
+>  	struct xfs_hooks	m_dir_update_hooks;
+> +
+> +
+> +	/* global XFS AG writeback wq */
+> +	struct workqueue_struct *m_ag_wq;
+> +	/* array of [sb_agcount] */
+> +	struct xfs_ag_wb        *m_ag_wb;
+> +
+> +	/* task cache and pool */
+> +	struct kmem_cache *m_ag_task_cachep;
+> +	mempool_t *m_ag_task_pool;
+>  } xfs_mount_t;
+>  
+>  #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index bc71aa9dcee8..73f8d2942df4 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1765,6 +1765,8 @@ xfs_fs_fill_super(
+>  	if (error)
+>  		goto out_free_sb;
+>  
+> +	xfs_init_ag_writeback(mp);
+> +
+>  	/*
+>  	 * V4 support is undergoing deprecation.
+>  	 *
+> -- 
+> 2.25.1
+> 
+> 
