@@ -1,104 +1,200 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f79.google.com (mail-oo1-f79.google.com [209.85.161.79])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E0FE1EB5F8;
-	Thu, 29 Jan 2026 23:19:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEE12329C6D
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 05:14:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.79
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769728794; cv=none; b=HPnFl8ZbSvwGtnl+I4oZvG8e6Slv1x2nsIKCBxO8QVZe+4R+SJdfiDPwDkM2K4Y2IevnbHvFKRiNr9a8vPqfxWRHUN2wnrxjF0aCRP7iSDu1JRSkXPF1VRW+gvCXfkmLVpO7GIQEi5C7OB9D7wrR5qFxBsna20EW+OlqfwgbpPc=
+	t=1769750077; cv=none; b=D2NBXFBs4qmwgsc0TwU0mA4PqfvrjH9y9GD8GDV9NPLIUJJbcFhE89/2ieR0hp4LcvioWeWzS/aJqAwlnhSiEh+ZD3hR8VbstEs2NxhfQnQQJLdZs2oUeIgk/SB9wJsFcVsikAfZCHgKzYcFcThtSY7r9WStwPyvQ91unvUqWGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769728794; c=relaxed/simple;
-	bh=DtI+0fZJQ3y1FUzJFQxqLNbmAchuIrXCAiEqbuVJmLo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XKGMghZgYfc3GoA1PtFQkkYrtJA8UbWvsGgDO90PwH80YNIkQZ67jGLdTDivy03BfO7HXnoKsw+/pC3rGXbPInas9YOthPi4v28DLe8NcOQ66ewVoIw8GqvHwNAy4DpFxIq4o1lIPnOqAm/LGQtOFDq4fDnAE4UllJC+bPmyQps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FIcvhCXS; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FIcvhCXS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C714DC4CEF7;
-	Thu, 29 Jan 2026 23:19:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769728793;
-	bh=DtI+0fZJQ3y1FUzJFQxqLNbmAchuIrXCAiEqbuVJmLo=;
-	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-	b=FIcvhCXSACEtnOLnOZhl6juiDomgioyt/676sBKnptLcB5Uq4b1vhqMGGIL2rsAfS
-	 4yoP8S7C6yY3audYUsguYjAB0haYZ2UICzifP8BRxvjXTUvrO1KSsZRj6wLlvuNdku
-	 KF3eq6S/o5khuUyMHWM6lsR+wv9mtze/jRfmicUhlLofXX2T+jLe6e7panopI8Ho/9
-	 35T+3Ypmb25uG7g4zIxebwtjPvourqo5WxdWTrEehWXayT8hmcZjr5+wRQ6zGd9vko
-	 O5tKiGeRJUBzBKxsHuLpwelEdZJ/BVq2gIIka97k/XcVvW1I3b5pjpwL7WjWPBctSM
-	 J7Nql2yZBZbMA==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-	id 3C0BFCE38E8; Thu, 29 Jan 2026 15:19:53 -0800 (PST)
-Date: Thu, 29 Jan 2026 15:19:53 -0800
-From: "Paul E. McKenney" <paulmck@kernel.org>
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: Kunwu Chan <kunwu.chan@hotmail.com>,
-	"rcu@vger.kernel.org" <rcu@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	hch <hch@lst.de>
-Subject: Re: rcu stalls during fstests runs for xfs
-Message-ID: <c33c3d3e-a59c-4f5a-a562-13e2cabc2faf@paulmck-laptop>
-Reply-To: paulmck@kernel.org
-References: <aXdO52wh2rqTUi1E@shinmob>
- <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
- <fc611e8e-0da9-4b88-83ef-092d300307e3@paulmck-laptop>
- <aXrl46PxeHQSpYbX@shinmob>
- <13b25e07-d7b8-4b4e-a249-b6826b2eea39@paulmck-laptop>
+	s=arc-20240116; t=1769750077; c=relaxed/simple;
+	bh=d7+T2RJO7nULQJuZtk2H2BMRMZ+2NKjSNlnNmZlE/EA=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=NhND8kUH6MXSqX92Uh7rxwQnIDVGlZWz/T3RoVZDAMZUnGmQfkzBz8PUfl/rUSELMc89QCk/Ue7HHj83A1sxu1pXts/ayMaRfEiiYiUQ+zW41msJ1Xt+eYe0dNEGK4ci1tAXe4n/rOVV0jLG+P9jp59nLoln94YoEVrgRsfgMjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f79.google.com with SMTP id 006d021491bc7-663005f0997so2796938eaf.0
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jan 2026 21:14:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769750075; x=1770354875;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WZBxNEkKoPRXPMzLcWsvsFY0BDmm7GFubz7Cg7pAEUM=;
+        b=rXqxQrloygLkb1KcitFSnn+ecqFJq7E9daOsdzXHfNt7J70giJN61FBo6wRuQrS9Sp
+         9bSvBE5DR5K8bWgGJlNjcJduLGzAZ5ykFeXGjtg4qtYJ0bbENIpisT6oWQes6C2ov6oJ
+         89ZmpYJI4fgHdVXcduK+rcyUrsi+b/gWEd4WbaiCbPCqSrf4QaRUyiUlQKzaRl16Kqoj
+         +mj4GGXIMWVqZV0SJ4WzvfVkbttz11QWOLXecz7lGZ5ZihWgl66cr1fWciAOAjtm5s9P
+         KolEwueEd2qPYZdQc8GlzaluPePmFKNveJsyNSa9yfQ0TtgKKe1Z9ocdnPprarazZj+u
+         Ef/A==
+X-Forwarded-Encrypted: i=1; AJvYcCU8kOgTmeSqLsY70sirRg8xWVx3PhDoelWRY90+y7iaBu/fHyD3C0Qpgrmt55xcJueYMO9n6PAKayQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyxNFtQGbNqp6cjrcusIBc7r04N3U85sF7U7g3t2/s3VDp2T6SN
+	oGr3UU1DRKqT+gKQZp5pwhaPuOt4UzGH6LnZUKJNpNZZHfel5qLe/tMVIVET8lYeZF/OmXtjOOD
+	Waq81HvdiKKQag8QUT42aPor75DSEPTiXxAdEBLl5916cZlqo397H65yVKPU=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <13b25e07-d7b8-4b4e-a249-b6826b2eea39@paulmck-laptop>
+X-Received: by 2002:a4a:ee0d:0:b0:662:c301:a278 with SMTP id
+ 006d021491bc7-6630f358020mr725707eaf.45.1769750074944; Thu, 29 Jan 2026
+ 21:14:34 -0800 (PST)
+Date: Thu, 29 Jan 2026 21:14:34 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <697c3e3a.a00a0220.35f26.000d.GAE@google.com>
+Subject: [syzbot] [iomap?] KASAN: use-after-free Write in iomap_write_end
+From: syzbot <syzbot+ea1cd4aa4d1e98458a55@syzkaller.appspotmail.com>
+To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jan 29, 2026 at 09:46:12AM -0800, Paul E. McKenney wrote:
-> On Thu, Jan 29, 2026 at 05:27:04AM +0000, Shinichiro Kawasaki wrote:
-> > On Jan 28, 2026 / 08:42, Paul E. McKenney wrote:
-> > > On Wed, Jan 28, 2026 at 05:55:01PM +0800, Kunwu Chan wrote:
-> > > > On 1/26/26 19:30, Shinichiro Kawasaki wrote:
-> > > > >  kernel: xfs/for-next, 51aba4ca399, v6.19-rc5+
-> > > > >      block device: dm-linear on HDD (non-zoned)
-> > > > >      xfs: zoned
-> > > > 
-> > > > I had a quick look at the attached logs. Across the different runs, the
-> > > > stall traces consistently show CPUs spending extended time in
-> > > > |mm_get_cid()|along the mm/sched context switch path.
-> > > > 
-> > > > This doesn’t seem to indicate an immediate RCU issue by itself, but it
-> > > > raises the question of whether context switch completion can be delayed
-> > > > for unusually long periods under these test configurations.
-> > > 
-> > > Thank you all!
-> > > 
-> > > Us RCU guys looked at this and it also looks to us that at least one
-> > > part of this issue is that mm_get_cid() is spinning.  This is being
-> > > investigated over here:
-> > > 
-> > > https://lore.kernel.org/all/877bt29cgv.ffs@tglx/
-> > > https://lore.kernel.org/all/bdfea828-4585-40e8-8835-247c6a8a76b0@linux.ibm.com/
-> > > https://lore.kernel.org/all/87y0lh96xo.ffs@tglx/
-> > 
-> > Knuwu, Paul and RCU experts, thank you very much. It's good to know that the
-> > similar issue is already under investigation. I hope that a fix gets available
-> > in timely manner.
-> > 
-> > > I have seen the static-key pattern called out by Dave Chinner when running
-> > > KASAN on large systems.  We worked around this by disabling KASAN's use
-> > > of static keys.  In case you were running KASAN in these tests.
-> > 
-> > As to KASAN, yes, I enable it in my test runs. I find three static-keys under
-> > mm/kasan/*. I will think if they can be disabled in my test runs. Thanks.
-> 
-> There is a set of Kconfig options that disables static branches.  If you
-> cannot find them quickly, please let me know and I can look them up.
+Hello,
 
-And Thomas Gleixner posted an alleged fix to the CID issue here:
+syzbot found the following issue on:
 
-https://lore.kernel.org/lkml/20260129210219.452851594@kernel.org/
+HEAD commit:    4d310797262f Merge tag 'pm-6.19-rc8' of git://git.kernel.o..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=17e91bfa580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=4aae00ac5a9d2645
+dashboard link: https://syzkaller.appspot.com/bug?extid=ea1cd4aa4d1e98458a55
+compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
 
-Please let him know whether or not it helps.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-							Thanx, Paul
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-4d310797.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0731328b5303/vmlinux-4d310797.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/fbeb5d7bc402/bzImage-4d310797.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+ea1cd4aa4d1e98458a55@syzkaller.appspotmail.com
+
+loop0: detected capacity change from 0 to 32768
+gfs2: fsid=syz:syz: Trying to join cluster "lock_nolock", "syz:syz"
+gfs2: fsid=syz:syz: Now mounting FS (format 1801)...
+gfs2: fsid=syz:syz.0: journal 0 mapped with 1 extents in 0ms
+gfs2: fsid=syz:syz.0: first mount done, others may mount
+overlay: ./bus is not a directory
+==================================================================
+BUG: KASAN: use-after-free in iomap_write_end_inline fs/iomap/buffered-io.c:1032 [inline]
+BUG: KASAN: use-after-free in iomap_write_end+0x390/0x720 fs/iomap/buffered-io.c:1050
+Write of size 1 at addr ffff88800e1d5904 by task syz.0.0/5322
+
+CPU: 0 UID: 0 PID: 5322 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:378 [inline]
+ print_report+0xba/0x230 mm/kasan/report.c:482
+ kasan_report+0x117/0x150 mm/kasan/report.c:595
+ check_region_inline mm/kasan/generic.c:-1 [inline]
+ kasan_check_range+0x264/0x2c0 mm/kasan/generic.c:200
+ __asan_memcpy+0x40/0x70 mm/kasan/shadow.c:106
+ iomap_write_end_inline fs/iomap/buffered-io.c:1032 [inline]
+ iomap_write_end+0x390/0x720 fs/iomap/buffered-io.c:1050
+ iomap_write_iter fs/iomap/buffered-io.c:1123 [inline]
+ iomap_file_buffered_write+0x52b/0xb30 fs/iomap/buffered-io.c:1189
+ gfs2_file_buffered_write+0x4eb/0x870 fs/gfs2/file.c:1061
+ gfs2_file_write_iter+0x976/0x1130 fs/gfs2/file.c:1166
+ iter_file_splice_write+0x99b/0x1100 fs/splice.c:738
+ do_splice_from fs/splice.c:938 [inline]
+ direct_splice_actor+0x101/0x160 fs/splice.c:1161
+ splice_direct_to_actor+0x53a/0xc70 fs/splice.c:1105
+ do_splice_direct_actor fs/splice.c:1204 [inline]
+ do_splice_direct+0x195/0x290 fs/splice.c:1230
+ do_sendfile+0x535/0x7d0 fs/read_write.c:1370
+ __do_sys_sendfile64 fs/read_write.c:1431 [inline]
+ __se_sys_sendfile64+0x144/0x1a0 fs/read_write.c:1417
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xe2/0xf80 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f224299aeb9
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2243773028 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 00007f2242c15fa0 RCX: 00007f224299aeb9
+RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000005
+RBP: 00007f2242a08c1f R08: 0000000000000000 R09: 0000000000000000
+R10: 000000007ffff004 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f2242c16038 R14: 00007f2242c15fa0 R15: 00007ffeffb7adf8
+ </TASK>
+
+The buggy address belongs to the physical page:
+page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x92c pfn:0xe1d5
+flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000000 ffffea0000387488 ffffea00008c1448 0000000000000000
+raw: 000000000000092c 0000000000000000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as freed
+page last allocated via order 0, migratetype Movable, gfp_mask 0x148c4a(GFP_NOFS|__GFP_HIGHMEM|__GFP_MOVABLE|__GFP_NOFAIL|__GFP_COMP|__GFP_HARDWALL), pid 5322, tgid 5321 (syz.0.0), ts 77159152107, free_ts 77205550804
+ set_page_owner include/linux/page_owner.h:32 [inline]
+ post_alloc_hook+0x228/0x280 mm/page_alloc.c:1884
+ prep_new_page mm/page_alloc.c:1892 [inline]
+ get_page_from_freelist+0x24dc/0x2580 mm/page_alloc.c:3945
+ __alloc_frozen_pages_noprof+0x18d/0x380 mm/page_alloc.c:5240
+ alloc_pages_mpol+0x232/0x4a0 mm/mempolicy.c:2486
+ alloc_frozen_pages_noprof mm/mempolicy.c:2557 [inline]
+ alloc_pages_noprof+0xa8/0x190 mm/mempolicy.c:2577
+ folio_alloc_noprof+0x1e/0x30 mm/mempolicy.c:2587
+ filemap_alloc_folio_noprof+0x111/0x470 mm/filemap.c:1013
+ __filemap_get_folio_mpol+0x3fc/0xb00 mm/filemap.c:2006
+ __filemap_get_folio include/linux/pagemap.h:774 [inline]
+ gfs2_getbuf+0x186/0x6d0 fs/gfs2/meta_io.c:144
+ gfs2_meta_read+0x109/0x8d0 fs/gfs2/meta_io.c:271
+ gfs2_meta_buffer+0x10f/0x2e0 fs/gfs2/meta_io.c:495
+ gfs2_meta_inode_buffer fs/gfs2/meta_io.h:70 [inline]
+ __gfs2_iomap_get+0x193/0x1840 fs/gfs2/bmap.c:861
+ gfs2_iomap_begin+0x219/0x11e0 fs/gfs2/bmap.c:1109
+ iomap_iter+0x600/0xf30 fs/iomap/iter.c:110
+ __iomap_dio_rw+0xcc4/0x1e10 fs/iomap/direct-io.c:752
+ iomap_dio_rw+0x45/0xb0 fs/iomap/direct-io.c:847
+page last free pid 74 tgid 74 stack trace:
+ reset_page_owner include/linux/page_owner.h:25 [inline]
+ free_pages_prepare mm/page_alloc.c:1433 [inline]
+ free_unref_folios+0xdce/0x1510 mm/page_alloc.c:3030
+ shrink_folio_list+0x4930/0x5160 mm/vmscan.c:1603
+ evict_folios+0x4795/0x5880 mm/vmscan.c:4711
+ try_to_shrink_lruvec+0x88b/0xb20 mm/vmscan.c:4874
+ shrink_one+0x25c/0x710 mm/vmscan.c:4919
+ shrink_many mm/vmscan.c:4982 [inline]
+ lru_gen_shrink_node mm/vmscan.c:5060 [inline]
+ shrink_node+0x2f8b/0x35f0 mm/vmscan.c:6047
+ kswapd_shrink_node mm/vmscan.c:6901 [inline]
+ balance_pgdat mm/vmscan.c:7084 [inline]
+ kswapd+0x144c/0x2800 mm/vmscan.c:7354
+ kthread+0x726/0x8b0 kernel/kthread.c:463
+ ret_from_fork+0x51b/0xa40 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
+
+Memory state around the buggy address:
+ ffff88800e1d5800: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88800e1d5880: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>ffff88800e1d5900: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                   ^
+ ffff88800e1d5980: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88800e1d5a00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
