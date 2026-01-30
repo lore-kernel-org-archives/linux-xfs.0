@@ -1,210 +1,76 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA86330337
-	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 15:42:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68280346774
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 16:09:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769787778; cv=none; b=gpGdkSEzo96XiFZ2YC3cp7VFtggVHkcxOyAxu1nK69fJLxTNNcQDbte4RhKoA4herVTQg0GVz6UKiB2v6/2vagBhdLGp3Bs6i218z+J6aRNB7c4WSiAnLtaSwLP/sXDS3pE+ibe++tXpMkx5dkhuajQVnkYKvWunkUHtcXjcypQ=
+	t=1769789353; cv=none; b=qOftHxmNBZljL/6IE0DLgeXbNYAhtfHgQiqZ/wj4TOaJpqoBeJNsfv3YW9o8VVa4JD8ajoGcPt+ZDGeNYPHl8S8KjTqH7pUY6J8lsoewQ8uM4zJ26isxtD6/U4KG4HW7k4oxRJvjvBx+E5DTDKwTfeGYmqmz8RO7tcnLwHr6B60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769787778; c=relaxed/simple;
-	bh=c3ghH7mQd6Ddq1mPeMsxo4Cr0y09DVBSncPKie0n0u4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pwKoXbL4vYDIdRQ0e1/bSLQG6u/5jfxs+AQeVmAL4r/7eVBNRFyAhZLu1QbraT7UEX/GcJuAQQz+P9wZcttR0br2Ipq8xYztEkfUikPXtcW3nIWQZosQCWOLTJ7Xsto3+sb4RSK0yHD5b1BlpfWk1QGZKfI9QJ6WgYOUiGEoJW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id B3E7E180F2D5;
-	Fri, 30 Jan 2026 16:42:52 +0100 (CET)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id 6oFZDmHRfGnyPBkAKEJqOA:T2
-	(envelope-from <lukas@herbolt.com>); Fri, 30 Jan 2026 16:42:52 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH] xfs: Use xarray to track SB UUIDs instead of plain array.
-Date: Fri, 30 Jan 2026 16:42:08 +0100
-Message-ID: <20260130154206.1368034-4-lukas@herbolt.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260130154206.1368034-2-lukas@herbolt.com>
-References: <20260130154206.1368034-2-lukas@herbolt.com>
+	s=arc-20240116; t=1769789353; c=relaxed/simple;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=n+xaIhL6iD1xQP0SEOWCCEe00PxdPTuPQ8oWpXJhUPpdsVZI6yAS+vTVg5jA+g6TUkkpDKxEQY7gIqv4+6qPxLMPBggzcxT2IPIBh07zfM3LTdbaKPBVVpXovBn0hfbTyq4xXrTXoz44RkY8zPgIKfPzWSpl1qKkstvF6hjcask=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=KY4UiRjJ; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KY4UiRjJ"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260130160904epoutp04cf3fed3872a4198a2d05eb03bda853a7~Pjggqrjwo1685416854epoutp04L
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 16:09:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260130160904epoutp04cf3fed3872a4198a2d05eb03bda853a7~Pjggqrjwo1685416854epoutp04L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1769789344;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=KY4UiRjJGS2lCsrOGQdD93kUWvTwdyrnyLE/BUSQ8RBHEQGND4J0+Qy+8qLUdbfTp
+	 NYHNuhHMKV7FVOUnpPF9dGIRjzL4MYApDqHx7wgluHHNnlSPBnf2yA5yZmGMrgZrpv
+	 YWvHAqysKnNCFguPOz5O4ginKOckKkz84xBX8rs8=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260130160903epcas5p312a66a400bf438157c5285f2f9076dd5~PjggFPk7l2594425944epcas5p3R;
+	Fri, 30 Jan 2026 16:09:03 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4f2gtQ74s2z2SSKX; Fri, 30 Jan
+	2026 16:09:02 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20260130160902epcas5p4f47396b260179d83b338be44cb4b886e~Pjge3l3yq1410114101epcas5p4r;
+	Fri, 30 Jan 2026 16:09:02 +0000 (GMT)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260130160900epsmtip10421ddfc9116cd83f323b3bf56c455af~PjgdWa7fj1856918569epsmtip1p;
+	Fri, 30 Jan 2026 16:09:00 +0000 (GMT)
+Message-ID: <7cee5c9a-756f-43d2-92b7-5d8a5fb4fd2b@samsung.com>
+Date: Fri, 30 Jan 2026 21:38:59 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 06/15] block: add fs_bio_integrity helpers
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Christian
+	Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Anuj Gupta
+	<anuj20.g@samsung.com>, linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20260128161517.666412-7-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+X-CMS-MailID: 20260130160902epcas5p4f47396b260179d83b338be44cb4b886e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260128165050epcas5p190f1dd0d8f5a3f51c74e8f3155e190ee
+References: <20260128161517.666412-1-hch@lst.de>
+	<CGME20260128165050epcas5p190f1dd0d8f5a3f51c74e8f3155e190ee@epcas5p1.samsung.com>
+	<20260128161517.666412-7-hch@lst.de>
 
-Removing the plain array to track the UUIDs and switch
-xarray to make more readable.
-
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- fs/xfs/xfs_mount.c | 87 +++++++++++++++++++++++-----------------------
- fs/xfs/xfs_mount.h |  3 +-
- fs/xfs/xfs_super.c |  2 +-
- 3 files changed, 46 insertions(+), 46 deletions(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 0953f6ae94ab..35c0d411e0cb 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -42,18 +42,48 @@
- #include "scrub/stats.h"
- #include "xfs_zone_alloc.h"
- 
--static DEFINE_MUTEX(xfs_uuid_table_mutex);
--static int xfs_uuid_table_size;
--static uuid_t *xfs_uuid_table;
-+static DEFINE_XARRAY_ALLOC(xfs_uuid_table);
-+
-+/*
-+ * Helper fucntions to store UUID in xarray.
-+ */
-+STATIC int
-+xfs_uuid_insert(uuid_t *uuid)
-+{
-+	uint32_t index = 0;
-+
-+	return xa_alloc(&xfs_uuid_table, &index, uuid,
-+			xa_limit_32b, GFP_KERNEL);
-+}
-+
-+STATIC uuid_t
-+*xfs_uuid_search(uuid_t *new_uuid)
-+{
-+	unsigned long index = 0;
-+	uuid_t *uuid = NULL;
-+
-+	xa_for_each(&xfs_uuid_table, index, uuid) {
-+		if (uuid_equal(uuid, new_uuid))
-+			return uuid;
-+	}
-+	return NULL;
-+}
-+
-+STATIC void
-+xfs_uuid_delete(uuid_t *uuid)
-+{
-+	unsigned long index = 0;
-+
-+	xa_for_each(&xfs_uuid_table, index, uuid) {
-+		xa_erase(&xfs_uuid_table, index);
-+	}
-+}
- 
- void
--xfs_uuid_table_free(void)
-+xfs_uuid_table_destroy(void)
- {
--	if (xfs_uuid_table_size == 0)
--		return;
--	kfree(xfs_uuid_table);
--	xfs_uuid_table = NULL;
--	xfs_uuid_table_size = 0;
-+	ASSERT(xa_empty(&xfs_uuid_table));
-+	xa_destroy(&xfs_uuid_table);
- }
- 
- /*
-@@ -65,7 +95,6 @@ xfs_uuid_mount(
- 	struct xfs_mount	*mp)
- {
- 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
--	int			hole, i;
- 
- 	/* Publish UUID in struct super_block */
- 	super_set_uuid(mp->m_super, uuid->b, sizeof(*uuid));
-@@ -78,29 +107,9 @@ xfs_uuid_mount(
- 		return -EINVAL;
- 	}
- 
--	mutex_lock(&xfs_uuid_table_mutex);
--	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_null(&xfs_uuid_table[i])) {
--			hole = i;
--			continue;
--		}
--		if (uuid_equal(uuid, &xfs_uuid_table[i]))
--			goto out_duplicate;
--	}
-+	if (!xfs_uuid_search(uuid))
-+		return xfs_uuid_insert(uuid);
- 
--	if (hole < 0) {
--		xfs_uuid_table = krealloc(xfs_uuid_table,
--			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
--			GFP_KERNEL | __GFP_NOFAIL);
--		hole = xfs_uuid_table_size++;
--	}
--	xfs_uuid_table[hole] = *uuid;
--	mutex_unlock(&xfs_uuid_table_mutex);
--
--	return 0;
--
-- out_duplicate:
--	mutex_unlock(&xfs_uuid_table_mutex);
- 	xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount", uuid);
- 	return -EINVAL;
- }
-@@ -110,22 +119,12 @@ xfs_uuid_unmount(
- 	struct xfs_mount	*mp)
- {
- 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
--	int			i;
- 
- 	if (xfs_has_nouuid(mp))
- 		return;
-+	xfs_uuid_delete(uuid);
-+	return;
- 
--	mutex_lock(&xfs_uuid_table_mutex);
--	for (i = 0; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_null(&xfs_uuid_table[i]))
--			continue;
--		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
--			continue;
--		memset(&xfs_uuid_table[i], 0, sizeof(uuid_t));
--		break;
--	}
--	ASSERT(i < xfs_uuid_table_size);
--	mutex_unlock(&xfs_uuid_table_mutex);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index b871dfde372b..c3a5035c1fb6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -689,7 +689,8 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
- 	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
- }
- 
--extern void	xfs_uuid_table_free(void);
-+extern void xfs_uuid_table_destroy(void);
-+
- uint64_t	xfs_default_resblks(struct xfs_mount *mp,
- 			enum xfs_free_counter ctr);
- extern int	xfs_mountfs(xfs_mount_t *mp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bc71aa9dcee8..fc9d2e5acf96 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2723,7 +2723,7 @@ exit_xfs_fs(void)
- 	xfs_mru_cache_uninit();
- 	xfs_destroy_workqueues();
- 	xfs_destroy_caches();
--	xfs_uuid_table_free();
-+	xfs_uuid_table_destroy();
- }
- 
- module_init(init_xfs_fs);
-
-base-commit: 63804fed149a6750ffd28610c5c1c98cce6bd377
--- 
-2.52.0
-
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
