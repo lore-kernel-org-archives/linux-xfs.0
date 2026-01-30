@@ -1,44 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BFB334B404
-	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 05:20:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC8B7347BDB
+	for <linux-xfs@vger.kernel.org>; Fri, 30 Jan 2026 05:20:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769750451; cv=none; b=Wx47gxLAMvzmjQ3o/orQh8VO936X/QjEtv4noErXgvTJspTVuntX3UjbWoRbUjx8qkmUutxMGWqZXPZIXEmr7Ba1QscWRb+QEY6ppbA7KZd7/rZyfw+skj1+WOMvXVmViNY2OUbz6/gPsISUnnI69ve9iRO1MZIJ1zfSNPe/9jw=
+	t=1769750455; cv=none; b=iCVufLETM215OzcgFOgfDwHxVZJjRleDp0t0rg/2r8FAQrDZzCuaRPStC3i3sYtY38oOM9Z3phmF4qSeQS2dd1zUHJ8Igrt8rCUk0jkOqgcIEXRxLxGjl1+floOgxScJ7IfcfB16UXTkKKBc4qVYSf7WHEbG9JAf8DzNakfxsJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769750451; c=relaxed/simple;
-	bh=VbwilhP6Gv7K0uNO049xJVclu+p7oabL/b6EBV82Bo4=;
+	s=arc-20240116; t=1769750455; c=relaxed/simple;
+	bh=YmTijWLPNRVDgIQ28ghPqY0CMrikBX7BMIIYZNPIPTY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SpAkDlwf6DA8WWtzW19MD/Ky19dBSDGibpqIkXQltETRKCXTLCrxiKXpydMHWJdLTzW7sdi1eUBuDteW/pskLITpESoY8aXvMUf/slZ6zmMG8BjvXVkAEayAGjtFYRC5uXt09/sO4zTSWyrvzwZ31maUD4UKzalnCq7M+iu5upY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OY2mdTOV; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ftrPimVYVfaERIZQiqvT4Y1Qle8Vf7I2dzNHww97f69ZL3yAHAYWogMNEoS2OWDN3ajB8s2s/531wnR6km8Elo+5YRRy0ms1WzrH9cYftHIOc3sx9xQx6pPiRCdDP+Fp4cIO7Ar/6/eOsNKdT/Xbrx13TrGzqXniwSqmedjFhPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HEz6/t82; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OY2mdTOV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HEz6/t82"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=kyzsyTa3SKj6hOMI8UOFVu65y2w7gRcKfLR0Ar6kbAc=; b=OY2mdTOVUJJmkvjHhfyFOnBsFw
-	4OzS8m3Ueht0pkhPijl7DJntGSGCybrb8P6F29aos8zEQ0+qwnoSjVkk8vJ3BBiCFkQFyBVp3HF2a
-	Zn5uIvdlAMvPmrriFDjPr7FB3ag8viOc8VHulYc8xShHQa++FIMX9Toqmu2yeJOvNuMPp7ZCvdnsE
-	qLk4IB0b6iojKw5iFD56wrYUULvnBte99YVtKxJFhRhnfdqPVc16PgoR+J5+FIvFz9sUXh8pQDOXm
-	Vt8BSbroGGaXJeIMaS0KatYqYyEmBwwsPbOpKxIEDUFeeOP5q5w6bE47qmXvsL4pvzLTIfPQzey6j
-	tbONOyPg==;
+	bh=PzCSIFAiOoXDTQ/0KylAflXgdjhjPENtQo/2NvMug/s=; b=HEz6/t82l6nKXdM6JqwfodNuz7
+	6Z9+fxGZC1f1NTz0mQfp08P8cCfRax2ABu9Pet/CUMm/uYCkCg0OR3AG9dW21Qg9rOvnqtzFxsyNd
+	iscCd7VC3CRWEV4hPn40urZ/QIUcx7EXCc3MOWIt6RFTqdJ2hzx/Ln/+VLpZcytfEGxJ1/nlR21TG
+	UX7qnlQaJ8EseWWcBXBjRWpx71Wpdd6UD5OJzCHDhxzDbOjm2nJ/BBegXYBX03FnN+OQ3lWAAoUKp
+	NDBBEhpIpQWDM2/vHkpiof5AFfbobHDROZlfwaGGcAy1Yid39toiaO6BIaTPxr3unDaNhUlBqH0CI
+	ZQWrO7Jg==;
 Received: from [185.190.48.89] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vlgw5-000000013JK-2Trd;
-	Fri, 30 Jan 2026 05:20:49 +0000
+	id 1vlgw9-000000013JR-0855;
+	Fri, 30 Jan 2026 05:20:53 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Hans Holmberg <hans.holmberg@wdc.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 09/11] xfs: add zone reset error injection
-Date: Fri, 30 Jan 2026 06:19:24 +0100
-Message-ID: <20260130052012.171568-10-hch@lst.de>
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 10/11] xfs: give the defer_relog stat a xs_ prefix
+Date: Fri, 30 Jan 2026 06:19:25 +0100
+Message-ID: <20260130052012.171568-11-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260130052012.171568-1-hch@lst.de>
 References: <20260130052012.171568-1-hch@lst.de>
@@ -51,82 +50,70 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a new errortag to test that zone reset errors are handled correctly.
+Make this counter naming consistent with all the others.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_errortag.h |  6 ++++--
- fs/xfs/xfs_zone_gc.c         | 13 +++++++++++--
- 2 files changed, 15 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c | 2 +-
+ fs/xfs/xfs_stats.c        | 6 +++---
+ fs/xfs/xfs_stats.h        | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index b7d98471684b..6de207fed2d8 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -74,7 +74,8 @@
- #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
- #define XFS_ERRTAG_FORCE_ZERO_RANGE			46
--#define XFS_ERRTAG_MAX					47
-+#define XFS_ERRTAG_ZONE_RESET				47
-+#define XFS_ERRTAG_MAX					48
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 0bd87b40d091..c39e40dcb0b0 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -565,7 +565,7 @@ xfs_defer_relog(
+ 			continue;
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -135,7 +136,8 @@ XFS_ERRTAG(WB_DELAY_MS,		wb_delay_ms,		3000) \
- XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
- XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
- XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
--XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4)
-+XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4) \
-+XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)
- #endif /* XFS_ERRTAG */
+ 		trace_xfs_defer_relog_intent((*tpp)->t_mountp, dfp);
+-		XFS_STATS_INC((*tpp)->t_mountp, defer_relog);
++		XFS_STATS_INC((*tpp)->t_mountp, xs_defer_relog);
  
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index 4023448e85d1..570102184904 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -16,6 +16,8 @@
- #include "xfs_rmap.h"
- #include "xfs_rtbitmap.h"
- #include "xfs_rtrmap_btree.h"
-+#include "xfs_errortag.h"
-+#include "xfs_error.h"
- #include "xfs_zone_alloc.h"
- #include "xfs_zone_priv.h"
- #include "xfs_zones.h"
-@@ -898,9 +900,17 @@ xfs_submit_zone_reset_bio(
- 	struct xfs_rtgroup	*rtg,
- 	struct bio		*bio)
- {
-+	struct xfs_mount	*mp = rtg_mount(rtg);
-+
- 	trace_xfs_zone_reset(rtg);
+ 		xfs_defer_relog_intent(*tpp, dfp);
+ 	}
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 9781222e0653..3fe1f5412537 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -23,7 +23,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 	uint64_t	xs_xstrat_bytes = 0;
+ 	uint64_t	xs_write_bytes = 0;
+ 	uint64_t	xs_read_bytes = 0;
+-	uint64_t	defer_relog = 0;
++	uint64_t	xs_defer_relog = 0;
  
- 	ASSERT(rtg_rmap(rtg)->i_used_blocks == 0);
-+
-+	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_ZONE_RESET)) {
-+		bio_io_error(bio);
-+		return;
-+	}
-+
- 	bio->bi_iter.bi_sector = xfs_gbno_to_daddr(&rtg->rtg_group, 0);
- 	if (!bdev_zone_is_seq(bio->bi_bdev, bio->bi_iter.bi_sector)) {
- 		/*
-@@ -913,8 +923,7 @@ xfs_submit_zone_reset_bio(
- 		}
- 		bio->bi_opf &= ~REQ_OP_ZONE_RESET;
- 		bio->bi_opf |= REQ_OP_DISCARD;
--		bio->bi_iter.bi_size =
--			XFS_FSB_TO_B(rtg_mount(rtg), rtg_blocks(rtg));
-+		bio->bi_iter.bi_size = XFS_FSB_TO_B(mp, rtg_blocks(rtg));
+ 	static const struct xstats_entry {
+ 		char	*desc;
+@@ -76,13 +76,13 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 		xs_xstrat_bytes += per_cpu_ptr(stats, i)->s.xs_xstrat_bytes;
+ 		xs_write_bytes += per_cpu_ptr(stats, i)->s.xs_write_bytes;
+ 		xs_read_bytes += per_cpu_ptr(stats, i)->s.xs_read_bytes;
+-		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
++		xs_defer_relog += per_cpu_ptr(stats, i)->s.xs_defer_relog;
  	}
  
- 	submit_bio(bio);
+ 	len += scnprintf(buf + len, PATH_MAX-len, "xpc %llu %llu %llu\n",
+ 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
+ 	len += scnprintf(buf + len, PATH_MAX-len, "defer_relog %llu\n",
+-			defer_relog);
++			xs_defer_relog);
+ 	len += scnprintf(buf + len, PATH_MAX-len, "debug %u\n",
+ #if defined(DEBUG)
+ 		1);
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index 15ba1abcf253..d86c6ce35010 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -142,7 +142,7 @@ struct __xfsstats {
+ 	uint64_t		xs_xstrat_bytes;
+ 	uint64_t		xs_write_bytes;
+ 	uint64_t		xs_read_bytes;
+-	uint64_t		defer_relog;
++	uint64_t		xs_defer_relog;
+ };
+ 
+ #define	xfsstats_offset(f)	(offsetof(struct __xfsstats, f)/sizeof(uint32_t))
 -- 
 2.47.3
 
