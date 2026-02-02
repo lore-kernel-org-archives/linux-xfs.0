@@ -1,46 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2ABB1C84BB
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 14:38:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 037A4372B24;
+	Mon,  2 Feb 2026 14:48:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770043127; cv=none; b=D2rkdXkk1nuGmkMNT02o4qFnsg8NLJOP1G828G18PcY5w6XoNsPZzVA4bj6L5eXUAOrDRxI0AXAVfk5zozd1kVVLibWnq9bM/FY5EyOTI4o8QyOf6JkD/AUe2my9Au/WkotMQHxWDhchS03qnDLw6xQBRZjUtM+AAHbqXXc6UNc=
+	t=1770043732; cv=none; b=aWlsxQOyu+SntlNn9ENZBRz9IaFR0JIAV70Hh6m5g4IkUA5uKBF7JZrWzcithiFzzykHwki+3XxFnD7AJe1WjVa1j49XUhrK4lYRAU48jo/cSq0oEwMLJkxzDWFUhEQkcu4cl559W4sDJA5M3Rjoac3mqVA3UPPnt20ouXSGbh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770043127; c=relaxed/simple;
-	bh=PrAXrrlrSUINsxO3vpkzIVWRSrEu2G7umCEsaGg3yiw=;
+	s=arc-20240116; t=1770043732; c=relaxed/simple;
+	bh=a0i1EGHJ53Cn36Ogm+2TKGDqjDbkwy8XN50DuccTGvw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IMvufF10Y+CWP2loTGNOVlxfyh0eAtsf/D6Qg7UCtqlVrssZnp6hGqipxcd3YiGsllebzYsVO1sDz4yFJZwzatTog0v8h54k3kgjKiIIazqwVWlNUaYLNireijfw3vJ5ZXU0VqY0Iz7yX88n/ja9HCSJ1Z4S+thtF0gIc437IVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZcI9N+zk; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=f2CTqSIU+bClA+EePUzTa24QauGKfAk+/kd9gzM1/RLFIahjK3e5/5womJtctQ7z7oAZrZOTxhJQcEKtEWoCjt5Bt3npcMwo5bc+jZDG3qIiKhN/+7qaqbv2ymFfgU6s27hee+gQfc/JfbPtYHUuWVj3I34FBIGzwI/AamIRI8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ErlKDL1V; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZcI9N+zk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ErlKDL1V"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=yfVBrvgRzjEQxFJEPjYVp8VVePe1odDur0CMEHAzOaM=; b=ZcI9N+zkBnhws1D1hUdRk1K3nv
-	QMfyi/cMujqnbeKpbXODfAwn7VVgqjYiuNAc4WL1P9btmSQiF4tcD/5mRx8umM7QESmwqX63Av6h7
-	YJRIv88uS+hA2E7lrt040yGLaSCwMay/zFEsW4Yi+k6fL2Ix9Ilzzn3/xyKOTE4gwGRhBwwfAUez0
-	FCkhdT2TbtCWpFEylr7wInAAIUDbLkFQfbo1zb8g0UuG7iuQGd1W4RzKuVCrJsrmnMJsoFr4wuno7
-	Vab6kztc/iIgWY4IqJKW9bwd0PHv0gXaVYg1kw7RnRiTvE5dsvzIu+5RYvNJLSAkPAtCwEydgGYAK
-	C4fBFC7A==;
+	bh=5RfuoFuZfmU6d6xpKp+WWNjws0YGAx9f0t4UKjDQuJQ=; b=ErlKDL1VrxmApC+k1RGI4731b9
+	g6U/J6ugzGmf7HqXFcuNK5qCOJENnJzyuTOS1Mki9v1pqhO5TX8C5prq32YkheUfq8pCRqK7KSkQb
+	H0fYZ4DIs2hInp5X2AHqavTVWiHu6IW43MGbxhGEqHzj9iC+9VLxpVbKz7FjRAIplYorYhdao6b2X
+	PPuHDys4lKDAmCyGejWfL2gJMn2gEr7sDXZ9geZ5iNmhhzzaEdLVVTW5CBAHu+/YE+U4lyg9nsFK4
+	m0mtkzdMhOHCV1viHn5KEp4uWoaKPC9pVqCKQXuGLbESv272CJ7VSUsmJX8lifpx3GI1J2K7UvyVR
+	IqUVKhAQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vmv4f-000000057CZ-24Mh;
-	Mon, 02 Feb 2026 14:38:45 +0000
-Date: Mon, 2 Feb 2026 06:38:45 -0800
+	id 1vmvEQ-00000005879-1moJ;
+	Mon, 02 Feb 2026 14:48:50 +0000
+Date: Mon, 2 Feb 2026 06:48:50 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
-	bfoster@redhat.com, david@fromorbit.com,
-	hsiangkao@linux.alibaba.com
-Subject: Re: [RFC V3 2/3] xfs: Refactoring the nagcount and delta calculation
-Message-ID: <aYC29YuaLHhQJuTz@infradead.org>
-References: <cover.1760640936.git.nirjhar.roy.lists@gmail.com>
- <b84a4243ee87e0f0519e8565b1da5b8579ed0f64.1760640936.git.nirjhar.roy.lists@gmail.com>
- <1659bd90-2fbc-42df-abbe-3da52402feb6@gmail.com>
+To: Piyush Patle <piyushpatle228@gmail.com>
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzbot+bd5ca596a01d01bfa083@syzkaller.appspotmail.com
+Subject: Re: [PATCH] iomap: handle iterator position advancing beyond current
+ mapping
+Message-ID: <aYC5Utav-rTKigTw@infradead.org>
+References: <20260202130044.567989-1-piyushpatle228@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,25 +47,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1659bd90-2fbc-42df-abbe-3da52402feb6@gmail.com>
+In-Reply-To: <20260202130044.567989-1-piyushpatle228@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Feb 02, 2026 at 07:45:56PM +0530, Nirjhar Roy (IBM) wrote:
-> 
-> On 10/20/25 21:13, Nirjhar Roy (IBM) wrote:
-> > Introduce xfs_growfs_compute_delta() to calculate the nagcount
-> > and delta blocks and refactor the code from xfs_growfs_data_private().
-> > No functional changes.
-> > 
-> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> Hi Carlos, Darrick,
-> 
-> Can this be picked up? This is quite independent of the rest of the patches
-> in this series.
+On Mon, Feb 02, 2026 at 06:30:44PM +0530, Piyush Patle wrote:
+> Closes: https://syzkaller.appspot.com/bug?id=bd5ca596a01d01bfa083
 
-For a 2 1/2 month patch picked from a larger series, a resend is probably
-a better idea.  But the last days of the merge window might not be the
-right time for a pure refactoring without urgency anyway.
+This link doesn't work.  And the commit log has zero details of what's
+happening either.
 
