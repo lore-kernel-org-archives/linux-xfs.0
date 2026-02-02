@@ -1,173 +1,63 @@
-Received: from mail-pl1-f196.google.com (mail-pl1-f196.google.com [209.85.214.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F0A19DFAB
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 14:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6330367F40
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 14:15:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770041302; cv=none; b=deEIFdAIx863BHssah0UIRP833FKpmGvSBnympJIE8tmDJzZjTcAf3vTl9ZfLZMQleN9HgKsKIa790ISGz7gzG8QQ1w7gto0PladMGe9kR3EGRgFvfilJll8ddXgQKxF/aFZdBiz9Z5LAxdXfodc29TajK94mBWr7zJk4LvU9uw=
+	t=1770041711; cv=none; b=ZDs95cmGBS1LdQJaiMGGjXHKO2NtxD7kXSpD7pYncvY2TiJj94HLiCvFWa7qUlvhnIYVJzXl8iAApHXOhvS7yhFym9gVfWriR2Po2EzAA+rKuAB18C91d5rDtFkce8Z4zMHrznkJfjOpD8aE7oJWcMTeYQpVM6qrVVpRQ0vH+6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770041302; c=relaxed/simple;
-	bh=JsHEnxzZfOJImgb3ruJ3pieGW36lOZf/AxcPFlFEDUM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NkvJmFKMCZN8dGUq+2mGjMnDlBpUWS4MxsF7NsrexC+6V5C6gS8QRhiIbmyI8375k3HffFV8BbQYMNodPCLaV+DiXNFQjZif1pA89hmdO/+YmY42lAq3XmTcNtbmk2fbXoM93JNBRUx35sUQ44hPTwWHS3SaN4tw3RDlxWe85nQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C37cRcZz; arc=none smtp.client-ip=209.85.214.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770041711; c=relaxed/simple;
+	bh=QpGHeeWF0V7cCj2YfkRMuy9YG9RKF1qsshjWkZ3NPPU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bCnJcTIhUkKk5dYG3rAnS0mao/QBguB5a2WommTvYZoqNnz5GyQRtxhEBUUztz90O3q60S8B7fNWK0gnX/6Iq+esrRHMH9J/Ld/hMT8ZuwaZ+a4c1xpOgDsatjBPDI+bkFPawdN9i2mJUItIEUpHaKJs+YL51rzLL/mejWtWVfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=E1eJ7Aot; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C37cRcZz"
-Received: by mail-pl1-f196.google.com with SMTP id d9443c01a7336-2a09a3bd9c5so31601835ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Feb 2026 06:08:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770041300; x=1770646100; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gTGhSF/LhzLm4AvGCBt62KIx+kqVzeQu4rl4M3jVG0c=;
-        b=C37cRcZzSo0ONpEiU4XKWr3PU1UHd2B0CS9/2Ta3P5UxbMoNoP8dU3Yf18drAodTJ0
-         1wB4zcuhcXCK5WIEP11VjFbxyHgcuAzVmefe3+wwxf4PbhqO5/8ji4EWPfPpo9HUNYTL
-         UJ7oPElfiEtBLACeOmZM2EsO+xv6JcoO2/cktVCJTPaVuqDxzXtH5P6OwJbfSUPRUxSo
-         HgpiNeckMXYV3hRCLXAcwNb6lX1nXzo7H6c1iM1pxacuvv/cCNCUplF6PO6+DXxQEOJ2
-         MeeA5SuisEcLi30/EXKNpjImjFQSX9L01y0jtTevj0poNdRAvy4s/0vBPgKa5cvfU83X
-         zXuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770041300; x=1770646100;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=gTGhSF/LhzLm4AvGCBt62KIx+kqVzeQu4rl4M3jVG0c=;
-        b=rcCPvLGctPKo02vz4dTTx7gHS00s5rjLwG8p9L7Y9U5KaHDdDtKsvNu9CoKWk7KPav
-         Zc4o2HepENYXsAd8z0NX+V4djQIEqtn5RkwjdX0sSRREP/5fk6GiOto9QRP84mWet8oJ
-         6wrC5PNIK5/of4AHwH0+TsWgWvnHvKwLC3ZCqpewUq4AL71N6Aprdp9LBmwyblkT3FiV
-         z4sE1y1lUsEpQFWk8wOTe0vC0T5pArQYzeisqWJnRog4nFWtP2AY8cEk/VNZ6yvRtS3q
-         MSsYKLAYxjWY5Ul2E8VNWgCqMzj522PsWPGtDVli+MvMCWLNCzrBP7UyVa4EHkCD0j7X
-         9VQA==
-X-Gm-Message-State: AOJu0YwEbIfvWmGVZ5CrE03mDjNafKxAYsyA/EQjcKY+YHixwMcTF4eG
-	xA4YpAE9e+5kFuIxb3KN4xQPadbQFdn9XlM1htXyF6SVNxz8MjaIi8U6
-X-Gm-Gg: AZuq6aKh/Ml1fyy7MiEVf0IoJA1VoHAgoCcDevtZjYDmOec/2KDtL3SWqCLuQX/noog
-	+QrOGqWWFA6+Z22Ay1SwSDTQCdtEFDR8jd0plcBq5PB7f9T0fB2kjxSpgpHRfkAxBcepfMl/72j
-	7mqxam1fmV3j0pTVmp3qfLdZtza1tVh3mvmfHUFJXzl/7UwcTduEmMNYjk8e+6lvPF2EIeGOwcn
-	kqMZ3aTQqn2znZ4kiIuUuyKQbTILSEEIcsIttr2CDaf9Vrma9lRmgfRySHLOM/1CouO/RQ4wgko
-	jObdq5kBc5OnRnRT1hGVZodUliOWGEk/m8v5Kt/v3eGD3lb/TLMZyWmt4AWKzyGiMiLPTEKxAt6
-	6A/L6Mcu4b/fiVIPeVd9ssjTq3X2xe62915Cv6gibrwURpHg7rJERODdcgAv//3V6l6gKPF+44z
-	1Pe9xRUd3E7BS0x22xFW41a+QLcQJIAiYo
-X-Received: by 2002:a17:902:cf10:b0:29d:65ed:f481 with SMTP id d9443c01a7336-2a8d8946eabmr125914985ad.0.1770041299948;
-        Mon, 02 Feb 2026 06:08:19 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.208.177])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a8b47f4717sm139961285ad.18.2026.02.02.06.08.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Feb 2026 06:08:19 -0800 (PST)
-Message-ID: <04bdccfc-5eb0-4962-992a-5d2d0b0bb41c@gmail.com>
-Date: Mon, 2 Feb 2026 19:38:14 +0530
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E1eJ7Aot"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=psdP5vkIdg2CeN/jj+7urDeqJ0RTX8DiC8JJxS0qSbk=; b=E1eJ7AotkwRYdPwLWzylhcSNBy
+	kMBmUqyesuagZ/z2eElUM4Q2Ps86m1XV1evCJoOgC2CMtEqc9GRhTfCL5EtMzROeby8f8KGZLrnDP
+	xa4CtYMLSUUqs/N3NWbutIcNBB4AtUt6B1ziQDdPDVCcPmw7/O0sfZCjtS8MYtXV353plfp3gj5rK
+	B/P552kQfd0VwBY3SgpVVkS8K9IoMS62lBWokgagJ8L15Y2Qb0V5K+oaCfIJdQwa8wBxs+mHoBV5Z
+	dKOdYJf3QIaiDKgm0N04pndERaw5xGgx5VJ8jr26HQ0/QnNjSBzeRfCypzhg0oAL3p6OR1ZhfU1g/
+	qCdCIHQQ==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vmuhm-0000000558G-3mPe;
+	Mon, 02 Feb 2026 14:15:07 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: fix inode stats with lots of metafiles
+Date: Mon,  2 Feb 2026 15:14:30 +0100
+Message-ID: <20260202141502.378973-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] xfs: Move ASSERTion location in
- xfs_rtcopy_summary()
-Content-Language: en-US
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org, hch@infradead.org
-References: <cover.1769625536.git.nirjhar.roy.lists@gmail.com>
- <e9f8457440db64b07ab448bd7d426d3eb9d457d6.1769625536.git.nirjhar.roy.lists@gmail.com>
- <aXse1lm9J66RTvwZ@nidhogg.toxiclabs.cc>
- <aXsgia9chv4y91u3@nidhogg.toxiclabs.cc>
- <d6020236-04e6-442f-af6f-0fd690442902@gmail.com>
- <aXtdDnpguPkytiPT@nidhogg.toxiclabs.cc>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <aXtdDnpguPkytiPT@nidhogg.toxiclabs.cc>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Hi all,
 
-On 1/29/26 18:59, Carlos Maiolino wrote:
-> On Thu, Jan 29, 2026 at 06:04:20PM +0530, Nirjhar Roy (IBM) wrote:
->> On 1/29/26 14:27, Carlos Maiolino wrote:
->>> On Thu, Jan 29, 2026 at 09:52:02AM +0100, Carlos Maiolino wrote:
->>>> On Thu, Jan 29, 2026 at 12:14:41AM +0530, Nirjhar Roy (IBM) wrote:
->>>>> We should ASSERT on a variable before using it, so that we
->>>>> don't end up using an illegal value.
->>>>>
->>>>> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
->>>>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->>>>> ---
->>>>>    fs/xfs/xfs_rtalloc.c | 6 +++++-
->>>>>    1 file changed, 5 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
->>>>> index a12ffed12391..9fb975171bf8 100644
->>>>> --- a/fs/xfs/xfs_rtalloc.c
->>>>> +++ b/fs/xfs/xfs_rtalloc.c
->>>>> @@ -112,6 +112,11 @@ xfs_rtcopy_summary(
->>>>>    			error = xfs_rtget_summary(oargs, log, bbno, &sum);
->>>>>    			if (error)
->>>>>    				goto out;
->>>>> +			if (sum < 0) {
->>>>> +				ASSERT(sum >= 0);
->>>>> +				error = -EFSCORRUPTED;
->>>>> +				goto out;
->>>>> +			}
->>>> What am I missing here? This looks weird...
->>>> We execute the block if sum is lower than 0, and then we assert it's
->>>> greater or equal than zero? This looks the assert will never fire as it
->>>> will only be checked when sum is always negative.
->>> Ugh, nvm, I'll grab more coffee. On the other hand, this still looks
->>> confusing, it would be better if we just ASSERT(0) there.
->> Well, the idea (as discussed in [1] and [2]) was that we should log that sum
->> has been assigned an illegal negative value (using an ASSERT) and then bail
->> out.
->> [1] https://lore.kernel.org/all/20260122181148.GE5945@frogsfrogsfrogs/
->>
->> [2] https://lore.kernel.org/all/20260128161447.GV5945@frogsfrogsfrogs/
-> I see. I honestly think this is really ugly, pointless, and confusing at
-> a first glance (at least for me). The assert location is logged anyway
-> when it fire.
->
-> If I'm the only one who finds this confusing, then fine, otherwise I'd
-> rather see ASSERT(0) in there.
+the second patch fixes the active inode/vnode count on file systems with
+lots of metafiles, i.e. on SMR hard disks.
 
-Sure, Carlos. ASSERT(0); sounds okay to me. Darrick, do you have any 
-hard preferences between ASSERT(0); and ASSERT(sum < 0); ? If not, then 
-I can go ahead, make the change and send a revision with the suggested 
-change here.
+The first patch cleans up the counters a bit to prepare for that.
 
---NR
-
->
-> Darrick, hch, thoughts?
->
->> --NR
->>
->>>> What am I missing from this patch?
->>>>
->>>>>    			if (sum == 0)
->>>>>    				continue;
->>>>>    			error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
->>>>> @@ -120,7 +125,6 @@ xfs_rtcopy_summary(
->>>>>    			error = xfs_rtmodify_summary(nargs, log, bbno, sum);
->>>>>    			if (error)
->>>>>    				goto out;
->>>>> -			ASSERT(sum > 0);
->>>>>    		}
->>>>>    	}
->>>>>    	error = 0;
->>>>> -- 
->>>>> 2.43.5
->>>>>
->>>>>
->> -- 
->> Nirjhar Roy
->> Linux Kernel Developer
->> IBM, Bangalore
->>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
-
+Subject:
+ libxfs/xfs_inode_buf.c |    4 ++++
+ libxfs/xfs_metafile.c  |    5 +++++
+ xfs_icache.c           |    9 ++++++---
+ xfs_stats.c            |   17 +++++++++++------
+ xfs_stats.h            |   19 ++++++++++---------
+ xfs_super.c            |    4 ++--
+ 6 files changed, 38 insertions(+), 20 deletions(-)
