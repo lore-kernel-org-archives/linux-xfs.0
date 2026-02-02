@@ -1,140 +1,145 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 543F82FB997
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 18:54:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 481912FC871
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 18:59:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770058481; cv=none; b=cJfc3apn5WGXxJJivR4KvJesGX7O1yOiNNuYqlkP5afi0sfAhxbLiesGuFYBgVe3oUKrmbkgq2pM8OTxbFBNauPImib5ke9/J+QZHT7IWiie1IpEH3CP5IZyB+1G2mqePkPQsNufYEHA1vRwAE2dfrf2b2hQf6dnrmjYfCEkICI=
+	t=1770058800; cv=none; b=TPC7OJst7dxIJL0tQfrw2Ls68aM1Z7GRryCI2MFbEnvdEWR2DA45hAHPicgalgyq37dcn2E41FInmUUShXMqlkfTMSb6M3WbIPOrJEWat6Qm98ec2CwMmsLQ07ukqvEhpf8pCIoilES8lMeW3PqSgxyi6R+VeJuV4YJa48YoKbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770058481; c=relaxed/simple;
-	bh=mZ5D2zAzzm696U6VgwotZHk2BkZr+SZOTM12Qx/6SxQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Hhyk6A6yfDU9IcyVW3ZE5X/CYev7p3CX2aV/4+N+LbyFSC0CNpjRD9ds8cr2nVGVj2BO346RCq3iINoNeabp4sKmRTZ8JfE0gLW40oo280pe/wmpwCtuO6A+/R3rBLfShvoCcx+Aok83xjBGvakBaNrqkxgiChotqPp3T603RJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K6xCRQNK; arc=none smtp.client-ip=209.85.222.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770058800; c=relaxed/simple;
+	bh=cdlq2Gnl74oO7/dDcIrNQ/cKJYwu5pS0GnFZokptAjg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=owYRN1DiC3Wuoanufvbi8BytbSK/5bLSKLTc8eJ6mYoon7lS5nUdegtroAMbgtGgi4k6sdOKUoCsrK86zmG4cWizq6i4PpLn6/hPLw+ShTTrkzJWhqLzDJVcQRJEb/+VxSIL7oRbIvSjntOhziVn+MNkFo8H/G7bn7A0ZDtxyE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tmlzYihm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K6xCRQNK"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-8c6aaf3cd62so527848585a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Feb 2026 10:54:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770058479; x=1770663279; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:autocrypt
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=q8tbSGXqu9XCrGpKlDfgkmWVwXh725wrV1GItS9qDF0=;
-        b=K6xCRQNKyf/T6P6kQ0dPFIZHiUp4oMXkQCKomOCQ1JWPqSr3KPGBXUy3Clh3ARgSxl
-         fk3IZBg+NmZl0D2a/AFkGqvDViqz6LCZLmtIY0HgIOxlRv/D1q+iuVZNEWe/6B2YMOzY
-         KN7Z+ymJyYm0YhZyXYVlPTQU7BJJZb7KbRptu0t9GpN6SSyNlYAfL+Rv62raD7eMS3a9
-         ylhghI/a6KXu9m92E+iaTnKRnnUOSk3av3VEzwwdtAY3oaJmQw0WrJoO3n4uyOUvPYw8
-         ftGagZdvwnnx4IZxThIistDk+Q/SNpwGrGOI7aXtM1sB1APAGhvB4YMtIZ19FW8wG63X
-         eW5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770058479; x=1770663279;
-        h=mime-version:user-agent:content-transfer-encoding:autocrypt
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=q8tbSGXqu9XCrGpKlDfgkmWVwXh725wrV1GItS9qDF0=;
-        b=qAmtm9Qpd77EUj0fyIXcePB3FnmOA3O9uHFv/Vrdent0YuL6Qi04EpjXWdFOaP0r6o
-         /J9Mjokgshw1gwI0GuQVDkBXKHVTStY5X7oLFAh48Lz+RJUv1UeNrF7KsXe8F/PySg4p
-         w0MzUHBc4A9rdg34o1uje1mVqGRpYNtHr/RfykqsjIqm3Vgq00XLCy/vaGlzz8qCYW72
-         XwssI5AxIX1bL8hCnCfahWqJxZ1ZrrQ9cA+k27oWY2Z9iLiTki3OiTNl5SlYWwSZKqfZ
-         X9Jnk9B2uVD+LYx8erPrkguPOXxGhYWV2zEv/pYej6MdauieLuw1FRm5HSU4RTZPN8U3
-         CzxA==
-X-Forwarded-Encrypted: i=1; AJvYcCW2O/+lP/DWzKrM7bLvWZYxaoKNZGrRI1hjva/0bzoEswXm+Ki1wtw6IItLKTm03tbCWqQ8HicMCNM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyINVn1DrA27sJm8ajeFzG73rHvGXP/nEU7NoW86JSARDU3tpnQ
-	qnuoLKJow9E4/5qMTgVGyeL+PbG5PtWtiSCz824Act3RU7q2xI812pv9
-X-Gm-Gg: AZuq6aJv2PqlTV4igKu98pmdmwHp8YpT1iTqCgIMC1/u9Sxl2eXAIr+0qmJGq7M6gMT
-	xgcdk0CvPM05Rv4inAhM+QXvICD9vK4cxcJ3qR/JJ5cIIobedrXMvgFWCgKhjxlpxL27tzDx5lj
-	Ot5dAMYbVWrZ9cg/nMhZFDvty7yqjE0OAHo6lltQ2l8g4M34q3t3SBrG3E64R7ryL1oQRlk8hMn
-	1B2KCckOlnvSRhrQnYOcGexoW4J092YU8f6wNPl248r+DwK94wA+fgraQ/feBQW+yQii2N/qsk2
-	q1t4iE2e3/2lxdjpmhkVlfy/Ilm/yflzh7UgAjDJDIGgvMYqiNY7c4iRxkzIIO1i1/y4A2Oobyc
-	gKskxeJF0CqITvnFBSShhbWEG/Prb41Xg4KZEoqB+2aM6gEBNsQYWV2G4irstdP2P9lxlEsJt9J
-	bTvdU8EtWD85aZj0U3eEAiaygFy4vY8HADqk51VTHYmTbSZj3V2sM1OlG3qQp0Eifthw==
-X-Received: by 2002:a05:620a:488e:b0:8b1:8858:6ead with SMTP id af79cd13be357-8c9eb1fcf6amr1599350085a.11.1770058479006;
-        Mon, 02 Feb 2026 10:54:39 -0800 (PST)
-Received: from ?IPv6:2a01:e11:3:1ff0:fc63:7c50:c123:ffef? ([2a01:e11:3:1ff0:fc63:7c50:c123:ffef])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8c713580985sm1258562285a.8.2026.02.02.10.54.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Feb 2026 10:54:38 -0800 (PST)
-Message-ID: <35351364d83b76158db8d77f0ab2a1a7db27e335.camel@gmail.com>
-Subject: Re: [PATCH] xfs/841: create a block device that must exist
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: Christoph Hellwig <hch@lst.de>, zlang@kernel.org
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date: Mon, 02 Feb 2026 19:54:35 +0100
-In-Reply-To: <20260202085701.343099-1-hch@lst.de>
-References: <20260202085701.343099-1-hch@lst.de>
-Autocrypt: addr=luca.dimaio1@gmail.com; prefer-encrypt=mutual;
- keydata=mQINBGGqRu4BEACybdvi9+LqKuWA/P9HW7+wzGtIbFL2PR/vgJZqLzAscGrJB3ZvpdT2h
- daDdjRX7Maod9EAZceZYl2YVLZ6Q54qhm1hlEp4Iw6/adryfzulrJPX39mvqpJNE6gSkatwUDekhC
- AJpBbpq2aB79wOF08++KofqNW1r0xMIQ/KVoPryE4jNL2y99bEvUpe4S9TEyWTwsv/I0nEIX4SMgf
- VmW9XY842p9Bj6lws5U2dENIU8OD3cgK4uhfueb/ggkYg/5ZcblIBdVY0xDiFCqyTDr8+TVK2Algr
- M+r5MDPUKQXpIxh+gD84PcX8VXDHsmZaWsZmdkryiZ5RFammebqoIdxLF0oqwgUpaA8Ed4hlPAzmd
- TdVjMwFo01IHzFkZvS0g90qVXTf1fTSVG4JZU2gAasKVl0VDh4yJlzK3c1rWueqISv6AiD+BA6sPu
- 4zscdBckK6diftYINuGV6Bfw+v+2AFvjCq8isfCQPXY8XHTg+5lktGN6+45SUEghDpeacSM+G/q25
- qCLKbi6dzAtjCDeR8b6o0lRQ645/5fMU4CSyanfsf7YRkw2RqA6pRM3q/i4nlvznMLxR42iNc1BMY
- A3t1jv6RIEE36eke9Ube0p0TsEisGGYo4NTVO4RUeMeSG3waYfLB0eXHe9Ph/K0FrTBq6XE65KwRO
- Bwk0tB6lU0+jwARAQABtCVMdWNhIERpIE1haW8gPGx1Y2EuZGltYWlvMUBnbWFpbC5jb20+iQJOBB
- MBCgA4FiEECdpUF1+FXVXQxDERHMOHTl7ICj4FAmGqRu4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgE
- CF4AACgkQHMOHTl7ICj5gag/+JtIKsPwWRJWnnexbGS/gGaZ81GtZ4skW/UHhQqfc44//ntToy3uw
- 2PFaPB+5WLlA/XAzpLBFjLD5ZscFtHW7/ICGxrBqB/Q6AULoz0zsDhJ8YmO68A5YYNkGCLbWzando
- vrY/GykUEMT1EsReaIHhLpL/+3jsXGyIsztFi6qkjfDsFT+306+llIhIxgY+ZI/B/wlI41BKmSae+
- 5WOR4oZb080Famy/5hjx/Mi0AYu2A6cRpw2k+l2/u+aEvunmkgkgB186tA/JhoOPYQvT5xVQ5GYRu
- vcX1kHscYD+Tgx3DhkMS1XqZihH4UE9Ec6QeOJTWrK1czRFTJpTOgPAMmksMdgU8YKKHj0dafCNl3
- /2gld0Q2s5/tAGPpPuOPJf5GUtcOn1Qxr7Re2pyrQdcdr/jUdy1GVHAldzOZlBID3u0dTUGWLsPDA
- dvwGyiwdZiNgnHxTEWchpFo0mwi5S/3+sWcPWAJO2zEVfkqyNhmHSW5EBrwe9nhCT5uqF8dEKb4tf
- FxAAgPAiFfnLhweVxkPIvPK6/rIZo8F6t6qSXibbTIjdi9pLSDMY0m8u/fRZ06DsciFIfrWG1LXlu
- 14mDpr4zQSUELe1RRU1NEfD87TyYehjPvEewM6bZlRJ4SLaWQFoRW3OKH7IN1ODUn7T9TIx1uuzs4
- 4ViZ2BeR0ow9RQc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.2 (by Flathub.org) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tmlzYihm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7006C116C6;
+	Mon,  2 Feb 2026 18:59:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770058799;
+	bh=cdlq2Gnl74oO7/dDcIrNQ/cKJYwu5pS0GnFZokptAjg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tmlzYihmfiO9MLSKT34RTGZn3e2gLGzf8SvCYUcO/k8i4JUOJ6h3gMEjkOvZ8m4Rx
+	 I47L7EzYJPX/tRMtXIKIKrm3Pbup2i7wqkfbdP5tNMVNxquwM80RjrhKBxkUcY+/tH
+	 iQdx5bcuWBKb7QsnhzKvdV+UBY16MtzuKHBjDs46hGa2AIlcVGWzxz2TnECAdXqWlm
+	 TOyb9rRQO9OjBOtQG4sPfuVBW21kZYgG69s5BcCL6BxLNKRL+99PY8DluMDYWN0cdi
+	 +9vlFusXbJeWCJPrFUWCkbU5U9vhjkt+Z66IOsUWNohwH7mHrPyaE+e0/ghK7gGNdl
+	 BkNhcieeiiN6Q==
+Date: Mon, 2 Feb 2026 10:59:59 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: generic/753 crash with LARP
+Message-ID: <20260202185959.GJ7712@frogsfrogsfrogs>
+References: <aYC0pe-S-RWSMXHn@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aYC0pe-S-RWSMXHn@infradead.org>
 
-Thanks Christoph
+On Mon, Feb 02, 2026 at 06:28:53AM -0800, Christoph Hellwig wrote:
+> I've seen a few crashed during xfstests where generic/753 crashed during
+> attr log recovery.  They never reproduced when running the test
+> standalone in the loop, which made me realize that normally the
+> test does not even hit attr log recovery.  Forcing using the attr log
+> items using:
+> 
+> echo 1 > /sys/fs/xfs/debug/larp
+> 
+> Now makes it crash immediately for me.  I plan to separately look why
+> LARP is enabled during my -g auto run, probably some issue with the
+> actual LARP tests, but for now here is the trace.  Sending this to
+> Darrick as I think he touched that area last and might have ideas.
 
-Reviewed-by: Luca Di Maio <luca.dimaio1@gmail.com>
+Huh, that's interesting.  I still get other weird failures in g/753 like
+attr fork block 0 containing random garbage, but I've not seen this one
+yet.
 
-On Mon, 2026-02-02 at 09:57 +0100, Christoph Hellwig wrote:
-> This test currently creates a block device node for /dev/ram0,
-> which isn't guaranteed to exist, and can thus cause the test to
-> fail with:
->=20
-> mkfs.xfs: cannot open $TEST_DIR/proto/blockdev: No such device or
-> address
->=20
-> Instead, create a node for the backing device for $TEST_DIR, which
-> must
-> exist.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> =C2=A0tests/xfs/841 | 5 ++++-
-> =C2=A01 file changed, 4 insertions(+), 1 deletion(-)
->=20
-> diff --git a/tests/xfs/841 b/tests/xfs/841
-> index ee2368d4a746..ddb1b3bea104 100755
-> --- a/tests/xfs/841
-> +++ b/tests/xfs/841
-> @@ -85,9 +85,12 @@ _create_proto_dir()
-> =C2=A0	$here/src/af_unix "$PROTO_DIR/socket" 2> /dev/null || true
-> =C2=A0
-> =C2=A0	# Block device (requires root)
-> -	mknod "$PROTO_DIR/blockdev" b 1 0 2> /dev/null || true
-> +	# Uses the device for $TEST_DIR to ensure it always exists.
-> +	mknod "$PROTO_DIR/blockdev" b $(stat -c '%Hd %Ld' $TEST_DIR)
-> \
-> +		2> /dev/null || true
-> =C2=A0
-> =C2=A0	# Character device (requires root)
-> +	# Uses /dev/null, which should always exist
-> =C2=A0	mknod "$PROTO_DIR/chardev" c 1 3 2> /dev/null || true
-> =C2=A0}
-> =C2=A0
+I suspect what's happening is that the attr intent code might have
+finished writing the new attr and cleared incomplete but didn't manage
+to write the attrd log item to disk before the fs went down.
+
+The strange thing that I think I'm seeing is a dirty log with an ondisk
+transaction that ends with the updates needed to allocate and map a new
+block into the attr fork at fileoff 0, but oddly is missing the buffer
+log item to set the contents of the new block 0 to an attr leaf block.
+
+But it takes a good hour of pounding before that happens, so it's hard
+even to add debugging to chase this down.
+
+--D
+
+> [   40.121475] XFS (dm-0): Mounting V5 Filesystem 82ccfb3f-c733-4297-a560-0b583af89968
+> [   40.325118] XFS (dm-0): Starting recovery (logdev: internal)
+> [   40.947262] XFS: Assertion failed: (entry->flags & XFS_ATTR_INCOMPLETE) == 0, file: fs/xfs/libxfs/xfs_attr_leaf.c, line: 2996
+> [   40.947950] ------------[ cut here ]------------
+> [   40.948205] kernel BUG at fs/xfs/xfs_message.c:102!
+> [   40.948500] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+> [   40.948932] CPU: 0 UID: 0 PID: 4585 Comm: mount Not tainted 6.19.0-rc6+ #3467 PREEMPT(full) 
+> [   40.949483] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
+> [   40.950048] RIP: 0010:assfail+0x2c/0x35
+> [   40.950252] Code: 40 d6 49 89 d0 41 89 c9 48 c7 c2 58 ed f8 82 48 89 f1 48 89 fe 48 c7 c7 d6 33 02 83 e8 fd fd ff ff 80 3d 7e ce 84 02 00 74 02 <0f> 0b 0f 0b c3 cc cc cc cc 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c
+> [   40.950871] RSP: 0018:ffffc90006dc3a68 EFLAGS: 00010202
+> [   40.950871] RAX: 0000000000000000 RBX: ffff8881130bd158 RCX: 000000007fffffff
+> [   40.950871] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff830233d6
+> [   40.950871] RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000000000a
+> [   40.950871] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff88811ac9c000
+> [   40.950871] R13: ffff88811ac9c0d0 R14: ffff888117b8e300 R15: ffff8881130bd100
+> [   40.950871] FS:  00007f35a3087840(0000) GS:ffff8884eb58a000(0000) knlGS:0000000000000000
+> [   40.950871] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   40.950871] CR2: 00007fff920deed8 CR3: 000000012821e004 CR4: 0000000000770ef0
+> [   40.950871] PKRU: 55555554
+> [   40.950871] Call Trace:
+> [   40.950871]  <TASK>
+> [   40.950871]  xfs_attr3_leaf_setflag+0x188/0x1e0
+> [   40.950871]  xfs_attr_set_iter+0x46d/0xbb0
+> [   40.950871]  xfs_attr_finish_item+0x48/0x110
+> [   40.950871]  xfs_defer_finish_one+0xfd/0x2a0
+> [   40.950871]  xlog_recover_finish_intent+0x68/0x80
+> [   40.950871]  xfs_attr_recover_work+0x360/0x5a0
+> [   40.950871]  xfs_defer_finish_recovery+0x1f/0x90
+> [   40.950871]  xlog_recover_process_intents+0x9f/0x2b0
+> [   40.950871]  ? _raw_spin_unlock_irqrestore+0x1d/0x40
+> [   40.950871]  ? debug_object_activate+0x1ec/0x250
+> [   40.950871]  xlog_recover_finish+0x46/0x320
+> [   40.950871]  xfs_log_mount_finish+0x16a/0x1c0
+> [   40.950871]  xfs_mountfs+0x52e/0xa60
+> [   40.950871]  ? xfs_mru_cache_create+0x179/0x1c0
+> [   40.950871]  xfs_fs_fill_super+0x669/0xa30
+> [   40.950871]  ? __pfx_xfs_fs_fill_super+0x10/0x10
+> [   40.950871]  get_tree_bdev_flags+0x12f/0x1d0
+> [   40.950871]  vfs_get_tree+0x24/0xd0
+> [   40.950871]  vfs_cmd_create+0x54/0xd0
+> [   40.950871]  __do_sys_fsconfig+0x4f6/0x6b0
+> [   40.950871]  do_syscall_64+0x50/0x2a0
+> [   40.950871]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> [   40.950871] RIP: 0033:0x7f35a32ac4aa
+> [   40.950871] Code: 73 01 c3 48 8b 0d 4e 59 0d 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 49 89 ca b8 af 01 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 1e 59 0d 00 f7 d8 64 89 01 48
+> [   40.950871] RSP: 002b:00007ffce01ac698 EFLAGS: 00000246 ORIG_RAX: 00000000000001af
+> [   40.950871] RAX: ffffffffffffffda RBX: 00005625531e3ad0 RCX: 00007f35a32ac4aa
+> [   40.950871] RDX: 0000000000000000 RSI: 0000000000000006 RDI: 0000000000000003
+> [   40.950871] RBP: 00005625531e4bf0 R08: 0000000000000000 R09: 0000000000000000
+> [   40.950871] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+> [   40.950871] R13: 00007f35a343e580 R14: 00007f35a344026c R15: 00007f35a3425a23
+> [   40.950871]  </TASK>
+> [   40.950871] Modules linked in:
+> [   40.964577] ---[ end trace 0000000000000000 ]---
+> [   40.965044] RIP: 0010:assfail+0x2c/0x35
+> [   40.965274] Code: 40 d6 49 89 d0 41 89 c9 48 c7 c2 58 ed f8 82 48 89 f1 48 89 fe 48 c7 c7 d6 33 02 83 e8 fd fd ff ff 80 3d 7e ce 84 02 00 74 02 <0f> 0b 0f 0b c3 cc cc cc cc 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c
+> [   40.966296] RSP: 0018:ffffc90006dc3a68 EFLAGS: 00010202
+> [   40.966588] RAX: 0000000000000000 RBX: ffff8881130bd158 RCX: 000000007fffffff
+> [   40.967151] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff830233d6
+> [   40.967546] RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000000000a
+> [   40.967947] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff88811ac9c000
+> [   40.968322] R13: ffff88811ac9c0d0 R14: ffff888117b8e300 R15: ffff8881130bd100
+> [   40.968687] FS:  00007f35a3087840(0000) GS:ffff8884eb58a000(0000) knlGS:0000000000000000
+> [   40.969101] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   40.969437] CR2: 00007f9fd47ad3f0 CR3: 000000012821e004 CR4: 0000000000770ef0
+> [   40.969806] PKRU: 55555554
+> 
