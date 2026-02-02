@@ -1,64 +1,64 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED41436683B
-	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 15:40:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79AB53793CF
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Feb 2026 15:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770046843; cv=none; b=h2FsIa1GBYD54S2RkYpdSTSFuH5ryS5RHlrFyuoz9Felx95mIUzIZY6n5thIR6Ydixziy5BSC9bGY1a2PmDkfPyPTQ9zdIIC+Knsdd92oW6IhOyYjORpAzLLN+GCX5FP3MrTgGCFXiPFCYv1Gv2ZlyJxLR7qN5waQYWgecmrBRg=
+	t=1770047104; cv=none; b=ZC4UjsoL/jwhYtaJK6NaO9nInX1C0YVVVmhPPeHBNuMuFeSV2atxP3GEks6c25DAgOFdMtBXOx9krdNmSapsNMOO3R55BFHs/CxZcbdF8won1mAk4FEawe8PoDz+E8u/7wdQ8lw2FSWDSZf8P9KQW8bK35n0eMDqG3W3fz3UXn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770046843; c=relaxed/simple;
-	bh=RP6S1ivaYAK6Fs5+VhDcT3M8k5FicM0n51mqRABDv7k=;
+	s=arc-20240116; t=1770047104; c=relaxed/simple;
+	bh=apmosNlmlGXu84xxAwbeHewfRKLaSp4Y/cXTo8RIVDg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nVmHs0O3RS9KLxy+7UDKNk1BQbqkOeia5amC6cZABMbEXsrb8530xgGW+0BdjNNPn/voY0CUzXd2uB4ZA/6u1y7UwVFxtDVmwgoz0e31fDCHzqPHOYVzRY+WS1aCA5yLuCUdSpU/w96cQ8F2X0dGr6hNJhJHtAlnEX9CmK3TteE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kAQzHm5p; arc=none smtp.client-ip=209.85.210.173
+	 MIME-Version; b=EP2JBnLsPDN7FbkAbdB1ivEpZ7EKNd+fxcauY0OhaBzcNmY0M1k7qCOXEU3kxtarH4IwmBrikV1hFyNB70KCFQfdC4xKbajFJuMwIYtwS6zkaL4Qz/IYcGQWIZLvHmjfFkaGVcSMiJHLEPXHJ7WQellv2zjzMJ6aK9gq1rFtBPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YbnDctMW; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kAQzHm5p"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-82311f4070cso2948821b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Feb 2026 07:40:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YbnDctMW"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-81e8b1bdf0cso2847895b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Feb 2026 07:45:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770046841; x=1770651641; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1770047103; x=1770651903; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=n05z2JgZ055VI92yGkVjhSrgVttdCiXX4GMR4DMFah4=;
-        b=kAQzHm5pTWygrkNcCvwyQzPkeb3zpZ1/rPtCqNQ/srl24eOOYRxh3hFsf2L1I23R5z
-         Ib0UCnjBi1f2Ddp64smUrCpzhSHN73Q3nHbpcJo8RP9m70biXvQuxFIltD3kLsZdAJWa
-         kvISTxR9gTS6PaGBpztbHS5WBOj4BeLX3h8kW7c/q/EJ/PgAwLwxmv+lzESVFqOHU1xe
-         gQqWcUV1QaunUWmCIFcR7hSbSf2TAA6YVP4ATqrk7eqVyU3TeToApfDtI2bzlO2OarxS
-         YcXn5y+XpnwPOHa/zQHe5ZxcCFqNWbWsldbU0l1xfiptEo6Vhkwl8cc1svydgnH6tR41
-         4U5A==
+        bh=bK/86Nyk/EKSMMzdzRby3gSajMQfUiZyejcUNvrlmaI=;
+        b=YbnDctMWIILWQWskhbR+4tTXyETdbS6st6Enj2mJO0kWkeGloerpg1yF+9v+X1t5W8
+         Sj9syCkLZJn7KjVVY3gbLNxPDq9Hd2DRzwg/Eez5uviN+mnPbti+LhqQGLY5CM+BmmhH
+         NvgoZlr5M31rSlr8XSAp1aDKEAah2MeZc+rQ/bAd5lFlh52C78qfufmRt/Mh3pWDhmrp
+         EKiwyMcpXOpBcxowwNql9IE1Nv5a8VjFV8l9EbfQYuZP+xDqx+K7ih8/UL8DcCalXwOn
+         oFmPQp1GU7Ub4r3dr0icNp6qTESH1RSLXM9RSHnDWGnqK/pratDDzyBr3gPXxmfq4Iv1
+         j6bQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770046841; x=1770651641;
+        d=1e100.net; s=20230601; t=1770047103; x=1770651903;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=n05z2JgZ055VI92yGkVjhSrgVttdCiXX4GMR4DMFah4=;
-        b=MUTd/JwDpzC6cXwjbIPWGm0lik0/1Fs+kVMvj/0ZSn+KhoxqtCoBOPBz1QCblFjCBm
-         nOi4EtPeysCLjYPDyrINAJ6VlfehbMQHH1YxUWgeWLkLij8hMTiEU5pC30+E7lVi2qHb
-         4ZBZ4ioWxwJHJKtOf+H+mb4BheLU3vczmeQtJvSUGvBPcYB+1AUPtHC1zCWVldI4Y37z
-         Pm7ie2FxmQdhaC9EooVHbqvoi3K5kkomigsg+wDHpwibRxLV1JhOX/YEBgTxAWWZSX9I
-         UejzPH8BiZZwf8fHMD5r8dcagOzb8WowDajQFDI1xuTUndux5WhdZBeU0P5rRvXInbLe
-         TDfA==
-X-Forwarded-Encrypted: i=1; AJvYcCXXPO9VNRaPF1DrIu2JlDQzmuxAt+mgt8LAqDWjDTjkkGnJvSJjflTT2WBpgIjWnkvPU2V0WsnXfqo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwjgxJglLTkiYOdWeneEUKSHi+oylST6ROVj4Tgfcx5o3YOs1fq
-	hIV69T/emw76wh5D4g4xWlEtsgpqoF4wRQiFnAp5WXhZwbvSxGak9cDh
-X-Gm-Gg: AZuq6aIp19HFaPlBWrZG6sAm/xLkV9avA9MrgEMReBuYA65QJCyMg7JUb0BjghCcimr
-	24v+w3TM6jgyVOQl5sxCHvjOZUkoQoA9ZeS8bPuBHSJ2lgI7NA4cq9Bm2+vOahzQK1SsO0DsPZk
-	eNcTdukTcheP7yNWZBM8ZPW0/OmkAn3JNG1WpSTLXG0s+xdd5f37fLoFpSFULni0Jhr3LFrj0Hv
-	CxHNVQcPVPQVAYbsmpgy3MHZtkCzrcm0tYZ0vsQvX1VLR20l6vEy/GF4NQT+GBKHfWVVu/oRywI
-	G/9Xp5cw7BOxXjVRBdMvu77ExhZA2TBBhFCZG3D9aI9sSbQQ+XDKp9L1K4hyNQ3JpzIcRjZTBLM
-	IsKVLoZQ5gLeh0EDfg1Fselqp9z4/hJqBQPy00VfkLOSFBRm/8cRNJk0PZK3pL8sCorKzvB/XVG
-	l47vWRh55XRdeDSVXTARhwL/Uh6Y1tmGRjx5HcZ6Bh/+tj/5nQ1LHNc7tgmws3czgLbc2flGgWT
-	M6flFsZLQGvSxTjf4v3hE8ppWjK45kEZ9ubp91up8FTSw==
-X-Received: by 2002:a05:6a00:218d:b0:81f:804f:af26 with SMTP id d2e1a72fcca58-823920f2aaemr18442535b3a.19.1770046841306;
-        Mon, 02 Feb 2026 07:40:41 -0800 (PST)
+        bh=bK/86Nyk/EKSMMzdzRby3gSajMQfUiZyejcUNvrlmaI=;
+        b=rwmnEoaDCCsh16E04k3Swp/s4jv5AoN7kYH5nljzajqC32bLTzZJQYjySO6L2ikxdp
+         STHd8+hcBnVsoc760daeUXXoBodtxsbnWcQ8bstPEJGfzF7po1rS+dA8wOxzwX8bwM7t
+         oovdRC62xiBIkFxdpZWalUpB5w2VVeaV77T2RkqJE+Jpf0KkF5nMsOGuWxLKT1IZk0yQ
+         TvSWRGeNLiZFvjn5jQ38W9T7Kgd5IeLXDwYi9nwjwN3FW8If2l4tSxlVE6G+opTGB6m0
+         FSLliElhYEvJvbAvnEZVeVFl9OgDR886paZNNU4cVRkuXMw6fPs8he38xnKuWG6Amqy8
+         FaUA==
+X-Forwarded-Encrypted: i=1; AJvYcCVeLF1RTn6lWft0IV7EhS5c1mFyI82BcyetDhq+elvcDHsY6vhw04T31fPETkMtRY4R4bf668InlS0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+3ebHpMkKQTvIZUcpbU+F6GiYX0P1IcQ0q6eNmKeYUurx86yD
+	dLiEHHRBj8U8Y533BoJxlvc6bZJc3qsA6c8Qm97W7wQ2T/wjSPuD6NRd
+X-Gm-Gg: AZuq6aJDp2pbcEISxX4IG65OVobz2Avy4J4jd4TYUnEhSzJlgPDHt77CgEjEnb4igNG
+	JQ6H0k7U7H2/UNBJVO4EcB1gzS4isX9jMOJ5Gre0qFSTs/yY3+7geG8hYNxo2tRB32G3FGu5apF
+	J0+04uJJvXYr91SSmbhqp9z+Khe/D1rxtFb6rx8sJbHxJiW1WPbHelwnGynZupvKzaeVWlrIpOF
+	sfRcgv/lPr10v2C/+4Ulndfudcg68e7D3w2mhAPeORNaLhaZ2yR4++hpt6RlEvxopw2Ennc7+jW
+	bbsTakXCK+eICONwkvNe6EFdZ84qn45rPAO0Kh47r+54Sh7H+D9uAbhV2ojWeY6lLsgj+hKf1hL
+	MViuZTsMImSUgdFkXGplsxoDRMV350fSf7+311U0MP71oCvHBXeiu4AWOuTPQU4slFWX0hQIgoh
+	yRivaqFwxI2HHXkP4J7fZHJ6LC6EJqROhjF93KQAa4t3+IWLoDAn7HDeAVHd3ehNsjTb2u9ey/s
+	8VGb6+B6VnLxp5dbXfOswaP4SAhyuuEsOXGhIqE0igty3lpx951forb
+X-Received: by 2002:a05:6a00:9185:b0:823:5f7:ecb6 with SMTP id d2e1a72fcca58-823aa43a1camr10597514b3a.17.1770047102767;
+        Mon, 02 Feb 2026 07:45:02 -0800 (PST)
 Received: from lorddaniel-VivoBook-ASUSLaptop-K3502ZA-S3502ZA.www.tendawifi.com ([14.139.108.62])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82379b2305fsm19783019b3a.10.2026.02.02.07.40.38
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82379b4ea8bsm20074206b3a.22.2026.02.02.07.44.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Feb 2026 07:40:40 -0800 (PST)
+        Mon, 02 Feb 2026 07:45:02 -0800 (PST)
 From: Piyush Patle <piyushpatle228@gmail.com>
 To: brauner@kernel.org
 Cc: djwong@kernel.org,
@@ -67,8 +67,8 @@ Cc: djwong@kernel.org,
 	linux-kernel@vger.kernel.org,
 	syzbot+bd5ca596a01d01bfa083@syzkaller.appspotmail.com
 Subject: [PATCH] iomap: handle iterator position advancing beyond current mapping
-Date: Mon,  2 Feb 2026 21:10:30 +0530
-Message-Id: <20260202154030.644730-1-piyushpatle228@gmail.com>
+Date: Mon,  2 Feb 2026 21:14:53 +0530
+Message-Id: <20260202154453.650471-1-piyushpatle228@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260202130044.567989-1-piyushpatle228@gmail.com>
 References: <20260202130044.567989-1-piyushpatle228@gmail.com>
@@ -80,21 +80,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-syzbot reports a WARN_ON in iomap_iter_done() when iter->pos advances
-past the end of the current iomap during buffered writes.
+iomap_iter_done() expects that the iterator position always lies within
+the current iomap range.  However, during buffered writes combined with
+truncate or overwrite operations, the iterator position can advance past
+the end of the current iomap without the mapping being invalidated.
 
-This happens when a write completes and updates iter->pos beyond the
-mapped extent before a new iomap is obtained, violating the invariant
-that iter->pos must lie within the active iomap range.
+When this happens, iomap_iter_done() triggers a warning because
+iomap.offset + iomap.length no longer covers iter->pos, even though this
+state can legitimately occur due to extent invalidation or write completion
+advancing the iterator position.
 
-Detect this condition early and mark the mapping stale so the iterator
-restarts with a fresh iomap covering the current position.
+Detect this condition immediately after iomap_begin(), mark the mapping
+as stale, reset the iterator state, and retry mapping from the current
+position.  This ensures that iomap_end() invariants are preserved and
+prevents spurious warnings.
 
 Fixes: a66191c590b3b58eaff05d2277971f854772bd5b ("iomap: tighten iterator state validation")
 Tested-by: Piyush Patle <piyushpatle288@gmail.com>
 Signed-off-by: Piyush Patle <piyushpatle228@gmail.com>
 Reported-by: syzbot+bd5ca596a01d01bfa083@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?id=bd5ca596a01d01bfa083
+Closes: https://syzkaller.appspot.com/bug?extid=bd5ca596a01d01bfa083
 ---
  fs/iomap/iter.c | 7 +++++++
  1 file changed, 7 insertions(+)
