@@ -1,197 +1,197 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1C12F3601;
-	Thu,  5 Feb 2026 20:35:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA8C32FA3F
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 21:18:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770323730; cv=none; b=sIdFe4AsrL89LS9F1S+6JA8OSBMxgKx6oQVRGAcRaGSUkOHE+khEpfPht8tbqpVphKA7aFGnH9oFyHoPlj0ph1hWjfLNbnMjgPWtKWqGxOqrYZPBXLFieR2BcA8uaCHyf5HL7a59Yqdp12GeP6xKdUqxaYz05aOB+jkr60YjtCk=
+	t=1770326282; cv=none; b=DaUOYu6HNsoOFMomkxzWNIb/99gzlzs3S/VkkgPmZpP2/eBKSg5veko8E6qJjZfGKtBUNJYPLIs06Jcu+zvd5plxK6NHoLSztzcnEBPws9bCWCuaEGnmwCfmojaKseYvu9Q7C27V9BCR04xggWdsz5VXppsqKQS6zgqg8rFyITA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770323730; c=relaxed/simple;
-	bh=vM7jv+m+6bMkOShmYUN1ahQ9mC41CDLIlJMHJGRgfaA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Yfmpjy92gQXOdmc2HhsLSCpbIAa9iE0jDgEI3JBr+GVMhvDtF3ib6Rz51iw8hIX1TRVRtpOUtPE5q7X2OWmQylMsF9xRy3FA8A9OLBBSUELvhYMA1oXEJ0hHLrXscI5QQczg66Uxvv2u+rn7TTp85fgx1dhoqzp0Bja6vaVENXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=eNaQaWxY; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1770326282; c=relaxed/simple;
+	bh=azW+Er9DVWyfLE4RxzMCv6BNZ8bp0rt83hTE3gEkO+g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gNDbhWXh7RNZKbkgdF+7vCnws/GYTc+2d325r8NvIBEeflXRvUlbRkodqz52rqjT0r72QrxYbipALUzKsJaR/Q3QSYhCrzyGjr8Fvm3ZfAG02WXpCrURZjaTUUR2B12Yr7s8nvqlEL0im/TcdVoOg1kCFHheY/yY1SxCg0Kz4g0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=y+p9/Hal; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="eNaQaWxY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=yHhcPcm7/aNDLEtRnOuhFSnTHyU3PJmqaMR5L62zSNU=; b=eNaQaWxYojWshirXCeqA9eyVJZ
-	hZcnGM9H28EPr5osfLxORkm082Y6MkKZ5voUiADi394hCJ+XNhacAJh1LBRmNsyQoB4xZUVcwuVfj
-	YGaPAZG+JMFzlnk7BDNjCRiAyQQLtUsVPuA1eZZYshIAwYWNpgs40J3djdEEtw8t3WTuN67ziGx1y
-	rFpklmAl4+PoV/fL0slBG35ZyahuEDzQuEQQpaHP3OhTS542F8aTc3Ck6it796ftV4eKAnoVJEW+q
-	WTnRFjYyNfg5nrpdc7UVma2NHmv6D4tGfOk0PaN8+NylCYq2Z1CJZnXg97oAE13fcllv6V0qHi4Ke
-	/xvHK1tg==;
-Received: from [187.57.129.220] (helo=[192.168.15.100])
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
-	id 1vo63v-00EXuY-38; Thu, 05 Feb 2026 21:34:51 +0100
-Message-ID: <05c37282-715e-4334-82e6-aea3241f15eb@igalia.com>
-Date: Thu, 5 Feb 2026 17:34:42 -0300
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="y+p9/Hal"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-34be2be4b7cso750142a91.3
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 13:18:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1770326281; x=1770931081; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=na2GFQeCH4nfrXfEZgtguqNxC9+KQ+7DBpsjE1+E+0c=;
+        b=y+p9/Halh4nvHhyYanofkzxZhPFibYSqab7SnjQPn/P2GOJJK2DNrE9HXXEE2SLs45
+         d+Y/A3jRyQ0JiwxskSKQ/RmnnDfEgmTxcUlz/wHdFq+7zTFH47qMRH9A1LPgNJsI63LZ
+         f0Cuezm0NvOw9/izhf3H2kIxoQPvFgo5wwyJkeqXoRxlZOUztjj11uHYa9WPDGyMagNH
+         pffbTIiHiXxhystuSpOqVAmHQMTy8YetdU6n9GkLkz70CSHZG/NMdLriL3D7TKNENltL
+         hqOe2fAflxyeMFjYolee90TBKHiQ+OD0Gz2h+B3+hM9DA8gE2BAxUJfLtMO4iizNUCGx
+         4NzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770326281; x=1770931081;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=na2GFQeCH4nfrXfEZgtguqNxC9+KQ+7DBpsjE1+E+0c=;
+        b=tyuE/A6ub5fYqTcgMrtWl2GA87NpNkFDshV9Ivxu5VOVcKPPX8ESeM8hUcot+2yfC1
+         c75YxdFXmnucpTf8vdtgihCHxI0xJFg4PdmUGvN+GCHqZxLqt8/HiYiWUlnMGHaly85U
+         /P4EOQyzES18K4uWuOF5otgR2X+VlxK4XzzqN6mxjTHP9/licw5cGOaKMLhSP5QkRL/7
+         QWSLJvLYfJZ3kayf2mQhKhdpfE2HWJsd2brMtsDfdetwsMdgWVCsQIthmEAMdmisi1Mo
+         hszrcuqF0vjSpuAIzFcbExWjJgNfny6TjJa7c20+O4E4vA6o/qFvU9s2TZuYMG0rWepF
+         Sa4A==
+X-Forwarded-Encrypted: i=1; AJvYcCUesVbVc4mebttEr/hKsFD7c6dzvjLYYmuMN/UuIaa6a+0tzp2WPfAp8ezFed7Uyz4hsnC4nIKc5To=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxtQ4TR+QDwXJ/3Np4ymLDkG0tFQNhAv4TTHn8a1/4zLRch5M+N
+	CqMQDIDENAMPJ3qFW8GICTnLh+D1PTeibVtStoKrdLq60PEJtu4JRcH2ftpKB1wiJ6WdZ4FqDeg
+	0L4x3
+X-Gm-Gg: AZuq6aJRkdtQXYEJRBLHGkgHZAzSEJsPXkRoTTBivWcBBu7Nbmep9Ouf9eDHHNd6G4r
+	MAmj3x4ZLhv1YflaviON8UsS85NDjRRk7TBOQJaPNa15yZFgQ0EsMmCktHtsWLl/zN8inH2SxEe
+	vURk5vPPLwbFsqLFyGZa6eFuwZklRRgag43DzeaNh9YrfBuhr20Hd9NenbFO3Uf2gYn0mmE6fPB
+	kKbemG02bOBgfF766mHp+uJr3PMOW3xVkLPJ6Uj+CsmzCu+ztpwPd0ibkgguWeU3wdRohptLg5S
+	JUJHG1/jkqi7L5NT+f5ZFq0ZSH4h1O5JFepq8NdYaGmlJKDIdrblaK6rX1Q0zBzyHlsy0HENX+G
+	xa89ptWn+AKYNUp4RcXwYd4SKAJBvLaX86644eMWVF9MtB1diBi4X7YxfxcDtt5uj/g8OyFdBMO
+	LNN0pdA7/2tTxhg3T3oLVDByI0bKoQ0XhWEAelw9QUInnbTj2qm6rE2UTIX743yYQ=
+X-Received: by 2002:a17:90b:2d86:b0:341:134:a962 with SMTP id 98e67ed59e1d1-354b3e4c3f3mr230761a91.28.1770326281112;
+        Thu, 05 Feb 2026 13:18:01 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c6dcb64a103sm318515a12.30.2026.02.05.13.18.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Feb 2026 13:18:00 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.99.1)
+	(envelope-from <david@fromorbit.com>)
+	id 1vo6jc-0000000DPLm-2pNm;
+	Fri, 06 Feb 2026 08:17:56 +1100
+Date: Fri, 6 Feb 2026 08:17:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: alexjlzheng@tencent.com, cem@kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: take a breath in xfsaild()
+Message-ID: <aYUJBChyWi3WdOIR@dread.disaster.area>
+References: <aYSCs6kyIZJS5MW4@dread.disaster.area>
+ <20260205125000.2324010-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
- Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
- Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
- Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
- Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
- linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
- Ludovico de Nittis <ludovico.denittis@collabora.com>
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
- <20260115062944.GA9590@lst.de>
- <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
- <20260115072311.GA10352@lst.de>
- <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
- <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
- <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
- <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
- <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
- <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
- <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
- <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
- <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
- <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
- <8ab387b1-c4aa-40a5-946f-f4510d8afd02@igalia.com>
- <CAOQ4uxiRpwuyfj_Wy3Zj+HAi+jgQOq8nPQK8wmn6Hgsz-9i1fw@mail.gmail.com>
- <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com>
-Content-Language: en-US
-From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-In-Reply-To: <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260205125000.2324010-1-alexjlzheng@tencent.com>
 
-Em 28/01/2026 08:49, Amir Goldstein escreveu:
-> On Sat, Jan 24, 2026 at 11:45 AM Amir Goldstein <amir73il@gmail.com> wrote:
->>
->> On Fri, Jan 23, 2026 at 9:08 PM André Almeida <andrealmeid@igalia.com> wrote:
->>>
->>> Em 23/01/2026 10:24, André Almeida escreveu:
->>>>
->>>> Em 22/01/2026 17:07, Amir Goldstein escreveu:
->>>>> On Tue, Jan 20, 2026 at 4:12 PM Amir Goldstein <amir73il@gmail.com>
->>>>> wrote:
->>>>>>
->>>>>> On Mon, Jan 19, 2026 at 5:56 PM André Almeida
->>>>>> <andrealmeid@igalia.com> wrote:
->>>>>>>
->>>>> ...
->>>>>>> Actually they are not in the same fs, upper and lower are coming from
->>>>>>> different fs', so when trying to mount I get the fallback to
->>>>>>> `uuid=null`. A quick hack circumventing this check makes the mount
->>>>>>> work.
->>>>>>>
->>>>>>> If you think this is the best way to solve this issue (rather than
->>>>>>> following the VFS helper path for instance),
->>>>>>
->>>>>> That's up to you if you want to solve the "all lower layers on same fs"
->>>>>> or want to also allow lower layers on different fs.
->>>>>> The former could be solved by relaxing the ovl rules.
->>>>>>
->>>>>>> please let me know how can
->>>>>>> I safely lift this restriction, like maybe adding a new flag for this?
->>>>>>
->>>>>> I think the attached patch should work for you and should not
->>>>>> break anything.
->>>>>>
->>>>>> It's only sanity tested and will need to write tests to verify it.
->>>>>>
->>>>>
->>>>> Andre,
->>>>>
->>>>> I tested the patch and it looks good on my side.
->>>>> If you want me to queue this patch for 7.0,
->>>>> please let me know if it addresses your use case.
->>>>>
->>>>
->>>> Hi Amir,
->>>>
->>>> I'm still testing it to make sure it works my case, I will return to you
->>>> ASAP. Thanks for the help!
->>>>
->>>
->>> So, your patch wasn't initially working in my setup here, and after some
->>> debugging it turns out that on ovl_verify_fh() *fh would have a NULL
->>> UUID, but *ofh would have a valid UUID, so the compare would then fail.
->>>
->>> Adding this line at ovl_get_fh() fixed the issue for me and made the
->>> patch work as I was expecting:
->>>
->>> +       if (!ovl_origin_uuid(ofs))
->>> +               fh->fb.uuid = uuid_null;
->>> +
->>>           return fh;
->>>
->>> Please let me know if that makes sense to you.
->>
->> It does not make sense to me.
->> I think you may be using the uuid=off feature in the wrong way.
->> What you did was to change the stored UUID, but this NOT the
->> purpose of uuid=off.
->>
->> The purpose of uuid=off is NOT to allow mounting an overlayfs
->> that was previously using a different lower UUID.
->> The purpose is to mount overlayfs the from the FIRST time with
->> uuid=off so that ovl_verify_origin_fh() gets null uuid from the
->> first call that sets the ORIGIN xattr.
->>
->> IOW, if user want to be able to change underlying later UUID
->> user needs to declare from the first overlayfs mount that this
->> is expected to happen, otherwise, overlayfs will assume that
->> an unintentional wrong configuration was used.
->>
->> I updated the documentation to try to explain this better:
->>
->> Is my understanding of the problems you had correct?
->> Is my solution understood and applicable to your use case?
->>
+On Thu, Feb 05, 2026 at 08:49:59PM +0800, Jinliang Zheng wrote:
+> On Thu, 5 Feb 2026 22:44:51 +1100, david@fromorbit.com wrote:
+> > On Thu, Feb 05, 2026 at 04:26:21PM +0800, alexjlzheng@gmail.com wrote:
+> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > > 
+> > > We noticed a softlockup like:
+> > > 
+> > >   crash> bt
+> > >   PID: 5153     TASK: ffff8960a7ca0000  CPU: 115  COMMAND: "xfsaild/dm-4"
+> > >    #0 [ffffc9001b1d4d58] machine_kexec at ffffffff9b086081
+> > >    #1 [ffffc9001b1d4db8] __crash_kexec at ffffffff9b20817a
+> > >    #2 [ffffc9001b1d4e78] panic at ffffffff9b107d8f
+> > >    #3 [ffffc9001b1d4ef8] watchdog_timer_fn at ffffffff9b243511
+> > >    #4 [ffffc9001b1d4f28] __hrtimer_run_queues at ffffffff9b1e62ff
+> > >    #5 [ffffc9001b1d4f80] hrtimer_interrupt at ffffffff9b1e73d4
+> > >    #6 [ffffc9001b1d4fd8] __sysvec_apic_timer_interrupt at ffffffff9b07bb29
+> > >    #7 [ffffc9001b1d4ff0] sysvec_apic_timer_interrupt at ffffffff9bd689f9
+> > >   --- <IRQ stack> ---
+> > >    #8 [ffffc90031cd3a18] asm_sysvec_apic_timer_interrupt at ffffffff9be00e86
+> > >       [exception RIP: part_in_flight+47]
+> > >       RIP: ffffffff9b67960f  RSP: ffffc90031cd3ac8  RFLAGS: 00000282
+> > >       RAX: 00000000000000a9  RBX: 00000000000c4645  RCX: 00000000000000f5
+> > >       RDX: ffffe89fffa36fe0  RSI: 0000000000000180  RDI: ffffffff9d1ae260
+> > >       RBP: ffff898083d30000   R8: 00000000000000a8   R9: 0000000000000000
+> > >       R10: ffff89808277d800  R11: 0000000000001000  R12: 0000000101a7d5be
+> > >       R13: 0000000000000000  R14: 0000000000001001  R15: 0000000000001001
+> > >       ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+> > >    #9 [ffffc90031cd3ad8] update_io_ticks at ffffffff9b6602e4
+> > >   #10 [ffffc90031cd3b00] bdev_start_io_acct at ffffffff9b66031b
+> > >   #11 [ffffc90031cd3b20] dm_io_acct at ffffffffc18d7f98 [dm_mod]
+> > >   #12 [ffffc90031cd3b50] dm_submit_bio_remap at ffffffffc18d8195 [dm_mod]
+> > >   #13 [ffffc90031cd3b70] dm_split_and_process_bio at ffffffffc18d9799 [dm_mod]
+> > >   #14 [ffffc90031cd3be0] dm_submit_bio at ffffffffc18d9b07 [dm_mod]
+> > >   #15 [ffffc90031cd3c20] __submit_bio at ffffffff9b65f61c
+> > >   #16 [ffffc90031cd3c38] __submit_bio_noacct at ffffffff9b65f73e
+> > >   #17 [ffffc90031cd3c80] xfs_buf_ioapply_map at ffffffffc23df4ea [xfs]
+> > 
+> > This isn't from a TOT kernel. xfs_buf_ioapply_map() went away a year
+> > ago. What kernel is this occurring on?
 > 
-> Hi Andre,
+> Thanks for your reply. :)
 > 
-> Sorry to nag you, but if you'd like me to queue the suggested change to 7.0,
-> I would need your feedback soon.
+> It's based on v6.6.
+
+v6.6 was released in late 2023. I think we largely fixed this
+problem with this series that was merged into 6.11 in mid 2024:
+
+https://lore.kernel.org/linux-xfs/20220809230353.3353059-1-david@fromorbit.com/
+
+In more detail...
+
+> > Can you please explain how the softlockup timer is being hit here so we
+> > can try to understand the root cause of the problem? Workload,
 > 
-
-Hey Amir, sorry for my delay. I just had a week out of the office and 
-just got back to this.
-
-Our initial test case worked great! We managed to mount both images and 
-use overlayfs without a problem after your clarification of where to use 
-uuid=off, which should be on the first mount.
-
-However, when rebooting to the other partition, the mount failed with 
-"failed to verify upper root origin" again, but I believe that I forgot 
-to add `uuid=off` somewhere in the mount scripts. I'm still debugging this.
-
-Anyhow, I see that we are now too close to the merge window, and from my 
-side we can delay this for 7.1 and merge it when it gets 100% clear that 
-this is the solution that we are looking for.
-
-Thanks again for your help!
-	André
-
-> FWIW, I think that this change of restrictions for uuid=null could be backported
-> to stable kernels, but I am not going to mark it for auto select, because
-> I'd rather see if anyone shouts with upstream kernel first when (if) we make
-> this change and manually backport later per demand.
+> Again, a testsuite combining stress-ng, LTP, and fio, executed concurrently.
 > 
-> Thanks,
-> Amir.
+> > hardware, filesystem config, storage stack, etc all matter here,
+> 
+> 
+> ================================= CPU ======================================
+> Architecture:                            x86_64
+> CPU op-mode(s):                          32-bit, 64-bit
+> Address sizes:                           45 bits physical, 48 bits virtual
+> Byte Order:                              Little Endian
+> CPU(s):                                  384
 
+... 384 CPUs banging on a single filesystem....
+
+> ================================= XFS ======================================
+> [root@localhost ~]# xfs_info /dev/ts/home 
+> meta-data=/dev/mapper/ts-home    isize=512    agcount=4, agsize=45875200 blks
+
+... that has very limited parallelism, and ...
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+> data     =                       bsize=4096   blocks=183500800, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=89600, version=2
+
+... a relatively small log (350MB) compared to the size of the
+system that is hammering on it.
+
+i.e. This is exactly the sort of system architecture that will push
+heaps of concurrency into the filesystem's transaction reservation
+slow path and keep it there for long periods of time. Especially
+under sustained, highly concurrent, modification heavy stress
+workloads.
+
+Exposing any kernel spin lock to unbound user controlled
+concurrency will eventually result in a workload that causes
+catastrophic spin lock contention breakdown. Then everything that
+uses said lock will spend excessive amounts of time spinning and not
+making progress.
+
+This is one of the scalability problems the patchset I linked above
+addressed. Prior to that patchset, the transaction reservation slow
+path (the "journal full" path) exposed the AIL lock to unbound
+userspace concurrency via the "update the AIL push target"
+mechanism. Both journal IO completion and the xfsaild are heavy
+users of the AIL lock, but don't normally contend with each other
+because internal filesystem concurrency is tightly bounded. Once
+userspace starts banging on it, however....
+
+Silencing soft lockups with cond_resched() is almost never the right
+thing to do - they are generally indicative of some other problem
+occurring. We need to understand what that "some other problem" is
+before we do anything else...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
