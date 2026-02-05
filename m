@@ -1,184 +1,197 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C748330100D
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 20:28:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1C12F3601;
+	Thu,  5 Feb 2026 20:35:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770323280; cv=none; b=jOxjGyTPTO6Ikwk4LTgYDJHD4fmeRypChaFe1ZXybazoOGz4ncpMwyRAW9WDcIdcWCqNYE5cqz0JaG6rKqCyWtJH1qpojdD0NA0j17pkKIavEqwA2XPJEw63VJSkE206bENuH7Dwvlhypeh1oGUht1CYa2jz8i50eUyyTMUgHxQ=
+	t=1770323730; cv=none; b=sIdFe4AsrL89LS9F1S+6JA8OSBMxgKx6oQVRGAcRaGSUkOHE+khEpfPht8tbqpVphKA7aFGnH9oFyHoPlj0ph1hWjfLNbnMjgPWtKWqGxOqrYZPBXLFieR2BcA8uaCHyf5HL7a59Yqdp12GeP6xKdUqxaYz05aOB+jkr60YjtCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770323280; c=relaxed/simple;
-	bh=niia58yHuSNHoSzxwYiho2gi/3KaKxCtnoPFWqsCLwc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iZnvfVJh0+xLS/DySy5ImJ0QocZNKWT0mLUmnY/XRRvGyZ+RvUTe2fTuk5fQAIObcine3xGuy4v28hTIhCQw2Eb73UtA7brVbpuWdK+if1AL65vt4Gfl2Tc2yZ9J2WrMOEtTUL2iEf+irJmhKfj/rAz42bM9Cro1ooOBQTOtKtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eckfZvbm; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1770323730; c=relaxed/simple;
+	bh=vM7jv+m+6bMkOShmYUN1ahQ9mC41CDLIlJMHJGRgfaA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Yfmpjy92gQXOdmc2HhsLSCpbIAa9iE0jDgEI3JBr+GVMhvDtF3ib6Rz51iw8hIX1TRVRtpOUtPE5q7X2OWmQylMsF9xRy3FA8A9OLBBSUELvhYMA1oXEJ0hHLrXscI5QQczg66Uxvv2u+rn7TTp85fgx1dhoqzp0Bja6vaVENXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=eNaQaWxY; arc=none smtp.client-ip=213.97.179.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eckfZvbm"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2a0d52768ccso8747835ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 12:28:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1770323280; x=1770928080; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=McVms00cAviRg0OClqcs3WN2EKZ9Ahl14CHN4GvqWtk=;
-        b=eckfZvbmciamjt2bED/IWzvB0MAcrYTwdjw1m09FY3B6bMOccb5gGljwY+OkGznt5y
-         xZlnfEEkM+5oFr4xXstE4/U3Ui4lnU5VJc6XeboDc+hdlV+p/2AImROlxeb/77cdxRTx
-         Jc8Pph3PnvKXPQt2z/F9NcyhHUTaFxPTJY0T7u3UxIVUYquoApPBfYl/1ChhlqjoYsbh
-         pkLhpqpsIHqyaSJU3PvTJVqc3XBhDKHXmMQgOtMVXle4bADLggBEGH6zUD15L8dYofAg
-         Sp2lXwpdYJQaOIOaFHVN8JASrEErprzTvHpDAb+TZ9f1UWCFO+PJr2h8/DZBUtoxz51y
-         iKVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770323280; x=1770928080;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=McVms00cAviRg0OClqcs3WN2EKZ9Ahl14CHN4GvqWtk=;
-        b=COA+WNj5y/E0abQtSko1N/YHPLP2zoTOB9tz5c4aIjx8Kds1sDuTyzN3HeOpwvbtcN
-         pHA0r5QVSlMKZNZfrY4mLKjGFAQriJR8PYJeK6mh+sawV4rD+UMmNw4rq0WeKDLwTgXt
-         Qr9N+WTN/qEV1jVNWyJg2lRtOUDmyfnGsyjcGy/gjkQZYrDAutv27CP8aRghies8p8k2
-         h6+xyFvlWO5FRW2cKeE0cGUAAb8HOP7cW+1w9L5yA31cQqucDx/qQpMpcCsKkJziynPy
-         sLX5PXA+4u/FtYevPr9n/6gQFqo4HVe6smJFzUmYwiPOtQjIKZeUj26mVpQRr/jAUeY3
-         lSiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV4NfzktDINyZ/WXHH7sJDD441VcWc0TAd1HLDrKZYoA7Q+T61ZoW95Wj8+5R+2H2E3GgGdyfSTOks=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIbcCGdf6t1y0/D+m9lpmlzAvqi4kJjO7xITX1j6z6ftZ91Abr
-	BHf0qLYCy5Z1B4hikbkRyYAUxOFUNalof52yGI61N2+g3YW+XVFIfGhOH8WZ70f7nPg=
-X-Gm-Gg: AZuq6aLDpDVIios/79eTbQakwNja1f8Z4QlXbhS5JDBr01EH5brAY9vTNfRGHcj3NKP
-	9hsOxBuc5m9/aR3rGHmrzu4NE2yhqpRIQuB+gaBvDmYkZFsONSDidJ3fOIIV2EXxUdm2qb7Vms2
-	eiqO6Q/piY9nFD+8dm253dg5FkLWCRTzAF2yZbqBJmitDh+s/U8twuG/B1wnfbd1WeOiiwIDdSt
-	Uq4ao2mFYf19TksQpoYIxUF74N/5QtlTuYWg9iETyaTKqgWPGq9Eu53Dsb174hCMC9ztHEqI4RH
-	8Z6lpQLn+XIZUsKSvAAIxP5MaczSEP/82tEX1fyOgQiGV8tbMiijkAhmVjchycsR/gXLeiiESqj
-	w+uwXyqC1tgw5qOBEYInZNvadD6fpb7rboT5l46AqftYyWnCxbAttCqcSoPVD4NQ7SbjOutPfeB
-	P52H8kW/fJay2oaTsSrOiwSgzi6Zy4M70Qc6eR9UqHdeYyw2/XuDlDC+dVBDb+6Qk=
-X-Received: by 2002:a17:902:fc43:b0:2a9:4c2:e53 with SMTP id d9443c01a7336-2a95192e01emr5075975ad.48.1770323279995;
-        Thu, 05 Feb 2026 12:27:59 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a951c940besm2818045ad.38.2026.02.05.12.27.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Feb 2026 12:27:59 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.99.1)
-	(envelope-from <david@fromorbit.com>)
-	id 1vo5xD-0000000DOVU-32Ei;
-	Fri, 06 Feb 2026 07:27:55 +1100
-Date: Fri, 6 Feb 2026 07:27:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jinliang Zheng <alexjlzheng@gmail.com>
-Cc: alexjlzheng@tencent.com, cem@kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: take a breath in xlog_ioend_work()
-Message-ID: <aYT9SyPV0GGaeRvG@dread.disaster.area>
-References: <aYR2-Y-Fe2Chh5if@dread.disaster.area>
- <20260205124940.2323931-1-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="eNaQaWxY"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=yHhcPcm7/aNDLEtRnOuhFSnTHyU3PJmqaMR5L62zSNU=; b=eNaQaWxYojWshirXCeqA9eyVJZ
+	hZcnGM9H28EPr5osfLxORkm082Y6MkKZ5voUiADi394hCJ+XNhacAJh1LBRmNsyQoB4xZUVcwuVfj
+	YGaPAZG+JMFzlnk7BDNjCRiAyQQLtUsVPuA1eZZYshIAwYWNpgs40J3djdEEtw8t3WTuN67ziGx1y
+	rFpklmAl4+PoV/fL0slBG35ZyahuEDzQuEQQpaHP3OhTS542F8aTc3Ck6it796ftV4eKAnoVJEW+q
+	WTnRFjYyNfg5nrpdc7UVma2NHmv6D4tGfOk0PaN8+NylCYq2Z1CJZnXg97oAE13fcllv6V0qHi4Ke
+	/xvHK1tg==;
+Received: from [187.57.129.220] (helo=[192.168.15.100])
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
+	id 1vo63v-00EXuY-38; Thu, 05 Feb 2026 21:34:51 +0100
+Message-ID: <05c37282-715e-4334-82e6-aea3241f15eb@igalia.com>
+Date: Thu, 5 Feb 2026 17:34:42 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
+ Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
+ Ludovico de Nittis <ludovico.denittis@collabora.com>
+References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
+ <20260115062944.GA9590@lst.de>
+ <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
+ <20260115072311.GA10352@lst.de>
+ <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
+ <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
+ <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
+ <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
+ <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
+ <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
+ <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
+ <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
+ <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
+ <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
+ <8ab387b1-c4aa-40a5-946f-f4510d8afd02@igalia.com>
+ <CAOQ4uxiRpwuyfj_Wy3Zj+HAi+jgQOq8nPQK8wmn6Hgsz-9i1fw@mail.gmail.com>
+ <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
+In-Reply-To: <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260205124940.2323931-1-alexjlzheng@tencent.com>
 
-On Thu, Feb 05, 2026 at 08:49:38PM +0800, Jinliang Zheng wrote:
-> On Thu, 5 Feb 2026 21:54:49 +1100, david@fromorbit.com wrote:
-> > On Thu, Feb 05, 2026 at 04:26:20PM +0800, alexjlzheng@gmail.com wrote:
-> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
-> > > 
-> > > The xlog_ioend_work() function contains several nested loops with
-> > > fairly complex operations, which may leads to:
-> > > 
-> > >   PID: 2604722  TASK: ffff88c08306b1c0  CPU: 263  COMMAND: "kworker/263:0H"
-> > >    #0 [ffffc9001cbf8d58] machine_kexec at ffffffff9d086081
-> > >    #1 [ffffc9001cbf8db8] __crash_kexec at ffffffff9d20817a
-> > >    #2 [ffffc9001cbf8e78] panic at ffffffff9d107d8f
-> > >    #3 [ffffc9001cbf8ef8] watchdog_timer_fn at ffffffff9d243511
-> > >    #4 [ffffc9001cbf8f28] __hrtimer_run_queues at ffffffff9d1e62ff
-> > >    #5 [ffffc9001cbf8f80] hrtimer_interrupt at ffffffff9d1e73d4
-> > >    #6 [ffffc9001cbf8fd8] __sysvec_apic_timer_interrupt at ffffffff9d07bb29
-> > >    #7 [ffffc9001cbf8ff0] sysvec_apic_timer_interrupt at ffffffff9dd689f9
-> > >   --- <IRQ stack> ---
-> > >    #8 [ffffc900460a7c28] asm_sysvec_apic_timer_interrupt at ffffffff9de00e86
-> > >       [exception RIP: slab_free_freelist_hook.constprop.0+107]
-> > >       RIP: ffffffff9d3ef74b  RSP: ffffc900460a7cd0  RFLAGS: 00000286
-> > >       RAX: ffff89ea4de06b00  RBX: ffff89ea4de06a00  RCX: ffff89ea4de06a00
-> > >       RDX: 0000000000000100  RSI: ffffc900460a7d28  RDI: ffff888100044c80
-> > >       RBP: ffff888100044c80   R8: 0000000000000000   R9: ffffffffc21e8500
-> > >       R10: ffff88c867e93200  R11: 0000000000000001  R12: ffff89ea4de06a00
-> > >       R13: ffffc900460a7d28  R14: ffff89ea4de06a00  R15: ffffc900460a7d30
-> > >       ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> > >    #9 [ffffc900460a7d18] __kmem_cache_free at ffffffff9d3f65a0
-> > >   #10 [ffffc900460a7d70] xlog_cil_committed at ffffffffc21e85af [xfs]
-> > >   #11 [ffffc900460a7da0] xlog_cil_process_committed at ffffffffc21e9747 [xfs]
-> > >   #12 [ffffc900460a7dd0] xlog_state_do_iclog_callbacks at ffffffffc21e41eb [xfs]
-> > >   #13 [ffffc900460a7e28] xlog_state_do_callback at ffffffffc21e436f [xfs]
-> > >   #14 [ffffc900460a7e50] xlog_ioend_work at ffffffffc21e6e1c [xfs]
-> > >   #15 [ffffc900460a7e70] process_one_work at ffffffff9d12de69
-> > >   #16 [ffffc900460a7ea8] worker_thread at ffffffff9d12e79b
-> > >   #17 [ffffc900460a7ef8] kthread at ffffffff9d1378fc
-> > >   #18 [ffffc900460a7f30] ret_from_fork at ffffffff9d042dd0
-> > >   #19 [ffffc900460a7f50] ret_from_fork_asm at ffffffff9d007e2b
-> > > 
-> > > This patch adds cond_resched() to avoid softlockups similar to the one
-> > > described above.
-> > 
-> > You've elided the soft lockup messages that tell us how long this
-> > task was holding the CPU. What is the soft lockup timer set to?
-> > What workload causes this to happen? How do we reproduce it?
+Em 28/01/2026 08:49, Amir Goldstein escreveu:
+> On Sat, Jan 24, 2026 at 11:45 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>>
+>> On Fri, Jan 23, 2026 at 9:08 PM André Almeida <andrealmeid@igalia.com> wrote:
+>>>
+>>> Em 23/01/2026 10:24, André Almeida escreveu:
+>>>>
+>>>> Em 22/01/2026 17:07, Amir Goldstein escreveu:
+>>>>> On Tue, Jan 20, 2026 at 4:12 PM Amir Goldstein <amir73il@gmail.com>
+>>>>> wrote:
+>>>>>>
+>>>>>> On Mon, Jan 19, 2026 at 5:56 PM André Almeida
+>>>>>> <andrealmeid@igalia.com> wrote:
+>>>>>>>
+>>>>> ...
+>>>>>>> Actually they are not in the same fs, upper and lower are coming from
+>>>>>>> different fs', so when trying to mount I get the fallback to
+>>>>>>> `uuid=null`. A quick hack circumventing this check makes the mount
+>>>>>>> work.
+>>>>>>>
+>>>>>>> If you think this is the best way to solve this issue (rather than
+>>>>>>> following the VFS helper path for instance),
+>>>>>>
+>>>>>> That's up to you if you want to solve the "all lower layers on same fs"
+>>>>>> or want to also allow lower layers on different fs.
+>>>>>> The former could be solved by relaxing the ovl rules.
+>>>>>>
+>>>>>>> please let me know how can
+>>>>>>> I safely lift this restriction, like maybe adding a new flag for this?
+>>>>>>
+>>>>>> I think the attached patch should work for you and should not
+>>>>>> break anything.
+>>>>>>
+>>>>>> It's only sanity tested and will need to write tests to verify it.
+>>>>>>
+>>>>>
+>>>>> Andre,
+>>>>>
+>>>>> I tested the patch and it looks good on my side.
+>>>>> If you want me to queue this patch for 7.0,
+>>>>> please let me know if it addresses your use case.
+>>>>>
+>>>>
+>>>> Hi Amir,
+>>>>
+>>>> I'm still testing it to make sure it works my case, I will return to you
+>>>> ASAP. Thanks for the help!
+>>>>
+>>>
+>>> So, your patch wasn't initially working in my setup here, and after some
+>>> debugging it turns out that on ovl_verify_fh() *fh would have a NULL
+>>> UUID, but *ofh would have a valid UUID, so the compare would then fail.
+>>>
+>>> Adding this line at ovl_get_fh() fixed the issue for me and made the
+>>> patch work as I was expecting:
+>>>
+>>> +       if (!ovl_origin_uuid(ofs))
+>>> +               fh->fb.uuid = uuid_null;
+>>> +
+>>>           return fh;
+>>>
+>>> Please let me know if that makes sense to you.
+>>
+>> It does not make sense to me.
+>> I think you may be using the uuid=off feature in the wrong way.
+>> What you did was to change the stored UUID, but this NOT the
+>> purpose of uuid=off.
+>>
+>> The purpose of uuid=off is NOT to allow mounting an overlayfs
+>> that was previously using a different lower UUID.
+>> The purpose is to mount overlayfs the from the FIRST time with
+>> uuid=off so that ovl_verify_origin_fh() gets null uuid from the
+>> first call that sets the ORIGIN xattr.
+>>
+>> IOW, if user want to be able to change underlying later UUID
+>> user needs to declare from the first overlayfs mount that this
+>> is expected to happen, otherwise, overlayfs will assume that
+>> an unintentional wrong configuration was used.
+>>
+>> I updated the documentation to try to explain this better:
+>>
+>> Is my understanding of the problems you had correct?
+>> Is my solution understood and applicable to your use case?
+>>
 > 
-> Thanks for your reply. :)
+> Hi Andre,
 > 
-> The soft lockup timer is set to 20s, and the cpu was holding 22s.
-
-Yep, something else must be screwed up here - an iclog completion
-should never have enough items attched to it that is takes this long
-to process them without yeilding the CPU.
-
-We can only loop once around the iclogs in this path these days,
-because the iclog we we are completing runs xlog_ioend_work() with
-the iclog->ic_sema held. This locks out new IO being issued on that
-iclog whilst we are processing the completion, and hence the
-iclogbuf ring will stall trying to write new items to this iclog.
-
-Hence whilst we are processing an iclog completion, the entire
-journal (and hence filesystem) can stall waiting for the completion
-to finish and release the iclog->ic_sema.
-
-This also means we can have, at most, 8 iclogs worth of journal
-writes to complete in xlog_ioend_work(). That greatly limits the
-number of items we are processing in the xlog_state_do_callback()
-loops. Yes, it can be tens of thousands of items, but it is bound by
-journal size and the checkpoint pipeline depth (maximum of 4
-checkpoints in flight at once).
-
-So I don't see how the number of items that we are asking to be
-processed during journal completion, by itself, can cause such a
-long processing time. We typically process upwards of a thousand
-items per millisecond here...
-
-> The workload is a test suite combining stress-ng, LTP, and fio,
-> executed concurrently. I believe reproducing the issue requires a
-> certain probability.
+> Sorry to nag you, but if you'd like me to queue the suggested change to 7.0,
+> I would need your feedback soon.
 > 
-> thanks,
-> Jinliang Zheng. :)
-> 
-> > 
-> > FWIW, yes, there might be several tens of thousands of objects to
-> > move to the AIL in this journal IO completion path, but if this
-> > takes more than a couple of hundred milliseconds of processing time
-> > then there is something else going wrong....
-> 
-> Is it possible that the kernel’s CPU and memory were under high load,
-> causing each iteration of the loop to take more time and eventually
-> accumulating to over 20 seconds?
 
-That's a characteristic behaviour of catastrophic spin lock
-contention...
+Hey Amir, sorry for my delay. I just had a week out of the office and 
+just got back to this.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Our initial test case worked great! We managed to mount both images and 
+use overlayfs without a problem after your clarification of where to use 
+uuid=off, which should be on the first mount.
+
+However, when rebooting to the other partition, the mount failed with 
+"failed to verify upper root origin" again, but I believe that I forgot 
+to add `uuid=off` somewhere in the mount scripts. I'm still debugging this.
+
+Anyhow, I see that we are now too close to the merge window, and from my 
+side we can delay this for 7.1 and merge it when it gets 100% clear that 
+this is the solution that we are looking for.
+
+Thanks again for your help!
+	André
+
+> FWIW, I think that this change of restrictions for uuid=null could be backported
+> to stable kernels, but I am not going to mark it for auto select, because
+> I'd rather see if anyone shouts with upstream kernel first when (if) we make
+> this change and manually backport later per demand.
+> 
+> Thanks,
+> Amir.
+
