@@ -1,163 +1,184 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460BC237180;
-	Thu,  5 Feb 2026 19:42:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C748330100D
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 20:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770320570; cv=none; b=VR7ydH0fhcYPXxL2XAszY/OrVNmBu2rGkqSPLLk+t0nssDdOg5Yr3VvBUcJ+jg6v0i9Lwcoe0U076Qyo/1sWxFImknXXeXE2iL9eysru8/f+ZkzDC7QzRp46XuGqekOvr20BQWo2KnwPZBitR/XE50sMpqyZrZMJDcRukqQQ3xw=
+	t=1770323280; cv=none; b=jOxjGyTPTO6Ikwk4LTgYDJHD4fmeRypChaFe1ZXybazoOGz4ncpMwyRAW9WDcIdcWCqNYE5cqz0JaG6rKqCyWtJH1qpojdD0NA0j17pkKIavEqwA2XPJEw63VJSkE206bENuH7Dwvlhypeh1oGUht1CYa2jz8i50eUyyTMUgHxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770320570; c=relaxed/simple;
-	bh=yGbjG/3x17Gc8ursq9S4mbSj7b2C4VF9UohLgcoN0UI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EOg+dUwRKT24MqUuKYBXS/RH/uyHdQZPmvxAjN5sZwiVZWpZaxi0NMJReqdvfL+0WuxJLkY7NUPTFJ0IJDDKC5+AIYU2s/G9Y0e0oEEsDBzl8ZUwLsoPFTS33S7kGV6zPdqGJYARUMV93JZ8Fuox8UY+371PepMZESDdAdq6RKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=NDgwXnos; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1770323280; c=relaxed/simple;
+	bh=niia58yHuSNHoSzxwYiho2gi/3KaKxCtnoPFWqsCLwc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iZnvfVJh0+xLS/DySy5ImJ0QocZNKWT0mLUmnY/XRRvGyZ+RvUTe2fTuk5fQAIObcine3xGuy4v28hTIhCQw2Eb73UtA7brVbpuWdK+if1AL65vt4Gfl2Tc2yZ9J2WrMOEtTUL2iEf+irJmhKfj/rAz42bM9Cro1ooOBQTOtKtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=eckfZvbm; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="NDgwXnos"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBZ862007036;
-	Thu, 5 Feb 2026 11:42:43 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=LHRvTXfg8AbW1lXErrTD00I8bbUcnPJ8/ywKnH2zqZw=; b=NDgwXnosaKwf
-	duCJnkOix1Q8t3LsjJqUutfJXOKFYRmYnfqMyTgz/Hp5MaujhdDZLSA1vpw6lbXh
-	oq+n1+4h0SRGhEXH3/ntwbUQ9wOrGgEzuYk1EQHKvTcE8BdrFQQOWeeHW/x+4dcD
-	0xgmqjKkXmmOr9L6tkpBcr8vnL3KQjPULMcX/PKS18CTZ0uoqvkgyr3bpfLuNAFD
-	NByR/rhO/sngBJ0hYfQZTkpjRntodi/34gQVp1VMbN+E5RP+R3R4wsfu5H1eIeVv
-	Y9qW/Vi1PSZtGe5j3U9SpXbJi01pFSfpQhK9biA9rkvV9LB3q3c7Wxw5UhZmopq3
-	8db4/qj/pA==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c50qtgtm0-3
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Thu, 05 Feb 2026 11:42:43 -0800 (PST)
-Received: from devbig003.atn7.facebook.com (2620:10d:c0a8:1c::1b) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Thu, 5 Feb 2026 19:42:28 +0000
-From: Chris Mason <clm@meta.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <cem@kernel.org>, <r772577952@gmail.com>, <stable@vger.kernel.org>,
-        <hch@lst.de>, <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/4] xfs: only call xf{array,blob}_destroy if we have a valid pointer
-Date: Thu, 5 Feb 2026 11:40:27 -0800
-Message-ID: <20260205194211.2307232-1-clm@meta.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
-References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs> <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="eckfZvbm"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2a0d52768ccso8747835ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 12:28:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1770323280; x=1770928080; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=McVms00cAviRg0OClqcs3WN2EKZ9Ahl14CHN4GvqWtk=;
+        b=eckfZvbmciamjt2bED/IWzvB0MAcrYTwdjw1m09FY3B6bMOccb5gGljwY+OkGznt5y
+         xZlnfEEkM+5oFr4xXstE4/U3Ui4lnU5VJc6XeboDc+hdlV+p/2AImROlxeb/77cdxRTx
+         Jc8Pph3PnvKXPQt2z/F9NcyhHUTaFxPTJY0T7u3UxIVUYquoApPBfYl/1ChhlqjoYsbh
+         pkLhpqpsIHqyaSJU3PvTJVqc3XBhDKHXmMQgOtMVXle4bADLggBEGH6zUD15L8dYofAg
+         Sp2lXwpdYJQaOIOaFHVN8JASrEErprzTvHpDAb+TZ9f1UWCFO+PJr2h8/DZBUtoxz51y
+         iKVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770323280; x=1770928080;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=McVms00cAviRg0OClqcs3WN2EKZ9Ahl14CHN4GvqWtk=;
+        b=COA+WNj5y/E0abQtSko1N/YHPLP2zoTOB9tz5c4aIjx8Kds1sDuTyzN3HeOpwvbtcN
+         pHA0r5QVSlMKZNZfrY4mLKjGFAQriJR8PYJeK6mh+sawV4rD+UMmNw4rq0WeKDLwTgXt
+         Qr9N+WTN/qEV1jVNWyJg2lRtOUDmyfnGsyjcGy/gjkQZYrDAutv27CP8aRghies8p8k2
+         h6+xyFvlWO5FRW2cKeE0cGUAAb8HOP7cW+1w9L5yA31cQqucDx/qQpMpcCsKkJziynPy
+         sLX5PXA+4u/FtYevPr9n/6gQFqo4HVe6smJFzUmYwiPOtQjIKZeUj26mVpQRr/jAUeY3
+         lSiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV4NfzktDINyZ/WXHH7sJDD441VcWc0TAd1HLDrKZYoA7Q+T61ZoW95Wj8+5R+2H2E3GgGdyfSTOks=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIbcCGdf6t1y0/D+m9lpmlzAvqi4kJjO7xITX1j6z6ftZ91Abr
+	BHf0qLYCy5Z1B4hikbkRyYAUxOFUNalof52yGI61N2+g3YW+XVFIfGhOH8WZ70f7nPg=
+X-Gm-Gg: AZuq6aLDpDVIios/79eTbQakwNja1f8Z4QlXbhS5JDBr01EH5brAY9vTNfRGHcj3NKP
+	9hsOxBuc5m9/aR3rGHmrzu4NE2yhqpRIQuB+gaBvDmYkZFsONSDidJ3fOIIV2EXxUdm2qb7Vms2
+	eiqO6Q/piY9nFD+8dm253dg5FkLWCRTzAF2yZbqBJmitDh+s/U8twuG/B1wnfbd1WeOiiwIDdSt
+	Uq4ao2mFYf19TksQpoYIxUF74N/5QtlTuYWg9iETyaTKqgWPGq9Eu53Dsb174hCMC9ztHEqI4RH
+	8Z6lpQLn+XIZUsKSvAAIxP5MaczSEP/82tEX1fyOgQiGV8tbMiijkAhmVjchycsR/gXLeiiESqj
+	w+uwXyqC1tgw5qOBEYInZNvadD6fpb7rboT5l46AqftYyWnCxbAttCqcSoPVD4NQ7SbjOutPfeB
+	P52H8kW/fJay2oaTsSrOiwSgzi6Zy4M70Qc6eR9UqHdeYyw2/XuDlDC+dVBDb+6Qk=
+X-Received: by 2002:a17:902:fc43:b0:2a9:4c2:e53 with SMTP id d9443c01a7336-2a95192e01emr5075975ad.48.1770323279995;
+        Thu, 05 Feb 2026 12:27:59 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a951c940besm2818045ad.38.2026.02.05.12.27.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Feb 2026 12:27:59 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.99.1)
+	(envelope-from <david@fromorbit.com>)
+	id 1vo5xD-0000000DOVU-32Ei;
+	Fri, 06 Feb 2026 07:27:55 +1100
+Date: Fri, 6 Feb 2026 07:27:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: alexjlzheng@tencent.com, cem@kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: take a breath in xlog_ioend_work()
+Message-ID: <aYT9SyPV0GGaeRvG@dread.disaster.area>
+References: <aYR2-Y-Fe2Chh5if@dread.disaster.area>
+ <20260205124940.2323931-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=FMsWBuos c=1 sm=1 tr=0 ts=6984f2b3 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
- a=dnfRgSOjAGpcwWFSCwIA:9
-X-Proofpoint-GUID: GAZ8RJT2CftIGwfIF13ZTVH2bAIgBYUB
-X-Proofpoint-ORIG-GUID: GAZ8RJT2CftIGwfIF13ZTVH2bAIgBYUB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE0OSBTYWx0ZWRfX8vP+o/AVqulL
- +ZJpAlAoRNqjMTAtwx1h1omhHoT9uh7htBC+mE3kbV1i0LuS+e2uv/c/SdFmpKEmJE9MnACcDhE
- F9xLpP/MNld5q1qlU19TgT7TrJM0q2Q43Cr/N+8Ho7B2VUFbZCG+Ti7BOyC5nIrwBRlnTq/JR0j
- 7yctaXZBHfWYV38QVBMDFHJJjW9BFG6fGcxnfyDJZkL4t5DJAYJ7mp7mKtBMGjOWF2JSYBWzlsI
- x/lfwSfK43GZIgZca5mbJ4uipyDNh7u4Z8KLjxkTxkyJHsZjr0vRWsPdqxlV3WVXp+6ZBRMaFEl
- E8kkKmZJBkla74Fu2raBbN/oNwmzcDMjcNnTCNf3FNYUnrKSN3tvR2FW8nsGz9MnaDkDWA+GdR/
- rcT/Wxi8hLv3X5uET4w3ZtDcPkzEm32WPwSQrYQB1LqpRZCDd07hi1ws55wCZ5cG13lhyYwiqpC
- yzgxmtGdxdC3/v2h6qA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-05_04,2026-02-05_03,2025-10-01_01
+In-Reply-To: <20260205124940.2323931-1-alexjlzheng@tencent.com>
 
-"Darrick J. Wong" <djwong@kernel.org> wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Feb 05, 2026 at 08:49:38PM +0800, Jinliang Zheng wrote:
+> On Thu, 5 Feb 2026 21:54:49 +1100, david@fromorbit.com wrote:
+> > On Thu, Feb 05, 2026 at 04:26:20PM +0800, alexjlzheng@gmail.com wrote:
+> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > > 
+> > > The xlog_ioend_work() function contains several nested loops with
+> > > fairly complex operations, which may leads to:
+> > > 
+> > >   PID: 2604722  TASK: ffff88c08306b1c0  CPU: 263  COMMAND: "kworker/263:0H"
+> > >    #0 [ffffc9001cbf8d58] machine_kexec at ffffffff9d086081
+> > >    #1 [ffffc9001cbf8db8] __crash_kexec at ffffffff9d20817a
+> > >    #2 [ffffc9001cbf8e78] panic at ffffffff9d107d8f
+> > >    #3 [ffffc9001cbf8ef8] watchdog_timer_fn at ffffffff9d243511
+> > >    #4 [ffffc9001cbf8f28] __hrtimer_run_queues at ffffffff9d1e62ff
+> > >    #5 [ffffc9001cbf8f80] hrtimer_interrupt at ffffffff9d1e73d4
+> > >    #6 [ffffc9001cbf8fd8] __sysvec_apic_timer_interrupt at ffffffff9d07bb29
+> > >    #7 [ffffc9001cbf8ff0] sysvec_apic_timer_interrupt at ffffffff9dd689f9
+> > >   --- <IRQ stack> ---
+> > >    #8 [ffffc900460a7c28] asm_sysvec_apic_timer_interrupt at ffffffff9de00e86
+> > >       [exception RIP: slab_free_freelist_hook.constprop.0+107]
+> > >       RIP: ffffffff9d3ef74b  RSP: ffffc900460a7cd0  RFLAGS: 00000286
+> > >       RAX: ffff89ea4de06b00  RBX: ffff89ea4de06a00  RCX: ffff89ea4de06a00
+> > >       RDX: 0000000000000100  RSI: ffffc900460a7d28  RDI: ffff888100044c80
+> > >       RBP: ffff888100044c80   R8: 0000000000000000   R9: ffffffffc21e8500
+> > >       R10: ffff88c867e93200  R11: 0000000000000001  R12: ffff89ea4de06a00
+> > >       R13: ffffc900460a7d28  R14: ffff89ea4de06a00  R15: ffffc900460a7d30
+> > >       ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+> > >    #9 [ffffc900460a7d18] __kmem_cache_free at ffffffff9d3f65a0
+> > >   #10 [ffffc900460a7d70] xlog_cil_committed at ffffffffc21e85af [xfs]
+> > >   #11 [ffffc900460a7da0] xlog_cil_process_committed at ffffffffc21e9747 [xfs]
+> > >   #12 [ffffc900460a7dd0] xlog_state_do_iclog_callbacks at ffffffffc21e41eb [xfs]
+> > >   #13 [ffffc900460a7e28] xlog_state_do_callback at ffffffffc21e436f [xfs]
+> > >   #14 [ffffc900460a7e50] xlog_ioend_work at ffffffffc21e6e1c [xfs]
+> > >   #15 [ffffc900460a7e70] process_one_work at ffffffff9d12de69
+> > >   #16 [ffffc900460a7ea8] worker_thread at ffffffff9d12e79b
+> > >   #17 [ffffc900460a7ef8] kthread at ffffffff9d1378fc
+> > >   #18 [ffffc900460a7f30] ret_from_fork at ffffffff9d042dd0
+> > >   #19 [ffffc900460a7f50] ret_from_fork_asm at ffffffff9d007e2b
+> > > 
+> > > This patch adds cond_resched() to avoid softlockups similar to the one
+> > > described above.
+> > 
+> > You've elided the soft lockup messages that tell us how long this
+> > task was holding the CPU. What is the soft lockup timer set to?
+> > What workload causes this to happen? How do we reproduce it?
 > 
-> Only call the xfarray and xfblob destructor if we have a valid pointer,
-> and be sure to null out that pointer afterwards.  Note that this patch
-> fixes a large number of commits, most of which were merged between 6.9
-> and 6.10.
+> Thanks for your reply. :)
+> 
+> The soft lockup timer is set to 20s, and the cpu was holding 22s.
 
-Hi everyone,
+Yep, something else must be screwed up here - an iclog completion
+should never have enough items attched to it that is takes this long
+to process them without yeilding the CPU.
 
-I'm trying out my AI review prompts on a few more trees, and I ran it
-on the fuse-iomap-cache branch:
+We can only loop once around the iclogs in this path these days,
+because the iclog we we are completing runs xlog_ioend_work() with
+the iclog->ic_sema held. This locks out new IO being issued on that
+iclog whilst we are processing the completion, and hence the
+iclogbuf ring will stall trying to write new items to this iclog.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
+Hence whilst we are processing an iclog completion, the entire
+journal (and hence filesystem) can stall waiting for the completion
+to finish and release the iclog->ic_sema.
 
-This was the latest email lore could find, apologies if I grabbed the wrong one.
+This also means we can have, at most, 8 iclogs worth of journal
+writes to complete in xlog_ioend_work(). That greatly limits the
+number of items we are processing in the xlog_state_do_callback()
+loops. Yes, it can be tens of thousands of items, but it is bound by
+journal size and the checkpoint pipeline depth (maximum of 4
+checkpoints in flight at once).
 
-Hopefully the review below is useful, please let me know if there are places it
-has gone wildly wrong.  I kept the header to make it obvious exactly which
-commit I'd run through.
+So I don't see how the number of items that we are asking to be
+processed during journal completion, by itself, can cause such a
+long processing time. We typically process upwards of a thousand
+items per millisecond here...
 
-I was really going for the fuse patches, but this ended up in my git
-rev-list output, and it looks valid to me:
+> The workload is a test suite combining stress-ng, LTP, and fio,
+> executed concurrently. I believe reproducing the issue requires a
+> certain probability.
+> 
+> thanks,
+> Jinliang Zheng. :)
+> 
+> > 
+> > FWIW, yes, there might be several tens of thousands of objects to
+> > move to the AIL in this journal IO completion path, but if this
+> > takes more than a couple of hundred milliseconds of processing time
+> > then there is something else going wrong....
+> 
+> Is it possible that the kernel’s CPU and memory were under high load,
+> causing each iteration of the loop to take more time and eventually
+> accumulating to over 20 seconds?
 
-commit 1e4e64674c788423e24610612e4981eb1dc9b28b
-Author: Darrick J. Wong <djwong@kernel.org>
+That's a characteristic behaviour of catastrophic spin lock
+contention...
 
-xfs: only call xf{array,blob}_destroy if we have a valid pointer
-
-This patch adds null pointer checks before calling xfarray_destroy and
-xfblob_destroy functions across multiple XFS scrub/repair teardown
-functions, and nulls out the pointers afterwards to prevent dangling
-pointer issues.
-
-Cc: r772577952@gmail.com
-Cc: <stable@vger.kernel.org> # v6.12
-Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
-
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index a2f6a7f71d839..6e3fef36d6614 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-
-[ ... ]
-
-> diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-> index 7a21b688a4715..d5a55eabf6801 100644
-> --- a/fs/xfs/scrub/dir_repair.c
-> +++ b/fs/xfs/scrub/dir_repair.c
-> @@ -172,8 +172,12 @@ xrep_dir_teardown(
->  	struct xrep_dir		*rd = sc->buf;
->
->  	xrep_findparent_scan_teardown(&rd->pscan);
-> -	xfblob_destroy(rd->dir_names);
-> -	xfarray_destroy(rd->dir_entries);
-> +	if (rd->dir_names)
-> +		xfblob_destroy(rd->dir_names);
-> +	rd->dir_names = NULL;
-> +	if (rd->dir_entries)
-> +		xfarray_destroy(rd->dir_entries);
-> +	rd->dir_names = NULL;
-                 ^^^^^^^^^^
-
-In xrep_dir_teardown, after destroying rd->dir_entries, the code sets
-rd->dir_names = NULL instead of rd->dir_entries = NULL. This leaves
-dir_entries as a dangling pointer after the xfarray is freed.
-
-The commit message states the patch should "be sure to null out that
-pointer afterwards", and the pattern in xrep_agi_buf_cleanup correctly
-nulls both iunlink_prev and iunlink_next pointers. This change should
-null both dir_names (line 177) and dir_entries (line 180), but line 180
-incorrectly nulls dir_names again.
-
-Shouldn't line 180 be rd->dir_entries = NULL?
-
-[ ... ]
-
-> Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
-
-The existing Fixes: tag points to commit ab97f4b1c03075, but this is not
-the first commit that introduced the bug. The bug was first introduced by
-commit f1184081ac97 ("xfs: teach scrub to check file nlinks") on
-2024-02-22, which unconditionally called xfarray_destroy without checking
-for NULL pointers. The commit ab97f4b1c03075 (2024-04-15) is one of
-several later commits that perpetuated the same bug pattern.
-
-Should the Fixes: tag reference f1184081ac97 instead?
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
