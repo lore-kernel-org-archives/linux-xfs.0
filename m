@@ -1,138 +1,163 @@
-Received: from mail-pf1-f196.google.com (mail-pf1-f196.google.com [209.85.210.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010C9263F4A
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 18:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460BC237180;
+	Thu,  5 Feb 2026 19:42:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770316413; cv=none; b=a6hVAA9Mcisr8tde1Bsr5QLWP5PALpEtF4ZoLOIH6CBAla4JDfHd1eXMC+ruwcsQDtFwRUcId8VNwQrnwGNhyv2Fg2IMU32EsYBpzaRoqp2n9fYrP+v5+xHP3pSfWgH78HXmTydfEY66s9QwBa2OK56Lvk3kUPHgQWlC/WQBwVE=
+	t=1770320570; cv=none; b=VR7ydH0fhcYPXxL2XAszY/OrVNmBu2rGkqSPLLk+t0nssDdOg5Yr3VvBUcJ+jg6v0i9Lwcoe0U076Qyo/1sWxFImknXXeXE2iL9eysru8/f+ZkzDC7QzRp46XuGqekOvr20BQWo2KnwPZBitR/XE50sMpqyZrZMJDcRukqQQ3xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770316413; c=relaxed/simple;
-	bh=krmct5/2gB9NC8+4Y8cZ2odnH/AaG1DYcSrZCesyMrk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OsTrQ5JgdsHFsQd1/EV/zq5r4knwEiWua8Gzhxqpi5qfijhlySnMxW/pZ4QYA0UqnwiK0Ma9bDmNjW0+vhqHan484CieZ4IU1v3xk9v7EM8UcGXwXN6zsgiFVFGuAeo+E51x07mPn9ok+jKNZKVuvdtfbX4fVvZT5Lag8/CroXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b/Ss8iPL; arc=none smtp.client-ip=209.85.210.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770320570; c=relaxed/simple;
+	bh=yGbjG/3x17Gc8ursq9S4mbSj7b2C4VF9UohLgcoN0UI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EOg+dUwRKT24MqUuKYBXS/RH/uyHdQZPmvxAjN5sZwiVZWpZaxi0NMJReqdvfL+0WuxJLkY7NUPTFJ0IJDDKC5+AIYU2s/G9Y0e0oEEsDBzl8ZUwLsoPFTS33S7kGV6zPdqGJYARUMV93JZ8Fuox8UY+371PepMZESDdAdq6RKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=NDgwXnos; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b/Ss8iPL"
-Received: by mail-pf1-f196.google.com with SMTP id d2e1a72fcca58-81ed3e6b8e3so709260b3a.2
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 10:33:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770316412; x=1770921212; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=fBDlyxKzWWXckCw7HRsZ1rb9+yJ1upJlMZa3IDCU5FA=;
-        b=b/Ss8iPLSf67WIk6g7uDPsvCZ+5AT07JVeQMDLNivSIEJoLvnPRH9C2Nh47quQuC52
-         TI2che0UYr6KgqJgDDdAB3ga/ZH51s7GfhAw1dzDObAAQ30YbLo5vVWuFbPGcuDp82vt
-         fnCwR9heW9KDSiCgQKH/gflbn/VbQB3zTWbzt0ruajV0nRtPPQv8mJFbui9onOp3Ojz7
-         KdA5u/JOPyqBbXjGv7gxZXfnSkrhYaOkvoQugnDlSh1kAN/BGAh1055NupWQU+DZNGjj
-         nzzj1dISFHOdu5XhHi223PzTFZBcdX6iulo6nNDdiZXPCxxdadGtwUkJusk1gSQRX5dy
-         F7ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770316412; x=1770921212;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fBDlyxKzWWXckCw7HRsZ1rb9+yJ1upJlMZa3IDCU5FA=;
-        b=RMwGEHBsgRDMQ6S+UkhEuG90ePkvxXVsQVLbfYdFZE381OBtxiHNK3QZivopMNufdc
-         sZ2pl1OFjvyHuxD5Emb1EleBgAVaTYG+N73GaTeDLnDeIYwzjwvPsGS2HThkF1F1v8xd
-         ObdUJqM5TcO8huaRfyII1cT2CugP3arlmPCXdCzEspuPJpl3cxMxHKP0m7sqWo/wxaoU
-         z1a0xg6dD+Do9FVQzEzLLcXoi9rZj1gARg5XX0+jFFysSbvcodVh2O3pqvXE5U6O6ccv
-         Q1bQ2uApXanxI2HzBfpD8TgLuBcRmoMelziswCZPDCx7OJ1NmkEiUXuK4kf4UpJppTkB
-         2iKA==
-X-Forwarded-Encrypted: i=1; AJvYcCWvveNRXhRZDrxmUdC30Ij6nV/DS2CRyO9ZJzjRR2Ynx1Xl7fQXzda0/M48UEbg4F90uCa3Ugv3Iac=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxIII9Kie0nOHnNaSKQplFzREMjgv6AK0VontrP5RrkDCbWs4mX
-	8DX7tScH+PdTntMaX5ViSL6aUI314eoXIZbYDQ5zjIm3uW8A8znXtuJxQjY5u+6R9vI=
-X-Gm-Gg: AZuq6aJSc+7nqB8b9+FBYvgzP4i+rcY4QPsZbz5PtcSy3h8c0tOS17GySPxv8LGGQna
-	bRPtt5CJljOXWaUIjk7Bo8kYP2bchEcMI+tGLnyUAEVav4nw0LtHwqdMWxlBWi53Bzs4DS5tDz3
-	ihUxDIOYvxhMfQ+WcGfIqBGW17FEuM4QD8KQ3cQy9FbLQKCk1Ye4zfDl7+TThDJ2uhtScc2dzo0
-	17M+fTvd1ziTTfQHk04Zh9CM2oK6ji6gSQY8urZApliZMui0dDgSsE7W1sIPJiOjLDScvOjrEYF
-	40ZAK3N+4y/EPRQBbfPW06QClLRrTi71D6DAWkwOoiyRjVSuCPeTGtCA4yipqn7vYH1ouPMQ83g
-	1Kw/YOmIrwdM1FLzVzKnw7fRsscEzDOOjSH00MNJbxRnH7P7eZAQlGB5TgtTj/ntqO/MsecKDNa
-	8+K6iTUPQBm0IMkdIxaknQGg==
-X-Received: by 2002:a17:90b:1c04:b0:353:2e1:95f2 with SMTP id 98e67ed59e1d1-354870db415mr6134416a91.8.1770316412108;
-        Thu, 05 Feb 2026 10:33:32 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.208.177])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3549c09ff2fsm3215851a91.2.2026.02.05.10.33.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Feb 2026 10:33:31 -0800 (PST)
-Message-ID: <e2fb579c-d7cf-4075-9cc1-41cfa9bfb689@gmail.com>
-Date: Fri, 6 Feb 2026 00:03:11 +0530
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="NDgwXnos"
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBZ862007036;
+	Thu, 5 Feb 2026 11:42:43 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=LHRvTXfg8AbW1lXErrTD00I8bbUcnPJ8/ywKnH2zqZw=; b=NDgwXnosaKwf
+	duCJnkOix1Q8t3LsjJqUutfJXOKFYRmYnfqMyTgz/Hp5MaujhdDZLSA1vpw6lbXh
+	oq+n1+4h0SRGhEXH3/ntwbUQ9wOrGgEzuYk1EQHKvTcE8BdrFQQOWeeHW/x+4dcD
+	0xgmqjKkXmmOr9L6tkpBcr8vnL3KQjPULMcX/PKS18CTZ0uoqvkgyr3bpfLuNAFD
+	NByR/rhO/sngBJ0hYfQZTkpjRntodi/34gQVp1VMbN+E5RP+R3R4wsfu5H1eIeVv
+	Y9qW/Vi1PSZtGe5j3U9SpXbJi01pFSfpQhK9biA9rkvV9LB3q3c7Wxw5UhZmopq3
+	8db4/qj/pA==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c50qtgtm0-3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 05 Feb 2026 11:42:43 -0800 (PST)
+Received: from devbig003.atn7.facebook.com (2620:10d:c0a8:1c::1b) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.35; Thu, 5 Feb 2026 19:42:28 +0000
+From: Chris Mason <clm@meta.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <r772577952@gmail.com>, <stable@vger.kernel.org>,
+        <hch@lst.de>, <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/4] xfs: only call xf{array,blob}_destroy if we have a valid pointer
+Date: Thu, 5 Feb 2026 11:40:27 -0800
+Message-ID: <20260205194211.2307232-1-clm@meta.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
+References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs> <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [patch v4 1/2] xfs: Replace ASSERT with XFS_IS_CORRUPT in
- xfs_rtcopy_summary()
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@infradead.org, cem@kernel.org, linux-xfs@vger.kernel.org,
- ritesh.list@gmail.com, ojaswin@linux.ibm.com
-References: <cover.1770133949.git.nirjhar.roy.lists@gmail.com>
- <4b37c139595fdb9af280496f599f6bb43ae5a9b3.1770133949.git.nirjhar.roy.lists@gmail.com>
- <20260205162100.GO7712@frogsfrogsfrogs>
-Content-Language: en-US
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20260205162100.GO7712@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Authority-Analysis: v=2.4 cv=FMsWBuos c=1 sm=1 tr=0 ts=6984f2b3 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+ a=dnfRgSOjAGpcwWFSCwIA:9
+X-Proofpoint-GUID: GAZ8RJT2CftIGwfIF13ZTVH2bAIgBYUB
+X-Proofpoint-ORIG-GUID: GAZ8RJT2CftIGwfIF13ZTVH2bAIgBYUB
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE0OSBTYWx0ZWRfX8vP+o/AVqulL
+ +ZJpAlAoRNqjMTAtwx1h1omhHoT9uh7htBC+mE3kbV1i0LuS+e2uv/c/SdFmpKEmJE9MnACcDhE
+ F9xLpP/MNld5q1qlU19TgT7TrJM0q2Q43Cr/N+8Ho7B2VUFbZCG+Ti7BOyC5nIrwBRlnTq/JR0j
+ 7yctaXZBHfWYV38QVBMDFHJJjW9BFG6fGcxnfyDJZkL4t5DJAYJ7mp7mKtBMGjOWF2JSYBWzlsI
+ x/lfwSfK43GZIgZca5mbJ4uipyDNh7u4Z8KLjxkTxkyJHsZjr0vRWsPdqxlV3WVXp+6ZBRMaFEl
+ E8kkKmZJBkla74Fu2raBbN/oNwmzcDMjcNnTCNf3FNYUnrKSN3tvR2FW8nsGz9MnaDkDWA+GdR/
+ rcT/Wxi8hLv3X5uET4w3ZtDcPkzEm32WPwSQrYQB1LqpRZCDd07hi1ws55wCZ5cG13lhyYwiqpC
+ yzgxmtGdxdC3/v2h6qA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-05_04,2026-02-05_03,2025-10-01_01
 
+"Darrick J. Wong" <djwong@kernel.org> wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Only call the xfarray and xfblob destructor if we have a valid pointer,
+> and be sure to null out that pointer afterwards.  Note that this patch
+> fixes a large number of commits, most of which were merged between 6.9
+> and 6.10.
 
-On 2/5/26 21:51, Darrick J. Wong wrote:
-> On Wed, Feb 04, 2026 at 08:36:26PM +0530, Nirjhar Roy (IBM) wrote:
->> Replace ASSERT(sum > 0) with an XFS_IS_CORRUPT() and place it just
->> after the call to xfs_rtget_summary() so that we don't end up using
->> an illegal value of sum.
->>
->> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> Looks good to me now, thanks for your persistence!
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hi everyone,
 
-Thank you for your review comments.
+I'm trying out my AI review prompts on a few more trees, and I ran it
+on the fuse-iomap-cache branch:
 
---NR
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
 
+This was the latest email lore could find, apologies if I grabbed the wrong one.
+
+Hopefully the review below is useful, please let me know if there are places it
+has gone wildly wrong.  I kept the header to make it obvious exactly which
+commit I'd run through.
+
+I was really going for the fuse patches, but this ended up in my git
+rev-list output, and it looks valid to me:
+
+commit 1e4e64674c788423e24610612e4981eb1dc9b28b
+Author: Darrick J. Wong <djwong@kernel.org>
+
+xfs: only call xf{array,blob}_destroy if we have a valid pointer
+
+This patch adds null pointer checks before calling xfarray_destroy and
+xfblob_destroy functions across multiple XFS scrub/repair teardown
+functions, and nulls out the pointers afterwards to prevent dangling
+pointer issues.
+
+Cc: r772577952@gmail.com
+Cc: <stable@vger.kernel.org> # v6.12
+Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index a2f6a7f71d839..6e3fef36d6614 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+
+[ ... ]
+
+> diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+> index 7a21b688a4715..d5a55eabf6801 100644
+> --- a/fs/xfs/scrub/dir_repair.c
+> +++ b/fs/xfs/scrub/dir_repair.c
+> @@ -172,8 +172,12 @@ xrep_dir_teardown(
+>  	struct xrep_dir		*rd = sc->buf;
 >
-> --D
->
->> ---
->>   fs/xfs/xfs_rtalloc.c | 5 ++++-
->>   1 file changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
->> index a12ffed12391..3035e4a7e817 100644
->> --- a/fs/xfs/xfs_rtalloc.c
->> +++ b/fs/xfs/xfs_rtalloc.c
->> @@ -112,6 +112,10 @@ xfs_rtcopy_summary(
->>   			error = xfs_rtget_summary(oargs, log, bbno, &sum);
->>   			if (error)
->>   				goto out;
->> +			if (XFS_IS_CORRUPT(oargs->mp, sum < 0)) {
->> +				error = -EFSCORRUPTED;
->> +				goto out;
->> +			}
->>   			if (sum == 0)
->>   				continue;
->>   			error = xfs_rtmodify_summary(oargs, log, bbno, -sum);
->> @@ -120,7 +124,6 @@ xfs_rtcopy_summary(
->>   			error = xfs_rtmodify_summary(nargs, log, bbno, sum);
->>   			if (error)
->>   				goto out;
->> -			ASSERT(sum > 0);
->>   		}
->>   	}
->>   	error = 0;
->> -- 
->> 2.43.5
->>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+>  	xrep_findparent_scan_teardown(&rd->pscan);
+> -	xfblob_destroy(rd->dir_names);
+> -	xfarray_destroy(rd->dir_entries);
+> +	if (rd->dir_names)
+> +		xfblob_destroy(rd->dir_names);
+> +	rd->dir_names = NULL;
+> +	if (rd->dir_entries)
+> +		xfarray_destroy(rd->dir_entries);
+> +	rd->dir_names = NULL;
+                 ^^^^^^^^^^
+
+In xrep_dir_teardown, after destroying rd->dir_entries, the code sets
+rd->dir_names = NULL instead of rd->dir_entries = NULL. This leaves
+dir_entries as a dangling pointer after the xfarray is freed.
+
+The commit message states the patch should "be sure to null out that
+pointer afterwards", and the pattern in xrep_agi_buf_cleanup correctly
+nulls both iunlink_prev and iunlink_next pointers. This change should
+null both dir_names (line 177) and dir_entries (line 180), but line 180
+incorrectly nulls dir_names again.
+
+Shouldn't line 180 be rd->dir_entries = NULL?
+
+[ ... ]
+
+> Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+
+The existing Fixes: tag points to commit ab97f4b1c03075, but this is not
+the first commit that introduced the bug. The bug was first introduced by
+commit f1184081ac97 ("xfs: teach scrub to check file nlinks") on
+2024-02-22, which unconditionally called xfarray_destroy without checking
+for NULL pointers. The commit ab97f4b1c03075 (2024-04-15) is one of
+several later commits that perpetuated the same bug pattern.
+
+Should the Fixes: tag reference f1184081ac97 instead?
 
