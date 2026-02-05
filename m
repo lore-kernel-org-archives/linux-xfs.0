@@ -1,197 +1,92 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-dl1-f53.google.com (mail-dl1-f53.google.com [74.125.82.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF05235503E
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 06:44:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09C0830F7EF
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 08:26:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770273886; cv=none; b=UH+0CoxeWxAaYRh4IArmyh8x87oKTRq1Nqbyl3m3FCr6YQ+4iz/dbHvD+oEx2mmqdB0P0V/LXm3eq0byjvEGODI7Tsp0mlv8ImhWABd5Cb40yjUD0CAfAIu6S8zzzpWRhJiRvS7WlvMARh+Y38MfyqNk7S5C7gi/u7z0dJHNt0M=
+	t=1770279986; cv=none; b=k40GuVEvLBM7xpoWbvueCGel2BjXLesr3Dj6eVqSihbEe2Wff0Z2NFrMcteGOXxnPXwt28dwGtdNAv+WLdGN3QdZHZOSK4zFa2USGX+IeMw9kciVfQx8+ubw/+661cIiFhCSeKSriUtP96ccMy0T3GILAVCupayXHv50hlI/xQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770273886; c=relaxed/simple;
-	bh=JbdI1NUXLhuX1W4EIQ1XgOIvg6sAYwOqA29NQMsR6OU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=fYQ2KqqTUS45li0IwDBDf6XWDgtLGOq+RFDyp4zwzcobQVC86twRmQh1l/NszNHCXA+9uar6xNOwPrrrin6WSHlVtt8Kgp0WDzDP8TJYP9c3iIJ42L/qOKwKPrpADtgieF0xR751Cbgb8zTMzca/57nV2qyXSwBNiiYI9M0JmW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gToDat6V; arc=none smtp.client-ip=209.85.216.51
+	s=arc-20240116; t=1770279986; c=relaxed/simple;
+	bh=lmwFrmN63ymvJSfI84HlcCwiM1bQqFDNVrP9jz7Ntdc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rTnPLMICUhnRKU2RAoA7GfKBOCCj/UsdtGDbt23qs0v5UCDpHUIiL8G0AXmL/TWkVdEHeKolhrnuPaAJqnkxv0+i2QxZrXp8m91a1qfUSHtD7BacJbeuxVK7aXOFeJsyD1EI8ugfi/rBNaS5cHDjS0Uhxr1bIGM5D85LmZ02K7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F5oQck5r; arc=none smtp.client-ip=74.125.82.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gToDat6V"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-352ccc61658so358035a91.0
-        for <linux-xfs@vger.kernel.org>; Wed, 04 Feb 2026 22:44:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F5oQck5r"
+Received: by mail-dl1-f53.google.com with SMTP id a92af1059eb24-1249b9f5703so1152427c88.0
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 00:26:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770273885; x=1770878685; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VNsGJHU6ZAGPYFrstJF6T+pTydSAytWmzby0uKhCanI=;
-        b=gToDat6VENDaStkuG2l8JTQAoVMw7AFrmtKyj3b6i9QtX5IG0bTJeqAw8RCaGuoAZz
-         J6BreB7285vtxAD3SbeQgVH0EjMh99Y0mGnJ62Palo+HNsa4qha+2mT6WewOWMHfyA5P
-         rqT8cEoHSgjFFr2e+Arp6Tkhxi3AXCJogSmP4lZon0oY7R7EEXv2DiWb+IB5QE8VTKOO
-         Rq2mRKLPitpmuYTVYMCbY/s9b39VGgTA5iFUSSUANGcGur6vPPU9hgaiEwy/MVXbYFLU
-         ZU3of8SR4wlnmF17sYgMNCZcSI5v3Ky3ELUqHHdiAWCRUt24HEAtSbPvo7smirhvHP/F
-         GwfQ==
+        d=gmail.com; s=20230601; t=1770279985; x=1770884785; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=9aDKO71QQchuiL6O17rzNxM8z2AUm9dMP10IkUlZzHA=;
+        b=F5oQck5rXzFGQuH+WKftqhZbsdJLia77PNOyDnCXTHjA8VfWfp8L9OluTHfSLHR3ut
+         G/RBHZnyUPqYcgzTBuQpit0uq3xxTdsOMJtvePk35YiBtFPgLCSIvTW7pRKLlFtIRvqY
+         mH8SIX/FF1Lp5dkDA85ojtE0TsLEMdngmQClTtCgG6345m2GCEm80SOFjZgXVwBHnokb
+         TNO6I03pr+GnSxsTtpt+AMajjz2BqOV1ymyiWzH/3W+txK2Lps5bfgYgB61IoTZUU/hF
+         DmiyOaKUZxNlv0spDS9sUtkoAnoo60112XYkBMA5LE23t+BTRhYi3DsXHLVPH6MFgs+l
+         M33A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770273885; x=1770878685;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VNsGJHU6ZAGPYFrstJF6T+pTydSAytWmzby0uKhCanI=;
-        b=UIgGGd8yNpG6t0CcMZ7BSPlsVU9XOjsIxrSxjCNbK2LK+EHOYd0YjGVwN65qven7Ox
-         N/6crPoFHwVLjo7sbB0w9Pej1nXb7tkwGT1Yy09ikKcUg/mk3lrBiOA1AClXzYrySMKB
-         w2koKabTEKfIZFwELV+k73s+8Ud2Av1NXPm6TgeXfM8/DZXTyK072SyQD+jkAIDgDBzh
-         LuD0N9rIAhDWW9VFf5DIrUfXZTrfDlcU42J+9wMF1koFCW99A2r6RguDQ0A4D0nVEYVy
-         Q8o0L5Bz3tFKXP1Ddt7ZzxCYPQ0yXGFqH4EBmAcCxzwYHLQ33e+qufIAzTmS4aJG+KLL
-         GilA==
-X-Forwarded-Encrypted: i=1; AJvYcCUUJv3V9IwImLkGnachuPORODRfI+ZIBqUEd7RV1F085mtyt4aBBe3GLw99loMDNQQEvmUEVX+o5ho=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywkc7+N23ocWZAAa9EkEXvPz4WHLNKs7m6CxC5jxDX6Jju5Kjz4
-	7LWj0aqHGLahHp2zZQplVk9Cp4FPYyIapRwYtAUyClANpIJH6qFXDyj3
-X-Gm-Gg: AZuq6aJb7QCa80Cj19DfjKpqZmaWiYgT+RHGp5yVPAKOinzjRfz4cYs+/1qeJAOfSaj
-	o1SXd1f/4JRP54JQQd9m4D1ELdr/Lz7PqCTBHrE7l4sdMIVZ22quD7+erzru/vxUKMHJ+Z21NhJ
-	ixv7in+0QBrhvBXB4MC4kztxdFPA+Q7aYr5Ln/Aklmk+Tm3HpWWPHHHNKn4bt+L0tlfUjjCVEQi
-	xuUCiqaVr3jOcCnJlvohOR7HgKjxruTFR3nHQrgR/tzE+S4kxR8BNwlPwHxwovqHIhpezTYqmrY
-	Upp5gugh9mJclz8naPjszynnJf3UEW/kCGCtsTxVFvfYv5x935MoeIRtrfxAosCN5Pjgcc6wN0w
-	Cul7r4TqUyFPlpp+GYOr4oAFmO/ZX3SUPMz/ETXWXy6tdB8kiQn4kedJJA296ZbOF2nJ5AN+Yh1
-	gIqbodHhRFzhrOqYJU2uGkJIDf7WFvU6F49HXl+4KKYDzb7BfC+zBKDlXluwVIeMbA
-X-Received: by 2002:a17:90b:5201:b0:353:100:2f20 with SMTP id 98e67ed59e1d1-354870eb37bmr4927223a91.10.1770273885118;
-        Wed, 04 Feb 2026 22:44:45 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.208.177])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3549c28204esm1389041a91.10.2026.02.04.22.44.37
+        d=1e100.net; s=20230601; t=1770279985; x=1770884785;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9aDKO71QQchuiL6O17rzNxM8z2AUm9dMP10IkUlZzHA=;
+        b=vLzXlW7HsmEOEHdxxnOxKl8cm41W0ESCK3bDy3736aOXsH9qIyL9Ql6/cWHT8JYcVQ
+         MR41mh0xGbdujLAnTw1RujGasrurYv9QDrGWwY/OaRRElSOdVRo4ysdMnmyJv+IQHFWd
+         lga4C/VxNyN06mxUE9CL/SHdC8o06zHlS8z6W203ntc1fY3uCR5GES+X5zLg6tsYYlmX
+         pfWDij84zNLZ3E6SbeNS1ObZU7eXL5yLi+kUM9mnScDzto6A5iSz+3mUf+Ap4AJubUy/
+         djj/dSht3JjtBA/M28IyTeDv5xIKpIDabOFocH3sI+Q2xPstw1r5ltEsKgLmPhJw04bf
+         TQlA==
+X-Gm-Message-State: AOJu0YwKNDGzf4CtS0q9VnrPnDCGgRcVlj/Oc9AKiSE9n1hexi5hlvAU
+	fa+OMTMCcmywaSK80fD3/oM60MYlKNlNOgAiIaOQKZAm4qPT6bbcr7sP
+X-Gm-Gg: AZuq6aIiH6WWAUG25HgBr+568p4jGKqnQMVCXPEMembEfXZrg1/G8jTwj0Fyk7/Rm12
+	G8icNBCF8HaZ9ewGBUwUVPyMJgnFystBMBhB9PDUhPAp01eb2DCcwTuHXP2aMgcNcsuHaVANCXm
+	GZ3mrxB2Mml1r2UiPJLmAo57iuIgkcGUERAaSXuO6Rn2xHFX8t6ymybaXODNlDtyFP+PdwHxGVC
+	5BXaOqYLXl9mVQQp8M43AtDofTZXrit8AeKkTLi71QPssLQVSzaOqdTiHSNmmWyW28WpEm0Bw5h
+	wTasv0uZmJmQ8MdUzTbyZBl00iIniWpzghOtH8QX5DFHWg9yAFEDaeX7VkWFL0aSN1U2cGI+//K
+	HU0tNS1v62bc6WnICNU9T58XT27ouWuVDFWanIzh2thKqjVOK8PX614b5hN+THdVVJv/jh2kqLU
+	rn9k2KNy4FXIyMWPH9uYSxnzw=
+X-Received: by 2002:a05:7022:914:b0:11b:38b6:a95a with SMTP id a92af1059eb24-126f4786246mr2781184c88.11.1770279984911;
+        Thu, 05 Feb 2026 00:26:24 -0800 (PST)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-126f503ecf4sm3903960c88.15.2026.02.05.00.26.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Feb 2026 22:44:44 -0800 (PST)
-Message-ID: <90870969cb6f04346d6dba603838abf993a42f5b.camel@gmail.com>
-Subject: Re: [PATCH v3 3/6] xfs: add per-inode AG prediction map and
- dirty-AG bitmap
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, Kundan Kumar
-	 <kundan.kumar@samsung.com>
-Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, 
- willy@infradead.org, mcgrof@kernel.org, clm@meta.com, david@fromorbit.com, 
- amir73il@gmail.com, axboe@kernel.dk, hch@lst.de, ritesh.list@gmail.com, 
- dave@stgolabs.net, cem@kernel.org, wangyufei@vivo.com, 
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- linux-xfs@vger.kernel.org,  gost.dev@samsung.com, anuj20.g@samsung.com,
- vishak.g@samsung.com,  joshi.k@samsung.com
-Date: Thu, 05 Feb 2026 12:14:35 +0530
-In-Reply-To: <20260129004404.GA7712@frogsfrogsfrogs>
-References: <20260116100818.7576-1-kundan.kumar@samsung.com>
-	 <CGME20260116101251epcas5p1cf5b48f2efb14fe4387be3053b3c3ebc@epcas5p1.samsung.com>
-	 <20260116100818.7576-4-kundan.kumar@samsung.com>
-	 <20260129004404.GA7712@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
+        Thu, 05 Feb 2026 00:26:24 -0800 (PST)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH 0/2] Add cond_resched() in some place to avoid softlockup
+Date: Thu,  5 Feb 2026 16:26:19 +0800
+Message-ID: <20260205082621.2259895-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, 2026-01-28 at 16:44 -0800, Darrick J. Wong wrote:
-> On Fri, Jan 16, 2026 at 03:38:15PM +0530, Kundan Kumar wrote:
-> > Add per-inode structures to track predicted AGs of dirty folios using
-> > an xarray and bitmap. This enables efficient identification of AGs
-> > involved in writeback.
-> > 
-> > Signed-off-by: Kundan Kumar <kundan.kumar@samsung.com>
-> > Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-> > ---
-> >  fs/xfs/xfs_icache.c | 27 +++++++++++++++++++++++++++
-> >  fs/xfs/xfs_inode.h  |  5 +++++
-> >  2 files changed, 32 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index e44040206851..f97aa6d66271 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -80,6 +80,25 @@ static inline xa_mark_t ici_tag_to_mark(unsigned int tag)
-> >  	return XFS_PERAG_BLOCKGC_MARK;
-> >  }
-> >  
-> > +static int xfs_inode_init_ag_bitmap(struct xfs_inode *ip)
-> > +{
-> > +	unsigned int bits = ip->i_mount->m_sb.sb_agcount;
-> > +	unsigned int nlongs;
-> > +
-> > +	xa_init_flags(&ip->i_ag_pmap, XA_FLAGS_LOCK_IRQ);
-> 
-> This increases the size of struct xfs_inode by 40 bytes...
-> 
-> > +	ip->i_ag_dirty_bitmap = NULL;
-> > +	ip->i_ag_dirty_bits = bits;
-> > +
-> > +	if (!bits)
-> > +		return 0;
-> > +
-> > +	nlongs = BITS_TO_LONGS(bits);
-> > +	ip->i_ag_dirty_bitmap = kcalloc(nlongs, sizeof(unsigned long),
-> > +					GFP_NOFS);
-> 
-> ...and there could be hundreds or thousands of AGs for each filesystem.
-> That's a lot of kernel memory to handle this prediction stuff, and I"m
-> not even sure what ag_dirty_bitmap does yet.
-> 
-> > +
-> > +	return ip->i_ag_dirty_bitmap ? 0 : -ENOMEM;
-> > +}
-> > +
-> >  /*
-> >   * Allocate and initialise an xfs_inode.
-> >   */
-> > @@ -131,6 +150,8 @@ xfs_inode_alloc(
-> >  	ip->i_next_unlinked = NULLAGINO;
-> >  	ip->i_prev_unlinked = 0;
-> >  
-> > +	xfs_inode_init_ag_bitmap(ip);
-> 
-> Unchecked return value???
-> 
-> > +
-> >  	return ip;
-> >  }
-> >  
-> > @@ -194,6 +215,12 @@ xfs_inode_free(
-> >  	ip->i_ino = 0;
-> >  	spin_unlock(&ip->i_flags_lock);
-> >  
-> > +	/* free xarray contents (values are immediate packed ints) */
-> > +	xa_destroy(&ip->i_ag_pmap);
-> > +	kfree(ip->i_ag_dirty_bitmap);
-> > +	ip->i_ag_dirty_bitmap = NULL;
-> > +	ip->i_ag_dirty_bits = 0;
-> > +
-> >  	__xfs_inode_free(ip);
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > index bd6d33557194..dee449168605 100644
-> > --- a/fs/xfs/xfs_inode.h
-> > +++ b/fs/xfs/xfs_inode.h
-> > @@ -99,6 +99,11 @@ typedef struct xfs_inode {
-> >  	spinlock_t		i_ioend_lock;
-> >  	struct work_struct	i_ioend_work;
-> >  	struct list_head	i_ioend_list;
-> > +
-> > +	/* AG prediction map: pgoff_t -> packed u32 */
-> 
-> What about blocksize < pagesize filesystems?  Which packed agno do you
-> associate with the pgoff_t?
-Sorry but I am bit unfamiliar with the term packed agno? Can you please briefly explain does packed
-agno mean?
---NR
-> 
-> Also, do you have an xarray entry for each pgoff_t in a large folio?
-> 
-> --D
-> 
-> > +	struct xarray           i_ag_pmap;
-> > +	unsigned long           *i_ag_dirty_bitmap;
-> > +	unsigned int            i_ag_dirty_bits;
-> >  } xfs_inode_t;
-> >  
-> >  static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
-> > -- 
-> > 2.25.1
-> > 
-> > 
+From: Jinliang Zheng <alexjlzheng@tencent.com>
+
+We recently observed several XFS-related softlockups in non-preempt
+kernels during stability testing, and we believe adding a few
+cond_resched()calls would be beneficial.
+
+Jinliang Zheng (2):
+  xfs: take a breath in xlog_ioend_work()
+  xfs: take a breath in xfsaild()
+
+ fs/xfs/xfs_buf.c     | 2 ++
+ fs/xfs/xfs_log_cil.c | 3 +++
+ 2 files changed, 5 insertions(+)
+
+-- 
+2.49.0
 
