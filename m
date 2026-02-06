@@ -1,150 +1,257 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FC1F30C345;
-	Fri,  6 Feb 2026 09:34:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8270D32E72C;
+	Fri,  6 Feb 2026 09:40:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770370441; cv=none; b=LmROYOsr6ofhv7/ABYfUWtdvZ04Ean2FQxKddwf64fkpMWDIrTsjYTNrk6GtcggfYDC18THns29+C6lTB2TXTn2Xav/YT2qRJPaDKEmO56WGWFIvsNaVXVUHJRDzYBE7QhFxTjNOo4IaD8y/4k7GdPKYYxXMwLQV5ZC+YrRR1xM=
+	t=1770370854; cv=none; b=gc/eq5j1ZxUPqXxQmVEyKFj3gU+/BjC7aXg4hhrZp+WXO08qCm3WnT4hV9a85OpJmtRh93XZMkveZArWGgW8Ku6bE+IwOCcRyDcOmReDb/BJnJE71AgK3EeymEkLfLyY3STLIBQZc555fUtplsFNwHSaCefU7qkZDHHjaxjTrGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770370441; c=relaxed/simple;
-	bh=dvUEdFjqvMZQLut8kiitetf6Knxbh6r5+j1oy/SnpFg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a8g7KIb8IynKHn44g9VnZqGU2s4KDNKOYyXvMF7TylpoN5qpzWhgt5+RcWOlidoDBICgKVrO5Cw8qz7KKSWyiBHMlaAdmCcCKq/4J2rCK0YBGDDfRc+WRYCPQ3Nv0byShkTdT3OtsVDKt7mcUu19/cQrzopA/Vf8HYzc1pXIHwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mre03dUm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770370854; c=relaxed/simple;
+	bh=fC0bZIWHVa85gQm485t6OL57fPmerIVuB3ioec0wM+0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AcCtA7Ru972WUM9D+YFfVX9HJID3KceaNgD26jcyoD66sywwcu4dxRBVBi8meE9Lm+qelQk+YcFG6U2i5B/G002hYlcJUPBqReMkg1L2pr7Y4BC5SS6I6+2zddl6HmmgO4FbaF97/zjSzbF6QCTLxEA1DuWNZdb1lTdNo0jXKbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D+iSRACW; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mre03dUm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51427C116C6;
-	Fri,  6 Feb 2026 09:33:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770370440;
-	bh=dvUEdFjqvMZQLut8kiitetf6Knxbh6r5+j1oy/SnpFg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Mre03dUmtsC9Kz6zPu6exNP6c13IvGojD/GUXDQWO2OlHqEQ9vIo1llqyfHyfmmpr
-	 HxP3u+Ynz5iWs8WqP1hbCEffQSSqDvHSOGNs2bKTlDLtvdd2n2kG7gPVTQpwD5+USW
-	 zudIXajlic6zzqcKQhOVldYLySG365y0P/unF/kbt6Ixuj7ijjLFNEoFC5uv32r3Yv
-	 lCnlo07GSYJRH49Vo73yszGJ3NK+NfJZ2EAuT5jzi8/MJY5s2mXLF5sB472ZuPvY8+
-	 DcJltobyO5LPGLZGYJ2vIWodAE4ne4UCn1p83Ag36JCFxFNLzshcGGf5B/jJy+rH97
-	 S2JNUASR2+cwg==
-Message-ID: <144e31a9-e29c-4809-af2e-5ac45150d3f7@kernel.org>
-Date: Fri, 6 Feb 2026 10:33:53 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D+iSRACW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1770370854; x=1801906854;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=fC0bZIWHVa85gQm485t6OL57fPmerIVuB3ioec0wM+0=;
+  b=D+iSRACWopvz7D/s7g9J5ODeuFmcQ3rgzx4b+HtiCcMiSImXqBXiB5hN
+   zVooZwGNGLn13CY0ViWag+j/+rwWIoqWH/T+Nj3Bc5x8cQiBOSXwnsuJG
+   CpFYcKrbk2ZaH0E8WRfL9EtgDSTtUNDzEK/dluXtT+3B4iIavD9pWvycx
+   PuDadLJ9ThWZWLN4q2L1vtX3tYW7MS+RgZlUi5JUlU8ydUEpV5Vwt5Dtb
+   M3PvBcn5IZ8f5EbtBkN9v1t5er2syrcWetlgW9XjS5vaXCUAjOi2BFFZe
+   1037cEU5X4uXzeYFXSDU02eYtLJUwnS3sfzw10VjRNtykP5uCLq7lvL6Y
+   g==;
+X-CSE-ConnectionGUID: Wg17dtXUQy6sE/tD6pWvug==
+X-CSE-MsgGUID: PHsg6JKzRgCi57vB6N9cLw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11692"; a="70772766"
+X-IronPort-AV: E=Sophos;i="6.21,276,1763452800"; 
+   d="scan'208";a="70772766"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2026 01:40:54 -0800
+X-CSE-ConnectionGUID: bx4xuHGASRyNDscEi8vz+Q==
+X-CSE-MsgGUID: q/RPj8O1ToOaz+/Bgqq4Xg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,276,1763452800"; 
+   d="scan'208";a="215794011"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 06 Feb 2026 01:40:51 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1voIKX-00000000kcS-1Gud;
+	Fri, 06 Feb 2026 09:40:49 +0000
+Date: Fri, 6 Feb 2026 17:39:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Wilfred Mallawa <wilfred.opensource@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Subject: Re: [PATCH] xfs: add static size checks for structures in xfs_fs.h
+Message-ID: <202602061752.Okg2N6tw-lkp@intel.com>
+References: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: rcu stalls during fstests runs for xfs
-Content-Language: en-GB, fr-BE
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: Kunwu Chan <kunwu.chan@hotmail.com>,
- "rcu@vger.kernel.org" <rcu@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, hch <hch@lst.de>,
- "Paul E. McKenney" <paulmck@kernel.org>, MPTCP Linux <mptcp@lists.linux.dev>
-References: <aXdO52wh2rqTUi1E@shinmob>
- <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
- <fc611e8e-0da9-4b88-83ef-092d300307e3@paulmck-laptop>
- <aXrl46PxeHQSpYbX@shinmob>
- <13b25e07-d7b8-4b4e-a249-b6826b2eea39@paulmck-laptop>
- <c33c3d3e-a59c-4f5a-a562-13e2cabc2faf@paulmck-laptop>
- <aXyRRaOBkvENTlBE@shinmob>
-From: Matthieu Baerts <matttbe@kernel.org>
-Autocrypt: addr=matttbe@kernel.org; keydata=
- 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
- lzVbFe7fduHbABmYz9cefQpO7wDE/Q==
-Organization: NGI0 Core
-In-Reply-To: <aXyRRaOBkvENTlBE@shinmob>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
 
-Hi Shinichiro,
+Hi Wilfred,
 
-Sorry to jump in, but I *think* our CI for the MPTCP subsystem is
-hitting the same issue.
+kernel test robot noticed the following build errors:
 
-On 30/01/2026 12:16, Shinichiro Kawasaki wrote:
-> On Jan 29, 2026 / 15:19, Paul E. McKenney wrote:
-> [...]
->>>>> I have seen the static-key pattern called out by Dave Chinner when running
->>>>> KASAN on large systems.  We worked around this by disabling KASAN's use
->>>>> of static keys.  In case you were running KASAN in these tests.
->>>>
->>>> As to KASAN, yes, I enable it in my test runs. I find three static-keys under
->>>> mm/kasan/*. I will think if they can be disabled in my test runs. Thanks.
->>>
->>> There is a set of Kconfig options that disables static branches.  If you
->>> cannot find them quickly, please let me know and I can look them up.
-> 
-> Thank you. But now I know the fix series by Thomas is available. I prioritize
-> the evaluation of the fix series. Later on, I will try disabling the static-keys
-> if it is required.
-> 
->>
->> And Thomas Gleixner posted an alleged fix to the CID issue here:
->>
->> https://lore.kernel.org/lkml/20260129210219.452851594@kernel.org/
->>
->> Please let him know whether or not it helps.
-> 
-> Good to see this fix candidate series, thanks :) I have set up the patches and
-> started my regular test runs. So far, the hangs have been observed once or twice
-> a week. To confirm the effect of the fix series, I think two weeks runs will be
-> required. Once I get the result, will share it on this thread and with Thomas.
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on linus/master v6.19-rc8 next-20260205]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-I know it is only one week now, but did you see any effects so far? On
-my side, I applied the v2 series -- which has been applied in
-tip/sched/urgent -- but I still have issues, and it looks like it is
-even more frequent. Maybe what I see is different. If you no longer see
-the issues on your side after one week, I'm going to start a new thread
-with my issues not to mix them.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wilfred-Mallawa/xfs-add-static-size-checks-for-structures-in-xfs_fs-h/20260206-111013
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20260206030557.1201204-2-wilfred.opensource%40gmail.com
+patch subject: [PATCH] xfs: add static size checks for structures in xfs_fs.h
+config: m68k-hp300_defconfig (https://download.01.org/0day-ci/archive/20260206/202602061752.Okg2N6tw-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 15.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260206/202602061752.Okg2N6tw-lkp@intel.com/reproduce)
 
-Note that in my case, the issue is visible on a system where nested VMs
-are used, with and without KASAN (enabled via debug.config), just after
-having started a VSOCK listening socket via socat.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602061752.Okg2N6tw-lkp@intel.com/
 
-Cheers,
-Matt
+All errors (new ones prefixed by >>):
+
+   In file included from include/linux/container_of.h:5,
+                    from include/linux/list.h:5,
+                    from include/linux/semaphore.h:11,
+                    from fs/xfs/xfs_platform.h:11,
+                    from fs/xfs/xfs_super.c:7:
+   fs/xfs/libxfs/xfs_ondisk.h: In function 'xfs_check_ondisk_structs':
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_flock64) is wrong, expected 48"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:230:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     230 |         XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,               48);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_fsop_geom_v1) is wrong, expected 112"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:231:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     231 |         XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,          112);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(xfs_growfs_data_t) is wrong, expected 16"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:236:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     236 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,                16);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(xfs_growfs_rt_t) is wrong, expected 16"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:238:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     238 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,                  16);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_inogrp) is wrong, expected 24"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:239:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     239 |         XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,                24);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+--
+   In file included from include/linux/container_of.h:5,
+                    from include/linux/list.h:5,
+                    from include/linux/semaphore.h:11,
+                    from xfs_platform.h:11,
+                    from xfs_super.c:7:
+   ././libxfs/xfs_ondisk.h: In function 'xfs_check_ondisk_structs':
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_flock64) is wrong, expected 48"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:230:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     230 |         XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,               48);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_fsop_geom_v1) is wrong, expected 112"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:231:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     231 |         XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,          112);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(xfs_growfs_data_t) is wrong, expected 16"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:236:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     236 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,                16);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(xfs_growfs_rt_t) is wrong, expected 16"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:238:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     238 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,                  16);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+>> include/linux/build_bug.h:78:41: error: static assertion failed: "XFS: sizeof(struct xfs_inogrp) is wrong, expected 24"
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                         ^~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ^~~~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:10:9: note: in expansion of macro 'static_assert'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ^~~~~~~~~~~~~
+   ././libxfs/xfs_ondisk.h:239:9: note: in expansion of macro 'XFS_CHECK_STRUCT_SIZE'
+     239 |         XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,                24);
+         |         ^~~~~~~~~~~~~~~~~~~~~
+
+
+vim +78 include/linux/build_bug.h
+
+bc6245e5efd70c Ian Abbott       2017-07-10  60  
+6bab69c65013be Rasmus Villemoes 2019-03-07  61  /**
+6bab69c65013be Rasmus Villemoes 2019-03-07  62   * static_assert - check integer constant expression at build time
+6bab69c65013be Rasmus Villemoes 2019-03-07  63   *
+6bab69c65013be Rasmus Villemoes 2019-03-07  64   * static_assert() is a wrapper for the C11 _Static_assert, with a
+6bab69c65013be Rasmus Villemoes 2019-03-07  65   * little macro magic to make the message optional (defaulting to the
+6bab69c65013be Rasmus Villemoes 2019-03-07  66   * stringification of the tested expression).
+6bab69c65013be Rasmus Villemoes 2019-03-07  67   *
+6bab69c65013be Rasmus Villemoes 2019-03-07  68   * Contrary to BUILD_BUG_ON(), static_assert() can be used at global
+6bab69c65013be Rasmus Villemoes 2019-03-07  69   * scope, but requires the expression to be an integer constant
+6bab69c65013be Rasmus Villemoes 2019-03-07  70   * expression (i.e., it is not enough that __builtin_constant_p() is
+6bab69c65013be Rasmus Villemoes 2019-03-07  71   * true for expr).
+6bab69c65013be Rasmus Villemoes 2019-03-07  72   *
+6bab69c65013be Rasmus Villemoes 2019-03-07  73   * Also note that BUILD_BUG_ON() fails the build if the condition is
+6bab69c65013be Rasmus Villemoes 2019-03-07  74   * true, while static_assert() fails the build if the expression is
+6bab69c65013be Rasmus Villemoes 2019-03-07  75   * false.
+6bab69c65013be Rasmus Villemoes 2019-03-07  76   */
+6bab69c65013be Rasmus Villemoes 2019-03-07  77  #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+6bab69c65013be Rasmus Villemoes 2019-03-07 @78  #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+6bab69c65013be Rasmus Villemoes 2019-03-07  79  
+07a368b3f55a79 Maxim Levitsky   2022-10-25  80  
+
 -- 
-Sponsored by the NGI0 Core fund.
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
