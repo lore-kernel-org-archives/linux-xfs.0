@@ -1,166 +1,210 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021862E62C3;
-	Fri,  6 Feb 2026 04:53:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D037229994B
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 05:36:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770353613; cv=none; b=IjGQlRG/kJjqqRT7Y1AWIxXqsOhZyiVXta7v4WUEONu9CQ0KuarkQjogFoucOJppo8pLJkkLNW79Ecvq2Ez3G/kVvAeOviNX/PCLvXlnNpD3V7wvyFw7xhgNuCGvOGhEVsDht9PZ15j9MSGvJ6xsTFW+SkPr/MpxImlzzwE2lNE=
+	t=1770356173; cv=none; b=COcl+brAMvS6hJouzwNtcRgh4RIv56U+4IRLF3gD6hzjGrLOVGdUZd/6Oto6ZbALyz7nkCyhEOAcj/FKzCc2LQY5G6HotQlLpN7tZuAgTWLRe43gs60P5CZhj+3eTVt7gpcStl9+cj1TnG0j3Rp0A+IzoKAbhWpnFGU0adZgHU0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770353613; c=relaxed/simple;
-	bh=XM9pzmK6p/zuNzks2AL7EdLS9nP7GMziA1jh2NiPmiY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q0vpyDIzKF2Bcu1lfopXDHMF4eVnbug841KPWq7bE1xNrsAvwsiYYGxnxJqJbxDwGC31dyN1WbkChMbVwI81lmPYulSf8Aw8ZJK/5/WJLWteVHDbO0YPESGtvYrwyfzoMtMyjmD+G2lDzNNSnlDGGVkBICtcyvyLqx1pEqg9p/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1m6wVNc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770356173; c=relaxed/simple;
+	bh=H81CFjeDSTAqNLLg0xiimtK9iXI3k9R0CkV3504hHoQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=L66veAwdYKT2TqWb9iGbJAU9ECIzrmgZQ3fCz3iV0iYfzSiOJ5kvSO0cScFFhSF+RU+RPg07d5A55fdRkVJLPDTQ7H1s8QmtJbvutS6DZAjqbz6LKqiLptQee39qLak/0JFUHj+lify0uCnj5BRXe1xyNdJiIvRDOYJaWUqRE7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mNIutWwl; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1m6wVNc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB965C116C6;
-	Fri,  6 Feb 2026 04:53:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770353612;
-	bh=XM9pzmK6p/zuNzks2AL7EdLS9nP7GMziA1jh2NiPmiY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=f1m6wVNcftdteUSXfxvrd7BPsvqnw28dovBjsiVLzm5bCffAcmwIzhAQtriipJX+Q
-	 vjwomq1DxaCIX2GVA40tGqAfqwQZMRuLEzUzxVfT90oGN0tVCO/PaDSJ7jDloWx5vL
-	 TDrh8ysZI+nQwvYHJT3qo9grKBfo1xBNIf3IYXSbyEohIgliz8c956AAvGfwHAAh8X
-	 wwQL6c8hJNC4J8mybWZJcRvfqeaIbEpimNQOcADDpZNu/vK5bHlTGMyOdKLjs2bZZP
-	 UCFxX05rBbNtO+7hsHpwwUb0LYzNKCFdBmBOXHByGlAqvFSnWwwdUfeHtuk72H/4A3
-	 bIGvkm4UssZEQ==
-Date: Thu, 5 Feb 2026 20:53:32 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Chris Mason <clm@meta.com>
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v6.1 11/11] xfs: add media verification ioctl
-Message-ID: <20260206045332.GU7712@frogsfrogsfrogs>
-References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs>
- <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
- <20260120041226.GJ15551@frogsfrogsfrogs>
- <20260206030527.2506821-1-clm@meta.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mNIutWwl"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2a0d52768ccso10875875ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 21:36:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770356173; x=1770960973; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fRGlRAio2Tk60tj3s00QBPQfJSe7aETEyN4NWVC2M0I=;
+        b=mNIutWwlXOlG3quThqcTSHcTpz33t/dNEYUJvN5n3du0yRCxbXAxW/8iBpDd6tmF63
+         s/6OeI/aXJq2WzP1+UZxm/eoh0aDIgoqbE9VNOC9gk5sa9op/O0NCapHPiRZrs1H/IuR
+         OTVEkEmyf7NS9JgAXuYKSZNB4eo7bwHxYghuFakzl7LYCump+LGPu7ZcMXPZWJDuk2DT
+         n/jb9jjx0SP5MMrG43bzotLPBLWeAJczGeIK9nN+7hKhcncjynOhD5w8zKf4fuTXfcDK
+         9rx9XyzZn4/zE4wRXmeYAwREOR/Vj7UNhnE9ZBq0B6uCfQhwp/V7XSrKRj7tGa3NL0Sy
+         csfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770356173; x=1770960973;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fRGlRAio2Tk60tj3s00QBPQfJSe7aETEyN4NWVC2M0I=;
+        b=QTl68EnaFdQ1vTsmbakgKGdyYl/xhZv2WKC8jmU0gVec12/XXbXFPr1WLp27CPZVj8
+         iINszJT+CWBLRx2N0dh4J3zjlHubJRKG+Im9zrb+ISAlkFcVOn1hGeRoN4J+VQxLtluH
+         VjHF8UG+RSAaSzVTbqteEXCa0TGN+iF7HCZs5bw/7WRBxKYXk8R5oI8kJZq+0aA+uyeG
+         Ltkj+KHfI0s8UHk8XqIcgQBB2EWqikUEjYCxuOsKxfcWVNDozRdwUZWcIgU+lawOqOd0
+         DBxFeAqoQ6gow7BUpJigqSZoynHQ5AUTR3WMFWKK0kRAJxT1H5/YY8hr+6u5OILCPYCt
+         75xQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVYOXlMvo3hj5utHfNlpYd1hboBKD1afHqDGCQpBikY+d7guXaiSi9em3WUFDelTuH7rNbrZ522OvQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNeD9p9sHRIziY6eQas5s6FwbAHjWxbeI+e5PggBivZXrii5sm
+	7beHxcn0XB8Agrx2gLKS+uaRXVsO381uyjP5Fau8we5Nj5mHGeqPShIE
+X-Gm-Gg: AZuq6aIH8cT7W/LuLbSlgFVd9YINJykKgOdFGgqBV/gkRu6+llxOe2SV24CQdrkpDF1
+	pLKrGatEj2PBAcqYg1alZWtXU+MomPQS2VxBY2YbNy9whUnQeKW+Tw9SGpOl7vsJWEvEU2UsuL+
+	4sFlx/hSGdx9dnaPKNL7g3JrxRVBTtNzPDdc8bnjMyT6iz6JijBdptL5ipQH8xRXUaBlRGnxRHK
+	rKkI5azLjhB8PCY2peSfXviFYQ0/t0v2cJrflm0HHpoaqTqeLnfsCoF5w/Jm8l/UflkB1nNkjqO
+	o4hP2mmC1wqytUL+HDcal+avmD31P6qq7x+nr+eDcWf6saFbU95gWCXOAmia66MN5TkCkNwhAdK
+	cj4T8LV87cLcrg9TPzi8RDFKUM0VAnmOnSEcyhM2SLGjP1wP5PtaXHp/Yo6lkQfwycPzc/X2QTj
+	EflBhZa3BSBQiGNQuZtGI6N8rT7zXscZYDE5vnWHOMbjl58H3gkg3a8gL8TfkgzA5b
+X-Received: by 2002:a17:902:da8f:b0:2a7:80bf:3131 with SMTP id d9443c01a7336-2a95196c7a7mr18061535ad.58.1770356173033;
+        Thu, 05 Feb 2026 21:36:13 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.208.177])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a951a64ebesm11846575ad.2.2026.02.05.21.36.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Feb 2026 21:36:12 -0800 (PST)
+Message-ID: <a017b49e0fb5b9f1a4f6929d7fb23897c98e2595.camel@gmail.com>
+Subject: Re: [PATCH v3 3/6] xfs: add per-inode AG prediction map and
+ dirty-AG bitmap
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Kundan Kumar <kundan.kumar@samsung.com>, viro@zeniv.linux.org.uk, 
+ brauner@kernel.org, jack@suse.cz, willy@infradead.org, mcgrof@kernel.org, 
+ clm@meta.com, david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk,
+ hch@lst.de,  ritesh.list@gmail.com, dave@stgolabs.net, cem@kernel.org,
+ wangyufei@vivo.com,  linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-xfs@vger.kernel.org,  gost.dev@samsung.com, anuj20.g@samsung.com,
+ vishak.g@samsung.com,  joshi.k@samsung.com
+Date: Fri, 06 Feb 2026 11:06:03 +0530
+In-Reply-To: <20260205163650.GQ7712@frogsfrogsfrogs>
+References: <20260116100818.7576-1-kundan.kumar@samsung.com>
+	 <CGME20260116101251epcas5p1cf5b48f2efb14fe4387be3053b3c3ebc@epcas5p1.samsung.com>
+	 <20260116100818.7576-4-kundan.kumar@samsung.com>
+	 <87a16d4d9c1e568a37fa07a97dda5777e14e9a8b.camel@gmail.com>
+	 <20260205163650.GQ7712@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260206030527.2506821-1-clm@meta.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 05, 2026 at 07:01:32PM -0800, Chris Mason wrote:
-> "Darrick J. Wong" <djwong@kernel.org> wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Thu, 2026-02-05 at 08:36 -0800, Darrick J. Wong wrote:
+> On Thu, Feb 05, 2026 at 12:06:19PM +0530, Nirjhar Roy (IBM) wrote:
+> > On Fri, 2026-01-16 at 15:38 +0530, Kundan Kumar wrote:
+> > > Add per-inode structures to track predicted AGs of dirty folios using
+> > > an xarray and bitmap. This enables efficient identification of AGs
+> > > involved in writeback.
+> > > 
+> > > Signed-off-by: Kundan Kumar <kundan.kumar@samsung.com>
+> > > Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> > > ---
+> > >  fs/xfs/xfs_icache.c | 27 +++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_inode.h  |  5 +++++
+> > >  2 files changed, 32 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index e44040206851..f97aa6d66271 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -80,6 +80,25 @@ static inline xa_mark_t ici_tag_to_mark(unsigned int tag)
+> > >  	return XFS_PERAG_BLOCKGC_MARK;
+> > >  }
+> > >  
+> > > +static int xfs_inode_init_ag_bitmap(struct xfs_inode *ip)
+> > Similar comment as before:
+> > static int
+> > xfs_inode_init...()
+> > > +{
+> > > +	unsigned int bits = ip->i_mount->m_sb.sb_agcount;
+> > > +	unsigned int nlongs;
+> > > +
+> > > +	xa_init_flags(&ip->i_ag_pmap, XA_FLAGS_LOCK_IRQ);
+> > Nit: The name of the functions suggests that it is initializing the tracking bitmap which it does -
+> > however, the above line does slightly different thing? Maybe move the xarray init outside the bitmap
+> > init function? 
+> 
+> Or just call it something else?  xfs_inode_init_perag_wb?
+> 
+> > > +	ip->i_ag_dirty_bitmap = NULL;
+> > > +	ip->i_ag_dirty_bits = bits;
+> > > +
+> > > +	if (!bits)
+> > Umm, !bits means agcount is 0. Shouldn't we ASSERT that bits >= 2? Or am I missing something?
+> 
+> Technically you can have 1 AG, but you definitely can't mount a zero AG
+> filesystem.
+Okay, but:
+/home/ubuntu$ mkfs.xfs -f  -d agcount=1 /dev/loop0
+Filesystem must have at least 2 superblocks for redundancy!
+Usage: mkfs.xfs
+Or maybe this restriction is just at the userspace tool level?
+> 
+> > > +		return 0;
+> > > +
+> > > +	nlongs = BITS_TO_LONGS(bits);
+> > > +	ip->i_ag_dirty_bitmap = kcalloc(nlongs, sizeof(unsigned long),
+> > > +					GFP_NOFS);
+> > > +
+> > > +	return ip->i_ag_dirty_bitmap ? 0 : -ENOMEM;
+> > > +}
+> > > +
+> > >  /*
+> > >   * Allocate and initialise an xfs_inode.
+> > >   */
+> > > @@ -131,6 +150,8 @@ xfs_inode_alloc(
+> > >  	ip->i_next_unlinked = NULLAGINO;
+> > >  	ip->i_prev_unlinked = 0;
+> > >  
+> > > +	xfs_inode_init_ag_bitmap(ip);
+> > xfs_inode_init_ag_bitmap() returns int - error handling for -ENOMEM?
+> > > +
+> > >  	return ip;
+> > >  }
+> > >  
+> > > @@ -194,6 +215,12 @@ xfs_inode_free(
+> > >  	ip->i_ino = 0;
+> > >  	spin_unlock(&ip->i_flags_lock);
+> > >  
+> > > +	/* free xarray contents (values are immediate packed ints) */
+> > > +	xa_destroy(&ip->i_ag_pmap);
+> > Nit:Maybe have a small wrapper for freeing it the prediction map? No hard preferences though.
+> > > +	kfree(ip->i_ag_dirty_bitmap);
+> > > +	ip->i_ag_dirty_bitmap = NULL;
+> > Nit: Usually while freeing the pointers I prefer:
+> > t = ip->i_ag_dirty_bitmap;
+> > ip->i_ag_dirty_bitmap = NULL;
+> > kfree(t);
+> > In this way, the pointer(i_ag_dirty_bitmap in this case) that I am freeing never points to an
+> > already freed address.
 > > 
-> > Add a new privileged ioctl so that xfs_scrub can ask the kernel to
-> > verify the media of the devices backing an xfs filesystem, and have any
-> > resulting media errors reported to fsnotify and xfs_healer.
+> > > +	ip->i_ag_dirty_bits = 0;
+> > > +
+> > >  	__xfs_inode_free(ip);
+> > >  }
+> > >  
+> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > > index bd6d33557194..dee449168605 100644
+> > > --- a/fs/xfs/xfs_inode.h
+> > > +++ b/fs/xfs/xfs_inode.h
+> > > @@ -99,6 +99,11 @@ typedef struct xfs_inode {
+> > >  	spinlock_t		i_ioend_lock;
+> > >  	struct work_struct	i_ioend_work;
+> > >  	struct list_head	i_ioend_list;
+> > > +
+> > > +	/* AG prediction map: pgoff_t -> packed u32 */
+> > > +	struct xarray           i_ag_pmap;
+> > > +	unsigned long           *i_ag_dirty_bitmap;
+> > > +	unsigned int            i_ag_dirty_bits;
+> > Not sure but, I mostly see the typedefed versions of data types being used like uint32 etc. Darrick,
+> > hch, are the above fine?
 > 
-> Hi everyone,
+> Yes, please don't mix types.  Pick one type and stick with it.
 > 
-> I'm trying out my AI review prompts on a few more trees, and I ran it
-> on the fuse-iomap-cache branch:
+> (and yes I wish we could struct bitmap_t(unsigned long))
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
+> --D
 > 
-> This was the latest email lore could find, apologies if I grabbed the wrong one.
-> 
-> Hopefully the review below is useful, please let me know if there are places it
-> has gone wildly wrong.  I kept the header to make it obvious exactly which
-> commit I'd run through.
-> 
-> (This is another XFS commit that ended up in my rev-list range, low confidence
-> in the actual review, but I'm curious if AI got this one right)
-> 
-> commit 2e5c40a5b6ca722202bc0e99830b6ecf8755d19c
-> Author: Darrick J. Wong <djwong@kernel.org>
-> 
-> xfs: add media verification ioctl
-> 
-> [ ... ]
-> 
-> > diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-> > --- /dev/null
-> > +++ b/fs/xfs/xfs_verify_media.c
-> > @@ -0,0 +1,445 @@
-> 
-> [ ... ]
-> 
-> > +/* Walk reverse mappings to look for all file data loss */
-> > +static int
-> > +xfs_verify_report_losses(
-> > +	struct xfs_mount	*mp,
-> > +	enum xfs_group_type	type,
-> > +	xfs_daddr_t		daddr,
-> > +	u64			bblen)
-> > +{
-> > +	struct xfs_group	*xg = NULL;
-> > +	struct xfs_trans	*tp;
-> > +	xfs_fsblock_t		start_bno, end_bno;
-> > +	uint32_t		start_gno, end_gno;
-> > +	int			error;
-> > +
-> > +	if (type == XG_TYPE_RTG) {
-> > +		start_bno = xfs_daddr_to_rtb(mp, daddr);
-> > +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
-> > +	} else {
-> > +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
-> > +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
-> > +	}
-> > +
-> > +	tp = xfs_trans_alloc_empty(mp);
-> > +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
-> > +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
-> > +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
-> > +		struct xfs_buf		*agf_bp = NULL;
-> > +		struct xfs_rtgroup	*rtg = NULL;
-> > +		struct xfs_btree_cur	*cur;
-> > +		struct xfs_rmap_irec	ri_low = { };
-> > +		struct xfs_rmap_irec	ri_high;
-> > +		struct xfs_group_data_lost lost;
-> > +
-> > +		if (type == XG_TYPE_AG) {
-> > +			struct xfs_perag	*pag = to_perag(xg);
-> > +
-> > +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-> > +			if (error) {
-> > +				xfs_perag_put(pag);
-> > +				break;
-> > +			}
-> > +
-> > +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
-> > +		} else {
-> > +			rtg = to_rtg(xg);
-> > +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-> > +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
-> > +		}
-> 
-> Does this code have a reference counting mismatch in the error paths?
-> 
-> The xfs_group returned by xfs_group_next_range() is acquired via
-> xfs_group_grab() which increments xg_active_ref.
-> 
-> In the error path at line 120, the code uses xfs_perag_put() to release
-> the reference:
-> 
-> 	error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-> 	if (error) {
-> 		xfs_perag_put(pag);
-> 		break;
-> 	}
-> 
-> And later in the loop, line 144 uses xfs_group_put().
-> 
-> Both xfs_perag_put() and xfs_group_put() decrement xg_ref, not
-> xg_active_ref. Looking at the reference counting implementation:
-> 
-> xfs_group_grab() calls atomic_inc_not_zero(&xg->xg_active_ref)
-> xfs_group_rele() calls atomic_dec(&xg->xg_active_ref)
-> xfs_group_put() calls atomic_dec(&xg->xg_ref)
-> 
-> Should these error paths use xfs_group_rele() instead to match the
-> xfs_group_grab() in xfs_group_next_range()?
+> > --NR
+> > >  } xfs_inode_t;
+> > >  
+> > >  static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
 
-Yep.  Wouldn't it be nice if our type system could keep those things
-straight... :/
-
---D
