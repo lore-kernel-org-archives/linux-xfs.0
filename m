@@ -1,121 +1,576 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072BF3644C6
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 10:07:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B36B32AAA0;
+	Fri,  6 Feb 2026 11:02:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770372474; cv=none; b=rKmLEueLCcPRcbgmh8V+sIq5SZvtVyLHcKyroNKwz4yOgB8dV+C09fsV9ZHMgLDDO1txjoTWVhz2sLymWwkFir4oIsUQYUwEpwREkr2uYg/WQ/TwcbTLg9kD7QMVqd2sTthkuFZKupLM9cm2iyCZueuPD8ZxdqifjViSAYNfNAc=
+	t=1770375778; cv=none; b=cA2wR5WYTtUOOYpvmMYyANodBviRebCWEG0JDHhVTaJPEEWKJydRPIo7CNTiK4vrG9Dbe5UpKnCjyJRypbE3+RFso2CvodsgO8mICptQt9G+7/BbvauNoWqhDwWlA3xjBMPS94tMLoWFvcL8Mi0q/KrrSjZb3izsvC0efC+SmWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770372474; c=relaxed/simple;
-	bh=zkisYpju7OIVNmeQIv2g+Pbt/1RHOnflWi27WX6FIbs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=g/ArwfjvqlSnM+H4+o0oLnbnJcqcr5g26eBciK7cz2CaZgFgyEu758GrKFg60Wp9W7BdwxdC5gBb8Ol9PLOxzV6R75uhaG6tXOqfTr7t70bfoop1ZmN+oh1SC16Eq0mz+OuRxQ6F1YBD8yv30o71KX5UhfviaeEIIcnPJvzdsvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Lp9qnYZy; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1770375778; c=relaxed/simple;
+	bh=Prz9IBJjqdVphy2Ge+dv2kBscU2tfHvVaOgg6tHoBZA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=huFP3JVCuxUQtOamVL794bUPDuU1OB0JeXECjCTG7aIsjeX4BAJZIL6R5S+wbXrxHXLdjp6Rn+i3sJgd2SvEJyDzfGfQrIQPGJf9LMFyktzrViCdRJGXjn090uaVtULRcDrlGOFfqHWs1Zq5PUJunquLr9RA2m/9X1LJCKQ9uOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qzpl2Zs0; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Lp9qnYZy"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260206100746epoutp0379c87cbb826ee608faab7e5b4893eeaa~RoGDHjLk30168301683epoutp036
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 10:07:46 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260206100746epoutp0379c87cbb826ee608faab7e5b4893eeaa~RoGDHjLk30168301683epoutp036
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1770372466;
-	bh=n7zGrdaEsDLLJ1RJqF9wbK0puJiQDIqXQjEhB/FWJOs=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=Lp9qnYZyS/FOrAKEvlub8fB/7fa23huJqbR8aJ8rjt//kmImjmiwttvfHAtF8vGcw
-	 025P1oRLexJoBjEU5wuKKRT0yL2vK5FCszdVdHe471lw8tpaUIh9CLLedurJJpEK5i
-	 hMuCTCvd3VXpq/cpAMSGx+A4WDxShwV8WzexJkFM=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260206100745epcas5p3a8327b1297e84e90ffb34615103a4773~RoGCMjuIl1568815688epcas5p3Q;
-	Fri,  6 Feb 2026 10:07:45 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.94]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4f6qXJ0LDnz6B9m4; Fri,  6 Feb
-	2026 10:07:44 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260206100743epcas5p1a70b6c71343aa9c1ebd818d70b3dceee~RoGAgY7uA0598805988epcas5p1W;
-	Fri,  6 Feb 2026 10:07:43 +0000 (GMT)
-Received: from [107.111.86.57] (unknown [107.111.86.57]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260206100739epsmtip183b7d9978cef2ff67102e2bc7008cce0~RoF9acq2q1596515965epsmtip1z;
-	Fri,  6 Feb 2026 10:07:39 +0000 (GMT)
-Message-ID: <28bfd5b4-0c97-46dd-9579-b162e44873a2@samsung.com>
-Date: Fri, 6 Feb 2026 15:37:38 +0530
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qzpl2Zs0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1770375778; x=1801911778;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Prz9IBJjqdVphy2Ge+dv2kBscU2tfHvVaOgg6tHoBZA=;
+  b=Qzpl2Zs08ykJoGOdwbe/4NSerXUbaFPphWNkuVbFzcUjEX0ZkHq14UAh
+   mmKy4UENXZ3SbmIgAy/7j4jSxyDuY39LyX/DTmLPiYf5ilGBY8fKhaCMW
+   6493D1U2eMHhHtDoBAl6Eh7KysVgnKM1iuIB8+nReQ0cu7K8B8VvHsXmP
+   IKQydqrKVa7YB6ffXqcY9FTZPOpfnQKG1J5MZNOrJR6ya7ocVP+B8hueF
+   j66r9I+WbFkmoqjOOTt7yD3b41wkh/PDOzxxE2xAuAOYo+2TDLkmwhL7L
+   EkhP7qdWJgmyk2uSuT6F44XgihTD2Luev4pIQkpHGLWmKAGF0nVKzV33N
+   g==;
+X-CSE-ConnectionGUID: of4sjOuqQn20JdIGnTVnWw==
+X-CSE-MsgGUID: QDt9P0nvTSWr9eo2jhFmrg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11692"; a="71649135"
+X-IronPort-AV: E=Sophos;i="6.21,276,1763452800"; 
+   d="scan'208";a="71649135"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2026 03:02:57 -0800
+X-CSE-ConnectionGUID: dBu+XRT0RXqTxFfA4GUymg==
+X-CSE-MsgGUID: j7pPHxbPTzud4QAqjZ2aYA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,276,1763452800"; 
+   d="scan'208";a="215418775"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 06 Feb 2026 03:02:54 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1voJbw-00000000kg4-1BYF;
+	Fri, 06 Feb 2026 11:02:52 +0000
+Date: Fri, 6 Feb 2026 19:02:06 +0800
+From: kernel test robot <lkp@intel.com>
+To: Wilfred Mallawa <wilfred.opensource@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Subject: Re: [PATCH] xfs: add static size checks for structures in xfs_fs.h
+Message-ID: <202602061801.UV2OuHCL-lkp@intel.com>
+References: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/6] AG aware parallel writeback for XFS
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>, djwong@kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz, willy@infradead.org, mcgrof@kernel.org,
-	clm@meta.com, david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk,
-	ritesh.list@gmail.com, dave@stgolabs.net, cem@kernel.org,
-	wangyufei@vivo.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, gost.dev@samsung.com, anuj20.g@samsung.com,
-	vishak.g@samsung.com, joshi.k@samsung.com
-From: Kundan Kumar <kundan.kumar@samsung.com>
-In-Reply-To: <20260206062527.GA25841@lst.de>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260206100743epcas5p1a70b6c71343aa9c1ebd818d70b3dceee
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4
-References: <CGME20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4@epcas5p1.samsung.com>
-	<20260116100818.7576-1-kundan.kumar@samsung.com> <aXEvAD5Rf5QLp4Ma@bfoster>
-	<ca048ecf-5aec-4a0d-8faf-ad9fcd310e21@samsung.com>
-	<aXN3EtxKFXX8DEbl@bfoster>
-	<e7413e3b-3fae-4aab-90a1-4a6695156b2e@samsung.com>
-	<20260206062527.GA25841@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
 
-On 2/6/2026 11:55 AM, Christoph Hellwig wrote:
-> I fear we're deep down a rabbit hole solving the wrong problem here.
-> Traditionally block allocation, in XFS and in general, was about finding
-> the "best" location to avoid seeks.  With SSDs the seeks themselves are
-> kinda pointless, although large sequential write streams are still very
-> useful of course, as is avoiding both freespace and bmap fragmentation.
-> On the other hand avoiding contention from multiple writers is a good
-> thing.  (this is discounting the HDD case, where the industry is very
-> rapidly moving to zoned device, for which zoned XFS has a totally
-> different allocator)
-> 
-> With multi-threaded writeback this become important for writeback, but
-> even before this would be useful for direct and uncached I/O.
-> 
-> So I think the first thing I'd look into it to tune the allocator to
-> avoid that contention, by by spreading different allocation streams from
-> different core to different AGs, and relax the very sophisticated and
-> detailed placement done by the XFS allocator.
+Hi Wilfred,
 
-When you say "coarse-grained sharding", do you mean tracking a single
-"home AG" per inode (no per-folio tagging) and using it as a best-effort
-hint for writeback routing?
+kernel test robot noticed the following build errors:
 
-If so, we can align with that and keep the threading model generic by
-relying on bdi writeback contexts. Concretely, XFS would set up a 
-bounded number of bdi wb contexts at mount time, and route each inode to 
-its home shard. Does this align with what you have in mind?
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on linus/master v6.19-rc8 next-20260205]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-We had implemented a similar approach in earlier versions of this
-series[1]. But the feedback[2] that we got was that mapping high level
-writeback to eventual AG allocation can be sometimes inaccurate (aged
-filesystems, inode spanning accross multiple AGs, etc.), so we moved to
-per folio tagging to make the routing decision closer to the actual IO.
-That said, I agree that the per folio approach is complex.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wilfred-Mallawa/xfs-add-static-size-checks-for-structures-in-xfs_fs-h/20260206-111013
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20260206030557.1201204-2-wilfred.opensource%40gmail.com
+patch subject: [PATCH] xfs: add static size checks for structures in xfs_fs.h
+config: i386-randconfig-011-20260206 (https://download.01.org/0day-ci/archive/20260206/202602061801.UV2OuHCL-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260206/202602061801.UV2OuHCL-lkp@intel.com/reproduce)
 
-Darrick, does this direction look reasonable to you as well?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602061801.UV2OuHCL-lkp@intel.com/
 
-[1] 
-https://lore.kernel.org/all/20251014120845.2361-1-kundan.kumar@samsung.com/
-[2] https://lore.kernel.org/all/20251107133742.GA5596@lst.de/
+All errors (new ones prefixed by >>):
 
+   In file included from fs/xfs/xfs_super.c:33:
+>> fs/xfs/libxfs/xfs_ondisk.h:230:2: error: static assertion failed due to requirement 'sizeof(struct xfs_flock64) == (48)': XFS: sizeof(struct xfs_flock64) is wrong, expected 48
+     230 |         XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,               48);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:16: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   fs/xfs/libxfs/xfs_ondisk.h:230:2: note: expression evaluates to '44 == 48'
+     230 |         XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,               48);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:35: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   In file included from fs/xfs/xfs_super.c:33:
+>> fs/xfs/libxfs/xfs_ondisk.h:231:2: error: static assertion failed due to requirement 'sizeof(struct xfs_fsop_geom_v1) == (112)': XFS: sizeof(struct xfs_fsop_geom_v1) is wrong, expected 112
+     231 |         XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,          112);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:16: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   fs/xfs/libxfs/xfs_ondisk.h:231:2: note: expression evaluates to '108 == 112'
+     231 |         XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,          112);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:35: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   In file included from fs/xfs/xfs_super.c:33:
+>> fs/xfs/libxfs/xfs_ondisk.h:236:2: error: static assertion failed due to requirement 'sizeof(struct xfs_growfs_data) == (16)': XFS: sizeof(xfs_growfs_data_t) is wrong, expected 16
+     236 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,                16);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:16: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   fs/xfs/libxfs/xfs_ondisk.h:236:2: note: expression evaluates to '12 == 16'
+     236 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,                16);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:35: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   In file included from fs/xfs/xfs_super.c:33:
+>> fs/xfs/libxfs/xfs_ondisk.h:238:2: error: static assertion failed due to requirement 'sizeof(struct xfs_growfs_rt) == (16)': XFS: sizeof(xfs_growfs_rt_t) is wrong, expected 16
+     238 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,                  16);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:16: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   fs/xfs/libxfs/xfs_ondisk.h:238:2: note: expression evaluates to '12 == 16'
+     238 |         XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,                  16);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:35: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   In file included from fs/xfs/xfs_super.c:33:
+>> fs/xfs/libxfs/xfs_ondisk.h:239:2: error: static assertion failed due to requirement 'sizeof(struct xfs_inogrp) == (24)': XFS: sizeof(struct xfs_inogrp) is wrong, expected 24
+     239 |         XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,                24);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:16: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   fs/xfs/libxfs/xfs_ondisk.h:239:2: note: expression evaluates to '20 == 24'
+     239 |         XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,                24);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/libxfs/xfs_ondisk.h:10:35: note: expanded from macro 'XFS_CHECK_STRUCT_SIZE'
+      10 |         static_assert(sizeof(structname) == (size), \
+         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+      11 |                 "XFS: sizeof(" #structname ") is wrong, expected " #size)
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:77:50: note: expanded from macro 'static_assert'
+      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+         |                                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:78:56: note: expanded from macro '__static_assert'
+      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+         |                                                        ^~~~
+   5 errors generated.
+
+
+vim +230 fs/xfs/libxfs/xfs_ondisk.h
+
+     8	
+     9	#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+    10		static_assert(sizeof(structname) == (size), \
+    11			"XFS: sizeof(" #structname ") is wrong, expected " #size)
+    12	
+    13	#define XFS_CHECK_OFFSET(structname, member, off) \
+    14		static_assert(offsetof(structname, member) == (off), \
+    15			"XFS: offsetof(" #structname ", " #member ") is wrong, " \
+    16			"expected " #off)
+    17	
+    18	#define XFS_CHECK_VALUE(value, expected) \
+    19		static_assert((value) == (expected), \
+    20			"XFS: value of " #value " is wrong, expected " #expected)
+    21	
+    22	#define XFS_CHECK_SB_OFFSET(field, offset) \
+    23		XFS_CHECK_OFFSET(struct xfs_dsb, field, offset); \
+    24		XFS_CHECK_OFFSET(struct xfs_sb, field, offset);
+    25	
+    26	static inline void __init
+    27	xfs_check_ondisk_structs(void)
+    28	{
+    29		/* direct I/O */
+    30		XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
+    31	
+    32		/* file structures */
+    33		XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+    34		XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+    35		XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+    36		XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+    37		XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+    38		XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+    39		XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+    40		XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+    41		XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+    42		XFS_CHECK_STRUCT_SIZE(xfs_timestamp_t,			8);
+    43		XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
+    44	
+    45		/* space btrees */
+    46		XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+    47		XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+    48		XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
+    49		XFS_CHECK_STRUCT_SIZE(struct xfs_alloc_rec,		8);
+    50		XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+    51		XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_lhdr,	64);
+    52		XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_shdr,	48);
+    53		XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+    54		XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+    55		XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_key,		4);
+    56		XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_rec,		12);
+    57		XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
+    58		XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
+    59		XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+    60		XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+    61		XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+    62		XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
+    63		XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
+    64		XFS_CHECK_STRUCT_SIZE(xfs_bmdr_key_t,			8);
+    65		XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
+    66		XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
+    67	
+    68		/* dir/attr trees */
+    69		XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+    70		XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	80);
+    71		XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
+    72		XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
+    73		XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
+    74		XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
+    75		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
+    76		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
+    77		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
+    78		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+    79		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+    80		XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+    81		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_entry,		8);
+    82		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_hdr,		32);
+    83		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_map,		4);
+    84		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
+    85		XFS_CHECK_STRUCT_SIZE(xfs_attrlist_cursor_t,		16);
+    86		XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
+    87		XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
+    88	
+    89		/* allocation groups */
+    90		XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
+    91	
+    92		/* realtime structures */
+    93		XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			56);
+    94		XFS_CHECK_STRUCT_SIZE(union xfs_rtword_raw,		4);
+    95		XFS_CHECK_STRUCT_SIZE(union xfs_suminfo_raw,		4);
+    96		XFS_CHECK_STRUCT_SIZE(struct xfs_rtbuf_blkinfo,		48);
+    97		XFS_CHECK_STRUCT_SIZE(xfs_rtrmap_ptr_t,			8);
+    98		XFS_CHECK_STRUCT_SIZE(struct xfs_rtrmap_root,		4);
+    99		XFS_CHECK_STRUCT_SIZE(xfs_rtrefcount_ptr_t,		8);
+   100		XFS_CHECK_STRUCT_SIZE(struct xfs_rtrefcount_root,	4);
+   101		XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
+   102	
+   103		/*
+   104		 * m68k has problems with struct xfs_attr_leaf_name_remote, but we pad
+   105		 * it to 4 bytes anyway so it's not obviously a problem.  Hence for the
+   106		 * moment we don't check this structure. This can be re-instated when
+   107		 * the attr definitions are updated to use c99 VLA definitions.
+   108		 *
+   109		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_remote,	12);
+   110		 */
+   111	
+   112		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, valuelen,	0);
+   113		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, namelen,	2);
+   114		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_local, nameval,	3);
+   115		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, valueblk,	0);
+   116		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, valuelen,	4);
+   117		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, namelen,	8);
+   118		XFS_CHECK_OFFSET(struct xfs_attr_leaf_name_remote, name,	9);
+   119		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leafblock,		32);
+   120		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_sf_hdr,		4);
+   121		XFS_CHECK_OFFSET(struct xfs_attr_sf_hdr, totsize,	0);
+   122		XFS_CHECK_OFFSET(struct xfs_attr_sf_hdr, count,		2);
+   123		XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, namelen,	0);
+   124		XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, valuelen,	1);
+   125		XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, flags,	2);
+   126		XFS_CHECK_OFFSET(struct xfs_attr_sf_entry, nameval,	3);
+   127		XFS_CHECK_STRUCT_SIZE(struct xfs_da_blkinfo,		12);
+   128		XFS_CHECK_STRUCT_SIZE(struct xfs_da_intnode,		16);
+   129		XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_entry,		8);
+   130		XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_hdr,		16);
+   131		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,		4);
+   132		XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, freetag,	0);
+   133		XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, length,	2);
+   134		XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, namelen,	0);
+   135		XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, offset,	1);
+   136		XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, name,	3);
+   137		XFS_CHECK_STRUCT_SIZE(struct xfs_parent_rec,		12);
+   138	
+   139		/* ondisk dir/attr structures from xfs/122 */
+   140		XFS_CHECK_STRUCT_SIZE(struct xfs_attr_sf_entry,		3);
+   141		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,	4);
+   142		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
+   143		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_unused,	6);
+   144		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free,		16);
+   145		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free_hdr,		16);
+   146		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf,		16);
+   147		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_entry,	8);
+   148		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_hdr,		16);
+   149		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_tail,	4);
+   150		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_entry,		3);
+   151		XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_hdr,		10);
+   152	
+   153		/* log structures */
+   154		XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
+   155		XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+   156		XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	16);
+   157		XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	16);
+   158		XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	16);
+   159		XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	16);
+   160		XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+   161		XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+   162		XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,		176);
+   163		XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+   164		XFS_CHECK_STRUCT_SIZE(xfs_log_timestamp_t,		8);
+   165		XFS_CHECK_STRUCT_SIZE(struct xfs_log_legacy_timestamp,	8);
+   166		XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+   167		XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
+   168		XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+   169		XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+   170		XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
+   171		XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
+   172		XFS_CHECK_STRUCT_SIZE(struct xfs_bui_log_format,	16);
+   173		XFS_CHECK_STRUCT_SIZE(struct xfs_bud_log_format,	16);
+   174		XFS_CHECK_STRUCT_SIZE(struct xfs_cui_log_format,	16);
+   175		XFS_CHECK_STRUCT_SIZE(struct xfs_cud_log_format,	16);
+   176		XFS_CHECK_STRUCT_SIZE(struct xfs_rui_log_format,	16);
+   177		XFS_CHECK_STRUCT_SIZE(struct xfs_rud_log_format,	16);
+   178		XFS_CHECK_STRUCT_SIZE(struct xfs_map_extent,		32);
+   179		XFS_CHECK_STRUCT_SIZE(struct xfs_phys_extent,		16);
+   180		XFS_CHECK_STRUCT_SIZE(struct xlog_rec_header,		512);
+   181		XFS_CHECK_STRUCT_SIZE(struct xlog_rec_ext_header,	512);
+   182	
+   183		XFS_CHECK_OFFSET(struct xlog_rec_header, h_reserved,		328);
+   184		XFS_CHECK_OFFSET(struct xlog_rec_ext_header, xh_reserved,	260);
+   185		XFS_CHECK_OFFSET(struct xfs_bui_log_format, bui_extents,	16);
+   186		XFS_CHECK_OFFSET(struct xfs_cui_log_format, cui_extents,	16);
+   187		XFS_CHECK_OFFSET(struct xfs_rui_log_format, rui_extents,	16);
+   188		XFS_CHECK_OFFSET(struct xfs_efi_log_format, efi_extents,	16);
+   189		XFS_CHECK_OFFSET(struct xfs_efi_log_format_32, efi_extents,	16);
+   190		XFS_CHECK_OFFSET(struct xfs_efi_log_format_64, efi_extents,	16);
+   191	
+   192		/* ondisk log structures from xfs/122 */
+   193		XFS_CHECK_STRUCT_SIZE(struct xfs_unmount_log_format,		8);
+   194		XFS_CHECK_STRUCT_SIZE(struct xfs_xmd_log_format,		16);
+   195		XFS_CHECK_STRUCT_SIZE(struct xfs_xmi_log_format,		88);
+   196	
+   197		/* parent pointer ioctls */
+   198		XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_rec,	32);
+   199		XFS_CHECK_STRUCT_SIZE(struct xfs_getparents,		40);
+   200		XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_by_handle,	64);
+   201	
+   202		/* error injection */
+   203		XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
+   204	
+   205		/*
+   206		 * The v5 superblock format extended several v4 header structures with
+   207		 * additional data. While new fields are only accessible on v5
+   208		 * superblocks, it's important that the v5 structures place original v4
+   209		 * fields/headers in the correct location on-disk. For example, we must
+   210		 * be able to find magic values at the same location in certain blocks
+   211		 * regardless of superblock version.
+   212		 *
+   213		 * The following checks ensure that various v5 data structures place the
+   214		 * subset of v4 metadata associated with the same type of block at the
+   215		 * start of the on-disk block. If there is no data structure definition
+   216		 * for certain types of v4 blocks, traverse down to the first field of
+   217		 * common metadata (e.g., magic value) and make sure it is at offset
+   218		 * zero.
+   219		 */
+   220		XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
+   221		XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
+   222		XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
+   223		XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
+   224		XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+   225	
+   226		XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+   227		XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
+   228		XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
+   229		XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
+ > 230		XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,		48);
+ > 231		XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,		112);
+   232		XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v4,		112);
+   233		XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
+   234		XFS_CHECK_STRUCT_SIZE(xfs_fsop_counts_t,		32);
+   235		XFS_CHECK_STRUCT_SIZE(xfs_fsop_resblks_t,		16);
+ > 236		XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,		16);
+   237		XFS_CHECK_STRUCT_SIZE(xfs_growfs_log_t,			8);
+ > 238		XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,			16);
+ > 239		XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,		24);
+   240		XFS_CHECK_STRUCT_SIZE(struct xfs_bulk_ireq,		64);
+   241		XFS_CHECK_STRUCT_SIZE(struct xfs_fs_eofblocks,		128);
+   242		XFS_CHECK_STRUCT_SIZE(xfs_fsid_t,			8);
+   243		XFS_CHECK_STRUCT_SIZE(xfs_fid_t,			16);
+   244		XFS_CHECK_STRUCT_SIZE(xfs_handle_t,			24);
+   245		XFS_CHECK_STRUCT_SIZE(struct xfs_exchange_range,	40);
+   246		XFS_CHECK_STRUCT_SIZE(struct xfs_commit_range,		88);
+   247	
+   248		/* scrub */
+   249		XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_metadata,	64);
+   250		XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec,		16);
+   251		XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec_head,	40);
+   252	
+   253		/*
+   254		 * Make sure the incore inode timestamp range corresponds to hand
+   255		 * converted values based on the ondisk format specification.
+   256		 */
+   257		XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MIN - XFS_BIGTIME_EPOCH_OFFSET,
+   258				XFS_LEGACY_TIME_MIN);
+   259		XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MAX - XFS_BIGTIME_EPOCH_OFFSET,
+   260				16299260424LL);
+   261	
+   262		/* Do the same with the incore quota expiration range. */
+   263		XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MIN << XFS_DQ_BIGTIME_SHIFT, 4);
+   264		XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MAX << XFS_DQ_BIGTIME_SHIFT,
+   265				16299260424LL);
+   266	
+   267		/* superblock field checks we got from xfs/122 */
+   268		XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,		304);
+   269		XFS_CHECK_STRUCT_SIZE(struct xfs_sb,		304);
+   270		XFS_CHECK_SB_OFFSET(sb_magicnum,		0);
+   271		XFS_CHECK_SB_OFFSET(sb_blocksize,		4);
+   272		XFS_CHECK_SB_OFFSET(sb_dblocks,			8);
+   273		XFS_CHECK_SB_OFFSET(sb_rblocks,			16);
+   274		XFS_CHECK_SB_OFFSET(sb_rextents,		24);
+   275		XFS_CHECK_SB_OFFSET(sb_uuid,			32);
+   276		XFS_CHECK_SB_OFFSET(sb_logstart,		48);
+   277		XFS_CHECK_SB_OFFSET(sb_rootino,			56);
+   278		XFS_CHECK_SB_OFFSET(sb_rbmino,			64);
+   279		XFS_CHECK_SB_OFFSET(sb_rsumino,			72);
+   280		XFS_CHECK_SB_OFFSET(sb_rextsize,		80);
+   281		XFS_CHECK_SB_OFFSET(sb_agblocks,		84);
+   282		XFS_CHECK_SB_OFFSET(sb_agcount,			88);
+   283		XFS_CHECK_SB_OFFSET(sb_rbmblocks,		92);
+   284		XFS_CHECK_SB_OFFSET(sb_logblocks,		96);
+   285		XFS_CHECK_SB_OFFSET(sb_versionnum,		100);
+   286		XFS_CHECK_SB_OFFSET(sb_sectsize,		102);
+   287		XFS_CHECK_SB_OFFSET(sb_inodesize,		104);
+   288		XFS_CHECK_SB_OFFSET(sb_inopblock,		106);
+   289		XFS_CHECK_SB_OFFSET(sb_blocklog,		120);
+   290		XFS_CHECK_SB_OFFSET(sb_fname[12],		120);
+   291		XFS_CHECK_SB_OFFSET(sb_sectlog,			121);
+   292		XFS_CHECK_SB_OFFSET(sb_inodelog,		122);
+   293		XFS_CHECK_SB_OFFSET(sb_inopblog,		123);
+   294		XFS_CHECK_SB_OFFSET(sb_agblklog,		124);
+   295		XFS_CHECK_SB_OFFSET(sb_rextslog,		125);
+   296		XFS_CHECK_SB_OFFSET(sb_inprogress,		126);
+   297		XFS_CHECK_SB_OFFSET(sb_imax_pct,		127);
+   298		XFS_CHECK_SB_OFFSET(sb_icount,			128);
+   299		XFS_CHECK_SB_OFFSET(sb_ifree,			136);
+   300		XFS_CHECK_SB_OFFSET(sb_fdblocks,		144);
+   301		XFS_CHECK_SB_OFFSET(sb_frextents,		152);
+   302		XFS_CHECK_SB_OFFSET(sb_uquotino,		160);
+   303		XFS_CHECK_SB_OFFSET(sb_gquotino,		168);
+   304		XFS_CHECK_SB_OFFSET(sb_qflags,			176);
+   305		XFS_CHECK_SB_OFFSET(sb_flags,			178);
+   306		XFS_CHECK_SB_OFFSET(sb_shared_vn,		179);
+   307		XFS_CHECK_SB_OFFSET(sb_inoalignmt,		180);
+   308		XFS_CHECK_SB_OFFSET(sb_unit,			184);
+   309		XFS_CHECK_SB_OFFSET(sb_width,			188);
+   310		XFS_CHECK_SB_OFFSET(sb_dirblklog,		192);
+   311		XFS_CHECK_SB_OFFSET(sb_logsectlog,		193);
+   312		XFS_CHECK_SB_OFFSET(sb_logsectsize,		194);
+   313		XFS_CHECK_SB_OFFSET(sb_logsunit,		196);
+   314		XFS_CHECK_SB_OFFSET(sb_features2,		200);
+   315		XFS_CHECK_SB_OFFSET(sb_bad_features2,		204);
+   316		XFS_CHECK_SB_OFFSET(sb_features_compat,		208);
+   317		XFS_CHECK_SB_OFFSET(sb_features_ro_compat,	212);
+   318		XFS_CHECK_SB_OFFSET(sb_features_incompat,	216);
+   319		XFS_CHECK_SB_OFFSET(sb_features_log_incompat,	220);
+   320		XFS_CHECK_SB_OFFSET(sb_crc,			224);
+   321		XFS_CHECK_SB_OFFSET(sb_spino_align,		228);
+   322		XFS_CHECK_SB_OFFSET(sb_pquotino,		232);
+   323		XFS_CHECK_SB_OFFSET(sb_lsn,			240);
+   324		XFS_CHECK_SB_OFFSET(sb_meta_uuid,		248);
+   325		XFS_CHECK_SB_OFFSET(sb_metadirino,		264);
+   326		XFS_CHECK_SB_OFFSET(sb_rgcount,			272);
+   327		XFS_CHECK_SB_OFFSET(sb_rgextents,		276);
+   328		XFS_CHECK_SB_OFFSET(sb_rgblklog,		280);
+   329		XFS_CHECK_SB_OFFSET(sb_pad,			281);
+   330		XFS_CHECK_SB_OFFSET(sb_rtstart,			288);
+   331		XFS_CHECK_SB_OFFSET(sb_rtreserved,		296);
+   332	}
+   333	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
