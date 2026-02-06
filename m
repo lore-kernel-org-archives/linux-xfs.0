@@ -1,276 +1,95 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB00D36EA98
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 13:12:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770383555; cv=pass; b=lkz4P8bDqH/GCh+ukdYZUAMIbB77xsNv4P5UTLUmQSA/l3oJC1cNCyvxlvv9Pgm0/+GLtBF2KGTLf/zjW6lw4OQn3AFnXZ6BZ3EthPohWTessb1AML2f031agcen6SUu6h2THAXZT1q2aUJhxx1VtlG+HDU0oHPedNQBjMZj1FI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770383555; c=relaxed/simple;
-	bh=CrEE7/bOrfWGlAsAei56Ak0WdJbpvJHOmaGDNmweqM4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pZVNcVUjGRD5vxbN25RqgPtT/34O/waXnxLr4db7uzY3PVWLWfUlpkSgon1Q8G6v0dl0+dHE002i3QHruOODfwmXpz1aLPWa8SbqVrW2wn8GbhjNf8LRx3ShVuLJHxLlF6I/9CpfLz/87j7LdcGtq2O2Yh+00YGGCL721C7SBIA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U7Qw7UqY; arc=pass smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC4429B8E1
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 15:38:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770392312; cv=none; b=DU1caj+7KT/DVUvhBEq3TEH9M8LUba6Y8w0vlfOUJ6hGSYxw0XBnEPDH/uMDAT26U7xUs/JOD51n8sHyp820uFymwlsHyeRR5WFCy17XFVETW8aZS77aHOxLTQ2VHi7bYFPYqaDddsoVlvWoPyizt9/ZDHoxPEwT+XpOKyEfy7s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770392312; c=relaxed/simple;
+	bh=0E6KGu+BCOGlp6vcpgD764YDOXTf/3TTu6oJLXM3vZM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mUUkrf/snQyArlxNVo1ArV99R/xum2t7rKXtDp/pPN2L9YLWLD3tdrPgb+9XaMJ6MWWV2plbz0D7E/7rrRS6PkhXbzSvg9SdcrQ7nDiQDeqCVVHd+lfGR52cxFvBBe/yrGEC8ZpD2f+MycGZ9qBgg65aahlsPaYCjYAxIF6PyjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HUCblToy; arc=none smtp.client-ip=209.85.216.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U7Qw7UqY"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-65808bb859cso3033672a12.2
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Feb 2026 05:12:34 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1770383553; cv=none;
-        d=google.com; s=arc-20240605;
-        b=AhQV0vY6BplZvzSOznB9OKjNDQKDnvQs+ZaxoLuM4p3Q8abg3bAATapyP5wlBPT6Hn
-         SsICR4qhJsldsbYUp5YvZls5nJ3op9sjiKmBrgxWv/7m4JScqEzwcfINxoP/UYscpbjI
-         9wkZEvOFSJnAaVMQLlnVp7WoepRDDxukj6/4DBMVluKrvk08n61Jtv20MpP+EqPHmSXf
-         d68+DVSkX7kI2pVGU9d1MQ4DfK84MVNHBZogiBt2w3yTtABAu8AY4FAlc27Gw6Oe7hhf
-         M0egwwgyps2714FLi/Dw0XU/tbus80b3worOSlyhI/kwKTrS6byMB0cdi1E5fC/0/w/R
-         2jmQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=o0D7XNcksMFotrGauTILfOksOfq1AbJOoC2AY5poRMw=;
-        fh=+D29FtClP6n6gXdfOYDJw0J6clpomNDk8QowZAtF3SM=;
-        b=SuuHJgSqrMvNWoMmbrsI3Aevywrgi9Lm7wltG6tg+2sQUh5TDxlYIMIfNu46o8zs3M
-         oH9sGuL4sIcbnuyhoMu/5+DR0C5L/g2zSr346Y0ZXyiqss6WO+fW9ydZwwGKMcn5kwwr
-         QjyKwX80eSkMyPogJPWD4vjW4IdgLxuD2pdGJZqGigKUcukAyGMVL6mYGRppO9Ri7BS7
-         GfQ1pKSKfHQdAswH8XBH4h+7U4cfPbG9U+u4V7gJvErF2+ptXctlnplyBJpPva1frZxV
-         hoOAl1jgTj+FmSbXmoJLAa5p3zsigbYpUX8zIW1X+a2cs4IGXbQvJxuunlW8IQJ2PsXZ
-         XK+w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HUCblToy"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3549bba5302so1358966a91.1
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Feb 2026 07:38:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770383553; x=1770988353; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o0D7XNcksMFotrGauTILfOksOfq1AbJOoC2AY5poRMw=;
-        b=U7Qw7UqYhtdUmayZ9ck6hsSNV7MLkZG+gYjmUsXNe4FQnGAxxxahSOhHxHyLd4BpZZ
-         U5aQ83498vNW2zOyEDezmjZbP1tr3nPULKC2dsYXWNtJsIuxVb4KoFkgTHDsBpF30hzE
-         X+HXU0vOXkV6yWLbpKB0ZMKsl/78g7iV4hzkUFJ3ClrhFYRSqfEWn28Nnyhm3P6ZSDwP
-         J11J6TZ1UeX7WyyTJKXqfk+n4lZ/QHKeKnINUEL6XnOUFiy0WYkboz0TXlgC+K2Bb08/
-         rkXDUu1sDK3aEvV1K1XMdVv7ShWvKUzl1Q5v8ZW4eGd96J6CX15v11GfuAG+8ZrJG9PF
-         922g==
+        d=gmail.com; s=20230601; t=1770392312; x=1770997112; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dz6wD+7Ugi3o96pX44vNbo/BkfXzNFQKVPcQ4VyxAC0=;
+        b=HUCblToy1GPOC3dHmFxtmrtdv+249K4L3m3goUhxK4lJJowQpxSXpcsCg3C8k834ZG
+         /O5bM21ehaNga4pa5/qeLKVdEgbXJSk/FKULhY5/sFfieOgUreJPM6AqdU0MnNqfA8GU
+         KIQj8MmsO66KCaNVHBnwWkUJLL85QHxhNtQvSWzOdSlg3/WuXbsfgLFQrfxTz88k+c9E
+         q18/i1pswPf2wkBg68+3LH197mmwa41l+VTLFRP6/+1/xudCowAGKu/dUs6jF8FTQdbL
+         gYfI8LT7zvvzB69IJNarROVBg8EwJ4YJ500RupcEr9XcojVQSbUJ88K4gdDr921q5rIQ
+         ONaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770383553; x=1770988353;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=o0D7XNcksMFotrGauTILfOksOfq1AbJOoC2AY5poRMw=;
-        b=Irv4PQK7ujP+Kl/Aq7Optu3W9xzc/jlldxx8Ya2y3tZItAHYz0kXIpNarFB5PFXUtC
-         r11OzIpq2ZajZmVdGlcskj3W2D6hB/CC3RzsAU8p/0VPKPi4Wiws9lwAwSXvXNzcKMMg
-         4lnb6fwSW/uxg+v5G44gLdc+ZDJVSHWyhyfzoHwbWW0NezKfhBzdfBWWyqdC3ebjhKcs
-         P+QzxCJ6S9ZAvcelSbucm8pxvVcON/DzpAKzHcmDjYAUeSzexh5I0OLZgnNIJEXsXgZ6
-         GUhoC62+BAd8ebCk2dV3TO2ApxkUeZmnv781zVGTVbY4EjfYVZ/Q/+fVT+dsjoKTPbov
-         0bnw==
-X-Forwarded-Encrypted: i=1; AJvYcCVkTS3QBbPm9AQPRAyLfv1JzSDfQ89mztrQuslcYr2orK2e4kX4wSpxzaM5hMtWrTi4M5bJMEWA/rA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqSk9AMiuL6dapQ5V24QEkQQfu+sKnqF9kWjl0RxP//VBe7aZy
-	K+2owYB8/JvKvhXdQTsAj9zuP3j0bcdRQ/xCS9+S+9J7mfO08m9jERsMsbHvPkGQx+MBfgkG6fx
-	TWBhUJUJ5MD0C1vpNTlTBMMK63gkQO0E=
-X-Gm-Gg: AZuq6aLf4V748rvEKCDrW0NFckqr+SAKeLC7+5x6xHoNP/VvQ0IcdUrZ59z8ph5jPQP
-	LwdXw2LCix9FYyCZ6jnx2zI1WdCwrrrmrxZRizu0Uq30ceuxFUPIm21HApCaEskpezDFH/aC95r
-	jCXUyaKsm3vp8/bah/JEl4vWOeo8G0Kqk2XJGfM+YlGqvCHb7T//YccTZI+bqRxrcTS1JX4vjDU
-	Skr7vul3MlLxFy2tdaRaUdycz2QgXwGvJOJsL4RHS49Y7HKKbSNU2frZSsqVK9AfVIqhtjbb1uA
-	70gh56a2Lewxx6xXU7BxLTwd+vRvKF6Ljm/ZRpIb
-X-Received: by 2002:a05:6402:3512:b0:659:4853:5398 with SMTP id
- 4fb4d7f45d1cf-65984139061mr1247097a12.14.1770383552988; Fri, 06 Feb 2026
- 05:12:32 -0800 (PST)
+        d=1e100.net; s=20230601; t=1770392312; x=1770997112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Dz6wD+7Ugi3o96pX44vNbo/BkfXzNFQKVPcQ4VyxAC0=;
+        b=ntEp95mpdvclrzpWLn04UXdrRsl59ss7zLS3g/mwh5RAcDtX46o3+93pBAs+D5qVGw
+         iH7GV4QE90hcXtdv9SGzTtHoVoAqGHsHffLeQJPrvxC1lKDw9Dnnvc/ME/rALrBhgMjv
+         U/3LBcZIgSOZSS0Q4YJ9PgLayTlmPEsCKaQl0V3L1N1PYhm1Cgxb0zMLnrXQRL1ghu26
+         xqJ2sQY3s1T2LhCSysEuDeCjCWEmigZkQKgkUwStzheHV064W/gebL0atSkpWOEC9eF+
+         dJ45Yy7pQC7Pz9cmts2EKgyuHLXx8s6pzEXwYGVRcKOklgE0nzFXlubEchgsqYaAq2MA
+         FtJQ==
+X-Gm-Message-State: AOJu0Ywb5Ias+yx5P4r+PxaGY7wZSoLf1f65xQL/EBpDL9VhrO/Oagaa
+	9IFuk3ZTikmQ1uIP/SWXcrXS32JSd7gIyzATJJQWGU1lVdZaeb0GSpvP
+X-Gm-Gg: AZuq6aIo2uWf/ONXRDJB3+8SacieqsxM+ffghhsNRxVo4uTUjJlhqV80mZ75GmaD3NO
+	cnnq27LDLu/ed8PSrHPndA6Ayn8GJS7WPD2KkB4LPqFKkvzpccGCYPkPnCNN+O5NhjTroMzfMM5
+	h2kO8oN+AuEgmhFURireA8vws2Q5uakQkpXkvRq/nkjx1Zn7F8E+8EAPkXHmfZwE6pccD6wysy5
+	V8R9UsYye7NTV7mve9hKcvwwbbtbrDUTsSGp+XYUT6QvIvYUH7/o1QprZ5kLNZTpiJN+C/RS4aO
+	/463BraL1KT3HoOZZCKpSQhi2PfOK9ewImBhbjlF/bM9Dm1KF9pVVSbN6ELatuuk4GUy57anVSs
+	fkquKeZ8PJE3Jru4I66Y/OIwsLPExSFLh7UkVmTMFT8ob1UNr4mgfyjfgKe/9Z0rAKkRKMVVTHc
+	DlkMZEvreSObk0f/vhnA2/UHWwQRADythYIPXYJRqH3cKlFt5WlsB5mSkZTBu7EHrl8AbW6A==
+X-Received: by 2002:a17:90b:4b87:b0:352:c9c9:75b8 with SMTP id 98e67ed59e1d1-354b3e79121mr2248049a91.36.1770392311730;
+        Fri, 06 Feb 2026 07:38:31 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com.com ([49.207.208.177])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3549c28241fsm6746975a91.11.2026.02.06.07.38.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Feb 2026 07:38:31 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: djwong@kernel.org,
+	hch@infradead.org,
+	cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	nirjhar.roy.lists@gmail.com
+Subject: [patch v1 0/2]  Misc refactoring in XFS
+Date: Fri,  6 Feb 2026 21:07:59 +0530
+Message-ID: <cover.1770128479.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
- <20260115062944.GA9590@lst.de> <633bb5f3-4582-416c-b8b9-fd1f3b3452ab@suse.com>
- <20260115072311.GA10352@lst.de> <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
- <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
- <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com> <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
- <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com> <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
- <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com> <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
- <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
- <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com> <8ab387b1-c4aa-40a5-946f-f4510d8afd02@igalia.com>
- <CAOQ4uxiRpwuyfj_Wy3Zj+HAi+jgQOq8nPQK8wmn6Hgsz-9i1fw@mail.gmail.com>
- <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com> <05c37282-715e-4334-82e6-aea3241f15eb@igalia.com>
-In-Reply-To: <05c37282-715e-4334-82e6-aea3241f15eb@igalia.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 6 Feb 2026 14:12:21 +0100
-X-Gm-Features: AZwV_QhqFlrzBxPxOmk9tvy31EKQfxouilAipC7udcRwop8DYl9mi6Fi_3EXec0
-Message-ID: <CAOQ4uxgzK7qYDFWYT62jH_zq8JkLGussD5ro4cKDqSNQqBiVUA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
-To: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
-Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, 
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
-	Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Christian Brauner <brauner@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	kernel-dev@igalia.com, vivek@collabora.com, 
-	Ludovico de Nittis <ludovico.denittis@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 5, 2026 at 9:34=E2=80=AFPM Andr=C3=A9 Almeida <andrealmeid@igal=
-ia.com> wrote:
->
-> Em 28/01/2026 08:49, Amir Goldstein escreveu:
-> > On Sat, Jan 24, 2026 at 11:45=E2=80=AFAM Amir Goldstein <amir73il@gmail=
-.com> wrote:
-> >>
-> >> On Fri, Jan 23, 2026 at 9:08=E2=80=AFPM Andr=C3=A9 Almeida <andrealmei=
-d@igalia.com> wrote:
-> >>>
-> >>> Em 23/01/2026 10:24, Andr=C3=A9 Almeida escreveu:
-> >>>>
-> >>>> Em 22/01/2026 17:07, Amir Goldstein escreveu:
-> >>>>> On Tue, Jan 20, 2026 at 4:12=E2=80=AFPM Amir Goldstein <amir73il@gm=
-ail.com>
-> >>>>> wrote:
-> >>>>>>
-> >>>>>> On Mon, Jan 19, 2026 at 5:56=E2=80=AFPM Andr=C3=A9 Almeida
-> >>>>>> <andrealmeid@igalia.com> wrote:
-> >>>>>>>
-> >>>>> ...
-> >>>>>>> Actually they are not in the same fs, upper and lower are coming =
-from
-> >>>>>>> different fs', so when trying to mount I get the fallback to
-> >>>>>>> `uuid=3Dnull`. A quick hack circumventing this check makes the mo=
-unt
-> >>>>>>> work.
-> >>>>>>>
-> >>>>>>> If you think this is the best way to solve this issue (rather tha=
-n
-> >>>>>>> following the VFS helper path for instance),
-> >>>>>>
-> >>>>>> That's up to you if you want to solve the "all lower layers on sam=
-e fs"
-> >>>>>> or want to also allow lower layers on different fs.
-> >>>>>> The former could be solved by relaxing the ovl rules.
-> >>>>>>
-> >>>>>>> please let me know how can
-> >>>>>>> I safely lift this restriction, like maybe adding a new flag for =
-this?
-> >>>>>>
-> >>>>>> I think the attached patch should work for you and should not
-> >>>>>> break anything.
-> >>>>>>
-> >>>>>> It's only sanity tested and will need to write tests to verify it.
-> >>>>>>
-> >>>>>
-> >>>>> Andre,
-> >>>>>
-> >>>>> I tested the patch and it looks good on my side.
-> >>>>> If you want me to queue this patch for 7.0,
-> >>>>> please let me know if it addresses your use case.
-> >>>>>
-> >>>>
-> >>>> Hi Amir,
-> >>>>
-> >>>> I'm still testing it to make sure it works my case, I will return to=
- you
-> >>>> ASAP. Thanks for the help!
-> >>>>
-> >>>
-> >>> So, your patch wasn't initially working in my setup here, and after s=
-ome
-> >>> debugging it turns out that on ovl_verify_fh() *fh would have a NULL
-> >>> UUID, but *ofh would have a valid UUID, so the compare would then fai=
-l.
-> >>>
-> >>> Adding this line at ovl_get_fh() fixed the issue for me and made the
-> >>> patch work as I was expecting:
-> >>>
-> >>> +       if (!ovl_origin_uuid(ofs))
-> >>> +               fh->fb.uuid =3D uuid_null;
-> >>> +
-> >>>           return fh;
-> >>>
-> >>> Please let me know if that makes sense to you.
-> >>
-> >> It does not make sense to me.
-> >> I think you may be using the uuid=3Doff feature in the wrong way.
-> >> What you did was to change the stored UUID, but this NOT the
-> >> purpose of uuid=3Doff.
-> >>
-> >> The purpose of uuid=3Doff is NOT to allow mounting an overlayfs
-> >> that was previously using a different lower UUID.
-> >> The purpose is to mount overlayfs the from the FIRST time with
-> >> uuid=3Doff so that ovl_verify_origin_fh() gets null uuid from the
-> >> first call that sets the ORIGIN xattr.
-> >>
-> >> IOW, if user want to be able to change underlying later UUID
-> >> user needs to declare from the first overlayfs mount that this
-> >> is expected to happen, otherwise, overlayfs will assume that
-> >> an unintentional wrong configuration was used.
-> >>
-> >> I updated the documentation to try to explain this better:
-> >>
-> >> Is my understanding of the problems you had correct?
-> >> Is my solution understood and applicable to your use case?
-> >>
-> >
-> > Hi Andre,
-> >
-> > Sorry to nag you, but if you'd like me to queue the suggested change to=
- 7.0,
-> > I would need your feedback soon.
-> >
->
-> Hey Amir, sorry for my delay. I just had a week out of the office and
-> just got back to this.
->
-> Our initial test case worked great! We managed to mount both images and
-> use overlayfs without a problem after your clarification of where to use
-> uuid=3Doff, which should be on the first mount.
+This patchset contains 2 refactorings. Details are in the patches.
+Please note that the RB for patch 1 was given in [1].
 
-Not only on the *first* mount - on *all* the mounts.
-Unless you use "uuid=3Doff" consistently, overlayfs will deny the mount.
+[1] https://lore.kernel.org/all/20250729202428.GE2672049@frogsfrogsfrogs/
 
->
-> However, when rebooting to the other partition, the mount failed with
-> "failed to verify upper root origin" again, but I believe that I forgot
-> to add `uuid=3Doff` somewhere in the mount scripts. I'm still debugging t=
-his.
+Nirjhar Roy (IBM) (2):
+  xfs: Refactoring the nagcount and delta calculation
+  xfs: Use rtg_group() wrapper in xfs_zone_gc.c
 
-Not sure what you mean by "other partition"
-Overlayfs verifies the origin by file handle + UUID.
-We allow relaxing UUID check with uuid=3Doff
-but isn't it the case for btrfs that the same file in different
-clones will have a different file handle, because of different
-root_objectid?
+ fs/xfs/libxfs/xfs_ag.c | 28 ++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h |  3 +++
+ fs/xfs/xfs_fsops.c     | 17 ++---------------
+ fs/xfs/xfs_zone_gc.c   |  4 ++--
+ 4 files changed, 35 insertions(+), 17 deletions(-)
 
-        fid->objectid =3D btrfs_ino(BTRFS_I(inode));
-        fid->root_objectid =3D btrfs_root_id(BTRFS_I(inode)->root);
-        fid->gen =3D inode->i_generation;
+-- 
+2.43.5
 
-That means that you can use "uuid=3Doff" to overcome the
-ephemeral nature of the btrfs clone UUID, but you cannot
-use it to mount an overlayfs that was created in one btrfs
-clone from another clone.
-
-Sorry, no "fileid=3Doff" option, this is out of the question.
-
-You are free to use "index=3Doff" to avoid those requirements,
-but the essence of "index=3Don" is that the lower file can be uniquely
-identified and therefore, changing the lower file's unique id is game over.
-
->
-> Anyhow, I see that we are now too close to the merge window, and from my
-> side we can delay this for 7.1 and merge it when it gets 100% clear that
-> this is the solution that we are looking for.
->
-
-I pushed this patch to overlayfs-next branch.
-It is an internal logic change in overlayfs that does not conflict with
-other code, so there should not be a problem to send a PR on the
-second half of the 7.0 merge window if this is useful.
-
-I think that the change itself makes sense because there was never
-a justification for the strict rule of both upper/lower on the same fs
-for uuid=3Doff, but I am still not going to send it without knowing that
-someone finds this useful for their workload.
-
-Thanks,
-Amir.
