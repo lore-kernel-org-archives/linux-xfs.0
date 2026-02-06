@@ -1,196 +1,168 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A74D29CB57
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 15:38:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE98835FF5B
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 17:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770392326; cv=none; b=HaJAer1LuHk/B0UYi6KGp9r4DWiU4+7EDDv44Jeviput9Izs2+2cTTVf0Z2o4wUESHLhE8rVQ/doGxhLXtzSSkhp0jwbVlMEgjl7or56FzPyowFbAYuJovHqM2teKuvXG2XIjPoB0gY6ue815C6IbqzuXfe8EO7jFFK2deK+6QM=
+	t=1770397379; cv=none; b=pBvxYTVFP/xHm5bRle7IivLRXMCjvBQP85DmuhnBK4ayCTroqdNPrKdzSBpn6/TxgAMPpUKehPm0MzlwFpGuYL13bl7IQUHEBF39i/6Y33moTM/DuD4YM549Cm2OcTI3Gv2iYVGuxyXDqzSHoBgzvZWUe8VY+Asi1/KDrsUJ78w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770392326; c=relaxed/simple;
-	bh=Q+jKwtINhMrXk60PK9ttBaryzzKp+PIUgdjDa38PFRM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=e1FYvf5+2wYSCoK+eUxk+LwWOyEK56jjY7wlcGA8MrKKNo8HXpczlAWnjdmCUbKR8PA9XxrBb2PfZMp2gkqOIP7Y357cbAZE1rNAPVSuxtnIhfffq7IIWmdJB5KhuoERt5NF2k/OODxqycyo+/Fh8Wl5xYjDQGzWp/SjaU0MVCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O6E6UkPR; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770397379; c=relaxed/simple;
+	bh=GUyoVBXr3Q1xsOquqRPXnYNTv4HpgxlmloxWIZh6WO8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l2vce8UFhMntg4xr80Nni6MoGSF1sO19VcrcXw2sbinXowhg0aVtqJA642USESnmnE3KOocr8t1/6ttkbuG7U/dQuviCuAdTN2P5QnGIeMYPW/9gfL6mj5QbEZnBJgVvckEMfc7QrrRAkgFdfEVq+FGkERIDJL8LBI2sJL4JuOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=orkqlvE9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=EE5crKCo; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=P0Te8zeS; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rMULjRcu; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O6E6UkPR"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-823075fed75so1395347b3a.1
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Feb 2026 07:38:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770392325; x=1770997125; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/nsWmNYBIabzKh//vXqMp2ygozfG/NVtVhziWQz+A14=;
-        b=O6E6UkPR7J9RhhQuCdqVusZ+4Rr4LD4NZRv86wADxSilW/WgwI7tem7M8ziU6p7XUZ
-         7ZjtpthUV5QYf31shGrNKTYMecY+mi2UAOcI7yHjVO/23zYcaCl3VPontEvqwbCdJPw8
-         3YLZUU4zWw/l6jw+jn/0Y8UUJiHDFuFZCkVYCwnMCMwb8eCzQzU9zfuEPChG5ACb7JN+
-         4h+cjHfzlhvqKngHcbbgfcgPvYCf9esoXgNCc8c0xnjSwfUIGhYdsSdMisy9VDT1XFHA
-         bw3vg86Wh/2K2ezzLk4RYbbx/VcRGdxJUvb99pQEtvLmKezUuWejcDWWD8ROMqliEdcO
-         I/Aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770392325; x=1770997125;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=/nsWmNYBIabzKh//vXqMp2ygozfG/NVtVhziWQz+A14=;
-        b=wkBcq6ITfkMLRDFF1tbAQWil+353Ao1+ZD2iwgn0LPFXLT3LhNhXYGcj+RY614vQB7
-         kAXbdaf0/gbmtNOXd0WAtT23onRjh4OL+QV95WrJCp4BEUsjtxzJAiSzTgDS583iT0RP
-         8uD3wxbTNrlCmG6USigWD09lP3YdXU9UdMSN9azCe0Nq9E+kmmpoGtwwxi+7mygOFVKm
-         fTwOHpXElw2bRhmyodU1oSw4Rz3QSA+2V7QMWjSTZFZBPaQvMD1tJoF0nM5ZFqVJnqQF
-         PsvwuIJvT+AC9SQCPMbEtRiYP01KX3/msf/q4a5n7UScn0h4PaogyjxDJbVZRQuX0Oju
-         /xJA==
-X-Gm-Message-State: AOJu0YzAmqzOvTXfL5l/YV/31Dx4iOh+JA8vC5YxlbbjYyX/I3AR08qK
-	PoxxWhq2AKiCihku480V8Bwmm6FidUzTF0/GkYYIlwVUFANMTuPRyr6c
-X-Gm-Gg: AZuq6aJRm4qmnntr59QWRh4UYxHvresef+mhARfePubWiWMnW6GMvia5s8F6ZcOT+TT
-	+5eRdYhwxO03Oua4QNeD1rI01JimqEYeICa1oSnQs/dMWadOiD/iowGJ2EWaMc4st84M9b5Gi0r
-	+mA3+Hf28+OlXuSU42zKlM6qNEq720HcMWxOiVmaWvB0dSGFltknB0OXkjTGq/MdmQCAdJNtqSz
-	xAa0HRodX3dprlNqmfSNqOcC96MFnkEY0jBWehMSqT4tTxXIJxDY/rnaKRmhlDKP3HuNzQjVcsx
-	L6JGruWQ5FbtHsWcdBRP4N8yKfYEjneBibDJSLOna2INqiAYvVkbXoKfZlHHaiSfcjqJ0vEJXYg
-	KY7Sv4gfrW2HvXDWrLxoyx+v1oigSDWN1kf54zNMXw8sfuI0mxtuY6qhaTViWF7zCBlDg8HdIOT
-	DIgHlzt7MRK48Z3VAmFAsuCv5N9Rdp2hCDBlRXWDfXkeo2Q8R0+46PTQKwGRBUoUXeoLpMxgtuB
-	2DnMuMi
-X-Received: by 2002:a05:6a21:7a8d:b0:38e:99a0:1057 with SMTP id adf61e73a8af0-393ada6bf63mr2986035637.34.1770392325435;
-        Fri, 06 Feb 2026 07:38:45 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com.com ([49.207.208.177])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3549c28241fsm6746975a91.11.2026.02.06.07.38.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Feb 2026 07:38:44 -0800 (PST)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: djwong@kernel.org,
-	hch@infradead.org,
-	cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [patch v1 1/2] xfs: Refactoring the nagcount and delta calculation
-Date: Fri,  6 Feb 2026 21:08:00 +0530
-Message-ID: <5c6e64dc58ed42566437dac8b2fa2c82d7482c05.1770128479.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <cover.1770128479.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1770128479.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="orkqlvE9";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="EE5crKCo";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="P0Te8zeS";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rMULjRcu"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E4EAF5BCE3;
+	Fri,  6 Feb 2026 17:02:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1770397377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CUYqtP7ZgHQdQC5vBnzVZXDXwlg+QpNEKhaQm5ovGbg=;
+	b=orkqlvE9SwTuzg1vUY/b9kRBRSLpHcoYbkm9JOzNPXV3xUCu71jskW4VC6PYgISH5dAKeQ
+	GnxkepJWMc9d5s492frW0onGpnHzB+rf+OT0PoaQHLS9zG/MfhCdsTS6jTxddG2endGtrJ
+	1XF6Cbi3kAHbaCBgf/9/TTJmGw1Khg4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1770397377;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CUYqtP7ZgHQdQC5vBnzVZXDXwlg+QpNEKhaQm5ovGbg=;
+	b=EE5crKCoft9WjyIsphFaJSVj0dj3WisFlTa44mrS3a0w9C5UIZO139v5AfnUvd8wFoAV/1
+	ijvnduHOW12+fhAw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1770397373; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CUYqtP7ZgHQdQC5vBnzVZXDXwlg+QpNEKhaQm5ovGbg=;
+	b=P0Te8zeSLjKAlYkAT+2RbICPhrTFBetL7skyodk5FaxxibOH9vtxvMRNfPFjuWF/D3BvCO
+	Twi7tlKa2WiGRW6KQFw0PMJvt9zlPkCAmXE9SqS2hBuQwUn90qdevnQOf1MeWIHxKS8xjC
+	uYOazmxOURU4PzyXqg1pSF2T4sjAbr4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1770397373;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CUYqtP7ZgHQdQC5vBnzVZXDXwlg+QpNEKhaQm5ovGbg=;
+	b=rMULjRculEo3SDhtOcqpmQ/l0s6TQHipK7lfBzjVqqjjFBs2ZAH89Z4OkmL0BIHHr2y7hh
+	+YBebsQbhnf9GdDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B86A13EA63;
+	Fri,  6 Feb 2026 17:02:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id dUHUKbgehmmudQAAD6G6ig
+	(envelope-from <pfalcato@suse.de>); Fri, 06 Feb 2026 17:02:48 +0000
+Date: Fri, 6 Feb 2026 17:02:47 +0000
+From: Pedro Falcato <pfalcato@suse.de>
+To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Jarkko Sakkinen <jarkko@kernel.org>, Dave Hansen <dave.hansen@linux.intel.com>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Jani Nikula <jani.nikula@linux.intel.com>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, Christian Koenig <christian.koenig@amd.com>, 
+	Huang Rui <ray.huang@amd.com>, Matthew Auld <matthew.auld@intel.com>, 
+	Matthew Brost <matthew.brost@intel.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Benjamin LaHaise <bcrl@kvack.org>, 
+	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
+	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
+	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>, 
+	Andreas Dilger <adilger.kernel@dilger.ca>, Muchun Song <muchun.song@linux.dev>, 
+	Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Tony Luck <tony.luck@intel.com>, 
+	Reinette Chatre <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>, 
+	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>, 
+	Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+	Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, 
+	Matthew Wilcox <willy@infradead.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, 
+	Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Zi Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>, 
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
+	Lance Yang <lance.yang@linux.dev>, Jann Horn <jannh@google.com>, 
+	David Howells <dhowells@redhat.com>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E . Hallyn" <serge@hallyn.com>, 
+	Yury Norov <yury.norov@gmail.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
+	linux-sgx@vger.kernel.org, linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, 
+	linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+	linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-erofs@lists.ozlabs.org, 
+	linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev, 
+	devel@lists.orangefs.org, linux-xfs@vger.kernel.org, keyrings@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v2 01/13] mm/vma: remove __private sparse decoration from
+ vma_flags_t
+Message-ID: <e3qrulshyfrqkpihfb7prx2xyp5sn37aobccihw6r7vwwj2zm2@fh56mijhhk3c>
+References: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
+ <64fa89f416f22a60ae74cfff8fd565e7677be192.1769097829.git.lorenzo.stoakes@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <64fa89f416f22a60ae74cfff8fd565e7677be192.1769097829.git.lorenzo.stoakes@oracle.com>
+X-Spam-Score: -2.30
+X-Spamd-Result: default: False [-2.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[linux-foundation.org,kernel.org,linux.intel.com,redhat.com,alien8.de,zytor.com,arndb.de,linuxfoundation.org,intel.com,suse.de,gmail.com,ffwll.ch,ursulin.net,amd.com,zeniv.linux.org.uk,suse.cz,kvack.org,linux.alibaba.com,google.com,huawei.com,vivo.com,mit.edu,dilger.ca,linux.dev,paragon-software.com,omnibond.com,arm.com,wdc.com,infradead.org,oracle.com,suse.com,nvidia.com,paul-moore.com,namei.org,hallyn.com,rasmusvillemoes.dk,vger.kernel.org,lists.linux.dev,lists.freedesktop.org,lists.ozlabs.org,lists.orangefs.org];
+	R_RATELIMIT(0.00)[to_ip_from(RLkbg1q7eokc4zfw9e5dipwr46)];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[93];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-Introduce xfs_growfs_compute_delta() to calculate the nagcount
-and delta blocks and refactor the code from xfs_growfs_data_private().
-No functional changes.
+On Thu, Jan 22, 2026 at 04:06:10PM +0000, Lorenzo Stoakes wrote:
+> We need to pass around these values and access them in a way that sparse
+> does not allow, as __private implies noderef, i.e. disallowing dereference
+> of the value, which manifests as sparse warnings even when passed around
+> benignly.
+> 
+> Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- fs/xfs/libxfs/xfs_ag.c | 28 ++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ag.h |  3 +++
- fs/xfs/xfs_fsops.c     | 17 ++---------------
- 3 files changed, 33 insertions(+), 15 deletions(-)
+Reviewed-by: Pedro Falcato <pfalcato@suse.de>
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index e6ba914f6d06..f2b35d59d51e 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -872,6 +872,34 @@ xfs_ag_shrink_space(
- 	return err2;
- }
- 
-+void
-+xfs_growfs_compute_deltas(
-+	struct xfs_mount	*mp,
-+	xfs_rfsblock_t		nb,
-+	int64_t			*deltap,
-+	xfs_agnumber_t		*nagcountp)
-+{
-+	xfs_rfsblock_t	nb_div, nb_mod;
-+	int64_t		delta;
-+	xfs_agnumber_t	nagcount;
-+
-+	nb_div = nb;
-+	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
-+	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
-+		nb_div++;
-+	else if (nb_mod)
-+		nb = nb_div * mp->m_sb.sb_agblocks;
-+
-+	if (nb_div > XFS_MAX_AGNUMBER + 1) {
-+		nb_div = XFS_MAX_AGNUMBER + 1;
-+		nb = nb_div * mp->m_sb.sb_agblocks;
-+	}
-+	nagcount = nb_div;
-+	delta = nb - mp->m_sb.sb_dblocks;
-+	*deltap = delta;
-+	*nagcountp = nagcount;
-+}
-+
- /*
-  * Extent the AG indicated by the @id by the length passed in
-  */
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 1f24cfa27321..f7b56d486468 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -331,6 +331,9 @@ struct aghdr_init_data {
- int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
- int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
- 			xfs_extlen_t delta);
-+void
-+xfs_growfs_compute_deltas(struct xfs_mount *mp, xfs_rfsblock_t nb,
-+	int64_t *deltap, xfs_agnumber_t *nagcountp);
- int xfs_ag_extend_space(struct xfs_perag *pag, struct xfs_trans *tp,
- 			xfs_extlen_t len);
- int xfs_ag_get_geometry(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 0ada73569394..8353e2f186f6 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -92,18 +92,17 @@ xfs_growfs_data_private(
- 	struct xfs_growfs_data	*in)		/* growfs data input struct */
- {
- 	xfs_agnumber_t		oagcount = mp->m_sb.sb_agcount;
-+	xfs_rfsblock_t		nb = in->newblocks;
- 	struct xfs_buf		*bp;
- 	int			error;
- 	xfs_agnumber_t		nagcount;
- 	xfs_agnumber_t		nagimax = 0;
--	xfs_rfsblock_t		nb, nb_div, nb_mod;
- 	int64_t			delta;
- 	bool			lastag_extended = false;
- 	struct xfs_trans	*tp;
- 	struct aghdr_init_data	id = {};
- 	struct xfs_perag	*last_pag;
- 
--	nb = in->newblocks;
- 	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
- 	if (error)
- 		return error;
-@@ -122,20 +121,8 @@ xfs_growfs_data_private(
- 			mp->m_sb.sb_rextsize);
- 	if (error)
- 		return error;
-+	xfs_growfs_compute_deltas(mp, nb, &delta, &nagcount);
- 
--	nb_div = nb;
--	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
--	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
--		nb_div++;
--	else if (nb_mod)
--		nb = nb_div * mp->m_sb.sb_agblocks;
--
--	if (nb_div > XFS_MAX_AGNUMBER + 1) {
--		nb_div = XFS_MAX_AGNUMBER + 1;
--		nb = nb_div * mp->m_sb.sb_agblocks;
--	}
--	nagcount = nb_div;
--	delta = nb - mp->m_sb.sb_dblocks;
- 	/*
- 	 * Reject filesystems with a single AG because they are not
- 	 * supported, and reject a shrink operation that would cause a
 -- 
-2.43.5
-
+Pedro
