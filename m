@@ -1,122 +1,39 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8F123A1E64
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 17:35:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C861B231842
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 17:38:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770399359; cv=none; b=Z/DSZzZoBQh/YooyEjk5RbH/ESQFJoyTjpV5ToChLPi61wt5Vg27I8yvacxrnQEqjEtJkmd9M/KNHEx4T45OeTEZ9UH7t0aJjf7J370zaQ3yCY5CGsrEdBZAyx/nsQOrTpOiEu0jLH2gMe2L8lZoBX96JskNTt/kXaUYJbDbpKM=
+	t=1770399486; cv=none; b=VmgxL65aVgSYRcXzqiTAbEhl0OKS/V1A8WLLrGKufK2drUSiFZcebD/PIyMZITLpwUt5B7Ly83Qfc8w5r3VWIaXdhWjqscBn0lF3QXpsTjQIq3ePSO1IHOEX+AhuM/b7ZTJaaDyOSayaeJ817jZnIw5scGEKTUdeQdjXQbORxGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770399359; c=relaxed/simple;
-	bh=7E9zqXJ8P3z1k3N3/tJLlplepwjs2XucigHp0+CCCRM=;
+	s=arc-20240116; t=1770399486; c=relaxed/simple;
+	bh=Krv90QfUmppb/+yGhc4V66VNTIEdH25mcsuM9wFbTFE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hrzbjMzAfe1Rc1wPrd/HH4qfjPalXpRikONULCQ2EQZv3ATX4/LHmLhPff+o47T9JtAZsAkjO3ayRrhIVdv9F6+mVTBBLTW486bMrBNfYROdWD69OIRpp+WK6/x8eqQXiXB4UUnlrFooJaIDME0ZZfepjAh7GnmaHx/eKbEqNo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1shQewP2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JHUa9amE; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=U5YPWMVu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9GrzkJr3; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hq7SkDeVDkHUIIJW9OA9YIl/HQiitFBniH+Oto5wDzut1UUqLdT4o+xxJuCIFE14iuLWYc2KSE2ElTVZ+jYYPMqhqNy2yfwpUF8EgsU1nd7QN2rKiv72vEakjV3obE/tYryBFfphM6jYUSWBbLbknAv/+tOVkXUVI8YpCRtkpuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mhUq6AxG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1shQewP2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JHUa9amE";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="U5YPWMVu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9GrzkJr3"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 5F7903E6DD;
-	Fri,  6 Feb 2026 17:35:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1770399357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VJUA43BGvzwxesp6EkqhFxBoO3OZeDjhsPe0maEveNQ=;
-	b=1shQewP2LmWP3MFSMYtX8w+6zZn7aKBAlTFRTxiOvTX7R2E4CohJmoLwXsU1vTDbMz0iaS
-	R2jXA7lFXktcPsgpxf12asWwe05gSqhUXi2iIsQ4/rI0b42DF2zGDL5ZS3bP0iKXY3o8fL
-	Y0jvZhjo5dSUxzqwtgF16yf6fyBAmG8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1770399357;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VJUA43BGvzwxesp6EkqhFxBoO3OZeDjhsPe0maEveNQ=;
-	b=JHUa9amEudPDM/4AySdJYeBKvZjF3HgEUfc5fY+W7hCNTZniiVkpoa0tvklosfEcBmNFGg
-	KejMN7mwEDAwKlAg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1770399356; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VJUA43BGvzwxesp6EkqhFxBoO3OZeDjhsPe0maEveNQ=;
-	b=U5YPWMVuexsLJCN9qapqSzJxhLnp84h/q7W92XbfAQUBhKRC87Wf1KYyxW+DhTX1iRGVH0
-	GHDnk8h5kAzOs/VSDW/GoZZCY7O++wzHGjG4gE148WnPmHOtLHOjuxzJQXQk+HoAKrhM4I
-	0pr/H/TJ/u6VuF6wpAnJn14EI8JyEUM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1770399356;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VJUA43BGvzwxesp6EkqhFxBoO3OZeDjhsPe0maEveNQ=;
-	b=9GrzkJr3/8NpPU6pAbKRUHmvzT482Kxxzhuv98BaxytL/Sy/DuDnzluD397tP3YK7WyJ5w
-	cQBGHJgBEnX0wYAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F2D5E3EA63;
-	Fri,  6 Feb 2026 17:35:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id HOILOHYmhmm0CAAAD6G6ig
-	(envelope-from <pfalcato@suse.de>); Fri, 06 Feb 2026 17:35:50 +0000
-Date: Fri, 6 Feb 2026 17:35:49 +0000
-From: Pedro Falcato <pfalcato@suse.de>
-To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Jarkko Sakkinen <jarkko@kernel.org>, Dave Hansen <dave.hansen@linux.intel.com>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dan Williams <dan.j.williams@intel.com>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Jani Nikula <jani.nikula@linux.intel.com>, 
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Tvrtko Ursulin <tursulin@ursulin.net>, Christian Koenig <christian.koenig@amd.com>, 
-	Huang Rui <ray.huang@amd.com>, Matthew Auld <matthew.auld@intel.com>, 
-	Matthew Brost <matthew.brost@intel.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Benjamin LaHaise <bcrl@kvack.org>, 
-	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
-	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
-	Hongbo Li <lihongbo22@huawei.com>, Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>, 
-	Andreas Dilger <adilger.kernel@dilger.ca>, Muchun Song <muchun.song@linux.dev>, 
-	Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>, 
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mike Marshall <hubcap@omnibond.com>, 
-	Martin Brandenburg <martin@omnibond.com>, Tony Luck <tony.luck@intel.com>, 
-	Reinette Chatre <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>, 
-	James Morse <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>, 
-	Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
-	Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, 
-	Matthew Wilcox <willy@infradead.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, 
-	Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Zi Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Jann Horn <jannh@google.com>, 
-	David Howells <dhowells@redhat.com>, Paul Moore <paul@paul-moore.com>, 
-	James Morris <jmorris@namei.org>, "Serge E . Hallyn" <serge@hallyn.com>, 
-	Yury Norov <yury.norov@gmail.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
-	linux-sgx@vger.kernel.org, linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, 
-	linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
-	linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-erofs@lists.ozlabs.org, 
-	linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev, 
-	devel@lists.orangefs.org, linux-xfs@vger.kernel.org, keyrings@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [PATCH v2 05/13] mm: add basic VMA flag operation helper
- functions
-Message-ID: <vrbggto75ugvpa5wtugmayr7yops6cnvygit42f2md646y6qnx@3vzc7taleijw>
-References: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
- <885d4897d67a6a57c0b07fa182a7055ad752df11.1769097829.git.lorenzo.stoakes@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhUq6AxG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72C8DC116C6;
+	Fri,  6 Feb 2026 17:38:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770399486;
+	bh=Krv90QfUmppb/+yGhc4V66VNTIEdH25mcsuM9wFbTFE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mhUq6AxGbw7kJRF7d/gWfBQA5lWKsYxRi45geSoADwBCb9YjG+/1ApnxsFG3nFMqx
+	 pEWKUW29TF86vu3W9n/CNlR2d/C5UeEe/F3sWqfvYD3YmQeLgA3TBPjRcHzaF3vSmR
+	 23kXfouSXolL1ubiUT7maxxD3dEYnlIos27GgPDnsejcGyvhjfcX2oAXpp/3M/zQPQ
+	 gmnnFCCWwcYq/rLC//vV2WO3oJ/Bb6d+2ETku9MQggqN0nvTmwMDslA4XCMwaIYqRY
+	 RX9D8Vco/9sxGU1jgnUIL+EO646/zOWBcBiUm0Qc+dWZ+Nc82juAhArvqmB633/vdx
+	 rOi6cIu1CBC6A==
+Date: Fri, 6 Feb 2026 09:38:05 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>
+Subject: Re: [bug report] xfs/802 failure due to mssing fstype report by lsblk
+Message-ID: <20260206173805.GY7712@frogsfrogsfrogs>
+References: <aYWobEmDn0jSPzqo@shinmob>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -125,87 +42,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <885d4897d67a6a57c0b07fa182a7055ad752df11.1769097829.git.lorenzo.stoakes@oracle.com>
-X-Spamd-Result: default: False [-2.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MISSING_XM_UA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[linux-foundation.org,kernel.org,linux.intel.com,redhat.com,alien8.de,zytor.com,arndb.de,linuxfoundation.org,intel.com,suse.de,gmail.com,ffwll.ch,ursulin.net,amd.com,zeniv.linux.org.uk,suse.cz,kvack.org,linux.alibaba.com,google.com,huawei.com,vivo.com,mit.edu,dilger.ca,linux.dev,paragon-software.com,omnibond.com,arm.com,wdc.com,infradead.org,oracle.com,suse.com,nvidia.com,paul-moore.com,namei.org,hallyn.com,rasmusvillemoes.dk,vger.kernel.org,lists.linux.dev,lists.freedesktop.org,lists.ozlabs.org,lists.orangefs.org];
-	R_RATELIMIT(0.00)[to_ip_from(RLkbg1q7eokc4zfw9e5dipwr46)];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[93];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[oracle.com:email,imap1.dmz-prg2.suse.org:helo,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Score: -2.30
-X-Spam-Level: 
+In-Reply-To: <aYWobEmDn0jSPzqo@shinmob>
 
-On Thu, Jan 22, 2026 at 04:06:14PM +0000, Lorenzo Stoakes wrote:
-> Now we have the mk_vma_flags() macro helper which permits easy
-> specification of any number of VMA flags, add helper functions which
-> operate with vma_flags_t parameters.
+On Fri, Feb 06, 2026 at 08:40:07AM +0000, Shinichiro Kawasaki wrote:
+> Hello Darrick,
 > 
-> This patch provides vma_flags_test[_mask](), vma_flags_set[_mask]() and
-> vma_flags_clear[_mask]() respectively testing, setting and clearing flags
-> with the _mask variants accepting vma_flag_t parameters, and the non-mask
-> variants implemented as macros which accept a list of flags.
+> Recently, my fstests run for null_blk (8GiB size) as SCRATCH_DEV failed at
+> xfs/802 [3]. I took a look and observed following points:
 > 
-> This allows us to trivially test/set/clear aggregate VMA flag values as
-> necessary, for instance:
-> 
-> 	if (vma_flags_test(&flags, VMA_READ_BIT, VMA_WRITE_BIT))
-> 		goto readwrite;
+> 1) xfs_scrub_all command ran as expected. Even though SCRATCH_DEV is mounted,
+>    it did not scrub SCRATCH_DEV. Hence the failure.
+> 2) xfs_scrub_all uses lsblk command to list all mounted xfs filesystems [1].
+>    However, lsblk command does not report that SCRATCH_DEV is mounted as xfs.
+> 3) I leanred that lsblk command refers to udev database [2], and udev database
+>    sometimes fails to update the filesystem information. This is the case for
+>    the null_blk as SCRATCH_DEV on my test nodes.
 
-I'm not a huge fan of the _test ambiguity here, but more words makes it uglier :/
-I think I can live with it though.
+Hrm.  I wonder if we're starting xfs_scrub_all too soon after the
+_scratch_cycle_mount?  It's possible that if udev is running slowly,
+it won't yet have poked blkid to update its cache, in which case lsblk
+won't show it.
 
-> 
-> 	vma_flags_set(&flags, VMA_READ_BIT, VMA_WRITE_BIT);
-> 
-> 	vma_flags_clear(&flags, VMA_READ_BIT, VMA_WRITE_BIT);
-> 
+If you add _udev_wait after _scratch_cycle_mount, does the "Health
+status has not beel collected" problem go away?  I couldn't reproduce
+this specific problem on my test VMs, but the "udev hasn't caught up and
+breaks fstests" pattern is very familiar. :/
 
-The variadic-ness here is very nice though.
+> Based on these observations, I think there are two points to improve:
+> 
+> 1) I found "blkid -p" command reports that null_blk is mounted as xfs, even when
+>    lsblk does not report it. I think xfs_scrub_all can be modified to use
+>    "blkid -p" instead of lsblk to find out xfs filesystems mounted.
+> 2) When there are other xfs filesystems on the test node than TEST_DEV or
+>    SCRATCH_DEV, xfs_scrub_all changes the status of them. This does not sound
+>    good to me since it affects system status out of the test targets block
+>    devices. I think he test case can be improved to check that there is no other
+>    xfs filesystems mounted other than TEST_DEV or SCRATCH_DEV/s. If not, the
+>    test case should be skipped.
 
-> We also add a function for testing that ALL flags are set for convenience,
-> e.g.:
-> 
-> 	if (vma_flags_test_all(&flags, VMA_READ_BIT, VMA_MAYREAD_BIT)) {
-> 		/* Both READ and MAYREAD flags set */
-> 		...
-> 	}
-> 
-> The compiler generates optimal assembly for each such that they behave as
-> if the caller were setting the bitmap flags manually.
-> 
-> This is important for e.g. drivers which manipulate flag values rather than
-> a VMA's specific flag values.
-> 
-> We also add helpers for testing, setting and clearing flags for VMA's and
-> VMA descriptors to reduce boilerplate.
-> 
-> Also add the EMPTY_VMA_FLAGS define to aid initialisation of empty flags.
-> 
-> Finally, update the userland VMA tests to add the helpers there so they can
-> be utilised as part of userland testing.
-> 
-> Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+I wonder if a better solution would be to add to xfs_scrub_all a
+--restrict $SCRATCH_MNT --restrict $TEST_DIR option so that it ignores
+mounts that aren't under test?
 
-Reviewed-by: Pedro Falcato <pfalcato@suse.de> 
+--D
 
--- 
-Pedro
+> At this moment, I don't have time to create patches for the improvements above.
+> If anyone can work on them, it will be appreciated.
+> 
+> [1] https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/scrub/xfs_scrub_all.py.in#n55
+> [2] https://unix.stackexchange.com/questions/642598/lsblk-file-system-type-not-appears-from-lsblk#642600
+> 
+> [3] xfs/802 failure console message
+> 
+> xfs/802            - output mismatch (see /home/shin/kts/kernel-test-suite/src/xfstests/results//xfs/802.out.bad)
+>     --- tests/xfs/802.out       2026-02-04 20:44:52.254221182 +0900
+>     +++ /home/shin/kts/kernel-test-suite/src/xfstests/results//xfs/802.out.bad  2026-02-06 17:04:24.336536185 +0900
+>     @@ -2,4 +2,7 @@
+>      Format and populate
+>      Scrub Scratch FS
+>      Scrub Everything
+>     +Health status has not been collected for this filesystem.
+>     +Please run xfs_scrub(8) to remedy this situation.
+>     +cannot find evidence that /var/kts/scratch was scrubbed
+>      Scrub Done
+>     ...
+>     (Run 'diff -u /home/shin/kts/kernel-test-suite/src/xfstests/tests/xfs/802.out /home/shin/kts/kernel-test-suite/src/xfstests/results//xfs/802.out.bad'  to see the entire diff)
