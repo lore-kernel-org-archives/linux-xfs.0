@@ -1,52 +1,71 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EADA244692;
-	Fri,  6 Feb 2026 03:05:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD87136351
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 03:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770347154; cv=none; b=n2vuZTvNQC5PGIekKjoA5OuFPd/A+jMXZbb2599EhhdFFNSaYkvO8dbELQskKV40rTqYtb3Uo3uQkHv1YwlSAN8dFQEdjTy7ergp1etK16FWd6H073zwXSmSaEe+8LhqZZ9CJO372KM8ZRyrLO65qznvFoCvM6caNfdIV3+hZ58=
+	t=1770347242; cv=none; b=cdO5CULJDsKy7ZOawUew+3Iekr0vEcMolWh5z3PKounhFHqbsD/91BzXhck1wKrMGomb7kmNIV9EprqVqoKPZsiTrO99QwkHLjkqnMqZQf/GamxbuMululCImlxvRyuCOpgoepsoVr9+ROU71KyGUISG6jU3V+HGbE8Lk6eh40U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770347154; c=relaxed/simple;
-	bh=CY9Kv9GJarmK3bvhoFDjW6CPCrn0G5WIA3KR1uW3xAE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=th3Ye922DIcgzMwH8Eqmnt5jwaueAHe0nyv1KAtjUv2EyUISWwmywnAltQ0ATggNhXZC++cdJHFp6vZWA4XXlplsM5cV5U1GAIIiQwjooFZ33ABu0vb+GOvjswV33bDHLp8k2md0INHPzdoU1vzU2W21CglKfx2DEuu89UEVCFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=LB8cB+2G; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1770347242; c=relaxed/simple;
+	bh=J/2AjULVPo7JxyW4cLKt3dWi5eq6Mmj+ADikJpFxrxs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aXYrRQmRbj5cyHm6bM2FpUI59Jd0wsnAH0PE3eP6UvUP2pvvGu/NYyKJjKhdeIFfI85euZNvtpmgAf1RNYRvY1rlq1bkNCVO5a/1ZKlP0FJn/L5vbAR1ufWznr5gnigIAgUQXV4orQelcFEXJ2YXxweDikiaG5Y1h2qqCCA0tNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B5yCB48O; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="LB8cB+2G"
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6160VsIJ4121925;
-	Thu, 5 Feb 2026 19:05:49 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=YzpQxNSfABSpsRLuyFgi7FBTpgot1zzgWPUDF/SFIzE=; b=LB8cB+2GqiQj
-	cK11HiRAZKwyylOBsvBH4KOo/q/HbwPJL02V+wRHR9YGf0/3mGrcLw9R2glZl/Ln
-	PzpnBdxKPVqmYv2sPDycCuuihLQJXOEb1HTNvdANj5gKWmA1fk/Sawv8QWMenZUx
-	+sb4u/GJ8BW5tKLmjDR1x5e5po1XomliKaeaCVIiW4uhbtdfEgn0sbqeFBBp+J+g
-	mDxArVD7eBfrLGPTLuPy2kEjjBdHBKIGlR1E7cUnXRRaw8PXTeLLPjVmk/4fT8Oq
-	Op1WPKhNHan9Ez/bX+M5usq3zEdUy9wn5sSPGd7P8ZAxQDspAv0ALZj36BdDmoZT
-	sr1ZP/xgww==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c55ud15yf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Thu, 05 Feb 2026 19:05:48 -0800 (PST)
-Received: from devbig003.atn7.facebook.com (2620:10d:c085:208::7cb7) by
- mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Fri, 6 Feb 2026 03:05:47 +0000
-From: Chris Mason <clm@meta.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <cem@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v6.1 11/11] xfs: add media verification ioctl
-Date: Thu, 5 Feb 2026 19:01:32 -0800
-Message-ID: <20260206030527.2506821-1-clm@meta.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260120041226.GJ15551@frogsfrogsfrogs>
-References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs> <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs> <20260120041226.GJ15551@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B5yCB48O"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2a0d52768ccso10311485ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 19:07:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770347241; x=1770952041; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=NeCdDvONNGPVeboC3q1Jqb3Mi6sRaFCJ/jUEyGj5MuI=;
+        b=B5yCB48OwyM6VD6nxkQTBHoZHBusC1RSn23Tp8f78UL8Izn3jHXLvl1BnBYw8XScUG
+         +ja0GE7Mx8KR+5VNd1eRC1itcIbqFABtM8TXstN10QGOGkKJQSXzjmabKRPRO+I0q3BR
+         SBE29ouXduIjClfBSWhCJ/pxw89VEyUynV9kl2geVmH/ApLwZgBuBIjus80As/qbQg1f
+         Yu838lQz/wlwgkaVyfh2zGLC2fNdwpjnCzGIwZMXXhSRLwWzhYH9y7gGsCGCcrNh+3jy
+         xgauueROn2Upg8kjgP/SAuJOovKO+Ds47AtOqZuO9p1x3Y/R1vaMS0m8kUx/aaBg2eRa
+         cLMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770347241; x=1770952041;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NeCdDvONNGPVeboC3q1Jqb3Mi6sRaFCJ/jUEyGj5MuI=;
+        b=bfG8L21Q9wh90OVLnCMFEOZdrACy7weZH/h/T4kYGQk6bCWZbQit6+IRKKnFfwC5a3
+         N+cfKQUtbFvCyvVwl4YeyUhWKYoEzWlGlNYFB5kgLo3seX4zPbVTdutprWyIIldS9+5A
+         lUj83Pz7BVzKqahqqfnFwXojdqllejTIUT6ShDCkVzT4g0W4Lj6x9LLbOFvlOdf2QSCo
+         ZQaZKKxVWoc1A8spUARlHYVSyLTrLw9lJyKqIRL4JUlEp/0phbhfgrMUXk/zFn2RDNOI
+         +vCw8AssnWy+DTzm/JSj2ay6j9OPvJNwn2Ed/HLyihuQz1eThzljOGZqGhWP51nQq7O3
+         fSoQ==
+X-Gm-Message-State: AOJu0YyNQEHxBh0ZeawnZHWrpIQHtjkPuf5qd6+jwPNRB5BLpVjZLIXP
+	dmppZ9iCz1T6WM2pOhSLwdobgFKEIH6EgVG0OdN4YMrgRJRFJ0/h69pU0oUc8qqQ
+X-Gm-Gg: AZuq6aK1tqJyls8OtTFwY37Y286PjlTvY4boTK8slk5xqwLZybgf0xzeF2S46hsfJv/
+	MSIJvI4uETzR8weupXn4ob+aA82Wt44mEBYCitiDDq/GpJTt/wTE8I7CW2hyGQLCU/ivOtNt1kL
+	Ao/B0SuE8tj/QVHiVvZnquHhwCEye5H04QSMwTrh4qoiRsPgQu76IJf81IjHgajrPBgtNi3xscS
+	LYm6TvlNM05UWRa2prr2H9vBYQwIiCUTnnrTH2ykD6ejbKFRka/vxDHDsuj75GZcDB8JIF7HF1t
+	vRjLh4EvBHraPuUZw0jP1EcjwhjFjK9IpoaEvNDfZysCabp7wfezsedgUaUOeUca40FoPzWh37F
+	gXQdqiAGO/DZpv/eXfWX7nbBS6t8HsrIIRtP53NPVPFiTq/jqL3QdStgbw7NSSKC21xiadZ2KDf
+	AZ1vP33f405dVhET0V54nZHmT3NyrHRvRvm+Jhz77D7VHXLdR4nMQB+vDLp+9E
+X-Received: by 2002:a17:903:2412:b0:2a7:90f2:2dea with SMTP id d9443c01a7336-2a9516f8bd7mr13167365ad.28.1770347241077;
+        Thu, 05 Feb 2026 19:07:21 -0800 (PST)
+Received: from zenbook ([159.196.5.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9522121besm8194905ad.85.2026.02.05.19.07.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Feb 2026 19:07:20 -0800 (PST)
+From: Wilfred Mallawa <wilfred.opensource@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Subject: [PATCH] xfs: add static size checks for structures in xfs_fs.h
+Date: Fri,  6 Feb 2026 13:05:58 +1000
+Message-ID: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,134 +73,125 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: dJ4r7jhJ9AcUmxcP1aueW9i2zL2X-9lO
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA2MDAxOSBTYWx0ZWRfX0SGgwv/gzY3N
- 3zBmkb3BO7lBWBD3ySfc1RbMiiNYCa1xdb2uUu94apcPl0q209iTuIOQ4QfynFbJFdFSYvEsZti
- R25L6PnA8u9VgPZSLZTAIBf3vHx9sNH5kORE5sG2hHR8k14tD+C/6iOSD0Jz0Ft75bBof7d5m4V
- qh1N8LlR03zjcw3hBPZC2f8lGOFJV7dgHbXykWT0Om6iVgQ3Jrwhgsgxpyv1pn7oiYovzADag4t
- J6RtL3FY+v5J7RY/2h8g/1AICyUjeiBKhxKuSrQVsCRK9YYyjq9UXqEilKgPRmvISroCsTYNqTt
- lvVVndIwySGxj2fI2OoEhbKQYaKV7l9HfbURvn1zzPYEP71h/1jAK8B0uSapmgAicxp5UQ1XSmz
- PGLeFZVVw/ZYa1Pg1Ws30xbTikzAAKxSwLzgyR478be4C0OkvieuqxQvcyaNkI03uaHAhPx6luy
- H9s/A9DLjXjWz2/I0PA==
-X-Authority-Analysis: v=2.4 cv=T6CBjvKQ c=1 sm=1 tr=0 ts=69855a8c cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8 a=ttdpyjjdJhq82aQT230A:9
-X-Proofpoint-GUID: dJ4r7jhJ9AcUmxcP1aueW9i2zL2X-9lO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-06_01,2026-02-05_03,2025-10-01_01
 
-"Darrick J. Wong" <djwong@kernel.org> wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Add a new privileged ioctl so that xfs_scrub can ask the kernel to
-> verify the media of the devices backing an xfs filesystem, and have any
-> resulting media errors reported to fsnotify and xfs_healer.
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
-Hi everyone,
+This patch adds static size checks for the structures in
+libxfs/xfs_fs.h. The structures with architecture dependent size for
+fields are ommited from this patch (such as xfs_bstat which depends on
+__kernel_long_t).
 
-I'm trying out my AI review prompts on a few more trees, and I ran it
-on the fuse-iomap-cache branch:
+Also remove some existing duplicate entries of XFS_CHECK_STRUCT_SIZE().
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+---
+ fs/xfs/libxfs/xfs_ondisk.h | 46 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
-This was the latest email lore could find, apologies if I grabbed the wrong one.
-
-Hopefully the review below is useful, please let me know if there are places it
-has gone wildly wrong.  I kept the header to make it obvious exactly which
-commit I'd run through.
-
-(This is another XFS commit that ended up in my rev-list range, low confidence
-in the actual review, but I'm curious if AI got this one right)
-
-commit 2e5c40a5b6ca722202bc0e99830b6ecf8755d19c
-Author: Darrick J. Wong <djwong@kernel.org>
-
-xfs: add media verification ioctl
-
-[ ... ]
-
-> diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-> --- /dev/null
-> +++ b/fs/xfs/xfs_verify_media.c
-> @@ -0,0 +1,445 @@
-
-[ ... ]
-
-> +/* Walk reverse mappings to look for all file data loss */
-> +static int
-> +xfs_verify_report_losses(
-> +	struct xfs_mount	*mp,
-> +	enum xfs_group_type	type,
-> +	xfs_daddr_t		daddr,
-> +	u64			bblen)
-> +{
-> +	struct xfs_group	*xg = NULL;
-> +	struct xfs_trans	*tp;
-> +	xfs_fsblock_t		start_bno, end_bno;
-> +	uint32_t		start_gno, end_gno;
-> +	int			error;
-> +
-> +	if (type == XG_TYPE_RTG) {
-> +		start_bno = xfs_daddr_to_rtb(mp, daddr);
-> +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
-> +	} else {
-> +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
-> +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
-> +	}
-> +
-> +	tp = xfs_trans_alloc_empty(mp);
-> +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
-> +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
-> +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
-> +		struct xfs_buf		*agf_bp = NULL;
-> +		struct xfs_rtgroup	*rtg = NULL;
-> +		struct xfs_btree_cur	*cur;
-> +		struct xfs_rmap_irec	ri_low = { };
-> +		struct xfs_rmap_irec	ri_high;
-> +		struct xfs_group_data_lost lost;
-> +
-> +		if (type == XG_TYPE_AG) {
-> +			struct xfs_perag	*pag = to_perag(xg);
-> +
-> +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-> +			if (error) {
-> +				xfs_perag_put(pag);
-> +				break;
-> +			}
-> +
-> +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
-> +		} else {
-> +			rtg = to_rtg(xg);
-> +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-> +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
-> +		}
-
-Does this code have a reference counting mismatch in the error paths?
-
-The xfs_group returned by xfs_group_next_range() is acquired via
-xfs_group_grab() which increments xg_active_ref.
-
-In the error path at line 120, the code uses xfs_perag_put() to release
-the reference:
-
-	error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-	if (error) {
-		xfs_perag_put(pag);
-		break;
-	}
-
-And later in the loop, line 144 uses xfs_group_put().
-
-Both xfs_perag_put() and xfs_group_put() decrement xg_ref, not
-xg_active_ref. Looking at the reference counting implementation:
-
-xfs_group_grab() calls atomic_inc_not_zero(&xg->xg_active_ref)
-xfs_group_rele() calls atomic_dec(&xg->xg_active_ref)
-xfs_group_put() calls atomic_dec(&xg->xg_ref)
-
-Should these error paths use xfs_group_rele() instead to match the
-xfs_group_grab() in xfs_group_next_range()?
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 2e9715cc1641..874c25cf9a4e 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -26,6 +26,9 @@
+ static inline void __init
+ xfs_check_ondisk_structs(void)
+ {
++	/* direct I/O */
++	XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
++
+ 	/* file structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+@@ -59,6 +62,8 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_bmdr_key_t,			8);
++	XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
++	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
+ 
+ 	/* dir/attr trees */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+@@ -77,6 +82,12 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_hdr,		32);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_map,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
++	XFS_CHECK_STRUCT_SIZE(xfs_attrlist_cursor_t,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
++
++	/* allocation groups */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
+ 
+ 	/* realtime structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			56);
+@@ -87,6 +98,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrmap_root,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_rtrefcount_ptr_t,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrefcount_root,	4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
+ 
+ 	/*
+ 	 * m68k has problems with struct xfs_attr_leaf_name_remote, but we pad
+@@ -117,20 +129,11 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_entry,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_hdr,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,		4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, freetag,	0);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, length,	2);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free_hdr,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_entry,	8);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_hdr,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_tail,	4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_entry,		3);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, namelen,	0);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, offset,	1);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, name,	3);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_hdr,		10);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_rec,		12);
+ 
+ 	/* ondisk dir/attr structures from xfs/122 */
+@@ -196,6 +199,9 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents,		40);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_by_handle,	64);
+ 
++	/* error injection */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
++
+ 	/*
+ 	 * The v5 superblock format extended several v4 header structures with
+ 	 * additional data. While new fields are only accessible on v5
+@@ -221,6 +227,28 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,		48);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,		112);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v4,		112);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
++	XFS_CHECK_STRUCT_SIZE(xfs_fsop_counts_t,		32);
++	XFS_CHECK_STRUCT_SIZE(xfs_fsop_resblks_t,		16);
++	XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,		16);
++	XFS_CHECK_STRUCT_SIZE(xfs_growfs_log_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,			16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,		24);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bulk_ireq,		64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_fs_eofblocks,		128);
++	XFS_CHECK_STRUCT_SIZE(xfs_fsid_t,			8);
++	XFS_CHECK_STRUCT_SIZE(xfs_fid_t,			16);
++	XFS_CHECK_STRUCT_SIZE(xfs_handle_t,			24);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_exchange_range,	40);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_commit_range,		88);
++
++	/* scrub */
++	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_metadata,	64);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec_head,	40);
+ 
+ 	/*
+ 	 * Make sure the incore inode timestamp range corresponds to hand
+-- 
+2.52.0
 
