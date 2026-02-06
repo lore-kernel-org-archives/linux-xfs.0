@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ECA03EBF19;
-	Fri,  6 Feb 2026 04:46:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021862E62C3;
+	Fri,  6 Feb 2026 04:53:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770353206; cv=none; b=VKtzm9yoS/ibqdNz1p4BmE3aqHa2HS+nLjcJ/m4FWX08VlvdzByEcLuCiyilSOaRqacnPBUX5UQbznLidgDqtJMCYEOVWyy8CUV1dMWXN69es4a4FysKM7Ynbw6Trk4z58E2xvF2d9SPTncezNqW/+hVt/R0u91//TzK0eDTd20=
+	t=1770353613; cv=none; b=IjGQlRG/kJjqqRT7Y1AWIxXqsOhZyiVXta7v4WUEONu9CQ0KuarkQjogFoucOJppo8pLJkkLNW79Ecvq2Ez3G/kVvAeOviNX/PCLvXlnNpD3V7wvyFw7xhgNuCGvOGhEVsDht9PZ15j9MSGvJ6xsTFW+SkPr/MpxImlzzwE2lNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770353206; c=relaxed/simple;
-	bh=3wyrS6FuHzMi0+gcu8RfA1Uj4G7edrBpeSx7MqKTXc8=;
+	s=arc-20240116; t=1770353613; c=relaxed/simple;
+	bh=XM9pzmK6p/zuNzks2AL7EdLS9nP7GMziA1jh2NiPmiY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GFiqBiHq95pRONSqHfO9JnK5dJx55ZcgfTmO2WHahsCTadPTNDi4ZFrCQX/atonktMMMHANBRAEbxswRUWtgFknIjVtIIJPrATYJjX88bR04ZtKOvqtKZS8KljdJVxgJS5tyb62GO76tMh0l19a3zAO/+D8u3XFi96LlyV1on4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gb0hV1/2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=q0vpyDIzKF2Bcu1lfopXDHMF4eVnbug841KPWq7bE1xNrsAvwsiYYGxnxJqJbxDwGC31dyN1WbkChMbVwI81lmPYulSf8Aw8ZJK/5/WJLWteVHDbO0YPESGtvYrwyfzoMtMyjmD+G2lDzNNSnlDGGVkBICtcyvyLqx1pEqg9p/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1m6wVNc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gb0hV1/2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8686C116C6;
-	Fri,  6 Feb 2026 04:46:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1m6wVNc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB965C116C6;
+	Fri,  6 Feb 2026 04:53:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770353205;
-	bh=3wyrS6FuHzMi0+gcu8RfA1Uj4G7edrBpeSx7MqKTXc8=;
+	s=k20201202; t=1770353612;
+	bh=XM9pzmK6p/zuNzks2AL7EdLS9nP7GMziA1jh2NiPmiY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Gb0hV1/2aS4cm+FFVdaFLDw82LwMIn15ByAImVqGV/EmXaq1YC99V5YDtygkhEgbE
-	 wXANfGHqz39YEnOYDCjXev6WmJ6Dn0RxkECibf5B/Sqlvqh5oW7ZlL0YK9rG3KSO03
-	 rfnwjbBht1vdJL2nYXdcJj/gSrfy5PCNkwYjvthR6RF8Y1y31DUeAVy4xhx/mO/eQY
-	 jRYleYWKz++PjArgHMKffQTojav69bI+hkYUrv3g6UMeOZ9kagGRtZDdM7tqk8AbbZ
-	 036WeX8Ic3Y1qqSpaLEpq/6xuZ1TEBtWjf3D3CYEDE/mHePD12Yynk3dLYpGVN75S9
-	 c+OljczaNLADQ==
-Date: Thu, 5 Feb 2026 20:46:45 -0800
+	b=f1m6wVNcftdteUSXfxvrd7BPsvqnw28dovBjsiVLzm5bCffAcmwIzhAQtriipJX+Q
+	 vjwomq1DxaCIX2GVA40tGqAfqwQZMRuLEzUzxVfT90oGN0tVCO/PaDSJ7jDloWx5vL
+	 TDrh8ysZI+nQwvYHJT3qo9grKBfo1xBNIf3IYXSbyEohIgliz8c956AAvGfwHAAh8X
+	 wwQL6c8hJNC4J8mybWZJcRvfqeaIbEpimNQOcADDpZNu/vK5bHlTGMyOdKLjs2bZZP
+	 UCFxX05rBbNtO+7hsHpwwUb0LYzNKCFdBmBOXHByGlAqvFSnWwwdUfeHtuk72H/4A3
+	 bIGvkm4UssZEQ==
+Date: Thu, 5 Feb 2026 20:53:32 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Chris Mason <clm@meta.com>
-Cc: cem@kernel.org, r772577952@gmail.com, stable@vger.kernel.org,
-	hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: only call xf{array,blob}_destroy if we have a
- valid pointer
-Message-ID: <20260206044645.GT7712@frogsfrogsfrogs>
-References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
- <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
- <20260205194211.2307232-1-clm@meta.com>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v6.1 11/11] xfs: add media verification ioctl
+Message-ID: <20260206045332.GU7712@frogsfrogsfrogs>
+References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs>
+ <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs>
+ <20260120041226.GJ15551@frogsfrogsfrogs>
+ <20260206030527.2506821-1-clm@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,16 +45,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260205194211.2307232-1-clm@meta.com>
+In-Reply-To: <20260206030527.2506821-1-clm@meta.com>
 
-On Thu, Feb 05, 2026 at 11:40:27AM -0800, Chris Mason wrote:
+On Thu, Feb 05, 2026 at 07:01:32PM -0800, Chris Mason wrote:
 > "Darrick J. Wong" <djwong@kernel.org> wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Only call the xfarray and xfblob destructor if we have a valid pointer,
-> > and be sure to null out that pointer afterwards.  Note that this patch
-> > fixes a large number of commits, most of which were merged between 6.9
-> > and 6.10.
+> > Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+> > verify the media of the devices backing an xfs filesystem, and have any
+> > resulting media errors reported to fsnotify and xfs_healer.
 > 
 > Hi everyone,
 > 
@@ -69,78 +68,99 @@ On Thu, Feb 05, 2026 at 11:40:27AM -0800, Chris Mason wrote:
 > has gone wildly wrong.  I kept the header to make it obvious exactly which
 > commit I'd run through.
 > 
-> I was really going for the fuse patches, but this ended up in my git
-> rev-list output, and it looks valid to me:
+> (This is another XFS commit that ended up in my rev-list range, low confidence
+> in the actual review, but I'm curious if AI got this one right)
 > 
-> commit 1e4e64674c788423e24610612e4981eb1dc9b28b
+> commit 2e5c40a5b6ca722202bc0e99830b6ecf8755d19c
 > Author: Darrick J. Wong <djwong@kernel.org>
 > 
-> xfs: only call xf{array,blob}_destroy if we have a valid pointer
-> 
-> This patch adds null pointer checks before calling xfarray_destroy and
-> xfblob_destroy functions across multiple XFS scrub/repair teardown
-> functions, and nulls out the pointers afterwards to prevent dangling
-> pointer issues.
-> 
-> Cc: r772577952@gmail.com
-> Cc: <stable@vger.kernel.org> # v6.12
-> Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
-> 
-> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> > index a2f6a7f71d839..6e3fef36d6614 100644
-> > --- a/fs/xfs/scrub/agheader_repair.c
-> > +++ b/fs/xfs/scrub/agheader_repair.c
+> xfs: add media verification ioctl
 > 
 > [ ... ]
 > 
-> > diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-> > index 7a21b688a4715..d5a55eabf6801 100644
-> > --- a/fs/xfs/scrub/dir_repair.c
-> > +++ b/fs/xfs/scrub/dir_repair.c
-> > @@ -172,8 +172,12 @@ xrep_dir_teardown(
-> >  	struct xrep_dir		*rd = sc->buf;
-> >
-> >  	xrep_findparent_scan_teardown(&rd->pscan);
-> > -	xfblob_destroy(rd->dir_names);
-> > -	xfarray_destroy(rd->dir_entries);
-> > +	if (rd->dir_names)
-> > +		xfblob_destroy(rd->dir_names);
-> > +	rd->dir_names = NULL;
-> > +	if (rd->dir_entries)
-> > +		xfarray_destroy(rd->dir_entries);
-> > +	rd->dir_names = NULL;
->                  ^^^^^^^^^^
+> > diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_verify_media.c
+> > @@ -0,0 +1,445 @@
 > 
-> In xrep_dir_teardown, after destroying rd->dir_entries, the code sets
-> rd->dir_names = NULL instead of rd->dir_entries = NULL. This leaves
-> dir_entries as a dangling pointer after the xfarray is freed.
-> 
-> The commit message states the patch should "be sure to null out that
-> pointer afterwards", and the pattern in xrep_agi_buf_cleanup correctly
-> nulls both iunlink_prev and iunlink_next pointers. This change should
-> null both dir_names (line 177) and dir_entries (line 180), but line 180
-> incorrectly nulls dir_names again.
-> 
-> Shouldn't line 180 be rd->dir_entries = NULL?
-
-Yep.  Will fix this.
-
 > [ ... ]
 > 
-> > Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+> > +/* Walk reverse mappings to look for all file data loss */
+> > +static int
+> > +xfs_verify_report_losses(
+> > +	struct xfs_mount	*mp,
+> > +	enum xfs_group_type	type,
+> > +	xfs_daddr_t		daddr,
+> > +	u64			bblen)
+> > +{
+> > +	struct xfs_group	*xg = NULL;
+> > +	struct xfs_trans	*tp;
+> > +	xfs_fsblock_t		start_bno, end_bno;
+> > +	uint32_t		start_gno, end_gno;
+> > +	int			error;
+> > +
+> > +	if (type == XG_TYPE_RTG) {
+> > +		start_bno = xfs_daddr_to_rtb(mp, daddr);
+> > +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
+> > +	} else {
+> > +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
+> > +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
+> > +	}
+> > +
+> > +	tp = xfs_trans_alloc_empty(mp);
+> > +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
+> > +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
+> > +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
+> > +		struct xfs_buf		*agf_bp = NULL;
+> > +		struct xfs_rtgroup	*rtg = NULL;
+> > +		struct xfs_btree_cur	*cur;
+> > +		struct xfs_rmap_irec	ri_low = { };
+> > +		struct xfs_rmap_irec	ri_high;
+> > +		struct xfs_group_data_lost lost;
+> > +
+> > +		if (type == XG_TYPE_AG) {
+> > +			struct xfs_perag	*pag = to_perag(xg);
+> > +
+> > +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+> > +			if (error) {
+> > +				xfs_perag_put(pag);
+> > +				break;
+> > +			}
+> > +
+> > +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
+> > +		} else {
+> > +			rtg = to_rtg(xg);
+> > +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+> > +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
+> > +		}
 > 
-> The existing Fixes: tag points to commit ab97f4b1c03075, but this is not
-> the first commit that introduced the bug. The bug was first introduced by
-> commit f1184081ac97 ("xfs: teach scrub to check file nlinks") on
-> 2024-02-22, which unconditionally called xfarray_destroy without checking
-> for NULL pointers. The commit ab97f4b1c03075 (2024-04-15) is one of
-> several later commits that perpetuated the same bug pattern.
+> Does this code have a reference counting mismatch in the error paths?
 > 
-> Should the Fixes: tag reference f1184081ac97 instead?
+> The xfs_group returned by xfs_group_next_range() is acquired via
+> xfs_group_grab() which increments xg_active_ref.
+> 
+> In the error path at line 120, the code uses xfs_perag_put() to release
+> the reference:
+> 
+> 	error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+> 	if (error) {
+> 		xfs_perag_put(pag);
+> 		break;
+> 	}
+> 
+> And later in the loop, line 144 uses xfs_group_put().
+> 
+> Both xfs_perag_put() and xfs_group_put() decrement xg_ref, not
+> xg_active_ref. Looking at the reference counting implementation:
+> 
+> xfs_group_grab() calls atomic_inc_not_zero(&xg->xg_active_ref)
+> xfs_group_rele() calls atomic_dec(&xg->xg_active_ref)
+> xfs_group_put() calls atomic_dec(&xg->xg_ref)
+> 
+> Should these error paths use xfs_group_rele() instead to match the
+> xfs_group_grab() in xfs_group_next_range()?
 
-Strictly speaking there should have been separate patches for each of
-the files fixed in this patch, but I went with the more recent commit
-which was introduced in 6.12 rather than the oldest commit from 6.9
-because only 6.12 is receiving fixes anyway.
+Yep.  Wouldn't it be nice if our type system could keep those things
+straight... :/
 
 --D
