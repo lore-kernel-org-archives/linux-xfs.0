@@ -1,89 +1,117 @@
-Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF8C3101DC
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 18:55:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D59F42F7440;
+	Fri,  6 Feb 2026 19:31:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770404109; cv=none; b=I8DR8uvtLOG9tp7mVOXVexSnwzs4Mgd7UH4R76JHRNFtLobWnm7bNTE9jcAj4zYRWAC2Ty4lVUol7LHoBZPCegoGXI0piPRLHitjbwJmO4jPzCh/ZEpEnH4+kNlYj1xoaSMDBTaRdDwpnxhIi31fJnMQlI8Z3Y/AAvpxi6UtZ2s=
+	t=1770406318; cv=none; b=OyMitjvO2kQ8DJYG4ARW2vsdOOgNzjJTFC/Ii6IOu1oj7462kJsqNPyMFP0SillOP2u35PcUI2NKKRLdu/d6Ondxx7pmUPOfpvZOAbJjpVxseLvIxI0g05HrHQVfGUjOrsvBO48qvIyG84w7niAnO0eao103TzsMOoAlJmocKLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770404109; c=relaxed/simple;
-	bh=hKCxXArb5MmLDQXsH2llw87ui4iuwN50i4e3U/xLpO8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B5DV4cs5em+AaYrbk0AKRCqFW3GJgt5kPD+0bpTEDUL5Xl5vzpgeiuobsjzbLe3uMdUHgKv2jHnbpVDBmv126K/0ReL1MkLMfbySMU6NtmouHuWcsUWH7I/CWnbEizkTaEf4yI/Iiy+DYhgMmYMAwbcuom/aTm5xOVjBk3UPtMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Csw0BfHw; arc=none smtp.client-ip=95.215.58.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1770406318; c=relaxed/simple;
+	bh=sFmOLogLTpCWkUOE9qlbNa3u0BVXHcuyge59i+fnUfg=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=FHhuCkNtDe0Q5kJWYxlSCmlwfTZePwYnXZV/F4JBUxIK/P+B6yuwoVTO+0ev/RVHhJi4rvDPxlgkeB6XAjZSL8Pyz/nZGEEwFhxBMj0YjR2knZsz4UvT75QpdsAGXtyyrmrl5donob6z0NqXl1oPig79CkZl91zRIf5AOjC/i1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=P0//Ycw7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Csw0BfHw"
-Message-ID: <37e584d1-1256-46ad-9ddf-0c4b8186db08@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770404097;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VZnCvjkBOiI3vs/EIfb+uZh3BeeEsDL1JmDGkWIqg1o=;
-	b=Csw0BfHwNtQYzpRzS2SLNyiBhnOcCmi+9MqjruxtOErCUmSpv+5nI8Wqvjfmxo0p73K8Th
-	WlQb0hu7T8LQsUcEB6rqVlCBlu3DP+Ch9VYGx3iYsCgV8xbKVE5KufCLNOFGmnKz6Th8pn
-	WchHdPO4aCKbv7JyMB1U5jG1ltqdVNA=
-Date: Fri, 6 Feb 2026 19:54:51 +0100
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="P0//Ycw7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E60FC116C6;
+	Fri,  6 Feb 2026 19:31:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1770406317;
+	bh=sFmOLogLTpCWkUOE9qlbNa3u0BVXHcuyge59i+fnUfg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=P0//Ycw7MamL01hmVUxrX954cfCW9uQM9dRODdcU5KIQuuE0qEyY1JS9AxdM8F96v
+	 5DofCLn88Bu4sHg6rPYalTvwkPcSbj6PjOltDumckh7j2RRU87blAz/W8ZmpRFjy+T
+	 5AbBbYyJ/4/G1l/2aQ5CJCldkjuxifDVAKZKSGfM=
+Date: Fri, 6 Feb 2026 11:31:53 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Pedro Falcato <pfalcato@suse.de>
+Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Jarkko Sakkinen
+ <jarkko@kernel.org>, Dave Hansen <dave.hansen@linux.intel.com>, Thomas
+ Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+ <bp@alien8.de>, x86@kernel.org, "H . Peter Anvin" <hpa@zytor.com>, Arnd
+ Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Dan Williams <dan.j.williams@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, Maarten
+ Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
+ <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie
+ <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Jani Nikula
+ <jani.nikula@linux.intel.com>, Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Tvrtko Ursulin <tursulin@ursulin.net>, Christian Koenig
+ <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>, Matthew Auld
+ <matthew.auld@intel.com>, Matthew Brost <matthew.brost@intel.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner
+ <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Benjamin LaHaise
+ <bcrl@kvack.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+ Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
+ Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>,
+ Chunhai Guo <guochunhai@vivo.com>, Theodore Ts'o <tytso@mit.edu>, Andreas
+ Dilger <adilger.kernel@dilger.ca>, Muchun Song <muchun.song@linux.dev>,
+ Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>,
+ Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mike
+ Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>,
+ Tony Luck <tony.luck@intel.com>, Reinette Chatre
+ <reinette.chatre@intel.com>, Dave Martin <Dave.Martin@arm.com>, James Morse
+ <james.morse@arm.com>, Babu Moger <babu.moger@amd.com>, Carlos Maiolino
+ <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota
+ <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, Matthew Wilcox
+ <willy@infradead.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+ Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@kernel.org>, Suren
+ Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Hugh
+ Dickins <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, Zi
+ Yan <ziy@nvidia.com>, Nico Pache <npache@redhat.com>, Ryan Roberts
+ <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
+ <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Jann Horn
+ <jannh@google.com>, David Howells <dhowells@redhat.com>, Paul Moore
+ <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E . Hallyn"
+ <serge@hallyn.com>, Yury Norov <yury.norov@gmail.com>, Rasmus Villemoes
+ <linux@rasmusvillemoes.dk>, linux-sgx@vger.kernel.org,
+ linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ intel-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+ linux-aio@kvack.org, linux-erofs@lists.ozlabs.org,
+ linux-ext4@vger.kernel.org, linux-mm@kvack.org, ntfs3@lists.linux.dev,
+ devel@lists.orangefs.org, linux-xfs@vger.kernel.org,
+ keyrings@vger.kernel.org, linux-security-module@vger.kernel.org, Jason
+ Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v2 09/13] mm: update all remaining mmap_prepare users to
+ use vma_flags_t
+Message-Id: <20260206113153.c443545459474cdef6dfd7ea@linux-foundation.org>
+In-Reply-To: <hmc2or77xnhrdlncfzjsljljwljnp6zztqsvmgxspfilmzkyty@czxpjpdm66ov>
+References: <cover.1769097829.git.lorenzo.stoakes@oracle.com>
+	<fb1f55323799f09fe6a36865b31550c9ec67c225.1769097829.git.lorenzo.stoakes@oracle.com>
+	<hmc2or77xnhrdlncfzjsljljwljnp6zztqsvmgxspfilmzkyty@czxpjpdm66ov>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Subject: Re: [PATCH 02/11] xfs: start creating infrastructure for health
- monitoring
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, p.raghav@samsung.com
-References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs>
- <176852588582.2137143.1283636639551788931.stgit@frogsfrogsfrogs>
- <tq3nyswm72gackesz6v476qqvin5eaa67f4hf6lg52exzv7k7p@tczjh5n777tc>
- <20260206174742.GI7693@frogsfrogsfrogs>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <20260206174742.GI7693@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
 
+On Fri, 6 Feb 2026 17:46:36 +0000 Pedro Falcato <pfalcato@suse.de> wrote:
 
-
-On 2/6/26 18:47, Darrick J. Wong wrote:
-> On Fri, Feb 06, 2026 at 02:07:56PM +0100, Pankaj Raghav (Samsung) wrote:
->>> +static DEFINE_SPINLOCK(xfs_healthmon_lock);
->>> +
->>> +/* Grab a reference to the healthmon object for a given mount, if any. */
->>> +static struct xfs_healthmon *
->>> +xfs_healthmon_get(
->>> +	struct xfs_mount		*mp)
->>> +{
->>> +	struct xfs_healthmon		*hm;
->>> +
->>> +	rcu_read_lock();
->>> +	hm = mp->m_healthmon;
->>
->> Nit: Should we do a READ_ONCE(mp->m_healthmon) here to avoid any
->> compiler tricks that can result in an undefined behaviour? I am not sure
->> if I am being paranoid here.
+> > -#define VM_REMAP_FLAGS (VM_IO | VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP)
+> > +#define VMA_REMAP_FLAGS mk_vma_flags(VMA_IO_BIT, VMA_PFNMAP_BIT,	\
+> > +				     VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT)
 > 
-> Compiler tricks?  We've taken the rcu read lock, which adds an
-> optimization barrier so that the mp->m_healthmon access can't be
-> reordered before the rcu_read_lock.  I'm not sure if that answers your
-> question.
+> as a sidenote, these flags are no longer constant expressions and thus
 > 
+> static vma_flags_t flags = VMA_REMAP_FLAGS;
+> 
+> can't compile.
 
-This answers. So this is my understanding: RCU guarantees that we get a valid
-object (actual data of m_healthmon) but does not guarantee the compiler will not reread
-the pointer between checking if hm is !NULL and accessing the pointer as we are doing it
-lockless.
+Yup, that isn't nice.  An all-caps thing with no () is a compile-time
+constant.
 
-So just a barrier() call in rcu_read_lock is enough to make sure this doesn't happen and probably
-adding a READ_ONCE() is not needed?
+It looks like we can make this a nice inlined (commented!) lower-cased
+C function as a little low-priority cleanup.
 
---
-Pankaj
+> Rest LGTM though.
+> 
+> Acked-by: Pedro Falcato <pfalcato@suse.de>
+
+Great, thanks.
