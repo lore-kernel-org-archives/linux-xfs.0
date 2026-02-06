@@ -1,197 +1,187 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA8C32FA3F
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Feb 2026 21:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EADA244692;
+	Fri,  6 Feb 2026 03:05:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770326282; cv=none; b=DaUOYu6HNsoOFMomkxzWNIb/99gzlzs3S/VkkgPmZpP2/eBKSg5veko8E6qJjZfGKtBUNJYPLIs06Jcu+zvd5plxK6NHoLSztzcnEBPws9bCWCuaEGnmwCfmojaKseYvu9Q7C27V9BCR04xggWdsz5VXppsqKQS6zgqg8rFyITA=
+	t=1770347154; cv=none; b=n2vuZTvNQC5PGIekKjoA5OuFPd/A+jMXZbb2599EhhdFFNSaYkvO8dbELQskKV40rTqYtb3Uo3uQkHv1YwlSAN8dFQEdjTy7ergp1etK16FWd6H073zwXSmSaEe+8LhqZZ9CJO372KM8ZRyrLO65qznvFoCvM6caNfdIV3+hZ58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770326282; c=relaxed/simple;
-	bh=azW+Er9DVWyfLE4RxzMCv6BNZ8bp0rt83hTE3gEkO+g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gNDbhWXh7RNZKbkgdF+7vCnws/GYTc+2d325r8NvIBEeflXRvUlbRkodqz52rqjT0r72QrxYbipALUzKsJaR/Q3QSYhCrzyGjr8Fvm3ZfAG02WXpCrURZjaTUUR2B12Yr7s8nvqlEL0im/TcdVoOg1kCFHheY/yY1SxCg0Kz4g0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=y+p9/Hal; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1770347154; c=relaxed/simple;
+	bh=CY9Kv9GJarmK3bvhoFDjW6CPCrn0G5WIA3KR1uW3xAE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=th3Ye922DIcgzMwH8Eqmnt5jwaueAHe0nyv1KAtjUv2EyUISWwmywnAltQ0ATggNhXZC++cdJHFp6vZWA4XXlplsM5cV5U1GAIIiQwjooFZ33ABu0vb+GOvjswV33bDHLp8k2md0INHPzdoU1vzU2W21CglKfx2DEuu89UEVCFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=LB8cB+2G; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="y+p9/Hal"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-34be2be4b7cso750142a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 13:18:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1770326281; x=1770931081; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=na2GFQeCH4nfrXfEZgtguqNxC9+KQ+7DBpsjE1+E+0c=;
-        b=y+p9/Halh4nvHhyYanofkzxZhPFibYSqab7SnjQPn/P2GOJJK2DNrE9HXXEE2SLs45
-         d+Y/A3jRyQ0JiwxskSKQ/RmnnDfEgmTxcUlz/wHdFq+7zTFH47qMRH9A1LPgNJsI63LZ
-         f0Cuezm0NvOw9/izhf3H2kIxoQPvFgo5wwyJkeqXoRxlZOUztjj11uHYa9WPDGyMagNH
-         pffbTIiHiXxhystuSpOqVAmHQMTy8YetdU6n9GkLkz70CSHZG/NMdLriL3D7TKNENltL
-         hqOe2fAflxyeMFjYolee90TBKHiQ+OD0Gz2h+B3+hM9DA8gE2BAxUJfLtMO4iizNUCGx
-         4NzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770326281; x=1770931081;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=na2GFQeCH4nfrXfEZgtguqNxC9+KQ+7DBpsjE1+E+0c=;
-        b=tyuE/A6ub5fYqTcgMrtWl2GA87NpNkFDshV9Ivxu5VOVcKPPX8ESeM8hUcot+2yfC1
-         c75YxdFXmnucpTf8vdtgihCHxI0xJFg4PdmUGvN+GCHqZxLqt8/HiYiWUlnMGHaly85U
-         /P4EOQyzES18K4uWuOF5otgR2X+VlxK4XzzqN6mxjTHP9/licw5cGOaKMLhSP5QkRL/7
-         QWSLJvLYfJZ3kayf2mQhKhdpfE2HWJsd2brMtsDfdetwsMdgWVCsQIthmEAMdmisi1Mo
-         hszrcuqF0vjSpuAIzFcbExWjJgNfny6TjJa7c20+O4E4vA6o/qFvU9s2TZuYMG0rWepF
-         Sa4A==
-X-Forwarded-Encrypted: i=1; AJvYcCUesVbVc4mebttEr/hKsFD7c6dzvjLYYmuMN/UuIaa6a+0tzp2WPfAp8ezFed7Uyz4hsnC4nIKc5To=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxtQ4TR+QDwXJ/3Np4ymLDkG0tFQNhAv4TTHn8a1/4zLRch5M+N
-	CqMQDIDENAMPJ3qFW8GICTnLh+D1PTeibVtStoKrdLq60PEJtu4JRcH2ftpKB1wiJ6WdZ4FqDeg
-	0L4x3
-X-Gm-Gg: AZuq6aJRkdtQXYEJRBLHGkgHZAzSEJsPXkRoTTBivWcBBu7Nbmep9Ouf9eDHHNd6G4r
-	MAmj3x4ZLhv1YflaviON8UsS85NDjRRk7TBOQJaPNa15yZFgQ0EsMmCktHtsWLl/zN8inH2SxEe
-	vURk5vPPLwbFsqLFyGZa6eFuwZklRRgag43DzeaNh9YrfBuhr20Hd9NenbFO3Uf2gYn0mmE6fPB
-	kKbemG02bOBgfF766mHp+uJr3PMOW3xVkLPJ6Uj+CsmzCu+ztpwPd0ibkgguWeU3wdRohptLg5S
-	JUJHG1/jkqi7L5NT+f5ZFq0ZSH4h1O5JFepq8NdYaGmlJKDIdrblaK6rX1Q0zBzyHlsy0HENX+G
-	xa89ptWn+AKYNUp4RcXwYd4SKAJBvLaX86644eMWVF9MtB1diBi4X7YxfxcDtt5uj/g8OyFdBMO
-	LNN0pdA7/2tTxhg3T3oLVDByI0bKoQ0XhWEAelw9QUInnbTj2qm6rE2UTIX743yYQ=
-X-Received: by 2002:a17:90b:2d86:b0:341:134:a962 with SMTP id 98e67ed59e1d1-354b3e4c3f3mr230761a91.28.1770326281112;
-        Thu, 05 Feb 2026 13:18:01 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-164-75.pa.nsw.optusnet.com.au. [49.180.164.75])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c6dcb64a103sm318515a12.30.2026.02.05.13.18.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Feb 2026 13:18:00 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.99.1)
-	(envelope-from <david@fromorbit.com>)
-	id 1vo6jc-0000000DPLm-2pNm;
-	Fri, 06 Feb 2026 08:17:56 +1100
-Date: Fri, 6 Feb 2026 08:17:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jinliang Zheng <alexjlzheng@gmail.com>
-Cc: alexjlzheng@tencent.com, cem@kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: take a breath in xfsaild()
-Message-ID: <aYUJBChyWi3WdOIR@dread.disaster.area>
-References: <aYSCs6kyIZJS5MW4@dread.disaster.area>
- <20260205125000.2324010-1-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="LB8cB+2G"
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6160VsIJ4121925;
+	Thu, 5 Feb 2026 19:05:49 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=YzpQxNSfABSpsRLuyFgi7FBTpgot1zzgWPUDF/SFIzE=; b=LB8cB+2GqiQj
+	cK11HiRAZKwyylOBsvBH4KOo/q/HbwPJL02V+wRHR9YGf0/3mGrcLw9R2glZl/Ln
+	PzpnBdxKPVqmYv2sPDycCuuihLQJXOEb1HTNvdANj5gKWmA1fk/Sawv8QWMenZUx
+	+sb4u/GJ8BW5tKLmjDR1x5e5po1XomliKaeaCVIiW4uhbtdfEgn0sbqeFBBp+J+g
+	mDxArVD7eBfrLGPTLuPy2kEjjBdHBKIGlR1E7cUnXRRaw8PXTeLLPjVmk/4fT8Oq
+	Op1WPKhNHan9Ez/bX+M5usq3zEdUy9wn5sSPGd7P8ZAxQDspAv0ALZj36BdDmoZT
+	sr1ZP/xgww==
+Received: from mail.thefacebook.com ([163.114.134.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c55ud15yf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 05 Feb 2026 19:05:48 -0800 (PST)
+Received: from devbig003.atn7.facebook.com (2620:10d:c085:208::7cb7) by
+ mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.35; Fri, 6 Feb 2026 03:05:47 +0000
+From: Chris Mason <clm@meta.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <hch@lst.de>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v6.1 11/11] xfs: add media verification ioctl
+Date: Thu, 5 Feb 2026 19:01:32 -0800
+Message-ID: <20260206030527.2506821-1-clm@meta.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260120041226.GJ15551@frogsfrogsfrogs>
+References: <176852588473.2137143.1604994842772101197.stgit@frogsfrogsfrogs> <176852588776.2137143.7103003682733018282.stgit@frogsfrogsfrogs> <20260120041226.GJ15551@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260205125000.2324010-1-alexjlzheng@tencent.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: dJ4r7jhJ9AcUmxcP1aueW9i2zL2X-9lO
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA2MDAxOSBTYWx0ZWRfX0SGgwv/gzY3N
+ 3zBmkb3BO7lBWBD3ySfc1RbMiiNYCa1xdb2uUu94apcPl0q209iTuIOQ4QfynFbJFdFSYvEsZti
+ R25L6PnA8u9VgPZSLZTAIBf3vHx9sNH5kORE5sG2hHR8k14tD+C/6iOSD0Jz0Ft75bBof7d5m4V
+ qh1N8LlR03zjcw3hBPZC2f8lGOFJV7dgHbXykWT0Om6iVgQ3Jrwhgsgxpyv1pn7oiYovzADag4t
+ J6RtL3FY+v5J7RY/2h8g/1AICyUjeiBKhxKuSrQVsCRK9YYyjq9UXqEilKgPRmvISroCsTYNqTt
+ lvVVndIwySGxj2fI2OoEhbKQYaKV7l9HfbURvn1zzPYEP71h/1jAK8B0uSapmgAicxp5UQ1XSmz
+ PGLeFZVVw/ZYa1Pg1Ws30xbTikzAAKxSwLzgyR478be4C0OkvieuqxQvcyaNkI03uaHAhPx6luy
+ H9s/A9DLjXjWz2/I0PA==
+X-Authority-Analysis: v=2.4 cv=T6CBjvKQ c=1 sm=1 tr=0 ts=69855a8c cx=c_pps
+ a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
+ a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
+ a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8 a=ttdpyjjdJhq82aQT230A:9
+X-Proofpoint-GUID: dJ4r7jhJ9AcUmxcP1aueW9i2zL2X-9lO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-06_01,2026-02-05_03,2025-10-01_01
 
-On Thu, Feb 05, 2026 at 08:49:59PM +0800, Jinliang Zheng wrote:
-> On Thu, 5 Feb 2026 22:44:51 +1100, david@fromorbit.com wrote:
-> > On Thu, Feb 05, 2026 at 04:26:21PM +0800, alexjlzheng@gmail.com wrote:
-> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
-> > > 
-> > > We noticed a softlockup like:
-> > > 
-> > >   crash> bt
-> > >   PID: 5153     TASK: ffff8960a7ca0000  CPU: 115  COMMAND: "xfsaild/dm-4"
-> > >    #0 [ffffc9001b1d4d58] machine_kexec at ffffffff9b086081
-> > >    #1 [ffffc9001b1d4db8] __crash_kexec at ffffffff9b20817a
-> > >    #2 [ffffc9001b1d4e78] panic at ffffffff9b107d8f
-> > >    #3 [ffffc9001b1d4ef8] watchdog_timer_fn at ffffffff9b243511
-> > >    #4 [ffffc9001b1d4f28] __hrtimer_run_queues at ffffffff9b1e62ff
-> > >    #5 [ffffc9001b1d4f80] hrtimer_interrupt at ffffffff9b1e73d4
-> > >    #6 [ffffc9001b1d4fd8] __sysvec_apic_timer_interrupt at ffffffff9b07bb29
-> > >    #7 [ffffc9001b1d4ff0] sysvec_apic_timer_interrupt at ffffffff9bd689f9
-> > >   --- <IRQ stack> ---
-> > >    #8 [ffffc90031cd3a18] asm_sysvec_apic_timer_interrupt at ffffffff9be00e86
-> > >       [exception RIP: part_in_flight+47]
-> > >       RIP: ffffffff9b67960f  RSP: ffffc90031cd3ac8  RFLAGS: 00000282
-> > >       RAX: 00000000000000a9  RBX: 00000000000c4645  RCX: 00000000000000f5
-> > >       RDX: ffffe89fffa36fe0  RSI: 0000000000000180  RDI: ffffffff9d1ae260
-> > >       RBP: ffff898083d30000   R8: 00000000000000a8   R9: 0000000000000000
-> > >       R10: ffff89808277d800  R11: 0000000000001000  R12: 0000000101a7d5be
-> > >       R13: 0000000000000000  R14: 0000000000001001  R15: 0000000000001001
-> > >       ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> > >    #9 [ffffc90031cd3ad8] update_io_ticks at ffffffff9b6602e4
-> > >   #10 [ffffc90031cd3b00] bdev_start_io_acct at ffffffff9b66031b
-> > >   #11 [ffffc90031cd3b20] dm_io_acct at ffffffffc18d7f98 [dm_mod]
-> > >   #12 [ffffc90031cd3b50] dm_submit_bio_remap at ffffffffc18d8195 [dm_mod]
-> > >   #13 [ffffc90031cd3b70] dm_split_and_process_bio at ffffffffc18d9799 [dm_mod]
-> > >   #14 [ffffc90031cd3be0] dm_submit_bio at ffffffffc18d9b07 [dm_mod]
-> > >   #15 [ffffc90031cd3c20] __submit_bio at ffffffff9b65f61c
-> > >   #16 [ffffc90031cd3c38] __submit_bio_noacct at ffffffff9b65f73e
-> > >   #17 [ffffc90031cd3c80] xfs_buf_ioapply_map at ffffffffc23df4ea [xfs]
-> > 
-> > This isn't from a TOT kernel. xfs_buf_ioapply_map() went away a year
-> > ago. What kernel is this occurring on?
+"Darrick J. Wong" <djwong@kernel.org> wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Thanks for your reply. :)
-> 
-> It's based on v6.6.
+> Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+> verify the media of the devices backing an xfs filesystem, and have any
+> resulting media errors reported to fsnotify and xfs_healer.
 
-v6.6 was released in late 2023. I think we largely fixed this
-problem with this series that was merged into 6.11 in mid 2024:
+Hi everyone,
 
-https://lore.kernel.org/linux-xfs/20220809230353.3353059-1-david@fromorbit.com/
+I'm trying out my AI review prompts on a few more trees, and I ran it
+on the fuse-iomap-cache branch:
 
-In more detail...
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
 
-> > Can you please explain how the softlockup timer is being hit here so we
-> > can try to understand the root cause of the problem? Workload,
-> 
-> Again, a testsuite combining stress-ng, LTP, and fio, executed concurrently.
-> 
-> > hardware, filesystem config, storage stack, etc all matter here,
-> 
-> 
-> ================================= CPU ======================================
-> Architecture:                            x86_64
-> CPU op-mode(s):                          32-bit, 64-bit
-> Address sizes:                           45 bits physical, 48 bits virtual
-> Byte Order:                              Little Endian
-> CPU(s):                                  384
+This was the latest email lore could find, apologies if I grabbed the wrong one.
 
-... 384 CPUs banging on a single filesystem....
+Hopefully the review below is useful, please let me know if there are places it
+has gone wildly wrong.  I kept the header to make it obvious exactly which
+commit I'd run through.
 
-> ================================= XFS ======================================
-> [root@localhost ~]# xfs_info /dev/ts/home 
-> meta-data=/dev/mapper/ts-home    isize=512    agcount=4, agsize=45875200 blks
+(This is another XFS commit that ended up in my rev-list range, low confidence
+in the actual review, but I'm curious if AI got this one right)
 
-... that has very limited parallelism, and ...
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=1
->          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-> data     =                       bsize=4096   blocks=183500800, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=89600, version=2
+commit 2e5c40a5b6ca722202bc0e99830b6ecf8755d19c
+Author: Darrick J. Wong <djwong@kernel.org>
 
-... a relatively small log (350MB) compared to the size of the
-system that is hammering on it.
+xfs: add media verification ioctl
 
-i.e. This is exactly the sort of system architecture that will push
-heaps of concurrency into the filesystem's transaction reservation
-slow path and keep it there for long periods of time. Especially
-under sustained, highly concurrent, modification heavy stress
-workloads.
+[ ... ]
 
-Exposing any kernel spin lock to unbound user controlled
-concurrency will eventually result in a workload that causes
-catastrophic spin lock contention breakdown. Then everything that
-uses said lock will spend excessive amounts of time spinning and not
-making progress.
+> diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
+> --- /dev/null
+> +++ b/fs/xfs/xfs_verify_media.c
+> @@ -0,0 +1,445 @@
 
-This is one of the scalability problems the patchset I linked above
-addressed. Prior to that patchset, the transaction reservation slow
-path (the "journal full" path) exposed the AIL lock to unbound
-userspace concurrency via the "update the AIL push target"
-mechanism. Both journal IO completion and the xfsaild are heavy
-users of the AIL lock, but don't normally contend with each other
-because internal filesystem concurrency is tightly bounded. Once
-userspace starts banging on it, however....
+[ ... ]
 
-Silencing soft lockups with cond_resched() is almost never the right
-thing to do - they are generally indicative of some other problem
-occurring. We need to understand what that "some other problem" is
-before we do anything else...
+> +/* Walk reverse mappings to look for all file data loss */
+> +static int
+> +xfs_verify_report_losses(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type,
+> +	xfs_daddr_t		daddr,
+> +	u64			bblen)
+> +{
+> +	struct xfs_group	*xg = NULL;
+> +	struct xfs_trans	*tp;
+> +	xfs_fsblock_t		start_bno, end_bno;
+> +	uint32_t		start_gno, end_gno;
+> +	int			error;
+> +
+> +	if (type == XG_TYPE_RTG) {
+> +		start_bno = xfs_daddr_to_rtb(mp, daddr);
+> +		end_bno = xfs_daddr_to_rtb(mp, daddr + bblen - 1);
+> +	} else {
+> +		start_bno = XFS_DADDR_TO_FSB(mp, daddr);
+> +		end_bno = XFS_DADDR_TO_FSB(mp, daddr + bblen - 1);
+> +	}
+> +
+> +	tp = xfs_trans_alloc_empty(mp);
+> +	start_gno = xfs_fsb_to_gno(mp, start_bno, type);
+> +	end_gno = xfs_fsb_to_gno(mp, end_bno, type);
+> +	while ((xg = xfs_group_next_range(mp, xg, start_gno, end_gno, type))) {
+> +		struct xfs_buf		*agf_bp = NULL;
+> +		struct xfs_rtgroup	*rtg = NULL;
+> +		struct xfs_btree_cur	*cur;
+> +		struct xfs_rmap_irec	ri_low = { };
+> +		struct xfs_rmap_irec	ri_high;
+> +		struct xfs_group_data_lost lost;
+> +
+> +		if (type == XG_TYPE_AG) {
+> +			struct xfs_perag	*pag = to_perag(xg);
+> +
+> +			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+> +			if (error) {
+> +				xfs_perag_put(pag);
+> +				break;
+> +			}
+> +
+> +			cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, pag);
+> +		} else {
+> +			rtg = to_rtg(xg);
+> +			xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+> +			cur = xfs_rtrmapbt_init_cursor(tp, rtg);
+> +		}
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Does this code have a reference counting mismatch in the error paths?
+
+The xfs_group returned by xfs_group_next_range() is acquired via
+xfs_group_grab() which increments xg_active_ref.
+
+In the error path at line 120, the code uses xfs_perag_put() to release
+the reference:
+
+	error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+	if (error) {
+		xfs_perag_put(pag);
+		break;
+	}
+
+And later in the loop, line 144 uses xfs_group_put().
+
+Both xfs_perag_put() and xfs_group_put() decrement xg_ref, not
+xg_active_ref. Looking at the reference counting implementation:
+
+xfs_group_grab() calls atomic_inc_not_zero(&xg->xg_active_ref)
+xfs_group_rele() calls atomic_dec(&xg->xg_active_ref)
+xfs_group_put() calls atomic_dec(&xg->xg_ref)
+
+Should these error paths use xfs_group_rele() instead to match the
+xfs_group_grab() in xfs_group_next_range()?
+
