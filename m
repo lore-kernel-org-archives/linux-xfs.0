@@ -1,197 +1,146 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD87136351
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Feb 2026 03:07:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ECA03EBF19;
+	Fri,  6 Feb 2026 04:46:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770347242; cv=none; b=cdO5CULJDsKy7ZOawUew+3Iekr0vEcMolWh5z3PKounhFHqbsD/91BzXhck1wKrMGomb7kmNIV9EprqVqoKPZsiTrO99QwkHLjkqnMqZQf/GamxbuMululCImlxvRyuCOpgoepsoVr9+ROU71KyGUISG6jU3V+HGbE8Lk6eh40U=
+	t=1770353206; cv=none; b=VKtzm9yoS/ibqdNz1p4BmE3aqHa2HS+nLjcJ/m4FWX08VlvdzByEcLuCiyilSOaRqacnPBUX5UQbznLidgDqtJMCYEOVWyy8CUV1dMWXN69es4a4FysKM7Ynbw6Trk4z58E2xvF2d9SPTncezNqW/+hVt/R0u91//TzK0eDTd20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770347242; c=relaxed/simple;
-	bh=J/2AjULVPo7JxyW4cLKt3dWi5eq6Mmj+ADikJpFxrxs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aXYrRQmRbj5cyHm6bM2FpUI59Jd0wsnAH0PE3eP6UvUP2pvvGu/NYyKJjKhdeIFfI85euZNvtpmgAf1RNYRvY1rlq1bkNCVO5a/1ZKlP0FJn/L5vbAR1ufWznr5gnigIAgUQXV4orQelcFEXJ2YXxweDikiaG5Y1h2qqCCA0tNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B5yCB48O; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770353206; c=relaxed/simple;
+	bh=3wyrS6FuHzMi0+gcu8RfA1Uj4G7edrBpeSx7MqKTXc8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GFiqBiHq95pRONSqHfO9JnK5dJx55ZcgfTmO2WHahsCTadPTNDi4ZFrCQX/atonktMMMHANBRAEbxswRUWtgFknIjVtIIJPrATYJjX88bR04ZtKOvqtKZS8KljdJVxgJS5tyb62GO76tMh0l19a3zAO/+D8u3XFi96LlyV1on4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gb0hV1/2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B5yCB48O"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2a0d52768ccso10311485ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Feb 2026 19:07:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770347241; x=1770952041; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NeCdDvONNGPVeboC3q1Jqb3Mi6sRaFCJ/jUEyGj5MuI=;
-        b=B5yCB48OwyM6VD6nxkQTBHoZHBusC1RSn23Tp8f78UL8Izn3jHXLvl1BnBYw8XScUG
-         +ja0GE7Mx8KR+5VNd1eRC1itcIbqFABtM8TXstN10QGOGkKJQSXzjmabKRPRO+I0q3BR
-         SBE29ouXduIjClfBSWhCJ/pxw89VEyUynV9kl2geVmH/ApLwZgBuBIjus80As/qbQg1f
-         Yu838lQz/wlwgkaVyfh2zGLC2fNdwpjnCzGIwZMXXhSRLwWzhYH9y7gGsCGCcrNh+3jy
-         xgauueROn2Upg8kjgP/SAuJOovKO+Ds47AtOqZuO9p1x3Y/R1vaMS0m8kUx/aaBg2eRa
-         cLMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770347241; x=1770952041;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NeCdDvONNGPVeboC3q1Jqb3Mi6sRaFCJ/jUEyGj5MuI=;
-        b=bfG8L21Q9wh90OVLnCMFEOZdrACy7weZH/h/T4kYGQk6bCWZbQit6+IRKKnFfwC5a3
-         N+cfKQUtbFvCyvVwl4YeyUhWKYoEzWlGlNYFB5kgLo3seX4zPbVTdutprWyIIldS9+5A
-         lUj83Pz7BVzKqahqqfnFwXojdqllejTIUT6ShDCkVzT4g0W4Lj6x9LLbOFvlOdf2QSCo
-         ZQaZKKxVWoc1A8spUARlHYVSyLTrLw9lJyKqIRL4JUlEp/0phbhfgrMUXk/zFn2RDNOI
-         +vCw8AssnWy+DTzm/JSj2ay6j9OPvJNwn2Ed/HLyihuQz1eThzljOGZqGhWP51nQq7O3
-         fSoQ==
-X-Gm-Message-State: AOJu0YyNQEHxBh0ZeawnZHWrpIQHtjkPuf5qd6+jwPNRB5BLpVjZLIXP
-	dmppZ9iCz1T6WM2pOhSLwdobgFKEIH6EgVG0OdN4YMrgRJRFJ0/h69pU0oUc8qqQ
-X-Gm-Gg: AZuq6aK1tqJyls8OtTFwY37Y286PjlTvY4boTK8slk5xqwLZybgf0xzeF2S46hsfJv/
-	MSIJvI4uETzR8weupXn4ob+aA82Wt44mEBYCitiDDq/GpJTt/wTE8I7CW2hyGQLCU/ivOtNt1kL
-	Ao/B0SuE8tj/QVHiVvZnquHhwCEye5H04QSMwTrh4qoiRsPgQu76IJf81IjHgajrPBgtNi3xscS
-	LYm6TvlNM05UWRa2prr2H9vBYQwIiCUTnnrTH2ykD6ejbKFRka/vxDHDsuj75GZcDB8JIF7HF1t
-	vRjLh4EvBHraPuUZw0jP1EcjwhjFjK9IpoaEvNDfZysCabp7wfezsedgUaUOeUca40FoPzWh37F
-	gXQdqiAGO/DZpv/eXfWX7nbBS6t8HsrIIRtP53NPVPFiTq/jqL3QdStgbw7NSSKC21xiadZ2KDf
-	AZ1vP33f405dVhET0V54nZHmT3NyrHRvRvm+Jhz77D7VHXLdR4nMQB+vDLp+9E
-X-Received: by 2002:a17:903:2412:b0:2a7:90f2:2dea with SMTP id d9443c01a7336-2a9516f8bd7mr13167365ad.28.1770347241077;
-        Thu, 05 Feb 2026 19:07:21 -0800 (PST)
-Received: from zenbook ([159.196.5.243])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9522121besm8194905ad.85.2026.02.05.19.07.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Feb 2026 19:07:20 -0800 (PST)
-From: Wilfred Mallawa <wilfred.opensource@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Subject: [PATCH] xfs: add static size checks for structures in xfs_fs.h
-Date: Fri,  6 Feb 2026 13:05:58 +1000
-Message-ID: <20260206030557.1201204-2-wilfred.opensource@gmail.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gb0hV1/2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8686C116C6;
+	Fri,  6 Feb 2026 04:46:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770353205;
+	bh=3wyrS6FuHzMi0+gcu8RfA1Uj4G7edrBpeSx7MqKTXc8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Gb0hV1/2aS4cm+FFVdaFLDw82LwMIn15ByAImVqGV/EmXaq1YC99V5YDtygkhEgbE
+	 wXANfGHqz39YEnOYDCjXev6WmJ6Dn0RxkECibf5B/Sqlvqh5oW7ZlL0YK9rG3KSO03
+	 rfnwjbBht1vdJL2nYXdcJj/gSrfy5PCNkwYjvthR6RF8Y1y31DUeAVy4xhx/mO/eQY
+	 jRYleYWKz++PjArgHMKffQTojav69bI+hkYUrv3g6UMeOZ9kagGRtZDdM7tqk8AbbZ
+	 036WeX8Ic3Y1qqSpaLEpq/6xuZ1TEBtWjf3D3CYEDE/mHePD12Yynk3dLYpGVN75S9
+	 c+OljczaNLADQ==
+Date: Thu, 5 Feb 2026 20:46:45 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Chris Mason <clm@meta.com>
+Cc: cem@kernel.org, r772577952@gmail.com, stable@vger.kernel.org,
+	hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfs: only call xf{array,blob}_destroy if we have a
+ valid pointer
+Message-ID: <20260206044645.GT7712@frogsfrogsfrogs>
+References: <176897723519.207608.4983293162799232099.stgit@frogsfrogsfrogs>
+ <176897723586.207608.15038929489815852871.stgit@frogsfrogsfrogs>
+ <20260205194211.2307232-1-clm@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260205194211.2307232-1-clm@meta.com>
 
-From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+On Thu, Feb 05, 2026 at 11:40:27AM -0800, Chris Mason wrote:
+> "Darrick J. Wong" <djwong@kernel.org> wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Only call the xfarray and xfblob destructor if we have a valid pointer,
+> > and be sure to null out that pointer afterwards.  Note that this patch
+> > fixes a large number of commits, most of which were merged between 6.9
+> > and 6.10.
+> 
+> Hi everyone,
+> 
+> I'm trying out my AI review prompts on a few more trees, and I ran it
+> on the fuse-iomap-cache branch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap-cache
+> 
+> This was the latest email lore could find, apologies if I grabbed the wrong one.
+> 
+> Hopefully the review below is useful, please let me know if there are places it
+> has gone wildly wrong.  I kept the header to make it obvious exactly which
+> commit I'd run through.
+> 
+> I was really going for the fuse patches, but this ended up in my git
+> rev-list output, and it looks valid to me:
+> 
+> commit 1e4e64674c788423e24610612e4981eb1dc9b28b
+> Author: Darrick J. Wong <djwong@kernel.org>
+> 
+> xfs: only call xf{array,blob}_destroy if we have a valid pointer
+> 
+> This patch adds null pointer checks before calling xfarray_destroy and
+> xfblob_destroy functions across multiple XFS scrub/repair teardown
+> functions, and nulls out the pointers afterwards to prevent dangling
+> pointer issues.
+> 
+> Cc: r772577952@gmail.com
+> Cc: <stable@vger.kernel.org> # v6.12
+> Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+> 
+> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> > index a2f6a7f71d839..6e3fef36d6614 100644
+> > --- a/fs/xfs/scrub/agheader_repair.c
+> > +++ b/fs/xfs/scrub/agheader_repair.c
+> 
+> [ ... ]
+> 
+> > diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
+> > index 7a21b688a4715..d5a55eabf6801 100644
+> > --- a/fs/xfs/scrub/dir_repair.c
+> > +++ b/fs/xfs/scrub/dir_repair.c
+> > @@ -172,8 +172,12 @@ xrep_dir_teardown(
+> >  	struct xrep_dir		*rd = sc->buf;
+> >
+> >  	xrep_findparent_scan_teardown(&rd->pscan);
+> > -	xfblob_destroy(rd->dir_names);
+> > -	xfarray_destroy(rd->dir_entries);
+> > +	if (rd->dir_names)
+> > +		xfblob_destroy(rd->dir_names);
+> > +	rd->dir_names = NULL;
+> > +	if (rd->dir_entries)
+> > +		xfarray_destroy(rd->dir_entries);
+> > +	rd->dir_names = NULL;
+>                  ^^^^^^^^^^
+> 
+> In xrep_dir_teardown, after destroying rd->dir_entries, the code sets
+> rd->dir_names = NULL instead of rd->dir_entries = NULL. This leaves
+> dir_entries as a dangling pointer after the xfarray is freed.
+> 
+> The commit message states the patch should "be sure to null out that
+> pointer afterwards", and the pattern in xrep_agi_buf_cleanup correctly
+> nulls both iunlink_prev and iunlink_next pointers. This change should
+> null both dir_names (line 177) and dir_entries (line 180), but line 180
+> incorrectly nulls dir_names again.
+> 
+> Shouldn't line 180 be rd->dir_entries = NULL?
 
-This patch adds static size checks for the structures in
-libxfs/xfs_fs.h. The structures with architecture dependent size for
-fields are ommited from this patch (such as xfs_bstat which depends on
-__kernel_long_t).
+Yep.  Will fix this.
 
-Also remove some existing duplicate entries of XFS_CHECK_STRUCT_SIZE().
+> [ ... ]
+> 
+> > Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+> 
+> The existing Fixes: tag points to commit ab97f4b1c03075, but this is not
+> the first commit that introduced the bug. The bug was first introduced by
+> commit f1184081ac97 ("xfs: teach scrub to check file nlinks") on
+> 2024-02-22, which unconditionally called xfarray_destroy without checking
+> for NULL pointers. The commit ab97f4b1c03075 (2024-04-15) is one of
+> several later commits that perpetuated the same bug pattern.
+> 
+> Should the Fixes: tag reference f1184081ac97 instead?
 
-Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
----
- fs/xfs/libxfs/xfs_ondisk.h | 46 ++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 9 deletions(-)
+Strictly speaking there should have been separate patches for each of
+the files fixed in this patch, but I went with the more recent commit
+which was introduced in 6.12 rather than the oldest commit from 6.9
+because only 6.12 is receiving fixes anyway.
 
-diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
-index 2e9715cc1641..874c25cf9a4e 100644
---- a/fs/xfs/libxfs/xfs_ondisk.h
-+++ b/fs/xfs/libxfs/xfs_ondisk.h
-@@ -26,6 +26,9 @@
- static inline void __init
- xfs_check_ondisk_structs(void)
- {
-+	/* direct I/O */
-+	XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
-+
- 	/* file structures */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
-@@ -59,6 +62,8 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_bmdr_key_t,			8);
-+	XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
-+	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
- 
- 	/* dir/attr trees */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
-@@ -77,6 +82,12 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_hdr,		32);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_map,		4);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
-+	XFS_CHECK_STRUCT_SIZE(xfs_attrlist_cursor_t,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
-+
-+	/* allocation groups */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
- 
- 	/* realtime structures */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtsb,			56);
-@@ -87,6 +98,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrmap_root,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_rtrefcount_ptr_t,		8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rtrefcount_root,	4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
- 
- 	/*
- 	 * m68k has problems with struct xfs_attr_leaf_name_remote, but we pad
-@@ -117,20 +129,11 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_entry,		8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_hdr,		16);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,		4);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
- 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, freetag,	0);
- 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, length,	2);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free_hdr,		16);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free,		16);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_entry,	8);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_hdr,		16);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf,		16);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_tail,	4);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_entry,		3);
- 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, namelen,	0);
- 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, offset,	1);
- 	XFS_CHECK_OFFSET(struct xfs_dir2_sf_entry, name,	3);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_hdr,		10);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_rec,		12);
- 
- 	/* ondisk dir/attr structures from xfs/122 */
-@@ -196,6 +199,9 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents,		40);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_getparents_by_handle,	64);
- 
-+	/* error injection */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
-+
- 	/*
- 	 * The v5 superblock format extended several v4 header structures with
- 	 * additional data. While new fields are only accessible on v5
-@@ -221,6 +227,28 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_flock64,		48);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v1,		112);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v4,		112);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
-+	XFS_CHECK_STRUCT_SIZE(xfs_fsop_counts_t,		32);
-+	XFS_CHECK_STRUCT_SIZE(xfs_fsop_resblks_t,		16);
-+	XFS_CHECK_STRUCT_SIZE(xfs_growfs_data_t,		16);
-+	XFS_CHECK_STRUCT_SIZE(xfs_growfs_log_t,			8);
-+	XFS_CHECK_STRUCT_SIZE(xfs_growfs_rt_t,			16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_inogrp,		24);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_bulk_ireq,		64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fs_eofblocks,		128);
-+	XFS_CHECK_STRUCT_SIZE(xfs_fsid_t,			8);
-+	XFS_CHECK_STRUCT_SIZE(xfs_fid_t,			16);
-+	XFS_CHECK_STRUCT_SIZE(xfs_handle_t,			24);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_exchange_range,	40);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_commit_range,		88);
-+
-+	/* scrub */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_metadata,	64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec_head,	40);
- 
- 	/*
- 	 * Make sure the incore inode timestamp range corresponds to hand
--- 
-2.52.0
-
+--D
