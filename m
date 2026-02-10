@@ -1,44 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F66031984E
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 15:46:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6435728469B
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 15:47:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770738367; cv=none; b=qYviUQ/uJXpQwL3ytNTMJVZCZ5kOh+0Gvh7LZ+XalvfwohSFJQBM9YOE02k6CdUhhhjkPV+hPH9KXePDhHJwsAfUsAUHQq4WHA6Tzz0zkacPZmHe5GobyBVWdz2jYK0X4r7SyntLYxmuIXpZeiiNiH8dNIf4cZKhCcNyGF8N2AM=
+	t=1770738466; cv=none; b=V7vxt0HDt4/MA8ad0csHDgZvUKxj0XBU1fkdCp+I9g0GWMy6RG3PwTUU8w49Mxw/L4tIknCUwrT6apj6N0H05pya5+vO/uhgVod7wKNE/m6Mvv2BpM0wUAqpWQemFQokwHkkYJFPko1z7d4S8PkQFhG6y7PzQhKGuMpIDwhWCP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770738367; c=relaxed/simple;
-	bh=3vdv+nyRUv/tsEOWpVFsCWcKxGBbZKKjdzR2Rb3o9ws=;
+	s=arc-20240116; t=1770738466; c=relaxed/simple;
+	bh=zShWnNsijyYLEVsn9RNfQ7+NpPGTjclhIc73+w9kjEw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bS3PNynP0lTMuNUhDLG5eSkpFQRmAlUhfb+zoP6aoGCTodMP8kDdQymX9Y9GG7bwyUtxVJf4EI2GBhZSQKmaD323qMZTCh1uPJTuevgw632Ju2QRkwc92+l3xGd6i5soN+iy0pDR2UJJVyyOY9qxNisxKJVHiAihcitXhjg/+Fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WB6jC+Pg; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=AIkehUD7SopUotxgyt4PVBGtU+iaJ3DjtyO+SRAxLzp0uWAUdWb8P0/RrbH+wVZ7OTYuY08R8D5UrMSK8Dy3RvRXMIf7IqJS8sQYzXLT5GBbYifdh2iPIXgUO7Kr4eEDZlmycTEA4bKANolaLHjJwKRKVyS04W74xaW77qzOLlg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SKgaN959; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WB6jC+Pg"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SKgaN959"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=d+o59NCZNoHwSAtOv/yseyt0jbQRTGlFQnxihXNwCzs=; b=WB6jC+PgUPRKVsIMqd5XA2hb4z
-	qWwger2lWhZPtqkFjG7Lz9T3B+Zk6QVNefG+myVqQQx71K4ioTI9i73hJ+iLu7ISr9+8gLSbWykum
-	W6J4Fjw0sT5LiCGsfHHiis6sF2g4gQha0glzhlDKgPnwnxRCanOivAFBoaOdimZzMaJ2ymWjwskGo
-	VFZM6U1nxINuxgXqVqflpPqfXdm4E4WeOxiZo5uF2SbybreIefExYm/C/zaT3a0JJgaWpi7nNzbs0
-	r/VEQc4oQ5Yra7Z2tVdRh1bL3izlZvQnXPiHrb6l2feUJZjtpo2p0QzoDdNxPSje9+1wluxq/G2sF
-	oDou7PPg==;
+	bh=XFoQGDpdiGHA3bPHpjS2ogTZqKSIo3l9yZZbYSAFpdY=; b=SKgaN959xb4yFg8Qw49JJhHKTn
+	oAz84a2RmhaRzrcd+w0MsHm7ph1S6XnkWLYsgkQ4JLSetHwfDp9e66q0/5Xk3QKuWf8/mt/CCJtP8
+	zis1igSVQKNvC6mAM45PQD5PlI1y+gpNyqV/RCb5VfMR0ljQ+0UviSzAgy+98AXL0XwJ7NwjtReQK
+	zx2CWww95lhzZ5RU9Paez2oPvF6tUafI1fP2D/5SZWgK+Wh1zC26/56iPnq9zlysquEZewAWL/cGG
+	2r3y0IuQOP4EbgS15oWfUVZocp1o96I7FUNyKHLojl4b/AW8nUMmYlOHbk7sqvCUx5ndi3L7KGizs
+	IntMhaBw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vppwC-0000000H9GL-44Dj;
-	Tue, 10 Feb 2026 15:46:04 +0000
-Date: Tue, 10 Feb 2026 07:46:04 -0800
+	id 1vppxo-0000000H9LO-3aFm;
+	Tue, 10 Feb 2026 15:47:44 +0000
+Date: Tue, 10 Feb 2026 07:47:44 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: nirjhar@linux.ibm.com
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
-	djwong@kernel.org, hch@infradead.org, cem@kernel.org,
-	nirjhar.roy.lists@gmail.com
-Subject: Re: [patch v1 2/2] xfs: Replace &rtg->rtg_group with rtg_group()
-Message-ID: <aYtSvJLCAPZXywit@infradead.org>
-References: <cover.1770725429.git.nirjhar.roy.lists@gmail.com>
- <3234d5a2693e1c18c2e3d34fc45d59118d503b67.1770725429.git.nirjhar.roy.lists@gmail.com>
+To: techlord8@web.de
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: What prevents XFS from being grown offline (without being
+ mounted)?
+Message-ID: <aYtTIGf5OeP01FBI@infradead.org>
+References: <trinity-fb1b39de-006e-4acc-8ab4-22a203b12391-1770653643533@trinity-msg-rest-webde-webde-live-54b976884-dmz76>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3234d5a2693e1c18c2e3d34fc45d59118d503b67.1770725429.git.nirjhar.roy.lists@gmail.com>
+In-Reply-To: <trinity-fb1b39de-006e-4acc-8ab4-22a203b12391-1770653643533@trinity-msg-rest-webde-webde-live-54b976884-dmz76>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Feb 10, 2026 at 05:56:35PM +0530, nirjhar@linux.ibm.com wrote:
-> From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-> 
-> Use the already existing rtg_group() wrapper instead of
-> directly accessing the struct xfs_group member in
-> struct xfs_rtgroup.
+On Mon, Feb 09, 2026 at 04:14:03PM +0000, techlord8@web.de wrote:
+> Common sense tells me offline growing should be simpler given that
+> there is no interference from data being read and written at the same
+> time. So why can XFS not be grown offline?
 
-Doesn't really save much, but I guess we should be consistent:
+Short answer: because no one implemented it.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Nit: your commit message could be condensed a bit by using up all 73
-characters.
-
+Long answer: because to grow a file system safely you want a transaction
+mechanism, and XFS only has that in the kernel.  Growing a live file
+system also really isn't hard in any significant way (unlike shrinking).
