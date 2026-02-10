@@ -1,69 +1,133 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D73AC2E7BCC;
-	Tue, 10 Feb 2026 16:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770740465; cv=none; b=l92+OjS2WGQibgvAl7XY0mSprCJWdjvkZX7QGyjiMlD3x091mTZ0PUblbtKDvt7Ml+aEK6nZKcwbytf9XsyJHEt9MFeKqNYjRfFmOlPZw9dmj6TBrGrKsEM2Jq3I7TvglEHEHBEopWqDfR7PMiv5lStrPh9RFMZSusAQ3PekZeg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770740465; c=relaxed/simple;
-	bh=6m9ywh+7CtQXO9LDljzJqaiRP0wFg9sht4dJlcqYQek=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aZzUlnRqFrTdk8LWkCdq4gQwxgcKb72H9Y4kFHPBosZSmJL6alWeZTq2tlVqx79Bb0OddMgK1zAS1c1Z1bNsYIzezVFgYLDR4B1+2vI6Oa3rrtZi2s9m988Fgry7+c69+fcOxR+4DqFIACAWsK/MXdgNp0CDXJn6JvfKHiI3Z5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=x+rjC7dW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC029387575
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 16:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.181
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770740675; cv=pass; b=Xpb460K3qjp+IbPn7tW6uFuc0nZSFsizYR2kgQuyXKdldOHvCuWRoyUUXBTOzACOgGBPdgC8CTLJPXfNnScV2n6/ngP//psWfZHyDd62Q9X6QAgpMm3je6IkmnovoeRgJvRNHMhdSBe4iO9IpQxCkkgsz88acTwHpdw4o3xTXxs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770740675; c=relaxed/simple;
+	bh=BkWtyYpqejlmByRC727LdbfV/RYqAERDreFY/UP2Aa4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FiOSAxCpqrkF0So9EGLnrz848rxo0cfWT0UKvSmCZnC+x01h9HLH6iWjOZ8UsbRueGp6NGDrxTflHyMD/ozqlukrd4MUiS1lufd4L+SvDHBMfXXWzghhkKiyHm3ULaFLikkcAzhxKsx7/WnRajirePpQQdLsRu/rZscQ+5LJxWw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jXoHp7nY; arc=pass smtp.client-ip=209.85.167.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x+rjC7dW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Y5zcvM3DB/X1SwvyJUyqRbQJv0rWF2nynRpSDGvWd4M=; b=x+rjC7dW5iF8EioZJe0rG9Kf5C
-	IZuDHhWZXyfropzEmoDj30i8qkSHETD2zOAaeuywi2GKqFvNB1cjPa57LSl1GXzvptX5sGHOwcb9J
-	AnwuT9dWYBy26H4w9wkC1j4R/QklqSzaNx4saBu3Ukfq2pwI9u1JRwD5JrWamJ1DIZYIEGjNvEVum
-	aSA4naoyvxDQoq5/goSTjgAbqTtqI7YkxoXxZivkl6ukHNFcWI4g9/E9iycFVQC7WQi1NoHe7PFKZ
-	gvIbzlEhAtvjzfxJ8LAWa5TIIOLjY27dtS1aQvc9hHkJMPLEQfaQdPDbM0xTV+cLMjf+3C0Tf4ReK
-	SyTfZk9g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vpqU4-0000000HDdx-0zvi;
-	Tue, 10 Feb 2026 16:21:04 +0000
-Date: Tue, 10 Feb 2026 08:21:04 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] xfs: replace zero range flush with folio batch
-Message-ID: <aYta8A6dBpjZyb8c@infradead.org>
-References: <20260129155028.141110-1-bfoster@redhat.com>
- <20260129155028.141110-6-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jXoHp7nY"
+Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-45c9fdf2a06so3857438b6e.2
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 08:24:34 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1770740674; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Q7NZe65kCwzNr73EzKI+pau/267Tc+AyQR23lQ6WW4cbTRCk77spDJbmBEXVErLPrJ
+         cCFUic0LaOMlk77uPUNPXVE7bP4ci30t808N4cNWUMbnNI1KNz/qaMl3k3mZc/JZx9yD
+         fOgcpJ9F8ODXdVQwHF3a6B0rjsre9hactk6UBPBe7DT6aXH+Hvh5JdJLuYYiS6/KGgcw
+         j2YyJossBY59pTZBjechfrbo8Jlk+fjrVjJpQNcrry/OeBabZ2bz6/BB9njKeQxeV/DI
+         mm6KP6pqg42lUfgACEAVk/JHDeOoklVdaGVWL02lp9DIYxyn48/3Z5OFIn4c4BHYrHPy
+         I1tQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=e87k8iFish9q2Uq3v9Uy7Fjw166hMufB5O7qErb387U=;
+        fh=LNM2MLq2RHw43tZKNgnqPLVOkcNkeHhlCxQKkA5VI60=;
+        b=gO7WY/Z84iQwdOhYonptIcrJskdnUJtXpHQWkH6ei81gWH+hM6DcYt8u0iAtmqDzJE
+         82q8f3ta13VE0yKlC5B5zA0CSyGiXt+9L+Eql32G1Ahvl8EnK8BMOaniK1L5nygJjT0K
+         dSd3wuEp7TTl18mNt5MwVg9GpvnCEHtQoYPmSNHLF5j3uAWQ31lBdCSL9TEty+K/qRB2
+         GX5xJBeSJgXTrn/RT4iDmIK6bPR7hd7K6A0jymHT1TkrfKPdnCgFtu1+KpUiXeXUBy+c
+         7cgexrqSW3hltHXoT8eaStOau/vik93al11IFHdXG+hGpYEX/mH+HRI+MxsrOEN4cYJb
+         h72w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770740674; x=1771345474; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=e87k8iFish9q2Uq3v9Uy7Fjw166hMufB5O7qErb387U=;
+        b=jXoHp7nY23Kq85huTPiHL1JsEK6nChfn2n6ItO9mJhQQLQMLKOQUwAVBSk5naFxJhY
+         R/CAa71VMkrHO+oF8K/OeGmgfjlswwdenQw7JEPsknyqg9LfdHHw0qjAjeMFHb7LmAQ0
+         sJGdIejhGm1kpLSexdcYBGDFglcXyj/uHKnuemJHLlww8nLSGLHYaDtZaLpyytNS4u7q
+         5lZFsffLsIby593IrGgzTQKuGXwsc2GUrRsA2zUNcdHq2LR4zmXIHCTuBkFVCbD5V0Zm
+         maODHoWpBu+PpgywObJIsMVDxwDufhdioUxtB/jrMD9+mMy1p548uzR+djRpr1ECBXDU
+         x+Bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770740674; x=1771345474;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e87k8iFish9q2Uq3v9Uy7Fjw166hMufB5O7qErb387U=;
+        b=P6l98aLaHc2xD86PzMZNJdXO7bpN22AHt0hrAq0DZjj5Luo4IbWWCD2unW4/TEUO5Q
+         xxg6kqmdq3zfdHZv+d/61KKXW5bVwvLJI8Lwzu1omRjP/vwnVsGwk2t9cZwam1vVjR61
+         k9c3/WABeLEJzbye9OoC6/ULjmWAYZlj0ibh3euAP6S3EdsC3mFLVv1/N4Kw0Y+U4pHV
+         U+auA2fwGAFqkhuwbCqzYWCKjG0jtN/ekp9UHewKsiRJpf2LmMlU2WdLnvAwskKDfYiL
+         q0cbgYnkYhlSLPFUTbcMCLIpY9Wvb6438GkkFImzRl8hcxorOxHhcz9Q7/byFghviWTd
+         8FkA==
+X-Forwarded-Encrypted: i=1; AJvYcCWbkYt+u2iwldSg3lVN3EenaNuM8uRcVVTyZs8rliKQtyGO1U7Robp/QzZnxE1IYO8Cz8SHVbWhOSA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwF7bth/B1UL+YcMy+WkLjSw923LXMQ6t32wW3U9KVthTzCXvin
+	Rm/C8X7Vr833AulghlUMBXNDrq6nD2+1kubOlBn67tf6NWfhH8dTZRu1YjC/UXO0kv7qztiLPWt
+	V3Zh14c7ZDexOMeL/owkSj99mAzgn+OQ=
+X-Gm-Gg: AZuq6aKAdVir4aHejl53QG5PgHgB5Kma0Ghwbv3wiGP9Pcl3T6RTNpft4IHbCYhNSvN
+	jgCSb5/NzYZmYUV+i0Ep6dOr0c2wFlMWEl+/npVtMQlwJjMjERPidPe3z+qhyweggMbGdETXfbk
+	AXuseIrNw5p+o0AZKap9cb2+neAZ6AYRSxfoKOTsSecWSsUY0G6sOQpMKqKvqYKklJ68L3QicPE
+	AM+5N+hlUc9gBZajJwiStjI5miXKWCWggFp618ZHkq+qaFnGVmKjvVby24pzd5RELuxWMNXmI+o
+	I7adwdY=
+X-Received: by 2002:a05:6808:4f23:b0:45f:42d6:2ffb with SMTP id
+ 5614622812f47-462fd051fdamr6992569b6e.41.1770740673692; Tue, 10 Feb 2026
+ 08:24:33 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260129155028.141110-6-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20260120142439.1821554-1-cel@kernel.org> <20260123-zwirn-verfassen-c93175b7a1ee@brauner>
+ <41b1274b-0720-451d-80db-210697cdb6ac@app.fastmail.com> <20260124-gezollt-vorbild-4f65079ab1f1@brauner>
+ <a1692040-58d0-412d-b0fc-c7b7a62585c4@app.fastmail.com>
+In-Reply-To: <a1692040-58d0-412d-b0fc-c7b7a62585c4@app.fastmail.com>
+From: Cedric Blancher <cedric.blancher@gmail.com>
+Date: Tue, 10 Feb 2026 17:23:57 +0100
+X-Gm-Features: AZwV_Qjy3M0uZY-NRx3otdHnq6x-9RSVjw1ETeNOu6B1p4FZNE0JCUf2MFslsk8
+Message-ID: <CALXu0UcJf+R3HuzwUrUTjsuYWdFrLZOwAsEtSyto2T9Rtg4rsw@mail.gmail.com>
+Subject: Re: [PATCH v6 00/16] Exposing case folding behavior
+To: linux-nfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jan 29, 2026 at 10:50:28AM -0500, Brian Foster wrote:
-> Now that the zero range pagecache flush is purely isolated to
-> providing zeroing correctness in this case, we can remove it and
-> replace it with the folio batch mechanism that is used for handling
-> unwritten extents.
-> 
-> This is still slightly odd in that XFS reports a hole vs. a mapping
-> that reflects the COW fork extents, but that has always been the
-> case in this situation and so a separate issue
+On Sun, 25 Jan 2026 at 23:05, Chuck Lever <cel@kernel.org> wrote:
+>
+>
+>
+> On Sat, Jan 24, 2026, at 7:52 AM, Christian Brauner wrote:
+> > On Fri, Jan 23, 2026 at 10:39:55AM -0500, Chuck Lever wrote:
+> >>
+> >>
+> >> On Fri, Jan 23, 2026, at 7:12 AM, Christian Brauner wrote:
+> >> >> Series based on v6.19-rc5.
+> >> >
+> >> > We're starting to cut it close even with the announced -rc8.
+> >> > So my current preference would be to wait for the 7.1 merge window.
+> >>
+> >> Hi Christian -
+> >>
+> >> Do you have a preference about continuing to post this series
+> >> during the merge window? I ask because netdev generally likes
+> >> a quiet period during the merge window.
+> >
+> > It's usually most helpful if people resend after -rc1 is out because
+> > then I can just pull it without having to worry about merge conflicts.
+> > But fwiw, I have you series in vfs-7.1.casefolding already. Let me push
+> > it out so you can see it.
+>
+> There will be at least one more revision of this series (and it can
+> happen in a few weeks) to split 1/16 as Darrick requested, and
+> address the nit that Jan noted.
 
-I wish we could fix it eventually.  One thing that came to my mind
-a few times would be to do all writes through the COW fork, and
-instead renaming it a 'staging' or similar fork, because it then
-contains all data not recorded into the inode yet.  But that would
-be a huge lift..
+Are you targeting LInux 7.0 or Linux 7.1?
 
-The patch itself looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ced
+-- 
+Cedric Blancher <cedric.blancher@gmail.com>
+[https://plus.google.com/u/0/+CedricBlancher/]
+Institute Pasteur
