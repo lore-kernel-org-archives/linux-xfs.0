@@ -1,71 +1,124 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E1022B8AB;
-	Tue, 10 Feb 2026 15:38:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0C53009E8
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 15:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770737940; cv=none; b=tTFg0zCFrdKF7fKvhszK5R8orKGRiQM9loo3OKaTfbo860XVKBwgC5Av5j7qBjQEwtziof3y4nahlnW7nFjZqE7bzVkHDhEqQSPSP35umReKZJCZlK33UUl0JiyO8WqO7e0WXqI4VWj9p6wz5oIEvBEGFMpPPhOeudCRI/JoRW4=
+	t=1770738263; cv=none; b=dU8IWqXc+L8W6TbuIp0H40wslSkmTXjoTfFDWxn9DgP0h4frTku+BX2EHmRHuvu9suPOU/8B32IoJ41fCzsBwpotSNjy5BCMEET3vzH62cvYnIDMUcs2Tem15WoxngkcNDARW6Fn0tpw+kZ+UX4RLCk9vujJsp2Pg4185sFThuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770737940; c=relaxed/simple;
-	bh=uFcjjkA3WFiZqFMy3mxET9pV3Rhqx7NQjS+2SqxHlZM=;
+	s=arc-20240116; t=1770738263; c=relaxed/simple;
+	bh=kMVndmYf49KAw4r93olStFgJ1mV9fcQ1uVr84wqh2DM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qvn/xpIfGnXwDPdB7P1WlEL1PlGoa3iAhjM/WfmVyOxiVVvJuFyNnV7PjkncyIuJB3R7JkKajZLTxEW/0L9kkhD9tHq4MJkn/zvC7/o9QtXn1QW3V7eTkGIachb4aE6pt08y319OY9BPI7ErGQvdNkGRMhAYXpae2Qg2KuKtO9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id E3B9468CFE; Tue, 10 Feb 2026 16:38:54 +0100 (CET)
-Date: Tue, 10 Feb 2026 16:38:54 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kundan Kumar <kundan.kumar@samsung.com>
-Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
-	willy@infradead.org, mcgrof@kernel.org, clm@meta.com,
-	david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk,
-	ritesh.list@gmail.com, djwong@kernel.org, dave@stgolabs.net,
-	cem@kernel.org, wangyufei@vivo.com, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org, gost.dev@samsung.com,
-	anuj20.g@samsung.com, vishak.g@samsung.com, joshi.k@samsung.com
-Subject: Re: [PATCH v3 0/6] AG aware parallel writeback for XFS
-Message-ID: <20260210153854.GA2484@lst.de>
-References: <CGME20260116101236epcas5p12ba3de776976f4ea6666e16a33ab6ec4@epcas5p1.samsung.com> <20260116100818.7576-1-kundan.kumar@samsung.com> <aXEvAD5Rf5QLp4Ma@bfoster> <ca048ecf-5aec-4a0d-8faf-ad9fcd310e21@samsung.com> <aXN3EtxKFXX8DEbl@bfoster> <e7413e3b-3fae-4aab-90a1-4a6695156b2e@samsung.com> <20260206062527.GA25841@lst.de> <5b11145d-15e2-485c-a978-365b58854371@samsung.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=JWwe0+BFVw8+L8SymSbzMv9t473/6Tbbh0yvtUruLgl22x0HwTutYqd38bT0N9i3Jqv7k4mvWyifbB9XZIm4lfcjWtkBf1y3Cc/bjilrOHJaEGdZD9A2GkIQCBs3gVJnQhJsFOa2EWOqaHCbpRfcvvcS4aTSeni8Wvc6SQn0DFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TrgyCYva; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TrgyCYva"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=VpNo1Q4blq6JFICWwRW4a2uuV5qc7EyHtggANmuIzVM=; b=TrgyCYvaad3j7yBr+LnSP9owbJ
+	5TU+Yc0CrAL7E5IdRVRJAw8rXtnoNvR2eUClnrcmPRnoCgBK6R+6hV+d+93atkYQq3yeWXzSEHn9a
+	jjjWY+3qn9YI30SNttOC7eKyHb7eA/ZWBurrkko8MLCDxIGGRBJje3JpA5p7wUimgNF+9pSNlVrkU
+	2cPq2Rs4ipFLm0MwHcnqvgZc8l3ROwhU0tc27rQKcd7KrFp2OOGyz6aSp63GzGYqlxshhi9iFGJR9
+	95i8Uygw427VzTwSHFR3La8eBSUq5CNBm/hgVqiBWERQ40eDK2Ltfys0fdAaX6MLj/7PshhfYRBea
+	Kud0sBSQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vppuU-0000000H95V-1u5J;
+	Tue, 10 Feb 2026 15:44:18 +0000
+Date: Tue, 10 Feb 2026 07:44:18 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: nirjhar@linux.ibm.com
+Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+	djwong@kernel.org, hch@infradead.org, cem@kernel.org,
+	nirjhar.roy.lists@gmail.com
+Subject: Re: [patch v1 1/2] xfs: Refactoring the nagcount and delta
+ calculation
+Message-ID: <aYtSUp0m5KUQ8HUt@infradead.org>
+References: <cover.1770725429.git.nirjhar.roy.lists@gmail.com>
+ <b70d0fa35690cb120a6f79a7283af943548acb45.1770725429.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5b11145d-15e2-485c-a978-365b58854371@samsung.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <b70d0fa35690cb120a6f79a7283af943548acb45.1770725429.git.nirjhar.roy.lists@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Feb 09, 2026 at 09:24:49PM +0530, Kundan Kumar wrote:
-> - Create a bounded number of bdi wb contexts at mount time (capped,
-> e.g. ≤ agcount).
+On Tue, Feb 10, 2026 at 05:56:34PM +0530, nirjhar@linux.ibm.com wrote:
+> From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+> 
+> Introduce xfs_growfs_compute_delta() to calculate the nagcount
+> and delta blocks and refactor the code from xfs_growfs_data_private().
+> No functional changes.
+> 
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_ag.c | 28 ++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_ag.h |  3 +++
+>  fs/xfs/xfs_fsops.c     | 17 ++---------------
+>  3 files changed, 33 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index e6ba914f6d06..f2b35d59d51e 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -872,6 +872,34 @@ xfs_ag_shrink_space(
+>  	return err2;
+>  }
+>  
+> +void
+> +xfs_growfs_compute_deltas(
+> +	struct xfs_mount	*mp,
+> +	xfs_rfsblock_t		nb,
+> +	int64_t			*deltap,
+> +	xfs_agnumber_t		*nagcountp)
+> +{
+> +	xfs_rfsblock_t	nb_div, nb_mod;
+> +	int64_t		delta;
+> +	xfs_agnumber_t	nagcount;
+> +
+> +	nb_div = nb;
+> +	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> +	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
+> +		nb_div++;
+> +	else if (nb_mod)
+> +		nb = nb_div * mp->m_sb.sb_agblocks;
+> +
+> +	if (nb_div > XFS_MAX_AGNUMBER + 1) {
+> +		nb_div = XFS_MAX_AGNUMBER + 1;
+> +		nb = nb_div * mp->m_sb.sb_agblocks;
+> +	}
+> +	nagcount = nb_div;
+> +	delta = nb - mp->m_sb.sb_dblocks;
+> +	*deltap = delta;
+> +	*nagcountp = nagcount;
+> +}
+> +
+>  /*
+>   * Extent the AG indicated by the @id by the length passed in
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index 1f24cfa27321..f7b56d486468 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -331,6 +331,9 @@ struct aghdr_init_data {
+>  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+>  int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
+>  			xfs_extlen_t delta);
+> +void
+> +xfs_growfs_compute_deltas(struct xfs_mount *mp, xfs_rfsblock_t nb,
+> +	int64_t *deltap, xfs_agnumber_t *nagcountp);
 
-Yeah.  And then optimally map them to CPU cores, similar to the
-blk-mq cpumap.
+The formatting here doesn't really match the functions above and below..
 
-> - Store a per-inode stream/shard id (no per-folio state).
+Otherwise looks good:
 
-Yes.
-
-> - Assign the stream id once and use it to select the wb context for
-> writeback.
-
-Yes.
-
-> - In the delalloc allocator, bias AG selection from the stream id by
-> partitioning AG space into per-stream "bands" and rotating the start
-> AG within that band; fall back to the existing allocator when
-> allocation can't be satisfied.
-
-Yes.
-
-We might also need something that falls back to less helpers if
-the free space is distributed unevently, but probably not for the
-first prototype.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
