@@ -1,63 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8C5234984
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 00:50:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 323C4128395
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 02:00:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770684606; cv=none; b=KZ4r7IfVKpNzKW2aS+9zzmlAiGExHS2bt09OlDC2h+69Jduc0y+g8h72bChHbLwKcSkcVgyGWpEE6JxfaIuh+hJDvFaF4oCCXwz4o/w8hvzDVC80/bI8iA1QyBmhZkn5gCQu2qULv9Rf+bx9kvrTG19bMpNZzdlEBILaefzROno=
+	t=1770688841; cv=none; b=XyM2K+HoyjBwiYeuIG9AYqeYHqXMOXbPRrDn/OZZ5YgWoOtC8myLO5FIyf1Yk/w5Xs0JT0KE+x9RfvTj+Cf1ghS8FRPYn8ekdiLgTRW3PAgHYmMe7qYxLaY6/fyrD/X6wBtfGnreqwcp0f2CL4vZzIRgrepZLDbIgi7k7MpAVyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770684606; c=relaxed/simple;
-	bh=DjuCjtdgEBE8YnR18x32jb94BIWi6OV1FBVh2dl3qvI=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=i9DlI4fihfUiH0/94wfAdDBWED3OdxKeKzkf4o1NgbB5ZVJfCfbJKnu2FTLyY5CAFUaJj5jqnO2r5ZPvT8kF1aWgmM52Iv/gKBOgAdbOT6cZ0uJXtmJudI24hqxUnxCi6E7vYTHEj4y4pMBD8vtEW1UqxdG4hJRIvDWKHLm9c4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Glinw17q; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770688841; c=relaxed/simple;
+	bh=KVPReESYyKCiXNwAWln9qboAf73skfa/b6cY3Th6vAU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N5Ma1UUsfGJnGzJPLwDVm1MkJZyshn6KabAbDzi337Efe0gV7dKtsveDKq0uhWB3BFZsTSYLUCTUUhYGaz81NyfLTx2zDu92vxUV/aEORKA3t1QpY+w8vaITnEiCRGjxsCJSGFUpgxoOgYa4TtY94p5hc4fQT+E0558YVJQMq34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tH2n6kkC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Glinw17q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6C98C19425;
-	Tue, 10 Feb 2026 00:50:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tH2n6kkC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B48C7C116C6;
+	Tue, 10 Feb 2026 02:00:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770684605;
-	bh=DjuCjtdgEBE8YnR18x32jb94BIWi6OV1FBVh2dl3qvI=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=Glinw17q/v4kJm/1dsCVmUKKz45qPD8KAInJxslp7k3hLmFV6d+cbLrxUKDe56zE7
-	 nSIBn0L7A4moJaRCiGUFBPc9B0857NZpj7T1y8ko3UGiN3kMDeRyGrhPe9l7sbDU8j
-	 7kkGA4hXJsMRD1es44ax2/l9kuAbVmsBcowlholbWHSMrwP25zvRvsxQv++n/qeZUx
-	 ilXYSfRk86A1hI1MTHMp5C8m3xr8129mmF0dmIBF95l3PZAMYysQ1KCYY5ZYT2C7dx
-	 OTiMPtkQ9XTENeYEHDctPyvbcF2U9ajOKd5K0sLsv/R0etLh/UzQH4V1U4S68T8imX
-	 55vgsda1TxRmw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id D5E94380AA4A;
-	Tue, 10 Feb 2026 00:50:02 +0000 (UTC)
-Subject: Re: [GIT PULL] XFS: New code for v7.0
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <aYXRoLlWgiUYROCK@nidhogg.toxiclabs.cc>
-References: <aYXRoLlWgiUYROCK@nidhogg.toxiclabs.cc>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <aYXRoLlWgiUYROCK@nidhogg.toxiclabs.cc>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-7.0
-X-PR-Tracked-Commit-Id: e33839b514a8af27ba03f9f2a414d154aa980320
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 56feb532bb927ae1c26726e2e7c0de95f54a3d67
-Message-Id: <177068460179.3270491.18070865243842275851.pr-tracker-bot@kernel.org>
-Date: Tue, 10 Feb 2026 00:50:01 +0000
-To: Carlos Maiolino <cem@kernel.org>
-Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
+	s=k20201202; t=1770688840;
+	bh=KVPReESYyKCiXNwAWln9qboAf73skfa/b6cY3Th6vAU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tH2n6kkCmhThvpDJyAdbdAhXLlKlIDJpIwpRR1+7+SDPEct4ZUlN60tP1Nl/ZNsPN
+	 jDrZUvVA2eWY8OJJKGav0Mo6LQcTcjXwtdjAv/ygseYblvFKlOcxdNNmi3YXtEpG1h
+	 ukN9mxVoJ3/oCHt+ROsHsxsakeAw+vcpP42FKToJmHaDMSptqesXmka3ef9DaWGr4O
+	 MXx9pMLA3MgpD6eXXQoLIGMrirEacsydXXSVJdL9lU8TGwgkB8pdLiY0NxgDp3Jm2T
+	 yiCUmDOjW90zgp6nUGPL8BSEZSbgrCNmuslUNAXo9IF9l2g05fQT3bjAZyxjo5XPP7
+	 5yaJkwT69bWbA==
+Date: Mon, 9 Feb 2026 18:00:40 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: hch <hch@lst.de>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [bug report] xfs/802 failure due to mssing fstype report by lsblk
+Message-ID: <20260210020040.GC7712@frogsfrogsfrogs>
+References: <aYWobEmDn0jSPzqo@shinmob>
+ <20260206173805.GY7712@frogsfrogsfrogs>
+ <aYlHZ4bBQI3Vpb3N@shinmob>
+ <20260209060716.GL1535390@frogsfrogsfrogs>
+ <20260209062821.GA9021@lst.de>
+ <aYmRhwnL286jv550@shinmob>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aYmRhwnL286jv550@shinmob>
 
-The pull request you sent on Mon, 9 Feb 2026 10:31:33 +0100:
+On Mon, Feb 09, 2026 at 07:54:38AM +0000, Shinichiro Kawasaki wrote:
+> On Feb 09, 2026 / 07:28, hch wrote:
+> > On Sun, Feb 08, 2026 at 10:07:16PM -0800, Darrick J. Wong wrote:
+> > > Waitaminute, how can you even format xfs on nullblk to run fstests?
+> > > Isn't that the bdev that silently discards everything written to it, and
+> > > returns zero on reads??
+> > 
+> > nullblk can be used with or without a backing store.  In the former
+> > case it will not always return zeroes on reads obviously.
+> 
+> Yes, null_blk has the "memory_backed" parameter. When 1 is set to this, data
+> written to the null_blk device is kept and read back. I create two 8GiB null_blk
+> devices enabling this memory_backed option, and use them as TEST_DEV and
+> SCRATCH_DEV for the regular xfs test runs.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-7.0
+Huh, ok.  Just out of curiosity, does blkid (in cache mode) /ever/ see
+the xfs filesystem?  I'm wondering if there's a race, a slow utility, or
+if whatever builds the blkid cache sees that it's nullblk and ignores
+it?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/56feb532bb927ae1c26726e2e7c0de95f54a3d67
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+--D
