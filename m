@@ -1,112 +1,328 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3485A346AF5
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Feb 2026 03:31:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 039EF318EDB
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Feb 2026 09:39:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770780683; cv=none; b=CLS8EeEw8Ii/SIMaJpSQ8modUJsmSCITstjO/z+EdCHgWa4Y6IvBuKZZ5mCTnIgFQqHU0NpT5g/vo+QmmM8Rmj5fKMRJxZm8zMTb80nyWL9d9lCv2wf8DjZe1GhYTy9PFiqtJJDqRFUXBVfLRDRLQbnHKfwRxkpQZ5VzYyOhVJ4=
+	t=1770802781; cv=none; b=it6vvXiURUnJSp1EMrltNy3bzLnpgE+4dsNVeDhXDoSWcm6Jcb5ro341pzemMZKr1bpVtrDTkxZtqZm5hguy/nPv7xZxLY0KVXZIsaWrWIlvg83k1SThDfjsGXlw6RRrY2u8LEHFe52+St+ry90C5F1KFxDnJdoemYxd8DHw7+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770780683; c=relaxed/simple;
-	bh=kOKImVrwx74w4JAgLh1XqCZTCzZvDUq6NyV98ul3sTg=;
+	s=arc-20240116; t=1770802781; c=relaxed/simple;
+	bh=O6gpU1IXzsMGv/H1tv+fqNzVpbMKe9TsMPFFLeOAFvE=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bZDDvJ/yTgR8VAmGx90iiP0HL5iWBAWBYoOUjB7soc/6E2JmYRAlh6r/Bb/4vE/EVhVZoVn1/QCd5bzzDOFUFcl3iuEGlStAprFwW4E0Ewhs7yEhsgrAMsQ6vuGaUS+vr9A4TmpbTe5QKcLQYKFDxC/8KXIeZEcf0VWbn5y5gxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E9SZzjyz; arc=none smtp.client-ip=209.85.216.51
+	 Content-Type:Mime-Version; b=YcZ8UlAqB+pslFYBF2rNB+kcTLnAEAPbefSPvmSHkFgeXBcreui/bm/m2leCd5tYBdp/lTWFXW2KdFenjSEZIErJSsqBqw0bCZaiTHieLUaNS1vCHuAHwRVGWuiA34wS+KXgGAyn0sfra6KoEwlSO/td82b52VEV5rKz627NPv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UMWet0U4; arc=none smtp.client-ip=209.85.210.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E9SZzjyz"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-354c16d83b2so2099853a91.3
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Feb 2026 19:31:21 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UMWet0U4"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-82361bcbd8fso2683831b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Feb 2026 01:39:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770780681; x=1771385481; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=kOKImVrwx74w4JAgLh1XqCZTCzZvDUq6NyV98ul3sTg=;
-        b=E9SZzjyzjd62aONPuax2pkSJIpl+8T7KlPv1CinGUhIh/zKcmIzE2UtCHXGi/5Nmwj
-         ODJwYLCA9F1nLE3lp+ae+YYNmXRNXtHrgPxLBjWUL1ihVMmblnuWp/QJBVUl9la1qQmi
-         FHAiL1kfxMJcXZOfzUc6ZwnQWNcsdzJogWw2TbhsTxo3PnIA45DPHQo8pWvTJXd0Lm41
-         fMQlG4mDyU44Dm6V7woJlMykgTbtgNs+RcvpVpINoKXf/At5zaLnkYknG1XgxWnwFMAW
-         hlaYFJzFVMM3BZVUw3A5dyMebvH8E1cGiTt8bbxBPn2c7BRJS+mcUQuiCNKP4sG51+l8
-         2Yuw==
+        d=gmail.com; s=20230601; t=1770802779; x=1771407579; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CsUDYOX+di7Z7Ep7ACxPObG+oLUZUZhESUJGxSBNSQc=;
+        b=UMWet0U4dlH96gyh9LfR2UJ3AqBFepEr+u4OBBW/HNlEJIPNnH9nhP04SIh+M3eedX
+         oPOIm0dOzrRMiSkD4BmhH6Oy5hnMAfezh/QR6MQ5cJQHBj9rmjtzifXtDSYTJsLVWrVX
+         iR9XLsOZYWDihi5SC/KTqXqcdmI3aMmutcWN2r3Sc7xDntJsJG/BzEBLAjGY/05XlOj7
+         T2aiKyocV1R6rfiE81A0k4pz2T8st7772so5JmeGqr16cpup4LGYyDNaj7QNC0a69lrv
+         1IvhE7tqVDir6VtbywK2F44L0W2rFRCrWMZS2R7Z+8+NLbEabaPYTKIorzm7EiCu0uhK
+         DqQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770780681; x=1771385481;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kOKImVrwx74w4JAgLh1XqCZTCzZvDUq6NyV98ul3sTg=;
-        b=aPWttG0PnSygEy4UAFQP7+2/QHqd0dzvcb4m2T149Z+Y31b3KZx1t+J/wJZa14uClI
-         ice2Cl9DeJ22RJKfmnVd4a1WOkTAK58u8NHamZAtdmoypK9nzHs5R6rUby7wozWYDD1Q
-         rm7Rf0mrsYh+XlSufBcBwbo3o1GT09HE041thX/zBkeFaZvzt1afjuPSWKdrCAsAKMRQ
-         8bXJDrAEyP6KMIPNQAjx6yGgtAgAXOqNBNVWkl4o9iXErNHqDPa8/5K4Y8lZneKRm0tv
-         vl50+vZhEfuoNEAR7G3Vbh7D8hbMOmHi9f/deHjVllaYeIpfk/eVO6Q+TGqWzCe23LPC
-         E5Gg==
-X-Forwarded-Encrypted: i=1; AJvYcCUP8ywVUzG7XgK1iQYXtWF92TpfgY7SbNRKm2EnZ5C+raljVuHC02JF8jgNHlrMpJkLJeCyBAG9UDc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/jd8jBy371v4UwAyKa8WbjoMTAEgiQQYvTDsc6JwX/bXrHN8R
-	BJsaG6y8kGIGaXbcKjHKrj6Ue72ovIseKSrzqCg8OnyieImw2wu43dH4
-X-Gm-Gg: AZuq6aKd5Muy8BnRt66wRuuTDxrUY22B7Ec4GaIDqQwYnWdUdYdjJ+1213xE/ZD/diR
-	UAHGoJ6kytWwi4Zd2Z5UPiUyQjmmoyVZ2EoEofPTMbqFzs5Hjtq5RNxRw80Mdpgj2bw3ruYrzNT
-	2xFb6u6o0Gexcmg8ibQuLI1QWbu0+Z6Y11yE9YbiXSrkzauEmx/jxS1D0lyXgg87ABOG7dyZzcn
-	NUGOzCme6yVqIBJgTAqnHs0kWPgV6gE5inka32UGXgjXrK/Hv2sY5Vu2bXVwFoPWo2s3KFKVnL6
-	peKsffNkKsKx1e359Ilk/tywDJnvFh5KkgqBmbb9YkqvC3HgLxXknWF3Dx7nl4O0I04lOOuijhn
-	RedCyR/a5v3HwpjErRt12UXLrXGwqh/xVMcLKXzfdLkryMEqw4GapMVCix6VpS0FllBiVXg+TKc
-	QzTzpOjIX9E1fcEu1Sep9Unz0QjTY0ez3MKzMwN7vz1n2CLNFcKOsifCNf4M+JPCE+ajUa9Q==
-X-Received: by 2002:a17:90b:350c:b0:356:268f:508 with SMTP id 98e67ed59e1d1-3567f8a17a6mr515278a91.35.1770780681443;
-        Tue, 10 Feb 2026 19:31:21 -0800 (PST)
-Received: from [192.168.0.27] ([159.196.5.243])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35662e531desm4467329a91.2.2026.02.10.19.31.18
+        d=1e100.net; s=20230601; t=1770802779; x=1771407579;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=CsUDYOX+di7Z7Ep7ACxPObG+oLUZUZhESUJGxSBNSQc=;
+        b=MLytiCulK141LEka6FeMIzfqRj6NqkBS5hDNOMr3/5ZkjyW9tdF95cxEJfYH+xeJX5
+         SfoXOMathYMx3gCx0ixf/WEgHPWizzAygLRkIF/FxubiDNoMYhsgHawYDzPhWXpH8Bi0
+         SMt3170uHatEoGSBz2PawA5Dx4UI57xGRnP76VfYF2l/07XwjzfoNEDqXAzm8eVLsFnT
+         oxkJqcbuFm6OHECXUU+eUEFsnRPk9iTR5vhPDCObB7e0JU6sJGAzGPw6aKwTBItq70Ol
+         wkSb8UkODFjVojSuryB6zIiXSAZ7N3238yVkmr4HaqqT/Bm7FXyENqjE3kJXqbpjIoY0
+         sF7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUYFuNj/CAnW5RZYsJztYEqOzEPMUJvoT0PucaggLuVS80ns7ZMdbqggm7Tc+ANMxsv561sCpUKBhg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4IOAtRiG1hpcLu6iLiWstkOLS6WlUJDgd2EUakWR4l7V6aZbj
+	QefWx3PH0UqmBAmdzu46GW3BTCpzW43Hef3FkefYWRVFtlmrWXmdIWJY
+X-Gm-Gg: AZuq6aIM7bu+lC2npFv3mzAubxdCQJpCV219EdVW2KjOfX6pWeCXibEHJjRZ3zKrg3x
+	KVdJOU39D/UnR9BaC3B9zFphvSI9JwSDXnZUogVmHb3WHbNjLlpkGM7BcO/16B02zxqx+DmSeOm
+	0+dMsNWWBASWswO62bR3UNRX276qghODhStN1oyej4msl5RA8qrtVabt643ldiFu0HQDgR6Va8k
+	78vyMTQigH8PPtgvBlcJcK4g4DMe3hOzZWiy4CFMIcJdnYlWjtqxVfFtUktZ8xf3k5OPrkyS2Fk
+	YGzTlBgJ2f8B6BjS+lOHxbhSX1YS7BpfSffIhUVnFC1CSuYg4RBz/sLyjBnsMwwRYD9W+zDmYai
+	fxJCMbhEsSP1iwbLJ9Q7gMsAa+z8r9NIkdZ9ia5LViTTMJDubJpUG04zO5w7MSE0mmvGEezdFmM
+	uCW693W0JjDM83qGhRWtI1lXP41srIcxUELCrJEkOfn3R/9EEHxgyU3LhfQhxDECpdJdQHQTRjD
+	asK
+X-Received: by 2002:a05:6a00:2192:b0:81f:3f8a:4c37 with SMTP id d2e1a72fcca58-8249b0c69ebmr1868834b3a.38.1770802779201;
+        Wed, 11 Feb 2026 01:39:39 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.226.188])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8249e3bd3bdsm1597023b3a.18.2026.02.11.01.39.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Feb 2026 19:31:20 -0800 (PST)
-Message-ID: <92ef85fe29b9e64766d8a901661a0a848cb73bf8.camel@gmail.com>
-Subject: Re: [PATCH v2 2/2] xfs: add static size checks for ioctl UABI
-From: Wilfred Mallawa <wilfred.opensource@gmail.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong"
- <djwong@kernel.org>, 	linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Date: Wed, 11 Feb 2026 13:31:16 +1000
-In-Reply-To: <20260210153559.GB31245@lst.de>
-References: <20260210055942.2844783-2-wilfred.opensource@gmail.com>
-	 <20260210055942.2844783-5-wilfred.opensource@gmail.com>
-	 <20260210153559.GB31245@lst.de>
+        Wed, 11 Feb 2026 01:39:38 -0800 (PST)
+Message-ID: <e9b10221c42b77050120332b6d3cb3c131e551fe.camel@gmail.com>
+Subject: Re: [PATCH v3 6/6] xfs: offload writeback by AG using per-inode
+ dirty bitmap and per-AG workers
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Kundan Kumar <kundan.kumar@samsung.com>, viro@zeniv.linux.org.uk, 
+ brauner@kernel.org, jack@suse.cz, willy@infradead.org, mcgrof@kernel.org, 
+ clm@meta.com, david@fromorbit.com, amir73il@gmail.com, axboe@kernel.dk,
+ hch@lst.de,  ritesh.list@gmail.com, djwong@kernel.org, dave@stgolabs.net,
+ cem@kernel.org,  wangyufei@vivo.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-xfs@vger.kernel.org, gost.dev@samsung.com, anuj20.g@samsung.com, 
+	vishak.g@samsung.com, joshi.k@samsung.com
+Date: Wed, 11 Feb 2026 15:09:29 +0530
+In-Reply-To: <20260116100818.7576-7-kundan.kumar@samsung.com>
+References: <20260116100818.7576-1-kundan.kumar@samsung.com>
+	 <CGME20260116101305epcas5p497cd6d9027301853669f1c1aaffbf128@epcas5p4.samsung.com>
+	 <20260116100818.7576-7-kundan.kumar@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-On Tue, 2026-02-10 at 16:35 +0100, Christoph Hellwig wrote:
-> On Tue, Feb 10, 2026 at 03:59:44PM +1000, Wilfred Mallawa wrote:
-> > From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> >=20
-> > The ioctl structures in libxfs/xfs_fs.h are missing static size
-> > checks.
-> > It is useful to have static size checks for these structures as
-> > adding
-> > new fields to them could cause issues (e.g. extra padding that may
-> > be
-> > inserted by the compiler). So add these checks to xfs/xfs_ondisk.h.
-> >=20
-> > Due to different padding/alignment requirements across different
-> > architectures, to avoid build failures, some structures are ommited
-> > from
-> > the size checks. For example, structures with "compat_" definitions
-> > in
-> > xfs/xfs_ioctl32.h are ommited.
->=20
-> Looks good:
->=20
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->=20
-> I couldn't spot any whitespace issues either, although I'd personally
-> drop the last empty line if I had to nitpick.
+On Fri, 2026-01-16 at 15:38 +0530, Kundan Kumar wrote:
+> Offload XFS writeback to per-AG workers based on the inode dirty-AG
+> bitmap. Each worker scans and submits writeback only for folios
+> belonging to its AG.
+> 
+> Signed-off-by: Kundan Kumar <kundan.kumar@samsung.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> ---
+>  fs/xfs/xfs_aops.c | 178 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 178 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 9d5b65922cd2..55c3154fb2b5 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -678,6 +678,180 @@ xfs_zoned_writeback_submit(
+>  	return 0;
+>  }
+>  
+> +static bool xfs_agp_match(struct xfs_inode *ip, pgoff_t index,
+> +			  xfs_agnumber_t agno)
+> +{
+> +	void *ent;
+> +	u32 v;
+> +	bool match = false;
 
-Fixed in V3, Thanks for the review!
+Similar coding style comments as mentioned in the previous patches in this series - variable
+declaration and function prototype style
+> +
+> +	ent = xa_load(&ip->i_ag_pmap, index);
+> +	if (ent && xa_is_value(ent)) {
+> +		v = xa_to_value(ent);
+> +		if (xfs_agp_valid(v))
+> +			match = (xfs_agp_agno(v) == (u32)agno);
+> +	}
+> +
+> +	return match;
+> +}
+> +
+> +static bool xfs_folio_matches_ag(struct folio *folio, xfs_agnumber_t agno)
+> +{
+> +	struct xfs_inode *ip = XFS_I(folio_mapping(folio)->host);
+> +
+> +	return xfs_agp_match(ip, folio->index, agno);
+> +}
+> +
+> +static int xfs_writepages_ag(struct xfs_inode *ip,
+> +			     struct writeback_control *wbc,
+> +			     xfs_agnumber_t agno)
+> +{
+> +	struct inode *inode = VFS_I(ip);
+> +	struct address_space *mapping = inode->i_mapping;
+> +	struct folio_batch *fbatch = &wbc->fbatch;
+> +	int ret = 0;
+> +	pgoff_t index, end;
+> +
 
-Wilfred
+Coding style ^^
+> +	wbc->range_cyclic = 0;
+> +
+> +	folio_batch_init(fbatch);
+> +	index = wbc->range_start >> PAGE_SHIFT;
+> +	end = wbc->range_end >> PAGE_SHIFT;
+> +
+> +	struct xfs_writepage_ctx wpc = {
+> +		.ctx = {
+> +			.inode = inode,
+> +			.wbc = wbc,
+> +			.ops = &xfs_writeback_ops,
+> +		},
+> +	};
+
+Nit: Maybe group all the declarations together? I did get a comment like this in one of my patches.
+> +
+> +	while (index <= end) {
+> +		int i, nr;
+
+Coding style
+> +
+> +		/* get a batch of DIRTY folios starting at index */
+> +		nr = filemap_get_folios_tag(mapping, &index, end,
+> +					    PAGECACHE_TAG_DIRTY, fbatch);
+2 tabs indentation
+> +		if (!nr)
+> +			break;
+> +
+> +		for (i = 0; i < nr; i++) {
+> +			struct folio *folio = fbatch->folios[i];
+> +
+> +			/* Filter BEFORE locking */
+> +			if (!xfs_folio_matches_ag(folio, agno))
+> +				continue;
+> +
+> +			folio_lock(folio);
+> +
+> +			/*
+> +			 * Now it's ours: clear dirty and submit.
+> +			 * This prevents *this AG worker* from seeing it again
+> +			 * next time.
+> +			 */
+> +			if (!folio_clear_dirty_for_io(folio)) {
+> +				folio_unlock(folio);
+> +				continue;
+> +			}
+> +			xa_erase(&ip->i_ag_pmap, folio->index);
+> +
+> +			ret = iomap_writeback_folio(&wpc.ctx, folio);
+> +			folio_unlock(folio);
+> +
+> +			if (ret) {
+> +				folio_batch_release(fbatch);
+> +				goto out;
+> +			}
+> +		}
+> +
+> +		folio_batch_release(fbatch);
+> +		cond_resched();
+> +	}
+> +
+> +out:
+> +	if (wpc.ctx.wb_ctx && wpc.ctx.ops && wpc.ctx.ops->writeback_submit)
+> +		wpc.ctx.ops->writeback_submit(&wpc.ctx, ret);
+> +
+> +	return ret;
+> +}
+> +
+> +static void xfs_ag_writeback_work(struct work_struct *work)
+> +{
+> +	struct xfs_ag_wb *awb = container_of(to_delayed_work(work),
+> +					     struct xfs_ag_wb, ag_work);
+> +	struct xfs_ag_wb_task *task;
+> +	struct xfs_mount *mp;
+> +	struct inode *inode;
+> +	struct xfs_inode *ip;
+> +	int ret;
+
+Coding style issues for variable declarations
+> +
+> +	for (;;) {
+Nit: I am not sure if this is a common practice in XFS to use such infinite for loops. Maybe have
+some conditional flag variable or something? Darrick, thoughts? 
+> +		spin_lock(&awb->lock);
+> +		task = list_first_entry_or_null(&awb->task_list,
+> +						struct xfs_ag_wb_task, list);
+2 tabs indentation                              ^^
+> +		if (task)
+> +			list_del_init(&task->list);
+> +		spin_unlock(&awb->lock);
+> +
+> +		if (!task)
+> +			break;
+> +
+> +		ip = task->ip;
+> +		mp = ip->i_mount;
+> +		inode = VFS_I(ip);
+> +
+> +		ret = xfs_writepages_ag(ip, &task->wbc, task->agno);
+> +
+> +		/* If didn't submit everything for this AG, set its bit */
+> +		if (ret)
+> +			set_bit(task->agno, ip->i_ag_dirty_bitmap);
+> +
+> +		iput(inode); /* drop igrab */
+> +		mempool_free(task, mp->m_ag_task_pool);
+> +	}
+> +}
+> +
+> +static int xfs_vm_writepages_offload(struct address_space *mapping,
+> +				     struct writeback_control *wbc)
+2 tabs indentation                   ^^		 
+> +{
+> +	struct inode *inode = mapping->host;
+> +	struct xfs_inode *ip = XFS_I(inode);
+> +	struct xfs_mount *mp = ip->i_mount;
+> +	struct xfs_ag_wb *awb;
+> +	struct xfs_ag_wb_task *task;
+> +	xfs_agnumber_t agno;
+> +
+
+Coding style for variable declaration ^^
+> +	if (!ip->i_ag_dirty_bits)
+> +		return 0;
+> +
+> +	for_each_set_bit(agno, ip->i_ag_dirty_bitmap, ip->i_ag_dirty_bits) {
+> +		if (!test_and_clear_bit(agno, ip->i_ag_dirty_bitmap))
+> +			continue;
+> +
+> +		task =  mempool_alloc(mp->m_ag_task_pool, GFP_NOFS);
+> +		if (!task) {
+> +			set_bit(agno, ip->i_ag_dirty_bitmap);
+> +			continue;
+> +		}
+> +
+> +		INIT_LIST_HEAD(&task->list);
+> +		task->ip = ip;
+> +		task->agno = agno;
+> +		task->wbc = *wbc;
+> +		igrab(inode); /* worker owns inode ref */
+> +
+> +		awb = &mp->m_ag_wb[agno];
+> +
+> +		spin_lock(&awb->lock);
+> +		list_add_tail(&task->list, &awb->task_list);
+> +		spin_unlock(&awb->lock);
+> +
+> +		mod_delayed_work(mp->m_ag_wq, &awb->ag_work, 0);
+> +	}
+> +
+> +	return 0;
+
+It seems that this function always returns zero - maybe in that case use void?
+> +}
+> +
+>  static const struct iomap_writeback_ops xfs_zoned_writeback_ops = {
+>  	.writeback_range	= xfs_zoned_writeback_range,
+>  	.writeback_submit	= xfs_zoned_writeback_submit,
+> @@ -706,6 +880,7 @@ xfs_init_ag_writeback(struct xfs_mount *mp)
+>  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+>  		struct xfs_ag_wb *awb = &mp->m_ag_wb[agno];
+>  
+> +		INIT_DELAYED_WORK(&awb->ag_work, xfs_ag_writeback_work);
+>  		spin_lock_init(&awb->lock);
+>  		INIT_LIST_HEAD(&awb->task_list);
+>  		awb->agno = agno;
+> @@ -769,6 +944,9 @@ xfs_vm_writepages(
+>  			xfs_open_zone_put(xc.open_zone);
+>  		return error;
+>  	} else {
+> +		if (wbc->sync_mode != WB_SYNC_ALL)
+> +			return xfs_vm_writepages_offload(mapping, wbc);
+> +
+
+Since this patch (and the overall patch series) introduces a couple of new data structures and a lot
+of new functions, can we please have some concise comments at the beginning of the functions or at
+least the functions introduced in this patch - just for a quicker understanding?
+--NR
+>  		struct xfs_writepage_ctx	wpc = {
+>  			.ctx = {
+>  				.inode	= mapping->host,
 
