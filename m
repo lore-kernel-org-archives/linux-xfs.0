@@ -1,46 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65CC53090FD;
-	Wed, 11 Feb 2026 15:36:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05F3030F7F7;
+	Wed, 11 Feb 2026 15:41:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770824208; cv=none; b=MU7GYVl2yRb0KtIJyTUhjwfNznvzPfEHtFw5ymYgMFtxyKsf00S6fGlLy8f05b8e4+KxCHk/hTXPmGsr5cSlwr/01nFq5qBdmqPflMfqBTeqZkWImUHbZUxa3P6SkZh6zazRUEaZR/6XvHq/Z82CmsKdCviSHBcxKfosL6DOwdQ=
+	t=1770824472; cv=none; b=K4bc5mMdC8XHPXz+oAvoxZxgPZEiqoA4tj7xQjqtAO1j0rJXlvRLlytFhZSInIVNpUfX5hdNT1r7F9BjAbBnBWkeNih7UB8iqvXqilux7Ukgdly2YU2F7K0KwzhveINQjM87bAflQg+qhcZI6gXnrePiqNbEQfDG2cwAj3+i12w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770824208; c=relaxed/simple;
-	bh=WJMNgtnE+vQzEPPuQj/rzkJg5/49P1a0CePxDzH8Eas=;
+	s=arc-20240116; t=1770824472; c=relaxed/simple;
+	bh=aJs/39Fr6BRe5aRAMCC8Tr/FF4UOhPyHeDCxJAFsgig=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XWWTfcNWMtgB7bXWmBeBtBZvGPjxqT3WBHtqCCiw+lyH1a+3Rqil7AKP7TzMhC9Pgfg3VELOMmErEMBQpPbrKONcCnyF6Q1v5LqRHiurpoJ2WQ6czz9fE1rZFSY2TV+jrc/1GraLgNhhkDyOpMLlD207j3Z61UxEwbinZJkVhJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2/HL/RxV; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=VFkyOUjH34nZFH0hlPMfhz3Hy2cVxKw9aMUGFQC7ORuzYRrYoaqLn7qGaD2hqIzRm9FjIalFHuucByw9f4LmvGtlo/xrua8D9LcKEpRz5NxQk+wQcR3ICCFoCcHnlNU2wOj+X7xwbN76r1rKZuXeeS60QxolmwqF9J5DcAEMo1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sCtjGMAl; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2/HL/RxV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sCtjGMAl"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=PNLS7mztLDXxLkKANq73DYvkDuOVqy+KgvHA4yDgYDo=; b=2/HL/RxVaenA39ruff/dt6dEgO
-	uPbaEhp6RFr9fSEacYjz19YMe+X9Ov+A9eT45pSSEnAGcPu/SJkZ7OudfZteLhX/gwiytIjc4l0xe
-	TwxXSTO02y7W1e9kCmwWus2v/DtD9MQGrWQbjGz+mNc6LbSHpwCb95PEzXnYsLv+zQM5veshEGxcX
-	GY6Uy/YAWvUuEy2XbjAHSDIdFQVF5aB+dq6/OszikAWt6lWPBa/3VYDKXErLowwuHSia1/IwIe7uf
-	xNtuoZN5IJ4QQsyTRG5kbKDTaDdYMko++AMuGFT7s1UV6ekZf8O+ZdssyC46qWXQLFsliP/gt1lrc
-	yAWMzXJQ==;
+	bh=iSTOlxV9SVNibpOeEzoKnxMTSS3Rhumc84h05lz/i6w=; b=sCtjGMAlJYgcEsQYK4V3Dt/DqC
+	kApRcB+Fp2ps9WIvwozId0ftXdSAZaPa0Z9C5p55hdZ7Q9sCj7XAhwCBQWNBbR2A3SgbbhTl3DwrL
+	vdD90BAa0iu2pNU3Iob93Zo2ztd589dt/5KRY2vz+IAh9I5yUhQ0L1bZyGlzfXakKJdGKEVs9ODAB
+	nZ2W44MoevZrGDoUWX1RTy1Vhm/GyhDdYieAP4AUO1mrKwXOmGXoCijGnUrW4PodgGDkT1kidOi3W
+	EQjzn56lb0tPuOrNEz2rvjS3Ma8jNzF5zsJdkljKt7RbkHCOBg/ipME/TB+pFHXxCjCMkQIGQ0tOj
+	FVT395ww==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vqCGb-00000000nRp-132k;
-	Wed, 11 Feb 2026 15:36:37 +0000
-Date: Wed, 11 Feb 2026 07:36:37 -0800
+	id 1vqCKz-00000000nng-0ctU;
+	Wed, 11 Feb 2026 15:41:09 +0000
+Date: Wed, 11 Feb 2026 07:41:09 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: Brian Foster <bfoster@redhat.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] iomap, xfs: lift zero range hole mapping flush
- into xfs
-Message-ID: <aYyiBcTx2IwfZUm2@infradead.org>
+Subject: Re: [PATCH v2 5/5] xfs: replace zero range flush with folio batch
+Message-ID: <aYyjFbZaWKRVD-ib@infradead.org>
 References: <20260129155028.141110-1-bfoster@redhat.com>
- <20260129155028.141110-2-bfoster@redhat.com>
- <aYtZtuqy72C0VvnQ@infradead.org>
- <aYuDhQj_xw3ByeD5@bfoster>
+ <20260129155028.141110-6-bfoster@redhat.com>
+ <aYta8A6dBpjZyb8c@infradead.org>
+ <aYuE2a0DdXZAPwXC@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,23 +48,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYuDhQj_xw3ByeD5@bfoster>
+In-Reply-To: <aYuE2a0DdXZAPwXC@bfoster>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Feb 10, 2026 at 02:14:13PM -0500, Brian Foster wrote:
-> On Tue, Feb 10, 2026 at 08:15:50AM -0800, Christoph Hellwig wrote:
-> > This looks sensible to me.  I'll add it to my zoned xfs test queue
-> > to make sure it doesn't break anything there, but as the zoned
-> > iomap_begin always allocates new space it should be fine.
-> > 
-> > 
-> 
-> Thanks. As you've probably noticed from looking through the rest of the
-> patches, this one is mainly a lift-and-shift initial step from iomap to
-> xfs. Let me know if anything breaks.
+On Tue, Feb 10, 2026 at 02:19:53PM -0500, Brian Foster wrote:
+> This adds a bit more code in the same area as this series. It doesn't
+> seem terrible so far, but it was one reason I was wondering if this
+> perhaps warranted splitting off its own callback. The behavior for zero
+> range here is unique enough from standard read/write ops such that might
+> be a readability improvement. Since I'm not the only person with that
+> thought, I'll take a proper look and see if it's worth a prototype to go
+> along with the mapping behavior change..
 
-Well, to one of the iomap_begin instances.  We have an entirely
-separate one for zoned mode, and we also fall back to the direct I/O
-one when a rtextsize is set.  I don't think either of the moved
-handling, but I want to be sure.
+Yeah, a separate handler might be cleaner.  Note that in
+xfs_buffered_write_iomap_begin, the zeroing special case is also
+a fairly large part of the function.
+
+One thing that might help here is my old idea of splitting looking up the
+existing mapping, and creating a new mapping for dirtied data into
+separate nested iomap iterations, preferably with a way to pass along the
+mapping for in-place updates.  That way all this zeroing special casing
+would go away, as we'd only perform an action if the read side lookup
+returned an extent.  But so far this is just a crazy idea in my mind,
+and I'm not really sure how well it would work in practice.
 
