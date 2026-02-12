@@ -1,193 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F57121E0AD;
-	Thu, 12 Feb 2026 16:44:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E3F12773E9
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Feb 2026 22:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770914648; cv=none; b=SVd86ruEoV8gLsLquZJ7U2D90yAqd42iricKl8n5kjuaQD6MRJSShJOvDwUYbWOmv4qiRucXLwhRB0sx24yTcqDKXtTqLkaG3eI70WUH/0RhkexlDBraGf+R9wkn7AyGnwdSrJvSMvgak4LDTmRlc5PZXYcra7iKFQ2zyUblyX8=
+	t=1770936635; cv=none; b=gGuUHRcP/Ypd4BbH40GNQZFmpH71gKF2YPQqyFLa6se80TbUJbwRHo+Ezhl6atr9J8HHFxKuVFup2aCXOmQGjCT2kQbejBzb4msFtVj4Vspwe6i/uWltDZyI8pPIqlNK4Og1cb+f/4NCHUOW3h8y2XGcY0yha4DZPetcEdhhYX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770914648; c=relaxed/simple;
-	bh=fBMZV8xeH7Lcc1Qw6/Gnc3TMizQuKDrdeQ4lbPdBWZU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PdAyWEGwx8FNT+/aS/ysicwB62h2/ADvBB50gXpRIYi6Q3q6nvrSw9vEYjx2COvB6ePyZedxFOeJ61WqR7M/gDaqMii+v29uvYrRSvFeRT4Cs5ZscA8IA49tmcIrVR8WqI4YHCPH07Mt39d2RVQ46i8cG/q+5/9FhXVdBrLoa0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WFmPHFdK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770936635; c=relaxed/simple;
+	bh=S4L8KEV+oGSnV0gsH17knwwqvPWzTD5JbFKFruKQbyE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cgkzOnbIKIIdnBT82fUwNfVL4oSioMJHJlWZFc5dXAQ4J/8gh/gcQbzk2g5DpvvF5Yj1GwtWUCDUiufaBarByRRWOz0oHWc8yBIUwjfHb9b2ZzGTbkCzE4anC2iFDoEudgLWbS4+WhX2oDAhW1gUQBlmVs1rY+gyetaYkN9TyXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cvdAQxcN; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WFmPHFdK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22D3FC4CEF7;
-	Thu, 12 Feb 2026 16:44:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770914647;
-	bh=fBMZV8xeH7Lcc1Qw6/Gnc3TMizQuKDrdeQ4lbPdBWZU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WFmPHFdKqSXPmhasKk6ip96QkCcVfaVRkXY7xGL6mi5SQ+PWdnwV+TJyb4uHxV0Io
-	 Ml8w67wprqX1XcrjdfahMTCL6vanjqAX4V2+xN89eJSOJI1CRM3Th3iPmtoHZUn1RO
-	 FLug9OcVocwGHa96XI29iqIbWjXvrbV5Y0QzbmcctCQzYVHSn6xNmPhiOpNnhp9+gw
-	 FNKTR7Y13CeTxnl0cMEcB2RmindzLLwohYtvTJoP4SrS/GNDbCKVAlF6KcVTSYNdxv
-	 QS9s0A9Dkgrjw0SckBQY8Sgp+tiJq2vOJP0lB4QBYzLRgy4kBvAz3QA7f92CwTMdSH
-	 9T6KlpgbpD3Dw==
-Date: Fri, 13 Feb 2026 00:44:02 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/4] Avoid failing shutdown tests without a journal
-Message-ID: <20260212164402.tbjcalfmeq6jfwum@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20260210111707.17132-1-jack@suse.cz>
- <20260212084050.uim52ck6zhffd5kl@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <zh372qbq2tq722476eaqrirmi55hxwzfs6msmzxfj6zv3jws5y@rdip5a6twsf6>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cvdAQxcN"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-823c56765fdso244682b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Feb 2026 14:50:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770936634; x=1771541434; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=XSMZQKY+yJGeWhWXBDSGG53MrRgkzS8SHGkIqFhf/2Q=;
+        b=cvdAQxcNrvKc8JpuTeXXeEaQG4hQNdLipRzOYs9/WCFZMDKf8F8wrOtrLWTQEt3YFj
+         uC9TjgCZJ5FyS10X7IdHB8kxqtKd5qwdGY1kaTym3NELyDXAN5AYc0r3qpSthF2XMFIL
+         NcdqIAAY8I51kCqwp7ISZt/t4Sm4xdUTp7e3wSyrTZRNdFDIx/h92jj2n1GGh0L26HsI
+         l9ebEaCdjjSd6Xa8vxbyrP7M/PUj8FfEFZtp/keU167iv3SP6hzsauDQp5Awe5dk/KmD
+         RVh6aAMPc9ZuLKWcTYwLGWKbNaG3DC/gnb3mmT0s4faoXx9ckA3/ZCoZuD4uRxqN+wdd
+         4Sqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770936634; x=1771541434;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XSMZQKY+yJGeWhWXBDSGG53MrRgkzS8SHGkIqFhf/2Q=;
+        b=hoG6+WW5GO/RQjumiuQj9Or1QS4pXjBh+4wbw0wD4i5KDUddW4vk0j9BDx1wUJv+nD
+         vudczcAiwKNuavASeYE8O736Hd7oOBfn8i1D8bF2wM9rrb4bUsOFWIkCo6RRpWaQxNbu
+         DRcNzhQUNluixXORpJZYrtEEoqc22HjgZa8cK6U4sRRwYK6CxjLJkSya+hzlV3ys0k0s
+         TwqzBzB+D6GNJMtqY0tIhJ0yftTWFXy0Ra/dfNPksTyGgEmk3P8EiI+GnT+p5V+XTtaO
+         EBaStA/2scMPlY+XvdZO2R0q21kHeBbNnkTzuweVopCl3QG8oFuo1DYNzxB8wVPo5Gu4
+         HGDg==
+X-Gm-Message-State: AOJu0YyYIFHVCg7otJyCziRdIB4xWllJw+x0TUNQdu7vUV1vxMu2gvWP
+	Gt6CgF8u7aYKAXJRm2/1PuKcg43AO5q6is+S491sFqTORl5okrR4FS/s
+X-Gm-Gg: AZuq6aJRqTJc2rDnw+soAVn+NuTfD0ePhud253dsIAt8qqYb39iDfVxbOuum4xNr6U/
+	c+iddWYecLMEzCRglUOyMOF93L8rKARPAWYsrsAJ+WTz1upDgES1oeBaZBal0mP7msLSD9Eh0Bb
+	YoIaUClfXZf91Lo7psoni1PgUx6/2MD1uMZfokpdyKvLDmEzXKix5Id05CWxtxVArrkj309Igus
+	VSgKmSNFCleJPct2br2ifOvphdef8WzFfDTmPjZXPrkWRATtcI40zVOzaMSFjYC/xN/uHjlNm++
+	js0UPXErbAZiwdNZMp7sfb8WZWAkKUBBUHiLHB5kqcUfGU7zd3+RCJdGhgwkMThnJxBGA0FLApD
+	i+PzR4EMutk37ZXym/vMWZLk5SLTsjVoNT/PaBeupP4aCaqptDlIy5hpwSaCAl2P4Fy3u/+uOl4
+	dbM7dRoEAhdLvtnsBxEjH4/bIIloaDYh56OuEUyHUjmD7wXcIY98l1L+RtXb9+
+X-Received: by 2002:a05:6a00:2917:b0:81f:4294:6080 with SMTP id d2e1a72fcca58-824c9516134mr870b3a.20.1770936633758;
+        Thu, 12 Feb 2026 14:50:33 -0800 (PST)
+Received: from zenbook ([159.196.5.243])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6a3e15bsm297446b3a.19.2026.02.12.14.50.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Feb 2026 14:50:33 -0800 (PST)
+From: Wilfred Mallawa <wilfred.opensource@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Subject: [PATCH v2] xfs: fix code alignment issues in xfs_ondisk.c
+Date: Fri, 13 Feb 2026 08:50:06 +1000
+Message-ID: <20260212225005.732651-2-wilfred.opensource@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <zh372qbq2tq722476eaqrirmi55hxwzfs6msmzxfj6zv3jws5y@rdip5a6twsf6>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 12, 2026 at 11:41:59AM +0100, Jan Kara wrote:
-> On Thu 12-02-26 16:40:50, Zorro Lang wrote:
-> > On Tue, Feb 10, 2026 at 12:20:17PM +0100, Jan Kara wrote:
-> > > Hello,
-> > > 
-> > > this patch series adds requirement for metadata journalling to couple
-> > > of tests using filesystem shutdown. After shutdown a filesystem without
-> > > a journal is not guaranteed to be consistent and thus tests often fail.
-> > 
-> > Hi Jan,
-> > 
-> > This patchset makes sense to me, thanks for fixing them :)
-> > 
-> > Since you brought this up, I just tried to check all cases using _require_scratch_shutdown
-> > but lack _require_metadata_journaling, I got this:
-> > 
-> > $ for f in `grep -rsnl _require_scratch_shutdown tests/`;do grep -q _require_metadata_journaling $f || echo $f;done
-> > tests/ext4/051       <=== fixed by this patchset
-> > tests/generic/050
-> > tests/generic/461
-> > tests/generic/474
-> > tests/generic/536
-> > tests/generic/599
-> > tests/generic/622
-> > tests/generic/635    <=== fixed by this patchset
-> > tests/generic/646    <=== fixed by this patchset
-> > tests/generic/705    <=== fixed by this patchset
-> > tests/generic/722
-> > tests/generic/730
-> > tests/generic/737
-> > tests/generic/775
-> > tests/generic/778
-> > tests/overlay/078
-> > tests/overlay/087
-> > tests/xfs/270
-> > tests/xfs/546
-> > 
-> > g/050 tests ro mount, so it might not need _require_metadata_journaling.
-> 
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
-Hi Jan,
+Fixup some code alignment issues in xfs_ondisk.c
 
-Thanks for your detailed response.
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+V1 -> V2:
+	- Reword the subject to clarify that this change is style related
+---
+ fs/xfs/libxfs/xfs_ondisk.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Yes, g/050 checks using _has_metadata_journaling and treats the fs
-> accordingly.
+diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+index 1914ffe59202..23cde1248f01 100644
+--- a/fs/xfs/libxfs/xfs_ondisk.h
++++ b/fs/xfs/libxfs/xfs_ondisk.h
+@@ -73,7 +73,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_entry,		8);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_entry,	8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_hdr,		32);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_map,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_leaf_name_local,	4);
+@@ -116,7 +116,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_intnode,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_entry,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_da_node_hdr,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,	4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, freetag,	0);
+ 	XFS_CHECK_OFFSET(struct xfs_dir2_data_unused, length,	2);
+-- 
+2.53.0
 
-I didn't notice that line, thanks.
-
-> 
-> > g/461 doesn't care the fs consistency, so ignore it too.
-> 
-> Ack.
-> 
-> > g/730 looks like doesn't need _require_metadata_journaling.
-> 
-> Ack.
-> 
-> > overlay/087 looks like can ignore _require_metadata_journaling.
-> 
-> I think this actually needs it since we shutdown the fs and then mount it
-> again which may fail with inconsistent fs.
-
-Thanks for the reminder, I totally overlooked the sync call. You're right, even
-aside from the journal, sync effectively help filesystem to be a consistent
-state (if no any hardware crashes during the sync running)
-
-> 
-> > Others, include g/474, g/536, g/599, g/622, g/722, g/737, g/775, g/778,
-> > overlay/078
-> > look like all need a journal fs.
-> 
-> g/474 seems good to test without metadata journalling it does syncfs and
-> then shutdown. In that case the data checksums should be valid even without
-> journalling.
-
-Sure.
-
-> 
-> g/599 should be also fine - we shutdown after remounting ro so that should
-> be working even without journalling.
-
-Oh, there's "_scratch_remount ro" before shutdown, sure.
-
-> 
-> g/622 - some bits should work even without journalling but for now I guess
-> we should just require it for simplicity.
-> 
-> g/737 - uses O_SYNC - should work even without journalling (perhaps the
-> test should be extended to fsync also the parent dir for complete correctness).
-> 
-> g/775 - tests atomic writes - should work even without journalling if the
-> fs claims to support atomic writes
-> 
-> g/778 - ditto
-> 
-> overlay/078 - this fsyncs the file before shutdown so it should work even
-> without journalling (but might need to fsync the parent dir for complete
-> correctness).
-
-I'm not sure we can arbitrarily add more sync calls before or after a specific
-fsync step. Doing so might break the original intent of the test. So I think
-we can keep it, and see if anyone complains or hits a bug later :)
-
-> 
-> > About x/270 and x/546, if we don't suppose other fs would like to run
-> > xfs cases, then xfs always support journal.
-> 
-> Correct.
-> 
-> > I initially considered calling _require_metadata_journaling directly inside
-> > _require_scratch_shutdown. However, I decided against it because some cases might
-> > only need the shutdown ioctl and don't strictly require a journal.
-> 
-> Absolutely. I think they should stay separate.
-> 
-> So to summarize I think we should still add _require_metadata_journaling to:
-> 
-> overlay/087
-> g/536
-> g/622
-> g/722
-
-Agree :)
-
-> 
-> and we might add fsync of parent directory before shutdown to g/737 and
-> overlay/078. Does this sound good?
-
-I'm concerned that adding broader sync or fsync operations might interfere with the
-test's original intent. We should probably evaluate the impact further. Alternatively,
-we could simply use _require_metadata_journaling to ensure we at least keep the
-coverage for the original bug :)
-
-Any more ideas please feel free to tell me.
-
-Thanks,
-Zorro
-
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-> 
