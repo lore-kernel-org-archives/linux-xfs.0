@@ -1,32 +1,32 @@
 Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938F92EB847
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Feb 2026 13:16:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66252FDC55
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Feb 2026 13:22:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770902183; cv=none; b=pAwYMwcPXSFz6uoUI2MxDwh33wI/ugHtSh7TlKoViyuBLYZOWWrjFC5rfNiBIpCxrO8IyVWSqV0SQzvfA/5aWezAXG9LHuzDlxMLDa+MZq9wu0KDX2VJWVwA+/BYrXR5rIVC19haJ8fKCf446Nlk95zXQ5OXRIFPbGVTAKC+vIs=
+	t=1770902548; cv=none; b=Yymx4G943Ah4Mu4YQ225loM2ZDn5aZrAEwI4zQw3pUA2SaBI+ueJBSMdPdk8Nc+4R6TPY2XjoRom32Uy3YzRmFWUS0YLROTLOuzyx1DMU0BRwku+Ui4DXa3DnUthBkywSVUPbVWT4PB6GOxfMabrVimTGOtZCva50+TiGKDUATM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770902183; c=relaxed/simple;
-	bh=yVv5TKQESSr2m5UvOaqKn+06fb2mGWtTA3esYbnJFlc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=epVSC27VgljcnChUWMGzB4rcVB3GVukVorMWKwjXxz/xaXQSKNGbBhs5rmRsqG9DJwD37eEsX9E6sXONVE6dadB0/H81jUODGWLkTx55TVhZ6z45uOEfTR9HXB/juDSr985aF1A6mV4qQJH/4aY/aUDMPeRLfs70ZZ9ufmemBOM=
+	s=arc-20240116; t=1770902548; c=relaxed/simple;
+	bh=atLY0OGsnjiiXU05WShjnn/Ore8CXVPIvG77rJiP/XE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I+ELZ8D0/cHa3ImIKrxMnnGub7JKdQm8zNDpNrrV3wxmrw69wmIj1/S/5AZ/Ic565nmQeivOPRuHQGGJoUWDzk7apitb1UOOIbbgded8gG4tzU45mCDBR/vJTmGU458WM5wMQzSOdyrUxuitZJMUE8KfysUjy46rXBHDyj1FX2A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
 Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id DC445180F2D5;
-	Thu, 12 Feb 2026 14:16:17 +0100 (CET)
+	by mx0.herbolt.com (Postfix) with ESMTP id AC3C7180F2C6;
+	Thu, 12 Feb 2026 14:12:46 +0100 (CET)
 Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
 	by mx0.herbolt.com with ESMTPSA
-	id nG4KMaHSjWk1WgEAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Thu, 12 Feb 2026 14:16:17 +0100
+	id M/U2H87RjWmoWQEAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Thu, 12 Feb 2026 14:12:46 +0100
 From: Lukas Herbolt <lukas@herbolt.com>
 To: djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v8 REBASE] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Thu, 12 Feb 2026 14:13:04 +0100
-Message-ID: <20260212131302.132709-3-lukas@herbolt.com>
+Subject: [PATCH] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Date: Thu, 12 Feb 2026 14:12:30 +0100
+Message-ID: <20260212131229.132640-2-lukas@herbolt.com>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -41,10 +41,6 @@ the unmap write zeroes operation.
 
 Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 ---
-v8 changes:
-	rebase to v6.19
-	add early check for not supported cases
-
  fs/xfs/xfs_bmap_util.c | 10 ++++++++--
  fs/xfs/xfs_bmap_util.h |  2 +-
  fs/xfs/xfs_file.c      | 39 ++++++++++++++++++++++++++-------------
