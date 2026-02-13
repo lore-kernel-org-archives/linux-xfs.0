@@ -1,180 +1,147 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B2B33066E
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Feb 2026 10:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51A8277C96
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Feb 2026 10:20:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770978013; cv=none; b=iPJS8NM9QZahnwrWC5NotnzZBuYPrIDD/tZo+Xxl5SiY+MRFXn6NyMFuU7+1FK84RCbnSkqC9lSQtfXzXuQT+tQVMP1ZH8jZ8XlvSg3akwisylKRiwD24BOXf3BLsFzXzQi6fWYkt9t/IDmA/s1AGlxD1rL8AOyed4GZyrGXdf4=
+	t=1770978055; cv=none; b=PA8HGkzToOOCGdpbIg3g4WDiJ12M6wYtXPfgKNufML8WseE7Nl+oWgD1aCIUDNE7d/IODBZFxlyok4iUyhOHNHqPDi4z/MgwbRnrl8+xUXxPaxx5gqhr/xij2Oa7vdGaHNSlOEf29Zav1IJPWG0DR/IGWzorlvc9RcudmrEHXNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770978013; c=relaxed/simple;
-	bh=Ua7cgJt0am9i20h/oREzwCJsPnd3t8Iy+Fu9BxIBTig=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=WdD66ey3loQhTr/654HytHv/EmjUpqV5ydoy58es6BIlQ0E+mjpepnCYJ2r3VfDxaaLrfPmj3hB3dRiTzXtGSBs0OT4OfHjIvNQNrptsoZVMwNmj5lrbk7qSeB/MoPb4/TdXxNJIsrcC+EMtJwNuG+zckKQZKJGp3JybQbccpv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O4EeyVac; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770978055; c=relaxed/simple;
+	bh=QkuM1KA98AjqJJLyF0SaSqtrBVA9aDzhjYALybpNT0Y=;
+	h=Message-ID:Date:MIME-Version:From:Subject:Cc:To:Content-Type; b=IYKkk/4spc8vnVB1KznQl4Xds03LeLheX+2ybaybvGQHTCD4ku4eULTPZuRugSEJtXpUk9O8L067Emws42vt8dGbDdD3nlbiAptRsI58Wo10QDtUtmIIoPB9eC7fpOelHTR3YvqKHkqFtEMJMD0uNIG5WXygDHFJ//dq8sqZwws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=S4ZmKQUW; arc=none smtp.client-ip=91.218.175.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O4EeyVac"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8249cb73792so860542b3a.3
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Feb 2026 02:20:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770978012; x=1771582812; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=zNTLNOUva/wrs64KIAki8pZHRLxbaL6YVGeBvHIT3Q4=;
-        b=O4EeyVacY5cNufng/l0xzVUXh7SDTbGQcqmpWNuOjVbYGjV6N5K+PtldkKqvT6hPY1
-         riLGammVNjb4elM9auGs4Gj9Ht9xou7vU2x2j7iZroPL+i79jBXI+d6gZzDLqvQEUmxL
-         OOrlH8AZizmTEkd41jlCK/taIRfMNIgV/v8jev73ue7KjXcDDmdL6aU1dk5Vck/D3qr+
-         GQvfVDNjTy31jqHUN8QYMBvcGK0PrzoJEEy56syKZsN/TrRoQnB5rmp9Rbu8zEsEdjyy
-         gcxE0z0Ep9RYWcAj9hfyoEHpMPQ0mMFThhYQOBLxyWz5Sg3Y+lXwFSOw8KO8GyDNKKHj
-         MTXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770978012; x=1771582812;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zNTLNOUva/wrs64KIAki8pZHRLxbaL6YVGeBvHIT3Q4=;
-        b=envOdUwRM1HoGHtocqkCIQoKZGSHLpyCQubRkfsKeD0Cw6JGjhBRTKljbJszvcU4gv
-         p5tPdTih3Sb4DXondugKjMxqlr/EzXKGIV9N3tBXz5TWxm3M966lyM34znEMR/sLy4KF
-         4tcYUJ8zxd7g2v/uwxtJJrpqMoqlw5/5R+RL7lYxba6qOYnaK6vFNo2DehUI1VAknVhW
-         Z3SmdXh/p4etH5JrH3R1iWESGYJSferpJir6aow8K4Mn01St1wWMbh253wbCn0FHTtqK
-         DJhpi6wMcrfswL2/ElUKkM+kKWaYGqq7RfczvQ+HOhangmVKF7yOOPBEF4OxKplNKB8P
-         xuTg==
-X-Forwarded-Encrypted: i=1; AJvYcCUmWIh1OjNMtDrTWSOgX+br3/p6bnw2ClQZcANBzvxPYqtxCNKstWJgxQ5TKm44hes7SqyR5/3Clko=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyg7LbOqWnsFY7Q0gvg0MPl0IYkLNbuuBt32N4fbstWZpsAKQLK
-	OQiH/Iz6llR8KY7CwudE/9hgDhOmLpQ0ShVMv6hipr6BRg52MoAOOrNr8npHcw==
-X-Gm-Gg: AZuq6aJ1YFoVs7s24meJMDXCpelG+kyw9tFyH5BL7xsvmWb5jNq3KPeGUjq0LNHSUKP
-	Unsy7LcrK1Pxs/cyNSVUMa1KAWVjufp8Z0NqMssi1dseChcprlG8Sl71ifDnEusEmMGuD0z2gnj
-	Nw2q/gBubKHgVzUsptLoMlYOk8iOQ2S/jX6mZGydBoYD2PiCtj6yHFGVrkYVrrpTKESXmRkbVMX
-	asFUYgAO3SjcSlIupw+JJKsRCFlbg9vPoFwJo2orUfN7PvmvfBVztI2GJMYPkB71JUawml8TKEL
-	GfpzLFeGKl7a2C1MO2SCbahSc5QQMI4Y+JGTx8z/N159Gnlutbn0iAuN2xJIRZUUUHjuWz18C32
-	xrEwXHg7k4T3wkeNDz6cMaGVnNcR4KIq/U6GFRBJaRqe5mECo1OQ7L16MioUWDwhs32b1DN5BNa
-	d0uGzDFWg552xjgJzpqSf01gzUMcfhO7rKGKZQEHdCHVHTcokbgkRcc+AzP5/lM2XidBhy9erkS
-	90tXmvj
-X-Received: by 2002:a05:6a00:17a8:b0:823:108c:5bae with SMTP id d2e1a72fcca58-824c946ed92mr1623723b3a.8.1770978011783;
-        Fri, 13 Feb 2026 02:20:11 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.230.129])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6b6a17fsm2692581b3a.34.2026.02.13.02.20.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Feb 2026 02:20:11 -0800 (PST)
-Message-ID: <af7b989f430a8b464f48a8404b4f60a5fb4a189f.camel@gmail.com>
-Subject: Re: [PATCH v2 1/5] iomap, xfs: lift zero range hole mapping flush
- into xfs
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Date: Fri, 13 Feb 2026 15:50:07 +0530
-In-Reply-To: <20260129155028.141110-2-bfoster@redhat.com>
-References: <20260129155028.141110-1-bfoster@redhat.com>
-	 <20260129155028.141110-2-bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="S4ZmKQUW"
+Message-ID: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1770978041;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=zuulf5kC8dVbyvKycXKA+/WFHNP1a1cf2S6fr25OXMk=;
+	b=S4ZmKQUWfUTzcb+l80Q3gDvuoftWI4D3rknQ+3HONyVjmERdEHXtzqCTluwLI3lheRxLkB
+	BedVdLXVMBk7HVoueNB1Pb9741D6IUfEDuJxSKHD9V+qk48Dxpa5sm7ZmzksF12vhQPDNA
+	9IU6Q6YuTOt163xQnbmzPqV5XP0hI7c=
+Date: Fri, 13 Feb 2026 11:20:36 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+Subject: [LSF/MM/BPF TOPIC] Buffered atomic writes
+Cc: Andres Freund <andres@anarazel.de>, djwong@kernel.org,
+ john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
+ ritesh.list@gmail.com, jack@suse.cz, ojaswin@linux.ibm.com,
+ Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
+ Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
+ tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
+To: linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+ linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, 2026-01-29 at 10:50 -0500, Brian Foster wrote:
-> iomap zero range has a wart in that it also flushes dirty pagecache
-> over hole mappings (rather than only unwritten mappings). This was
-> included to accommodate a quirk in XFS where COW fork preallocation
-> can exist over a hole in the data fork, and the associated range is
-> reported as a hole. This is because the range actually is a hole,
-> but XFS also has an optimization where if COW fork blocks exist for
-> a range being written to, those blocks are used regardless of
-> whether the data fork blocks are shared or not. For zeroing, COW
-> fork blocks over a data fork hole are only relevant if the range is
-> dirty in pagecache, otherwise the range is already considered
-> zeroed.
-> 
-> The easiest way to deal with this corner case is to flush the
-> pagecache to trigger COW remapping into the data fork, and then
-> operate on the updated on-disk state. The problem is that ext4
-> cannot accommodate a flush from this context due to being a
-> transaction deadlock vector.
-> 
-> Outside of the hole quirk, ext4 can avoid the flush for zero range
-> by using the recently introduced folio batch lookup mechanism for
-> unwritten mappings. Therefore, take the next logical step and lift
-> the hole handling logic into the XFS iomap_begin handler. iomap will
-> still flush on unwritten mappings without a folio batch, and XFS
-> will flush and retry mapping lookups in the case where it would
-> otherwise report a hole with dirty pagecache during a zero range.
-> 
-> Note that this is intended to be a fairly straightforward lift and
-> otherwise not change behavior. Now that the flush exists within XFS,
-> follow on patches can further optimize it.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/iomap/buffered-io.c |  2 +-
->  fs/xfs/xfs_iomap.c     | 25 ++++++++++++++++++++++---
->  2 files changed, 23 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6beb876658c0..807384d72311 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1620,7 +1620,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
->  		     srcmap->type == IOMAP_UNWRITTEN)) {
->  			s64 status;
->  
-> -			if (range_dirty) {
-> +			if (range_dirty && srcmap->type == IOMAP_UNWRITTEN) {
->  				range_dirty = false;
->  				status = iomap_zero_iter_flush_and_stale(&iter);
->  			} else {
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 37a1b33e9045..896d0dd07613 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1790,6 +1790,7 @@ xfs_buffered_write_iomap_begin(
->  	if (error)
->  		return error;
->  
-> +restart:
->  	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
->  	if (error)
->  		return error;
-> @@ -1817,9 +1818,27 @@ xfs_buffered_write_iomap_begin(
->  	if (eof)
->  		imap.br_startoff = end_fsb; /* fake hole until the end */
->  
-> -	/* We never need to allocate blocks for zeroing or unsharing a hole. */
-> -	if ((flags & (IOMAP_UNSHARE | IOMAP_ZERO)) &&
-> -	    imap.br_startoff > offset_fsb) {
-> +	/* We never need to allocate blocks for unsharing a hole. */
-> +	if ((flags & IOMAP_UNSHARE) && imap.br_startoff > offset_fsb) {
-> +		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> +		goto out_unlock;
-> +	}
-> +
-> +	/*
-> +	 * We may need to zero over a hole in the data fork if it's fronted by
-> +	 * COW blocks and dirty pagecache. To make sure zeroing occurs, force
-> +	 * writeback to remap pending blocks and restart the lookup.
-> +	 */
-> +	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-> +		if (filemap_range_needs_writeback(inode->i_mapping, offset,
-> +						  offset + count - 1)) {
-> +			xfs_iunlock(ip, lockmode);
+Hi all,
 
-I am a bit new to this section of the code - so a naive question:
-Why do we need to unlock the inode here? Shouldn't the mappings be thread safe while the write/flush
-is going on?
---NR
-> +			error = filemap_write_and_wait_range(inode->i_mapping,
-> +						offset, offset + count - 1);
-> +			if (error)
-> +				return error;
-> +			goto restart;
-> +		}
->  		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
->  		goto out_unlock;
->  	}
+Atomic (untorn) writes for Direct I/O have successfully landed in kernel
+for ext4 and XFS[1][2]. However, extending this support to Buffered I/O 
+remains a contentious topic, with previous discussions often stalling 
+due to concerns about complexity versus utility.
+
+I would like to propose a session to discuss the concrete use cases for
+buffered atomic writes and if possible, talk about the outstanding
+architectural blockers blocking the current RFCs[3][4].
+
+## Use Case:
+
+A recurring objection to buffered atomics is the lack of a convincing 
+use case, with the argument that databases should simply migrate to 
+direct I/O. We have been working with PostgreSQL developer Andres 
+Freund, who has highlighted a specific architectural requirement where 
+buffered I/O remains preferable in certain scenarios.
+
+While Postgres recently started to support direct I/O, optimal 
+performance requires a large, statically configured user-space buffer 
+pool. This becomes problematic when running many Postgres instances on 
+the same hardware, a common deployment scenario. Statically partitioning 
+RAM for direct I/O caches across many instances is inefficient compared 
+to allowing the kernel page cache to dynamically balance memory pressure 
+between instances.
+
+The other use case is using postgres as part of a larger workload on one
+instance. Using up enough memory for postgres' buffer pool to make DIO 
+use viable is often not realistic, because some deployments require a 
+lot of memory to cache database IO, while others need a lot of memory 
+for non-database caching.
+
+Enabling atomic writes for this buffered workload would allow Postgres 
+to disable full-page writes [5]. For direct I/O, this has shown to 
+reduce transaction variability; for buffered I/O, we expect similar 
+gains, alongside decreased WAL bandwidth and storage costs for WAL 
+archival. As a side note, for most workloads full page writes occupy  a 
+significant portion of WAL volume.
+
+Andres has agreed to attend LSFMM this year to discuss these requirements.
+
+## Discussion:
+
+We currently have RFCs posted by John Garry and Ojaswin Mujoo, and there
+was a previous LSFMM proposal about untorn buffered writes from Ted Tso.
+Based on the conversation/blockers we had before, the discussion at 
+LSFMM should focus on the following blocking issues:
+
+- Handling Short Writes under Memory Pressure[6]: A buffered atomic
+   write might span page boundaries. If memory pressure causes a page
+   fault or reclaim mid-copy, the write could be torn inside the page
+   cache before it even reaches the filesystem.
+     - The current RFC uses a "pinning" approach: pinning user pages and
+       creating a BVEC to ensure the full copy can proceed atomically.
+       This adds complexity to the write path.
+     - Discussion: Is this acceptable? Should we consider alternatives,
+       such as requiring userspace to mlock the I/O buffers before
+       issuing the write to guarantee atomic copy in the page cache?
+
+- Page Cache Model vs. Filesystem CoW: The current RFC introduces a
+   PG_atomic page flag to track dirty pages requiring atomic writeback.
+   This faced pushback due to page flags being a scarce resource[7].
+   Furthermore, it was argued that atomic model does not fit the buffered
+   I/O model because data sitting in the page cache is vulnerable to
+   modification before writeback occurs, and writeback does not preserve
+   application ordering[8].
+     -  Dave Chinner has proposed leveraging the filesystem's CoW path
+        where we always allocate new blocks for the atomic write (forced
+        CoW). If the hardware supports it (e.g., NVMe atomic limits), the
+        filesystem can optimize the writeback to use REQ_ATOMIC in place,
+        avoiding the CoW overhead while maintaining the architectural
+        separation.
+     - Discussion: While the CoW approach fits XFS and other CoW
+       filesystems well, it presents challenges for filesystems like ext4
+       which lack CoW capabilities for data. Should this be a filesystem
+       specific feature?
+
+Comments or Curses, all are welcome.
+
+--
+Pankaj
+
+[1] https://lwn.net/Articles/1009298/
+[2] https://docs.kernel.org/6.17/filesystems/ext4/atomic_writes.html
+[3] 
+https://lore.kernel.org/linux-fsdevel/20240422143923.3927601-1-john.g.garry@oracle.com/
+[4] https://lore.kernel.org/all/cover.1762945505.git.ojaswin@linux.ibm.com
+[5] 
+https://www.postgresql.org/docs/16/runtime-config-wal.html#GUC-FULL-PAGE-WRITES
+[6] 
+https://lore.kernel.org/linux-fsdevel/ZiZ8XGZz46D3PRKr@casper.infradead.org/
+[7] 
+https://lore.kernel.org/linux-fsdevel/aRSuH82gM-8BzPCU@casper.infradead.org/
+[8] 
+https://lore.kernel.org/linux-fsdevel/aRmHRk7FGD4nCT0s@dread.disaster.area/
 
