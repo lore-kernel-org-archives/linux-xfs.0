@@ -1,161 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECBD954758;
-	Fri, 13 Feb 2026 06:16:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD3223536B;
+	Fri, 13 Feb 2026 07:02:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770963363; cv=none; b=AjpAbljYpQBLsAJfG6l32FTJLuwnno5bZVujQTp73wGThpSH7txMJIfo7muusevV7x5qK/dWQKMpIHndDIWMepCJHoeH3wo4XFXXGNZvCRmNwOHOoIOlAUtuIhiwlIYzhSPRhGBUQLaaShwzXYeG0GY+lzKuDo7X4s77XXt4tCM=
+	t=1770966122; cv=none; b=UE/RHYS4ngfsf991LXXCafdZnJagcZd1Hnleu+qJ4qRM9UEUIVRAQLBIJnY8X0SPe6mqTOuddi6ALiJbRI/imyeeFa3c7QrnZXhjWEimR8ZqaVc2xiP14UHMSoQKrLpffgWEYv5hxs7u239krGbVPUctZ0E6FbmAWnH5tLxT/CQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770963363; c=relaxed/simple;
-	bh=W3RxpfxwjDUi/lf+ieDlNq3xonQWusqmMpzBKFNmLHg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=dC7UPs3QBvs0KPME647+424tYeLCFKQGCxleGKvQlP7PwwjIISq5wGj7inSrnGAUwFA1v2xo0rNZY3ty5o1x4pcHBuii6G/XZkgXtLVYsu0I7sTiB9bhJgO8If2i8yWKu099FOGhgKPKxajIqRN5ChhkJi8kK6rQXsnTjTXO38M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BoE/4weF; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1770966122; c=relaxed/simple;
+	bh=ydS4jE/FuR90d2+OxmMK7Gc0AAs69afw83mKljgmL04=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UjxotQlOagVU7iVmMtDY8k71E5NLAWCqIvXwJNeY8JMPcdCs9Ax5Ko3u/KbfbN+JunFXTqd5CPkQKoQYwNyBVB64BxldmW6CtlXvGeGCh5zfoVid2pdy1S+9u6LICd2Fn+XNuH9jZVTI8mwgniElXvxyqzCD+P5wxR+HVWdXl+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=r0pBBPht; arc=none smtp.client-ip=216.71.154.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BoE/4weF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=R6MCeCQIudUdCJb7W2+7m3UWEQYipLV/JlJeNx6RuHo=; b=BoE/4weFlLW3aMCXhE/uNIrPeM
-	vDqI6KW5PP287EtCGKpN5M30UZW1S8cP5jqOE3NT5ock4zwYy8+PG8V7qjNsa/35UpuKyl84lSf7p
-	61rVZzDB4XIxPyaD/VFsxlpKBxyff4iii4vxTjSWhwSMKxwBJiQUzaT/ESfX9BCzjFxfT3yL0r8TX
-	OiYA6TOpOHqs4qWzt8kBhgqjiw73A2h+Fw+B+M5mleFNLBVnzWivj+wuYMZadrbULzlWYHelxYL3/
-	Kee9rC7bm9T5hGNEfEKP5/ZReptflYgdmI1y3AgMZEVyhEdJfB1V9jC91jH+hutxqDhN7cHTU/vSp
-	wjo2h49Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vqmT7-000000033Xv-3Pfl;
-	Fri, 13 Feb 2026 06:16:00 +0000
-Date: Thu, 12 Feb 2026 22:15:57 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz
-Subject: inconsistent lock state in the new fserror code
-Message-ID: <aY7BndIgQg3ci_6s@infradead.org>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="r0pBBPht"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1770966121; x=1802502121;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ydS4jE/FuR90d2+OxmMK7Gc0AAs69afw83mKljgmL04=;
+  b=r0pBBPhtw/lCoSq7cNIMWA5ScAH6qgoej9BCeGyrioz273SjhxYfxakb
+   z+eGY0hKmr63l691Shu1fu7ABhrc0fS6uLT3UY7SEsNRDNQ3gto9P3jQz
+   UCmjFNrgLuJDWCvr8jCTijYlUWRjZYO7xlAuMSSdtNUbqWfo+Rg6BroSN
+   BHnYEVBjuh121zeHBh+o4BT2WtxTOi/9RargroXsOkLVoR2YxcF8C85v+
+   r4JWBHYcgK5EECFX0T+rht7hUb8p/AnjkNz9ykUJtHt3B5t8EabT/SGxI
+   wV4uCbFtI/Qs20KWvV+8JBVAmmt9ja45l8M4jz8hyg7uqSP2Ducbns2BQ
+   A==;
+X-CSE-ConnectionGUID: OoYhvgbnSiq0VS9jJ6cseA==
+X-CSE-MsgGUID: EOOOsnYfSuC5fOE2OVBAfg==
+X-IronPort-AV: E=Sophos;i="6.21,288,1763395200"; 
+   d="scan'208";a="137154150"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Feb 2026 15:01:54 +0800
+IronPort-SDR: 698ecc62_seVu63iXk2RRIOU4oE8YAnQnh3l5dteF4aYAw7ZstxUH7Di
+ 3RLO6UEgrXSYut/f72dmbMKnlILcJ4nenrEO7ow==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Feb 2026 23:01:55 -0800
+WDCIronportException: Internal
+Received: from wdap-yooxex5p9f.ad.shared (HELO neo.wdc.com) ([10.224.28.126])
+  by uls-op-cesaip01.wdc.com with ESMTP; 12 Feb 2026 23:01:52 -0800
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 0/2] fstests: simplify per-fs _fixed_by_kernel_commit
+Date: Fri, 13 Feb 2026 08:01:46 +0100
+Message-ID: <20260213070148.37518-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-xfstests generic/108 makes lockdep unhappy with the new fserror code
-in Linus' tree, see the trace below.  The problem seems to be that
-igrab takes i_lock to protect against a inode that is beeing freed.
-Error reporting doesn't care about that, but we don't really have
-a good interface to just grab a reference.
+Hi Zorro,
 
-[  149.494670] ================================
-[  149.494871] WARNING: inconsistent lock state
-[  149.495073] 6.19.0+ #4827 Tainted: G                 N 
-[  149.495336] --------------------------------
-[  149.495560] inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
-[  149.495857] swapper/1/0 [HC1[1]:SC0[0]:HE0:SE1] takes:
-[  149.496111] ffff88811ed1b140 (&sb->s_type->i_lock_key#33){?.+.}-{3:3}, at: igrab+0x1a/0xb0
-[  149.496543] {HARDIRQ-ON-W} state was registered at:
-[  149.496853]   lock_acquire+0xca/0x2c0
-[  149.497057]   _raw_spin_lock+0x2e/0x40
-[  149.497257]   unlock_new_inode+0x2c/0xc0
-[  149.497460]   xfs_iget+0xcf4/0x1080
-[  149.497643]   xfs_trans_metafile_iget+0x3d/0x100
-[  149.497882]   xfs_metafile_iget+0x2b/0x50
-[  149.498144]   xfs_mount_setup_metadir+0x20/0x60
-[  149.498163]   xfs_mountfs+0x457/0xa60
-[  149.498163]   xfs_fs_fill_super+0x6b3/0xa90
-[  149.498163]   get_tree_bdev_flags+0x13c/0x1e0
-[  149.498163]   vfs_get_tree+0x27/0xe0
-[  149.498163]   vfs_cmd_create+0x54/0xe0
-[  149.498163]   __do_sys_fsconfig+0x309/0x620
-[  149.498163]   do_syscall_64+0x8b/0xf80
-[  149.498163]   entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[  149.498163] irq event stamp: 139080
-[  149.498163] hardirqs last  enabled at (139079): [<ffffffff813a923c>] do_idle+0x1ec/0x270
-[  149.498163] hardirqs last disabled at (139080): [<ffffffff828a8d09>] common_interrupt+0x19/0xe0
-[  149.498163] softirqs last  enabled at (139032): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
-[  149.498163] softirqs last disabled at (139025): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
-[  149.498163] 
-[  149.498163] other info that might help us debug this:
-[  149.498163]  Possible unsafe locking scenario:
-[  149.498163] 
-[  149.498163]        CPU0
-[  149.498163]        ----
-[  149.498163]   lock(&sb->s_type->i_lock_key#33);
-[  149.498163]   <Interrupt>
-[  149.498163]     lock(&sb->s_type->i_lock_key#33);
-[  149.498163] 
-[  149.498163]  *** DEADLOCK ***
-[  149.498163] 
-[  149.498163] 1 lock held by swapper/1/0:
-[  149.498163]  #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
-[  149.498163] 
-[  149.498163] stack backtrace:
-[  149.498163] CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full) 
-[  149.498163] Tainted: [N]=TEST
-[  149.498163] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
-[  149.498163] Call Trace:
-[  149.498163]  <IRQ>
-[  149.498163]  dump_stack_lvl+0x5b/0x80
-[  149.498163]  print_usage_bug.part.0+0x22c/0x2c0
-[  149.498163]  mark_lock+0xa6f/0xe90
-[  149.498163]  ? mempool_alloc_noprof+0x91/0x130
-[  149.498163]  ? set_track_prepare+0x39/0x60
-[  149.498163]  ? mempool_alloc_noprof+0x91/0x130
-[  149.498163]  ? fserror_report+0x8a/0x260
-[  149.498163]  ? iomap_finish_ioend_buffered+0x170/0x210
-[  149.498163]  ? clone_endio+0x8f/0x1c0
-[  149.498163]  ? blk_update_request+0x1e4/0x4d0
-[  149.498163]  ? blk_mq_end_request+0x1b/0x100
-[  149.498163]  ? virtblk_done+0x6f/0x110
-[  149.498163]  ? vring_interrupt+0x59/0x80
-[  149.498163]  ? __handle_irq_event_percpu+0x8a/0x2e0
-[  149.498163]  ? handle_irq_event+0x33/0x70
-[  149.498163]  ? handle_edge_irq+0xdd/0x1e0
-[  149.498163]  __lock_acquire+0x10b6/0x25e0
-[  149.498163]  ? __pcs_replace_empty_main+0x369/0x510
-[  149.498163]  ? __pcs_replace_empty_main+0x369/0x510
-[  149.498163]  lock_acquire+0xca/0x2c0
-[  149.498163]  ? igrab+0x1a/0xb0
-[  149.498163]  ? rcu_is_watching+0x11/0x50
-[  149.498163]  ? __kmalloc_noprof+0x3ab/0x5a0
-[  149.498163]  _raw_spin_lock+0x2e/0x40
-[  149.498163]  ? igrab+0x1a/0xb0
-[  149.498163]  igrab+0x1a/0xb0
-[  149.498163]  fserror_report+0x135/0x260
-[  149.498163]  iomap_finish_ioend_buffered+0x170/0x210
-[  149.498163]  ? __pfx_stripe_end_io+0x10/0x10
-[  149.498163]  clone_endio+0x8f/0x1c0
-[  149.498163]  blk_update_request+0x1e4/0x4d0
-[  149.498163]  ? __pfx_sg_pool_free+0x10/0x10
-[  149.498163]  ? mempool_free+0x3d/0x50
-[  149.498163]  blk_mq_end_request+0x1b/0x100
-[  149.498163]  virtblk_done+0x6f/0x110
-[  149.498163]  vring_interrupt+0x59/0x80
-[  149.498163]  __handle_irq_event_percpu+0x8a/0x2e0
-[  149.498163]  handle_irq_event+0x33/0x70
-[  149.498163]  handle_edge_irq+0xdd/0x1e0
-[  149.498163]  __common_interrupt+0x6f/0x180
-[  149.498163]  common_interrupt+0xb7/0xe0
-[  149.498163]  </IRQ>
-[  149.498163]  <TASK>
-[  149.498163]  asm_common_interrupt+0x26/0x40
-[  149.498163] RIP: 0010:default_idle+0xf/0x20
-[  149.498163] Code: 4c 01 c7 4c 29 c2 e9 6e ff ff ff 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa eb 07 0f 00 2d a9 88 15 00 fb f4 <fa> c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00 00 90 90 90 90 90
-[  149.498163] RSP: 0018:ffffc9000009fed8 EFLAGS: 00000206
-[  149.498163] RAX: 0000000000021f47 RBX: ffff888100ad53c0 RCX: 0000000000000000
-[  149.498163] RDX: 0000000000000000 RSI: ffffffff83278fb9 RDI: ffffffff8329090b
-[  149.498163] RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000000
-[  149.498163] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
-[  149.498163] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
-[  149.498163]  default_idle_call+0x7e/0x1a0
-[  149.498163]  do_idle+0x1ec/0x270
-[  149.498163]  cpu_startup_entry+0x24/0x30
-[  149.498163]  start_secondary+0xf7/0x100
-[  149.498163]  common_startup_64+0x13e/0x148
-[  149.498163]  </TASK>
+Christoph asked in https://lore.kernel.org/r/20260210155123.GA3552@lst.de
+to introduce a _fixed_by_fs_commit helper, that encapulates the
+ if [ $FSTYP" = fs ] && _fixed_by_kernel_commit XXXXXX "blah"
+pattern.
+
+Here's my take on it. I also thought about adding more helpers like:
+- _fixed_by_btrfs_commit
+- _fixed_by_xfs_commit
+- _fixed_by_ext4_commit
+but not sure if this is going too far.
+
+Johannes Thumshirn (2):
+  fstests: add _fixed_by_fs_commit helper
+  fstests: use _fixed_by_fs_commit where appropriate
+
+ common/rc         |  9 +++++++++
+ tests/generic/211 |  2 +-
+ tests/generic/362 |  3 +--
+ tests/generic/363 | 10 ++++------
+ tests/generic/364 |  3 +--
+ tests/generic/365 | 15 ++++++---------
+ tests/generic/366 |  2 +-
+ tests/generic/367 |  2 +-
+ tests/generic/370 |  5 ++---
+ tests/generic/471 |  2 +-
+ tests/generic/562 |  3 +--
+ tests/generic/623 |  2 +-
+ tests/generic/631 |  3 +--
+ tests/generic/646 |  2 +-
+ tests/generic/649 |  2 +-
+ tests/generic/650 |  2 +-
+ tests/generic/695 |  2 +-
+ tests/generic/700 |  2 +-
+ tests/generic/701 |  2 +-
+ tests/generic/702 |  2 +-
+ tests/generic/703 |  3 +--
+ tests/generic/704 |  2 +-
+ tests/generic/706 |  3 +--
+ tests/generic/707 |  2 +-
+ tests/generic/708 |  3 +--
+ tests/generic/733 | 10 ++--------
+ tests/generic/736 |  2 +-
+ tests/generic/738 |  2 +-
+ tests/generic/741 |  2 +-
+ tests/generic/742 |  3 +--
+ tests/generic/748 |  2 +-
+ tests/generic/755 |  2 +-
+ tests/generic/757 |  2 +-
+ tests/generic/761 |  2 +-
+ tests/generic/763 |  2 +-
+ tests/generic/764 |  2 +-
+ tests/generic/766 |  8 +++-----
+ tests/generic/771 |  2 +-
+ tests/generic/779 |  2 +-
+ tests/generic/782 |  2 +-
+ tests/generic/784 |  2 +-
+ tests/generic/785 |  2 +-
+ 42 files changed, 62 insertions(+), 75 deletions(-)
+
+-- 
+2.53.0
+
