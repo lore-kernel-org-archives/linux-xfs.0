@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA4E15A86D
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Feb 2026 22:14:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B0C2580D7;
+	Fri, 13 Feb 2026 22:38:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771020845; cv=none; b=cFI+JFr1BZzClj77kIojahHBi0mP1a/HsbqaU1RLEDBFIIiFTbzf7EHdRtXKsuP4Any7WKkjcv9RpqVyEL/Q9Or92kvPDsEGTLejLvGBWWD9r13CmRANoc+JFlUwOl8kbDjJLknZ4xZx/XX96BU50/jUK1hexCRBmPHCpYjCMtE=
+	t=1771022320; cv=none; b=LortIQ9+OaQ0ZCxQqPhDmJvxGkFFu3WmacUw/1Reh0LbyxsC1NBJ9EcXoerKGnCKUMWAbjZS/v59Xx0tonbNyfSsqqGhQWODpBvi6M8OVPz1T8eZwqLPulFynDF5QtMHo+3keR8JPSuoS5m2cg5ryfxC+Igk21Zipfgm8i8UfwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771020845; c=relaxed/simple;
-	bh=8MrgrlZn3xqRUYUaETYAP/lLjKPaLChIKD+VbCyByfU=;
+	s=arc-20240116; t=1771022320; c=relaxed/simple;
+	bh=Ve8YwiigmrDNnLpgP+LGYVw5qMqRy8pGkihEnM4HGU4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SKt2tYzp6qLD8aEf/YAm+n9dAEQZPmPhwkxOUfBqmJt7+9cpWbtiGQQ1qD1/jMkPUKaPmEPhXw/4dbFe2nuhHcadBQoQ8wRaPAtqqRukHNw9g1kn940U4LzVP24VJIAeB2j2LH8bzjifKI5Dn7J+aqoMzzGgQCuWbbXQPq3L6Q4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k3jzcXWd; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=kkhwRW2RcamSQnAfdKL70cax8x3kbnqfHL8O+jKwvkAfhg38cq5C8Np/pNv9xdp1K9sUKGLadQodRQ5SiYMHtBSlxpYT43leG3ybUKPdqSykuF8J70YVh5kKYjyJOKIYQ6hj0xyDth+tR42P4BhlSz38yntwgHmdhXWCxDt//cg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eM97uQ/j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k3jzcXWd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A6E9C116C6;
-	Fri, 13 Feb 2026 22:14:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eM97uQ/j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E94EBC116C6;
+	Fri, 13 Feb 2026 22:38:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771020844;
-	bh=8MrgrlZn3xqRUYUaETYAP/lLjKPaLChIKD+VbCyByfU=;
+	s=k20201202; t=1771022320;
+	bh=Ve8YwiigmrDNnLpgP+LGYVw5qMqRy8pGkihEnM4HGU4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=k3jzcXWd1Sh6rm+ZFTP/piwqCJZ0r6vmNM41txN0HjoPxO1xeNdyeIBjRelACms4n
-	 q3QK5WXjxKypjp1p0oCgY47lZF18BCbYxV2zAtUJ+hOSqsbU2Exm1IT+2mWPg2hOWo
-	 3vYXn2JJOknHaQjDrKkZM+6/gBhZYvT7D7BXCVqz7EtBqxz1cGLA/zDUPreBuid7AY
-	 cBn4u/cHrEcbKAsIgLU1Ez4JDdkyp7EfpjyouFWAOzQDRoxkHTXW+HFwxKr1j94jT7
-	 Btwyax+s3iCbv373pneXo62GOv1nJgGWBN1UYLo4GFb211z0APRz4ph4XAsXJbd7Ea
-	 +iPZ3nhoS1xfg==
-Date: Fri, 13 Feb 2026 14:14:04 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: hch <hch@lst.de>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [bug report] xfs/802 failure due to mssing fstype report by lsblk
-Message-ID: <20260213221404.GH7712@frogsfrogsfrogs>
-References: <aYWobEmDn0jSPzqo@shinmob>
- <20260206173805.GY7712@frogsfrogsfrogs>
- <aYlHZ4bBQI3Vpb3N@shinmob>
- <20260209060716.GL1535390@frogsfrogsfrogs>
- <20260209062821.GA9021@lst.de>
- <aYmRhwnL286jv550@shinmob>
- <20260210020040.GC7712@frogsfrogsfrogs>
- <aYrKf6ukceZrSRhJ@shinmob>
+	b=eM97uQ/jZL8Byarre/CtJi3EvtDh+ZpxLTcE691Ixua0anP9MVXlaekK0VKZpHyo2
+	 2i0J1Oc06ZX8eYourC9B2WAKmSvW/kZsjeY97pJv4h1XTXAyJ/UMt1wC9e/AMnrQ9R
+	 jI+G4D2Uy4Cb+Y0qFDtuAH2RINx/oHogOaAe2RdMiYQ65ZtOWNpr+DMrb+ewHVlg+K
+	 gukZdU9wsxMtGK8cBuKgIjvg1sdvGjR/dOso1rKhJIYqElj+YJrcsWuAvOOcyKmWT7
+	 LvxUOqEt0r3E+C+1f5anbSbJhyK1HQHMZnxOHalgAO8mw43Dr2nzxOBWXg6kXPww+r
+	 9tN8nmrvZPypQ==
+Date: Sat, 14 Feb 2026 09:38:26 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, jack@suse.cz
+Subject: Re: inconsistent lock state in the new fserror code
+Message-ID: <aY-n4leNi4NCzri1@dread>
+References: <aY7BndIgQg3ci_6s@infradead.org>
+ <20260213160041.GT1535390@frogsfrogsfrogs>
+ <20260213190757.GJ7693@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,160 +45,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYrKf6ukceZrSRhJ@shinmob>
+In-Reply-To: <20260213190757.GJ7693@frogsfrogsfrogs>
 
-On Tue, Feb 10, 2026 at 06:19:21AM +0000, Shinichiro Kawasaki wrote:
-> On Feb 09, 2026 / 18:00, Darrick J. Wong wrote:
-> > On Mon, Feb 09, 2026 at 07:54:38AM +0000, Shinichiro Kawasaki wrote:
-> > > On Feb 09, 2026 / 07:28, hch wrote:
-> > > > On Sun, Feb 08, 2026 at 10:07:16PM -0800, Darrick J. Wong wrote:
-> > > > > Waitaminute, how can you even format xfs on nullblk to run fstests?
-> > > > > Isn't that the bdev that silently discards everything written to it, and
-> > > > > returns zero on reads??
-> > > > 
-> > > > nullblk can be used with or without a backing store.  In the former
-> > > > case it will not always return zeroes on reads obviously.
-> > > 
-> > > Yes, null_blk has the "memory_backed" parameter. When 1 is set to this, data
-> > > written to the null_blk device is kept and read back. I create two 8GiB null_blk
-> > > devices enabling this memory_backed option, and use them as TEST_DEV and
-> > > SCRATCH_DEV for the regular xfs test runs.
+On Fri, Feb 13, 2026 at 11:07:57AM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 13, 2026 at 08:00:41AM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 12, 2026 at 10:15:57PM -0800, Christoph Hellwig wrote:
+> > > [  149.498163] other info that might help us debug this:
+> > > [  149.498163]  Possible unsafe locking scenario:
+> > > [  149.498163] 
+> > > [  149.498163]        CPU0
+> > > [  149.498163]        ----
+> > > [  149.498163]   lock(&sb->s_type->i_lock_key#33);
+> > > [  149.498163]   <Interrupt>
+> > > [  149.498163]     lock(&sb->s_type->i_lock_key#33);
 > > 
-> > Huh, ok.  Just out of curiosity, does blkid (in cache mode) /ever/ see
-> > the xfs filesystem?  I'm wondering if there's a race, a slow utility, or
-> > if whatever builds the blkid cache sees that it's nullblk and ignores
-> > it?
+> > Er... is lockdep telling us here that we could take i_lock in
+> > unlock_new_inode, get interrupted, and then take another i_lock?
+
+Yes.
+
+> > > [  149.498163] 
+> > > [  149.498163]  *** DEADLOCK ***
+> > > [  149.498163] 
+> > > [  149.498163] 1 lock held by swapper/1/0:
+> > > [  149.498163]  #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
+> > > [  149.498163] 
+> > > [  149.498163] stack backtrace:
+> > > [  149.498163] CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full) 
+> > > [  149.498163] Tainted: [N]=TEST
+> > > [  149.498163] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
+> > > [  149.498163] Call Trace:
+> > > [  149.498163]  <IRQ>
+> > > [  149.498163]  dump_stack_lvl+0x5b/0x80
+> > > [  149.498163]  print_usage_bug.part.0+0x22c/0x2c0
+> > > [  149.498163]  mark_lock+0xa6f/0xe90
+> > > [  149.498163]  __lock_acquire+0x10b6/0x25e0
+> > > [  149.498163]  lock_acquire+0xca/0x2c0
+> > > [  149.498163]  _raw_spin_lock+0x2e/0x40
+> > > [  149.498163]  igrab+0x1a/0xb0
+> > > [  149.498163]  fserror_report+0x135/0x260
+> > > [  149.498163]  iomap_finish_ioend_buffered+0x170/0x210
+> > > [  149.498163]  clone_endio+0x8f/0x1c0
+> > > [  149.498163]  blk_update_request+0x1e4/0x4d0
+> > > [  149.498163]  blk_mq_end_request+0x1b/0x100
+> > > [  149.498163]  virtblk_done+0x6f/0x110
+> > > [  149.498163]  vring_interrupt+0x59/0x80
+
+Ok, so why are we calling iomap_finish_ioend_buffered() from IRQ
+context? That looks like a bug because the only IO completion call
+chain that can get into iomap_finish_ioend_buffered() is supposedly:
+
+iomap_finish_ioends
+  iomap_finish_ioend
+    iomap_finish_ioend_buffered
+
+And the comment above iomap_finish_ioends() says:
+
+/*
+ * Ioend completion routine for merged bios. This can only be called from task
+ * contexts as merged ioends can be of unbound length. Hence we have to break up
+ * the writeback completions into manageable chunks to avoid long scheduler
+ * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
+ * good batch processing throughput without creating adverse scheduler latency
+ * conditions.
+ */
+
+Ah, there's the problem - pure buffered overwrites from XFS use
+ioend_writeback_end_bio(), not xfs_end_bio(). Hence the buffered
+write completion is not punted to a workqueue, and it calls
+iomap_finish_ioend_buffered() direct from the bio completion
+context.
+
+Yeah, that seems like a bug that needs fixing in the
+ioend_writeback_end_bio() function - if there's an IO error, it
+needs to punt the processing of the ioend to a workqueue...
+
+> > > [  149.498163]  __handle_irq_event_percpu+0x8a/0x2e0
+> > > [  149.498163]  handle_irq_event+0x33/0x70
+> > > [  149.498163]  handle_edge_irq+0xdd/0x1e0
+> > > [  149.498163]  __common_interrupt+0x6f/0x180
+> > > [  149.498163]  common_interrupt+0xb7/0xe0
+> > 
+> > Hrmm, so we're calling fserror_report/igrab from an interrupt handler.
+> > The bio endio function is for writeback ioend completion.
+
+Yup, this is one of the reasons writeback doesn't hold an inode
+reference over IO - we can't call iput() from an interrupt context.
+
+> > igrab takes i_lock to check if the inode is in FREEING or WILL_FREE
+> > state.  However, the fact that it's in writeback presumably means that
+> > the vfs still holds an i_count on this inode,
+
+Writeback holds an inode reference over submission only.
+
+> > so the inode cannot be
+> > freed until iomap_finish_ioend_buffered completes.
+
+iput()->iput_final()->evict will block in inode_wait_for_writeback()
+waiting for outstanding writeback to complete before it starts
+tearing down the inode. This isn't controlled by reference counts.
+
+> /me hands himself another cup of coffee, changes that to:
 > 
-> I tried the experement below, using /dev/nullb1 formatted as xfs:
-> 
-> # Clear blkid cache
-> $ sudo rm /run/blkid/blkid.tab
-> 
-> # Call blkid, but normal user can not parse superblock, then can not get fstype.
-> $ blkid --match-tag=TYPE /dev/nullb1
-> 
-> # Call blkid with superuser privilege. It can get fstype, but does not cache it,
-> # since --probe option is specified.
-> $ sudo blkid --probe --match-tag=TYPE /dev/nullb1
-> /dev/nullb1: TYPE="xfs"
-> 
-> # Still normal user can not get fstype since fstype is not cached.
-> $ blkid --match-tag=TYPE /dev/nullb1
-> 
-> # Call blkid as superuser without --probe option. It caches the fstype.
-> $sudo blkid --match-tag=TYPE /dev/nullb1
-> /dev/nullb1: TYPE="xfs"
-> 
-> # Now normal user can get fstype referring to the cache
-> $ blkid --match-tag=TYPE /dev/nullb1
-> /dev/nullb1: TYPE="xfs"
-> 
-> 
-> Based on this result, my understanding is that blkid caches its superblock
-> parse results when --probe, or -p option, is not specified. As far as I git
-> grep util-linux, this behavior does not change for null_blk.
+> 	/*
+> 	 * Can't iput from non-sleeping context, so grabbing another
+> 	 * reference to the inode must be the last thing before
+> 	 * submitting the event.  Open-code the igrab here to avoid
+> 	 * taking i_lock in interrupt context.
+> 	 */
+> 	if (inode) {
+> 		WARN_ON_ONCE(inode_unhashed(inode));
+> 		WARN_ON_ONCE(inode_state_read_once(inode) &
+> 					(I_NEW | I_FREEING | I_WILL_FREE));
 
-<sigh> I just spent two hours digging further into why your nullblk
-device doesn't show up in the lsblk output.
+It is valid for the inode have a zero reference count and have either
+I_FREEING or I_WILL_FREE set here if another task has dropped the
+final inode reference while writeback IO is still in flight.
 
-Let's start with creating an nullblk device and formatting it:
+> 		if (!atomic_inc_not_zero(&inode->i_count))
+> 			goto lost_event;
 
-# modprobe null_blk gb=1 memory_backed=1
-# mkfs.ext2 -F /dev/nullb0
-# mkfs.ext2 -F /dev/sda
-# mount /dev/nullb0 /mnt
+Overall, I'm not sure using atomic_inc_not_zero() is safe here. It
+may be, but I don't think this is how the problem should be solved.
+Punt ioend w/ IO errors to a work queue, and then nothing needs to
+change w.r.t. the fserror handling of the inodes. i.e. it will be
+save to use inode->i_lock and hence igrab()...
 
-Now let's query lsblk:
+Cheers,
 
-# lsblk -o NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT,UUID
-NAME   KNAME  TYPE FSTYPE MOUNTPOINT UUID
-sda    sda    disk ext2              cca89aa9-2dfd-4609-9f62-8a3c88c2054a
-nullb0 nullb0 disk        /mnt
-
-For nullb0, lsblk finds the mountpoint, but it can't identify it as an
-ext2 filesystem.  stracing the output, I see that it opens
-/run/udev/data/b${major}:${minor} to find out the filesystem type.
-
-# cat /run/udev/data/b252\:0
-I:991780315
-G:systemd
-Q:systemd
-V:1
-# cat /run/udev/data/b8\:0
-S:disk/by-uuid/cca89aa9-2dfd-4609-9f62-8a3c88c2054a
-S:disk/by-path/pci-0000:00:06.0-scsi-0:0:0:0
-S:disk/by-diskseq/1
-S:disk/by-id/scsi-0QEMU_RAMDISK_drive-scsi0-0-0-0
-I:592459
-E:ID_FS_UUID=cca89aa9-2dfd-4609-9f62-8a3c88c2054a
-E:ID_FS_UUID_ENC=cca89aa9-2dfd-4609-9f62-8a3c88c2054a
-E:ID_FS_VERSION=1.0
-E:ID_FS_BLOCKSIZE=4096
-E:ID_FS_LASTBLOCK=2579968
-E:ID_FS_SIZE=10567548928
-E:ID_FS_TYPE=ext2
-E:ID_FS_USAGE=filesystem
-E:ID_SCSI=1
-E:ID_VENDOR=QEMU
-E:ID_VENDOR_ENC=QEMU\x20\x20\x20\x20
-E:ID_MODEL=RAMDISK
-E:ID_MODEL_ENC=RAMDISK\x20\x20\x20\x20\x20\x20\x20\x20\x20
-E:ID_REVISION=2.5+
-E:ID_TYPE=disk
-E:ID_SERIAL=0QEMU_RAMDISK_drive-scsi0-0-0-0
-E:ID_SERIAL_SHORT=drive-scsi0-0-0-0
-E:ID_BUS=scsi
-E:ID_PATH=pci-0000:00:06.0-scsi-0:0:0:0
-E:ID_PATH_TAG=pci-0000_00_06_0-scsi-0_0_0_0
-E:UDISKS_AUTO=0
-G:systemd
-Q:systemd
-V:1
-
-As you can see, the udev device database saw that sda has an ext2
-filesystem, but records almost nothing for nullb0.  That's why lsblk
-doesn't detect fstype for nullb0.  Why doesn't udev record anything for
-nullb0?  I suspect it has something to do with this hunk of
-60-block.rules:
-
-ACTION!="remove", SUBSYSTEM=="block", \
-  KERNEL=="loop*|mmcblk*[0-9]|msblk*[0-9]|mspblk*[0-9]|nvme*|sd*|vd*|xvd*|bcache*|cciss*|dasd*|ubd*|ubi*|scm*|pmem*|nbd*|zd*|rbd*|zram*|ublkb*", \
-  OPTIONS+="watch"
-
-This causes udev to establish an inotify watch on block devices.  When a
-bdev is opened for write and closed, udev receives the inotify event and
-synthesizes a change uevent.  Annoyingly, creating a new rule file with:
-
-ACTION!="remove", SUBSYSTEM=="block", \
-  KERNEL=="nullb*", \
-  OPTIONS+="watch"
-
-doesn't fix the problem, and I'm not familiar enough with the set of
-udev rule files on a Debian 13 system to make any further diagnoses.  If
-you're really interested in using nullblk as a ramdisk for this purpose
-then I think you should file a bug against systemd to make lsblk work
-properly for nullblk.
-
-Note: blkid without the -p looks at /run/blkid/blkid.tab and does not
-pay attention to the /run/udev files.  I don't know why the two
-utilities look at different files.
-
-> Anyway, I think blkid with --probe option is good for fstests usage, since it
-> directly checks the superblock of the target block devices.
-
-That's not an attractive option for fixing xfs/802.  The test fails
-because xfs_scrub is never run against the scratch fs on the nullblk.
-The scratch fs is not seen by xfs_scrub_all because lsblk doesn't see a
-fstype for nullb0.  lsblk doesn't see that because (apparently) udev
-doesn't touch nullb0.
-
-The lsblk call is internal to xfs_scrub_all; it needs lsblk's json
-output to find all mounted XFS filesystems on the system.  blkid doesn't
-reveal anything about mount points.
-
-Yes, we could change xfs_scrub_all to call blkid -p on every block
-device for which lsblk doesn't find a fstype but does find a mountpoint,
-but at that point I say xfs shouldn't be working around bugs in udev
-that concern an ephemeral block device.
-
---D
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
