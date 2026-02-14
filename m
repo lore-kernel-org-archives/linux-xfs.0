@@ -1,179 +1,234 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B0C2580D7;
-	Fri, 13 Feb 2026 22:38:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F5516A956
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Feb 2026 04:57:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771022320; cv=none; b=LortIQ9+OaQ0ZCxQqPhDmJvxGkFFu3WmacUw/1Reh0LbyxsC1NBJ9EcXoerKGnCKUMWAbjZS/v59Xx0tonbNyfSsqqGhQWODpBvi6M8OVPz1T8eZwqLPulFynDF5QtMHo+3keR8JPSuoS5m2cg5ryfxC+Igk21Zipfgm8i8UfwE=
+	t=1771045045; cv=none; b=ULHktOY8fJ881BbsG5dY/DgxhVmWdlMySSTukVhBjVj53/ZuM5ecNmRnHjY2ISiW2ASVpXLieCt9Wy1Q6zPXLIBBw96vwzlvKqR5Mq0Dgg4HvXmSlJdjlWqvF+FxilcF8ZhP98I05rvjQjMgEaFfptJMeqTCxJ7R7DKEtqt4ZgI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771022320; c=relaxed/simple;
-	bh=Ve8YwiigmrDNnLpgP+LGYVw5qMqRy8pGkihEnM4HGU4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kkhwRW2RcamSQnAfdKL70cax8x3kbnqfHL8O+jKwvkAfhg38cq5C8Np/pNv9xdp1K9sUKGLadQodRQ5SiYMHtBSlxpYT43leG3ybUKPdqSykuF8J70YVh5kKYjyJOKIYQ6hj0xyDth+tR42P4BhlSz38yntwgHmdhXWCxDt//cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eM97uQ/j; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eM97uQ/j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E94EBC116C6;
-	Fri, 13 Feb 2026 22:38:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771022320;
-	bh=Ve8YwiigmrDNnLpgP+LGYVw5qMqRy8pGkihEnM4HGU4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eM97uQ/jZL8Byarre/CtJi3EvtDh+ZpxLTcE691Ixua0anP9MVXlaekK0VKZpHyo2
-	 2i0J1Oc06ZX8eYourC9B2WAKmSvW/kZsjeY97pJv4h1XTXAyJ/UMt1wC9e/AMnrQ9R
-	 jI+G4D2Uy4Cb+Y0qFDtuAH2RINx/oHogOaAe2RdMiYQ65ZtOWNpr+DMrb+ewHVlg+K
-	 gukZdU9wsxMtGK8cBuKgIjvg1sdvGjR/dOso1rKhJIYqElj+YJrcsWuAvOOcyKmWT7
-	 LvxUOqEt0r3E+C+1f5anbSbJhyK1HQHMZnxOHalgAO8mw43Dr2nzxOBWXg6kXPww+r
-	 9tN8nmrvZPypQ==
-Date: Sat, 14 Feb 2026 09:38:26 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz
-Subject: Re: inconsistent lock state in the new fserror code
-Message-ID: <aY-n4leNi4NCzri1@dread>
-References: <aY7BndIgQg3ci_6s@infradead.org>
- <20260213160041.GT1535390@frogsfrogsfrogs>
- <20260213190757.GJ7693@frogsfrogsfrogs>
+	s=arc-20240116; t=1771045045; c=relaxed/simple;
+	bh=7nuuXLg6f0Ij0qLE2O/LBNCdJ6veInoV/ITegksbfqo=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=iMRDMaVvguIg6m2wk2DH4lljUy2i/RxqC7aBIp3pslQ97nLv3DK6qyxUM88fL6jMZPE1B2yl5pEXIrXQVPWQGRH0381JSWBgjkTqdA5LwP6afmZR3AxxN7uGse8XWhQUkR4drgnrqtRCHi1wuBhQmfrjMnBBX3wPe2uEHUzXJHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-6781479fe9dso7982507eaf.1
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Feb 2026 20:57:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771045043; x=1771649843;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/GfvfsL74IF+0808tUlB4O0Z5LOEFg8wa3bl5940VRQ=;
+        b=ifFTlBoizwgZ4fOj77RFjwT00Pl2WmAjDxQjSNCpqEtgs9irocVR8/X6Mi7+As8Dz1
+         SI6bb6tvwUMa4qW/IR7JNI+2+1DW/MAljz6Rz3VX6w77GDk5Xn12B1B/67SQFs2X0yrD
+         4NiCPTlk+NiLXspHisLo+rBgDzJVNpwkxAJ26veUTff73aORmDLF2LFOJac/EIF1QuGi
+         RkPTU/S+16ghgWt+sHAKFYDpAZG2MF5jTNiiyST/3ySf3ahX1EqMHZk7o41mIYcVR3aS
+         0fyXKyCj6/Mq7w+1STeBBHROKmML1IpAdF2LKIy2yfFYM+OOTfHg50AB7+8DH60tm9I5
+         yyYw==
+X-Forwarded-Encrypted: i=1; AJvYcCVt5QCYqsBLVIvhECbs7CZb24TzzAjkv442EFqgXEHH6KEgRfA/SYQNavsPkvRVbvJlKMKWtSl+LDU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwWpep8ZgTcxH6Ir17oY5VFxIM/CsQsqsH058DivvtAiJ2nX0tm
+	M+h/wbp+kpR4diD2p+CuJIfiPgKY8fv0JKYamxMfPzOXEfaHzHIyxaa5es00Dhc5V406xB3Yzzl
+	XsPWb/ORVQGMCMGS2X8cfOBTsi0czxxKd6LTpncmY9NQy6Pwi9Xmd/fPdE04=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260213190757.GJ7693@frogsfrogsfrogs>
+X-Received: by 2002:a05:6820:498e:b0:676:a419:cf76 with SMTP id
+ 006d021491bc7-6782342471dmr1119140eaf.40.1771045042872; Fri, 13 Feb 2026
+ 20:57:22 -0800 (PST)
+Date: Fri, 13 Feb 2026 20:57:22 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <699000b2.050a0220.3a4a67.00a6.GAE@google.com>
+Subject: [syzbot] [xfs?] inconsistent lock state in igrab
+From: syzbot <syzbot+5eb0d61dfb76ca12670c@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Feb 13, 2026 at 11:07:57AM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 13, 2026 at 08:00:41AM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 12, 2026 at 10:15:57PM -0800, Christoph Hellwig wrote:
-> > > [  149.498163] other info that might help us debug this:
-> > > [  149.498163]  Possible unsafe locking scenario:
-> > > [  149.498163] 
-> > > [  149.498163]        CPU0
-> > > [  149.498163]        ----
-> > > [  149.498163]   lock(&sb->s_type->i_lock_key#33);
-> > > [  149.498163]   <Interrupt>
-> > > [  149.498163]     lock(&sb->s_type->i_lock_key#33);
-> > 
-> > Er... is lockdep telling us here that we could take i_lock in
-> > unlock_new_inode, get interrupted, and then take another i_lock?
+Hello,
 
-Yes.
+syzbot found the following issue on:
 
-> > > [  149.498163] 
-> > > [  149.498163]  *** DEADLOCK ***
-> > > [  149.498163] 
-> > > [  149.498163] 1 lock held by swapper/1/0:
-> > > [  149.498163]  #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
-> > > [  149.498163] 
-> > > [  149.498163] stack backtrace:
-> > > [  149.498163] CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full) 
-> > > [  149.498163] Tainted: [N]=TEST
-> > > [  149.498163] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
-> > > [  149.498163] Call Trace:
-> > > [  149.498163]  <IRQ>
-> > > [  149.498163]  dump_stack_lvl+0x5b/0x80
-> > > [  149.498163]  print_usage_bug.part.0+0x22c/0x2c0
-> > > [  149.498163]  mark_lock+0xa6f/0xe90
-> > > [  149.498163]  __lock_acquire+0x10b6/0x25e0
-> > > [  149.498163]  lock_acquire+0xca/0x2c0
-> > > [  149.498163]  _raw_spin_lock+0x2e/0x40
-> > > [  149.498163]  igrab+0x1a/0xb0
-> > > [  149.498163]  fserror_report+0x135/0x260
-> > > [  149.498163]  iomap_finish_ioend_buffered+0x170/0x210
-> > > [  149.498163]  clone_endio+0x8f/0x1c0
-> > > [  149.498163]  blk_update_request+0x1e4/0x4d0
-> > > [  149.498163]  blk_mq_end_request+0x1b/0x100
-> > > [  149.498163]  virtblk_done+0x6f/0x110
-> > > [  149.498163]  vring_interrupt+0x59/0x80
+HEAD commit:    8a5203c630c6 Merge tag 'v7.0-rc-part1-smb3-client-fixes' o..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=158b97fa580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=e987256b161b7ac5
+dashboard link: https://syzkaller.appspot.com/bug?extid=5eb0d61dfb76ca12670c
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
 
-Ok, so why are we calling iomap_finish_ioend_buffered() from IRQ
-context? That looks like a bug because the only IO completion call
-chain that can get into iomap_finish_ioend_buffered() is supposedly:
+Unfortunately, I don't have any reproducer for this issue yet.
 
-iomap_finish_ioends
-  iomap_finish_ioend
-    iomap_finish_ioend_buffered
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/a3e5efac4c35/disk-8a5203c6.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/d4bd99ed6dad/vmlinux-8a5203c6.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/228bf34253f1/bzImage-8a5203c6.xz
 
-And the comment above iomap_finish_ioends() says:
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+5eb0d61dfb76ca12670c@syzkaller.appspotmail.com
 
-/*
- * Ioend completion routine for merged bios. This can only be called from task
- * contexts as merged ioends can be of unbound length. Hence we have to break up
- * the writeback completions into manageable chunks to avoid long scheduler
- * holdoffs. We aim to keep scheduler holdoffs down below 10ms so that we get
- * good batch processing throughput without creating adverse scheduler latency
- * conditions.
- */
+I/O error, dev loop8, sector 18692 op 0x0:(READ) flags 0x880700 phys_seg 1 prio class 2
+================================
+WARNING: inconsistent lock state
+syzkaller #0 Tainted: G             L     
+--------------------------------
+inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+kworker/u8:12/11736 [HC0[0]:SC1[1]:HE1:SE0] takes:
+ffff88807fafd500 (&sb->s_type->i_lock_key#50){+.?.}-{3:3}, at: spin_lock include/linux/spinlock.h:351 [inline]
+ffff88807fafd500 (&sb->s_type->i_lock_key#50){+.?.}-{3:3}, at: igrab+0x2a/0x230 fs/inode.c:1574
+{SOFTIRQ-ON-W} state was registered at:
+  lock_acquire kernel/locking/lockdep.c:5868 [inline]
+  lock_acquire+0x17c/0x330 kernel/locking/lockdep.c:5825
+  __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
+  _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
+  spin_lock include/linux/spinlock.h:351 [inline]
+  unlock_new_inode+0x7a/0x330 fs/inode.c:1213
+  xfs_finish_inode_setup fs/xfs/xfs_inode.h:630 [inline]
+  xfs_setup_existing_inode fs/xfs/xfs_inode.h:637 [inline]
+  xfs_iget+0x1196/0x30f0 fs/xfs/xfs_icache.c:814
+  xfs_mountfs+0x108c/0x20b0 fs/xfs/xfs_mount.c:1072
+  xfs_fs_fill_super+0x153f/0x1f20 fs/xfs/xfs_super.c:1947
+  get_tree_bdev_flags+0x38c/0x620 fs/super.c:1694
+  vfs_get_tree+0x92/0x320 fs/super.c:1754
+  fc_mount fs/namespace.c:1193 [inline]
+  do_new_mount_fc fs/namespace.c:3761 [inline]
+  do_new_mount fs/namespace.c:3837 [inline]
+  path_mount+0x7d0/0x23d0 fs/namespace.c:4147
+  do_mount fs/namespace.c:4160 [inline]
+  __do_sys_mount fs/namespace.c:4349 [inline]
+  __se_sys_mount fs/namespace.c:4326 [inline]
+  __x64_sys_mount+0x293/0x310 fs/namespace.c:4326
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xc9/0xf80 arch/x86/entry/syscall_64.c:94
+  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+irq event stamp: 1437372
+hardirqs last  enabled at (1437372): [<ffffffff8b7b9792>] __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:151 [inline]
+hardirqs last  enabled at (1437372): [<ffffffff8b7b9792>] _raw_spin_unlock_irqrestore+0x52/0x80 kernel/locking/spinlock.c:194
+hardirqs last disabled at (1437371): [<ffffffff8b7b94a2>] __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:108 [inline]
+hardirqs last disabled at (1437371): [<ffffffff8b7b94a2>] _raw_spin_lock_irqsave+0x52/0x60 kernel/locking/spinlock.c:162
+softirqs last  enabled at (1437320): [<ffffffff872b1a07>] spin_unlock_bh include/linux/spinlock.h:396 [inline]
+softirqs last  enabled at (1437320): [<ffffffff872b1a07>] nsim_dev_trap_report drivers/net/netdevsim/dev.c:890 [inline]
+softirqs last  enabled at (1437320): [<ffffffff872b1a07>] nsim_dev_trap_report_work+0x8c7/0xd10 drivers/net/netdevsim/dev.c:921
+softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] __do_softirq kernel/softirq.c:656 [inline]
+softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] invoke_softirq kernel/softirq.c:496 [inline]
+softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] __irq_exit_rcu+0xef/0x150 kernel/softirq.c:723
 
-Ah, there's the problem - pure buffered overwrites from XFS use
-ioend_writeback_end_bio(), not xfs_end_bio(). Hence the buffered
-write completion is not punted to a workqueue, and it calls
-iomap_finish_ioend_buffered() direct from the bio completion
-context.
+other info that might help us debug this:
+ Possible unsafe locking scenario:
 
-Yeah, that seems like a bug that needs fixing in the
-ioend_writeback_end_bio() function - if there's an IO error, it
-needs to punt the processing of the ioend to a workqueue...
+       CPU0
+       ----
+  lock(&sb->s_type->i_lock_key#50);
+  <Interrupt>
+    lock(&sb->s_type->i_lock_key#50);
 
-> > > [  149.498163]  __handle_irq_event_percpu+0x8a/0x2e0
-> > > [  149.498163]  handle_irq_event+0x33/0x70
-> > > [  149.498163]  handle_edge_irq+0xdd/0x1e0
-> > > [  149.498163]  __common_interrupt+0x6f/0x180
-> > > [  149.498163]  common_interrupt+0xb7/0xe0
-> > 
-> > Hrmm, so we're calling fserror_report/igrab from an interrupt handler.
-> > The bio endio function is for writeback ioend completion.
+ *** DEADLOCK ***
 
-Yup, this is one of the reasons writeback doesn't hold an inode
-reference over IO - we can't call iput() from an interrupt context.
+2 locks held by kworker/u8:12/11736:
+ #0: ffff888079e6c148 ((wq_completion)loop8){+.+.}-{0:0}, at: process_one_work+0x11ae/0x1840 kernel/workqueue.c:3232
+ #1: ffffc9001333fc98 ((work_completion)(&worker->work)){+.+.}-{0:0}, at: process_one_work+0x927/0x1840 kernel/workqueue.c:3233
 
-> > igrab takes i_lock to check if the inode is in FREEING or WILL_FREE
-> > state.  However, the fact that it's in writeback presumably means that
-> > the vfs still holds an i_count on this inode,
+stack backtrace:
+CPU: 1 UID: 0 PID: 11736 Comm: kworker/u8:12 Tainted: G             L      syzkaller #0 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/24/2026
+Workqueue: loop8 loop_workfn
+Call Trace:
+ <IRQ>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_usage_bug.part.0+0x257/0x340 kernel/locking/lockdep.c:4042
+ print_usage_bug kernel/locking/lockdep.c:4010 [inline]
+ valid_state kernel/locking/lockdep.c:4056 [inline]
+ mark_lock_irq kernel/locking/lockdep.c:4267 [inline]
+ mark_lock+0x74a/0xa20 kernel/locking/lockdep.c:4753
+ mark_usage kernel/locking/lockdep.c:4642 [inline]
+ __lock_acquire+0x103a/0x2630 kernel/locking/lockdep.c:5191
+ lock_acquire kernel/locking/lockdep.c:5868 [inline]
+ lock_acquire+0x17c/0x330 kernel/locking/lockdep.c:5825
+ __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
+ _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
+ spin_lock include/linux/spinlock.h:351 [inline]
+ igrab+0x2a/0x230 fs/inode.c:1574
+ fserror_report+0x3fd/0x750 fs/fserror.c:159
+ fserror_report_io include/linux/fserror.h:48 [inline]
+ iomap_finish_folio_read+0x168/0x2c0 fs/iomap/buffered-io.c:407
+ iomap_read_end_io+0x11a/0x430 fs/iomap/bio.c:17
+ bio_endio+0x755/0x8b0 block/bio.c:1709
+ blk_update_request+0x741/0x1330 block/blk-mq.c:1007
+ blk_mq_end_request+0x5b/0x420 block/blk-mq.c:1169
+ lo_complete_rq+0x1d4/0x2a0 drivers/block/loop.c:314
+ blk_complete_reqs+0xb1/0xf0 block/blk-mq.c:1244
+ handle_softirqs+0x1ea/0x910 kernel/softirq.c:622
+ __do_softirq kernel/softirq.c:656 [inline]
+ invoke_softirq kernel/softirq.c:496 [inline]
+ __irq_exit_rcu+0xef/0x150 kernel/softirq.c:723
+ irq_exit_rcu+0x9/0x30 kernel/softirq.c:739
+ instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1056 [inline]
+ sysvec_apic_timer_interrupt+0xa3/0xc0 arch/x86/kernel/apic/apic.c:1056
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:697
+RIP: 0010:__raw_spin_unlock_irq include/linux/spinlock_api_smp.h:160 [inline]
+RIP: 0010:_raw_spin_unlock_irq+0x29/0x50 kernel/locking/spinlock.c:202
+Code: 90 f3 0f 1e fa 53 48 8b 74 24 08 48 89 fb 48 83 c7 18 e8 fa 9c 67 f6 48 89 df e8 e2 ea 67 f6 e8 fd 31 93 f6 fb bf 01 00 00 00 <e8> 92 39 58 f6 65 8b 05 1b 79 6a 08 85 c0 74 06 5b e9 ec a9 94 f5
+RSP: 0018:ffffc9001333fb30 EFLAGS: 00000202
+RAX: 000000000015eea7 RBX: ffff888141bdd0c8 RCX: 0000000000000040
+RDX: 0000000000000000 RSI: ffffffff8dc4d62d RDI: 0000000000000001
+RBP: ffff888141bdd168 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000000 R12: ffff888141bdd168
+R13: ffff888141bdd170 R14: ffffffff8e211280 R15: 0000000004208060
+ spin_unlock_irq include/linux/spinlock.h:401 [inline]
+ loop_process_work+0xa0a/0x11c0 drivers/block/loop.c:1977
+ process_one_work+0x9c2/0x1840 kernel/workqueue.c:3257
+ process_scheduled_works kernel/workqueue.c:3340 [inline]
+ worker_thread+0x5da/0xe40 kernel/workqueue.c:3421
+ kthread+0x3b3/0x730 kernel/kthread.c:463
+ ret_from_fork+0x754/0xaf0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
+ </TASK>
+----------------
+Code disassembly (best guess):
+   0:	90                   	nop
+   1:	f3 0f 1e fa          	endbr64
+   5:	53                   	push   %rbx
+   6:	48 8b 74 24 08       	mov    0x8(%rsp),%rsi
+   b:	48 89 fb             	mov    %rdi,%rbx
+   e:	48 83 c7 18          	add    $0x18,%rdi
+  12:	e8 fa 9c 67 f6       	call   0xf6679d11
+  17:	48 89 df             	mov    %rbx,%rdi
+  1a:	e8 e2 ea 67 f6       	call   0xf667eb01
+  1f:	e8 fd 31 93 f6       	call   0xf6933221
+  24:	fb                   	sti
+  25:	bf 01 00 00 00       	mov    $0x1,%edi
+* 2a:	e8 92 39 58 f6       	call   0xf65839c1 <-- trapping instruction
+  2f:	65 8b 05 1b 79 6a 08 	mov    %gs:0x86a791b(%rip),%eax        # 0x86a7951
+  36:	85 c0                	test   %eax,%eax
+  38:	74 06                	je     0x40
+  3a:	5b                   	pop    %rbx
+  3b:	e9 ec a9 94 f5       	jmp    0xf594aa2c
 
-Writeback holds an inode reference over submission only.
 
-> > so the inode cannot be
-> > freed until iomap_finish_ioend_buffered completes.
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-iput()->iput_final()->evict will block in inode_wait_for_writeback()
-waiting for outstanding writeback to complete before it starts
-tearing down the inode. This isn't controlled by reference counts.
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-> /me hands himself another cup of coffee, changes that to:
-> 
-> 	/*
-> 	 * Can't iput from non-sleeping context, so grabbing another
-> 	 * reference to the inode must be the last thing before
-> 	 * submitting the event.  Open-code the igrab here to avoid
-> 	 * taking i_lock in interrupt context.
-> 	 */
-> 	if (inode) {
-> 		WARN_ON_ONCE(inode_unhashed(inode));
-> 		WARN_ON_ONCE(inode_state_read_once(inode) &
-> 					(I_NEW | I_FREEING | I_WILL_FREE));
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-It is valid for the inode have a zero reference count and have either
-I_FREEING or I_WILL_FREE set here if another task has dropped the
-final inode reference while writeback IO is still in flight.
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-> 		if (!atomic_inc_not_zero(&inode->i_count))
-> 			goto lost_event;
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-Overall, I'm not sure using atomic_inc_not_zero() is safe here. It
-may be, but I don't think this is how the problem should be solved.
-Punt ioend w/ IO errors to a work queue, and then nothing needs to
-change w.r.t. the fserror handling of the inodes. i.e. it will be
-save to use inode->i_lock and hence igrab()...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+If you want to undo deduplication, reply with:
+#syz undup
