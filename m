@@ -1,107 +1,103 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FCBA2E717B
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 13:18:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46EA62EC0AA;
+	Mon, 16 Feb 2026 14:59:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771247898; cv=none; b=CirvaPbh3VdgL/0VTWRLwPYcodci0JTf0L0nEFUCK7qS0nWJWCswPJeOV8KtT6IjUxV77EWtNdXyhGSpt42xOh9nwWa9UzQ6+2ARhzk+wcoNVFfehqWn7sNqCeq27FJQWMtvjOFqp4VspR5CY0oybfCjtq1OV3lOo+RudCB1Vko=
+	t=1771253985; cv=none; b=Fn0flUGTitQ+/pNmFAQOXBZL1jLu883s1qPYpaieFQcACP6uluP0hIqwh4t/gifwBwB3u3JwUm8vSd5JIpYjj5vlQmAHLvk5K36ez/Y/avpmClkX91dr4z3O5CNEMx6iJmYz/TfVma+OvsaKyO93w3JfM05A8gBPO7wiOo2GDJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771247898; c=relaxed/simple;
-	bh=vZEGwyLXtwS50t+qseTk7VEoyijqYlIwNiT1NUT/MaQ=;
+	s=arc-20240116; t=1771253985; c=relaxed/simple;
+	bh=oc55y3wjpZlo833gGfIcwf9bnB6EdTCJlBIxD29V68E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WuCBdz0MixGJ585qZCBKyk7XPnYZM7o90cPRQWyLU5yju9YF4hOcu6FdT01SrDdDf7rksjypyPHTG28wFS4fWmx+gD/RiYAS/rCuaAC4eUuctU+mY8s4cO03y6mfGtvhjS08t6QrjOVjubJQd992n/ErzDIbXukD1Gbv1ua0fPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=p48jLXCy; arc=none smtp.client-ip=91.218.175.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=pOBfUWd+7Sc33IA8jiZEM+eLNJChSUs1YHI9NgD59Zw5N0K69txMMbjYUDUcqUOd9iqgS+FqkZMyMhkWVgIVp/oXioRONXw4X3QwoAwexAAWEi0sxt6Z/kf0s1Sf6WGIhhYa3klLSrFhjw+fCsbhWj3zK/zPvc/RgbugQ8bX5GA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=b9mkgaCF; arc=none smtp.client-ip=213.97.179.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="p48jLXCy"
-Message-ID: <c29d36eb-0706-4f3c-aaed-de7d9ef74bed@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771247894;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V05ejPvopLo9DRbeUi1eZlG4ZZP00I4HL4AVm44w2ig=;
-	b=p48jLXCyB4VQIxa8U3Gdq7k8wKO8XyymBq6W8BKSRkDN7UxEod2Qo9XWM6In41SsmVr+1X
-	6bxBpYh3sSb2Zy2qbVUyeFagIxBxAeBh7JjAaEUhiDSJL47UcvZlEFoNMF1POC5KagDyAC
-	gKbYB0/kLVuZKWkLCLWUh1bnjRK+ODA=
-Date: Mon, 16 Feb 2026 14:18:10 +0100
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="b9mkgaCF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
+	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=QxvgiaqVGCdeAbIPSiymes9zs7t9hJVWrxFxQjBQv9A=; b=b9mkgaCFKmDR3uUeKv38fBPlRg
+	oNKjrKR415peZXAlfQOXGvzNGm4OZdQ3Qvhm250ewB6UzAT7qLMlYw2siUKErOyOKWzYI5IUxHiJR
+	OIZlmXY8WJ8/hJMlU5ScacR+Rx1MLJYIzg0M+gOLhKPyXhZ3j2B3LxXUth8cwUdfslCjCFM+1I3eM
+	mj9Jp/pI8g3BB+CMww1S3jI+hFu4/zRUSgnd2dTb6OBQPaEn042GgRzjQfbEMeAfmPKxIHb/7rh0L
+	16bGQOltX759CtlZcMszJxAC4L5pRncMOTza9zZPBzIr2NM1xunCaLZ0CxGvQv0WTJX6o8mhZmcZt
+	Jku+Qbgw==;
+Received: from [191.204.193.173] (helo=[192.168.15.100])
+	by fanzine2.igalia.com with esmtpsa 
+	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
+	id 1vs04J-001Kau-SZ; Mon, 16 Feb 2026 15:59:24 +0100
+Message-ID: <8bec19de-6e6e-418a-a256-5918bd835d98@igalia.com>
+Date: Mon, 16 Feb 2026 11:59:14 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-To: Jan Kara <jack@suse.cz>, Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
- Andres Freund <andres@anarazel.de>, djwong@kernel.org,
- john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
- ritesh.list@gmail.com, Luis Chamberlain <mcgrof@kernel.org>,
- dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
- gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
- vi.shah@samsung.com
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] ovl: Use real disk UUID for origin file handles
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Chuck Lever <chuck.lever@oracle.com>,
+ Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>,
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Christian Brauner <brauner@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, kernel-dev@igalia.com, vivek@collabora.com,
+ Ludovico de Nittis <ludovico.denittis@collabora.com>
+References: <20260114-tonyk-get_disk_uuid-v1-0-e6a319e25d57@igalia.com>
+ <22b16e24-d10e-43f6-bc2b-eeaa94310e3a@igalia.com>
+ <CAOQ4uxhbz7=XT=C3R8XqL0K_o7KwLKsoNwgk=qJGuw2375MTJw@mail.gmail.com>
+ <0241e2c4-bf11-4372-9eda-cccaba4a6d7d@igalia.com>
+ <CAOQ4uxi988PutUi=Owm5zf6NaCm90PUCJLu7dw8firH8305w-A@mail.gmail.com>
+ <33c1ccbd-abbe-4278-8ab1-d7d645c8b6e8@igalia.com>
+ <CAOQ4uxgCM=q29Vs+35y-2K9k7GP2A2NfPkuqCrUiMUHW+KhbWw@mail.gmail.com>
+ <75a9247a-12f4-4066-9712-c70ab41c274f@igalia.com>
+ <CAOQ4uxig==FAd=2hO0B_CVBDSuBwdqL-zaXkpf-QXn5iEL364g@mail.gmail.com>
+ <CAOQ4uxg6dKr4XB3yAkfGd_ehZkBMcoNHiF5CeB9=3aca44yHRg@mail.gmail.com>
+ <ee38734b-c4c3-4b96-8ff2-b4ce5730b57c@igalia.com>
+ <8ab387b1-c4aa-40a5-946f-f4510d8afd02@igalia.com>
+ <CAOQ4uxiRpwuyfj_Wy3Zj+HAi+jgQOq8nPQK8wmn6Hgsz-9i1fw@mail.gmail.com>
+ <CAOQ4uxhHFvYNAgES9wpM_C-7GvfwXC2xet1ensfeQOyPJRAuNQ@mail.gmail.com>
+ <05c37282-715e-4334-82e6-aea3241f15eb@igalia.com>
+ <CAOQ4uxgzK7qYDFWYT62jH_zq8JkLGussD5ro4cKDqSNQqBiVUA@mail.gmail.com>
 Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
+From: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>
+In-Reply-To: <CAOQ4uxgzK7qYDFWYT62jH_zq8JkLGussD5ro4cKDqSNQqBiVUA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
 
-
-
-On 2/16/2026 12:38 PM, Jan Kara wrote:
-> Hi!
-> 
-> On Fri 13-02-26 19:02:39, Ojaswin Mujoo wrote:
->> Another thing that came up is to consider using write through semantics
->> for buffered atomic writes, where we are able to transition page to
->> writeback state immediately after the write and avoid any other users to
->> modify the data till writeback completes. This might affect performance
->> since we won't be able to batch similar atomic IOs but maybe
->> applications like postgres would not mind this too much. If we go with
->> this approach, we will be able to avoid worrying too much about other
->> users changing atomic data underneath us.
+Em 06/02/2026 10:12, Amir Goldstein escreveu:
+> On Thu, Feb 5, 2026 at 9:34 PM André Almeida <andrealmeid@igalia.com> wrote:
 >>
->> An argument against this however is that it is user's responsibility to
->> not do non atomic IO over an atomic range and this shall be considered a
->> userspace usage error. This is similar to how there are ways users can
->> tear a dio if they perform overlapping writes. [1].
+>> Anyhow, I see that we are now too close to the merge window, and from my
+>> side we can delay this for 7.1 and merge it when it gets 100% clear that
+>> this is the solution that we are looking for.
+>>
 > 
-> Yes, I was wondering whether the write-through semantics would make sense
-> as well. Intuitively it should make things simpler because you could
-> practially reuse the atomic DIO write path. Only that you'd first copy
-> data into the page cache and issue dio write from those folios. No need for
-> special tracking of which folios actually belong together in atomic write,
-> no need for cluttering standard folio writeback path, in case atomic write
-> cannot happen (e.g. because you cannot allocate appropriately aligned
-> blocks) you get the error back rightaway, ...
+> I pushed this patch to overlayfs-next branch.
+> It is an internal logic change in overlayfs that does not conflict with
+> other code, so there should not be a problem to send a PR on the
+> second half of the 7.0 merge window if this is useful.
 > 
-> Of course this all depends on whether such semantics would be actually
-> useful for users such as PostgreSQL.
+> I think that the change itself makes sense because there was never
+> a justification for the strict rule of both upper/lower on the same fs
+> for uuid=off, but I am still not going to send it without knowing that
+> someone finds this useful for their workload.
+> 
 
-One issue might be the performance, especially if the atomic max unit is in the 
-smaller end such as 16k or 32k (which is fairly common). But it will avoid the 
-overlapping writes issue and can easily leverage the direct IO path.
+Hi Amir,
 
-But one thing that postgres really cares about is the integrity of a database 
-block. So if there is an IO that is a multiple of an atomic write unit (one 
-atomic unit encapsulates the whole DB page), it is not a problem if tearing 
-happens on the atomic boundaries. This fits very well with what NVMe calls 
-Multiple Atomicity Mode (MAM) [1].
-
-We don't have any semantics for MaM at the moment but that could increase the 
-performance as we can do larger IOs but still get the atomic guarantees certain 
-applications care about.
-
-
-[1] 
-https://nvmexpress.org/wp-content/uploads/NVM-Express-NVM-Command-Set-Specification-Revision-1.1-2024.08.05-Ratified.pdf 
-
+I can confirm that this is useful for my workload. After correctly 
+setting this flag for every mount, everything is working good and we can 
+bypass the random UUID issues. Thank you for your help!
