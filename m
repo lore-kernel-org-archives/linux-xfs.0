@@ -1,54 +1,54 @@
 Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 242B219CC28;
-	Mon, 16 Feb 2026 15:45:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB4E19CC28;
+	Mon, 16 Feb 2026 15:57:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771256747; cv=none; b=MyUZnj+MUzE9UJFJWNWMELmsIJ46bsK+uZGIWq3rhMW9tKKirLS7lwUxWfrxiwKsh+qMra7+yW9ElYNQCEelbRs/P6LAigqIADEn0n0TYJ5+6YeM1YMHLonoJ5Fcl//FaNAVpIYu8o5B/oyF8yum2VdGXGjcBWhq2mN7K40EmN0=
+	t=1771257468; cv=none; b=I306mGmocOdlVvOwSWQjGem1YPHpLeXyK/4tn61dcbWY1xyvtkJXa8/90P5oYe+uvmmp3caL7agZwdnrgUCClm4o2p+I0G+43CVgMiZ0EzHnocxf55d+mDc9sJ1Ccs9zpk+euRlcIfpbGNTsYwkk3NYsB0RcrvBfDNEt3acHYAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771256747; c=relaxed/simple;
-	bh=Evpzvkw81S0CRbwE/HHEyEmxFarwL+mFUgQPB6wLPq0=;
+	s=arc-20240116; t=1771257468; c=relaxed/simple;
+	bh=87pzktPufHzCthSnDht78xrj6MKlwJefHV1B6sHG0Wo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A+5QUvJdqNaOfF+ibl6RVd1Slq4SQ8eM/XIlAT6cmB5usDgNPllGmpLmmwaA3sLpK7D128+ZK5u838bm+1t5MTnWUOYrO5b57aaVP1xXn76kL6hdSmYY15Gw0vBhoU0VgEHnsTyc+jsZ9or1Q2bxtdqMWEvRcEvCE3VASj2goJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=fLcbJWSQ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=TEBdSCZw; arc=none smtp.client-ip=202.12.124.159
+	 Content-Type:Content-Disposition:In-Reply-To; b=rx973L8Avpf4HHXJnXE5R+L8iHwFOpGwVrkP6e1Kiryvevc2E1IDQsj4qQpvB81JoEeYZGIZZdHgEmcrE8H3RpJCr71x5woQflNbsNBOjTG4SaT2Q2ZQMgFqI3q84EBmaqlnp/sFtnr/a3RuSqmqHLZlDMyWieyUvgsZBPimkbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=jNP6/UIn; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BdzMv320; arc=none smtp.client-ip=202.12.124.159
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="fLcbJWSQ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="TEBdSCZw"
-Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 8FB777A0132;
-	Mon, 16 Feb 2026 10:45:43 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-08.internal (MEProxy); Mon, 16 Feb 2026 10:45:44 -0500
+	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="jNP6/UIn";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BdzMv320"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 7253A7A017A;
+	Mon, 16 Feb 2026 10:57:46 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-03.internal (MEProxy); Mon, 16 Feb 2026 10:57:47 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
 	cc:cc:content-type:content-type:date:date:from:from:in-reply-to
 	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm3; t=1771256743; x=1771343143; bh=byd/v2Kyqy
-	Dmof5svJZ7UzEBF0pNwQx35fX6HwsRSGs=; b=fLcbJWSQjsRhBbOBtM2EW8Z+7J
-	MqQnRDhJLYSMACQ3EJqa4WizGze79ppT7QggWvX0dP2MEMHguctxA7EZdn5v5g22
-	78F3huI8LgHKdVH3dzS0fqJ1EtOvsaYOFqSiADeXt34dhqaItUNbRME+xKU/gJFq
-	esAWi4t+c7F5UvMeUSZhKZ5aq1J1mphwvYYqSBXU1sHA67jmbOv4KzSOzxGsTd6Q
-	oPXzwDneb/A6o/QMslyJO/0mhLwXg5tyCT3jRx/K16d4sn435isg8kXvu9nzZOTt
-	QcrZLq/6YgWjUiersqTNFhBFStjMxT0Objk2aa+xdbUxFjYLV/I2NY0wf8tw==
+	:subject:to:to; s=fm3; t=1771257466; x=1771343866; bh=8ny6L3zkCf
+	X0j47xfHrpkoxrxspJzdvPThy0B9HOMh4=; b=jNP6/UIn5h67c4pHOIJt6WcBFQ
+	3Ez9eAHvBKjWUSGOP4z1rJU0bZDj72VpXbJqJ19zf6F/UO0VdFXizuY4co3ti2T9
+	CsDdHZr8YznwA16hnBSinl23TMH9oth63/L6WVm4PO1OiUzxakZ3Zb6ROdyb9yM7
+	4o1eD8VZ5vXcZEQDCUWD6TfPu0s0hDVlGOqQNUGy2KXipcxLg+01VwCbRRyAW2lm
+	lKlz41EngtphONWUuwGvlEj7Nset88WpvMccOofU9A06fy6roLH9czpXEHQYUhsW
+	ziKTnS9Z4Ifp8a2oT6BO2cscSBwXXhX6WzMfUE/+EEnKibNzNZruRgWAmebw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-type:content-type:date:date
 	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
 	:message-id:mime-version:references:reply-to:subject:subject:to
 	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1771256743; x=1771343143; bh=byd/v2KyqyDmof5svJZ7UzEBF0pNwQx35fX
-	6HwsRSGs=; b=TEBdSCZwiOP63qvlCuIBpa6qUvBOh5Z+T7jXUo+gKDBrBiIk3RC
-	wp7MY5EY94uq3MlfAdpBZgPQ6iAJzB7PxWTcVc3JaUheJlizdT7O6w2Fzj4jCz36
-	dP6nCJr/YHi8uPf4EU0l+IeqW4YiNGT7yi78bx1DpYgM6wCbtobMhFezzz32MtIL
-	7zJ39G1E0Cl9MmMo6wHs+PRKgWoNPXiMUQ8HPhDgQ+wUMwpEcImYOjmNWheMwH+e
-	uhmiT3094iGrZWpACEWO9Bj/ASy7+VWJ3PHHzb0+kdPKd7Qbf+LfrZqbwlXC1D2u
-	Xw/dJZwCyTWihCGbUd0JfxldtjXdqgzKifw==
-X-ME-Sender: <xms:pTuTaa_UHB7SBUzARRWugCYU1fi6tg1hE4XJS-reok_qw6Msi5ykiA>
-    <xme:pTuTaRomk6HNgnr-JwZDaToS0XjX02Xv38_eHpsbstwupjNS9i8iiQalS76v7Mtqo
-    h9rzioOL-Rh6wn9AA2vvevLSOly203B8YUeLObfdLo7iS7d6-Izyg>
-X-ME-Received: <xmr:pTuTaVHnyV0scUE-Yl1IbhBsGRO5nxCm5pj5dO4LEIy18KkLUzAaHUF1IND_FXBO-LDIiw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvudejvdeiucetufdoteggodetrf
+	1771257466; x=1771343866; bh=8ny6L3zkCfX0j47xfHrpkoxrxspJzdvPThy
+	0B9HOMh4=; b=BdzMv320tFvUAITz5K7ZBbhslwF0II4hV0vFg0VgmUMLJrWN+a3
+	rC32xlNR88mYbvbOuelZmvsDlY42gj3KWMsSFSupy9iyiPvAzk+qEO6ma5kYQA+Z
+	gh+sC8QShDOhwn9kIMU29pnNE4TFZJlBezaImBVzhEXHmIULUlj5Hp565a0kcgDo
+	yrU/ZPgr/rgMwcotIMPOOsDhbs3OT6WYqN6KUqbAmSkjwhg2FiFFvbPIlImv8VPI
+	Ezi7dkiVb2sizvwRUTTRueZgZ/sdTHU6NOCxTeq/j0vpLZfubh3NJJMYGvYM0Gm9
+	axnEf2iw38s0sbV/vKASyWq+2Ja4ZrP+C6w==
+X-ME-Sender: <xms:eT6TaYhy7ZiIUMNV9o5zAxxBmLsgQ-F0vPzNVDppUIY-4mPVavQg0A>
+    <xme:eT6TaX9RQwxh4SJ0Z-Qh42ytjdQ5z27PsbfnK7H5uNwbGqR-bMc3_EiJRQ6FNJzs0
+    wigUHEjKXN69XL2mOVzIMZeT9A9G8eoDM5w7xYX1hqP7z2I8IRbCQ>
+X-ME-Received: <xmr:eT6TaVIf5ahnHo_4mr99E4_Qc3ozO5CRvGpwHgIp8cscheAJayHWW9Jukn5rm39hE2-qbg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvudejvdelucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
     rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
     gurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomheptehnughrvghs
@@ -64,28 +64,28 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvudejvdeiucetufdote
     grghhhrghvsehlihhnuhigrdguvghvpdhrtghpthhtohepohhjrghsfihinheslhhinhhu
     gidrihgsmhdrtghomhdprhgtphhtthhopehlshhfqdhptgeslhhishhtshdrlhhinhhugi
     dqfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtohephhgthheslhhsthdruggv
-X-ME-Proxy: <xmx:pTuTaZl7LPYcsR3rciVtoJqfCZEOB0JQbGcoz0-ic0KULz8k1mwQAg>
-    <xmx:pTuTaZ8KZ4GEjbzHp0LCzKCqshn9ctf2Dn-xgEqWJjKR4M-qcJlGKw>
-    <xmx:pTuTaSk30NVwN2D8fPSMsDU74Buf2DDpFgtKwP5EK8n_mhC5E9Fq4A>
-    <xmx:pTuTafmaTrZODoYe5KF8w9RVTJWLs_dmhfkOxz02Sp2egRBkDarhgQ>
-    <xmx:pzuTaTlhh_ePKldq6rQo1A5lMYc_mOlA_DBFEWV_-jnEBGri5pawnUv9>
+X-ME-Proxy: <xmx:eT6TaQY6AOTmuO-eiDc2jyfM8Qa83v5y5WghAv_duMKrl_625G_eow>
+    <xmx:eT6TaQgNIRQ4QYpWgiLXRkrs7g6kWwRJytm6vJeR7oZUbk3d1nRzbA>
+    <xmx:eT6Tad6T-bM66v1fbCzXuMHeZUNnv_OpR1gFDTASS_eYK6jsRj3i2w>
+    <xmx:eT6TaQqyEeQ8IlZfnoHLXgIKu_lJdfCKwvXF6vyd9E2tiSn7YtxT1g>
+    <xmx:ej6Taf5s9cJOCvzk2wAxZZHwlzUlaswk1VbSZywx80cTTUpeVNnqhVE3>
 Feedback-ID: id4a34324:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 16 Feb 2026 10:45:41 -0500 (EST)
-Date: Mon, 16 Feb 2026 10:45:40 -0500
+ 16 Feb 2026 10:57:45 -0500 (EST)
+Date: Mon, 16 Feb 2026 10:57:44 -0500
 From: Andres Freund <andres@anarazel.de>
-To: Pankaj Raghav <pankaj.raghav@linux.dev>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org, 
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, 
-	djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, 
-	ritesh.list@gmail.com, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, 
-	dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com, 
-	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s>
+To: Jan Kara <jack@suse.cz>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, 
+	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
+	john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, ritesh.list@gmail.com, 
+	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
+	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <fh3hxyhoezqzcsabqjr2glft2uvrx5bkyx6pejek3uskpm5ow4@zym4kmg5o2bm>
 References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
  <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
+ <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,72 +94,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
+In-Reply-To: <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
 
 Hi,
 
-On 2026-02-16 10:52:35 +0100, Pankaj Raghav wrote:
-> On 2/13/26 14:32, Ojaswin Mujoo wrote:
-> > On Fri, Feb 13, 2026 at 11:20:36AM +0100, Pankaj Raghav wrote:
-> >> We currently have RFCs posted by John Garry and Ojaswin Mujoo, and there
-> >> was a previous LSFMM proposal about untorn buffered writes from Ted Tso.
-> >> Based on the conversation/blockers we had before, the discussion at LSFMM
-> >> should focus on the following blocking issues:
-> >>
-> >> - Handling Short Writes under Memory Pressure[6]: A buffered atomic
-> >>   write might span page boundaries. If memory pressure causes a page
-> >>   fault or reclaim mid-copy, the write could be torn inside the page
-> >>   cache before it even reaches the filesystem.
-> >>     - The current RFC uses a "pinning" approach: pinning user pages and
-> >>       creating a BVEC to ensure the full copy can proceed atomically.
-> >>       This adds complexity to the write path.
-> >>     - Discussion: Is this acceptable? Should we consider alternatives,
-> >>       such as requiring userspace to mlock the I/O buffers before
-> >>       issuing the write to guarantee atomic copy in the page cache?
-> >
-> > Right, I chose this approach because we only get to know about the short
-> > copy after it has actually happened in copy_folio_from_iter_atomic()
-> > and it seemed simpler to just not let the short copy happen. This is
-> > inspired from how dio pins the pages for DMA, just that we do it
-> > for a shorter time.
-> >
-> > It does add slight complexity to the path but I'm not sure if it's complex
-> > enough to justify adding a hard requirement of having pages mlock'd.
-> >
->
-> As databases like postgres have a buffer cache that they manage in userspace,
-> which is eventually used to do IO, I am wondering if they already do a mlock
-> or some other way to guarantee the buffer cache does not get reclaimed. That is
-> why I was thinking if we could make it a requirement. Of course, that also requires
-> checking if the range is mlocked in the iomap_write_iter path.
-
-We don't generally mlock our buffer pool - but we strongly recommend to use
-explicit huge pages (due to TLB pressure, faster fork() and less memory wasted
-on page tables), which afaict has basically the same effect. However, that
-doesn't make the page cache pages locked...
-
-
-> >> - Page Cache Model vs. Filesystem CoW: The current RFC introduces a
-> >>   PG_atomic page flag to track dirty pages requiring atomic writeback.
-> >>   This faced pushback due to page flags being a scarce resource[7].
-> >>   Furthermore, it was argued that atomic model does not fit the buffered
-> >>   I/O model because data sitting in the page cache is vulnerable to
-> >>   modification before writeback occurs, and writeback does not preserve
-> >>   application ordering[8].
-> >>     -  Dave Chinner has proposed leveraging the filesystem's CoW path
-> >>        where we always allocate new blocks for the atomic write (forced
-> >>        CoW). If the hardware supports it (e.g., NVMe atomic limits), the
-> >>        filesystem can optimize the writeback to use REQ_ATOMIC in place,
-> >>        avoiding the CoW overhead while maintaining the architectural
-> >>        separation.
-> >
-> > Right, this is what I'm doing in the new RFC where we maintain the
-> > mappings for atomic write in COW fork. This way we are able to utilize a
-> > lot of existing infrastructure, however it does add some complexity to
-> > ->iomap_begin() and ->writeback_range() callbacks of the FS. I believe
-> > it is a tradeoff since the general consesus was mostly to avoid adding
-> > too much complexity to iomap layer.
-> >
+On 2026-02-16 12:38:59 +0100, Jan Kara wrote:
+> On Fri 13-02-26 19:02:39, Ojaswin Mujoo wrote:
 > > Another thing that came up is to consider using write through semantics
 > > for buffered atomic writes, where we are able to transition page to
 > > writeback state immediately after the write and avoid any other users to
@@ -169,110 +109,47 @@ doesn't make the page cache pages locked...
 > > this approach, we will be able to avoid worrying too much about other
 > > users changing atomic data underneath us.
 > >
->
-> Hmm, IIUC, postgres will write their dirty buffer cache by combining
-> multiple DB pages based on `io_combine_limit` (typically 128kb).
-
-We will try to do that, but it's obviously far from always possible, in some
-workloads [parts of ]the data in the buffer pool rarely will be dirtied in
-consecutive blocks.
-
-FWIW, postgres already tries to force some just-written pages into
-writeback. For sources of writes that can be plentiful and are done in the
-background, we default to issuing sync_file_range(SYNC_FILE_RANGE_WRITE),
-after 256kB-512kB of writes, as otherwise foreground latency can be
-significantly impacted by the kernel deciding to suddenly write back (due to
-dirty_writeback_centisecs, dirty_background_bytes, ...) and because otherwise
-the fsyncs at the end of a checkpoint can be unpredictably slow.  For
-foreground writes we do not default to that, as there are users that won't
-(because they don't know, because they overcommit hardware, ...) size
-postgres' buffer pool to be big enough and thus will often re-dirty pages that
-have already recently been written out to the operating systems.  But for many
-workloads it's recommened that users turn on
-sync_file_range(SYNC_FILE_RANGE_WRITE) for foreground writes as well (*).
-
-So for many workloads it'd be fine to just always start writeback for atomic
-writes immediately. It's possible, but I am not at all sure, that for most of
-the other workloads, the gains from atomic writes will outstrip the cost of
-more frequently writing data back.
-
-
-(*) As it turns out, it often seems to improves write throughput as well, if
-writeback is triggered by memory pressure instead of SYNC_FILE_RANGE_WRITE,
-linux seems to often trigger a lot more small random IO.
-
-
-> So immediately writing them might be ok as long as we don't remove those
-> pages from the page cache like we do in RWF_UNCACHED.
-
-Yes, it might.  I actually often have wished for something like a
-RWF_WRITEBACK flag...
-
-
 > > An argument against this however is that it is user's responsibility to
 > > not do non atomic IO over an atomic range and this shall be considered a
 > > userspace usage error. This is similar to how there are ways users can
 > > tear a dio if they perform overlapping writes. [1].
-
-Hm, the scope of the prohibition here is not clear to me. Would it just
-be forbidden to do:
-
-P1: start pwritev(fd, [blocks 1-10], RWF_ATOMIC)
-P2: pwrite(fd, [any block in 1-10]), non-atomically
-P1: complete pwritev(fd, ...)
-
-or is it also forbidden to do:
-
-P1: pwritev(fd, [blocks 1-10], RWF_ATOMIC) start & completes
-Kernel: starts writeback but doesn't complete it
-P1: pwrite(fd, [any block in 1-10]), non-atomically
-Kernel: completes writeback
-
-The former is not at all an issue for postgres' use case, the pages in our
-buffer pool that are undergoing IO are locked, preventing additional IO (be it
-reads or writes) to those blocks.
-
-The latter would be a problem, since userspace wouldn't even know that here is
-still "atomic writeback" going on, afaict the only way we could avoid it would
-be to issue an f[data]sync(), which likely would be prohibitively expensive.
-
-
-
-> > That being said, I think these points are worth discussing and it would
-> > be helpful to have people from postgres around while discussing these
-> > semantics with the FS community members.
-> >
-> > As for ordering of writes, I'm not sure if that is something that
-> > we should guarantee via the RWF_ATOMIC api. Ensuring ordering has mostly
-> > been the task of userspace via fsync() and friends.
-> >
 >
-> Agreed.
+> Yes, I was wondering whether the write-through semantics would make sense
+> as well.
 
-From postgres' side that's fine. In the cases we care about ordering we use
-fsync() already.
+As outlined in
+https://lore.kernel.org/all/zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s/
+that is something that would be useful for postgres even orthogonally to
+atomic writes.
+
+If this were the path to go with, I'd suggest adding an RWF_WRITETHROUGH and
+requiring it to be set when using RWF_ATOMIC on an buffered write. That way,
+if the kernel were to eventually support buffered atomic writes without
+immediate writeback, the semantics to userspace wouldn't suddenly change.
 
 
-> > [1] https://lore.kernel.org/fstests/0af205d9-6093-4931-abe9-f236acae8d44@oracle.com/
-> >
-> >>     - Discussion: While the CoW approach fits XFS and other CoW
-> >>       filesystems well, it presents challenges for filesystems like ext4
-> >>       which lack CoW capabilities for data. Should this be a filesystem
-> >>       specific feature?
-> >
-> > I believe your question is if we should have a hard dependency on COW
-> > mappings for atomic writes. Currently, COW in atomic write context in
-> > XFS, is used for these 2 things:
-> >
-> > 1. COW fork holds atomic write ranges.
-> >
-> > This is not strictly a COW feature, just that we are repurposing the COW
-> > fork to hold our atomic ranges. Basically a way for writeback path to
-> > know that atomic write was done here.
+> Intuitively it should make things simpler because you could
+> practially reuse the atomic DIO write path. Only that you'd first copy
+> data into the page cache and issue dio write from those folios. No need for
+> special tracking of which folios actually belong together in atomic write,
+> no need for cluttering standard folio writeback path, in case atomic write
+> cannot happen (e.g. because you cannot allocate appropriately aligned
+> blocks) you get the error back rightaway, ...
+>
+> Of course this all depends on whether such semantics would be actually
+> useful for users such as PostgreSQL.
 
-Does that mean buffered atomic writes would cause fragmentation?  Some common
-database workloads, e.g. anything running on cheaper cloud storage, are pretty
-sensitive to that due to the increase in use of the metered IOPS.
+I think it would be useful for many workloads.
+
+As noted in the linked message, there are some workloads where I am not sure
+how the gains/costs would balance out (with a small PG buffer pool in a write
+heavy workload, we'd loose the ability to have the kernel avoid redundant
+writes). It's possible that we could develop some heuristics to fall back to
+doing our own torn-page avoidance in such cases, although it's not immediately
+obvious to me what that heuristic would be.  It's also not that common a
+workload, it's *much* more common to have a read heavy workload that has to
+overflow in the kernel page cache, due to not being able to dedicate
+sufficient memory to postgres.
 
 Greetings,
 
