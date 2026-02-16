@@ -1,91 +1,36 @@
-Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB4E19CC28;
-	Mon, 16 Feb 2026 15:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8C52DB7BA
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 16:41:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771257468; cv=none; b=I306mGmocOdlVvOwSWQjGem1YPHpLeXyK/4tn61dcbWY1xyvtkJXa8/90P5oYe+uvmmp3caL7agZwdnrgUCClm4o2p+I0G+43CVgMiZ0EzHnocxf55d+mDc9sJ1Ccs9zpk+euRlcIfpbGNTsYwkk3NYsB0RcrvBfDNEt3acHYAU=
+	t=1771260095; cv=none; b=C7WZjzkVnLnjZ5HZ3cLqDRHpzWmOtco8+p71ULSXHmdmSJlxV+WxG92qNd1zSyjdPtEdnEAwJGdqDdAUH6BElq4eFReJq4oBBxYbWSqjY8ur7DPdanfgUnshnvQoDON/jfU33O/eh4xTOsCiRUcsiHbxCENZgzwSG3R+H9FsCv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771257468; c=relaxed/simple;
-	bh=87pzktPufHzCthSnDht78xrj6MKlwJefHV1B6sHG0Wo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rx973L8Avpf4HHXJnXE5R+L8iHwFOpGwVrkP6e1Kiryvevc2E1IDQsj4qQpvB81JoEeYZGIZZdHgEmcrE8H3RpJCr71x5woQflNbsNBOjTG4SaT2Q2ZQMgFqI3q84EBmaqlnp/sFtnr/a3RuSqmqHLZlDMyWieyUvgsZBPimkbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=jNP6/UIn; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BdzMv320; arc=none smtp.client-ip=202.12.124.159
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
+	s=arc-20240116; t=1771260095; c=relaxed/simple;
+	bh=hB1BMqOI8XNHHJLZW1zD74AB6GwhqNdP2y8DOAtglkM=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=HteAA2ZIkZYs9pxgbGdNNsAYeiNlK2Vua/TTcLiHaiHJPMizI+qrDJd5wzhuuJbk2m/lodUkMw0/ZHY8RUordKl5ZsF4i2nSMO6pFbzZucjvV4xvLw+9B+bgn6FSQLHTQwhhIxFCabnBbNDKx4VSkS3+Icw7ilWX9cUbGN1i8zE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SOZYvo5R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="jNP6/UIn";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BdzMv320"
-Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 7253A7A017A;
-	Mon, 16 Feb 2026 10:57:46 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-03.internal (MEProxy); Mon, 16 Feb 2026 10:57:47 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
-	cc:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm3; t=1771257466; x=1771343866; bh=8ny6L3zkCf
-	X0j47xfHrpkoxrxspJzdvPThy0B9HOMh4=; b=jNP6/UIn5h67c4pHOIJt6WcBFQ
-	3Ez9eAHvBKjWUSGOP4z1rJU0bZDj72VpXbJqJ19zf6F/UO0VdFXizuY4co3ti2T9
-	CsDdHZr8YznwA16hnBSinl23TMH9oth63/L6WVm4PO1OiUzxakZ3Zb6ROdyb9yM7
-	4o1eD8VZ5vXcZEQDCUWD6TfPu0s0hDVlGOqQNUGy2KXipcxLg+01VwCbRRyAW2lm
-	lKlz41EngtphONWUuwGvlEj7Nset88WpvMccOofU9A06fy6roLH9czpXEHQYUhsW
-	ziKTnS9Z4Ifp8a2oT6BO2cscSBwXXhX6WzMfUE/+EEnKibNzNZruRgWAmebw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1771257466; x=1771343866; bh=8ny6L3zkCfX0j47xfHrpkoxrxspJzdvPThy
-	0B9HOMh4=; b=BdzMv320tFvUAITz5K7ZBbhslwF0II4hV0vFg0VgmUMLJrWN+a3
-	rC32xlNR88mYbvbOuelZmvsDlY42gj3KWMsSFSupy9iyiPvAzk+qEO6ma5kYQA+Z
-	gh+sC8QShDOhwn9kIMU29pnNE4TFZJlBezaImBVzhEXHmIULUlj5Hp565a0kcgDo
-	yrU/ZPgr/rgMwcotIMPOOsDhbs3OT6WYqN6KUqbAmSkjwhg2FiFFvbPIlImv8VPI
-	Ezi7dkiVb2sizvwRUTTRueZgZ/sdTHU6NOCxTeq/j0vpLZfubh3NJJMYGvYM0Gm9
-	axnEf2iw38s0sbV/vKASyWq+2Ja4ZrP+C6w==
-X-ME-Sender: <xms:eT6TaYhy7ZiIUMNV9o5zAxxBmLsgQ-F0vPzNVDppUIY-4mPVavQg0A>
-    <xme:eT6TaX9RQwxh4SJ0Z-Qh42ytjdQ5z27PsbfnK7H5uNwbGqR-bMc3_EiJRQ6FNJzs0
-    wigUHEjKXN69XL2mOVzIMZeT9A9G8eoDM5w7xYX1hqP7z2I8IRbCQ>
-X-ME-Received: <xmr:eT6TaVIf5ahnHo_4mr99E4_Qc3ozO5CRvGpwHgIp8cscheAJayHWW9Jukn5rm39hE2-qbg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvudejvdelucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomheptehnughrvghs
-    ucfhrhgvuhhnugcuoegrnhgurhgvshesrghnrghrrgiivghlrdguvgeqnecuggftrfgrth
-    htvghrnhepheeiudduuedvleetjedujeffgeeiueevgeehjedtgeehueekledthfelhefh
-    geelnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
-    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrnhgurhgvshesrghnrghrrgiivghlrdgu
-    vgdpnhgspghrtghpthhtohepudelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhope
-    hrihhtvghshhdrlhhishhtsehgmhgrihhlrdgtohhmpdhrtghpthhtohepfihilhhlhies
-    ihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrd
-    horhhgpdhrtghpthhtohepmhgtghhrohhfsehkvghrnhgvlhdrohhrghdprhgtphhtthho
-    pehlihhnuhigqdhmmheskhhvrggtkhdrohhrghdprhgtphhtthhopehprghnkhgrjhdrrh
-    grghhhrghvsehlihhnuhigrdguvghvpdhrtghpthhtohepohhjrghsfihinheslhhinhhu
-    gidrihgsmhdrtghomhdprhgtphhtthhopehlshhfqdhptgeslhhishhtshdrlhhinhhugi
-    dqfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtohephhgthheslhhsthdruggv
-X-ME-Proxy: <xmx:eT6TaQY6AOTmuO-eiDc2jyfM8Qa83v5y5WghAv_duMKrl_625G_eow>
-    <xmx:eT6TaQgNIRQ4QYpWgiLXRkrs7g6kWwRJytm6vJeR7oZUbk3d1nRzbA>
-    <xmx:eT6Tad6T-bM66v1fbCzXuMHeZUNnv_OpR1gFDTASS_eYK6jsRj3i2w>
-    <xmx:eT6TaQqyEeQ8IlZfnoHLXgIKu_lJdfCKwvXF6vyd9E2tiSn7YtxT1g>
-    <xmx:ej6Taf5s9cJOCvzk2wAxZZHwlzUlaswk1VbSZywx80cTTUpeVNnqhVE3>
-Feedback-ID: id4a34324:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 16 Feb 2026 10:57:45 -0500 (EST)
-Date: Mon, 16 Feb 2026 10:57:44 -0500
-From: Andres Freund <andres@anarazel.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, 
-	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
-	john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, ritesh.list@gmail.com, 
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
-	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <fh3hxyhoezqzcsabqjr2glft2uvrx5bkyx6pejek3uskpm5ow4@zym4kmg5o2bm>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SOZYvo5R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 611FFC116C6
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 16:41:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771260095;
+	bh=hB1BMqOI8XNHHJLZW1zD74AB6GwhqNdP2y8DOAtglkM=;
+	h=Date:From:To:Subject:From;
+	b=SOZYvo5Rt2aDlcHurFjuN6s8Jika7Q/ISYT6dtPKMyOYa9oje/e8IDXDGcahM/Zyn
+	 OqSUpM6cWgNjooH9aU4C1lIhmVWw/69Q39uCo2h9K5cJH7vLNi2A0l1BkvtgkYyG6Q
+	 deskLGwTlSVxGyNZsxlrm5XyWaw7QQDXzVc8ppXHiuLU855Ki5++RX6j+gHrk1aPKE
+	 xB9sJS/kmiZGidFiwpRPC0Az0KFfYTngK9NL/f+sXCegxWiKmaac3l52uMC8468sUd
+	 glvgEQAJOAn+7m+qvNPuml2igvsr8x4gylHeEjtViG6HuCt7VppjYPzdqRbk/TO1zU
+	 78mw+9wnurbGQ==
+Date: Mon, 16 Feb 2026 17:41:31 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e920893f56ef
+Message-ID: <aZNIWeCCJu6DzqBQ@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,63 +39,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
-
-Hi,
-
-On 2026-02-16 12:38:59 +0100, Jan Kara wrote:
-> On Fri 13-02-26 19:02:39, Ojaswin Mujoo wrote:
-> > Another thing that came up is to consider using write through semantics
-> > for buffered atomic writes, where we are able to transition page to
-> > writeback state immediately after the write and avoid any other users to
-> > modify the data till writeback completes. This might affect performance
-> > since we won't be able to batch similar atomic IOs but maybe
-> > applications like postgres would not mind this too much. If we go with
-> > this approach, we will be able to avoid worrying too much about other
-> > users changing atomic data underneath us.
-> >
-> > An argument against this however is that it is user's responsibility to
-> > not do non atomic IO over an atomic range and this shall be considered a
-> > userspace usage error. This is similar to how there are ways users can
-> > tear a dio if they perform overlapping writes. [1].
->
-> Yes, I was wondering whether the write-through semantics would make sense
-> as well.
-
-As outlined in
-https://lore.kernel.org/all/zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s/
-that is something that would be useful for postgres even orthogonally to
-atomic writes.
-
-If this were the path to go with, I'd suggest adding an RWF_WRITETHROUGH and
-requiring it to be set when using RWF_ATOMIC on an buffered write. That way,
-if the kernel were to eventually support buffered atomic writes without
-immediate writeback, the semantics to userspace wouldn't suddenly change.
 
 
-> Intuitively it should make things simpler because you could
-> practially reuse the atomic DIO write path. Only that you'd first copy
-> data into the page cache and issue dio write from those folios. No need for
-> special tracking of which folios actually belong together in atomic write,
-> no need for cluttering standard folio writeback path, in case atomic write
-> cannot happen (e.g. because you cannot allocate appropriately aligned
-> blocks) you get the error back rightaway, ...
->
-> Of course this all depends on whether such semantics would be actually
-> useful for users such as PostgreSQL.
+Hi folks,
 
-I think it would be useful for many workloads.
+The for-next branch of the xfs-linux repository at:
 
-As noted in the linked message, there are some workloads where I am not sure
-how the gains/costs would balance out (with a small PG buffer pool in a write
-heavy workload, we'd loose the ability to have the kernel avoid redundant
-writes). It's possible that we could develop some heuristics to fall back to
-doing our own torn-page avoidance in such cases, although it's not immediately
-obvious to me what that heuristic would be.  It's also not that common a
-workload, it's *much* more common to have a read heavy workload that has to
-overflow in the kernel page cache, due to not being able to dedicate
-sufficient memory to postgres.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Greetings,
+has just been updated.
 
-Andres Freund
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+This is a initial pull after 6.19 release, I expect to be rebasing it
+soon on top of the next -rc, but I wanted to push these patches this
+week yet.
+
+The new head of the for-next branch is commit:
+
+e920893f56ef xfs: fix code alignment issues in xfs_ondisk.c
+
+5 new commits:
+
+Nirjhar Roy (IBM) (4):
+      [ce95c72c7f95] xfs: Replace ASSERT with XFS_IS_CORRUPT in xfs_rtcopy_summary()
+      [60cb35d383aa] xfs: Fix in xfs_rtalloc_query_range()
+      [c656834e964d] xfs: Refactoring the nagcount and delta calculation
+      [f0d0d93e22e5] xfs: Replace &rtg->rtg_group with rtg_group()
+
+Wilfred Mallawa (1):
+      [e920893f56ef] xfs: fix code alignment issues in xfs_ondisk.c
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_ag.c       | 28 ++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h       |  3 +++
+ fs/xfs/libxfs/xfs_ondisk.h   |  4 ++--
+ fs/xfs/libxfs/xfs_rtbitmap.c |  2 +-
+ fs/xfs/xfs_fsops.c           | 17 ++---------------
+ fs/xfs/xfs_rtalloc.c         |  5 ++++-
+ fs/xfs/xfs_zone_alloc.c      |  6 +++---
+ fs/xfs/xfs_zone_gc.c         | 10 +++++-----
+ 8 files changed, 48 insertions(+), 27 deletions(-)
