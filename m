@@ -1,159 +1,244 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAF82D7DE7
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 09:34:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B07E26FD93
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 09:52:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771234472; cv=none; b=u75eS2mWUUHqEc9zSR/n8K6yDI9jcR9p6bXY1jwqSuSaiAPrjoH+1RtwlgSASbyZRQZGN4pu7MkA8YGuiPOwlJhxWhjv1AmVkYpIEQeP284iyySqLYd+Y79UPIgPeXyESbyBv8wpCkLY06qGXZvF8euegw6ej4mdWDlOCcQ4IDE=
+	t=1771235563; cv=none; b=QaJVj61FCKMaTDsaOjTPmNhiIkUzO0YRyDjlCJ71WkDUzk+xpduPasF2DIcaY3gM1dEnL+xFgZE0bOKXQDnx+LAc7C3SUn9ucQRhmGubAiTkpp+2ePZrYDXLEM757IFPNr+EoaSmnOHnH5RRR7GdJs406NCGYI87HjrDIyvkExk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771234472; c=relaxed/simple;
-	bh=jhMntOyS8kfKSMCQX1szEC2w1VIVF0WqxofuxaLd/tg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZMubnR/TogzjAxjAQ7kEjwkhX96W2LdiNrHZl1zOhIH9YVox22m0R+cTdauCdWJDAGYEqPfWCYu8WKGOg92a+N2JMtRZTFyLHqjkHsagD22OxLJSMz77pob9U1H1PdjkDeGHjupOmlQk6zkm8KoWA+BQC47kyiuxoxQSjkpSyIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eOFVj+nH; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=0e9h6n7W; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eOFVj+nH; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=0e9h6n7W; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1771235563; c=relaxed/simple;
+	bh=MUGuKY4Gnm3/EiR6Prb2nO5Boxfnsma1Qv1s2gET2Y0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=E5xS1RDm9nmf3HL0Kb5QrFqd6CIrroksT+xdNpEBJL1jCmXZsVilYcV7m52xAfsoZMEVY+iqTphxwn0+aS2H7AuaL2PjImq9DO7H9SO9ffug2VdVi+OAJc3fq13NDDrC27cO+URuBAZgelNuKjEjgwB9SFo2hYDbPjoA/uJNZCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ws0qq2Nu; arc=none smtp.client-ip=91.218.175.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eOFVj+nH";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="0e9h6n7W";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eOFVj+nH";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="0e9h6n7W"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A81685CE53;
-	Mon, 16 Feb 2026 09:34:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1771234469; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ws0qq2Nu"
+Message-ID: <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1771235558;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=OCszzZsjqv86kyDYo8qvw9YJ7L3pIGbbLC2tAnq4Pik=;
-	b=eOFVj+nHMTli7bxHkOQDoz5KPXwPx6diiDMWUdiey/emVGuV9NGaHcKp0FkAG0sxLdb/7x
-	IPPv7p3288qFxdMaQDGfAntctiAcNANUC4S2Vlr9ldRl0MxOlgwzGx4E1bjD421YLXT0ZK
-	7WJI2vRPJQpytoP9jMp72vMXn0b8qYw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1771234469;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OCszzZsjqv86kyDYo8qvw9YJ7L3pIGbbLC2tAnq4Pik=;
-	b=0e9h6n7Wkxi13NMHcyZbXPESR9pmHQn2j1iaue7dVcxM7jAgbW/UYKnO5qaR+9mqRIej9Y
-	Zbv/Aj3avysTEbCg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=eOFVj+nH;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=0e9h6n7W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1771234469; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OCszzZsjqv86kyDYo8qvw9YJ7L3pIGbbLC2tAnq4Pik=;
-	b=eOFVj+nHMTli7bxHkOQDoz5KPXwPx6diiDMWUdiey/emVGuV9NGaHcKp0FkAG0sxLdb/7x
-	IPPv7p3288qFxdMaQDGfAntctiAcNANUC4S2Vlr9ldRl0MxOlgwzGx4E1bjD421YLXT0ZK
-	7WJI2vRPJQpytoP9jMp72vMXn0b8qYw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1771234469;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OCszzZsjqv86kyDYo8qvw9YJ7L3pIGbbLC2tAnq4Pik=;
-	b=0e9h6n7Wkxi13NMHcyZbXPESR9pmHQn2j1iaue7dVcxM7jAgbW/UYKnO5qaR+9mqRIej9Y
-	Zbv/Aj3avysTEbCg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 924023EA62;
-	Mon, 16 Feb 2026 09:34:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id aM+vI6Xkkml+dwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 16 Feb 2026 09:34:29 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 19E6CA0AA5; Mon, 16 Feb 2026 09:56:07 +0100 (CET)
-Date: Mon, 16 Feb 2026 09:56:07 +0100
-From: Jan Kara <jack@suse.cz>
-To: Zorro Lang <zlang@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Zorro Lang <zlang@redhat.com>, 
-	fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/4] Avoid failing shutdown tests without a journal
-Message-ID: <bgtrbxzrwih2j2bgoanwf5sgl4go5xy6fxnvknkgnugqtkl5pt@iy6bcuqrx5ku>
-References: <20260210111707.17132-1-jack@suse.cz>
- <20260212084050.uim52ck6zhffd5kl@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <zh372qbq2tq722476eaqrirmi55hxwzfs6msmzxfj6zv3jws5y@rdip5a6twsf6>
- <20260212164402.tbjcalfmeq6jfwum@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	bh=y1XmG/hIaACTUgj9EBZ/72IQ5DDq7ji1NcrhuA61/gY=;
+	b=ws0qq2Nut0J5hbxl5bHXlf7XQFx3x6Mx6g822LS8NfZJDAE5CxoIZ9x9O5bC1hDcxgJKv9
+	VXJglNMvxamiC1cq97YAIcLqaDq0rxOpEM0KYhj5GvQWhh8Wlk9W1wroyXXzGF5v64hdVE
+	ild9jTGKiQkQgQ+vAiU8rzs+5/CFKOU=
+Date: Mon, 16 Feb 2026 10:52:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260212164402.tbjcalfmeq6jfwum@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	TO_DN_SOME(0.00)[];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_TLS_LAST(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Rspamd-Queue-Id: A81685CE53
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spam-Level: 
+Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+ linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
+ Andres Freund <andres@anarazel.de>, djwong@kernel.org,
+ john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
+ ritesh.list@gmail.com, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>,
+ dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
+ gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
+ vi.shah@samsung.com
+References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+ <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri 13-02-26 00:44:02, Zorro Lang wrote:
-> On Thu, Feb 12, 2026 at 11:41:59AM +0100, Jan Kara wrote:
-> > > I initially considered calling _require_metadata_journaling directly inside
-> > > _require_scratch_shutdown. However, I decided against it because some cases might
-> > > only need the shutdown ioctl and don't strictly require a journal.
-> > 
-> > Absolutely. I think they should stay separate.
-> > 
-> > So to summarize I think we should still add _require_metadata_journaling to:
-> > 
-> > overlay/087
-> > g/536
-> > g/622
-> > g/722
+On 2/13/26 14:32, Ojaswin Mujoo wrote:
+> On Fri, Feb 13, 2026 at 11:20:36AM +0100, Pankaj Raghav wrote:
+>> Hi all,
+>>
+>> Atomic (untorn) writes for Direct I/O have successfully landed in kernel
+>> for ext4 and XFS[1][2]. However, extending this support to Buffered I/O
+>> remains a contentious topic, with previous discussions often stalling due to
+>> concerns about complexity versus utility.
+>>
+>> I would like to propose a session to discuss the concrete use cases for
+>> buffered atomic writes and if possible, talk about the outstanding
+>> architectural blockers blocking the current RFCs[3][4].
 > 
-> Agree :)
-
-Should I send patches or will you do this modification?
-
-> > and we might add fsync of parent directory before shutdown to g/737 and
-> > overlay/078. Does this sound good?
+> Hi Pankaj,
 > 
-> I'm concerned that adding broader sync or fsync operations might interfere with the
-> test's original intent. We should probably evaluate the impact further. Alternatively,
-> we could simply use _require_metadata_journaling to ensure we at least keep the
-> coverage for the original bug :)
+> Thanks for the proposal and glad to hear there is a wider interest in
+> this topic. We have also been actively working on this and I in middle
+> of testing and ironing out bugs in my RFC v2 for buffered atomic
+> writes, which is largely based on Dave's suggestions to maintain atomic
+> write mappings in FS layer (aka XFS COW fork). Infact I was going to
+> propose a discussion on this myself :) 
+> 
 
-I agree with the approach to just leave the test as is for now and invest time
-into deciding what's the proper solution once someone complains :)
+Perfect.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+>>
+>> ## Use Case:
+>>
+>> A recurring objection to buffered atomics is the lack of a convincing use
+>> case, with the argument that databases should simply migrate to direct I/O.
+>> We have been working with PostgreSQL developer Andres Freund, who has
+>> highlighted a specific architectural requirement where buffered I/O remains
+>> preferable in certain scenarios.
+> 
+> Looks like you have some nice insights to cover from postgres side which
+> filesystem community has been asking for. As I've also been working on
+> the kernel implementation side of it, do you think we could do a joint
+> session on this topic?
+>
+As one of the main pushback for this feature has been a valid usecase, the main
+outcome I would like to get out of this session is a community consensus on the use case
+for this feature.
+
+It looks like you already made quite a bit of progress with the CoW impl, so it
+would be great to if it can be a joint session.
+
+
+>> We currently have RFCs posted by John Garry and Ojaswin Mujoo, and there
+>> was a previous LSFMM proposal about untorn buffered writes from Ted Tso.
+>> Based on the conversation/blockers we had before, the discussion at LSFMM
+>> should focus on the following blocking issues:
+>>
+>> - Handling Short Writes under Memory Pressure[6]: A buffered atomic
+>>   write might span page boundaries. If memory pressure causes a page
+>>   fault or reclaim mid-copy, the write could be torn inside the page
+>>   cache before it even reaches the filesystem.
+>>     - The current RFC uses a "pinning" approach: pinning user pages and
+>>       creating a BVEC to ensure the full copy can proceed atomically.
+>>       This adds complexity to the write path.
+>>     - Discussion: Is this acceptable? Should we consider alternatives,
+>>       such as requiring userspace to mlock the I/O buffers before
+>>       issuing the write to guarantee atomic copy in the page cache?
+> 
+> Right, I chose this approach because we only get to know about the short
+> copy after it has actually happened in copy_folio_from_iter_atomic()
+> and it seemed simpler to just not let the short copy happen. This is
+> inspired from how dio pins the pages for DMA, just that we do it
+> for a shorter time.
+> 
+> It does add slight complexity to the path but I'm not sure if it's complex
+> enough to justify adding a hard requirement of having pages mlock'd.
+> 
+
+As databases like postgres have a buffer cache that they manage in userspace,
+which is eventually used to do IO, I am wondering if they already do a mlock
+or some other way to guarantee the buffer cache does not get reclaimed. That is
+why I was thinking if we could make it a requirement. Of course, that also requires
+checking if the range is mlocked in the iomap_write_iter path.
+
+>>
+>> - Page Cache Model vs. Filesystem CoW: The current RFC introduces a
+>>   PG_atomic page flag to track dirty pages requiring atomic writeback.
+>>   This faced pushback due to page flags being a scarce resource[7].
+>>   Furthermore, it was argued that atomic model does not fit the buffered
+>>   I/O model because data sitting in the page cache is vulnerable to
+>>   modification before writeback occurs, and writeback does not preserve
+>>   application ordering[8].
+>>     -  Dave Chinner has proposed leveraging the filesystem's CoW path
+>>        where we always allocate new blocks for the atomic write (forced
+>>        CoW). If the hardware supports it (e.g., NVMe atomic limits), the
+>>        filesystem can optimize the writeback to use REQ_ATOMIC in place,
+>>        avoiding the CoW overhead while maintaining the architectural
+>>        separation.
+> 
+> Right, this is what I'm doing in the new RFC where we maintain the
+> mappings for atomic write in COW fork. This way we are able to utilize a
+> lot of existing infrastructure, however it does add some complexity to
+> ->iomap_begin() and ->writeback_range() callbacks of the FS. I believe
+> it is a tradeoff since the general consesus was mostly to avoid adding
+> too much complexity to iomap layer.
+> 
+> Another thing that came up is to consider using write through semantics 
+> for buffered atomic writes, where we are able to transition page to
+> writeback state immediately after the write and avoid any other users to
+> modify the data till writeback completes. This might affect performance
+> since we won't be able to batch similar atomic IOs but maybe
+> applications like postgres would not mind this too much. If we go with
+> this approach, we will be able to avoid worrying too much about other
+> users changing atomic data underneath us. 
+> 
+
+Hmm, IIUC, postgres will write their dirty buffer cache by combining multiple DB
+pages based on `io_combine_limit` (typically 128kb). So immediately writing them
+might be ok as long as we don't remove those pages from the page cache like we do in
+RWF_UNCACHED.
+
+
+> An argument against this however is that it is user's responsibility to
+> not do non atomic IO over an atomic range and this shall be considered a
+> userspace usage error. This is similar to how there are ways users can
+> tear a dio if they perform overlapping writes. [1]. 
+> 
+> That being said, I think these points are worth discussing and it would
+> be helpful to have people from postgres around while discussing these
+> semantics with the FS community members.
+> 
+> As for ordering of writes, I'm not sure if that is something that
+> we should guarantee via the RWF_ATOMIC api. Ensuring ordering has mostly
+> been the task of userspace via fsync() and friends.
+> 
+
+Agreed.
+
+> 
+> [1] https://lore.kernel.org/fstests/0af205d9-6093-4931-abe9-f236acae8d44@oracle.com/
+> 
+>>     - Discussion: While the CoW approach fits XFS and other CoW
+>>       filesystems well, it presents challenges for filesystems like ext4
+>>       which lack CoW capabilities for data. Should this be a filesystem
+>>       specific feature?
+> 
+> I believe your question is if we should have a hard dependency on COW
+> mappings for atomic writes. Currently, COW in atomic write context in
+> XFS, is used for these 2 things:
+> 
+> 1. COW fork holds atomic write ranges.
+> 
+> This is not strictly a COW feature, just that we are repurposing the COW
+> fork to hold our atomic ranges. Basically a way for writeback path to
+> know that atomic write was done here.
+> 
+> COW fork is one way to do this but I believe every FS has a version of
+> in memory extent trees where such ephemeral atomic write mappings can be
+> held. The extent status cache is ext4's version of this, and can be used
+> to manage the atomic write ranges. 
+> 
+> There is an alternate suggestion that came up from discussions with Ted
+> and Darrick that we can instead use a generic side-car structure which
+> holds atomic write ranges. FSes can populate these during atomic writes
+> and query these in their writeback paths. 
+> 
+> This means for any FS operation (think truncate, falloc, mwrite, write
+> ...) we would need to keep this structure in sync, which can become pretty
+> complex pretty fast. I'm yet to implement this so not sure how it would
+> look in practice though.
+> 
+> 2. COW feature as a whole enables software based atomic writes.
+> 
+> This is something that ext4 won't be able to support (right now), just
+> like how we don't support software writes for dio.
+> 
+> I believe Baokun and Yi and working on a feature that can eventually
+> enable COW writes in ext4 [2]. Till we have something like that, we
+> would have to rely on hardware support.
+> 
+> Regardless, I don't think the ability to support or not support
+> software atomic writes largely depends on the filesystem so I'm not
+> sure how we can lift this up to a generic layer anyways.
+> 
+> [2] https://lore.kernel.org/linux-ext4/9666679c-c9f7-435c-8b67-c67c2f0c19ab@huawei.com/
+> 
+
+Thanks for the explanation. I am also planning to take a shot at the CoW approach. I would
+be more than happy to review and test if you send a RFC in the meantime.
+
+--
+Pankaj
+
