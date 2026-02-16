@@ -1,135 +1,232 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A84D287257
-	for <linux-xfs@vger.kernel.org>; Sun, 15 Feb 2026 09:02:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 301C11E00B4
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 05:30:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771146122; cv=none; b=ha446sBNozJd96qBq59+Xv8HbplB3bmyRnKP1Y8kjQEUnlaIhDvPzFgSfNEzbrJq9YTtXZOalXeMCv4KKWZrrR5TG0iq0FvF2+nHFfGtJVk2TvVLWvlljtV0AKP0i/88BrVqARg0MN2i3wyG04M70q+fbsTcMQnLQoB8IBJbPjg=
+	t=1771219823; cv=none; b=kfP+yvoIxFeLugIUO/TNVuuJ3Clooz/jbMwVj76Y1YqLC1y+X37wr463jDz5uZ+h3ii40Zu9bBPTmpMXb5u2P4DDs3qJ3xy7J6SqsJvxkXik+3U+iFvkUlYMfaYwYvGrHhcIClV0CEqrdvoiCyvBFr/k7l+fJA1+0Tgmm1vkW4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771146122; c=relaxed/simple;
-	bh=W6T4NKMFGU2utFNEhPpN8fZf0hDKTQ6a+z8Ar/UV6dQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MLRL4MukE5MVuhjfeGDZ/FA+D4ET5YqxyZJAiieMcxp5B75nfCav7Ad1+XGfr15GfilquR71PcATYjR4fuonO/9ahFjUCnwKAJ2kTwhDQgOKbT9lx+PWFC0NIzRUmybA4Utzbv6FB5vkMo8SFPr6xvrsqetEUQdMP/GUvF9w3gE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S6yphLgs; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1771219823; c=relaxed/simple;
+	bh=v3po6HqXnP9XNEwTzzQncPi8k6bGVsTBZ/yyaMQRcnE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=kVc9iFcDjinvvvBHWERGDCMnjGVWmfiZh56Wvlq7P2JiBxqIbypjKLa9y1JB21PYYwK3J14geftkpz/tPyDb3MERf3xdSfJgfKYPUTfnTS7k7h1ZBTnCtP675bGD9X7RxNyNFayUwiZPTzaMHXqr/WDe6g/D8SGc+pU3DGlTKc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=cMd4d41r; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S6yphLgs"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-4362197d174so1471396f8f.3
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Feb 2026 01:02:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771146120; x=1771750920; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+D0ODJnkgxsrPA3UYy81wUrrkW2kcfyG+MPWkVZLGUk=;
-        b=S6yphLgs/m+PstcT6JoZP/nYSovXkFDplNeEQVtl6jyOyUeYp2mAe1BJ0f+zDzzWaR
-         CeWutWf0eNMJC0Uww7j3uwfYIQnxzXrPrSh5mJNAtbsb89c4EWaGC0hFJmFbfIo+v4iM
-         Va2938r2H/zquw6VuE/pDcXU3C37IznRCGVfuSHorOHR3qw1gExiler0I+5fQH3Ybocq
-         B/D3VZJsvRIy/4iqYNA0LKbA9/nojoeghHskOACUv7l5QA5pBycNCyZoVs8oD0sSJ8p/
-         aJxceRQ/BJPNieoWgi40YqCy1GMF2LY4UbsTKaS8nPAKW1xiosXx6CirjHhvGc8DkAmE
-         lSzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771146120; x=1771750920;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+D0ODJnkgxsrPA3UYy81wUrrkW2kcfyG+MPWkVZLGUk=;
-        b=liPnuM9oO/awzThVG+oILjIH1n1sjVgems3tdlnuaxR7buVDBInV1D4J4lqOrdce34
-         4tK7stKkcysUA1D7meOF6jAP7tjQnASUWaGRAFiZdmpMH+DjraOSp7udZJI6y8fv2ld1
-         HhhCtQ+u1phDnaaamSV5o/1tgfx2U+o0vWd6JXe7hPvcTaJdDWwMlhy3Dl9JTtNOSPn7
-         80Kgv2SD+aynY933OLkWHK+36D68L6KKBNeJ13O7ZSouvluTWrFcCfkQ2obGjzCH2uML
-         Q7FNJa1rG44/q98GCPIpO3mbi0tuUg7YJJor+h3Oy3zYUvQkZ8e3Q9peQkmUJrqz51OX
-         tBSw==
-X-Gm-Message-State: AOJu0Yy2Q/1519m455+T3iBREHAm34z60vW6DI6PiEddBViqvyE2KeSl
-	CM9PlpiI6UQvBRsss3OLzeiGIUcbNvjkagP8a8NmDJL+GJYVv6hA7dsI
-X-Gm-Gg: AZuq6aJaJFJsz1zIUIL9olCAWI+eYsMYA9XhOz/aA86NYic5NBmq1Ssn1rfLCE/NGoH
-	s1L0DXAE7h2HFsz7XAJB6PSwv0ESw9v0yHE1MbiYz/Y82Afu3fT1IhA61U27ZFb+BL4qCD5GsW9
-	NIpAl39FIZiouD26teH4YwjwTvI1CgzGeW20RISVUf5hdD+BcnG/oXIZemEj5lxdfBcMPdntCl6
-	YX96Qd61FQK9C51sFSI69bIF6adf/IcK+6YuCFNPGUsgZpqPiTwMSh8BLX8K2LT0Gp+dYubPKLZ
-	H/Pns3+PxxslR8zbaYwh1n/6JLtK2p+kB/r7c9LQi8Nd7iUdoU9K6rHI47SstAT9swvu0+Ox0nh
-	IwM/H1pujY/wdR9vMsunGC7lRePHGyL5NQ9KCR+3EEUKIgnFjv16RNVUuZVfhIrnFoZNIntpQwh
-	3hEZ0kDuIuBj/8PgjjGgDX
-X-Received: by 2002:a05:6000:2311:b0:435:a258:76e with SMTP id ffacd0b85a97d-4379793dd5emr12414131f8f.60.1771146118907;
-        Sun, 15 Feb 2026 01:01:58 -0800 (PST)
-Received: from localhost ([2a0d:6fc2:4b0a:db00:eb98:5335:fc91:c4bc])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796abd793sm18612064f8f.25.2026.02.15.01.01.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Feb 2026 01:01:58 -0800 (PST)
-Date: Sun, 15 Feb 2026 11:01:57 +0200
-From: Amir Goldstein <amir73il@gmail.com>
-To: Pankaj Raghav <pankaj.raghav@linux.dev>,
-	Andres Freund <andres@anarazel.de>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
-	djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
-	hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
-	ojaswin@linux.ibm.com, Luis Chamberlain <mcgrof@kernel.org>,
-	dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
-	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
-	vi.shah@samsung.com
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <aZGLhTvjmRVZNA8m@amir-ThinkPad-T480>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="cMd4d41r"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260216053012epoutp03733e59efc710c25433a9c7c02ca66021~UowkFgyUK0328603286epoutp03L
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Feb 2026 05:30:12 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260216053012epoutp03733e59efc710c25433a9c7c02ca66021~UowkFgyUK0328603286epoutp03L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1771219812;
+	bh=+2Q9cs81mGLZ6eNq/6YqlmRX8CoeWDDw0BcNeK1YJgs=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=cMd4d41rnK3/osF2biJElC2MoKEttaRiVJPoSOcqDNMfLnJFA+yDZoKIANEW1jC77
+	 /+y16wYJ3SYAcWxMc9VKVdx7BXlfu7WUJ8PZS61PjMDqmjqWu6iUKPHn7DuG7NwWFu
+	 8jD//VbXC0XNZJetXU44PMNN+X7P4Ta7HdVSlBwo=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260216053012epcas5p4c5bf1a92444f946b69b05d714c83e0da~Uowjq53Kw2729427294epcas5p4-;
+	Mon, 16 Feb 2026 05:30:12 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.90]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4fDrvR39TWz6B9mJ; Mon, 16 Feb
+	2026 05:30:11 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260216053011epcas5p127f51074dc05c5dc6e6df56f5a564721~Uowinycbe1714217142epcas5p19;
+	Mon, 16 Feb 2026 05:30:11 +0000 (GMT)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260216053009epsmtip1658b1edf49d24a134f8dc157e75640e7~UowhKU4zo1594915949epsmtip1G;
+	Mon, 16 Feb 2026 05:30:09 +0000 (GMT)
+From: Kanchan Joshi <joshi.k@samsung.com>
+To: hch@lst.de, brauner@kernel.org, jack@suse.cz, djwong@kernel.org,
+	axboe@kernel.dk, kbusch@kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com, Kanchan Joshi
+	<joshi.k@samsung.com>
+Subject: [PATCH 0/4] write-stream for file I/O
+Date: Mon, 16 Feb 2026 10:55:36 +0530
+Message-Id: <20260216052540.217920-1-joshi.k@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260216053011epcas5p127f51074dc05c5dc6e6df56f5a564721
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260216053011epcas5p127f51074dc05c5dc6e6df56f5a564721
+References: <CGME20260216053011epcas5p127f51074dc05c5dc6e6df56f5a564721@epcas5p1.samsung.com>
 
-On Fri, Feb 13, 2026 at 11:20:36AM +0100, Pankaj Raghav wrote:
-> Hi all,
-> 
-> Atomic (untorn) writes for Direct I/O have successfully landed in kernel
-> for ext4 and XFS[1][2]. However, extending this support to Buffered I/O
-> remains a contentious topic, with previous discussions often stalling due to
-> concerns about complexity versus utility.
-> 
-> I would like to propose a session to discuss the concrete use cases for
-> buffered atomic writes and if possible, talk about the outstanding
-> architectural blockers blocking the current RFCs[3][4].
-> 
-> ## Use Case:
-> 
-> A recurring objection to buffered atomics is the lack of a convincing use
-> case, with the argument that databases should simply migrate to direct I/O.
-> We have been working with PostgreSQL developer Andres Freund, who has
-> highlighted a specific architectural requirement where buffered I/O remains
-> preferable in certain scenarios.
-> 
-> While Postgres recently started to support direct I/O, optimal performance
-> requires a large, statically configured user-space buffer pool. This becomes
-> problematic when running many Postgres instances on the same hardware, a
-> common deployment scenario. Statically partitioning RAM for direct I/O
-> caches across many instances is inefficient compared to allowing the kernel
-> page cache to dynamically balance memory pressure between instances.
-> 
-> The other use case is using postgres as part of a larger workload on one
-> instance. Using up enough memory for postgres' buffer pool to make DIO use
-> viable is often not realistic, because some deployments require a lot of
-> memory to cache database IO, while others need a lot of memory for
-> non-database caching.
-> 
-> Enabling atomic writes for this buffered workload would allow Postgres to
-> disable full-page writes [5]. For direct I/O, this has shown to reduce
-> transaction variability; for buffered I/O, we expect similar gains,
-> alongside decreased WAL bandwidth and storage costs for WAL archival. As a
-> side note, for most workloads full page writes occupy  a significant portion
-> of WAL volume.
-> 
-> Andres has agreed to attend LSFMM this year to discuss these requirements.
-> 
+This patch series introduces a generic interface for 'Write Stream
+Management', enabling applications to guide physical data placement
+on files that support it.
 
-Andres,
+### Changes since RFC [1]
 
-If you wish to attend LSFMM, please request an invite via the Google
-form:
+- Move stream-management to file operations (Christoph)
+- Stop adding "write-stream" in vfs inode but use FS-specific inode (Christoph)
+- Iomap based write-stream propagation (Christoph)
 
-  https://forms.gle/hUgiEksr8CA1migCA
+### Motivation
 
-Thanks,
-Amir.
+Maybe LSFMM session [2] repetition;
+Standard SSDs abstract physical data placement, limiting the Host to
+logical data placement.
+FDP-capable NVMe SSDs allow the Host to physically separate data into
+distinct "streams" or "buckets." This separation reduces
+device-internal write amplification, yielding tangible benefits to the
+drive users: improved life, predictable QoS, and better energy
+efficiency.
+
+While Linux supports write-stream based placement for block IO path
+(since 6.16), the capability remains inaccessible to standard file-based
+applications. The series fills that gap and enables application-driven
+placement on files.
+
+### Implementation
+
+The series implements generic write-stream management via:
+
+- VFS: New `fcntl` user interface for write-stream discovery and assignment.
+- Iomap: Infrastructure to propagate file-level write-streams to the block layer.
+- XFS: Initial filesystem support implementing the write-stream interface.
+
+The application interface involves three new `fcntl` commands:
+
+F_GET_MAX_WRITE_STREAMS: Query the number of available streams.
+F_SET_WRITE_STREAM: Assign a specific stream to a file.
+F_GET_WRITE_STREAM: Retrieve the stream currently assigned to a file.
+
+### Comparison with Write Hints (RWH_WRITE_LIFE_*)
+
+- Semantics: Write Hints describe 'data temperature' (e.g.,
+short/long/extreme), implying a lifetime. Write Streams describe 'data
+placement' (e.g., Bin 1/Bin 2), implying only separation.
+
+- Scalability: Write Hints are limited to a small, fixed enum (6
+values). Write streams are dynamic, device-dependent values that can
+scale much higher (kernel limit: up to 255 due to u8 field).
+
+- Discovery: The existing write-hint interface is advisory and decoupled
+  from underlying capabilties; application has no way to probe support
+and cannot deterministically know which hints are valid. Write-streams
+provide explicit discovery via `F_GET_MAX_WRITE_STREAMS`.
+
+Note: within the kernel, the separation between two constructs
+(write-hint and write-stream) had started from 6.16 itself.
+
+### Interface example
+
+An example program for the new write-stream interface is attached below [3].
+New interface has also worked fine when integrated with RockDB.
+
+
+[1] https://lore.kernel.org/linux-fsdevel/20250729145135.12463-1-joshi.k@samsung.com/
+[2] https://lwn.net/Articles/1018642/
+[3]
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <linux/fcntl.h>
+
+#define BUF_SIZE        (4096)
+
+int write_fd(int fd, int st) {
+
+        char buf[BUF_SIZE];
+        int ret, set, get;
+
+        if (fd < 0) {
+                printf("[!]invalid fd\n");
+                return fd;
+        }
+
+        ret = fcntl(fd, F_GET_MAX_WRITE_STREAMS);
+        if (ret < 0) {
+                printf("F_GET_MAX_WRITE_STREAMS: failed (%s)\n",
+strerror(errno));
+                return ret;
+        }
+        if (st > ret) {
+                printf("error in setting stream, available upto %d\n", ret);
+                return -1;
+        }
+
+        ret = fcntl(fd, F_SET_WRITE_STREAM, st);
+        if (ret < 0) {
+                printf("F_SET_WRITE_STREAM: failed (%s)\n", strerror(errno));
+                return ret;
+        }
+        set = st;
+
+        ret = fcntl(fd, F_GET_WRITE_STREAM);
+        if (ret < 0) {
+                printf("F_GET_WRITE_STREAM: failed (%s)\n", strerror(errno));
+                return ret;
+        }
+        get = ret;
+
+        if (get != set)
+                printf("unexpected, set %d but get %d\n", set, get);
+
+        ret = write(fd, buf, BUF_SIZE);
+        if (ret < BUF_SIZE) {
+                printf("failed, wrote %d bytes (expected %d)\n", ret, BUF_SIZE);
+                return ret;
+        }
+        return 0;
+}
+
+int main(int argc, char *argv[])
+{
+        int ret, regfd;
+
+        /* two file writes, one buffered another direct */
+        regfd = open("/mnt/f_buffered", O_CREAT | O_RDWR, 0644);
+        ret = write_fd(regfd, 7);
+        close(regfd);
+
+        regfd = open("/mnt/f_direct", O_CREAT | O_RDWR| O_DIRECT, 0644);
+        ret = write_fd(regfd, 6);
+        close(regfd);
+        return ret;
+}
+
+Kanchan Joshi (4):
+  fs: add write-stream management file_operations
+  fcntl: expose write-stream management to userspace
+  iomap: introduce and propagate write_stream
+  xfs: enable userspace write stream support
+
+ fs/fcntl.c                 | 33 +++++++++++++++++++++++
+ fs/iomap/direct-io.c       |  1 +
+ fs/iomap/ioend.c           |  3 +++
+ fs/xfs/xfs_file.c          | 54 ++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_icache.c        |  1 +
+ fs/xfs/xfs_inode.h         |  3 +++
+ fs/xfs/xfs_iomap.c         |  1 +
+ include/linux/fs.h         |  6 +++++
+ include/linux/iomap.h      |  2 ++
+ include/uapi/linux/fcntl.h |  4 +++
+ 10 files changed, 108 insertions(+)
+
+-- 
+2.25.1
+
