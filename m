@@ -1,177 +1,159 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D50933858F
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Feb 2026 15:06:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDB31A08AF;
+	Tue, 17 Feb 2026 15:47:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771340816; cv=none; b=s/uVTagbBAsS/7pnff+8qIKmpEzdfPZjotw6SH1c+ztjxB70vyKZVuixoZaSzw2oXOThaNWaGyd3qrKIBBKyUyLdaeVi73cRpTy92i/1HmVJ/wbOSpKme8csOA6NVYhycv5Ro+q6JhdFJBRFap+pudpGwSgXoEfDxExLrD5hEVM=
+	t=1771343234; cv=none; b=CIQAOZXy3C5PlQTv/VOBS2K/4n3yiPMAglZ2MdgXcFMQfX5beNRfxZZSMBMlsFGNbdjheleX94qsejfneXtHQU6OyKl8IrTpUaUCz1LQ5DxnumhHZeYYgtkpkKAITbjZ3sbuT8AQbujVaxfJhMQAUZ4Wmb0cWP5UkauuEGT4nHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771340816; c=relaxed/simple;
-	bh=2iRreTJmR3+8Y7w+IPkUtFAxQUsbKylqqeQQVGJVvb4=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=k86lJNWAULZEeJqDyzw96SIl8NglheuY/S5hsrkaR+P5+mP8htB3HWfOC/6Gu3X4kkzyORh8INYVeVUz5x+z7Y8uvWLO2v03rJe40ViWPDhcTNJSILdx3umAeVpP3z36mbHhOsrNHJlOb2mMDErEniT26WHN/gGsT/QkfAaLIvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jt4WOkuu; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1771343234; c=relaxed/simple;
+	bh=/F3CF7kJIJlYdTae/ocf5yJrbawHZOMAk0LiuSCTIJc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AgxMOxDL9x6extm6R6duxkSgAfhOZvmwKc2jOfP8CCFwMr+74UqIys7lEsdlh9+bBa2S4y4Vqw7CHpP8IKUrHr8xOXBFrUQ9e/onOC7yYNLyxqxa1LWqr851Zzl2gKtXiNwwf9tznu/vjtbv1yvEbQ1xGtV+BsiFVRfMMNyNriw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=Mn8APs0x; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Eh20fcjU; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jt4WOkuu"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2a9296b3926so29226455ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Feb 2026 07:06:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771340815; x=1771945615; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XVYan2GOph5iGkuloXlUEbn2xG2E+s4UQDb2f5z5l3w=;
-        b=jt4WOkuuuzj3NPAC9rnyl07KkbylL6bV5x6h2taAQrIgR3iKwCay3Q8i2sIvgMHUGD
-         1NEKsU8j6oihHSonXyeAr4HalVWpuo8XlP/V8PYeIRncWRng+WLtxnZhz6gOsgjzBOMk
-         nAOO0vEV1WMYvvE5JlqWe9twPQ3UlcEbgpo3hnEWIRE71VuZrErBiscG7MKYTnQhUNfc
-         4ADhMpwg2lMbKYl5VFuwoDpUW6bWmID+3xGEJOSoVP88+WW9qripQShBbJ1rVe96iMdw
-         pM4QgAgvdHcGQzYKLnRCpkOLm4StzAILOHMtsh0qjfKuSgnRXZOenhBKo8NU+csowZfq
-         Dq/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771340815; x=1771945615;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XVYan2GOph5iGkuloXlUEbn2xG2E+s4UQDb2f5z5l3w=;
-        b=BFUs8ex1bfoSvjwbW97PGMsLo6xzy92xadAz+5WDJZqFFKxzTgcjiEcQQS/KgM3R/y
-         S5L9m2lE9uMS82AfOBP7Wi3SNFymKz1sHv+AOPljxNQZGQmb1VymQhmSpp+t/jZFzIgj
-         XmVHVqbnl96cShAJaNZ2gIqX0F4PjW+Euw7Zepd8kUGnS8s0HWaf/FH5UnPuiuTxnvUD
-         KOnsQPaBeKLVyXndSzRtrpxU+bp68LLvo4EWMYBk8cfROIGUPhIfseJZVnAK71kUOoQ9
-         4IGWiaaFnzKDfgsMUWjEYnIGCGWx38ffVo4z0U4Fn/uV+dLELDydL3gYo5GLmKIauEsp
-         tAHA==
-X-Forwarded-Encrypted: i=1; AJvYcCVy40hvV1Om2128+6DdlbxxNi0kixIdtI4fz08M6tQ4nGf9U87hMrRs60Dqo1GnYY/ik8CmRWTJrhc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzAFZuzQnd8D1/bAQpIJgsRWG8G8SqNhD241hQHx3gRET6E8GqA
-	LMDeZCfxyYQZNR749uopIsqFJ2mx2+gIjmxTbtRCGRiYt2VSxRJSgCta
-X-Gm-Gg: AZuq6aIzujAVAH/qbSVVM26M3gSccjbYOm/17sptnGgynEoA0N/jY9cHj96BlOmLou4
-	zxOrbdc1VRNfLeNAuPho8P1E42Mb5U2HYszWkCAf6rzN3I8/Ws/lk1Vp/amEIsRbV4j//QAAweT
-	8ZrEfV06MDuaWrSKGpIr55zBm8N4zUMrQTFPQ9btJsmRu2z7iuqQqXJnoNV2SIEHj1fPf1nmWR4
-	Zu6fZWEZ4AYcMQrsce7t90fUZkD4+fXHoG3apACEcS0II5Uanc0p3U5S/sRPEW58YUvZnr9HCO7
-	eoNI2HBd5RbXX2OKR+HLz9gM4eikeMuFtU2+7+YLbqNFYe+pUDSTJ5e1pQvCKWaSLIyjXercShC
-	oohcchaEyyW1pXNmmFWYJswlaqHkeNNoIW5GE5ZZH8tVo7ZFdhsPhaKPDX1MdZRjWpBG1UDGArA
-	M98lj+tBPyI0Mzm8bK+JjADdtaQkHXgKZL8Jg7TcblWjsy79z1SGQ9Cb7raPcCtKhYSXqeDXbJx
-	rD+uzwP
-X-Received: by 2002:a17:903:3545:b0:29d:a26c:34b6 with SMTP id d9443c01a7336-2ab506145ffmr130164015ad.50.1771340814705;
-        Tue, 17 Feb 2026 07:06:54 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.205.118])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad1a738220sm106548725ad.37.2026.02.17.07.06.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Feb 2026 07:06:54 -0800 (PST)
-Message-ID: <37206076c486da01efe90b95f5dc61049cb2d141.camel@gmail.com>
-Subject: Re: [PATCH v2 4/5] xfs: only flush when COW fork blocks overlap
- data fork holes
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Date: Tue, 17 Feb 2026 20:36:50 +0530
-In-Reply-To: <20260129155028.141110-5-bfoster@redhat.com>
-References: <20260129155028.141110-1-bfoster@redhat.com>
-	 <20260129155028.141110-5-bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
+	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="Mn8APs0x";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Eh20fcjU"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 7E88A7A0108;
+	Tue, 17 Feb 2026 10:47:10 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-04.internal (MEProxy); Tue, 17 Feb 2026 10:47:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1771343230;
+	 x=1771429630; bh=eSOHZKYixCwKfgxL+toMTrJrfTKK7cDvAJRVjTf9RM0=; b=
+	Mn8APs0x7sHctVRPN8/7iUwyhAmujqeUbTrvmNm6j+FOlZQSs+/73bLRa6geXjbz
+	099935qUbifVqUCIxuqwEMwd4cRdQBDF5RJVHCRoL2LYmyra1T04cYK0jGCjB4Ww
+	aiosmjsmjhVh5zi9HXP2X2nH+CWmUQFezSawr47QivjSVR03asypxVydDCSzJEip
+	1l1nb50Qzvj5XRwtUlZeTxJv7Krl+5fts26S77m+ildbnGuxudoXIuYg0DBXcd/N
+	QWQHG3qmhAwZ2rogEfeBYAz1VvqL9we1C+ioIx65wRGnjXK48GeoAufxMfERQmPa
+	e87uHR7i06X8tgJbELLHyA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1771343230; x=
+	1771429630; bh=eSOHZKYixCwKfgxL+toMTrJrfTKK7cDvAJRVjTf9RM0=; b=E
+	h20fcjUeQD5VDaOOummopqzrHBZf0r3+6stdjYoCheS8QRvS9yb/OGU1xwhJRLaB
+	HzuxZsLMWkhcdJuX2AAhxP2m9oGf8VPs4dlhELOxNlwXhxCpEO5IPUxY6Qq5SYCY
+	QRPqP8tJPkDWOu5I+33J+MPRYpccOZElANHNqzGX8IH+h/dmcdsdTu5pBTTK9DNj
+	/Z8ujUYiP35PUcT0J8r6UEQWsvVRMtz7B6lMQR8+Zb7iGA/1KLWCvjGOe1JC/bee
+	rrCQVrghgs4vWEjFQscYYybLZyqGT07MyGI/2rQwh9mgANE8qVn8r7LdDMjrpGwm
+	AnaanyrFKK0z2w4/Yoi/A==
+X-ME-Sender: <xms:fI2UadxdXWxOkJBqkCf3w_2xjNSc95X5l6befkBvbTGYGq9ya6YceA>
+    <xme:fI2UaZLt5zDl_7wWXcGZeRnoWgoze8gE_tmakKEUWp14tpfP5GopDHfId27gpLCzX
+    Xb-7PAwxLS2J8nGPfjZDSbXqGYYVhJ-224WBUiVnYsbpks79NTsTw>
+X-ME-Received: <xmr:fI2UaS063dnAzv8VHGf0UxFZLuYO9TsPYnhFGbMQ31mNL3wUi2pxw_KaQml3ieMaA-nHEw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvvddtudeiucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkfhggtggugfgjsehtkefstddttdejnecuhfhrohhmpeetnhgurhgv
+    shcuhfhrvghunhguuceorghnughrvghssegrnhgrrhgriigvlhdruggvqeenucggtffrrg
+    htthgvrhhnpedtleelvdfgjedvffeiueekfeeuleffhfegfffhgfffkeevueehieehhfei
+    gffhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grnhgurhgvshesrghnrghrrgiivghlrdguvgdpnhgspghrtghpthhtohepvddtpdhmohgu
+    vgepshhmthhpohhuthdprhgtphhtthhopegrmhhirhejfehilhesghhmrghilhdrtghomh
+    dprhgtphhtthhopehrihhtvghshhdrlhhishhtsehgmhgrihhlrdgtohhmpdhrtghpthht
+    ohepfihilhhlhiesihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopegujhifohhngh
+    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepmhgtghhrohhfsehkvghrnhgvlhdrohhr
+    ghdprhgtphhtthhopehlihhnuhigqdhmmheskhhvrggtkhdrohhrghdprhgtphhtthhope
+    hprghnkhgrjhdrrhgrghhhrghvsehlihhnuhigrdguvghvpdhrtghpthhtohepohhjrghs
+    fihinheslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehlshhfqdhptgeslhhish
+    htshdrlhhinhhugidqfhhouhhnuggrthhiohhnrdhorhhg
+X-ME-Proxy: <xmx:fI2UaTcdZYB-mpJIJd5jldcTdiY-2Twjhj8aAHGKT7qzEf-NoLUuiA>
+    <xmx:fI2UaW6TbJ9w1l0L50LmdJioh38TY-CiCK6iJHnQdsCrnRppAzeIew>
+    <xmx:fI2UaW8wc3tfyzNhknY6_3BJhGTQY-0VBQWWApz6h7_O9W-g0AbiLw>
+    <xmx:fI2UadJ6rf-vJ4UZNx7yLVwQXr04L3BfQ7RjiQ30ZLTfPrBi0OhJFQ>
+    <xmx:fo2UaSfK4T3HvYEQLinaS7lvlUdt-dAbbSUTo1wOW05RdrqEQEj_EDV5>
+Feedback-ID: id4a34324:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 17 Feb 2026 10:47:07 -0500 (EST)
+Date: Tue, 17 Feb 2026 10:47:07 -0500
+From: Andres Freund <andres@anarazel.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, 
+	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
+	john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com, jack@suse.cz, 
+	ojaswin@linux.ibm.com, Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, 
+	Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, 
+	vi.shah@samsung.com
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <ndwqem2mzymo6j3zw3mmxk2vh4mnun2fb2s5vrh4nthatlze3u@qjemcazy4agv>
+References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+ <20260217055103.GA6174@lst.de>
+ <CAOQ4uxgdWvJPAi6QMWQjWJ2TnjO=JP84WCgQ+ShM3GiikF=bSw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxgdWvJPAi6QMWQjWJ2TnjO=JP84WCgQ+ShM3GiikF=bSw@mail.gmail.com>
 
-On Thu, 2026-01-29 at 10:50 -0500, Brian Foster wrote:
-> The zero range hole mapping flush case has been lifted from iomap
-> into XFS. Now that we have more mapping context available from the
-> ->iomap_begin() handler, we can isolate the flush further to when we
-> know a hole is fronted by COW blocks.
-> 
-> Rather than purely rely on pagecache dirty state, explicitly check
-> for the case where a range is a hole in both forks. Otherwise trim
-> to the range where there does happen to be overlap and use that for
-> the pagecache writeback check. This might prevent some spurious
-> zeroing, but more importantly makes it easier to remove the flush
-> entirely.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_iomap.c | 36 ++++++++++++++++++++++++++++++------
->  1 file changed, 30 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 0edab7af4a10..0e82b4ec8264 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1760,10 +1760,12 @@ xfs_buffered_write_iomap_begin(
->  {
->  	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
->  						     iomap);
-> +	struct address_space	*mapping = inode->i_mapping;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
-> +	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
->  	struct xfs_bmbt_irec	imap, cmap;
->  	struct xfs_iext_cursor	icur, ccur;
->  	xfs_fsblock_t		prealloc_blocks = 0;
-> @@ -1831,6 +1833,8 @@ xfs_buffered_write_iomap_begin(
->  		}
->  		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
->  				&ccur, &cmap);
-> +		if (!cow_eof)
-> +			cow_fsb = cmap.br_startoff;
->  	}
->  
->  	/* We never need to allocate blocks for unsharing a hole. */
-> @@ -1845,17 +1849,37 @@ xfs_buffered_write_iomap_begin(
->  	 * writeback to remap pending blocks and restart the lookup.
->  	 */
->  	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-> -		if (filemap_range_needs_writeback(inode->i_mapping, offset,
-> -						  offset + count - 1)) {
-> +		loff_t start, end;
+Hi,
 
-Nit: Tab between data type and identifier?
+On 2026-02-17 10:23:36 +0100, Amir Goldstein wrote:
+> On Tue, Feb 17, 2026 at 8:00 AM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > I think a better session would be how we can help postgres to move
+> > off buffered I/O instead of adding more special cases for them.
 
-> +
-> +		imap.br_blockcount = imap.br_startoff - offset_fsb;
-> +		imap.br_startoff = offset_fsb;
-> +		imap.br_startblock = HOLESTARTBLOCK;
-> +		imap.br_state = XFS_EXT_NORM;
-> +
-> +		if (cow_fsb == NULLFILEOFF) {
-> +			goto found_imap;
-> +		} else if (cow_fsb > offset_fsb) {
-> +			xfs_trim_extent(&imap, offset_fsb,
-> +					cow_fsb - offset_fsb);
-> +			goto found_imap;
-> +		}
-> +
-> +		/* COW fork blocks overlap the hole */
-> +		xfs_trim_extent(&imap, offset_fsb,
-> +			    cmap.br_startoff + cmap.br_blockcount - offset_fsb);
-> +		start = XFS_FSB_TO_B(mp, imap.br_startoff);
-> +		end = XFS_FSB_TO_B(mp,
-> +				   imap.br_startoff + imap.br_blockcount) - 1;
+FWIW, we are adding support for DIO (it's been added, but performance isn't
+competitive for most workloads in the released versions yet, work to address
+those issues is in progress).
 
-So, we are including the bytes in the block number (imap.br_startoff + imap.br_blockcount - 1)th,
-right? That is why a -1 after XFS_FSB_TO_B()? 
---NR
-> +		if (filemap_range_needs_writeback(mapping, start, end)) {
->  			xfs_iunlock(ip, lockmode);
-> -			error = filemap_write_and_wait_range(inode->i_mapping,
-> -						offset, offset + count - 1);
-> +			error = filemap_write_and_wait_range(mapping, start,
-> +							     end);
->  			if (error)
->  				return error;
->  			goto restart;
->  		}
-> -		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> -		goto out_unlock;
-> +
-> +		goto found_imap;
->  	}
->  
->  	/*
+But it's only really be viable for larger setups, not for e.g.:
+- smaller, unattended setups
+- uses of postgres as part of a larger application on one server with hard to
+  predict memory usage of different components
+- intentionally overcommitted shared hosting type scenarios
 
+Even once a well configured postgres using DIO beats postgres not using DIO,
+I'll bet that well over 50% of users won't be able to use DIO.
+
+
+There are some kernel issues that make it harder than necessary to use DIO,
+btw:
+
+Most prominently: With DIO concurrently extending multiple files leads to
+quite terrible fragmentation, at least with XFS. Forcing us to
+over-aggressively use fallocate(), truncating later if it turns out we need
+less space. The fallocate in turn triggers slowness in the write paths, as
+writing to uninitialized extents is a metadata operation.  It'd be great if
+the allocation behaviour with concurrent file extension could be improved and
+if we could have a fallocate mode that forces extents to be initialized.
+
+A secondary issue is that with the buffer pool sizes necessary for DIO use on
+bigger systems, creating the anonymous memory mapping becomes painfully slow
+if we use MAP_POPULATE - which we kinda need to do, as otherwise performance
+is very inconsistent initially (often iomap -> gup -> handle_mm_fault ->
+folio_zero_user uses the majority of the CPU). We've been experimenting with
+not using MAP_POPULATE and using multiple threads to populate the mapping in
+parallel, but that feels not like something that userspace ought to have to
+do.  It's easier to work around for us that the uninitialized extent
+conversion issue, but it still is something we IMO shouldn't have to do.
+
+
+> Respectfully, I disagree that DIO is the only possible solution.
+> Direct I/O is a legit solution for databases and so is buffered I/O
+> each with their own caveats.
+
+> Specifically, when two subsystems (kernel vfs and db) each require a huge
+> amount of cache memory for best performance, setting them up to play nicely
+> together to utilize system memory in an optimal way is a huge pain.
+
+Yep.
+
+Greetings,
+
+Andres Freund
