@@ -1,110 +1,221 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08EC1482E8
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Feb 2026 12:42:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F031DF27F
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Feb 2026 13:19:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771332180; cv=none; b=AzHNmCwtjo2FYQaahbopFuQRSmSws49LAMJm0iIfB+edB3WjLfJ2q/WSUOa+ZtKrsOJ7/MoW8+j4+5QDw6Gus9IB1GU1B/MjGmHWJMM09akcCCJgt1t2wnDytXgPU6YWvjR7tMuhG4YuFDLW/GOXQxJ1boUu+gUtEvzRfXFy5bU=
+	t=1771334360; cv=none; b=lp/3HhuPuaUCx4gcm1aJx8AzyF+uYMSeDZSvSLSPPru8iKeDRsdsLZZGc/3IlPJrNuiOycP4uRUq2ivvT2INY/ssCbDsDfj45Bk7ILMfhBUmZEdTqx8W3kYKULtq4hhOtTloRC1U25YrKuZ2SzLGw3hF//drrJODmqh9zYyP8X8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771332180; c=relaxed/simple;
-	bh=HPfF9FXYIEsCzB6Gh5Ceal5kKcdQMhEjpIC03DM8Pjs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fIdAa66ZH0E6pzh+L3sr/UZi0OPGxe6FY4KcN04n1+aKc/GrSWsnN9WP9hdKsgRzfbX34ElQFX6BEMQ5NmBuqcK0uNhFwCfiPeo+4ShVwXIgnYQchzyyhtFWaZacvzcNDvyHj2nCaTQTsRmS2MgDBXIn7FKoSHXOwqOtOUJkzdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=nd0EUNwq; arc=none smtp.client-ip=95.215.58.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1771334360; c=relaxed/simple;
+	bh=p3OesVCkD1eTGRXZtuB7DymQrZtUa90XZPMdfyANI4w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u/wZfosF0hwP9bhG5Lbho4OuK6gBaT/OtIllrsLuiGRZQHvgy8W7arysp0i5bZJpZexAPiF1lr6oHoYr+bOHjN+18J6YG/FfiVozMFxbFj7vhEa+bsuxU3hb3BtU9bxPK1BicV/q8JadZGPpcA5Q/8ZK7JnsvCMHBzEAAgs53o4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ldVqn4ST; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="nd0EUNwq"
-Message-ID: <4627056f-2ab9-4ff1-bca0-5d80f8f0bbab@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771332166;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hHe3ZejbOvudEwAFGp4CJMQCUggASakx2SvWy48y3WA=;
-	b=nd0EUNwqwPgsrOW39DUKMqi0MAu86LgmPAc45mvnFMyfd00VVEkLVG905HJY5LjZtYOxhT
-	2xV5Dft2o/QCfaaYr5jKBgtQZr11QWsPRVkswFGstncp2L532LR9+4PX7FtJzluYTGY/2b
-	QU9DrWfQEvKcvV0+uS0eYFGr/IRCB1A=
-Date: Tue, 17 Feb 2026 13:42:35 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ldVqn4ST"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40123C4CEF7;
+	Tue, 17 Feb 2026 13:19:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771334360;
+	bh=p3OesVCkD1eTGRXZtuB7DymQrZtUa90XZPMdfyANI4w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ldVqn4STQxh0UI52lO2o849wAGh5kxkwMJ4wchztKtPUkZFYCccrJS7VijF4Yfha1
+	 hHaVFncoNUmFblhBhWeDuOHhMitY0YXfcc+c1k8MKeacT7cOHhhS4+MuDCD8KRAq9W
+	 5YP/metLcQCQAtxfrwlgo+Of7HieQmjfnQbM+sspMnBfzQJDqX4I8gSrpge8dZ8SQv
+	 sXwgCD5xXzpDO9UQq9dIwj7umOTFhVJlgODSCsTioGv+WiYSiu1rWZWsWyGRbbGkRM
+	 KK+L+bBDscFpKHyTVRxUI91JOOPoX6h1WqWjc+P49NkgGt0+zHJPMIr57pXIA5XZfY
+	 nRO/04vaxVXGQ==
+Date: Tue, 17 Feb 2026 14:19:16 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 REBASE] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code
+ base
+Message-ID: <aZRjL9KElwju605a@nidhogg.toxiclabs.cc>
+References: <20260212131302.132709-3-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-To: Jan Kara <jack@suse.cz>, Andres Freund <andres@anarazel.de>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org,
- linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
- lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
- john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
- ritesh.list@gmail.com, Luis Chamberlain <mcgrof@kernel.org>,
- dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
- gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
- vi.shah@samsung.com
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
- <zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s>
- <wkczfczlmstoywbmgfrxzm6ko4frjsu65kvpwquzu7obrjcd3f@6gs5nsfivc6v>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <wkczfczlmstoywbmgfrxzm6ko4frjsu65kvpwquzu7obrjcd3f@6gs5nsfivc6v>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260212131302.132709-3-lukas@herbolt.com>
 
-On 2/17/2026 1:06 PM, Jan Kara wrote:
-> On Mon 16-02-26 10:45:40, Andres Freund wrote:
->>> Hmm, IIUC, postgres will write their dirty buffer cache by combining
->>> multiple DB pages based on `io_combine_limit` (typically 128kb).
->>
->> We will try to do that, but it's obviously far from always possible, in some
->> workloads [parts of ]the data in the buffer pool rarely will be dirtied in
->> consecutive blocks.
->>
->> FWIW, postgres already tries to force some just-written pages into
->> writeback. For sources of writes that can be plentiful and are done in the
->> background, we default to issuing sync_file_range(SYNC_FILE_RANGE_WRITE),
->> after 256kB-512kB of writes, as otherwise foreground latency can be
->> significantly impacted by the kernel deciding to suddenly write back (due to
->> dirty_writeback_centisecs, dirty_background_bytes, ...) and because otherwise
->> the fsyncs at the end of a checkpoint can be unpredictably slow.  For
->> foreground writes we do not default to that, as there are users that won't
->> (because they don't know, because they overcommit hardware, ...) size
->> postgres' buffer pool to be big enough and thus will often re-dirty pages that
->> have already recently been written out to the operating systems.  But for many
->> workloads it's recommened that users turn on
->> sync_file_range(SYNC_FILE_RANGE_WRITE) for foreground writes as well (*).
->>
->> So for many workloads it'd be fine to just always start writeback for atomic
->> writes immediately. It's possible, but I am not at all sure, that for most of
->> the other workloads, the gains from atomic writes will outstrip the cost of
->> more frequently writing data back.
+On Thu, Feb 12, 2026 at 02:13:04PM +0100, Lukas Herbolt wrote:
+> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+> the unmap write zeroes operation.
 > 
-> OK, good. Then I think it's worth a try.
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+> v8 changes:
+> 	rebase to v6.19
+> 	add early check for not supported cases
 > 
->> (*) As it turns out, it often seems to improves write throughput as well, if
->> writeback is triggered by memory pressure instead of SYNC_FILE_RANGE_WRITE,
->> linux seems to often trigger a lot more small random IO.
->>
->>> So immediately writing them might be ok as long as we don't remove those
->>> pages from the page cache like we do in RWF_UNCACHED.
->>
->> Yes, it might.  I actually often have wished for something like a
->> RWF_WRITEBACK flag...
+>  fs/xfs/xfs_bmap_util.c | 10 ++++++++--
+>  fs/xfs/xfs_bmap_util.h |  2 +-
+>  fs/xfs/xfs_file.c      | 39 ++++++++++++++++++++++++++-------------
+>  3 files changed, 35 insertions(+), 16 deletions(-)
 > 
-> I'd call it RWF_WRITETHROUGH but otherwise it makes sense.
-> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 2208a720ec3f..942d35743b82 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -642,11 +642,17 @@ xfs_free_eofblocks(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
 
-One naive question: semantically what will be the difference between
-RWF_DSYNC and RWF_WRITETHROUGH? So RWF_DSYNC will be the sync version and 
-RWF_WRITETHOUGH will be an async version where we kick off writeback immediately 
-in the background and return?
+"Callers can specify bmapi_flags" is unneeded here IMHO, the function
+definition already states that.
 
---
-Pankaj
+> + * further checks whether the hard ware supports and it can fallback to
+> + * software zeroing.
 
+This sounds weird to me, but I'm not native English speaker. Also, I
+don't think this comment belongs here, xfs_alloc_file_space() ignores
+bmapi_flags, it just pass it along...
+
+
+> + */
+>  int
+>  xfs_alloc_file_space(
+>  	struct xfs_inode	*ip,
+>  	xfs_off_t		offset,
+> -	xfs_off_t		len)
+> +	xfs_off_t		len,
+> +	uint32_t		bmapi_flags)
+>  {
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	xfs_off_t		count;
+> @@ -748,7 +754,7 @@ xfs_alloc_file_space(
+>  		 * will eventually reach the requested range.
+>  		 */
+>  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+> +				allocatesize_fsb, bmapi_flags, 0, imapp,
+>  				&nimaps);
+>  		if (error) {
+>  			if (error != -ENOSR)
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index c477b3361630..2895cc97a572 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+>  
+>  /* preallocation and hole punch interface */
+>  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+> -		xfs_off_t len);
+> +		xfs_off_t len, uint32_t bmapi_flags);
+>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 7874cf745af3..2535db43ff25 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1293,6 +1293,7 @@ xfs_falloc_zero_range(
+>  	unsigned int		blksize = i_blocksize(inode);
+>  	loff_t			new_size = 0;
+>  	int			error;
+> +	uint32_t                bmapi_flags;
+>  
+>  	trace_xfs_zero_file_space(ip);
+>  
+> @@ -1300,18 +1301,27 @@ xfs_falloc_zero_range(
+>  	if (error)
+>  		return error;
+>  
+> -	if (xfs_falloc_force_zero(ip, ac)) {
+> -		error = xfs_zero_range(ip, offset, len, ac, NULL);
+> -	} else {
+> -		error = xfs_free_file_space(ip, offset, len, ac);
+> -		if (error)
+> -			return error;
+>  
+> -		len = round_up(offset + len, blksize) -
+> -			round_down(offset, blksize);
+> -		offset = round_down(offset, blksize);
+> -		error = xfs_alloc_file_space(ip, offset, len);
+> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
+
+	... The comment probably belongs here and it can be short like
+	(based on the same comment from Ext4):
+
+	  /*
+	   * Do not allow writing zeroes if the hardware does not
+	   * support it
+	   */
+
+The rest of the patch looks fine to me, although Christoph likely will
+also need to take a look on it because xfs_falloc_force_zero() behavior.
+
+> +		if (xfs_is_always_cow_inode(ip) ||
+> +		    !bdev_write_zeroes_unmap_sectors(
+> +			xfs_inode_buftarg(ip)->bt_bdev))
+> +			return -EOPNOTSUPP;
+> +		bmapi_flags = XFS_BMAPI_ZERO;
+> +	} else {
+> +		if (xfs_falloc_force_zero(ip, ac)) {
+> +			error = xfs_zero_range(ip, offset, len, ac, NULL);
+> +			goto set_filesize;
+> +		}
+> +		bmapi_flags = XFS_BMAPI_PREALLOC;
+>  	}
+> +
+> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+> +	offset = round_down(offset, blksize);
+> +
+> +	error = xfs_alloc_file_space(ip, offset, len, bmapi_flags);
+> +
+> +set_filesize:
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1336,7 +1346,8 @@ xfs_falloc_unshare_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1364,7 +1375,8 @@ xfs_falloc_allocate_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1374,7 +1386,7 @@ xfs_falloc_allocate_range(
+>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+> -		 FALLOC_FL_UNSHARE_RANGE)
+> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+>  
+>  STATIC long
+>  __xfs_file_fallocate(
+> @@ -1417,6 +1429,7 @@ __xfs_file_fallocate(
+>  	case FALLOC_FL_INSERT_RANGE:
+>  		error = xfs_falloc_insert_range(file, offset, len);
+>  		break;
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  	case FALLOC_FL_ZERO_RANGE:
+>  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+>  		break;
+> 
+> base-commit: 05f7e89ab9731565d8a62e3b5d1ec206485eeb0b
+> -- 
+> 2.53.0
+> 
+> 
