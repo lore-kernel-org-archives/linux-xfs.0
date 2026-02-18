@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB802F616B;
-	Wed, 18 Feb 2026 23:05:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF1E82F616B;
+	Wed, 18 Feb 2026 23:06:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771455905; cv=none; b=aOdCo+g8rJQAOzSbwT/flWiT/kD5FpZKNlychUBNnGffP8+YKNWkv0g5oO0TwK+JD0ECT43ua7fbV341PPSH8eMkyHiUUvOL2ZkT2VEqwXX8ps07TdKVn34WWV6Fk4fY2rViRlrAVXLaRKn4HqN2qNZMMzekkHX2w1xXTb0hWJc=
+	t=1771455975; cv=none; b=U0VuIv875t48o1+vNVUtaS4H/jOV2uAjWrgQzIUrrUBgF+fPh41I7NMBKtPAixUF505rJHSqF/FFxTnzkMqJYILTFwo8C2IU4vHt8oRqq0Gs+Ao9NSY1MNiue8btWyXp/Ri+sEWR5uY/AH3j+Z5+saHIuJBIq1HW1TC+SU9fkyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771455905; c=relaxed/simple;
-	bh=m0Ge09sJIPzxExUr5refscakKrrITkNwyVfeS2JWhXc=;
+	s=arc-20240116; t=1771455975; c=relaxed/simple;
+	bh=vWc9pjDxYfDOGUUahUs8C4GcRMhanIR5qN6sDvlcoSM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dKEqnqRrkvkGadbv+wxZZ/6srja80dktYOu5wQqfc6apsVSZyFw1j/wwDuXj1nLP0PV0M9vrguSPzSGXmhVw6DYvQY3YwIAPK4x1NzfXaZb+/eclqXJzmU9Zi7REzv/tn5wkMFEjOjJZbKM6+nJwoTpwYEk4V2sAPDdRDldxocs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h6+A3jbM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TQwVuYNH7e2v1F3SOoD88cnskmrgR6SNSPNmBQaMIJTiGrmEn6CfbqjXeBRVBL/BKEOkRKs89UsgXZcpOGtF+hd+d+lwLKRjUiiWt4Ov87CKbGe1Rs5c60Naxt/hWhvyV9H+qFYsbWtL23/cJLWz9oyg/R7FBVDGZLIEdfSIEb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TP2WG13Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h6+A3jbM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA43FC116D0;
-	Wed, 18 Feb 2026 23:05:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TP2WG13Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 768DAC116D0;
+	Wed, 18 Feb 2026 23:06:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771455904;
-	bh=m0Ge09sJIPzxExUr5refscakKrrITkNwyVfeS2JWhXc=;
+	s=k20201202; t=1771455975;
+	bh=vWc9pjDxYfDOGUUahUs8C4GcRMhanIR5qN6sDvlcoSM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=h6+A3jbMjxE1FkuoJXtX6lkJ5bI19axbGH+t2WCl5FpaTRcdzzXPgPiwbM9PrPWtw
-	 /8maKDauEt+20Yp4Ql8x1Ylkw8UOMuDregpljmx8drOQFin44E/foQUrdInoj4K4a4
-	 neu/l3QihXseyCrkrUD1hUEyuMJZlpJLS3f2V5SzNhK8HVitWkvPnJhyhgUw4GFQua
-	 /7gFGqO9zCh67kDN7hdi5CDONhlj8qtT3yTQSSrhnm2j+RLWNRP8PkUQbQCJJQ+sNX
-	 I4CmCG464ET0R6piXNYf0ZM+0iW7A3CFtvvYzFa1hbJoED0hGcszGdHiVy34b2jlw9
-	 spHuhPWvXnltQ==
-Date: Wed, 18 Feb 2026 15:05:04 -0800
+	b=TP2WG13QiNgYz2sJEHdMnJuTED4lgLssAmVwmY3qT9LY1v6a0ISQjHY25lovFAqi3
+	 6dko+RVqriVRQDuRYWDvGLmg6ZnxZ0OpXMhHl8sAIBnTO+nFXvFrvqy7weZYXdoEeR
+	 CnwCNymgeE++8j73DV+R37F/m9CkOED3qqAmU6dyAyray1XZjtKzoy5s1i/ZmUDP55
+	 Qf8boYHiIgV7QKOJW2sQxvdth6nTctcFIoadajJZqQb/vfKQATLHaTd3HR4CGD+2F1
+	 9ff6aiAW90TjvaG8M+c/6Pz4sRj9P8CrKeotNK4Kwc+UMOzcGSR7PREwSM0urtOFrc
+	 4lr2VNAsh8Fzw==
+Date: Wed, 18 Feb 2026 15:06:14 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH v3 08/35] iomap: don't limit fsverity metadata by EOF in
- writeback
-Message-ID: <20260218230504.GG6467@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 10/35] iomap: issue readahead for fsverity merkle tree
+Message-ID: <20260218230614.GH6467@frogsfrogsfrogs>
 References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-9-aalbersh@kernel.org>
+ <20260217231937.1183679-11-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,40 +43,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260217231937.1183679-9-aalbersh@kernel.org>
+In-Reply-To: <20260217231937.1183679-11-aalbersh@kernel.org>
 
-On Wed, Feb 18, 2026 at 12:19:08AM +0100, Andrey Albershteyn wrote:
-> fsverity metadata is stored at the next folio after largest folio
-> containing EOF.
+On Wed, Feb 18, 2026 at 12:19:10AM +0100, Andrey Albershteyn wrote:
+> Issue reading of fsverity merkle tree on the fsverity inodes. This way
+> metadata will be available at I/O completion time.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-I think this should be in the previous patch since writeback is part of
-pagecache writes.
-
-Also, should there be a (debug) check somewhere that an IOMAP_F_FSVERITY
-mapping gets mapped to a folio that's entirely above EOF?
+Seems fine to me...
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/iomap/buffered-io.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  fs/iomap/buffered-io.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
 > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 4cf9d0991dc1..a95f87b4efe1 100644
+> index cd74a15411cf..bd3ab4e6b2bf 100644
 > --- a/fs/iomap/buffered-io.c
 > +++ b/fs/iomap/buffered-io.c
-> @@ -1817,7 +1817,8 @@ int iomap_writeback_folio(struct iomap_writepage_ctx *wpc, struct folio *folio)
+> @@ -570,8 +570,12 @@ void iomap_read_folio(const struct iomap_ops *ops,
 >  
->  	trace_iomap_writeback_folio(inode, pos, folio_size(folio));
+>  	trace_iomap_readpage(iter.inode, 1);
 >  
-> -	if (!iomap_writeback_handle_eof(folio, inode, &end_pos))
-> +	if (!(wpc->iomap.flags & IOMAP_F_FSVERITY) &&
-> +	    !iomap_writeback_handle_eof(folio, inode, &end_pos))
->  		return 0;
->  	WARN_ON_ONCE(end_pos <= pos);
+> -	if (fsverity_active(iter.inode))
+> +	if (fsverity_active(iter.inode)) {
+>  		ctx->vi = fsverity_get_info(iter.inode);
+> +		if (iter.pos < fsverity_metadata_offset(iter.inode))
+> +			fsverity_readahead(ctx->vi, folio->index,
+> +					   folio_nr_pages(folio));
+> +	}
 >  
+>  	while ((ret = iomap_iter(&iter, ops)) > 0)
+>  		iter.status = iomap_read_folio_iter(&iter, ctx,
 > -- 
 > 2.51.2
 > 
