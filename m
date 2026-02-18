@@ -1,41 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D3042C0F8E;
-	Wed, 18 Feb 2026 23:20:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5132E6CB6;
+	Wed, 18 Feb 2026 23:42:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771456843; cv=none; b=DeHEaTxfM18JLOZKFyXkdFHQI7j0dGbebGYgFqgLUQ6omh+QSOqvqb2deHL6q18ngyo6kKFTZ4DPU9X32zS4JOG2h5UQFnPKBdPm86qwiE4m50FvRjXvwjiz0pds0+SIZNuV4QJKb+M/OiwNc9QipsqxdN+dNka3QjIQit0efzw=
+	t=1771458135; cv=none; b=iOix/vAIaC1dwU9pz4LS9T+s6jOD+vjlK5LKR1xdV1hILBTUjXwghuGZ3Cjk43I2ke4dTdVtXgYas1TrobOJYdGwmBsxYQHnH+kmmyUbqk/5mXycpJwvMu00bZ555U5nYY9npqYb4YOGXcbL0wkJ2cjl7qjs1tYB/ECxjmfH6FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771456843; c=relaxed/simple;
-	bh=sO52637lZXxDYceUwX8KiN4AT6/Rr4T9XpCWaLK+Zd8=;
+	s=arc-20240116; t=1771458135; c=relaxed/simple;
+	bh=wCbI6wj7oxCUGmf8RRxMZeFQ8W8q98rrl9MHtnRP6jI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iir39VkxW9+oaIRiIKWRUaG+Sj0TbuTF3LQ0Sx+zHIod9U46aTUrr6G2ew4aNhDF7q9kL2ESJ/WzSKMGsMMC5WQkob+AGHGYY6eCV+sfQOy7eQaxFg+yvZ4p3OiPTxNT+/ASIUdIZ6m/wHQcD8amVgwuA7oi1SUxJxYDp/UEKL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9E7fm7W; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=E8CxbyBevQXwl79+W1fLObxPnRJfQxBexg/C+nZbZwMC5ijvo7kVXE03hDQY74WTN9xlZ5Ehn5+i/zYUZc5neX7u0h3rqa7I2PRad5Zcy1l+obf5NxNifY0ztkBZCINInvRYvIQW715xRy2HB++eqVIE/ojepz82ztrsP4APTpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V482Ob1R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9E7fm7W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF16EC116D0;
-	Wed, 18 Feb 2026 23:20:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V482Ob1R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BAFC116D0;
+	Wed, 18 Feb 2026 23:42:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771456843;
-	bh=sO52637lZXxDYceUwX8KiN4AT6/Rr4T9XpCWaLK+Zd8=;
+	s=k20201202; t=1771458134;
+	bh=wCbI6wj7oxCUGmf8RRxMZeFQ8W8q98rrl9MHtnRP6jI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y9E7fm7WSpl9Adm3jnVrW8BXWDIUhmrrbfIZ8nS5C+pXvz8bJdgSFrn6f6L/EGPfw
-	 K4b/29QjeAYWuDVeWU5zNn5xYB7acOSQnwEc5VkRlqaenFzh/iGy7wHSdpvul2ef6Y
-	 kqPQInsERqm6qBPgHC49r7ZplyNpx6ON5Z2IzOkdsBBne2IuppNYhJHD6z8oRdsIWs
-	 3XVucAwM942AFdswnsx/0plaNOb5IQhrauq8Kmrue3ZCcCgDC3EgUJBKwF++WNcqGA
-	 B+3bqgyWzY0CAPrfLFbBoTzyxRTuqgxUL2XMFclBb2cfxRoujWaSIsBiuMjOFclSBY
-	 oyGjKhKEqN+kA==
-Date: Wed, 18 Feb 2026 15:20:42 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH v3 25/35] xfs: add helpers to convert between pagecache
- and on-disk offset
-Message-ID: <20260218232042.GM6467@frogsfrogsfrogs>
-References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-26-aalbersh@kernel.org>
+	b=V482Ob1RXXUzn81PwKknfj7zFSM//p1O8HjqzzfwWdYy1c36IW7SYGt4KfeDAHGtG
+	 iKZ+UaU1YzcsbouN6WtYesHztcMAxrjzxHH8+Ld7a0l9Qvq9M1JaXFzmR/Aem9NJfB
+	 fNMli9L16D8GygPMO77W3Un9Kd93UzFoP7I2e+4B7r1JGCNuE/7CFpIASwzB0Y7TqF
+	 dUEvqViPc39jgHBIDtaxVVXXSCZRcbXp6L82sRgzRfMjSwycsGRFj8p1QPEhY0J2aA
+	 TKoPoxozyRhyjSityUtYqM8fbMy9QyobU01DTGOh61T5J4JbgQEtQKjpssD2kaMAOX
+	 4dY6Jl5xEvcNw==
+Date: Thu, 19 Feb 2026 10:42:00 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andres Freund <andres@anarazel.de>,
+	Pankaj Raghav <pankaj.raghav@linux.dev>, Jan Kara <jack@suse.cz>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+	lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+	john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com,
+	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
+	Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
+	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
+Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <aZZOSFdL_L_EoU34@dread>
+References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+ <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
+ <zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s>
+ <wkczfczlmstoywbmgfrxzm6ko4frjsu65kvpwquzu7obrjcd3f@6gs5nsfivc6v>
+ <4627056f-2ab9-4ff1-bca0-5d80f8f0bbab@linux.dev>
+ <ignmsoluhway2yllepl2djcjjaukjijq3ejrlf4uuvh57ru7ur@njkzymuvzfqf>
+ <aZUQKx_C3-qyU4PJ@dread>
+ <20260218064739.GA8881@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,95 +57,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260217231937.1183679-26-aalbersh@kernel.org>
+In-Reply-To: <20260218064739.GA8881@lst.de>
 
-On Wed, Feb 18, 2026 at 12:19:25AM +0100, Andrey Albershteyn wrote:
-> This helpers converts offset which XFS uses to store fsverity metadata
-> on disk to the offset in the pagecache.
+On Wed, Feb 18, 2026 at 07:47:39AM +0100, Christoph Hellwig wrote:
+> On Wed, Feb 18, 2026 at 12:04:43PM +1100, Dave Chinner wrote:
+> > > > > I'd call it RWF_WRITETHROUGH but otherwise it makes sense.
+> > > > > 
+> > > > 
+> > > > One naive question: semantically what will be the difference between
+> > > > RWF_DSYNC and RWF_WRITETHROUGH?
+> > 
+> > None, except that RWF_DSYNC provides data integrity guarantees.
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  fs/xfs/xfs_fsverity.c | 14 ++++++++++++++
->  fs/xfs/xfs_fsverity.h | 13 +++++++++++++
->  2 files changed, 27 insertions(+)
+> Which boils down to RWF_DSYNC still writing out the inode and flushing
+> the cache.
 > 
-> diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
-> index 47add19a241e..4b918eb746d7 100644
-> --- a/fs/xfs/xfs_fsverity.c
-> +++ b/fs/xfs/xfs_fsverity.c
-> @@ -8,6 +8,20 @@
->  #include "xfs_fsverity.h"
->  #include <linux/fsverity.h>
->  
-> +loff_t
-> +xfs_fsverity_offset_to_disk(struct xfs_inode *ip, loff_t offset)
-> +{
-> +	return (offset - fsverity_metadata_offset(VFS_I(ip))) |
-> +	       XFS_FSVERITY_REGION_START;
-> +}
-> +
-> +loff_t
-> +xfs_fsverity_offset_from_disk(struct xfs_inode *ip, loff_t offset)
-
-The type signatures here confused me.  The @offset parameter to
-_from_disk is the ondisk file offset of fsverity metadata?  And we
-return the ...  incore file offset of the fsverity metadata?
-
-It's harder to be helpful when reviewing patches that add helpers
-without actually using them.
-
-I don't know if I should suggest that the input parameter should be a
-different type altogether (xfs_fileoff_t?) because I can't see here how
-the helper is used.
-
-> +{
-> +	return (offset ^ XFS_FSVERITY_REGION_START) +
-> +	       fsverity_metadata_offset(VFS_I(ip));
-
-This logic is a little obscure here; is this really just:
-
-	offset - XFS_FSVERITY_REGION_START + fsverity_metadata_offset()
-?
-
---D
-
-> +}
-> +
->  bool
->  xfs_fsverity_sealed_data(
->  	const struct xfs_inode	*ip,
-> diff --git a/fs/xfs/xfs_fsverity.h b/fs/xfs/xfs_fsverity.h
-> index 5fc55f42b317..6f3d60f010d8 100644
-> --- a/fs/xfs/xfs_fsverity.h
-> +++ b/fs/xfs/xfs_fsverity.h
-> @@ -10,6 +10,8 @@
->  #ifdef CONFIG_FS_VERITY
->  bool xfs_fsverity_sealed_data(const struct xfs_inode *ip,
->  		loff_t offset);
-> +loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip, loff_t pos);
-> +loff_t xfs_fsverity_offset_from_disk(struct xfs_inode *ip, loff_t offset);
->  #else
->  static inline loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip,
->  						 loff_t pos)
-> @@ -17,6 +19,17 @@ static inline loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip,
->  	WARN_ON_ONCE(1);
->  	return ULLONG_MAX;
->  }
-> +static inline loff_t xfs_fsverity_offset_from_disk(struct xfs_inode *ip,
-> +						   loff_t offset)
-> +{
-> +	WARN_ON_ONCE(1);
-> +	return ULLONG_MAX;
-> +}
-> +static inline bool xfs_fsverity_sealed_data(const struct xfs_inode *ip,
-> +					    loff_t offset)
-> +{
-> +	return false;
-> +}
->  #endif	/* CONFIG_FS_VERITY */
->  
->  #endif	/* __XFS_FSVERITY_H__ */
-> -- 
-> 2.51.2
+> > > Which
+> > > wouldn't be needed for RWF_WRITETHROUGH, right?
+> > 
+> > Correct, there shouldn't be any data integrity guarantees associated
+> > with plain RWF_WRITETHROUGH.
 > 
-> 
+> Which makes me curious if the plain RWF_WRITETHROUGH would be all
+> that useful.
+
+For modern SSDs, I think the answer is yes.
+
+e.g. when you are doing lots of small writes to many files from many
+threads, it bottlenecks on single threaded writeback. All of the IO
+is submitted by background writeback which runs out of CPU fairly
+quickly. We end up dirty throttling and topping out at ~100k random
+4kB buffered writes IOPS regardless of how much submitter
+concurrency we have.
+
+If we switch that to RWF_WRITETHROUGH, we now have N submitting
+threads that can all work in parallel, we get pretty much zero dirty
+folio backlog (so no dirty throttling and more consistent IO
+latency) and throughput can scales much higher because we have IO
+submitter concurrency to spread the CPU load around.
+
+I did a fsmark test of a write-though hack a couple of years back,
+creating and writing 4kB data files concurrently in a directory per
+thread.  With vanilla writeback, it topped out at about 80k 4kB file
+creates/s from 4 threads and only wnet slower the more I increased
+the userspace create concurrency.
+
+Using writethrough submission, it topped out at about 400k 4kB file
+creates/s from 32 threads and was largely limited in the fsmark
+tasks by the CPU overhead for file creation, user data copying and
+data extent space allocation.
+
+I also did a multi-file, multi-process random 4kB write test with
+fio, using files much larger than memory and long runtimes. Once the
+normal background write path started dirty throttling, it ran at
+about 100k 4kB write IOPS, again limited by the single threaded writeback
+flusher using all it's CPU time for allocating blocks during
+writeback.
+
+Using writethrough, I saw about 900k IOPS being sustained right from
+the start, largely limited by a combination of CPU usage and IO
+latency in the fio task context. In comparison, the same workload
+with DIO ran to the storage capability of 1.6M IOPS because it had
+significantly lower CPU usage and IO latency.
+
+I also did some kernel compile tests with writethrough for all
+buffered write IO. On fast storage there was neglible
+difference in performance between vanilla buffered writes and
+submitter driver blocking write-through. This result made me
+question the need for caching on modern SSDs at all :)
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
