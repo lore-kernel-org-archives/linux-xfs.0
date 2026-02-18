@@ -1,92 +1,76 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25FE63101BB
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 12:17:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C5A2D6E76;
+	Wed, 18 Feb 2026 12:55:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771417079; cv=none; b=OpU9pnifvLA6gB9MBsQvwPxJ/TK+RbjYysSNwyc1V3WSMDlKK/dF9+M2/f/pRVj9kwLbbXxY4q11CDACLcEmCXYdfoSWNbvvBi92lkJB3E/vj2A2yPfNYxH+kCTBXI6qLvejC4hxn383avL7NMeJl3AmYRE5jyvEYXwONRr3OL8=
+	t=1771419309; cv=none; b=RdE3y+qMa9OJiCpIFcvphmUYR0R+4P/SmO/uggzBaF0nTvekC/WOYdvgWBDs/lNZdpbCc2icvXmYZLaadv2MKnmJBZiuvlSKTWyRUGzar6NDifKZOi2YhmXBEVLlkvyBy9TrpnxdNAkZaqgIZgrmjtTfhCL+b3npkeus5Dpefx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771417079; c=relaxed/simple;
-	bh=oHxq0RfYCSn+Ri7S2yKvntEHV9eX/s1jFiqv1G6pKoM=;
+	s=arc-20240116; t=1771419309; c=relaxed/simple;
+	bh=dbqw6kTwA+NdAUBcQMVyNOpTUDTOeMi07iknLsGEZ+0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UILhWhu11knC9PHvBM3G41cypVYmIFo4qTXx+j+1lOeiOhIWFbhbAyrDYw8LZXNhgrQoWeo1EPWmKTB/H1Khj9pGYpcjmtR7egUj1JJY5mWFs49FT6EwxESF4CzVnheb+DGlTDViVo2UBBHzkAHtt+C2RY3eWZl34zwKPw+M4Co=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BmlF6Geh; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=NI1ZtNtf; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=vEuwM6h/9gNSo01gE5yeB5RCAaZntrklJ5Y1hSs/a+UQNkfHV+AIoWDhye0PUnnboXSQfGxUWYKo2MtFxjnsXfNS3YLmSIG4GjNX1DwPZT+GprVC6b25gb6MRbP3VMz4JMycuxsc4NJLNvY3G4nFprGL8ZqeVAlShUTLuPfR8jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EWdE9Pc+; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BmlF6Geh";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="NI1ZtNtf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771417077;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=A90VfYyBvXYfNQuJ+OjztcCqIsGKTH6zgy48JEKhUi4=;
-	b=BmlF6Gehs4S1vSXZqz78mOzy8/bklFiIMHyOGDQ/nh1GTTVCVzCo+f1SLzA2xrLp5y1c/Y
-	orPWkMq0kNx0j98ThwACW1zCM2bmQPu0vQ6IgDMCU89Hktk7Omb5KKL4B+iZjfg0OalkgG
-	7CLzxbuIQRTWclyapJblwl6ExaeN5j8=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-77-JsdVSvGOM1m-6YynhHUmVQ-1; Wed, 18 Feb 2026 07:17:55 -0500
-X-MC-Unique: JsdVSvGOM1m-6YynhHUmVQ-1
-X-Mimecast-MFC-AGG-ID: JsdVSvGOM1m-6YynhHUmVQ_1771417075
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-4368060a5e5so5584739f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 04:17:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1771417074; x=1772021874; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=A90VfYyBvXYfNQuJ+OjztcCqIsGKTH6zgy48JEKhUi4=;
-        b=NI1ZtNtfKq47tfUp7B4B/4Nopd97spFXitrFYrF0CFzMycn8+8OP5dhcujyrXYxO3p
-         23b8Co/Btf23OS2ZgD4g0DAraP/ChbUy1qQR6S0eFSrMAX2Q7rh1ctHIrAMhKuUGNEab
-         htNb5eKYVEDImgZpU7PwH/ENA5orDYPZnXcwvvzh19L3lWuk++SnAjM2pLFa+CBI3Atm
-         qtqc9+0/7qI+vIRQaV3LNKgZXaimJ7Cdb+htcsUtLtqkCQOqUhFiTOTk5v1BTiGNRpmT
-         AzcXxSXnkVHb5+h3RLjcTw4E4Egd8nTO2JTNQSLdebAMemIZ+tkU4YYTLuYya4LpvOr0
-         qQZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771417074; x=1772021874;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=A90VfYyBvXYfNQuJ+OjztcCqIsGKTH6zgy48JEKhUi4=;
-        b=DkfQZiBZPKCJdLu+AmFPQPwzBmGmZ/RyYyamC6h6b37Z1Z/yfP70kVAZipcpqSKoTg
-         r7l9D8JIxTaVOtZPmSkHYqHxLARDGEpWU0AJ/7DXoiqr7uYUwNZQrxn/5n/vZsr1irOT
-         6pvhIsJWHDl39I4kLWcl8vxvlGx0+QkJNPUYmi3hmwwzObzHjuJitkUAHOXotiClcFZb
-         eFu6fDnGG34jP9KvySRnhpJlHWX5gwZHSTIKzFE0w4ACry/Jc0gD0SoahLd/UCiEc5sT
-         9tX3m8Xydzr77wSUWnyZOABDHLs07Mt75CgKEjYI0yr+5lbeATfkqcioqH4/VWwwUIf4
-         cRKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUFSflpuZ88BzAaHgaJ6vzh4dR5KSHRDA+hhNeMS6qm8Zj0A3gwO/R2uic+j/kJon6FV0qqMNY9wjg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzkDHhhi4jx3yS4hFhrkcFwCub0Mn1sX+vXFloPAq0KpHScmWCG
-	33f88S6zuMdYKMsX/vvLGR2Yu5uz6ZNvly0b/jXZF/Npmw7/8OiOipwtpA4ov7DAI5VPO8U9XZr
-	A4bmbYsqVNjpTOxJqLF2kpTSb3ihdi2y3cTH5COTyuce7NnkGjDbdYT6P9Hn2
-X-Gm-Gg: AZuq6aJfxOst7iypnPND6xHS0Fxa3OZykRdCdPaUk/oTe7y/iil2KhIOUHDcZSd/+eC
-	mwNHuMtHDTtJgBuihlCvUYSd7cFNVerN68HVMLMSHB0UWkoNYabBznBpyK8sGvMDDr5ddgOHLRR
-	tLG1U4GZgLMmt6qrVZ9r0FUrnonb4n3glaNwAzQ0HqM1XUOsg3MkpcvZqVyOYbN69EGl32p0J1w
-	WiXw/UVkkNrCpZkYBgXcWhRDplx0rMMstls8CCoe7Av0qgCnVpV9Jpri23i3VJ/t4FItCbLPjM+
-	c42yudT+VN+RBNIqD/GV86TUvLBbVIM9EnM79QtMTC7YRYCmRHuOCl9qsqzwpAhMGas38YveJmg
-	WBwM0Hoq0WME=
-X-Received: by 2002:a05:6000:186f:b0:436:1b1:6cbb with SMTP id ffacd0b85a97d-4379db30f9bmr22128042f8f.7.1771417074459;
-        Wed, 18 Feb 2026 04:17:54 -0800 (PST)
-X-Received: by 2002:a05:6000:186f:b0:436:1b1:6cbb with SMTP id ffacd0b85a97d-4379db30f9bmr22127986f8f.7.1771417073862;
-        Wed, 18 Feb 2026 04:17:53 -0800 (PST)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796ac82f7sm45619590f8f.28.2026.02.18.04.17.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Feb 2026 04:17:53 -0800 (PST)
-Date: Wed, 18 Feb 2026 13:17:52 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, 
-	djwong@kernel.org
-Subject: Re: [PATCH v3 06/35] fsverity: pass digest size and hash of the
- empty block to ->write
-Message-ID: <wl5dkpyqtmbdyc7w7v4kqiydpuemaccmivi37ebbzohn4bvcwo@iny5xh3qaqsq>
-References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-7-aalbersh@kernel.org>
- <20260218061834.GB8416@lst.de>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EWdE9Pc+"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61I9KWwC3661553;
+	Wed, 18 Feb 2026 12:54:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=BlA1AbMzOeTmhaj5e99ZkJ4aaV0Ydz
+	pz7qXESwhzBw0=; b=EWdE9Pc+rdxxTC8NAoOgznIV/LjA1IVskBFKXQuVm26iIA
+	IHPQ/mZhu82rmbL+PHKciaRpKm2FC20POFYFYT/pCwJ4V7U+qmTBOzPn5LwKwyAK
+	nLdlgu264oeKZ7dbqjjG7snnTXAM4Wnz7L8guKvTQvP2elc34nPaRb72ffZtk1/e
+	VusELSQfV23whrJXiGBjhzaxjzy7+zKb0h5QPe3ivi4DIfDQGAQVp1jky5TrccsT
+	eu4wuYPkzjxcq6Hkdr1aPRIi/XfWoyTxA+1/pruuQarggSnOMgy/w4SnNnNqhxnc
+	SCI861u8a1CwDBde0udKshfqUaiWEX847yo5oweQ==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cajcjg4tq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Feb 2026 12:54:35 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61I8e4Zu001419;
+	Wed, 18 Feb 2026 12:54:34 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ccb2bftac-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Feb 2026 12:54:34 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61ICsWv553674438
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Feb 2026 12:54:32 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6E7CA20040;
+	Wed, 18 Feb 2026 12:54:32 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CD1A720043;
+	Wed, 18 Feb 2026 12:54:27 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.27.220])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 18 Feb 2026 12:54:27 +0000 (GMT)
+Date: Wed, 18 Feb 2026 18:24:25 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Pankaj Raghav <pankaj.raghav@linux.dev>,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
+        Andres Freund <andres@anarazel.de>, djwong@kernel.org,
+        john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
+        ritesh.list@gmail.com, Luis Chamberlain <mcgrof@kernel.org>,
+        dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
+        gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
+        vi.shah@samsung.com
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <aZW2geKlQESzxXzV@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+ <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
+ <aZS18m1eIxjDmyBa@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <aZUHHvNl6cQr-uwd@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -95,21 +79,131 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260218061834.GB8416@lst.de>
+In-Reply-To: <aZUHHvNl6cQr-uwd@dread>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: -fnHeqLWXVntKC1VPi5-hEcRrUMZ1eZU
+X-Authority-Analysis: v=2.4 cv=Md9hep/f c=1 sm=1 tr=0 ts=6995b68b cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=kj9zAlcOel0A:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=NEAV23lmAAAA:8
+ a=VwQbUJbxAAAA:8 a=mABpun1c11mrw8mCog8A:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE4MDExMCBTYWx0ZWRfXzmhqwlV11zuf
+ HnmAQnAhefdBCrARMdXeJQSd44KB601SjyK/JR0C6gSI9FuU434jMjIZRB9peArV6ksn6dB2Tsi
+ +CKCwHjSLZHhmIeidEXc/OuKSEdQiwBeO3dceRy2JWC1wkS4RfklibBsSwHV0g4sP0Go5+lUnrI
+ J8w9YDYeei1TO3C51EgMJUXHPoieEjezgBQW7Px/RyxlZlURBGKTsRI709hFtHi9uXlgScWuCOI
+ 2/+K1Da1QZIKtGU3FvITkQnLC1t7+zZH1tKAWTueD49VcleXglUDjhdvTdqLsxUchkMMoZfwHSY
+ GTubwyHEfgWFZFR8jvUMmNph8Hqkv1r7evKqLlI+yTQoFimn0cTTwquPKo0dNZMvUUiRwMz8yR7
+ XKHguLAmceAQC1oPsMPCjwDrrjCEi2SSYMojmBcD7OMyTXGmo403Qrfp8IUIC9WfdGFDEIA72Dp
+ e9tPMACa/OGWvsZOx6Q==
+X-Proofpoint-GUID: VKj-YQ9wKR8GjOpfDRXrT459fMxy1rGC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-18_02,2026-02-16_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 impostorscore=0 lowpriorityscore=0 spamscore=0 adultscore=0
+ priorityscore=1501 suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602180110
 
-On 2026-02-18 07:18:34, Christoph Hellwig wrote:
-> On Wed, Feb 18, 2026 at 12:19:06AM +0100, Andrey Albershteyn wrote:
-> > Let filesystem iterate over hashes in the block and check if these are
-> > hashes of zeroed data blocks. XFS will use this to decide if it want to
-> > store tree block full of these hashes.
+On Wed, Feb 18, 2026 at 11:26:06AM +1100, Dave Chinner wrote:
+> On Wed, Feb 18, 2026 at 12:09:46AM +0530, Ojaswin Mujoo wrote:
+> > On Mon, Feb 16, 2026 at 12:38:59PM +0100, Jan Kara wrote:
+> > > Hi!
+> > > 
+> > > On Fri 13-02-26 19:02:39, Ojaswin Mujoo wrote:
+> > > > Another thing that came up is to consider using write through semantics 
+> > > > for buffered atomic writes, where we are able to transition page to
+> > > > writeback state immediately after the write and avoid any other users to
+> > > > modify the data till writeback completes. This might affect performance
+> > > > since we won't be able to batch similar atomic IOs but maybe
+> > > > applications like postgres would not mind this too much. If we go with
+> > > > this approach, we will be able to avoid worrying too much about other
+> > > > users changing atomic data underneath us. 
+> > > > 
+> > > > An argument against this however is that it is user's responsibility to
+> > > > not do non atomic IO over an atomic range and this shall be considered a
+> > > > userspace usage error. This is similar to how there are ways users can
+> > > > tear a dio if they perform overlapping writes. [1]. 
+> > > 
+> > > Yes, I was wondering whether the write-through semantics would make sense
+> > > as well. Intuitively it should make things simpler because you could
+> > > practially reuse the atomic DIO write path. Only that you'd first copy
+> > > data into the page cache and issue dio write from those folios. No need for
+> > > special tracking of which folios actually belong together in atomic write,
+> > > no need for cluttering standard folio writeback path, in case atomic write
+> > > cannot happen (e.g. because you cannot allocate appropriately aligned
+> > > blocks) you get the error back rightaway, ...
+> > 
+> > This is an interesting idea Jan and also saves a lot of tracking of
+> > atomic extents etc.
 > 
-> Does it make sense to pass in the zero_digest vs just having a global
-> symbol or accessor?  This should be static information.
+> ISTR mentioning that we should be doing exactly this (grab page
+> cache pages, fill them and submit them through the DIO path) for
+> O_DSYNC buffered writethrough IO a long time again. The context was
+> optimising buffered O_DSYNC to use the FUA optimisations in the
+> iomap DIO write path.
+> 
+> I suggested it again when discussing how RWF_DONTCACHE should be
+> implemented, because the async DIO write completion path invalidates
+> the page cache over the IO range. i.e. it would avoid the need to
+> use folio flags to track pages that needed invalidation at IO
+> completion...
+> 
+> I have a vague recollection of mentioning this early in the buffered
+> RWF_ATOMIC discussions, too, though that may have just been the
+> voices in my head.
 
-I think this won't work if we have two filesystems with different
-block sizes and therefore different merkle block sizes => different
-hash.
+Hi Dave,
 
--- 
-- Andrey
+Yes we did discuss this [1] :)
 
+We also discussed the alternative of using the COW fork path for atomic
+writes [2]. Since at that point I was not completely sure if the
+writethrough would become too restrictive of an approach, I was working
+on a COW fork implementation.
+
+However, from the discussion here as well as Andres' comments, it seems
+like write through might not be too bad for postgres.
+
+> 
+> Regardless, we are here again with proposals for RWF_ATOMIC and
+> RWF_WRITETHROUGH and a suggestion that maybe we should vector
+> buffered writethrough via the DIO path.....
+> 
+> Perhaps it's time to do this?
+
+I agree that it makes more sense to do writethrough if we want to have
+the strict old-or-new semantics (as opposed to just untorn IO
+semantics). I'll work on a POC for this approach of doing atomic writes,
+I'll mostly try to base it off your suggestions in [1].
+
+FWIW, I do have a somewhat working (although untested and possible
+broken in some places) POC for performing atomic writes via XFS COW fork
+based on suggestions from Dave [2]. Even though we want to explore the
+writethrough approach, I'd just share it here incase anyone is
+interested in how the design is looking like:
+
+https://github.com/OjaswinM/linux/commits/iomap-buffered-atomic-rfc2.3/
+
+(If anyone prefers for me to send this as a patchset on mailing list, let
+me know)
+
+Regards,
+ojaswin
+
+[1] https://lore.kernel.org/linux-fsdevel/aRmHRk7FGD4nCT0s@dread.disaster.area/
+[2] https://lore.kernel.org/linux-fsdevel/aRuKz4F3xATf8IUp@dread.disaster.area/
+
+> 
+> FWIW, the other thing that write-through via the DIO path enables is
+> true async O_DSYNC buffered IO. Right now O_DSYNC buffered writes
+> block waiting on IO completion through generic_sync_write() ->
+> vfs_fsync_range(), even when issued through AIO paths.  Vectoring it
+> through the DIO path avoids the blocking fsync path in IO submission
+> as it runs in the async DIO completion path if it is needed....
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> dgc@kernel.org
