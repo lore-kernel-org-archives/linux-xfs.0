@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6B6259CBD;
-	Wed, 18 Feb 2026 23:12:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D3042C0F8E;
+	Wed, 18 Feb 2026 23:20:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771456370; cv=none; b=V30Vo1o1Rq4knYHIYQ02VXY1LCMyDK9N7FpmKcxj+vcS69KtP/ESv8u6SN1DBtjPGPTVVjmwAGEffIcaCFR+31hPhJArrDFMtGM0bdj/nZGYu+TVjpXYy4lFlF9sSgmnWjuz19yDA1nSOIxohBxt+/BXxNW9EapQvtW/8RDnQYI=
+	t=1771456843; cv=none; b=DeHEaTxfM18JLOZKFyXkdFHQI7j0dGbebGYgFqgLUQ6omh+QSOqvqb2deHL6q18ngyo6kKFTZ4DPU9X32zS4JOG2h5UQFnPKBdPm86qwiE4m50FvRjXvwjiz0pds0+SIZNuV4QJKb+M/OiwNc9QipsqxdN+dNka3QjIQit0efzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771456370; c=relaxed/simple;
-	bh=vnfMBnkZ70F9tmp16F0mDr+VnO+JS4AVgyvbIWS7ZCo=;
+	s=arc-20240116; t=1771456843; c=relaxed/simple;
+	bh=sO52637lZXxDYceUwX8KiN4AT6/Rr4T9XpCWaLK+Zd8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ntPgASuavIGdxwUMy9mhRGo2JcNcQBDNmC4WFDbdf0TMglZXu0FmhS8+LFFZQ2JyFS4K6AA0Yveq8eDjW1XXrfsi7OPuFEJTTwAjaQ1NXdebDHCbH3mI8eCmbJvt+zbm+QGTvVWewJQ8v4WwpyN5lGQ5i2aXbOWyVbzlm5dvGvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kPvPE90z; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iir39VkxW9+oaIRiIKWRUaG+Sj0TbuTF3LQ0Sx+zHIod9U46aTUrr6G2ew4aNhDF7q9kL2ESJ/WzSKMGsMMC5WQkob+AGHGYY6eCV+sfQOy7eQaxFg+yvZ4p3OiPTxNT+/ASIUdIZ6m/wHQcD8amVgwuA7oi1SUxJxYDp/UEKL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9E7fm7W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kPvPE90z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 399E2C116D0;
-	Wed, 18 Feb 2026 23:12:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9E7fm7W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF16EC116D0;
+	Wed, 18 Feb 2026 23:20:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771456370;
-	bh=vnfMBnkZ70F9tmp16F0mDr+VnO+JS4AVgyvbIWS7ZCo=;
+	s=k20201202; t=1771456843;
+	bh=sO52637lZXxDYceUwX8KiN4AT6/Rr4T9XpCWaLK+Zd8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kPvPE90zX5kKwQKmTs8PuG36xJyt9D70pfBNNeo5hKqUrP+NVKV3CVCzpGOngEulG
-	 /XazQdto2pXlIGXMPVMHhpiWRPdHCTnq37hVoVNQvxWXGkUE0I8VAg6ukCqfdzOqrR
-	 34avx0t10VeOXRFj4EIXmTP3+nnrbZU9a5Db3vpPC35R+SF1as3/JOgUKc1d75oe34
-	 zDb/m8czGmauIxlkrYN0Cf8DNyxo60unCuedz/vhCIRygvtc69iCHW1LYx3azsPN/0
-	 6vbFjrp7dTTLJWWORaPrJ84NHm3ONmHRvMue9xmtzFts1btoMGwcQJgDlxi0n8OVg0
-	 IpGBn5Zle1awQ==
-Date: Wed, 18 Feb 2026 15:12:49 -0800
+	b=Y9E7fm7WSpl9Adm3jnVrW8BXWDIUhmrrbfIZ8nS5C+pXvz8bJdgSFrn6f6L/EGPfw
+	 K4b/29QjeAYWuDVeWU5zNn5xYB7acOSQnwEc5VkRlqaenFzh/iGy7wHSdpvul2ef6Y
+	 kqPQInsERqm6qBPgHC49r7ZplyNpx6ON5Z2IzOkdsBBne2IuppNYhJHD6z8oRdsIWs
+	 3XVucAwM942AFdswnsx/0plaNOb5IQhrauq8Kmrue3ZCcCgDC3EgUJBKwF++WNcqGA
+	 B+3bqgyWzY0CAPrfLFbBoTzyxRTuqgxUL2XMFclBb2cfxRoujWaSIsBiuMjOFclSBY
+	 oyGjKhKEqN+kA==
+Date: Wed, 18 Feb 2026 15:20:42 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH v3 21/35] xfs: disable preallocations for fsverity Merkle
- tree writes
-Message-ID: <20260218231249.GL6467@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 25/35] xfs: add helpers to convert between pagecache
+ and on-disk offset
+Message-ID: <20260218232042.GM6467@frogsfrogsfrogs>
 References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-22-aalbersh@kernel.org>
+ <20260217231937.1183679-26-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,45 +44,94 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260217231937.1183679-22-aalbersh@kernel.org>
+In-Reply-To: <20260217231937.1183679-26-aalbersh@kernel.org>
 
-On Wed, Feb 18, 2026 at 12:19:21AM +0100, Andrey Albershteyn wrote:
-> While writing Merkle tree, file is read-only and there's no further
-> writes except Merkle tree building. The file will be truncated
-> beforehand to remove any preallocated extents in futher patches.
-> 
-> The Merkle tree is the only data XFS will write. We don't want XFS to
-> truncate any post EOF extests due to existing preallocated extents.
-
-The file will be unwritable after fsverity construction is complete.
-Perhaps xfs *should* trim the post-eof speculative preallocations if it
-doesn't already?
-
---D
-
-> Therefore, we also need to disable preallocations while writing merkle
-> tree.
+On Wed, Feb 18, 2026 at 12:19:25AM +0100, Andrey Albershteyn wrote:
+> This helpers converts offset which XFS uses to store fsverity metadata
+> on disk to the offset in the pagecache.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > ---
->  fs/xfs/xfs_iomap.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_fsverity.c | 14 ++++++++++++++
+>  fs/xfs/xfs_fsverity.h | 13 +++++++++++++
+>  2 files changed, 27 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index b5d70bcb63b9..52c41ef36d6d 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1941,7 +1941,9 @@ xfs_buffered_write_iomap_begin(
->  		 * Determine the initial size of the preallocation.
->  		 * We clean up any extra preallocation when the file is closed.
->  		 */
-> -		if (xfs_has_allocsize(mp))
-> +		if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +			prealloc_blocks = 0;
-> +		else if (xfs_has_allocsize(mp))
->  			prealloc_blocks = mp->m_allocsize_blocks;
->  		else if (allocfork == XFS_DATA_FORK)
->  			prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
+> diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+> index 47add19a241e..4b918eb746d7 100644
+> --- a/fs/xfs/xfs_fsverity.c
+> +++ b/fs/xfs/xfs_fsverity.c
+> @@ -8,6 +8,20 @@
+>  #include "xfs_fsverity.h"
+>  #include <linux/fsverity.h>
+>  
+> +loff_t
+> +xfs_fsverity_offset_to_disk(struct xfs_inode *ip, loff_t offset)
+> +{
+> +	return (offset - fsverity_metadata_offset(VFS_I(ip))) |
+> +	       XFS_FSVERITY_REGION_START;
+> +}
+> +
+> +loff_t
+> +xfs_fsverity_offset_from_disk(struct xfs_inode *ip, loff_t offset)
+
+The type signatures here confused me.  The @offset parameter to
+_from_disk is the ondisk file offset of fsverity metadata?  And we
+return the ...  incore file offset of the fsverity metadata?
+
+It's harder to be helpful when reviewing patches that add helpers
+without actually using them.
+
+I don't know if I should suggest that the input parameter should be a
+different type altogether (xfs_fileoff_t?) because I can't see here how
+the helper is used.
+
+> +{
+> +	return (offset ^ XFS_FSVERITY_REGION_START) +
+> +	       fsverity_metadata_offset(VFS_I(ip));
+
+This logic is a little obscure here; is this really just:
+
+	offset - XFS_FSVERITY_REGION_START + fsverity_metadata_offset()
+?
+
+--D
+
+> +}
+> +
+>  bool
+>  xfs_fsverity_sealed_data(
+>  	const struct xfs_inode	*ip,
+> diff --git a/fs/xfs/xfs_fsverity.h b/fs/xfs/xfs_fsverity.h
+> index 5fc55f42b317..6f3d60f010d8 100644
+> --- a/fs/xfs/xfs_fsverity.h
+> +++ b/fs/xfs/xfs_fsverity.h
+> @@ -10,6 +10,8 @@
+>  #ifdef CONFIG_FS_VERITY
+>  bool xfs_fsverity_sealed_data(const struct xfs_inode *ip,
+>  		loff_t offset);
+> +loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip, loff_t pos);
+> +loff_t xfs_fsverity_offset_from_disk(struct xfs_inode *ip, loff_t offset);
+>  #else
+>  static inline loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip,
+>  						 loff_t pos)
+> @@ -17,6 +19,17 @@ static inline loff_t xfs_fsverity_offset_to_disk(struct xfs_inode *ip,
+>  	WARN_ON_ONCE(1);
+>  	return ULLONG_MAX;
+>  }
+> +static inline loff_t xfs_fsverity_offset_from_disk(struct xfs_inode *ip,
+> +						   loff_t offset)
+> +{
+> +	WARN_ON_ONCE(1);
+> +	return ULLONG_MAX;
+> +}
+> +static inline bool xfs_fsverity_sealed_data(const struct xfs_inode *ip,
+> +					    loff_t offset)
+> +{
+> +	return false;
+> +}
+>  #endif	/* CONFIG_FS_VERITY */
+>  
+>  #endif	/* __XFS_FSVERITY_H__ */
 > -- 
 > 2.51.2
 > 
