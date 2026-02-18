@@ -1,91 +1,92 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43CEA33D6CB
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 09:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E202FD1B3
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 10:18:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771408662; cv=none; b=f+kMmX/LmOiAMYi6XO0PmTZhb6nRJ78Naz2gPPiZV1rrJutS37n017pyO2VEphOn37PM8MD3ZxbxUw1dSC4egg0CIJMKurW68FQ95HlP5mQoupJpXDrQspSMRRMdtmfip8YepgNZPFGNDKnKiaG0kU8qdug0zJrKBk/YEyra0UY=
+	t=1771409894; cv=none; b=TGxrvV7AvY0tBUMh9aV6cI9ArtXl+YnVfgt46HxQXgKnbhrBP09ufrH652FK8NYV5ttzah7lpdmTT+J846ETn3AZurH4xZY1V0BK/Ko/NiZ5gGzKsy5StbPyNncyUVKEnWA+ScfHO6WDNkwG7dXjci6R2M45sQksGsg0LiNXolw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771408662; c=relaxed/simple;
-	bh=6aOIQiPaQR+XKiGerpItA4/7Z/95kKFkL1ZGyjcNy1U=;
+	s=arc-20240116; t=1771409894; c=relaxed/simple;
+	bh=hEkOYoZ+YvzCIzyqbCCHiW1cU9u4+rx18WM/qq/4Keo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gF2G0R0YJ8AvVOcIiBbFJiRcBiycXEj8CEtOw63iP/NSQYQO0NlZjQPoSPKvZDyJxnYsXa9uE28Jwo2jg1esaXsmvDjy2FyH7iFFEjf1J0D005jHLR5xI82s4q2q9YoV9e9MXw7RPF09uG5Fca9v3w6j5wxd50xllaeQy+pWPjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IQ4x99Hf; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=S+EV+HOw; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=dfD1v5BHTdkJha0BE56zcnOXVfWkU9dXrF10HZbpM6mkxaqwadekkHxOirEfRRg77pc/SUA/vPk+lBYZUMW+E7hk+qju5aXx4NCWjb1aTy2OPr93h3CHBKM5to2UwFg0z7/WJIwVwca+BGwZ690klghE26zkLep8+M69qGmAxoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IawcHVff; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=oUr6bhcG; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IQ4x99Hf";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="S+EV+HOw"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IawcHVff";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="oUr6bhcG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771408660;
+	s=mimecast20190719; t=1771409892;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=//uspxAcdKQl0NBbsDDK4OeRCiJdPlDUYGGqBQXBcNc=;
-	b=IQ4x99HfOQv8vGeMWFnh3IuKTRgNze/OOizEDk9cXDC2QI7GCoTrwYtaABcCoUZXLPcZgc
-	mb9kCPOBXy9GsaTJSQ6+YDPrw6uw6m1H6z1p83toMh9XhXu2E8zXAAisDgyNp0wL9995Pt
-	O75kmysVHjC2F/blJszlvuVTyfkY8Os=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=CdumppwhlBUdillyHNoUIaTpT4tIY7ONjvEdXG67S8c=;
+	b=IawcHVffD/nTBk1rM445HefuamTY+jQe+7rPwgloJUA6jj7+a8ieGq0b4mHU+NcE4m1HZY
+	lghGyWbL9/IzwVG83CYkF09LbiVHVIkAb/xiZOD8B6iDMKR+vZG47jAFN8rQcegxzp1CgH
+	SclVyddER0IbOsjr3YhVV7EjRITvA3I=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-221-mjWJy9SwPS-qZkwacRSagw-1; Wed, 18 Feb 2026 04:57:38 -0500
-X-MC-Unique: mjWJy9SwPS-qZkwacRSagw-1
-X-Mimecast-MFC-AGG-ID: mjWJy9SwPS-qZkwacRSagw_1771408657
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4830e7c6131so50187155e9.2
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 01:57:38 -0800 (PST)
+ us-mta-84-oMcQPDZuP52WtbCF7FIFuA-1; Wed, 18 Feb 2026 05:18:10 -0500
+X-MC-Unique: oMcQPDZuP52WtbCF7FIFuA-1
+X-Mimecast-MFC-AGG-ID: oMcQPDZuP52WtbCF7FIFuA_1771409889
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4837246211bso54003415e9.0
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 02:18:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1771408657; x=1772013457; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1771409889; x=1772014689; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=//uspxAcdKQl0NBbsDDK4OeRCiJdPlDUYGGqBQXBcNc=;
-        b=S+EV+HOwXcML8p0VxD2MKBcuonNoxmyFYzZHvzcDPnrk2wkiO2Dh84O71rM8nBgVuP
-         nqjmoacRGlILt3TFq9qwjKnR0p16mpS6cso9veyXQKINFiF8+A09XqCltd6jMHfgNYk4
-         pzArnu8ElnRxm/x/YdKS3nqwbWstVEKm0IAl/RLWV/iuXftzT7NjESrronXb83dY9V+A
-         IMgnmWrlO34HuuqSSBvmX7hF6XbrUyN6rzyTcukBX+CR6R9AkvGHT3bX8k88qdI+3ABp
-         qcuFTKBqftLo0LD31WNfnnAVJgRYa+matC2eLHJkVrynGxNoLBulLuy/cTuRznExPEY/
-         xYRg==
+        bh=CdumppwhlBUdillyHNoUIaTpT4tIY7ONjvEdXG67S8c=;
+        b=oUr6bhcG2x4YhoM/N/QevpH+wQFl9gQQM9KVdzimEPUNex9wrf6w9Oc33XuXrOVLgE
+         RJ792Rw8QwEhuC++XXoDDDYjVo2+sEEu1HnuFBjoH9nvg8+1WE4zM8tTm2NX4FEr4EQB
+         66bqrMdNnlS9Y/l1rK6TkuW82MUgxeLjtBbgiSBi1COh6BVJP7U7GFi1yhfU3kCUSbsh
+         AXyPhtHw8WZ1xVzegH4gX2RJ3rMUsFKp8lmKLLdnTVBYvrY2FloOCImx0GyfSpDkM8De
+         cT008TvD6checaEAQ6FfI6gH24EaIw+SIxdaVoK2MpcM0Zr7WTOAV07gkwTd7KTT3GmS
+         cmrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771408657; x=1772013457;
+        d=1e100.net; s=20230601; t=1771409889; x=1772014689;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=//uspxAcdKQl0NBbsDDK4OeRCiJdPlDUYGGqBQXBcNc=;
-        b=EjxwJ3nQqV94kHJijfJqqd6DigvGtAcTf6+C4hKCSVYJpLVHR5FzEPTVclCjjJo3hs
-         EhCe9/01O/4RcoCKlVAk1SizKwAaJz9QHhV8Ch4sGmZNzjg1gedIRYWPNDjzrF5vBLnA
-         hMp1KsYNIjrHnLh2oWWVwT3v6Wmdnba9L29/HVlSUSwkoO3L/BMQtiz9WMJ7tMrIowyU
-         g8ZErlTtlCUzO+fMwvnOAUXwdOnWeE5iyqGIENF43BqlFJ2VMnohBwpTpnwZ9IqZMO82
-         iN7/puHFTKE4SL+gZq5wwgWgnX4W38IPnim1BVGBmqVx0ZoTkcCEK0w3YZu6+RKhdZqx
-         DGdQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX0DpTfdQsXMUj06kXmzZCM9TZGTbiOPDM93Sv1YLWKP0lJH5DaQA5dzk0cNL8NExVt6O8WShZovKc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPFI5Y7uQYqFVw7OFTNOS6aJM35vxkfzh6KKrI7yUusGaPEzpb
-	eV/ylX+Eqma6VWYaaR+Vt/v0k6lT1EhitzubL2eSujCKcZXQ07APRhWiDXnnONLxrwZFSfpTdFa
-	G6rDyhCKzWqes2VLmyc0kOCqojWyn9Zk+Mr8Q5VVhGZVXfcT56sG0rxkymPFR
-X-Gm-Gg: AZuq6aLIKaZwep4ITTmzg+QReSQ/X7N01RxD4vzMADsHV8F9/Ji/jr1qedFLDKygUSI
-	bEoN5KoaZDST9luKUNnwYvYMj0XQTV3Hk1/nOkfJbvlEtgnNReFd6Ph75keKn/VPvyAAtX4T5aY
-	8yYM5a+XcBwf1ylcTLDWJ6zLxOTTO+zwfs2D16SO1ytds4MGLZniAXn4i9pBSjXBf+Tbnkjrrri
-	42nTaxH+fobw14MyqL92Xsp813iWQ7jpvpCMMt+Pn0VieM6HA2HpXtBACP0/h4AtZwIW8EOXC5t
-	LqyugklEnlX3XfeNySL6O9Xa7878MzdpGLQQ174HSX24c2IxYDHuaPonOQdidFThesFKmaWKf0+
-	9tY8SrCkQXZI=
-X-Received: by 2002:a05:600c:820f:b0:483:71f7:2797 with SMTP id 5b1f17b1804b1-48379b9f3a3mr224711135e9.14.1771408657373;
-        Wed, 18 Feb 2026 01:57:37 -0800 (PST)
-X-Received: by 2002:a05:600c:820f:b0:483:71f7:2797 with SMTP id 5b1f17b1804b1-48379b9f3a3mr224710785e9.14.1771408656858;
-        Wed, 18 Feb 2026 01:57:36 -0800 (PST)
+        bh=CdumppwhlBUdillyHNoUIaTpT4tIY7ONjvEdXG67S8c=;
+        b=kfbtnAgmHVGf9Ad2o8+oTtvPq/WTw3MEaRLVw0qDxfQlFYaCvjOFOYOspVHNDI1DRH
+         g2dotmJvkcyFy4aSSVXw1kJcOJ8+sOaX4x2Ogw103Dnh0ClToFV51iD9qoGBsm+UN7Cp
+         xjRCtELNhNhRV/QBFY8vB1o2So8mcK75t4+kCPl+GFHvJG8+789l+0lFjXeh7S31cByz
+         xkX1gMALHeYKPhBsDnlS+suyg/liP4Sqy6KIceGCcPQOkLgmqOkthrIop1WU6ApEIiUD
+         YtjdgD62Qzo5DLKtOIhSuy8EcPVqh1ireItVCdIIH08SjhIBpzsX6WgPU6iV1TdlFWxp
+         R0FA==
+X-Forwarded-Encrypted: i=1; AJvYcCUWnmJab2bvOWlmB9Cm0zHR1JKsgaoAK0VIK/6Zkn/jNg/hKg/WmeY/O63Zi5wxdEYkvrfcocfMFo4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+3VzcR++8ZC11tlcubalV2FxCp3onuUcnVXunYS7iGpOhyjlJ
+	mam5S1yvpKJOZvgPissazb4vS2ATS6Qbf2WeQ5r9j0PfuIkMJevguptAL8rO0wdQS8bLI6oji/u
+	Y9v8cOQel3PHVfXwNP9cW+aB/DmZjjPXKeX6GLT3FFkw+RVECTC61lFuJfgdm
+X-Gm-Gg: AZuq6aJhZuOT3VNVsr0qcy908iEAHvO683n818E63Ci+hvWtALkn7kFxJ9Kals6M97A
+	Qvq9E1KC3etojqG+Fxm5q27Ww9Ezr//tQDWVJY+yjY1FSa/ioZQta1d+F17zcGWAXMmU8G7WFrf
+	S+W/7ArjmJGEUwLOjX/viE229oZQQMj6nYUtVDlWkQHjK9krNFIOmKXGjBB4WLplgFu25mPfXsW
+	1M/xjcR+Bzfqoz8As0IvddT0RrdEJq1z5zn3++vyQtS+iA4BygdhZ3dXPwuzXZyUtMGYy4LUCp0
+	h/kA/oRYQl1/WpJZk4DzwJP+QksHBXaO3ardLZlXL+by4d/N58ufGvs+Wp3W3UekBsKSVAExkn2
+	kUG+01ToX2yc=
+X-Received: by 2002:a05:600c:19c6:b0:480:3bba:1ca9 with SMTP id 5b1f17b1804b1-48398a65e5cmr24011405e9.4.1771409888922;
+        Wed, 18 Feb 2026 02:18:08 -0800 (PST)
+X-Received: by 2002:a05:600c:19c6:b0:480:3bba:1ca9 with SMTP id 5b1f17b1804b1-48398a65e5cmr24010895e9.4.1771409888328;
+        Wed, 18 Feb 2026 02:18:08 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4837b68e5adsm382224275e9.9.2026.02.18.01.57.36
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48398244e83sm29376605e9.2.2026.02.18.02.18.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Feb 2026 01:57:36 -0800 (PST)
-Date: Wed, 18 Feb 2026 10:57:35 +0100
+        Wed, 18 Feb 2026 02:18:08 -0800 (PST)
+Date: Wed, 18 Feb 2026 11:18:07 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
 	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, 
 	djwong@kernel.org
-Subject: Re: [PATCH v3 28/35] xfs: add fs-verity support
-Message-ID: <mtnj4ahovgefkl4pexgwkxrreq6fm7hwpk5lgeaihxg7z5zdlz@tpzevymml5qx>
+Subject: Re: [PATCH v3 22/35] xfs: add iomap write/writeback and reading of
+ Merkle tree pages
+Message-ID: <zpdrihys2jk2duk3o76ao4tykc4o7adree2lf3dqzuiqggcaka@xnmbkzswbmpz>
 References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-29-aalbersh@kernel.org>
- <20260218064429.GC8768@lst.de>
+ <20260217231937.1183679-23-aalbersh@kernel.org>
+ <20260218063521.GC8600@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,114 +95,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260218064429.GC8768@lst.de>
+In-Reply-To: <20260218063521.GC8600@lst.de>
 
-On 2026-02-18 07:44:29, Christoph Hellwig wrote:
-> > +static int
-> > +xfs_fsverity_read(
-> > +	struct inode	*inode,
-> > +	void		*buf,
-> > +	size_t		count,
-> > +	loff_t		pos)
-> > +{
-> > +	struct folio	*folio;
-> > +	size_t		n;
-> > +
-> > +	while (count) {
+On 2026-02-18 07:35:21, Christoph Hellwig wrote:
+> > -	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, XFS_WPC(wpc)->data_seq);
+> > +	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, iomap_flags, XFS_WPC(wpc)->data_seq);
 > 
-> It might be nice to lift this from ext4/f2fs into common code rather
-> than adding yet another duplicate.
-
-sure
-
+> Overly long line.
 > 
-> > +static int
-> > +xfs_fsverity_write(
-> > +	struct file		*file,
-> > +	loff_t			pos,
-> > +	size_t			length,
-> > +	const void		*buf)
-> > +{
-> > +	int			ret;
-> > +	struct iov_iter		iiter;
-> > +	struct kvec		kvec = {
-> > +		.iov_base	= (void *)buf,
-> > +		.iov_len	= length,
-> > +	};
-> > +	struct kiocb		iocb = {
-> > +		.ki_filp	= file,
-> > +		.ki_ioprio	= get_current_ioprio(),
-> > +		.ki_pos		= pos,
-> > +	};
-> > +
-> > +	iov_iter_kvec(&iiter, WRITE, &kvec, 1, length);
-> > +
-> > +	ret = iomap_file_buffered_write(&iocb, &iiter,
-> > +				   &xfs_buffered_write_iomap_ops,
-> > +				   &xfs_iomap_write_ops, NULL);
-> > +	if (ret < 0)
-> > +		return ret;
-> > +	return 0;
+> > +		if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION)) {
+> > +			wbc->range_start = fsverity_metadata_offset(VFS_I(ip));
+> > +			wbc->range_end = LLONG_MAX;
+> > +			wbc->nr_to_write = LONG_MAX;
 > 
-> I'd move this to fs/iomap/ as and pass in the ops.
+> Shouldn't this be taken care of by the caller?
 
-sure
+hmm right, I will update filemap_write_and_wait() call in
+xfs_fsverity_end_enable(). That the only place writeback of verity
+metadata is requested.
 
 > 
-> > +static int
-> > +xfs_fsverity_drop_descriptor_page(
-> > +	struct inode	*inode,
-> > +	u64		offset)
-> > +{
-> > +	pgoff_t index = offset >> PAGE_SHIFT;
-> > +
-> > +	return invalidate_inode_pages2_range(inode->i_mapping, index, index);
-> > +}
+> > +			/*
+> > +			 * Set IOMAP_F_FSVERITY to skip initial EOF check
+> > +			 * The following iomap->flags would be set in
+> > +			 * xfs_map_blocks()
+> > +			 */
+> > +			wpc.ctx.iomap.flags |= IOMAP_F_FSVERITY;
 > 
-> What is the rationale for this?  Why do ext4 and f2fs get away without
-> it?
+> I'm usually a fan of more comments rather than less, but I don't think
+> this adds any value.
 
-They don't skip blocks full of zero hashes and then synthesize them.
-XFS has holes in the tree and this is handling for the case
-fs block size < PAGE_SIZE when these tree holes are in one folio
-with descriptor. Iomap can not fill them without getting descriptor
-first.
-
-Should I add this to the comment above? Not sure how well it's
-described
-
-> 
-> > +	pgoff_t			index)
-> > +{
-> > +	pgoff_t			metadata_idx =
-> > +		(fsverity_metadata_offset(inode) >> PAGE_SHIFT);
-> > +	pgoff_t			idx = index + metadata_idx;
-> > +
-> > +	return generic_read_merkle_tree_page(inode, idx);
-> 
-> I'd write this the same way ext4/f2fs do:
-> 
-> 	idx += (fsverity_metadata_offset(inode) >> PAGE_SHIFT);
-> 	return generic_read_merkle_tree_page(inode, idx);
-> 
-
-sure
-
-> 
-> 
-> > +{
-> > +	pgoff_t			metadata_idx =
-> > +		(fsverity_metadata_offset(inode) >> PAGE_SHIFT);
-> > +	pgoff_t			idx = index + metadata_idx;
-> > +
-> > +	generic_readahead_merkle_tree(inode, idx, nr_pages);
-> 
-> Same here.
-> 
-> > +	if ((i == size) && (size == ip->i_mount->m_sb.sb_blocksize))
-> 
-> No need for the inner braces.
-> 
+Sure, I will rewrite it
 
 -- 
 - Andrey
