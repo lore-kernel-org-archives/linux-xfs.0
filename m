@@ -1,49 +1,66 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B003F2848BB
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 07:19:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598F33EBF02
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 07:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771399149; cv=none; b=XzIoIeeavhVYd553whOCY28kldY1QjAlq7jsqu3vLncBmaqjxnrFnsTW6L/kz88BS5m49f7wkNLHrQ5ZgTfni+YRUbDmLaRU+FXN6qq9xDnnWNFNHp8nGXsuh2YewISMJqjSV03lvUK52O7SlH0hbOMqh4tciC4Zbh2bK4bFSvY=
+	t=1771400851; cv=none; b=bajk4li970ffhx96jf9TS8xc9a2fIzbibEO5YW+5m+4t1BFs/+tJ04WwcOy9UgdjB6Q/t4OyLxCmb54cgc+4k10nxNNkqTBi0yOQ/emnyDJ9JImroN5JzeLkTnjZ12t6LWk+DV/dF/nhWZQlnHAL+dir+D4fjdSdpwkg9uE9q4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771399149; c=relaxed/simple;
-	bh=dHCoNWajzoo+lystlDrBYqM5KIVoUr9HUSPQSB3VgDc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=jhVSLPHbBs+13F+JKYjzf0/sdnrwTfxMyqXRBjVGmMk7AVkM2YHuCI2NNANuirpk22HBvr3sK33kT143VRUTgDT6db5fhCBLopl+W5IdkxCWn4YpX2jbigXdGulXdLNMgHTfglLD3xg/0SIt4fP69+0fI09Gxn1PmUUG5Y10Ajo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=vXOVfstn; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1771400851; c=relaxed/simple;
+	bh=ksHQWDVDIOQapAukk2h5bzf/yQ4fqTdliB8WsW15kxA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iIevJOeo216l/aCEDGaZk2EFkbOXUYQa4v7GXwBV8zhNRG+n7gaG91Y/M8cpL841+yU1NEGiKXoTsEHWDdPAvN34wjpgLQ0Sgbxwzm3LbOnKVovwUF7V1xcT7ALA7ItjiMobSwt6IqF1Wv+p/JEpYz4c8BCBbMZnJfer2Y1GVYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PCWMNSWY; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="vXOVfstn"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260218071859epoutp02e1540a901c679fd13d21be219a807fbe~VRiG4gF-61673516735epoutp02R
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 07:18:59 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260218071859epoutp02e1540a901c679fd13d21be219a807fbe~VRiG4gF-61673516735epoutp02R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1771399139;
-	bh=9luwsJeK912R/lFXrfPaMjLOsC/mXZ/L4LYvoHi7d4g=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=vXOVfstn+6eSuAkXNMv+4oTe8pmjtbQQD+CtFAIoB2yDhxf7R074nARVwLk4FO/eC
-	 h3p2TTKM6zaObEG/o126N3DYcl2dRvX/SqmUwrESElFlYsRhoSaN8RUVNIogBIDnU7
-	 YEuqhSxCbu8w7EO4azIiC93hQUQYXCVnwYM3noeo=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260218071858epcas5p2674ada589c47791eaafa35673ab9a10b~VRiGap0ZP1431814318epcas5p2d;
-	Wed, 18 Feb 2026 07:18:58 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.89]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4fG7D16Pzkz6B9mC; Wed, 18 Feb
-	2026 07:18:57 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260218071857epcas5p2d424ce4ac7f566e2e998614a58b7dee9~VRiFbPcH01431814318epcas5p2b;
-	Wed, 18 Feb 2026 07:18:57 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260218071856epsmtip1a92b55b6ba15a1103d43583b611510c3~VRiEFzryN1246212462epsmtip1D;
-	Wed, 18 Feb 2026 07:18:55 +0000 (GMT)
-Message-ID: <4ac9befb-e99b-4e7a-9b04-aec6da3b837a@samsung.com>
-Date: Wed, 18 Feb 2026 12:48:55 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PCWMNSWY"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2aaf9191da3so33203035ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Feb 2026 23:47:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771400850; x=1772005650; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Zn21Y2vbR2N+WDLS5+0ZFfHChchkcXZawoLKC6BUxjg=;
+        b=PCWMNSWYiqmaOG8TwuNx9GXM8gaFICjlwkfBIQPv4Rh5tHrLUb/KXA1noorR8TM5Qs
+         4k8J7nnvFxpXXED8S+ocuf0Ng1MQvZmtBv0Ui2sCdas5z/ZKuFkyIqee8bk+adkoUWqA
+         sSLNxGRoy7boQ4uCLvYIPzKGXov89nQh466nsrenBuOcL7y6S8NGQrnDGYRa1bgZCPpb
+         r0C2IyWeNXHKwPn4qfhyN7zb8kbXnbDY5KGYryUI4IZIXufhYKsUfqgepvv1FzS/XUee
+         Je2OXKLy7eC1+zhFH11/BQy+ZuFURDJnfVAQI/fE+TfWf70xlSLErkqpN3oKGZH4NouF
+         16wA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771400850; x=1772005650;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Zn21Y2vbR2N+WDLS5+0ZFfHChchkcXZawoLKC6BUxjg=;
+        b=uyDXAzr5JsikB+3Xm1r+Pz8i4c9tn0oAYF/SoN7q26xNH8DSo2qMcld1DMyneyLnRX
+         cbCbNChBsQsfd4xuMNht8wD87HioNpmEcjm9lu6xg5hfoG3uB/Gt5IOtW/fNZJwzWbyS
+         4nnmR5hzlRV6Phva12NTY52Lle1HZ252Rdr2uxVsDjQ9B9Vqoh1NXVkux8i+VkcuFvrQ
+         ChykfZCnrf4+KgV97cf5iTXZeJyegA1ikjoMkH4f3apdtkv5bjbmNUU6MPYaKR0h8qwy
+         i59BEBKNVhwEO+n2bo0m53+QIVYHWEUjASwivwJnqLLJXV68rax5lLhGbWR28Ou2kkdT
+         9xoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVwRjg2EqdH82AG78x1yHvmwUVJe5fifiBwvVfiP2sB32OhqRd5dYxWatz2f/v/OeHguui+sFcvV70=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwaWYZjlZiRJNkr/ehKJDaOg0FdnQKEKsBPjBbZPwI5DC9/KLC5
+	0RixJmqBdC+4voqjnsJliHLwvHvm8KAoWOhSEQc3Zg/9n1JlUThDezsf
+X-Gm-Gg: AZuq6aJ1FvD4xZtHExkF2iBsSBKz9AKgTw6fDg0wf+a4R7ZLf2yZqotzBzgexUcgFQV
+	0pPW3+ywKBnyRD3295cOhuu/55WU5IERenGhJCSYJejWvhGhQIF4je0qeYGgISQuPi8KOipTEOT
+	1q35vaGoZcQWZhK89eK8DNADGaDug7zlKryKJ4h4r3R63PI1ivkJwpz7SdGDewyFVqGrkwzKX0/
+	VIAAtIkUrOuySvRCkco0dmQp3DlCgY0GSfYvU4h+U8w5v2KlT0OlbUWj0faLAOiHS8Lj4RMrEC4
+	6ErH2zkZByFhUDA3iU9RKyICKXJx43ujyPRDiC5lXlClCagAx4IiH9vN8LLn0sgxIj4KhhDoSAY
+	TPgk77152kyKEsVqdNSmBu77K2VEmTxLiqvNAU55HgUjcFh9RDZ2ObHcJtH3xuStijexurrSG2k
+	CFerAD99N6/y2kncFg6dAo9C0y8hShZnrXUEcuug==
+X-Received: by 2002:a17:903:286:b0:2ab:2633:d986 with SMTP id d9443c01a7336-2ad50f9fcf5mr10167155ad.49.1771400849612;
+        Tue, 17 Feb 2026 23:47:29 -0800 (PST)
+Received: from [192.168.0.120] ([49.207.205.118])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad1a9d6134sm128297885ad.57.2026.02.17.23.47.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Feb 2026 23:47:29 -0800 (PST)
+Message-ID: <b4e97ebc-fa34-4bfa-8331-6a149f65b301@gmail.com>
+Date: Wed, 18 Feb 2026 13:17:24 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,78 +68,47 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] fs: add write-stream management file_operations
-To: Christian Brauner <brauner@kernel.org>
-Cc: hch@lst.de, jack@suse.cz, djwong@kernel.org, axboe@kernel.dk,
-	kbusch@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com
+Subject: Re: [PATCH v1 1/4] xfs: Fix xfs_last_rt_bmblock()
 Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260217-idealerweise-geheuer-ee86894f4792@brauner>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
+ ritesh.list@gmail.com, ojaswin@linux.ibm.com
+References: <cover.1770904484.git.nirjhar.roy.lists@gmail.com>
+ <8b93afb5feaef3fef206c5e4a6a5f83a6d63b53b.1770904484.git.nirjhar.roy.lists@gmail.com>
+ <aZVTwrR4ORzYALSy@infradead.org>
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <aZVTwrR4ORzYALSy@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260218071857epcas5p2d424ce4ac7f566e2e998614a58b7dee9
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260216053017epcas5p2d6492dd8c33c6d2453b15d79819d97eb
-References: <20260216052540.217920-1-joshi.k@samsung.com>
-	<CGME20260216053017epcas5p2d6492dd8c33c6d2453b15d79819d97eb@epcas5p2.samsung.com>
-	<20260216052540.217920-2-joshi.k@samsung.com>
-	<20260217-idealerweise-geheuer-ee86894f4792@brauner>
-
-On 2/17/2026 2:02 PM, Christian Brauner wrote:
->> diff --git a/include/linux/fs.h b/include/linux/fs.h
->> index 2e4d1e8b0e71..ff9aa391eda7 100644
->> --- a/include/linux/fs.h
->> +++ b/include/linux/fs.h
->> @@ -1967,6 +1967,12 @@ struct file_operations {
->>   	int (*uring_cmd_iopoll)(struct io_uring_cmd *, struct io_comp_batch *,
->>   				unsigned int poll_flags);
->>   	int (*mmap_prepare)(struct vm_area_desc *);
->> +	/* To fetch number of streams that are available for a file */
->> +	int (*get_max_write_streams)(struct file *);
->> +	/* To set write stream on a file */
->> +	int (*set_write_stream)(struct file *, unsigned long);
->> +	/* To query the write stream on a file */
->> +	int (*get_write_stream)(struct file *);
-> Let's not waste three new file operations for this thing. Either make it
-> VFS level ioctl() commands or add support for it into file_getattr() and
-> file_setattr().
-
-In hindsight, I should have added a single 'multiplexed' file operation.
-But can move to vfs level ioctl instead. Will this [1] be reasonable?
-
-[1]
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -337,6 +337,20 @@ struct file_attr {
-  /* Get logical block metadata capability details */
-  #define FS_IOC_GETLBMD_CAP             _IOWR(0x15, 2, struct 
-logical_block_metadata_cap)
-
-+/* Structure for FS_IOC_WRITE_STREAM */
-+struct fs_write_stream {
-+       __u32 op_flags; /* IN: operation flags; GET_MAX|GET|SET */
-+       __u32 stream_id; /* IN/OUT: stream value to assign/query; for 
-SET/GET */
-+       __u32 max_streams; /* OUT: max streams supported by file; for 
-GET_MAX */
-+       __u32 reserved;
-+};
-+/* Operation flags */
-+#define FS_WRITE_STREAM_OP_GET_MAX     (1 << 0)
-+#define FS_WRITE_STREAM_OP_GET         (1 << 1)
-+#define FS_WRITE_STREAM_OP_SET         (1 << 2)
-+
-+#define FS_IOC_WRITE_STREAM            _IOWR('f', 21, struct 
-fs_write_stream)
-+
 
 
+On 2/18/26 11:23, Christoph Hellwig wrote:
+> On Thu, Feb 12, 2026 at 07:31:44PM +0530, Nirjhar Roy (IBM) wrote:
+>> Reproduce:
+>> $ mkfs.xfs -m metadir=0 -r rtdev=/dev/loop1 /dev/loop0 \
+>> 	-r rgsize=32768b,size=32769b -f
+>> $ mount -o rtdev=/dev/loop1 /dev/loop0 /mnt/scratch
+>> $ xfs_growfs -R $(( 32769 + 1 )) /mnt/scratch
+>> $ xfs_info /mnt/scratch | grep rtextents
+>> $ # We can see that rtextents hasn't changed
+> Please wire this up in xfstests.
 
+Yes, I have prepared a bunch of XFS realtime grow and shrink tests as a 
+part of XFS realtime shrinkfs work. That will cover this fix (and a 
+couple of other fixes that I posted earlier). I will send them shortly 
+in a few days.
 
+>
+> Otherwise looks good:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
+Thank you.
 
+--NR
+
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
