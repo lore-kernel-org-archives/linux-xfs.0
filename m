@@ -1,72 +1,63 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B97C1DF73C;
-	Wed, 18 Feb 2026 06:53:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E938194C95;
+	Wed, 18 Feb 2026 07:09:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771397639; cv=none; b=IVowVnNNnPZIiuPe0XT/gwIvkd+Pnht4hIi4Sc9ad9FSlTMJUTiJfH4QwJJo+CkeuEqJfcmPGZaKq5FlMhunSZ8mLqCObsZCDCL3CsDjnEeeLAei5Vj+p+rAc/uX702YDOfvi+jaXfNqxqGXbySaU/YgZ7Y5kkEEcZJ6c21rGjw=
+	t=1771398574; cv=none; b=Ti7kcvHvgNg4hcpCLaVV1n8H6IWkcJe2brpyBQwu5v0YV+XaTazCij03SZ6MCsKxdbf/iZJRN3zXxSdzV/OrqoxXFzVBtprJV6JY99qtRMfbMnLof/YevobVNr8bz+VnJAtEOdN9Lc9A8zL971ub56bEfTyN9NJF8Qatk80sUaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771397639; c=relaxed/simple;
-	bh=QIphd3WJ79WCF+z9/Fn0REHKAqiLCDZ0bz5bWgP3e74=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ju0p/EAU+8O7V+e22E7qC/qhBCA+onHtCK/jAQaHGoK8flD7letVOkFnja1Izy+/V4J03niHrGCz23t4Z1XhpRmgMEesSCy4aOEoSTswlepfZZmAmEsMKUcoKba2SDS2zOr1cJcdlIyPrOheiHDOy+p+jSIFMex/EoRH3Gl65Yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 946E068B05; Wed, 18 Feb 2026 07:53:53 +0100 (CET)
-Date: Wed, 18 Feb 2026 07:53:53 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Andres Freund <andres@anarazel.de>
-Cc: Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>,
-	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-	lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-	john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com,
-	jack@suse.cz, ojaswin@linux.ibm.com,
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
-	Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
-	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <20260218065353.GA9072@lst.de>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev> <20260217055103.GA6174@lst.de> <CAOQ4uxgdWvJPAi6QMWQjWJ2TnjO=JP84WCgQ+ShM3GiikF=bSw@mail.gmail.com> <ndwqem2mzymo6j3zw3mmxk2vh4mnun2fb2s5vrh4nthatlze3u@qjemcazy4agv>
+	s=arc-20240116; t=1771398574; c=relaxed/simple;
+	bh=E+JXX/D7nVzCbXMojQr2+ZsL9vr1MB+pmBhAmWQe0k8=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=o99xO4lLDVQItMCN403VnqBEFAbH/0VwFEmPbe9Ey8jfEeK7mQLXGte+tmUbnNTsSD108GmQOS8zozwpjZUMe40ISR4vPdr7dXYaCoHZC87I18iKT79qRivEUrTH8hTapLnNeRTmhgNDIQf/EgRLng9CGdos9FsU1eHSCNbcJlk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LDHuZRUu; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LDHuZRUu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1BAAC19421;
+	Wed, 18 Feb 2026 07:09:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771398574;
+	bh=E+JXX/D7nVzCbXMojQr2+ZsL9vr1MB+pmBhAmWQe0k8=;
+	h=Date:To:From:Subject:From;
+	b=LDHuZRUu6OngjnaydxbpkZ65GQxnOAfkhQO6/chsr3A1tIPlWufr0b1+Y7Ho47hp0
+	 CU84Xv58/u9Dz8KmeN3Es/448wrPKHHoODhG4UPNWfCpN0R1O5kdwP/nTSbydocZyx
+	 W64Zm3P4v/79C02NVpxZLHnbBh5jLc40so9xaLbJ3YGRYI4RlHMzhz6U33KDg8hofT
+	 +nnCDnYd5CuN6ZjVS//p+IFJXqdAVOmmHJObxpIw7o5Q14hLvOwnJaQDVJccjfBSeg
+	 aVhJxskiaXZ1QcFtIFoML2Bcu8DjMTFwmwx9n/YUWowbKgHswjmMyFdnpo2Gcw2V4F
+	 BRk+idOUs470A==
+Message-ID: <924998a5-9786-4868-ba9f-726c4437cd7d@kernel.org>
+Date: Wed, 18 Feb 2026 16:09:32 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ndwqem2mzymo6j3zw3mmxk2vh4mnun2fb2s5vrh4nthatlze3u@qjemcazy4agv>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-btrfs@vger.kernel.org
+From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Zonar v1.0.0 released
+Organization: Western Digital Research
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Feb 17, 2026 at 10:47:07AM -0500, Andres Freund wrote:
-> Most prominently: With DIO concurrently extending multiple files leads to
-> quite terrible fragmentation, at least with XFS. Forcing us to
-> over-aggressively use fallocate(), truncating later if it turns out we need
-> less space. The fallocate in turn triggers slowness in the write paths, as
-> writing to uninitialized extents is a metadata operation.  It'd be great if
-> the allocation behaviour with concurrent file extension could be improved and
-> if we could have a fallocate mode that forces extents to be initialized.
+This is to announce the release of zonar, a graphical tool for monitoring and
+inspecting the usage of a file system on a zoned block device. Zonar source code
+is hosted on github here:
 
-As Dave already mentioned, if you do concurrent allocations (extension
-or hole filling), setting an extent size hint is probably a good idea.
-We could try to look into heuristics, but chances are that they would
-degrade other use caes.  Details would be useful as a report on the
-XFS list.
+https://github.com/westerndigitalcorporation/zonar
 
-> 
-> A secondary issue is that with the buffer pool sizes necessary for DIO use on
-> bigger systems, creating the anonymous memory mapping becomes painfully slow
-> if we use MAP_POPULATE - which we kinda need to do, as otherwise performance
-> is very inconsistent initially (often iomap -> gup -> handle_mm_fault ->
-> folio_zero_user uses the majority of the CPU). We've been experimenting with
-> not using MAP_POPULATE and using multiple threads to populate the mapping in
-> parallel, but that feels not like something that userspace ought to have to
-> do.  It's easier to work around for us that the uninitialized extent
-> conversion issue, but it still is something we IMO shouldn't have to do.
+Zonar currently only supports XFS but we are working toward adding BTRFS support
+as well.
 
-Please report this to linux-mm.
+Command-line tools like xfs_bmap already allow getting the disk location of file
+data extents. Zonar allows the same, but graphically, and for many number of
+files and zones at a time, which can greatly facilitate understanding and
+visualization of a file system data placement decisions.
+
+-- 
+Damien Le Moal
+Western Digital Research
 
