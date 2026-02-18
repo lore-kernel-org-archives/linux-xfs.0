@@ -1,54 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5132E6CB6;
-	Wed, 18 Feb 2026 23:42:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C53427979A;
+	Wed, 18 Feb 2026 23:49:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771458135; cv=none; b=iOix/vAIaC1dwU9pz4LS9T+s6jOD+vjlK5LKR1xdV1hILBTUjXwghuGZ3Cjk43I2ke4dTdVtXgYas1TrobOJYdGwmBsxYQHnH+kmmyUbqk/5mXycpJwvMu00bZ555U5nYY9npqYb4YOGXcbL0wkJ2cjl7qjs1tYB/ECxjmfH6FQ=
+	t=1771458558; cv=none; b=REDsxzZWEi50X2WxzaIpwuT9UXsHeZDdGlfxFFP2jjEqhVPUayUuag3WGx4+LsJcNvzpAwKlEQatanO5M69keF9xwjLUhq1avja987AUenCz8cuX+pkrQAmi3ffEc3so7VzdsHYSfLWBO5hLVVTr5uOL8wNpA6p6yArTfCCyKZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771458135; c=relaxed/simple;
-	bh=wCbI6wj7oxCUGmf8RRxMZeFQ8W8q98rrl9MHtnRP6jI=;
+	s=arc-20240116; t=1771458558; c=relaxed/simple;
+	bh=+70HNPRBg9zMVWQc4KRyK67eVeHc7zQJrDejWG3WqBw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E8CxbyBevQXwl79+W1fLObxPnRJfQxBexg/C+nZbZwMC5ijvo7kVXE03hDQY74WTN9xlZ5Ehn5+i/zYUZc5neX7u0h3rqa7I2PRad5Zcy1l+obf5NxNifY0ztkBZCINInvRYvIQW715xRy2HB++eqVIE/ojepz82ztrsP4APTpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V482Ob1R; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tS/YWEu42Qswmfu9otuvthsELcxLR2MfGhiQIYS6qhR9N583X/nRywb9yGrSZFFUptZwZ3WZi9ByUA6V2roD7bDnNetEIIf4phHtoprPkMx8ptZh6iMMM16oUiO1wKNCcPFWVrZuHYvJE0OK1/LtZZ/o3NST30vuRkxryd/8SNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QB9rf0sN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V482Ob1R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BAFC116D0;
-	Wed, 18 Feb 2026 23:42:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QB9rf0sN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1C77C116D0;
+	Wed, 18 Feb 2026 23:49:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771458134;
-	bh=wCbI6wj7oxCUGmf8RRxMZeFQ8W8q98rrl9MHtnRP6jI=;
+	s=k20201202; t=1771458557;
+	bh=+70HNPRBg9zMVWQc4KRyK67eVeHc7zQJrDejWG3WqBw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=V482Ob1RXXUzn81PwKknfj7zFSM//p1O8HjqzzfwWdYy1c36IW7SYGt4KfeDAHGtG
-	 iKZ+UaU1YzcsbouN6WtYesHztcMAxrjzxHH8+Ld7a0l9Qvq9M1JaXFzmR/Aem9NJfB
-	 fNMli9L16D8GygPMO77W3Un9Kd93UzFoP7I2e+4B7r1JGCNuE/7CFpIASwzB0Y7TqF
-	 dUEvqViPc39jgHBIDtaxVVXXSCZRcbXp6L82sRgzRfMjSwycsGRFj8p1QPEhY0J2aA
-	 TKoPoxozyRhyjSityUtYqM8fbMy9QyobU01DTGOh61T5J4JbgQEtQKjpssD2kaMAOX
-	 4dY6Jl5xEvcNw==
-Date: Thu, 19 Feb 2026 10:42:00 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andres Freund <andres@anarazel.de>,
-	Pankaj Raghav <pankaj.raghav@linux.dev>, Jan Kara <jack@suse.cz>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-	lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-	john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com,
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
-	Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
-	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <aZZOSFdL_L_EoU34@dread>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
- <zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s>
- <wkczfczlmstoywbmgfrxzm6ko4frjsu65kvpwquzu7obrjcd3f@6gs5nsfivc6v>
- <4627056f-2ab9-4ff1-bca0-5d80f8f0bbab@linux.dev>
- <ignmsoluhway2yllepl2djcjjaukjijq3ejrlf4uuvh57ru7ur@njkzymuvzfqf>
- <aZUQKx_C3-qyU4PJ@dread>
- <20260218064739.GA8881@lst.de>
+	b=QB9rf0sNGLzURjmAexKtDrw62jEM4EwV2dPaBpMKF/j/Zdzqb/qVm2P0GBDsjIhlu
+	 ox34wJOt9LnvAwVb0MyUh/aiVPqjURA0VNM7M5MTNFJix9mNF8WTd/jDQRJBTD5shi
+	 RxhJ+tW9SLpHN5ssoT8242W8X6kJnxWo3JUxHiOQOoId6+XIBdrwuO2RxCXUT3Uv2R
+	 MTucv2+BHvEK4t9a7rLK9akeEDBhD++YmqZNlVAtGnOMg9FIB2fM83D0gga2l0Jorn
+	 Kz/PFwzZtY/17IYwKh0DRDawsajeJJ6Svr3dy9sELkoDzzuSUlWjD0LGlLbLvBCxTP
+	 rO1lbpebq0LaQ==
+Date: Wed, 18 Feb 2026 15:49:17 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Ethan Tidmore <ethantidmore06@gmail.com>
+Cc: Carlos Maiolino <cem@kernel.org>, NeilBrown <neil@brown.name>,
+	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: Fix error pointer dereference
+Message-ID: <20260218234917.GA6490@frogsfrogsfrogs>
+References: <20260218195115.14049-1-ethantidmore06@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,76 +43,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260218064739.GA8881@lst.de>
+In-Reply-To: <20260218195115.14049-1-ethantidmore06@gmail.com>
 
-On Wed, Feb 18, 2026 at 07:47:39AM +0100, Christoph Hellwig wrote:
-> On Wed, Feb 18, 2026 at 12:04:43PM +1100, Dave Chinner wrote:
-> > > > > I'd call it RWF_WRITETHROUGH but otherwise it makes sense.
-> > > > > 
-> > > > 
-> > > > One naive question: semantically what will be the difference between
-> > > > RWF_DSYNC and RWF_WRITETHROUGH?
-> > 
-> > None, except that RWF_DSYNC provides data integrity guarantees.
+On Wed, Feb 18, 2026 at 01:51:15PM -0600, Ethan Tidmore wrote:
+> The function try_lookup_noperm() can return an error pointer and is not
+> checked for one. Add checks for error pointer.
 > 
-> Which boils down to RWF_DSYNC still writing out the inode and flushing
-> the cache.
+> Detected by Smatch:
+> fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error: 
+> 'd_child' dereferencing possible ERR_PTR()
 > 
-> > > Which
-> > > wouldn't be needed for RWF_WRITETHROUGH, right?
-> > 
-> > Correct, there shouldn't be any data integrity guarantees associated
-> > with plain RWF_WRITETHROUGH.
+> fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error: 
+> 'd_child' dereferencing possible ERR_PTR()
 > 
-> Which makes me curious if the plain RWF_WRITETHROUGH would be all
-> that useful.
+> Fixes: 06c567403ae5a ("Use try_lookup_noperm() instead of d_hash_and_lookup() outside of VFS")
 
-For modern SSDs, I think the answer is yes.
+Cc: <stable@vger.kernel.org> # v6.16
 
-e.g. when you are doing lots of small writes to many files from many
-threads, it bottlenecks on single threaded writeback. All of the IO
-is submitted by background writeback which runs out of CPU fairly
-quickly. We end up dirty throttling and topping out at ~100k random
-4kB buffered writes IOPS regardless of how much submitter
-concurrency we have.
+> Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+> ---
+>  fs/xfs/scrub/orphanage.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+> index 52a108f6d5f4..cdb0f486f50c 100644
+> --- a/fs/xfs/scrub/orphanage.c
+> +++ b/fs/xfs/scrub/orphanage.c
+> @@ -442,7 +442,7 @@ xrep_adoption_check_dcache(
+>  		return 0;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
 
-If we switch that to RWF_WRITETHROUGH, we now have N submitting
-threads that can all work in parallel, we get pretty much zero dirty
-folio backlog (so no dirty throttling and more consistent IO
-latency) and throughput can scales much higher because we have IO
-submitter concurrency to spread the CPU load around.
+"Look up a dentry by name in the dcache, returning NULL if it does not
+currently exist."
 
-I did a fsmark test of a write-though hack a couple of years back,
-creating and writing 4kB data files concurrently in a directory per
-thread.  With vanilla writeback, it topped out at about 80k 4kB file
-creates/s from 4 threads and only wnet slower the more I increased
-the userspace create concurrency.
+Could you please fix the documentation since try_lookup_noperm can
+return ERR_PTR values?
 
-Using writethrough submission, it topped out at about 400k 4kB file
-creates/s from 32 threads and was largely limited in the fsmark
-tasks by the CPU overhead for file creation, user data copying and
-data extent space allocation.
+> -	if (d_child) {
+> +	if (!IS_ERR_OR_NULL(d_child)) {
 
-I also did a multi-file, multi-process random 4kB write test with
-fio, using files much larger than memory and long runtimes. Once the
-normal background write path started dirty throttling, it ran at
-about 100k 4kB write IOPS, again limited by the single threaded writeback
-flusher using all it's CPU time for allocating blocks during
-writeback.
+If d_child is an ERR_PTR, shouldn't we extract that error value and
+return it instead of zero?
 
-Using writethrough, I saw about 900k IOPS being sustained right from
-the start, largely limited by a combination of CPU usage and IO
-latency in the fio task context. In comparison, the same workload
-with DIO ran to the storage capability of 1.6M IOPS because it had
-significantly lower CPU usage and IO latency.
+--D
 
-I also did some kernel compile tests with writethrough for all
-buffered write IO. On fast storage there was neglible
-difference in performance between vanilla buffered writes and
-submitter driver blocking write-through. This result made me
-question the need for caching on modern SSDs at all :)
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+>  		trace_xrep_adoption_check_child(sc->mp, d_child);
+>  
+>  		if (d_is_positive(d_child)) {
+> @@ -479,7 +479,7 @@ xrep_adoption_zap_dcache(
+>  		return;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
+> -	while (d_child != NULL) {
+> +	while (!IS_ERR_OR_NULL(d_child)) {
+>  		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
+>  
+>  		ASSERT(d_is_negative(d_child));
+> -- 
+> 2.53.0
+> 
+> 
