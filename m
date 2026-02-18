@@ -1,75 +1,95 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E08302176;
-	Wed, 18 Feb 2026 20:23:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48103311C32;
+	Wed, 18 Feb 2026 21:04:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771446208; cv=none; b=kJ1bgmkviU7BK9Zi6v0WPN3tFgOibACLiZlZvwmDqL2+QkYDLpjCmLI6J8KcYgioO0ZpcZE4BM5eEWkLzpLb+rtSr84C1HYg4SIDCLSCmxgS7VmOTEhhpNkcIgdnSxK+nffd/xyB9ATnJWZnW4DErmvzC9TzsKLV+9u64o3b3ww=
+	t=1771448668; cv=none; b=Z+ts1KX6ED99hf16pNfwwB/naNdRfOWWIrGujF0339VQe6wnXFYM8ilCqKSozH5GZG6X2sAkUeQN59FYS/aZa1B+pG4HUoHh5b2R1M78xNGWQtjCNIjtpn2oxagA+8eHq2YycKY6Zr8S1xaSsgECNamM/TtJNFJatIcxF+6CqAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771446208; c=relaxed/simple;
-	bh=a+EJK4INIn3rrEmeU+8uqf68BGwI08tUjsSp41J2wwI=;
+	s=arc-20240116; t=1771448668; c=relaxed/simple;
+	bh=//ZHD8C3KycWAjKcIrQijg9JtgcpYF5hca65+1F+vQU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uExVD79BAIsvDxnP4IQSoN4y7WuSvvOYN+zhQ9oT42q4K5m3rauOSMe7X+D2WowGM4w15WOGW7L/GVgiQYlfx9OcZPIP/TjrikRNXSza89IJmAsNEY2TfzguHZNaWifs54vrB9ibIRMCVXV8oxs7zRkxCToJH0wrOf6RLbjnVFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jhZQuTZW; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=aK/wK6GmpRBxr1Pq/3yulDYk0TITUqyESTcst1E2QIK1u7lRr0KhCCvL6nB4s11yv7kxXTbVpxeAuCg9qEWS7mThh66lCbjm+FZlowT4Cbfv3BMymf3l7IDfQ5B7RKgvDb9oI3lgd+zFT8rR6iIXiH9tGSTHxEIZtaR1znvmNg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=Bh/39XMQ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=plf5A42Q; arc=none smtp.client-ip=202.12.124.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jhZQuTZW"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61IEAEB41410265;
-	Wed, 18 Feb 2026 20:22:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=E+i1/faGO1lFhzHanw7UXC5RtBSvvF
-	1mijuShk8gkfI=; b=jhZQuTZWDC526OZq7bI3InheN/0s1ee1iDdXS7sBdxxWVT
-	0vxcEQ+6dr5E3yVw0MQ9DgMKFl6Ww7fr4IPPYiDrkdIqrla7V/eiKL5bfjrHfBOD
-	PfPhfTQCzlu1zVfjT5ayvpHPxFcZOiz5JmS+skR1x+SzOvXd7QDC7lmHtn5LKvKD
-	U/WNr+5N6QGJpXkYdyMkr6bQAaBUJe1blNUVbKOucrvqMgyM605aPwxmf4q5BldT
-	hW0Cg+LfXMUWCgcF3D0nlRzzAeueE/FUkgCi5YnUgx0LJFbQjydT/L9nsXOEotWT
-	/bFDlafoTxNKko6P9mkKS6ZUaM3sv+qc0gSFq3WQ==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4caj4khwth-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Feb 2026 20:22:52 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61IH03pO012024;
-	Wed, 18 Feb 2026 20:22:51 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ccb271eu6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Feb 2026 20:22:51 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61IKMnkv35914068
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 18 Feb 2026 20:22:49 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6C5332005A;
-	Wed, 18 Feb 2026 20:22:49 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 196BD2004F;
-	Wed, 18 Feb 2026 20:22:45 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.25.124])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 18 Feb 2026 20:22:44 +0000 (GMT)
-Date: Thu, 19 Feb 2026 01:52:42 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="Bh/39XMQ";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="plf5A42Q"
+Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
+	by mailfout.stl.internal (Postfix) with ESMTP id A844D1D0009F;
+	Wed, 18 Feb 2026 16:04:24 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-12.internal (MEProxy); Wed, 18 Feb 2026 16:04:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
+	cc:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm3; t=1771448664; x=1771535064; bh=79/kJXt6NE
+	qGLpu83/22II9pOyL9CJZBDcnxuiTjByE=; b=Bh/39XMQnn30o0s4flayPigsyj
+	iLSxJdJxnt6/OODgLrfYAwvsthfWVN2ZOXNvgyDVSojr+mdYCSWiPNqvusO/gdzo
+	mZi8PK7rtcRUiwDiFNO1/EE7Hc1H3RlYEOA2qwNlAtI3Us3/Tx7IPSrZWEeqoe2Q
+	J4IxytiWUqW12hyDSwUbqYMPUkiRblqQN8oXKHA9RTSDi70NMyWSjTzoset4usrl
+	kqlSMlrC762jp16JSib047e0xN2pnHd74QyGofVXuYIemOrKRQYxJYCjsnBS3woR
+	6g0nIwHjv6W4dqfWOydiby7HNp0VPFLdHXAf+X1JuT7OoILI/YVsYNBGhH7A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1771448664; x=1771535064; bh=79/kJXt6NEqGLpu83/22II9pOyL9CJZBDcn
+	xuiTjByE=; b=plf5A42Q+m2vLEDVo+GEDFNfNo6E6+Kl88RUWt1TW+yNjqFpFhq
+	gVKwHjP7+u7UT3QocF0auccylkpWDVBRxsNPXuDR21sEz9ZPXKytOzZjxM0cTD94
+	P80ZRl6lXdMy3qopRIBEg23FwwugIBxc76xaIdbfx1dV2Vvby0htIK4Le5QpoKse
+	+O3bPhTOiP/oJLjoEjRV2cTNNbTU1tetxgoO/DVoezX/0cAMbvM+DU+/h6kvUT3r
+	hvtrc9GYtNws2N1rUfjnNztclxf8UiUrJZyehzPiHzTLiKObVRgSBTAhp9AJOTxo
+	D3An0tniQvkFjfNwc/23grTv1DcMEqWsnkA==
+X-ME-Sender: <xms:VymWaSrIzlXjCsnAYGCr6xdql40_0LTWNqWB6zX29PQhU9nFGKQqug>
+    <xme:VymWaXlTfFj0KZGeV51jL5MXBHrcX8spy7EBb9yo8qxBYpV2BmfCUjJ4uwnnza98G
+    cnR6iMmXjjsb6iy6Vy4QrJz5V8WHncpvO2h4UTPQaO_tttzrXgJJYU>
+X-ME-Received: <xmr:VymWacSSafM0PsnWDUm7AgS2Msq20DMBattPcZ0xsxwdl4ZQo7y-FymK3Cmi_dTfK8xDvA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvvdefieejucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomheptehnughrvghs
+    ucfhrhgvuhhnugcuoegrnhgurhgvshesrghnrghrrgiivghlrdguvgeqnecuggftrfgrth
+    htvghrnhepfeffgfelvdffgedtveelgfdtgefghfdvkefggeetieevjeekteduleevjefh
+    ueegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hnughrvghssegrnhgrrhgriigvlhdruggvpdhnsggprhgtphhtthhopeduledpmhhouggv
+    pehsmhhtphhouhhtpdhrtghpthhtoheprhhithgvshhhrdhlihhsthesghhmrghilhdrtg
+    homhdprhgtphhtthhopeifihhllhihsehinhhfrhgruggvrggurdhorhhgpdhrtghpthht
+    ohepughjfihonhhgsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmtghgrhhofheskh
+    gvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqmhhmsehkvhgrtghkrdhorhhg
+    pdhrtghpthhtohepphgrnhhkrghjrdhrrghghhgrvheslhhinhhugidruggvvhdprhgtph
+    htthhopehojhgrshifihhnsehlihhnuhigrdhisghmrdgtohhmpdhrtghpthhtoheplhhs
+    fhdqphgtsehlihhsthhsrdhlihhnuhigqdhfohhunhgurghtihhonhdrohhrghdprhgtph
+    htthhopehhtghhsehlshhtrdguvg
+X-ME-Proxy: <xmx:VymWaZDNNedCP64l0E46dD9lLg36JpqYO1KPIWLHsYjbPIdv7y8wBg>
+    <xmx:VymWacratkOjQM04gQdZl7bQRkeBFvXaU9-a_pdTCR0cXQhb_NnDQQ>
+    <xmx:VymWaXh7dngNuF9kHXhZqnN1wxk8YQCeueKRXygZR8STS22FLxsaCw>
+    <xmx:VymWaZyqTNM_2DYBW_uaObIxNOusgXnfMG2JPmTodyw7HkpAbGlJvg>
+    <xmx:WCmWabh5bbTPfYVpP0IyJzPD9TpaBT-GGaehkCixY6X7M7HwcpitLldk>
+Feedback-ID: id4a34324:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 18 Feb 2026 16:04:23 -0500 (EST)
+Date: Wed, 18 Feb 2026 16:04:22 -0500
+From: Andres Freund <andres@anarazel.de>
 To: Jan Kara <jack@suse.cz>
-Cc: Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        lsf-pc@lists.linux-foundation.org, Andres Freund <andres@anarazel.de>,
-        djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
-        hch@lst.de, ritesh.list@gmail.com,
-        Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
-        Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
-        tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <aZYfkuueWpMxEiHl@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+Cc: Pankaj Raghav <pankaj.raghav@linux.dev>, 
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
+	john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, ritesh.list@gmail.com, 
+	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
+	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
+Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <vr6xl5ntbgh3ou6uahu425xknlseclqj5aweb2ntvyedrgree6@uwbqiqamzec6>
 References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
  <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
  <7cf3f249-453d-423a-91d1-dfb45c474b78@linux.dev>
- <aZSjUWBkUFeJNEL6@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <bf6eek2jagskkgu3isixqjjg3ftrkp5juf6lge3rjjutzzhbdd@vkliyqpsmrry>
+ <zzvybbfy6bcxnkt4cfzruhdyy6jsvnuvtjkebdeqwkm6nfpgij@dlps7ucza22s>
+ <wkczfczlmstoywbmgfrxzm6ko4frjsu65kvpwquzu7obrjcd3f@6gs5nsfivc6v>
+ <2planlrvjqicgpparsdhxipfdoawtzq3tedql72hoff4pdet6t@btxbx6cpoyc6>
+ <umq2nlgxqp4xbrp23zjiajwd6ombed4dfwbajuh35xd4vphyee@26g2y6a4rdnu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,65 +98,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bf6eek2jagskkgu3isixqjjg3ftrkp5juf6lge3rjjutzzhbdd@vkliyqpsmrry>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE4MDE3MiBTYWx0ZWRfX9FLEzf7jtPZJ
- gxRIrZ/x2mb/H3n910wOIdSzPtIrGUlfYxuofg56lSK0ItA0AyNFv8Kzn3TXJzZIrATwkusRCcG
- 0Xu9sAKUIAo4niQIgJvB/rhGZ5z2sx70baKRjeCDv8ftTvGZth3eNx29448fjestSwgOHQpMKSz
- 4EN8nz/qwWeVBGNI4PdG1jb8D4u50HpSPy6rPZvZ8AjixQDFsf+vXCnV9zBe9im2jSNVZLEeZ8D
- 65VdPgdMP4yUsBDEWzmUtzHEAMdbrtHHG7x7WA8P0WNP3A6cKPh338RkH2592PRkf7PYbrixmft
- 5xkKlIwNzF2cRpAscDzy90MLh+/F0Pgwb7rOsLImee/n4n/AUqN7bUtfV2wYRxp0FNR13VG8TnR
- zDFTGH23MCWaerUBCCb2lX9bse28g1p3GVo1g0wE8xxC91oeWvkMkSPe+E80ZmuKjhmmm53rCep
- /HZoD0qSHwr9ojMEJbA==
-X-Proofpoint-ORIG-GUID: Wn6Xsq6wTeBZ9-DdGXuQDbfw6exEBFXj
-X-Proofpoint-GUID: K4HPm-rnhFQtBUYE8FvRoE8HPd9myNYa
-X-Authority-Analysis: v=2.4 cv=M7hA6iws c=1 sm=1 tr=0 ts=69961f9c cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=kj9zAlcOel0A:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=iox4zFpeAAAA:8
- a=NybPXLiR-Eq3wr7rucQA:9 a=CjuIK1q_8ugA:10 a=WzC6qhA0u3u7Ye7llzcV:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-18_04,2026-02-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 malwarescore=0 lowpriorityscore=0 clxscore=1015 phishscore=0
- impostorscore=0 suspectscore=0 priorityscore=1501 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602180172
+In-Reply-To: <umq2nlgxqp4xbrp23zjiajwd6ombed4dfwbajuh35xd4vphyee@26g2y6a4rdnu>
 
-On Wed, Feb 18, 2026 at 06:42:05PM +0100, Jan Kara wrote:
-> On Tue 17-02-26 22:50:17, Ojaswin Mujoo wrote:
-> > On Mon, Feb 16, 2026 at 10:52:35AM +0100, Pankaj Raghav wrote:
-> > > Hmm, IIUC, postgres will write their dirty buffer cache by combining multiple DB
-> > > pages based on `io_combine_limit` (typically 128kb). So immediately writing them
-> > > might be ok as long as we don't remove those pages from the page cache like we do in
-> > > RWF_UNCACHED.
-> > 
-> > Yep, and Ive not looked at the code path much but I think if we really
-> > care about the user not changing the data b/w write and writeback then
-> > we will probably need to start the writeback while holding the folio
-> > lock, which is currently not done in RWF_UNCACHED.
+Hi,
+
+On 2026-02-18 18:37:45 +0100, Jan Kara wrote:
+> On Tue 17-02-26 11:13:07, Andres Freund wrote:
+> > Hm. It's somewhat painful to not know when we can write in what mode again -
+> > with DIO that's not an issue. I guess we could use
+> > sync_file_range(SYNC_FILE_RANGE_WAIT_BEFORE) if we really needed to know?
+> > Although the semantics of the SFR flags aren't particularly clear, so maybe
+> > not?
 > 
-> That isn't enough. submit_bio() returning isn't enough to guaranteed DMA
-> to the device has happened. And until it happens, modifying the pagecache
-> page means modifying the data the disk will get. The best is probably to
-> transition pages to writeback state and deal with it as with any other
-> requirement for stable pages.
+> If you used RWF_WRITETHROUGH for your writes (so you are sure IO has
+> already started) then sync_file_range(SYNC_FILE_RANGE_WAIT_BEFORE) would
+> indeed be a safe way of waiting for that IO to complete (or just wait for
+> the write(2) syscall itself to complete if we make RWF_WRITETHROUGH wait
+> for IO completion as Dave suggests - but I guess writes may happen from
+> multiple threads so that may be not very convenient and sync_file_range(2)
+> might be actually easier).
 
-Yes true, looking at the code, it does seem like we would also need to
-depend on the stable page mechanism to ensure nobody changes the buffers
-till the IO has actually finished.
+For us a synchronously blocking RWF_WRITETHROUGH would actually be easier, I
+think.
 
-I think the right way to go would be to first start with an
-implementation of RWF_WRITETHOUGH and then utilize that and stable pages
-to enable RWF_ATOMIC for buffered IO.
+The issue with writes from multiple threads actually goes the other way for us
+- without knowing when the IO actually completes, our buffer pool's state
+cannot reflect whether there is ongoing IO for a buffer or not. So we would
+always have to do sync_file_range(SYNC_FILE_RANGE_WAIT_BEFORE) before doing
+further IO.
 
-Regards,
-ojaswin
+Not knowing how many writes are actually outstanding also makes it harder for
+us to avoid overwhelming the storage (triggering e.g. poor commit latency).
 
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+Greetings,
+
+Andres Freund
