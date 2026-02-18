@@ -1,83 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 569252FE56A;
-	Wed, 18 Feb 2026 19:00:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9ED29E114
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 19:51:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771441240; cv=none; b=XUHpg+mzmmkrlXiAnW++1HYX+ObGfCYO8MtmqZC+4rAhdLVvGigFTeWO4QdTLvhhWgcRle4WSvqzuEFR0oSFNYO2xu49tq2HfvLxaSawhidDnywMtV++6Kzji32BchxqFIItLj3bStfIInRXPwB4ofkWR1OFk1+r0oOEEhOEJus=
+	t=1771444295; cv=none; b=BmHfEgl17W10hV5bztbzWQdKZPisDWk1Q7RajnYuv4GHruBtwm4W9Qd5QYJB4JMINKXDj6XgjvMLb3sz9Y153WM2MxRPqhwznkB74t26iT9w9LvypzZNCVD1c/bl+XOYiZQqnn+ovGasvGAxkQxIQi9mRmOB+pq6LgIFh5WpoqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771441240; c=relaxed/simple;
-	bh=5XCcVudrYiZDaVmNcc3qQJfyMbi+XHIbWD/I6moPDhI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RPvQ12u7sOozoezbvlitd91122A8Kd6j9SLqlZdqfYhuH5N4SFP2dV9Bd2lHtZxoMRdTmwGX2lI42g8bqSGtyqP+I+jkMCEAho+WqGKRaaBeN8ZHHA/OyBRGL6scH9Nf1VsImWkGuguu36HmCgphYecOCOE/UQvxYV+yMRZV2Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pMxYjZjM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771444295; c=relaxed/simple;
+	bh=o14jQr3MK0WAom64yndMqkc/N3aQelcLXwWK3gZYnNc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ltbSAOZUN4W+cAYKDxQsYsq6ouSp32fTXAJe5gC2MKjL8MSMlTiHwfivwx5K0Uh7q6mlCO63zuH/ZB+VsxWTLa/sJAWXoZPmZyl7EhycGFl9uNHJBP3730OjHNuWdDXhjg0m1PuLU5T+ygffTp5auJRZGWAd1M5Hj4eBi4UscLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hmJCZaoi; arc=none smtp.client-ip=209.85.128.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pMxYjZjM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9DC7C116D0;
-	Wed, 18 Feb 2026 19:00:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771441239;
-	bh=5XCcVudrYiZDaVmNcc3qQJfyMbi+XHIbWD/I6moPDhI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pMxYjZjMjKjqw9Z+KxD7GQ9QAODsOpcHIcAYCUCp0x4vKcPW5MscLsIgHDmeJWvPz
-	 EhpHHmU71mdxMNQonhSUMZpRmHIOJZZf9vUHS7/LDnEz7XU414e6Khnw6Dxlcjwo39
-	 z2h8cUvlt9O5XfZvl7FsHE9WVN0s8yjLySt3Zcn7FPsMZyg+zQRFykUBMyJ3e5YiT8
-	 aQabzAAQl/rw5qxpR2sKb2NVYm2D9IDzSNy1J24GxCEo74f0UqA3cmv+lbAW3hPx7p
-	 4jcmfcDIiKTumE+fxxamlf8f/AH/kYqbaPx3XUNsXfpHsR2TR7NsrHyUX23c36YUlQ
-	 ZMTQ7JVt8ClPw==
-Date: Wed, 18 Feb 2026 11:00:39 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dgc@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-	brauner@kernel.org, jack@suse.cz
-Subject: Re: inconsistent lock state in the new fserror code
-Message-ID: <20260218190039.GA6503@frogsfrogsfrogs>
-References: <aY7BndIgQg3ci_6s@infradead.org>
- <20260213160041.GT1535390@frogsfrogsfrogs>
- <20260213190757.GJ7693@frogsfrogsfrogs>
- <aY-n4leNi4NCzri1@dread>
- <aZQBAYCc5ouSoVXe@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hmJCZaoi"
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-797ab169454so2348347b3.3
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 11:51:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771444293; x=1772049093; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rhei553V0qQizYs5ft2+gJcj/d+TOeR7Ld/V97lPAMM=;
+        b=hmJCZaoiY/zYuhlNFOuRi4cJ0Bo6D7bf0FwtLUkE0r9J87ZatltXW98o5yM0PL/LJg
+         4jSEP447wXsJgobxv/4dtAH3CvUoHHayL78BxzUTHN90zFJtoKu6yyG3JrFaR2LzdNy1
+         81WUL9OwXKB2sScZOX5GiRiboIvjlmPl9BPI1ABLZwEJ9gJFcbHIYNKKAGK5C/2EfKhT
+         AEnaIOUNsUCb8msm1THZMlU9Lih+uU8OphgXlrhoAgyzLRxeyNNlZ0zvfNJgnqIx/Y2u
+         t2MswnzI9m5rd1P4e8AtcDSSB2e0V80tuHUAZqqvmVpt46QS7DSfvtmrU/6w2Gy7H33Q
+         1oEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771444293; x=1772049093;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rhei553V0qQizYs5ft2+gJcj/d+TOeR7Ld/V97lPAMM=;
+        b=noqhFO0d69zFx790r23bl186nKUFDAzm5olh5Jd/hdnqFRxTp8My5dLJ4ouuImjYMa
+         x0uNnfXCbZ9Y9l0jw05twpIaEIYExkT1MGil7pH+HBx2n33sm8zup1kjQCwwGqaXxrw9
+         Xp4HizqcNjCvq2FO3Rya0XRDaEjYwEQm21hdbktuRVzbz7rlHK6G+AfIKzYxpOFo1jiK
+         16oJ2kPq2WBalZvgGP8Fp5Y/EbduQGSzYEH5vAUWUgGz2Dt/QMTaMfWkLcJhXO2iTLH9
+         ndhErFefxBDqJoxKbGax5T0lp/VedTxj+M4oY3kbXl7E5yFdZKyUvmB83fRfggn+7AwW
+         SOkA==
+X-Forwarded-Encrypted: i=1; AJvYcCXz5saGTT7Lod6Qpk8q+MGfOpdhbSW4FjOevBhnx7VGS/yR/GXjH6Era1/PdFd2ifTQ/EJ3/QjOyss=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrtHn7L7OXFKJnDSIHuHAiJ09UbIFwSU0ahDWUoWuSSl45rRSV
+	1C74yLCEBVPv9BHA2YYEBDc9F78PKgqCod7tAtsRNghKaNxXpLs9eSjJ
+X-Gm-Gg: AZuq6aIbT9XcwOZdU/wqvw3a7lQa9D7o78CHqOIwd/ySTTyUBVPPFnu+jb8eAEG4KGM
+	0K6clJ8VKwfbmL9RvXxT5rswPu3dV27LlmyFbOgvmnPmW1nSWp4+BGipiwq7U09zEQ1+sB9Kmlm
+	HTd4gbnBlHFXLmdyZ/zvvhh8NRPcq7Y19CMCeLMkY33kRzbEiT+i2U0KOwiUthpedFFgiACCtPf
+	j+s54IDNPDEnwyI75lJPi137+oR5ygc3PlXVDA+Z2+iW1OYq6hVesHFQmbV84CrXyM1ChohJA+2
+	LspZ59fg8bS4CDZnZ6uosJFfZ+9zyujo65VByvK1UKh6jYpLlxP0fJcTUXXVqVUnzVPI+cckfPx
+	dUHCKrF/oxwEDETL3A01Xw4XLj+kccEkikS+osKs3r+DdiPL/7HhbJZWzFgl6/DOd0dZAZt+zgI
+	mlDzlVy/gZnhisM4n4jHM9JkEND2AW0bWo+UjYUiPYgRD6bh2Xk/heaGHbqT7Ht9h/4j1ro1F4s
+	NspuKCYKBrSSqvP8lBYGCiMOEDJvV+WHjM2g96QDxc=
+X-Received: by 2002:a05:690c:17:b0:794:8d58:cac0 with SMTP id 00721157ae682-797ac51634amr127805617b3.16.1771444293184;
+        Wed, 18 Feb 2026 11:51:33 -0800 (PST)
+Received: from tux ([2601:7c0:c37c:4c00:e3a8:26f7:7e08:88e1])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7966c18b3desm121944387b3.14.2026.02.18.11.51.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Feb 2026 11:51:32 -0800 (PST)
+From: Ethan Tidmore <ethantidmore06@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	NeilBrown <neil@brown.name>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ethan Tidmore <ethantidmore06@gmail.com>
+Subject: [PATCH] xfs: Fix error pointer dereference
+Date: Wed, 18 Feb 2026 13:51:15 -0600
+Message-ID: <20260218195115.14049-1-ethantidmore06@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZQBAYCc5ouSoVXe@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Feb 16, 2026 at 09:47:45PM -0800, Christoph Hellwig wrote:
-> On Sat, Feb 14, 2026 at 09:38:26AM +1100, Dave Chinner wrote:
-> > Yeah, that seems like a bug that needs fixing in the
-> > ioend_writeback_end_bio() function - if there's an IO error, it
-> > needs to punt the processing of the ioend to a workqueue...
-> 
-> The iomap code doesn't have a workqueue currently.  The way we split
-> the code, we left the workqueue handling in XFS, because it is anchored
-> in the inode.  I've been wanting to have it generic, as it would help
-> with various other things, though.
-> 
-> For XFS we might be able to just always hook into our I/O completion
-> handler and shortcut the workqueue for pure overwrites without errors,
-> but that won't help other users like the block device code, zonefs and
-> gfs2.  Maybe we'll need an opt-in for the fserror reporting now to
-> exclude them?
+The function try_lookup_noperm() can return an error pointer and is not
+checked for one. Add checks for error pointer.
 
-<shrug> Assuming that file IO errors aren't a frequent occurrence, it's
-easy enough to attach them to a global list and schedule_worker to
-process the list when an error comes in.
+Detected by Smatch:
+fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error: 
+'d_child' dereferencing possible ERR_PTR()
 
-> On something related, if we require a user context for fserror_report
-> anyway, there is no need for the workqueue bouncing in it.
+fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error: 
+'d_child' dereferencing possible ERR_PTR()
 
-Bouncing the fserror_event to an async kworker is useful for laundering
-the inode locking context -- fsnotify and ->report_error know they're
-running in process context without any filesystem locks held.
+Fixes: 06c567403ae5a ("Use try_lookup_noperm() instead of d_hash_and_lookup() outside of VFS")
+Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+---
+ fs/xfs/scrub/orphanage.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I tried getting rid of the wq bouncing and immediately ran into the same
-lockdep complaint but on xfs_inode::i_flags_lock.
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 52a108f6d5f4..cdb0f486f50c 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -442,7 +442,7 @@ xrep_adoption_check_dcache(
+ 		return 0;
+ 
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
+-	if (d_child) {
++	if (!IS_ERR_OR_NULL(d_child)) {
+ 		trace_xrep_adoption_check_child(sc->mp, d_child);
+ 
+ 		if (d_is_positive(d_child)) {
+@@ -479,7 +479,7 @@ xrep_adoption_zap_dcache(
+ 		return;
+ 
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
+-	while (d_child != NULL) {
++	while (!IS_ERR_OR_NULL(d_child)) {
+ 		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
+ 
+ 		ASSERT(d_is_negative(d_child));
+-- 
+2.53.0
 
---D
