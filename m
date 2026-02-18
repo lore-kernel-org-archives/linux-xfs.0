@@ -1,76 +1,56 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C5A2D6E76;
-	Wed, 18 Feb 2026 12:55:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA14B33F389
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Feb 2026 15:38:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771419309; cv=none; b=RdE3y+qMa9OJiCpIFcvphmUYR0R+4P/SmO/uggzBaF0nTvekC/WOYdvgWBDs/lNZdpbCc2icvXmYZLaadv2MKnmJBZiuvlSKTWyRUGzar6NDifKZOi2YhmXBEVLlkvyBy9TrpnxdNAkZaqgIZgrmjtTfhCL+b3npkeus5Dpefx8=
+	t=1771429091; cv=none; b=OZcMD3cyXLaeig/k6HZ0Lgjx6vwhB0t8WaLTQw7iqxIsj62eBFzBYov5JelEdzBH7t3qa3TYMwlO9uu4nfGKmmjmVwY7+YHl4qzFaj3G6wt52c8yzKn/gr5SGZN6xCvD72u5ji02EjcSsA+By9peYkbyXr9bm06nlHRCncONqUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771419309; c=relaxed/simple;
-	bh=dbqw6kTwA+NdAUBcQMVyNOpTUDTOeMi07iknLsGEZ+0=;
+	s=arc-20240116; t=1771429091; c=relaxed/simple;
+	bh=z3juJ2SlP8qY4SclGcvg8DCUEuZenH19njTBDryHy0E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vEuwM6h/9gNSo01gE5yeB5RCAaZntrklJ5Y1hSs/a+UQNkfHV+AIoWDhye0PUnnboXSQfGxUWYKo2MtFxjnsXfNS3YLmSIG4GjNX1DwPZT+GprVC6b25gb6MRbP3VMz4JMycuxsc4NJLNvY3G4nFprGL8ZqeVAlShUTLuPfR8jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EWdE9Pc+; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=IBkvdj+11IzkBcY4Ljrz/OnnKBLwRxil2SZPwI8L8dI6fmCs5GEuVw//qBQfqHtu1FwBV5ixSoP0WXeWP4t6Yyw+sDX5L+rhRy+R3CJlptgKr/6nbDbif1qzkXbmX9yHvQttm3u2p+zDr0lErlNjrEIRBRxZEU114oGWFEqO85o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=duv5EfN/; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EWdE9Pc+"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61I9KWwC3661553;
-	Wed, 18 Feb 2026 12:54:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=BlA1AbMzOeTmhaj5e99ZkJ4aaV0Ydz
-	pz7qXESwhzBw0=; b=EWdE9Pc+rdxxTC8NAoOgznIV/LjA1IVskBFKXQuVm26iIA
-	IHPQ/mZhu82rmbL+PHKciaRpKm2FC20POFYFYT/pCwJ4V7U+qmTBOzPn5LwKwyAK
-	nLdlgu264oeKZ7dbqjjG7snnTXAM4Wnz7L8guKvTQvP2elc34nPaRb72ffZtk1/e
-	VusELSQfV23whrJXiGBjhzaxjzy7+zKb0h5QPe3ivi4DIfDQGAQVp1jky5TrccsT
-	eu4wuYPkzjxcq6Hkdr1aPRIi/XfWoyTxA+1/pruuQarggSnOMgy/w4SnNnNqhxnc
-	SCI861u8a1CwDBde0udKshfqUaiWEX847yo5oweQ==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cajcjg4tq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Feb 2026 12:54:35 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61I8e4Zu001419;
-	Wed, 18 Feb 2026 12:54:34 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ccb2bftac-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Feb 2026 12:54:34 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61ICsWv553674438
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 18 Feb 2026 12:54:32 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6E7CA20040;
-	Wed, 18 Feb 2026 12:54:32 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id CD1A720043;
-	Wed, 18 Feb 2026 12:54:27 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.27.220])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 18 Feb 2026 12:54:27 +0000 (GMT)
-Date: Wed, 18 Feb 2026 18:24:25 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Pankaj Raghav <pankaj.raghav@linux.dev>,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org,
-        Andres Freund <andres@anarazel.de>, djwong@kernel.org,
-        john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
-        ritesh.list@gmail.com, Luis Chamberlain <mcgrof@kernel.org>,
-        dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>,
-        gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com,
-        vi.shah@samsung.com
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <aZW2geKlQESzxXzV@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <aY8n97G_hXzA5MMn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <w3vwdaygcz3prsxwv43blo4co666mragpdwaxihbirt5stl4vr@agyz4mnaxghj>
- <aZS18m1eIxjDmyBa@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <aZUHHvNl6cQr-uwd@dread>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="duv5EfN/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1771429089;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oGs/+jFNnvuI7VQc9EOSjYg5S/COZ79HWvSik5xW2ds=;
+	b=duv5EfN/LblU/B2Fw8Zr59n6XKmcPPMQit9Qg1Kzux6aAJ/S5pld307C3SAUf+77QVceKN
+	uVxlRjSQ8S20RdY/5KjtN2PeW6YEg8G++F70D2VgLXyZ4rDGR8fbQ33hDnN1iHPK9ubEwk
+	E75WYHjPj6k4Ts5b3jUtfeQPMcRxpss=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-503-VJXc0r1DNY-l79Lf6nf_aQ-1; Wed,
+ 18 Feb 2026 10:38:04 -0500
+X-MC-Unique: VJXc0r1DNY-l79Lf6nf_aQ-1
+X-Mimecast-MFC-AGG-ID: VJXc0r1DNY-l79Lf6nf_aQ_1771429083
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8B7FA18004AD;
+	Wed, 18 Feb 2026 15:38:03 +0000 (UTC)
+Received: from bfoster (unknown [10.22.89.38])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB8C9195410D;
+	Wed, 18 Feb 2026 15:38:02 +0000 (UTC)
+Date: Wed, 18 Feb 2026 10:37:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] xfs: only flush when COW fork blocks overlap data
+ fork holes
+Message-ID: <aZXc0vyT2zVcRXCp@bfoster>
+References: <20260129155028.141110-1-bfoster@redhat.com>
+ <20260129155028.141110-5-bfoster@redhat.com>
+ <37206076c486da01efe90b95f5dc61049cb2d141.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,131 +59,116 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aZUHHvNl6cQr-uwd@dread>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: -fnHeqLWXVntKC1VPi5-hEcRrUMZ1eZU
-X-Authority-Analysis: v=2.4 cv=Md9hep/f c=1 sm=1 tr=0 ts=6995b68b cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=kj9zAlcOel0A:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=NEAV23lmAAAA:8
- a=VwQbUJbxAAAA:8 a=mABpun1c11mrw8mCog8A:9 a=CjuIK1q_8ugA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE4MDExMCBTYWx0ZWRfXzmhqwlV11zuf
- HnmAQnAhefdBCrARMdXeJQSd44KB601SjyK/JR0C6gSI9FuU434jMjIZRB9peArV6ksn6dB2Tsi
- +CKCwHjSLZHhmIeidEXc/OuKSEdQiwBeO3dceRy2JWC1wkS4RfklibBsSwHV0g4sP0Go5+lUnrI
- J8w9YDYeei1TO3C51EgMJUXHPoieEjezgBQW7Px/RyxlZlURBGKTsRI709hFtHi9uXlgScWuCOI
- 2/+K1Da1QZIKtGU3FvITkQnLC1t7+zZH1tKAWTueD49VcleXglUDjhdvTdqLsxUchkMMoZfwHSY
- GTubwyHEfgWFZFR8jvUMmNph8Hqkv1r7evKqLlI+yTQoFimn0cTTwquPKo0dNZMvUUiRwMz8yR7
- XKHguLAmceAQC1oPsMPCjwDrrjCEi2SSYMojmBcD7OMyTXGmo403Qrfp8IUIC9WfdGFDEIA72Dp
- e9tPMACa/OGWvsZOx6Q==
-X-Proofpoint-GUID: VKj-YQ9wKR8GjOpfDRXrT459fMxy1rGC
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-18_02,2026-02-16_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 impostorscore=0 lowpriorityscore=0 spamscore=0 adultscore=0
- priorityscore=1501 suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602180110
+In-Reply-To: <37206076c486da01efe90b95f5dc61049cb2d141.camel@gmail.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Wed, Feb 18, 2026 at 11:26:06AM +1100, Dave Chinner wrote:
-> On Wed, Feb 18, 2026 at 12:09:46AM +0530, Ojaswin Mujoo wrote:
-> > On Mon, Feb 16, 2026 at 12:38:59PM +0100, Jan Kara wrote:
-> > > Hi!
-> > > 
-> > > On Fri 13-02-26 19:02:39, Ojaswin Mujoo wrote:
-> > > > Another thing that came up is to consider using write through semantics 
-> > > > for buffered atomic writes, where we are able to transition page to
-> > > > writeback state immediately after the write and avoid any other users to
-> > > > modify the data till writeback completes. This might affect performance
-> > > > since we won't be able to batch similar atomic IOs but maybe
-> > > > applications like postgres would not mind this too much. If we go with
-> > > > this approach, we will be able to avoid worrying too much about other
-> > > > users changing atomic data underneath us. 
-> > > > 
-> > > > An argument against this however is that it is user's responsibility to
-> > > > not do non atomic IO over an atomic range and this shall be considered a
-> > > > userspace usage error. This is similar to how there are ways users can
-> > > > tear a dio if they perform overlapping writes. [1]. 
-> > > 
-> > > Yes, I was wondering whether the write-through semantics would make sense
-> > > as well. Intuitively it should make things simpler because you could
-> > > practially reuse the atomic DIO write path. Only that you'd first copy
-> > > data into the page cache and issue dio write from those folios. No need for
-> > > special tracking of which folios actually belong together in atomic write,
-> > > no need for cluttering standard folio writeback path, in case atomic write
-> > > cannot happen (e.g. because you cannot allocate appropriately aligned
-> > > blocks) you get the error back rightaway, ...
+On Tue, Feb 17, 2026 at 08:36:50PM +0530, Nirjhar Roy (IBM) wrote:
+> On Thu, 2026-01-29 at 10:50 -0500, Brian Foster wrote:
+> > The zero range hole mapping flush case has been lifted from iomap
+> > into XFS. Now that we have more mapping context available from the
+> > ->iomap_begin() handler, we can isolate the flush further to when we
+> > know a hole is fronted by COW blocks.
 > > 
-> > This is an interesting idea Jan and also saves a lot of tracking of
-> > atomic extents etc.
+> > Rather than purely rely on pagecache dirty state, explicitly check
+> > for the case where a range is a hole in both forks. Otherwise trim
+> > to the range where there does happen to be overlap and use that for
+> > the pagecache writeback check. This might prevent some spurious
+> > zeroing, but more importantly makes it easier to remove the flush
+> > entirely.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_iomap.c | 36 ++++++++++++++++++++++++++++++------
+> >  1 file changed, 30 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 0edab7af4a10..0e82b4ec8264 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -1760,10 +1760,12 @@ xfs_buffered_write_iomap_begin(
+> >  {
+> >  	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
+> >  						     iomap);
+> > +	struct address_space	*mapping = inode->i_mapping;
+> >  	struct xfs_inode	*ip = XFS_I(inode);
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> >  	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
+> > +	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+> >  	struct xfs_bmbt_irec	imap, cmap;
+> >  	struct xfs_iext_cursor	icur, ccur;
+> >  	xfs_fsblock_t		prealloc_blocks = 0;
+> > @@ -1831,6 +1833,8 @@ xfs_buffered_write_iomap_begin(
+> >  		}
+> >  		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+> >  				&ccur, &cmap);
+> > +		if (!cow_eof)
+> > +			cow_fsb = cmap.br_startoff;
+> >  	}
+> >  
+> >  	/* We never need to allocate blocks for unsharing a hole. */
+> > @@ -1845,17 +1849,37 @@ xfs_buffered_write_iomap_begin(
+> >  	 * writeback to remap pending blocks and restart the lookup.
+> >  	 */
+> >  	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
+> > -		if (filemap_range_needs_writeback(inode->i_mapping, offset,
+> > -						  offset + count - 1)) {
+> > +		loff_t start, end;
 > 
-> ISTR mentioning that we should be doing exactly this (grab page
-> cache pages, fill them and submit them through the DIO path) for
-> O_DSYNC buffered writethrough IO a long time again. The context was
-> optimising buffered O_DSYNC to use the FUA optimisations in the
-> iomap DIO write path.
+> Nit: Tab between data type and identifier?
 > 
-> I suggested it again when discussing how RWF_DONTCACHE should be
-> implemented, because the async DIO write completion path invalidates
-> the page cache over the IO range. i.e. it would avoid the need to
-> use folio flags to track pages that needed invalidation at IO
-> completion...
+
+Sure.
+
+> > +
+> > +		imap.br_blockcount = imap.br_startoff - offset_fsb;
+> > +		imap.br_startoff = offset_fsb;
+> > +		imap.br_startblock = HOLESTARTBLOCK;
+> > +		imap.br_state = XFS_EXT_NORM;
+> > +
+> > +		if (cow_fsb == NULLFILEOFF) {
+> > +			goto found_imap;
+> > +		} else if (cow_fsb > offset_fsb) {
+> > +			xfs_trim_extent(&imap, offset_fsb,
+> > +					cow_fsb - offset_fsb);
+> > +			goto found_imap;
+> > +		}
+> > +
+> > +		/* COW fork blocks overlap the hole */
+> > +		xfs_trim_extent(&imap, offset_fsb,
+> > +			    cmap.br_startoff + cmap.br_blockcount - offset_fsb);
+> > +		start = XFS_FSB_TO_B(mp, imap.br_startoff);
+> > +		end = XFS_FSB_TO_B(mp,
+> > +				   imap.br_startoff + imap.br_blockcount) - 1;
 > 
-> I have a vague recollection of mentioning this early in the buffered
-> RWF_ATOMIC discussions, too, though that may have just been the
-> voices in my head.
+> So, we are including the bytes in the block number (imap.br_startoff + imap.br_blockcount - 1)th,
+> right? That is why a -1 after XFS_FSB_TO_B()? 
 
-Hi Dave,
+Not sure I follow what you mean by the "bytes in the block number"
+phrasing..? Anyways, the XFS_FSB_TO_B() here should return the starting
+byte offset of the first block beyond the range (exclusive). The -1
+changes that to the last byte offset of the range we're interested in
+(inclusive), which I believe is what the filemap api wants..
 
-Yes we did discuss this [1] :)
+Brian
 
-We also discussed the alternative of using the COW fork path for atomic
-writes [2]. Since at that point I was not completely sure if the
-writethrough would become too restrictive of an approach, I was working
-on a COW fork implementation.
-
-However, from the discussion here as well as Andres' comments, it seems
-like write through might not be too bad for postgres.
-
+> --NR
+> > +		if (filemap_range_needs_writeback(mapping, start, end)) {
+> >  			xfs_iunlock(ip, lockmode);
+> > -			error = filemap_write_and_wait_range(inode->i_mapping,
+> > -						offset, offset + count - 1);
+> > +			error = filemap_write_and_wait_range(mapping, start,
+> > +							     end);
+> >  			if (error)
+> >  				return error;
+> >  			goto restart;
+> >  		}
+> > -		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
+> > -		goto out_unlock;
+> > +
+> > +		goto found_imap;
+> >  	}
+> >  
+> >  	/*
 > 
-> Regardless, we are here again with proposals for RWF_ATOMIC and
-> RWF_WRITETHROUGH and a suggestion that maybe we should vector
-> buffered writethrough via the DIO path.....
-> 
-> Perhaps it's time to do this?
 
-I agree that it makes more sense to do writethrough if we want to have
-the strict old-or-new semantics (as opposed to just untorn IO
-semantics). I'll work on a POC for this approach of doing atomic writes,
-I'll mostly try to base it off your suggestions in [1].
-
-FWIW, I do have a somewhat working (although untested and possible
-broken in some places) POC for performing atomic writes via XFS COW fork
-based on suggestions from Dave [2]. Even though we want to explore the
-writethrough approach, I'd just share it here incase anyone is
-interested in how the design is looking like:
-
-https://github.com/OjaswinM/linux/commits/iomap-buffered-atomic-rfc2.3/
-
-(If anyone prefers for me to send this as a patchset on mailing list, let
-me know)
-
-Regards,
-ojaswin
-
-[1] https://lore.kernel.org/linux-fsdevel/aRmHRk7FGD4nCT0s@dread.disaster.area/
-[2] https://lore.kernel.org/linux-fsdevel/aRuKz4F3xATf8IUp@dread.disaster.area/
-
-> 
-> FWIW, the other thing that write-through via the DIO path enables is
-> true async O_DSYNC buffered IO. Right now O_DSYNC buffered writes
-> block waiting on IO completion through generic_sync_write() ->
-> vfs_fsync_range(), even when issued through AIO paths.  Vectoring it
-> through the DIO path avoids the blocking fsync path in IO submission
-> as it runs in the async DIO completion path if it is needed....
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> dgc@kernel.org
