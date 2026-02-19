@@ -1,102 +1,80 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF131DF261
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 13:15:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 448F53033E9
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 13:16:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771506960; cv=none; b=pijePghKrceeAvbvv20nq1+cdlf/AlLR5DfaDurVgRRi7jyZSBGzBxT8oP89wj6i14NSVIeqQqHIbk+g/8XgaLsGR1BwAOhYzQvI6XAX3p8JEAC0lA/fqKKX6v606PY8Hi962nOxAb20uEjwSKZ6KRIhTU+ZlLSFcCZNI65hv0o=
+	t=1771506983; cv=none; b=YHNzKuyeVpTuXAomb/9qxcxii7spfm+zdYWoGl4qT+PmWuhBoF3qnULo26fTeQ8a81UrYRHJZDSApbughpV6CJ38IkCZfHyHvvifU3kcv/UehJGLryBbZqGMZ0Uk+zQG382H1Y7a86wKvovZHZGReleSbHNXQEVMwF+qSM0rUMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771506960; c=relaxed/simple;
-	bh=IuKcDRmNJjOX0Gu7WLWpJfPMCTPA3wSdz6nVNsrH0Ws=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ctjxWqIeUqTdO5A/aY1cZMIfYQr0Jd72Vs3ywo2ikuE9fVC216pu5tWmLklm/rqlsVQ85l7InREzNfXbhrxBb8NSOlN7wP0oLy0+qabxln0659yB014ldkAFwOx57DabCbv3cu04h/+iO9/jE6IFP4ZyLjm8F97rHeLltd4GGYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wglAwgLV; arc=none smtp.client-ip=91.218.175.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1771506983; c=relaxed/simple;
+	bh=DbA0pVvkD81yH1UFr/+teBp0AtmqQoNA59E1qisFcRw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FKmr7DpHtF5HsrKG5CakFzr6guv46VTwWiHymjKZU+YmgFiwStMR6kKOdTxJ0VBKKX8IoCujZbybMQlgYbbPmhzRETOkep1V4LieQ/wA9EudO7Zt8BNASGNcybfhHO5gwzkSKNnZchu1XPlARabI6HOlnii6OxTMbLEgvXF8ZlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=QMseGHyh; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wglAwgLV"
-Message-ID: <0ca84d35-ed3e-4387-9b38-a85d62afa1c2@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771506956;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XH5fl7iX+3zxGYiW2NIAWUiOwf9QcSJJ8gjNCAIjZEM=;
-	b=wglAwgLV7Jx9nzN8sg37Pp70S6ukaS23E3AY0d/PUPGCFIkPH+AJsZnQNd3uyGJj4Gm1ll
-	x7kmVMG6G2/jMALCfWQGbwYn6FmlCmiBBiybzR22sL+UvSyPOEPTBKy9yyfusDn8P//KK+
-	RBeqqJUy2vfVmUZOEF9H1A/jT37RjB8=
-Date: Thu, 19 Feb 2026 14:15:54 +0100
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="QMseGHyh"
+Received: from macsyma.thunk.org (pool-173-48-113-47.bstnma.fios.verizon.net [173.48.113.47])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 61JDEfrH015259
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Feb 2026 08:14:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1771506893; bh=YvzVGXRA9tq4Mexi8H81CMjCPQQmDTjjwr0q5r4ZxjY=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=QMseGHyhfBaFWPX10hbUsMCruhrhgp9Y/y2cMCXsfRSODON0B5P+fIp1gbQDE498j
+	 3kKA0mEvpnBkxC4fOP6ZE400XvESf8AzQ8W4hQYtEoVmenggeiuCZAsgDBp1wUb2cT
+	 X6xiagrW3q1RCtta1iKSfDQKms5OjV5lnfxVAv8Q2AfkIOYoMk37GhEy8mDWLba8oU
+	 +wzfcZxoHjbivvm4nlALGSOE0Sgx0+Y+qu96lZShmvpLYtEHFmEOzfCJdgvL6N1a6T
+	 adL+YMa067AgExO/2xBFBiPTBuMQzJwlEaf6kQsPMFWsEHJLIbYxEGHfhvJQevk+z6
+	 +8ydG6It0w42g==
+Received: by macsyma.thunk.org (Postfix, from userid 15806)
+	id 51D465919577; Thu, 19 Feb 2026 08:14:41 -0500 (EST)
+Date: Thu, 19 Feb 2026 08:14:41 -0500
+From: "Theodore Tso" <tytso@mit.edu>
+To: Chuck Lever <cel@kernel.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
+        Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        hirofumi@mail.parknet.co.jp, linkinjeon@kernel.org,
+        sj1557.seo@samsung.com, yuezhang.mo@sony.com,
+        almaz.alexandrovich@paragon-software.com, slava@dubeyko.com,
+        glaubitz@physik.fu-berlin.de, frank.li@vivo.com,
+        adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org,
+        pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com,
+        trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org,
+        chao@kernel.org, hansg@kernel.org, senozhatsky@chromium.org,
+        Chuck Lever <chuck.lever@oracle.com>
+Subject: Re: [PATCH v8 08/17] ext4: Report case sensitivity in fileattr_get
+Message-ID: <20260219131441.GA69183@macsyma-wired.lan>
+References: <20260217214741.1928576-1-cel@kernel.org>
+ <20260217214741.1928576-9-cel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/6] xfs: fix potential pointer access race in
- xfs_healthmon_get
-To: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, p.raghav@samsung.com
-References: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
- <177145925494.401799.17980890890269795712.stgit@frogsfrogsfrogs>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <177145925494.401799.17980890890269795712.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260217214741.1928576-9-cel@kernel.org>
 
-On 2/19/2026 7:01 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Feb 17, 2026 at 04:47:32PM -0500, Chuck Lever wrote:
+> From: Chuck Lever <chuck.lever@oracle.com>
 > 
-> Pankaj Raghav asks about this code in xfs_healthmon_get:
+> Report ext4's case sensitivity behavior via the FS_XFLAG_CASEFOLD
+> flag. ext4 always preserves case at rest.
 > 
->    hm = mp->m_healthmon;
->    if (hm && !refcount_inc_not_zero(&hm->ref))
->      hm = NULL;
->    rcu_read_unlock();
->    return hm;
+> Case sensitivity is a per-directory setting in ext4. If the queried
+> inode is a casefolded directory, report case-insensitive; otherwise
+> report case-sensitive (standard POSIX behavior).
 > 
-> (slightly edited to compress a mailing list thread)
-> 
-> "Nit: Should we do a READ_ONCE(mp->m_healthmon) here to avoid any
-> compiler tricks that can result in an undefined behaviour? I am not sure
-> if I am being paranoid here.
-> 
-> "So this is my understanding: RCU guarantees that we get a valid object
-> (actual data of m_healthmon) but does not guarantee the compiler will
-> not reread the pointer between checking if hm is !NULL and accessing the
-> pointer as we are doing it lockless.
-> 
-> "So just a barrier() call in rcu_read_lock is enough to make sure this
-> doesn't happen and probably adding a READ_ONCE() is not needed?"
-> 
-> After some initial confusion I concluded that he's correct.  The
-> compiler could very well eliminate the hm variable in favor of walking
-> the pointers twice, turning the code into:
-> 
->    if (mp->m_healthmon && !refcount_inc_not_zero(&mp->m_healthmon->ref))
-> 
-> If this happens, then xfs_healthmon_detach can sneak in between the
-> two sides of the && expression and set mp->m_healthmon to NULL, and
-> thereby cause a null pointer dereference crash.  Fix this by using the
-> rcu pointer assignment and dereference functions, which ensure that the
-> proper reordering barriers are in place.
-> 
-> Practically speaking, gcc seems to allocate an actual variable for hm
-> and only reads mp->m_healthmon once (as intended), but we ought to be
-> more explicit about requiring this.
-> 
-> Reported-by: Pankaj Raghav <pankaj.raghav@linux.dev>
-> Fixes: a48373e7d35a89f6f ("xfs: start creating infrastructure for health monitoring")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
 
-Looks good,
-
-Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
-
---
-Pankaj
+Acked-by: Theodore Ts'o <tytso@mit.edu>
