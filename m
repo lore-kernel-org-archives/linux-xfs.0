@@ -1,157 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7142C3EBF2E;
-	Thu, 19 Feb 2026 16:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F942868B5
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 16:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771518944; cv=none; b=JBzpLAFqjm9Wqiv7CxufEh1isuCqN3mdfgyz2hD7d7sEv1Uk3m3/hqg36AbQq1KTc4mluSvLw7DgE6bVh+ruUicxmZfECvXgQD+KNJFgDcLmIinjh9OHsqfG5mAnFd/2e49MlLvciIfIni5fJbIIcCaE4bKJVwwlkCyjkhwfPF0=
+	t=1771519614; cv=none; b=Bi8jxKwjSDvc4mz1Wex1lQhGacSb9Sl+yNRyLiasyzEkqS99aSy/vCfa3wbgM+9aQqePDbM7xuBjlAOeJ09us40KW7/xApmANnY3LLHlFwfgSYaiKv7M27As/LG5vmnlyU6UUSB6/yu8rUOtYRmCNPq5I7raS8bmGdGjwuYK7j0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771518944; c=relaxed/simple;
-	bh=YPrvkVaJt23Q927cNV1urRTMpZUQ2dGUVLzgjku0Da4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dd8UKmo7mYtDJEG/lpsO9mpsDga5i9KjofemkVOsRec4BplIgYDkqir59t4vmMvTbB9MssXHwaXYEZN8pgEj/8hrFCzuYyaHZ6WGPk2VVNNQ8hsK7GXeH2xPyln7EoyeA7zwOTOOUkD+L0JmRkHMlM7O5Fz+W5agmao5phbHT5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gZd+YGby; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771519614; c=relaxed/simple;
+	bh=AMXkrxtqo0+dlZrh+Ijb3BN3wZ2bsz6l9G5kEW7xnbs=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=PSZXtXuBQUQr2Yo9N31cJxkXDvzaviEho/Nu/DgwL9wENdsv9nwD5VV6wdKJkpYPrKnLyU4sz73a4PLtqveCQ5xT9buAUnZu3itItxihneAk5UgLgUBVYQkq3JMbrT9F3JC4oULsIXJccg+U4ck+NJr3umlf/pLLYTiG7KizLtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ae15TwLB; arc=none smtp.client-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gZd+YGby"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D51CC4CEF7;
-	Thu, 19 Feb 2026 16:35:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771518944;
-	bh=YPrvkVaJt23Q927cNV1urRTMpZUQ2dGUVLzgjku0Da4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gZd+YGby7+Qt3UW+rFEIzdo29MnSvcfVn7EdaZvXGEhynrbyqQOmRyKjP6yaFcLL/
-	 2dcipxUivBPfzmYj6o/Y1lZg7ZzsTJO96SMZH64luYaYnSTZ01rF0SIaLQM0sfMaH0
-	 zng+DDGj24xXr/G8aHOLogJ+MNt0w6PeSfjfZbQtZk0G+alUbYDws9Q/KUl+FE2GAk
-	 1Z+GbE/OeU/WKZY2kGxfj/JRSdwHWFk5yXR5X4cAF+sKb3ElGgWlMsl2cMiYAnTW0J
-	 Vzg2g8avKVUYBjKfzPBRxVq90q2NKMwriAJ2ksosOg9cIVHtbLBo2X3KV6JhcBl6m+
-	 VqLSCVYlAfrrQ==
-Date: Thu, 19 Feb 2026 17:35:38 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, 
-	"Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>, hch@infradead.org, david@fromorbit.com, zlang@kernel.org, 
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org, ritesh.list@gmail.com, 
-	ojaswin@linux.ibm.com, hsiangkao@linux.alibaba.com
-Subject: Re: [PATCH v1 0/7] Add multi rtgroup grow and shrink tests
-Message-ID: <aZc7pCdmIH3num0Q@nidhogg.toxiclabs.cc>
-References: <20260219055737.769860-1-nirjhar@linux.ibm.com>
- <cover.1771425357.git.nirjhar.roy.lists@gmail.com>
- <aZcIEd9DY_bQGJ9L@nidhogg.toxiclabs.cc>
- <dd1b584b-987c-4dce-b84c-c9fe74687e95@gmail.com>
- <aZci9Fz8NgXhrUSa@nidhogg.toxiclabs.cc>
- <20260219154936.GF6490@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ae15TwLB"
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-797d509a2f5so13326247b3.2
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 08:46:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771519613; x=1772124413; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AMXkrxtqo0+dlZrh+Ijb3BN3wZ2bsz6l9G5kEW7xnbs=;
+        b=ae15TwLBuKpUomjZq1iSV1YdU3utCdF2zKVvaxl/tfa484bl0KvCzZid4hHeCoS6/V
+         lqFfoHHRb1oUCXJ3EEpvq/AjkObA94ALDW2py57QizEauAyGxRwzNibXYyqaYD70l6/1
+         YnC+meJ/gs/JidFuYW2Bm5fTfg872Hv8ygtj1UBSOuko3saCVoPok8l9VV9S9Vylqfxz
+         XM7woxrsrG9wfXsG2SGnUtfVYB+N+oqN8KJRsoFYy8cq7Da4qX2DtYIME8FdJz9QTmzm
+         T9e0rK9zim9DafBN/+33UjdBJCF2c8q+A2XZxJHZBGQk9O62nQkX74kMBPJslxuqzSk7
+         Fxjw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771519613; x=1772124413;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=AMXkrxtqo0+dlZrh+Ijb3BN3wZ2bsz6l9G5kEW7xnbs=;
+        b=Hwr5DMUN072DlED+pCUawDhdRKrwHLoiOLkBqeK8gaF7qiBmSGfpEjpE1Gcvm4dDAS
+         G7u7FvTZclVNd0vVE96pWw9dqARHegdCITAwrLFhfxvuyyr/+iI8OdhXoE8KCNBgpqZB
+         dPS3b/J3rkJoTnVa4CsWknVb8FXap0Bdww2AqcW7/1x/I1ehABDRs1/qCqXMvw4DsESR
+         m2JX7cGnTPci0OFsJbpwSYTfpAmWD+W6pMLUgZDqodOEQtERsPXVo0d3erefo3PiLtbP
+         p5N7D7vz01MN/5BZ2tTBtdQ2bQjVr00j8XRta8hFqzyF9cJJ0NcW6CzHpSgzSe5Hilsx
+         nRPA==
+X-Forwarded-Encrypted: i=1; AJvYcCX/7zV3TCTahlnEr+TDNWZvu3oXCfbPh3dfGt6sTgCYC0T7j5Hs4LKR+iil5/gIXgz4KJaLZZjQdoQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjTunhKVlPiwsb3LkvBXWN9dW/dUqAs+7pJ2ZALKJPQnZII66n
+	zmabsL733rjzYLTXRD5wB7vXON1DJ56GGfAEUAPhk+rftdOmaMtnEmqD
+X-Gm-Gg: AZuq6aLK5HSuwlCBld2i4LVpIffCm4xcCgTgeN80qQyrdAvquUhXIUeuC6+ANwjK/KU
+	jro2YrZS2yHBf5ERzIObmPN3DVvOfWzoYh9xo+gR8Dg4ZleZsfqP8R5/SoodtrC2UEL1haOHl/5
+	IFCu5aPr3UdRkorktY21gOSD2dOSzaxm6t8vPYuq7lg5rQiVAfKPaF8Nls0/n0W8ybRuDMho4gh
+	Z7EiYc9Lka3fL6YqN6yzaer545O5KQvTEO29elDdmyikP2aQ+qImC7hG1YKeZ4x+u5YJXmPHnrT
+	ea027RpoqRTGpjm7XITjqaaa9g9Qvnls/0cjy3+/MyzgI1NenHB/5rIEPo2yc6dlVt6IQGKOlKT
+	9ySep2xLjJxk73IMOpWs9EIaeJiK4WOwWWY7/YKAgORxuwFR0kNLbsqOYqYCLKsFlNBbgt15uOo
+	IWhTZ9gj7HraI77q15CyH443jWFK8irZXiMS5ctI1hbII52BpC35vSHwdJ4YhHWQWQnENqoXeur
+	ASBz8CZp4UJMq3ztbocXGllMMfW08qlNT3j1DP4s1+IIwzFOTxXiFy8iBshGwMaRIM=
+X-Received: by 2002:a05:690c:6e0a:b0:797:d386:44e4 with SMTP id 00721157ae682-797f71e402amr54351877b3.16.1771519612413;
+        Thu, 19 Feb 2026 08:46:52 -0800 (PST)
+Received: from localhost ([2601:7c0:c37c:4c00:5c8f:3752:85c2:a587])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7966c254d4esm131010867b3.40.2026.02.19.08.46.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Feb 2026 08:46:52 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260219154936.GF6490@frogsfrogsfrogs>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 19 Feb 2026 10:46:51 -0600
+Message-Id: <DGJ3AIJ080KO.3MUES6EQ1TWDA@gmail.com>
+Cc: "Christian Brauner" <brauner@kernel.org>, <linux-xfs@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: Fix error pointer dereference
+From: "Ethan Tidmore" <ethantidmore06@gmail.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, "Ethan Tidmore"
+ <ethantidmore06@gmail.com>, "Carlos Maiolino" <cem@kernel.org>, "NeilBrown"
+ <neil@brown.name>
+X-Mailer: aerc 0.21.0
+References: <20260218195115.14049-1-ethantidmore06@gmail.com>
+ <61386abf00c817e65ab70c994ed584fde339f9ed.camel@gmail.com>
+In-Reply-To: <61386abf00c817e65ab70c994ed584fde339f9ed.camel@gmail.com>
 
-On Thu, Feb 19, 2026 at 07:49:36AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 19, 2026 at 03:55:02PM +0100, Carlos Maiolino wrote:
-> > On Thu, Feb 19, 2026 at 08:10:50PM +0530, Nirjhar Roy (IBM) wrote:
-> > > 
-> > > On 2/19/26 18:25, Carlos Maiolino wrote:
-> > > > On Thu, Feb 19, 2026 at 06:10:48AM +0000, Nirjhar Roy (IBM) wrote:
-> > > > > From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-> > > > > 
-> > > > > This series adds several tests to validate the XFS realtime fs growth and
-> > > > > shrink functionality.
-> > > > > It begins with the introduction of some preconditions and helper
-> > > > > functions, then some tests that validate realtime group growth, followed
-> > > > > by realtime group shrink/removal tests and ends with a test that
-> > > > > validates both growth and shrink functionality together.
-> > > > > Individual patches have the details.
-> > > > Please don't send new versions in reply to the old one, it just make
-> > > > hard to pull patches from the list. b4 usually doesn't handle it
-> > > > gracefully.
-> > > 
-> > > This entire series is new i.e, the kernel changes, fstests and the xfsprogs
-> > > changes. Can you please explain as to what do you mean by the old version?
-> > > Which old are version are you referring to?
-> > 
-> > Sure, I said 'old version' but the same applies to sending them in reply
-> > to other series/patches.
-> > 
-> > This series was sent:
-> > 
-> > In-Reply-To: <20260219055737.769860-1-nirjhar@linux.ibm.com>
-> > 
-> > which is:
-> > 
-> > Subject: xfs: Add support for multi rtgroup shrink+removal
-> > 
-> > 
-> > In better wording, please don't nest series under other series/patches,
-> > or things like that. It works in some point cases, but in general it
-> > just makes my life difficult to pull them from the list.
-> 
-> Pull requests, perhaps?
-> 
-> Or is the problem here that you're using b4/korgalore/etc to download
-> patchmails so that you can read them outside of a MUA?
+On Thu Feb 19, 2026 at 5:26 AM CST, Nirjhar Roy (IBM) wrote:
+> On Wed, 2026-02-18 at 13:51 -0600, Ethan Tidmore wrote:
 
-Yup, b4. Andrey mentioned there is a way to break threads, but that bit
-me once pulling weird stuff.
+...
 
-> 
-> ((Again, I'll express a wish that people push their branches to
-> git.kernel.org and send a link in the cover letter; that's much easier
-> for me to pull and examine than reading emails or prying individual
-> maybe-MTA-corrupted emails out of mutt into applyable form...))
-> 
-> --D
-> 
-> > 
-> > > 
-> > > --NR
-> > > 
-> > > > 
-> > > > > Nirjhar Roy (IBM) (7):
-> > > > >    xfs: Introduce _require_realtime_xfs_{shrink,grow} pre-condition
-> > > > >    xfs: Introduce helpers to count the number of bitmap and summary
-> > > > >      inodes
-> > > > >    xfs: Add realtime group grow tests
-> > > > >    xfs: Add multi rt group grow + shutdown + recovery tests
-> > > > >    xfs: Add realtime group shrink tests
-> > > > >    xfs: Add multi rt group shrink + shutdown + recovery tests
-> > > > >    xfs: Add parallel back to back grow/shrink tests
-> > > > > 
-> > > > >   common/xfs        |  65 +++++++++++++++-
-> > > > >   tests/xfs/333     |  95 +++++++++++++++++++++++
-> > > > >   tests/xfs/333.out |   5 ++
-> > > > >   tests/xfs/539     | 190 ++++++++++++++++++++++++++++++++++++++++++++++
-> > > > >   tests/xfs/539.out |  19 +++++
-> > > > >   tests/xfs/611     |  97 +++++++++++++++++++++++
-> > > > >   tests/xfs/611.out |   5 ++
-> > > > >   tests/xfs/654     |  90 ++++++++++++++++++++++
-> > > > >   tests/xfs/654.out |   5 ++
-> > > > >   tests/xfs/655     | 151 ++++++++++++++++++++++++++++++++++++
-> > > > >   tests/xfs/655.out |  13 ++++
-> > > > >   11 files changed, 734 insertions(+), 1 deletion(-)
-> > > > >   create mode 100755 tests/xfs/333
-> > > > >   create mode 100644 tests/xfs/333.out
-> > > > >   create mode 100755 tests/xfs/539
-> > > > >   create mode 100644 tests/xfs/539.out
-> > > > >   create mode 100755 tests/xfs/611
-> > > > >   create mode 100644 tests/xfs/611.out
-> > > > >   create mode 100755 tests/xfs/654
-> > > > >   create mode 100644 tests/xfs/654.out
-> > > > >   create mode 100755 tests/xfs/655
-> > > > >   create mode 100644 tests/xfs/655.out
-> > > > > 
-> > > > > -- 
-> > > > > 2.34.1
-> > > > > 
-> > > > > 
-> > > -- 
-> > > Nirjhar Roy
-> > > Linux Kernel Developer
-> > > IBM, Bangalore
-> > > 
-> > 
-> 
+>
+> Based on my limited knowledge of this change looks okay to me. I looked i=
+nto the return values of
+> try_lookup_noperm() and it does return error pointer which is not NULL. I=
+ also checked the other
+> call sites of try_lookup_noperm() but I do see a mixed handling i.e, some=
+ places just checks for
+> !ptr and some for IS_ERR_OR_NULL. For example in fs/autofs it checks with=
+ IS_ERR_OR_NULL whereas in
+> fs/proc/base.c it just checks for !child. However, IMO, it is better to c=
+heck for both NULL and
+> error pointer if there is a possibility for both.
+> --NR
+
+I was already planning on sending a patch to fs/proc/base.c also. Smatch
+was complaining there too.
+
+Thanks,
+
+ET
