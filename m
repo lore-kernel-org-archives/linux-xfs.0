@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8EA21FF33;
-	Thu, 19 Feb 2026 06:00:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C172521FF33
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 06:00:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771480848; cv=none; b=N01F1tCvp+mI7/CgFoheaeHvY3Jr0Hg7WCUyh/4K3OxJzp3phrbecRIH4QGbzBA+H6uGAgXxoqvy43e/+JdvZmeuq2fLDZI421B3gyGC5phmiVyHpraOfq/aUiHlM3A0A4e4j7wLftNHs6aHYtyIFrs2f7JWajILPjE0Nt7SSkA=
+	t=1771480853; cv=none; b=AnafeFZVJZfU4nzH4EfXt9vEkC/cuXluYTX7Cx+0RNpQbN0VnKaL1N85bALf2gDlUGp8X06AnKwuSa1dwvfE2nGy20k5TcCYn4FWPUnEvh3p+Pm26g1QhNCTj06SFojZyb22s49Akro7Va6o/5SV9cV0DdW+vwy/4YUUx3LA5wU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771480848; c=relaxed/simple;
-	bh=ycByYo3VrFargZA4slJ9PqgwcdopS0X5eJ6NupY0x1Q=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=H31/pKRXrGu0VXhTebAhm2YcY9O+9euo2ndZ1Gl/QrQVR1FW27qigxdjseOrDkuIFBNXHmxhEwhHtgFNp35fTIEk71dSZxQsmH6l6G3hmWv6/hgyQ/NEoZbrI5jZWpBIaADcUQRVAFRCE12imbRs8Dxy3Zfgs8hJjiHpBWz4oYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p4mfvqpQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771480853; c=relaxed/simple;
+	bh=nE5aXNzRUS3BruGnYSE/bvVT1StFUOHL+l6VB/rRyBo=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=Z5l2FaJH7gFCT7YMggN8sptXzf+sNircm8VmtKuKCujKdwFG+T/36K5tMwbWsUIbnoqyWVupvafBTqNmsSPXCeZ6ddAEx/voc5L/wEoIPvDeN8pP5z96z0IVbkIkS9rsmrb8zFFL3+VVduPk47aWmYb7H763NIz7mpvu8sU8onc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sOZehDVE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p4mfvqpQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB320C4CEF7;
-	Thu, 19 Feb 2026 06:00:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sOZehDVE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B7DAC4CEF7;
+	Thu, 19 Feb 2026 06:00:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771480848;
-	bh=ycByYo3VrFargZA4slJ9PqgwcdopS0X5eJ6NupY0x1Q=;
+	s=k20201202; t=1771480853;
+	bh=nE5aXNzRUS3BruGnYSE/bvVT1StFUOHL+l6VB/rRyBo=;
 	h=Date:Subject:From:To:Cc:From;
-	b=p4mfvqpQwbBd1nP5zFbJJ7dKcy5rbshxB2p3b6ARIsw+2v7GZtHeZUECzEbh+/s8w
-	 NvnuhOthLWQBPbvXHWP3b+6mGYHnMl65+4s6Fzz7/HUg9n6dqgbzzkrnJnXNgleNTF
-	 P76QhoJ5VycQXP2l2wPAhQlek9ZQIxnWq8l2iqyfGMXQpdTzZW3435jhzPBfy++UU6
-	 so4dC5HHaUluXMqW7KZ763fSFZRyUtTI4+cK8Oagz8wNNsUllc6akofKVoZ+8gGARz
-	 5jhUzsoo2Z67SfLGbagFWwZ3KKoLmVyTttFAvYHEo/yyY0s6nXqez0jrgXK2Z3Bjz2
-	 WNmFI1CWxRIeg==
-Date: Wed, 18 Feb 2026 22:00:47 -0800
-Subject: [PATCHSET 1/2] xfs: bug fixes for 7.0
+	b=sOZehDVETmzOFkq2vv+sWznlPwd0C2T823A/m9yxoAH5juieINKE0yhMAHy6fbfwT
+	 UVPJtbEfPuedrIhHJePVEs4/sOle0/+fo0On4jVPAdFHqQGOTBahmTtt091AjNsTdf
+	 yi1thUC3l4nUQAjYV53KyU7gd75fn80irBjDPtyTi6ALclY732IXcl44qkGPLp6gua
+	 O0by5ICuH7tGTkCuPxu0nz7aKL5zCOdvFwDRgOSqOpnmkXASBMxrb7SVt3mj8RdGoh
+	 guUJxvTlveO0tmIk/kojHeBpI+pznLeOo8BVFoIW+xyWEav//qV3UR3RsnlXpGC5sq
+	 I7JUGrkBbWgaQ==
+Date: Wed, 18 Feb 2026 22:00:53 -0800
+Subject: [PATCHSET 2/2] fs: bug fixes for 7.0
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: clm@meta.com, stable@vger.kernel.org, samsun1006219@gmail.com,
- pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org
-Message-ID: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
+Cc: hch@infradead.org, jack@suse.cz, amir73il@gmail.com,
+ linux-xfs@vger.kernel.org, brauner@kernel.org
+Message-ID: <177145925746.402132.684963065354931952.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,22 +54,13 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-7.0
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=vfs-fixes-7.0
 ---
 Commits in this patchset:
- * xfs: fix copy-paste error in previous fix
- * xfs: fix xfs_group release bug in xfs_verify_report_losses
- * xfs: fix xfs_group release bug in xfs_verify_report_losses
- * xfs: fix potential pointer access race in xfs_healthmon_get
- * xfs: don't report metadata inodes to fserror
- * xfs: don't report half-built inodes to fserror
+ * fsnotify: drop unused helper
+ * fserror: fix lockdep complaint when igrabbing inode
 ---
- fs/xfs/xfs_mount.h          |    2 +-
- fs/xfs/scrub/dir_repair.c   |    2 +-
- fs/xfs/xfs_health.c         |   20 ++++++++++++++++++--
- fs/xfs/xfs_healthmon.c      |   10 ++++++----
- fs/xfs/xfs_icache.c         |    9 ++++++++-
- fs/xfs/xfs_notify_failure.c |    4 ++--
- fs/xfs/xfs_verify_media.c   |    4 ++--
- 7 files changed, 38 insertions(+), 13 deletions(-)
+ include/linux/fsnotify.h |   13 -------------
+ fs/iomap/ioend.c         |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 13 deletions(-)
 
