@@ -1,142 +1,139 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4310199920
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 09:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771492411; cv=pass; b=Wd+zRdDtOH+qbzoCqKjsS+eshtyjfbLFvRBp9UmMSA6TTvYzCDCFZhyvyJje6xSzaVgaBgQiJWUGSYjo55e1YZ8nSCNQeYtfs8T22Hn0kMC6l4tAHnGKpILgI6DvSDQoFTs+nRuFSm/laHGLYSPiM2RyFzav3IrrhhuWg07UJUA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771492411; c=relaxed/simple;
-	bh=6SdLRE7Uye7mecwC75Z6G0WHM07HcenmkmdKgcB2OKo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PX0HOxI5+PAuXGonwA8VUsp2WAPlTvm1c1wTSZ/5YizoX7vTnNFNjtOdlx2ZQocSyGghQrL1lPU2FS8G/bHTzM3vbL8F+X0oQq5oVrIljsX3Ft+F3cXTuqxnR1zeegdhXDIeAhFAl1NisvmAuaYm35f0fEstlNmQVtweWmKB0LI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N+RkdUkB; arc=pass smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D22338936
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 09:20:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771492859; cv=none; b=qweTz/cmtaueCnRr1+eDqYv5//B1Xz5WgoEfwPqa5HCzS5IkGXhUS1ITN0b0Me5yXNmz+6qPBVkU2ndd4Y7HELeKIBhPybGfHSrDP1RHq7gYjlya1yJ5I88xKFSrQOCmVwyRnYAcBys1FPDrHh5Gh+XSXY61WfVHWFOxIaTWYTo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771492859; c=relaxed/simple;
+	bh=xKXts/skz0JyIelk8FhsIJVjS5AJwJaHz2pl7SfkktE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ufwn/p3hQKIuIn0UB/9PlEf5ECqeOWehJv8HlX7uTiTocNxKF+6fo/0CsIIdx2sNgoYsNTggiRhBH9vp2OArHpRP8G3QUo98nxucFQgIBWQOcWlMDJgcYSwW1aZu4cKEhrEzAhO80bKF/3dAsKPt1mkwndjyYyHNU/N/nHmgd44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HhSlNfq1; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N+RkdUkB"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-b8f96f6956aso98271066b.3
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 01:13:29 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771492408; cv=none;
-        d=google.com; s=arc-20240605;
-        b=b9Feqcz1UPXsaomE1MgT2LwPR7CzSerWixLypt38dx32WfPk2/8j8tzzmAR5pd6SaY
-         Rcx5My6ujN04WJH4DBvh2Dahq6s1kcfWCIgrptgxz+AVmgC+TmS/RWIdVV4Wll8XzGZq
-         4y2E1GR0S2ioE8XftoTkIBlDk8DjcWPfO8gOLaL70NErmXxmRjhYv0dtO/UwV0ca63Fz
-         fxi3wSWVDSq2rti3h7KrsyH2/gxwyHvNbT9nUj2x0BQrURK0JcG5JEqrDo5Ei6QYNO5i
-         7xlnk5fZLOiSbn4gpE2zLcW6MmLOwP8qg6K8N6Fl4x10gBi6mEhiAbCXEibCzVIzuOjx
-         w4nQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=giQ2yQPplON01LAnGnRJuxTbuZrduE2SkCeIirbKbS4=;
-        fh=NnoUyvDVXRmjYO0BM9m/y7RJNDNLm/VkC891lzo+eGA=;
-        b=JthVzxojG+PxFrM3vLciv52sSYejpzNglmhmEMpeWaZFw6Y1WZxpklkYkhVuf0npRU
-         sZcSB7OhM72u6IHi8RM0T0ydTLR9j7ygSqkRes3wZ3qbD05UAI9UgpMoagfXsM71JjUj
-         W2m7e1ClHYayJV7iGrpvqtG4NEQ500C4a48E/L7RMleTwiSgywirgttpTkNpZgoOmOdT
-         PeOZQNaxfssZiSdEeQdJ5ZTKeq09DjttGgzFwy6EeWoS3+3JHjD/4Yrd72ouu3ZGC1s0
-         WDLI2FoeOMfe9CElt3J2KMOKx1u4w7zHXgh808zYUbjn6Vj0eg0vmKvtSBnlOwp6Htrd
-         vPOw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HhSlNfq1"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4362d4050c1so714731f8f.2
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 01:20:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771492408; x=1772097208; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=giQ2yQPplON01LAnGnRJuxTbuZrduE2SkCeIirbKbS4=;
-        b=N+RkdUkBIUtoIqs0lhwzWit/4c0ZFu+Gni4Nkru0WQwBhf0i6+YrrLO2GZncAd7CGj
-         OrnPl6Oie59sx5nly+sS86GfBXKg0AKAhenhuGp9GMzrDK75WcfgbJAw3SSTE649ju3T
-         JZYSBLtqsZMcfQZdWfSsctn6FaukOdXcncHgJXzYyBdIxdmgHjTjagZI3owOGgUWm70S
-         J9NvtK3iwBjzEaoHnEBhZhILW8wvF4SvUH/uX6U1CPantQh9ilLl08pDBoAbAG/Wbdiz
-         tozSNG2geXtnMEgYHqbCWm58uFLWOQQrs29Vu9lp8jnkDQAIPqohGV1Loe/yjJSM/9Uo
-         GGZQ==
+        d=suse.com; s=google; t=1771492856; x=1772097656; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+FlmjqWniPC3jVFM4ecKSA8vcZ4REL4AR5R1sKakC6E=;
+        b=HhSlNfq1aK66riOhvJRGmKVmwUE9x101pY3piUYViH0cXEwhc5pbTnZh89v7RoVCQm
+         Ro10cpiJoLdVuA2TyGpc/DdErnJY4Eh5IJap8jQs6bkwlAj4rq4UYjuDQwGRii1NE8Z3
+         MYVIZwI0OgLdJbP4KhLNIFrU/UEXH4J0q1uahFzC6qTHCrXobXMUY78hLK9V6DquDnM5
+         zCiJu++S9g5GRkCCq6rCdHTzxkvr6SbklmqxQo8WUbt6dnzNUrK2nh+UYvD5W0OZgO/p
+         0pdun0Vw9ULnbRav3lMAh38AkvXxHqaKWdNCkyIPl9n6uwY9e+bk7LPV5x5NaqUakA99
+         25bQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771492408; x=1772097208;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=giQ2yQPplON01LAnGnRJuxTbuZrduE2SkCeIirbKbS4=;
-        b=qgvLMC+ZeGeSK56Fhnmp2UFqPO8MLQafDgf6RHQo/I8RcyMZB9R+MR2nj9fwjC2Zq/
-         OWgi76bFU+awKcTKCE1MyCEFRVyb5c3AY78spB6bMYLL/1yd1lTr7DeAT4H1P/oz3d6J
-         W4xi9YhNGEyPUBEjCb2ck6+D9P2iEhKXyoPaL6VNR7p0Hc5FSZy8iUYmsJ3clVZoVtHr
-         xunuwbos8aAgCqVs6tVJZZGPL4gj6jX7QSZQvpGBDKYVRymTu+HHgY3VMNjg4hBZ8SDh
-         GJQeacur11QlQkrVo2D8thijtwbNBu5qbg/xqNpjmxW2hK5gfvGuRGRboo5nEQRWVQ2/
-         fSUg==
-X-Forwarded-Encrypted: i=1; AJvYcCUL/6DTykzThr6jHVM7ieg6Z/bL4PkuFPlxduxFG+K+NMVgMMbHZNgEUi95lkHJbgilfe+PpFxxc1U=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwRbG3zwBRhe/EiahPQSvIf934+CN+H8NA7eb5c3evgiGghPPdx
-	j0zY4eT3GvWBOTOyerxDiwYyrVmjW0EevDfUQKmXc7lTm+Gbw+aLZGF3qGWdgmKHQTDvWoOVDcu
-	j8NdZNhUT0ow1PRIf+bcySpvL31ILsjI=
-X-Gm-Gg: AZuq6aLnylV8ZtdI5S3P9SF6sBTiCmdTUDbe9Zh4guZTDthsYOIq5A7/KTyRWVXc2hC
-	uRH1UEdY5kdfR1Rs/ia4pcOfR7xTVQVJn4h5gi30gvUb+4h+9AivQJIsU8cNKgZdC0PJR4LI9Ph
-	yh6EN4I+xPAIYUTMR+n7syJxfhBp7xMu5Ta5w9Gu9WK9lY2NJB8BxlR3JDk03NlHAUdzfOICwr4
-	q0FV+sq+seGc7Uq3QDIM4BINUIKVg37islcBvOEDXjVWIsMp93PRo1WKiwiLDxhHB2QzYsPUDxY
-	6Omi+JE0
-X-Received: by 2002:a17:907:94ca:b0:b8a:f91e:283b with SMTP id
- a640c23a62f3a-b903dd391f4mr240466866b.60.1771492407632; Thu, 19 Feb 2026
- 01:13:27 -0800 (PST)
+        d=1e100.net; s=20230601; t=1771492856; x=1772097656;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+FlmjqWniPC3jVFM4ecKSA8vcZ4REL4AR5R1sKakC6E=;
+        b=CNJsrYbIBTkZ6tIDHZdPACJQiTZzeQFWCUaZdaa7yjvcagDKGckvcTU4MDBPMe56Tk
+         5yYVzJJ/VsPMeWwBDdPvxEVnVjN4ykplzvWE1DPIW3h1IoVislVbXALGXoS/WFaofKbd
+         l5BGOYHOh3v9coTrO2UdobqQvTHqWVML2SXfvrfjrUG3PRhogJVjdDMaN+6UMUqoW5E/
+         ij+lUgREREyr/9lQfYjLI88/dGz1tU4ip3llL1zvx3masE47nwcWSoFYlnviaOhdp+wZ
+         2V9D8BgDPI9NJVpUa2mZq2ABl6u2LhHWN2sskHDSPj14AXn44o490FB+rHppRLNyiROm
+         vU7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUgpKp/5qgAU4Zlf4Whow/SptYkLSj+D+gvXBAET2zTCcWH9ZDCzLbgmF3Ughy3pOyOWhh+9IIE1Go=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJ2Sd4Q5GQKkLBrORWm9iEp5vPUtw44z3QJavm7hYDIHZTI6jf
+	coIDHG0WSyhUu2da78aVwDaUs0HK7n+2z2sucbCiln5FYt6cq1apo5m3FOQzlLueW9w=
+X-Gm-Gg: AZuq6aJ9Q1hxmsrIFPH4nmD0HSILtOyLK5jSwwbTI6yldLkd4KPzynzPjtGPosm0pSH
+	nCS6Jsl2bPwEQKcPIwzzNjd9wyUkF6E9wa7NdugZlRVK4TyMNknusq1sZhESFQBPURMd5Hvrkxo
+	52gZRKevo0WaK0nVwpKJ+TObrzLnLDeu8X2bl8gX4Y+HfM/LNq8nEItMP2hj5C34naJGKPy0y7p
+	U1N6a8kKuPwrOLT69DEohr0pvdVhH633cVUzeXFimBN+5RdB3vg0w5rO2RHpKxr+yj82+X/OWTe
+	+8M+my3EinbPlObdNSveNGB/Hmt5eorzjU7guvfeeDUraLFqJwMKXIdLHEK5AkaVlPkIjOc4iAd
+	cWE01mx9YS67hFVi00x9SVR8GWpH6lk9r8q234iSDGz9o4Dl8nyWUAfO3ZNPpDRu14AlaVqrtGm
+	tA1zTNNmDjnLThlqx1XusDP0db88o3UlQ=
+X-Received: by 2002:a5d:5917:0:b0:437:99d2:c115 with SMTP id ffacd0b85a97d-43799d2c495mr28106790f8f.26.1771492856402;
+        Thu, 19 Feb 2026 01:20:56 -0800 (PST)
+Received: from localhost (109-81-84-7.rct.o2.cz. [109.81.84.7])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796ac8d82sm48035914f8f.31.2026.02.19.01.20.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Feb 2026 01:20:56 -0800 (PST)
+Date: Thu, 19 Feb 2026 10:20:54 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Marco Crivellari <marco.crivellari@suse.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Anthony Iliopoulos <ailiopoulos@suse.com>,
+	Carlos Maiolino <cem@kernel.org>
+Subject: Re: [PATCH] xfs: convert alloc_workqueue users to WQ_UNBOUND
+Message-ID: <aZbV9tqatNGbKRqF@tiehlicka>
+References: <20260218165609.378983-1-marco.crivellari@suse.com>
+ <aZZmVuY6C8PJMh_F@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <177145925746.402132.684963065354931952.stgit@frogsfrogsfrogs> <177145925776.402132.12925789451998493951.stgit@frogsfrogsfrogs>
-In-Reply-To: <177145925776.402132.12925789451998493951.stgit@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 19 Feb 2026 11:13:16 +0200
-X-Gm-Features: AaiRm50TFRps7R-TKjszjJl7mIQyvJdTGmaSE9eJDDRH466ForswRbN23IB6gW0
-Message-ID: <CAOQ4uxhR0UZt7wcRSXtsQq_GU8m_yLVc3bK2zJJduzqSmfe7FQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] fsnotify: drop unused helper
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org, 
-	brauner@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aZZmVuY6C8PJMh_F@dread>
 
-On Thu, Feb 19, 2026 at 8:02=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Remove this helper now that all users have been converted to
-> fserror_report_metadata as of 7.0-rc1.
->
-> Cc: jack@suse.cz
-> Cc: amir73il@gmail.com
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Acked-by: Amir Goldstein <amir73il@gmail.com>
+On Thu 19-02-26 12:24:38, Dave Chinner wrote:
+> On Wed, Feb 18, 2026 at 05:56:09PM +0100, Marco Crivellari wrote:
+> > Recently, as part of a workqueue refactor, WQ_PERCPU has been added to
+> > alloc_workqueue() users that didn't specify WQ_UNBOUND.
+> > The change has been introduced by:
+> > 
+> >   69635d7f4b344 ("fs: WQ_PERCPU added to alloc_workqueue users")
+> > 
+> > These specific workqueues don't use per-cpu data, so change the behavior
+> > removing WQ_PERCPU and adding WQ_UNBOUND.
+> 
+> Your definition for "doesn't need per-cpu workqueues" is sadly
+> deficient.
 
-> ---
->  include/linux/fsnotify.h |   13 -------------
->  1 file changed, 13 deletions(-)
->
->
-> diff --git a/include/linux/fsnotify.h b/include/linux/fsnotify.h
-> index 28a9cb13fbfa38..079c18bcdbde68 100644
-> --- a/include/linux/fsnotify.h
-> +++ b/include/linux/fsnotify.h
-> @@ -495,19 +495,6 @@ static inline void fsnotify_change(struct dentry *de=
-ntry, unsigned int ia_valid)
->                 fsnotify_dentry(dentry, mask);
->  }
->
-> -static inline int fsnotify_sb_error(struct super_block *sb, struct inode=
- *inode,
-> -                                   int error)
-> -{
-> -       struct fs_error_report report =3D {
-> -               .error =3D error,
-> -               .inode =3D inode,
-> -               .sb =3D sb,
-> -       };
-> -
-> -       return fsnotify(FS_ERROR, &report, FSNOTIFY_EVENT_ERROR,
-> -                       NULL, NULL, NULL, 0);
-> -}
-> -
->  static inline void fsnotify_mnt_attach(struct mnt_namespace *ns, struct =
-vfsmount *mnt)
->  {
->         fsnotify_mnt(FS_MNT_ATTACH, ns, mnt);
->
+I believe Marco wanted to say they do not require strict per-cpu
+guarantee of WQ_PERCPU for correctness. I.e. those workers do not
+operate on per-cpu data.
+
+> > Even if these workqueue are
+> > marked unbound, the workqueue subsystem maintains cache locality by
+> > default via affinity scopes.
+> > 
+> > The changes from per-cpu to unbound will help to improve situations where
+> > CPU isolation is used, because unbound work can be moved away from
+> > isolated CPUs.
+> 
+> If you are running operations through the XFS filesystem on isolated
+> CPUs, then you absolutely need some of these the per-cpu workqueues
+> running on those isolated CPUs too.
+
+The usecase is that isolated workload needs to perform fs operations at
+certain stages of the operation. Then it moves over to "do not disturb"
+mode when it operates in the userspace and shouldn't be disrupted by the
+kernel. We do observe that those workers trigger at later time and
+disturb the workload when not appropriate.
+ 
+> Also, these workqueues are typically implemented these ways to meet
+> performancei targets, concurrency constraints or algorithm
+> requirements. Changes like this need a bunch of XFS metadata
+> scalability benchmarks on high end server systems under a variety of
+> conditions to at least show there aren't any obvious any behavioural
+> or performance regressions that result from the change.
+
+This is a fair ask. We do not want to regress non-isolated workloads by
+any means and if there is a risk of regression for those, and from your
+more detailed explanation it seems so, then we might need to search for
+a different approach. Would be an opt in - i.e. tolerate performance
+loss by loosing the locality via a kernel cmd line an option?
+
+I am cutting your specific feedback on those WQs. Thanks for that! This
+is a very valuable feedback.
+
+Thanks!
+-- 
+Michal Hocko
+SUSE Labs
