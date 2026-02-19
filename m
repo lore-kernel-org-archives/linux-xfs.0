@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A61C24729A
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:46:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95142E6CAB
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:47:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544814; cv=none; b=sE2UCaxbyuZrFVZJPmwES5oNVthoG/YGQnkrSfWRUZoQb9ngS7s1CjtZeQ6LZVGcU4Za0Ymx/buc66fxbct8vs3wRze5qPkfI/p66/JmaW4iOjcRWtW328fXenIcoDw4qCWaAGNXNGRt696ikP0hncQVKkG/7YQp2pToPmB/qy8=
+	t=1771544829; cv=none; b=i20/0X1p8PYt1f3zbQiWPfvYBi7AYu5PUpwQ/6npJAdNA8uhA9BS/WeTtgywPd4+DBUFcJy+5v99kHTYEvwzlHQOSvMvWAyacLAUI1M71aPLO/HMPZZwyg08VilQlik1zvnfrpH4ipTFLfVV4Gwysm70+kdBs5iEoq6jfVmzf7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771544814; c=relaxed/simple;
-	bh=VfXnfV7WZ9ILOe9qbwt49ZUvIOMlzOms9BiQe3NJg5U=;
+	s=arc-20240116; t=1771544829; c=relaxed/simple;
+	bh=XpWl8v1JWuxmYm5FQAiHMdBkq4xVx0qlyXyhWaGNOaE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a1QriPwJCfgho9gQi1hus7LBvvOOvmU0sDebnGF01FJqweRbVDulpX2W0XizDMPBWCmcKFQHhTP8FCOhLbg5dQqXORw/xRmyFnjUepkZRK09BBNr+hnbFS1HZAnJRUyAZNc0uurMM67/E0agqcIBUz2yplY11NaIFYS00xGaezE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FjIBLBXr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lX5cFPOmULRdzM+RmmGeTra2ice+lrsWY5xJikJxfrAbrGS6ZrZexZfniEN1GS857n2QezlLoI9fdFsu3v1O2oPNl+w785rorKFdDPIL5LaS5ClTbgC/KNA2bkiyrXL4yeFl897fgaktg4/I2pLtaQCFLL5hp2IMbzsPxR27Eas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i5609iYP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FjIBLBXr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5F89C4CEF7;
-	Thu, 19 Feb 2026 23:46:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i5609iYP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B23C4CEF7;
+	Thu, 19 Feb 2026 23:47:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771544814;
-	bh=VfXnfV7WZ9ILOe9qbwt49ZUvIOMlzOms9BiQe3NJg5U=;
+	s=k20201202; t=1771544829;
+	bh=XpWl8v1JWuxmYm5FQAiHMdBkq4xVx0qlyXyhWaGNOaE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=FjIBLBXrllXdjNQZ7hh3qE+osfJZS7TNufQi7M21SIzwjxeerSMkjdb92z+HpEHKQ
-	 sJhIYni8bRH/zbgl2ZUOSl/BNLI+YqYOgq4v8mwh1FCMCfpaC1Mn1hTAQW5fnJVFMP
-	 GwXcQ+zoaDq7GQbHV5A7U29op3cAyvmghwCdYGv75AJW+IT1/RSdHRt9nbS0GYfIZk
-	 UhEIpp9wF1dv8Q1HJJm12k3eRFFjny4jtQd55RuV5OobJP6PsRqHSkmWztT7XYaMj/
-	 MaLo2pO+cmuvqgZ0QSCz6Z+Q9C6861D/AFSMpUuF1gZenzZlX45bmBg6HnjEAZPOEl
-	 P40T0ftsFXSoA==
-Date: Thu, 19 Feb 2026 15:46:53 -0800
-Subject: [PATCH 1/6] mkfs: set rtstart from user-specified dblocks
+	b=i5609iYPgN9y2wNombmzpw4sYyOCSlfJLm6WxQ8xyJ/LnkBBndTfmhMdsPUYiM5LT
+	 /AgLkSa+o7uL2XVMhc/m06/woCFo9hvv4I4APSwg3OQgasSuRobXJDhCzyp7mmfg42
+	 eSyPiYuc+579O6WcsL8MXmSdRsmDbhqUg+e2cpk7fNV+CWBRimksulAnOeJDxDa8gm
+	 hoaOG1omw3DvikR6mBKMo1aaSZQ+bugmqBWAt0kG0Lk4l4eylzkLLw/Ld1b+Wt8BMc
+	 kIljNG5qTiPGZ/RgXL5WxS3ebmu385skNioX/VyViLD3rIHndGT7KsbkEeVcqumOuP
+	 wsQlm7x1tX80w==
+Date: Thu, 19 Feb 2026 15:47:09 -0800
+Subject: [PATCH 2/6] xfs_logprint: print log data to the screen in host-endian
+ order
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177154457224.1286306.3676140728308498902.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177154457243.1286306.12744406304510860262.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
 References: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,90 +46,91 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-generic/211 fails to format the disk on a system with an internal zoned
-device.  Poking through the shell scripts, it's apparently doing this:
+Add a cli option so that users won't have to byteswap u32 values when
+they're digging through broken logs on little-endian systems.  Also make
+it more obvious which column is the offset and which are the byte(s).
 
-# mkfs.xfs -d size=629145600 -r size=629145600 -b size=4096 -m metadir=1,autofsck=1,uquota,gquota,pquota, -r zoned=1 -d rtinherit=1 /dev/sdd
-size 629145600 specified for data subvolume is too large, maximum is 131072 blocks
-
-Strange -- we asked for 629M data and rt sections, the device is 20GB in
-size, but it claims insufficient space in the data subvolume.
-
-Further analysis shows that open_devices is setting rtstart to 1% of the
-size of the data volume (or no less than 300M) and rounding that up to
-the nearest power of two (512M).  Hence the 131072 number.
-
-But wait, we said that we wanted a 629M data section.  Let's set rtstart
-to the same value if the user didn't already provide one, instead of
-using the default value.
-
-Cc: <linux-xfs@vger.kernel.org> # v6.15.0
-Fixes: 2e5a737a61d34e ("xfs_mkfs: support creating file system with zoned RT devices")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/xfs_mkfs.c |   42 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 11 deletions(-)
+ logprint/logprint.h      |    1 +
+ logprint/log_print_all.c |    5 +++--
+ logprint/logprint.c      |    5 +++++
+ man/man8/xfs_logprint.8  |    4 ++++
+ 4 files changed, 13 insertions(+), 2 deletions(-)
 
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b34407725f76df..a90160b26065b7 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3696,6 +3696,36 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+diff --git a/logprint/logprint.h b/logprint/logprint.h
+index aa90068c8a2af1..2ba868a9155108 100644
+--- a/logprint/logprint.h
++++ b/logprint/logprint.h
+@@ -16,6 +16,7 @@ extern int	print_transactions;
+ extern int	print_overwrite;
+ extern int	print_no_data;
+ extern int	print_no_print;
++extern int	print_host_endian;
  
- }
+ /* exports */
+ extern time64_t xlog_extract_dinode_ts(const xfs_log_timestamp_t);
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 0afad597bb6ce0..5a01e049b8bb50 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -55,8 +55,9 @@ xlog_recover_print_data(
  
-+static uint64_t
-+calc_rtstart(
-+	const struct mkfs_params	*cfg,
-+	const struct libxfs_init	*xi)
-+{
-+	uint64_t			rt_target_size;
-+	uint64_t			rtstart = 1;
-+
-+	if (cfg->dblocks) {
-+		/*
-+		 * If the user specified the size of the data device but not
-+		 * the start of the internal rt device, set the internal rt
-+		 * volume to start at the end of the data device.
-+		 */
-+		return cfg->dblocks << (cfg->blocklog - BBSHIFT);
-+	}
-+
-+	/*
-+	 * By default reserve at 1% of the total capacity (rounded up to the
-+	 * next power of two) for metadata, but match the minimum we enforce
-+	 * elsewhere. This matches what SMR HDDs provide.
-+	 */
-+	rt_target_size = max((xi->data.size + 99) / 100,
-+			     BTOBB(300 * 1024 * 1024));
-+
-+	while (rtstart < rt_target_size)
-+		rtstart <<= 1;
-+	return rtstart;
-+}
-+
- static void
- open_devices(
- 	struct mkfs_params	*cfg,
-@@ -3720,17 +3750,7 @@ open_devices(
- 		zt->rt.zone_capacity = zt->data.zone_capacity;
- 		zt->rt.nr_zones = zt->data.nr_zones - zt->data.nr_conv_zones;
- 	} else if (cfg->sb_feat.zoned && !cfg->rtstart && !xi->rt.dev) {
--		/*
--		 * By default reserve at 1% of the total capacity (rounded up to
--		 * the next power of two) for metadata, but match the minimum we
--		 * enforce elsewhere. This matches what SMR HDDs provide.
--		 */
--		uint64_t rt_target_size = max((xi->data.size + 99) / 100,
--					      BTOBB(300 * 1024 * 1024));
--
--		cfg->rtstart = 1;
--		while (cfg->rtstart < rt_target_size)
--			cfg->rtstart <<= 1;
-+		cfg->rtstart = calc_rtstart(cfg, xi);
- 	}
+ 		while (j < nums) {
+ 			if ((j % 8) == 0)
+-				printf("%2x ", j);
+-			printf("%8x ", *dp);
++				printf("%2x: ", j);
++			printf("%08x ", print_host_endian ? be32_to_cpu(*dp) :
++							    *dp);
+ 			dp++;
+ 			j++;
+ 			if ((j % 8) == 0)
+diff --git a/logprint/logprint.c b/logprint/logprint.c
+index 7c69cdcc7cfacb..34df3400c8d544 100644
+--- a/logprint/logprint.c
++++ b/logprint/logprint.c
+@@ -24,6 +24,7 @@ int	print_buffer;
+ int	print_overwrite;
+ int     print_no_data;
+ int     print_no_print;
++int	print_host_endian;
+ static int	print_operation = OP_PRINT;
+ static struct libxfs_init x;
  
- 	if (cfg->rtstart) {
+@@ -37,6 +38,7 @@ Options:\n\
+     -d	            dump the log in log-record format\n\
+     -e	            exit when an error is found in the log\n\
+     -f	            specified device is actually a file\n\
++    -h		    print hex data in host-endian order\n\
+     -l <device>     filename of external log\n\
+     -n	            don't try and interpret log data\n\
+     -o	            print buffer data in hex\n\
+@@ -171,6 +173,9 @@ main(int argc, char **argv)
+ 				x.log.name = optarg;
+ 				x.log.isfile = 1;
+ 				break;
++			case 'h':
++				print_host_endian = 1;
++				break;
+ 			case 'i':
+ 				print_inode++;
+ 				break;
+diff --git a/man/man8/xfs_logprint.8 b/man/man8/xfs_logprint.8
+index 16e881ee8f230d..d64af5963f1a8a 100644
+--- a/man/man8/xfs_logprint.8
++++ b/man/man8/xfs_logprint.8
+@@ -76,6 +76,10 @@ .SH OPTIONS
+ an ordinary file with
+ .BR xfs_copy (8).
+ .TP
++.B \-h
++Print u32 hex dump data in host-endian order.
++The default is to print without any endian decoding.
++.TP
+ .BI \-l " logdev"
+ External log device. Only for those filesystems which use an external log.
+ .TP
 
