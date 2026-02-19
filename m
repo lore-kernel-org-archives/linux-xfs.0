@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C08320C463;
-	Thu, 19 Feb 2026 13:02:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D1E46FBF
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 13:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771506130; cv=none; b=KxymIbpEsTJPWBy5aGdRmn/82Wf10SZaMQdaehtaEsyI68bZgEcVdU9qDqyIGau/4OkZQnD/8vwL1CKykVUSjdZulhJVD0FAYxO51cUg5KtWf35zm2/+hw1LEbaZy1sXcvGvN4KofvHwKDg3d6VcV/pJkMyovRNlXUHvUe0ymqk=
+	t=1771506593; cv=none; b=GsfVYDLI0jW9r3eFiRh2StLF/oY78d9YtDv767JwfzHhpc4e4J361s7Vk/B5yZ7l8EymoaMgSGPCxB78jujtvMVRhLgsdZWL585GbAC+ZHSQK8bYHMaj4WwnKVwUVgeA+pSLgQFWU6g31DRXy6IOsmc3+01gdeppCM5SzrbpN2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771506130; c=relaxed/simple;
-	bh=QppXLEvgfZalvoa4uJG5b72ujwrROheC5T1TUvFb52E=;
+	s=arc-20240116; t=1771506593; c=relaxed/simple;
+	bh=Qf/IhL6LDxdsjv0mbEXZVrFpMYnXJUOXV8R0zDKBT/Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L/0JqmAesfdNg6bq6GPynt82pVnwWDEw4fA89ar1qiQHruKb6RjNoMqlkytzFNdDglqQnxdrAMEnknVq63qxXaznafcgucmOOD9s1A2VDJJeTrz8uZubvF97ZSzGPVRMn/31IZKc8ZMCKM5tbYXYECEy2A1LwKQl/pCYqmIYV0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k/svY+de; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YWZTxhTU8NUtJ/0U3B9C0cOFG/yvZjIH4OQg2Q9vDJ7uJYAoJmXmhG/j27/SeNZ7ojuBU12tGtwnx8EQ84WJIfj2FVA01DyNW02cqFGx17XUcNnDIVtuU36RSTuXsmeas405uKtnK03nPpbabUbA0cO1tjE5kRacuMpcw7MVo+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PPswdKAB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k/svY+de"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1611C4CEF7;
-	Thu, 19 Feb 2026 13:02:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PPswdKAB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7957C116C6;
+	Thu, 19 Feb 2026 13:09:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771506129;
-	bh=QppXLEvgfZalvoa4uJG5b72ujwrROheC5T1TUvFb52E=;
+	s=k20201202; t=1771506593;
+	bh=Qf/IhL6LDxdsjv0mbEXZVrFpMYnXJUOXV8R0zDKBT/Y=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=k/svY+deZ48Mge1381SVYO74baDsJUOeFPtttLGPhPgHxfGNroyQYwqbzSJ23B0wV
-	 MKHtwjEhfLTCKEoxnLK+dVhs8DvmMTs5mguj3JhSvwTXvJ9xNdIZkXFHw1K8Geb1cn
-	 xxsYX0rkhEuwU1A65jQukkDsjdEHLx0n1O7WQRD2gG2Xd1WgwXh8t66WZ+SCSINfVY
-	 MsS6jZqNLZM37eTYKLVXtCGcLRJLwZYnUUeQ61ygDm8Lpay4+fu/rv9d61Y46A+AKx
-	 YJ/ICjkD94Czz9sUyGtUHr7WlBblxda6VGgg1Asry4gl6n5NIj+W/woBd20J1NiBbv
-	 sfpuIcUZCln9Q==
-Date: Thu, 19 Feb 2026 14:02:06 +0100
+	b=PPswdKABLEl6sbE8+U4+1v821YXCR0ocA8x3XVIBHRWMAs4XGpVNVjvPqkg30Oi22
+	 pyouay4ZWFCiA87X0tNwYpoI/CXg2kG8N7sVlhd64y8i9Qq6yYuTXKLhFiqRGMLEe6
+	 l9SItAkAjk15Ou3kIClV1q2umPHWA4a2dcMQbhUuwp8QBk5n5imD+NLJ0K0gdv6BSL
+	 Ifwcam8OAp8ljXw1jt1LQzGZrFVvc9U+6cz+QiEkBo/NyBPpquSmkEDBsEhC99mFTc
+	 sCZYUd5Njyxjpaibj3jszvW99L2DVYPePVUE1CRlf91kVqKsYCGwOaMoHXC9j/Qpgq
+	 oPAp+4AaZ/PJA==
+Date: Thu, 19 Feb 2026 14:09:49 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: fix xfs_group release bug in
- xfs_verify_report_losses
-Message-ID: <aZcJEu9PjdfXPwIG@nidhogg.toxiclabs.cc>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, pankaj.raghav@linux.dev, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/6] xfs: fix potential pointer access race in
+ xfs_healthmon_get
+Message-ID: <aZcLVXE2DUH_AAP1@nidhogg.toxiclabs.cc>
 References: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
- <177145925473.401799.4192737708449778278.stgit@frogsfrogsfrogs>
+ <177145925494.401799.17980890890269795712.stgit@frogsfrogsfrogs>
+ <aZaxI4PzJKqUc7a_@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,59 +45,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <177145925473.401799.4192737708449778278.stgit@frogsfrogsfrogs>
+In-Reply-To: <aZaxI4PzJKqUc7a_@infradead.org>
 
-On Wed, Feb 18, 2026 at 10:01:30PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Feb 18, 2026 at 10:43:47PM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 18, 2026 at 10:01:45PM -0800, Darrick J. Wong wrote:
+> >  
+> > -	XFS_M((struct super_block *)hm->mount_cookie)->m_healthmon = NULL;
+> > +	rcu_assign_pointer(XFS_M(
+> > +			(struct super_block *)hm->mount_cookie)->m_healthmon,
+> > +			NULL);
 > 
-> Chris Mason reports that his AI tools noticed that we were using
-> xfs_perag_put and xfs_group_put to release the group reference returned
-> by xfs_group_next_range.  However, the iterator function returns an
-> object with an active refcount, which means that we must use the correct
-> function to release the active refcount, which is _rele.
+> Just a nitpick, but factoring the cookie to sb thing into a helper
+> or at least separate assignment would really clean this up.
 
-The subject looks a copy/paste from the previous one, ditto for the
-description.
+Or perhaps just factor out a struct super_block *sb from it to untangle
+it a bit.
 
-The description matches the patch, but the subject doesn't.
-
-If you're going to send me a PR with this series, please fix it. If I'm
-pulling this series straight from the list, I'll fix it here.
-
-Other than the description problems, the patch looks fine:
+I'm fine with any of the approaches though.
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> 
-> Cc: <stable@vger.kernel.org> # v6.0
-> Fixes: 6f643c57d57c56 ("xfs: implement ->notify_failure() for XFS")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_notify_failure.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> index 6be19fa1ebe262..64c8afb935c261 100644
-> --- a/fs/xfs/xfs_notify_failure.c
-> +++ b/fs/xfs/xfs_notify_failure.c
-> @@ -304,7 +304,7 @@ xfs_dax_notify_dev_failure(
->  
->  			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
->  			if (error) {
-> -				xfs_perag_put(pag);
-> +				xfs_perag_rele(pag);
->  				break;
->  			}
->  
-> @@ -340,7 +340,7 @@ xfs_dax_notify_dev_failure(
->  		if (rtg)
->  			xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
->  		if (error) {
-> -			xfs_group_put(xg);
-> +			xfs_group_rele(xg);
->  			break;
->  		}
->  	}
-> 
-> 
