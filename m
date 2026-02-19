@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95142E6CAB
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:47:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98FFC24729A
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:47:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544829; cv=none; b=i20/0X1p8PYt1f3zbQiWPfvYBi7AYu5PUpwQ/6npJAdNA8uhA9BS/WeTtgywPd4+DBUFcJy+5v99kHTYEvwzlHQOSvMvWAyacLAUI1M71aPLO/HMPZZwyg08VilQlik1zvnfrpH4ipTFLfVV4Gwysm70+kdBs5iEoq6jfVmzf7U=
+	t=1771544845; cv=none; b=FpfBb5XsivwmR/0Yt98vLOnoaVc52zr1bo2U7nKnD2j484jNsvXknzYbRxTdDxhBnZALqI4dxe0f1pD8AvyO5hvWbg0soM95Qmg9wzjd4Ng4L2VHyEuTntuNAEyKNLTKBs80b+PF7q2kh28zQvmNVAGUWUPUQHtH9KWomHysO6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771544829; c=relaxed/simple;
-	bh=XpWl8v1JWuxmYm5FQAiHMdBkq4xVx0qlyXyhWaGNOaE=;
+	s=arc-20240116; t=1771544845; c=relaxed/simple;
+	bh=raPsc5E7xCEZVWitMbpQAbDSFIXC5uNFmBfPGQR/SVE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lX5cFPOmULRdzM+RmmGeTra2ice+lrsWY5xJikJxfrAbrGS6ZrZexZfniEN1GS857n2QezlLoI9fdFsu3v1O2oPNl+w785rorKFdDPIL5LaS5ClTbgC/KNA2bkiyrXL4yeFl897fgaktg4/I2pLtaQCFLL5hp2IMbzsPxR27Eas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i5609iYP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JbvWMoyOdzXMuRf/NovwK+BXSKNeNndR5osHEKvGzrZNL0NsfEt5Ff3uHVVVO7tzsjKdoR+hfP64BCbiWhw8JMZ4bnq9iq4vGNM2WNKkCLDI6fbx6cryxr0q1TkCdLH3GGXwcqgIjRjEvQ6LP+lWU1HzD0pJNVyIfeMcnyqVMy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qwYuELIs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i5609iYP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B23C4CEF7;
-	Thu, 19 Feb 2026 23:47:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qwYuELIs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 320D8C4CEF7;
+	Thu, 19 Feb 2026 23:47:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771544829;
-	bh=XpWl8v1JWuxmYm5FQAiHMdBkq4xVx0qlyXyhWaGNOaE=;
+	s=k20201202; t=1771544845;
+	bh=raPsc5E7xCEZVWitMbpQAbDSFIXC5uNFmBfPGQR/SVE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=i5609iYPgN9y2wNombmzpw4sYyOCSlfJLm6WxQ8xyJ/LnkBBndTfmhMdsPUYiM5LT
-	 /AgLkSa+o7uL2XVMhc/m06/woCFo9hvv4I4APSwg3OQgasSuRobXJDhCzyp7mmfg42
-	 eSyPiYuc+579O6WcsL8MXmSdRsmDbhqUg+e2cpk7fNV+CWBRimksulAnOeJDxDa8gm
-	 hoaOG1omw3DvikR6mBKMo1aaSZQ+bugmqBWAt0kG0Lk4l4eylzkLLw/Ld1b+Wt8BMc
-	 kIljNG5qTiPGZ/RgXL5WxS3ebmu385skNioX/VyViLD3rIHndGT7KsbkEeVcqumOuP
-	 wsQlm7x1tX80w==
-Date: Thu, 19 Feb 2026 15:47:09 -0800
-Subject: [PATCH 2/6] xfs_logprint: print log data to the screen in host-endian
- order
+	b=qwYuELIs9wtv4ax8AIKyqGsQsh19DOaI514EddtvyaL2v/qX9eoc7ylJSE52OgWmU
+	 M/ypL9TIPAc9yYATANlb2k+UAk4ALSEbqVzlrTw8zXqotJY+hMpVPmkEu9WmXBxioh
+	 bWAw/LGJDic0lhlFSPcNNElRZr5aBOZsoWn4KOzDvBpvCxuNpVkhwOUGDSSwN/+eQq
+	 JXZjDUQnTkRBF/2pWNgs82tHCCjUpGcb0giuPrOtkL+l7zYTTW0Xcls9gbwA9AWRnk
+	 qL+iNxo7KWS9bEpsaMsnkt7wacpncaO5ZJmcClZnGWW7Q+hyjiw5uX18qwwPrR3ymR
+	 8Q8mbdrmQ+nYg==
+Date: Thu, 19 Feb 2026 15:47:24 -0800
+Subject: [PATCH 3/6] mkfs: quiet down warning about insufficient write zones
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177154457243.1286306.12744406304510860262.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <177154457261.1286306.1799786827639995258.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
 References: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,91 +45,50 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a cli option so that users won't have to byteswap u32 values when
-they're digging through broken logs on little-endian systems.  Also make
-it more obvious which column is the offset and which are the byte(s).
+xfs/067 fails with the following weird mkfs message:
 
+ --- tests/xfs/067.out	2025-07-15 14:41:40.191273467 -0700
+ +++ /run/fstests/logs/xfs/067.out.bad	2026-01-06 16:59:11.907677987 -0800
+ @@ -1,4 +1,8 @@
+  QA output created by 067
+ +Warning: not enough zones (134/133) for backing requested rt size due to
+ +over-provisioning needs, writable size will be less than (null)
+ +Warning: not enough zones (134/133) for backing requested rt size due to
+ +over-provisioning needs, writable size will be less than (null)
+
+In this case, MKFS_OPTIONS is set to: "-rrtdev=/dev/sdb4 -m
+metadir=1,autofsck=1,uquota,gquota,pquota -d rtinherit=1 -r zoned=1
+/dev/sda4"
+
+In other words, we didn't pass an explicit rt volume size to mkfs, so
+the message is a bit bogus.  Let's skip printing the message when
+the user did not provide an explicit rtsize parameter.
+
+Cc: <linux-xfs@vger.kernel.org> # v6.18.0
+Fixes: b5d372d96db1ad ("mkfs: adjust_nr_zones for zoned file system on conventional devices")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- logprint/logprint.h      |    1 +
- logprint/log_print_all.c |    5 +++--
- logprint/logprint.c      |    5 +++++
- man/man8/xfs_logprint.8  |    4 ++++
- 4 files changed, 13 insertions(+), 2 deletions(-)
+ mkfs/xfs_mkfs.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 
-diff --git a/logprint/logprint.h b/logprint/logprint.h
-index aa90068c8a2af1..2ba868a9155108 100644
---- a/logprint/logprint.h
-+++ b/logprint/logprint.h
-@@ -16,6 +16,7 @@ extern int	print_transactions;
- extern int	print_overwrite;
- extern int	print_no_data;
- extern int	print_no_print;
-+extern int	print_host_endian;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index a90160b26065b7..f539c91db251fd 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4579,10 +4579,11 @@ adjust_nr_zones(
+ 				cfg->rgsize;
  
- /* exports */
- extern time64_t xlog_extract_dinode_ts(const xfs_log_timestamp_t);
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index 0afad597bb6ce0..5a01e049b8bb50 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -55,8 +55,9 @@ xlog_recover_print_data(
- 
- 		while (j < nums) {
- 			if ((j % 8) == 0)
--				printf("%2x ", j);
--			printf("%8x ", *dp);
-+				printf("%2x: ", j);
-+			printf("%08x ", print_host_endian ? be32_to_cpu(*dp) :
-+							    *dp);
- 			dp++;
- 			j++;
- 			if ((j % 8) == 0)
-diff --git a/logprint/logprint.c b/logprint/logprint.c
-index 7c69cdcc7cfacb..34df3400c8d544 100644
---- a/logprint/logprint.c
-+++ b/logprint/logprint.c
-@@ -24,6 +24,7 @@ int	print_buffer;
- int	print_overwrite;
- int     print_no_data;
- int     print_no_print;
-+int	print_host_endian;
- static int	print_operation = OP_PRINT;
- static struct libxfs_init x;
- 
-@@ -37,6 +38,7 @@ Options:\n\
-     -d	            dump the log in log-record format\n\
-     -e	            exit when an error is found in the log\n\
-     -f	            specified device is actually a file\n\
-+    -h		    print hex data in host-endian order\n\
-     -l <device>     filename of external log\n\
-     -n	            don't try and interpret log data\n\
-     -o	            print buffer data in hex\n\
-@@ -171,6 +173,9 @@ main(int argc, char **argv)
- 				x.log.name = optarg;
- 				x.log.isfile = 1;
- 				break;
-+			case 'h':
-+				print_host_endian = 1;
-+				break;
- 			case 'i':
- 				print_inode++;
- 				break;
-diff --git a/man/man8/xfs_logprint.8 b/man/man8/xfs_logprint.8
-index 16e881ee8f230d..d64af5963f1a8a 100644
---- a/man/man8/xfs_logprint.8
-+++ b/man/man8/xfs_logprint.8
-@@ -76,6 +76,10 @@ .SH OPTIONS
- an ordinary file with
- .BR xfs_copy (8).
- .TP
-+.B \-h
-+Print u32 hex dump data in host-endian order.
-+The default is to print without any endian decoding.
-+.TP
- .BI \-l " logdev"
- External log device. Only for those filesystems which use an external log.
- .TP
+ 	if (cfg->rgcount > max_zones) {
+-		fprintf(stderr,
++		if (cli->rtsize)
++			fprintf(stderr,
+ _("Warning: not enough zones (%lu/%u) for backing requested rt size due to\n"
+   "over-provisioning needs, writable size will be less than %s\n"),
+-			cfg->rgcount, max_zones, cli->rtsize);
++				cfg->rgcount, max_zones, cli->rtsize);
+ 		cfg->rgcount = max_zones;
+ 	}
+ 	new_rtblocks = (cfg->rgcount * cfg->rgsize);
 
