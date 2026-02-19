@@ -1,46 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82DBE2EA480;
-	Thu, 19 Feb 2026 06:15:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A92C226CFD;
+	Thu, 19 Feb 2026 06:15:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771481703; cv=none; b=ihdQLdGmvnFtqj2BseykvXmLl17IxEBYYlVG1N8n8oWe0L5A79NEfTTWmVZGcwKu4TfZxsUYoui9TWR/adGnr2jwu2R13Hj5SIj38I/FyMhiERH6ymjUZgoCIehIyoNBmYnBVit2nvTlp85gGLfTXZ3fxdvcB5B9P17rvnHh60w=
+	t=1771481747; cv=none; b=gEGK4UOjp9fSc0PZZk1DoeK/EsJECsi9bvRMWPPqau+P6RmS7xxQVwYIPfH+MkoRvz0K3JGLc10DeOruXOXm7XgLNGHz7yoPEVuQDmsbgt8TkRJ21+RSlROgua5CkNhY1UaGhg0Cde7aSI7WdgVbF+JLNBiY5adk0vFip1L1p+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771481703; c=relaxed/simple;
-	bh=YHOM66lzoRUwmE4qMaRR3bRGMxJJ74seep+VqmXIRF8=;
+	s=arc-20240116; t=1771481747; c=relaxed/simple;
+	bh=Tqx6M5MwcjMrvVzocPJ1OYpdPRpNbyMIqQdqD5ugIJc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Kqo5mLf+P+OyHMDcdOwAsXwt33UEEuCTqJGkdZddnDuX6+gMMWEd6m6QBjywaVI65iskctpf8nRNBqUJb4OH/7pVQWXAkLRvuBPN/5HVvIm52VGd0ICJst8esOZvo8JwJ8LSWqSsTRnUe7gEdPKzMb1dgzfOXC9zBvVIHRT5YYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kEBkUbZ1; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZRiF9tNoGhGW/AAt1J6C0JMzEM2iQn6DJMJi6bGuIrCpt1FzCKnlj9RZJA9aRwcoyWZjBW/9iOZSe6FiBtAn527V2wnxwLahYGTt1Rxba87k5Qhke61+7B+PihstAAAi8gsOTIPsLdqoaZPiakM8+g84QgDwvrvHn+/zBJ9s3v4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kov+KwbH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kEBkUbZ1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kjEUyrIdtoSVK8/ToumRhv0Uezf2o1ihI+CRhD6nx/4=; b=kEBkUbZ1sa/DlTE2krJ0fBQEES
-	+PBADcrAuFuIlklPPwf7ITh6R6re6hhKMsdRpjMjD97eIvJjACmyfIQY+GkBLZh0Bpf/buqCw38SC
-	YtnhQLO4aSwNK9oxzQPjTtT6kFb1fNGxv3R0kOkdOrON+2Kb3gHTW1SVpgquD1hV9bTwpCHmGI/V6
-	yamiKGnfy8RkyWfYpXPtwoXzGZsMwWecuXld/G3gbP0mMQni3RKc9S5asGiDM0uAyMXtituYRYotZ
-	b0mgBugwVCTjmLvE4532hLuoJ10C34JC1ZGcJG4cFLavxbyMp3Xm3lHE5yHsjihwCVJQkZQhkmjnR
-	A6sTKJNg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vsxJV-0000000AwtX-43a7;
-	Thu, 19 Feb 2026 06:15:01 +0000
-Date: Wed, 18 Feb 2026 22:15:01 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>
-Cc: djwong@kernel.org, hch@infradead.org, cem@kernel.org,
-	david@fromorbit.com, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, nirjhar.roy.lists@gmail.com,
-	hsiangkao@linux.alibaba.com
-Subject: Re: [RFC v1 2/4] xfs: Introduce xfs_rtginodes_ensure_all()
-Message-ID: <aZaqZSUKUJDpuVQK@infradead.org>
-References: <cover.1771418537.git.nirjhar.roy.lists@gmail.com>
- <38947e4ca2d01828e7e7033f115770efe6ac9651.1771418537.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kov+KwbH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8C55C4CEF7;
+	Thu, 19 Feb 2026 06:15:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771481746;
+	bh=Tqx6M5MwcjMrvVzocPJ1OYpdPRpNbyMIqQdqD5ugIJc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kov+KwbHkCOhVQym68J1GjNhHgIDklZjTNMYq59/BYed+0nTMyu3HX+F/YISVy5mO
+	 sm5uSY6rZdZ1oMl4g/yxXVRzAk6Yk6XlTufZAtTXSFvU4VC749LXYiMVxlez35RqJO
+	 cKseYvSqzQ9O7ql0YqZajV5Wr/N5CtOmk5nSd71ZxISpkAKzjVi48Xq5vAlPq274TW
+	 iY9e95PqYh6eBgX27muZHU9jXL0Aqk4bJ/kdCNy8XWqyaWrWOyL/BJubzhTesBp29V
+	 ca4x6N+2X3yJ+e6DH0YrEw7TFuheg8fpJoafJ0uswZWV6U09hvcANR7GMzgXAAqMIE
+	 /TOvqWUS3ECmA==
+Date: Wed, 18 Feb 2026 22:15:46 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org
+Cc: hch@infradead.org, brauner@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] fserror: fix lockdep complaint when igrabbing inode
+Message-ID: <20260219061546.GP6467@frogsfrogsfrogs>
+References: <177148129514.716249.10889194125495783768.stgit@frogsfrogsfrogs>
+ <177148129564.716249.3069780698231701540.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,33 +43,178 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <38947e4ca2d01828e7e7033f115770efe6ac9651.1771418537.git.nirjhar.roy.lists@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <177148129564.716249.3069780698231701540.stgit@frogsfrogsfrogs>
 
-> +int
-> +xfs_rtginodes_ensure_all(struct xfs_rtgroup *rtg)
+On Wed, Feb 18, 2026 at 10:09:37PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Christoph Hellwig reported a lockdep splat in generic/108:
+> 
+>  ================================
+>  WARNING: inconsistent lock state
+>  6.19.0+ #4827 Tainted: G                 N
+>  --------------------------------
+>  inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+>  swapper/1/0 [HC1[1]:SC0[0]:HE0:SE1] takes:
+>  ffff88811ed1b140 (&sb->s_type->i_lock_key#33){?.+.}-{3:3}, at: igrab+0x1a/0xb0
+>  {HARDIRQ-ON-W} state was registered at:
+>    lock_acquire+0xca/0x2c0
+>    _raw_spin_lock+0x2e/0x40
+>    unlock_new_inode+0x2c/0xc0
+>    xfs_iget+0xcf4/0x1080
+>    xfs_trans_metafile_iget+0x3d/0x100
+>    xfs_metafile_iget+0x2b/0x50
+>    xfs_mount_setup_metadir+0x20/0x60
+>    xfs_mountfs+0x457/0xa60
+>    xfs_fs_fill_super+0x6b3/0xa90
+>    get_tree_bdev_flags+0x13c/0x1e0
+>    vfs_get_tree+0x27/0xe0
+>    vfs_cmd_create+0x54/0xe0
+>    __do_sys_fsconfig+0x309/0x620
+>    do_syscall_64+0x8b/0xf80
+>    entry_SYSCALL_64_after_hwframe+0x76/0x7e
+>  irq event stamp: 139080
+>  hardirqs last  enabled at (139079): [<ffffffff813a923c>] do_idle+0x1ec/0x270
+>  hardirqs last disabled at (139080): [<ffffffff828a8d09>] common_interrupt+0x19/0xe0
+>  softirqs last  enabled at (139032): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
+>  softirqs last disabled at (139025): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
+> 
+>  other info that might help us debug this:
+>   Possible unsafe locking scenario:
+> 
+>         CPU0
+>         ----
+>    lock(&sb->s_type->i_lock_key#33);
+>    <Interrupt>
+>      lock(&sb->s_type->i_lock_key#33);
+> 
+>   *** DEADLOCK ***
+> 
+>  1 lock held by swapper/1/0:
+>   #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
+> 
+>  stack backtrace:
+>  CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full)
+>  Tainted: [N]=TEST
+>  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
+>  Call Trace:
+>   <IRQ>
+>   dump_stack_lvl+0x5b/0x80
+>   print_usage_bug.part.0+0x22c/0x2c0
+>   mark_lock+0xa6f/0xe90
+>   __lock_acquire+0x10b6/0x25e0
+>   lock_acquire+0xca/0x2c0
+>   _raw_spin_lock+0x2e/0x40
+>   igrab+0x1a/0xb0
+>   fserror_report+0x135/0x260
+>   iomap_finish_ioend_buffered+0x170/0x210
+>   clone_endio+0x8f/0x1c0
+>   blk_update_request+0x1e4/0x4d0
+>   blk_mq_end_request+0x1b/0x100
+>   virtblk_done+0x6f/0x110
+>   vring_interrupt+0x59/0x80
+>   __handle_irq_event_percpu+0x8a/0x2e0
+>   handle_irq_event+0x33/0x70
+>   handle_edge_irq+0xdd/0x1e0
+>   __common_interrupt+0x6f/0x180
+>   common_interrupt+0xb7/0xe0
+>   </IRQ>
+> 
+> It looks like the concern here is that inode::i_lock is sometimes taken
+> in IRQ context, and sometimes it is held when going to IRQ context,
+> though it's a little difficult to tell since I think this is a kernel
+> from after the actual 6.19 release but before 7.0-rc1.
+> 
+> Either way, we don't need to take i_lock, because filesystems should
+> not report files to fserror if they're about to be freed or have not
+> yet been exposed to other threads, because the resulting fsnotify report
+> will be meaningless.
+> 
+> Therefore, bump inode::i_count directly and clarify the preconditions on
+> the inode being passed in.
 
-Please use the usual XFS function definition style.
+...and now I realize that I got so hung up on email cc list composition
+that I neglected to notice that I forgot to update the commit message
+to say:
 
+"Therefore, add the ioend to a queue and get an async worker to chug
+through the error events from process context with no filesystem locks
+already held."
+
+Let's hope I got the paperwork right this time, all this friction to
+amend minor mistakes are why I don't want to be here anymore. <grumble>
+
+--D
+
+> Link: https://lore.kernel.org/linux-fsdevel/aY7BndIgQg3ci_6s@infradead.org/
+> Reported-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/iomap/ioend.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+> 
+> 
+> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+> index e4d57cb969f1bb..4d1ef8a2cee90b 100644
+> --- a/fs/iomap/ioend.c
+> +++ b/fs/iomap/ioend.c
+> @@ -69,11 +69,57 @@ static u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
+>  	return folio_count;
+>  }
+>  
+> +static DEFINE_SPINLOCK(failed_ioend_lock);
+> +static LIST_HEAD(failed_ioend_list);
+> +
+> +static void
+> +iomap_fail_ioends(
+> +	struct work_struct	*work)
 > +{
-> +	int	i = 0;
-
-The for loop already does this.
-
-> +	int	error = 0;
+> +	struct iomap_ioend	*ioend;
+> +	struct list_head	tmp;
+> +	unsigned long		flags;
 > +
-> +	ASSERT(rtg);
-
-The assert isn't needed.
-
+> +	spin_lock_irqsave(&failed_ioend_lock, flags);
+> +	list_replace_init(&failed_ioend_list, &tmp);
+> +	spin_unlock_irqrestore(&failed_ioend_lock, flags);
 > +
-> +	for (i = 0; i < XFS_RTGI_MAX; i++) {
-> +		error = xfs_rtginode_ensure(rtg, i);
-> +		if (error)
-> +			break;
+> +	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
+> +			io_list))) {
+> +		list_del_init(&ioend->io_list);
+> +		iomap_finish_ioend_buffered(ioend);
+> +		cond_resched();
 > +	}
-> +	return error;
-
-Just return the error directly from the loop and 0 if you make it
-through, then there is no need for the error initialization at the
-top either.
+> +}
+> +
+> +static DECLARE_WORK(failed_ioend_work, iomap_fail_ioends);
+> +
+> +static void iomap_fail_ioend_buffered(struct iomap_ioend *ioend)
+> +{
+> +	unsigned long flags;
+> +
+> +	/*
+> +	 * Bounce I/O errors to a workqueue to avoid nested i_lock acquisitions
+> +	 * in the fserror code.  The caller no longer owns the ioend reference
+> +	 * after the spinlock drops.
+> +	 */
+> +	spin_lock_irqsave(&failed_ioend_lock, flags);
+> +	if (list_empty(&failed_ioend_list))
+> +		WARN_ON_ONCE(!schedule_work(&failed_ioend_work));
+> +	list_add_tail(&ioend->io_list, &failed_ioend_list);
+> +	spin_unlock_irqrestore(&failed_ioend_lock, flags);
+> +}
+> +
+>  static void ioend_writeback_end_bio(struct bio *bio)
+>  {
+>  	struct iomap_ioend *ioend = iomap_ioend_from_bio(bio);
+>  
+>  	ioend->io_error = blk_status_to_errno(bio->bi_status);
+> +	if (ioend->io_error) {
+> +		iomap_fail_ioend_buffered(ioend);
+> +		return;
+> +	}
+> +
+>  	iomap_finish_ioend_buffered(ioend);
+>  }
+>  
+> 
+> 
