@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B55531A813
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:44:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0577C8E6
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:44:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544673; cv=none; b=Ox1wbiAhQsUMOAUQ6GOnFC/1xnYgTV3Mi3nu1UYwnmehf9nbAlpRZCRuNw/QRBs1tcCAftIr0JP/khM7DOEqQGltNWnQld2I6klW3++l6fKdgZa7RIUZo0KgqtjBPTJzOsTqM8GHm+z1KlIkca5d8dd0qfdrrDzHm6sysfAfdbo=
+	t=1771544689; cv=none; b=INaN1WAxZi8QTTbetjkHU0teqKMw2wP5wrDBpGTFjvpOGSCrMK298g7Nntow7qW11P/92NC54O+aH97cm/uAV1p47vn+yEtxKfiRRW9hapfdbYztpqFs+w4iXd66NQv5jymzdBJijLA73ooccMTErQdvMXxzPiuxC14QiHImzvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771544673; c=relaxed/simple;
-	bh=hTQ4zzJr29psIpKpgVNr1TeChz+JD8mkHSccM3ld/ME=;
+	s=arc-20240116; t=1771544689; c=relaxed/simple;
+	bh=Hqt01NUlnOeofrg5LLVPqxp+eRJ8jl8gak9KKzyCiw4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uf/lQlyN3y8DKL7XVjaopwEDsaZi765qTCWRE+N+4RC4kcwmvT8QluRz7SUCHk0UoRtapsWg7uO0c9TabN6PDi/EVXwwIICPwFpYcZ0cu665Bw3uNOQfZ6OtQh0fa9btSy/kRKskoL6qBYRNptSkVeA3XfyqEWYuQQXWGDAj7yM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAHQKbGi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jsbzvC90OUeveV8YcpE7L4buMl5mob81cXePaQOnSEJ75Do4TaWNJYHAGABe5XBAY6OPQdVbovLHe5p2T71w0f8Ciw+teAy6Vbj/nPu8NT+OvLPBFIiu0qLIGgp7Vygkjs4Njkxs7T9IGhogf8tT2tqRlu3G+1bE4DYRRtstUfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7iGbXYw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAHQKbGi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 280D4C4CEF7;
-	Thu, 19 Feb 2026 23:44:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7iGbXYw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D22D3C4CEF7;
+	Thu, 19 Feb 2026 23:44:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771544673;
-	bh=hTQ4zzJr29psIpKpgVNr1TeChz+JD8mkHSccM3ld/ME=;
+	s=k20201202; t=1771544688;
+	bh=Hqt01NUlnOeofrg5LLVPqxp+eRJ8jl8gak9KKzyCiw4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=TAHQKbGi0r/K3AR2U0fyAa24KkYA6PIiDU3757KUHXja0s/mrBVgrK76xms1AmyQY
-	 TbZFwMq8b/Btg+ezIB/qNtaQqkwQGTV3URcFtkcj0mdSgbxEnkjtSAtja2QnDNpG2P
-	 OWWgfNv/XO8UhCT+t+JJPtK3NY+0+kqgDRM/DeIu9x3yRTnJGDfrbK8dMoPR2XD21S
-	 3asgbJ1Vd9gHSiz8wcMuK1Bj/7Lt1d9Opge7uQaKkMgNK1bft7JeDwS1H4j5C26wHH
-	 BtiSXhD1Dkeu+Wl7rjRHrCQEAoMBpHWrHHc/C0epBZvOe/Xm2mJUdy9iirte4sOxCe
-	 YfE0NBRhR+Q6w==
-Date: Thu, 19 Feb 2026 15:44:32 -0800
-Subject: [PATCH 04/12] xfs: use a lockref for the xfs_dquot reference count
+	b=R7iGbXYwJzvmxgU0SacscizkZ47a2gr3TeImP+n8ElcO7BOeE0Ex7Yj50uH18CVx1
+	 ye08Jdz4cA+owo50zatWxKfi5oM5ci2o7lvFlx9audBC1Pobh1TgW4L7hnQXNQ7dlV
+	 ZLJF/q8KnGV2upfuJIW0FyskzgGq96pc1nZNkOuGdNlxm4n8GjM7TlkLSwjKfmQ+R0
+	 qAaAFRjiWwZF+TuvcGlOGRjsWXyuvJm/IKtRBn28cQxY724/4hmiW9sc5mXDTZFJXQ
+	 mWgK8G45bluC982q9KEtA6/NkS0Fepb2mOFgO8zc7lWRdNLTsV0W8dh6DlxFpUMErN
+	 cJq+OEusSipmQ==
+Date: Thu, 19 Feb 2026 15:44:48 -0800
+Subject: [PATCH 05/12] xfs: add a XLOG_CYCLE_DATA_SIZE constant
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177154456802.1285810.4287423505253578455.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, cmaiolino@redhat.com, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <177154456818.1285810.8462510393642140537.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
 References: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,42 +46,73 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 0c5e80bd579f7bec3704bad6c1f72b13b0d73b53
+Source kernel commit: 74d975ed6c9f8ba44179502a8ad5a839b38e8630
 
-The xfs_dquot structure currently uses the anti-pattern of using the
-in-object lock that protects the content to also serialize reference
-count updates for the structure, leading to a cumbersome free path.
-This is partially papered over by the fact that we never free the dquot
-directly but always through the LRU.  Switch to use a lockref instead and
-move the reference counter manipulations out of q_qlock.
-
-To make this work, xfs_qm_flush_one and xfs_qm_flush_one are converted to
-acquire a dquot reference while flushing to integrate with the lockref
-"get if not dead" scheme.
+The XLOG_HEADER_CYCLE_SIZE / BBSIZE expression is used a lot
+in the log code, give it a symbolic name.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_quota_defs.h |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ libxfs/xfs_log_format.h   |    5 +++--
+ libxlog/xfs_log_recover.c |    6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
-index 763d941a8420c5..551d7ae46c5c21 100644
---- a/libxfs/xfs_quota_defs.h
-+++ b/libxfs/xfs_quota_defs.h
-@@ -29,11 +29,9 @@ typedef uint8_t		xfs_dqtype_t;
-  * flags for q_flags field in the dquot.
-  */
- #define XFS_DQFLAG_DIRTY	(1u << 0)	/* dquot is dirty */
--#define XFS_DQFLAG_FREEING	(1u << 1)	/* dquot is being torn down */
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index 6c50cb2ece1972..91a841ea5bb36d 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -31,6 +31,7 @@ typedef uint32_t xlog_tid_t;
+ #define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
+ #define XLOG_MAX_RECORD_BSIZE	(256*1024)
+ #define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
++#define XLOG_CYCLE_DATA_SIZE	(XLOG_HEADER_CYCLE_SIZE / BBSIZE)
+ #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+ #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+ #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+@@ -135,7 +136,7 @@ typedef struct xlog_rec_header {
+ 	__le32	  h_crc;	/* crc of log record                    :  4 */
+ 	__be32	  h_prev_block; /* block number to previous LR		:  4 */
+ 	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
+-	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
++	__be32	  h_cycle_data[XLOG_CYCLE_DATA_SIZE];
  
- #define XFS_DQFLAG_STRINGS \
--	{ XFS_DQFLAG_DIRTY,	"DIRTY" }, \
--	{ XFS_DQFLAG_FREEING,	"FREEING" }
-+	{ XFS_DQFLAG_DIRTY,	"DIRTY" }
+ 	/* fields added by the Linux port: */
+ 	__be32    h_fmt;        /* format of log record                 :  4 */
+@@ -172,7 +173,7 @@ typedef struct xlog_rec_header {
+ 
+ typedef struct xlog_rec_ext_header {
+ 	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+-	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
++	__be32	  xh_cycle_data[XLOG_CYCLE_DATA_SIZE];		/*	: 256 */
+ } xlog_rec_ext_header_t;
  
  /*
-  * We have the possibility of all three quota types being active at once, and
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 3e7bbf08af1f40..6ab8b8b0635c7b 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -1338,7 +1338,7 @@ xlog_unpack_data(
+ 		return error;
+ 
+ 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
+-		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
++		  i < XLOG_CYCLE_DATA_SIZE; i++) {
+ 		*(__be32 *)dp = *(__be32 *)&rhead->h_cycle_data[i];
+ 		dp += BBSIZE;
+ 	}
+@@ -1346,8 +1346,8 @@ xlog_unpack_data(
+ 	if (xfs_has_logv2(log->l_mp)) {
+ 		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+ 		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
+-			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+-			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
++			j = i / XLOG_CYCLE_DATA_SIZE;
++			k = i % XLOG_CYCLE_DATA_SIZE;
+ 			*(__be32 *)dp = xhdr[j].hic_xheader.xh_cycle_data[k];
+ 			dp += BBSIZE;
+ 		}
 
