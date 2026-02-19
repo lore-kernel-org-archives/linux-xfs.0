@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56B42E6CAB
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:43:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6172131A813
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:43:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544619; cv=none; b=fb44SY3I3OT4EHt/xEXsGKrIs1RzD4Ktez+NqAgY2fhwspLwuLo8pJW++vpJoC6KbaQZv3S+s/vuaJh2197R+PNFBJmjsoEiSYculKM1VuG/yyZeM7wphGGu0J6eEziNXGDWvAQsQzSdaUjuF4tLenMhMMj7nJtESmcvEfNDT7o=
+	t=1771544625; cv=none; b=WB07mVM96Q3/XvMJVsycM2TKEkMNWNF9mWiyHgdhC8RvQsL0Jk6ghqZvFY7qZqaUh2O9NgmcCtgoB03bxMhxXFtsd56KZsSLQZQwV1UHhNavn69M/i1x6NDooci4O0vrH2nCp6vu+Yd4XszjDS5QHy0t9s1YsCeN+oCxbeUTevA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771544619; c=relaxed/simple;
-	bh=zvgoqDuU6IFE2O3RIfm29wa2ioh+M8zB8ptDgUCOdmw=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=D+SYk+WQzaTjpN3r7HIdN3ZThC/r9pYG9U5bSkqcOMalJbe5v3ntiXycZHwAv6km8ZoCm0e8vKr7kpsXM24nygeFxLwBbfsPOQZIFMvPq0hCZgZ3j2QaYvvoMXd+J4OYD75NlQI6OGnJ8VAy26OKgvFpK7pGHzJioyjozujGxAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jdI7WyQB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771544625; c=relaxed/simple;
+	bh=3JaQBIrFIbtChjC3pyLRwcWB1xL4UUd0CQGPYZnrD7o=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=G9MEtW891jDzmlUzgxxs7Y4d+BnuQdOUJkmxYujMhy+Ip0yrpa+QIqSteFCc9w+v59dYeKXZPI3AwtDZS4T0m66xg0IF27IsAlvB5fl8CIs92NXGoGh/L0WokvLPLBY6IsSOyL7Yy48UZOgjfRIrMTowv1kUgaem2SjdH3DXpZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MfunYst7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jdI7WyQB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94A5EC4CEF7;
-	Thu, 19 Feb 2026 23:43:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MfunYst7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 440E9C4CEF7;
+	Thu, 19 Feb 2026 23:43:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771544619;
-	bh=zvgoqDuU6IFE2O3RIfm29wa2ioh+M8zB8ptDgUCOdmw=;
-	h=Date:Subject:From:To:Cc:From;
-	b=jdI7WyQBDpz/TWw8Camx1qPSth3t6YxdYpjJvRZPvbRcP2VfD9lEI2fqcVixGsUsO
-	 fHT7L6x9Zvb+kTicht+BS/ceQICieidBRDVGKThjyjrne+oqjdy+z9ivQhoPOXoYQZ
-	 9Wq1iOmnapO/gcc9U6QmuR5vLItMpnBpqXIKOo7VXDeie2veR49a3NyJz5K/MhOqHO
-	 4reQ+KpOPqkUnHqcIY3OGfAYNCPLsOHvuBkJ5rByWPDJbxb1/HX4blLysVA0qTRsek
-	 8pPLbB7oT1bhl1V9cr/Q+4vidaSmEyAuUOuYmPuW5Ly1HfqIjEYB2rZcOAtE4AhMU5
-	 723xnpTr427JQ==
-Date: Thu, 19 Feb 2026 15:43:39 -0800
-Subject: [PATCHSET 2/2] xfsprogs: various bug fixes for 6.19
+	s=k20201202; t=1771544625;
+	bh=3JaQBIrFIbtChjC3pyLRwcWB1xL4UUd0CQGPYZnrD7o=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=MfunYst767AD2snkFv7vZnR5yc/FwAijK6Su21/gYviz/kRCuk7NJ9da2czJs9kcD
+	 V3RoPjuuyuQfYKcRm0EPjJOXG0jSVSXF4BznY/BulmtWd7d28Eqmrn/m7E5lv5ECeL
+	 +jH8VoL34G2vglBhO3H3Q7pjRfDSiLrnl37KqRyC+l9n+5bBfQ7jHoZKvSyNME+YbT
+	 FFccaN37lbHPSeoTu4weFjzdstiEN1vZ0CCzhcbMX4D6o+y3tep6rIjQgcVVHVgTiU
+	 l0DqAS+CmI09U6QobOGIHQd/sRYPFmAp3PTw+hlHxsEDnGhelG/SqNYLpurL4b7EYc
+	 Egy4q/DfGloig==
+Date: Thu, 19 Feb 2026 15:43:44 -0800
+Subject: [PATCH 01/12] xfs: error tag to force zeroing on debug kernels
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
+Cc: bfoster@redhat.com, brauner@kernel.org, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <177154456747.1285810.6219232325635808732.stgit@frogsfrogsfrogs>
+In-Reply-To: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
+References: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,43 +44,52 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Brian Foster <bfoster@redhat.com>
 
-This is miscellaneous bugfixes.
+Source kernel commit: 66d78a11479cfea00e8d1d9d3e33f3db1597e6bf
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+iomap_zero_range() has to cover various corner cases that are
+difficult to test on production kernels because it is used in fairly
+limited use cases. For example, it is currently only used by XFS and
+mostly only in partial block zeroing cases.
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
+While it's possible to test most of these functional cases, we can
+provide more robust test coverage by co-opting fallocate zero range
+to invoke zeroing of the entire range instead of the more efficient
+block punch/allocate sequence. Add an errortag to occasionally
+invoke forced zeroing.
 
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Christian Brauner <brauner@kernel.org>
 ---
-Commits in this patchset:
- * mkfs: set rtstart from user-specified dblocks
- * xfs_logprint: print log data to the screen in host-endian order
- * mkfs: quiet down warning about insufficient write zones
- * xfs_mdrestore: fix restoration on filesystems with 4k sectors
- * debian: don't explicitly reload systemd from postinst
- * xfs_scrub_all: fix non-service-mode arguments to xfs_scrub
----
- logprint/logprint.h       |    1 +
- debian/postinst           |    3 ---
- logprint/log_print_all.c  |    5 +++--
- logprint/logprint.c       |    5 +++++
- man/man8/xfs_logprint.8   |    4 ++++
- mdrestore/xfs_mdrestore.c |   16 +++++++++++----
- mkfs/xfs_mkfs.c           |   47 +++++++++++++++++++++++++++++++++------------
- scrub/Makefile            |    2 +-
- scrub/xfs_scrub_all.py.in |    3 ++-
- 9 files changed, 62 insertions(+), 24 deletions(-)
+ libxfs/xfs_errortag.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+
+diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+index de840abc0bcd44..57e47077c75a2a 100644
+--- a/libxfs/xfs_errortag.h
++++ b/libxfs/xfs_errortag.h
+@@ -73,7 +73,8 @@
+ #define XFS_ERRTAG_WRITE_DELAY_MS			43
+ #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
+ #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
+-#define XFS_ERRTAG_MAX					46
++#define XFS_ERRTAG_FORCE_ZERO_RANGE			46
++#define XFS_ERRTAG_MAX					47
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -133,7 +134,8 @@ XFS_ERRTAG(ATTR_LEAF_TO_NODE,	attr_leaf_to_node,	1) \
+ XFS_ERRTAG(WB_DELAY_MS,		wb_delay_ms,		3000) \
+ XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
+ XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
+-XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4)
++XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
++XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4)
+ #endif /* XFS_ERRTAG */
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
 
