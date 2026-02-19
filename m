@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F3F325712
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:45:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E6F27B4F7
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 23:45:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544736; cv=none; b=kFl+Lu5gtqoNtxFdEqNrcOGrZ9hZ/AYAQGqGEDbTr9bZv+Zx5ZJGJfaXb9qStEI7a2xcKTtFkdFie1bsyrvQ8DzkDmdNjEdeaV6AEtfCostYCbZFEVmrc5d7b9cdRFw2Gsvp8WyhcgvXM//egCsE4X/KDlg4qXTZ3ZLvDT8Tg8g=
+	t=1771544751; cv=none; b=WS/j14++RguSw37OxoG0qY+ioJ1ap8Ju8VxYsUL85IWKg1uuNRbtVpGe13mjuu7s9Fbc46X7ZYAHolUUBjeXqJKV5VB6RONz6sSoy3UeaIRb0q+A3IbBUbYBgKoUhkEp1r2gV1lOEcQ+2X7lGl3RcJfIq1mHiBKABYRJ6L/v8Lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771544736; c=relaxed/simple;
-	bh=orfpf6z7mxHBShmH3QAVXuls5JT313wnMhN9QT/ZWO0=;
+	s=arc-20240116; t=1771544751; c=relaxed/simple;
+	bh=FUNak+McDHOBzOF/kWSuHykp31CCwgvluwfmyvgudAE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OM2E9NpocNvcFtDOHp7MmS5Lk11RHMkAIzi8cVwOaF0DqRUUIDatbSNS8gf6yQLpDMGO7h81inRcdWpKPwk7ng/QSPFxAMb5MmGe9Bt6Owden4qk5wxtIDa5xkwMy6979V8RCs6TCkrpVxq7neYcRckqIGOPVwNU04//EoMB6jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IX0K996k; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XAeTmKjM2pNq4s6cjyoV34QkDYDyIfciow8JzKPHrzhlQkKpMySvab/HVD1UDAmJ/FBybMThIteP1ii/lAwrpL9d8TVN0P6gy11ii/MrWQfnIsF6iaG4ZVo/QvgiJ3K4zDavCHraCpQTsiukzGLxhFxQWJ1+JsWvz5cACr6zz6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JkdYqo7h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IX0K996k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6736C4CEF7;
-	Thu, 19 Feb 2026 23:45:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JkdYqo7h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F7BEC4CEF7;
+	Thu, 19 Feb 2026 23:45:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771544735;
-	bh=orfpf6z7mxHBShmH3QAVXuls5JT313wnMhN9QT/ZWO0=;
+	s=k20201202; t=1771544751;
+	bh=FUNak+McDHOBzOF/kWSuHykp31CCwgvluwfmyvgudAE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IX0K996kKzF6Tm8E0fIyIq7CZhxFFj3/c2sHEwWBj3thIUWJpzxgol7VI737g/b9+
-	 JgdiPPdvJbaReQKLtXX/+iI53Yno3+JSQUoZw8t5g0ZkRIcCtu/V033vOQWn3Utg0o
-	 JeWtPMnSXN3fEHhJukMC0e21fGyTCfF7+0J8E13Zceb9InJ3WWKhLSqSqbZhXLuZ3o
-	 c250m1WubJX3w6uZHVS7ZXjiir7j37LuxUokjjMSJIvOoj6i1/6E+Un0Wdz8YIFrxW
-	 8lQYuvakn9oprtFxUygIz0nq+hfcA+sqy3GWUH6xV/afAvuVjI+Z0NgN+WOGV9Lm10
-	 4D8FxW8QYC9YQ==
-Date: Thu, 19 Feb 2026 15:45:35 -0800
-Subject: [PATCH 08/12] xfs: remove xarray mark for reclaimable zones
+	b=JkdYqo7hC3/J56fRiJNt7JyS8C+99k+2v8D/CS9w1MBOLoeFMCvNkQuAZSMufJAS4
+	 6RObeRx/Lve8mek8mKXrKhOhqDn2vrMlp0rge+wz0Yvl5gVydKoW//HWHkDu2N0VVT
+	 eadUAUkG45KF5hp1UgILNTTeC7JVsp7/ENdFoBfKOyltVGhOFSCX2g62d/c2ZSPUdT
+	 CmtnI465f3VKrQFoMU9rDQ7k0W7OlLO4mDGRhEBBJhiBVVD5lQ6BWqE5SjcBs11/UQ
+	 UZRaTp6JaKrOCARxIivT8A1MTO4HzN7hABIrddbecr6y/IGX983aQN91siuZW5119h
+	 XqzUi3yq0paeQ==
+Date: Thu, 19 Feb 2026 15:45:50 -0800
+Subject: [PATCH 09/12] xfs: validate that zoned RT devices are zone aligned
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: cem@kernel.org, hans.holmberg@wdc.com, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <177154456873.1285810.8177929225997763863.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177154456890.1285810.11146600955522147726.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
 References: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,37 +43,47 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Hans Holmberg <hans.holmberg@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: bf3b8e915215ef78319b896c0ccc14dc57dac80f
+Source kernel commit: 982d2616a2906113e433fdc0cfcc122f8d1bb60a
 
-We can easily check if there are any reclaimble zones by just looking
-at the used counters in the reclaim buckets, so do that to free up the
-xarray mark we currently use for this purpose.
+Garbage collection assumes all zones contain the full amount of blocks.
+Mkfs already ensures this happens, but make the kernel check it as well
+to avoid getting into trouble due to fuzzers or mkfs bugs.
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 2167eaabe2fa ("xfs: define the zoned on-disk format")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_rtgroup.h |    6 ------
- 1 file changed, 6 deletions(-)
+ libxfs/xfs_sb.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 
-diff --git a/libxfs/xfs_rtgroup.h b/libxfs/xfs_rtgroup.h
-index a94e925ae67cb6..03f1e2493334f3 100644
---- a/libxfs/xfs_rtgroup.h
-+++ b/libxfs/xfs_rtgroup.h
-@@ -64,12 +64,6 @@ struct xfs_rtgroup {
-  */
- #define XFS_RTG_FREE			XA_MARK_0
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index dd14c3ab3b59e3..3e2d3c6da19631 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -299,6 +299,21 @@ xfs_validate_rt_geometry(
+ 	    sbp->sb_rbmblocks != xfs_expected_rbmblocks(sbp))
+ 		return false;
  
--/*
-- * For zoned RT devices this is set on groups that are fully written and that
-- * have unused blocks.  Used by the garbage collection to pick targets.
-- */
--#define XFS_RTG_RECLAIMABLE		XA_MARK_1
--
- static inline struct xfs_rtgroup *to_rtg(struct xfs_group *xg)
- {
- 	return container_of(xg, struct xfs_rtgroup, rtg_group);
++	if (xfs_sb_is_v5(sbp) &&
++	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED)) {
++		uint32_t		mod;
++
++		/*
++		 * Zoned RT devices must be aligned to the RT group size,
++		 * because garbage collection assumes that all zones have the
++		 * same size to avoid insane complexity if that weren't the
++		 * case.
++		 */
++		div_u64_rem(sbp->sb_rextents, sbp->sb_rgextents, &mod);
++		if (mod)
++			return false;
++	}
++
+ 	return true;
+ }
+ 
 
