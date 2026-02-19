@@ -1,139 +1,126 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34D22338936
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 09:20:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771492859; cv=none; b=qweTz/cmtaueCnRr1+eDqYv5//B1Xz5WgoEfwPqa5HCzS5IkGXhUS1ITN0b0Me5yXNmz+6qPBVkU2ndd4Y7HELeKIBhPybGfHSrDP1RHq7gYjlya1yJ5I88xKFSrQOCmVwyRnYAcBys1FPDrHh5Gh+XSXY61WfVHWFOxIaTWYTo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771492859; c=relaxed/simple;
-	bh=xKXts/skz0JyIelk8FhsIJVjS5AJwJaHz2pl7SfkktE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ufwn/p3hQKIuIn0UB/9PlEf5ECqeOWehJv8HlX7uTiTocNxKF+6fo/0CsIIdx2sNgoYsNTggiRhBH9vp2OArHpRP8G3QUo98nxucFQgIBWQOcWlMDJgcYSwW1aZu4cKEhrEzAhO80bKF/3dAsKPt1mkwndjyYyHNU/N/nHmgd44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HhSlNfq1; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BC829E11B
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 09:35:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771493719; cv=pass; b=kG9Guk5+1xRbLzJr8UMKlVvLAA1+y8G+xO/SRVkb6oBhCVc6+jbyOXWW4ILcfEJrPPpZAUBMkFIaDyDJbVnuaEn0WW/iZj5QKtnhziXK8dboBtA3xGsEcZ2aGsMuIKkfea4+UgJ5idfT9qRq65sAOQfO0IvwB70B2j4GmYcVvks=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771493719; c=relaxed/simple;
+	bh=gCWDiQm+EHHTUf3msypTuKiY8ST30SKMWU2VhVV9PuQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SqTTs9tdbFeiSFsb1CJlRbOMLAzkLznQpVeUSlDgTQIRN4foV+9e8VaraJW34BwzEKfsPi3W1UMr1zXA02D3lTd04vrO8miay1aeyUuCGkpuX3QKjmRlbZiV5gTdJBtvIY1YZE7IgHlrcNs8W+UtuISoPpPQHBLLfICvN0hC19Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=O+79GAjr; arc=pass smtp.client-ip=209.85.167.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HhSlNfq1"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4362d4050c1so714731f8f.2
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 01:20:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="O+79GAjr"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-59de8155501so756546e87.3
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 01:35:18 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771493717; cv=none;
+        d=google.com; s=arc-20240605;
+        b=e1z/kV3F0O6ljH8IAPZRdEjCPNBm3eOuxFmk3Dy6pobFk+4+1OqD7847nvjFrIo+Qd
+         1ZdGgM2JrrUj/wMXrnE6NXHyNMn9B/mnmgzOBLTzydERJqK442bcEkuPbRtlMHHzo3Uh
+         /B4LqFEn5Rn+acPGa7uNAAE4kDKV8NNUiOGGZMrbVETNGIOw4bqdecE2eXIlxlNJF0zE
+         B4rkDhIx8UzC8mmZTmawlOAE/+Un7ZcE3OPuYn1/QZXNk2vBSncdgakKx1FmLrCAqVkg
+         gNUAguDZwoTLIzyqS2Qz5lkmKam6IWJFJHJyX/ogzrYNWuu44CpHnJpsCoNOdpnVADx7
+         vxlg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=qwP73GPLt6/49YtKqBvxtty3Y7ZnoSWI6pg6OHhH1MU=;
+        fh=Dn1gbGPw3WGS3L77TDwcG49BoAeZPjD5NhHoWJvw7q4=;
+        b=TQifI87OTGnCAEknV/Oh1HcUyFLpbpZ/VsceramrnCa4hGBCnwZ1yqoemEv/o8Zx8N
+         2/0/9/5A2qcjpewDKTjPJsw8w9SOltciq6uYMV1gdL8jvtVt6JS8N0OT/LZy+sClJ+jz
+         plJzVSUsOQxpwV2bY2mIgBGtSsDAM//H7Gmu9VsLJ/PRa1BFji74o01rH29EPdd42UFd
+         5s37zloG+BVgqMAfeeeMFBJPx7czEa07M4qh+2K8pfyE4FdTvUJrFNclQZ2XBd/XmMet
+         3tQGe+Q1hcRnpFPaZdsGPWA3mpkx5mZVe5/smAI1DTpdEwV/D/tDacdTf+H9t+q5KxCn
+         mQEQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1771492856; x=1772097656; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+FlmjqWniPC3jVFM4ecKSA8vcZ4REL4AR5R1sKakC6E=;
-        b=HhSlNfq1aK66riOhvJRGmKVmwUE9x101pY3piUYViH0cXEwhc5pbTnZh89v7RoVCQm
-         Ro10cpiJoLdVuA2TyGpc/DdErnJY4Eh5IJap8jQs6bkwlAj4rq4UYjuDQwGRii1NE8Z3
-         MYVIZwI0OgLdJbP4KhLNIFrU/UEXH4J0q1uahFzC6qTHCrXobXMUY78hLK9V6DquDnM5
-         zCiJu++S9g5GRkCCq6rCdHTzxkvr6SbklmqxQo8WUbt6dnzNUrK2nh+UYvD5W0OZgO/p
-         0pdun0Vw9ULnbRav3lMAh38AkvXxHqaKWdNCkyIPl9n6uwY9e+bk7LPV5x5NaqUakA99
-         25bQ==
+        d=suse.com; s=google; t=1771493717; x=1772098517; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qwP73GPLt6/49YtKqBvxtty3Y7ZnoSWI6pg6OHhH1MU=;
+        b=O+79GAjrfutAqPW9UdOjtEZwRahYbUWG0djjo2jTHqHnkzVBxfiSAkCgAKkGjRISMX
+         L2ELXRTY3jOpb/w1s8fDSB3h28lvquHHCHMpFZ24YZE3u4riZAxZjPH5U9bXTEkOEk0P
+         v0jM4Qg2MYdn9d1NZgCnaSsb5IgNb0tOf2xo8P3iSu9coz8ZGcM99BcGHAMsLQN7hlzG
+         NLHzOWDLhLhuYFew8PqbQFBbSNcMVDfQnymR/e+7flp9SAtICvP03WtqfvJzIDelME5C
+         rumcaQnHHbb6r/etdDgUdAR29rrRWfAhAc5uq18qBjiLcw3PpnJCWJPbTOtnfFCZKHE1
+         4zNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771492856; x=1772097656;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+FlmjqWniPC3jVFM4ecKSA8vcZ4REL4AR5R1sKakC6E=;
-        b=CNJsrYbIBTkZ6tIDHZdPACJQiTZzeQFWCUaZdaa7yjvcagDKGckvcTU4MDBPMe56Tk
-         5yYVzJJ/VsPMeWwBDdPvxEVnVjN4ykplzvWE1DPIW3h1IoVislVbXALGXoS/WFaofKbd
-         l5BGOYHOh3v9coTrO2UdobqQvTHqWVML2SXfvrfjrUG3PRhogJVjdDMaN+6UMUqoW5E/
-         ij+lUgREREyr/9lQfYjLI88/dGz1tU4ip3llL1zvx3masE47nwcWSoFYlnviaOhdp+wZ
-         2V9D8BgDPI9NJVpUa2mZq2ABl6u2LhHWN2sskHDSPj14AXn44o490FB+rHppRLNyiROm
-         vU7w==
-X-Forwarded-Encrypted: i=1; AJvYcCUgpKp/5qgAU4Zlf4Whow/SptYkLSj+D+gvXBAET2zTCcWH9ZDCzLbgmF3Ughy3pOyOWhh+9IIE1Go=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJ2Sd4Q5GQKkLBrORWm9iEp5vPUtw44z3QJavm7hYDIHZTI6jf
-	coIDHG0WSyhUu2da78aVwDaUs0HK7n+2z2sucbCiln5FYt6cq1apo5m3FOQzlLueW9w=
-X-Gm-Gg: AZuq6aJ9Q1hxmsrIFPH4nmD0HSILtOyLK5jSwwbTI6yldLkd4KPzynzPjtGPosm0pSH
-	nCS6Jsl2bPwEQKcPIwzzNjd9wyUkF6E9wa7NdugZlRVK4TyMNknusq1sZhESFQBPURMd5Hvrkxo
-	52gZRKevo0WaK0nVwpKJ+TObrzLnLDeu8X2bl8gX4Y+HfM/LNq8nEItMP2hj5C34naJGKPy0y7p
-	U1N6a8kKuPwrOLT69DEohr0pvdVhH633cVUzeXFimBN+5RdB3vg0w5rO2RHpKxr+yj82+X/OWTe
-	+8M+my3EinbPlObdNSveNGB/Hmt5eorzjU7guvfeeDUraLFqJwMKXIdLHEK5AkaVlPkIjOc4iAd
-	cWE01mx9YS67hFVi00x9SVR8GWpH6lk9r8q234iSDGz9o4Dl8nyWUAfO3ZNPpDRu14AlaVqrtGm
-	tA1zTNNmDjnLThlqx1XusDP0db88o3UlQ=
-X-Received: by 2002:a5d:5917:0:b0:437:99d2:c115 with SMTP id ffacd0b85a97d-43799d2c495mr28106790f8f.26.1771492856402;
-        Thu, 19 Feb 2026 01:20:56 -0800 (PST)
-Received: from localhost (109-81-84-7.rct.o2.cz. [109.81.84.7])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796ac8d82sm48035914f8f.31.2026.02.19.01.20.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Feb 2026 01:20:56 -0800 (PST)
-Date: Thu, 19 Feb 2026 10:20:54 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Marco Crivellari <marco.crivellari@suse.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Anthony Iliopoulos <ailiopoulos@suse.com>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH] xfs: convert alloc_workqueue users to WQ_UNBOUND
-Message-ID: <aZbV9tqatNGbKRqF@tiehlicka>
-References: <20260218165609.378983-1-marco.crivellari@suse.com>
- <aZZmVuY6C8PJMh_F@dread>
+        d=1e100.net; s=20230601; t=1771493717; x=1772098517;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=qwP73GPLt6/49YtKqBvxtty3Y7ZnoSWI6pg6OHhH1MU=;
+        b=F89tfuN+scKoS2fALhYsLpIpE+Wb5fIQyAnnOWtUS/iLqYfuR22m5HFMP/8axCox02
+         ovujBfxXuKMb+ebuAFiKPuwzWfNoxYE1d+xf4jj11LQPhJmeoeuF3LzsejFCjESoH1pj
+         Ff2NrSHB6A2kFzUbns5K9Vp1vwwlN3yNeHx3abhzEaPiybqnStNdDhJJx9Wm+cXYurdi
+         sg73zScEIGb9hBshEQziv2pIYcHvkbwj8fjxiHJz4670d6zspBxfYDEMfOBve8Uj7kGi
+         SX1nSD2WmnSVrJEzKpGuubehfm0uLEB/lgA2rTqVMsXk/h305cgYrQj2ofubV76LOMBa
+         z1oQ==
+X-Forwarded-Encrypted: i=1; AJvYcCULUr8M194uCpDcsj1tN8aBl4//5vx8ieJySlrqO0DtZe132ZrTlh0+5rYIE46MMiilHU48iFA+m3E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7tF0XQ1AF3Kr3fLiQwreM4fQzcMLEVadWnzKPIlQzUI53o1Z0
+	ssQMh0tEZjf1Mt9oDaBQG6pCc8e5JCeZaEcUJq5wDPFdn2Hbds4AlXi7rDKA2Ip4yX/9I+YnlNn
+	Qk9F9hDTuuZRbc0Pjv3MvZGSrHLTd/i7eZDERWUSwMw==
+X-Gm-Gg: AZuq6aJtlNOwiDZwjNZsqwU/Svv9RSb25D4F86riY3JSR/PNc+F+WB86Jtld3Fmvr5n
+	uPhXK+ZN3ULgiE8waaayYWjn/xVIeKJtgmgUDB/jvgr4TfJXB+cpBIRWur8PaJel0WOk/Bw8Zdz
+	SV+7NWdIYdV44MHlNXMNR+aThlR8RS7dyIEqDyEE37AO/MaZ6DLsoBo2ug6+HBxDdzQmiuNmUPY
+	HjWpb9wrtfHudHJ30cxpP6EL4DRIq2RdqySmj45Iocj6985rjiudDYGuRWEd45e/6Qts0hXg8uD
+	Lupydn46bzT384fXFtZBCrGUc0FzVqGsZqd73Tpg
+X-Received: by 2002:ac2:4f06:0:b0:59e:144:64b6 with SMTP id
+ 2adb3069b0e04-59f89751253mr639377e87.21.1771493716463; Thu, 19 Feb 2026
+ 01:35:16 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20260218165609.378983-1-marco.crivellari@suse.com> <aZZmVuY6C8PJMh_F@dread>
 In-Reply-To: <aZZmVuY6C8PJMh_F@dread>
+From: Marco Crivellari <marco.crivellari@suse.com>
+Date: Thu, 19 Feb 2026 10:35:05 +0100
+X-Gm-Features: AaiRm50uFsB4Wl3syTOS_67PY-dPVy0dI9VHOt1139FVH3f6WTgGaNZ7sO9ygl0
+Message-ID: <CAAofZF6Osnih1Atg5dzSqCH3pAK5U5jMfRX+pCu2HPwmpRmBOg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: convert alloc_workqueue users to WQ_UNBOUND
+To: Dave Chinner <dgc@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
+	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Michal Hocko <mhocko@suse.com>, Anthony Iliopoulos <ailiopoulos@suse.com>, Carlos Maiolino <cem@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu 19-02-26 12:24:38, Dave Chinner wrote:
+On Thu, Feb 19, 2026 at 2:24=E2=80=AFAM Dave Chinner <dgc@kernel.org> wrote=
+:
+>
 > On Wed, Feb 18, 2026 at 05:56:09PM +0100, Marco Crivellari wrote:
 > > Recently, as part of a workqueue refactor, WQ_PERCPU has been added to
 > > alloc_workqueue() users that didn't specify WQ_UNBOUND.
 > > The change has been introduced by:
-> > 
+> >
 > >   69635d7f4b344 ("fs: WQ_PERCPU added to alloc_workqueue users")
-> > 
-> > These specific workqueues don't use per-cpu data, so change the behavior
+> >
+> > These specific workqueues don't use per-cpu data, so change the behavio=
+r
 > > removing WQ_PERCPU and adding WQ_UNBOUND.
-> 
+>
 > Your definition for "doesn't need per-cpu workqueues" is sadly
 > deficient.
 
-I believe Marco wanted to say they do not require strict per-cpu
-guarantee of WQ_PERCPU for correctness. I.e. those workers do not
-operate on per-cpu data.
+I should have added a "request for comments" for this patch, maybe.
+Anyhow I meant they are not operating on per-cpu data, so it wasn't
+"strictly" necessary because of this, sorry.
 
-> > Even if these workqueue are
-> > marked unbound, the workqueue subsystem maintains cache locality by
-> > default via affinity scopes.
-> > 
-> > The changes from per-cpu to unbound will help to improve situations where
-> > CPU isolation is used, because unbound work can be moved away from
-> > isolated CPUs.
-> 
-> If you are running operations through the XFS filesystem on isolated
-> CPUs, then you absolutely need some of these the per-cpu workqueues
-> running on those isolated CPUs too.
+Thanks for all the information you shared. I will read carefully.
 
-The usecase is that isolated workload needs to perform fs operations at
-certain stages of the operation. Then it moves over to "do not disturb"
-mode when it operates in the userspace and shouldn't be disrupted by the
-kernel. We do observe that those workers trigger at later time and
-disturb the workload when not appropriate.
- 
-> Also, these workqueues are typically implemented these ways to meet
-> performancei targets, concurrency constraints or algorithm
-> requirements. Changes like this need a bunch of XFS metadata
-> scalability benchmarks on high end server systems under a variety of
-> conditions to at least show there aren't any obvious any behavioural
-> or performance regressions that result from the change.
+--
 
-This is a fair ask. We do not want to regress non-isolated workloads by
-any means and if there is a risk of regression for those, and from your
-more detailed explanation it seems so, then we might need to search for
-a different approach. Would be an opt in - i.e. tolerate performance
-loss by loosing the locality via a kernel cmd line an option?
+Marco Crivellari
 
-I am cutting your specific feedback on those WQs. Thanks for that! This
-is a very valuable feedback.
-
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+L3 Support Engineer
