@@ -1,274 +1,141 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB9E12E0B71;
-	Thu, 19 Feb 2026 19:30:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 973CD30DD2A
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 20:07:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771529418; cv=none; b=P0g4rsjZd7VDTHZ7RMVY9oq2sBh+S72irQlkgMzCb3tW+oOl6z07by0GcXr0J29FIE7uh0gzU+Edap3PsiL3eeqHQRMpOzLLdtUMrj1bAYdhAu9FcVDez5nsGi/hed41CQx9esr7aWr8sl4ltRCjWJr0VA86yi2ZK19+9JArDq8=
+	t=1771531662; cv=none; b=FcKQ52xzk+XP5OwmDVFrwpvBhwTvVAip2Z2RN0qnBg6BYtV7IIz+PClWu1LJO99ybpAeBHY2CFJQ+ZEkLIpODe9ex9uleKB1xZ83Bc9I2i7NPgO6EpAIbZsG2oG/a7UKGvYhK+v5YMdaTi6DSz8w3YK/4o9sWijHcjs7ntrhivg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771529418; c=relaxed/simple;
-	bh=X/X5RRyXeMbrbz/ZenwcyeIPn7dwKsb549deEqtV4Uw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MoJpOXm0IF093g28zz3g7P2It8PWkCk7k4xthawiNMgfgMJbkzd0ufScq/TCPbSrEBDLepI4xONFCeLaF0a3G2LXji4GKKBxYV/yfj4YWvMB3xvv/dlcdhNygiqPwBxOMU2uE6jlI+FjxGX2Ges4nPiPJRD2WvU4MiNMEtgjjFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z6mt63/d; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771531662; c=relaxed/simple;
+	bh=4hKDGUDaKLhwYa10wo2QUB1w2/7YI/N2c1XW+iZG8HU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=liKo8cPcTENajmT5BYzWKtg+6KpIB51G3a0i1OTEdAieNoc6Ox0wfL54u6xdR4DcT0PorHDyNYFxfvveWrDe69QnzRqo2rw381aKycCyeFfjZBncdNWscGIzZOEW2wYL12BwhA7VfIODfOmySuAbSAfIN6aOnDoJvIqkzwpFIJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lmqO1imb; arc=none smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z6mt63/d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8832CC4CEF7;
-	Thu, 19 Feb 2026 19:30:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771529417;
-	bh=X/X5RRyXeMbrbz/ZenwcyeIPn7dwKsb549deEqtV4Uw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Z6mt63/dEtr/b2f/BAwtqo2iR05YETFPx3v9WHh04gipNepb9nb1k9oDmx+YMK/C1
-	 gQHWQCBHJgWODIPcXPmCKOeT8espIeE2AbCkaJznPpkfEurvvh8CWKSVrsHHskxZ+x
-	 yTjEoAeQHhiyQrNJyWXw/tMfhDBobBkT5ETKal0FY6xjUmoDc3FWiqJa31e5N6/tkt
-	 Lxo+9G9+8vv2WR4jeo81Lj94kYOmtBy6aKc6Sn16HdncvyxmfEenjDSlV7KmpXvpks
-	 u0pAsF06U5CsZH7OGNiWlsw7pAbcF0B1FF1L3VYhRdigRx0HiaXrNmDBxQ91VH7Rhf
-	 zqougAFRmBgHQ==
-Date: Thu, 19 Feb 2026 11:30:16 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>, b@magnolia.djwong.org
-Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH v3 27/35] xfs: use different on-disk and pagecache offset
- for fsverity
-Message-ID: <20260219193016.GO6490@frogsfrogsfrogs>
-References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-28-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lmqO1imb"
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-7950881727cso9660187b3.3
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 12:07:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771531658; x=1772136458; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/qmzM+i4dYpgByb8fBfDVhdvTlZELGZrVQkv0zNaF9U=;
+        b=lmqO1imbRIlo79Y9c90FVho2utTjZJQIdRzOHniaQM8FskebgEI4dwQ2qK6W9ew/YY
+         TrmZv0HXIYr8kGiDvJQ3FZJqbblCKMFryGZTo9TP6765CQ3gf6PLMXWKFuBuiq/XTuHL
+         SowL8LfohVNlVlzGgZxiTwb1fSp3G5iRloRUJUCIdIOtbrnS3N48pdQ0aFU22sEEbLbs
+         2RUaNwGV5Lh0pRuOa4jCxalBPMgeZ7Vd3qlVHY0pHyfZpAHaTEjLIP64rUZty27mOmZo
+         fqNYEP13hjG6HQKpSv/kF5et9V3HXhaimnohpW/tVqGSr3G0/T1f230s1xgGNZ+EAAdP
+         J60g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771531658; x=1772136458;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/qmzM+i4dYpgByb8fBfDVhdvTlZELGZrVQkv0zNaF9U=;
+        b=kOxxi6UAihvS2PrLjXdV5xgKkHiiStLydJWTypTs3lej30ONxZobv08JnaMVzYSYSn
+         1fqwMzfZgtFQWUeZFAV7a8Kd/BXZ21b96dxSvBH4kpJNs20+pzVJ7aKwikD+P56YO9tz
+         J1it0LdS+3CrI08Lh/2sfTIjvsj11X0RXQYiBYPkyMLVid+QOFtqdo8F4vs7K7W01jZW
+         LyP86yAjyFnSNDWCVdVNXngFxW7Qj1e0jr7QX2krSh3Pfu8tj1BQm3fiO0VBr13CF1aY
+         RBwXYMt7iWHIMGdX4T7SGV6L3Kz1y191YsMHVN1E78h4ppqcJbMDKjzkhPPunnuC/7eT
+         msEA==
+X-Forwarded-Encrypted: i=1; AJvYcCWpGgxiFLxdYw3MNGK86zkhGGefNMzia0o9X0Ckmq9SkZPxcR/I4L1S35IZwv5Oq07SLIrmX4FASUY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxcoo1XibXCsu+eyd8ctV7zqogFFZX9YoA9zVIFIZUx8LJizcgV
+	nqwMb5fHhbPNcnNlPdRu4o0Xd0tZeKsDySPNcrnz7VGS1ZoRaZSwO6wYbCTgjvI+gI4=
+X-Gm-Gg: AZuq6aJ2kCaBZok9hgyS63TNDOBeiCsxwAjgJCp+aJOyMZvD3jSLYCSSLh+XfovfxZq
+	YzR5uw+nXHljH0yBZb+ayz8+Kdj8axcmBh9Msfd2uIDqkcVe6+W13fboPkrrmQQrZBXg0chCZFV
+	7xkW8N24kWfjCx9qI/EMg1Yfw6lP38MBsZjI9V9Ck8fuecYIIrr+GpfmBLa0nLOlcHDstw+pQmF
+	wMdaT77CNjqm6i1lMGdyrkz2Td0H14JSWY+6NTe5zz4c4D+TcQll1q0l5Si+RRgn0BkN6FXRn6B
+	TRTHsMQfGdG20pS7xt4mqoB3/SWjYPdJCGS+oDyUgs4k0Pr8L2SJvEzdCVjqSBNpRF81JtC3YLp
+	1CLXXM1+ZfDIdPh2Xdiw2Q3Hr3Ks0jLU2U54eCbNYtdt32BudJvcwAo0/PgwikzbOyJuyDTfKjH
+	ae1SmfYgg1WMo9JgHsGP0/ruVbm3ZPl8C4iOEjcmg4+cUaK8TdvAjAZE9UinemWYvv5nb0PEe0K
+	2q+J/1KNxYc0BfrvgMHLOrRH9GwwNOgB3KYfhoe8yU=
+X-Received: by 2002:a05:690c:6612:b0:796:4ab9:f29b with SMTP id 00721157ae682-797f7353b65mr48586537b3.39.1771531658458;
+        Thu, 19 Feb 2026 12:07:38 -0800 (PST)
+Received: from tux ([2601:7c0:c37c:4c00:e3a8:26f7:7e08:88e1])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7966c2667f9sm138276567b3.46.2026.02.19.12.07.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Feb 2026 12:07:38 -0800 (PST)
+From: Ethan Tidmore <ethantidmore06@gmail.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: nirjhar.roy.lists@gmail.com,
+	neil@brown.name,
+	brauner@kernel.org,
+	jlayton@kernel.org,
+	amir73il@gmail.com,
+	jack@suse.cz,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ethan Tidmore <ethantidmore06@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v3] xfs: Fix error pointer dereference
+Date: Thu, 19 Feb 2026 14:07:15 -0600
+Message-ID: <20260219200715.785849-1-ethantidmore06@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260217231937.1183679-28-aalbersh@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Feb 18, 2026 at 12:19:27AM +0100, Andrey Albershteyn wrote:
-> Convert between pagecache and on-disk offset while reading/writing
-> fsverity metadata through iomap.
-> 
-> We can not use on-disk (1ULL << 53) offset for pagecache as it doesn't
+The function try_lookup_noperm() can return an error pointer and is not
+checked for one.
 
-nit: 'cannot', not 'can not'.
+Add checks for error pointer in xrep_adoption_check_dcache() and
+xrep_adoption_zap_dcache().
 
-(English is a weird language, the two don't quite mean the same thing)
+Detected by Smatch:
+fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error:
+'d_child' dereferencing possible ERR_PTR()
 
-> fit into 32-bit address space and the page radix tree is going to be
-> quite high on 64-bit. To prevent this we use lower offset, right after
-> EOF. The fsverity_metadata_offset() sets it to be next largest folio
-> after EOF.
+fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error:
+'d_child' dereferencing possible ERR_PTR()
 
-I'd say "fsverity_metadata_offset() sets the pagecache offset so that
-file data and fsverity metadata cannot be cached by the same folio."
+Fixes: 73597e3e42b4 ("xfs: ensure dentry consistency when the orphanage adopts a file")
+Cc: <stable@vger.kernel.org> # v6.16
+Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+---
+v3:
+- Add dput(d_orphanage) before returning error code in 
+  xrep_adoption_check_dcache().
+- Revert xrep_adoption_zap_dcache() change back to v1 version.
+- Include function names where error pointer checks were added.
+v2:
+- Propagate the error back in xrep_adoption_check_dcache().
+- Add Cc to stable.
+- Add correct Fixes tag.
 
-> We can not use this pagecache offset for on-disk file offset though, as
-> this is folio size dependent. Therefore, for on-disk we use offset far
-> beyond EOF which allows to use largest file size supported by fsverity.
-> 
-> Also don't convert offset if IOMAP_REPORT is set as we need to see real
-> extents for fiemap.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 12 ++++++++++--
->  fs/xfs/xfs_aops.c        | 13 ++++++++++---
->  fs/xfs/xfs_iomap.c       | 33 ++++++++++++++++++++++++++-------
->  3 files changed, 46 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 99a3ff2ee928..05fddd34c697 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -41,6 +41,8 @@
->  #include "xfs_inode_util.h"
->  #include "xfs_rtgroup.h"
->  #include "xfs_zone_alloc.h"
-> +#include "xfs_fsverity.h"
-> +#include <linux/fsverity.h>
->  
->  struct kmem_cache		*xfs_bmap_intent_cache;
->  
-> @@ -4451,7 +4453,9 @@ xfs_bmapi_convert_one_delalloc(
->  	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
->  	XFS_STATS_INC(mp, xs_xstrat_quick);
->  
-> -	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION) &&
-> +	    XFS_FSB_TO_B(mp, bma.got.br_startoff) >=
-> +		    fsverity_metadata_offset(VFS_I(ip)))
->  		flags |= IOMAP_F_FSVERITY;
+ fs/xfs/scrub/orphanage.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Hrmmm.  I wonder, why not create a set of fsverity-specific iomap ops
-that wrap xfs_read_iomap_begin and/or xfs_buffered_write_iomap_begin?
-The wrappers could then do the offset translation prior to calling the
-real _iomap_begin function, and then undo that translation on the output
-mapping and set IOMAP_F_FSVERITY?  Then we don't clutter up the regular
-paths with the translation stuff.
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 52a108f6d5f4..682af1bcf131 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -442,6 +442,10 @@ xrep_adoption_check_dcache(
+ 		return 0;
+ 
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
++	if (IS_ERR(d_child)) {
++		dput(d_orphanage);
++		return PTR_ERR(d_child);
++	}
+ 	if (d_child) {
+ 		trace_xrep_adoption_check_child(sc->mp, d_child);
+ 
+@@ -479,7 +483,7 @@ xrep_adoption_zap_dcache(
+ 		return;
+ 
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
+-	while (d_child != NULL) {
++	while (!IS_ERR_OR_NULL(d_child)) {
+ 		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
+ 
+ 		ASSERT(d_is_negative(d_child));
+-- 
+2.53.0
 
-<shrug> Thoughts?  This way seems to work as well.
-
---D
-
->  
->  	ASSERT(!isnullstartblock(bma.got.br_startblock));
-> @@ -4495,6 +4499,10 @@ xfs_bmapi_convert_delalloc(
->  	unsigned int		*seq)
->  {
->  	int			error;
-> +	loff_t			iomap_offset = offset;
-> +
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +		iomap_offset = xfs_fsverity_offset_from_disk(ip, offset);
->  
->  	/*
->  	 * Attempt to allocate whatever delalloc extent currently backs offset
-> @@ -4507,7 +4515,7 @@ xfs_bmapi_convert_delalloc(
->  					iomap, seq);
->  		if (error)
->  			return error;
-> -	} while (iomap->offset + iomap->length <= offset);
-> +	} while (iomap->offset + iomap->length <= iomap_offset);
->  
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 9d4fc3322ec7..53aeea5e9ebd 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -335,8 +335,8 @@ xfs_map_blocks(
->  	struct xfs_inode	*ip = XFS_I(wpc->inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	ssize_t			count = i_blocksize(wpc->inode);
-> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> -	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> +	xfs_fileoff_t		offset_fsb;
-> +	xfs_fileoff_t		end_fsb;
->  	xfs_fileoff_t		cow_fsb;
->  	int			whichfork;
->  	struct xfs_bmbt_irec	imap;
-> @@ -351,8 +351,12 @@ xfs_map_blocks(
->  
->  	XFS_ERRORTAG_DELAY(mp, XFS_ERRTAG_WB_DELAY_MS);
->  
-> -	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION)) {
->  		iomap_flags |= IOMAP_F_FSVERITY;
-> +		offset = xfs_fsverity_offset_to_disk(ip, offset);
-> +	}
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	end_fsb = XFS_B_TO_FSB(mp, offset + count);
->  
->  	/*
->  	 * COW fork blocks can overlap data fork blocks even if the blocks
-> @@ -484,6 +488,9 @@ xfs_map_blocks(
->  			wpc->iomap.length = cow_offset - wpc->iomap.offset;
->  	}
->  
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +		offset = xfs_fsverity_offset_from_disk(ip, offset);
-> +
->  	ASSERT(wpc->iomap.offset <= offset);
->  	ASSERT(wpc->iomap.offset + wpc->iomap.length > offset);
->  	trace_xfs_map_blocks_alloc(ip, offset, count, whichfork, &imap);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 6b14221ecee2..a04361cf0e99 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -32,6 +32,7 @@
->  #include "xfs_rtbitmap.h"
->  #include "xfs_icache.h"
->  #include "xfs_zone_alloc.h"
-> +#include "xfs_fsverity.h"
->  #include <linux/fsverity.h>
->  
->  #define XFS_ALLOC_ALIGN(mp, off) \
-> @@ -142,7 +143,11 @@ xfs_bmbt_to_iomap(
->  		    xfs_rtbno_is_group_start(mp, imap->br_startblock))
->  			iomap->flags |= IOMAP_F_BOUNDARY;
->  	}
-> -	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-> +	if (xfs_fsverity_need_convert_offset(ip, imap, mapping_flags))
-> +		iomap->offset = xfs_fsverity_offset_from_disk(
-> +			ip, XFS_FSB_TO_B(mp, imap->br_startoff));
-> +	else
-> +		iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
->  	iomap->flags = iomap_flags;
->  	if (mapping_flags & IOMAP_DAX) {
-> @@ -629,6 +634,8 @@ xfs_iomap_write_unwritten(
->  	uint		resblks;
->  	int		error;
->  
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +		offset = xfs_fsverity_offset_to_disk(ip, offset);
->  	trace_xfs_unwritten_convert(ip, offset, count);
->  
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> @@ -1766,8 +1773,8 @@ xfs_buffered_write_iomap_begin(
->  						     iomap);
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> -	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
-> +	xfs_fileoff_t		offset_fsb;
-> +	xfs_fileoff_t		end_fsb;
->  	struct xfs_bmbt_irec	imap, cmap;
->  	struct xfs_iext_cursor	icur, ccur;
->  	xfs_fsblock_t		prealloc_blocks = 0;
-> @@ -1790,8 +1797,12 @@ xfs_buffered_write_iomap_begin(
->  		return xfs_direct_write_iomap_begin(inode, offset, count,
->  				flags, iomap, srcmap);
->  
-> -	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
-> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION)) {
->  		iomap_flags |= IOMAP_F_FSVERITY;
-> +		offset = xfs_fsverity_offset_to_disk(ip, offset);
-> +	}
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	end_fsb = xfs_iomap_end_fsb(mp, offset, count);
->  
->  	error = xfs_qm_dqattach(ip);
->  	if (error)
-> @@ -2112,8 +2123,8 @@ xfs_read_iomap_begin(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_bmbt_irec	imap;
-> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> -	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-> +	xfs_fileoff_t		offset_fsb;
-> +	xfs_fileoff_t		end_fsb;
->  	int			nimaps = 1, error = 0;
->  	bool			shared = false;
->  	unsigned int		lockmode = XFS_ILOCK_SHARED;
-> @@ -2125,8 +2136,15 @@ xfs_read_iomap_begin(
->  	if (xfs_is_shutdown(mp))
->  		return -EIO;
->  
-> -	if (fsverity_active(inode) && offset >= XFS_FSVERITY_REGION_START)
-> +	if (fsverity_active(inode) &&
-> +	    (offset >= fsverity_metadata_offset(inode)) &&
-> +	    !(flags & IOMAP_REPORT)) {
->  		iomap_flags |= IOMAP_F_FSVERITY;
-> +		offset = xfs_fsverity_offset_to_disk(ip, offset);
-> +	}
-> +
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	end_fsb = xfs_iomap_end_fsb(mp, offset, length);
->  
->  	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
->  	if (error)
-> @@ -2142,6 +2160,7 @@ xfs_read_iomap_begin(
->  		return error;
->  	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
->  	iomap_flags |= shared ? IOMAP_F_SHARED : 0;
-> +
->  	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
->  }
->  
-> -- 
-> 2.51.2
-> 
-> 
