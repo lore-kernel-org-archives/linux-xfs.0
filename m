@@ -1,32 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 562BD2EB87E;
-	Thu, 19 Feb 2026 13:38:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC6F3191BB;
+	Thu, 19 Feb 2026 13:41:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771508314; cv=none; b=L9nlcBfV6Gt8ZCClBy/Q2l2KrJ5SugekiZyYszgd2FG4Wp3sru/F4v88b1w2aQdZS5jOQFZzly3e/Dqs1XE3taiceHNf/qPvxLpoLDQs7qGKR1OAy8eY8umV1sBxGU4I0CvTx8qm0zJpWmjf90BUHbifRu/Mjhy2JNCq6Thyr5o=
+	t=1771508466; cv=none; b=mIapGbEPVI1NkIS7h/qkjLmUd4JM2ay5X7eB05EhMygnSZzkzTW7IXJ8+1mdv+DClcv1gm6kBLZ+vvz65sr5fS4JXb33jtk+5005iIhIR4pC4R57yQUxiLXoMRSOPvyIt/1AzjPSrODt0dvMKt27U5RLtRsLzpIIf8Lj/GYeP+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771508314; c=relaxed/simple;
-	bh=SNekF7prFibKS9mG5Fno51gLDqSAsz6awlkrLP9LR+M=;
+	s=arc-20240116; t=1771508466; c=relaxed/simple;
+	bh=Wb9Q0hoQOXXMO297DJsBiXshfgGgR+MvEB0pfl3uBcM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lyL+zbyciCzMzQX6kcGd7jH0gu0j2Yg561OoibFNUYbaL6PaxC5NHvXYWVBLxBJqKv27kiONGydqvz7IGBDdDcUn/9jJzDL1W55JBuTyG7BdSDhZlUuasx5KPz9fkZdmXMTAu9fyZhggGog2EX/EeXFYieXNnTvWDHxeGvFh06Q=
+	 Content-Type:Content-Disposition:In-Reply-To; b=KTD7nyUV4i6+6NHRkBxGTErhn6qUwscV0pNIGExYRccJBJL0wzXvlaVVPcAEuzz50+dOH/QhT55/+G6pdpHoYWSZwrhoRKpg+xhzC63z3MOTQ/DJzFuhVqSHKZ/N3pBABrNwvr9EnaMUirlqzGMgV/GBq59Pq6+qs60IlR6UebM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id A7C5168B05; Thu, 19 Feb 2026 14:38:29 +0100 (CET)
-Date: Thu, 19 Feb 2026 14:38:29 +0100
+	id 1E6B568BFE; Thu, 19 Feb 2026 14:41:02 +0100 (CET)
+Date: Thu, 19 Feb 2026 14:41:01 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>,
 	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
 	ebiggers@kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v3 11/35] iomap: allow filesystem to read fsverity
- metadata beyound EOF
-Message-ID: <20260219133829.GA11935@lst.de>
-References: <20260217231937.1183679-1-aalbersh@kernel.org> <20260217231937.1183679-12-aalbersh@kernel.org> <20260218063606.GD8600@lst.de> <hfteu6bonpv7djecbf3d6ekh56ktgcl4c2lvtjtrjfetzaq5dw@scsrvxx5rgig> <20260219060420.GC3739@lst.de> <qheg77kxcl4ecqdrsnmz4acfvszjlamlb7ilgxxyf3pmt4r7ah@5fzzmcpurdfp>
+Subject: Re: [PATCH v3 28/35] xfs: add fs-verity support
+Message-ID: <20260219134101.GA12139@lst.de>
+References: <20260217231937.1183679-1-aalbersh@kernel.org> <20260217231937.1183679-29-aalbersh@kernel.org> <20260218064429.GC8768@lst.de> <mtnj4ahovgefkl4pexgwkxrreq6fm7hwpk5lgeaihxg7z5zdlz@tpzevymml5qx> <20260219061122.GA4091@lst.de> <4cmnh4lgygm4fj3fixsgy3b7xp2ayo3jirvspoma6qxusdgluu@nyamffhaurej>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,89 +34,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <qheg77kxcl4ecqdrsnmz4acfvszjlamlb7ilgxxyf3pmt4r7ah@5fzzmcpurdfp>
+In-Reply-To: <4cmnh4lgygm4fj3fixsgy3b7xp2ayo3jirvspoma6qxusdgluu@nyamffhaurej>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Feb 19, 2026 at 12:11:18PM +0100, Andrey Albershteyn wrote:
-> > > fsverity descriptor. This is basically the case as for EOF folio.
-> > > Descriptor is the end of the fsverity metadata region. If we have 1k
-> > > fs blocks (= merkle blocks) we can have [descriptor | hole ] folio.
-> > > As we are not limited by i_size here, iomap_block_needs_zeroing()
-> > > won't fire to zero this hole. So, this case is to mark this tail as
-> > > uptodate.
+On Thu, Feb 19, 2026 at 10:51:14AM +0100, Andrey Albershteyn wrote:
+> > > fs block size < PAGE_SIZE when these tree holes are in one folio
+> > > with descriptor. Iomap can not fill them without getting descriptor
+> > > first.
 > > 
-> > How do we end up in that without ctx->vi set?
+> > Should we just simply not create tree holes for that case?  Anything
+> > involving page cache validation is a pain, so if we have an easy
+> > enough way to avoid it I'd rather do that.
 > 
-> We're reading it
+> I don't think we can. Any hole at the tree tail which gets into the
+> same folio with descriptor need to be skipped. If we write out
+> hashes instead of the holes for the 4k page then other holes at
+> lower offsets of the tree still can have holes on bigger page
+> system.
 
-Did a part of that sentence get lost?
+Ok.
 
-> yes this would work
-> 
-> I've attached the current patch, with all the changes.
-> 
-> +               } else if (iomap_block_needs_zeroing(iter, pos) &&
-> +                          !(iomap->flags & IOMAP_F_FSVERITY)) {
-> 
-> This check is still needed as we should not hit it when we're
-> reading normal merkle tree block. iomap_block_needs_zeroing is
-> checking if offset is beyond i_size and will fire here for merkle
-> blocks.
-> 
-> Let me know if you prefer to split the first case further, or the
-> current patch is good enough.
-> 
-> -- 
-> - Andrey
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 47356c763744..af7b79073879 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -533,10 +533,31 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
->                 if (plen == 0)
->                         return 0;
->  
-> -               /* zero post-eof blocks as the page may be mapped */
-> -               if (iomap_block_needs_zeroing(iter, pos) &&
-> -                   !(iomap->flags & IOMAP_F_FSVERITY)) {
-> +               /*
-> +                * Handling of fsverity "holes". We hits this for two case:
-> +                *   1. No need to go further, the hole after fsverity
-> +                *      descriptor is the end of the fsverity metadata.
-> +                *
-> +                *   2. This folio contains merkle tree blocks which need to be
+> Adding a bit of space between tree tail and descriptor would
+> probably work but that's also dependent on the page size.
 
-Overly long line here.
-
-> +                *      synthesized and fsverity descriptor.
-> +                */
-> +               if ((iomap->flags & IOMAP_F_FSVERITY) &&
-> +                   iomap->type == IOMAP_HOLE) {
-> +                       /*
-> +                        * Synthesize the hash value for a zeroed folio if we
-> +                        * are reading merkle tree blocks.
-> +                        */
-
-.. and we'll probably want to merge this into the above comment.
-
-> +                       if (ctx->vi)
-> +                               fsverity_folio_zero_hash(folio, poff, plen,
-> +                                                        ctx->vi);
-> +                       iomap_set_range_uptodate(folio, poff, plen);
-> +               } else if (iomap_block_needs_zeroing(iter, pos) &&
-> +                          !(iomap->flags & IOMAP_F_FSVERITY)) {
-> +                       /* zero post-eof blocks as the page may be mapped */
->                         folio_zero_range(folio, poff, plen);
-> +                       if (fsverity_active(iter->inode) &&
-> +                           !fsverity_verify_blocks(ctx->vi, folio, plen, poff))
-
-Another overly long line here.  Also we should avoid the
-fsverity_active check here, as it causes a rhashtable lookup.  F2fs
-and ext4 just check ctx->vi, but based on the checks above, we seem
-to set this also for (some) reads of the fsverity metadata.  But as
-we exclude IOMAP_F_FSVERITY above, we might actually be fine with a
-ctx->vi anyway.
-
-Please document the rules for ctx->vi while were it.
-
+Well, I guess then the only thing we can do is writes very detailed
+comments explaining all this.
