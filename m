@@ -1,134 +1,135 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4329C248F47
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 14:48:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7FCE41A8F
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 14:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771512486; cv=none; b=NApeHsPcOlJTHa8uG4mIL/B4eunOfVbjqrmEVHOgFj2H9mFN5YZw7kjyWmDQqCOABK2Kptbgv0lB8FK7cXE0gir7AzDtpewEqL/UEVw07vtX4v0gIH78QjXqvzLcBA7GZOTXhvhJypqjC8oJiB1yBStij6LZRkU/+tLydIO2Tcc=
+	t=1771512627; cv=none; b=mDXRkMmaUeflqPTM0YkH99N8UAmEjX0L0IVszaHg7Y7/fiP2G+tv+NDYsMAZXA2+9N661zlvPVk39r5E9qn6xmNJxqjHoINW7QzBc+bvePLX/VZEcuNEtwl0WBDd1Ih8HLIOoaY/fWnzi0EOazEG53y7p1QeywTYPnzNJspNfnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771512486; c=relaxed/simple;
-	bh=2JGinfGoFrkNWZCdbkoicKCoKLYeIZaZqAwTkQYHdOc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RFMFhi/nq1WVtSmRzwORnSQftizyqkALWzvRvfa91h3AFnNUkqZPHiXk/V8fVRlyTWuIoJfUS2KxRa+tQ/cquX6KbJLvMONn9Wv4YC2162wGVLAzImeYRfLlzRQlui6aN2TYv929OsXK0wQOIzevZbEjFI5zreXT9/47k+/zMMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=RjDr7lvE; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1771512627; c=relaxed/simple;
+	bh=gf6E7bobh4NargGLKJiii5c/q65Olqg7xMpGfuPGWJs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rKx+qQ+0s9H66JMvl4/6f37ye3fcQGQMR7AqM2rtrItEi/+oJwpvRfGB/Xl3X+VexrsEcY/WVwx6anlnoXsxDGK6LzOT6D97BRp9wItdcjqJtCcfTVoqOIv20A6A7LIbqjzGQxXkHrb+XZxqiNtdCB+mKGxqvTeMlngr9iNJ0yk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iwhbq1jh; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="RjDr7lvE"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61J99sDc1260044;
-	Thu, 19 Feb 2026 14:47:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=pTXWyGOy8cH9Hf4F1
-	sfmkwHao1hqvLop4Dn4H2p6GjI=; b=RjDr7lvE2Vt4FYu6Rx6O7NAr2dVAXXzzH
-	oSsgoFahplibnwfe6NxAX4TPpapW5P5dp6ZRxIKwclXwBpIoZmKi9nnZHarLpkyR
-	7iJTK9VCUT9OkyS6vjj2Y+knznU6u9mq1YEBsUhW/TNgo7KRsm93onK6P+Gr8Isn
-	6E6vb5l7FRFKD8pPVfa2I4E2GoJ5ty8wYtx7diMuciAVje6PTOmXEKgSsDnrzX5Q
-	R4WPwcERI/EmJN+wsEpYiC5xQPNbKSHgI7AAqLpdfrZ1Qwv/g3WLdEyW5SKq7NZI
-	t9hvqfCA7rniL/DcUJEymTgQ5k3NKKg9CWrfVBbyqWEgoxP3yDg8g==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4caj6s6hga-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Feb 2026 14:47:59 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61JDp0dg023972;
-	Thu, 19 Feb 2026 14:47:58 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ccb45cjpq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Feb 2026 14:47:58 +0000
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61JElvWs22020674
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 19 Feb 2026 14:47:57 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 70AC858055;
-	Thu, 19 Feb 2026 14:47:57 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0524F58043;
-	Thu, 19 Feb 2026 14:47:55 +0000 (GMT)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com.com (unknown [9.39.21.217])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 19 Feb 2026 14:47:54 +0000 (GMT)
-From: "Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>
-To: djwong@kernel.org, hch@infradead.org, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
-        nirjhar.roy.lists@gmail.com, nirjhar@linux.ibm.com
-Subject: [PATCH v3 4/4] xfs: Add comments for usages of some macros.
-Date: Thu, 19 Feb 2026 20:16:50 +0530
-Message-ID: <ed78cfaa48058b00bc93cff93994cfbe0d4ef503.1771512159.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <cover.1771512159.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1771512159.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iwhbq1jh"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ad617d5b80so3824115ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 06:50:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771512626; x=1772117426; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xiTZ2cmbtRtOUHflzI8vgvHD6jvCdgAiI9yvzuu9kAk=;
+        b=Iwhbq1jh9V41maOmIhnV2neMZwZ8/xwlIkMtnCXZe+TrBaPcs7YppwOhIFXaC8TiFo
+         /4C/gNhL6tyFakIif7ocHURNTklfbIseis6LJjwgHJFYJnZ3s83FQcitw+/77lyf460L
+         4U4ZsuCLo/E0dPhkFS7YzL8XNULIo0iI3JPIFqWs72pYZYy9/hHR2poDtgL+L/GCCjSR
+         +3ITc4JvhPCbwZT+rx+e+HBUQOYjRwQukKIr3yuq+h7lc855Igb+4aCdAvFmcDNNBGGn
+         PrhH58uRptFCLDW8aK8iUzqfNUP2wkBZYWvHbaDtyUYJvmVs3EJkXkmVo9O+YYRKYHlr
+         2/mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771512626; x=1772117426;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xiTZ2cmbtRtOUHflzI8vgvHD6jvCdgAiI9yvzuu9kAk=;
+        b=Ux+eN5LQs+X0eKORYRMLbT+tl4RTzouCFG2rmbU2dJ8jPZo1bicLZ9USmoBKUfzBDK
+         VJiJf7jxjtl0yxMJ+wU+YwEFeE6l1on01hWL54oc4NdrRtvhBfpGkcWOAHTp+JVx8VJS
+         7/aoC25CYcs8Y2yZBxi6ZV+euRvgsV8BpVc/QiLEhG1yEpqPtsdkHK2TOdS6A5HSc8DJ
+         yPhBH1YZgrQfDi/mqxloOiQrXRvfNIox79ZMYFudOixoWJH/nUsVB49DfPCkt+EgDxoX
+         NHZBFG/8eJCDa8A/yZ1jX1tgGgVjAlFhLOzGdUWijnAxwTcubSrG2vouPYGvXU6v9WZt
+         VptA==
+X-Forwarded-Encrypted: i=1; AJvYcCXphCVFbXHeAi2Wy+QZNxGmkBMHahEslWQd4f2dI80kMT+xP7M1+TR7DnuTgjVVeATitACVvmntr+o=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyk6G37S2PE6ip6a03tnq49dKQKC45BA/2zyeeoT1fnf7Q5nlRx
+	DwSlpIjcHEX5oRjio2C9Ab2RpWlBmk2KxLWgbMY/xJqLUwZ4X0Ht4JkZ
+X-Gm-Gg: AZuq6aJsmvAyfdvxaXGdJFBuBCtk9ki8geXpCmQfwN+/89xLtLf4CXClgRbncVVem3p
+	qiLNThR3LCdk5nM5Q60FnxYlNf1WTWSL0vzkBkoLRXgpjPJPhnKs6RE+RSgoKhqfjPXNO8Hs+al
+	SHzyBC47nhtbV4jS7lnCVP+w8lmnSOZHC16NvKOi4AKF619ADcK8Msd1DnIvNhqjfJXpr1cN8GK
+	8y63RWavjNxwg4KVwfHI8SUgOjyaznXpUw/57GAC+hxKLTbySOiBTVBuq8IFxTXmd+vxlU0j4hH
+	VVttfp/o6bqEZNraOLqxfVZLN5uEUPpethjQ4dYV83MsCg4QwXmcWjzip7GSOaRBjoSOLLuJSeE
+	H5gxdPaIeZ+506pBCW1Dtbv/Tit+pu91BLIyPUZUkKVxqVnxk094DxK72M4JLkKV0ARsfi6ZsjR
+	DpMIOolc3dQVYzI9x3+WMXUnod5O7WFqUjZiHfVg==
+X-Received: by 2002:a17:903:2445:b0:2aa:dd98:197e with SMTP id d9443c01a7336-2ad5b16c9a6mr23717035ad.51.1771512625982;
+        Thu, 19 Feb 2026 06:50:25 -0800 (PST)
+Received: from [192.168.0.120] ([49.207.232.214])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad1a73200asm167728575ad.36.2026.02.19.06.50.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Feb 2026 06:50:25 -0800 (PST)
+Message-ID: <771efc3b-43bb-4838-9f9b-47341292cf35@gmail.com>
+Date: Thu, 19 Feb 2026 20:20:21 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=dvvWylg4 c=1 sm=1 tr=0 ts=6997229f cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=pGLkceISAAAA:8 a=GYC6hG8fiMhmU3THKwoA:9
-X-Proofpoint-GUID: ijnFd-9w_zTYy9uAYUb-MtDvZcomF7hu
-X-Proofpoint-ORIG-GUID: 0BAi3LN9gn2aRQOsKWFVjWxNGaolxHoo
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE5MDEzNCBTYWx0ZWRfX6MH98GaeQv2U
- jW74wUCB4o6andKQL7o7hi3MvWVH5woV7W30ivETSDORDQAbxlSy0WiN1mf6DchanZuOaVtejSM
- HZ2yjX/3aQful+OoA9D4upESuf8uAuaY5czmKbeiu0nUXU1OBNZkP4NNGfIjyo+OH0qzwrGAtDo
- bgmboIpEDHFQ6wHPbLmg5+eNsFJbd/iMUOumREszxd6K8V4qFGotPf2N6PKbY4C3H+UaCvu+87a
- VllIyYaKKIY+YKA/Lr8YL88IjQSn2gUx2USCIFM/2QzzPZYzJ2ZDZMToleMkkcNofgq4+F3asjs
- SiqaKAtCM6GKgeBMUgUXyqjvDhWButwNcyI8irBapkToXSta2i65Ph7C0FsKVVUK5YNeEoeH+Yp
- qjb9omY8qUlxCk5GU0z2jt80b40oMZVF3t3pc1S/1l5FdKQn5Yrb3Of3ytkJTkRYp8vQQzMBDik
- 0sszi3YgLooIHh9gWVA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-19_04,2026-02-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0
- priorityscore=1501 clxscore=1015 malwarescore=0 phishscore=0 suspectscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2602190134
-
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/4] xfs: Misc changes to XFS realtime
+Content-Language: en-US
+To: Carlos Maiolino <cem@kernel.org>,
+ "Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>
+Cc: djwong@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
+ ritesh.list@gmail.com, ojaswin@linux.ibm.com
+References: <cover.1771486609.git.nirjhar.roy.lists@gmail.com>
+ <aZcRxYYpo-DvGxrr@nidhogg.toxiclabs.cc>
 From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <aZcRxYYpo-DvGxrr@nidhogg.toxiclabs.cc>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Add comments explaining when to use XFS_IS_CORRUPT() and ASSERT()
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- fs/xfs/xfs_platform.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+On 2/19/26 19:07, Carlos Maiolino wrote:
+> On Thu, Feb 19, 2026 at 01:08:48PM +0530, Nirjhar Roy (IBM) wrote:
+>> From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+>>
+>> This series has a bug fix and adds some missing operations to
+>> growfs code in the realtime code. Details are in the commit messages.
+>>
+>> [v1] -> v2
+>> 1. Added RB from Christoph in patch 1 and 4.
+>> 2. Updated the commit message in patch 4 ("xfs: Add comments for usages of some macros.")
+>> 3. Updated the commit message and added some comments in the code explaining
+>>     the change in patch 3("xfs: Update lazy counters in xfs_growfs_rt_bmblock()")
+>> 4. Removed patch 2 of [v1] - instead added a comment in xfs_log_sb()
+>>     explaining why we are not checking the lazy counter enablement while
+>>     updating the free rtextent count (sb_frextents).
+>>
+>> [v1]- https://lore.kernel.org/all/cover.1770904484.git.nirjhar.roy.lists@gmail.com/
+>>
+>> Nirjhar Roy (IBM) (4):
+>>    xfs: Fix xfs_last_rt_bmblock()
+>>    xfs: Add a comment in xfs_log_sb()
+>>    xfs: Update lazy counters in xfs_growfs_rt_bmblock()
+>>    xfs: Add comments for usages of some macros.
+>>
+>>   fs/xfs/libxfs/xfs_sb.c |  3 +++
+>>   fs/xfs/xfs_linux.h     |  6 ++++++
+> Please rebase it on top of current xfs code (preferentially for-next
+> branch). xfs_linux.h has been renamed during the merge window.
 
-diff --git a/fs/xfs/xfs_platform.h b/fs/xfs/xfs_platform.h
-index 1e59bf94d1f2..c9ce0450cf7a 100644
---- a/fs/xfs/xfs_platform.h
-+++ b/fs/xfs/xfs_platform.h
-@@ -235,6 +235,7 @@ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 
- #ifdef XFS_WARN
- 
-+/* Please note that this ASSERT doesn't kill the kernel */
- #define ASSERT(expr)	\
- 	(likely(expr) ? (void)0 : asswarn(NULL, #expr, __FILE__, __LINE__))
- 
-@@ -245,6 +246,11 @@ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- #endif /* XFS_WARN */
- #endif /* DEBUG */
- 
-+/*
-+ * Use this to catch metadata corruptions that are not caught by the regular
-+ * verifiers. The reason is that the verifiers check corruptions only within
-+ * the block.
-+ */
- #define XFS_IS_CORRUPT(mp, expr)	\
- 	(unlikely(expr) ? xfs_corruption_error(#expr, XFS_ERRLEVEL_LOW, (mp), \
- 					       NULL, 0, __FILE__, __LINE__, \
+Okay, done[1]. Thank you for pointing this out.
+
+[1] 
+https://lore.kernel.org/all/ed78cfaa48058b00bc93cff93994cfbe0d4ef503.1771512159.git.nirjhar.roy.lists@gmail.com/
+
+--NR
+
+>
+> Thanks!
+>
+>>   fs/xfs/xfs_rtalloc.c   | 39 +++++++++++++++++++++++++++++++++------
+>>   3 files changed, 42 insertions(+), 6 deletions(-)
+>>
+>> -- 
+>> 2.43.5
+>>
+>>
 -- 
-2.43.5
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
