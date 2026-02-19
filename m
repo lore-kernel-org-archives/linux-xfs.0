@@ -1,209 +1,132 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BEBF33D6FF
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 11:11:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C613334C05
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 11:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771499488; cv=none; b=G3G0xeV+saV8m9fskOlh+FAGcZk2KGuXQ5b2Z0QBdnrLmxhu/RxhpH48bls9h+8OC9Q68UVKQzDgtdiuzcPt5CkMCs2t9NPpYIHCAEcLMxoehKMYQBKcdA9B4Nz/MvKpggUHwWyrzwKhYG26blmZs0ogk/OOorqGdSZuOPUSbnQ=
+	t=1771500424; cv=none; b=Q4JOX/MhAf0p9u7Cr6qlHhg04w/2AHjSkYz3M9nmrLVUzKRBP0JNX2wFRkvqQO0aEWhuljOiX62AaquUXIlKSN35XRqeESnD7Szd9b4k9CRtQZhwYKyrN7JJtqeE8V2y84vHzWvASzczzB4YXz5UyuXUU3K7b6q1vO1dZj/SDWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771499488; c=relaxed/simple;
-	bh=nB0bTsF21LZ1FMr3dpBbHwJVzpYmVbgqeukyG/vW3pQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oNwamqE4oAYtzNuFrQM86zh7g3eKmQ4UWmPae+fi7QyuoKJd7thTEBevBHkO4rrQ5pP1dbDDH7jTba30KiCz6pC5IUn/F4hseTGb5T9ZWNIWyYn7Z8Q/wuwl0d9ubJdLbZ7mcR5qzqyqK4Z9KoJkMfU1NgPFuD8rub0Tm/4sy70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RIJzEomr; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=BXh90YZ0; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1771500424; c=relaxed/simple;
+	bh=f3vAqn4ppbFnh0QecIxiNKjgijr644VO5H3nZrPIEnY=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=anb4fxf2RBwBhmOw/imACXMdJQyknSkf9kBTtxdmKn2YXCKIMb/tolDyY4cBUULtukJthxpvCMHgDkM3hSTk/eOZWFq9LRRkr3Q0qK6+RpZiNRO9Fnjo7HBpNA+CORr1GMiu36/dJT8F72OMKVib59Q5Tuz6ZoxeyPm9B4T9j2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XlqP4ZCk; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RIJzEomr";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="BXh90YZ0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771499486;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=A5XAF0Aaeg8lBO1DxOELBnxRYVsQIoZJWshuHqIQFsA=;
-	b=RIJzEomrTdU52TxKNTW8GKZwmjIwgj3YSPl9YmvxUNgvPYWRfujQHeqAySMUWCL1aRwyRf
-	KKa0yTQ+/QTNTfsR/NM/U80JHxA8sRbuH+Eb9tVkfolaEkPKNoswQe0BLVyQJOuzOAZko/
-	s4+3q+OjpkNxDoCBDZusShBoO5GosSs=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-663-6rQPuaEgPB6AP5GULFGvqQ-1; Thu, 19 Feb 2026 06:11:22 -0500
-X-MC-Unique: 6rQPuaEgPB6AP5GULFGvqQ-1
-X-Mimecast-MFC-AGG-ID: 6rQPuaEgPB6AP5GULFGvqQ_1771499481
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4839fc4cef6so4105345e9.0
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 03:11:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XlqP4ZCk"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3562212b427so299895a91.1
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 03:27:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1771499481; x=1772104281; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=A5XAF0Aaeg8lBO1DxOELBnxRYVsQIoZJWshuHqIQFsA=;
-        b=BXh90YZ0i5Z7RatEh/UhrBwyMu97e75d+bBk+UJnsl/FIe2oJlSX438qyia3FREfdk
-         XKclxgxpo34jPWOLzlElj6oT5KR6n7NAAI/b6QSGV0DanzwwNXo5wac6eOFpCIsKXqOm
-         rZT8fBnEHRlozTZY5BzK+wycj7h7C6val+nrfRWMBNkxGMp2hI7QrIQQEzovS/6/5Gee
-         /Zb7Bs2knICU4wR7/yardK+/PXBCP09VbHUDhjux1itB+eTiNhXnb2I+tEwUeJRJnA9d
-         83hmdMAl0gao3+TR2Coe1z11WEL29R2lWv7tAvjMpTuz2GGKCyOrjM0f7M0bF8EK8Z2Q
-         8mhw==
+        d=gmail.com; s=20230601; t=1771500422; x=1772105222; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZURHwMivqBWxN0ER4yF2IOWlvgzhn1+/h2yBszFYV2Q=;
+        b=XlqP4ZCkRs+B3PVqNMoBClzHRMa/euJTmlWoct7LYj9lc+lbPrQIqo44xAAHC6P9fq
+         RTXM9GGVrqRAYsvhhS+XS4hkXZW8Yq4Ibkw+96+T/Hvuh8rjypW73QiiLQMrg0+pUM2e
+         VJQC5ehsVNUo+5O0delNmNi8zKwZZ9WkGh/vJfKhsTwsR4iehOqtjyBbXSgammV4VK68
+         0mf1mgRycScFnIvMp33OKLzu8apki8MD0rq190yFMtJy0MsgndOjxFHXFUvjenRii10p
+         +MDBC83EEJUcKpCu1QcYDHO/Ok4GINIyXklTdjh50IqJNgNPH3IUwFQiZRMxI1DCOIyw
+         bx3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771499481; x=1772104281;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=A5XAF0Aaeg8lBO1DxOELBnxRYVsQIoZJWshuHqIQFsA=;
-        b=S5AbQfxFL+vYTfnDyCvzObhhknA+oMOA/qqqerXG8bfE1vKVuFED4++n78Sq86/gfy
-         y3sGDrvkqLjA4qJOpPbj9yAY6ICr4cXkIKIvjfz4QxGFEhQkYrMCpgY95Bx65jeXYw9s
-         AouC7q5kKK/rBUsE2XsVkC9F2OdVDkAF5hRcTLHeWiVRa03OJCAvZbBdBHiv/5tQZ+uN
-         Zsy+MbObMIdgFoLBvy0+ae6er2kYIDDEMvNIR/kHw6Ojl/lC1+dHowQV5UzRpWcNdivG
-         ZSf7ndDIUJPSUAwy3nHIQN9m8feA5YxwFi+LAlXnR8fyejd2N1gQB1LHV+CFKxGgHH8n
-         El9w==
-X-Forwarded-Encrypted: i=1; AJvYcCWOthO0DT2ckxE5UanW0kDh+zFgOxBItAgFGR2xAvA7rFfgUMOhEcUNCNdgtMj11TtFHz7KxrcXp/4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxcap1xnpLixzojW071t+2svUwxbQ8A4MdIsbeuMCkpLIC+uv63
-	SNhlV3KTMkt+hvEyjwDE8CqGD+jFtFYbefKXSH2iXT6EWVXbcrM0Y9Ugzig2siJWlcKTGNtgD6Z
-	GKxagcnv8RrYjXWn+cyzR+ml/AYAC9aZxxdFwIVPkBZWNvQSZq60TamuUk4Rp
-X-Gm-Gg: AZuq6aLwlaxxoaOK4gULqojiFeWcTmOEL432t1Z2uYgyTp4hKNFpKv4onqUSQ+3Gt1w
-	Vf1d/EfDXO2dS3crIT41e5Q7hXUSY2lyy0PwmclVejYjE1siDyPnDvirJK5j8xGdDwmkzSJV7ON
-	mPh7lbsK+kmIF0cmo+8isAKCsUNcQdjXeLTUhEM+ErCL0xwJBNSoEQ2BRek+zgy9FrHvWNUQX/F
-	lDx22oa+40LpUuvuogPO5vZ/XU9udoLqnd48GfA9bOetF/DR56DCY7F6VZtfvGI/oJaqyiAV3gC
-	FahloSblJFZOkrJWZH5rx8F5SD+0O/rNBF8NsGP8R37IsSWKkHhN6VgAi/7bJbNBuXS/ldPL6qG
-	hU1GaZ5pWbEE=
-X-Received: by 2002:a05:600c:3b22:b0:477:9a61:fd06 with SMTP id 5b1f17b1804b1-4839fe97501mr21343325e9.8.1771499480389;
-        Thu, 19 Feb 2026 03:11:20 -0800 (PST)
-X-Received: by 2002:a05:600c:3b22:b0:477:9a61:fd06 with SMTP id 5b1f17b1804b1-4839fe97501mr21342205e9.8.1771499479443;
-        Thu, 19 Feb 2026 03:11:19 -0800 (PST)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4839f90c27fsm32768655e9.2.2026.02.19.03.11.18
+        d=1e100.net; s=20230601; t=1771500422; x=1772105222;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZURHwMivqBWxN0ER4yF2IOWlvgzhn1+/h2yBszFYV2Q=;
+        b=KMQk+uouk3oPrVuQorj/ljBIQXP4C5LmFzLes056/iT9+jjfRcg0uVmoxDSB8SmHF7
+         Qcfk63TQBrc9cXX7vEGp7pdZrSCtLmqXTNTQB7iIYV27EohsHaksOBqpESUkOCEfyQ6u
+         JRN/fs3zTn/yyLnFZaAKQuAmK6W4iUnAf7qX/6/XZCfSFlK8pBL0Y/4MTDIM/jOsfCq7
+         WQ2DFAAA57g5+M4v57oNz97svsIyrn08oRSQEtd63VRhAJtNKvSQiGehh8L3Dw7CZq5F
+         BF6X45U6XsdMBNud6MWamwMQmfc6bZA8YcRotZZeT6aWZenZw10M/5W8g1foUgfKEYpn
+         uQ6A==
+X-Forwarded-Encrypted: i=1; AJvYcCUQOPYBZr5YZScIUu0f5+IQ4vlC8xLl86mxP6TYHSb3XVSD32WYdohIguIUXVWWQNlo7kwpVxIa7NI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2vbSBvj0yBSCqLqHadU/u8to+XZo5VUCkcJgYHIbmstzmb9Uy
+	bFEoH9f/rbTKaVhQLcaI5qZFyNcHFCAQAMKnpHS1jzDONvFCMS50S2P0
+X-Gm-Gg: AZuq6aKl8CepClykKfe5Nsnw/SBhCvIRYT4x6J2O1AENuWNMyMmI8ZOBk6pCtJ6LCsN
+	QJ9qKYCimiOtaCuSzClG99A9ABJGIcpqB9CmOmsEsDooTxiRcYVIcvbF09xPg01sQ+jECTH5rL6
+	eqWs5qCjSlTot9BLn0E66TSvZb6SPOCObp4WyKqS/s/oO6JLmuuoPuB2KHmFr2wkWCgQ78TZkSO
+	BL41V1g3zVcT3Nz3wxbTMzSs4SHKxia8ayWektRr9CtKTniROtAlSwQA0LvG+OaScLD3Eg4SJy5
+	UNFdWzu2d/1U3WB5S5H2aDnF5FwcYLIKWg+rx0H6C6aqro9sq7F+3dc3BeYsxuPpUodNR3LgQ0K
+	jUz1nnnRwfOkmz9Za6Si/R8z3yPXfy5SyDvdpzQTfGFaj9LMpJmr2Ln8Q2w+n5wqdaYLzgi1p+U
+	baCvGfHCr+INSCPgVJLXePdFw208WeT4VM/HR/WMdXzDmV1OGfUoPTO0oHY79t7UlbEuDa5vmyy
+	sJSerJo
+X-Received: by 2002:a17:90b:5190:b0:340:ad5e:cd with SMTP id 98e67ed59e1d1-358890a1502mr4212975a91.5.1771500422526;
+        Thu, 19 Feb 2026 03:27:02 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.232.214])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-356629314fbsm28039491a91.0.2026.02.19.03.26.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Feb 2026 03:11:19 -0800 (PST)
-Date: Thu, 19 Feb 2026 12:11:18 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, 
-	djwong@kernel.org
-Subject: Re: [PATCH v3 11/35] iomap: allow filesystem to read fsverity
- metadata beyound EOF
-Message-ID: <qheg77kxcl4ecqdrsnmz4acfvszjlamlb7ilgxxyf3pmt4r7ah@5fzzmcpurdfp>
-References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-12-aalbersh@kernel.org>
- <20260218063606.GD8600@lst.de>
- <hfteu6bonpv7djecbf3d6ekh56ktgcl4c2lvtjtrjfetzaq5dw@scsrvxx5rgig>
- <20260219060420.GC3739@lst.de>
+        Thu, 19 Feb 2026 03:27:01 -0800 (PST)
+Message-ID: <61386abf00c817e65ab70c994ed584fde339f9ed.camel@gmail.com>
+Subject: Re: [PATCH] xfs: Fix error pointer dereference
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Ethan Tidmore <ethantidmore06@gmail.com>, Carlos Maiolino
+ <cem@kernel.org>,  NeilBrown <neil@brown.name>
+Cc: Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Thu, 19 Feb 2026 16:56:56 +0530
+In-Reply-To: <20260218195115.14049-1-ethantidmore06@gmail.com>
+References: <20260218195115.14049-1-ethantidmore06@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260219060420.GC3739@lst.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-On 2026-02-19 07:04:20, Christoph Hellwig wrote:
-> On Wed, Feb 18, 2026 at 10:41:14AM +0100, Andrey Albershteyn wrote:
-> > > +		 * Handling of fsverity "holes". We hits this for two case:
-> > > +		 *   1. No need to go further, the hole after fsverity
-> > > +		 *	descriptor is the end of the fsverity metadata.
-> > > +		 *
-> > > +		 *	No ctx->vi means we are reading a folio with descriptor.
-> > > +		 *	XXX: what does descriptor mean here?  Also how do we
-> > > +		 *	even end up with this case?  I can't see how this can
-> > > +		 *	happe based on the caller?
-> > 
-> > fsverity descriptor. This is basically the case as for EOF folio.
-> > Descriptor is the end of the fsverity metadata region. If we have 1k
-> > fs blocks (= merkle blocks) we can have [descriptor | hole ] folio.
-> > As we are not limited by i_size here, iomap_block_needs_zeroing()
-> > won't fire to zero this hole. So, this case is to mark this tail as
-> > uptodate.
+On Wed, 2026-02-18 at 13:51 -0600, Ethan Tidmore wrote:
+> The function try_lookup_noperm() can return an error pointer and is not
+> checked for one. Add checks for error pointer.
+
+Nit:In the subject, maybe just add the function name where the error pointer dereference is being
+fixed?
 > 
-> How do we end up in that without ctx->vi set?
-
-We're reading it
-
+> Detected by Smatch:
+> fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error: 
+> 'd_child' dereferencing possible ERR_PTR()
 > 
-> > I think this could be split into two cases by checking if (poff +
-> > plen) cover everything to the folio end. This means that we didn't
-> > get the case with tree holes and descriptor in one folio.
+> fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error: 
+> 'd_child' dereferencing possible ERR_PTR()
 > 
-> That might be more clear.
+> Fixes: 06c567403ae5a ("Use try_lookup_noperm() instead of d_hash_and_lookup() outside of VFS")
+> Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+> ---
+>  fs/xfs/scrub/orphanage.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> > > +		    	if (!ctx->vi) {
-> > > +				iomap_set_range_uptodate(folio, poff, plen);
-> > > +				/*
-> > > +				 * XXX: why return to the caller early here?
-> > > +				 */
-> > 
-> > To not hit hole in the tree (which means synthesize the block). The
-> > fsverity_folio_zero_hash() case.
-> 
-> Well, I mean return early from the function and not just move on
-> to the next loop iteration (which based on everything else you
-> wrote would then terminate anyway), і.e., why is this not:
-> 
-> 		if (!ctx->vi)
-> 			fsverity_folio_zero_hash(folio, poff, plen, ctx->vi)
-> 		iomap_set_range_uptodate(folio, poff, plen);
-> 	} else if ...
+> diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+> index 52a108f6d5f4..cdb0f486f50c 100644
+> --- a/fs/xfs/scrub/orphanage.c
+> +++ b/fs/xfs/scrub/orphanage.c
+> @@ -442,7 +442,7 @@ xrep_adoption_check_dcache(
+>  		return 0;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
+> -	if (d_child) {
+> +	if (!IS_ERR_OR_NULL(d_child)) {
+>  		trace_xrep_adoption_check_child(sc->mp, d_child);
+>  
+>  		if (d_is_positive(d_child)) {
+> @@ -479,7 +479,7 @@ xrep_adoption_zap_dcache(
+>  		return;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
+> -	while (d_child != NULL) {
+> +	while (!IS_ERR_OR_NULL(d_child)) {
+>  		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
 
-yes this would work
-
-I've attached the current patch, with all the changes.
-
-+               } else if (iomap_block_needs_zeroing(iter, pos) &&
-+                          !(iomap->flags & IOMAP_F_FSVERITY)) {
-
-This check is still needed as we should not hit it when we're
-reading normal merkle tree block. iomap_block_needs_zeroing is
-checking if offset is beyond i_size and will fire here for merkle
-blocks.
-
-Let me know if you prefer to split the first case further, or the
-current patch is good enough.
-
--- 
-- Andrey
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 47356c763744..af7b79073879 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -533,10 +533,31 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
-                if (plen == 0)
-                        return 0;
- 
--               /* zero post-eof blocks as the page may be mapped */
--               if (iomap_block_needs_zeroing(iter, pos) &&
--                   !(iomap->flags & IOMAP_F_FSVERITY)) {
-+               /*
-+                * Handling of fsverity "holes". We hits this for two case:
-+                *   1. No need to go further, the hole after fsverity
-+                *      descriptor is the end of the fsverity metadata.
-+                *
-+                *   2. This folio contains merkle tree blocks which need to be
-+                *      synthesized and fsverity descriptor.
-+                */
-+               if ((iomap->flags & IOMAP_F_FSVERITY) &&
-+                   iomap->type == IOMAP_HOLE) {
-+                       /*
-+                        * Synthesize the hash value for a zeroed folio if we
-+                        * are reading merkle tree blocks.
-+                        */
-+                       if (ctx->vi)
-+                               fsverity_folio_zero_hash(folio, poff, plen,
-+                                                        ctx->vi);
-+                       iomap_set_range_uptodate(folio, poff, plen);
-+               } else if (iomap_block_needs_zeroing(iter, pos) &&
-+                          !(iomap->flags & IOMAP_F_FSVERITY)) {
-+                       /* zero post-eof blocks as the page may be mapped */
-                        folio_zero_range(folio, poff, plen);
-+                       if (fsverity_active(iter->inode) &&
-+                           !fsverity_verify_blocks(ctx->vi, folio, plen, poff))
-+                               return -EIO;
-                        iomap_set_range_uptodate(folio, poff, plen);
-                } else {
-                        if (!*bytes_submitted)
+Based on my limited knowledge of this change looks okay to me. I looked into the return values of
+try_lookup_noperm() and it does return error pointer which is not NULL. I also checked the other
+call sites of try_lookup_noperm() but I do see a mixed handling i.e, some places just checks for
+!ptr and some for IS_ERR_OR_NULL. For example in fs/autofs it checks with IS_ERR_OR_NULL whereas in
+fs/proc/base.c it just checks for !child. However, IMO, it is better to check for both NULL and
+error pointer if there is a possibility for both.
+--NR
+>  
+>  		ASSERT(d_is_negative(d_child));
 
