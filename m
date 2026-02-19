@@ -1,105 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C6282C0F8C
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 13:11:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF131DF261
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 13:15:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771506706; cv=none; b=kgC6P1zFOySkLdPlUSCz3KqwTTAbPkFgxE/ZRdE2d+1Cdhjv+aiUa8z5tfwxic4msBSucUNjv2ewlQQ8W3T3DIbEZte3Lcm/0Slrh9ZbuhuxdckAeRkQfhGOQe7U4nOEIkCihjxD6uzUo768Bmn+zB1WdS+HPtyL5DhIt+i++eA=
+	t=1771506960; cv=none; b=pijePghKrceeAvbvv20nq1+cdlf/AlLR5DfaDurVgRRi7jyZSBGzBxT8oP89wj6i14NSVIeqQqHIbk+g/8XgaLsGR1BwAOhYzQvI6XAX3p8JEAC0lA/fqKKX6v606PY8Hi962nOxAb20uEjwSKZ6KRIhTU+ZlLSFcCZNI65hv0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771506706; c=relaxed/simple;
-	bh=q8VJMrc8n1rNzDm1g6nxCqEgajkXiV4bGGAfB++sHxk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=clca7Kdq+8KhvF5xTsXkzfW9EwXC06cYC9dtX30KzhGhtGkDFDs+J11opALbJj9DeKY93vUvIZLMdPADxaOtGVM9/Plv4rn3KelHNuOxP8f35K5M4gCo5RgKKfaapi7bYcTVu4oBaTBnGrI/c4Sxk19XpmGP3ZsQaWQ0Qs/S138=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPznEakT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771506960; c=relaxed/simple;
+	bh=IuKcDRmNJjOX0Gu7WLWpJfPMCTPA3wSdz6nVNsrH0Ws=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ctjxWqIeUqTdO5A/aY1cZMIfYQr0Jd72Vs3ywo2ikuE9fVC216pu5tWmLklm/rqlsVQ85l7InREzNfXbhrxBb8NSOlN7wP0oLy0+qabxln0659yB014ldkAFwOx57DabCbv3cu04h/+iO9/jE6IFP4ZyLjm8F97rHeLltd4GGYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wglAwgLV; arc=none smtp.client-ip=91.218.175.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPznEakT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73750C4CEF7;
-	Thu, 19 Feb 2026 13:11:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771506706;
-	bh=q8VJMrc8n1rNzDm1g6nxCqEgajkXiV4bGGAfB++sHxk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iPznEakTTfHGuxMAVjU3VdAxvBQ/AGbUVeN+mqbNAsbFHVVX9ksyQ7eGb97Rb2v50
-	 eTasU9MonZInXCqh461JjEO7N/DxlXaObcnU+RL3Qv2bpNDdp+hJJr0afd9P2dXxpG
-	 wl86/ARm2lkZGyVYMpqtTwjdw30/XolRH99Evb5jx94c2xba19HkNwftSKmlDs42UG
-	 vGHOFUrd7mS+jtsfpIUUSQIlQhWrEsYK24pj/kLlGrPhUj65AuXZW5xukKGoNqBFu3
-	 AtNdggkDsADG6QgXZuAioOkpLq91GwaMNjj5Xk3DfHg45e+4DiR+XE2q2Mntlce7Zg
-	 gLbItJFjGIztA==
-Date: Thu, 19 Feb 2026 14:11:42 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs: don't report metadata inodes to fserror
-Message-ID: <aZcMBfm6ls3F88ks@nidhogg.toxiclabs.cc>
-References: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
- <177145925516.401799.751825387607935746.stgit@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wglAwgLV"
+Message-ID: <0ca84d35-ed3e-4387-9b38-a85d62afa1c2@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1771506956;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XH5fl7iX+3zxGYiW2NIAWUiOwf9QcSJJ8gjNCAIjZEM=;
+	b=wglAwgLV7Jx9nzN8sg37Pp70S6ukaS23E3AY0d/PUPGCFIkPH+AJsZnQNd3uyGJj4Gm1ll
+	x7kmVMG6G2/jMALCfWQGbwYn6FmlCmiBBiybzR22sL+UvSyPOEPTBKy9yyfusDn8P//KK+
+	RBeqqJUy2vfVmUZOEF9H1A/jT37RjB8=
+Date: Thu, 19 Feb 2026 14:15:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <177145925516.401799.751825387607935746.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/6] xfs: fix potential pointer access race in
+ xfs_healthmon_get
+To: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, p.raghav@samsung.com
+References: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
+ <177145925494.401799.17980890890269795712.stgit@frogsfrogsfrogs>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <177145925494.401799.17980890890269795712.stgit@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Wed, Feb 18, 2026 at 10:02:01PM -0800, Darrick J. Wong wrote:
+On 2/19/2026 7:01 AM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Internal metadata inodes are not exposed to userspace programs, so it
-> makes no sense to pass them to the fserror functions (aka fsnotify).
-> Instead, report metadata file problems as general filesystem corruption.
+> Pankaj Raghav asks about this code in xfs_healthmon_get:
 > 
-> Fixes: 5eb4cb18e445d0 ("xfs: convey metadata health events to the health monitor")
+>    hm = mp->m_healthmon;
+>    if (hm && !refcount_inc_not_zero(&hm->ref))
+>      hm = NULL;
+>    rcu_read_unlock();
+>    return hm;
+> 
+> (slightly edited to compress a mailing list thread)
+> 
+> "Nit: Should we do a READ_ONCE(mp->m_healthmon) here to avoid any
+> compiler tricks that can result in an undefined behaviour? I am not sure
+> if I am being paranoid here.
+> 
+> "So this is my understanding: RCU guarantees that we get a valid object
+> (actual data of m_healthmon) but does not guarantee the compiler will
+> not reread the pointer between checking if hm is !NULL and accessing the
+> pointer as we are doing it lockless.
+> 
+> "So just a barrier() call in rcu_read_lock is enough to make sure this
+> doesn't happen and probably adding a READ_ONCE() is not needed?"
+> 
+> After some initial confusion I concluded that he's correct.  The
+> compiler could very well eliminate the hm variable in favor of walking
+> the pointers twice, turning the code into:
+> 
+>    if (mp->m_healthmon && !refcount_inc_not_zero(&mp->m_healthmon->ref))
+> 
+> If this happens, then xfs_healthmon_detach can sneak in between the
+> two sides of the && expression and set mp->m_healthmon to NULL, and
+> thereby cause a null pointer dereference crash.  Fix this by using the
+> rcu pointer assignment and dereference functions, which ensure that the
+> proper reordering barriers are in place.
+> 
+> Practically speaking, gcc seems to allocate an actual variable for hm
+> and only reads mp->m_healthmon once (as intended), but we ought to be
+> more explicit about requiring this.
+> 
+> Reported-by: Pankaj Raghav <pankaj.raghav@linux.dev>
+> Fixes: a48373e7d35a89f6f ("xfs: start creating infrastructure for health monitoring")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
 > ---
->  fs/xfs/xfs_health.c |   16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> index 169123772cb39b..6475159eb9302c 100644
-> --- a/fs/xfs/xfs_health.c
-> +++ b/fs/xfs/xfs_health.c
-> @@ -314,6 +314,18 @@ xfs_rgno_mark_sick(
->  	xfs_rtgroup_put(rtg);
->  }
->  
-> +static inline void xfs_inode_report_fserror(struct xfs_inode *ip)
-> +{
-> +	/* Report metadata inodes as general filesystem corruption */
-> +	if (xfs_is_internal_inode(ip)) {
-> +		fserror_report_metadata(ip->i_mount->m_super, -EFSCORRUPTED,
-> +				GFP_NOFS);
-> +		return;
-> +	}
-> +
-> +	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-> +}
-> +
->  /* Mark the unhealthy parts of an inode. */
->  void
->  xfs_inode_mark_sick(
-> @@ -339,7 +351,7 @@ xfs_inode_mark_sick(
->  	inode_state_clear(VFS_I(ip), I_DONTCACHE);
->  	spin_unlock(&VFS_I(ip)->i_lock);
->  
-> -	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-> +	xfs_inode_report_fserror(ip);
->  	if (mask)
->  		xfs_healthmon_report_inode(ip, XFS_HEALTHMON_SICK, old_mask,
->  				mask);
-> @@ -371,7 +383,7 @@ xfs_inode_mark_corrupt(
->  	inode_state_clear(VFS_I(ip), I_DONTCACHE);
->  	spin_unlock(&VFS_I(ip)->i_lock);
->  
-> -	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-> +	xfs_inode_report_fserror(ip);
->  	if (mask)
->  		xfs_healthmon_report_inode(ip, XFS_HEALTHMON_CORRUPT, old_mask,
->  				mask);
-> 
+
+Looks good,
+
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+
+--
+Pankaj
