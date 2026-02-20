@@ -1,54 +1,77 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A9873164D4
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 15:39:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B6F34E771
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 15:57:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771601981; cv=none; b=odFVoIsAsEGyZLL0ha+c0x6laJP2NMJ3UBQQVNbUC+gmu5ARwNE9ThQREjEpfZYBRWxW36FrnKXTa8l0pMZQhh2kzuq4eouYTKuoZTV96/WDTLCQuLYgkDSNrHx+VVP3czan6QWqpbLvVDMPN2dc+QNHCxPb+zgqE5ADh4p+Yes=
+	t=1771603037; cv=none; b=i/ZfiBY61lFUuvKMNiHBPww/8zpaFWwboxPP8MRx2rHtDjj8JUQXvAOpfH+onjleVve3WE8YexHUU8F6XFeCPbeOMKX/+I4rLuJbjv2clfGb0WMzdvbGqNL1Ql6Qaq5e8yZ8EL9BbqjsGbVaeK/9BArpd2n1I4UPjRw2iQS6t+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771601981; c=relaxed/simple;
-	bh=P3f8CV5LAPUzExHu68TaXjFh4WBhcyVngskppl2q9Bo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YGIo/P+OEYyOM85qW88RiaykWZk5NJS2X5X6FpYFG+2Yjqyi7TE/q3xX/2R7vchTUElHjcd2zhvScGY1Efj5ekTz4a8TunZvye0a16W1X+Z+C4eNHKcBWxCpTA6Lr7hqd8kg4nELYODzySI24xD8pZS2CBcPI1B7QiuZ2gckmvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gF1GMF3j; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1771603037; c=relaxed/simple;
+	bh=PgGYHDvluDEDwh42Htw50puTD9Onf6jLJr5njX3J01c=;
+	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
+	 Message-ID:References:Date; b=n8k+n2M+wLDCxmtvi/Q0YvFSfOnuq5ded0SJ26AY1Jkz/mb6nAZnE0DN71DhiXVCewJNqu9wlUS6rGWKM6/RO5TO7m5yN5bJ2QHxC6Oh1yuw0GgQAEVQiLstTkeIw89u+kFybHLxp82qZjR2ctLkDxgaqM4lBZ/e2c8wZ7XN9v8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=V8ph7C2d; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gF1GMF3j"
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="V8ph7C2d"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6NXkuigp/Y9mf+Lo5mvvulQ59YNXCkdOX8CO9v/tBnE=; b=gF1GMF3j1cv9hg7OK6JHwT8TqX
-	u48jzCv5P69NXQhBUwgSVOK+xwJ6brx6UWb710oEkLPmbfbOIclP6qv0dpgBVEf358oxljpmA3HXV
-	J9c1sk0+BlhJ076hTEC4El2/5f3D6gpDaviYvVj1KxR3ixfB0DwUUZZbqOfiqChFZ9BQcCCkn9MnR
-	mEtq0hM/jukutf8jIReoJivZ5Rv4A2fZE0UH6cwdfdwLxHjGZsDbZNkqvM8LaXrEr9JkaYVXoqgj+
-	pizbFcf7s8GAfQtS3onCS6Wb1wQzUyTNi3mob83zfBEK+QUCsPdOP9V6Jwf85fThsiAvyXUVfWc7t
-	2DrIW6qQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vtSbS-0000000F47V-2wQ9;
-	Fri, 20 Feb 2026 15:39:38 +0000
-Date: Fri, 20 Feb 2026 07:39:38 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, cem@kernel.org, cmaiolino@redhat.com, hch@lst.de,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] xfs: remove xlog_in_core_2_t
-Message-ID: <aZiAOukwRtc4_Dzy@infradead.org>
-References: <177154456673.1285810.13156117508727707417.stgit@frogsfrogsfrogs>
- <177154456837.1285810.1825229967595111728.stgit@frogsfrogsfrogs>
+	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=F/aFgDca7C5oLTN2wHjgv0ZHEfixDP0D7+nlWbQ1zNM=; b=V8ph7C2daAq1JUQz0xQmIMDqPA
+	j/jB4JRn0yj2kP2FYpJ8QTwF7YaJa0FFuRdhblwMF8c37jYvOjUwTuvd2oVR0ncwXc1Y+eB/Eb3TY
+	mzRgaYoRlZMZz6NlA7q7K+HDx91JAv5udni6b5N1k6B5JvwORsZjgxI9yhYGKr8LTe/KIJr2kFhr+
+	ty5btz3PDyx+JgO8bhgA3zbIy75qrDZ9pRXl9x06sTGW7yTAiixaQ2fYrPAqslGsoN1o8Gr3ZZtCG
+	UTGrBjIlBWFye8sTzXvkDWzf1G9qkzTLqocYPl+4oyGLZIGchqCFCrCDlpfAiWoGrkhlWj6Ow2Epf
+	KW6tIeGA==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1vtSsL-008NPQ-2j;
+	Fri, 20 Feb 2026 15:57:05 +0000
+X-Loop: owner@bugs.debian.org
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <177154456837.1285810.1825229967595111728.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Mailer: MIME-tools 5.510 (Entity 5.510)
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+To: Marco d'Itri <md@linux.it>
+CC: linux-xfs@vger.kernel.org
+Subject: Processed: forcibly merging 1116595  1128087
+Message-ID: <handler.s.C.17716029431996265.transcript@bugs.debian.org>
+References: <1771602938-546197910-bts>
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Source: xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date: Fri, 20 Feb 2026 15:57:05 +0000
 
-The libxlog part looks good.  I actually had a local version, but
-you keep beating me on submitting these ports..
+Processing commands for control@bugs.debian.org:
 
+> forcemerge 1116595  1128087
+Bug #1116595 [xfsprogs] Packaging issue: xfs_scrub_all_fail.service NoNewPr=
+ivileges breaks emailing reports
+Bug #1116595 [xfsprogs] Packaging issue: xfs_scrub_all_fail.service NoNewPr=
+ivileges breaks emailing reports
+Marked as found in versions xfsprogs/6.18.0-3.
+Bug #1128087 [xfsprogs] xfs_scrub_all_fail.service: fails to email report (=
+might be similar to bug #1116595)
+Severity set to 'important' from 'normal'
+Marked as found in versions xfsprogs/6.13.0-2.
+Merged 1116595 1128087
+> thanks
+Stopping processing here.
+
+Please contact me if you need assistance.
+--=20
+1116595: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1116595
+1128087: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1128087
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
