@@ -1,124 +1,142 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6664320A0C
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 09:29:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EC73358BC
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 10:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771579749; cv=none; b=cvsQXrKnOBBlOU2cRHPNdkIAcKSGSd42Ca9D+Th6+PYrBDH+gcc39pW+HwEOa4NitLXlw10eB6NhFvMRSlsxyRELr0J7p0cXBMkT/VaIx+ARxYB14bPvdA2qaN3X9X3v57FOotw0FBw0Tjmxq6QPBxzPF/t0wxGSF0X7yNfILYY=
+	t=1771581616; cv=none; b=WVdYO1jM8QP98t5AraxZaWYArQLB/gbRHuLVqsQT1sYrNAYUl+rwbznoS3goAriBn7cZCR++lHdwHyT89q+bZ5TkY4Bl2Q51IiIfp808vP4UttZ/g/rG6JUlthsXcqt2qRTvqfa602PDSIhKjwfL4YxkQ5PUG1JJA2ogZMmi4mU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771579749; c=relaxed/simple;
-	bh=VMTBZ2q1fGVoYGSyCRvcMqoocE6gyf2zzmG18jf+qEQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p2X8pKxKpYvqOEzkfQYBY+wNkrKj0q6jT5z4U4B+XibYq3hepXIFw1LYt1HgPMR+mfdfM0R05RTmbGEjamMenTuUz8mJzjdn7WSuaWcDIBGWnKfbxxpQjs812daCZkwL19fL5eOd1BP8c/v6qWNxgnKHcL8pS+Z3hMuaKi6Q8VU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=KlTFmDB7; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1771581616; c=relaxed/simple;
+	bh=rFa1JNOOh8Ssk8Y8ywFKJB6552RP7UBIeqsSW/gEraI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=JX7LyDMv04ASjLgG8DvUloEk1rwTKdmJPMjXTmWRPWqtgvmoiCY4PP0gKay+b6qlFB5b9i/zq3oLv5YcIs66r+4gZHx0Q4p9b1yjEfjeVltcSjevhI7iyOOoOOXEL9H2qievxlYJK+jvMfutVUNobaFF6ukkS6HcS2tql9wI7xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BdzFF0e/; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="KlTFmDB7"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-48329eb96a7so10838095e9.3
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 01:29:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BdzFF0e/"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-35621aa8c7fso1046233a91.2
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 02:00:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1771579746; x=1772184546; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MKuFWwKHCyFD8XdrAqu0nelXgub1Q7mxMeJGT4NfFh0=;
-        b=KlTFmDB7obw7FGej/1wrFPUp7yfGoMMm8Tko+4K2RYbb0tfFS2nFXqCteFeUowiCFu
-         LlqJaB0WZyGFVSblO6wmblI914NWBoxezXQd23YDsk5PRbLxO7fXECeBIWl/SqyTNMhd
-         JxQe5Ic4T1WzvthVvWzgn3o7T3oZTBkCf+V1DpHqopWyoBNR8iRNk5+GJ+Uj5BEmrGHz
-         w4yYsigbAZEUX2wIyN56mydqIBNwV90irkfr+fOwfJ3tFfuDqB08HT+x0vF3psvGuWct
-         De/dgNCeMd1N4lFfoCtC+8W156iQlDE32L3jVlsGfwoH3/6dgqyGnt6bbQNeogg3mxdw
-         vvTQ==
+        d=gmail.com; s=20230601; t=1771581615; x=1772186415; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=E21Ynhw++H4r3Jkl9ZIAjOT6EVhP7EbsgEinOa2T0OU=;
+        b=BdzFF0e/jLSJTHcSA34sOUbNrNEJhWIPpyKxBf6/g8NkOVhBCaaI/FiDCUer/sLl3b
+         x/RArfUs6pkTvtlVoRKyXHL+iRwGRCxhb0893hOFk5jYOZwUH4jSxYkGyumDIZG1HdGQ
+         l5pWszK6La+t+3qmFg5VG/MMFhTqE2lA9FfGhIV/XAcsfm7jCUupKNxJDHpsgm3fve5q
+         1KjixJdnBfSc8/xSkeHXMGIO77Dgu+RmpdCDNM3X86KZnq4sjAqh4/bt+bxHC1LWI467
+         dI9N0eNv/9iLs8/bDrhAhARk+jXVLIm2Bdg8cWm+8a6aKDH4DSMPXKUw54z+HhOx1/EC
+         YaLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771579746; x=1772184546;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1771581615; x=1772186415;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=MKuFWwKHCyFD8XdrAqu0nelXgub1Q7mxMeJGT4NfFh0=;
-        b=iD/xrnjV9ki9xiaCCWpW6UGL0s9zJiyBuHbIIfjsnVDpHQG1UhS2PuQZWZBaPTzq+4
-         hU40g5J5qNkw+Kn7otb836UdD9/ewgifExIKBTzJuKRshg8/BUjbnKGiuy4q+WMSjo8A
-         2QIdn+8A8rxxDz7o7FQtH0q11dt0UjBc4OAjyQuheatpSezIiR6ESiKTD78teUhqGgv5
-         QmRflIGiDmIYZKK1jMX7wU9z/KxdMzLktEv/O/WHMsUrlfVh6y9roShlphXIja3SRfUu
-         m5SvVpPmGFCFMhVubm6ipwvMCVnoAHDxygZsRe2uH8lufILTCpK7GDpGVEdg7nQNI2OK
-         6LFg==
-X-Forwarded-Encrypted: i=1; AJvYcCXeejpDGGbiXwGDvYe8bsc0CPIk/felJJLtJ3df830B5RvcGuvtTR29jv/gY+AAWPexmKZkGjk4j8U=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmN5zXNvtqn5lz89kKMRJk+ey/c5k2ZgTWMk1VwrIAyAqig4v7
-	w1Y2LkLovz+e0dLT2Re3/Rm1g/LU48UN9R2oeMEbA273k1prR0bjfGfv+fpnAfHC0mc=
-X-Gm-Gg: AZuq6aK5fO3RC82fSd5Jepiej8WZZ4ahy4aT3ZEM1R0VOGaPLHcGva1e69C0lTrbyNc
-	NGWqJgil+m5JZ+J/+kFtYomyOguJKd0OTGT4VLPq18EbUpl8gto2kxaisXVoVJ7uGl+uXK0ZMB+
-	3zcJvqnEhWdfR/Gp4DSqVlRPVcPk0A12lVsgeb3ovPNqY/FbmCvB9eeJi4gIWRsxEY/20OdyP1Q
-	R6KfyY6fQ6LW36Jt10gcydec+n/z86h7Y5OXPTWIrmg2tGI+ePfhLfVBMzXNf5GyWJSPmic1S1Y
-	NYKH0IbwOBmzG87TCaq5pQ16LgSPCmoxrIIFy/xS1sb3Q38p5LPNRQ3lvTQMzSvnJqeB+0arB18
-	C7gxtWAwvK9VPiA1mpwmtv/zS16NgvaxyYfqrat15y+xB2fypMt1rxJjcQwHg17i3J7KaLryaNQ
-	9hxU7xui+YJPxQF/yrP/k0rIZEPG/BH58=
-X-Received: by 2002:a05:600c:4744:b0:480:6852:8d94 with SMTP id 5b1f17b1804b1-4839e668216mr90509835e9.27.1771579745884;
-        Fri, 20 Feb 2026 01:29:05 -0800 (PST)
-Received: from localhost (109-81-84-7.rct.o2.cz. [109.81.84.7])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-483a316eb08sm66105105e9.0.2026.02.20.01.29.05
+        bh=E21Ynhw++H4r3Jkl9ZIAjOT6EVhP7EbsgEinOa2T0OU=;
+        b=WoyHToHxD6itZz/tfEDQp/f1abbI1dSi809uXs/NR6o6A2tSrODFbGAlHWw9gl/Fzg
+         J3zeLxXeqjPgc9zLoMNQpZvUan9NJHyOSA+KUKC3timwemFP/XkAICSdWALA//GyNC3P
+         Fq0kBshGbtN6tJ6+Mtp8sXFVHb/bESuxi/sf64mWE8sJwXbM2vdbX7qt9c7ZXqMXRl8y
+         P6WqnwFmyRRSo9s09gZa5jK9VDcAFtczbJMuGoQkx1YOuCVdJhoVF49PFWi8/HphcZv8
+         VBQwZ2D6ch6rZBbzmk/FV2rnD3cxugRXayKYLl+OuqltsGlryeYJPKz1yuj6tMC2tT2W
+         k6Aw==
+X-Forwarded-Encrypted: i=1; AJvYcCX33HpLU2WN4Wj8RMWKD2Y5R7W+lb/1jGVPphNL8UgQPcZk32NxdPUia3MNGOpQMuzxVzAvxjeUVZw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfElNinVG3otpi6KrmHnjyFjWRqTlRI/kfHUAZ4g35YITW6ZSQ
+	lv8lVhwAZFgHsx8lQcl6KaCX3ZjghZVWI39aO1aUwlIlDzyEKkoxpd4b
+X-Gm-Gg: AZuq6aJZOQkhdb4w6ATTwNR+qlMu7HlWIjmNZFf5J1Z/DLy/FXSXI0C2LJKnIKKmPEV
+	NWDYhmzKo3a3K6dT0IQf9FgugI/X7ZuoM8q0HdYvaIJwTDegmaGANI7kImG+/Bd94T8VGgLeZQH
+	EcPZZGndJW8HsyWmRkEDvnSDNGDlBpe+yikjptw+T/2XGgAnioqYixmEBZVr0Yc75IxWYapfbWR
+	czWEFnxZDsUnptsAjKgG/K0tuaHExK+gBaN0+fTZf1Cz3Dt3+4x7CtcZgzxlvTY28+AXD7eWVGv
+	phi60XK1AVIWR+FCbGepmF3CRK7ixkZ17C5MDUgnxFK5RJabW8uDqZ8ozKxjeiSqhlyrZ5ZrFZ5
+	2Lu/OYWDdcxthqDGFRLmkbi5UZ3EKjhKTseB5wdM258RPWuyZgh8e9Sn8bbeHKiLeYAHUqDy6tx
+	BTNgl9tVUTtwZ1Q87sGLVD0FT9WJvpkj+cVSk/9Eh5/ezcbe4SVJWcXPoYcUyCaUGzKkz19SDOa
+	uz1
+X-Received: by 2002:a17:90b:2541:b0:343:6108:1712 with SMTP id 98e67ed59e1d1-35844f9bf28mr19807914a91.18.1771581615001;
+        Fri, 20 Feb 2026 02:00:15 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.233.114])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3589d7f1774sm2444331a91.1.2026.02.20.02.00.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Feb 2026 01:29:05 -0800 (PST)
-Date: Fri, 20 Feb 2026 10:29:04 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Marco Crivellari <marco.crivellari@suse.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Anthony Iliopoulos <ailiopoulos@suse.com>,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH] xfs: convert alloc_workqueue users to WQ_UNBOUND
-Message-ID: <aZgpYJW-za1O30jG@tiehlicka>
-References: <20260218165609.378983-1-marco.crivellari@suse.com>
- <aZZmVuY6C8PJMh_F@dread>
- <aZbV9tqatNGbKRqF@tiehlicka>
- <aZeNG4CcIGtmy5Fx@dread>
+        Fri, 20 Feb 2026 02:00:14 -0800 (PST)
+Message-ID: <f8ea8da2649595f2edcb57a9776748cbced391a7.camel@gmail.com>
+Subject: Re: [PATCH v3] xfs: Fix error pointer dereference
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Ethan Tidmore <ethantidmore06@gmail.com>, cem@kernel.org,
+ djwong@kernel.org
+Cc: neil@brown.name, brauner@kernel.org, jlayton@kernel.org,
+ amir73il@gmail.com,  jack@suse.cz, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org,  stable@vger.kernel.org
+Date: Fri, 20 Feb 2026 15:30:08 +0530
+In-Reply-To: <20260219200715.785849-1-ethantidmore06@gmail.com>
+References: <20260219200715.785849-1-ethantidmore06@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZeNG4CcIGtmy5Fx@dread>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-On Fri 20-02-26 09:22:19, Dave Chinner wrote:
-> On Thu, Feb 19, 2026 at 10:20:54AM +0100, Michal Hocko wrote:
-[...]
-> > The usecase is that isolated workload needs to perform fs operations at
-> > certain stages of the operation. Then it moves over to "do not disturb"
-> > mode when it operates in the userspace and shouldn't be disrupted by the
-> > kernel. We do observe that those workers trigger at later time and
-> > disturb the workload when not appropriate.
+On Thu, 2026-02-19 at 14:07 -0600, Ethan Tidmore wrote:
+> The function try_lookup_noperm() can return an error pointer and is not
+> checked for one.
 > 
-> Define "later time".
+> Add checks for error pointer in xrep_adoption_check_dcache() and
+> xrep_adoption_zap_dcache().
+> 
+> Detected by Smatch:
+> fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error:
+> 'd_child' dereferencing possible ERR_PTR()
+> 
+> fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error:
+> 'd_child' dereferencing possible ERR_PTR()
+> 
+> Fixes: 73597e3e42b4 ("xfs: ensure dentry consistency when the orphanage adopts a file")
+> Cc: <stable@vger.kernel.org> # v6.16
+> Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+> ---
+> v3:
+> - Add dput(d_orphanage) before returning error code in 
+>   xrep_adoption_check_dcache().
+> - Revert xrep_adoption_zap_dcache() change back to v1 version.
+> - Include function names where error pointer checks were added.
+> v2:
+> - Propagate the error back in xrep_adoption_check_dcache().
+> - Add Cc to stable.
+> - Add correct Fixes tag.
+> 
+>  fs/xfs/scrub/orphanage.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+> index 52a108f6d5f4..682af1bcf131 100644
+> --- a/fs/xfs/scrub/orphanage.c
+> +++ b/fs/xfs/scrub/orphanage.c
+> @@ -442,6 +442,10 @@ xrep_adoption_check_dcache(
+>  		return 0;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
+> +	if (IS_ERR(d_child)) {
+> +		dput(d_orphanage);
+> +		return PTR_ERR(d_child);
+> +	}
+>  	if (d_child) {
+>  		trace_xrep_adoption_check_child(sc->mp, d_child);
+>  
+> @@ -479,7 +483,7 @@ xrep_adoption_zap_dcache(
+>  		return;
+>  
+>  	d_child = try_lookup_noperm(&qname, d_orphanage);
+> -	while (d_child != NULL) {
+> +	while (!IS_ERR_OR_NULL(d_child)) {
+>  		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
+>  
+>  		ASSERT(d_is_negative(d_child));
 
-After workload transitions to the "do not disturb" operation. 
+Based on my reviews in the previous version[1], this looks good to me.
+Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+[1] https://lore.kernel.org/all/61386abf00c817e65ab70c994ed584fde339f9ed.camel@gmail.com/
 
-> Also, please explain how the XFS work gets queued to run on these
-> isolated CPUs?  If there's nothing fs, storage or memory reclaim
-> related running on the isolated CPU, then none of the XFS workqueues
-> should ever trigger on those CPUs. 
-
-I do not have full visibility in the workload (i.e. access to the code)
-so we only rely on tracing data. We know that the workload operates on
-the set of isolated cpus and each component is consuming a dedicated
-CPU. We also do see (among others) XFS workers interfering. I am not
-able to link exact syscalls to those worker items but we pressume those
-are result of prior workload execution as not much else is running on
-those CPUs.
-
-> IOWs, if you are getting unexpected work triggers on isolated CPUs,
-> then you need to first explain how those unexpected triggers are
-> occurring. Once you can explain how the per-cpu workqueues are
-> responsible for the unexpected behaviour rather than just being the
-> visible symptom of something else going wrong (e.g. a scheduler or
-> workqueue bug), then we can discussion changing the XFS code....
-
-Understood.
-
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
