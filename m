@@ -1,225 +1,196 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010054.outbound.protection.outlook.com [52.101.56.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98EFD2EDD52
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 18:12:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771611136; cv=none; b=eomDK7k9rOGZtOYe+MQn0Q7GbmKX1+5nsT3mfvVwaAVzZSRWlgNlfgRh9O3hy5ukW3+KA8OpbdhZjJnPjI6VkRqCA4Txr9bAQ0FkXLBRGMUKlPfkPu9iyjg/G6kt0pv2lp2w7lFHV8VltS9jL7LF/mZXGSYzHkvx3Az8BFhZafo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771611136; c=relaxed/simple;
-	bh=QXiBS2u3WNPthvMcu8RHcrGjQZdLwGXaQ61hy2ceOZc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FLqGZvHn50T/b/WYj0SFFLv6674gU+9jJWEx8sTujYWfRSmsIKNGhzk0WpEMjomJDBv/NKXrdH8lqD8Wdf+DPSW+foZmc4YzIeQkVOChRRwQmWr0u22QyErJXXyu0yF9Kr5BFDMPDZFYjWgSJ3G25xe/sFBGdyoCxpSzNxrd6gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cBlPMUKa; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443FC22A7E9;
+	Fri, 20 Feb 2026 19:01:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771614115; cv=fail; b=GGCIA7GVwv8DwnpfGPYx9mp7Yp0RCbFABA0/zV6qrocEFxK4KNA/IA1IGl3C0UX0VWcpW1eHq8l4+XnJP2m1ReiPC68rfcf+4ITR1uqU0XCIB8mdw5B5b/aLFXksE8qWmepAwY6gAFfPrmG3kGjheIVtXhFgm/b3Q1a2DnrQxhQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771614115; c=relaxed/simple;
+	bh=6xdC7gsUhljZ2A1OAxyWNUq9yhHS1dl8pibq0pRQDNk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=CEQpMEwkHD9wURLT3TAbT2gN/PKWNnd2imOIrtP3/0kEveHtQQB/BFETGUAspBFuTiGHCeoCt2oGzquLCD2GHJsHtf9CljPWVYt+y8Ls2YTy/aSkiK3eGivNAUae5PTU2t6AaKoXKyRcBC0NMQWXTRALgC0aSw5Q8eBNPktor34=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=frZxMOe3; arc=fail smtp.client-ip=52.101.56.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cBlPMUKa"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-826c49b7628so1043975b3a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 10:12:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771611133; x=1772215933; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TqtVpJyXlOSony1ZgNHaOS1RyIHwaNyTbJaxrJhP7jI=;
-        b=cBlPMUKav7RpjFBvYH1HO5e884abdKIbQ4QJqS1YBmw5ozZdEZozrdvPyBPraReo9S
-         kWzlHz8/Na5MnBMH+cZuFHui2hJwH3THW4Sh5pBn2eCVQXHeyUWvkNRhUsSBYKVtBQEa
-         et0H8nDSdZA8NwW9biEXvF5gztD63NMrYp04zZrHIJ7dXRvYWIlJRPbLrf1AAxhsbOgQ
-         ndwO3lsK/EzH2cR2Fz2aSLQSk/AJtxHSSi1X5IT8KSqsR0vH1wi4shUATHrOtYifda1w
-         qmgcivaN9zVt2jGvvNd0sK0vy88a2KK5FgJ2n7jFm0nfcDpohVPKdwRoqRpq5GLphl0U
-         l4VQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771611133; x=1772215933;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TqtVpJyXlOSony1ZgNHaOS1RyIHwaNyTbJaxrJhP7jI=;
-        b=EHZxGxyKY9N0sLLdAjbtsFtet586UtofHlw0GzeG/nw+xn3jqv5fhFbHxs0yDbnTMJ
-         99vLvhtqUH6rbsfdsLlt1d90/lLEWMpQH5XLYSPGuWv41yTIbTv9JvKIjwAhWhBWk6Sh
-         mlA2xLFYBETufi6q8Jl61hYeU8P7VpvbtClLqBr1mL9ljSbyIPw9P8G9jCytDZ5z6IOr
-         Ja3tcAOLE8Bwmvn8kmwa5BqrcH+KWjUhcpluv2vjWhAibWshURylEtF/vmwfgknbpREh
-         XDSM8RiqetjZ9wrgih5OqpLtniLXMvebhiYhfz9IGmNf2pcExlLBCE2Ta+KjfEdLdFDH
-         OEXg==
-X-Forwarded-Encrypted: i=1; AJvYcCWaZ20kPDYBO16ixhDlB86HUO8ixxDMGQRy/yQUbSKU0HPCDCC2PY85Co8mdqGajd/LlxN5jKK9GJc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSZN6R2GMQ+gnvfkTFSq7B2C2K9W+ZUy9ps1xVCAwZwIzW/p+2
-	fr5Xcjt+VhFDY98o+7usOXP2B1g/tVrulsXUec7zQSQrGGPrgGx5pdOP
-X-Gm-Gg: AZuq6aLJSsHU9gmnrqNY09GI+lhC9h3Zgzun41MU7BvI0VHVCaCZanKUwqhQYoeXwR4
-	lXhcd7e2JVUezsTZ3Bgs30pK1yeFw9gZEwCjWlxNde3gsGawmFNJvvpq3Zc1kg59ZdK+OAk1z/m
-	1T2j3tsQUlBEcsqnalgt4HPYnH/yDh6sCYiA59XKneq3yKF8xtgJ7wYCvGHQiLke90Lu9ch1xUJ
-	GAhJUB1QSLoOAskF0wSBYSA8tf9hfNDSohrEFZF+5qKqfvNBaBLrUsmfKS0rsgkFc7eWZGmfPmc
-	5E8hQ9ApCdzR44QaLKy81BjH4eRztM2Y2LR2md0OGSKFG7Mr65zQpg/GgdoTfG5aXD6VPz1Uokd
-	hPd07N1MOHRlQSG3NsevWEWBAv05fMOeghCslShzCtUJNlo5Rwx1uEtMhQVQBCWQyjN4HzxBU8l
-	IaGmItEF4Y4tPCp4AT+JW9Qy786NFlU/5H4Q==
-X-Received: by 2002:a05:6a21:50e:b0:38b:e890:2f36 with SMTP id adf61e73a8af0-39545f7d1e7mr430868637.46.1771611132749;
-        Fri, 20 Feb 2026 10:12:12 -0800 (PST)
-Received: from [192.168.0.120] ([49.207.233.114])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c70b7253b43sm96706a12.25.2026.02.20.10.12.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Feb 2026 10:12:12 -0800 (PST)
-Message-ID: <9f4acd07-b8dd-45ff-b40a-4d135be3155d@gmail.com>
-Date: Fri, 20 Feb 2026 23:42:06 +0530
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="frZxMOe3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=c6iJsbOrSPi7da6xs2SsAMUQ9ogDRALjiM8ZHPDREMsqSpDa9UnR78/NOzAuiv0S2uxCu+Ac499tbkuBQY9Q94KLdzpz1PyHQx9rwrTlASQbG5s3W3M1v1UbYUwfzRmD83nokihbA0ARTcPYnjMn8vY/z9O1hteTpi7Zgq/cjHzlvIrdCiy4Gjnx/LXwbFvMsNTUAkXHL+Q16XYBENaWz01iz4+GdKAyZEj5mtq1Gmdn9zdLWzO/ro5sBWPf+f+GbX0BRXKYQgdb5Rj+XtMXXbUNZ08KmPtFvmopeCP7mRHervXX4VcccjEdCIh43HwMLUguvjXTlZi2CUbubHMTMg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1Rreux8E7mNc4HPszf6KeTWQ+ouRkjWSaXvSXLUkA64=;
+ b=Qp2Vuk6fyZVzmRgODs+8OZJbOqezWTolCzlFSVYZznHo4uiZFanMi+6vmfNaMD7SHefGofh2/1CDll8wyG8HlyDmECBYDySHqn3tgy2bLP/RIOkDTDnOqryy78XM/e4BKqVkZnjWtc2rVxJKSFb6+lCLsZqT9+aWAKsKDCRKyRLKGK1X6QOcQpmCiY7hesgoFBocd/7F69nVhqGfl6Dtf/FJ7n8RvzrdVBxBhhW37f+KsKN+zB+IbYtBqwi0E0WgzoYGeykl9F5U0bE2GvqecRc591d6Wi14AdYqDH8ovNIwrKKawruwLTuA+u+gTrNKCj3XVY7CkcI/i1iHm58A6Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1Rreux8E7mNc4HPszf6KeTWQ+ouRkjWSaXvSXLUkA64=;
+ b=frZxMOe3Yiemz3l/y2uiHvs9HFyGSe9Sw24ClfRrWTPmtF2Lym15Ou4YMwzmuOMoC9aSruk7OSW85MZAQV7esxKeRDawY9zWV7rYdxoYC5+J/TMS0wwf5TaZ1Qq0+/uW9N1YwNrf0LfghP2yqTCluN/rcgB8QzsEgU62ZKH48WafXuMRyVw3Sq4G1aPS3mMD+rNSg9gVWbaeCM6PHaXMbP/cfGjy6dbGiJTLchu47FHspe0ttWFEHIbMBo924qXWKrY2VI/lFb2H04URs5nA4C1wDq6A7dE04ULVp1OSGad7EfHEolscXqXOwGRTnA67f74QFGbniAiHDerVtySTwQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB6486.namprd12.prod.outlook.com (2603:10b6:8:c5::21) by
+ DS0PR12MB6629.namprd12.prod.outlook.com (2603:10b6:8:d3::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9632.16; Fri, 20 Feb 2026 19:01:45 +0000
+Received: from DS0PR12MB6486.namprd12.prod.outlook.com
+ ([fe80::88a9:f314:c95f:8b33]) by DS0PR12MB6486.namprd12.prod.outlook.com
+ ([fe80::88a9:f314:c95f:8b33%4]) with mapi id 15.20.9632.015; Fri, 20 Feb 2026
+ 19:01:44 +0000
+Date: Fri, 20 Feb 2026 14:01:42 -0500
+From: Joel Fernandes <joelagnelf@nvidia.com>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "Paul E. McKenney" <paulmck@kernel.org>,
+	Kunwu Chan <kunwu.chan@hotmail.com>,
+	"rcu@vger.kernel.org" <rcu@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>, Thomas Gleixner <tglx@kernel.org>
+Subject: Re: rcu stalls during fstests runs for xfs
+Message-ID: <20260220190142.GA2120005@joelbox2>
+References: <aXdO52wh2rqTUi1E@shinmob>
+ <IA1PR14MB565903564F4AA105AF6A21099791A@IA1PR14MB5659.namprd14.prod.outlook.com>
+ <fc611e8e-0da9-4b88-83ef-092d300307e3@paulmck-laptop>
+ <aXrl46PxeHQSpYbX@shinmob>
+ <13b25e07-d7b8-4b4e-a249-b6826b2eea39@paulmck-laptop>
+ <c33c3d3e-a59c-4f5a-a562-13e2cabc2faf@paulmck-laptop>
+ <aXyRRaOBkvENTlBE@shinmob>
+ <aY54lbpbvATqNqEA@shinmob>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aY54lbpbvATqNqEA@shinmob>
+X-ClientProxiedBy: BL1PR13CA0202.namprd13.prod.outlook.com
+ (2603:10b6:208:2be::27) To DS0PR12MB6486.namprd12.prod.outlook.com
+ (2603:10b6:8:c5::21)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 0/7] Add multi rtgroup grow and shrink tests
-Content-Language: en-US
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, hch@infradead.org, david@fromorbit.com,
- zlang@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
- ritesh.list@gmail.com, ojaswin@linux.ibm.com, hsiangkao@linux.alibaba.com
-References: <20260219055737.769860-1-nirjhar@linux.ibm.com>
- <cover.1771425357.git.nirjhar.roy.lists@gmail.com>
- <aZcIEd9DY_bQGJ9L@nidhogg.toxiclabs.cc>
- <dd1b584b-987c-4dce-b84c-c9fe74687e95@gmail.com>
- <aZci9Fz8NgXhrUSa@nidhogg.toxiclabs.cc>
- <20260219154936.GF6490@frogsfrogsfrogs>
- <a3c85a2e0dff0d43ec66621c6fa530c66ec1c88e.camel@gmail.com>
- <20260220161015.GV6490@frogsfrogsfrogs>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20260220161015.GV6490@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB6486:EE_|DS0PR12MB6629:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7dae80da-4bef-4fe4-4aa3-08de70b27ccc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?q5phgZagquxIRQ1xSxr5CMEg1FF0Q5CXPOMablKlrih/Q2TzCyXQUVDrSwqs?=
+ =?us-ascii?Q?dudkmR46XpzHu8Ti3lMz3qrRjo/i9abjboTiCp9M3tCcKSwg6AXvZRsvUg/1?=
+ =?us-ascii?Q?DnFS1TbBpmQbbdnN+9YHHFvDh50AZNMdEwWCsdxseR4D+xN0/CN7CYTAMfiq?=
+ =?us-ascii?Q?hQJe7VduxquN9q/3WZ+9mWvIfnTACH3zT81LS4e7/0eHNcWNCFwdxv2DKu9a?=
+ =?us-ascii?Q?NV9eM3PWraQ0TmUQk9TQKEXI5Ro63m+hkXujrJqvs0fB4KC5wORsomPBlTa2?=
+ =?us-ascii?Q?/F98JCDOj1rzA7P7uK+Saw+OK7ISQjS9v1Bf254CMUx3NbCOpW3Q/X87HQVc?=
+ =?us-ascii?Q?rOjw+faBg7mS7G29dMCh2NfjCOgA32gDe9kqlKoXqRc/VIemTeQmKOOa0uP0?=
+ =?us-ascii?Q?+VgLGDWJAWeeFCh3QuM7KLCka8V4UN9mdX+hfZ1sjxpFCLakbRSXCtj+nCmC?=
+ =?us-ascii?Q?nJT7wHJuowH9YSkpSbefKp3vkuJilaPt+3pbF1Nf3M4Nt7qHEXzsSpKYbndM?=
+ =?us-ascii?Q?wBZFsFJYv+ziX4KZXeExC9PmL1G/rmJweE+AlKSYOUBHPaxdlZR/k9JCPZfj?=
+ =?us-ascii?Q?+KAG/bHs0M2SBuy5NOEFgN42VFb+ChwJXtGEdgW2Y+RQUrjSzVz18Y2qy65y?=
+ =?us-ascii?Q?Ylkth4jm+otRx2INQIn6aek3nEGZcrvDYT8+HUEHhzY49hpdn3MJMKU7gzgb?=
+ =?us-ascii?Q?0pmr9FqC1ydpQuPcHv04puFYLtm0yHleEeMtv6mSXPDMDLBy8EdwOYWLbHZR?=
+ =?us-ascii?Q?lEDSvtu/SzmRl5AfWNB4UOgVmVc26qhTHZjUzgHupFZEA77YC5eET/gU4lLm?=
+ =?us-ascii?Q?34pVjGfEVhe7vD7VYPxemo63Whv+VVm4UmftQXX1dvdLARczCnItuDpS/+jH?=
+ =?us-ascii?Q?1gUo0CA+meEJBNTOWPwfex3Lnlcarp9ql6a1FrOKXBiPCCChRjslj119WovG?=
+ =?us-ascii?Q?YqSh0tBiCUHnYssvAH46MAh7Z+dPK9rNtQS2/VCdanlZ1Qw+NL9UuQc+KNiw?=
+ =?us-ascii?Q?H1ZyHYnWqqTtHHBU3eBcawdETplL2n4f5jSqmA8YdhepDmXpuwWcdYvSHUNP?=
+ =?us-ascii?Q?FoiZNByznpLeQIgeh2SOGd3jmjEg6gKkx2NigbC+XEuTEXrD2UwcnvUgfuPx?=
+ =?us-ascii?Q?5GfpmVH4Ksk4nZjHqMfa6uome1VFD2apDGdTVfMHnj9ZhGoiZwZWYsWdIOfu?=
+ =?us-ascii?Q?naL+sFVX1tZlFPmWuTW8F20/+K+qMGz5iSbJ1na4TJHTGAo2cSkIo6KO1Ddf?=
+ =?us-ascii?Q?/6VMHtiyilT8uoLZBiKEIR5z+/OIWHbMG65398AxG37L99Sspmwntj+tuAhd?=
+ =?us-ascii?Q?r/6+E4Yw/QmNwlyWwQc3Je4xO36kZtpP6YGnnUXNC8U7PrzKhjP7U4EzhJuI?=
+ =?us-ascii?Q?yxccZQT4BsaqrT6m/pSXEW8zYYz75CWGpl3COYoKSNXZuNxnLHgERQkmGulD?=
+ =?us-ascii?Q?5T3zAlXVIr8eM96VgnwOx5BF8pued3Od0gWBBLYLz9aLJzqQT2e5tqKnrjrB?=
+ =?us-ascii?Q?csnQFvntYcrjoUsUFo6ANGuO+sbQnDg/AgaIcsEwQxH9XoyskAD/wbM14D6v?=
+ =?us-ascii?Q?/jFMPiKnAUj+SEejg98=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB6486.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?sq4XJrgYccefjG/pH1iEI7XOnk6gWkDmOku7x0FNid0r5T8RGwpKZllpQKQ3?=
+ =?us-ascii?Q?EJngDTwSRW/e16IT1Dr2dzY7jgZNOgLelRHCbRdQeypMQ0uDxtv32O6/Dxmi?=
+ =?us-ascii?Q?u5yTtiDn7D6ArjHeVYcNsWbpWq4xVqbph3jf4KnZYXq6eqpKlECe+IH0V4xq?=
+ =?us-ascii?Q?keqlbeMDeUWwodmYL3P8qpexde3vG3s2Jbp2MusJA8XkQrTSdmA0W2szxDe1?=
+ =?us-ascii?Q?KPKsTpDSIEi1FBvyYKLsQWnMzpUmzT3IrImhtnZU6Ostda/iaa6w+7Ok6gSa?=
+ =?us-ascii?Q?Y3TWTkW5tAaWjsaZe9z8cyjYbVZrcNV1EFv/k33RD+LJsctcBnyZBlV0Bf9G?=
+ =?us-ascii?Q?RdJVadNrGr1E/q83I8PKhEgO0jpg2V5j6w6eJZi3dTZfhwgRj7qyKZbncxkJ?=
+ =?us-ascii?Q?D5giuPERYdvEatUdJ+7toagTOkVaoKBABsjBfre5bWxSHxe3FbSWcpPQNS80?=
+ =?us-ascii?Q?00tD92KMLI1L1on7wkybESohfdddviRWrWsjgRYGvITrpp263KiVgXRujPus?=
+ =?us-ascii?Q?/71gIaf2fMC9jjlK2h8blOLStbTobxvAaeWczI0V33hG5tKPlprdZRwFLdYh?=
+ =?us-ascii?Q?vgT8DjhpeUiQ+/Q84vYuEEURs3quk2LnPyCURGI1wq5wNyeMMcxF88ALQ2uD?=
+ =?us-ascii?Q?VfUf9NcyW3cCCLobIId6B0Lr4DjoQ04lhuZCbsUnMJ80zzxcLWCEzFiUXjAO?=
+ =?us-ascii?Q?zYZydNud9LECw8wiuPARoGxd5ItfqcmTEHOc5N4PHATyEb7mC1AAw80y5N3z?=
+ =?us-ascii?Q?YMsQ0Y+eydybfQRy/Q55tgST0+BZXCcseMJe9jPsR6plcweT3aNVQ8flqwLJ?=
+ =?us-ascii?Q?zv+Ce4yy/Ne4jMaM08+UZYDOeW0I50chHW/s0EOiEVF8khv0BwHNOKkqY5nG?=
+ =?us-ascii?Q?epVzdMH5rHUTPcpTIYvvN21PFaD+L4ZumNLGp80Q47sTl0ICb8qf2L4gAwVc?=
+ =?us-ascii?Q?fRFz7UaUO3CAVBEudeVbrxVsl2HLLAinJ+v19+5wZ+toFzHk9jgsE0WC/cZS?=
+ =?us-ascii?Q?1QoLLnjfrVARa08/WTP3FxhOnfKl2DzWF1D4X/J0/51vXLuM4PZrD0FJI7uS?=
+ =?us-ascii?Q?0Jjxe5heDBCfyJ630QMiOJxWQLBCAwV6y41F5/XnRLTyhULYQvG1XjrlamV0?=
+ =?us-ascii?Q?RDAWjrzW4mIGabJjGqxUBTOgi/dUeffMDvgpVUB4cp2Jzb+sQY904z2hbnAy?=
+ =?us-ascii?Q?fe8m0jgxokLtzz2WVJPdgZQcFpDTvtT3+knE/qvi4jDepm3NZabgXFhO9jXY?=
+ =?us-ascii?Q?d8jLbpBjdcEJpGhQx0p3MTEsA+K0sP9/ddO0ZwcZQSEV4N+6LYgYgyNvD0dR?=
+ =?us-ascii?Q?igziLfRTpkawmMXJvYx7vGBN8uYiIon9+I84S8JYnIcwFYpEeLkK3KgI820d?=
+ =?us-ascii?Q?e5Va3Oce240bVD1HLiGPPPr7QR7ac2qJWKHUM09dFINWOU6CxIyw+4dnw0In?=
+ =?us-ascii?Q?sTBFnWzDC5XJso19iE0d8aAKoP6aOz+8y8bvrQYCJ1+Nj5t2yGd2qqnhVasZ?=
+ =?us-ascii?Q?uxFdLnr/AQ9nsM2A+eLGZovl8z5kHpGXaXTf31zSKlNEyjMVbDeHwIr/gkA4?=
+ =?us-ascii?Q?umn0eyTNsr8eR2Wv45+eM5iZ8uheaBj3vxeTLUrRtoSXEdewapqWiUjF95L/?=
+ =?us-ascii?Q?aao97OZP3tkuSjGxmbiTzHtUSwPWcR9L4RIsiJfKS3OPst6MRAkcj5aTeKxY?=
+ =?us-ascii?Q?KPSeB0BaK+4aku5AiTmKYPMBONng3xg/91Ms1YKus+khrmqIuFhBkKSbjaRu?=
+ =?us-ascii?Q?kEQF2demKA=3D=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7dae80da-4bef-4fe4-4aa3-08de70b27ccc
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB6486.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Feb 2026 19:01:43.9519
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ppVZgDcNTgVxyFrfOrSimaMgbiBjxADA7zM2WkJIs5WYPoEhCUjVhffDSTih/0u7vSnLDk7zKubumzx/zZpRjg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6629
 
+On Fri, Feb 13, 2026 at 01:26:32AM +0000, Shinichiro Kawasaki wrote:
+> Cc+: Thomas,
+> 
+> On Jan 30, 2026 / 20:16, Shin'ichiro Kawasaki wrote:
+> > On Jan 29, 2026 / 15:19, Paul E. McKenney wrote:
+> > [...]
+> > > And Thomas Gleixner posted an alleged fix to the CID issue here:
+> > > 
+> > > https://lore.kernel.org/lkml/20260129210219.452851594@kernel.org/
+> > > 
+> > > Please let him know whether or not it helps.
+> > 
+> > Good to see this fix candidate series, thanks :) I have set up the patches and
+> > started my regular test runs. So far, the hangs have been observed once or twice
+> > a week. To confirm the effect of the fix series, I think two weeks runs will be
+> > required. Once I get the result, will share it on this thread and with Thomas.
+> 
+> Two weeks have passed, and I did not observed the hang! Then I'm confident that
+> the v1 fix series by Thomas avoided the rcu stall issue in my xfs-zoned test
+> systems. The series is already in v6.19 kernel tag as v2. Great.
+> 
+> Thomas, just FYI.
+> 
+> I faced mysterious kernel hangs during my regular fstests runs [1]. RCU experts
+> suggested the hangs might be caused by the recent MMCID changes. I tried your v1
+> fix patch series "sched/mmcid: Cure mode transition woes", and confirmed it
+> avoids the hangs. Thank you for the fix. The v2 series is already in v6.19
+> kernel tag, so this report might not be so valuable, but just in case. (And
+> thank you again for the additional quick fix for my blktests failure caused by
+> one of the patches in the series).
+> 
+> [1] https://lore.kernel.org/rcu/aXdO52wh2rqTUi1E@shinmob/
 
-On 2/20/26 21:40, Darrick J. Wong wrote:
-> On Fri, Feb 20, 2026 at 04:54:57PM +0530, Nirjhar Roy (IBM) wrote:
->> On Thu, 2026-02-19 at 07:49 -0800, Darrick J. Wong wrote:
->>> On Thu, Feb 19, 2026 at 03:55:02PM +0100, Carlos Maiolino wrote:
->>>> On Thu, Feb 19, 2026 at 08:10:50PM +0530, Nirjhar Roy (IBM) wrote:
->>>>> On 2/19/26 18:25, Carlos Maiolino wrote:
->>>>>> On Thu, Feb 19, 2026 at 06:10:48AM +0000, Nirjhar Roy (IBM) wrote:
->>>>>>> From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
->>>>>>>
->>>>>>> This series adds several tests to validate the XFS realtime fs growth and
->>>>>>> shrink functionality.
->>>>>>> It begins with the introduction of some preconditions and helper
->>>>>>> functions, then some tests that validate realtime group growth, followed
->>>>>>> by realtime group shrink/removal tests and ends with a test that
->>>>>>> validates both growth and shrink functionality together.
->>>>>>> Individual patches have the details.
->>>>>> Please don't send new versions in reply to the old one, it just make
->>>>>> hard to pull patches from the list. b4 usually doesn't handle it
->>>>>> gracefully.
->>>>> This entire series is new i.e, the kernel changes, fstests and the xfsprogs
->>>>> changes. Can you please explain as to what do you mean by the old version?
->>>>> Which old are version are you referring to?
->>>> Sure, I said 'old version' but the same applies to sending them in reply
->>>> to other series/patches.
->>>>
->>>> This series was sent:
->>>>
->>>> In-Reply-To: <20260219055737.769860-1-nirjhar@linux.ibm.com>
->>>>
->>>> which is:
->>>>
->>>> Subject: xfs: Add support for multi rtgroup shrink+removal
->>>>
->>>>
->>>> In better wording, please don't nest series under other series/patches,
->>>> or things like that. It works in some point cases, but in general it
->>>> just makes my life difficult to pull them from the list.
->>> Pull requests, perhaps?
->>>
->>> Or is the problem here that you're using b4/korgalore/etc to download
->>> patchmails so that you can read them outside of a MUA?
->>>
->>> ((Again, I'll express a wish that people push their branches to
->>> git.kernel.org and send a link in the cover letter; that's much easier
->>> for me to pull and examine than reading emails or prying individual
->>> maybe-MTA-corrupted emails out of mutt into applyable form...))
->> Okay, I will keep this in mind. I was under the impression that only
->> maintainers can have their private branches in git.kernel.org. I will
-> Anyone with a kernel.org account can push git repos.
+Good to see that this got resolved. I am guessing there's nothing from an RCU
+point of view that could be done differently to diagnose this earlier, since
+I pretty quickly spotted it was MMCID related when I saw the existing report.
+Let me/us RCU folk know if there's anything else to do here though..
 
-https://korg.docs.kernel.org/accounts.html
+thanks,
 
-It says the following:
-
-Getting a kernel.org account
-Kernel.org accounts are reserved for Linux kernel maintainers or 
-high-profile developers. If you do not fall under one of these two 
-categories, it’s unlikely that an account will be issued to you.
-
-
-In that case, should I use GitHub?
-
->
-> github kinda works too, though I am a Bad Microsoft Citizen(tm) so they
-> arbitrarily claim on first access that I'm over a rate limit that they
-> do not specify.  Granted that makes them a Bad Provider(tm) but I doubt
-> they hear me above all the AI noise.
-Okay.
->
->> check on how to create a branch in git.kernel.org. For now, is it okay
->> to just send the branch link as a separate email reply and you can
->> take a look - next revision onwards I will have the link in the cover
->> letter itself?
-> Sounds fine to me.
-
-Thank you.
-
---NR
-
->
-> --D
->
->> --NR
->>> --D
->>>
->>>>> --NR
->>>>>
->>>>>>> Nirjhar Roy (IBM) (7):
->>>>>>>     xfs: Introduce _require_realtime_xfs_{shrink,grow} pre-condition
->>>>>>>     xfs: Introduce helpers to count the number of bitmap and summary
->>>>>>>       inodes
->>>>>>>     xfs: Add realtime group grow tests
->>>>>>>     xfs: Add multi rt group grow + shutdown + recovery tests
->>>>>>>     xfs: Add realtime group shrink tests
->>>>>>>     xfs: Add multi rt group shrink + shutdown + recovery tests
->>>>>>>     xfs: Add parallel back to back grow/shrink tests
->>>>>>>
->>>>>>>    common/xfs        |  65 +++++++++++++++-
->>>>>>>    tests/xfs/333     |  95 +++++++++++++++++++++++
->>>>>>>    tests/xfs/333.out |   5 ++
->>>>>>>    tests/xfs/539     | 190 ++++++++++++++++++++++++++++++++++++++++++++++
->>>>>>>    tests/xfs/539.out |  19 +++++
->>>>>>>    tests/xfs/611     |  97 +++++++++++++++++++++++
->>>>>>>    tests/xfs/611.out |   5 ++
->>>>>>>    tests/xfs/654     |  90 ++++++++++++++++++++++
->>>>>>>    tests/xfs/654.out |   5 ++
->>>>>>>    tests/xfs/655     | 151 ++++++++++++++++++++++++++++++++++++
->>>>>>>    tests/xfs/655.out |  13 ++++
->>>>>>>    11 files changed, 734 insertions(+), 1 deletion(-)
->>>>>>>    create mode 100755 tests/xfs/333
->>>>>>>    create mode 100644 tests/xfs/333.out
->>>>>>>    create mode 100755 tests/xfs/539
->>>>>>>    create mode 100644 tests/xfs/539.out
->>>>>>>    create mode 100755 tests/xfs/611
->>>>>>>    create mode 100644 tests/xfs/611.out
->>>>>>>    create mode 100755 tests/xfs/654
->>>>>>>    create mode 100644 tests/xfs/654.out
->>>>>>>    create mode 100755 tests/xfs/655
->>>>>>>    create mode 100644 tests/xfs/655.out
->>>>>>>
->>>>>>> -- 
->>>>>>> 2.34.1
->>>>>>>
->>>>>>>
->>>>> -- 
->>>>> Nirjhar Roy
->>>>> Linux Kernel Developer
->>>>> IBM, Bangalore
->>>>>
->>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+--
+Joel Fernandes
 
