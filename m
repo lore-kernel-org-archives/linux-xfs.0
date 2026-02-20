@@ -1,32 +1,41 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C136729D29D;
-	Fri, 20 Feb 2026 15:31:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D5527144B
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 15:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771601478; cv=none; b=bz4H+uVIYG7wjPUFNBwdrLb9S6eRxzTBi7nwMjYdhtvMoT5nUlsgPAckcpSJX7ACHjzBKaGgLySn1zTUmGmm4VRFGVmJ41xI/wWEKW5bQk2cPe0tY244saXFD2zIxO5B7+0mTIlDelQhzP0J9MpzJ2ZC/fewaA3i8oot8vNjFGY=
+	t=1771601739; cv=none; b=Jb1svgu1HmBgSqN66GpzWoqBZ7LNV6qj/kP4mVEPDpr1cIDYaq+kVIWgCJ9aTEEpM5KdN630gd8KZX1wmmH6RPHrYEWpHhczwOKK5bQj8Wjb+O/CCfwUIPllCg0grqZxYAYYJs+2+4SnYX1LWEGdHXY+HBhYhKS+Y6Q3BCidx18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771601478; c=relaxed/simple;
-	bh=fUcOx96hUH2xxWt5q41bPTjE5PJ87yVEHYVDDLnSaIM=;
+	s=arc-20240116; t=1771601739; c=relaxed/simple;
+	bh=0cuGeZWEUQm9duk9PKAi/Mf7CKlX5bbzbqYRVenEEPI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KuFpPI6xCluokuHP9Dji3xE5caklVVW3l/gS76TLLm1T688u1LRArMnH1otD+6c1f3ZqYLMy3x3qpSJUTl7RtptnZ/dUfjjoHByls8M8ONqlxw+S9s6JEa1nJntQ4GeHSN62BUlT4wslCbX8FCfqxBqCxp1CQdKqweui04Yk0Zg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 50A3A68B05; Fri, 20 Feb 2026 16:31:14 +0100 (CET)
-Date: Fri, 20 Feb 2026 16:31:13 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	ebiggers@kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v3 11/35] iomap: allow filesystem to read fsverity
- metadata beyound EOF
-Message-ID: <20260220153113.GA14359@lst.de>
-References: <20260217231937.1183679-1-aalbersh@kernel.org> <20260217231937.1183679-12-aalbersh@kernel.org> <20260218063606.GD8600@lst.de> <hfteu6bonpv7djecbf3d6ekh56ktgcl4c2lvtjtrjfetzaq5dw@scsrvxx5rgig> <20260219060420.GC3739@lst.de> <qheg77kxcl4ecqdrsnmz4acfvszjlamlb7ilgxxyf3pmt4r7ah@5fzzmcpurdfp> <20260219133829.GA11935@lst.de> <bltgc6uliclhzkuqd4la2tzp6x7vsww73nvjedxh7s624tby3k@jw4ij5irh6ni>
+	 Content-Type:Content-Disposition:In-Reply-To; b=uumQnE6kzy8pxiRkmZUz7S8kPDQxzwZBbUJ6l7q055Cv9wEzjNtU3KiD/SXsV5nk0sYiktBk0JB0ahKG22wi4y7xYnfne4VGmzQtjYjgyjjW6UhT1oi3XBgRDQt8eF1KpyMWiETbovQlZLoaa7tdIH1bFlrijQ6W63CmVkUA7+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=X3BosU5K; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X3BosU5K"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=0cuGeZWEUQm9duk9PKAi/Mf7CKlX5bbzbqYRVenEEPI=; b=X3BosU5KqNRiEuFDEydtEQjtLo
+	hbMcgLHyKGMAXN7Bj+fz20qDfoX/1YNjdd/5MuUvcBcANeJUi+nSp6Lh3jwKmkHwB8ryPESUQxz0A
+	hruTgqCbbDION1+e7suMoPcU3wWxJHcmsE/qjz/CeD+HCBOhtrjJul173GG/0i+mekyCCN7iA9274
+	jK07huf59nJYSfKvavWreFnFEi2IRt47AJmIQq6elBFwmjW4y1LFDHo9jvIz/BgdJaSspdiuIdZjW
+	wGD1BTJ5uBpCHK2f4SugXP5KARrle5CJxDgyAmjp+J99eP6aXlH3yScwqIZyO89wVO+4Ykr3nl6dr
+	k0zmLR/w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vtSXV-0000000F2xs-1Bew;
+	Fri, 20 Feb 2026 15:35:33 +0000
+Date: Fri, 20 Feb 2026 07:35:33 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET 2/2] xfsprogs: various bug fixes for 6.19
+Message-ID: <aZh_Rb7fGsXek6GE@infradead.org>
+References: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,72 +44,8 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bltgc6uliclhzkuqd4la2tzp6x7vsww73nvjedxh7s624tby3k@jw4ij5irh6ni>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <177154457179.1286306.5487224679893352750.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Feb 19, 2026 at 03:23:11PM +0100, Andrey Albershteyn wrote:
-> On 2026-02-19 14:38:29, Christoph Hellwig wrote:
-> > On Thu, Feb 19, 2026 at 12:11:18PM +0100, Andrey Albershteyn wrote:
-> > > > > fsverity descriptor. This is basically the case as for EOF folio.
-> > > > > Descriptor is the end of the fsverity metadata region. If we have 1k
-> > > > > fs blocks (= merkle blocks) we can have [descriptor | hole ] folio.
-> > > > > As we are not limited by i_size here, iomap_block_needs_zeroing()
-> > > > > won't fire to zero this hole. So, this case is to mark this tail as
-> > > > > uptodate.
-> > > > 
-> > > > How do we end up in that without ctx->vi set?
-> > > 
-> > > We're reading it
-> > 
-> > Did a part of that sentence get lost?
-> 
-> I mean that to have ctx->vi we need to read fsverity descriptor
-> first. When iomap is reading fsverity descriptor inode won't have
-> any fsverity_info yet.
-
-So for ext4/f2fs the pattern is that it is set by:
-
-	if (folio->index < DIV_ROUND_UP(inode->i_size, PAGE_SIZE))
-		vi = fsverity_get_info(inode);
-
-i.e., only for reading the data.  OTOH, for iomap we do:
-
-	if (fsverity_active(iter.inode)) {
-		ctx->vi = fsverity_get_info(iter.inode);
-
-which means it now is set for all I/O on fsverity files, which
-is subtly different.
-
-(You don't actually need the fsverity_active chck, fsverity_get_info
-already does that, btw).
-
-I'm still not sure what "When iomap is reading fsverity descriptor
-inode" means.
-
-> > Another overly long line here.  Also we should avoid the
-> > fsverity_active check here, as it causes a rhashtable lookup.  F2fs
-> > and ext4 just check ctx->vi, but based on the checks above, we seem
-> > to set this also for (some) reads of the fsverity metadata.  But as
-> > we exclude IOMAP_F_FSVERITY above, we might actually be fine with a
-> > ctx->vi anyway.
-> 
-> Don't you confused this with fsverity_get_info()? I don't see how it
-> could cause lookup.
-
-Yeah.  Still, having ctx->vi implies fsverity_active, and follows
-what we're doing elsewhere.
-
-> 
-> > 
-> > Please document the rules for ctx->vi while were it.
-> > 
-> 
-> Hmm, the vi is set in iomap_read_folio() [1] and then used down
-> through I/O up to ioend completion. What info you would like to see
-> there?
-
-See above, unlike ext4/f2fs we set it for all I/O on fsverity inodes.
-And afaik we don't actually need it, the only use in the fsverity
-metadata path is the fill zeroes hash values check (which I'm still
-totally confused about).
+This all (or at least mostly?) seems to be in xfsprogs for-next already.
 
