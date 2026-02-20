@@ -1,141 +1,76 @@
-Received: from mailly.debian.org (mailly.debian.org [82.195.75.114])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF14E365A18
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 17:33:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.114
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 437F0366047
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 17:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771608829; cv=none; b=Jq4K16NKfXJ1nyxF9Ju/AeWm5wI3pPs4WXYlA80qMocEIFBaLukHjNh0FG7KGemxa93kFMzTwSBcz6j3z55iXf1wjOXwpLJ/Vcxr+HNDLuJB4q7OMcZ8MoJ4OnjkQ2NMyuiWtK1pPeavuMr4L4tqKR8YJwPbTQY2HY0kpfqdCfQ=
+	t=1771609103; cv=none; b=kSe0idbQCxTwMQ7yCXGZbB80kXuWyxyDW79WlMhIAF1ixcspGLiLcFSHiobirG9/I8PXIAeJJg4XKe7l8feT7EHZXur7PR5C1O3gzz4ecHLKSaRYwg6YQVdxEVlSl1we45zosv0dSQkvnEDilJAer0wbtvxupTZNbGT24pI4bf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771608829; c=relaxed/simple;
-	bh=zikbnsWJ3TIgIKZV55r7x2NqU+NddWmL32JjgJxCIT8=;
-	h=From:To:MIME-Version:Subject:Content-Type:Message-Id:Date; b=QSSz117oA9RDWlt3kcbS1jvs1Sx+iJ8f+qiLubxT/boKLzatTguyzbQkKleU4SYrr5ECKpADp32VEjEpffNOo9l1+RJKM9xraCzfCzHILULq8I9eYwY9AJIFW41Noxn7vEtGloCavafgA4fkLtjb8f3RjF6u54fLKXWjRdpOkGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=r66fkeq/; arc=none smtp.client-ip=82.195.75.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
+	s=arc-20240116; t=1771609103; c=relaxed/simple;
+	bh=XdDTaFoSe9mc1fD2fv/JClDi2RenbGpk6mud6CDwyOU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=J/7Ff0a0vPyqrnHdQnKJcwDzioBAEIJsLve8WcipW5twmZmOLZfzG7tcNP2mNzFdi3TURT0dBSxhHIh9f/dABJ1P61N8RtL6MvNcUUD/hvTaeNW7OM1wgSacxr1SluockNB5Ny84aaYMcSkGx3p4OYDFe0UaLl9qIs2SXX6bkE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p8pYTnRQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="r66fkeq/"
-Received: from [192.91.235.231] (port=38452 helo=fasolo.debian.org)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by mailly.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1vtUNn-00BkWy-1o
-	for linux-xfs@vger.kernel.org;
-	Fri, 20 Feb 2026 17:33:39 +0000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=ftp-master.debian.org; s=smtpauto.fasolo; h=Date:Message-Id:Content-Type:
-	Subject:MIME-Version:To:From:Reply-To:Cc:Content-Transfer-Encoding:Content-ID
-	:Content-Description:In-Reply-To:References;
-	bh=v3ck70r3lBa2peK9ON/WclcloSaDdP+rVUvOm6lbdyI=; b=r66fkeq/dGWFL2PnH7BwZgNshI
-	AHIskuZc5dVmrWuCybv190VUCHMtNzydLcH2XJU99YEQEl9lKF6wPcw4zl9UNixkKIWcySVQJZPSe
-	I+TWaDfvC9k5eTPXRMUDvEKR6dkDIfGR91LC1Hl3lQ2QhMa4okVYAC/Bv2fHksHEQlLZAUHHZ0tC6
-	AQHlolc3aAJGYTeojOS7gIwnJHaUjYV1jzPKJRXP6fASb4Q7sMSY2nv9pzRaSppmjHtPlQ19sK+P+
-	rLnRXOh8UIb0K2SKr5dsTgio1hiME4oEYxUHzTg4kYIdYTOvG8C4JPK/gRRVToMRSfSO5xi7nOGIA
-	21I0VUrA==;
-Received: from dak by fasolo.debian.org with local (Exim 4.98.2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1vtUNk-00000000AzN-20e1;
-	Fri, 20 Feb 2026 17:33:36 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To: Bastian Germann <bage@debian.org>,
- XFS Development Team <linux-xfs@vger.kernel.org>
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Debian: DAK
-Debian-Changes: xfsprogs_6.18.0-4_source.changes
-Debian-Source: xfsprogs
-Debian-Version: 6.18.0-4
-Debian-Architecture: source
-Debian-Suite: unstable
-Debian-Archive-Action: accept
-Precedence: bulk
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p8pYTnRQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E48B5C116C6;
+	Fri, 20 Feb 2026 17:38:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771609103;
+	bh=XdDTaFoSe9mc1fD2fv/JClDi2RenbGpk6mud6CDwyOU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p8pYTnRQoJbN6pEFCRW19ilZu5oW/cGCukDdccjUM6fnZZjxVf6BjHDjhHh3z+Yio
+	 GSTJcuXdF2OI+iNbGGI22N43zI+q/GXJFiOIJ8Co0aZqD7m6892N+azOuCYjVxPlwS
+	 h8G83AV0vgcKA1DkWvMl2OUGIyMQs005FW1qVqEXw8lI8Vc9L5vvxym6humZegl5RC
+	 5xd+4v2MAytG7lzjXnzaJj6C2j8uk+kgSXilztf9fLVjvFVyGPDTA5QOfiTMz1KT9R
+	 kvlSSfzgGdZbd5nbfvlIsUj3o97Lmgw3cphCWOssgGprU8sJhwXhnVJdHt7Mr1Fe/I
+	 1xta/PC/6K26Q==
+Date: Fri, 20 Feb 2026 09:38:22 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Bastian Germann <bage@debian.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] debian: Drop Uploader: Bastian Germann
+Message-ID: <20260220173822.GA6490@frogsfrogsfrogs>
+References: <20260220171714.852017-1-bage@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: xfsprogs_6.18.0-4_source.changes ACCEPTED into unstable
-Content-Type: multipart/signed; micalg="pgp-sha256";
- protocol="application/pgp-signature";
- boundary="===============2846991371207014941=="
-Message-Id: <E1vtUNk-00000000AzN-20e1@fasolo.debian.org>
-Date: Fri, 20 Feb 2026 17:33:36 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260220171714.852017-1-bage@debian.org>
 
---===============2846991371207014941==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Fri, Feb 20, 2026 at 06:17:10PM +0100, Bastian Germann wrote:
+> I am no longer uploading the package to Debian.
+> The package is the same except for debian/upstream/signing-key.asc
+> which I have kept on the actual signer's key for the releases.
 
-Thank you for your contribution to Debian.
+Thanks for all your packaging help over the years!
 
+> Signed-off-by: Bastian Germann <bage@debian.org>
 
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Accepted:
+--D
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Fri, 20 Feb 2026 18:09:05 +0100
-Source: xfsprogs
-Architecture: source
-Version: 6.18.0-4
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bage@debian.org>
-Changes:
- xfsprogs (6.18.0-4) unstable; urgency=3Dmedium
- .
-   * Drop the patch for parent pointers and exchange-range.
-Checksums-Sha1:
- f18de77cdc92c5be5d7855dc5d27971d71b00650 2048 xfsprogs_6.18.0-4.dsc
- 43681e9bb9ec0ec0ff9e101f9ee8649149ef8a9d 12144 xfsprogs_6.18.0-4.debian.tar.=
-xz
- fbc5dd0e2fa4ef2065227960b5df195eb5c9b799 5862 xfsprogs_6.18.0-4_source.build=
-info
-Checksums-Sha256:
- c70b2e6c8d97e8a9656db2e095b9c398e32681f2906892291183a6dfd041dc5b 2048 xfspro=
-gs_6.18.0-4.dsc
- 9e10fa82b58600950ddf30b463c8999a2e148edc39526046cfcbac023fe12a71 12144 xfspr=
-ogs_6.18.0-4.debian.tar.xz
- 64c074a791c93a85fa832a45751d0459b08aa46bf03160e3364b685155410997 5862 xfspro=
-gs_6.18.0-4_source.buildinfo
-Files:
- 20f9dc48fd232cdfb742649a5113eb99 2048 admin optional xfsprogs_6.18.0-4.dsc
- 9ed67eaaa9791b9f95d708aa53a641dd 12144 admin optional xfsprogs_6.18.0-4.debi=
-an.tar.xz
- 61336ef5e7f2aea443cc1c5850a07f91 5862 admin optional xfsprogs_6.18.0-4_sourc=
-e.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQHEBAEBCgAuFiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmmYlcQQHGJhZ2VAZGVi
-aWFuLm9yZwAKCRAfXHqLRVZDFFMgC/4t+akrY+eV3QjUN212x8vLqvwt9D9eln3q
-2+B2tU/fGyIGita5q13BzVJaKJ+74Nnp6O9ymHOZzEWtx7Ab1WUzAC+qWlxzQ/Ng
-zWEXxjVle8Ze7hCvn3peYaIypKP5QDIfWDNmtNKds5TeM5DTnWlHkMN2agbrz9xR
-qAat35voWMfTJtg5NEm0jNEGhRKjPASGyf4ALAih4/OyRhJeg26lx5a6jjuo+/8n
-LpJyw9/4EMsbgXyFcasO0wgrMF0VFzsn5enAw476wmjXQvL0B4e3DqsJHDIWmWM6
-njxj35Z4zAYELZIbhUrirTxHUr9Tupjwgc6FjkmrRF/yoifWHJysZ9ZJNrmIqfTS
-LKJm45gDW+CwWXXmUju5kIJ5MmNaMmXoWaaH1eVGv5ZITvVqVLL5EN2O7BLXRuJn
-IEeUT5uDHIdqfbCxppMRg1z5I/GxxAf2SEQanKMsErmL217ey5q1v9fMzzmOo0Lw
-7Jibdlu0aQbmO5xI5wl7U1ETz2GV1eY=3D
-=3Dv2kv
------END PGP SIGNATURE-----
-
-
---===============2846991371207014941==
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTziqJOuF8J+ZI8pJSb9qggYcy5IQUCaZia8AAKCRCb9qggYcy5
-IeDFAP9cXY8D64PUcuY7KvRLANcvt+tk1YUHbzRjUyXKD71mLAD/fx9NjI7eHVXx
-MwG01dAY6g/syVmDHxy6FGhkJ4i4VgE=
-=+y9H
------END PGP SIGNATURE-----
-
---===============2846991371207014941==--
+> ---
+>  debian/control | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/debian/control b/debian/control
+> index 66b0a47a..6473c10b 100644
+> --- a/debian/control
+> +++ b/debian/control
+> @@ -2,7 +2,7 @@ Source: xfsprogs
+>  Section: admin
+>  Priority: optional
+>  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+> -Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bage@debian.org>
+> +Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+>  Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libicu-dev, pkg-config, liburcu-dev, systemd-dev | systemd (<< 253-2~)
+>  Standards-Version: 4.0.0
+>  Homepage: https://xfs.wiki.kernel.org/
+> 
