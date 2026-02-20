@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B6811DFF7;
-	Fri, 20 Feb 2026 01:00:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60E172AD2C
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 01:01:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771549247; cv=none; b=LB0gyOsd/UdQIZ8XziUcC/8kk/afOVJi/RQaJguorZy1Aquc6e+whLx6tqhOMOjifa0B9EnjPtpJld2W5PQCkfmoSly7mVL9jSBV492QijLL9+gog/cXGWsn49BIch7gS+Lmw243HP1Ji82KbKOZLQbpIlqnGJK+oPANGCkKMPE=
+	t=1771549263; cv=none; b=b2HQ/lCiyY+XFsOxaVGvBE0bYF2QHYhOsE241+HlQEwT9vkTg0fQH4EmGHQyVVq8R0kXQHIBoX8kaNGzA1yq8qCsH2llmt5xu6Ci1JZlhrGDNi9UUDsNjMcWQhwDJbhkMz1nzVpNNLRS1UzJvq8o0kd62M8rJ9rGItMdq2OZdoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771549247; c=relaxed/simple;
-	bh=7YjorkG2TwZ6exYzlncIPJFNRaN16o5Dpt06f/CvBSs=;
+	s=arc-20240116; t=1771549263; c=relaxed/simple;
+	bh=ACHOOzTdV14NUt+rtU+qcwu4vxDYVeTbAiFMzAAhuk4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SiRK5hYNXolRs7Txsp4mHTT07Tazdwm8Rj1V9KsDhQLOvezu2P1/yCJTuyxeRY+LwG6CO5uJTe0/IzNUzRR6LJKKzsmJsFrmOGlOv4lyX7czd+FEWEPFqB6Ox3hiPJNbmb52JTqd4zpKlr4t2j3UAUuCwEtfZa1fF93Nz38236w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+MnGjvq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qJZw4AUgPOz5n22WB+Rj8B2T1fp/BtW+22KFDQwBLRtkR9YB5WptdJi9fVlulGQrqI+/NDPniZExGXZJD1berpzBalTJyx8Fl+ka/MWz0F7Md56LDo+jcuemT0V6TEVKDIvQmT4ukvbz/cQ+t8+aZbc6+OHvN3MVdGCJAQPo01U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWmlcjV5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+MnGjvq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59808C4CEF7;
-	Fri, 20 Feb 2026 01:00:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWmlcjV5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDFC3C4CEF7;
+	Fri, 20 Feb 2026 01:01:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771549247;
-	bh=7YjorkG2TwZ6exYzlncIPJFNRaN16o5Dpt06f/CvBSs=;
+	s=k20201202; t=1771549263;
+	bh=ACHOOzTdV14NUt+rtU+qcwu4vxDYVeTbAiFMzAAhuk4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=s+MnGjvqsBREJDC93B2UIlkZ2sPFTxETF7S5qwcXIpTupUenof+gu0Qr5FVcraol9
-	 pUTDGVeRFYuKhenX2kWztYXa2UtJ4Vjt5x+QQKkuc7BKSs1R1LhSi+SNJKzxmOktDy
-	 5gIWdB3w0+yQvfdsveqGiJ5IJlONS9z6JHLS31UnRrk8Ea359oNe4xCvYsXiaqhS4Y
-	 7nk3OLAuO3Elz1q8QipwTpQUP0kxFm/4rFzHP/z0NvtA2ReXnVTlKk1ob95tcYIFCO
-	 ZaYOXFix3j9LLrCrrIsR8u5fyq2AnWSIDmPO2UV5AJEx3vAwpj4lo75uDrX8qebuXT
-	 2XRssg24tccCw==
-Date: Thu, 19 Feb 2026 17:00:46 -0800
-Subject: [PATCH 3/6] xfs: fix xfs_group release bug in
- xfs_dax_notify_dev_failure
+	b=hWmlcjV5Kt8PRMzX06UXOKsQJd1TRS7hxSc4YEKbo/smDjRkibxWB3OOn7YUCZeO7
+	 arCXDIdDv8IXyAu1+kVaOowBqVpR5bC6x2UIY2OWLuSvOP3UwhNXGLZB2YwIc2W+0c
+	 8gDFsHUvyjzrVo0hzuNQaF3kgfWVbnm9PCmOujDGwYiKUqgEUo+BkOm/jf9QBBcuE7
+	 yf26DjrWzqxfJLDQiu//XTFzxaLnA/g2dYz1HGz57BolSBIqHc4Y35rAk4P7hAZTnE
+	 88irIOYJIc5wkavKvnc6BKNcUPB7MTwvG6Cx2STK5/AWp2rOQoZm7vl8T76S03TzKH
+	 n6hZO5jqX2Mrg==
+Date: Thu, 19 Feb 2026 17:01:02 -0800
+Subject: [PATCH 4/6] xfs: fix potential pointer access race in
+ xfs_healthmon_get
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: cmaiolino@redhat.com, hch@lst.de, stable@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <177154903727.1351708.2138879525463955738.stgit@frogsfrogsfrogs>
+Cc: cmaiolino@redhat.com, hch@lst.de, p.raghav@samsung.com,
+ pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org
+Message-ID: <177154903748.1351708.7656635791637678344.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154903631.1351708.2643960160835435965.stgit@frogsfrogsfrogs>
 References: <177154903631.1351708.2643960160835435965.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,42 +47,114 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Chris Mason reports that his AI tools noticed that we were using
-xfs_perag_put and xfs_group_put to release the group reference returned
-by xfs_group_next_range.  However, the iterator function returns an
-object with an active refcount, which means that we must use the correct
-function to release the active refcount, which is _rele.
+Pankaj Raghav asks about this code in xfs_healthmon_get:
 
-Cc: <stable@vger.kernel.org> # v6.0
-Fixes: 6f643c57d57c56 ("xfs: implement ->notify_failure() for XFS")
+  hm = mp->m_healthmon;
+  if (hm && !refcount_inc_not_zero(&hm->ref))
+    hm = NULL;
+  rcu_read_unlock();
+  return hm;
+
+(slightly edited to compress a mailing list thread)
+
+"Nit: Should we do a READ_ONCE(mp->m_healthmon) here to avoid any
+compiler tricks that can result in an undefined behaviour? I am not sure
+if I am being paranoid here.
+
+"So this is my understanding: RCU guarantees that we get a valid object
+(actual data of m_healthmon) but does not guarantee the compiler will
+not reread the pointer between checking if hm is !NULL and accessing the
+pointer as we are doing it lockless.
+
+"So just a barrier() call in rcu_read_lock is enough to make sure this
+doesn't happen and probably adding a READ_ONCE() is not needed?"
+
+After some initial confusion I concluded that he's correct.  The
+compiler could very well eliminate the hm variable in favor of walking
+the pointers twice, turning the code into:
+
+  if (mp->m_healthmon && !refcount_inc_not_zero(&mp->m_healthmon->ref))
+
+If this happens, then xfs_healthmon_detach can sneak in between the
+two sides of the && expression and set mp->m_healthmon to NULL, and
+thereby cause a null pointer dereference crash.  Fix this by using the
+rcu pointer assignment and dereference functions, which ensure that the
+proper reordering barriers are in place.
+
+Practically speaking, gcc seems to allocate an actual variable for hm
+and only reads mp->m_healthmon once (as intended), but we ought to be
+more explicit about requiring this.
+
+Reported-by: Pankaj Raghav <pankaj.raghav@linux.dev>
+Fixes: a48373e7d35a89f6f ("xfs: start creating infrastructure for health monitoring")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- fs/xfs/xfs_notify_failure.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.h     |    2 +-
+ fs/xfs/xfs_healthmon.c |   11 +++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-index 6be19fa1ebe262..64c8afb935c261 100644
---- a/fs/xfs/xfs_notify_failure.c
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -304,7 +304,7 @@ xfs_dax_notify_dev_failure(
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 61c71128d171cb..ddd4028be8d6ba 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -345,7 +345,7 @@ typedef struct xfs_mount {
+ 	struct xfs_hooks	m_dir_update_hooks;
  
- 			error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
- 			if (error) {
--				xfs_perag_put(pag);
-+				xfs_perag_rele(pag);
- 				break;
- 			}
+ 	/* Private data referring to a health monitor object. */
+-	struct xfs_healthmon	*m_healthmon;
++	struct xfs_healthmon __rcu	*m_healthmon;
+ } xfs_mount_t;
  
-@@ -340,7 +340,7 @@ xfs_dax_notify_dev_failure(
- 		if (rtg)
- 			xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_RMAP);
- 		if (error) {
--			xfs_group_put(xg);
-+			xfs_group_rele(xg);
- 			break;
- 		}
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
+index ca7352dcd182fb..1494408f66a0df 100644
+--- a/fs/xfs/xfs_healthmon.c
++++ b/fs/xfs/xfs_healthmon.c
+@@ -69,7 +69,7 @@ xfs_healthmon_get(
+ 	struct xfs_healthmon		*hm;
+ 
+ 	rcu_read_lock();
+-	hm = mp->m_healthmon;
++	hm = rcu_dereference(mp->m_healthmon);
+ 	if (hm && !refcount_inc_not_zero(&hm->ref))
+ 		hm = NULL;
+ 	rcu_read_unlock();
+@@ -110,13 +110,13 @@ xfs_healthmon_attach(
+ 	struct xfs_healthmon	*hm)
+ {
+ 	spin_lock(&xfs_healthmon_lock);
+-	if (mp->m_healthmon != NULL) {
++	if (rcu_access_pointer(mp->m_healthmon) != NULL) {
+ 		spin_unlock(&xfs_healthmon_lock);
+ 		return -EEXIST;
  	}
+ 
+ 	refcount_inc(&hm->ref);
+-	mp->m_healthmon = hm;
++	rcu_assign_pointer(mp->m_healthmon, hm);
+ 	hm->mount_cookie = (uintptr_t)mp->m_super;
+ 	spin_unlock(&xfs_healthmon_lock);
+ 
+@@ -128,13 +128,16 @@ STATIC void
+ xfs_healthmon_detach(
+ 	struct xfs_healthmon	*hm)
+ {
++	struct xfs_mount	*mp;
++
+ 	spin_lock(&xfs_healthmon_lock);
+ 	if (hm->mount_cookie == DETACHED_MOUNT_COOKIE) {
+ 		spin_unlock(&xfs_healthmon_lock);
+ 		return;
+ 	}
+ 
+-	XFS_M((struct super_block *)hm->mount_cookie)->m_healthmon = NULL;
++	mp = XFS_M((struct super_block *)hm->mount_cookie);
++	rcu_assign_pointer(mp->m_healthmon, NULL);
+ 	hm->mount_cookie = DETACHED_MOUNT_COOKIE;
+ 	spin_unlock(&xfs_healthmon_lock);
+ 
 
