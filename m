@@ -1,166 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801CC2AD3D;
-	Fri, 20 Feb 2026 00:55:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BAD723B63C;
+	Fri, 20 Feb 2026 01:00:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771548943; cv=none; b=HQnBYNQp3n4DRY3611wnuREUplQx7R3+LL08O3fQ2qEluK9ZPsfoR36rz2rv47GGaLsZsJ54KWdLKHI3e39Npqzv06uF508QKE9kFBY+H2dcrYl0/WGczf4uXbpn9dQdCsszWFJj55LAWcORJck4lcx0Fn+2ww2xoEcCePoYtwQ=
+	t=1771549205; cv=none; b=g3wBhvlZKVeg4Z1HUpgIjpYAt89A66dBxw8wH1W36RPYVmbid7wuiWIqez24sWw72vAvs4TjTe58bn4ifME+jO6kl5tUB9PZOhjTKS4j32A4BdEYI0vwWnY3tMCmPR3TWidLpgJAtND6Q2AtnnGzQvbFsNYCYbbWdhBQpAPjVY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771548943; c=relaxed/simple;
-	bh=QLs1m1e5rJqSfGDa0i9ViJWwh9zj3eVZW1t/FDvc8Xo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QJgp5I2ljLaYlv+7CVNjepXi9RuemX6IZDgxZ1m9WZBCrD48HPKYi4OE4xEgvnHnTnynbS5e3ollg61lpCB34rPdYgkaFvugDHnzjGCQ3GO55x2guOK0LY+KD9LZKcJ8k0/1geXMdySJmNBPpCf01NwKgmniPD81cJPDoJJCYF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TbCD6rpv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771549205; c=relaxed/simple;
+	bh=5p7SbKqVircELTBuy2BmwTm1XnHnIBAJv2ZYxmBFy60=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=j7YTMAcv2ivtehrpvSK3Ojb7xG5jXlt6L73KH1m2UxwUnrnL6evTPlmaWw+kSHAh1SM18FEvgQwZAuMouTYUa1OYYTlc1+BDpf6Z31qcc6NMl8k4NvbR+Yh9gMpXPCLdY+SSieHiwRq8rPwNvJ1t3rz48k9mA/qTi/Jk+24Y/jI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azvdLG1r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TbCD6rpv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D0DC19421;
-	Fri, 20 Feb 2026 00:55:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azvdLG1r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B093CC4CEF7;
+	Fri, 20 Feb 2026 01:00:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771548943;
-	bh=QLs1m1e5rJqSfGDa0i9ViJWwh9zj3eVZW1t/FDvc8Xo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TbCD6rpvi6NoeIoGEBBGOWxL1VaMvqZuKKP8hWf7s4MCZ44DFdVVZwwS/SEVLexSC
-	 mQ/SJT3KMJu+cZ/jl5/SoaPmVtp1k8I/vNr2m5CgdIDdckqi58GpJeGgYucRxr+CAc
-	 KewEnQwoUVBa5BXDQ0gMR3a0PSOYqE3xT75mWdV9E8KI8WWPZEZ27VUBuG1jq2QeU7
-	 WLlH+1jvo7iyZzmyqOcelxHk8+X2LGxyo6ExmqPdndchQG/kwkrRQw+Jrtkj8lgbIa
-	 mOA/C/ca+URwq+kMfrcaerce3/fCzpUN/52m2QfrfM2eQmlmxs7hnTUKheGnQ6rVyk
-	 QLRnlFBHnpVLA==
-Date: Thu, 19 Feb 2026 16:55:42 -0800
+	s=k20201202; t=1771549204;
+	bh=5p7SbKqVircELTBuy2BmwTm1XnHnIBAJv2ZYxmBFy60=;
+	h=Date:Subject:From:To:Cc:From;
+	b=azvdLG1rE3gSwUuTeJueGUBh2AT4fZByrTzrbmKwQhXbuKh6XZIuTwBXhO3MqUN83
+	 RsAUmtpG25VTQj1xiXXi8aGKXBd6pv4QcAdtMGHZWVfI+VzT8gHUKgYQaP9kQzZ/PW
+	 8KTZMEH6cObC5gNJ5fRemBcQfMLPuyWN72KiYPNNVSEHFd/y3+xeepMDbVJ4FiYwjy
+	 sN6vMlqEvDt68IklWZLK6y+qmIjfC00RA6gUSYnoNX4KjqtPw1jea/gpqCx20ia/hV
+	 V1B+6vEP96LSLnllgUkByzood0bXxWYcIP67NQI4ZvsaZoCCRq9lnVQJVepg9qhU0j
+	 gFodGPrxOTlow==
+Date: Thu, 19 Feb 2026 17:00:04 -0800
+Subject: [PATCHSET v2 1/2] xfs: bug fixes for 7.0
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: cem@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/2] fserror: fix lockdep complaint when igrabbing inode
-Message-ID: <20260220005542.GU6490@frogsfrogsfrogs>
-References: <177148129514.716249.10889194125495783768.stgit@frogsfrogsfrogs>
- <177148129564.716249.3069780698231701540.stgit@frogsfrogsfrogs>
- <20260219061546.GP6467@frogsfrogsfrogs>
- <20260219-variabel-nackt-a9ce89e670d5@brauner>
+To: cem@kernel.org, djwong@kernel.org
+Cc: hch@lst.de, cmaiolino@redhat.com, stable@vger.kernel.org,
+ samsun1006219@gmail.com, clm@meta.com, pankaj.raghav@linux.dev,
+ p.raghav@samsung.com, linux-xfs@vger.kernel.org
+Message-ID: <177154903631.1351708.2643960160835435965.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260219-variabel-nackt-a9ce89e670d5@brauner>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 19, 2026 at 09:11:28AM +0100, Christian Brauner wrote:
-> On Wed, Feb 18, 2026 at 10:15:46PM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 18, 2026 at 10:09:37PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Christoph Hellwig reported a lockdep splat in generic/108:
-> > > 
-> > >  ================================
-> > >  WARNING: inconsistent lock state
-> > >  6.19.0+ #4827 Tainted: G                 N
-> > >  --------------------------------
-> > >  inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
-> > >  swapper/1/0 [HC1[1]:SC0[0]:HE0:SE1] takes:
-> > >  ffff88811ed1b140 (&sb->s_type->i_lock_key#33){?.+.}-{3:3}, at: igrab+0x1a/0xb0
-> > >  {HARDIRQ-ON-W} state was registered at:
-> > >    lock_acquire+0xca/0x2c0
-> > >    _raw_spin_lock+0x2e/0x40
-> > >    unlock_new_inode+0x2c/0xc0
-> > >    xfs_iget+0xcf4/0x1080
-> > >    xfs_trans_metafile_iget+0x3d/0x100
-> > >    xfs_metafile_iget+0x2b/0x50
-> > >    xfs_mount_setup_metadir+0x20/0x60
-> > >    xfs_mountfs+0x457/0xa60
-> > >    xfs_fs_fill_super+0x6b3/0xa90
-> > >    get_tree_bdev_flags+0x13c/0x1e0
-> > >    vfs_get_tree+0x27/0xe0
-> > >    vfs_cmd_create+0x54/0xe0
-> > >    __do_sys_fsconfig+0x309/0x620
-> > >    do_syscall_64+0x8b/0xf80
-> > >    entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> > >  irq event stamp: 139080
-> > >  hardirqs last  enabled at (139079): [<ffffffff813a923c>] do_idle+0x1ec/0x270
-> > >  hardirqs last disabled at (139080): [<ffffffff828a8d09>] common_interrupt+0x19/0xe0
-> > >  softirqs last  enabled at (139032): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
-> > >  softirqs last disabled at (139025): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
-> > > 
-> > >  other info that might help us debug this:
-> > >   Possible unsafe locking scenario:
-> > > 
-> > >         CPU0
-> > >         ----
-> > >    lock(&sb->s_type->i_lock_key#33);
-> > >    <Interrupt>
-> > >      lock(&sb->s_type->i_lock_key#33);
-> > > 
-> > >   *** DEADLOCK ***
-> > > 
-> > >  1 lock held by swapper/1/0:
-> > >   #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
-> > > 
-> > >  stack backtrace:
-> > >  CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full)
-> > >  Tainted: [N]=TEST
-> > >  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
-> > >  Call Trace:
-> > >   <IRQ>
-> > >   dump_stack_lvl+0x5b/0x80
-> > >   print_usage_bug.part.0+0x22c/0x2c0
-> > >   mark_lock+0xa6f/0xe90
-> > >   __lock_acquire+0x10b6/0x25e0
-> > >   lock_acquire+0xca/0x2c0
-> > >   _raw_spin_lock+0x2e/0x40
-> > >   igrab+0x1a/0xb0
-> > >   fserror_report+0x135/0x260
-> > >   iomap_finish_ioend_buffered+0x170/0x210
-> > >   clone_endio+0x8f/0x1c0
-> > >   blk_update_request+0x1e4/0x4d0
-> > >   blk_mq_end_request+0x1b/0x100
-> > >   virtblk_done+0x6f/0x110
-> > >   vring_interrupt+0x59/0x80
-> > >   __handle_irq_event_percpu+0x8a/0x2e0
-> > >   handle_irq_event+0x33/0x70
-> > >   handle_edge_irq+0xdd/0x1e0
-> > >   __common_interrupt+0x6f/0x180
-> > >   common_interrupt+0xb7/0xe0
-> > >   </IRQ>
-> > > 
-> > > It looks like the concern here is that inode::i_lock is sometimes taken
-> > > in IRQ context, and sometimes it is held when going to IRQ context,
-> > > though it's a little difficult to tell since I think this is a kernel
-> > > from after the actual 6.19 release but before 7.0-rc1.
-> > > 
-> > > Either way, we don't need to take i_lock, because filesystems should
-> > > not report files to fserror if they're about to be freed or have not
-> > > yet been exposed to other threads, because the resulting fsnotify report
-> > > will be meaningless.
-> > > 
-> > > Therefore, bump inode::i_count directly and clarify the preconditions on
-> > > the inode being passed in.
-> > 
-> > ...and now I realize that I got so hung up on email cc list composition
-> 
-> I honestly just use b4 prep --auto-to-cc
+Hi all,
 
-So do I, but I ^R'd and got one with linux-xfs by mistake.  Unless
-there's some magic "read MAINTAINERS functionality" that I haven't
-discovered yet?  I haven't updated in quite a while.
+Bug fixes for 7.0.
 
-> > that I neglected to notice that I forgot to update the commit message
-> > to say:
-> > 
-> > "Therefore, add the ioend to a queue and get an async worker to chug
-> > through the error events from process context with no filesystem locks
-> > already held."
-> > 
-> > Let's hope I got the paperwork right this time, all this friction to
-> > amend minor mistakes are why I don't want to be here anymore. <grumble>
-> 
-> You know, I can just add that for you when applying. :)
+v2: clean a couple of things up, add rvbs
 
-I prefer to resend the whole series with /all/ the correct tags and
-messages so it actually gets recorded here accurately.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Also, would you mind picking up the first patch for 7.0-rc2 so that the
-old fsnotify helper is gone for good?
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-fixes-7.0
+---
+Commits in this patchset:
+ * xfs: fix copy-paste error in previous fix
+ * xfs: fix xfs_group release bug in xfs_verify_report_losses
+ * xfs: fix xfs_group release bug in xfs_dax_notify_dev_failure
+ * xfs: fix potential pointer access race in xfs_healthmon_get
+ * xfs: don't report metadata inodes to fserror
+ * xfs: don't report half-built inodes to fserror
+---
+ fs/xfs/xfs_mount.h          |    2 +-
+ fs/xfs/scrub/dir_repair.c   |    2 +-
+ fs/xfs/xfs_health.c         |   20 ++++++++++++++++++--
+ fs/xfs/xfs_healthmon.c      |   11 +++++++----
+ fs/xfs/xfs_icache.c         |    9 ++++++++-
+ fs/xfs/xfs_notify_failure.c |    4 ++--
+ fs/xfs/xfs_verify_media.c   |    4 ++--
+ 7 files changed, 39 insertions(+), 13 deletions(-)
+
