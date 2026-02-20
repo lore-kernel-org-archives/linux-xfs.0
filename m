@@ -1,216 +1,166 @@
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73A9C15539A
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 00:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.182
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771548431; cv=pass; b=EHlf5wV9Wkx6kAymGqY9WAUvKWZLQBiLFb6IqxERk6Suh0UtuPafIRgw8v6EfIGbrecGfyhc+JPtou0R/wpTUFk28Eq5gNEBiiATN8HVLnXII8HEpz3MuWhpvVnu6w9CntiZDkEkbsJX/jC1IKAfu4YDFHZHaXYvrjSxc9Ty+bA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771548431; c=relaxed/simple;
-	bh=xTt0BEA591J0c9PAsPbBiOclLC5gI9Gqua7xciXt6k0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pFh3tuzb2WWxLjmpHXn5NslIUkBYSGnyVQ/hLkho45m1/JjsvZHY8vsieV2b95VLsJPBLWxJ/STlIxuHr1c5cPem5py4BpRtCjfca2hswBmyLn9W0vjUS64998U312xUfmKhsW+Ruylv59/3Pn0BtYFLrlX7KsuRGzddIvwETqY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R7WtjQ1y; arc=pass smtp.client-ip=209.85.160.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801CC2AD3D;
+	Fri, 20 Feb 2026 00:55:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771548943; cv=none; b=HQnBYNQp3n4DRY3611wnuREUplQx7R3+LL08O3fQ2qEluK9ZPsfoR36rz2rv47GGaLsZsJ54KWdLKHI3e39Npqzv06uF508QKE9kFBY+H2dcrYl0/WGczf4uXbpn9dQdCsszWFJj55LAWcORJck4lcx0Fn+2ww2xoEcCePoYtwQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771548943; c=relaxed/simple;
+	bh=QLs1m1e5rJqSfGDa0i9ViJWwh9zj3eVZW1t/FDvc8Xo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QJgp5I2ljLaYlv+7CVNjepXi9RuemX6IZDgxZ1m9WZBCrD48HPKYi4OE4xEgvnHnTnynbS5e3ollg61lpCB34rPdYgkaFvugDHnzjGCQ3GO55x2guOK0LY+KD9LZKcJ8k0/1geXMdySJmNBPpCf01NwKgmniPD81cJPDoJJCYF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TbCD6rpv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R7WtjQ1y"
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-506a93ba42dso16137771cf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 16:47:10 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771548429; cv=none;
-        d=google.com; s=arc-20240605;
-        b=hECqSyeWQUllgCLAOPM4me795EywHct0sPh5UcW8wt2r29Ws78r0ra/CiCV5CNPYLS
-         /jzWnJUkKZcYubsdzfALFqLJkv6JF91zPSoLScE7JeRb080sU1XlaCUM9T1StC5gkQf2
-         vsIu1RfA0TfidQh2ZC4nZAvGh756ekXbrxqCKx/27MEcpQD69+2enfKO7N0+m0v7ZrAC
-         ItIeAfA8wvT2wWCNMRfpgoyJLTElfBRTmfuTwYcQ3gTyolcaSc2HtWXEEGS7O1cws0mE
-         y9vis3xUFwC67tt43MDfAPmi6RCEcXAteqVk47PshzVws79xZuBbWZMdgOVDWF86nmVU
-         fJxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=qzyzcE29s5UWFgF3EvqaYj8fmDA9pHKzMIVbNGFxE/w=;
-        fh=VMJOhBF29C/B2z47zeZdF/zc1d27ulpDb/IejbgttxQ=;
-        b=V6XNjBpc1Ho37Cy6w6RQasAF+AZcJXmEFzxr+QbQ/pZ/ENwk7eEg3EGO3l+uAA/2ju
-         QP9tCvz3/2vj0DHEGRpZr6xILLKD6U5t/4hEPco64AglrVYD8D6A3fWC3N30cKeGloEd
-         +7MPOssvU8DZkJDwRrfHbS9U/ydwRb/ggynOcH+YRdJq1V0lEtUyrdoD+1FKFcUvbRLP
-         POLtQ3YaKVb0aCwliCfOpbO6lVvZdbFXmF9Ac1DlrJGak+b/sKkt1j3nN04ecBs3FSJS
-         m9dSx0FaEi/br2KubBUk8W51x1YPUi0UK2M8CX8JUeXjwvZ0tE1l8MiolekF1i/S3lHZ
-         bj1g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771548429; x=1772153229; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qzyzcE29s5UWFgF3EvqaYj8fmDA9pHKzMIVbNGFxE/w=;
-        b=R7WtjQ1yuzLQI9+tfQ0XeBCOSmLUTQd0zCFh/XLDcP3tYNOpm1gYK9VVvFLFi/v7rW
-         c/bWgX8U8KtchZFP5ToPdrL3thScz1SenwavPmLO2Gn9AYJRFw7P24hmmlWlge70q7Nx
-         evXMLDsrupJRM4y8IUr2V888olky+5cTWtt1nq+UN3C8LzyW3oaopLXTNGGRw/244+Vr
-         aPWiC7kF+Lf/EQPZBt47BrY5dVCdqcLus0PVYnU4ny7ipFYiXADGrC5BUR6FxAJioSH5
-         a2djpeNWjiB3NL4Cpi3tm7ynPqx+ZTHlZ3PzHASW9jteI1IFN6RotUF/iu6cx5BM5Nhd
-         cUVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771548429; x=1772153229;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=qzyzcE29s5UWFgF3EvqaYj8fmDA9pHKzMIVbNGFxE/w=;
-        b=uzuf5cJVwAZfBqclehicQC7LG+af0B/e/hpP6l44425+PapxUvd/o5DipKw3swa28R
-         3ymC+HSVhKGx8UmbRrbj2KFWdmDxRM+aHZ44qlBXY0+LuslVPH2xkWzWQg0bQGOyHb8i
-         VIxeuHpMgX6o8kjc4oI4TIZUVoswi7BJevsnM+xgreaSIhAlzGbxe2i7O2SNjrNiRpzB
-         DM2GZARAQMVpV8hAdCPseaS2d71U09D3wr7o1vjh+DiP7/3Myoh4veTzygqa2xxQmgOd
-         2E8JKp4wXztiWv7yQsekSXFj7jGlTMdxlWB1SJnitTNsS+GknI7Y2WBp6HBtyrz5XBBH
-         IMcA==
-X-Forwarded-Encrypted: i=1; AJvYcCUHkjh08X6E680jHZEsXNmMugTg60jd+bBGZ6DNZOQZKhWlYIksSfG/qKvt262m6EjSa4ZLO/EveF8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwfU6pFUiH7hp3Yz/ZvEUu7kjMANFchW02Zwpc/D4vdHuFd3bEf
-	GQRevT6RPtLQqdOkEKQ7DWsmN7dh8nPC72sEXjvl15gkLhQqAirxYLVNWv9W+r1w7zUHkEnk5Q/
-	vdHsPH91ytiPKe5bRf/n7j6Es9rAJgwY=
-X-Gm-Gg: AZuq6aI9T1SAPXvYTAUY+3/YS3vtM8N9o1FCylWFH62Iee0D0fGRqzR2Umiy+4BieVv
-	Wopl0vvsd5ML5lxxWV5xaLayBsS+ogtcej6fAUfYZiaXDxxZYOvE1YC6P0FlGU2WFs8E68Bx2xQ
-	L/GDCXOqEY0hM8S1P3j3mkTk/9X4Sth6aZE6QXh4FTPPNtUhNzyhZY6mpzejObKm5WgFzUsT+qL
-	qhev+H6Z7V4wu7wPBsKEVZIFlX+WCRT9FNV3aR+TMwDxf+eMgUkPYjCTCcmWX0lmXXC+OR7qvxN
-	GidpmA==
-X-Received: by 2002:a05:622a:1392:b0:502:f291:615e with SMTP id
- d75a77b69052e-506b40012c4mr255736501cf.52.1771548429056; Thu, 19 Feb 2026
- 16:47:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TbCD6rpv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D0DC19421;
+	Fri, 20 Feb 2026 00:55:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771548943;
+	bh=QLs1m1e5rJqSfGDa0i9ViJWwh9zj3eVZW1t/FDvc8Xo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TbCD6rpvi6NoeIoGEBBGOWxL1VaMvqZuKKP8hWf7s4MCZ44DFdVVZwwS/SEVLexSC
+	 mQ/SJT3KMJu+cZ/jl5/SoaPmVtp1k8I/vNr2m5CgdIDdckqi58GpJeGgYucRxr+CAc
+	 KewEnQwoUVBa5BXDQ0gMR3a0PSOYqE3xT75mWdV9E8KI8WWPZEZ27VUBuG1jq2QeU7
+	 WLlH+1jvo7iyZzmyqOcelxHk8+X2LGxyo6ExmqPdndchQG/kwkrRQw+Jrtkj8lgbIa
+	 mOA/C/ca+URwq+kMfrcaerce3/fCzpUN/52m2QfrfM2eQmlmxs7hnTUKheGnQ6rVyk
+	 QLRnlFBHnpVLA==
+Date: Thu, 19 Feb 2026 16:55:42 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christian Brauner <brauner@kernel.org>
+Cc: cem@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] fserror: fix lockdep complaint when igrabbing inode
+Message-ID: <20260220005542.GU6490@frogsfrogsfrogs>
+References: <177148129514.716249.10889194125495783768.stgit@frogsfrogsfrogs>
+ <177148129564.716249.3069780698231701540.stgit@frogsfrogsfrogs>
+ <20260219061546.GP6467@frogsfrogsfrogs>
+ <20260219-variabel-nackt-a9ce89e670d5@brauner>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <6968a164.050a0220.58bed.0011.GAE@google.com> <699777ce.050a0220.b01bb.0031.GAE@google.com>
-In-Reply-To: <699777ce.050a0220.b01bb.0031.GAE@google.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 19 Feb 2026 16:46:58 -0800
-X-Gm-Features: AaiRm53qLMVjJECGwYdBMHzFC2E7SY8nFWKsmtIAWKtQ0mVWd43M2D_UQOVJujo
-Message-ID: <CAJnrk1bk7jN8SfHny9nVWZZS6tP8bnQbMZHTCuFma6-YuMugAg@mail.gmail.com>
-Subject: Re: [syzbot] [iomap?] WARNING in ifs_free
-To: syzbot <syzbot+d3a62bea0e61f9d121da@syzkaller.appspotmail.com>
-Cc: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260219-variabel-nackt-a9ce89e670d5@brauner>
 
-On Thu, Feb 19, 2026 at 12:51=E2=80=AFPM syzbot
-<syzbot+d3a62bea0e61f9d121da@syzkaller.appspotmail.com> wrote:
->
-> syzbot has found a reproducer for the following issue on:
->
-> HEAD commit:    2b7a25df823d Merge tag 'mm-nonmm-stable-2026-02-18-19-56'=
- ..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=3D10c2172258000=
-0
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3D65722f41f7edc=
-17e
-> dashboard link: https://syzkaller.appspot.com/bug?extid=3Dd3a62bea0e61f9d=
-121da
-> compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25=
-a-1~exp1~20251221153213.50), Debian LLD 21.1.8
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D1501dc02580=
-000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D1357f65258000=
-0
->
-> Downloadable assets:
-> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d=
-900f083ada3/non_bootable_disk-2b7a25df.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/f3a54d09b17c/vmlinu=
-x-2b7a25df.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/fb704901bce5/b=
-zImage-2b7a25df.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/b778b9903d=
-e5/mount_0.gz
->
-> IMPORTANT: if you fix the issue, please add the following tag to the comm=
-it:
-> Reported-by: syzbot+d3a62bea0e61f9d121da@syzkaller.appspotmail.com
->
-> ------------[ cut here ]------------
-> ifs_is_fully_uptodate(folio, ifs) !=3D folio_test_uptodate(folio)
-> WARNING: fs/iomap/buffered-io.c:256 at ifs_free+0x358/0x420 fs/iomap/buff=
-ered-io.c:255, CPU#0: syz-executor/5453
-> Modules linked in:
-> CPU: 0 UID: 0 PID: 5453 Comm: syz-executor Not tainted syzkaller #0 PREEM=
-PT(full)
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.=
-16.3-2 04/01/2014
-> RIP: 0010:ifs_free+0x358/0x420 fs/iomap/buffered-io.c:255
-> Code: 41 5f 5d e9 7a fb bd ff e8 45 5a 5e ff 90 0f 0b 90 e9 d0 fe ff ff e=
-8 37 5a 5e ff 90 0f 0b 90 e9 0a ff ff ff e8 29 5a 5e ff 90 <0f> 0b 90 eb c3=
- 44 89 e1 80 e1 07 80 c1 03 38 c1 0f 8c 06 fe ff ff
-> RSP: 0018:ffffc9000dfcf688 EFLAGS: 00010293
-> RAX: ffffffff82674207 RBX: 0000000000000008 RCX: ffff88801f834900
-> RDX: 0000000000000000 RSI: 0000000000000008 RDI: 0000000000000000
-> RBP: 000000008267bc01 R08: ffffea00010fb747 R09: 1ffffd400021f6e8
-> R10: dffffc0000000000 R11: fffff9400021f6e9 R12: ffff888051c7da44
-> R13: ffff888051c7da00 R14: ffffea00010fb740 R15: 1ffffd400021f6e9
-> FS:  0000555586def500(0000) GS:ffff88808ca5b000(0000) knlGS:0000000000000=
-000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000555586e0aa28 CR3: 00000000591fe000 CR4: 0000000000352ef0
-> Call Trace:
->  <TASK>
->  folio_invalidate mm/truncate.c:140 [inline]
->  truncate_cleanup_folio+0xcb/0x190 mm/truncate.c:160
->  truncate_inode_pages_range+0x2ce/0xe30 mm/truncate.c:404
->  ntfs_evict_inode+0x19/0x40 fs/ntfs3/inode.c:1861
->  evict+0x61e/0xb10 fs/inode.c:846
->  dispose_list fs/inode.c:888 [inline]
->  evict_inodes+0x75a/0x7f0 fs/inode.c:942
->  generic_shutdown_super+0xaa/0x2d0 fs/super.c:632
->  kill_block_super+0x44/0x90 fs/super.c:1725
->  ntfs3_kill_sb+0x44/0x1c0 fs/ntfs3/super.c:1889
->  deactivate_locked_super+0xbc/0x130 fs/super.c:476
->  cleanup_mnt+0x437/0x4d0 fs/namespace.c:1312
->  task_work_run+0x1d9/0x270 kernel/task_work.c:233
->  resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
->  __exit_to_user_mode_loop kernel/entry/common.c:67 [inline]
->  exit_to_user_mode_loop+0xed/0x480 kernel/entry/common.c:98
->  __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline=
-]
->  syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:256 [=
-inline]
->  syscall_exit_to_user_mode include/linux/entry-common.h:325 [inline]
->  do_syscall_64+0x32d/0xf80 arch/x86/entry/syscall_64.c:100
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7fb0f859d897
-> Code: a2 c7 05 5c ee 24 00 00 00 00 00 eb 96 e8 e1 12 00 00 90 31 f6 e9 0=
-9 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff=
- ff 77 01 c3 48 c7 c2 e8 ff ff ff f7 d8 64 89 02 b8
-> RSP: 002b:00007ffd23732b28 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
-> RAX: 0000000000000000 RBX: 00007fb0f8631ef0 RCX: 00007fb0f859d897
-> RDX: 0000000000000000 RSI: 0000000000000009 RDI: 00007ffd23732be0
-> RBP: 00007ffd23732be0 R08: 00007ffd23733be0 R09: 00000000ffffffff
-> R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffd23733c70
-> R13: 00007fb0f8631ef0 R14: 000000000001b126 R15: 00007ffd23733cb0
->  </TASK>
->
+On Thu, Feb 19, 2026 at 09:11:28AM +0100, Christian Brauner wrote:
+> On Wed, Feb 18, 2026 at 10:15:46PM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 18, 2026 at 10:09:37PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Christoph Hellwig reported a lockdep splat in generic/108:
+> > > 
+> > >  ================================
+> > >  WARNING: inconsistent lock state
+> > >  6.19.0+ #4827 Tainted: G                 N
+> > >  --------------------------------
+> > >  inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+> > >  swapper/1/0 [HC1[1]:SC0[0]:HE0:SE1] takes:
+> > >  ffff88811ed1b140 (&sb->s_type->i_lock_key#33){?.+.}-{3:3}, at: igrab+0x1a/0xb0
+> > >  {HARDIRQ-ON-W} state was registered at:
+> > >    lock_acquire+0xca/0x2c0
+> > >    _raw_spin_lock+0x2e/0x40
+> > >    unlock_new_inode+0x2c/0xc0
+> > >    xfs_iget+0xcf4/0x1080
+> > >    xfs_trans_metafile_iget+0x3d/0x100
+> > >    xfs_metafile_iget+0x2b/0x50
+> > >    xfs_mount_setup_metadir+0x20/0x60
+> > >    xfs_mountfs+0x457/0xa60
+> > >    xfs_fs_fill_super+0x6b3/0xa90
+> > >    get_tree_bdev_flags+0x13c/0x1e0
+> > >    vfs_get_tree+0x27/0xe0
+> > >    vfs_cmd_create+0x54/0xe0
+> > >    __do_sys_fsconfig+0x309/0x620
+> > >    do_syscall_64+0x8b/0xf80
+> > >    entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> > >  irq event stamp: 139080
+> > >  hardirqs last  enabled at (139079): [<ffffffff813a923c>] do_idle+0x1ec/0x270
+> > >  hardirqs last disabled at (139080): [<ffffffff828a8d09>] common_interrupt+0x19/0xe0
+> > >  softirqs last  enabled at (139032): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
+> > >  softirqs last disabled at (139025): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
+> > > 
+> > >  other info that might help us debug this:
+> > >   Possible unsafe locking scenario:
+> > > 
+> > >         CPU0
+> > >         ----
+> > >    lock(&sb->s_type->i_lock_key#33);
+> > >    <Interrupt>
+> > >      lock(&sb->s_type->i_lock_key#33);
+> > > 
+> > >   *** DEADLOCK ***
+> > > 
+> > >  1 lock held by swapper/1/0:
+> > >   #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
+> > > 
+> > >  stack backtrace:
+> > >  CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full)
+> > >  Tainted: [N]=TEST
+> > >  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
+> > >  Call Trace:
+> > >   <IRQ>
+> > >   dump_stack_lvl+0x5b/0x80
+> > >   print_usage_bug.part.0+0x22c/0x2c0
+> > >   mark_lock+0xa6f/0xe90
+> > >   __lock_acquire+0x10b6/0x25e0
+> > >   lock_acquire+0xca/0x2c0
+> > >   _raw_spin_lock+0x2e/0x40
+> > >   igrab+0x1a/0xb0
+> > >   fserror_report+0x135/0x260
+> > >   iomap_finish_ioend_buffered+0x170/0x210
+> > >   clone_endio+0x8f/0x1c0
+> > >   blk_update_request+0x1e4/0x4d0
+> > >   blk_mq_end_request+0x1b/0x100
+> > >   virtblk_done+0x6f/0x110
+> > >   vring_interrupt+0x59/0x80
+> > >   __handle_irq_event_percpu+0x8a/0x2e0
+> > >   handle_irq_event+0x33/0x70
+> > >   handle_edge_irq+0xdd/0x1e0
+> > >   __common_interrupt+0x6f/0x180
+> > >   common_interrupt+0xb7/0xe0
+> > >   </IRQ>
+> > > 
+> > > It looks like the concern here is that inode::i_lock is sometimes taken
+> > > in IRQ context, and sometimes it is held when going to IRQ context,
+> > > though it's a little difficult to tell since I think this is a kernel
+> > > from after the actual 6.19 release but before 7.0-rc1.
+> > > 
+> > > Either way, we don't need to take i_lock, because filesystems should
+> > > not report files to fserror if they're about to be freed or have not
+> > > yet been exposed to other threads, because the resulting fsnotify report
+> > > will be meaningless.
+> > > 
+> > > Therefore, bump inode::i_count directly and clarify the preconditions on
+> > > the inode being passed in.
+> > 
+> > ...and now I realize that I got so hung up on email cc list composition
+> 
+> I honestly just use b4 prep --auto-to-cc
 
-I ran the repro locally to see if it's the same issue fixed by [1] but
-this is a different unrelated issue.
+So do I, but I ^R'd and got one with linux-xfs by mistake.  Unless
+there's some magic "read MAINTAINERS functionality" that I haven't
+discovered yet?  I haven't updated in quite a while.
 
-The folio is uptodate but the ifs uptodate bitmap is not reflected as
-fully uptodate. I think this is because ntfs3 handles writes for
-compressed files through its own interface that doesn't go through
-iomap where it calls folio_mark_uptodate() but the ifs bitmap doesn't
-get updated. fuse-blk servers that operate in writethrough mode run
-into something like this as well [2].
+> > that I neglected to notice that I forgot to update the commit message
+> > to say:
+> > 
+> > "Therefore, add the ioend to a queue and get an async worker to chug
+> > through the error events from process context with no filesystem locks
+> > already held."
+> > 
+> > Let's hope I got the paperwork right this time, all this friction to
+> > amend minor mistakes are why I don't want to be here anymore. <grumble>
+> 
+> You know, I can just add that for you when applying. :)
 
-This doesn't lead to any data corruption issues. Should we get rid of
-the  WARN_ON_ONCE(ifs_is_fully_uptodate(folio, ifs) !=3D
-folio_test_uptodate(folio))? The alternative is to make a modified
-version of the functionality in "iomap_set_range_uptodate()" a public
-api callable by subsystems.
+I prefer to resend the whole series with /all/ the correct tags and
+messages so it actually gets recorded here accurately.
 
-Thanks,
-Joanne
+Also, would you mind picking up the first patch for 7.0-rc2 so that the
+old fsnotify helper is gone for good?
 
-[1] https://lore.kernel.org/linux-fsdevel/20260219003911.344478-1-joannelko=
-ong@gmail.com/
-[2] https://lore.kernel.org/linux-fsdevel/20251223223018.3295372-2-sashal@k=
-ernel.org/
+--D
