@@ -1,206 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f51.google.com (mail-yx1-f51.google.com [74.125.224.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC3BE2AD2C;
-	Fri, 20 Feb 2026 01:02:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC2F2C3749
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 03:38:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771549325; cv=none; b=oD/fhLgTO4sRBPaicTouw9FA/V+iYcZj6dSqpFyeYjoE1q2+yaB8FM/Z8jQUztUh2l3/mIVaDdRB7Rf48wbgNsbrZ4uc9Dk7nxwXVKpdEY+EbJ/jlK03tWFtQdK8Vk5S4xpbb4f7r7MUvvU6dXVqKM2DR3HHH0sc/g2Q7pz/vb8=
+	t=1771558728; cv=none; b=M/cL2H9HtJ9vJZLU9Ku6pNGtTLNuomjCD7XsjFhQXz1lOfewMTKWul7m+Zqa/bgW3+5bAmjVAilAfVHb8cQ/SUqQWPVtE0EY8Kr4brkvWlfSU12wDThEokLZwhTSfTIxYoHGrv8A+UMVYiBGEOAKsv+Q9UpKd9eUcaQSty2BMcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771549325; c=relaxed/simple;
-	bh=yaHAX6Xx1SaBmdGNesRQKsSdD6Ia5hfAIINgbudg2UU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NYj0MGGCCF2Apgl/C8etK52J+VONYhdTC4SRcORJPOQkiFGIOOQhuZyhkOwowvJJZLazWWytvrTUkgJwSpZ8Eg9/uxznRQ5Jjs/Hn3ir4yxGxKN1sfVBus1vZcK8Ac6YQJ+E8pXTp7z6OQwKkaJjkFjJVdA819AV7r30JKoGnxs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f8Ve/rPK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771558728; c=relaxed/simple;
+	bh=ERiI0ik+7C8U2bOZoMUPA8NBk6mNeP8oUH1ilI5DrIk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hE7BjGrwreHBbqKn1wBS4sMyReXDnBGuQN+0XBW5xId7tBCEm9D+Tf+QDbpeZFM0pJxHD6pFik1hJOO1exHLzsdpx0Hkagp9keOhIurZgYTsxSX7fTgfcxc4qXovgx8a1XVyW+CWpZoqeilu734im3+C6fNk9aGw2L2MAGl7qks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I2mzisgh; arc=none smtp.client-ip=74.125.224.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f8Ve/rPK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71925C4CEF7;
-	Fri, 20 Feb 2026 01:02:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771549325;
-	bh=yaHAX6Xx1SaBmdGNesRQKsSdD6Ia5hfAIINgbudg2UU=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=f8Ve/rPKynS1etF6BCUHukQmxfLbhq7PB3/O+7pHFw0UWNj0a48QoZ0THNX7UjJKN
-	 YrgGD2szHSe7wEcqllDxanINZ9jz4XTClXCHL3Fgb2Ke4rnHujnK+s1tb5ARs1RiJu
-	 h2JslpL4s1FtEpm5J4GOO0hRCcKAT2xlezBeGwKMJs9Lq6ZLxbjB88B1BslBm+7hxF
-	 k9nnYcZ3Ga2MaaUzrff2XG7JH5nGrDvJQ6Yra7JKcE+MyzG9sukXMF6H1bNgCPC6hl
-	 PyO8QTAI/hRh1Ls9RCIlt/jETzN8tUKa9/L59NNkFA5f4s8NjXE6Fdj1FUKDBFo1eL
-	 yP9ARb2zh+tXg==
-Date: Thu, 19 Feb 2026 17:02:05 -0800
-Subject: [PATCH 2/2] fserror: fix lockdep complaint when igrabbing inode
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: hch@infradead.org, hch@lst.de, linux-xfs@vger.kernel.org,
- brauner@kernel.org, linux-fsdevel@vger.kernel.org
-Message-ID: <177154904047.1351989.1087153602279831695.stgit@frogsfrogsfrogs>
-In-Reply-To: <177154903995.1351989.7277473944406826383.stgit@frogsfrogsfrogs>
-References: <177154903995.1351989.7277473944406826383.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I2mzisgh"
+Received: by mail-yx1-f51.google.com with SMTP id 956f58d0204a3-64ad46a44easo1563745d50.0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Feb 2026 19:38:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771558726; x=1772163526; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=TYi5KdDTrgKmUbM9Hgtml02i+c073pK3aRdi4XL87EQ=;
+        b=I2mzisghLi54jACxIHeX8n3kJC+GUbKVsBaMTS0RIZ1mrQ7Uy+rXOU5GNEbSJJ5kVj
+         d96b8G2UbQKwo1R1/3iv5Xc4kb5Nnl7UqbnqWwJxsqmPkTFrgVT+bMl9Wcm5J1OooJQ6
+         TI+5UDTRMCa0r0UtTkS6m0d4vf/fG+QIZ28K71uLaxB7Gxmw6iPmi8vLveN7Sgsujf4a
+         h2ljmIBhLr8qR1pbzqgX6OM77tMCFM9QsL7WTwQMR4nTtjZfQHtdAvJi4dk6MFxKMU8K
+         oOKkszHSEZyPGz8xUpUW3rC7z0f7jfq65VQA/L5uuRhEdAJVYFPImPyfyGny9rGvH+Te
+         ozYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771558726; x=1772163526;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TYi5KdDTrgKmUbM9Hgtml02i+c073pK3aRdi4XL87EQ=;
+        b=B5LshrsBxxLmds5wDHQnHN5L4lK46obUyL1BKfBIBc1Fd+iltscq5v1cUtyndnqosV
+         Q9meann/Q9mnvnabfL4ZehDjuCVwqCCtGM6g686/Eg+aHTo/A2s96X0g83eg3AZnuf6Y
+         UYLDsa2wrcLRobgOJRHVO+VZ5JpsMgMbO1sZ0UVaiAjudoaEXylhqU5fUDs0/dvnUzXN
+         Ok1xegJezlVJVNvSVCxhkmnTrCV02A8TMoF+S7RY0VXeo/p0aOdkwZnly6EFjPV3maLX
+         6kKmRjSUg04+9h7q4IQrP0fDowTwTTnUr/xE6aJ96/spkve9WW7QhUZwljNUF+JNn9lK
+         P6/w==
+X-Forwarded-Encrypted: i=1; AJvYcCXkKp3qVxK665w2m7oeCippMeLEI+lQ/WVGK7cf8dYPqfNcr2iMpT7mbsp0iInjBlkr2f7wdpHmPzc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxA4gWunAGf4LO5khwXEpfTDymQemyFq3TNnP1L3w8LqCL48Nch
+	2LMg4ULV1Zn0PbM6fH7acyTS2hn8MJMgQIvHdWrribfQTwE1RRGwCxiIDcwNwFXqccY=
+X-Gm-Gg: AZuq6aIEiD6V6/DLanREC55h9UOMgtoTSsF/dJ9uDQqPwcPXGdV+i7Rif+Xhi4J8Jse
+	XtX8H+5/7xB5hDfxofpIeZLjhN9qTtbfzSk0Le/AZWiZRBnBQi1mpH9iXq9j7+L9jkvMX7VtFHw
+	Iwm/PIdom+mgBVIN9wkQZ8d7/l08Yg6BrBSL9ABU2JDLIZJAXR+uZuBYK3MUiDyFR2uce/fAgnj
+	B4KndxBf0Y3HI0OrDNBSOfSpi7M2lP9mZL5J0u1kwMsjghqowrJ3FfgmClpFnY0LOHkvX0Z1LZW
+	Lib3wtMQWXr6XwUhoXHz+Y6iHoWz5FdRon7XUIQDE1ZXiwDzhsVscjsKGlfLGsd/VfwyZ/ABEiw
+	Il+jdZxSxYjLrdFkPhpOub6Bz9N+xA9r+XfHMAShr62995Wym9YgXH7RXC+f3Yrl0jTWH6pMxr2
+	ZYRXyk34ykv5WBv4lkyvG59Q0Uvm+PcfWbF/molRFDuJqcjHvTyFJ5zVDKdZktaEwR/XjATNMB2
+	nRHqYu2vs/5L2HYooegWwU9E3ZsfupveI2+KChDep4=
+X-Received: by 2002:a05:690e:408a:b0:646:b1f3:aeb2 with SMTP id 956f58d0204a3-64c70ba3c7dmr277466d50.3.1771558725713;
+        Thu, 19 Feb 2026 19:38:45 -0800 (PST)
+Received: from tux ([2601:7c0:c37c:4c00:e3a8:26f7:7e08:88e1])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-64c22eb2059sm7927069d50.10.2026.02.19.19.38.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Feb 2026 19:38:45 -0800 (PST)
+From: Ethan Tidmore <ethantidmore06@gmail.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: brauner@kernel.org,
+	neil@brown.name,
+	jlayton@kernel.org,
+	amir73il@gmail.com,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ethan Tidmore <ethantidmore06@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v4] xfs: Fix error pointer dereference
+Date: Thu, 19 Feb 2026 21:38:25 -0600
+Message-ID: <20260220033825.1153487-1-ethantidmore06@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+The function try_lookup_noperm() can return an error pointer and is not
+checked for one.
 
-Christoph Hellwig reported a lockdep splat in generic/108:
+Add checks for error pointer in xrep_adoption_check_dcache() and
+xrep_adoption_zap_dcache().
 
- ================================
- WARNING: inconsistent lock state
- 6.19.0+ #4827 Tainted: G                 N
- --------------------------------
- inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
- swapper/1/0 [HC1[1]:SC0[0]:HE0:SE1] takes:
- ffff88811ed1b140 (&sb->s_type->i_lock_key#33){?.+.}-{3:3}, at: igrab+0x1a/0xb0
- {HARDIRQ-ON-W} state was registered at:
-   lock_acquire+0xca/0x2c0
-   _raw_spin_lock+0x2e/0x40
-   unlock_new_inode+0x2c/0xc0
-   xfs_iget+0xcf4/0x1080
-   xfs_trans_metafile_iget+0x3d/0x100
-   xfs_metafile_iget+0x2b/0x50
-   xfs_mount_setup_metadir+0x20/0x60
-   xfs_mountfs+0x457/0xa60
-   xfs_fs_fill_super+0x6b3/0xa90
-   get_tree_bdev_flags+0x13c/0x1e0
-   vfs_get_tree+0x27/0xe0
-   vfs_cmd_create+0x54/0xe0
-   __do_sys_fsconfig+0x309/0x620
-   do_syscall_64+0x8b/0xf80
-   entry_SYSCALL_64_after_hwframe+0x76/0x7e
- irq event stamp: 139080
- hardirqs last  enabled at (139079): [<ffffffff813a923c>] do_idle+0x1ec/0x270
- hardirqs last disabled at (139080): [<ffffffff828a8d09>] common_interrupt+0x19/0xe0
- softirqs last  enabled at (139032): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
- softirqs last disabled at (139025): [<ffffffff8134a853>] __irq_exit_rcu+0xc3/0x120
+Detected by Smatch:
+fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error:
+'d_child' dereferencing possible ERR_PTR()
 
- other info that might help us debug this:
-  Possible unsafe locking scenario:
+fs/xfs/scrub/orphanage.c:485 xrep_adoption_zap_dcache() error:
+'d_child' dereferencing possible ERR_PTR()
 
-        CPU0
-        ----
-   lock(&sb->s_type->i_lock_key#33);
-   <Interrupt>
-     lock(&sb->s_type->i_lock_key#33);
-
-  *** DEADLOCK ***
-
- 1 lock held by swapper/1/0:
-  #0: ffff8881052c81a0 (&vblk->vqs[i].lock){-.-.}-{3:3}, at: virtblk_done+0x4b/0x110
-
- stack backtrace:
- CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Tainted: G                 N  6.19.0+ #4827 PREEMPT(full)
- Tainted: [N]=TEST
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org 04/01/2014
- Call Trace:
-  <IRQ>
-  dump_stack_lvl+0x5b/0x80
-  print_usage_bug.part.0+0x22c/0x2c0
-  mark_lock+0xa6f/0xe90
-  __lock_acquire+0x10b6/0x25e0
-  lock_acquire+0xca/0x2c0
-  _raw_spin_lock+0x2e/0x40
-  igrab+0x1a/0xb0
-  fserror_report+0x135/0x260
-  iomap_finish_ioend_buffered+0x170/0x210
-  clone_endio+0x8f/0x1c0
-  blk_update_request+0x1e4/0x4d0
-  blk_mq_end_request+0x1b/0x100
-  virtblk_done+0x6f/0x110
-  vring_interrupt+0x59/0x80
-  __handle_irq_event_percpu+0x8a/0x2e0
-  handle_irq_event+0x33/0x70
-  handle_edge_irq+0xdd/0x1e0
-  __common_interrupt+0x6f/0x180
-  common_interrupt+0xb7/0xe0
-  </IRQ>
-
-It looks like the concern here is that inode::i_lock is sometimes taken
-in IRQ context, and sometimes it is held when going to IRQ context,
-though it's a little difficult to tell since I think this is a kernel
-from after the actual 6.19 release but before 7.0-rc1.
-
-Either way, we don't need to take i_lock, because filesystems should
-not report files to fserror if they're about to be freed or have not
-yet been exposed to other threads, because the resulting fsnotify report
-will be meaningless.
-
-Therefore, add the ioend to a queue and get an async worker to chug
-through the error events from process context with no filesystem locks
-already held.
-
-Link: https://lore.kernel.org/linux-fsdevel/aY7BndIgQg3ci_6s@infradead.org/
-Reported-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 73597e3e42b4 ("xfs: ensure dentry consistency when the orphanage adopts a file")
+Cc: <stable@vger.kernel.org> # v6.16
+Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/iomap/ioend.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+v4:
+- Add blank line after closing brace.
+v3:
+- Add dput(d_orphanage) before returning error code in 
+  xrep_adoption_check_dcache().
+- Revert xrep_adoption_zap_dcache() change back to v1 version.
+- Include function names where error pointer checks were added.
+v2:
+- Propagate the error back in xrep_adoption_check_dcache().
+- Add Cc to stable.
+- Add correct Fixes tag.
+ fs/xfs/scrub/orphanage.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index e4d57cb969f1bb..4d1ef8a2cee90b 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -69,11 +69,57 @@ static u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
- 	return folio_count;
- }
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 52a108f6d5f4..33c6db6b4498 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -442,6 +442,11 @@ xrep_adoption_check_dcache(
+ 		return 0;
  
-+static DEFINE_SPINLOCK(failed_ioend_lock);
-+static LIST_HEAD(failed_ioend_list);
-+
-+static void
-+iomap_fail_ioends(
-+	struct work_struct	*work)
-+{
-+	struct iomap_ioend	*ioend;
-+	struct list_head	tmp;
-+	unsigned long		flags;
-+
-+	spin_lock_irqsave(&failed_ioend_lock, flags);
-+	list_replace_init(&failed_ioend_list, &tmp);
-+	spin_unlock_irqrestore(&failed_ioend_lock, flags);
-+
-+	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
-+			io_list))) {
-+		list_del_init(&ioend->io_list);
-+		iomap_finish_ioend_buffered(ioend);
-+		cond_resched();
-+	}
-+}
-+
-+static DECLARE_WORK(failed_ioend_work, iomap_fail_ioends);
-+
-+static void iomap_fail_ioend_buffered(struct iomap_ioend *ioend)
-+{
-+	unsigned long flags;
-+
-+	/*
-+	 * Bounce I/O errors to a workqueue to avoid nested i_lock acquisitions
-+	 * in the fserror code.  The caller no longer owns the ioend reference
-+	 * after the spinlock drops.
-+	 */
-+	spin_lock_irqsave(&failed_ioend_lock, flags);
-+	if (list_empty(&failed_ioend_list))
-+		WARN_ON_ONCE(!schedule_work(&failed_ioend_work));
-+	list_add_tail(&ioend->io_list, &failed_ioend_list);
-+	spin_unlock_irqrestore(&failed_ioend_lock, flags);
-+}
-+
- static void ioend_writeback_end_bio(struct bio *bio)
- {
- 	struct iomap_ioend *ioend = iomap_ioend_from_bio(bio);
- 
- 	ioend->io_error = blk_status_to_errno(bio->bi_status);
-+	if (ioend->io_error) {
-+		iomap_fail_ioend_buffered(ioend);
-+		return;
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
++	if (IS_ERR(d_child)) {
++		dput(d_orphanage);
++		return PTR_ERR(d_child);
 +	}
 +
- 	iomap_finish_ioend_buffered(ioend);
- }
+ 	if (d_child) {
+ 		trace_xrep_adoption_check_child(sc->mp, d_child);
  
+@@ -479,7 +484,7 @@ xrep_adoption_zap_dcache(
+ 		return;
+ 
+ 	d_child = try_lookup_noperm(&qname, d_orphanage);
+-	while (d_child != NULL) {
++	while (!IS_ERR_OR_NULL(d_child)) {
+ 		trace_xrep_adoption_invalidate_child(sc->mp, d_child);
+ 
+ 		ASSERT(d_is_negative(d_child));
+-- 
+2.53.0
 
