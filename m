@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3EDA2AD2C
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 01:01:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B7972AD2C
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Feb 2026 01:01:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771549279; cv=none; b=DRTDM6GiqZq2yegnwdNPQOp1gMoxjBc8XwFETgJkWK9YRi7oDI5PkVJCLktdCAZiIozWNvUJcFTi7L7lI7POa0tTrJv9T3c529yXoU6C4dCEWqMufkrnYMNA30G7mAgg8eVXRd5MjJ1iwYH6idKo5wMkx9yq882WtUuhB3R8/jo=
+	t=1771549294; cv=none; b=sVFPpwg3hpwfhJ5+XXodlKIPPPEMMOQKL8TTvACOu/CRvQOM3R9QoX7j6bssVJGNOUc+CQE7baWvRay0Hr9/vjj7vZwQiHMbvCktfrem2pbCn4C1GzpO+64Y4UNbmoIlienlTDgKbyLabTOGLt/j60vlzy3tKg8HKGvnjhQppVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771549279; c=relaxed/simple;
-	bh=XhZujguExUNM9gAqHLz5xzLODwj2T+3Ysh/caoqXsuU=;
+	s=arc-20240116; t=1771549294; c=relaxed/simple;
+	bh=Mk2t5yGxAxnJZsXxzqOaIE+HmQfb33pS4WMTPye26ZA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uRdBap0YquKlmXXtV3Cac0cH/PGxyejEtCvN8urr2h6J7lrPPMhRr58XBw10DkrQCHg7/+qPk/Pnge0GOrOklJkGA4LBbRj37opVvdNN/frSj3bLnKQl7cmZvGeyLbG/g2cp6jNu+XlANpzR+w5JRKpf4zvGiJtA3Gc7m2Hf6fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lDigQCNa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=AKOvZ1elh0iHyZ+1ktQs4LguLfAPE1qEOrezsG8B7hbHkYvDtZvEHM5IrESqA+ut0Jab5V1xwt1+fvnr8Nsq3x9qXXKPhEV2ZaWk/IKvrVypajiedhFX9Yr5OXJv7rQfqwc9L81C9bhfAzTvYEFn6x2z7ajnecldF0eCRUKcpGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiCvEIVn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lDigQCNa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A755C4CEF7;
-	Fri, 20 Feb 2026 01:01:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiCvEIVn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42FD2C4CEF7;
+	Fri, 20 Feb 2026 01:01:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771549278;
-	bh=XhZujguExUNM9gAqHLz5xzLODwj2T+3Ysh/caoqXsuU=;
+	s=k20201202; t=1771549294;
+	bh=Mk2t5yGxAxnJZsXxzqOaIE+HmQfb33pS4WMTPye26ZA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=lDigQCNanGOm6JBkAVcaPlAgVkaOTliohorNv+cN4e/GHvTrLLaCmnwZ4F88+UJ+g
-	 csAv6XlzZgylX01Zw6sBk99bWruhOeaoSp7WnCwSGk6qqOfiHi93jryPOTweyaPHqI
-	 kwB3p0pQLQ9dthCTBV970f6QXAoIKRLNKsW0sag7AvnlnLGm/TWjLfR0xzo8U+ZwhO
-	 KXiaUIuz/xNLUPNwS9s9roD6akh727/N2zZ8A22pDzyvt7T6VBXGUzfy36FIM0i9oh
-	 YrafBMw9B1+H6KOFd36twn7Wlpk459197evxvfYj+yG1t9BoulQGgf/X4xjvhu1seT
-	 X4uewVVgA3Q9g==
-Date: Thu, 19 Feb 2026 17:01:18 -0800
-Subject: [PATCH 5/6] xfs: don't report metadata inodes to fserror
+	b=QiCvEIVnXn9MQUTqV5YT2QRoEk5oyw1Z8hx0wybr+PLnuWUMhVPBydmXqDLo7VlMX
+	 tBZ4fkrTglb1G7AQeCShP4osZmrUItzCxas06CQ2UCO5gbh+1rQFv6Tf+STrRpAP65
+	 g5iYwMOvsM06dqu3lkeZMqtyWr+JSQRSHT0UWdXxSAnOPeZWeb9YYjsRIXI8WwkKix
+	 A2uXZCHoofnBjqlDLIvtEnWmpxJlufI/ILz5uIGG9FQkhC0QNruhf2QUcjaldwjvvE
+	 nTmvM1yYE2PXGd/EUpp+ivn0CZZ8HwxN3ntt0uYJKjnGIf7cZKejy5GBF17AmA401t
+	 nMkXE6GDcfnfw==
+Date: Thu, 19 Feb 2026 17:01:33 -0800
+Subject: [PATCH 6/6] xfs: don't report half-built inodes to fserror
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: cem@kernel.org, djwong@kernel.org
-Cc: cmaiolino@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177154903770.1351708.580642367097924245.stgit@frogsfrogsfrogs>
+Cc: cmaiolino@redhat.com, hch@lst.de, samsun1006219@gmail.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <177154903791.1351708.4543112738693282340.stgit@frogsfrogsfrogs>
 In-Reply-To: <177154903631.1351708.2643960160835435965.stgit@frogsfrogsfrogs>
 References: <177154903631.1351708.2643960160835435965.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,58 +46,72 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Internal metadata inodes are not exposed to userspace programs, so it
-makes no sense to pass them to the fserror functions (aka fsnotify).
-Instead, report metadata file problems as general filesystem corruption.
+Sam Sun apparently found a syzbot way to fuzz a filesystem such that
+xfs_iget_cache_miss would free the inode before the fserror code could
+catch up.  Frustratingly he doesn't use the syzbot dashboard so there's
+no C reproducer and not even a full error report, so I'm guessing that:
 
+Inodes that are being constructed or torn down inside XFS are not
+visible to the VFS.  They should never be reported to fserror.
+Also, any inode that has been freshly allocated in _cache_miss should be
+marked INEW immediately because, well, it's an incompletely constructed
+inode that isn't yet visible to the VFS.
+
+Reported-by: Sam Sun <samsun1006219@gmail.com>
 Fixes: 5eb4cb18e445d0 ("xfs: convey metadata health events to the health monitor")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_health.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_health.c |    8 ++++++--
+ fs/xfs/xfs_icache.c |    9 ++++++++-
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 169123772cb39b..6475159eb9302c 100644
+index 6475159eb9302c..239b843e83d42a 100644
 --- a/fs/xfs/xfs_health.c
 +++ b/fs/xfs/xfs_health.c
-@@ -314,6 +314,18 @@ xfs_rgno_mark_sick(
- 	xfs_rtgroup_put(rtg);
- }
+@@ -316,8 +316,12 @@ xfs_rgno_mark_sick(
  
-+static inline void xfs_inode_report_fserror(struct xfs_inode *ip)
-+{
-+	/* Report metadata inodes as general filesystem corruption */
-+	if (xfs_is_internal_inode(ip)) {
-+		fserror_report_metadata(ip->i_mount->m_super, -EFSCORRUPTED,
-+				GFP_NOFS);
-+		return;
-+	}
+ static inline void xfs_inode_report_fserror(struct xfs_inode *ip)
+ {
+-	/* Report metadata inodes as general filesystem corruption */
+-	if (xfs_is_internal_inode(ip)) {
++	/*
++	 * Do not report inodes being constructed or freed, or metadata inodes,
++	 * to fsnotify.
++	 */
++	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIM) ||
++	    xfs_is_internal_inode(ip)) {
+ 		fserror_report_metadata(ip->i_mount->m_super, -EFSCORRUPTED,
+ 				GFP_NOFS);
+ 		return;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index dbaab4ae709f9c..f13e55b75d66c4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -636,6 +636,14 @@ xfs_iget_cache_miss(
+ 	if (!ip)
+ 		return -ENOMEM;
+ 
++	/*
++	 * Set XFS_INEW as early as possible so that the health code won't pass
++	 * the inode to the fserror code if the ondisk inode cannot be loaded.
++	 * We're going to free the xfs_inode immediately if that happens, which
++	 * would lead to UAF problems.
++	 */
++	xfs_iflags_set(ip, XFS_INEW);
 +
-+	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-+}
-+
- /* Mark the unhealthy parts of an inode. */
- void
- xfs_inode_mark_sick(
-@@ -339,7 +351,7 @@ xfs_inode_mark_sick(
- 	inode_state_clear(VFS_I(ip), I_DONTCACHE);
- 	spin_unlock(&VFS_I(ip)->i_lock);
+ 	error = xfs_imap(pag, tp, ip->i_ino, &ip->i_imap, flags);
+ 	if (error)
+ 		goto out_destroy;
+@@ -713,7 +721,6 @@ xfs_iget_cache_miss(
+ 	ip->i_udquot = NULL;
+ 	ip->i_gdquot = NULL;
+ 	ip->i_pdquot = NULL;
+-	xfs_iflags_set(ip, XFS_INEW);
  
--	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-+	xfs_inode_report_fserror(ip);
- 	if (mask)
- 		xfs_healthmon_report_inode(ip, XFS_HEALTHMON_SICK, old_mask,
- 				mask);
-@@ -371,7 +383,7 @@ xfs_inode_mark_corrupt(
- 	inode_state_clear(VFS_I(ip), I_DONTCACHE);
- 	spin_unlock(&VFS_I(ip)->i_lock);
- 
--	fserror_report_file_metadata(VFS_I(ip), -EFSCORRUPTED, GFP_NOFS);
-+	xfs_inode_report_fserror(ip);
- 	if (mask)
- 		xfs_healthmon_report_inode(ip, XFS_HEALTHMON_CORRUPT, old_mask,
- 				mask);
+ 	/* insert the new inode */
+ 	spin_lock(&pag->pag_ici_lock);
 
