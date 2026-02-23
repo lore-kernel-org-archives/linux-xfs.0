@@ -1,189 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A484119ABC6
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 16:19:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EBD23E346
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 16:23:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771863556; cv=none; b=HabmPLBRny0mmCyGyeZ3knppjF+oI+jS6Gcd+dFSWI2w3ZYnJWD1qxbN7L0AqDLxkgR8umGFN/0xhG6LbuzM01heAK+gOzo6NYVnvotsSA+at3hyGTXxlLz759BB4vwmacL8hGAK95oxu7i6YhILcS4lXrrvr2IM7DrzSyVAVIc=
+	t=1771863802; cv=none; b=Fo8QQifHkhsT6KgsiQvF9LcqiLz+/WVtDGFUKpHBRet1bCeXlOWFgMG+IIvZcXbbeR5RubgUzdKcPN4rvXYBaUDohCPoNZiGef1veLDAiZCWUUSy8bIKpoQTNk4a3jP1oUOYoUDAUL2U5wg2XWWiMwexryzi9/Hh1hulhxvqpuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771863556; c=relaxed/simple;
-	bh=GdNppqAVq3HF892D2B8NGPqbm+P8olnGWEgsRPmTlyg=;
+	s=arc-20240116; t=1771863802; c=relaxed/simple;
+	bh=o4IVAdp2yG0qhK4Jw4zlNYSp4MPlUPAQf/b9xPb03cI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LRL2z+/B4pD+I5DpsEqMzZCfB5htdiBYCGzLfYgPklNh2Gdj2lYzt9HL7nVJHGs/wfUayy6W40qhBhGHijEd9yazT1Ys0eNOZiywelfVeOElfm5ReoKSob0gX1CUoYhC2wu+ukcZ9J9C2AAu6mEz/f/sBJQtxdgOdEpZp3IwuPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g3HH/3Pv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=i6DZajyCeXPPpgTssbVYTG4uI/LDG9kaAOH8ssa1Q3gZZgF57u9NRO9zWksTEJoSrL0GM4loulnJ101VsmIslXGBQRTno9UZ/z70a9H+AiLRwkPHD3zTuyYkW8CJsklYM/gVPQzAYkozvhH01HKtyTj2jWDbAyuBcKAd1fR5NoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ApYYW+GW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g3HH/3Pv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81325C116C6;
-	Mon, 23 Feb 2026 16:19:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ApYYW+GW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72DB4C116C6;
+	Mon, 23 Feb 2026 16:23:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771863556;
-	bh=GdNppqAVq3HF892D2B8NGPqbm+P8olnGWEgsRPmTlyg=;
+	s=k20201202; t=1771863801;
+	bh=o4IVAdp2yG0qhK4Jw4zlNYSp4MPlUPAQf/b9xPb03cI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=g3HH/3Pv4MZPwzij6hiqSVB54VT4HPkwV5yPlOb3gIGI/W8UTsy+iCZ1CV0EJrFeZ
-	 CUbFchJFywZPR7fD9EoGAVHZcp9tJm68jMbmhamYT845LSwzaLvkLAXqK5vBL7gAhz
-	 vCt55aCjScYyxRdipm/7+tLTAxAWqefo4gtkMYM4Zqufz0FibJH47lw99Jv3a0+XEA
-	 eCLXIsvjsjYvChF1irVgzCpEHDib5dD564biJLku1GZiZgFnQ30dyDirgtr0ZFq8gZ
-	 v9234wfUim+T/lgz9m6rgaIYNqprwv5HC2b8dTINXrvZ/YysethvkzQwA6RNpCblZN
-	 vEdGZXFxeO4zw==
-Date: Mon, 23 Feb 2026 08:19:15 -0800
+	b=ApYYW+GWv+qpugBgn4UA7Pypezeg94JAvc1x6Y4YvFbUj4YflGTeRLRuHU88LyJnu
+	 rCh2QfgIquDmBBy3YDx+yO/MJQwARIJiiwQZqgNct3+3wkKNI90QXhgzsF0Yp6jqMq
+	 PQWo6if53UJCmj7PCo+vS/G2lPxDHZZzEnuSPie6O8y1c4ijwLWr9pZtSGPQKnKt/Y
+	 2hoy7vpIb3XRYdrdkcbSg8OT4x5CLOptWrmw4OaUT1vFuUd+wvHl9QgNFW2g54UUSH
+	 LNOLTEdPOrLPNIlTev5ZP+43ehBJ9/DVXw0EZ99glnLo3BShWvpZ1l+b+3Z+spHgrI
+	 MvQfHvoQxlkvw==
+Date: Mon, 23 Feb 2026 08:23:20 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org
-Subject: Re: [PATCH v9] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <20260223161915.GA2390353@frogsfrogsfrogs>
-References: <20260223091106.296338-2-lukas@herbolt.com>
+To: =?utf-8?B?0JzQsNGA0Log0JrQvtGA0LXQvdCx0LXRgNCz?= <socketpair@gmail.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [RFE] xfs_growfs: option to clamp growth to an AG boundary
+Message-ID: <20260223162320.GB2390353@frogsfrogsfrogs>
+References: <CAEmTpZGcBvxsMP6Qg4zcUd-D4M9-jmzS=+9ZsY2RemRDTDQcQg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260223091106.296338-2-lukas@herbolt.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAEmTpZGcBvxsMP6Qg4zcUd-D4M9-jmzS=+9ZsY2RemRDTDQcQg@mail.gmail.com>
 
-On Mon, Feb 23, 2026 at 10:11:07AM +0100, Lukas Herbolt wrote:
-> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-> the unmap write zeroes operation.
+On Mon, Feb 23, 2026 at 02:48:48PM +0500, Марк Коренберг wrote:
+> Hi,
 > 
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |  5 +++--
->  fs/xfs/xfs_bmap_util.h |  2 +-
->  fs/xfs/xfs_file.c      | 39 ++++++++++++++++++++++++++-------------
->  3 files changed, 30 insertions(+), 16 deletions(-)
+> I ran into an issue after growing an XFS filesystem where the final
+> allocation group (last AG) ended up very small. Most workloads were
+> fine, but large reflink-heavy copies started failing. In my case,
+> copying a ClickHouse data directory with:
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 2208a720ec3f..0c1b1fa82f8b 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -646,7 +646,8 @@ int
->  xfs_alloc_file_space(
->  	struct xfs_inode	*ip,
->  	xfs_off_t		offset,
-> -	xfs_off_t		len)
-> +	xfs_off_t		len,
-> +	uint32_t		bmapi_flags)
->  {
->  	xfs_mount_t		*mp = ip->i_mount;
->  	xfs_off_t		count;
-> @@ -748,7 +749,7 @@ xfs_alloc_file_space(
->  		 * will eventually reach the requested range.
->  		 */
->  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
-> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-> +				allocatesize_fsb, bmapi_flags, 0, imapp,
->  				&nimaps);
->  		if (error) {
->  			if (error != -ENOSR)
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index c477b3361630..2895cc97a572 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
->  
->  /* preallocation and hole punch interface */
->  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-> -		xfs_off_t len);
-> +		xfs_off_t len, uint32_t bmapi_flags);
->  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
->  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7874cf745af3..83c45ada3cc8 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1293,6 +1293,7 @@ xfs_falloc_zero_range(
->  	unsigned int		blksize = i_blocksize(inode);
->  	loff_t			new_size = 0;
->  	int			error;
-> +	uint32_t                bmapi_flags;
->  
->  	trace_xfs_zero_file_space(ip);
->  
-> @@ -1300,18 +1301,27 @@ xfs_falloc_zero_range(
->  	if (error)
->  		return error;
->  
-> -	if (xfs_falloc_force_zero(ip, ac)) {
-> -		error = xfs_zero_range(ip, offset, len, ac, NULL);
-> -	} else {
-> -		error = xfs_free_file_space(ip, offset, len, ac);
+> `cp -a --reflink=always ...`
+> 
+> fails on a filesystem with a tiny last AG. Using --reflink=auto
 
-Where did this call to xfs_free_file_space go?  This looks like a
-behavior change in the classic zero-range behavior.
+How does it fail?
 
 --D
 
-> -		if (error)
-> -			return error;
->  
-> -		len = round_up(offset + len, blksize) -
-> -			round_down(offset, blksize);
-> -		offset = round_down(offset, blksize);
-> -		error = xfs_alloc_file_space(ip, offset, len);
-> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
-> +		if (xfs_is_always_cow_inode(ip) ||
-> +		    !bdev_write_zeroes_unmap_sectors(
-> +				xfs_inode_buftarg(ip)->bt_bdev))
-> +			return -EOPNOTSUPP;
-> +		bmapi_flags = XFS_BMAPI_ZERO;
-> +	} else {
-> +		if (xfs_falloc_force_zero(ip, ac)) {
-> +			error = xfs_zero_range(ip, offset, len, ac, NULL);
-> +			goto set_filesize;
-> +		}
-> +		bmapi_flags = XFS_BMAPI_PREALLOC;
->  	}
-> +
-> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
-> +	offset = round_down(offset, blksize);
-> +
-> +	error = xfs_alloc_file_space(ip, offset, len, bmapi_flags);
-> +
-> +set_filesize:
->  	if (error)
->  		return error;
->  	return xfs_falloc_setsize(file, new_size);
-> @@ -1336,7 +1346,8 @@ xfs_falloc_unshare_range(
->  	if (error)
->  		return error;
->  
-> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-> +			XFS_BMAPI_PREALLOC);
->  	if (error)
->  		return error;
->  	return xfs_falloc_setsize(file, new_size);
-> @@ -1364,7 +1375,8 @@ xfs_falloc_allocate_range(
->  	if (error)
->  		return error;
->  
-> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-> +			XFS_BMAPI_PREALLOC);
->  	if (error)
->  		return error;
->  	return xfs_falloc_setsize(file, new_size);
-> @@ -1374,7 +1386,7 @@ xfs_falloc_allocate_range(
->  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
-> -		 FALLOC_FL_UNSHARE_RANGE)
-> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
->  
->  STATIC long
->  __xfs_file_fallocate(
-> @@ -1417,6 +1429,7 @@ __xfs_file_fallocate(
->  	case FALLOC_FL_INSERT_RANGE:
->  		error = xfs_falloc_insert_range(file, offset, len);
->  		break;
-> +	case FALLOC_FL_WRITE_ZEROES:
->  	case FALLOC_FL_ZERO_RANGE:
->  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
->  		break;
-> -- 
-> 2.53.0
+> doesn’t help either, because `cp` doesn’t fall back to a non-reflink
+> copy if the reflink attempt fails.
 > 
+> To work around this, I had to write scripts that compute a “safe”
+> target size before running xfs_growfs. The alignment I needed is a bit
+> awkward:
+> 
+> 1. Round the LV size up to the next multiple of the filesystem AG
+> size, so the grown filesystem ends exactly on an AG boundary (no
+> partial/tiny last AG).
+> 
+> 2. Then round the LV size down to the LVM extents size (4 MiB in my
+> case). Rounding up to the LVM granularity can reintroduce a tiny last
+> AG.
+> If the automatically chosen AG size were aligned to that granularity,
+> step (2) wouldn’t be necessary.
+> 
+> This feels like something xfsprogs could support directly. My proposals:
+> 
+> 1. xfs_growfs: add an option to print an “optimal grow target size”:
+> the current(new) block device size rounded **down** to a multiple of
+> the AG size.
+> A --json output mode would make this easy to consume from scripts.
+> 
+> 2. AG size calculation/alignment: when choosing an automatic AG size,
+> always round it down to an alignment such as 4 MiB, or (preferably)
+> consider the underlying device/LVM extent size when it can be
+> detected, instead of using a constant.
+> 
+> 3. Docs (mkfs + AG sizing): when specifying AG size manually,
+> recommend: choosing filesystem sizing so the final size is an integer
+> multiple of AG size (i.e., no partial last AG), and aligning the AG
+> size to the underlying allocation granularity (e.g., LVM
+> extent/segment size) when applicable.
+> 
+> 4. Docs (xfs_growfs): add a note that it’s highly preferable to grow
+> the filesystem in multiples of the existing AG size, to avoid a tiny
+> last AG.
+> 
+> 5. Optional grow mode: add a xfs_growfs mode/switch that grows “as
+> much as possible”, but clamps the resulting filesystem size **down**
+> to an AG boundary, and reports how much space is left unused (e.g., “X
+> bytes left unallocated to avoid a partial final AG”).
+> 
+> This might sound like a corner case, but it’s easy to hit in practice
+> when the block device is resized to just arbitrary chosen size then
+> xfs_growfs expands to consume the whole device.
+> 
+> Thanks,
+> Mark
 > 
