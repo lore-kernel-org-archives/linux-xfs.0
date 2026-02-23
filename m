@@ -1,90 +1,91 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2C1733B97B
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 18:12:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3E833CE86
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 18:19:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771870342; cv=none; b=f2ZgZbZ1txI0VEzUnPhak4HvtUAXt4mWMdCqjDMPKdZEpOr+iYnQDiB881GbX2xR6mTfZSF4nX20hHXoZpt8bgGuqysVdu3I67kuAYTwcA0DTcz/6cBXDYJN59oxSa7a9yWrgrEPvQ6SsYE9UZvEg5eHVH/ktS8yWT5FvbY+WyE=
+	t=1771870767; cv=none; b=dOm34rp/Z0zaVfV90gMI0MLd331pombGXDplaU/aUQVeXS22QvkFEvpMUBEwP5WY/6afJz3KSAT10UUXTg+5uZ6LvINFmIxTr6JwclSW+jyh9v1XOmC4f8WSScsfabdRmsXzlsiVZMtdx8HmiBlEvKQrlOk7tECxFi8De03ql8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771870342; c=relaxed/simple;
-	bh=GpcFfjFqktZkq1PJJFTb0XK2gYmrC40W4g+B7g8ZrDc=;
+	s=arc-20240116; t=1771870767; c=relaxed/simple;
+	bh=tYg6lKXCrXqkSRjroh8xnR35YcUacejrcTuL0nB1Jg4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JXSHXqGZf8P7wYRTKBjocZ1joJ+18lcwnpXXdgRTQn5nJcAAW618G+ZTnsfldeHyLErxTWLs/WzFx2cfpNwAW1dqvC6IwMcWJH/bBjnPQH5FuWr5s/BzK3yH8oSAuNPdpmzS5pluBBtJR2c/9GvahwvPG7ixhIVlE5nOoh9UQ2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GZ4YcwBb; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=P3ONXnQO; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=TyOXd1sxAFmquiqHibuIiNkbKetxsyzYQuUi2FnsN5a22jZQQhHhvEE3O0x9+5xYmn3XTw7UwBpHT0fT15pvetzgdRrdGRO5L3txhr7QIa0e++e5T6CkpcQLhOMu7XARoyBFGncMqikT2t6DOWRNg9eVJpi9ULIfNbOU1raCJS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aB+cCavL; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=CMELSw5N; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GZ4YcwBb";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="P3ONXnQO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aB+cCavL";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="CMELSw5N"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771870339;
+	s=mimecast20190719; t=1771870763;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=67lPNWHfQZaorsIQ9wDyrI/yXPhj5APVQRxZORYETQg=;
-	b=GZ4YcwBbzdepbQ8hmmFDiL4+Adr9q89TB4wQsRkyjFLlSgnrtETKofUcw5ed/jWZv5Vtsy
-	eDzvoiy3AYuaQpmKAxMLKzz1RxFgV2k9RfJpERHFg8ZQGpD/rx7T1Euv+xp/5nt/tv68qX
-	bD6q/dNgA+GAGTMbFF6qgQZ9oAl/toY=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=5ifqmgc0Bd/dYXqGP8nteQfhBSpKJvq3ZUBjnYwveQk=;
+	b=aB+cCavLs+zm+jpCb/2mr4KCcVI/Ye/8MYApgLMtX5j7MYq1uXd+NlqcWmpRPy1Bne+oJK
+	HJ7m+/COGrks5e/ZXSRHHju9+yTkdGv4eL9Q4j6k4qSsw1kqKrJDDvORih7AmSTBGd9Zrh
+	BqLhXxpQEayspziUcGESAyr1LNHaKtQ=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-654-_6S-wXFFOs-BKRd6XGgTUQ-1; Mon, 23 Feb 2026 13:12:16 -0500
-X-MC-Unique: _6S-wXFFOs-BKRd6XGgTUQ-1
-X-Mimecast-MFC-AGG-ID: _6S-wXFFOs-BKRd6XGgTUQ_1771870336
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4806b12ad3fso34568435e9.0
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 10:12:16 -0800 (PST)
+ us-mta-149-Yo-q6gt2OOiTmxO1jzRMVw-1; Mon, 23 Feb 2026 13:19:21 -0500
+X-MC-Unique: Yo-q6gt2OOiTmxO1jzRMVw-1
+X-Mimecast-MFC-AGG-ID: Yo-q6gt2OOiTmxO1jzRMVw_1771870760
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-435991d4a3aso3245271f8f.1
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 10:19:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1771870335; x=1772475135; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1771870760; x=1772475560; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=67lPNWHfQZaorsIQ9wDyrI/yXPhj5APVQRxZORYETQg=;
-        b=P3ONXnQO1BwmhffO8Ck+JxqjnFjukn+1FB69pICgreQgw5H7bTHZ5ehMAfw1oO6HFG
-         DBdncL0b+FnYrD1XFX6Z3OBtn4EB7wtRhQ1buzkQQkQ/flMLfiYxBb2i+xm6+UzgUKTI
-         hRHBsK22v3VoMsWysiF4yillArVezOPkBJkOvbR7+FG3X1HWaeb6prCTJwigLrPNIAq6
-         fWzFGCQNOfQaMSs7iN+bxADFb505I3QhrtRbN1WhoRJBCp4jpuomAKoQpcy1ASNqtvBY
-         YLa5Dpk+ON+CihiRQnRyuz+dIZ4dVaFfGqB1ouFhVGpKtMQUuKdWiXe9IsFrYMwFhcY/
-         FW8A==
+        bh=5ifqmgc0Bd/dYXqGP8nteQfhBSpKJvq3ZUBjnYwveQk=;
+        b=CMELSw5NQJZgvFoLaBpbPb1/kcl8z9hiFK1axxzRKIYj/cKHBd8TcFAQRBDQlAV89K
+         /TbZcIVev1E0JhbF5gforNUnGeN42pKxtXql1aOy1A4Src5po27AMxtjZmUExep7IFk+
+         ewvc/ruAWYsgl+QYimErrT7Nlp0m8V9ieOsZzA40G1e1RvmVrNFvHDH5AvjxkZsKbbPQ
+         7o6GG8G2qnRs/cdwCmrVg0AnOCXY4sc1gFVLIO6vRMZ+8qGZQE469byx6HdLIPIIUEpc
+         Afjld7IfKjFwzF7g3BYhgtVp0U8tLHgQ9Macj6YxYIyN9ZLIWL/Oj/vQX2qIZOWeC+al
+         QkrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771870335; x=1772475135;
+        d=1e100.net; s=20230601; t=1771870760; x=1772475560;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=67lPNWHfQZaorsIQ9wDyrI/yXPhj5APVQRxZORYETQg=;
-        b=Tdu1giUMSYTFBaGj0bVwTujUpJYmSo0iyCHpG3XabYmL69POmBBu3TvcSc2ykHs0R5
-         fVHeYEvArnum3Y9JhFQC6Ij4kPpAIlA49wL5v8MOntzPWFUubZ4zfyiqm6hau2uXxzrM
-         uZZZSP0RIR4ThwhUAnBCPhB1sWh2dzu64PwxdfW0tIxghueYrt9v9JDCBWHuSsDVh34+
-         +bSYAJBzQfFNI+ZmylL+xJXqLb6OlA+vKAkLCt1OdI1jdsh1Oakg6R7jUN01tDHNG5Z0
-         4h9y/AlVx3AesBrAjDR8V/jDLUBGUDvGLaRkB6o80O/Vis+2k+MXbz+Eids+zTykfywn
-         I9nQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXgFDS5832FidTRYTFpvP8FUsdCtGp4cUbw2KkBV++Sg6CHy5mWLoxdyouVZDNn3NPuH9VZ3F1lb24=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwiKJxptq9xmppVFM8m7jFggC/R2rebod3V40WUkqAYeyV9/lWF
-	vmD/KvlSMS4QgAXhq7sC3JLkwjaKeE63QI+oo+Mv30W9PdUgKEGm9dBNjBOX99H1An239dC5xCx
-	c7O5JSz4AOuKZQ7njOXiiEyoPbyj3eYLr/Sn8zumYRSfAk+tWHUXNVL9Cx6ql
-X-Gm-Gg: AZuq6aKcUBV3wLlfUtbNM27tG6r3F1/Hn2EOzKn5MRgkloJficc5YwUX+sTGypPT+ka
-	6CmadFk6byomh5iLi1XkAfWGI+m+tLji9+jVhRH4k2K6Ih2+4+L/3GXSS4rHx8d+WdvRFMwjdMu
-	8ud+e8ZZpwxwoaPWJqJM0wlAMVtTp+FLJp8ZJQaaIyc3hm/v0OcjvNlt+mt0ZQIBBAtzWGXT4Q2
-	tmztMsZgYFX4wsNDVoVfc0yPCer7yT2t4HskQKY6p2sq2f/rMvoJXwSJVWAMs9JtFNsrTRm4gkb
-	YAawIcVEC7M6IunwCjUr8N5mKa+O8u6UKYkxnCZHoeGph1LdM/2YcEvuaC7XyhkGvYkK+ZBLdsc
-	X7nRxFmVAhK4=
-X-Received: by 2002:a05:600d:6445:20b0:483:abeb:7a5c with SMTP id 5b1f17b1804b1-483abeb7b61mr97766905e9.12.1771870335615;
-        Mon, 23 Feb 2026 10:12:15 -0800 (PST)
-X-Received: by 2002:a05:600d:6445:20b0:483:abeb:7a5c with SMTP id 5b1f17b1804b1-483abeb7b61mr97766435e9.12.1771870335063;
-        Mon, 23 Feb 2026 10:12:15 -0800 (PST)
+        bh=5ifqmgc0Bd/dYXqGP8nteQfhBSpKJvq3ZUBjnYwveQk=;
+        b=vpLKg6pg1c6H6Xkc8uQ0fnVUI/vEI6kL7DxL5pVIhb+47RLYPY3tsmMZ0GEi2AIgEX
+         19FCWrcF7BkCFFvjmZeOlx0tDcviq1Pss6yn49j4hZNbXUUqIjbqFBKMUYYdA7hRsZ/9
+         j6gjq1CPsC8c8jomvo1CUG57uXJHjkFaMPcUdLZA46hdMrpyFku/jUrbSrroKRplmRW4
+         bQiqE5pzyPHklPYR6gLf0Otk9yybyL2uO+VqZ28mzwJPq4xVMFKNej+R5yk1M9KBuDeK
+         +ouIk2RiaHDScyNf07ivx5F+ISer8jgSUnwP2vMm5qEWpOEzZ8JViRMdnjPcAlpKkrjp
+         UNqw==
+X-Forwarded-Encrypted: i=1; AJvYcCVawgddYlaSRtBM7JFmvVIofBPNkBlMONJBxMtJFYKVdna6CPwiEQ2PcThLGaxOgs5gIFzwSY9lLwE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJAb4b4pqnVukUQtyulvRxlXDISrEwLUQxodsXdRgLwv6q2H/g
+	K6Y5bgHH5M4QqZM6U9lFJSjnsC1wrAz3sPhzomfQJChwrUhDcxhIvtVfRJkwRPFn5kGmL4F+t3S
+	4oRlrq3egqLaAWFeMdDEdnmZ7BuqAjnLrGtUKprK+AZv6a34R/EhKdvQDtbNA
+X-Gm-Gg: ATEYQzyyY6hUeKzm4eoKtYQAT/60YofLTrr34wkQ0bG77sn/jrNIoDAfdhDpGCG+SJy
+	EWgDnoxI18IuKDoLMwqd6MEVZsXbFZuUWUYBO68Z39wgAM7JKPXoSFkQZJp8z5l83FJo1F+FiEE
+	iK1Z/M5LzEmHODJLV6YxOd39czoaModtnT7+TI284fZgk0b4ESUu+/Rc/NjjJN524zp0HTw4Ezm
+	H93uOm6gvNtxhlftpRPX0dmEzm4bY+R3Ay3B+qQSIMvUKUFa3pWGxGzG/5lam7gWN6BSXRUGDe0
+	1Lwifaapqmhh7MeKoPiS4Jr9Z2tGprnWZdGSjGBpC/HJWxaYFmu5bsoIk9hQgyUhD8Gc+6lGiq4
+	Z8ZhdKF7comw=
+X-Received: by 2002:a05:6000:2301:b0:435:a501:359 with SMTP id ffacd0b85a97d-4396f18a666mr17997606f8f.41.1771870760132;
+        Mon, 23 Feb 2026 10:19:20 -0800 (PST)
+X-Received: by 2002:a05:6000:2301:b0:435:a501:359 with SMTP id ffacd0b85a97d-4396f18a666mr17997554f8f.41.1771870759664;
+        Mon, 23 Feb 2026 10:19:19 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-483a430a33esm113087605e9.32.2026.02.23.10.12.14
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43970c08b9csm23518931f8f.16.2026.02.23.10.19.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Feb 2026 10:12:14 -0800 (PST)
-Date: Mon, 23 Feb 2026 19:12:13 +0100
+        Mon, 23 Feb 2026 10:19:19 -0800 (PST)
+Date: Mon, 23 Feb 2026 19:19:18 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
 	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH v3 34/35] xfs: add fsverity traces
-Message-ID: <ttfypsjh7cjab5o6wjvfjd4oj36wruigwqdttt35kdvnfptmex@2owry54j747a>
+Subject: Re: [PATCH v3 33/35] xfs: introduce health state for corrupted
+ fsverity metadata
+Message-ID: <zv5rshpef3fti4ldwhfcaekmjjzcwtxr3fgtabwyufkhcn4gvw@uk4ojtvmxquc>
 References: <20260217231937.1183679-1-aalbersh@kernel.org>
- <20260217231937.1183679-35-aalbersh@kernel.org>
- <20260219173610.GM6490@frogsfrogsfrogs>
+ <20260217231937.1183679-34-aalbersh@kernel.org>
+ <20260219173427.GL6490@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -93,37 +94,130 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260219173610.GM6490@frogsfrogsfrogs>
+In-Reply-To: <20260219173427.GL6490@frogsfrogsfrogs>
 
-On 2026-02-19 09:36:10, Darrick J. Wong wrote:
-> > +TRACE_EVENT(xfs_fsverity_get_descriptor,
-> > +	TP_PROTO(struct xfs_inode *ip),
-> > +	TP_ARGS(ip),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_ino_t, ino)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> > +		__entry->ino = ip->i_ino;
-> > +	),
-> > +	TP_printk("dev %d:%d ino 0x%llx",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->ino)
-> > +);
-> > +
-> > +DECLARE_EVENT_CLASS(xfs_fsverity_class,
-> > +	TP_PROTO(struct xfs_inode *ip, u64 pos, unsigned int length),
+On 2026-02-19 09:34:27, Darrick J. Wong wrote:
+> On Wed, Feb 18, 2026 at 12:19:33AM +0100, Andrey Albershteyn wrote:
+> > Report corrupted fsverity descriptor through health system.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > 
-> I wonder if @length ought to be size_t instead of unsigned int?
-> Probably doesn't matter at this point, fsverity isn't going to send huge
-> multigigabyte IOs.
+> Looks good to me, though I'll have to revisit this with a sharper eye
+> for what happens if/when you rebase to use fserror_*.
+> 
+> IIRC inconsistencies between the merkle tree and the file data are
+> reported as -EIO, right?
 
-I will update it
+iomap reports -EIO on the file data read, and fsverity_verify_bio()
+will report block size failure with fserror_report_data_lost().
 
+> And at that point we have the file range
+> information, so we could actually use fserror_report_data_lost.
+> 
+> I forget, what do we do for inconsistencies between an internal node of
+> the merkle tree and the next level down?  That sounds like something
+> that should set XFS_SICK_INO_FSVERITY, right?
+
+It's done by fsverity itself in verify_data_block() and will be
+reported with fserror_report_data_lost().
+
+> For this bit involving just the fsverity descriptor,
 > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 Thanks!
+
+> 
+> --D
+> 
+> > ---
+> >  fs/xfs/libxfs/xfs_fs.h     |  1 +
+> >  fs/xfs/libxfs/xfs_health.h |  4 +++-
+> >  fs/xfs/xfs_fsverity.c      | 13 ++++++++++---
+> >  fs/xfs/xfs_health.c        |  1 +
+> >  4 files changed, 15 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index 36a87276f0b7..d8be7fe93382 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -423,6 +423,7 @@ struct xfs_bulkstat {
+> >  #define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
+> >  #define XFS_BS_SICK_DIRTREE	(1 << 8)  /* directory tree structure */
+> >  #define XFS_BS_SICK_DATA	(1 << 9)  /* file data */
+> > +#define XFS_BS_SICK_FSVERITY	(1 << 10) /* fsverity metadata */
+> >  
+> >  /*
+> >   * Project quota id helpers (previously projid was 16bit only
+> > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+> > index fa91916ad072..c534aacf3199 100644
+> > --- a/fs/xfs/libxfs/xfs_health.h
+> > +++ b/fs/xfs/libxfs/xfs_health.h
+> > @@ -105,6 +105,7 @@ struct xfs_rtgroup;
+> >  #define XFS_SICK_INO_FORGET	(1 << 12)
+> >  #define XFS_SICK_INO_DIRTREE	(1 << 13)  /* directory tree structure */
+> >  #define XFS_SICK_INO_DATA	(1 << 14)  /* file data */
+> > +#define XFS_SICK_INO_FSVERITY	(1 << 15)  /* fsverity metadata */
+> >  
+> >  /* Primary evidence of health problems in a given group. */
+> >  #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+> > @@ -142,7 +143,8 @@ struct xfs_rtgroup;
+> >  				 XFS_SICK_INO_SYMLINK | \
+> >  				 XFS_SICK_INO_PARENT | \
+> >  				 XFS_SICK_INO_DIRTREE | \
+> > -				 XFS_SICK_INO_DATA)
+> > +				 XFS_SICK_INO_DATA | \
+> > +				 XFS_SICK_INO_FSVERITY)
+> >  
+> >  #define XFS_SICK_INO_ZAPPED	(XFS_SICK_INO_BMBTD_ZAPPED | \
+> >  				 XFS_SICK_INO_BMBTA_ZAPPED | \
+> > diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+> > index 5a2874236c3c..d89512d59328 100644
+> > --- a/fs/xfs/xfs_fsverity.c
+> > +++ b/fs/xfs/xfs_fsverity.c
+> > @@ -197,16 +197,23 @@ xfs_fsverity_get_descriptor(
+> >  		return error;
+> >  
+> >  	desc_size = be32_to_cpu(d_desc_size);
+> > -	if (XFS_IS_CORRUPT(mp, desc_size > FS_VERITY_MAX_DESCRIPTOR_SIZE))
+> > +	if (XFS_IS_CORRUPT(mp, desc_size > FS_VERITY_MAX_DESCRIPTOR_SIZE)) {
+> > +		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+> >  		return -ERANGE;
+> > -	if (XFS_IS_CORRUPT(mp, desc_size > desc_size_pos))
+> > +	}
+> > +
+> > +	if (XFS_IS_CORRUPT(mp, desc_size > desc_size_pos)) {
+> > +		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+> >  		return -ERANGE;
+> > +	}
+> >  
+> >  	if (!buf_size)
+> >  		return desc_size;
+> >  
+> > -	if (XFS_IS_CORRUPT(mp, desc_size > buf_size))
+> > +	if (XFS_IS_CORRUPT(mp, desc_size > buf_size)) {
+> > +		xfs_inode_mark_sick(XFS_I(inode), XFS_SICK_INO_FSVERITY);
+> >  		return -ERANGE;
+> > +	}
+> >  
+> >  	desc_pos = round_down(desc_size_pos - desc_size, blocksize);
+> >  	error = xfs_fsverity_read(inode, buf, desc_size, desc_pos);
+> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > index b851651c02b2..e52ee02f7d7c 100644
+> > --- a/fs/xfs/xfs_health.c
+> > +++ b/fs/xfs/xfs_health.c
+> > @@ -488,6 +488,7 @@ static const struct ioctl_sick_map ino_map[] = {
+> >  	{ XFS_SICK_INO_SYMLINK_ZAPPED,	XFS_BS_SICK_SYMLINK },
+> >  	{ XFS_SICK_INO_DIRTREE,	XFS_BS_SICK_DIRTREE },
+> >  	{ XFS_SICK_INO_DATA,	XFS_BS_SICK_DATA },
+> > +	{ XFS_SICK_INO_FSVERITY,	XFS_BS_SICK_FSVERITY },
+> >  };
+> >  
+> >  /* Fill out bulkstat health info. */
+> > -- 
+> > 2.51.2
+> > 
+> > 
+> 
 
 -- 
 - Andrey
