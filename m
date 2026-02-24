@@ -1,36 +1,48 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48C0C3A1A33;
-	Tue, 24 Feb 2026 15:04:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0B93A1E9E
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 15:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771945448; cv=none; b=gFwSU8enW2Qfr2F2xkMbpyQOcgKQWlmVLVzUsWRStVyMnb+uOjRg+sLvgu0hrnfWbq0bX2jfZxV1cSSaS2w/zpVLEE25+xs8p732uu/YcrYd3/LEDN/qfg2sfbo8qwj3NC2XZhltjUZGdKelcNSSGfDXECsP5UGUcHThm37vC/I=
+	t=1771946722; cv=none; b=uDXdNpJa2fLBF6YlBsgTfjfWyX+9hNMd5lxVHMhgkPhX0Tw8sMvpwy/ZYd6nvx8Y75A5FC0ju1TIxylDbkmMPy9lSG/a0Prq1hEBI1f/FbNM07uqWbyfpR6TsfuZwN4Ck1i9DACm55ezXoXnc3XHP1ZQP8K4UR9Z36kXQhc37JY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771945448; c=relaxed/simple;
-	bh=rWFO8CZOotuLVmwufovMRUQplJCgF3XyPfme8d4XwBw=;
+	s=arc-20240116; t=1771946722; c=relaxed/simple;
+	bh=y1Td8ktXwoJSPrRKZ0fP2h6lcagQl30y0VXis8wxycM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pjBi89Ymh1A+Lb5b+SpRnN86JYWR+pf6MdbsN/WAToqIToOX5/7JD3GadM6YDXoD0sPkoDWgoID6Th6//6y2qKL+lQzei3B4/njboKtZ0GPp757F6lQQp/fUtJBbvEbcEEk59hFWv6XUNann+U2HctwA3AhprFc1Z28JZiXwWJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9F58568AFE; Tue, 24 Feb 2026 16:04:01 +0100 (CET)
-Date: Tue, 24 Feb 2026 16:04:01 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-	lsf-pc@lists.linux-foundation.org,
-	Andres Freund <andres@anarazel.de>, djwong@kernel.org,
-	john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com,
-	jack@suse.cz, ojaswin@linux.ibm.com,
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com,
-	Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com,
-	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <20260224150401.GA14612@lst.de>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev> <sjuplc6ud6ym3qyn7qmhzpr3jzjxpf6wcza3s2cenvmwwibbxr@aorfpiuxf7qy> <20260220151050.GA14064@lst.de> <rn5qoix7rattqns5ut7q6wmasjm4x3usfbh5x4e7yg22fzpiqt@744cbmehelmt>
+	 Content-Type:Content-Disposition:In-Reply-To; b=ag/pMJS5bWWnZzD+e4tAA03crhmzqn9pNECqMhFf33C4bWxPpcL0QFSvc5zcshAwCIK2q3UAVJNOIO9eIBz55VPperxrkWZfuOJN0MEs2iWqGkGqiV/PUhuumOKugoC7rMJNS3siFmadREiaT8zW2O7ys+61HnaG1eAwcNaTTHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=U997oiXo; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="U997oiXo"
+Received: from macsyma.thunk.org (pool-173-48-111-182.bstnma.fios.verizon.net [173.48.111.182])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 61OFOqSx010759
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Feb 2026 10:24:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1771946694; bh=xDSAnXoB9ejN/bLi5BfMqVBcp3Wg5UbG7Pg4difgCEo=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=U997oiXoilh/FS+HP/sc9+AhvTSPm0sBVkyHybp7gSa3iwBR/F0vHIr9gMl1tvktL
+	 geUmnMAjAkBOiWEs0omBnR23bwxfTcKdEFoorNTnzCi2IANakgSzfbDF1IZtx1UAXD
+	 F463L33LgFV/nTPaE90lpwOv4t5pO1N3CMCqURjK5IyTc0SZGaQocu9PBIirS2jT2B
+	 38WkzQSpSshgvUurqCVerpzXVYQ7WTTmiaoofZbkU+I979He89eQrXvo8HWtaqBM7X
+	 9A7bqjC2LHLFwYamCJdTBTMqvXLae972b2/zlSPQXb+TTvh45vFdLkHokDvoOLYd8n
+	 XbqE2fwiJvdUw==
+Received: by macsyma.thunk.org (Postfix, from userid 15806)
+	id EDB4759B421E; Tue, 24 Feb 2026 10:24:51 -0500 (EST)
+Date: Tue, 24 Feb 2026 10:24:51 -0500
+From: "Theodore Tso" <tytso@mit.edu>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fsverity: add dependency on 64K or smaller pages
+Message-ID: <20260224152451.GB16846@macsyma-wired.lan>
+References: <20260221204525.30426-1-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,15 +51,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <rn5qoix7rattqns5ut7q6wmasjm4x3usfbh5x4e7yg22fzpiqt@744cbmehelmt>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260221204525.30426-1-ebiggers@kernel.org>
 
-On Tue, Feb 24, 2026 at 01:09:58PM +0000, Pankaj Raghav (Samsung) wrote:
-> As you replied, either direct IO or writethrough semantics might be the way
-> forward. That is why I mentioned the first step is to do a prototype of
-> writethrough and see if adding atomic support on top will make sense for
-> the buffered IO path.
+On Sat, Feb 21, 2026 at 12:45:25PM -0800, Eric Biggers wrote:
+> Currently, all filesystems that support fsverity (ext4, f2fs, and btrfs)
+> cache the Merkle tree in the pagecache at a 64K aligned offset after the
+> end of the file data.  This offset needs to be a multiple of the page
+> size, which is guaranteed only when the page size is 64K or smaller.
+> 
+> 64K was chosen to be the "largest reasonable page size".  But it isn't
+> the largest *possible* page size: the hexagon and powerpc ports of Linux
+> support 256K pages, though that configuration is rarely used.
+> 
+> For now, just disable support for FS_VERITY in these odd configurations
+> to ensure it isn't used in cases where it would have incorrect behavior.
+> 
+> Fixes: 671e67b47e9f ("fs-verity: add Kconfig and the helper functions for hashing")
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Closes: https://lore.kernel.org/r/20260119063349.GA643@lst.de
+> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
 
-Yes.  And even without addin explicit writethrough semantics, this
-is almost guaranteed to be a win for O_(D)SYNC.
-
+Reviewed-by: Theodore Ts'o <tytso@mit.edu>
