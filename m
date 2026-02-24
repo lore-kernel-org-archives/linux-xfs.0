@@ -1,45 +1,88 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8B737D11B
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 13:10:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0D039E19C
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 13:55:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771938609; cv=none; b=DzGE04yB/IJhLmnZlKfhjNYZVPtc3VIBMGxz2dsAHRelGvey11fabadJ3ZYnZoK/nA94m4HlQHMFGRMgAU2tcUQ63ejpkWbHoLuHDeJxdR7uHKJ0ObFZZN4AT/FjE6gRZyzYcp+m7j4zQe5mL6XVNMeWA47Kj1ueA5egNLQcnXY=
+	t=1771941314; cv=none; b=T3h7AccB68CNCScuktBxASS31FT3owIflo7rp+fdk0z8JTjhRrD/Fcoi0hauluG1NVJgvUHyyi1Ofll4RRDWAZLoNE/LYS61RjcLsyT8Ok4qY5sgeKFjGEscwpkn2czftNbWE52vtVecVMWqgkeVOrQ1LduOX/PVV8aTAwRhXT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771938609; c=relaxed/simple;
-	bh=KRyQEqdx9nDxD05wNjoY0C4vqHurq7T/UtjpGKJqkio=;
+	s=arc-20240116; t=1771941314; c=relaxed/simple;
+	bh=Y83YN3Z+oLSinJ7NVQEsEsHz/fpDH/jnmePEQ8Rq+M4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sSR4oPe4R9OzymDDlYyF5kquuW3xLGSlDVKOxupZXCfCdvvrh66vAa1yJgVPGv121tRO+bhMg5KlAbmDK8j02HDsUoVaNNGD8u7suF0uVrz9SOUKK9ohrQ4ZwqtfHTAgxVehu1Z178/agyYL7x25lgWSjgUJmhO43hHFOcAFEqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vBUnboDs; arc=none smtp.client-ip=91.218.175.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=SeM9q3NNzFFcvyDamtK3qJvSM6wXGqV3HPdbBjGcYnAFE0nr9Zh/tN6GRhayc7bzkXac4GN8FSvWk/gxuEgb9rgnhcgVOY5Jqo9D50QkB98KFMP+87Orqcv2rL9pa0CpMpIsOdCatK0DipYupLN6B02LVwZ/RZT0a897MJaw1wc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=MT1kUN+g; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6EFemYbm; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=MT1kUN+g; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6EFemYbm; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vBUnboDs"
-Date: Tue, 24 Feb 2026 13:09:58 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771938605;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MT1kUN+g";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6EFemYbm";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MT1kUN+g";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6EFemYbm"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 013293F251;
+	Tue, 24 Feb 2026 13:55:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1771941309;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=iHmLfEoIM1CK3zmKD5Au1dNJD5+SaRgc7xYd5V7yZqE=;
-	b=vBUnboDszDrSTC7QiGdYqXIqUsnhzZtkBEA7USdkiADpAfHtm6T9DfjxqFbBXytJE/L6tf
-	VArkOf8r/dQ6ACwRXGLIXwSKcO5/2Ce6K7WlXo7QHh9xSLKOPcT0T9ZXHVvQDlVPSJhahv
-	JWl83yCyyqPB8h4ZtUK0L5NzrygQuY4=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, 
-	Andres Freund <andres@anarazel.de>, djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, 
-	ritesh.list@gmail.com, jack@suse.cz, ojaswin@linux.ibm.com, 
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
-	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <rn5qoix7rattqns5ut7q6wmasjm4x3usfbh5x4e7yg22fzpiqt@744cbmehelmt>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
- <sjuplc6ud6ym3qyn7qmhzpr3jzjxpf6wcza3s2cenvmwwibbxr@aorfpiuxf7qy>
- <20260220151050.GA14064@lst.de>
+	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
+	b=MT1kUN+gGMsCoUB7Gjf+X+6FRCA4P14szw92f6JxsRV9UMCUBkcWJ/9jC42VOyxmQsQ3Ps
+	iQZMh7ZKItwreVqdT0dkT/MVXaUQUyAzinPYWwXqVuomUEFjzWu09pIxdXe6uVgKTQ9nuj
+	huY1D4lmsDtGpbQaHXgiCDySZqFGOhw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1771941309;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
+	b=6EFemYbm6sEj3mrcQ6sGZxLXHy3au4fcdkZjOBJZG/c8rQEr1EOhkmXX1kXnTMf41r2YMZ
+	ZGAmaWkNO5ITBFBQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=MT1kUN+g;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=6EFemYbm
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1771941309;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
+	b=MT1kUN+gGMsCoUB7Gjf+X+6FRCA4P14szw92f6JxsRV9UMCUBkcWJ/9jC42VOyxmQsQ3Ps
+	iQZMh7ZKItwreVqdT0dkT/MVXaUQUyAzinPYWwXqVuomUEFjzWu09pIxdXe6uVgKTQ9nuj
+	huY1D4lmsDtGpbQaHXgiCDySZqFGOhw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1771941309;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
+	b=6EFemYbm6sEj3mrcQ6sGZxLXHy3au4fcdkZjOBJZG/c8rQEr1EOhkmXX1kXnTMf41r2YMZ
+	ZGAmaWkNO5ITBFBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CB6473EA68;
+	Tue, 24 Feb 2026 13:55:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 6HV7MbytnWkuJwAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Tue, 24 Feb 2026 13:55:08 +0000
+Date: Tue, 24 Feb 2026 14:55:07 +0100
+From: David Sterba <dsterba@suse.cz>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fsverity: add dependency on 64K or smaller pages
+Message-ID: <20260224135507.GT26902@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20260221204525.30426-1-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,39 +91,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260220151050.GA14064@lst.de>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20260221204525.30426-1-ebiggers@kernel.org>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.21 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Rspamd-Queue-Id: 013293F251
+X-Spam-Flag: NO
+X-Spam-Score: -4.21
+X-Spam-Level: 
 
-On Fri, Feb 20, 2026 at 04:10:50PM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 20, 2026 at 10:08:26AM +0000, Pankaj Raghav (Samsung) wrote:
-> > On Fri, Feb 13, 2026 at 11:20:36AM +0100, Pankaj Raghav wrote:
-> > > Hi all,
-> > > 
-> > > Atomic (untorn) writes for Direct I/O have successfully landed in kernel
-> > > for ext4 and XFS[1][2]. However, extending this support to Buffered I/O
-> > > remains a contentious topic, with previous discussions often stalling due to
-> > > concerns about complexity versus utility.
-> > > 
-> > 
-> > Hi,
-> > 
-> > Thanks a lot everyone for the input on this topic. I would like to
-> > summarize some of the important points discussed here so that it could
-> > be used as a reference for the talk and RFCs going forward:
-> > 
-> > - There is a general consensus to add atomic support to buffered IO
-> >   path.
+On Sat, Feb 21, 2026 at 12:45:25PM -0800, Eric Biggers wrote:
+> Currently, all filesystems that support fsverity (ext4, f2fs, and btrfs)
+> cache the Merkle tree in the pagecache at a 64K aligned offset after the
+> end of the file data.  This offset needs to be a multiple of the page
+> size, which is guaranteed only when the page size is 64K or smaller.
 > 
-> I don't think that's quite true.
+> 64K was chosen to be the "largest reasonable page size".  But it isn't
+> the largest *possible* page size: the hexagon and powerpc ports of Linux
+> support 256K pages, though that configuration is rarely used.
+> 
+> For now, just disable support for FS_VERITY in these odd configurations
+> to ensure it isn't used in cases where it would have incorrect behavior.
+> 
+> Fixes: 671e67b47e9f ("fs-verity: add Kconfig and the helper functions for hashing")
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Closes: https://lore.kernel.org/r/20260119063349.GA643@lst.de
+> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+> ---
+>  fs/verity/Kconfig | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/fs/verity/Kconfig b/fs/verity/Kconfig
+> index 76d1c5971b82..b20882963ffb 100644
+> --- a/fs/verity/Kconfig
+> +++ b/fs/verity/Kconfig
+> @@ -1,9 +1,12 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  
+>  config FS_VERITY
+>  	bool "FS Verity (read-only file-based authenticity protection)"
+> +	# Filesystems cache the Merkle tree at a 64K aligned offset in the
+> +	# pagecache.  That approach assumes the page size is at most 64K.
+> +	depends on PAGE_SHIFT <= 16
 
-Ok, s/consensus/some consensus/ :). I do get your concern that buffered
-IO might not be a good fit for doing atomic IO operation (I also
-mentioned that in the proposal).
-
-As you replied, either direct IO or writethrough semantics might be the way
-forward. That is why I mentioned the first step is to do a prototype of
-writethrough and see if adding atomic support on top will make sense for
-the buffered IO path.
-
--- 
-Pankaj
+Makes sense to me, we have "depends on PAGE_SIZE_LESS_THAN_256KB" since
+somebody tried to use btrfs on the 256K system.
