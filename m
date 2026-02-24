@@ -1,122 +1,162 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E16CF369211
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 08:55:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73E0925785D
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 11:39:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771923307; cv=none; b=OuiamC1/gIyq3QtVjk5qCPHxtxsqIk9XJ37kxl/HjC38vUcU3+ac0oLTYQsMV3dE3KYVnrOLodqaINiUvSIlvWVRBeFneo0SSwH8KoRZQhIwfDzX7P9AsJRJ+S2mFriXfiumRtN/QL8QrcqpmUNoPCSxGc20EIWYXBgxS58i2y4=
+	t=1771933153; cv=none; b=KGeZfHBsSjzzJvT7Lwpl3ULI9iBwVPwAgTiEqv0qGgJuRBL5NPAhXJYA1tN5+2y0UBy6ESirq50lcxfvHCZO5y8srvJbTDhSF2uTljVcqERhJtaD3pyoauhTa++hBx89UaiqyNyPNMUu7S6nFAflbu+GCzV3aVdBBQeZpFoqdAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771923307; c=relaxed/simple;
-	bh=WdkXRdY3pya96/6gahFL70Y8QYuUJkziwiUDKY2Gu+w=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=Lcoey0w6z8JXVazJ4UsiJx69f1OkRWY42zT1bvpsF0mlr3vquNV5ilvsjmMQgyXlXjnFKhmPrzw/QsK4zJ5QzC6HXG1C9vB1WFkCqRNtOjbw4smt9ZuoghL+jUJazEzGlB+za35vql9GzNt8IKqdGc5mgH5NLrsUTQcLWEjDjPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 35AEE180F24F;
-	Tue, 24 Feb 2026 09:54:59 +0100 (CET)
-Received: from mail.herbolt.com ([172.168.31.10])
-	by mx0.herbolt.com with ESMTPSA
-	id JRXkAmNnnWlshQ4AKEJqOA
-	(envelope-from <lukas@herbolt.com>); Tue, 24 Feb 2026 09:54:59 +0100
+	s=arc-20240116; t=1771933153; c=relaxed/simple;
+	bh=k06t8vpIFoukonS7TZhXZljzYk/vPeAB/hTGMYfQHYo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DRgjDWKr2w5edgN0ebS9mvLOeFSJfYBum4sP4n7phswboasmkOGqThh4aL6aUzH9nkzkVZGV2QwWemzzYk6Biq67+oFDf+fxeGlWqyBFrnH2DDIjvfQkLJtdpd9orU5DPzW7Gw+m9bUMOix4vSQKxGywdkXj5MSUBmiqzztsPMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nUg1ONc+; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nUg1ONc+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFE4CC19422;
+	Tue, 24 Feb 2026 11:39:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771933153;
+	bh=k06t8vpIFoukonS7TZhXZljzYk/vPeAB/hTGMYfQHYo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nUg1ONc+HO60bXioAk4GtzdQSKBcIkYUcrBjtG/dedFkhLijqLg63XCXDQYBn4MNY
+	 VtUQ1oibI7qiE04radlIWR90YBGOabnnF55c48Q51HWgxZd1p9oikABQTG7YU4uSFt
+	 eqZxVBQGIMvHrzrhZdW9MderZWhV4Y8Jd6kqSLJsxIIoKbzZuqBugyqeIM3KyO2xHT
+	 PkEpZEC0642gdV3t8cQTh/QTJUml1309qjSGEg+xKDhqC9b8FRM+MV5Q6ojBKVpnrC
+	 nLGiIuU6iW96Jus1WyNESET3G5hMLJsQuwSlpOqH3DPfF+8wAGWQjWPXaR2zdPc/5a
+	 HXjjwuKAtReXg==
+Date: Tue, 24 Feb 2026 12:39:08 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: samsun1006219@gmail.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/6] xfs: don't report half-built inodes to fserror
+Message-ID: <aZ2NU4-LCIGOgjI9@nidhogg.toxiclabs.cc>
+References: <177145925377.401799.10773940743454980308.stgit@frogsfrogsfrogs>
+ <177145925538.401799.9155847221857034016.stgit@frogsfrogsfrogs>
+ <aZcNva4Ur6WSqyDD@nidhogg.toxiclabs.cc>
+ <20260219220223.GS6490@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 24 Feb 2026 09:54:58 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org
-Subject: Re: [PATCH v9] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-In-Reply-To: <20260223161915.GA2390353@frogsfrogsfrogs>
-References: <20260223091106.296338-2-lukas@herbolt.com>
- <20260223161915.GA2390353@frogsfrogsfrogs>
-Message-ID: <18da9d56003f68d964e8de66d75b1476@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260219220223.GS6490@frogsfrogsfrogs>
 
-On 2026-02-23 17:19, Darrick J. Wong wrote:
-> On Mon, Feb 23, 2026 at 10:11:07AM +0100, Lukas Herbolt wrote:
->> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
->> the unmap write zeroes operation.
->> 
->> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
->> ---
->>  fs/xfs/xfs_bmap_util.c |  5 +++--
->>  fs/xfs/xfs_bmap_util.h |  2 +-
->>  fs/xfs/xfs_file.c      | 39 ++++++++++++++++++++++++++-------------
->>  3 files changed, 30 insertions(+), 16 deletions(-)
->> 
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 2208a720ec3f..0c1b1fa82f8b 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -646,7 +646,8 @@ int
->>  xfs_alloc_file_space(
->>  	struct xfs_inode	*ip,
->>  	xfs_off_t		offset,
->> -	xfs_off_t		len)
->> +	xfs_off_t		len,
->> +	uint32_t		bmapi_flags)
->>  {
->>  	xfs_mount_t		*mp = ip->i_mount;
->>  	xfs_off_t		count;
->> @@ -748,7 +749,7 @@ xfs_alloc_file_space(
->>  		 * will eventually reach the requested range.
->>  		 */
->>  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
->> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
->> +				allocatesize_fsb, bmapi_flags, 0, imapp,
->>  				&nimaps);
->>  		if (error) {
->>  			if (error != -ENOSR)
->> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
->> index c477b3361630..2895cc97a572 100644
->> --- a/fs/xfs/xfs_bmap_util.h
->> +++ b/fs/xfs/xfs_bmap_util.h
->> @@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, 
->> struct xfs_inode *ip,
->> 
->>  /* preallocation and hole punch interface */
->>  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
->> -		xfs_off_t len);
->> +		xfs_off_t len, uint32_t bmapi_flags);
->>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
->>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
->>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
->> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index 7874cf745af3..83c45ada3cc8 100644
->> --- a/fs/xfs/xfs_file.c
->> +++ b/fs/xfs/xfs_file.c
->> @@ -1293,6 +1293,7 @@ xfs_falloc_zero_range(
->>  	unsigned int		blksize = i_blocksize(inode);
->>  	loff_t			new_size = 0;
->>  	int			error;
->> +	uint32_t                bmapi_flags;
->> 
->>  	trace_xfs_zero_file_space(ip);
->> 
->> @@ -1300,18 +1301,27 @@ xfs_falloc_zero_range(
->>  	if (error)
->>  		return error;
->> 
->> -	if (xfs_falloc_force_zero(ip, ac)) {
->> -		error = xfs_zero_range(ip, offset, len, ac, NULL);
->> -	} else {
->> -		error = xfs_free_file_space(ip, offset, len, ac);
+On Thu, Feb 19, 2026 at 02:02:23PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 19, 2026 at 02:21:36PM +0100, Carlos Maiolino wrote:
+> > On Wed, Feb 18, 2026 at 10:02:17PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Sam Sun apparently found a syzbot way to fuzz a filesystem such that
+> > > xfs_iget_cache_miss would free the inode before the fserror code could
+> > > catch up.  Frustratingly he doesn't use the syzbot dashboard so there's
+> > > no C reproducer and not even a full error report, so I'm guessing that:
+> > > 
+> > > Inodes that are being constructed or torn down inside XFS are not
+> > > visible to the VFS.  They should never be reported to fserror.
+> > > Also, any inode that has been freshly allocated in _cache_miss should be
+> > > marked INEW immediately because, well, it's an incompletely constructed
+> > > inode that isn't yet visible to the VFS.
+> > > 
+> > > Reported-by: Sam Sun <samsun1006219@gmail.com>
+> > > Fixes: 5eb4cb18e445d0 ("xfs: convey metadata health events to the health monitor")
+> > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > The change looks ok to me. Would be nice though if we can be sure this
+> > fix the reporter's issue. Any idea if the reporter could reproduce it?
 > 
-> Where did this call to xfs_free_file_space go?  This looks like a
-> behavior change in the classic zero-range behavior.
+> It sounds like syzbot found a reproducer for the reporter, but they will
+> not integrate with Google's syzbot dashboard or stand up their own
+> instance so I can't download it on my own; and they only posted a very
+> large strace so someone would have to turn that into a C program.
+> 
+> This is rude behavior, and egregiously so when the reporter **has an
+> automated fuzzer** that spat out a C program somewhere, but they won't
+> share.
+
+Agreed.
+
+> 
+> > Otherwise pointing this as a fix to a problem we can't be sure has
+> > actually been fixed, sounds misleading at best.
+> 
+> I don't know what to do unless the reporter builds a patched kernel and
+> tests it for us.
+
+Chances are.... we never hear anything else again, but hopefully I'm
+wrong :)
+
+My suggestion would be to leave the Fixes tag off, to avoid stable
+backports that "might not really fix" the problem, but this is a
+suggestion only, I'm ok to have it anyway.
+
+> 
+> > For the fix itself though:
+> > 
+> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Thanks for reviewing.
 > 
 > --D
 > 
-
-Seems I missed the else branch when doing the rebase.
--- 
--lhe
+> > 
+> > > ---
+> > >  fs/xfs/xfs_health.c |    8 ++++++--
+> > >  fs/xfs/xfs_icache.c |    9 ++++++++-
+> > >  2 files changed, 14 insertions(+), 3 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > > index 6475159eb9302c..239b843e83d42a 100644
+> > > --- a/fs/xfs/xfs_health.c
+> > > +++ b/fs/xfs/xfs_health.c
+> > > @@ -316,8 +316,12 @@ xfs_rgno_mark_sick(
+> > >  
+> > >  static inline void xfs_inode_report_fserror(struct xfs_inode *ip)
+> > >  {
+> > > -	/* Report metadata inodes as general filesystem corruption */
+> > > -	if (xfs_is_internal_inode(ip)) {
+> > > +	/*
+> > > +	 * Do not report inodes being constructed or freed, or metadata inodes,
+> > > +	 * to fsnotify.
+> > > +	 */
+> > > +	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIM) ||
+> > > +	    xfs_is_internal_inode(ip)) {
+> > >  		fserror_report_metadata(ip->i_mount->m_super, -EFSCORRUPTED,
+> > >  				GFP_NOFS);
+> > >  		return;
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index dbaab4ae709f9c..f13e55b75d66c4 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -636,6 +636,14 @@ xfs_iget_cache_miss(
+> > >  	if (!ip)
+> > >  		return -ENOMEM;
+> > >  
+> > > +	/*
+> > > +	 * Set XFS_INEW as early as possible so that the health code won't pass
+> > > +	 * the inode to the fserror code if the ondisk inode cannot be loaded.
+> > > +	 * We're going to free the xfs_inode immediately if that happens, which
+> > > +	 * would lead to UAF problems.
+> > > +	 */
+> > > +	xfs_iflags_set(ip, XFS_INEW);
+> > > +
+> > >  	error = xfs_imap(pag, tp, ip->i_ino, &ip->i_imap, flags);
+> > >  	if (error)
+> > >  		goto out_destroy;
+> > > @@ -713,7 +721,6 @@ xfs_iget_cache_miss(
+> > >  	ip->i_udquot = NULL;
+> > >  	ip->i_gdquot = NULL;
+> > >  	ip->i_pdquot = NULL;
+> > > -	xfs_iflags_set(ip, XFS_INEW);
+> > >  
+> > >  	/* insert the new inode */
+> > >  	spin_lock(&pag->pag_ici_lock);
+> > > 
+> > > 
+> > 
+> 
