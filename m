@@ -1,235 +1,176 @@
-Received: from mail-dy1-f171.google.com (mail-dy1-f171.google.com [74.125.82.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9BE41DDE5
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 06:17:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771913867; cv=pass; b=murYM78eORVSwLdBCFp9ymXLZVqQ+8ABKKTiTy/PgNUzPObKCS4RWl0OkzmdqAGtfdRDgMZHUa6ZuwCmX6nx7hHSd436Yn+djqVA+1X8+1pkM/rM0sDmbVZFPg/cer+vRKpyTgLePPkn7z8lfu1U+BH4Yedg0Kjt9/ABSGJPLZc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771913867; c=relaxed/simple;
-	bh=2z0EOhz8K0AmNpyEL7wPeiJNKbnFreiq+QhI1xzR2OA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=LZUz7JDIcoRY5KgFi63znw5ltY4tQNfZeQhDapPSDzKCWFLd7peZ7u87DaESeY2VFSkOVSAA1j786Ke/N9r7yxD2WnJ7hR/jN2w0SM0rMLk0A2R+dUBWKG8gbntCmAySYUduoKZB4hM0zBsyE7XOdpeSgiCj6g4yEU6glhv3gRg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XV1ICedM; arc=pass smtp.client-ip=74.125.82.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6612A13DBA0
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 07:17:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771917459; cv=none; b=APfYOObFkR6sUY03eLPd/M+00m/d5Q8rcF2025F/RBp+zx5RsfkjpI/V8i2qg1UhrisbsFwkgFtEr/TmUZ46v1NzLCFahQvuLsEsf3RNxM7fMWlITuDrRqjiL/r5Mzy2O3ARm2XNfWANjpCFkgkjyacMI7YPnipa78SUMoLnX34=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771917459; c=relaxed/simple;
+	bh=awDSGMLi8gE1Mu1yYIRLuy+ygNXS7LrEgADWQcpzrYs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jrjc54G11iH4CoAA2c4EL7qIpJLQTH0DRAhC4QzmzHzY8mlQEb8taFN3d744MZtrtuA3ebaIARWopIyEXg693WFc/zieUB988LVGztGhyP+ceWu0XGGz4kRiZn7IERJGd6LbyBaFEmxBrNGYPhSxgtxo0VhTZzGJR3vLgdpLfpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BkJxTuel; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PvDxfeu7; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XV1ICedM"
-Received: by mail-dy1-f171.google.com with SMTP id 5a478bee46e88-2b4520f6b32so6269442eec.0
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 22:17:45 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771913865; cv=none;
-        d=google.com; s=arc-20240605;
-        b=JtAX8e01m03zDOkc0EqKljCwM7yeEVe7iR0igoJTSqGgvx4p9tn7GOyDavEp0OLB15
-         rtVpJh9D6KrMxXt6IU8FOl0nVAIc6hyYBjzeXUlGj1jJJePMo6mdxMa/KFctXvxYfBJZ
-         1HmHkKN4lxjfk9f48dnb64dIayRtHvwqtgPxY7yD7FzaK9jW+RXjkVHU7wxmV8PH9v7N
-         JBPGFXD4tLnzM/lPkhb14nj6X6SWGezFvJvD/1ca0oEmRzryofcxM4DXe9V/jq0o59EY
-         QeK0H32heBAQoexMIz3wYff6nDy4aCeygNO7JQdhmxUtb0bZJuDFb51QgCjI86SRcuMJ
-         H5Pg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=uU4DHnIX8mlfZgVmJu6OlaRk4cJhwTjr5L5mCLu2N7w=;
-        fh=pSdrseqNupkxNxqKlXhEMb/2RRkeMT4fn8FFpitvwgI=;
-        b=eXzaaFZSneMdzwT/YjWcf1MvS741Kp6DMdVojM7kdQ2+qRcff+O/y4oIc0EefUKPG4
-         P+pdQRAHGBGrDgN0S21zjG3FO5tI1pVPBE5ZZa6b73wk1Hrb0OkWZK0iKWjljwOrW7ZJ
-         18nmVJAw1N7DR/7+q2jpfaEEksdFgMeeNcuEzslpUvaVDOMs4C5Zkl29bTo5vs0mGg8r
-         zeCfYn2FUapPySzfqGE2eTx62b6Q1wXqG6BtWXoGOUwIpERtHEBElYpqghi1O8+avpli
-         wrmmb3gwvK5zYFqSVdzx1PLXqKU+4VwpzT5tWmexq1V+lwerfdv10EHxzH8ve3MKXmyI
-         UPFw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BkJxTuel";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PvDxfeu7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1771917457;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=6NYu8pY1ouCPtZ2vDY1nZ88AhTeLCns0XORKWdlEN2w=;
+	b=BkJxTuelSloHdWgzwFwvLC/4ggvLo9C+ZgFm18DLrj4Lbi16+DaRVnW+FlLlecUuC3pDt/
+	DzcBkkwEIgzwgI17tagJZgHeU7reRUliAGqpm18oa2+lLE6J4DD3snnEi2jlarI9rv9sB7
+	TUz1c8lfxnCB1klIUZcNvcyiu0WmoYY=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-201-LyOIpRjPMi2rCsI0rr8iow-1; Tue, 24 Feb 2026 02:17:35 -0500
+X-MC-Unique: LyOIpRjPMi2rCsI0rr8iow-1
+X-Mimecast-MFC-AGG-ID: LyOIpRjPMi2rCsI0rr8iow_1771917455
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2a7d7b87977so55332245ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Feb 2026 23:17:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771913865; x=1772518665; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uU4DHnIX8mlfZgVmJu6OlaRk4cJhwTjr5L5mCLu2N7w=;
-        b=XV1ICedM7Z9RgyMAq4GLdw/Z8nR2GE53DWLkszmQT8HVECeHMjSDBMfDW4i8Icyuyc
-         WouAfc8bKQppPSnDOJ5/FMGQ0bBsQY25kmv6LdY9ANDYF7aMcTZydU//p5l8olCkJw9z
-         uw4cQ2DghRnAakI5GCO7ykDwCPo59wkusT661aRIqkIQbIfj/xWWyF+9sGc56NLtppQi
-         TtiHaESZBe9ETJ7q2Habs9AFJILmvLTPMjTtmQuah+ewyXdQK6bT7dzZnjUtR8HjPRc+
-         nSGVXUqoeGsa/J2Tb83Hs8dd5+L++m9HjjAI+sTAmqsTO2+TJzvNq0mLN+aWY/mEAqaQ
-         KOgg==
+        d=redhat.com; s=google; t=1771917454; x=1772522254; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6NYu8pY1ouCPtZ2vDY1nZ88AhTeLCns0XORKWdlEN2w=;
+        b=PvDxfeu7LkqqMUb3W6KdDoirSjEc/vVxy5nR8LZVCPXyX3Lr90VmCimKEYcl2v/h+r
+         oHtAxjIlLAjcBF165dgcRgZt2YBzasoUQF21N+F7X3r3I0a5xzNF5P+i7JynX6EU6HHR
+         uJxbCNJgJ8lJ1RdUV7Zrh5/6F2Q0KIBJ6WWbd9je+/I7rWgJAbvjio/47Z49e0JwuugM
+         gvgvLay5hnYFOjoA15Wb6+Kxfe1xACikjQBKNas0orW3QLSwWz5TvREFRaVBZ19v/Wnd
+         6ZxNbCmgJDR41jGyqU8a66sKspBo8QngpyGQ9afp1YadP1ba4+jcg/GiWE58Ag74bael
+         2bxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771913865; x=1772518665;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=uU4DHnIX8mlfZgVmJu6OlaRk4cJhwTjr5L5mCLu2N7w=;
-        b=qSNbOGbq3wdvW/gDr3iRiEGHqwDrsAojCs/cbhnqi+RyYqfqGx2Kv6um7H2MWTStWL
-         cjBW46PoL/HTMQ4URMULzi444LGkw629VM/NSsOGiY1l9K6HgnqjTgXOFKjYPpQHkP25
-         p8Gju9qxhxhfMR3Rg4LDV2kZpi21IGYB6Ub/zZxt32M3m6uNauMEd2a2jm1VVWZiPe+6
-         x9GbZfvlbPKjTwHIdgnLrER/McfxCLhXfF9xSw127zYevxEeymrO4XafX0Jn74xncG8u
-         CO6nK7JuMjK9ZIcxTCnFG3N4FQpnBhy7o9xJlgEq9FAEQseAu+unF6OYvun83u/P/NL1
-         PiVQ==
-X-Gm-Message-State: AOJu0Yx+PueCTZmyIoB4Jnn8v6AakzPP0Pe/znP4YlFwXJzqT9j8PGMC
-	jnEw5t1bzEQVjpITvGhXLgjYq6FS+K5DcyMLMK5Zij6wTzEDr6nlmacF0NoWr3pgaWPIL2NSN8m
-	mtuqH7QxlyXdXaVQin/ljHqA+8cqRxUcIkLZcToQ=
-X-Gm-Gg: ATEYQzx8JXknCCpjCrKHpZsC5a7yTEZrhC5pTQ45FPaZYjdR/CJTUa1lRg/uDQvW+Ny
-	HLtlDP1luwvONulft5znd4VpZIdODR40Z2J6amPW+3O//Cc0AYeVgT5rKGC3BsfJZkMB1FbX1BZ
-	nGygO4UGoBsS34Xa9jRPy2x958bC7NFLDHdoEYzQk9FS7D6g6VFxjFIBx9uRMNJVTanCpu02s6h
-	cdwQln8r5PFcO8mWQd2A5GwwfsKf4qSNDKIeHcGvPcOlA+gf6b7O6oJuF0LQkO4QeyF3YN/kSaQ
-	YOJhzWFSIXfG9SSU
-X-Received: by 2002:a05:7301:678e:b0:2b7:a27f:3a6a with SMTP id
- 5a478bee46e88-2bd7b9d9844mr4366057eec.4.1771913864698; Mon, 23 Feb 2026
- 22:17:44 -0800 (PST)
+        d=1e100.net; s=20230601; t=1771917454; x=1772522254;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6NYu8pY1ouCPtZ2vDY1nZ88AhTeLCns0XORKWdlEN2w=;
+        b=FdYN00utxM+c/8ltoBWJNJOrlATRyTUijyEG88IVtZ78R0j61pIirJTyr12G/KBnkB
+         J/AGrfXa/zdWktxuunNXf1G5KmK7YQ418CyyuIb3JU89sbIhtquRnQ32O0uUpwIA5LhU
+         DrcDUW27wLS0s/AnwP09I2XxD62uPSHxxcepW9WLxAzM3umAnloh832Td7SansBahWMX
+         T/g7symGldVpwQLUaIm1tz0vgNNDuoS1hynrWK3eVKm2grafGGZ48Yd4t3E+grQ0Y5Da
+         6nBA88Igmw4k3JMhUoxbXiWwS5xin6hG8+5U1IAxMzlEwhsGTxjnyKTFwhP7ALrEa2/T
+         ckGg==
+X-Gm-Message-State: AOJu0YzLHSqHOX5wZ5pEFzY2awRYqQ9neVSYY/InJx5e61p571UtcEyE
+	4y/eUEGPEfB16WfzJsGBVfsDLZcEAHhSdseydkhkE6j8Z4NXePZuyW2qhrLOX7YgY9XT9ZPxZSl
+	4EpX1MQ/B15KYKhofiG/ltYjNJvKT5p2Js5ShlKMQ9se8kVT24aG6Q7xDZO+YmL/DM5TdaPxQm7
+	7ncYwlZre7BVaAdC4pHo+D9LxxQ3+peqjyMnIxGi5JF+eqiQ==
+X-Gm-Gg: ATEYQzwsP3WHndrdkiC2ffkNx6bLzmQo0UG2ADlAbELlQBi/mdhS4WzTiSirQSGYJ4v
+	LfQNqovt+8kDOUiJmrUHT2CSilvk/BTS2gCbl2vcY61kv+VECIpN5+eUfdg4WtoLJ9XUbE0lXXn
+	xJbZpIdDDaAvOb9BopiZOUFQvist2CVRR4+IWjyk6BSnCAYIoMk4uUpS3Y5mq9/OGa3FU+Zt2rZ
+	AaLI/HlRbidrTvKyi3q/cqJyi9bby6DAVGAnOxgyYDIjvD2IJHhKPLkN8/uth/KBWcnOhAAKkcv
+	GXMMot9RwFtKV8f53ivzTE23GHL51N4ndZFEYBuLViDZmHyXkdFvYBkLpSFO0mMCvvbiIzFyCib
+	Mcyi2L2jdKif4/vgkdJpN/iUhuNfvaq2cow==
+X-Received: by 2002:a17:903:11d2:b0:2aa:e6c8:2c6e with SMTP id d9443c01a7336-2ad7457a8c8mr96669455ad.56.1771917454225;
+        Mon, 23 Feb 2026 23:17:34 -0800 (PST)
+X-Received: by 2002:a17:903:11d2:b0:2aa:e6c8:2c6e with SMTP id d9443c01a7336-2ad7457a8c8mr96669225ad.56.1771917453644;
+        Mon, 23 Feb 2026 23:17:33 -0800 (PST)
+Received: from anathem.redhat.com ([2001:8003:4a36:e700:56b6:ee78:9da2:b58f])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad80907b4csm58720515ad.78.2026.02.23.23.17.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Feb 2026 23:17:32 -0800 (PST)
+From: Donald Douwsma <ddouwsma@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH 0/5] xfsdump, xfsprogs distro builds and DEBUG=
+Date: Tue, 24 Feb 2026 18:17:07 +1100
+Message-ID: <20260224071712.1014075-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAEmTpZGcBvxsMP6Qg4zcUd-D4M9-jmzS=+9ZsY2RemRDTDQcQg@mail.gmail.com>
- <20260223162320.GB2390353@frogsfrogsfrogs> <CAEmTpZFcHCgt_T63zE4pQk4mmyULZ7TfTNqPXDXDfJBma8dj+g@mail.gmail.com>
- <20260223230840.GD2390353@frogsfrogsfrogs>
-In-Reply-To: <20260223230840.GD2390353@frogsfrogsfrogs>
-From: =?UTF-8?B?0JzQsNGA0Log0JrQvtGA0LXQvdCx0LXRgNCz?= <socketpair@gmail.com>
-Date: Tue, 24 Feb 2026 11:17:33 +0500
-X-Gm-Features: AaiRm53nsEobfStMKFp3GrS-Qo8KUxykQiyF_8uJvf0uLq8qCz-IKpLNHjV8idc
-Message-ID: <CAEmTpZFxZP2K3QDOFnoKXMKZP7pKzLu_aHZpM-wkvC68Lt7UZA@mail.gmail.com>
-Subject: Re: [RFE] xfs_growfs: option to clamp growth to an AG boundary
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-=D0=B2=D1=82, 24 =D1=84=D0=B5=D0=B2=D1=80. 2026=E2=80=AF=D0=B3. =D0=B2 04:0=
-8, Darrick J. Wong <djwong@kernel.org>:
->
-> On Tue, Feb 24, 2026 at 12:29:49AM +0500, =D0=9C=D0=B0=D1=80=D0=BA =D0=9A=
-=D0=BE=D1=80=D0=B5=D0=BD=D0=B1=D0=B5=D1=80=D0=B3 wrote:
-> > ```
-> > cp: failed to clone
-> > '/run/ideco-overlay-dir/ideco-trash-o4ut52ue/upperdir/var/lib/clickhous=
-e/store/e2b/e2bdef56-6be8-40bf-8fab-d8fb2e9fdd94/90-20250905_11925_11925_0/=
-primary.cidx'
-> > from '/run/ideco-overlay-dir/storage/ideco-ngfw-19-7-19/upperdir/var/li=
-b/clickhouse/store/e2b/e2bdef56-6be8-40bf-8fab-d8fb2e9fdd94/90-20250905_119=
-25_11925_0/primary.cidx':
-> > No space left on device
->
-> Ah, that.  coreutils seems to think that FICLONE returning ENOSPC is a
-> fatal error.  I wonder if we need to amend the ficlone manpage to state
-> that ENOSPC can happen if there's not enough space in an AG to clone and
-> that the caller might try a regular copy; or just change xfs to return a
-> different errno?
+tldr; Fedora builds with -DDEBUG, is that what folk want or expect?
 
-Possibly. But in my use case, though, I need fast copying without
-additional disk-space consumption, so reflinks are important. I=E2=80=99d
-rather tolerate reduced free space than lose reflink capability.
+We see cases from the field where xfsrestore aborts on an assert(3).
+In each case there's a real problem that needs to be fixed, but these
+problems are preventing folk from restoring their data. With the asserts
+suppressed or removed xfsrestore usually does something sane enough, at
+worst leaving restored content in the orphanage where a user can find
+it.
 
+This was notably seen with the original xfsdump bind mount fix, now
+we're seeing asserts fire during cumulative restores in
+noref_elim_recurse.
 
->
-> --D
->
-> > ```
-> >
-> > In all such cases `xfs_bmap -v  ......` always refer to the last AG.
-> >
-> > # xfs_spaceman -c 'freesp -g' /run/ideco-overlay-dir
-> >         AG    extents     blocks
-> >          0        461    6658463
-> >          1         98    6406298
-> >         .......
-> >         15        125    6638281
-> >         16          1          1   <=3D=3D=3D=3D=3D=3D (!)
-> >
-> > =D0=BF=D0=BD, 23 =D1=84=D0=B5=D0=B2=D1=80. 2026=E2=80=AF=D0=B3. =D0=B2 =
-21:23, Darrick J. Wong <djwong@kernel.org>:
-> > >
-> > > On Mon, Feb 23, 2026 at 02:48:48PM +0500, =D0=9C=D0=B0=D1=80=D0=BA =
-=D0=9A=D0=BE=D1=80=D0=B5=D0=BD=D0=B1=D0=B5=D1=80=D0=B3 wrote:
-> > > > Hi,
-> > > >
-> > > > I ran into an issue after growing an XFS filesystem where the final
-> > > > allocation group (last AG) ended up very small. Most workloads were
-> > > > fine, but large reflink-heavy copies started failing. In my case,
-> > > > copying a ClickHouse data directory with:
-> > > >
-> > > > `cp -a --reflink=3Dalways ...`
-> > > >
-> > > > fails on a filesystem with a tiny last AG. Using --reflink=3Dauto
-> > >
-> > > How does it fail?
-> > >
-> > > --D
-> > >
-> > > > doesn=E2=80=99t help either, because `cp` doesn=E2=80=99t fall back=
- to a non-reflink
-> > > > copy if the reflink attempt fails.
-> > > >
-> > > > To work around this, I had to write scripts that compute a =E2=80=
-=9Csafe=E2=80=9D
-> > > > target size before running xfs_growfs. The alignment I needed is a =
-bit
-> > > > awkward:
-> > > >
-> > > > 1. Round the LV size up to the next multiple of the filesystem AG
-> > > > size, so the grown filesystem ends exactly on an AG boundary (no
-> > > > partial/tiny last AG).
-> > > >
-> > > > 2. Then round the LV size down to the LVM extents size (4 MiB in my
-> > > > case). Rounding up to the LVM granularity can reintroduce a tiny la=
-st
-> > > > AG.
-> > > > If the automatically chosen AG size were aligned to that granularit=
-y,
-> > > > step (2) wouldn=E2=80=99t be necessary.
-> > > >
-> > > > This feels like something xfsprogs could support directly. My propo=
-sals:
-> > > >
-> > > > 1. xfs_growfs: add an option to print an =E2=80=9Coptimal grow targ=
-et size=E2=80=9D:
-> > > > the current(new) block device size rounded **down** to a multiple o=
-f
-> > > > the AG size.
-> > > > A --json output mode would make this easy to consume from scripts.
-> > > >
-> > > > 2. AG size calculation/alignment: when choosing an automatic AG siz=
-e,
-> > > > always round it down to an alignment such as 4 MiB, or (preferably)
-> > > > consider the underlying device/LVM extent size when it can be
-> > > > detected, instead of using a constant.
-> > > >
-> > > > 3. Docs (mkfs + AG sizing): when specifying AG size manually,
-> > > > recommend: choosing filesystem sizing so the final size is an integ=
-er
-> > > > multiple of AG size (i.e., no partial last AG), and aligning the AG
-> > > > size to the underlying allocation granularity (e.g., LVM
-> > > > extent/segment size) when applicable.
-> > > >
-> > > > 4. Docs (xfs_growfs): add a note that it=E2=80=99s highly preferabl=
-e to grow
-> > > > the filesystem in multiples of the existing AG size, to avoid a tin=
-y
-> > > > last AG.
-> > > >
-> > > > 5. Optional grow mode: add a xfs_growfs mode/switch that grows =E2=
-=80=9Cas
-> > > > much as possible=E2=80=9D, but clamps the resulting filesystem size=
- **down**
-> > > > to an AG boundary, and reports how much space is left unused (e.g.,=
- =E2=80=9CX
-> > > > bytes left unallocated to avoid a partial final AG=E2=80=9D).
-> > > >
-> > > > This might sound like a corner case, but it=E2=80=99s easy to hit i=
-n practice
-> > > > when the block device is resized to just arbitrary chosen size then
-> > > > xfs_growfs expands to consume the whole device.
-> > > >
-> > > > Thanks,
-> > > > Mark
-> > > >
-> >
-> >
-> >
-> > --
-> > Segmentation fault
-> >
+  xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
 
+This appears to be caused by a rename to within the tree between restore
+levels, or a combination of modifications during occurring during the
+dump. Fixing it will likely require changes in noref_elim_recurse, or
+tree_post, to ensure elements of the tree are created for these edge
+cases.
 
+But why are we seeing assert(3) active in Fedora based distro builds?
 
---=20
-Segmentation fault
+xfsprogs and xfsdump m4/package_globals.m4 shows builds should default
+to DEBUG and xfsdump doc/INSTALL talks about how to turn off asserts and
+create an optimized build, but only Debian has its build rules in-tree,
+where they set DEBUG=-DNDEBUG.
+
+Building locally on Fedora or similar gets varied results with recent
+Fedora versions building as if DEBUG=-DNDEBUG was set within the realm
+of configure or autoconf, which may be misleading people.
+
+But for Fedora release builds we can see that they're building with
+DEBUG=-DDEBUG resulting in gcc called with -DDEBUG in the build logs.
+
+  https://src.fedoraproject.org/rpms/xfsdump
+  https://kojipkgs.fedoraproject.org//packages/xfsdump/3.2.0/4.fc44/data/logs/x86_64/build.log
+
+  https://src.fedoraproject.org/rpms/xfsprogs
+  https://kojipkgs.fedoraproject.org//packages/xfsprogs/6.18.0/2.fc44/data/logs/x86_64/build.log
+
+I don't think the intention was to have these build as DEBUG, but that
+seems to be the current result. But before I dig into this further can I
+confirm what people think this should do?
+
+The following series is illustrative of the changes to build xfsdump
+cleanly with DEBUG=-DNDEBUG, or the type of downstream workarounds
+required to help end users hitting problems for the status quo.
+
+Don
+
+Donald Douwsma (5):
+  xfsrestore: remove unused variable strctxp
+  annotate variables only used for assert
+  xfsrestore: include TREE_DEBUG all builds
+  xfsrestore: remove failing assert from noref_elim_recurse
+  xfsrestore: assert suppression workaround
+
+ common/drive_minrmt.c    |  5 +--
+ common/drive_scsitape.c  |  5 +--
+ common/drive_simple.c    |  9 ++---
+ common/main.c            |  6 +--
+ common/mlog.c            |  6 +--
+ common/qlock.c           | 18 ++++-----
+ common/ring.c            |  2 +-
+ dump/content.c           |  8 ++--
+ include/config.h.in      |  4 ++
+ man/man8/xfsrestore.8    |  4 ++
+ restore/Makefile         |  6 ++-
+ restore/content.c        | 36 +++++++-----------
+ restore/dirattr.c        |  3 +-
+ restore/getopt.h         |  4 +-
+ restore/inomap.c         |  9 ++---
+ restore/restore_assert.c | 39 +++++++++++++++++++
+ restore/restore_assert.h | 18 +++++++++
+ restore/tree.c           | 82 ++++++++++++++--------------------------
+ restore/win.c            | 24 ++++--------
+ 19 files changed, 148 insertions(+), 140 deletions(-)
+ create mode 100644 restore/restore_assert.c
+ create mode 100644 restore/restore_assert.h
+
+-- 
+2.47.3
+
