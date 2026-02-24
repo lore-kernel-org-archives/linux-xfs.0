@@ -1,164 +1,179 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0D039E19C
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 13:55:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9759F39E194
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Feb 2026 13:59:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771941314; cv=none; b=T3h7AccB68CNCScuktBxASS31FT3owIflo7rp+fdk0z8JTjhRrD/Fcoi0hauluG1NVJgvUHyyi1Ofll4RRDWAZLoNE/LYS61RjcLsyT8Ok4qY5sgeKFjGEscwpkn2czftNbWE52vtVecVMWqgkeVOrQ1LduOX/PVV8aTAwRhXT8=
+	t=1771941592; cv=none; b=rHgKH7CWkdd8Dpm9o23H8ZwMl6fIgLqmdiLtRP5FixheAUP34XWLKPCaesduXESgLLhuH/b1rxEXKHaQal6oIkzOOAzEMkCOlFndP4Poyr6PdWqF/SVDqsGXjqucKBHoNBSKBZaiR13auBNdD77gs6wByZ0vksgWRXf2d1LJF6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771941314; c=relaxed/simple;
-	bh=Y83YN3Z+oLSinJ7NVQEsEsHz/fpDH/jnmePEQ8Rq+M4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SeM9q3NNzFFcvyDamtK3qJvSM6wXGqV3HPdbBjGcYnAFE0nr9Zh/tN6GRhayc7bzkXac4GN8FSvWk/gxuEgb9rgnhcgVOY5Jqo9D50QkB98KFMP+87Orqcv2rL9pa0CpMpIsOdCatK0DipYupLN6B02LVwZ/RZT0a897MJaw1wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=MT1kUN+g; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6EFemYbm; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=MT1kUN+g; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=6EFemYbm; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1771941592; c=relaxed/simple;
+	bh=90IGV3yzq5sMBiIOOmjMy1yyxw0778eEePLVtS4GeLw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NfyBYgHGS0YkuLQm0VUBnc104g0K4ROjg132mfQszUKdE0s+5dqnk2qw0NwOh28rhZc+dGuF8b5EBXLx9K4bMomeZvjmfCmNvsU+YcpmhEQkkdNR8sV0ChLOSf3ArIN+hO1th08et2FFfzdeZQqcJO0tyuYC6G36PeBcjfaLqmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=o3z6/Skd; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MT1kUN+g";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6EFemYbm";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MT1kUN+g";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6EFemYbm"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 013293F251;
-	Tue, 24 Feb 2026 13:55:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1771941309;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
-	b=MT1kUN+gGMsCoUB7Gjf+X+6FRCA4P14szw92f6JxsRV9UMCUBkcWJ/9jC42VOyxmQsQ3Ps
-	iQZMh7ZKItwreVqdT0dkT/MVXaUQUyAzinPYWwXqVuomUEFjzWu09pIxdXe6uVgKTQ9nuj
-	huY1D4lmsDtGpbQaHXgiCDySZqFGOhw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1771941309;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
-	b=6EFemYbm6sEj3mrcQ6sGZxLXHy3au4fcdkZjOBJZG/c8rQEr1EOhkmXX1kXnTMf41r2YMZ
-	ZGAmaWkNO5ITBFBQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=MT1kUN+g;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=6EFemYbm
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1771941309;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
-	b=MT1kUN+gGMsCoUB7Gjf+X+6FRCA4P14szw92f6JxsRV9UMCUBkcWJ/9jC42VOyxmQsQ3Ps
-	iQZMh7ZKItwreVqdT0dkT/MVXaUQUyAzinPYWwXqVuomUEFjzWu09pIxdXe6uVgKTQ9nuj
-	huY1D4lmsDtGpbQaHXgiCDySZqFGOhw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1771941309;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IwteX+3st/BoFz5qXCpVjpTwTwtYXckuDq7ibdYt4EA=;
-	b=6EFemYbm6sEj3mrcQ6sGZxLXHy3au4fcdkZjOBJZG/c8rQEr1EOhkmXX1kXnTMf41r2YMZ
-	ZGAmaWkNO5ITBFBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CB6473EA68;
-	Tue, 24 Feb 2026 13:55:08 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 6HV7MbytnWkuJwAAD6G6ig
-	(envelope-from <dsterba@suse.cz>); Tue, 24 Feb 2026 13:55:08 +0000
-Date: Tue, 24 Feb 2026 14:55:07 +0100
-From: David Sterba <dsterba@suse.cz>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fsverity: add dependency on 64K or smaller pages
-Message-ID: <20260224135507.GT26902@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20260221204525.30426-1-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o3z6/Skd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=NnbfZ1NWNxJfHLx7ZVnEC3FsLQO0RnLRPpJYzV5kIto=; b=o3z6/Skdiir04ekHL7Rvpeg294
+	FKSlHGisIwusojWviF0Bspl2Daj/8gBrv/CRYZzx3qdp8YnV7afdySEVedvDYLnm8Hsz+qZAK1m2y
+	FF8I9UUbavIAjxlXTHdrciQ+oOhLnSHAsjmxMe7fnu2z8oLKoLvVlfnGb6HJW6DcxWKWvD6O8LDLC
+	S8qbb6oIQa+2xBjyKoH2rXbn/2aCNtpFLjLbRLSLMIqNfv5a1rzlXuWZgVnstIpybLnrl/NqqonYp
+	ZyeBrVoycTNGkhWLu7kwlY3Jpn2F3AEUhvoTfYeQB8E3WRkTt+XMxoRTC8PRlxPvA9Br3hc2zdAK7
+	pJauVQAA==;
+Received: from [4.28.11.157] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vuswx-00000002Alh-16IW;
+	Tue, 24 Feb 2026 13:59:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 2/2] xfs: remove metafile inodes from the active inode stat
+Date: Tue, 24 Feb 2026 05:59:36 -0800
+Message-ID: <20260224135942.364932-3-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260224135942.364932-1-hch@lst.de>
+References: <20260224135942.364932-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260221204525.30426-1-ebiggers@kernel.org>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.21 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	HAS_REPLYTO(0.30)[dsterba@suse.cz];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	ARC_NA(0.00)[];
-	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	RCVD_TLS_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Queue-Id: 013293F251
-X-Spam-Flag: NO
-X-Spam-Score: -4.21
-X-Spam-Level: 
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sat, Feb 21, 2026 at 12:45:25PM -0800, Eric Biggers wrote:
-> Currently, all filesystems that support fsverity (ext4, f2fs, and btrfs)
-> cache the Merkle tree in the pagecache at a 64K aligned offset after the
-> end of the file data.  This offset needs to be a multiple of the page
-> size, which is guaranteed only when the page size is 64K or smaller.
-> 
-> 64K was chosen to be the "largest reasonable page size".  But it isn't
-> the largest *possible* page size: the hexagon and powerpc ports of Linux
-> support 256K pages, though that configuration is rarely used.
-> 
-> For now, just disable support for FS_VERITY in these odd configurations
-> to ensure it isn't used in cases where it would have incorrect behavior.
-> 
-> Fixes: 671e67b47e9f ("fs-verity: add Kconfig and the helper functions for hashing")
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Closes: https://lore.kernel.org/r/20260119063349.GA643@lst.de
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> ---
->  fs/verity/Kconfig | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/verity/Kconfig b/fs/verity/Kconfig
-> index 76d1c5971b82..b20882963ffb 100644
-> --- a/fs/verity/Kconfig
-> +++ b/fs/verity/Kconfig
-> @@ -1,9 +1,12 @@
->  # SPDX-License-Identifier: GPL-2.0
->  
->  config FS_VERITY
->  	bool "FS Verity (read-only file-based authenticity protection)"
-> +	# Filesystems cache the Merkle tree at a 64K aligned offset in the
-> +	# pagecache.  That approach assumes the page size is at most 64K.
-> +	depends on PAGE_SHIFT <= 16
+The active inode (or active vnode until recently) stat can get much larger
+than expected on file systems with a lot of metafile inodes like zoned
+file systems on SMR hard disks with 10.000s of rtg rmap inodes.
 
-Makes sense to me, we have "depends on PAGE_SIZE_LESS_THAN_256KB" since
-somebody tried to use btrfs on the 256K system.
+Remove all metafile inodes from the active counter to make it more useful
+to track actual workloads and add a separate counter for active metafile
+inodes.
+
+This fixes xfs/177 on SMR hard drives.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c |  4 ++++
+ fs/xfs/libxfs/xfs_metafile.c  |  5 +++++
+ fs/xfs/xfs_icache.c           |  5 ++++-
+ fs/xfs/xfs_stats.c            | 11 ++++++++---
+ fs/xfs/xfs_stats.h            |  3 ++-
+ 5 files changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index a017016e9075..3794e5412eba 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -268,6 +268,10 @@ xfs_inode_from_disk(
+ 	}
+ 	if (xfs_is_reflink_inode(ip))
+ 		xfs_ifork_init_cow(ip);
++	if (xfs_is_metadir_inode(ip)) {
++		XFS_STATS_DEC(ip->i_mount, xs_inodes_active);
++		XFS_STATS_INC(ip->i_mount, xs_inodes_meta);
++	}
+ 	return 0;
+ 
+ out_destroy_data_fork:
+diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
+index cf239f862212..71f004e9dc64 100644
+--- a/fs/xfs/libxfs/xfs_metafile.c
++++ b/fs/xfs/libxfs/xfs_metafile.c
+@@ -61,6 +61,9 @@ xfs_metafile_set_iflag(
+ 	ip->i_diflags2 |= XFS_DIFLAG2_METADATA;
+ 	ip->i_metatype = metafile_type;
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	XFS_STATS_DEC(ip->i_mount, xs_inodes_active);
++	XFS_STATS_INC(ip->i_mount, xs_inodes_meta);
+ }
+ 
+ /* Clear the metadata directory inode flag. */
+@@ -74,6 +77,8 @@ xfs_metafile_clear_iflag(
+ 
+ 	ip->i_diflags2 &= ~XFS_DIFLAG2_METADATA;
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	XFS_STATS_INC(ip->i_mount, xs_inodes_active);
++	XFS_STATS_DEC(ip->i_mount, xs_inodes_meta);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f76c6decdaa3..f2d4294efd37 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -172,7 +172,10 @@ __xfs_inode_free(
+ 	/* asserts to verify all state is correct here */
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+ 	ASSERT(!ip->i_itemp || list_empty(&ip->i_itemp->ili_item.li_bio_list));
+-	XFS_STATS_DEC(ip->i_mount, xs_inodes_active);
++	if (xfs_is_metadir_inode(ip))
++		XFS_STATS_DEC(ip->i_mount, xs_inodes_meta);
++	else
++		XFS_STATS_DEC(ip->i_mount, xs_inodes_active);
+ 
+ 	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
+ }
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index bc4a5d6dc795..c13d600732c9 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -59,7 +59,8 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 		{ "rtrefcntbt",		xfsstats_offset(xs_qm_dqreclaims)},
+ 		/* we print both series of quota information together */
+ 		{ "qm",			xfsstats_offset(xs_gc_read_calls)},
+-		{ "zoned",		xfsstats_offset(__pad1)},
++		{ "zoned",		xfsstats_offset(xs_inodes_meta)},
++		{ "metafile",		xfsstats_offset(xs_xstrat_bytes)},
+ 	};
+ 
+ 	/* Loop over all stats groups */
+@@ -99,16 +100,20 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 
+ void xfs_stats_clearall(struct xfsstats __percpu *stats)
+ {
++	uint32_t	xs_inodes_active, xs_inodes_meta;
+ 	int		c;
+-	uint32_t	xs_inodes_active;
+ 
+ 	xfs_notice(NULL, "Clearing xfsstats");
+ 	for_each_possible_cpu(c) {
+ 		preempt_disable();
+-		/* save xs_inodes_active, it's a universal truth! */
++		/*
++		 * Save the active / meta inode counters, as they are stateful.
++		 */
+ 		xs_inodes_active = per_cpu_ptr(stats, c)->s.xs_inodes_active;
++		xs_inodes_meta = per_cpu_ptr(stats, c)->s.xs_inodes_meta;
+ 		memset(per_cpu_ptr(stats, c), 0, sizeof(*stats));
+ 		per_cpu_ptr(stats, c)->s.xs_inodes_active = xs_inodes_active;
++		per_cpu_ptr(stats, c)->s.xs_inodes_meta = xs_inodes_meta;
+ 		preempt_enable();
+ 	}
+ }
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index 64bc0cc18126..57c32b86c358 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -142,7 +142,8 @@ struct __xfsstats {
+ 	uint32_t		xs_gc_read_calls;
+ 	uint32_t		xs_gc_write_calls;
+ 	uint32_t		xs_gc_zone_reset_calls;
+-	uint32_t		__pad1;
++/* Metafile counters */
++	uint32_t		xs_inodes_meta;
+ /* Extra precision counters */
+ 	uint64_t		xs_xstrat_bytes;
+ 	uint64_t		xs_write_bytes;
+-- 
+2.47.3
+
