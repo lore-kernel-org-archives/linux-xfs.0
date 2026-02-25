@@ -1,58 +1,180 @@
 Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFFE9311C2F
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Feb 2026 08:21:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5A42DB789
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Feb 2026 08:39:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772007718; cv=none; b=FvKYYDBJf/7XDEF6W+5xCo/WDwlXtW30C49dLNxucGOU26zOAGMQT3lzMXS0wh60qVx+q1P2dt874GhoIEBpvztWM1h9Mkdy6Y9rSdrefH/OAqtyk9sqErCA3T57ULeed+2TFVmr1DrOEzu2/C0s3Cwtpq7lFB8ezHnzGDP+1g4=
+	t=1772008766; cv=none; b=R9EZvUzvw1DHxHjgue/Mqq5L+0jW1eNNdN346O345NEX6htqZk0toOxpuD2soFsJRude70pmSFMln2+Yi6wdDVImXZUnxL2MVdLTgBhGmmkkFKL9223Ef9Gr5w1r9MCW7BNP/cCpwcpRw7oANFHcYFNrLsb4xjuOAmsrLrgw45g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772007718; c=relaxed/simple;
-	bh=yxLKYR+x3rPedx1Pc7QGPLEBb4HWHrP6OpH5qMCI9UM=;
-	h=MIME-Version:Date:From:To:Cc:Subject:Message-ID:Content-Type; b=q2mrMjDnEUolNtnIlw5CSWYvWIw+p9AyaKaUNZZ7/0PH4t1MVt9Aw1IPkgYKzwkXuERw6R1ItRM0fxiPl+u2F1l7D3GT6P6Ox8rvwmTJnlJTtT318KTkqjxHox4w3GoDVMr5ozLPYaz22YVI+kkAvFpTU8uM5Ufq1+4lwxcU9z4=
+	s=arc-20240116; t=1772008766; c=relaxed/simple;
+	bh=5jRIGxEWfltI6fcGFMPw7GooqWbRzey7Hs7D+TlqxEk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WY9cbGxqiG43wqNb2Hu1FrJKIdI0IBMgaU61Gr4LuQsWTEhD14XWsjT9NmwBQzpgCizVNDXWIuanjpUMjOtWi3eQa4WlBWOLohToRWMjhKDx0RnQmGc5hpBgX4Iu3oP4JSJJXKxDPwo2o+GZIBngqMlO5sEyRPc5qamRuQS9vNI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
 Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id DE647180F2E7;
-	Wed, 25 Feb 2026 09:21:42 +0100 (CET)
-Received: from mail.herbolt.com ([172.168.31.10])
+	by mx0.herbolt.com (Postfix) with ESMTP id 74941180F2E7;
+	Wed, 25 Feb 2026 09:39:21 +0100 (CET)
+Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
 	by mx0.herbolt.com with ESMTPSA
-	id 5zuANRaxnmlepA8AKEJqOA
-	(envelope-from <lukas@herbolt.com>); Wed, 25 Feb 2026 09:21:42 +0100
+	id mYE7Fzm1nml/qg8AKEJqOA
+	(envelope-from <lukas@herbolt.com>); Wed, 25 Feb 2026 09:39:21 +0100
+From: Lukas Herbolt <lukas@herbolt.com>
+To: linux-xfs@vger.kernel.org,
+	djwong@kernel.org
+Cc: cem@kernel.org,
+	hch@infradead.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Date: Wed, 25 Feb 2026 09:37:47 +0100
+Message-ID: <20260225083746.580759-2-lukas@herbolt.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Wed, 25 Feb 2026 09:21:42 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: socketpair@gmail.com, Linux Xfs <linux-xfs@vger.kernel.org>
-Subject: [RFE] xfs_growfs: option to clamp growth to an AG boundary
-Reply-To: aZ29iJJF9sGfya1k@infradead.org
-Mail-Reply-To: aZ29iJJF9sGfya1k@infradead.org
-Message-ID: <74e545ca6c3b98c00018f604812853cc@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-> I like your proposal.  This is actually a relatively east project,
-> and I've happy to mentor whomever wants to take it up.  Although
-I like the idea and can take a look at it, but I will leave it to
-the author if they will pick it up.
+Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+the unmap write zeroes operation.
 
-Just for the LVM extent size, LVM does not expose it unless you look
-at the metadata, afaik.
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+---
+ fs/xfs/xfs_bmap_util.c |  5 +++--
+ fs/xfs/xfs_bmap_util.h |  2 +-
+ fs/xfs/xfs_file.c      | 43 +++++++++++++++++++++++++++++-------------
+ 3 files changed, 34 insertions(+), 16 deletions(-)
 
-> I think json output while generally useful is probably a separate
-> issue and should be addressed separately and in a more general
-> fashion.
-
-I guess json output could be also added to mkfs.xfs, xfs_admin (xfs_db)
-
-
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 2208a720ec3f..0c1b1fa82f8b 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -646,7 +646,8 @@ int
+ xfs_alloc_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		len)
++	xfs_off_t		len,
++	uint32_t		bmapi_flags)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+@@ -748,7 +749,7 @@ xfs_alloc_file_space(
+ 		 * will eventually reach the requested range.
+ 		 */
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				allocatesize_fsb, bmapi_flags, 0, imapp,
+ 				&nimaps);
+ 		if (error) {
+ 			if (error != -ENOSR)
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index c477b3361630..2895cc97a572 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 
+ /* preallocation and hole punch interface */
+ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+-		xfs_off_t len);
++		xfs_off_t len, uint32_t bmapi_flags);
+ int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 7874cf745af3..1ba4f449edb3 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1293,6 +1293,7 @@ xfs_falloc_zero_range(
+ 	unsigned int		blksize = i_blocksize(inode);
+ 	loff_t			new_size = 0;
+ 	int			error;
++	uint32_t                bmapi_flags;
+ 
+ 	trace_xfs_zero_file_space(ip);
+ 
+@@ -1300,18 +1301,31 @@ xfs_falloc_zero_range(
+ 	if (error)
+ 		return error;
+ 
+-	if (xfs_falloc_force_zero(ip, ac)) {
+-		error = xfs_zero_range(ip, offset, len, ac, NULL);
+-	} else {
+-		error = xfs_free_file_space(ip, offset, len, ac);
+-		if (error)
+-			return error;
+ 
+-		len = round_up(offset + len, blksize) -
+-			round_down(offset, blksize);
+-		offset = round_down(offset, blksize);
+-		error = xfs_alloc_file_space(ip, offset, len);
++	if (mode & FALLOC_FL_WRITE_ZEROES) {
++		if (xfs_is_always_cow_inode(ip) ||
++		    !bdev_write_zeroes_unmap_sectors(
++				xfs_inode_buftarg(ip)->bt_bdev))
++			return -EOPNOTSUPP;
++		bmapi_flags = XFS_BMAPI_ZERO;
++	} else {
++		if (xfs_falloc_force_zero(ip, ac)) {
++			error = xfs_zero_range(ip, offset, len, ac, NULL);
++			goto set_filesize;
++		} else {
++			error = xfs_free_file_space(ip, offset, len, ac);
++			if (error)
++				return error;
++		}
++		bmapi_flags = XFS_BMAPI_PREALLOC;
+ 	}
++
++	len = round_up(offset + len, blksize) - round_down(offset, blksize);
++	offset = round_down(offset, blksize);
++
++	error = xfs_alloc_file_space(ip, offset, len, bmapi_flags);
++
++set_filesize:
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1336,7 +1350,8 @@ xfs_falloc_unshare_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1364,7 +1379,8 @@ xfs_falloc_allocate_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1374,7 +1390,7 @@ xfs_falloc_allocate_range(
+ 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+ 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+ 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+-		 FALLOC_FL_UNSHARE_RANGE)
++		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 
+ STATIC long
+ __xfs_file_fallocate(
+@@ -1417,6 +1433,7 @@ __xfs_file_fallocate(
+ 	case FALLOC_FL_INSERT_RANGE:
+ 		error = xfs_falloc_insert_range(file, offset, len);
+ 		break;
++	case FALLOC_FL_WRITE_ZEROES:
+ 	case FALLOC_FL_ZERO_RANGE:
+ 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+ 		break;
 -- 
--lhe
+2.53.0
+
