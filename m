@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B338738F936;
-	Wed, 25 Feb 2026 09:38:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B98AE38F259
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Feb 2026 09:38:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772012328; cv=none; b=QMLz7YQcdkojm3Nt6dXgzAcSprudmJ/Vai1pfegMmQe23WdkrzxrOYLksJyvb6acODis3d1kycPFGVQVcsLvQ9wVZ1myxpiRv6r5FERnc3J5s27Fxtx/UGcaLtVDT7cLmC/1eG7DDZ0Bk3jRcQZa1nQ18Akw/9zeCGFo+51r3cA=
+	t=1772012330; cv=none; b=cElGYzLMOZMIb5XvBOLbq+DHOQMGWIeYeX+ropVVNuJOWadkVIX6l4L3MMm+PsV8Xc/KM0DBouClowECE6fP7H2eQhIGIPBN1Zb/Z2D+8t2YAvoRETFNK/P79qnOm0CQfa31Ix4gxmeODGt6keA+im15rf7TTlU0O6xxXaY1kMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772012328; c=relaxed/simple;
-	bh=dCTE1bcKMGWdjpUZDMsqo3eLezXx0QxE7rEzWAHI8eM=;
+	s=arc-20240116; t=1772012330; c=relaxed/simple;
+	bh=p9fbmydOZFIF/TYileGzfQVM4FU5VDdFJJYSDATA0NE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=GLlgvIDwbZNmE2gYpEY6R5oxETxQXOTf4crCdNQsD3XTqsb1TlhjN47nH8PBIzicGzWTIKFZdQ6OhMvdJl8rMLbMq2zm+Jp9+kdWlDpWt7DrLRTRIrUem8DwxGSUFYEtynSedPgG3At2JpmVRyMMiNsOqAPLTz+rfTSGp0O9cpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/UbSjaI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=m70wA1QDDTIvJGRHBhe02P3vszqXCRugX6DQ514hTLT6lSYAejhnGhoKT3IpjnQcYIOTVpRk6WTO6Id2ml6HLfr3yIPjgU5GXMG7ml/GbDo5Gav1P7V+tkKJn3tzM3Myx9DUWmZehwc3kvuJzvhal6xmT4B10qiuugLP0N/i0Q8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CInMVkk+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/UbSjaI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 569ECC116D0;
-	Wed, 25 Feb 2026 09:38:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CInMVkk+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C582DC2BC86;
+	Wed, 25 Feb 2026 09:38:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772012328;
-	bh=dCTE1bcKMGWdjpUZDMsqo3eLezXx0QxE7rEzWAHI8eM=;
+	s=k20201202; t=1772012330;
+	bh=p9fbmydOZFIF/TYileGzfQVM4FU5VDdFJJYSDATA0NE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=R/UbSjaIydsVudpYouIylDhErT62WR61MQqifaGGFoaBTnYnAmGGkEnimNQNUO6Zf
-	 l9MQcwJT1ZbXyUgVFSLtYg4/t1gpyl/PpS8Z0uQqcGdAybY6cBHYP4qpwrFD0TW7HC
-	 2g+YodkSJMdj+Jehf4yI29Uco4g9jE/jIpmVmLgPuOpuhvLP9nxXiGYMgZCWyzZ3p1
-	 05YiPoDoUxCieRVs04lxgDG1i09n7JFa8AgnH+lHpUx61IIFtPFY3sNvibfCJExnKI
-	 yjz5tJ2HSHf9sml0Yil17E4zfi7/JAP/DXDtAH2Qp0xpN8fX80KyTLhFLfMHb0VEAh
-	 KeLO+E/+RYyrQ==
+	b=CInMVkk+sQ9nK2o5f1VvTCPVjkTpDhT+FZhcRFsIpTOKhEGiUMRljV1B9h2C03Vj2
+	 Muy7csAE1sLHYxDXD6ZQULwcDO2/u4RV1nyPTEwLyUPNtTuetHipfWM7pWm3jMFNeE
+	 XECLPdDqcyofH66AeF7ZmGyVuByu4RjR/CN8vPlU40etrcuweko9LR60qQL7Vr0Akj
+	 htqRGPOL1Q9lZCPHrPkkxdQkT0i9hj0jtuoV1WE3SqJv9vxXh2mNCboB0Mdhg6zOqT
+	 6Dfa1v+9Kroxqakpb75y47rqFdgQhr9/D/S+x97gd8bZq858+YY007r9L7uX3wBg82
+	 iJqh1LP3KAH1w==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: clm@meta.com, cmaiolino@redhat.com, hch@lst.de, 
- linux-xfs@vger.kernel.org, p.raghav@samsung.com, pankaj.raghav@linux.dev, 
- samsun1006219@gmail.com, stable@vger.kernel.org
-In-Reply-To: <177189148163.4009522.17296873599093337410.stg-ugh@frogsfrogsfrogs>
-References: <177189148163.4009522.17296873599093337410.stg-ugh@frogsfrogsfrogs>
-Subject: Re: [GIT PULL] xfs: bug fixes for 7.0
-Message-Id: <177201232606.40354.7035859505657512309.b4-ty@kernel.org>
-Date: Wed, 25 Feb 2026 10:38:46 +0100
+To: djwong@kernel.org, hch@infradead.org, 
+ "Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com, 
+ nirjhar.roy.lists@gmail.com
+In-Reply-To: <cover.1771570164.git.nirjhar.roy.lists@gmail.com>
+References: <cover.1771570164.git.nirjhar.roy.lists@gmail.com>
+Subject: Re: [PATCH v4 0/4] xfs: Misc changes to XFS realtime
+Message-Id: <177201232851.40354.5097407504767806979.b4-ty@kernel.org>
+Date: Wed, 25 Feb 2026 10:38:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,21 +46,28 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-
-On Mon, 23 Feb 2026 16:06:00 -0800, Darrick J. Wong wrote:
-> Please pull this branch with changes for xfs for 7.0-rc2.
+On Fri, 20 Feb 2026 12:23:57 +0530, Nirjhar Roy (IBM) wrote:
+> From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
 > 
-> As usual, I did a test-merge with the main upstream branch as of a few
-> minutes ago, and didn't see any conflicts.  Please let me know if you
-> encounter any problems.
+> This series has a bug fix and adds some missing operations to
+> growfs code in the realtime code. Details are in the commit messages.
 > 
-> --D
+> [v3]- v4
+> 1. Added RBs from Darrick patch 1,2,3.
+> 2. Updated the comments in patch 4.
 > 
 > [...]
 
-Merged, thanks!
+Applied to for-next, thanks!
 
-merge commit: 4b7b9e3b5abf42756576a2b5d4d31f4c4ae17880
+[1/4] xfs: Fix xfs_last_rt_bmblock()
+      commit: 5c230c08da92e8b4a4916b9de4bb87521adcba0e
+[2/4] xfs: Add a comment in xfs_log_sb()
+      commit: d93c48bfe3d969d370512f5adbfa29bcb91e020b
+[3/4] xfs: Update lazy counters in xfs_growfs_rt_bmblock()
+      commit: e37c36b26503edcfd8824ed16b256d83b58c2faf
+[4/4] xfs: Add comments for usages of some macros.
+      commit: fddf473b28fb68aefc56959cd86faf3acb5a8621
 
 Best regards,
 -- 
