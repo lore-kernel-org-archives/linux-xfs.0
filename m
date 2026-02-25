@@ -1,34 +1,34 @@
 Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5A42DB789
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Feb 2026 08:39:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CC931CA4A
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Feb 2026 08:39:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772008766; cv=none; b=R9EZvUzvw1DHxHjgue/Mqq5L+0jW1eNNdN346O345NEX6htqZk0toOxpuD2soFsJRude70pmSFMln2+Yi6wdDVImXZUnxL2MVdLTgBhGmmkkFKL9223Ef9Gr5w1r9MCW7BNP/cCpwcpRw7oANFHcYFNrLsb4xjuOAmsrLrgw45g=
+	t=1772008791; cv=none; b=OEV8GdqGvpEsI5IsZI8SKPTKnRUh1GJGcpq6LsGkgE+WxYsN0t13aQ3fG3G+vflHoI7jT/b9I6Urqj33lOoR+AKhZ4LTvmcK7ap1Ag7YVNPiZN/7O68YlqDXNnDICXH4B2aKaxF9J6eXrt08aZSeSYX0YZLCM5tGJqlI/fDxDDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772008766; c=relaxed/simple;
+	s=arc-20240116; t=1772008791; c=relaxed/simple;
 	bh=5jRIGxEWfltI6fcGFMPw7GooqWbRzey7Hs7D+TlqxEk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WY9cbGxqiG43wqNb2Hu1FrJKIdI0IBMgaU61Gr4LuQsWTEhD14XWsjT9NmwBQzpgCizVNDXWIuanjpUMjOtWi3eQa4WlBWOLohToRWMjhKDx0RnQmGc5hpBgX4Iu3oP4JSJJXKxDPwo2o+GZIBngqMlO5sEyRPc5qamRuQS9vNI=
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=csv6i+8yov2gh8s0u0LmvBPbWnTWqIWOUdVNCdE7cg19r3XI3GV+hmcSupoC2du1tFgetYg2t7ydXg7laaTFt+Yx+Yh1L+YWRz6U+Jd3AlEkIG3/BOKMfojgmzzijhcdDjL/SOiom7AeEROtzZUqdEOWO55mc4SKdyngFd13Bk4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
 Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 74941180F2E7;
-	Wed, 25 Feb 2026 09:39:21 +0100 (CET)
+	by mx0.herbolt.com (Postfix) with ESMTP id 32714180F2E7;
+	Wed, 25 Feb 2026 09:39:46 +0100 (CET)
 Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
 	by mx0.herbolt.com with ESMTPSA
-	id mYE7Fzm1nml/qg8AKEJqOA
-	(envelope-from <lukas@herbolt.com>); Wed, 25 Feb 2026 09:39:21 +0100
+	id TgRKCVK1nmmYqg8AKEJqOA
+	(envelope-from <lukas@herbolt.com>); Wed, 25 Feb 2026 09:39:46 +0100
 From: Lukas Herbolt <lukas@herbolt.com>
 To: linux-xfs@vger.kernel.org,
 	djwong@kernel.org
 Cc: cem@kernel.org,
 	hch@infradead.org,
 	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Wed, 25 Feb 2026 09:37:47 +0100
-Message-ID: <20260225083746.580759-2-lukas@herbolt.com>
+Subject: [PATCH v10] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Date: Wed, 25 Feb 2026 09:39:33 +0100
+Message-ID: <20260225083932.580849-2-lukas@herbolt.com>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
