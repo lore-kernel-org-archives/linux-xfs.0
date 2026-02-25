@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37BFC38F246;
-	Wed, 25 Feb 2026 09:38:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B338738F936;
+	Wed, 25 Feb 2026 09:38:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772012326; cv=none; b=cBPQz3HXbuTBPHopJbtzMmYAbFkYvHUOrD1PKH84aWmXx7GwGcWBS5kiSytGweE2KwlkIuIU3NoDCfuGelm8MIORLIaDypVNY4FT3KtUj+XovJFKT+OE8wRU0ITJiLT5mJ1Z5CUTf+k4XfvQ/DuBJNFPmEKdnHGC+w3rQAi0JNE=
+	t=1772012328; cv=none; b=QMLz7YQcdkojm3Nt6dXgzAcSprudmJ/Vai1pfegMmQe23WdkrzxrOYLksJyvb6acODis3d1kycPFGVQVcsLvQ9wVZ1myxpiRv6r5FERnc3J5s27Fxtx/UGcaLtVDT7cLmC/1eG7DDZ0Bk3jRcQZa1nQ18Akw/9zeCGFo+51r3cA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772012326; c=relaxed/simple;
-	bh=lfi05J89RRrbhiE4UWHFK5tZNhHQMDGgVHV69yqt/QU=;
+	s=arc-20240116; t=1772012328; c=relaxed/simple;
+	bh=dCTE1bcKMGWdjpUZDMsqo3eLezXx0QxE7rEzWAHI8eM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=trSzeVXNCnsMMCcECb0kLl+oLJROpnotqh1aT85eqZ2wDOblrI4gUBEIlQTSlBIKF/u+3B1rm4MFdkTuaE3eTIAKcr5n32QYNtkwBd3eLHb6Tzq//kq6IbhWJlilzFGdBSnV5SNK4nkgccm32uk8C8+MiCNFFPvLGgMojMna3k4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JmviitsE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GLlgvIDwbZNmE2gYpEY6R5oxETxQXOTf4crCdNQsD3XTqsb1TlhjN47nH8PBIzicGzWTIKFZdQ6OhMvdJl8rMLbMq2zm+Jp9+kdWlDpWt7DrLRTRIrUem8DwxGSUFYEtynSedPgG3At2JpmVRyMMiNsOqAPLTz+rfTSGp0O9cpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/UbSjaI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JmviitsE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEA7EC19422;
-	Wed, 25 Feb 2026 09:38:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/UbSjaI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 569ECC116D0;
+	Wed, 25 Feb 2026 09:38:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772012325;
-	bh=lfi05J89RRrbhiE4UWHFK5tZNhHQMDGgVHV69yqt/QU=;
+	s=k20201202; t=1772012328;
+	bh=dCTE1bcKMGWdjpUZDMsqo3eLezXx0QxE7rEzWAHI8eM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=JmviitsEnEXELcZPnWleU6QEo7wtiVdrzZDkkO5oW7gEFF0AQGYQpRekSjy1c0j+2
-	 7sY/8X/pdnTY6s0Oho8kaM+jHMxG7SyiEjtuehuvvHUgmzu452H1pMQT/Q5Dy6g6NX
-	 JijxACIo2yho6Vco2httt5P0vemrh+gNZZK6wyLaCG9mSi5QrVyBb/DGxB9vTNigxR
-	 udqTgkFTWEeOXfEigVJNQqfTXqoKrT8zycPy4SF6ilQ3usmKqj57DgkjON1iJxVi2k
-	 cgvd01tuex+Uy3aaMlTrKfsPb+uFE4+1zC+iVqXfsLgGiLNAy+c30NyG52EveDkD9a
-	 Q5absLPlZcw7Q==
+	b=R/UbSjaIydsVudpYouIylDhErT62WR61MQqifaGGFoaBTnYnAmGGkEnimNQNUO6Zf
+	 l9MQcwJT1ZbXyUgVFSLtYg4/t1gpyl/PpS8Z0uQqcGdAybY6cBHYP4qpwrFD0TW7HC
+	 2g+YodkSJMdj+Jehf4yI29Uco4g9jE/jIpmVmLgPuOpuhvLP9nxXiGYMgZCWyzZ3p1
+	 05YiPoDoUxCieRVs04lxgDG1i09n7JFa8AgnH+lHpUx61IIFtPFY3sNvibfCJExnKI
+	 yjz5tJ2HSHf9sml0Yil17E4zfi7/JAP/DXDtAH2Qp0xpN8fX80KyTLhFLfMHb0VEAh
+	 KeLO+E/+RYyrQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Ethan Tidmore <ethantidmore06@gmail.com>
-Cc: brauner@kernel.org, neil@brown.name, jlayton@kernel.org, 
- amir73il@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org
-In-Reply-To: <20260220033825.1153487-1-ethantidmore06@gmail.com>
-References: <20260220033825.1153487-1-ethantidmore06@gmail.com>
-Subject: Re: [PATCH v4] xfs: Fix error pointer dereference
-Message-Id: <177201232362.40354.12522642521416160152.b4-ty@kernel.org>
-Date: Wed, 25 Feb 2026 10:38:43 +0100
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: clm@meta.com, cmaiolino@redhat.com, hch@lst.de, 
+ linux-xfs@vger.kernel.org, p.raghav@samsung.com, pankaj.raghav@linux.dev, 
+ samsun1006219@gmail.com, stable@vger.kernel.org
+In-Reply-To: <177189148163.4009522.17296873599093337410.stg-ugh@frogsfrogsfrogs>
+References: <177189148163.4009522.17296873599093337410.stg-ugh@frogsfrogsfrogs>
+Subject: Re: [GIT PULL] xfs: bug fixes for 7.0
+Message-Id: <177201232606.40354.7035859505657512309.b4-ty@kernel.org>
+Date: Wed, 25 Feb 2026 10:38:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,23 +46,21 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Thu, 19 Feb 2026 21:38:25 -0600, Ethan Tidmore wrote:
-> The function try_lookup_noperm() can return an error pointer and is not
-> checked for one.
+
+On Mon, 23 Feb 2026 16:06:00 -0800, Darrick J. Wong wrote:
+> Please pull this branch with changes for xfs for 7.0-rc2.
 > 
-> Add checks for error pointer in xrep_adoption_check_dcache() and
-> xrep_adoption_zap_dcache().
+> As usual, I did a test-merge with the main upstream branch as of a few
+> minutes ago, and didn't see any conflicts.  Please let me know if you
+> encounter any problems.
 > 
-> Detected by Smatch:
-> fs/xfs/scrub/orphanage.c:449 xrep_adoption_check_dcache() error:
-> 'd_child' dereferencing possible ERR_PTR()
+> --D
 > 
 > [...]
 
-Applied to for-next, thanks!
+Merged, thanks!
 
-[1/1] xfs: Fix error pointer dereference
-      commit: 98899e053df0678bcabde2114d509b0e308cf52c
+merge commit: 4b7b9e3b5abf42756576a2b5d4d31f4c4ae17880
 
 Best regards,
 -- 
