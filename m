@@ -1,145 +1,84 @@
-Received: from flow-b7-smtp.messagingengine.com (flow-b7-smtp.messagingengine.com [202.12.124.142])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49AAB2D060D;
-	Thu, 26 Feb 2026 01:34:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F00791946C8
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Feb 2026 05:21:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772069661; cv=none; b=Sc88sOZ/tASe6LRjOJbWwRYOcyfUKGmLhozvf56lciKIvrp12SQNvc5QvoEYzrA8IFPP56dvjE1mOmryed1gKf0F8K2S72OsFmpTHhpIStei4yFBBZboIL5MhscaxJ9dlSNBqgWSqG8LYEcUAol2En+J8kyJBGH+Xs9ZLAEyFpg=
+	t=1772083276; cv=none; b=Krty6JeL0F3K9tLsr1aE0D7ZFIWwkQeRRYk+vjMeMFNVlPLUuYwE5LIBTgBm2XNLCKYWP7Np3uY6yQr7Jg3Hx9zWSUUB3COvEwz+jnMsQzfckBZ/vGLCrNUxgsSiBkNBVSb1iLef8AonO49OkVi6l5jcCAF8L9Mw7A/Iobh0/HE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772069661; c=relaxed/simple;
-	bh=s0GI5iI3wRZDhofWKjF/FkmAMYAMF4AS6inKjugXtHI=;
-	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
-	 References:Date:Message-id; b=tsB1oEd6BCOKX9TPmUubX5rybg/RijfIlGeTBfiweZ0/80qHKoxtZeajQDixfJYsgtKMXM+yytbk8+p/yn5EsEK6GCur0lfqAjjWeHulEnw9yRrl/9vDeAlp7PflImfxqT/5qVSdRBq3Ay3eLsMbluJH+IJOOZGsQnHCHCTXrz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=TyFPTUuN; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Ib+fb/df; arc=none smtp.client-ip=202.12.124.142
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
+	s=arc-20240116; t=1772083276; c=relaxed/simple;
+	bh=Z71bM/qwQXIVOG+hKusdTmuk4XaC2SBTguRPDmjDL4Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oJadSgvPabGTalOPir3/5/hSUDtGO0dsKKQPfB6be0toSLsjxt1BU9zSZexO8cxdWajupzmtJfvd2+pbEGZ18MfK1BRtvIi+/0cOHumoTsMUSp9Y2p2XG59coS1JRXa/M4zZmji4+b2bTI0iQUqDByjiN+/4ejAdUIfhqr1/o/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZcnxAooQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="TyFPTUuN";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Ib+fb/df"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailflow.stl.internal (Postfix) with ESMTP id 770D01301436;
-	Wed, 25 Feb 2026 20:34:18 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Wed, 25 Feb 2026 20:34:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to; s=fm3; t=
-	1772069658; x=1772076858; bh=xFBd+sgdAigxjeaFROdJjStbv2bZWH9W94w
-	m4HgXADY=; b=TyFPTUuNpFO4HIfohypp+ntLH4SQw2KPz+k2oQocgPVXp9IMTnX
-	YTwXn0B0NRR1FYYXcaTtalmso1CAnAtpqQXesgp6NXUx9quUYAHLB9YpC7bcAFIk
-	TvZwg0C4FEHSiJIWxgFCFZeZtQNbnePdiIhVa5xxbKLS4C0AAupb2KhOapT87xq6
-	/3dFNWglRa3+Asvjf363pYv350SKI+bTeFGj0Ke0oZ/HCmva0nyqttckU6ALPSJC
-	tKc9PZzn6EA/vn9yNXu2DyW0UREtAZ/UTz1GA6V09Li6HeUdi6bLRfdCD5cAE4/8
-	WK60qtisykmi10YVhcXga6K3ltYHqs7v/qg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772069658; x=
-	1772076858; bh=xFBd+sgdAigxjeaFROdJjStbv2bZWH9W94wm4HgXADY=; b=I
-	b+fb/dfhFB2brFsDKPdocEWfgR6l5L1tGXqcmDEUm3dOayVudiX+HaadK36d/22y
-	X+hujziwNR1hhTLDE2AI+F4JYwsusV2edxzfklPwQ2qZG64OmPoEcH5DheOy4vAg
-	yZobw4gbMhMooYzr+mwhaa5gBqWaBtLl4E4sefLwDLQNuUzHEvbFUl+50coVVzRQ
-	uUSfLvsYvt4ZHYuBH0TtNmKmiN2iTjqr/WfXIN4vsdjnHDbYjLnhZrQP2i/uHaKd
-	hi1uQRctV8MB4SMWSP8frR1+kHQsrbBVM9bNFci7X5iHcoMOp5CM90AYY1GGHLla
-	lsHXTe1M7Jgjucp7xuAqA==
-X-ME-Sender: <xms:GaOfaZdxVZrAzznSHl1LN0ciatDBWLW_4Ro8DTat2U9_lQfv7c3xVg>
-    <xme:GaOfaU3CQnGhH_qC9WVaUqiJ_NCnEVlJXvoCDEyQujfqIEFNjcJ-KobsK6_w0bXRA
-    1o46wyvYNXYHRmuB2DKHe8Qk8RpFZRs_31jtFSaYRrHAyZ0>
-X-ME-Received: <xmr:GaOfaZ56MuiAcHw3-TwPARtUbYmsMUpCo2Tgrqvdk_rKhN1qr8rZK8mNn6nhWrEZy_AkfhXlZTsDqCDkE90mmkyGUJoOWVM0jUxttdORdGVn>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeegjeduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurheptgfgggfhvfevufgjfhffkfhrsehtjeertddttdejnecuhfhrohhmpefpvghilheu
-    rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epudetfefhudevhedvfeeufedvffekveekgfdtfefggfekheejgefhteeihffggfelnecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
-    esohifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohepfedupdhmohguvgepshhmthhp
-    ohhuthdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpd
-    hrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
-    phhtthhopehlihhnuhigqdhunhhiohhnfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtoheplhhinhhugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
-    phhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprh
-    gtphhtthhopehlihhnuhigqdhfshguvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-    pdhrtghpthhtoheplhhinhhugidqtghifhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtohepvggtrhihphhtfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghp
-    thhtoheptggvphhhqdguvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:GaOfabL1dxc7_aM4UDs5Mnpgjmz6nRiprNnIb1cnNlkCnzS-DCI01w>
-    <xmx:GaOfadZA0aqqd6hc81DmwuMDHkptr7xfpw9R6OlYEqEEXQp_JHd2Tg>
-    <xmx:GaOfaQ1gMPhOOVjW9cB40OYojuSXNA5JDysMhyGtEuX2KAF1dKYb1w>
-    <xmx:GaOfaXPevv-IvnTNjJUThP9sr3Z22JJ883VL2eHqz1vQzs-Pzf2nZA>
-    <xmx:GqOfaQqK_qAYvtHo1ixO-4yAHtdC6htK7kcrEBnPb9SzuKAO8kARg5HQ>
-Feedback-ID: i9d664b8f:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 25 Feb 2026 20:34:09 -0500 (EST)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZcnxAooQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D606C19422;
+	Thu, 26 Feb 2026 05:21:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772083275;
+	bh=Z71bM/qwQXIVOG+hKusdTmuk4XaC2SBTguRPDmjDL4Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZcnxAooQEnXrJj8P9nIUweQhExmrpVgrUKIi8+IBN4+uXWW6PtaqjG1vrr8dMeMPM
+	 cbcw0KylqkYO9qPZsPmrGFDW+Eq93+u7wcx2oifSang0luvvn3B7G+riXWngeLQEVZ
+	 aq9oopb/8b/CX4inIBO6evpBRH+54HdzXZffFspbV73FDq58udFXmGY6pN009OaNTV
+	 z0MS4GX/BScIzcnG7pHsTCUTRC0cMeDtsbxm6Dz9zlDhXEWA6qKJqV3ubzZW4k4unh
+	 +DF/mgHSIiwh87pXFcZaKdSYTcnu5CiKMxl0L/6sv3ECauUNlR75DYNASQd9wyBD7N
+	 0gibbG9iVD7nw==
+Date: Wed, 25 Feb 2026 21:21:15 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
+Subject: Re: [PATCH] xfs: remove scratch field from struct xfs_gc_bio
+Message-ID: <20260226052115.GD13853@frogsfrogsfrogs>
+References: <20260225224646.2103434-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: NeilBrown <neilb@ownmail.net>
-To: "Al Viro" <viro@zeniv.linux.org.uk>
-Cc: "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
- "David Howells" <dhowells@redhat.com>,
- "Marc Dionne" <marc.dionne@auristor.com>, "Xiubo Li" <xiubli@redhat.com>,
- "Ilya Dryomov" <idryomov@gmail.com>, "Tyler Hicks" <code@tyhicks.com>,
- "Miklos Szeredi" <miklos@szeredi.hu>,
- "Richard Weinberger" <richard@nod.at>,
- "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
- "Johannes Berg" <johannes@sipsolutions.net>,
- "Trond Myklebust" <trondmy@kernel.org>,
- "Anna Schumaker" <anna@kernel.org>,
- "Chuck Lever" <chuck.lever@oracle.com>,
- "Jeff Layton" <jlayton@kernel.org>,
- "Amir Goldstein" <amir73il@gmail.com>,
- "Steve French" <sfrench@samba.org>,
- "Namjae Jeon" <linkinjeon@kernel.org>,
- "Carlos Maiolino" <cem@kernel.org>, linux-fsdevel@vger.kernel.org,
- linux-afs@lists.infradead.org, netfs@lists.linux.dev,
- ceph-devel@vger.kernel.org, ecryptfs@vger.kernel.org,
- linux-um@lists.infradead.org, linux-nfs@vger.kernel.org,
- linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/11] VFS: allow d_splice_alias() and d_add() to work on
- hashed dentries.
-In-reply-to: <177206761798.7472.8904569543245678825@noble.neil.brown.name>
-References: <20250812235228.3072318-1-neil@brown.name>, <>,
- <20250812235228.3072318-9-neil@brown.name>, <>,
- <20250813050717.GD222315@ZenIV>,
- <177206761798.7472.8904569543245678825@noble.neil.brown.name>
-Date: Thu, 26 Feb 2026 12:34:06 +1100
-Message-id: <177206964635.7472.10143856965392266372@noble.neil.brown.name>
-Reply-To: NeilBrown <neil@brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260225224646.2103434-1-dlemoal@kernel.org>
 
-On Thu, 26 Feb 2026, NeilBrown wrote:
+On Thu, Feb 26, 2026 at 07:46:46AM +0900, Damien Le Moal wrote:
+> The scratch field in struct xfs_gc_bio is unused. Remove it.
 > 
-> d_add_hashed() would be much the same as d_instantiate(), and that
-> could be used for d_splice_alias() when the dentry is hashed.
-> There aren't any cases where d_splice_alias() is called with a directory
-> inode and a hashed dentry.
+> Fixes: 102f444b57b3 ("xfs: rework zone GC buffer management")
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-There are of course... mkdir() is given a hashed negative dentry and may
-need to use d_splice_alias() if there is any chance the inode was
-accessible (e.g. by fhandle) before the splice can happen.
+Looks good to me and assuming the bots don't scream,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Maybe we could always give mkdir a d_in_lookup() alias?
+--D
 
-As it is, generic "create object" code inside a filesystem may need to
-handle three cases:
-
- d_in_lookup() - use d_splice_alias()
- otherwise if non-dir: - use d_instantiate
- otherwise - use some new d_add_or_obtain (name taken from NFS) which 
-     does the right thing with directories.
-
-Currently most d_drop() and use d_splice_alias() but I need to avoid the
-d_drop().
-
-Thanks,
-NeilBrown
+> ---
+>  fs/xfs/xfs_zone_gc.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 48c6cf584447..d78e29cdcc45 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -96,7 +96,6 @@ struct xfs_gc_bio {
+>  	 */
+>  	xfs_fsblock_t			old_startblock;
+>  	xfs_daddr_t			new_daddr;
+> -	struct xfs_zone_scratch		*scratch;
+>  
+>  	/* Are we writing to a sequential write required zone? */
+>  	bool				is_seq;
+> @@ -779,7 +778,6 @@ xfs_zone_gc_split_write(
+>  	ihold(VFS_I(chunk->ip));
+>  	split_chunk->ip = chunk->ip;
+>  	split_chunk->is_seq = chunk->is_seq;
+> -	split_chunk->scratch = chunk->scratch;
+>  	split_chunk->offset = chunk->offset;
+>  	split_chunk->len = split_len;
+>  	split_chunk->old_startblock = chunk->old_startblock;
+> -- 
+> 2.53.0
+> 
+> 
