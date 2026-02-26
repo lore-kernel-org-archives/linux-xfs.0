@@ -1,39 +1,41 @@
-Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB573A0EB3
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Feb 2026 14:44:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D666B3EFD1D
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Feb 2026 15:31:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772117060; cv=none; b=CKlO7B0eShwEm8RrHhse6FrEvjRFPQB+J8eHI/3R3YEKnfqS310DQ2RYizWfCiVPYXfGbgCsUb5kbe0ebBr8APpvW4SHVZUpgp+gm15BSsSO/WvJl2KEtTXPRKGrJwsAm+9gLCiOkqa/fOO1vjBgvjQFfG7VPhbOjly1ozfXVxQ=
+	t=1772119910; cv=none; b=KTWGN8RgkXhiRh8TTuo9A4fZ63rW7On1u250+x1/faC+5juEApDfm8aU6R3MKC0mQ/KjAioPqSmhvKdczCuakn6SsXf1b4H76a1k0EB+Bs82tK0NsTTw6kPzZy69TZ2H+Cyau+zP8JoM5ROiQlW6a0VaPvARHxkmsonyY5YmJmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772117060; c=relaxed/simple;
-	bh=Gae+h045LDZGeAHgAWfGnBE74AuphkLsw4hVxEOQPhs=;
+	s=arc-20240116; t=1772119910; c=relaxed/simple;
+	bh=2Rv21dcxlkWFMcHy9Fpbt5sXORxWl9mIh058ViyUjPY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eAlZKfhdg/ECnHc/UGARzLZw72WfP+1Vniuxuy2rOmAUg6ryAfxW7V9ptaLzdvYZMOwriKApUDmlMPdf9WZKX6gO52JC/GQtHKBSrkwJqw2ivdUS8E+Rn0C+i7VX8mLyigE+VwBxcKkHqZufpq1lYTr60/zQIc0aqpJjhfIIRAU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Tzx/01/O; arc=none smtp.client-ip=95.215.58.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=F2udwTw2IaOMM3r1EGlpv0pzDLEXxazycJBiP+4FujwfH6H8gG68OLowqfZG0XCXSuRb2SCBGOM7dindPTsV97LlpuzEO/p+z8BKjzvhlkmCRaLB67b7Polt3DUhDf7+yAGoa79QfmKf7MEtQfMQ+ejOwG0e2RaSUPDFqbiD4pg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Btxf2Mx9; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Tzx/01/O"
-Date: Thu, 26 Feb 2026 14:44:05 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772117054;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=np9xQQrV63VoGu7jrM5DyORvNYsLaL9VUNRwSBaJHOM=;
-	b=Tzx/01/OJ3Mjk2ZF5irOKB2imQbhcdHgDV7bu/r3kZUSgE2jB6Szecb6IyqrQiRHUvLg7C
-	PK1DIL38S2oWx8tCvWBiEG43pfHjespKviLI4IdAW64SWwE86CAF3CKgwxEmocQKUgScu4
-	RpzxKbSg0MvMEIhaooQA/2JzB9YcqJc=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, cem@kernel.org, 
-	hch@infradead.org, p.raghav@samsung.com, pankaj.raghav@linux.dev
-Subject: Re: [PATCH v10] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <wmxdwtvahubdga73cgzprqtj7fxyjgx5kxvr4cobtl6ski2i6y@ic2g3bfymkwi>
-References: <20260225083932.580849-2-lukas@herbolt.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Btxf2Mx9"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=f35/tuCgwOdoS1bITw0f1myInnjcrl7dr1CtVe1TRuw=; b=Btxf2Mx906/fxKR43RpjJvBbQc
+	1rHqzcCP55w6BJmNu+jfWvrmHpEOHVXD8p6FQHtYGTWnfJTxvN/0MiOqQkOn70yYM+jLvLiXV+erT
+	261ZBDApS5+bHTrjQZb95xhaCGwsUUYb9CSaZV3RzuSQ6yltmcKenDoZPL/qvlY7sxe88dgwstaWk
+	qRgjrp7SWtViQciV0aFLPRjgofWUwnKtZsF106JU4kD5sLJcs53cVgmAqfh9NAL55T99lML/XBcUd
+	18j2HbZ+F1In4oShpKnBY4xzcJGGa3i+mbaD7C7cahM6T5JDldeMZXG6pyoGpDe8vcaLUO+5Gy44P
+	GA3Th4Cg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vvdLA-00000006W80-1nti;
+	Thu, 26 Feb 2026 15:31:48 +0000
+Date: Thu, 26 Feb 2026 07:31:48 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
+Subject: Re: [PATCH] xfs: remove scratch field from struct xfs_gc_bio
+Message-ID: <aaBnZNe4MA3ppD-O@infradead.org>
+References: <20260225224646.2103434-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,103 +44,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260225083932.580849-2-lukas@herbolt.com>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20260225224646.2103434-1-dlemoal@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Feb 25, 2026 at 09:39:33AM +0100, Lukas Herbolt wrote:
-> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-> the unmap write zeroes operation.
+On Thu, Feb 26, 2026 at 07:46:46AM +0900, Damien Le Moal wrote:
+> The scratch field in struct xfs_gc_bio is unused. Remove it.
 > 
-Hi Lukas,
+> Fixes: 102f444b57b3 ("xfs: rework zone GC buffer management")
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-I independently started implmenting this feature as well. I ran a test case
-on your patches and it resulted in a warning in iomap_zero_range.
-iomap_zero_range has a check for folios outside eof, and it is being
-called as a part of setsize, i.e, before we change the size of the file.
+Looks good:
 
-I think we need to do a PREALLOC and then do a XFS_BMAPI_ZERO with
-XFS_BMAPI_CONVERT. Or I don't know if we should change the warning in
-iomap_zero_range.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Doing unwritten extents first and then converting them to written with
-zeroes is what ext4 does as well. Maybe it is better this way because we
-can quickly allocate the blocks and return while holding the aglocks and
-then do the actually write. I guess someone more experienced with XFS
-can comment on that.
-
-I can send what I have and I will CC you in the series.
-
-This is the warning I get when I test your patch:
-
-WARNING:
-
-[  112.551102] WARNING: fs/iomap/buffered-io.c:1525 at iomap_zero_range+0x42d/0x7b0, CPU#2: write_zeroes/411
-[  112.560073] RIP: 0010:iomap_zero_range+0x42d/0x7b0
-[  112.593471]  xfs_zero_range+0x86/0xd0 [xfs]
-<snip>
-[  112.594100]  xfs_setattr_size+0x5c2/0xd90 [xfs]
-<snip>
-[  112.598895]  xfs_falloc_setsize+0x158/0x200 [xfs]
-
-
-This is the test case:
-#define _GNU_SOURCE
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-
-#ifndef FALLOC_FL_ZERO_RANGE
-#define FALLOC_FL_ZERO_RANGE 0x10
-#endif
-
-#ifndef FALLOC_FL_WRITE_ZEROES
-#define FALLOC_FL_WRITE_ZEROES 0x80
-#endif
-
-#define TEST_SIZE (10 * 1024 * 1024)
-
-void test_fallocate(const char *filename, int mode, const char *mode_name) {
-    int fd;
-
-    printf("Testing %s on %s...\n", mode_name, filename);
-
-    unlink(filename);
-
-    fd = open(filename, O_RDWR | O_CREAT, 0666);
-    if (fd < 0) {
-        perror("open failed");
-        return;
-    }
-
-    if (fallocate(fd, mode, 0, TEST_SIZE) == 0) {
-        printf(" -> fallocate(%s) succeeded!\n", mode_name);
-    } else {
-        printf(" -> fallocate(%s) failed: %s\n", mode_name, strerror(errno));
-    }
-
-    close(fd);
-
-    /* Dump extent info using xfs_io */
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "xfs_io -c 'bmap -vp' %s", filename);
-    printf("=== Extents for %s ===\n", filename);
-    system(cmd);
-    printf("\n");
-}
-
-int main() {
-    printf("Starting fallocate tests...\n");
-    printf("------------------------------------------------\n\n");
-
-    test_fallocate("test_zero_range.bin", FALLOC_FL_ZERO_RANGE, "FALLOC_FL_ZERO_RANGE");
-    test_fallocate("test_write_zeroes.bin", FALLOC_FL_WRITE_ZEROES, "FALLOC_FL_WRITE_ZEROES");
-
-    printf("Test complete.\n");
-    return 0;
-}
-
---
-Pankaj
