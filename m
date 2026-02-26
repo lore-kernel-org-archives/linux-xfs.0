@@ -1,56 +1,195 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B161332620
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Feb 2026 16:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 583CA42983C
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Feb 2026 16:49:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772124166; cv=none; b=gUUji28JDvkeTFtMH8K8voQnnnfJTq4x+35hLpz1pI5vOHLeYc7Sk6zu9WiQQ+8Cf15/4lsF9udCb1/mvC1Xg9xs8x6+iou3cekEOteFJ9vfRvizO2MSdA0Pi0cJYJiF7mRv6TUy+ZlQ1HCaxnih2+tPbbVlaGdtQ2zmTiWrq4Y=
+	t=1772124566; cv=none; b=XxPMY+1VkiBDCKTzmVESVaSis8T/ZEHCW59I9gOUXkU32Z/6Q5vQhya2LJRg35T2wdjEyuzay8R2QpPQwF8Oj21A5aVtl0Myss0BzUEijgSvqe07zVsyAIvwnHlD5XiEIKaiyxpLb+pfd9ninpz5cS5bgQhg5DGZhlO8WllZdUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772124166; c=relaxed/simple;
-	bh=6YalIR2DtD1+GY77RJ/bxVU4NwCwD9ItbbKj2+ekkJQ=;
+	s=arc-20240116; t=1772124566; c=relaxed/simple;
+	bh=VqGVgXxY2G6zwg2uiSi6OSBwSy2bKCiV2e1rsbEF/QA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u85Sgq2yHSOrDS24/NlJ2PEoVqc/NwBb/N/iL7fbrPe1FEvB63q58zHv+5qKJ+KuiMDDGjC2e1DLkKRFQ+Hwn8dEaMCze9XffZrTE++wYsry/eCguO7lVm970pHRut0BOryZR+p9n8GltxePCDdn3ktorf19Ti6kbVaAXtRVl9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AysYb/vZ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=KgTubVOrvD6k/20MyKbHMIOQoK96oot3k/y448OHslNMMn7TKT+VRdV6vatOLcRcT1HbHR8daRv53myAozo645qgeFqW7rp7PFQpBg6YxQn1hBGAM/4THu24lCsT3gdGmgw9vzoIdazQZ6+frEkrDtCTATMwLs74U+2MyAzMnWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hAYgA2jp; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zCgOS19u; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hAYgA2jp; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zCgOS19u; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AysYb/vZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772124164;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=x7rWcOD+pcORVfqwmn55zpuuLbu77Kq98FpVHYlx6fo=;
-	b=AysYb/vZwIuTA2BcrjwdhumCoCwBICLotpLtXd0Tce9JzUEcaIDC4OLoGj0NVEgORRW+0Q
-	MhxYdDO+jSLk81nhZbI7bK5qqPcuZkwGUnxHtVZ6bjENPi5XS8Berg7HDivsdzFhlG10FX
-	+SsELT2xRsn1seGW9uPt/c/OW8lAH5U=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-444-dxkN4faTNLCBlKJGeaHb4g-1; Thu,
- 26 Feb 2026 11:42:39 -0500
-X-MC-Unique: dxkN4faTNLCBlKJGeaHb4g-1
-X-Mimecast-MFC-AGG-ID: dxkN4faTNLCBlKJGeaHb4g_1772124157
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hAYgA2jp";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zCgOS19u";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hAYgA2jp";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zCgOS19u"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 30F831955F16;
-	Thu, 26 Feb 2026 16:42:37 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.229])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 826C81800348;
-	Thu, 26 Feb 2026 16:42:35 +0000 (UTC)
-Date: Thu, 26 Feb 2026 11:42:26 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Cc: Lukas Herbolt <lukas@herbolt.com>, linux-xfs@vger.kernel.org,
-	djwong@kernel.org, cem@kernel.org, hch@infradead.org,
-	p.raghav@samsung.com
-Subject: Re: [PATCH v10] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <aaB38r55RPLj3ij-@bfoster>
-References: <20260225083932.580849-2-lukas@herbolt.com>
- <wmxdwtvahubdga73cgzprqtj7fxyjgx5kxvr4cobtl6ski2i6y@ic2g3bfymkwi>
+	by smtp-out1.suse.de (Postfix) with ESMTPS id CD87E4D4CA;
+	Thu, 26 Feb 2026 16:49:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1772124560;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BNwEAWIsld/a3bTo0jTTEGruuvEsAoMftAo147KwrkY=;
+	b=hAYgA2jpZa4xi0xhqaRwMEM4MmatY7e7kOD/E1qjGdJ66bF2R3siOjYy5Y6Yg9dDfzUDD4
+	aeuOtKCnl8v1QoxCgsTX8W1RjLx4+PdWc/SXCUL+OLAvf+woDLtaeDL8YsARBgnzpciH/g
+	IVXCKBa3wKZd2silyKmBo19Po0OpWAk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1772124560;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BNwEAWIsld/a3bTo0jTTEGruuvEsAoMftAo147KwrkY=;
+	b=zCgOS19u4C6rF6D6cMRbA7dGGq7ArZv1u0GnIvuUsaX35ZbUbgb8M1Ez+SVwqYgh9euqH2
+	kmxPCc+6nDwXgTAQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=hAYgA2jp;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=zCgOS19u
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1772124560;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BNwEAWIsld/a3bTo0jTTEGruuvEsAoMftAo147KwrkY=;
+	b=hAYgA2jpZa4xi0xhqaRwMEM4MmatY7e7kOD/E1qjGdJ66bF2R3siOjYy5Y6Yg9dDfzUDD4
+	aeuOtKCnl8v1QoxCgsTX8W1RjLx4+PdWc/SXCUL+OLAvf+woDLtaeDL8YsARBgnzpciH/g
+	IVXCKBa3wKZd2silyKmBo19Po0OpWAk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1772124560;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BNwEAWIsld/a3bTo0jTTEGruuvEsAoMftAo147KwrkY=;
+	b=zCgOS19u4C6rF6D6cMRbA7dGGq7ArZv1u0GnIvuUsaX35ZbUbgb8M1Ez+SVwqYgh9euqH2
+	kmxPCc+6nDwXgTAQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3626B3EA62;
+	Thu, 26 Feb 2026 16:49:20 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id GqJ+DJB5oGkrMQAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Thu, 26 Feb 2026 16:49:20 +0000
+Date: Thu, 26 Feb 2026 17:49:15 +0100
+From: David Sterba <dsterba@suse.cz>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Eric Biggers <ebiggers@kernel.org>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	David Hildenbrand <david@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>,
+	Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+	Steve French <sfrench@samba.org>,
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+	Shyam Prasad N <sprasad@microsoft.com>,
+	Bharath SM <bharathsm@microsoft.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	Viacheslav Dubeyko <slava@dubeyko.com>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	David Sterba <dsterba@suse.com>,
+	Marc Dionne <marc.dionne@auristor.com>, Ian Kent <raven@themaw.net>,
+	Luis de Bethencourt <luisbg@kernel.org>,
+	Salah Triki <salah.triki@gmail.com>,
+	"Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+	Ilya Dryomov <idryomov@gmail.com>,
+	Alex Markuze <amarkuze@redhat.com>,
+	Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+	Nicolas Pitre <nico@fluxnic.net>, Tyler Hicks <code@tyhicks.com>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Yangtao Li <frank.li@vivo.com>,
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Richard Weinberger <richard@nod.at>,
+	Dave Kleikamp <shaggy@kernel.org>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Miklos Szeredi <miklos@szeredi.hu>, Anders Larsen <al@alarsen.net>,
+	Zhihao Cheng <chengzhihao1@huawei.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Mimi Zohar <zohar@linux.ibm.com>,
+	Roberto Sassu <roberto.sassu@huawei.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Eric Snowberg <eric.snowberg@oracle.com>, Fan Wu <wufan@kernel.org>,
+	Stephen Smalley <stephen.smalley.work@gmail.com>,
+	Ondrej Mosnacek <omosnace@redhat.com>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Willem de Bruijn <willemb@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>, Simon Horman <horms@kernel.org>,
+	Oleg Nesterov <oleg@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	James Clark <james.clark@linaro.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Martin Schiller <ms@dev.tdt.de>, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+	nvdimm@lists.linux.dev, fsverity@lists.linux.dev,
+	linux-mm@kvack.org, netfs@lists.linux.dev,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+	samba-technical@lists.samba.org, linux-nilfs@vger.kernel.org,
+	v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
+	autofs@vger.kernel.org, ceph-devel@vger.kernel.org,
+	codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+	linux-mtd@lists.infradead.org, jfs-discussion@lists.sourceforge.net,
+	ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org,
+	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+	linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+	netdev@vger.kernel.org, linux-perf-users@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-hams@vger.kernel.org, linux-x25@vger.kernel.org
+Subject: Re: [PATCH 19/61] affs: update format strings for u64 i_ino
+Message-ID: <20260226164914.GG26902@suse.cz>
+Reply-To: dsterba@suse.cz
+References: <20260226-iino-u64-v1-0-ccceff366db9@kernel.org>
+ <20260226-iino-u64-v1-19-ccceff366db9@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,123 +198,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <wmxdwtvahubdga73cgzprqtj7fxyjgx5kxvr4cobtl6ski2i6y@ic2g3bfymkwi>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+In-Reply-To: <20260226-iino-u64-v1-19-ccceff366db9@kernel.org>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spamd-Bar: /
+X-Rspamd-Queue-Id: CD87E4D4CA
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -0.71
+X-Spam-Level: 
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-0.71 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	FORGED_RECIPIENTS(2.00)[m:jlayton@kernel.org,m:brauner@kernel.org,m:rostedt@goodmis.org,m:mhiramat@kernel.org,m:mathieu.desnoyers@efficios.com,m:dan.j.williams@intel.com,m:willy@infradead.org,m:ebiggers@kernel.org,m:tytso@mit.edu,m:muchun.song@linux.dev,m:david@kernel.org,m:pc@manguebit.org,m:adilger.kernel@dilger.ca,m:jaegeuk@kernel.org,m:chao@kernel.org,m:trondmy@kernel.org,m:anna@kernel.org,m:neil@brown.name,m:ronniesahlberg@gmail.com,m:sprasad@microsoft.com,m:bharathsm@microsoft.com,m:alex.aring@gmail.com,m:konishi.ryusuke@gmail.com,m:slava@dubeyko.com,m:ericvh@kernel.org,m:lucho@ionkov.net,m:asmadeus@codewreck.org,m:linux_oss@crudebyte.com,m:marc.dionne@auristor.com,m:luisbg@kernel.org,m:salah.triki@gmail.com,m:aivazian.tigran@gmail.com,m:idryomov@gmail.com,m:jaharkes@cs.cmu.edu,m:coda@cs.cmu.edu,m:nico@fluxnic.net,m:amir73il@gmail.com,m:hch@infradead.org,m:mikulas@artax.karlin.mff.cuni.cz,m:dwmw2@infradead.org,m:richard@nod.at,m:shaggy@kernel.org,m:mark@fasheh.com,m:jlbec@evil
+ plan.org,m:joseph.qi@linux.alibaba.com,m:hubcap@omnibond.com,m:martin@omnibond.com,m:al@alarsen.net,m:chengzhihao1@huawei.com,m:dlemoal@kernel.org,m:jth@kernel.org,m:john.johansen@canonical.com,m:jmorris@namei.org,m:serge@hallyn.com,m:zohar@linux.ibm.com,m:roberto.sassu@huawei.com,m:dmitry.kasatkin@gmail.com,m:wufan@kernel.org,m:stephen.smalley.work@gmail.com,m:alexander.deucher@amd.com,m:christian.koenig@amd.com,m:airlied@gmail.com,m:simona@ffwll.ch,m:sumit.semwal@linaro.org,m:edumazet@google.com,m:kuniyu@google.com,m:willemb@google.com,m:davem@davemloft.net,m:kuba@kernel.org,m:horms@kernel.org,m:peterz@infradead.org,m:acme@kernel.org,m:namhyung@kernel.org,s:autofs@vger.kernel.org,s:ceph-devel@vger.kernel.org,s:ecryptfs@vger.kernel.org,s:linux-cifs@vger.kernel.org,s:linux-ext4@vger.kernel.org,s:linux-fscrypt@vger.kernel.org,s:linux-fsdevel@vger.kernel.org,s:linux-hams@vger.kernel.org,s:linux-integrity@vger.kernel.org,s:linux-kernel@vger.kernel.org,s:linux-media@vger.kernel.org,s:li
+ nux-nfs@vger.kernel.org,s:linux-nilfs@vger.kernel.org,s:linux-perf-users@vger.kernel.org,s:linux-security-module@vger.kernel.org,s:linux-trace-kernel@vger.kernel.org,s:linux-unionfs@vger.kernel.org,s:linux-x25@vger.kernel.org,s:linux-xfs@vger.kernel.org,s:netdev@vger.kernel.org,s:selinux@vger.kernel.org];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FREEMAIL_CC(0.00)[zeniv.linux.org.uk,kernel.org,suse.cz,goodmis.org,efficios.com,intel.com,infradead.org,mit.edu,linux.dev,suse.de,redhat.com,manguebit.org,dilger.ca,suse.com,oracle.com,brown.name,talpey.com,samba.org,gmail.com,microsoft.com,dubeyko.com,ionkov.net,codewreck.org,crudebyte.com,auristor.com,themaw.net,cs.cmu.edu,fluxnic.net,tyhicks.com,physik.fu-berlin.de,vivo.com,artax.karlin.mff.cuni.cz,nod.at,paragon-software.com,fasheh.com,evilplan.org,linux.alibaba.com,omnibond.com,szeredi.hu,alarsen.net,huawei.com,wdc.com,canonical.com,paul-moore.com,namei.org,hallyn.com,linux.ibm.com,schaufler-ca.com,amd.com,ffwll.ch,linaro.org,google.com,davemloft.net,arm.com,linux.intel.com,dev.tdt.de,vger.kernel.org,lists.linux.dev,kvack.org,lists.sourceforge.net,lists.samba.org,lists.infradead.org,coda.cs.cmu.edu,lists.orangefs.org,lists.ubuntu.com,lists.freedesktop.org,lists.linaro.org];
+	RCPT_COUNT_GT_50(0.00)[146];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	R_RATELIMIT(0.00)[to_ip_from(RL4z7ik3mu4s1tb3i49rs8q359)];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
 
-On Thu, Feb 26, 2026 at 02:44:05PM +0000, Pankaj Raghav (Samsung) wrote:
-> On Wed, Feb 25, 2026 at 09:39:33AM +0100, Lukas Herbolt wrote:
-> > Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-> > the unmap write zeroes operation.
-> > 
-> Hi Lukas,
+On Thu, Feb 26, 2026 at 10:55:21AM -0500, Jeff Layton wrote:
+> Update format strings and local variable types in affs for the
+> i_ino type change from unsigned long to u64.
 > 
-> I independently started implmenting this feature as well. I ran a test case
-> on your patches and it resulted in a warning in iomap_zero_range.
-> iomap_zero_range has a check for folios outside eof, and it is being
-> called as a part of setsize, i.e, before we change the size of the file.
-> 
-> I think we need to do a PREALLOC and then do a XFS_BMAPI_ZERO with
-> XFS_BMAPI_CONVERT. Or I don't know if we should change the warning in
-> iomap_zero_range.
-> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-The reason the warning is there is because iomap_zero_range() uses
-buffered writes but doesn't actually bump i_size for writes beyond eof.
-Therefore if it ends up zeroing folios that start beyond eof, writeback
-would potentially toss those folios if i_size wasn't updated somehow or
-another by the time it occurs..
-
-I'd guess there are two likely scenarios that lead to this warning, but
-you'd have to confirm. One is that we're unnecessarily zeroing an
-unwritten range for some reason. That would probably be harmless, but
-unexpected. The other would be zeroing written blocks beyond eof, which
-is risky and probably something we want to avoid, but also suspicious in
-that I don't think we should ever have written extents beyond eof in XFS
-(but rather either delalloc or written).
-
-Brian
-
-> Doing unwritten extents first and then converting them to written with
-> zeroes is what ext4 does as well. Maybe it is better this way because we
-> can quickly allocate the blocks and return while holding the aglocks and
-> then do the actually write. I guess someone more experienced with XFS
-> can comment on that.
-> 
-> I can send what I have and I will CC you in the series.
-> 
-> This is the warning I get when I test your patch:
-> 
-> WARNING:
-> 
-> [  112.551102] WARNING: fs/iomap/buffered-io.c:1525 at iomap_zero_range+0x42d/0x7b0, CPU#2: write_zeroes/411
-> [  112.560073] RIP: 0010:iomap_zero_range+0x42d/0x7b0
-> [  112.593471]  xfs_zero_range+0x86/0xd0 [xfs]
-> <snip>
-> [  112.594100]  xfs_setattr_size+0x5c2/0xd90 [xfs]
-> <snip>
-> [  112.598895]  xfs_falloc_setsize+0x158/0x200 [xfs]
-> 
-> 
-> This is the test case:
-> #define _GNU_SOURCE
-> #include <fcntl.h>
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <unistd.h>
-> #include <string.h>
-> #include <errno.h>
-> 
-> #ifndef FALLOC_FL_ZERO_RANGE
-> #define FALLOC_FL_ZERO_RANGE 0x10
-> #endif
-> 
-> #ifndef FALLOC_FL_WRITE_ZEROES
-> #define FALLOC_FL_WRITE_ZEROES 0x80
-> #endif
-> 
-> #define TEST_SIZE (10 * 1024 * 1024)
-> 
-> void test_fallocate(const char *filename, int mode, const char *mode_name) {
->     int fd;
-> 
->     printf("Testing %s on %s...\n", mode_name, filename);
-> 
->     unlink(filename);
-> 
->     fd = open(filename, O_RDWR | O_CREAT, 0666);
->     if (fd < 0) {
->         perror("open failed");
->         return;
->     }
-> 
->     if (fallocate(fd, mode, 0, TEST_SIZE) == 0) {
->         printf(" -> fallocate(%s) succeeded!\n", mode_name);
->     } else {
->         printf(" -> fallocate(%s) failed: %s\n", mode_name, strerror(errno));
->     }
-> 
->     close(fd);
-> 
->     /* Dump extent info using xfs_io */
->     char cmd[256];
->     snprintf(cmd, sizeof(cmd), "xfs_io -c 'bmap -vp' %s", filename);
->     printf("=== Extents for %s ===\n", filename);
->     system(cmd);
->     printf("\n");
-> }
-> 
-> int main() {
->     printf("Starting fallocate tests...\n");
->     printf("------------------------------------------------\n\n");
-> 
->     test_fallocate("test_zero_range.bin", FALLOC_FL_ZERO_RANGE, "FALLOC_FL_ZERO_RANGE");
->     test_fallocate("test_write_zeroes.bin", FALLOC_FL_WRITE_ZEROES, "FALLOC_FL_WRITE_ZEROES");
-> 
->     printf("Test complete.\n");
->     return 0;
-> }
-> 
-> --
-> Pankaj
-> 
-
+Acked-by: David Sterba <dsterba@suse.com>
