@@ -1,69 +1,155 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D0D407568;
-	Fri, 27 Feb 2026 13:52:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819FF421F0A
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Feb 2026 14:08:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772200357; cv=none; b=VTWtNnD+KQNWlHj5PCwzhGlg6e9chbGbcZBD865vSagGeTGrKX9vTyS5lTpL44ApDV8ZV2ktPY3s0+GEdSjxX5NgLg9wriouI9f26h5PLFMKKH8j0D2C84f+WlJh7T+n3jVQsdFdvVruhbCs73R1exB7JrONVne3Mn0VOO9LkjM=
+	t=1772201334; cv=none; b=Bv3LuB9dy7zlsPDxj+xJIyLaxNmM5l9VYQm759XhKsMIMdNS263JUQz/UwchaZLKpLJeDzgQeRFmDWyVz0EsiMYUJjGMA2lNamxQ63GxSRVP7ioTu8zYvMZcOBrtM72YrOAa1I7PjQa/pq1DFytu0QfOY00wfWvTb7GufKoFnB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772200357; c=relaxed/simple;
-	bh=ubxolrZAJzpAc67IrFsJm10tC/6/fBLHWP7mx/sXgls=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HXjdbFlhRXzH8bSUPStfYHcTT3XqAqhs4zG6rvU5iF0ATZUDvf3TJ483OeYFMC7anclrrJZit7WLgnj6nrsPg9FWfzowxAakYfSBfL0Y/yd46OChMTYDJ5tV7urAiDL2yIcJBfH2jVbzCDqGrcfag18ASLezmk8OBKg6meoPCkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1E29C68B05; Fri, 27 Feb 2026 14:52:34 +0100 (CET)
-Date: Fri, 27 Feb 2026 14:52:33 +0100
-From: hch <hch@lst.de>
-To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Cc: "djwong@kernel.org" <djwong@kernel.org>, hch <hch@lst.de>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"cem@kernel.org" <cem@kernel.org>
-Subject: Re: [PATCH] xfs: add write pointer to xfs_rtgroup_geometry
-Message-ID: <20260227135233.GA20671@lst.de>
-References: <20260227030105.822728-2-wilfred.opensource@gmail.com> <20260227040619.GI13853@frogsfrogsfrogs> <dbda17987ff33a132da82b8635ac2a5c6ae01c78.camel@wdc.com>
+	s=arc-20240116; t=1772201334; c=relaxed/simple;
+	bh=jevjgH3cJoY5u/CM6leg/1JHgTeHZ7SejjgxInlyq/Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=RTyw5t86HJbbKiwKoResEuKVfodnjky3P1Ig07Q1xp7IF9/TMg4fMwlIOwMMK052Cecg3lXoP8HQM+L9lIrjRNITWAMHG35bCrOJ/fJSL/LZ5obJp87hLd61XerH6EHUzylVFhV5n4k4qxVjfKZjbnjX+a8xMO6nN8xS4hCl8Lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4fMqtn0Mb7z9t16;
+	Fri, 27 Feb 2026 15:08:49 +0100 (CET)
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: linux-xfs@vger.kernel.org
+Cc: bfoster@redhat.com,
+	dchinner@redhat.com,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	gost.dev@samsung.com,
+	pankaj.raghav@linux.dev,
+	andres@anarazel.de,
+	cem@kernel.org,
+	hch@infradead.org,
+	lucas@herbolt.com
+Subject: [RFC 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+Date: Fri, 27 Feb 2026 15:08:40 +0100
+Message-ID: <20260227140842.1437710-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <dbda17987ff33a132da82b8635ac2a5c6ae01c78.camel@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Feb 27, 2026 at 05:16:39AM +0000, Wilfred Mallawa wrote:
-> > > -	__u32 rg_reserved[27];	/* o: zero */
-> > > +	__u32 rg_reserved0;	/* o: preserve alignment */
-> > > +	__u64 rg_writepointer;  /* o: write pointer sector for
-> > > zoned */
-> > 
-> > Hrm.  It's not possible to advance the write pointer less than a
-> > single
-> > xfs fsblock, right? 
-> 
-> I believe so, perhaps Christoph could chime in?
+The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
+of Zhang Yi's initial patches[1]. Postgres developer Andres also
+mentioned they would like to use this feature in Postgres [2].
 
-It's not possible.
+Lukas Herbolt sent a patch recently that adds this support but I found
+some issues with them[3]. I independtly started working on these patches
+a while back as well, so I thought maybe I will send a RFC version of
+this support.
 
-> 
-> > zoned rt requires rt groups, so that means the
-> > write pointer within a rtgroup has to be a xfs_rgblock_t (32bit)
-> > value,
-> > so shouldn't this be a __u32 field?
-> 
-> I figured since this is currently returning a basic block offset
-> (similar to a zone report from a zoned device), it *could* exceed a
-> U32_MAX for larger zones (?). Does it seem more appropriate to return
-> the xfs fsblock offset here instead?
+I have implemented this support similar to what ext4 is doing: write unwritten
+extents first, increase the size of the file, then zero out those extents
+with XFS_BMAPI_CONVERT with XFS_BMAPI_ZERO. This seems to be working
+correctly without changing any of the core infrastructure. But I am not
+sure if this is the most efficient way of doing it in XFS or if there
+are some corner cases I am missing, so any feedback is welcome.
 
-No, the count of blocks in a zone is a xfs_rgblock_t, which is a
-uint32_t.  So all group/zone relative addressing can and should use
-32-bit types.
+[1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+[2] https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
+[3] https://lore.kernel.org/linux-xfs/wmxdwtvahubdga73cgzprqtj7fxyjgx5kxvr4cobtl6ski2i6y@ic2g3bfymkwi/
+
+=== Testing ===:
+
+void test_fallocate(const char *filename, int mode, const char *mode_name) {
+    int fd;
+
+    printf("Testing %s on %s...\n", mode_name, filename);
+
+    unlink(filename);
+
+    fd = open(filename, O_RDWR | O_CREAT, 0666);
+    if (fd < 0) {
+        perror("open failed");
+        return;
+    }
+
+    if (fallocate(fd, mode, 0, TEST_SIZE) == 0) {
+        printf(" -> fallocate(%s) succeeded!\n", mode_name);
+    } else {
+        printf(" -> fallocate(%s) failed: %s\n", mode_name, strerror(errno));
+    }
+
+    close(fd);
+
+    /* Dump extent info using xfs_io */
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "xfs_io -c 'bmap -vvp' %s", filename);
+    printf("=== Extents for %s ===\n", filename);
+    system(cmd);
+    printf("\n");
+}
+
+int main() {
+    printf("Starting fallocate tests...\n");
+    printf("------------------------------------------------\n\n");
+
+    test_fallocate("test_zero_range.bin", FALLOC_FL_ZERO_RANGE, "FALLOC_FL_ZERO_RANGE");
+    test_fallocate("test_write_zeroes.bin", FALLOC_FL_WRITE_ZEROES, "FALLOC_FL_WRITE_ZEROES");
+
+    printf("Test complete.\n");
+    return 0;
+}
+
+This is the output:
+
+root@debian:/mnt# ~/home/write_zeroes /mnt/hello
+Starting fallocate tests...
+------------------------------------------------
+
+Testing FALLOC_FL_ZERO_RANGE on test_zero_range.bin...
+ -> fallocate(FALLOC_FL_ZERO_RANGE) succeeded!
+=== Extents for test_zero_range.bin ===
+test_zero_range.bin:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+   0: [0..20479]:      20672..41151      0 (20672..41151)   20480 010000
+ FLAG Values:
+    0100000 Shared extent
+    0010000 Unwritten preallocated extent
+    0001000 Doesn't begin on stripe unit
+    0000100 Doesn't end   on stripe unit
+    0000010 Doesn't begin on stripe width
+    0000001 Doesn't end   on stripe width
+
+Testing FALLOC_FL_WRITE_ZEROES on test_write_zeroes.bin...
+ -> fallocate(FALLOC_FL_WRITE_ZEROES) succeeded!
+=== Extents for test_write_zeroes.bin ===
+test_write_zeroes.bin:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+   0: [0..20479]:      41152..61631      0 (41152..61631)   20480 000000
+ FLAG Values:
+    0100000 Shared extent
+    0010000 Unwritten preallocated extent
+    0001000 Doesn't begin on stripe unit
+    0000100 Doesn't end   on stripe unit
+    0000010 Doesn't begin on stripe width
+    0000001 Doesn't end   on stripe width
+
+Pankaj Raghav (2):
+  xfs: add flags field to xfs_alloc_file_space
+  xfs: add support for FALLOC_FL_WRITE_ZEROES
+
+ fs/xfs/xfs_bmap_util.c |  5 ++--
+ fs/xfs/xfs_bmap_util.h |  2 +-
+ fs/xfs/xfs_file.c      | 64 +++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 64 insertions(+), 7 deletions(-)
+
+
+base-commit: 4d750717498bbc1d8801281c32453a5f23d0bbe8
+-- 
+2.50.1
 
