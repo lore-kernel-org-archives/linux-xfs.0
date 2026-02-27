@@ -1,163 +1,69 @@
-Received: from relayaws-01.paragon-software.com (relayaws-01.paragon-software.com [35.157.23.187])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A780B2D94AC;
-	Fri, 27 Feb 2026 13:46:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.157.23.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D0D407568;
+	Fri, 27 Feb 2026 13:52:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772199982; cv=none; b=krwCqNrZmc6m0+WkvRsZ7Z7KzlAPalizkSBmH//tlfK/OL3FK3JuXZ2AbN+rIQkjpPcBxvTW/5+c5RFfm0e7i/VpBqJOPjhTdpOW+aZnwkQoQuZg5PWOK07iAxGfR/hQrQh4UIosuQC0JYmyoPVFgrUohKcph1Wcn8k6Zs4foYc=
+	t=1772200357; cv=none; b=VTWtNnD+KQNWlHj5PCwzhGlg6e9chbGbcZBD865vSagGeTGrKX9vTyS5lTpL44ApDV8ZV2ktPY3s0+GEdSjxX5NgLg9wriouI9f26h5PLFMKKH8j0D2C84f+WlJh7T+n3jVQsdFdvVruhbCs73R1exB7JrONVne3Mn0VOO9LkjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772199982; c=relaxed/simple;
-	bh=z0K5yqmsvL+BPpTl9z7t4zFYOlZHqtcMweAFoIYy2jY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=hXqRUNjpdOffrjUiBDHUikD22ci0AtEkAGp6WlYPCqlmMlSAmoC8DYyKksxuJJ/QcVFm9m8JIMmYCcM2OOiPbivTFnSVJmzkateV0WGAu+F15j9+5+mGPyNp6g9EjQ3Yrd6PQs9cfREDed/onB+H5KqAwDX2DHSQf2ERnP4yHEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=paragon-software.com; spf=pass smtp.mailfrom=paragon-software.com; dkim=pass (1024-bit key) header.d=paragon-software.com header.i=@paragon-software.com header.b=I5A0/iNh; arc=none smtp.client-ip=35.157.23.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=paragon-software.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paragon-software.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=paragon-software.com header.i=@paragon-software.com header.b="I5A0/iNh"
-Received: from relayfre-01.paragon-software.com (unknown [176.12.100.13])
-	by relayaws-01.paragon-software.com (Postfix) with ESMTPS id ED2C81DA1;
-	Fri, 27 Feb 2026 13:44:27 +0000 (UTC)
-Authentication-Results: relayaws-01.paragon-software.com;
-	dkim=pass (1024-bit key; unprotected) header.d=paragon-software.com header.i=@paragon-software.com header.b=I5A0/iNh;
-	dkim-atps=neutral
-Received: from dlg2.mail.paragon-software.com (vdlg-exch-02.paragon-software.com [172.30.1.105])
-	by relayfre-01.paragon-software.com (Postfix) with ESMTPS id C95D11D1B;
-	Fri, 27 Feb 2026 13:46:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=paragon-software.com; s=mail; t=1772199972;
-	bh=2JG+S5Jc4wy67khMF3eE3EWJ7FaXlM8z1txAXuFhg/g=;
-	h=Date:Subject:To:CC:References:From:In-Reply-To;
-	b=I5A0/iNh89QpX3dy7d0Wf1SN5zLZOiTlZ60YJ1ObBTMAlhQaDS4AIBpre04cVmdC9
-	 wGZffi4SsIj4sft1VHYKx+BExHSRUTVv9r2l/CnorFRl47vStwFXU6HpPvih/qb5bk
-	 Kzq21KZnMJDKs4xC/ZlgI1baFHZCoIPxSXafXtq8=
-Received: from [192.168.95.128] (172.30.20.153) by
- vdlg-exch-02.paragon-software.com (172.30.1.105) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Fri, 27 Feb 2026 16:46:10 +0300
-Message-ID: <449fd474-0b61-42ff-afbe-56b728d69262@paragon-software.com>
-Date: Fri, 27 Feb 2026 14:46:08 +0100
+	s=arc-20240116; t=1772200357; c=relaxed/simple;
+	bh=ubxolrZAJzpAc67IrFsJm10tC/6/fBLHWP7mx/sXgls=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HXjdbFlhRXzH8bSUPStfYHcTT3XqAqhs4zG6rvU5iF0ATZUDvf3TJ483OeYFMC7anclrrJZit7WLgnj6nrsPg9FWfzowxAakYfSBfL0Y/yd46OChMTYDJ5tV7urAiDL2yIcJBfH2jVbzCDqGrcfag18ASLezmk8OBKg6meoPCkc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1E29C68B05; Fri, 27 Feb 2026 14:52:34 +0100 (CET)
+Date: Fri, 27 Feb 2026 14:52:33 +0100
+From: hch <hch@lst.de>
+To: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Cc: "djwong@kernel.org" <djwong@kernel.org>, hch <hch@lst.de>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"cem@kernel.org" <cem@kernel.org>
+Subject: Re: [PATCH] xfs: add write pointer to xfs_rtgroup_geometry
+Message-ID: <20260227135233.GA20671@lst.de>
+References: <20260227030105.822728-2-wilfred.opensource@gmail.com> <20260227040619.GI13853@frogsfrogsfrogs> <dbda17987ff33a132da82b8635ac2a5c6ae01c78.camel@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/16] ntfs3: remove copy and pasted iomap code
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Christian
- Brauner <brauner@kernel.org>
-CC: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Anuj Gupta
-	<anuj20.g@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
-	<ntfs3@lists.linux.dev>, <linux-block@vger.kernel.org>,
-	<nvdimm@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>
-References: <20260223132021.292832-1-hch@lst.de>
- <20260223132021.292832-13-hch@lst.de>
-Content-Language: en-US
-From: Konstantin Komarov <almaz.alexandrovich@paragon-software.com>
-In-Reply-To: <20260223132021.292832-13-hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: vdlg-exch-02.paragon-software.com (172.30.1.105) To
- vdlg-exch-02.paragon-software.com (172.30.1.105)
+In-Reply-To: <dbda17987ff33a132da82b8635ac2a5c6ae01c78.camel@wdc.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 2/23/26 14:20, Christoph Hellwig wrote:
+On Fri, Feb 27, 2026 at 05:16:39AM +0000, Wilfred Mallawa wrote:
+> > > -	__u32 rg_reserved[27];	/* o: zero */
+> > > +	__u32 rg_reserved0;	/* o: preserve alignment */
+> > > +	__u64 rg_writepointer;  /* o: write pointer sector for
+> > > zoned */
+> > 
+> > Hrm.  It's not possible to advance the write pointer less than a
+> > single
+> > xfs fsblock, right? 
+> 
+> I believe so, perhaps Christoph could chime in?
 
-> ntfs3 copied the iomap code without attribution or talking to the
-> maintainers, to hook into the bio completion for (unexplained) zeroing.
->
-> Fix this by just overriding the bio completion handler in the submit
-> handler.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   fs/ntfs3/inode.c | 51 +++---------------------------------------------
->   1 file changed, 3 insertions(+), 48 deletions(-)
->
-> diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
-> index 7ab4e18f8013..60af9f8e0366 100644
-> --- a/fs/ntfs3/inode.c
-> +++ b/fs/ntfs3/inode.c
-> @@ -605,63 +605,18 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
->   	bio_put(bio);
->   }
->   
-> -/*
-> - * Copied from iomap/bio.c.
-> - */
-> -static int ntfs_iomap_bio_read_folio_range(const struct iomap_iter *iter,
-> -					   struct iomap_read_folio_ctx *ctx,
-> -					   size_t plen)
-> -{
-> -	struct folio *folio = ctx->cur_folio;
-> -	const struct iomap *iomap = &iter->iomap;
-> -	loff_t pos = iter->pos;
-> -	size_t poff = offset_in_folio(folio, pos);
-> -	loff_t length = iomap_length(iter);
-> -	sector_t sector;
-> -	struct bio *bio = ctx->read_ctx;
-> -
-> -	sector = iomap_sector(iomap, pos);
-> -	if (!bio || bio_end_sector(bio) != sector ||
-> -	    !bio_add_folio(bio, folio, plen, poff)) {
-> -		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
-> -		gfp_t orig_gfp = gfp;
-> -		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
-> -
-> -		if (bio)
-> -			submit_bio(bio);
-> -
-> -		if (ctx->rac) /* same as readahead_gfp_mask */
-> -			gfp |= __GFP_NORETRY | __GFP_NOWARN;
-> -		bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs), REQ_OP_READ,
-> -				gfp);
-> -		/*
-> -		 * If the bio_alloc fails, try it again for a single page to
-> -		 * avoid having to deal with partial page reads.  This emulates
-> -		 * what do_mpage_read_folio does.
-> -		 */
-> -		if (!bio)
-> -			bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ, orig_gfp);
-> -		if (ctx->rac)
-> -			bio->bi_opf |= REQ_RAHEAD;
-> -		bio->bi_iter.bi_sector = sector;
-> -		bio->bi_end_io = ntfs_iomap_read_end_io;
-> -		bio_add_folio_nofail(bio, folio, plen, poff);
-> -		ctx->read_ctx = bio;
-> -	}
-> -	return 0;
-> -}
-> -
->   static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
->   		struct iomap_read_folio_ctx *ctx)
->   {
->   	struct bio *bio = ctx->read_ctx;
->   
-> +	bio->bi_end_io = ntfs_iomap_read_end_io;
->   	submit_bio(bio);
->   }
->   
->   static const struct iomap_read_ops ntfs_iomap_bio_read_ops = {
-> -	.read_folio_range = ntfs_iomap_bio_read_folio_range,
-> -	.submit_read = ntfs_iomap_bio_submit_read,
-> +	.read_folio_range	= iomap_bio_read_folio_range,
-> +	.submit_read		= ntfs_iomap_bio_submit_read,
->   };
->   
->   static int ntfs_read_folio(struct file *file, struct folio *folio)
+It's not possible.
 
-Hello,
+> 
+> > zoned rt requires rt groups, so that means the
+> > write pointer within a rtgroup has to be a xfs_rgblock_t (32bit)
+> > value,
+> > so shouldn't this be a __u32 field?
+> 
+> I figured since this is currently returning a basic block offset
+> (similar to a zone report from a zoned device), it *could* exceed a
+> U32_MAX for larger zones (?). Does it seem more appropriate to return
+> the xfs fsblock offset here instead?
 
-Thanks for the note. The iomap helper was copied because
-`iomap_bio_read_folio_range` is defined `static` in iomap/bio.c and thus
-not available for reuse; that prevented using the exported helpers in this
-tree.
-
-If Iâ€™m mistaken, please let me know.
-
-Regards,
-Konstantin
+No, the count of blocks in a zone is a xfs_rgblock_t, which is a
+uint32_t.  So all group/zone relative addressing can and should use
+32-bit types.
 
