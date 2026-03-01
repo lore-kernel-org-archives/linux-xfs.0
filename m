@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5069E2C1788;
-	Sun,  1 Mar 2026 01:34:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51851299A84;
+	Sun,  1 Mar 2026 01:34:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328881; cv=none; b=U73wCYCAEktQfe6NtzLBqY9JdMtZuMeOPM5XsBZAL3hNgxfKeoM/75DQdLHA8U/RptXqh+EM5wtU/PWSWNSl5tyikcORJRgguQzZb6QgHwLhkXhXV7ZiuZBfx+uobxeHPF0udCURseMvVwDX+wC/HNBF9hL5WrCirRTew3ZMRuc=
+	t=1772328885; cv=none; b=n5iIHZunSpg02dnS4oahPDF9AwPw6iyrqxBAHXXadgSmoJp/2U9v3nSm/C+/hw61C7EeONQQiiV+Z0F4ib7g698GNdz5EoBG6mGa+clkKBeiysr5poeDnTeNlR5WVjCP4qBqWTyvPQdTthuk/7ex0QGRYIOOFgzJ3xC6wUrSN7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328881; c=relaxed/simple;
-	bh=k2JRoIFBQk9xU1XgZlYxj8iYdVhW47ITXvdaxQ7TKsQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RspmmJo5yw0hl0Rww+J4dbeu7eyWNkpg7fN/bZP6SUBIpuicsZw+hirrkCgQ4BFvY6FBxDiKlRM2MI60CxjP69DEkgZ9TBz4ly8eGpuK+bQrzrA5ptNcjIEGaXNyiFWcHdLHEofPcW8ZVDqO3grN/NfwYWVkG6uW2nJImW7palQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m6G7TK2D; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328885; c=relaxed/simple;
+	bh=hIEDvdR1Ka4FKpCminD6mdYZfNvTjBOkDpULWg/KTUw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s37qNGVU34Yn9sdWNFUq9oGOiXmJV+c08TqzXs59W1wvtO/DbkcXaSXQ9lNwYFCRY4vAnidOCNapzMSO1ABOlsdf0zIN0mMB6f9XF61vWWujzy4oPceTEgDN6Bcvvk1CCz18A2JEVc2R3JmvGDzX8FmGaNeKbU8zqwYC8mgPEO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NlIPl/hS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m6G7TK2D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D355C19421;
-	Sun,  1 Mar 2026 01:34:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NlIPl/hS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA9B9C19421;
+	Sun,  1 Mar 2026 01:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328880;
-	bh=k2JRoIFBQk9xU1XgZlYxj8iYdVhW47ITXvdaxQ7TKsQ=;
+	s=k20201202; t=1772328885;
+	bh=hIEDvdR1Ka4FKpCminD6mdYZfNvTjBOkDpULWg/KTUw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=m6G7TK2D9JlclBfecWP6ihcYXKlS97iYOBfa8GJdJpM3tQ+YITw2wICthYSBkVImB
-	 bG7dxz5DlRNK0DL8QO/h2Sk1XnQKUDr2U9u244uZTNA6VwRyUsoD4Z/KA3AKSh250R
-	 CRvWUXTf3TzKa7UnwNpJ2NKwRDMKq3nZc5/RYJymGPue8Pl3XVme+R6CC3HpXXfzKT
-	 39iKl0vOKGS5omvhJNV06+eqCbo0DPRy05XhZsBMyLyN3hvSbYrplt4VwaEuUkDDVp
-	 0H62scxwznQINJWpGqIT1L271r5XOgbL8DRTt5wWbAVuR3bySitvpLmA41XW+I5pXJ
-	 BaYbN6DJZ7fWQ==
+	b=NlIPl/hSJqrZtMdwrhbH2VuzDgJrJ3ZPGMh1Bno+xhTbmbZ8wkDP10kN3q+jiboz8
+	 gnj/wAYeFZZBRWswUR6/0/vYN+wAUnVgSNDxGhuvZxiqB8rRN1/QVBZsdmGBAuj6F7
+	 tvugcJ5JBW/bijvtvwoKwTgvR2xg2luyuXXpgQTY4VsUyL9K/ETpMtLZpleLwUvPvu
+	 tb+qi1KhaeP4OuWwWOFQ7R+SRj46KfRnRyyZ7UK/RjwgVlOpNQGTMdttu9Kvx8ZoTS
+	 Ynhd90MAqNhq4FF+Jdy6rlMLKCrKhWehf1fN1og8yC6Dp7a89yF8u9kMYkuUfLjBYm
+	 xm1pnG8p+BrGw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: fix freemap adjustments when adding xattrs to leaf blocks" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:34:36 -0500
-Message-ID: <20260301013439.1694190-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: delete attr leaf freemap entries when empty" failed to apply to 6.6-stable tree
+Date: Sat, 28 Feb 2026 20:34:41 -0500
+Message-ID: <20260301013443.1694266-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -54,136 +54,73 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 3eefc0c2b78444b64feeb3783c017d6adc3cd3ce Mon Sep 17 00:00:00 2001
+From 6f13c1d2a6271c2e73226864a0e83de2770b6f34 Mon Sep 17 00:00:00 2001
 From: "Darrick J. Wong" <djwong@kernel.org>
-Date: Fri, 23 Jan 2026 09:27:31 -0800
-Subject: [PATCH] xfs: fix freemap adjustments when adding xattrs to leaf
- blocks
+Date: Fri, 23 Jan 2026 09:27:30 -0800
+Subject: [PATCH] xfs: delete attr leaf freemap entries when empty
 
-xfs/592 and xfs/794 both trip this assertion in the leaf block freemap
-adjustment code after ~20 minutes of running on my test VMs:
+Back in commit 2a2b5932db6758 ("xfs: fix attr leaf header freemap.size
+underflow"), Brian Foster observed that it's possible for a small
+freemap at the end of the end of the xattr entries array to experience
+a size underflow when subtracting the space consumed by an expansion of
+the entries array.  There are only three freemap entries, which means
+that it is not a complete index of all free space in the leaf block.
 
- ASSERT(ichdr->firstused >= ichdr->count * sizeof(xfs_attr_leaf_entry_t)
-					+ xfs_attr3_leaf_hdr_size(leaf));
+This code can leave behind a zero-length freemap entry with a nonzero
+base.  Subsequent setxattr operations can increase the base up to the
+point that it overlaps with another freemap entry.  This isn't in and of
+itself a problem because the code in _leaf_add that finds free space
+ignores any freemap entry with zero size.
 
-Upon enabling quite a lot more debugging code, I narrowed this down to
-fsstress trying to set a local extended attribute with namelen=3 and
-valuelen=71.  This results in an entry size of 80 bytes.
+However, there's another bug in the freemap update code in _leaf_add,
+which is that it fails to update a freemap entry that begins midway
+through the xattr entry that was just appended to the array.  That can
+result in the freemap containing two entries with the same base but
+different sizes (0 for the "pushed-up" entry, nonzero for the entry
+that's actually tracking free space).  A subsequent _leaf_add can then
+allocate xattr namevalue entries on top of the entries array, leading to
+data loss.  But fixing that is for later.
 
-At the start of xfs_attr3_leaf_add_work, the freemap looks like this:
+For now, eliminate the possibility of confusion by zeroing out the base
+of any freemap entry that has zero size.  Because the freemap is not
+intended to be a complete index of free space, a subsequent failure to
+find any free space for a new xattr will trigger block compaction, which
+regenerates the freemap.
 
-i 0 base 448 size 0 rhs 448 count 46
-i 1 base 388 size 132 rhs 448 count 46
-i 2 base 2120 size 4 rhs 448 count 46
-firstused = 520
-
-where "rhs" is the first byte past the end of the leaf entry array.
-This is inconsistent -- the entries array ends at byte 448, but
-freemap[1] says there's free space starting at byte 388!
-
-By the end of the function, the freemap is in worse shape:
-
-i 0 base 456 size 0 rhs 456 count 47
-i 1 base 388 size 52 rhs 456 count 47
-i 2 base 2120 size 4 rhs 456 count 47
-firstused = 440
-
-Important note: 388 is not aligned with the entries array element size
-of 8 bytes.
-
-Based on the incorrect freemap, the name area starts at byte 440, which
-is below the end of the entries array!  That's why the assertion
-triggers and the filesystem shuts down.
-
-How did we end up here?  First, recall from the previous patch that the
-freemap array in an xattr leaf block is not intended to be a
-comprehensive map of all free space in the leaf block.  In other words,
-it's perfectly legal to have a leaf block with:
-
- * 376 bytes in use by the entries array
- * freemap[0] has [base = 376, size = 8]
- * freemap[1] has [base = 388, size = 1500]
- * the space between 376 and 388 is free, but the freemap stopped
-   tracking that some time ago
-
-If we add one xattr, the entries array grows to 384 bytes, and
-freemap[0] becomes [base = 384, size = 0].  So far, so good.  But if we
-add a second xattr, the entries array grows to 392 bytes, and freemap[0]
-gets pushed up to [base = 392, size = 0].  This is bad, because
-freemap[1] hasn't been updated, and now the entries array and the free
-space claim the same space.
-
-The fix here is to adjust all freemap entries so that none of them
-collide with the entries array.  Note that this fix relies on commit
-2a2b5932db6758 ("xfs: fix attr leaf header freemap.size underflow") and
-the previous patch that resets zero length freemap entries to have
-base = 0.
+It looks like this bug has been in the codebase for quite a long time.
 
 Cc: <stable@vger.kernel.org> # v2.6.12
 Fixes: 1da177e4c3f415 ("Linux-2.6.12-rc2")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 36 +++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index c8c9737f04563..c0d6252271378 100644
+index 6061230b17ef5..c8c9737f04563 100644
 --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1476,6 +1476,7 @@ xfs_attr3_leaf_add_work(
- 	struct xfs_attr_leaf_name_local *name_loc;
- 	struct xfs_attr_leaf_name_remote *name_rmt;
- 	struct xfs_mount	*mp;
-+	int			old_end, new_end;
- 	int			tmp;
- 	int			i;
- 
-@@ -1568,17 +1569,36 @@ xfs_attr3_leaf_add_work(
- 	if (be16_to_cpu(entry->nameidx) < ichdr->firstused)
- 		ichdr->firstused = be16_to_cpu(entry->nameidx);
- 
--	ASSERT(ichdr->firstused >= ichdr->count * sizeof(xfs_attr_leaf_entry_t)
--					+ xfs_attr3_leaf_hdr_size(leaf));
--	tmp = (ichdr->count - 1) * sizeof(xfs_attr_leaf_entry_t)
--					+ xfs_attr3_leaf_hdr_size(leaf);
-+	new_end = ichdr->count * sizeof(struct xfs_attr_leaf_entry) +
-+					xfs_attr3_leaf_hdr_size(leaf);
-+	old_end = new_end - sizeof(struct xfs_attr_leaf_entry);
-+
-+	ASSERT(ichdr->firstused >= new_end);
- 
- 	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
--		if (ichdr->freemap[i].base == tmp) {
--			ichdr->freemap[i].base += sizeof(xfs_attr_leaf_entry_t);
-+		int		diff = 0;
-+
-+		if (ichdr->freemap[i].base == old_end) {
-+			/*
-+			 * This freemap entry starts at the old end of the
-+			 * leaf entry array, so we need to adjust its base
-+			 * upward to accomodate the larger array.
-+			 */
-+			diff = sizeof(struct xfs_attr_leaf_entry);
-+		} else if (ichdr->freemap[i].size > 0 &&
-+			   ichdr->freemap[i].base < new_end) {
-+			/*
-+			 * This freemap entry starts in the space claimed by
-+			 * the new leaf entry.  Adjust its base upward to
-+			 * reflect that.
-+			 */
-+			diff = new_end - ichdr->freemap[i].base;
-+		}
-+
-+		if (diff) {
-+			ichdr->freemap[i].base += diff;
- 			ichdr->freemap[i].size -=
--				min_t(uint16_t, ichdr->freemap[i].size,
--						sizeof(xfs_attr_leaf_entry_t));
-+				min_t(uint16_t, ichdr->freemap[i].size, diff);
+@@ -1580,6 +1580,19 @@ xfs_attr3_leaf_add_work(
+ 				min_t(uint16_t, ichdr->freemap[i].size,
+ 						sizeof(xfs_attr_leaf_entry_t));
  		}
- 
- 		/*
++
++		/*
++		 * Don't leave zero-length freemaps with nonzero base lying
++		 * around, because we don't want the code in _remove that
++		 * matches on base address to get confused and create
++		 * overlapping freemaps.  If we end up with no freemap entries
++		 * then the next _add will compact the leaf block and
++		 * regenerate the freemaps.
++		 */
++		if (ichdr->freemap[i].size == 0 && ichdr->freemap[i].base > 0) {
++			ichdr->freemap[i].base = 0;
++			ichdr->holes = 1;
++		}
+ 	}
+ 	ichdr->usedbytes += xfs_attr_leaf_entsize(leaf, args->index);
+ }
 -- 
 2.51.0
 
