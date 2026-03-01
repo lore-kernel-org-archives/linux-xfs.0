@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE1D238171;
-	Sun,  1 Mar 2026 01:23:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0C22727EB;
+	Sun,  1 Mar 2026 01:23:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328203; cv=none; b=lhFIy4nrcMWXDZcQHY09+X4xclrou3GeAHXGiE12Ne5Uc1aXMhKEwyZSVpYQC7aV3PsN3zt2GFyCdhyF4SNuRh3KruXD1dRV9QzIefee6GVhaAVPaUUZIDoaEiU8lBAgZM4BmB2EvR4wZzzdmmkR4CLGpO2KRqEsFrVpeFzg3wQ=
+	t=1772328208; cv=none; b=Rkhhzkr2XNgmxhBdt9OuLo+I2c4hXBqshnpVGPdisAifP1Row5pwu8vjuYO0EnyLQQBgmh5KVZCAD0DrV+ZnMy+UAmRuBzWh7x6ORBfhea/7Sj3eQbDxK7mFCzjSStRxejr3ZYVRjFunQDzvuIiqzs+VCZk7PpQiJYwoY9jzC28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328203; c=relaxed/simple;
-	bh=lztf7gbi9rIi7D96Gsi+OIv5d56OJVcQ8bcksuUHnEI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=svkFcg4jIuuraDpjDO4f4+S0Ye8ih65DRant8/Fwvt+yN3IkxRasNp9jyoXPfbWGFMZfqmIVvbge7ys09SiRi6xgbJ0awYQBG4KUPvr9wE28Gm+y3chzL/sCQ4goliHvlmVcnCY/Nf+Bywe9JJAQsX7l56rlW3kqFK1d9kUFM8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vwd7/8mc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328208; c=relaxed/simple;
+	bh=h8YsQ6PfIkYmpRG1oPkA846rc3k2v2gUCfWlTVSEv/U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ey/VcrnsysCU9VK9aSehOsNJcrrFSb472E8krYtygndInt6cGc27fzap+vdVfZvy0/sXfbdHzM6krVYHGRolPHOfo1++Z2n33jNl2VoGMBN8QNc5N08W+l6OXBl/mV40cl8eEPgGX2D17ZGElqdGPRike5ARK54KcGB14MqkmZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NWSprLr7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vwd7/8mc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12F9CC19421;
-	Sun,  1 Mar 2026 01:23:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NWSprLr7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD2FBC19421;
+	Sun,  1 Mar 2026 01:23:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328203;
-	bh=lztf7gbi9rIi7D96Gsi+OIv5d56OJVcQ8bcksuUHnEI=;
+	s=k20201202; t=1772328208;
+	bh=h8YsQ6PfIkYmpRG1oPkA846rc3k2v2gUCfWlTVSEv/U=;
 	h=From:To:Cc:Subject:Date:From;
-	b=Vwd7/8mcuWhf51kzuv/gMzrBLwoL8fF1r0gMRqbXibxoaQQsP67fwqTmHE6i8iqGb
-	 eKU3FqfApIIpuL6eN5WwfwNB1iI2aN0M+3CzNJ0aRs5DO70STyt4EcfxI7fhHDM6G/
-	 OadEzrxI10Qu8qg7WDNSg6v11ldNEtvWT0p3wa4MMrQ8ODqcKgyk02ujH7Vm4Ta/VE
-	 JH8jaMhaB/4O4P95xgFckDz7fwekNTRlnmW9MWZVPNxmwZIdxatGuDn9Q6r7sLUkCU
-	 0xvfLJ0V/0me5B1t/kwWGIih0Whw1CWwaR60N1JsTlmoMEd0NtzH43ONz7iIDDnCwU
-	 MfQ3IbFZROm6w==
+	b=NWSprLr7aQYVx3er5aNcjnXm0F2tJxxpg3c6bis6nDKKJ76D9sSrA8Xr56XzVLdk+
+	 kFTXKJ8GBx/JpkcsjqFqatWkUrg1ds3jq8dVaQyFG+P8qIlLFEnF74EHj3qwQwTuRu
+	 PEYYcIrBRQ5ZmpnPGGzPHWsHt57hus7SiU3izal++1L3zvkDOB2t9ArR9qSKcVMLCA
+	 JiRZ2rEjknW/GyWiip25KyTetT7SWk8MuOCHmnKLbK8RXQivBI9mmx0ymdDOy84TL4
+	 T7QZ3hK08yXhtwCc4I0XUzkoqrE4M2voIDIjBSYBkjYxKF7jTV40SoKQJ8p1dR7IzM
+	 Ei2/iJwEl7FMQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	djwong@kernel.org
 Cc: r772577952@gmail.com,
 	Christoph Hellwig <hch@lst.de>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: only call xf{array,blob}_destroy if we have a valid pointer" failed to apply to 6.12-stable tree
-Date: Sat, 28 Feb 2026 20:23:21 -0500
-Message-ID: <20260301012321.1680046-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: check return value of xchk_scrub_create_subord" failed to apply to 6.12-stable tree
+Date: Sat, 28 Feb 2026 20:23:26 -0500
+Message-ID: <20260301012326.1680145-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -55,119 +55,68 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From ba408d299a3bb3c5309f40c5326e4fb83ead4247 Mon Sep 17 00:00:00 2001
+From ca27313fb3f23e4ac18532ede4ec1c7cc5814c4a Mon Sep 17 00:00:00 2001
 From: "Darrick J. Wong" <djwong@kernel.org>
-Date: Fri, 23 Jan 2026 09:27:37 -0800
-Subject: [PATCH] xfs: only call xf{array,blob}_destroy if we have a valid
- pointer
+Date: Fri, 23 Jan 2026 09:27:38 -0800
+Subject: [PATCH] xfs: check return value of xchk_scrub_create_subord
 
-Only call the xfarray and xfblob destructor if we have a valid pointer,
-and be sure to null out that pointer afterwards.  Note that this patch
-fixes a large number of commits, most of which were merged between 6.9
-and 6.10.
+Fix this function to return NULL instead of a mangled ENOMEM, then fix
+the callers to actually check for a null pointer and return ENOMEM.
+Most of the corrections here are for code merged between 6.2 and 6.10.
 
 Cc: r772577952@gmail.com
 Cc: <stable@vger.kernel.org> # v6.12
-Fixes: ab97f4b1c03075 ("xfs: repair AGI unlinked inode bucket lists")
+Fixes: 1a5f6e08d4e379 ("xfs: create subordinate scrub contexts for xchk_metadata_inode_subtype")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Tested-by: Jiaming Zhang <r772577952@gmail.com>
 ---
- fs/xfs/scrub/agheader_repair.c | 8 ++++++--
- fs/xfs/scrub/attr_repair.c     | 6 ++++--
- fs/xfs/scrub/dir_repair.c      | 8 ++++++--
- fs/xfs/scrub/dirtree.c         | 8 ++++++--
- fs/xfs/scrub/nlinks.c          | 3 ++-
- 5 files changed, 24 insertions(+), 9 deletions(-)
+ fs/xfs/scrub/common.c | 3 +++
+ fs/xfs/scrub/repair.c | 3 +++
+ fs/xfs/scrub/scrub.c  | 2 +-
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index d8e3c51a41b1a..15d58eedb3873 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -837,8 +837,12 @@ xrep_agi_buf_cleanup(
- {
- 	struct xrep_agi	*ragi = buf;
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index affed35a8c96f..20e63069088b3 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -1399,6 +1399,9 @@ xchk_metadata_inode_subtype(
+ 	int			error;
  
--	xfarray_destroy(ragi->iunlink_prev);
--	xfarray_destroy(ragi->iunlink_next);
-+	if (ragi->iunlink_prev)
-+		xfarray_destroy(ragi->iunlink_prev);
-+	ragi->iunlink_prev = NULL;
-+	if (ragi->iunlink_next)
-+		xfarray_destroy(ragi->iunlink_next);
-+	ragi->iunlink_next = NULL;
- 	xagino_bitmap_destroy(&ragi->iunlink_bmp);
- }
+ 	sub = xchk_scrub_create_subord(sc, scrub_type);
++	if (!sub)
++		return -ENOMEM;
++
+ 	error = sub->sc.ops->scrub(&sub->sc);
+ 	xchk_scrub_free_subord(sub);
+ 	return error;
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 3ebe27524ce39..ac8c592579bd5 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -1136,6 +1136,9 @@ xrep_metadata_inode_subtype(
+ 	 * setup/teardown routines.
+ 	 */
+ 	sub = xchk_scrub_create_subord(sc, scrub_type);
++	if (!sub)
++		return -ENOMEM;
++
+ 	error = sub->sc.ops->scrub(&sub->sc);
+ 	if (error)
+ 		goto out;
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 670ac2baae0c7..c1c6415f50550 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -634,7 +634,7 @@ xchk_scrub_create_subord(
  
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index f9191eae13eea..a924b467a8447 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -1516,8 +1516,10 @@ xrep_xattr_teardown(
- 		xfblob_destroy(rx->pptr_names);
- 	if (rx->pptr_recs)
- 		xfarray_destroy(rx->pptr_recs);
--	xfblob_destroy(rx->xattr_blobs);
--	xfarray_destroy(rx->xattr_records);
-+	if (rx->xattr_blobs)
-+		xfblob_destroy(rx->xattr_blobs);
-+	if (rx->xattr_records)
-+		xfarray_destroy(rx->xattr_records);
- 	mutex_destroy(&rx->lock);
- 	kfree(rx);
- }
-diff --git a/fs/xfs/scrub/dir_repair.c b/fs/xfs/scrub/dir_repair.c
-index dbfcef6fb7da6..f105e49f654bd 100644
---- a/fs/xfs/scrub/dir_repair.c
-+++ b/fs/xfs/scrub/dir_repair.c
-@@ -172,8 +172,12 @@ xrep_dir_teardown(
- 	struct xrep_dir		*rd = sc->buf;
+ 	sub = kzalloc(sizeof(*sub), XCHK_GFP_FLAGS);
+ 	if (!sub)
+-		return ERR_PTR(-ENOMEM);
++		return NULL;
  
- 	xrep_findparent_scan_teardown(&rd->pscan);
--	xfblob_destroy(rd->dir_names);
--	xfarray_destroy(rd->dir_entries);
-+	if (rd->dir_names)
-+		xfblob_destroy(rd->dir_names);
-+	rd->dir_names = NULL;
-+	if (rd->dir_entries)
-+		xfarray_destroy(rd->dir_entries);
-+	rd->dir_names = NULL;
- }
- 
- /* Set up for a directory repair. */
-diff --git a/fs/xfs/scrub/dirtree.c b/fs/xfs/scrub/dirtree.c
-index e484f8a0886cd..e95dc74f11456 100644
---- a/fs/xfs/scrub/dirtree.c
-+++ b/fs/xfs/scrub/dirtree.c
-@@ -81,8 +81,12 @@ xchk_dirtree_buf_cleanup(
- 		kfree(path);
- 	}
- 
--	xfblob_destroy(dl->path_names);
--	xfarray_destroy(dl->path_steps);
-+	if (dl->path_names)
-+		xfblob_destroy(dl->path_names);
-+	dl->path_names = NULL;
-+	if (dl->path_steps)
-+		xfarray_destroy(dl->path_steps);
-+	dl->path_steps = NULL;
- 	mutex_destroy(&dl->lock);
- }
- 
-diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-index 46488aff908cc..e80fe7395d788 100644
---- a/fs/xfs/scrub/nlinks.c
-+++ b/fs/xfs/scrub/nlinks.c
-@@ -971,7 +971,8 @@ xchk_nlinks_teardown_scan(
- 
- 	xfs_dir_hook_del(xnc->sc->mp, &xnc->dhook);
- 
--	xfarray_destroy(xnc->nlinks);
-+	if (xnc->nlinks)
-+		xfarray_destroy(xnc->nlinks);
- 	xnc->nlinks = NULL;
- 
- 	xchk_iscan_teardown(&xnc->collect_iscan);
+ 	sub->old_smtype = sc->sm->sm_type;
+ 	sub->old_smflags = sc->sm->sm_flags;
 -- 
 2.51.0
 
