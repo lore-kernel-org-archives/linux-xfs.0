@@ -1,314 +1,65 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailly.debian.org (mailly.debian.org [82.195.75.114])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76D433B2AA
-	for <linux-xfs@vger.kernel.org>; Sun,  1 Mar 2026 13:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9A74315A
+	for <linux-xfs@vger.kernel.org>; Sun,  1 Mar 2026 16:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.114
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772370956; cv=none; b=YbN2D6lGEzGpLnSxzMW44zzwV1v+obk/AR6z3Y7S50mvu0F/yKtG+qOJFI4ECh+mTeipyDoAlr8MOq3bLlOTMHkrOw3Du5m1MXjLIqsCYWOmQHKdp7+bEHMGSVFcqaTClM3P6T60TwlpaxLIGBhfruBz5zU31NgUjsqbYDGMGQw=
+	t=1772383148; cv=none; b=V/bil5qkJGTSewYBj3/ugsG8ijRhmmCS52MnnvYkPdaQgOs8voTxi4ImIjHJ3KmaSHeCap+l0tr2xUCYoZpyiHImI1vMCpMHBRmuh8KMPB7yR9yn79GFbKbkoDwvz2rrxk1ebbq7Cst7Om4w592jbIjrjStqg1x8SK4slBGrcJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772370956; c=relaxed/simple;
-	bh=ZLZQE0GXeHZvnuR3V3ClHur20ND39tVVF7L8YuUrOM4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q0S6n3/jkPhZ+pBY5kKUpp8gIMkF474Utmim8NiUlpdEZYVwcS68FTEJu2gvJIYQnxM5T4PC5zMYEdvFymHbv+e5BAz4m3/l0MEMLPLjP0RDLGpScPtlENJTaufbvPQS8cZffDbBDxvtLi8hyNzzuqf9kdUl9tt6wdMAVb3rhsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Imd7PUpA; arc=none smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772383148; c=relaxed/simple;
+	bh=3UKrX9IBmd+GmZv5dP/3VzeuKSgDIeADLcZIX0hL1jM=;
+	h=To:From:Subject:Date:Message-Id; b=R9IGPDEhjzE9VGMopQKCF2UUSTiSI00rKI+oguVi2CGdL4vLTP36BeDoJV6BXPdJOMwWsszCoFMKn631GZ9aN750jlD6K07k5DmUShrsm/YYP+lngiLl1YrMHiCQOmraodEzBOWwMcZ8bW4WNolmroQ71UwOtsaXvPaCqpFuzoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org; spf=none smtp.mailfrom=ftp-master.debian.org; dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b=kk5yuhYO; arc=none smtp.client-ip=82.195.75.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ftp-master.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp-master.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Imd7PUpA"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-b935b8dcab7so553179266b.1
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Mar 2026 05:15:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772370954; x=1772975754; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=kZuHbNxrjmmINf1/XZXGIBer5llHrVS+trrV0cr48Gc=;
-        b=Imd7PUpAx5LizhFfyaFyReG0dwWtsm2/CbGzRc88/Mwjsd6QRJnR9b8RhV4Pu84VJI
-         suv3MAJFGAlRbqgASpEP+PQnTWd14JM811thsOr7ZRSpFIYn+YwXsWiHKOQzdn95nYcZ
-         FgcZxfTxAgv0bQhpRrUT6TGfIYP6cn2Vghr9MX6A76sMcFsKxQlQ39afmurWDp32jr1v
-         TyRNr5U7UsTWoh4O4Ioc2+HV4D91aptkTUcKDYJdKHUFrPY52QxWKFxb9cK/fNmgieku
-         8PwgXVkh+Ce4o1BlFv6Et1tDt5PAzE5e89anQ83fZCxpnTqD5HH8riYqo2GxpbDBXH9K
-         IXeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772370954; x=1772975754;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kZuHbNxrjmmINf1/XZXGIBer5llHrVS+trrV0cr48Gc=;
-        b=HMcWJ8Ll6Ea0TwTTnxLziQ6FX81GFKs5dHoziCNYLq8rGmMbH7DzSpfa+xhezPvU7j
-         OfwGyfhPrkTHtvfZHdlcHk1uPn0pkeHqRKyheRecEpn4jhB6SUUOB3fP7g48A8US7cN/
-         nP817C+oAcotv7Bmrqq1FKT3srN0VhuqAMK9iARkLj/TvPwH+h355DEB+ZRW9FC+aQGI
-         tODgwsqo5yET43zGbn76JANLDBJ6WBIBcm3KMxfG9VMwK6ZS0Pu82Ly7eKSrTL/naTz4
-         eVaZqnCVKth7Zkbv394Spc9tcO1GkmrLWuyeZbKX/DHSwOsA3rmk2k038xMi57LLWwLL
-         nGgQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVI6+m+GOfODCJzl684qjwVUfYGkJbndEt/t7ZHzB/ty4Y/u0CPIo5nF9iA5WvdcH66ZTybxjcp1To=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyBXfZViCQAX6sAhNKReekfhPcEFAKltIQ/ym3UTzlEkLBsUD9V
-	HU2OmQi02uqKI25+XC4glCMLbltFxrf/bzww60f7HLEEslClBKL7fiwi0SV62Glb
-X-Gm-Gg: ATEYQzwMExPyJI7a7b49wUoqXs25O3E5w6b8MjXByO+8LWg8a5Ur2DjyavmutSvVEVs
-	0dgncusPhoQaLBNruf9pgHVzlZMuIh7k7NZ1K+mQLFVcMBJU2P1Zsuz/zcd+3iszkwU2hC84+ky
-	h1T3ilOVXQw6V6pwVMOVfuKL4pqmW/VBbebXRUga+eehpPU355UE+Llx2ueYSwwDm5g0BMG6F6i
-	pbzCadFgjYBCjgHQJhPK/Z4MJGXbJWiSfGcBjzvbq/qNODN1aXy8zxf2VW4TsaYDMu3NosXUClE
-	b0Qi5k6AsZFnMtyMYwOxr+iN9k4J90gc+EGN5cVdBH359g/kD7mnIfynwEn3miWaXGt22EQIkFO
-	JoReoijSfVsr2OAV1ukhjiBmtCIEVK8DUhVDYdv1UmPMDvBbs11U7+WA/XCzN+9u4+SmcYOLRMr
-	+ClHDUNlxueqQQZUaCeOakZfIfWvF8d0t2tlW8Wgrb9B7cLLaBXlKjQhGK3GAmnYP+Fho8cdMDB
-	sH2IrynMlJhpFNbtqwL/jrj0fcz
-X-Received: by 2002:a17:906:ad7:b0:b88:775c:bd6b with SMTP id a640c23a62f3a-b9376553e7amr432998666b.46.1772370953329;
-        Sun, 01 Mar 2026 05:15:53 -0800 (PST)
-Received: from localhost (2001-1c00-570d-ee00-d118-5ff5-6236-8e43.cable.dynamic.v6.ziggo.nl. [2001:1c00:570d:ee00:d118:5ff5:6236:8e43])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b935ac51431sm360050666b.17.2026.03.01.05.15.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Mar 2026 05:15:52 -0800 (PST)
-Date: Sun, 1 Mar 2026 14:15:52 +0100
-From: Amir Goldstein <amir73il@gmail.com>
-To: Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 5/9] fstests: verify fanotify isolation on cloned
- filesystems
-Message-ID: <aaQ8CB7C4FjDuedR@amir-ThinkPad-T480>
-References: <cover.1772095513.git.asj@kernel.org>
- <b54dea5e72585db5f5c3d74ce399f9d839965821.1772095513.git.asj@kernel.org>
+	dkim=pass (2048-bit key) header.d=ftp-master.debian.org header.i=@ftp-master.debian.org header.b="kk5yuhYO"
+Received: via submission
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+	by mailly.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1vwjov-0048WB-17
+	for linux-xfs@vger.kernel.org;
+	Sun, 01 Mar 2026 16:39:05 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+	Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=pl4zZ7AUmE0YewSK3QZOcu/7aZwzUBXZymUuSXvGMrc=; b=kk5yuhYOBuVZbeMKttUj4TueNu
+	cnWJXjsqFPXrq7roWtJuBtbSUfxYSlL5k1mUaLBOSS4lOeR2JoaLW8t/ImaZJcRKikfHyLu0rQuho
+	KZx8FUvhuf50PpRJEnJ8YVQe1lLyXOaVbLZq0B3di6S7S/0+URHQofeKYbWXjiq328NnMEhguA5eJ
+	Pc9bcScPbMRrAiKoNv90yFrQbsDqeN37ZJd6MAwwVRgppDK0eun5+iMhClq7tzOp78EOF7YirZlHg
+	yvGbZK7WNobon3zokYM0+3xE0y2g9b0LdiHDagbTPw1G3BhyOnOKVh7qeIg7FtRYT7gaLAGAgvphG
+	K6K1PYlg==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.96)
+	(envelope-from <ftpmaster@ftp-master.debian.org>)
+	id 1vwjou-002WWv-1G
+	for linux-xfs@vger.kernel.org;
+	Sun, 01 Mar 2026 16:39:04 +0000
+To: linux-xfs@vger.kernel.org
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.18.0-5_source.changes
+Date: Sun, 01 Mar 2026 16:39:04 +0000
+X-Debian: DAK
+X-DAK: DAK
+Precedence: bulk
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1vwjou-002WWv-1G@usper.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b54dea5e72585db5f5c3d74ce399f9d839965821.1772095513.git.asj@kernel.org>
 
-On Thu, Feb 26, 2026 at 10:41:46PM +0800, Anand Jain wrote:
-> Verify that fanotify events are correctly routed to the appropriate
-> watcher when cloned filesystems are mounted.
-> Helps verify kernel's event notification distinguishes between devices
-> sharing the same FSID/UUID.
-> 
-> Signed-off-by: Anand Jain <asj@kernel.org>
-> ---
->  .gitignore            |  1 +
->  src/Makefile          |  2 +-
->  src/fanotify.c        | 66 +++++++++++++++++++++++++++++++++
->  tests/generic/791     | 86 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/791.out |  7 ++++
->  5 files changed, 161 insertions(+), 1 deletion(-)
->  create mode 100644 src/fanotify.c
->  create mode 100644 tests/generic/791
->  create mode 100644 tests/generic/791.out
-> 
-> diff --git a/.gitignore b/.gitignore
-> index 82c57f415301..7f91310ce58b 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -212,6 +212,7 @@ tags
->  /src/dio-writeback-race
->  /src/unlink-fsync
->  /src/file_attr
-> +/src/fanotify
->  
->  # Symlinked files
->  /tests/generic/035.out
-> diff --git a/src/Makefile b/src/Makefile
-> index d0a4106e6be8..ff71cde936a7 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -36,7 +36,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
->  	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
->  	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment \
-> -	rw_hint
-> +	rw_hint fanotify
+xfsprogs_6.18.0-5_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.18.0-5.dsc
+  xfsprogs_6.18.0-5.debian.tar.xz
+  xfsprogs_6.18.0-5_source.buildinfo
 
-Check if you already have fsnotifywait installed on your system
-most likely you do. It was added to inotify-tools quite some time ago.
-Could save you from adding a custom prog.
-Not 100% sure about fsnotifywait, but quite sure that
-fsnotifywatch --verbose prints the FSID of events.
+Greetings,
 
-Thanks,
-Amir.
-
->  
->  EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
->  	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-> diff --git a/src/fanotify.c b/src/fanotify.c
-> new file mode 100644
-> index 000000000000..e30c48dc0e52
-> --- /dev/null
-> +++ b/src/fanotify.c
-> @@ -0,0 +1,66 @@
-> +/*
-> + * SPDX-License-Identifier: GPL-2.0
-> + * Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-> + *
-> + * Simple fanotify monitor to verify mount-point event isolation.
-> + */
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <fcntl.h>
-> +#include <unistd.h>
-> +#include <errno.h>
-> +#include <string.h>
-> +#include <stdint.h>
-> +#include <sys/fanotify.h>
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int fd;
-> +	char buf[4096] __attribute__((aligned(8)));
-> +	setlinebuf(stdout);
-> +
-> +	if (argc < 2) {
-> +		fprintf(stderr, "Usage: %s <path>\n", argv[0]);
-> +		return 1;
-> +	}
-> +
-> +	// Initialize with FID reporting
-> +	fd = fanotify_init(FAN_CLASS_NOTIF | FAN_REPORT_FID, O_RDONLY);
-> +	if (fd < 0) {
-> +		perror("fanotify_init");
-> +		return 1;
-> +	}
-> +
-> +	if (fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_FILESYSTEM,
-> +			  FAN_CREATE, AT_FDCWD, argv[1]) < 0) {
-> +		perror("fanotify_mark");
-> +		return 1;
-> +	}
-> +
-> +	printf("Listening for events on %s...\n", argv[1]);
-> +	while (1) {
-> +		struct fanotify_event_metadata *metadata = (struct fanotify_event_metadata *)buf;
-> +		ssize_t len = read(fd, buf, sizeof(buf));
-> +
-> +		if (len <= 0) break;
-> +
-> +		while (FAN_EVENT_OK(metadata, len)) {
-> +			// metadata_len is the offset to the first info record
-> +			if (metadata->event_len > metadata->metadata_len) {
-> +				struct fanotify_event_info_header *hdr =
-> +(struct fanotify_event_info_header *)((char *)metadata + metadata->metadata_len);
-> +
-> +				if (hdr->info_type == FAN_EVENT_INFO_TYPE_FID) {
-> +					struct fanotify_event_info_fid *fid = (struct fanotify_event_info_fid *)hdr;
-> +					printf("FSID: %08x%08x\n",
-> +						fid->fsid.val[0], fid->fsid.val[1]);
-> +				}
-> +			}
-> +			metadata = FAN_EVENT_NEXT(metadata, len);
-> +		}
-> +	}
-> +
-> +	fflush(stdout);
-> +	close(fd);
-> +	return 0;
-> +}
-> diff --git a/tests/generic/791 b/tests/generic/791
-> new file mode 100644
-> index 000000000000..fe8109083732
-> --- /dev/null
-> +++ b/tests/generic/791
-> @@ -0,0 +1,86 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-> +#
-> +# FS QA Test 791
-> +# Verify fanotify FID functionality on cloned filesystems by setting up
-> +# watchers and making sure notifications are in the correct logs files.
-> +
-> +. ./common/preamble
-> +
-> +_begin_fstest auto quick mount clone
-> +
-> +_require_test
-> +_require_scratch_dev_pool 2
-> +
-> +[ "$FSTYP" = "ext4" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-> +	"ext4: derive f_fsid from block device to avoid collisions"
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	umount $mnt1 $mnt2 2>/dev/null
-> +	_scratch_dev_pool_put
-> +}
-> +
-> +_scratch_dev_pool_get 2
-> +_scratch_mkfs_sized_clone >$seqres.full 2>&1
-> +devs=($SCRATCH_DEV_POOL)
-> +mnt2=$TEST_DIR/mnt2
-> +mkdir -p $mnt2
-> +
-> +_scratch_mount $(_clone_mount_option)
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-> +						_fail "Failed to mount dev2"
-> +
-> +fsid1=$(stat -f -c "%i" $SCRATCH_MNT)
-> +fsid2=$(stat -f -c "%i" $mnt2)
-> +
-> +[[ "$fsid1" == "$fsid2" ]] && \
-> +	_notrun "Require clone filesystem with unique f_fsid"
-> +
-> +log1=$tmp.fanotify1
-> +log2=$tmp.fanotify2
-> +
-> +echo "Setup FID fanotify watchers on both SCRATCH_MNT and mnt2"
-> +$here/src/fanotify $SCRATCH_MNT > $log1 2>&1 &
-> +pid1=$!
-> +$here/src/fanotify $mnt2 > $log2 2>&1 &
-> +pid2=$!
-> +sleep 2
-> +
-> +echo "Trigger file creation on SCRATCH_MNT"
-> +touch $SCRATCH_MNT/file_on_scratch_mnt
-> +sync
-> +sleep 1
-> +
-> +echo "Trigger file creation on mnt2"
-> +touch $mnt2/file_on_mnt2
-> +sync
-> +sleep 1
-> +
-> +echo "Verify fsid in the fanotify"
-> +kill $pid1 $pid2
-> +wait $pid1 $pid2 2>/dev/null
-> +
-> +echo fsid1=$fsid1 fsid2=$fsid2 >> $seqres.full
-> +cat $log1 >> $seqres.full
-> +cat $log2 >> $seqres.full
-> +
-> +if grep -q "${fsid1}" $log1 && ! grep -q "${fsid2}" $log1; then
-> +	echo "SUCCESS: SCRATCH_MNT events found"
-> +else
-> +	[ ! -s $log1 ] && echo "  - SCRATCH_MNT received no events."
-> +	grep -q "${fsid2}" $log1 && echo "  - SCRATCH_MNT received event from mnt2."
-> +fi
-> +
-> +if grep -q "${fsid2}" $log2 && ! grep -q "${fsid1}" $log2; then
-> +	echo "SUCCESS: mnt2 events found"
-> +else
-> +	[ ! -s $log2 ] && echo "  - mnt2 received no events."
-> +	grep -q "${fsid1}" $log2 && echo "  - mnt2 received event from SCRATCH_MNT."
-> +fi
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/791.out b/tests/generic/791.out
-> new file mode 100644
-> index 000000000000..9725c99bcb4b
-> --- /dev/null
-> +++ b/tests/generic/791.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 791
-> +Setup FID fanotify watchers on both SCRATCH_MNT and mnt2
-> +Trigger file creation on SCRATCH_MNT
-> +Trigger file creation on mnt2
-> +Verify fsid in the fanotify
-> +SUCCESS: SCRATCH_MNT events found
-> +SUCCESS: mnt2 events found
-> -- 
-> 2.43.0
-> 
+	Your Debian queue daemon (running on host usper.debian.org)
