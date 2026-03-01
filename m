@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E2C51A3165;
-	Sun,  1 Mar 2026 01:51:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F581A3165;
+	Sun,  1 Mar 2026 01:51:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329884; cv=none; b=DbCEpK5S6lCz8bylwVbMpOdofnCz5d5yqlJ4hy3owkHCFgSLKofiOU3NB+WtCBosSAM6T36BotFSy6NpvQQXK/ApNvvti3bh4C4te9DGKFnaixHYfJtSKC6IzRNbD4Z3VLeA2zKL4jZkw4FITZ9FF1qPToWZrI7RTzjuwIlZ/Dk=
+	t=1772329889; cv=none; b=pg/LvC98rFv3IdioZhu81XXzMPqARaV5bNBm+vpYhTbWwH80KbL/Q3jgzaVOpRYE5lVaLFU9HY+fUTEdkpHTuTCAlWtJc3CSZAvBzxKYPqcMBnopsEok17PaNJO0oxqMYuBFQRUvsffV+8GYBXb7N2WTQHalHzoIemW4QBIuUwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329884; c=relaxed/simple;
-	bh=NR7jY9BJNhXmlxBo2SY0ZZi0oOMfjQurKdsPFhXUbbQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JAedN4fu7glk3HQK2Uq0VYadO7Q4ZntHCCNg/5w+iiGx9IVzSldCmLfMzqYkW5y1iosNIRcab1RxZPAH0wNhdhDnpfkBtBif2ev9PLriaHYneq0Kcf4wdMxLnafc+D7IajIMzR9cxMsNA5BylxcEBOTfCKPDs4jJBsmVtfrxcE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQGmA/Uu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329889; c=relaxed/simple;
+	bh=AgSADgdW694KD7uHvIcfpYrMGEv0FmdH9BuEzfYfoOs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WIHBzSeKF9AjUxcQDRmTP3mzhT3+Cry5dBQtoGHNNpde1nui/fHNG+cVXUDCEfIFnYkwLBKdwBlb6CK3HKSXdL240F31/SUjfQuE37t39DXWPHkIIpMK55EzjF5y40/uLF/W0/4s5g+iJQ3mfzuWVEHWJROHj/DS44QWwpkqvL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XTxFSyCT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQGmA/Uu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3280C19425;
-	Sun,  1 Mar 2026 01:51:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XTxFSyCT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 844E8C19425;
+	Sun,  1 Mar 2026 01:51:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329884;
-	bh=NR7jY9BJNhXmlxBo2SY0ZZi0oOMfjQurKdsPFhXUbbQ=;
+	s=k20201202; t=1772329889;
+	bh=AgSADgdW694KD7uHvIcfpYrMGEv0FmdH9BuEzfYfoOs=;
 	h=From:To:Cc:Subject:Date:From;
-	b=aQGmA/UuMg7fzSx7Wd7b6sFiAxft8DL418JKf2SabOimkTl3OavkJMkXt4E1BhYWa
-	 BJfsb1m7P6rmwBTd1UvAzYs+YoeLTpTaXdKQShmX+Vc2HnSOlojLV54SJggElVjkhe
-	 k+eEXh5dfsJnklHa/7qUih/wsejFaDzcEqpah/v2x0sYcwX/92Ee7dRC6kiZAhDpFU
-	 WHmZHPDC7zHzOH2hTZciqAXpsow0aNN7t+CHI05xlShP3AU7Jgr1WQy1IY0A6mVOzd
-	 hmLV6cI3q8s3G9wodqSKByRx00U/7vlSeF42YI0R785gayjvsuY6Ed0SA6FFXz0iUe
-	 NWolOZaRpvgvw==
+	b=XTxFSyCTPu7GlW7pSmO5m6jhUcfe8w/D7irQ88zl/do53I/bXH4JP7UK/dTRRx13b
+	 fK9Vb93QX/w+UZ9IicJIv533n3R6USm5fakfuaCqBzrEYmHkCgXyk5j4LfuHhH+183
+	 BsT2FkkbvDZgP5rKvcVZgVSNB0flNfmebf5BnuW2RCj+QbwiFHtVNsaqYuxRKzNlep
+	 0fPLIJGhLqlxV12WNydcksLr0LAP3BupfOh6yYBh26evlWLbGB8TdQ5otq17lHaa+P
+	 tnOXoo7bxbgItzCTB545PQxmC2GDEWJOhIHt+DXIvEJf8tmLnD5h9YH5p3stkZrCmy
+	 c+5QosKp7+flQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	hch@lst.de
-Cc: Mark Tinguely <mark.tinguely@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
+	djwong@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>,
 	Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: remove xfs_attr_leaf_hasname" failed to apply to 5.15-stable tree
-Date: Sat, 28 Feb 2026 20:51:22 -0500
-Message-ID: <20260301015122.1717646-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: mark data structures corrupt on EIO and ENODATA" failed to apply to 5.15-stable tree
+Date: Sat, 28 Feb 2026 20:51:26 -0500
+Message-ID: <20260301015127.1717768-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -56,157 +55,80 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 3a65ea768b8094e4699e72f9ab420eb9e0f3f568 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Fri, 9 Jan 2026 16:17:40 +0100
-Subject: [PATCH] xfs: remove xfs_attr_leaf_hasname
+From f39854a3fb2f06dc69b81ada002b641ba5b4696b Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <djwong@kernel.org>
+Date: Thu, 18 Dec 2025 18:40:50 -0800
+Subject: [PATCH] xfs: mark data structures corrupt on EIO and ENODATA
 
-The calling convention of xfs_attr_leaf_hasname() is problematic, because
-it returns a NULL buffer when xfs_attr3_leaf_read fails, a valid buffer
-when xfs_attr3_leaf_lookup_int returns -ENOATTR or -EEXIST, and a
-non-NULL buffer pointer for an already released buffer when
-xfs_attr3_leaf_lookup_int fails with other error values.
+I learned a few things this year: first, blk_status_to_errno can return
+ENODATA for critical media errors; and second, the scrub code doesn't
+mark data structures as corrupt on ENODATA or EIO.
 
-Fix this by simply open coding xfs_attr_leaf_hasname in the callers, so
-that the buffer release code is done by each caller of
-xfs_attr3_leaf_read.
+Currently, scrub failing to capture these errors isn't all that
+impactful -- the checking code will exit to userspace with EIO/ENODATA,
+and xfs_scrub will log a complaint and exit with nonzero status.  Most
+people treat fsck tools failing as a sign that the fs is corrupt, but
+online fsck should mark the metadata bad and keep moving.
 
-Cc: stable@vger.kernel.org # v5.19+
-Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-Reported-by: Mark Tinguely <mark.tinguely@oracle.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Cc: stable@vger.kernel.org # v4.15
+Fixes: 4700d22980d459 ("xfs: create helpers to record and deal with scrub problems")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c | 75 +++++++++++++---------------------------
- 1 file changed, 24 insertions(+), 51 deletions(-)
+ fs/xfs/scrub/btree.c   | 2 ++
+ fs/xfs/scrub/common.c  | 4 ++++
+ fs/xfs/scrub/dabtree.c | 2 ++
+ 3 files changed, 8 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 866abae58fe1e..9e6b18d6ae003 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -50,7 +50,6 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
-  */
- STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
--STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
- 
- /*
-  * Internal routines when attribute list is more than one block.
-@@ -979,11 +978,12 @@ xfs_attr_lookup(
- 		return error;
- 
- 	if (xfs_attr_is_leaf(dp)) {
--		error = xfs_attr_leaf_hasname(args, &bp);
--
--		if (bp)
--			xfs_trans_brelse(args->trans, bp);
--
-+		error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner,
-+				0, &bp);
-+		if (error)
-+			return error;
-+		error = xfs_attr3_leaf_lookup_int(bp, args);
-+		xfs_trans_brelse(args->trans, bp);
- 		return error;
- 	}
- 
-@@ -1222,27 +1222,6 @@ xfs_attr_shortform_addname(
-  * External routines when attribute list is one block
-  *========================================================================*/
- 
--/*
-- * Return EEXIST if attr is found, or ENOATTR if not
-- */
--STATIC int
--xfs_attr_leaf_hasname(
--	struct xfs_da_args	*args,
--	struct xfs_buf		**bp)
--{
--	int                     error = 0;
--
--	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, bp);
--	if (error)
--		return error;
--
--	error = xfs_attr3_leaf_lookup_int(*bp, args);
--	if (error != -ENOATTR && error != -EEXIST)
--		xfs_trans_brelse(args->trans, *bp);
--
--	return error;
--}
--
- /*
-  * Remove a name from the leaf attribute list structure
-  *
-@@ -1253,25 +1232,22 @@ STATIC int
- xfs_attr_leaf_removename(
- 	struct xfs_da_args	*args)
- {
--	struct xfs_inode	*dp;
--	struct xfs_buf		*bp;
-+	struct xfs_inode	*dp = args->dp;
- 	int			error, forkoff;
-+	struct xfs_buf		*bp;
- 
- 	trace_xfs_attr_leaf_removename(args);
- 
--	/*
--	 * Remove the attribute.
--	 */
--	dp = args->dp;
--
--	error = xfs_attr_leaf_hasname(args, &bp);
--	if (error == -ENOATTR) {
-+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-+	if (error)
-+		return error;
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	if (error != -EEXIST) {
- 		xfs_trans_brelse(args->trans, bp);
--		if (args->op_flags & XFS_DA_OP_RECOVERY)
-+		if (error == -ENOATTR && (args->op_flags & XFS_DA_OP_RECOVERY))
- 			return 0;
- 		return error;
--	} else if (error != -EEXIST)
--		return error;
-+	}
- 
- 	xfs_attr3_leaf_remove(bp, args);
- 
-@@ -1295,23 +1271,20 @@ xfs_attr_leaf_removename(
-  * Returns 0 on successful retrieval, otherwise an error.
-  */
- STATIC int
--xfs_attr_leaf_get(xfs_da_args_t *args)
-+xfs_attr_leaf_get(
-+	struct xfs_da_args	*args)
- {
--	struct xfs_buf *bp;
--	int error;
-+	struct xfs_buf		*bp;
-+	int			error;
- 
- 	trace_xfs_attr_leaf_get(args);
- 
--	error = xfs_attr_leaf_hasname(args, &bp);
--
--	if (error == -ENOATTR)  {
--		xfs_trans_brelse(args->trans, bp);
--		return error;
--	} else if (error != -EEXIST)
-+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-+	if (error)
- 		return error;
--
--
--	error = xfs_attr3_leaf_getvalue(bp, args);
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	if (error == -EEXIST)
-+		error = xfs_attr3_leaf_getvalue(bp, args);
- 	xfs_trans_brelse(args->trans, bp);
- 	return error;
- }
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 8ba004979862f..40f36db9f07d5 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -42,6 +42,8 @@ __xchk_btree_process_error(
+ 		break;
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
++	case -EIO:
++	case -ENODATA:
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 38d0b7d5c894b..affed35a8c96f 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -103,6 +103,8 @@ __xchk_process_error(
+ 		break;
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
++	case -EIO:
++	case -ENODATA:
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+@@ -177,6 +179,8 @@ __xchk_fblock_process_error(
+ 		break;
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
++	case -EIO:
++	case -ENODATA:
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index dd14f355358ca..5858d4d5e279b 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -45,6 +45,8 @@ xchk_da_process_error(
+ 		break;
+ 	case -EFSBADCRC:
+ 	case -EFSCORRUPTED:
++	case -EIO:
++	case -ENODATA:
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 		*error = 0;
 -- 
 2.51.0
 
