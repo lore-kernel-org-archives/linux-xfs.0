@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314BD2BD59C;
-	Sun,  1 Mar 2026 01:43:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF4BB145A1F;
+	Sun,  1 Mar 2026 01:43:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329380; cv=none; b=ufQ8Yw2mw8PoG0Gzo51N+fZAaVLN78P15dorcKV0Xr1la5Leg7c8PzNgr5ODN8HpAdez0Rrb9stwSGtSiVhqHRwt0a/xaChHk1ZEjJNgtAneSKzjWSyN3EjCZVE6qLhKu+y03I4iK7YN1z48EKCyeMeDIENav6fc/Kfie6VjncI=
+	t=1772329405; cv=none; b=VOVDoGlE8UNAi0xRoTxqcKPwSIFVst4qb1CaH0MRxGQuFO536kdeE4YrME8TNsyX6FthhZ+bJjuua9GOILwq3jSFbhA1PsR99BTQFkQfmasPRRkxpqgpn69hp4m4eLyAKO/9+dS0Q6sUr3AGdX9W0OkXy+K6/1FjuMVc8sBmkEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329380; c=relaxed/simple;
-	bh=Di7yHqLX5I7K7qMRnir9UF7rL2QRli72foPG+H+XYaA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b9jZcalyyUZIY9Y5VpC15JR/aOWxRI92/vO8IvaPxzuHcj0cI1EG4BDTyjKCmIzadaY3xVbq6nIxf6VvxPqp3WkYEYoCZyx7oO0jHaxwpF4gGU/5W7OrV/RwB+V+wjqMFE4PNE096Dwce4JNnAIO4jTw/gfL12l2CzJDzpDAtOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uJe7iv4k; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329405; c=relaxed/simple;
+	bh=UIgJpaffmdiJ9njvqxowhaNJQz4xetD64CxdmQgyFs0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t6NYqizfYOFZhtTqhcn7798vhB05gCSLt0He5waEX+fYAIfGCUG6uiZ3zKAALsliv6NLVW5IX5zRHwIP1RHCbqgvbWMUI3X88z4XSFPYNHGZmqZLQMnn/BQrqZXw6MpfGDPg/qTzRmkZb38RgGz3OL/7ay2IvCoCsmuYlEAbqNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=faoixRZN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uJe7iv4k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF48C19421;
-	Sun,  1 Mar 2026 01:42:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="faoixRZN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EA20C19421;
+	Sun,  1 Mar 2026 01:43:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329380;
-	bh=Di7yHqLX5I7K7qMRnir9UF7rL2QRli72foPG+H+XYaA=;
+	s=k20201202; t=1772329405;
+	bh=UIgJpaffmdiJ9njvqxowhaNJQz4xetD64CxdmQgyFs0=;
 	h=From:To:Cc:Subject:Date:From;
-	b=uJe7iv4kEDekWJ2bPxtBJWrXPDy5YVMikblyDzS9hsJi4X5WS+5io6Rf7k8GDGNaN
-	 MlLmwhK2SOKFrIMoCQ105yijjlN9+4Zt2H0TuGaYvdxqdxVPMxg+M7frxfP4L53V16
-	 L2liArdCOLu0hdpq/YihQFeSzur+W3SPJVArk1aNVp6bNtcPE4ra+gbJcw8VajKl19
-	 zZboHhePQaHzv6jyczNiNL8Kti69u6V0Se1deTUg+YPyI1XkOCrxJU/cK0GRYN6iT8
-	 PfS9OB6cBbXYCTiLhFzCg8AuxHpQbjd8lp5rNZHXY9CQdzSyohaDXFgtyAR7kFbp+3
-	 TmJ5AF+29Xv8w==
+	b=faoixRZNANBRZ8KoFXFTTgoZR9xPbkbvUMSEsmJibg5NVygVQ5fpsW5W5mG9jxQLy
+	 mrBfutqQEPiLReEUVdKrXCLa3+5l3xf7YUP14w2pzVMz9OuO28hi962PliEr2JW8q0
+	 tshvM2X8uZDL77TFKGq+F032+IrUNb2Taxvsvx6jQeE4bfGW71gKRasL0hnCk91WKy
+	 55kjzTCEymR4y71YMSMRM++sWwH1t6ICqQMuFSAg5lMwha2j+AUv7qkv9CyDvESqVL
+	 5Srz0+dvTj+FJNoRHVZGXkLVbuYfepXHZy1KkUVpVukTwzCM3ds8+xxufs2Jfr5ncz
+	 2kyxc54BZ4Qxw==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>,
-	Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: mark data structures corrupt on EIO and ENODATA" failed to apply to 6.1-stable tree
-Date: Sat, 28 Feb 2026 20:42:57 -0500
-Message-ID: <20260301014258.1704928-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: fix remote xattr valuelblk check" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:43:23 -0500
+Message-ID: <20260301014324.1705491-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -55,80 +54,40 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From f39854a3fb2f06dc69b81ada002b641ba5b4696b Mon Sep 17 00:00:00 2001
+From bd3138e8912c9db182eac5fed1337645a98b7a4f Mon Sep 17 00:00:00 2001
 From: "Darrick J. Wong" <djwong@kernel.org>
-Date: Thu, 18 Dec 2025 18:40:50 -0800
-Subject: [PATCH] xfs: mark data structures corrupt on EIO and ENODATA
+Date: Fri, 23 Jan 2026 09:27:33 -0800
+Subject: [PATCH] xfs: fix remote xattr valuelblk check
 
-I learned a few things this year: first, blk_status_to_errno can return
-ENODATA for critical media errors; and second, the scrub code doesn't
-mark data structures as corrupt on ENODATA or EIO.
+In debugging other problems with generic/753, it turns out that it's
+possible for the system go to down in the middle of a remote xattr set
+operation such that the leaf block entry is marked incomplete and
+valueblk is set to zero.  Make this no longer a failure.
 
-Currently, scrub failing to capture these errors isn't all that
-impactful -- the checking code will exit to userspace with EIO/ENODATA,
-and xfs_scrub will log a complaint and exit with nonzero status.  Most
-people treat fsck tools failing as a sign that the fs is corrupt, but
-online fsck should mark the metadata bad and keep moving.
-
-Cc: stable@vger.kernel.org # v4.15
-Fixes: 4700d22980d459 ("xfs: create helpers to record and deal with scrub problems")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Cc: <stable@vger.kernel.org> # v4.15
+Fixes: 13791d3b833428 ("xfs: scrub extended attribute leaf space")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- fs/xfs/scrub/btree.c   | 2 ++
- fs/xfs/scrub/common.c  | 4 ++++
- fs/xfs/scrub/dabtree.c | 2 ++
- 3 files changed, 8 insertions(+)
+ fs/xfs/scrub/attr.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 8ba004979862f..40f36db9f07d5 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -42,6 +42,8 @@ __xchk_btree_process_error(
- 		break;
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
-+	case -EIO:
-+	case -ENODATA:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 38d0b7d5c894b..affed35a8c96f 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -103,6 +103,8 @@ __xchk_process_error(
- 		break;
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
-+	case -EIO:
-+	case -ENODATA:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
-@@ -177,6 +179,8 @@ __xchk_fblock_process_error(
- 		break;
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
-+	case -EIO:
-+	case -ENODATA:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index dd14f355358ca..5858d4d5e279b 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -45,6 +45,8 @@ xchk_da_process_error(
- 		break;
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
-+	case -EIO:
-+	case -ENODATA:
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 		*error = 0;
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index a397c50b77943..c3c122ea2d322 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -338,7 +338,10 @@ xchk_xattr_entry(
+ 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
+ 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
+ 		name_end = (char *)rentry + namesize;
+-		if (rentry->namelen == 0 || rentry->valueblk == 0)
++		if (rentry->namelen == 0)
++			xchk_da_set_corrupt(ds, level);
++		if (rentry->valueblk == 0 &&
++		    !(ent->flags & XFS_ATTR_INCOMPLETE))
+ 			xchk_da_set_corrupt(ds, level);
+ 	}
+ 	if (name_end > buf_end)
 -- 
 2.51.0
 
