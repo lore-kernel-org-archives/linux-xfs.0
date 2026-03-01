@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 373CF259C80;
-	Sun,  1 Mar 2026 02:01:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700AE259C80;
+	Sun,  1 Mar 2026 02:02:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330518; cv=none; b=r9VBRoe3MXvrlOqPoz/4UYZXunz1X2lsuBkOhV7Ctdcla3Q57jOygYnguCajhbxXShkipDuArFqcavtXLFeYY1Ngj/x8NKr3Uen9R6KBHVVqJvlEVIg4n7Fzt8vXdaJA2omTKcH2VDaYzMCiuniNi/syzssZLqW+Vwd+tU/cpwA=
+	t=1772330520; cv=none; b=RVSmgx3ABL3UUyyrzw3ZfxvhozmQAeDh72bZ6Yu6oH4sEs4/oUHdD17fal45FAFrVWYfvuUAoLGQIZ1ZYieQxRrtzYOM9Vyw1fROKDahgmxC3VZP2UNbwEOr/eVM0IlvIkPQS6Jytfeo5fY5OOb4A8uhoN6D+C+y+vz07XK1w/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330518; c=relaxed/simple;
-	bh=ynoUbYWukNxHyVsKqqBNM/xxFtUtBJ3C/zzqDVoKqg4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Jh+6I2ULnRq6yajFV2XuwAaywub4zdE1EgCIPepUktiu2mn4JFB08VdSsSA8LC8jktMmTJMK1H7ExC2sXoMBTs1td/y7sg6qFD+aR6PgCX1Ok8/1zuL2BQFSIRBLhphfUB+jta7ZmeCQnL8kxGe5VeuGSWORRFWzuYswoGVB6Gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqeCBkNG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772330520; c=relaxed/simple;
+	bh=0GW2Dfo8bMAwLhoSpJqB7GXmNjNtdOnqQgMYlEMk6BQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RFNGaQnMkrpOISkiSuk23f3eIe6zkyPjbapDpKVBCuuQ0zp3jsoSAMsn2MfUQpf5zPb0bvfDHYK9s2sLUtqB5nW08mEyq6K138g8iSFtBinTuHYweJ1T4fUHOrdU4Sjxe9GgybO7N/rmgp6F/PWXCQO9uPPgzfyM8nBdQDeeP/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RldULCnF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqeCBkNG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 954B7C19421;
-	Sun,  1 Mar 2026 02:01:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RldULCnF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC813C19421;
+	Sun,  1 Mar 2026 02:01:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330518;
-	bh=ynoUbYWukNxHyVsKqqBNM/xxFtUtBJ3C/zzqDVoKqg4=;
+	s=k20201202; t=1772330520;
+	bh=0GW2Dfo8bMAwLhoSpJqB7GXmNjNtdOnqQgMYlEMk6BQ=;
 	h=From:To:Cc:Subject:Date:From;
-	b=LqeCBkNGhHIojUMXdBrY76zVyOQmkGemVcfMXaKIFbucvNYwmmPitHtOgixfBs3XT
-	 xcVJXP/d9/Tb4yBHqqJ+VeMs7LEFntwp+Q/W/wL1Ypn3oGjC6VZxJHGkzIwTJRbZTt
-	 iIaQRRMqxaeyBWE/Es63At5sMkxJOZTPAR/u2iTnqwsi9HaYB60Q6fW0LNlsJMPZj/
-	 309SqBil8dk5nOekBeSfOMmSi9EsK1WAM2gDoAXk2abW2BV+fAJ4UlyGTIerh5pPna
-	 +3wQVkzJWjxc62hlj6LmCm41rVZTIZhdzH2avJhuYv3E8fRNCNLO6EuGJFrgri5U7O
-	 JfMfOu7bhsW9A==
+	b=RldULCnFa+ISyIAXCoeu+jhpuqlebVJdl5tru2nYrOFBKopVUAHkoYQ0mBD95ghrJ
+	 OdqKxEglKz4+xD2Ou8xRuzvKxrbPoyq2aIDwLMYHWiFmE18OoEuivGVy08RH9QfCgS
+	 HdMNurOaJJLj1QVCU220T92I6Afh7Uk5HS0uX1F6zwUfaL3uV+732pENPF+nJzWirc
+	 bszVW+t6WFKOkgqBn1Xi3FxEZSok0ovVOEzq4YwVsrAmt8K+P/N3QApgMTXOoe2Q3s
+	 7Dgy9PXn0PnMX0ASS6gSSVqghdUzhER4HKVBpjUPDxy1HFurVM3PoAQI3sq5/Ym2AZ
+	 xUEv0ztJ6C9RQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	djwong@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: fix remote xattr valuelblk check" failed to apply to 5.10-stable tree
-Date: Sat, 28 Feb 2026 21:01:56 -0500
-Message-ID: <20260301020156.1729305-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: fix the xattr scrub to detect freemap/entries array collisions" failed to apply to 5.10-stable tree
+Date: Sat, 28 Feb 2026 21:01:58 -0500
+Message-ID: <20260301020158.1729354-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -54,40 +54,114 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From bd3138e8912c9db182eac5fed1337645a98b7a4f Mon Sep 17 00:00:00 2001
+From 6fed8270448c246e706921c177e9633013dd3fcf Mon Sep 17 00:00:00 2001
 From: "Darrick J. Wong" <djwong@kernel.org>
 Date: Fri, 23 Jan 2026 09:27:33 -0800
-Subject: [PATCH] xfs: fix remote xattr valuelblk check
+Subject: [PATCH] xfs: fix the xattr scrub to detect freemap/entries array
+ collisions
 
-In debugging other problems with generic/753, it turns out that it's
-possible for the system go to down in the middle of a remote xattr set
-operation such that the leaf block entry is marked incomplete and
-valueblk is set to zero.  Make this no longer a failure.
+In the previous patches, we observed that it's possible for there to be
+freemap entries with zero size but a nonzero base.  This isn't an
+inconsistency per se, but older kernels can get confused by this and
+corrupt the block, leading to corruption.
+
+If we see this, flag the xattr structure for optimization so that it
+gets rebuilt.
 
 Cc: <stable@vger.kernel.org> # v4.15
 Fixes: 13791d3b833428 ("xfs: scrub extended attribute leaf space")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/attr.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/attr.c | 54 ++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index a397c50b77943..c3c122ea2d322 100644
+index eeb5ac34d7422..a397c50b77943 100644
 --- a/fs/xfs/scrub/attr.c
 +++ b/fs/xfs/scrub/attr.c
-@@ -338,7 +338,10 @@ xchk_xattr_entry(
- 		rentry = xfs_attr3_leaf_name_remote(leaf, idx);
- 		namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
- 		name_end = (char *)rentry + namesize;
--		if (rentry->namelen == 0 || rentry->valueblk == 0)
-+		if (rentry->namelen == 0)
-+			xchk_da_set_corrupt(ds, level);
-+		if (rentry->valueblk == 0 &&
-+		    !(ent->flags & XFS_ATTR_INCOMPLETE))
- 			xchk_da_set_corrupt(ds, level);
+@@ -287,32 +287,6 @@ xchk_xattr_set_map(
+ 	return ret;
+ }
+ 
+-/*
+- * Check the leaf freemap from the usage bitmap.  Returns false if the
+- * attr freemap has problems or points to used space.
+- */
+-STATIC bool
+-xchk_xattr_check_freemap(
+-	struct xfs_scrub		*sc,
+-	struct xfs_attr3_icleaf_hdr	*leafhdr)
+-{
+-	struct xchk_xattr_buf		*ab = sc->buf;
+-	unsigned int			mapsize = sc->mp->m_attr_geo->blksize;
+-	int				i;
+-
+-	/* Construct bitmap of freemap contents. */
+-	bitmap_zero(ab->freemap, mapsize);
+-	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
+-		if (!xchk_xattr_set_map(sc, ab->freemap,
+-				leafhdr->freemap[i].base,
+-				leafhdr->freemap[i].size))
+-			return false;
+-	}
+-
+-	/* Look for bits that are set in freemap and are marked in use. */
+-	return !bitmap_intersects(ab->freemap, ab->usedmap, mapsize);
+-}
+-
+ /*
+  * Check this leaf entry's relations to everything else.
+  * Returns the number of bytes used for the name/value data.
+@@ -403,6 +377,7 @@ xchk_xattr_block(
+ 
+ 	*last_checked = blk->blkno;
+ 	bitmap_zero(ab->usedmap, mp->m_attr_geo->blksize);
++	bitmap_zero(ab->freemap, mp->m_attr_geo->blksize);
+ 
+ 	/* Check all the padding. */
+ 	if (xfs_has_crc(ds->sc->mp)) {
+@@ -449,6 +424,9 @@ xchk_xattr_block(
+ 	if ((char *)&entries[leafhdr.count] > (char *)leaf + leafhdr.firstused)
+ 		xchk_da_set_corrupt(ds, level);
+ 
++	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out;
++
+ 	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
+ 	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
+ 		/* Mark the leaf entry itself. */
+@@ -467,7 +445,29 @@ xchk_xattr_block(
+ 			goto out;
  	}
- 	if (name_end > buf_end)
+ 
+-	if (!xchk_xattr_check_freemap(ds->sc, &leafhdr))
++	/* Construct bitmap of freemap contents. */
++	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
++		if (!xchk_xattr_set_map(ds->sc, ab->freemap,
++				leafhdr.freemap[i].base,
++				leafhdr.freemap[i].size))
++			xchk_da_set_corrupt(ds, level);
++
++		/*
++		 * freemap entries with zero length and nonzero base can cause
++		 * problems with older kernels, so we mark these for preening
++		 * even though there's no inconsistency.
++		 */
++		if (leafhdr.freemap[i].size == 0 &&
++		    leafhdr.freemap[i].base > 0)
++			xchk_da_set_preen(ds, level);
++
++		if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++			goto out;
++	}
++
++	/* Look for bits that are set in freemap and are marked in use. */
++	if (bitmap_intersects(ab->freemap, ab->usedmap,
++			mp->m_attr_geo->blksize))
+ 		xchk_da_set_corrupt(ds, level);
+ 
+ 	if (leafhdr.usedbytes != usedbytes)
 -- 
 2.51.0
 
