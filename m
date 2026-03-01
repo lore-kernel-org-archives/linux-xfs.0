@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F152F12CE;
-	Sun,  1 Mar 2026 02:01:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA08259C80;
+	Sun,  1 Mar 2026 02:01:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772330488; cv=none; b=Ea5fzfdPC8y+Vvd7a0Roa5K9RAdZ6f62HFUekUsETr35QGKZqQweAcOaSVAAFr6qympv/sbPQGFbZshi5s1nGtOeI4Ou6yXbyVmihNSWemww7Vdg4Jmv+vXYATj6ZwzqsifC7tlQiSj+R5Qbh5IUzBU3GytMUFpqiM9ZV2/g2hg=
+	t=1772330511; cv=none; b=Y+mL1Nrs0LBwXoYOKwjQrDSP3IvYXaU2iU4S4if335GdeR//U0OuUuLpUy9kj4SR2QmJXfdEP0MQPugJclVYtY/dHufhtP0XTlDVYA6Ty2cmn2qRq+bU9CQY693fROvCAOtWCl7+FwuNnbI28N1sYHJbcnWCICnqmb0+jViU5eA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772330488; c=relaxed/simple;
-	bh=FrRqc1XZG6bZAK3fwm8Y0iqbTryEbjOP/z0jl6ZSO5A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TRvs4jEXmKi1oNWJRAGJvl+I2pKE22+bfJ1Z6FrdfNw1aHUQVBqdDHhiLG9a/EHfZI+toDuSH9tP2SkWAoCigMZuxYtt/DuwEoVEjw2GyfhYQNSyClFuPm0Hni0/0i0hAcxpGwAx0nm/RadZpIUhSeMQV10co2ymf13zpmUklLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NsXi+o/V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772330511; c=relaxed/simple;
+	bh=SZO6Likc2aVLQlPtgAoK7KLCxUevkiBSncbR5E9FjHo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gEemhXH3QDADiVtLhWhBOsyo0hzIX6SD9VkGLZveL9hHu7hzlNNHjJrimsamytNqg5obepnju+NBkohPTRjNArEg+NKTa8GLOuRKXSl6awNT5gwjCYPLcWCyfxAUH+h818ooszx2WQ5cx0mM77y6mUpsBYyad/YzPJ2fSD1RvEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hnKt79yo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NsXi+o/V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05A98C19424;
-	Sun,  1 Mar 2026 02:01:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hnKt79yo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 181B5C19421;
+	Sun,  1 Mar 2026 02:01:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772330488;
-	bh=FrRqc1XZG6bZAK3fwm8Y0iqbTryEbjOP/z0jl6ZSO5A=;
+	s=k20201202; t=1772330511;
+	bh=SZO6Likc2aVLQlPtgAoK7KLCxUevkiBSncbR5E9FjHo=;
 	h=From:To:Cc:Subject:Date:From;
-	b=NsXi+o/VuvNPuaP6i89/G1jb/Te6LjIJMFcfRduiC9ogBvmYzVhxNv8iKzDzdTPLg
-	 9TTIvpRAKXBDGmRJDQnCvyXij15ygEzYv/nFQJFAzTI2OlQgXpTMFvRzgXMpDtLjVf
-	 o+bG2fCEPhOTe6KBdfqXOIDFH9+uQpSu7rzxgCVD2ssH36eO6pj5t14N/MIyhTxNxN
-	 mDwudnL+aklHyAql5qD0+HiK1irsD2p9yubE9Hhhng9xeReIhzHjtK8KZpktWs7AQq
-	 DpfTEK46ISNrvV3qzXf185dQlCom740Mu7/j4Zsh0wE2LKmlAmrYto0XctqOKoE1HK
-	 ABuYKVIbkjNBg==
+	b=hnKt79yo1TSZlYrsg5B0fGDqWAZbbki8RlyP/vouxFQng7CBVUclCKSW6SzS796vm
+	 vv7sYDrcNkmPmSk+DAGM02tymr6jkDdNoYxFgYKgvnQNoZoVxttOp+6Z6r87b9uX2/
+	 bBL78ETVZVov3dPrG4i3Il/SuUdjX0956rjr4ihxybjWyaPjkIBZMQBI9iX+2c3L9K
+	 kMf+8Bt03LYyyEsdA2/b1J1q0wMFGc/+QWHXPodyz7ZU5mZpgAVGXfpXbFfT0Z0Li2
+	 hTGCDs9IRt6jRfqlue7e/K7s1S287a+/100SDX/B10a7p4QkA2PhMd0KnM3hmRWJz2
+	 wT3JF84yY6gZA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	hch@lst.de
-Cc: Mark Tinguely <mark.tinguely@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
+	djwong@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>,
 	linux-xfs@vger.kernel.org
-Subject: FAILED: Patch "xfs: remove xfs_attr_leaf_hasname" failed to apply to 5.10-stable tree
-Date: Sat, 28 Feb 2026 21:01:26 -0500
-Message-ID: <20260301020126.1728741-1-sashal@kernel.org>
+Subject: FAILED: Patch "xfs: delete attr leaf freemap entries when empty" failed to apply to 5.10-stable tree
+Date: Sat, 28 Feb 2026 21:01:47 -0500
+Message-ID: <20260301020149.1729196-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -56,156 +54,72 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 3a65ea768b8094e4699e72f9ab420eb9e0f3f568 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Fri, 9 Jan 2026 16:17:40 +0100
-Subject: [PATCH] xfs: remove xfs_attr_leaf_hasname
+From 6f13c1d2a6271c2e73226864a0e83de2770b6f34 Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <djwong@kernel.org>
+Date: Fri, 23 Jan 2026 09:27:30 -0800
+Subject: [PATCH] xfs: delete attr leaf freemap entries when empty
 
-The calling convention of xfs_attr_leaf_hasname() is problematic, because
-it returns a NULL buffer when xfs_attr3_leaf_read fails, a valid buffer
-when xfs_attr3_leaf_lookup_int returns -ENOATTR or -EEXIST, and a
-non-NULL buffer pointer for an already released buffer when
-xfs_attr3_leaf_lookup_int fails with other error values.
+Back in commit 2a2b5932db6758 ("xfs: fix attr leaf header freemap.size
+underflow"), Brian Foster observed that it's possible for a small
+freemap at the end of the end of the xattr entries array to experience
+a size underflow when subtracting the space consumed by an expansion of
+the entries array.  There are only three freemap entries, which means
+that it is not a complete index of all free space in the leaf block.
 
-Fix this by simply open coding xfs_attr_leaf_hasname in the callers, so
-that the buffer release code is done by each caller of
-xfs_attr3_leaf_read.
+This code can leave behind a zero-length freemap entry with a nonzero
+base.  Subsequent setxattr operations can increase the base up to the
+point that it overlaps with another freemap entry.  This isn't in and of
+itself a problem because the code in _leaf_add that finds free space
+ignores any freemap entry with zero size.
 
-Cc: stable@vger.kernel.org # v5.19+
-Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-Reported-by: Mark Tinguely <mark.tinguely@oracle.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
+However, there's another bug in the freemap update code in _leaf_add,
+which is that it fails to update a freemap entry that begins midway
+through the xattr entry that was just appended to the array.  That can
+result in the freemap containing two entries with the same base but
+different sizes (0 for the "pushed-up" entry, nonzero for the entry
+that's actually tracking free space).  A subsequent _leaf_add can then
+allocate xattr namevalue entries on top of the entries array, leading to
+data loss.  But fixing that is for later.
+
+For now, eliminate the possibility of confusion by zeroing out the base
+of any freemap entry that has zero size.  Because the freemap is not
+intended to be a complete index of free space, a subsequent failure to
+find any free space for a new xattr will trigger block compaction, which
+regenerates the freemap.
+
+It looks like this bug has been in the codebase for quite a long time.
+
+Cc: <stable@vger.kernel.org> # v2.6.12
+Fixes: 1da177e4c3f415 ("Linux-2.6.12-rc2")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_attr.c | 75 +++++++++++++---------------------------
- 1 file changed, 24 insertions(+), 51 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 866abae58fe1e..9e6b18d6ae003 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -50,7 +50,6 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
-  */
- STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
--STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
- 
- /*
-  * Internal routines when attribute list is more than one block.
-@@ -979,11 +978,12 @@ xfs_attr_lookup(
- 		return error;
- 
- 	if (xfs_attr_is_leaf(dp)) {
--		error = xfs_attr_leaf_hasname(args, &bp);
--
--		if (bp)
--			xfs_trans_brelse(args->trans, bp);
--
-+		error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner,
-+				0, &bp);
-+		if (error)
-+			return error;
-+		error = xfs_attr3_leaf_lookup_int(bp, args);
-+		xfs_trans_brelse(args->trans, bp);
- 		return error;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 6061230b17ef5..c8c9737f04563 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1580,6 +1580,19 @@ xfs_attr3_leaf_add_work(
+ 				min_t(uint16_t, ichdr->freemap[i].size,
+ 						sizeof(xfs_attr_leaf_entry_t));
+ 		}
++
++		/*
++		 * Don't leave zero-length freemaps with nonzero base lying
++		 * around, because we don't want the code in _remove that
++		 * matches on base address to get confused and create
++		 * overlapping freemaps.  If we end up with no freemap entries
++		 * then the next _add will compact the leaf block and
++		 * regenerate the freemaps.
++		 */
++		if (ichdr->freemap[i].size == 0 && ichdr->freemap[i].base > 0) {
++			ichdr->freemap[i].base = 0;
++			ichdr->holes = 1;
++		}
  	}
- 
-@@ -1222,27 +1222,6 @@ xfs_attr_shortform_addname(
-  * External routines when attribute list is one block
-  *========================================================================*/
- 
--/*
-- * Return EEXIST if attr is found, or ENOATTR if not
-- */
--STATIC int
--xfs_attr_leaf_hasname(
--	struct xfs_da_args	*args,
--	struct xfs_buf		**bp)
--{
--	int                     error = 0;
--
--	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, bp);
--	if (error)
--		return error;
--
--	error = xfs_attr3_leaf_lookup_int(*bp, args);
--	if (error != -ENOATTR && error != -EEXIST)
--		xfs_trans_brelse(args->trans, *bp);
--
--	return error;
--}
--
- /*
-  * Remove a name from the leaf attribute list structure
-  *
-@@ -1253,25 +1232,22 @@ STATIC int
- xfs_attr_leaf_removename(
- 	struct xfs_da_args	*args)
- {
--	struct xfs_inode	*dp;
--	struct xfs_buf		*bp;
-+	struct xfs_inode	*dp = args->dp;
- 	int			error, forkoff;
-+	struct xfs_buf		*bp;
- 
- 	trace_xfs_attr_leaf_removename(args);
- 
--	/*
--	 * Remove the attribute.
--	 */
--	dp = args->dp;
--
--	error = xfs_attr_leaf_hasname(args, &bp);
--	if (error == -ENOATTR) {
-+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-+	if (error)
-+		return error;
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	if (error != -EEXIST) {
- 		xfs_trans_brelse(args->trans, bp);
--		if (args->op_flags & XFS_DA_OP_RECOVERY)
-+		if (error == -ENOATTR && (args->op_flags & XFS_DA_OP_RECOVERY))
- 			return 0;
- 		return error;
--	} else if (error != -EEXIST)
--		return error;
-+	}
- 
- 	xfs_attr3_leaf_remove(bp, args);
- 
-@@ -1295,23 +1271,20 @@ xfs_attr_leaf_removename(
-  * Returns 0 on successful retrieval, otherwise an error.
-  */
- STATIC int
--xfs_attr_leaf_get(xfs_da_args_t *args)
-+xfs_attr_leaf_get(
-+	struct xfs_da_args	*args)
- {
--	struct xfs_buf *bp;
--	int error;
-+	struct xfs_buf		*bp;
-+	int			error;
- 
- 	trace_xfs_attr_leaf_get(args);
- 
--	error = xfs_attr_leaf_hasname(args, &bp);
--
--	if (error == -ENOATTR)  {
--		xfs_trans_brelse(args->trans, bp);
--		return error;
--	} else if (error != -EEXIST)
-+	error = xfs_attr3_leaf_read(args->trans, args->dp, args->owner, 0, &bp);
-+	if (error)
- 		return error;
--
--
--	error = xfs_attr3_leaf_getvalue(bp, args);
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	if (error == -EEXIST)
-+		error = xfs_attr3_leaf_getvalue(bp, args);
- 	xfs_trans_brelse(args->trans, bp);
- 	return error;
+ 	ichdr->usedbytes += xfs_attr_leaf_entsize(leaf, args->index);
  }
 -- 
 2.51.0
