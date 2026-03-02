@@ -1,131 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5A233A70A;
-	Mon,  2 Mar 2026 10:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94BCC248F57
+	for <linux-xfs@vger.kernel.org>; Mon,  2 Mar 2026 13:24:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772446300; cv=none; b=nPu549YXIsK6jgxVochzSARXVEmZcgaDFFKB61XjZou01OB56Vt8t5S4OOFINzPcz7euPTAO0Q4u0i5INZqUZk2gbKThmXRowCa/Q+XO/xaZythWz3n/QsQoSrBxXeE4pAwmK9AwkWtTZtGla0XC5dLIcljEDnJlqS+h4aUtt5I=
+	t=1772457855; cv=none; b=retn8pZVxzAtCys8QXZ40oUgXTHUQQJPHVdy71bg+LraKdVXxiBgKINWWn9NWk0miuVvXWwI5urCJX1yFvTeuOJ3QG3jgxHTy6zJBYWyTabTxIw+M8mQ4Onj4BR8pqYmlzIntVIxSvtHCbjsR0UGC0609qvdoQFoIQTtzp7o8jY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772446300; c=relaxed/simple;
-	bh=kUc0farZiGjD/n/ZNvbtXOu1ZJEABLXUI1WRJsXmbXM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g/rAMOFtQmWwICYCJWX1z8ZmVZi9TQxFlXVYawg1t+UGd2JbYnP9zqIrUxdecPT/LcWTmqizTdl+PdtCVTQeUbCTaKtNZGEkYZz418sP8eNGsRKIkBtZsD8ugTZ8Hsz4oX7WKrx1t/GzO5Xcp60guOyxF9KZ/h7dSDEyLd3TKkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ld0iTfc0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772457855; c=relaxed/simple;
+	bh=ltfsj99I78ai3Uw4cmgHT0d1UXB8XXPY1S98SmQRKs0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gOhtdXm1NmcMicIuY1yex/MDLlI4JqzAeLPQODT6IulEspZ5fWsixFQDXAtm5tUsleDke1roaV0UdufrOQISlK71DQScy4lHLs5I+RKont1ZmuXdq/pTQEyv5hLMMaZ9zEKbIPQx6cQkYOKDEwihwiOWSwAxYwfVqorR45W35Qw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LueOPztv; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ld0iTfc0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C359C19423;
-	Mon,  2 Mar 2026 10:11:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772446299;
-	bh=kUc0farZiGjD/n/ZNvbtXOu1ZJEABLXUI1WRJsXmbXM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ld0iTfc0cwdtiAlPMEakYAevL8IA888m/oSGOWsZW9Vt/zRCmvQ4Uc2DLU421l8Ep
-	 FeEfp7BAVN3Md4S7xoDs560NSkIPqpAgGZjI8duIgTUDUN4ffC/n9jlqR9mSdh7DOK
-	 i+fwYRegrrDbqO2zS5LTbG0RJJekRLaCqvE4GMYHd2g6AqdC5IbN1o6ybzmA2KYMQj
-	 H8/+Z0X4Lskdq25zp26NlH+MAudrmt8Ze01H0WanxEKFuUQOsSeWHdU+ioNIsSNDJn
-	 l1yOC6qj/LVeXnfey1eygn3X+LetUHp/cr/wpE8fSTUC2ZAQM12IfB/Z06v2wfSFCz
-	 rcqnAPVmF3txA==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	ntfs3@lists.linux.dev,
-	linux-block@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>
-Subject: Re: support file system generated / verified integrity information v4
-Date: Mon,  2 Mar 2026 11:11:22 +0100
-Message-ID: <20260302-legehennen-musizieren-08d0e3caa674@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260223132021.292832-1-hch@lst.de>
-References: <20260223132021.292832-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LueOPztv"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-8274a3db5e3so1921793b3a.0
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Mar 2026 05:24:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772457849; x=1773062649; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=v9ZnDEvgwTfM42XxCeWf1ZWhMQzzUDLYvt9awp7GUwc=;
+        b=LueOPztvjLS8TwLVZEA7S/Gqx4FUAvlFDty0m5Ywooe7fOv98qYJW5jZgNLf+dBVXL
+         LDHJBQaDuMOVCpSXyW1+Ifxtrxx1k5aBtNnH2bops36EEp5mcPiOPW1dijZj1Czhbdp/
+         pZsaRzkSCMd1BdzxeRCthPqHRcn1DA6jZyy40+TlkrDM7menZPM6nH5P6RmWYEn14G4q
+         mjcww6g4kmG1tdsC21C6nJlZYWHEXqKLEHd/cI70mBkKIt6yI8nFQYdhYyvAi4oj8qQH
+         SKzV6RYep9VvN8RxJ5zmEyG44P3uYDiHRi8gHza32G3OS+HmEVQiquxEOGUwSF3IT4nI
+         HL1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772457849; x=1773062649;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=v9ZnDEvgwTfM42XxCeWf1ZWhMQzzUDLYvt9awp7GUwc=;
+        b=dT9+0hH2X9GnMMTt7BvJJM8zsfmC9i42lmvtYJxMtmLPhxLFxUM7SzASB1GpcgBeFg
+         vudJqTegCGWCkXP4pQLAAWJyePI543XG/XGhqrgUzfLzMDzUG4F+aoZmME44dvLWQDXf
+         5369XCU4CEWvvc7WPEY2xRgDeVcCA/aXH/E+5+yR0Vkh73xGvgJLsFTPfh0pNTNGngko
+         koW00DItuqHdju3FQpAEph0Ly1tz9w+wYxFYVa3BN4W40uaWLuq+1Q66MCnbYMvt3yRo
+         yuaz7wpr6s3o2UkQ5kdGxaHpC2y3+J8OIuXkWmvbMyOteCQ4Q31v89B2T3Ddc3Fp9QXE
+         s35Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWmKhwBNoGYcVDDmnPRS7lxWua7rgGxZXtciYJgd4GWxADzeLW5yoWwRp+1X4is40U7jxmhmM9zXiY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOojk9NqAHblsp5eQnIbRKdi2sEfZ4AHsnUImVuoZc+1iNxQT4
+	J0ATa8hMVFGKcQ3+1ZMFeevj6gTsxDc8ZXPneUUA/C6Fj7YH/n8suy7f
+X-Gm-Gg: ATEYQzwncz8YXNegYTyQ5tuF+i4VGhXNBm/qdFLdg5fb99n0WXBOyCPb0ubSQ1roeq4
+	fK8yGcfi5SrhVqbno6O7WXMAAdnU0sRtb6NDiwHHOjTROuCRiuQ882J9X5j56AtkO6GgNN+grec
+	Iw5XetZdu1HoPZ7bP8LaL05robVnKW9clrgGLL4QQUaHSA6kywRGN0WlqZVYSz49FWk2tPCGGsS
+	7lJELV/UmrMmMCtdw0mE3y7mQFEf4ntEQ5qZCDoTYW9jtsELJpfRmlM4B8zroUFIo4aq/CWWpYY
+	qfvXO8cxo+0UvespzAibEAM5GM3ZuN8vs1irZqKQ+p1DX5Hfqe23zEcKj8amV1CdNvlVExoxMrb
+	JkiyAv+b2ZQiQrDSXrITmg3wX7AulkSYKQbsaZHXYqgiux2cehCtxs260nEE7Pnl+aDk7UGgHQN
+	Fg2y2cY5SHf9LLEFKXWjGMprMPZBg=
+X-Received: by 2002:a05:6a00:3a25:b0:827:2891:c177 with SMTP id d2e1a72fcca58-8274da2fee7mr8658465b3a.64.1772457848572;
+        Mon, 02 Mar 2026 05:24:08 -0800 (PST)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8273a05e831sm13446967b3a.58.2026.03.02.05.24.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Mar 2026 05:24:08 -0800 (PST)
+Message-ID: <73e51635-e461-4292-a858-f73ea4d23545@gmail.com>
+Date: Mon, 2 Mar 2026 21:24:05 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3749; i=brauner@kernel.org; h=from:subject:message-id; bh=kUc0farZiGjD/n/ZNvbtXOu1ZJEABLXUI1WRJsXmbXM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQuTQr5LTEvM/FaGJOD/CtL7fimM5MvX52/7GFUWNlF5 gnPizyZOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZyO4zhf+nviJw1/T92tyfF 9+oxcPcx3b+kpPDy0xazm+GSsTvXxDMyTOuLZW/sZO/YaLDhx4U9+x7ZqCtYeCwNmqqhk85+08S cAwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/9] fstests: add test for inotify isolation on cloned
+ devices
+To: Amir Goldstein <amir73il@gmail.com>, Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Jan Kara <jack@suse.cz>
+References: <cover.1772095513.git.asj@kernel.org>
+ <78014ba3d564004081dca3c1d7e69cec8943f629.1772095513.git.asj@kernel.org>
+ <aaQ59uL3rG7_WYHJ@amir-ThinkPad-T480>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <aaQ59uL3rG7_WYHJ@amir-ThinkPad-T480>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, 23 Feb 2026 05:20:00 -0800, Christoph Hellwig wrote:
-> this series adds support to generate and verify integrity information
-> (aka T10 PI) in the file system, instead of the automatic below the
-> covers support that is currently used.
+
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -r -f $tmp.*
+>> +	umount $mnt1 $mnt2 2>/dev/null
+>> +	_scratch_dev_pool_put
+>> +}
+>> +
+>> +_scratch_dev_pool_get 2
+>> +_scratch_mkfs_sized_clone >$seqres.full 2>&1
+>> +devs=($SCRATCH_DEV_POOL)
+>> +mnt2=$TEST_DIR/mnt2
+>> +mkdir -p $mnt2
+>> +
+>> +_scratch_mount $(_clone_mount_option)
+>> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+>> +						_fail "Failed to mount dev2"
+>> +
+>> +log1=$tmp.inotify1
+>> +log2=$tmp.inotify2
+>> +
+>> +echo "Setup inotify watchers on both SCRATCH_MNT and mnt2"
+>> +$INOTIFYWAIT_PROG -m -e create --format '%f' $SCRATCH_MNT > $log1 2>&1 &
+>> +pid1=$!
+>> +$INOTIFYWAIT_PROG -m -e create --format '%f' $mnt2 > $log2 2>&1 &
+>> +pid2=$!
+>> +sleep 2
+>> +
+>> +echo "Trigger file creation on SCRATCH_MNT"
+>> +touch $SCRATCH_MNT/file_on_scratch_mnt
+>> +sync
+>> +sleep 1
+>> +
+>> +echo "Trigger file creation on mnt2"
+>> +touch $mnt2/file_on_mnt2
+>> +sync
+>> +sleep 1
+>> +
+>> +echo "Verify inotify isolation"
+>> +kill $pid1 $pid2
+>> +wait $pid1 $pid2 2>/dev/null
 > 
-> There two reasons for this:
-> 
->   a) to increase the protection enveloped.  Right now this is just a
->      minor step from the bottom of the block layer to the file system,
->      but it is required to support io_uring integrity data passthrough in
->      the file system similar to the currently existing support for block
->      devices, which will follow next.  It also allows the file system to
->      directly see the integrity error and act upon in, e.g. when using
->      RAID either integrated (as in btrfs) or by supporting reading
->      redundant copies through the block layer.
->   b) to make the PI processing more efficient.  This is primarily a
->      concern for reads, where the block layer auto PI has to schedule a
->      work item for each bio, and the file system them has to do it again
->      for bounce buffering.  Additionally the current iomap post-I/O
->      workqueue handling is a lot more efficient by supporting merging and
->      avoiding workqueue scheduling storms.
-> 
-> [...]
+> I think you also need to take care of killing the bg process
+> in _cleanup() so that the test could be cleanly aborted.
 
-Applied to the vfs-7.1.verity branch of the vfs/vfs.git tree.
-Patches in the vfs-7.1.verity branch should appear in linux-next soon.
+You are right, SIGINT can terminate the testcase at any point, we need
+kill(1) in _cleanup().
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+I'll fix this in v2.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Thanks, Anand
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.1.verity
-
-[01/16] block: factor out a bio_integrity_action helper
-        https://git.kernel.org/vfs/vfs/c/08163237c7be
-[02/16] block: factor out a bio_integrity_setup_default helper
-        https://git.kernel.org/vfs/vfs/c/32d5010c428f
-[03/16] block: add a bdev_has_integrity_csum helper
-        https://git.kernel.org/vfs/vfs/c/840b166bef09
-[04/16] block: prepare generation / verification helpers for fs usage
-        https://git.kernel.org/vfs/vfs/c/179c2a24466b
-[05/16] block: make max_integrity_io_size public
-        https://git.kernel.org/vfs/vfs/c/1b9353e52c31
-[06/16] block: add fs_bio_integrity helpers
-        https://git.kernel.org/vfs/vfs/c/e539fc923425
-[07/16] block: pass a maxlen argument to bio_iov_iter_bounce
-        https://git.kernel.org/vfs/vfs/c/fc9fc9482061
-[08/16] iomap: refactor iomap_bio_read_folio_range
-        https://git.kernel.org/vfs/vfs/c/9701407ec63e
-[09/16] iomap: pass the iomap_iter to ->submit_read
-        https://git.kernel.org/vfs/vfs/c/f11d7d3307f4
-[10/16] iomap: only call into ->submit_read when there is a read_ctx
-        https://git.kernel.org/vfs/vfs/c/46441138b832
-[11/16] iomap: allow file systems to hook into buffered read bio submission
-        https://git.kernel.org/vfs/vfs/c/04c2cc5bb77b
-[12/16] ntfs3: remove copy and pasted iomap code
-        https://git.kernel.org/vfs/vfs/c/4c3906772536
-[13/16] iomap: add a bioset pointer to iomap_read_folio_ops
-        https://git.kernel.org/vfs/vfs/c/c1dec831dd53
-[14/16] iomap: support ioends for buffered reads
-        https://git.kernel.org/vfs/vfs/c/9c617c91f801
-[15/16] iomap: support T10 protection information
-        https://git.kernel.org/vfs/vfs/c/fa1758bda166
-[16/16] xfs: support T10 protection information
-        https://git.kernel.org/vfs/vfs/c/330cc116c7a0
