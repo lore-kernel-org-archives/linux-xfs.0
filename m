@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04DD176FB1
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:14:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B4B1891A9
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:15:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496886; cv=none; b=O30uZ2vJsJ16xzC/ltYdQfMkB1r82MGnKLeIkzV5YyWSUe1vJDA7IXDR1d5uQWWivWBe4N4f95GHClqCcC46BjkT4z9DkJ+3HOA2xzV32uFFXHh/+yM0TSkHFnABnigREhWcnRMHJIdRAPysDU+CV4G26BcbZ296xKPoFKXpGNg=
+	t=1772496902; cv=none; b=aIE1tt1YckGU/os6wZpbsCyGkNmHibYxrKGVTbX+FYnMeln9jc5REQTJ38oyPXXZKfI++uLD/bkNQtUDhLVCWyMLzdC7fByhR1OFp7wAf6tVL+2jlybRFXhk6+iZdHUQV5TVAV5C0pQhhUCfyhQNSyXgMcS0wwCTCpW4fC4CO4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772496886; c=relaxed/simple;
-	bh=A/188eQSg6Izlh4t7DV7ltpRRHl0aR3boj37W6y2P+4=;
+	s=arc-20240116; t=1772496902; c=relaxed/simple;
+	bh=ofsKgAB98Gv+bkWu1JcZMV6ksBg39qhcg/63zIU40XM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nRSPC6Pyvctc1n+/AAd5r2xcGDBGFEhOMXxY5cEieDTxIomCQEzoECTl4qWZPGcr8hjvGFgo7392RuMyo84KUpqNTQv23MDamG9v9k4K2opKZoy1YPw5DYH94F0ciCJC013t/HFubq9+6XO3xPl5hrXDExLLuwzT0mpkIu5XD+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hHB6Cjvz; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Ra7OjVGVP6TOyG4ax29Xq64d0Bz1oVVup2S2mBrKDSe7fypnmXFBqou3wroTCXmabldQMAUcdJyDb07GqHqu0MfcN5zWcerTyguB4bjQryog+1eKg+1fGxeFHFkkghNGL066tx9STDH4F+4pNZdULuJgilccqTM5QHkBlwsD/fU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MsqvbUVY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hHB6Cjvz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA34EC19423;
-	Tue,  3 Mar 2026 00:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MsqvbUVY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72316C19423;
+	Tue,  3 Mar 2026 00:15:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772496885;
-	bh=A/188eQSg6Izlh4t7DV7ltpRRHl0aR3boj37W6y2P+4=;
+	s=k20201202; t=1772496901;
+	bh=ofsKgAB98Gv+bkWu1JcZMV6ksBg39qhcg/63zIU40XM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=hHB6Cjvz1U/FEtSjYc3zrlkz+lzCVOhRFikPTEFXp1JyY/AmlV6sf+m5h89KGgTId
-	 0rzk8p+W6XC6inWFU6sHu2VLC0yjzGDfmrXIMVopIGQlynomZZb0Lk51Tkx6w4KVVJ
-	 g1ikNFw5dnmTStldIXfawv/A7hHjwRBOIx01kIPrQnYI6WsRvp0dYwEMh1jCl4I3TB
-	 ZkrPJKi7mTmGHS4kuyvGNVLaqp2tq8hUqAAScVXrqoUw5qHNtWM7zbQ3uMgr03iirL
-	 IW8y+Vux80TYKtykpoX7SlYtopxKeYE2+mtJbruP2x7iYtylwR55SesQ++2k5KxcPY
-	 c4gDlM2sfWU9Q==
-Date: Mon, 02 Mar 2026 16:14:45 -0800
-Subject: [PATCH 10/36] xfs: check if an open file is on the health monitored
- fs
+	b=MsqvbUVYjthwTR2eKF9oFjtLjsLKfmU62bVI5Up16184QQpOZXpGNQq4pan4ugb5f
+	 JUcXfH5ulG987OWzpliIXTDrKiumLeMzBbsR32R7VvMlgVav4GLTINp+hSxy3x9V9g
+	 jyyMXf0ha+2ItrZ6J5VrpCqugeHrrp2hD91NGsrCi8VmgsaWkY3wsaxZofiFaLl7OS
+	 0IQiGeaw9Q5s4eYENEb24qlMPxOogWtb1Q/CetA+vOLkYwoRmhSyAvRwkBCJJpK4Ko
+	 OChxR6EyQ7IU1O3Zu53Y3258ZR8L/1kPiIgYWBJMMdjEfHsZjbu5jbWq9jI3S/vBIg
+	 2fcfzNHktgpJg==
+Date: Mon, 02 Mar 2026 16:15:01 -0800
+Subject: [PATCH 11/36] xfs: add media verification ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177249637959.457970.17795134556111842313.stgit@frogsfrogsfrogs>
+Message-ID: <177249637978.457970.2157001000924066861.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,51 +45,80 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 8b85dc4090e1c72c6d42acd823514cce67cd54fc
+Source kernel commit: b8accfd65d31f25b9df15ec2419179b6fa0b21d5
 
-Create a new ioctl for the healthmon file that checks that a given fd
-points to the same filesystem that the healthmon file is monitoring.
-This allows xfs_healer to check that when it reopens a mountpoint to
-perform repairs, the file that it gets matches the filesystem that
-generated the corruption report.
+Add a new privileged ioctl so that xfs_scrub can ask the kernel to
+verify the media of the devices backing an xfs filesystem, and have any
+resulting media errors reported to fsnotify and xfs_healer.
 
-(Note that xfs_healer doesn't maintain an open fd to a filesystem that
-it's monitoring so that it doesn't pin the mount.)
+To accomplish this, the kernel allocates a folio between the base page
+size and 1MB, and issues read IOs to a gradually incrementing range of
+one of the storage devices underlying an xfs filesystem.  If any error
+occurs, that raw error is reported to the calling process.  If the error
+happens to be one of the ones that the kernel considers indicative of
+data loss, then it will also be reported to xfs_healthmon and fsnotify.
+
+Driving the verification from the kernel enables xfs (and by extension
+xfs_scrub) to have precise control over the size and error handling of
+IOs that are issued to the underlying block device, and to emit
+notifications about problems to other relevant kernel subsystems
+immediately.
+
+Note that the caller is also allowed to reduce the size of the IO and
+to ask for a relaxation period after each IO.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ libxfs/xfs_fs.h |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 4ec1b2aede976f..a01303c5de6ce6 100644
+index a01303c5de6ce6..d165de607d179e 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -1151,6 +1151,15 @@ struct xfs_health_monitor {
- /* Initial return format version */
- #define XFS_HEALTH_MONITOR_FMT_V0	(0)
+@@ -1160,6 +1160,34 @@ struct xfs_health_file_on_monitored_fs {
+ 	__u32		flags;	/* zero for now */
+ };
  
-+/*
-+ * Check that a given fd points to the same filesystem that the health monitor
-+ * is monitoring.
-+ */
-+struct xfs_health_file_on_monitored_fs {
-+	__s32		fd;
-+	__u32		flags;	/* zero for now */
++/* Verify the media of the underlying devices */
++struct xfs_verify_media {
++	__u32	me_dev;		/* I: XFS_DEV_{DATA,LOG,RT} */
++	__u32	me_flags;	/* I: XFS_VERIFY_MEDIA_* */
++
++	/*
++	 * IO: inclusive start of disk range to verify, in 512b blocks.
++	 * Will be adjusted upwards as media verification succeeds.
++	 */
++	__u64	me_start_daddr;
++
++	/*
++	 * IO: exclusive end of the disk range to verify, in 512b blocks.
++	 * Can be adjusted downwards to match device size.
++	 */
++	__u64	me_end_daddr;
++
++	__u32	me_ioerror;	/* O: I/O error (positive) */
++	__u32	me_max_io_size;	/* I: maximum IO size in bytes */
++
++	__u32	me_rest_us;	/* I: rest time between IOs, usecs */
++	__u32	me_pad;		/* zero */
 +};
++
++#define XFS_VERIFY_MEDIA_REPORT	(1 << 0)	/* report to fsnotify */
++
++#define XFS_VERIFY_MEDIA_FLAGS	(XFS_VERIFY_MEDIA_REPORT)
 +
  /*
   * ioctl commands that are used by Linux filesystems
   */
-@@ -1191,7 +1200,8 @@ struct xfs_health_monitor {
- #define XFS_IOC_SCRUBV_METADATA	_IOWR('X', 64, struct xfs_scrub_vec_head)
- #define XFS_IOC_RTGROUP_GEOMETRY _IOWR('X', 65, struct xfs_rtgroup_geometry)
+@@ -1202,6 +1230,8 @@ struct xfs_health_file_on_monitored_fs {
  #define XFS_IOC_HEALTH_MONITOR	_IOW ('X', 68, struct xfs_health_monitor)
--
-+#define XFS_IOC_HEALTH_FD_ON_MONITORED_FS \
-+				_IOW ('X', 69, struct xfs_health_file_on_monitored_fs)
+ #define XFS_IOC_HEALTH_FD_ON_MONITORED_FS \
+ 				_IOW ('X', 69, struct xfs_health_file_on_monitored_fs)
++#define XFS_IOC_VERIFY_MEDIA	_IOWR('X', 70, struct xfs_verify_media)
++
  /*
   * ioctl commands that replace IRIX syssgi()'s
   */
