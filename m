@@ -1,210 +1,211 @@
-Received: from mail-ua1-f50.google.com (mail-ua1-f50.google.com [209.85.222.50])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D51D27E1C5
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 07:35:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.222.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE18388E7E
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 09:21:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772523354; cv=pass; b=LZEzb/BBsuxP9QAsvRKdBQlTtTa4bmBrfkp8NcJ07DcsV0jsrXrBAPcC0qJYtQNRsYTtZyT8PVpVV+MZ5nxI1ipef+IW1UsoqwDfD14M7+3Lakx27Ol24kpOh3xAZgVMzNa1ooshEv3A50/se3z+C8xQ2HxDoQ+sc6llEK+pZS4=
+	t=1772529680; cv=pass; b=Z6OOHz6PKAnvlCXmVtEIoF/6nd8a1gf+h5UO/qZzGZhM2yAxuvFZWBTV65t8jwBzrlSgMBHWvWNx5EUec1E/gkAyChcc04Hy4vkmK5CPGNZWW+Z7BbXuHc+MSxqYbQhVK8pYQmcva2ZsCkUrY6w2thXO3sKoKBAFq2AE8IrazAg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772523354; c=relaxed/simple;
-	bh=zgZmrqF57sIWcIa034uvjAlzCMcTAuz+eMRN4h89fic=;
+	s=arc-20240116; t=1772529680; c=relaxed/simple;
+	bh=bb64YLXIy3oPeHwsvS7m0P33nEAT9WuWSYWp276y4dI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nZ2AtIV+Z07vcSgGhA5nvI14GYEw6TlwWrsiZGEDl3Ml5NmjV289BAxsXnG7PF74OX+HaeUWGzmPLjcJ+E3CJiBULtZ9XvH8H9MERGdHQpxnaPNxkNgMrFU7rvY4MmHLnnUE9lnPmlp8rGBHjUdexBVCSRgEGSuzrGIfYIBCA08=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=osbx7sA+; arc=pass smtp.client-ip=209.85.222.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 To:Cc:Content-Type; b=ZTKgAYiEF5XWWB/dFrne3h8GDDSmRxmEAvvIy2JjthEZcf3pTEukBqFCeDEpUFB6oMY/PHnUeWNVff/nT1emDmn3qbLn262Uf0bs43Wvns3vr0adbMPnrUxohiCSKg+ewza4dChC5sB28TS5ZH55Wt3OKrLWmkvn74eHv5FfCKk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nGuTpO3B; arc=pass smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="osbx7sA+"
-Received: by mail-ua1-f50.google.com with SMTP id a1e0cc1a2514c-94de6081c1cso3405450241.1
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Mar 2026 23:35:52 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772523351; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGuTpO3B"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-65fa4713bd3so9335171a12.3
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Mar 2026 01:21:17 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772529676; cv=none;
         d=google.com; s=arc-20240605;
-        b=UkZ7zg+Fde0wnLh5WeZHSi/qgYLPQaodit+FUUbV3dpmLTY+AIS9tXfgfRPOH/zcnD
-         uXwjrcK6fMXooLfIJvslJjC8gCCC2/aKpR2F4UTE4rfjAXUdWHy+Cn/7FOAuI7b2LVxb
-         RJNohmYYK1PY3DazMs2skdJGn0iNG4qPFL+YkHLxQuT3zNxRNjxVQP2EA34YNINV6B7z
-         X+uvyx1KdB3jULrtW9NnHgyC7ZIaDQU2fAU1o9E6+L69WT07Pbif0sLEwkN8uuFx4rdu
-         f62wZu3TaqaD7x3TsKflew48hhtenENy9zhpxr5J13xTozB0kGmSf7mKSCqQL6i1vzbh
-         fa2w==
+        b=e2cMb7hkP0xSPU0neIY5CoiJByDs5vPWdD/eyNFHAuTeA02alTFFU7C8BTho+YeddL
+         OJBSQm21dm4QJyLdlynU4YyelBoQ4MO3R5PkWjjHrvqClic8X777yxPIOoQNMQ5jb4hT
+         DqOxkwRna0l+TFSTPskptW+9kG4H/nYmGqsoL1pACrtXoYn3RVDimHNIzNT6ORns3lHJ
+         1F+RxsFk+dE4c/dbPYpCDYqc2SpPGawf1hqUZyE9UWqfhNuiMRDjr9Gz5QLT2CSvM8lF
+         3NJIj3uvtdQ5nAgJf/xH7ITqE/E78/U4rbeuEhGA33saNh3GYieP0/9n7APNt7lJxwlC
+         NwPA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=Lt2O1U4QyboglAO2yLzVlOi3dxrdTjnMuLUtlpidD1o=;
-        fh=eSR46TvxAUUbNT60uQWkdSCrTQ3y3MyFXyhUT0RZAyY=;
-        b=VBwckoUBKIfpipPkAjEMcRbqMzMLPTjSgm0UExX4usaiOS6/MnNU02hJHpI2gteQV0
-         71vwZF2Z8kf6I4Fs842/8lI3KGACPlsf1ZJue9SwimXYn5a3CiCU4/gh8zFWhzkG5ZZu
-         jTONKvENMf4QQjEJ1NMyocGn+Eu4f7laIviVgpNAXyaOPXXZUd4z0K2deDbkxhvoFSSB
-         bjzF8sVisLVmHhs5HV3fEpENbOPiXgY7xliL2mZClkC7SRMBp41aC1ezSid3oedreJdG
-         6cVcBHpdidzHM2crsR8b+kz3JvxFGwEpg6MBFqdNhRrFueTpQ1P6zwprC8sOUKmgcmPT
-         oicw==;
+        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
+        fh=W38F1VzYxA84/wM9bdyoSrn3IHg2QLMAKg3cNlm51sk=;
+        b=N3BMIXjtqtxmYxBeTGbkp50sE7/pG7dmOnzEwHnF7StTjdD5DmNexE3mD6V0S71YvV
+         ZMThWIQ2sw/FK+/+D4lePJsf3ltdhYM4o7X/0dic+oSF5+k6LpdNIs+2B7+ZAtMY7nrX
+         VVlnyroMLjpguXB8IwN3xe+s652DhzToVnbzTKar5Liaq8uJEyt7R9d5r3z5UzC+MWBQ
+         L0TDnQSloTlQlQFgiBZltf4YJ4YcKE37Q1IiY1KXmqICSC0R83u7zUZEz9zThH1AqddC
+         +MWwk4oavccn/CM4obsY2sQw4ZfQIRXI5E1DgqXMGCDoudBIq5Bei+okxRNFW+oKCKjN
+         AOlg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1772523351; x=1773128151; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1772529676; x=1773134476; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Lt2O1U4QyboglAO2yLzVlOi3dxrdTjnMuLUtlpidD1o=;
-        b=osbx7sA+OAX1eedWGxTbDbRqFmu6WYeGBSrThet5HgpB/ACJ4wCe2EMggoy+dey75g
-         5EzISouZuDD0Jl4RvknfjqandYCHJ/scGcR9RjhEQwzLKsjL8SOCOG78SPLFyJyLOJqf
-         9ZNyvV7WOKIL6K1dst6O9q22pag2aZd2JMUKWDALNHQUqFS+jMrKbur6pz0nTB1e3+4O
-         /1SsdCHIGRsfuMwUwgnIimPw5czKl/ZixOSh5kWWxB7KvbqPJV2mbxULUpiFuVAN3Wav
-         f3BVYtlSvMIW5qKM8hvReDntlBbiWgEOh6UZGEuSwtSV3W6r5XYs7Zueh/wDDSJbYDxb
-         jcuw==
+        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
+        b=nGuTpO3ByxyjjWH2tKgvQehhnLj3L1VHUegh6UFn9Z60eQlD1tg/xJBb10Kh4bUSEP
+         YTjjKDswEqoZwpFvPZ9wIEOzbSzGwROyp3rx9ovIDwepfY2GhImOgdmCxodjRVrXVz+p
+         Se/gSpfm7dx72pfJ62GfD7/Hnz3LVKnhKgoumXg5urpBgVDYH2wkfY+iybIvkkamghzJ
+         LJaIdWxjTKCfKDtR4uiswi+skWBpIYFkW0Xy9l63k9aQd5d460EZrTss88JRcasaZEtA
+         HPkRxCpIbSQjQoGYQa1mzndXxuD3h5wu6WZf/iSgaHQeg8pEaNzxZJhWI6Tciu6TqduC
+         Y1Rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772523351; x=1773128151;
+        d=1e100.net; s=20230601; t=1772529676; x=1773134476;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Lt2O1U4QyboglAO2yLzVlOi3dxrdTjnMuLUtlpidD1o=;
-        b=KFNIbNYs8iFu7q1OkBBhGduIUdg6fmbCcBxD0aiHqfSon+/63z4+5IC8mWE331Yj2f
-         MlWvC70qLeDZ+pnzC88C72YcM8wgnrf2rgPLnvHUn5jlxUrbrlWIpdU64v2CuTHhf1Z8
-         MNuRM+PJ3HYh73qDYR/v45eylXmlUCHjjJm4WcF9WEDXckSSZWNsEiR9HKIkeDylkyTs
-         1sO+ILcNyqf5hfolas3qZB2A/sseZ1Xibc6bD8btdIbGnKJlCutodDMODQcE27AcdV/r
-         R548HxwruFn8GhTURaqyEqizVuBu/6LrHts4G9mHgAp7AI68Fvun6IZJscrN2qzhw1sp
-         DfJQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW6Wcoknk9jnf3mtc1p58yEHfJamXF/gSkfseJ1WvL7p8luzGH72Rz388ChXFjtmY3ffXqt2pF7KUA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyo4bLK2O0/Xf0kP7/1zbfItt8kBgqTBA8IhKRqhRDGO+kX3Fhn
-	AEtsiH/zKOPBEk12xBbLHwaecopbyXFHFYa61nspSqMH6N2/TKDtZQbWElFjeFwltNgLzJCt8n6
-	QueoPokIq+I0OYTj86mCUNo9XWxX17Orc3FASwe8=
-X-Gm-Gg: ATEYQzz3HIwCM7mPN6GCC/FwAKa6/Ku8/9CErX9Vg+WuQgVQq9gq9m4GK2Eb9ab2lDc
-	iqMAyMaEwEMus8UmkwukfRYv17m6EM8NyC1lEsnFOCUo7/PboFFJ7AUBJDhhj0OQo9l+htTrTxt
-	icH5ZIExpPzhFKUz+xH1OaKpenLjV2jrfj4nxmH4pwSXi38asBh5vxL0r3PF6ADbjhim6nbGSxR
-	octz/L2c2OGhSB+lOqKGHiU6i509bbLV3LuvW8YC1Cl0QcQ7RQ98Ho3xPEqvpFOlukTuIMIJSRq
-	Z5T0NCUrKTv/J2H5G18RCzP8z8vzbtEiKP772xIzuTx5e5ezWq5BA6/eQ3Y=
-X-Received: by 2002:a05:6102:3747:b0:5fd:efb0:8562 with SMTP id
- ada2fe7eead31-5ff325a3a36mr6781527137.39.1772523351040; Mon, 02 Mar 2026
- 23:35:51 -0800 (PST)
+        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
+        b=Y9K4XnOXO0rsEQQVKc1UV13/4KVGto4E67QX1xaOQxz5BhpXORM0U4Oml6dRuscXjN
+         r22cUiXqdXj3KLjZZ87iXsRGh4mcEoF/739XiQslIARrHFVcS8yIucCqFrp0ZX+B7xQl
+         ql7l/+HuRzBSnkgsYgGncF+QQMRy8yZxk7eIeg24IAGY/PpvzkJytJ2xhxsj5TpuLiA0
+         lGze+k001MLEsF4pMgKNPhZxEtE2a2klx2bSWcq2TBUVJyfz190/yyGgbKe0+ivUsmQG
+         WBgSTzKsQvS5VpJ6SLqfE9DeUexHdKNfTRhpU5gSOS/6kfYxz9YjJO42ygDGt4fQM0zx
+         0Hrg==
+X-Forwarded-Encrypted: i=1; AJvYcCVjmM2Hq5nnLslwlb30LTWVA6FznsP8r4xpGexsJVm5ZB93d0NTkQ6fhHSdgqYUlfGmr9xASs4ofQg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5t137sPUmLJNMnVD1j+22beMY/zpdGK79tQ+Dvo8g0eZ9IEkA
+	MM6BVp4MCKWpBOt/ZwShzjZDfnS1g+SeFRhS/ZpwuZVXzgeOdzw633LUsJUmL3wVGh7hkdter1H
+	GjB90dKSnTVBE+2uw/WT/7oDP6pFOIbN/hCGe3Ac=
+X-Gm-Gg: ATEYQzz5b1oUwalD21ETouuzfb1simG3DjDa4JvlUJSYJ+Fvlko2J3JKI1XibrhwOTT
+	50GM4UvP13425RNTaCBtEEAgv+HrSbwtNCyZa/QjrzXFNV+pWkGMHCeNZro4m8NCOcK90TqswSb
+	GRvInOQQSkVgb/0GtJt73lA4kgu/jv0e+swHVNkdKZ5/rqmoQuZOgnj4r6c4PmBt25kQ4NyCA70
+	Daf3pqEdl53f8mrLZcsBxo3A15YmxHMle4HCEmM1ILEA1XXz17tSdK+L2BZn+Lk4fqTalF+BsGo
+	21GVuiQn3YFUdD8pvppn/0pZvTSeqZpMgDMWr5G8gUauTLOyV0M=
+X-Received: by 2002:a17:907:3d51:b0:b87:10fd:b590 with SMTP id
+ a640c23a62f3a-b9376590b83mr865582266b.60.1772529675436; Tue, 03 Mar 2026
+ 01:21:15 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260303015646.2796170-1-morbo@google.com> <20260303051419.GD57948@frogsfrogsfrogs>
-In-Reply-To: <20260303051419.GD57948@frogsfrogsfrogs>
-From: Bill Wendling <morbo@google.com>
-Date: Mon, 2 Mar 2026 23:35:35 -0800
-X-Gm-Features: AaiRm536S064yiNI-5nK8lVd51En-2-5MBZyMPoDT6E1lWDqWbEr-lDnIgSWVgU
-Message-ID: <CAGG=3QXpNVzmG7W-NxbvviVbTM2CDXO4BNj56_pv+1PjY0nKBA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs> <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
+In-Reply-To: <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 3 Mar 2026 10:21:04 +0100
+X-Gm-Features: AaiRm535KwsgAVHj6EheTjrAtrSsGztnAGaoLe1OJY2V4Cm-WW3-sgOnbmd3S6E
+Message-ID: <CAOQ4uxgmYNWCs18+WU9-7QDkhp0f_xX6nvKiyDhS8gZzfUXXXA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
-	Gogul Balakrishnan <bgogul@google.com>, Arman Hasanzadeh <armanihm@google.com>, Kees Cook <kees@kernel.org>, 
-	linux-xfs@vger.kernel.org, codemender-patching+linux@google.com
+Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, 
+	gabriel@krisman.be, jack@suse.cz, fstests@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 2, 2026 at 9:14=E2=80=AFPM Darrick J. Wong <djwong@kernel.org> =
+On Tue, Mar 3, 2026 at 1:40=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
 wrote:
 >
-> On Tue, Mar 03, 2026 at 01:56:35AM +0000, Bill Wendling wrote:
-> > Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
-> > xfs_attr_list_context`. This field is used to point to a buffer of
-> > size `bufsize`.
-> >
-> > The `buffer` field is assigned in:
-> > 1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
-> > 2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
-> > 3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to=
- NULL)
-> >
-> > In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
-> > them to ensure `bufsize` is set before `buffer` is assigned, although
-> > no access happens between them.
-> >
-> > In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
-> > them to ensure `bufsize` is set before `buffer` is assigned.
-> >
-> > In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
-> > remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
-> > is NULL, no access occurs.
-> >
-> > In all cases, the pointer `buffer` is not accessed before `bufsize` is
-> > set.
-> >
-> > This patch was generated by CodeMender and reviewed by Bill Wendling.
-> > Tested by running xfstests.
-> >
-> > Signed-off-by: Bill Wendling <morbo@google.com>
-> > ---
-> > Cc: Carlos Maiolino <cem@kernel.org>
-> > Cc: "Darrick J. Wong" <djwong@kernel.org>
-> > Cc: Gogul Balakrishnan <bgogul@google.com>
-> > Cc: Arman Hasanzadeh <armanihm@google.com>
-> > Cc: Kees Cook <kees@kernel.org>
-> > Cc: linux-xfs@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Cc: codemender-patching+linux@google.com
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.h | 2 +-
-> >  fs/xfs/xfs_handle.c      | 2 +-
-> >  fs/xfs/xfs_xattr.c       | 2 +-
-> >  3 files changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > index 8244305949de..4cd161905288 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.h
-> > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > @@ -55,7 +55,7 @@ struct xfs_attr_list_context {
-> >       struct xfs_trans        *tp;
-> >       struct xfs_inode        *dp;            /* inode */
-> >       struct xfs_attrlist_cursor_kern cursor; /* position in list */
-> > -     void                    *buffer;        /* output buffer */
-> > +     void                    *buffer __counted_by_ptr(bufsize);      /=
-* output buffer */
+> From: Darrick J. Wong <djwong@kernel.org>
 >
-> Looks reasonable, but ... how hard will it be to port __counted_by_ptr
-> to userspace?  Files in fs/xfs/libxfs/ get ported to userspace xfs.  I
-> see that it maps to an __attribute__.  Does that get us any new gcc
-> typechecking magic?
+> Test the fsnotify filesystem error reporting.
+
+For the record, I feel that I need to say to all the people whom we pushed =
+back
+on fanotify tests in fstests until there was a good enough reason to do so,
+that this seems like a good reason to do so ;)
+
+But also for future test writers, please note that FAN_FS_ERROR is an
+exception to the rule and please keep writing new fanotify/inotify tests in=
+ LTP
+(until there is a good enough reason...)
+
 >
-I'm not familiar with how the files are ported to user space. There
-are #defines in include/uapi/linux/stddef.h that turn this attribute
-(and other similarly named attributes) off. Please let me know if
-that's not sufficient, as it will most likely apply to other APIs.
-
-As for new typechecking magic, Clang and GCC check to ensure that the
-"counter" has an integral type. Otherwise, nothing earth shattering.
-:-)
-
--bw
-
-> --D
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  src/Makefile           |    2
+>  src/fs-monitor.c       |  155 +++++++++++++++++++++++++++++++++
+>  tests/generic/1838     |  228 ++++++++++++++++++++++++++++++++++++++++++=
+++++++
+>  tests/generic/1838.out |   20 ++++
+>  4 files changed, 404 insertions(+), 1 deletion(-)
+>  create mode 100644 src/fs-monitor.c
+>  create mode 100755 tests/generic/1838
+>  create mode 100644 tests/generic/1838.out
 >
-> >
-> >       /*
-> >        * Abort attribute list iteration if non-zero.  Can be used to pa=
-ss
-> > diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-> > index d1291ca15239..2b8617ae7ec2 100644
-> > --- a/fs/xfs/xfs_handle.c
-> > +++ b/fs/xfs/xfs_handle.c
-> > @@ -443,8 +443,8 @@ xfs_ioc_attr_list(
-> >       context.dp =3D dp;
-> >       context.resynch =3D 1;
-> >       context.attr_filter =3D xfs_attr_filter(flags);
-> > -     context.buffer =3D buffer;
-> >       context.bufsize =3D round_down(bufsize, sizeof(uint32_t));
-> > +     context.buffer =3D buffer;
-> >       context.firstu =3D context.bufsize;
-> >       context.put_listent =3D xfs_ioc_attr_put_listent;
-> >
-> > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> > index a735f16d9cd8..544213067d59 100644
-> > --- a/fs/xfs/xfs_xattr.c
-> > +++ b/fs/xfs/xfs_xattr.c
-> > @@ -332,8 +332,8 @@ xfs_vn_listxattr(
-> >       memset(&context, 0, sizeof(context));
-> >       context.dp =3D XFS_I(inode);
-> >       context.resynch =3D 1;
-> > -     context.buffer =3D size ? data : NULL;
-> >       context.bufsize =3D size;
-> > +     context.buffer =3D size ? data : NULL;
-> >       context.firstu =3D context.bufsize;
-> >       context.put_listent =3D xfs_xattr_put_listent;
-> >
-> > --
-> > 2.53.0.473.g4a7958ca14-goog
-> >
-> >
+>
+...
+
+> diff --git a/tests/generic/1838 b/tests/generic/1838
+> new file mode 100755
+> index 00000000000000..087851ddcbdb44
+> --- /dev/null
+> +++ b/tests/generic/1838
+> @@ -0,0 +1,228 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1838
+> +#
+> +# Check that fsnotify can report file IO errors.
+> +
+> +. ./common/preamble
+> +_begin_fstest auto quick eio selfhealing
+> +
+> +# Override the default cleanup function.
+> +_cleanup()
+> +{
+> +       cd /
+> +       test -n "$fsmonitor_pid" && kill -TERM $fsmonitor_pid
+> +       rm -f $tmp.*
+> +       _dmerror_cleanup
+> +}
+> +
+> +# Import common functions.
+> +. ./common/fuzzy
+> +. ./common/filter
+> +. ./common/dmerror
+> +. ./common/systemd
+> +
+> +case "$FSTYP" in
+> +xfs)
+> +       # added as a part of xfs health monitoring
+> +       _require_xfs_io_command healthmon
+> +       # no out of place writes
+> +       _require_no_xfs_always_cow
+> +       ;;
+> +ext4)
+> +       # added at the same time as uevents
+> +       modprobe fs-$FSTYP
+> +       test -e /sys/fs/ext4/features/uevents || \
+> +               _notrun "$FSTYP does not support fsnotify ioerrors"
+> +       ;;
+> +*)
+> +       _notrun "$FSTYP does not support fsnotify ioerrors"
+> +       ;;
+> +esac
+> +
+
+_require_fsnotify_errors ?
+
+> +_require_scratch
+> +_require_dm_target error
+> +_require_test_program fs-monitor
+> +_require_xfs_io_command "fiemap"
+> +_require_odirect
+> +
+> +# fsnotify only gives us a file handle, the error number, and the number=
+ of
+> +# times it was seen in between event deliveries.   The handle is mostly =
+useless
+> +# since we have no generic way to map that to a file path.  Therefore we=
+ can
+> +# only coalesce all the I/O errors into one report.
+> +filter_fsnotify_errors() {
+> +       _filter_scratch | \
+> +               grep -E '(FAN_FS_ERROR|Generic Error Record|error: 5)' | =
+\
+> +               sed -e "s/len=3D[0-9]*/len=3DXXX/g" | \
+> +               sort | \
+> +               uniq
+> +}
+
+move to common/filter?
+
+Apart from those nits, no further comments.
+
+Thanks,
+Amir.
