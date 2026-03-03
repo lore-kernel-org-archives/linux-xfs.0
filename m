@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21764374E7C
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:34:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A7A11A4F2F
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:35:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772498093; cv=none; b=abBxXVz5QKMm9kdeq6vE7v9Hd6ZasCWCFALimfMU7F8D+eTHlnsF8LPt28oly8t+7ElyLPFdEs3vq6yHLoBJP0pNPd8s2AxRQZ2E+N0UZXa3T4GKY8EcSR+5E8lacJsIOIUKmrpn/43e40M5WaQypvCDVxyhpYH/UO9karAYtLE=
+	t=1772498108; cv=none; b=mlPakF7Jd/aK8icUQbH+Pbj9OE4wM/VL8adLE7Uq28uatxS/78ZVc3FApLcnD2XskCM6fONgpG88ds1HYtp6ZVn8c+Yii4QqryrBQCcrZuc//82PkCPe3Vk9i6B1pGpNGQ6UynSyevA0bKaSWa2LtEzqSU6ycvTineFADH6xrlc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772498093; c=relaxed/simple;
-	bh=cy3+aZz8VmwlSziuq1OV2SW6uOncKuITctguXMlY7tM=;
+	s=arc-20240116; t=1772498108; c=relaxed/simple;
+	bh=bZ70sV5pLb2q4olyFeJ4JPAsvQX4vnKmrsguYxNVMCs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JtkESoJKhvltv63Vo9Rm24P8gD/NCJiZcYt2kIJhXrhrw1VHMsq6tETdT4p3zLJBzLbFtyV/wa617y1/OOqiXru6pvEHzl31LnR8c0IbuY8XaHmKlLg3tvSkdT65ObaQRzETDY0oAwd58Gkg+KxDBYRiS269ATiYUIjiWHJZc+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vyx025Y3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=pi5P1Ew5qSc7WL7Lx1jON7sb5S9wjivGrMJ2efLR/YEH6OqASApQWENSbksuLA87IbJl4xK0YEb/3VVLpmcc3y7MCHcW2g38inwB+KIDJGBJ0bhoFoc4UY2avdHUG8sYpASY14BN7IqcQOSoFE4kCQWlqBtD4zHg4URWtoJ4VQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AcFH9FYf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vyx025Y3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5112C19423;
-	Tue,  3 Mar 2026 00:34:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AcFH9FYf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6354CC19423;
+	Tue,  3 Mar 2026 00:35:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772498092;
-	bh=cy3+aZz8VmwlSziuq1OV2SW6uOncKuITctguXMlY7tM=;
+	s=k20201202; t=1772498108;
+	bh=bZ70sV5pLb2q4olyFeJ4JPAsvQX4vnKmrsguYxNVMCs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Vyx025Y3Y6Bnf0BREmqgm6jScEKhP6EKrvKyQRtdmX/BBB8mgOx7Vl7TLK8ro66Or
-	 YCidjQEiZc3IhjrETTxaaRE+D12ymgqiGLp/shNrv7nJHkwLEbfQ0dZsf4RYDZhwOY
-	 hfBMI+rjmvQAwZM+NmmLcyA5D6cb+9xXe4RQyjMApabVuAsTt0gUKChT97IV6JSCLl
-	 C/Au/7aOuVj7jvyR6ky5y5ROzgHe5EUe12sX/d7Ewl92pbMDiEtaCST1Bll+Psq8jq
-	 +uWwJV3utIFDTw9qRRrSPrTvuOPVEjSlQGPWbV3aAEUxTnwZVv4rejVuq9Z7ZWwAsD
-	 vf+EdIylJvfXA==
-Date: Mon, 02 Mar 2026 16:34:52 -0800
-Subject: [PATCH 04/26] libfrog: hoist a couple of service helper functions
+	b=AcFH9FYf7qSjEcg3qTCv26fst4XFStLqjtyS6F9ZUJ+HkeOQvc0iYYH73N/tbQoxu
+	 cMw9DuS3gN1zZrm+ODxF2QAyFTApGfKyZrrwzMhF4ZLmW1rTtDt9ysmphdWvAQDd6s
+	 EU2/wOb95/VXVFSXAurRQMbw+CvDixENVxQZTxzLk0DHEjq0RdsxVLxVHh9onN3m6R
+	 y+twbMHslm78mevucUkqVIkn3zFKxetbYKwgx+hFL3H41mbYN37hBcoymtX+dJ5Shh
+	 32Rzq9ae/G1UzsIPe87IjJmAh7oZ/79voexKUahIrAeV9YP3lYL+FO5fE5mWA3yPNl
+	 uonTUxFeZXwJg==
+Date: Mon, 02 Mar 2026 16:35:07 -0800
+Subject: [PATCH 05/26] man2: document the healthmon ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177249783366.482027.6931104577818307338.stgit@frogsfrogsfrogs>
+Message-ID: <177249783384.482027.17022650157700588082.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
 References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,110 +45,567 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Hoist a couple of service/daemon-related helper functions to libfrog so
-that we can share the code between xfs_scrub and xfs_healer.
+Document the XFS_IOC_HEALTH_MONITOR and
+XFS_IOC_HEALTH_FD_ON_MONITORED_FS ioctls.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libfrog/systemd.h |   28 ++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |   32 +++++++++-----------------------
- 2 files changed, 37 insertions(+), 23 deletions(-)
+ man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 |   75 ++++
+ man/man2/ioctl_xfs_health_monitor.2            |  464 ++++++++++++++++++++++++
+ 2 files changed, 539 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+ create mode 100644 man/man2/ioctl_xfs_health_monitor.2
 
 
-diff --git a/libfrog/systemd.h b/libfrog/systemd.h
-index 4f414bc3c1e9c3..c96df4afa39aa6 100644
---- a/libfrog/systemd.h
-+++ b/libfrog/systemd.h
-@@ -17,4 +17,32 @@ enum systemd_unit_manage {
- 
- int systemd_manage_unit(enum systemd_unit_manage how, const char *unitname);
- 
-+static inline bool systemd_is_service(void)
-+{
-+	return getenv("SERVICE_MODE") != NULL;
-+}
+diff --git a/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+new file mode 100644
+index 00000000000000..bbc5ce9bbabf53
+--- /dev/null
++++ b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+@@ -0,0 +1,75 @@
++.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-HEALTH-FD-ON-MONITORED-FS 2 2026-01-04 "XFS"
++.SH NAME
++ioctl_xfs_health_fd_on_monitored_fs \- check if the given fd belongs to the same fs being monitored
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " healthmon_fd ", XFS_IOC_HEALTH_FD_ON_MONITORED_FS, struct xfs_health_file_on_monitored_fs *" arg );
++.SH DESCRIPTION
++This XFS healthmon fd ioctl asks the kernel driver if the file descriptor
++passed in via
++.I arg
++points to a file on the same filesystem that is being monitored by
++.IR healthmon_fd .
++The file descriptor is conveyed in a structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_health_file_on_monitored_fs {
++	__s32 fd;
++	__u32 flags;
++};
++.fi
++.in
++.PP
++The field
++.I flags
++must be zero.
++.PP
++The field
++.I fd
++is a descriptor of an open file.
++.PP
++The argument
++.I healthmon_fd
++must be a file opened via the
++.B XFS_IOC_HEALTH_MONITOR
++ioctl.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++If the file descriptor points to a file on the same filesystem that is being
++monitored, 0 is returned.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B ESTALE
++The open file is not on the same filesystem that is being monitored.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EBADF
++.I arg.fd
++does not refer to an open file.
++.TP
++.B EFAULT
++The
++.I arg
++structure could not be copied into the kernel.
++.TP
++.B ENOTTY
++.I healthmon_fd
++is not a XFS health monitoring file.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl_xfs_health_monitor (2)
+diff --git a/man/man2/ioctl_xfs_health_monitor.2 b/man/man2/ioctl_xfs_health_monitor.2
+new file mode 100644
+index 00000000000000..269c434515d960
+--- /dev/null
++++ b/man/man2/ioctl_xfs_health_monitor.2
+@@ -0,0 +1,464 @@
++.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-HEALTH-MONITOR 2 2026-01-04 "XFS"
++.SH NAME
++ioctl_xfs_health_monitor \- read filesystem health events from the kernel
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " dest_fd ", XFS_IOC_HEALTH_MONITOR, struct xfs_health_monitor *" arg );
++.SH DESCRIPTION
++This XFS ioctl asks the kernel driver to create a pseudo-file from which
++information about adverse filesystem health events can be read.
++This new file will be installed into the file descriptor table of the calling
++process as a read-only file, and will have the close-on-exec flag set.
++.PP
++The specific behaviors of this health monitor file are requested via a
++structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_health_monitor {
++	__u64 flags;
++	__u8  format;
++	__u8  pad[23];
++};
++.fi
++.in
++.PP
++The field
++.I pad
++must be zero.
++.PP
++The field
++.I format
++controls the format of the event data that can be read:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_FMT_V0
++Event data will be presented in discrete objects of type struct
++xfs_health_monitor_event.
++See below for more information.
++.RE
 +
-+/* Special processing for a service/daemon program that is exiting. */
-+static inline int
-+systemd_service_exit(int ret)
-+{
-+	/*
-+	 * We have to sleep 2 seconds here because journald uses the pid to
-+	 * connect our log messages to the systemd service.  This is critical
-+	 * for capturing all the log messages if the service fails, because
-+	 * failure analysis tools use the service name to gather log messages
-+	 * for reporting.
-+	 */
-+	sleep(2);
++.PD 1
++.PP
++The field
++.I flags
++control the behavior of the monitor.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_VERBOSE
++Return all health events, including affirmations of healthy metadata.
++.RE
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++Otherwise, the return value is a new file descriptor.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EEXIST
++Health monitoring is already active for this filesystem.
++.TP
++.B EPERM
++The caller does not have permission to open a health monitor.
++Calling programs must have administrative capability, run in the initial user
++namespace, and the
++.I fd
++passed to ioctl must be the root directory of an XFS filesystem.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EFAULT
++The argument could not be copied into the kernel.
++.TP
++.B ENOMEM
++There was not sufficient memory to construct the health monitor.
++.SH EVENT FORMAT
++Calling programs retrieve XFS health events by calling
++.BR read (2)
++on the returned file descriptor.
++The read buffer must be large enough to hold at least one event object.
++Partial objects will not be returned; instead, a short read will occur.
 +
-+	/*
-+	 * If we're being run as a service, the return code must fit the LSB
-+	 * init script action error guidelines, which is to say that we
-+	 * compress all errors to 1 ("generic or unspecified error", LSB 5.0
-+	 * section 22.2) and hope the admin will scan the log for what actually
-+	 * happened.
-+	 */
-+	return ret != 0 ? EXIT_FAILURE : EXIT_SUCCESS;
-+}
++Events will be returned in the following format:
 +
- #endif /* __LIBFROG_SYSTEMD_H__ */
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 3dba972a7e8d2a..79937aa8cce4c4 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -19,6 +19,7 @@
- #include "unicrash.h"
- #include "progress.h"
- #include "libfrog/histogram.h"
-+#include "libfrog/systemd.h"
- 
- /*
-  * XFS Online Metadata Scrub (and Repair)
-@@ -866,8 +867,7 @@ main(
- 	if (stdout_isatty && !progress_fp)
- 		progress_fp = fdopen(1, "w+");
- 
--	if (getenv("SERVICE_MODE"))
--		is_service = true;
-+	is_service = systemd_is_service();
- 
- 	/* Initialize overall phase stats. */
- 	error = phase_start(&all_pi, 0, NULL);
-@@ -960,29 +960,15 @@ main(
- 	hist_free(&ctx.datadev_hist);
- 	hist_free(&ctx.rtdev_hist);
- 
--	/*
--	 * If we're being run as a service, the return code must fit the LSB
--	 * init script action error guidelines, which is to say that we
--	 * compress all errors to 1 ("generic or unspecified error", LSB 5.0
--	 * section 22.2) and hope the admin will scan the log for what
--	 * actually happened.
--	 *
--	 * We have to sleep 2 seconds here because journald uses the pid to
--	 * connect our log messages to the systemd service.  This is critical
--	 * for capturing all the log messages if the scrub fails, because the
--	 * fail service uses the service name to gather log messages for the
--	 * error report.
--	 *
--	 * Note: We don't count a lack of kernel support as a service failure
--	 * because we haven't determined that there's anything wrong with the
--	 * filesystem.
--	 */
- 	if (is_service) {
--		sleep(2);
-+		/*
-+		 * Note: We don't count a lack of kernel support as a service
-+		 * failure because we haven't determined that there's anything
-+		 * wrong with the filesystem.
-+		 */
- 		if (!ctx.scrub_setup_succeeded)
--			return 0;
--		if (ret != SCRUB_RET_SUCCESS)
--			return 1;
-+			ret = 0;
-+		return systemd_service_exit(ret);
- 	}
- 
- 	return ret;
++.PP
++.in +4n
++.nf
++struct xfs_health_monitor_event {
++	__u32	domain;
++	__u32	type;
++	__u64	time_ns;
++
++	union {
++		struct xfs_health_monitor_lost lost;
++		struct xfs_health_monitor_fs fs;
++		struct xfs_health_monitor_group group;
++		struct xfs_health_monitor_inode inode;
++		struct xfs_health_monitor_shutdown shutdown;
++		struct xfs_health_monitor_media media;
++		struct xfs_health_monitor_filerange filerange;
++	} e;
++
++	__u64	pad[2];
++};
++.fi
++.in
++.PP
++The field
++.I time_ns
++records the timestamp at which the health event was generated, in units of
++nanoseconds since the Unix epoch.
++.PP
++The field
++.I pad
++will be zero.
++.PP
++The field
++.I domain
++indicates the scope of the filesystem affected by the event:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_MOUNT
++The entire filesystem is affected.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_FS
++Metadata concerning the entire filesystem is affected.
++Details are available through the
++.I fs
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_AG
++Metadata concerning a specific allocation group is affected.
++Details are available through the
++.I group
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_RTGROUP
++Metadata concerning a specific realtime allocation group is affected.
++Details are available through the
++.I group
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_INODE
++File metadata is affected.
++Details are available through the
++.I inode
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_DATADEV
++The main data volume is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_RTDEV
++The realtime volume is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_LOGDEV
++The external log is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_FILERANGE
++File data is affected.
++Details are available through the
++.I filerange
++field.
++.RE
++
++.PP
++The field
++.I type
++indicates what was affected by a health event:
++.RS 0.4i
++.PP
++The following types apply to events from the
++.B MOUNT
++domain.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_RUNNING
++This filesystem health monitor is now running.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_LOST
++Health events were lost.
++Details are available through the
++.I lost
++field.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_UNMOUNT
++The filesystem is being unmounted.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_SHUTDOWN
++The filesystem has shut down due to problems.
++Details are available through the
++.I shutdown
++field.
++.RE
++.PP
++The following three types apply to events from the
++.BR FS ,
++.BR AG ,
++.BR RTGROUP ,
++and
++.B INODE
++domains.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_SICK
++Filesystem metadata has been scanned by online fsck and found to be corrupt.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_CORRUPT
++A metadata corruption problem was encountered during a filesystem operation
++outside of fsck.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_HEALTHY
++Filesystem metadata has either been scanned by online fsck and found to be
++in good condition, or it has been repaired to good condition.
++.RE
++.PP
++The following type applies to events from the
++.BR DATADEV ,
++.BR RTDEV ,
++and
++.B LOGDEV
++domains.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_MEDIA_ERROR
++A media error has been observed on one of the storage devices that can be
++attached to an XFS filesystem.
++.RE
++.PP
++The following types apply to events from the
++.B FILERANGE
++domain.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_BUFREAD
++An attempt to read (or readahead) from a file failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_BUFWRITE
++An attempt to write dirty data to storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DIOREAD
++A direct read of file data from storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DIOWRITE
++A direct write of file data to storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DATALOST
++A latent media error was discovered on the storage backing part of this file.
++.RE
++.RE
++
++.PP
++The union
++.I e
++contains further details about the health event:
++
++.RS 0.4i
++.PP
++The kernel will use no more than 32KiB of memory per monitoring file to queue
++health events.
++If this limit is exceeded, an event will be generated to describe how many
++events were lost:
++
++.in +4n
++.nf
++struct xfs_health_monitor_lost {
++	__u64	count;
++};
++.fi
++.in
++.PP
++The
++.I count
++field records the number of events lost.
++
++.PP
++If whole-filesystem metadata experiences a health event, the exact type of
++that metadata is recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_fs {
++	__u32	mask;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_FSOP_GEOM_SICK_*
++flags that are documented in the
++.BR ioctl_xfs_fsgeometry (2)
++manual page.
++
++.PP
++If an allocation group (realtime or data) experiences a health event,
++the exact type and location of the metadata is recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_group {
++	__u32	mask;
++	__u32	gno;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_AG_SICK_*
++flags that are documented in the
++.BR ioctl_xfs_ag_geometry (2)
++manual page, or the
++.I XFS_RTGROUP_SICK_*
++flags that are documented by the
++.BR ioctl_xfs_rtgroup_geometry (2)
++manual page.
++.PP
++The
++.I gno
++field will contain the group number.
++
++.PP
++If a file experiences a health event, the exact type and handle to the file
++is recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_inode {
++	__u32	mask;
++	__u32	gen;
++	__u64	ino;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_BS_SICK_*
++flags that are documented by the
++.BR ioctl_xfs_bulkstat (2)
++manual page.
++.PP
++The
++.I ino
++and
++.I gen
++fields describe a handle to the affected file.
++
++.PP
++If the filesystem shuts down abnormally, the exact reasons are recorded as
++follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_shutdown {
++	__u32	reasons;
++};
++.fi
++.in
++.PP
++The
++.I reasons
++field is a combination of the following values:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_SHUTDOWN_META_IO_ERROR
++Metadata I/O errors were encountered.
++.TP
++.B XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR
++Log I/O errors were encountered.
++.TP
++.B XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT
++The filesystem was forcibly shut down by an administrator.
++.TP
++.B XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE
++In-memory metadata are corrupt.
++.TP
++.B XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK
++On-disk metadata are corrupt.
++.TP
++.B XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED
++Storage devices were removed.
++.RE
++
++.PP
++If a media error is discovered on the storage device, the exact location is
++recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_media {
++	__u64	daddr;
++	__u64	bbcount;
++};
++.fi
++.in
++.PP
++The
++.I daddr
++and
++.I bbcount
++fields describe the range of the storage that were lost.
++Both are provided in units of 512-byte blocks.
++
++.PP
++If a problem is discovered with regular file data, the handle of the file
++and the exact range of the file are recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_filerange {
++	__u64	pos;
++	__u64	len;
++	__u64	ino;
++	__u32	gen;
++	__u32	error;
++};
++.fi
++.in
++.PP
++The
++.I ino
++and
++.I gen
++fields describe a handle to the affected file.
++The
++.I pos
++and
++.I len
++fields describe the range of the file data that are affected.
++Both are provided in units of bytes.
++.PP
++The
++.I error
++field describes the error that occurred.
++See the
++.BR errno (3)
++manual page for more information.
++.RE
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl_xfs_health_samefs (2)
 
