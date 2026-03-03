@@ -1,211 +1,185 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE18388E7E
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 09:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772529680; cv=pass; b=Z6OOHz6PKAnvlCXmVtEIoF/6nd8a1gf+h5UO/qZzGZhM2yAxuvFZWBTV65t8jwBzrlSgMBHWvWNx5EUec1E/gkAyChcc04Hy4vkmK5CPGNZWW+Z7BbXuHc+MSxqYbQhVK8pYQmcva2ZsCkUrY6w2thXO3sKoKBAFq2AE8IrazAg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772529680; c=relaxed/simple;
-	bh=bb64YLXIy3oPeHwsvS7m0P33nEAT9WuWSYWp276y4dI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZTKgAYiEF5XWWB/dFrne3h8GDDSmRxmEAvvIy2JjthEZcf3pTEukBqFCeDEpUFB6oMY/PHnUeWNVff/nT1emDmn3qbLn262Uf0bs43Wvns3vr0adbMPnrUxohiCSKg+ewza4dChC5sB28TS5ZH55Wt3OKrLWmkvn74eHv5FfCKk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nGuTpO3B; arc=pass smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGuTpO3B"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-65fa4713bd3so9335171a12.3
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Mar 2026 01:21:17 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772529676; cv=none;
-        d=google.com; s=arc-20240605;
-        b=e2cMb7hkP0xSPU0neIY5CoiJByDs5vPWdD/eyNFHAuTeA02alTFFU7C8BTho+YeddL
-         OJBSQm21dm4QJyLdlynU4YyelBoQ4MO3R5PkWjjHrvqClic8X777yxPIOoQNMQ5jb4hT
-         DqOxkwRna0l+TFSTPskptW+9kG4H/nYmGqsoL1pACrtXoYn3RVDimHNIzNT6ORns3lHJ
-         1F+RxsFk+dE4c/dbPYpCDYqc2SpPGawf1hqUZyE9UWqfhNuiMRDjr9Gz5QLT2CSvM8lF
-         3NJIj3uvtdQ5nAgJf/xH7ITqE/E78/U4rbeuEhGA33saNh3GYieP0/9n7APNt7lJxwlC
-         NwPA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
-        fh=W38F1VzYxA84/wM9bdyoSrn3IHg2QLMAKg3cNlm51sk=;
-        b=N3BMIXjtqtxmYxBeTGbkp50sE7/pG7dmOnzEwHnF7StTjdD5DmNexE3mD6V0S71YvV
-         ZMThWIQ2sw/FK+/+D4lePJsf3ltdhYM4o7X/0dic+oSF5+k6LpdNIs+2B7+ZAtMY7nrX
-         VVlnyroMLjpguXB8IwN3xe+s652DhzToVnbzTKar5Liaq8uJEyt7R9d5r3z5UzC+MWBQ
-         L0TDnQSloTlQlQFgiBZltf4YJ4YcKE37Q1IiY1KXmqICSC0R83u7zUZEz9zThH1AqddC
-         +MWwk4oavccn/CM4obsY2sQw4ZfQIRXI5E1DgqXMGCDoudBIq5Bei+okxRNFW+oKCKjN
-         AOlg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772529676; x=1773134476; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
-        b=nGuTpO3ByxyjjWH2tKgvQehhnLj3L1VHUegh6UFn9Z60eQlD1tg/xJBb10Kh4bUSEP
-         YTjjKDswEqoZwpFvPZ9wIEOzbSzGwROyp3rx9ovIDwepfY2GhImOgdmCxodjRVrXVz+p
-         Se/gSpfm7dx72pfJ62GfD7/Hnz3LVKnhKgoumXg5urpBgVDYH2wkfY+iybIvkkamghzJ
-         LJaIdWxjTKCfKDtR4uiswi+skWBpIYFkW0Xy9l63k9aQd5d460EZrTss88JRcasaZEtA
-         HPkRxCpIbSQjQoGYQa1mzndXxuD3h5wu6WZf/iSgaHQeg8pEaNzxZJhWI6Tciu6TqduC
-         Y1Rw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772529676; x=1773134476;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=pkig2duPJVssDkbWxtWOY0gHaOnkUNJGF+RUH4/MX7E=;
-        b=Y9K4XnOXO0rsEQQVKc1UV13/4KVGto4E67QX1xaOQxz5BhpXORM0U4Oml6dRuscXjN
-         r22cUiXqdXj3KLjZZ87iXsRGh4mcEoF/739XiQslIARrHFVcS8yIucCqFrp0ZX+B7xQl
-         ql7l/+HuRzBSnkgsYgGncF+QQMRy8yZxk7eIeg24IAGY/PpvzkJytJ2xhxsj5TpuLiA0
-         lGze+k001MLEsF4pMgKNPhZxEtE2a2klx2bSWcq2TBUVJyfz190/yyGgbKe0+ivUsmQG
-         WBgSTzKsQvS5VpJ6SLqfE9DeUexHdKNfTRhpU5gSOS/6kfYxz9YjJO42ygDGt4fQM0zx
-         0Hrg==
-X-Forwarded-Encrypted: i=1; AJvYcCVjmM2Hq5nnLslwlb30LTWVA6FznsP8r4xpGexsJVm5ZB93d0NTkQ6fhHSdgqYUlfGmr9xASs4ofQg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5t137sPUmLJNMnVD1j+22beMY/zpdGK79tQ+Dvo8g0eZ9IEkA
-	MM6BVp4MCKWpBOt/ZwShzjZDfnS1g+SeFRhS/ZpwuZVXzgeOdzw633LUsJUmL3wVGh7hkdter1H
-	GjB90dKSnTVBE+2uw/WT/7oDP6pFOIbN/hCGe3Ac=
-X-Gm-Gg: ATEYQzz5b1oUwalD21ETouuzfb1simG3DjDa4JvlUJSYJ+Fvlko2J3JKI1XibrhwOTT
-	50GM4UvP13425RNTaCBtEEAgv+HrSbwtNCyZa/QjrzXFNV+pWkGMHCeNZro4m8NCOcK90TqswSb
-	GRvInOQQSkVgb/0GtJt73lA4kgu/jv0e+swHVNkdKZ5/rqmoQuZOgnj4r6c4PmBt25kQ4NyCA70
-	Daf3pqEdl53f8mrLZcsBxo3A15YmxHMle4HCEmM1ILEA1XXz17tSdK+L2BZn+Lk4fqTalF+BsGo
-	21GVuiQn3YFUdD8pvppn/0pZvTSeqZpMgDMWr5G8gUauTLOyV0M=
-X-Received: by 2002:a17:907:3d51:b0:b87:10fd:b590 with SMTP id
- a640c23a62f3a-b9376590b83mr865582266b.60.1772529675436; Tue, 03 Mar 2026
- 01:21:15 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5962390202
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 10:04:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772532257; cv=none; b=AlZvprqS9R1bMnn8R8iFI/D3CYUKtVbksfghXwwxdoT5z5SWc1OfPDhiIZlP/MhPhlEHdSo3NIKdHSg/qrLfwKjapO8dz6cGfTmwyA479386IiegtavQUWGyzEm8kbcI4FIQT/0+memY8MKvRRv1ZVZtNAffuUQApD7XRBO96QQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772532257; c=relaxed/simple;
+	bh=KGFR6GPIehO6zIdn2CFtuE4synSr/5rzwVcLZPCowm8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l/QWKZWQIrUrdvwAnhIfCHLrIMag9oXdlgbOa6S85XIMUL36p1RK21VYZy9Mx3JPzt58PENd0kfa/RyX8vTFf+r7exYLuncoM4u4SDKSxJZmFFo3m60S4PkrFVZgTwV3bXYUQMJiHC0CAKD/NoVIH71BiGB4YIP/0FZFWtC/AFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <mkl@pengutronix.de>)
+	id 1vxMbR-0007dp-7S; Tue, 03 Mar 2026 11:03:45 +0100
+Received: from moin.white.stw.pengutronix.de ([2a0a:edc0:0:b01:1d::7b] helo=bjornoya.blackshift.org)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <mkl@pengutronix.de>)
+	id 1vxMbP-003WdD-12;
+	Tue, 03 Mar 2026 11:03:44 +0100
+Received: from pengutronix.de (p4ffb2dc6.dip0.t-ipconnect.de [79.251.45.198])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	(Authenticated sender: mkl-all@blackshift.org)
+	by smtp.blackshift.org (Postfix) with ESMTPSA id 23B2F4F64B1;
+	Tue, 03 Mar 2026 10:03:43 +0000 (UTC)
+Date: Tue, 3 Mar 2026 11:03:42 +0100
+From: Marc Kleine-Budde <mkl@pengutronix.de>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>, 
+	Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+	Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, 
+	Eric Biggers <ebiggers@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, 
+	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
+	David Hildenbrand <david@kernel.org>, David Howells <dhowells@redhat.com>, 
+	Paulo Alcantara <pc@manguebit.org>, Andreas Dilger <adilger.kernel@dilger.ca>, 
+	Jan Kara <jack@suse.com>, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>, 
+	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+	Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+	Steve French <sfrench@samba.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+	Shyam Prasad N <sprasad@microsoft.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Alexander Aring <alex.aring@gmail.com>, Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
+	Viacheslav Dubeyko <slava@dubeyko.com>, Eric Van Hensbergen <ericvh@kernel.org>, 
+	Latchesar Ionkov <lucho@ionkov.net>, Dominique Martinet <asmadeus@codewreck.org>, 
+	Christian Schoenebeck <linux_oss@crudebyte.com>, David Sterba <dsterba@suse.com>, 
+	Marc Dionne <marc.dionne@auristor.com>, Ian Kent <raven@themaw.net>, 
+	Luis de Bethencourt <luisbg@kernel.org>, Salah Triki <salah.triki@gmail.com>, 
+	"Tigran A. Aivazian" <aivazian.tigran@gmail.com>, Ilya Dryomov <idryomov@gmail.com>, 
+	Alex Markuze <amarkuze@redhat.com>, Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu, 
+	Nicolas Pitre <nico@fluxnic.net>, Tyler Hicks <code@tyhicks.com>, 
+	Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>, 
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Yangtao Li <frank.li@vivo.com>, 
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, David Woodhouse <dwmw2@infradead.org>, 
+	Richard Weinberger <richard@nod.at>, Dave Kleikamp <shaggy@kernel.org>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
+	Joseph Qi <joseph.qi@linux.alibaba.com>, Mike Marshall <hubcap@omnibond.com>, 
+	Martin Brandenburg <martin@omnibond.com>, Miklos Szeredi <miklos@szeredi.hu>, 
+	Anders Larsen <al@alarsen.net>, Zhihao Cheng <chengzhihao1@huawei.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
+	Johannes Thumshirn <jth@kernel.org>, John Johansen <john.johansen@canonical.com>, 
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Mimi Zohar <zohar@linux.ibm.com>, 
+	Roberto Sassu <roberto.sassu@huawei.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, 
+	Eric Snowberg <eric.snowberg@oracle.com>, Fan Wu <wufan@kernel.org>, 
+	Stephen Smalley <stephen.smalley.work@gmail.com>, Ondrej Mosnacek <omosnace@redhat.com>, 
+	Casey Schaufler <casey@schaufler-ca.com>, Alex Deucher <alexander.deucher@amd.com>, 
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Sumit Semwal <sumit.semwal@linaro.org>, 
+	Eric Dumazet <edumazet@google.com>, Kuniyuki Iwashima <kuniyu@google.com>, 
+	Paolo Abeni <pabeni@redhat.com>, Willem de Bruijn <willemb@google.com>, 
+	"David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
+	Simon Horman <horms@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
+	Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+	Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>, 
+	Adrian Hunter <adrian.hunter@intel.com>, James Clark <james.clark@linaro.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Martin Schiller <ms@dev.tdt.de>, Eric Paris <eparis@redhat.com>, 
+	Joerg Reuter <jreuter@yaina.de>, Marcel Holtmann <marcel@holtmann.org>, 
+	Johan Hedberg <johan.hedberg@gmail.com>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Oliver Hartkopp <socketcan@hartkopp.net>, David Ahern <dsahern@kernel.org>, 
+	Neal Cardwell <ncardwell@google.com>, Steffen Klassert <steffen.klassert@secunet.com>, 
+	Herbert Xu <herbert@gondor.apana.org.au>, Remi Denis-Courmont <courmisch@gmail.com>, 
+	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>, Xin Long <lucien.xin@gmail.com>, 
+	Magnus Karlsson <magnus.karlsson@intel.com>, Maciej Fijalkowski <maciej.fijalkowski@intel.com>, 
+	Stanislav Fomichev <sdf@fomichev.me>, Alexei Starovoitov <ast@kernel.org>, 
+	Daniel Borkmann <daniel@iogearbox.net>, Jesper Dangaard Brouer <hawk@kernel.org>, 
+	John Fastabend <john.fastabend@gmail.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, nvdimm@lists.linux.dev, fsverity@lists.linux.dev, 
+	linux-mm@kvack.org, netfs@lists.linux.dev, linux-ext4@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	samba-technical@lists.samba.org, linux-nilfs@vger.kernel.org, v9fs@lists.linux.dev, 
+	linux-afs@lists.infradead.org, autofs@vger.kernel.org, ceph-devel@vger.kernel.org, 
+	codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	jfs-discussion@lists.sourceforge.net, ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
+	devel@lists.orangefs.org, linux-unionfs@vger.kernel.org, apparmor@lists.ubuntu.com, 
+	linux-security-module@vger.kernel.org, linux-integrity@vger.kernel.org, selinux@vger.kernel.org, 
+	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org, 
+	linaro-mm-sig@lists.linaro.org, netdev@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-fscrypt@vger.kernel.org, linux-xfs@vger.kernel.org, linux-hams@vger.kernel.org, 
+	linux-x25@vger.kernel.org, audit@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-can@vger.kernel.org, linux-sctp@vger.kernel.org, bpf@vger.kernel.org
+Subject: Re: [PATCH v2 004/110] net: change sock.sk_ino and sock_i_ino() to
+ u64
+Message-ID: <20260303-tall-fictional-tench-7c5f66-mkl@pengutronix.de>
+X-AI: stop_reason: "refusal"
+References: <20260302-iino-u64-v2-0-e5388800dae0@kernel.org>
+ <20260302-iino-u64-v2-4-e5388800dae0@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs> <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
-In-Reply-To: <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 3 Mar 2026 10:21:04 +0100
-X-Gm-Features: AaiRm535KwsgAVHj6EheTjrAtrSsGztnAGaoLe1OJY2V4Cm-WW3-sgOnbmd3S6E
-Message-ID: <CAOQ4uxgmYNWCs18+WU9-7QDkhp0f_xX6nvKiyDhS8gZzfUXXXA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de, 
-	gabriel@krisman.be, jack@suse.cz, fstests@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="w7xntzjnabubqe7a"
+Content-Disposition: inline
+In-Reply-To: <20260302-iino-u64-v2-4-e5388800dae0@kernel.org>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: mkl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-xfs@vger.kernel.org
+
+
+--w7xntzjnabubqe7a
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2 004/110] net: change sock.sk_ino and sock_i_ino() to
+ u64
+MIME-Version: 1.0
 
-On Tue, Mar 3, 2026 at 1:40=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
-wrote:
+On 02.03.2026 15:23:48, Jeff Layton wrote:
+> inode->i_ino is being converted to a u64. sock.sk_ino (which caches the
+> inode number) must also be widened to avoid truncation on 32-bit
+> architectures where unsigned long is only 32 bits.
 >
-> From: Darrick J. Wong <djwong@kernel.org>
+> Change sk_ino from unsigned long to u64, and update the return type
+> of sock_i_ino() to match. Fix all format strings that print the
+> result of sock_i_ino() (%lu -> %llu), and widen the intermediate
+> variables and function parameters in the diag modules that were
+> using int to hold the inode number.
 >
-> Test the fsnotify filesystem error reporting.
-
-For the record, I feel that I need to say to all the people whom we pushed =
-back
-on fanotify tests in fstests until there was a good enough reason to do so,
-that this seems like a good reason to do so ;)
-
-But also for future test writers, please note that FAN_FS_ERROR is an
-exception to the rule and please keep writing new fanotify/inotify tests in=
- LTP
-(until there is a good enough reason...)
-
+> Note that the UAPI socket diag structures (inet_diag_msg.idiag_inode,
+> unix_diag_msg.udiag_ino, etc.) are all __u32 and cannot be changed
+> without breaking the ABI. The assignments to those fields will
+> silently truncate, which is the existing behavior.
 >
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 > ---
->  src/Makefile           |    2
->  src/fs-monitor.c       |  155 +++++++++++++++++++++++++++++++++
->  tests/generic/1838     |  228 ++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  tests/generic/1838.out |   20 ++++
->  4 files changed, 404 insertions(+), 1 deletion(-)
->  create mode 100644 src/fs-monitor.c
->  create mode 100755 tests/generic/1838
->  create mode 100644 tests/generic/1838.out
->
->
-...
+>  net/can/bcm.c                | 2 +-
 
-> diff --git a/tests/generic/1838 b/tests/generic/1838
-> new file mode 100755
-> index 00000000000000..087851ddcbdb44
-> --- /dev/null
-> +++ b/tests/generic/1838
-> @@ -0,0 +1,228 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 1838
-> +#
-> +# Check that fsnotify can report file IO errors.
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick eio selfhealing
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +       cd /
-> +       test -n "$fsmonitor_pid" && kill -TERM $fsmonitor_pid
-> +       rm -f $tmp.*
-> +       _dmerror_cleanup
-> +}
-> +
-> +# Import common functions.
-> +. ./common/fuzzy
-> +. ./common/filter
-> +. ./common/dmerror
-> +. ./common/systemd
-> +
-> +case "$FSTYP" in
-> +xfs)
-> +       # added as a part of xfs health monitoring
-> +       _require_xfs_io_command healthmon
-> +       # no out of place writes
-> +       _require_no_xfs_always_cow
-> +       ;;
-> +ext4)
-> +       # added at the same time as uevents
-> +       modprobe fs-$FSTYP
-> +       test -e /sys/fs/ext4/features/uevents || \
-> +               _notrun "$FSTYP does not support fsnotify ioerrors"
-> +       ;;
-> +*)
-> +       _notrun "$FSTYP does not support fsnotify ioerrors"
-> +       ;;
-> +esac
-> +
+Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> # for net/can
 
-_require_fsnotify_errors ?
+regards,
+Marc
 
-> +_require_scratch
-> +_require_dm_target error
-> +_require_test_program fs-monitor
-> +_require_xfs_io_command "fiemap"
-> +_require_odirect
-> +
-> +# fsnotify only gives us a file handle, the error number, and the number=
- of
-> +# times it was seen in between event deliveries.   The handle is mostly =
-useless
-> +# since we have no generic way to map that to a file path.  Therefore we=
- can
-> +# only coalesce all the I/O errors into one report.
-> +filter_fsnotify_errors() {
-> +       _filter_scratch | \
-> +               grep -E '(FAN_FS_ERROR|Generic Error Record|error: 5)' | =
-\
-> +               sed -e "s/len=3D[0-9]*/len=3DXXX/g" | \
-> +               sort | \
-> +               uniq
-> +}
+--=20
+Pengutronix e.K.                 | Marc Kleine-Budde          |
+Embedded Linux                   | https://www.pengutronix.de |
+Vertretung N=C3=BCrnberg              | Phone: +49-5121-206917-129 |
+Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-9   |
 
-move to common/filter?
+--w7xntzjnabubqe7a
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Apart from those nits, no further comments.
+-----BEGIN PGP SIGNATURE-----
 
-Thanks,
-Amir.
+iHUEABYKAB0WIQSl+MghEFFAdY3pYJLMOmT6rpmt0gUCaaax+QAKCRDMOmT6rpmt
+0hl7AQCzPgPTWe6ol8KwtKBDfHnqkx4Ku1cIiwlQY4Hnx5jz1wD5ASVd5abGOb50
+lF4hQNIazRvyjJwKRF+va5JwX/SN2go=
+=y8vr
+-----END PGP SIGNATURE-----
+
+--w7xntzjnabubqe7a--
