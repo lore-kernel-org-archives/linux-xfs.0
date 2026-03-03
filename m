@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3850F282F0E
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:38:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C1D19C546
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:38:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772498296; cv=none; b=sOhmpoDL2jUKY/q4v+GpgFKe5J6xQwZwguOs9/bOQjBWqWSI44iyJxlM1PB1JtgK3kuqPOr9wwfyhhP6kGejH26oKgibfXWui9fT3R+i/6qnzvhNb5+uOYetKPVcgsK0J437CVgzkPvmwGm+OcniiE1BnxY4Atn0lejA2ThPGmo=
+	t=1772498312; cv=none; b=qOmcxb89UocWIrw+dYvZgoa+Nls27XF699U5DV0xNA2jSYG2d1W+kuz2uOfydoP+qHr8o7V7RN+7Ex828eM6biX1k315pxDFZEzQY5RRC3nxH/VHqFXGmUQ2Xyi7GiqO2bNMcyIK3GtNiRCT5HXB16Ng53gpppKAiAXo25EJywg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772498296; c=relaxed/simple;
-	bh=sg221LvqTLFHgOxqcfGbFUndqO8Oj1wTEHnCCjsDPl0=;
+	s=arc-20240116; t=1772498312; c=relaxed/simple;
+	bh=6QeCXM1UquwytI+cyw0XT0sao8CrnE0T7JYkrTobwdQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VG0UJYUQVEwwVzq9B+4QF/pRUoQObwZt8WcOLAEePp057SY3e9CYaklxMRnSNfIP8PmO08XzgBy5JsCp5RgY/qitcQ5llJe3anrKixlUVt0zXHBakK1YXCiMix1AxoBNCBWS+guYnAICLE1DcWnXtmXSeVrp8X+JeqgpLdFAyqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G/d6Iknf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aQz0PflsEi4OQZ6fxDr9ReUad5VEzF/P9DcyE8vp/GysodBqv049f6e/uHXLOtdPw5HBMItCQmMssge9xMyZQz9ExlAjiQVW60ceJsajAsykHPGwUYQEmBrsFDC1rxDBHekoMx6uBnj9OMvFdq4Z9Tn6rZdacmpaeI3R9vT2ZAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bn5+4VNG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G/d6Iknf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17DEAC19423;
-	Tue,  3 Mar 2026 00:38:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bn5+4VNG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2FFEC19423;
+	Tue,  3 Mar 2026 00:38:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772498296;
-	bh=sg221LvqTLFHgOxqcfGbFUndqO8Oj1wTEHnCCjsDPl0=;
+	s=k20201202; t=1772498311;
+	bh=6QeCXM1UquwytI+cyw0XT0sao8CrnE0T7JYkrTobwdQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G/d6IknfXVLVl+X8lw0vu3SYAWkn5SFGHTbwPGhEReMDXwOQ0e/C3hg2+DgUMFF+e
-	 24wWQyWCyCmXhbBeOrMAS+Kr8dgIxJf6ayv0QurJx+W2gfL2v5ihWn7+q3jNYqRuLP
-	 r7TNoIiwLtiNbKOlHvlqFahvQDF630uKDMtdjsbUJNfhyJ2pKoVZOnTc4AYy5FRDaF
-	 8Owfkhh5Jbz0sd+wo3QMy0MsXnBi95NGbyIASI6mmq0FOkxLQrBGO3yKG821dAQs1i
-	 NaLmai+i199yv/9O8zcpTFdleSNrgXLGD/it4WKgb+JhwBxE014PFYZ1WM3oWrOROA
-	 hRxL3q5E+R/BQ==
-Date: Mon, 02 Mar 2026 16:38:15 -0800
-Subject: [PATCH 17/26] xfs_healer: use getmntent to find moved filesystems
+	b=bn5+4VNGZDVsN7K/q0mtVP2n7xf5ccpGrTBud42IpX3q6btDFV3fLWAheAL8GJkyy
+	 5A9desncAb9ZoxC7rNPcl1Qm2CifBxcaclH1teU33dr1dNn3kXiNPHaTqT3i8OATco
+	 0z/hImgbI8u58T1bVlW528pKw25ZC54gnxxruCiT771yMZVsG4ChXbP8BgmCH399ja
+	 53q+bVFjpO2hx6OOcdkHdR9qHUqV887mIuEMqUtuXt0Ul/JAcFemGyU2kZoCfySMwU
+	 rR90tiv7mBt057/VAGl9P5iVsu6Rb/Y5rxOGcePM19qLFFR9BPPJKds5pFbrP1Qf2c
+	 VDpn9v7efCNgg==
+Date: Mon, 02 Mar 2026 16:38:31 -0800
+Subject: [PATCH 18/26] xfs_healer: validate that repair fds point to the
+ monitored fs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177249783601.482027.9121579371607325115.stgit@frogsfrogsfrogs>
+Message-ID: <177249783619.482027.5192762904110510597.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
 References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,97 +46,131 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's possible that a mounted filesystem can move mountpoints between the
-time of the initial mount (at which point xfs_healer starts) and when
-it actually wants to start a repair.  When this happens,
-weakhandle::mountpoint becomes obsolete and opening it will either fail
-with ENOENT or the handle revalidation will return ESTALE.
-
-However, we do still have a means to find the mounted filesystem -- the
-fsname parameter (aka the path to the data device at mount time).  This
-is record in /proc/mounts, which means that we can iterate getmntent to
-see if we can find the mount elsewhere.
+When xfs_healer reopens a mountpoint to perform a repair, it should
+validate that the opened fd points to a file on the same filesystem as
+the one being monitored.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- healer/weakhandle.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 4 deletions(-)
+ healer/xfs_healer.h |    4 +++-
+ healer/fsrepair.c   |   18 +++++++++++++++++-
+ healer/weakhandle.c |   20 +++++++++++++++-----
+ 3 files changed, 35 insertions(+), 7 deletions(-)
 
 
-diff --git a/healer/weakhandle.c b/healer/weakhandle.c
-index 849aa2882700d4..8ca4ef847188ba 100644
---- a/healer/weakhandle.c
-+++ b/healer/weakhandle.c
-@@ -65,10 +65,14 @@ weakhandle_alloc(
- 	return -1;
+diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
+index 5e9fd7fec904ab..d613c4f65fe9eb 100644
+--- a/healer/xfs_healer.h
++++ b/healer/xfs_healer.h
+@@ -76,7 +76,9 @@ void run_full_repair(struct healer_ctx *ctx);
+ /* weakhandle.c */
+ int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
+ 		struct weakhandle **whp);
+-int weakhandle_reopen(struct weakhandle *wh, int *fd);
++typedef bool (*weakhandle_fd_t)(int mnt_fd, void *data);
++int weakhandle_reopen(struct weakhandle *wh, int *fd,
++		weakhandle_fd_t is_acceptable, void *data);
+ void weakhandle_free(struct weakhandle **whp);
+ int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
+ 		char *path, size_t pathlen);
+diff --git a/healer/fsrepair.c b/healer/fsrepair.c
+index 9f8c128e395ebc..002e5e78fcf22e 100644
+--- a/healer/fsrepair.c
++++ b/healer/fsrepair.c
+@@ -233,6 +233,22 @@ try_repair_inode(
+ 	return REPAIR_DONE;
  }
  
--/* Reopen a file handle obtained via weak reference. */
--int
--weakhandle_reopen(
-+/*
-+ * Reopen a file handle obtained via weak reference, using the given path to a
-+ * mount point.
-+ */
-+static int
-+weakhandle_reopen_from(
- 	struct weakhandle	*wh,
-+	const char		*path,
- 	int			*fd)
- {
- 	void			*hanp;
-@@ -78,7 +82,7 @@ weakhandle_reopen(
- 
- 	*fd = -1;
- 
--	mnt_fd = open(wh->mntpoint, O_RDONLY);
-+	mnt_fd = open(path, O_RDONLY);
- 	if (mnt_fd < 0)
- 		return -1;
- 
-@@ -102,6 +106,44 @@ weakhandle_reopen(
- 	return -1;
- }
- 
-+/* Reopen a file handle obtained via weak reference. */
-+int
-+weakhandle_reopen(
-+	struct weakhandle	*wh,
-+	int			*fd)
++/* Make sure the reopened file is on the same fs as the monitor. */
++static bool
++is_same_fs(
++	int				mnt_fd,
++	void				*data)
 +{
-+	FILE			*mtab;
-+	struct mntent		*mount;
-+	int			ret;
++	struct xfs_health_file_on_monitored_fs hms = {
++		.fd = mnt_fd,
++	};
++	FILE				*mon_fp = data;
++	int				ret;
 +
-+	ret = weakhandle_reopen_from(wh, wh->mntpoint, fd);
-+	if (!ret)
-+		return 0;
-+
-+	mtab = setmntent(_PATH_PROC_MOUNTS, "r");
-+	if (!mtab)
-+		return -1;
-+
-+	while ((mount = getmntent(mtab)) != NULL) {
-+		if (strcmp(mount->mnt_type, "xfs"))
-+			continue;
-+		if (strcmp(mount->mnt_fsname, wh->fsname))
-+			continue;
-+
-+		ret = weakhandle_reopen_from(wh, mount->mnt_dir, fd);
-+		if (!ret)
-+			break;
-+	}
-+
-+	if (*fd < 0) {
-+		errno = ESTALE;
-+		ret = -1;
-+	}
-+
-+	endmntent(mtab);
-+	return ret;
++	ret = ioctl(fileno(mon_fp), XFS_IOC_HEALTH_FD_ON_MONITORED_FS, &hms);
++	return ret == 0;
 +}
 +
- /* Tear down a weak handle */
- void
- weakhandle_free(
+ /* Repair a metadata corruption. */
+ int
+ repair_metadata(
+@@ -244,7 +260,7 @@ repair_metadata(
+ 	int					repair_fd;
+ 	int					ret;
+ 
+-	ret = weakhandle_reopen(ctx->wh, &repair_fd);
++	ret = weakhandle_reopen(ctx->wh, &repair_fd, is_same_fs, ctx->mon_fp);
+ 	if (ret) {
+ 		fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
+ 				_("cannot open filesystem to repair"),
+diff --git a/healer/weakhandle.c b/healer/weakhandle.c
+index 8ca4ef847188ba..4b0e2e991702ca 100644
+--- a/healer/weakhandle.c
++++ b/healer/weakhandle.c
+@@ -73,7 +73,9 @@ static int
+ weakhandle_reopen_from(
+ 	struct weakhandle	*wh,
+ 	const char		*path,
+-	int			*fd)
++	int			*fd,
++	weakhandle_fd_t		is_acceptable,
++	void			*data)
+ {
+ 	void			*hanp;
+ 	size_t			hlen;
+@@ -95,6 +97,11 @@ weakhandle_reopen_from(
+ 		goto out_handle;
+ 	}
+ 
++	if (is_acceptable && !is_acceptable(mnt_fd, data)) {
++		errno = ESTALE;
++		goto out_handle;
++	}
++
+ 	free_handle(hanp, hlen);
+ 	*fd = mnt_fd;
+ 	return 0;
+@@ -110,13 +117,15 @@ weakhandle_reopen_from(
+ int
+ weakhandle_reopen(
+ 	struct weakhandle	*wh,
+-	int			*fd)
++	int			*fd,
++	weakhandle_fd_t		is_acceptable,
++	void			*data)
+ {
+ 	FILE			*mtab;
+ 	struct mntent		*mount;
+ 	int			ret;
+ 
+-	ret = weakhandle_reopen_from(wh, wh->mntpoint, fd);
++	ret = weakhandle_reopen_from(wh, wh->mntpoint, fd, is_acceptable, data);
+ 	if (!ret)
+ 		return 0;
+ 
+@@ -130,7 +139,8 @@ weakhandle_reopen(
+ 		if (strcmp(mount->mnt_fsname, wh->fsname))
+ 			continue;
+ 
+-		ret = weakhandle_reopen_from(wh, mount->mnt_dir, fd);
++		ret = weakhandle_reopen_from(wh, mount->mnt_dir, fd,
++				is_acceptable, data);
+ 		if (!ret)
+ 			break;
+ 	}
+@@ -215,7 +225,7 @@ weakhandle_getpath_for(
+ 	fakehandle.ha_fid.fid_ino = ino;
+ 	fakehandle.ha_fid.fid_gen = gen;
+ 
+-	ret = weakhandle_reopen(wh, &mnt_fd);
++	ret = weakhandle_reopen(wh, &mnt_fd, NULL, NULL);
+ 	if (ret)
+ 		return ret;
+ 
 
