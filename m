@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0F419C540
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:17:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CBD19C540
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:17:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772497059; cv=none; b=BhQcMOVkU/vur4rNhrFgJp3umDiU4CT6VhJ5Y2kSqDOrbfFvqG0w5Mwrt598DNgqRX7Is/g4UskbyrBD4pxY5/gNbjuUu/uYUE6JmGQub5+S0NqpECJ7TAzciTViaGUR3KFMY04WH4frFz+LQrnJ6WOmIR4INHNZJc8/GFJHp/s=
+	t=1772497075; cv=none; b=OwL6VxmSXQ5y7O+jEiwV1tQEWN+7+RUOb3qTVtm6KjrwHu92+ZB0Qj4dAavaLoe5r4WrrHd/KoWjQD3HkLZv+A28sFY3CUoFYfncI2tXq3t4CU+U2sbPcPJz31yRWoqlp+pV0ZCMXqMAD5YJJEyPvJPc7q7J5Kj8GIKX/9lFSe8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772497059; c=relaxed/simple;
-	bh=oaKd7fVZzogP7aL9d1E1mAcf0zUSCvzh51Nxzdij1ro=;
+	s=arc-20240116; t=1772497075; c=relaxed/simple;
+	bh=O6T0JzH4mxM5o7cHfXj/nJnzEjzGCa9FKhM5FSil7tI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ozpFIyi2wptHLh+gWIE8h4z65lAIVGG/yaQ+/o8G8NqdCIy77O22L7hfTScA54ViDEMR9A2xf7WgZYbbiSWypLi/j44uneL95xxlDGN0vONjDrzS1lePIkG52ifn2cLJ6vrP5qTL41NzdxSt1wMpXq4okrBC1EgbobGQvVNHDqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=agJe7Y/O; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=g+WLYF4BtkYcHrMZz7ZSA++9jkJn/NCNVmPaGgHNHat4MUh+DczInK/3u45ELsoJCNPRML/JCj0CTK0zZKjH+U07Aj+yvC6m6dZOpMhSiEoyyHGCxN9VB4AHhyD4q5IhrMJj2KaRTGZr1mITe2Aky21PhbmbawreabArFe8u8wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g4n4eub0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="agJe7Y/O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AED2C2BC86;
-	Tue,  3 Mar 2026 00:17:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g4n4eub0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01A99C2BC86;
+	Tue,  3 Mar 2026 00:17:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772497059;
-	bh=oaKd7fVZzogP7aL9d1E1mAcf0zUSCvzh51Nxzdij1ro=;
+	s=k20201202; t=1772497075;
+	bh=O6T0JzH4mxM5o7cHfXj/nJnzEjzGCa9FKhM5FSil7tI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=agJe7Y/OV2Q+2CcRFzE6AuHfpJy7IV+wBqzsY1wPeINQOmnWL+BocFVn7+4JMZ9GF
-	 E/MctKF4lbLxGLDg37QzobQ493lhOGiuyIrn6FGXB7DkZYkJgafq6mfSMn0JaMV2pz
-	 FGKE6am5z+0LLxj7wd9pkeFAq3NTj1Y60rMXSdNOtqiLt2vs9H44lXGEJmvUwr4VG/
-	 F7TxDO8PDCbcwA2p3OUheaKwn0eDwkQsC9Yft4UehiGlatfuu/Q3q1BRcFqHWawNhe
-	 LNf+egPIcqUg7k+PKyG0EiImyNV//EvqNT7tr79VnaMdQvyNniBm6ErQJTeM7Ggtct
-	 4+ff9ef+fG6bQ==
-Date: Mon, 02 Mar 2026 16:17:38 -0800
-Subject: [PATCH 21/36] xfs: strengthen attr leaf block freemap checking
+	b=g4n4eub0mOmjf5/ITcrsXatA0eZUZ09APJgza1ENFDlwharcWBedJLIDIHH/UtqPi
+	 m3Ma+1Excq2bKmKl2RN/LsIQNcCMilLpS3KcoTE8gfoNcFyGRcurVYspMbhuGP+1Kp
+	 ZnKXlIMs3buVtrrR36mu/RZ5SwcixATwoQaD/pJ85GOzOrX9xlqfAFaDirUFT72dDW
+	 fs6+FpLcywoOCdG5CwknLUrqWjfkMkRLjj9Xs815Zz/fZWJbLwjU8wNgD/33/rVzwt
+	 6sa/LKaNk30yGOMkz7OSd/RwH+NUY1KHvgBDSQB0DeZV54CG++qRdSOciIZNjFLKlX
+	 kpQUzHnuZqimA==
+Date: Mon, 02 Mar 2026 16:17:54 -0800
+Subject: [PATCH 22/36] xfs: reduce xfs_attr_try_sf_addname parameters
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177249638164.457970.15632258495528603684.stgit@frogsfrogsfrogs>
+Message-ID: <177249638183.457970.15775615572741963298.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,115 +45,62 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 27a0c41f33d8d31558d334b07eb58701aab0b3dd
+Source kernel commit: 1ef7729df1f0c5f7bb63a121164f54d376d35835
 
-Check for erroneous overlapping freemap regions and collisions between
-freemap regions and the xattr leaf entry array.
-
-Note that we must explicitly zero out the extra freemaps in
-xfs_attr3_leaf_compact so that the in-memory buffer has a correctly
-initialized freemap array to satisfy the new verification code, even if
-subsequent code changes the contents before unlocking the buffer.
+The dp parameter to this function is an alias of args->dp, so remove it
+for clarity before we go adding new callers.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_attr_leaf.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+ libxfs/xfs_attr.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 158864249c8888..f591984c3748ff 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -82,6 +82,49 @@ xfs_attr_leaf_entries_end(
- 			xfs_attr3_leaf_hdr_size(leaf);
- }
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index baf617cfeabe00..175f8572b0f930 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -349,16 +349,14 @@ xfs_attr_set_resv(
+  */
+ STATIC int
+ xfs_attr_try_sf_addname(
+-	struct xfs_inode	*dp,
+ 	struct xfs_da_args	*args)
+ {
+-
+ 	int			error;
  
-+static inline bool
-+ichdr_freemaps_overlap(
-+	const struct xfs_attr3_icleaf_hdr	*ichdr,
-+	unsigned int				x,
-+	unsigned int				y)
-+{
-+	const unsigned int			xend =
-+		ichdr->freemap[x].base + ichdr->freemap[x].size;
-+	const unsigned int			yend =
-+		ichdr->freemap[y].base + ichdr->freemap[y].size;
-+
-+	/* empty slots do not overlap */
-+	if (!ichdr->freemap[x].size || !ichdr->freemap[y].size)
-+		return false;
-+
-+	return ichdr->freemap[x].base < yend && xend > ichdr->freemap[y].base;
-+}
-+
-+static inline xfs_failaddr_t
-+xfs_attr_leaf_ichdr_freemaps_verify(
-+	const struct xfs_attr3_icleaf_hdr	*ichdr,
-+	const struct xfs_attr_leafblock		*leaf)
-+{
-+	unsigned int				entries_end =
-+		xfs_attr_leaf_entries_end(ichdr->count, leaf);
-+	int					i;
-+
-+	if (ichdr_freemaps_overlap(ichdr, 0, 1))
-+		return __this_address;
-+	if (ichdr_freemaps_overlap(ichdr, 0, 2))
-+		return __this_address;
-+	if (ichdr_freemaps_overlap(ichdr, 1, 2))
-+		return __this_address;
-+
-+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-+		if (ichdr->freemap[i].size > 0 &&
-+		    ichdr->freemap[i].base < entries_end)
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
- /*
-  * attr3 block 'firstused' conversion helpers.
-  *
-@@ -225,6 +268,8 @@ xfs_attr3_leaf_hdr_to_disk(
- 			hdr3->freemap[i].base = cpu_to_be16(from->freemap[i].base);
- 			hdr3->freemap[i].size = cpu_to_be16(from->freemap[i].size);
- 		}
-+
-+		ASSERT(xfs_attr_leaf_ichdr_freemaps_verify(from, to) == NULL);
- 		return;
- 	}
- 	to->hdr.info.forw = cpu_to_be32(from->forw);
-@@ -240,6 +285,8 @@ xfs_attr3_leaf_hdr_to_disk(
- 		to->hdr.freemap[i].base = cpu_to_be16(from->freemap[i].base);
- 		to->hdr.freemap[i].size = cpu_to_be16(from->freemap[i].size);
- 	}
-+
-+	ASSERT(xfs_attr_leaf_ichdr_freemaps_verify(from, to) == NULL);
- }
+ 	/*
+ 	 * Build initial attribute list (if required).
+ 	 */
+-	if (dp->i_af.if_format == XFS_DINODE_FMT_EXTENTS)
++	if (args->dp->i_af.if_format == XFS_DINODE_FMT_EXTENTS)
+ 		xfs_attr_shortform_create(args);
  
- static xfs_failaddr_t
-@@ -392,6 +439,10 @@ xfs_attr3_leaf_verify(
- 			return __this_address;
- 	}
+ 	error = xfs_attr_shortform_addname(args);
+@@ -370,9 +368,9 @@ xfs_attr_try_sf_addname(
+ 	 * NOTE: this is also the error path (EEXIST, etc).
+ 	 */
+ 	if (!error)
+-		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
++		xfs_trans_ichgtime(args->trans, args->dp, XFS_ICHGTIME_CHG);
  
-+	fa = xfs_attr_leaf_ichdr_freemaps_verify(&ichdr, leaf);
-+	if (fa)
-+		return fa;
-+
- 	return NULL;
- }
+-	if (xfs_has_wsync(dp->i_mount))
++	if (xfs_has_wsync(args->dp->i_mount))
+ 		xfs_trans_set_sync(args->trans);
  
-@@ -1661,6 +1712,10 @@ xfs_attr3_leaf_compact(
- 	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
- 	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
- 						ichdr_dst->freemap[0].base;
-+	ichdr_dst->freemap[1].base = 0;
-+	ichdr_dst->freemap[2].base = 0;
-+	ichdr_dst->freemap[1].size = 0;
-+	ichdr_dst->freemap[2].size = 0;
+ 	return error;
+@@ -383,10 +381,9 @@ xfs_attr_sf_addname(
+ 	struct xfs_attr_intent		*attr)
+ {
+ 	struct xfs_da_args		*args = attr->xattri_da_args;
+-	struct xfs_inode		*dp = args->dp;
+ 	int				error = 0;
  
- 	/* write the header back to initialise the underlying buffer */
- 	xfs_attr3_leaf_hdr_to_disk(args->geo, leaf_dst, ichdr_dst);
+-	error = xfs_attr_try_sf_addname(dp, args);
++	error = xfs_attr_try_sf_addname(args);
+ 	if (error != -ENOSPC) {
+ 		ASSERT(!error || error == -EEXIST);
+ 		attr->xattri_dela_state = XFS_DAS_DONE;
 
