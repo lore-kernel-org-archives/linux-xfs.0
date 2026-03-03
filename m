@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9988C390991
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2758D390991
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:21:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772497263; cv=none; b=MJxXR2nNQaqOw025OWAiN71WMkfKdSwx+Cq+bzOkENciD8yf/CKJOBRKgTEG2nl2OGaABlihmymGjWPa80flRqRtgYOtr11lKB1Wl6XzeVQi/tncxqVK0o+OxrE2rBn+VRnVVo1NdMnJk1xyl3XpY+Oqt5mHg32vp6whUfDRhRQ=
+	t=1772497279; cv=none; b=c2MLZt4XugLcsYPIe8ElSWwz/n63J7NEDy94mWnZVHHUfJ022jBKx+ze3xAWixldnzCHY26r/Icztz5fZS9k///3y0jPF6mLzTsVVNjOvrWRM1d7lhTr85kGJR/4pqN9k/Ipmz3erfKWFTRblrybtg2ZVV8K8EV1COWwSnUG+rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772497263; c=relaxed/simple;
-	bh=fDWuJ93+zfmNGO7umEHtDSQfBNFARQZHU6QcPQ0q8OY=;
+	s=arc-20240116; t=1772497279; c=relaxed/simple;
+	bh=g8higwjbdPPoy5qm1qLX+cwWLqRjqkp68sR8Ljf97R8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=porMZcE4fYKYLM3Wcn1O2syrwAJDNUJDBonvRWMFdESqPUDoJnnTUoR5ClC0tlgiijTrqj+EB7sUqDyOOS1R19TY3VzAizjjbEDmo2d8Ty9KYdvEmbK1rEiKr5XCmN3ZjcanaMmBaJSo3mrH3wVR4S5wLPXQ5It/bS1ajRfCCBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eI1btB4W; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PgKkjAlDHggoVHrV2jHX9Rfw4PNmuYXYqOELuCcEcDVSqzE6ENHz1u1vK8QnbzJfOQjA1Nv3YsiUfl4ug03jf8xAZQSb/5Hg+61ABDHMWr3QyFG0x+drepxqh1XYGAvhp7SqTCeZu7pjUbTfgX4UD44JtXIj/MYUieofTWCfVcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MoX/R/CC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eI1btB4W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A861C19423;
-	Tue,  3 Mar 2026 00:21:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MoX/R/CC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C893AC19423;
+	Tue,  3 Mar 2026 00:21:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772497263;
-	bh=fDWuJ93+zfmNGO7umEHtDSQfBNFARQZHU6QcPQ0q8OY=;
+	s=k20201202; t=1772497278;
+	bh=g8higwjbdPPoy5qm1qLX+cwWLqRjqkp68sR8Ljf97R8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eI1btB4Wwlh6eZwT1LD6gPDjIt7pP36/hOBsi6LbV1yRN4VrF28Py9dwP1YU4Od71
-	 vqXZ+Dw3DLUJDaX82RXCjpYbxaTy1P4Mpsr8tkzh6ejFd+gj6RlBGu/8CmYgKs5nbo
-	 eE/g2QecVth0I8yV6wzBrJf4XkYngqjbfGmT5OEVScNBLzRI6yBxFt768bnlyBuz0B
-	 s2dxaQpWoFSVOA/AQoF6ncvh79RMmC5T4EK3cn3RT1EsLRsd3LmY6aloOPCKMOKkzu
-	 o9zKIpoqsoIBomo+aRsLg8jhj3pKj7+jX4xkPpj4ljT20cQkLRWOllha8+G/fQsf2U
-	 OoH5ByIOAXQaw==
-Date: Mon, 02 Mar 2026 16:21:02 -0800
-Subject: [PATCH 34/36] xfs: Add a comment in xfs_log_sb()
+	b=MoX/R/CC2Ay9Q2kx609V3Upl2BQhXfgz3rCW2Wti0aIShKaXZtKAXovXEeDmGYtTc
+	 vhqX6phFqYVIFB/sbf4AfymVTJ76Rrq6SaZA7T6ZpgUvRxZCP5f4w7HcW+IFoRJaRv
+	 9krFgkooZkXUIxmML00n8z/eij/VudTUhTum3JvztU0qP5ssS9DdouFjHfMyvhxhtK
+	 xat3uHz8DNHhDUFAff3kqw1EHL52K1jvu9UXoRwrpJaT6IFwb+WLz4Qp2z9DC8KOhF
+	 4F8crQjcxgxNBdM3kpwuwU3QS6zc/wGt5G3QVqBUD4KahrB1UwYeBTV8Pgcn2rhNMx
+	 IvTY8gpaNw55A==
+Date: Mon, 02 Mar 2026 16:21:18 -0800
+Subject: [PATCH 35/36] xfs: remove duplicate static size checks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, hch@lst.de, nirjhar.roy.lists@gmail.com,
+Cc: cem@kernel.org, hch@lst.de, wilfred.mallawa@wdc.com,
  linux-xfs@vger.kernel.org
-Message-ID: <177249638403.457970.14548064570115566557.stgit@frogsfrogsfrogs>
+Message-ID: <177249638421.457970.1713202280529505966.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,38 +44,40 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
-Source kernel commit: ac1d977096a17d56c55bd7f90be48e81ac4cec3f
+Source kernel commit: e97cbf863d8918452c9f81bebdade8d04e2e7b60
 
-Add a comment explaining why the sb_frextents are updated outside the
-if (xfs_has_lazycount(mp) check even though it is a lazycounter.
-RT groups are supported only in v5 filesystems which always have
-lazycounter enabled - so putting it inside the if(xfs_has_lazycount(mp)
-check is redundant.
+In libxfs/xfs_ondisk.h, remove some duplicate entries of
+XFS_CHECK_STRUCT_SIZE().
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_sb.c |    3 +++
- 1 file changed, 3 insertions(+)
+ libxfs/xfs_ondisk.h |    9 ---------
+ 1 file changed, 9 deletions(-)
 
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index b29077dcd0aed7..7a1d85b86e59ea 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1345,6 +1345,9 @@ xfs_log_sb(
- 	 * feature was introduced.  This counter can go negative due to the way
- 	 * we handle nearly-lockless reservations, so we must use the _positive
- 	 * variant here to avoid writing out nonsense frextents.
-+	 *
-+	 * RT groups are only supported on v5 file systems, which always
-+	 * have lazy SB counters.
- 	 */
- 	if (xfs_has_rtgroups(mp) && !xfs_has_zoned(mp)) {
- 		mp->m_sb.sb_frextents =
+diff --git a/libxfs/xfs_ondisk.h b/libxfs/xfs_ondisk.h
+index 70605019383c32..7bccfa7b695c95 100644
+--- a/libxfs/xfs_ondisk.h
++++ b/libxfs/xfs_ondisk.h
+@@ -136,16 +136,7 @@ xfs_check_ondisk_structs(void)
+ 	/* ondisk dir/attr structures from xfs/122 */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_sf_entry,		3);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_free,	4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_hdr,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_data_unused,	6);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_free_hdr,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_entry,	8);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_hdr,		16);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_leaf_tail,	4);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_entry,		3);
+-	XFS_CHECK_STRUCT_SIZE(struct xfs_dir2_sf_hdr,		10);
+ 
+ 	/* log structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
 
