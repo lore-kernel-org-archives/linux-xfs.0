@@ -1,68 +1,102 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C9E3502A7;
-	Tue,  3 Mar 2026 14:51:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6088447DF89;
+	Tue,  3 Mar 2026 14:54:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772549482; cv=none; b=lLBiRJiiOMjoObykRKfVA5nIaRmON6GUcKebS0tM0wqT2wmkKc3q9IVLinn3m0ljFz+TK4R+HYHDuglDhFaxDVT7AdNMvQUY/qkFV7OLmCVUXACBFvbZ5MX+B0BJntr5B5iRG/KWUwNB7jcvzaGgYtQNpvd10wq83NwUpmvR0Qs=
+	t=1772549674; cv=none; b=nBybzX7DdWY+Heg1+0SFtN7T4PjAvmZZeDJULq7k9VRmyDCjc2DR4YUDTk5o7syRMG5jYpsw0z4V4u3Z2thPmK4eQtZ0A+DPZFTj0uPSmZmPZjlKeTX/q+1LDw8+Bcy42wWKuUaTpxjaxmApTHMFvdc1t/93FUTTpm3Zpg5jMw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772549482; c=relaxed/simple;
-	bh=rgNL1inaPJ7m8XSklo6WqH97eI0lqnqRQLRDL64gSJE=;
+	s=arc-20240116; t=1772549674; c=relaxed/simple;
+	bh=Moit/K87vMx+jMZRbscMvV2mu0ip1PtbBQxaqyS4EQs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mabaHp4vhYrklL1RvJnw/zFrjECrKNYbsJ9zMTsPB599qwH54KAw93hGKkFX2sGQGpxCSNucPlXQgWU1zgCAGHeAQ7sx6jTDdm0xRKuCST1GXRELSsxw5UDz4ftB0ZDQjQOHbhek5MQtUza3MYVgo2j0HFTlDMzv2m2Y3Vy4WpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WKsHdlMn; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=AggJNj1Zt2nna7varF2vkv4nDecqZnrcl5kDO0ghu7j3eB9Sn7MkXLFcPH3haqaEBUD3ahT9v9gIJdgar1P7Ew1uyz6OfvjH8Qk84EpEG81xo/QmnkOEdmokb+HhCXYNPk8jkCeUA6QOXjSjdtHaOd6fgAZ3PWD/URiNgHM7kKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Vwicla6O; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WKsHdlMn"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vwicla6O"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=0azL9xrP6RjsDUWM8INKgKlOF2jsHNXZZ1YqkDP2LyI=; b=WKsHdlMnkEgxG2jMJsdzyNnAM1
-	gzZbuFiJ1/V8ZzmO1LPj9LSCIMe92E/4TSnW/2LEozoRgcNnS/Tmbzbr8VwBZDUFyk8lf0YdHHnyU
-	OGhRH3DqO6vlgf9RzInWHL+4//md+jo7+ligTbO8SkPQDtCnWo5/DUFJ4ZYs78L6/sU9nk4KUmiqx
-	lDtXODNXhuW0El8IYf93I7qB6NtkM1O8sU+jSizp4ICfE7FCNb7Sax8iLmqjCXOUJIUmoekLGbVye
-	Pk/yEElZPvkvgoAjmyAyyLAwpkPjueWPB8YvMszj2/ekXOBJvRcI4CtmoO6asn/FGfmM09IXAmY5L
-	bd+8O/kw==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=4jkfdMOGxaOV5m+ZC+AwRoFEfjLylQ+rHaRfwNk7O8U=; b=Vwicla6OpwA/VRQpz/yGJeXdgp
+	NX+CLnYGsqNIehvMHpoIbw9w933GaDmZ7GxahlFSVav/AR8kWx8mf7X6nMAZKWIsgVh9xMcqbuJXC
+	pzvLOLxahgTuZ6rF5lFhOZFERle5fabVWukOlvfohVZ8fPV8toaK/jEzBbaXQUX25GHUBxlhe4yYN
+	isN+Ind667wUw8iyFkXIUN22UEpY7DK5nQs+OKw7A3/V/SoCIMdGCyIfeorwjP6UQ0+0mcCSCFLxV
+	N7vLZc2LLMpBzYwLGPjdmY40IMaKctaTfZUA9bSYJ2Pt8+YhRtDiW7xfzprZZKF0MuqBfqTI1tTSF
+	egMFYnRg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vxR5j-0000000FMKT-3PDm;
-	Tue, 03 Mar 2026 14:51:19 +0000
-Date: Tue, 3 Mar 2026 06:51:19 -0800
+	id 1vxR8n-0000000FMSl-0TbL;
+	Tue, 03 Mar 2026 14:54:29 +0000
+Date: Tue, 3 Mar 2026 06:54:29 -0800
 From: Christoph Hellwig <hch@infradead.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com,
-	linux-fsdevel@vger.kernel.org, hch@lst.de, gabriel@krisman.be,
-	jack@suse.cz, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	gabriel@krisman.be, amir73il@gmail.com, jack@suse.cz,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-Message-ID: <aab1Z7J-m97VfFvS@infradead.org>
+Message-ID: <aab2JbAZI8RFq_XE@infradead.org>
 References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
  <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
- <CAOQ4uxgmYNWCs18+WU9-7QDkhp0f_xX6nvKiyDhS8gZzfUXXXA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxgmYNWCs18+WU9-7QDkhp0f_xX6nvKiyDhS8gZzfUXXXA@mail.gmail.com>
+In-Reply-To: <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 03, 2026 at 10:21:04AM +0100, Amir Goldstein wrote:
-> On Tue, Mar 3, 2026 at 1:40 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Test the fsnotify filesystem error reporting.
-> 
-> For the record, I feel that I need to say to all the people whom we pushed back
-> on fanotify tests in fstests until there was a good enough reason to do so,
-> that this seems like a good reason to do so ;)
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright 2021, Collabora Ltd.
+> + */
 
-Who pushed backed on that?  Because IMHO hiding stuff in ltp is a sure
-way it doesn't get exercisesd regularly?
+Where is this coming from?
+
+> +#ifndef __GLIBC__
+> +#include <asm-generic/int-ll64.h>
+> +#endif
+
+And what is this for?  Looks pretty whacky.
+
+> +case "$FSTYP" in
+> +xfs)
+> +	# added as a part of xfs health monitoring
+> +	_require_xfs_io_command healthmon
+> +	# no out of place writes
+> +	_require_no_xfs_always_cow
+> +	;;
+> +ext4)
+> +	# added at the same time as uevents
+> +	modprobe fs-$FSTYP
+> +	test -e /sys/fs/ext4/features/uevents || \
+> +		_notrun "$FSTYP does not support fsnotify ioerrors"
+> +	;;
+> +*)
+> +	_notrun "$FSTYP does not support fsnotify ioerrors"
+> +	;;
+> +esac
+
+Please abstract this out into a documented helper in common/
+
+> +#
+> +# The dm-error map added by this test doesn't work on zoned devices because
+> +# table sizes need to be aligned to the zone size, and even for zoned on
+> +# conventional this test will get confused because of the internal RT device.
+> +#
+> +# That check requires a mounted file system, so do a dummy mount before setting
+> +# up DM.
+> +#
+> +_scratch_mount
+> +test $FSTYP = xfs && _require_xfs_scratch_non_zoned
+> +_scratch_unmount
+
+Hmm, this is a bit sad.  Can we align the map?  Or should we carve in
+and add proper error injection to the block code, which has been
+somewhere on my todo list forever because dm-error and friends are
+so painful to setup.  Maybe I need to expedite that.
 
