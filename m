@@ -1,39 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F7E32DF6F4;
-	Tue,  3 Mar 2026 17:53:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4876D366577;
+	Tue,  3 Mar 2026 17:59:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772560381; cv=none; b=Nx5OSqSsxHgCUkiJD0GFoO73BxH0rdEx2nwh6GIPDGrfBhygBhLMJLp5clV7870VL0mfouS+aAubPQgisDJKnODZ5hvivdvR42cxMQKwL/UTjiSXUJ7/DH7csxmYhHWNdwhg/6lKIcHciZA7+OelLOX2XgazwOzzOsL+cwM41GA=
+	t=1772560786; cv=none; b=C5M+F2Pcc/wih3O5SkKE2ThN6nCzJ5s6KpuafNtPpju8g9O1w+KEyjNKr2tT9FbSoP2QZFah668ilLBIpZxFi/liZ0IonVaGllLMT10E7rQ0qagnAAP9DbmtH+y+aNqzO82BkP4zCMOLP/nCqYAmwrOuwA9IQeJ/M+kAiNtctH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772560381; c=relaxed/simple;
-	bh=7QD5MqjyE+Wjyl0MhxMq8Ns+opJ4HIXK6UR6t+WDVh4=;
+	s=arc-20240116; t=1772560786; c=relaxed/simple;
+	bh=7w4Yv3iEeerca9ZUbPzIO0+RunrJzrs7MoONu9vAzrw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NAKIgv9zYXbS1P6p6NN2xviJwTNhM9xJ9H3hXWTH0GWlcS/hE2+Y5iD+xK+nNXp7NtacuRObDRrbPVzCVfGz+KnUHIHjraYZUBplQXG0qfKv9Gf2NmbbWEDzW96x7Cep8Qf+uy2QHC8eJ+s9oxVcE53mY2QOw6/c/plGUzo7hmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vFbYO+o8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YFhkRCXcE+9CvOXrYyPJEZpIyeHSTiTwP5ISQreHSIJBbZhgdEgyexWvTNsZhgLpGweXEAW2Y2KPFx7GOgjqHnRo489Af+LMnT3G5XU2NbkXQKgENloXarKxO3c8mtnuKTJc3lXDoakDk4byieTAUAs3gFah2sHJszEVkPvHFZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ji3FbPuY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vFbYO+o8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4B28C116C6;
-	Tue,  3 Mar 2026 17:53:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ji3FbPuY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE4E9C116C6;
+	Tue,  3 Mar 2026 17:59:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772560381;
-	bh=7QD5MqjyE+Wjyl0MhxMq8Ns+opJ4HIXK6UR6t+WDVh4=;
+	s=k20201202; t=1772560785;
+	bh=7w4Yv3iEeerca9ZUbPzIO0+RunrJzrs7MoONu9vAzrw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vFbYO+o8xLrOMsSHnERuLJK9EEosB54/L0L1Z04JJ/by/7P+ddIznLeUv1jMHVotr
-	 iMWbG0qvUXe3V1xDQdXAen+hV2AS1szC2CD3RhD/94xf5lVybOxEl8Dz9C3EiON7PR
-	 C7NNe33xDtgJVeh+Vjctd+VOuLqQi8cTAr+jj+GPttMmGuAq7pilQkhr+n3DadmFSw
-	 QESNBjTuzOc3j5fH1JPw2XKUGMbXJa9/Nb6fAVjQfoygguovlWfZ7fCq31xh5kFiKz
-	 a02dK3TdZZwrSmqIeLcyySzCo0UIue2DPfjV3O5YLaAwmHr0J5Z0Jerfi+AgFPULs3
-	 sTDqYucISnk8A==
-Date: Tue, 3 Mar 2026 09:53:00 -0800
+	b=ji3FbPuYUcizrCG/pFTd6Ed2+fSE7Gol20eivW+pSW1siolnXkL6ykgYVjZKdnSBy
+	 YF4CvJr8tBX+NILNkL5xawompxRfORJFSICOplscgVnxAq0faQvLPITYuwrSMayjDb
+	 G8sjRLbCH6/OmyoQGTKO/nKq8dZk+gLqGxMcNMOZkkU43sqE+1zzDj0RxfJ+WfJCOn
+	 cGtvCQmnmGvcfK4445BXgcPNJ5fvxHHfY2sIsLuBT0liD2I4J00Js5rWrxWFM7V6Bf
+	 lW0CEGUKyQzRvxJV7uPkG4jPeXaOKLX480scoJQ/eK3KolfP7tpRZCrJbh+BBd8K2D
+	 0MaZ9TU0ZobmQ==
+Date: Tue, 3 Mar 2026 09:59:45 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, luca.dimaio1@gmail.com, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs/841: create a block device that must exist
-Message-ID: <20260303175300.GT57948@frogsfrogsfrogs>
-References: <20260202085701.343099-1-hch@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	gabriel@krisman.be, amir73il@gmail.com, jack@suse.cz,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
+Message-ID: <20260303175945.GE13843@frogsfrogsfrogs>
+References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
+ <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
+ <aab2JbAZI8RFq_XE@infradead.org>
+ <20260303164901.GJ57948@frogsfrogsfrogs>
+ <aacR-EYFd0x_nRz-@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,80 +47,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260202085701.343099-1-hch@lst.de>
+In-Reply-To: <aacR-EYFd0x_nRz-@infradead.org>
 
-On Mon, Feb 02, 2026 at 09:57:01AM +0100, Christoph Hellwig wrote:
-> This test currently creates a block device node for /dev/ram0,
-> which isn't guaranteed to exist, and can thus cause the test to
-> fail with:
+On Tue, Mar 03, 2026 at 08:53:12AM -0800, Christoph Hellwig wrote:
+> On Tue, Mar 03, 2026 at 08:49:01AM -0800, Darrick J. Wong wrote:
+> > > > +ext4)
+> > > > +	# added at the same time as uevents
+> > > > +	modprobe fs-$FSTYP
+> > > > +	test -e /sys/fs/ext4/features/uevents || \
+> > > > +		_notrun "$FSTYP does not support fsnotify ioerrors"
+> > > > +	;;
+> > > > +*)
+> > > > +	_notrun "$FSTYP does not support fsnotify ioerrors"
+> > > > +	;;
+> > > > +esac
+> > > 
+> > > Please abstract this out into a documented helper in common/
+> > 
+> > Ok.  I'm not sure how to check for feature support on ext4 anymore since
+> > the uevents patch didn't get merged, and then I clearly forgot to rip
+> > that out of this helper here.
 > 
-> mkfs.xfs: cannot open $TEST_DIR/proto/blockdev: No such device or address
+> Oh.  Well, drop that then and move the xfs side and the default n
+> into a common helper instead of hardcoding it in the test.
+
+/me discovers that Baolin Liu added a "err_report_sec" sysfs knob to
+ext4 in 7.0-rc1, so I can just change the helper to look for that.  I'll
+move the logic to common/rc.
+
+> > > and add proper error injection to the block code, which has been
+> > > somewhere on my todo list forever because dm-error and friends are
+> > > so painful to setup.  Maybe I need to expedite that.
+> > 
+> > I think it's theoretically possible to figure out that there's a zone
+> > size and then round outwards the error-target part of the dm table to
+> > align with a zone.
 > 
-> Instead, create a node for the backing device for $TEST_DIR, which must
-> exist.
+> It's the sysfs chunk size.  btrfs/237 harcodes reading that out,
+> which could be easily lifted into a helper.
+> 
+> > I have a lot more doubts about whether or not doing
+> > that in bash/awk is a good idea though.  It'd be a lot easier if either
+> > the block layer did error injection or if someone just fixes those
+> > limitations in dm itself.
+> 
+> I'll sign up to do the block layer stuff.  Doing so should allow us
+> to run a lot more of the error injetion tests on zoned xfs, which
+> would be good.  So I guess you should keep it as-is for now,
+> and I'll do a sweep later.
 
-Hrm.  I'm still noticing regressions with this test, particularly when
-the blocksize of the test filesystem is different from the block size
-of the $IMG_FILE filesystem.
-
-So I started looking for fsblock discrepancies between
-xfs_reproducible_test.img.[1-3] and noticed that EOF block contents are
-different if the file being copied in has sparse holes in it that are
-not aligned to the fsblock size of the new filesystem.
-
-IOWs, if $TEST_DIR is a 1k fsblock filesystem and the $IMG_FILE
-filesystems have 4k fsblocks, you can write 1k at odd offsets (e.g. 1k,
-3k, 5k, 7k, etc) and the created file does not match the file in the
-proto dir.
-
-I traced this to design thinko in libxfs_file_write -- it assumes that
-the caller always wants to write the full block, even if the buffer
-passed in does not cover the entire range of the block.  Therefore it'll
-zero the head and the tail of the xfs_buf before writing it out.
-
-Thus, the region at 1k causes mkfs to allocate fileoff 0 (which is a 4k
-block).  Then libxfs_file_write writes 1024 bytes of zeroes, 1024 bytes
-of copied-in data, and 2048 bytes of more zeroes.
-
-Next, the region at 3k causes mkfs to re-call libxfs_file_write, but
-this time it writes 3072 bytes of zeroes and 1024 bytes of copied-in
-data, thus obliterating the first write.
-
-That bug's on me, and I'll fix it in writefile by rounding data_pos and
-hole_pos outward as needed to be aligned to the block size of the copied
-in filesystem.  And I'll update xfs/841 to compare $PROTO_DIR against
-what's in the new filesystem.
-
-That fixes the data corruption problem, but then the test still fails
-because now the space map isn't the same between mkfs invocations.
+Ok, thanks. :)
 
 --D
-
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  tests/xfs/841 | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tests/xfs/841 b/tests/xfs/841
-> index ee2368d4a746..ddb1b3bea104 100755
-> --- a/tests/xfs/841
-> +++ b/tests/xfs/841
-> @@ -85,9 +85,12 @@ _create_proto_dir()
->  	$here/src/af_unix "$PROTO_DIR/socket" 2> /dev/null || true
->  
->  	# Block device (requires root)
-> -	mknod "$PROTO_DIR/blockdev" b 1 0 2> /dev/null || true
-> +	# Uses the device for $TEST_DIR to ensure it always exists.
-> +	mknod "$PROTO_DIR/blockdev" b $(stat -c '%Hd %Ld' $TEST_DIR) \
-> +		2> /dev/null || true
->  
->  	# Character device (requires root)
-> +	# Uses /dev/null, which should always exist
->  	mknod "$PROTO_DIR/chardev" c 1 3 2> /dev/null || true
->  }
->  
-> -- 
-> 2.47.3
-> 
-> 
