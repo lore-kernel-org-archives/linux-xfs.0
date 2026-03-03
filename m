@@ -1,97 +1,72 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCF3D3DBD66;
-	Tue,  3 Mar 2026 16:53:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA853ED5C3
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 16:54:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772556797; cv=none; b=blWisOkL/E7sN7lyz2hNyAYqwu6IS/zFh1zcna6Z+7kvz5Usy5rl8LcgjT/Eh9qxkyC85VYUBqr8L3FfFJd6nC/rw9HTE3j9Xlq9Q5QOSs5A4+B/F4VRks9cXZKKPgr55dB2RqB+csBo+j9kMIqwNGTdkffSxq15THtCZOLzuBo=
+	t=1772556854; cv=none; b=YhAr9QabS343MIM89Jvj9p0AMqKLBb+dTTDvAg/be7qtcjuCBoZbvKbnQHczpuBetVkIr5b7os3PdPC+XYvihmYcwYMKqi+izlIjyHQZpjPsweSvtLFPAytx5fFO0eLGOM6FzpAy93qCo8oNb07tYGVeqmU1yk9ehLIvWLi4rCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772556797; c=relaxed/simple;
-	bh=hM3JuSJObjPYSaMejdndGHeShGaty5RqSUN6GqELeZ0=;
+	s=arc-20240116; t=1772556854; c=relaxed/simple;
+	bh=1zv8la/yle8KdLjMwifu13Od2xvaI1jcG2U73Y8QWsQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pdvcXfDSl3o8mAdJOrhpUsyqIL/36oNzo3frRrWXNiWLDChmykcR2q56uI2MTjTI0tkvl43Ppqy68Pz4soslLPQX9KdpnMYgmJkEjVtkEkdMMBPps1rgDt94YewFPM37vMYKDhG17wfLGBHWKz0zlL6YaJUYXoPvHzMJW66gzCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lZUzoahV; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=kIc1CvmKnfe7ODikCcJdeb33m1yqHbR1h0a69nEiSzdmwSCy7IPIKgfoZA9OZ3/Iv2y/72coCF6c8EajkrlkWnQJ43m7+XtcplA91tofudk4gGeZh/RiRh5Vv0SkX6US+m0rEcZHxoATqIN4WaU83xJeQimwup9cePzfAEGHNBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=d8SsOft4; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lZUzoahV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d8SsOft4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=LK5ovpByNqMJYEsOUFqrGM8WApOp3poHiGmOjO+XhlA=; b=lZUzoahVcm4BR6DSZEXlobv0kn
-	2M0ZYyZW3ViL5NF+WB88v0QV2eoS5wflLDsr3U5kTfkVag85Jfd00a65yz3jKtvdoIqbfFRMXdZQC
-	DwKfOKlpBaUXOPtGt3GtAfv911qQEM7zNt7Zq793idsBDI3DkgXfbGZir0yVa4EyoOsYX2iCNysNz
-	ZJyahRkTL6i/emRSuSRFW6HhEVY+m749s41o+eieuEazBXOuBXCT1WPqkajLgUbtKKMwwFiJFT59t
-	FTVh4WJdkNjvEOJrNij/FpCkYKHjsIXyui6D2p5RT2HGGX9stlb1kzhR0itWWbR3Y8kVavwyUqZ5f
-	0Nb8L5qw==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=mI3RKCxL2BpwfMx/iNqmS+Tyft+G5GLGGzSspt88tBg=; b=d8SsOft42msB36Y5WtLNHDe4Ln
+	8iwluP21jPi5ixZQsuHhiWwUkP9PaJ/6FUQLS2Tgehf8d2ASGt17v9fetLmm6VPLaP7xFqnrWfbt+
+	1ql+Pq3ZAycLsquXIhWWCCj/upak1RrggBtrEuqg+Lre9hFEpKUdvCr6pF4JUfd+3CK4y10l3mbgn
+	E5D3v3njaWM0hefW8y5Mpqu7twCTmpUvLp2/GoMMsyOCecUXkRdaB4HQwSYNnxBVNxJP+UizBA7OF
+	+cENHmYv0uMGXC8VEgjVGBcGyTcbyMp1YHOVHGHKGdOO2TBVRqwyrFezh6L9cUC3ZO9FJEiKqkFQS
+	i8tK7/jQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vxSzg-0000000FbtI-1hEH;
-	Tue, 03 Mar 2026 16:53:12 +0000
-Date: Tue, 3 Mar 2026 08:53:12 -0800
+	id 1vxT0e-0000000Fbyg-35WO;
+	Tue, 03 Mar 2026 16:54:12 +0000
+Date: Tue, 3 Mar 2026 08:54:12 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
-	linux-fsdevel@vger.kernel.org, hch@lst.de, gabriel@krisman.be,
-	amir73il@gmail.com, jack@suse.cz, fstests@vger.kernel.org,
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@kernel.org, hch@lst.de,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-Message-ID: <aacR-EYFd0x_nRz-@infradead.org>
-References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
- <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
- <aab2JbAZI8RFq_XE@infradead.org>
- <20260303164901.GJ57948@frogsfrogsfrogs>
+Subject: Re: [PATCH 13/26] xfs_healer: create a service to start the
+ per-mount healer service
+Message-ID: <aacSNL9qWjo8NIo-@infradead.org>
+References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
+ <177249783527.482027.17759904859193601740.stgit@frogsfrogsfrogs>
+ <aacDDXudwf9ygIkQ@infradead.org>
+ <20260303165221.GK57948@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260303164901.GJ57948@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260303165221.GK57948@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 03, 2026 at 08:49:01AM -0800, Darrick J. Wong wrote:
-> > > +ext4)
-> > > +	# added at the same time as uevents
-> > > +	modprobe fs-$FSTYP
-> > > +	test -e /sys/fs/ext4/features/uevents || \
-> > > +		_notrun "$FSTYP does not support fsnotify ioerrors"
-> > > +	;;
-> > > +*)
-> > > +	_notrun "$FSTYP does not support fsnotify ioerrors"
-> > > +	;;
-> > > +esac
+On Tue, Mar 03, 2026 at 08:52:21AM -0800, Darrick J. Wong wrote:
+> > > +	while ((ret = syscall(SYS_listmount, &req, &mnt_ids, 32, 0)) > 0) {
 > > 
-> > Please abstract this out into a documented helper in common/
+> > Should this use a wrapper so we can switch to the type safe libc
+> > version once it becomes available?
 > 
-> Ok.  I'm not sure how to check for feature support on ext4 anymore since
-> the uevents patch didn't get merged, and then I clearly forgot to rip
-> that out of this helper here.
+> What kind of wrapper?
 
-Oh.  Well, drop that then and move the xfs side and the default n
-into a common helper instead of hardcoding it in the test.
+For calling the listmount system call.
 
-> > and add proper error injection to the block code, which has been
-> > somewhere on my todo list forever because dm-error and friends are
-> > so painful to setup.  Maybe I need to expedite that.
-> 
-> I think it's theoretically possible to figure out that there's a zone
-> size and then round outwards the error-target part of the dm table to
-> align with a zone.
+> or did you have something else in mind?  The manual page for listmount
+> says that glibc provides no wrapper[1].
 
-It's the sysfs chunk size.  btrfs/237 harcodes reading that out,
-which could be easily lifted into a helper.
-
-> I have a lot more doubts about whether or not doing
-> that in bash/awk is a good idea though.  It'd be a lot easier if either
-> the block layer did error injection or if someone just fixes those
-> limitations in dm itself.
-
-I'll sign up to do the block layer stuff.  Doing so should allow us
-to run a lot more of the error injetion tests on zoned xfs, which
-would be good.  So I guess you should keep it as-is for now,
-and I'll do a sweep later.
+Ånd there are no plans to provide one? :(  Even if so having a libfrog
+wrapper would be nice rather than open coding syscall() in at least
+two places in this series.
 
