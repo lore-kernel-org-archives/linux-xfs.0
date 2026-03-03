@@ -1,87 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E55512CDA5;
-	Tue,  3 Mar 2026 00:44:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3B233909AE;
+	Tue,  3 Mar 2026 00:47:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772498656; cv=none; b=IggG3hEz6n9y3q4cZdgZMc/qEXEvArIbkSlb0Lk4ZCUsY1GiHrjSlVShAHo7a8WctCTC9TnNAGEUNSx0bpX6KEU0RboHQ9f0lXrkspKknxadrHIGYJVTNgkbfWBGaOmyb5KBo+EoLB/+qPZlUCQzQKPfdCrB+O1ziel3nSPgtPE=
+	t=1772498861; cv=none; b=SXCDS/kmAaABb4bdFs1PGgTimxL+z2oAJqVq0FbQNA+MVuIM7x0AwuLbCDSFfLuyDCnS+nP+j7AXnsMLbQWaXe3pu9f8jgxyGTXQ29QgQYEFxpxHoWme6xIY8wzQZimMOGFf3JXt92PBwswgHbfbcwanOoVK3VvoiSh7ir5k49k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772498656; c=relaxed/simple;
-	bh=7i9cmbUUM/MmZ++lNsMkMrk2JPwvUq3YzJ3X1LFXZjU=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WVeqNtEduvquuxrV87uiydcpOf86n6NHooqqqADlBA3sNwoPV2b+GFV8hr2SxGCmYZ0qOwCG0KSyO3u0mgadatFEI4wzRXTepjcdDyMlHQtGL5RCq5qOjR9yzNSqwFtDyqyyumNw9kWp00v2Na5fBJyj+Zxjb6DAkD/J4LTxmkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGQJ6KXp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772498861; c=relaxed/simple;
+	bh=YFqBgaJuK1OlwbhS42ODQa19TFnjE6y8hxDLopekmpU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PYT3lYBai7Mo+i1hVCQihQwbSFgdfJXCrnqN4v/vucGBt6MNzqFU5+oaNC4dhpXh3kjOz9gC5ctzbT0fT4044G4zUpUq/r/v17JplFASKbAZX/RPyn5KGxHigSF+UiJ1B08znCymqvgaZNHdX26LRJ9jNM70Et70Z+MM1AOj3X0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2J3Dix7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGQJ6KXp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47443C19423;
-	Tue,  3 Mar 2026 00:44:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2J3Dix7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80E4DC19423;
+	Tue,  3 Mar 2026 00:47:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772498656;
-	bh=7i9cmbUUM/MmZ++lNsMkMrk2JPwvUq3YzJ3X1LFXZjU=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HGQJ6KXps0Mi+B1InoEaJUcE+tsjDkoP87i4r1nL1pEyWDH33hk/xve64dJcWrkpK
-	 6Qdlf5ELY9JLL6icW7WlQGIVJo1cLn7WWn3ioFs3rmfaTmfZBrqRKRwm6gtfisRUqp
-	 WY1ex2txry0G2PBzW1AqvANabpRp00b/gznbgHLaorpFMceNot0aLBPEnr5G8QKBvb
-	 7O7ifStGvjKS4TIaJpcnT5CTO+3HBFFQ6EqeCfWf0DHsF1VZpxrVRGPD9qTbTEL9gR
-	 x/CHpgjXTL0IHAxF72KQYD2uAp0fWl3Z9Rs5bp3rJsDJYvgahIdIXTZIpOv+rkJoCH
-	 /smt2k3d9C8gQ==
-Date: Mon, 02 Mar 2026 16:44:15 -0800
-Subject: [PATCH 13/13] xfs: test xfs_healer background service
+	s=k20201202; t=1772498860;
+	bh=YFqBgaJuK1OlwbhS42ODQa19TFnjE6y8hxDLopekmpU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=l2J3Dix7QstK58DvFUkWhcoUsl4p8fRt90muSvHdcBnOxdi0LvQFW9w8nUPHArtFu
+	 toDnHcnaavjVD8nxRXu1dCqM0uGeg7fl5dNaOhmS6oOVIDpsVzja2/K9Y1zFbTiW9L
+	 telAWSl1f1cJftH3sUQJQjiklYMP+sEyDk3zNK+ZEluN8DVRn65EXNmbJ8j6ZuYxCQ
+	 iThjueMryqiHwvyJSQjx12Xvwxp3Ky8TMjjGxMA7bbPBY1/O+cfnFbk7h4oPeENn2O
+	 EvSQsU9DIhurfUT2iv3oYr0VZVVB4FKDArQZKqES1uTyEO+rfbv/duh9jGL7iDdIpw
+	 50YNF2n/jhedg==
+Date: Mon, 2 Mar 2026 16:47:39 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com, djwong@kernel.org
+To: zlang@redhat.com
 Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177249786007.483507.4292030602464179950.stgit@frogsfrogsfrogs>
-In-Reply-To: <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
-References: <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
+Subject: [PATCH 14/13] xfs: test xfs_healer startup service
+Message-ID: <20260303004739.GD13843@frogsfrogsfrogs>
+References: <20260303002508.GB57948@frogsfrogsfrogs>
+ <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that when xfs_healer can monitor and repair filesystems when it's
-running as a systemd service, which is the intended usage model.
+Make sure that xfs_healer_start can actually start up xfs_healer service
+instances when a filesystem is mounted.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/1902     |  152 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1902.out |    2 +
- 2 files changed, 154 insertions(+)
- create mode 100755 tests/xfs/1902
- create mode 100755 tests/xfs/1902.out
+ tests/xfs/1903     |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1903.out |    6 +++
+ 2 files changed, 130 insertions(+)
+ create mode 100755 tests/xfs/1903
+ create mode 100644 tests/xfs/1903.out
 
-
-diff --git a/tests/xfs/1902 b/tests/xfs/1902
+diff --git a/tests/xfs/1903 b/tests/xfs/1903
 new file mode 100755
-index 00000000000000..d327995df8c5b0
+index 00000000000000..d71d75a6af3f9d
 --- /dev/null
-+++ b/tests/xfs/1902
-@@ -0,0 +1,152 @@
++++ b/tests/xfs/1903
+@@ -0,0 +1,124 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
++# Copyright (c) 2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test 1902
++# FS QA Test No. 1903
 +#
-+# Ensure that autonomous self healing fixes the filesystem correctly when
-+# running in a systemd service
++# Check that the xfs_healer startup service starts the per-mount xfs_healer
++# service for the scratch filesystem.  IOWs, this is basic testing for the
++# xfs_healer systemd background services.
 +#
-+# unreliable_in_parallel: this test runs the xfs_healer systemd service, which
-+# cannot be isolated to a specific testcase with the way check-parallel is
-+# implemented.
-+#
++
++# unreliable_in_parallel: this appears to try to run healer services on all
++# mounted filesystems - that's a problem when there are a hundred other test
++# filesystems mounted running other tests...
++
 +. ./common/preamble
 +_begin_fstest auto selfhealing unreliable_in_parallel
 +
 +_cleanup()
 +{
 +	cd /
++	test -n "$new_healerstart_svc" &&
++		_systemd_unit_stop "$new_healerstart_svc"
++	test -n "$was_masked" && \
++		_systemd_unit_mask "$healer_svc" &>> $seqres.full
 +	if [ -n "$new_svcfile" ]; then
 +		rm -f "$new_svcfile"
 +		systemctl daemon-reload
@@ -90,137 +96,106 @@ index 00000000000000..d327995df8c5b0
 +}
 +
 +. ./common/filter
++. ./common/populate
 +. ./common/fuzzy
 +. ./common/systemd
 +
 +_require_systemd_is_running
 +_require_systemd_unit_defined xfs_healer@.service
-+_require_scrub
-+_require_xfs_io_command "repair"	# online repair support
-+_require_xfs_db_command "blocktrash"
-+_require_command "$XFS_HEALER_PROG" "xfs_healer"
-+_require_command "$XFS_PROPERTY_PROG" "xfs_property"
++_require_systemd_unit_defined xfs_healer_start.service
 +_require_scratch
++_require_scrub
++_require_xfs_io_command "scrub"
++_require_xfs_spaceman_command "health"
++_require_populate_commands
++_require_command "$XFS_HEALER_PROG" "xfs_healer"
++_require_command $ATTR_PROG "attr"
 +
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
++_xfs_skip_online_rebuild
++_xfs_skip_offline_rebuild
 +
-+_xfs_has_feature $SCRATCH_MNT rmapbt || \
-+	_notrun "reverse mapping required to test directory auto-repair"
-+_xfs_has_feature $SCRATCH_MNT parent || \
-+	_notrun "parent pointers required to test directory auto-repair"
-+_require_xfs_healer $SCRATCH_MNT --repair
-+
-+# Configure the filesystem for automatic repair of the filesystem.
-+$XFS_PROPERTY_PROG $SCRATCH_MNT set autofsck=repair >> $seqres.full
-+
-+# Create a largeish directory
-+dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-+echo testdata > $SCRATCH_MNT/a
-+mkdir -p "$SCRATCH_MNT/some/victimdir"
-+for ((i = 0; i < (dblksz / 255); i++)); do
-+	fname="$(printf "%0255d" "$i")"
-+	ln $SCRATCH_MNT/a $SCRATCH_MNT/some/victimdir/$fname
-+done
-+
-+# Did we get at least two dir blocks?
-+dirsize=$(stat -c '%s' $SCRATCH_MNT/some/victimdir)
-+test "$dirsize" -gt "$dblksz" || echo "failed to create two-block directory"
-+
-+# Break the directory
-+_scratch_unmount
-+_scratch_xfs_db -x \
-+	-c 'path /some/victimdir' \
-+	-c 'bmap' \
-+	-c 'dblock 1' \
-+	-c 'blocktrash -z -0 -o 0 -x 2048 -y 2048 -n 2048' >> $seqres.full
-+
-+# Find the existing xfs_healer@ service definition, figure out where we're
-+# going to land our test-specific override
-+orig_svcfile="$(_systemd_unit_path "xfs_healer@-.service")"
++orig_svcfile="$(_systemd_unit_path "xfs_healer_start.service")"
 +test -f "$orig_svcfile" || \
-+	_notrun "cannot find xfs_healer@ service file"
++	_notrun "cannot find xfs_healer_start service file"
 +
 +new_svcdir="$(_systemd_runtime_dir)"
 +test -d "$new_svcdir" || \
 +	_notrun "cannot find runtime systemd service dir"
 +
-+# We need to make some local mods to the xfs_healer@ service definition
++# We need to make some local mods to the xfs_healer_start service definition
 +# so we fork it and create a new service just for this test.
-+new_healer_template="xfs_healer_fstest@.service"
-+new_healer_svc="$(_xfs_systemd_svcname "$new_healer_template" "$SCRATCH_MNT")"
-+_systemd_unit_status "$new_healer_svc" 2>&1 | \
++new_healerstart_svc="xfs_healer_start_fstest.service"
++_systemd_unit_status "$new_healerstart_svc" 2>&1 | \
 +	grep -E -q '(could not be found|Loaded: not-found)' || \
-+	_notrun "systemd service \"$new_healer_svc\" found, will not mess with this"
++	_notrun "systemd service \"$new_healerstart_svc\" found, will not mess with this"
 +
-+new_svcfile="$new_svcdir/$new_healer_template"
++find_healer_trace() {
++	local path="$1"
++
++	sleep 2		# wait for delays in startup
++	$XFS_HEALER_PROG --supported "$path" 2>&1 | grep -q 'already running' || \
++		echo "cannot find evidence that xfs_healer is running for $path"
++}
++
++echo "Format and populate"
++_scratch_mkfs >> $seqres.full
++_scratch_mount
++_require_xfs_healer $SCRATCH_MNT
++
++# Configure the filesystem for background checks of the filesystem.
++$ATTR_PROG -R -s xfs:autofsck -V check $SCRATCH_MNT >> $seqres.full
++
++was_masked=
++healer_svc="$(_xfs_healer_svcname "$SCRATCH_MNT")"
++
++# Preserve the xfs_healer@ mask state -- we don't want this permanently
++# changing global state.
++if _systemd_unit_masked "$healer_svc"; then
++	_systemd_unit_unmask "$healer_svc" &>> $seqres.full
++	was_masked=1
++fi
++
++echo "Start healer on scratch FS"
++_systemd_unit_start "$healer_svc"
++find_healer_trace "$SCRATCH_MNT"
++_systemd_unit_stop "$healer_svc"
++
++new_svcfile="$new_svcdir/$new_healerstart_svc"
 +cp "$orig_svcfile" "$new_svcfile"
 +
-+# Pick up all the CLI args except for --repair and --no-autofsck because we're
-+# going to force it to --autofsck below
-+execargs="$(grep '^ExecStart=' $new_svcfile | \
-+	    sed -e 's/^ExecStart=\S*//g' \
-+	        -e 's/--no-autofsck//g' \
-+		-e 's/--repair//g')"
 +sed -e '/ExecStart=/d' -e '/BindPaths=/d' -e '/ExecCondition=/d' -i $new_svcfile
 +cat >> "$new_svcfile" << ENDL
-+
 +[Service]
-+ExecCondition=$XFS_HEALER_PROG --supported %f
-+ExecStart=$XFS_HEALER_PROG $execargs
++ExecCondition=$XFS_HEALER_START_PROG --supported
++ExecStart=$XFS_HEALER_START_PROG
 +ENDL
 +_systemd_reload
 +
 +# Emit the results of our editing to the full log.
-+systemctl cat "$new_healer_svc" >> $seqres.full
++systemctl cat "$new_healerstart_svc" >> $seqres.full
 +
-+# Remount, with service activation
-+_scratch_mount
++echo "Start healer for everything"
++_systemd_unit_start "$new_healerstart_svc"
++find_healer_trace "$SCRATCH_MNT"
 +
-+old_healer_svc="$(_xfs_healer_svcname "$SCRATCH_MNT")"
-+_systemd_unit_stop "$old_healer_svc" &>> $seqres.full
-+_systemd_unit_start "$new_healer_svc" &>> $seqres.full
++echo "Restart healer for scratch FS"
++_scratch_cycle_mount
++find_healer_trace "$SCRATCH_MNT"
 +
-+_systemd_unit_status "$new_healer_svc" 2>&1 | grep -q 'Active: active' || \
-+	echo "systemd service \"$new_healer_svc\" not running??"
++echo "Healer testing done" | tee -a $seqres.full
 +
-+# Access the broken directory to trigger a repair, then poll the directory
-+# for 5 seconds to see if it gets fixed without us needing to intervene.
-+ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
-+_filter_scratch < $tmp.err
-+try=0
-+while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
-+	echo "try $try saw corruption" >> $seqres.full
-+	sleep 0.1
-+	ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
-+	try=$((try + 1))
-+done
-+echo "try $try no longer saw corruption or gave up" >> $seqres.full
-+_filter_scratch < $tmp.err
-+
-+# List the dirents of /victimdir to see if it stops reporting corruption
-+ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
-+try=0
-+while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
-+	echo "retry $try still saw corruption" >> $seqres.full
-+	sleep 0.1
-+	ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
-+	try=$((try + 1))
-+done
-+echo "retry $try no longer saw corruption or gave up" >> $seqres.full
-+
-+# Unmount to kill the healer
-+_scratch_kill_xfs_healer
-+journalctl -u "$new_healer_svc" >> $seqres.full
-+
++# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/1902.out b/tests/xfs/1902.out
-new file mode 100755
-index 00000000000000..84f9b9e50e1e02
+diff --git a/tests/xfs/1903.out b/tests/xfs/1903.out
+new file mode 100644
+index 00000000000000..07810f60ca10c6
 --- /dev/null
-+++ b/tests/xfs/1902.out
-@@ -0,0 +1,2 @@
-+QA output created by 1902
-+ls: reading directory 'SCRATCH_MNT/some/victimdir': Structure needs cleaning
-
++++ b/tests/xfs/1903.out
+@@ -0,0 +1,6 @@
++QA output created by 1903
++Format and populate
++Start healer on scratch FS
++Start healer for everything
++Restart healer for scratch FS
++Healer testing done
