@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B4B1891A9
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:15:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CD851B4224
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:15:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496902; cv=none; b=aIE1tt1YckGU/os6wZpbsCyGkNmHibYxrKGVTbX+FYnMeln9jc5REQTJ38oyPXXZKfI++uLD/bkNQtUDhLVCWyMLzdC7fByhR1OFp7wAf6tVL+2jlybRFXhk6+iZdHUQV5TVAV5C0pQhhUCfyhQNSyXgMcS0wwCTCpW4fC4CO4k=
+	t=1772496917; cv=none; b=YdzwmCHQ6pqiRFzycKKsMh1rGaBGqthNgCLXG3Mdo0PpbLB210os26vc62Eikwy66HUshwgAEU+ODMfeuLBxK3EWesg1ET9SIU+GxHgIGHMBA9bJMRzWWtCK3zNbxQpHPRta8fBFabaF2neRmLHI/6aTRa9fu6fQ0BTnbUR4U5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772496902; c=relaxed/simple;
-	bh=ofsKgAB98Gv+bkWu1JcZMV6ksBg39qhcg/63zIU40XM=;
+	s=arc-20240116; t=1772496917; c=relaxed/simple;
+	bh=jyiQxv/VJ9m58SogDdLXQVr+NmV6Upp87DwV1OmClGY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ra7OjVGVP6TOyG4ax29Xq64d0Bz1oVVup2S2mBrKDSe7fypnmXFBqou3wroTCXmabldQMAUcdJyDb07GqHqu0MfcN5zWcerTyguB4bjQryog+1eKg+1fGxeFHFkkghNGL066tx9STDH4F+4pNZdULuJgilccqTM5QHkBlwsD/fU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MsqvbUVY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SL8HjXKO93/g+lZ9v3IAEw0csPXSTzOW/T/l0a3W6uQ069An6gjLphMo1WthjeriYsxzKhhn7zTF+nlWPgWie6KJmHu6xv3J+CHl7B5w/DRcuFBjKuiqWxvdKeKGn5gq9qHttGpK0Xs4mgz/s4Ir46g3bl3x5L4a/E5vWetWd0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ov9pfYTP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MsqvbUVY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72316C19423;
-	Tue,  3 Mar 2026 00:15:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ov9pfYTP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B2DEC19423;
+	Tue,  3 Mar 2026 00:15:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772496901;
-	bh=ofsKgAB98Gv+bkWu1JcZMV6ksBg39qhcg/63zIU40XM=;
+	s=k20201202; t=1772496917;
+	bh=jyiQxv/VJ9m58SogDdLXQVr+NmV6Upp87DwV1OmClGY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MsqvbUVYjthwTR2eKF9oFjtLjsLKfmU62bVI5Up16184QQpOZXpGNQq4pan4ugb5f
-	 JUcXfH5ulG987OWzpliIXTDrKiumLeMzBbsR32R7VvMlgVav4GLTINp+hSxy3x9V9g
-	 jyyMXf0ha+2ItrZ6J5VrpCqugeHrrp2hD91NGsrCi8VmgsaWkY3wsaxZofiFaLl7OS
-	 0IQiGeaw9Q5s4eYENEb24qlMPxOogWtb1Q/CetA+vOLkYwoRmhSyAvRwkBCJJpK4Ko
-	 OChxR6EyQ7IU1O3Zu53Y3258ZR8L/1kPiIgYWBJMMdjEfHsZjbu5jbWq9jI3S/vBIg
-	 2fcfzNHktgpJg==
-Date: Mon, 02 Mar 2026 16:15:01 -0800
-Subject: [PATCH 11/36] xfs: add media verification ioctl
+	b=ov9pfYTPYl80wG0RudYKetZheVDN0O26wMs9b8kYSGCAdy32olbXC+WQcstEbBMi5
+	 LE3v4KxEX8+RQrzL+QtSsMIizSuS0M9B5025QRc4FZFkwbeoUT4UawfUQy+uNXYicv
+	 JXIxwtIkJVKpaFi4PNmpozVkWnjqjk38WfZz0kuEFRZU2WdeTWK5eDrY6QC7lxvBVN
+	 oyNiAyx6gKOtl529LmlZJ3wrb+Dpe9GgGrTdlVXJ3pdjJ1hFjYbTTuEn5IKneo+qAe
+	 1MgkWAlhaaIrOkLYrzRg9RYa01tQAoBby7lOuiAVOeO9SFKrpvuXRn15Kf2gmv2n3m
+	 AN9BViw4mt+9g==
+Date: Mon, 02 Mar 2026 16:15:16 -0800
+Subject: [PATCH 12/36] xfs: move struct xfs_log_iovec to xfs_log_priv.h
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177249637978.457970.2157001000924066861.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177249637996.457970.5988457332713577268.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,83 +43,68 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: b8accfd65d31f25b9df15ec2419179b6fa0b21d5
+Source kernel commit: 027410591418bded6ba6051151d88fc6fb8a7614
 
-Add a new privileged ioctl so that xfs_scrub can ask the kernel to
-verify the media of the devices backing an xfs filesystem, and have any
-resulting media errors reported to fsnotify and xfs_healer.
+This structure is now only used by the core logging and CIL code.
 
-To accomplish this, the kernel allocates a folio between the base page
-size and 1MB, and issues read IOs to a gradually incrementing range of
-one of the storage devices underlying an xfs filesystem.  If any error
-occurs, that raw error is reported to the calling process.  If the error
-happens to be one of the ones that the kernel considers indicative of
-data loss, then it will also be reported to xfs_healthmon and fsnotify.
+Also remove the unused typedef.
 
-Driving the verification from the kernel enables xfs (and by extension
-xfs_scrub) to have precise control over the size and error handling of
-IOs that are issued to the underlying block device, and to emit
-notifications about problems to other relevant kernel subsystems
-immediately.
-
-Note that the caller is also allowed to reduce the size of the IO and
-to ask for a relaxation period after each IO.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_fs.h |   30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ include/kmem.h            |    2 ++
+ libxfs/xfs_log_format.h   |    7 -------
+ libxlog/xfs_log_recover.c |    4 ++--
+ 3 files changed, 4 insertions(+), 9 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index a01303c5de6ce6..d165de607d179e 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -1160,6 +1160,34 @@ struct xfs_health_file_on_monitored_fs {
- 	__u32		flags;	/* zero for now */
- };
+diff --git a/include/kmem.h b/include/kmem.h
+index 66f8b1fbea8fdf..d66310ececec80 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -60,6 +60,8 @@ static inline void *kmalloc(size_t size, gfp_t flags)
  
-+/* Verify the media of the underlying devices */
-+struct xfs_verify_media {
-+	__u32	me_dev;		/* I: XFS_DEV_{DATA,LOG,RT} */
-+	__u32	me_flags;	/* I: XFS_VERIFY_MEDIA_* */
-+
-+	/*
-+	 * IO: inclusive start of disk range to verify, in 512b blocks.
-+	 * Will be adjusted upwards as media verification succeeds.
-+	 */
-+	__u64	me_start_daddr;
-+
-+	/*
-+	 * IO: exclusive end of the disk range to verify, in 512b blocks.
-+	 * Can be adjusted downwards to match device size.
-+	 */
-+	__u64	me_end_daddr;
-+
-+	__u32	me_ioerror;	/* O: I/O error (positive) */
-+	__u32	me_max_io_size;	/* I: maximum IO size in bytes */
-+
-+	__u32	me_rest_us;	/* I: rest time between IOs, usecs */
-+	__u32	me_pad;		/* zero */
-+};
-+
-+#define XFS_VERIFY_MEDIA_REPORT	(1 << 0)	/* report to fsnotify */
-+
-+#define XFS_VERIFY_MEDIA_FLAGS	(XFS_VERIFY_MEDIA_REPORT)
-+
+ #define kzalloc(size, gfp)	kvmalloc((size), (gfp) | __GFP_ZERO)
+ #define kvzalloc(size, gfp)	kzalloc((size), (gfp))
++#define kmalloc_array(n, size, gfp)	kvmalloc((n) * (size), (gfp))
++#define kcalloc(n, size, gfp)	kmalloc_array((n), (size), (gfp) | __GFP_ZERO)
+ 
+ static inline void kfree(const void *ptr)
+ {
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index 908e7060428ccb..3f5a24dda90701 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -184,13 +184,6 @@ struct xlog_rec_header {
+ #define XLOG_REC_SIZE_OTHER	offsetofend(struct xlog_rec_header, h_size)
+ #endif /* __i386__ */
+ 
+-/* not an on-disk structure, but needed by log recovery in userspace */
+-struct xfs_log_iovec {
+-	void		*i_addr;	/* beginning address of region */
+-	int		i_len;		/* length in bytes of region */
+-	uint		i_type;		/* type of region */
+-};
+-
  /*
-  * ioctl commands that are used by Linux filesystems
-  */
-@@ -1202,6 +1230,8 @@ struct xfs_health_file_on_monitored_fs {
- #define XFS_IOC_HEALTH_MONITOR	_IOW ('X', 68, struct xfs_health_monitor)
- #define XFS_IOC_HEALTH_FD_ON_MONITORED_FS \
- 				_IOW ('X', 69, struct xfs_health_file_on_monitored_fs)
-+#define XFS_IOC_VERIFY_MEDIA	_IOWR('X', 70, struct xfs_verify_media)
-+
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-  */
+  * Transaction Header definitions.
+  *
+diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+index 65e3c782d59674..af72b97d150b75 100644
+--- a/libxlog/xfs_log_recover.c
++++ b/libxlog/xfs_log_recover.c
+@@ -1112,8 +1112,8 @@ xlog_recover_add_to_trans(
+ 		}
+ 
+ 		item->ri_total = in_f->ilf_size;
+-		item->ri_buf = kzalloc(
+-			item->ri_total * sizeof(struct xfs_log_iovec), 0);
++		item->ri_buf = kcalloc(item->ri_total, sizeof(*item->ri_buf),
++				0);
+ 	}
+ 	ASSERT(item->ri_total > item->ri_cnt);
+ 	/* Description region is ri_buf[0] */
 
