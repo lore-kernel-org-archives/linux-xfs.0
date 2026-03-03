@@ -1,44 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7D5370D4A;
-	Tue,  3 Mar 2026 16:38:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53EB848C8DB;
+	Tue,  3 Mar 2026 16:49:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772555909; cv=none; b=EixPcUouPsYJG0eUO/gWgkAjdEBSo0pwD4C4B10gPy6XZcvTtktgzFCfHnvxdQp35uqfJQS6hHaMS6oi96N08gUBW75RX7raRVv9Ksx2u9i/S3gbOCnq/YyL3ErWiwoYzoHfHKP4qJcY49nGfvsClZ+LuSm+BLPxbngelTYSiOg=
+	t=1772556542; cv=none; b=WgjJotzOVk31n+PjSQU0haCQscvuUBuIyRNugYQ86eta2GPeTNh+Ek9vhTUP2hpGG6D7modxoDcIwxL+n14G1FxbPoqmJ8k/yVER3Nq74EWLERzIy1HljTTZDR7g+oL70x35/REvCxR6DGPwmVX+PW68cHXLjoRBSaSNpywEOZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772555909; c=relaxed/simple;
-	bh=td5tzea6Xp4RN2nFykvpRDtfXDPa6TnzFtAZISE44Xc=;
+	s=arc-20240116; t=1772556542; c=relaxed/simple;
+	bh=AxGT7UfkHl60FW2EHZgPq+1ZuWUwh4rOVv4rGfzflqI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U/T+dHZem1O1m0bEQtGUTEb2wNOvvFXO+nRixpVLjnOCi5oRwORAbsxSyp7x64DoRJ/ifJ/0EwFFr2tfa34KACy2tNCjlEe1gZWFLcTjYT54qp7pEMZcPiTyBn4lXhekmc/SMJkkq6nliYO3QAdZg40706vV3IK6TdB+c8U9xss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LHmMXCv1; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mwDBdPW8vd9UKbOFGQRgCrpP2RcwqR1xCXJsI30GxNKZu+GZc8qbX+HKSoizcVUETomM7IZaHcMJ4/i8KmEVu8VHzVBFOiJUBO1RksEiE7o9RSh99GR4tRyROPJJqdJgt5ECGHFauBlGFwQCE1uTvA3Z2htBQuPOmtKEd1Yad8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJZ9Sr0H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LHmMXCv1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB212C116C6;
-	Tue,  3 Mar 2026 16:38:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJZ9Sr0H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D29ADC19422;
+	Tue,  3 Mar 2026 16:49:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772555908;
-	bh=td5tzea6Xp4RN2nFykvpRDtfXDPa6TnzFtAZISE44Xc=;
+	s=k20201202; t=1772556541;
+	bh=AxGT7UfkHl60FW2EHZgPq+1ZuWUwh4rOVv4rGfzflqI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LHmMXCv1wGeCzc7f0UchMuQlBuLKqZxerFjlAu96qaEThJ+o569CKTpuSMSvPfX33
-	 6lGCYD/vOCUBoEUwcR3toUAPaj9qIkeJlBimDS7fwhqDb1MN7fXT0q6bttmoRxSjJJ
-	 y29uJ2syrFNP+iu7TvHxAlh/PBr2hi5L9LOgO1UGEGrOJIH8rW4J3hNaiSm6XzWCHh
-	 FApRSjH8POSE951IbtSPT55pk5Kj28ZLfzGe2Y2SfxupjJM+JD521NnnMyuYhSBYkc
-	 6B7f0QN9hu9BPOURnF2DD5onpj4lAAW3WNT7ODUl74hLMq/o2Q7dR6GhOUL2lTIcWs
-	 5iEdK2Ik1vkgQ==
-Date: Tue, 3 Mar 2026 08:38:28 -0800
+	b=RJZ9Sr0Hpnc593ZYUofSa4PnU2VYtynYI/y27n4sHiShcrVIVWXsL9fA5m+EFDWo+
+	 tEK5TEUGrZBkxj4mVVqGzJ0zrNGZ1PDtC2Kl4BxpJalo6A4bSMxB2YbCkZc2wWp6I2
+	 9/WP4pWNOWVeyfRsDNUAADIIUr1y8DxstVaC/NdmDus6dNISTA3LkwJgpjy0pA2sAL
+	 4Jv9Bhr1nJfTD2EkfCMu64peXz5nb35b398+ki93nTIB+6cOleq2TM8ZXXbR7XAylp
+	 mbvuoJzX7m+rEEL7SEyWgb9bskL7pabssmUqG1Fam9mJXJc1fGAnbJDKnO+6FSyaSC
+	 +pu2icF3Jq62Q==
+Date: Tue, 3 Mar 2026 08:49:01 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Gabriel Krisman Bertazi <gabriel@krisman.be>, zlang@redhat.com,
-	linux-fsdevel@vger.kernel.org, hch@lst.de, amir73il@gmail.com,
-	jack@suse.cz, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	gabriel@krisman.be, amir73il@gmail.com, jack@suse.cz,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-Message-ID: <20260303163828.GI57948@frogsfrogsfrogs>
+Message-ID: <20260303164901.GJ57948@frogsfrogsfrogs>
 References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
  <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
  <aab2JbAZI8RFq_XE@infradead.org>
- <87ldg83nj7.fsf@mailhost.krisman.be>
- <aacIh7YJps8rp7gi@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,47 +45,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aacIh7YJps8rp7gi@infradead.org>
+In-Reply-To: <aab2JbAZI8RFq_XE@infradead.org>
 
-On Tue, Mar 03, 2026 at 08:12:55AM -0800, Christoph Hellwig wrote:
-> On Tue, Mar 03, 2026 at 11:06:52AM -0500, Gabriel Krisman Bertazi wrote:
-> > Christoph Hellwig <hch@infradead.org> writes:
-> > 
-> > >> +// SPDX-License-Identifier: GPL-2.0
-> > >> +/*
-> > >> + * Copyright 2021, Collabora Ltd.
-> > >> + */
-> > >
-> > > Where is this coming from?
-> > 
-> > This code is heavily based, if not the same, to what I originally wrote
-> > as a kernel tree "samples/fs-monitor.c" when I was employed by
-> > Collabora.  I appreciate Darrick keeping the note actually.
+On Tue, Mar 03, 2026 at 06:54:29AM -0800, Christoph Hellwig wrote:
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Copyright 2021, Collabora Ltd.
+> > + */
 > 
-> The note is good.  But if we import code from somewhere, we should
-> document where it is coming from, both for attribution and to ease
-> any future resyncs if needed.
-
-Yeah, I copied this straight from the kernel tree, which is why it
-contains this wart:
-
-> > >> +#ifndef __GLIBC__
-> > >> +#include <asm-generic/int-ll64.h>
-> > >> +#endif
-> > >
-> > > And what is this for?  Looks pretty whacky.
-> > 
-> > Comes from kernel commit 3193e8942fc7 ("samples: fix building fs-monitor
-> > on musl systems") to fix building with musl.  We don't need it here.
+> Where is this coming from?
 > 
-> In the place that needs it it really should have a comment explainig
-> the logic behind it.
+> > +#ifndef __GLIBC__
+> > +#include <asm-generic/int-ll64.h>
+> > +#endif
+> 
+> And what is this for?  Looks pretty whacky.
+> 
+> > +case "$FSTYP" in
+> > +xfs)
+> > +	# added as a part of xfs health monitoring
+> > +	_require_xfs_io_command healthmon
+> > +	# no out of place writes
+> > +	_require_no_xfs_always_cow
+> > +	;;
+> > +ext4)
+> > +	# added at the same time as uevents
+> > +	modprobe fs-$FSTYP
+> > +	test -e /sys/fs/ext4/features/uevents || \
+> > +		_notrun "$FSTYP does not support fsnotify ioerrors"
+> > +	;;
+> > +*)
+> > +	_notrun "$FSTYP does not support fsnotify ioerrors"
+> > +	;;
+> > +esac
+> 
+> Please abstract this out into a documented helper in common/
 
-I don't know that people *don't* try to run fstests with musl.  But as
-they seem surprisingly patient with continuously fixing up xfsprogs,
-perhaps it's ok to clean this up on the way into fstests.
+Ok.  I'm not sure how to check for feature support on ext4 anymore since
+the uevents patch didn't get merged, and then I clearly forgot to rip
+that out of this helper here.
 
-I'll add more attribution for the c file pointing back to where it came
-from.
+> > +#
+> > +# The dm-error map added by this test doesn't work on zoned devices because
+> > +# table sizes need to be aligned to the zone size, and even for zoned on
+> > +# conventional this test will get confused because of the internal RT device.
+> > +#
+> > +# That check requires a mounted file system, so do a dummy mount before setting
+> > +# up DM.
+> > +#
+> > +_scratch_mount
+> > +test $FSTYP = xfs && _require_xfs_scratch_non_zoned
+> > +_scratch_unmount
+> 
+> Hmm, this is a bit sad.  Can we align the map?  Or should we carve in
+> and add proper error injection to the block code, which has been
+> somewhere on my todo list forever because dm-error and friends are
+> so painful to setup.  Maybe I need to expedite that.
+
+I think it's theoretically possible to figure out that there's a zone
+size and then round outwards the error-target part of the dm table to
+align with a zone.  I have a lot more doubts about whether or not doing
+that in bash/awk is a good idea though.  It'd be a lot easier if either
+the block layer did error injection or if someone just fixes those
+limitations in dm itself.
 
 --D
