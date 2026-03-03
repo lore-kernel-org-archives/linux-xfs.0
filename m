@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53EB848C8DB;
-	Tue,  3 Mar 2026 16:49:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C1913C6A52
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 16:52:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772556542; cv=none; b=WgjJotzOVk31n+PjSQU0haCQscvuUBuIyRNugYQ86eta2GPeTNh+Ek9vhTUP2hpGG6D7modxoDcIwxL+n14G1FxbPoqmJ8k/yVER3Nq74EWLERzIy1HljTTZDR7g+oL70x35/REvCxR6DGPwmVX+PW68cHXLjoRBSaSNpywEOZQ=
+	t=1772556742; cv=none; b=oB42BRwyq+dM814DKLIfb3ZTKn9srAiuYMior8ab3DAevsrjyz39djDWKHj6nsfumr0ZL9pu6sxG204IKUlp4bN5xKmdH6D4MSCuMZg+AaSW949EsLRAId+eWrbjLgwb0my1rWu7z0V9pycPcL80S9TvcUZFJ8KVO26QVxP6ZO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772556542; c=relaxed/simple;
-	bh=AxGT7UfkHl60FW2EHZgPq+1ZuWUwh4rOVv4rGfzflqI=;
+	s=arc-20240116; t=1772556742; c=relaxed/simple;
+	bh=bDUG9uLgpVFsusRvyz3UeI4Y9nfMA62BArLgXuOkcvE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mwDBdPW8vd9UKbOFGQRgCrpP2RcwqR1xCXJsI30GxNKZu+GZc8qbX+HKSoizcVUETomM7IZaHcMJ4/i8KmEVu8VHzVBFOiJUBO1RksEiE7o9RSh99GR4tRyROPJJqdJgt5ECGHFauBlGFwQCE1uTvA3Z2htBQuPOmtKEd1Yad8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJZ9Sr0H; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IMc1dMJfHusEG0L8TYxAxBfmXv24yt/NEHc0DZyveUEj8kuCc+xW4jyZ+d32DymGajowYqbwCjEi5Y3zO2ty9lmCJql8cKbkD/yww+3DHMgX7yQ8b1l9HzdrJTdMcuoVNORPE0h0eKwHtf5ZSVv6/NzKyeaRkNTIIm9ogUneJxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QTxMsnJr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJZ9Sr0H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D29ADC19422;
-	Tue,  3 Mar 2026 16:49:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QTxMsnJr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B41B8C2BCB1;
+	Tue,  3 Mar 2026 16:52:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772556541;
-	bh=AxGT7UfkHl60FW2EHZgPq+1ZuWUwh4rOVv4rGfzflqI=;
+	s=k20201202; t=1772556741;
+	bh=bDUG9uLgpVFsusRvyz3UeI4Y9nfMA62BArLgXuOkcvE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RJZ9Sr0Hpnc593ZYUofSa4PnU2VYtynYI/y27n4sHiShcrVIVWXsL9fA5m+EFDWo+
-	 tEK5TEUGrZBkxj4mVVqGzJ0zrNGZ1PDtC2Kl4BxpJalo6A4bSMxB2YbCkZc2wWp6I2
-	 9/WP4pWNOWVeyfRsDNUAADIIUr1y8DxstVaC/NdmDus6dNISTA3LkwJgpjy0pA2sAL
-	 4Jv9Bhr1nJfTD2EkfCMu64peXz5nb35b398+ki93nTIB+6cOleq2TM8ZXXbR7XAylp
-	 mbvuoJzX7m+rEEL7SEyWgb9bskL7pabssmUqG1Fam9mJXJc1fGAnbJDKnO+6FSyaSC
-	 +pu2icF3Jq62Q==
-Date: Tue, 3 Mar 2026 08:49:01 -0800
+	b=QTxMsnJrmJlhPC7eQGBLGUgPfp+aVIjr2V9fjjxYxVocVMzi0p4IkDtdJhHw37SjT
+	 aY1UeOnu6kaoUaa5TmKy2d985CP1hmnvgiIt980KXUfcicL0/oCJeRZLsRzZ8DloVi
+	 pUiHriSshcEhlDlEZorugJr0Xpz7ZOFHP8MLfFI7D+tLKhuLxlgQHmzjm+KxAGErNC
+	 ikwuvtbxE9r7TxBmy7Dqa7DqYTx7IsuJx5zqAI06oeQgyHyKKFLQgrGWOfZa0dewkJ
+	 NmGTnpfK36DGDsqtyFuT8lt0cWnDT1ojwf/PMQpr7jXp8ImPoi6bNIZBaqC4PU6CIv
+	 Cs4ULzcBAq4qw==
+Date: Tue, 3 Mar 2026 08:52:21 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, hch@lst.de,
-	gabriel@krisman.be, amir73il@gmail.com, jack@suse.cz,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-Message-ID: <20260303164901.GJ57948@frogsfrogsfrogs>
-References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
- <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
- <aab2JbAZI8RFq_XE@infradead.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 13/26] xfs_healer: create a service to start the
+ per-mount healer service
+Message-ID: <20260303165221.GK57948@frogsfrogsfrogs>
+References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
+ <177249783527.482027.17759904859193601740.stgit@frogsfrogsfrogs>
+ <aacDDXudwf9ygIkQ@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,68 +44,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aab2JbAZI8RFq_XE@infradead.org>
+In-Reply-To: <aacDDXudwf9ygIkQ@infradead.org>
 
-On Tue, Mar 03, 2026 at 06:54:29AM -0800, Christoph Hellwig wrote:
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +/*
-> > + * Copyright 2021, Collabora Ltd.
-> > + */
-> 
-> Where is this coming from?
-> 
-> > +#ifndef __GLIBC__
-> > +#include <asm-generic/int-ll64.h>
+On Tue, Mar 03, 2026 at 07:49:33AM -0800, Christoph Hellwig wrote:
+> > +/* Start healer services for existing XFS mounts. */
+> > +static int
+> > +start_existing_mounts(
+> > +	int			mnt_ns_fd)
+> > +{
+> > +	struct mnt_id_req	req = {
+> > +		.size		= sizeof(struct mnt_id_req),
+> > +#ifdef HAVE_LISTMOUNT_NS_FD
+> > +		.mnt_ns_fd	= mnt_ns_fd,
+> > +#else
+> > +		.spare		= mnt_ns_fd,
 > > +#endif
+> > +		.mnt_id		= LSMT_ROOT,
+> > +	};
+> > +	uint64_t		mnt_ids[32];
+> > +	int			i;
 > 
-> And what is this for?  Looks pretty whacky.
 > 
-> > +case "$FSTYP" in
-> > +xfs)
-> > +	# added as a part of xfs health monitoring
-> > +	_require_xfs_io_command healthmon
-> > +	# no out of place writes
-> > +	_require_no_xfs_always_cow
-> > +	;;
-> > +ext4)
-> > +	# added at the same time as uevents
-> > +	modprobe fs-$FSTYP
-> > +	test -e /sys/fs/ext4/features/uevents || \
-> > +		_notrun "$FSTYP does not support fsnotify ioerrors"
-> > +	;;
-> > +*)
-> > +	_notrun "$FSTYP does not support fsnotify ioerrors"
-> > +	;;
-> > +esac
+> > +	while ((ret = syscall(SYS_listmount, &req, &mnt_ids, 32, 0)) > 0) {
 > 
-> Please abstract this out into a documented helper in common/
+> Should this use a wrapper so we can switch to the type safe libc
+> version once it becomes available?
 
-Ok.  I'm not sure how to check for feature support on ext4 anymore since
-the uevents patch didn't get merged, and then I clearly forgot to rip
-that out of this helper here.
+What kind of wrapper?
 
-> > +#
-> > +# The dm-error map added by this test doesn't work on zoned devices because
-> > +# table sizes need to be aligned to the zone size, and even for zoned on
-> > +# conventional this test will get confused because of the internal RT device.
-> > +#
-> > +# That check requires a mounted file system, so do a dummy mount before setting
-> > +# up DM.
-> > +#
-> > +_scratch_mount
-> > +test $FSTYP = xfs && _require_xfs_scratch_non_zoned
-> > +_scratch_unmount
-> 
-> Hmm, this is a bit sad.  Can we align the map?  Or should we carve in
-> and add proper error injection to the block code, which has been
-> somewhere on my todo list forever because dm-error and friends are
-> so painful to setup.  Maybe I need to expedite that.
+static inline void
+set_mnt_id_req_ns_fd(struct mnt_id_req *r, int mnt_ns_fd)
+{
+#ifdef HAVE_LISTMOUNT_NS_FD
+	r->mnt_ns_fd = mnt_ns_fd;
+#else
+	r->spare = mnt_ns_fd;
+#endif
+}
 
-I think it's theoretically possible to figure out that there's a zone
-size and then round outwards the error-target part of the dm table to
-align with a zone.  I have a lot more doubts about whether or not doing
-that in bash/awk is a good idea though.  It'd be a lot easier if either
-the block layer did error injection or if someone just fixes those
-limitations in dm itself.
+or did you have something else in mind?  The manual page for listmount
+says that glibc provides no wrapper[1].
 
 --D
+
+[1] https://www.man7.org/linux//man-pages/man2/listmount.2.html
