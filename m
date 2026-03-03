@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754DA1096F
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:12:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C18215B0EC
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:12:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772496739; cv=none; b=WJHAXapksSZ3LuzNlQNRb+9p/bufRr0dsxZk8+g55OyrwmRUz/GrcgfYAE/xuUEU4B5hDeUfEje0NcjlwmUz93aqLVXJqxTggSIGVhlxoL2DCRuv6cRNcaBFQza1MQZs5k9bxVmOaXg2C2cbs0vnAUVFjbhFZHgS9i7d7xuxXEg=
+	t=1772496745; cv=none; b=CvngW6OqKOxxAmJI0s6nuMrpGMGadU6KA2A3AF5mw+/5AwUD8INAcg+4+hAZP/XxlN3vys2EWCo5KOD5OYCQ9rprvvteZfvPxG/iBh8+EhlNusiFEHjDucm1AKU/l4EHNMq3R19204Wg3CQwCOE5DkkXTRu/a+w1PqZ9tUf8LK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772496739; c=relaxed/simple;
-	bh=lT+H5S63UMWL6K0m2JpC31kLxMdU8XJ0/Fj33fSOlUQ=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=XtCn8GxUvgUB/uGG1qJR/wOS1hTvCrhbNdXgmTVTzrI7jsNZhhDTv3ooHdlgzdfRNaZ83e+0Oi2rNTSTqVqjk5W+ifYl/zlPCFRSS15VU7q4J66mimeO5LH405TbDSknPkhWvCDko5MBjCo0yh2XlDNxIIirlxBbP6uguOgw0Xg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SPFtytvY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772496745; c=relaxed/simple;
+	bh=vrG0VICtLqvpcF49NoAHpb5eJ2wfboHhQEEv95EtvMw=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aYQMxd8DG260b7xFCgGe0fBP5rr3HYBhom4zgpZ1DSsw802ZBw6amn7svelCY7sS2iGQ0v1o0dslwWLi03lHDkaMOJ5CRftvzRh0g2OkRBXq5kqQFmJwFKPtHS4DBtfGOwV+PXXf/3ueKt3hUx4xLvpmMm+OnjU1ymvCnsU/LEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZI3nRJe/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SPFtytvY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F316C19423;
-	Tue,  3 Mar 2026 00:12:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZI3nRJe/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8069C2BC86;
+	Tue,  3 Mar 2026 00:12:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772496739;
-	bh=lT+H5S63UMWL6K0m2JpC31kLxMdU8XJ0/Fj33fSOlUQ=;
-	h=Date:Subject:From:To:Cc:From;
-	b=SPFtytvYdQmC5a1G+FAFm7utR/nbYvut0ntD+ysyd27c+SUOT4OcNZaX4ReT8bJUp
-	 ydxWTA1Rm1NG9PDuxNbxe/cfU83WFGV/XnBUBQSEmsqCgx5Cj5G/le+UGc+6wlxfSa
-	 7kOZUzVRkF9LC1NpXYrd++IVaBsTq+2xvwY7nzZwEJoj15fg30yvVdl+FJDSEN2d9f
-	 +xs2AO7XuFoI9yidlcZO9NiSnnhqbHfemL4y4KNLubErF80CIDP0qoRFsD5t3brS9E
-	 uqyrnfvCFySKwV/atkfOl/9R2xJ7ZnAIiwnMFhS+dGX5KJa6NQCQxuw4ESaywXXjaB
-	 eS121wFBr+S2Q==
-Date: Mon, 02 Mar 2026 16:12:18 -0800
-Subject: [PATCHSET] xfsprogs: new libxfs code from kernel 7.0
+	s=k20201202; t=1772496744;
+	bh=vrG0VICtLqvpcF49NoAHpb5eJ2wfboHhQEEv95EtvMw=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=ZI3nRJe/AzhoU2xF8+h/ttIv3vnrpsdwGfzpbVaAN+cVmDD2bgEjEe06u0djUPEdg
+	 JgJmQwBwdIWDb2vtA83fLhXEvn9JU25ic1qzdj427JbtD+QJ1XUtrlJR+UQ8HYH/W1
+	 9+E2selTxdS12dvzW+M17L2AK9++f1py9gVI5DLdqiHoYLex9ugJOjVpfX+ibU+bFY
+	 JQkWW+8+PXSOaZwO6usRHf0C2//JhyKBZZ3e0k/f+BczuBObl7bO2woRyCaRXuFQvb
+	 ZdqomUicdfwaM28BqFqDUoW/hYfaPMMnCWUzJRZraA4Y9txEBSu1jl2rBjY3W+kv1h
+	 rjQh2t0dkLR8A==
+Date: Mon, 02 Mar 2026 16:12:24 -0800
+Subject: [PATCH 01/36] libfrog: hoist some utilities from libxfs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: kees@kernel.org, hans.holmberg@wdc.com, torvalds@linux-foundation.org,
- shinsj4653@gmail.com, cem@kernel.org, dlemoal@kernel.org, hch@lst.de,
- nirjhar.roy.lists@gmail.com, mark.tinguely@oracle.com,
- wilfred.mallawa@wdc.com, cmaiolino@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <177249637795.457970.6552712137048900310.stgit@frogsfrogsfrogs>
+In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
+References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,149 +43,578 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This series ports kernel libxfs code to userspace from 7.0-rc2 and is a prereq
-for the xfs_healer patches that come next.  The cc list on this userspace port
-has gotten kind of out of hand due to the treewide cleanups that went in just
-before -rc1.
+This started with a desire to move the duplicate cmn_err declarations in
+libxfs into libfrog/util.h ahead of the patch that renames libxfs_priv.h
+to xfs_platform.h.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+Then this patch expanded in scope when I realized that there were
+several other utility functions that weren't specific to xfs; those go
+in libfrog.
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-7.0-sync
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-Commits in this patchset:
- * libfrog: hoist some utilities from libxfs
- * libfrog: fix missing gettext call in current_fixed_time
- * xfs: start creating infrastructure for health monitoring
- * xfs: create event queuing, formatting, and discovery infrastructure
- * xfs: convey filesystem unmount events to the health monitor
- * xfs: convey metadata health events to the health monitor
- * xfs: convey filesystem shutdown events to the health monitor
- * xfs: convey externally discovered fsdax media errors to the health monitor
- * xfs: convey file I/O errors to the health monitor
- * xfs: check if an open file is on the health monitored fs
- * xfs: add media verification ioctl
- * xfs: move struct xfs_log_iovec to xfs_log_priv.h
- * xfs: directly include xfs_platform.h
- * xfs: remove xfs_attr_leaf_hasname
- * xfs: add missing forward declaration in xfs_zones.h
- * xfs: add a xfs_rtgroup_raw_size helper
- * xfs: split and refactor zone validation
- * xfs: delete attr leaf freemap entries when empty
- * xfs: fix freemap adjustments when adding xattrs to leaf blocks
- * xfs: refactor attr3 leaf table size computation
- * xfs: strengthen attr leaf block freemap checking
- * xfs: reduce xfs_attr_try_sf_addname parameters
- * xfs: speed up parent pointer operations when possible
- * xfs: add a method to replace shortform attrs
- * xfs: fix spacing style issues in xfs_alloc.c
- * xfs: don't validate error tags in the I/O path
- * xfs: add zone reset error injection
- * xfs: give the defer_relog stat a xs_ prefix
- * treewide: Replace kmalloc with kmalloc_obj for non-scalar types
- * Convert 'alloc_obj' family to use the new default GFP_KERNEL argument
- * xfs: Refactoring the nagcount and delta calculation
- * xfs: fix code alignment issues in xfs_ondisk.c
- * xfs: remove metafile inodes from the active inode stat
- * xfs: Add a comment in xfs_log_sb()
- * xfs: remove duplicate static size checks
- * xfs: add static size checks for ioctl UABI
----
- include/kmem.h                |   36 +++++++
- include/libxfs.h              |    7 -
- include/platform_defs.h       |    8 ++
- include/xfs_fs_compat.h       |    8 --
- include/xfs_trace.h           |    1 
- libfrog/util.h                |   21 ++++
- libxfs/libxfs_api_defs.h      |    2 
- libxfs/xfs_ag.h               |    3 +
- libxfs/xfs_attr.h             |    6 +
- libxfs/xfs_attr_leaf.h        |    1 
- libxfs/xfs_da_format.h        |    2 
- libxfs/xfs_errortag.h         |    8 +-
- libxfs/xfs_fs.h               |  189 +++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_health.h           |    5 +
- libxfs/xfs_log_format.h       |    7 -
- libxfs/xfs_ondisk.h           |   52 +++++++----
- libxfs/xfs_platform.h         |   25 +----
- libxfs/xfs_rtgroup.h          |   15 +++
- libxfs/xfs_zones.h            |    6 +
- libfrog/Makefile              |    4 +
- libfrog/util.c                |  166 +++++++++++++++++++++++++++++++++++
- libxfs/Makefile               |    4 -
- libxfs/buf_mem.c              |    2 
- libxfs/cache.c                |    2 
- libxfs/defer_item.c           |    2 
- libxfs/init.c                 |    2 
- libxfs/inode.c                |    2 
- libxfs/iunlink.c              |    2 
- libxfs/kmem.c                 |    2 
- libxfs/logitem.c              |    2 
- libxfs/rdwr.c                 |    2 
- libxfs/topology.c             |    2 
- libxfs/trans.c                |    2 
- libxfs/util.c                 |  162 ----------------------------------
- libxfs/xfblob.c               |    2 
- libxfs/xfile.c                |    2 
- libxfs/xfs_ag.c               |   32 ++++++-
- libxfs/xfs_ag_resv.c          |    2 
- libxfs/xfs_alloc.c            |   10 +-
- libxfs/xfs_alloc_btree.c      |    2 
- libxfs/xfs_attr.c             |  191 +++++++++++++++++++++++++++-------------
- libxfs/xfs_attr_leaf.c        |  197 ++++++++++++++++++++++++++++++++++-------
- libxfs/xfs_attr_remote.c      |    2 
- libxfs/xfs_bit.c              |    2 
- libxfs/xfs_bmap.c             |    2 
- libxfs/xfs_bmap_btree.c       |    2 
- libxfs/xfs_btree.c            |    2 
- libxfs/xfs_btree_mem.c        |    2 
- libxfs/xfs_btree_staging.c    |    2 
- libxfs/xfs_da_btree.c         |    2 
- libxfs/xfs_defer.c            |    6 +
- libxfs/xfs_dir2.c             |   21 ++--
- libxfs/xfs_dir2_block.c       |    2 
- libxfs/xfs_dir2_data.c        |    2 
- libxfs/xfs_dir2_leaf.c        |    2 
- libxfs/xfs_dir2_node.c        |    2 
- libxfs/xfs_dir2_sf.c          |    2 
- libxfs/xfs_dquot_buf.c        |    2 
- libxfs/xfs_exchmaps.c         |    2 
- libxfs/xfs_group.c            |    2 
- libxfs/xfs_ialloc.c           |    2 
- libxfs/xfs_ialloc_btree.c     |    2 
- libxfs/xfs_iext_tree.c        |    2 
- libxfs/xfs_inode_buf.c        |    6 +
- libxfs/xfs_inode_fork.c       |    2 
- libxfs/xfs_inode_util.c       |    2 
- libxfs/xfs_log_rlimit.c       |    2 
- libxfs/xfs_metadir.c          |    2 
- libxfs/xfs_metafile.c         |    7 +
- libxfs/xfs_parent.c           |   16 ++-
- libxfs/xfs_refcount.c         |    6 +
- libxfs/xfs_refcount_btree.c   |    2 
- libxfs/xfs_rmap.c             |    2 
- libxfs/xfs_rmap_btree.c       |    2 
- libxfs/xfs_rtbitmap.c         |    2 
- libxfs/xfs_rtgroup.c          |    4 -
- libxfs/xfs_rtrefcount_btree.c |    2 
- libxfs/xfs_rtrmap_btree.c     |    2 
- libxfs/xfs_sb.c               |    5 +
- libxfs/xfs_symlink_remote.c   |    2 
- libxfs/xfs_trans_inode.c      |    2 
- libxfs/xfs_trans_resv.c       |    2 
- libxfs/xfs_trans_space.c      |    2 
- libxfs/xfs_types.c            |    2 
- libxfs/xfs_zones.c            |  151 ++++++++-----------------------
- libxlog/xfs_log_recover.c     |    4 -
- repair/zoned.c                |    7 +
- 87 files changed, 973 insertions(+), 526 deletions(-)
- rename libxfs/{libxfs_priv.h => xfs_platform.h} (96%)
+ include/libxfs.h        |    7 --
+ include/platform_defs.h |    8 ++
+ include/xfs_fs_compat.h |    8 --
+ libfrog/util.h          |   21 ++++++
+ libxfs/libxfs_priv.h    |   17 -----
+ libfrog/Makefile        |    4 +
+ libfrog/util.c          |  166 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/Makefile         |    2 -
+ libxfs/util.c           |  160 ---------------------------------------------
+ 9 files changed, 201 insertions(+), 192 deletions(-)
+
+
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 1e0d1a48fbb698..68d1f351f70093 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -26,6 +26,7 @@
+ #include "libfrog/radix-tree.h"
+ #include "libfrog/bitmask.h"
+ #include "libfrog/div64.h"
++#include "libfrog/util.h"
+ #include "atomic.h"
+ #include "spinlock.h"
+ 
+@@ -187,12 +188,6 @@ int	libxfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ int	libxfs_file_write(struct xfs_inode *ip, void *buf, off_t pos,
+ 		size_t len);
+ 
+-/* XXX: this is messy and needs fixing */
+-#ifndef __LIBXFS_INTERNAL_XFS_H__
+-extern void cmn_err(int, char *, ...);
+-enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+-#endif
+-
+ #include "xfs_ialloc.h"
+ 
+ #include "xfs_attr_leaf.h"
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index 09129e0f22dcba..b2d80597a83aa4 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -74,6 +74,14 @@ typedef unsigned short umode_t;
+ 
+ extern int	platform_nproc(void);
+ 
++/* 64-bit seconds counter that works independently of the C library time_t. */
++typedef long long int time64_t;
++
++struct timespec64 {
++	time64_t	tv_sec;			/* seconds */
++	long		tv_nsec;		/* nanoseconds */
++};
++
+ #define NSEC_PER_SEC	(1000000000ULL)
+ #define NSEC_PER_USEC	(1000ULL)
+ 
+diff --git a/include/xfs_fs_compat.h b/include/xfs_fs_compat.h
+index 0077f00cb94904..ccf00424b1b85a 100644
+--- a/include/xfs_fs_compat.h
++++ b/include/xfs_fs_compat.h
+@@ -85,14 +85,6 @@ struct xfs_extent_data {
+ #define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
+ #define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_extent_data)
+ 
+-/* 64-bit seconds counter that works independently of the C library time_t. */
+-typedef long long int time64_t;
+-
+-struct timespec64 {
+-	time64_t	tv_sec;			/* seconds */
+-	long		tv_nsec;		/* nanoseconds */
+-};
+-
+ #define U32_MAX		((uint32_t)~0U)
+ #define S32_MAX		((int32_t)(U32_MAX >> 1))
+ #define S32_MIN		((int32_t)(-S32_MAX - 1))
+diff --git a/libfrog/util.h b/libfrog/util.h
+index d1c4dd40fc926c..48df6a691a8f6d 100644
+--- a/libfrog/util.h
++++ b/libfrog/util.h
+@@ -7,6 +7,8 @@
+ #define __LIBFROG_UTIL_H__
+ 
+ #include <sys/types.h>
++#include <stdint.h>
++#include <stdbool.h>
+ 
+ unsigned int	log2_roundup(unsigned int i);
+ unsigned int	log2_rounddown(unsigned long long i);
+@@ -18,4 +20,23 @@ unsigned int	log2_rounddown(unsigned long long i);
+ 
+ void *memchr_inv(const void *start, int c, size_t bytes);
+ 
++struct timespec64;
++
++bool current_fixed_time(struct timespec64 *tv);
++bool get_deterministic_seed(uint32_t *result);
++
++#ifdef HAVE_GETRANDOM_NONBLOCK
++uint32_t get_random_u32(void);
++#else
++#define get_random_u32()	(0)
++#endif
++
++extern void cmn_err(int, char *, ...);
++enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
++
++typedef unsigned char u8;
++unsigned int hweight8(unsigned int w);
++unsigned int hweight32(unsigned int w);
++unsigned int hweight64(uint64_t w);
++
+ #endif /* __LIBFROG_UTIL_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 5474865a673e9a..825915d7d91924 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -65,9 +65,6 @@
+ #include "libfrog/crc32c.h"
+ 
+ #include <sys/xattr.h>
+-#ifdef HAVE_GETRANDOM_NONBLOCK
+-#include <sys/random.h>
+-#endif
+ 
+ /* Zones used in libxfs allocations that aren't in shared header files */
+ extern struct kmem_cache *xfs_buf_item_cache;
+@@ -133,9 +130,6 @@ extern char    *progname;
+ #define XFS_IGET_CREATE			0x1
+ #define XFS_IGET_UNTRUSTED		0x2
+ 
+-extern void cmn_err(int, char *, ...);
+-enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+-
+ #define xfs_info(mp,fmt,args...)	cmn_err(CE_CONT, _(fmt), ## args)
+ #define xfs_info_ratelimited(mp,fmt,args...) cmn_err(CE_CONT, _(fmt), ## args)
+ #define xfs_notice(mp,fmt,args...)	cmn_err(CE_NOTE, _(fmt), ## args)
+@@ -214,12 +208,6 @@ static inline bool WARN_ON(bool expr) {
+ #define percpu_counter_read_positive(x)	((*x) > 0 ? (*x) : 0)
+ #define percpu_counter_sum_positive(x)	((*x) > 0 ? (*x) : 0)
+ 
+-#ifdef HAVE_GETRANDOM_NONBLOCK
+-uint32_t get_random_u32(void);
+-#else
+-#define get_random_u32()	(0)
+-#endif
+-
+ #define PAGE_SIZE		getpagesize()
+ extern unsigned int PAGE_SHIFT;
+ 
+@@ -567,11 +555,6 @@ void xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *lip, int type,
+ #define XFS_STATS_INC_OFF(mp, off)
+ #define XFS_STATS_ADD_OFF(mp, off, val)
+ 
+-typedef unsigned char u8;
+-unsigned int hweight8(unsigned int w);
+-unsigned int hweight32(unsigned int w);
+-unsigned int hweight64(__u64 w);
+-
+ #define xfs_buf_cache_init(bch)		(0)
+ #define xfs_buf_cache_destroy(bch)	((void)0)
+ 
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 9f405ffe347566..927bd8d0957fab 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -82,6 +82,10 @@ else
+ HAVE_GETTEXT = False
+ endif
+ 
++ifeq ($(HAVE_GETRANDOM_NONBLOCK),yes)
++LCFLAGS += -DHAVE_GETRANDOM_NONBLOCK
++endif
++
+ default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
+ 
+ crc32table.h: gen_crc32table.c crc32defs.h
+diff --git a/libfrog/util.c b/libfrog/util.c
+index 4e130c884c17a2..d49cf72426f6c8 100644
+--- a/libfrog/util.c
++++ b/libfrog/util.c
+@@ -6,6 +6,12 @@
+ #include "platform_defs.h"
+ #include "util.h"
+ 
++#ifdef HAVE_GETRANDOM_NONBLOCK
++#include <sys/random.h>
++#endif
++
++extern char *progname;
++
+ /*
+  * libfrog is a collection of miscellaneous userspace utilities.
+  * It's a library of Funny Random Oddball Gunk <cough>.
+@@ -48,3 +54,163 @@ log2_rounddown(unsigned long long i)
+ 	}
+ 	return rval;
+ }
++
++/*
++ * current_fixed_time() tries to detect if SOURCE_DATE_EPOCH is in our
++ * environment, and set input timespec's timestamp to that value.
++ *
++ * Returns true on success, fail otherwise.
++ */
++bool
++current_fixed_time(
++	struct timespec64	*tv)
++{
++	/*
++	 * To avoid many getenv() we'll use an initialization static flag, so
++	 * we only read once.
++	 */
++	static bool		enabled = false;
++	static bool		read_env = false;
++	static time64_t		epoch;
++	char			*endp;
++	char			*source_date_epoch;
++
++	if (!read_env) {
++		read_env = true;
++		source_date_epoch = getenv("SOURCE_DATE_EPOCH");
++		if (source_date_epoch && source_date_epoch[0] != '\0') {
++			errno = 0;
++			epoch = strtoll(source_date_epoch, &endp, 10);
++			if (errno != 0 || *endp != '\0') {
++				fprintf(stderr,
++			"%s: SOURCE_DATE_EPOCH '%s' invalid timestamp, ignoring.\n",
++				progname, source_date_epoch);
++
++				return false;
++			}
++
++			enabled = true;
++		}
++	}
++
++	/*
++	 * This will happen only if we successfully read a valid
++	 * SOURCE_DATE_EPOCH and properly initiated the epoch value.
++	 */
++	if (read_env && enabled) {
++		tv->tv_sec = epoch;
++		tv->tv_nsec = 0;
++		return true;
++	}
++
++	/*
++	 * We initialized but had no valid SOURCE_DATE_EPOCH so we fall back
++	 * to regular behaviour.
++	 */
++	return false;
++}
++
++void
++cmn_err(int level, char *fmt, ...)
++{
++	va_list	ap;
++
++	va_start(ap, fmt);
++	vfprintf(stderr, fmt, ap);
++	fputs("\n", stderr);
++	va_end(ap);
++}
++
++unsigned int
++hweight8(unsigned int w)
++{
++	unsigned int res = w - ((w >> 1) & 0x55);
++	res = (res & 0x33) + ((res >> 2) & 0x33);
++	return (res + (res >> 4)) & 0x0F;
++}
++
++unsigned int
++hweight32(unsigned int w)
++{
++	unsigned int res = w - ((w >> 1) & 0x55555555);
++	res = (res & 0x33333333) + ((res >> 2) & 0x33333333);
++	res = (res + (res >> 4)) & 0x0F0F0F0F;
++	res = res + (res >> 8);
++	return (res + (res >> 16)) & 0x000000FF;
++}
++
++unsigned int
++hweight64(uint64_t w)
++{
++	return hweight32((unsigned int)w) +
++	       hweight32((unsigned int)(w >> 32));
++}
++
++/*
++ * get_deterministic_seed() tries to detect if DETERMINISTIC_SEED=1 is in our
++ * environment, and set our result to 0x53454544 (SEED) instead of
++ * extracting from getrandom().
++ *
++ * Returns true on success, fail otherwise.
++ */
++bool
++get_deterministic_seed(
++	uint32_t	*result)
++{
++	/*
++	 * To avoid many getenv() we'll use an initialization static flag, so
++	 * we only read once.
++	 */
++	static bool	enabled = false;
++	static bool	read_env = false;
++	static uint32_t	deterministic_seed = 0x53454544; /* SEED */
++	char		*seed_env;
++
++	if (!read_env) {
++		read_env = true;
++		seed_env = getenv("DETERMINISTIC_SEED");
++		if (seed_env && strcmp(seed_env, "1") == 0)
++			enabled = true;
++	}
++
++	/*
++	 * This will happen only if we successfully read DETERMINISTIC_SEED=1.
++	 */
++	if (read_env && enabled) {
++		*result = deterministic_seed;
++
++		return true;
++	}
++
++	/*
++	 * We initialized but had no DETERMINISTIC_SEED=1 in env so we fall
++	 * back to regular behaviour.
++	 */
++	return false;
++}
++
++#ifdef HAVE_GETRANDOM_NONBLOCK
++uint32_t
++get_random_u32(void)
++{
++	uint32_t	ret;
++	ssize_t		sz;
++
++	/*
++	 * Check for DETERMINISTIC_SEED in environment, it means we're
++	 * creating a reproducible filesystem.
++	 * If it fails, fall back to returning getrandom() like we used to do.
++	 */
++	if (get_deterministic_seed(&ret))
++		return ret;
++	/*
++	 * Try to extract a u32 of randomness from /dev/urandom.  If that
++	 * fails, fall back to returning zero like we used to do.
++	 */
++	sz = getrandom(&ret, sizeof(ret), GRND_NONBLOCK);
++	if (sz != sizeof(ret))
++		return 0;
++
++	return ret;
++}
++#endif
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 61c43529b532b6..c5e2161c33096a 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -169,7 +169,7 @@ endif
+ 
+ FCFLAGS = -I.
+ 
+-LTLIBS = $(LIBPTHREAD) $(LIBRT)
++LTLIBS = $(LIBPTHREAD) $(LIBRT) $(LIBFROG)
+ 
+ # don't try linking xfs_repair with a debug libxfs.
+ DEBUG = -DNDEBUG
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 8dba3ef0c66139..23cdaba80fe4c3 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -137,61 +137,6 @@ xfs_log_calc_unit_res(
+ 	return unit_bytes;
+ }
+ 
+-/*
+- * current_fixed_time() tries to detect if SOURCE_DATE_EPOCH is in our
+- * environment, and set input timespec's timestamp to that value.
+- *
+- * Returns true on success, fail otherwise.
+- */
+-static bool
+-current_fixed_time(
+-	struct			timespec64 *tv)
+-{
+-	/*
+-	 * To avoid many getenv() we'll use an initialization static flag, so
+-	 * we only read once.
+-	 */
+-	static bool		enabled = false;
+-	static bool		read_env = false;
+-	static time64_t		epoch;
+-	char			*endp;
+-	char			*source_date_epoch;
+-
+-	if (!read_env) {
+-		read_env = true;
+-		source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+-		if (source_date_epoch && source_date_epoch[0] != '\0') {
+-			errno = 0;
+-			epoch = strtoll(source_date_epoch, &endp, 10);
+-			if (errno != 0 || *endp != '\0') {
+-				fprintf(stderr,
+-			"%s: SOURCE_DATE_EPOCH '%s' invalid timestamp, ignoring.\n",
+-				progname, source_date_epoch);
+-
+-				return false;
+-			}
+-
+-			enabled = true;
+-		}
+-	}
+-
+-	/*
+-	 * This will happen only if we successfully read a valid
+-	 * SOURCE_DATE_EPOCH and properly initiated the epoch value.
+-	 */
+-	if (read_env && enabled) {
+-		tv->tv_sec = epoch;
+-		tv->tv_nsec = 0;
+-		return true;
+-	}
+-
+-	/*
+-	 * We initialized but had no valid SOURCE_DATE_EPOCH so we fall back
+-	 * to regular behaviour.
+-	 */
+-	return false;
+-}
+-
+ struct timespec64
+ current_time(struct inode *inode)
+ {
+@@ -364,17 +309,6 @@ libxfs_alloc_file_space(
+ 	return error;
+ }
+ 
+-void
+-cmn_err(int level, char *fmt, ...)
+-{
+-	va_list	ap;
+-
+-	va_start(ap, fmt);
+-	vfprintf(stderr, fmt, ap);
+-	fputs("\n", stderr);
+-	va_end(ap);
+-}
+-
+ /*
+  * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
+  * values, and omit the stack trace unless the error level is tuned high.
+@@ -513,31 +447,6 @@ libxfs_zero_extent(
+ 	return libxfs_device_zero(xfs_find_bdev_for_inode(ip), sector, size);
+ }
+ 
+-unsigned int
+-hweight8(unsigned int w)
+-{
+-	unsigned int res = w - ((w >> 1) & 0x55);
+-	res = (res & 0x33) + ((res >> 2) & 0x33);
+-	return (res + (res >> 4)) & 0x0F;
+-}
+-
+-unsigned int
+-hweight32(unsigned int w)
+-{
+-	unsigned int res = w - ((w >> 1) & 0x55555555);
+-	res = (res & 0x33333333) + ((res >> 2) & 0x33333333);
+-	res = (res + (res >> 4)) & 0x0F0F0F0F;
+-	res = res + (res >> 8);
+-	return (res + (res >> 16)) & 0x000000FF;
+-}
+-
+-unsigned int
+-hweight64(__u64 w)
+-{
+-	return hweight32((unsigned int)w) +
+-	       hweight32((unsigned int)(w >> 32));
+-}
+-
+ /* xfs_health.c */
+ 
+ /* Mark a per-fs metadata healed. */
+@@ -579,75 +488,6 @@ void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork) { }
+ void xfs_da_mark_sick(struct xfs_da_args *args) { }
+ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
+ 
+-/*
+- * get_deterministic_seed() tries to detect if DETERMINISTIC_SEED=1 is in our
+- * environment, and set our result to 0x53454544 (SEED) instead of
+- * extracting from getrandom().
+- *
+- * Returns true on success, fail otherwise.
+- */
+-static bool
+-get_deterministic_seed(
+-	uint32_t	*result)
+-{
+-	/*
+-	 * To avoid many getenv() we'll use an initialization static flag, so
+-	 * we only read once.
+-	 */
+-	static bool	enabled = false;
+-	static bool	read_env = false;
+-	static uint32_t	deterministic_seed = 0x53454544; /* SEED */
+-	char		*seed_env;
+-
+-	if (!read_env) {
+-		read_env = true;
+-		seed_env = getenv("DETERMINISTIC_SEED");
+-		if (seed_env && strcmp(seed_env, "1") == 0)
+-			enabled = true;
+-	}
+-
+-	/*
+-	 * This will happen only if we successfully read DETERMINISTIC_SEED=1.
+-	 */
+-	if (read_env && enabled) {
+-		*result = deterministic_seed;
+-
+-		return true;
+-	}
+-
+-	/*
+-	 * We initialized but had no DETERMINISTIC_SEED=1 in env so we fall
+-	 * back to regular behaviour.
+-	 */
+-	return false;
+-}
+-
+-#ifdef HAVE_GETRANDOM_NONBLOCK
+-uint32_t
+-get_random_u32(void)
+-{
+-	uint32_t	ret;
+-	ssize_t		sz;
+-
+-	/*
+-	 * Check for DETERMINISTIC_SEED in environment, it means we're
+-	 * creating a reproducible filesystem.
+-	 * If it fails, fall back to returning getrandom() like we used to do.
+-	 */
+-	if (get_deterministic_seed(&ret))
+-		return ret;
+-	/*
+-	 * Try to extract a u32 of randomness from /dev/urandom.  If that
+-	 * fails, fall back to returning zero like we used to do.
+-	 */
+-	sz = getrandom(&ret, sizeof(ret), GRND_NONBLOCK);
+-	if (sz != sizeof(ret))
+-		return 0;
+-
+-	return ret;
+-}
+-#endif
+-
+ /*
+  * Write a buffer to a file on the data device.  There must not be sparse holes
+  * or unwritten extents.
 
