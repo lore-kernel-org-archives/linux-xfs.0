@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A3112CDA5;
-	Tue,  3 Mar 2026 00:40:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C93219C546;
+	Tue,  3 Mar 2026 00:41:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772498452; cv=none; b=XWQCcspbBY/tbnyFaeOLkkBfNacMKxWQsCq7EXGO2PYOsnaZ2akQzEsUffP6snfptP/xy4rzoo27ucXgZ9Ziqqnzmgcwbca87yO+FElCP8LbpESy1tjo3DOsmbMuHXrFwT2Klb/dqlaaoniZX+tyEsUFK2gTh4N5wCyiuGBvrgY=
+	t=1772498468; cv=none; b=NL54FYXqTzmNZ6CrTqb2YU4XnEomIVf6c2B7RZf/WS8bgUk/5sAe5sx13pA6F5UrxguI45NhH3Cj4+Krw0yUiKJ98z4AuY3z1yaa/gnv33nSoo0+FHIxQm4rogp6FbK/yHCnQpLsNUNFIc62GFAVP/gb/nVON1Oz4g5kS7Uz/q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772498452; c=relaxed/simple;
-	bh=NiAgvTZ9q/jszEbZykKZat8+RICbVID0Iz5hAtYVuEM=;
+	s=arc-20240116; t=1772498468; c=relaxed/simple;
+	bh=p1pYSqx0+XQQKTHczhAEnrV8MbMSxF3iKDe6Z8riQzI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZK5x3tTHMMMlcxwXZq4iC2awJS50fE3PaOrfYgb+H1jSDEB+1H7TA2Lo7hthR4W5UF5/z9X5rvFG0v7BkVO2izX+pm+9kNprIfxU/GrvHraiq8IpkRPpvq+ZWjY0pLnRdQDLQZvmNPPH8nXEZ9eLcnPnxYHeXNw4cjxHDeiGQZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cxXt3PxY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UmYs5wT0RMOtHkH7C6S9S03FHmFWHhIGNu677CBnfvTY90ec29n6GUJw1TOk/EkWri02T3Q8nMuX7Y2Z2AtSuWBkD/rt0eGL6zX9AixXUx1WhCojvJVZsz0HdFqmRERJsEJ7XyfZbiy4ii782vlhV+PfN2GJeLaOdsYX6fcxHhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HIMKSizi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cxXt3PxY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82F96C19423;
-	Tue,  3 Mar 2026 00:40:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HIMKSizi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28828C2BC86;
+	Tue,  3 Mar 2026 00:41:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772498452;
-	bh=NiAgvTZ9q/jszEbZykKZat8+RICbVID0Iz5hAtYVuEM=;
+	s=k20201202; t=1772498468;
+	bh=p1pYSqx0+XQQKTHczhAEnrV8MbMSxF3iKDe6Z8riQzI=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=cxXt3PxYBQTNDM6lv5Oo8yMDMSvg/gekLP9VXtxkYXY8DVMa6uKUu8PUrEgUTF9JN
-	 dB8Vsuf7k/K7tLiVKsSna1J6HlRU5GI9kdzRxJpAvnaPn+s+i27bIw6HivQsOs+Iki
-	 bR7wwWR7tHPlDu8LyLb/n4uyF9n/7F/RdeSfHa8Ai1/w9cwWxwgWngipaeguPsgRxU
-	 dDZJ+L2OdTBwF6PCPGOK3QeuZ0lC57eTxhv5XquA5+qfS3wwr6SF1Ipw2td7WTntRP
-	 vl4PvgRuwYo3JIWMbpFf2h1SO/QeX6lvOj+oZvx64dCt3relh4LtFLeJ42r/Y9c5FE
-	 KM4eI5SVOHU5Q==
-Date: Mon, 02 Mar 2026 16:40:52 -0800
-Subject: [PATCH 1/1] generic: test fsnotify filesystem error reporting
+	b=HIMKSiziS3rQxQK65/z1DF3uT53YCwb+s7UBAyuOlCIAPRnBIpep1qgMNrBIKLh/1
+	 w9Urw50H/1uZjFbM+X52N1ZryX+MZ1+ox5hoFssKr0FF/bDAcOElwO2Xnpqss/twIw
+	 VuJFNaq2irEBpv5EB543KGhYFz3EkI/aW0fRYeqIqeA3pPcBuUXSVO8HA7JzOypzL3
+	 rY/xflBfdkzuEPMJxdLrvgkef99WL2E7lsSc1LTA3DTHlwwtlqNslarvYEEGPz+OAh
+	 ola5MNRBG1m5Jlz8bo7vc1JPBABCSywqR51mmwmxRkdC+eEvZmYZeuYFGK5Pmbm7Gf
+	 OlykEqUcZK2Cg==
+Date: Mon, 02 Mar 2026 16:41:07 -0800
+Subject: [PATCH 01/13] xfs: test health monitoring code
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, gabriel@krisman.be,
- amir73il@gmail.com, jack@suse.cz, fstests@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <177249785472.483405.1160086113668716052.stgit@frogsfrogsfrogs>
-In-Reply-To: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
-References: <177249785452.483405.17984642662799629787.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <177249785787.483507.3326797286262755687.stgit@frogsfrogsfrogs>
+In-Reply-To: <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
+References: <177249785709.483507.8373602184765043420.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,452 +45,98 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Test the fsnotify filesystem error reporting.
+Add some functionality tests for the new health monitoring code.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- src/Makefile           |    2 
- src/fs-monitor.c       |  155 +++++++++++++++++++++++++++++++++
- tests/generic/1838     |  228 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1838.out |   20 ++++
- 4 files changed, 404 insertions(+), 1 deletion(-)
- create mode 100644 src/fs-monitor.c
- create mode 100755 tests/generic/1838
- create mode 100644 tests/generic/1838.out
+ doc/group-names.txt |    1 +
+ tests/xfs/1885      |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1885.out  |    5 +++++
+ 3 files changed, 59 insertions(+)
+ create mode 100755 tests/xfs/1885
+ create mode 100644 tests/xfs/1885.out
 
 
-diff --git a/src/Makefile b/src/Makefile
-index 577d816ae859b6..1c761da0ccff20 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -36,7 +36,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
- 	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
- 	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment \
--	rw_hint
-+	rw_hint fs-monitor
- 
- EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
- 	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-diff --git a/src/fs-monitor.c b/src/fs-monitor.c
-new file mode 100644
-index 00000000000000..fef596a3966933
---- /dev/null
-+++ b/src/fs-monitor.c
-@@ -0,0 +1,155 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright 2021, Collabora Ltd.
-+ */
-+
-+#include <errno.h>
-+#include <err.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <fcntl.h>
-+#include <sys/fanotify.h>
-+#include <sys/types.h>
-+#include <unistd.h>
-+#ifndef __GLIBC__
-+#include <asm-generic/int-ll64.h>
-+#endif
-+
-+#ifndef FAN_FS_ERROR
-+#define FAN_FS_ERROR		0x00008000
-+#define FAN_EVENT_INFO_TYPE_ERROR	5
-+
-+struct fanotify_event_info_error {
-+	struct fanotify_event_info_header hdr;
-+	__s32 error;
-+	__u32 error_count;
-+};
-+#endif
-+
-+#ifndef FILEID_INO32_GEN
-+#define FILEID_INO32_GEN	1
-+#endif
-+
-+#ifndef FILEID_INVALID
-+#define	FILEID_INVALID		0xff
-+#endif
-+
-+static void print_fh(struct file_handle *fh)
-+{
-+	int i;
-+	uint32_t *h = (uint32_t *) fh->f_handle;
-+
-+	printf("\tfh: ");
-+	for (i = 0; i < fh->handle_bytes; i++)
-+		printf("%hhx", fh->f_handle[i]);
-+	printf("\n");
-+
-+	printf("\tdecoded fh: ");
-+	if (fh->handle_type == FILEID_INO32_GEN)
-+		printf("inode=%u gen=%u\n", h[0], h[1]);
-+	else if (fh->handle_type == FILEID_INVALID && !fh->handle_bytes)
-+		printf("Type %d (Superblock error)\n", fh->handle_type);
-+	else
-+		printf("Type %d (Unknown)\n", fh->handle_type);
-+
-+}
-+
-+static void handle_notifications(char *buffer, int len)
-+{
-+	struct fanotify_event_metadata *event =
-+		(struct fanotify_event_metadata *) buffer;
-+	struct fanotify_event_info_header *info;
-+	struct fanotify_event_info_error *err;
-+	struct fanotify_event_info_fid *fid;
-+	int off;
-+
-+	for (; FAN_EVENT_OK(event, len); event = FAN_EVENT_NEXT(event, len)) {
-+
-+		if (event->mask != FAN_FS_ERROR) {
-+			printf("unexpected FAN MARK: %llx\n",
-+							(unsigned long long)event->mask);
-+			goto next_event;
-+		}
-+
-+		if (event->fd != FAN_NOFD) {
-+			printf("Unexpected fd (!= FAN_NOFD)\n");
-+			goto next_event;
-+		}
-+
-+		printf("FAN_FS_ERROR (len=%d)\n", event->event_len);
-+
-+		for (off = sizeof(*event) ; off < event->event_len;
-+		     off += info->len) {
-+			info = (struct fanotify_event_info_header *)
-+				((char *) event + off);
-+
-+			switch (info->info_type) {
-+			case FAN_EVENT_INFO_TYPE_ERROR:
-+				err = (struct fanotify_event_info_error *) info;
-+
-+				printf("\tGeneric Error Record: len=%d\n",
-+				       err->hdr.len);
-+				printf("\terror: %d\n", err->error);
-+				printf("\terror_count: %d\n", err->error_count);
-+				break;
-+
-+			case FAN_EVENT_INFO_TYPE_FID:
-+				fid = (struct fanotify_event_info_fid *) info;
-+
-+				printf("\tfsid: %x%x\n",
-+#if defined(__GLIBC__)
-+				       fid->fsid.val[0], fid->fsid.val[1]);
-+#else
-+				       fid->fsid.__val[0], fid->fsid.__val[1]);
-+#endif
-+				print_fh((struct file_handle *) &fid->handle);
-+				break;
-+
-+			default:
-+				printf("\tUnknown info type=%d len=%d:\n",
-+				       info->info_type, info->len);
-+			}
-+		}
-+next_event:
-+		printf("---\n\n");
-+		fflush(stdout);
-+	}
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int fd;
-+
-+	char buffer[BUFSIZ];
-+
-+	if (argc < 2) {
-+		printf("Missing path argument\n");
-+		return 1;
-+	}
-+
-+	fd = fanotify_init(FAN_CLASS_NOTIF|FAN_REPORT_FID, O_RDONLY);
-+	if (fd < 0) {
-+		perror("fanotify_init");
-+		errx(1, "fanotify_init");
-+	}
-+
-+	if (fanotify_mark(fd, FAN_MARK_ADD|FAN_MARK_FILESYSTEM,
-+			  FAN_FS_ERROR, AT_FDCWD, argv[1])) {
-+		perror("fanotify_mark");
-+		errx(1, "fanotify_mark");
-+	}
-+
-+	printf("fanotify active\n");
-+	fflush(stdout);
-+
-+	while (1) {
-+		int n = read(fd, buffer, BUFSIZ);
-+
-+		if (n < 0)
-+			errx(1, "read");
-+
-+		handle_notifications(buffer, n);
-+	}
-+
-+	return 0;
-+}
-diff --git a/tests/generic/1838 b/tests/generic/1838
+diff --git a/doc/group-names.txt b/doc/group-names.txt
+index 10b49e50517797..158f84d36d3154 100644
+--- a/doc/group-names.txt
++++ b/doc/group-names.txt
+@@ -117,6 +117,7 @@ samefs			overlayfs when all layers are on the same fs
+ scrub			filesystem metadata scrubbers
+ seed			btrfs seeded filesystems
+ seek			llseek functionality
++selfhealing		self healing filesystem code
+ selftest		tests with fixed results, used to validate testing setup
+ send			btrfs send/receive
+ shrinkfs		decreasing the size of a filesystem
+diff --git a/tests/xfs/1885 b/tests/xfs/1885
 new file mode 100755
-index 00000000000000..087851ddcbdb44
+index 00000000000000..1d75ef19c7c9d9
 --- /dev/null
-+++ b/tests/generic/1838
-@@ -0,0 +1,228 @@
++++ b/tests/xfs/1885
+@@ -0,0 +1,53 @@
 +#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
++# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 1838
++# FS QA Test 1885
 +#
-+# Check that fsnotify can report file IO errors.
-+
++# Make sure that healthmon handles module refcount correctly.
++#
 +. ./common/preamble
-+_begin_fstest auto quick eio selfhealing
++_begin_fstest auto selfhealing
 +
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	test -n "$fsmonitor_pid" && kill -TERM $fsmonitor_pid
-+	rm -f $tmp.*
-+	_dmerror_cleanup
-+}
-+
-+# Import common functions.
-+. ./common/fuzzy
 +. ./common/filter
-+. ./common/dmerror
-+. ./common/systemd
++. ./common/module
 +
-+case "$FSTYP" in
-+xfs)
-+	# added as a part of xfs health monitoring
-+	_require_xfs_io_command healthmon
-+	# no out of place writes
-+	_require_no_xfs_always_cow
-+	;;
-+ext4)
-+	# added at the same time as uevents
-+	modprobe fs-$FSTYP
-+	test -e /sys/fs/ext4/features/uevents || \
-+		_notrun "$FSTYP does not support fsnotify ioerrors"
-+	;;
-+*)
-+	_notrun "$FSTYP does not support fsnotify ioerrors"
-+	;;
-+esac
++refcount_file="/sys/module/xfs/refcnt"
++test -e "$refcount_file" || _notrun "cannot find xfs module refcount"
 +
-+_require_scratch
-+_require_dm_target error
-+_require_test_program fs-monitor
-+_require_xfs_io_command "fiemap"
-+_require_odirect
++_require_test
++_require_xfs_io_command healthmon
 +
-+# fsnotify only gives us a file handle, the error number, and the number of
-+# times it was seen in between event deliveries.   The handle is mostly useless
-+# since we have no generic way to map that to a file path.  Therefore we can
-+# only coalesce all the I/O errors into one report.
-+filter_fsnotify_errors() {
-+	_filter_scratch | \
-+		grep -E '(FAN_FS_ERROR|Generic Error Record|error: 5)' | \
-+		sed -e "s/len=[0-9]*/len=XXX/g" | \
-+		sort | \
-+		uniq
-+}
++# Capture mod refcount without the test fs mounted
++_test_unmount
++init_refcount="$(cat "$refcount_file")"
 +
-+_scratch_mkfs >> $seqres.full
++# Capture mod refcount with the test fs mounted
++_test_mount
++nomon_mount_refcount="$(cat "$refcount_file")"
 +
-+#
-+# The dm-error map added by this test doesn't work on zoned devices because
-+# table sizes need to be aligned to the zone size, and even for zoned on
-+# conventional this test will get confused because of the internal RT device.
-+#
-+# That check requires a mounted file system, so do a dummy mount before setting
-+# up DM.
-+#
-+_scratch_mount
-+test $FSTYP = xfs && _require_xfs_scratch_non_zoned
-+_scratch_unmount
++# Capture mod refcount with test fs mounted and the healthmon fd open.
++# Pause the xfs_io process so that it doesn't actually respond to events.
++$XFS_IO_PROG -c 'healthmon -c -v' $TEST_DIR >> $seqres.full &
++sleep 0.5
++kill -STOP %1
++mon_mount_refcount="$(cat "$refcount_file")"
 +
-+_dmerror_init
-+_dmerror_mount >> $seqres.full 2>&1
++# Capture mod refcount with only the healthmon fd open.
++_test_unmount
++mon_nomount_refcount="$(cat "$refcount_file")"
 +
-+test $FSTYP = xfs && _xfs_force_bdev data $SCRATCH_MNT
++# Capture mod refcount after continuing healthmon (which should exit due to the
++# unmount) and killing it.
++kill -CONT %1
++kill %1
++wait
++nomon_nomount_refcount="$(cat "$refcount_file")"
 +
-+# Write a file with 4 file blocks worth of data, figure out the LBA to target
-+victim=$SCRATCH_MNT/a
-+file_blksz=$(_get_file_block_size $SCRATCH_MNT)
-+$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c "fsync" $victim >> $seqres.full
++_within_tolerance "mount refcount" "$nomon_mount_refcount" "$((init_refcount + 1))" 0 -v
++_within_tolerance "mount + healthmon refcount" "$mon_mount_refcount" "$((init_refcount + 2))" 0 -v
++_within_tolerance "healthmon refcount" "$mon_nomount_refcount" "$((init_refcount + 1))" 0 -v
++_within_tolerance "end refcount" "$nomon_nomount_refcount" "$init_refcount" 0 -v
 +
-+awk_len_prog='{print $4}'
-+bmap_str="$($XFS_IO_PROG -c "fiemap -v" $victim | grep "^[[:space:]]*0:")"
-+echo "$bmap_str" >> $seqres.full
-+
-+phys="$(echo "$bmap_str" | $AWK_PROG '{print $3}')"
-+len="$(echo "$bmap_str" | $AWK_PROG "$awk_len_prog")"
-+
-+fs_blksz=$(_get_block_size $SCRATCH_MNT)
-+echo "file_blksz:$file_blksz:fs_blksz:$fs_blksz" >> $seqres.full
-+kernel_sectors_per_fs_block=$((fs_blksz / 512))
-+
-+# Did we get at least 4 fs blocks worth of extent?
-+min_len_sectors=$(( 4 * kernel_sectors_per_fs_block ))
-+test "$len" -lt $min_len_sectors && \
-+	_fail "could not format a long enough extent on an empty fs??"
-+
-+phys_start=$(echo "$phys" | sed -e 's/\.\..*//g')
-+
-+echo "$phys:$len:$fs_blksz:$phys_start" >> $seqres.full
-+echo "victim file:" >> $seqres.full
-+od -tx1 -Ad -c $victim >> $seqres.full
-+
-+# Set the dmerror table so that all IO will pass through.
-+_dmerror_reset_table
-+
-+cat >> $seqres.full << ENDL
-+dmerror before:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+# All sector numbers that we feed to the kernel must be in units of 512b, but
-+# they also must be aligned to the device's logical block size.
-+logical_block_size=`$here/src/min_dio_alignment $SCRATCH_MNT $SCRATCH_DEV`
-+kernel_sectors_per_device_lba=$((logical_block_size / 512))
-+
-+# Mark as bad one of the device LBAs in the middle of the extent.  Target the
-+# second LBA of the third block of the four-block file extent that we allocated
-+# earlier, but without overflowing into the fourth file block.
-+bad_sector=$(( phys_start + (2 * kernel_sectors_per_fs_block) ))
-+bad_len=$kernel_sectors_per_device_lba
-+if (( kernel_sectors_per_device_lba < kernel_sectors_per_fs_block )); then
-+	bad_sector=$((bad_sector + kernel_sectors_per_device_lba))
-+fi
-+if (( (bad_sector % kernel_sectors_per_device_lba) != 0)); then
-+	echo "bad_sector $bad_sector not congruent with device logical block size $logical_block_size"
-+fi
-+
-+# Remount to flush the page cache, start fsnotify, and make the LBA bad
-+_dmerror_unmount
-+_dmerror_mount
-+
-+$here/src/fs-monitor $SCRATCH_MNT > $tmp.fsmonitor &
-+fsmonitor_pid=$!
-+sleep 1
-+
-+_dmerror_mark_range_bad $bad_sector $bad_len
-+
-+cat >> $seqres.full << ENDL
-+dmerror after marking bad:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+_dmerror_load_error_table
-+
-+# See if buffered reads pick it up
-+echo "Try buffered read"
-+$XFS_IO_PROG -c "pread 0 $((4 * file_blksz))" $victim >> $seqres.full
-+
-+# See if directio reads pick it up
-+echo "Try directio read"
-+$XFS_IO_PROG -d -c "pread 0 $((4 * file_blksz))" $victim >> $seqres.full
-+
-+# See if directio writes pick it up
-+echo "Try directio write"
-+$XFS_IO_PROG -d -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c fsync $victim >> $seqres.full
-+
-+# See if buffered writes pick it up
-+echo "Try buffered write"
-+$XFS_IO_PROG -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c fsync $victim >> $seqres.full
-+
-+# Now mark the bad range good so that unmount won't fail due to IO errors.
-+echo "Fix device"
-+_dmerror_mark_range_good $bad_sector $bad_len
-+_dmerror_load_error_table
-+
-+cat >> $seqres.full << ENDL
-+dmerror after marking good:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+# Unmount filesystem to start fresh
-+echo "Kill fsnotify"
-+_dmerror_unmount
-+sleep 1
-+kill -TERM $fsmonitor_pid
-+unset fsmonitor_pid
-+echo fsnotify log >> $seqres.full
-+cat $tmp.fsmonitor >> $seqres.full
-+cat $tmp.fsmonitor | filter_fsnotify_errors
-+
-+# Start fsnotify again so that can verify that the errors don't persist after
-+# we flip back to the good dm table.
-+echo "Remount and restart fsnotify"
-+_dmerror_mount
-+$here/src/fs-monitor $SCRATCH_MNT > $tmp.fsmonitor &
-+fsmonitor_pid=$!
-+sleep 1
-+
-+# See if buffered reads pick it up
-+echo "Try buffered read again"
-+$XFS_IO_PROG -c "pread 0 $((4 * file_blksz))" $victim >> $seqres.full
-+
-+# See if directio reads pick it up
-+echo "Try directio read again"
-+$XFS_IO_PROG -d -c "pread 0 $((4 * file_blksz))" $victim >> $seqres.full
-+
-+# See if directio writes pick it up
-+echo "Try directio write again"
-+$XFS_IO_PROG -d -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c fsync $victim >> $seqres.full
-+
-+# See if buffered writes pick it up
-+echo "Try buffered write again"
-+$XFS_IO_PROG -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c fsync $victim >> $seqres.full
-+
-+# Unmount fs and kill fsnotify, then wait for it to finish
-+echo "Kill fsnotify again"
-+_dmerror_unmount
-+sleep 1
-+kill -TERM $fsmonitor_pid
-+unset fsmonitor_pid
-+cat $tmp.fsmonitor >> $seqres.full
-+cat $tmp.fsmonitor | filter_fsnotify_errors
-+
-+# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/1838.out b/tests/generic/1838.out
+diff --git a/tests/xfs/1885.out b/tests/xfs/1885.out
 new file mode 100644
-index 00000000000000..adae590fe0b2ea
+index 00000000000000..f152cef0525609
 --- /dev/null
-+++ b/tests/generic/1838.out
-@@ -0,0 +1,20 @@
-+QA output created by 1838
-+Try buffered read
-+pread: Input/output error
-+Try directio read
-+pread: Input/output error
-+Try directio write
-+pwrite: Input/output error
-+Try buffered write
-+fsync: Input/output error
-+Fix device
-+Kill fsnotify
-+	Generic Error Record: len=XXX
-+	error: 5
-+FAN_FS_ERROR (len=XXX)
-+Remount and restart fsnotify
-+Try buffered read again
-+Try directio read again
-+Try directio write again
-+Try buffered write again
-+Kill fsnotify again
++++ b/tests/xfs/1885.out
+@@ -0,0 +1,5 @@
++QA output created by 1885
++mount refcount is in range
++mount + healthmon refcount is in range
++healthmon refcount is in range
++end refcount is in range
 
