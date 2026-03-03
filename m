@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5060C1DEFE8
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:18:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3B80390991
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 00:18:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772497122; cv=none; b=aF7gyCoMOMan1j196umsbUQfEQFUfDkpUgDibDQIPJ6O9IVTM0MOL/fP9Egyo0I85KLbU8ULRrR5efAOGPM0kNp5U4VwNO6xj/c5E3QOxP2owQowcUgXkF1KV1Ton4ngRXZp/6Tejfz2e7idP9ZtINLSRzXvqWGySfdu6c9gSPI=
+	t=1772497137; cv=none; b=vDfshb3w3nYElPIvF8zbM3K8YAl3l1eWolu/cpxAp+YpbruEJILoCFfr3xCFEXDU7aCr1+5lJ0o20Pj+vUJ5rKHqrCbPbG4oA9OPsTJKjGUTw+f5M6prpP+SnL4+RX2IGIyjZDoJO6425V2cXM5Vlmb4chdalxLG85s9GVu6SNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772497122; c=relaxed/simple;
-	bh=YENs4bmcsgJKw/hm0cfjktZQ50SonArZ/+CrwE3/pcA=;
+	s=arc-20240116; t=1772497137; c=relaxed/simple;
+	bh=b5C34FoUc0zxqJPttP8/Pe5OieiCtsWzRFDnaAvQ4v0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OI3q2w0UMHmPW3oW+b11FDVfuH3r+fSqGZRG08Y5wdmpdt8aKywnSerwInA0gX4Wcw4atoixs2fOnjEMM+N6z4Q6IKyt/rM12Kf0QSb6Lr5/0QSWpoPYH9R0xF9qy/bunKZooDP2PoZYq3BbDeNBdSDqksb0WqePenot1pcyrLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q0B9Inhv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=fYozMxLCrS+RaaRWE3RCgOE5YqsUi9PShfz6lSrp1TFQjAI4BaAbKV/HJBIopbqMgKAlOw+gpY0CGw23rMTXfTdd7KCRnX35nDUxJ6EXyB715E+bvufJbiUSPCauF3K8b+uBrxniz1d0WAlKB7ZC5hMdpCT+Wi6DliQGwpyewbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MYaVV4aO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q0B9Inhv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB857C19423;
-	Tue,  3 Mar 2026 00:18:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MYaVV4aO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E73BC19423;
+	Tue,  3 Mar 2026 00:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772497122;
-	bh=YENs4bmcsgJKw/hm0cfjktZQ50SonArZ/+CrwE3/pcA=;
+	s=k20201202; t=1772497137;
+	bh=b5C34FoUc0zxqJPttP8/Pe5OieiCtsWzRFDnaAvQ4v0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Q0B9Inhvdzj06j4RM8MpsTEkc3bW882JZtVuGrVrWz6/4b1sH4YhqKxCmEzoBKw4C
-	 Nk0GDOWSv35oCM9urOxZdpfvSC9tEDYKCv/X+iWAz9w4eUrX+bjZI19gsmoJsS3qex
-	 8w1RhuBndB08i1hNLswxI4LS/BDwLSFbUYODmCjfoA3DDBRqfG+aRmY8EEKREXKFAo
-	 7nw/iuhQaDTjcGLoTB647JEEPZkO1HtbtfnqPYzY5j7Wv14cQcgSaYDI9ppMpVG5AY
-	 wYjC3pjONWposvZMw+aAMfOCP2bMgySeJlLj6HCNrk+NJxsALY5cFAOpfogW3Kj+lX
-	 Vxt7M+BirS+zA==
-Date: Mon, 02 Mar 2026 16:18:41 -0800
-Subject: [PATCH 25/36] xfs: fix spacing style issues in xfs_alloc.c
+	b=MYaVV4aOMVXgX93BMM1eh3XlbCr16WccxHN2doQIcCwab06+Hl+oFL89xp2WCoffU
+	 lF22/VijLjXmUzhmriGHlNt3PVbEu/bTNL57jPH5CjmEU2zHRKhy2YHFMQA+vm+Fjh
+	 t7IkpJpleVzgUqB6YEMPyb46NrvZiATROfcXt/8RUY6EGzl0E2zJ+NxvGnuc1rkqGR
+	 BZPeCLDtvudJcYe5voQlgmlqBAvEH0hKKn6WgQLB2E5E2/T+q3qvCtI+Chs76IPq0c
+	 Yt+oVGiMJz/Y0RxZ+DSBdxUgDV1YKYQ78b10WgJ728hx6nJ8ar48o5HmSKMUcs9Ckq
+	 bQYHZ0QzHR2gg==
+Date: Mon, 02 Mar 2026 16:18:57 -0800
+Subject: [PATCH 26/36] xfs: don't validate error tags in the I/O path
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, shinsj4653@gmail.com, linux-xfs@vger.kernel.org
-Message-ID: <177249638238.457970.10333179272852692004.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, cmaiolino@redhat.com, hans.holmberg@wdc.com, hch@lst.de,
+ linux-xfs@vger.kernel.org
+Message-ID: <177249638256.457970.12041287422883068113.stgit@frogsfrogsfrogs>
 In-Reply-To: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,48 +44,36 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Shin Seong-jun <shinsj4653@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 0ead3b72469e52ca02946b2e5b35fff38bfa061f
+Source kernel commit: b8862a09d8256a9037293f1da3b4617b21de26f1
 
-Fix checkpatch.pl errors regarding missing spaces around assignment
-operators in xfs_alloc_compute_diff() and xfs_alloc_fixup_trees().
+We can trust XFS developers enough to not pass random stuff to
+XFS_ERROR_TEST/DELAY.  Open code the validity check in xfs_errortag_add,
+which is the only place that receives unvalidated error tag values from
+user space, and drop the now pointless xfs_errortag_enabled helper.
 
-Adhere to the Linux kernel coding style by ensuring spaces are placed
-around the assignment operator '='.
-
-Signed-off-by: Shin Seong-jun <shinsj4653@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_alloc.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ libxfs/xfs_errortag.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 9f92bd77fad76c..695ed830d139fe 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -372,8 +372,8 @@ xfs_alloc_compute_diff(
- 	xfs_agblock_t	freeend;	/* end of freespace extent */
- 	xfs_agblock_t	newbno1;	/* return block number */
- 	xfs_agblock_t	newbno2;	/* other new block number */
--	xfs_extlen_t	newlen1=0;	/* length with newbno1 */
--	xfs_extlen_t	newlen2=0;	/* length with newbno2 */
-+	xfs_extlen_t	newlen1 = 0;	/* length with newbno1 */
-+	xfs_extlen_t	newlen2 = 0;	/* length with newbno2 */
- 	xfs_agblock_t	wantend;	/* end of target extent */
- 	bool		userdata = datatype & XFS_ALLOC_USERDATA;
- 
-@@ -573,8 +573,8 @@ xfs_alloc_fixup_trees(
- 	int		i;		/* operation results */
- 	xfs_agblock_t	nfbno1;		/* first new free startblock */
- 	xfs_agblock_t	nfbno2;		/* second new free startblock */
--	xfs_extlen_t	nflen1=0;	/* first new free length */
--	xfs_extlen_t	nflen2=0;	/* second new free length */
-+	xfs_extlen_t	nflen1 = 0;	/* first new free length */
-+	xfs_extlen_t	nflen2 = 0;	/* second new free length */
- 	struct xfs_mount *mp;
- 	bool		fixup_longest = false;
- 
+diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+index 57e47077c75a2a..b7d98471684bf1 100644
+--- a/libxfs/xfs_errortag.h
++++ b/libxfs/xfs_errortag.h
+@@ -53,7 +53,7 @@
+  * Drop-writes support removed because write error handling cannot trash
+  * pre-existing delalloc extents in any useful way anymore. We retain the
+  * definition so that we can reject it as an invalid value in
+- * xfs_errortag_valid().
++ * xfs_errortag_add().
+  */
+ #define XFS_ERRTAG_DROP_WRITES				28
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
 
