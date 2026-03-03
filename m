@@ -1,41 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F78C32D0FC
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 15:40:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A024388E4F
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 15:44:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772552451; cv=none; b=Ebs+HYbu0MZ53ciy4YIM6pQMa3KL3vK+Wyrl/n+N8PDOnUgraEsENfakwjLvEBLXdmE6wka1aMx2YnfhngttaCv6KWjvezdbRgtOf/PhScWrgFCn6+rV247gc7+XudxHRaFfSIeX3t69geOWcVs7HRrMgsW+KG1BfQUA2wszaO8=
+	t=1772552649; cv=none; b=I6kNIispyc12Px7SJ+rQeygwSle4YneaHaWybbxG+2dvtunS/Q7n3TUZpflcolD5nlUWQxm9cWZ1dJgo2nhEmTFq/JOe7f5PkO5XMwvbd+1OQp1SpqWy4ZJtvq5yTPQe24xTPZHXTn5g9ajsAhNUoQornZag6kNKw/Y8YsVqCBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772552451; c=relaxed/simple;
-	bh=+07JA7FUJHgiD77Aj8DmivAMKmwPUO/eE0jRJGw1oaM=;
+	s=arc-20240116; t=1772552649; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R41CIEJ9FpaPhP3ZGKVmjhc6OnTolPA3sut2DPQCydXEUgr1WcWS+fmVY2rLegEBFW0QYu7pnDL8mEkGLbQtm1FpA2bszX1La89ojkcDGOnmW1sOuNQ/JaIPU/PoATQQMYpXMo/qyrm2BzibV/C3+rbyF4AzCyzxcTQ2fljMLko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kdbskO4C; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JM6E0LBbF+T7hH0EzmO4QOsutsacoaSWChNau3Wwe+PnG88UCJB8qgeTRG53mZNUQ4fwnqNQkoD1uDCfh75mjdegBtHGF5zwdkv2DOuGnNLoNmKhwjCYlEkvu+P4obveoGMDpW1uCjsQcSWOnKFhI+85QywsN5Lh1sgbnC0giFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wiMW3wVm; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdbskO4C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3C00C116C6;
-	Tue,  3 Mar 2026 15:40:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772552450;
-	bh=+07JA7FUJHgiD77Aj8DmivAMKmwPUO/eE0jRJGw1oaM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kdbskO4ClkX9vG6cTDPwou/Z7OyF5P6dwN60CdWXZ9oM3qKb+VGzrKLMljNiNaevp
-	 tqs+oxYZ2LG/atzGNPfTFKpxnrYveg0Wb0/Gu8utL8ZaiPYJGkrOVIHlawrec6pHCf
-	 nwJ4oPcccbe4DgY1zgfjncuB0xGQDwSmvikhxtnu6A2lyXNWiJnTxuYJ6wYCt679Rz
-	 gXdUE8jKtcg+3NUK/tWKvwY33Dzc4cEEr+1Fh/R+VsEdcmko0l5Dyttxj782ly9+Dj
-	 xie+FiSECIOTrrkpgfiKK4lE7nPrY3PctZu0rrly1l38EzMoMiQX65oaIHClaW1AR4
-	 On8kEp9AKYKDw==
-Date: Tue, 3 Mar 2026 07:40:50 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, cem@kernel.org, dlemoal@kernel.org, hch@lst.de,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/36] xfs: split and refactor zone validation
-Message-ID: <20260303154050.GH13868@frogsfrogsfrogs>
-References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
- <177249638091.457970.11956003361714341028.stgit@frogsfrogsfrogs>
- <aab0ENuLXPSADWVS@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wiMW3wVm"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=wiMW3wVmK2dW90w4jTuGNmb6HS
+	uJrv8trStcnR4UvQpi25b0zeXK/00OdyLJl3d3srkMyWMBZh7SOIIzHMlrq/1N5sL/fcIgLil5vXy
+	gE+NqvNMiLIgQST9bLTX+aokXbcyAUacawoo+OukBRRRfs1q4lrGE/8w7U1RFcSg0uSwwWNoVtDHl
+	jf5TPTDi9NusqN/E+VMevaVZZO1EM8d67wZg3Sn7sJAPSt8PWsV21jD8ml6vGKdamTatn/UCE7Iz3
+	CbbgFl/ROQc3IVLFgtkutxXSZ/qWYKVCx7Y6nEi/rtcE5hzsanZnHDAXaaqisTW8To2pnCZnqAw0Q
+	WZqnuTjQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vxRup-0000000FRwd-3Mss;
+	Tue, 03 Mar 2026 15:44:07 +0000
+Date: Tue, 3 Mar 2026 07:44:07 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/26] libfrog: add a function to grab the path from an
+ open fd and a file handle
+Message-ID: <aacBx3nHS6V7HOIq@infradead.org>
+References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
+ <177249783310.482027.11917142460939036196.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,15 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aab0ENuLXPSADWVS@infradead.org>
+In-Reply-To: <177249783310.482027.11917142460939036196.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 03, 2026 at 06:45:36AM -0800, Christoph Hellwig wrote:
-> FYI, I have a whole series to make better use of this new API in
-> xfs_repair.  But I guess just doing the bulk conversion as part of the
-> sync might be ok.  Looks quick from a first glance, but I've not 100%
-> verified it.
+Looks good:
 
-<nod> This was my quick and dirty make-it-build hackjob.  I'd review an
-improved variant on this. :)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
---D
