@@ -1,78 +1,77 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6EDE3E0C48
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 10:59:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5563E3D6CBD
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 11:00:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772535575; cv=none; b=lXWy//ZQRecLdw1HJJatOdoc4RtoYxhZoj0V4zv2vO8DssdbW5ehFbF6BiMuU6GX97Ad6Z2Hr7zZeHHz2X3EDPTp9Z4nlMi2hct9G72tqZRQVsc7/+8PdYNTlzdS+odTkvZa5n6S7m8CDcs0lSsCq17SMqP71yqJ5+Lwi9tftGE=
+	t=1772535628; cv=none; b=ilSFt9uZqHGffoP3MxD2usrb7/wGmec34t/WSqfkImq8kBE9zNOt7gv/4wTAaB2lgqe9GMTUN4Sy2NgiDeydK1YXFgiygUh9EmKEAdp/aljWVy3qbW7DRp2L8YbEyrzmwKtNez9WU0ySVBjjhQAusMjVYif135sYIL40Z3JhX/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772535575; c=relaxed/simple;
-	bh=eXqOnrwdK7rUUcie+Pv9UYDD0aGGJ1WO4xVbxo8W89g=;
+	s=arc-20240116; t=1772535628; c=relaxed/simple;
+	bh=tuGLOFIJ8YBbx/G2IbOVayier5wmXHsDs7PLk8p6LTM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g5pl1xzyX+xEz5rORCKuK5w3n3efVRpdX33cgwjO0CmlOQIiqeFWarrJYaYVE8zDgTmFFGSA1APOReyEh8GAkyEA5/avqpsXPQvr0bPoeVbPBxhUlHgLLWbjCqZ+NUbKhvkXhXIZHzdIEwZlU50TENTCz2uLvrSKtyVSnxgx0CU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jlrTi3dG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=buw/z/im; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=jlrTi3dG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=buw/z/im; arc=none smtp.client-ip=195.135.223.131
+	 Content-Type:Content-Disposition:In-Reply-To; b=AXntPmIJAprfoWu8VNOma6H5XQLeTx7Qo2S9r6sMWGH7nGf1nRJdAXw6kI+GqIR7VGfne0ZXYbOmNA0n+w9aL9ZHc4qAf62ZbX3477L2PHCK9GQ8ko+fwNktGtTTwoPDThBfqCE2c1dbq0ECIHYOu/oy3OHI7KYp1g4oeuIbVGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=DbtHMotC; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=gsLHqQdu; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=DbtHMotC; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=gsLHqQdu; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jlrTi3dG";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="buw/z/im";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="jlrTi3dG";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="buw/z/im"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="DbtHMotC";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="gsLHqQdu";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="DbtHMotC";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="gsLHqQdu"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A8BC35BDF1;
-	Tue,  3 Mar 2026 10:59:27 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id BAD725BDE6;
+	Tue,  3 Mar 2026 11:00:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1772535567; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1772535621; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1Ax2U3KSgQjtDsUZU4K+0IOeH3oN3CBmHmXatVIwbT4=;
-	b=jlrTi3dGzi6tF685duuqaLJ6WZU3anD5qv56Ez+rz+JN3YyW16+umpZndND/z+6evwwU+v
-	iV25kK98omMc+huAfdqvXof0fqmeprAS4F1QpWbWNPJjG/yoLSz9Il+psHcNJjmdULsl6v
-	xxuKQyO7oM/GXdvEiCwSQ6AIQOt+gqs=
+	bh=dhnbMNQM0zK8uEsXfKabt/iC5mT7FVi91m1UyqMxpMU=;
+	b=DbtHMotC2fkwuee89xKeRtFeVp6RNaKShtvPGfZmXLe3xysZMJabVOcmgCA0AFlJfgenpn
+	k+NGM6F9rabVCF2bQMODitFZHUHgiZe9+QNvAINh3bP2dSNe6mGpV+Fh3WnbAgnU33aKY5
+	Y+KyhmoXIr+k0O9oDuUvTeBhpK7a2uY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1772535567;
+	s=susede2_ed25519; t=1772535621;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1Ax2U3KSgQjtDsUZU4K+0IOeH3oN3CBmHmXatVIwbT4=;
-	b=buw/z/imK6nKUxnqweYn7ZS+SUxT409/8UUPNuUvWQ8Mi6gHe2zTcjBSW2AlIHTW0Q2xsS
-	nV0AecnyWGTC1JDQ==
+	bh=dhnbMNQM0zK8uEsXfKabt/iC5mT7FVi91m1UyqMxpMU=;
+	b=gsLHqQduhNKupVSKkzKyiP02Xq5mGrMXk0yXO5V/lAsHipIQ9azFjYPsfEHTHGqrxS61X6
+	7Att2gAlaKqI68Bw==
 Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=jlrTi3dG;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="buw/z/im"
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1772535567; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1772535621; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1Ax2U3KSgQjtDsUZU4K+0IOeH3oN3CBmHmXatVIwbT4=;
-	b=jlrTi3dGzi6tF685duuqaLJ6WZU3anD5qv56Ez+rz+JN3YyW16+umpZndND/z+6evwwU+v
-	iV25kK98omMc+huAfdqvXof0fqmeprAS4F1QpWbWNPJjG/yoLSz9Il+psHcNJjmdULsl6v
-	xxuKQyO7oM/GXdvEiCwSQ6AIQOt+gqs=
+	bh=dhnbMNQM0zK8uEsXfKabt/iC5mT7FVi91m1UyqMxpMU=;
+	b=DbtHMotC2fkwuee89xKeRtFeVp6RNaKShtvPGfZmXLe3xysZMJabVOcmgCA0AFlJfgenpn
+	k+NGM6F9rabVCF2bQMODitFZHUHgiZe9+QNvAINh3bP2dSNe6mGpV+Fh3WnbAgnU33aKY5
+	Y+KyhmoXIr+k0O9oDuUvTeBhpK7a2uY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1772535567;
+	s=susede2_ed25519; t=1772535621;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1Ax2U3KSgQjtDsUZU4K+0IOeH3oN3CBmHmXatVIwbT4=;
-	b=buw/z/imK6nKUxnqweYn7ZS+SUxT409/8UUPNuUvWQ8Mi6gHe2zTcjBSW2AlIHTW0Q2xsS
-	nV0AecnyWGTC1JDQ==
+	bh=dhnbMNQM0zK8uEsXfKabt/iC5mT7FVi91m1UyqMxpMU=;
+	b=gsLHqQduhNKupVSKkzKyiP02Xq5mGrMXk0yXO5V/lAsHipIQ9azFjYPsfEHTHGqrxS61X6
+	7Att2gAlaKqI68Bw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8DAF53EA6D;
-	Tue,  3 Mar 2026 10:59:27 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A83423EA6C;
+	Tue,  3 Mar 2026 11:00:21 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id dB7WIQ+/pmlvLwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 03 Mar 2026 10:59:27 +0000
+	id dqoCKUW/pmlzMAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 03 Mar 2026 11:00:21 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 3AE3FA0A1B; Tue,  3 Mar 2026 11:59:27 +0100 (CET)
-Date: Tue, 3 Mar 2026 11:59:27 +0100
+	id 5F742A0A1B; Tue,  3 Mar 2026 12:00:21 +0100 (CET)
+Date: Tue, 3 Mar 2026 12:00:21 +0100
 From: Jan Kara <jack@suse.cz>
 To: Jeff Layton <jlayton@kernel.org>
 Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
@@ -151,10 +150,11 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
 	linux-fscrypt@vger.kernel.org, linux-xfs@vger.kernel.org, linux-hams@vger.kernel.org, 
 	linux-x25@vger.kernel.org, audit@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
 	linux-can@vger.kernel.org, linux-sctp@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: [PATCH v2 002/110] vfs: widen inode hash/lookup functions to u64
-Message-ID: <o5ksne7mgzpbnevfepfgugnmniimpalg2z67qjnnfhhu5kd7fz@zeif2ihe6jws>
+Subject: Re: [PATCH v2 001/110] vfs: introduce kino_t typedef and PRIino
+ format macro
+Message-ID: <qgxgwukvxgqggl2gd4cb3jt54ocvu23p3qurzwyxhtewtsu2sh@darljhcli56k>
 References: <20260302-iino-u64-v2-0-e5388800dae0@kernel.org>
- <20260302-iino-u64-v2-2-e5388800dae0@kernel.org>
+ <20260302-iino-u64-v2-1-e5388800dae0@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -163,65 +163,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260302-iino-u64-v2-2-e5388800dae0@kernel.org>
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-0.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+In-Reply-To: <20260302-iino-u64-v2-1-e5388800dae0@kernel.org>
+X-Spam-Score: -0.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-0.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
 	FORGED_RECIPIENTS(2.00)[m:jlayton@kernel.org,m:brauner@kernel.org,m:jack@suse.cz,m:rostedt@goodmis.org,m:mhiramat@kernel.org,m:mathieu.desnoyers@efficios.com,m:dan.j.williams@intel.com,m:willy@infradead.org,m:ebiggers@kernel.org,m:tytso@mit.edu,m:muchun.song@linux.dev,m:osalvador@suse.de,m:david@kernel.org,m:dhowells@redhat.com,m:pc@manguebit.org,m:adilger.kernel@dilger.ca,m:jack@suse.com,m:jaegeuk@kernel.org,m:chao@kernel.org,m:trondmy@kernel.org,m:anna@kernel.org,m:chuck.lever@oracle.com,m:neil@brown.name,m:okorniev@redhat.com,m:Dai.Ngo@oracle.com,m:tom@talpey.com,m:sfrench@samba.org,m:ronniesahlberg@gmail.com,m:sprasad@microsoft.com,m:bharathsm@microsoft.com,m:alex.aring@gmail.com,m:konishi.ryusuke@gmail.com,m:slava@dubeyko.com,m:ericvh@kernel.org,m:lucho@ionkov.net,m:asmadeus@codewreck.org,m:linux_oss@crudebyte.com,m:dsterba@suse.com,m:marc.dionne@auristor.com,m:raven@themaw.net,m:luisbg@kernel.org,m:salah.triki@gmail.com,m:aivazian.tigran@gmail.com,m:idryomov@gmail.com,m:amarku
  ze@redhat.com,m:jaharkes@cs.cmu.edu,m:coda@cs.cmu.edu,m:nico@fluxnic.net,m:code@tyhicks.com,m:amir73il@gmail.com,m:hch@infradead.org,m:glaubitz@physik.fu-berlin.de,m:mikulas@artax.karlin.mff.cuni.cz,m:dwmw2@infradead.org,m:richard@nod.at,m:shaggy@kernel.org,m:almaz.alexandrovich@paragon-software.com,m:mark@fasheh.com,m:jlbec@evilplan.org,m:joseph.qi@linux.alibaba.com,m:hubcap@omnibond.com,m:martin@omnibond.com,m:miklos@szeredi.hu,m:al@alarsen.net,m:chengzhihao1@huawei.com,m:dlemoal@kernel.org,m:jth@kernel.org,m:john.johansen@canonical.com,m:paul@paul-moore.com,m:jmorris@namei.org,m:serge@hallyn.com,m:zohar@linux.ibm.com,m:roberto.sassu@huawei.com,m:dmitry.kasatkin@gmail.com,m:eric.snowberg@oracle.com,m:wufan@kernel.org,m:stephen.smalley.work@gmail.com,m:omosnace@redhat.com,m:casey@schaufler-ca.com,m:alexander.deucher@amd.com,m:christian.koenig@amd.com,m:airlied@gmail.com,m:simona@ffwll.ch,m:sumit.semwal@linaro.org,m:edumazet@google.com,m:kuniyu@google.com,m:pabeni@redhat.com,m:wille
  mb@google.com,m:davem@davemloft.net,m:kuba@kernel.org,m:horms@kernel.org,m:oleg@redhat.com,m:peterz@infradead.org,m:mingo@redhat.com,m:acme@kernel.org,m:namhyung@kernel.org,s:linux-ext4@vger.kernel.org,s:linux-fscrypt@vger.kernel.org,s:linux-fsdevel@vger.kernel.org,s:linux-hams@vger.kernel.org,s:linux-integrity@vger.kernel.org,s:linux-kernel@vger.kernel.org,s:linux-media@vger.kernel.org,s:linux-nfs@vger.kernel.org,s:linux-nilfs@vger.kernel.org,s:linux-perf-users@vger.kernel.org,s:linux-sctp@vger.kernel.org,s:linux-security-module@vger.kernel.org,s:linux-trace-kernel@vger.kernel.org,s:linux-unionfs@vger.kernel.org,s:linux-x25@vger.kernel.org,s:linux-xfs@vger.kernel.org,s:netdev@vger.kernel.org,s:selinux@vger.kernel.org,s:jreuter@yaina.de];
 	SUSPICIOUS_RECIPS(1.50)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
 	MIME_TRACE(0.00)[0:+];
 	ARC_NA(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[zeniv.linux.org.uk,kernel.org,suse.cz,goodmis.org,efficios.com,intel.com,infradead.org,mit.edu,linux.dev,suse.de,redhat.com,manguebit.org,dilger.ca,suse.com,oracle.com,brown.name,talpey.com,samba.org,gmail.com,microsoft.com,dubeyko.com,ionkov.net,codewreck.org,crudebyte.com,auristor.com,themaw.net,cs.cmu.edu,fluxnic.net,tyhicks.com,physik.fu-berlin.de,vivo.com,artax.karlin.mff.cuni.cz,nod.at,paragon-software.com,fasheh.com,evilplan.org,linux.alibaba.com,omnibond.com,szeredi.hu,alarsen.net,huawei.com,wdc.com,canonical.com,paul-moore.com,namei.org,hallyn.com,linux.ibm.com,schaufler-ca.com,amd.com,ffwll.ch,linaro.org,google.com,davemloft.net,arm.com,linux.intel.com,dev.tdt.de,yaina.de,holtmann.org,hartkopp.net,pengutronix.de,secunet.com,gondor.apana.org.au,fomichev.me,iogearbox.net,vger.kernel.org,lists.linux.dev,kvack.org,lists.sourceforge.net,lists.samba.org,lists.infradead.org,coda.cs.cmu.edu,lists.orangefs.org,lists.ubuntu.com,lists.freedesktop.org,lists.linaro.or
- g];
-	RCPT_COUNT_GT_50(0.00)[172];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
 	TO_DN_SOME(0.00)[];
 	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim,suse.cz:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Spamd-Bar: /
-X-Rspamd-Queue-Id: A8BC35BDF1
-X-Rspamd-Action: no action
+	FREEMAIL_CC(0.00)[zeniv.linux.org.uk,kernel.org,suse.cz,goodmis.org,efficios.com,intel.com,infradead.org,mit.edu,linux.dev,suse.de,redhat.com,manguebit.org,dilger.ca,suse.com,oracle.com,brown.name,talpey.com,samba.org,gmail.com,microsoft.com,dubeyko.com,ionkov.net,codewreck.org,crudebyte.com,auristor.com,themaw.net,cs.cmu.edu,fluxnic.net,tyhicks.com,physik.fu-berlin.de,vivo.com,artax.karlin.mff.cuni.cz,nod.at,paragon-software.com,fasheh.com,evilplan.org,linux.alibaba.com,omnibond.com,szeredi.hu,alarsen.net,huawei.com,wdc.com,canonical.com,paul-moore.com,namei.org,hallyn.com,linux.ibm.com,schaufler-ca.com,amd.com,ffwll.ch,linaro.org,google.com,davemloft.net,arm.com,linux.intel.com,dev.tdt.de,yaina.de,holtmann.org,hartkopp.net,pengutronix.de,secunet.com,gondor.apana.org.au,fomichev.me,iogearbox.net,vger.kernel.org,lists.linux.dev,kvack.org,lists.sourceforge.net,lists.samba.org,lists.infradead.org,coda.cs.cmu.edu,lists.orangefs.org,lists.ubuntu.com,lists.freedesktop.org,lists.linaro.or
+ g];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[172];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:email]
 X-Spam-Flag: NO
-X-Spam-Score: -0.51
-X-Spam-Level: 
 
-On Mon 02-03-26 15:23:46, Jeff Layton wrote:
-> Change the inode hash/lookup VFS API functions to accept u64 parameters
-> instead of unsigned long for inode numbers and hash values. This is
-> preparation for widening i_ino itself to u64, which will allow
-> filesystems to store full 64-bit inode numbers on 32-bit architectures.
+On Mon 02-03-26 15:23:45, Jeff Layton wrote:
+> Introduce a kino_t typedef and PRIino format macro to enable a
+> bisect-clean transition of i_ino from unsigned long to u64.
 > 
-> Since unsigned long implicitly widens to u64 on all architectures, this
-> change is backward-compatible with all existing callers.
+> kino_t is initially defined as unsigned long (matching the original
+> i_ino type), and PRIino is "l" (the format length modifier for
+> unsigned long). A later patch will change these to u64 and "ll"
+> respectively once all format strings have been updated to use PRIino.
 > 
-> In dump_mapping(), change the local ino variable to kino_t and use the
-> PRIino format macro, since this variable holds an i_ino value. In
-> init_special_inode(), also switch to PRIino.
+> The PRIino macro is a length modifier, not a complete format specifier.
+> It is used as: "%" PRIino "u" for decimal, "%" PRIino "x" for hex, etc.
+> This follows the pattern used by userspace PRIu64/PRIx64 macros.
+> 
+> Format strings using i_ino should be updated to use PRIino instead of
+> a hard-coded length modifier to ensure warning-free compilation on
+> both 32-bit and 64-bit architectures throughout the transition.
 > 
 > Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-Looks good. Feel free to add:
+Yeah, as a temporary solution for bisectability this looks fine to me. Feel
+free to add:
 
 Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
+
+> ---
+>  include/linux/fs.h | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 8b3dd145b25ec12b00ac1df17a952d9116b88047..e38bc5ece1f360d679a8f30b8171292f7a65c218 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -758,6 +758,9 @@ struct inode_state_flags {
+>  	enum inode_state_flags_enum __state;
+>  };
+>  
+> +typedef unsigned long	kino_t;
+> +#define PRIino		"l"
+> +
+>  /*
+>   * Keep mostly read-only and often accessed (especially for
+>   * the RCU path lookup and 'stat' data) fields at the beginning
+> @@ -783,7 +786,7 @@ struct inode {
+>  #endif
+>  
+>  	/* Stat data, not accessed from path walking */
+> -	unsigned long		i_ino;
+> +	kino_t			i_ino;
+>  	/*
+>  	 * Filesystems may only read i_nlink directly.  They shall use the
+>  	 * following functions for modification:
+> 
+> -- 
+> 2.53.0
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
