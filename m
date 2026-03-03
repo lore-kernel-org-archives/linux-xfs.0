@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B831C4D90C8
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 16:22:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4114D8DA7
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Mar 2026 16:24:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772554921; cv=none; b=IXKxIfZkqCYVh8SH7APlyJSLnXuCrA2rfAcq2dnO4KlbfWuNbBOCFbYJaTw0XIRp5ai85+iMmviZ3qdP/MXuk7fJ6ZX9oTzwk0ywKSCY8zBrfE7paUY5C/biEFmDOERLVMePc8F4gf24zNJ5rIh/+5fGihdGZCO0yZO4u68TWNQ=
+	t=1772555081; cv=none; b=H+MwwxlcbXxC3JbPOZwkI0HVjOgkoKpMALiBi1W5G/oHrGLP2lSdzA61EzRfe6h/ac6N0bamXyryvE7sjb3/774JggS+0BVKFIY5LizPIzfR0G+PJd/KbYyCMbyyu/XaGLLY4to29GvVfVeq6QLNwckOAYlD7BgRMDG2XVIVj5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772554921; c=relaxed/simple;
-	bh=4NpWeJdxaxwsQzi57cjKH3xS5+3V9BUI9hV7QRskhoo=;
+	s=arc-20240116; t=1772555081; c=relaxed/simple;
+	bh=wzgsrGjmasuXITkCzZ13Fhxhz4cL5DD2J9g2wgjwVCI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TkmwjZzRProHjRyhgS1y5/ca6ad21YGzVE/PPj8yBmFRGXxH92Tkgy9IZiZNGf/lgTnaC2yoM8STnTUTXoHCi0bvWzFGWMxq5qBrKiDdvLXkqQ9+m1hodb7DD8SnD5sEGNsID48Ut5zmlf/95XIniXjcOhOxUX2IqM/ctASPqm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DVssZSUB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=kSOe8z47JFqXYyEhwM40RruU8swp/UVYZkIhMtXGMXKeAUCSLxwvs3IKycdjQrCo5+qXEOtEFbAZxKkl73hi3pD4vTFwI7Zd6tujuzk/QWWjFq8BXg96iGSqXn5NFcix9cNugWZSmxIeK9Emuc87QSGn5ryDe8klyFC602j/CyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pI5BmLkl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DVssZSUB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFAAAC19422;
-	Tue,  3 Mar 2026 16:22:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pI5BmLkl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F5B6C116C6;
+	Tue,  3 Mar 2026 16:24:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772554921;
-	bh=4NpWeJdxaxwsQzi57cjKH3xS5+3V9BUI9hV7QRskhoo=;
+	s=k20201202; t=1772555081;
+	bh=wzgsrGjmasuXITkCzZ13Fhxhz4cL5DD2J9g2wgjwVCI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DVssZSUBgAxKIbF3cH77FxEbkD4UXk3Xj7qeNK8UfgV9T73g4a7mISWQoRBLTIpbE
-	 5FHhEn7Zd9FC31McgwZNZaT0xLPUzr/pLV6ZiLvS44us3gHHpdtUV2WT+Ixrh00Kyd
-	 Tsnk2ZzMdAhetJP4uDia0+81lo32inZmTs+zQHeF92Dzf4iTBk+6TbZTJTUB1aNopy
-	 TsF2FdF/LUgwZGBfySUbCEAZNwx8un9NUP5awkmXBvjnWZz+xtnhNkifGCGukXBP0t
-	 m1Jl9m8RK2XCRD+r+/qUhoMH8/bBkY8gfkGc/Njo+V89HJATSBB/YFjp9e983dXecn
-	 eKS7Vf0emipKw==
-Date: Tue, 3 Mar 2026 08:22:00 -0800
+	b=pI5BmLkl8D5PaMqrkGKCeQ80AeKkNB0HsDuIukJnDBLm8dxhHTn6HlscFs90KMvir
+	 uf/rYWq9qMobudj4qXfKGOlRBAKKPmtlZalL39S+pkB+QlYGcnjqEnQEwb1yd6ZJ4I
+	 X3UsU3AAghUgojCMtkgKlupf0M2ZhGU7YnYD/qRTwViDnjPS7SmDymhQ4gqdnJ/x71
+	 5G94EFPrIYOxkoXCzgR56lQDIRkjtAB79apxHCXt6IX1iQfDa7YmcSxhLoK60LQONv
+	 plOqeXT4kPCVO1qez5rdEMO7hQ7FGoHxwW4IpJHlXLQQ/MbCWWS7/Sd5vO2gPaRAuD
+	 gqOHcrq/MEj/w==
+Date: Tue, 3 Mar 2026 08:24:40 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, kees@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 29/36] treewide: Replace kmalloc with kmalloc_obj for
- non-scalar types
-Message-ID: <20260303162200.GF57948@frogsfrogsfrogs>
+Cc: aalbersh@kernel.org, cem@kernel.org, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 33/36] xfs: remove metafile inodes from the active inode
+ stat
+Message-ID: <20260303162440.GG57948@frogsfrogsfrogs>
 References: <177249637597.457970.8500158485809720053.stgit@frogsfrogsfrogs>
- <177249638311.457970.11002432782642333341.stgit@frogsfrogsfrogs>
- <aab0Y5ZMfuvylSD3@infradead.org>
+ <177249638385.457970.8057539261074430844.stgit@frogsfrogsfrogs>
+ <aab03-37QcwSKu0u@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,17 +45,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aab0Y5ZMfuvylSD3@infradead.org>
+In-Reply-To: <aab03-37QcwSKu0u@infradead.org>
 
-On Tue, Mar 03, 2026 at 06:46:59AM -0800, Christoph Hellwig wrote:
-> Again, splitting out adding new helpers is probably a good idea.
+On Tue, Mar 03, 2026 at 06:49:03AM -0800, Christoph Hellwig wrote:
+> On Mon, Mar 02, 2026 at 04:20:47PM -0800, Darrick J. Wong wrote:
+> > -#define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
+> > +#define XFS_STATS_DEC(mp, count)	do { (mp) = (mp); } while (0)
 > 
-> And boy do I hate this new API that was just sneaked in without
-> any review :(
+> Looks like XFS_STATS_DEC has been around for a while like this.  Maybe
+> split that fix out?
 
-FWIW I find this new helper rather pointless churn, especially since the
-argument can be either a type or a pointer to a type.  Great, we now no
-longer have to type 'sizeof()', which is a boon because I now rent DRAM
-by the byte.
+Will do, though AFAICT all the previous "callsites" were all #ifdef'd
+out of existence anyway.
 
 --D
