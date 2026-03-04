@@ -1,63 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8182D73463;
-	Wed,  4 Mar 2026 12:55:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9602C26E71F
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Mar 2026 13:02:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772628930; cv=none; b=YN+ht1BpU5FAb2+S7R7heu0GWpCIiZcqbIL+5GLoT6a/x5S+gp6aehXkgomWIUIxKGOR/CL4o1x44qGdzaSwafdPbq5RWssGa7PGfG2LxeWnOSAcKHWAd1G3nFK/+qJR+OVHIz61p3Wr2y+lonu7DorNrbXFQv/gFh1dbWIHckQ=
+	t=1772629325; cv=none; b=KsaJkPudyr5+FKV+9e3P0aId4GVQHFpQNieqtJnf3ZxDu69tAINjV+KQkXeVXmbrv9AKaUzHakJ/wWFoV21AdU8izeOrH44qXVHfEXHK6jE3GZdukZVtHn5KnVl8B0mwCPDtooZxTO4uKGOivq/pFBt5Th7XX5ZKaMPvygBAzoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772628930; c=relaxed/simple;
-	bh=YOVUcvbe65ZJpd4Sa/Gyz3S1wnefhK4mWrP5HMD2COs=;
+	s=arc-20240116; t=1772629325; c=relaxed/simple;
+	bh=tuF9fSA8eU+YKx2EyjmbpvRxn8Vs3Upda4cIdHCItoU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X2X7vIzeuec8PMGVUQzQRUux0svI3q3aKFPCLIQavPPjRsQOVrmb+wE04QVNxl4EmmjZ5YtIutJr8mHXGX+otOU+1HgHOkBEQAWcU/9HW78tRWoS7LTjiwvmCn9OeJzaFYDzcFeSNXqH3frk0ozBKg3qj5zECrfzUvNiODjflv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sXJ5tALs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=sh9WPtlPg/3jjha1agf79ozXFkODRZHRLzOoxCJwPSYGVHbacG5bMYmMqNuod0BCXn5oz+9lQ4hgcNTFY6R4+QzJFJ6ZwUqOp2QyvaUTLb7P07n9OqvK85/GdSJ1L+ZOSyE5mGUXJQNmo2houtwo7Rzyx7JjL3IDbNp9N8CSPfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Jo01Zwic; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sXJ5tALs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D17ACC19423;
-	Wed,  4 Mar 2026 12:55:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772628930;
-	bh=YOVUcvbe65ZJpd4Sa/Gyz3S1wnefhK4mWrP5HMD2COs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sXJ5tALsZ3x+Xm8IRWMMkdygQLA/rJbgtfXgLxP5e79JNZxC1bITeYuabK/RzE1Nh
-	 bhWGnOkCOdDPttDDSCP36m/lnqK05MwEJURAtHv8KeRvCIK3CFPV8lnQn6hMcxAYUx
-	 0/gWHfjp/TNahdP9yDw/ZBMLVn4CMyFUPfXcwnT89dEM3x29orr58m3pQYKvIJNgFh
-	 xHKrmO8frvKRU8hlUrRZt4KecverAwoHXSr4Sf/pligM0Bd/X5/VuJ0y6jRdbD5xSw
-	 fhbLQo4KQ632nxvSOa6IpSftyx4aUDfoMt926sT1fOObQVz4ygu+GbjkWS6x3SASzA
-	 uphtRWGOcqyrg==
-Date: Wed, 4 Mar 2026 13:55:24 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Anuj Gupta <anuj20.g@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>, 
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, ntfs3@lists.linux.dev, linux-block@vger.kernel.org, 
-	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	Jens Axboe <axboe@kernel.dk>
-Subject: Re: support file system generated / verified integrity information v4
-Message-ID: <20260304-sattel-filigran-aa002d3e3983@brauner>
-References: <20260223132021.292832-1-hch@lst.de>
- <20260302-legehennen-musizieren-08d0e3caa674@brauner>
- <aaWVQ3g6vsDB4GvQ@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Jo01Zwic"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=irNiMnjvxN6ZEzmdkWeBKRlNQi/d23kfafBSx/p1yNM=; b=Jo01Zwic8/cb8hPXa+n4Xl9Lui
+	A8K2wLCVV1WECSLP3Fw87ckFHgGAAPOeaW/szG0VtZ/xQG2olnVM+iOeAYpgUqCGDYxdl11iH29bV
+	KbxZ9UnSGdisYeALmeD34XVeX63Y4/l6eLxf3W9Ria4z1tiIuGML48l4kn9P4rpnvcSNpdnWVBNV1
+	3jTFxPBV3+ZUgbVufGwvss2svCMkIzkJuPWLI6VRk9O/kZ0EanfDd1TaoykwkHwtsUlNz4eYwVXCw
+	rVLekg2TZx1nF1xh2G4tpZiTGNMXxlEcdFhorPPlDGe2lRXJZZzsFNVs8RQ8/sxYTo8RchaeT3nI9
+	oQ9AxS7g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vxlrT-0000000HDSQ-0brO;
+	Wed, 04 Mar 2026 13:01:59 +0000
+Date: Wed, 4 Mar 2026 05:01:59 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@kernel.org, hch@lst.de,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 25/26] debian: enable xfs_healer on the root filesystem
+ by default
+Message-ID: <aagtR_YU0gOwAZCs@infradead.org>
+References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
+ <177249783748.482027.8553755838914398859.stgit@frogsfrogsfrogs>
+ <aacFKgnRvvhSVsH_@infradead.org>
+ <20260303171400.GP57948@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aaWVQ3g6vsDB4GvQ@infradead.org>
+In-Reply-To: <20260303171400.GP57948@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Mar 02, 2026 at 05:48:51AM -0800, Christoph Hellwig wrote:
-> On Mon, Mar 02, 2026 at 11:11:22AM +0100, Christian Brauner wrote:
-> > Applied to the vfs-7.1.verity branch of the vfs/vfs.git tree.
-> > Patches in the vfs-7.1.verity branch should appear in linux-next soon.
-> 
-> Note that the branch name matters much, but this is a different (and
-> older) use of integrity compare to fsverity/dm-verity.
+On Tue, Mar 03, 2026 at 09:14:00AM -0800, Darrick J. Wong wrote:
+> A lot depends on the distro -- RHEL and SUSE require the sysadmin to
+> activate services.  Debian turns on any service shipping in a package by
+> default, which is sort of funny since they don't enable online fsck in
+> their kernel at all, so all the healer services fail the --supported
+> checks and deactivate immediately.
 
-Yeah, I know it was mainly named for the related xfs work I had expected
-to require some infrastructure work. I'll rename this to
-vfs-7.1-integrity which is a bit more generic.
+So this patch doesn't make much sense right now?
+
+Either way it really should have these details in the commit log.
+
