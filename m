@@ -1,54 +1,79 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B19051DF254;
-	Wed,  4 Mar 2026 13:20:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9D9B282F11;
+	Wed,  4 Mar 2026 13:32:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772630444; cv=none; b=HZWWmWqyF7dx+XUlCBo6MGespMQgwGCs97obD2NfDVS9Kqz675WMrGqB+Qd/VKiFJx6LRf/50jIQAbFPMjNb59BpQ6fX7LbXqZqkb/Z5hUaXUfEOMb/TOb14VNeQ2qYzV2AA5EZYqdZdF0T7z61zlTKTmlv3bc7R9hjyHOPd83w=
+	t=1772631137; cv=none; b=V9+NITXg9TH59lLRoMzZguWAkhNHDAcRI+Rq94MKX5H8ZRXm49c7HMELlmV4/gKL1d2xEXZuFqEylrjtnYw+nJ68AuVGOPlzbM1O4WVIN7GqwuRItu9vAQKBxGQOIO4Wkvj0j/tD3tkp+XQyirjyUNYXbrYAPbl5gfbW5kpQbyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772630444; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MCiSbBnjpNUDgsxWZSiWeg/JJp2fME7YAgTW2KpS2Zp2TdtV5XWk8tA4xKQtUp4DlNp38y9BA130jYKQDuTEANiH4gBSFWlp7kiE75L3jqR5KqSSUUHlDzVYm4i0XrkJFbsygA/NXlgHrSZWZiteS1fPxPdPUxYBWMYRHpZHNw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2eYagBrw; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1772631137; c=relaxed/simple;
+	bh=vtPXm1/SQmtjVv56wH2xXhtJbMUeRM7jylkwF9nkOyY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=bXFtemQ3swKv078BOF5lxr7FjsAzuIo5LDkL9W9pD8jBgFIFWYSKQoUiqcQ7yp1v+6tZ9smFlUcvM/aKp4s51QDfk+ZReGKQyuoRyVsJ4ZgAEwjLzsSEQiG2AD9S4pEGYSx6Nz6qEyNaUf6xNnpyOKA9SmanGsOGcoUoWR6yh64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j709Uv+W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2eYagBrw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=2eYagBrwGFN+jBA+qaWMx4UTqI
-	g7XPWQjyyH9ohXUfjNMMbHbCDx9WsGIYx7f0P5vh9HU+OYGc+2GawUWew2QiwLYi7R5JjmOQ8r27S
-	qnpFYn/5MtTwclu50fyVAf3qtGdIBMfvHIWNl0Y7QIbibVxlfDfDQikjT4LMaylr2lP0xZCm3evmA
-	6qoEhX5jyh6Ucoyad5gAKqgGzcjQKRWBTEyBye08WsSchT6r6CczJVJhc4DvwESiZtUC0MYjEyKJN
-	rtL3H3Lq3IIZXQ4p1kc8hPTR4M/R66n0EQMDWSIAw5lVI5QZP9xcmWG6utHzvcm8IEPZAu7Kk18n0
-	gCF8bx+Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vxm9a-0000000HExF-2rWi;
-	Wed, 04 Mar 2026 13:20:42 +0000
-Date: Wed, 4 Mar 2026 05:20:42 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: hongao <hongao@uniontech.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, djwong@kernel.org,
-	sandeen@redhat.com, hch@infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: Remove redundant NULL check after __GFP_NOFAIL
-Message-ID: <aagxqnPGwUil-_E7@infradead.org>
-References: <B6935AE39B8FFBF2+20260303033332.277641-1-hongao@uniontech.com>
- <505A5848AA49D10A+20260304112914.599369-1-hongao@uniontech.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j709Uv+W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F6DFC19423;
+	Wed,  4 Mar 2026 13:32:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772631137;
+	bh=vtPXm1/SQmtjVv56wH2xXhtJbMUeRM7jylkwF9nkOyY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=j709Uv+WE1YqEkDO44/yB965delVMWfNxWACE4BpYlnSSGvTbYBBPQd3AX5q0c+52
+	 /OVJd7zGqfSmJIV+VFK9zKiqCOZGkup3ITTrVRllgWXgSc3ilyBIHX7HA2x79l8VSH
+	 RybKTD84xQ+l2LIeRzm1TODiR/uEsLAZVD3P1x0ySI3Duankgxwkt91ggfdQt0ZxrE
+	 2lNFcVOUoNfn4JN2KImNKofMuuUfPodY5uhAW3pkd98XKpJIVMji8R3g3+AXkHsL05
+	 v/xXUBufm7Qz3ZYtpXfRu2RKFi54y5k03UFp0LAD/SwIcckR9iRHptms6K3l6n2BqR
+	 TecdEycTvCvBQ==
+From: Christian Brauner <brauner@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
+ xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, 
+ Carlos Maiolino <cmaiolino@redhat.com>
+In-Reply-To: <20260302173002.GL13829@frogsfrogsfrogs>
+References: <20260302173002.GL13829@frogsfrogsfrogs>
+Subject: Re: [PATCH v3] iomap: reject delalloc mappings during writeback
+Message-Id: <177263113605.1044679.13007828862296316195.b4-ty@kernel.org>
+Date: Wed, 04 Mar 2026 14:32:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <505A5848AA49D10A+20260304112914.599369-1-hongao@uniontech.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15-dev-47773
 
-Looks good:
+On Mon, 02 Mar 2026 09:30:02 -0800, Darrick J. Wong wrote:
+> Filesystems should never provide a delayed allocation mapping to
+> writeback; they're supposed to allocate the space before replying.
+> This can lead to weird IO errors and crashes in the block layer if the
+> filesystem is being malicious, or if it hadn't set iomap->dev because
+> it's a delalloc mapping.
+> 
+> Fix this by failing writeback on delalloc mappings.  Currently no
+> filesystems actually misbehave in this manner, but we ought to be
+> stricter about things like that.
+> 
+> [...]
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] iomap: reject delalloc mappings during writeback
+      https://git.kernel.org/vfs/vfs/c/d320f160aa5f
+
