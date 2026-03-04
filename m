@@ -1,86 +1,180 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 619EF3DFC88
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Mar 2026 19:58:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F229327BFB;
+	Wed,  4 Mar 2026 21:41:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772654283; cv=none; b=s3c0F0wP7R81MZtd9LuO3cc2KL6hcB5MFdjJt5nl/I5NoqjVBbGTBtjfOdDBoVek8huMIWZWuBbifDuNwid/HW9sVKM4NTH5N+0V/XYl2HfFMUz0nAXDFEUMfFn668mKKRvi7nHxXtAvk/at7jG9FyVj+vQafc02Y/HPPqoAQSg=
+	t=1772660508; cv=none; b=Sw+pyDYSj5GGyKQkh5PJeOWD5VmG87070nFTyihXeVoAmnxEjU3wcvp37vxTqwTTmxGU++tGIPesOxd1b7JixuRdvuf1j4gWqeB4FZf4ENZ9n0eeQSSTmQr/wCdQChvDlFbA5kY6tmcaIE8ZbEbj42ydFYCAGTSebHjuhEI2gAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772654283; c=relaxed/simple;
-	bh=2b3BcYshVI0ys5MlNRzX1fUgAd0mPVO++Y+X6SGMCZc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VUB+Bzsc2gif7CXCUBj0eOZ8+A9O7biU8Gmz7+WP6cXO1+Kw7wwCOiRhq+HOBVhBLW2lY5eDy926UA77BTBnFDFxO3b+LveL2xs+4K0N4pjLs/5Xm6mCsDOq7b1iUNDBrPnQxbWRok31+ZH3ZHLBIp5op7ubTes0owDvquQV2FU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UibRKpJw; arc=none smtp.client-ip=91.218.175.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1772660508; c=relaxed/simple;
+	bh=PV67OS/91fsa6EbIf+u5pJQmbMnqcMaw7mOqQaMZtc4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lfld2e8/PbdfaAtjfigBPh7E9dFW1n7G05AkucJry/6w46kgIFNyvq8Ec74bhrTMwT2u9Fs/hHRofFqKVS5l0aZXWocJDGl6q3qSWRzXAzvRXgGgyISAtQ65Mjbz52nMmgXXLwGijR+1/0Kp5egn+4O2VOcNn5aQK2iGIdfrkCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WOy+ahU5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UibRKpJw"
-Date: Wed, 4 Mar 2026 19:57:52 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772654277;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Tj1LMzsNN+o8aC+HAre/O2tWQUU3/YabUMS/UfEj64c=;
-	b=UibRKpJwo2sSAlsGpjzAO9leJpxF1ZN6/v8w5gR9omriLG9FYqNMKr2sjaMkEfLrFHviqx
-	aMjF6+BHoDVOoxzzZ7dzHm1kzE73vgtc1QCTEI3pg5CASZ8jW3w8Uzxs9Ej2rI1If73ywG
-	dACX2i6nkkIBRon1r6GLpOkdolAE0SI=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: Carlos Maiolino <cem@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, 
-	bfoster@redhat.com, dchinner@redhat.com, "Darrick J . Wong" <djwong@kernel.org>, 
-	gost.dev@samsung.com, andres@anarazel.de
-Subject: Re: [RFC 1/2] xfs: add flags field to xfs_alloc_file_space
-Message-ID: <i3bbr3komctputcxqz4mnto3bdzmfhq7u5vma6bleay5zxme2r@rgtjf7tuyocl>
-References: <20260227140842.1437710-1-p.raghav@samsung.com>
- <20260227140842.1437710-2-p.raghav@samsung.com>
- <aab9Lgt-HUaNq-FL@infradead.org>
- <cz7xkvha3ka6cqilkeolypgbr7rttlxk24uiliqvaou527kjkr@6cx6q3kprtjt>
- <aaf6QgbmQQ56ZlhH@nidhogg.toxiclabs.cc>
- <ecd24894-bd95-40d1-9f3f-579a6b666391@linux.dev>
- <c4839f9ca3959790aefe153b505aeb8c@herbolt.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WOy+ahU5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFDDDC4CEF7;
+	Wed,  4 Mar 2026 21:41:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772660507;
+	bh=PV67OS/91fsa6EbIf+u5pJQmbMnqcMaw7mOqQaMZtc4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=WOy+ahU5UARQ0yTbDyVVAn1fSlv8RpYZwjPT+Gigf4F6vtlQM47BUEAaHpPl28jTi
+	 zijTiFmnsokrQhTEwusFFZyPjXjLpzptmexKVrqiO7zalnrs6jCk/4Dtvo7p2Wi1b1
+	 deFntjfjHaMPD1GtY9aIYLocTQHgNd9upu9na/Ju2G9Ir6nNYqwGJRWtco86cB0/5r
+	 uO2UQtHfq4CG7HDfigIocItuDJOTEaZae9H5bHTqKAx9IDkUJuakGJN2s0X8q9pydZ
+	 YUjxavtU51Dm29ViV1Ch1zVWrQIQ2z11hjkuPtHX/LzHUzaMqMA8RcsW3Ko5J8lxOB
+	 JCi7YwgNkSxnQ==
+Message-ID: <d5ef252a-02db-42d1-8ffa-1769189ae60a@kernel.org>
+Date: Thu, 5 Mar 2026 06:41:21 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c4839f9ca3959790aefe153b505aeb8c@herbolt.com>
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 12/12] treewide: change inode->i_ino from unsigned long
+ to u64
+To: Jeff Layton <jlayton@kernel.org>, Alexander Viro
+ <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
+ Jan Kara <jack@suse.cz>, Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Dan Williams <dan.j.williams@intel.com>, Eric Biggers <ebiggers@kernel.org>,
+ "Theodore Y. Ts'o" <tytso@mit.edu>, Muchun Song <muchun.song@linux.dev>,
+ Oscar Salvador <osalvador@suse.de>, David Hildenbrand <david@kernel.org>,
+ David Howells <dhowells@redhat.com>, Paulo Alcantara <pc@manguebit.org>,
+ Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
+ Chuck Lever <chuck.lever@oracle.com>, NeilBrown <neil@brown.name>,
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Tom Talpey <tom@talpey.com>, Steve French <sfrench@samba.org>,
+ Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+ Shyam Prasad N <sprasad@microsoft.com>, Bharath SM
+ <bharathsm@microsoft.com>, Alexander Aring <alex.aring@gmail.com>,
+ Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+ Viacheslav Dubeyko <slava@dubeyko.com>,
+ Eric Van Hensbergen <ericvh@kernel.org>, Latchesar Ionkov
+ <lucho@ionkov.net>, Dominique Martinet <asmadeus@codewreck.org>,
+ Christian Schoenebeck <linux_oss@crudebyte.com>,
+ David Sterba <dsterba@suse.com>, Marc Dionne <marc.dionne@auristor.com>,
+ Ian Kent <raven@themaw.net>, Luis de Bethencourt <luisbg@kernel.org>,
+ Salah Triki <salah.triki@gmail.com>,
+ "Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+ Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>,
+ Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+ Nicolas Pitre <nico@fluxnic.net>, Tyler Hicks <code@tyhicks.com>,
+ Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@infradead.org>,
+ John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+ Yangtao Li <frank.li@vivo.com>,
+ Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+ David Woodhouse <dwmw2@infradead.org>, Richard Weinberger <richard@nod.at>,
+ Dave Kleikamp <shaggy@kernel.org>,
+ Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+ Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
+ Joseph Qi <joseph.qi@linux.alibaba.com>, Mike Marshall
+ <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>,
+ Miklos Szeredi <miklos@szeredi.hu>, Anders Larsen <al@alarsen.net>,
+ Zhihao Cheng <chengzhihao1@huawei.com>, Naohiro Aota <naohiro.aota@wdc.com>,
+ Johannes Thumshirn <jth@kernel.org>,
+ John Johansen <john.johansen@canonical.com>, Paul Moore
+ <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+ "Serge E. Hallyn" <serge@hallyn.com>, Mimi Zohar <zohar@linux.ibm.com>,
+ Roberto Sassu <roberto.sassu@huawei.com>,
+ Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+ Eric Snowberg <eric.snowberg@oracle.com>, Fan Wu <wufan@kernel.org>,
+ Stephen Smalley <stephen.smalley.work@gmail.com>,
+ Ondrej Mosnacek <omosnace@redhat.com>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Eric Dumazet <edumazet@google.com>,
+ Kuniyuki Iwashima <kuniyu@google.com>, Paolo Abeni <pabeni@redhat.com>,
+ Willem de Bruijn <willemb@google.com>, "David S. Miller"
+ <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>,
+ Simon Horman <horms@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
+ Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
+ Arnaldo Carvalho de Melo <acme@kernel.org>,
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+ Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, James Clark
+ <james.clark@linaro.org>, "Darrick J. Wong" <djwong@kernel.org>,
+ Martin Schiller <ms@dev.tdt.de>, Eric Paris <eparis@redhat.com>,
+ Joerg Reuter <jreuter@yaina.de>, Marcel Holtmann <marcel@holtmann.org>,
+ Johan Hedberg <johan.hedberg@gmail.com>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Oliver Hartkopp <socketcan@hartkopp.net>,
+ Marc Kleine-Budde <mkl@pengutronix.de>, David Ahern <dsahern@kernel.org>,
+ Neal Cardwell <ncardwell@google.com>,
+ Steffen Klassert <steffen.klassert@secunet.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>,
+ Remi Denis-Courmont <courmisch@gmail.com>,
+ Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+ Xin Long <lucien.xin@gmail.com>, Magnus Karlsson
+ <magnus.karlsson@intel.com>,
+ Maciej Fijalkowski <maciej.fijalkowski@intel.com>,
+ Stanislav Fomichev <sdf@fomichev.me>, Alexei Starovoitov <ast@kernel.org>,
+ Daniel Borkmann <daniel@iogearbox.net>,
+ Jesper Dangaard Brouer <hawk@kernel.org>,
+ John Fastabend <john.fastabend@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ fsverity@lists.linux.dev, linux-mm@kvack.org, netfs@lists.linux.dev,
+ linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ samba-technical@lists.samba.org, linux-nilfs@vger.kernel.org,
+ v9fs@lists.linux.dev, linux-afs@lists.infradead.org, autofs@vger.kernel.org,
+ ceph-devel@vger.kernel.org, codalist@coda.cs.cmu.edu,
+ ecryptfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+ jfs-discussion@lists.sourceforge.net, ntfs3@lists.linux.dev,
+ ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
+ linux-unionfs@vger.kernel.org, apparmor@lists.ubuntu.com,
+ linux-security-module@vger.kernel.org, linux-integrity@vger.kernel.org,
+ selinux@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+ linaro-mm-sig@lists.linaro.org, netdev@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-hams@vger.kernel.org,
+ linux-x25@vger.kernel.org, audit@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
+ linux-sctp@vger.kernel.org, bpf@vger.kernel.org
+References: <20260304-iino-u64-v3-0-2257ad83d372@kernel.org>
+ <20260304-iino-u64-v3-12-2257ad83d372@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260304-iino-u64-v3-12-2257ad83d372@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-> > > If by any means I got the timeline wrong above, forget everything I
-> > > said
-> > > other than the "work with him to get this done".
-> > > 
-> > 
-> > His patches are not working properly. It is almost a week since I sent
-> > that message on his thread. I have messaged him again on how to proceed.
-> > I will wait and see what he replies :)
+On 3/5/26 00:32, Jeff Layton wrote:
+> On 32-bit architectures, unsigned long is only 32 bits wide, which
+> causes 64-bit inode numbers to be silently truncated. Several
+> filesystems (NFS, XFS, BTRFS, etc.) can generate inode numbers that
+> exceed 32 bits, and this truncation can lead to inode number collisions
+> and other subtle bugs on 32-bit systems.
 > 
-> Sorry, the original CC somehow messed the filtering and it fell trough the
-> cracks
-> of the email folders. If you agree I would add the `two stage Ext4 like`
-> into the
-> original patch still utilizing the xfs_falloc_zero_range. Doing the the
-> default
-> XFS_BMAPI_PREALLOC and sending the XFS_BMAPI_ZERO|XFS_BMAPI_CONVERT if the
-> WR_ZERO
-> is set and the device supports it.
+> Change the type of inode->i_ino from unsigned long to u64 to ensure that
+> inode numbers are always represented as 64-bit values regardless of
+> architecture. Update all format specifiers treewide from %lu/%lx to
+> %llu/%llx to match the new type, along with corresponding local variable
+> types.
 > 
-
-Sounds good. I think this is the right way to go.
-
-> I think that would still be quite readable without the of duplicating the
-> code.
+> This is the bulk treewide conversion. Earlier patches in this series
+> handled trace events separately to allow trace field reordering for
+> better struct packing on 32-bit.
 > 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-Yeah. Maybe also you want to split your code into two patches similar to
-what I done here? IMO, it makes it a bit more readable.
+For the zonefs bits:
 
---
-Pankaj
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
+
+-- 
+Damien Le Moal
+Western Digital Research
