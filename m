@@ -1,140 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpbg154.qq.com (smtpbg154.qq.com [15.184.224.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C143A4F25;
-	Wed,  4 Mar 2026 11:10:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C7717BCA;
+	Wed,  4 Mar 2026 11:30:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=15.184.224.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772622631; cv=none; b=aZtHzLQpweEt+kh840pINpvzSE+nKnyhcJoOhxo+6R1N7Yw31nPRCynTzOGkPzNmmZJZRYKnQIgwHQsOfoZhbxhnjQv+KKhyj4y/jh6dN9In27WClQl1bg1Awldy4VcrF1MHVjT7ozDtmmCBbM9Y/+sJ3o7kDLmOcFQ97kz4LrY=
+	t=1772623856; cv=none; b=co/It8Pa7hVXCDt7PIc/nc+/KCKrDe3TiaYAdxvh1aJ+7Kyzq4CZuYz5qEhEXdmqSsVcJpqp0gvzkOU8UmuFW/KPCX91PTXV5LvOM04vdjbiZKtqBzCFcNfZrOw4NqFkFt7hUgtJnBo1kfypUY5KEaEo+JbMKBZ5Bm49TyY4nG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772622631; c=relaxed/simple;
-	bh=NqNfQqjBGfmbAJo/aZtHMPo7003kq0HNHUa3oLLM9rE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mOwlADegZNWRm0dv1I4xMg8DdkrRZbC46fUuw/aLiMnSDMLdPP8/cLmuhRe9Vw96PeB0QSAmg+sms6aFjjxTSOFAZjwpi9F7k594FFvGPhAoOOuNfBGe+Fx1beGv1+HxaEnI950JuPzQtAN/CqdL+7qCjmLB4Lo2GwEd3jnJrWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KtxESzLT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772623856; c=relaxed/simple;
+	bh=/DAPR9YQ7YDAW8oZA7Qwt3fLuAbtVrpSy8jC6ChRBIg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pCHMzKhF/oxGK2it/dc1tG6MwWePYdScpqQm1OTUKIi6UVysDZj+LiHai/e9gLm/3jfpIKB0q/uyWu6dlRwKQfj8uMSz7xg/dorPtQvCW7Oev5buUP9ZvaN06Ndn2peY02nvzGPD+830egJcQueYcn9mC3rvl90Dn8alIgaDdso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=G/8DkeIE; arc=none smtp.client-ip=15.184.224.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KtxESzLT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64839C19423;
-	Wed,  4 Mar 2026 11:10:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772622630;
-	bh=NqNfQqjBGfmbAJo/aZtHMPo7003kq0HNHUa3oLLM9rE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KtxESzLTRevMkC0RMT3EArDVMk2FhTkCghz7l84S/Sl/uRFMKbvYjBO6WKTPLXZG2
-	 hDd+jtXTkQDCPlsNqrRNNBIS69FSEG3kyCqhhWldcKaA7lgmXmclpmibkTkxFDGx05
-	 L1mWc9QOtddQl0a6TEhhiss3l8edtqg3iz0dJiofY0wVH+4yeCbYY1MzoD2oPWrjdR
-	 EnDw2NjEjLAGM8p4Zym2vHqMmJuBYJNQQtn7Ix1yH9YiSler1bu8kJQI/BP/hsAWKP
-	 HCA4EbtIlLqW3pzKVaXGzu0CeEXA+pozdgRHL7CTE7jTeamnzsicmpnlaw5LC2gU+C
-	 eQD2mqeeLI41g==
-Date: Wed, 4 Mar 2026 11:10:13 +0000
-From: Mark Brown <broonie@kernel.org>
-To: Yury Norov <ynorov@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Theodore Ts'o <tytso@mit.edu>, Albert Ou <aou@eecs.berkeley.edu>,
-	Alexander Duyck <alexanderduyck@fb.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Alexandra Winter <wintera@linux.ibm.com>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Anna Schumaker <anna@kernel.org>,
-	Anton Yakovlev <anton.yakovlev@opensynergy.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Aswin Karuvally <aswin@linux.ibm.com>,
-	Borislav Petkov <bp@alien8.de>, Carlos Maiolino <cem@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chao Yu <chao@kernel.org>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Claudio Imbrenda <imbrenda@linux.ibm.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	David Airlie <airlied@gmail.com>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Dongsheng Yang <dongsheng.yang@linux.dev>,
-	Eric Dumazet <edumazet@google.com>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Ingo Molnar <mingo@redhat.com>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Janosch Frank <frankja@linux.ibm.com>,
-	Jaroslav Kysela <perex@perex.cz>, Jens Axboe <axboe@kernel.dk>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Linus Walleij <linusw@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Namhyung Kim <namhyung@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Paolo Bonzini <pbonzini@redhat.com>, Paul Walmsley <pjw@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Sean Christopherson <seanjc@google.com>,
-	Simona Vetter <simona@ffwll.ch>, Takashi Iwai <tiwai@suse.com>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Vasily Gorbik <gor@linux.ibm.com>, Will Deacon <will@kernel.org>,
-	Yury Norov <yury.norov@gmail.com>, Zheng Gu <cengku@gmail.com>,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-	linux-riscv@lists.infradead.org, kvm@vger.kernel.org,
-	linux-s390@vger.kernel.org, linux-block@vger.kernel.org,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	dm-devel@lists.linux.dev, netdev@vger.kernel.org,
-	linux-spi@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-crypto@vger.kernel.org,
-	linux-mm@kvack.org, linux-perf-users@vger.kernel.org,
-	v9fs@lists.linux.dev, virtualization@lists.linux.dev,
-	linux-sound@vger.kernel.org
-Subject: Re: [PATCH 5/8] spi: use rest_of_page() macro where appropriate
-Message-ID: <e731e101-bf06-44d7-ac91-0756c5b8bbc8@sirena.org.uk>
-References: <20260304012717.201797-1-ynorov@nvidia.com>
- <20260304012717.201797-6-ynorov@nvidia.com>
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="G/8DkeIE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1772623780;
+	bh=MpENa8mWUxuwjKdTOrasJ08UWYdELB3KH0mJp4yoAzA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=G/8DkeIE/Jr3QRH9X69qKEBGyKOZkMnqdKNFbnX/mdoa6R4b9VZ9kzow9R03gAZ4d
+	 lnEejDzfHBcgWFmkfkunowNcwDkUSwUDlhNceqbPx75Y7KYrte0ZvksEtEtu2EpUZ0
+	 1c8RYT0MK1fxzpIAoIxRadqu4m/H6kJKP/C2NoYQ=
+X-QQ-mid: zesmtpip3t1772623764t823d88a5
+X-QQ-Originating-IP: Qj2980G7g8byIFySsnUrKZuXHUTt8e0jQmCCZP8U0n8=
+Received: from hongao-PC ( [localhost])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 04 Mar 2026 19:29:17 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 4117823029604281760
+EX-QQ-RecipientCnt: 7
+From: hongao <hongao@uniontech.com>
+To: cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: djwong@kernel.org,
+	sandeen@redhat.com,
+	hch@infradead.org,
+	linux-kernel@vger.kernel.org,
+	hongao <hongao@uniontech.com>
+Subject: [PATCH v2] xfs: Remove redundant NULL check after __GFP_NOFAIL
+Date: Wed,  4 Mar 2026 19:29:14 +0800
+Message-ID: <505A5848AA49D10A+20260304112914.599369-1-hongao@uniontech.com>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <B6935AE39B8FFBF2+20260303033332.277641-1-hongao@uniontech.com>
+References: <B6935AE39B8FFBF2+20260303033332.277641-1-hongao@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="MuL6cN1k4g/DbVd2"
-Content-Disposition: inline
-In-Reply-To: <20260304012717.201797-6-ynorov@nvidia.com>
-X-Cookie: Take it easy, we're in a hurry.
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpip:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: MSyoPQEuxKCuFQgrWzu7mfvoLsb3J5wq/+XtbluHfjQtWT414f9pDuGF
+	xGo7E3zEVGk7qm6XQ9OcDRNYupTA4e8uP3HK7wd4vmeBLPyUV7+wIbgbIS0zeXdcMUlonSL
+	/LSVduwz+LH9hhZ6P2kMwrUusjtKXXKDniGJMfgaGcpSrzSXNHG2Hp/bU6KvCghcG6ZzPG3
+	M7HPdIMTOrorxWJ98UekBKlSrZrYEJAXLBr10PnVkOuCJdsUNCzaZVgzf9hpEOt5xgMHV89
+	4fTGLTiP2OVRIelY3w53kMWYzW3sbhbsqflOo8bJVxkpM36LS0oCKYnmvVOKywlra2rIo9W
+	VA28UZ2FjFR92O9OGFkYAVq5qj+sMNeG2vKydwAFTWhmUYMhwElh/Y1b4c0hqkC+PWFLiaz
+	d6CyvMyS0dXJQDyTgb3yDjKjL3rzeTyEsGDNqECZna1tJPlXx7b4TCUKTsZ4hfjw1yrOnrb
+	M2QGKACc0o3/sxQXQ5SgMPDxL4L0xaBZKy6PeYdtcWvE0T+Q7m8aULCqV/zgmEvaeyr8YJB
+	D4elVISnKDKH7uNVd8PusBkAyZyprd7CGREqEmmTTzOo7IdAcSK6drSDTQAx/rO7mqtbhO0
+	vq/2s/RI19yN8oKqJVsN5cZSUHSreruXbL6kma529zPkgyl4dm/S9jgz3BSQLP0eC4lIPmE
+	Ppx1ZK6SQMBMYP1F2gBN+5Xm0Kb1TjzfepIYmAZD2W+K7QucogKrhSYE/dw5vdYXxRmDxPJ
+	mnSwU9EuHXsoae2vMoSd/zQNfR0VZ2LU5POIBeAS2Y5ZM/4cOBO9jKOQtkPe28mQknHrhs3
+	e4jIXJjSDNeV2DUHijB5TEFbr3TLJoUKgGVO5eTkUAXwh3330e2J05BOuDbayFqg8yTPsOO
+	tm+IUN89dO7uNt6S+uHFj1uSNTY44ZXs8Ud3mkXzaTYJFxVqo7tWdR+vtKFzip8AJN12Rg6
+	dHh7wKBMqxd/o1Y1+SiCjShXQVguM3smXhc16rSxIkhXjEhdNon5Erg6oGrty0v2srdesbv
+	IpxKzU9g==
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+X-QQ-RECHKSPAM: 0
 
+kzalloc() is called with __GFP_NOFAIL, so a NULL return is not expected.
+Drop the redundant !map check in xfs_dabuf_map().
+Also switch the nirecs-sized allocation to kcalloc().
 
---MuL6cN1k4g/DbVd2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: hongao <hongao@uniontech.com>
+---
+ fs/xfs/libxfs/xfs_da_btree.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-On Tue, Mar 03, 2026 at 08:27:13PM -0500, Yury Norov wrote:
-> Switch SPI code to using the macro. No functional changes intended.
->=20
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 766631f0562e..09d4c17b3e7b 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2716,12 +2716,8 @@ xfs_dabuf_map(
+ 	 * larger one that needs to be free by the caller.
+ 	 */
+ 	if (nirecs > 1) {
+-		map = kzalloc(nirecs * sizeof(struct xfs_buf_map),
+-				GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+-		if (!map) {
+-			error = -ENOMEM;
+-			goto out_free_irecs;
+-		}
++		map = kcalloc(nirecs, sizeof(struct xfs_buf_map),
++			      GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+ 		*mapp = map;
+ 	}
+ 
+-- 
+2.51.0
 
-Acked-by: Mark Brown <broonie@kernel.org>
-
---MuL6cN1k4g/DbVd2
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmmoExQACgkQJNaLcl1U
-h9CfwQf+I/XcN+BTYZLFcHPKTZ6Gt21+q3GLOzdkgChqzxOybf6b2qD+OHDN55Te
-HvnosWIFzWzrD0ZP4eNe1TE0j1djIs+y2hdX6fElOOuJijsn21UWvVZXuuGdENdA
-tPZDWrSzxJ8sU12FFYyBJDxsnWysekc1llPy00e37sfeetOZOLaYg/1jnttOl6oU
-a3i0DGlMSVCN0pIYah+1R5Vbe35l4DlrcyOoswdwqqqEAzPLr0ysycWbbVmelm0M
-U/y3gvpx6ZZBlMMio/3WWZfu3pM/Kwc8nzHkdzsstdqSIsRHEWru1MF5W4E+IcwO
-Id51vK66wgwDVauWcfBpUUDez8/oEA==
-=1DSJ
------END PGP SIGNATURE-----
-
---MuL6cN1k4g/DbVd2--
