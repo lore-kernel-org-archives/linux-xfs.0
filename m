@@ -1,47 +1,47 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010003.outbound.protection.outlook.com [52.101.46.3])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011055.outbound.protection.outlook.com [52.101.52.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BF2930EF68;
-	Wed,  4 Mar 2026 01:27:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CD4C31B824;
+	Wed,  4 Mar 2026 01:27:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.55
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772587672; cv=fail; b=ComVDQwkq8bGBoEMx8xf7YzF/I9QVdwoBXoKB7dNIGZd4MjkwWLDl2KYXylk92bBsOOj3V7peSgHesLfiUgaD9ZStXyis+Qd+Zaopex35ryIxGOqrYUD8Q5QnDyYuwnwlc5RvR4hs2f9IQnVKnIu6W/VtvRgpkoScMIdAISE0CU=
+	t=1772587674; cv=fail; b=MFmrRM7A/v8cso2jOF0G66/Jlwu4MOKhYkr9ukvSKC+soBBf3QlR9lbDkW4Qs/YaPaI5XhwWuxRxujntyv5ojF3MUuIxycgx4DBS837JnAMUU2MIn2gN3R+8YKsnAelzcfV4Ht7BXCF9WA/h4ACEXR2B7LxMgOEislr/mEo3Mds=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772587672; c=relaxed/simple;
-	bh=7vCK/sxc+B4ZeJxzC9X2CSCD1lC5VfqOhXpqm+D2/lI=;
+	s=arc-20240116; t=1772587674; c=relaxed/simple;
+	bh=gSQwYNjQtxONeZhXN2E16D1SgtSrl9p/iPb4eHcT4A8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=B1i32xR5u0N8nuJsWLcAAyvaLd+PEKzni6LdM9aU2WCrUP+ithbKvz4UHH+LwsDwxgM5gqmiZZ9WpWSaMxKBSGQ2uzccpkBJwpsHTOJwzXRjkWNN83Ieh+XkXZOUNwfYbxYOsCuRqO4+Zg+Z0GPDw+gj9gXHtvQYCxXaKe3TDZs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PbJxEn7G; arc=fail smtp.client-ip=52.101.46.3
+	 Content-Type:MIME-Version; b=hZyXgeYKoO941oMRmXu1Ttyybkf/XQr2dVpbPB6XgYZ1ty3EPd24NynwUf9a6Q4mP9usr5SI+4pfqSDzTHrRmJlTmVaEnwMiQ+1CeX04vQwEF3U3cXT127OFSOxJ4UWH+8d2BaByIn7It3Tjn2eaeq6pTyGvC631MWaxqbH1y3Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=f5sF/09Q; arc=fail smtp.client-ip=52.101.52.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PbJxEn7G"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="f5sF/09Q"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rtYbkjF6j/cckPMLctsjtszaImOU9ZmtO+EqP+j2ORwzMKxXJe3bI77aOmn2S/XcGc1WJD2/1Jn+jmpN2k7HdWtI98cFoxh6U1LnISGNxLoUTERSg8ZkCq7nbcM3s1SWZUc3LZ0uicurVNrqfwRWy/sFigwX3ooAJwgUh6ojU1LZQGSbkTgwJX9pnTpUe/Q06mwAoJUqNjxA45WoLouWNLJTKyoSiOESCs30dFHFo6NUpFzkun5u+H4UbcGLHekzkCKS8t+SC2Sa2VuJIhTv7gMa2Q6IThiQn7bO2xdA6huicZ4aN92nYkiRwF/3DHOfGOzoBLWitMyJ/SeQEH7ghg==
+ b=a5afcP+xPp53aYkHswiWzdI4Msozqr5V4tHhEVXe9ZVjtcmRiy3VX11EkPHjazOLYMHmGxtIZ1Y0lGPnHStG+/C0bRfTo7MUqs/Mt8xjsP3P7e45Tsjhnuput9GwSWyBLlsoZq2QWZSKI21cj3tsvENx9xrZ9jKDxVS7Ir+xVogQ8dPScgJpIFGkkHmjRcuTtxYiJUwfWpSGShQNjiEwGmIFTPWDeJpwX+mSIb0dtqB29KsgifvWU6U63Ztsb8TPcihy32Q/yp19plQumzA04MwzycDnQcvnjZljjC1W1nyboRNthKtcyp9pXv4mMkgoyqWpLchikAR6nskSg4ChpQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NsJTnERJRzZhLCX7+/1+Xs6KkE2zo4OgvkEqpZE8A8M=;
- b=E18v9nkNSsHVeMIWL/LoI9pyKcyxfSMSgSTN/6w5RsgqPazWaDQO/pkYiIsYhPo9Vjx5NXD0KDMoweSQXgOVCYD5hcK5Z5xiyG5WDbpPWitzh3lK2o6gN1zvsfTiMpTemEVKJCjLhaniS+5peAzqo/sDCyjdPmBD/jzrS4k9tuXDEUPe+KKS0clVpUXhaQpREupcCVej9NQAzBGB+cvcuVqm4aY4kK3nx0bH+YqA5yqvwrI2SljsqAYyfjsuvyKEgj5zrHXXtZYVrV5BrKHtK77Inv1WPylNoqrBQLdVQlEUeUa5KDhfAL4YQO30v3bWPrrIuHu40iArdIVTXXuB4g==
+ bh=8gSCHE8kjPSLoULSKkpRxPQqFKwhZBXzpx81D8lSNwo=;
+ b=wbJElpWqD6bg0np/jNgUS09/M6WzYi4dXudK8aKDX0VYiPs8VBeR5wWPPryGowCpTuB5H/ScREOXYsnBTRWUJtKCVh48VEvGMNSPA0FvjxenfxRYSiJv/3SsO1k4oIt9v0SSFvyG1Lev7GmYbW+CKWEmESsBklwuQfB/0v1pL4jgZ5k/XAhZKV0v8JCDOuUNm7RaR7Y9jbSdPvfj3NCPnohu+8z7NGRmq8hlm2RUA4hoz5u1Ay04m7rI3HziSV8vTp15QzorFOH2zQnTBkrfh8Bv20q+PV9C2YUE1fsyPndY0a/vtMAZdZOB6Zh9Szx+m/r3yjdbYR/4pz6V7wmw7A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NsJTnERJRzZhLCX7+/1+Xs6KkE2zo4OgvkEqpZE8A8M=;
- b=PbJxEn7G+bS4KSMUxBgg46xddct10ZkhjQScemEdN/gpDMagU91bawODu8Pdm5K18m52HIkUFZEJ1dEnBPuYjO114YrqnYyyJzoVl9XYneOhjptOiiBjLx69K7wokffoYf3xOrC6yyJzOzWWZA/r3e7X87i4jMdt76OuovlA8miRsFdS/ScO7tNNoh6pntyVsZEOLdg5JnnTlm3HPtBmqI+CsMb/KInoW5//v50YE+PlKH0cyo6iq0xtaN9m4s0Yu3h+dMmtFcgyWvud+zJJZ0yOtWKaeZrt1iDVBGCNtkEVqXvtVFetko+1VAu4W+2Y3bB3+mScPxYZLuL8xmi+dg==
+ bh=8gSCHE8kjPSLoULSKkpRxPQqFKwhZBXzpx81D8lSNwo=;
+ b=f5sF/09Q480wY19v1DY3Wt+SNUs6vVXNnfB4WTZLCiAUZdUuHcjnQZtwIPxSD5MC3m8FjWqDcVHdmYoyy3a3YR8YTJZoqiCMCvFvSlpv2IWlfLYXxnB27ls2FDf17x0IGjUDteajVACehCgQlH9MkjMfmgtNfDoUNo1niDZAL0eZigyTFSeuWyGGkSbRqKBVaxptIbqnrR9aBmVRDapK/pME3lM6UW7pm2Xj5/EtV/1OYYM5kg3kg10EopJujBHC/ujXluuVSmDflkCC6+qiRR/UlVgMH018CmS8f49SnBIU8dYa1kciQOVP4rRF/2Zu1WHrSt9VUT4gsIEkfXRHFw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from PH0PR12MB8800.namprd12.prod.outlook.com (2603:10b6:510:26f::12)
  by IA1PR12MB6651.namprd12.prod.outlook.com (2603:10b6:208:3a0::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.22; Wed, 4 Mar
- 2026 01:27:29 +0000
+ 2026 01:27:33 +0000
 Received: from PH0PR12MB8800.namprd12.prod.outlook.com
  ([fe80::f79d:ddc5:2ad7:762d]) by PH0PR12MB8800.namprd12.prod.outlook.com
  ([fe80::f79d:ddc5:2ad7:762d%4]) with mapi id 15.20.9654.022; Wed, 4 Mar 2026
- 01:27:29 +0000
+ 01:27:33 +0000
 From: Yury Norov <ynorov@nvidia.com>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	"David S. Miller" <davem@davemloft.net>,
@@ -129,16 +129,16 @@ Cc: Yury Norov <ynorov@nvidia.com>,
 	v9fs@lists.linux.dev,
 	virtualization@lists.linux.dev,
 	linux-sound@vger.kernel.org
-Subject: [PATCH 4/8] core: use rest_of_page() macro where appropriate
-Date: Tue,  3 Mar 2026 20:27:12 -0500
-Message-ID: <20260304012717.201797-5-ynorov@nvidia.com>
+Subject: [PATCH 6/8] KVM: use rest_of_page() macro where appropriate
+Date: Tue,  3 Mar 2026 20:27:14 -0500
+Message-ID: <20260304012717.201797-7-ynorov@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260304012717.201797-1-ynorov@nvidia.com>
 References: <20260304012717.201797-1-ynorov@nvidia.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BN0PR07CA0030.namprd07.prod.outlook.com
- (2603:10b6:408:141::13) To PH0PR12MB8800.namprd12.prod.outlook.com
+X-ClientProxiedBy: BN9PR03CA0939.namprd03.prod.outlook.com
+ (2603:10b6:408:108::14) To PH0PR12MB8800.namprd12.prod.outlook.com
  (2603:10b6:510:26f::12)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -148,218 +148,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: PH0PR12MB8800:EE_|IA1PR12MB6651:EE_
-X-MS-Office365-Filtering-Correlation-Id: fc3321f5-58f2-453f-5285-08de798d3366
+X-MS-Office365-Filtering-Correlation-Id: a668991d-ff9b-4dbb-7daa-08de798d35a8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|366016|1800799024|10070799003|376014|7416014|921020;
 X-Microsoft-Antispam-Message-Info:
-	2bU1Zgdgg8fizy0j7DF+Bij0LR23XaHZoLO1x5kNaZZTZ8wNpGFJ/vX/G4h7UWom/z0NhDFAN7b4Q7P3g/JAwgLAPzuc3HwJOWg+ys3klcS2jI2YrgS5XTHNd1ReeWfZJthPb65KL2xVO6MR2ugndghKxMxGl+Turbo52l/QpFs4e3wat6zf5Bbm0ByxO8sm36toVsRPXChQcQ4HGaGobAdh6r/wXr3HNtWz/vWiafQd0dP0rAQX4cFOCWp9bPulnvAYbD43PMoMV04xgsOPod/VcXPBH2irxM+VH4ZuPseotVhF64Q1ym2fanC+A+7c4cYY7cINPwMTmrzUDiPs4ePPwpXcFoH01bWPMReos3tWfecXgZrAkSLTz4xVkSYhYLkgU2PGz+/fX2uxHeiJMcpGE5Se+M6iptqHPNVbrV/jE/NeYseeooOZicU317qfbBW7Msyjxqq4fw5Sj9MdObdriBRfiH7qWNTGA/bEDUqjrN9tF8pxt7mALPAP+Sx3Z+EvhPoO0KzviGRQguPYE50/MIHJ4Xjacew9zBQO+f81G2lZBqeg21PBYTy/ITcrhBonEvsbRspS+gObiM1XiYjxP/XVjVQfqYQY93+/AeNHW1TH96VM8kUwdfFtYfa4m1yDta7tL2/7Z1TBNa9tXgxZrxMj7uXyLkUMSvZCPV8XH/j/xfucUaI/XkNvtSmqLP2Dh9xZTiqYljgDNp/htcurwFA7PeEG6M+iExtsQH40j7aE7tFAbtJVl1PmQC733dtLxI+wPXZoSMlISASWZA==
+	Z/6V97ZgGWZnJizosWGs3D3JmsBEU37quAoqwhEy56JDe8uN9V3H6D0yuBL506dxvp7oKI9HDcWQuTOlKn0o1JpfUQnxPPVHmG8fJW0OJ2nIPNi/BZ5LpoMR8z8W9ya02KrLD+7+pOg61gi6s0I3tkmeKrg5DEriLsalAWRhpbRdciQcUJ98RKyfMVAO/XnUqVRVy+mCCctZ5T0BPaspgBUdQCU+vpwLVMWgLWg4xwX5QaiOhiL5bYu3LJxw5MD3r3OTLNsbkDoQ0oUDuJh091ka7SnC0vuHZ3ptqQ3ghskwHcPQKSMbxV+7P8btNCQviv75jQU9o/qFRbhF2XUTNS+Qc4BtwtnE/Lvguo1ceZnaIQpK8RgQOlgihnvThAsXus7SPKfcgffX5kkYyiGOXXbx2QJxfndKopRgwym112xa8FNEwzOrYtKVSvsBMdlVPdMU8DUD5IC71mZYK1dAiaf36QUz9dW9Ibj8wULgR/OF2sGOXtJep8iC0/Ojd/ofmjfcQ6auj/jtREgrlK4jtSKwjsePgcVhq0mct+jNAElovWmy7MJ56cWAm7WgJ4SB1cTtaNxVMRhkgBJ56PKWV0JQu0xlZJ3NKA+xU4uPGfsFxXuV7VktmRigNpPV6h9vd5f9Pnphg3l+tgavj+Od6om9EpHzRTvSpjYzzG5471C9FMY+oSzEOq9q8Xn4COFLTJb1VuaMekZAgG+uBTdDVleFXWQy0PRNyCjZ1KPO4+wlaQ8xlZQ30GD3yei8xfzDp6Etd01YNcd7ZPo5U2jfWg==
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR12MB8800.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(10070799003)(376014)(7416014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?hLSUKEpnuUW544SwxGwrhhMNk8qp8Sr4uH7HRvp89Br0GFhxPRZlF4nVLAuf?=
- =?us-ascii?Q?9cbxAnUU4Yr9Qodq/neTvvZJoZU27/0qEqHDxlDg1GMv3B67nf8h+2pBE1B4?=
- =?us-ascii?Q?AVg0nLDTMLyi0X4VkU+2jGRcjllIYrz+oBaW6UyTN6f19asc0m2ggf6rfjHH?=
- =?us-ascii?Q?bArwZ8s5GnYSKj0VV1XTS7MkQxHb3IFxT9RGLfSho8p6MsaC90jg4eUv32ER?=
- =?us-ascii?Q?vdmeTv5FjGzt2M8fQEpjcRglbWMQ7SjnEKRPq2IOl1CRghfTyTEZP8MntlUD?=
- =?us-ascii?Q?mX9+1+Iq8XGMLVevmT65dxoVKiq/wC2hLYpMgCLUtJnlAb9tG/ZEiiBxI2d0?=
- =?us-ascii?Q?ZGoZqE5StbiZ6PhQOI8CBeTiUVq/KLulLFJ8H4M6750WEnmcFS6fGiM2cub/?=
- =?us-ascii?Q?oTY9sH6rr/Pef3BgOjVIU2i1YUgu5+ab8bInl48INoy3pyZDcSeJGe/ZadA/?=
- =?us-ascii?Q?17tK8Pg2LuXWScGSf7Ty5vy9wODwj58v3GeJF/pqnXtDqUx4mzDwzWxboc0D?=
- =?us-ascii?Q?iAdvEzxa2DU1HkaFqE+35CCCEd+ITB7SiEd8jEweFvlU9O3wG9Wq1xpOAdrM?=
- =?us-ascii?Q?0YKghEn+M+MpR/A+isdjW1APAbhysW2JPN4sbyu1b3y0co1BfU8vk1UPmukh?=
- =?us-ascii?Q?LgBSFCHWwfgUaQbVbxpqfomjIeIB/lbBS0M/KXlh5wgP71WQ0rIHqt5CwvNn?=
- =?us-ascii?Q?79gzEPYEQNyq8qeqAsua9C1/Dmr0so/BhIqfEQCIdjDjDwjDj9o/BfSelVSk?=
- =?us-ascii?Q?u0kRek/gBRysGF6M6icv34XWivsleUhsL9CuFikZUtUGYNI+vvLZG+orY176?=
- =?us-ascii?Q?WUu9n2LEuNrOCUw+2iC3rFnvQ7rebARLkVpAsauXky34GyaKp4b3dkhLxfFk?=
- =?us-ascii?Q?eC9f8knwrC6hSYM6BMfT37rgWxOhXsOtIXya3yF507Q2jozncX3+iqtwQNU5?=
- =?us-ascii?Q?kydHjcIT9HIShwe2CpFAt1MOGSineOPJKvJmGTdsalPpuBDN4Fzo2QuMROyW?=
- =?us-ascii?Q?LHXeeKN6o2mYGyuQGZbiKW4r2RwkjJGF/Tee7xiT1D1CEuIcGDdAx2RIcDZN?=
- =?us-ascii?Q?5q3PaUkKalvgIURESxDPLUcFQPxUzSu4ZR3II7bqVW1x+BcytJhBCqksmusK?=
- =?us-ascii?Q?zx8uRU2zu1FKBXw+zOdKewNd9NZWlWEo8ieIAgJxjTrBibZBg+aZShu6/sjV?=
- =?us-ascii?Q?TOY8GB8lbWDvslKF4AuUxDqTwDIyQuDJIMNUm8/Du8CJfrwOsYwdtQdC7ZmO?=
- =?us-ascii?Q?Tcoumo0Ox/5bjuEHfEEQwPvxYMmHSADbCq4nNU5WCBK0J9HH0IXtXb3gLyEm?=
- =?us-ascii?Q?1f/RrFgjqQMEypJTgAEjTSXjB5kQWZX4sQYfEFdsidbrO3H/lDjPCyUfZBel?=
- =?us-ascii?Q?mAMUIM90cvomiBWcbEDQsfaSzFCXGlDOpRYh2jChzWVpXxrGWHx40Nz43Gif?=
- =?us-ascii?Q?yvTl1YSbMdCUiJLm7W6ZtKTyWQ+ZjT0LYo6CPblgros3Oe3oUYEURGCf9Xjn?=
- =?us-ascii?Q?HVpeHe+o0iCb7xXKf/dKY+HyA20ENFPjnaVPXLsmcMNxr4qk/31/qL1kCZJw?=
- =?us-ascii?Q?6AJt7lF09XAfZStNj7dKOvwZEivg58ojkdH4TAeZc9p41hKYkfG0iI/3FXIZ?=
- =?us-ascii?Q?yDqQMhQoEKuwdWMTmWHQs+dODra4vyZptQLUcqbkEU+Y74+KdgTAmqTE0MG2?=
- =?us-ascii?Q?k7/h/p492MZ1Y+NBbU4T/0o6az8K1cAZaf+I64jVY37d6kvham8GL28W5sn+?=
- =?us-ascii?Q?oapzuIVKp4/3Vax/KXq+5E5gtaSDI6Z4jY+Rw1kUo+/BY5Oz1gSw?=
+	=?us-ascii?Q?laYgr3IxhCpx4j5kAcCot2E/Vds0o6kWWRSkjhyWLUWD7KnDgH7Y1ZuPn3NN?=
+ =?us-ascii?Q?T7vC5+3ZaVnxRrdvyxx4Pk32wCA36ghzy+a7JPqKAgl/W6+ER1Gweb37TUlG?=
+ =?us-ascii?Q?jbKLI3PtNYWB3vftGBA2zzxthZoh8cTCK1+iib+/D5uiOGZl3t/iu3gn52gG?=
+ =?us-ascii?Q?6vdHH07a8CbBy8eX4hheIn+vKX3n8lCq+lScXOLywYvX5liTqyIobDDoHMxg?=
+ =?us-ascii?Q?6/gdi8l94txKeW83Mpcn0rlrO2NZH2Wp+Xk9wwgBXl5m/yt5kpglcTqtX2uZ?=
+ =?us-ascii?Q?bT2KRNx2B70ebitdNXc7JT83lyPk2H0/NEEZnmgauUaSD5EanlTM3rK3UMqf?=
+ =?us-ascii?Q?VkZigj7W40REEgNAR+EZ2HoJEo2CCUHGldupvDrYdF/LeoC4GxS0mCufNpqi?=
+ =?us-ascii?Q?+aroeTwNAV6oVuTfxshUYht6iSJAbIqVmtGmA+r9FfQ3NuOLqp7ehdd2OlFn?=
+ =?us-ascii?Q?A+QTYT5DPXpU3Hjo6xbFRIeE8AzUnMeKNBdZVPJkA6MWofZ9AYvgvUfZzPSz?=
+ =?us-ascii?Q?sMymeQ7yWdKdLd6lGxVL85nafColRy16aCzvBn5TqjIZwNlidpdNvFGY/RkH?=
+ =?us-ascii?Q?ByLtJLcNNzgSr6mzWuPV3pm8Tq78hEGf2c2zMcdBlgH3dQwYa4JELCG+U0QR?=
+ =?us-ascii?Q?KNTPwFJsRLv79MiuTHxxERMUXifaB9lRVVu9UeDeNnJnEf/oxfze9tHsxHHX?=
+ =?us-ascii?Q?b64wyrpfq/5VWiLD0J5dKLbXcc6EB4OGeOWjKLxWdgTDWeyTMOTeNZtY4ltN?=
+ =?us-ascii?Q?ilPrVnS9iVOlvhXSPF7inNdbpo3Qm9NdCiOftJtFr2pPTkkAUpJA1ddJsXHW?=
+ =?us-ascii?Q?JV6H/5RL11cKVVtX91ibKZW07gLklZ5KG4OyZVmXf4qe+mwinGs5hhPDkCse?=
+ =?us-ascii?Q?jwWtnKoExLGVTa9af5q3IRkESQZPeqRo3zvPV+tSSCrkkxO2DndjGFfQ3JSg?=
+ =?us-ascii?Q?Tr+X9j8APyhcmfV+sT35H623x8I+h2YG1YdyewmmAkOxFzlp4e6RbzSSc5Ob?=
+ =?us-ascii?Q?OhRz9+x2brAanr8h6fQ6kt1vX142wIyXIgoc4QBML58szqTKyEb1PjZS5QBc?=
+ =?us-ascii?Q?IGl72nmkGzGrla/30UhPk/Uk33V77V/BS1KRwEOX+CNDXPxYD66C7bkUy265?=
+ =?us-ascii?Q?2NWweaA/3yE0QY6orrpYKP4HQkb7VMgIOSBcOrDDk3lWK3TFyZ+sDvzNjYxL?=
+ =?us-ascii?Q?nm6bQz7vMBlpbXKeCxouxHVtOmcvE2fEMdscirYsTU6RAkz6L5C0/LUezw+z?=
+ =?us-ascii?Q?nQp3DS4x2tyD8sxYQyP2uTg3WJ+YIZS6GxlSQnNW3Bn+uBTZIt1EQYfSGZP7?=
+ =?us-ascii?Q?ZIKGDgE2LTKC9RAcM9vVm3ZrvQDc7QoTNzUX41ttr3w+0g5s2Ji/gr/FyIbu?=
+ =?us-ascii?Q?P7dG/cNYnnHQWq1o/DNFXBkEgSuY0o+vqJAZ8Jf0lzEsVlk345/poEQdlA+o?=
+ =?us-ascii?Q?hf7PiKHDScKqE5Jh60nN78knkAj/oylR+TlFMCg5/D4EEUPCefP7ZnEcun2z?=
+ =?us-ascii?Q?MYVGRd3uvVYU0vGTjb2jG3qb1vNYn+t1o7HdK9vymM2TtVhUxW/WJCirhuSf?=
+ =?us-ascii?Q?pBmPscEsjuKH6aBdjXXDMv3/Yppc3XNC//+ObZWvq+DMuyIJ1uW3TvNFNzqO?=
+ =?us-ascii?Q?fqHS0tbuUjJTX3ZASi+GQksg6JnUmNeG20CRLeFgzok2+suplVFdaKt7My4q?=
+ =?us-ascii?Q?M5LyApib5nySpUtA+JaA2HSpBZrb14KDYPS6cyXnhX6yIyZ950FBjV7x172A?=
+ =?us-ascii?Q?dVBrYx1dTkPYSm7toKzWE1J8W0h+zMjBquMe0kBK99qsGkl+aDlG?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fc3321f5-58f2-453f-5285-08de798d3366
+X-MS-Exchange-CrossTenant-Network-Message-Id: a668991d-ff9b-4dbb-7daa-08de798d35a8
 X-MS-Exchange-CrossTenant-AuthSource: PH0PR12MB8800.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2026 01:27:29.4321
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2026 01:27:33.1912
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QKugQiQpNaSieM+KubWVyA3r/4X8bz0eN0Y+a21LkKjVOAfxFj76HJG2XRHAse1XkLqFszUAxZx6OyCgFMahgw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: NuFdHRQ+7R7JZVi6h8G6FO97rJSCcjNiBcJaG0+UNpDidCcb/D65BlFnnGxlBYVv7Gy4M0KiWg0X+ktiM9h16w==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6651
 
-Switch core and library code to using the macro. No functional
-changes intended.
+Switch KVM code to using the macro. No functional changes intended.
 
 Signed-off-by: Yury Norov <ynorov@nvidia.com>
 ---
- include/crypto/scatterwalk.h |  2 +-
- include/linux/highmem.h      | 24 ++++++++++--------------
- include/linux/iomap.h        |  2 +-
- include/linux/iov_iter.h     |  3 +--
- kernel/events/ring_buffer.c  |  2 +-
- lib/bitmap-str.c             |  2 +-
- lib/iov_iter.c               |  5 ++---
- 7 files changed, 17 insertions(+), 23 deletions(-)
+ arch/s390/kvm/gaccess.c | 6 +++---
+ arch/x86/kvm/emulate.c  | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/crypto/scatterwalk.h b/include/crypto/scatterwalk.h
-index 624fab589c2c..c671d5383c12 100644
---- a/include/crypto/scatterwalk.h
-+++ b/include/crypto/scatterwalk.h
-@@ -73,7 +73,7 @@ static inline unsigned int scatterwalk_clamp(struct scatter_walk *walk,
- 	 * page due to the data not being aligned to the algorithm's alignmask.
- 	 */
- 	if (IS_ENABLED(CONFIG_HIGHMEM))
--		limit = PAGE_SIZE - offset_in_page(walk->offset);
-+		limit = rest_of_page(walk->offset);
- 	else
- 		limit = PAGE_SIZE;
+diff --git a/arch/s390/kvm/gaccess.c b/arch/s390/kvm/gaccess.c
+index 4630b2a067ea..40f85b7eca63 100644
+--- a/arch/s390/kvm/gaccess.c
++++ b/arch/s390/kvm/gaccess.c
+@@ -973,7 +973,7 @@ int access_guest_with_key(struct kvm_vcpu *vcpu, unsigned long ga, u8 ar,
+ 	if (rc)
+ 		goto out_unlock;
+ 	for (idx = 0; idx < nr_pages; idx++) {
+-		fragment_len = min(PAGE_SIZE - offset_in_page(gpas[idx]), len);
++		fragment_len = min(rest_of_page(gpas[idx]), len);
+ 		if (try_fetch_prot_override && fetch_prot_override_applies(ga, fragment_len)) {
+ 			rc = access_guest_page_gpa(vcpu->kvm, mode, gpas[idx], data, fragment_len);
+ 		} else {
+@@ -1015,7 +1015,7 @@ int access_guest_real(struct kvm_vcpu *vcpu, unsigned long gra,
  
-diff --git a/include/linux/highmem.h b/include/linux/highmem.h
-index af03db851a1d..05528ba886fb 100644
---- a/include/linux/highmem.h
-+++ b/include/linux/highmem.h
-@@ -507,12 +507,10 @@ static inline void memcpy_folio(struct folio *dst_folio, size_t dst_off,
- 		const char *src = kmap_local_folio(src_folio, src_off);
- 		size_t chunk = len;
+ 	while (len && !rc) {
+ 		gpa = kvm_s390_real_to_abs(vcpu, gra);
+-		fragment_len = min(PAGE_SIZE - offset_in_page(gpa), len);
++		fragment_len = min(rest_of_page(gpa), len);
+ 		rc = access_guest_page_gpa(vcpu->kvm, mode, gpa, data, fragment_len);
+ 		len -= fragment_len;
+ 		gra += fragment_len;
+@@ -1237,7 +1237,7 @@ int check_gpa_range(struct kvm *kvm, unsigned long gpa, unsigned long length,
+ 	int rc = 0;
  
--		if (folio_test_highmem(dst_folio) &&
--		    chunk > PAGE_SIZE - offset_in_page(dst_off))
--			chunk = PAGE_SIZE - offset_in_page(dst_off);
--		if (folio_test_highmem(src_folio) &&
--		    chunk > PAGE_SIZE - offset_in_page(src_off))
--			chunk = PAGE_SIZE - offset_in_page(src_off);
-+		if (folio_test_highmem(dst_folio) && chunk > rest_of_page(dst_off))
-+			chunk = rest_of_page(dst_off);
-+		if (folio_test_highmem(src_folio) && chunk > rest_of_page(src_off))
-+			chunk = rest_of_page(src_off);
- 		memcpy(dst, src, chunk);
- 		kunmap_local(src);
- 		kunmap_local(dst);
-@@ -580,9 +578,8 @@ static inline void memcpy_from_folio(char *to, struct folio *folio,
- 		const char *from = kmap_local_folio(folio, offset);
- 		size_t chunk = len;
+ 	while (length && !rc) {
+-		fragment_len = min(PAGE_SIZE - offset_in_page(gpa), length);
++		fragment_len = min(rest_of_page(gpa), length);
+ 		rc = vm_check_access_key_gpa(kvm, access_key, mode, gpa);
+ 		length -= fragment_len;
+ 		gpa += fragment_len;
+diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
+index c8e292e9a24d..c060d1e2bb94 100644
+--- a/arch/x86/kvm/emulate.c
++++ b/arch/x86/kvm/emulate.c
+@@ -864,7 +864,7 @@ static int __do_insn_fetch_bytes(struct x86_emulate_ctxt *ctxt, int op_size)
+ 		return rc;
  
--		if (folio_test_partial_kmap(folio) &&
--		    chunk > PAGE_SIZE - offset_in_page(offset))
--			chunk = PAGE_SIZE - offset_in_page(offset);
-+		if (folio_test_partial_kmap(folio) && chunk > rest_of_page(offset))
-+			chunk = rest_of_page(offset);
- 		memcpy(to, from, chunk);
- 		kunmap_local(from);
+ 	size = min_t(unsigned, 15UL ^ cur_size, max_size);
+-	size = min_t(unsigned, size, PAGE_SIZE - offset_in_page(linear));
++	size = min_t(unsigned int, size, rest_of_page(linear));
  
-@@ -608,9 +605,8 @@ static inline void memcpy_to_folio(struct folio *folio, size_t offset,
- 		char *to = kmap_local_folio(folio, offset);
- 		size_t chunk = len;
- 
--		if (folio_test_partial_kmap(folio) &&
--		    chunk > PAGE_SIZE - offset_in_page(offset))
--			chunk = PAGE_SIZE - offset_in_page(offset);
-+		if (folio_test_partial_kmap(folio) && chunk > rest_of_page(offset))
-+			chunk = rest_of_page(offset);
- 		memcpy(to, from, chunk);
- 		kunmap_local(to);
- 
-@@ -642,7 +638,7 @@ static inline __must_check void *folio_zero_tail(struct folio *folio,
- 	size_t len = folio_size(folio) - offset;
- 
- 	if (folio_test_partial_kmap(folio)) {
--		size_t max = PAGE_SIZE - offset_in_page(offset);
-+		size_t max = rest_of_page(offset);
- 
- 		while (len > max) {
- 			memset(kaddr, 0, max);
-@@ -680,7 +676,7 @@ static inline void folio_fill_tail(struct folio *folio, size_t offset,
- 	VM_BUG_ON(offset + len > folio_size(folio));
- 
- 	if (folio_test_partial_kmap(folio)) {
--		size_t max = PAGE_SIZE - offset_in_page(offset);
-+		size_t max = rest_of_page(offset);
- 
- 		while (len > max) {
- 			memcpy(to, from, max);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 99b7209dabd7..6ae549192adb 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -142,7 +142,7 @@ static inline void *iomap_inline_data(const struct iomap *iomap, loff_t pos)
-  */
- static inline bool iomap_inline_data_valid(const struct iomap *iomap)
- {
--	return iomap->length <= PAGE_SIZE - offset_in_page(iomap->inline_data);
-+	return iomap->length <= rest_of_page(iomap->inline_data);
- }
- 
- /*
-diff --git a/include/linux/iov_iter.h b/include/linux/iov_iter.h
-index f9a17fbbd398..13a9ee653ef8 100644
---- a/include/linux/iov_iter.h
-+++ b/include/linux/iov_iter.h
-@@ -227,8 +227,7 @@ size_t iterate_xarray(struct iov_iter *iter, size_t len, void *priv, void *priv2
- 		while (flen) {
- 			void *base = kmap_local_folio(folio, offset);
- 
--			part = min_t(size_t, flen,
--				     PAGE_SIZE - offset_in_page(offset));
-+			part = min_t(size_t, flen, rest_of_page(offset));
- 			remain = step(base, progress, part, priv, priv2);
- 			kunmap_local(base);
- 
-diff --git a/kernel/events/ring_buffer.c b/kernel/events/ring_buffer.c
-index 3e7de2661417..1db2868b90c9 100644
---- a/kernel/events/ring_buffer.c
-+++ b/kernel/events/ring_buffer.c
-@@ -590,7 +590,7 @@ long perf_output_copy_aux(struct perf_output_handle *aux_handle,
- 	to &= (rb->aux_nr_pages << PAGE_SHIFT) - 1;
- 
- 	do {
--		tocopy = PAGE_SIZE - offset_in_page(from);
-+		tocopy = rest_of_page(from);
- 		if (to > from)
- 			tocopy = min(tocopy, to - from);
- 		if (!tocopy)
-diff --git a/lib/bitmap-str.c b/lib/bitmap-str.c
-index be745209507a..a357342d5d6c 100644
---- a/lib/bitmap-str.c
-+++ b/lib/bitmap-str.c
-@@ -58,7 +58,7 @@ EXPORT_SYMBOL(bitmap_parse_user);
- int bitmap_print_to_pagebuf(bool list, char *buf, const unsigned long *maskp,
- 			    int nmaskbits)
- {
--	ptrdiff_t len = PAGE_SIZE - offset_in_page(buf);
-+	ptrdiff_t len = rest_of_page(buf);
- 
- 	return list ? scnprintf(buf, len, "%*pbl\n", nmaskbits, maskp) :
- 		      scnprintf(buf, len, "%*pb\n", nmaskbits, maskp);
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 0a63c7fba313..c7e812349ca2 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -483,9 +483,8 @@ size_t copy_folio_from_iter_atomic(struct folio *folio, size_t offset,
- 		char *to = kmap_local_folio(folio, offset);
- 
- 		n = bytes - copied;
--		if (folio_test_partial_kmap(folio) &&
--		    n > PAGE_SIZE - offset_in_page(offset))
--			n = PAGE_SIZE - offset_in_page(offset);
-+		if (folio_test_partial_kmap(folio) && n > rest_of_page(offset))
-+			n = rest_of_page(offset);
- 
- 		pagefault_disable();
- 		n = __copy_from_iter(to, n, i);
+ 	/*
+ 	 * One instruction can only straddle two pages,
+@@ -1372,7 +1372,7 @@ static int pio_in_emulated(struct x86_emulate_ctxt *ctxt,
+ 			address_mask(ctxt, reg_read(ctxt, VCPU_REGS_RCX)) : 1;
+ 		in_page = (ctxt->eflags & X86_EFLAGS_DF) ?
+ 			offset_in_page(reg_read(ctxt, VCPU_REGS_RDI)) :
+-			PAGE_SIZE - offset_in_page(reg_read(ctxt, VCPU_REGS_RDI));
++			rest_of_page(reg_read(ctxt, VCPU_REGS_RDI));
+ 		n = min3(in_page, (unsigned int)sizeof(rc->data) / size, count);
+ 		if (n == 0)
+ 			n = 1;
 -- 
 2.43.0
 
