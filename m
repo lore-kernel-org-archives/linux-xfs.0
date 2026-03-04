@@ -1,43 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDE8C3264ED;
-	Wed,  4 Mar 2026 16:44:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A57E7361DB8;
+	Wed,  4 Mar 2026 16:49:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772642692; cv=none; b=jHTpNvoS9Yg1CVZFT2p7vAidcIBo9/xpCQoyPYl6yPIE8Cnu13QFizuClUuk2MBnSkdUawGTGb/T+fSxK2S2u/acKPXPJOqMio7x+i8WyhvUKB1g12ABJQEw1VJFtOswHoEkEygwqwskyc9HPmnbtC5fg/H/hfblue+qKdU9KW0=
+	t=1772642988; cv=none; b=c+K9XfuJkAlMEX5vSka1PESuaA5Ep3XBRCbuWbroYm7ftOm6JfOLk/Q0zSRxfwt6825rEtbOn+zem+eVemhVcDcK2r0Iyco/HWM1wtU0xTnCG45L+FlhkMGON0C6U1HnPtRWk703FY7HSRIurLDQ2jj8lz3BpJE7+l/RGm5CTUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772642692; c=relaxed/simple;
-	bh=Vf8+GXwy4WDgkqG5c/4wsXk5bvhJqcLmTc9tkPR43ic=;
+	s=arc-20240116; t=1772642988; c=relaxed/simple;
+	bh=zqrzxr1MA8BzlrUKvBCJrNGlu7J1lpLLID3A02GKxfk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ANx6dEGnBQUPdqOoPimxeY+nEeRRmu2WVydxRomG1Qbs2CWPzPT3hlJ6V1XR6gUxBm0UaqAU5eky3BtwWWFdsPDAfKadWrx0rWAcNpSqEthuFv3miLF5xbbhT1dGElbav8PwiiPoZltEiSd6smoS5sQFL6KA6+zaGIZPT9WZ13E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T1EEbYId; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=j1uk4u0JeTk8KcU+kQLykJfM/FAYl/xCx3yXOc4+aouck7PCzF7aKYtSRmhn2nHvUTbJ1nYV4RhiJLv2aRCaVPE3AgOB5lTE1SDPjfob0uaiTLj+J6lBrFL2Kco2AAI09sTXChp5BEvqL7qrf8CfD2V63a+wduapKv1cm6p/os4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HBZ2uYlY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T1EEbYId"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593F5C2BC87;
-	Wed,  4 Mar 2026 16:44:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HBZ2uYlY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E782C4CEF7;
+	Wed,  4 Mar 2026 16:49:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772642692;
-	bh=Vf8+GXwy4WDgkqG5c/4wsXk5bvhJqcLmTc9tkPR43ic=;
+	s=k20201202; t=1772642988;
+	bh=zqrzxr1MA8BzlrUKvBCJrNGlu7J1lpLLID3A02GKxfk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T1EEbYId27V8IOw8W/10cmXHOkcaUvZ74/qkO32Gc9KHAbb3T3WJgu0bvilBQcblg
-	 zCTsH2Yhqyx7yZW/7pz1cbS7p2nnJJw+STm78jwnadZ1Ebrw4zoCcEdX71Msdadj7r
-	 J9Oh3D+rcEGc5h0FUR5IVvQ4PVkfEefPhehPUGduGz2CsmydNp7OvDDRxROLGtTZqD
-	 pbxSsQD9SmMi45NU0CzULQA7EsGmgdI2uiYiKrMGfDOqmyGtMZHhQDtTWmD9iA/Nj1
-	 gi9ZkE/MKg+wz7eGUyOh1ro96cVdWGCCFTBKEN+KRuK4XlMuOHcy3EKkN0/ec+TnXd
-	 ANh099+GzqrlA==
-Date: Wed, 4 Mar 2026 08:44:51 -0800
+	b=HBZ2uYlY/PN5t2rnhIqi0RZojzcYf+Vzvdqya9uYo1D0XnfIS7zt1liSpuX2V+yAF
+	 aTF7uvB7oIM5raF1t5tOyrYltww8jmbogf4A2+Jq4wnnCsezUOqaOEp7pEqwskc7IM
+	 gtPpVGMF5B0NrI34G6o4nHU2nrYwBHjDGcDVC1CEvtn72rS/9qKm6t7Wf+qb6p3ZzZ
+	 CjMutR84DfOqG1LS5eqSr+WI3VbXfvUOPOyw6VvMwQJdXMJ/PMb2WlsOGFlWFTtF4L
+	 6JyGrkU+fovY/91P2lOMVNoCwt7ybE8ztMzTliKakttHZRmaQ+TmFI0mq1mrSSDWxr
+	 +gKZzFc0S0F4Q==
+Date: Wed, 4 Mar 2026 08:49:47 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yuto Ohnuki <ytohnuki@amazon.com>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <darrick.wong@oracle.com>,
-	Dave Chinner <dchinner@redhat.com>,
-	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: fix use-after-free in xfs_inode_item_push()
-Message-ID: <20260304164451.GW57948@frogsfrogsfrogs>
-References: <20260304162405.58017-2-ytohnuki@amazon.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, luca.dimaio1@gmail.com, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/841: create a block device that must exist
+Message-ID: <20260304164947.GX57948@frogsfrogsfrogs>
+References: <20260202085701.343099-1-hch@lst.de>
+ <20260303175300.GT57948@frogsfrogsfrogs>
+ <20260304125502.GA13048@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,111 +44,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260304162405.58017-2-ytohnuki@amazon.com>
+In-Reply-To: <20260304125502.GA13048@lst.de>
 
-On Wed, Mar 04, 2026 at 04:24:06PM +0000, Yuto Ohnuki wrote:
-> Since commit 90c60e164012 ("xfs: xfs_iflush() is no longer necessary"),
-> xfs_inode_item_push() no longer holds the inode locked (ILOCK_SHARED)
-> while flushing, so the inode and its log item can be freed via
-> RCU callback (xfs_inode_free_callback) while the AIL lock is
-> temporarily dropped.
+On Wed, Mar 04, 2026 at 01:55:02PM +0100, Christoph Hellwig wrote:
+> On Tue, Mar 03, 2026 at 09:53:00AM -0800, Darrick J. Wong wrote:
+> > On Mon, Feb 02, 2026 at 09:57:01AM +0100, Christoph Hellwig wrote:
+> > > This test currently creates a block device node for /dev/ram0,
+> > > which isn't guaranteed to exist, and can thus cause the test to
+> > > fail with:
+> > > 
+> > > mkfs.xfs: cannot open $TEST_DIR/proto/blockdev: No such device or address
+> > > 
+> > > Instead, create a node for the backing device for $TEST_DIR, which must
+> > > exist.
+> > 
+> > Hrm.  I'm still noticing regressions with this test, particularly when
+> > the blocksize of the test filesystem is different from the block size
+> > of the $IMG_FILE filesystem.
 > 
-> This results in a use-after-free when the function reacquires the AIL
-> lock by dereferencing the freed log item's li_ailp pointer at offset 48.
+> That is with the test in general, and not because of the block device
+> fix, right?  Your description seems to indicate that, I'm just a bit
+> confused as it is replying to my incremental patch.
+
+Correct, I'm just complaining about x841 in general.  Your bdev fix
+eliminated one of the sources of test failures.
+
+> > So I started looking for fsblock discrepancies between
+> > xfs_reproducible_test.img.[1-3] and noticed that EOF block contents are
+> > different if the file being copied in has sparse holes in it that are
+> > not aligned to the fsblock size of the new filesystem.
 > 
-> Fix this by saving the ailp pointer in a local variable while the AIL
-> lock is held and the log item is guaranteed to be valid.
+> Oooh.
 > 
-> Also move trace_xfs_ail_push() before xfsaild_push_item() because the
-> log item may be freed during the push.
+> > Next, the region at 3k causes mkfs to re-call libxfs_file_write, but
+> > this time it writes 3072 bytes of zeroes and 1024 bytes of copied-in
+> > data, thus obliterating the first write.
+> > 
+> > That bug's on me,
 > 
-> Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
-> Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
-> Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
-
-Cc: <stable@vger.kernel.org> # v5.9
-
-> ---
->  fs/xfs/xfs_inode_item.c | 5 +++--
->  fs/xfs/xfs_trans_ail.c  | 8 +++++++-
->  2 files changed, 10 insertions(+), 3 deletions(-)
+> Yeah.
 > 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 8913036b8024..0a8957f9c72f 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -746,6 +746,7 @@ xfs_inode_item_push(
->  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
->  	struct xfs_inode	*ip = iip->ili_inode;
->  	struct xfs_buf		*bp = lip->li_buf;
-> +	struct xfs_ail		*ailp = lip->li_ailp;
->  	uint			rval = XFS_ITEM_SUCCESS;
->  	int			error;
->  
-> @@ -771,7 +772,7 @@ xfs_inode_item_push(
->  	if (!xfs_buf_trylock(bp))
->  		return XFS_ITEM_LOCKED;
->  
-> -	spin_unlock(&lip->li_ailp->ail_lock);
-> +	spin_unlock(&ailp->ail_lock);
->  
->  	/*
->  	 * We need to hold a reference for flushing the cluster buffer as it may
-> @@ -795,7 +796,7 @@ xfs_inode_item_push(
->  		rval = XFS_ITEM_LOCKED;
->  	}
->  
-> -	spin_lock(&lip->li_ailp->ail_lock);
-> +	spin_lock(&ailp->ail_lock);
+> 
+> > and I'll fix it in writefile by rounding data_pos and
+> > hole_pos outward as needed to be aligned to the block size of the copied
+> > in filesystem.  And I'll update xfs/841 to compare $PROTO_DIR against
+> > what's in the new filesystem.
+> > 
+> > That fixes the data corruption problem, but then the test still fails
+> > because now the space map isn't the same between mkfs invocations.
+> 
+> Aarg.  But I'm glad we got a test for this feature that's uncovering
+> old buggy/sloppy libxfs code..
 
-Hmm, so the @lip UAF is here, where we try to re-acquire the AIL lock?
+Yeah.  I missed the detail that none of the existing protofile tests
+actually tried to import sparse files, let alone checked the results.
 
->  	return rval;
->  }
->  
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 923729af4206..e34d8a7e341d 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -510,6 +510,13 @@ xfsaild_push(
->  		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
->  			goto next_item;
->  
-> +		/*
-> +		 * The log item may be freed after the push if the AIL lock is
-> +		 * temporarily dropped and the RCU grace period expires,
-> +		 * so trace it before pushing.
-> +		 */
-> +		trace_xfs_ail_push(lip);
-> +
->  		/*
->  		 * Note that iop_push may unlock and reacquire the AIL lock.  We
->  		 * rely on the AIL cursor implementation to be able to deal with
-> @@ -519,7 +526,6 @@ xfsaild_push(
->  		switch (lock_result) {
->  		case XFS_ITEM_SUCCESS:
->  			XFS_STATS_INC(mp, xs_push_ail_success);
-> -			trace_xfs_ail_push(lip);
-
-Do the tracepoints in the other legs of the switch statement have a
-similar UAF problem because they dereference @lip?
+I'll try to send the fix patches in a bit but QA blew up last night so I
+should probably go figure out why there's suddenly log corruption, or if
+some cloud thing got really FUBARd at 17:08 last night.
 
 --D
-
->  
->  			ailp->ail_last_pushed_lsn = lsn;
->  			break;
-> -- 
-> 2.50.1
-> 
-> 
-> 
-> 
-> Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
-> 
-> Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
-> 
-> 
-> 
-> 
