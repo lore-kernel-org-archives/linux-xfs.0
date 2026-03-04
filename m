@@ -1,104 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8D8A395D8F;
-	Wed,  4 Mar 2026 22:29:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1E0C1F0E29;
+	Wed,  4 Mar 2026 23:06:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772663389; cv=none; b=QqgqmjN/e3bj1WHaBPQekVIiNecpFWy3PziFWy9e1nZmhe233blDyeU4e3sh82XKIK8JohEERxWWPd+4KRzUXh5e9x3V53FaCOm+Fp+xvQSfkvKWxawbmRfS1GvnM+bFZ7me1pw2zL8ujBpYy8pJltX9V64H+YlmyEAL9xX30qc=
+	t=1772665587; cv=none; b=J75qOqpNcIYtU7vMpAlUByEF/rf1lZqH434DC/JuxknU1OOvBKQgttITSxrmCu9EVLHnIDJtcKQVjIWJrDSA9GTm2FZCQyZSaBSMaj5VNlSFUxgM1Yelbt2yZ2JCzQxsHqgvQfaIP6JDZhi8c67L3Hkc9XsqSCfzhs9EGNX+J2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772663389; c=relaxed/simple;
-	bh=4g9Hc6BCi1UzcQ6UmFUsAKXtEqFK6/wIIRnu62xorDM=;
+	s=arc-20240116; t=1772665587; c=relaxed/simple;
+	bh=ZeGYCWTU3QRXQaD+TuWlLQ7UkZa7emtFfgUUXJwLiIM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MjZvILiPgwssanEB8Z/tZ9zpOIqjohBnm5YKJ4Nv/BRkKxTdrLDqc9Pf5OB2aIrG8xLLR/Debd/yB/e9euQqS6ompmJrSe0JDIU7e3Le6+6mONOuEaceWfcF0AoD2jbllCuD3CtUVxkbm2S1U9lLI85Tv5WGnulXuUApC3o/TXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H7E6g6Lm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=q9Z80Tgm/fDxrSVYbR5c4Wzgrll2+CiZiTamWOzOtZ+e1paIV5RnwBp07OKdI6Xil6msikTP/6XHegqdHMOyO2ryaHyHsPwlxcMxIVmx8t6VOjNtiD/u6I1sXyQwN+Q1NmUdHSePabewnPd/GlO3sur61zDseS9SuRUXc4+clb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G6d09Sek; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H7E6g6Lm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E566C4CEF7;
-	Wed,  4 Mar 2026 22:29:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G6d09Sek"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF6A9C4CEF7;
+	Wed,  4 Mar 2026 23:06:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772663388;
-	bh=4g9Hc6BCi1UzcQ6UmFUsAKXtEqFK6/wIIRnu62xorDM=;
+	s=k20201202; t=1772665587;
+	bh=ZeGYCWTU3QRXQaD+TuWlLQ7UkZa7emtFfgUUXJwLiIM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H7E6g6Lm08bdby4/2tHEolh5uuAfzAVSsM3yLpncdqLzpMpx2R/jiaVVx3BrpUlHV
-	 zLgQZLl3q+J8YOTxOWa4cFn0qM9qtzHl3urpYxu/J8dk/Ng4eTR5ve5/MwMG2EM0x4
-	 13hRsUgqaHxQn1bDCNJafYTopHM59GSiSSfWDaMrsTRgNMP0a8wibVOr0aBrw1II97
-	 INDpQBDBhw/6g/ZfJeCr4GjGF8S8trfaYHGCsvv3rBpIoZHp4hfWrZiyJa1NX9T5Ya
-	 lxm3zNjb7ZsIhtDD0mqurpzxaf9es4FePOHSAnjX78l7+ajL920pZ2wjsA901PjGJl
-	 9YO9TEkdx8L9Q==
-Date: Wed, 4 Mar 2026 17:29:46 -0500
-From: Mike Snitzer <snitzer@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Luis de Bethencourt <luisbg@kernel.org>,
-	Salah Triki <salah.triki@gmail.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-	Anders Larsen <al@alarsen.net>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>,
-	David Sterba <dsterba@suse.com>, Chris Mason <clm@fb.com>,
-	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Chunhai Guo <guochunhai@vivo.com>, Jan Kara <jack@suse.com>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Richard Weinberger <richard@nod.at>,
-	Dave Kleikamp <shaggy@kernel.org>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-	Viacheslav Dubeyko <slava@dubeyko.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Phillip Lougher <phillip@squashfs.org.uk>,
-	Carlos Maiolino <cem@kernel.org>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Yuezhang Mo <yuezhang.mo@sony.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>, Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-	Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>,
-	Bharath SM <bharathsm@microsoft.com>,
-	Hans de Goede <hansg@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-mtd@lists.infradead.org, jfs-discussion@lists.sourceforge.net,
-	linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-	ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, gfs2@lists.linux.dev, linux-doc@vger.kernel.org,
-	v9fs@lists.linux.dev, ceph-devel@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-	samba-technical@lists.samba.org
-Subject: Re: [PATCH 24/24] fs: remove simple_nosetlease()
-Message-ID: <aaiyWlJelhHju741@kernel.org>
-References: <20260108-setlease-6-20-v1-0-ea4dec9b67fa@kernel.org>
- <20260108-setlease-6-20-v1-24-ea4dec9b67fa@kernel.org>
- <aZ84VRrRVyGEzSJn@kernel.org>
- <e07e9b893ca04ce6ead4790e72c7f285a7159070.camel@kernel.org>
+	b=G6d09SekxYEbddmYEn/VEjfbnXFDAevk3pUDOT3GminH6jfJntsLNntUjkMr23XJW
+	 ePUEVoHIf5Gy9PoxsT2Y/X+MISdHeeJPP2nyI8g+Y+0pS4Pv6pruN7id2T7pMLVfj1
+	 KyIm1pSXEtVnW2x6/t1Wpm1P3ZurarDOBihPXixXak0yWJjx6i5H+cCQjWKe3vNiyq
+	 uMb9tjFis+ExbGLVDXn+hyw+6t9SjAbyQAf23/LIsYsPEvfPYSZvguZ/KDTMhXdwc2
+	 dwU+Qle7JLWiio2gfllKdbjbPMsMxd9qzU8kieWnSBcUwigrLum8KJjhg22jF7SeZD
+	 CxCwDEVgoV0/g==
+Date: Thu, 5 Mar 2026 10:06:17 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Yuto Ohnuki <ytohnuki@amazon.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <darrick.wong@oracle.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
+Subject: Re: [PATCH] xfs: fix use-after-free in xfs_inode_item_push()
+Message-ID: <aai66aCvGC66P8cN@dread>
+References: <20260304162405.58017-2-ytohnuki@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -107,146 +46,241 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e07e9b893ca04ce6ead4790e72c7f285a7159070.camel@kernel.org>
+In-Reply-To: <20260304162405.58017-2-ytohnuki@amazon.com>
 
-On Wed, Mar 04, 2026 at 11:59:32AM -0500, Jeff Layton wrote:
-> On Wed, 2026-02-25 at 12:58 -0500, Mike Snitzer wrote:
-> > On Thu, Jan 08, 2026 at 12:13:19PM -0500, Jeff Layton wrote:
-> > > Setting ->setlease() to a NULL pointer now has the same effect as
-> > > setting it to simple_nosetlease(). Remove all of the setlease
-> > > file_operations that are set to simple_nosetlease, and the function
-> > > itself.
-> > > 
-> > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > ---
-> > >  fs/9p/vfs_dir.c        |  2 --
-> > >  fs/9p/vfs_file.c       |  2 --
-> > >  fs/ceph/dir.c          |  2 --
-> > >  fs/ceph/file.c         |  1 -
-> > >  fs/fuse/dir.c          |  1 -
-> > >  fs/gfs2/file.c         |  2 --
-> > >  fs/libfs.c             | 18 ------------------
-> > >  fs/nfs/dir.c           |  1 -
-> > >  fs/nfs/file.c          |  1 -
-> > >  fs/smb/client/cifsfs.c |  1 -
-> > >  fs/vboxsf/dir.c        |  1 -
-> > >  fs/vboxsf/file.c       |  1 -
-> > >  include/linux/fs.h     |  1 -
-> > >  13 files changed, 34 deletions(-)
-> > > 
-> > 
-> > <snip>
-> > 
-> > > diff --git a/fs/libfs.c b/fs/libfs.c
-> > > index 697c6d5fc12786c036f0086886297fb5cd52ae00..f1860dff86f2703266beecf31e9d2667af7a9684 100644
-> > > --- a/fs/libfs.c
-> > > +++ b/fs/libfs.c
-> > > @@ -1699,24 +1699,6 @@ struct inode *alloc_anon_inode(struct super_block *s)
-> > >  }
-> > >  EXPORT_SYMBOL(alloc_anon_inode);
-> > >  
-> > > -/**
-> > > - * simple_nosetlease - generic helper for prohibiting leases
-> > > - * @filp: file pointer
-> > > - * @arg: type of lease to obtain
-> > > - * @flp: new lease supplied for insertion
-> > > - * @priv: private data for lm_setup operation
-> > > - *
-> > > - * Generic helper for filesystems that do not wish to allow leases to be set.
-> > > - * All arguments are ignored and it just returns -EINVAL.
-> > > - */
-> > > -int
-> > > -simple_nosetlease(struct file *filp, int arg, struct file_lease **flp,
-> > > -		  void **priv)
-> > > -{
-> > > -	return -EINVAL;
-> > > -}
-> > > -EXPORT_SYMBOL(simple_nosetlease);
-> > > -
-> > >  /**
-> > >   * simple_get_link - generic helper to get the target of "fast" symlinks
-> > >   * @dentry: not used here
-> > > diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-> > > index 71df279febf797880ded19e45528c3df4cea2dde..23a78a742b619dea8b76ddf28f4f59a1c8a015e2 100644
-> > > --- a/fs/nfs/dir.c
-> > > +++ b/fs/nfs/dir.c
-> > > @@ -66,7 +66,6 @@ const struct file_operations nfs_dir_operations = {
-> > >  	.open		= nfs_opendir,
-> > >  	.release	= nfs_closedir,
-> > >  	.fsync		= nfs_fsync_dir,
-> > > -	.setlease	= simple_nosetlease,
-> > >  };
-> > >  
-> > >  const struct address_space_operations nfs_dir_aops = {
-> > > diff --git a/fs/nfs/file.c b/fs/nfs/file.c
-> > > index d020aab40c64ebda30d130b6acee1b9194621457..9d269561961825f88529551b0f0287920960ac62 100644
-> > > --- a/fs/nfs/file.c
-> > > +++ b/fs/nfs/file.c
-> > > @@ -962,7 +962,6 @@ const struct file_operations nfs_file_operations = {
-> > >  	.splice_read	= nfs_file_splice_read,
-> > >  	.splice_write	= iter_file_splice_write,
-> > >  	.check_flags	= nfs_check_flags,
-> > > -	.setlease	= simple_nosetlease,
-> > >  	.fop_flags	= FOP_DONTCACHE,
-> > >  };
-> > >  EXPORT_SYMBOL_GPL(nfs_file_operations);
-> > 
-> > Hey Jeff,
-> > 
-> > I've noticed an NFS reexport regression in v6.19 and now v7.0-rc1
-> > (similar but different due to your series that requires opt-in via
-> > .setlease).
-> > 
-> > Bisect first pointed out this commit:
-> > 10dcd5110678 nfs: properly disallow delegation requests on directories
-> > 
-> > And now with v7.0-rc1 its the fact that NFS doesn't provide .setlease
-> > so lstat() on parent dir (of file that I touch) gets -EINVAL.
-> > 
-> > So its a confluence of NFS's dir delegations and your setlease changes.
-> > 
-> > If I reexport NFSv4.2 filesystem in terms of NFSv4.1, the regression
-> > is seen by doing (lstat reproducer that gemini spit out for me is
-> > attached):
-> > 
-> > $ touch /mnt/share41/test
-> > $ strace ./lstat /mnt/share41
-> > ...
-> > lstat("/mnt/share41", 0x7ffec0d79920)   = -1 EINVAL (Invalid argument)
-> > 
-> > If I immediately re-run it works:
-> > ...
-> > lstat("/mnt/share41", {st_mode=S_IFDIR|0777, st_size=4096, ...}) = 0
-> > 
-> > I'm not sure what the proper fix is yet, but I feel like you've missed
-> > that NFS itself can be (re)exported?
-> > 
-> > 
+On Wed, Mar 04, 2026 at 04:24:06PM +0000, Yuto Ohnuki wrote:
+> Since commit 90c60e164012 ("xfs: xfs_iflush() is no longer necessary"),
+> xfs_inode_item_push() no longer holds the inode locked (ILOCK_SHARED)
+> while flushing, so the inode and its log item can be freed via
+> RCU callback (xfs_inode_free_callback) while the AIL lock is
+> temporarily dropped.
+
+How? You state this can happen, but then don't explain how this
+occurs. i.e. the commit message just describes the UAF failure and
+the fix in the code rahter than how the failure occurs in the first
+place.
+
+IOWs, I have to spend a bunch of my time reverse engineering the bug
+report to understand exactly how this UAF occurs, because it
+certainly doesn't happen in normal operation.
+
+i.e in normal operation, either (or both) the IFLUSHING lock is held
+on the inode, or the inode is attached to and referenced by the
+inode cluster buffer.
+
+xfs_reclaim_inode() explicitly takes IFLUSHING and checks the inode
+is clean (i.e. not attached to the cluster buffer) before starting
+the process of freeing it.
+
+IOWs, the inode cannot be reclaimed until it is unlocked and removed
+from the inode cluster buffer, and this happens during inode cluster
+buffer IO completion in normal operation whilst the buffer is still
+locked.
+
+The only way that we can do anything differently in reclaim is if we
+are in shutdown conditions. In which case reclaim locks the inode
+and calls xfs_iflush_shutdown_abort(). This locks the buffer, then
+removes the inode from the buffer, the AIL and clears the IFLUSHING
+state, then allows indoe reclaim to continue.
+
+Omitted from the sysbot traces is this:
+
+[ 1161.203695][T20859] XFS (loop6): metadata I/O error in "xfs_btree_read_buf_block+0x2b0/0x490" at daddr 0x4 len 4 error 74
+[ 1161.254510][T20859] XFS (loop6): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x518/0x950 (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
+[ 1161.254574][T20859] XFS (loop6): Please unmount the filesystem and rectify the problem(s)
+[ 1162.085767][T19986] XFS (loop6): Unmounting Filesystem 9f91832a-3b79-45c3-9d6d-ed0bc7357fe4
+[ 1162.203508][T20924] ==================================================================
+[ 1162.203522][T20924] BUG: KASAN: slab-use-after-free in xfs_inode_item_push+0x396/0x720
+[ 1162.203550][T20924] Read of size 8 at addr ffff88805e822ae8 by task xfsaild/loop6/20924
+
+The filesystem is indeed in a shutdown state and is being unmounted.
+However, the AIL is still running, which means unmount hasn't yet
+got to reclaiming inodes - the AIL is flushed and emptied before
+that happens. Hence this must be a race between background inode
+reclaim and the xfsaild. Interestingly, some of the failures are on
+quota inodes, which get released in unmount moments before we call
+xfs_unmount_flush_inodes(). This implies unmount triggered the AIL
+to run and is waiting in xfs_ail_push_all_sync() for all dirty
+inodes to be removed from the AIL.
+
+IOWs, the reason this race condition occurred is that unmount has
+triggered the AIL to push -and fail- all the dirty inodes in the
+system at the same time that background reclaim is trying to -fail
+and reclaim- all the dirty inodes.
+
+There's the underlying root cause of the race condition that is
+resulting in the UAF bug being exposed - the unmount code
+is allowing background inode reclaim to remove dirty inodes from the
+AIL whilst it is explicitly pushing dirty inodes and failing them to
+remove them from the AIL.
+
+Indeed, xfs_unmount_flush_inodes() does:
+
+        xfs_ail_push_all_sync(mp->m_ail);
+        xfs_inodegc_stop(mp);
+        cancel_delayed_work_sync(&mp->m_reclaim_work);
+        xfs_reclaim_inodes(mp);
+
+IOWs, it pushes the entire AIL to fail everything on it and waits
+for that to complete, then stops inodegc, then is
+stops background reclaim work, then it reclaims all the remaining
+inodes.
+
+Honestly, that looks broken. If there are inodes queued for GC, then
+they can be dirtied and inserted into the AIL as part of the inodegc
+queue flush. This is unlikely if the filesystem is shut down, but
+it could happen in normal operation. We also don't need background
+inode reclaim running here, because we are about to run a blocking
+inode reclaim pass, too.
+
+Hence If we change this like so:
+
++        cancel_delayed_work_sync(&mp->m_reclaim_work);
++        xfs_inodegc_stop(mp);
+         xfs_ail_push_all_sync(mp->m_ail);
+-        xfs_inodegc_stop(mp);
+-        cancel_delayed_work_sync(&mp->m_reclaim_work);
+         xfs_reclaim_inodes(mp);
+
+We no longer have a vector for adding inodes to the AIL after it has
+been flushed, and we will not have two background threads both
+racing to abort/fail/free dirty inodes during unmount. I think this
+needs to be done for correctness of unmount, regardless of the fact
+it exposes a UAF issues elsewhere in the code.
+
+Ok, so that's one problem, but how is background inode reclaim and
+inode item pushing racing to create a UAF situation?
+
+Again, I think that's a shutdown related issue. xfs_iflush_cluster()
+does:
+
+               /*
+                 * Abort flushing this inode if we are shut down because the
+                 * inode may not currently be in the AIL. This can occur when
+                 * log I/O failure unpins the inode without inserting into the
+                 * AIL, leaving a dirty/unpinned inode attached to the buffer
+                 * that otherwise looks like it should be flushed.
+                 */
+                if (xlog_is_shutdown(mp->m_log)) {
+                        xfs_iunpin_wait(ip);
+                        xfs_iflush_abort(ip);
+                        xfs_iunlock(ip, XFS_ILOCK_SHARED);
+                        error = -EIO;
+                        continue;
+                }
+......
+        if (error) {
+                /*
+                 * Shutdown first so we kill the log before we release this
+                 * buffer. If it is an INODE_ALLOC buffer and pins the tail
+                 * of the log, failing it before the _log_ is shut down can
+                 * result in the log tail being moved forward in the journal
+                 * on disk because log writes can still be taking place. Hence
+                 * unpinning the tail will allow the ICREATE intent to be
+                 * removed from the log an recovery will fail with uninitialised
+                 * inode cluster buffers.
+                 */
+                xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+                bp->b_flags |= XBF_ASYNC;
+                xfs_buf_ioend_fail(bp);
+                return error;
+        }
+
+The first hunk results in individual inodes being aborted, marked
+clean and removed from the AIL. This then allows reclaim to lock
+them and call xfs_iflush_shutdown_abort() on them, which then
+serialises on the buffer lock.
+
+The second hunk is where the buffer lock gets dropped. This runs IO
+completion to abort any inodes that were previously marked IFLUSHING
+and so skipped by the first hunk. This will result in them being
+marked clean and removed from the AIL, hence also allowing reclaim
+to lock and abort them.
+
+At this point in xfs_buf_ioend_fail(), the buffer is then unlocked
+and any pending inode reclaim will now make progress. For a UAF to
+then occur a few lines of code later in xfs_inode_item_push() on the
+log item, the xfsaild() -must- be preempted and not rescheduled
+until the inode reclaim has done all it's work (which is quite a
+lot, with lots of locking involved) and then have the rcu grace
+period expire and have all the RCU callbacks run to free the inode
+before it gets scheduled again to relock the AIL....
+
+So, yes, we need to handle this case in xfs_inode_item_push().
+
+More importantly:
+
+Now I understand why the UAF occurs, it becomes obvious that
+xfs_dquot_item_push() has the same log item UAF bug in it, too. the
+path to it is slightly more convolutedi and does not involve RCU
+freeing at all. i.e. dquots can be reclaimed asynchronously via a
+memory pressure driven shrinker, so if xfsaild can be preempted for
+long periods of time, the same race window exists where a flushed
+dquot can be marked clean, reclaimed and freed before the AIL lock
+is regained.
+
+> This results in a use-after-free when the function reacquires the AIL
+> lock by dereferencing the freed log item's li_ailp pointer at offset 48.
 > 
-> My apologies. I missed seeing this last week.
+> Fix this by saving the ailp pointer in a local variable while the AIL
+> lock is held and the log item is guaranteed to be valid.
 > 
-> That's a very simple reproducer! That's very strange behavior,
-> especially since NFS4 does provide a setlease operation:
-> 
-> const struct file_operations nfs4_file_operations = {
-> 	[...]
-> 	.setlease       = nfs4_setlease,
-> 	[...]
-> };
+> Also move trace_xfs_ail_push() before xfsaild_push_item() because the
+> log item may be freed during the push.
 
-Huh, not sure how I missed nfs4_setlease...
+That will simply create lots of unnecessary noise in AIL
+tracing. We do not want "push" traces on every item, we only want
+them on the items that returned XFS_ITEM_SUCCESS. We have other
+trace points for different return values, too, and they are often
+much noisier than XFS_ITEM_SUCESS. e.g. inode cluster flushing can
+have a 30:1 ratio of XFS_ITEM_FLUSHING to XFS_INODE_SUCCESS - we do
+not want a "push" trace for every "flushing" trace, as that will
+massively increase the number of traces emitted by this code.
 
-> I'm not sure why this would cause lstat() to return -EINVAL.
+Also, because I know understand how the race condition occurs, I can
+state that the UAF doesn't just occur when XFS_ITEM_SUCCESS is
+returned. The UAF is most likely to occur when the buffer is failed
+because xfs_iflush_cluster() returns -EIO, which results in
+XFS_ITEM_LOCKED being returned.
 
-Likewise, especially given nfs4_setlease
+In that case, we run:
 
-> What's happening on the wire when this occurs?
-> 
-> I'll plan to take a look here soon either way.
+                case XFS_ITEM_LOCKED:
+                        XFS_STATS_INC(mp, xs_push_ail_locked);
+>>>>>>>>                trace_xfs_ail_locked(lip);
 
-I'll have to revisit myself, been a bit.
+                        stuck++;
+                        break;
 
-Will let you know.
+See the problem?
 
-Thanks,
-Mike
+If we cannot rely on the the log item being valid after
+xfsaild_push_item() is called in shutdown conditions due to
+pre-emption, then we cannot rely on it being valid for any of
+the code we run after that call. Hence there are more issues than
+just movign a tracepoint.
+
+The tracepoints will need to be modified to take individual values,
+which will need to be stored in temporary variables before
+xfsaild_push_item() is called.
+
+Comments need to be added to xfsaild_push_item() to indicate that
+after ->iop_push is called, the log item may be invalid.
+
+Comments need to be added to xfsaild_push() at the
+xfsaild_push_item() call site that the log item cannot be referenced
+after this call as it may already be free on return.
+
+Comments need to be added to xfs_inode_item_push() and
+xfs_dquot_item_push() indicating the exact line of code where we can
+no longer reference the log item because it may have been freed.
+
+And the unmount inode flushing operation ordering also needs to be
+fixed...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
