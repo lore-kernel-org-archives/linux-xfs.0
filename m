@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423E734A3D2
-	for <linux-xfs@vger.kernel.org>; Wed,  4 Mar 2026 16:30:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E950E35E948
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Mar 2026 16:35:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772641821; cv=none; b=WaUFg/lPtsf2/D1hXvLB1Gs192he9p67w4igWKCDxuY0xOcWDcicCxhfLngpeSEp3BfSO0gVrTE13wwKFsNX4HEnsXXUSopDPyMAi1FcEVl3Uuv1PhXXX9UfZ3pYfpJ2ZDbOIrOryPhK2hRxQhdhGsEj9QqajsEFazYHs8HM09A=
+	t=1772642104; cv=none; b=kdHINnZRm2QOnIPcRTHECSyh5DlmOVkAWzXPMROLtMwnHoJweDVxjktbgnAVHuvT0FUVz5EAXEsN5qM7c8/vQNFCEDgQBuKCwEsPBCXzZcCAJqwtwhdyoYzAFNC2wGtsXxGt3YiP4IEogRoESzMYDYEpjMfdm6nIrBSkGaY/6Zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772641821; c=relaxed/simple;
-	bh=y+ihdeYqVYpDA+fMCsffMFgWbvumwQ6iTpI8L1A0+KY=;
+	s=arc-20240116; t=1772642104; c=relaxed/simple;
+	bh=LV/NmH2Icjkm167Lisysr8e5DoR2luFIm2fACHqaFJc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZfB4IxgogXyUJhXOZDK9ZvtJgrIDKX9z77zzSUmH3wVlynT/Zpi6x08eea11Ek1fdZIrgyOG49ZukahuimupDOWzqfD0cLgIHc338xotfMVs1KuVBkJ2sORjuHEJp4thVWkx/ougJ31WNbgOL6s5FHEyvd/EvCDXKWlKE1W7VPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BU2qolYb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BCkVjAJofjHNYIiwGs8TQR7z7Alc8Ff2h5wgpG/n+ZCpa9WcY/cSRIFxxhA7oCrB/mCWtiPfxD49WNpwc/zzdpWPZ8Av1XoVJ+TvyQG+2xrNeXjNusd5udOI3jfl9se8mvScDBfRD2CBZi2DEgoHqNO94GbGQLp6kGo3PJymGKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qtf2aHyi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BU2qolYb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C9D6C4CEF7;
-	Wed,  4 Mar 2026 16:30:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qtf2aHyi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55793C4CEF7;
+	Wed,  4 Mar 2026 16:35:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772641821;
-	bh=y+ihdeYqVYpDA+fMCsffMFgWbvumwQ6iTpI8L1A0+KY=;
+	s=k20201202; t=1772642103;
+	bh=LV/NmH2Icjkm167Lisysr8e5DoR2luFIm2fACHqaFJc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BU2qolYbjotufvuNWGFEnF5t1q7sqIl/5AFbHtue1hMsAt+kil/Zj7cL6HC+7pQJQ
-	 ZdNP4VagDNNOS/FYFPZfvKAEPrmIgbjCMc8cOb/A5dz44PUe2ErQToSyFZpTB7Sbny
-	 MkTRNDY1O5K2xeSlEGxVGWAcAgO5X+frNLXG0yWxfRqJJDiMH7usbHB9eSsiPIzigR
-	 HDZ3o7SzbpnBNViGJK4NKDiiERSNFYmUHW5iPOzkt7arQm7Dqyc4oUemVzT+DQf0RA
-	 l8F4ohyfO7IdTtfTe1JQetO74+Q1mtv9cAnuYZgiPtB38MpgJEqYW5awTsfSxk5+7Z
-	 d4TXFprUI0sJQ==
-Date: Wed, 4 Mar 2026 08:30:20 -0800
+	b=qtf2aHyiMau2TQwneGmseRRBkorTTbT+YehZOHQH2aBiyg1Uoj7VsLiypvHOyg2E/
+	 R459mc4MGTcoaMYM239+6QMWwD/xxmxqzxLX17jIa5dGyi2tzlL5gEho3SpzDIvaD7
+	 hQXh2eFZSvyF8CSQ7+vQlX+ZaHhbyixG4q+u/HH01MIjVY4H7pz2dzrv987PPwc06a
+	 8n/nfkpOQ90moCifky2hx48wi1zgaBn6/6b+iVXYLaq3a7PPJBiAODcIunBXvdKDSs
+	 3ezgzjWhWdq7XbHoXEjvmKsF39kd2FmEuDv6tFNfv/ef9x9trFg9PVGH8lsFrWQxoj
+	 XUIhdM8Gti6KA==
+Date: Wed, 4 Mar 2026 08:35:02 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/26] xfs_healer: use getmntent to find moved filesystems
-Message-ID: <20260304163020.GU57948@frogsfrogsfrogs>
+Subject: Re: [PATCH 23/26] xfs_io: print systemd service names
+Message-ID: <20260304163502.GV57948@frogsfrogsfrogs>
 References: <177249783165.482027.209169366483011357.stgit@frogsfrogsfrogs>
- <177249783601.482027.9121579371607325115.stgit@frogsfrogsfrogs>
- <aacDkSiRLgD1k3Tg@infradead.org>
- <20260303172654.GQ57948@frogsfrogsfrogs>
- <aagtnm0-z3ldfFqd@infradead.org>
+ <177249783711.482027.11261039889156364110.stgit@frogsfrogsfrogs>
+ <aacE3gW9j6pKrspy@infradead.org>
+ <20260303172916.GR57948@frogsfrogsfrogs>
+ <aagt0pZTkqysyjQJ@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,37 +45,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aagtnm0-z3ldfFqd@infradead.org>
+In-Reply-To: <aagt0pZTkqysyjQJ@infradead.org>
 
-On Wed, Mar 04, 2026 at 05:03:26AM -0800, Christoph Hellwig wrote:
-> On Tue, Mar 03, 2026 at 09:26:54AM -0800, Darrick J. Wong wrote:
-> > Or did you mean that xfs_healer should keep the rootdir fd open for the
-> > duration of its existence, that way weakhandle reconnection is trivial?
-> > 
-> > [from the next patch]
-> > 
-> > > > When xfs_healer reopens a mountpoint to perform a repair, it should
-> > > > validate that the opened fd points to a file on the same filesystem as
-> > > > the one being monitored.
-> > > 
-> > > .. and if we'd always keep the week handle around we would not need
-> > > this?
-> > 
-> > The trouble with keeping the rootdir fd around is that now we pin the
-> > mount and nobody can unmount the disk until they manually kill
-> > xfs_healer.  IOWs, struct weakhandle is basically a wrapper around
-> > struct xfs_handle with some cleverness to avoid maintaining an open fd
-> > to the xfs filesystem when it's not needed.
+On Wed, Mar 04, 2026 at 05:04:18AM -0800, Christoph Hellwig wrote:
+> On Tue, Mar 03, 2026 at 09:29:16AM -0800, Darrick J. Wong wrote:
+> > (That was a long way of saying "can't we just keep using xfs_io as a
+> > dumping ground for QA-related xfs stuff?" ;))
 > 
-> Ok.  I've officially forgot what all the kernel code did.  I somehow
-> expected a weak handle to be a fd that the kernel could close on us,
-> which would be much more handy here.
+> I really hate messing it up with things that are no I/O at all,
+> and not related to issuing I/O or related syscalls.  Maybe just add
+> a new little binary for it?
 
-Yeah.  I tried creating a(nother) anon_inode that has the same sort of
-weak link to the xfs_mount that the healthmon fd has, for the purpose of
-forwarding scrub ioctls.  That got twisty fast because the scrub code
-wants to be able to call things like mnt_want_write_file and file_inode,
-but the file doesn't point to an xfs inode and abusing the anon inode
-file to make that work just became too gross to stomach. :/
+How about xfs_db, since normal users shouldn't need to compute the
+service unit names?
 
 --D
