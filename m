@@ -1,164 +1,90 @@
-Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886363C2792;
-	Wed,  4 Mar 2026 17:41:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.34.181.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA853D3484
+	for <linux-xfs@vger.kernel.org>; Wed,  4 Mar 2026 18:24:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772646090; cv=none; b=JoQv0ENQtnmk3jedPhj03TahgStp6qB/w65Wjv9CJjX9P1TEf8cgL+EXkFsLmuO26rol8HIcaOTayMM83odppVZBXWzpaeXKYTk+sJD/TPQS7vS/JylQXJ908Ww61QNoLXnq7XrZvSTFw7FcZoTkaHNITQLA7RNNusB5carS0xY=
+	t=1772648672; cv=none; b=bkdh3Qq3zDZIlJ5HcaSjCCjT8OrAJoy3LY5rUn0bB8nZbWpB2vXDWj8vzpTLY0EAg0jNCxS65AS4SDco01hJEUMgsSJb2fg401vGEAOBiMKD/cYA8yVlCVFuLI/Wlo2CsXfJP5UaKKE5eRdkeDS32G9QjhVAGlxXy9TRJcPOgVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772646090; c=relaxed/simple;
-	bh=S5+fhQwrYYHlW1h283EAcuFfv9TSlLMI3QiByYoWS8Q=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OENMIynEUN2OWpPGP9s+jQQiTFNy77LC8M5kEO0iD1RWpPgGXq4YQmMvEiLtWzqfFsNetdqN/u89/Q/NzRRDtspPp4ApSNbjqBXjZsJB58Giwk6qTSlacJqJj1alkTNlGCeqAIsGPOl/C4opXhZFaF4qSCT3cuP8rDEI2NIzxeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=Iap+PwHt; arc=none smtp.client-ip=52.34.181.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="Iap+PwHt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1772646089; x=1804182089;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=g6dfqGUBRT3ijAPy+6ZYXfBDnxZhw1gL+gagUZeGRkw=;
-  b=Iap+PwHtp4sk7uC54bMsYgzbU2rCgxuSuEgGAmcRtFSqSXE8BCAGGQfY
-   f/YS738ffmzfpt0kOUkD9F4gg+OOKmRx3BNcDj6O6a4U3F6VHvMdH/xfO
-   /QWD8oKqRspvK0TQxxgkL8uxozG7fFnvwEwCD3bVlIzar4B6XAb4gy+ME
-   Xsahm8ZE802EqMF98JOh/UQS8EQ2bBU2RuawaOEXoG1YyGbVeaa69nrW+
-   mWkqWAr3Qk57Hxew6qOYeBnpaya3egYHGx1QlC020bZuY+UPnW1Aoy4S0
-   3iGwIiw2lV4Fu9fAW7DYB/IrwmaPhyCIeBkfP6n4GxtgH84n1a6KV7Pmd
-   g==;
-X-CSE-ConnectionGUID: f58EkBpjSU28+YueJQTvzw==
-X-CSE-MsgGUID: dWr4e1xiT0W3ZgaHAytGFA==
-X-IronPort-AV: E=Sophos;i="6.21,324,1763424000"; 
-   d="scan'208";a="14296922"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 17:41:26 +0000
-Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:23287]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.52.102:2525] with esmtp (Farcaster)
- id 5907f8f0-4674-4be8-b323-3bf194da1d24; Wed, 4 Mar 2026 17:41:26 +0000 (UTC)
-X-Farcaster-Flow-ID: 5907f8f0-4674-4be8-b323-3bf194da1d24
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Wed, 4 Mar 2026 17:41:26 +0000
-Received: from c889f3b07a0a.amazon.com (10.106.82.8) by
- EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Wed, 4 Mar 2026 17:41:24 +0000
-From: Yuto Ohnuki <ytohnuki@amazon.com>
-To: <djwong@kernel.org>
-CC: <bfoster@redhat.com>, <cem@kernel.org>, <darrick.wong@oracle.com>,
-	<dchinner@redhat.com>, <linux-kernel@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>,
-	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
-	<ytohnuki@amazon.com>
-Subject: Re: [PATCH] xfs: fix use-after-free in xfs_inode_item_push()
-Date: Wed, 4 Mar 2026 17:41:18 +0000
-Message-ID: <20260304174117.88648-2-ytohnuki@amazon.com>
-X-Mailer: git-send-email 2.50.0
-In-Reply-To: <20260304164451.GW57948@frogsfrogsfrogs>
-References: <20260304164451.GW57948@frogsfrogsfrogs>
+	s=arc-20240116; t=1772648672; c=relaxed/simple;
+	bh=VtgM19PrT8vLK6zBA63HxqeFwpJy2jgB7OhwT2INTHw=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=isXKBnXVPCLXXUf+zZHuZl2NP5IjYpYQXwP6CrPFdnNALyRqWzb000TWep23DJS19mQQikD1vj3qWfH16CvRq9xdPZYmzTnJkFwTThyg6UU7/9L/PpSqeWU3MuWkVfnGHGNQO0L57YPOoL1MEZXs7bfIFGslXH0m510KcDKDAj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-6798747187eso111251362eaf.1
+        for <linux-xfs@vger.kernel.org>; Wed, 04 Mar 2026 10:24:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772648670; x=1773253470;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=osaiu1+CEKd4sdOVSwyso1K8nlflVflsib8WB8EwwlM=;
+        b=twD/zFeVso6NadkEUSB5rdIesmPnz+15sYyuqDswAlySWYZdGD1OFoU619z7ffmlux
+         H2OFNaYr0no7m98myfa0f2azAok54QKerBoaWIFi98aKz3R0KE4GkChT723a2oj9ihl+
+         vEWdnSys+PGRp1/EtyfWEIPMcOp8YveuC4ac2/FzC1ESU+xUo0uj8PUlxf9HQgmnkBRF
+         kmY1UGHjmzGX5kGeX4ONZJ36ek9UaPAZGfkqx7/T/2/93Jq1Ez+ktSacMUcVDMv45aWJ
+         hXVcgxcUd4EC9TuAKmTkZfwt6RcgwboKZLpAcD2O91ZcTJ4RcJqN9gS7nQT+Vkd/GUsx
+         qknw==
+X-Forwarded-Encrypted: i=1; AJvYcCVbq6RPHWEhwmmzAnlS1WwONB/+LfLkq3WD3c203ga2KDO0ZjnoomARZ+Bt6sJDhrWJ6jzO3EzjBgo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6AYSZDWGOmyPq1W+VHF5BVrb/u77OUs7P9lmjwvQB+9ohziAw
+	cw8nzXnXHnGiaAsPH4qI7/Hdwj+PHXkLyWyz4McS5kxZZ4TexUx3KAdXJMt30HY8o/sg5z+omvV
+	z8yp3Jynr2W+ckyZk4lZpClDOb1waoYqAwn0WrU4Kk3zDHul+wc1n0qEZChU=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D039UWA001.ant.amazon.com (10.13.139.110) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6820:2913:b0:67a:1c77:4bb5 with SMTP id
+ 006d021491bc7-67b17706629mr1839855eaf.25.1772648669954; Wed, 04 Mar 2026
+ 10:24:29 -0800 (PST)
+Date: Wed, 04 Mar 2026 10:24:29 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <69a878dd.a70a0220.135158.0011.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Mar 2026)
+From: syzbot <syzbot+list6f294b4cf6287e6480f5@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-> > ---
-> >  fs/xfs/xfs_inode_item.c | 5 +++--
-> >  fs/xfs/xfs_trans_ail.c  | 8 +++++++-
-> >  2 files changed, 10 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > index 8913036b8024..0a8957f9c72f 100644
-> > --- a/fs/xfs/xfs_inode_item.c
-> > +++ b/fs/xfs/xfs_inode_item.c
-> > @@ -746,6 +746,7 @@ xfs_inode_item_push(
-> >     struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-> >     struct xfs_inode        *ip = iip->ili_inode;
-> >     struct xfs_buf          *bp = lip->li_buf;
-> > +   struct xfs_ail          *ailp = lip->li_ailp;
-> >     uint                    rval = XFS_ITEM_SUCCESS;
-> >     int                     error;
-> >  
-> > @@ -771,7 +772,7 @@ xfs_inode_item_push(
-> >     if (!xfs_buf_trylock(bp))
-> >             return XFS_ITEM_LOCKED;
-> >  
-> > -   spin_unlock(&lip->li_ailp->ail_lock);
-> > +   spin_unlock(&ailp->ail_lock);
-> >  
-> >     /*
-> >      * We need to hold a reference for flushing the cluster buffer as it may
-> > @@ -795,7 +796,7 @@ xfs_inode_item_push(
-> >             rval = XFS_ITEM_LOCKED;
-> >     }
-> >  
-> > -   spin_lock(&lip->li_ailp->ail_lock);
-> > +   spin_lock(&ailp->ail_lock);
-> 
-> Hmm, so the @lip UAF is here, where we try to re-acquire the AIL lock?
+Hello xfs maintainers/developers,
 
-Yes. The syzbot report shows a Read of size 8 at offset 48 (li_ailp)
-when spin_lock() dereferences the freed log item to get the
-AIL pointer.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-> >     return rval;
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> > index 923729af4206..e34d8a7e341d 100644
-> > --- a/fs/xfs/xfs_trans_ail.c
-> > +++ b/fs/xfs/xfs_trans_ail.c
-> > @@ -510,6 +510,13 @@ xfsaild_push(
-> >             if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
-> >                     goto next_item;
-> >  
-> > +           /*
-> > +            * The log item may be freed after the push if the AIL lock is
-> > +            * temporarily dropped and the RCU grace period expires,
-> > +            * so trace it before pushing.
-> > +            */
-> > +           trace_xfs_ail_push(lip);
-> > +
-> >             /*
-> >              * Note that iop_push may unlock and reacquire the AIL lock.  We
-> >              * rely on the AIL cursor implementation to be able to deal with
-> > @@ -519,7 +526,6 @@ xfsaild_push(
-> >             switch (lock_result) {
-> >             case XFS_ITEM_SUCCESS:
-> >                     XFS_STATS_INC(mp, xs_push_ail_success);
-> > -                   trace_xfs_ail_push(lip);
-> 
-> Do the tracepoints in the other legs of the switch statement have a
-> similar UAF problem because they dereference @lip?
-> 
-> --D
+During the period, 2 new issues were detected and 0 were fixed.
+In total, 21 issues are still open and 28 have already been fixed.
 
-Thank you very much for pointing out the other switch statement.
+Some of the still happening issues:
 
-XFS_ITEM_PINNED is always returned before the AIL lock
-is dropped, so trace_xfs_ail_pinned() is safe.
+Ref Crashes Repro Title
+<1> 2936    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<2> 364     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<3> 117     Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<4> 51      Yes   KASAN: slab-use-after-free Read in xfs_buf_rele (4)
+                  https://syzkaller.appspot.com/bug?extid=0391d34e801643e2809b
+<5> 42      Yes   KASAN: slab-use-after-free Read in fserror_worker
+                  https://syzkaller.appspot.com/bug?extid=fbf6ff30de890ff32ec5
+<6> 17      Yes   inconsistent lock state in igrab
+                  https://syzkaller.appspot.com/bug?extid=5eb0d61dfb76ca12670c
+<7> 6       Yes   INFO: task hung in xlog_force_lsn (2)
+                  https://syzkaller.appspot.com/bug?extid=c27dee924f3271489c82
 
-However, looking into it further, XFS_ITEM_FLUSHING and 
-XFS_ITEM_LOCKED can also be returned via the rval path after the AIL 
-lock is dropped and reacquired. So trace_xfs_ail_flushing() and
-trace_xfs_ail_locked() could also hit a UAF in those cases.
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-I'll send a v2 that addresses those as well.
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
 
-
-Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
-
-Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
-
-
-
+You may send multiple commands in a single email message.
