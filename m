@@ -1,49 +1,81 @@
-Received: from mail.itouring.de (mail.itouring.de [85.10.202.141])
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33713346A0
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Mar 2026 07:54:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.10.202.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34BF245031
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Mar 2026 08:59:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772697246; cv=none; b=RMdYfR+EWA3zjp2UcTg+h5bz7P34VoosmRNizcTceZSEhoW/Wm2PQR7abGa4SaU75hbTpsIkvuQfEqn0f0NFw7IFQGRXemiX9TQ7NFwTciFcvqPeZAhtdLna9/qxukoiXzcMiS9FVcs+ZpVwHShlTdUn32hsKp3Bir34uO2xOHg=
+	t=1772701166; cv=none; b=BupI6YK42qwE9DsrHEUgvVOxIB7gNjzAoLLzxCU6MbwpEeiCPaeog9Ex2YXgSpjq8c2DteO6fIL2ik//VO1/DEb5dao8frt3blwQaoYDobg51zMUVICdLdDEqRTvKJlq5x845bO/CI3/inecwBKma+rUyb/tM/lswLZZBq0v/X4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772697246; c=relaxed/simple;
-	bh=N1X6WiLTKvcrzF5dL4XwTMRsPK8sxcLQQ8DO6gGReNk=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=V4pmxKUre0IcKMm74MCG+ILqWcXOx+ZmvDK/I2hhOYqBK6y8NzsvEXwdsUwvKhBKwmTfo/lnL2pPZVpuA7Z3uga0MgSeZV8d0Rr9HgJ1ytnlFp9UDzM+ccDs+D7OeVT3vZqYzjM60IjaUQ11xZQP32eJ3Vc32orMFNmPob/nu0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=applied-asynchrony.com; spf=pass smtp.mailfrom=applied-asynchrony.com; arc=none smtp.client-ip=85.10.202.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=applied-asynchrony.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=applied-asynchrony.com
-Received: from tux.applied-asynchrony.com (p5b07e7bf.dip0.t-ipconnect.de [91.7.231.191])
-	by mail.itouring.de (Postfix) with ESMTPSA id 0859012942D;
-	Thu, 05 Mar 2026 08:46:36 +0100 (CET)
-Received: from [192.168.100.223] (ragnarok.applied-asynchrony.com [192.168.100.223])
-	by tux.applied-asynchrony.com (Postfix) with ESMTP id A944C601893B2;
-	Thu, 05 Mar 2026 08:46:35 +0100 (CET)
-Subject: Re: [PATCH 2/4] libxfs: fix data corruption bug in libxfs_file_write
-To: "Darrick J. Wong" <djwong@kernel.org>, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-References: <177268456992.1999857.6319345892309281117.stgit@frogsfrogsfrogs>
- <177268457046.1999857.4333152615677714192.stgit@frogsfrogsfrogs>
-From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Organization: Applied Asynchrony, Inc.
-Message-ID: <95b8493c-4e56-03b2-0d9f-7a8ce1675a07@applied-asynchrony.com>
-Date: Thu, 5 Mar 2026 08:46:35 +0100
+	s=arc-20240116; t=1772701166; c=relaxed/simple;
+	bh=OUkfSEzaWG+A8z/v1pgoSZwLnL+MnEXZudQu4KzjvMw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BChr16J9MnB9N2ueEsQs/N+zAYIPMQwQa9mRoAJTN0QQDI+V3ibi3eauSXvBU1q/ZRBFd1hrgQsnFp33tdn3/Aqntv4omWkMl+NZjtmtYjREZq0YHjTiqmIqe/3xwCliB8okqxlluDFBZXXp7VZdvTV2JMEYc66kTnwlBbIEZwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=RWGAblqe; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="RWGAblqe"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=WMAbf8w4W0XfIjzUnS/iJsbAErVP1jbi46nXbGVGxtQ=;
+	b=RWGAblqeJKwpqM+s0WQyEOCGqdMMi1yN9An/3liudkLrhM7OJRkv51y3flbCdjCoHoR42Ajel
+	K/siFISh8TS8wxqWDhnSg5cHOUw6Af+DMkVglTtku6oPx2982xnMs8mpCf5mjebEBWiXpNvO54X
+	1Hmb13B6SibiXz5WWjYCtio=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4fRNdL20W1zRhSc;
+	Thu,  5 Mar 2026 16:54:30 +0800 (CST)
+Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id 43F9F40561;
+	Thu,  5 Mar 2026 16:59:21 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 5 Mar 2026 16:59:21 +0800
+Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 5 Mar
+ 2026 16:59:20 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH 0/2] xfs: code cleanup and item deletion fix
+Date: Thu, 5 Mar 2026 16:49:20 +0800
+Message-ID: <20260305084922.800699-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <177268457046.1999857.4333152615677714192.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-On 2026-03-05 05:24, Darrick J. Wong wrote:
-> Cc: <linux-xfs@vger.kernel.org> # v6.13.0
-        ^^^^^^^^^
+This patch series contains the first two patches from the previously
+unfinished patch set [1]. I'm resubmitting them separately since patch 2
+addresses an corner case issue that should be fixed. At the same time, I
+rewrote the commit message and comments of patch 2.
 
-I guess meant stable@ here and in the other patches?
+Patch 1 : Simple clean code.
+Patch 2 : Fixes a issue where the tail LSN was incorrectly moved forward
+	  due to improper deletion of log items from the AIL before log
+	  shutdown. 
 
--h
+[1] https://patchwork.kernel.org/project/xfs/patch/20240823110439.1585041-1-leo.lilong@huawei.com/
+
+Long Li (2):
+  xfs: remove redundant set null for ip->i_itemp
+  xfs: ensure dquot item is deleted from AIL only after log shutdown
+
+ fs/xfs/xfs_dquot.c  | 8 +++++++-
+ fs/xfs/xfs_icache.c | 1 -
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+-- 
+2.39.2
+
