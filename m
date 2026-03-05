@@ -1,84 +1,113 @@
-Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5851F36654F
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Mar 2026 08:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2118374186;
+	Thu,  5 Mar 2026 09:05:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772701167; cv=none; b=YgAD46+cz3ozSQcyHCCFLdL0JnZ0LTjBMZzE4jMaGCoztw+T09Xk8xLMMgYpap+Rh744xnXTbx3YZ3YZjdymUH/YaxPlCKOgIzLy7sc7hIQQmVVkS4BTQuEEbz4dxi7mAieOc72pvI8p1L8zLiN+fkUxZy+mKstDYWO4Pet9yl0=
+	t=1772701507; cv=none; b=lBOOIdob50oISlSYn4nRrw4pUDb1/WSaFaBq5FTRbwxUImrZ7/AZGVZuNi7Ukg9eaB7WhWP97zO5M26FzJGz0lwdZx51yqmTz1GaQ8dwoqfNVcOWaSZebMzEG9Y7rs+Wy6GMqXDKfRODaf6O4sWq0owmYxAw5Mq0vGiKbrL1WVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772701167; c=relaxed/simple;
-	bh=xu0pS1tfomBzq9HPD/bhW7eZFMtFwAogJa8BfnZi+Oo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=o9GE4diR6el2Rn+a3Cbo91chYSur8VSW6wXrwYN5guOSBno5JsJIKN8B6Wp5MZD3eanR7QqhswYtTNG1WwbigCSWdmIzZtOCBHq2dyQ8fBKgQWe7JdtEJ+IchCZXyRXlQhGZUFPUqNlxWP6L7Tc/HipCPeG0CpYLWI1zJ3UJEuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=nuIivRX/; arc=none smtp.client-ip=113.46.200.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1772701507; c=relaxed/simple;
+	bh=ClNFD7uXVR2zd+ywIi5vyi3YiK5DG+nqhGlbvd8sLrQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T2XVDDdEhqlp4GUtW/g/iIx/Kk7m5Ob5Il4Q5jD/yYo0vD4U419rWkrJxmHueSS/Fr3jE0+dLVnXEYbtyyTCOyQCrzliqhkSeWW5F8HucAuyQNsq7vwy3XAXQbQV8/vS7Ix5iPPPPIo5vnFj1bCqg23LOo+4+kTb/rGoLbfXAKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aZhrWAW4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="nuIivRX/"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=EWkjQKGle+VFfgxYgPYTkB3/FYnIsLFjYnRJTdJTkK8=;
-	b=nuIivRX/ESjzzEU97IEWpqXUZeeqL0gmYzlc+8VEavKcH4Jq1xR0TEWLbvrcJsRaxK/8/i9A1
-	hubfw5k8apnHZGHdPsJA5BYEe5G9RvBIYKjSZPVWLxq8/sLy4NI1ArUwrYYz4WOz9hG3aWvI5He
-	KqeLHXyzZ2zdWE/fxhudGCs=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fRNdg119xznTVw;
-	Thu,  5 Mar 2026 16:54:47 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3E01640561;
-	Thu,  5 Mar 2026 16:59:23 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 5 Mar 2026 16:59:23 +0800
-Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 5 Mar
- 2026 16:59:22 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH 1/2] xfs: remove redundant set null for ip->i_itemp
-Date: Thu, 5 Mar 2026 16:49:21 +0800
-Message-ID: <20260305084922.800699-2-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260305084922.800699-1-leo.lilong@huawei.com>
-References: <20260305084922.800699-1-leo.lilong@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aZhrWAW4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C1E1C19425;
+	Thu,  5 Mar 2026 09:05:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772701507;
+	bh=ClNFD7uXVR2zd+ywIi5vyi3YiK5DG+nqhGlbvd8sLrQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aZhrWAW4DpAGLFX9GfVbibg5zID8EYSkTEIRQ95J/NrcPO5uOxo3Z8SBw9eQ85VjU
+	 wHVs8VCUAdAuWXonGjyGYYjNo8xL5sYPNE0iYQ8+5otKl1Lg5S5TrswDTeCJqgT8ZT
+	 THc6x80lmY3d/ytSxkPWEzXRXRKCDftAkoAYJ46iJLuFBGm2Aacm3OZkQtZDhHlb7l
+	 sG11KKzKxUw3WWMJB3HVQoS1UhIC+LGMnGb1xb4R+a59ax/5l1ntSbdpFRf6YzWgha
+	 k0dY688xWWLTrk5hbstEQ2rkhHOg7nJAyeHiuJvLQLqo2vePv76auo4dL4anDWclDp
+	 2oBM2e/TVIIsA==
+Date: Thu, 5 Mar 2026 10:05:03 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't clobber bi_status in xfs_zone_alloc_and_submit
+Message-ID: <aalG6v8qM-FyvrW1@nidhogg.toxiclabs.cc>
+References: <20260304185923.291592-1-agruenba@redhat.com>
+ <20260304195303.GA57948@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260304195303.GA57948@frogsfrogsfrogs>
 
-ip->i_itemp has been set null in xfs_inode_item_destroy(), so there is
-no need set it null again in xfs_inode_free_callback().
+On Wed, Mar 04, 2026 at 11:53:03AM -0800, Darrick J. Wong wrote:
+> On Wed, Mar 04, 2026 at 07:59:20PM +0100, Andreas Gruenbacher wrote:
+> > Function xfs_zone_alloc_and_submit() sets bio->bi_status and then it
+> > calls bio_io_error() which overwrites that value again.  Fix that by
+> > completing the bio separately after setting bio->bi_status.
+> > 
+> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> 
+> Yeah, that make sense to me that we shouldn't override the value set in
+> out_split_error.
+> 
+> Cc: <stable@vger.kernel.org> # v6.15
+> Fixes: 4e4d5207557770 ("xfs: add the zoned space allocator")
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_icache.c | 1 -
- 1 file changed, 1 deletion(-)
+I can add that at commit time, no need to send again Andreas.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a7a09e7eec81..2040a9292ee6 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -159,7 +159,6 @@ xfs_inode_free_callback(
- 		ASSERT(!test_bit(XFS_LI_IN_AIL,
- 				 &ip->i_itemp->ili_item.li_flags));
- 		xfs_inode_item_destroy(ip);
--		ip->i_itemp = NULL;
- 	}
- 
- 	kmem_cache_free(xfs_inode_cache, ip);
--- 
-2.39.2
 
+For the patch itself:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> 
+> --D
+> 
+> > ---
+> >  fs/xfs/xfs_zone_alloc.c | 9 ++++++---
+> >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> > index e3d19b6dc64a..c3328b9dda37 100644
+> > --- a/fs/xfs/xfs_zone_alloc.c
+> > +++ b/fs/xfs/xfs_zone_alloc.c
+> > @@ -862,7 +862,7 @@ xfs_zone_alloc_and_submit(
+> >  	bool			is_seq;
+> >  
+> >  	if (xfs_is_shutdown(mp))
+> > -		goto out_error;
+> > +		goto out_io_error;
+> >  
+> >  	/*
+> >  	 * If we don't have a locally cached zone in this write context, see if
+> > @@ -875,7 +875,7 @@ xfs_zone_alloc_and_submit(
+> >  select_zone:
+> >  		*oz = xfs_select_zone(mp, write_hint, pack_tight);
+> >  		if (!*oz)
+> > -			goto out_error;
+> > +			goto out_io_error;
+> >  		xfs_set_cached_zone(ip, *oz);
+> >  	}
+> >  
+> > @@ -902,7 +902,10 @@ xfs_zone_alloc_and_submit(
+> >  
+> >  out_split_error:
+> >  	ioend->io_bio.bi_status = errno_to_blk_status(PTR_ERR(split));
+> > -out_error:
+> > +	bio_endio(&ioend->io_bio);
+> > +	return;
+> > +
+> > +out_io_error:
+> >  	bio_io_error(&ioend->io_bio);
+> >  }
+> >  
+> > -- 
+> > 2.52.0
+> > 
+> > 
