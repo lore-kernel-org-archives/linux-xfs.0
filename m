@@ -1,212 +1,274 @@
-Received: from mx0a-002e3701.pphosted.com (mx0a-002e3701.pphosted.com [148.163.147.86])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA601E885A;
-	Fri,  6 Mar 2026 08:48:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.147.86
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772786936; cv=fail; b=J9yuASCR5L0HQxIHYX+43akql33B2scohBVRjng9fN6T9I4/JQ1lwTGzovMD5ieM0znTZPW9Wkdrv1Ks24KUgT4OQcboQXeCNJb8OLdwjvUhM1xqYOWQt7kmN1DZI9IrkLOWTmoqcBKtI5xoNJ7Gtv0U4cBuwItOayo/xElHIsE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772786936; c=relaxed/simple;
-	bh=vDFYNEi17fK3u8mYN4bYzJFdGqldhR7Hah2tXUPy9Ws=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=cQ2l6qIiFufCnvX1J3f6/ZiCinqkuVI5mpATNrvKu6/iddU3i58rzY0r8TVGuiVUP3ZvcngSDQ8O7PIWRzl3qvYXIyYFu3t/RDgKT88ISImhPNeFylYAcFdW6IJRwEUu372SGnQWhHd+/MpXjap6vPHiLmnsTfew76WWJ8oIrQw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hpe.com; spf=pass smtp.mailfrom=hpe.com; dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b=lzLPUs53; arc=fail smtp.client-ip=148.163.147.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hpe.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hpe.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD9A33B6CB;
+	Fri,  6 Mar 2026 09:15:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772788508; cv=none; b=e+8vKnSn84cLNLd4ZqnhbpZQ8kIURZi7XqPNUAdVTGF1vkwY96Wprk7pcQZqALiso2xj+M5ginnmVgyAJ/eu6l2y/nFH+GVemtYGsUX4wnV8uZpVUki+WoGqVbpm++w6Mtq9LozfiSAAp/feMTT1fvNbOojpBxMNczzpuS6lCwI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772788508; c=relaxed/simple;
+	bh=7RvOdnrFs/iEe9G84pPe+q4PLv+gFd3Sa58Nl0eTC8M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MhkrUNew/kVjjDX00OOp2HBs5hVrUxZeQ+VO91IGOaVaGPyrv/7spRARgvL4zQSEQEm5Soq62lHODY+P8EFU2BSfjsBxus5wxEs6wP6knTO423TDZzAZK0kJ8WCPPK06gaQ5BB7kgguVlb6DEYYVM5ZKe5J9x4Q4fnwuwp8KipI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TyR366hp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hpe.com header.i=@hpe.com header.b="lzLPUs53"
-Received: from pps.filterd (m0150241.ppops.net [127.0.0.1])
-	by mx0a-002e3701.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6268WNdI942972;
-	Fri, 6 Mar 2026 08:48:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps0720; bh=hA
-	4tbKCL//LCrI3WEe3XDlVxyGULK3rpMrqwcRYETUA=; b=lzLPUs53saG4GPnFMY
-	7LLfQSojr5LHPMlaq/+uL7ko73mX82yEHXN9JBIpMgXKwAT+AW/kc984yGIyfWca
-	HYx+UM2N0gRQdm841q83J4PVRrwZi8u90wPv+cDTkVEmnQv8tnQ3gsMgg7JYkM6X
-	DQcOu6CtpcHyIoyLjAsv74YQCYljfSko24r4mV/WVstHQGROgC489PA/E0CY4gMC
-	3g4X/P3V6rFc6FZQsezClR3wF8a849bc68RHkjqQdOkMHIWc+Xpi86LsgrQVWtJk
-	DPUeeSB95eXaLbmj/HbzXrJ7kg3hNqyBi/pRUbOaphosh27EPcDf0ekTtpj0YgzC
-	P/Aw==
-Received: from p1lg14881.it.hpe.com (p1lg14881.it.hpe.com [16.230.97.202])
-	by mx0a-002e3701.pphosted.com (PPS) with ESMTPS id 4cqqt9ufea-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 06 Mar 2026 08:48:25 +0000 (GMT)
-Received: from p1wg14925.americas.hpqcorp.net (unknown [10.119.18.114])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by p1lg14881.it.hpe.com (Postfix) with ESMTPS id 3B83D808060;
-	Fri,  6 Mar 2026 08:48:24 +0000 (UTC)
-Received: from p1wg14926.americas.hpqcorp.net (10.119.18.115) by
- p1wg14925.americas.hpqcorp.net (10.119.18.114) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 5 Mar 2026 20:48:11 -1200
-Received: from P1WG14918.americas.hpqcorp.net (16.230.19.121) by
- p1wg14926.americas.hpqcorp.net (10.119.18.115) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17 via Frontend Transport; Thu, 5 Mar 2026 20:48:11 -1200
-Received: from PH0PR07CU006.outbound.protection.outlook.com (192.58.206.35) by
- edge.it.hpe.com (16.230.19.121) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 6 Mar
- 2026 08:48:11 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ff3h3pjlck3vuV6z3NNgn6VuU/6c9DQVwY7BEfAtPs8zfF7vT2iBGKOMGUuZmzIG0plFHsqt3VVKDxq23JuF4GbSkTlESoQPoSouux7nKAKK4DpVeT8Ye4Fnb3VFM1IRm0ppPE58QI98NVu1R+xZKIcYQSYIvojUN84TzODTcZPtPhiBB8vK/icejf/BehY921jV+O0xAbyPx+ErHWT9dcVt2+yYjGeOBKDCFczg3BpWKDTja/FbT7FYWt9/jjlRxw/gCwf4V9UgA1xiHfyPj3rIWPEnyz4ihYF5Vpbw3iv00FThQffVNchQFBN4SClEIed3Q5ZrMdzw6I9fTW0SuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hA4tbKCL//LCrI3WEe3XDlVxyGULK3rpMrqwcRYETUA=;
- b=HJJKXuVWkGwtRdaHFxTrRCUbMTA3n6QQYMgRn/eW47ADIjzeZePuObj27x9Fy5fA5TTyuBq0ZmhFypuQlDyW2yNamAJBtE7OSxx9hY4w9kkX/ZZATJ9A51/qGtaA0J5fpwUmsyb1rUEH8/wP4GFuVNvo1kMlgNMzUGINdseiRMleOEK0KVqqtr+3ow9VXHODdLBhbhm+Sx5vLBBIcULOCDNmgWe2fwlwt02c+yTkASdv65EETzohK2uuVRwgXttvcFXQf1kUxgUo78nW2jrhMvKX/GaSbva0ActVTaWAmpeSl9fE60C2g2bBeGKn539yVpyAlSI4/UyHV6WEX4dz6g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hpe.com; dmarc=pass action=none header.from=hpe.com; dkim=pass
- header.d=hpe.com; arc=none
-Received: from MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:303:1a7::10)
- by PH7PR84MB1416.NAMPRD84.PROD.OUTLOOK.COM (2603:10b6:510:152::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.17; Fri, 6 Mar
- 2026 08:48:10 +0000
-Received: from MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::2ba0:a89d:6d4e:eda6]) by MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM
- ([fe80::2ba0:a89d:6d4e:eda6%7]) with mapi id 15.20.9678.017; Fri, 6 Mar 2026
- 08:48:09 +0000
-From: "Joarder, Souptick" <souptick.joarder@hpe.com>
-To: Chen Ni <nichen@iscas.ac.cn>, "cem@kernel.org" <cem@kernel.org>
-CC: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] xfs: Convert comma to semicolon
-Thread-Topic: [PATCH] xfs: Convert comma to semicolon
-Thread-Index: AQHcrQuH829ntJ6KKEGXk0V8FNV0JLWhMS+g
-Date: Fri, 6 Mar 2026 08:48:09 +0000
-Message-ID: <MW4PR84MB158876E693CC975181443ECC8F7AA@MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM>
-References: <20260306014800.1257769-1-nichen@iscas.ac.cn>
-In-Reply-To: <20260306014800.1257769-1-nichen@iscas.ac.cn>
-Accept-Language: en-IN, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MW4PR84MB1588:EE_|PH7PR84MB1416:EE_
-x-ms-office365-filtering-correlation-id: 94cd729f-2b97-4713-cec0-08de7b5d180f
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700021;
-x-microsoft-antispam-message-info: Z+QyfX0VzrvZvKz+PCjNdYvzG2xdOdoAjSxoz51Njv6VW4+pSqh6YpV1BSLWDXyzRPNNd8eV2mNKHB387zFdkaUnvLZ1nXSmvT+YtMsG3ui/olhq8KV6i/XP/gD/O+3FuREE+J3676DdgY2YM4c7x+xHPfgoeV877N12/rXE8fnr2nX74LhJWH0E30GH4GQcfZEDJ1RL+pGVTln9oBCRS1eRLXRRqvmM2kJvLvFb9yLWRRoGnoW2obNIuAY7ZWFkpQO81C74h2ywvQl7vMq2lrt87l2dIUPbm8AT9dKmek3cFKk0kjLqKrTI5rcB1BiMZMEbfFCt7YKfqa1hSkq9jy3t5MV80udsKbUQah1f7S2JQZA+5QHigTqCOnUg0yi4YdMYYEQon1MCkvhRpCg/dMS1VEQ0nfLlrV8ndZvaNKj6gQXda84+WYgOmi3Gx5IVC3kPzpqd2wgXLP4wmkzyq4eBvvq/Y5GVhiaGdCx9/yyuh36Y4t4IaZthHmd2k4KfbC8JEfr0/bOLOD+x3LRYRbuMb25jnsNN6bJJ/VyfBitx3UTZZ7QmSzepLk0+2g6sWNZ6+H2s8VOQjjjQfDJiMSd+IjjP9MYKobUs7r371Cu0VV36mgbcz4R3VLtdfcmlEqxBHYpZd6lkmo+9Za6631Ekw2UdBerpbGtF5Rt6R1VIKdRNuxjT2B/hOQA/eXfIPm7Ya+qOwkryUY7rqW9nBiyQviAX4xK2QYhRbmcmlJzaWoF7aGjMGkP1xS9lmgCxvqYIZhRrTHvZhYv3QNFoiDZWL2OoqhJvKlDvzZ92WVs=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?8I+wA4a0jGaDaPdkYZGZb8lAQsZIHAc6hRiLRgdl10MqlrvPtuvLglHdEJX1?=
- =?us-ascii?Q?lG1APuVv3Smu3J/fsMDZuh48rhtWFKBqruHafOp0jesOUdy7hE0XYu60ANkx?=
- =?us-ascii?Q?IRgJ10gSIBWMAIgx2LHKoJXFKdjIPbAVyNFEgUJTpFGmJXtJtGfL/n6KxHa7?=
- =?us-ascii?Q?yUgL1/rqCiaxNRDW3Y/S4uTupMaYsrEWVOzBSHc7ok8m0AXZbTk8mRPTZ7Ue?=
- =?us-ascii?Q?w2EAADeghGlqmj8aKflp+aDt6h4FAL3CiPgRnn1zQc7ikDssErrlWV5zj9MJ?=
- =?us-ascii?Q?bf0l4vVChnkVABFi3MH2nVqPbY/Lr0KV2WYBbkfHGWRipWMhgw1IgccPVOIF?=
- =?us-ascii?Q?YLtnzmjN9kbLwI/QnH4ca0hFcES9zZBs80y4i5dI6eay3Hv8H67Ms6LDSfdS?=
- =?us-ascii?Q?DNm5xE5XykbbmjIdw+1vIt9a1wDb+F9K7n0wy7Q5VPgNOm+Sv2aHPwwdcaUO?=
- =?us-ascii?Q?KyxHqg7ZQuk/XvHA500BEqJf7tvg+gJOvXFKJL+dfskuRaJw1NpbmW/5rEtf?=
- =?us-ascii?Q?fOobdb4V16Hsqux127+t/9eQXyJGc/Ak+mJVQ8EeIWxJ0iMouZClRye2ONUc?=
- =?us-ascii?Q?sTAiVwfFI/PPU5BFMbP49WrSvmcK+5lz/ti7kf2i3spdIdF+S5H0ghJcbcTn?=
- =?us-ascii?Q?aNURQVCY3uAAbXvVd4j4yKaCWPLlNt7dwgeefl/zJGjFmVx7l0fGs+E61KUN?=
- =?us-ascii?Q?uwbP8Xq2M+AaR1J0C7NMiwWJQW6U/wIU2XsAdXeQV7ziex7ypJdp+DWowflv?=
- =?us-ascii?Q?tBbfZWlsIvr31BFYOUQOHiAc/Qx+trj5hj62/IYVCd/6U+lUKpxGNusaeaPr?=
- =?us-ascii?Q?GX7BDJH7S5rSB1tSyOHYBA4mjv/ay3q5EFwXMpvJccjSHkmiOiTNX26wlSIf?=
- =?us-ascii?Q?OSCwysnUTQp7QSq2J6k/CV1pUTtcnJcZ/8z3b36Tp26GiocMhqv/3pP3uKXE?=
- =?us-ascii?Q?BxcWxUATcbg/luLHZv3xNjRcMZ1c/X2+AvodRgctUtZGs0MeFVfJofXbVIYb?=
- =?us-ascii?Q?DuTpusXXlU2Mg0IWrpjfwkxOSc/XhbWi+4gVjACzxreDXGXCxOKjxNapmC1K?=
- =?us-ascii?Q?JaBTLJx6kHXO6YUdVTghrTjwwAEHFaDZPqNSHYstiC/y0sBDHa84baI8CHML?=
- =?us-ascii?Q?Af2oFB08kOZeUFA8c2vjvAkPc7rkuNMvDu0wO2LuX6qY/CP2MQ2StRQJk2xL?=
- =?us-ascii?Q?w33H9K8mN4Fd9GVuOhggQdaKhLswvP3kzhvEcShQXH7W9NJmmKcpovoGzjBa?=
- =?us-ascii?Q?7GsHXTf3KTrarqhUPq9QDUCbV3EC8V/1RKIqVgSosaROn4BRZvUWlM0lQnOv?=
- =?us-ascii?Q?eCMUOzgNAh+YrhMWiNy+zzqO/st9PQprRjfzsZ2HWl2u4LkKgn76wb1U/uDk?=
- =?us-ascii?Q?IsGgXh3q7cbRFcNwKfATf++6di2nhJ1S/KYyVUzm0JapRZZmiqYpSqCcYGlb?=
- =?us-ascii?Q?zhgl/4t27IeoOAjudlllMFehAKMlkHPPn2UMNF/IbMPNIcg4mhMYW+Z8gkpK?=
- =?us-ascii?Q?372p0AlDfZsrDUvzlPVwE7FXPimPc4h6XRIpVPisdmH1SFajjHwTmnwcgyU0?=
- =?us-ascii?Q?ryLVcTUMEhHJjGVf6AjX6eQU37SJcOKjcM8fFdl4Ib1sBljtU8kx6VK586Pn?=
- =?us-ascii?Q?9uulLEodffIfmk2O2hPk/O6Nn+26//xm/4nyNquhd704IaE3CVDL1k+lPh4u?=
- =?us-ascii?Q?sk9cCz9eZHO7hJv5uQYgrKgr/VIGHyM7At92irz4MT1wtuQLyuHdeCjbKIUm?=
- =?us-ascii?Q?EVCEr9qGww=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TyR366hp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C425BC4CEF7;
+	Fri,  6 Mar 2026 09:14:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772788507;
+	bh=7RvOdnrFs/iEe9G84pPe+q4PLv+gFd3Sa58Nl0eTC8M=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=TyR366hpH5SBgvb3stJOO+3+JgB4eyp8Ub6SIcEY5Wv5+DIXq3qwQ1akUuyGzm4GI
+	 oVWqv0SYGKFQk/aIJcLbDc3SkZdh03GwnjPJPfc8DHBxnnTk3pTwokbH2aquirHejB
+	 nz1gJxpKMhkWSd0cvlbIm12Yo0dUUSzlaMGnA70lo5LCfYmGHYkoB3BEoaWxEw9skO
+	 0XSBCv8+kTn/Gf5HrA+24udlPqxoLhC1731SEC00PUdG+t6hKArOjAPEtT/hHxR1LY
+	 s+VuE2scXcViJMBvNGcnMzw7bfK0RAeQxP1RLAMHfxMD+S62KQ5DOUo/0QF6h57vkJ
+	 rf8R3FiiVNktg==
+From: Christian Brauner <brauner@kernel.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	fsverity@lists.linux.dev,
+	linux-mm@kvack.org,
+	netfs@lists.linux.dev,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	linux-nilfs@vger.kernel.org,
+	v9fs@lists.linux.dev,
+	linux-afs@lists.infradead.org,
+	autofs@vger.kernel.org,
+	ceph-devel@vger.kernel.org,
+	codalist@coda.cs.cmu.edu,
+	ecryptfs@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	jfs-discussion@lists.sourceforge.net,
+	ntfs3@lists.linux.dev,
+	ocfs2-devel@lists.linux.dev,
+	devel@lists.orangefs.org,
+	linux-unionfs@vger.kernel.org,
+	apparmor@lists.ubuntu.com,
+	linux-security-module@vger.kernel.org,
+	linux-integrity@vger.kernel.org,
+	selinux@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org,
+	linaro-mm-sig@lists.linaro.org,
+	netdev@vger.kernel.org,
+	linux-perf-users@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-hams@vger.kernel.org,
+	linux-x25@vger.kernel.org,
+	audit@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-sctp@vger.kernel.org,
+	bpf@vger.kernel.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Jan Kara <jack@suse.cz>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Eric Biggers <ebiggers@kernel.org>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	David Hildenbrand <david@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Andreas Dilger <adilger.kernel@dilger.ca>,
+	Jan Kara <jack@suse.com>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Chao Yu <chao@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>,
+	Tom Talpey <tom@talpey.com>,
+	Steve French <sfrench@samba.org>,
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+	Shyam Prasad N <sprasad@microsoft.com>,
+	Bharath SM <bharathsm@microsoft.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	Viacheslav Dubeyko <slava@dubeyko.com>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	David Sterba <dsterba@suse.com>,
+	Marc Dionne <marc.dionne@auristor.com>,
+	Ian Kent <raven@themaw.net>,
+	Luis de Bethencourt <luisbg@kernel.org>,
+	Salah Triki <salah.triki@gmail.com>,
+	"Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+	Ilya Dryomov <idryomov@gmail.com>,
+	Alex Markuze <amarkuze@redhat.com>,
+	Jan Harkes <jaharkes@cs.cmu.edu>,
+	coda@cs.cmu.edu,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tyler Hicks <code@tyhicks.com>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Yangtao Li <frank.li@vivo.com>,
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Richard Weinberger <richard@nod.at>,
+	Dave Kleikamp <shaggy@kernel.org>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Mark Fasheh <mark@fasheh.com>,
+	Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Anders Larsen <al@alarsen.net>,
+	Zhihao Cheng <chengzhihao1@huawei.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>,
+	James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Mimi Zohar <zohar@linux.ibm.com>,
+	Roberto Sassu <roberto.sassu@huawei.com>,
+	Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+	Eric Snowberg <eric.snowberg@oracle.com>,
+	Fan Wu <wufan@kernel.org>,
+	Stephen Smalley <stephen.smalley.work@gmail.com>,
+	Ondrej Mosnacek <omosnace@redhat.com>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Willem de Bruijn <willemb@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Simon Horman <horms@kernel.org>,
+	Oleg Nesterov <oleg@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Ian Rogers <irogers@google.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	James Clark <james.clark@linaro.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Martin Schiller <ms@dev.tdt.de>,
+	Eric Paris <eparis@redhat.com>,
+	Joerg Reuter <jreuter@yaina.de>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Oliver Hartkopp <socketcan@hartkopp.net>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	David Ahern <dsahern@kernel.org>,
+	Neal Cardwell <ncardwell@google.com>,
+	Steffen Klassert <steffen.klassert@secunet.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Remi Denis-Courmont <courmisch@gmail.com>,
+	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+	Xin Long <lucien.xin@gmail.com>,
+	Magnus Karlsson <magnus.karlsson@intel.com>,
+	Maciej Fijalkowski <maciej.fijalkowski@intel.com>,
+	Stanislav Fomichev <sdf@fomichev.me>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Jesper Dangaard Brouer <hawk@kernel.org>,
+	John Fastabend <john.fastabend@gmail.com>
+Subject: Re: [PATCH v3 00/12] vfs: change inode->i_ino from unsigned long to u64
+Date: Fri,  6 Mar 2026 10:09:33 +0100
+Message-ID: <20260306-kennen-zubrot-2605fcfd6950@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260304-iino-u64-v3-0-2257ad83d372@kernel.org>
+References: <20260304-iino-u64-v3-0-2257ad83d372@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR84MB1588.NAMPRD84.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 94cd729f-2b97-4713-cec0-08de7b5d180f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Mar 2026 08:48:09.8784
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 105b2061-b669-4b31-92ac-24d304d195dc
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PImS4Jyyp+B67PajlnZxtPdg4wwnTvzcYfb6ZG+sAkhMP5dGJSSY5WZe8NRVaXaSNxX5d/aQ1Iow91ciJYS6mwuQ3uWIpjn1bH3p7n2gBWA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR84MB1416
-X-OriginatorOrg: hpe.com
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDA4MyBTYWx0ZWRfXzBsAcjwpNNGW
- 15LL6C6mAfQr+taVKIkH/8ZpmvGESWJ9urd4AfdQeyhn4Cm/PDeAMGGp8MqmnnHlQ14pzVZDgQw
- Zy5pOa3osNHRmskeqeVWL8J/AOHAuzStuwfECCWMoe6PpBRJEYSxopEiUStNzS9pt/CyMiQeTvv
- FuDEg9RjM+tmBKoDk0lIFzombHtFbi/FdfyGRz0h4DxrjL1U1VyaHUmWDbf6w8X5B3YuTkMyQ/t
- XzNUdxENaPx4M2T/c1cQ1x/C9Vv0X3u9h0iQ7jKlAujlduJUwM9q4wwOLOhavVPSPe2EAbN7U/c
- kBymqDCr1w9AO4T9RezbcxcMx7inEK7GsHNJlNJBJPcu0BN5UU+k1nvqghYjhPAKpfkv/aQKGMx
- Fyot6QHl6MPnOjacRGBkQKE/ILfW89rNNivWfhYUBOiXvvoGwLhXZw/lPd5cauaTBXFPMnXl82c
- FDhDKqD166VJbsoO9QA==
-X-Proofpoint-ORIG-GUID: LUMSDbci1iK6dq_yQrPWURGlXo8cDcNW
-X-Authority-Analysis: v=2.4 cv=AJfdtCC3 c=1 sm=1 tr=0 ts=69aa94d9 cx=c_pps
- a=FAnPgvRYq/vnBSvlTDCQOQ==:117 a=FAnPgvRYq/vnBSvlTDCQOQ==:17
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10 a=Yq5XynenixoA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=gQcMVamqm3wCPoSYhaRC:22 a=_ZmgHqWwjZUDpi_pur5s:22
- a=VwQbUJbxAAAA:8 a=MvuuwTCpAAAA:8 a=-vHDrlTFsSstyenhOaoA:9 a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: LUMSDbci1iK6dq_yQrPWURGlXo8cDcNW
-X-HPE-SCL: -1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-06_03,2026-03-04_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 suspectscore=0 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 adultscore=0 bulkscore=0 phishscore=0
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
- definitions=main-2603060083
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2708; i=brauner@kernel.org; h=from:subject:message-id; bh=7RvOdnrFs/iEe9G84pPe+q4PLv+gFd3Sa58Nl0eTC8M=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSumvWu2uNxbBFXikaZQKrMtl0PLj1c+kZGWOrvZiHz/ W/CTGOed5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzk4A5GhimT869vPnNH4Vqj t6Tr0fqPLXs3v0g/qbXpwf6o52L5D7YyMnxU+idovG+O5JQe0WVOK45/sI9bw9AjJfah78/izrQ aXg4A
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
+On Wed, 04 Mar 2026 10:32:30 -0500, Jeff Layton wrote:
+> Christian said [1] to "just do it" when I proposed this, so here we are!
+> 
+> For historical reasons, the inode->i_ino field is an unsigned long,
+> which means that it's 32 bits on 32 bit architectures. This has caused a
+> number of filesystems to implement hacks to hash a 64-bit identifier
+> into a 32-bit field, and deprives us of a universal identifier field for
+> an inode.
+> 
+> [...]
 
+This series makes me happy. We've been talking about this conversion for
+a while and I'm thankful that you did this work. Without the automation
+available this probably wouldn't have happened as quickly as it did now.
+Let's see what bits and pieces it missed.
 
------Original Message-----
-From: Chen Ni <nichen@iscas.ac.cn>=20
-Sent: Friday, March 6, 2026 7:18 AM
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org; linux-kernel@vger.kernel.org; Chen Ni <niche=
-n@iscas.ac.cn>
-Subject: [PATCH] xfs: Convert comma to semicolon
-
-Using a ',' in place of a ';' can have unintended side effects.
-Although that is not the case here, it seems best to use ';'
-unless ',' is intended.
-
-Found by inspection.
-No functional change intended.
-Compile tested only.
-
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
-
-Acked-by: Souptick Joarder <souptick.joarder@hpe.com>
 ---
- fs/xfs/xfs_aops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c index f279055fcea0..79ec=
-98c8f299 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -792,7 +792,7 @@ xfs_vm_readahead(
- {
- 	struct iomap_read_folio_ctx	ctx =3D { .rac =3D rac };
-=20
--	ctx.ops =3D xfs_get_iomap_read_ops(rac->mapping),
-+	ctx.ops =3D xfs_get_iomap_read_ops(rac->mapping);
- 	iomap_readahead(&xfs_read_iomap_ops, &ctx, NULL);  }
-=20
---
-2.25.1
+Applied to the vfs-7.1.kino branch of the vfs/vfs.git tree.
+Patches in the vfs-7.1.kino branch should appear in linux-next soon.
 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-7.1.kino
+
+[01/12] vfs: widen inode hash/lookup functions to u64
+        https://git.kernel.org/vfs/vfs/c/2412a9fa518a
+[02/12] audit: widen ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/a5e863be4d02
+[03/12] net: change sock.sk_ino and sock_i_ino() to u64
+        https://git.kernel.org/vfs/vfs/c/c21144a0a33f
+[04/12] vfs: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/5e5c380870b2
+[05/12] cachefiles: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/25291f67aad7
+[06/12] ext2: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/797d04a355e3
+[07/12] hugetlbfs: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/3c976fb36a9a
+[08/12] zonefs: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/988f68c01b3a
+[09/12] ext4: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/1c1427c79bc2
+[10/12] f2fs: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/6e62bf74bd8a
+[11/12] nilfs2: widen trace event i_ino fields to u64
+        https://git.kernel.org/vfs/vfs/c/6ce73711525a
+[12/12] treewide: change inode->i_ino from unsigned long to u64
+        https://git.kernel.org/vfs/vfs/c/af82d143e869
