@@ -1,101 +1,172 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67EE322A1F
-	for <linux-xfs@vger.kernel.org>; Sun,  8 Mar 2026 09:19:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38FF523EAB7;
+	Sun,  8 Mar 2026 15:33:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772961571; cv=none; b=NC7QDmboH8l+MZETDNxD5YqcqW6YrlXA6U3nj3iFJB4mp3V1VhSBDQcLKQi1i9ieQSkfXy5LymjCDy0QFpNwJZwF3pTAEyHzFV25H9UxHdsjvYtvi2jvzK2KarGV8U6BeXrRogmxfZ3+W0wlColyKoqB/SfV2+YGLXDfwSkyTU4=
+	t=1772983997; cv=none; b=jv0jI0DcOhqz40YOoX7IDDmR598cMNgy6BWRWGSl4IKWj6WmofUO+Rz7rCcf7//9Qjm1DHjWZIjPIJGxI7i8lVrDVmpIoNEduTeVw012mJ+P9Tqh3O9iE6cuDA9BgT0d7dCtqjZFzf7+g8QL9GuAhJxekhWF9p2Y8XmUR1s9SN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772961571; c=relaxed/simple;
-	bh=qYzgh6uAd/1Nf5hmJK0kVF7yvFRbMy5kDQaFgFAuQVo=;
-	h=Date:Message-Id:From:To:Cc:Subject:MIME-version:Content-type; b=F4kRDe6+o/g9yXgYxiOg0fhmLxdTXCljb3odWrGQOagbh8Y8wS158R++Ml+E2nx7g6xmyVqufWSXFxrLho7ZzkbFBrbrw6AQ/ogfOPa8dm2F5yaLULi3BgHf1IhhHqnaQuhP4/+deY+v6VZzRxYGK6+o2O/Xz1s8nWrNEmMT0Lw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LS3BZNx8; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772983997; c=relaxed/simple;
+	bh=+TuBzpmKnTWYsMNcFOOQUsN6k4xfkhutUhWMIzW2MtU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MgpUou+wXjfDMjax5ORvDb2JCMfj/Ul/jn188SZkj03youYZrMlj1aIau5wxJTEvCPGwpWwC9Q4KEigfti7LiMlLkAdHnhYjpyviOcqA7zk/ZNITQ4wbpN2s014g2EMquhxhlQI3LISd+AOlYv296Cl132ykq6lQ8ravK8tyOYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=M8oMLKHe; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=rNdLk/p3; arc=none smtp.client-ip=202.12.124.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LS3BZNx8"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-8298fad2063so1666642b3a.3
-        for <linux-xfs@vger.kernel.org>; Sun, 08 Mar 2026 01:19:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772961570; x=1773566370; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:subject:cc:to:from
-         :message-id:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qYzgh6uAd/1Nf5hmJK0kVF7yvFRbMy5kDQaFgFAuQVo=;
-        b=LS3BZNx8AzNx7qnmiBP27oh6GYvUgCEBATLBYY3qytWtx+fSHxuVFhmQ+FzkptCmxE
-         COXIKbxt8fiSe3qoU/oUUNJkqOOt4Ii/FM7+Nhayr7td7pdEVBxiypYTMVgwdiCYehMD
-         2X4YUdpeWs6L8lC1xLbiNr8LtJ7OUQYRDKrS74y+E+KQavSwLoSNagI5lstpy6KaIbJ1
-         IGf7CYLXBlBu+l8d/nJZ/h9oUjJiBanIDEpDmrEERnKIpB3ajSxtFKXD98lZUxaQPibf
-         a9c7//W78FWtjcsMfnXkxfwQhXNaQSxs6O99RzSuCs4ifvnIWB4caQygtURoY/tCyavL
-         6Qkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772961570; x=1773566370;
-        h=content-transfer-encoding:mime-version:subject:cc:to:from
-         :message-id:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qYzgh6uAd/1Nf5hmJK0kVF7yvFRbMy5kDQaFgFAuQVo=;
-        b=qmt/to94iXpYGNvpj9bC/D2TpKRAuQOqRKSykje8BMB+fCxO+8w8CVrCB2jVYoxBYL
-         y29SQNkoyJF1AZw/ym7nBFQQBakQsglL+v4YZFpWACvTTgVOkv0S+Eq5XzsMgNIRrf4F
-         c26eUhTc0RWJP0lro3d3H4SXdH2vg+68jwUdQPu5nCEJNLHRd1boH4GCQRQx3BiBiRn7
-         /J47oM4PhrbVHJpJ2yEoQNeEm1MzjQoqVjGGNEt4LZSN0IvzLkY7G9BkV2K1m7OaJL2y
-         liJ/SEcTIEiO51ltgxfrTSwB/Sshqjv5wQoW3SJZJxwcDLVIXGfcWo+hHPLxVWdxn/MN
-         Sd3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCURSuLVCOEPN9vvbZ+jwRwNSjK9JRnI4b+ykDOEWyqAYPj1ADV6EpUGUgA9n4K1kULme9wiNd9fsX8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzU+mHzwmDSk3PCR6lYr21fJ3AFmc4woDwy5Z2TMlzG2iUOG3tC
-	l5Ratol1T655Fkczx+jbkaZZxvsH9MPWNC8hZsb/7rOu2yy94vo229rh
-X-Gm-Gg: ATEYQzxxThixc5/uiBpsEY/QfXPAJY+HL7xA8oIu7wXg+sjn4UWyZzt1U+zdDXu66Ul
-	7JWRdA+BlO+jCkX2ytOgqbGOHkiP5pXM4e1P1JU6TKJ3n9Pzkmn4GI4f46gLS22KlbaEiJtXJ9X
-	Slya/24MuQu1I7HHwJCSLoyfNZEVTzDZvHTAEvEEp9iGkkzJ5r29cUMXBUCbBOlYH1adsQZIqj7
-	bDMcyBEe+/tXB7umeMC8oK56wZhGT4MsDZl1cTh/+9EsQiYhcnPlHQB1xvQ+f4KeNpfxalxByJw
-	0r6/jHNLkRjayeyYlwG7GXSLQ7CWuTvPyxX8KPFs3MOiCMqBu3vV/EgzIN/YFd7JZy7iaMne8xD
-	UeTuKshcB7V7cH43qa+h5NmjB0i0HWBI2W29dUrx/JYxgWpSWHWlO4IHfkg0x+i5ztkGea/9T+8
-	gC/HoijwNw4SUY+DTUPNeV+g==
-X-Received: by 2002:a05:6a00:983:b0:81e:7496:f826 with SMTP id d2e1a72fcca58-829a2f6d717mr7319185b3a.31.1772961570117;
-        Sun, 08 Mar 2026 01:19:30 -0800 (PST)
-Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-829a46765a6sm6709106b3a.29.2026.03.08.01.19.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Mar 2026 01:19:29 -0800 (PST)
-Date: Sun, 08 Mar 2026 14:49:21 +0530
-Message-Id: <v7f6u19i.ritesh.list@gmail.com>
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Andres Freund <andres@anarazel.de>, Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, jack@suse.cz, ojaswin@linux.ibm.com, Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
+	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="M8oMLKHe";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="rNdLk/p3"
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	by mailfout.stl.internal (Postfix) with ESMTP id 93A821D0000E;
+	Sun,  8 Mar 2026 11:33:13 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-07.internal (MEProxy); Sun, 08 Mar 2026 11:33:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1772983993;
+	 x=1773070393; bh=j67XtJ9OGsdlKsg8v+Rh/M0QEDVD7WMs+occTWtaidE=; b=
+	M8oMLKHeJC1qqUKI5wl4oHJh7TlqciEYhO6kYd7RzJ2jC4XoEhFuubaAPWAGuit+
+	3JE3EKayzXDkDwXkVn3Fcmfb7D7Gd2fd+ztdjiYLLvTFscp4rAOmHZWaCo8T/hfr
+	VJ06mIg0Y1VsBea+wPPBr9aj7Qv2+J2ybCeeT/ssvq7J9iPRtHP+a7TScPE4WUzu
+	/HyffTZTwKpCuFxA3cOnWZQJOrYdr2nnAFcuI75M8pb1Pccn1voqqxaCi/et3QK7
+	f8N4bbfjThQn7VPdu/JPn5XWY49A6iYaV25sb66F807jxUOegh2qWk/9Ho9yEjvw
+	8aG+NibXye1ZKyYbfZV1uw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1772983993; x=
+	1773070393; bh=j67XtJ9OGsdlKsg8v+Rh/M0QEDVD7WMs+occTWtaidE=; b=r
+	NdLk/p32TQDKOBkrSnPA2MnysyMVa1WS+6lXiU81IfyWLSXZ4m9MXaKyWwxOnZsh
+	X6GSMd6Xw53CYtt5hUKoNi23Ldd/c7y9VEJ8SE7KVWRe/IL/cr0b25pZYndIlZIB
+	gwi5DouetHBxepC9B+1HcM482KeTOXJWVxcWR+SveGzv7c8X3ZjsKn40LUihfA43
+	T4tJ8FU4zmnQhAinCgLgUzZdQVLNo+fBieTrnZjcXgEY9sSTpwJvKHi8BPgnSzY5
+	Kg9L+AxNIOqYxoA5sjOdVeOy3hBy7NfUg7Y9Iybw4UXRx42sfAaDyRVBrHJVVO3+
+	DnT48ti0Pvq1lrRM/3s4w==
+X-ME-Sender: <xms:t5ataVwCm1DrshxsYPYAjikWwiata3XhjybKXJVu9wRn8VF4pWedGw>
+    <xme:t5ataRL48WYmaazofgmpoG9726ua1f2FnGRLyRl3X2r44PM6sT0Ve8CP0SRCI8PrH
+    rGsE4wH2SluW0f_2AU8zhTgOeKKFW2Er6UQL2VfBzffOSDdyWtBag>
+X-ME-Received: <xmr:t5ataa2yko-EbDXivTKMVyzLWK43LK26FoGPv6CJraasA3aXJR4fBsPMXTCiAL68ncoEVw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvjeehheehucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkfhggtggugfgjsehtkefstddttdejnecuhfhrohhmpeetnhgurhgv
+    shcuhfhrvghunhguuceorghnughrvghssegrnhgrrhgriigvlhdruggvqeenucggtffrrg
+    htthgvrhhnpedtleelvdfgjedvffeiueekfeeuleffhfegfffhgfffkeevueehieehhfei
+    gffhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grnhgurhgvshesrghnrghrrgiivghlrdguvgdpnhgspghrtghpthhtohepvddtpdhmohgu
+    vgepshhmthhpohhuthdprhgtphhtthhopegrmhhirhejfehilhesghhmrghilhdrtghomh
+    dprhgtphhtthhopehrihhtvghshhdrlhhishhtsehgmhgrihhlrdgtohhmpdhrtghpthht
+    ohepfihilhhlhiesihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopegujhifohhngh
+    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepmhgtghhrohhfsehkvghrnhgvlhdrohhr
+    ghdprhgtphhtthhopehlihhnuhigqdhmmheskhhvrggtkhdrohhrghdprhgtphhtthhope
+    hprghnkhgrjhdrrhgrghhhrghvsehlihhnuhigrdguvghvpdhrtghpthhtohepohhjrghs
+    fihinheslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehlshhfqdhptgeslhhish
+    htshdrlhhinhhugidqfhhouhhnuggrthhiohhnrdhorhhg
+X-ME-Proxy: <xmx:t5atabdr7P5wMdbGIgFdb3ItIOC2ChWHV7AMfKIRxqK1W48aO0FLSQ>
+    <xmx:t5atae7_j236xrkK0fKiAb7qogWk8a7ApPSSz1SSbBwZmBaL5IoZAQ>
+    <xmx:t5atae9iAxo7ei6UuV1V5whjymcmGSwjfJspj-VputDXUjfJik0psA>
+    <xmx:t5ataVL7cZ6ttfoZ9QCbSAFcajRLT-wbNEyIjafmvuPb5m9qassYdA>
+    <xmx:uZataaeyBP_MPNczw099JYvNBOlN3bTUpmojFbk_LjJMiR9yZYqA1_33>
+Feedback-ID: id4a34324:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
+ 8 Mar 2026 11:33:11 -0400 (EDT)
+Date: Sun, 8 Mar 2026 11:33:10 -0400
+From: Andres Freund <andres@anarazel.de>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>, 
+	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
+	john.g.garry@oracle.com, willy@infradead.org, jack@suse.cz, ojaswin@linux.ibm.com, 
+	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
+	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
 Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
+Message-ID: <pyyeaqzjdpgkpjfyxkrlzawwwj6elzvidubtq73toufr7wgoec@prv4u3o5ixjy>
+References: <v7f6u19i.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-
-Andres Freund <andres@anarazel.de> writes:
+In-Reply-To: <v7f6u19i.ritesh.list@gmail.com>
 
 Hi,
 
-> Hi,
+On 2026-03-08 14:49:21 +0530, Ritesh Harjani wrote:
+> Andres Freund <andres@anarazel.de> writes:
+> > On 2026-02-17 10:23:36 +0100, Amir Goldstein wrote:
+> >> On Tue, Feb 17, 2026 at 8:00 AM Christoph Hellwig <hch@lst.de> wrote:
+> >> >
+> >> > I think a better session would be how we can help postgres to move
+> >> > off buffered I/O instead of adding more special cases for them.
+> >
+> > FWIW, we are adding support for DIO (it's been added, but performance isn't
+> > competitive for most workloads in the released versions yet, work to address
+> > those issues is in progress).
+> >
 >
-> On 2026-02-17 10:23:36 +0100, Amir Goldstein wrote:
->> On Tue, Feb 17, 2026 at 8:00 AM Christoph Hellwig <hch@lst.de> wrote:
->> >
->> > I think a better session would be how we can help postgres to move
->> > off buffered I/O instead of adding more special cases for them.
->
-> FWIW, we are adding support for DIO (it's been added, but performance isn't
-> competitive for most workloads in the released versions yet, work to address
-> those issues is in progress).
->
+> Is postgres also planning to evaluate the performance gains by using DIO
+> atomic writes available in upstream linux kernel? What would be
+> interesting to see is the relative %delta with DIO atomic-writes v/s
+> DIO non atomic writes.
 
-Is postgres also planning to evaluate the performance gains by using DIO
-atomic writes available in upstream linux kernel? What would be
-interesting to see is the relative %delta with DIO atomic-writes v/s
-DIO non atomic writes.
+For some limited workloads that comparison is possible today with minimal work
+(albeit with some safety compromises, due to postgres not yet verifying that
+the atomic boundaries are correct, but it's good enough for experiments), as
+you can just disable the torn-page avoidance with a configuration parameter.
 
-That being said, I understand the discussion in this wider thread is
-also around supporting write-through in linux and then adding support of
-atomic writes on top of that. We have an early prototype of that
-design ready and Ojaswin will be soon posting that out.
 
--ritesh
+The gains from not needing full page writes (postgres' mechanism to protect
+against torn pages) can be rather significant, as full page writes have
+substantial overhead due to the higher journalling volume. The worst part of
+the cost is that the cost decreases between checkpoints (because we don't need
+to repeatedly log a full page images for the same page), just to then increase
+again when the next checkpoint starts.  It's not uncommon that in the phase
+just after the start of a checkpoint, WAL is over 90% of full page writes
+(when not having full page write compression enabled), while later the same
+workload only has a very small percentage of the overhead.  The biggest gain
+from atomic writes will be the more even performance (important for real world
+users), rather than the absolute increase in throughput.
+
+
+Normal gains during the full page intensive phase are probably on the order of
+20-35% for workload with many small transactions, bigger for workloads with
+larger transactions. But if the increase in WAL volume pushes you above the
+disk write throughput, the gains can be almost arbitrarily larger. E.g. on a
+cloud disk with 100MB/s of write bandwidth, the difference between WAL
+throughput of 50MB/s without full page writes and the same workload with full
+page images generating ~300MB/s of WAL will obviously mean that you'll get
+about < 1/3 of the transaction throughput while also not having any spare IO
+capacity for anything other than WAL writes.
+
+
+The reason I say limited workloads above is that upstream postgres does not
+yet do smart enough write combining with DIO for data writes, I'd expect that
+to be addressed later this year (but it's community open source, as you
+presumably know from experience, that's not always easy to predict /
+control). If the workload has a large fraction of data writes, the overhead of
+that makes the DIO numbers too unrealistic.
+
+
+Unfortunately all this means that the gains from atomic writes, be it for
+buffered or direct IO, will very very heavily depend on the chosen workload
+and by tweaking the workload / hardware you can inflate the gains to an almost
+arbitrarily large degree.
+
+
+This is also about more than throughput / latency, as the volume of WAL also
+impacts the cost of retaining the WAL - often that's done for a while to allow
+point-in-time-recovery (i.e. recovering an older base backup up to a precise
+point in time, to recover from application bugs or operator errors).
+
+
+Greetings,
+
+Andres Freund
