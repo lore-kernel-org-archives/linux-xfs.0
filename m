@@ -1,172 +1,127 @@
-Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
+Received: from pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.162.73.231])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38FF523EAB7;
-	Sun,  8 Mar 2026 15:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E1C933E348;
+	Sun,  8 Mar 2026 18:28:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.162.73.231
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772983997; cv=none; b=jv0jI0DcOhqz40YOoX7IDDmR598cMNgy6BWRWGSl4IKWj6WmofUO+Rz7rCcf7//9Qjm1DHjWZIjPIJGxI7i8lVrDVmpIoNEduTeVw012mJ+P9Tqh3O9iE6cuDA9BgT0d7dCtqjZFzf7+g8QL9GuAhJxekhWF9p2Y8XmUR1s9SN8=
+	t=1772994500; cv=none; b=RruAe8I/LlndbkXelZhmSijmbVVLlK8zcM6seHgg6bPTYDFaSKu/kFjiKgP/oYd2c5iuNLpYUn9sKN239F1fHXedLiFFLCiO4xAB+JcJVl54A++lcLupHDNAdE4mfs6bIl7Tq9tDrIA6Q6VBDnON0VJAIKLW2P0EPRSvLYFXXy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772983997; c=relaxed/simple;
-	bh=+TuBzpmKnTWYsMNcFOOQUsN6k4xfkhutUhWMIzW2MtU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MgpUou+wXjfDMjax5ORvDb2JCMfj/Ul/jn188SZkj03youYZrMlj1aIau5wxJTEvCPGwpWwC9Q4KEigfti7LiMlLkAdHnhYjpyviOcqA7zk/ZNITQ4wbpN2s014g2EMquhxhlQI3LISd+AOlYv296Cl132ykq6lQ8ravK8tyOYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de; spf=pass smtp.mailfrom=anarazel.de; dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b=M8oMLKHe; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=rNdLk/p3; arc=none smtp.client-ip=202.12.124.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=anarazel.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anarazel.de
+	s=arc-20240116; t=1772994500; c=relaxed/simple;
+	bh=lNOK5ANUL1LUa+yFrwVIJkyfZsEPkwqEKPpuD8jiIvQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WyuPyKo1RsMzPJtXgM95VDTg1Mxu8l+2dgVd3WMbfId2K31hJuzH5jMv+YAsgu/OoUz2KoYjpFoVtbqmgG8BJS6H08EOIwFqAvfXOD46USScaQhQlJFnsBkwmLQrXT5+Lp5qxmmQNzzrUhRDQKpRdTjiKX7ZKOPeen024+0cu4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=NHiKk7zw; arc=none smtp.client-ip=35.162.73.231
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=anarazel.de header.i=@anarazel.de header.b="M8oMLKHe";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="rNdLk/p3"
-Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
-	by mailfout.stl.internal (Postfix) with ESMTP id 93A821D0000E;
-	Sun,  8 Mar 2026 11:33:13 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-07.internal (MEProxy); Sun, 08 Mar 2026 11:33:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1772983993;
-	 x=1773070393; bh=j67XtJ9OGsdlKsg8v+Rh/M0QEDVD7WMs+occTWtaidE=; b=
-	M8oMLKHeJC1qqUKI5wl4oHJh7TlqciEYhO6kYd7RzJ2jC4XoEhFuubaAPWAGuit+
-	3JE3EKayzXDkDwXkVn3Fcmfb7D7Gd2fd+ztdjiYLLvTFscp4rAOmHZWaCo8T/hfr
-	VJ06mIg0Y1VsBea+wPPBr9aj7Qv2+J2ybCeeT/ssvq7J9iPRtHP+a7TScPE4WUzu
-	/HyffTZTwKpCuFxA3cOnWZQJOrYdr2nnAFcuI75M8pb1Pccn1voqqxaCi/et3QK7
-	f8N4bbfjThQn7VPdu/JPn5XWY49A6iYaV25sb66F807jxUOegh2qWk/9Ho9yEjvw
-	8aG+NibXye1ZKyYbfZV1uw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1772983993; x=
-	1773070393; bh=j67XtJ9OGsdlKsg8v+Rh/M0QEDVD7WMs+occTWtaidE=; b=r
-	NdLk/p32TQDKOBkrSnPA2MnysyMVa1WS+6lXiU81IfyWLSXZ4m9MXaKyWwxOnZsh
-	X6GSMd6Xw53CYtt5hUKoNi23Ldd/c7y9VEJ8SE7KVWRe/IL/cr0b25pZYndIlZIB
-	gwi5DouetHBxepC9B+1HcM482KeTOXJWVxcWR+SveGzv7c8X3ZjsKn40LUihfA43
-	T4tJ8FU4zmnQhAinCgLgUzZdQVLNo+fBieTrnZjcXgEY9sSTpwJvKHi8BPgnSzY5
-	Kg9L+AxNIOqYxoA5sjOdVeOy3hBy7NfUg7Y9Iybw4UXRx42sfAaDyRVBrHJVVO3+
-	DnT48ti0Pvq1lrRM/3s4w==
-X-ME-Sender: <xms:t5ataVwCm1DrshxsYPYAjikWwiata3XhjybKXJVu9wRn8VF4pWedGw>
-    <xme:t5ataRL48WYmaazofgmpoG9726ua1f2FnGRLyRl3X2r44PM6sT0Ve8CP0SRCI8PrH
-    rGsE4wH2SluW0f_2AU8zhTgOeKKFW2Er6UQL2VfBzffOSDdyWtBag>
-X-ME-Received: <xmr:t5ataa2yko-EbDXivTKMVyzLWK43LK26FoGPv6CJraasA3aXJR4fBsPMXTCiAL68ncoEVw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvjeehheehucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkfhggtggugfgjsehtkefstddttdejnecuhfhrohhmpeetnhgurhgv
-    shcuhfhrvghunhguuceorghnughrvghssegrnhgrrhgriigvlhdruggvqeenucggtffrrg
-    htthgvrhhnpedtleelvdfgjedvffeiueekfeeuleffhfegfffhgfffkeevueehieehhfei
-    gffhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grnhgurhgvshesrghnrghrrgiivghlrdguvgdpnhgspghrtghpthhtohepvddtpdhmohgu
-    vgepshhmthhpohhuthdprhgtphhtthhopegrmhhirhejfehilhesghhmrghilhdrtghomh
-    dprhgtphhtthhopehrihhtvghshhdrlhhishhtsehgmhgrihhlrdgtohhmpdhrtghpthht
-    ohepfihilhhlhiesihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopegujhifohhngh
-    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepmhgtghhrohhfsehkvghrnhgvlhdrohhr
-    ghdprhgtphhtthhopehlihhnuhigqdhmmheskhhvrggtkhdrohhrghdprhgtphhtthhope
-    hprghnkhgrjhdrrhgrghhhrghvsehlihhnuhigrdguvghvpdhrtghpthhtohepohhjrghs
-    fihinheslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehlshhfqdhptgeslhhish
-    htshdrlhhinhhugidqfhhouhhnuggrthhiohhnrdhorhhg
-X-ME-Proxy: <xmx:t5atabdr7P5wMdbGIgFdb3ItIOC2ChWHV7AMfKIRxqK1W48aO0FLSQ>
-    <xmx:t5atae7_j236xrkK0fKiAb7qogWk8a7ApPSSz1SSbBwZmBaL5IoZAQ>
-    <xmx:t5atae9iAxo7ei6UuV1V5whjymcmGSwjfJspj-VputDXUjfJik0psA>
-    <xmx:t5ataVL7cZ6ttfoZ9QCbSAFcajRLT-wbNEyIjafmvuPb5m9qassYdA>
-    <xmx:uZataaeyBP_MPNczw099JYvNBOlN3bTUpmojFbk_LjJMiR9yZYqA1_33>
-Feedback-ID: id4a34324:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
- 8 Mar 2026 11:33:11 -0400 (EDT)
-Date: Sun, 8 Mar 2026 11:33:10 -0400
-From: Andres Freund <andres@anarazel.de>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>, 
-	Pankaj Raghav <pankaj.raghav@linux.dev>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, djwong@kernel.org, 
-	john.g.garry@oracle.com, willy@infradead.org, jack@suse.cz, ojaswin@linux.ibm.com, 
-	Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, 
-	gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Buffered atomic writes
-Message-ID: <pyyeaqzjdpgkpjfyxkrlzawwwj6elzvidubtq73toufr7wgoec@prv4u3o5ixjy>
-References: <v7f6u19i.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="NHiKk7zw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1772994499; x=1804530499;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Gn+wo5+/If5mRGgzlhNBLxY31rnAKWopReu868U7ckg=;
+  b=NHiKk7zw4HzUumgtODz+/zGQ7wt4xgNu9QaXypLTk9It5h5RRaobVPit
+   DjfQK/NV9lepaOEpAOQNgKRx3lfJcrHjV9M624aryIdG3LCY+DG9XrnzQ
+   iSUUPruKNEThz9zQoY0meoToXMRfOWhWs8gnU3lnkKuq2NYTyN1jQmWWO
+   logTXi5a7RslQ1/7tWooVlzhHDuk1UWXj0kpsSC6y5pualCKYBwkIL9Rw
+   CPH8NY1kzaAZcw83kI0BUWhKVCUg1s5df+sb2KBFvPy9dMNSqwd6YS80K
+   54qMcwCCpLiWEqOb925TM5PpyksOjbZbl8tBVZLjFp1EAONz8SDjUrfLo
+   w==;
+X-CSE-ConnectionGUID: GAxpbzcjRlWKW+AxKkyztQ==
+X-CSE-MsgGUID: kXwUEIToS6a2OyWEVUjEsg==
+X-IronPort-AV: E=Sophos;i="6.23,109,1770595200"; 
+   d="scan'208";a="14379157"
+Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
+  by internal-pdx-out-012.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2026 18:28:16 +0000
+Received: from EX19MTAUWA001.ant.amazon.com [205.251.233.182:4089]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.39:2525] with esmtp (Farcaster)
+ id 775eb367-3392-4f1d-be0e-cddd18b8ce91; Sun, 8 Mar 2026 18:28:16 +0000 (UTC)
+X-Farcaster-Flow-ID: 775eb367-3392-4f1d-be0e-cddd18b8ce91
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWA001.ant.amazon.com (10.250.64.218) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sun, 8 Mar 2026 18:28:15 +0000
+Received: from c889f3b07a0a.amazon.com (10.106.82.18) by
+ EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sun, 8 Mar 2026 18:28:14 +0000
+From: Yuto Ohnuki <ytohnuki@amazon.com>
+To: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>
+CC: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster
+	<bfoster@redhat.com>, <linux-xfs@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>
+Subject: [PATCH v3 0/4] xfs: fix AIL push use-after-free during shutdown
+Date: Sun, 8 Mar 2026 18:28:05 +0000
+Message-ID: <20260308182804.33127-6-ytohnuki@amazon.com>
+X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <v7f6u19i.ritesh.list@gmail.com>
+X-ClientProxiedBy: EX19D036UWB004.ant.amazon.com (10.13.139.170) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-Hi,
+When a filesystem is shut down, background inode reclaim and the xfsaild
+can race to abort and free dirty inodes. Since commit 90c60e164012
+("xfs: xfs_iflush() is no longer necessary"), xfs_inode_item_push() no
+longer holds ILOCK_SHARED while flushing, removing the protection that
+prevented the inode from being reclaimed during the flush.
 
-On 2026-03-08 14:49:21 +0530, Ritesh Harjani wrote:
-> Andres Freund <andres@anarazel.de> writes:
-> > On 2026-02-17 10:23:36 +0100, Amir Goldstein wrote:
-> >> On Tue, Feb 17, 2026 at 8:00 AM Christoph Hellwig <hch@lst.de> wrote:
-> >> >
-> >> > I think a better session would be how we can help postgres to move
-> >> > off buffered I/O instead of adding more special cases for them.
-> >
-> > FWIW, we are adding support for DIO (it's been added, but performance isn't
-> > competitive for most workloads in the released versions yet, work to address
-> > those issues is in progress).
-> >
->
-> Is postgres also planning to evaluate the performance gains by using DIO
-> atomic writes available in upstream linux kernel? What would be
-> interesting to see is the relative %delta with DIO atomic-writes v/s
-> DIO non atomic writes.
+This results in use-after-free when dereferencing log items after
+iop_push() returns, or when reacquiring the AIL lock via lip->li_ailp.
 
-For some limited workloads that comparison is possible today with minimal work
-(albeit with some safety compromises, due to postgres not yet verifying that
-the atomic boundaries are correct, but it's good enough for experiments), as
-you can just disable the torn-page avoidance with a configuration parameter.
+This series fixes the issue by:
+1. Reordering unmount to stop reclaim before pushing the AIL
+2. Factoring the push loop into a helper for readability
+3. Capturing log item fields before push callbacks for tracepoints
+4. Saving the ailp pointer before dropping the AIL lock
 
+Changes in v3:
+- Split into 4 patches as suggested by Dave Chinner
+- Moved UAF-unsafe point comments to after xfs_buf_relse()
+- Passed ailp instead of dev to tracepoints
+- Moved xfs_ail_push_class definition after xfs_log_item_class events
+- Factored xfsaild_push() loop body into xfsaild_process_logitem()
+- Added xfsaild_push_item() header comment describing post-return lifetime
+- Link to v2: https://lore.kernel.org/all/20260305185836.56478-2-ytohnuki@amazon.com/
 
-The gains from not needing full page writes (postgres' mechanism to protect
-against torn pages) can be rather significant, as full page writes have
-substantial overhead due to the higher journalling volume. The worst part of
-the cost is that the cost decreases between checkpoints (because we don't need
-to repeatedly log a full page images for the same page), just to then increase
-again when the next checkpoint starts.  It's not uncommon that in the phase
-just after the start of a checkpoint, WAL is over 90% of full page writes
-(when not having full page write compression enabled), while later the same
-workload only has a very small percentage of the overhead.  The biggest gain
-from atomic writes will be the more even performance (important for real world
-users), rather than the absolute increase in throughput.
+Changes in v2:
+- Reordered xfs_unmount_flush_inodes() to stop reclaim before pushing
+  AIL suggested by Dave Chinner
+- Introduced xfs_ail_push_class trace event to avoid dereferencing
+  freed log items in tracepoints
+- Added comments documenting that log items must not be referenced
+  after iop_push() returns
+- Saved ailp pointer in local variables in push functions
+- Link to v1: https://lore.kernel.org/all/20260304162405.58017-2-ytohnuki@amazon.com/
 
+Yuto Ohnuki (4):
+  xfs: stop reclaim before pushing AIL during unmount
+  xfs: refactor xfsaild_push loop into helper
+  xfs: avoid dereferencing log items after push callbacks
+  xfs: save ailp before dropping the AIL lock in push callbacks
 
-Normal gains during the full page intensive phase are probably on the order of
-20-35% for workload with many small transactions, bigger for workloads with
-larger transactions. But if the increase in WAL volume pushes you above the
-disk write throughput, the gains can be almost arbitrarily larger. E.g. on a
-cloud disk with 100MB/s of write bandwidth, the difference between WAL
-throughput of 50MB/s without full page writes and the same workload with full
-page images generating ~300MB/s of WAL will obviously mean that you'll get
-about < 1/3 of the transaction throughput while also not having any spare IO
-capacity for anything other than WAL writes.
+ fs/xfs/xfs_dquot_item.c |   9 ++-
+ fs/xfs/xfs_inode_item.c |   9 ++-
+ fs/xfs/xfs_mount.c      |   4 +-
+ fs/xfs/xfs_trace.h      |  36 ++++++++++--
+ fs/xfs/xfs_trans_ail.c  | 124 +++++++++++++++++++++++-----------------
+ 5 files changed, 120 insertions(+), 62 deletions(-)
 
-
-The reason I say limited workloads above is that upstream postgres does not
-yet do smart enough write combining with DIO for data writes, I'd expect that
-to be addressed later this year (but it's community open source, as you
-presumably know from experience, that's not always easy to predict /
-control). If the workload has a large fraction of data writes, the overhead of
-that makes the DIO numbers too unrealistic.
+-- 
+2.50.1
 
 
-Unfortunately all this means that the gains from atomic writes, be it for
-buffered or direct IO, will very very heavily depend on the chosen workload
-and by tweaking the workload / hardware you can inflate the gains to an almost
-arbitrarily large degree.
 
 
-This is also about more than throughput / latency, as the volume of WAL also
-impacts the cost of retaining the WAL - often that's done for a while to allow
-point-in-time-recovery (i.e. recovering an older base backup up to a precise
-point in time, to recover from application bugs or operator errors).
+Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+
+Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
 
 
-Greetings,
 
-Andres Freund
