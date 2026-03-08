@@ -1,62 +1,61 @@
 Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0197033E348;
-	Sun,  8 Mar 2026 18:28:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA4739283D;
+	Sun,  8 Mar 2026 18:28:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772994505; cv=none; b=pjpitdxKw7jmxxjNRoLhDt6R3ERgNvUcWjvMSdwQBDQvNwomt7T2LzvG24YtcWGsRILEHNqEObvqci0F5QYLznLMqIJbOol3H/y5OprBSO6epo6NKfMJUcCpeCCFdnzC95jyX+Qce3IiEIqvOWPe8l5VfFRaD9Tb2NJ9Z41qRo0=
+	t=1772994506; cv=none; b=CkGh93cGIR5dZdG4ZIkPghoGCEmLZ/PybFMPT1DodKPTotD8rEQsqMQrp3g3mbUoqiB5++cygPqeTRqInXiuauJ1yj6CFoskw4XAZs5mUGFnll5NOIGHCUCRtrlwPRKANyaJxLCVpBv1MqDzhUPSnoVzqeNNMi+18fe9BCGrrng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772994505; c=relaxed/simple;
-	bh=8PNyLdCufw1wJ+Rudba2u0ehjT9bec5MnnyztAojW1I=;
+	s=arc-20240116; t=1772994506; c=relaxed/simple;
+	bh=zLMN9+R3TcKfIQICVwuSHYqAKVdUpKlnJmncphhvbK8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XjT2ssZdztQtTQPhWz/Unj6jMLNdngYkETylgnmkoH1dW2AZTMkI88CaoUY/4bWC2kGyJPCoDpD/SU9SizQx1YwuVYAe5kkh/SvMXondks8msAwMyFCtJq7jfUkbrQpf+GyGVUUtwiZLdk+Zxwcw6Z5wbPZnezeTAzjUFMKoF7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=b0QafEy1; arc=none smtp.client-ip=52.42.203.116
+	 MIME-Version:Content-Type; b=WyE9rvaaak+kgm6GjWFOm4okKXRkvf1F+9h96W/P8IBZtPys0WhcaRk7Fa9AvxgXEofC5wuJIoA0t2Y7kEoGLhx5VLXnLldq1Ae8QVtXj9lL4X/nuJjrgLDdG7pj+kxO1Mktyr3C3YuhuNHqM5tSIVhu079HgPnD8MqN6sqNelU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=mfdNifbw; arc=none smtp.client-ip=52.42.203.116
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="b0QafEy1"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="mfdNifbw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1772994503; x=1804530503;
+  t=1772994505; x=1804530505;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uKZECHlQvfktn+FLrbd1kXbKtr6B4SpmpC7n4bWVYv4=;
-  b=b0QafEy1eoJYT+g8ne68ZK8i0hK8wD4x8rpUh3cqJ5Z0xn4RURuZ5cyQ
-   vJoXZNgOEPPBzPdmqe1qV3QLSHN7o9P+IcrrT2Ansc3cJjtW0E1sGSevb
-   DFieV7Bc2A8jcCRd14oAjgjMNzi6mCxvd6qAdcLAHBb8A6Z4JuOKP9l3I
-   aglWW7eZ++MaxDeA5zKSKmaKb3/vBGW/dW05pHu9w0l6OinuK8LMqUTNV
-   dFGEfGI0LKpk+6YuQsbR6VddI0OeAkDtnIJ7bGCbgaspU8JeDpfNLrX5B
-   swPl6oO13KHV4b0NFyLYLSUtVW8RTU9fls+pFIVreYKAxRRV2R3g1ujH5
-   w==;
-X-CSE-ConnectionGUID: EdYEGu9ERZKcgbKmHZFn1Q==
-X-CSE-MsgGUID: LHpB2xutSaWjq4kji7Dqgg==
+  bh=xxNWM3yg6rCQ2GaizLCYP3y/nhylL6KTTtZ38mtodWg=;
+  b=mfdNifbw6O2HG7GnoxXjACbr/WxWHBuGfZ3VdLYuha26vP5cMlYv614T
+   8TccNm/h+pIKhtHkysa/nqo16bDfF3yFblh4zFUT8xq7Eohs5fJOwWoIX
+   GioPFGrxgMjYrOuIY7KECO9QbqSmb9xgmLfQ21N/ZofN3CWeFcJunwM5F
+   IPZ8XACyoNE9pBuGAVy0EH3dYQgZMokTR05QomixGgNBsmm323LhSML9D
+   8M2m9wR6L/8u6C0FG6pbVK8YukIc5RmVUarpnhQrgsb3n67gXdxPEVTqS
+   +kGEMcMoyqCgsDDr7i8JXl5LH0Ew+8y+7sZ7AYoD+3Rczok/d1j0a8y4O
+   g==;
+X-CSE-ConnectionGUID: HKNvzKu0TM224L6+ThPT6w==
+X-CSE-MsgGUID: 7zQ07h3uQpK41nMlRux01g==
 X-IronPort-AV: E=Sophos;i="6.23,109,1770595200"; 
-   d="scan'208";a="14575495"
+   d="scan'208";a="14575498"
 Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2026 18:28:21 +0000
-Received: from EX19MTAUWC001.ant.amazon.com [205.251.233.53:6285]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.4.108:2525] with esmtp (Farcaster)
- id b6cf0bb0-76a1-4bab-a1b3-0ef9b7112b6b; Sun, 8 Mar 2026 18:28:21 +0000 (UTC)
-X-Farcaster-Flow-ID: b6cf0bb0-76a1-4bab-a1b3-0ef9b7112b6b
+  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2026 18:28:24 +0000
+Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.48:16326]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.6.153:2525] with esmtp (Farcaster)
+ id 1203a453-8489-4ab9-a65c-e19db4ef0a33; Sun, 8 Mar 2026 18:28:23 +0000 (UTC)
+X-Farcaster-Flow-ID: 1203a453-8489-4ab9-a65c-e19db4ef0a33
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWC001.ant.amazon.com (10.250.64.174) with Microsoft SMTP Server
+ EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sun, 8 Mar 2026 18:28:20 +0000
+ Sun, 8 Mar 2026 18:28:23 +0000
 Received: from c889f3b07a0a.amazon.com (10.106.82.18) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sun, 8 Mar 2026 18:28:18 +0000
+ Sun, 8 Mar 2026 18:28:21 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
 To: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>
 CC: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster
 	<bfoster@redhat.com>, <linux-xfs@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>,
-	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
 	<stable@vger.kernel.org>
-Subject: [PATCH v3 1/4] xfs: stop reclaim before pushing AIL during unmount
-Date: Sun, 8 Mar 2026 18:28:06 +0000
-Message-ID: <20260308182804.33127-7-ytohnuki@amazon.com>
+Subject: [PATCH v3 2/4] xfs: refactor xfsaild_push loop into helper
+Date: Sun, 8 Mar 2026 18:28:07 +0000
+Message-ID: <20260308182804.33127-8-ytohnuki@amazon.com>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20260308182804.33127-6-ytohnuki@amazon.com>
 References: <20260308182804.33127-6-ytohnuki@amazon.com>
@@ -71,40 +70,157 @@ X-ClientProxiedBy: EX19D036UWB004.ant.amazon.com (10.13.139.170) To
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-The unmount sequence in xfs_unmount_flush_inodes() pushed the AIL while
-background reclaim and inodegc are still running. This creates a race
-where reclaim can free inodes and their log items while the AIL push is
-still referencing them.
+Factor the loop body of xfsaild_push() into a separate
+xfsaild_process_logitem() helper to improve readability.
 
-Reorder xfs_unmount_flush_inodes() to cancel background reclaim and stop
-inodegc before pushing the AIL, so that background reclaim and inodegc
-are no longer running while the AIL is pushed.
+This is a pure code movement with no functional change. The
+subsequent patch to fix a use-after-free in the AIL push path
+depends on this refactoring.
 
-Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
-Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
 Cc: <stable@vger.kernel.org> # v5.9
 Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
 ---
- fs/xfs/xfs_mount.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_trans_ail.c | 116 +++++++++++++++++++++++------------------
+ 1 file changed, 64 insertions(+), 52 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9c295abd0a0a..786e1fc720e5 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -621,9 +621,9 @@ xfs_unmount_flush_inodes(
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 923729af4206..ac747804e1d6 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -458,6 +458,69 @@ xfs_ail_calc_push_target(
+ 	return target_lsn;
+ }
  
- 	xfs_set_unmounting(mp);
++static void
++xfsaild_process_logitem(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	*lip,
++	xfs_lsn_t		lsn,
++	int			*stuck,
++	int			*flushing)
++{
++	struct xfs_mount	*mp = ailp->ail_log->l_mp;
++	int			lock_result;
++
++	/*
++	 * Note that iop_push may unlock and reacquire the AIL lock. We
++	 * rely on the AIL cursor implementation to be able to deal with
++	 * the dropped lock.
++	 */
++	lock_result = xfsaild_push_item(ailp, lip);
++	switch (lock_result) {
++	case XFS_ITEM_SUCCESS:
++		XFS_STATS_INC(mp, xs_push_ail_success);
++		trace_xfs_ail_push(lip);
++
++		ailp->ail_last_pushed_lsn = lsn;
++		break;
++
++	case XFS_ITEM_FLUSHING:
++		/*
++		 * The item or its backing buffer is already being
++		 * flushed.  The typical reason for that is that an
++		 * inode buffer is locked because we already pushed the
++		 * updates to it as part of inode clustering.
++		 *
++		 * We do not want to stop flushing just because lots
++		 * of items are already being flushed, but we need to
++		 * re-try the flushing relatively soon if most of the
++		 * AIL is being flushed.
++		 */
++		XFS_STATS_INC(mp, xs_push_ail_flushing);
++		trace_xfs_ail_flushing(lip);
++
++		(*flushing)++;
++		ailp->ail_last_pushed_lsn = lsn;
++		break;
++
++	case XFS_ITEM_PINNED:
++		XFS_STATS_INC(mp, xs_push_ail_pinned);
++		trace_xfs_ail_pinned(lip);
++
++		(*stuck)++;
++		ailp->ail_log_flush++;
++		break;
++	case XFS_ITEM_LOCKED:
++		XFS_STATS_INC(mp, xs_push_ail_locked);
++		trace_xfs_ail_locked(lip);
++
++		(*stuck)++;
++		break;
++	default:
++		ASSERT(0);
++		break;
++	}
++}
++
+ static long
+ xfsaild_push(
+ 	struct xfs_ail		*ailp)
+@@ -505,62 +568,11 @@ xfsaild_push(
  
--	xfs_ail_push_all_sync(mp->m_ail);
--	xfs_inodegc_stop(mp);
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	xfs_inodegc_stop(mp);
-+	xfs_ail_push_all_sync(mp->m_ail);
- 	xfs_reclaim_inodes(mp);
- 	xfs_health_unmount(mp);
- 	xfs_healthmon_unmount(mp);
+ 	lsn = lip->li_lsn;
+ 	while ((XFS_LSN_CMP(lip->li_lsn, ailp->ail_target) <= 0)) {
+-		int	lock_result;
+ 
+ 		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
+ 			goto next_item;
+ 
+-		/*
+-		 * Note that iop_push may unlock and reacquire the AIL lock.  We
+-		 * rely on the AIL cursor implementation to be able to deal with
+-		 * the dropped lock.
+-		 */
+-		lock_result = xfsaild_push_item(ailp, lip);
+-		switch (lock_result) {
+-		case XFS_ITEM_SUCCESS:
+-			XFS_STATS_INC(mp, xs_push_ail_success);
+-			trace_xfs_ail_push(lip);
+-
+-			ailp->ail_last_pushed_lsn = lsn;
+-			break;
+-
+-		case XFS_ITEM_FLUSHING:
+-			/*
+-			 * The item or its backing buffer is already being
+-			 * flushed.  The typical reason for that is that an
+-			 * inode buffer is locked because we already pushed the
+-			 * updates to it as part of inode clustering.
+-			 *
+-			 * We do not want to stop flushing just because lots
+-			 * of items are already being flushed, but we need to
+-			 * re-try the flushing relatively soon if most of the
+-			 * AIL is being flushed.
+-			 */
+-			XFS_STATS_INC(mp, xs_push_ail_flushing);
+-			trace_xfs_ail_flushing(lip);
+-
+-			flushing++;
+-			ailp->ail_last_pushed_lsn = lsn;
+-			break;
+-
+-		case XFS_ITEM_PINNED:
+-			XFS_STATS_INC(mp, xs_push_ail_pinned);
+-			trace_xfs_ail_pinned(lip);
+-
+-			stuck++;
+-			ailp->ail_log_flush++;
+-			break;
+-		case XFS_ITEM_LOCKED:
+-			XFS_STATS_INC(mp, xs_push_ail_locked);
+-			trace_xfs_ail_locked(lip);
+-
+-			stuck++;
+-			break;
+-		default:
+-			ASSERT(0);
+-			break;
+-		}
+-
++		xfsaild_process_logitem(ailp, lip, lsn, &stuck, &flushing);
+ 		count++;
+ 
+ 		/*
 -- 
 2.50.1
 
