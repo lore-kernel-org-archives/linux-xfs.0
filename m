@@ -1,135 +1,113 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E9D378805;
-	Mon,  9 Mar 2026 12:46:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67C223AE191
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Mar 2026 13:45:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773060377; cv=none; b=Z+KxXsJftY2bMWrkrTTRohw9OfIufHuyVtYXHvqljTg9TYfNH/6DhnrDT/qEZ3Wjwhsq6FBgPclrw8qYku2R7KOwDcZ24xR7qPtLE4axLM1Q/i58EoZqF/eF99eOS3pWQvyLDX5VXDNh/fT2n8dU+GSCbmjbrWATRSjOlA1SO00=
+	t=1773063914; cv=none; b=DpUTF3otbWolFjwmj6eppZTgY/C+sQNPHNcaqgj4ewIqBF9IbHo3dfMqOxVE8uzvianUB/nMHP44wb/hyU23O8GZYU9E0UiSHUgmTe6F+RfpD2n/+GytU2jNdALVeM/aICqpfHYp2VQaBUU2OEC7CXk0TV0fnGHEOL63X/LtRwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773060377; c=relaxed/simple;
-	bh=TB1rR85ROaSy6UBoxYmOUEsYJutQqwBBn4S6y5af2eE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cLWGjv++VoJEPzm4ip8hjUqHsMvsAOgA5DRub14VigQ2OBbNcJZRyMyi5gJSCtUU+9mcGRwaMD6VKopQqHnnX5Dwklr8GB0Nzr6drGNlQs4jR3swQadtRylwgS8g8+DPZLN/lcRqEk1Pq8G8OHoB3lDpBdueDtccdFARbqzyscc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VBdAwq6l; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773063914; c=relaxed/simple;
+	bh=JW1hWlBxe0cHIzUOPib4iFHW1u327Sc33VpsPuFjAiM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uF0svvH7Q76o7QhqyWnN2bsWza8JhU8BlSIoGKQLX3O7jPZm3FyZKIo3egWXc+E4RHr0PMP4EXbmsgCfPHocyeAyR9FZcLo0MDv/dnxgF9c29boYErtLE7vjTrUxj+Xib2k15eNLJ9bLjBIatneIhz1yQXV7JtT/vvHsoS0/mxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=c299GqJk; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VBdAwq6l"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773060375; x=1804596375;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=TB1rR85ROaSy6UBoxYmOUEsYJutQqwBBn4S6y5af2eE=;
-  b=VBdAwq6lbTDdPnK7DvU5XmCD6ux/aomOSNaOQnsvxmc5FExdUKoEVlAt
-   BSJzH6ZoB9lfRB/lo32zy/TweAHCswWZcn2/nXAUTnCgH6QKhuFerybut
-   zaB7QfaMxlxzILjwowWAsdieOT+iecu2JcfNrGQj0/nyjto9UAgVeN1QY
-   bkZjdSGa+gdsSScqI7Waq4hcOe1NAUhFqzj6j1oKTm73nZEv6PRLUBVqC
-   YwBpvIIlID6ABbF0ETfW++iMJ2TzwWMaVq+I3LHIILvLSzJyY8lTfFjCl
-   5r280B6VUlZjuGpBZ2spiouU9zCsRzX7GzS3ehQyroEqGtH5QTxAtGKqc
-   A==;
-X-CSE-ConnectionGUID: Dae5XyKmSyKuOpuuCi//+g==
-X-CSE-MsgGUID: 4D32fEneQlmIA2JlzrabFQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11723"; a="73981357"
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="73981357"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 05:46:15 -0700
-X-CSE-ConnectionGUID: D7HOj06LTjyN+lE05ENfzQ==
-X-CSE-MsgGUID: xp+qGuzkR1qnAvKVB+FQuQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="218886495"
-Received: from lkp-server01.sh.intel.com (HELO 434e41ea3c86) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 09 Mar 2026 05:46:12 -0700
-Received: from kbuild by 434e41ea3c86 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vzZzs-000000000EO-3e2R;
-	Mon, 09 Mar 2026 12:46:08 +0000
-Date: Mon, 9 Mar 2026 20:45:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: Kanchan Joshi <joshi.k@samsung.com>, brauner@kernel.org, hch@lst.de,
-	djwong@kernel.org, jack@suse.cz, cem@kernel.org, kbusch@kernel.org,
-	axboe@kernel.dk
-Cc: oe-kbuild-all@lists.linux.dev, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, gost.dev@samsung.com,
-	Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v2 4/5] xfs: steer allocation using write stream
-Message-ID: <202603092015.hrOdrSYV-lkp@intel.com>
-References: <20260309052944.156054-5-joshi.k@samsung.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c299GqJk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773063912;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=PUrP3CspI6tpbi7cIMO9xFrb2RcdQqNNn0BdJmA2SwE=;
+	b=c299GqJk4Y2m4M2E3hHcqSMl/HoRgCBAo3QqEYad1SIWTwqVAe9CpZMNpddxopLTfBspYI
+	Wx8UqciW3+oSsGx1HD5PbwKGUGyKHUZYmLIiIAZummvRUN6VSyAW2Pwm+KDCT596hxboP/
+	QsRR4+7jRoyMwET/3+WSK8uPt4PT5Ro=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-533-uw2cmZLFPfSXCpYd3EaqwQ-1; Mon,
+ 09 Mar 2026 09:45:09 -0400
+X-MC-Unique: uw2cmZLFPfSXCpYd3EaqwQ-1
+X-Mimecast-MFC-AGG-ID: uw2cmZLFPfSXCpYd3EaqwQ_1773063908
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 274B819560AD;
+	Mon,  9 Mar 2026 13:45:08 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.89.107])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9599E18002A6;
+	Mon,  9 Mar 2026 13:45:07 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v3 0/8] iomap, xfs: improve zero range flushing and lookup
+Date: Mon,  9 Mar 2026 09:44:58 -0400
+Message-ID: <20260309134506.167663-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260309052944.156054-5-joshi.k@samsung.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi Kanchan,
+Hi all,
 
-kernel test robot noticed the following build errors:
+Here's v3 of the patches to lift and replace the hole mapping pagecache
+flush logic from iomap into XFS and clean it up. The major changes from
+v2 are the addition of patches 1, 2 and 8.
 
-[auto build test ERROR on 11439c4635edd669ae435eec308f4ab8a0804808]
+Christoph discovered a regression with zero range in zoned mode on v2 of
+the series. The problem is that the zoned mode iomap_begin() relied on
+the hole mapping flush to handle the case where writes are pending but
+blocks have not yet been mapped into the data fork for the first time.
+Patches 1-2 lift the flush into the begin handler, document the purpose,
+and clean up the logic a bit. They are inserted at the beginning of the
+series to avoid regression from removing the flush from iomap in patch
+3, but ordering is not critical as zoned support is experimental.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Kanchan-Joshi/fs-add-generic-write-stream-management-ioctl/20260309-133736
-base:   11439c4635edd669ae435eec308f4ab8a0804808
-patch link:    https://lore.kernel.org/r/20260309052944.156054-5-joshi.k%40samsung.com
-patch subject: [PATCH v2 4/5] xfs: steer allocation using write stream
-config: i386-randconfig-011-20260309 (https://download.01.org/0day-ci/archive/20260309/202603092015.hrOdrSYV-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260309/202603092015.hrOdrSYV-lkp@intel.com/reproduce)
+Patch 8 changes the normal buffered write iomap_begin() handler to no
+longer report a hole in the situation where we have dirty pagecache
+backed by COW fork blocks and a data fork hole. Since the main
+differentiator between representing this case as a hole or data mapping
+is pagecache, the folio lookup provides a straightforward way to
+distinguish between the two.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603092015.hrOdrSYV-lkp@intel.com/
+Otherwise v3 includes some miscellaneous updates to logic, comments,
+whitespace, etc. based on feedback to v2.
 
-All errors (new ones prefixed by >>):
+Brian
 
-   ld: fs/xfs/xfs_inode.o: in function `xfs_inode_write_stream_to_ag':
->> fs/xfs/xfs_inode.c:126:(.text+0x9ed): undefined reference to `__umoddi3'
+v3:
+- Inserted new patches 1-2 to fix up zoned mode zeroing.
+- Appended patch 8 to correctly report COW mappings backed by data fork
+  holes.
+- Various minor fixups to logic, whitespace, comments.
+v2: https://lore.kernel.org/linux-fsdevel/20260129155028.141110-1-bfoster@redhat.com/
+- Patch 1 from v1 merged separately.
+- Fixed up iomap_fill_dirty_folios() call in patch 5.
+v1: https://lore.kernel.org/linux-fsdevel/20251016190303.53881-1-bfoster@redhat.com/
 
+Brian Foster (8):
+  xfs: fix iomap hole map reporting for zoned zero range
+  xfs: flush dirty pagecache over hole in zoned mode zero range
+  iomap, xfs: lift zero range hole mapping flush into xfs
+  xfs: flush eof folio before insert range size update
+  xfs: look up cow fork extent earlier for buffered iomap_begin
+  xfs: only flush when COW fork blocks overlap data fork holes
+  xfs: replace zero range flush with folio batch
+  xfs: report cow mappings with dirty pagecache for iomap zero range
 
-vim +126 fs/xfs/xfs_inode.c
-
-    95	
-    96	xfs_agnumber_t
-    97	xfs_inode_write_stream_to_ag(
-    98		struct xfs_inode	*ip)
-    99	{
-   100		struct xfs_mount	*mp = ip->i_mount;
-   101		uint8_t			stream_id = ip->i_write_stream;
-   102		uint32_t		max_streams = xfs_inode_max_write_streams(ip);
-   103		uint32_t		nr_ags;
-   104		xfs_agnumber_t		start_ag, ags_per_stream;
-   105	
-   106		if (XFS_IS_REALTIME_INODE(ip) || !max_streams)
-   107			return NULLAGNUMBER;
-   108	
-   109		stream_id -= 1; /* for 0-based math, stream-ids are 1-based */
-   110	
-   111		nr_ags = mp->m_sb.sb_agcount;
-   112		ags_per_stream = nr_ags / max_streams;
-   113	
-   114		/* for the case when we have fewer AGs than streams */
-   115		if (ags_per_stream == 0) {
-   116			start_ag = stream_id % nr_ags;
-   117			ags_per_stream = 1;
-   118		} else {
-   119			/* otherwise AGs are partitioned into N streams */
-   120			start_ag = stream_id * ags_per_stream;
-   121			/* uneven distribution case: last stream may contain extra */
-   122			if (stream_id == max_streams-1)
-   123				ags_per_stream = nr_ags - start_ag;
-   124		}
-   125		/* intra-stream concurrency: hash inode to choose AG within partition */
- > 126		return start_ag + (ip->i_ino % ags_per_stream);
-   127	}
-   128	
+ fs/iomap/buffered-io.c |   6 +-
+ fs/xfs/xfs_file.c      |  17 +++++
+ fs/xfs/xfs_iomap.c     | 145 +++++++++++++++++++++++++++++++----------
+ 3 files changed, 129 insertions(+), 39 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.52.0
+
