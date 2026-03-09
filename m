@@ -1,66 +1,69 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B415C3ACF0B;
-	Mon,  9 Mar 2026 17:35:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07943C1970;
+	Mon,  9 Mar 2026 17:35:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773077706; cv=none; b=IOao3Z6xJeupjIuT4rcvV/HbjPmYS0WnOpCPHHVR9EG6+IArZoNMeC2G90EWVrj06cz780pCsZ4Lk6ul4CVQRvuHOGeHgC9skVTE0sGta0X4wtP0cAzt1HvuNcxGSKfpIvKJesO8RVtJHPiQUBkuzAzMHP4jiTHkFmBQO/o5/qE=
+	t=1773077712; cv=none; b=r1dSfIGyPYTqn0JaEPmCAY7997CXFjrCb71sdstAqF+rB4bcKUPolWpI0CPLBCmKXx5QS9WY2C8dI+pfRB+VVnYVq2FdXJ8qMFYz1MPIF4NK7JIgeVu98MsL69WCYEbfoTPPMxVk9xOg0sR/SX7E1nOpXpoElCaStiZsDqcaZBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773077706; c=relaxed/simple;
-	bh=kyY//F9eOQX0/Oh3hHtRE3YZIKc2PL/jyPEc4Mn2idQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JGidd7+oSC2DMSGEM+9YMApvfJPJl+Pbatc8UwGdNsgE/YXd8FTv3VUUvSk/vcHpPpOWFBvzvW2oCsagliuXunG+BosWr5rDM/Rr61/JA02ggFla8WEdccYrrA0akhxbt+1/LR0J0/+4u2zDF4ij6J83YNaGVOcrG41HUbrkhVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cmmNWCeb; arc=none smtp.client-ip=148.163.156.1
+	s=arc-20240116; t=1773077712; c=relaxed/simple;
+	bh=lafVXzuhV61RjmVrewetl0LZjUOWGKV1axCa+l3Yj6w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mNg6LxnbnU3HkA4mvP73rVMmJhLhaKnQb7wRwMcRh+fRd64tx4YRNoUrjqVG6EimvgpfCQZcXDVZ/EftKu3+IEYNPlRAprYFUNxXHW8RZfQIt6jx7T2xCy6aZmSpP7FLZWooR16A2pVV9FcvYK8S9/f69p8A98HXQHSsMqKevPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=YAOI/wZ/; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cmmNWCeb"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 629F1D2c1587167;
-	Mon, 9 Mar 2026 17:34:41 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="YAOI/wZ/"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 629F56jS1503836;
+	Mon, 9 Mar 2026 17:34:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=IGjLdmecKjgoDONdoJGj6y4YjmlQfnh79sgI7Z69E
-	cw=; b=cmmNWCebIh6eWwa6bfgQ64OrZc8hi0R+BFOdL+GTn7lyDRjMjjwlX8cr3
-	/2PM1mKkvno9ra7oHCwA/Vj/VWKTn+Zi4CzBTsXSsRZsowEan9/dcDeyMZqiWshb
-	5ecZICoFvBE02DFTYe9CtjALoP8k62+kUx2KK+v7x76oYhMxFp5J1UfD1oJ7VwUs
-	isLRXlfsNR6mLz5LFCgC0r8Dpqdh0o3R1Na/1YyovhcxCrt3ArRAFiD69Lyt6AID
-	NQmPsKQUJKia43Npe2+YH3gUpbOpjxz9bzxwL3IEZPwqyTDafBAHmE/rhTnRrFLj
-	cmUPBLZC8CIuqOUdP5I8I8BMowSJw==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4crcvm7rev-1
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=Vtlhm0EQ1xSG1AnmV
+	kTMbebOcFrwSxiUsQY+cdkOjVQ=; b=YAOI/wZ/8OimsXaDvDlPxjpki1Qjx3RMx
+	L9nQRWJiI0jZtrxRDQE96kPt337TMSiVItEqwuTsY5QpTQYlLUWbKpF2a43WEYl7
+	FNztpE4e0Ijpj2egonKXqjaFNgh8x+9PmM4FkDPAJK80yG/LkVvrTMDJFFuGXKId
+	qjaPm8fgWCC4RP/xdSK0foNoTKnaDM04wepXcR5/BWebtYGRIsge17aTWyPW8JnD
+	+M5Hm/tcKKJc6jPfmIPNi7Esv5tt5M612ZxImQ75AZQ610pD0N+mHMZo/tbCmV/x
+	q1Z58gCSyxAK5ztqpHI8zX9dsPKtp6qqDyVi+WFE593PSwdm1Zz8w==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4crcvr7gp1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Mar 2026 17:34:40 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 629EDVkq015653;
-	Mon, 9 Mar 2026 17:34:39 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4crybn5xdf-1
+	Mon, 09 Mar 2026 17:34:46 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 629DjNq9029356;
+	Mon, 9 Mar 2026 17:34:46 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4csp6ujjk5-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Mar 2026 17:34:39 +0000
+	Mon, 09 Mar 2026 17:34:45 +0000
 Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 629HYbw248169298
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 629HYhfM52036046
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 9 Mar 2026 17:34:37 GMT
+	Mon, 9 Mar 2026 17:34:44 GMT
 Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 69F1520043;
-	Mon,  9 Mar 2026 17:34:37 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id D7F7A20043;
+	Mon,  9 Mar 2026 17:34:43 +0000 (GMT)
 Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8F93520040;
-	Mon,  9 Mar 2026 17:34:34 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 35B7920040;
+	Mon,  9 Mar 2026 17:34:41 +0000 (GMT)
 Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.22.68])
 	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  9 Mar 2026 17:34:34 +0000 (GMT)
+	Mon,  9 Mar 2026 17:34:40 +0000 (GMT)
 From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc: djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
         hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
         Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
         p.raghav@samsung.com, andres@anarazel.de, linux-kernel@vger.kernel.org
-Subject: [RFC 0/3] Add buffered write-through support to iomap & xfs
-Date: Mon,  9 Mar 2026 23:04:30 +0530
-Message-ID: <cover.1773076216.git.ojaswin@linux.ibm.com>
+Subject: [RFC 2/3] iomap: Enable stable writes for RWF_WRITETHROUGH inodes
+Date: Mon,  9 Mar 2026 23:04:32 +0530
+Message-ID: <3704b81046b11f8b8da0367c7c8ad8767f42e5df.1773076216.git.ojaswin@linux.ibm.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <cover.1773076216.git.ojaswin@linux.ibm.com>
+References: <cover.1773076216.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -70,94 +73,179 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: IWp_9BbuKreQFC62Zr9Mz0-b_69QhO-a
-X-Proofpoint-ORIG-GUID: 4v1vrtKvWlQdULbiyTJMI18SBiHnclKS
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA5MDE1OCBTYWx0ZWRfX2OkHXQHi1vUy
- pti9c1snkGU0j13QCchAiWTTDL/G+p90GnvVwI9OcZraUFELZHDvDimdOyXAXkBogZ6TmRPqkcF
- jYGQ2PRA7C4IB6/Im09ACACZzeBWWaw5mZTPP/h136CMEICWdhVZwnMS2y8BlteVX7/LZfDNk6D
- Uu8AGmHJfWE/DdR3sUM0vlu3o+SruL5QOzviSd1Nf8OBF3ZhFFpUaUsFTgUHa7HnPkoUDNK3rDO
- KfSv0+1u9DSIiTP4d9zICEvXd8T+kfNYyjBECM6GEP+Esjo18l63wuyTvsvy8hx+C9Ux7GRJQgQ
- M6mIweN1PAy5TBBGvPjodhjap3g1YCoiNd+fmwwTSj70nSp1KX+FCTAVbCbbTK2iEPZzQ0DRehc
- DSCq+lF7r+GLiEouKFvqDIPm3n1+HUUju80bk5c2v6JGLPuG6vkotK8t0QZGy/YRrU6cBr/a4cR
- aC6WkuzhTHX5c/yTqUA==
-X-Authority-Analysis: v=2.4 cv=B5q0EetM c=1 sm=1 tr=0 ts=69af04b1 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA5MDE1OCBTYWx0ZWRfX68f8wx7XIu53
+ Enl2neocfxBMLdQx+ZNIosXumzEksznAo0zQPvxkB2sH7/dCFSjMK04u1XoHgnpbjIWfloY1uiI
+ 9e71XuWVW467n/4EJZMh0YVIQnobX/RkXZFI2VDV1WYlFY1Xr6r30lITlPEPfzNCi5LSe+Nwpqg
+ NtQIi0NDrdC69DQxKiyRQPg5IpHK/F2srqYia4BkeVC4cdan0G+vzZlZODDSj6P8cJ4WYtsEjd3
+ dTQbqXLPzs9xt0DBVO420BcIJYRol37p9RncpFpZsphcydFiQUEBP9fwoE3jNXKHDvI5c4t/gM8
+ V6djGyo4MMhRrXmjAnaLin1kFUEVMKKozb+r598nLVDVG3UGR04gZkkd6FlQ2dZbmEL3BHDCkuF
+ UoE9PiRsN3BD3qOTEVDsjeExNhsZL2tPmn0HB9ycn+TEkRbsyBWE0BZVMOYAeMjVk80UsdOhdQy
+ c9G1JgOtZDVLkj88SZQ==
+X-Proofpoint-GUID: Vhmub7mEpm-eBb32uRGgmbNM8WjTJQmQ
+X-Proofpoint-ORIG-GUID: qyic1gUoH0EE9xn4Ec68tZhCv1zerRtP
+X-Authority-Analysis: v=2.4 cv=QoFTHFyd c=1 sm=1 tr=0 ts=69af04b7 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
  a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8 a=mKH1vGL1XA5uFJBiVzsA:9
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=SyJQyBQOrdvXXMiPuw4A:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-09_04,2026-03-09_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 adultscore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 clxscore=1015 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603090158
+ impostorscore=0 spamscore=0 priorityscore=1501 phishscore=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 malwarescore=0 suspectscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
+ definitions=main-2603090158
 
-Hi all,
+Currently, RWF_WRITETHROUGH writes wait for writeback to complete
+on a folio before performing the writethrough. This serializes
+writethrough with each other and the writeback path. However, it is also
+desirable have similar guarantees between RWF_WRITETHROUGH and non
+writethrough writes.
 
-This patchset implements an early design prototype of buffered I/O
-write-through semantics in linux.
+Hence, ensure stable writes are enabled on an inode's mapping as
+long as a writethrough write is ongoing. This way, all paths will
+wait for RWF_WRITETHROUGH to complete on a folio before proceeding.
+
+To track inflight writethrough writes, we use an atomic counter in the
+inode->i_mapping. This struct was chosen because (i) writethrough is an
+operation on the folio and (ii) we don't want to add bloat to struct
+inode.
+
+Suggested-by: Dave Chinner <dgc@kernel.org>
+Suggested-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+---
+ fs/inode.c             |  1 +
+ fs/iomap/buffered-io.c | 35 +++++++++++++++++++++++++++++++++--
+ fs/iomap/direct-io.c   |  2 ++
+ include/linux/fs.h     |  2 ++
+ include/linux/iomap.h  |  2 ++
+ 5 files changed, 40 insertions(+), 2 deletions(-)
+
+diff --git a/fs/inode.c b/fs/inode.c
+index cc12b68e021b..5b779c112ff8 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -280,6 +280,7 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
+ 	mapping->flags = 0;
+ 	mapping->wb_err = 0;
+ 	atomic_set(&mapping->i_mmap_writable, 0);
++	atomic_set(&mapping->i_wt_count, 0);
+ #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+ 	atomic_set(&mapping->nr_thps, 0);
+ #endif
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ab169daa1126..9d4d459af1a0 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1150,11 +1150,41 @@ static bool iomap_writethrough_checks(struct kiocb *iocb, size_t off, loff_t len
+ 	return true;
+ }
  
-This idea mainly picked up traction to enable RWF_ATOMIC buffered IO [1],
-however write-through path can have many use cases beyond atomic writes, 
-- such as enabling truly async AIO buffered I/O when issued with O_DSYNC   
-- better scalability for buffered I/O
-
-The implementation of write-through combines the buffered IO frontend
-with async dio backend, which leads to some interesting interactions.
-I've added most of the design notes in respective patches. Please note
-that this is an initial RFC to iron out any early design issues. This is
-largely based on suggestions from Dave an Jan in [1] so thanks for the
-pointers!
-
-
-* Testing Notes *
-
-- I've added support for RWF_WRITETHROUGH to fsx and fsstress in
-  xfstests and these patches survive fsx with integrity verification as
-  well as fsstress parallel stressing.
-- -g quick with blocks size == page size and blocksize < pagesize shows
-  no new regressions.
-
-
-* Design TODOs *
-
-- Evaluate if we need to tag page cache dirty bit in xarray, since 
-  PG_Writeback is already set on the folio.
-- As mentioned in patch 2, we call ->iomap_begin() twice which is not
-  ideal but is kept this way to avoid churn and keep the PoC minimal.
-  Look into a better way to refactor this.
-- Fix support with filesystem freezing.
-
-
-* Future work (once design is finalized) *
-
-- Add aio O_DSYNC buffered write-through support
-- Add RWF_ATOMIC support for buffered IO via write-through path
-- Add support of other RWF_ flags for write-through buffered I/O path including
-- Benchmarking numbers and more thorough testing needed.
-
-As usual, thoughts and suggestions are welcome.
-
-[1] https://lore.kernel.org/all/d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev/
-
-Regards,
-ojaswin
-
-Ojaswin Mujoo (3):
-  iomap: Support buffered RWF_WRITETHROUGH via async dio backend
-  iomap: Enable stable writes for RWF_WRITETHROUGH inodes
-  xfs: Add RWF_WRITETHROUGH support to xfs
-
- fs/inode.c              |   1 +
- fs/iomap/buffered-io.c  | 414 ++++++++++++++++++++++++++++++++++++++++
- fs/iomap/direct-io.c    |  64 ++++---
- fs/xfs/xfs_file.c       |  68 ++++++-
- include/linux/fs.h      |   9 +
- include/linux/iomap.h   |  34 ++++
- include/uapi/linux/fs.h |   5 +-
- 7 files changed, 568 insertions(+), 27 deletions(-)
-
++/**
++ * inode_writethrough_begin - signal start of a RWF_WRITETHROUGH request
++ * @inode: inode the writethrough happens on
++ *
++ * This is called when we are about to start a writethrough on an inode.
++ * If it is the first writethrough, set the mapping as stable to ensure
++ * other folio operations wait for writeback to finish.
++ *
++ * To avoid a race, just set the mapping stable first and then increment
++ * writethrough count, so that the stable writes are enforced as soon as
++ * writethrough count becomes non zero.
++ */
++inline void inode_writethrough_begin(struct inode *inode)
++{
++	mapping_set_stable_writes(inode->i_mapping);
++	atomic_inc(&inode->i_mapping->i_wt_count);
++}
++
++/**
++ * inode_writethrough_end - signal finish of a RWF_WRITETHROUGH request
++ * @inode: inode the writethrough I/O happened on
++ *
++ * This is called once we've finished processing a writethrough request
++ */
++inline void inode_writethrough_end(struct inode *inode)
++{
++	if (atomic_dec_and_test(&inode->i_mapping->i_wt_count))
++		mapping_clear_stable_writes(inode->i_mapping);
++}
++
+ /*
+  * With writethrough, we might potentially be writing through a partial
+  * folio hence we don't clear the dirty bit (yet)
+  */
+-static void folio_prepare_writethrough(struct folio *folio)
++static void folio_prepare_writethrough(struct inode *inode, struct folio *folio)
+ {
+ 	if (folio_test_writeback(folio))
+ 		folio_wait_writeback(folio);
+@@ -1167,6 +1197,7 @@ static void folio_prepare_writethrough(struct folio *folio)
+ 		/* Refer folio_clear_dirty_for_io() for why this is needed */
+ 		folio_mark_dirty(folio);
+ 
++	inode_writethrough_begin(inode);
+ }
+ 
+ /**
+@@ -1203,7 +1234,7 @@ static int iomap_writethrough_begin(struct kiocb *iocb, struct folio *folio,
+ 	bool fully_written;
+ 	u64 zero = 0;
+ 
+-	folio_prepare_writethrough(folio);
++	folio_prepare_writethrough(iter->inode, folio);
+ 
+ 	wt_ctx->bvec = kmalloc(sizeof(struct bio_vec), GFP_KERNEL | GFP_NOFS);
+ 	if (!wt_ctx->bvec)
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index f4d8ff08a83a..12680d97d765 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -140,6 +140,8 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 		kiocb_invalidate_post_direct_write(iocb, dio->size);
+ 
+ 	inode_dio_end(file_inode(iocb->ki_filp));
++	if (dio->flags & IOMAP_DIO_BUF_WRITETHROUGH)
++		inode_writethrough_end(file_inode(iocb->ki_filp));
+ 
+ 	if (ret > 0) {
+ 		iocb->ki_pos += ret;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index ca291957140e..6b7491fdd51a 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -456,6 +456,7 @@ extern const struct address_space_operations empty_aops;
+  *   memory mappings.
+  * @gfp_mask: Memory allocation flags to use for allocating pages.
+  * @i_mmap_writable: Number of VM_SHARED, VM_MAYWRITE mappings.
++ * @i_wt_count: Number of RWF_WRITETHROUGH writes ongoing in mapping.
+  * @nr_thps: Number of THPs in the pagecache (non-shmem only).
+  * @i_mmap: Tree of private and shared mappings.
+  * @i_mmap_rwsem: Protects @i_mmap and @i_mmap_writable.
+@@ -474,6 +475,7 @@ struct address_space {
+ 	struct rw_semaphore	invalidate_lock;
+ 	gfp_t			gfp_mask;
+ 	atomic_t		i_mmap_writable;
++	atomic_t		i_wt_count;
+ #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+ 	/* number of thp, only for non-shmem files */
+ 	atomic_t		nr_thps;
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index b96574bb2918..6d08b966ceaf 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -630,6 +630,8 @@ struct iomap_writethrough_ops {
+ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
+ 				      const struct iomap_writethrough_ops *wt_ops,
+ 				      void *private);
++inline void inode_writethrough_begin(struct inode *inode);
++inline void inode_writethrough_end(struct inode *inode);
+ 
+ #ifdef CONFIG_SWAP
+ struct file;
 -- 
 2.52.0
 
