@@ -1,55 +1,55 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5D4931960A
-	for <linux-xfs@vger.kernel.org>; Mon,  9 Mar 2026 05:34:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51EFC322C99
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Mar 2026 05:34:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773034484; cv=none; b=Lj6HRNFfi7o8IABpK/e8S+lM6GmQUk0a0p/DmLt+NFaiPX4GOKTdMyQo4oAFhsSMwS4gIIScOxzyJ+qwXDNhhGOcAnWbhIxpqCnel5VO0LPU0WV4/cNm1/lXZbJBusaY/Vwj8L8KORNpsonyNc8epgXlP/ptbq4Icdlk5gDwE8g=
+	t=1773034484; cv=none; b=DSCqUhjkXadpYf3sJndTLVORTljHEVtc3kc+qywtelHSbKAzdhQKC1Q8xEAio3pwG+fNJv+ePVOpzbyUcyrbFqohaU5081vkJWq8Kv6b9DbtUJ4Y6H/u7Jf4x1bob0jrs9OqgyFOO21YDyP1WEymUimOcH3JA7CsFP8Mee3V1nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773034484; c=relaxed/simple;
-	bh=WWb2RdHEM9qosKfkPMuU44SZxHLp0wZCvSFiF3ptktE=;
+	bh=gjoh2aBUmwpTg5oa9Gc8Nq6R9oc6b3jqB6391/6635A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=dVvYLFU7znnSztili1Avjt4bEcs/OQXXhcXLXvqXchEnYC58pGOTh5R7JBouMkX+yodfHx5V04ACN0Ei4DaTOe2hBrIy4UxaAZFnmChACO+307N28L6dIzWt/YkM26hE/yFB+ILHz9YXfeq7obAgaXs9L7Bh4faDWM5A/md852E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=gx5kHYvO; arc=none smtp.client-ip=203.254.224.24
+	 Content-Type:References; b=f487GAimPpGQlhCM0BdDALPxv5LfUD+gyBMj70FKHcx/773RKUkfAzY++DqGG+YrKyFx25WDEhIH0oO10W3fBIP+pkwrUxtYyjnmIxgMiHi21RMCMcRahBG0bqJdR1OMmr9415L0QQAF1oomiCYtv8KUgsDuoLoeBiWRV6JG5JE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=JO/Y8BGu; arc=none smtp.client-ip=203.254.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gx5kHYvO"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260309053432epoutp010e9d76f99f51704b5477d6ac01a0f547~bFXVha0iR1015310153epoutp01k
-	for <linux-xfs@vger.kernel.org>; Mon,  9 Mar 2026 05:34:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260309053432epoutp010e9d76f99f51704b5477d6ac01a0f547~bFXVha0iR1015310153epoutp01k
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="JO/Y8BGu"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260309053439epoutp04766e53c7aa667ab8d978c1ee3fa0cbbb~bFXb48rRy0325903259epoutp04l
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Mar 2026 05:34:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260309053439epoutp04766e53c7aa667ab8d978c1ee3fa0cbbb~bFXb48rRy0325903259epoutp04l
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1773034472;
-	bh=ZV7vHGKd86ci7tpJDG93f/uO4dpBPLwF2oya7Gr7xdo=;
+	s=mail20170921; t=1773034479;
+	bh=NFPEB0YbFwrkO2+cZ3PSAuT4sZuEeXUeB09VRdcM7/M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gx5kHYvOU9+DdTrz7wKjZEtnFShm5ULhhAIWSnLMMH1FIYSqiIVZIa5OXVRui0AC7
-	 7u7niLRm2D+P+4zUXVkrZZalt09p8OFe35pDl4LGSboRfkKirrHA3eyzD8ouguODrw
-	 C1D7ux3l0xcjLiuf13fGnUv6aGkD8rD9RT5ESzC4=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260309053431epcas5p27498b8d52a211b6118f8f235fd85f713~bFXVFmpyb1306813068epcas5p2O;
-	Mon,  9 Mar 2026 05:34:31 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.94]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4fTm0k4F5Lz6B9m9; Mon,  9 Mar
-	2026 05:34:30 +0000 (GMT)
+	b=JO/Y8BGuFUShVXyEl8s6r7F+wwiHTvSFtd0ge91XgjqpHSf9XoHxAyMGwkCgZEUl9
+	 82YK3DT45WhI4oWAdIO3m1zl9RXBlG//h1TQyrCqkzo9UyvNmSEZsmI0xY7htfLiP+
+	 4KUR75zqmlmq5UYGYLdom6kHsT15Wa9GHRDNl9mg=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260309053438epcas5p4dd91c5b1eef04d3ac2fbaac41e6d9785~bFXbZy6un1828218282epcas5p4B;
+	Mon,  9 Mar 2026 05:34:38 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.91]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4fTm0s3j8Cz3hhT9; Mon,  9 Mar
+	2026 05:34:37 +0000 (GMT)
 Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
 	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20260309053430epcas5p3db87d346a4a816f385becac0212cd3ab~bFXTqvKty0574505745epcas5p3B;
-	Mon,  9 Mar 2026 05:34:30 +0000 (GMT)
+	20260309053436epcas5p3cdfff99c945032dc50503774770f4317~bFXZug-bU3071830718epcas5p3R;
+	Mon,  9 Mar 2026 05:34:36 +0000 (GMT)
 Received: from localhost.localdomain (unknown [107.99.41.245]) by
 	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260309053428epsmtip22aeedc1cbf50ff6356776ca293f5cfdc~bFXRz95jM2004820048epsmtip2S;
-	Mon,  9 Mar 2026 05:34:28 +0000 (GMT)
+	20260309053434epsmtip204ca109b3b8216661863d102f25395e1~bFXXyxbiv1941719417epsmtip2k;
+	Mon,  9 Mar 2026 05:34:34 +0000 (GMT)
 From: Kanchan Joshi <joshi.k@samsung.com>
 To: brauner@kernel.org, hch@lst.de, djwong@kernel.org, jack@suse.cz,
 	cem@kernel.org, kbusch@kernel.org, axboe@kernel.dk
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	gost.dev@samsung.com, Kanchan Joshi <joshi.k@samsung.com>
-Subject: [PATCH v2 2/5] iomap: introduce and propagate write_stream
-Date: Mon,  9 Mar 2026 10:59:41 +0530
-Message-Id: <20260309052944.156054-3-joshi.k@samsung.com>
+Subject: [PATCH v2 5/5] xfs: introduce software write streams
+Date: Mon,  9 Mar 2026 10:59:44 +0530
+Message-Id: <20260309052944.156054-6-joshi.k@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260309052944.156054-1-joshi.k@samsung.com>
 Precedence: bulk
@@ -59,74 +59,76 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260309053430epcas5p3db87d346a4a816f385becac0212cd3ab
+X-CMS-MailID: 20260309053436epcas5p3cdfff99c945032dc50503774770f4317
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260309053430epcas5p3db87d346a4a816f385becac0212cd3ab
+X-CMS-RootMailID: 20260309053436epcas5p3cdfff99c945032dc50503774770f4317
 References: <20260309052944.156054-1-joshi.k@samsung.com>
-	<CGME20260309053430epcas5p3db87d346a4a816f385becac0212cd3ab@epcas5p3.samsung.com>
+	<CGME20260309053436epcas5p3cdfff99c945032dc50503774770f4317@epcas5p3.samsung.com>
 
-Add a new write_stream field to struct iomap. Existing hole is used to
-place the new field.
-Propagate write_stream from iomap to bio in both direct I/O and buffered
-writeback paths.
+Even when the underlying block device does not advertise write streams,
+XFS can choose do so as write-stream based AG allocation can improve the
+concurrency and reduce interleaving of concurrent block allocation as well
+as logical fragmentation.
+
+Use a simple 3-tier (low/medium/high) AG count based heuristic to
+publish streams. This enables logical spatial isolation for standard
+storage, execluding rotational media and rtvolume.
 
 Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 ---
- fs/iomap/direct-io.c  | 1 +
- fs/iomap/ioend.c      | 3 +++
- include/linux/iomap.h | 2 ++
- 3 files changed, 6 insertions(+)
+ fs/xfs/xfs_inode.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 95254aa1b654..086530c0471e 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -333,6 +333,7 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_iter *iter,
- 			pos >> iter->inode->i_blkbits, GFP_KERNEL);
- 	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
- 	bio->bi_write_hint = iter->inode->i_write_hint;
-+	bio->bi_write_stream = iter->iomap.write_stream;
- 	bio->bi_ioprio = dio->iocb->ki_ioprio;
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index 4d1ef8a2cee9..6a9c8e0c7536 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -159,6 +159,7 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
- 			       GFP_NOFS, &iomap_ioend_bioset);
- 	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
- 	bio->bi_write_hint = wpc->inode->i_write_hint;
-+	bio->bi_write_stream = wpc->iomap.write_stream;
- 	wbc_init_bio(wpc->wbc, bio);
- 	wpc->nr_folios = 0;
- 	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
-@@ -179,6 +180,8 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
- 	if (!(wpc->iomap.flags & IOMAP_F_ANON_WRITE) &&
- 	    iomap_sector(&wpc->iomap, pos) != bio_end_sector(&ioend->io_bio))
- 		return false;
-+	if (wpc->iomap.write_stream != ioend->io_bio.bi_write_stream)
-+		return false;
- 	/*
- 	 * Limit ioend bio chain lengths to minimise IO completion latency. This
- 	 * also prevents long tight loops ending page writeback on all the
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 99b7209dabd7..e087818d11d4 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -113,6 +113,8 @@ struct iomap {
- 	u64			length;	/* length of mapping, bytes */
- 	u16			type;	/* type of mapping */
- 	u16			flags;	/* flags for mapping */
-+	/* 4-byte padding hole here */
-+	u8			write_stream; /* write stream for I/O */
- 	struct block_device	*bdev;	/* block device for I/O */
- 	struct dax_device	*dax_dev; /* dax_dev for dax operations */
- 	void			*inline_data;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e93141d2cd8b..6c26cf03a261 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -44,7 +44,7 @@
+ #include "xfs_xattr.h"
+ #include "xfs_inode_util.h"
+ #include "xfs_metafile.h"
+-
++#define XFS_MAX_WRITE_STREAMS			(32)
+ struct kmem_cache *xfs_inode_cache;
+ 
+ int
+@@ -53,6 +53,8 @@ xfs_inode_max_write_streams(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct block_device	*bdev;
++	int			hw_streams, sw_streams;
++	xfs_agnumber_t		nr_ags;
+ 
+ 	if (XFS_IS_REALTIME_INODE(ip))
+ 		bdev = mp->m_rtdev_targp ? mp->m_rtdev_targp->bt_bdev : NULL;
+@@ -62,7 +64,22 @@ xfs_inode_max_write_streams(
+ 	if (!bdev)
+ 		return 0;
+ 
+-	return bdev_max_write_streams(bdev);
++	hw_streams = bdev_max_write_streams(bdev);
++	if (hw_streams > 0)
++		return hw_streams;
++	/* fallback to software-only write streams, excluding some cases */
++	if (bdev_rot(bdev) || XFS_IS_REALTIME_INODE(ip))
++		return 0;
++	nr_ags = mp->m_sb.sb_agcount;
++	/* heuristic: 3-tier (large/mid/small) split of AGs into streams */
++	if (nr_ags >= 32)
++		sw_streams = nr_ags / 4;
++	else if (nr_ags >= 8)
++		sw_streams = nr_ags / 2;
++	else
++		sw_streams = nr_ags;
++
++	return min_t(int, sw_streams, XFS_MAX_WRITE_STREAMS);
+ }
+ 
+ uint8_t
 -- 
 2.25.1
 
