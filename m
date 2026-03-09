@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C89C238C23;
-	Mon,  9 Mar 2026 16:34:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBCCC385501;
+	Mon,  9 Mar 2026 16:38:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773074090; cv=none; b=MWKsBXIErLYOdzV1rAi8fnYt2WeIBItsB7Q4PBoZp3yCkpIr6tQBoTJ1guaFeOTTMhXDbc7iLQyseiMd9yZ8EX++zldVcLNkdoIxJNZ5kAmh6Ka4/nYak41x/Co2us6iibN0NTB2CVc0eHWVwYuQknv7cPTage8OmMgB4wGBAT0=
+	t=1773074320; cv=none; b=Xwb8iLaFo7gjjmnMlr7REhmGIlDh9YaVe1WM1PmYaDl0r638p/T5bTIk4Iita11bpCHUTds9C9DgdZvyJqneMhMxOAaQPr8Xv1HHwTtlYAfaYPWOIpZY2alH4rBm61ByUDsRNDOpLrlpZ48o6XS+hcgzP3XvHYE0ZarUL99P67s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773074090; c=relaxed/simple;
-	bh=H2j4+gkiNfMb8WlOpGA2EOv2lRQiRzHSZ57+uNmC+PM=;
+	s=arc-20240116; t=1773074320; c=relaxed/simple;
+	bh=Xby0f12Hc4bveWsyuVys3FKnpF0Og+7P3Rk/31Mz+uQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OYPuKtpn+uoKQ/VeLzvRzJAcU7PIZ0Cnbt0+ppO0JqFQ4FZqiDlcCv+eMTx73DUnz/8MKzuumI3aH/AWrBG202cRLaZk9kLPL/Jh1dFbLToB7jF7j/u+6GJ2538mci4yMek0bNmqEegnQEEU36j3OnUcfGK0h3xrGfzWZhSJMS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uMW6vxKm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OzsJZPrHsgnAbmtez0uzQyjzOQy63GqtwZKVPtPdgZh6kpsLhQJxsZWeS63FUCjbu/NKESr5wBMFcdaevWA9dj6J4N/mSdQdJRuROn21AA9gjKzFfmmbv42pyCxiXTPjRZpRmBCwp+o4s4QAZLzplKjVoePEK28SYj819Xtkifg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EdvBv4Vo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uMW6vxKm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11093C2BC86;
-	Mon,  9 Mar 2026 16:34:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EdvBv4Vo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BEF9C4CEF7;
+	Mon,  9 Mar 2026 16:38:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773074090;
-	bh=H2j4+gkiNfMb8WlOpGA2EOv2lRQiRzHSZ57+uNmC+PM=;
+	s=k20201202; t=1773074320;
+	bh=Xby0f12Hc4bveWsyuVys3FKnpF0Og+7P3Rk/31Mz+uQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uMW6vxKmJxHxLitAohuVtFbImFqRS9KfKirVTf9RhHrabE4k2nLNN7Iufh8fqTxu4
-	 ggK+li00QW5g/lvccCFOR7ek+Pqa2AO6CglKt4HbBpC5C7BeKx6L99qJJrsVWGH7nE
-	 dF8YwiDBDNPQInnSr+TkGNkSsvGxw3D8fj2oyzsW8/0lFJg+9kMrTVHUiVxmCy9Ff7
-	 PSI85tGmI6OZPv9Yzbqltr99SunOlGeyV6kHHoXocGGCoVJqckLxFFOJJ/UnFAcHBV
-	 tgBa2peFtIi4+MDZ5+JmfdVUUiJPsNjkGHts0ICP8muyy+3cd3jQreRMfcwGyk1lWL
-	 7s10xzsY4hsuA==
-Date: Mon, 9 Mar 2026 09:34:49 -0700
+	b=EdvBv4VotuO5Ziw3fCh35TU1usUK6l2LaW1rUQB5l1mKaia7BmNNpEBLKRizkSYRd
+	 NT8ntsVjxEeJIM3L0MHgAqex1hXmGs7uNCR720qG8jaDx1ZtWiZoWX4nm/m/4bYSot
+	 DgEePDmFsUd6H5vUdLzqXCAHomAhJ5szD+wHvjTHLCuFVVkY7DCn9r9UM9a3z5P6Vs
+	 AMNqHFgxVxzajLDExVpTD0MoQWW0dGrDW9pQ99YxwjlonMRNxTAv+OxQij1pp46ymM
+	 0tFaH4k4Ge7VK6rveceORGSJaVB71SMD3j0vH8T8gHkALbQN6XwbZNdqL94I5CTOo5
+	 ioDcz+lAzcjmQ==
+Date: Mon, 9 Mar 2026 09:38:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Kanchan Joshi <joshi.k@samsung.com>
 Cc: brauner@kernel.org, hch@lst.de, jack@suse.cz, cem@kernel.org,
 	kbusch@kernel.org, axboe@kernel.dk, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, gost.dev@samsung.com
-Subject: Re: [PATCH v2 2/5] iomap: introduce and propagate write_stream
-Message-ID: <20260309163449.GF6033@frogsfrogsfrogs>
+Subject: Re: [PATCH v2 3/5] xfs: implement write-stream management support
+Message-ID: <20260309163839.GG6033@frogsfrogsfrogs>
 References: <20260309052944.156054-1-joshi.k@samsung.com>
- <CGME20260309053430epcas5p3db87d346a4a816f385becac0212cd3ab@epcas5p3.samsung.com>
- <20260309052944.156054-3-joshi.k@samsung.com>
+ <CGME20260309053432epcas5p48e0273c8829a735ed987d1a02fcccac4@epcas5p4.samsung.com>
+ <20260309052944.156054-4-joshi.k@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,40 +45,195 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260309052944.156054-3-joshi.k@samsung.com>
+In-Reply-To: <20260309052944.156054-4-joshi.k@samsung.com>
 
-On Mon, Mar 09, 2026 at 10:59:41AM +0530, Kanchan Joshi wrote:
-> Add a new write_stream field to struct iomap. Existing hole is used to
-> place the new field.
-> Propagate write_stream from iomap to bio in both direct I/O and buffered
-> writeback paths.
+On Mon, Mar 09, 2026 at 10:59:42AM +0530, Kanchan Joshi wrote:
+> Implement support for FS_IOC_WRITE_STREAM ioctl.
+> 
+> For FS_WRITE_STREAM_OP_GET_MAX, available write streams are reported
+> based on the capability of the underlying block device.
+> For FS_WRITE_STREAM_OP_{SET/GET}, add a new i_write_stream field in xfs
+> inode. This value is propagated to the iomap during block mapping.
 > 
 > Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 > ---
->  fs/iomap/direct-io.c  | 1 +
->  fs/iomap/ioend.c      | 3 +++
->  include/linux/iomap.h | 2 ++
->  3 files changed, 6 insertions(+)
+>  fs/xfs/xfs_icache.c |  1 +
+>  fs/xfs/xfs_inode.c  | 46 +++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_inode.h  |  6 ++++++
+>  fs/xfs/xfs_ioctl.c  | 34 +++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_iomap.c  |  1 +
+>  5 files changed, 88 insertions(+)
 > 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index a7a09e7eec81..2ad8d02152f4 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -130,6 +130,7 @@ xfs_inode_alloc(
+>  	spin_lock_init(&ip->i_ioend_lock);
+>  	ip->i_next_unlinked = NULLAGINO;
+>  	ip->i_prev_unlinked = 0;
+> +	ip->i_write_stream = 0;
+>  
+>  	return ip;
+>  }
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 50c0404f9064..9b88b2d1cf9a 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -47,6 +47,52 @@
+>  
+>  struct kmem_cache *xfs_inode_cache;
+>  
+> +int
+> +xfs_inode_max_write_streams(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct block_device	*bdev;
+> +
+> +	if (XFS_IS_REALTIME_INODE(ip))
+> +		bdev = mp->m_rtdev_targp ? mp->m_rtdev_targp->bt_bdev : NULL;
 
-<snip>
+Uhh if this is a realtime inode then there had better be an
+m_rtdev_targp to dereference.
 
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 99b7209dabd7..e087818d11d4 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -113,6 +113,8 @@ struct iomap {
->  	u64			length;	/* length of mapping, bytes */
->  	u16			type;	/* type of mapping */
->  	u16			flags;	/* flags for mapping */
-> +	/* 4-byte padding hole here */
+Also... this is xfs_inode_buftarg().
 
-It's 3 bytes now, right? ;)
+> +	else
+> +		bdev = mp->m_ddev_targp->bt_bdev;
+> +
+> +	if (!bdev)
+> +		return 0;
+> +
+> +	return bdev_max_write_streams(bdev);
+> +}
+> +
+> +uint8_t
+> +xfs_inode_get_write_stream(
+> +	struct xfs_inode	*ip)
+> +{
+> +	uint8_t		stream_id;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> +	stream_id = ip->i_write_stream;
+> +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> +
+> +	return stream_id;
+> +}
+> +
+> +int
+> +xfs_inode_set_write_stream(
+> +	struct xfs_inode	*ip,
+> +	uint8_t			stream_id)
+> +{
+> +	if (stream_id > xfs_inode_max_write_streams(ip))
 
-> +	u8			write_stream; /* write stream for I/O */
->  	struct block_device	*bdev;	/* block device for I/O */
->  	struct dax_device	*dax_dev; /* dax_dev for dax operations */
->  	void			*inline_data;
+Inodes can change devices, so this needs to go under the ILOCK.
+
+> +		return -EINVAL;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	ip->i_write_stream =  stream_id;
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	return 0;
+> +}
+> +
+>  /*
+>   * These two are wrapper routines around the xfs_ilock() routine used to
+>   * centralize some grungy code.  They are used in places that wish to lock the
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index bd6d33557194..9f6cab729924 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -38,6 +38,9 @@ typedef struct xfs_inode {
+>  	struct xfs_ifork	i_df;		/* data fork */
+>  	struct xfs_ifork	i_af;		/* attribute fork */
+>  
+> +	/* Write stream information */
+> +	uint8_t			i_write_stream;
+
+I'm confused, bdev_max_write_streams returns an unsigned short, but this
+is a uint8_t field.  How are we supposed to deal with truncation issues?
+
+--D
+
+> +
+>  	/* Transaction and locking information. */
+>  	struct xfs_inode_log_item *i_itemp;	/* logging information */
+>  	struct rw_semaphore	i_lock;		/* inode lock */
+> @@ -676,4 +679,7 @@ int xfs_icreate_dqalloc(const struct xfs_icreate_args *args,
+>  		struct xfs_dquot **udqpp, struct xfs_dquot **gdqpp,
+>  		struct xfs_dquot **pdqpp);
+>  
+> +int xfs_inode_max_write_streams(struct xfs_inode *ip);
+> +uint8_t xfs_inode_get_write_stream(struct xfs_inode *ip);
+> +int xfs_inode_set_write_stream(struct xfs_inode *ip, uint8_t stream_id);
+>  #endif	/* __XFS_INODE_H__ */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index facffdc8dca8..091d6a8b5f57 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1160,6 +1160,38 @@ xfs_ioctl_fs_counts(
+>  	return 0;
+>  }
+>  
+> +static int
+> +xfs_ioc_write_stream(
+> +	struct file		*filp,
+> +	void __user		*arg)
+> +{
+> +	struct inode		*inode = file_inode(filp);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct fs_write_stream	ws = { };
+> +
+> +	if (copy_from_user(&ws, arg, sizeof(ws)))
+> +		return -EFAULT;
+> +
+> +	switch (ws.op_flags) {
+> +	case FS_WRITE_STREAM_OP_GET_MAX:
+> +		ws.max_streams = xfs_inode_max_write_streams(ip);
+> +		goto copy_out;
+> +	case FS_WRITE_STREAM_OP_GET:
+> +		ws.stream_id = xfs_inode_get_write_stream(ip);
+> +		goto copy_out;
+> +	case FS_WRITE_STREAM_OP_SET:
+> +		return xfs_inode_set_write_stream(ip, ws.stream_id);
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +
+> +copy_out:
+> +	if (copy_to_user(arg, &ws, sizeof(ws)))
+> +		return -EFAULT;
+> +	return 0;
+> +}
+> +
+>  /*
+>   * These long-unused ioctls were removed from the official ioctl API in 5.17,
+>   * but retain these definitions so that we can log warnings about them.
+> @@ -1425,6 +1457,8 @@ xfs_file_ioctl(
+>  		return xfs_ioc_health_monitor(filp, arg);
+>  	case XFS_IOC_VERIFY_MEDIA:
+>  		return xfs_ioc_verify_media(filp, arg);
+> +	case FS_IOC_WRITE_STREAM:
+> +		return xfs_ioc_write_stream(filp, arg);
+>  
+>  	default:
+>  		return -ENOTTY;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index be86d43044df..7988c9e16635 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -148,6 +148,7 @@ xfs_bmbt_to_iomap(
+>  	else
+>  		iomap->bdev = target->bt_bdev;
+>  	iomap->flags = iomap_flags;
+> +	iomap->write_stream = ip->i_write_stream;
+>  
+>  	/*
+>  	 * If the inode is dirty for datasync purposes, let iomap know so it
 > -- 
 > 2.25.1
 > 
