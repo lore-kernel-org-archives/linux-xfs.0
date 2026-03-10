@@ -1,48 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D30112E7F3A;
-	Tue, 10 Mar 2026 14:59:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BF3305962
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 15:02:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773154763; cv=none; b=iSFz8xr9eVaCbtrQSZENWj9Y7tFgrWZH35e61s4HpXwPTZxNBXgdjdoBxkKpDZmUbWIIAmOlZ2y4An9nplPqIbJgnqB/rg2n42IQ7mxIvojl2tdCjD04Vx3/lJN/mo11+Bwisgh+NUZvkKpME3ypCEZLtvH24y8LC9GgHhXu57c=
+	t=1773154975; cv=none; b=FcQIsTihbtxvTvAenN8ycOb7jW8NgyElDJPwQA3KFQR2y2HYcYSEiQCe9OeKhLQQ0XOom9lzAd0S3FbM8CRO6udDiGXVxuzh9IxgxH6yD/H4HGmpTbD083tRrQ8b/tzF5em3yp1tBTKVOrAgtxQeqeqF13umYlwND8I/3ZJrElc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773154763; c=relaxed/simple;
-	bh=X6NG3IpgwJ5O5UAl+yBvYmWqOasAuXGOjONkg6PGTXE=;
+	s=arc-20240116; t=1773154975; c=relaxed/simple;
+	bh=4IBJS8O9pMClJmgPRxC4s9c8Dv66uhbDHtsW10Lf/mE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g+FU6jCcx1KprB/JegEcuUVZn+1im5638mKhW0UAPSb9fzFRUyiOh2jbUscFXjCuMbKpAPC2enNhETvZwfs62qey3UbygRc7bbbshdDfrYo9o5dzeljGz2nRpe9RmyikSfktMjaIzqoSjsUgFo2aQ1ym6Y32aQYwl2iF86EBCIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qGQUMAFt; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z47R7bMGVZLg1dSDfnf6rwqW4/jqUaHAMinhGeyXw1cIRSRWLcv6a7Mpfj6QtcztjWVwu+vgbD/n1WC0zgTnpd9SbEC1OJ7KAMn7aV0oOC0siANIIbRPrA54ZuLUIlICIW0cx88qjoJg+OoCeHkU7H4CaKexWX3YBGqiIqLmxFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MgDKcPeo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qGQUMAFt"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6BQoDt+m6u6N20P2MpYTm3D824xlK0sDz1yEkLcwtNc=; b=qGQUMAFt2BibDKC6H/8hsbqiyv
-	0IEr7PFwPi1aKHiZ94mhsuI/kTGlpCuAfa2eqqfgSoejR/nrc5NOwTzdvwD9DfVGKrXaCljfqxFl1
-	hTsrvbjSsD9Jg/m36JpPB7iDUnThvQIjYE3f5zlsPnrIKqiGC5HvkMelPPbRh3NAJU3z8fM+zXfwE
-	PtCIT5TNq/sTawCZZRPIlbrHsQ9M9tSfgLJTWaJtBscMkf/2lyg2XOgoLQ5zKeUg2aJcg0qtG2gJk
-	INg9x4gQfHkqIev7TsHAquzfpMbG7TJuN983TgsJEJKvqJcyqIY3+s3NXmKL0RLvyYanYcwRGd4eU
-	4q3SNUjA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vzyYL-00000009kGL-1h7F;
-	Tue, 10 Mar 2026 14:59:21 +0000
-Date: Tue, 10 Mar 2026 07:59:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 8/8] xfs: report cow mappings with dirty pagecache for
- iomap zero range
-Message-ID: <abAxyZur6jWeC_yv@infradead.org>
-References: <20260309134506.167663-1-bfoster@redhat.com>
- <20260309134506.167663-9-bfoster@redhat.com>
- <20260309175602.GR6033@frogsfrogsfrogs>
- <aa-_IM8JBdqnMKRw@infradead.org>
- <20260310145215.GN1105363@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MgDKcPeo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDC0FC19423;
+	Tue, 10 Mar 2026 15:02:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773154975;
+	bh=4IBJS8O9pMClJmgPRxC4s9c8Dv66uhbDHtsW10Lf/mE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MgDKcPeopZ+VO0o2jeHUZaa1i7oDRDvFs5QP2hDS5GReRWiv2r6wbAARUifkZO9Dz
+	 +WlHsoeYCOzwwW+h8iv1eKRxVXMoft+7j3kh/3psHV3T6cQpl+AZ11fWpKdT/XxbqN
+	 tA4WveWz3DkcWzSSPmbS0zMjyLgWT32a7hnJmsT235fZVad04PCsW0UtCdz0Dy12Lk
+	 UKcmYQLkmweNiwRKfJtIMWw7NX80nakJs/0u90k+n5CdvKqtPBe2faLGj345tW+YnB
+	 6abD+azimWPuYayXexmXRsiMp8coscKvZPzkSRb/AnOrbG9GIy2GwsrcJpQm7C/Dqt
+	 sjrNTf/q4YLUQ==
+Date: Tue, 10 Mar 2026 08:02:54 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>,
+	linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org,
+	p.raghav@samsung.com
+Subject: Re: [PATCH v11 2/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Message-ID: <20260310150254.GP1105363@frogsfrogsfrogs>
+References: <20260309181235.428151-2-lukas@herbolt.com>
+ <20260310004400.GU6033@frogsfrogsfrogs>
+ <j2nfikz4ugqs6u25jpf7mlxhvzpiochp7eu4yslm6tjpwprcmu@e33c7htr3cd3>
+ <db573faa5330e7cc8ad31ca86333227f@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,26 +46,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260310145215.GN1105363@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <db573faa5330e7cc8ad31ca86333227f@herbolt.com>
 
-On Tue, Mar 10, 2026 at 07:52:15AM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 09, 2026 at 11:50:08PM -0700, Christoph Hellwig wrote:
-> > On Mon, Mar 09, 2026 at 10:56:02AM -0700, Darrick J. Wong wrote:
-> > > Hrmm.  I wonder if IOMAP_REPORT should grow this new "expose dirty
-> > > unwritten cow fork mappings over a data fork hole" behavior too?  I
-> > > guess the only user of IOMAP_REPORT that might care is swapfile
-> > > activation, but that fsyncs the whole file to disk before starting the
-> > > iteration so I think it won't matter?
+On Tue, Mar 10, 2026 at 12:22:54PM +0100, Lukas Herbolt wrote:
+> On 2026-03-10 11:10, Pankaj Raghav (Samsung) wrote:
+> > > 	if (xfs_is_always_cow_inode(ip) ||
 > > 
-> > swapfile really should not be using IOMAP_REPORT, as IOMAP_REPORT
-> > implies just reporting what is there, while swapfile actually uses
-> > this as an I/O mapping..
+> > Why should we check for this here but we don't do this check in
+> > xfs_falloc_zero_range()?
+> > 
+> > There is a comment in xfs_falloc_allocate_range():
+> > 
+> > 	/*
+> > 	 * If always_cow mode we can't use preallocations and thus should not
+> > 	 * create them.
+> > 	 */
+> > 	if (xfs_is_always_cow_inode(XFS_I(inode)))
+> > 		return -EOPNOTSUPP;
+> > 
+> > Don't we also use preallocations in xfs_falloc_zero_range()?
+> > 
 > 
-> Swapfiles are really a read-write lease on the entire file's layout,
-> right?  Maybe we ought to just have an IOMAP_LAYOUT opflag for it and
-> pnfs?
+> For the xfs_falloc_zero_range we return 0 on COW from xfs_alloc_file_space
+> and that
+> results in creating a hole in the file instead of having preallocated
+> extents as shown
+> bellow.
+> 
+> But for the xfs_falloc_write_zero_range(), we want fail as soon as possible
+> as possible.
+> 
+> Feel free to correct me if I am wrong.
 
-I thought about that.  It's basically like a pnfs layout, except that
-it can't ever be recalled.
+You're correct, write-zero-range wants to actually write zeroes to
+storage to avoid remapping overhead during a write.  However, zoned /
+alwayscow files always remap so this mode is not supported for them.
 
+--D
+
+> int
+> xfs_alloc_file_space(
+>         struct xfs_inode        *ip,
+>         xfs_off_t               offset,
+>         xfs_off_t               len)
+> {
+>         xfs_mount_t             *mp = ip->i_mount;
+>         xfs_off_t               count;
+>         xfs_filblks_t           allocatesize_fsb;
+>         xfs_extlen_t            extsz, temp;
+>         xfs_fileoff_t           startoffset_fsb;
+>         xfs_fileoff_t           endoffset_fsb;
+>         int                     rt;
+>         xfs_trans_t             *tp;
+>         xfs_bmbt_irec_t         imaps[1], *imapp;
+>         int                     error;
+> 
+>         if (xfs_is_always_cow_inode(ip))
+>                 return 0;
+> 
+> 
+> root@build-00:/mnt# dd if=/dev/urandom of=/mnt/test.bin bs=10M oflag=direct
+> count=1
+> 1+0 records in
+> 1+0 records out
+> 10485760 bytes (10 MB, 10 MiB) copied, 0.167452 s, 62.6 MB/s
+> root@build-00:/mnt# xfs_bmap -vp  test.bin
+> test.bin:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..20479]:      192..20671        0 (192..20671)     20480 000000
+> root@build-00:/mnt# strace -e fallocate fallocate -zl 2M  test.bin
+> fallocate(3, FALLOC_FL_ZERO_RANGE, 0, 2097152) = 0
+> +++ exited with 0 +++
+> root@build-00:/mnt# xfs_bmap -vp  test.bin
+> test.bin:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..4095]:       hole                                  4096
+>    1: [4096..20479]:   4288..20671       0 (4288..20671)    16384 000000
+> root@build-00:/mnt# dd if=/dev/urandom of=/mnt/test.bin bs=1M oflag=direct
+> count=1 conv=notrunc
+> 1+0 records in
+> 1+0 records out
+> 1048576 bytes (1.0 MB, 1.0 MiB) copied, 0.0172151 s, 60.9 MB/s
+> root@build-00:/mnt# xfs_bmap -vp  test.bin
+> test.bin:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..2047]:       192..2239         0 (192..2239)       2048 000000
+>    1: [2048..4095]:    hole                                  2048
+>    2: [4096..20479]:   4288..20671       0 (4288..20671)    16384 000000
+> root@build-00:/mnt# cat /sys/fs/xfs/debug/
+> always_cow          bload_node_slack    larp                mount_delay
+> bload_leaf_slack    bug_on_assert       log_recovery_delay  pwork_threads
+> root@build-00:/mnt# cat /sys/fs/xfs/debug/always_cow
+> 1
+> 
+> 
+> -- 
+> -lhe
+> 
