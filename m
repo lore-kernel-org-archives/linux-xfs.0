@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36FE1DF25F
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:48:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533981547C0
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:48:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114483; cv=none; b=QR+iBMba2PgNQHiQS37RaVFLYAAjspGrJCBgf7Kzz6mdqCfj29K6fRuGVo0RKzbJY2Fw3aseqNslF5cbyxXaeLHSTd/CmafzGqdymBTFR3wVZ1nUw5TrQkA7pJ324eBvgQaimn1Ok1V/9W+oMolwMy/oihh2snDJvhJSNNyH4c4=
+	t=1773114499; cv=none; b=gAYV7G2oBdpfQBrc7njhWwoW18Mb0qYQTer6Xr5PmkOoxN8end1IlTsJT2+VAN/OJruTwZSda7kBo+e9X1deAc4WUl8PxrXAfiv3KvZFQz+DWJ6FMP4tuNtnn6oUec3XdbAf/vzPgujDjM9EATkqzkR8fqYr7B17wWR/suXupX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114483; c=relaxed/simple;
-	bh=gNLcxXvZ1oAd5HrriM/vWAHjDo/rFnJ4H4JoTJmEKvM=;
+	s=arc-20240116; t=1773114499; c=relaxed/simple;
+	bh=+uj/HlqNtotowCW/Hdh8OELMGJL8rYp9d8Tsq5npesU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Yy4n76ygGMLYRb+8/tiHexCOISAM5CRMIaw8b8J4fS60ECpvfhQG1cx24UFmJg64Rhbf2pITUH/01EZN6bqRoixgmhmPbveFHj7fyNeUwLVeIzNlNrA0dMpXlDDSMdX5/QGLRfK52a3zgOVDhxb5zrUAHUSbA+VZcfGClx1i8z4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SHdWBisI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cy2dpVonXAaNlkQKkXXpi92KLdOBTzi1Dcl1vzaCrGl0u9HF8dZidpWrNJkwQo3oqBaWzZqJC6AsYX1jJpEBy24rNNMIyiFY9rGqcDsaP++7WdnA6+grT/eYD6PGRZTEFK+MwOzHj7wHmVLFI6sWIxEaZUPCPKMVtO6Tef2oMiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=esa+RxJD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SHdWBisI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FA7CC19423;
-	Tue, 10 Mar 2026 03:48:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="esa+RxJD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B4B2C19423;
+	Tue, 10 Mar 2026 03:48:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114483;
-	bh=gNLcxXvZ1oAd5HrriM/vWAHjDo/rFnJ4H4JoTJmEKvM=;
+	s=k20201202; t=1773114499;
+	bh=+uj/HlqNtotowCW/Hdh8OELMGJL8rYp9d8Tsq5npesU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SHdWBisIG456WQH4HyHHzfOKEEicT8FPre1D15xl66wrofg8NDsYfgALMBJ3Sth3m
-	 NGcbnRbMtm76XLrrLQIvmAsy1zs5umSgaJ2OQI6NO2Oz9dAXyB+n6VxTWkMMA4+W2I
-	 PY0OV3HL27mhs0/q3qkQhHoyC7U4vnL/UZjtOOrLaYEdA6d0Q7CPHw6T7ATG1fnCYW
-	 iFXDhK2UvYXL77FsfEj6Ame+34UPAO0sJrglgcf0cSa/yVkCfzdyUlQnpvJd//+s2q
-	 bhBf+N8UO6VF4scWmcyydckvn8/gb9cmJgL0MdGee0hY/8AW4yOXUlIBlAj6xJYXV+
-	 r1oabm3gtqkrA==
-Date: Mon, 09 Mar 2026 20:48:03 -0700
-Subject: [PATCH 21/28] xfs_healer: add a manual page
+	b=esa+RxJDnc0IlHcZn5J1iJtS1+5GIeZl4sCFgHXAEwFvkOYr5DditmC/uzwNSj9aD
+	 JUOmT2yKrbf44QIZ0UhxymAnxhp1u3AOH+q3EmmgfA19ugrH+bRjRWHB1d/oaHHaMG
+	 HxanrLYzVHiF5kJVyrYFabU1r4UC+eCeCcbfDlbijr3A3ZEotzN88VkI5glg1HNy5p
+	 tgJ6BEqtw09VAayVk2wK58Gs8P//CEWSNVnN9tqE4Ccwffqdx760d4c0hr4jMHc+Ky
+	 gkKRouZjrYiPy5bF2nb+1LsEXbUNLeCPNhHRQO3yilMOslDJ09hjbsVSDPEsgS+6gz
+	 bTwMj//J2Rv1w==
+Date: Mon, 09 Mar 2026 20:48:18 -0700
+Subject: [PATCH 22/28] xfs_scrub: use the verify media ioctl during phase 6 if
+ possible
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177311401842.1183235.18251247850049435922.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <177311401861.1183235.9677228337197848690.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,228 +46,176 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new section 8 manpage for this service daemon so others can read
-about what this program is supposed to do.
+If the kernel suppots the XFS_IOC_VERIFY_MEDIA ioctl, use that to
+perform the phase 6 media scan instead of pwrite or the SCSI VERIFY
+command.  This enables better integration with xfs_healer and fsnotify;
+and reduces the amount of work that userspace has to do.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/Makefile           |   40 +++++++++++++---
- man/man8/xfs_healer.8       |  109 +++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_healer_start.8 |   37 +++++++++++++++
- 3 files changed, 180 insertions(+), 6 deletions(-)
- create mode 100644 man/man8/xfs_healer.8
- create mode 100644 man/man8/xfs_healer_start.8
+ scrub/disk.h        |   11 ++++++++++-
+ scrub/disk.c        |   38 +++++++++++++++++++++++++++++++++++++-
+ scrub/phase1.c      |   25 +++++++++++++++++++++++++
+ scrub/read_verify.c |    2 +-
+ 4 files changed, 73 insertions(+), 3 deletions(-)
 
 
-diff --git a/man/man8/Makefile b/man/man8/Makefile
-index 5be76ab727a1fe..05710f85ae89ad 100644
---- a/man/man8/Makefile
-+++ b/man/man8/Makefile
-@@ -7,13 +7,41 @@ include $(TOPDIR)/include/builddefs
+diff --git a/scrub/disk.h b/scrub/disk.h
+index 73c73ab57fb5c7..2ae27b73839ad3 100644
+--- a/scrub/disk.h
++++ b/scrub/disk.h
+@@ -10,18 +10,27 @@
+ struct disk {
+ 	struct stat	d_sb;
+ 	int		d_fd;
++	int		d_verify_fd;
+ 	unsigned int	d_lbalog;
+ 	unsigned int	d_lbasize;	/* bytes */
+ 	unsigned int	d_flags;
+ 	unsigned int	d_blksize;	/* bytes */
+ 	uint64_t	d_size;		/* bytes */
+ 	uint64_t	d_start;	/* bytes */
++	unsigned int	d_verify_disk;
+ };
  
- MAN_SECTION	= 8
+ unsigned int disk_heads(struct disk *disk);
+ struct disk *disk_open(const char *pathname);
+ int disk_close(struct disk *disk);
+ ssize_t disk_read_verify(struct disk *disk, void *buf, uint64_t startblock,
+-		uint64_t blockcount);
++		uint64_t blockcount, bool single_step);
++
++static inline void
++disk_config_xfs_verify(struct disk *disk, int mnt_fd, unsigned int verify_disk)
++{
++	disk->d_verify_fd = mnt_fd;
++	disk->d_verify_disk = verify_disk;
++}
  
--ifneq ("$(ENABLE_SCRUB)","yes")
--  MAN_PAGES = $(filter-out xfs_scrub%,$(shell echo *.$(MAN_SECTION)))
--else
--  MAN_PAGES = $(shell echo *.$(MAN_SECTION))
--  MAN_PAGES += xfs_scrub_all.8
-+MAN_PAGES = \
-+	fsck.xfs.8 \
-+	mkfs.xfs.8 \
-+	xfs_admin.8 \
-+	xfs_bmap.8 \
-+	xfs_copy.8 \
-+	xfs_db.8 \
-+	xfs_estimate.8 \
-+	xfs_freeze.8 \
-+	xfs_fsr.8 \
-+	xfs_growfs.8 \
-+	xfs_info.8 \
-+	xfs_io.8 \
-+	xfs_logprint.8 \
-+	xfs_mdrestore.8 \
-+	xfs_metadump.8 \
-+	xfs_mkfile.8 \
-+	xfs_ncheck.8 \
-+	xfs_property.8 \
-+	xfs_protofile.8 \
-+	xfs_quota.8 \
-+	xfs_repair.8 \
-+	xfs_rtcp.8 \
-+	xfs_spaceman.8
+ #endif /* XFS_SCRUB_DISK_H_ */
+diff --git a/scrub/disk.c b/scrub/disk.c
+index 2cf84d91887587..5c20fbb0f2181b 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -190,6 +190,7 @@ disk_open(
+ 	disk = calloc(1, sizeof(struct disk));
+ 	if (!disk)
+ 		return NULL;
++	disk->d_verify_fd = -1;
+ 
+ 	disk->d_fd = open(pathname, O_RDONLY | O_DIRECT | O_NOATIME);
+ 	if (disk->d_fd < 0)
+@@ -323,13 +324,45 @@ disk_simulate_read_error(
+ 	return 0;
+ }
+ 
++/* Use the XFS media verification ioctl to do the media scan */
++static ssize_t
++disk_ioctl_verify(
++	struct disk		*disk,
++	uint64_t		start,
++	uint64_t		length,
++	bool			single_step)
++{
++	const uint64_t	orig_start_daddr = BTOBBT(start);
++	struct xfs_verify_media	me = {
++		.me_start_daddr	= orig_start_daddr,
++		.me_end_daddr	= BTOBB(start + length),
++		.me_dev		= disk->d_verify_disk,
++		.me_rest_us	= bg_mode > 2 ? bg_mode - 1 : 0,
++	};
++	int			ret;
 +
-+ifeq ($(ENABLE_HEALER),yes)
-+  MAN_PAGES += xfs_healer.8
- endif
--MAN_PAGES	+= mkfs.xfs.8
-+ifeq ($(HAVE_HEALER_START_DEPS),yes)
-+  MAN_PAGES += xfs_healer_start.8
-+endif
-+ifeq ($(ENABLE_SCRUB),yes)
-+  MAN_PAGES += xfs_scrub.8 xfs_scrub_all.8
-+endif
++	if (single_step)
++		me.me_flags |= XFS_VERIFY_MEDIA_REPORT;
 +
- MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
- LSRCFILES	= $(MAN_PAGES)
- DIRT		= mkfs.xfs.8 xfs_scrub_all.8
-diff --git a/man/man8/xfs_healer.8 b/man/man8/xfs_healer.8
-new file mode 100644
-index 00000000000000..eea799f7811a4d
---- /dev/null
-+++ b/man/man8/xfs_healer.8
-@@ -0,0 +1,109 @@
-+.TH xfs_healer 8
-+.SH NAME
-+xfs_healer \- automatically heal damage to XFS filesystem metadata
-+.SH SYNOPSIS
-+.B xfs_healer
-+[
-+.B OPTIONS
-+]
-+.I mount-point
-+.br
-+.B xfs_healer \-V
-+.SH DESCRIPTION
-+.B xfs_healer
-+is a daemon that tries to automatically repair damaged XFS filesystem metadata.
-+.PP
-+.B WARNING!
-+This program is
-+.BR EXPERIMENTAL ","
-+which means that its behavior and interface
-+could change at any time!
-+.PP
-+.B xfs_healer
-+asks the kernel to report all observations of corrupt metadata, media errors,
-+filesystem shutdowns, and file I/O errors.
-+The program can respond to runtime metadata corruption errors by initiating
-+targeted repairs of the suspect metadata or a full online fsck of the
-+filesystem.
++	ret = ioctl(disk->d_verify_fd, XFS_IOC_VERIFY_MEDIA, &me);
++	if (ret < 0)
++		return ret;
++	if (me.me_ioerror) {
++		errno = me.me_ioerror;
++		return -1;
++	}
 +
-+Normally this program runs as a systemd service.
-+The service is activated via the
-+.I xfs_healer_start
-+service if systemd is supported.
++	return BBTOB(me.me_start_daddr - orig_start_daddr);
++}
 +
-+The kernel may not support repairing or optimizing the filesystem.
-+If this is the case, the filesystem must be unmounted and
-+.BR xfs_repair (8)
-+run on the filesystem to fix the problems.
-+.SH OPTIONS
-+.TP
-+.BI \-\-everything
-+Ask the kernel to send us good metadata health events, not only events related
-+to metadata corruption, media errors, shutdowns, and I/O errors.
-+.TP
-+.B \-\-foreground
-+Start enough event handling threads to allow consumption of all online CPUs.
-+If not specified, start exactly one event handling thread.
-+.TP
-+.B \-\-no-autofsck
-+Do not use the
-+.I autofsck
-+filesystem property to decide whether or not to repair corrupt metadata.
-+If the
-+.B \-\-repair
-+option is given, then all corruptions will be repaired.
-+If the
-+.B \-\-repair
-+option is not given, then the program will never try to repair the filesystem.
-+.TP
-+.B \-\-quiet
-+Do not print every event to standard output.
-+.TP
-+.B \-\-repair
-+Always try to repair each piece of corrupt metadata when the kernel tells us
-+about it.
-+If an individual repair fails or the kernel tells us that health events were
-+lost, the
-+.I xfs_scrub
-+service for this mount point will be launched.
-+The default is not to try to repair anything.
-+If this option is specified but the kernel does not support repairs, the
-+program will exit.
-+.TP
-+.B \-\-supported
-+Check if the filesystem supports sending health events.
-+Exits with 0 if it does, and non-zero if not.
-+.TP
-+.BI \-V
-+Prints the version number and exit.
+ /* Read-verify an extent of a disk device. */
+ ssize_t
+ disk_read_verify(
+ 	struct disk		*disk,
+ 	void			*buf,
+ 	uint64_t		start,
+-	uint64_t		length)
++	uint64_t		length,
++	bool			single_step)
+ {
+ 	if (debug) {
+ 		int		ret;
+@@ -345,6 +378,9 @@ disk_read_verify(
+ 			return length;
+ 	}
+ 
++	if (disk->d_verify_fd >= 0)
++		return disk_ioctl_verify(disk, start, length, single_step);
 +
-+.SH AUTOFSCK
-+By default, this program will read the
-+.I autofsck
-+filesystem property to decide if it should try to repair corruptions.
-+If the property is set to the value
-+.B repair
-+then corruptions will be repaired.
-+If the property is not set but the filesystem supports all back-reference
-+metadata (reverse mappings and parent pointers), then corruptions will be
-+repaired.
+ 	/* Convert to logical block size. */
+ 	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
+ 		return disk_scsi_verify(disk, BTOLBAT(disk, start),
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 10e9aa1892b701..093e7a01b9542f 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -213,6 +213,29 @@ mode_from_autofsck(
+ 	goto summarize;
+ }
+ 
++/* Does the XFS driver support media scanning its own disks? */
++static void
++configure_xfs_verify(
++	struct scrub_ctx	*ctx)
++{
++	struct xfs_verify_media	me = {
++		.me_start_daddr	= 1,
++		.me_end_daddr	= 0,
++		.me_dev		= XFS_DEV_DATA,
++	};
++	int			ret;
 +
-+See the
-+.BR xfs_scrub (8)
-+manual page for more details on this filesystem property.
++	ret = ioctl(ctx->mnt.fd, XFS_IOC_VERIFY_MEDIA, &me);
++	if (ret < 0)
++		return;
 +
-+.SH CAVEATS
-+.B xfs_healer
-+is an immature utility!
-+Do not run this program unless you have backups of your data!
-+This program takes advantage of in-kernel scrubbing to verify a given
-+data structure with locks held and can keep the filesystem busy for a
-+long time.
-+The kernel must be new enough to support the SCRUB_METADATA ioctl.
-+.PP
-+If errors are found and cannot be repaired, the filesystem must be
-+unmounted and repaired.
-+.SH SEE ALSO
-+.BR xfs_repair (8)
-+and
-+.BR xfs_scrub (8).
-diff --git a/man/man8/xfs_healer_start.8 b/man/man8/xfs_healer_start.8
-new file mode 100644
-index 00000000000000..9e424432a513fe
---- /dev/null
-+++ b/man/man8/xfs_healer_start.8
-@@ -0,0 +1,37 @@
-+.TH xfs_healer_start 8
-+.SH NAME
-+xfs_healer_start \- starts xfs_healer instances
-+.SH SYNOPSIS
-+.B xfs_healer_start
-+[
-+.B OPTIONS
-+]
-+.br
-+.B xfs_healer \-V
-+.SH DESCRIPTION
-+.B xfs_healer_start
-+starts the xfs_healer service whenever the kernel mounts an XFS filesystem in
-+the current mount namespace.
-+.PP
-+.B WARNING!
-+This program is
-+.BR EXPERIMENTAL ","
-+which means that its behavior and interface
-+could change at any time!
++	disk_config_xfs_verify(ctx->datadev, ctx->mnt.fd, XFS_DEV_DATA);
++	if (ctx->logdev)
++		disk_config_xfs_verify(ctx->logdev, ctx->mnt.fd, XFS_DEV_LOG);
++	if (ctx->rtdev)
++		disk_config_xfs_verify(ctx->rtdev, ctx->mnt.fd, XFS_DEV_RT);
++}
 +
-+Normally this program runs as a systemd service.
+ /*
+  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
+  * Anything we've already built will be cleaned up by scrub_cleanup.
+@@ -379,6 +402,8 @@ _("Unable to find realtime device path."));
+ 		}
+ 	}
+ 
++	configure_xfs_verify(ctx);
 +
-+.SH OPTIONS
-+.TP
-+.B \-\-supported
-+Check if the kernel supports listening for mount events.
-+Exits with 0 if it does, and non-zero if not.
-+.TP
-+.BI "\-\-mountns " path
-+Monitor the given mount namespace.
-+Defaults to the mount namespace associated with the process itself.
-+.TP
-+.BI \-V
-+Prints the version number and exit.
-+.SH SEE ALSO
-+.BR xfs_healer (8).
+ 	/*
+ 	 * Everything's set up, which means any failures recorded after
+ 	 * this point are most probably corruption errors (as opposed to
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index 1219efe2590182..9e1f3ec0ed1186 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -201,7 +201,7 @@ read_verify(
+ 		dbg_printf("diskverify %d %"PRIu64" %zu\n", rvp->disk->d_fd,
+ 				rv->io_start, len);
+ 		sz = disk_read_verify(rvp->disk, rvp->readbuf, rv->io_start,
+-				len);
++				len, io_max_size <= rvp->miniosz);
+ 		if (sz == len && io_max_size < rvp->miniosz) {
+ 			/*
+ 			 * If the verify request was 100% successful and less
 
