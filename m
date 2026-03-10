@@ -1,88 +1,194 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB662372B31
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:02:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BA9B3D0934
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:31:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773144145; cv=none; b=ZitpdMkYPH9FQv2h1DDoUwN5BvpaIJsiIhn/rbglXLnilsnhYWDxruxpZzNB4ysDn7HnKW1Uf0InpDZtsNZskX53rT2dFYmRWUsXYAhClM/zcZGEZsshoV+g/JslN+7QxzbzOAfIbhHTQ0ccFTB9NfXFEVdDo5E0fvtQNyPdNRA=
+	t=1773145891; cv=none; b=inwY0erPJTjZpNxC5Fpi22Ynqz8OsmYwcthNG0PV5VLpL3PqTd9TK63PU3W2HBBO3C1EWhWWGv7x/HGuKGDBfmvNBc+9GmnwwuCSjqFWjwfH6jyltF5qR9vy8ALRrZiPyqwaTZWErYEgpLgFChY5V6hCuhTgDx1Rh283QWBA06Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773144145; c=relaxed/simple;
-	bh=at4BPLxLl5PeTiWnP69G7QF+T7bYNiMi3AVVn7YyvXk=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AinBHFRS8GcKpLGHkRFzXp8HhCksmFeWSNp2/q3+fSChtoCOern7LcaM0kJftj/j2kNOWG4wWKvprVRS+FrDbk53/6ClWz4AWJTAyBIlL+iBPJmLTPeWcELlGgvE6jPG4BU3p7/Oo4RqHKSkNGvQH1y7+FP0Jf1TUE8A6BJ/DjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=qtGgLdnx; arc=none smtp.client-ip=113.46.200.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="qtGgLdnx"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=c8euFrWljbzxJTf2Hi5PPrkksISqAB89fxwgIGE6pIc=;
-	b=qtGgLdnxNR9hGpajct9iXPJ8xOSpYkjPN2EVM6UslTaX//H3Lr5nny23c8CViKmR4bClbFZMz
-	worHgsY9XYzRktnu6yZgZnBdSfkN8geyH/dQe2bEwTaBt+bHeZsuk3NpQcOueGv6d9HkppdKRTy
-	YBZ8LYeAfwdNUjUsKgWp6lc=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4fVXRM4HdZzcZy0;
-	Tue, 10 Mar 2026 19:56:47 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5093F40363;
-	Tue, 10 Mar 2026 20:02:12 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 10 Mar 2026 20:02:12 +0800
-Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 10 Mar
- 2026 20:02:11 +0800
-Date: Tue, 10 Mar 2026 19:58:23 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: Re: [PATCH 2/4] xfs: factor out xfs_da3_node_entry_remove
-Message-ID: <abAHX977xcOEaqRM@localhost.localdomain>
-References: <20260309082752.2039861-1-leo.lilong@huawei.com>
- <20260309082752.2039861-3-leo.lilong@huawei.com>
- <20260309164229.GI6033@frogsfrogsfrogs>
+	s=arc-20240116; t=1773145891; c=relaxed/simple;
+	bh=vTj3qG2yeOsecD1NLDh6MdNhz7G0toqV2IBANTebgfw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KP6EfC9waASPe9bSDGKIclwSJ1TYb+RAPZW8GVGn0tdjR/5GZzugiojBhh0c7pWy/bW2Vrzna3DOhzU1eDZlnEWmSJNUC8gHmell8batvjqwOIiygOhoGuPM+GxNgTUCow/OnE745G2Nz++JezLh963YgvyCjwoMdgyA2L7Lywk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id BC32C180F14A;
+	Tue, 10 Mar 2026 13:31:22 +0100 (CET)
+Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id 883vKhoPsGnm1B4AKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 10 Mar 2026 13:31:22 +0100
+From: Lukas Herbolt <lukas@herbolt.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	hch@infradead.org,
+	djwong@kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH v3 REBASE] xfs: Use xarray to track SB UUIDs instead of plain array.
+Date: Tue, 10 Mar 2026 13:30:22 +0100
+Message-ID: <20260310123021.715566-2-lukas@herbolt.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20260309164229.GI6033@frogsfrogsfrogs>
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 09, 2026 at 09:42:29AM -0700, Darrick J. Wong wrote:
-> 
-> > +	__xfs_da3_node_remove(state->args->trans, state->args->dp,
-> > +			state->args->geo, drop_blk);
-> > +}
-> > +
-> > +/*
-> > + * Remove an entry from a node at the specified index, this is an exported
-> > + * wrapper for removing entries from intermediate nodes.
-> > + */
-> > +void
-> > +xfs_da3_node_entry_remove(
-> 
-> This only applies to attr(ibute) structures, as evidenced by m_attr_geo
-> below.  I think this ought to be named xfs_attr3_node_entry_remove.
-> 
+Removing the plain array to track the UUIDs and switch
+to xarray makes it more readable.
 
-Considering that xfs_da_btree.c implements functions related to xfs_da*, 
-it might not be appropriate to place xfs_attr3_node_entry_remove here either.
-I think we could add an additional `struct xfs_da_geometry *geo` parameter
-to xfs_da3_node_entry_remove() and let it be specified externally, which
-would increase the function's generality. What do you think?
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+---
+ changes v3:
+	fix locking/unlocking mistakes
+	removing wrapper function xfs_uuid_insert()
+	rebase xfs/for-next
 
+ fs/xfs/xfs_mount.c | 76 ++++++++++++++++++++++------------------------
+ fs/xfs/xfs_mount.h |  3 ++
+ 2 files changed, 40 insertions(+), 39 deletions(-)
 
-Thanks,
-Long Li
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9c295abd0a0a..b183d04da998 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -44,17 +44,36 @@
+ #include "xfs_healthmon.h"
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+-static int xfs_uuid_table_size;
+-static uuid_t *xfs_uuid_table;
++static DEFINE_XARRAY_ALLOC(xfs_uuid_table);
++
++static uuid_t *
++xfs_uuid_search(
++	uuid_t		*new_uuid)
++{
++	unsigned long	index = 0;
++	uuid_t		*uuid;
++
++	xa_for_each(&xfs_uuid_table, index, uuid) {
++		if (uuid_equal(uuid, new_uuid))
++			return uuid;
++	}
++	return NULL;
++}
++
++static void
++xfs_uuid_delete(
++	uuid_t		*uuid,
++	unsigned int	index)
++{
++	ASSERT(uuid_equal(xa_load(&xfs_uuid_table, index), uuid));
++	xa_erase(&xfs_uuid_table, index);
++}
+ 
+ void
+ xfs_uuid_table_free(void)
+ {
+-	if (xfs_uuid_table_size == 0)
+-		return;
+-	kfree(xfs_uuid_table);
+-	xfs_uuid_table = NULL;
+-	xfs_uuid_table_size = 0;
++	ASSERT(xa_empty(&xfs_uuid_table));
++	xa_destroy(&xfs_uuid_table);
+ }
+ 
+ /*
+@@ -66,7 +85,7 @@ xfs_uuid_mount(
+ 	struct xfs_mount	*mp)
+ {
+ 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
+-	int			hole, i;
++	int			ret;
+ 
+ 	/* Publish UUID in struct super_block */
+ 	super_set_uuid(mp->m_super, uuid->b, sizeof(*uuid));
+@@ -80,30 +99,17 @@ xfs_uuid_mount(
+ 	}
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+-	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_null(&xfs_uuid_table[i])) {
+-			hole = i;
+-			continue;
+-		}
+-		if (uuid_equal(uuid, &xfs_uuid_table[i]))
+-			goto out_duplicate;
+-	}
+-
+-	if (hole < 0) {
+-		xfs_uuid_table = krealloc(xfs_uuid_table,
+-			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
+-			GFP_KERNEL | __GFP_NOFAIL);
+-		hole = xfs_uuid_table_size++;
++	if (unlikely(xfs_uuid_search(uuid))) {
++		xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount",
++				uuid);
++		mutex_unlock(&xfs_uuid_table_mutex);
++		return -EINVAL;
+ 	}
+-	xfs_uuid_table[hole] = *uuid;
+-	mutex_unlock(&xfs_uuid_table_mutex);
+ 
+-	return 0;
+-
+- out_duplicate:
++	ret = xa_alloc(&xfs_uuid_table, &mp->m_uuid_table_index, uuid,
++				xa_limit_32b, GFP_KERNEL);
+ 	mutex_unlock(&xfs_uuid_table_mutex);
+-	xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount", uuid);
+-	return -EINVAL;
++	return ret;
+ }
+ 
+ STATIC void
+@@ -111,22 +117,14 @@ xfs_uuid_unmount(
+ 	struct xfs_mount	*mp)
+ {
+ 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
+-	int			i;
+ 
+ 	if (xfs_has_nouuid(mp))
+ 		return;
+ 
+ 	mutex_lock(&xfs_uuid_table_mutex);
+-	for (i = 0; i < xfs_uuid_table_size; i++) {
+-		if (uuid_is_null(&xfs_uuid_table[i]))
+-			continue;
+-		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
+-			continue;
+-		memset(&xfs_uuid_table[i], 0, sizeof(uuid_t));
+-		break;
+-	}
+-	ASSERT(i < xfs_uuid_table_size);
++	xfs_uuid_delete(uuid, mp->m_uuid_table_index);
+ 	mutex_unlock(&xfs_uuid_table_mutex);
++	return;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index ddd4028be8d6..d964bae096ef 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -346,6 +346,9 @@ typedef struct xfs_mount {
+ 
+ 	/* Private data referring to a health monitor object. */
+ 	struct xfs_healthmon __rcu	*m_healthmon;
++
++	/* Index of uuid record in the uuid xarray. */
++	unsigned int		m_uuid_table_index;
+ } xfs_mount_t;
+ 
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+
+base-commit: 54fcd2f95f8d216183965a370ec69e1aab14f5da
+-- 
+2.53.0
+
