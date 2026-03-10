@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB323D092A
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:33:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 764173D47BD
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:33:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773146011; cv=none; b=K3vtLs/IQLNynJWRfaayKlUM4KMuy5DxzwZuTLEsX98ovakjzFqLn4IedYOdBx6crCdLZjq68Piuia4RNwftEGL1ekt5Q3IO2HJ4oilCYLOxJAd9lrxI7AXEiNqXd1axz88+YtqJ8N3j777PJtUwVmy/mL60QLF9OUthHa8UZD8=
+	t=1773146013; cv=none; b=dV2qTDUSmD+3lhml5G4zIoBheIBk6BbEFT9FOq7c7Ew5nhpEvhq2XJuuNKaelmFZjmYofZl5ItUJhHw1BJm4ATsqc84KWzWvNWvfTg2x4Tmu14MAKxkHLmdV7B6QEBou3PE+434pRXeTrDoviZ9EN97yyYbkPnMs/UuzlnheFCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773146011; c=relaxed/simple;
-	bh=O2A1ARd9rS9e5C9B8ti2ogqa5nDpg9ibtZ0Ao+5Fgeo=;
+	s=arc-20240116; t=1773146013; c=relaxed/simple;
+	bh=MhW7nGpIIqc538zhMGvT22/tIXYgnlrerG5vgocZK2A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IlB8lFvFCigesYp2o9LAMLUDXI/U9gnRYhb5Mh/oNl0suDDhYvZI950Hw5Emh6hFk6cQ+N23s3D0tPLwTz8ZXxbLui6sMh+4MAqtJ5c3wk7LaODq4RBiolp9QPJlqboYkN063CjUNjkGvBMigWmulbOHHA1PiYp60wP6rS4tf5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xr7K6xOg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=dDFwzohip/LTiZNqueg39T1P1y3AZEImqbJp9Q5KswyDw6F/SkQA604/ZLCI7djHOc2annYvjSW4PFhJ1HQmG1wWm4XYr9HKh28nz0ydRoe0zoIZBGysUGc+si2bcnQiQQlYqTe5qjswYQFWOguveWY9G8XhqEe2gZCM/EjyAFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=noNZMbNY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xr7K6xOg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CC08C19425;
-	Tue, 10 Mar 2026 12:33:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="noNZMbNY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0512BC19423;
+	Tue, 10 Mar 2026 12:33:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773146011;
-	bh=O2A1ARd9rS9e5C9B8ti2ogqa5nDpg9ibtZ0Ao+5Fgeo=;
+	s=k20201202; t=1773146013;
+	bh=MhW7nGpIIqc538zhMGvT22/tIXYgnlrerG5vgocZK2A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Xr7K6xOgivLO7VrtKmz0bSC1dImHM3qu61sSRfaFhsi7KF4dBAYMqmjl2ORyvny8M
-	 8wVJBAIieV+CE1b5T9nMSq98wKxf7L4HiZocqkVhw1hU9uNjtCq9UnI+a2e9UsWpJu
-	 esnzIezkhoO1reldX3a37qySkXbmhf/InX/MnYIeyQGNGGnTgPJKrlijQN4p/wTiO2
-	 qstH5M9C+T71FOPoDT7QfyQZYJsq6xzD5WqqMaf2WMDfusB6RoE1HyUxI/AMBMZF7Y
-	 t5FYCyR/REXCmtcS+nc5pv/AhRmJRdjcbbOPgGJMfW/sGa4lzTu/7eyRK+nbNmBmUD
-	 M+uZWQFypOxMA==
+	b=noNZMbNY+jkovx5Ah0dvIlIS5b0VyvhysvL0S7zjRtktVqMPGzyC75vdIK6Lv9N2m
+	 Co3nQu+UFgloCqjcDlcEdxKcXY2pXCGPE/qG0PXQnZK3fqp5yKrCOAmUc1dq3W1k+z
+	 BB4oU8ZSliSDVuGHlEWGGwefy4fCdMO2AmdrMaEqwiAvBt8jNjqx2gWfBWwD/e3wGD
+	 IWghrLNWuV7xvQXfV6yaU7yM9ApSinSwHPJLVcpMRbBX8PgRmwiB9hjRs/ZZEhbQuT
+	 3HICKyEHhRkPs6BSzH5PoTUfoBdr+UNea6KKURdpAfsL2j4fB4MTa5bNZ41JjnEAD7
+	 VPeWTCXiYoSmA==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: david@fromorbit.com,
 	hch@lst.de,
 	djwong@kernel.org
-Subject: [PATCH 1/3] xfs: add a couple helpers to alloc/free xfs_busy_extents
-Date: Tue, 10 Mar 2026 13:33:14 +0100
-Message-ID: <20260310123324.339310-2-cem@kernel.org>
+Subject: [PATCH 2/3] xfs: convert busy_extents list to a pointer within cil context
+Date: Tue, 10 Mar 2026 13:33:15 +0100
+Message-ID: <20260310123324.339310-3-cem@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260310123324.339310-1-cem@kernel.org>
 References: <20260310123324.339310-1-cem@kernel.org>
@@ -47,111 +47,110 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-There are a couple locations which repeats the same code pattern
-to alloc/free the xfs_busy_extents list
+Decouple the busy extents list from the cil context.
 
-These helpers will come in handy when decoupling busy_extents
-list from the cil context.
-
-Notice though commit bf4afc53b77a removed GFP_KERNEL from the kzalloc_obj()
-calls due to the new default argument.
-On future usage we'll also need to pass NOFAIL here, so we need to be able
-to pass some flags as argument.
-
-The avoid calls like xfs_busy_extents_alloc(0) explicitly pass GFP_KERNEL
-as argument. It looks better to me.
+By having the object independently allocated, we can transfer
+its ownership to the discard code.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_discard.c     | 12 +++++-------
- fs/xfs/xfs_extent_busy.h | 17 +++++++++++++++++
- 2 files changed, 22 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_discard.c  |  1 +
+ fs/xfs/xfs_log_cil.c  | 17 ++++++++++-------
+ fs/xfs/xfs_log_priv.h |  2 +-
+ 3 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 906221ffe9ba..f393be78dc46 100644
+index f393be78dc46..2db0ea6eedc6 100644
 --- a/fs/xfs/xfs_discard.c
 +++ b/fs/xfs/xfs_discard.c
-@@ -349,18 +349,17 @@ xfs_trim_perag_extents(
- 	do {
- 		struct xfs_busy_extents	*extents;
+@@ -86,6 +86,7 @@ xfs_discard_endio_work(
  
--		extents = kzalloc_obj(*extents);
-+		extents = xfs_busy_extents_alloc(GFP_KERNEL);
- 		if (!extents) {
- 			error = -ENOMEM;
- 			break;
+ 	xfs_extent_busy_clear(&extents->extent_list, false);
+ 	kfree(extents->owner);
++	xfs_busy_extents_free(extents);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index edc368938f30..bb71b5ad6b55 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -101,8 +101,8 @@ xlog_cil_ctx_alloc(void)
+ 	struct xfs_cil_ctx	*ctx;
+ 
+ 	ctx = kzalloc_obj(*ctx, GFP_KERNEL | __GFP_NOFAIL);
++	ctx->busy_extents = xfs_busy_extents_alloc(GFP_KERNEL | __GFP_NOFAIL);
+ 	INIT_LIST_HEAD(&ctx->committing);
+-	INIT_LIST_HEAD(&ctx->busy_extents.extent_list);
+ 	INIT_LIST_HEAD(&ctx->log_items);
+ 	INIT_LIST_HEAD(&ctx->lv_chain);
+ 	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
+@@ -131,7 +131,7 @@ xlog_cil_push_pcp_aggregate(
+ 
+ 		if (!list_empty(&cilpcp->busy_extents)) {
+ 			list_splice_init(&cilpcp->busy_extents,
+-					&ctx->busy_extents.extent_list);
++					&ctx->busy_extents->extent_list);
  		}
+ 		if (!list_empty(&cilpcp->log_items))
+ 			list_splice_init(&cilpcp->log_items, &ctx->log_items);
+@@ -994,8 +994,8 @@ xlog_cil_committed(
  
- 		extents->owner = extents;
--		INIT_LIST_HEAD(&extents->extent_list);
+ 	xlog_cil_ail_insert(ctx, abort);
  
- 		error = xfs_trim_gather_extents(pag, &tcur, extents);
- 		if (error) {
--			kfree(extents);
-+			xfs_busy_extents_free(extents);
- 			break;
- 		}
+-	xfs_extent_busy_sort(&ctx->busy_extents.extent_list);
+-	xfs_extent_busy_clear(&ctx->busy_extents.extent_list,
++	xfs_extent_busy_sort(&ctx->busy_extents->extent_list);
++	xfs_extent_busy_clear(&ctx->busy_extents->extent_list,
+ 			      xfs_has_discard(mp) && !abort);
  
-@@ -689,7 +688,7 @@ xfs_trim_rtgroup_extents(
- 	 * trims the extents returned.
- 	 */
- 	do {
--		tr.extents = kzalloc_obj(*tr.extents);
-+		tr.extents = xfs_busy_extents_alloc(GFP_KERNEL);
- 		if (!tr.extents) {
- 			error = -ENOMEM;
- 			break;
-@@ -698,7 +697,6 @@ xfs_trim_rtgroup_extents(
- 		tr.queued = 0;
- 		tr.batch = XFS_DISCARD_MAX_EXAMINE;
- 		tr.extents->owner = tr.extents;
--		INIT_LIST_HEAD(&tr.extents->extent_list);
+ 	spin_lock(&ctx->cil->xc_push_lock);
+@@ -1004,12 +1004,13 @@ xlog_cil_committed(
  
- 		xfs_rtgroup_lock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
- 		error = xfs_rtalloc_query_range(rtg, tp, low, high,
-@@ -707,12 +705,12 @@ xfs_trim_rtgroup_extents(
- 		if (error == -ECANCELED)
- 			error = 0;
- 		if (error) {
--			kfree(tr.extents);
-+			xfs_busy_extents_free(tr.extents);
- 			break;
- 		}
+ 	xlog_cil_free_logvec(&ctx->lv_chain);
  
- 		if (!tr.queued) {
--			kfree(tr.extents);
-+			xfs_busy_extents_free(tr.extents);
- 			break;
- 		}
+-	if (!list_empty(&ctx->busy_extents.extent_list)) {
+-		ctx->busy_extents.owner = ctx;
+-		xfs_discard_extents(mp, &ctx->busy_extents);
++	if (!list_empty(&ctx->busy_extents->extent_list)) {
++		ctx->busy_extents->owner = ctx;
++		xfs_discard_extents(mp, ctx->busy_extents);
+ 		return;
+ 	}
  
-diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index 3e6e019b6146..699f97a53530 100644
---- a/fs/xfs/xfs_extent_busy.h
-+++ b/fs/xfs/xfs_extent_busy.h
-@@ -43,6 +43,23 @@ struct xfs_busy_extents {
- 	void			*owner;
- };
++	xfs_busy_extents_free(ctx->busy_extents);
+ 	kfree(ctx);
+ }
  
-+static inline struct xfs_busy_extents *
-+xfs_busy_extents_alloc(gfp_t flags)
-+{
-+	struct xfs_busy_extents *e;
-+	e = kzalloc_obj(*e, flags);
-+
-+	if (e)
-+		INIT_LIST_HEAD(&e->extent_list);
-+	return e;
-+}
-+
-+static inline void xfs_busy_extents_free(
-+	struct xfs_busy_extents *e)
-+{
-+	kfree(e);
-+}
-+
- void xfs_extent_busy_insert(struct xfs_trans *tp, struct xfs_group *xg,
- 		xfs_agblock_t bno, xfs_extlen_t len, unsigned int flags);
- void xfs_extent_busy_insert_discard(struct xfs_group *xg, xfs_agblock_t bno,
+@@ -1595,6 +1596,7 @@ xlog_cil_push_work(
+ out_skip:
+ 	up_write(&cil->xc_ctx_lock);
+ 	xfs_log_ticket_put(new_ctx->ticket);
++	xfs_busy_extents_free(new_ctx->busy_extents);
+ 	kfree(new_ctx);
+ 	memalloc_nofs_restore(nofs_flags);
+ 	return;
+@@ -2058,6 +2060,7 @@ xlog_cil_destroy(
+ 	if (cil->xc_ctx) {
+ 		if (cil->xc_ctx->ticket)
+ 			xfs_log_ticket_put(cil->xc_ctx->ticket);
++		xfs_busy_extents_free(cil->xc_ctx->busy_extents);
+ 		kfree(cil->xc_ctx);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index cf1e4ce61a8c..b0f9923f30cc 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -240,7 +240,7 @@ struct xfs_cil_ctx {
+ 	struct xlog_in_core	*commit_iclog;
+ 	struct xlog_ticket	*ticket;	/* chkpt ticket */
+ 	atomic_t		space_used;	/* aggregate size of regions */
+-	struct xfs_busy_extents	busy_extents;
++	struct xfs_busy_extents	*busy_extents;
+ 	struct list_head	log_items;	/* log items in chkpt */
+ 	struct list_head	lv_chain;	/* logvecs being pushed */
+ 	struct list_head	iclog_entry;
 -- 
 2.53.0
 
