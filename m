@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83C71DF755;
-	Tue, 10 Mar 2026 03:52:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E3F019EED3;
+	Tue, 10 Mar 2026 03:52:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114734; cv=none; b=s5uGUMDbmwhiACcHLjqvgv+vo4+aYaKc9Ddc1mx672hgXfGQYImbkleMLHgWZf+i9fcDNcHMJRZuMsw+h0ybqP5ZIMr/XRcm8Edz1tV6Yiuh0KAkLt0CfqctjFBBF/1DnkM0S3Xy3aJADWKZ+1YIeFRtGJ9A0AL06nyIn5Oxc2A=
+	t=1773114749; cv=none; b=QwtYZX7Lfgw7dEaCEHvjFO/vB3GXY8Gucg6e6zGQF/l1bR9j6qxppM50uYgsQ/ioEtIlE+MWom2iH3RiNi7fxBqTpevGduAG3IOk3kIpw1VUuWy/z9+fFH0yjQbuV/gQcG7++fQ8dx7yjGkLZc+5DO+1dGQcYO0YFbzltRJNqZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114734; c=relaxed/simple;
-	bh=ugcUXQHyKYLZrAXFBZnkgHoGwbTMoflSP0S+qVl750s=;
+	s=arc-20240116; t=1773114749; c=relaxed/simple;
+	bh=Z1XzLAb87kPrIXKyM3Qq3hz31wpWhXydvD4M+Kz6LEU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VMlIM9dBEvnmy5aI6HZy7kQVDzgdROaW/mfh8+OTL60Zk+oXfpjxucGRWGMe/PBGR6hn/2qV+UNiwjVUPsbKbM2JL6jV2qExLbhTnEbTF034avACKOKBotA5ZWppBHp7AXBTLMBtT/lbYVpnf8yDgjqotSdP/+W3piAHTe4sPEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8iF8xlV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=sKmxNkzNXop5LgsYrkfJkSulCmnT1fDKvHPTlpwjd0sN8StRblA0VbLPq9hKC8XYzeo89USepkChvfSHkwjUvE+4aUXkvQDmsInlgC6PsEotcyzjV75WDx3wb9IElTD4QXI0JaRNlTBMMfMg+/2qOv+kUu5mej8B33Yxx6wv6zE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDIavtnf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8iF8xlV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CDDFC19423;
-	Tue, 10 Mar 2026 03:52:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDIavtnf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2185AC19423;
+	Tue, 10 Mar 2026 03:52:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114733;
-	bh=ugcUXQHyKYLZrAXFBZnkgHoGwbTMoflSP0S+qVl750s=;
+	s=k20201202; t=1773114749;
+	bh=Z1XzLAb87kPrIXKyM3Qq3hz31wpWhXydvD4M+Kz6LEU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=F8iF8xlVlsjytZy3W59xsg/hqOI8vjPBYFK8g1sHPkxyh77kdzq2K6BTwS3RjfVgF
-	 Po6PXbgIDWB0JTTr53c4/SsyhEqs8yZeJxGXz+VujAdiFpfw+J7Xygz/K2fscSZ9Md
-	 AHQNTDNy11r2OmdF9eHvw3lAdUQw+7pruo/xm6E9cYyEqjrY/CZhWdWnxAi7xYZf/y
-	 1RPi0EJpDjfjh909Po2Sy5qZV7ASuiaWnMHnEJrRSx02PdEuMZGx+f5LFlkIGuKJR7
-	 NW1CO4teZfsmvfG/GsuZXW/fN/N/UQ6PrvS8b61x66PXXaRjg68gLRIck0ZoNTuUko
-	 aZmxNBywE32uA==
-Date: Mon, 09 Mar 2026 20:52:13 -0700
-Subject: [PATCH 08/14] xfs: test xfs_healer can report file media errors
+	b=UDIavtnf/DvZVGoYcEmBFZB0UgaZv5ydWRoFUUVMOTJipvmFMdiTlt20bviTZekDp
+	 FsR7B6sYiHgP2WgSrzNUWueMF+9fFjNeOEuOFplqOmrAvHkUg7fXIT3Wg6Sb682FdK
+	 CoR31CEfgL8vyFXTzjGyNL/1Ucs+6ped+qz7Y7ZjsHxXaOsWxanvyShnmQSfySUyi4
+	 +KBTDK0gcEaZpw1iX2eeq4a2iMnhZz1x1yxiOuVZTidZl5p9g3tDh3VYgdFHdL4JGS
+	 58fOyFua/vxu+MDqSTUq6o0IwgYX0ORKot47ZAWKlHmZasIW5lX2aMHtl+zWvAPhDo
+	 PzUkULqIpZQOQ==
+Date: Mon, 09 Mar 2026 20:52:28 -0700
+Subject: [PATCH 09/14] xfs: test xfs_healer can report filesystem shutdowns
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177311403923.1186408.14451135693864403499.stgit@frogsfrogsfrogs>
+Message-ID: <177311403941.1186408.2309881878313608797.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,207 +45,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that xfs_healer can actually report media errors as found by the
-kernel.
+Make sure that xfs_healer can actually report abnormal filesystem shutdowns.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/1897     |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1897.out |    7 ++
- 2 files changed, 179 insertions(+)
- create mode 100755 tests/xfs/1897
- create mode 100755 tests/xfs/1897.out
+ tests/xfs/1898     |   37 +++++++++++++++++++++++++++++++++++++
+ tests/xfs/1898.out |    4 ++++
+ 2 files changed, 41 insertions(+)
+ create mode 100755 tests/xfs/1898
+ create mode 100755 tests/xfs/1898.out
 
 
-diff --git a/tests/xfs/1897 b/tests/xfs/1897
+diff --git a/tests/xfs/1898 b/tests/xfs/1898
 new file mode 100755
-index 00000000000000..4670c333a2d82c
+index 00000000000000..2b6c72093e7021
 --- /dev/null
-+++ b/tests/xfs/1897
-@@ -0,0 +1,172 @@
++++ b/tests/xfs/1898
+@@ -0,0 +1,37 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0-or-later
 +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 1897
++# FS QA Test No. 1898
 +#
-+# Check that xfs_healer can report media errors.
++# Check that xfs_healer can report filesystem shutdowns.
 +
 +. ./common/preamble
 +_begin_fstest auto quick scrub eio selfhealing
 +
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_dmerror_cleanup
-+}
-+
 +. ./common/fuzzy
 +. ./common/filter
-+. ./common/dmerror
 +. ./common/systemd
 +
-+_require_scratch
++_require_scratch_nocheck
 +_require_scrub
-+_require_dm_target error
 +_require_command "$XFS_HEALER_PROG" "xfs_healer"
-+_require_xfs_io_command verifymedia
-+
-+filter_healer() {
-+	_filter_scratch | \
-+		grep -E '(media failed|media error)' | \
-+		sed \
-+		    -e 's/datadev/DEVICE/g' \
-+		    -e 's/rtdev/DEVICE/g' \
-+		    -e 's/ino [0-9]*/ino NUM/g' \
-+		    -e 's/gen 0x[0-9a-f]*/gen NUM/g' \
-+		    -e 's/pos [0-9]*/pos NUM/g' \
-+		    -e 's/len [0-9]*/len NUM/g' \
-+		    -e 's/0x[0-9a-f]*/NUM/g' \
-+		    -e 's|SCRATCH_MNT/a|VICTIM|g' \
-+		    -e 's|SCRATCH_MNT ino NUM gen NUM|VICTIM|g'
-+}
-+
-+filter_verify() {
-+	sed -e 's/\([a-z]*dev\): verify error at offset \([0-9]*\) length \([0-9]*\)/DEVICE: verify error at offset XXX length XXX/g'
-+}
 +
 +_scratch_mkfs >> $seqres.full
-+
-+# The dm-error map added by this test doesn't work on zoned devices because
-+# table sizes need to be aligned to the zone size, and even for zoned on
-+# conventional this test will get confused because of the internal RT device.
-+#
-+# That check requires a mounted file system, so do a dummy mount before setting
-+# up DM.
 +_scratch_mount
-+_require_xfs_scratch_non_zoned
 +_require_xfs_healer $SCRATCH_MNT
-+_scratch_unmount
++$XFS_IO_PROG -f -c "pwrite -S 0x58 0 500k" -c "fsync" $victim >> $seqres.full
 +
-+_dmerror_init
-+_dmerror_mount
-+
-+# Write a file with 4 file blocks worth of data, figure out the LBA to target
-+victim=$SCRATCH_MNT/a
-+file_blksz=$(_get_file_block_size $SCRATCH_MNT)
-+$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c "fsync" $victim >> $seqres.full
-+unset errordev
-+verifymediadev="-d"
-+
-+awk_len_prog='{print $6}'
-+if _xfs_is_realtime_file $victim; then
-+	if ! _xfs_has_feature $SCRATCH_MNT rtgroups; then
-+		awk_len_prog='{print $4}'
-+	fi
-+	errordev="RT"
-+	verifymediadev="-r"
-+fi
-+bmap_str="$($XFS_IO_PROG -c "bmap -elpv" $victim | grep "^[[:space:]]*0:")"
-+echo "$errordev:$bmap_str" >> $seqres.full
-+
-+phys="$(echo "$bmap_str" | $AWK_PROG '{print $3}')"
-+len="$(echo "$bmap_str" | $AWK_PROG "$awk_len_prog")"
-+
-+fs_blksz=$(_get_block_size $SCRATCH_MNT)
-+echo "file_blksz:$file_blksz:fs_blksz:$fs_blksz" >> $seqres.full
-+kernel_sectors_per_fs_block=$((fs_blksz / 512))
-+
-+# Did we get at least 4 fs blocks worth of extent?
-+min_len_sectors=$(( 4 * kernel_sectors_per_fs_block ))
-+test "$len" -lt $min_len_sectors && \
-+	_fail "could not format a long enough extent on an empty fs??"
-+
-+phys_start=$(echo "$phys" | sed -e 's/\.\..*//g')
-+
-+echo "$errordev:$phys:$len:$fs_blksz:$phys_start" >> $seqres.full
-+echo "victim file:" >> $seqres.full
-+od -tx1 -Ad -c $victim >> $seqres.full
-+
-+# Set the dmerror table so that all IO will pass through.
-+_dmerror_reset_table
-+
-+cat >> $seqres.full << ENDL
-+dmerror before:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+# All sector numbers that we feed to the kernel must be in units of 512b, but
-+# they also must be aligned to the device's logical block size.
-+logical_block_size=`$here/src/min_dio_alignment $SCRATCH_MNT $SCRATCH_DEV`
-+kernel_sectors_per_device_lba=$((logical_block_size / 512))
-+
-+# Pretend as bad one of the device LBAs in the middle of the extent.  Target
-+# the second LBA of the third block of the four-block file extent that we
-+# allocated earlier, but without overflowing into the fourth file block.
-+bad_sector=$(( phys_start + (2 * kernel_sectors_per_fs_block) ))
-+bad_len=$kernel_sectors_per_device_lba
-+if (( kernel_sectors_per_device_lba < kernel_sectors_per_fs_block )); then
-+	bad_sector=$((bad_sector + kernel_sectors_per_device_lba))
-+fi
-+if (( (bad_sector % kernel_sectors_per_device_lba) != 0)); then
-+	echo "bad_sector $bad_sector not congruent with device logical block size $logical_block_size"
-+fi
-+_dmerror_mark_range_bad $bad_sector $bad_len $errordev
-+
-+cat >> $seqres.full << ENDL
-+dmerror after marking bad:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+_dmerror_load_error_table
-+
-+echo "Simulate media error"
++echo "Start healer and shut down"
 +_scratch_invoke_xfs_healer "$tmp.healer"
-+echo "verifymedia $verifymediadev -R $((bad_sector * 512)) $(((bad_sector + bad_len) * 512))" >> $seqres.full
-+$XFS_IO_PROG -x -c "verifymedia $verifymediadev -R $((bad_sector * 512)) $(((bad_sector + bad_len) * 512))" $SCRATCH_MNT 2>&1 | filter_verify
-+
-+# Now mark the bad range good so that a retest shows no media failure.
-+_dmerror_mark_range_good $bad_sector $bad_len $errordev
-+_dmerror_load_error_table
-+
-+cat >> $seqres.full << ENDL
-+dmerror after marking good:
-+$DMERROR_TABLE
-+$DMERROR_RTTABLE
-+<end table>
-+ENDL
-+
-+echo "No more media error"
-+echo "verifymedia $verifymediadev -R $((bad_sector * 512)) $(((bad_sector + bad_len) * 512))" >> $seqres.full
-+$XFS_IO_PROG -x -c "verifymedia $verifymediadev -R $((bad_sector * 512)) $(((bad_sector + bad_len) * 512))" $SCRATCH_MNT >> $seqres.full
++_scratch_shutdown -f
 +
 +# Unmount filesystem to start fresh
 +echo "Kill healer"
-+_scratch_kill_xfs_healer _dmerror_unmount
-+
-+# filesystems without rmap do not translate media errors to lost file ranges
-+# so fake the output
-+_xfs_has_feature "$SCRATCH_DEV" rmapbt || \
-+	echo "VICTIM pos 0 len 0: media failed" >> $tmp.healer
-+
++_scratch_kill_xfs_healer
 +cat $tmp.healer >> $seqres.full
-+cat $tmp.healer | filter_healer
++cat $tmp.healer | _filter_scratch | grep 'shut down'
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/1897.out b/tests/xfs/1897.out
+diff --git a/tests/xfs/1898.out b/tests/xfs/1898.out
 new file mode 100755
-index 00000000000000..1bb615c3119dce
+index 00000000000000..f71f848da810ce
 --- /dev/null
-+++ b/tests/xfs/1897.out
-@@ -0,0 +1,7 @@
-+QA output created by 1897
-+Simulate media error
-+DEVICE: verify error at offset XXX length XXX: Input/output error
-+No more media error
++++ b/tests/xfs/1898.out
+@@ -0,0 +1,4 @@
++QA output created by 1898
++Start healer and shut down
 +Kill healer
-+SCRATCH_MNT DEVICE daddr NUM bbcount NUM: media error
-+VICTIM pos NUM len NUM: media failed
++SCRATCH_MNT: filesystem shut down due to forced unmount
 
