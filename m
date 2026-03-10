@@ -1,128 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A458F4FA;
-	Tue, 10 Mar 2026 05:47:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 587FB3ACEF5
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 05:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773121676; cv=none; b=sckeCPxcB/1O4+7F7ZSiIJNdBBdmmL5A4dDzM8UXZf989XJczjJhppIkxp9hE/h12QOeNJdVjNjq6kdCwswOZxgA+eQgEHAhptE2jVHFXD/39USveiPc6rz/jwQQgQ4E5ujpm1oFaGfjf8gwSH2nyioYE3NcpvJNsoK7gs+QHvo=
+	t=1773121799; cv=none; b=ORE3TADI5BxlRcMiMPjnmODa2zTFWbK40yi0lE7Ao8GXnvV6y6Lj0jAjzmFW8LdSde/rKjwOOuzsYdb5YWEnfveUYhVKy9BIupzmwK5Q/VFWsenqsxRddnhHP6SveWhQL/vFfl8bU3wfdtRYUJLjKxw6FwoEqHUs2JJq3A8IzHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773121676; c=relaxed/simple;
-	bh=BDHI3iOK37fgXlwcqrKkQw6QER82llhEJ3Ysjw8rpJg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O9+jRxiFaMTkMvMEdqrCVkD+hJmd1Qra2WZ7eYmv/brvcOtF2p976Nn2LjgsvfvuDYZymSVZtOh9Z4odb7bw5GOQt/Wgbz6YeuIt58+8ZsC0VPkH1wYI4qMJjSMje0oqOP+Ok82c1Cs8kPuyRjUSMmM+wx2X1qBvAe19TAhhTJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZX/vRr/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773121799; c=relaxed/simple;
+	bh=/QAlSwxCL3YeNfXvPolDNjg6x5KjVV4GoQBz310VDH4=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=rGJliK370TheXwFC2UQAknygci/Nq7mZwUVPV76sx9eX0JQuC+cN5XtakH4bOmu58BtuMxMIcdxThSV76lQe06YkVS5qht/GTOnS6wHI1zaOzYO+FlR8s+iXrO/xi51BXa1HKOnfDpI1dQGToP+KkTTIxBvQTYMgFzByOpdqYO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=esYbiJki; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZX/vRr/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F311BC19423;
-	Tue, 10 Mar 2026 05:47:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773121676;
-	bh=BDHI3iOK37fgXlwcqrKkQw6QER82llhEJ3Ysjw8rpJg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eZX/vRr/Z0WD7ihlYW9nPNKm7r0t3ug7YhlhBsDs0sLcvO4Ak202rjXJizrM7/VWu
-	 c7xWf56jTBpgJ+qn2IXoqzuD680HtDGilyNcEVFyltlrTytL8riGoIEhy0vtMc9y4T
-	 MICbnvDHV10cWgqa9F1jzsnxYTIXrLkG0K7llmHDCelQdxqQnHfaiWFc8jPuRi1bQa
-	 Khqhta0sDQcfuZV+Le3GhrcS9EgsGtIzy25iF7vZ2P/TMAjkChiETm4Pi3y8cUQeRk
-	 j2gEqtlrlEYFtnD1qdwPZs/KdR8CwZ/EtItcGl9lYhjPqMgES194uWOYUmr7JNWPeT
-	 TI8uvB90Gr3Gg==
-Date: Tue, 10 Mar 2026 16:47:50 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Kanchan Joshi <joshi.k@samsung.com>
-Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, jack@suse.cz,
-	cem@kernel.org, kbusch@kernel.org, axboe@kernel.dk,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	gost.dev@samsung.com
-Subject: Re: [PATCH v2 4/5] xfs: steer allocation using write stream
-Message-ID: <aa-whgDFL7h8-gIl@dread>
-References: <20260309052944.156054-1-joshi.k@samsung.com>
- <CGME20260309053434epcas5p308acff894c6735e382c0e5e1e737c9de@epcas5p3.samsung.com>
- <20260309052944.156054-5-joshi.k@samsung.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="esYbiJki"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2a871daa98fso93150815ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Mar 2026 22:49:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773121791; x=1773726591; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=4e252tvJ7wgS17IJwLKwEjk90VH1IZzHII9iIV6zg7Q=;
+        b=esYbiJkiOa6c8VSgEzfgVXJuvYifvl+0q4JtztlYusRJ2yS2o+IW53jcS1Gh7Sa1zJ
+         OK1NzXHwY3gIogRdojWGGeNpHbtxFoqU4oWOFwtZPapA6t2R/2bPe4q/1gjSqDbwE7j0
+         0ViKkLxcdNU0AGkFDlPVU5UxlQsE3w9cMrDzHiDXyrFgINheHP3vuYr3TFBRQBN1lpsa
+         inn3/rzY7u6S28iirMr8RCCredVxLiR93Qob8HqfiabeHwBi6v1QJtpVvPJ8av+nm2yt
+         mH7+TAstxnAl4qeK996HdDRIu6X6PG815P1PojaQH0DBYm2+prSgRapD9xT+o8KAzPdU
+         FiNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773121791; x=1773726591;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4e252tvJ7wgS17IJwLKwEjk90VH1IZzHII9iIV6zg7Q=;
+        b=fzJgNf16CGro9UzSnynJewIoZg3nR2eCUbHegbzRPOIZNCoUjrNtwchwmjPS6cvFMc
+         BbwjJCVCB4hjO74A9+V73YytEK0vmtn/vDNJ4jN8/HwAN9p5lqphYao4s6RjYzfsb5C+
+         XEm+QWE02DIuW2HL513uDR24oNwtLTTMvCEaUosf+F+IdZ8QaIcENonD4yeYur+Z2I85
+         T5scB2xA2E70MZUBrPuG+gIcR7anaqBZlPCPEG6aS9Olx9sjzOL0f9IXXmvym/uwAs2W
+         jmb0Y+cq4n3pWkz2n6iJxYDJNQ4rbjQzvbGVfvR+jd2yKKph0/S+3qDeB1nEr7mpfE77
+         /Vyg==
+X-Gm-Message-State: AOJu0YwO5ydMkBlW2baPotUA4EH4WGGt91pPMLJR8gI0kiA8zXnRHdw7
+	0mkYanoTSjGCwBrkBV15rUgvNcBHQYPDDv7DFpLJX4cCXGL4sYOt8jnv
+X-Gm-Gg: ATEYQzzqWkHJJrExJYd+saccnox39Kxy1IFIpncEqQSP8tU919jOX9HCnc8n0v0yADJ
+	Bnu//PKJGRh0BhyHKZcDnOeJpgTbzUnT54kuBhxVEM//bw3ZYk96emuhTXFQcKwlqYA9qFf+Gqf
+	KLNj9gHWLrsaw4a/Cu34F5s4OFeTgZCzg3Zq6IM7ZECBn+8ZJ4AK2vUd148vNE/tEYCKO1F+vcK
+	lPt9upxWKLD690YznOS97fo6KxkRKh5edfv+Ju+7Pr3c65GKMgzon3UNZvCP5V2Tep5uTGUZ1XB
+	lE/f1gl1Y655mrPFJVXxEj4m8MHdNHvsV0o3WWB37oO83f8Jus5SM8qXuZNwyvdNyaSNc2+JiOI
+	pjR6JXulEgd2k3VsRttxSvPhaKTcR+LITdtinRKCJaSn+Yy8vl9bjmeKnRvyhGhkc0ezeNijf1u
+	iNZFwDdtjdHRnOC7BMayNetQ==
+X-Received: by 2002:a17:902:ea02:b0:2ae:7ed6:46e3 with SMTP id d9443c01a7336-2ae824441d8mr137516745ad.27.1773121791358;
+        Mon, 09 Mar 2026 22:49:51 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ae83e58592sm187181675ad.14.2026.03.09.22.49.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Mar 2026 22:49:50 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu, p.raghav@samsung.com, andres@anarazel.de, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 2/3] iomap: Enable stable writes for RWF_WRITETHROUGH inodes
+In-Reply-To: <20260310035719.GI1105363@frogsfrogsfrogs>
+Date: Tue, 10 Mar 2026 10:55:04 +0530
+Message-ID: <4imouuhb.ritesh.list@gmail.com>
+References: <cover.1773076216.git.ojaswin@linux.ibm.com> <3704b81046b11f8b8da0367c7c8ad8767f42e5df.1773076216.git.ojaswin@linux.ibm.com> <20260310035719.GI1105363@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260309052944.156054-5-joshi.k@samsung.com>
 
-On Mon, Mar 09, 2026 at 10:59:43AM +0530, Kanchan Joshi wrote:
-> When write stream is set on the file, override the default
-> directory-locality heuristic with a new heuristic that maps
-> available AGs into streams.
+"Darrick J. Wong" <djwong@kernel.org> writes:
+
+> On Mon, Mar 09, 2026 at 11:04:32PM +0530, Ojaswin Mujoo wrote:
+>> Currently, RWF_WRITETHROUGH writes wait for writeback to complete
+>> on a folio before performing the writethrough. This serializes
+>> writethrough with each other and the writeback path. However, it is also
+>> desirable have similar guarantees between RWF_WRITETHROUGH and non
+>> writethrough writes.
+>> 
+>> Hence, ensure stable writes are enabled on an inode's mapping as
+>> long as a writethrough write is ongoing. This way, all paths will
+>> wait for RWF_WRITETHROUGH to complete on a folio before proceeding.
+>> 
+>> To track inflight writethrough writes, we use an atomic counter in the
+>> inode->i_mapping. This struct was chosen because (i) writethrough is an
+>> operation on the folio and (ii) we don't want to add bloat to struct
+>> inode.
+
+Now I am also questioning the need of this counter.
+If mapping has AS_STABLE_WRITES bit set, then that means the
+inode->mapping is going through stable writes until that bit is
+cleared. And since in future we are going to add support of async
+buffered write-through, so the stable writes bit should get cleared in
+the completion path (like how it is done now.) 
+
 >
-> Isolating distinct write streams into dedicated allocation groups helps
-> in reducing the block interleaving of concurrent writers. Keeping these
-> streams spatially separated reduces AGF lock contention and logical file
-> fragmentation.
+> What if we just set it whenever someone successfully initiates a
+> RWF_WRITETHROUGH write?  Then we wouldn't need all this atomic counter
+> machinery.
+>
 
-a.k.a. the XFS filestreams allocator.
+I agree. If we set the mapping as stable before initiating
+iomap_write_begin() itself, then we don't need this atomic counter.
 
-i.e. we already have an allocator that performs this exact locality
-mapping. See xfs_inode_is_filestream() and the allocator code path
-that goes this way:
+Maybe, we can set it in iomap_file_writethrough_write() itself
+(we have mapping available from iocb).
 
-xfs_bmap_btalloc()
-  xfs_bmap_btalloc_filestreams()
-    xfs_filestream_select_ag()
 
-Please integrate this write stream mapping functionality into that
-allocator rather than hacking a new, almost identical allocator
-policy into XFS.
+> Also: What if some filesystem (not xfs, obviously) finds a need to
+> change the stablepages bit while there might be writethrough writes in
+> progress?
 
-filestreams currently uses the parent inode number as the stream ID
-and maps that to an AG. It should be relatively trivial to use the
-ip->i_write_stream as the stream ID instead of the parent inode.
+Is there a usecase where this can happen (just curious)?
 
-> If AGs are fewer than write streams, write streams are distributed into
-> available AGs in round robin fashion.
-> If not, available AGs are partitioned into write streams. Since each
-> write stream maps to a partition of multiple contiguous AGs, the inode hash
-> is used to choose the specific AG within the stream partition. This can
-> help with intra-stream concurency when multiple files are being written in
-> a single stream that has 2 or more AGs.
-> 
-> Example: 8 Allocation Groups, 4 Streams
-> Partition Size = 2 AGs per Stream
-> 
->    Stream 1 (ID: 1)         Stream 2 (ID: 2)         Streams 3 & 4
->  +---------+---------+    +---------+---------+    +-------------
->  |   AG0   |   AG1   |    |   AG2   |   AG3   |    |  AG4...AG7
->  +---------+---------+    +---------+---------+    +-------------
->       ^         ^              ^         ^
->       |         |              |         |
->       | File B (ino: 101)      | File D (ino: 201)
->       | 101 % 2 = 1 -> AG 1    | 201 % 2 = 1 -> AG 3
->       |                        |
->  File A (ino: 100)        File C (ino: 200)
->  100 % 2 = 0 -> AG 0      200 % 2 = 0 -> AG 2
-> 
-> If AGs can not be evenly distributed among streams, the last stream will
-> absorb the remaining AGs.
+> It's a little awkward to have a flag /and/ a counter; why not
+> change mapping_{set,clear}_stable_pages to inc and dec the counter and
+> base the test off that?
+>
 
-Yeah, this should all be hidden behind xfs_filestream_select_ag()
-when ip->i_write_stream is set....
+Yes, either ways, I agree that I don't see the need of an extra counter here.
 
-> Note that there are no hard boundaries; this only provides explicit
-> routing hint to xfs allocator so that it can group/isolate files in the way
-> application has decided to group/isolate. We still try to preserve file
-> contiguity, and the full space can be utilized even with a single stream.
-
-Yes, that's pretty much exactly what the filestreams allocator was
-designed to do. It's a whole lot more dynamic that what you are
-trying to do above and is not limited fixed AGs for streams - as
-soon as an AG is out of space, it will select the AG with the most
-free space for the stream and keep that relationship until that AG
-is out of space.
-
-IOWs, filestreams does not limit a stream to a fixed number of AGs.
-All it does is keep IO with the same stream ID in the same AG until
-the AG is full and, as much as possible, prevents multiple streams
-from using the same AG.
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+-ritesh
