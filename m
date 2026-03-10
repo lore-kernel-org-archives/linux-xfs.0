@@ -1,52 +1,52 @@
 Received: from pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.26.1.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7990331A065;
-	Tue, 10 Mar 2026 18:38:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5FAD31A07F;
+	Tue, 10 Mar 2026 18:38:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.26.1.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773167935; cv=none; b=jhdyr72mCUI5cmNyqTgPygMfZlv4xWtBDst9fiEsiqTgKJmrwINfn80Btbxuh0ysI2OblQoGrpvYiu60uVhNHmvduZJrw72xQaOv2S2rjEoamhvIItfpA48X7lUVLENPVjZjigSb2IBj0g7XEVHMrPVFzfJ0WzvmOxWDkagGBv8=
+	t=1773167936; cv=none; b=gCkPcmfAKl1CkqqHpFy0rD7kfpJ29ht8w5C9+hshJI6FnbALLbTpgPcatY+bOYM26A6Z0h8UKPvisVbocDwO0vxvqn+Udc4n3LHcnBtyzHaWNBVR9JL1MKd4XlVQoq6qd/7n4IqLp1ERtfE9j6E2WuoRnos+rfSgvtV6g2tpjjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773167935; c=relaxed/simple;
-	bh=HeqsfeBcTBt4ArfKV32ZtW3E86s8D5Uxvo1ghrvN2zo=;
+	s=arc-20240116; t=1773167936; c=relaxed/simple;
+	bh=rIVnGInd1Kc7Lfu07d1MuB7hupkdwmJcYNnvcOPk9Kk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ACOTyln0zeIBL4S3dNRDLeDwRbIdoW1k77AJyCY1Ee0/7rXeCtkHjhKoxekqTymd5GAMqef1+Cs7/gmU/nX3hXkXuSA6PM5tp73KIrEOur6oRrymyWjOKZqkHLla4scgQCz+NLI7G8+Tj3ZD32SXsZmQSnOsWmg+8A+JrxDl58E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=Lg/wj79U; arc=none smtp.client-ip=52.26.1.71
+	 MIME-Version:Content-Type; b=gR3j0jMk1nVPCxzLEjQO4yKfNCN052ezXOXtG7EIIg/TgUOLPyW+hXDDKiwe2Y1W6py3s6jJ+G84se2HwXsldBg3N0dAMNpMwcYvwtzj8ZA4KOXs97ukn6OMcgT3ZKyboTdfZ2p8i2+0kdcJgjDpplis/31mgREizUO7lUDCsaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=e8sroEZ0; arc=none smtp.client-ip=52.26.1.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="Lg/wj79U"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="e8sroEZ0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1773167934; x=1804703934;
+  t=1773167935; x=1804703935;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JtOydYU3WqE8Z2TOBVP6syGAXK8byl5NV2hYUJzJtXk=;
-  b=Lg/wj79UAHpAX+ITMKjZb/Jzsfm537R7rg2pMX2XJmsL0gox1ds0t9sk
-   I/m58Ww/YaT7WnSYvfcx81smDawVXb5GP4aziC0wEydeZRWzTaIo3LedI
-   Bufy7bKWrGGcHKVN41Vldps/dD6UXJGAE1h28vGnkE/8Zi0ipVM11Hb+u
-   /AeSfYl5HWXC2Lg7MxrDfrruNCZ+O+tq3n3F/FruU2G0aG17l4Q4kbXWE
-   qb1AU2HC8kC54aAshr3q/eqvg0dE7znbtQfW6DFPcL63VwuOKqLtPX8k3
-   gS2sUIXnopB6I+7F+THyZ4Kh8evLJpL9v6ineDhoLy2O+AsC7zO8MubSM
-   w==;
-X-CSE-ConnectionGUID: oeo/sL4gQqWEEvSO1v0gOQ==
-X-CSE-MsgGUID: bkRKWOB/QDGgDahUeXi26Q==
+  bh=5xv1p9eU47NVp3o9CONDiQJ1V9HKJVb9C2TnW6MdRvY=;
+  b=e8sroEZ0Yb6QlVv2DcaYqL6adc/OZnm8YNtvCtEaJ3qk3PIBQXBflR5F
+   buUStUSJcLvyv8L50tu5lCZUe7bGxZmB63qz12lE+mqmTPQ2ED7BMDINq
+   ilhKMyvckIferjQCDVaq5oFCWe6w9a62EC82Dx59Ip8ef0EX64YVZ+UI4
+   QTW969suaAPotpB0O6tL/ptAvvyBws1zFDRyFih+k45fwen86anOKow35
+   TQzOZ3VXlO9AJ+hHu/BJQonW67ws8J4LH31pU4UihVw0VinKVb1wEFoA5
+   GWiwuSzBAO01uDDqTOHbou/3qPKB1gf2ofwCezGodQPoMK37VV3NbvTA9
+   Q==;
+X-CSE-ConnectionGUID: Zssv5p6xQ5qJrtvDYpksNw==
+X-CSE-MsgGUID: 964qTTVhSkul/FQ5HOYJYA==
 X-IronPort-AV: E=Sophos;i="6.23,112,1770595200"; 
-   d="scan'208";a="14738389"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:38:50 +0000
-Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:3067]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.152:2525] with esmtp (Farcaster)
- id 08a1a1eb-2d27-4c44-9dbf-ad6240b37571; Tue, 10 Mar 2026 18:38:50 +0000 (UTC)
-X-Farcaster-Flow-ID: 08a1a1eb-2d27-4c44-9dbf-ad6240b37571
+   d="scan'208";a="14738412"
+Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
+  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:38:54 +0000
+Received: from EX19MTAUWA001.ant.amazon.com [205.251.233.236:23881]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.4.108:2525] with esmtp (Farcaster)
+ id d3e8d478-92a2-4f29-b065-91f9d57ca7df; Tue, 10 Mar 2026 18:38:54 +0000 (UTC)
+X-Farcaster-Flow-ID: d3e8d478-92a2-4f29-b065-91f9d57ca7df
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ EX19MTAUWA001.ant.amazon.com (10.250.64.217) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 18:38:50 +0000
+ Tue, 10 Mar 2026 18:38:54 +0000
 Received: from c889f3b07a0a.amazon.com (10.106.82.15) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 18:38:48 +0000
+ Tue, 10 Mar 2026 18:38:52 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
 To: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>
 CC: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster
@@ -54,9 +54,9 @@ CC: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster
 	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>,
 	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
 	<stable@vger.kernel.org>
-Subject: [PATCH v4 1/4] xfs: stop reclaim before pushing AIL during unmount
-Date: Tue, 10 Mar 2026 18:38:37 +0000
-Message-ID: <20260310183835.89827-7-ytohnuki@amazon.com>
+Subject: [PATCH v4 2/4] xfs: avoid dereferencing log items after push callbacks
+Date: Tue, 10 Mar 2026 18:38:38 +0000
+Message-ID: <20260310183835.89827-8-ytohnuki@amazon.com>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20260310183835.89827-6-ytohnuki@amazon.com>
 References: <20260310183835.89827-6-ytohnuki@amazon.com>
@@ -71,17 +71,16 @@ X-ClientProxiedBy: EX19D036UWC002.ant.amazon.com (10.13.139.242) To
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-The unmount sequence in xfs_unmount_flush_inodes() pushed the AIL while
-background reclaim and inodegc are still running. This is broken
-independently of any use-after-free issues - background reclaim and
-inodegc should not be running while the AIL is being pushed during
-unmount, as inodegc can dirty and insert inodes into the AIL during the
-flush, and background reclaim can race to abort and free dirty inodes.
+After xfsaild_push_item() calls iop_push(), the log item may have been
+freed if the AIL lock was dropped during the push. Background inode
+reclaim or the dquot shrinker can free the log item while the AIL lock
+is not held, and the tracepoints in the switch statement dereference
+the log item after iop_push() returns.
 
-Reorder xfs_unmount_flush_inodes() to stop inodegc and cancel background
-reclaim before pushing the AIL. Stop inodegc before cancelling
-m_reclaim_work because the inodegc worker can re-queue m_reclaim_work
-via xfs_inodegc_set_reclaimable.
+Fix this by capturing the log item type, flags, and LSN before calling
+xfsaild_push_item(), and introducing a new xfs_ail_push_class trace
+event class that takes these pre-captured values and the ailp pointer
+instead of the log item pointer.
 
 Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
 Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
@@ -89,36 +88,146 @@ Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
 Cc: <stable@vger.kernel.org> # v5.9
 Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
 ---
- fs/xfs/xfs_mount.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_trace.h     | 36 ++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trans_ail.c | 26 +++++++++++++++++++-------
+ 2 files changed, 51 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9c295abd0a0a..ef1ea8a1238c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -608,8 +608,9 @@ xfs_unmount_check(
-  * have been retrying in the background.  This will prevent never-ending
-  * retries in AIL pushing from hanging the unmount.
-  *
-- * Finally, we can push the AIL to clean all the remaining dirty objects, then
-- * reclaim the remaining inodes that are still in memory at this point in time.
-+ * Stop inodegc and background reclaim before pushing the AIL so that they
-+ * are not running while the AIL is being flushed. Then push the AIL to
-+ * clean all the remaining dirty objects and reclaim the remaining inodes.
-  */
- static void
- xfs_unmount_flush_inodes(
-@@ -621,9 +622,9 @@ xfs_unmount_flush_inodes(
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 813e5a9f57eb..0e994b3f768f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -56,6 +56,7 @@
+ #include <linux/tracepoint.h>
  
- 	xfs_set_unmounting(mp);
+ struct xfs_agf;
++struct xfs_ail;
+ struct xfs_alloc_arg;
+ struct xfs_attr_list_context;
+ struct xfs_buf_log_item;
+@@ -1650,16 +1651,43 @@ TRACE_EVENT(xfs_log_force,
+ DEFINE_EVENT(xfs_log_item_class, name, \
+ 	TP_PROTO(struct xfs_log_item *lip), \
+ 	TP_ARGS(lip))
+-DEFINE_LOG_ITEM_EVENT(xfs_ail_push);
+-DEFINE_LOG_ITEM_EVENT(xfs_ail_pinned);
+-DEFINE_LOG_ITEM_EVENT(xfs_ail_locked);
+-DEFINE_LOG_ITEM_EVENT(xfs_ail_flushing);
+ DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_mark);
+ DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_skip);
+ DEFINE_LOG_ITEM_EVENT(xfs_cil_whiteout_unpin);
+ DEFINE_LOG_ITEM_EVENT(xlog_ail_insert_abort);
+ DEFINE_LOG_ITEM_EVENT(xfs_trans_free_abort);
  
--	xfs_ail_push_all_sync(mp->m_ail);
- 	xfs_inodegc_stop(mp);
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	xfs_ail_push_all_sync(mp->m_ail);
- 	xfs_reclaim_inodes(mp);
- 	xfs_health_unmount(mp);
- 	xfs_healthmon_unmount(mp);
++DECLARE_EVENT_CLASS(xfs_ail_push_class,
++	TP_PROTO(struct xfs_ail *ailp, uint type, unsigned long flags, xfs_lsn_t lsn),
++	TP_ARGS(ailp, type, flags, lsn),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(uint, type)
++		__field(unsigned long, flags)
++		__field(xfs_lsn_t, lsn)
++	),
++	TP_fast_assign(
++		__entry->dev = ailp->ail_log->l_mp->m_super->s_dev;
++		__entry->type = type;
++		__entry->flags = flags;
++		__entry->lsn = lsn;
++	),
++	TP_printk("dev %d:%d lsn %d/%d type %s flags %s",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  CYCLE_LSN(__entry->lsn), BLOCK_LSN(__entry->lsn),
++		  __print_symbolic(__entry->type, XFS_LI_TYPE_DESC),
++		  __print_flags(__entry->flags, "|", XFS_LI_FLAGS))
++)
++
++#define DEFINE_AIL_PUSH_EVENT(name) \
++DEFINE_EVENT(xfs_ail_push_class, name, \
++	TP_PROTO(struct xfs_ail *ailp, uint type, unsigned long flags, xfs_lsn_t lsn), \
++	TP_ARGS(ailp, type, flags, lsn))
++DEFINE_AIL_PUSH_EVENT(xfs_ail_push);
++DEFINE_AIL_PUSH_EVENT(xfs_ail_pinned);
++DEFINE_AIL_PUSH_EVENT(xfs_ail_locked);
++DEFINE_AIL_PUSH_EVENT(xfs_ail_flushing);
++
+ DECLARE_EVENT_CLASS(xfs_ail_class,
+ 	TP_PROTO(struct xfs_log_item *lip, xfs_lsn_t old_lsn, xfs_lsn_t new_lsn),
+ 	TP_ARGS(lip, old_lsn, new_lsn),
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 923729af4206..63266d31b514 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -365,6 +365,12 @@ xfsaild_resubmit_item(
+ 	return XFS_ITEM_SUCCESS;
+ }
+ 
++/*
++ * Push a single log item from the AIL.
++ *
++ * @lip may have been released and freed by the time this function returns,
++ * so callers must not dereference the log item afterwards.
++ */
+ static inline uint
+ xfsaild_push_item(
+ 	struct xfs_ail		*ailp,
+@@ -505,7 +511,10 @@ xfsaild_push(
+ 
+ 	lsn = lip->li_lsn;
+ 	while ((XFS_LSN_CMP(lip->li_lsn, ailp->ail_target) <= 0)) {
+-		int	lock_result;
++		int		lock_result;
++		uint		type = lip->li_type;
++		unsigned long	flags = lip->li_flags;
++		xfs_lsn_t	item_lsn = lip->li_lsn;
+ 
+ 		if (test_bit(XFS_LI_FLUSHING, &lip->li_flags))
+ 			goto next_item;
+@@ -514,14 +523,17 @@ xfsaild_push(
+ 		 * Note that iop_push may unlock and reacquire the AIL lock.  We
+ 		 * rely on the AIL cursor implementation to be able to deal with
+ 		 * the dropped lock.
++		 *
++		 * The log item may have been freed by the push, so it must not
++		 * be accessed or dereferenced below this line.
+ 		 */
+ 		lock_result = xfsaild_push_item(ailp, lip);
+ 		switch (lock_result) {
+ 		case XFS_ITEM_SUCCESS:
+ 			XFS_STATS_INC(mp, xs_push_ail_success);
+-			trace_xfs_ail_push(lip);
++			trace_xfs_ail_push(ailp, type, flags, item_lsn);
+ 
+-			ailp->ail_last_pushed_lsn = lsn;
++			ailp->ail_last_pushed_lsn = item_lsn;
+ 			break;
+ 
+ 		case XFS_ITEM_FLUSHING:
+@@ -537,22 +549,22 @@ xfsaild_push(
+ 			 * AIL is being flushed.
+ 			 */
+ 			XFS_STATS_INC(mp, xs_push_ail_flushing);
+-			trace_xfs_ail_flushing(lip);
++			trace_xfs_ail_flushing(ailp, type, flags, item_lsn);
+ 
+ 			flushing++;
+-			ailp->ail_last_pushed_lsn = lsn;
++			ailp->ail_last_pushed_lsn = item_lsn;
+ 			break;
+ 
+ 		case XFS_ITEM_PINNED:
+ 			XFS_STATS_INC(mp, xs_push_ail_pinned);
+-			trace_xfs_ail_pinned(lip);
++			trace_xfs_ail_pinned(ailp, type, flags, item_lsn);
+ 
+ 			stuck++;
+ 			ailp->ail_log_flush++;
+ 			break;
+ 		case XFS_ITEM_LOCKED:
+ 			XFS_STATS_INC(mp, xs_push_ail_locked);
+-			trace_xfs_ail_locked(lip);
++			trace_xfs_ail_locked(ailp, type, flags, item_lsn);
+ 
+ 			stuck++;
+ 			break;
 -- 
 2.50.1
 
