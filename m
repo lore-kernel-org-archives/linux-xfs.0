@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00B52C11E8
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:47:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9799B320A04
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:47:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114420; cv=none; b=O8wzkbtJCV6LJaSNz0meCn3jtxx4GadtYlWXn8XVUxdKP/zVawSCRhCP6yk6Xg6/gHcC3+7pjgKXGwa6YAWxraMbBBjCsUVxFh6OPzOexeLqjV689BasUGdvF9SO65Lfjoex+ONPFm4V/xelVrO/h7BbNv4Oum7LDXe0R13Bgbk=
+	t=1773114436; cv=none; b=IUZNqIlY+IzrVQxWcdUGTxyvUCzbrqc7qxFs9dC8y8HEe6ZP8ExT2NGpm/6eld6L2k64J3HYr/yQ8EpH3zo/GbVDq6p1LhoHGd9aXjhmOZFSOc8miRq5h0kpoTHitAvMwHL57l6dkLsEnq3Ihim/byZiKVSkU8iEqt2kfZvSSPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114420; c=relaxed/simple;
-	bh=AJe2UXbHH2vrFuhvOWMCLrlkFHZPjOimJEJGW/R19vQ=;
+	s=arc-20240116; t=1773114436; c=relaxed/simple;
+	bh=QjN+IagLzdj505Y4eK1hIC0fXsgtx0I64ojtzXGnYHc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uSfVkot3s2o8an1raz9dM9itRODhlAUK062qd7FL3hoBm/k5XZ/PvGNNhDWgpitOGOHTqCJmw30Zv9hVAE2EH1dtrHCAPq1Cinw1vNR+iYDDHEp7I4JhW1iADR2EWd9SrjS9K7r561bt1yJHvJWBh6Dp7kZWOyxGh2eMA+KdB5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dl7OKIRm; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=eNLp/Q300m9rv88nRSiZ+lHJUDHaQQnFr6CSJbLwNgi+FuSbO9GTVYzLiD7GaQHrJjax0+Zpsu1U2qWwkDYy2+TjeAF3ikxu8FF2lOqg+BKUG6PU575aqbH3Oq2kq3+VF8UvrVqjz7wo8nANKqKWEsHkArfAsv824pz/9YuNbj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J9gZQMlO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dl7OKIRm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88906C4CEF7;
-	Tue, 10 Mar 2026 03:47:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J9gZQMlO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7930EC4CEF7;
+	Tue, 10 Mar 2026 03:47:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114420;
-	bh=AJe2UXbHH2vrFuhvOWMCLrlkFHZPjOimJEJGW/R19vQ=;
+	s=k20201202; t=1773114436;
+	bh=QjN+IagLzdj505Y4eK1hIC0fXsgtx0I64ojtzXGnYHc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Dl7OKIRmPv0Xx3gHN2PP+Ap4/skLOqTmLMAVPWm7dEL5YmQ31KCThuI/G2sJjIqjt
-	 9s0AWhpc3Q5OjMSXAhm2MMsSd59yK6L7ssLtEmkO0w8c76/1UaimgSiX9RqWsy6uSA
-	 3MiYk1mqkW55PZUPzPgdb17WFT9r4cGYwM3w5xkvM35b+gzIsNL8Kz78dGvW7EhPFF
-	 ay1uSLDvMU39BagRkWGWU73r3GkwEmzdYJ/6aDXuH5SBne2o2TnSRcLCf1K+aivZ09
-	 ROQBVmNLQjlLALLgHBgIQInZbX2zuNflK2iraTiiu0HOk/Iv79j0GD87rchxu01xy4
-	 qV/FVXVYxHytA==
-Date: Mon, 09 Mar 2026 20:46:59 -0700
-Subject: [PATCH 17/28] xfs_healer: run full scrub after lost corruption events
- or targeted repair failure
+	b=J9gZQMlOmDqvs3+2mRNdKzy6/UvA3TKnPV1/gcXD1Zthd6qbnZ2GfHt+OcWiNyLIe
+	 W+lllVgju5jF3YOJyK8boH8MailF/S3qoCnWX0jC5Z+DJT8ouDvcfbT72XVYfHcBNr
+	 +0ZawzoD1v3n85QjaHyix8RBG9QAUKLNSTzEFy8n5hI7yZWkPBGNt2eEbSk54DujyU
+	 9W0XMlch+0Gtz1N+RjllxuLTU1OEM+I7nCTmogtsKRNDTqD1fGoQ5IcJ7wpiF6QQFB
+	 qYCsfzRl82g/BJuRlpvuqDkOyyr3JiUcw/MZeF0dJvEQtj7fIPKMKegsBjvK3UGVXr
+	 8Ko2d5Q7m/L0A==
+Date: Mon, 09 Mar 2026 20:47:15 -0700
+Subject: [PATCH 18/28] xfs_healer: use getmntent to find moved filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177311401771.1183235.15406712424819057552.stgit@frogsfrogsfrogs>
+Message-ID: <177311401788.1183235.255744775409520037.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,320 +45,106 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we fail to perform a spot repair of metadata or the kernel tells us
-that it lost corruption events due to queue limits, initiate a full run
-of the online fsck service to try to fix the error.
+It's possible that a mounted filesystem can move mountpoints between the
+time of the initial mount (at which point xfs_healer starts) and when
+it actually wants to start a repair.  When this happens,
+weakhandle::mountpoint becomes obsolete and opening it will either fail
+with ENOENT or the handle revalidation will return ESTALE.
+
+However, we do still have a means to find the mounted filesystem -- the
+fsname parameter (aka the path to the data device at mount time).  This
+is record in /proc/mounts, which means that we can iterate getmntent to
+see if we can find the mount elsewhere.
+
+As documented a few patches ago, this would be easier if we had
+revocable fds that didn't pin mounts, but that's a very huge ask.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/xfs_healer.h  |    3 ++
- healer/Makefile      |    2 +
- healer/fsrepair.c    |   81 +++++++++++++++++++++++++++++++++++++++++++++-----
- healer/weakhandle.c  |   13 ++++++++
- healer/xfs_healer.c  |    7 ++++
- include/builddefs.in |    1 +
- scrub/Makefile       |    7 ++--
- 7 files changed, 102 insertions(+), 12 deletions(-)
+ healer/weakhandle.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 51 insertions(+), 4 deletions(-)
 
 
-diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
-index a2a46053928e33..e1370323bbd66a 100644
---- a/healer/xfs_healer.h
-+++ b/healer/xfs_healer.h
-@@ -72,6 +72,7 @@ void lookup_path(struct healer_ctx *ctx,
- int repair_metadata(struct healer_ctx *ctx, const struct hme_prefix *pfx,
- 		const struct xfs_health_monitor_event *hme);
- bool healer_can_repair(struct healer_ctx *ctx);
-+void run_full_repair(struct healer_ctx *ctx);
- 
- /* weakhandle.c */
- int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
-@@ -80,5 +81,7 @@ int weakhandle_reopen(struct weakhandle *wh, int *fd);
- void weakhandle_free(struct weakhandle **whp);
- int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
- 		char *path, size_t pathlen);
-+int weakhandle_instance_unit_name(struct weakhandle *wh, const char *template,
-+		char *unitname, size_t unitnamelen);
- 
- #endif /* XFS_HEALER_XFS_HEALER_H_ */
-diff --git a/healer/Makefile b/healer/Makefile
-index 60bc31004ed423..5c5f6951e0d399 100644
---- a/healer/Makefile
-+++ b/healer/Makefile
-@@ -19,6 +19,8 @@ xfs_healer.c
- HFILES = \
- xfs_healer.h
- 
-+CFLAGS+=-DXFS_SCRUB_SVCNAME=\"$(XFS_SCRUB_SVCNAME)\"
-+
- LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBURCU) $(LIBPTHREAD)
- LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
- LLDFLAGS = -static
-diff --git a/healer/fsrepair.c b/healer/fsrepair.c
-index 4534104f8a6ac1..9f8c128e395ebc 100644
---- a/healer/fsrepair.c
-+++ b/healer/fsrepair.c
-@@ -9,8 +9,14 @@
- #include "libfrog/fsgeom.h"
- #include "libfrog/workqueue.h"
- #include "libfrog/healthevent.h"
-+#include "libfrog/systemd.h"
- #include "xfs_healer.h"
- 
-+enum what_next {
-+	NEED_FULL_REPAIR,
-+	REPAIR_DONE,
-+};
-+
- /* Translate scrub output flags to outcome. */
- static enum repair_outcome from_repair_oflags(uint32_t oflags)
- {
-@@ -61,7 +67,7 @@ xfs_repair_metadata(
- }
- 
- /* React to a fs-domain corruption event by repairing it. */
--static void
-+static enum what_next
- try_repair_wholefs(
- 	struct healer_ctx			*ctx,
- 	const struct hme_prefix			*pfx,
-@@ -90,11 +96,16 @@ try_repair_wholefs(
- 		pthread_mutex_lock(&ctx->conlock);
- 		report_health_repair(pfx, hme, f->event_mask, outcome);
- 		pthread_mutex_unlock(&ctx->conlock);
-+
-+		if (outcome == REPAIR_FAILED)
-+			return NEED_FULL_REPAIR;
- 	}
-+
-+	return REPAIR_DONE;
- }
- 
- /* React to an ag corruption event by repairing it. */
--static void
-+static enum what_next
- try_repair_ag(
- 	struct healer_ctx			*ctx,
- 	const struct hme_prefix			*pfx,
-@@ -126,11 +137,16 @@ try_repair_ag(
- 		pthread_mutex_lock(&ctx->conlock);
- 		report_health_repair(pfx, hme, f->event_mask, outcome);
- 		pthread_mutex_unlock(&ctx->conlock);
-+
-+		if (outcome == REPAIR_FAILED)
-+			return NEED_FULL_REPAIR;
- 	}
-+
-+	return REPAIR_DONE;
- }
- 
- /* React to a rtgroup corruption event by repairing it. */
--static void
-+static enum what_next
- try_repair_rtgroup(
- 	struct healer_ctx			*ctx,
- 	const struct hme_prefix			*pfx,
-@@ -157,11 +173,16 @@ try_repair_rtgroup(
- 		pthread_mutex_lock(&ctx->conlock);
- 		report_health_repair(pfx, hme, f->event_mask, outcome);
- 		pthread_mutex_unlock(&ctx->conlock);
-+
-+		if (outcome == REPAIR_FAILED)
-+			return NEED_FULL_REPAIR;
- 	}
-+
-+	return REPAIR_DONE;
- }
- 
- /* React to a inode-domain corruption event by repairing it. */
--static void
-+static enum what_next
- try_repair_inode(
- 	struct healer_ctx			*ctx,
- 	const struct hme_prefix			*orig_pfx,
-@@ -204,7 +225,12 @@ try_repair_inode(
- 		pthread_mutex_lock(&ctx->conlock);
- 		report_health_repair(pfx, hme, f->event_mask, outcome);
- 		pthread_mutex_unlock(&ctx->conlock);
-+
-+		if (outcome == REPAIR_FAILED)
-+			return NEED_FULL_REPAIR;
- 	}
-+
-+	return REPAIR_DONE;
- }
- 
- /* Repair a metadata corruption. */
-@@ -214,6 +240,7 @@ repair_metadata(
- 	const struct hme_prefix			*pfx,
- 	const struct xfs_health_monitor_event	*hme)
- {
-+	enum what_next				what_next;
- 	int					repair_fd;
- 	int					ret;
- 
-@@ -227,19 +254,25 @@ repair_metadata(
- 
- 	switch (hme->domain) {
- 	case XFS_HEALTH_MONITOR_DOMAIN_FS:
--		try_repair_wholefs(ctx, pfx, repair_fd, hme);
-+		what_next = try_repair_wholefs(ctx, pfx, repair_fd, hme);
- 		break;
- 	case XFS_HEALTH_MONITOR_DOMAIN_AG:
--		try_repair_ag(ctx, pfx, repair_fd, hme);
-+		what_next = try_repair_ag(ctx, pfx, repair_fd, hme);
- 		break;
- 	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
--		try_repair_rtgroup(ctx, pfx, repair_fd, hme);
-+		what_next = try_repair_rtgroup(ctx, pfx, repair_fd, hme);
- 		break;
- 	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
--		try_repair_inode(ctx, pfx, repair_fd, hme);
-+		what_next = try_repair_inode(ctx, pfx, repair_fd, hme);
- 		break;
-+	default:
-+		what_next = REPAIR_DONE;
- 	}
- 
-+	/* Transform into a full repair if we failed to fix this item. */
-+	if (what_next == NEED_FULL_REPAIR)
-+		run_full_repair(ctx);
-+
- 	close(repair_fd);
- 	return 0;
- }
-@@ -259,3 +292,35 @@ healer_can_repair(
- 	ret = ioctl(ctx->mnt.fd, XFS_IOC_SCRUB_METADATA, &sm);
- 	return ret ? false : true;
- }
-+
-+/* Run a full repair of the filesystem using the background fsck service. */
-+void
-+run_full_repair(
-+	struct healer_ctx	*ctx)
-+{
-+	char			unitname[PATH_MAX];
-+	int			ret;
-+
-+	ret = weakhandle_instance_unit_name(ctx->wh, XFS_SCRUB_SVCNAME,
-+			unitname, PATH_MAX);
-+	if (ret) {
-+		fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-+				_("Could not determine xfs_scrub unit name."));
-+		return;
-+	}
-+
-+	/*
-+	 * Scrub could already be repairing something, so try to start the unit
-+	 * and be content if it's already running.
-+	 */
-+	ret = systemd_manage_unit(UM_START, unitname);
-+	if (ret) {
-+		fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
-+				_("Could not start xfs_scrub service unit"),
-+				unitname);
-+		return;
-+	}
-+
-+	printf("%s: %s\n", ctx->mntpoint, _("Full repairs in progress."));
-+	fflush(stdout);
-+}
 diff --git a/healer/weakhandle.c b/healer/weakhandle.c
-index 8950e0eb1e5a43..849aa2882700d4 100644
+index 849aa2882700d4..5df5207514e38e 100644
 --- a/healer/weakhandle.c
 +++ b/healer/weakhandle.c
-@@ -13,6 +13,7 @@
- #include "libfrog/workqueue.h"
- #include "libfrog/getparents.h"
- #include "libfrog/paths.h"
-+#include "libfrog/systemd.h"
- #include "xfs_healer.h"
- 
- struct weakhandle {
-@@ -199,3 +200,15 @@ weakhandle_getpath_for(
- 	close(mnt_fd);
- 	return ret;
+@@ -65,10 +65,14 @@ weakhandle_alloc(
+ 	return -1;
  }
-+
-+/* Compute the systemd instance unit name for this mountpoint. */
+ 
+-/* Reopen a file handle obtained via weak reference. */
+-int
+-weakhandle_reopen(
++/*
++ * Reopen a file handle obtained via weak reference, using the given path to a
++ * mount point.
++ */
++static int
++weakhandle_reopen_from(
+ 	struct weakhandle	*wh,
++	const char		*path,
+ 	int			*fd)
+ {
+ 	void			*hanp;
+@@ -78,7 +82,7 @@ weakhandle_reopen(
+ 
+ 	*fd = -1;
+ 
+-	mnt_fd = open(wh->mntpoint, O_RDONLY);
++	mnt_fd = open(path, O_RDONLY);
+ 	if (mnt_fd < 0)
+ 		return -1;
+ 
+@@ -102,6 +106,49 @@ weakhandle_reopen(
+ 	return -1;
+ }
+ 
++/* Reopen a file handle obtained via weak reference. */
 +int
-+weakhandle_instance_unit_name(
++weakhandle_reopen(
 +	struct weakhandle	*wh,
-+	const char		*template,
-+	char			*unitname,
-+	size_t			unitnamelen)
++	int			*fd)
 +{
-+	return systemd_path_instance_unit_name(template, wh->mntpoint,
-+			unitname, unitnamelen);
-+}
-diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index f4bee495979324..09b88c754a550c 100644
---- a/healer/xfs_healer.c
-+++ b/healer/xfs_healer.c
-@@ -138,6 +138,13 @@ handle_event(
- 		pthread_mutex_unlock(&ctx->conlock);
- 	}
- 
-+	/*
-+	 * If we didn't ask for all the metadata reports (including the healthy
-+	 * ones) and the kernel tells us it lost something, run the full scan.
-+	 */
-+	if (hme->type == XFS_HEALTH_MONITOR_TYPE_LOST && !ctx->everything)
-+		run_full_repair(ctx);
++	FILE			*mtab;
++	struct mntent		*mnt;
++	int			ret;
 +
- 	/* Initiate a repair if appropriate. */
- 	if (will_repair)
- 		repair_metadata(ctx, &pfx, hme);
-diff --git a/include/builddefs.in b/include/builddefs.in
-index bdba9cd9037900..3b52d1afd7031c 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -62,6 +62,7 @@ MKFS_CFG_DIR	= @datadir@/@pkg_name@/mkfs
- PKG_STATE_DIR	= @localstatedir@/lib/@pkg_name@
- 
- XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
-+XFS_SCRUB_SVCNAME=xfs_scrub@.service
- 
- CC		= @cc@
- BUILD_CC	= @BUILD_CC@
-diff --git a/scrub/Makefile b/scrub/Makefile
-index ff79a265762332..aee49bfce100e2 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -8,7 +8,6 @@ include $(builddefs)
- 
- SCRUB_PREREQS=$(HAVE_GETFSMAP)
- 
--scrub_svcname=xfs_scrub@.service
- scrub_media_svcname=xfs_scrub_media@.service
- 
- ifeq ($(SCRUB_PREREQS),yes)
-@@ -21,7 +20,7 @@ XFS_SCRUB_SERVICE_ARGS = -b -o autofsck
- ifeq ($(HAVE_SYSTEMD),yes)
- INSTALL_SCRUB += install-systemd
- SYSTEMD_SERVICES=\
--	$(scrub_svcname) \
-+	$(XFS_SCRUB_SVCNAME) \
- 	xfs_scrub_fail@.service \
- 	$(scrub_media_svcname) \
- 	xfs_scrub_media_fail@.service \
-@@ -123,7 +122,7 @@ xfs_scrub_all.timer: xfs_scrub_all.timer.in $(builddefs)
- $(XFS_SCRUB_ALL_PROG): $(XFS_SCRUB_ALL_PROG).in $(builddefs) $(TOPDIR)/libfrog/gettext.py
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
--		   -e "s|@scrub_svcname@|$(scrub_svcname)|g" \
-+		   -e "s|@scrub_svcname@|$(XFS_SCRUB_SVCNAME)|g" \
- 		   -e "s|@scrub_media_svcname@|$(scrub_media_svcname)|g" \
- 		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
- 		   -e "s|@stampfile@|$(XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP)|g" \
-@@ -137,7 +136,7 @@ $(XFS_SCRUB_ALL_PROG): $(XFS_SCRUB_ALL_PROG).in $(builddefs) $(TOPDIR)/libfrog/g
- xfs_scrub_fail: xfs_scrub_fail.in $(builddefs)
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
--		   -e "s|@scrub_svcname@|$(scrub_svcname)|g" \
-+		   -e "s|@scrub_svcname@|$(XFS_SCRUB_SVCNAME)|g" \
- 		   -e "s|@pkg_version@|$(PKG_VERSION)|g"  < $< > $@
- 	$(Q)chmod a+x $@
- 
++	/* First try reopening using the original mountpoint */
++	ret = weakhandle_reopen_from(wh, wh->mntpoint, fd);
++	if (!ret)
++		return 0;
++
++	/*
++	 * That didn't work, so now walk /proc/mounts to find a mount with the
++	 * same fsname (aka xfs data device path) as when we started.
++	 */
++	mtab = setmntent(_PATH_PROC_MOUNTS, "r");
++	if (!mtab)
++		return -1;
++
++	while ((mnt = getmntent(mtab)) != NULL) {
++		if (strcmp(mnt->mnt_type, "xfs"))
++			continue;
++		if (strcmp(mnt->mnt_fsname, wh->fsname))
++			continue;
++
++		ret = weakhandle_reopen_from(wh, mnt->mnt_dir, fd);
++		if (!ret)
++			break;
++	}
++
++	if (*fd < 0) {
++		errno = ESTALE;
++		ret = -1;
++	}
++
++	endmntent(mtab);
++	return ret;
++}
++
+ /* Tear down a weak handle */
+ void
+ weakhandle_free(
 
