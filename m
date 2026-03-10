@@ -1,85 +1,172 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5DBB1E2606
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 18:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F800346776
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 19:03:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773168984; cv=none; b=AGQUiVNa2vEd6xWFxfClqLfwO7+Y7CzHleUGHl8b9FO5gAmfAGCL873XLxvz8kxvOKVk4P+OOMufs5jn6YBHZ4W3ZTj2J/wwhA1rQTrBNpBQ2mAY6+4Ht5RlcxLwfE27juViNpI8+bsfedEk3xAGA864GdFla0GYbPnnsdvS+nM=
+	t=1773169432; cv=none; b=H9eZfROkjtp4RkndirRK8vvqMSta63ebqL1mCBjU0Pd3SJ1IEag8CXWXqSNneFJ/8j8F0nmmROUr1djIowtUZue4KA+ekJC5VaR8N2/nqawjJMSQHLEtRXsVDRj/x1K5Av4vtHOIhcuwEQy+Dr99dk04HfGUMj2r8B59mX3QWNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773168984; c=relaxed/simple;
-	bh=BYnM5b+3COAJGoGXQ5jT9MMVL7oglRAeZ+IOULD6pd4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZSTcJPQCWewSEgLfs0gma69HWfgYa9gJzroF/VPqaS4jrqUJ0JMvMkx93A35VFq6TX16WWIysgBnCcr8CwxYXjGPJ+Jc98auwo688jgQiw6N8Jpjup64/BEFdkwH6W8o1caYGZ5ZcBcRemoyMQBYofHKVsExtjiW3RyPJDXpVKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aI9zytPL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773169432; c=relaxed/simple;
+	bh=dlv00AgLM+KouvtSokdVKlP46ycLQjKEHfebwFemrBg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=EQouwkPzHowPMja/91xWe+GT5185pSOJh6eJ85CjQxbxVha17B2ZOfPDpoUvGhnpn5GhNsYbF3TXhLu5yvvqnB9F7klAKnksL93jXrSjmssrx3B15DrK4vQ88DUfQosdrCt5GLuMx+vfMmz/TIeHkuCJ9PKk/P68gCBF6xUGVew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=sOxX9Pe5; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aI9zytPL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77499C19423;
-	Tue, 10 Mar 2026 18:56:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773168983;
-	bh=BYnM5b+3COAJGoGXQ5jT9MMVL7oglRAeZ+IOULD6pd4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aI9zytPLJCHdFbmmN/zCjUtF/417+D2ZfGtl7uFKWdoM4lBI/u7pv4mdPaGaTJZQm
-	 pinK7F321e2dUcRnRXe1m5Z4vjFao6h283MmA21T5QwcU3wX3JgWc/OcL9D153BTlw
-	 Li8npr3ccyZ4QE07TbmBjrCzndvg5pvWnGo7VLgHdMP35taoULpeYNRf0i37Tran+9
-	 jtWw/K9oSQ/fxreb4p1IlUV6xrURnXPQ/mhFGEs5IUQGvqaqK41mstS4RhtwAecSjL
-	 +Wct1+ysbrthclzkSJu9W+rwy0jkrenV9pxs6j1OcV5NuQ51KYbU6Dc/cWvGb/o5TJ
-	 5092EEGk7ROHw==
-Date: Tue, 10 Mar 2026 11:56:22 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 19/28] xfs_healer: use statmount to find moved
- filesystems even faster
-Message-ID: <20260310185622.GT1105363@frogsfrogsfrogs>
-References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
- <177311401806.1183235.3840165745930552108.stgit@frogsfrogsfrogs>
- <aa_kSzpFeT7nuJeW@infradead.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="sOxX9Pe5"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260310190348epoutp0232ede5b5b71b92e7c8d952bc7e7bf274~bkDM-fpjk0531005310epoutp02k
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 19:03:48 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260310190348epoutp0232ede5b5b71b92e7c8d952bc7e7bf274~bkDM-fpjk0531005310epoutp02k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1773169428;
+	bh=RSII0xHq4bz2UU0P23lD0uAewQb3K85xxRg2UTCbBVM=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=sOxX9Pe5Jna37SeKBIHP9GhA7DOVsoMSLKHE90bYRsTm8podOUy6Gp0qHwZWEZ8pc
+	 tkSzuadq1aHEmEUPMWBlDsXMJ13+phZcXICR8D4rgXKfd3IBFe485Et0Lc7zaug48z
+	 q0XeZib6y/ycIRMzPYkaDGNbK7bn7h4hswhM1QVA=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20260310190346epcas5p226e65dec37b1a28903da42190b3d5b0e~bkDLvl6DH3114431144epcas5p2H;
+	Tue, 10 Mar 2026 19:03:46 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.94]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4fVjw15SbNz6B9m6; Tue, 10 Mar
+	2026 19:03:45 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260310190345epcas5p3177958f481ce13557a665c6f4223a022~bkDKYREoO0888908889epcas5p30;
+	Tue, 10 Mar 2026 19:03:45 +0000 (GMT)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260310190343epsmtip2d2e2e5624a38c4d0b330bd1963c5b029~bkDIu6Uv22357523575epsmtip2U;
+	Tue, 10 Mar 2026 19:03:43 +0000 (GMT)
+Message-ID: <7a4f9902-d87d-4032-9df0-efa807c6aade@samsung.com>
+Date: Wed, 11 Mar 2026 00:33:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aa_kSzpFeT7nuJeW@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/5] xfs: steer allocation using write stream
+To: Dave Chinner <dgc@kernel.org>
+Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, jack@suse.cz,
+	cem@kernel.org, kbusch@kernel.org, axboe@kernel.dk,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	gost.dev@samsung.com
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <aa-whgDFL7h8-gIl@dread>
+Content-Transfer-Encoding: 7bit
+X-CMS-MailID: 20260310190345epcas5p3177958f481ce13557a665c6f4223a022
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260309053434epcas5p308acff894c6735e382c0e5e1e737c9de
+References: <20260309052944.156054-1-joshi.k@samsung.com>
+	<CGME20260309053434epcas5p308acff894c6735e382c0e5e1e737c9de@epcas5p3.samsung.com>
+	<20260309052944.156054-5-joshi.k@samsung.com> <aa-whgDFL7h8-gIl@dread>
 
-On Tue, Mar 10, 2026 at 02:28:43AM -0700, Christoph Hellwig wrote:
-> > 
-> > However, this is really slow if there are a lot of filesystems because
-> > we end up wading through a lot of irrelevant information.  However,
-> > statmount() can help us here because as of Linux 7.0 we can open the
-> > passed-in path at startup, call statmount() on it to retrieve the
-> > mnt_id, and then call it again later with that same mnt_id to find the
-> > mountpoint.  Luckily xfs_healthmon didn't get merged until 7.0 so it's
-> > more or less guaranteed to be there if XFS_IOC_HEALTH_MONITOR succeeds.
-> > 
-> > Obviously if this doesn't work, we can fall back to the slow walk.
+On 3/10/2026 11:17 AM, Dave Chinner wrote:
+>> When write stream is set on the file, override the default
+>> directory-locality heuristic with a new heuristic that maps
+>> available AGs into streams.
+>>
+>> Isolating distinct write streams into dedicated allocation groups helps
+>> in reducing the block interleaving of concurrent writers. Keeping these
+>> streams spatially separated reduces AGF lock contention and logical file
+>> fragmentation.
+> a.k.a. the XFS filestreams allocator.
+
+Yes, but there is difference between what I am doing and what is 
+present. Let me write that in the end.
 > 
-> Can we kill the fallback and instead just have a good error message
-> if someone messes up their backports?
+> i.e. we already have an allocator that performs this exact locality
+> mapping. See xfs_inode_is_filestream() and the allocator code path
+> that goes this way:
+> 
+> xfs_bmap_btalloc()
+>    xfs_bmap_btalloc_filestreams()
+>      xfs_filestream_select_ag()
+> 
+> Please integrate this write stream mapping functionality into that
+> allocator rather than hacking a new, almost identical allocator
+> policy into XFS.
+> 
+> filestreams currently uses the parent inode number as the stream ID
+> and maps that to an AG. It should be relatively trivial to use the
+> ip->i_write_stream as the stream ID instead of the parent inode.
 
-Yes we could, though the risk with dropping the previous patch is that
-someone could introduce a third-party seccomp policy that forbids
-statmount() even on kernels that support it, and then xfs_healer would
-just fail if the mount moves.
+Yeah, should be possible. Will try that in V3.
 
-That would be totally stupid because the only reason you'd encounter
-that is because either (a) your distro screwed up their security policy
-or (b) your paranoid IT department deploys an Enterprise Security Model
-written by a ven-duh who hasn't gotten around to evaluating the new
-syscalls and blocks anything they've not read about.
+>> If AGs are fewer than write streams, write streams are distributed into
+>> available AGs in round robin fashion.
+>> If not, available AGs are partitioned into write streams. Since each
+>> write stream maps to a partition of multiple contiguous AGs, the inode hash
+>> is used to choose the specific AG within the stream partition. This can
+>> help with intra-stream concurency when multiple files are being written in
+>> a single stream that has 2 or more AGs.
+>>
+>> Example: 8 Allocation Groups, 4 Streams
+>> Partition Size = 2 AGs per Stream
+>>
+>>     Stream 1 (ID: 1)         Stream 2 (ID: 2)         Streams 3 & 4
+>>   +---------+---------+    +---------+---------+    +-------------
+>>   |   AG0   |   AG1   |    |   AG2   |   AG3   |    |  AG4...AG7
+>>   +---------+---------+    +---------+---------+    +-------------
+>>        ^         ^              ^         ^
+>>        |         |              |         |
+>>        | File B (ino: 101)      | File D (ino: 201)
+>>        | 101 % 2 = 1 -> AG 1    | 201 % 2 = 1 -> AG 3
+>>        |                        |
+>>   File A (ino: 100)        File C (ino: 200)
+>>   100 % 2 = 0 -> AG 0      200 % 2 = 0 -> AG 2
+>>
+>> If AGs can not be evenly distributed among streams, the last stream will
+>> absorb the remaining AGs.
+> Yeah, this should all be hidden behind xfs_filestream_select_ag()
+> when ip->i_write_stream is set....
 
-I'd rather keep the getmntent stuff around since that's the classic way
-linux programs (including xfsprogs) have handled scanning the mount
-tables.  But if you feel strongly about not having getmntent it's not
-hard to pull it out.
+Added in the TBD list.
 
-On a practical note: We have 5 weeks more to wait to be sure that
-STATMOUNT_BY_FD actually makes it into a released kernel.  Seeing as
-xfsprogs 7.0 won't get tagged until well after that, we don't have to
-decide to strip out getmntent anytime soon.
+>> Note that there are no hard boundaries; this only provides explicit
+>> routing hint to xfs allocator so that it can group/isolate files in the way
+>> application has decided to group/isolate. We still try to preserve file
+>> contiguity, and the full space can be utilized even with a single stream.
+> Yes, that's pretty much exactly what the filestreams allocator was
+> designed to do. It's a whole lot more dynamic that what you are
+> trying to do above and is not limited fixed AGs for streams - as
+> soon as an AG is out of space, it will select the AG with the most
+> free space for the stream and keep that relationship until that AG
+> is out of space.
+> 
+> IOWs, filestreams does not limit a stream to a fixed number of AGs.
+> All it does is keep IO with the same stream ID in the same AG until
+> the AG is full and, as much as possible, prevents multiple streams
+> from using the same AG.
 
---D
+
+filestream: 1 filestream == 1AG, at a time. And that can cause AGF lock 
+contention on high-concurrency NVMe workloads i.e., when multiple 
+threads writing to different files in same filestream.
+
+What I am doing here with new write stream has two aspects:
+
+(a) inter stream concurrency: multiple threads writing to different 
+files in different streams are not going to run into AGF lock.
+
+(b) intra stream concurrency: multiple threads writing to different 
+files in single stream will also face 'reduced' contention if each 
+stream is a collection of AG and we are spreading the load (with inode 
+hash). Therefore, each stream is partitioned into a group of AGs.
+
+Also, with filestream we can't do cross-directory grouping, of 
+file-level granularity. Write stream is a more explicit model. 
+Application decides what files are to be spatially separated/grouped and 
+what kind of concurrency buckets should be chosen for its N threads/files.
+
