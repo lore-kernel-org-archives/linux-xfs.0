@@ -1,42 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC173D0906
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 20:06:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B53D93CA487;
+	Tue, 10 Mar 2026 20:39:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773173188; cv=none; b=fijmjPJYRSGZg4Y7zXRJ/FK/wRsW+OLBsRgDsk0DF5QIxXoHo+vBLTWznD0Lt4IQ8Ritw7J+Eyux2GmQHkEzBMhh6kXFvoc5+1bNu+E4T+OVCZjG1yQi7pmgrf/uzvy0MZ7vCiCVitNOSME50x3lxam3XSxIy5sSWRksKDjDQ4E=
+	t=1773175185; cv=none; b=qE3yOgaHdJTYDkgggikfXwFgM68TFpyUVS1h61uLnN5CAWlmpr3tQaxoxuuYlKiYZ32wdp4MXAuqy49H1sqHzPrJPk2n4p7SIt7FsdbdXOFzfGQ3SLDicVgcYsOjL7jzafEhbT40756vGYkAp4KhnMPaj/JCIQnUy6MDkhZoB9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773173188; c=relaxed/simple;
-	bh=RFRL2YT7EQhKFxjwJgN9nWW75kqD7nFc/B2SZt14Crs=;
+	s=arc-20240116; t=1773175185; c=relaxed/simple;
+	bh=lt1/kxTCNg5v0pkAV3T5RZBbwlgFYhCBNmjK4LavN8I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T/oIrmH0UHWubMVTsgmjX1RviLp3uYy9838nPafC+L1H6RQgpezT4wufsSXat/D6r6rJyMqmhftPRcvOvy4AynesaHIoFowqxCBmqk7BVxaMpJLCfQOmpCtNOJcKdExn+HJiGMmQBt16A+l+XxisJsl14ZAbKdap8TJHYu33nXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YF2auV/k; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=r4NFSwE3pMb78KkjQKYz6pMFJmHNfkIRc9dqSE2qjnXTW/pGO0sqkq4a5NlntvcKTfKuBoFBE23s4rmgUxfNJPx5CQvSeqjTxgVnX/4dr+pvPB2LkbsOiYJMNWDFcUphRaKHibFcf09ixNP6rtkhW+emvv8MUWHz3dhz+KHlTJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cnZgSk7/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YF2auV/k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98BB4C2BCB2;
-	Tue, 10 Mar 2026 20:06:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cnZgSk7/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B4DBC19423;
+	Tue, 10 Mar 2026 20:39:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773173187;
-	bh=RFRL2YT7EQhKFxjwJgN9nWW75kqD7nFc/B2SZt14Crs=;
+	s=k20201202; t=1773175185;
+	bh=lt1/kxTCNg5v0pkAV3T5RZBbwlgFYhCBNmjK4LavN8I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YF2auV/k9sQ0s+H1Bm7jUxPS5T8i64r+opWY3zwpHEp1AWi5eV0s/sX7foQiLv8Wo
-	 w53zfOfwD8O6p0BLB71z4ORCu5dMByIu5xkikUWLF7xoCTCOi9Nlz9phF4P1ZqyrBI
-	 hePL5Ogklw1+UcEMbC2wn5y+u+7jTckhnoFWZEm1bx07O6LUMtLwMygFTYm3E/f6Be
-	 EVTRtDwF6G6HdHVEVNreHVznDb0gw44pbZTBCXNJ+qXwxtw7EkY7LLd+tgJGI6NLhZ
-	 c3PRTs/K/6iU2gbEbuJqYwOhrng0wXGexUOrtNHZ35kJ4/QJdtd6VorFwPP9Na9hBP
-	 T+yoYPIHYtR9g==
-Date: Tue, 10 Mar 2026 13:06:26 -0700
+	b=cnZgSk7/fvXTT1Sm6fsvYQ/KJyrZHRcrpBBAa+72nZiTT2VLRSAtCytOJvAm3USqh
+	 BGe18+B8a+yMVvpNeidjef9g618170K5eSaFlaV3NZaleSrcZq4SpC5+OwmMhiId6W
+	 FFsxCwXBz7ZSSnEZHyffwTXNVILudTC+3kJOdQB1oKmH+gSD3kHggIlor9ztSItzgC
+	 NHf5jsiIxMvrfgQul977mci+dcVGVJjM5/4jVqCQMYPvfrNeSQAjoQM2y1SS58HFs+
+	 GzmO8jXUvoR9gM3PTiBTi8lvvwUImuotdpaBgHb+NYtJX6WWwzogUut5/c0yj6dmSY
+	 THqAfjo1Ll42w==
+Date: Tue, 10 Mar 2026 13:39:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 19/28] xfs_healer: use statmount to find moved
- filesystems even faster
-Message-ID: <20260310200626.GU1105363@frogsfrogsfrogs>
-References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
- <177311401806.1183235.3840165745930552108.stgit@frogsfrogsfrogs>
- <aa_kSzpFeT7nuJeW@infradead.org>
- <20260310185622.GT1105363@frogsfrogsfrogs>
+To: Yuto Ohnuki <ytohnuki@amazon.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	"Darrick J . Wong" <darrick.wong@oracle.com>,
+	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v4 1/4] xfs: stop reclaim before pushing AIL during
+ unmount
+Message-ID: <20260310203944.GV1105363@frogsfrogsfrogs>
+References: <20260310183835.89827-6-ytohnuki@amazon.com>
+ <20260310183835.89827-7-ytohnuki@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,79 +48,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260310185622.GT1105363@frogsfrogsfrogs>
+In-Reply-To: <20260310183835.89827-7-ytohnuki@amazon.com>
 
-On Tue, Mar 10, 2026 at 11:56:22AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 10, 2026 at 02:28:43AM -0700, Christoph Hellwig wrote:
-> > > 
-> > > However, this is really slow if there are a lot of filesystems because
-> > > we end up wading through a lot of irrelevant information.  However,
-> > > statmount() can help us here because as of Linux 7.0 we can open the
-> > > passed-in path at startup, call statmount() on it to retrieve the
-> > > mnt_id, and then call it again later with that same mnt_id to find the
-> > > mountpoint.  Luckily xfs_healthmon didn't get merged until 7.0 so it's
-> > > more or less guaranteed to be there if XFS_IOC_HEALTH_MONITOR succeeds.
-> > > 
-> > > Obviously if this doesn't work, we can fall back to the slow walk.
-> > 
-> > Can we kill the fallback and instead just have a good error message
-> > if someone messes up their backports?
+On Tue, Mar 10, 2026 at 06:38:37PM +0000, Yuto Ohnuki wrote:
+> The unmount sequence in xfs_unmount_flush_inodes() pushed the AIL while
+> background reclaim and inodegc are still running. This is broken
+> independently of any use-after-free issues - background reclaim and
+> inodegc should not be running while the AIL is being pushed during
+> unmount, as inodegc can dirty and insert inodes into the AIL during the
+> flush, and background reclaim can race to abort and free dirty inodes.
 > 
-> Yes we could, though the risk with dropping the previous patch is that
-> someone could introduce a third-party seccomp policy that forbids
-> statmount() even on kernels that support it, and then xfs_healer would
-> just fail if the mount moves.
+> Reorder xfs_unmount_flush_inodes() to stop inodegc and cancel background
+> reclaim before pushing the AIL. Stop inodegc before cancelling
+> m_reclaim_work because the inodegc worker can re-queue m_reclaim_work
+> via xfs_inodegc_set_reclaimable.
 > 
-> That would be totally stupid because the only reason you'd encounter
-> that is because either (a) your distro screwed up their security policy
-> or (b) your paranoid IT department deploys an Enterprise Security Model
-> written by a ven-duh who hasn't gotten around to evaluating the new
-> syscalls and blocks anything they've not read about.
-> 
-> I'd rather keep the getmntent stuff around since that's the classic way
-> linux programs (including xfsprogs) have handled scanning the mount
-> tables.  But if you feel strongly about not having getmntent it's not
-> hard to pull it out.
+> Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
+> Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
+> Cc: <stable@vger.kernel.org> # v5.9
+> Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
 
-Actually, ignore all this, I found a much better reason for keeping both
-versions:
-
-Each bind mount gets a new mnt_id, so getmntent is the only way to find
-a different vfsmount of the same filesystem.  If you do this:
-
-mount /dev/sda /mnt
-xfs_healer /mnt &
-mount /mnt /opt --bind
-umount /mnt
-
-the filesystem itself never gets unmounted, but statmount() won't be
-able to find /opt without scanning the mount table.  Observe that the
-bind mount gets a different vfsmount object, and hence a different
-mnt_id:
-
-# mount /dev/sda /mnt
-# xfs_io -c statmount /mnt | grep mnt_id:
-        mnt_id: 0x80004775
-# mount /mnt /opt --bind
-# xfs_io -c statmount /opt | grep mnt_id:
-        mnt_id: 0x8000477a
-
-The statmount reconnection thing, however, works for mount --move
-because the vfsmount object doesn't go away, it merely moves around:
-
-# mount -t tmpfs urk /mnt
-# mount --make-rprivate /mnt
-# mkdir -p /mnt/a /mnt/b
-# mount /dev/sda /mnt/a
-# xfs_io -c statmount /mnt/a | grep mnt_id:
-        mnt_id: 0x800048a9
-# mount --move /mnt/a /mnt/b
-# xfs_io -c statmount /mnt/b | grep mnt_id:
-        mnt_id: 0x800048a9
-
-I'm not sure when anyone would really do this, but it's certainly
-possible to do this, and every other process in the same mount namespace
-will see it.  I'll go write a new test to exercise this, since I forgot
-to do that earlier.
+Looks good now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_mount.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 9c295abd0a0a..ef1ea8a1238c 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -608,8 +608,9 @@ xfs_unmount_check(
+>   * have been retrying in the background.  This will prevent never-ending
+>   * retries in AIL pushing from hanging the unmount.
+>   *
+> - * Finally, we can push the AIL to clean all the remaining dirty objects, then
+> - * reclaim the remaining inodes that are still in memory at this point in time.
+> + * Stop inodegc and background reclaim before pushing the AIL so that they
+> + * are not running while the AIL is being flushed. Then push the AIL to
+> + * clean all the remaining dirty objects and reclaim the remaining inodes.
+>   */
+>  static void
+>  xfs_unmount_flush_inodes(
+> @@ -621,9 +622,9 @@ xfs_unmount_flush_inodes(
+>  
+>  	xfs_set_unmounting(mp);
+>  
+> -	xfs_ail_push_all_sync(mp->m_ail);
+>  	xfs_inodegc_stop(mp);
+>  	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> +	xfs_ail_push_all_sync(mp->m_ail);
+>  	xfs_reclaim_inodes(mp);
+>  	xfs_health_unmount(mp);
+>  	xfs_healthmon_unmount(mp);
+> -- 
+> 2.50.1
+> 
+> 
+> 
+> 
+> Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+> 
+> Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
+> 
+> 
+> 
+> 
