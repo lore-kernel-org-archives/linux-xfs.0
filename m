@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A481643B
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:45:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC751DF25F
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:45:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114324; cv=none; b=mi5dc9potLXeK7ACQjqM/qjwW5X8TD7X8EXH68JDJR/gBTIf/R+UoM0wL2DRPEfKS6ahkfddMA0p4WAFSc5rCeZgte8CrKvd7mx8KaMTZZFV7Ctk0RKciT+uz+6sca8tqjldobZ5LBpcl/2nHOVepynhkq4jo93MejF8q5YN3EE=
+	t=1773114340; cv=none; b=Tj0RXz50eHaS+54NTfIoMng8XHLHO6lIf3ieFuTbx608+QE2NDhx6Ks3IOdzV54fo07b+xFaQXAYB5oNmcmDWuUE25+5IPOZeTLMV6RQyaPOyf4WiAZgEcS507f5IoXkEAXlVzbOyL1t/Zlp4HEelwXXig3JcsN8JCuA7kcInlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114324; c=relaxed/simple;
-	bh=fCUwDl5p9f9UkHA1yHTDnHgQ4M5/ySDIbgj/znPMw4M=;
+	s=arc-20240116; t=1773114340; c=relaxed/simple;
+	bh=7yBTg9OKYjqkAl/4cmZDlhZ1cxWSZz73Kzn4JKzZM7g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=InwVTDZrXQ5+BPL0iZ0SUc4cwX3KJXnz/ReIxOKFmfNaqNsHbnLlTox4nPvnTPFTs2zciwmUO25DVbHddXc4C3jahrpwyJiA6pM/Hp/cTUyUPD2uU11tjAlnEegWfKx9Vpo0j03KbvP5unlhN7CjrWrhWvlq7PrKPXpCHzOpEcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YBQZNl3w; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=FEGftTSnSqkOMS6RgwhTLMUr01ud7EL6lbOI7oZpDg8AcYqzgVLI2iAPMrmi9O9P5aR4E4pqZVQjywYgDGd8wtmN89mQ0mbTSA6nOrZfICksELx1mrZnpym9jfg/C7FrYLZtXxi38CGjnwDYtynNquTNzvAAe9n3LfCfr/zAQk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jaxjQiz7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YBQZNl3w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61615C4CEF7;
-	Tue, 10 Mar 2026 03:45:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jaxjQiz7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 788B9C4CEF7;
+	Tue, 10 Mar 2026 03:45:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114324;
-	bh=fCUwDl5p9f9UkHA1yHTDnHgQ4M5/ySDIbgj/znPMw4M=;
+	s=k20201202; t=1773114340;
+	bh=7yBTg9OKYjqkAl/4cmZDlhZ1cxWSZz73Kzn4JKzZM7g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YBQZNl3wju+J9uckFNdAm3HtPBv6aBz2igKkLZYNYBGHzcPV30LRvycihCpUrLQxK
-	 CTG+Hnm+rL4Ee7PA+oBc+S3zbQjA5fNA9aoUXRaPqis7Uyw070s0yKlP0To3TwFOEM
-	 2Sn1mfb7BIVOHpP4Wly6feSYd0D747eaEczoFuVAMaPHzKlfn5OIF3ofMNUtLB+vMY
-	 a+1kvQJMQV0YAG+7vEiT2nXB+FOMM6QXcWiGl4Fbtt/sCMbmaC7rohB/GZaMq1K/ty
-	 6yC9v8bNUNlZQZgWvcjJjg70lYcvi3aphti+57YMzr5/ZRfWdscx9SFi5tstiSRQHY
-	 G16rL1nNPJRHw==
-Date: Mon, 09 Mar 2026 20:45:23 -0700
-Subject: [PATCH 11/28] xfs_healer: enable repairing filesystems
+	b=jaxjQiz7vfFrSeT1ocW1Ngncy7k9Alw9lH1W9zqENUOZzA3rFmNJq7HSoFApWQGu3
+	 UKg8zPUM/YSu//K/8okW+Q2Ep6jo7l9w5m8WCSyabzdyZcmpZcjhz7ivQqXAr7PP7X
+	 OGsr7P+XmIOgDZKMIG7wnP2KeMMx2atNSIBxafuoPG3bHTN6ttGJm25F0JWF/t+zUw
+	 SoUqq8rVizvVAogWAe9ZNSMkIXWj0AmAM6lc786JFVe1iqPHDivtTUgFSNPB/Nx0Rd
+	 DK9KkXM6Ms2gKuiWcgRIWvtaH2EyErdxCXxKrlBhh/yRpcxYNRAcl10XQOkwbrtsHM
+	 9BXgwK9WRqUXA==
+Date: Mon, 09 Mar 2026 20:45:39 -0700
+Subject: [PATCH 12/28] xfs_healer: use getparents to look up file names
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177311401662.1183235.16677262362085176145.stgit@frogsfrogsfrogs>
+Message-ID: <177311401681.1183235.10408766226218016749.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,792 +45,253 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make it so that our health monitoring daemon can initiate repairs in
-response to reports of corrupt filesystem metadata.  Repairs are
-initiated from the background workers as explained in the previous
-patch.
-
-Note that just like xfs_scrub, xfs_healer's ability to repair metadata
-relies heavily on back references such as reverse mappings and directory
-parent pointers to add redundancy to the filesystem.  Check for these
-two features and whine a bit if they are missing, just like scrub.
-
-There's a bit of trickery with the fd that is used to initiate repairs
-in the kernel.  Because an open fd will pin the filesystem in memory,
-xfs_healer can only hold an open fd to the target filesystem while it's
-performing repairs.  Therefore, at startup xfs_healer must sample enough
-information about the target filesystem to reconnect to it later on.
-Currently, the fs source (aka the data device path) and the root
-directory handle are sufficient to do this.
-
-Someday we might be able to have revocable fds, which would eliminate
-the need for such efforts in userspace.
+If the kernel tells about something that happened to a file, use the
+GETPARENTS ioctl to try to look up the path to that file for more
+ergonomic reporting.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/xfs_healer.h   |   28 ++++++
- libfrog/flagmap.h     |    3 +
- libfrog/healthevent.h |   12 ++
- healer/Makefile       |    2 
- healer/fsrepair.c     |  249 +++++++++++++++++++++++++++++++++++++++++++++++++
- healer/weakhandle.c   |  115 +++++++++++++++++++++++
- healer/xfs_healer.c   |   55 +++++++++++
- libfrog/flagmap.c     |   17 +++
- libfrog/healthevent.c |  117 +++++++++++++++++++++++
- 9 files changed, 598 insertions(+)
- create mode 100644 healer/fsrepair.c
- create mode 100644 healer/weakhandle.c
+ healer/xfs_healer.h |    6 ++++
+ healer/fsrepair.c   |   16 ++++++++-
+ healer/weakhandle.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ healer/xfs_healer.c |   45 ++++++++++++++++++++++++++-
+ 4 files changed, 149 insertions(+), 4 deletions(-)
 
 
 diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
-index bcddde5db0cc47..a4de1ad32a408f 100644
+index a4de1ad32a408f..6d12921245934c 100644
 --- a/healer/xfs_healer.h
 +++ b/healer/xfs_healer.h
-@@ -8,6 +8,9 @@
+@@ -61,6 +61,10 @@ static inline bool healer_has_parent(const struct healer_ctx *ctx)
+ 	return ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_PARENT;
+ }
  
- extern char *progname;
- 
-+struct weakhandle;
-+struct hme_prefix;
-+
- /*
-  * When running in environments with restrictive security policies, healer
-  * might not be allowed to access the global mount tree.  However, processes
-@@ -22,6 +25,7 @@ struct healer_ctx {
- 	int			log;
- 	int			everything;
- 	int			foreground;
-+	int			want_repair;
- 
- 	/* fd and fs geometry for mount */
- 	struct xfs_fd		mnt;
-@@ -32,6 +36,9 @@ struct healer_ctx {
- 	/* Shared reference to the getmntent fsname for reconnecting */
- 	const char		*fsname;
- 
-+	/* weak file handle so we can reattach to filesystem */
-+	struct weakhandle	*wh;
-+
- 	/* file stream of monitor and buffer */
- 	FILE			*mon_fp;
- 	char			*mon_buf;
-@@ -44,4 +51,25 @@ struct healer_ctx {
- 	bool			queue_active;
- };
- 
-+static inline bool healer_has_rmapbt(const struct healer_ctx *ctx)
-+{
-+	return ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT;
-+}
-+
-+static inline bool healer_has_parent(const struct healer_ctx *ctx)
-+{
-+	return ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_PARENT;
-+}
-+
-+/* repair.c */
-+int repair_metadata(struct healer_ctx *ctx, const struct hme_prefix *pfx,
-+		const struct xfs_health_monitor_event *hme);
-+bool healer_can_repair(struct healer_ctx *ctx);
-+
-+/* weakhandle.c */
-+int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
-+		struct weakhandle **whp);
-+int weakhandle_reopen(struct weakhandle *wh, int *fd);
-+void weakhandle_free(struct weakhandle **whp);
-+
- #endif /* XFS_HEALER_XFS_HEALER_H_ */
-diff --git a/libfrog/flagmap.h b/libfrog/flagmap.h
-index 8031d75a7c02a8..05110c3544dc97 100644
---- a/libfrog/flagmap.h
-+++ b/libfrog/flagmap.h
-@@ -14,6 +14,9 @@ struct flag_map {
- void mask_to_string(const struct flag_map *map, unsigned long long mask,
- 		const char *delimiter, char *buf, size_t bufsize);
- 
-+const char *lowest_set_mask_string(const struct flag_map *map,
-+		unsigned long long mask);
-+
- const char *value_to_string(const struct flag_map *map,
- 		unsigned long long value);
- 
-diff --git a/libfrog/healthevent.h b/libfrog/healthevent.h
-index 6de41bc797100c..4f3c8ba639ec4c 100644
---- a/libfrog/healthevent.h
-+++ b/libfrog/healthevent.h
-@@ -40,4 +40,16 @@ hme_prefix_init(
- void hme_report_event(const struct hme_prefix *pfx,
- 		const struct xfs_health_monitor_event *hme);
- 
-+enum repair_outcome {
-+	REPAIR_SUCCESS,
-+	REPAIR_FAILED,
-+	REPAIR_PROBABLY_OK,
-+	REPAIR_UNNECESSARY,
-+};
-+
-+void report_health_repair(const struct hme_prefix *pfx,
++void lookup_path(struct healer_ctx *ctx,
 +		const struct xfs_health_monitor_event *hme,
-+		uint32_t event_mask,
-+		enum repair_outcome outcome);
++		struct hme_prefix *pfx);
 +
- #endif /* LIBFROG_HEALTHEVENT_H_ */
-diff --git a/healer/Makefile b/healer/Makefile
-index e82c820883669a..981192b81af626 100644
---- a/healer/Makefile
-+++ b/healer/Makefile
-@@ -11,6 +11,8 @@ INSTALL_HEALER = install-healer
- LTCOMMAND = xfs_healer
+ /* repair.c */
+ int repair_metadata(struct healer_ctx *ctx, const struct hme_prefix *pfx,
+ 		const struct xfs_health_monitor_event *hme);
+@@ -71,5 +75,7 @@ int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
+ 		struct weakhandle **whp);
+ int weakhandle_reopen(struct weakhandle *wh, int *fd);
+ void weakhandle_free(struct weakhandle **whp);
++int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
++		char *path, size_t pathlen);
  
- CFILES = \
-+fsrepair.c \
-+weakhandle.c \
- xfs_healer.c
- 
- HFILES = \
+ #endif /* XFS_HEALER_XFS_HEALER_H_ */
 diff --git a/healer/fsrepair.c b/healer/fsrepair.c
-new file mode 100644
-index 00000000000000..907afca3dba8a7
---- /dev/null
+index 907afca3dba8a7..4534104f8a6ac1 100644
+--- a/healer/fsrepair.c
 +++ b/healer/fsrepair.c
-@@ -0,0 +1,249 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+
-+#include "platform_defs.h"
-+#include "libfrog/fsgeom.h"
-+#include "libfrog/workqueue.h"
-+#include "libfrog/healthevent.h"
-+#include "xfs_healer.h"
-+
-+/* Translate scrub output flags to outcome. */
-+static enum repair_outcome from_repair_oflags(uint32_t oflags)
-+{
-+	if (oflags & (XFS_SCRUB_OFLAG_CORRUPT | XFS_SCRUB_OFLAG_INCOMPLETE))
-+		return REPAIR_FAILED;
-+
-+	if (oflags & XFS_SCRUB_OFLAG_XFAIL)
-+		return REPAIR_PROBABLY_OK;
-+
-+	if (oflags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
-+		return REPAIR_UNNECESSARY;
-+
-+	return REPAIR_SUCCESS;
-+}
-+
-+struct u32_scrub {
-+	uint32_t	event_mask;
-+	uint32_t	scrub_type;
-+};
-+
-+#define foreach_scrub_type(cur, mask, coll) \
-+	for ((cur) = (coll); (cur)->scrub_type != 0; (cur)++) \
-+		if ((mask) & (cur)->event_mask)
-+
-+/* Call the kernel to repair some inode metadata. */
-+static inline enum repair_outcome
-+xfs_repair_metadata(
-+	int			fd,
-+	uint32_t		scrub_type,
-+	uint32_t		group,
-+	uint64_t		ino,
-+	uint32_t		gen)
-+{
-+	struct xfs_scrub_metadata sm = {
-+		.sm_type = scrub_type,
-+		.sm_flags = XFS_SCRUB_IFLAG_REPAIR,
-+		.sm_ino = ino,
-+		.sm_gen = gen,
-+		.sm_agno = group,
-+	};
-+	int			ret;
-+
-+	ret = ioctl(fd, XFS_IOC_SCRUB_METADATA, &sm);
-+	if (ret)
-+		return REPAIR_FAILED;
-+
-+	return from_repair_oflags(sm.sm_flags);
-+}
-+
-+/* React to a fs-domain corruption event by repairing it. */
-+static void
-+try_repair_wholefs(
-+	struct healer_ctx			*ctx,
-+	const struct hme_prefix			*pfx,
-+	int					mnt_fd,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+#define X(code, type) { XFS_FSOP_GEOM_SICK_ ## code, XFS_SCRUB_TYPE_ ## type }
-+	static const struct u32_scrub		FS_STRUCTURES[] = {
-+		X(COUNTERS,	FSCOUNTERS),
-+		X(UQUOTA,	UQUOTA),
-+		X(GQUOTA,	GQUOTA),
-+		X(PQUOTA,	PQUOTA),
-+		X(RT_BITMAP,	RTBITMAP),
-+		X(RT_SUMMARY,	RTSUM),
-+		X(QUOTACHECK,	QUOTACHECK),
-+		X(NLINKS,	NLINKS),
-+		{0,		0},
-+	};
-+#undef X
+@@ -164,7 +164,7 @@ try_repair_rtgroup(
+ static void
+ try_repair_inode(
+ 	struct healer_ctx			*ctx,
+-	const struct hme_prefix			*pfx,
++	const struct hme_prefix			*orig_pfx,
+ 	int					mnt_fd,
+ 	const struct xfs_health_monitor_event	*hme)
+ {
+@@ -182,13 +182,25 @@ try_repair_inode(
+ 		{0,		0},
+ 	};
+ #undef X
+-	const struct u32_scrub *f;
++	struct hme_prefix	new_pfx;
++	const struct hme_prefix	*pfx = orig_pfx;
 +	const struct u32_scrub	*f;
+ 
+ 	foreach_scrub_type(f, hme->e.inode.mask, INODE_STRUCTURES) {
+ 		enum repair_outcome	outcome =
+ 			xfs_repair_metadata(mnt_fd, f->scrub_type,
+ 					0, hme->e.inode.ino, hme->e.inode.gen);
+ 
++		/*
++		 * Try again to find the file path, maybe we fixed the dir
++		 * tree.
++		 */
++		if (!hme_prefix_has_path(pfx)) {
++			lookup_path(ctx, hme, &new_pfx);
++			if (hme_prefix_has_path(&new_pfx))
++				pfx = &new_pfx;
++		}
 +
-+	foreach_scrub_type(f, hme->e.fs.mask, FS_STRUCTURES) {
-+		enum repair_outcome	outcome =
-+			xfs_repair_metadata(mnt_fd, f->scrub_type, 0, 0, 0);
-+
-+		pthread_mutex_lock(&ctx->conlock);
-+		report_health_repair(pfx, hme, f->event_mask, outcome);
-+		pthread_mutex_unlock(&ctx->conlock);
-+	}
-+}
-+
-+/* React to an ag corruption event by repairing it. */
-+static void
-+try_repair_ag(
-+	struct healer_ctx			*ctx,
-+	const struct hme_prefix			*pfx,
-+	int					mnt_fd,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+#define X(code, type) { XFS_AG_GEOM_SICK_ ## code, XFS_SCRUB_TYPE_ ## type }
-+	static const struct u32_scrub		AG_STRUCTURES[] = {
-+		X(SB,		SB),
-+		X(AGF,		AGF),
-+		X(AGFL,		AGFL),
-+		X(AGI,		AGI),
-+		X(BNOBT,	BNOBT),
-+		X(CNTBT,	CNTBT),
-+		X(INOBT,	INOBT),
-+		X(FINOBT,	FINOBT),
-+		X(RMAPBT,	RMAPBT),
-+		X(REFCNTBT,	REFCNTBT),
-+		{0,		0},
-+	};
-+#undef X
-+	const struct u32_scrub *f;
-+
-+	foreach_scrub_type(f, hme->e.group.mask, AG_STRUCTURES) {
-+		enum repair_outcome	outcome =
-+			xfs_repair_metadata(mnt_fd, f->scrub_type,
-+					hme->e.group.gno, 0, 0);
-+
-+		pthread_mutex_lock(&ctx->conlock);
-+		report_health_repair(pfx, hme, f->event_mask, outcome);
-+		pthread_mutex_unlock(&ctx->conlock);
-+	}
-+}
-+
-+/* React to a rtgroup corruption event by repairing it. */
-+static void
-+try_repair_rtgroup(
-+	struct healer_ctx			*ctx,
-+	const struct hme_prefix			*pfx,
-+	int					mnt_fd,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+#define X(code, type) { XFS_RTGROUP_GEOM_SICK_ ## code, XFS_SCRUB_TYPE_ ## type }
-+	static const struct u32_scrub		RTG_STRUCTURES[] = {
-+		X(SUPER,	RGSUPER),
-+		X(BITMAP,	RTBITMAP),
-+		X(SUMMARY,	RTSUM),
-+		X(RMAPBT,	RTRMAPBT),
-+		X(REFCNTBT,	RTREFCBT),
-+		{0,		0},
-+	};
-+#undef X
-+	const struct u32_scrub *f;
-+
-+	foreach_scrub_type(f, hme->e.group.mask, RTG_STRUCTURES) {
-+		enum repair_outcome	outcome =
-+			xfs_repair_metadata(mnt_fd, f->scrub_type,
-+					hme->e.group.gno, 0, 0);
-+
-+		pthread_mutex_lock(&ctx->conlock);
-+		report_health_repair(pfx, hme, f->event_mask, outcome);
-+		pthread_mutex_unlock(&ctx->conlock);
-+	}
-+}
-+
-+/* React to a inode-domain corruption event by repairing it. */
-+static void
-+try_repair_inode(
-+	struct healer_ctx			*ctx,
-+	const struct hme_prefix			*pfx,
-+	int					mnt_fd,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+#define X(code, type) { XFS_BS_SICK_ ## code, XFS_SCRUB_TYPE_ ## type }
-+	static const struct u32_scrub		INODE_STRUCTURES[] = {
-+		X(INODE,	INODE),
-+		X(BMBTD,	BMBTD),
-+		X(BMBTA,	BMBTA),
-+		X(BMBTC,	BMBTC),
-+		X(DIR,		DIR),
-+		X(XATTR,	XATTR),
-+		X(SYMLINK,	SYMLINK),
-+		X(PARENT,	PARENT),
-+		X(DIRTREE,	DIRTREE),
-+		{0,		0},
-+	};
-+#undef X
-+	const struct u32_scrub *f;
-+
-+	foreach_scrub_type(f, hme->e.inode.mask, INODE_STRUCTURES) {
-+		enum repair_outcome	outcome =
-+			xfs_repair_metadata(mnt_fd, f->scrub_type,
-+					0, hme->e.inode.ino, hme->e.inode.gen);
-+
-+		pthread_mutex_lock(&ctx->conlock);
-+		report_health_repair(pfx, hme, f->event_mask, outcome);
-+		pthread_mutex_unlock(&ctx->conlock);
-+	}
-+}
-+
-+/* Repair a metadata corruption. */
-+int
-+repair_metadata(
-+	struct healer_ctx			*ctx,
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	int					repair_fd;
-+	int					ret;
-+
-+	ret = weakhandle_reopen(ctx->wh, &repair_fd);
-+	if (ret) {
-+		fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
-+				_("cannot open filesystem to repair"),
-+				strerror(errno));
-+		return ret;
-+	}
-+
-+	switch (hme->domain) {
-+	case XFS_HEALTH_MONITOR_DOMAIN_FS:
-+		try_repair_wholefs(ctx, pfx, repair_fd, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_AG:
-+		try_repair_ag(ctx, pfx, repair_fd, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
-+		try_repair_rtgroup(ctx, pfx, repair_fd, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
-+		try_repair_inode(ctx, pfx, repair_fd, hme);
-+		break;
-+	}
-+
-+	close(repair_fd);
-+	return 0;
-+}
-+
-+/* Ask the kernel if it supports repairs. */
-+bool
-+healer_can_repair(
-+	struct healer_ctx	*ctx)
-+{
-+	struct xfs_scrub_metadata sm = {
-+		.sm_type = XFS_SCRUB_TYPE_PROBE,
-+		.sm_flags = XFS_SCRUB_IFLAG_REPAIR,
-+	};
-+	int			ret;
-+
-+	/* assume any errno means not supported */
-+	ret = ioctl(ctx->mnt.fd, XFS_IOC_SCRUB_METADATA, &sm);
-+	return ret ? false : true;
-+}
+ 		pthread_mutex_lock(&ctx->conlock);
+ 		report_health_repair(pfx, hme, f->event_mask, outcome);
+ 		pthread_mutex_unlock(&ctx->conlock);
 diff --git a/healer/weakhandle.c b/healer/weakhandle.c
-new file mode 100644
-index 00000000000000..53df43b03e16cc
---- /dev/null
+index 53df43b03e16cc..8950e0eb1e5a43 100644
+--- a/healer/weakhandle.c
 +++ b/healer/weakhandle.c
-@@ -0,0 +1,115 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include <pthread.h>
-+#include <stdlib.h>
+@@ -11,6 +11,8 @@
+ #include "handle.h"
+ #include "libfrog/fsgeom.h"
+ #include "libfrog/workqueue.h"
++#include "libfrog/getparents.h"
++#include "libfrog/paths.h"
+ #include "xfs_healer.h"
+ 
+ struct weakhandle {
+@@ -113,3 +115,87 @@ weakhandle_free(
+ 
+ 	*whp = NULL;
+ }
 +
-+#include "platform_defs.h"
-+#include "handle.h"
-+#include "libfrog/fsgeom.h"
-+#include "libfrog/workqueue.h"
-+#include "xfs_healer.h"
-+
-+struct weakhandle {
-+	/* Shared reference to the user's mountpoint for logging */
-+	const char		*mntpoint;
-+
-+	/* Shared reference to the getmntent fsname for reconnecting */
-+	const char		*fsname;
-+
-+	/* handle to root dir */
-+	void			*hanp;
-+	size_t			hlen;
++struct bufvec {
++	char	*buf;
++	size_t	len;
 +};
 +
-+/* Capture a handle for a given filesystem, but don't attach to the fd. */
-+int
-+weakhandle_alloc(
-+	int			fd,
-+	const char		*mountpoint,
-+	const char		*fsname,
-+	struct weakhandle	**whp)
++static int
++render_path(
++	const char		*mntpt,
++	const struct path_list	*path,
++	void			*arg)
 +{
-+	struct weakhandle	*wh;
-+	int			ret;
++	struct bufvec		*args = arg;
++	int			mntpt_len = strlen(mntpt);
++	ssize_t			ret;
 +
-+	*whp = NULL;
++	/* Trim trailing slashes from the mountpoint */
++	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
++		mntpt_len--;
 +
-+	if (fd < 0 || !mountpoint) {
-+		errno = EINVAL;
-+		return -1;
-+	}
++	ret = snprintf(args->buf, args->len, "%.*s", mntpt_len, mntpt);
++	if (ret < 0 || ret >= args->len)
++		return 0;
 +
-+	wh = calloc(1, sizeof(struct weakhandle));
-+	if (!wh)
-+		return -1;
++	ret = path_list_to_string(path, args->buf + ret, args->len - ret);
++	if (ret < 0)
++		return 0;
 +
-+	wh->mntpoint = mountpoint;
-+	wh->fsname = fsname;
-+
-+	ret = fd_to_handle(fd, &wh->hanp, &wh->hlen);
-+	if (ret)
-+		goto out_wh;
-+
-+	*whp = wh;
-+	return 0;
-+
-+out_wh:
-+	free(wh);
-+	return -1;
++	/* magic code that means we found one */
++	return ECANCELED;
 +}
 +
-+/* Reopen a file handle obtained via weak reference. */
++/* Render any path to this weakhandle into the specified buffer. */
 +int
-+weakhandle_reopen(
++weakhandle_getpath_for(
 +	struct weakhandle	*wh,
-+	int			*fd)
++	uint64_t		ino,
++	uint32_t		gen,
++	char			*path,
++	size_t			pathlen)
 +{
-+	void			*hanp;
-+	size_t			hlen;
++	struct xfs_handle	fakehandle;
++	struct bufvec		bv = {
++		.buf		= path,
++		.len		= pathlen,
++	};
 +	int			mnt_fd;
 +	int			ret;
 +
-+	*fd = -1;
-+
-+	mnt_fd = open(wh->mntpoint, O_RDONLY);
-+	if (mnt_fd < 0)
++	if (wh->hlen != sizeof(fakehandle)) {
++		errno = EINVAL;
 +		return -1;
++	}
++	memcpy(&fakehandle, wh->hanp, sizeof(fakehandle));
++	fakehandle.ha_fid.fid_ino = ino;
++	fakehandle.ha_fid.fid_gen = gen;
 +
-+	ret = fd_to_handle(mnt_fd, &hanp, &hlen);
++	ret = weakhandle_reopen(wh, &mnt_fd);
 +	if (ret)
-+		goto out_mntfd;
++		return ret;
 +
-+	if (hlen != wh->hlen || memcmp(hanp, wh->hanp, hlen)) {
-+		errno = ESTALE;
-+		goto out_handle;
++	/*
++	 * In the common case, files only have one parent; and what's the
++	 * chance that we'll need to walk past the second parent to find *one*
++	 * path that goes to the rootdir?  With a max filename length of 255
++	 * bytes, we pick 600 for the buffer size.
++	 */
++	ret = handle_walk_paths_fd(wh->mntpoint, mnt_fd, &fakehandle,
++			sizeof(fakehandle), 600, render_path, &bv);
++	switch (ret) {
++	case ECANCELED:
++		/* found a path */
++		ret = 0;
++		break;
++	default:
++		/* didn't find one */
++		errno = ENOENT;
++		ret = -1;
++		break;
 +	}
 +
-+	free_handle(hanp, hlen);
-+	*fd = mnt_fd;
-+	return 0;
-+
-+out_handle:
-+	free_handle(hanp, hlen);
-+out_mntfd:
 +	close(mnt_fd);
-+	return -1;
-+}
-+
-+/* Tear down a weak handle */
-+void
-+weakhandle_free(
-+	struct weakhandle	**whp)
-+{
-+	struct weakhandle	*wh = *whp;
-+
-+	if (wh) {
-+		free_handle(wh->hanp, wh->hlen);
-+		free(wh);
-+	}
-+
-+	*whp = NULL;
++	return ret;
 +}
 diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index e0076fff381632..488f2a5310d0fd 100644
+index 488f2a5310d0fd..63baf641cb6ec6 100644
 --- a/healer/xfs_healer.c
 +++ b/healer/xfs_healer.c
-@@ -59,6 +59,18 @@ event_loggable(
- 	return ctx->log || event_not_actionable(hme);
+@@ -34,6 +34,39 @@ open_health_monitor(
+ 	return ioctl(mnt_fd, XFS_IOC_HEALTH_MONITOR, &hmo);
  }
  
-+/* Are we going to try a repair? */
-+static inline bool
-+event_repairable(
-+	const struct healer_ctx			*ctx,
-+	const struct xfs_health_monitor_event	*hme)
++/* Report either the file handle or its path, if we can. */
++void
++lookup_path(
++	struct healer_ctx			*ctx,
++	const struct xfs_health_monitor_event	*hme,
++	struct hme_prefix			*pfx)
 +{
-+	if (event_not_actionable(hme))
-+		return false;
++	uint64_t				ino = 0;
++	uint32_t				gen = 0;
++	int					ret;
 +
-+	return ctx->want_repair && hme->type == XFS_HEALTH_MONITOR_TYPE_SICK;
++	if (!healer_has_parent(ctx))
++		return;
++
++	switch (hme->domain) {
++	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
++		ino = hme->e.inode.ino;
++		gen = hme->e.inode.gen;
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_FILERANGE:
++		ino = hme->e.filerange.ino;
++		gen = hme->e.filerange.gen;
++		break;
++	default:
++		return;
++	}
++
++	ret = weakhandle_getpath_for(ctx->wh, ino, gen, pfx->path,
++			sizeof(pfx->path));
++	if (ret)
++		hme_prefix_clear_path(pfx);
 +}
 +
- /* Handle an event asynchronously. */
- static void
- handle_event(
-@@ -70,6 +82,7 @@ handle_event(
- 	struct xfs_health_monitor_event	*hme = arg;
- 	struct healer_ctx		*ctx = wq->wq_ctx;
- 	const bool loggable = event_loggable(ctx, hme);
-+	const bool will_repair = event_repairable(ctx, hme);
+ /* Decide if this event can only be reported upon, and not acted upon. */
+ static bool
+ event_not_actionable(
+@@ -86,6 +119,13 @@ handle_event(
  
  	hme_prefix_init(&pfx, ctx->mntpoint);
  
-@@ -83,6 +96,10 @@ handle_event(
- 		pthread_mutex_unlock(&ctx->conlock);
- 	}
- 
-+	/* Initiate a repair if appropriate. */
-+	if (will_repair)
-+		repair_metadata(ctx, &pfx, hme);
-+
- 	free(hme);
- }
- 
-@@ -156,6 +173,40 @@ setup_monitor(
- 		goto out_mnt_fd;
- 	}
- 
-+	if (ctx->want_repair) {
-+		/* Check that the kernel supports repairs at all. */
-+		if (!healer_can_repair(ctx)) {
-+			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-+ _("XFS online repair is not supported, exiting"));
-+			goto out_mnt_fd;
-+		}
-+
-+		/* Check for backref metadata that makes repair effective. */
-+		if (!healer_has_rmapbt(ctx))
-+			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-+ _("XFS online repair is less effective without rmap btrees."));
-+
-+		if (!healer_has_parent(ctx))
-+			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-+ _("XFS online repair is less effective without parent pointers."));
-+
-+	}
-+
 +	/*
-+	 * Open weak-referenced file handle to mountpoint so that we can
-+	 * reconnect to the mountpoint to start repairs.
++	 * Try to look up the file name for the file we're about to log or
++	 * about to repair (which always logs).
 +	 */
-+	if (ctx->want_repair) {
-+		ret = weakhandle_alloc(ctx->mnt.fd, ctx->mntpoint,
-+				ctx->fsname, &ctx->wh);
-+		if (ret) {
-+			fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
-+					_("creating weak fshandle"),
-+					strerror(errno));
-+			goto out_mnt_fd;
-+		}
-+	}
++	if (loggable || will_repair)
++		lookup_path(ctx, hme, &pfx);
 +
  	/*
- 	 * Open the health monitor, then close the mountpoint to avoid pinning
- 	 * it.  We can reconnect later if need be.
-@@ -287,6 +338,7 @@ teardown_monitor(
- 		ctx->mon_fp = NULL;
- 	}
- 	free(ctx->mon_buf);
-+	weakhandle_free(&ctx->wh);
- 	ctx->mon_buf = NULL;
- }
+ 	 * Non-actionable events should always be logged, because they are 100%
+ 	 * informational.
+@@ -194,9 +234,10 @@ setup_monitor(
  
-@@ -301,6 +353,7 @@ usage(void)
- 	fprintf(stderr, _("  --everything  Capture all events.\n"));
- 	fprintf(stderr, _("  --foreground  Process events as soon as possible.\n"));
- 	fprintf(stderr, _("  --quiet       Do not log health events to stdout.\n"));
-+	fprintf(stderr, _("  --repair      Always repair corrupt metadata.\n"));
- 	fprintf(stderr, _("  -V            Print version.\n"));
- 
- 	exit(EXIT_FAILURE);
-@@ -312,6 +365,7 @@ enum long_opt_nr {
- 	LOPT_FOREGROUND,
- 	LOPT_HELP,
- 	LOPT_QUIET,
-+	LOPT_REPAIR,
- 
- 	LOPT_MAX,
- };
-@@ -342,6 +396,7 @@ main(
- 		[LOPT_FOREGROUND]  = {"foreground", no_argument, &ctx.foreground, 1 },
- 		[LOPT_HELP]	   = {"help", no_argument, NULL, 0 },
- 		[LOPT_QUIET]	   = {"quiet", no_argument, &ctx.log, 0 },
-+		[LOPT_REPAIR]	   = {"repair", no_argument, &ctx.want_repair, 1 },
- 
- 		[LOPT_MAX]	   = {NULL, 0, NULL, 0 },
- 	};
-diff --git a/libfrog/flagmap.c b/libfrog/flagmap.c
-index 631c4bbc8f1dc0..ce413297780a2a 100644
---- a/libfrog/flagmap.c
-+++ b/libfrog/flagmap.c
-@@ -44,6 +44,23 @@ mask_to_string(
- 		snprintf(buf, bufsize, "%s0x%llx", tag, mask & ~seen);
- }
- 
-+/*
-+ * Given a mapping of bits to strings and a bitmask, return the string
-+ * corresponding to the lowest set bit in the mask.
-+ */
-+const char *
-+lowest_set_mask_string(
-+	const struct flag_map	*map,
-+	unsigned long long	mask)
-+{
-+	for (; map->string; map++) {
-+		if (mask & map->flag)
-+			return _(map->string);
-+	}
-+
-+	return _("unknown flag");
-+}
-+
- /*
-  * Given a mapping of values to strings and a value, return the matching string
-  * or confusion.
-diff --git a/libfrog/healthevent.c b/libfrog/healthevent.c
-index 8520cb3218fb03..193738332dbd71 100644
---- a/libfrog/healthevent.c
-+++ b/libfrog/healthevent.c
-@@ -358,3 +358,120 @@ hme_report_event(
- 		break;
- 	}
- }
-+
-+static const char *
-+repair_outcome_string(
-+	enum repair_outcome	o)
-+{
-+	switch (o) {
-+	case REPAIR_FAILED:
-+		return _("Repair unsuccessful; offline repair required.");
-+	case REPAIR_PROBABLY_OK:
-+		return _("Seems correct but cross-referencing failed; offline repair recommended.");
-+	case REPAIR_UNNECESSARY:
-+		return _("No modification needed.");
-+	case REPAIR_SUCCESS:
-+		return _("Repairs successful.");
-+	}
-+
-+	return NULL;
-+}
-+
-+/* Report inode metadata repair */
-+static void
-+report_inode_repair(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme,
-+	uint32_t				domain_mask,
-+	enum repair_outcome			outcome)
-+{
-+	if (hme_prefix_has_path(pfx))
-+		printf("%s %s: %s\n",
-+				pfx->path,
-+				lowest_set_mask_string(inode_structs,
-+						       domain_mask),
-+				repair_outcome_string(outcome));
-+	else
-+		printf("%s %s %llu %s 0x%x %s: %s\n",
-+				pfx->mountpoint,
-+				_("ino"),
-+				(unsigned long long)hme->e.inode.ino,
-+				_("gen"),
-+				hme->e.inode.gen,
-+				lowest_set_mask_string(inode_structs,
-+						       domain_mask),
-+				repair_outcome_string(outcome));
-+	fflush(stdout);
-+}
-+
-+/* Report AG metadata repair */
-+static void
-+report_ag_repair(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme,
-+	uint32_t				domain_mask,
-+	enum repair_outcome			outcome)
-+{
-+	printf("%s %s 0x%x %s: %s\n", pfx->mountpoint,
-+			_("agno"),
-+			hme->e.group.gno,
-+			lowest_set_mask_string(ag_structs, domain_mask),
-+			repair_outcome_string(outcome));
-+	fflush(stdout);
-+}
-+
-+/* Report rtgroup metadata repair */
-+static void
-+report_rtgroup_repair(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme,
-+	uint32_t				domain_mask,
-+	enum repair_outcome			outcome)
-+{
-+	printf("%s %s 0x%x %s: %s\n", pfx->mountpoint,
-+			_("rgno"),
-+			hme->e.group.gno,
-+			lowest_set_mask_string(rtgroup_structs, domain_mask),
-+			repair_outcome_string(outcome));
-+	fflush(stdout);
-+}
-+
-+/* Report fs-wide metadata repair */
-+static void
-+report_fs_repair(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme,
-+	uint32_t				domain_mask,
-+	enum repair_outcome			outcome)
-+{
-+	printf("%s %s: %s\n", pfx->mountpoint,
-+			lowest_set_mask_string(fs_structs, domain_mask),
-+			repair_outcome_string(outcome));
-+	fflush(stdout);
-+}
-+
-+/* Log a repair event to stdout. */
-+void
-+report_health_repair(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme,
-+	uint32_t				domain_mask,
-+	enum repair_outcome			outcome)
-+{
-+	switch (hme->domain) {
-+	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
-+		report_inode_repair(pfx, hme, domain_mask, outcome);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_AG:
-+		report_ag_repair(pfx, hme, domain_mask, outcome);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
-+		report_rtgroup_repair(pfx, hme, domain_mask, outcome);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_FS:
-+		report_fs_repair(pfx, hme, domain_mask, outcome);
-+		break;
-+	default:
-+		break;
-+	}
-+}
+ 	/*
+ 	 * Open weak-referenced file handle to mountpoint so that we can
+-	 * reconnect to the mountpoint to start repairs.
++	 * reconnect to the mountpoint to start repairs or to look up file
++	 * paths for logging.
+ 	 */
+-	if (ctx->want_repair) {
++	if (ctx->want_repair || healer_has_parent(ctx)) {
+ 		ret = weakhandle_alloc(ctx->mnt.fd, ctx->mntpoint,
+ 				ctx->fsname, &ctx->wh);
+ 		if (ret) {
 
