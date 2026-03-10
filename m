@@ -1,62 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E781397E70
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:56:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3863B38B5
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 13:03:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773147418; cv=none; b=au6bLKfNHH8w8jqMIyGyYd7VMJAlU1XUNBX9+XIs7gteWVUbkRqP5cMijuh+eeR5KUkyWZSMbyje/qM5wouv0d8zlu0kFOG4hCz6crgXI4FxrbJELtRRHPVPrBtgYfn7XxAcFoQ+P4TNWBoD2uxl/kirFL8bHsGI9d3YXuxAQmQ=
+	t=1773147829; cv=none; b=JzTTcs8NXVU+wvu/Esee3SQy5Rmdh8Qf//1eNBIxCO7aVe8ZBtU0xMfGfnWQFwJYkR/ug1l4iVV8wIN+IsvDgrGhSZeFAAwofFwxQH3AWYOknCwP4tdoMakEqvkA5WwLtEOW+oYOMm7CZZD8ulS/D1UfdAZgi22twI7DQD63VgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773147418; c=relaxed/simple;
-	bh=+2nIBTTX5HuLXdl/fn4EA0NSepyj6/WEtOAmoSg/3o4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZqPVjOMDG2OVgkJguCX5lShplx6mIis5LOc+EN3jVzStFnQ9d4gSa5ijm+rq4GUkgA1TkhdObzE/SMJdlACPjjQ9AyB3sius4buuOiZNZQ82Xmcv53+Ipmim/aA6m05SoPyXpSXnNd06ru6b3mS+6X3mYeeGvS0kI6nRkXGnR0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5USOdmR; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5USOdmR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FB40C19425;
-	Tue, 10 Mar 2026 12:56:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773147418;
-	bh=+2nIBTTX5HuLXdl/fn4EA0NSepyj6/WEtOAmoSg/3o4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=a5USOdmRmbBQl7Lsicy/fAbvELzzwsYXVnj1wKca7Gz4E+YHo2FQmhky3mLs5JqcC
-	 sKp0vtrwHtOekKnPiooX9deC8BrXstWPAloLT8iXId1FmuBBInmYIXOzBjo5aLBrDy
-	 N2Up5atJ0l19Kk3BdHSYzRwgj/cqqsYnhoA6+xzg96BqhKsTkR/RQL8zH1LftGRo3N
-	 o/KKmkSx+/2GEYKskchQJfuBevmH0mA+f1ipGVY/92lonm37KuI32iZZfNnKAFFJs+
-	 v/3j8xMCFrDOi48aikz2dj4q1JANke339h+QsTJI7vqfd1QKNzXYX3noDMxkBESmiN
-	 7kkQa4cJ7jYoQ==
-Message-ID: <96cc9d33-4f84-4cc5-a408-2586b269ace6@kernel.org>
-Date: Tue, 10 Mar 2026 13:56:56 +0100
+	s=arc-20240116; t=1773147829; c=relaxed/simple;
+	bh=XFg9zCR4kl3WIist/N0ooX0c37ZQPIWlBgdtfQczx6Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qitG2FnqnsWL8EdTwHcaO0hMehdV6Q8lwsCrg1q0A5rpInKiEMbwbEr/TqxI5xzaZRKwUtkUdNWWA6KBaerKeK+Figwsa7GoWl5wAMDAV8NUER/Ud90jFXLJggWN/eP0IthQCtsHgquuZ7CN6oSa36dCc2F9EutI8dNfb4ImIbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7FBF468C4E; Tue, 10 Mar 2026 14:03:44 +0100 (CET)
+Date: Tue, 10 Mar 2026 14:03:44 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
+	djwong@kernel.org
+Subject: Re: [PATCH 1/3] xfs: add a couple helpers to alloc/free
+ xfs_busy_extents
+Message-ID: <20260310130344.GA4151@lst.de>
+References: <20260310123324.339310-1-cem@kernel.org> <20260310123324.339310-2-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] xfs: opencode xfs_zone_record_blocks
-To: cem@kernel.org, linux-xfs@vger.kernel.org
-Cc: hch@lst.de
-References: <20260310115555.114197-1-cem@kernel.org>
- <20260310115555.114197-5-cem@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260310115555.114197-5-cem@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260310123324.339310-2-cem@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 2026/03/10 12:55, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
-> 
-> We only have a single caller, no need to keep it in its own function.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Tue, Mar 10, 2026 at 01:33:14PM +0100, cem@kernel.org wrote:
+> The avoid calls like xfs_busy_extents_alloc(0) explicitly pass GFP_KERNEL
+> as argument. It looks better to me.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+You can't really pass 0 anyway, so I think this part of the commit
+log doesn't make much sense.
 
+> +static inline struct xfs_busy_extents *
+> +xfs_busy_extents_alloc(gfp_t flags)
+> +{
+> +	struct xfs_busy_extents *e;
+> +	e = kzalloc_obj(*e, flags);
 
--- 
-Damien Le Moal
-Western Digital Research
+Please keep an empty line between declarations and code.  And in this
+case you could probably move the initialization to the declaration line
+as well.
+>
+> +	if (e)
+> +		INIT_LIST_HEAD(&e->extent_list);
+> +	return e;
+> +}
+> +
+> +static inline void xfs_busy_extents_free(
+> +	struct xfs_busy_extents *e)
+
+This is inconsistent with the xfs_busy_extents_alloc prototype above,
+which uses the mormal kernel style, which we sometimes do for inlines,
+but also doesn't use the XFS style with the return type on a separate
+line and the argument names tab indented.
+
