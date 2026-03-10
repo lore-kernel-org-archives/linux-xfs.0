@@ -1,118 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.245.243.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC683B6373
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 17:39:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96DC2D2496;
+	Tue, 10 Mar 2026 17:46:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.245.243.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773164391; cv=none; b=X+su6U7TPJJP5CiMnCcJV9AIrHe2ZHCDknXfvuoxhk0V0C4HKNeAlAwss1zGxFvchRBM3861LvV5DWdwEcAF9y/Bw01Pqw2QPj3HuCq5EINEfpp5nz547QpCpkU24KijaqcuQT3cFmOi1zQ+AxJ+u9kw6r7eCXdAYQd51nmmNYA=
+	t=1773164774; cv=none; b=HLpeR6f77d3JqHh1Uwg8xKPeohHk3916J605EikNd3IIfA8YARzyLuT78nvYcfFoLN7QbOwrwBd5gHsXsuwQ+Wr7YRYwZBV6XADHLxz0VnVLxmbmoRBtv55YctLJPu7jFaVEV6AaxGppg0fEeapG35hhHOR3T3+ZvkQyzMzJs/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773164391; c=relaxed/simple;
-	bh=jA5pFCfW8hJaq15EQauV4B30iajeorI8AYd48H2r2pk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bpCqQLvVmO36qcOjPa2HQVeI9PzM7kYxUsRQXPVmySZXJsQcenfehUgE3kSNpz1Je78RekNzY3yxo3WhxLB9DhFjIdA5X6EVc6M4kXVJIPnNIVLWj6ffo1GKJei8poRizp5XdCEsuolc/vYJJnopzmKzQdv671xzqCHUzG/yeJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNkuZ01V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773164774; c=relaxed/simple;
+	bh=uIUWs+noznTVO5/TSiUkk70+NA0IGhHQuQLdkc68X44=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=PlwGAQM+h4+VpevMr2ynGHQ9cMI9EWJWhzwID6u2HfajGe/xITEGw9tdONB8wO7L8ZpqJwPwtBj29UK8qGD+7v4UjSUeaFVPP/lJtLOLfJ/lG5gaf4qhOzKVK7AimU7gHfOvxwugV4mtCioRJ2ew4Z+fpqsBSjBGofTzJ0kKdVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=ZyWX6vEe; arc=none smtp.client-ip=44.245.243.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNkuZ01V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CC26C19425;
-	Tue, 10 Mar 2026 17:39:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773164391;
-	bh=jA5pFCfW8hJaq15EQauV4B30iajeorI8AYd48H2r2pk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VNkuZ01V/QLNp12oyK3cDtCwdZRE+9kyr7EEsDCFJpIkmGfsYwVCLiJyl4BXCH9V+
-	 Na2v2B69CdMwLOEt8Hg5ckMo1PE7S3+6a8B3zDS3FqE/7b3TDml6rm1WUaLgKq04Lb
-	 jYtuGlPidpDG5MlblNR6hFIHai7YWmYjd2zNdaYb1/lW5LlcmPb/rQ8f3Z1JZQo96a
-	 JfnbNhQZSOsP+YYyhOvo7jNGUixbO5QA9ak50j2mCVoFHxR5yu4fpPN7rvQ/eZ5GuV
-	 lwAt4vB1Z6b3RNsQzTkcN0Jju5EIRGdLun4KNVZywsgixD7zJ/PZ4bAkMwXLiNg799
-	 DerLFvGi0d/Kw==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Cc: hch@lst.de,
-	dlemoal@kernel.org
-Subject: [PATCH v2 4/4] xfs: opencode xfs_zone_record_blocks
-Date: Tue, 10 Mar 2026 18:36:49 +0100
-Message-ID: <20260310173709.457047-5-cem@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260310173709.457047-1-cem@kernel.org>
-References: <20260310173709.457047-1-cem@kernel.org>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="ZyWX6vEe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1773164773; x=1804700773;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=LLAirha655TV6Rkr//LqjWH4Nchvefj1xA2HILMeZhA=;
+  b=ZyWX6vEepBE85f78OFZZUHB3HbvVPbjIMxJkAiJEpH2LTGL0a6AHogMg
+   SxJNR54jujqK51atNEehrVN099TUUeDCn3+A2DLuIR4KXmvK43OJzplJH
+   hSF+x3F+J14rwQDXiJpZpz4Kb8rEyRXZRvC61kIDJooidqFtOnjBWShk7
+   vO4tFgmI6Mbe16k9TjUEb+syfxa1IGvH7JJ4ppke9xHTNk7TPH4xyQLKY
+   HJixAv+myzvPuOyB0vIsW5dOe6+IlfsRy5PPDkd5rMikuwrB3jPIP139Z
+   Oy+VU6vQNMU+HWcEBADWoNNmRzgYWkeAUZfNUBe3pgAlaeCD7jRXQ8z/6
+   A==;
+X-CSE-ConnectionGUID: Jk+NSRnrQFW5eHuwgdtvVA==
+X-CSE-MsgGUID: wBhRdTwXSKaoilCcWg1gsw==
+X-IronPort-AV: E=Sophos;i="6.23,112,1770595200"; 
+   d="scan'208";a="14260071"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 17:46:11 +0000
+Received: from EX19MTAUWC001.ant.amazon.com [205.251.233.53:7195]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.26.67:2525] with esmtp (Farcaster)
+ id bb4cda12-55e4-4c61-9cde-6b0876b0dc1b; Tue, 10 Mar 2026 17:46:11 +0000 (UTC)
+X-Farcaster-Flow-ID: bb4cda12-55e4-4c61-9cde-6b0876b0dc1b
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC001.ant.amazon.com (10.250.64.174) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 10 Mar 2026 17:46:09 +0000
+Received: from c889f3b07a0a.amazon.com (10.106.82.15) by
+ EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 10 Mar 2026 17:46:07 +0000
+From: Yuto Ohnuki <ytohnuki@amazon.com>
+To: <dgc@kernel.org>
+CC: <bfoster@redhat.com>, <cem@kernel.org>, <darrick.wong@oracle.com>,
+	<dchinner@redhat.com>, <linux-kernel@vger.kernel.org>,
+	<linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>, <ytohnuki@amazon.com>
+Subject: Re: [PATCH v3 2/4] xfs: refactor xfsaild_push loop into helper
+Date: Tue, 10 Mar 2026 17:46:01 +0000
+Message-ID: <20260310174600.76042-2-ytohnuki@amazon.com>
+X-Mailer: git-send-email 2.50.0
+In-Reply-To: <aa-rfqemHJuWG8VL@dread>
+References: <aa-rfqemHJuWG8VL@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: EX19D038UWC003.ant.amazon.com (10.13.139.209) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-From: Carlos Maiolino <cem@kernel.org>
+> > Factor the loop body of xfsaild_push() into a separate
+> > xfsaild_process_logitem() helper to improve readability.
+> > 
+> > This is a pure code movement with no functional change. The
+> > subsequent patch to fix a use-after-free in the AIL push path
+> > depends on this refactoring.
+> > 
+> > Cc: <stable@vger.kernel.org> # v5.9
+> > Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-We only have a single caller, no need to keep it in its own function.
+Thanks for the review, Dave.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+In v4, I reworked the patch ordering so that the bugfix patches don't
+depend on the refactoring patch, reducing the stable backport burden.
 
----
-v2: add RwB tags, no changes
+Since the context has changed slightly, I've dropped your Reviewed-by
+from this patch in v4 just to be safe. I would appreciate it if you
+could take another look when you get a chance.
 
- fs/xfs/xfs_zone_alloc.c | 30 ++++++++----------------------
- 1 file changed, 8 insertions(+), 22 deletions(-)
+Yuto
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 97149bfc2512..7d712d5a5ce0 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -201,27 +201,6 @@ xfs_zone_inc_written(
- 		xfs_open_zone_mark_full(oz);
- }
- 
--static void
--xfs_zone_record_blocks(
--	struct xfs_trans	*tp,
--	struct xfs_open_zone	*oz,
--	xfs_fsblock_t		fsbno,
--	xfs_filblks_t		len)
--{
--	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_rtgroup	*rtg = oz->oz_rtg;
--	struct xfs_inode	*rmapip = rtg_rmap(rtg);
--
--	trace_xfs_zone_record_blocks(oz, xfs_rtb_to_rgbno(mp, fsbno), len);
--
--	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
--	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
--	rmapip->i_used_blocks += len;
--	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
--	xfs_zone_inc_written(oz, len);
--	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
--}
--
- /*
-  * Called for blocks that have been written to disk, but not actually linked to
-  * an inode, which can happen when garbage collection races with user data
-@@ -252,6 +231,8 @@ xfs_zoned_map_extent(
- 	xfs_fsblock_t		old_startblock)
- {
- 	struct xfs_bmbt_irec	data;
-+	struct xfs_rtgroup	*rtg = oz->oz_rtg;
-+	struct xfs_inode	*rmapip = rtg_rmap(rtg);
- 	int			nmaps = 1;
- 	int			error;
- 
-@@ -310,7 +291,12 @@ xfs_zoned_map_extent(
- 		}
- 	}
- 
--	xfs_zone_record_blocks(tp, oz, new->br_startblock, new->br_blockcount);
-+	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-+	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
-+	rmapip->i_used_blocks += new->br_blockcount;
-+	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
-+	xfs_zone_inc_written(oz, new->br_blockcount);
-+	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
- 
- 	/* Map the new blocks into the data fork. */
- 	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, new);
--- 
-2.53.0
+
+
+Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+
+Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
+
+
 
