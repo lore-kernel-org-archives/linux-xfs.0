@@ -1,96 +1,189 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EEA3E95B5;
-	Tue, 10 Mar 2026 10:16:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2821643B
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 10:20:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773137792; cv=none; b=YQD29rwvR8uZzkexu83tdTAAU+Ptz6jbPCE/mmNJ8AY2Y/3NcYGZ5nnoa+hcaZuNjlN3J2HXUQWBikWtiZt3vaea9zgMfi4Rr/xvMBhQVUFSwkyZB9JVzNy0zFCZd/9Um6/j7WYu3eDact3BQeLGxuSytrmtwpHNozhMjJEAiMQ=
+	t=1773138064; cv=none; b=htHndk2lSEqDxnfeCMH/elP8xA4/6oyouvkqnSJEKkaid9ElXgiTqfRNaWTTPRZfzGB01eACld70rkLPKYw3cPZ1NnwGd4bq3r5ecojC/fgmeX8svJb2QLkhe7W/sfB/31KjWper5Drw+a7oy8gxzd+rENZXLJ1/Xuopl1a/87w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773137792; c=relaxed/simple;
-	bh=JpVHMfmsxruFspBgacpNIqbvFeaSkGXgdMYZvL9c94I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RdAZlfo7mAMPOHq3I388+eQ6cjE8ahRqlW9gPvx3rl/oYmU22m1a68eJPSdBiYCyx94dVWJEitb2jBmIL/FA3qF4Q5pDXi9jm+w/2EnByo2q3L0IAO2IvFfXkjO0wTI1nnUfXD0twEFYCq2reUxiy5AXC945IvpSltGlDH3gnyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n955BlsM; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n955BlsM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92825C2BC86;
-	Tue, 10 Mar 2026 10:16:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773137791;
-	bh=JpVHMfmsxruFspBgacpNIqbvFeaSkGXgdMYZvL9c94I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=n955BlsMwAmB0f7NP3jhKxgG8bcVxp0amdN8yBPyoTLVAQNr6Dl+Tzt5nio5S5ivK
-	 Ozgmu3hGMzbDWrzs4yFj9BEngYcb30JZRYtychA8ieDEFpxvrDLQbgsKepKO6W6mX5
-	 r4l9acPKbBcCSn/jDM7cXKh4n9D4n4yNwMnvKooYwCoOez+rPgmLHB6MbK6q/w5TiV
-	 D15DpfldnR0QIVQiBQotQDKIn3xE15Nj0+PdigVhEUVsVb5gnJ930JxIpWk/1JvQky
-	 68bn47XGKBmv5wgsUL8xb1fLKBWBc9pD4xraxNSjxIBmZtOiSvLLENy/hK8Yw7esXN
-	 w5mVHT7cd6Gsg==
-Date: Tue, 10 Mar 2026 11:16:25 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Carlos Maiolino <cem@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Anuj Gupta <anuj20.g@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>, 
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, ntfs3@lists.linux.dev, linux-block@vger.kernel.org, 
-	nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: (subset) support file system generated / verified integrity
- information v4
-Message-ID: <20260310-beengt-galant-e82b95450cc5@brauner>
-References: <20260223132021.292832-1-hch@lst.de>
- <177306794392.32482.9164747646721806111.b4-ty@kernel.dk>
+	s=arc-20240116; t=1773138064; c=relaxed/simple;
+	bh=aBAVFuL9gL8tg5TUH31RDOaYmasJ4f4HRgirCiTcVno=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=RPHixH8YAs9228rF3s30PCL8s4CGkkhu2qHy3Iwy0Rm3B6/8nZlzIm9NgMJ6NQJVx1JyafrlWFY5V2EaWt6TIgkuFhYr2NMfOlvFVdUBj4nSyPl5ngSyCLB21UuH/gZXiu/vXmju+sOTfkyBG3u61qenyTWyq2EIOjzq5ZKwAtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id CFCCE180F14A;
+	Tue, 10 Mar 2026 11:20:54 +0100 (CET)
+Received: from mail.herbolt.com ([172.168.31.10])
+	by mx0.herbolt.com with ESMTPSA
+	id 05ADMobwr2neth4AKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 10 Mar 2026 11:20:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <177306794392.32482.9164747646721806111.b4-ty@kernel.dk>
+Date: Tue, 10 Mar 2026 11:20:54 +0100
+From: Lukas Herbolt <lukas@herbolt.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org,
+ p.raghav@samsung.com
+Subject: Re: [PATCH v11 2/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+In-Reply-To: <20260310004400.GU6033@frogsfrogsfrogs>
+References: <20260309181235.428151-2-lukas@herbolt.com>
+ <20260310004400.GU6033@frogsfrogsfrogs>
+Message-ID: <274965b98fee964be0cdcf4503d394b3@herbolt.com>
+X-Sender: lukas@herbolt.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 09, 2026 at 08:52:23AM -0600, Jens Axboe wrote:
+On 2026-03-10 01:44, Darrick J. Wong wrote:
+> On Mon, Mar 09, 2026 at 07:12:36PM +0100, Lukas Herbolt wrote:
+>> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device
+>> enable the unmap write zeroes operation.
+>> 
+>> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+>> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+>> 
+>> ---
+>>  v11 changes:
+>> 	- split into 2 patches separating the bmapi_flags addition
+>> 	- 2 step allocation, to avoid zeroing beyond EOF
+>> 
+>>  fs/xfs/xfs_file.c | 41 +++++++++++++++++++++++++++++------------
+>>  1 file changed, 29 insertions(+), 12 deletions(-)
+>> 
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index fd049a1fc9c6..f8c1611e3267 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -1293,29 +1293,45 @@ xfs_falloc_zero_range(
+>>  	unsigned int		blksize = i_blocksize(inode);
+>>  	loff_t			new_size = 0;
+>>  	int			error;
+>> +	bool                    need_convert = false;
+>> 
+>>  	trace_xfs_zero_file_space(ip);
+>> 
+>> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
+>> +		if (xfs_is_always_cow_inode(ip) ||
+>> +		    !bdev_write_zeroes_unmap_sectors(
+>> +			    xfs_inode_buftarg(ip)->bt_bdev))
+>> +			return -EOPNOTSUPP;
+>> +		need_convert = true;
+>> +	}
+>> +
+>>  	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+>>  	if (error)
+>>  		return error;
+>> 
+>>  	if (xfs_falloc_force_zero(ip, ac)) {
+>>  		error = xfs_zero_range(ip, offset, len, ac, NULL);
+>> -	} else {
+>> -		error = xfs_free_file_space(ip, offset, len, ac);
+>> -		if (error)
+>> -			return error;
+>> -
+>> -		len = round_up(offset + len, blksize) -
+>> -			round_down(offset, blksize);
+>> -		offset = round_down(offset, blksize);
+>> -		error = xfs_alloc_file_space(ip, offset, len,
+>> -				XFS_BMAPI_PREALLOC);
+>> +		goto set_filesize;
+>>  	}
+>> +	error = xfs_free_file_space(ip, offset, len, ac);
+>>  	if (error)
+>>  		return error;
+>> -	return xfs_falloc_setsize(file, new_size);
+>> +
+>> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+>> +	offset = round_down(offset, blksize);
+>> +	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
+>> +
+>> +set_filesize:
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	error = xfs_falloc_setsize(file, new_size);
+>> +	if (error)
+>> +		return error;
+>> +	if (need_convert)
+>> +		error = xfs_alloc_file_space(ip, offset, len,
+>> +				XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
+>> +	return error;
+>>  }
 > 
-> On Mon, 23 Feb 2026 05:20:00 -0800, Christoph Hellwig wrote:
-> > this series adds support to generate and verify integrity information
-> > (aka T10 PI) in the file system, instead of the automatic below the
-> > covers support that is currently used.
-> > 
-> > There two reasons for this:
-> > 
-> >   a) to increase the protection enveloped.  Right now this is just a
-> >      minor step from the bottom of the block layer to the file system,
-> >      but it is required to support io_uring integrity data passthrough in
-> >      the file system similar to the currently existing support for block
-> >      devices, which will follow next.  It also allows the file system to
-> >      directly see the integrity error and act upon in, e.g. when using
-> >      RAID either integrated (as in btrfs) or by supporting reading
-> >      redundant copies through the block layer.
-> >   b) to make the PI processing more efficient.  This is primarily a
-> >      concern for reads, where the block layer auto PI has to schedule a
-> >      work item for each bio, and the file system them has to do it again
-> >      for bounce buffering.  Additionally the current iomap post-I/O
-> >      workqueue handling is a lot more efficient by supporting merging and
-> >      avoiding workqueue scheduling storms.
-> > 
-> > [...]
+> I can't help but think this would be cleaner as:
 > 
-> Applied, thanks!
+> static int
+> xfs_falloc_write_zero_range(
+> 	struct file		*file,
+> 	int			mode,
+> 	loff_t			offset,
+> 	loff_t			len,
+> 	struct xfs_zone_alloc_ctx *ac)
+> {
+> 	struct inode		*inode = file_inode(file);
+> 	struct xfs_inode	*ip = XFS_I(inode);
+> 	unsigned int		blksize = i_blocksize(inode);
+> 	loff_t			new_size = 0;
+> 	int			error;
 > 
-> [01/16] block: factor out a bio_integrity_action helper
->         commit: 7ea25eaad5ae3a6c837a3df9bdb822194f002565
-> [02/16] block: factor out a bio_integrity_setup_default helper
->         commit: a936655697cd8d1bab2fd5189e2c33dd6356a266
-> [03/16] block: add a bdev_has_integrity_csum helper
->         commit: 7afe93946dff63aa57c6db81f5eb43ac8233364e
-> [04/16] block: prepare generation / verification helpers for fs usage
->         commit: 3f00626832a9f85fc5a04b25898157a6d43cb236
-> [05/16] block: make max_integrity_io_size public
->         commit: 8c56ef10150ed7650cf4105539242c94c156148c
-> [06/16] block: add fs_bio_integrity helpers
->         commit: 0bde8a12b5540572a7fd6d2867bee6de15e4f289
-> [07/16] block: pass a maxlen argument to bio_iov_iter_bounce
->         commit: a9aa6045abde87b94168c3ba034b953417e27272
+> 	trace_xfs_zero_file_space(ip);
+> 
+> 	if (xfs_is_always_cow_inode(ip) ||
+> 	    !bdev_write_zeroes_unmap_sectors(
+> 				xfs_inode_buftarg(ip)->bt_bdev))
+> 		return -EOPNOTSUPP;
+> 
+> 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+> 	if (error)
+> 		return error;
+> 
+> 	if (xfs_falloc_force_zero(ip, ac)) {
+> 		error = xfs_zero_range(ip, offset, len, ac, NULL);
+> 		if (error)
+> 			return error;
+> 
+> 		return xfs_falloc_setsize(file, new_size);
+> 	}
+> 
+> 	error = xfs_free_file_space(ip, offset, len, ac);
+> 	if (error)
+> 		return error;
+> 
+> 	len = round_up(offset + len, blksize) -
+> 		round_down(offset, blksize);
+> 	offset = round_down(offset, blksize);
+> 	error = xfs_alloc_file_space(ip, offset, len);
+> 	if (error)
+> 		return error;
+> 
+> 	error = xfs_falloc_setsize(file, new_size);
+> 	if (error)
+> 		return error;
+> 
+> 	return xfs_alloc_file_space(ip, offset, len,
+> 			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
+> }
+I didn't want to duplicate most of the xfs_falloc_zero_range, but if 
+that's
+fine we can go this way.
 
-I've pulled the shared branch and also updated my base to v7.0-rc3 as
-per Christoph's request in the other mail.
+> ...assuming there's even a point to WRITE_ZEROES on a zoned file?
+I think this is covered in:
+
+if (xfs_is_always_cow_inode(ip) ||
+     !bdev_write_zeroes_unmap_sectors(
+		xfs_inode_buftarg(ip)->bt_bdev))
+	return -EOPNOTSUPP;
+
+
+-- 
+-lhe
