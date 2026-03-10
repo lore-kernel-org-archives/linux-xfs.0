@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BD3134D4C1
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:42:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD77034D4C1
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:43:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114168; cv=none; b=Qyoqcw8AxazYlyEcy4HYhIncbbmpGEgXmh6nI92RcbE7PpSBLUeFnh5TgrBWKEkzwwv8BJ2pHiB5AdX3TsQawyNMupGFejE0Z4sBq66ZFd4MHaaK6aAxNi33LqUCNHY7xpD8zK3UheWRO1ebPXbpYrEsquipDDDA1/MpQq/pHMw=
+	t=1773114183; cv=none; b=i5dDa5GtNECCVVz1e4N90QnCBTP/yJNKd7u9Pkxl83gqqWbuxT4F+Qv1szJMiVFZLMzXQ1DmNoYszJc9VsQHqDHa/ReuLmwk0NDSi/KeO7ib0D++SCiaeeax7hVdrYclkDoPWUTTnk4EUm4IGH+8sXaXbDnzmy6WZkg4efJzeHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114168; c=relaxed/simple;
-	bh=BBUwUsIhQbQ8cygT1u7F0umpf0CFhxBYmOn4B7ozmJ4=;
+	s=arc-20240116; t=1773114183; c=relaxed/simple;
+	bh=gGC3RipP2/fRaV1kzztHHRTVemJOrv1TWYyA0pQ8UGk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=euL8LPsMhrSymjd19gYCJbAi/ntX8me6JJNg0WrYcvMx2gG+XPaifTwYYvh4FgsN8k8KM/vzMv6j1sk5BjsY6Us4fiGvdUlenhqS9OAq+tjIccCSIHn4RC6v4a53SzW/dLgx5eecxhYrkhNgjkfUBwRRf89e7oU0HRqIJhY6udQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vJGM7Syv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=f+sfbFHfRVePH+GNqfDfnc14/2SAUeid+xiRioyY8kAKr+xpqLOpoPeRTT8bBXsH12CdLk+Jbi4LcL/jsos5n8M9W0rmURxdMK5xQYmmgp6jqLDJKClI4QzdSCqk7C/fg4pq3TbZsteLy67TOL9a/UmzBVLH7GenGMe/4wgo3lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jB0rWrPK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vJGM7Syv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D7DEC4CEF7;
-	Tue, 10 Mar 2026 03:42:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jB0rWrPK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A44B4C4CEF7;
+	Tue, 10 Mar 2026 03:43:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114168;
-	bh=BBUwUsIhQbQ8cygT1u7F0umpf0CFhxBYmOn4B7ozmJ4=;
+	s=k20201202; t=1773114183;
+	bh=gGC3RipP2/fRaV1kzztHHRTVemJOrv1TWYyA0pQ8UGk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=vJGM7Syv6e9MarY+YlLc+WVMFNds7U+tY/cKiyTi7Axlk8ITmKBi08zgeEpUG1Rss
-	 wl549dspSMQ+vVpd7qIbHtXPfJwKajPVb6QVE8yHQNhDDDIUQrpIfERQu1Y64gIguS
-	 V0xvAobRuA730vcntZdWukymvgkDBBDm0VJJLzNaquFjA6R2zqqK3EX1srjVt3y91m
-	 59lufL8+V4sTHrE8dJyL7Yh1TpWmJBNGaOdlo0g59WnMAZEoFR/nic7b6cFIHEuKFu
-	 P6hI/Vvs4115nO+WLFSe1HdKtTicZLQZGwCGvOhIJbB7NxBfZIUTtXs+xuo3GkqTI0
-	 JlIaq+/w2pjUA==
-Date: Mon, 09 Mar 2026 20:42:47 -0700
-Subject: [PATCH 01/28] libfrog: add a function to grab the path from an open
- fd and a file handle
+	b=jB0rWrPKXNUoMLX+TXOnf+c4seZOy0lIt2kzZENkcH5sgi8th2j77ete89G7vrSpH
+	 2jKN2A40erk4OV8mHACgp/GpZ+DPr7mbYTwOUGUBNbpJJ0QYjfZEwUX3h7IGhQvWJZ
+	 iTzJ4M5ZUGxn/fseHqOP9d38jpo/MVHqrXsivdIAUpLU8yCTHEbr+1uzQApS/YUzZq
+	 BixwFlvRq6AuQsYYsMk2uZwbIsjyS0Tpu+qnPwq/Mys4nCHOLLf0OQl1yon4kNArxX
+	 1eHfJuKsdPpKwE3rIakZVdNR1cPBlf7yPb6lxuEMc/VVqg4KrHkeaD8mVv62zVzNAQ
+	 p7Ee2VOcWh3vQ==
+Date: Mon, 09 Mar 2026 20:43:03 -0700
+Subject: [PATCH 02/28] libfrog: create healthmon event log library functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177311401485.1183235.469439595903316993.stgit@frogsfrogsfrogs>
+Message-ID: <177311401503.1183235.6871665674540920778.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,193 +45,563 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-handle_walk_paths operates on a file handle, but requires that the fs
-has been registered with libhandle via path_to_fshandle.  For a normal
-libhandle client this is the desirable behavior because the application
-*should* maintain an open fd to the filesystem mount.
-
-However for xfs_healer this isn't going to work well because the healer
-mustn't pin the mount while it's running.  It's smart enough to know how
-to find and reconnect to the mountpoint, but libhandle doesn't have any
-such concept.
-
-Therefore, alter the libfrog getparents code so that xfs_healer can pass
-in the mountpoint and reconnected fd without needing libhandle.  All
-we're really doing here is trying to obtain a user-visible path for a
-file that encountered problems for logging purposes; if it fails, we'll
-fall back to logging the inode number.
+Add some helper functions to log health monitoring events so that xfs_io
+and xfs_healer can share logging code.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/getparents.h |    4 ++
- libfrog/getparents.c |   93 ++++++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 82 insertions(+), 15 deletions(-)
+ libfrog/flagmap.h     |   20 +++
+ libfrog/healthevent.h |   43 ++++++
+ libfrog/Makefile      |    4 +
+ libfrog/flagmap.c     |   62 ++++++++
+ libfrog/healthevent.c |  360 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 489 insertions(+)
+ create mode 100644 libfrog/flagmap.h
+ create mode 100644 libfrog/healthevent.h
+ create mode 100644 libfrog/flagmap.c
+ create mode 100644 libfrog/healthevent.c
 
 
-diff --git a/libfrog/getparents.h b/libfrog/getparents.h
-index 8098d594219b4c..e1df30889c7606 100644
---- a/libfrog/getparents.h
-+++ b/libfrog/getparents.h
-@@ -39,4 +39,8 @@ int fd_to_path(int fd, size_t ioctl_bufsize, char *path, size_t pathlen);
- int handle_to_path(const void *hanp, size_t hlen, size_t ioctl_bufsize,
- 		char *path, size_t pathlen);
- 
-+int handle_walk_paths_fd(const char *mntpt, int mntfd, const void *hanp,
-+		size_t hanlen, size_t ioctl_bufsize, walk_path_fn fn,
-+		void *arg);
-+
- #endif /* __LIBFROG_GETPARENTS_H_ */
-diff --git a/libfrog/getparents.c b/libfrog/getparents.c
-index 9118b0ff32db0d..e8f545392634e4 100644
---- a/libfrog/getparents.c
-+++ b/libfrog/getparents.c
-@@ -112,9 +112,13 @@ fd_walk_parents(
- 	return ret;
- }
- 
--/* Walk all parent pointers of this handle.  Returns 0 or positive errno. */
--int
--handle_walk_parents(
+diff --git a/libfrog/flagmap.h b/libfrog/flagmap.h
+new file mode 100644
+index 00000000000000..8031d75a7c02a8
+--- /dev/null
++++ b/libfrog/flagmap.h
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * Walk all parent pointers of this handle using the given fd to query the
-+ * filesystem.  Returns 0 or positive errno.
++ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
 + */
-+static int
-+handle_walk_parents_fd(
-+	int			fd,
- 	const void		*hanp,
- 	size_t			hlen,
- 	size_t			bufsize,
-@@ -123,21 +127,11 @@ handle_walk_parents(
- {
- 	struct xfs_getparents_by_handle	gph = { };
- 	void			*buf;
--	char			*mntpt;
--	int			fd;
- 	int			ret;
- 
- 	if (hlen != sizeof(struct xfs_handle))
- 		return EINVAL;
- 
--	/*
--	 * This function doesn't modify the handle, but we don't want to have
--	 * to bump the libhandle major version just to change that.
--	 */
--	fd = handle_to_fsfd((void *)hanp, &mntpt);
--	if (fd < 0)
--		return errno;
--
- 	buf = alloc_records(&gph.gph_request, bufsize);
- 	if (!buf)
- 		return errno;
-@@ -158,6 +152,29 @@ handle_walk_parents(
- 	return ret;
- }
- 
-+/* Walk all parent pointers of this handle.  Returns 0 or positive errno. */
-+int
-+handle_walk_parents(
-+	const void		*hanp,
-+	size_t			hlen,
-+	size_t			bufsize,
-+	walk_parent_fn		fn,
-+	void			*arg)
-+{
-+	char			*mntpt;
-+	int			fd;
++#ifndef LIBFROG_FLAGMAP_H_
++#define LIBFROG_FLAGMAP_H_
 +
++struct flag_map {
++	unsigned long long	flag;
++	const char		*string;
++};
++
++void mask_to_string(const struct flag_map *map, unsigned long long mask,
++		const char *delimiter, char *buf, size_t bufsize);
++
++const char *value_to_string(const struct flag_map *map,
++		unsigned long long value);
++
++#endif /* LIBFROG_FLAGMAP_H_ */
+diff --git a/libfrog/healthevent.h b/libfrog/healthevent.h
+new file mode 100644
+index 00000000000000..6de41bc797100c
+--- /dev/null
++++ b/libfrog/healthevent.h
+@@ -0,0 +1,43 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef LIBFROG_HEALTHEVENT_H_
++#define LIBFROG_HEALTHEVENT_H_
++
++struct hme_prefix {
 +	/*
-+	 * This function doesn't modify the handle, but we don't want to have
-+	 * to bump the libhandle major version just to change that.
++	 * Format a complete file path into this buffer to prevent the logging
++	 * code from printing the mountpoint and a file handle.  Only works for
++	 * file-related events.
 +	 */
-+	fd = handle_to_fsfd((void *)hanp, &mntpt);
-+	if (fd < 0)
-+		return errno;
++	char		path[MAXPATHLEN];
 +
-+	return handle_walk_parents_fd(fd, hanp, hlen, bufsize, fn, arg);
-+}
++	/* Set this to the mountpoint */
++	const char	*mountpoint;
++};
 +
- struct walk_ppaths_info {
- 	/* Callback */
- 	walk_path_fn		fn;
-@@ -169,7 +186,11 @@ struct walk_ppaths_info {
- 	/* Path that we're constructing. */
- 	struct path_list	*path;
- 
-+	/* Use this much memory per call. */
- 	size_t			ioctl_bufsize;
-+
-+	/* Use this fd for calling the getparents ioctl. */
-+	int			mntfd;
- };
- 
- /*
-@@ -200,8 +221,14 @@ find_parent_component(
- 		return errno;
- 	path_list_add_parent_component(wpi->path, pc);
- 
--	ret = handle_walk_parents(&rec->p_handle, sizeof(rec->p_handle),
--			wpi->ioctl_bufsize, find_parent_component, wpi);
-+	if (wpi->mntfd >= 0)
-+		ret = handle_walk_parents_fd(wpi->mntfd, &rec->p_handle,
-+				sizeof(rec->p_handle), wpi->ioctl_bufsize,
-+				find_parent_component, wpi);
-+	else
-+		ret = handle_walk_parents(&rec->p_handle,
-+				sizeof(rec->p_handle), wpi->ioctl_bufsize,
-+				find_parent_component, wpi);
- 
- 	path_list_del_component(wpi->path, pc);
- 	path_component_free(pc);
-@@ -222,6 +249,7 @@ handle_walk_paths(
- {
- 	struct walk_ppaths_info	wpi = {
- 		.ioctl_bufsize	= ioctl_bufsize,
-+		.mntfd		= -1,
- 	};
- 	int			ret;
- 
-@@ -246,6 +274,41 @@ handle_walk_paths(
- 	return ret;
- }
- 
-+/*
-+ * Call the given function on all known paths from the vfs root to the inode
-+ * described in the handle using an already open mountpoint and fd.  Returns 0
-+ * for success or positive errno.
-+ */
-+int
-+handle_walk_paths_fd(
-+	const char		*mntpt,
-+	int			mntfd,
-+	const void		*hanp,
-+	size_t			hlen,
-+	size_t			ioctl_bufsize,
-+	walk_path_fn		fn,
-+	void			*arg)
++static inline bool hme_prefix_has_path(const struct hme_prefix *pfx)
 +{
-+	struct walk_ppaths_info	wpi = {
-+		.ioctl_bufsize	= ioctl_bufsize,
-+		.mntfd		= mntfd,
-+		.mntpt		= (char *)mntpt,
-+	};
-+	int			ret;
-+
-+	wpi.path = path_list_init();
-+	if (!wpi.path)
-+		return errno;
-+	wpi.fn = fn;
-+	wpi.arg = arg;
-+
-+	ret = handle_walk_parents_fd(mntfd, hanp, hlen, ioctl_bufsize,
-+			find_parent_component, &wpi);
-+
-+	path_list_free(wpi.path);
-+	return ret;
++	return pfx->path[0] != 0;
 +}
 +
- /*
-  * Call the given function on all known paths from the vfs root to the inode
-  * referred to by the file description.  Returns 0 or positive errno.
++static inline void hme_prefix_clear_path(struct hme_prefix *pfx)
++{
++	pfx->path[0] = 0;
++}
++
++static inline void
++hme_prefix_init(
++	struct hme_prefix	*pfx,
++	const char		*mountpoint)
++{
++	pfx->mountpoint = mountpoint;
++	hme_prefix_clear_path(pfx);
++}
++
++void hme_report_event(const struct hme_prefix *pfx,
++		const struct xfs_health_monitor_event *hme);
++
++#endif /* LIBFROG_HEALTHEVENT_H_ */
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 927bd8d0957fab..bccd9289e5dd79 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -19,11 +19,13 @@ bulkstat.c \
+ convert.c \
+ crc32.c \
+ file_exchange.c \
++flagmap.c \
+ fsgeom.c \
+ fsproperties.c \
+ fsprops.c \
+ getparents.c \
+ histogram.c \
++healthevent.c \
+ file_attr.c \
+ list_sort.c \
+ linux.c \
+@@ -51,11 +53,13 @@ dahashselftest.h \
+ div64.h \
+ fakelibattr.h \
+ file_exchange.h \
++flagmap.h \
+ fsgeom.h \
+ fsproperties.h \
+ fsprops.h \
+ getparents.h \
+ handle_priv.h \
++healthevent.h \
+ histogram.h \
+ file_attr.h \
+ logging.h \
+diff --git a/libfrog/flagmap.c b/libfrog/flagmap.c
+new file mode 100644
+index 00000000000000..631c4bbc8f1dc0
+--- /dev/null
++++ b/libfrog/flagmap.c
+@@ -0,0 +1,62 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++
++#include "platform_defs.h"
++#include "libfrog/flagmap.h"
++
++/*
++ * Given a mapping of bits to strings and a bitmask, format the bitmask as a
++ * list of strings and hexadecimal number representing bits not mapped to any
++ * string.  The output will be truncated if buf is not large enough.
++ */
++void
++mask_to_string(
++	const struct flag_map	*map,
++	unsigned long long	mask,
++	const char		*delimiter,
++	char			*buf,
++	size_t			bufsize)
++{
++	const char		*tag = "";
++	unsigned long long	seen = 0;
++	int			w;
++
++	for (; map->string; map++) {
++		seen |= map->flag;
++
++		if (mask & map->flag) {
++			w = snprintf(buf, bufsize, "%s%s", tag, _(map->string));
++			if (w > bufsize)
++				return;
++
++			buf += w;
++			bufsize -= w;
++
++			tag = delimiter;
++		}
++	}
++
++	if (mask & ~seen)
++		snprintf(buf, bufsize, "%s0x%llx", tag, mask & ~seen);
++}
++
++/*
++ * Given a mapping of values to strings and a value, return the matching string
++ * or confusion.
++ */
++const char *
++value_to_string(
++	const struct flag_map	*map,
++	unsigned long long	value)
++{
++	for (; map->string; map++) {
++		if (value == map->flag)
++			return _(map->string);
++	}
++
++	return _("unknown value");
++}
+diff --git a/libfrog/healthevent.c b/libfrog/healthevent.c
+new file mode 100644
+index 00000000000000..8520cb3218fb03
+--- /dev/null
++++ b/libfrog/healthevent.c
+@@ -0,0 +1,360 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++
++#include "platform_defs.h"
++#include "libfrog/healthevent.h"
++#include "libfrog/flagmap.h"
++
++/*
++ * The healthmon log string format is as follows:
++ *
++ * WHICH OBJECT: STATUS
++ *
++ * /mnt: 32 events lost
++ * /mnt agno 0x5 bnobt, rmapbt: sick
++ * /mnt rgno 0x5 bitmap: sick
++ * /mnt ino 13 gen 0x3 bmbtd: sick
++ * /mnt/a bmbtd: sick
++ * /mnt ino 13 gen 0x3 pos 4096 len 4096: directio_write failed
++ * /mnt/a pos 4096 len 4096: directio_read failed
++ * /mnt datadev daddr 0x13 bbcount 0x5: media error
++ * /mnt: filesystem shut down due to shenanigans, badness
++ */
++
++static const struct flag_map device_domains[] = {
++	{ XFS_HEALTH_MONITOR_DOMAIN_DATADEV,	N_("datadev") },
++	{ XFS_HEALTH_MONITOR_DOMAIN_RTDEV,	N_("rtdev") },
++	{ XFS_HEALTH_MONITOR_DOMAIN_LOGDEV,	N_("logdev") },
++	{0, NULL},
++};
++
++static inline const char *
++device_domain_string(
++	uint32_t		domain)
++{
++	return value_to_string(device_domains, domain);
++}
++
++static const struct flag_map fileio_types[] = {
++	{ XFS_HEALTH_MONITOR_TYPE_BUFREAD,	N_("buffered_read") },
++	{ XFS_HEALTH_MONITOR_TYPE_BUFWRITE,	N_("buffered_write") },
++	{ XFS_HEALTH_MONITOR_TYPE_DIOREAD,	N_("directio_read") },
++	{ XFS_HEALTH_MONITOR_TYPE_DIOWRITE,	N_("directio_write") },
++	{ XFS_HEALTH_MONITOR_TYPE_DATALOST,	N_("media") },
++	{0, NULL},
++};
++
++static inline const char *
++fileio_type_string(
++	uint32_t		type)
++{
++	return value_to_string(fileio_types, type);
++}
++
++static const struct flag_map health_types[] = {
++	{ XFS_HEALTH_MONITOR_TYPE_SICK,		N_("sick") },
++	{ XFS_HEALTH_MONITOR_TYPE_CORRUPT,	N_("corrupt") },
++	{ XFS_HEALTH_MONITOR_TYPE_HEALTHY,	N_("healthy") },
++	{0, NULL},
++};
++
++static inline const char *
++health_type_string(
++	uint32_t		type)
++{
++	return value_to_string(health_types, type);
++}
++
++/* Report that the kernel lost events. */
++static void
++report_lost(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	printf("%s: %llu %s\n", pfx->mountpoint,
++			(unsigned long long)hme->e.lost.count,
++			_("events lost"));
++	fflush(stdout);
++}
++
++/* Report that the monitor is running. */
++static void
++report_running(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	printf("%s: %s\n", pfx->mountpoint, _("monitoring started"));
++	fflush(stdout);
++}
++
++/* Report that the filesystem was unmounted. */
++static void
++report_unmounted(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	printf("%s: %s\n", pfx->mountpoint, _("filesystem unmounted"));
++	fflush(stdout);
++}
++
++static const struct flag_map shutdown_reasons[] = {
++	{ XFS_HEALTH_SHUTDOWN_META_IO_ERROR,	N_("metadata I/O error") },
++	{ XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR,	N_("log I/O error") },
++	{ XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT,	N_("forced unmount") },
++	{ XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE,	N_("in-memory state corruption") },
++	{ XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK,	N_("ondisk metadata corruption") },
++	{ XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED,	N_("device removed") },
++	{0, NULL},
++};
++
++/* Report an abortive shutdown of the filesystem. */
++static void
++report_shutdown(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	char					buf[512];
++
++	mask_to_string(shutdown_reasons, hme->e.shutdown.reasons, ", ", buf,
++			sizeof(buf));
++
++	printf("%s: %s %s\n", pfx->mountpoint,
++			_("filesystem shut down due to"), buf);
++	fflush(stdout);
++}
++
++static const struct flag_map inode_structs[] = {
++	{ XFS_BS_SICK_INODE,	N_("core") },
++	{ XFS_BS_SICK_BMBTD,	N_("datafork") },
++	{ XFS_BS_SICK_BMBTA,	N_("attrfork") },
++	{ XFS_BS_SICK_BMBTC,	N_("cowfork") },
++	{ XFS_BS_SICK_DIR,	N_("directory") },
++	{ XFS_BS_SICK_XATTR,	N_("xattr") },
++	{ XFS_BS_SICK_SYMLINK,	N_("symlink") },
++	{ XFS_BS_SICK_PARENT,	N_("parent") },
++	{ XFS_BS_SICK_DIRTREE,	N_("dirtree") },
++	{0, NULL},
++};
++
++/* Report inode metadata corruption */
++static void
++report_inode(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	char					buf[512];
++
++	mask_to_string(inode_structs, hme->e.inode.mask, ", ", buf,
++			sizeof(buf));
++
++	if (hme_prefix_has_path(pfx))
++		printf("%s %s: %s\n",
++				pfx->path,
++				buf,
++				health_type_string(hme->type));
++	else
++		printf("%s %s %llu %s 0x%x %s: %s\n",
++				pfx->mountpoint,
++				_("ino"),
++				(unsigned long long)hme->e.inode.ino,
++				_("gen"),
++				hme->e.inode.gen,
++				buf,
++				health_type_string(hme->type));
++	fflush(stdout);
++}
++
++static const struct flag_map ag_structs[] = {
++	{ XFS_AG_GEOM_SICK_SB,		N_("super") },
++	{ XFS_AG_GEOM_SICK_AGF,		N_("agf") },
++	{ XFS_AG_GEOM_SICK_AGFL,	N_("agfl") },
++	{ XFS_AG_GEOM_SICK_AGI,		N_("agi") },
++	{ XFS_AG_GEOM_SICK_BNOBT,	N_("bnobt") },
++	{ XFS_AG_GEOM_SICK_CNTBT,	N_("cntbt") },
++	{ XFS_AG_GEOM_SICK_INOBT,	N_("inobt") },
++	{ XFS_AG_GEOM_SICK_FINOBT,	N_("finobt") },
++	{ XFS_AG_GEOM_SICK_RMAPBT,	N_("rmapbt") },
++	{ XFS_AG_GEOM_SICK_REFCNTBT,	N_("refcountbt") },
++	{ XFS_AG_GEOM_SICK_INODES,	N_("inodes") },
++	{0, NULL},
++};
++
++/* Report AG metadata corruption */
++static void
++report_ag(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	char					buf[512];
++
++	mask_to_string(ag_structs, hme->e.group.mask, ", ", buf,
++			sizeof(buf));
++
++	printf("%s %s 0x%x %s: %s\n",
++			pfx->mountpoint,
++			_("agno"),
++			hme->e.group.gno,
++			buf,
++			health_type_string(hme->type));
++	fflush(stdout);
++}
++
++static const struct flag_map rtgroup_structs[] = {
++	{ XFS_RTGROUP_GEOM_SICK_SUPER,		N_("super") },
++	{ XFS_RTGROUP_GEOM_SICK_BITMAP,		N_("bitmap") },
++	{ XFS_RTGROUP_GEOM_SICK_SUMMARY,	N_("summary") },
++	{ XFS_RTGROUP_GEOM_SICK_RMAPBT,		N_("rmapbt") },
++	{ XFS_RTGROUP_GEOM_SICK_REFCNTBT,	N_("refcountbt") },
++	{0, NULL},
++};
++
++/* Report rtgroup metadata corruption */
++static void
++report_rtgroup(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	char					buf[512];
++
++	mask_to_string(rtgroup_structs, hme->e.group.mask, ", ", buf,
++			sizeof(buf));
++
++	printf("%s %s 0x%x %s: %s\n",
++			pfx->mountpoint,
++			_("rgno"),
++			hme->e.group.gno,
++			buf, health_type_string(hme->type));
++	fflush(stdout);
++}
++
++static const struct flag_map fs_structs[] = {
++	{ XFS_FSOP_GEOM_SICK_COUNTERS,		N_("fscounters") },
++	{ XFS_FSOP_GEOM_SICK_UQUOTA,		N_("usrquota") },
++	{ XFS_FSOP_GEOM_SICK_GQUOTA,		N_("grpquota") },
++	{ XFS_FSOP_GEOM_SICK_PQUOTA,		N_("prjquota") },
++	{ XFS_FSOP_GEOM_SICK_RT_BITMAP,		N_("bitmap") },
++	{ XFS_FSOP_GEOM_SICK_RT_SUMMARY,	N_("summary") },
++	{ XFS_FSOP_GEOM_SICK_QUOTACHECK,	N_("quotacheck") },
++	{ XFS_FSOP_GEOM_SICK_NLINKS,		N_("nlinks") },
++	{ XFS_FSOP_GEOM_SICK_METADIR,		N_("metadir") },
++	{ XFS_FSOP_GEOM_SICK_METAPATH,		N_("metapath") },
++	{0, NULL},
++};
++
++/* Report fs-wide metadata corruption */
++static void
++report_fs(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	char					buf[512];
++
++	mask_to_string(fs_structs, hme->e.fs.mask, ", ", buf, sizeof(buf));
++
++	printf("%s %s: %s\n",
++			pfx->mountpoint,
++			buf,
++			health_type_string(hme->type));
++	fflush(stdout);
++}
++
++/* Report device media corruption */
++static void
++report_device_error(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	printf("%s %s %s 0x%llx %s 0x%llx: %s\n", pfx->mountpoint,
++			device_domain_string(hme->domain),
++			_("daddr"),
++			(unsigned long long)hme->e.media.daddr,
++			_("bbcount"),
++			(unsigned long long)hme->e.media.bbcount,
++			_("media error"));
++	fflush(stdout);
++}
++
++/* Report file range errors */
++static void
++report_file_range(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	if (hme_prefix_has_path(pfx))
++		printf("%s ", pfx->path);
++	else
++		printf("%s %s %llu %s 0x%x ",
++				pfx->mountpoint,
++				_("ino"),
++				(unsigned long long)hme->e.filerange.ino,
++				_("gen"),
++				hme->e.filerange.gen);
++	if (hme->type != XFS_HEALTH_MONITOR_TYPE_DATALOST &&
++	    hme->e.filerange.error)
++		printf("%s %llu %s %llu: %s: %s\n",
++				_("pos"),
++				(unsigned long long)hme->e.filerange.pos,
++				_("len"),
++				(unsigned long long)hme->e.filerange.len,
++				fileio_type_string(hme->type),
++				strerror(hme->e.filerange.error));
++	else
++		printf("%s %llu %s %llu: %s %s\n",
++				_("pos"),
++				(unsigned long long)hme->e.filerange.pos,
++				_("len"),
++				(unsigned long long)hme->e.filerange.len,
++				fileio_type_string(hme->type),
++				_("failed"));
++	fflush(stdout);
++}
++
++/* Log a health monitoring event to stdout. */
++void
++hme_report_event(
++	const struct hme_prefix			*pfx,
++	const struct xfs_health_monitor_event	*hme)
++{
++	switch (hme->domain) {
++	case XFS_HEALTH_MONITOR_DOMAIN_MOUNT:
++		switch (hme->type) {
++		case XFS_HEALTH_MONITOR_TYPE_LOST:
++			report_lost(pfx, hme);
++			return;
++		case XFS_HEALTH_MONITOR_TYPE_RUNNING:
++			report_running(pfx, hme);
++			return;
++		case XFS_HEALTH_MONITOR_TYPE_UNMOUNT:
++			report_unmounted(pfx, hme);
++			return;
++		case XFS_HEALTH_MONITOR_TYPE_SHUTDOWN:
++			report_shutdown(pfx, hme);
++			return;
++		}
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
++		report_inode(pfx, hme);
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_AG:
++		report_ag(pfx, hme);
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
++		report_rtgroup(pfx, hme);
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_FS:
++		report_fs(pfx, hme);
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_DATADEV:
++	case XFS_HEALTH_MONITOR_DOMAIN_RTDEV:
++	case XFS_HEALTH_MONITOR_DOMAIN_LOGDEV:
++		report_device_error(pfx, hme);
++		break;
++	case XFS_HEALTH_MONITOR_DOMAIN_FILERANGE:
++		report_file_range(pfx, hme);
++		break;
++	}
++}
 
