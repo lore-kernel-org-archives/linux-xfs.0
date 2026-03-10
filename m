@@ -1,148 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33FC0280A58
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 20:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA0F3C8721
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 21:19:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773175956; cv=none; b=GJpHnPc4fUcZJvFOkSVY43pe8j024KlUIq+FTanwyQZ3GIwXS9pwT7yvnYlC69gzlrhmxBhkAncfC7skKQ6qUl4m9uwvUsqMS97by/J3knzphtSSv8pMSqzsNbUVFC+xLs4srWBZ8pIPes/5Iv1CQn6rKi/d+uKp6KqPv9Vv4lY=
+	t=1773177578; cv=none; b=r2/S8vQJAAZjlHaqIeqNC37oWsPbn71Bm5akOxZgArCPdvEHSgwJdNsObAdG/wBFWrdbhnHdkiMo6SioRP4NMS1qDvG/eFJxuQogk7g6bLgAE4a88eu4k/VW0mdIVvzXPXHZ5Da/YT8xcescU1Hyz29FrnGbEG7iqyEY5d1EabI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773175956; c=relaxed/simple;
-	bh=/lrH3ivhiQu3seo7b2A44qX5uPNJbIqm66BRy3gAWOU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V3AJ1zKLfU5/ZpKy/SzUZjP34sBgCChWAu6SN023cmJXK6kpIVFiGi1hScwaWzw4OVdkeRxDZjg1YCa5RIflezJWNlV14+XHQEUyKxUYcMQFTXpOIAgldgwjO4azswcyM10m8xRvwk1XFRAwdZ+iM3aueAxmGfgLWap3ikwSmzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xm/IXV9r; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773177578; c=relaxed/simple;
+	bh=Zf7/i0jGVAu0/+7+dSwJFtM3bUaQc1Rs7UI/+ZD5oOs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=QYrN303412jC6bRLW90oqyj79AGNMDxDRjSQBFE3CUbaU0tzJQ5KbgWrIURw+RrzHBxx8sk+HXA+LJ8QvYip2h1kkpEgD0LM1yAePP0xaafZb0MrfrFRsKXECnD9JjPmUmteEm3H0gRRw1f/+iJI75lz93HS+0MjHkd4J/P2kTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=XEWWl6od; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xm/IXV9r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C4F8C19423;
-	Tue, 10 Mar 2026 20:52:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773175955;
-	bh=/lrH3ivhiQu3seo7b2A44qX5uPNJbIqm66BRy3gAWOU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xm/IXV9rtQT1TevVLInr30Z90Lp191MF3fkkIXSxtjSS4MloZ8s0G0g/rEMU4gEQ0
-	 BOkOHgWfHUaDBV6MGVdcI7ZNKYjGc+eQ8wpVDPV2T94xUTZA912StvSBap7SzzLPzt
-	 M915VvElRiUEFdV2Xj21jWhY8/6z9L6BjBaxpIzycXPrP7rFqUJ/7ulmyfBSBHB6g/
-	 58/e9EtIDHIUiT/wpPpQR1PTgLT4697TfQLINnif8O7LQKmk24Foa2O/2cGZPjVItT
-	 6IqvctdaugkeGO221gicR2h5ceBXHksRs02Otp5aOhAa6HeDfMDhah+NlVW5UruqDg
-	 0CNT4YLGPS06A==
-Date: Tue, 10 Mar 2026 13:52:35 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org,
-	pankaj.raghav@linux.dev, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH v12 2/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <20260310205235.GA1105363@frogsfrogsfrogs>
-References: <20260310194245.848034-2-lukas@herbolt.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XEWWl6od"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260310211933epoutp048ed8ab0522324cae415ea9b62794213c~bl5utmSXp0440304403epoutp04M
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 21:19:33 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260310211933epoutp048ed8ab0522324cae415ea9b62794213c~bl5utmSXp0440304403epoutp04M
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1773177573;
+	bh=WwMjZur1Xm8pRnWlc1Gkb+/unkxaBfqJrvZe+O8jiJY=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=XEWWl6odqYYdrhbBZBD6L5tw3NkcrGvmAXc9/LRTE3VOVzpD/vZruWY8hAt2nRiGb
+	 gu7mcGmk0AISIDCN3cjzecbBFeJeaeaydkVKiOu3IKurcKhVIFu0jJt+qUDDdMufSh
+	 K0fLDHUqBfUqKABtu2icem/94kuu/N7mJ/r7vpf0=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260310211932epcas5p158327b35aaf2d8aeb73b3e5056937f5c~bl5uDXnwT2299022990epcas5p1R;
+	Tue, 10 Mar 2026 21:19:32 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.94]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4fVmwg3hb6z6B9m4; Tue, 10 Mar
+	2026 21:19:31 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260310211930epcas5p12a8e25dc1aaa1026025282b281b04d46~bl5smpzcF1050410504epcas5p1h;
+	Tue, 10 Mar 2026 21:19:30 +0000 (GMT)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260310211928epsmtip1700dab47f7127f82fbeec89dedbd4ee8~bl5qrJzFO1355813558epsmtip1w;
+	Tue, 10 Mar 2026 21:19:28 +0000 (GMT)
+Message-ID: <9b0d2f1c-f3dd-4e7d-963b-dd0fde02b243@samsung.com>
+Date: Wed, 11 Mar 2026 02:49:27 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260310194245.848034-2-lukas@herbolt.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/5] write streams and xfs spatial isolation
+To: Christoph Hellwig <hch@lst.de>
+Cc: brauner@kernel.org, djwong@kernel.org, jack@suse.cz, cem@kernel.org,
+	kbusch@kernel.org, axboe@kernel.dk, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, gost.dev@samsung.com, Hans Holmberg
+	<hans.holmberg@wdc.com>
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20260309154047.GA18538@lst.de>
+Content-Transfer-Encoding: 7bit
+X-CMS-MailID: 20260310211930epcas5p12a8e25dc1aaa1026025282b281b04d46
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260309053425epcas5p32886580a4fbe646ceee66f2864970e9f
+References: <CGME20260309053425epcas5p32886580a4fbe646ceee66f2864970e9f@epcas5p3.samsung.com>
+	<20260309052944.156054-1-joshi.k@samsung.com>
+	<20260309154047.GA18538@lst.de>
 
-On Tue, Mar 10, 2026 at 08:42:46PM +0100, Lukas Herbolt wrote:
-> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device
-> enable the unmap write zeroes operation.
+On 3/9/2026 9:10 PM, Christoph Hellwig wrote:
+> This is laking numbers to justify all the changes.
 > 
-> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> ---
->  v12 changes:
-> 	split from xfs_falloc_zero_range() into separate function
->  fs/xfs/xfs_file.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 48 insertions(+), 1 deletion(-)
+>  From previous experiments the most important isolations is to put
+> the file system log and metadata into a separate stream each, which
+> would be the first step before exposing user knobs.
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index fd049a1fc9c6..ede7be05d83e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1318,6 +1318,49 @@ xfs_falloc_zero_range(
->  	return xfs_falloc_setsize(file, new_size);
->  }
->  
-> +static int
-> +xfs_falloc_write_zero_range(
-> +	struct file		*file,
-> +	int			mode,
-> +	loff_t			offset,
-> +	loff_t			len,
-> +	struct xfs_zone_alloc_ctx *ac)
-> +{
-> +	struct inode		*inode = file_inode(file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	unsigned int		blksize = i_blocksize(inode);
-> +	loff_t			new_size = 0;
-> +	int			error;
-> +
-> +	if (xfs_is_always_cow_inode(ip) ||
-> +	    !bdev_write_zeroes_unmap_sectors(
-> +		    xfs_inode_buftarg(ip)->bt_bdev))
-> +		return -EOPNOTSUPP;
-> +
-> +	trace_xfs_zero_file_space(ip);
+> And once we look into application optimizations I think your best bet is
+> to resurrect the FDP/write streams support for zoned XFS that Hans and I
+> did and posted in reply to one of Keith' iterations of the write stream
+> patches.  This will reuse all the intelligent placement decisions we've
+> put into that allocator.  Once that is done we can look into exposing the
+> write streams already inherent in that to user space, but we really
+> should be doing all the ground work first.  And maybe some of this can
+> apply to the conventional allocator, but given that it has no way to
+> track the placement unit sizes I'm a bit doubtful that the results will
+> look great.
 
-I think we want to have a separate tracepoint for write-zeroes, but TBH
-the fallocate tracepoints all kinda suck in that we don't record the
-range or any of the flags so... there's a minor cleanup to be done
-separately.
+In the LSFMM thread on this topic, you advised that I should not tie a
+high-level VFS/XFS feature exclusively to FDP as a single
+implementation [1]. I took your advice and tried to communicate that
+general value with this iteration.
 
-In the meantime this looks ok provided it doesn't break fsx/fsstress?
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+- Parts of these patches rely on block device's write streams. Block 
+device provider can be anything (lvm, raid etc.) that chooses to expose 
+streams to leverage the application's spatial isolation intent. That 
+goes back to what I added in the cover letter: write streams enable 
+collaborative data placement, allowing the abstraction provider to 
+leverage application intent.
 
---D
+- I added Patch 4 (AG steering) and Patch 5 (software streams)
+specifically with this general-purpose intent in mind. For FDP only 
+enablement, I wanted only first 3 patches.
 
-> +
-> +	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_free_file_space(ip, offset, len, ac);
-> +	if (error)
-> +		return error;
-> +
-> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
-> +	offset = round_down(offset, blksize);
-> +	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_falloc_setsize(file, new_size);
-> +	if (error)
-> +		return error;
-> +
-> +	return xfs_alloc_file_space(ip, offset, len,
-> +			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
-> +}
-> +
->  static int
->  xfs_falloc_unshare_range(
->  	struct file		*file,
-> @@ -1377,7 +1420,7 @@ xfs_falloc_allocate_range(
->  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
-> -		 FALLOC_FL_UNSHARE_RANGE)
-> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
->  
->  STATIC long
->  __xfs_file_fallocate(
-> @@ -1423,6 +1466,10 @@ __xfs_file_fallocate(
->  	case FALLOC_FL_ZERO_RANGE:
->  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
->  		break;
-> +	case FALLOC_FL_WRITE_ZEROES:
-> +		error = xfs_falloc_write_zero_range(file, mode, offset,
-> +				len, ac);
-> +		break;
->  	case FALLOC_FL_UNSHARE_RANGE:
->  		error = xfs_falloc_unshare_range(file, mode, offset, len);
->  		break;
-> -- 
-> 2.53.0
-> 
-> 
+Regarding the Zoned allocator approach - this was designed for a
+fundamentally different device architecture. My concern with porting
+FDP to it is that it negates the design consensus + progress we reached 
+since the RFC last year.
+
+Temperature vs. Spatial Placement: The Zoned allocator leverages
+temperature/lifetime hints. The deliberate design choice to move away
+from a temperature-based API was made in RFC itself, and I outlined
+the reasoning in the cover letter ("Comparison with write hints"
+section). Also the discoverable interface allows to add things like 
+logs/meta streams easily.
+
+Hardware Constraints: The Zoned allocator is designed to manage strict
+hardware constraints (tracking exact zone write pointers, host-side
+garbage collection). Conventional and FDP drives offload these 
+constraints to FTL anyway.
+
+Lack of precise placement unit tracking: If any inefficiencies occur
+due to that, they would exclusively apply to FDP-capable device.
+
+The AG steering scheme is intended for the broader class of conventional 
+block devices which don't expose write pointer, placement unit etc.
+
+[1] https://lore.kernel.org/linux-fsdevel/20260223135339.GA17313@lst.de/
