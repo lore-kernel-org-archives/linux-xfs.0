@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A43C1DF755;
-	Tue, 10 Mar 2026 03:51:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CBC92C11E8;
+	Tue, 10 Mar 2026 03:51:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114671; cv=none; b=VtuwCYtjsBCwY3M0YLnFq8HEsLvGWPV3LMD7Z1G4rpwuf4qLXP5i6x8Z/wNXcuSrLxjawhSxb7hXp0YEe5+a3oTfRTrkiKL2zOry5Mbyu5aV+jZRWY2UKZ4v7Kf83a9eH/Xx2/Xsekbx7W6RUciaiujkp30fKJ/pO3FJbtrro/s=
+	t=1773114687; cv=none; b=rpJ+p4Tgki+CrusCLb4bteErnUESUvR5SDK0P0xKX71HOvQcuaVxAnRkDPkpbXJJLNkVnYFswHA+b3bLWx+xl/YcfU39M0V9VvBSPa+9CVWK7z9AayiIxvZH77z8Q9mr8gyAj0fEHL28JzOfN6GNYUr94WyWEELTu5WhrogHJqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114671; c=relaxed/simple;
-	bh=VkibPkYh1rfwTygUyNRnt0+3fmTpVLyLXJ1UKiR8204=;
+	s=arc-20240116; t=1773114687; c=relaxed/simple;
+	bh=SNJ8TbUBDlqhiVK7+LmOUpbQNbGe9ck+HXXL/yDd4IM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DcZdU8hpEFuSBqf5aj8LyQkHfZ8g7DV7X+FWJ4pIeAaBru4mzZ23HbnWkdq5ZLbAoU5jZpsn+0DnB1ic7/I5Q4rD/e8NMUau5JDoWFiTCOSoWbFWUL9DONG2MgBmRe99yrSv1Aa2CYOX1/uXGpcdmTPsNFAPHdO/xkCeJcIOySk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=urOHqOsU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=JouejBm/BXB5wo9MIWTzX2/OhN71YKBrjvb8GCUdYZltKxvdvJinMf5hBj3GWbyaxV9RAaS4J8V9ltAKvp5QIu9ILWRtEmGRew+SsT0coZprq2Z3+teTKm46Q/8fnnCePPTSXlhMdxD9umHgZFfi2p5T0eBEbgxOhUIW0rHXb0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E/i6BEl1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="urOHqOsU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14912C19423;
-	Tue, 10 Mar 2026 03:51:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E/i6BEl1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0079C19423;
+	Tue, 10 Mar 2026 03:51:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114671;
-	bh=VkibPkYh1rfwTygUyNRnt0+3fmTpVLyLXJ1UKiR8204=;
+	s=k20201202; t=1773114686;
+	bh=SNJ8TbUBDlqhiVK7+LmOUpbQNbGe9ck+HXXL/yDd4IM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=urOHqOsU4ie8e3eg27XsxSFrJBq4rKbpg7NA9SsT+zuQIcrlutMseZ/5QNLkl9hbU
-	 ZM2ZvmHlXM+G4STDnXsxRrsZUsZlo+KS0SjSk9PtBESN8urSyTEvIKHlRknnuggYwe
-	 MBjsRFM7jIXOjWxv0FO56T7oPxkrKPoBuyI14UoUvrDHQ92XvM+WvEs7yn6/b2DEJ4
-	 leyAtyr8nUlh7mIjeMe1SZCA3Ru9FERuYNsl81HNS/QX2K1gqkxP45GvUqf4/PDO9S
-	 LngGCzVaXoyZj+UAqm/4csnnHEzcZR+izCSTdDYnomL5HB4fR9Bp4wQv42QecIZoLz
-	 2BlG8uYyBVofg==
-Date: Mon, 09 Mar 2026 20:51:10 -0700
-Subject: [PATCH 04/14] xfs: set up common code for testing xfs_healer
+	b=E/i6BEl1N05yS2tT5Moo6U2n18qDRRTYuRL0qxzTKTCjOXD6PjJiD2dFV+xh2U6x4
+	 UzGU8BKdvw/nlhdrQEeb+cprAwdgjokv/0xuJHqHxQ98tyT+sehlwTN3X4zg6wkE/G
+	 N3HxjHppryB2BIjIfRUErnAXISqMPQC3qKpbhrPIv72hQRKx3lX7iOcpqbOWNFCBb4
+	 +UTJ9KDcSis6X9PgiQS5VkBt0ZPcUkUIT+/iRuK6j146oi7gP3C2PkPBpM2rgJ8WP8
+	 c49WjbLEF7VFnMS/7vuCrHku5vSM+Z8D3Uj3Qigw84TP6rbQvnFdx+o5brqzTJuGbz
+	 E/WG9Ka91s3Vg==
+Date: Mon, 09 Mar 2026 20:51:26 -0700
+Subject: [PATCH 05/14] xfs: test xfs_healer's event handling
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177311403849.1186408.3223809492518597284.stgit@frogsfrogsfrogs>
+Message-ID: <177311403867.1186408.18154501598966372334.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,234 +45,74 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a bunch of common code so that we can test the xfs_healer daemon.
-Most of the changes here are to make it easier to manage the systemd
-service units for xfs_healer and xfs_scrub.
+Make sure that xfs_healer can handle every type of event that the kernel
+can throw at it by initiating a full scrub of a test filesystem.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/config  |   14 ++++++++
- common/rc      |    5 +++
- common/systemd |   39 ++++++++++++++++++++++
- common/xfs     |   98 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/802  |    4 +-
- 5 files changed, 158 insertions(+), 2 deletions(-)
+ tests/xfs/1882     |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1882.out |    2 ++
+ 2 files changed, 46 insertions(+)
+ create mode 100755 tests/xfs/1882
+ create mode 100644 tests/xfs/1882.out
 
 
-diff --git a/common/config b/common/config
-index 1420e35ddfee42..8468a60081f50c 100644
---- a/common/config
-+++ b/common/config
-@@ -161,6 +161,20 @@ export XFS_ADMIN_PROG="$(type -P xfs_admin)"
- export XFS_GROWFS_PROG=$(type -P xfs_growfs)
- export XFS_SPACEMAN_PROG="$(type -P xfs_spaceman)"
- export XFS_SCRUB_PROG="$(type -P xfs_scrub)"
+diff --git a/tests/xfs/1882 b/tests/xfs/1882
+new file mode 100755
+index 00000000000000..2fb4589418401e
+--- /dev/null
++++ b/tests/xfs/1882
+@@ -0,0 +1,44 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1882
++#
++# Make sure that xfs_healer correctly handles all the reports that it gets
++# from the kernel.  We simulate this by using the --everything mode so we get
++# all the events, not just the sickness reports.
++#
++. ./common/preamble
++_begin_fstest auto selfhealing
 +
-+XFS_HEALER_PROG="$(type -P xfs_healer)"
-+XFS_HEALER_START_PROG="$(type -P xfs_healer_start)"
++. ./common/filter
++. ./common/fuzzy
++. ./common/systemd
++. ./common/populate
 +
-+# If not found, try the ones installed in libexec
-+if [ ! -x "$XFS_HEALER_PROG" ] && [ -e /usr/libexec/xfsprogs/xfs_healer ]; then
-+	XFS_HEALER_PROG=/usr/libexec/xfsprogs/xfs_healer
-+fi
-+if [ ! -x "$XFS_HEALER_START_PROG" ] && [ -e /usr/libexec/xfsprogs/xfs_healer_start ]; then
-+	XFS_HEALER_START_PROG=/usr/libexec/xfsprogs/xfs_healer_start
-+fi
-+export XFS_HEALER_PROG
-+export XFS_HEALER_START_PROG
++_require_scrub
++_require_xfs_io_command "scrub"		# online check support
++_require_command "$XFS_HEALER_PROG" "xfs_healer"
++_require_scratch
 +
- export XFS_PARALLEL_REPAIR_PROG="$(type -P xfs_prepair)"
- export XFS_PARALLEL_REPAIR64_PROG="$(type -P xfs_prepair64)"
- export __XFSDUMP_PROG="$(type -P xfsdump)"
-diff --git a/common/rc b/common/rc
-index ccb78baf5bd41a..0b740595d231b5 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3021,6 +3021,11 @@ _require_xfs_io_command()
- 	"label")
- 		testio=`$XFS_IO_PROG -c "label" $TEST_DIR 2>&1`
- 		;;
-+	"verifymedia")
-+		testio=`$XFS_IO_PROG -x -c "verifymedia $* 0 0" 2>&1`
-+		echo $testio | grep -q "invalid option" && \
-+			_notrun "xfs_io $command support is missing"
-+		;;
- 	"open")
- 		# -c "open $f" is broken in xfs_io <= 4.8. Along with the fix,
- 		# a new -C flag was introduced to execute one shot commands.
-diff --git a/common/systemd b/common/systemd
-index b2e24f267b2d93..589aad1bef2637 100644
---- a/common/systemd
-+++ b/common/systemd
-@@ -44,6 +44,18 @@ _systemd_unit_active() {
- 	test "$(systemctl is-active "$1")" = "active"
- }
- 
-+# Wait for up to a certain number of seconds for a service to reach inactive
-+# state.
-+_systemd_unit_wait() {
-+	local svcname="$1"
-+	local timeout="${2:-30}"
++# Does this fs support health monitoring?
++_scratch_mkfs >> $seqres.full
++_scratch_mount
++_require_xfs_healer $SCRATCH_MNT
++_scratch_unmount
 +
-+	for ((i = 0; i < (timeout * 2); i++)); do
-+		test "$(systemctl is-active "$svcname")" = "inactive" && break
-+		sleep 0.5
-+	done
-+}
++# Create a sample fs with all the goodies
++_scratch_populate_cached nofill &>> $seqres.full
++_scratch_mount
 +
- _require_systemd_unit_active() {
- 	_require_systemd_unit_defined "$1"
- 	_systemd_unit_active "$1" || \
-@@ -71,3 +83,30 @@ _systemd_unit_status() {
- 	_systemd_installed || return 1
- 	systemctl status "$1"
- }
++_scratch_invoke_xfs_healer "$tmp.healer" --everything
 +
-+# Start a running systemd unit
-+_systemd_unit_start() {
-+	systemctl start "$1"
-+}
-+# Stop a running systemd unit
-+_systemd_unit_stop() {
-+	systemctl stop "$1"
-+}
++# Run scrub to make some noise
++_scratch_scrub -b -n >> $seqres.full
 +
-+# Mask or unmask a running systemd unit
-+_systemd_unit_mask() {
-+	systemctl mask "$1"
-+}
-+_systemd_unit_unmask() {
-+	systemctl unmask "$1"
-+}
-+_systemd_unit_masked() {
-+	systemctl status "$1" 2>/dev/null | grep -q 'Loaded: masked'
-+}
++_scratch_kill_xfs_healer
++cat $tmp.healer >> $seqres.full
 +
-+_systemd_service_unit_path() {
-+	local template="$1"
-+	local path="$2"
-+
-+	systemd-escape --template "$template" --path "$path"
-+}
-diff --git a/common/xfs b/common/xfs
-index 7fa0db2e26b4c9..f276325df8fbac 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -2301,3 +2301,101 @@ _filter_bmap_gno()
- 		if ($ag =~ /\d+/) {print "$ag "} ;
-         '
- }
-+
-+# Run the xfs_healer program on some filesystem
-+_xfs_healer() {
-+	$XFS_HEALER_PROG "$@"
-+}
-+
-+# Compute the xfs_healer systemd service instance name for a given path.
-+# This is easy because xfs_healer has always supported --svcname.
-+_xfs_healer_svcname()
-+{
-+	_xfs_healer --svcname "$@"
-+}
-+
-+# Compute the xfs_scrub systemd service instance name for a given path.  This
-+# is tricky because xfs_scrub only gained --svcname when xfs_healer was made.
-+_xfs_scrub_svcname()
-+{
-+	local ret
-+
-+	if ret="$($XFS_SCRUB_PROG --svcname "$@")"; then
-+		echo "$ret"
-+		return 0
-+	fi
-+
-+	# ...but if not, we can fall back to brute force systemd invocations.
-+	_systemd_service_unit_path "xfs_scrub@.service" "$*"
-+}
-+
-+# Run the xfs_healer program on the scratch fs
-+_scratch_xfs_healer() {
-+	_xfs_healer "$@" "$SCRATCH_MNT"
-+}
-+
-+# Turn off the background xfs_healer service if any so that it doesn't fix
-+# injected metadata errors; then start a background copy of xfs_healer to
-+# capture that.
-+_invoke_xfs_healer() {
-+	local mount="$1"
-+	local logfile="$2"
-+	shift; shift
-+
-+	if _systemd_is_running; then
-+		local svc="$(_xfs_healer_svcname "$mount")"
-+		_systemd_unit_stop "$svc" &>> $seqres.full
-+	fi
-+
-+	$XFS_HEALER_PROG "$mount" "$@" &> "$logfile" &
-+	XFS_HEALER_PID=$!
-+
-+	# Wait 30s for the healer program to really start up
-+	for ((i = 0; i < 60; i++)); do
-+		test -e "$logfile" && \
-+			grep -q 'monitoring started' "$logfile" && \
-+			break
-+		sleep 0.5
-+	done
-+}
-+
-+# Run our own copy of xfs_healer against the scratch device.  Note that
-+# unmounting the scratch fs causes the healer daemon to exit, so we don't need
-+# to kill it explicitly from _cleanup.
-+_scratch_invoke_xfs_healer() {
-+	_invoke_xfs_healer "$SCRATCH_MNT" "$@"
-+}
-+
-+# Unmount the filesystem to kill the xfs_healer instance started by
-+# _invoke_xfs_healer, and wait up to a certain amount of time for it to exit.
-+_kill_xfs_healer() {
-+	local unmount="$1"
-+	local timeout="${2:-30}"
-+	local i
-+
-+	# Unmount fs to kill healer, then wait for it to finish
-+	for ((i = 0; i < (timeout * 2); i++)); do
-+		$unmount &>> $seqres.full && break
-+		sleep 0.5
-+	done
-+
-+	test -n "$XFS_HEALER_PID" && \
-+		kill $XFS_HEALER_PID &>> $seqres.full
-+	wait
-+	unset XFS_HEALER_PID
-+}
-+
-+# Unmount the scratch fs to kill a _scratch_invoke_xfs_healer instance.
-+_scratch_kill_xfs_healer() {
-+	local unmount="${1:-_scratch_unmount}"
-+	shift
-+
-+	_kill_xfs_healer "$unmount" "$@"
-+}
-+
-+# Does this mounted filesystem support xfs_healer?
-+_require_xfs_healer()
-+{
-+	_xfs_healer --supported "$@" &>/dev/null || \
-+		_notrun "health monitoring not supported on this kernel"
-+}
-diff --git a/tests/xfs/802 b/tests/xfs/802
-index fc4767acb66a55..18312b15b645bd 100755
---- a/tests/xfs/802
-+++ b/tests/xfs/802
-@@ -105,8 +105,8 @@ run_scrub_service() {
- }
- 
- echo "Scrub Scratch FS"
--scratch_path=$(systemd-escape --path "$SCRATCH_MNT")
--run_scrub_service xfs_scrub@$scratch_path
-+svc="$(_xfs_scrub_svcname "$SCRATCH_MNT")"
-+run_scrub_service "$svc"
- find_scrub_trace "$SCRATCH_MNT"
- 
- # Remove the xfs_scrub_all media scan stamp directory (if specified) because we
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/1882.out b/tests/xfs/1882.out
+new file mode 100644
+index 00000000000000..9b31ccb735cabd
+--- /dev/null
++++ b/tests/xfs/1882.out
+@@ -0,0 +1,2 @@
++QA output created by 1882
++Silence is golden
 
