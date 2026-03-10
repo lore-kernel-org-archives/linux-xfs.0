@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3641634D4C1;
-	Tue, 10 Mar 2026 03:42:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C647D3B8D59;
+	Tue, 10 Mar 2026 03:42:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114137; cv=none; b=WN9r8Vqfs2LL9d8OHWvwcPgrppDgnqcRMFGugWVe3lABnKhFc/u5BS5tUyNBKN7QT4t/8t75O9/mZ3oHqIEtas07CSdcAw9mIvFEaByJuYSKrBb/fMV0b/NXd6PjG77YpydOMYWBiNum1JCbUFOB8WCCUIjxqgCL5nrDP0Lw1lk=
+	t=1773114152; cv=none; b=s2npyUAmUrjmOHnPbdeC0jTekuxN141S7jl4mNcQGgn+yx+Q7hHY9EwL6ZXFYBbtFcG7HymgPttwdqwhzW1tFTv4R8OJeJ27DmuB8UJ29jhMRShNoGXe5IaEQsCk3xywZ/kYdrOfbZDUn4kOYK0q8HyosIFzPwmPiDwFSfGn2AY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114137; c=relaxed/simple;
-	bh=SO04fnJ9dXwEdmsIdaIovUzM5+Jv2Bc7nR4LTEdp6QY=;
+	s=arc-20240116; t=1773114152; c=relaxed/simple;
+	bh=/PBpHKkIVBqtDgnGCakUe1TSMvEqWeb8P+0vPk4V2hM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ghwp3r+BS7jX84Ya32dv2TMrBXjzQ7K5c5y2+SdxiBNOV+631mhJ3a4tw38nIay8YvmhUsA5WwPegZMnhtvODr4hniqTWSsHAT2NnG/IIR9I0iYhbdcl/4/JJq0V/xsaVsIZ8NOpJThUCFQGXbg0ScMpyX/zjXi0pCLh0SpBosc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EGh4UJxZ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=njpYgJC91WEsIxROnsMUSBWPfY7zH2EqHqrvJ9/v5eWQWYEFuUPq+qJtoJ0a6+sjVU1RJXsFYoWcXKFt9Dj4TF4LBITOFzmnXEYVlsTX1v/m7F4BbpBL1TgKPKhVXXyYDsC5NOb7OLe18unfoILNyW7Shl0gaXwEWYl/aKyagVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qJND+KSK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EGh4UJxZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C06A6C4CEF7;
-	Tue, 10 Mar 2026 03:42:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qJND+KSK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68BD0C4CEF7;
+	Tue, 10 Mar 2026 03:42:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114136;
-	bh=SO04fnJ9dXwEdmsIdaIovUzM5+Jv2Bc7nR4LTEdp6QY=;
+	s=k20201202; t=1773114152;
+	bh=/PBpHKkIVBqtDgnGCakUe1TSMvEqWeb8P+0vPk4V2hM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EGh4UJxZMllxVJc6qsqWFVwlI241p7j0hnVahy9+ZFrtJ/vzH+8UUUbEQht2rDjCK
-	 B0tiq+zIcKg6mHapFi+kzIwwzES6lcIgiJy71ShvQgTXaDTxqyO+uMZ63QpuY8/WOv
-	 2lThLn2FARe/1lQXxdTbQy/bMZ/FIeN80yKjCGmfVRgPhUf2rsc07hFpEB2yzlmpHQ
-	 h+RJNiPyIJf6K1g8jsAKk/wz9lpXG0+dhNfyf3H744BtZMHY1tb2yMQW/r4QiXUMTi
-	 8c+OrmAnNdfemr96VKJ/uIDbGb2wRZXIzhrAT1DG8Ef+lmkiyeVRzvfMn6A0OdxdFO
-	 BQS+n1Wg5DUtQ==
-Date: Mon, 09 Mar 2026 20:42:16 -0700
-Subject: [PATCHSET v9 1/2] fstests: test generic file IO error reporting
+	b=qJND+KSKSix7l1qKFRXAxqlpEco4XDLLjQdLNu70ER5KpJAXssClptJQk0eKfmp5D
+	 pk7Ek5wyPAZ6NsIofjRl5jGrTAkJZDnjcS+1zzrpPqHLlfZvL3LFN3oKqiv/3CPysc
+	 e4dteQ5EYuPDX4S6TKO5Sy/b4eLu3nXymNmp5yv8t5z02qL9YqVOuL4SAZNhP7IPam
+	 +TiAHkAiTaqf5n98hGUlohXdX3ye7oHQbp3gy0ZBimqsd6z57vHUddSQboWvQFU2/8
+	 rgVStAn6k8qXZSbTxKFw6NLa0ePUslI1plwmn3fizkQyayDjYcP04VuSc8F28N/73w
+	 PKKKlxHPQaW/Q==
+Date: Mon, 09 Mar 2026 20:42:32 -0700
+Subject: [PATCHSET v9 2/2] fstests: autonomous self healing of filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: jack@suse.cz, fstests@vger.kernel.org, amir73il@gmail.com,
- gabriel@krisman.be, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- hch@lst.de
-Message-ID: <177311403420.1186306.10503664469609309721.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 In-Reply-To: <20260310033846.GH1105363@frogsfrogsfrogs>
 References: <20260310033846.GH1105363@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,13 +45,20 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Refactor the iomap file I/O error handling code so that failures are
-reported in a generic way to fsnotify.  Then connect the XFS health
-reporting to the same fsnotify, and now XFS can notify userspace of
-problems.
+This series adds functionality and regression tests for the automated
+self healing daemon for xfs.
 
 v9: tweak fstests per userspace changes; improve attribution of the
     generic fserror test; fix some bugs pointed out by zorro
+v8: clean up userspace for merging now that the kernel part is upstream
+v7: more cleanups of the media verification ioctl, improve comments, and
+    reuse the bio
+v6: fix pi-breaking bugs, make verify failures trigger health reports
+v5: add verify-media ioctl, collapse small helper funcs with only
+    one caller
+v4: drop multiple client support so we can make direct calls into
+    healthmon instead of chasing pointers and doing indirect calls
+v3: drag out of rfc status
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -64,22 +69,87 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=filesystem-error-reporting
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=filesystem-error-reporting
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-monitoring
 ---
 Commits in this patchset:
- * generic: test fsnotify filesystem error reporting
+ * xfs: test health monitoring code
+ * xfs: test for metadata corruption error reporting via healthmon
+ * xfs: test io error reporting via healthmon
+ * xfs: set up common code for testing xfs_healer
+ * xfs: test xfs_healer's event handling
+ * xfs: test xfs_healer can fix a filesystem
+ * xfs: test xfs_healer can report file I/O errors
+ * xfs: test xfs_healer can report file media errors
+ * xfs: test xfs_healer can report filesystem shutdowns
+ * xfs: test xfs_healer can initiate full filesystem repairs
+ * xfs: test xfs_healer can follow mount moves
+ * xfs: test xfs_healer wont repair the wrong filesystem
+ * xfs: test xfs_healer background service
+ * xfs: test xfs_healer startup service
 ---
- common/rc              |   25 ++++++
- doc/group-names.txt    |    1 
- src/Makefile           |    2 
- src/fs-monitor.c       |  153 ++++++++++++++++++++++++++++++++++
- tests/generic/1838     |  214 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1838.out |   20 ++++
- 6 files changed, 414 insertions(+), 1 deletion(-)
- create mode 100644 src/fs-monitor.c
- create mode 100755 tests/generic/1838
- create mode 100644 tests/generic/1838.out
+ common/config      |   14 +++
+ common/module      |   11 +++
+ common/rc          |    5 +
+ common/systemd     |   39 ++++++++++
+ common/xfs         |   98 ++++++++++++++++++++++++
+ tests/xfs/1878     |   93 +++++++++++++++++++++++
+ tests/xfs/1878.out |   10 ++
+ tests/xfs/1879     |   93 +++++++++++++++++++++++
+ tests/xfs/1879.out |    8 ++
+ tests/xfs/1882     |   44 +++++++++++
+ tests/xfs/1882.out |    2 
+ tests/xfs/1884     |   89 ++++++++++++++++++++++
+ tests/xfs/1884.out |    2 
+ tests/xfs/1885     |   59 +++++++++++++++
+ tests/xfs/1885.out |    5 +
+ tests/xfs/1896     |  210 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1896.out |   21 +++++
+ tests/xfs/1897     |  172 +++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1897.out |    7 ++
+ tests/xfs/1898     |   37 +++++++++
+ tests/xfs/1898.out |    4 +
+ tests/xfs/1899     |  108 +++++++++++++++++++++++++++
+ tests/xfs/1899.out |    3 +
+ tests/xfs/1900     |  115 ++++++++++++++++++++++++++++
+ tests/xfs/1900.out |    2 
+ tests/xfs/1901     |  137 ++++++++++++++++++++++++++++++++++
+ tests/xfs/1901.out |    2 
+ tests/xfs/1902     |  152 ++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1902.out |    2 
+ tests/xfs/1903     |  124 +++++++++++++++++++++++++++++++
+ tests/xfs/1903.out |    6 +
+ tests/xfs/802      |    4 -
+ 32 files changed, 1676 insertions(+), 2 deletions(-)
+ create mode 100755 tests/xfs/1878
+ create mode 100644 tests/xfs/1878.out
+ create mode 100755 tests/xfs/1879
+ create mode 100644 tests/xfs/1879.out
+ create mode 100755 tests/xfs/1882
+ create mode 100644 tests/xfs/1882.out
+ create mode 100755 tests/xfs/1884
+ create mode 100644 tests/xfs/1884.out
+ create mode 100755 tests/xfs/1885
+ create mode 100644 tests/xfs/1885.out
+ create mode 100755 tests/xfs/1896
+ create mode 100644 tests/xfs/1896.out
+ create mode 100755 tests/xfs/1897
+ create mode 100755 tests/xfs/1897.out
+ create mode 100755 tests/xfs/1898
+ create mode 100755 tests/xfs/1898.out
+ create mode 100755 tests/xfs/1899
+ create mode 100644 tests/xfs/1899.out
+ create mode 100755 tests/xfs/1900
+ create mode 100755 tests/xfs/1900.out
+ create mode 100755 tests/xfs/1901
+ create mode 100755 tests/xfs/1901.out
+ create mode 100755 tests/xfs/1902
+ create mode 100755 tests/xfs/1902.out
+ create mode 100755 tests/xfs/1903
+ create mode 100644 tests/xfs/1903.out
 
