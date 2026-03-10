@@ -1,202 +1,216 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C58FD3BE17B;
-	Tue, 10 Mar 2026 03:53:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 878373A900B;
+	Tue, 10 Mar 2026 03:57:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114827; cv=none; b=lDczjh8pux3Ot3sy73ASRszX3ia+B4i0oPrGEFn+11y5EbXtmUo+lAFccILwvnDsh62ZuNCtFibHSbhjEpBwLvOxC+l+OQhB5VwC2M+qjz0fDNvtZE9cIrEiBeMzCtnxE6uKvs32Z1kuuPCaXIMD0P8nqijyjYbVJTiqYCtj08c=
+	t=1773115040; cv=none; b=ael1dGqUERjGkb5ZXJZNMoAVdyjhnMZcOOFyOkxlU8D57B0FVmFUrPWVdNIhLtDRzZecrygq7iyr+xmZ3ugivl1Ppo0lyPUJ8xtm54i5sA0XEo8vJrekD+T0emvc2ukTYKBD4qmYDZrNUotg0sXNxBg/egl+cDnZuwmNZ4NtuSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114827; c=relaxed/simple;
-	bh=VgvLqXWOK2hMB0AyKeyEm22V/ejAmYD+xVD0zNjSZo4=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i33VCP1OH99ACdgEHwsbs8p0/jGdEUiwWuc3S2nwdTwA8ptgAEOKIhZiSkrjeo1YDtolzD3tBRmmnEcZO+0dOAJduP7MCi+Dbm70/uJ+9Ea2zXfemrlToc2tESCYF0O7jcfoYhMcaGsbDGde+QSSjxybj4cjuLiaT7bWQRvhaRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gYtp1yH+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773115040; c=relaxed/simple;
+	bh=IjbEklTo5LvRbm8faKaRvrfzXD/Dc9aoP3u4JUtVXbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i/KDvN9KDhi8qO79rFF4s6x1R4BBgwsV9miRmfa5KoRlj7Rdr6sPSbhMQkkn0ZMrf8J8yh1LvsJZ6f46IxhCQGaxBkEXTChcT1Na/HUvGgbjP6gmdpBbkvQ+XHt8GY/jlmKXf0FU4QuKON6HxDxY0YlBL98FUBP8GeZktF6CIu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KwzSxHxp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gYtp1yH+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5615CC19423;
-	Tue, 10 Mar 2026 03:53:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KwzSxHxp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10671C19423;
+	Tue, 10 Mar 2026 03:57:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114827;
-	bh=VgvLqXWOK2hMB0AyKeyEm22V/ejAmYD+xVD0zNjSZo4=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=gYtp1yH+Hh0q31eiwRhdcB5aFObseSeIgn2eiTtbBfUz9PMJh/G+9qYDBzVC7o8QK
-	 R+By+McN4fScfGlPdtThUWyZBr29TbnMusxTWALgR1p2KQfUtiWCkklT7xJmGbHIPE
-	 bTEqf8bLPdF+mWpZFGml8MkNLi9qPs7Q59VpwsGU826e5ImdHV8LHYsBMRl5AGR2Kv
-	 2hucvGUewoLsM74NYAwGpScCbHJ5fNl6cgTDM0m6TpwxpUt4InY31t775fV0DN7lv1
-	 ZC5Rf8S8J/XTUYYHjAGr8cZKA8k2MwVl4EWTcp0tMpfDSged6iQvYfDRE2HDiVIPD5
-	 kWW+O/5aaBHfQ==
-Date: Mon, 09 Mar 2026 20:53:46 -0700
-Subject: [PATCH 14/14] xfs: test xfs_healer startup service
+	s=k20201202; t=1773115040;
+	bh=IjbEklTo5LvRbm8faKaRvrfzXD/Dc9aoP3u4JUtVXbQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KwzSxHxp/cmSEmHx9QUdse9iMEUg9sh7aKu0+sHUSUK/7Lrf2HOGCRnTaVzpn0t4C
+	 JuJSY6do2bJyIOnr6WAs3H1fNFFmkJahun2G2le5eQ8fryNOAv5KHvKPF9C7a1937W
+	 jV+ps4jekxKFKBjreeO2VeuO4Wfpqa5gMzENPdZCBSesedrsvdtR7/7YdT5oPalFrs
+	 LEfRW5Vl64TLW0tpDRTJ93d0Zdj7l38/Rg78NZ2SMIzo8P2AzMlcQ7EsUuPM91Pyx7
+	 3YduepDozPOGe7c9+nRa/PYDQc4ZpsfOpxnTaLQ0QK1MZ6cV3eGgh617E8oD1aqF1b
+	 n7kAOd0x2D9AQ==
+Date: Mon, 9 Mar 2026 20:57:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177311404033.1186408.15997052827273603644.stgit@frogsfrogsfrogs>
-In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
-References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
+	ritesh.list@gmail.com, jack@suse.cz,
+	Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
+	p.raghav@samsung.com, andres@anarazel.de,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC 2/3] iomap: Enable stable writes for RWF_WRITETHROUGH inodes
+Message-ID: <20260310035719.GI1105363@frogsfrogsfrogs>
+References: <cover.1773076216.git.ojaswin@linux.ibm.com>
+ <3704b81046b11f8b8da0367c7c8ad8767f42e5df.1773076216.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3704b81046b11f8b8da0367c7c8ad8767f42e5df.1773076216.git.ojaswin@linux.ibm.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Mar 09, 2026 at 11:04:32PM +0530, Ojaswin Mujoo wrote:
+> Currently, RWF_WRITETHROUGH writes wait for writeback to complete
+> on a folio before performing the writethrough. This serializes
+> writethrough with each other and the writeback path. However, it is also
+> desirable have similar guarantees between RWF_WRITETHROUGH and non
+> writethrough writes.
+> 
+> Hence, ensure stable writes are enabled on an inode's mapping as
+> long as a writethrough write is ongoing. This way, all paths will
+> wait for RWF_WRITETHROUGH to complete on a folio before proceeding.
+> 
+> To track inflight writethrough writes, we use an atomic counter in the
+> inode->i_mapping. This struct was chosen because (i) writethrough is an
+> operation on the folio and (ii) we don't want to add bloat to struct
+> inode.
 
-Make sure that xfs_healer_start can actually start up xfs_healer service
-instances when a filesystem is mounted.
+What if we just set it whenever someone successfully initiates a
+RWF_WRITETHROUGH write?  Then we wouldn't need all this atomic counter
+machinery.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/1903     |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1903.out |    6 +++
- 2 files changed, 130 insertions(+)
- create mode 100755 tests/xfs/1903
- create mode 100644 tests/xfs/1903.out
+Also: What if some filesystem (not xfs, obviously) finds a need to
+change the stablepages bit while there might be writethrough writes in
+progress?  It's a little awkward to have a flag /and/ a counter; why not
+change mapping_{set,clear}_stable_pages to inc and dec the counter and
+base the test off that?
 
+--D
 
-diff --git a/tests/xfs/1903 b/tests/xfs/1903
-new file mode 100755
-index 00000000000000..d71d75a6af3f9d
---- /dev/null
-+++ b/tests/xfs/1903
-@@ -0,0 +1,124 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1903
-+#
-+# Check that the xfs_healer startup service starts the per-mount xfs_healer
-+# service for the scratch filesystem.  IOWs, this is basic testing for the
-+# xfs_healer systemd background services.
-+#
-+
-+# unreliable_in_parallel: this appears to try to run healer services on all
-+# mounted filesystems - that's a problem when there are a hundred other test
-+# filesystems mounted running other tests...
-+
-+. ./common/preamble
-+_begin_fstest auto selfhealing unreliable_in_parallel
-+
-+_cleanup()
-+{
-+	cd /
-+	test -n "$new_healerstart_svc" &&
-+		_systemd_unit_stop "$new_healerstart_svc"
-+	test -n "$was_masked" && \
-+		_systemd_unit_mask "$healer_svc" &>> $seqres.full
-+	if [ -n "$new_svcfile" ]; then
-+		rm -f "$new_svcfile"
-+		systemctl daemon-reload
-+	fi
-+	rm -r -f $tmp.*
-+}
-+
-+. ./common/filter
-+. ./common/populate
-+. ./common/fuzzy
-+. ./common/systemd
-+
-+_require_systemd_is_running
-+_require_systemd_unit_defined xfs_healer@.service
-+_require_systemd_unit_defined xfs_healer_start.service
-+_require_scratch
-+_require_scrub
-+_require_xfs_io_command "scrub"
-+_require_xfs_spaceman_command "health"
-+_require_populate_commands
-+_require_command "$XFS_HEALER_PROG" "xfs_healer"
-+_require_command $ATTR_PROG "attr"
-+
-+_xfs_skip_online_rebuild
-+_xfs_skip_offline_rebuild
-+
-+orig_svcfile="$(_systemd_unit_path "xfs_healer_start.service")"
-+test -f "$orig_svcfile" || \
-+	_notrun "cannot find xfs_healer_start service file"
-+
-+new_svcdir="$(_systemd_runtime_dir)"
-+test -d "$new_svcdir" || \
-+	_notrun "cannot find runtime systemd service dir"
-+
-+# We need to make some local mods to the xfs_healer_start service definition
-+# so we fork it and create a new service just for this test.
-+new_healerstart_svc="xfs_healer_start_fstest.service"
-+_systemd_unit_status "$new_healerstart_svc" 2>&1 | \
-+	grep -E -q '(could not be found|Loaded: not-found)' || \
-+	_notrun "systemd service \"$new_healerstart_svc\" found, will not mess with this"
-+
-+find_healer_trace() {
-+	local path="$1"
-+
-+	sleep 2		# wait for delays in startup
-+	$XFS_HEALER_PROG --supported "$path" 2>&1 | grep -q 'already running' || \
-+		echo "cannot find evidence that xfs_healer is running for $path"
-+}
-+
-+echo "Format and populate"
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
-+_require_xfs_healer $SCRATCH_MNT
-+
-+# Configure the filesystem for background checks of the filesystem.
-+$ATTR_PROG -R -s xfs:autofsck -V check $SCRATCH_MNT >> $seqres.full
-+
-+was_masked=
-+healer_svc="$(_xfs_healer_svcname "$SCRATCH_MNT")"
-+
-+# Preserve the xfs_healer@ mask state -- we don't want this permanently
-+# changing global state.
-+if _systemd_unit_masked "$healer_svc"; then
-+	_systemd_unit_unmask "$healer_svc" &>> $seqres.full
-+	was_masked=1
-+fi
-+
-+echo "Start healer on scratch FS"
-+_systemd_unit_start "$healer_svc"
-+find_healer_trace "$SCRATCH_MNT"
-+_systemd_unit_stop "$healer_svc"
-+
-+new_svcfile="$new_svcdir/$new_healerstart_svc"
-+cp "$orig_svcfile" "$new_svcfile"
-+
-+sed -e '/ExecStart=/d' -e '/BindPaths=/d' -e '/ExecCondition=/d' -i $new_svcfile
-+cat >> "$new_svcfile" << ENDL
-+[Service]
-+ExecCondition=$XFS_HEALER_START_PROG --supported
-+ExecStart=$XFS_HEALER_START_PROG
-+ENDL
-+_systemd_reload
-+
-+# Emit the results of our editing to the full log.
-+systemctl cat "$new_healerstart_svc" >> $seqres.full
-+
-+echo "Start healer for everything"
-+_systemd_unit_start "$new_healerstart_svc"
-+find_healer_trace "$SCRATCH_MNT"
-+
-+echo "Restart healer for scratch FS"
-+_scratch_cycle_mount
-+find_healer_trace "$SCRATCH_MNT"
-+
-+echo "Healer testing done" | tee -a $seqres.full
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1903.out b/tests/xfs/1903.out
-new file mode 100644
-index 00000000000000..07810f60ca10c6
---- /dev/null
-+++ b/tests/xfs/1903.out
-@@ -0,0 +1,6 @@
-+QA output created by 1903
-+Format and populate
-+Start healer on scratch FS
-+Start healer for everything
-+Restart healer for scratch FS
-+Healer testing done
-
+> Suggested-by: Dave Chinner <dgc@kernel.org>
+> Suggested-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> ---
+>  fs/inode.c             |  1 +
+>  fs/iomap/buffered-io.c | 35 +++++++++++++++++++++++++++++++++--
+>  fs/iomap/direct-io.c   |  2 ++
+>  include/linux/fs.h     |  2 ++
+>  include/linux/iomap.h  |  2 ++
+>  5 files changed, 40 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index cc12b68e021b..5b779c112ff8 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -280,6 +280,7 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
+>  	mapping->flags = 0;
+>  	mapping->wb_err = 0;
+>  	atomic_set(&mapping->i_mmap_writable, 0);
+> +	atomic_set(&mapping->i_wt_count, 0);
+>  #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+>  	atomic_set(&mapping->nr_thps, 0);
+>  #endif
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ab169daa1126..9d4d459af1a0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1150,11 +1150,41 @@ static bool iomap_writethrough_checks(struct kiocb *iocb, size_t off, loff_t len
+>  	return true;
+>  }
+>  
+> +/**
+> + * inode_writethrough_begin - signal start of a RWF_WRITETHROUGH request
+> + * @inode: inode the writethrough happens on
+> + *
+> + * This is called when we are about to start a writethrough on an inode.
+> + * If it is the first writethrough, set the mapping as stable to ensure
+> + * other folio operations wait for writeback to finish.
+> + *
+> + * To avoid a race, just set the mapping stable first and then increment
+> + * writethrough count, so that the stable writes are enforced as soon as
+> + * writethrough count becomes non zero.
+> + */
+> +inline void inode_writethrough_begin(struct inode *inode)
+> +{
+> +	mapping_set_stable_writes(inode->i_mapping);
+> +	atomic_inc(&inode->i_mapping->i_wt_count);
+> +}
+> +
+> +/**
+> + * inode_writethrough_end - signal finish of a RWF_WRITETHROUGH request
+> + * @inode: inode the writethrough I/O happened on
+> + *
+> + * This is called once we've finished processing a writethrough request
+> + */
+> +inline void inode_writethrough_end(struct inode *inode)
+> +{
+> +	if (atomic_dec_and_test(&inode->i_mapping->i_wt_count))
+> +		mapping_clear_stable_writes(inode->i_mapping);
+> +}
+> +
+>  /*
+>   * With writethrough, we might potentially be writing through a partial
+>   * folio hence we don't clear the dirty bit (yet)
+>   */
+> -static void folio_prepare_writethrough(struct folio *folio)
+> +static void folio_prepare_writethrough(struct inode *inode, struct folio *folio)
+>  {
+>  	if (folio_test_writeback(folio))
+>  		folio_wait_writeback(folio);
+> @@ -1167,6 +1197,7 @@ static void folio_prepare_writethrough(struct folio *folio)
+>  		/* Refer folio_clear_dirty_for_io() for why this is needed */
+>  		folio_mark_dirty(folio);
+>  
+> +	inode_writethrough_begin(inode);
+>  }
+>  
+>  /**
+> @@ -1203,7 +1234,7 @@ static int iomap_writethrough_begin(struct kiocb *iocb, struct folio *folio,
+>  	bool fully_written;
+>  	u64 zero = 0;
+>  
+> -	folio_prepare_writethrough(folio);
+> +	folio_prepare_writethrough(iter->inode, folio);
+>  
+>  	wt_ctx->bvec = kmalloc(sizeof(struct bio_vec), GFP_KERNEL | GFP_NOFS);
+>  	if (!wt_ctx->bvec)
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index f4d8ff08a83a..12680d97d765 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -140,6 +140,8 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  		kiocb_invalidate_post_direct_write(iocb, dio->size);
+>  
+>  	inode_dio_end(file_inode(iocb->ki_filp));
+> +	if (dio->flags & IOMAP_DIO_BUF_WRITETHROUGH)
+> +		inode_writethrough_end(file_inode(iocb->ki_filp));
+>  
+>  	if (ret > 0) {
+>  		iocb->ki_pos += ret;
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index ca291957140e..6b7491fdd51a 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -456,6 +456,7 @@ extern const struct address_space_operations empty_aops;
+>   *   memory mappings.
+>   * @gfp_mask: Memory allocation flags to use for allocating pages.
+>   * @i_mmap_writable: Number of VM_SHARED, VM_MAYWRITE mappings.
+> + * @i_wt_count: Number of RWF_WRITETHROUGH writes ongoing in mapping.
+>   * @nr_thps: Number of THPs in the pagecache (non-shmem only).
+>   * @i_mmap: Tree of private and shared mappings.
+>   * @i_mmap_rwsem: Protects @i_mmap and @i_mmap_writable.
+> @@ -474,6 +475,7 @@ struct address_space {
+>  	struct rw_semaphore	invalidate_lock;
+>  	gfp_t			gfp_mask;
+>  	atomic_t		i_mmap_writable;
+> +	atomic_t		i_wt_count;
+>  #ifdef CONFIG_READ_ONLY_THP_FOR_FS
+>  	/* number of thp, only for non-shmem files */
+>  	atomic_t		nr_thps;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index b96574bb2918..6d08b966ceaf 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -630,6 +630,8 @@ struct iomap_writethrough_ops {
+>  ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
+>  				      const struct iomap_writethrough_ops *wt_ops,
+>  				      void *private);
+> +inline void inode_writethrough_begin(struct inode *inode);
+> +inline void inode_writethrough_end(struct inode *inode);
+>  
+>  #ifdef CONFIG_SWAP
+>  struct file;
+> -- 
+> 2.52.0
+> 
+> 
