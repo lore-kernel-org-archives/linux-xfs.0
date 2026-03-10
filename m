@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE95399007
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:46:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00B52C11E8
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:47:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114404; cv=none; b=lNLqMJamDK85HtlLa15hixA8s7jcKNHaDofp0u8gVbcL257JW1N3F18xiIE7fqKvYOJa/HYkJbYmV8UiSZMXli6F4elsgl6Pq0sl6/D8zR/Y2cjqEUeatIS007Xc8GPeQI9w5WALBdaMzdzraxPwZBRfnHS7XvNb+/nba6YDNI4=
+	t=1773114420; cv=none; b=O8wzkbtJCV6LJaSNz0meCn3jtxx4GadtYlWXn8XVUxdKP/zVawSCRhCP6yk6Xg6/gHcC3+7pjgKXGwa6YAWxraMbBBjCsUVxFh6OPzOexeLqjV689BasUGdvF9SO65Lfjoex+ONPFm4V/xelVrO/h7BbNv4Oum7LDXe0R13Bgbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114404; c=relaxed/simple;
-	bh=ee2SMb4r7Ixvqj4mbWpPfyFaG9Gjd1nM6MbvzpIgsnk=;
+	s=arc-20240116; t=1773114420; c=relaxed/simple;
+	bh=AJe2UXbHH2vrFuhvOWMCLrlkFHZPjOimJEJGW/R19vQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iH8zxtyAAQ9uGN4/sW9tSyJMxv3CaypX62FMmfo58hFDAMHvXI60mXpJPgE6kq5EtFIe1ykkoJhhP1UmqLUmEOA/r45rdobJOH5ORo5b/hdMUWy3o1B135BhZfYZJHaPWb8BJAZg/GTH1kND0gd0AY6H2r9oLjFLnzsrhKJJLOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fjZCoimK; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=uSfVkot3s2o8an1raz9dM9itRODhlAUK062qd7FL3hoBm/k5XZ/PvGNNhDWgpitOGOHTqCJmw30Zv9hVAE2EH1dtrHCAPq1Cinw1vNR+iYDDHEp7I4JhW1iADR2EWd9SrjS9K7r561bt1yJHvJWBh6Dp7kZWOyxGh2eMA+KdB5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dl7OKIRm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fjZCoimK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1198DC4CEF7;
-	Tue, 10 Mar 2026 03:46:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dl7OKIRm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88906C4CEF7;
+	Tue, 10 Mar 2026 03:47:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114404;
-	bh=ee2SMb4r7Ixvqj4mbWpPfyFaG9Gjd1nM6MbvzpIgsnk=;
+	s=k20201202; t=1773114420;
+	bh=AJe2UXbHH2vrFuhvOWMCLrlkFHZPjOimJEJGW/R19vQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=fjZCoimKKkU8e+obEkrNDPA2nlgBLKncOzOhxHCb/UfynI4rrtwLF12WHLcrzh/bj
-	 CNdL3P4C9KU3YfagErQZwFaLf9aFD1xjnGIAPTK7M6GoOq4Xj3EBW/FWqqU8JSQb13
-	 NnK13Tupkxi4U38ktswKAhRTGimQSj7CdumBpu+WgaIh+Oo0bikI00jlyHBx6RYgIX
-	 k9/KJwIr3+GPVKsT+SYpfvIppUHZRFXlTaxJ7jmW3sb8Q6Ah28PVf9n2fLP025K9y0
-	 Aj7g2VmL8Or9HWOZVhuAtgBHZ+oXWOF0sgM9tbFLDoaS7/UXrUt9HLRLLZfNt9D6/X
-	 u8FA8Cq17kAfA==
-Date: Mon, 09 Mar 2026 20:46:43 -0700
-Subject: [PATCH 16/28] xfs_healer: use the autofsck fsproperty to select mode
+	b=Dl7OKIRmPv0Xx3gHN2PP+Ap4/skLOqTmLMAVPWm7dEL5YmQ31KCThuI/G2sJjIqjt
+	 9s0AWhpc3Q5OjMSXAhm2MMsSd59yK6L7ssLtEmkO0w8c76/1UaimgSiX9RqWsy6uSA
+	 3MiYk1mqkW55PZUPzPgdb17WFT9r4cGYwM3w5xkvM35b+gzIsNL8Kz78dGvW7EhPFF
+	 ay1uSLDvMU39BagRkWGWU73r3GkwEmzdYJ/6aDXuH5SBne2o2TnSRcLCf1K+aivZ09
+	 ROQBVmNLQjlLALLgHBgIQInZbX2zuNflK2iraTiiu0HOk/Iv79j0GD87rchxu01xy4
+	 qV/FVXVYxHytA==
+Date: Mon, 09 Mar 2026 20:46:59 -0700
+Subject: [PATCH 17/28] xfs_healer: run full scrub after lost corruption events
+ or targeted repair failure
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177311401753.1183235.12245394271448270116.stgit@frogsfrogsfrogs>
+Message-ID: <177311401771.1183235.15406712424819057552.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,218 +46,320 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the xfs_healer background service query the autofsck filesystem
-property to figure out which operating mode it should use.
+If we fail to perform a spot repair of metadata or the kernel tells us
+that it lost corruption events due to queue limits, initiate a full run
+of the online fsck service to try to fix the error.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/xfs_healer.h    |    1 
- libfrog/fsproperties.h |    5 ++
- healer/xfs_healer.c    |  102 +++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 105 insertions(+), 3 deletions(-)
+ healer/xfs_healer.h  |    3 ++
+ healer/Makefile      |    2 +
+ healer/fsrepair.c    |   81 +++++++++++++++++++++++++++++++++++++++++++++-----
+ healer/weakhandle.c  |   13 ++++++++
+ healer/xfs_healer.c  |    7 ++++
+ include/builddefs.in |    1 +
+ scrub/Makefile       |    7 ++--
+ 7 files changed, 102 insertions(+), 12 deletions(-)
 
 
 diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
-index 7caa6c66a59c6f..a2a46053928e33 100644
+index a2a46053928e33..e1370323bbd66a 100644
 --- a/healer/xfs_healer.h
 +++ b/healer/xfs_healer.h
-@@ -28,6 +28,7 @@ struct healer_ctx {
- 	int			want_repair;
- 	int			print_svcname;
- 	int			support_check;
-+	int			autofsck;
+@@ -72,6 +72,7 @@ void lookup_path(struct healer_ctx *ctx,
+ int repair_metadata(struct healer_ctx *ctx, const struct hme_prefix *pfx,
+ 		const struct xfs_health_monitor_event *hme);
+ bool healer_can_repair(struct healer_ctx *ctx);
++void run_full_repair(struct healer_ctx *ctx);
  
- 	/* fd and fs geometry for mount */
- 	struct xfs_fd		mnt;
-diff --git a/libfrog/fsproperties.h b/libfrog/fsproperties.h
-index 11d6530bc9a6d6..1cf90d058765b2 100644
---- a/libfrog/fsproperties.h
-+++ b/libfrog/fsproperties.h
-@@ -52,6 +52,11 @@ bool fsprop_validate(const char *name, const char *value);
+ /* weakhandle.c */
+ int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
+@@ -80,5 +81,7 @@ int weakhandle_reopen(struct weakhandle *wh, int *fd);
+ void weakhandle_free(struct weakhandle **whp);
+ int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
+ 		char *path, size_t pathlen);
++int weakhandle_instance_unit_name(struct weakhandle *wh, const char *template,
++		char *unitname, size_t unitnamelen);
  
- #define FSPROP_AUTOFSCK_NAME		"autofsck"
+ #endif /* XFS_HEALER_XFS_HEALER_H_ */
+diff --git a/healer/Makefile b/healer/Makefile
+index 60bc31004ed423..5c5f6951e0d399 100644
+--- a/healer/Makefile
++++ b/healer/Makefile
+@@ -19,6 +19,8 @@ xfs_healer.c
+ HFILES = \
+ xfs_healer.h
  
-+/* filesystem property name for fgetxattr */
-+#define VFS_FSPROP_AUTOFSCK_NAME	(FSPROP_NAMESPACE \
-+					 FSPROP_NAME_PREFIX \
-+					 FSPROP_AUTOFSCK_NAME)
++CFLAGS+=-DXFS_SCRUB_SVCNAME=\"$(XFS_SCRUB_SVCNAME)\"
 +
- enum fsprop_autofsck {
- 	FSPROP_AUTOFSCK_UNSET = 0,	/* do not set property */
- 	FSPROP_AUTOFSCK_NONE,		/* no background scrubs */
-diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index 8c48d2d9ee8c2d..f4bee495979324 100644
---- a/healer/xfs_healer.c
-+++ b/healer/xfs_healer.c
-@@ -6,6 +6,7 @@
- #include "xfs.h"
- #include <pthread.h>
- #include <stdlib.h>
-+#include <sys/xattr.h>
- 
- #include "platform_defs.h"
+ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
+diff --git a/healer/fsrepair.c b/healer/fsrepair.c
+index 4534104f8a6ac1..9f8c128e395ebc 100644
+--- a/healer/fsrepair.c
++++ b/healer/fsrepair.c
+@@ -9,8 +9,14 @@
  #include "libfrog/fsgeom.h"
-@@ -13,6 +14,7 @@
- #include "libfrog/healthevent.h"
  #include "libfrog/workqueue.h"
- #include "libfrog/systemd.h"
-+#include "libfrog/fsproperties.h"
+ #include "libfrog/healthevent.h"
++#include "libfrog/systemd.h"
  #include "xfs_healer.h"
  
- /* Program name; needed for libfrog error reports. */
-@@ -191,6 +193,63 @@ healer_nproc(
- 	return ctx->foreground ? platform_nproc() : 1;
- }
- 
-+enum want_repair {
-+	WR_REPAIR,
-+	WR_LOG_ONLY,
-+	WR_EXIT,
++enum what_next {
++	NEED_FULL_REPAIR,
++	REPAIR_DONE,
 +};
 +
-+/* Determine want_repair from the autofsck filesystem property. */
-+static enum want_repair
-+want_repair_from_autofsck(
-+	struct healer_ctx	*ctx)
-+{
-+	char			valuebuf[FSPROP_MAX_VALUELEN + 1] = { 0 };
-+	enum fsprop_autofsck	shval;
-+	ssize_t			ret;
+ /* Translate scrub output flags to outcome. */
+ static enum repair_outcome from_repair_oflags(uint32_t oflags)
+ {
+@@ -61,7 +67,7 @@ xfs_repair_metadata(
+ }
+ 
+ /* React to a fs-domain corruption event by repairing it. */
+-static void
++static enum what_next
+ try_repair_wholefs(
+ 	struct healer_ctx			*ctx,
+ 	const struct hme_prefix			*pfx,
+@@ -90,11 +96,16 @@ try_repair_wholefs(
+ 		pthread_mutex_lock(&ctx->conlock);
+ 		report_health_repair(pfx, hme, f->event_mask, outcome);
+ 		pthread_mutex_unlock(&ctx->conlock);
 +
-+	/*
-+	 * Any OS error (including ENODATA) or string parsing error is treated
-+	 * the same as an unrecognized value.
-+	 */
-+	ret = fgetxattr(ctx->mnt.fd, VFS_FSPROP_AUTOFSCK_NAME, valuebuf,
-+			FSPROP_MAX_VALUELEN);
-+	if (ret < 0)
-+		goto no_advice;
++		if (outcome == REPAIR_FAILED)
++			return NEED_FULL_REPAIR;
+ 	}
 +
-+	shval = fsprop_autofsck_read(valuebuf);
-+	switch (shval) {
-+	case FSPROP_AUTOFSCK_NONE:
-+		/* don't run at all */
-+		ret = WR_EXIT;
-+		break;
-+	case FSPROP_AUTOFSCK_CHECK:
-+	case FSPROP_AUTOFSCK_OPTIMIZE:
-+		/* log events, do not repair */
-+		ret = WR_LOG_ONLY;
-+		break;
-+	case FSPROP_AUTOFSCK_REPAIR:
-+		/* repair stuff */
-+		ret = WR_REPAIR;
-+		break;
-+	case FSPROP_AUTOFSCK_UNSET:
-+		goto no_advice;
-+	}
++	return REPAIR_DONE;
+ }
+ 
+ /* React to an ag corruption event by repairing it. */
+-static void
++static enum what_next
+ try_repair_ag(
+ 	struct healer_ctx			*ctx,
+ 	const struct hme_prefix			*pfx,
+@@ -126,11 +137,16 @@ try_repair_ag(
+ 		pthread_mutex_lock(&ctx->conlock);
+ 		report_health_repair(pfx, hme, f->event_mask, outcome);
+ 		pthread_mutex_unlock(&ctx->conlock);
 +
-+	return ret;
++		if (outcome == REPAIR_FAILED)
++			return NEED_FULL_REPAIR;
+ 	}
 +
-+no_advice:
-+	/*
-+	 * For an unrecognized value, log but do not fix runtime corruption if
-+	 * backref metadata are enabled.  If no backref metadata are available,
-+	 * the fs is too old so don't run at all.
-+	 */
-+	if (healer_has_rmapbt(ctx) || healer_has_parent(ctx))
-+		return WR_LOG_ONLY;
++	return REPAIR_DONE;
+ }
+ 
+ /* React to a rtgroup corruption event by repairing it. */
+-static void
++static enum what_next
+ try_repair_rtgroup(
+ 	struct healer_ctx			*ctx,
+ 	const struct hme_prefix			*pfx,
+@@ -157,11 +173,16 @@ try_repair_rtgroup(
+ 		pthread_mutex_lock(&ctx->conlock);
+ 		report_health_repair(pfx, hme, f->event_mask, outcome);
+ 		pthread_mutex_unlock(&ctx->conlock);
 +
-+	return WR_EXIT;
-+}
++		if (outcome == REPAIR_FAILED)
++			return NEED_FULL_REPAIR;
+ 	}
 +
- enum mon_state {
- 	MON_START,
- 	MON_EXIT,
-@@ -219,14 +278,45 @@ setup_monitor(
- 		goto out_mnt_fd;
++	return REPAIR_DONE;
+ }
+ 
+ /* React to a inode-domain corruption event by repairing it. */
+-static void
++static enum what_next
+ try_repair_inode(
+ 	struct healer_ctx			*ctx,
+ 	const struct hme_prefix			*orig_pfx,
+@@ -204,7 +225,12 @@ try_repair_inode(
+ 		pthread_mutex_lock(&ctx->conlock);
+ 		report_health_repair(pfx, hme, f->event_mask, outcome);
+ 		pthread_mutex_unlock(&ctx->conlock);
++
++		if (outcome == REPAIR_FAILED)
++			return NEED_FULL_REPAIR;
+ 	}
++
++	return REPAIR_DONE;
+ }
+ 
+ /* Repair a metadata corruption. */
+@@ -214,6 +240,7 @@ repair_metadata(
+ 	const struct hme_prefix			*pfx,
+ 	const struct xfs_health_monitor_event	*hme)
+ {
++	enum what_next				what_next;
+ 	int					repair_fd;
+ 	int					ret;
+ 
+@@ -227,19 +254,25 @@ repair_metadata(
+ 
+ 	switch (hme->domain) {
+ 	case XFS_HEALTH_MONITOR_DOMAIN_FS:
+-		try_repair_wholefs(ctx, pfx, repair_fd, hme);
++		what_next = try_repair_wholefs(ctx, pfx, repair_fd, hme);
+ 		break;
+ 	case XFS_HEALTH_MONITOR_DOMAIN_AG:
+-		try_repair_ag(ctx, pfx, repair_fd, hme);
++		what_next = try_repair_ag(ctx, pfx, repair_fd, hme);
+ 		break;
+ 	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
+-		try_repair_rtgroup(ctx, pfx, repair_fd, hme);
++		what_next = try_repair_rtgroup(ctx, pfx, repair_fd, hme);
+ 		break;
+ 	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
+-		try_repair_inode(ctx, pfx, repair_fd, hme);
++		what_next = try_repair_inode(ctx, pfx, repair_fd, hme);
+ 		break;
++	default:
++		what_next = REPAIR_DONE;
  	}
  
--	if (ctx->want_repair) {
--		/* Check that the kernel supports repairs at all. */
--		if (!healer_can_repair(ctx)) {
-+	if (ctx->autofsck) {
-+		switch (want_repair_from_autofsck(ctx)) {
-+		case WR_EXIT:
-+			printf("%s: %s\n", ctx->mntpoint,
-+ _("Disabling daemon per autofsck directive."));
-+			fflush(stdout);
-+			close(ctx->mnt.fd);
-+			return MON_EXIT;
-+		case WR_REPAIR:
-+			ctx->want_repair = 1;
-+			printf("%s: %s\n", ctx->mntpoint,
-+ _("Automatically repairing per autofsck directive."));
-+			fflush(stdout);
-+			break;
-+		case WR_LOG_ONLY:
-+			ctx->want_repair = 0;
-+			ctx->log = 1;
-+			printf("%s: %s\n", ctx->mntpoint,
-+ _("Only logging errors per autofsck directive."));
-+			fflush(stdout);
-+			break;
-+		}
++	/* Transform into a full repair if we failed to fix this item. */
++	if (what_next == NEED_FULL_REPAIR)
++		run_full_repair(ctx);
++
+ 	close(repair_fd);
+ 	return 0;
+ }
+@@ -259,3 +292,35 @@ healer_can_repair(
+ 	ret = ioctl(ctx->mnt.fd, XFS_IOC_SCRUB_METADATA, &sm);
+ 	return ret ? false : true;
+ }
++
++/* Run a full repair of the filesystem using the background fsck service. */
++void
++run_full_repair(
++	struct healer_ctx	*ctx)
++{
++	char			unitname[PATH_MAX];
++	int			ret;
++
++	ret = weakhandle_instance_unit_name(ctx->wh, XFS_SCRUB_SVCNAME,
++			unitname, PATH_MAX);
++	if (ret) {
++		fprintf(stderr, "%s: %s\n", ctx->mntpoint,
++				_("Could not determine xfs_scrub unit name."));
++		return;
 +	}
 +
-+	/* Check that the kernel supports repairs at all. */
-+	if (ctx->want_repair && !healer_can_repair(ctx)) {
-+		if (!ctx->autofsck) {
- 			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-  _("XFS online repair is not supported, exiting"));
- 			goto out_mnt_fd;
- 		}
- 
-+		printf("%s: %s\n", ctx->mntpoint,
-+ _("XFS online repair is not supported, will report only"));
-+		fflush(stdout);
-+		ctx->want_repair = 0;
++	/*
++	 * Scrub could already be repairing something, so try to start the unit
++	 * and be content if it's already running.
++	 */
++	ret = systemd_manage_unit(UM_START, unitname);
++	if (ret) {
++		fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
++				_("Could not start xfs_scrub service unit"),
++				unitname);
++		return;
 +	}
 +
-+	if (ctx->want_repair) {
- 		/* Check for backref metadata that makes repair effective. */
- 		if (!healer_has_rmapbt(ctx))
- 			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
-@@ -409,6 +499,7 @@ usage(void)
- 	fprintf(stderr, _("  --debug       Enable debugging messages.\n"));
- 	fprintf(stderr, _("  --everything  Capture all events.\n"));
- 	fprintf(stderr, _("  --foreground  Process events as soon as possible.\n"));
-+	fprintf(stderr, _("  --no-autofsck Do not use the \"autofsck\" fs property to decide to repair.\n"));
- 	fprintf(stderr, _("  --quiet       Do not log health events to stdout.\n"));
- 	fprintf(stderr, _("  --repair      Always repair corrupt metadata.\n"));
- 	fprintf(stderr, _("  --supported   Check that health monitoring is supported.\n"));
-@@ -422,6 +513,7 @@ enum long_opt_nr {
- 	LOPT_EVERYTHING,
- 	LOPT_FOREGROUND,
- 	LOPT_HELP,
-+	LOPT_NO_AUTOFSCK,
- 	LOPT_QUIET,
- 	LOPT_REPAIR,
- 	LOPT_SUPPORTED,
-@@ -439,6 +531,7 @@ main(
- 		.conlock	= (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER,
- 		.log		= 1,
- 		.mnt.fd		= -1,
-+		.autofsck	= 1,
- 	};
- 	int			option_index;
- 	int			vflag = 0;
-@@ -455,6 +548,7 @@ main(
- 		[LOPT_EVERYTHING]  = {"everything", no_argument, &ctx.everything, 1 },
- 		[LOPT_FOREGROUND]  = {"foreground", no_argument, &ctx.foreground, 1 },
- 		[LOPT_HELP]	   = {"help", no_argument, NULL, 0 },
-+		[LOPT_NO_AUTOFSCK] = {"no-autofsck", no_argument, &ctx.autofsck, 0 },
- 		[LOPT_QUIET]	   = {"quiet", no_argument, &ctx.log, 0 },
- 		[LOPT_REPAIR]	   = {"repair", no_argument, &ctx.want_repair, 1 },
- 		[LOPT_SUPPORTED]   = {"supported", no_argument, &ctx.support_check, 1 },
-@@ -492,6 +586,8 @@ main(
++	printf("%s: %s\n", ctx->mntpoint, _("Full repairs in progress."));
++	fflush(stdout);
++}
+diff --git a/healer/weakhandle.c b/healer/weakhandle.c
+index 8950e0eb1e5a43..849aa2882700d4 100644
+--- a/healer/weakhandle.c
++++ b/healer/weakhandle.c
+@@ -13,6 +13,7 @@
+ #include "libfrog/workqueue.h"
+ #include "libfrog/getparents.h"
+ #include "libfrog/paths.h"
++#include "libfrog/systemd.h"
+ #include "xfs_healer.h"
  
- 	if (optind != argc - 1)
- 		usage();
-+	if (ctx.want_repair)
-+		ctx.autofsck = 0;
+ struct weakhandle {
+@@ -199,3 +200,15 @@ weakhandle_getpath_for(
+ 	close(mnt_fd);
+ 	return ret;
+ }
++
++/* Compute the systemd instance unit name for this mountpoint. */
++int
++weakhandle_instance_unit_name(
++	struct weakhandle	*wh,
++	const char		*template,
++	char			*unitname,
++	size_t			unitnamelen)
++{
++	return systemd_path_instance_unit_name(template, wh->mntpoint,
++			unitname, unitnamelen);
++}
+diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
+index f4bee495979324..09b88c754a550c 100644
+--- a/healer/xfs_healer.c
++++ b/healer/xfs_healer.c
+@@ -138,6 +138,13 @@ handle_event(
+ 		pthread_mutex_unlock(&ctx->conlock);
+ 	}
  
- 	ctx.mntpoint = argv[optind];
++	/*
++	 * If we didn't ask for all the metadata reports (including the healthy
++	 * ones) and the kernel tells us it lost something, run the full scan.
++	 */
++	if (hme->type == XFS_HEALTH_MONITOR_TYPE_LOST && !ctx->everything)
++		run_full_repair(ctx);
++
+ 	/* Initiate a repair if appropriate. */
+ 	if (will_repair)
+ 		repair_metadata(ctx, &pfx, hme);
+diff --git a/include/builddefs.in b/include/builddefs.in
+index bdba9cd9037900..3b52d1afd7031c 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -62,6 +62,7 @@ MKFS_CFG_DIR	= @datadir@/@pkg_name@/mkfs
+ PKG_STATE_DIR	= @localstatedir@/lib/@pkg_name@
+ 
+ XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
++XFS_SCRUB_SVCNAME=xfs_scrub@.service
+ 
+ CC		= @cc@
+ BUILD_CC	= @BUILD_CC@
+diff --git a/scrub/Makefile b/scrub/Makefile
+index ff79a265762332..aee49bfce100e2 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -8,7 +8,6 @@ include $(builddefs)
+ 
+ SCRUB_PREREQS=$(HAVE_GETFSMAP)
+ 
+-scrub_svcname=xfs_scrub@.service
+ scrub_media_svcname=xfs_scrub_media@.service
+ 
+ ifeq ($(SCRUB_PREREQS),yes)
+@@ -21,7 +20,7 @@ XFS_SCRUB_SERVICE_ARGS = -b -o autofsck
+ ifeq ($(HAVE_SYSTEMD),yes)
+ INSTALL_SCRUB += install-systemd
+ SYSTEMD_SERVICES=\
+-	$(scrub_svcname) \
++	$(XFS_SCRUB_SVCNAME) \
+ 	xfs_scrub_fail@.service \
+ 	$(scrub_media_svcname) \
+ 	xfs_scrub_media_fail@.service \
+@@ -123,7 +122,7 @@ xfs_scrub_all.timer: xfs_scrub_all.timer.in $(builddefs)
+ $(XFS_SCRUB_ALL_PROG): $(XFS_SCRUB_ALL_PROG).in $(builddefs) $(TOPDIR)/libfrog/gettext.py
+ 	@echo "    [SED]    $@"
+ 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
+-		   -e "s|@scrub_svcname@|$(scrub_svcname)|g" \
++		   -e "s|@scrub_svcname@|$(XFS_SCRUB_SVCNAME)|g" \
+ 		   -e "s|@scrub_media_svcname@|$(scrub_media_svcname)|g" \
+ 		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
+ 		   -e "s|@stampfile@|$(XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP)|g" \
+@@ -137,7 +136,7 @@ $(XFS_SCRUB_ALL_PROG): $(XFS_SCRUB_ALL_PROG).in $(builddefs) $(TOPDIR)/libfrog/g
+ xfs_scrub_fail: xfs_scrub_fail.in $(builddefs)
+ 	@echo "    [SED]    $@"
+ 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
+-		   -e "s|@scrub_svcname@|$(scrub_svcname)|g" \
++		   -e "s|@scrub_svcname@|$(XFS_SCRUB_SVCNAME)|g" \
+ 		   -e "s|@pkg_version@|$(PKG_VERSION)|g"  < $< > $@
+ 	$(Q)chmod a+x $@
  
 
