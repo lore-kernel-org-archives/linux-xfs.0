@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CBC92C11E8;
-	Tue, 10 Mar 2026 03:51:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FA33BD63B;
+	Tue, 10 Mar 2026 03:51:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114687; cv=none; b=rpJ+p4Tgki+CrusCLb4bteErnUESUvR5SDK0P0xKX71HOvQcuaVxAnRkDPkpbXJJLNkVnYFswHA+b3bLWx+xl/YcfU39M0V9VvBSPa+9CVWK7z9AayiIxvZH77z8Q9mr8gyAj0fEHL28JzOfN6GNYUr94WyWEELTu5WhrogHJqw=
+	t=1773114702; cv=none; b=b1nkA0ZCRnfgLkP3VQhCnQ0zrRMU8JHvJflUJ1wP5QYzpE09AL5fNo1IjyU4g6dp36KuK2GOgzgO0yHs6vSIdNkYCkasmc1vDjw1W8b5M0OFIwKV/RYukuKWrNa1Y8Qvo+uJ/UKZKtUugenZkOIH+MxZY54mVBqTqnT91JGPGWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114687; c=relaxed/simple;
-	bh=SNJ8TbUBDlqhiVK7+LmOUpbQNbGe9ck+HXXL/yDd4IM=;
+	s=arc-20240116; t=1773114702; c=relaxed/simple;
+	bh=hhr1TxoteWvL/GC6vNAPz8m7PDQCt3f+Exm+b8hNvJg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JouejBm/BXB5wo9MIWTzX2/OhN71YKBrjvb8GCUdYZltKxvdvJinMf5hBj3GWbyaxV9RAaS4J8V9ltAKvp5QIu9ILWRtEmGRew+SsT0coZprq2Z3+teTKm46Q/8fnnCePPTSXlhMdxD9umHgZFfi2p5T0eBEbgxOhUIW0rHXb0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E/i6BEl1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hk7dVmG/sWw6TRE5JQlDZWgpzgSWFLtXlwz5GVQOIn3H0GPQbMsP+GuoO7WmQ4ODTiK7oOA7JB3zcs1YGz8R+XKmsHfM1VNphVmS6X21dCGniZNCHKL+oK/xULVuGnS5iQFvy8q4Oy5+fN9w7Wy8CyYBMTYHIlUl1wjPws0kJYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hL1gbaGd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E/i6BEl1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0079C19423;
-	Tue, 10 Mar 2026 03:51:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hL1gbaGd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F9EEC19423;
+	Tue, 10 Mar 2026 03:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114686;
-	bh=SNJ8TbUBDlqhiVK7+LmOUpbQNbGe9ck+HXXL/yDd4IM=;
+	s=k20201202; t=1773114702;
+	bh=hhr1TxoteWvL/GC6vNAPz8m7PDQCt3f+Exm+b8hNvJg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=E/i6BEl1N05yS2tT5Moo6U2n18qDRRTYuRL0qxzTKTCjOXD6PjJiD2dFV+xh2U6x4
-	 UzGU8BKdvw/nlhdrQEeb+cprAwdgjokv/0xuJHqHxQ98tyT+sehlwTN3X4zg6wkE/G
-	 N3HxjHppryB2BIjIfRUErnAXISqMPQC3qKpbhrPIv72hQRKx3lX7iOcpqbOWNFCBb4
-	 +UTJ9KDcSis6X9PgiQS5VkBt0ZPcUkUIT+/iRuK6j146oi7gP3C2PkPBpM2rgJ8WP8
-	 c49WjbLEF7VFnMS/7vuCrHku5vSM+Z8D3Uj3Qigw84TP6rbQvnFdx+o5brqzTJuGbz
-	 E/WG9Ka91s3Vg==
-Date: Mon, 09 Mar 2026 20:51:26 -0700
-Subject: [PATCH 05/14] xfs: test xfs_healer's event handling
+	b=hL1gbaGdEMqIAom5E7d8YuqaAfVjELFft9ippQbjSIFlFUGWFmvtngCDiI3n6Axx5
+	 bS8R2riaTvI7t3VKpHhC75bcrXzWqRbOFdZP+dhtsTGgU6L+rWXIfkL4Tfxpwxce6V
+	 5+cjn39I8aJO21XNomR+lIe+OmfOFpEPhK5cThrUBRRuonRZelLjI0iYVIXaLYhXrC
+	 x5jAOHx3g11f4a7FbFKb8Z8mOZziwf/JSAbULWiWOiGZJq+A5oY+JQfGwZR/sY+nkn
+	 YCVlBDiVARR6R5+XIg3hpBIr72NuC1cw95U9CTyIM+5/EAD/de18rTg+HNfAyj+BCo
+	 BMReN1zyCYRIg==
+Date: Mon, 09 Mar 2026 20:51:41 -0700
+Subject: [PATCH 06/14] xfs: test xfs_healer can fix a filesystem
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177311403867.1186408.18154501598966372334.stgit@frogsfrogsfrogs>
+Message-ID: <177311403886.1186408.6888396407274716678.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,33 +45,30 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that xfs_healer can handle every type of event that the kernel
-can throw at it by initiating a full scrub of a test filesystem.
+Make sure that xfs_healer can actually fix an injected metadata corruption.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/1882     |   44 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1882.out |    2 ++
- 2 files changed, 46 insertions(+)
- create mode 100755 tests/xfs/1882
- create mode 100644 tests/xfs/1882.out
+ tests/xfs/1884     |   89 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1884.out |    2 +
+ 2 files changed, 91 insertions(+)
+ create mode 100755 tests/xfs/1884
+ create mode 100644 tests/xfs/1884.out
 
 
-diff --git a/tests/xfs/1882 b/tests/xfs/1882
+diff --git a/tests/xfs/1884 b/tests/xfs/1884
 new file mode 100755
-index 00000000000000..2fb4589418401e
+index 00000000000000..1fa6457ad25203
 --- /dev/null
-+++ b/tests/xfs/1882
-@@ -0,0 +1,44 @@
++++ b/tests/xfs/1884
+@@ -0,0 +1,89 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test 1882
++# FS QA Test 1884
 +#
-+# Make sure that xfs_healer correctly handles all the reports that it gets
-+# from the kernel.  We simulate this by using the --everything mode so we get
-+# all the events, not just the sickness reports.
++# Ensure that autonomous self healing fixes the filesystem correctly.
 +#
 +. ./common/preamble
 +_begin_fstest auto selfhealing
@@ -79,40 +76,87 @@ index 00000000000000..2fb4589418401e
 +. ./common/filter
 +. ./common/fuzzy
 +. ./common/systemd
-+. ./common/populate
 +
 +_require_scrub
-+_require_xfs_io_command "scrub"		# online check support
++_require_xfs_io_command "repair"	# online repair support
++_require_xfs_db_command "blocktrash"
 +_require_command "$XFS_HEALER_PROG" "xfs_healer"
++_require_command "$XFS_PROPERTY_PROG" "xfs_property"
 +_require_scratch
 +
-+# Does this fs support health monitoring?
 +_scratch_mkfs >> $seqres.full
 +_scratch_mount
-+_require_xfs_healer $SCRATCH_MNT
-+_scratch_unmount
 +
-+# Create a sample fs with all the goodies
-+_scratch_populate_cached nofill &>> $seqres.full
++_xfs_has_feature $SCRATCH_MNT rmapbt || \
++	_notrun "reverse mapping required to test directory auto-repair"
++_xfs_has_feature $SCRATCH_MNT parent || \
++	_notrun "parent pointers required to test directory auto-repair"
++_require_xfs_healer $SCRATCH_MNT --repair
++
++# Configure the filesystem for automatic repair of the filesystem.
++$XFS_PROPERTY_PROG $SCRATCH_MNT set autofsck=repair >> $seqres.full
++
++# Create a largeish directory
++dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
++echo testdata > $SCRATCH_MNT/a
++mkdir -p "$SCRATCH_MNT/some/victimdir"
++for ((i = 0; i < (dblksz / 255); i++)); do
++	fname="$(printf "%0255d" "$i")"
++	ln $SCRATCH_MNT/a $SCRATCH_MNT/some/victimdir/$fname
++done
++
++# Did we get at least two dir blocks?
++dirsize=$(stat -c '%s' $SCRATCH_MNT/some/victimdir)
++test "$dirsize" -gt "$dblksz" || echo "failed to create two-block directory"
++
++# Break the directory, remount filesystem
++_scratch_unmount
++_scratch_xfs_db -x \
++	-c 'path /some/victimdir' \
++	-c 'bmap' \
++	-c 'dblock 1' \
++	-c 'blocktrash -z -0 -o 0 -x 2048 -y 2048 -n 2048' >> $seqres.full
 +_scratch_mount
 +
-+_scratch_invoke_xfs_healer "$tmp.healer" --everything
++_scratch_invoke_xfs_healer "$tmp.healer" --repair
 +
-+# Run scrub to make some noise
-+_scratch_scrub -b -n >> $seqres.full
++# Access the broken directory to trigger a repair, then poll the directory
++# for 5 seconds to see if it gets fixed without us needing to intervene.
++ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
++_filter_scratch < $tmp.err
++try=0
++while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
++	echo "try $try saw corruption" >> $seqres.full
++	sleep 0.1
++	ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
++	try=$((try + 1))
++done
++echo "try $try no longer saw corruption or gave up" >> $seqres.full
++_filter_scratch < $tmp.err
 +
++# List the dirents of /victimdir to see if it stops reporting corruption
++ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
++try=0
++while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
++	echo "retry $try still saw corruption" >> $seqres.full
++	sleep 0.1
++	ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
++	try=$((try + 1))
++done
++echo "retry $try no longer saw corruption or gave up" >> $seqres.full
++
++# Unmount to kill the healer
 +_scratch_kill_xfs_healer
 +cat $tmp.healer >> $seqres.full
 +
-+echo Silence is golden
 +status=0
 +exit
-diff --git a/tests/xfs/1882.out b/tests/xfs/1882.out
+diff --git a/tests/xfs/1884.out b/tests/xfs/1884.out
 new file mode 100644
-index 00000000000000..9b31ccb735cabd
+index 00000000000000..929e33da01f92c
 --- /dev/null
-+++ b/tests/xfs/1882.out
++++ b/tests/xfs/1884.out
 @@ -0,0 +1,2 @@
-+QA output created by 1882
-+Silence is golden
++QA output created by 1884
++ls: reading directory 'SCRATCH_MNT/some/victimdir': Structure needs cleaning
 
