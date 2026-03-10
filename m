@@ -1,42 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A323D47C4
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BBC03D813C
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:42:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773146014; cv=none; b=JyjJz7niFkv8azZwkQUeDJjRNJwt3jj45ueMCoaKAy82zrWIXtizPwJ9QMOYARIlSMwetAxqRtNXzaOlr36GVLWKOwZnFx1vY7vlGL7liEJZWPDOT7LBfCITMXGCvBDR+8xMC90xWElX8HGgWNNHrTjCXqVQC6XCwb0X+QDtZBE=
+	t=1773146575; cv=none; b=M+02bQWvhhd7NYy6IbZ+PCdcIXwFR0Q3q7Ox3H+MBk8hdd5aObQhePshd3wZMmkudIm++ayBFUlA3EIaFnr7o4m7YRXaw2lmoUtf0Pp748n3L5Fb0XWVNxN42VTvJaLNarMudDbO3uaEyyuLpUcnbilVsPjk4PDvZCJwPR9aEF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773146014; c=relaxed/simple;
-	bh=86HuWIyZQGKpYCIdvXT/EO5IR7VkTwBG2hvXGT+Eo8c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hF/EaRJGf7UONAg61+LEYA+FbvBnmw/S3G7NHLYNr8Tqdnu1uR7pRhvbTJXuNTRL18cJrnoX7/J0ePDPDX/289z12zpF1W84fzRDnpxqZ2OYQXInoa/4RoFthfo1hOpKjKBCmLrVcahjTrateSMLXWR8nmec3fCHOr7lih9EldM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YmOgArPe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773146575; c=relaxed/simple;
+	bh=1W36W53BQXOIG/Biz0wacygmpbpK8oHczuot6VOxbjE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GXhi4STViZifoPmTjAg9hnvwtL4y3bX/g6izjYGRdap7opKK+SRGeguNT8xGfifBjmZHonqHal2kzr7aEJFGmdBG7OzedKYVmV7VNCAzBXE3yrNkIBgpwG1S3/xb7OFZpA5Q/f7ucDyF4yGhIBTdMpJqFO0PrzGisOSlenFA2sM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=AG0tgMXN; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YmOgArPe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95F2EC19423;
-	Tue, 10 Mar 2026 12:33:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773146014;
-	bh=86HuWIyZQGKpYCIdvXT/EO5IR7VkTwBG2hvXGT+Eo8c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YmOgArPeWPfVedp3Y5s/AYuQHyy3TSVjsU8uM6H0nnUdyX1eZEZ4me4uc4d+kJpLR
-	 5wpLbzlUYX9y/8C0clSraaNDszg0dycZlaAh3hCVtiio7Cqkaysldf0XP8HFxwDKpp
-	 /sbS5XkHnmW4KiX+vL9x2J++IHueRnw4qUIVU7XS5sR8ZqEAWzvLfbwc5UkFlVuF6O
-	 L67HkdTpxfCEysCyEAukvEgr2pXvdjSfgefXLIF0GXISY4LhkPSeKLEs+prki6l0uv
-	 mnJZjChPMwKxboHSvFoYtgaURigODbpdj8ufOh0xNCGMKQiiAx9Hn1zfHQ5cF1hYx+
-	 7mRrkuj1nMlYw==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com,
-	hch@lst.de,
-	djwong@kernel.org
-Subject: [PATCH 3/3] xfs: remove owner field from xfs_extent_busy
-Date: Tue, 10 Mar 2026 13:33:16 +0100
-Message-ID: <20260310123324.339310-4-cem@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260310123324.339310-1-cem@kernel.org>
-References: <20260310123324.339310-1-cem@kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="AG0tgMXN"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=mAC7Dw8R4Xml+fdXxusFDLWcXHUNj6bBygGRPLlaPYU=;
+	b=AG0tgMXN8ZLGT9F/8fXW4NX1lhGR7lh/30E+oIfrjjDr8Y7W59Wf5KizbN7fzFo6bMS+ipGI6
+	lxE2BJcwKq45VSbVN53h/AwGpBQWY4iy794IRV/Kz2hmnksIXDC3eNiDGPg3I+BIDJd1cjAaizQ
+	Iwk0jan4EDuh+qxeuLgwO2I=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fVYLd334RzKm4X;
+	Tue, 10 Mar 2026 20:37:45 +0800 (CST)
+Received: from dggemv712-chm.china.huawei.com (unknown [10.1.198.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id DBA2D40563;
+	Tue, 10 Mar 2026 20:42:40 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv712-chm.china.huawei.com (10.1.198.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 10 Mar 2026 20:42:40 +0800
+Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 10 Mar
+ 2026 20:42:39 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH] xfs: fix integer overflow in bmap intent sort comparator
+Date: Tue, 10 Mar 2026 20:32:33 +0800
+Message-ID: <20260310123233.449659-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,120 +52,38 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-From: Carlos Maiolino <cem@kernel.org>
+xfs_bmap_update_diff_items() sorts bmap intents by inode number using
+a subtraction of two xfs_ino_t (uint64_t) values, with the result
+truncated to int. This is incorrect when two inode numbers differ by
+more than INT_MAX (2^31 - 1), which is entirely possible on large XFS
+filesystems.
 
-Now that xfs_busy_extents is not embedded into a cil context, we can
-get rid of the owner field.
+Fix this by replacing the subtraction with cmp_int().
 
-The struct will be freed upon a call to xfs_discard_extents(), whether
-at IO completion or by direct calling xfs_discard_endio_work().
-
-What reamains is xlog_cil_commited now being responsible for freeing
-the context itself.
-
-Worth mentioning that the busy extents still need to be manually freed
-during filesystem shutdown via xlog_cil_destroy() if there is a
-remaining context there.
-
-Also, xlog_cil_committed() now unconditionally calls xfs_discard_extents.
-This seems safe because it can handle an empty list, and as a bonus,
-it will call xfs_discard_endio_work() for such case, without any extra
-wiring needed to free the busy extents list in case it is empty.
-xfs_discard_endio_work() is also able to properly handle the empty list.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: <stable@vger.kernel.org>
+Fixes: 9f3afb57d5f1 ("xfs: implement deferred bmbt map/unmap operations")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
- fs/xfs/xfs_discard.c     |  4 ----
- fs/xfs/xfs_extent_busy.h |  7 -------
- fs/xfs/xfs_log_cil.c     | 13 ++++---------
- 3 files changed, 4 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_bmap_item.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 2db0ea6eedc6..be4bc16dc85c 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -85,7 +85,6 @@ xfs_discard_endio_work(
- 		container_of(work, struct xfs_busy_extents, endio_work);
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index e8775f254c89..b237a25d6045 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -245,7 +245,7 @@ xfs_bmap_update_diff_items(
+ 	struct xfs_bmap_intent		*ba = bi_entry(a);
+ 	struct xfs_bmap_intent		*bb = bi_entry(b);
  
- 	xfs_extent_busy_clear(&extents->extent_list, false);
--	kfree(extents->owner);
- 	xfs_busy_extents_free(extents);
+-	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
++	return cmp_int(ba->bi_owner->i_ino, bb->bi_owner->i_ino);
  }
  
-@@ -356,8 +355,6 @@ xfs_trim_perag_extents(
- 			break;
- 		}
- 
--		extents->owner = extents;
--
- 		error = xfs_trim_gather_extents(pag, &tcur, extents);
- 		if (error) {
- 			xfs_busy_extents_free(extents);
-@@ -697,7 +694,6 @@ xfs_trim_rtgroup_extents(
- 
- 		tr.queued = 0;
- 		tr.batch = XFS_DISCARD_MAX_EXAMINE;
--		tr.extents->owner = tr.extents;
- 
- 		xfs_rtgroup_lock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
- 		error = xfs_rtalloc_query_range(rtg, tp, low, high,
-diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index 699f97a53530..5deaa1fbe378 100644
---- a/fs/xfs/xfs_extent_busy.h
-+++ b/fs/xfs/xfs_extent_busy.h
-@@ -34,13 +34,6 @@ struct xfs_extent_busy {
- struct xfs_busy_extents {
- 	struct list_head	extent_list;
- 	struct work_struct	endio_work;
--
--	/*
--	 * Owner is the object containing the struct xfs_busy_extents to free
--	 * once the busy extents have been processed. If only the
--	 * xfs_busy_extents object needs freeing, then point this at itself.
--	 */
--	void			*owner;
- };
- 
- static inline struct xfs_busy_extents *
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index bb71b5ad6b55..befc2691f053 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -976,6 +976,7 @@ xlog_cil_committed(
- 	struct xfs_cil_ctx	*ctx)
- {
- 	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
-+	struct xfs_busy_extents	*busy_extents = ctx->busy_extents;
- 	bool			abort = xlog_is_shutdown(ctx->cil->xc_log);
- 
- 	/*
-@@ -994,8 +995,8 @@ xlog_cil_committed(
- 
- 	xlog_cil_ail_insert(ctx, abort);
- 
--	xfs_extent_busy_sort(&ctx->busy_extents->extent_list);
--	xfs_extent_busy_clear(&ctx->busy_extents->extent_list,
-+	xfs_extent_busy_sort(&busy_extents->extent_list);
-+	xfs_extent_busy_clear(&busy_extents->extent_list,
- 			      xfs_has_discard(mp) && !abort);
- 
- 	spin_lock(&ctx->cil->xc_push_lock);
-@@ -1004,13 +1005,7 @@ xlog_cil_committed(
- 
- 	xlog_cil_free_logvec(&ctx->lv_chain);
- 
--	if (!list_empty(&ctx->busy_extents->extent_list)) {
--		ctx->busy_extents->owner = ctx;
--		xfs_discard_extents(mp, ctx->busy_extents);
--		return;
--	}
--
--	xfs_busy_extents_free(ctx->busy_extents);
-+	xfs_discard_extents(mp, busy_extents);
- 	kfree(ctx);
- }
- 
+ /* Log bmap updates in the intent item. */
 -- 
-2.53.0
+2.39.2
 
