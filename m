@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391394C77DD
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 11:56:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F0E4F798A
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 11:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143766; cv=none; b=JYk22nkYWITi6LgJpJDEdT5FrlpWIq4sLzkSl0QMHZTqipIE6FON/U4v5DLT76Fh9B6GMxDC57qUZdVcY2WiN3igLdfzBH2iYWaEV7cMLLmC1j616kq2BWUcbnvB1KP0OOWYgfZISiJyDk3lCKFQrywCeUnEIZtFq541ISHWgBQ=
+	t=1773143767; cv=none; b=uigMh5qVBwB34mALsviLmXk0qt3qr8y2zDMKgOAgU0gk4NdW1gXHFcLAwp13FDoBXgp6av/VS1FDdQtMbHBqHzleArdDCHpsmX7O4s45mTWbexRK8bo6fpLS75JMKAO36UsUJEUCmwzXU8cuvNSHkBNIyqQfwJOtRs/O0Tla4DA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143766; c=relaxed/simple;
-	bh=CfJCCnAJEwAju2aDY8Qzn0aX2+mjuV2/1RJuZGSp9gU=;
+	s=arc-20240116; t=1773143767; c=relaxed/simple;
+	bh=FX3LzaBGRsF/pd9oxgBTapM6vJE5c+/3H5oT2X9JDcU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FCv0xH8GJMARn1jPeC6444IMgizihLAqcFHiB3axQ+RYyIuyQUNsVeNDQ+NjtcuKnuOQsKsupxvTocHScxg1WW5rqOsgmy0XpvxLsffbwSmN/1HXaE6eDClNPJBUGxIcTCkOTIaOFaLsSd8FZV851qA8duB6CzloEEJuuU5G9Lo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u31XpaEn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=BSkNA2OCM140Sw1jScEvNgLyVHcOkZuVpA+xjI38a52CRV6PR9YP6wsS0DX9fkG1mJGNBwRSLQPkn7YebAwEiDGeo/ehfkg2gqimLurMJg2nbnTH55XUFRPdXBE+Nvt3ylFyjObMgCQeXjbcSLNKxrRKvN29rtzVXf8ZQUXUt8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MRbWJcZJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u31XpaEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F549C2BC9E;
-	Tue, 10 Mar 2026 11:56:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRbWJcZJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86030C2BCB1;
+	Tue, 10 Mar 2026 11:56:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773143764;
-	bh=CfJCCnAJEwAju2aDY8Qzn0aX2+mjuV2/1RJuZGSp9gU=;
+	s=k20201202; t=1773143767;
+	bh=FX3LzaBGRsF/pd9oxgBTapM6vJE5c+/3H5oT2X9JDcU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=u31XpaEnclqNyjouEwZKUujEok73j1zXEvE+DXWHaVuHUKNbRov4NeyYoXmjfPXB7
-	 Vc3amHjakrLOxygN4C8ViupT5IHRPvdhKb43FvIrCaayxWT73Q6753V349H/em/D88
-	 A8MtccqwzuTofkZQGLOEwVBdieYeTvY78OnapkuL3pDSmliLD6zGHaommRzx7bEhm0
-	 dSEkanU6zw9o3IKFDcM+egvJBf5CZdt+iutWSaxliSTaDS2j7dkmzohIJxLrfXtXx1
-	 nEUt5qVf5HwSfogn6jrB9Zk9w5HHWkrRKryHwscYPOpcm3Tw0l1zxVd6Uqc9CqECJj
-	 7MlTjrVpF/Tqw==
+	b=MRbWJcZJodEsVxgF7Rk2bAxjwsBb2yaWNzkcsKyBjdcCv4lvkql71Shn0G4IflM5e
+	 B4pF47NtmQ0Lqjy8MxAnH6UiOchFVdHDvzoxKFbkuylpYC2lJhvofmtyt5UC4hyyoG
+	 CG4AEIVnEaAzv7V3+lxsGCWD2hzRS7HXowPRDXBU7LMobDh14i+QMWW/+AtmpH74KS
+	 KWUN++g3jD2NCa2j9PyYEFtapLJair7vrHwfiXUIn7zu5hodTe+kP4zk6zg/6VX1DL
+	 QobnI3nxA0qCENn67XAbKkgU678ZTVwGEszLLP+UhHASqPRNc8V9AyeLdih/FRxcHt
+	 5gbUPhf6xfePg==
 From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
 Cc: hch@lst.de,
 	dlemoal@kernel.org
-Subject: [PATCH 2/4] xfs: move zoned dio ioend to its own function
-Date: Tue, 10 Mar 2026 12:55:05 +0100
-Message-ID: <20260310115555.114197-3-cem@kernel.org>
+Subject: [PATCH 4/4] xfs: opencode xfs_zone_record_blocks
+Date: Tue, 10 Mar 2026 12:55:07 +0100
+Message-ID: <20260310115555.114197-5-cem@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260310115555.114197-1-cem@kernel.org>
 References: <20260310115555.114197-1-cem@kernel.org>
@@ -46,74 +46,68 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-All zoned dio needs during endio is set the file size, so move it
-out of the generic function.
+We only have a single caller, no need to keep it in its own function.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_file.c | 35 ++++++++++++++++++++++++++++++++---
- 1 file changed, 32 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_zone_alloc.c | 30 ++++++++----------------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 45ecd743fa32..29b02673111b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -595,6 +595,36 @@ xfs_dio_endio_set_isize(
- 	return xfs_setfilesize(ip, offset, size);
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 97149bfc2512..7d712d5a5ce0 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -201,27 +201,6 @@ xfs_zone_inc_written(
+ 		xfs_open_zone_mark_full(oz);
  }
  
-+static int
-+xfs_zoned_dio_write_end_io(
-+	struct kiocb		*iocb,
-+	ssize_t			size,
-+	int			error,
-+	unsigned		flags)
-+{
-+	struct inode		*inode = file_inode(iocb->ki_filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	unsigned int		nofs_flag;
-+
-+	ASSERT(!(flags & (IOMAP_DIO_UNWRITTEN | IOMAP_DIO_COW)));
-+
-+	trace_xfs_end_io_direct_write(ip, iocb->ki_pos, size);
-+
-+	if (xfs_is_shutdown(ip->i_mount))
-+		return -EIO;
-+
-+	if (error || !size)
-+		return error;
-+
-+	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
-+
-+	nofs_flag = memalloc_nofs_save();
-+	error = xfs_dio_endio_set_isize(inode, iocb->ki_pos, size);
-+	memalloc_nofs_restore(nofs_flag);
-+
-+	return error;
-+}
-+
- static int
- xfs_dio_write_end_io(
- 	struct kiocb		*iocb,
-@@ -607,8 +637,7 @@ xfs_dio_write_end_io(
- 	loff_t			offset = iocb->ki_pos;
- 	unsigned int		nofs_flag;
- 
--	ASSERT(!xfs_is_zoned_inode(ip) ||
--	       !(flags & (IOMAP_DIO_UNWRITTEN | IOMAP_DIO_COW)));
-+	ASSERT(!xfs_is_zoned_inode(ip));
- 
- 	trace_xfs_end_io_direct_write(ip, offset, size);
- 
-@@ -701,7 +730,7 @@ xfs_dio_zoned_submit_io(
- static const struct iomap_dio_ops xfs_dio_zoned_write_ops = {
- 	.bio_set	= &iomap_ioend_bioset,
- 	.submit_io	= xfs_dio_zoned_submit_io,
--	.end_io		= xfs_dio_write_end_io,
-+	.end_io		= xfs_zoned_dio_write_end_io,
- };
- 
+-static void
+-xfs_zone_record_blocks(
+-	struct xfs_trans	*tp,
+-	struct xfs_open_zone	*oz,
+-	xfs_fsblock_t		fsbno,
+-	xfs_filblks_t		len)
+-{
+-	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_rtgroup	*rtg = oz->oz_rtg;
+-	struct xfs_inode	*rmapip = rtg_rmap(rtg);
+-
+-	trace_xfs_zone_record_blocks(oz, xfs_rtb_to_rgbno(mp, fsbno), len);
+-
+-	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+-	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
+-	rmapip->i_used_blocks += len;
+-	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
+-	xfs_zone_inc_written(oz, len);
+-	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
+-}
+-
  /*
+  * Called for blocks that have been written to disk, but not actually linked to
+  * an inode, which can happen when garbage collection races with user data
+@@ -252,6 +231,8 @@ xfs_zoned_map_extent(
+ 	xfs_fsblock_t		old_startblock)
+ {
+ 	struct xfs_bmbt_irec	data;
++	struct xfs_rtgroup	*rtg = oz->oz_rtg;
++	struct xfs_inode	*rmapip = rtg_rmap(rtg);
+ 	int			nmaps = 1;
+ 	int			error;
+ 
+@@ -310,7 +291,12 @@ xfs_zoned_map_extent(
+ 		}
+ 	}
+ 
+-	xfs_zone_record_blocks(tp, oz, new->br_startblock, new->br_blockcount);
++	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
++	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
++	rmapip->i_used_blocks += new->br_blockcount;
++	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
++	xfs_zone_inc_written(oz, new->br_blockcount);
++	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
+ 
+ 	/* Map the new blocks into the data fork. */
+ 	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, new);
 -- 
 2.53.0
 
