@@ -1,34 +1,38 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BA9B3D0934
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:31:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1FD3D47A2
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:33:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773145891; cv=none; b=inwY0erPJTjZpNxC5Fpi22Ynqz8OsmYwcthNG0PV5VLpL3PqTd9TK63PU3W2HBBO3C1EWhWWGv7x/HGuKGDBfmvNBc+9GmnwwuCSjqFWjwfH6jyltF5qR9vy8ALRrZiPyqwaTZWErYEgpLgFChY5V6hCuhTgDx1Rh283QWBA06Y=
+	t=1773146010; cv=none; b=JwXn+USoOiYLfqxtD/rjthepPGejuHiY9Bqruqs0gvZtED4TREa4+5GaYDo5DvY1kRyJQu6le2USgUCDwK+lnY1jFAv7blYNgw4snTbjVCaAHfvlfFc9FXZzDKJvon+O2JWA5qL3sYfA3A2Cw+we+AUEjLEFoM5dE2fGBhhvwtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773145891; c=relaxed/simple;
-	bh=vTj3qG2yeOsecD1NLDh6MdNhz7G0toqV2IBANTebgfw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KP6EfC9waASPe9bSDGKIclwSJ1TYb+RAPZW8GVGn0tdjR/5GZzugiojBhh0c7pWy/bW2Vrzna3DOhzU1eDZlnEWmSJNUC8gHmell8batvjqwOIiygOhoGuPM+GxNgTUCow/OnE745G2Nz++JezLh963YgvyCjwoMdgyA2L7Lywk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id BC32C180F14A;
-	Tue, 10 Mar 2026 13:31:22 +0100 (CET)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id 883vKhoPsGnm1B4AKEJqOA
-	(envelope-from <lukas@herbolt.com>); Tue, 10 Mar 2026 13:31:22 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
+	s=arc-20240116; t=1773146010; c=relaxed/simple;
+	bh=Y+yLNB+3vxPPGVfTOy2JxBAmLUzT4osGEDC+Mfvh3MU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qx+0Cd/aZsg6kg1Ax+JGcC3kgo4vmTFgJAY6IRkc8P4oxlE0p/i+SGcOsWOww2OvV46mcCOtG7cGb6nFzj6c4ohyuMB8lcLFj3J1GsKsLAULlC/H7jeKG7ptIRHcZGh+xOoGkBDVvp0ulzvBd5CFnn/8t2WN/5qgxWdW4Ps9ok0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mmj152AE; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mmj152AE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDAF2C19423;
+	Tue, 10 Mar 2026 12:33:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773146010;
+	bh=Y+yLNB+3vxPPGVfTOy2JxBAmLUzT4osGEDC+Mfvh3MU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=mmj152AENGFP3p+qaztaKw8dL82AUc+xopkQFk2yFz04Cyg6tobsXrYruzAEv6F0w
+	 gLrYof1UmuoSGnJTdM0iavHonH042Z67isOVeMm6s0RRgaPLDew4RqrGp0ZqjALSTr
+	 H5VhNBNZUGjcvr2hoaj7iPX4ej66NLDezngQrO/yR5QH3Ngs5HtfqzH5C7hAUa/Qj7
+	 U1K04IhLnq9WdU+fvHbQfJw6W75PunXCeGWMkTOiQkiRdc1O52fI5f3xxr8m67TomH
+	 sU5YFyy0Tr5/bCt+mTH5RCLmuBAo3aukkcSAZdBeWtsmu+5lzE5wtcYl3uKRGt6xbU
+	 o8YXVZIBlhOvw==
+From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	hch@infradead.org,
-	djwong@kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v3 REBASE] xfs: Use xarray to track SB UUIDs instead of plain array.
-Date: Tue, 10 Mar 2026 13:30:22 +0100
-Message-ID: <20260310123021.715566-2-lukas@herbolt.com>
+Cc: david@fromorbit.com,
+	hch@lst.de,
+	djwong@kernel.org
+Subject: [PATCH 0/3] Decouple busy_extents from cil context
+Date: Tue, 10 Mar 2026 13:33:13 +0100
+Message-ID: <20260310123324.339310-1-cem@kernel.org>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,157 +42,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Removing the plain array to track the UUIDs and switch
-to xarray makes it more readable.
+From: Carlos Maiolino <cem@kernel.org>
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- changes v3:
-	fix locking/unlocking mistakes
-	removing wrapper function xfs_uuid_insert()
-	rebase xfs/for-next
+This series belongs to some work I am doing on AIL aiming to improve its
+writeback performance.
 
- fs/xfs/xfs_mount.c | 76 ++++++++++++++++++++++------------------------
- fs/xfs/xfs_mount.h |  3 ++
- 2 files changed, 40 insertions(+), 39 deletions(-)
+I need the cil context to be treated as a single unit during AIL
+processing, and having busy_extents associated with it gets in the way.
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9c295abd0a0a..b183d04da998 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -44,17 +44,36 @@
- #include "xfs_healthmon.h"
- 
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
--static int xfs_uuid_table_size;
--static uuid_t *xfs_uuid_table;
-+static DEFINE_XARRAY_ALLOC(xfs_uuid_table);
-+
-+static uuid_t *
-+xfs_uuid_search(
-+	uuid_t		*new_uuid)
-+{
-+	unsigned long	index = 0;
-+	uuid_t		*uuid;
-+
-+	xa_for_each(&xfs_uuid_table, index, uuid) {
-+		if (uuid_equal(uuid, new_uuid))
-+			return uuid;
-+	}
-+	return NULL;
-+}
-+
-+static void
-+xfs_uuid_delete(
-+	uuid_t		*uuid,
-+	unsigned int	index)
-+{
-+	ASSERT(uuid_equal(xa_load(&xfs_uuid_table, index), uuid));
-+	xa_erase(&xfs_uuid_table, index);
-+}
- 
- void
- xfs_uuid_table_free(void)
- {
--	if (xfs_uuid_table_size == 0)
--		return;
--	kfree(xfs_uuid_table);
--	xfs_uuid_table = NULL;
--	xfs_uuid_table_size = 0;
-+	ASSERT(xa_empty(&xfs_uuid_table));
-+	xa_destroy(&xfs_uuid_table);
- }
- 
- /*
-@@ -66,7 +85,7 @@ xfs_uuid_mount(
- 	struct xfs_mount	*mp)
- {
- 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
--	int			hole, i;
-+	int			ret;
- 
- 	/* Publish UUID in struct super_block */
- 	super_set_uuid(mp->m_super, uuid->b, sizeof(*uuid));
-@@ -80,30 +99,17 @@ xfs_uuid_mount(
- 	}
- 
- 	mutex_lock(&xfs_uuid_table_mutex);
--	for (i = 0, hole = -1; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_null(&xfs_uuid_table[i])) {
--			hole = i;
--			continue;
--		}
--		if (uuid_equal(uuid, &xfs_uuid_table[i]))
--			goto out_duplicate;
--	}
--
--	if (hole < 0) {
--		xfs_uuid_table = krealloc(xfs_uuid_table,
--			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
--			GFP_KERNEL | __GFP_NOFAIL);
--		hole = xfs_uuid_table_size++;
-+	if (unlikely(xfs_uuid_search(uuid))) {
-+		xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount",
-+				uuid);
-+		mutex_unlock(&xfs_uuid_table_mutex);
-+		return -EINVAL;
- 	}
--	xfs_uuid_table[hole] = *uuid;
--	mutex_unlock(&xfs_uuid_table_mutex);
- 
--	return 0;
--
-- out_duplicate:
-+	ret = xa_alloc(&xfs_uuid_table, &mp->m_uuid_table_index, uuid,
-+				xa_limit_32b, GFP_KERNEL);
- 	mutex_unlock(&xfs_uuid_table_mutex);
--	xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount", uuid);
--	return -EINVAL;
-+	return ret;
- }
- 
- STATIC void
-@@ -111,22 +117,14 @@ xfs_uuid_unmount(
- 	struct xfs_mount	*mp)
- {
- 	uuid_t			*uuid = &mp->m_sb.sb_uuid;
--	int			i;
- 
- 	if (xfs_has_nouuid(mp))
- 		return;
- 
- 	mutex_lock(&xfs_uuid_table_mutex);
--	for (i = 0; i < xfs_uuid_table_size; i++) {
--		if (uuid_is_null(&xfs_uuid_table[i]))
--			continue;
--		if (!uuid_equal(uuid, &xfs_uuid_table[i]))
--			continue;
--		memset(&xfs_uuid_table[i], 0, sizeof(uuid_t));
--		break;
--	}
--	ASSERT(i < xfs_uuid_table_size);
-+	xfs_uuid_delete(uuid, mp->m_uuid_table_index);
- 	mutex_unlock(&xfs_uuid_table_mutex);
-+	return;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index ddd4028be8d6..d964bae096ef 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -346,6 +346,9 @@ typedef struct xfs_mount {
- 
- 	/* Private data referring to a health monitor object. */
- 	struct xfs_healthmon __rcu	*m_healthmon;
-+
-+	/* Index of uuid record in the uuid xarray. */
-+	unsigned int		m_uuid_table_index;
- } xfs_mount_t;
- 
- #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+This has passed the same tests I run during patch integration without
+regressions.
 
-base-commit: 54fcd2f95f8d216183965a370ec69e1aab14f5da
+Instead of keeping rebasing it on top of newer versions, I'd appreciate
+I could get reviews and upstream this part now, to reduce the amount of
+changes I need to rebase.
+
+I should get the next part ready soon once I fix a few issues on it.
+
+Carlos Maiolino (3):
+  xfs: add a couple helpers to alloc/free xfs_busy_extents
+  xfs: convert busy_extents list to a pointer within cil context
+  xfs: remove owner field from xfs_extent_busy
+
+ fs/xfs/xfs_discard.c     | 17 ++++++-----------
+ fs/xfs/xfs_extent_busy.h | 24 +++++++++++++++++-------
+ fs/xfs/xfs_log_cil.c     | 18 ++++++++----------
+ fs/xfs/xfs_log_priv.h    |  2 +-
+ 4 files changed, 32 insertions(+), 29 deletions(-)
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 -- 
 2.53.0
 
