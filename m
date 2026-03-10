@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE311547C0
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:49:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8149E1547C0
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 03:49:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114561; cv=none; b=S3o42/x17EXrCr7765ThxyWQoaeRCTGJicWgtMVTip3WmYNGk6ZNN2AHF9GrWeIPzoIeGIjS3dtil9fi8Hri9DzRZJRi1/mwH96LmmyLLbMp4qjLoI+hXprcOKpyakMAo5vgUXYr+4vuIZbWaiYv/HPUWyn5gMaM+jYKZuEMOTk=
+	t=1773114577; cv=none; b=koEU6MwRJzPxgTy4n1H9hioeVIa8RHOjX2ysaKZ15MbmCHz3vIT/BS03wW5fg6U5/D3Uvy5bWosjYkSuBOmY+ePatlqA5SyYavljFfG+JdB46sSc7ATgcEwy+dq405viLj6UcVfaIDLQddte2Z42UmEKTu+mr1WDmHGosF4TAD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114561; c=relaxed/simple;
-	bh=2cxrpAckN6kurr7u7Rnxo8eaHxl6J1CR4vbCVT89ljk=;
+	s=arc-20240116; t=1773114577; c=relaxed/simple;
+	bh=4CjUqy25/f9eu0Yc2dU4tmFlXgTYqay+43I2sX2go8k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qMgsV2rBHGZcXcrPDYkwVczfpVp1EE4rz847sza/w0okweqROMZiWIuRsYvlm5owOv7dZKSSCrtUmtwnhO3yEsQKjCzF8zcyYh4P/cVilr4L5Jf8IPtWk9u+gzhm1D7BMnTdF15EExn4OlTlyv4PFuM55r2Ivvsjgp6yfJWcGFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E7m9iVmL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=OYyhE5yEl9modVz66Scq+jlsJm/gVnvQj/4TrTt4fWakfFq7YBTJzpMcNMJDMl7FlhCsXAAA0DvcaLbjvaS6sLPSp20f3EzetVJMxbFDyzOndOrolPU/oGJrPAPF9haSU8bT5Pk8jylMtBBMn7sNQk/qSo/qJU6mY4lhVWHX79o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OWy1Urlf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E7m9iVmL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEB28C19423;
-	Tue, 10 Mar 2026 03:49:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OWy1Urlf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D5E4C19423;
+	Tue, 10 Mar 2026 03:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114561;
-	bh=2cxrpAckN6kurr7u7Rnxo8eaHxl6J1CR4vbCVT89ljk=;
+	s=k20201202; t=1773114577;
+	bh=4CjUqy25/f9eu0Yc2dU4tmFlXgTYqay+43I2sX2go8k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=E7m9iVmLHxSsNqiNq45FlmtUidqM4IJTieobVQcnX/cTWQWiX3RnEUyzwiz6p/5BV
-	 cz0H6kVQqxflSK2l39I00ZQ1KYz+1uJkRHaUatrI99GbwXZjuJ4XRnr0QiDTXhajeN
-	 sB8tsqsAr2BpbiHas36xBghEJ4rfJu4lh0lJsM30ZMyHvQwLrbQyCXVRfLsxvLprAF
-	 Y0RvUEICELC0IuskJht9lWFbszpeR6sicQgHfvqNt3h9Y/DfFo7ke2mFh1hC3DBGVX
-	 7g8LmMNsy1t7qgPe41B7kouPvZLPPWtM4ihCpfMDA2Ig0zirHDM+xOPdbj4hGcp0o8
-	 KtTV0nkV41DGA==
-Date: Mon, 09 Mar 2026 20:49:21 -0700
-Subject: [PATCH 26/28] mkfs: enable online repair if all backrefs are enabled
+	b=OWy1UrlfRhZVFr1y3V2d5rzKStvKkjsvRI1MRL9lfP3Atv1lCpaZ5v1vSloKPtlWg
+	 Y8109TPhZyB1HEVZS1/6vMp6QaWaX/9TcwsENqgUMAyX0ZlBnD9uZMqVZpwPloZRja
+	 kI6qTk0vTGVMLzyuVjj6B8HPOv/BFH6VdHZgn6HSPGWWmHzHfsDbzAhWJ+wjkfacGU
+	 9fbgAPlg3pOUdj3B6wxYLpb0l9W1Ll2yJ686X/ZJagyIl9Aj+g9vz5oVGau9KqqrD7
+	 M37HoTl235FOHg5Oj83ogfIlzaVF9H2r5xaOKDINabyxzV28u5lP64Gl1G86Ak/yEI
+	 r6aXIsupTRTkg==
+Date: Mon, 09 Mar 2026 20:49:36 -0700
+Subject: [PATCH 27/28] debian/control: listify the build dependencies
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <177311401930.1183235.5546361742527693533.stgit@frogsfrogsfrogs>
+Message-ID: <177311401948.1183235.9806339034108921343.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,44 +45,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If all backreferences are enabled in the filesystem, then enable online
-repair by default if the user didn't supply any other autofsck setting.
-Users might as well get full self-repair capability if they're paying
-for the extra metadata.
-
-Note that it's up to each distro to enable the systemd services
-according to their own service activation policies.  Debian policy is to
-enable all systemd services at package installation but they don't
-enable online fsck in their Kconfig so the services won't activate.
-RHEL and SUSE policy requires sysadmins to enable them explicitly unless
-the OS vendor also ships a systemd preset file enabling the services.
-Distros without systemd won't get any of the systemd services,
-obviously.
+This will make it less gross to add more build deps later.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ debian/control |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 527a662f3ac858..f859626afdda36 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -6296,6 +6296,15 @@ main(
- 	if (mp->m_sb.sb_agcount > 1)
- 		rewrite_secondary_superblocks(mp);
- 
-+	/*
-+	 * If the filesystem has full backreferences and the user didn't
-+	 * express an autofsck preference, enable online repair because they
-+	 * might as well get some useful functionality from the extra metadata.
-+	 */
-+	if (cli.autofsck == FSPROP_AUTOFSCK_UNSET &&
-+	    cli.sb_feat.rmapbt && cli.sb_feat.parent_pointers)
-+		cli.autofsck = FSPROP_AUTOFSCK_REPAIR;
-+
- 	if (cli.autofsck != FSPROP_AUTOFSCK_UNSET)
- 		set_autofsck(mp, &cli);
+diff --git a/debian/control b/debian/control
+index 6473c10be7f7d6..d50960fba205bb 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,7 +3,19 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: libinih-dev (>= 53), uuid-dev, debhelper (>= 12), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libicu-dev, pkg-config, liburcu-dev, systemd-dev | systemd (<< 253-2~)
++Build-Depends: debhelper (>= 12),
++ gettext,
++ libblkid-dev (>= 2.17),
++ libdevmapper-dev,
++ libedit-dev,
++ libicu-dev,
++ libinih-dev (>= 53),
++ libtool,
++ liburcu-dev,
++ linux-libc-dev,
++ pkg-config,
++ systemd-dev | systemd (<< 253-2~),
++ uuid-dev
+ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
  
 
