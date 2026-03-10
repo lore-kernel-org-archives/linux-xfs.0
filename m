@@ -1,39 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A49242D6B
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 00:44:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E212BD11;
+	Tue, 10 Mar 2026 00:46:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773103441; cv=none; b=Sj30AMXn8POsJH6jxb8gIx9M3KA7Se1MJWy7LOzlKXBccuK8Ue1p9DvsL3GrCNoxZgNHDFFlDV9OrxX9sKC6p78FHgLwReo8Su93cJfQhLOMKJayIKwyXjyhlLmM6MjVueqIEs5Ny1T7hQwfnx4suE6sR2p9d4GYBmLwFHH7SyY=
+	t=1773103588; cv=none; b=sKXZ99XaDpG+XPvY5zINMAUqLfTr6yhKZ6gckXk9jjhnZI43YGc8UrnyMe55YapWQajZml4Pxys0oeIYlEy+PdmVR+BbCAHceDuVGDr7sGqhcAH/EBIBZXF11/Fp78LlZqYfMrKZYK8LS8Lqr2LOpsms5qr05aW5kOCiMwxo+aY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773103441; c=relaxed/simple;
-	bh=HFClNht4lmfzv5TbHw4PwVNIH5oXPkEE+hguN3umAzk=;
+	s=arc-20240116; t=1773103588; c=relaxed/simple;
+	bh=ZaMPY2YfyWjkT+Gcpp9C9C2PHVwVCnyFNVGI6g8OFNY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jZZZkI4WgK7bYs2hqD+13iFQQwwBXDipZtxSHSlr6iExoYwmKCb+1XsCbymA9vB5u636KQLF8mu2mjsDpgxzRV4Q668V57qEEF8Rsi443fLtze+ZYVdFL6RPx+2MXilqgO5jn3zy1Uz5H2xAw0jSbU3tJ9rhjP9cTOBGuje4B9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TemAaRaE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FNtKXq1NhnntoN+BLVnApECH8703emMLPNCpL3GFMTtNgK/B+/BLuZTRBE2nctxlWREgwLo5/bLrwNxOlcSxNgNsT2FFJoANTq8AVAp35fJnmlYpsaiAKspuEvC1bODEEJl6AAknmSqT23pJEJYzlFWwfXgIv2gPblv8r9/ca5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I/1xWpRD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TemAaRaE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A02C4CEF7;
-	Tue, 10 Mar 2026 00:44:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I/1xWpRD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E013FC4CEF7;
+	Tue, 10 Mar 2026 00:46:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773103440;
-	bh=HFClNht4lmfzv5TbHw4PwVNIH5oXPkEE+hguN3umAzk=;
+	s=k20201202; t=1773103587;
+	bh=ZaMPY2YfyWjkT+Gcpp9C9C2PHVwVCnyFNVGI6g8OFNY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TemAaRaEEZCs7W+c8NtgL11eqJ9JrcWG6/SIrzYaaEUUnd2mr1k49d8F3RaYNNw8L
-	 DotrKDnbjM61xx0PXa/PYX4CJbOw+orpCP1nsXhm5kyMDa7/Sr1KXbsbHgLH7E0jT0
-	 KlC7M1zAGA1GpjKVz9d25Y/Q/s44irMN33NK4PCdGdiXJT4TPXt4LwaC7GhbMleMXi
-	 C9FLHOHcX3drntzpg37Z2Wd8zz0I/oQ8kuNJxnhJMHpxhJaq6cfVFj2CAwMW02sb62
-	 5dj3e4MN8mL1ivrSrH9gvODRYx/LIfGh6LCM+SSu6c8EeWfN0QQ3xpL6uEOch98HMs
-	 vboj9CwhlEd6w==
-Date: Mon, 9 Mar 2026 17:44:00 -0700
+	b=I/1xWpRDysmce3EvyVnDKvplZQdEjjKRvgmy5LdtujsGRPRt+90/Q3oZadWhrczVK
+	 QFiZeRzNsuWYvCxautmeR8y1HvInv0nUBr8eDiMG5CyoOxwt0uP6yFUEpBhcT3VUQJ
+	 gMdFl/kQlUlFa2g3AMebTXjVzwpx2ZWc3d2T1p4U1TYIVd0Z/itnEwFscfBAqLygge
+	 MlGZcPhQK0uZXzFaqTE9HHOWiAGdE7OBwwozTyPcX+DFc0SCWzprSOvi78r5WEd93o
+	 oHayMDAiNInQrV71Axr7SjTy7EQ5xiL/QGV9y821SwUAnzbhgLkEBuolUmmhX1TnL7
+	 NcNDqlOSGKhHQ==
+Date: Mon, 9 Mar 2026 17:46:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, hch@infradead.org,
-	p.raghav@samsung.com
-Subject: Re: [PATCH v11 2/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <20260310004400.GU6033@frogsfrogsfrogs>
-References: <20260309181235.428151-2-lukas@herbolt.com>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v4 01/25] fsverity: report validation errors through
+ fserror to fsnotify
+Message-ID: <20260310004627.GV6033@frogsfrogsfrogs>
+References: <20260309192355.176980-1-aalbersh@kernel.org>
+ <20260309192355.176980-2-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,162 +46,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260309181235.428151-2-lukas@herbolt.com>
+In-Reply-To: <20260309192355.176980-2-aalbersh@kernel.org>
 
-On Mon, Mar 09, 2026 at 07:12:36PM +0100, Lukas Herbolt wrote:
-> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device
-> enable the unmap write zeroes operation.
+On Mon, Mar 09, 2026 at 08:23:16PM +0100, Andrey Albershteyn wrote:
+> Reported verification errors to fsnotify through recently added fserror
+> interface.
 > 
-> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > ---
->  v11 changes:
-> 	- split into 2 patches separating the bmapi_flags addition
-> 	- 2 step allocation, to avoid zeroing beyond EOF
+>  fs/verity/verify.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
->  fs/xfs/xfs_file.c | 41 +++++++++++++++++++++++++++++------------
->  1 file changed, 29 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index fd049a1fc9c6..f8c1611e3267 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1293,29 +1293,45 @@ xfs_falloc_zero_range(
->  	unsigned int		blksize = i_blocksize(inode);
->  	loff_t			new_size = 0;
->  	int			error;
-> +	bool                    need_convert = false;
+> diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+> index 4004a1d42875..99276053d3bb 100644
+> --- a/fs/verity/verify.c
+> +++ b/fs/verity/verify.c
+> @@ -9,6 +9,7 @@
 >  
->  	trace_xfs_zero_file_space(ip);
+>  #include <linux/bio.h>
+>  #include <linux/export.h>
+> +#include <linux/fserror.h>
 >  
-> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
-> +		if (xfs_is_always_cow_inode(ip) ||
-> +		    !bdev_write_zeroes_unmap_sectors(
-> +			    xfs_inode_buftarg(ip)->bt_bdev))
-> +			return -EOPNOTSUPP;
-> +		need_convert = true;
-> +	}
-> +
->  	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
->  	if (error)
->  		return error;
+>  #define FS_VERITY_MAX_PENDING_BLOCKS 2
 >  
->  	if (xfs_falloc_force_zero(ip, ac)) {
->  		error = xfs_zero_range(ip, offset, len, ac, NULL);
-> -	} else {
-> -		error = xfs_free_file_space(ip, offset, len, ac);
-> -		if (error)
-> -			return error;
-> -
-> -		len = round_up(offset + len, blksize) -
-> -			round_down(offset, blksize);
-> -		offset = round_down(offset, blksize);
-> -		error = xfs_alloc_file_space(ip, offset, len,
-> -				XFS_BMAPI_PREALLOC);
-> +		goto set_filesize;
->  	}
-> +	error = xfs_free_file_space(ip, offset, len, ac);
->  	if (error)
->  		return error;
-> -	return xfs_falloc_setsize(file, new_size);
-> +
-> +	len = round_up(offset + len, blksize) - round_down(offset, blksize);
-> +	offset = round_down(offset, blksize);
-> +	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
-> +
-> +set_filesize:
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_falloc_setsize(file, new_size);
-> +	if (error)
-> +		return error;
-> +	if (need_convert)
-> +		error = xfs_alloc_file_space(ip, offset, len,
-> +				XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
-> +	return error;
->  }
+> @@ -312,6 +313,7 @@ static bool verify_data_block(struct fsverity_info *vi,
+>  		data_pos, level - 1, params->hash_alg->name, hsize, want_hash,
+>  		params->hash_alg->name, hsize,
+>  		level == 0 ? dblock->real_hash : real_hash);
+> +	fserror_report_data_lost(inode, data_pos, params->block_size, GFP_NOFS);
 
-I can't help but think this would be cleaner as:
-
-static int
-xfs_falloc_write_zero_range(
-	struct file		*file,
-	int			mode,
-	loff_t			offset,
-	loff_t			len,
-	struct xfs_zone_alloc_ctx *ac)
-{
-	struct inode		*inode = file_inode(file);
-	struct xfs_inode	*ip = XFS_I(inode);
-	unsigned int		blksize = i_blocksize(inode);
-	loff_t			new_size = 0;
-	int			error;
-
-	trace_xfs_zero_file_space(ip);
-
-	if (xfs_is_always_cow_inode(ip) ||
-	    !bdev_write_zeroes_unmap_sectors(
-				xfs_inode_buftarg(ip)->bt_bdev))
-		return -EOPNOTSUPP;
-
-	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-	if (error)
-		return error;
-
-	if (xfs_falloc_force_zero(ip, ac)) {
-		error = xfs_zero_range(ip, offset, len, ac, NULL);
-		if (error)
-			return error;
-
-		return xfs_falloc_setsize(file, new_size);
-	}
-
-	error = xfs_free_file_space(ip, offset, len, ac);
-	if (error)
-		return error;
-
-	len = round_up(offset + len, blksize) -
-		round_down(offset, blksize);
-	offset = round_down(offset, blksize);
-	error = xfs_alloc_file_space(ip, offset, len);
-	if (error)
-		return error;
-
-	error = xfs_falloc_setsize(file, new_size);
-	if (error)
-		return error;
-
-	return xfs_alloc_file_space(ip, offset, len,
-			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO);
-}
-
-...assuming there's even a point to WRITE_ZEROES on a zoned file?
+Don't we also need to cover the "if (unlikely(data_pos >= inode->i_size))"
+around line 199 in verify_data_block?
 
 --D
 
->>   
->  static int
-> @@ -1377,7 +1393,7 @@ xfs_falloc_allocate_range(
->  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
-> -		 FALLOC_FL_UNSHARE_RANGE)
-> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
->  
->  STATIC long
->  __xfs_file_fallocate(
-> @@ -1420,6 +1436,7 @@ __xfs_file_fallocate(
->  	case FALLOC_FL_INSERT_RANGE:
->  		error = xfs_falloc_insert_range(file, offset, len);
->  		break;
-> +	case FALLOC_FL_WRITE_ZEROES:
->  	case FALLOC_FL_ZERO_RANGE:
->  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
->  		break;
+>  error:
+>  	for (; level > 0; level--) {
+>  		kunmap_local(hblocks[level - 1].addr);
 > -- 
-> 2.53.0
+> 2.51.2
 > 
 > 
