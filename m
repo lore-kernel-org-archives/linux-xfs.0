@@ -1,113 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F0E4F798A
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 11:56:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB662372B31
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 12:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143767; cv=none; b=uigMh5qVBwB34mALsviLmXk0qt3qr8y2zDMKgOAgU0gk4NdW1gXHFcLAwp13FDoBXgp6av/VS1FDdQtMbHBqHzleArdDCHpsmX7O4s45mTWbexRK8bo6fpLS75JMKAO36UsUJEUCmwzXU8cuvNSHkBNIyqQfwJOtRs/O0Tla4DA=
+	t=1773144145; cv=none; b=ZitpdMkYPH9FQv2h1DDoUwN5BvpaIJsiIhn/rbglXLnilsnhYWDxruxpZzNB4ysDn7HnKW1Uf0InpDZtsNZskX53rT2dFYmRWUsXYAhClM/zcZGEZsshoV+g/JslN+7QxzbzOAfIbhHTQ0ccFTB9NfXFEVdDo5E0fvtQNyPdNRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143767; c=relaxed/simple;
-	bh=FX3LzaBGRsF/pd9oxgBTapM6vJE5c+/3H5oT2X9JDcU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BSkNA2OCM140Sw1jScEvNgLyVHcOkZuVpA+xjI38a52CRV6PR9YP6wsS0DX9fkG1mJGNBwRSLQPkn7YebAwEiDGeo/ehfkg2gqimLurMJg2nbnTH55XUFRPdXBE+Nvt3ylFyjObMgCQeXjbcSLNKxrRKvN29rtzVXf8ZQUXUt8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MRbWJcZJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773144145; c=relaxed/simple;
+	bh=at4BPLxLl5PeTiWnP69G7QF+T7bYNiMi3AVVn7YyvXk=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AinBHFRS8GcKpLGHkRFzXp8HhCksmFeWSNp2/q3+fSChtoCOern7LcaM0kJftj/j2kNOWG4wWKvprVRS+FrDbk53/6ClWz4AWJTAyBIlL+iBPJmLTPeWcELlGgvE6jPG4BU3p7/Oo4RqHKSkNGvQH1y7+FP0Jf1TUE8A6BJ/DjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=qtGgLdnx; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRbWJcZJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86030C2BCB1;
-	Tue, 10 Mar 2026 11:56:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773143767;
-	bh=FX3LzaBGRsF/pd9oxgBTapM6vJE5c+/3H5oT2X9JDcU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MRbWJcZJodEsVxgF7Rk2bAxjwsBb2yaWNzkcsKyBjdcCv4lvkql71Shn0G4IflM5e
-	 B4pF47NtmQ0Lqjy8MxAnH6UiOchFVdHDvzoxKFbkuylpYC2lJhvofmtyt5UC4hyyoG
-	 CG4AEIVnEaAzv7V3+lxsGCWD2hzRS7HXowPRDXBU7LMobDh14i+QMWW/+AtmpH74KS
-	 KWUN++g3jD2NCa2j9PyYEFtapLJair7vrHwfiXUIn7zu5hodTe+kP4zk6zg/6VX1DL
-	 QobnI3nxA0qCENn67XAbKkgU678ZTVwGEszLLP+UhHASqPRNc8V9AyeLdih/FRxcHt
-	 5gbUPhf6xfePg==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Cc: hch@lst.de,
-	dlemoal@kernel.org
-Subject: [PATCH 4/4] xfs: opencode xfs_zone_record_blocks
-Date: Tue, 10 Mar 2026 12:55:07 +0100
-Message-ID: <20260310115555.114197-5-cem@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260310115555.114197-1-cem@kernel.org>
-References: <20260310115555.114197-1-cem@kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="qtGgLdnx"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=c8euFrWljbzxJTf2Hi5PPrkksISqAB89fxwgIGE6pIc=;
+	b=qtGgLdnxNR9hGpajct9iXPJ8xOSpYkjPN2EVM6UslTaX//H3Lr5nny23c8CViKmR4bClbFZMz
+	worHgsY9XYzRktnu6yZgZnBdSfkN8geyH/dQe2bEwTaBt+bHeZsuk3NpQcOueGv6d9HkppdKRTy
+	YBZ8LYeAfwdNUjUsKgWp6lc=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4fVXRM4HdZzcZy0;
+	Tue, 10 Mar 2026 19:56:47 +0800 (CST)
+Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5093F40363;
+	Tue, 10 Mar 2026 20:02:12 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 10 Mar 2026 20:02:12 +0800
+Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 10 Mar
+ 2026 20:02:11 +0800
+Date: Tue, 10 Mar 2026 19:58:23 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: Re: [PATCH 2/4] xfs: factor out xfs_da3_node_entry_remove
+Message-ID: <abAHX977xcOEaqRM@localhost.localdomain>
+References: <20260309082752.2039861-1-leo.lilong@huawei.com>
+ <20260309082752.2039861-3-leo.lilong@huawei.com>
+ <20260309164229.GI6033@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20260309164229.GI6033@frogsfrogsfrogs>
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-From: Carlos Maiolino <cem@kernel.org>
+On Mon, Mar 09, 2026 at 09:42:29AM -0700, Darrick J. Wong wrote:
+> 
+> > +	__xfs_da3_node_remove(state->args->trans, state->args->dp,
+> > +			state->args->geo, drop_blk);
+> > +}
+> > +
+> > +/*
+> > + * Remove an entry from a node at the specified index, this is an exported
+> > + * wrapper for removing entries from intermediate nodes.
+> > + */
+> > +void
+> > +xfs_da3_node_entry_remove(
+> 
+> This only applies to attr(ibute) structures, as evidenced by m_attr_geo
+> below.  I think this ought to be named xfs_attr3_node_entry_remove.
+> 
 
-We only have a single caller, no need to keep it in its own function.
+Considering that xfs_da_btree.c implements functions related to xfs_da*, 
+it might not be appropriate to place xfs_attr3_node_entry_remove here either.
+I think we could add an additional `struct xfs_da_geometry *geo` parameter
+to xfs_da3_node_entry_remove() and let it be specified externally, which
+would increase the function's generality. What do you think?
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_zone_alloc.c | 30 ++++++++----------------------
- 1 file changed, 8 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 97149bfc2512..7d712d5a5ce0 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -201,27 +201,6 @@ xfs_zone_inc_written(
- 		xfs_open_zone_mark_full(oz);
- }
- 
--static void
--xfs_zone_record_blocks(
--	struct xfs_trans	*tp,
--	struct xfs_open_zone	*oz,
--	xfs_fsblock_t		fsbno,
--	xfs_filblks_t		len)
--{
--	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_rtgroup	*rtg = oz->oz_rtg;
--	struct xfs_inode	*rmapip = rtg_rmap(rtg);
--
--	trace_xfs_zone_record_blocks(oz, xfs_rtb_to_rgbno(mp, fsbno), len);
--
--	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
--	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
--	rmapip->i_used_blocks += len;
--	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
--	xfs_zone_inc_written(oz, len);
--	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
--}
--
- /*
-  * Called for blocks that have been written to disk, but not actually linked to
-  * an inode, which can happen when garbage collection races with user data
-@@ -252,6 +231,8 @@ xfs_zoned_map_extent(
- 	xfs_fsblock_t		old_startblock)
- {
- 	struct xfs_bmbt_irec	data;
-+	struct xfs_rtgroup	*rtg = oz->oz_rtg;
-+	struct xfs_inode	*rmapip = rtg_rmap(rtg);
- 	int			nmaps = 1;
- 	int			error;
- 
-@@ -310,7 +291,12 @@ xfs_zoned_map_extent(
- 		}
- 	}
- 
--	xfs_zone_record_blocks(tp, oz, new->br_startblock, new->br_blockcount);
-+	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
-+	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
-+	rmapip->i_used_blocks += new->br_blockcount;
-+	ASSERT(rmapip->i_used_blocks <= rtg_blocks(rtg));
-+	xfs_zone_inc_written(oz, new->br_blockcount);
-+	xfs_trans_log_inode(tp, rmapip, XFS_ILOG_CORE);
- 
- 	/* Map the new blocks into the data fork. */
- 	xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, new);
--- 
-2.53.0
-
+Thanks,
+Long Li
