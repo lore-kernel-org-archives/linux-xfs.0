@@ -1,103 +1,113 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C7339DBCA
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 17:55:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E843C0612;
+	Tue, 10 Mar 2026 17:57:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.218.115.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773165340; cv=none; b=erE2lBQYdpyOr22/hVnAkry8UPq+wfDg4lzSESM0z/SpRskFXJNCpjQtzBVbkXrFPBFNM3ws3vOMn7ZD4QZuvUWfG+FUIxc+BsWaNgCTOe23dOq20Ly2pTyXr10VqDs46dRA4SMOehFaWNggeA9NtyFIbygMBDapkmJgaMWIseg=
+	t=1773165428; cv=none; b=ihTXAaQDVB5BL/K4RD1A0It5dRPD3I2TQUpJdIXisQD2ClIeE7p0MFolg9ySlzS8apMYRA/1/iz/LMaTnUzWxEEMncCtRSrFekI85HErD/zI5rpqW23kGe3hC0LzslokW+v3dgVMoGzC70t9aNekfJDPA3jAuoyjj0yP7ty21BU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773165340; c=relaxed/simple;
-	bh=VCU+EpIetXArFMbXxWRS8WogDLF0jb+tsu314Avaalg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=c+y9sCNvsamr6rn9aEWVs71iSdP9suZUrSw9CTtyfl7W/L4wuvcvpYEsTMOXiYPuYDaBRGb/uPyHa9U7+666gfHHwy/8dtT8g2ThrWwgMQKu1Tu6mWIJ7o/WRZQBeGElClTR4F135DtZmPHdWuLH+OaLprJjJJfAkltN1pvj2Vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ryuZ1UUw; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1773165428; c=relaxed/simple;
+	bh=dE2wnhvT1/jOjYo2r7H6d5SffljydMQYDMzibj2ztqk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=C9nvQL/KjhgTgKYaJYir7KUVuIrI5xxcsyu4iC4/ckH7R3cZ1I7qU/BMlx9pMejcYBw/SDAAJrNGE17FL50DVDcTes5zmlU2GlSw+iaYrsP3Mmyd9Egq/g+4lsaIQkLG6FShtFZNhWTe3dDS9zORuRRpPKF1Z4huix0kJQsdBwI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=DNt2qlJt; arc=none smtp.client-ip=34.218.115.239
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ryuZ1UUw"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260310175530epoutp04e43638ccb4c7bda1f29c1fcf59e249ee~bjHkpAGDc1162611626epoutp04V
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 17:55:30 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260310175530epoutp04e43638ccb4c7bda1f29c1fcf59e249ee~bjHkpAGDc1162611626epoutp04V
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1773165330;
-	bh=HziSH2/Cf5Alx7OkIwA/epyvhcQF8gIRyPzH4/4FbaI=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=ryuZ1UUwEEobVWVk0HzhPWygJpRPxXX9OVysCn7JI+FxfltU6zGEHJ9PqQKELr5Li
-	 g1evJRuqDQ8xHyIZneLN+Qp7TgEkek/5nvxpvYFkCELWaF3TPqS6jVEm9fvmUiWSZN
-	 sAGUY6NYqRmBWoNiEHvHzsqCtDTl9H0SNa5SmlB8=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260310175529epcas5p4c8b08a7af0c347f8db0b0e4d242ece17~bjHj4oFW30201002010epcas5p4k;
-	Tue, 10 Mar 2026 17:55:29 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.92]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4fVhPD3xKFz3hhT3; Tue, 10 Mar
-	2026 17:55:28 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260310175527epcas5p4b20cd0d70a4401b7b213d97540aa43c6~bjHifQe6C0660906609epcas5p4P;
-	Tue, 10 Mar 2026 17:55:27 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260310175526epsmtip196e441f42f3ac81bbdbafeb74fc677c7~bjHg9Tcpl2031820318epsmtip1M;
-	Tue, 10 Mar 2026 17:55:26 +0000 (GMT)
-Message-ID: <2cde8902-6d50-4035-b9c4-89bd5e2c9468@samsung.com>
-Date: Tue, 10 Mar 2026 23:25:25 +0530
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="DNt2qlJt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1773165427; x=1804701427;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=vXtjcRARDJJWJjzlBqRUJ7XjkdKoCtgRUPgj1EfuX5M=;
+  b=DNt2qlJtIP7iCxYX18l/JSTdalVu/sDdxdhCpkSIc0wDbg4CmBwUnFEG
+   KozuGaQCrQojjuwi/BcyQT6R+W3PHNBVYvmEIZ+YKQNv77XSoWs4bjpUT
+   bEV4WZIJ4q0fosrInCBG3Og4xOYRcTQxTDnrOmAlEH95PjeYsIRzlhF4o
+   Y2TRiTYdlplzcqDE/Gifi4uJvp1E0eo5ih5OU8V75tpiEtbVoLZHJq7BN
+   3mPSc14IvWuY3YzATuSX908pTftSMaImE/iOn5haCybUycTHUxk20l65p
+   cLnoTKLg3sR1aIKTb5qMXGyUjvwzd/TBT8mGgWnZUoO83zgKq3LnvW/gS
+   A==;
+X-CSE-ConnectionGUID: dm3G3WkKSLGNbB861GvvWg==
+X-CSE-MsgGUID: VEd7LeRQR5WnohhxJ81UMQ==
+X-IronPort-AV: E=Sophos;i="6.23,112,1770595200"; 
+   d="scan'208";a="14537078"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 17:57:07 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:3821]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.152:2525] with esmtp (Farcaster)
+ id 5be03645-ff53-4f3d-84c8-7f837792af6a; Tue, 10 Mar 2026 17:57:07 +0000 (UTC)
+X-Farcaster-Flow-ID: 5be03645-ff53-4f3d-84c8-7f837792af6a
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 10 Mar 2026 17:57:04 +0000
+Received: from c889f3b07a0a.amazon.com (10.106.82.15) by
+ EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 10 Mar 2026 17:57:02 +0000
+From: Yuto Ohnuki <ytohnuki@amazon.com>
+To: <dgc@kernel.org>
+CC: <bfoster@redhat.com>, <cem@kernel.org>, <darrick.wong@oracle.com>,
+	<dchinner@redhat.com>, <linux-kernel@vger.kernel.org>,
+	<linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>,
+	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
+	<ytohnuki@amazon.com>
+Subject: Re: [PATCH v3 3/4] xfs: avoid dereferencing log items after push callbacks
+Date: Tue, 10 Mar 2026 17:56:55 +0000
+Message-ID: <20260310175655.80695-2-ytohnuki@amazon.com>
+X-Mailer: git-send-email 2.50.0
+In-Reply-To: <aa-rqpyApQhssW8A@dread>
+References: <aa-rqpyApQhssW8A@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/5] fs: add generic write-stream management ioctl
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, jack@suse.cz, cem@kernel.org,
-	kbusch@kernel.org, axboe@kernel.dk, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, gost.dev@samsung.com,
-	linux-api@vger.kernel.org
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260309163325.GE6033@frogsfrogsfrogs>
+X-ClientProxiedBy: EX19D031UWC001.ant.amazon.com (10.13.139.241) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260310175527epcas5p4b20cd0d70a4401b7b213d97540aa43c6
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260309053427epcas5p23419afbe49e4e35526388601e162ee94
-References: <20260309052944.156054-1-joshi.k@samsung.com>
-	<CGME20260309053427epcas5p23419afbe49e4e35526388601e162ee94@epcas5p2.samsung.com>
-	<20260309052944.156054-2-joshi.k@samsung.com>
-	<20260309163325.GE6033@frogsfrogsfrogs>
 
-On 3/9/2026 10:03 PM, Darrick J. Wong wrote:
->> +struct fs_write_stream {
->> +	__u32		op_flags;	/* IN: operation flags */
->> +	__u32		stream_id;	/* IN/OUT:  stream value to assign/guery */
->> +	__u32		max_streams;	/* OUT: max streams values supported */
->> +	__u32		rsvd;
->> +};
-> This isn't an very cohesive interface -- GET_MAX probably only needs
-> op_flags and max_streams, right?  And GET/SET only use op_flags and
-> stream_id, right?
+> > After xfsaild_push_item() calls iop_push(), the log item may have been
+> > freed if the AIL lock was dropped during the push. The tracepoints in
+> > the switch statement dereference the log item after iop_push() returns,
+> > which can result in a use-after-free.
+> > 
+> > Fix this by capturing the log item type, flags, and LSN before calling
+> > xfsaild_push_item(), and introducing a new xfs_ail_push_class trace
+> > event class that takes these pre-captured values and the ailp pointer
+> > instead of the log item pointer.
+> > 
+> > Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
+> > Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
+> > Cc: <stable@vger.kernel.org> # v5.9
+> > Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> -- 
+> Dave Chinner
+> dgc@kernel.org
 
-Yeah, right. That's the trade-off with swiss army knife type ioctl which 
-uses op_flags to decide what it should do. Apart from keeping a single 
-ioctl I was thinking a bit about extensibility (for anything new we may 
-be able to do a new op_flags with some rsvd or union) too. But if you 
-feel strong about this, I can take 3 ioctl route?
+Thanks for the review, Dave.
 
->> +#define FS_WRITE_STREAM_OP_GET_MAX		(1 << 0)
->> +#define FS_WRITE_STREAM_OP_GET			(1 << 1)
->> +#define FS_WRITE_STREAM_OP_SET			(1 << 2)
->> +
->> +#define FS_IOC_WRITE_STREAM		_IOWR('f', 43, struct fs_write_stream)
-> EXT4_IOC_CHECKPOINT already took 'f' / 43.  I/think/ there's no problem
-> because its argument is a u32 and ioctl definitions incorporate the
-> lower bits of of the argument size but you might want to be careful
-> anyway.
+In v4, I reworked the patch ordering so that the bugfix patches come
+before the refactoring.
 
-Indeed, thanks!
+Since the context has changed, I've dropped your Reviewed-by from
+this patch in v4 just to be safe. I would appreciate another look
+when you get a chance.
+
+Yuto
+
+
+
+Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+
+Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
+
+
+
