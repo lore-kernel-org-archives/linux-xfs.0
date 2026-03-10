@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F305B3BD62F;
-	Tue, 10 Mar 2026 03:50:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FAB3BD65B;
+	Tue, 10 Mar 2026 03:50:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773114640; cv=none; b=Je5CvxfeFMV23a047bvuKtvPb5FI0MYnl5/MD9Ypou60r5yK4C8SqTY4HW678yBrK6WZibj9zvVeGooHhUXUS9Tkh7Z3U/HQg30cqLmQ5yEMKoxQN4FFTVzuI/EGYOLQTsl1Ymou7AELLrvAlXdwmE4vcPLGdgxe/QO2afn4O+I=
+	t=1773114656; cv=none; b=kL3KRlNHq7tALuTXRkrKsYcAv43J/qvI4lERSWvCGBg8BFWPHO9JOATMoxBwVTZwv2XAGIIB5Vnf5WtmGNzUZsOBdh6J4Ve/l405EVDhXuout6If0EOGiETg1TPsiVainsxWazFLFLGg+Qii8CDBO9718TrKBrPYhtVp31aRs08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773114640; c=relaxed/simple;
-	bh=QoMDD47NiCbFdUIIHJVFJTqqaQvN0ICYjggpcXl7cMg=;
+	s=arc-20240116; t=1773114656; c=relaxed/simple;
+	bh=H/1JEd8+CMCbZ3Y2fxzF8SYq5qrTkGnQjTq/ut/F4A0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NTgvt7pAjoRhBklwV98IjVGb4yEZl+L647/YyagAicUImV5vKQp6907q76nr52gD/3oIFsbSI6hWkdcZ0hXIPZxcIkVpTB7EI5mQ5uybFkyfpoKIwiu202Nck3aun++AlBpMiwVUuyBHFgAhc3XnePs5SvE9cpYGsJyFpY+OMyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qZcfsgXX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=USbIv8xAwlWL0YIeTjKrrdnY/EujvdI2NRwoD5jxKzKBxpkKzalkThSXOWRBXaxc1IViGo6Cqle0w59wO37xpW4NICDmMxxvI8i5MHMJcsbnW5G9xpVEfvUyv/YG3LySBB8YDrmQFdPWWRH0Nbg3iGC3+i+Rhb9yjEDE3jsrR1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KaN+J92Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qZcfsgXX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCCB6C19425;
-	Tue, 10 Mar 2026 03:50:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KaN+J92Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FA75C19423;
+	Tue, 10 Mar 2026 03:50:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773114639;
-	bh=QoMDD47NiCbFdUIIHJVFJTqqaQvN0ICYjggpcXl7cMg=;
+	s=k20201202; t=1773114655;
+	bh=H/1JEd8+CMCbZ3Y2fxzF8SYq5qrTkGnQjTq/ut/F4A0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qZcfsgXXKgc6ovdfsiT7F0BWNTqVUboUYEL/9yz6U/zB8HJBZZTN8F9uHTr3SA609
-	 RM79Mk+Wbi9stIu2smLwoYkqMrX39qSJFZHn7dnWSGlD722KQB7WKUFgfeSH8SsuFM
-	 PrhGCzeLIfhFN0C9EmVx7/k+pBm39c/D2u5Ovnsr4aV4VA8PqUroI48piAX7Kkap/r
-	 0PJr4FFDb1wkxWdvNGOzC05V8a8oeM7H+YifOSgRyaPoRFVGR+eh64wTyh+uQ7raP9
-	 mr4hXal08/3orzEoNYUieyxyuUmAXZL42d/dnGseCFQ0L+Mt3U43a2GJpdGG5sWOxV
-	 WfkYnh5tfR5GA==
-Date: Mon, 09 Mar 2026 20:50:39 -0700
-Subject: [PATCH 02/14] xfs: test for metadata corruption error reporting via
- healthmon
+	b=KaN+J92ZX3upWwCu71fd8+wf9ThX7GG1eZ0pvBtz5wlAC6ZGUtAfYg/uFqCi5BFc8
+	 JBScJIRAgwcFHqDfXKWkGteSgli+rNtDHiif3dDVN4x8kaV/HYReTxR9wcZ/4k23bh
+	 +9F3uPJBE7t61d43OORUzt7vlwR8z5DWEXafs60n4/64RX3otR9RMwK9f6M99r9/xX
+	 N627me9ToorCeSs46XWkakOc4BsQNTMbjY8AkKx0wTI2YJtSDhI8q0Jf00/FtAprbh
+	 Y7lQHoumf14+CIKuJqUopvBUehmFzeM/4hKHcKkT4FrbjfX1cAUhLc+xAQYSKNg3Ta
+	 QDxZ1mr8z0hJw==
+Date: Mon, 09 Mar 2026 20:50:55 -0700
+Subject: [PATCH 03/14] xfs: test io error reporting via healthmon
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177311403813.1186408.6579877651738146939.stgit@frogsfrogsfrogs>
+Message-ID: <177311403831.1186408.9334207319061853105.stgit@frogsfrogsfrogs>
 In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +45,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Check if we can detect runtime metadata corruptions via the health
-monitor.
+Create a new test to make sure the kernel can report IO errors via
+health monitoring.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/1879     |   93 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1879.out |    8 ++++
- 2 files changed, 101 insertions(+)
- create mode 100755 tests/xfs/1879
- create mode 100644 tests/xfs/1879.out
+ tests/xfs/1878     |   93 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1878.out |   10 ++++++
+ 2 files changed, 103 insertions(+)
+ create mode 100755 tests/xfs/1878
+ create mode 100644 tests/xfs/1878.out
 
 
-diff --git a/tests/xfs/1879 b/tests/xfs/1879
+diff --git a/tests/xfs/1878 b/tests/xfs/1878
 new file mode 100755
-index 00000000000000..75bc8e3b5f4316
+index 00000000000000..1ff6ae040fb193
 --- /dev/null
-+++ b/tests/xfs/1879
++++ b/tests/xfs/1878
 @@ -0,0 +1,93 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 1879
++# FS QA Test No. 1878
 +#
-+# Corrupt some metadata and try to access it with the health monitoring program
-+# running.  Check that healthmon observes a metadata error.
++# Attempt to read and write a file in buffered and directio mode with the
++# health monitoring program running.  Check that healthmon observes all four
++# types of IO errors.
 +#
 +. ./common/preamble
 +_begin_fstest auto quick eio selfhealing
@@ -80,95 +80,96 @@ index 00000000000000..75bc8e3b5f4316
 +{
 +	cd /
 +	rm -rf $tmp.* $testdir
++	_dmerror_cleanup
 +}
 +
 +. ./common/filter
++. ./common/dmerror
 +
 +_require_scratch_nocheck
-+_require_scratch_xfs_crc # can't detect minor corruption w/o crc
 +_require_xfs_io_command healthmon
++_require_dm_target error
++
++filter_healer_errors() {
++	_filter_scratch | \
++		grep -E '(buffered|directio)' | \
++		sed \
++		    -e 's/ino [0-9]*/ino NUM/g' \
++		    -e 's/gen 0x[0-9a-f]*/gen NUM/g' \
++		    -e 's/pos [0-9]*/pos NUM/g' \
++		    -e 's/len [0-9]*/len NUM/g' \
++		    -e 's|SCRATCH_MNT/a|VICTIM|g' \
++		    -e 's|SCRATCH_MNT ino NUM gen NUM|VICTIM|g' | \
++		uniq
++}
 +
 +# Disable the scratch rt device to avoid test failures relating to the rt
 +# bitmap consuming all the free space in our small data device.
 +unset SCRATCH_RTDEV
 +
 +echo "Format and mount"
-+_scratch_mkfs -d agcount=1 | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-+. $tmp.mkfs
-+_scratch_mount
-+mkdir $SCRATCH_MNT/a/
-+# Enough entries to get to a single block directory
-+for ((i = 0; i < ( (isize + 255) / 256); i++)); do
-+	path="$(printf "%s/a/%0255d" "$SCRATCH_MNT" "$i")"
-+	touch "$path"
-+done
-+inum="$(stat -c %i "$SCRATCH_MNT/a")"
-+_scratch_unmount
++_scratch_mkfs > $seqres.full 2>&1
++_dmerror_init no_log
++_dmerror_mount
 +
-+# Fuzz the directory block so that the touch below will be guaranteed to trip
-+# a runtime sickness report in exactly the manner we desire.
-+_scratch_xfs_db -x -c "inode $inum" -c "dblock 0" -c 'fuzz bhdr.hdr.owner add' -c print &>> $seqres.full
++_require_fs_space $SCRATCH_MNT 65536
 +
-+# Try to allocate space to trigger a metadata corruption event
-+echo "Runtime corruption detection"
-+_scratch_mount
-+$XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT > $tmp.healthmon &
++# Create a file with written regions far enough apart that the pagecache can't
++# possibly be caching the regions with a single folio.
++testfile=$SCRATCH_MNT/fsync-err-test
++$XFS_IO_PROG -f \
++	-c 'pwrite -b 1m 0 1m' \
++	-c 'pwrite -b 1m 10g 1m' \
++	-c 'pwrite -b 1m 20g 1m' \
++	-c fsync $testfile >> $seqres.full
++
++# First we check if directio errors get reported
++$XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT >> $tmp.healthmon &
 +sleep 1	# wait for program to start up
-+touch $SCRATCH_MNT/a/farts &>> $seqres.full
-+_scratch_unmount
++_dmerror_load_error_table
++$XFS_IO_PROG -d -c 'pwrite -b 256k 12k 16k' $testfile >> $seqres.full
++$XFS_IO_PROG -d -c 'pread -b 256k 10g 16k' $testfile >> $seqres.full
++_dmerror_load_working_table
 +
++_dmerror_unmount
++wait	# for healthmon to finish
++_dmerror_mount
++
++# Next we check if buffered io errors get reported.  We have to write something
++# before loading the error table to ensure the dquots get loaded.
++$XFS_IO_PROG -c 'pwrite -b 256k 20g 1k' -c fsync $testfile >> $seqres.full
++$XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT >> $tmp.healthmon &
++sleep 1	# wait for program to start up
++_dmerror_load_error_table
++$XFS_IO_PROG -c 'pread -b 256k 12k 16k' $testfile >> $seqres.full
++$XFS_IO_PROG -c 'pwrite -b 256k 20g 16k' -c fsync $testfile >> $seqres.full
++_dmerror_load_working_table
++
++_dmerror_unmount
 +wait	# for healthmon to finish
 +
 +# Did we get errors?
-+check_healthmon()
-+{
-+	cat $tmp.healthmon >> $seqres.full
-+	_filter_scratch < $tmp.healthmon | \
-+		grep -E '(sick|corrupt)' | \
-+		sed -e 's|SCRATCH_MNT/a|VICTIM|g' \
-+		    -e 's|SCRATCH_MNT ino [0-9]* gen 0x[0-9a-f]*|VICTIM|g' | \
-+		sort | \
-+		uniq
-+}
-+check_healthmon
++cat $tmp.healthmon >> $seqres.full
++filter_healer_errors < $tmp.healthmon
 +
-+# Run scrub to trigger a health event from there too.
-+echo "Scrub corruption detection"
-+_scratch_mount
-+if _supports_xfs_scrub $SCRATCH_MNT $SCRATCH_DEV; then
-+	$XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT > $tmp.healthmon &
-+	sleep 1	# wait for program to start up
-+	$XFS_SCRUB_PROG -n $SCRATCH_MNT &>> $seqres.full
-+	_scratch_unmount
-+
-+	wait	# for healthmon to finish
-+
-+	# Did we get errors?
-+	check_healthmon
-+else
-+	# mock the output since we don't support scrub
-+	_scratch_unmount
-+	cat << ENDL
-+VICTIM directory: corrupt
-+VICTIM directory: sick
-+VICTIM parent: corrupt
-+ENDL
-+fi
++_dmerror_cleanup
 +
 +status=0
 +exit
-diff --git a/tests/xfs/1879.out b/tests/xfs/1879.out
+diff --git a/tests/xfs/1878.out b/tests/xfs/1878.out
 new file mode 100644
-index 00000000000000..2f6acbe1c4fb22
+index 00000000000000..f64c440b1a6ed1
 --- /dev/null
-+++ b/tests/xfs/1879.out
-@@ -0,0 +1,8 @@
-+QA output created by 1879
++++ b/tests/xfs/1878.out
+@@ -0,0 +1,10 @@
++QA output created by 1878
 +Format and mount
-+Runtime corruption detection
-+VICTIM directory: sick
-+Scrub corruption detection
-+VICTIM directory: corrupt
-+VICTIM directory: sick
-+VICTIM parent: corrupt
++pwrite: Input/output error
++pread: Input/output error
++pread: Input/output error
++fsync: Input/output error
++VICTIM pos NUM len NUM: directio_write: Input/output error
++VICTIM pos NUM len NUM: directio_read: Input/output error
++VICTIM pos NUM len NUM: buffered_read: Input/output error
++VICTIM pos NUM len NUM: buffered_write: Input/output error
 
