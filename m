@@ -1,60 +1,65 @@
-Received: from pdx-out-011.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-011.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.35.192.45])
+Received: from pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.26.1.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABA232DB78B;
-	Tue, 10 Mar 2026 18:38:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.35.192.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7990331A065;
+	Tue, 10 Mar 2026 18:38:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.26.1.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773167932; cv=none; b=lEEQLqpXzlbBuN9l6HGU44F2Oa6txrIXBT43GE6/TbAqFF/vUCsloXmMip/X2z5pmSLMbk77CpXICCer+gsTESsftsDQMiuhuFnsOyh9tEij+KDYKQEiv8RjsbVUTN0QYpVYYypFt26ws3cmH0+372XJcwmfCj7XNsXkzx/yhoA=
+	t=1773167935; cv=none; b=jhdyr72mCUI5cmNyqTgPygMfZlv4xWtBDst9fiEsiqTgKJmrwINfn80Btbxuh0ysI2OblQoGrpvYiu60uVhNHmvduZJrw72xQaOv2S2rjEoamhvIItfpA48X7lUVLENPVjZjigSb2IBj0g7XEVHMrPVFzfJ0WzvmOxWDkagGBv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773167932; c=relaxed/simple;
-	bh=Z8bymAiTawJ3Pen8fiT9SedU9TetaBrJAouahCKBsiQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=A7kd+Zs5dFYHdf5o9Z6lpDeRus2dkz4ZIFacOGOCf86fIchNvY0h8l3OJAfsOwQ+2RXg+T+gt4GOJjN+riZU6D8NyQewwr7cpDQFOXogaB0O5kzxXBej5Golrbj/D/BZU222UyTnoP6wCHmbSU9cQmpgAl81Wiv79QukrHCFKd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=belVaCXe; arc=none smtp.client-ip=52.35.192.45
+	s=arc-20240116; t=1773167935; c=relaxed/simple;
+	bh=HeqsfeBcTBt4ArfKV32ZtW3E86s8D5Uxvo1ghrvN2zo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ACOTyln0zeIBL4S3dNRDLeDwRbIdoW1k77AJyCY1Ee0/7rXeCtkHjhKoxekqTymd5GAMqef1+Cs7/gmU/nX3hXkXuSA6PM5tp73KIrEOur6oRrymyWjOKZqkHLla4scgQCz+NLI7G8+Tj3ZD32SXsZmQSnOsWmg+8A+JrxDl58E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=Lg/wj79U; arc=none smtp.client-ip=52.26.1.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="belVaCXe"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="Lg/wj79U"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1773167931; x=1804703931;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vhme4BgJWKhLCHDH3rslfPKs5BykGET2hI3Ao91Aftc=;
-  b=belVaCXeZEnlFsBsSVWPUuBd2EU1ANMf6QawOPCq4gslbqYnO4z5GMFj
-   NyNmFmRHMNIgwUXL5XM3aJHAygzScjHWkXdmfWHQTPBLeSrDXjiUtbCvG
-   6aCq4I4sd9ZAPRVmJapG9dO4YWvWHoDtf0GMhd8+ujnYufMC5vYnkEPw5
-   llbp0RyA1dEkIIuMMgM5aYhGnSuSgOo4my84FyjXsorX9ezDiDoe31p+2
-   tPXwFTiwZq3zVQBtUtdVF526mi4kfOdOy3FejHHWDvES5oKKVTsOUmD3F
-   4QvwtU+rIUF1NFn7NqY6rlMUW3M3scqaHHDHPg+iReG84aiYMuvHofvDs
-   g==;
-X-CSE-ConnectionGUID: Ts5k0FhRQtKl5SPLEBEkGw==
-X-CSE-MsgGUID: CirMUBegToK5FVCSQ0oNIw==
+  t=1773167934; x=1804703934;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=JtOydYU3WqE8Z2TOBVP6syGAXK8byl5NV2hYUJzJtXk=;
+  b=Lg/wj79UAHpAX+ITMKjZb/Jzsfm537R7rg2pMX2XJmsL0gox1ds0t9sk
+   I/m58Ww/YaT7WnSYvfcx81smDawVXb5GP4aziC0wEydeZRWzTaIo3LedI
+   Bufy7bKWrGGcHKVN41Vldps/dD6UXJGAE1h28vGnkE/8Zi0ipVM11Hb+u
+   /AeSfYl5HWXC2Lg7MxrDfrruNCZ+O+tq3n3F/FruU2G0aG17l4Q4kbXWE
+   qb1AU2HC8kC54aAshr3q/eqvg0dE7znbtQfW6DFPcL63VwuOKqLtPX8k3
+   gS2sUIXnopB6I+7F+THyZ4Kh8evLJpL9v6ineDhoLy2O+AsC7zO8MubSM
+   w==;
+X-CSE-ConnectionGUID: oeo/sL4gQqWEEvSO1v0gOQ==
+X-CSE-MsgGUID: bkRKWOB/QDGgDahUeXi26Q==
 X-IronPort-AV: E=Sophos;i="6.23,112,1770595200"; 
-   d="scan'208";a="14514977"
-Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
-  by internal-pdx-out-011.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:38:48 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:8842]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.26.67:2525] with esmtp (Farcaster)
- id 82c13a67-b64e-4929-8d98-1fb87bd1ac68; Tue, 10 Mar 2026 18:38:48 +0000 (UTC)
-X-Farcaster-Flow-ID: 82c13a67-b64e-4929-8d98-1fb87bd1ac68
+   d="scan'208";a="14738389"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 18:38:50 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:3067]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.152:2525] with esmtp (Farcaster)
+ id 08a1a1eb-2d27-4c44-9dbf-ad6240b37571; Tue, 10 Mar 2026 18:38:50 +0000 (UTC)
+X-Farcaster-Flow-ID: 08a1a1eb-2d27-4c44-9dbf-ad6240b37571
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 18:38:46 +0000
+ Tue, 10 Mar 2026 18:38:50 +0000
 Received: from c889f3b07a0a.amazon.com (10.106.82.15) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 18:38:44 +0000
+ Tue, 10 Mar 2026 18:38:48 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
 To: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>
 CC: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster
 	<bfoster@redhat.com>, <linux-xfs@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>
-Subject: [PATCH v4 0/4] xfs: fix AIL push use-after-free during shutdown
-Date: Tue, 10 Mar 2026 18:38:36 +0000
-Message-ID: <20260310183835.89827-6-ytohnuki@amazon.com>
+	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>,
+	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v4 1/4] xfs: stop reclaim before pushing AIL during unmount
+Date: Tue, 10 Mar 2026 18:38:37 +0000
+Message-ID: <20260310183835.89827-7-ytohnuki@amazon.com>
 X-Mailer: git-send-email 2.50.0
+In-Reply-To: <20260310183835.89827-6-ytohnuki@amazon.com>
+References: <20260310183835.89827-6-ytohnuki@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -66,65 +71,54 @@ X-ClientProxiedBy: EX19D036UWC002.ant.amazon.com (10.13.139.242) To
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-When a filesystem is shut down, background inode reclaim and the xfsaild
-can race to abort and free dirty inodes. Since commit 90c60e164012
-("xfs: xfs_iflush() is no longer necessary"), xfs_inode_item_push() no
-longer holds ILOCK_SHARED while flushing, removing the protection that
-prevented the inode from being reclaimed during the flush.
+The unmount sequence in xfs_unmount_flush_inodes() pushed the AIL while
+background reclaim and inodegc are still running. This is broken
+independently of any use-after-free issues - background reclaim and
+inodegc should not be running while the AIL is being pushed during
+unmount, as inodegc can dirty and insert inodes into the AIL during the
+flush, and background reclaim can race to abort and free dirty inodes.
 
-This results in use-after-free when dereferencing log items after
-iop_push() returns, or when reacquiring the AIL lock via lip->li_ailp.
+Reorder xfs_unmount_flush_inodes() to stop inodegc and cancel background
+reclaim before pushing the AIL. Stop inodegc before cancelling
+m_reclaim_work because the inodegc worker can re-queue m_reclaim_work
+via xfs_inodegc_set_reclaimable.
 
-This series fixes the issue by:
-1. Reordering unmount to stop reclaim and inodegc before pushing the AIL
-2. Capturing log item fields before push callbacks for tracepoints
-3. Saving the ailp pointer before dropping the AIL lock
-4. Factoring the push loop into a helper for readability (non-bugfix)
+Reported-by: syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=652af2b3c5569c4ab63c
+Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
+Cc: <stable@vger.kernel.org> # v5.9
+Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+---
+ fs/xfs/xfs_mount.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Changes in v4:
-- Fixed unmount ordering: xfs_inodegc_stop before cancel_delayed_work_sync
-  to prevent inodegc from re-queuing m_reclaim_work as suggested by
-  Darrick J. Wong
-- Updated xfs_unmount_flush_inodes function comment to reflect new ordering
-- Reworked patch ordering so bugfix patches (1-3) do not depend on the
-  refactoring patch, reducing stable backport burden
-- Added comment at xfsaild_push_item call site documenting that the log
-  item must not be dereferenced after the call
-- Moved refactoring to patch 4 without Cc: stable
-- Link to v3: https://lore.kernel.org/all/20260308182804.33127-6-ytohnuki@amazon.com/
-
-Changes in v3:
-- Split into 4 patches as suggested by Dave Chinner
-- Moved UAF-unsafe point comments to after xfs_buf_relse()
-- Passed ailp instead of dev to tracepoints
-- Moved xfs_ail_push_class definition after xfs_log_item_class events
-- Factored xfsaild_push() loop body into xfsaild_process_logitem()
-- Added xfsaild_push_item() header comment describing post-return lifetime
-- Link to v2: https://lore.kernel.org/all/20260305185836.56478-2-ytohnuki@amazon.com/
-
-Changes in v2:
-- Reordered xfs_unmount_flush_inodes() to stop reclaim before pushing
-  AIL suggested by Dave Chinner
-- Introduced xfs_ail_push_class trace event to avoid dereferencing
-  freed log items in tracepoints
-- Added comments documenting that log items must not be referenced
-  after iop_push() returns
-- Saved ailp pointer in local variables in push functions
-- Link to v1: https://lore.kernel.org/all/20260304162405.58017-2-ytohnuki@amazon.com/
-
-Yuto Ohnuki (4):
-  xfs: stop reclaim before pushing AIL during unmount
-  xfs: avoid dereferencing log items after push callbacks
-  xfs: save ailp before dropping the AIL lock in push callbacks
-  xfs: refactor xfsaild_push loop into helper
-
- fs/xfs/xfs_dquot_item.c |   9 ++-
- fs/xfs/xfs_inode_item.c |   9 ++-
- fs/xfs/xfs_mount.c      |   7 ++-
- fs/xfs/xfs_trace.h      |  36 ++++++++++--
- fs/xfs/xfs_trans_ail.c  | 127 ++++++++++++++++++++++++----------------
- 5 files changed, 125 insertions(+), 63 deletions(-)
-
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9c295abd0a0a..ef1ea8a1238c 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -608,8 +608,9 @@ xfs_unmount_check(
+  * have been retrying in the background.  This will prevent never-ending
+  * retries in AIL pushing from hanging the unmount.
+  *
+- * Finally, we can push the AIL to clean all the remaining dirty objects, then
+- * reclaim the remaining inodes that are still in memory at this point in time.
++ * Stop inodegc and background reclaim before pushing the AIL so that they
++ * are not running while the AIL is being flushed. Then push the AIL to
++ * clean all the remaining dirty objects and reclaim the remaining inodes.
+  */
+ static void
+ xfs_unmount_flush_inodes(
+@@ -621,9 +622,9 @@ xfs_unmount_flush_inodes(
+ 
+ 	xfs_set_unmounting(mp);
+ 
+-	xfs_ail_push_all_sync(mp->m_ail);
+ 	xfs_inodegc_stop(mp);
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
++	xfs_ail_push_all_sync(mp->m_ail);
+ 	xfs_reclaim_inodes(mp);
+ 	xfs_health_unmount(mp);
+ 	xfs_healthmon_unmount(mp);
 -- 
 2.50.1
 
