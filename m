@@ -1,42 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10BDE3148A6
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 06:43:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF703491C2;
+	Tue, 10 Mar 2026 06:45:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773124999; cv=none; b=VGKbOzvi2xfpgagEn5O07U7hRgb3M/7o5FzD+18994zda+RAT8/7vHXNhOaRAZ6SEL9GpnwGPnY6fTjZk33pMkeeJtfNfwHXIcQ3fF064uc4kbhXBhglGqJSS5EnLovIW3pPNMAssS561VVLld6X91m5TjA1aLUV57rlwIWTDrk=
+	t=1773125107; cv=none; b=gvZfnxG6yp5iNkbOm9bxIdPsd8BZh1RpWhQTGLYDqxbD25X/8DNMlal4Pwk7ZIlbqg4Z9DreNTTTuFnLfAFJuWY2FD2D2qdSLckKAJojF77OW2UOzo3KOUNVVC24w3YL0ghV0xsvkuc++17GNfnbezJFeOdtKPyX2wpG32+RQ1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773124999; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1773125107; c=relaxed/simple;
+	bh=8N8Xkhc0dX4leii2PCJdfk697cNOJJ7durSohUZVp3M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RMIpGP7GSEHn5hQPxgoQr1WXRVdGjQVUIUuPE9+Fb2+2aZNMwdaj4EulMngfsUTUnokLec+M9uXlbLjSZMNL78rGn/Ke8Uhz1gu9InuWSKvjA6RtkcbgKcB5zS93lXdra3Goc0IvaFbN+3aQeWXTPtRJibM+D7CkSg8guOYgrBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RHUs4Rnk; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=JuP3OnChJR05Te+l9kHX5CjuTRSQ2/tsPwKceaa72x1R7Ubj0bpJzDl2GEA9fhH9FpM2miwrffm2vooBR99D0XNbdGlWvZJM72eNcy7ANb7NfHHbf4HF3rAfGz3vIubhB8B1gnfWHXiB+KqCDiGLELtzoayiMehZv6XpMAghHrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F2rHjzR5; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RHUs4Rnk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F2rHjzR5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=RHUs4RnkCmiCqZfr1gJKKpBkOy
-	KoFOubsDOUz1NJNt8K82wTJ1ajLrwVvwWoqku5G/JwCXX9lMOpVwjPbUoZ6GcARyYbBlQoIm37Rbk
-	JRGiFqW89wscE9WlrM25+dcMgInNSom6/7XUAgpQUN72cGFVMRhP4DqUkulAeNC8BLlsd6mM+7tl3
-	apjiKTyB/G1Oky1cXEuMMnnMC+/MuKO8dJCnSu1es55T315we60aApW2itGitrjZL87c4UjHuqyrb
-	Q4rxawwal/5NhxVp7U5HQQWUJxDckqlbn+z6hlAtSzpTrJMADkV6cUqck390J4rIlKBmOr1G6qKZ1
-	94fnhlrA==;
+	bh=SRIRNiVyMNvRyW+hWEHfrNuUrTbHsSV/xUQcmLHmJCg=; b=F2rHjzR5K+O553Dg6TL8yYNUKO
+	uPtkGKK6I6VR7h9Lqb6pIGkcqjbCDLtC4IfcMvsHnA95esJ4IH4nCoKpnIzlHmnH68ydhB5F3SNMv
+	DelJ6k01n4cBLV23zvNtSkHwFeMo0aJ7LIJUDNhfTvN3O+wbxjdMrVf1j7Hmy2ZGz6IDpcRApeK39
+	8h1IeBrrUSSY+65SD0Q9+PW/nVnhToycBLOiBIvY8tPB8Gzsk0tbWfx8jns8Q9XcWoQ26/bF57xyL
+	Y0uXoImp9w02qV78bQPxcmDGBMx9Jdq30k0z7ipwQqw4s84KmXXTQSpV/0nPSUV3r/kttEknxWjsJ
+	wlP1UxWA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vzqoH-00000008nT1-2uD6;
-	Tue, 10 Mar 2026 06:43:17 +0000
-Date: Mon, 9 Mar 2026 23:43:17 -0700
+	id 1vzqq0-00000008naY-1jMz;
+	Tue, 10 Mar 2026 06:45:04 +0000
+Date: Mon, 9 Mar 2026 23:45:04 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] mkfs: fix log sunit automatic configuration
-Message-ID: <aa-9hWUgZDaDoazW@infradead.org>
-References: <177311301461.1161719.5028507121065374411.stgit@frogsfrogsfrogs>
- <177311301552.1161719.2460209929845208189.stgit@frogsfrogsfrogs>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 0/8] iomap, xfs: improve zero range flushing and lookup
+Message-ID: <aa-98KuvCPNUhtRE@infradead.org>
+References: <20260309134506.167663-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +44,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <177311301552.1161719.2460209929845208189.stgit@frogsfrogsfrogs>
+In-Reply-To: <20260309134506.167663-1-bfoster@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Mon, Mar 09, 2026 at 09:44:58AM -0400, Brian Foster wrote:
+> Christoph discovered a regression with zero range in zoned mode on v2 of
+> the series. The problem is that the zoned mode iomap_begin() relied on
+> the hole mapping flush to handle the case where writes are pending but
+> blocks have not yet been mapped into the data fork for the first time.
+> Patches 1-2 lift the flush into the begin handler, document the purpose,
+> and clean up the logic a bit. They are inserted at the beginning of the
+> series to avoid regression from removing the flush from iomap in patch
+> 3, but ordering is not critical as zoned support is experimental.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thanks!  I've run this through my usual zoned testing over last night
+and it passes without regression.  I'll also add it to bigger automated
+CI, but I expect it to do just fine there as well.
 
