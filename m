@@ -1,122 +1,83 @@
-Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
+Received: from pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com [34.218.115.239])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DBC3D8129;
-	Tue, 10 Mar 2026 17:33:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.34.181.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB7143D6CB2;
+	Tue, 10 Mar 2026 17:38:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.218.115.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773164008; cv=none; b=ZIQCYDq9d1F39WV+X/Q2N5SfGgkohr5vPZ9k5BzIAHyNP3DLoVu26bw8X8dQNelNat2xWCkN9loIqPD86ImkLRwo+Fa9nb3P9Ak9DZi379DOHUT8BYSVK1HSnWgIYmV97G6oAdGDniLIP1CwADNgh1CyyVPsfCFvf2+4f3NsvJE=
+	t=1773164343; cv=none; b=lwTveBAHXtBbz8o3sKAfwHIvxayvoUbaWb1odN264gN1t8EGlotIcnrTHX1Ovyaz619z8ERCsikc3NqB4ocOg+tnxqYyX2WOkYkQaeY9jX1KLD71+X1tT/1aeQIM0f18VD63Rgh0MeGdLN1QVYpiwtiJSnH+b2uK7QJSV8tWTq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773164008; c=relaxed/simple;
-	bh=//CrkQ4G6SBCtaqdSUoXjcR4q+caQPkfIu5ZBOh3Kf4=;
+	s=arc-20240116; t=1773164343; c=relaxed/simple;
+	bh=V6IjNMBW0S5eKc1YV//lAQ/egCIcxF3tLa+FdpApFYM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QBKVzlQQ1jqnSP/BV1ECx1bEr50Okz4L8gLC6IHDIf1hMUUU3bIi2waxxdGJqQzV4z4NufUjuqIqw+6TFrg+fDvwCvCna0muQx0tbxdpRHc6lzkhkRDmo2CQYsztY54vqkandiBIi5wseTJULl3g4EHC7jCg1c4bPTwxW18y16k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=bq3heuSl; arc=none smtp.client-ip=52.34.181.151
+	 MIME-Version:Content-Type; b=KjnGel5qxxOtr6ZSAcEqarsIWcB1HIALHzWyFDs4igo6Nw29EbM5CcCqDH2xoia+2/9e0XlClPrZ0qwurxOMsrqe5E2zVXmAZ7qKiI8fZ2e6YyIpvmMjfJ+I2RQaGNv08BsvMCch0YRmm44Ri+18sjtBajR1JkqqsrcxqBKSjms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=Urhb46eX; arc=none smtp.client-ip=34.218.115.239
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="bq3heuSl"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="Urhb46eX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1773164007; x=1804700007;
+  t=1773164338; x=1804700338;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JuJr00wp6WVYLKvXWLzydnDEZTCw1hP1uyar6Pvl3jI=;
-  b=bq3heuSlPC0ZHsBDbBsjHItBkw60cOvwrrppR0drBovspSh9jC44BUvH
-   yngm3i/4bizgv7mtl7+qXe9QO7504LgKkNhulzViUhFjM1oqdo0/Nqfir
-   4yQwpS49QaXJzz4MY8Mu91W+SxcBuYEiJGEGJkv9lvgNTqjMtXRRz2l7H
-   W6bulT7BOJZu4xqNBI/BJtFCUJAj8nOySmz2vpbMHo+9Bt73atDRD6bgI
-   EHRj6RJG2mTUXp7Jzev8ByRLrX3N7H8Uj/MJH2xUNd7nkdbBJEhT2YpuG
-   7+p+yYWdvss7lURS2kJ9DRsLDFw1OudadrZfTEw0J/Xj8k8YMhOKKwxXc
-   Q==;
-X-CSE-ConnectionGUID: gEKmWbqMS6yxgyhYBlhddQ==
-X-CSE-MsgGUID: m1K/oxxvQFuNx1hO10W/wQ==
+  bh=eotE7EGuSQNJY7vzoK04NHfOGDbwjHGzTDQSLYfDwog=;
+  b=Urhb46eXVoVqmNHAfIGdCrkgLqFZas+LIMV1lg0CrLz0eJTjpV9XX9dz
+   2DUe6bZ9F7tKtUjTNUbnojwuuF2RPuVFWvE5dCafRhvB712I2nRsBuYQK
+   HBjXJyDRx+lKCdPKgXl2JbvNW8Ln7MzPH1nNhk/3ygjCGSAMK/oU2xUcA
+   VwxKYfymd+LLX1h52SB5CMxnTrlRrZDxUVUZq9OJFgiSCa6+YOsjzsYOj
+   LECQcIF8UmAMh9kR+j/ZqkuicFxnVthYoHG+XTWx+0iwHEM/kxpILWlM8
+   iz9qUdQujnAfuqK5aHWEIGz2QtnR1Vv2pGYMHNaKyXPcssTmzUvWMyR9e
+   A==;
+X-CSE-ConnectionGUID: 6j2+BE2ITue4Pge1FLfgsQ==
+X-CSE-MsgGUID: zbVhyClYRhesfZF9Rcw7tg==
 X-IronPort-AV: E=Sophos;i="6.23,112,1770595200"; 
-   d="scan'208";a="14720260"
-Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
-  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 17:33:23 +0000
-Received: from EX19MTAUWA001.ant.amazon.com [205.251.233.182:13362]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.52.102:2525] with esmtp (Farcaster)
- id 6448cfff-a050-4751-8d86-d12b249326ae; Tue, 10 Mar 2026 17:33:23 +0000 (UTC)
-X-Farcaster-Flow-ID: 6448cfff-a050-4751-8d86-d12b249326ae
+   d="scan'208";a="14535764"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-013.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2026 17:38:55 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:18138]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.31.3:2525] with esmtp (Farcaster)
+ id 4072b922-e8d5-4e0b-afc5-df21a11ef0ec; Tue, 10 Mar 2026 17:38:55 +0000 (UTC)
+X-Farcaster-Flow-ID: 4072b922-e8d5-4e0b-afc5-df21a11ef0ec
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA001.ant.amazon.com (10.250.64.204) with Microsoft SMTP Server
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 17:33:23 +0000
+ Tue, 10 Mar 2026 17:38:55 +0000
 Received: from c889f3b07a0a.amazon.com (10.106.82.15) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 10 Mar 2026 17:33:21 +0000
+ Tue, 10 Mar 2026 17:38:53 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
 To: <djwong@kernel.org>
 CC: <bfoster@redhat.com>, <cem@kernel.org>, <darrick.wong@oracle.com>,
 	<dchinner@redhat.com>, <linux-kernel@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>,
-	<syzbot+652af2b3c5569c4ab63c@syzkaller.appspotmail.com>,
-	<ytohnuki@amazon.com>
-Subject: Re: [PATCH v3 1/4] xfs: stop reclaim before pushing AIL during unmount
-Date: Tue, 10 Mar 2026 17:33:14 +0000
-Message-ID: <20260310173314.71923-2-ytohnuki@amazon.com>
+	<linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>, <ytohnuki@amazon.com>
+Subject: Re: [PATCH v3 2/4] xfs: refactor xfsaild_push loop into helper
+Date: Tue, 10 Mar 2026 17:38:46 +0000
+Message-ID: <20260310173845.73766-2-ytohnuki@amazon.com>
 X-Mailer: git-send-email 2.50.0
-In-Reply-To: <20260309160235.GA6033@frogsfrogsfrogs>
-References: <20260309160235.GA6033@frogsfrogsfrogs>
+In-Reply-To: <20260309161427.GB6033@frogsfrogsfrogs>
+References: <20260309161427.GB6033@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D043UWA004.ant.amazon.com (10.13.139.41) To
+X-ClientProxiedBy: EX19D039UWB002.ant.amazon.com (10.13.138.79) To
  EX19D001UWA001.ant.amazon.com (10.13.138.214)
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-> Is this a general race between background inode reclaim and AIL pushes?
-> Or is the race between an AIL push and the explicit call to
-> xfs_reclaim_inodes below?
-> 
-> I ask because there's a call to xfs_ail_push_all_sync from various
-> places in the codebase:
-> 
-> - Log covering/quiescing activities
-> 
-> - xchk_checkpoint_log in the online fsck code if the inode btree
->   scrubber thinks it's racing with inode reclaim.
-> 
-> If inode reclaim happens to be running at the same time as these AIL
-> pushes, won't the same race condition manifest there?  But maybe you
-> meant the race is with the explicit xfs_reclaim_inodes below?
-
-The UAF itself is a general race between background inode reclaim (and
-the dquot shrinker) and AIL pushes, not a race between the AIL push
-and the explicit xfs_reclaim_inodes call below. The syzbot report
-triggered it during shutdown because aborting dirty inodes makes them
-reclaimable while still referenced by the AIL, but the unsafe
-post-push dereferences fixed in patches 2/4 and 3/4 in v4 are not
-shutdown-specific. Those patches address the general race by
-capturing log item fields before push callbacks and saving the ailp
-pointer before dropping the AIL lock.
-
-This patch (patch 1/4) is a separate correctness fix for the unmount
-path. As Dave analysed in his v1 review [1], the unmount sequence is
-broken independently of the UAF - background reclaim and inodegc
-should not be running while the AIL is being pushed during unmount.
-This patch eliminates the conditions that make the general race
-particularly likely to trigger during unmount.
-
-[1] https://lore.kernel.org/all/aai66aCvGC66P8cN@dread/
-
-> xfs_inodegc_inactivate (aka the inodegc worker) can call
-> xfs_inodegc_set_reclaimable, which in turn calls xfs_reclaim_work_queue.
-> That will re-queue m_reclaim_work, which we just cancelled.  I think
-> inodegc_stop has to come before cancelling m_reclaim_work.
+> Seems like a reasonable hoist to reduce the length of the function, but
+> in ordering the patches this way (cleanup, then bugfixes) the hoist also
+> has to be backported to 5.10/5.15/6.1/6.6/6.12/6.18/6.19.
 > 
 > --D
 
-Thank you for your valuable feedback.
-Fixed in v4 - xfs_inodegc_stop is now called before
-cancel_delayed_work_sync, and the function comment is updated to
-reflect the new ordering.
+Thank you. In v4, I moved the refactoring to patch 4/4 after the
+bugfix patches and dropped the Cc: stable tag, so it no longer needs
+to be backported.
 
 Yuto
 
