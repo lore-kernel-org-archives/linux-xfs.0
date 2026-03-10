@@ -1,194 +1,331 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115CB32ED29;
-	Tue, 10 Mar 2026 01:05:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE52238C1F;
+	Tue, 10 Mar 2026 01:17:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773104753; cv=none; b=VT5yaiU3j3gWmWuqpcplzDejGmPz5p5uihGjn8VWq+d+tGXIKULPCM827XVJPgp4i1jrmnJxeZ4NHPNucj3dM6bfLbUhGdE0VN8Ubp3I6TIJ2lHBPNT4Lu45MVK2v2PDLyuf/ZLqdeUpRQbY7kzrfG7f7GNit+LTC4J2cpfVV0s=
+	t=1773105464; cv=none; b=QU2RnAY/0B8JrNwWfmZMVGMG0ITtfEYgvUlz51gb014d7b3Z+g9enWMfY0pOImvour1Lzz/XFEEt1QSWGhOkzdF7cTFZ1fsdlkiojOLOZWXVgREQUpM4d/EzOWSW+cnxaFTslNGmVIgRMOSKCuzrQ5xBljdcKMfzXbG4Or5f0Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773104753; c=relaxed/simple;
-	bh=aUKDupC9eg6IqmhfO1YbMuAZG/32Sgrd20f3Tc9BPdI=;
+	s=arc-20240116; t=1773105464; c=relaxed/simple;
+	bh=56nUjjKM7Ah5K6O4pNWS96wSR3WUSaWfhbp+8xaYKE8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pJ6G2m3CAVB43lFv+7umqpkPSibV3FeM7p3sJD68oXx7JpkNcnqATDDb1kElFoD+WbS4Ue5nXpHKStBQnLQt/xZcm3OhmLI/eUBpDQhNNepjKfU/ZUpBM4cs8/gH4Pn8685w1yO/asEL+umjiV2C95YkVqfEDljOwLyPPGU8Slo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d1jGGpyi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HT0WZDcOSHKBeWKygVuH6fvMNckpmgAdmzwYLg8+KuHHEbvOKvoO5urMNTXzEIwuI04fWOVCwmmSZe5MkxU/BHFHFhW+K0hTl4k792BnMiyG8QiYqEzceNUbRL8os8PH0uB+u+aVb7sX0ymlG4Wd5vAWjAho+wTUo+a5GlgYz0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=stFSN5L8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d1jGGpyi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9180CC4CEF7;
-	Tue, 10 Mar 2026 01:05:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="stFSN5L8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 293B4C4CEF7;
+	Tue, 10 Mar 2026 01:17:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773104752;
-	bh=aUKDupC9eg6IqmhfO1YbMuAZG/32Sgrd20f3Tc9BPdI=;
+	s=k20201202; t=1773105464;
+	bh=56nUjjKM7Ah5K6O4pNWS96wSR3WUSaWfhbp+8xaYKE8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d1jGGpyiSyUBEjiqzNypUpmXJsTHj07FCWLK6mv7BxQeHbQ9yApuaIyw4iD6hEWZt
-	 9UMeBVkNmLvcnwK/b2k3yLspTLZjvNMljELG/Uq3OaGFwCCxdTadxR1qjQxJKmCut3
-	 zicmzsUSBiCZFWQ6UbwIx3Sjngu4jGc8Dr3iYHjQzCuZagnbliDwweiHhrwnIaUQy2
-	 p3kLWeXgE6xh2p3hNZAkqer9VvdY8S/H4lHStKzbg9ipAWBgZ9aD5ez1tzDlQG0+AR
-	 zgxwNdn81hzFjuAfjVrsB5EOA1c4qOO4zInSUv3oGJU5em/WcyqPuz3foFUWsAOezq
-	 LhOyEpV9ocTfA==
-Date: Mon, 9 Mar 2026 18:05:52 -0700
+	b=stFSN5L8sfCRPDMCe2F664UFPXnPmY8Pgr0bJXpIWNcENTM+E1sba/PXsnWA8wdoc
+	 sTy4itKJFWuH0zv0qcO87Xa65d6MRqq1ypre2/fX9RPuddA+lS6c5XqMOGRGyx6rYM
+	 Q4pjVzVx4kTAYyLHtkhM30XllxejOcI3+Luv5i1ygTfsDLEI0djm3BDssJvYLTFccF
+	 eOorbzm3opINq+yp2zWpEkBxKLBLz6hYBtp1eRG/UPh89mR2ALJcijZ6fLkiFiPL94
+	 ReXr8LH1jIhJK6Moxl+0GrP2n4FvOvf7PewhzUbrGlSKyVWAAZG48l1eQtmBeThwc0
+	 wSsmmYYAHNymg==
+Date: Mon, 9 Mar 2026 18:17:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de,
 	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v4 12/25] xfs: introduce fsverity on-disk changes
-Message-ID: <20260310010552.GC1105363@frogsfrogsfrogs>
+Subject: Re: [PATCH v4 16/25] xfs: handle fsverity I/O in write/read path
+Message-ID: <20260310011743.GD1105363@frogsfrogsfrogs>
 References: <20260309192355.176980-1-aalbersh@kernel.org>
- <20260309192355.176980-13-aalbersh@kernel.org>
+ <20260309192355.176980-17-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260309192355.176980-13-aalbersh@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260309192355.176980-17-aalbersh@kernel.org>
 
-On Mon, Mar 09, 2026 at 08:23:27PM +0100, Andrey Albershteyn wrote:
-> Introduce XFS_DIFLAG2_VERITY for inodes with fsverity. This flag
-> indicates that inode has fs-verity enabled (i.e. descriptor exist,
-> tree is built and file is read-only).
+On Mon, Mar 09, 2026 at 08:23:31PM +0100, Andrey Albershteyn wrote:
+> For write/writeback set IOMAP_F_FSVERITY flag telling iomap to not
+> update inode size and to not skip folios beyond EOF.
 > 
-> Introduce XFS_SB_FEAT_RO_COMPAT_VERITY for filesystems having
-> fsverity inodes. As on-disk changes applies to fsverity inodes only, let
-> older kernels read-only access. This will be enabled in the further
-> patch after full fsverity support.
+> Initiate fsverity writeback with IOMAP_F_FSVERITY set to tell iomap
+> should not skip folio that is dirty beyond EOF.
+> 
+> In read path let iomap know that we are reading fsverity metadata. So,
+> treat holes in the tree as request to synthesize tree blocks and hole
+> after descriptor as end of the fsverity region.
+> 
+> Introduce a new inode flag meaning that merkle tree is being build on
+> the inode.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_format.h     | 8 +++++++-
->  fs/xfs/libxfs/xfs_inode_buf.c  | 8 ++++++++
->  fs/xfs/libxfs/xfs_inode_util.c | 2 ++
->  fs/xfs/libxfs/xfs_sb.c         | 2 ++
->  fs/xfs/xfs_iops.c              | 2 ++
->  fs/xfs/xfs_mount.h             | 2 ++
->  6 files changed, 23 insertions(+), 1 deletion(-)
+>  fs/xfs/Makefile          |  1 +
+>  fs/xfs/libxfs/xfs_bmap.c |  7 +++++++
+>  fs/xfs/xfs_aops.c        | 16 +++++++++++++++-
+>  fs/xfs/xfs_fsverity.c    | 34 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_fsverity.h    | 20 ++++++++++++++++++++
+>  fs/xfs/xfs_inode.h       |  6 ++++++
+>  fs/xfs/xfs_iomap.c       | 15 +++++++++++++--
+>  7 files changed, 96 insertions(+), 3 deletions(-)
+>  create mode 100644 fs/xfs/xfs_fsverity.c
+>  create mode 100644 fs/xfs/xfs_fsverity.h
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 779dac59b1f3..d67b404964fc 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -374,6 +374,7 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
->  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
->  #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
-> +#define XFS_SB_FEAT_RO_COMPAT_VERITY   (1 << 4)		/* fs-verity */
->  #define XFS_SB_FEAT_RO_COMPAT_ALL \
->  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> @@ -1230,16 +1231,21 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
->   */
->  #define XFS_DIFLAG2_METADATA_BIT	5
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 9f7133e02576..38b7f51e5d84 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -149,6 +149,7 @@ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+>  xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+>  xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
+>  xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+> +xfs-$(CONFIG_FS_VERITY)		+= xfs_fsverity.o
 >  
-> +/* inodes sealed with fs-verity */
-> +#define XFS_DIFLAG2_VERITY_BIT		6
+>  # notify failure
+>  ifeq ($(CONFIG_MEMORY_FAILURE),y)
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 7a4c8f1aa76c..931d02678d19 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -41,6 +41,8 @@
+>  #include "xfs_inode_util.h"
+>  #include "xfs_rtgroup.h"
+>  #include "xfs_zone_alloc.h"
+> +#include "xfs_fsverity.h"
+> +#include <linux/fsverity.h>
+>  
+>  struct kmem_cache		*xfs_bmap_intent_cache;
+>  
+> @@ -4451,6 +4453,11 @@ xfs_bmapi_convert_one_delalloc(
+>  	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
+>  	XFS_STATS_INC(mp, xs_xstrat_quick);
+>  
+> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION) &&
+> +	    XFS_FSB_TO_B(mp, bma.got.br_startoff) >=
+> +		    xfs_fsverity_metadata_offset(ip))
+> +		flags |= IOMAP_F_FSVERITY;
 > +
->  #define XFS_DIFLAG2_DAX		(1ULL << XFS_DIFLAG2_DAX_BIT)
->  #define XFS_DIFLAG2_REFLINK	(1ULL << XFS_DIFLAG2_REFLINK_BIT)
->  #define XFS_DIFLAG2_COWEXTSIZE	(1ULL << XFS_DIFLAG2_COWEXTSIZE_BIT)
->  #define XFS_DIFLAG2_BIGTIME	(1ULL << XFS_DIFLAG2_BIGTIME_BIT)
->  #define XFS_DIFLAG2_NREXT64	(1ULL << XFS_DIFLAG2_NREXT64_BIT)
->  #define XFS_DIFLAG2_METADATA	(1ULL << XFS_DIFLAG2_METADATA_BIT)
-> +#define XFS_DIFLAG2_VERITY	(1ULL << XFS_DIFLAG2_VERITY_BIT)
+>  	ASSERT(!isnullstartblock(bma.got.br_startblock));
+>  	xfs_bmbt_to_iomap(ip, iomap, &bma.got, 0, flags,
+>  				xfs_iomap_inode_sequence(ip, flags));
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index f279055fcea0..9503252a0fa4 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -22,6 +22,7 @@
+>  #include "xfs_icache.h"
+>  #include "xfs_zone_alloc.h"
+>  #include "xfs_rtgroup.h"
+> +#include "xfs_fsverity.h"
+>  #include <linux/bio-integrity.h>
 >  
->  #define XFS_DIFLAG2_ANY \
->  	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
-> -	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_METADATA)
-> +	 XFS_DIFLAG2_BIGTIME | XFS_DIFLAG2_NREXT64 | XFS_DIFLAG2_METADATA | \
-> +	 XFS_DIFLAG2_VERITY)
+>  struct xfs_writepage_ctx {
+> @@ -339,12 +340,16 @@ xfs_map_blocks(
+>  	int			retries = 0;
+>  	int			error = 0;
+>  	unsigned int		*seq;
+> +	unsigned int		iomap_flags = 0;
 >  
->  static inline bool xfs_dinode_has_bigtime(const struct xfs_dinode *dip)
->  {
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index a017016e9075..c5822d938d81 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -756,6 +756,14 @@ xfs_dinode_verify(
->  	    !xfs_has_rtreflink(mp))
->  		return __this_address;
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
 >  
-> +	/* only regular files can have fsverity */
-> +	if (flags2 & XFS_DIFLAG2_VERITY) {
-> +		if (!xfs_has_verity(mp))
-> +			return __this_address;
-> +		if ((mode & S_IFMT) != S_IFREG)
+>  	XFS_ERRORTAG_DELAY(mp, XFS_ERRTAG_WB_DELAY_MS);
+>  
+> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
+> +		iomap_flags |= IOMAP_F_FSVERITY;
+> +
+>  	/*
+>  	 * COW fork blocks can overlap data fork blocks even if the blocks
+>  	 * aren't shared.  COW I/O always takes precedent, so we must always
+> @@ -432,7 +437,8 @@ xfs_map_blocks(
+>  	    isnullstartblock(imap.br_startblock))
+>  		goto allocate_blocks;
+>  
+> -	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, XFS_WPC(wpc)->data_seq);
+> +	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, iomap_flags,
+> +			  XFS_WPC(wpc)->data_seq);
+>  	trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
+>  	return 0;
+>  allocate_blocks:
+> @@ -705,6 +711,14 @@ xfs_vm_writepages(
+>  			},
+>  		};
+>  
+> +		/*
+> +		 * Writeback does not work for folios past EOF, let it know that
+> +		 * I/O happens for fsverity metadata and this restriction need
+> +		 * to be skipped
+> +		 */
+> +		if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
+> +			wpc.ctx.iomap.flags |= IOMAP_F_FSVERITY;
+> +
+>  		return iomap_writepages(&wpc.ctx);
+>  	}
+>  }
+> diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+> new file mode 100644
+> index 000000000000..bc6020cc6e41
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fsverity.c
+> @@ -0,0 +1,34 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2026 Red Hat, Inc.
+> + */
+> +#include "xfs_platform.h"
+> +#include "xfs_format.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_fsverity.h"
+> +#include "xfs_fsverity.h"
+> +#include <linux/fsverity.h>
+> +#include <linux/iomap.h>
+> +
+> +/*
+> + * At maximum of 8 levels with 128 hashes per block (32 bytes SHA-256) maximum
+> + * tree size is ((128^8 − 1)/(128 − 1)) = 567*10^12 blocks. This should fit in
+> + * 53 bits address space.
+> + *
+> + * At this Merkle tree size we can cover 295EB large file. This is much larger
+> + * than the currently supported file size.
+> + *
+> + * For sha512 the largest file we can cover ends at 1 << 50 offset, this is also
+> + * good.
+> + */
+> +#define XFS_FSVERITY_LARGEST_FILE ((loff_t)1ULL << 53)
 
-Nit: This can be S_ISREG(mode)
+I think this ought to go in xfs_format.h since it's related to the
+ondisk file layout.  In addition, I think the roundup value ought to
+get its own #define in xfs_format.h similar to the way btrfs does it.
 
-With that tidied up,
+#define XFS_FSVERITY_START_ALIGN		(65536)
+
+> +
+> +loff_t
+> +xfs_fsverity_metadata_offset(
+> +	const struct xfs_inode	*ip)
+> +{
+> +	return round_up(i_size_read(VFS_IC(ip)), 65536);
+> +}
+
+
+then this turns into:
+
+loff_t
+xfs_fsverity_metadata_offset(
+	const struct xfs_inode	*ip)
+{
+	return round_up(i_size_read(VFS_IC(ip)), XFS_FSVERITY_START_ALIGN);
+}
+
+With those two #define things addressed, I'm satisfied
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
 
 --D
 
-> +			return __this_address;
-> +	}
+
+> diff --git a/fs/xfs/xfs_fsverity.h b/fs/xfs/xfs_fsverity.h
+> new file mode 100644
+> index 000000000000..5771db2cd797
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fsverity.h
+> @@ -0,0 +1,20 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2026 Red Hat, Inc.
+> + */
+> +#ifndef __XFS_FSVERITY_H__
+> +#define __XFS_FSVERITY_H__
 > +
->  	if (xfs_has_zoned(mp) &&
->  	    dip->di_metatype == cpu_to_be16(XFS_METAFILE_RTRMAP)) {
->  		if (be32_to_cpu(dip->di_used_blocks) > mp->m_sb.sb_rgextents)
-> diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-> index 551fa51befb6..6b1e20a4bb9b 100644
-> --- a/fs/xfs/libxfs/xfs_inode_util.c
-> +++ b/fs/xfs/libxfs/xfs_inode_util.c
-> @@ -126,6 +126,8 @@ xfs_ip2xflags(
->  			flags |= FS_XFLAG_DAX;
->  		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
->  			flags |= FS_XFLAG_COWEXTSIZE;
-> +		if (ip->i_diflags2 & XFS_DIFLAG2_VERITY)
-> +			flags |= FS_XFLAG_VERITY;
->  	}
+> +#include "xfs_platform.h"
+> +
+> +#ifdef CONFIG_FS_VERITY
+> +loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip);
+> +#else
+> +static inline loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip)
+> +{
+> +	WARN_ON_ONCE(1);
+> +	return ULLONG_MAX;
+> +}
+> +#endif	/* CONFIG_FS_VERITY */
+> +
+> +#endif	/* __XFS_FSVERITY_H__ */
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index bd6d33557194..6df48d68a919 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -415,6 +415,12 @@ static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
+>   */
+>  #define XFS_IREMAPPING		(1U << 15)
 >  
->  	if (xfs_inode_has_attr_fork(ip))
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 38d16fe1f6d8..4401a5f16344 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -165,6 +165,8 @@ xfs_sb_version_to_features(
->  		features |= XFS_FEAT_REFLINK;
->  	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
->  		features |= XFS_FEAT_INOBTCNT;
-> +	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_VERITY)
-> +		features |= XFS_FEAT_VERITY;
->  	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_FTYPE)
->  		features |= XFS_FEAT_FTYPE;
->  	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_SPINODES)
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 208543e57eda..ca369eb96561 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1415,6 +1415,8 @@ xfs_diflags_to_iflags(
->  		flags |= S_NOATIME;
->  	if (init && xfs_inode_should_enable_dax(ip))
->  		flags |= S_DAX;
-> +	if (xflags & FS_XFLAG_VERITY)
-> +		flags |= S_VERITY;
+> +/*
+> + * fs-verity's Merkle tree is under construction. The file is read-only, the
+> + * only writes happening are for the fsverity metadata.
+> + */
+> +#define XFS_VERITY_CONSTRUCTION	(1U << 16)
+> +
+>  /* All inode state flags related to inode reclaim. */
+>  #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
+>  				 XFS_IRECLAIM | \
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 9c2f12d5fec9..71ccd4ff5f48 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -32,6 +32,8 @@
+>  #include "xfs_rtbitmap.h"
+>  #include "xfs_icache.h"
+>  #include "xfs_zone_alloc.h"
+> +#include "xfs_fsverity.h"
+> +#include <linux/fsverity.h>
 >  
->  	/*
->  	 * S_DAX can only be set during inode initialization and is never set by
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 61c71128d171..c746bc90cf3e 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -385,6 +385,7 @@ typedef struct xfs_mount {
->  #define XFS_FEAT_EXCHANGE_RANGE	(1ULL << 27)	/* exchange range */
->  #define XFS_FEAT_METADIR	(1ULL << 28)	/* metadata directory tree */
->  #define XFS_FEAT_ZONED		(1ULL << 29)	/* zoned RT device */
-> +#define XFS_FEAT_VERITY		(1ULL << 30)	/* fs-verity */
+>  #define XFS_ALLOC_ALIGN(mp, off) \
+>  	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
+> @@ -1789,6 +1791,9 @@ xfs_buffered_write_iomap_begin(
+>  		return xfs_direct_write_iomap_begin(inode, offset, count,
+>  				flags, iomap, srcmap);
 >  
->  /* Mount features */
->  #define XFS_FEAT_NOLIFETIME	(1ULL << 47)	/* disable lifetime hints */
-> @@ -442,6 +443,7 @@ __XFS_HAS_FEAT(exchange_range, EXCHANGE_RANGE)
->  __XFS_HAS_FEAT(metadir, METADIR)
->  __XFS_HAS_FEAT(zoned, ZONED)
->  __XFS_HAS_FEAT(nolifetime, NOLIFETIME)
-> +__XFS_HAS_FEAT(verity, VERITY)
+> +	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
+> +		iomap_flags |= IOMAP_F_FSVERITY;
+> +
+>  	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+> @@ -2113,12 +2118,17 @@ xfs_read_iomap_begin(
+>  	bool			shared = false;
+>  	unsigned int		lockmode = XFS_ILOCK_SHARED;
+>  	u64			seq;
+> +	unsigned int		iomap_flags = 0;
 >  
->  static inline bool xfs_has_rtgroups(const struct xfs_mount *mp)
->  {
+>  	ASSERT(!(flags & (IOMAP_WRITE | IOMAP_ZERO)));
+>  
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+>  
+> +	if (fsverity_active(inode) &&
+> +	    (offset >= xfs_fsverity_metadata_offset(ip)))
+> +		iomap_flags |= IOMAP_F_FSVERITY;
+> +
+>  	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+>  	if (error)
+>  		return error;
+> @@ -2132,8 +2142,9 @@ xfs_read_iomap_begin(
+>  	if (error)
+>  		return error;
+>  	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
+> -	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
+> -				 shared ? IOMAP_F_SHARED : 0, seq);
+> +	iomap_flags |= shared ? IOMAP_F_SHARED : 0;
+> +
+> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
+>  }
+>  
+>  const struct iomap_ops xfs_read_iomap_ops = {
 > -- 
 > 2.51.2
 > 
