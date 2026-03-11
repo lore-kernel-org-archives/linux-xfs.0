@@ -1,64 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A7B26B2DA
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 07:03:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E5C8347BB5;
+	Wed, 11 Mar 2026 08:08:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773212625; cv=none; b=ComWAm/J8Iq3X6/v8Cm7/g6OoBnR7l8TKsgu7CuNAOe7QEPqLI/IUsDNUWWmIS8sMoqYYpWOQah7Z20W+JkBsXaKjnaN2uOAiLqqgjwsP5TUSfCZGIIwySrK1pVf1eOdFxYfpxUlZsXEc2seBgtdrz3k+BV28xgmswmPpQFP5xo=
+	t=1773216505; cv=none; b=rOYKNnz/O9J/+FmlIrepip1G3ZG/fnPtU/A7K/BoktYbCAlAO+IP3dkKoIiwU/Q2qgifTVyvkzSUxUh5VA+sDhLgYEJXfAfZ7+l+KT87EqSfAG4ycgd77zyL/d6XjT/GQ+sTt6R9q5DlNo3OMU9aQjPJDrWkwZ+YXk5ofDrCeFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773212625; c=relaxed/simple;
-	bh=gehtBxd6vp1gcdRjFNMo4f3u5kgzru2wV1Tf1Ez1iN0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QE2Gnng21CdwkIGSrJasORLvhH4IeIhB56NNGbddE2gO6Ws7SsH6AKfVZBkAOVkLbLVSOC/0m70J6ht3Yyv04C9YKjQoinPOmwi2ObCjDyx07Ts98iMR6Wu5gCSsAu8vc2LzRLyFT+/M80sDXWDmfpQ/iB5pWxiXxDzsJrxU/0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l4s+/gWA; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l4s+/gWA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50635C4CEF7;
-	Wed, 11 Mar 2026 07:03:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773212624;
-	bh=gehtBxd6vp1gcdRjFNMo4f3u5kgzru2wV1Tf1Ez1iN0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=l4s+/gWAdTJS05JdZpMPL67FboxABITCKXEIHfugOs2HGXanaAChUi85bLhB1Fh/r
-	 oE1AYXFGYbc1c0NB9qiTp6Dpr87seJY6Oqz9fr4o1mZTS9rKMJGSlA0NI4+KyomNlG
-	 QxkT0dIi/ZqEloU5Hc3neuf+wHfVSzgC/RsQN4yklWIrb8PcQtQWSoJWe0ZvwQl1Ll
-	 zVAlNZei3sIWi0XECYzxg2uALhGM1A+dDFtCeNMLGWKqqoWvxX4t5ONN8dVXaxRiWt
-	 EG86pDg/+6Y1uKu1kDV9/Si9ceA6kOafOyNJqjexX4gUw+gVfR44va6jSGY1rIBs+4
-	 q8dTsqWkW75+w==
-Message-ID: <ff8f1134-d39e-4fb8-92d0-487a7afa2349@kernel.org>
-Date: Wed, 11 Mar 2026 08:03:42 +0100
+	s=arc-20240116; t=1773216505; c=relaxed/simple;
+	bh=F1yKz2cNKfFmT4+PWmlovRfCcxtuvekcqi1QNT2OqbQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=AqtAZMo+Ot7/2Ivv+MscsQfYBcn8ezv1OeTtrELX2v0Dq90gk3RNW644dvizq6BSqDOpqNEBANL1DlZFRPqcn+NcX1FXo/IBOBieyMMlC5C9j0ftuLAQR46bkNv25WnI0tfYJCXQYcsSJ2A26XPeZ+9xpn4g8obJt5YUI5jamkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost (unknown [124.16.138.129])
+	by APP-05 (Coremail) with SMTP id zQCowAD3hAjxIrFpyrEkCg--.57727S2;
+	Wed, 11 Mar 2026 16:08:17 +0800 (CST)
+From: Chen Ni <nichen@iscas.ac.cn>
+To: cem@kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Convert comma to semicolon
+Date: Wed, 11 Mar 2026 16:08:17 +0800
+Message-Id: <20260311080817.2906233-1-nichen@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <aa_Z9AkLoS6BrTwc@nidhogg.toxiclabs.cc>
+References: <aa_Z9AkLoS6BrTwc@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/4] xfs: factor out xfs_dio_write_zoned_end_io
-To: cem@kernel.org, linux-xfs@vger.kernel.org
-Cc: hch@lst.de
-References: <20260310173709.457047-1-cem@kernel.org>
- <20260310173709.457047-3-cem@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260310173709.457047-3-cem@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowAD3hAjxIrFpyrEkCg--.57727S2
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYI7k0a2IF6F4UM7kC6x804xWl14x267AK
+	xVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGw
+	A2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26ryj
+	6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gc
+	CE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxI
+	r21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87
+	Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY02Av
+	z4vE14v_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxV
+	AFwI0_Jrv_JF1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1Y6r17MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjxU4U73DUUUU
+X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-On 2026/03/10 18:36, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Tue, Mar 10, 2026 at 09:52:15AM +0100, Carlos Maiolino wrote:
+> What tree HEAD did you apply this on?
 > 
-> Stop sharing direct IO end_io between regular and zoned devices
-> by factoring out zoned dio end_io to its own function.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> I can't find where this code exists. I'm assuming you sent it against
+> some tree other than XFS's tree?
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Hi Carlos,
 
+You are correct. This patch was based on linux-next commit 7407c0fbfa90,
+which is not present in the current XFS tree.
 
--- 
-Damien Le Moal
-Western Digital Research
+Please disregard.
+
+Best regards,
+Chen Ni
+
