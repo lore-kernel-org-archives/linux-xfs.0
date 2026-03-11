@@ -1,76 +1,106 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94A5A3E3C7E
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 09:26:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE2F362141
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 09:55:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773221202; cv=none; b=CXZc+ytHBj79EnhuQ2AOwPHwPRwOT7tolnMTJ4d9aTCLOHcMxz5NV+hz4WA3BKGYNDLVp6CH7ZV6VTzTME0ql3MK/S+SGVTvAS7E1tJcV3/LQKPUS7f2gE9TgJL5o/wMQzfV90X8R5QARvpj0Txy2Ced+mswJkWrBrXjGMJ5Cw8=
+	t=1773222946; cv=none; b=lBeIrL27PvjIqcpyttdaqY/rMlGM9xQ03D7uhznq15iXTEMaR2qVw/t9MtRAIjPchSCKOcwdxFr8AiTGujQvJlQ1iwnd6rYE+RBDAU3aCoewhypg2+zzm1wwaXxvtubCIW+o7ClWgZZraNPlY/0kHHT/DXe4M2TBVsgfZxmH91s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773221202; c=relaxed/simple;
-	bh=LjeTpkV1uezTWo1aPBaKujmidCqc41UfsubViccIbD0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SAWqjECTDaZhk/8ZinutsEqht9XpGp8tfc/ZIoG4otoA7yT+OPI8SAEbD7s+kFmbHqIvwLDxc9SADuyFn8wIzOgtJYoaaSKOA/GnKiGDE68JiRqNqo7g8dvjcB5LQZBNM3odawpUXVcBBB3azMwNHTOZTVrvn2oFLuv8W6T0s4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wehmyTbj; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1773222946; c=relaxed/simple;
+	bh=PHGxFUxeU/8CEJ9f/a1uf4JM9nYM9jy8TCMggINjb0Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p36aJUJ4v2AsWegbILWxAvLBMUZ/Hr+WLerYp6heOxFyrAMWOYZQ8h17p8V2/hy+iKTVLjDVfeEzleR8Mx9e9ceynZpwFlUAu7uTkyTwsrvVSX764LXt2Dt3fROxYLmu9fVZzG+kLqwtDkMK+xPsITXjtptssJ3zBsC0EGFqH1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZbCifSww; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=MuFJ2zMT; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wehmyTbj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=G0vSZ0Y9UPnf0oHPOOMTJLTTzGNo3V6M5ANRchoYAMY=; b=wehmyTbjFAeTdmUFVxEMb7TAob
-	4Eqw2B2hnow1FnLWnGkhEHNkF+bazN6Bo28BVz7gNB4c2BUfzQYZv7bw+BSA0btoom82LgpK724Zp
-	FJulR73spB7TQw0paIo4aqSYq2ZcgJSLsX7k2nvNvxeGPBmwWsAEX1AhJZOV43ArJm7swCUlFS4+5
-	G1AVKSGgxIvnxHiOAC17teH1XZUOzyH5i1vU8vaOxRXfxmcrsXg3ivEEODnZVJcIlOptxTYQ0HAKZ
-	xVD+1XNhfHgux4UN7QaAB9w/TVXuC6nJKflCw3vjUpfskPWqAeeC/Ik0HfueoQ7ug9oCIMRznSy4L
-	ozscx0tw==;
-Received: from [195.12.231.117] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w0Fpt-0000000BHbL-28w3;
-	Wed, 11 Mar 2026 09:26:37 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] io: print more realtime subvolume related information in statfs
-Date: Wed, 11 Mar 2026 10:26:27 +0100
-Message-ID: <20260311092634.995699-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZbCifSww";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="MuFJ2zMT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773222944;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=568arM3Ae5VjTzjIlVx9FCFrwJLVn/cH6C7/64HDZLg=;
+	b=ZbCifSwwt2SxRj++KD8K3l6GDYnG78fFN7ckTzzmsN2V8mGLiASzIhoVGexpXfh3mRHbRj
+	cjE5PaL53Tsten4zWuYSh6rerPtKBFUnx913p7F6VHDT4NlT26FWskg2OMNsTCSpQeJ/Fx
+	z2P2DELIlIeBeA/JfVYXCvCgXV3f7Os=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-543-JQz0pemdP4uAXFEDbLmZqg-1; Wed, 11 Mar 2026 05:55:43 -0400
+X-MC-Unique: JQz0pemdP4uAXFEDbLmZqg-1
+X-Mimecast-MFC-AGG-ID: JQz0pemdP4uAXFEDbLmZqg_1773222942
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4852fbfc379so45186795e9.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 02:55:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1773222941; x=1773827741; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=568arM3Ae5VjTzjIlVx9FCFrwJLVn/cH6C7/64HDZLg=;
+        b=MuFJ2zMTUhW0j+rlfyKG8hIEl3HQGo74l6bTr0KTCPSmWPLeKh0WfdrG+d+98IPe2Q
+         lIaADiD19zm2y+thg21qoYM721Kx7DrBjPktNamNekWvQvEW4+32EbuZ/TZi21YLzzlC
+         vAwsQzgWL4N4F0pzEETpCGN5DyqlGYbLm2+9C4RsEfxk1nfYTFJ36txMoMPDyjfaVvcu
+         uSbuIUg04ODT5eUjHGnR6nNZ65UCRzLgq2gwTBpf15Bd65yGzMddi2tEeQG+mYse5tXL
+         5xolUSWiZDH/tXvLyULJr5lYDVOZBdGzCOUrp/KNesagTctqV+0XDTRlGBnBZNGAYMXo
+         PRiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773222941; x=1773827741;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=568arM3Ae5VjTzjIlVx9FCFrwJLVn/cH6C7/64HDZLg=;
+        b=ftbmVYRlcQ3/CEEvLB09xaOs2HLJM8PpCwfznZ/ldmYHYI75dRx2c7E2wtwjdugZpI
+         0i7DCw7bad6/RijKOuPRiGy8llyqg5874UzJeNpUNwbVgoj+fjDqAAl5h2kmW1LEHb7u
+         XFxxEo2Cq9NScELiWdTqnaL7Gghh17e5aTRQkiGONuYOY4XEEWOyr/EP3C/7ub5FewCm
+         k7llTk9O5ii1lOFVwq+5J1JR1JSGfzHEUOGMi6M45dBxKqMjpMBz6BMhPzGo3ME72DXr
+         1YYv8ClTNTdwvhKru+oBO/h2EyMpThb/7VwlPaBp0TxhK7FZt1GASuAfOu9+SALFmrrV
+         GXiA==
+X-Forwarded-Encrypted: i=1; AJvYcCVf6QAJ06Zv1s8d83OM52kBBnPl2dW4ACwIjXnh3XBDS+7A8pyCnatQde2fanA12ugVopIQv2+yvO8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxx/SPmU/3JlZgwnknZWWv7YMsIo3kMgUzqkZVerb/SZuvrRoOZ
+	LGl2N7UoUDIIFoU/QgUxlVZyMznrGrGycUnZjbggqyR2GxbNNb8NFIaeCalslUUdLKipZI0JoOL
+	eYWjfuPZ3dBCxP3K9/UIjjo8VLlwVkxLHG28nA+ENqwjcKTbXB/mlZhRsdVT2p0PhGhGP
+X-Gm-Gg: ATEYQzy8AxyMXPiF0CkEVJYlklN7mOvju8GI4oV/r4YP716D63RoKqfcEIEWyAuKM24
+	UvjeGE7zpEWH3QJ9iSxAYdyvB8XQXIF+rygUdi/WFX3Q95Kee2y85mTnALu/a9AP9HyVW9LdEAP
+	R4lkY/5rtvNcbpHGGXsqsa+mO0ymaqXfkVcbeESF335Dp14284puQS0vrfkA5et2oYzP7ocg54i
+	nrzhdJdAYJipXnLQ7PmJOfNCG3Nvhxmx90kE4NSfKhrHOlxVe3xwp06YyfjTUNzcqQVuuMM62K5
+	P/VSs54xkSIOIC885rVp/FEN4CPcGiK6HCkBqbv/4CecRiNp1ZgXVzDvPriFcfiKTiENOF+I6CL
+	W1qsUwgC8zq4=
+X-Received: by 2002:a05:600c:1f87:b0:485:3fd1:9936 with SMTP id 5b1f17b1804b1-4854b0a4a9dmr30730635e9.5.1773222941488;
+        Wed, 11 Mar 2026 02:55:41 -0700 (PDT)
+X-Received: by 2002:a05:600c:1f87:b0:485:3fd1:9936 with SMTP id 5b1f17b1804b1-4854b0a4a9dmr30730325e9.5.1773222940958;
+        Wed, 11 Mar 2026 02:55:40 -0700 (PDT)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4854b66dedfsm41284855e9.12.2026.03.11.02.55.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Mar 2026 02:55:40 -0700 (PDT)
+Date: Wed, 11 Mar 2026 10:55:40 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_io: fix fsmap help
+Message-ID: <uhrachhijcna3ocol56fuzsiq2ygalqwkuftdqdirvrhjwen6j@yuwm2jd4f2a2>
+References: <20260311092503.995666-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260311092503.995666-1-hch@lst.de>
 
-The statfs call report information from the fs geometry structure.
-Add the fields added for realtime group and zoned device support to
-this output.
+On 2026-03-11 10:25:00, Christoph Hellwig wrote:
+> By default fsmap prints the reverse mapping for all devices.  Update the
+> help text to correctly reflect that.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- io/stat.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+LGTM
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-diff --git a/io/stat.c b/io/stat.c
-index c1085f14eade..e3b3574e0416 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -282,6 +282,12 @@ statfs_f(
- 			printf(_("geom.rtextsize = %u\n"), fsgeo.rtextsize);
- 			printf(_("geom.sunit = %u\n"), fsgeo.sunit);
- 			printf(_("geom.swidth = %u\n"), fsgeo.swidth);
-+			printf(_("geom.rgextents = %u\n"), fsgeo.rgextents);
-+			printf(_("geom.rgcount = %u\n"), fsgeo.rgcount);
-+			printf(_("geom.rtstart = %llu\n"),
-+				(unsigned long long)fsgeo.rtstart);
-+			printf(_("geom.rtreserved = %llu\n"),
-+				(unsigned long long)fsgeo.rtreserved);
- 		}
- 	}
- 
 -- 
-2.47.3
+- Andrey
 
