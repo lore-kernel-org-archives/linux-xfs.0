@@ -1,30 +1,66 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C0B2517AF;
-	Wed, 11 Mar 2026 02:17:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5701433B6DB
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 02:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773195452; cv=none; b=PsByJJ8IjDduT2O9Se5Q4q4rlV59EnIEa0nsLqXWC1pnGJuJPfRKZ6Mg4tMwRWd/VYIzFdjodgdDz3KSUL+gJytZAop2fz9Ylb+5zzfOchpez40jLFAaN1Us0enPabHeg4HJYjFGg3JrKrLgTcuFVRVRbzX+4u40UK7wm6M78MU=
+	t=1773196343; cv=none; b=eTV2ilVCS3HCosK4U95/n0WNJv5vLABLqxq9148xyPztqOlhzlgxQFDuvYchjw5b0xZpcWt7EJJ7vxi7HIj8fRxIBowBsOBnUC3OODA9FJfchK9eQ4BKesn4uv/nLVRk6p0vW2kd6N4kREbnKPPkOHMt/wUTm7gwHKNH9oCYlnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773195452; c=relaxed/simple;
-	bh=o6oCv60S4RRCXHCWraKQyOjlmh/+J4/OyQJJvIdsGfQ=;
+	s=arc-20240116; t=1773196343; c=relaxed/simple;
+	bh=2Y2qzvuPFdU5DMP+6rADIQVlTkbnE6vQUfOagnM8Itk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d2yrY5A3nxlnERoFxuXPzEk+UTAIDeQGSBrT/XSGr4jOmO0cGu53PfP6kbektBzW4K2qDb4cCoMHzH+rS3zMVFHXVAcYaH9lWrb6WiUal0ZSVpxAAESdl5nn/Yvt2hIPKZYX9ja+STN1GAuqcuyAhiMmBHDkagJ8kDkJqSMOFoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fVvX72HlxzKHMqM;
-	Wed, 11 Mar 2026 10:17:11 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 78D1340590;
-	Wed, 11 Mar 2026 10:17:27 +0800 (CST)
-Received: from [10.174.178.253] (unknown [10.174.178.253])
-	by APP1 (Coremail) with SMTP id cCh0CgD3+Ni10LBp4uHeAQ--.31859S3;
-	Wed, 11 Mar 2026 10:17:27 +0800 (CST)
-Message-ID: <1dce8b3b-29ee-4c45-98cb-8882a79c41c2@huaweicloud.com>
-Date: Wed, 11 Mar 2026 10:17:25 +0800
+	 In-Reply-To:Content-Type; b=E0Sfr10CD5xFy3AcZto/N1VLtZc+GuhUVWsXxMU+p5PaxuOZQteP0M1Y/TMhU1TPG4YelMmNyq+56hPOElKp8OBviYzh3nMtq06ohRSVPg2ybjAhYPfvMm5yELm2ZI2C26t3QGHBMpwEDNjpqcdylwBq5GnTQCB5zOklSHxWOGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mZrB476i; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mZrB476i"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2aae4816912so89343115ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 19:32:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773196342; x=1773801142; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=OBSynOvi3xpXr30q7Fy487t9vRr0oTbMzF3rt3i3WIY=;
+        b=mZrB476iV6v+UUhfHNu0Xc4xcpu23gRjWlMTM0YjNyXgIME00YM3SF3fD+obqq13Q+
+         /Yh23eitCx8vLGMvo4zyBALew0QazOz+GVOI/IF93I2zr28wzPrN8kzJS52SszbPEgm9
+         jMRQ2oUgmirvOR1kSPjYUGU7qozsAdOIHpBkS31uUEPtG7MxQ+3tUEkzYsJoWGwQo+rf
+         OS7kjW4iiWTL8xQElAeJZwslGE9Y5ePm9x3u39tlEH+6xYubtXbrivoWns+D/tQMPQHL
+         2VdK7xhGw7sjlC7wVt642PWMynXkfKpV10aMZtOVN9p3K1A3ssX3fqOPLFQF1ZU6Qagl
+         vrLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773196342; x=1773801142;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=OBSynOvi3xpXr30q7Fy487t9vRr0oTbMzF3rt3i3WIY=;
+        b=YI6MdzCNkk/wI5v3LGfB+2Gy6qSRBsUr2QwcKzmlS/uB6iamIlBdxOmigMMv7x8UMl
+         bKh1JpcSVQAoyvpFYjUeb0Te5z7pjOFnR0AMircBoOvPdPVZOakx2REinQtMkHnPJCbG
+         1JhwRcKXIReosX0J5iEKGo9ZVIm2COFQdmJtuCQk0o4FfUYyZpbgt5KMTP49QwhhRezA
+         +np7uc66VHBE4fFY6f6yId+jlsJGqYYqZr3z2wbVYCs7cUdx6J4ajJMJOmYVpiukm9XK
+         +0lTXN6Ku8gY0/IwqH9Kkz/uXJCVQ1kptderh63WJUAULY1mBi07Lbu3hfpmBYXaFd6r
+         qBOg==
+X-Forwarded-Encrypted: i=1; AJvYcCW92kAgXYGURH/pfhPQEhesdydr5vKqnmGMIH4Z0I3dbrFyx2ukxfllSUXbxF6KhCEbAqLc1KhxNqA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwhtWoI9G4w9FDh92plAndZssDQ93HanS49MFjvWwe0HjS+aMfO
+	HBwQ6r4G52ZJa5rJIfAwA96ZbyPbA+WQ/lKQE8/YAhy3F8pMj/MKcFyX
+X-Gm-Gg: ATEYQzxMf1YOsmTJI7MTTafy6wEAAlIw6RJ2jgifzJxFusWPbPKGu8Kya757bUclSmK
+	ihh0IkhfBqgojC3kOtsWLyh9Oda8VNONrJNCOI4mo+XenbuVszs6Q965pYeu9eHPUPZdk6f5os4
+	eW5qlKvjxPALXKnaib+IjCetazXL3GEursrRmqY3p6PFjQrVm6olQuoSwGQKHrLNSr2wSoDGLQs
+	A5vMadOORLHkmYtoPEBBhG0X/xt6O97Ij0nSuf/tfo3qDViiZOnZqj0vkSnQ2ono8aIkHUdAUgH
+	FOVRh2d0wUN1/EW2Cl1Dg60KIqd6WA+KY6dga7Ib5qyfa2tLC9WwzTbOo7JoVZnDkwg60Azkfp8
+	tdmKn/fYDvCtI8ytfMiLOkpkmjtJPwkIoai8z1qtRdixX2OFJ0jtt8nSAmFwnnOie9T0XPA/iD/
+	GXd7YN011xYGFaj3Vz1J+TeWOfMm0=
+X-Received: by 2002:a17:903:2b0c:b0:2ad:d5ea:4c89 with SMTP id d9443c01a7336-2aeae7c04bcmr8516825ad.22.1773196341648;
+        Tue, 10 Mar 2026 19:32:21 -0700 (PDT)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aeae0e61a9sm6442645ad.0.2026.03.10.19.32.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Mar 2026 19:32:21 -0700 (PDT)
+Message-ID: <43710dd2-4282-4475-a29d-983295fab86f@gmail.com>
+Date: Wed, 11 Mar 2026 10:32:18 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,133 +68,59 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: fix incorrect did_zero setting in
- iomap_zero_iter()
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
- brauner@kernel.org, hch@infradead.org, yi.zhang@huawei.com,
- yizhang089@gmail.com, yangerkun@huawei.com, yukuai@fnnas.com
-References: <20260310082250.3535486-1-yi.zhang@huaweicloud.com>
- <20260310221303.GA1770774@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/9] fstests: add _mkfs_scratch_clone() helper
+To: Zorro Lang <zlang@redhat.com>, Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <cover.1772095513.git.asj@kernel.org>
+ <254fdd3e212f6618ea33207ef24db2b316d2d8fc.1772095513.git.asj@kernel.org>
+ <20260309191317.vxcjvqfpoqdiycki@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20260310221303.GA1770774@frogsfrogsfrogs>
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <20260309191317.vxcjvqfpoqdiycki@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgD3+Ni10LBp4uHeAQ--.31859S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWw1rurW8CrWftw4fXry8Grg_yoW5AF4fpr
-	Z7KF4vkFs2q3y7uFn5tF9Fqr1Yyr1rXrW7Wr4UGwn8ZFsY9rWIkr18KayY9F1xJ34fCw1I
-	vF4jkas7AF1DAFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUylb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Transfer-Encoding: 8bit
 
-On 3/11/2026 6:13 AM, Darrick J. Wong wrote:
-> On Tue, Mar 10, 2026 at 04:22:50PM +0800, Zhang Yi wrote:
->> From: Zhang Yi <yi.zhang@huawei.com>
->>
->> The did_zero output parameter was unconditionally set after the loop,
->> which is incorrect. It should only be set when the zeroing operation
->> actually happens, not when IOMAP_F_STALE is set or when
->> IOMAP_F_FOLIO_BATCH is set but !folio causes the loop to break early,
->> or when iomap_iter_advance() returns an error.
->>
->> This causes did_zero to be incorrectly set when zeroing a clean
->> unwritten extent because the loop exits early without actually zeroing
->> any data.
->>
->> Fix it by using a local variable to track whether any folio was actually
->> zeroed, and only set did_zero after the loop if zeroing happened.
->>
->> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
->> ---
->>  fs/iomap/buffered-io.c | 8 ++++++--
->>  1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
->> index 5297491d5e3e..7a3780242cde 100644
->> --- a/fs/iomap/buffered-io.c
->> +++ b/fs/iomap/buffered-io.c
->> @@ -1537,6 +1537,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
->>  		const struct iomap_write_ops *write_ops)
->>  {
->>  	u64 bytes = iomap_length(iter);
->> +	bool zeroed = false;
->>  	int status;
->>  
->>  	do {
->> @@ -1555,6 +1556,8 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
->>  		/* a NULL folio means we're done with a folio batch */
->>  		if (!folio) {
->>  			status = iomap_iter_advance_full(iter);
->> +			if (status)
->> +				return status;
->>  			break;
->>  		}
->>  
->> @@ -1565,6 +1568,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
->>  				bytes);
->>  
->>  		folio_zero_range(folio, offset, bytes);
->> +		zeroed = true;
->>  		folio_mark_accessed(folio);
->>  
->>  		ret = iomap_write_end(iter, bytes, bytes, folio);
->> @@ -1574,10 +1578,10 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
->>  
->>  		status = iomap_iter_advance(iter, bytes);
->>  		if (status)
->> -			break;
->> +			return status;
-> 
-> I think this seems like an unrelated change?  Do any of the callers
-> behave differently if iomap_zero_range() returns an error but also sets
-> did_zero to true?
-> 
 
-In the event of an error return, no caller will be concerned with the
-did_zero state. It is only relevant when the operation is successful.
-So I think we can just return if some error happens, consistent with
-other error-handling practices in this loop.
+> What about if ${#devs[@]} > 2 ?
 
->>  	} while ((bytes = iomap_length(iter)) > 0);
->>  
->> -	if (did_zero)
->> +	if (did_zero && zeroed)
->>  		*did_zero = true;
+On purpose- so tests using _scratch_mkfs_sized_clone() don't
+pick a random higher number. If a test needs more than two
+devices, opens an opportunity to critically review this function.
+>> +	fi
+>> +
+>> +	case "$FSTYP" in
+>> +	"btrfs")
+>> +		_scratch_mkfs_sized $size
+>> +		_scratch_mount
+>> +		$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/sv1
+>> +		_scratch_unmount
+>> +		;;
+>> +	"xfs"|"ext4")
+>> +		_scratch_mkfs_sized $size
+>> +		;;
+>> +	*)
+>> +		_notrun "fstests clone op unsupported for FS $FSTYP"
+>> +		;;
+>> +	esac
+>> +
+>> +	# clone SCRATCH_DEV devs[0] to devs[1].
+>> +	dd if=$SCRATCH_DEV of=${devs[1]} bs=$size status=none count=1 || \
+>> +							_fail "Clone failed"
 > 
-> Why not just do:
-> 
-> 	if (did_zero)
-> 		*did_zero = zeroed;
-> 
-> ?
-> 
+> I'm wondering if we absolutely need to use SCRATCH_DEV_POOL for this test. Could we clone SCRATCH_DEV
+> to an image file instead? Or would it be feasible to simply run the test using two image files?
 
-If we proceed with this approach, when there are mixed extents and the
-final iteration of the iomap_zero_range() loop does not zero out any
-data, it will clear the flags that were set in previous loop when the
-data was zeroed.
+Using a config file and testing directly on block devices lets
+us cover a wider range of devices.
 
-Thanks,
-Yi.
+When I wrote this test case, I was also considering whether a
+serial-number–based mount without extra mount option, would be
+better in the kernel.
 
-> --D
-> 
->>  	return status;
->>  }
->> -- 
->> 2.52.0
->>
->>
+The downside is that xfs/ext4 testers now need to use
+SCRATCH_DEV_POOL. Let me know what you prefer.
+
+
+
 
