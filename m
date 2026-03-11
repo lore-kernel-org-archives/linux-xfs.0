@@ -1,146 +1,176 @@
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2E82C234E
-	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 04:25:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03F97B652;
+	Wed, 11 Mar 2026 06:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773203135; cv=none; b=EHnzMVTywG8H/NOiYpbq1cDW34l6RKfuYSlCUznYR671yAE8+ETDdbPliA0j9tLSPKRz0ZanFykPlyjdHNrDu532yr+zc4cAaRIajNB4MvB8lQ/lKNevC41q9cQg2JEWg0Yr3xR+ZCUTH6iQtI7NELPHcV8nEIbUt4ze+Z0VCtc=
+	t=1773210513; cv=none; b=FVGc6BvjzAIgVF80LnHkCPx5vzFrjvLQH9BLnNLJoV9Kh/t0hsSgmNz/3fp5JNDN6yYiyTynKdt0vOXJfQVjmDVsUoro9KC6oPnfmGYRw78I2hF7dS9vDfZ3rsTrn5vztVNfA7WfkT9V6okT40WZ75yqIuW9ogbQflBKJl8LFp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773203135; c=relaxed/simple;
-	bh=OV282ESBR2B6HOLfmgxSEz7bKzYuzM6j5PzCZ1QmAQ4=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=X0UueNA7yFCVb+s14GIERFNF99X1+83QePEDmxKPhS8Po+Aj+QraIGdapLhJVOnad0iM+W0OW/FFbZ+IL8jMRVI7bYpCtfcwjjGM6YFbrCAHaOtgYFQroI4xiOlqJTD5bF5LzUCxglW8FtS98v85EFCaFpyNGhtWe+wNhCStxDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-463ee33f9b2so50578625b6e.3
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Mar 2026 21:25:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773203133; x=1773807933;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=MJBej/m7/3WxM0PGbEN1Gz6ax2HLqIM5iGAI2FUH2YI=;
-        b=EZqyZYC1+uM1u4RfX4qX4pJXL0GyEO1kX9UPpdUvA6HliJ8yx9LyrSZpc9XICarILT
-         LpqWDcB0QUUvLTl7W0ca9nGeVA3eFxpYh25lnmnYf1uVZVsvaqkVrplGJdzB9pcMvFDw
-         V5QTCSC9GEfEYbmZ4nicRTH5N3IPaGj6qabs7N3j1KGmRQjO0bnXEe5rLJamVwmzzJ5O
-         XMrYC2rg4ZwaZ1QZQ4U6wVoZIFogRyXm+lJlQ5rRhmYzRQdInUdYJHOOrs8eXX8knahp
-         TRTW8FRWAufy44liJgJZiYTFGf6yQW/Sas2KAyEIBsN0MhBRKJEqLEcc505kf2LhC6B8
-         yj3w==
-X-Forwarded-Encrypted: i=1; AJvYcCXbkyKzxcXMJdSF41rVEC6uYQZsSep02jJBr3DDNqZOqRBwQBd0yqYyjjpZzvuoY2YsFTYhF2sJ+XU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxrAE/IZTCMTcjwcWKzo6t36QhdDDq4G53Dh2+jSnRqJgpqQNdp
-	gV9KIZei5ijIlh2jBeB5soHgh9Td1keb9i/+vXkW1msOLHhUU+kZIB3+XU6Rey+obdqOTzmdvvN
-	o4YScfKyH0Eo9PB2F2W+f46akZfrqztD2KUORbr9URiVxJP6GRz+O61PwM68=
+	s=arc-20240116; t=1773210513; c=relaxed/simple;
+	bh=idFRLDYGSaqji22TfKEkZTGjN63Xp1znHFuqWYMNDQQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MsAGcJLLbBQW5Gj7aXEIsigevbZg0mGHIVE5MAFYKkE2TyBPbEoC5mQ9drqKdWss0wdiIIoFnH/Ks6A0BGJ2h7t4ymtD+yCMKd9sJTbD3hU7onIHGIdOXGB3cvNjb0/aAY8kVHanBXE7ZSnCWu+gbtuol7XqujadPajV8paULWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Q3F/59pT; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Q3F/59pT"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62B0QkRX3693682;
+	Wed, 11 Mar 2026 06:28:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=N9RQdJK1pMBTDxBVsSAO1ngJwMvAFX
+	aLuNbgxJzeoE0=; b=Q3F/59pT5ADzGvQGbfOWbTvUiwEDt3/xNkLhtGLlA3qom5
+	nvjqlazZaRfzmyCEd/gBT7/+wK4buFfLkV2u/Kh4dvQGBtzN1ko6+sGot8Ki2C8M
+	XuTRqu2+rth6AIWfuIU29YiaUCIbmTdlfKJRfx76H0YO8VqJSxWa6lSuVrNxvJCX
+	BfNJxknCZu5pU6VWH10anrpabXjzGonB0KnE1zNhq7a/FZCLikAdhMzDEia4258f
+	U/m4ep75do9o2tiRrht7i7L2iU7z1I0TwjMFkv/YCxgR0gnQdLuNql0kW3GlHZMY
+	mVz2VPvlzHbwXuDBRVKqDVw2n8sXVwv2kxwUDejg==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4crd1mp0xh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Mar 2026 06:28:01 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62B6PRqJ021181;
+	Wed, 11 Mar 2026 06:28:00 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4crxbsve3p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Mar 2026 06:28:00 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62B6RwLc29753776
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Mar 2026 06:27:58 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 611782004F;
+	Wed, 11 Mar 2026 06:27:58 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 697882005A;
+	Wed, 11 Mar 2026 06:27:55 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 11 Mar 2026 06:27:55 +0000 (GMT)
+Date: Wed, 11 Mar 2026 11:57:52 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, john.g.garry@oracle.com,
+        willy@infradead.org, hch@lst.de, jack@suse.cz,
+        Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
+        p.raghav@samsung.com, andres@anarazel.de, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 2/3] iomap: Enable stable writes for RWF_WRITETHROUGH inodes
+Message-ID: <abELaEj_zhhKLG46@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1773076216.git.ojaswin@linux.ibm.com>
+ <3704b81046b11f8b8da0367c7c8ad8767f42e5df.1773076216.git.ojaswin@linux.ibm.com>
+ <20260310035719.GI1105363@frogsfrogsfrogs>
+ <4imouuhb.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:1787:b0:45e:f09f:6359 with SMTP id
- 5614622812f47-467335b7dbemr654821b6e.53.1773203132866; Tue, 10 Mar 2026
- 21:25:32 -0700 (PDT)
-Date: Tue, 10 Mar 2026 21:25:32 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <69b0eebc.050a0220.381736.0048.GAE@google.com>
-Subject: [syzbot] [xfs?] WARNING in refill_objects
-From: syzbot <syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4imouuhb.ritesh.list@gmail.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=ds3Wylg4 c=1 sm=1 tr=0 ts=69b10b71 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=kj9zAlcOel0A:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8
+ a=T_0yxg-eI3LeCsH8YuMA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzExMDA0OSBTYWx0ZWRfXy88/wtbdTV8t
+ bu7xLRfplC5EbHm+BVCq2yFIO7PDgFVjmkO/5xZeil09J6zPRbP6K1cqja2zUqrACbaEqZPtyIm
+ wD0vfq1rGHYO9bYCvRS4fogg5E8jB5xwKjJPJ1S4pPhoRWcuJ3PSGtxyIy4oiEv2Y/K+BwjzTcd
+ K1yTu/Wz01O2yWfMsBx9DtJy1ttgfDVUZIUUDlqZtFhulWv8xmDSspD+Wvt92nmZDOzc2VQCwjS
+ KPfdxOx1XaujAh8W3pJcM9+HVlOm0nvdNYc2TAsLdubRIodsCz3jUAtIBZKGj2nEpwa64bXbVXu
+ 6L67/PUImVOT5dLcTxcFbtKCRD5Sw/VAc2jQ0j8lWkZ/TKLtSWuHgDhRLLG/aMTFTmfPpxRQ2dz
+ Y3YhNtjQ7Hw3FiaEmIQiEC3JtnSvCfG/Pp7wq9FYvh0cw3thMx/N8MVV+3T94WkcuTqDuHk5PnN
+ I4PI5UGfscGgqfiSUfw==
+X-Proofpoint-GUID: zhXUuC23IdkSXQsIwiHbKkhHFy8COG78
+X-Proofpoint-ORIG-GUID: tPR5_RX8cr4ooo60Z--9ro6uu6VY1wRZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-10_05,2026-03-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 phishscore=0 clxscore=1015 impostorscore=0 suspectscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603110049
 
-Hello,
+On Tue, Mar 10, 2026 at 10:55:04AM +0530, Ritesh Harjani wrote:
+> "Darrick J. Wong" <djwong@kernel.org> writes:
+> 
+> > On Mon, Mar 09, 2026 at 11:04:32PM +0530, Ojaswin Mujoo wrote:
+> >> Currently, RWF_WRITETHROUGH writes wait for writeback to complete
+> >> on a folio before performing the writethrough. This serializes
+> >> writethrough with each other and the writeback path. However, it is also
+> >> desirable have similar guarantees between RWF_WRITETHROUGH and non
+> >> writethrough writes.
+> >> 
+> >> Hence, ensure stable writes are enabled on an inode's mapping as
+> >> long as a writethrough write is ongoing. This way, all paths will
+> >> wait for RWF_WRITETHROUGH to complete on a folio before proceeding.
+> >> 
+> >> To track inflight writethrough writes, we use an atomic counter in the
+> >> inode->i_mapping. This struct was chosen because (i) writethrough is an
+> >> operation on the folio and (ii) we don't want to add bloat to struct
+> >> inode.
+> 
+> Now I am also questioning the need of this counter.
+> If mapping has AS_STABLE_WRITES bit set, then that means the
+> inode->mapping is going through stable writes until that bit is
+> cleared. And since in future we are going to add support of async
+> buffered write-through, so the stable writes bit should get cleared in
+> the completion path (like how it is done now.) 
+> 
+> >
+> > What if we just set it whenever someone successfully initiates a
+> > RWF_WRITETHROUGH write?  Then we wouldn't need all this atomic counter
+> > machinery.
+> >
 
-syzbot found the following issue on:
+> 
+> I agree. If we set the mapping as stable before initiating
+> iomap_write_begin() itself, then we don't need this atomic counter.
+> 
+> Maybe, we can set it in iomap_file_writethrough_write() itself
+> (we have mapping available from iocb).
 
-HEAD commit:    651690480a96 Merge tag 'spi-fix-v7.0-rc2' of git://git.ker..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1660ca02580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c5c49ee0942d1cdb
-dashboard link: https://syzkaller.appspot.com/bug?extid=d78ace33ad4ee69329d5
-compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
+Hi Darrick, Ritesh,
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Yes, I think we don't need the counter to know when to switch stable
+writes on and off. Now that I'm thinking about it, maybe a mapping level
+stable write is too restrictive? I understand that for certain hardware we
+need it at mapping level but for cases like writethrough, all we need is
+that particular folio to complete writeback. Why should we serialize
+it with other non overlapping writes.
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-65169048.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/87d1bc3c7c70/vmlinux-65169048.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/8ab02990eba5/bzImage-65169048.xz
+Maybe implementing a folio level stable writes or sprinkling around
+folio_wait_writeback() makes more sense?
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com
+Also since we are on this topic, another thing that I should change is
+where we call folio_mkclean(). Right now we call folio_mkclean() after
+copying user data to pagecache, which means theres a window where mmap
+write might change the data. I think we should proactively call it
+before the memcpy?
 
-------------[ cut here ]------------
-current->flags & PF_MEMALLOC
-WARNING: mm/page_alloc.c:4741 at __alloc_pages_slowpath+0xd0a/0xd40 mm/page_alloc.c:4741, CPU#0: kswapd0/70
-Modules linked in:
-CPU: 0 UID: 0 PID: 70 Comm: kswapd0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:__alloc_pages_slowpath+0xd0a/0xd40 mm/page_alloc.c:4741
-Code: 48 8b 1d 31 3b f9 10 48 83 c3 2c 48 89 d8 48 c1 e8 03 0f b6 04 08 84 c0 75 23 f6 43 01 08 48 8b 54 24 08 0f 84 41 f3 ff ff 90 <0f> 0b 90 e9 38 f3 ff ff e8 59 7c 8c 09 90 0f 0b 90 eb c2 89 d9 80
-RSP: 0018:ffffc90000b1ec98 EFLAGS: 00010202
-RAX: 0000000000000000 RBX: ffff888000e3c9ac RCX: dffffc0000000000
-RDX: ffffc90000b1edc0 RSI: 0000000000000000 RDI: 00000000000cacc0
-RBP: 00000000000cacc0 R08: ffff88802fffd9b0 R09: 1ffff1100bffae52
-R10: dffffc0000000000 R11: ffffed100bffae53 R12: ffffc90000b1edc0
-R13: 1ffff92000163db4 R14: 00000000000cacc0 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88808ca56000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fc9045ff000 CR3: 00000000121ca000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- __alloc_frozen_pages_noprof+0x322/0x380 mm/page_alloc.c:5263
- alloc_slab_page mm/slub.c:3296 [inline]
- allocate_slab+0x11f/0x660 mm/slub.c:3493
- new_slab mm/slub.c:3543 [inline]
- refill_objects+0x331/0x3c0 mm/slub.c:7178
- __pcs_replace_empty_main+0x2f9/0x5e0 mm/slub.c:-1
- alloc_from_pcs mm/slub.c:4720 [inline]
- slab_alloc_node mm/slub.c:4854 [inline]
- kmem_cache_alloc_noprof+0x37d/0x650 mm/slub.c:4876
- __xfs_trans_alloc+0x26/0x410 fs/xfs/xfs_trans.c:220
- xfs_trans_alloc+0xd7/0x9b0 fs/xfs/xfs_trans.c:254
- xfs_vn_sync_lazytime+0xaf/0x150 fs/xfs/xfs_iops.c:1238
- sync_lazytime+0x12d/0x2d0 fs/fs-writeback.c:1721
- iput+0x230/0xe80 fs/inode.c:1997
- __dentry_kill+0x1a2/0x5e0 fs/dcache.c:670
- shrink_kill+0xa9/0x2c0 fs/dcache.c:1147
- shrink_dentry_list+0x2e0/0x5e0 fs/dcache.c:1174
- prune_dcache_sb+0x119/0x180 fs/dcache.c:1256
- super_cache_scan+0x369/0x4b0 fs/super.c:223
- do_shrink_slab+0x6df/0x1170 mm/shrinker.c:437
- shrink_slab_memcg mm/shrinker.c:550 [inline]
- shrink_slab+0x830/0x1150 mm/shrinker.c:628
- shrink_one+0x2d9/0x710 mm/vmscan.c:4928
- shrink_many mm/vmscan.c:4989 [inline]
- lru_gen_shrink_node mm/vmscan.c:5067 [inline]
- shrink_node+0x3197/0x3a90 mm/vmscan.c:6047
- kswapd_shrink_node mm/vmscan.c:6894 [inline]
- balance_pgdat mm/vmscan.c:7070 [inline]
- kswapd+0x1742/0x2e10 mm/vmscan.c:7343
- kthread+0x388/0x470 kernel/kthread.c:436
- ret_from_fork+0x51e/0xb90 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+> 
+> 
+> > Also: What if some filesystem (not xfs, obviously) finds a need to
+> > change the stablepages bit while there might be writethrough writes in
+> > progress?
+> 
+> Is there a usecase where this can happen (just curious)?
+> 
+> > It's a little awkward to have a flag /and/ a counter; why not
+> > change mapping_{set,clear}_stable_pages to inc and dec the counter and
+> > base the test off that?
+> >
+> 
+> Yes, either ways, I agree that I don't see the need of an extra counter here.
+> 
+> -ritesh
