@@ -1,32 +1,41 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E5C8347BB5;
-	Wed, 11 Mar 2026 08:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327113DDDD5
+	for <linux-xfs@vger.kernel.org>; Wed, 11 Mar 2026 09:25:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773216505; cv=none; b=rOYKNnz/O9J/+FmlIrepip1G3ZG/fnPtU/A7K/BoktYbCAlAO+IP3dkKoIiwU/Q2qgifTVyvkzSUxUh5VA+sDhLgYEJXfAfZ7+l+KT87EqSfAG4ycgd77zyL/d6XjT/GQ+sTt6R9q5DlNo3OMU9aQjPJDrWkwZ+YXk5ofDrCeFc=
+	t=1773221117; cv=none; b=cD5OVYlOIG0SKt3FuMbgEqy87ri3Azef2yZD0dg6ZyMS5BUUNiZG4rL/e6/WITTovEciH1h53E7RxYOLJQrNg1DeS6qnog50uiaRYviBcS0T/SUaJhB9Sq18FttLoVmTklfnuI969+xvsLXwkLCNTuoCQZwygHJsluEhiA/vvd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773216505; c=relaxed/simple;
-	bh=F1yKz2cNKfFmT4+PWmlovRfCcxtuvekcqi1QNT2OqbQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AqtAZMo+Ot7/2Ivv+MscsQfYBcn8ezv1OeTtrELX2v0Dq90gk3RNW644dvizq6BSqDOpqNEBANL1DlZFRPqcn+NcX1FXo/IBOBieyMMlC5C9j0ftuLAQR46bkNv25WnI0tfYJCXQYcsSJ2A26XPeZ+9xpn4g8obJt5YUI5jamkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-05 (Coremail) with SMTP id zQCowAD3hAjxIrFpyrEkCg--.57727S2;
-	Wed, 11 Mar 2026 16:08:17 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: cem@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Convert comma to semicolon
-Date: Wed, 11 Mar 2026 16:08:17 +0800
-Message-Id: <20260311080817.2906233-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <aa_Z9AkLoS6BrTwc@nidhogg.toxiclabs.cc>
-References: <aa_Z9AkLoS6BrTwc@nidhogg.toxiclabs.cc>
+	s=arc-20240116; t=1773221117; c=relaxed/simple;
+	bh=KdNglbRz+CmKIc9cpKsgfSfqm29qi8WiY9h3FMgXXi4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=n3zle8ZQvk17e305PYg8i793ilQHHkFTnbOZrGu13woGedHjzU6Vz7cN+I71u63+d3/czrMEVWhf7iK1MV3qW62GqgaBItNq+1tC3wO2Zu+8OT2/pFApJbQVP8goQR/ZMKSCxIajRhx/2qZ+cAz6jIiCyLiboNIYAVAAg1e09qI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NLxLmGWi; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NLxLmGWi"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=6ScTYNeDTmWGxDCfpLThczfKwZsW2Sd+Wu+0t+hGE2Q=; b=NLxLmGWidOZ1rhV61sIGcqmo4s
+	SFNP3qnw6H4JUGxTD5n5+aXXZ1wjzFNmJBES8fkPXdSr3uIFUlF5lGWLGW1N2vjleYfbC7iAT5UEC
+	zqq/m9askibpu0mJbl+BjGO+Ln8F+DN8aKUqT/+FTL4jN4sVCRXx0QOeR8xsVw7dGGsxGEXo5M4+t
+	CxUTudVxfkJAjkkBbpIihIzloSexklYrc/0j44uHZc7scZFKzgbIkjQgUndjkiB8Jzs0rFYKjYGNt
+	YDuaNOVwoRelWkRemZJddZtWBArUsOtwcWVhzjOuG7lDj0H6cNB2ZfdhYxpGwtFPhUQZp7yAwphiB
+	rwEnJGbA==;
+Received: from [195.12.231.117] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w0FoV-0000000BH3x-1zXD;
+	Wed, 11 Mar 2026 09:25:12 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_io: fix fsmap help
+Date: Wed, 11 Mar 2026 10:25:00 +0100
+Message-ID: <20260311092503.995666-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,36 +43,39 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAD3hAjxIrFpyrEkCg--.57727S2
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYI7k0a2IF6F4UM7kC6x804xWl14x267AK
-	xVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGw
-	A2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26ryj
-	6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gc
-	CE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxI
-	r21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87
-	Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY02Av
-	z4vE14v_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxV
-	AFwI0_Jrv_JF1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r1Y6r17MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjxU4U73DUUUU
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Mar 10, 2026 at 09:52:15AM +0100, Carlos Maiolino wrote:
-> What tree HEAD did you apply this on?
-> 
-> I can't find where this code exists. I'm assuming you sent it against
-> some tree other than XFS's tree?
+By default fsmap prints the reverse mapping for all devices.  Update the
+help text to correctly reflect that.
 
-Hi Carlos,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ io/fsmap.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-You are correct. This patch was based on linux-next commit 7407c0fbfa90,
-which is not present in the current XFS tree.
-
-Please disregard.
-
-Best regards,
-Chen Ni
+diff --git a/io/fsmap.c b/io/fsmap.c
+index 005d32e500a0..0182154fee47 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -24,7 +24,8 @@ fsmap_help(void)
+ "\n"
+ " Prints the block mapping for the filesystem hosting the current file"
+ "\n"
+-" fsmap prints the map of disk blocks used by the whole filesystem.\n"
++" fsmap prints the map of disk blocks used on a given file system filesystem.\n"
++" By default, the blocks for all devices are printed.\n"
+ " When possible, owner and offset information will be included in the\n"
+ " space report.\n"
+ "\n"
+@@ -32,7 +33,7 @@ fsmap_help(void)
+ "     extent: major:minor [startblock..endblock]: owner startoffset..endoffset length\n"
+ " The owner field is either an inode number or a special value.\n"
+ " All the file offsets and disk blocks are in units of 512-byte blocks.\n"
+-" -d -- query only the data device (default).\n"
++" -d -- query only the data device.\n"
+ " -l -- query only the log device.\n"
+ " -r -- query only the realtime device.\n"
+ " -n -- query n extents at a time.\n"
+-- 
+2.47.3
 
