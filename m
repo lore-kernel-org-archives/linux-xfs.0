@@ -1,68 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179B3387342
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:39:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91C7B28D8DA
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773304743; cv=none; b=hzuyKl+tc0Oa/AuMIV/HSKSXY0T2NXOFX5TaKZGjsTykoYqn+bGOQekF/3kaslSAYtdSWCCgPf03WQI1BDP6fLq4dCp4fPIEd78DoUsftDrYiFVrd0VMN0Kt7iT+4bTyKmUBMdjICu1S5ZnZULsrm6KH9YoBz867oC5au5FTTsk=
+	t=1773306503; cv=none; b=Kh/XqqCBr8i1botdzpjEcurfMYij/NZZn4m978vX0pi6vOXSd5tW5npJ4+gyn223VQRls0XUylpYKbZ9VIF7sXIzRnEqzh4bBJHdTNzni7VzYcoF5tVF8hNlfA+IdIZYrucb5jyzophdfR0jwPOlnkT6Mr2xdmHwMM52B8OKuVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773304743; c=relaxed/simple;
-	bh=zrmNlWzilPDrCluOQQSVbklEU+D+0LARP8QcG7REtU8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=WAMCMZ0b5CqCd+UHu/zgK2YTLvQTCxg6o05NR6O/yqJiGXzNql7e1dRPNb+pug5/Uz6nYheJp33rmI0o9xlV2GeuMG7CRjo7wGTpVpqLnfOUho3gzYKF7RhJQ5gmdxClK5Q1Ru+t+uaaJQ+IgVjIqoJDWzucM5TYVh59llt5yPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azs9KGo0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773306503; c=relaxed/simple;
+	bh=cJAkeJvihkEVTFrQb8UxvRKSFvkI/rqQcoFKEXIQ3BU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fC06sava3K+4ykZ8LbDKJB9QoKeuvj0uGCV7UlHgIxDV1hMVTWJdZFVqDQGDu3eooMWaWhBVWQUcYWmgufYr2q8Ksv6O1ZUbQCSYUC/vKEEKx2K5D6h9RZKYrMz/wDDAL0j1wnr1WnhKtAzbVqRGu+lrYARhsjYtOQwgqJ6vQjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=CjIrihv0; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azs9KGo0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7385C116C6;
-	Thu, 12 Mar 2026 08:39:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773304742;
-	bh=zrmNlWzilPDrCluOQQSVbklEU+D+0LARP8QcG7REtU8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=azs9KGo01CMWARx8GovoeAtxAvZjPXQDiRMbNAEfI+7MoxLFt4aL04a02+R0NtAgm
-	 3dXERDH6LpHT7VrJNzQnMH1caK1OMRddfuuNKAY0HMdDnT8b60Dlo1dtjg/JqMtN6U
-	 re3OtuF5Bp8eq5dfKwuEZlkIIzifvC8I0/gY/9WgdY6T126/LaCkSNg6muApbWBk+H
-	 hLHxC2TxuoXOi0dScYlsIEnYbSSf6tvzV0aHuonwpTHlBCzMgj7QZK5eXGQMxUdv4H
-	 y0KdDjC02kSS3DqN2TRjGcPWOXU7KAViQdMtU88meT5tFL87rzOobVlKMc6Cj8NjBf
-	 47xS/5vtwauTQ==
-From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Long Li <leo.lilong@huawei.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com, 
- houtao1@huawei.com, yangerkun@huawei.com, lonuxli.64@gmail.com
-In-Reply-To: <20260310123233.449659-1-leo.lilong@huawei.com>
-References: <20260310123233.449659-1-leo.lilong@huawei.com>
-Subject: Re: [PATCH] xfs: fix integer overflow in bmap intent sort
- comparator
-Message-Id: <177330474045.21168.6950788298705202973.b4-ty@kernel.org>
-Date: Thu, 12 Mar 2026 09:39:00 +0100
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="CjIrihv0"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=+m1r00usAOVWL0madypsr3hYAtadbZi1CU33TVAO6N0=;
+	b=CjIrihv0hBVU0rq4wyUz3gmP+S3OFISFck8cbp5Vrjbq39E9JOtrCe5HEtQqv5+docdp7rCIY
+	b1ZeT2hVB0sVsLewdi17xqAhDIvmOpD80IodPA37MzPzgNpo0SUKOreomIGJCLkxGdWEbeKdrw8
+	Xp9J3YV9WKe0WKHB7SffgVk=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4fWhVK2l95zmV6N;
+	Thu, 12 Mar 2026 17:03:21 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id 45CC740565;
+	Thu, 12 Mar 2026 17:08:18 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 12 Mar 2026 17:08:18 +0800
+Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 12 Mar
+ 2026 17:08:17 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH v2 1/4] xfs: only assert new size for datafork during truncate extents
+Date: Thu, 12 Mar 2026 16:57:57 +0800
+Message-ID: <20260312085800.1213919-2-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20260312085800.1213919-1-leo.lilong@huawei.com>
+References: <20260312085800.1213919-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-On Tue, 10 Mar 2026 20:32:33 +0800, Long Li wrote:
-> xfs_bmap_update_diff_items() sorts bmap intents by inode number using
-> a subtraction of two xfs_ino_t (uint64_t) values, with the result
-> truncated to int. This is incorrect when two inode numbers differ by
-> more than INT_MAX (2^31 - 1), which is entirely possible on large XFS
-> filesystems.
-> 
-> Fix this by replacing the subtraction with cmp_int().
-> 
-> [...]
+The assertion functions properly because we currently only truncate the
+attr to a zero size. Any other new size of the attr is not preempted.
+Make this assertion is specific to the datafork, preparing for
+subsequent patches to truncate the attribute to a non-zero size.
 
-Applied to for-next, thanks!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/xfs_inode.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-[1/1] xfs: fix integer overflow in bmap intent sort comparator
-      commit: 362c490980867930a098b99f421268fbd7ca05fd
-
-Best regards,
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 50c0404f9064..beaa26ec62da 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1048,7 +1048,8 @@ xfs_itruncate_extents_flags(
+ 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+ 	if (icount_read(VFS_I(ip)))
+ 		xfs_assert_ilocked(ip, XFS_IOLOCK_EXCL);
+-	ASSERT(new_size <= XFS_ISIZE(ip));
++	if (whichfork == XFS_DATA_FORK)
++		ASSERT(new_size <= XFS_ISIZE(ip));
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
 -- 
-Carlos Maiolino <cem@kernel.org>
+2.39.2
 
