@@ -1,62 +1,62 @@
 Received: from flow-b6-smtp.messagingengine.com (flow-b6-smtp.messagingengine.com [202.12.124.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08BC523EABA;
-	Thu, 12 Mar 2026 21:49:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90EF7309F1D;
+	Thu, 12 Mar 2026 21:54:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773352180; cv=none; b=C+JJbN82Aq2/Mo8uSRp1VlV3M8prVPz9dQrDfcHC0Eh3QmYtGmiuovvDs1frFCFWt+pCiSqR2QLWLhLO9s/sghBdnYHHCeHqZEOyF7nd/mNLvJ/BED7bEhiT5P0vxbCknNp3lLQDZoq2O0yCv56ODhoD06lVLePJkIBBS+3yR5o=
+	t=1773352471; cv=none; b=mMHUUEDkXgWqHnMqIE/Jn7oZWp0At8Co0GCMH2qqfbaG6PLalJcsxZsIvbyu0iv8UXe3tyhuXr92JhHnI8KwCcA3c52ql4HFehPSS7tYxrZD7CWN71ZPQUDRt/Ug6W6mcu06tgjweQg2s9r3BNPnyTBquSwWg+nvag/UCoWWhKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773352180; c=relaxed/simple;
-	bh=VGwEZOS2xQR90lck3nphx6g+AoqwByQSrwXBkPz1zDo=;
+	s=arc-20240116; t=1773352471; c=relaxed/simple;
+	bh=CKKDH3OvgdUZHlw6DEhu3V+APgTia4OWQcwK0cNE0Lc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h01DaeBqiqlI2sC8CTmRD0Rk+kQGJSKp2Iw/L+lSblJXgJNNj4LONBW+TRkM7nVIp4SSdoj/t5c3A/Ga8zruLg5NhwfeQC38JYzjosGv37v3nDP+phdKu1sdnQ483W2ukkzETA/BVNFD3bGGt9IH9JdBveVHjd2Cq4l88H+fC5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=Xccu7BqG; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=m/gQSpd7; arc=none smtp.client-ip=202.12.124.141
+	 MIME-Version; b=mx7MCnLPASjBP1cXykypAQyXI3SHwNbX3+O09iQjZvlSq7sY0nqAOSgS7tUTtayQo39lFbMUVPfh4+9OVRyAKDZaTHpIMO66U7Zej3emE9bXfOroZDj1t+n2cmkWw2k5zF4ubXl8xzKPHWC8PtIMwK8YoV0TJj94/tvFyjnzBUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=knwvQbEG; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=4Zu9WuMX; arc=none smtp.client-ip=202.12.124.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="Xccu7BqG";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="m/gQSpd7"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailflow.stl.internal (Postfix) with ESMTP id 304841301B9C;
-	Thu, 12 Mar 2026 17:49:37 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="knwvQbEG";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="4Zu9WuMX"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailflow.stl.internal (Postfix) with ESMTP id 764DE1301B4D;
+	Thu, 12 Mar 2026 17:54:28 -0400 (EDT)
 Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Thu, 12 Mar 2026 17:49:38 -0400
+  by phl-compute-10.internal (MEProxy); Thu, 12 Mar 2026 17:54:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
 	cc:cc:content-transfer-encoding:content-type:date:date:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:reply-to:subject:subject:to:to; s=fm1; t=1773352177;
-	 x=1773359377; bh=puUX/onZj/vaXC+2Vk95PLkQLCVwPSvUkX77dKofgTQ=; b=
-	Xccu7BqGG8E2NDVZg/N4GFdwY2oD8s3CZ2ec6I8noK+y1khNNKwdQa3qSaE8p3ck
-	0l50JSAYQMZ5XRGqZ6Bm/NAd13BsbRhSkEdg7tqZU6lqcf02dFEy2EcSjKuts/ie
-	93Y1uP4EFwJeTb8r7VZMByZxlZdqGEPpizVdBZMUA2mImhfkLWcTIYnNYeFDeLsv
-	5FU2zkjTsrw3bSzl+CIzFJGHS1tbUaCwV+5sD1boXsVdn68Nb5W86QGVNW3kz1dO
-	ZBA29VXiDgjJht9QJK+RFCH9oZopsofcKUpnEEHU0+MgBQGEzMOp4Bq2C4HkdvRc
-	lnP0iuRl+qvkLgnss8CbMw==
+	:reply-to:reply-to:subject:subject:to:to; s=fm1; t=1773352468;
+	 x=1773359668; bh=6rEBHIocsGomFaeNZ8FKVkPPiCLC3KUr0T88wGXsY+w=; b=
+	knwvQbEGvEIqlMfPnGjtJpPojdNrNczYPtebe2Z4kPKMkUCzRctdcCXACQElzs21
+	5O2a+QMmSwXVS7mmXVu2UbB62pEo78a9LLmTYGivD7du0jEWHQCQNY9CqyyjZM0D
+	WxQVP+B/lLDgba8OONiDmEMwfdC99MyLWeo5sUXoJpj2s0/eqU6juECWNWTZd58e
+	f2JUhGZZOdAKXc5zKwvqkmFAR+ulhtk7F4N+/VKAGM16LSYty6niYrfDL3MhwWZQ
+	5F7UPhU37iVLnKURGdbIUXSCxaF0GsKm5E/ELskY9F7iGXtUNUkh7m1SAYob5ueD
+	tG+cNMx+lV41n5I+6+vVUw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
 	:reply-to:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm1; t=1773352177; x=1773359377; bh=p
-	uUX/onZj/vaXC+2Vk95PLkQLCVwPSvUkX77dKofgTQ=; b=m/gQSpd72bOeZbbIs
-	bt9p9HVZaVD6pf8ZLbR/liTkCv6KLk37Bwr8ICPhs7HK1JpcdmbvRz230O5ZCVWm
-	bL1vRCv8aa/Xm/OpaO3WA7ztqdqawHLsbn96Qsi2daFjSCddFwzLvvwz4NQtqelr
-	jJiohG5ZcJotwPQPUQg4NyRCl/Tlv1u4/GXgV4jKWFBH0UUA+Mqw1kR51FO2ihPR
-	sv9Bl9N1dEqbD5ZMaW3p4mZ8SyUtMM0xpWUs4C7GXuaqyzfvyS/u1YLmjyB5CADx
-	iwjOJR50j2ZM6njft50LG+J5rhWP3t9qo6Wg405WgsbPq6uZnUmaMgGVQl7jGsRk
-	+xLJA==
-X-ME-Sender: <xms:7zSzaRVK2ld2mjFEAplQJYa3xj2B5fXBRT5y0o0EdVsnun8GWGj7QA>
-    <xme:7zSzabR2Lv5FmbF1j0P4TzJuP00xer94lt3X-Grr0Tb7TbVDJgf4Jx5IwpC9MwnwJ
-    P4t_lKZRwAwLN1n9mgh-b1sfmG9SoeU2JQMiLlb4i48l8ScJA>
-X-ME-Received: <xmr:7zSzaUUi1znV28haYsZWa146WyJbSjqBMqzMN7HUYQ0_ezVgi0z1HHys1ytelS5qeuiqw3N9ZonF1PHm-rXrsrwIwgZ4NLTmc8x48k7FJUbX>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvkeejledtucetufdoteggodetrf
+	:x-me-sender:x-sasl-enc; s=fm1; t=1773352468; x=1773359668; bh=6
+	rEBHIocsGomFaeNZ8FKVkPPiCLC3KUr0T88wGXsY+w=; b=4Zu9WuMXKiMeGX/7/
+	ze2DMZPQ/soZLDQ/oXU+K/4hHMjcEbwuRZzOQNn/0FYKubqN7uvd+xUhQsXGDVfc
+	XFQx9NIeuhB4i9Fdw+0hLLcGCxsoXgvauzXIgttzQmRQRIMSqUVbZ83wnbvBzzTO
+	LXU0seG7VBKWtNnozR19mdRgFEyA4pYMjPGA/j7LYSGbfIowMBFBZEYKa8ZivFjZ
+	wCZFyMVCKIXP7JjAvEk3jKEPxxVTswqg27R3aHZpcyHuzR6zYaa9mxb3FygDZl2f
+	k88L/InMovZo682809zK4ENFUDAn25o7ypfmHbL8vM48dnX2pKAMzl5X2ab+Svl4
+	ddZIw==
+X-ME-Sender: <xms:Ezazaey-fvZqInYUpzLKVh0s2v9tOotlJQb5SulL9nI4oaXgr3tSpA>
+    <xme:Ezazad8MrhOleAAQOTQy2qLblBKX5WC_We4qchjQvILJ3pnRA2FxvthXMjdfjfV4w
+    UoRKHkRpzuWB2q2BhG3sPKxU_JyisucUacsdZab9tuQGNM1Hw>
+X-ME-Received: <xmr:EzazabbikfbFhxQsQwNIZruHOMSwYGu5ivVqXVqxLTeYxlwz9iv_yIyz17g7ZV2LlcxBcrz3VW2uBeAL_bnCWa-q56oBQi4V-rXhNxIFXune>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvkeejleduucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
     rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
     gurhephffvvefufffkofgjfhhrggfgsedtkeertdertddtnecuhfhrohhmpefpvghilheu
     rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
     epveevkeffudeuvefhieeghffgudektdelkeejiedtjedugfeukedvkeffvdefvddunecu
-    vehluhhsthgvrhfuihiivgepudenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
+    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
     esohifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohephedupdhmohguvgepshhmthhp
     ohhuthdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpd
     hrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
@@ -68,14 +68,14 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvkeejledtucetufdote
     hnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqvgigthegsehvghgvrhdrkhgvrhhn
     vghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqvghfihesvhhgvghrrdhkvghrnhgvlh
     drohhrgh
-X-ME-Proxy: <xmx:7zSzaYayN_tA3ZkrIRtpJ_g6qClkPs2v_4yuR5WOe7mTaUdMhUxu9Q>
-    <xmx:7zSzaa_u1VUCAlV12vbpEUyTKc2zx_hwL4IwQMPrbjyh4r_ouPPtxQ>
-    <xmx:7zSzaf4y5PLi3r_Ggqqc4UxN7B9yxtAOERfWRtN6w0IgVtlfwvZ05Q>
-    <xmx:7zSzaQnBblIZERJYN1PXUQ5V96-8KEp8KPLi_5CcVcuQa04y7G941w>
-    <xmx:8TSzaZmH5TF4DiiBHGfn2CzS1n4UuyybOJqjIgTLw_TmHyJHXgibp5sQ>
+X-ME-Proxy: <xmx:EzazaR_rDZ2cpPqieMKXHtJOQkHjLTGjyZbnPvedne1hBz6T8TNV8A>
+    <xmx:EzazaVgT96boA0j1ougvrF0FQaqGb49jA9P1i0x6pBMQiTubNk5OHQ>
+    <xmx:EzazaRnU5sTc9LuYwn6ue2LaL3bI3JtiIHjA8-szWM4tYJeor1kUZQ>
+    <xmx:EzazaSAd69RfkLZRj40WM2JpiwTdOS31qJZu-6BnOXl0dr1anYis8Q>
+    <xmx:FDazaQPDp6s81azLqtKk1OQBYAISt4wd_paeIdQbgvXGX3nCkXzwKQNo>
 Feedback-ID: i9d664b8f:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 12 Mar 2026 17:49:22 -0400 (EDT)
+ 12 Mar 2026 17:54:14 -0400 (EDT)
 From: NeilBrown <neilb@ownmail.net>
 To: Linus Torvalds <torvalds@linux-foundation.org>,
 	Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -118,9 +118,9 @@ Cc: linux-fsdevel@vger.kernel.org,
 	gfs2@lists.linux.dev,
 	linux-um@lists.infradead.org,
 	linux-efi@vger.kernel.org
-Subject: [PATCH 18/53] shmem: use d_duplicate()
-Date: Fri, 13 Mar 2026 08:12:05 +1100
-Message-ID: <20260312214330.3885211-19-neilb@ownmail.net>
+Subject: [PATCH 38/53] cephfs: Don't d_drop() before d_splice_alias()
+Date: Fri, 13 Mar 2026 08:12:25 +1100
+Message-ID: <20260312214330.3885211-39-neilb@ownmail.net>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20260312214330.3885211-1-neilb@ownmail.net>
 References: <20260312214330.3885211-1-neilb@ownmail.net>
@@ -135,33 +135,43 @@ Content-Transfer-Encoding: 8bit
 
 From: NeilBrown <neil@brown.name>
 
-To prepare for d_alloc_parallel() being permitted without a directory
-lock, use d_duplicate() when duplicating a dentry in order to create a
-whiteout.
+In two places ceph drops a dentry and then calls d_splice_alias().
+The d_drop() is no longer needed before d_splice_alias() and will
+cause problems for proposed changes to locking.
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- mm/shmem.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/ceph/file.c  | 2 --
+ fs/ceph/inode.c | 3 ---
+ 2 files changed, 5 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index b40f3cd48961..6b39a59355d7 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -4030,11 +4030,12 @@ static int shmem_whiteout(struct mnt_idmap *idmap,
- 	struct dentry *whiteout;
- 	int error;
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 66bbf6d517a9..c40d129bbd03 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -751,8 +751,6 @@ static int ceph_finish_async_create(struct inode *dir, struct inode *inode,
+ 			unlock_new_inode(inode);
+ 		}
+ 		if (d_in_lookup(dentry) || d_really_is_negative(dentry)) {
+-			if (!d_unhashed(dentry))
+-				d_drop(dentry);
+ 			dn = d_splice_alias(inode, dentry);
+ 			WARN_ON_ONCE(dn && dn != dentry);
+ 		}
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 8557b207d337..32bac5cac8c4 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -1517,9 +1517,6 @@ static int splice_dentry(struct dentry **pdn, struct inode *in)
+ 		}
+ 	}
  
--	whiteout = d_alloc(old_dentry->d_parent, &old_dentry->d_name);
-+	whiteout = d_duplicate(old_dentry);
- 	if (!whiteout)
- 		return -ENOMEM;
- 	error = shmem_mknod(idmap, old_dir, whiteout,
- 			    S_IFCHR | WHITEOUT_MODE, WHITEOUT_DEV);
-+	d_lookup_done(whiteout);
- 	dput(whiteout);
- 	return error;
- }
+-	/* dn must be unhashed */
+-	if (!d_unhashed(dn))
+-		d_drop(dn);
+ 	realdn = d_splice_alias(in, dn);
+ 	if (IS_ERR(realdn)) {
+ 		pr_err_client(cl, "error %ld %p inode %p ino %llx.%llx\n",
 -- 
 2.50.0.107.gf914562f5916.dirty
 
