@@ -1,139 +1,99 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F6378F2E
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:45:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C3673C0637;
+	Thu, 12 Mar 2026 12:11:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773308731; cv=none; b=hUl8fb384jfJQig+CgrvvFGUyYDnDsSVQooh4ZFoK9O14ytOXOUkbu4dunHdBqobL8cV646qOYeODmgmlG5PaXcpvvwFZP5xv8FkS6h+xpQgSaH261Ou5xi6naaWt5OATU04FPigtpZ23EMh0l27wvwJCRPnXCMbc/TjeCLbHzU=
+	t=1773317484; cv=none; b=NVfyXtxa0U2H73HwQtudh4Beg6KglYcOeC4QXubYu8OyRNKQsJMIq43C5NsdJXklQeqcHUetI/W7AJPVvnSLcJWShuXwstDhhFcLD1vSTlqe58P9N5dTzwVNGiWfnzUl3w0puci0BksD634gOAj1Igr2GX9QJmRAPi8Zxz5h9GE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773308731; c=relaxed/simple;
-	bh=0ZRANUN7UlCukwYQM29Md9MnE0nYb2RsCEQmYpZxDpE=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=LtCaIrzqrFLYyytU3oYa6bD0zXSG3K9Q0d6BTtC5EG4KFrTemL/zF+V6qzHX4zGeq7Md9TeqpOZPW/+rmNrybAVYr92WPs0kwQsCaYKUlVryr9OoySKzT4f/rRXmn2JLpn00+6txjK3VZi0QHiu96r9QH4w60wv0c/q/8jD8fX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dilger.ca; spf=pass smtp.mailfrom=dilger.ca; dkim=pass (2048-bit key) header.d=dilger-ca.20230601.gappssmtp.com header.i=@dilger-ca.20230601.gappssmtp.com header.b=nCpB1pfZ; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dilger.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dilger.ca
+	s=arc-20240116; t=1773317484; c=relaxed/simple;
+	bh=pYtzYzU3hcC71DMdzs1RnbTWm53HJuN8VornObBqgvw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gmPmhx5CHymlo/MmGo+FHOHE54t93n+bljvRz2jIWSqLyglCWGztfKcLUrqkHx/iHZmd4f/9kjD4pOlRG8bT0jQ9IwG1inDv0f7z9xew0aJTcxq04zMqDb03oVbERW8BkLHMDlIKtJ4H9Egwcgynic/SyuU6xzAjlqfTgaVJR2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=iMU/icBW; arc=none smtp.client-ip=54.206.34.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dilger-ca.20230601.gappssmtp.com header.i=@dilger-ca.20230601.gappssmtp.com header.b="nCpB1pfZ"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2adbfab4501so4303135ad.2
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 02:45:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20230601.gappssmtp.com; s=20230601; t=1773308730; x=1773913530; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3x0eeu7MjizOqKGGJm4T2xmjny18E14L15w/38jmSwg=;
-        b=nCpB1pfZElk8JOvn9zteby2BBnel8E9UT1BeI0QqqExRlKKRt/+MaPYSQd5DbVTm1b
-         5X3XMQcxh4vts+7qvf8R2CufaVkGr4ZhiObAZEz4bwFHgefMiu8P/8qFRP9tX6SZczi6
-         T5tU+xQ5MW+G+2LPl47ubqkb9dF86RiMKZGlYU0NwaXWXG3Y5PJHP4Fe7u0/s1tiOTaJ
-         4Aj9U2qunFnV1SZVJpJpUQUcBtapFS0y7o2JY0CRmACdLkiwD+1tpzLR0g9zEdvONJiQ
-         ucvzilDnh3Zxw/OGBGK6aDpwiNz2WSAao5+FVvK2kvHy2HrISg33fbcKPexAB1F7D3a4
-         6Xrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773308730; x=1773913530;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3x0eeu7MjizOqKGGJm4T2xmjny18E14L15w/38jmSwg=;
-        b=Vd+lzhLAd3HDqG1+fh9Yk/W8aiSVwzSoSeeixDGLIxaJVXPfnKUluSMA7AoCV17OWw
-         hvK5Zxdg00OLoUaT4J5K2qziQ7+qHF8qePxgUDusBX7WIMDwyg5vQMZHfiJWbx/pEQJK
-         7EQkkFo/nAQ/hwwKc7+SChrcakYZ/bAQGc8s/GuFqEkjsa2akm/lkFdSXEc+iFoEGiyz
-         bOyFzJ4Le2b8E7gpKBKtNZNWJOAB+ywfO5jAy5BsMWD8M8F8a/JKJvNoHNawgqEdlWJl
-         nWMO95rNPE7UuFo6MoI7EOTzMFOn47zZWMA7gaoO3pcRuquryoGUURaXbbJrTiUhB2qh
-         PDkw==
-X-Gm-Message-State: AOJu0YyVHbBNW/xfFDkp0Zt7CCqDecAYcHjvF2CYpiLayVnvwT7kF5N1
-	TBpWb+M0N9dvw9Thv/SPhVG4kOBuSiJAdccjcqg9XzL7+OKDbPw0ndiAVKYVOhswy3o=
-X-Gm-Gg: ATEYQzwYWDngPpRLbUFQCmyzGzzt7Du+FvdHYJ8FW1LIRcR/dX2R9uZQ6p+WDVMD4FC
-	f7T1EiLrVMfYgfHdPcklQ27xVRZUSHPlGpxT8O2mwRCP33q4LU/z0krCKeI61DXzj2rNYV3Fo0R
-	ZyLkd404L1u+++yNkNRv4u05fsoi2RKaZo+f29TyPZm8OondAQ/aUyMfsVP4sl25Q40h1wuHfnh
-	a2ICW4IB19tn0EgeJDSW2bIDZxUiTe1PErLA1ppcIvKGUr/mRqWktJzyYpidYqH3RZcVWBVMo8x
-	D5ICwiuQqnLCpxO/A5crN0NMXqxrYK3pPHqtQW79q3rGS//G26RbtCAMWTWtJLJsMYVTr6MmS1o
-	UKkKjEXEBxn5cesmfXbgSMMVM2bb5XIzEOHMcWHEvIaYLQGtfSs07K4okNoah/abtlhn82/hQaD
-	N8/ryv2JgwSfjv9a+bjE9xTNWI/SFAzn0OXhoREM14UD1V7gFuA+yATdWWBNRSEAVzNYp+YkIk9
-	VAVEQ==
-X-Received: by 2002:a17:902:f550:b0:2ae:3e4a:3cb8 with SMTP id d9443c01a7336-2aeae95301bmr56859165ad.53.1773308729647;
-        Thu, 12 Mar 2026 02:45:29 -0700 (PDT)
-Received: from smtpclient.apple (S01068c763f81ca4b.cg.shawcable.net. [70.77.200.158])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aeae258e26sm49293315ad.37.2026.03.12.02.45.28
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Mar 2026 02:45:29 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="iMU/icBW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1773317448;
+	bh=JzMZ6Illm3olIQVM1CIFS+yhwDn9CKSBdZFqE/yOK9w=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=iMU/icBWp4mfPIWEx72fCWlpmHmuLTAYjJ8N0ea14QlQSdgQjLsuFyIDcIo3JJzg2
+	 o+dd/4TlqK2KVIzFj2+pqevCiKHF1ZMxh1GI4nHJaow85D3HXs6cCAvIgcvEWmZ+9H
+	 21RnOXpNt3VMSYTjnzQadQR3IIEc1Xn7Ohsh7vNE=
+X-QQ-mid: esmtpsz11t1773317443t4428a848
+X-QQ-Originating-IP: iv4EUvJnJXdbZKjq4oI8qP9L5SZqG0Roq7Bm9D4V+Y8=
+Received: from hongao-PC ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 12 Mar 2026 20:10:28 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 4145597553995456810
+EX-QQ-RecipientCnt: 5
+From: hongao <hongao@uniontech.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	hongao <hongao@uniontech.com>
+Subject: [PATCH] xfs: scrub: unlock dquot before early return in quota scrub
+Date: Thu, 12 Mar 2026 20:10:26 +0800
+Message-ID: <1C42C3A2C8CD80B0+20260312121026.23660-1-hongao@uniontech.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.100.1.1.5\))
-Subject: Re: [RFC PATCH] quota: allow unprivileged users to query ID 0 default
- limits
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20260312090810.1145908-1-ravising@redhat.com>
-Date: Thu, 12 Mar 2026 03:45:17 -0600
-Cc: linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org,
- jack@suse.com,
- cem@kernel.org,
- dgc@kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <F061AB76-E500-4F78-A6E3-E71A32B04077@dilger.ca>
-References: <20260312090810.1145908-1-ravising@redhat.com>
-To: Ravi Singh <ravising@redhat.com>
-X-Mailer: Apple Mail (2.3864.100.1.1.5)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: NhdiEwnVOUqEVnM8jLi5TYAlgz8/ATfp7a4K4+amnft+HWpPfjQFxjdT
+	X7ycn2lIQyJpn2eSOhpTS94rJkwnlXC9qZrnauF6FsA+TG1iNhv6++4P+2usb4BHWLdh1Go
+	kr/9tnsaSPM27HhOkpizKaeITJ4N+Vxji6gclbdFqs4cGFdMjq2HjMFzGPsQbWzniQaHl5W
+	UJE7XLZ8JZ7BRMLciNjpHPpVQYAWgSp1s3dRmslvVLVRoRhLK29wXUxbyTsdqp99OXI+blL
+	xI/6pXC4Mtbn+bxjr5VrLHDDUc1ToS6E0QifXCuXpcs9CZowA6Xprori90OiE42gaOukk/8
+	WoojJr+yq66mzFuXSi7ReZ0RzrNy0F4W8sbuTTZzFh0HzdfDLeCDjNJzedd+EblA32UrrMj
+	/bES69KBnSGjgEWUHjUvWWzRiYsjudvF9QeQZkP4oh2d5fNiwKl/Pd5sIQEm0TtScP8O003
+	dpIZTkRyA8Tj/rDw0iaWyjfCAz9ffm8VTu42/EyLQ9z6KtHat3W8xCsN+ZaOzQ7zhFQgt3F
+	/vOSdQYs37jZqbJG1qBQTOjoNulImY1+AfUJMrmT6L1IFZ6RgarZIz1NZaBMlylWEA6mpOw
+	/w3/CFlZnY8BDpyMlQfTR2SO4PuHbtC/qZu+mRS1nSszSRFB4Bgphx/4horpLgYGVPFQlRc
+	uaQcusdcnb4xF92GsaUDPiHHtqzZEcwzQjHi31+7o24VM2C2wnTcrwq4HwA9YLsOerlr1+9
+	DmXbwzRpSrGFMZKj6/H7xz4HP+6PRenuggCHT/83ZvcpdLgYWd3D8hw7Lm6CkvH/wXivwmZ
+	ixge9o0ccfmpRJ2qRWsgpGk7ZpVi/iV62xo1BaSv8jHE5mk7SsHgYsrLNV4pgay44HZNqZZ
+	ruXt4NIcMDfbcwdj5YUHikLwe9WQGooC2BeI3PLbRySx9RqvXz2xy3OfY1vojH1rnk3D5pz
+	X26V1jmjpWoC0CuyvJVqemMl9IBVXzPdeCbjHJi36WVLqAI51T88mJMzdP/oqoIELTOqqYL
+	pQI6nzktTTpMce/FMg
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-On Mar 12, 2026, at 03:08, Ravi Singh <ravising@redhat.com> wrote:
->=20
-> Default quota limits are stored on the ID 0 dquot record and are
-> applied by the kernel to all users who have no explicit limits set.
-> However, check_quotactl_permission() only allows unprivileged users to
-> query their own user or group quota via Q_GETQUOTA/Q_XGETQUOTA.  This
-> means unprivileged users cannot discover what default limits apply to
-> them.
->=20
-> Allow any user to query ID 0's quota via Q_GETQUOTA/Q_XGETQUOTA.
-> Note that this does expose ID 0's usage counters and timers in
-> addition to the default limits. This enables userspace tools like
-> xfs_quota to fetch default limits and display them to unprivileged
-> users.
+xchk_quota_item can return early after calling xchk_fblock_process_error.
+When that helper returns false, the function returned immediately without
+dropping dq->q_qlock, which can leave the dquot lock held and risk lock
+leaks or deadlocks in later quota operations.
 
-Showing the root user's quota usage may be confusing for the regular
-user.  It seems better to filter out the quota usage in this case and
-only expose the limits?
+Fix this by unlocking dq->q_qlock before the early return.
 
-Alternately, should users without an explicit quota limit have the
-default limits merged into their returned values, rather than them
-needing to query id=3D0 separately for the limits?
+Signed-off-by: hongao <hongao@uniontech.com>
 
-Cheers, Andreas
->=20
-> This change does not affect Q_XGETNEXTQUOTA, Q_SETQLIM, or any other
-> quota command -- those still require CAP_SYS_ADMIN.
->=20
-> Signed-off-by: Ravi Singh <ravising@redhat.com>
-> ---
-> fs/quota/quota.c | 3 +++
-> 1 file changed, 3 insertions(+)
->=20
-> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> index 33bacd707..8b21f3c1b 100644
-> --- a/fs/quota/quota.c
-> +++ b/fs/quota/quota.c
-> @@ -42,6 +42,9 @@ static int check_quotactl_permission(struct =
-super_block *sb, int type, int cmd,
-> if ((type =3D=3D USRQUOTA && uid_eq(current_euid(), =
-make_kuid(current_user_ns(), id))) ||
->    (type =3D=3D GRPQUOTA && in_egroup_p(make_kgid(current_user_ns(), =
-id))))
-> break;
-> + /* Allow unprivileged read of ID 0 (default quota limits) */
-> + if (id =3D=3D 0)
-> + break;
-> fallthrough;
-> default:
-> if (!capable(CAP_SYS_ADMIN))
-> --=20
-> 2.49.0
->=20
->=20
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 1d25bd5b892e..222812fe202c 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -171,8 +171,10 @@ xchk_quota_item(
+ 
+ 	error = xchk_quota_item_bmap(sc, dq, offset);
+ 	xchk_iunlock(sc, XFS_ILOCK_SHARED);
+-	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, offset, &error))
++	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, offset, &error)) {
++		mutex_unlock(&dq->q_qlock);
+ 		return error;
++	}
+ 
+ 	/*
+ 	 * Warn if the hard limits are larger than the fs.
+-- 
+2.51.0
 
