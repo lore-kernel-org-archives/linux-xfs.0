@@ -1,50 +1,50 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA16538D69B
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09A3484A35
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773306503; cv=none; b=kdiJZCLPYwfCENSlFApY7q57mTa5HR4nq46fvJrEtBL9IJNzVIEEeQiOBMhjDjDCJRYFQJqH2aKsTTg+lWUYLFCAa1xMgPz6V+OSUdXqRGmePHOTgXJIHNFPo5njtNU2nLhktCaizZwFzBJhXv/CF5ROCU+VQgWyZg7+80Q908o=
+	t=1773306506; cv=none; b=b/nDutrYn3+08ZXPkKm6bD+niaMQTEYgzwa39+W4Z7eYuWRo6fBpEmcqdFzhN2nqghedhL94vUJ+ZRC2+iQUY7N5qdh/ENkYIJxxvxvM2TpT9GyRqmqhNObAUPtl2itvnChBviz3ddOvMjrvHnq2sHRrpnJjAp7UeRnqOr8jGFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773306503; c=relaxed/simple;
-	bh=I/Z9LRO27Gr4arhzcNcGEMbDACO+7Ne2sGpTirGqjTM=;
+	s=arc-20240116; t=1773306506; c=relaxed/simple;
+	bh=cxq+96DcK5Y09iAVcf4m6wU1jysvTWFdlQzugZ3ld8w=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a1nHjKwi2zjsfTvjJxjIB1+zzPkAcFPu2WVyZdeyyaoMeN/WyHaj5p4RqTbCeNQd8jS4axCtgZnHCZNvgjwxnYYiewLIrIfKHdHMMUBwZdd0DZtp8T1a6JHtntcbLiNeLehL5fxxnw+gZZijOYFRUqzCCQhKYy6gcOmhb0ziH5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=CJ9gmjQx; arc=none smtp.client-ip=113.46.200.219
+	 MIME-Version:Content-Type; b=FWpZr+DnCS/AfMOWzfVnbR8zUBWzSZXvfEGvJi0VjXe7h+viM2T8FqqEkPWyVybOg4OZaeMZD3LyPKCaVR+O+et7DFRY8coleZ1FcKN8uLLKJCjpLgOxRobuMf9hFKFLxTOIf748XTnbyJsD3s6nz34O+wjPQQyAqG5VO0RKCYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Jg71CKB8; arc=none smtp.client-ip=113.46.200.218
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="CJ9gmjQx"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Jg71CKB8"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=A/tp1SjtdgE8/7kMKQ5rdCpJEhU528SF5PqEBpSjyfo=;
-	b=CJ9gmjQx1uzt+11+f6m47CYyxYDPTZULhrvngCTPYpB2YEmM03+EjOPBLFw8+PJzBrgWPeSlu
-	ZB+jgYiKb8Uxo/TLH7tXMfcsR7jDb/5bsoae2QeuerkTfnLAnxRJ/zW3A+UF65hRVlDt/5jhIps
-	/T16+oAi/6DLPSps0316wyA=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4fWhVL0Ys1z1prLv;
-	Thu, 12 Mar 2026 17:03:22 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 4BCB7404AD;
-	Thu, 12 Mar 2026 17:08:20 +0800 (CST)
+	bh=l+PXrVhkhvr3YF9pJKf479edZlG4CWlWbIB6BH+l81Q=;
+	b=Jg71CKB8eWm5yrt0uw4idHHFrZ7wskBo8CNG2KhN55G5Q66LppnSRv2HWtiBAlhkhYpkt3LMD
+	+qvznj2zCFcdtbglvhJuVbci24blhp+KJb8iLKDyl/lMEjYIX2MZgaYxQzC761BUAvoCfrAfliH
+	mY1syJOfj0HzeGTbx2DWG/s=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4fWhV53cs8zpSt7;
+	Thu, 12 Mar 2026 17:03:09 +0800 (CST)
+Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id BFFE22025F;
+	Thu, 12 Mar 2026 17:08:22 +0800 (CST)
 Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 12 Mar 2026 17:08:20 +0800
+ 15.2.1544.11; Thu, 12 Mar 2026 17:08:19 +0800
 Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
  (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 12 Mar
- 2026 17:08:19 +0800
+ 2026 17:08:18 +0800
 From: Long Li <leo.lilong@huawei.com>
 To: <djwong@kernel.org>, <cem@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
 	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
 	<lonuxli.64@gmail.com>
-Subject: [PATCH v2 4/4] xfs: close crash window in attr dabtree inactivation
-Date: Thu, 12 Mar 2026 16:58:00 +0800
-Message-ID: <20260312085800.1213919-5-leo.lilong@huawei.com>
+Subject: [PATCH v2 3/4] xfs: factor out xfs_attr3_leaf_init
+Date: Thu, 12 Mar 2026 16:57:59 +0800
+Message-ID: <20260312085800.1213919-4-leo.lilong@huawei.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20260312085800.1213919-1-leo.lilong@huawei.com>
 References: <20260312085800.1213919-1-leo.lilong@huawei.com>
@@ -59,247 +59,62 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
  kwepemn100013.china.huawei.com (7.202.194.116)
 
-When inactivating an inode with node-format extended attributes,
-xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
-xfs_trans_binval(), but intentionally does not remove the corresponding
-entries from their parent node blocks.  The implicit assumption is that
-xfs_attr_inactive() will truncate the entire attr fork to zero extents
-afterwards, so log recovery will never reach the root node and follow
-those stale pointers.
+Factor out wrapper xfs_attr3_leaf_init function, which exported for
+external use.
 
-However, if a log shutdown occurs after the leaf/node block cancellations
-commit but before the attr bmap truncation commits, this assumption
-breaks.  Recovery replays the attr bmap intact (the inode still has
-attr fork extents), but suppresses replay of all cancelled leaf/node
-blocks, maybe leaving them as stale data on disk.  On the next mount,
-xlog_recover_process_iunlinks() retries inactivation and attempts to
-read the root node via the attr bmap. If the root node was not replayed,
-reading the unreplayed root block triggers a metadata verification
-failure immediately; if it was replayed, following its child pointers
-to unreplayed child blocks triggers the same failure:
-
- XFS (pmem0): Metadata corruption detected at
- xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
- XFS (pmem0): Unmount and run xfs_repair
- XFS (pmem0): First 128 bytes of corrupted metadata buffer:
- 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
- XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
-
-Fix this in two places:
-
-In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
-child block, immediately remove the entry that references it from the
-parent node in the same transaction.  This eliminates the window where
-the parent holds a pointer to a cancelled block.  Once all children are
-removed, the now-empty root node is converted to a leaf block within the
-same transaction. This node-to-leaf conversion is necessary for crash
-safety. If the system shutdown after the empty node is written to the
-log but before the second-phase bmap truncation commits, log recovery
-will attempt to verify the root block on disk. xfs_da3_node_verify()
-does not permit a node block with count == 0; such a block will fail
-verification and trigger a metadata corruption shutdown. on the other
-hand, leaf blocks are allowed to have this transient state.
-
-In xfs_attr_inactive(), split the attr fork truncation into two explicit
-phases.  First, truncate all extents beyond the root block (the child
-extents whose parent references have already been removed above).
-Second, invalidate the root block and truncate the attr bmap to zero in
-a single transaction.  The two operations in the second phase must be
-atomic: as long as the attr bmap has any non-zero length, recovery can
-follow it to the root block, so the root block invalidation must commit
-together with the bmap-to-zero truncation.
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: <stable@vger.kernel.org>
 Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
- fs/xfs/xfs_attr_inactive.c | 93 ++++++++++++++++++++++----------------
- 1 file changed, 53 insertions(+), 40 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 22 ++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.h |  3 +++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 92331991f9fd..235f19a68fa2 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -140,7 +140,7 @@ xfs_attr3_node_inactive(
- 	xfs_daddr_t		parent_blkno, child_blkno;
- 	struct xfs_buf		*child_bp;
- 	struct xfs_da3_icnode_hdr ichdr;
--	int			error, i;
-+	int			error;
- 
- 	/*
- 	 * Since this code is recursive (gasp!) we must protect ourselves.
-@@ -152,7 +152,7 @@ xfs_attr3_node_inactive(
- 		return -EFSCORRUPTED;
- 	}
- 
--	xfs_da3_node_hdr_from_disk(dp->i_mount, &ichdr, bp->b_addr);
-+	xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
- 	parent_blkno = xfs_buf_daddr(bp);
- 	if (!ichdr.count) {
- 		xfs_trans_brelse(*trans, bp);
-@@ -167,7 +167,7 @@ xfs_attr3_node_inactive(
- 	 * over the leaves removing all of them.  If this is higher up
- 	 * in the tree, recurse downward.
- 	 */
--	for (i = 0; i < ichdr.count; i++) {
-+	while (ichdr.count > 0) {
- 		/*
- 		 * Read the subsidiary block to see what we have to work with.
- 		 * Don't do this in a transaction.  This is a depth-first
-@@ -218,29 +218,32 @@ xfs_attr3_node_inactive(
- 		xfs_trans_binval(*trans, child_bp);
- 		child_bp = NULL;
- 
--		/*
--		 * If we're not done, re-read the parent to get the next
--		 * child block number.
--		 */
--		if (i + 1 < ichdr.count) {
--			struct xfs_da3_icnode_hdr phdr;
-+		error = xfs_da3_node_read_mapped(*trans, dp,
-+				parent_blkno, &bp, XFS_ATTR_FORK);
-+		if (error)
-+			return error;
- 
--			error = xfs_da3_node_read_mapped(*trans, dp,
--					parent_blkno, &bp, XFS_ATTR_FORK);
-+		/*
-+		 * Remove entry from parent node, prevents being indexed to.
-+		 */
-+		xfs_attr3_node_entry_remove(*trans, dp, bp, 0);
-+
-+		xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
-+		bp = NULL;
-+
-+		if (ichdr.count > 0) {
-+			/*
-+			 * If we're not done, get the next child block number.
-+			 */
-+			child_fsb = be32_to_cpu(ichdr.btree[0].before);
-+
-+			/*
-+			 * Atomically commit the whole invalidate stuff.
-+			 */
-+			error = xfs_trans_roll_inode(trans, dp);
- 			if (error)
- 				return error;
--			xfs_da3_node_hdr_from_disk(dp->i_mount, &phdr,
--						  bp->b_addr);
--			child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
--			xfs_trans_brelse(*trans, bp);
--			bp = NULL;
- 		}
--		/*
--		 * Atomically commit the whole invalidate stuff.
--		 */
--		error = xfs_trans_roll_inode(trans, dp);
--		if (error)
--			return  error;
- 	}
- 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 47f48ae555c0..96a65141e812 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1415,6 +1415,28 @@ xfs_attr3_leaf_create(
  	return 0;
-@@ -257,10 +260,8 @@ xfs_attr3_root_inactive(
- 	struct xfs_trans	**trans,
- 	struct xfs_inode	*dp)
- {
--	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_da_blkinfo	*info;
- 	struct xfs_buf		*bp;
--	xfs_daddr_t		blkno;
- 	int			error;
- 
- 	/*
-@@ -272,7 +273,6 @@ xfs_attr3_root_inactive(
- 	error = xfs_da3_node_read(*trans, dp, 0, &bp, XFS_ATTR_FORK);
- 	if (error)
- 		return error;
--	blkno = xfs_buf_daddr(bp);
- 
- 	/*
- 	 * Invalidate the tree, even if the "tree" is only a single leaf block.
-@@ -283,6 +283,16 @@ xfs_attr3_root_inactive(
- 	case cpu_to_be16(XFS_DA_NODE_MAGIC):
- 	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
- 		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Empty root node block are not allowed, convert it to leaf.
-+		 */
-+		error = xfs_attr3_leaf_init(*trans, dp, 0);
-+		if (error)
-+			return error;
-+		error = xfs_trans_roll_inode(trans, dp);
- 		break;
- 	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
- 	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-@@ -295,21 +305,6 @@ xfs_attr3_root_inactive(
- 		xfs_trans_brelse(*trans, bp);
- 		break;
- 	}
--	if (error)
--		return error;
--
--	/*
--	 * Invalidate the incore copy of the root block.
--	 */
--	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp, blkno,
--			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0, &bp);
--	if (error)
--		return error;
--	xfs_trans_binval(*trans, bp);	/* remove from cache */
--	/*
--	 * Commit the invalidate and start the next transaction.
--	 */
--	error = xfs_trans_roll_inode(trans, dp);
- 
- 	return error;
  }
-@@ -328,6 +323,7 @@ xfs_attr_inactive(
- {
- 	struct xfs_trans	*trans;
- 	struct xfs_mount	*mp;
-+	struct xfs_buf          *bp;
- 	int			lock_mode = XFS_ILOCK_SHARED;
- 	int			error = 0;
  
-@@ -363,10 +359,27 @@ xfs_attr_inactive(
- 	 * removal below.
- 	 */
- 	if (dp->i_af.if_nextents > 0) {
-+		/*
-+		 * Invalidate and truncate all blocks but leave the root block.
-+		 */
- 		error = xfs_attr3_root_inactive(&trans, dp);
- 		if (error)
- 			goto out_cancel;
- 
-+		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK,
-+				XFS_FSB_TO_B(mp, mp->m_attr_geo->fsbcount));
-+		if (error)
-+			goto out_cancel;
++/*
++ * Create and initialize an empty attr leaf block at blkno, and attach the
++ * buffer to tp.
++ */
++int
++xfs_attr3_leaf_init(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		blkno)
++{
++	struct xfs_buf		*bp = NULL;
++	struct xfs_da_args	args = {
++		.trans		= tp,
++		.dp		= dp,
++		.owner		= dp->i_ino,
++		.geo		= dp->i_mount->m_attr_geo,
++	};
 +
-+		/*
-+		 * Invalidate and truncate the root block and ensure that the
-+		 * operation is completed within a single transaction.
-+		 */
-+		error = xfs_da_get_buf(trans, dp, 0, &bp, XFS_ATTR_FORK);
-+		if (error)
-+			goto out_cancel;
++	ASSERT(tp != NULL);
 +
-+		xfs_trans_binval(trans, bp);
- 		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
- 		if (error)
- 			goto out_cancel;
++	return xfs_attr3_leaf_create(&args, blkno, &bp);
++}
+ /*
+  * Split the leaf node, rebalance, then add the new entry.
+  *
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index aca46da2bc50..72639efe6ac3 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -87,6 +87,9 @@ int	xfs_attr3_leaf_list_int(struct xfs_buf *bp,
+ /*
+  * Routines used for shrinking the Btree.
+  */
++
++int	xfs_attr3_leaf_init(struct xfs_trans *tp, struct xfs_inode *dp,
++				xfs_dablk_t blkno);
+ int	xfs_attr3_leaf_toosmall(struct xfs_da_state *state, int *retval);
+ void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
+ 				       struct xfs_da_state_blk *drop_blk,
 -- 
 2.39.2
 
