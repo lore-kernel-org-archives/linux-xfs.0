@@ -1,50 +1,89 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3587A84A35
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 828C038B7BA
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773306503; cv=none; b=PMIHWr5AYASEeAIwZDlcXsSrxjwYQCpY7CjaBP6VNbIL/7KLPkQLx4sMPatUbbIp3adFgISJ52AuMM/4VKGblMWjLAE7ZBx8duJbrTqx5x23xh3cka4/DYrLeXmKw69V73TRVtvxwDOsWtBEy8j85Z9B86PQ2TDUPUDYoAIgcRs=
+	t=1773306503; cv=none; b=WcbAu7ldRz42qN5k1Dss/K1t2JoYtpzCNVQcDeC5LikyG1Brd23c4rqhxkKRc88ClB9HfeYk4u3xsN5KUdwBGWhaDSzsYRh7eiACAGjcYKrIV9h9SyIcxBHqMHv9LTirDVbNzBTv1hY+kYi5DIBcqMKnytZcR4an/prF3X9E11Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773306503; c=relaxed/simple;
-	bh=/o+z23G8DZuKuPhhvPUXwOlG2O0f5zV3bAFIYsgjIAQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ozk+1wXf//UcuOQak++KvZ2tZd5SqaI45tCGq9dRa523VM1BV7ocAGCHnWwiR9j5+NXtnR3AURnRMuP2jER6L8xOAHGhvUO5ZAphJ9A/gX3t9xxjAtxaDqrrtHEIDbPs8svIzJV8AQPAvuMMQu+1pzF2/960z+7YmDaUPVZofio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=R4HVbBll; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	bh=684ISgQ8smHUyEZZTzGZngt64u/D6u1pEXkFQoQVAfo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SfpyYFT9aovU/k3butchP8Q+DP6vcKWB+tYHG5PLWWT7jYtuFlFtbvq0W7QTCXniaCdVQVM99ZQYlgFTMN4pcXxJGR0KDrv1MUmpLoPmUzh4evkCFehbzrjzpd/a7576OnTP6n/tafhH1tQdFRgHkiC9+yzhNp9M/E3k/5r9JZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gM9oRoxE; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=iuIV5lZ6; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="R4HVbBll"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=XwZMMDPwnDZf/jJBAQwve1J44wAYEwlYCEWimpDa8WQ=;
-	b=R4HVbBllxv+85ARo61tPLYXbFTvALgzh30JXJQ+ZBQWwKennLWxdxVyt5CUY4rh72fVjMgDrU
-	MySwF82orc+B6NCBNDPn9yU5rTbftu9hNp3GCym0sB9nwoKJEbSVTq2xkfCSLIL3fP03eOz+ZG/
-	sC66bLajaVUd9ADJbz8AqUo=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4fWhVH3fSkz1prLv;
-	Thu, 12 Mar 2026 17:03:19 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id B4EE6404AD;
-	Thu, 12 Mar 2026 17:08:17 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 12 Mar 2026 17:08:17 +0800
-Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 12 Mar
- 2026 17:08:16 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH v2 0/4] xfs: close crash window in attr dabtree inactivation
-Date: Thu, 12 Mar 2026 16:57:56 +0800
-Message-ID: <20260312085800.1213919-1-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gM9oRoxE";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="iuIV5lZ6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773306501;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
+	b=gM9oRoxEuebKbTwId4c8gQjK9n0IBIVTyBeZEkZLEcnZPdy2bET6HskVOBiB4cauaz8Q2N
+	x/KgObpRa+e5Z1CnGafa/EJIr+eOxDgOnnWMImjg8+aywY9434k74Auy9saj1UYj+RZBma
+	5h8P4oL4gTXEL0CmW7wbGKELXT9hSAo=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-67-7kwwYZpVNKu98XuGXE1OLg-1; Thu, 12 Mar 2026 05:08:19 -0400
+X-MC-Unique: 7kwwYZpVNKu98XuGXE1OLg-1
+X-Mimecast-MFC-AGG-ID: 7kwwYZpVNKu98XuGXE1OLg_1773306498
+Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-899edf01747so8899996d6.2
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 02:08:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1773306498; x=1773911298; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
+        b=iuIV5lZ6ddw7IuVSOgb6x6rFNYZrf7nWtNk2eeG09YAEv2qbBDbITPyHMm6WU6D+FM
+         Hr4RpbpIHf970d5IKFuChIIBqoFRmohkA01+7mUlEGhJuCNA4qLT8BAuFseWWM9DkRM2
+         ixj+5Bs0z54NenkQFjKwBBHXErta1LtF+7wB7HZkUz6PpCLGiYJYZL26bY12unCQKbA6
+         /F+m7mfWBvuJmQyeqgIouYV36m9irl8HAvj+7h2h8xLNfUeusdSGW4kq6J1VlbdV2Ut5
+         06TVYt4G+KWVPFEcBzbtisS84GDnJtNUtSjoVbsK4EXjRoSv1HOkTdNmLvsWnVrEzRr6
+         JfZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773306498; x=1773911298;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
+        b=PaYi7l+Adfk2kRsWltJ1jt0SIdTg0Q84kOXLBMHsoY4CL5WNdPCDRl+tBNBxB68C21
+         nEa4ev+nN0CFGMbqMYBhiMePObJBYUijLE4nv7dIzdXEIWFSWAMavy8YOewKpWIuVvyR
+         pi6OVwlE3C3t1zNDmJrveEgzYSpvG8KOltOe3gX8DCjRYsvMvidQ6Tz2G9Rdr3EW/0UK
+         tO+MdeHUpaVQUC5ACVsHtHMedu2XRgAJ0zlP9M5A/flY0ZG8NpxU28AxwYf0jTwRdniO
+         u6mloWtOx5nq82ZqVrX+sguF3IMljR5dyjc/l2VnMTcdu3pLbtTOHPC3KcQTnjmM6Xs1
+         vV/g==
+X-Gm-Message-State: AOJu0YwGH5SsBF+mJ2jeglC18ycVKZWFc10wmRT3No8ZYR5Zsf50+Mnc
+	Q+NiNYdp7Pf7jfBAwOVJAtw53kWBidiBQHmOc5WRj7rzcAWXKwHJVKnFjXyJJzb5kewGrcS6xwd
+	UN/OcnRrAiREXJVnh53keaYgjRcMN/bMJW4FDi2UNBHumkZkpuitMtjteJinKDLFQKdT73CgU4e
+	I/6DFTmbJCSJuLzX92hAYpZbCmxQr+8oIbD+qUOjCTVr2WaQER
+X-Gm-Gg: ATEYQzz3nJErBnDQtF0ee5ZHmIakAFZDuKqqrG+RciHFpQJTbWqadTIuULTNjU8q5bb
+	iRSSsmUXzQH2azXBD7AiJjXhlO4BeHxfam5j4EXzyKkCi/t81vn6FaWVBoq8saK/Dx7es1b5Vr2
+	lrpbaIq2hXwbHOLX/ov7kSTgU8dgVD/lvmleiWcKdNYrDXyGKramszCbTktnNOXg6vmBOXmnvVS
+	mKjVAuA5NyyXPV7ZdsXDpILp2CSq6GnQe+N07BlTIePmacJjTSw1K8g19XwaItUHDlECBL66ITP
+	x//hULBNa3TO46vtzrCe73KZgpmOTeBvx8ftL8zOBwkxSOkrHZfVtbGi1hZeyGNpnpfw5yYfmAi
+	Muca2cVIBvw6yhd6w
+X-Received: by 2002:ad4:5ec6:0:b0:899:e8b8:8744 with SMTP id 6a1803df08f44-89a66adcc90mr72412236d6.57.1773306498085;
+        Thu, 12 Mar 2026 02:08:18 -0700 (PDT)
+X-Received: by 2002:ad4:5ec6:0:b0:899:e8b8:8744 with SMTP id 6a1803df08f44-89a66adcc90mr72411796d6.57.1773306497533;
+        Thu, 12 Mar 2026 02:08:17 -0700 (PDT)
+Received: from fedora.. ([66.187.232.140])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65cffbdesm30780086d6.41.2026.03.12.02.08.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2026 02:08:17 -0700 (PDT)
+From: Ravi Singh <ravising@redhat.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com,
+	cem@kernel.org,
+	dgc@kernel.org
+Subject: [RFC PATCH] quota: allow unprivileged users to query ID 0 default limits
+Date: Thu, 12 Mar 2026 17:08:10 +0800
+Message-ID: <20260312090810.1145908-1-ravising@redhat.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,82 +91,42 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemn100013.china.huawei.com (7.202.194.116)
 
-Problem
--------
+Default quota limits are stored on the ID 0 dquot record and are
+applied by the kernel to all users who have no explicit limits set.
+However, check_quotactl_permission() only allows unprivileged users to
+query their own user or group quota via Q_GETQUOTA/Q_XGETQUOTA.  This
+means unprivileged users cannot discover what default limits apply to
+them.
 
-xfs_attr3_node_inactive() cancels all child blocks in the attr dabtree
-via xfs_trans_binval(), relying on a subsequent full attr bmap truncation
-in xfs_attr_inactive() to ensure log recovery never reaches the root
-node.  The child block cancellations and the bmap truncation are
-committed in separate transactions, creating a narrow but real crash
-window.
+Allow any user to query ID 0's quota via Q_GETQUOTA/Q_XGETQUOTA.
+Note that this does expose ID 0's usage counters and timers in
+addition to the default limits. This enables userspace tools like
+xfs_quota to fetch default limits and display them to unprivileged
+users.
 
-If the system shuts down after the cancellations commit but before the
-bmap truncation commits, the attr bmap survives recovery intact and
-xlog_recover_process_iunlinks() retries inactivation.  It attempts to
-read the root node via the attr bmap: if the root node was not replayed,
-reading the unreplayed root block maybe triggers a metadata verification
-failure immediately; if it was replayed, following its child pointers to
-unreplayed child blocks triggers the same failure.
+This change does not affect Q_XGETNEXTQUOTA, Q_SETQLIM, or any other
+quota command -- those still require CAP_SYS_ADMIN.
 
-Zhang Yi previously attempted to solve this problem [1], but Dave gave
-different advice. Following the approach suggested by Dave Chinner in
-review.
-
-[1] https://patchwork.kernel.org/project/xfs/patch/20230613030434.2944173-3-yi.zhang@huaweicloud.com/
-
-Fix
+Signed-off-by: Ravi Singh <ravising@redhat.com>
 ---
+ fs/quota/quota.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-The fix addresses the atomicity gap at two levels:
-
-(1) In xfs_attr3_node_inactive(), each child block invalidation and the
-    removal of its reference from the parent node are placed in the same
-    transaction, so no parent node ever holds a pointer to a cancelled
-    block at any crash point.  After all children are removed, the empty
-    root node is converted to an empty leaf in the same transaction.
-    This conversion is necessary because xfs_da3_node_verify() rejects
-    a node block with count == 0, whereas xfs_attr3_leaf_verify()
-    explicitly allows it during recovery to accommodate the transient
-    state from the shortform-to-leaf promotion path.
-
-(2) In xfs_attr_inactive(), the attr fork is truncated in two phases.
-    First the child extents are removed.  Then the root block is
-    invalidated and the attr bmap is truncated to zero in a single
-    transaction.  These two operations in the second phase must be
-    atomic: as long as the attr bmap has any non-zero length, recovery
-    can follow it to the root block, so the root block invalidation must
-    commit together with the bmap-to-zero truncation.
-
-
-Changes
--------
-
-v1->v2:
- 1) Rename xfs_da3_node_entry_remove to xfs_attr3_node_entry_remove.
- 2) Initializing the structure value when declaring a structure in a function.
- 3) An assertion is added to xfs_attr3_leaf_init to check whether tp is not null.
- 4) Fixed syntax style issues.
-
-
-Long Li (4):
-  xfs: only assert new size for datafork during truncate extents
-  xfs: factor out xfs_attr3_node_entry_remove
-  xfs: factor out xfs_attr3_leaf_init
-  xfs: close crash window in attr dabtree inactivation
-
- fs/xfs/libxfs/xfs_attr_leaf.c | 22 +++++++++
- fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++
- fs/xfs/libxfs/xfs_da_btree.c  | 54 +++++++++++++++-----
- fs/xfs/libxfs/xfs_da_btree.h  |  2 +
- fs/xfs/xfs_attr_inactive.c    | 93 ++++++++++++++++++++---------------
- fs/xfs/xfs_inode.c            |  3 +-
- 6 files changed, 125 insertions(+), 52 deletions(-)
-
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 33bacd707..8b21f3c1b 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -42,6 +42,9 @@ static int check_quotactl_permission(struct super_block *sb, int type, int cmd,
+ 		if ((type == USRQUOTA && uid_eq(current_euid(), make_kuid(current_user_ns(), id))) ||
+ 		    (type == GRPQUOTA && in_egroup_p(make_kgid(current_user_ns(), id))))
+ 			break;
++		 /* Allow unprivileged read of ID 0 (default quota limits) */
++		if (id == 0)
++			break;
+ 		fallthrough;
+ 	default:
+ 		if (!capable(CAP_SYS_ADMIN))
 -- 
-2.39.2
+2.49.0
 
