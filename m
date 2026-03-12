@@ -1,109 +1,91 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 906E237F00B;
-	Thu, 12 Mar 2026 07:25:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F9B34B661
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:37:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773300313; cv=none; b=mtmX+JiqtLMf+ZPR/jqK8fICLUrMvmZ/xQaVGbwaC3K4UC5MMKZtX+1wnIewSKsmXpEV83MyZaAy3eUbnnEKE9EyLz1jSh9O3qwZpA28N5aG4iFiUCOTJVfP6O/3Pz4XWwVmfFY6uwShStT1zU3P5eLwf2WzbgF8qI2ww52RIWM=
+	t=1773304637; cv=none; b=UJJCRlNn04fWyIsjAB28b6tavOP1mhRwQhLu0X4nCbyJbbI3T5N2ooVc+fy7oLNE8FcGyYdsGOOwh3+XE/xFt8i0JFM8Wq4YR4qPfM4Q9fuuLiI5K7+sspLs3WTCc2JYYr97D79UknuzVweO7G+hkaIO51sdvZS0szyd2mrtIls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773300313; c=relaxed/simple;
-	bh=YqJI3ZKHcmMDUHXUkAmA2+28Na5c6ZdPLLxnw6GNcIk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ApXjC857PpqRux5TgW8DXmCPMLrWKEylHzfqE4VzRYg1AVjJJ/5q2VmAdSb3p2UpJ4YjF5eHmcf+wt2GZS20gPBaHqtlMk0kob934Zdxixn60zxN+PiBb7KXIeTC01n1Ct0I79g+TyROeCT9TtVgwV86kXoVr12Fz02sCk+8E8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=VObwK2p0; arc=none smtp.client-ip=54.92.39.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1773304637; c=relaxed/simple;
+	bh=UvQZqj/T7F/eRO8zpDsAPTLIr2VnRqyjpe0Zw/RSyN4=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=CwpZpeAhSlTD0KIinT2wV4rBvZk2wV5bXGdDNopnR1Kf+wBAZ3HWRwWJ0yaX00JodZ1a7MzC5KAuxZCa1M7J9CK9TjPLciPwVyiaJHGlxwUHjzMX7bsuUW4OMjCPQRk8ZcTe/ox/ve0XB61YQ8Av0h8PChpmMivH9G5pNAL8+fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q3FIND4y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="VObwK2p0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1773300173;
-	bh=uE1qAgtDAGSa1NPskOkVNYL2f9OL7kBhgBuoDsOfrRk=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=VObwK2p0kZlUuiig85oR2uO/Gj+cBBFQposJb4uc2T5iHiY+RZar1Xw7MYA5JBd54
-	 W5YP8iIA7EvsMy4ctop1F6tC7Tlq6gFG5nfhK5TeterTM28ci8r5klC9vZrUCZ1Z0S
-	 Jz02aQ/OvleZYyRtuyV5nUPvs9khzgJ5+48QMPcY=
-X-QQ-mid: zesmtpip3t1773300147tc9ef238a
-X-QQ-Originating-IP: QDhBwvxszLKHKKGxKLU8mWe9rf+MrZWkRmN9//j+Gi8=
-Received: from uos-PC ( [localhost])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 12 Mar 2026 15:22:25 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 10054979261313954186
-EX-QQ-RecipientCnt: 9
-From: Morduan Zang <zhangdandan@uniontech.com>
-To: cem@kernel.org
-Cc: zhanjun@uniontech.com,
-	hch@lst.de,
-	dchinner@redhat.com,
-	stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Morduan Zang <zhangdandan@uniontech.com>,
-	syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com
-Subject: [PATCH] xfs: use GFP_NOFS in __xfs_trans_alloc
-Date: Thu, 12 Mar 2026 15:22:14 +0800
-Message-ID: <24B50BB66059E3C8+20260312072214.475115-1-zhangdandan@uniontech.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q3FIND4y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 796B1C4CEF7
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:37:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773304637;
+	bh=UvQZqj/T7F/eRO8zpDsAPTLIr2VnRqyjpe0Zw/RSyN4=;
+	h=Date:From:To:Subject:From;
+	b=Q3FIND4y8tVqqIT58lwIsASuTO/tHQQXbcSRNEZ5g/TLXVaamCM6UVRapce8E3yej
+	 uQFJRVRSuiC2ejOtbv1gqACnLwi1yUAVYvISB6rwsq10jj9Gma6nQ+36MvXGZlzDQu
+	 Q1eoRqiuiiBjP3x9Il4cLkUd7k5gAdO07qXMjTkkUVXx4W0yfKQb20TOQAgktslbcV
+	 otNas8JJsswsvimVVOLUrwefX46jpdTozPwgKNYB256qoeaUW9thSZpc8Lk15PHWDi
+	 OsAJN56OwtmITVaFQ245J/tDzMrdGru4EjtgaaCkcgU6aWu2P0XYf1wQP+ae+Ei5fL
+	 51dBHBgbrFeAA==
+Date: Thu, 12 Mar 2026 09:37:13 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to f8544b654f22
+Message-ID: <abJ7AAHxksEKOltq@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpip:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
-X-QQ-XMAILINFO: NuZvjORXcxgLFndWgHwWwMYYXa0pACmFx/XmdfELtY/1tCUOb3kBVkw8
-	XAYA/YosconkoYbVW7I0TMoCNmqlgMGmlxr/ExDSo2j+RxB9sEBxj77PXlFVzSVff9TtzEm
-	/beGyx8MvVT1lne71h+OkQDEOPP/z3hId2fbI7THKIfl5ZN4F6HzkPixJ+jrbMpe5i4tA0U
-	3gNtfSefI1M+liYy0NsqIEi1DFOMpzsDR9NIaj+nYe09cwL+2mRN7EmNTYr5sCjTY7xOZOE
-	CBLP248qdewZi4kP+0PvdLYlCIw31I0+0KUkLDVlXxuVw41FW6jHPEQCWNgK3J/mZetnEue
-	Qq1LPteh3LD8fdwXdhqym2ld40jhZoRTfPiAyF9M65IALR9nUl2uwMcZLFq4RRtzWpGau+y
-	l7JZev9sjPG0XS2ANZdM5TelcnTESPuXuU2TezJuCzRX3bFQkegxz1EPOdsdjpH4EseI2rK
-	Oy3a9wrE6Bugpja9TtAlUn+yDtFKOfT8jT8V9CRsiD6OtZJ0ETT70Xe0k/q4zVQWikprxfK
-	tSlTuPkMd5nh1wp+XWf3swsEsyIsoLieRjxWJez83UcLakLjiUsJqndU2VxnaKibUGLiAJ5
-	U1YZKn6oUrwQVYQZ7kQcwjpWuRYkAnH5alZoURP6kh8cVkDQm9qpKHb98x9owgbdBNZQS2Q
-	u1PIUXWKn3Trtfcv2tlOiGuc11RWa/PYSifCycTcLtLnbZqajdm+r5G+Ug3qaPPYbT8wvlL
-	eh662o7rlcWsOqUg/DXkj/Iiejw1cqhiCl8NexrcCXLu9kGK/vJ81D1KnNNiIYZl1tvxToY
-	nWp5goLMVt5ZIQtQ0b220PbcpY8UC6Jp4/XNFxY/hzSfW6+kqXdNDqaTa1FsjymdAD1dFb6
-	UjGczN6/TkmeYQazUmP+vY9aYxHFC79Xzae6MZXoBqAjgfsc9Jvlu2JyKM0Xaf35F/yrWNH
-	6QDxdYucMTWKJsKVyuWacE68wcviBI7t5QjlzgC/Hr8VtucRBhRJmJRy049EhUYzGiaccN0
-	eNfuK47TBaF+p476kOGYYcAX7nRQjIs9+FcSF5leiGnrmKkeH/qEiB3vHFVnw=
-X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-__xfs_trans_alloc() allocates the transaction structure before
-xfs_trans_set_context() establishes the nofs context. If memory reclaim
-enters XFS through xfs_vn_sync_lazytime(), this GFP_KERNEL allocation can
-trigger a warning from the reclaim path.
 
-Use GFP_NOFS for the transaction allocation to avoid filesystem reclaim
-recursion before the nofs context is set.
+Hi folks,
 
-Link: https://syzkaller.appspot.com/bug?extid=d78ace33ad4ee69329d5
-Fixes: 83a80e95e797 ("xfs: decouple xfs_trans_alloc_empty from xfs_trans_alloc")
-Reported-by: syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com
+The for-next branch of the xfs-linux repository at:
 
-Signed-off-by: Zhan Jun <zhanjun@uniontech.com>
-Signed-off-by: Morduan Zang <zhangdandan@uniontech.com>
----
- fs/xfs/xfs_trans.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index bcc470f56e46..0d347cff7317 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -217,7 +217,7 @@ __xfs_trans_alloc(
- 
- 	ASSERT(!(flags & XFS_TRANS_RES_FDBLKS) || xfs_has_lazysbcount(mp));
- 
--	tp = kmem_cache_zalloc(xfs_trans_cache, GFP_KERNEL | __GFP_NOFAIL);
-+	tp = kmem_cache_zalloc(xfs_trans_cache, GFP_NOFS | __GFP_NOFAIL);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_start_intwrite(mp->m_super);
- 	xfs_trans_set_context(tp);
--- 
-2.50.1
+has just been updated.
 
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+f8544b654f22 Merge branch 'xfs-7.1-merge' into for-next
+
+10 new commits:
+
+Carlos Maiolino (5):
+      [db8367f63b30] xfs: factor out isize updates from xfs_dio_write_end_io
+      [02a5d8993b09] xfs: factor out xfs_dio_write_zoned_end_io
+      [3bdc20b005c2] xfs: factor out xfs_zone_inc_written
+      [54514abb9891] xfs: opencode xfs_zone_record_blocks
+      [f8544b654f22] Merge branch 'xfs-7.1-merge' into for-next
+
+Darrick J. Wong (1):
+      [52a8a1ba883d] xfs: fix undersized l_iclog_roundoff values
+
+Long Li (3):
+      [f1d77b863b41] xfs: remove redundant set null for ip->i_itemp
+      [186ac39b8a7d] xfs: ensure dquot item is deleted from AIL only after log shutdown
+      [362c49098086] xfs: fix integer overflow in bmap intent sort comparator
+
+Wilfred Mallawa (1):
+      [c6ce65cb17aa] xfs: add write pointer to xfs_rtgroup_geometry
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_fs.h  |  5 ++-
+ fs/xfs/xfs_bmap_item.c  |  2 +-
+ fs/xfs/xfs_dquot.c      |  8 ++++-
+ fs/xfs/xfs_file.c       | 95 +++++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_icache.c     |  1 -
+ fs/xfs/xfs_ioctl.c      | 19 ++++++++++
+ fs/xfs/xfs_log.c        |  2 ++
+ fs/xfs/xfs_zone_alloc.c | 32 +++++++----------
+ 8 files changed, 115 insertions(+), 49 deletions(-)
