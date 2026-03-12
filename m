@@ -1,89 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 828C038B7BA
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA16538D69B
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 09:08:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773306503; cv=none; b=WcbAu7ldRz42qN5k1Dss/K1t2JoYtpzCNVQcDeC5LikyG1Brd23c4rqhxkKRc88ClB9HfeYk4u3xsN5KUdwBGWhaDSzsYRh7eiACAGjcYKrIV9h9SyIcxBHqMHv9LTirDVbNzBTv1hY+kYi5DIBcqMKnytZcR4an/prF3X9E11Y=
+	t=1773306503; cv=none; b=kdiJZCLPYwfCENSlFApY7q57mTa5HR4nq46fvJrEtBL9IJNzVIEEeQiOBMhjDjDCJRYFQJqH2aKsTTg+lWUYLFCAa1xMgPz6V+OSUdXqRGmePHOTgXJIHNFPo5njtNU2nLhktCaizZwFzBJhXv/CF5ROCU+VQgWyZg7+80Q908o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773306503; c=relaxed/simple;
-	bh=684ISgQ8smHUyEZZTzGZngt64u/D6u1pEXkFQoQVAfo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SfpyYFT9aovU/k3butchP8Q+DP6vcKWB+tYHG5PLWWT7jYtuFlFtbvq0W7QTCXniaCdVQVM99ZQYlgFTMN4pcXxJGR0KDrv1MUmpLoPmUzh4evkCFehbzrjzpd/a7576OnTP6n/tafhH1tQdFRgHkiC9+yzhNp9M/E3k/5r9JZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gM9oRoxE; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=iuIV5lZ6; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	bh=I/Z9LRO27Gr4arhzcNcGEMbDACO+7Ne2sGpTirGqjTM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=a1nHjKwi2zjsfTvjJxjIB1+zzPkAcFPu2WVyZdeyyaoMeN/WyHaj5p4RqTbCeNQd8jS4axCtgZnHCZNvgjwxnYYiewLIrIfKHdHMMUBwZdd0DZtp8T1a6JHtntcbLiNeLehL5fxxnw+gZZijOYFRUqzCCQhKYy6gcOmhb0ziH5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=CJ9gmjQx; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gM9oRoxE";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="iuIV5lZ6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773306501;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
-	b=gM9oRoxEuebKbTwId4c8gQjK9n0IBIVTyBeZEkZLEcnZPdy2bET6HskVOBiB4cauaz8Q2N
-	x/KgObpRa+e5Z1CnGafa/EJIr+eOxDgOnnWMImjg8+aywY9434k74Auy9saj1UYj+RZBma
-	5h8P4oL4gTXEL0CmW7wbGKELXT9hSAo=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-67-7kwwYZpVNKu98XuGXE1OLg-1; Thu, 12 Mar 2026 05:08:19 -0400
-X-MC-Unique: 7kwwYZpVNKu98XuGXE1OLg-1
-X-Mimecast-MFC-AGG-ID: 7kwwYZpVNKu98XuGXE1OLg_1773306498
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-899edf01747so8899996d6.2
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 02:08:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773306498; x=1773911298; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
-        b=iuIV5lZ6ddw7IuVSOgb6x6rFNYZrf7nWtNk2eeG09YAEv2qbBDbITPyHMm6WU6D+FM
-         Hr4RpbpIHf970d5IKFuChIIBqoFRmohkA01+7mUlEGhJuCNA4qLT8BAuFseWWM9DkRM2
-         ixj+5Bs0z54NenkQFjKwBBHXErta1LtF+7wB7HZkUz6PpCLGiYJYZL26bY12unCQKbA6
-         /F+m7mfWBvuJmQyeqgIouYV36m9irl8HAvj+7h2h8xLNfUeusdSGW4kq6J1VlbdV2Ut5
-         06TVYt4G+KWVPFEcBzbtisS84GDnJtNUtSjoVbsK4EXjRoSv1HOkTdNmLvsWnVrEzRr6
-         JfZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773306498; x=1773911298;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eYKj8TYhZs/mWZdGVkKQ790hFLSyw65FsP7IykSGsaI=;
-        b=PaYi7l+Adfk2kRsWltJ1jt0SIdTg0Q84kOXLBMHsoY4CL5WNdPCDRl+tBNBxB68C21
-         nEa4ev+nN0CFGMbqMYBhiMePObJBYUijLE4nv7dIzdXEIWFSWAMavy8YOewKpWIuVvyR
-         pi6OVwlE3C3t1zNDmJrveEgzYSpvG8KOltOe3gX8DCjRYsvMvidQ6Tz2G9Rdr3EW/0UK
-         tO+MdeHUpaVQUC5ACVsHtHMedu2XRgAJ0zlP9M5A/flY0ZG8NpxU28AxwYf0jTwRdniO
-         u6mloWtOx5nq82ZqVrX+sguF3IMljR5dyjc/l2VnMTcdu3pLbtTOHPC3KcQTnjmM6Xs1
-         vV/g==
-X-Gm-Message-State: AOJu0YwGH5SsBF+mJ2jeglC18ycVKZWFc10wmRT3No8ZYR5Zsf50+Mnc
-	Q+NiNYdp7Pf7jfBAwOVJAtw53kWBidiBQHmOc5WRj7rzcAWXKwHJVKnFjXyJJzb5kewGrcS6xwd
-	UN/OcnRrAiREXJVnh53keaYgjRcMN/bMJW4FDi2UNBHumkZkpuitMtjteJinKDLFQKdT73CgU4e
-	I/6DFTmbJCSJuLzX92hAYpZbCmxQr+8oIbD+qUOjCTVr2WaQER
-X-Gm-Gg: ATEYQzz3nJErBnDQtF0ee5ZHmIakAFZDuKqqrG+RciHFpQJTbWqadTIuULTNjU8q5bb
-	iRSSsmUXzQH2azXBD7AiJjXhlO4BeHxfam5j4EXzyKkCi/t81vn6FaWVBoq8saK/Dx7es1b5Vr2
-	lrpbaIq2hXwbHOLX/ov7kSTgU8dgVD/lvmleiWcKdNYrDXyGKramszCbTktnNOXg6vmBOXmnvVS
-	mKjVAuA5NyyXPV7ZdsXDpILp2CSq6GnQe+N07BlTIePmacJjTSw1K8g19XwaItUHDlECBL66ITP
-	x//hULBNa3TO46vtzrCe73KZgpmOTeBvx8ftL8zOBwkxSOkrHZfVtbGi1hZeyGNpnpfw5yYfmAi
-	Muca2cVIBvw6yhd6w
-X-Received: by 2002:ad4:5ec6:0:b0:899:e8b8:8744 with SMTP id 6a1803df08f44-89a66adcc90mr72412236d6.57.1773306498085;
-        Thu, 12 Mar 2026 02:08:18 -0700 (PDT)
-X-Received: by 2002:ad4:5ec6:0:b0:899:e8b8:8744 with SMTP id 6a1803df08f44-89a66adcc90mr72411796d6.57.1773306497533;
-        Thu, 12 Mar 2026 02:08:17 -0700 (PDT)
-Received: from fedora.. ([66.187.232.140])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65cffbdesm30780086d6.41.2026.03.12.02.08.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Mar 2026 02:08:17 -0700 (PDT)
-From: Ravi Singh <ravising@redhat.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com,
-	cem@kernel.org,
-	dgc@kernel.org
-Subject: [RFC PATCH] quota: allow unprivileged users to query ID 0 default limits
-Date: Thu, 12 Mar 2026 17:08:10 +0800
-Message-ID: <20260312090810.1145908-1-ravising@redhat.com>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="CJ9gmjQx"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=A/tp1SjtdgE8/7kMKQ5rdCpJEhU528SF5PqEBpSjyfo=;
+	b=CJ9gmjQx1uzt+11+f6m47CYyxYDPTZULhrvngCTPYpB2YEmM03+EjOPBLFw8+PJzBrgWPeSlu
+	ZB+jgYiKb8Uxo/TLH7tXMfcsR7jDb/5bsoae2QeuerkTfnLAnxRJ/zW3A+UF65hRVlDt/5jhIps
+	/T16+oAi/6DLPSps0316wyA=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4fWhVL0Ys1z1prLv;
+	Thu, 12 Mar 2026 17:03:22 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id 4BCB7404AD;
+	Thu, 12 Mar 2026 17:08:20 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 12 Mar 2026 17:08:20 +0800
+Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 12 Mar
+ 2026 17:08:19 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH v2 4/4] xfs: close crash window in attr dabtree inactivation
+Date: Thu, 12 Mar 2026 16:58:00 +0800
+Message-ID: <20260312085800.1213919-5-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20260312085800.1213919-1-leo.lilong@huawei.com>
+References: <20260312085800.1213919-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -91,42 +55,251 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-Default quota limits are stored on the ID 0 dquot record and are
-applied by the kernel to all users who have no explicit limits set.
-However, check_quotactl_permission() only allows unprivileged users to
-query their own user or group quota via Q_GETQUOTA/Q_XGETQUOTA.  This
-means unprivileged users cannot discover what default limits apply to
-them.
+When inactivating an inode with node-format extended attributes,
+xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
+xfs_trans_binval(), but intentionally does not remove the corresponding
+entries from their parent node blocks.  The implicit assumption is that
+xfs_attr_inactive() will truncate the entire attr fork to zero extents
+afterwards, so log recovery will never reach the root node and follow
+those stale pointers.
 
-Allow any user to query ID 0's quota via Q_GETQUOTA/Q_XGETQUOTA.
-Note that this does expose ID 0's usage counters and timers in
-addition to the default limits. This enables userspace tools like
-xfs_quota to fetch default limits and display them to unprivileged
-users.
+However, if a log shutdown occurs after the leaf/node block cancellations
+commit but before the attr bmap truncation commits, this assumption
+breaks.  Recovery replays the attr bmap intact (the inode still has
+attr fork extents), but suppresses replay of all cancelled leaf/node
+blocks, maybe leaving them as stale data on disk.  On the next mount,
+xlog_recover_process_iunlinks() retries inactivation and attempts to
+read the root node via the attr bmap. If the root node was not replayed,
+reading the unreplayed root block triggers a metadata verification
+failure immediately; if it was replayed, following its child pointers
+to unreplayed child blocks triggers the same failure:
 
-This change does not affect Q_XGETNEXTQUOTA, Q_SETQLIM, or any other
-quota command -- those still require CAP_SYS_ADMIN.
+ XFS (pmem0): Metadata corruption detected at
+ xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
+ XFS (pmem0): Unmount and run xfs_repair
+ XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+ 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+ XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
 
-Signed-off-by: Ravi Singh <ravising@redhat.com>
+Fix this in two places:
+
+In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
+child block, immediately remove the entry that references it from the
+parent node in the same transaction.  This eliminates the window where
+the parent holds a pointer to a cancelled block.  Once all children are
+removed, the now-empty root node is converted to a leaf block within the
+same transaction. This node-to-leaf conversion is necessary for crash
+safety. If the system shutdown after the empty node is written to the
+log but before the second-phase bmap truncation commits, log recovery
+will attempt to verify the root block on disk. xfs_da3_node_verify()
+does not permit a node block with count == 0; such a block will fail
+verification and trigger a metadata corruption shutdown. on the other
+hand, leaf blocks are allowed to have this transient state.
+
+In xfs_attr_inactive(), split the attr fork truncation into two explicit
+phases.  First, truncate all extents beyond the root block (the child
+extents whose parent references have already been removed above).
+Second, invalidate the root block and truncate the attr bmap to zero in
+a single transaction.  The two operations in the second phase must be
+atomic: as long as the attr bmap has any non-zero length, recovery can
+follow it to the root block, so the root block invalidation must commit
+together with the bmap-to-zero truncation.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
- fs/quota/quota.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/xfs_attr_inactive.c | 93 ++++++++++++++++++++++----------------
+ 1 file changed, 53 insertions(+), 40 deletions(-)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 33bacd707..8b21f3c1b 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -42,6 +42,9 @@ static int check_quotactl_permission(struct super_block *sb, int type, int cmd,
- 		if ((type == USRQUOTA && uid_eq(current_euid(), make_kuid(current_user_ns(), id))) ||
- 		    (type == GRPQUOTA && in_egroup_p(make_kgid(current_user_ns(), id))))
- 			break;
-+		 /* Allow unprivileged read of ID 0 (default quota limits) */
-+		if (id == 0)
-+			break;
- 		fallthrough;
- 	default:
- 		if (!capable(CAP_SYS_ADMIN))
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 92331991f9fd..235f19a68fa2 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -140,7 +140,7 @@ xfs_attr3_node_inactive(
+ 	xfs_daddr_t		parent_blkno, child_blkno;
+ 	struct xfs_buf		*child_bp;
+ 	struct xfs_da3_icnode_hdr ichdr;
+-	int			error, i;
++	int			error;
+ 
+ 	/*
+ 	 * Since this code is recursive (gasp!) we must protect ourselves.
+@@ -152,7 +152,7 @@ xfs_attr3_node_inactive(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	xfs_da3_node_hdr_from_disk(dp->i_mount, &ichdr, bp->b_addr);
++	xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
+ 	parent_blkno = xfs_buf_daddr(bp);
+ 	if (!ichdr.count) {
+ 		xfs_trans_brelse(*trans, bp);
+@@ -167,7 +167,7 @@ xfs_attr3_node_inactive(
+ 	 * over the leaves removing all of them.  If this is higher up
+ 	 * in the tree, recurse downward.
+ 	 */
+-	for (i = 0; i < ichdr.count; i++) {
++	while (ichdr.count > 0) {
+ 		/*
+ 		 * Read the subsidiary block to see what we have to work with.
+ 		 * Don't do this in a transaction.  This is a depth-first
+@@ -218,29 +218,32 @@ xfs_attr3_node_inactive(
+ 		xfs_trans_binval(*trans, child_bp);
+ 		child_bp = NULL;
+ 
+-		/*
+-		 * If we're not done, re-read the parent to get the next
+-		 * child block number.
+-		 */
+-		if (i + 1 < ichdr.count) {
+-			struct xfs_da3_icnode_hdr phdr;
++		error = xfs_da3_node_read_mapped(*trans, dp,
++				parent_blkno, &bp, XFS_ATTR_FORK);
++		if (error)
++			return error;
+ 
+-			error = xfs_da3_node_read_mapped(*trans, dp,
+-					parent_blkno, &bp, XFS_ATTR_FORK);
++		/*
++		 * Remove entry from parent node, prevents being indexed to.
++		 */
++		xfs_attr3_node_entry_remove(*trans, dp, bp, 0);
++
++		xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
++		bp = NULL;
++
++		if (ichdr.count > 0) {
++			/*
++			 * If we're not done, get the next child block number.
++			 */
++			child_fsb = be32_to_cpu(ichdr.btree[0].before);
++
++			/*
++			 * Atomically commit the whole invalidate stuff.
++			 */
++			error = xfs_trans_roll_inode(trans, dp);
+ 			if (error)
+ 				return error;
+-			xfs_da3_node_hdr_from_disk(dp->i_mount, &phdr,
+-						  bp->b_addr);
+-			child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
+-			xfs_trans_brelse(*trans, bp);
+-			bp = NULL;
+ 		}
+-		/*
+-		 * Atomically commit the whole invalidate stuff.
+-		 */
+-		error = xfs_trans_roll_inode(trans, dp);
+-		if (error)
+-			return  error;
+ 	}
+ 
+ 	return 0;
+@@ -257,10 +260,8 @@ xfs_attr3_root_inactive(
+ 	struct xfs_trans	**trans,
+ 	struct xfs_inode	*dp)
+ {
+-	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_da_blkinfo	*info;
+ 	struct xfs_buf		*bp;
+-	xfs_daddr_t		blkno;
+ 	int			error;
+ 
+ 	/*
+@@ -272,7 +273,6 @@ xfs_attr3_root_inactive(
+ 	error = xfs_da3_node_read(*trans, dp, 0, &bp, XFS_ATTR_FORK);
+ 	if (error)
+ 		return error;
+-	blkno = xfs_buf_daddr(bp);
+ 
+ 	/*
+ 	 * Invalidate the tree, even if the "tree" is only a single leaf block.
+@@ -283,6 +283,16 @@ xfs_attr3_root_inactive(
+ 	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+ 	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+ 		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
++		if (error)
++			return error;
++
++		/*
++		 * Empty root node block are not allowed, convert it to leaf.
++		 */
++		error = xfs_attr3_leaf_init(*trans, dp, 0);
++		if (error)
++			return error;
++		error = xfs_trans_roll_inode(trans, dp);
+ 		break;
+ 	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+ 	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+@@ -295,21 +305,6 @@ xfs_attr3_root_inactive(
+ 		xfs_trans_brelse(*trans, bp);
+ 		break;
+ 	}
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * Invalidate the incore copy of the root block.
+-	 */
+-	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp, blkno,
+-			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0, &bp);
+-	if (error)
+-		return error;
+-	xfs_trans_binval(*trans, bp);	/* remove from cache */
+-	/*
+-	 * Commit the invalidate and start the next transaction.
+-	 */
+-	error = xfs_trans_roll_inode(trans, dp);
+ 
+ 	return error;
+ }
+@@ -328,6 +323,7 @@ xfs_attr_inactive(
+ {
+ 	struct xfs_trans	*trans;
+ 	struct xfs_mount	*mp;
++	struct xfs_buf          *bp;
+ 	int			lock_mode = XFS_ILOCK_SHARED;
+ 	int			error = 0;
+ 
+@@ -363,10 +359,27 @@ xfs_attr_inactive(
+ 	 * removal below.
+ 	 */
+ 	if (dp->i_af.if_nextents > 0) {
++		/*
++		 * Invalidate and truncate all blocks but leave the root block.
++		 */
+ 		error = xfs_attr3_root_inactive(&trans, dp);
+ 		if (error)
+ 			goto out_cancel;
+ 
++		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK,
++				XFS_FSB_TO_B(mp, mp->m_attr_geo->fsbcount));
++		if (error)
++			goto out_cancel;
++
++		/*
++		 * Invalidate and truncate the root block and ensure that the
++		 * operation is completed within a single transaction.
++		 */
++		error = xfs_da_get_buf(trans, dp, 0, &bp, XFS_ATTR_FORK);
++		if (error)
++			goto out_cancel;
++
++		xfs_trans_binval(trans, bp);
+ 		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+ 		if (error)
+ 			goto out_cancel;
 -- 
-2.49.0
+2.39.2
 
