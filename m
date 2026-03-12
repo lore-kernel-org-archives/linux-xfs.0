@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5763370D48
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 14:19:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2AC22820C6;
+	Thu, 12 Mar 2026 14:21:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773325184; cv=none; b=YZEPThIpiiHZmj+Tt8UK8kipPvuosglkm84l31EZTT9JhP1TSLBi6yEHHtZ60S3Mt4fvOcH/7KGl1FkP/8haYFdeLCm7acfg47kJHG5jjt12QKZ3FvB2H+vlQZqfIdNwlGvsLy+GovRlBgnSgwjJZ4T5/7C5+XP59N4NTeYXRxg=
+	t=1773325291; cv=none; b=f9LP1jvuU+M+KeiMUJUXbSOVfWQrOrZfGwgWJTWMiHGWOsUMZsI+SDmRgHgu+/NpPi0N2VX9G/u+MgNhiOXxQRgC1vGpL2e/900ukZVIiC4OluoSavMIEmsn5uTw7Y1L6HkYErUO3IYknlAw0wuPD/VkOgThVz3fdJ0JfjCqDag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773325184; c=relaxed/simple;
-	bh=b1f2tBl2YI2oB1m2BEW5Sk+6/4IcrZj9kY0zJ4VKP2M=;
+	s=arc-20240116; t=1773325291; c=relaxed/simple;
+	bh=tMccCel+Z5i138C1lPY8yH3cbuhu4niRgkjvCwVuQLI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WpYkpNw+WwBq5mj+q/SbH2gvj5qgD7PYJthBQi7YJ7gFKE+aZ/vkCyNohFVknMf2QK187udWU0tbnLlr9QRxzW8EkS4ZpnrDL8k3AfMLQEiruHZWcpEJjWEuRgTccxtL5WEkGbSoo7G0/pefccJXegadW5rO8w4D3kXKQAugHPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPRLya3F; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=khulOCAeqcihPWZ+DcmgFSZhEr3x15hcXib+SH0Cp4w2d3x7BnMQhARoPfzDRThauemdwVhWouk9Au7LKD3miu+aWRbubZVZ0TwW1HlzwPt7yPc3GC2jsmRWUJwMS9f5d1t4DxwPxVshuSxe2S4pItJ0OTNaoIJ1uO+Rc9AntTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vOiKDNqn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPRLya3F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66BE1C4CEF7;
-	Thu, 12 Mar 2026 14:19:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vOiKDNqn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BF31C4CEF7;
+	Thu, 12 Mar 2026 14:21:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773325184;
-	bh=b1f2tBl2YI2oB1m2BEW5Sk+6/4IcrZj9kY0zJ4VKP2M=;
+	s=k20201202; t=1773325291;
+	bh=tMccCel+Z5i138C1lPY8yH3cbuhu4niRgkjvCwVuQLI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VPRLya3Fek8RIN7y+RRLeaHKNy06ZwsNmKdRSGJZIqmQRsgGYoFqDvovM7DLWgnZd
-	 q5GaRtL+rseFE95nYeiv9fpfZQwccZ57WoRC9EHoZ85sz3gM0Q9nUq0JlE2AmTiKaB
-	 UMSEfmQrh3skhv+xFtVwxEJRMwLwh1lreb2qzxq7ix0n5WvIFmpWOwyL++14UI6xFW
-	 YoGR7DSTO8YqU3A1Dr/rm946gTLef3gBBlWrLYtreKpwR2OJa7Zgbud8t0fpuT0r0R
-	 jygtmDh4lqT4QYIZuFsgY8nXKE5bDvsGIDtkdE1cOF1R2OZu3pbvmPEHrrSfU3t+k3
-	 SlRq9XKVItwjA==
-Date: Thu, 12 Mar 2026 07:19:43 -0700
+	b=vOiKDNqnKD7iNNTG2MFsx4SzYAkB8ETw/KopJM2wiBgQY3K4Twmtce6goeX4KF+z3
+	 JJg7Qp1pSPAvWWlY986yD9Oh6HI9kjnRIsJoIChVozH9LiXS7H/oqSCfwfOMU+A/LY
+	 hb6rZcVAJWS1xmsTrndV7hGoOqikttDsl+mNwq05NnGN58osQMqYfdYP1ZWg79AqGL
+	 fPQozWwBDuoaAJvf2T/ddZ7fz+PcTozsNlAvQkPm2Sztp67caqyXm2XiuWept5SOA2
+	 Dosl76FzvLhQwEQv0nueRHD+iZZEPsmy0SjKgeNX0gPLBmrvf2g0M2g5Ujp4lT08lL
+	 dHKoVb3U0PwbQ==
+Date: Thu, 12 Mar 2026 07:21:30 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 19/28] xfs_healer: use statmount to find moved
- filesystems even faster
-Message-ID: <20260312141943.GF1770774@frogsfrogsfrogs>
-References: <177311401331.1183235.13382695982141268952.stgit@frogsfrogsfrogs>
- <177311401806.1183235.3840165745930552108.stgit@frogsfrogsfrogs>
- <aa_kSzpFeT7nuJeW@infradead.org>
- <20260310185622.GT1105363@frogsfrogsfrogs>
- <abJmBzRhCK46DcVk@infradead.org>
+To: zlang@redhat.com, Christoph Hellwig <hch@infradead.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH 15/14] xfs: test xfs_healer can follow private mntns mount
+ moves
+Message-ID: <20260312142130.GG1770774@frogsfrogsfrogs>
+References: <20260310033846.GH1105363@frogsfrogsfrogs>
+ <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,33 +43,163 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <abJmBzRhCK46DcVk@infradead.org>
+In-Reply-To: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
 
-On Thu, Mar 12, 2026 at 12:06:47AM -0700, Christoph Hellwig wrote:
-> On Tue, Mar 10, 2026 at 11:56:22AM -0700, Darrick J. Wong wrote:
-> > Yes we could, though the risk with dropping the previous patch is that
-> > someone could introduce a third-party seccomp policy that forbids
-> > statmount() even on kernels that support it, and then xfs_healer would
-> > just fail if the mount moves.
-> 
-> Trying toi protect against broken third party security policies is
-> impossible.  If people do cargo cult "security" they get what they
-> pay for.
-> 
-> > I'd rather keep the getmntent stuff around since that's the classic way
-> > linux programs (including xfsprogs) have handled scanning the mount
-> > tables.  But if you feel strongly about not having getmntent it's not
-> > hard to pull it out.
-> 
-> I'm not a fan of keeping code around that doesn't really get exercised.
-> Although your next mail suggest we could exercise it, so maybe we just
-> need goot test for both cases.
-> 
-> I still hate the fragility of all this, but I can't immediately thing
-> of a better way.
+From: Darrick J. Wong <djwong@kernel.org>
 
-I'll think about this more today, but my gut feeling is that the
-getmntent patch should stay because it works for both cases.  But let me
-post my new testcase exercising mount --move first.
+Make sure that when xfs_healer needs to reopen a filesystem to repair
+it, it can still find the filesystem even if it has been mount --move'd.
+This requires a bunch of private namespace magic.
 
---D
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ tests/xfs/1904     |  129 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1904.out |    3 +
+ 2 files changed, 132 insertions(+)
+ create mode 100755 tests/xfs/1904
+ create mode 100755 tests/xfs/1904.out
+
+diff --git a/tests/xfs/1904 b/tests/xfs/1904
+new file mode 100755
+index 00000000000000..78e8f5dcb0e834
+--- /dev/null
++++ b/tests/xfs/1904
+@@ -0,0 +1,129 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2026 Oracle.  All Rights Reserved.
++#
++# FS QA Test 1904
++#
++# Ensure that autonomous self healing fixes the filesystem correctly even if
++# the original mount has moved somewhere else via --move.
++#
++. ./common/preamble
++_begin_fstest auto selfhealing
++
++. ./common/filter
++. ./common/fuzzy
++. ./common/systemd
++
++if [ -n "$IN_MOUNTNS" ]; then
++	_mount --make-rprivate /
++	findmnt -o TARGET,PROPAGATION >> $seqres.full
++
++	_scratch_mount
++	_scratch_invoke_xfs_healer "$tmp.healer" --repair
++
++	# Move the scratch filesystem to a completely different mountpoint so that
++	# we can test if the healer can find it again.
++	new_dir=$TEST_DIR/moocow
++	mkdir -p $new_dir
++	_mount --move $SCRATCH_MNT $new_dir
++
++	df -t xfs >> $seqres.full
++
++	# Access the broken directory to trigger a repair, then poll the directory
++	# for 5 seconds to see if it gets fixed without us needing to intervene.
++	ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
++	_filter_scratch < $tmp.err | _filter_test_dir
++	try=0
++	while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
++		echo "try $try saw corruption" >> $seqres.full
++		sleep 0.1
++		ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
++		try=$((try + 1))
++	done
++	echo "try $try no longer saw corruption or gave up" >> $seqres.full
++	_filter_scratch < $tmp.err | _filter_test_dir
++
++	# List the dirents of /victimdir to see if it stops reporting corruption
++	ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
++	try=0
++	while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
++		echo "retry $try still saw corruption" >> $seqres.full
++		sleep 0.1
++		ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
++		try=$((try + 1))
++	done
++	echo "retry $try no longer saw corruption or gave up" >> $seqres.full
++
++	new_dir_unmount() {
++		_unmount $new_dir
++	}
++
++	# Unmount to kill the healer
++	_scratch_kill_xfs_healer new_dir_unmount
++	cat $tmp.healer >> $seqres.full
++
++	# No need to clean up, the mount ns destructor will detach the
++	# filesystems for us.
++	exit
++fi
++
++_cleanup()
++{
++	command -v _kill_fsstress &>/dev/null && _kill_fsstress
++	cd /
++	rm -r -f $tmp.*
++	if [ -n "$new_dir" ]; then
++		_unmount "$new_dir" &>/dev/null
++		rm -rf "$new_dir"
++	fi
++}
++
++_require_unshare
++_require_test
++_require_scrub
++_require_xfs_io_command "repair"	# online repair support
++_require_xfs_db_command "blocktrash"
++_require_command "$XFS_HEALER_PROG" "xfs_healer"
++_require_command "$XFS_PROPERTY_PROG" "xfs_property"
++_require_scratch
++
++_scratch_mkfs >> $seqres.full
++_scratch_mount
++
++_xfs_has_feature $SCRATCH_MNT rmapbt || \
++	_notrun "reverse mapping required to test directory auto-repair"
++_xfs_has_feature $SCRATCH_MNT parent || \
++	_notrun "parent pointers required to test directory auto-repair"
++_require_xfs_healer $SCRATCH_MNT --repair
++
++# Configure the filesystem for automatic repair of the filesystem.
++$XFS_PROPERTY_PROG $SCRATCH_MNT set autofsck=repair >> $seqres.full
++
++# Create a largeish directory
++dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
++echo testdata > $SCRATCH_MNT/a
++mkdir -p "$SCRATCH_MNT/some/victimdir"
++for ((i = 0; i < (dblksz / 255); i++)); do
++	fname="$(printf "%0255d" "$i")"
++	ln $SCRATCH_MNT/a $SCRATCH_MNT/some/victimdir/$fname
++done
++
++# Did we get at least two dir blocks?
++dirsize=$(stat -c '%s' $SCRATCH_MNT/some/victimdir)
++test "$dirsize" -gt "$dblksz" || echo "failed to create two-block directory"
++
++# Break the directory, remount filesystem
++_scratch_unmount
++_scratch_xfs_db -x \
++	-c 'path /some/victimdir' \
++	-c 'bmap' \
++	-c 'dblock 1' \
++	-c 'blocktrash -z -0 -o 0 -x 2048 -y 2048 -n 2048' >> $seqres.full
++
++# mount --move only works if mount propagation is disabled, so we have to start
++# a subshell with a separate mount namespace, disable propagation for the
++# entire directory tree, and only then can we run our tests.
++IN_MOUNTNS=1 unshare -m bash "$0"
++
++status=0
++exit
+diff --git a/tests/xfs/1904.out b/tests/xfs/1904.out
+new file mode 100755
+index 00000000000000..34a46298dd439a
+--- /dev/null
++++ b/tests/xfs/1904.out
+@@ -0,0 +1,3 @@
++QA output created by 1904
++QA output created by 1904
++ls: reading directory 'TEST_DIR/moocow/some/victimdir': Structure needs cleaning
