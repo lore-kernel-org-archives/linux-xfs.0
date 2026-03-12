@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E816238757B
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:38:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E1538758A
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:39:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773304740; cv=none; b=elymiuUVBcGI9UGVOZ0inCBRvTCj9yMMfwy/pzNnDqQ5fzwJgoTuEI0ThRWO/sncZBbTZbrVB3VzmScH2U95Mzyt2mScZKnVIWCK0TLHu6hTRO80CVdSFvJM4c5ZYad0i/d3OsvgNsG2fcDrCb5OCEU/45waPFL/NXWyGQRadz8=
+	t=1773304740; cv=none; b=ANDzLXTiIipaAp+8v3CY/KjHMW78pneOGqX6KlAg9BvToYMHyo16umRydBLN7FRKdL4HMtVhzMrxbSx94JtchVSBQdcxtSf4RPfRvCom/Bi9o8CBULk3FMvDQEMzBU2mYRsGftGeSUfYpxFCcZ5K+ahi/5Mx48w9mSbrrhSPCZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773304740; c=relaxed/simple;
-	bh=pRnMpsxfgOixSr+e1LB2zzXo/+IfTKnhwyqZ0BznaxA=;
+	bh=MEblnn+8/8vG474OwcjxDZOjKiheqwpcz+Fbgk5BJpA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=aIS8CvjbRCy5wLamnyNJhGN7rC+VfECKOUBn1TBonG1P3HuvfIUjN6WY25YPJGPN7/yNcaUkUlro77GVeP7lLaplhgdaqACAUmyYofo3CgfRSoroEY6HizCusD4M+z6Y9OoHVGyocUUPBIVitqUhAYd1WgRBOw0foyv5O6Skv0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I267E94C; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=V6dwUF/F2yhUgiZIk0/yYJ8wduEGEyonRwFKEQVCujKHt6j0rwbQ+Jl/GkXrpzF1XWD6+wbiIoDpcVfOQb+XRtRLIXAL07Ihr+ehpfg9ytfSEyWKv8e6gx9Ir7zLSQ+BbYwqLQcZvLj9icaQ2nWiCoNSgkgM0kkXlujnSWNKMUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tXfyVrRW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I267E94C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F541C4CEF7;
-	Thu, 12 Mar 2026 08:38:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tXfyVrRW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6AEAC2BCB2;
+	Thu, 12 Mar 2026 08:38:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773304739;
-	bh=pRnMpsxfgOixSr+e1LB2zzXo/+IfTKnhwyqZ0BznaxA=;
+	s=k20201202; t=1773304740;
+	bh=MEblnn+8/8vG474OwcjxDZOjKiheqwpcz+Fbgk5BJpA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=I267E94Cp0AwulHQzVM+uN1t/yvJqsw4CmIeER9SuEl294YUMrSK0qGWgcDX7tjpN
-	 HeKEqTGXc41FpL9FyZWJc2qOMuefmpQdE81Vpvoq51mOaPEpMy3SG65Z5NfBzoLeVm
-	 ibU8Chzju259oRNabZMTg438PDulhJlhlab4vhTekx4imf0FbZeLS0oX3Lg9EskytE
-	 HxfvaxYvubwtdxfDfD2FFzLTKr19RFTXwQYJFfOTUP86mvmTXLC/P2EcB9dCVWhQuO
-	 8DVmLO16jXs4Yp/mHZr99DPCNXeLc+kI9abeiv1vUHe+6pkYa5SP4qgJuDrhkEAYQV
-	 2Dap9scjZTcbA==
+	b=tXfyVrRWOfYetanozT2ahPyIqiWLNg8ThSiKyNRXVkSOO713yZKi+yPEnU/YYQ68X
+	 HU/pYPGzD04d4prqCaKpvGuHS8TUcublaQYE7Qrs5TD4scOdtv794Px9Gj4HaaYdTG
+	 Awv7I8VBXE0x1vLT76kPsWdX+X2arpUO7Cxvr9G9PF8SW+SCeJV/ArUhL2W3pMf6CV
+	 MFnMZxzLTChzMVdp6aW2t6d5Tm0sWJ1Z+eso15adqB+8HNs+ISMnpQw7N9Sez5iWr/
+	 +RABs3umtjfi1rTV2JwgQ2v/NHtdqsLyc7KWnmS58H5cTf/qdo4xO1B0g5L3RNVJG7
+	 vcssnBFNRsAwg==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Long Li <leo.lilong@huawei.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com, 
- houtao1@huawei.com, yangerkun@huawei.com, lonuxli.64@gmail.com
-In-Reply-To: <20260305084922.800699-1-leo.lilong@huawei.com>
-References: <20260305084922.800699-1-leo.lilong@huawei.com>
-Subject: Re: [PATCH 0/2] xfs: code cleanup and item deletion fix
-Message-Id: <177330473709.21168.10891525491371559552.b4-ty@kernel.org>
-Date: Thu, 12 Mar 2026 09:38:57 +0100
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>
+In-Reply-To: <20260305042620.GC57948@frogsfrogsfrogs>
+References: <20260305042620.GC57948@frogsfrogsfrogs>
+Subject: Re: [PATCH] xfs: fix undersized l_iclog_roundoff values
+Message-Id: <177330473939.21168.5117477787553199516.b4-ty@kernel.org>
+Date: Thu, 12 Mar 2026 09:38:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,25 +44,25 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Thu, 05 Mar 2026 16:49:20 +0800, Long Li wrote:
-> This patch series contains the first two patches from the previously
-> unfinished patch set [1]. I'm resubmitting them separately since patch 2
-> addresses an corner case issue that should be fixed. At the same time, I
-> rewrote the commit message and comments of patch 2.
+On Wed, 04 Mar 2026 20:26:20 -0800, Darrick J. Wong wrote:
+> If the superblock doesn't list a log stripe unit, we set the incore log
+> roundoff value to 512.  This leads to corrupt logs and unmountable
+> filesystems in generic/617 on a disk with 4k physical sectors...
 > 
-> Patch 1 : Simple clean code.
-> Patch 2 : Fixes a issue where the tail LSN was incorrectly moved forward
-> 	  due to improper deletion of log items from the AIL before log
-> 	  shutdown.
+> XFS (sda1): Mounting V5 Filesystem ff3121ca-26e6-4b77-b742-aaff9a449e1c
+> XFS (sda1): Torn write (CRC failure) detected at log block 0x318e. Truncating head block from 0x3197.
+> XFS (sda1): failed to locate log tail
+> XFS (sda1): log mount/recovery failed: error -74
+> XFS (sda1): log mount failed
+> XFS (sda1): Mounting V5 Filesystem ff3121ca-26e6-4b77-b742-aaff9a449e1c
+> XFS (sda1): Ending clean mount
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: remove redundant set null for ip->i_itemp
-      commit: f1d77b863b414586ee45e10d9837c9ab27d8692d
-[2/2] xfs: ensure dquot item is deleted from AIL only after log shutdown
-      commit: 186ac39b8a7d3ec7ce9c5dd45e5c2730177f375c
+[1/1] xfs: fix undersized l_iclog_roundoff values
+      commit: 52a8a1ba883defbfe3200baa22cf4cd21985d51a
 
 Best regards,
 -- 
