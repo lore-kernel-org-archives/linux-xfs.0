@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909CF375F71
-	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:37:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E816238757B
+	for <linux-xfs@vger.kernel.org>; Thu, 12 Mar 2026 08:38:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773304656; cv=none; b=LDna+jLwcoqSi4qdHqZQr4Jr8qgbUk0waMpgTwWXxxTJYtnc/L+4VSOIWiCBDhbLzbcDv4bDwPX5PmyQAIEqRm5/N8RnFoi5XXi8R1+TJ5phWnp6kAfa+xs32mUC8l5iUb8eIe+tpgu2kR48S88wBKR2FdAESrDFfw464CdOihM=
+	t=1773304740; cv=none; b=elymiuUVBcGI9UGVOZ0inCBRvTCj9yMMfwy/pzNnDqQ5fzwJgoTuEI0ThRWO/sncZBbTZbrVB3VzmScH2U95Mzyt2mScZKnVIWCK0TLHu6hTRO80CVdSFvJM4c5ZYad0i/d3OsvgNsG2fcDrCb5OCEU/45waPFL/NXWyGQRadz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773304656; c=relaxed/simple;
-	bh=n22GzCZFdUtGbp91fkPXqX0Y4tqqGSONNXogP3PTSPo=;
+	s=arc-20240116; t=1773304740; c=relaxed/simple;
+	bh=pRnMpsxfgOixSr+e1LB2zzXo/+IfTKnhwyqZ0BznaxA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=GsqL4ZwmOM9lCE+q5G72va7LMDCvlzCBI5Z/HIhVHdHQyocKLPPIPbQEdgPjtt+XWaOvidZcyalIVXUqczvhZWFglATjS7SBMGB0u2nHSPPUH4Cx4BO1ucEF/sNtH79kB6Nte+pACmv01v+Mn92xShbjysaO9/ZLd8/86wOLOqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KyD3gFjD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=aIS8CvjbRCy5wLamnyNJhGN7rC+VfECKOUBn1TBonG1P3HuvfIUjN6WY25YPJGPN7/yNcaUkUlro77GVeP7lLaplhgdaqACAUmyYofo3CgfRSoroEY6HizCusD4M+z6Y9OoHVGyocUUPBIVitqUhAYd1WgRBOw0foyv5O6Skv0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I267E94C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KyD3gFjD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13680C4CEF7;
-	Thu, 12 Mar 2026 08:37:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I267E94C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F541C4CEF7;
+	Thu, 12 Mar 2026 08:38:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773304656;
-	bh=n22GzCZFdUtGbp91fkPXqX0Y4tqqGSONNXogP3PTSPo=;
+	s=k20201202; t=1773304739;
+	bh=pRnMpsxfgOixSr+e1LB2zzXo/+IfTKnhwyqZ0BznaxA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=KyD3gFjD3Y2LHrjBosmYHVANiidiVV74Fc/frtTMGb0K02OHms7QP+lj4DPAUnVoA
-	 OwBdAVqLzoCR88XCD2zCrbYDCcf9gAsUUu8WrEdWoS26aZmem8FJV0AluDQKM3PXvp
-	 jgprRmxi87Ff4LoU8iD8aN9oqMoA3bVrtR3YbOX2QBLVJWhHFOFVb1kF19285j4Pgb
-	 v1fDSiK1w6Pu3HiXHv86keViKowfS98LfKAS6VD44UzbyIGTovozGLK5+MBEfSvtM1
-	 yM+TI3jmC8gb0s9ssLQSIem+adbmyccxlM6dIseo/vaEW75UTS+U2Bxi2KpBgNF+dI
-	 FWTYvIygwdjdg==
+	b=I267E94Cp0AwulHQzVM+uN1t/yvJqsw4CmIeER9SuEl294YUMrSK0qGWgcDX7tjpN
+	 HeKEqTGXc41FpL9FyZWJc2qOMuefmpQdE81Vpvoq51mOaPEpMy3SG65Z5NfBzoLeVm
+	 ibU8Chzju259oRNabZMTg438PDulhJlhlab4vhTekx4imf0FbZeLS0oX3Lg9EskytE
+	 HxfvaxYvubwtdxfDfD2FFzLTKr19RFTXwQYJFfOTUP86mvmTXLC/P2EcB9dCVWhQuO
+	 8DVmLO16jXs4Yp/mHZr99DPCNXeLc+kI9abeiv1vUHe+6pkYa5SP4qgJuDrhkEAYQV
+	 2Dap9scjZTcbA==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, cem@kernel.org
-Cc: hch@lst.de, dlemoal@kernel.org
-In-Reply-To: <20260310173709.457047-1-cem@kernel.org>
-References: <20260310173709.457047-1-cem@kernel.org>
-Subject: Re: [PATCH v2 0/4] Zoned device cleanups
-Message-Id: <177330465478.21069.13072964600496902678.b4-ty@kernel.org>
-Date: Thu, 12 Mar 2026 09:37:34 +0100
+To: djwong@kernel.org, Long Li <leo.lilong@huawei.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, yi.zhang@huawei.com, 
+ houtao1@huawei.com, yangerkun@huawei.com, lonuxli.64@gmail.com
+In-Reply-To: <20260305084922.800699-1-leo.lilong@huawei.com>
+References: <20260305084922.800699-1-leo.lilong@huawei.com>
+Subject: Re: [PATCH 0/2] xfs: code cleanup and item deletion fix
+Message-Id: <177330473709.21168.10891525491371559552.b4-ty@kernel.org>
+Date: Thu, 12 Mar 2026 09:38:57 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,26 +45,25 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Tue, 10 Mar 2026 18:36:45 +0100, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On Thu, 05 Mar 2026 16:49:20 +0800, Long Li wrote:
+> This patch series contains the first two patches from the previously
+> unfinished patch set [1]. I'm resubmitting them separately since patch 2
+> addresses an corner case issue that should be fixed. At the same time, I
+> rewrote the commit message and comments of patch 2.
 > 
-> This is the V2 of this series, which implement changes suggested by
-> Damien and Christoph on the V1.
-> 
-> Only changes are on patches 1 and 2.
+> Patch 1 : Simple clean code.
+> Patch 2 : Fixes a issue where the tail LSN was incorrectly moved forward
+> 	  due to improper deletion of log items from the AIL before log
+> 	  shutdown.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/4] xfs: factor out isize updates from xfs_dio_write_end_io
-      commit: db8367f63b301bbdff6eb00c2e09fad4f2ae75e9
-[2/4] xfs: factor out xfs_dio_write_zoned_end_io
-      commit: 02a5d8993b09fe9a6754e57d0e25399baffe9a06
-[3/4] xfs: factor out xfs_zone_inc_written
-      commit: 3bdc20b005c20ce1bf9b098d1ee2caa1d994141e
-[4/4] xfs: opencode xfs_zone_record_blocks
-      commit: 54514abb9891eb35033608e0fb51809f5a4c07ff
+[1/2] xfs: remove redundant set null for ip->i_itemp
+      commit: f1d77b863b414586ee45e10d9837c9ab27d8692d
+[2/2] xfs: ensure dquot item is deleted from AIL only after log shutdown
+      commit: 186ac39b8a7d3ec7ce9c5dd45e5c2730177f375c
 
 Best regards,
 -- 
