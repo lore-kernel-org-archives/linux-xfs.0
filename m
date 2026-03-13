@@ -1,226 +1,196 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C524C37DE95;
-	Fri, 13 Mar 2026 23:41:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21671383C8E;
+	Fri, 13 Mar 2026 23:45:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773445266; cv=none; b=lKByf1sxEbZ5dTjoWe5U9K44i/LCx02kV6JVL4MDBoHnPkLsMvo1Mpy9GbfAAeu4TbZ6M7olxjNwSfBYb8GVxUn/BpF63/dokW2p2FmqhH9gP245Mt/RB00gEk2200gdEWPOk+9jhrcQjpxulPFr6DGLHDqqw6rPAZ786nhHud0=
+	t=1773445505; cv=none; b=LwjVUCU/T9DEVFMfkHHWCBN35IvfIjYVuRktwHsj7eG/OTxHxBOZGeHKbCciFATXq0BluP8d6kdX9ccItHrIL5wDAGhUWDC4+8dysyw99q5LC8yHZwwNDgWDqe2XeV/gXPyugDh7znmbrs3/Ewsfk+6q573XBrJGko2T2byKVro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773445266; c=relaxed/simple;
-	bh=VtW4pkksUv6dfkxTaTy07edfanCdWpfeCuaSDM6cPg4=;
+	s=arc-20240116; t=1773445505; c=relaxed/simple;
+	bh=eod/zR3rnEhO5dFB+Y3DQS6ZLZHg6M3ReeWt6GwdUBA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=prPx/gwoX02+TOuFRuJAUKlGbqGTd+wqMoOrYntlWY+cKJ+IG/B7SeO0SJvgN5PGKsSprC78wAEJz4yIBiVW0QCQuKZK9nIaNXyXw7bpSeFxmhBSSgkdKkULuKXHCu5IohbKGmP9LAQSUJFTXMqnE6WMQGl4UQwF87O1LQQAyUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZbZuH2Qm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tZ6UqB1+F1QXxnJuh/wNRni5fn7CYplPDeWPuwhmvqDdLJKrTM6rF71KjCZMmAOEQ3CFBkKkQRvn9ILNirjMFt4FGUIgK5cM4GVRXdJKGw32BBPPuFnAxNaAdhaV3d04QHmR6VUDDLgvNDhhK3keBy2H287JIJZXvx6B1mMI470=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LDgo1T5W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZbZuH2Qm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97533C19421;
-	Fri, 13 Mar 2026 23:41:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LDgo1T5W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD27DC19421;
+	Fri, 13 Mar 2026 23:45:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773445266;
-	bh=VtW4pkksUv6dfkxTaTy07edfanCdWpfeCuaSDM6cPg4=;
+	s=k20201202; t=1773445504;
+	bh=eod/zR3rnEhO5dFB+Y3DQS6ZLZHg6M3ReeWt6GwdUBA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZbZuH2QmI8OjEkLm/ryX/kb/IcnTFzuTRHvWx/Qxdz2GxNWF3cKRRBweXAzmkah1D
-	 wHzh8isy6J5uoz3g9SaGisZMVGY7/b3Orzg6KYsZ88lGb/8iEDDGo2Rl79UqA/w1ze
-	 PjaRps/PxI9FOl6W8L1hYObu9r6J26bB5WfCWACcUjVBQYH5q+xpjzpeLmkCi8aqdn
-	 6rCcDfO4AvE7PipmmnZ5ni2PHcUMSp/ra2kG7eRfWiewuirseJ3OO0H/oniq6t4SSh
-	 XVMb+yJtylXoYO3MelWZHSZRVuCw73QZKIIDts7nNrloLEHx+Zz0rsNlAOMigOotCX
-	 YUfqQGPRQdC8w==
-Date: Fri, 13 Mar 2026 16:41:06 -0700
+	b=LDgo1T5W2H7RixfBCZF8LTXSUQT5xBeA3HEWLlHfent5m3kbBqvErPnVIUczzuTkD
+	 d9/tberwjZd0gfPbZf3I2SKRD1eNkbEP2wacis/m4VD5mheljMU5axQOkdOzlk8NJ6
+	 VftY5FtX4xnkbLpeAgqbAQm+f++QbZIVwJpwj4PVmkDVddyMnYS7fhfb12Kr0RNnkl
+	 pqy/AS5brLAsTPIGZ/X09gs0Hnjj3A1CRH7x2ueLddtCYwc1EF52f5hW2mLqPlxET0
+	 Auv1XX5qcbpmNvgNlQNK+cu5fyVUEUwxqEzsQ/2+ajPFYJbY4TJaosm31eyVj5qn6K
+	 UftIruoGnikLA==
+Date: Fri, 13 Mar 2026 16:45:04 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/14] xfs: test xfs_healer can follow private mntns
- mount moves
-Message-ID: <20260313234106.GF6023@frogsfrogsfrogs>
-References: <20260310033846.GH1105363@frogsfrogsfrogs>
- <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
- <20260312142130.GG1770774@frogsfrogsfrogs>
- <20260313200553.xujzlttj66eg7mgm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs/62[3-8]: require XFS_SCRUB_PROG
+Message-ID: <20260313234504.GG6023@frogsfrogsfrogs>
+References: <20260311041443.GC6023@frogsfrogsfrogs>
+ <20260313175529.kdwqkjtpn2fwigrz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260313200553.xujzlttj66eg7mgm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260313175529.kdwqkjtpn2fwigrz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Sat, Mar 14, 2026 at 04:05:53AM +0800, Zorro Lang wrote:
-> On Thu, Mar 12, 2026 at 07:21:30AM -0700, Darrick J. Wong wrote:
+On Sat, Mar 14, 2026 at 01:55:29AM +0800, Zorro Lang wrote:
+> On Tue, Mar 10, 2026 at 09:14:43PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Make sure that when xfs_healer needs to reopen a filesystem to repair
-> > it, it can still find the filesystem even if it has been mount --move'd.
-> > This requires a bunch of private namespace magic.
+> > QA reports that xfs/62[3-8] fail because they didn't install
+> > xfsprogs-xfs_scrub package and this test requires xfs_scrub(8).
+> > Add the missing _require call, and update the README so that anyone
+> > running fstests on RHEL/Fedora actually get all the necessary
+> > components to do a full test of XFS.
 > > 
+> > Cc: <fstests@vger.kernel.org> # v2024.06.27
+> > Fixes: 4de8fd7860a2bb ("scrub: test correction of directory tree corruptions")
 > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > > ---
-> >  tests/xfs/1904     |  129 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/1904.out |    3 +
-> >  2 files changed, 132 insertions(+)
-> >  create mode 100755 tests/xfs/1904
-> >  create mode 100755 tests/xfs/1904.out
+> >  README        |    2 +-
+> >  tests/xfs/623 |    3 +--
+> >  tests/xfs/624 |    3 +--
+> >  tests/xfs/625 |    3 +--
+> >  tests/xfs/626 |    3 +--
+> >  tests/xfs/627 |    3 +--
+> >  tests/xfs/628 |    1 +
+> >  7 files changed, 7 insertions(+), 11 deletions(-)
 > > 
-> > diff --git a/tests/xfs/1904 b/tests/xfs/1904
-> > new file mode 100755
-> > index 00000000000000..78e8f5dcb0e834
-> > --- /dev/null
-> > +++ b/tests/xfs/1904
-> > @@ -0,0 +1,129 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2026 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 1904
-> > +#
-> > +# Ensure that autonomous self healing fixes the filesystem correctly even if
-> > +# the original mount has moved somewhere else via --move.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto selfhealing
-> > +
-> > +. ./common/filter
-> > +. ./common/fuzzy
-> > +. ./common/systemd
-> > +
-> > +if [ -n "$IN_MOUNTNS" ]; then
-> > +	_mount --make-rprivate /
+> > diff --git a/README b/README
+> > index 211e273115f08f..36684cc6572d4b 100644
+> > --- a/README
+> > +++ b/README
+> > @@ -126,7 +126,7 @@ Fedora
+> >     $ sudo yum install acl attr automake bc dbench dump e2fsprogs fio gawk gcc \
+> >          gdbm-devel git indent kernel-devel libacl-devel libaio-devel \
+> >          libcap-devel libtool liburing-devel libuuid-devel lvm2 make psmisc \
+> > -        python3 quota sed sqlite udftools  xfsprogs
+> > +        python3 quota sed sqlite udftools xfsprogs xfsprogs-xfs_scrub
 > 
-> I'd like to add this case and other cases related with mount propagation in this
-> patchset to "mount" group. I'll do it when I merge this patchset. Others look and
-> test good to me,
-
-<nod> That sounds reasonable.  Thanks for all the other minor touch-ups
-that you applied before merging into patches-in-queue!
-
---D
-
+> Sure,
 > 
 > Reviewed-by: Zorro Lang <zlang@redhat.com>
 > 
-> > +	findmnt -o TARGET,PROPAGATION >> $seqres.full
-> > +
-> > +	_scratch_mount
-> > +	_scratch_invoke_xfs_healer "$tmp.healer" --repair
-> > +
-> > +	# Move the scratch filesystem to a completely different mountpoint so that
-> > +	# we can test if the healer can find it again.
-> > +	new_dir=$TEST_DIR/moocow
-> > +	mkdir -p $new_dir
-> > +	_mount --move $SCRATCH_MNT $new_dir
-> > +
-> > +	df -t xfs >> $seqres.full
-> > +
-> > +	# Access the broken directory to trigger a repair, then poll the directory
-> > +	# for 5 seconds to see if it gets fixed without us needing to intervene.
-> > +	ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
-> > +	_filter_scratch < $tmp.err | _filter_test_dir
-> > +	try=0
-> > +	while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
-> > +		echo "try $try saw corruption" >> $seqres.full
-> > +		sleep 0.1
-> > +		ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
-> > +		try=$((try + 1))
-> > +	done
-> > +	echo "try $try no longer saw corruption or gave up" >> $seqres.full
-> > +	_filter_scratch < $tmp.err | _filter_test_dir
-> > +
-> > +	# List the dirents of /victimdir to see if it stops reporting corruption
-> > +	ls $new_dir/some/victimdir > /dev/null 2> $tmp.err
-> > +	try=0
-> > +	while [ $try -lt 50 ] && grep -q 'Structure needs cleaning' $tmp.err; do
-> > +		echo "retry $try still saw corruption" >> $seqres.full
-> > +		sleep 0.1
-> > +		ls $SCRATCH_MNT/some/victimdir > /dev/null 2> $tmp.err
-> > +		try=$((try + 1))
-> > +	done
-> > +	echo "retry $try no longer saw corruption or gave up" >> $seqres.full
-> > +
-> > +	new_dir_unmount() {
-> > +		_unmount $new_dir
-> > +	}
-> > +
-> > +	# Unmount to kill the healer
-> > +	_scratch_kill_xfs_healer new_dir_unmount
-> > +	cat $tmp.healer >> $seqres.full
-> > +
-> > +	# No need to clean up, the mount ns destructor will detach the
-> > +	# filesystems for us.
-> > +	exit
-> > +fi
-> > +
-> > +_cleanup()
-> > +{
-> > +	command -v _kill_fsstress &>/dev/null && _kill_fsstress
-> > +	cd /
-> > +	rm -r -f $tmp.*
-> > +	if [ -n "$new_dir" ]; then
-> > +		_unmount "$new_dir" &>/dev/null
-> > +		rm -rf "$new_dir"
-> > +	fi
-> > +}
-> > +
-> > +_require_unshare
-> > +_require_test
+> I’m thinking we could split this package list into "necessary" dependencies and "optional"
+> ones. The "necessary" dependencies would include all packages required for building and
+> basic execution of xfstests, while missing "optional" dependencies would simply result in
+> certain cases being notrun. Any thoughts on this :)
+
+Hrmm.  Now that I look at README a bit more, we /could/ break things out
+by what you need to run xfstests at all vs. what you need for specific
+filesystems.  For example, xfsprogs-xfs_scrub is really only necessary
+for testing XFS itself, but xfsprogs is needed even if you're testing
+ext4.
+
+Oh.  The RHEL/Centos sections actually do that, and the only difference
+between Fedora and RHEL/Centos seem to be that you have to configure
+EPEL repos for !Fedora.
+
+Those sections really ought to be merged to avoid repetition.  Also I'm
+pretty sure RHEL is supposed to use dnf not yum nowadays.
+
+--D
+
+> Thanks,
+> Zorro
+> 
+> >  
+> >  2. Install packages for the filesystem(s) being tested:
+> >  
+> > diff --git a/tests/xfs/623 b/tests/xfs/623
+> > index aff3f903660fa7..7f79ccbcbf7f14 100755
+> > --- a/tests/xfs/623
+> > +++ b/tests/xfs/623
+> > @@ -16,8 +16,7 @@ _begin_fstest auto online_repair
+> >  . ./common/fuzzy
+> >  . ./common/populate
+> >  
+> > -
+> > -# Modify as appropriate.
 > > +_require_scrub
-> > +_require_xfs_io_command "repair"	# online repair support
-> > +_require_xfs_db_command "blocktrash"
-> > +_require_command "$XFS_HEALER_PROG" "xfs_healer"
-> > +_require_command "$XFS_PROPERTY_PROG" "xfs_property"
-> > +_require_scratch
-> > +
-> > +_scratch_mkfs >> $seqres.full
-> > +_scratch_mount
-> > +
-> > +_xfs_has_feature $SCRATCH_MNT rmapbt || \
-> > +	_notrun "reverse mapping required to test directory auto-repair"
-> > +_xfs_has_feature $SCRATCH_MNT parent || \
-> > +	_notrun "parent pointers required to test directory auto-repair"
-> > +_require_xfs_healer $SCRATCH_MNT --repair
-> > +
-> > +# Configure the filesystem for automatic repair of the filesystem.
-> > +$XFS_PROPERTY_PROG $SCRATCH_MNT set autofsck=repair >> $seqres.full
-> > +
-> > +# Create a largeish directory
-> > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > +echo testdata > $SCRATCH_MNT/a
-> > +mkdir -p "$SCRATCH_MNT/some/victimdir"
-> > +for ((i = 0; i < (dblksz / 255); i++)); do
-> > +	fname="$(printf "%0255d" "$i")"
-> > +	ln $SCRATCH_MNT/a $SCRATCH_MNT/some/victimdir/$fname
-> > +done
-> > +
-> > +# Did we get at least two dir blocks?
-> > +dirsize=$(stat -c '%s' $SCRATCH_MNT/some/victimdir)
-> > +test "$dirsize" -gt "$dblksz" || echo "failed to create two-block directory"
-> > +
-> > +# Break the directory, remount filesystem
-> > +_scratch_unmount
-> > +_scratch_xfs_db -x \
-> > +	-c 'path /some/victimdir' \
-> > +	-c 'bmap' \
-> > +	-c 'dblock 1' \
-> > +	-c 'blocktrash -z -0 -o 0 -x 2048 -y 2048 -n 2048' >> $seqres.full
-> > +
-> > +# mount --move only works if mount propagation is disabled, so we have to start
-> > +# a subshell with a separate mount namespace, disable propagation for the
-> > +# entire directory tree, and only then can we run our tests.
-> > +IN_MOUNTNS=1 unshare -m bash "$0"
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/1904.out b/tests/xfs/1904.out
-> > new file mode 100755
-> > index 00000000000000..34a46298dd439a
-> > --- /dev/null
-> > +++ b/tests/xfs/1904.out
-> > @@ -0,0 +1,3 @@
-> > +QA output created by 1904
-> > +QA output created by 1904
-> > +ls: reading directory 'TEST_DIR/moocow/some/victimdir': Structure needs cleaning
+> >  _require_xfs_db_command "link"
+> >  _require_xfs_db_command "unlink"
+> >  _require_scratch
+> > diff --git a/tests/xfs/624 b/tests/xfs/624
+> > index e63cfcc6e7ba82..09a922c8d18c8a 100755
+> > --- a/tests/xfs/624
+> > +++ b/tests/xfs/624
+> > @@ -16,8 +16,7 @@ _begin_fstest auto online_repair
+> >  . ./common/fuzzy
+> >  . ./common/populate
+> >  
+> > -
+> > -# Modify as appropriate.
+> > +_require_scrub
+> >  _require_xfs_db_command "link"
+> >  _require_xfs_db_command "unlink"
+> >  _require_scratch
+> > diff --git a/tests/xfs/625 b/tests/xfs/625
+> > index 23013f195c9e7f..2654216b67aa11 100755
+> > --- a/tests/xfs/625
+> > +++ b/tests/xfs/625
+> > @@ -16,8 +16,7 @@ _begin_fstest auto online_repair
+> >  . ./common/fuzzy
+> >  . ./common/populate
+> >  
+> > -
+> > -# Modify as appropriate.
+> > +_require_scrub
+> >  _require_xfs_db_command "link"
+> >  _require_xfs_db_command "unlink"
+> >  _require_scratch
+> > diff --git a/tests/xfs/626 b/tests/xfs/626
+> > index c424819cede6e1..3b4cdca4fe4e24 100755
+> > --- a/tests/xfs/626
+> > +++ b/tests/xfs/626
+> > @@ -16,8 +16,7 @@ _begin_fstest auto online_repair
+> >  . ./common/fuzzy
+> >  . ./common/populate
+> >  
+> > -
+> > -# Modify as appropriate.
+> > +_require_scrub
+> >  _require_xfs_db_command "link"
+> >  _require_xfs_db_command "unlink"
+> >  _require_scratch
+> > diff --git a/tests/xfs/627 b/tests/xfs/627
+> > index 411a7603317058..fc54199b4a95de 100755
+> > --- a/tests/xfs/627
+> > +++ b/tests/xfs/627
+> > @@ -16,8 +16,7 @@ _begin_fstest auto online_repair
+> >  . ./common/fuzzy
+> >  . ./common/populate
+> >  
+> > -
+> > -# Modify as appropriate.
+> > +_require_scrub
+> >  _require_xfs_db_command "link"
+> >  _require_xfs_db_command "unlink"
+> >  _require_scratch
+> > diff --git a/tests/xfs/628 b/tests/xfs/628
+> > index c77d67db358983..e003f41999f401 100755
+> > --- a/tests/xfs/628
+> > +++ b/tests/xfs/628
+> > @@ -17,6 +17,7 @@ _begin_fstest scrub fsstress_scrub
+> >  . ./common/inject
+> >  . ./common/xfs
+> >  
+> > +_require_scrub
+> >  _require_scratch
+> >  _require_xfs_stress_scrub
+> >  
 > > 
 > 
 > 
