@@ -1,237 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5AD3A8746
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 14:46:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB6B03A7F74;
+	Fri, 13 Mar 2026 14:55:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773413213; cv=none; b=k1Y4D5TmQJB4vs5QQ4AYyK80gK2AoAvHD1PhuYtvdCsoHpPlf+l4zqiFWmjnqLvOh9p3xl5j9Omoj+7ujsb5TqjSs+itxdb74ix6RZo78w+NhyCIz3dSgW/SHehWm4Ut6uvEivfCE03YqPbQoL35ZPmsnb3G45rUvqDh5UO/W6E=
+	t=1773413752; cv=none; b=LDzjf+LfqH1gOChC7ZrqeoX8ddldpj/u7gy2TmqKlZjOsSWIN1JftEDq7lH3CS8kcWXR6pA9wc+g2niXVoZKpTjyf49MywgtC7qUYo65SLVNNdImk18X+V5Gxd2E4pmll/hZh96LZ+9d9FXQZ/PvHcsQBOrzHAfkd6rd5esMm1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773413213; c=relaxed/simple;
-	bh=/kDCDxgeOYLm/UxTDRQrtDtT3mO8DI8h/wat16QFGa8=;
+	s=arc-20240116; t=1773413752; c=relaxed/simple;
+	bh=1SJdVb46rEOXp0TNCRzNQH20hOu3F1a8jHEpr/61pdg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JDKUQAsZwfxKRgev9IIhUf8+oq1P2b8Z6YAloFcKTpggAY2pHKv6Y0gCUU1ir48yR7jMriOJLMCU/yjuBKVttVG+nTezwtdD7aR5JpoztIge9P2kHffiBLSlLDJc8jeZT4DgbKTYLIalQV980uPuEllH6OrdhxPjkTk9SY69PaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SmjqEjAC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=O7wF6pWkjx8hO36/j38Beivm2HccAJRhszXIHRi7Bb7NK/SIEWToK+tYveWFeyZWdkWFqCyIWH6Umwo+8ZeI69jX6YxyeuNZ1raj+wK2I3bItLAyg91JGRuGe3tWJth5S9iibByenRNbyEnzanDWfOrGwz4iIzwCbQplnEtfRL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=STCiPlE7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SmjqEjAC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B09C7C2BC87;
-	Fri, 13 Mar 2026 14:46:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="STCiPlE7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45E4FC19421;
+	Fri, 13 Mar 2026 14:55:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773413212;
-	bh=/kDCDxgeOYLm/UxTDRQrtDtT3mO8DI8h/wat16QFGa8=;
+	s=k20201202; t=1773413752;
+	bh=1SJdVb46rEOXp0TNCRzNQH20hOu3F1a8jHEpr/61pdg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SmjqEjACajyfjYegwJjt1wFRy+O3b0Yrh1teV2Cz6RwVYuAwLFWz0toY3ulxBC8kB
-	 47QfIMNZkxCFtY9lvOCj6DDSbTrj9LFmjFmzLN7QaZAOEDF9dAwuRsHjKa+JiJeq1g
-	 aYYgtsBBA/DIQ++XmGwqdsrd2TsTZtFsn2ZN2E2PppF0d3GKQSXsGK6wq13MAYF1xh
-	 KT6vn+KXOu+2gYc6C8ludIEvwCVUSisVDUCYXbrtrW3wjE94aVovyNG8CqSBqIoxDA
-	 1vqQmyiRM8zYwJVkeO98GdTBd5X+VDGZh0PHqBdNc+MK89nACpaj9q0etTW5b2I1Uc
-	 rq2b0HKi3vUkg==
-Date: Fri, 13 Mar 2026 07:46:51 -0700
+	b=STCiPlE7YCJ6EP08/0/rI3sm0hiVo8h5O7hPvhYrwE3F9gUgh6x4qYOG+oseUMFcp
+	 0fco+B87d09Raz+TTKdqXsLyYzKcXAdDlu7u6dynGTXapE5MiKaRnCLZNtHfy4iPVf
+	 YrFUa2ViLJHx3lj6THIzfxNRTHyc59xkPpq2G4OYaS7/FpXFsareyepu+TXhtqXV1t
+	 +IWXOamdz1kto1W1vQdKKch43W+DgpLtRQt/JCOlpjqXu2nAG9q2e5bg95X1VbUZkm
+	 zFHSXzhBhfLcoSN9hVcPH55Kp/YFTYgSIxZnb4g0wcPn5Iu25E8YXr01CGvzb/Z3K7
+	 vTjplDCeoUGQQ==
+Date: Fri, 13 Mar 2026 07:55:51 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Long Li <leo.lilong@huawei.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
-	lonuxli.64@gmail.com
-Subject: Re: [PATCH 4/4] xfs: close crash window in attr dabtree inactivation
-Message-ID: <20260313144651.GM1770774@frogsfrogsfrogs>
-References: <20260309082752.2039861-1-leo.lilong@huawei.com>
- <20260309082752.2039861-5-leo.lilong@huawei.com>
- <20260309165933.GK6033@frogsfrogsfrogs>
- <aa_UFVW5bPLk8iBK@localhost.localdomain>
- <20260310144642.GK1105363@frogsfrogsfrogs>
- <abDUvhU9lzT_91VL@localhost.localdomain>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	ebiggers@kernel.org, hch@lst.de, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v4 19/25] xfs: remove unwritten extents after
+ preallocations in fsverity metadata
+Message-ID: <20260313145551.GN1770774@frogsfrogsfrogs>
+References: <20260309192355.176980-1-aalbersh@kernel.org>
+ <20260309192355.176980-20-aalbersh@kernel.org>
+ <20260310012914.GG1105363@frogsfrogsfrogs>
+ <ymisdrze3ohdnxa4inqfwp4riaz4qk5nmtil33adn5ukhngq7v@f3tcv3hbzobz>
+ <20260312145250.GE6069@frogsfrogsfrogs>
+ <dz3va7indkh4to2pingopyndck737qvyxvlfomkqqothzj4pdk@wu26ba5stnf6>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <abDUvhU9lzT_91VL@localhost.localdomain>
+In-Reply-To: <dz3va7indkh4to2pingopyndck737qvyxvlfomkqqothzj4pdk@wu26ba5stnf6>
 
-On Wed, Mar 11, 2026 at 10:34:38AM +0800, Long Li wrote:
-> On Tue, Mar 10, 2026 at 07:46:42AM -0700, Darrick J. Wong wrote:
-> > On Tue, Mar 10, 2026 at 04:19:33PM +0800, Long Li wrote:
-> > > On Mon, Mar 09, 2026 at 09:59:33AM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Mar 09, 2026 at 04:27:52PM +0800, Long Li wrote:
-> > > > > When inactivating an inode with node-format extended attributes,
-> > > > > xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
-> > > > > xfs_trans_binval(), but intentionally does not remove the corresponding
-> > > > > entries from their parent node blocks.  The implicit assumption is that
-> > > > > xfs_attr_inactive() will truncate the entire attr fork to zero extents
-> > > > > afterwards, so log recovery will never reach the root node and follow
-> > > > > those stale pointers.
+On Fri, Mar 13, 2026 at 12:17:15PM +0100, Andrey Albershteyn wrote:
+> On 2026-03-12 07:52:50, Darrick J. Wong wrote:
+> > On Thu, Mar 12, 2026 at 02:50:57PM +0100, Andrey Albershteyn wrote:
+> > > On 2026-03-09 18:29:14, Darrick J. Wong wrote:
+> > > > > XFS preallocates spaces during writes. In normal I/O this space, if
+> > > > > unused, is removed by truncate. For files with fsverity, XFS does not
+> > > > > use truncate as fsverity metadata is stored past EOF.
 > > > > > 
-> > > > > However, if a log shutdown occurs after the child block cancellations
-> > > > > commit but before the attr bmap truncation commits, this assumption
-> > > > > breaks.  Recovery replays the attr bmap intact (the inode still has
-> > > > > attr fork extents), but suppresses replay of all cancelled child
-> > > > > blocks, maybe leaving them as stale data on disk.  On the next mount,
-> > > > > xlog_recover_process_iunlinks() retries inactivation and attempts to
-> > > > > read the root node via the attr bmap. If the root node was not replayed,
-> > > > > reading the unreplayed root block triggers a metadata verification
-> > > > > failure immediately; if it was replayed, following its child pointers
-> > > > > to unreplayed child blocks triggers the same failure:
+> > > > > After we're done with writing fsverity metadata iterate over extents in
+> > > > > that region and remove any unwritten ones. These would be preallocation
+> > > > > leftovers in the merkle tree holes and past fsverity descriptor.
 > > > > > 
-> > > > >  XFS (pmem0): Metadata corruption detected at
-> > > > >  xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
-> > > > >  XFS (pmem0): Unmount and run xfs_repair
-> > > > >  XFS (pmem0): First 128 bytes of corrupted metadata buffer:
-> > > > >  00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > >  XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
-> > > > 
-> > > > Did you hit this through a customer issue?  Or is this the same "corrupt
-> > > > block 0 of inode 25165954 attribute fork" problem exposed by generic/753
-> > > > last week?  Or possibly both?
-> > > > 
-> > > > https://lore.kernel.org/linux-xfs/CAF-d4Oscq=qaCd9dbbEZjG8dA5Q7erdWSszoxY1migM8j85eRw@mail.gmail.com/
+> > > > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > > > > ---
 > > > 
-> > > We encountered this issue while performing disk fault injection tests, 
-> > > rather than through the generic/753. When I construct the problem
-> > > and use xfs_repair to repair it, the error message "corrupt block 0" can
-> > > be reported as follows:
+> > > > There's an upper limit on the number of blocks you can unmap/free in a
+> > > > single transaction.  Maybe move the xfs_trans_{alloc,commit} into the
+> > > > loop body?
+> > > > 
+> > > > Oh wait, you skip the written extents.  Ok, so maybe just roll it after
+> > > > you've done a bunmapi.
 > > > 
-> > >   Metadata corruption detected at 0x452a9c, xfs_da3_node block 0x78/0x1000
-> > >   corrupt block 0 of inode 131 attribute fork
-> > >   problem with attribute contents in inode 131
-> > >   clearing inode 131 attributes
-> > >   correcting nblocks for inode 131, was 1 - counted 0
-> > > 
-> > > So the problem you encountered before might be this issue.
-> > > 
-> > > > 
-> > > > > Fix this in two places:
-> > > > > 
-> > > > > In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
-> > > > > child block, immediately remove the entry that references it from the
-> > > > > parent node in the same transaction.  This eliminates the window where
-> > > > > the parent holds a pointer to a cancelled block.  Once all children are
-> > > > > removed, the now-empty root node is converted to a leaf block within the
-> > > > > same transaction. This node-to-leaf conversion is necessary for crash
-> > > > > safety. If the system shutdown after the empty node is written to the
-> > > > > log but before the second-phase bmap truncation commits, log recovery
-> > > > > will attempt to verify the root block on disk. xfs_da3_node_verify()
-> > > > > does not permit a node block with count == 0; such a block will fail
-> > > > > verification and trigger a metadata corruption shutdown. on the other
-> > > > > hand, leaf blocks are allowed to have this transient state.
-> > > > 
-> > > > Hrmmm... this really does sound like the "corrupt block 0" problem
-> > > > referenced above.
-> > > > 
-> > > > > In xfs_attr_inactive(), split the attr fork truncation into two explicit
-> > > > > phases.  First, truncate all extents beyond the root block (the child
-> > > > > extents whose parent references have already been removed above).
-> > > > > Second, invalidate the root block and truncate the attr bmap to zero in
-> > > > > a single transaction.  The two operations in the second phase must be
-> > > > > atomic: as long as the attr bmap has any non-zero length, recovery can
-> > > > > follow it to the root block, so the root block invalidation must commit
-> > > > > together with the bmap-to-zero truncation.
-> > > > > 
-> > > > > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > > 
-> > > ......
-> > > 
-> > > > > @@ -283,6 +283,16 @@ xfs_attr3_root_inactive(
-> > > > >  	case cpu_to_be16(XFS_DA_NODE_MAGIC):
-> > > > >  	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-> > > > >  		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
-> > > > > +		if (error)
-> > > > > +			return error;
-> > > > > +
-> > > > > +		/*
-> > > > > +		 * Empty root node block are not allowed, convert it to leaf.
-> > > > > +		 */
-> > > > > +		error = xfs_attr3_leaf_init(*trans, dp, 0);
-> > > > 
-> > > > Responding to my own question: Ah, I see -- "leaf init" doesn't use the
-> > > > bp anymore and it's attached to the transaction so it doesn't leak.
-> > > > That's a little subtle since there's nothing preventing someone from
-> > > > calling xfs_attr3_leaf_init(NULL, dp, 0).
-> > > 
-> > > Indeed, there should be an increase in explanatory comments and an empty
-> > > check for the tp.
-> > > 
-> > > > 
-> > > > > +		if (error)
-> > > > > +			return error;
-> > > > > +		error = xfs_trans_roll_inode(trans, dp);
-> > > > 
-> > > > If we have an xattr structure with multiple levels of dabtree nodes, can
-> > > > this lead to the somewhat odd situation where the tree levels are
-> > > > uneven during deconstruction?  For example
-> > > > 
-> > > >       root
-> > > >       /  \
-> > > >  node     empty_leaf
-> > > >  |  \
-> > > >  |   \
-> > > > node node
-> > > > |       \
-> > > > leaves  more_leaves
-> > > > 
-> > > > Does this matter, or can the inactivation code already handle it?  I
-> > > > suppose since we're inactivating (either in inodegc or in recovery after
-> > > > a crash) user programs will never see this so the window of confusion
-> > > > might be pretty small.
-> > > > 
-> > > > --D
-> > > 
-> > > For the reason of simplicity and efficiency, the dead code does not consider
-> > > this tree imbalance scenario, and I understand that this would not cause
-> > > any practical issues. 
+> > > I see, I will add a rolling transaction. Btw, why skipping the
+> > > written extents let's us use rolling here?
 > > 
-> > "dead" code?  Did you mean to say that the code that the patch removes
-> > did not consider this imbalanced tree scenario?  "Dead" code usually
-> > refers to code that's still in the codebase that nobody calls or
-> > executes.
-> 
-> Sorry for the confusion — "dead code" was a mistaken word choice.  I
-> meant the attr inactivation code.
-> 
+> > Hrmm.  At first I thought: why can't xfs_fsverity_cancel_unwritten
+> > allocate (and commit) the transaction inside the loop body?  Then I
+> > thought "well, it's only conditionally unmapping things, and it's sort
+> > of a pain to allocate a transaction only then to find out if you
+> > actually want to run one".
 > > 
-> > I /think/ what I'm hearing is that the the attr inactivation code can
-> > handle the system going down midway through removing the attr structure,
-> > so it doesn't matter if log recovery finds an imbalanced tree because
-> > all it's really doing is walking the dabtree to each leaf and nuking the
-> > path to that leaf; and now it'll also rewrite each emptied-out node with
-> > an empty leaf to ensure that a second log recovery can resume if the
-> > first recovery attempt fails due to system crash etc.
+> > OTOH there could be billions of extents in the data fork, so holding the
+> > ILOCK for that many transactions isn't a good thing because tr_write
+> > only preallocates space for a certain number of transaction rolls.
+> > fsverity already holds IOLOCK_EXCL so there can't be any other programs
+> > using the file.
 > > 
-> > (Is that correct?)
+> > So now I arrive back at "The transaction allocation and commit/cancel
+> > should be inside the loop body, since crashing midway through wouldn't
+> > result in user-visible changes to the file data".
 > > 
-> > --D
+> > > > Do you need to purge the cow fork too?
+> > > 
+> > > hmm, what case are you thinking about here? The fsverity is written
+> > > in past EOF region, I don't see how COW extent could be left there.
+> > > Can they somehow be left mapped for blocks past i_size?
+> > 
+> > I was talking about speculative cow fork preallocations below i_size.
+> > They'll eventually get purged by blockgc, but you could give the space
+> > back once you've committed enabling the fsverity file flag.
 > 
-> And yes, I agree with most of your understanding, but the approach is 
-> slightly different from what you described.  Only the empty root node
-> is rewritten as an empty leaf.  For intermediate nodes, the handling
-> depends on whether the entry being removed is the last one in that node:
-> if it is not the last entry, the transaction is committed immediately
-> after the deletion; if it is the last entry, the entry deletion, the 
-> cancellation of the now-empty node block, and the removal of the pointer
-> to that node from its parent are all placed in the same transaction.
-> This ensures that an empty intermediate node is never visible to recovery
-> without its parent pointer also being gone, avoiding the need to convert
-> every emptied intermediate node to a leaf.
-> 
-> The root node is a special case, which is essentially indexed by attr bmap.
-> Therefore, the root node can only be converted to an empty leaf to
-> prevent an empty node from being visible during the next recovery.
+> hmm, if they're purged by blockgc, then why to do it here? I'm
 
-Ah, ok, thanks for the explanation.  I'll go catch up with your latest
-posting now. :)
+Since you've made the file read-only by turning on fsverity, I think
+it's appropriate to return the COW fork preallocations to the free space
+pool.  Granted, you're correct that blockgc will eventually call
+xfs_reflink_cancel_cow_range for you either due to timeout or because
+something hit ENOSPC and kicked blockgc.  So I guess its not a
+requirement to land this series; I was just surprised not to see
+xfs_reflink_cancel_cow_range done explicitly here.
+
+> iterating and removing unwritten extents here only because
+> xfs_inode_free_eofblocks() will skip fsverity inodes, the check in
+> xfs_can_free_eofblocks():
+> 
+> 	if (IS_VERITY(VFS_I(ip)))
+> 		return false;
+> 
+> The skipping is done to not remove all the fsverity metadata
+> extents. With preallocations enabled there could be unwritten
+> extents left in the metadata.
+
+<nod> Cleaning out the unwritten extents from the data fork when
+enabling fsverity makes sense to me and is totally fine.
+
+> Am I missing something?
+
+Nah, but we might be talking past each other a bit at this point. :/
 
 --D
-
-> Thanks,
-> Long Li
-> 
-> 
