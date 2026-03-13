@@ -1,95 +1,86 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3322538B14E
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 11:17:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FD4389DF0
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 13:12:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773400645; cv=none; b=jCm37eKQRjjn0YEm5z+fyo9k9ZUv5MmEPptmj8RQnRVaiDL/tqgR+B/grjJHy/5aEwMmeMo9mcgSzJs7P9zTMgMvHd94uE6Q4hoNujIa2XB3XNEMZSa5zH0uNQPTiEYTw+qyRGc/UbGLtJJ9FE6jUs8ewIt046xvzmu4rNLDJkA=
+	t=1773407582; cv=none; b=ozN5jxz6iFQXnNRMTMAAKQgU/t0k/346kQ274yeEJFIDInfGWjnt/Us2+JtnOWY3QNXhaYLcB2Xfb2oMh1pTm5aHovWAodBr0RN6gwwUeGozJ5A3UjCmxrXAkgm9tMlaIYHJFB380cdq7BdsNVISXjko+RGGZH3D+ZnMJ5tWah0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773400645; c=relaxed/simple;
-	bh=2ocLF+6gDlSJ0COpbZ4Q1YW8LyldVKS8d2Q/lZFZfic=;
+	s=arc-20240116; t=1773407582; c=relaxed/simple;
+	bh=33WQ9KYqFSvWnDSNh2w1MmmAU80VJLafAd867ISfwFI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GdgzgX3UvKChGPZwBXPTfbOcrZAB/eFe6nd+C85xGelXRK6id4htElzqHaQKSGDxoIzUg1nGmVMzPV4XsRumHN4nzKEV7RiRyKyCbc6cJbhhVYedA8QEbNWSu6aQe/kmAFrs+CGMnaxLxgqQajCs96qPYQGaQ9WROgBnM/vEfRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UVzIQZKQ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=UK3vPB4M; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=R8ygJAcf/Y28U+wvGFzNB2Zlx+bE1ZOzBVv4BDoj3zEgRKnixgN0wWw9UFIT+bvBVRMHcW4R9wT8E5PGacvMCzoUUrwXMAYxDIMl/kiGThIbb5i+UTw7xIez7279qPyCshEuk1PpuVXHCclR8k3hWJnpabJaAWH42oqefyNkBeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OIRRDChT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EOYMTD/B; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UVzIQZKQ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="UK3vPB4M"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OIRRDChT";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EOYMTD/B"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773400641;
+	s=mimecast20190719; t=1773407578;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=G3aAJby17/qDvpdgHW3BwLZTyLi3K99yUle4/tTAV/E=;
-	b=UVzIQZKQ/MQXvfRrITd3YREFefC16rSlLaZjUXSRlmyZfDYBiWoIOcDDztBKOBKaqMdgk3
-	Bd6NKGDFM84hZXGE2QZOvfmaPNfPnUxE39HXxaEVLDvaJZOZmFp+lpVQV3jMxpJYNIghWw
-	I/gkRYzP/cqxMXlip5xUjbyMEM4+jXk=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
+	b=OIRRDChTXqc+REIqSMqFKQVFpNshZypdLLzwEuR8EL6cou68QFi4Bx1JMU+wKWHMaUNiXK
+	timheQLWEG77RHRGH60sBelZm6WUyorpj2+ouzSl1ngsQJXuxbeuqlksq0vnfYaQxMemGf
+	LESu8SQvfmjr10WQ+yp5JJayZdOfXSk=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-383-gHfdNRkfO4Gu4zA2tvyGXQ-1; Fri, 13 Mar 2026 07:17:20 -0400
-X-MC-Unique: gHfdNRkfO4Gu4zA2tvyGXQ-1
-X-Mimecast-MFC-AGG-ID: gHfdNRkfO4Gu4zA2tvyGXQ_1773400639
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-439fbfd93e8so1269790f8f.0
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 04:17:19 -0700 (PDT)
+ us-mta-483-fkAl5mhwP5W9te4T_Z_Jzw-1; Fri, 13 Mar 2026 09:12:57 -0400
+X-MC-Unique: fkAl5mhwP5W9te4T_Z_Jzw-1
+X-Mimecast-MFC-AGG-ID: fkAl5mhwP5W9te4T_Z_Jzw_1773407576
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-439bab2d095so1354416f8f.3
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 06:12:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773400638; x=1774005438; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1773407575; x=1774012375; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G3aAJby17/qDvpdgHW3BwLZTyLi3K99yUle4/tTAV/E=;
-        b=UK3vPB4MSDCHkPA4jY4bB4yUOPaA7qwwS1LXEuynBfO59zoai/l5X8o2xCWclGXV9g
-         4smlqXR4kVAEJKriI1vdp3grxQvUKsV2of3/gf1PzJ27aS7trVLjTDcEitb0F2CgO2Yt
-         J9xA0neDom/pRM5O0V3MZO/y5APXFxyJjq7zXfFo9X9JuGZ1yMVtRJEAI7AiSG4eBclz
-         0vRL2PiokHB9CoCR1ecOeHpJAWdzUMQX03jiFgSyeMorFmcYq7l2K4q9A9LC+cQ46KND
-         LMU6DKVZ6zW1K2U7I+KLgkC+dp+pEhcNz/IR0XTeFQzcac/qO14FXgQ5g/+47jbD7jur
-         JDjQ==
+        bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
+        b=EOYMTD/B3/BeXNkswHp4PCwwvn0vfs5IcVBc4wiquXOpKVTVPCgCdR9bij99bEcjnY
+         X9WKm2ZGscdbnkULNm0pShR12ymY2S4IitCBVfn0F7Ex1f0hWKB6zjlW9IkJNBNuyNIT
+         FnL8qzqnmkN16iBQ3hgAYsOs+Uio49NBqQWf0F/EHqtT0QBVHYE2rErrFLRD6Ip7hZcj
+         AHOoDg34VGJQnObNp2ER800BJErkESstb6xX/+H/Kqn69QqNXFCJXpWEfOgIzT8cm73w
+         itNcxZ/wWK+ngIIB9i8JNXBgY2/v9SVmpxnOh++p35k7yUv24tUo4y2fFQkvvMwOtAA5
+         5IvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773400638; x=1774005438;
+        d=1e100.net; s=20251104; t=1773407575; x=1774012375;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=G3aAJby17/qDvpdgHW3BwLZTyLi3K99yUle4/tTAV/E=;
-        b=CAzQccsHsudyn+Q/HXZxl/FUkQtcTZ7AdBJaRozMHHQ+bG8gREhkFOsAX6ubhuQ8T/
-         85azDn5ZWAC+zfNTGS9a4XE5gFWyyHS2zwyEvbmX4ukVLNFw0h3e/F3V2IiLtq2vDH0L
-         4PzmMJ9GjDVNaywpyUvYQHxf+Eev+CEr/J/B9nO0/F7pzxvUu/aBGS9F1IDMX5GOV8k4
-         V968VRogCQ6ISUrmNkqcpXst2v9es4yjoVUjqJtHs597POGbR/jb9FHWLQVhxaRYf+ef
-         0UWbf7O9dV3hXlojTAocabLvJ6lkW5sZ6hR3TbqJelufJxczmcvw9pcKiw7l4lGQbiuD
-         CvNw==
-X-Forwarded-Encrypted: i=1; AJvYcCUfkG9eGVxzRgtO9WMyuOlGfsS6bbh2EFfinGoBhHLRZ7fNMV/6HNA4FtO7u4Mi3ug8/bUdR1MPDNE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz2EW9dTYP08T1Z4GeIqhPYBSjffLAC+SFCbZ7yiwtFQqzhb6Mc
-	oLxyBRzG0RTvi/NW1eMs4erSgWfp4cFb4R2YXXP/MberT9/nDtYsriJ+r9FK2slJT+Bb4M3sDrG
-	VhL0Utc7gxM+AGi5WCwCZJmrHSYSn95R2xEy109qFgWIbKKVMJGt3Hblku4xKhUoGhBP+
-X-Gm-Gg: ATEYQzyrGC9qo72R7Gs8bnIix/mLxDChc71rlcDY2n9qaBhhsIWrsqFSMLAYtD3GPoz
-	3BIWottl/0LnS7VAU9C+iicaw9nPmPmCnNB3CM5ELg5IRqtYRSwO4CC3lwmbuyyo++Bs2nNoDR9
-	a2mhtxbNNl8D04ziKtcIy1j/PmBZBpmSdvbdNJ86f+Yf9VYbD8Q9PyME/jhQSScz52b+qxnqmKr
-	UhJcy/UT+sA1S5459IUposUlRGmpoZzyI9pC103JCicwhMiEJLMEzUJ9WqXg96LGPOl2u0p23FE
-	opz8vUaASHpHgyqmpXlDOVpcF6Cl79pFV90r7aCIJusOzEKhTd9fzz9lxbGgd/IrBAGW5lFbeVo
-	3M7M9Ms+3D8s=
-X-Received: by 2002:a05:6000:2010:b0:439:ddc0:4bee with SMTP id ffacd0b85a97d-43a04d86228mr5317853f8f.16.1773400637592;
-        Fri, 13 Mar 2026 04:17:17 -0700 (PDT)
-X-Received: by 2002:a05:6000:2010:b0:439:ddc0:4bee with SMTP id ffacd0b85a97d-43a04d86228mr5317761f8f.16.1773400636834;
-        Fri, 13 Mar 2026 04:17:16 -0700 (PDT)
+        bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
+        b=dfUKQiT1zKcGvMDWm0BVVtD4f9ISeEGBOYfkyXtPscaQfcrGf2DThH3mJkj6tmYzUU
+         1DVXuiDWDTDnNcPVws4jBICv/NwegQ5zvdt0pYUBT7HY5D7/mfycGAXjxYtRVTtWm5I/
+         34zjBcojR7VEGtaYg+EJYl3BfDqVGFWoF+kbBMNrdxl23VgZaEcPoNKu/+oDWEaT8jxh
+         fWvrRKwuV2R2dqJRx3O+NVly3lBYgPHf54vyi/EvEj66p92GYL5YbFVpwmMM1qLkw/AL
+         a9w5lHsXqOSsKuyEIkml57/IkMJsPN0HJ5x93NTSxaYpQItX4M/HpfZT0XYhRH3qk2Uu
+         PjoA==
+X-Gm-Message-State: AOJu0YzHFAtFibHlhSjl5brQUDvkAhUb5RFxE0S0jj7rSX6tbmRN2nsm
+	SWLin0OiesxIruG7AUFyVIWqdt/7VvusqvshsWf3RGmGVYE/Ukg/VlevER7afG/8iaKZMCXS33B
+	dsdAV3m97N95OUE2mg1lJ9TKARvUP2wN3wEey9oshE0/iYOjrm5epOdeaMqDbUQZ4X2XU
+X-Gm-Gg: ATEYQzwUUfxSuKl8Arc4gyrcQuuvWGQYroMA2c4eCN2eyHxWO8kKIvKTA7Zuw/4RCR6
+	/zW1QCgfKlmg1QRwspkEhxTN1uymhP0oon0TfCwJd2o4LzfG6iqlNdZFUsBfshoLKjG5qoMV3gS
+	e51WPoKQcK8KBw3V22pTrrIV+vo05/4ZkQfuTx92FyFnOS2MLydvEJXBUxbd7ERUUii2wC9GLAM
+	zGAZP0jFcX5O8KCIeJK2+et+b7vkidKDzSUma01zZRUSR/i6kN0IviPecbd7UwgeNzkum8d3Hah
+	El2cRCL5NDsSkuVlgNO54ypanZGg0vf0rWRxGt1lca1cbKoSpZScFISKpXT4kQxFRKRtBbMe4I4
+	ih5pyXJVLyts=
+X-Received: by 2002:a05:6000:2903:b0:439:d7e1:fc51 with SMTP id ffacd0b85a97d-43a04dbeec1mr6581513f8f.36.1773407575364;
+        Fri, 13 Mar 2026 06:12:55 -0700 (PDT)
+X-Received: by 2002:a05:6000:2903:b0:439:d7e1:fc51 with SMTP id ffacd0b85a97d-43a04dbeec1mr6581432f8f.36.1773407574779;
+        Fri, 13 Mar 2026 06:12:54 -0700 (PDT)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43a03cfd18fsm8558495f8f.36.2026.03.13.04.17.16
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439fe19abbasm16034949f8f.6.2026.03.13.06.12.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Mar 2026 04:17:16 -0700 (PDT)
-Date: Fri, 13 Mar 2026 12:17:15 +0100
+        Fri, 13 Mar 2026 06:12:54 -0700 (PDT)
+Date: Fri, 13 Mar 2026 14:12:53 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, hch@lst.de, 
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v4 19/25] xfs: remove unwritten extents after
- preallocations in fsverity metadata
-Message-ID: <dz3va7indkh4to2pingopyndck737qvyxvlfomkqqothzj4pdk@wu26ba5stnf6>
-References: <20260309192355.176980-1-aalbersh@kernel.org>
- <20260309192355.176980-20-aalbersh@kernel.org>
- <20260310012914.GG1105363@frogsfrogsfrogs>
- <ymisdrze3ohdnxa4inqfwp4riaz4qk5nmtil33adn5ukhngq7v@f3tcv3hbzobz>
- <20260312145250.GE6069@frogsfrogsfrogs>
+To: Donald Douwsma <ddouwsma@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/5] xfsdump, xfsprogs distro builds and DEBUG=
+Message-ID: <nxyxi6y5hdpr3jpmr3aehoaklpe53qqdrpkf27ejn4ospx4rin@6oib2fgjv3hm>
+References: <20260224071712.1014075-1-ddouwsma@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -98,71 +89,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260312145250.GE6069@frogsfrogsfrogs>
+In-Reply-To: <20260224071712.1014075-1-ddouwsma@redhat.com>
 
-On 2026-03-12 07:52:50, Darrick J. Wong wrote:
-> On Thu, Mar 12, 2026 at 02:50:57PM +0100, Andrey Albershteyn wrote:
-> > On 2026-03-09 18:29:14, Darrick J. Wong wrote:
-> > > > XFS preallocates spaces during writes. In normal I/O this space, if
-> > > > unused, is removed by truncate. For files with fsverity, XFS does not
-> > > > use truncate as fsverity metadata is stored past EOF.
-> > > > 
-> > > > After we're done with writing fsverity metadata iterate over extents in
-> > > > that region and remove any unwritten ones. These would be preallocation
-> > > > leftovers in the merkle tree holes and past fsverity descriptor.
-> > > > 
-> > > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > > ---
-> > 
-> > > There's an upper limit on the number of blocks you can unmap/free in a
-> > > single transaction.  Maybe move the xfs_trans_{alloc,commit} into the
-> > > loop body?
-> > > 
-> > > Oh wait, you skip the written extents.  Ok, so maybe just roll it after
-> > > you've done a bunmapi.
-> > 
-> > I see, I will add a rolling transaction. Btw, why skipping the
-> > written extents let's us use rolling here?
+On 2026-02-24 18:17:07, Donald Douwsma wrote:
+> tldr; Fedora builds with -DDEBUG, is that what folk want or expect?
 > 
-> Hrmm.  At first I thought: why can't xfs_fsverity_cancel_unwritten
-> allocate (and commit) the transaction inside the loop body?  Then I
-> thought "well, it's only conditionally unmapping things, and it's sort
-> of a pain to allocate a transaction only then to find out if you
-> actually want to run one".
+> We see cases from the field where xfsrestore aborts on an assert(3).
+> In each case there's a real problem that needs to be fixed, but these
+> problems are preventing folk from restoring their data. With the asserts
+> suppressed or removed xfsrestore usually does something sane enough, at
+> worst leaving restored content in the orphanage where a user can find
+> it.
 > 
-> OTOH there could be billions of extents in the data fork, so holding the
-> ILOCK for that many transactions isn't a good thing because tr_write
-> only preallocates space for a certain number of transaction rolls.
-> fsverity already holds IOLOCK_EXCL so there can't be any other programs
-> using the file.
+> This was notably seen with the original xfsdump bind mount fix, now
+> we're seeing asserts fire during cumulative restores in
+> noref_elim_recurse.
 > 
-> So now I arrive back at "The transaction allocation and commit/cancel
-> should be inside the loop body, since crashing midway through wouldn't
-> result in user-visible changes to the file data".
+>   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
 > 
-> > > Do you need to purge the cow fork too?
-> > 
-> > hmm, what case are you thinking about here? The fsverity is written
-> > in past EOF region, I don't see how COW extent could be left there.
-> > Can they somehow be left mapped for blocks past i_size?
+> This appears to be caused by a rename to within the tree between restore
+> levels, or a combination of modifications during occurring during the
+> dump. Fixing it will likely require changes in noref_elim_recurse, or
+> tree_post, to ensure elements of the tree are created for these edge
+> cases.
 > 
-> I was talking about speculative cow fork preallocations below i_size.
-> They'll eventually get purged by blockgc, but you could give the space
-> back once you've committed enabling the fsverity file flag.
+> But why are we seeing assert(3) active in Fedora based distro builds?
+> 
+> xfsprogs and xfsdump m4/package_globals.m4 shows builds should default
+> to DEBUG and xfsdump doc/INSTALL talks about how to turn off asserts and
+> create an optimized build, but only Debian has its build rules in-tree,
+> where they set DEBUG=-DNDEBUG.
+> 
+> Building locally on Fedora or similar gets varied results with recent
+> Fedora versions building as if DEBUG=-DNDEBUG was set within the realm
+> of configure or autoconf, which may be misleading people.
+> 
+> But for Fedora release builds we can see that they're building with
+> DEBUG=-DDEBUG resulting in gcc called with -DDEBUG in the build logs.
+> 
+>   https://src.fedoraproject.org/rpms/xfsdump
+>   https://kojipkgs.fedoraproject.org//packages/xfsdump/3.2.0/4.fc44/data/logs/x86_64/build.log
+> 
+>   https://src.fedoraproject.org/rpms/xfsprogs
+>   https://kojipkgs.fedoraproject.org//packages/xfsprogs/6.18.0/2.fc44/data/logs/x86_64/build.log
+> 
+> I don't think the intention was to have these build as DEBUG, but that
+> seems to be the current result. But before I dig into this further can I
+> confirm what people think this should do?
+> 
+> The following series is illustrative of the changes to build xfsdump
+> cleanly with DEBUG=-DNDEBUG, or the type of downstream workarounds
+> required to help end users hitting problems for the status quo.
+> 
+> Don
+> 
+> Donald Douwsma (5):
+>   xfsrestore: remove unused variable strctxp
+>   annotate variables only used for assert
+>   xfsrestore: include TREE_DEBUG all builds
 
-hmm, if they're purged by blockgc, then why to do it here? I'm
-iterating and removing unwritten extents here only because
-xfs_inode_free_eofblocks() will skip fsverity inodes, the check in
-xfs_can_free_eofblocks():
-
-	if (IS_VERITY(VFS_I(ip)))
-		return false;
-
-The skipping is done to not remove all the fsverity metadata
-extents. With preallocations enabled there could be unwritten
-extents left in the metadata.
-
-Am I missing something?
+First 3 patches looks good to me to include, not sure about the
+rest and the original use of the those asserts.
 
 -- 
 - Andrey
