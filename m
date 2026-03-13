@@ -1,47 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB6B03A7F74;
-	Fri, 13 Mar 2026 14:55:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7EB3A8743;
+	Fri, 13 Mar 2026 14:57:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773413752; cv=none; b=LDzjf+LfqH1gOChC7ZrqeoX8ddldpj/u7gy2TmqKlZjOsSWIN1JftEDq7lH3CS8kcWXR6pA9wc+g2niXVoZKpTjyf49MywgtC7qUYo65SLVNNdImk18X+V5Gxd2E4pmll/hZh96LZ+9d9FXQZ/PvHcsQBOrzHAfkd6rd5esMm1w=
+	t=1773413857; cv=none; b=Rd7UD57/kKWAbyjc3cYdFterV0BLglM3gZR3BqTbzO5bx4tntqyHIam/kkRXj0de9o+ulYNUD/qxbU6lA2t6TBaBxqQXmqbCYZN54MSKuAnMehU1QJvXK1fKy1173fsBS1OaZB57B/A+GlPsRnDoEu5icB1PGk6TL7a2EhzqZDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773413752; c=relaxed/simple;
-	bh=1SJdVb46rEOXp0TNCRzNQH20hOu3F1a8jHEpr/61pdg=;
+	s=arc-20240116; t=1773413857; c=relaxed/simple;
+	bh=08TPvKwyl36FzMlvSX3X3YJCr2tM4c/qd6WY/yURdR8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O7wF6pWkjx8hO36/j38Beivm2HccAJRhszXIHRi7Bb7NK/SIEWToK+tYveWFeyZWdkWFqCyIWH6Umwo+8ZeI69jX6YxyeuNZ1raj+wK2I3bItLAyg91JGRuGe3tWJth5S9iibByenRNbyEnzanDWfOrGwz4iIzwCbQplnEtfRL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=STCiPlE7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=F8nZuYbgfWzKhk6xNVxWThA/XUxKaGGD+6yt3Yk5Ek62ysr8gDlOx2od3mYgH6PlfTr2u4vIMoDBlZL9Qh9bKTNMNqij7Dxs09EzbNK1CDgO9IjHQHuovwTb2WT0HI7WtNTPRsR8WkkFPogfEFiUBezHFVFixa13MXYoEzXuWxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dWctC+Od; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="STCiPlE7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45E4FC19421;
-	Fri, 13 Mar 2026 14:55:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dWctC+Od"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F274AC19421;
+	Fri, 13 Mar 2026 14:57:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773413752;
-	bh=1SJdVb46rEOXp0TNCRzNQH20hOu3F1a8jHEpr/61pdg=;
+	s=k20201202; t=1773413857;
+	bh=08TPvKwyl36FzMlvSX3X3YJCr2tM4c/qd6WY/yURdR8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=STCiPlE7YCJ6EP08/0/rI3sm0hiVo8h5O7hPvhYrwE3F9gUgh6x4qYOG+oseUMFcp
-	 0fco+B87d09Raz+TTKdqXsLyYzKcXAdDlu7u6dynGTXapE5MiKaRnCLZNtHfy4iPVf
-	 YrFUa2ViLJHx3lj6THIzfxNRTHyc59xkPpq2G4OYaS7/FpXFsareyepu+TXhtqXV1t
-	 +IWXOamdz1kto1W1vQdKKch43W+DgpLtRQt/JCOlpjqXu2nAG9q2e5bg95X1VbUZkm
-	 zFHSXzhBhfLcoSN9hVcPH55Kp/YFTYgSIxZnb4g0wcPn5Iu25E8YXr01CGvzb/Z3K7
-	 vTjplDCeoUGQQ==
-Date: Fri, 13 Mar 2026 07:55:51 -0700
+	b=dWctC+OdSrUWbw+1mYqRtt1b2znyxAJ962tc57KUJyX/xROXgg6r0U0jstQq7DoYK
+	 WHg5C0TGaJIGfG2uzDN+ownBY+/nT+tpBERAUa7dAAgQQFrHq7BqggHJ1ZAnftwQhT
+	 eJTkbQxy+PKysot7RQnrE3jHlY8nWZH5dO93eoZ0EYyknW5i0msaLn2dYcYuAusrdv
+	 Bgxx+6u63+5MGsMRiXq/gogmmRL24jZyDtQmoNZjhYng2oX4axSz/94eAe53gwZtak
+	 jwErQwyp0glrzyLqpVixtJs+bnHOkaIfULqYOMYGuS8FXC6lmAUygeq7rRu8szM/0t
+	 kM7mNJZeAXDFw==
+Date: Fri, 13 Mar 2026 07:57:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
-	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	ebiggers@kernel.org, hch@lst.de, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v4 19/25] xfs: remove unwritten extents after
- preallocations in fsverity metadata
-Message-ID: <20260313145551.GN1770774@frogsfrogsfrogs>
-References: <20260309192355.176980-1-aalbersh@kernel.org>
- <20260309192355.176980-20-aalbersh@kernel.org>
- <20260310012914.GG1105363@frogsfrogsfrogs>
- <ymisdrze3ohdnxa4inqfwp4riaz4qk5nmtil33adn5ukhngq7v@f3tcv3hbzobz>
- <20260312145250.GE6069@frogsfrogsfrogs>
- <dz3va7indkh4to2pingopyndck737qvyxvlfomkqqothzj4pdk@wu26ba5stnf6>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	brauner@kernel.org, hch@infradead.org, yi.zhang@huawei.com,
+	yizhang089@gmail.com, yangerkun@huawei.com, yukuai@fnnas.com
+Subject: Re: [PATCH] iomap: fix incorrect did_zero setting in
+ iomap_zero_iter()
+Message-ID: <20260313145736.GO1770774@frogsfrogsfrogs>
+References: <20260310082250.3535486-1-yi.zhang@huaweicloud.com>
+ <20260310221303.GA1770774@frogsfrogsfrogs>
+ <1dce8b3b-29ee-4c45-98cb-8882a79c41c2@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,85 +46,111 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dz3va7indkh4to2pingopyndck737qvyxvlfomkqqothzj4pdk@wu26ba5stnf6>
+In-Reply-To: <1dce8b3b-29ee-4c45-98cb-8882a79c41c2@huaweicloud.com>
 
-On Fri, Mar 13, 2026 at 12:17:15PM +0100, Andrey Albershteyn wrote:
-> On 2026-03-12 07:52:50, Darrick J. Wong wrote:
-> > On Thu, Mar 12, 2026 at 02:50:57PM +0100, Andrey Albershteyn wrote:
-> > > On 2026-03-09 18:29:14, Darrick J. Wong wrote:
-> > > > > XFS preallocates spaces during writes. In normal I/O this space, if
-> > > > > unused, is removed by truncate. For files with fsverity, XFS does not
-> > > > > use truncate as fsverity metadata is stored past EOF.
-> > > > > 
-> > > > > After we're done with writing fsverity metadata iterate over extents in
-> > > > > that region and remove any unwritten ones. These would be preallocation
-> > > > > leftovers in the merkle tree holes and past fsverity descriptor.
-> > > > > 
-> > > > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > > > ---
-> > > 
-> > > > There's an upper limit on the number of blocks you can unmap/free in a
-> > > > single transaction.  Maybe move the xfs_trans_{alloc,commit} into the
-> > > > loop body?
-> > > > 
-> > > > Oh wait, you skip the written extents.  Ok, so maybe just roll it after
-> > > > you've done a bunmapi.
-> > > 
-> > > I see, I will add a rolling transaction. Btw, why skipping the
-> > > written extents let's us use rolling here?
+On Wed, Mar 11, 2026 at 10:17:25AM +0800, Zhang Yi wrote:
+> On 3/11/2026 6:13 AM, Darrick J. Wong wrote:
+> > On Tue, Mar 10, 2026 at 04:22:50PM +0800, Zhang Yi wrote:
+> >> From: Zhang Yi <yi.zhang@huawei.com>
+> >>
+> >> The did_zero output parameter was unconditionally set after the loop,
+> >> which is incorrect. It should only be set when the zeroing operation
+> >> actually happens, not when IOMAP_F_STALE is set or when
+> >> IOMAP_F_FOLIO_BATCH is set but !folio causes the loop to break early,
+> >> or when iomap_iter_advance() returns an error.
+> >>
+> >> This causes did_zero to be incorrectly set when zeroing a clean
+> >> unwritten extent because the loop exits early without actually zeroing
+> >> any data.
+> >>
+> >> Fix it by using a local variable to track whether any folio was actually
+> >> zeroed, and only set did_zero after the loop if zeroing happened.
+> >>
+> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> >> ---
+> >>  fs/iomap/buffered-io.c | 8 ++++++--
+> >>  1 file changed, 6 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> >> index 5297491d5e3e..7a3780242cde 100644
+> >> --- a/fs/iomap/buffered-io.c
+> >> +++ b/fs/iomap/buffered-io.c
+> >> @@ -1537,6 +1537,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> >>  		const struct iomap_write_ops *write_ops)
+> >>  {
+> >>  	u64 bytes = iomap_length(iter);
+> >> +	bool zeroed = false;
+> >>  	int status;
+> >>  
+> >>  	do {
+> >> @@ -1555,6 +1556,8 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> >>  		/* a NULL folio means we're done with a folio batch */
+> >>  		if (!folio) {
+> >>  			status = iomap_iter_advance_full(iter);
+> >> +			if (status)
+> >> +				return status;
+> >>  			break;
+> >>  		}
+> >>  
+> >> @@ -1565,6 +1568,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> >>  				bytes);
+> >>  
+> >>  		folio_zero_range(folio, offset, bytes);
+> >> +		zeroed = true;
+> >>  		folio_mark_accessed(folio);
+> >>  
+> >>  		ret = iomap_write_end(iter, bytes, bytes, folio);
+> >> @@ -1574,10 +1578,10 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> >>  
+> >>  		status = iomap_iter_advance(iter, bytes);
+> >>  		if (status)
+> >> -			break;
+> >> +			return status;
 > > 
-> > Hrmm.  At first I thought: why can't xfs_fsverity_cancel_unwritten
-> > allocate (and commit) the transaction inside the loop body?  Then I
-> > thought "well, it's only conditionally unmapping things, and it's sort
-> > of a pain to allocate a transaction only then to find out if you
-> > actually want to run one".
+> > I think this seems like an unrelated change?  Do any of the callers
+> > behave differently if iomap_zero_range() returns an error but also sets
+> > did_zero to true?
 > > 
-> > OTOH there could be billions of extents in the data fork, so holding the
-> > ILOCK for that many transactions isn't a good thing because tr_write
-> > only preallocates space for a certain number of transaction rolls.
-> > fsverity already holds IOLOCK_EXCL so there can't be any other programs
-> > using the file.
-> > 
-> > So now I arrive back at "The transaction allocation and commit/cancel
-> > should be inside the loop body, since crashing midway through wouldn't
-> > result in user-visible changes to the file data".
-> > 
-> > > > Do you need to purge the cow fork too?
-> > > 
-> > > hmm, what case are you thinking about here? The fsverity is written
-> > > in past EOF region, I don't see how COW extent could be left there.
-> > > Can they somehow be left mapped for blocks past i_size?
-> > 
-> > I was talking about speculative cow fork preallocations below i_size.
-> > They'll eventually get purged by blockgc, but you could give the space
-> > back once you've committed enabling the fsverity file flag.
 > 
-> hmm, if they're purged by blockgc, then why to do it here? I'm
-
-Since you've made the file read-only by turning on fsverity, I think
-it's appropriate to return the COW fork preallocations to the free space
-pool.  Granted, you're correct that blockgc will eventually call
-xfs_reflink_cancel_cow_range for you either due to timeout or because
-something hit ENOSPC and kicked blockgc.  So I guess its not a
-requirement to land this series; I was just surprised not to see
-xfs_reflink_cancel_cow_range done explicitly here.
-
-> iterating and removing unwritten extents here only because
-> xfs_inode_free_eofblocks() will skip fsverity inodes, the check in
-> xfs_can_free_eofblocks():
+> In the event of an error return, no caller will be concerned with the
+> did_zero state. It is only relevant when the operation is successful.
+> So I think we can just return if some error happens, consistent with
+> other error-handling practices in this loop.
 > 
-> 	if (IS_VERITY(VFS_I(ip)))
-> 		return false;
+> >>  	} while ((bytes = iomap_length(iter)) > 0);
+> >>  
+> >> -	if (did_zero)
+> >> +	if (did_zero && zeroed)
+> >>  		*did_zero = true;
+> > 
+> > Why not just do:
+> > 
+> > 	if (did_zero)
+> > 		*did_zero = zeroed;
+> > 
+> > ?
+> > 
 > 
-> The skipping is done to not remove all the fsverity metadata
-> extents. With preallocations enabled there could be unwritten
-> extents left in the metadata.
+> If we proceed with this approach, when there are mixed extents and the
+> final iteration of the iomap_zero_range() loop does not zero out any
+> data, it will clear the flags that were set in previous loop when the
+> data was zeroed.
 
-<nod> Cleaning out the unwritten extents from the data fork when
-enabling fsverity makes sense to me and is totally fine.
-
-> Am I missing something?
-
-Nah, but we might be talking past each other a bit at this point. :/
+Ah, got it.  This makes sense enough to me to warrant wider testing so
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> Thanks,
+> Yi.
+> 
+> > --D
+> > 
+> >>  	return status;
+> >>  }
+> >> -- 
+> >> 2.52.0
+> >>
+> >>
+> 
+> 
