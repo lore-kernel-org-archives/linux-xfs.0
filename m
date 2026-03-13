@@ -1,156 +1,237 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FD4389DF0
-	for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 13:12:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5AD3A8746
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 14:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773407582; cv=none; b=ozN5jxz6iFQXnNRMTMAAKQgU/t0k/346kQ274yeEJFIDInfGWjnt/Us2+JtnOWY3QNXhaYLcB2Xfb2oMh1pTm5aHovWAodBr0RN6gwwUeGozJ5A3UjCmxrXAkgm9tMlaIYHJFB380cdq7BdsNVISXjko+RGGZH3D+ZnMJ5tWah0=
+	t=1773413213; cv=none; b=k1Y4D5TmQJB4vs5QQ4AYyK80gK2AoAvHD1PhuYtvdCsoHpPlf+l4zqiFWmjnqLvOh9p3xl5j9Omoj+7ujsb5TqjSs+itxdb74ix6RZo78w+NhyCIz3dSgW/SHehWm4Ut6uvEivfCE03YqPbQoL35ZPmsnb3G45rUvqDh5UO/W6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773407582; c=relaxed/simple;
-	bh=33WQ9KYqFSvWnDSNh2w1MmmAU80VJLafAd867ISfwFI=;
+	s=arc-20240116; t=1773413213; c=relaxed/simple;
+	bh=/kDCDxgeOYLm/UxTDRQrtDtT3mO8DI8h/wat16QFGa8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R8ygJAcf/Y28U+wvGFzNB2Zlx+bE1ZOzBVv4BDoj3zEgRKnixgN0wWw9UFIT+bvBVRMHcW4R9wT8E5PGacvMCzoUUrwXMAYxDIMl/kiGThIbb5i+UTw7xIez7279qPyCshEuk1PpuVXHCclR8k3hWJnpabJaAWH42oqefyNkBeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OIRRDChT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EOYMTD/B; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=JDKUQAsZwfxKRgev9IIhUf8+oq1P2b8Z6YAloFcKTpggAY2pHKv6Y0gCUU1ir48yR7jMriOJLMCU/yjuBKVttVG+nTezwtdD7aR5JpoztIge9P2kHffiBLSlLDJc8jeZT4DgbKTYLIalQV980uPuEllH6OrdhxPjkTk9SY69PaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SmjqEjAC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OIRRDChT";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EOYMTD/B"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773407578;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
-	b=OIRRDChTXqc+REIqSMqFKQVFpNshZypdLLzwEuR8EL6cou68QFi4Bx1JMU+wKWHMaUNiXK
-	timheQLWEG77RHRGH60sBelZm6WUyorpj2+ouzSl1ngsQJXuxbeuqlksq0vnfYaQxMemGf
-	LESu8SQvfmjr10WQ+yp5JJayZdOfXSk=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-483-fkAl5mhwP5W9te4T_Z_Jzw-1; Fri, 13 Mar 2026 09:12:57 -0400
-X-MC-Unique: fkAl5mhwP5W9te4T_Z_Jzw-1
-X-Mimecast-MFC-AGG-ID: fkAl5mhwP5W9te4T_Z_Jzw_1773407576
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-439bab2d095so1354416f8f.3
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Mar 2026 06:12:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773407575; x=1774012375; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
-        b=EOYMTD/B3/BeXNkswHp4PCwwvn0vfs5IcVBc4wiquXOpKVTVPCgCdR9bij99bEcjnY
-         X9WKm2ZGscdbnkULNm0pShR12ymY2S4IitCBVfn0F7Ex1f0hWKB6zjlW9IkJNBNuyNIT
-         FnL8qzqnmkN16iBQ3hgAYsOs+Uio49NBqQWf0F/EHqtT0QBVHYE2rErrFLRD6Ip7hZcj
-         AHOoDg34VGJQnObNp2ER800BJErkESstb6xX/+H/Kqn69QqNXFCJXpWEfOgIzT8cm73w
-         itNcxZ/wWK+ngIIB9i8JNXBgY2/v9SVmpxnOh++p35k7yUv24tUo4y2fFQkvvMwOtAA5
-         5IvQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773407575; x=1774012375;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PfJ/KX9G+4IwIzqH9bOlI0FJJqC8ABUTj7gz7e2V6rM=;
-        b=dfUKQiT1zKcGvMDWm0BVVtD4f9ISeEGBOYfkyXtPscaQfcrGf2DThH3mJkj6tmYzUU
-         1DVXuiDWDTDnNcPVws4jBICv/NwegQ5zvdt0pYUBT7HY5D7/mfycGAXjxYtRVTtWm5I/
-         34zjBcojR7VEGtaYg+EJYl3BfDqVGFWoF+kbBMNrdxl23VgZaEcPoNKu/+oDWEaT8jxh
-         fWvrRKwuV2R2dqJRx3O+NVly3lBYgPHf54vyi/EvEj66p92GYL5YbFVpwmMM1qLkw/AL
-         a9w5lHsXqOSsKuyEIkml57/IkMJsPN0HJ5x93NTSxaYpQItX4M/HpfZT0XYhRH3qk2Uu
-         PjoA==
-X-Gm-Message-State: AOJu0YzHFAtFibHlhSjl5brQUDvkAhUb5RFxE0S0jj7rSX6tbmRN2nsm
-	SWLin0OiesxIruG7AUFyVIWqdt/7VvusqvshsWf3RGmGVYE/Ukg/VlevER7afG/8iaKZMCXS33B
-	dsdAV3m97N95OUE2mg1lJ9TKARvUP2wN3wEey9oshE0/iYOjrm5epOdeaMqDbUQZ4X2XU
-X-Gm-Gg: ATEYQzwUUfxSuKl8Arc4gyrcQuuvWGQYroMA2c4eCN2eyHxWO8kKIvKTA7Zuw/4RCR6
-	/zW1QCgfKlmg1QRwspkEhxTN1uymhP0oon0TfCwJd2o4LzfG6iqlNdZFUsBfshoLKjG5qoMV3gS
-	e51WPoKQcK8KBw3V22pTrrIV+vo05/4ZkQfuTx92FyFnOS2MLydvEJXBUxbd7ERUUii2wC9GLAM
-	zGAZP0jFcX5O8KCIeJK2+et+b7vkidKDzSUma01zZRUSR/i6kN0IviPecbd7UwgeNzkum8d3Hah
-	El2cRCL5NDsSkuVlgNO54ypanZGg0vf0rWRxGt1lca1cbKoSpZScFISKpXT4kQxFRKRtBbMe4I4
-	ih5pyXJVLyts=
-X-Received: by 2002:a05:6000:2903:b0:439:d7e1:fc51 with SMTP id ffacd0b85a97d-43a04dbeec1mr6581513f8f.36.1773407575364;
-        Fri, 13 Mar 2026 06:12:55 -0700 (PDT)
-X-Received: by 2002:a05:6000:2903:b0:439:d7e1:fc51 with SMTP id ffacd0b85a97d-43a04dbeec1mr6581432f8f.36.1773407574779;
-        Fri, 13 Mar 2026 06:12:54 -0700 (PDT)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439fe19abbasm16034949f8f.6.2026.03.13.06.12.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Mar 2026 06:12:54 -0700 (PDT)
-Date: Fri, 13 Mar 2026 14:12:53 +0100
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Donald Douwsma <ddouwsma@redhat.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/5] xfsdump, xfsprogs distro builds and DEBUG=
-Message-ID: <nxyxi6y5hdpr3jpmr3aehoaklpe53qqdrpkf27ejn4ospx4rin@6oib2fgjv3hm>
-References: <20260224071712.1014075-1-ddouwsma@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SmjqEjAC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B09C7C2BC87;
+	Fri, 13 Mar 2026 14:46:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773413212;
+	bh=/kDCDxgeOYLm/UxTDRQrtDtT3mO8DI8h/wat16QFGa8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SmjqEjACajyfjYegwJjt1wFRy+O3b0Yrh1teV2Cz6RwVYuAwLFWz0toY3ulxBC8kB
+	 47QfIMNZkxCFtY9lvOCj6DDSbTrj9LFmjFmzLN7QaZAOEDF9dAwuRsHjKa+JiJeq1g
+	 aYYgtsBBA/DIQ++XmGwqdsrd2TsTZtFsn2ZN2E2PppF0d3GKQSXsGK6wq13MAYF1xh
+	 KT6vn+KXOu+2gYc6C8ludIEvwCVUSisVDUCYXbrtrW3wjE94aVovyNG8CqSBqIoxDA
+	 1vqQmyiRM8zYwJVkeO98GdTBd5X+VDGZh0PHqBdNc+MK89nACpaj9q0etTW5b2I1Uc
+	 rq2b0HKi3vUkg==
+Date: Fri, 13 Mar 2026 07:46:51 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Long Li <leo.lilong@huawei.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+	lonuxli.64@gmail.com
+Subject: Re: [PATCH 4/4] xfs: close crash window in attr dabtree inactivation
+Message-ID: <20260313144651.GM1770774@frogsfrogsfrogs>
+References: <20260309082752.2039861-1-leo.lilong@huawei.com>
+ <20260309082752.2039861-5-leo.lilong@huawei.com>
+ <20260309165933.GK6033@frogsfrogsfrogs>
+ <aa_UFVW5bPLk8iBK@localhost.localdomain>
+ <20260310144642.GK1105363@frogsfrogsfrogs>
+ <abDUvhU9lzT_91VL@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260224071712.1014075-1-ddouwsma@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <abDUvhU9lzT_91VL@localhost.localdomain>
 
-On 2026-02-24 18:17:07, Donald Douwsma wrote:
-> tldr; Fedora builds with -DDEBUG, is that what folk want or expect?
+On Wed, Mar 11, 2026 at 10:34:38AM +0800, Long Li wrote:
+> On Tue, Mar 10, 2026 at 07:46:42AM -0700, Darrick J. Wong wrote:
+> > On Tue, Mar 10, 2026 at 04:19:33PM +0800, Long Li wrote:
+> > > On Mon, Mar 09, 2026 at 09:59:33AM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Mar 09, 2026 at 04:27:52PM +0800, Long Li wrote:
+> > > > > When inactivating an inode with node-format extended attributes,
+> > > > > xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
+> > > > > xfs_trans_binval(), but intentionally does not remove the corresponding
+> > > > > entries from their parent node blocks.  The implicit assumption is that
+> > > > > xfs_attr_inactive() will truncate the entire attr fork to zero extents
+> > > > > afterwards, so log recovery will never reach the root node and follow
+> > > > > those stale pointers.
+> > > > > 
+> > > > > However, if a log shutdown occurs after the child block cancellations
+> > > > > commit but before the attr bmap truncation commits, this assumption
+> > > > > breaks.  Recovery replays the attr bmap intact (the inode still has
+> > > > > attr fork extents), but suppresses replay of all cancelled child
+> > > > > blocks, maybe leaving them as stale data on disk.  On the next mount,
+> > > > > xlog_recover_process_iunlinks() retries inactivation and attempts to
+> > > > > read the root node via the attr bmap. If the root node was not replayed,
+> > > > > reading the unreplayed root block triggers a metadata verification
+> > > > > failure immediately; if it was replayed, following its child pointers
+> > > > > to unreplayed child blocks triggers the same failure:
+> > > > > 
+> > > > >  XFS (pmem0): Metadata corruption detected at
+> > > > >  xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
+> > > > >  XFS (pmem0): Unmount and run xfs_repair
+> > > > >  XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+> > > > >  00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > >  XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
+> > > > 
+> > > > Did you hit this through a customer issue?  Or is this the same "corrupt
+> > > > block 0 of inode 25165954 attribute fork" problem exposed by generic/753
+> > > > last week?  Or possibly both?
+> > > > 
+> > > > https://lore.kernel.org/linux-xfs/CAF-d4Oscq=qaCd9dbbEZjG8dA5Q7erdWSszoxY1migM8j85eRw@mail.gmail.com/
+> > > 
+> > > We encountered this issue while performing disk fault injection tests, 
+> > > rather than through the generic/753. When I construct the problem
+> > > and use xfs_repair to repair it, the error message "corrupt block 0" can
+> > > be reported as follows:
+> > > 
+> > >   Metadata corruption detected at 0x452a9c, xfs_da3_node block 0x78/0x1000
+> > >   corrupt block 0 of inode 131 attribute fork
+> > >   problem with attribute contents in inode 131
+> > >   clearing inode 131 attributes
+> > >   correcting nblocks for inode 131, was 1 - counted 0
+> > > 
+> > > So the problem you encountered before might be this issue.
+> > > 
+> > > > 
+> > > > > Fix this in two places:
+> > > > > 
+> > > > > In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
+> > > > > child block, immediately remove the entry that references it from the
+> > > > > parent node in the same transaction.  This eliminates the window where
+> > > > > the parent holds a pointer to a cancelled block.  Once all children are
+> > > > > removed, the now-empty root node is converted to a leaf block within the
+> > > > > same transaction. This node-to-leaf conversion is necessary for crash
+> > > > > safety. If the system shutdown after the empty node is written to the
+> > > > > log but before the second-phase bmap truncation commits, log recovery
+> > > > > will attempt to verify the root block on disk. xfs_da3_node_verify()
+> > > > > does not permit a node block with count == 0; such a block will fail
+> > > > > verification and trigger a metadata corruption shutdown. on the other
+> > > > > hand, leaf blocks are allowed to have this transient state.
+> > > > 
+> > > > Hrmmm... this really does sound like the "corrupt block 0" problem
+> > > > referenced above.
+> > > > 
+> > > > > In xfs_attr_inactive(), split the attr fork truncation into two explicit
+> > > > > phases.  First, truncate all extents beyond the root block (the child
+> > > > > extents whose parent references have already been removed above).
+> > > > > Second, invalidate the root block and truncate the attr bmap to zero in
+> > > > > a single transaction.  The two operations in the second phase must be
+> > > > > atomic: as long as the attr bmap has any non-zero length, recovery can
+> > > > > follow it to the root block, so the root block invalidation must commit
+> > > > > together with the bmap-to-zero truncation.
+> > > > > 
+> > > > > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > > 
+> > > ......
+> > > 
+> > > > > @@ -283,6 +283,16 @@ xfs_attr3_root_inactive(
+> > > > >  	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+> > > > >  	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+> > > > >  		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
+> > > > > +		if (error)
+> > > > > +			return error;
+> > > > > +
+> > > > > +		/*
+> > > > > +		 * Empty root node block are not allowed, convert it to leaf.
+> > > > > +		 */
+> > > > > +		error = xfs_attr3_leaf_init(*trans, dp, 0);
+> > > > 
+> > > > Responding to my own question: Ah, I see -- "leaf init" doesn't use the
+> > > > bp anymore and it's attached to the transaction so it doesn't leak.
+> > > > That's a little subtle since there's nothing preventing someone from
+> > > > calling xfs_attr3_leaf_init(NULL, dp, 0).
+> > > 
+> > > Indeed, there should be an increase in explanatory comments and an empty
+> > > check for the tp.
+> > > 
+> > > > 
+> > > > > +		if (error)
+> > > > > +			return error;
+> > > > > +		error = xfs_trans_roll_inode(trans, dp);
+> > > > 
+> > > > If we have an xattr structure with multiple levels of dabtree nodes, can
+> > > > this lead to the somewhat odd situation where the tree levels are
+> > > > uneven during deconstruction?  For example
+> > > > 
+> > > >       root
+> > > >       /  \
+> > > >  node     empty_leaf
+> > > >  |  \
+> > > >  |   \
+> > > > node node
+> > > > |       \
+> > > > leaves  more_leaves
+> > > > 
+> > > > Does this matter, or can the inactivation code already handle it?  I
+> > > > suppose since we're inactivating (either in inodegc or in recovery after
+> > > > a crash) user programs will never see this so the window of confusion
+> > > > might be pretty small.
+> > > > 
+> > > > --D
+> > > 
+> > > For the reason of simplicity and efficiency, the dead code does not consider
+> > > this tree imbalance scenario, and I understand that this would not cause
+> > > any practical issues. 
+> > 
+> > "dead" code?  Did you mean to say that the code that the patch removes
+> > did not consider this imbalanced tree scenario?  "Dead" code usually
+> > refers to code that's still in the codebase that nobody calls or
+> > executes.
 > 
-> We see cases from the field where xfsrestore aborts on an assert(3).
-> In each case there's a real problem that needs to be fixed, but these
-> problems are preventing folk from restoring their data. With the asserts
-> suppressed or removed xfsrestore usually does something sane enough, at
-> worst leaving restored content in the orphanage where a user can find
-> it.
+> Sorry for the confusion — "dead code" was a mistaken word choice.  I
+> meant the attr inactivation code.
 > 
-> This was notably seen with the original xfsdump bind mount fix, now
-> we're seeing asserts fire during cumulative restores in
-> noref_elim_recurse.
+> > 
+> > I /think/ what I'm hearing is that the the attr inactivation code can
+> > handle the system going down midway through removing the attr structure,
+> > so it doesn't matter if log recovery finds an imbalanced tree because
+> > all it's really doing is walking the dabtree to each leaf and nuking the
+> > path to that leaf; and now it'll also rewrite each emptied-out node with
+> > an empty leaf to ensure that a second log recovery can resume if the
+> > first recovery attempt fails due to system crash etc.
+> > 
+> > (Is that correct?)
+> > 
+> > --D
 > 
->   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
+> And yes, I agree with most of your understanding, but the approach is 
+> slightly different from what you described.  Only the empty root node
+> is rewritten as an empty leaf.  For intermediate nodes, the handling
+> depends on whether the entry being removed is the last one in that node:
+> if it is not the last entry, the transaction is committed immediately
+> after the deletion; if it is the last entry, the entry deletion, the 
+> cancellation of the now-empty node block, and the removal of the pointer
+> to that node from its parent are all placed in the same transaction.
+> This ensures that an empty intermediate node is never visible to recovery
+> without its parent pointer also being gone, avoiding the need to convert
+> every emptied intermediate node to a leaf.
 > 
-> This appears to be caused by a rename to within the tree between restore
-> levels, or a combination of modifications during occurring during the
-> dump. Fixing it will likely require changes in noref_elim_recurse, or
-> tree_post, to ensure elements of the tree are created for these edge
-> cases.
-> 
-> But why are we seeing assert(3) active in Fedora based distro builds?
-> 
-> xfsprogs and xfsdump m4/package_globals.m4 shows builds should default
-> to DEBUG and xfsdump doc/INSTALL talks about how to turn off asserts and
-> create an optimized build, but only Debian has its build rules in-tree,
-> where they set DEBUG=-DNDEBUG.
-> 
-> Building locally on Fedora or similar gets varied results with recent
-> Fedora versions building as if DEBUG=-DNDEBUG was set within the realm
-> of configure or autoconf, which may be misleading people.
-> 
-> But for Fedora release builds we can see that they're building with
-> DEBUG=-DDEBUG resulting in gcc called with -DDEBUG in the build logs.
-> 
->   https://src.fedoraproject.org/rpms/xfsdump
->   https://kojipkgs.fedoraproject.org//packages/xfsdump/3.2.0/4.fc44/data/logs/x86_64/build.log
-> 
->   https://src.fedoraproject.org/rpms/xfsprogs
->   https://kojipkgs.fedoraproject.org//packages/xfsprogs/6.18.0/2.fc44/data/logs/x86_64/build.log
-> 
-> I don't think the intention was to have these build as DEBUG, but that
-> seems to be the current result. But before I dig into this further can I
-> confirm what people think this should do?
-> 
-> The following series is illustrative of the changes to build xfsdump
-> cleanly with DEBUG=-DNDEBUG, or the type of downstream workarounds
-> required to help end users hitting problems for the status quo.
-> 
-> Don
-> 
-> Donald Douwsma (5):
->   xfsrestore: remove unused variable strctxp
->   annotate variables only used for assert
->   xfsrestore: include TREE_DEBUG all builds
+> The root node is a special case, which is essentially indexed by attr bmap.
+> Therefore, the root node can only be converted to an empty leaf to
+> prevent an empty node from being visible during the next recovery.
 
-First 3 patches looks good to me to include, not sure about the
-rest and the original use of the those asserts.
+Ah, ok, thanks for the explanation.  I'll go catch up with your latest
+posting now. :)
 
--- 
-- Andrey
+--D
 
+> Thanks,
+> Long Li
+> 
+> 
