@@ -1,159 +1,185 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6E91F131A
-	for <linux-xfs@vger.kernel.org>; Sat, 14 Mar 2026 17:04:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5883282F0A
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Mar 2026 20:38:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773507873; cv=none; b=Yaq2Pfewac5BcjjWU1rD1vkVxBkxYxOPk82yY4ZPU1HX+f/m+pMoD51cZoXgtw0v16Juy491w2foIE214u336AZN6leexzrqzOWBfvQ/uotbNtahRCAcNESDZPy6fk8VTan2XZiFtTIfca+yJHT3Iw56Pn2yI7/08A1pqnuMKCE=
+	t=1773520690; cv=none; b=tBkw0aiXuBqMl7QatEFxn1/k9vN/3FDPFLcBtL/dqxOqzSYXs+Qvq4VlTH72QV8DWzzZ7qAjGP5h/Z76PXJTGXc887bBz9XSD7qcDZq8/kegyyW/sLkOWlbvewjDkrobFWTaYxm7tcONwhikofXICCsWSefsvpxGNUpT2zXB//4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773507873; c=relaxed/simple;
-	bh=+ysvLkOY/6j/R/TWM/XeHYspBYMAFmbYe1y4eHA9qLA=;
+	s=arc-20240116; t=1773520690; c=relaxed/simple;
+	bh=3jsGC0oW8+Vhx/E9RzCl0LIHAoux9bsXXiQzRkWMAaE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AyBAxPi0RPP/0RXmKJMuUPMb2UY26YovbvXLEHg+B4Mmiej8chjFYT7JA0QcXpHhXkDy5Ivu9s7fhXO6u0mwXbyY5+6deaNgHUw6s+69WVCJkLxQyAK2tn1o9TpuI5MzEPEVkujzbxS/n0aQJ4PMFqBxhOBDm01weA3BiO/iMbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EY8UBmPA; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=OZjPWx1p; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=V0HzCvmmC5dEC7hm5H1l+lETushI7hcz9b+yq4q2Sau6x8Khg9eD7g37d2DuhHT/JeOBpMqiIE3w/sna+daxM8ikcOVzSW9yXM9vUlgBHPwDDbWG8p2t/4whPDuGmy3oCCVs0CcRXLhLg9WYroOL1xfirjPdS6MPrdqQSxE6wn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y240C2QQ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=X4S7TYGS; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EY8UBmPA";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="OZjPWx1p"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y240C2QQ";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="X4S7TYGS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773507870;
+	s=mimecast20190719; t=1773520687;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=TY2RZifNMA2+PGDu5d8zIqDKxVt19EdeEHnDXNRBqlI=;
-	b=EY8UBmPAdqvTBSxaTTtpC06V4Bgb7/f4THV1WTi1dvzgZauR9CJPXiSJsZlxcx8V7D9ecA
-	Q8c/W9uJwM/YXZgIWubhXNzrFDDh+6DPJjow5GMB1nPA0bcWdO5f+Zr8YC/ujdXoitjmKT
-	h6tpQ4+IRmzUVfHByVA8AwtZh07MkMA=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=5kLm1ltD9Bl0VYZ370BXyzemIFUkmOHX1fkgy/6TVew=;
+	b=Y240C2QQz6T/5gTSphytRIczzOi+Rz64EfaL+GzPXBYm+L1HhGmMOrcWumXoNgzkcMO9wy
+	Yz9ENvHr48ec0nom71wqOB231zn1D9mH2VcZVBM6MeyvHEX8W+avH1UoJlbiBMXNsPF6bI
+	4zqaPxN+Jam+wboeDmfgYebG4uoCQ/U=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-274-iXhF5O1sP1iD-yWPEbB71A-1; Sat, 14 Mar 2026 13:04:29 -0400
-X-MC-Unique: iXhF5O1sP1iD-yWPEbB71A-1
-X-Mimecast-MFC-AGG-ID: iXhF5O1sP1iD-yWPEbB71A_1773507868
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2aec805eec4so13152955ad.1
-        for <linux-xfs@vger.kernel.org>; Sat, 14 Mar 2026 10:04:29 -0700 (PDT)
+ us-mta-59-o_RUmI9INcyjpdddAhFQNA-1; Sat, 14 Mar 2026 16:38:06 -0400
+X-MC-Unique: o_RUmI9INcyjpdddAhFQNA-1
+X-Mimecast-MFC-AGG-ID: o_RUmI9INcyjpdddAhFQNA_1773520685
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-358e95e81aeso22066629a91.0
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Mar 2026 13:38:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773507868; x=1774112668; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=TY2RZifNMA2+PGDu5d8zIqDKxVt19EdeEHnDXNRBqlI=;
-        b=OZjPWx1pr3ATCwsqXFldQaaMg0jHR3FcYdl4U1d7djGcjDIsz3rjZZnXn+8yFJuyl8
-         YEW+6H2fs4kM4wIyIM0KuEgoYJYXHbM2p+b12NHJp4PwnoYJaPOriyNb2BRxR7DK7ZPe
-         121McMA2KZ7EECJ3LmlV3BmQU7PzhTOaLTnxLGTWnxqdJjvj6s+HXSYKQPAZpcQ83YQf
-         gAqyx15XyqjSEJB/eTLxlvcGDMFzZh3f4zofMG9I1CAMIyVVbpxSJzJMRVANRKzCI9WS
-         HMO96eNQAYIo94bvngQFTEMHvQEFU4TS+fmT3sRxNzEKgyLQuZGTLPQrz5P07pdkoXGj
-         Vwtg==
+        d=redhat.com; s=google; t=1773520685; x=1774125485; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=5kLm1ltD9Bl0VYZ370BXyzemIFUkmOHX1fkgy/6TVew=;
+        b=X4S7TYGSh6nrcy4pUWMe080Hg8mJkufpeDEKJUhKSrihvDPqZJfhB6Mmw50xyeD+va
+         /8Vie5CaahR+jlmwVfRBJiN9MGBC1BmEdgg/zG4vDzeN7DjhoAvOZun139xA8elE3rpk
+         9GnsDcTsyd/uYLEBAyfVPf64xwpxU61uk1YXJgNfkMEC9NKdBVKu06BnYd5vRLpz3XcW
+         GDUl/JQbLAe1uo+fK4YBNS+Qn/b1yZQaqlIHZrLHN7MtUI5bzghPBVUXRui8GynY+0Uo
+         tEVsvDhJb2yT1Q8iN9DO3atgjVu8bN3ygDWey1Sp+2gDSzVStvszNzPFl7YVyEQUr8IW
+         lOXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773507868; x=1774112668;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TY2RZifNMA2+PGDu5d8zIqDKxVt19EdeEHnDXNRBqlI=;
-        b=iCmvJ5xckpFXaPuTGfW8yBuQGIQTiJjqXalusUcDllBN6esxaUGfyz0vJRpKL1nWbz
-         OnrzfHQnVa683zMMngMJRbgFOGE8dP2mMeSDrPtYYUbjzOOli1wZAPkI+ZzWRfdrfY2l
-         85PTmWQPKbyV2KolFAdq7DE5vVHupCOiqG5f3iNjvlIUyGKPvPYT62x+nQQQ6oJM++2j
-         t5V7hrZdETf0o46hD6Baod9St/3c4dhQJHNn2bFv5LK4zRW1mk1+EFVR9g3rd1EH6oeh
-         0YC1dFOmMsxqARj93KG6x2swJqrFa5Y36BVGg56fi2u4uGVmAqs/UM039sSg2brJ3Q3e
-         q9jA==
-X-Forwarded-Encrypted: i=1; AJvYcCUixRVGHp4EnHWw+QrnzkJqdxRBIBxyp0wwmrRTt7DZ97IqWVSZx21uFpSR7ozkFB61GHPsS+Tg0rU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7JhjeeuBXG+s2dV+fCuMZWlXReSYqIg2ziw1Jy4Gf45JZoli1
-	Vh1o3Mxc3CRXRfqAbiNAU1/H1g18WPtZs/wpVyCpK58/wclyi92+qtcDD2Z3UKNrcOaZi3wTiLP
-	pRtdFmD4rdykRoSDLodqv7YfRVrakMSqm7JNqfcn+gK9OwRXwOECcpXyqBK3DbQ==
-X-Gm-Gg: ATEYQzzs7mq3zy5qTX9cvYwjZu/1hjrg6w6ksYfNXpFdVTnD1PQvYeNopuZ1JyCuoUd
-	NOK1sCitQ64P7DwXCx30owFrkK4zEnIUWKeMK9bNYLitgFyjVD4E3wNhs9QHjzel6GI7j+Dgiur
-	CnJJV0zNwTY7ZJeW/dYKP4eNYEoYEpTyO/jbWtMazlsbK4unfAbgOfzA1yj0tfuwezJEj+kruY5
-	CLv+UF8PS3+PE74Zg+CusAQqEBK89KApBG0I8DBvdwxqQ0FgMIG1+ByekMMKLPnE/vUk/S4+tmK
-	lyRlT60AtOU2z8LWUqVTW4i9BeSleKxMVBnmdfHUIrHHxP4LHSMT5wnGhmvw0sKC4n6hTlQPjeu
-	J1ladhO+VQ5ZXF5tx9TgHus6GIgULe9z6BicKS7R7imGA0o7gwitkxKuGnjdaGg==
-X-Received: by 2002:a17:902:ef07:b0:2ad:e02b:4629 with SMTP id d9443c01a7336-2aecac81c73mr90329805ad.50.1773507868279;
-        Sat, 14 Mar 2026 10:04:28 -0700 (PDT)
-X-Received: by 2002:a17:902:ef07:b0:2ad:e02b:4629 with SMTP id d9443c01a7336-2aecac81c73mr90329605ad.50.1773507867842;
-        Sat, 14 Mar 2026 10:04:27 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2aece7ed753sm73365325ad.45.2026.03.14.10.04.25
+        d=1e100.net; s=20251104; t=1773520685; x=1774125485;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5kLm1ltD9Bl0VYZ370BXyzemIFUkmOHX1fkgy/6TVew=;
+        b=Q5bll5tO32l7eFZdKraf9oN/5VhxiHZ+piu2vncUZ7/Fsl6Z+YM16h1l5xV03eWbx2
+         11LzesgOh06KeIfeME021BN1LmY6FqH8n9IgarjBnnhXc55NtGWCwKSWzcOuowPN1jpq
+         ynPjZVnZPg7oVKc0tn2ESpq8SPLwRhoTqQpcbrSuLjftxEC1uwHvn7XHFG7JgwF4Pjbh
+         YvgQrupvuuTGAdt97DnlsVLujBehsByRP+WPahohyYJEIpHv8vs2xed4st1thyUsGhfs
+         FaHrLQyNOjyfVqgX5Ene9JRpfszmFFFLiQGVDqf26G1Oz7DB3QZEKW/nFtCIBch/W+k5
+         xUTw==
+X-Forwarded-Encrypted: i=1; AJvYcCWlRry+2dx7S4GgmFzo5/cI9epWnuI1PXifFOFBBz0hLxeLtkrer98TKyA3Z8phoFAQalNm/rFtPCM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyK2dfnB115bj5y/FT0GdR7CyDH8hY5q8bpWOhFbtGu+L+48T+O
+	/wDWwhIH0WUyZgWW5b2iiV0H5nRAd8gfGVGel0mpikT9v+veAaH3kbWH5qJQIYS2XXRPZxxDRdz
+	7o9BTOL5m6R4FMneeoYdAbWPwnq5ONaQ9udUK/Buwz5w3uOR8c8sgiqZhnBEY3rMfUQsyMQ==
+X-Gm-Gg: ATEYQzwUeHUmqDxNXlx4K3z8+tp9c9dD6bt97npknDetRPnxHKg+CYO+WgzSXfQzds4
+	2hJb1zihNfnOC6VPT9dGQqfytZy/lBSiRQ2TY2H+9GcTWoNLEIGOupTZSMhPr9czLe19vUIiQoj
+	z4D5urYrzMeNVXhxOrpHhCt914l27En6M+IEsRQWNRmrlfTFFND+eLvXnNfxoj7dA2i5Rtc+IHE
+	cDOhg6dwSFmK2Jj0CPhseEtetBq0I+NqcIV/flS5IMvq98b7CnYh1gU0YlJTQN4GX0gr1IyPoXi
+	5BZaLD7oQyH/DpClWioiwnfqVQIsiKxY8zGFb69fny+jvoR/h+xlReYElKztGBZmd1d8wvW8Yro
+	cBN5Y0dmewc1NQoRkrw==
+X-Received: by 2002:a17:90b:4b09:b0:35a:1ad9:c641 with SMTP id 98e67ed59e1d1-35a220a9dcamr6293091a91.31.1773520684825;
+        Sat, 14 Mar 2026 13:38:04 -0700 (PDT)
+X-Received: by 2002:a17:90b:4b09:b0:35a:1ad9:c641 with SMTP id 98e67ed59e1d1-35a220a9dcamr6293088a91.31.1773520684457;
+        Sat, 14 Mar 2026 13:38:04 -0700 (PDT)
+Received: from doltdoltdolt ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35b929558d1sm429634a91.4.2026.03.14.13.38.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 14 Mar 2026 10:04:27 -0700 (PDT)
-Date: Sun, 15 Mar 2026 01:04:22 +0800
+        Sat, 14 Mar 2026 13:38:03 -0700 (PDT)
+Date: Sun, 15 Mar 2026 04:37:59 +0800
 From: Zorro Lang <zlang@redhat.com>
-To: Anand Jain <anajain.sg@gmail.com>
-Cc: Anand Jain <asj@kernel.org>, fstests@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] fstests: add _mkfs_scratch_clone() helper
-Message-ID: <20260314170422.a62qqwqe6agom443@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <cover.1772095513.git.asj@kernel.org>
- <254fdd3e212f6618ea33207ef24db2b316d2d8fc.1772095513.git.asj@kernel.org>
- <20260309191317.vxcjvqfpoqdiycki@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <43710dd2-4282-4475-a29d-983295fab86f@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/14] xfs: set up common code for testing xfs_healer
+Message-ID: <20260314203759.nbt523d7dyuhr6um@doltdoltdolt>
+References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
+ <177311403849.1186408.3223809492518597284.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <43710dd2-4282-4475-a29d-983295fab86f@gmail.com>
+In-Reply-To: <177311403849.1186408.3223809492518597284.stgit@frogsfrogsfrogs>
 
-On Wed, Mar 11, 2026 at 10:32:18AM +0800, Anand Jain wrote:
+On Mon, Mar 09, 2026 at 08:51:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > What about if ${#devs[@]} > 2 ?
+> Add a bunch of common code so that we can test the xfs_healer daemon.
+> Most of the changes here are to make it easier to manage the systemd
+> service units for xfs_healer and xfs_scrub.
 > 
-> On purpose- so tests using _scratch_mkfs_sized_clone() don't
-> pick a random higher number. If a test needs more than two
-> devices, opens an opportunity to critically review this function.
-> >> +	fi
-> >> +
-> >> +	case "$FSTYP" in
-> >> +	"btrfs")
-> >> +		_scratch_mkfs_sized $size
-> >> +		_scratch_mount
-> >> +		$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/sv1
-> >> +		_scratch_unmount
-> >> +		;;
-> >> +	"xfs"|"ext4")
-> >> +		_scratch_mkfs_sized $size
-> >> +		;;
-> >> +	*)
-> >> +		_notrun "fstests clone op unsupported for FS $FSTYP"
-> >> +		;;
-> >> +	esac
-> >> +
-> >> +	# clone SCRATCH_DEV devs[0] to devs[1].
-> >> +	dd if=$SCRATCH_DEV of=${devs[1]} bs=$size status=none count=1 || \
-> >> +							_fail "Clone failed"
-> > 
-> > I'm wondering if we absolutely need to use SCRATCH_DEV_POOL for this test. Could we clone SCRATCH_DEV
-> > to an image file instead? Or would it be feasible to simply run the test using two image files?
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/config  |   14 ++++++++
+>  common/rc      |    5 +++
+>  common/systemd |   39 ++++++++++++++++++++++
+>  common/xfs     |   98 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/802  |    4 +-
+>  5 files changed, 158 insertions(+), 2 deletions(-)
 > 
-> Using a config file and testing directly on block devices lets
-> us cover a wider range of devices.
-> 
-> When I wrote this test case, I was also considering whether a
-> serial-number–based mount without extra mount option, would be
-> better in the kernel.
-> 
-> The downside is that xfs/ext4 testers now need to use
-> SCRATCH_DEV_POOL. Let me know what you prefer.
 
-I'm concerned that testers from other filesystems might not be familiar
-with SCRATCH_DEV_POOL, as it's typically not a requirement for their
-testing. I'm not sure if they would be willing to configure and switch
-to SCRATCH_DEV_POOL, just for these few test cases. If we can avoid making
-the pool to be a hard requirement, it might be more user-friendly for other
-fs list. Welcome feedback and review points from other filesystem mailing
-lists :)
+[snip]
+
+> +# Compute the xfs_scrub systemd service instance name for a given path.  This
+> +# is tricky because xfs_scrub only gained --svcname when xfs_healer was made.
+> +_xfs_scrub_svcname()
+> +{
+> +	local ret
+> +
+> +	if ret="$($XFS_SCRUB_PROG --svcname "$@")"; then
+
+Better to be:
+
+-       if ret="$($XFS_SCRUB_PROG --svcname "$@")"; then
++       if ret="$($XFS_SCRUB_PROG --svcname "$@" 2>/dev/null)"; then
+
+Or below xfs/802 will ...
+
+> +		echo "$ret"
+> +		return 0
+> +	fi
+
+[snip]
+
+> diff --git a/tests/xfs/802 b/tests/xfs/802
+> index fc4767acb66a55..18312b15b645bd 100755
+> --- a/tests/xfs/802
+> +++ b/tests/xfs/802
+> @@ -105,8 +105,8 @@ run_scrub_service() {
+>  }
+>  
+>  echo "Scrub Scratch FS"
+> -scratch_path=$(systemd-escape --path "$SCRATCH_MNT")
+> -run_scrub_service xfs_scrub@$scratch_path
+> +svc="$(_xfs_scrub_svcname "$SCRATCH_MNT")"
+
+... fails on old xfsprogs as:
+
+  --- /dev/fd/63	2026-03-13 19:16:15.217899866 -0400
+  +++ xfs/802.out.bad	2026-03-13 19:16:15.191834546 -0400
+  @@ -1,5 +1,21 @@
+   QA output created by 802
+   Format and populate
+   Scrub Scratch FS
+  +/usr/sbin/xfs_scrub: invalid option -- '-'
+  +Usage: xfs_scrub [OPTIONS] mountpoint
+  +
+  +Options:
+  +  -a count     Stop after this many errors are found.
+  +  -b           Background mode.
+  +  -C fd        Print progress information to this fd.
+  +  -e behavior  What to do if errors are found.
+  +  -k           Do not FITRIM the free space.
+  +  -m path      Path to /etc/mtab.
+  +  -n           Dry run.  Do not modify anything.
+  +  -p           Only optimize, do not fix corruptions.
+  +  -T           Display timing/usage information.
+  +  -v           Verbose output.
+  +  -V           Print version.
+  +  -x           Scrub file data too.
+   Scrub Everything
+   Scrub Done
+
+If you don't have more suggestion, I'll help to change that :)
 
 Thanks,
 Zorro
 
-> 
-> 
-> 
+> +run_scrub_service "$svc"
+>  find_scrub_trace "$SCRATCH_MNT"
+>  
+>  # Remove the xfs_scrub_all media scan stamp directory (if specified) because we
 > 
 
