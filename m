@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8EC285CAE;
-	Fri, 13 Mar 2026 23:53:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA40275870
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Mar 2026 00:18:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773445981; cv=none; b=YbLzyG1Hqc9k6mf2s1/g5MulHKbziUnLZ1wcmR3meLsNieu87iPXiN/4LkrnghmrRNLFjEfKsHIloHFhgacTcOEXcY1XJykE/j8pHqSKGt6magKKVqS2APFflIQHyK4xGvlcszLCCpvXeIWmoCF5JlwqYqpM771xNOuBTEZQTbU=
+	t=1773447537; cv=none; b=N6EDD2ps0/3EZuESmVJluJ+NhTtvczYsAkbx/P8y4DCEGJn6mWbKpm/fHcZ1NhFlQQZoLSQDV755qINoArKY/mJPw3LOrTkOM/0zSDGilmh7mRXyNUHq5Vqc+qkg57p6z7Kpd6S9HT9WunU74v+tzKS4PRYC36BtlR9sVLMiinU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773445981; c=relaxed/simple;
-	bh=5r5j5oLDbMFyq7DrYWhRWxFhJiFPpNWAap2QKg7KDhs=;
+	s=arc-20240116; t=1773447537; c=relaxed/simple;
+	bh=TOpwd+JUUb20849P6XnXLVsbR/b+MXZuNWmwDq4PZo0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oXeq5YYZ39FxAiCJq4gV7KsJb+aZNZG+Kan4mxzSrkI/w6x8Je6OqtHNsfMGmzpol4VNLB/FDBtb6hRt4/SEUMvK7OOswKSKIDLF9jPv5MFpUoDgutxr8TIkxa5hhqFmYEL4lshPzMGoGUXoKl1ieZZOqbVJAyHKEU+/cRCLcD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CUxeMhqC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QLl7g+GDANvfvJ+vAsML/QXvfzU4eRkavz7R+EFUNLT0S/I/GFvWh6etdmWAslW2+1Fsnu1LNrmT3I+UKEAdckFBCyYrAU/dgS+XRfne9pN8dbdxF8fXG5KACvaM3Qw0IH6nqJ/TOIigRcQT8Er9cq0DxUtzdYGIraXF/bi5MnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTzif8va; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CUxeMhqC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62260C19421;
-	Fri, 13 Mar 2026 23:53:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTzif8va"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4FCCC19421;
+	Sat, 14 Mar 2026 00:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773445980;
-	bh=5r5j5oLDbMFyq7DrYWhRWxFhJiFPpNWAap2QKg7KDhs=;
+	s=k20201202; t=1773447536;
+	bh=TOpwd+JUUb20849P6XnXLVsbR/b+MXZuNWmwDq4PZo0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CUxeMhqCD1bvPi8eMx70VUDJiTsoNxt4QobZZtz33U2AY99VVCyocFUOLcqUKPhqt
-	 36XtbhAC1/aJ5/hswzi2ExgxSnGIzvtggBYNsn8dZdywI5QIRG5F5vXpj8A2wuSaWL
-	 hkL1Niqo/so9kxkWHR8Xs2uGOv0yp2I6ovHZooNeVxdrYFRE2WRkEWwlywS5kZ3ic2
-	 +IOlK6Xw0IIw5hMBGkMz9y6vWq86/9RKgoPSqNFcesjwKgnD3zDOiFi2tM0ArBUi+4
-	 KblOHyK7R+d0jVuW9ehAzMiy2ga9a/XdizZ/H5E3BC3F8BNalcCxmiCk0RO6fsuf2o
-	 3PXseipOO1MSw==
-Date: Fri, 13 Mar 2026 16:52:59 -0700
+	b=VTzif8varJ7rSSgBusG/3HhR6KAZavACgdhlTM8FGbm9t4imBw8NQrOG0Seu0+j5m
+	 w4NL2bo0WugcNjvGe1t3/ZBl/uSO39CT2NBZ8Tzj6sOaBpDJvOXzK8ZZGcq9y6SvQ7
+	 N7X6OWDhLizXL0ocrnvl1yGbG9oSiTvFUPbP3bwB3szTCauqKn9lZispKdJ3mTLrCX
+	 x/fXi1+uFbiCXWhlqvfcvOn/H7RrdPUb+NEUWhqhGbTk2q7yGht5/EpLFyICG3mi7X
+	 Vm74q4Iiq//q2ahVRwygWqBDJqk1W3WgJK499XO9xxAZeFt4YnbE0A73bAf2zCz5zj
+	 GAHHCESKZpkTQ==
+Date: Fri, 13 Mar 2026 17:18:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, lukas@herbolt.com,
-	dgc@kernel.org, pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] ltp: add support for FALLOC_FL_WRITE_ZEROES to fsx and
- fsstress
-Message-ID: <20260313235259.GH6023@frogsfrogsfrogs>
-References: <20260312195308.738189-1-p.raghav@samsung.com>
+To: Long Li <leo.lilong@huawei.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+	lonuxli.64@gmail.com
+Subject: Re: [PATCH v2 4/4] xfs: close crash window in attr dabtree
+ inactivation
+Message-ID: <20260314001856.GS1770774@frogsfrogsfrogs>
+References: <20260312085800.1213919-1-leo.lilong@huawei.com>
+ <20260312085800.1213919-5-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,288 +45,260 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260312195308.738189-1-p.raghav@samsung.com>
+In-Reply-To: <20260312085800.1213919-5-leo.lilong@huawei.com>
 
-On Thu, Mar 12, 2026 at 08:53:08PM +0100, Pankaj Raghav wrote:
-> Add FALLOC_FL_WRITE_ZEROES support to both fsx and fsstress.
-> FALLOC_FL_WRITE_ZEROES flag was added in the kernel as a part of Zhang
-> Yi's series [1].
+On Thu, Mar 12, 2026 at 04:58:00PM +0800, Long Li wrote:
+> When inactivating an inode with node-format extended attributes,
+> xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
+> xfs_trans_binval(), but intentionally does not remove the corresponding
+> entries from their parent node blocks.  The implicit assumption is that
+> xfs_attr_inactive() will truncate the entire attr fork to zero extents
+> afterwards, so log recovery will never reach the root node and follow
+> those stale pointers.
 > 
-> FALLOC_FL_KEEP_SIZE is not supported when FALLOC_FL_WRITE_ZEROES is
-> used.
+> However, if a log shutdown occurs after the leaf/node block cancellations
+> commit but before the attr bmap truncation commits, this assumption
+> breaks.  Recovery replays the attr bmap intact (the inode still has
+> attr fork extents), but suppresses replay of all cancelled leaf/node
+> blocks, maybe leaving them as stale data on disk.  On the next mount,
+> xlog_recover_process_iunlinks() retries inactivation and attempts to
+> read the root node via the attr bmap. If the root node was not replayed,
+> reading the unreplayed root block triggers a metadata verification
+> failure immediately; if it was replayed, following its child pointers
+> to unreplayed child blocks triggers the same failure:
 > 
-> [1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+>  XFS (pmem0): Metadata corruption detected at
+>  xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
+>  XFS (pmem0): Unmount and run xfs_repair
+>  XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+>  00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>  XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
 > 
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Fix this in two places:
+> 
+> In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
+> child block, immediately remove the entry that references it from the
+> parent node in the same transaction.  This eliminates the window where
+> the parent holds a pointer to a cancelled block.  Once all children are
+> removed, the now-empty root node is converted to a leaf block within the
+> same transaction. This node-to-leaf conversion is necessary for crash
+> safety. If the system shutdown after the empty node is written to the
+> log but before the second-phase bmap truncation commits, log recovery
+> will attempt to verify the root block on disk. xfs_da3_node_verify()
+> does not permit a node block with count == 0; such a block will fail
+> verification and trigger a metadata corruption shutdown. on the other
+> hand, leaf blocks are allowed to have this transient state.
+> 
+> In xfs_attr_inactive(), split the attr fork truncation into two explicit
+> phases.  First, truncate all extents beyond the root block (the child
+> extents whose parent references have already been removed above).
+> Second, invalidate the root block and truncate the attr bmap to zero in
+> a single transaction.  The two operations in the second phase must be
+> atomic: as long as the attr bmap has any non-zero length, recovery can
+> follow it to the root block, so the root block invalidation must commit
+> together with the bmap-to-zero truncation.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
 
-Looks like a clone of the ZERO_RANGE code so I think this is ready for
-wider testing...
+I think this looks ok, but let me run it through g753 over the weekend
+to see if it fixes that problem too.  Thanks for answering my questions
+the last time through.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  ltp/fsstress.c | 15 ++++++++-
->  ltp/fsx.c      | 85 ++++++++++++++++++++++++++++++++++++++++++++++++--
->  src/global.h   |  8 +++++
->  3 files changed, 105 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_attr_inactive.c | 93 ++++++++++++++++++++++----------------
+>  1 file changed, 53 insertions(+), 40 deletions(-)
 > 
-> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> index 9d0ed32f..fe340aea 100644
-> --- a/ltp/fsstress.c
-> +++ b/ltp/fsstress.c
-> @@ -124,6 +124,7 @@ typedef enum {
->  	OP_MWRITE,
->  	OP_PUNCH,
->  	OP_ZERO,
-> +	OP_WRITE_ZEROES,
->  	OP_COLLAPSE,
->  	OP_INSERT,
->  	OP_READ,
-> @@ -257,6 +258,7 @@ void	mread_f(opnum_t, long);
->  void	mwrite_f(opnum_t, long);
->  void	punch_f(opnum_t, long);
->  void	zero_f(opnum_t, long);
-> +void	write_zeroes_f(opnum_t, long);
->  void	collapse_f(opnum_t, long);
->  void	insert_f(opnum_t, long);
->  void	unshare_f(opnum_t, long);
-> @@ -326,6 +328,7 @@ struct opdesc	ops[OP_LAST]	= {
->  	[OP_MWRITE]	   = {"mwrite",	       mwrite_f,	2, 1 },
->  	[OP_PUNCH]	   = {"punch",	       punch_f,		1, 1 },
->  	[OP_ZERO]	   = {"zero",	       zero_f,		1, 1 },
-> +	[OP_WRITE_ZEROES]  = {"write_zeroes",  write_zeroes_f,	1, 1 },
->  	[OP_COLLAPSE]	   = {"collapse",      collapse_f,	1, 1 },
->  	[OP_INSERT]	   = {"insert",	       insert_f,	1, 1 },
->  	[OP_READ]	   = {"read",	       read_f,		1, 0 },
-> @@ -3827,6 +3830,7 @@ struct print_flags falloc_flags [] = {
->  	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
->  	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
->  	{ FALLOC_FL_UNSHARE_RANGE, "UNSHARE_RANGE"},
-> +	{ FALLOC_FL_WRITE_ZEROES, "WRITE_ZEROES"},
->  	{ -1, NULL}
->  };
+> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> index 92331991f9fd..235f19a68fa2 100644
+> --- a/fs/xfs/xfs_attr_inactive.c
+> +++ b/fs/xfs/xfs_attr_inactive.c
+> @@ -140,7 +140,7 @@ xfs_attr3_node_inactive(
+>  	xfs_daddr_t		parent_blkno, child_blkno;
+>  	struct xfs_buf		*child_bp;
+>  	struct xfs_da3_icnode_hdr ichdr;
+> -	int			error, i;
+> +	int			error;
 >  
-> @@ -3886,7 +3890,8 @@ do_fallocate(opnum_t opno, long r, int mode)
->  		off = roundup_64(off, stb.st_blksize);
->  		len = roundup_64(len, stb.st_blksize);
+>  	/*
+>  	 * Since this code is recursive (gasp!) we must protect ourselves.
+> @@ -152,7 +152,7 @@ xfs_attr3_node_inactive(
+>  		return -EFSCORRUPTED;
 >  	}
-> -	mode |= FALLOC_FL_KEEP_SIZE & random();
-> +	if (!(mode & FALLOC_FL_WRITE_ZEROES))
-> +		mode |= FALLOC_FL_KEEP_SIZE & random();
->  	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
->  	if (v)
->  		printf("%d/%lld: fallocate(%s) %s%s [%lld,%lld] %d\n",
-> @@ -4513,6 +4518,14 @@ zero_f(opnum_t opno, long r)
->  #endif
->  }
 >  
-> +void
-> +write_zeroes_f(opnum_t opno, long r)
-> +{
-> +#ifdef HAVE_LINUX_FALLOC_H
-> +	do_fallocate(opno, r, FALLOC_FL_WRITE_ZEROES);
-> +#endif
-> +}
-> +
->  void
->  collapse_f(opnum_t opno, long r)
->  {
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index 32b9d599..63cdd58e 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -125,6 +125,7 @@ enum {
->  	OP_FALLOCATE,
->  	OP_PUNCH_HOLE,
->  	OP_ZERO_RANGE,
-> +	OP_WRITE_ZEROES,
->  	OP_COLLAPSE_RANGE,
->  	OP_INSERT_RANGE,
->  	OP_CLONE_RANGE,
-> @@ -189,6 +190,7 @@ int     keep_size_calls = 1;            /* -K flag disables */
->  int     unshare_range_calls = 1;        /* -u flag disables */
->  int     punch_hole_calls = 1;           /* -H flag disables */
->  int     zero_range_calls = 1;           /* -z flag disables */
-> +int     write_zeroes_calls = 1;         /* -Y flag disables */
->  int	collapse_range_calls = 1;	/* -C flag disables */
->  int	insert_range_calls = 1;		/* -I flag disables */
->  int	mapped_reads = 1;		/* -R flag disables it */
-> @@ -306,6 +308,7 @@ static const char *op_names[] = {
->  	[OP_FALLOCATE] = "fallocate",
->  	[OP_PUNCH_HOLE] = "punch_hole",
->  	[OP_ZERO_RANGE] = "zero_range",
-> +	[OP_WRITE_ZEROES] = "write_zeroes",
->  	[OP_COLLAPSE_RANGE] = "collapse_range",
->  	[OP_INSERT_RANGE] = "insert_range",
->  	[OP_CLONE_RANGE] = "clone_range",
-> @@ -486,6 +489,13 @@ logdump(void)
->  			if (overlap)
->  				prt("\t******ZZZZ");
->  			break;
-> +		case OP_WRITE_ZEROES:
-> +			prt("WZERO    0x%x thru 0x%x\t(0x%x bytes)",
-> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> +			    lp->args[1]);
-> +			if (overlap)
-> +				prt("\t******ZZZZ");
-> +			break;
->  		case OP_COLLAPSE_RANGE:
->  			prt("COLLAPSE 0x%x thru 0x%x\t(0x%x bytes)",
->  			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> @@ -1413,6 +1423,59 @@ do_zero_range(unsigned offset, unsigned length, int keep_size)
->  }
->  #endif
+> -	xfs_da3_node_hdr_from_disk(dp->i_mount, &ichdr, bp->b_addr);
+> +	xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
+>  	parent_blkno = xfs_buf_daddr(bp);
+>  	if (!ichdr.count) {
+>  		xfs_trans_brelse(*trans, bp);
+> @@ -167,7 +167,7 @@ xfs_attr3_node_inactive(
+>  	 * over the leaves removing all of them.  If this is higher up
+>  	 * in the tree, recurse downward.
+>  	 */
+> -	for (i = 0; i < ichdr.count; i++) {
+> +	while (ichdr.count > 0) {
+>  		/*
+>  		 * Read the subsidiary block to see what we have to work with.
+>  		 * Don't do this in a transaction.  This is a depth-first
+> @@ -218,29 +218,32 @@ xfs_attr3_node_inactive(
+>  		xfs_trans_binval(*trans, child_bp);
+>  		child_bp = NULL;
 >  
-> +#ifdef FALLOC_FL_WRITE_ZEROES
-> +void
-> +do_write_zeroes(unsigned offset, unsigned length)
-> +{
-> +	unsigned end_offset;
-> +	int mode = FALLOC_FL_WRITE_ZEROES;
+> -		/*
+> -		 * If we're not done, re-read the parent to get the next
+> -		 * child block number.
+> -		 */
+> -		if (i + 1 < ichdr.count) {
+> -			struct xfs_da3_icnode_hdr phdr;
+> +		error = xfs_da3_node_read_mapped(*trans, dp,
+> +				parent_blkno, &bp, XFS_ATTR_FORK);
+> +		if (error)
+> +			return error;
+>  
+> -			error = xfs_da3_node_read_mapped(*trans, dp,
+> -					parent_blkno, &bp, XFS_ATTR_FORK);
+> +		/*
+> +		 * Remove entry from parent node, prevents being indexed to.
+> +		 */
+> +		xfs_attr3_node_entry_remove(*trans, dp, bp, 0);
 > +
-> +	if (length == 0) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping zero length write zeroes\n");
-> +		log4(OP_WRITE_ZEROES, offset, length, FL_SKIPPED);
-> +		return;
-> +	}
+> +		xfs_da3_node_hdr_from_disk(mp, &ichdr, bp->b_addr);
+> +		bp = NULL;
 > +
-> +	end_offset = offset + length;
+> +		if (ichdr.count > 0) {
+> +			/*
+> +			 * If we're not done, get the next child block number.
+> +			 */
+> +			child_fsb = be32_to_cpu(ichdr.btree[0].before);
 > +
-> +	if (end_offset > biggest) {
-> +		biggest = end_offset;
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("write_zeroes to largest ever: 0x%x\n", end_offset);
-> +	}
-> +
-> +	log4(OP_WRITE_ZEROES, offset, length, FL_NONE);
-> +
-> +	if (end_offset > file_size)
-> +		update_file_size(offset, length);
-> +
-> +	if (testcalls <= simulatedopcount)
-> +		return;
-> +
-> +	if ((progressinterval && testcalls % progressinterval == 0) ||
-> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
-> +		      end_offset <= monitorend))) {
-> +		prt("%lld wzero\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-> +			offset, offset+length, length);
-> +	}
-> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-> +		prt("write zeroes: 0x%x to 0x%x\n", offset, offset + length);
-> +		prterr("do_write_zeroes: fallocate");
-> +		report_failure(161);
-> +	}
-> +
-> +	memset(good_buf + offset, '\0', length);
-> +}
-> +
-> +#else
-> +void
-> +do_write_zeroes(unsigned offset, unsigned length)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  #ifdef FALLOC_FL_COLLAPSE_RANGE
->  void
->  do_collapse_range(unsigned offset, unsigned length)
-> @@ -2409,6 +2472,12 @@ have_op:
->  			goto out;
+> +			/*
+> +			 * Atomically commit the whole invalidate stuff.
+> +			 */
+> +			error = xfs_trans_roll_inode(trans, dp);
+>  			if (error)
+>  				return error;
+> -			xfs_da3_node_hdr_from_disk(dp->i_mount, &phdr,
+> -						  bp->b_addr);
+> -			child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
+> -			xfs_trans_brelse(*trans, bp);
+> -			bp = NULL;
 >  		}
->  		break;
-> +	case OP_WRITE_ZEROES:
-> +		if (!write_zeroes_calls) {
-> +			log4(OP_WRITE_ZEROES, offset, size, FL_SKIPPED);
-> +			goto out;
-> +		}
-> +		break;
->  	case OP_COLLAPSE_RANGE:
->  		if (!collapse_range_calls) {
->  			log4(OP_COLLAPSE_RANGE, offset, size, FL_SKIPPED);
-> @@ -2512,6 +2581,10 @@ have_op:
->  		TRIM_OFF_LEN(offset, size, maxfilelen);
->  		do_zero_range(offset, size, keep_size);
->  		break;
-> +	case OP_WRITE_ZEROES:
-> +		TRIM_OFF_LEN(offset, size, maxfilelen);
-> +		do_write_zeroes(offset, size);
-> +		break;
->  	case OP_COLLAPSE_RANGE:
->  		TRIM_OFF_LEN(offset, size, file_size - 1);
->  		offset = rounddown_64(offset, block_size);
-> @@ -2611,7 +2684,7 @@ void
->  usage(void)
+> -		/*
+> -		 * Atomically commit the whole invalidate stuff.
+> -		 */
+> -		error = xfs_trans_roll_inode(trans, dp);
+> -		if (error)
+> -			return  error;
+>  	}
+>  
+>  	return 0;
+> @@ -257,10 +260,8 @@ xfs_attr3_root_inactive(
+>  	struct xfs_trans	**trans,
+>  	struct xfs_inode	*dp)
 >  {
->  	fprintf(stdout, "usage: %s",
-> -		"fsx [-adfhknqxyzBEFHIJKLORWXZ0]\n\
-> +		"fsx [-adfhknqxyzBEFHIJKLORWXZ0Y]\n\
->  	   [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid]\n\
->  	   [-l flen] [-m start:end] [-o oplen] [-p progressinterval]\n\
->  	   [-r readbdy] [-s style] [-t truncbdy] [-w writebdy]\n\
-> @@ -2663,6 +2736,9 @@ usage(void)
->  #ifdef FALLOC_FL_ZERO_RANGE
->  "	-z: Do not use zero range calls\n"
->  #endif
-> +#ifdef FALLOC_FL_WRITE_ZEROES
-> +"	-Y: Do not use write zeroes calls\n"
-> +#endif
->  #ifdef FALLOC_FL_COLLAPSE_RANGE
->  "	-C: Do not use collapse range calls\n"
->  #endif
-> @@ -3160,7 +3236,7 @@ main(int argc, char **argv)
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+> -	struct xfs_mount	*mp = dp->i_mount;
+>  	struct xfs_da_blkinfo	*info;
+>  	struct xfs_buf		*bp;
+> -	xfs_daddr_t		blkno;
+>  	int			error;
 >  
->  	while ((ch = getopt_long(argc, argv,
-> -				 "0ab:c:de:fg:hi:j:kl:m:no:p:qr:s:t:uw:xyABD:EFJKHzCILN:TOP:RS:UWXZ",
-> +				 "0ab:c:de:fg:hi:j:kl:m:no:p:qr:s:t:uw:xyABD:EFJKHzCILN:TOP:RS:UWXZY",
->  				 longopts, NULL)) != EOF)
->  		switch (ch) {
->  		case 'a':
-> @@ -3307,6 +3383,9 @@ main(int argc, char **argv)
->  		case 'z':
->  			zero_range_calls = 0;
->  			break;
-> +		case 'Y':
-> +			write_zeroes_calls = 0;
-> +			break;
->  		case 'C':
->  			collapse_range_calls = 0;
->  			break;
-> @@ -3568,6 +3647,8 @@ main(int argc, char **argv)
->  		punch_hole_calls = test_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE);
->  	if (zero_range_calls)
->  		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
-> +	if (write_zeroes_calls)
-> +		write_zeroes_calls = test_fallocate(FALLOC_FL_WRITE_ZEROES);
->  	if (collapse_range_calls)
->  		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
->  	if (insert_range_calls)
-> diff --git a/src/global.h b/src/global.h
-> index fbc0a0b5..e07b3703 100644
-> --- a/src/global.h
-> +++ b/src/global.h
-> @@ -179,6 +179,14 @@
->  #define FALLOC_FL_INSERT_RANGE		0x20
->  #endif
+>  	/*
+> @@ -272,7 +273,6 @@ xfs_attr3_root_inactive(
+>  	error = xfs_da3_node_read(*trans, dp, 0, &bp, XFS_ATTR_FORK);
+>  	if (error)
+>  		return error;
+> -	blkno = xfs_buf_daddr(bp);
 >  
-> +#ifndef FALLOC_FL_UNSHARE_RANGE
-> +#define FALLOC_FL_UNSHARE_RANGE		0x40
-> +#endif
+>  	/*
+>  	 * Invalidate the tree, even if the "tree" is only a single leaf block.
+> @@ -283,6 +283,16 @@ xfs_attr3_root_inactive(
+>  	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+>  	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+>  		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
+> +		if (error)
+> +			return error;
 > +
-> +#ifndef FALLOC_FL_WRITE_ZEROES
-> +#define FALLOC_FL_WRITE_ZEROES		0x80
-> +#endif
-> +
->  #endif /* HAVE_LINUX_FALLOC_H */
+> +		/*
+> +		 * Empty root node block are not allowed, convert it to leaf.
+> +		 */
+> +		error = xfs_attr3_leaf_init(*trans, dp, 0);
+> +		if (error)
+> +			return error;
+> +		error = xfs_trans_roll_inode(trans, dp);
+>  		break;
+>  	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+>  	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+> @@ -295,21 +305,6 @@ xfs_attr3_root_inactive(
+>  		xfs_trans_brelse(*trans, bp);
+>  		break;
+>  	}
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Invalidate the incore copy of the root block.
+> -	 */
+> -	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp, blkno,
+> -			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0, &bp);
+> -	if (error)
+> -		return error;
+> -	xfs_trans_binval(*trans, bp);	/* remove from cache */
+> -	/*
+> -	 * Commit the invalidate and start the next transaction.
+> -	 */
+> -	error = xfs_trans_roll_inode(trans, dp);
 >  
->  #ifdef HAVE_SYS_MMAN_H
-> 
-> base-commit: 3ded3e13c008326d197d11ac975049ed1f8ec922
+>  	return error;
+>  }
+> @@ -328,6 +323,7 @@ xfs_attr_inactive(
+>  {
+>  	struct xfs_trans	*trans;
+>  	struct xfs_mount	*mp;
+> +	struct xfs_buf          *bp;
+>  	int			lock_mode = XFS_ILOCK_SHARED;
+>  	int			error = 0;
+>  
+> @@ -363,10 +359,27 @@ xfs_attr_inactive(
+>  	 * removal below.
+>  	 */
+>  	if (dp->i_af.if_nextents > 0) {
+> +		/*
+> +		 * Invalidate and truncate all blocks but leave the root block.
+> +		 */
+>  		error = xfs_attr3_root_inactive(&trans, dp);
+>  		if (error)
+>  			goto out_cancel;
+>  
+> +		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK,
+> +				XFS_FSB_TO_B(mp, mp->m_attr_geo->fsbcount));
+> +		if (error)
+> +			goto out_cancel;
+> +
+> +		/*
+> +		 * Invalidate and truncate the root block and ensure that the
+> +		 * operation is completed within a single transaction.
+> +		 */
+> +		error = xfs_da_get_buf(trans, dp, 0, &bp, XFS_ATTR_FORK);
+> +		if (error)
+> +			goto out_cancel;
+> +
+> +		xfs_trans_binval(trans, bp);
+>  		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+>  		if (error)
+>  			goto out_cancel;
 > -- 
-> 2.51.2
+> 2.39.2
 > 
 > 
