@@ -1,112 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 547DE19343E
-	for <linux-xfs@vger.kernel.org>; Sun, 15 Mar 2026 00:00:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB35C3594A;
+	Sun, 15 Mar 2026 04:51:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773532849; cv=none; b=W1A/fyjfGWjJgd28A2D1oSJFHA8JO8LWC268VxBy6TF4tXU0GiaxyONjc5PYN47KwLaAMVw3hVoFxJpcmpVoziFi4Xv8X3cvgpacWwBMvW1nn8F19lEGJplGPRKdN4virJguNh4EsI3zL29UqgCsTuNJHbhTYylT8RCaVxOKVtg=
+	t=1773550295; cv=none; b=bb0k3bIDzigXomYQvp/PQuU4dJgtC3h60B5rxq/ZJgMgle91ms4dg09VGmMr3vTxUD+eSy0HXTyQv1s6JoHXRn50It6qEFb8B4CLwCumP0CHnTpLs1uanSl/py/VYIXfc5gDcKOrnrj689PnW9Wwddv4u0yYj0XePPBrGBWwkhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773532849; c=relaxed/simple;
-	bh=h+87hQuyl6UpELTdK12nlsc71JtQ2KMfVDPBw9CIQfc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bvYrOAMwUHRvvktUzHpovOvO5nRJrDB/UAOzDuU0PiFE/HRyNUohHVNIbQf0kKY1TwWCNHhy0Rg14h65sJZ2T5d72Ssab0TrueshtpQIYz2CNfIvq06Ir0lEkShHIPK03TpDHqbgkohZmz9snfsJ/2MZTsLB64Ibo2QhoXXKciU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H4XPbxyj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773550295; c=relaxed/simple;
+	bh=2pctLpceaitcLftHd3fezaOyBKG0rKfvVCfN2qLPGS8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GhU0sRP/KwHNsoWcPQCLqA/xkruhrJFuClB64oInIcYVzMobCH0lsJgxbZA3BXGz12TM7boQcwnnPlpzaiQUQIV99kxDAmWoUxnPROL//urN81FICagRXLzPiArhoAaZAAfEdAey8YsZQ4POGEGuvi9VXXAUaWF+Tpl6KdyfOaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XJGR9Bx/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H4XPbxyj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD4C1C116C6;
-	Sun, 15 Mar 2026 00:00:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XJGR9Bx/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F754C4CEF7;
+	Sun, 15 Mar 2026 04:51:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773532849;
-	bh=h+87hQuyl6UpELTdK12nlsc71JtQ2KMfVDPBw9CIQfc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=H4XPbxyjLGTCd1ZOal2EwAoYoiul5pXWAmHg4LDv7jBeIfjdciVy2BkgvHbt65Jv1
-	 4jmiSHEsJhA+cAICsSVLUB7A+XeOFkTGlBD3IkvWYs5OcPkd89QC3CQzQa5sj/rdn4
-	 CF0riP/5UasVBKN4rDipc2K0CoNcZyySjpJwqA6a1ezH9gH4PfnAUOzHqCEJ8fEogL
-	 w9LLIIRqlhYz3q6NgBQv5CYBszJJ16/H2mLF1qNRqlFzEw8IwTLGDHAL1Ytq5wy29d
-	 wga6OmLf6O/L1KIm9sg/qY3KdH/vpUczHE5BEuBgIojUQGDSQwOCfvxFtJ348aDX0I
-	 ug4XvjUltPoLw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: [PATCH 3/3] xfs: improve xfs_zoned_need_gc()
-Date: Sun, 15 Mar 2026 08:55:08 +0900
-Message-ID: <20260314235508.183984-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260314235508.183984-1-dlemoal@kernel.org>
-References: <20260314235508.183984-1-dlemoal@kernel.org>
+	s=k20201202; t=1773550294;
+	bh=2pctLpceaitcLftHd3fezaOyBKG0rKfvVCfN2qLPGS8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XJGR9Bx/t5OH689tskBJxk7huQxC/ns+8st+6IZyHGWLkUkDuYuCMHP1Qc1RI974r
+	 xoKjOvaB3kT5upPXfXqr1Sf0aYlaQIc7qbdgV98JfJrIItGT9+569spCz5bGFicgw+
+	 YdgcRpWRCkNQnUybGu2pyaN9pAUzyFosb52H1sjZ6sdla40Im1aREUM/w2kf6gUPk5
+	 4JMcXgVTZzlTLQ4NI7ES/b7loWPRlYWe7c+VPSjsrtBns5Nb8DWQyeX4w5bZx8ftKz
+	 Xe1jeSN+KkoQFWy/3x00H0Xnuquc37qaWG3yAfrY7eqSCOwDjukDKlAFapCHpr9hzM
+	 eYPk+HLVuFhqA==
+Date: Sat, 14 Mar 2026 21:51:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/14] xfs: set up common code for testing xfs_healer
+Message-ID: <20260315045133.GG6069@frogsfrogsfrogs>
+References: <177311403712.1186408.7032564474004561606.stgit@frogsfrogsfrogs>
+ <177311403849.1186408.3223809492518597284.stgit@frogsfrogsfrogs>
+ <20260314203759.nbt523d7dyuhr6um@doltdoltdolt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260314203759.nbt523d7dyuhr6um@doltdoltdolt>
 
-If zonegc_low_space is set to zero (which is the default), the second
-condition in xfs_zoned_need_gc() that triggers GC never evaluates to
-true, so there is no need to calculate the test threshold and to
-evaluate that condition.
+On Sun, Mar 15, 2026 at 04:37:59AM +0800, Zorro Lang wrote:
+> On Mon, Mar 09, 2026 at 08:51:10PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a bunch of common code so that we can test the xfs_healer daemon.
+> > Most of the changes here are to make it easier to manage the systemd
+> > service units for xfs_healer and xfs_scrub.
+> > 
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  common/config  |   14 ++++++++
+> >  common/rc      |    5 +++
+> >  common/systemd |   39 ++++++++++++++++++++++
+> >  common/xfs     |   98 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/802  |    4 +-
+> >  5 files changed, 158 insertions(+), 2 deletions(-)
+> > 
+> 
+> [snip]
+> 
+> > +# Compute the xfs_scrub systemd service instance name for a given path.  This
+> > +# is tricky because xfs_scrub only gained --svcname when xfs_healer was made.
+> > +_xfs_scrub_svcname()
+> > +{
+> > +	local ret
+> > +
+> > +	if ret="$($XFS_SCRUB_PROG --svcname "$@")"; then
+> 
+> Better to be:
+> 
+> -       if ret="$($XFS_SCRUB_PROG --svcname "$@")"; then
+> +       if ret="$($XFS_SCRUB_PROG --svcname "$@" 2>/dev/null)"; then
+> 
+> Or below xfs/802 will ...
+> 
+> > +		echo "$ret"
+> > +		return 0
+> > +	fi
+> 
+> [snip]
+> 
+> > diff --git a/tests/xfs/802 b/tests/xfs/802
+> > index fc4767acb66a55..18312b15b645bd 100755
+> > --- a/tests/xfs/802
+> > +++ b/tests/xfs/802
+> > @@ -105,8 +105,8 @@ run_scrub_service() {
+> >  }
+> >  
+> >  echo "Scrub Scratch FS"
+> > -scratch_path=$(systemd-escape --path "$SCRATCH_MNT")
+> > -run_scrub_service xfs_scrub@$scratch_path
+> > +svc="$(_xfs_scrub_svcname "$SCRATCH_MNT")"
+> 
+> ... fails on old xfsprogs as:
+> 
+>   --- /dev/fd/63	2026-03-13 19:16:15.217899866 -0400
+>   +++ xfs/802.out.bad	2026-03-13 19:16:15.191834546 -0400
+>   @@ -1,5 +1,21 @@
+>    QA output created by 802
+>    Format and populate
+>    Scrub Scratch FS
+>   +/usr/sbin/xfs_scrub: invalid option -- '-'
+>   +Usage: xfs_scrub [OPTIONS] mountpoint
+>   +
+>   +Options:
+>   +  -a count     Stop after this many errors are found.
+>   +  -b           Background mode.
+>   +  -C fd        Print progress information to this fd.
+>   +  -e behavior  What to do if errors are found.
+>   +  -k           Do not FITRIM the free space.
+>   +  -m path      Path to /etc/mtab.
+>   +  -n           Dry run.  Do not modify anything.
+>   +  -p           Only optimize, do not fix corruptions.
+>   +  -T           Display timing/usage information.
+>   +  -v           Verbose output.
+>   +  -V           Print version.
+>   +  -x           Scrub file data too.
+>    Scrub Everything
+>    Scrub Done
+> 
+> If you don't have more suggestion, I'll help to change that :)
 
-While at it, add comments to document the intent of each of the 3 tests
-used to determine the return value to control the execution of garbage
-collection.
+That seems the proper correction to make.  Thanks for your help!
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- fs/xfs/xfs_zone_gc.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index 309f70098524..0ff710fa0ee7 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -170,25 +170,37 @@ xfs_zoned_need_gc(
- 	s64			available, free, threshold;
- 	s32			remainder;
- 
-+	/* If we have no reclaimable blocks, running GC is useless. */
- 	if (!xfs_zoned_have_reclaimable(mp->m_zone_info))
- 		return false;
- 
-+	/*
-+	 * In order to avoid file fragmentation as much as possible, we should
-+	 * make sure that we can open enough zones. So trigger GC if the number
-+	 * of blocks immediately available for writes is lower than the total
-+	 * number of blocks from all possible open zones.
-+	 */
- 	available = xfs_estimate_freecounter(mp, XC_FREE_RTAVAILABLE);
--
- 	if (available <
- 	    xfs_rtgs_to_rfsbs(mp, mp->m_max_open_zones - XFS_OPEN_GC_ZONES))
- 		return true;
- 
--	free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
-+	/*
-+	 * For cases where the user wants to be more aggressive with GC,
-+	 * the sysfs attribute zonegc_low_space may be set to a non zero value,
-+	 * to indicate that GC should try to maintain at least zonegc_low_space
-+	 * percent of the free space to be directly available for writing. Check
-+	 * this here.
-+	 */
-+	if (!mp->m_zonegc_low_space)
-+		return false;
- 
-+	free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
- 	threshold = div_s64_rem(free, 100, &remainder);
- 	threshold = threshold * mp->m_zonegc_low_space +
- 		    remainder * div_s64(mp->m_zonegc_low_space, 100);
- 
--	if (available < threshold)
--		return true;
--
--	return false;
-+	return available < threshold;
- }
- 
- static struct xfs_zone_gc_data *
--- 
-2.53.0
-
+> Thanks,
+> Zorro
+> 
+> > +run_scrub_service "$svc"
+> >  find_scrub_trace "$SCRATCH_MNT"
+> >  
+> >  # Remove the xfs_scrub_all media scan stamp directory (if specified) because we
+> > 
+> 
