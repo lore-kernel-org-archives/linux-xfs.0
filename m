@@ -1,158 +1,115 @@
-Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+Received: from mail-ua1-f42.google.com (mail-ua1-f42.google.com [209.85.222.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4163E0227
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 18:42:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773686526; cv=none; b=Ku1YAE0mEP9zLkcEhppvmHzXfSs/MK5wYVaaAIb1gL4A0Qy8TLC31lpS9SRWSiZMee/LjBEjJfLCLmGsLOFt9xFouRptL093jsf2HesOBZsu2YdTJ5klpST3HWclft4uuBNZ3d3uTloF/vNIctYur3Ec6Ft2J3jkLEu/WNbgRgg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773686526; c=relaxed/simple;
-	bh=meCDkZNdQoV9AVjvAGbFhG8GrL/vbagcWRmYa3xgdeU=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=sBwzqWEyQxLtXp2kGNy29+F1LBpeyKIrufM1+8kj1zlRs5QlqEH7t0Az5KZxjT/FDConnacrlu41+lQC3wCSoegxLkZoTrd6WSl6D5171zfZRyFyZYUPY5JjKXbjNfAlcc1lmiK9EnA3EYH4ej9JFQngQIP7loY6EWeSCKJfn9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DXVok95i; arc=none smtp.client-ip=209.85.215.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029B83E0247
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 18:42:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.222.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773686569; cv=pass; b=FcplmChzlMol+OPaV+Y9xPTbexCfCxgcxSuVzRo8a9fz0OFhDS7sBaJaRyax1t8YSLIADvWZLXuXa7mOL88Y83R9QWSHDnhug7w4WZrvDr92122aWDz+zcDAPG9cFIsVWnnfErwv8FHCweuDlVziVRhQhfBgqJcm6HSDrM1CZZM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773686569; c=relaxed/simple;
+	bh=T0QKJaV94bh9nTonDr12UMWAzm5y/yKAeIdsAJRuH5w=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SEjfWtdrxxHKwu3U8ZLYCja2sjMliaXbZJWK3JwE4PAQ4rAAYQdZRtDn0xFjcZYE7NKRP8whrwnKDdokB6U/NO9BbTqm/XIXQSZeNdOIw27tTL1wE7Se6dQCC4wecKiOQXN2kahHzA5yiFXQYX35EnJx2aYreGrSM0NiZ3AlOfI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HtNIFFem; arc=pass smtp.client-ip=209.85.222.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DXVok95i"
-Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c739120475fso3029168a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 11:42:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HtNIFFem"
+Received: by mail-ua1-f42.google.com with SMTP id a1e0cc1a2514c-94e2ad66abcso1245173241.1
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 11:42:47 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773686567; cv=none;
+        d=google.com; s=arc-20240605;
+        b=emsYwR1FkxelZ2Zj6mKyeH3zQ1ibN6pzC22zxg5PIY3hsGFf/2MwqIn6uTW3iC4NR5
+         TJKCqQi6BmoVq8Mn4J63LRM6VXcFTCDCdWca0y7Qwz+JDQ0Gv4fvpuSeYh8eAUXzi4Pb
+         Czf3zO8wWE2foIXfY47ROUpHpj0Ua+8B2Jx8pz43gkJfjacIxdQrrj3PZME8coCq6uab
+         LucX+M/GWKKghodaPMNYcTTlgfbt4oG9tHHRu0psqEEheifDcwLqWUmc5XjZQpW/LjiP
+         ewRX7ClMhPRP9vT8qv4Q7FswnVN0+dO2/0pwTHf9iA7kQdhk3mjHGDHJkSAxpPs/Ahro
+         8TLg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=H9NfNLKlSE1zi/KG4JCS/I/z8kud9vlQVptECf+KUTI=;
+        fh=rV9hn4j9i3gd8UUAs3PeBElNPXRy7zMqBni2EMP4gXg=;
+        b=lPqWSsosPFqmTi3bVJHu/pDF6QT5uXrtrlENHspjzzXJCEbHQ6nEDl9KMz1DzJX3M0
+         ylyDSPop3Q8qwFxbFQnEBAish0hP1tKqfwldm7UiTYwxnREy5V12NjtDwMzLYrOpzmn1
+         mtr7OQ5iWOojnSIVBjtw6Ie60sCKJlwYNIiy6l+mtVu3KjQRcZY6XwXykiH6KxX7/b/m
+         HiPz8AesUBeHwfjStQThOjWkqXu+VquXxHovhLWXxxbYA9MXFYO/l6AGWf9W+jWqoned
+         nS2ACUSQzXxr69wVGNUyHOI+ZIEzu37eXRpjGeaMdyj5f2TDkhA19ynwCqKcj4V6FlH3
+         AUMA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773686523; x=1774291323; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=meMK1fTvkCROtMML1gkfwIQxzx+YnZ3FUZcDljZmaVM=;
-        b=DXVok95iZ6ZikARs3ZLWq7rQEfsHupzpRUQYUMmtxRcwleNgA097eXWlnsufw9/Ng5
-         KudKu0bgv2AdsnGu0HIHna5UivAsTvXC82srK68+aCIrHDeG3PIjwIoMhppypLOugPI8
-         W2mDDxWodySOvtXkWYz0ts1E/ACG1EEfiMbxrrr3j7dyBVTrEzevraP2r4h73BWsDKdm
-         w/ZkKq4/r7jXHOG26tnRrcW+SYGTqzo0BJoE+0gzzCwt+8jKYXDxmyS1zXe/1YQqQAsA
-         yoQhsx7hqUiM5WuXabswblWwKoZ08AIw0tx3cq54i/6tN33xDE5N/l9QTiKMIu8ex1ts
-         /8fQ==
+        d=google.com; s=20251104; t=1773686567; x=1774291367; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=H9NfNLKlSE1zi/KG4JCS/I/z8kud9vlQVptECf+KUTI=;
+        b=HtNIFFemKR59GrThl0cIOclK4NmU8vtNZmrfjKpfd0Mppqw69I/5yLxPtlolfDnhEo
+         5/89t+pzxBUgMFUJJp8TzskJOzlfVoWEnlGPzrGXS1Xs4BaZtA+OBuVXveRogwKpU40M
+         1dbDq0jyUx2qBTIz+DEYSAqmhEczmAOKC5WW7F08BdtMBWxlsfY9shiOSqFn3xV7xgSj
+         mW+i/UymGzwCsHYT77HI/jmCNRrTGxk5niXDwZpEorYojPYztIli2W7FG1beVkGSX4xt
+         dlWsPN3oQ7f9r1eDpBFzqPi+J0Uf039BM4REoC3oVwak4D4QqnCP9j4KIFpYZs6Wvzgz
+         n2yw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773686523; x=1774291323;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=meMK1fTvkCROtMML1gkfwIQxzx+YnZ3FUZcDljZmaVM=;
-        b=Knt52DFoCiiuEOEPAT1DFFa4sqnIU2zp2VMweXymiTc898Q9LaR8il/yYFN489Y85s
-         dssuQhOOE/T6Sp+YOt2ASaaniWuda5Bhwmzn/yzMqRYsFOGTdu/ykpHZx0aupx7OF2HX
-         kHoU2PJwpVntNR5otSbsFudJ/jFt3By9fnLkgeyWbYpOAvg1LDsr4UYFu72xqMJCHr09
-         1swTweFypgwZA6vK+n6mQrwyZ1AGkHY+XMlG/u73D1fACEhfwCXq9AzImN5Gfy+KkJ9R
-         HvUAFMhAjcemvLi/0FBQHAwuJcPcQqbz8mhDVBnLeBOe2+cbNqhDvqfs88YJYsAL9x1Z
-         XZhw==
-X-Forwarded-Encrypted: i=1; AJvYcCXTN8gohcVXw1FMDGZ5Kao7TJd9dIxXKLh6tIN5yCTpXf2unmksWQ6YGdYyXiAF67R9cRiC7Qa7epw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLPonUmhiFfZZw2ygoXCQ+RGmkVtji3MrHOnLOo3G9rYX2lT/H
-	FlXiwAZGdvrtklN9nT1d4FMnvlsPCQ4jq/sznzDI//8wj8tPmmyw+/u1lmd0XwkI/EXB3htUMMr
-	u
-X-Received: from pgam8.prod.google.com ([2002:a05:6a02:2b48:b0:c66:7f77:eb66])
- (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:729e:b0:398:9ae9:7110
- with SMTP id adf61e73a8af0-398eca00a67mr13549140637.11.1773686522906; Mon, 16
- Mar 2026 11:42:02 -0700 (PDT)
-Date: Mon, 16 Mar 2026 18:41:58 +0000
-In-Reply-To: <20260303015646.2796170-1-morbo@google.com>
+        d=1e100.net; s=20251104; t=1773686567; x=1774291367;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=H9NfNLKlSE1zi/KG4JCS/I/z8kud9vlQVptECf+KUTI=;
+        b=o+cCawy6E7TRNutE3aFMi4vdefnWriMrTokpE/vQ+m9j0rNtnCLo8uifsWIV7jb5kY
+         WTGkD+OXadKVA/LdhocgiC6bKdzQwDV68FR1VHxxYVm4OwymhCNAQU11QUDkXTvi1RYA
+         byYMpMHqcXpPLmux31jMBVK+zAZWtWl7eDo7KCXL55cWnvbxCGLJY2zvhHQxoWkH6uwF
+         Mc/vbGsm0Yc5RK7fH2Br98aefLWo/olRvY15dvT0NeFy3108PygArMxOpYRRFUm7tRZH
+         t08CnunI7GuWx1UxYJ3/DpI07AH2tHSWUEsXYzuiz8Ulr7gvJVITpQFEhWGeixjsnrN4
+         aqBA==
+X-Forwarded-Encrypted: i=1; AJvYcCUh5rMixL8jvb5Re2et0fmquv5vMDnt8UXUc/2Jit9Nme7fb39chQgKN1vZqcOmzBvsTWX4J8tYaps=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwtawwGeWk//cEQMu+8a+5bt0dgcWQG413eRfEctRUVOFdRm1xf
+	ZZt+AVhJrg91DByv6BO//ZT8OUdzSHTVWdmnusXxS6J9Vupuq/FsRXUtP0cCxGZRgW/iD8/H2yl
+	/tD3PRFTrKlXShTtvLLBnUSPmXmdC2hhdJFYowjI=
+X-Gm-Gg: ATEYQzwErJOhIZ0sNDdBEHGW0RywVdMD3rFl+BaZsWnI/tY2qKf7M255gA9fngd7TLz
+	URQJkJDi072sIumPDZxStxgsvOomocYS8yM2GjnqohTNuv9MKj71Ck+XbNzPwlVQGjAfpBBKUwh
+	i4tqlCFrzZBv0KZQZEuazGX0EQhMTwUF5+s2Sgvsz1AtR3WP6fpaZ9rr1F2cuwMKjS288eSg9l7
+	J0Ezw1wfLI810sE6n1Q2t45H8zyCXWj/FBZtWaDGUsOlWsioZyzBWUNocfjau/Dbuy8JsdMl7Ba
+	u/shGT/MBcfyx7wWcCmVUTcII+plxZu0LyETtqRsbAi8142N+v5QValnPDo=
+X-Received: by 2002:a05:6102:c50:b0:5ef:a8cb:857b with SMTP id
+ ada2fe7eead31-6020e58621dmr5046795137.23.1773686566485; Mon, 16 Mar 2026
+ 11:42:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260303015646.2796170-1-morbo@google.com>
-X-Mailer: git-send-email 2.53.0.851.ga537e3e6e9-goog
-Message-ID: <20260316184200.840020-1-morbo@google.com>
-Subject: [PATCH v2] xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+MIME-Version: 1.0
+References: <20260303015646.2796170-1-morbo@google.com> <aaby5V0TDMlahSj0@infradead.org>
+In-Reply-To: <aaby5V0TDMlahSj0@infradead.org>
 From: Bill Wendling <morbo@google.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bill Wendling <morbo@google.com>, Carlos Maiolino <cem@kernel.org>, 
+Date: Mon, 16 Mar 2026 11:42:30 -0700
+X-Gm-Features: AaiRm53hWRgSh7Shh2bVd9Q1Zs-dMrPjW64SSnx1dcHqHMaCo01kLAOvuU6O_kE
+Message-ID: <CAGG=3QWSDXmjn4Jy9K45oyDo4Uu7ZyLOuhnGMsgBwa+APt9vFQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
 	"Darrick J. Wong" <djwong@kernel.org>, Gogul Balakrishnan <bgogul@google.com>, 
 	Arman Hasanzadeh <armanihm@google.com>, Kees Cook <kees@kernel.org>, linux-xfs@vger.kernel.org, 
 	codemender-patching+linux@google.com
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
-xfs_attr_list_context`. This field is used to point to a buffer of
-size `bufsize`.
+On Tue, Mar 3, 2026 at 6:40=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> > -     void                    *buffer;        /* output buffer */
+> > +     void                    *buffer __counted_by_ptr(bufsize);      /=
+* output buffer */
+>
+> Please split this up somehow to keep the line readable, e.g.
+>
+>         /* output buffer: */
+>         void                    *buffer __counted_by_ptr(bufsize);
+>
+> Otherwise looks good.
 
-The `buffer` field is assigned in:
-1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
-2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
-3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to NULL)
+Done. Sorry for the delay. I was on vacation.
 
-In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
-them to ensure `bufsize` is set before `buffer` is assigned, although
-no access happens between them.
-
-In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
-them to ensure `bufsize` is set before `buffer` is assigned.
-
-In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
-remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
-is NULL, no access occurs.
-
-In all cases, the pointer `buffer` is not accessed before `bufsize` is set.
-
-This patch was generated by CodeMender and reviewed by Bill Wendling.
-Tested by running xfstests.
-
-Signed-off-by: Bill Wendling <morbo@google.com>
----
-Cc: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Gogul Balakrishnan <bgogul@google.com>
-Cc: Arman Hasanzadeh <armanihm@google.com>
-Cc: Kees Cook <kees@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: codemender-patching+linux@google.com
----
-v2 - Place comment in a more readable spot.
----
- fs/xfs/libxfs/xfs_attr.h | 3 ++-
- fs/xfs/xfs_handle.c      | 2 +-
- fs/xfs/xfs_xattr.c       | 2 +-
- 3 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 8244305949de..4b4217e23d1c 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -55,7 +55,8 @@ struct xfs_attr_list_context {
- 	struct xfs_trans	*tp;
- 	struct xfs_inode	*dp;		/* inode */
- 	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
--	void			*buffer;	/* output buffer */
-+	/* output buffer */
-+	void			*buffer __counted_by_ptr(bufsize);
- 
- 	/*
- 	 * Abort attribute list iteration if non-zero.  Can be used to pass
-diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-index d1291ca15239..2b8617ae7ec2 100644
---- a/fs/xfs/xfs_handle.c
-+++ b/fs/xfs/xfs_handle.c
-@@ -443,8 +443,8 @@ xfs_ioc_attr_list(
- 	context.dp = dp;
- 	context.resynch = 1;
- 	context.attr_filter = xfs_attr_filter(flags);
--	context.buffer = buffer;
- 	context.bufsize = round_down(bufsize, sizeof(uint32_t));
-+	context.buffer = buffer;
- 	context.firstu = context.bufsize;
- 	context.put_listent = xfs_ioc_attr_put_listent;
- 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index a735f16d9cd8..544213067d59 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -332,8 +332,8 @@ xfs_vn_listxattr(
- 	memset(&context, 0, sizeof(context));
- 	context.dp = XFS_I(inode);
- 	context.resynch = 1;
--	context.buffer = size ? data : NULL;
- 	context.bufsize = size;
-+	context.buffer = size ? data : NULL;
- 	context.firstu = context.bufsize;
- 	context.put_listent = xfs_xattr_put_listent;
- 
--- 
-2.53.0.851.ga537e3e6e9-goog
-
+-bw
