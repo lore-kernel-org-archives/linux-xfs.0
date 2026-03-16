@@ -1,138 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2206E355020
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 22:52:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A895D1922FD;
+	Mon, 16 Mar 2026 22:53:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773701530; cv=none; b=G/OaMpgbgybJLIMHVhhfv9QRg/vkGN4GDFlwsP4WnH6ItY7DIz41RWsPyrWm4lYncm2jCGbIPU0TbloHL0D+Doa4bygmEr25ppjfMTjkSDhw3Pd/o9jjMBSnliKFWpFXWoUM5fYWd67bT8kWBBSo4s08ElZDsjmXQuDzuNE8wxU=
+	t=1773701627; cv=none; b=YA88yi9sv1gYUrMUKRwgxcgpqSzaFRSyQUO5BO5/5AtVY76U/jJrbQi9sYBP3ZkzGyaTDjHJDX/XodY+11OPsJY9zl61ck3jJfydytoev0cPXNycNZmint4Jv9f31ahpv9V/3ikKQLzSqSrdKORhVG+QrRVEMBqDAuvfTae/Nnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773701530; c=relaxed/simple;
-	bh=0+PLEg9nCmK8zDEkw1nz61XlZHwuIbLzK/M819r3Y70=;
+	s=arc-20240116; t=1773701627; c=relaxed/simple;
+	bh=PeRpdtBSFtw+WuO6+Oy1Kh5Rw3/jWvhl4ecurq8PqAs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nw//RVh+QZdFv5TBknTLT98v9vXGD4JxkRBSqJxbiVa1c68CoeBmLKo7P5q8PhEajn+9Wa/nUwCPRi0DSVNPxud7+0u98BBUN4g+k6s2lWLz0eejcJ5G+1jE4LDMt84Xb1sPuke6gnUF1RRAq0ex3GpI331Z2io1vPu1qX3Kmig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LVySnuiS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fqn5JkmbsRTv5t5n/4w71Nk/iOOJDA/mM/1lw/5l7K0tW6wG00hVUlUboA6q7w77LcSF8hvaTB1vPgT6AWGIR3KZfDxSjv8+yjdOv4gsYYLVGKzut72ty4Hbhp3Fvi4dM0e3V/0FJ6ULkYdjn34gk1YcZQInkmfpqNlAwJkm7lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cc5iH2EB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LVySnuiS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C890C19421;
-	Mon, 16 Mar 2026 22:52:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cc5iH2EB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20329C19421;
+	Mon, 16 Mar 2026 22:53:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773701529;
-	bh=0+PLEg9nCmK8zDEkw1nz61XlZHwuIbLzK/M819r3Y70=;
+	s=k20201202; t=1773701627;
+	bh=PeRpdtBSFtw+WuO6+Oy1Kh5Rw3/jWvhl4ecurq8PqAs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LVySnuiS0Nxw9qRN9OHHry2m5yto3i39VeSC/kQSRPYc4cWyQneRtpdBc2WkcXSp/
-	 T/um+sxCzU2tcSLYeaIwgn2YhCCa3GoZ92+qNOxWl+EP0kV4fOLYQoz2jwM4eoYE4V
-	 o30ZflkTgqHrcjHOwHSeXWq/IREiucVXnFzRFhNAOdgvfNyezVeoSqST+TqZMRP46D
-	 5qmPXkl4fJs6x+0UJ2dutrWsP++r/rG+Wg4bnHATA91m8Pq0Lg5B/5nRA5h/j7jBpo
-	 HpurOQv8Hco5Rjoufei8kLUzYP1wIRjZjeWNDlpMT09r3433gvx97NvObFHh8L+t7z
-	 BZmH1v1/9h7iA==
-Date: Mon, 16 Mar 2026 15:52:09 -0700
+	b=cc5iH2EBI2Ih25v0Qiq2V/QBZf2dVhAisR+UZh9KVD0cQPkt3ijlIi/EqN4+4T5I6
+	 /hELqKnwl9rPBclBtzFweOangesDXBOeEUgF38EcGldUK/YbIit7BTo2VKVBrZ+FyH
+	 LIDzo8vgc5t62DchTHPVYLf3SL7wJ5a4lNOXMG6lOobPVPsRJgt8sdg6FbJlsz01ck
+	 vxwRDMoyrF2Do1uLKnNPtof/NbmctSdjCPtpq7rb8/ou4idrbE/6i2CoHkbnQedpwn
+	 VkIvUN1L6l5Jzd47Q9VNdR2EyyfnLfm5Wj4ruk77uRcGeViY99PUSTkdJLp7QKvTqn
+	 XB3XFn29zvdDQ==
+Date: Mon, 16 Mar 2026 15:53:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ravi Singh <ravising@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: generic/753 crash with LARP
-Message-ID: <20260316225209.GF1770774@frogsfrogsfrogs>
-References: <aYC0pe-S-RWSMXHn@infradead.org>
- <20260202185959.GJ7712@frogsfrogsfrogs>
- <CAF-d4OshnJ997DDsgWzr0f+4-JpRaQ+B5-y6M0PUm=es9LpQXA@mail.gmail.com>
- <20260226053052.GE13853@frogsfrogsfrogs>
- <CAF-d4Oscq=qaCd9dbbEZjG8dA5Q7erdWSszoxY1migM8j85eRw@mail.gmail.com>
+To: Bill Wendling <morbo@google.com>
+Cc: linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
+	Gogul Balakrishnan <bgogul@google.com>,
+	Arman Hasanzadeh <armanihm@google.com>, Kees Cook <kees@kernel.org>,
+	linux-xfs@vger.kernel.org, codemender-patching+linux@google.com
+Subject: Re: [PATCH v2] xfs: annotate struct xfs_attr_list_context with
+ __counted_by_ptr
+Message-ID: <20260316225346.GG1770774@frogsfrogsfrogs>
+References: <20260303015646.2796170-1-morbo@google.com>
+ <20260316184200.840020-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAF-d4Oscq=qaCd9dbbEZjG8dA5Q7erdWSszoxY1migM8j85eRw@mail.gmail.com>
+In-Reply-To: <20260316184200.840020-1-morbo@google.com>
 
-On Sat, Feb 28, 2026 at 04:54:25PM +0530, Ravi Singh wrote:
-> On Thu, Feb 26, 2026 at 11:01 AM Darrick J. Wong <djwong@kernel.org> wrote:
+On Mon, Mar 16, 2026 at 06:41:58PM +0000, Bill Wendling wrote:
+> Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
+> xfs_attr_list_context`. This field is used to point to a buffer of
+> size `bufsize`.
 > 
-> > Hrm.  Where should we insert a xfs_force_shutdown call to reproduce the
-> > problem?  I can get this to trip, but only after 18-25 minutes of
-> > letting g/753 run.
+> The `buffer` field is assigned in:
+> 1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
+> 2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
+> 3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to NULL)
 > 
-> I'm able to reproduce the crash reliably with the patch below.
-> With this change, g/753 crash quickly.
-> Please see if this works for you as well.
+> In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
+> them to ensure `bufsize` is set before `buffer` is assigned, although
+> no access happens between them.
 > 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 354472bf4..15eefa3e1 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -500,6 +500,17 @@ xfs_attr_finish_item(
->                 goto out;
->         }
+> In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
+> them to ensure `bufsize` is set before `buffer` is assigned.
 > 
-> +       /* Simulate crash after setflag committed during LARP replace. */
-> +       if ((attr->xattri_dela_state == XFS_DAS_NODE_REMOVE_RMT ||
-> +            attr->xattri_dela_state == XFS_DAS_NODE_REMOVE_ATTR) &&
-> +            (args->op_flags & XFS_DA_OP_LOGGED) &&
-> +            !(args->op_flags & XFS_DA_OP_RECOVERY)) {
-> +               xfs_force_shutdown(args->dp->i_mount,
-> +                                  SHUTDOWN_CORRUPT_INCORE);
-> +               error = -EIO;
-> +               goto out;
-> +       }
-> +
->         error = xfs_attr_set_iter(attr);
->         if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
->                 return -EAGAIN;
+> In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
+> remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
+> is NULL, no access occurs.
 > 
-> >
-> > Also, if you apply that patch so that it creates the incomplete attr
-> > name, do you end up with a consistent filesystem afterwards?
+> In all cases, the pointer `buffer` is not accessed before `bufsize` is set.
 > 
-> No. After applying the patch, the filesystem remains consistent
-> after the run. xfs_repair -n does not report any structural
-> corruption or incomplete attribute.
-> I haven’t done exhaustive testing yet, though.
+> This patch was generated by CodeMender and reviewed by Bill Wendling.
+> Tested by running xfstests.
 > 
-> >
-> > I think xfs_repair could report incomplete attr names instead of
-> > clobbering the whole attr fork.  xfs_scrub can fix it, so it's not a big
-> > deal to leave incomplete names around ... unless it'll confuse
-> > xfs_attr_set?
-> 
-> I agree. I took a look at your xfs_progs commit
-> 11a22e694671c112b3ebfffe879cc148cb8b5494.
-> 
-> >
-> > (Also, do you ever see the xfs_repair in g/753 fail with complaints
-> > about a corrupt attr leaf block at block offset 0?  I've seen that once
-> > or twice but haven't reproduced it consistently yet...)
-> 
-> If you're referring to xfs_repair -n corruption errors like:
-> 
-> Metadata corruption detected at 0x55dc57df7f68,
-> xfs_da3_node block 0x10801d0/0x1000
-> corrupt block 0 of inode 25165954 attribute fork
-> problem with attribute contents in inode 25165954
-> would clear attr fork
-> 
-> Yes, I’ve seen this once as well. However, I haven’t been able
-> to reproduce it reliably.
+> Signed-off-by: Bill Wendling <morbo@google.com>
 
-I think this patchset
-https://lore.kernel.org/linux-xfs/20260312085800.1213919-1-leo.lilong@huawei.com/
+Looks ok to me, even if it's nothing earthshattering ;)
 
-nearly fixes that problem.  I added a small follow-on in
-https://lore.kernel.org/linux-xfs/20260316045613.GU1770774@frogsfrogsfrogs/
-
-which seems to have fixed the problem completely, at least if you have
-this xfs_repair patch also applied:
-https://lore.kernel.org/linux-xfs/20260316225033.GP6069@frogsfrogsfrogs/
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Thanks,
-> Ravi
+> ---
+> Cc: Carlos Maiolino <cem@kernel.org>
+> Cc: "Darrick J. Wong" <djwong@kernel.org>
+> Cc: Gogul Balakrishnan <bgogul@google.com>
+> Cc: Arman Hasanzadeh <armanihm@google.com>
+> Cc: Kees Cook <kees@kernel.org>
+> Cc: linux-xfs@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: codemender-patching+linux@google.com
+> ---
+> v2 - Place comment in a more readable spot.
+> ---
+>  fs/xfs/libxfs/xfs_attr.h | 3 ++-
+>  fs/xfs/xfs_handle.c      | 2 +-
+>  fs/xfs/xfs_xattr.c       | 2 +-
+>  3 files changed, 4 insertions(+), 3 deletions(-)
 > 
-> >
-> > --D
-> >
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 8244305949de..4b4217e23d1c 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -55,7 +55,8 @@ struct xfs_attr_list_context {
+>  	struct xfs_trans	*tp;
+>  	struct xfs_inode	*dp;		/* inode */
+>  	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
+> -	void			*buffer;	/* output buffer */
+> +	/* output buffer */
+> +	void			*buffer __counted_by_ptr(bufsize);
+>  
+>  	/*
+>  	 * Abort attribute list iteration if non-zero.  Can be used to pass
+> diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+> index d1291ca15239..2b8617ae7ec2 100644
+> --- a/fs/xfs/xfs_handle.c
+> +++ b/fs/xfs/xfs_handle.c
+> @@ -443,8 +443,8 @@ xfs_ioc_attr_list(
+>  	context.dp = dp;
+>  	context.resynch = 1;
+>  	context.attr_filter = xfs_attr_filter(flags);
+> -	context.buffer = buffer;
+>  	context.bufsize = round_down(bufsize, sizeof(uint32_t));
+> +	context.buffer = buffer;
+>  	context.firstu = context.bufsize;
+>  	context.put_listent = xfs_ioc_attr_put_listent;
+>  
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index a735f16d9cd8..544213067d59 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -332,8 +332,8 @@ xfs_vn_listxattr(
+>  	memset(&context, 0, sizeof(context));
+>  	context.dp = XFS_I(inode);
+>  	context.resynch = 1;
+> -	context.buffer = size ? data : NULL;
+>  	context.bufsize = size;
+> +	context.buffer = size ? data : NULL;
+>  	context.firstu = context.bufsize;
+>  	context.put_listent = xfs_xattr_put_listent;
+>  
+> -- 
+> 2.53.0.851.ga537e3e6e9-goog
 > 
 > 
