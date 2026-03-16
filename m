@@ -1,162 +1,158 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6BE83E0220
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 18:40:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4163E0227
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 18:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773686456; cv=none; b=ofOCrnNnQQ4LLN6FCXapyf/ZCapZ+5DOXv+hw+8WJ42CO2FF0e/3uRYvxwNV2iiZR5slvRPGZKuDZv1wItPiz70WXRfmzmkjKehrKLElfBJ5esLibmc/zJKyUXWFub5HxSZZ4a9VOA6styFog+aASAyeHEaprOW2GSpppqCWwNQ=
+	t=1773686526; cv=none; b=Ku1YAE0mEP9zLkcEhppvmHzXfSs/MK5wYVaaAIb1gL4A0Qy8TLC31lpS9SRWSiZMee/LjBEjJfLCLmGsLOFt9xFouRptL093jsf2HesOBZsu2YdTJ5klpST3HWclft4uuBNZ3d3uTloF/vNIctYur3Ec6Ft2J3jkLEu/WNbgRgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773686456; c=relaxed/simple;
-	bh=QidtBix1KZQxoTs2FPcZqmT6gEHQJGYZjnLMkHeIxbE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qTmE0wlV1IPEACAGHFx5nuWOiX8pLXCJuViLQF2uN4qipqcrIf5AQv6xtEA5ixm6GkbrZzJ7Xj7J6J4QOHghY5fABWTnhg4RXl0vZNS+9brlTV7MwDHVT2QVgH1/lUKJDo4u88L5yU9XQIhugawF6jzNqMjF9QGIk7YtV8nI7RY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d2xpHAyV; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ltoKmtNx; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1773686526; c=relaxed/simple;
+	bh=meCDkZNdQoV9AVjvAGbFhG8GrL/vbagcWRmYa3xgdeU=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=sBwzqWEyQxLtXp2kGNy29+F1LBpeyKIrufM1+8kj1zlRs5QlqEH7t0Az5KZxjT/FDConnacrlu41+lQC3wCSoegxLkZoTrd6WSl6D5171zfZRyFyZYUPY5JjKXbjNfAlcc1lmiK9EnA3EYH4ej9JFQngQIP7loY6EWeSCKJfn9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DXVok95i; arc=none smtp.client-ip=209.85.215.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d2xpHAyV";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ltoKmtNx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773686450;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Zg8GjY3hLi9qO5yTJ9QjTKSpRjIDRv4OW1ON0/sXxR4=;
-	b=d2xpHAyVUsby87Aojz1iZS+fGVWDUcv4XGPM2Dr+igd1d9xUfvYGihdWVBaZq+fbrCBIXC
-	syiPj6ZgU2x9BYY7iHNThKN/oiDIy4PRKvVklfBlNnfdHlWZusepIycDIgmdC168BrEet5
-	/CeJlk84qxRiiBz5WHUsv+a7s6JcTgY=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-98-LJROpjfVMSGz3i0ZN1rcbw-1; Mon, 16 Mar 2026 14:40:49 -0400
-X-MC-Unique: LJROpjfVMSGz3i0ZN1rcbw-1
-X-Mimecast-MFC-AGG-ID: LJROpjfVMSGz3i0ZN1rcbw_1773686448
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-35ba4bf54beso1075893a91.1
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 11:40:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DXVok95i"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c739120475fso3029168a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 11:42:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773686448; x=1774291248; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Zg8GjY3hLi9qO5yTJ9QjTKSpRjIDRv4OW1ON0/sXxR4=;
-        b=ltoKmtNxV9EH7Haj1s2C2U37IlsiDPgpRmtZtM8fDAKOLvD+VfkTwtW4cphR6M1I1H
-         IMOTNcKP4kesXOcgYi7JiH0IIeYxshktUkfZBetZZSO7s37bUwNBs0Pb/0Z66URUMEZt
-         O992Zxxgr6tM/IhEOVZhuayDrhjZk2RhfKWO6zDd88K2Mh85Z/QoxKTzgsWwalv60ecQ
-         53Xb5NRZ0HQLwUFRXC2D063+e7GIpOp2PVat5m5dNkjx5oX5pgFoIHduA3GbqS3nGKo6
-         uQxbAZ5i93ksb10N+hyTvRIueRk9/em/hkQLmn3hAo27geHRYBB+YjxeRZTP6HMy/8Jm
-         6YSg==
+        d=google.com; s=20251104; t=1773686523; x=1774291323; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=meMK1fTvkCROtMML1gkfwIQxzx+YnZ3FUZcDljZmaVM=;
+        b=DXVok95iZ6ZikARs3ZLWq7rQEfsHupzpRUQYUMmtxRcwleNgA097eXWlnsufw9/Ng5
+         KudKu0bgv2AdsnGu0HIHna5UivAsTvXC82srK68+aCIrHDeG3PIjwIoMhppypLOugPI8
+         W2mDDxWodySOvtXkWYz0ts1E/ACG1EEfiMbxrrr3j7dyBVTrEzevraP2r4h73BWsDKdm
+         w/ZkKq4/r7jXHOG26tnRrcW+SYGTqzo0BJoE+0gzzCwt+8jKYXDxmyS1zXe/1YQqQAsA
+         yoQhsx7hqUiM5WuXabswblWwKoZ08AIw0tx3cq54i/6tN33xDE5N/l9QTiKMIu8ex1ts
+         /8fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773686448; x=1774291248;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Zg8GjY3hLi9qO5yTJ9QjTKSpRjIDRv4OW1ON0/sXxR4=;
-        b=TBynoSFcy1PCUZvN8WaJOMJLTdGhGUWAdSTjFgxDQeJilQW+sU4N8xuThYdgRAxtlf
-         54vA1bOW9K+58b3WWmex0WrCiVbNL0zgenAKa9AFyC9MH1xvT/mcEJc/z1pOtrx4j2Z7
-         ZhlLjcTmuFn9Sr+8xn1Ix7fSbo+hFXF/tK8nirnTlTfm81d/1Oz/b+jAFYUe2Qq2UuRV
-         ctFJj+Y672qKxlVqq3+Tdw9Wq6XPacksDvYJ0W2otPfyR02VdEXoVsrs9UWtu0K2W/F7
-         Hn8flro1zD/T+S1eFZvb42trmFJXYtAyU+vi3VzkLOabib0ZaZ1C3U6pTh1K7m5JCQki
-         vnCw==
-X-Forwarded-Encrypted: i=1; AJvYcCU/LjV082HveHY8Wd3cFnQ5CpfMQGvgzZbW+m+3lN/h5YoCCQIWsqIwr+2Ve0IQ5OTX5in6HYmaD8A=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzMDGLMCy4xPL7GyfvNvvnLpRW5VkVUUxNxDKbneoTN2HVkeZvv
-	K/I/lSZLkmkzlw74rNZ6pECd9GT6UGWnJ8D3Psb7cQGP+PoOCmwwd3NW9ww0Gzd6QW1uWj0y5x6
-	NrvsTiEBkThVXmbkqkbJhMQpuodvmoLC+pSUhlUNYg98d31Oe98UEx69LU2ZGEA==
-X-Gm-Gg: ATEYQzxSOfVWlh7hwzp8JJXPRIPgT6544CuNJ2/PgPH6hGyhLcLC1+yvsd6E5zu2Ktx
-	nibkh8GTPjhtESUDQHcvJCtzSWStjrIlch9yiL/CO9JlCsMiZTsaEUltQoJy140viqWrgODNXAp
-	/D8kDT2XQwQxCSPPUN9H3UevTBpU+efrY8VWLv0h+vhs4flr02c9ma0JZic+q6rDxG5qYBXeQVa
-	l0B/b5fjet5SP0f6VDJTIJDiMD952aj/Qm87y8XRcz2Gf5HPpihOL/HNsZ59txtDH7hfYoaCuCY
-	Ma2kAFokBE/pcFe5Znn+eX1xAnOJ/c3bUankvhmOrzj4GXmM3Ij/tr1P+ykIGlYe0NHb5CHUQAr
-	SPiZIFqen4fFzvTQz1w==
-X-Received: by 2002:a17:90b:4b05:b0:34a:b8e0:dd64 with SMTP id 98e67ed59e1d1-35a21efd272mr11767653a91.1.1773686447988;
-        Mon, 16 Mar 2026 11:40:47 -0700 (PDT)
-X-Received: by 2002:a17:90b:4b05:b0:34a:b8e0:dd64 with SMTP id 98e67ed59e1d1-35a21efd272mr11767629a91.1.1773686447508;
-        Mon, 16 Mar 2026 11:40:47 -0700 (PDT)
-Received: from doltdoltdolt ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35bada2bfdbsm363654a91.3.2026.03.16.11.40.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Mar 2026 11:40:47 -0700 (PDT)
-Date: Tue, 17 Mar 2026 02:40:41 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, jack@suse.cz,
-	fstests@vger.kernel.org, amir73il@gmail.com, gabriel@krisman.be,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	hch@lst.de
-Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
-Message-ID: <20260316184041.ji5slfx4yvtfwwzq@doltdoltdolt>
-References: <177311403420.1186306.10503664469609309721.stgit@frogsfrogsfrogs>
- <177311403440.1186306.11707487947646813883.stgit@frogsfrogsfrogs>
- <abfIexgmKjS1Q7bN@infradead.org>
- <20260316162147.GW1770774@frogsfrogsfrogs>
+        d=1e100.net; s=20251104; t=1773686523; x=1774291323;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=meMK1fTvkCROtMML1gkfwIQxzx+YnZ3FUZcDljZmaVM=;
+        b=Knt52DFoCiiuEOEPAT1DFFa4sqnIU2zp2VMweXymiTc898Q9LaR8il/yYFN489Y85s
+         dssuQhOOE/T6Sp+YOt2ASaaniWuda5Bhwmzn/yzMqRYsFOGTdu/ykpHZx0aupx7OF2HX
+         kHoU2PJwpVntNR5otSbsFudJ/jFt3By9fnLkgeyWbYpOAvg1LDsr4UYFu72xqMJCHr09
+         1swTweFypgwZA6vK+n6mQrwyZ1AGkHY+XMlG/u73D1fACEhfwCXq9AzImN5Gfy+KkJ9R
+         HvUAFMhAjcemvLi/0FBQHAwuJcPcQqbz8mhDVBnLeBOe2+cbNqhDvqfs88YJYsAL9x1Z
+         XZhw==
+X-Forwarded-Encrypted: i=1; AJvYcCXTN8gohcVXw1FMDGZ5Kao7TJd9dIxXKLh6tIN5yCTpXf2unmksWQ6YGdYyXiAF67R9cRiC7Qa7epw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLPonUmhiFfZZw2ygoXCQ+RGmkVtji3MrHOnLOo3G9rYX2lT/H
+	FlXiwAZGdvrtklN9nT1d4FMnvlsPCQ4jq/sznzDI//8wj8tPmmyw+/u1lmd0XwkI/EXB3htUMMr
+	u
+X-Received: from pgam8.prod.google.com ([2002:a05:6a02:2b48:b0:c66:7f77:eb66])
+ (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:729e:b0:398:9ae9:7110
+ with SMTP id adf61e73a8af0-398eca00a67mr13549140637.11.1773686522906; Mon, 16
+ Mar 2026 11:42:02 -0700 (PDT)
+Date: Mon, 16 Mar 2026 18:41:58 +0000
+In-Reply-To: <20260303015646.2796170-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260316162147.GW1770774@frogsfrogsfrogs>
+Mime-Version: 1.0
+References: <20260303015646.2796170-1-morbo@google.com>
+X-Mailer: git-send-email 2.53.0.851.ga537e3e6e9-goog
+Message-ID: <20260316184200.840020-1-morbo@google.com>
+Subject: [PATCH v2] xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+From: Bill Wendling <morbo@google.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bill Wendling <morbo@google.com>, Carlos Maiolino <cem@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Gogul Balakrishnan <bgogul@google.com>, 
+	Arman Hasanzadeh <armanihm@google.com>, Kees Cook <kees@kernel.org>, linux-xfs@vger.kernel.org, 
+	codemender-patching+linux@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Mar 16, 2026 at 09:21:47AM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 16, 2026 at 02:08:11AM -0700, Christoph Hellwig wrote:
-> > On Mon, Mar 09, 2026 at 08:50:08PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Test the fsnotify filesystem error reporting.
-> > 
-> > Still would be helpful to explain what is being tested and how and
-> > the source of the test tool.
-> 
-> "Use dmerror to inject a media error for a file's storage, then run some
-> IO and make sure that fanotify reports the IO errors."
-> 
-> (I'm not sure what the process is for updating commit messages once
-> something's in patches-in-queue...)
+Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
+xfs_attr_list_context`. This field is used to point to a buffer of
+size `bufsize`.
 
-patches-in-queue is a scratch branch, I always re-push(-f) to this branch.
-So please feel free to tell me what do you want to update in this patch
-(I'm going to make the next fstests release soon:).
+The `buffer` field is assigned in:
+1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
+2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
+3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to NULL)
 
-Thanks,
-Zorro
+In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
+them to ensure `bufsize` is set before `buffer` is assigned, although
+no access happens between them.
 
-> 
-> > > +#ifndef FILEID_INO32_GEN
-> > > +#define FILEID_INO32_GEN	1
-> > > +#endif
-> > > +
-> > > +#ifndef FILEID_INVALID
-> > > +#define	FILEID_INVALID		0xff
-> > > +#endif
-> > > +
-> > > +static void print_fh(struct file_handle *fh)
-> > > +{
-> > > +	int i;
-> > > +	uint32_t *h = (uint32_t *) fh->f_handle;
-> > > +
-> > > +	printf("\tfh: ");
-> > > +	for (i = 0; i < fh->handle_bytes; i++)
-> > > +		printf("%hhx", fh->f_handle[i]);
-> > > +	printf("\n");
-> > > +
-> > > +	printf("\tdecoded fh: ");
-> > > +	if (fh->handle_type == FILEID_INO32_GEN)
-> > > +		printf("inode=%u gen=%u\n", h[0], h[1]);
-> > > +	else if (fh->handle_type == FILEID_INVALID && !fh->handle_bytes)
-> > > +		printf("Type %d (Superblock error)\n", fh->handle_type);
-> > > +	else
-> > > +		printf("Type %d (Unknown)\n", fh->handle_type);
-> > 
-> > 
-> > Isn't this always going to print unknown for normal xfs mounts without
-> > inode32?
-> 
-> Yes, though generic/791 filters out the file handle and (TBH) I don't
-> really want people getting ideas about cracking file handles.  Probably
-> we should just eliminate this whole part of the function, but that would
-> make future forklift upgrades from the kernel harder.
-> 
-> --D
-> 
+In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
+them to ensure `bufsize` is set before `buffer` is assigned.
+
+In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
+remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
+is NULL, no access occurs.
+
+In all cases, the pointer `buffer` is not accessed before `bufsize` is set.
+
+This patch was generated by CodeMender and reviewed by Bill Wendling.
+Tested by running xfstests.
+
+Signed-off-by: Bill Wendling <morbo@google.com>
+---
+Cc: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Gogul Balakrishnan <bgogul@google.com>
+Cc: Arman Hasanzadeh <armanihm@google.com>
+Cc: Kees Cook <kees@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: codemender-patching+linux@google.com
+---
+v2 - Place comment in a more readable spot.
+---
+ fs/xfs/libxfs/xfs_attr.h | 3 ++-
+ fs/xfs/xfs_handle.c      | 2 +-
+ fs/xfs/xfs_xattr.c       | 2 +-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 8244305949de..4b4217e23d1c 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -55,7 +55,8 @@ struct xfs_attr_list_context {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_inode	*dp;		/* inode */
+ 	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
+-	void			*buffer;	/* output buffer */
++	/* output buffer */
++	void			*buffer __counted_by_ptr(bufsize);
+ 
+ 	/*
+ 	 * Abort attribute list iteration if non-zero.  Can be used to pass
+diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+index d1291ca15239..2b8617ae7ec2 100644
+--- a/fs/xfs/xfs_handle.c
++++ b/fs/xfs/xfs_handle.c
+@@ -443,8 +443,8 @@ xfs_ioc_attr_list(
+ 	context.dp = dp;
+ 	context.resynch = 1;
+ 	context.attr_filter = xfs_attr_filter(flags);
+-	context.buffer = buffer;
+ 	context.bufsize = round_down(bufsize, sizeof(uint32_t));
++	context.buffer = buffer;
+ 	context.firstu = context.bufsize;
+ 	context.put_listent = xfs_ioc_attr_put_listent;
+ 
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index a735f16d9cd8..544213067d59 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -332,8 +332,8 @@ xfs_vn_listxattr(
+ 	memset(&context, 0, sizeof(context));
+ 	context.dp = XFS_I(inode);
+ 	context.resynch = 1;
+-	context.buffer = size ? data : NULL;
+ 	context.bufsize = size;
++	context.buffer = size ? data : NULL;
+ 	context.firstu = context.bufsize;
+ 	context.put_listent = xfs_xattr_put_listent;
+ 
+-- 
+2.53.0.851.ga537e3e6e9-goog
 
