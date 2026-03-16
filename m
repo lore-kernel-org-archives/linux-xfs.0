@@ -1,94 +1,185 @@
-Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64C14594A
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 07:23:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EBDE29B8E1
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 08:37:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773645823; cv=none; b=lczXWGIFJJ0TWyCwOeP3MKQZ6iOCIF/v+hYAKScRvTTLRVsJvBDorbth3K5AKvpJooMAUUnnl5h3cgdrHIYsLG6WlXfWQwi0IBXLEunAdWCy/ZT7CQtCxtbHGnmqR3V3H4dMMb11anYUpV6WfL39kEKaZSBrDW4tckKBzWJP4Mk=
+	t=1773650223; cv=none; b=BLZzZu8QjJzm+zrmRS638ZQS5+soe+UTnhAlxBBkt/Rai2IT7VNPMQo+gW9YVgGJeFxOM/8l0NEYGjTZFT150DekC02+beChNnOAZ9OQ4oFVzSSmRv1tNF4zGY9KXNmPD+95j0+dQtY/2lGXYREIIvWu1xs5+ynzzVnjAMMET8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773645823; c=relaxed/simple;
-	bh=nb4KLGx6mJwE7prowxe6Qw/4V44SjApZeyYd5FHN4A8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uQSGMqcGgpgMmeZNmpyKSxktF4UzR3TbYNwdDe5mIHOXnOmm7Zti4mvkuBBdRbKtlZN4xl+qQoULDRttBbmGyJ70wz/cahxQYpH/Vdp6QhBG6Rw2C4ZBlyYF11f5LT9X1KyFmRNQ/jbIP06dggFYXLmYJvte/CkK0/SEJA+7uOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=J6LyKszC; arc=none smtp.client-ip=91.218.175.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1773650223; c=relaxed/simple;
+	bh=s6v2r5bcjnJi0PmsW3OcrkS+L/KJMuYWEj5vQH2jUiE=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bVbYKRhZkdtBIvrzuV9VhfL/2Ta3N1HknyoENsHWzLociO+w8OdWOAYc4RRdFq0TKbW9LzY/r9bSGMD2cZggv+yAtOGxHv9zmv1fAYbVueSBdHxlNJky8ylC637vxv+QJwWPt1uKYAKXoIAVKrZqJF1B9vAJ64u/ZBP4IIy6G0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=UZ0wBXFc; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=UZ0wBXFc; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="J6LyKszC"
-Message-ID: <2200df0c-0e18-4b9d-bf60-65e692a2b92f@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1773645818;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5d5w6HGVmdm/JWT/kQM05DEoSMMa+8rkVt5ciARWawM=;
-	b=J6LyKszCILKO0zDUkzbKCCsYUam+BAULom79L7j2MPZK9dx8mEpsrY2ANBur/qb+7ZazbG
-	C4aisEnL6WkqZkMmN99YI8wa3Vn6AHpniUjKFe6hK7p/uw2foTpzd3P7NnCwm2TN4bnlqU
-	FAQ1M4I7ZhLx4iqyBIjv3Vfs8wQj94s=
-Date: Mon, 16 Mar 2026 08:23:35 +0100
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="UZ0wBXFc";
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="UZ0wBXFc"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=38D3fGaNHFBjWyMTnGZV50WGTJvY/OuYP1HvGpf2bNI=;
+	b=UZ0wBXFc+puD1wvHT3pKhrV3TsRFnf+eU1IsVcNXVDXrVeuOfhZZeN7DBI0fZIl/wxhDGbRvb
+	DQu+QuQ9GgJ+NBMEX/uVVc6Vm9dCEf3nxA8IdR9FoTwDz7qFTM0R4fcIhAMF+K+3XbdTi1n2q3M
+	oxV7cSswj8DRXwCRlx4ilSU=
+Received: from canpmsgout06.his.huawei.com (unknown [172.19.92.157])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTPS id 4fZ7hw3MZlz1BG2d
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 16:36:00 +0800 (CST)
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=38D3fGaNHFBjWyMTnGZV50WGTJvY/OuYP1HvGpf2bNI=;
+	b=UZ0wBXFc+puD1wvHT3pKhrV3TsRFnf+eU1IsVcNXVDXrVeuOfhZZeN7DBI0fZIl/wxhDGbRvb
+	DQu+QuQ9GgJ+NBMEX/uVVc6Vm9dCEf3nxA8IdR9FoTwDz7qFTM0R4fcIhAMF+K+3XbdTi1n2q3M
+	oxV7cSswj8DRXwCRlx4ilSU=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4fZ7c21NxgzRhWK;
+	Mon, 16 Mar 2026 16:31:46 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id B6B0340363;
+	Mon, 16 Mar 2026 16:36:43 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 16 Mar 2026 16:36:43 +0800
+Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Mon, 16 Mar
+ 2026 16:36:43 +0800
+Date: Mon, 16 Mar 2026 16:32:35 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: Re: [PATCH v2 4/4] xfs: close crash window in attr dabtree
+ inactivation
+Message-ID: <abfAIz5yfqdG8SgR@localhost.localdomain>
+References: <20260312085800.1213919-1-leo.lilong@huawei.com>
+ <20260312085800.1213919-5-leo.lilong@huawei.com>
+ <20260314001856.GS1770774@frogsfrogsfrogs>
+ <20260316045613.GU1770774@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v11 2/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-To: Dave Chinner <dgc@kernel.org>
-Cc: Lukas Herbolt <lukas@herbolt.com>, linux-xfs@vger.kernel.org,
- cem@kernel.org, hch@infradead.org, djwong@kernel.org, p.raghav@samsung.com
-References: <20260309181235.428151-2-lukas@herbolt.com>
- <abCzhDSVmFx4PtWI@dread>
- <my5vghqmg4npgqpunilj3btbgrvr2s4dbqkm2j6cpw2l3tccrk@p3h3scnzwz6o>
- <abdFmEn7lQKqqbv1@dread>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <abdFmEn7lQKqqbv1@dread>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20260316045613.GU1770774@frogsfrogsfrogs>
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
->>> So, a helper function in fs/xfs/xfs_bmap_util.c such as this:
->>>
->>> /*
->>>  * This function is used to allocate written extents over holes
->>>  * and/or convert unwritten extents to written extents based on the
->>>  * @flags passed to it.
->>>  *
->>>  * If @flags is zero, if will allocate written extents for holes and
->>
->> s/zero/XFS_BMAPI_ZERO ?
+On Sun, Mar 15, 2026 at 09:56:13PM -0700, Darrick J. Wong wrote:
+> On Fri, Mar 13, 2026 at 05:18:56PM -0700, Darrick J. Wong wrote:
+> > On Thu, Mar 12, 2026 at 04:58:00PM +0800, Long Li wrote:
+> > > When inactivating an inode with node-format extended attributes,
+> > > xfs_attr3_node_inactive() invalidates all child leaf/node blocks via
+> > > xfs_trans_binval(), but intentionally does not remove the corresponding
+> > > entries from their parent node blocks.  The implicit assumption is that
+> > > xfs_attr_inactive() will truncate the entire attr fork to zero extents
+> > > afterwards, so log recovery will never reach the root node and follow
+> > > those stale pointers.
+> > > 
+> > > However, if a log shutdown occurs after the leaf/node block cancellations
+> > > commit but before the attr bmap truncation commits, this assumption
+> > > breaks.  Recovery replays the attr bmap intact (the inode still has
+> > > attr fork extents), but suppresses replay of all cancelled leaf/node
+> > > blocks, maybe leaving them as stale data on disk.  On the next mount,
+> > > xlog_recover_process_iunlinks() retries inactivation and attempts to
+> > > read the root node via the attr bmap. If the root node was not replayed,
+> > > reading the unreplayed root block triggers a metadata verification
+> > > failure immediately; if it was replayed, following its child pointers
+> > > to unreplayed child blocks triggers the same failure:
+> > > 
+> > >  XFS (pmem0): Metadata corruption detected at
+> > >  xfs_da3_node_read_verify+0x53/0x220, xfs_da3_node block 0x78
+> > >  XFS (pmem0): Unmount and run xfs_repair
+> > >  XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+> > >  00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > >  XFS (pmem0): metadata I/O error in "xfs_da_read_buf+0x104/0x190" at daddr 0x78 len 8 error 117
+> > > 
+> > > Fix this in two places:
+> > > 
+> > > In xfs_attr3_node_inactive(), after calling xfs_trans_binval() on a
+> > > child block, immediately remove the entry that references it from the
+> > > parent node in the same transaction.  This eliminates the window where
+> > > the parent holds a pointer to a cancelled block.  Once all children are
+> > > removed, the now-empty root node is converted to a leaf block within the
+> > > same transaction. This node-to-leaf conversion is necessary for crash
+> > > safety. If the system shutdown after the empty node is written to the
+> > > log but before the second-phase bmap truncation commits, log recovery
+> > > will attempt to verify the root block on disk. xfs_da3_node_verify()
+> > > does not permit a node block with count == 0; such a block will fail
+> > > verification and trigger a metadata corruption shutdown. on the other
+> > > hand, leaf blocks are allowed to have this transient state.
+> > > 
+> > > In xfs_attr_inactive(), split the attr fork truncation into two explicit
+> > > phases.  First, truncate all extents beyond the root block (the child
+> > > extents whose parent references have already been removed above).
+> > > Second, invalidate the root block and truncate the attr bmap to zero in
+> > > a single transaction.  The two operations in the second phase must be
+> > > atomic: as long as the attr bmap has any non-zero length, recovery can
+> > > follow it to the root block, so the root block invalidation must commit
+> > > together with the bmap-to-zero truncation.
+> > > 
+> > > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> > > Cc: <stable@vger.kernel.org>
+> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > 
+> > I think this looks ok, but let me run it through g753 over the weekend
+> > to see if it fixes that problem too.  Thanks for answering my questions
+> > the last time through.
+> > 
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> No, I explicitly meant flags = 0.
-> 
->>>  * delalloc extents across the range.
->>>  *
->>>  * If XFS_BMAPI_CONVERT is specified in @flags, then it will also do
->>>  * conversion of unwritten extents in the range to written extents.
->>>  *
->>>  * If XFS_BMAPI_ZERO is specified in @flags, then both newly
->>
->> s/XFS_BMAPI_ZERO/(XFS_BMAPI_ZERO | XFS_BMAPI_CONVERT) ?
-> 
-> No I explictly describing what happens when you do "flags |=
-> XFS_BMAPI_ZERO;" to any other xfs_bmapi_write() operation
-> flag specification.
-> 
-> i.e. XFS_BMAPI_ZERO is an optional behavioural modifier for
-> allocation and/or unwritten extent conversion operations. i.e all it
-> does is add initialisation of the new/modified extents to contain
-> real zeroes.
-> 
-> e.g. flags = 0 means "allocate holes/delalloc as uninitialised
-> written extents". flags = 0 | XFS_BMAPI_ZERO
-> means "allocate holes/delalloc and initialise them to contain
-> zeros". Unwritten extents will not be modified by either operation.
+> In retesting generic/753, I noticed that this patchset *does* actually
+> fix the problem of xfs_repair complaining about random contents in attr
+> block 0.  So, I think you've fixed that problem, yay!
 > 
 
-Ok, Thanks for the clarification. I was about to send the patches.
-I will make this change and send the patches.
+That sounds great, thank you for the test.
 
---
-Pankaj
+> However, I noticed an additional thing -- if attr block 0 happened to be
+> a leaf node (i.e. not a da3 node) AND that leaf happened to contain a
+> non-INCOMPLETE remote attr entry AND the fs went down after the first
+> bunmapi (that removes all but block0) but before the second bunmapi
+> (which eliminates block 0), that remote entry will point to blocks
+> that have been bunmapi'd, and xfs_repair will complain about that too.
+> 
+> So, I think this patch needs to reinit old leaf blocks too; see below.
+
+Agree with you, thanks for pointint this out. 
+
+For non-root leaf blocks, the remote value block cancellation and the
+removal of the leaf entry from its parent node are already in the same
+transaction, so that case is safe.
+
+For the root leaf block, it is reachable as long as the attr bmap is
+non-zero, so the remote value block cancellations and the leaf reinit
+must be atomic.
+
+> Note that xfs_repair also needs a patch to teach it not to zap the
+> entire attr fork just because it found one incomplete attr entry in a
+> leaf block.
+> 
+> Thoughts?
+
+With the leaf reinit added, xfs_repair maybe encounter an empty leaf at
+block 0 with no entries referencing the remote blocks. So I don't understand
+under what circumstances there would be an "incomplete attr entry", perhaps
+I missed something?
+
+Thanks,
+Long Li
+
