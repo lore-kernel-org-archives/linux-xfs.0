@@ -1,147 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A895D1922FD;
-	Mon, 16 Mar 2026 22:53:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C87146D5A;
+	Mon, 16 Mar 2026 23:28:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773701627; cv=none; b=YA88yi9sv1gYUrMUKRwgxcgpqSzaFRSyQUO5BO5/5AtVY76U/jJrbQi9sYBP3ZkzGyaTDjHJDX/XodY+11OPsJY9zl61ck3jJfydytoev0cPXNycNZmint4Jv9f31ahpv9V/3ikKQLzSqSrdKORhVG+QrRVEMBqDAuvfTae/Nnc=
+	t=1773703739; cv=none; b=mipK3P/NYHuVu5B1GBuy7k2IRHXnBniwbuz5My72x3BMSbHRMadekZqwCLQRUHEvEoYuokZlWUdnggv0VCBDcRFtO9p8jSgGFtcorhA+/R292IIwDZbrwT31sZaQoYrBmp/MBCr0zzdVdgaSIO8VglxckFJHVdfJmjyNRP6cPBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773701627; c=relaxed/simple;
-	bh=PeRpdtBSFtw+WuO6+Oy1Kh5Rw3/jWvhl4ecurq8PqAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Fqn5JkmbsRTv5t5n/4w71Nk/iOOJDA/mM/1lw/5l7K0tW6wG00hVUlUboA6q7w77LcSF8hvaTB1vPgT6AWGIR3KZfDxSjv8+yjdOv4gsYYLVGKzut72ty4Hbhp3Fvi4dM0e3V/0FJ6ULkYdjn34gk1YcZQInkmfpqNlAwJkm7lc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cc5iH2EB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773703739; c=relaxed/simple;
+	bh=RBhTUhD6RmvH0U1qEVkkP88JB2pe7Ug7fvscAArvZR8=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=guQwc7Tn2A7YylMPNiL0nVytDC68Tr+4pkLZZBG5cuJc5ua+1i3u9/tYoW+kWMW0ueJsJjmo1gaE+nXrbmvPW7OPgadrJ4RZqv2yG22EBI3jhjFCKleNmekwGVZLd5FND43KUwH1wRqbKaFBUyQadepSPDmhpqlLzV64U1tmIc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cct2t42c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cc5iH2EB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20329C19421;
-	Mon, 16 Mar 2026 22:53:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cct2t42c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C16D5C19421;
+	Mon, 16 Mar 2026 23:28:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773701627;
-	bh=PeRpdtBSFtw+WuO6+Oy1Kh5Rw3/jWvhl4ecurq8PqAs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cc5iH2EBI2Ih25v0Qiq2V/QBZf2dVhAisR+UZh9KVD0cQPkt3ijlIi/EqN4+4T5I6
-	 /hELqKnwl9rPBclBtzFweOangesDXBOeEUgF38EcGldUK/YbIit7BTo2VKVBrZ+FyH
-	 LIDzo8vgc5t62DchTHPVYLf3SL7wJ5a4lNOXMG6lOobPVPsRJgt8sdg6FbJlsz01ck
-	 vxwRDMoyrF2Do1uLKnNPtof/NbmctSdjCPtpq7rb8/ou4idrbE/6i2CoHkbnQedpwn
-	 VkIvUN1L6l5Jzd47Q9VNdR2EyyfnLfm5Wj4ruk77uRcGeViY99PUSTkdJLp7QKvTqn
-	 XB3XFn29zvdDQ==
-Date: Mon, 16 Mar 2026 15:53:46 -0700
+	s=k20201202; t=1773703738;
+	bh=RBhTUhD6RmvH0U1qEVkkP88JB2pe7Ug7fvscAArvZR8=;
+	h=Date:Subject:From:To:Cc:From;
+	b=cct2t42cmb40Cg0+T06OmP9+ZRI0QYOT+N6gkbz7/eCnDd4Ocl1P9L81ROzcxKkDg
+	 5SAb9pwD6i0a5gSfAOEpYWUaa0oC4VDGTB6syuFNmt4PB87dyIGn/cwv4nfhW7Sxro
+	 W3au6LymF7SARM3Zpth1t9pDpeFgzRZUhfazm+DK5XucIPhXBAJEOOf/T5XaDU5doX
+	 fwkXVlhOjJF/t6D4A83iGvaFdBm4JPWBsmFUNmv9tTxZWWYjjm1QmRrqJTagoCsZUw
+	 ckeyU85H09gDogqeI8kJ9L8Sih9mVbiqI4gOAFelpJ1lBr3w1dGNXKlHU5neWVEwNH
+	 D0BjntUOM8y/w==
+Date: Mon, 16 Mar 2026 16:28:58 -0700
+Subject: [PATCHSET] fstests: fixes for autonomous self healing of filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bill Wendling <morbo@google.com>
-Cc: linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	Gogul Balakrishnan <bgogul@google.com>,
-	Arman Hasanzadeh <armanihm@google.com>, Kees Cook <kees@kernel.org>,
-	linux-xfs@vger.kernel.org, codemender-patching+linux@google.com
-Subject: Re: [PATCH v2] xfs: annotate struct xfs_attr_list_context with
- __counted_by_ptr
-Message-ID: <20260316225346.GG1770774@frogsfrogsfrogs>
-References: <20260303015646.2796170-1-morbo@google.com>
- <20260316184200.840020-1-morbo@google.com>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <177370372656.2108664.15986990094116651469.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260316184200.840020-1-morbo@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 16, 2026 at 06:41:58PM +0000, Bill Wendling wrote:
-> Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
-> xfs_attr_list_context`. This field is used to point to a buffer of
-> size `bufsize`.
-> 
-> The `buffer` field is assigned in:
-> 1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
-> 2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
-> 3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to NULL)
-> 
-> In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
-> them to ensure `bufsize` is set before `buffer` is assigned, although
-> no access happens between them.
-> 
-> In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
-> them to ensure `bufsize` is set before `buffer` is assigned.
-> 
-> In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
-> remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
-> is NULL, no access occurs.
-> 
-> In all cases, the pointer `buffer` is not accessed before `bufsize` is set.
-> 
-> This patch was generated by CodeMender and reviewed by Bill Wendling.
-> Tested by running xfstests.
-> 
-> Signed-off-by: Bill Wendling <morbo@google.com>
+Hi all,
 
-Looks ok to me, even if it's nothing earthshattering ;)
+These are miscellaneous bug fixes for the queued-up self healing
+fstests.
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
 
-> ---
-> Cc: Carlos Maiolino <cem@kernel.org>
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Cc: Gogul Balakrishnan <bgogul@google.com>
-> Cc: Arman Hasanzadeh <armanihm@google.com>
-> Cc: Kees Cook <kees@kernel.org>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: codemender-patching+linux@google.com
-> ---
-> v2 - Place comment in a more readable spot.
-> ---
->  fs/xfs/libxfs/xfs_attr.h | 3 ++-
->  fs/xfs/xfs_handle.c      | 2 +-
->  fs/xfs/xfs_xattr.c       | 2 +-
->  3 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 8244305949de..4b4217e23d1c 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -55,7 +55,8 @@ struct xfs_attr_list_context {
->  	struct xfs_trans	*tp;
->  	struct xfs_inode	*dp;		/* inode */
->  	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
-> -	void			*buffer;	/* output buffer */
-> +	/* output buffer */
-> +	void			*buffer __counted_by_ptr(bufsize);
->  
->  	/*
->  	 * Abort attribute list iteration if non-zero.  Can be used to pass
-> diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-> index d1291ca15239..2b8617ae7ec2 100644
-> --- a/fs/xfs/xfs_handle.c
-> +++ b/fs/xfs/xfs_handle.c
-> @@ -443,8 +443,8 @@ xfs_ioc_attr_list(
->  	context.dp = dp;
->  	context.resynch = 1;
->  	context.attr_filter = xfs_attr_filter(flags);
-> -	context.buffer = buffer;
->  	context.bufsize = round_down(bufsize, sizeof(uint32_t));
-> +	context.buffer = buffer;
->  	context.firstu = context.bufsize;
->  	context.put_listent = xfs_ioc_attr_put_listent;
->  
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index a735f16d9cd8..544213067d59 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -332,8 +332,8 @@ xfs_vn_listxattr(
->  	memset(&context, 0, sizeof(context));
->  	context.dp = XFS_I(inode);
->  	context.resynch = 1;
-> -	context.buffer = size ? data : NULL;
->  	context.bufsize = size;
-> +	context.buffer = size ? data : NULL;
->  	context.firstu = context.bufsize;
->  	context.put_listent = xfs_xattr_put_listent;
->  
-> -- 
-> 2.53.0.851.ga537e3e6e9-goog
-> 
-> 
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-monitoring-fixes
+---
+Commits in this patchset:
+ * common: ignore stderr for the two new svcname helpers
+ * xfs/6{59-61}: force xfs_healer to run
+ * xfs/805: adjust for new autofsck fsproperty defaults
+---
+ common/xfs        |    4 ++--
+ tests/xfs/659     |    3 +++
+ tests/xfs/660     |    3 +++
+ tests/xfs/661     |    4 ++++
+ tests/xfs/805     |    7 +------
+ tests/xfs/805.out |    1 -
+ 6 files changed, 13 insertions(+), 9 deletions(-)
+
