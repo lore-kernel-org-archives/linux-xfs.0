@@ -1,41 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B7E71A9FA7
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 15:35:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E50053A1A2B
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 15:42:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773675344; cv=none; b=U/WlTXOBQ5s1fREm07Zp0/SFIYMsBtFUnqmB1ZyR/bZJQCD+ip1UpYjbIIFt3m8nRfXFkQ94QmOe4Ge/dzc464ayWVcewCK4XcZ9XE/vV2GAjmNCPmJcT3zit9tPjBQ3nXmkuTdD70E7J/Lx+R0rld8s8poxKOp0Uz2vx5knaqc=
+	t=1773675742; cv=none; b=gU/o1Rd4sdQaKiuRVNXksc1kvkz2UEIttUm8+Iv08phuvwUcPiUDz9G9cT1f1PgeNmLtZvlK8zwnrxjchLJi4Bo+JsEQEuFtbMB9EWpvqRprL2RQNK3i30s4qkh5dOqQ40IkR8wn/v6bBlWQINV80rq8eJQmruRjw0puBn+WMUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773675344; c=relaxed/simple;
-	bh=97VYcBKiCNoNLavm1s3dlEbKrkaU7hvG4dFiyjWG3C8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mf5UqimnfBCTFQTXBYQicMbsuIvByIFkhUl44WHCy/gGlEcE8DQfZJholNEnKQIsZ9e3nz7ds0Wk9ZnU6Oy3CzgXzkm38zg5RTu2MnnKgk7AmqAtDrapgmSKY0RzcTBoxJ6CBozLhQJ58bigK1IepVCtJq61jzRgXZFe43PSqIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dKzvRlgg; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1773675742; c=relaxed/simple;
+	bh=MChR2YiVZfOYgIlY7JIqe6OucPNqwC0TBQ6GGGNAAt8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aGDi01Wl4hCXpgfgDvpap9Am2c6IgAOm1FftyHD6OFPu/ajIStAw6H3qG7EaoxBSw9xczyelmvWvI1gTXGeU3LigeVAY69/yVf2psaIeE+3JVPSE5/wPsWIOj/Wkg/5CG2vnNWzyZ5OMuFatiKjy/WrNgVXGhfNpkq1SxH0dbWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rzOfqnWT; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dKzvRlgg"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rzOfqnWT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
 	Content-ID:Content-Description:In-Reply-To:References;
-	bh=JZIl7q25QtYHlAoo+Mo85ZTi9wM5RBmAa0n3fMO2vIc=; b=dKzvRlggpO5lWazAT+iulKVf2C
-	nonbe5+aQG4/2i+mGFFkF+eoYUCDiuciWCm/pjRESEsTldDZ6zpwf3/rwFn0daAcerfvrdRWm26ra
-	rd+Z77L9FKZb6FBpdpwE9uwzOK3nLVLnfYF3MUvPJnKalFG/dDIMkkXUXrOhbg3qJqo12GRoiiHTL
-	n62L2CUeAu/tqjyoSnGaiSyUnM2v/m6lPtSsnYUb53KCDm1Tw3fUsBsU+3ocZYxLtaxOrrtQZjsSv
-	bu7rhosQge4fdlvrUdRqCKtaYf6ezzouZ6JDLPDnAmrXgOonDYxUBfTXUN6p6g/Fdcyfhcn8rmvXz
-	YDHyka1A==;
+	bh=4VWsNhJ3qefZcJVhIWKLPOVwPG6ErhIkUBgJPoUzLAM=; b=rzOfqnWT1nEBTI1wuGjc3RQeRX
+	BvXz+R/I++/JrsBJNuny6Ha4qnh2VpdoBRtIq7aD6y3jbDBFw0MRsXApV/sRVWh++D8EdKKq0+kYa
+	Z8lJv7CvepFdUvtDLGLRdlY+onB2QGlduN7a9c4ouAcTFapVJeVHGdolngwOTtriykhR6/6TpAMBR
+	C+Xeb1LA5COK37+T4QKzOE8OUbqLRC+peVMJaLAtFrtbVBoW/uZXkgz2xRM6kQ6J28XPjTpOnVMQG
+	V+PB1y+gj3hJIWm6jcgSV410m40tH28Ic0FwCWpaKIiLImxXwQItBTuE+Td3JMtJiN+W5922UFto9
+	oE02JLHw==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w29yl-00000004LbB-0EMk;
-	Mon, 16 Mar 2026 15:35:39 +0000
+	id 1w2A5D-00000004MKZ-3D5Q;
+	Mon, 16 Mar 2026 15:42:20 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: djwong@kernel.org,
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>,
+	Brian Foster <bfoster@redhat.com>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: cleanup buftarg handling in XFS_IOC_VERIFY_MEDIA
-Date: Mon, 16 Mar 2026 16:35:29 +0100
-Message-ID: <20260316153533.1580167-1-hch@lst.de>
+Subject: buffer cache simplification v4
+Date: Mon, 16 Mar 2026 16:41:32 +0100
+Message-ID: <20260316154216.1598410-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -46,87 +47,33 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The newly added XFS_IOC_VERIFY_MEDIA is a bit unusual in how it handles
-buftarg fields.  Update it to be more in line with other XFS code:
+Hi all,
 
- - use btp->bt_dev instead of btp->bt_bdev->bd_dev to retrieve the device
-   number for tracing
- - use btp->bt_logical_sectorsize instead of
-   bdev_logical_block_size(btp->bt_bdev) to retrieve the logical sector
-   size
- - compare the buftarg and not the bdev to see if there is a separate
-   log buftarg
+this series has a few old patches that simplify the LRU handling, and
+moves back to only having a per-buftarg hash now that the buffer hash
+is using the scalable rhashtable.  While some of this looks like
+performance work, performance and scalability is unchanged even on the
+80 core dual socket system I test this on.  Besides cleaning up the
+code nice, it also happens to fix a syzcaller reported use after free
+during buffer shutdown, which happened incidentally because of how the
+tear down of the buftarg vs the perag structures is handled.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_verify_media.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+Changes since v3:
+ - split the change to handling how referenced buffers on the LRU
+   are handled into a separate patch
 
-diff --git a/fs/xfs/xfs_verify_media.c b/fs/xfs/xfs_verify_media.c
-index 8bbd4ec567f8..5ead3976d511 100644
---- a/fs/xfs/xfs_verify_media.c
-+++ b/fs/xfs/xfs_verify_media.c
-@@ -183,10 +183,9 @@ xfs_verify_iosize(
- 			min_not_zero(SZ_1M, me->me_max_io_size);
- 
- 	BUILD_BUG_ON(BBSHIFT != SECTOR_SHIFT);
--	ASSERT(BBTOB(bbcount) >= bdev_logical_block_size(btp->bt_bdev));
-+	ASSERT(BBTOB(bbcount) >= btp->bt_logical_sectorsize);
- 
--	return clamp(iosize, bdev_logical_block_size(btp->bt_bdev),
--			BBTOB(bbcount));
-+	return clamp(iosize, btp->bt_logical_sectorsize, BBTOB(bbcount));
- }
- 
- /* Allocate as much memory as we can get for verification buffer. */
-@@ -218,8 +217,8 @@ xfs_verify_media_error(
- 	unsigned int		bio_bbcount,
- 	blk_status_t		bio_status)
- {
--	trace_xfs_verify_media_error(mp, me, btp->bt_bdev->bd_dev, daddr,
--			bio_bbcount, bio_status);
-+	trace_xfs_verify_media_error(mp, me, btp->bt_dev, daddr, bio_bbcount,
-+			bio_status);
- 
- 	/*
- 	 * Pass any error, I/O or otherwise, up to the caller if we didn't
-@@ -280,7 +279,7 @@ xfs_verify_media(
- 		btp = mp->m_ddev_targp;
- 		break;
- 	case XFS_DEV_LOG:
--		if (mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev)
-+		if (mp->m_logdev_targp != mp->m_ddev_targp)
- 			btp = mp->m_logdev_targp;
- 		break;
- 	case XFS_DEV_RT:
-@@ -299,7 +298,7 @@ xfs_verify_media(
- 
- 	/* start and end have to be aligned to the lba size */
- 	if (!IS_ALIGNED(BBTOB(me->me_start_daddr | me->me_end_daddr),
--			bdev_logical_block_size(btp->bt_bdev)))
-+			btp->bt_logical_sectorsize))
- 		return -EINVAL;
- 
- 	/*
-@@ -331,8 +330,7 @@ xfs_verify_media(
- 	if (!folio)
- 		return -ENOMEM;
- 
--	trace_xfs_verify_media(mp, me, btp->bt_bdev->bd_dev, daddr, bbcount,
--			folio);
-+	trace_xfs_verify_media(mp, me, btp->bt_dev, daddr, bbcount, folio);
- 
- 	bio = bio_alloc(btp->bt_bdev, 1, REQ_OP_READ, GFP_KERNEL);
- 	if (!bio) {
-@@ -400,7 +398,7 @@ xfs_verify_media(
- 	 * an operational error.
- 	 */
- 	me->me_start_daddr = daddr;
--	trace_xfs_verify_media_end(mp, me, btp->bt_bdev->bd_dev);
-+	trace_xfs_verify_media_end(mp, me, btp->bt_dev);
- 	return 0;
- }
- 
--- 
-2.47.3
+Changes since v2:
+ - mark b_hold as signed in patch 1 before removing it in patch 2
+ - document the changed locking in xfs_buf_rele_cached.
 
+Changes since v2:
+ - add more details and a link to a commit message
+
+Diffstat:
+ libxfs/xfs_ag.c |   13 ----
+ libxfs/xfs_ag.h |    2 
+ xfs_buf.c       |  148 ++++++++++++++++++++------------------------------------
+ xfs_buf.h       |   14 +----
+ xfs_buf_mem.c   |   11 ----
+ xfs_trace.h     |   10 +--
+ 6 files changed, 66 insertions(+), 132 deletions(-)
