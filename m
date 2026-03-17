@@ -1,47 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8402C0F78
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 13:41:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC322D592E;
+	Tue, 17 Mar 2026 13:44:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773754895; cv=none; b=i5ewe+9uH5xrivkrNvql7KSLlLxJ4AoA0m4EofC7SJoina0L1TVCecyQujuBXelmuCPnJSTUTvvVrQs3cWBA8t+OJWNaU4lGDv9RMWaMMalLq44/+3lpalSijcIHdlgCgSUAxbA42b54a5wWL1zClRnVwQ/RxrJOzIINduaP8EQ=
+	t=1773755055; cv=none; b=ePKDzP90xQNkfcnFK5QqwjqkTqovSpSB+IRxFldDP67qHkz5cFPae4owkKy6Sz4Z/3qd0EYvhENaFnQVrGR3TN9J0BP5orwwrrY/0rE3qCx9csGn1woyE/NJ69Qa+x0LRGN3Rqc9nittEzhANS73h129LerDN52BJVAvAcISxp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773754895; c=relaxed/simple;
-	bh=uRRAVvHCyineMqAz2z6r2mCBKgnBlnhrcS+wWqNW7HQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fAVUt03rYWRwKz57MnziCP/Mm5g8s8rsmZxRMa1V8my5AVq6eYRMH3N5tfyZslj3jvMAhKag3hC+jkltvuk950nmhRZZVzYTKc5I4SIL1XoprWeBkMpiZmJyKn59bNGXSp5QgWrn8FE62Ob1jGFn8Vo1Y4KScIpTVsrhyrpWsNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=26PaCywi; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1773755055; c=relaxed/simple;
+	bh=H5iAoUkv9rrKDqZp/Z4J9ELBVPR6LNcMR/XbORkB2uY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I6Hbo8DgKqOC+8kPKUMub8DcJ4iKywu5j2fRtFOPOEc0fnB2yz/HotpEoXAHq/8rSEIVB3NtNgFJ/gYvQX63swvVsCsLLwEcLOHUxDsgQFqU7f91JfhH4t5BiIrtVgDSHsaBf7yR6R6y+WGNFgS8CijyufWWCByoRAL4FSHWOyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hzD3Xy6Q; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="26PaCywi"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hzD3Xy6Q"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=/j/jMdCgErZw2oO8u46//25xWQCk+mcZ3T8nGdJxrpY=; b=26PaCywiYf3KR9J3YjwVlCjdNZ
-	qW5XNw/xx+k3KPA/a0R1wbX49clEVQQvimKVBySvWsuBAn3AsMKZkVDsAn1y40ZnJVBnN+CdPIhg9
-	wZ5rNSRSbu2qmTd+IGCn4YMqFSpgPLg+bqiq4ZF0kLTegktzkB5VX2oQi/Xf6lHW8T/jUEOXhWN9n
-	LiWY+9EasOYnnUlHFpz+optUcAeYzg62+bXy6DmJzsro81Vy3HIeuOyUDxiuQePnM/3Umwc8ApSFF
-	2WCPRPJt0MNVMt4rUrzISE5KL1ApVGpXiVRk1kSmOwwYyN6USL8hBzgwTbEcjU0NvD0Qnf4h54WED
-	BTzqcOjA==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=qdlZJQWinV/T/tEukgP9BgoZ1KsPHk6ar7zBuEJioC4=; b=hzD3Xy6QZD6klvvLARweBOZcAr
+	JcldeaRxgQlvlScZbcIaGs5RIPFtN0SJXEvN7m5SJBqDXCWyaNtBPNg8IMA5kVX6xNWcJ4AR7K9kO
+	9DgEl0xclY4VmMRnAQirUPH4NMNlMyOFuDMRt4Pu3+LcltxN/SKRp0Hl5lOSo/aWhxMP93pWnVHsM
+	1XvlITEAkpb08EMoMWi37R6tuaE6RwWhjpjf/34CC3eRS68RAbsfeF5ivhbCSYAxX/uwVS9pJoF+S
+	ANjUAv20kVFjm8TL88pOlN0AT1e4ZPeEjD6aRPQY1mfQwRcF40PY9A45P7PD0S3fTeyt7uhIjACUb
+	x0Uo8K/Q==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2Uft-00000006T2k-2Yrj;
-	Tue, 17 Mar 2026 13:41:34 +0000
+	id 1w2UiS-00000006TEe-1eEm;
+	Tue, 17 Mar 2026 13:44:13 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>,
-	Brian Foster <bfoster@redhat.com>,
-	linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 4/4] xfs: don't decrement the buffer LRU count for in-use buffers
-Date: Tue, 17 Mar 2026 14:40:55 +0100
-Message-ID: <20260317134110.1691097-5-hch@lst.de>
+To: brauner@kernel.org,
+	viro@zeniv.linux.org.uk
+Cc: jack@suse.cz,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] fs: clear I_DIRTY_TIME in sync_lazytime
+Date: Tue, 17 Mar 2026 14:44:04 +0100
+Message-ID: <20260317134409.1691317-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260317134110.1691097-1-hch@lst.de>
-References: <20260317134110.1691097-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,61 +48,53 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-XFS buffers are added to the LRU when they are unused, but are only
-removed from the LRU lazily when the LRU list scan finds a used buffer.
-So far this only happen when the LRU counter hits 0, which is suboptimal
-as buffers that were added to the LRU, but are in use again still consume
-LRU scanning resources and are aged while actually in use.
+For file systems implementing ->sync_lazytime, I_DIRTY_TIME fails to get
+cleared in sync_lazytime, and might cause additional calls to
+sync_lazytime during inode deactivation.  Use the same pattern as in
+__mark_inode_dirty to clear the flag under the inode lock.
 
-Fix this by checking for in-use buffers and removing the from the LRU
-before decrementing the LRU counter.
-
+Fixes: 5cf06ea56ee6 ("fs: add a ->sync_lazytime method")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ fs/fs-writeback.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c0a4d0a37f57..8ba9b74339a7 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1523,6 +1523,18 @@ xfs_buftarg_isolate(
- 	if (!spin_trylock(&bp->b_lockref.lock))
- 		return LRU_SKIP;
- 
-+	/*
-+	 * If the buffer is in use, remove it from the LRU for now.  We can't
-+	 * free it while someone is using it, and we should also not count
-+	 * eviction passed for it, just as if it hadn't been added to the LRU
-+	 * yet.
-+	 */
-+	if (bp->b_lockref.count > 0) {
-+		list_lru_isolate(lru, &bp->b_lru);
-+		spin_unlock(&bp->b_lockref.lock);
-+		return LRU_REMOVED;
-+	}
-+
- 	/*
- 	 * Decrement the b_lru_ref count unless the value is already
- 	 * zero. If the value is already zero, we need to reclaim the
-@@ -1533,16 +1545,6 @@ xfs_buftarg_isolate(
- 		return LRU_ROTATE;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 7c75ed7e8979..d8dac1931595 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1711,6 +1711,19 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
  	}
- 	
--	/*
--	 * If the buffer is in use, remove it from the LRU for now as we can't
--	 * free it.  It will be freed when the last reference drops.
--	 */
--	if (bp->b_lockref.count > 0) {
--		list_lru_isolate(lru, &bp->b_lru);
--		spin_unlock(&bp->b_lockref.lock);
--		return LRU_REMOVED;
--	}
--
- 	lockref_mark_dead(&bp->b_lockref);
- 	list_lru_isolate_move(lru, item, dispose);
- 	spin_unlock(&bp->b_lockref.lock);
+ }
+ 
++static bool __sync_lazytime(struct inode *inode)
++{
++	spin_lock(&inode->i_lock);
++	if (!(inode_state_read(inode) & I_DIRTY_TIME)) {
++		spin_unlock(&inode->i_lock);
++		return false;
++	}
++	inode_state_clear(inode, I_DIRTY_TIME);
++	spin_unlock(&inode->i_lock);
++	inode->i_op->sync_lazytime(inode);
++	return true;
++}
++
+ bool sync_lazytime(struct inode *inode)
+ {
+ 	if (!(inode_state_read_once(inode) & I_DIRTY_TIME))
+@@ -1718,9 +1731,8 @@ bool sync_lazytime(struct inode *inode)
+ 
+ 	trace_writeback_lazytime(inode);
+ 	if (inode->i_op->sync_lazytime)
+-		inode->i_op->sync_lazytime(inode);
+-	else
+-		mark_inode_dirty_sync(inode);
++		return __sync_lazytime(inode);
++	mark_inode_dirty_sync(inode);
+ 	return true;
+ }
+ 
 -- 
 2.47.3
 
