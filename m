@@ -1,121 +1,153 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7546D35966
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 02:02:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC021E51E0
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 02:18:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773712966; cv=none; b=FbSxiGQd+MmeL0Jsn4Qj4c42Z+4BQSAh39dIJ2XaAk6Eyb+zFomyKtuM2JiqNeFuG7FyHbrmrbwG3OdpwOOLWMBszrkZAKyEC9tj6avic8QhuzR2qpJqeSCjUQyGGIH3HEYL73/BmMPzwH/3uziDgp7x8eUINzTSRHhpKFp+w8M=
+	t=1773713939; cv=none; b=Q5bnBOWsAHVTUf8ZL0oqR7XzTDSSFp8ofm+pKBufuxKUjAT9DdA/0R0t7sPpIkEV7VrabwOTRoBo1Vowd9ctLtUksw1GMyt3alor5ggcSz/1jZEdrDgGYB9o1Xy2Ow1HvSoJvgaCYqdRpRX4p/VvNU+R9fCTTC6xIxDBDzNSgBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773712966; c=relaxed/simple;
-	bh=02HKZy6jKe0j0P2557iZE/+h6x4GuYMRxizF6ibbUr4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NOnttm92pV7LjLpqYFdsbrjd6983ijoknUf4iNPC7Gqn7vnOmVqL3cMppiKM4AQnajDyIq4YWi3jZADFQO4Ye1ecdsNCZLmL0KhqhUuuP/DzmfxH+TBfMcdWTfkro5gKXPDYFx72z1e5xIIrLPJrHhKU+oTSuoRSedjPIdqx+yg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=qg71gtyI; arc=none smtp.client-ip=113.46.200.226
+	s=arc-20240116; t=1773713939; c=relaxed/simple;
+	bh=w0zwr9PZ0ZchMyGPjBfijM8adpHZbqj5V2fzE+cLKa4=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kJMO85VHLE0xG8ww6SYCZeVadhd1JBq1lM+p2MvPbj0SxKaceWp93OQNg1OIOBAr/Dydy9MVrSbiBlggK39jmch9GtMXbeK98SIEFg6APB4kykRUoHWmr0RQ7KSz9W+JjRJ2h87Ek2K+zFA66oRcIk9YcnAx2Y6Oz0lw2SH9IIc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=KUldY10L; arc=none smtp.client-ip=113.46.200.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="qg71gtyI"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="KUldY10L"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=fyKPnqgkvDrQX7XCLPDzhVz/lkqzkJkueOCHdQ6kDbs=;
-	b=qg71gtyIfHajXrO6ZsfEKVhpwsWZeCF9g9GT4cTkG3UWzbtMyx12rH94eJQxVmq8IdawyjOgk
-	QYDrcxbmxPN7I6Bb2xcGNZSIiiuPxihZJQ1VDKlCn4kdr4abVDlUULh+jYEP8Rl39509oNmhC/p
-	SpfqU8wlAcL21zFcwFpmV8s=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fZZpl3YLPzKm58;
-	Tue, 17 Mar 2026 09:57:35 +0800 (CST)
+	bh=EbfwmWTJyL55LcYc7w0bOom4jGb1KuApP8xOlSbw9TA=;
+	b=KUldY10LTvNwOzUk1SkE5tqNzD7FWcYpSR2nP3/Fm/cO/mqIp4alixdSdZPA71sJnxUrxdO6R
+	/WxwIyziK2pJmebeg3ANm41gfebzdBtnVvq1j+axqXUETsTCB9EbJpDKYaeUoTa8vtv5Hy9bDEt
+	ywht4V6ARn3ogew+W6n79dM=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4fZb936Jhtz1T4FW;
+	Tue, 17 Mar 2026 10:13:27 +0800 (CST)
 Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id E3C7740562;
-	Tue, 17 Mar 2026 10:02:34 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 5083540569;
+	Tue, 17 Mar 2026 10:18:47 +0800 (CST)
 Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
  dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 17 Mar 2026 10:02:34 +0800
-Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ 15.2.1544.11; Tue, 17 Mar 2026 10:18:47 +0800
+Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
  (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 17 Mar
- 2026 10:02:33 +0800
+ 2026 10:18:46 +0800
+Date: Tue, 17 Mar 2026 10:14:36 +0800
 From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
 	<lonuxli.64@gmail.com>
-Subject: [PATCH v3 3/4] xfs: factor out xfs_attr3_leaf_init
-Date: Tue, 17 Mar 2026 09:51:54 +0800
-Message-ID: <20260317015155.589955-4-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260317015155.589955-1-leo.lilong@huawei.com>
-References: <20260317015155.589955-1-leo.lilong@huawei.com>
+Subject: Re: [PATCH 2/3] xfs: fix ri_total validation in
+ xlog_recover_attri_commit_pass2
+Message-ID: <abi5DL2O8-7xBtx8@localhost.localdomain>
+References: <20260316012416.2413909-1-leo.lilong@huawei.com>
+ <20260316012416.2413909-3-leo.lilong@huawei.com>
+ <20260316223921.GD1770774@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20260316223921.GD1770774@frogsfrogsfrogs>
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
  kwepemn100013.china.huawei.com (7.202.194.116)
 
-Factor out wrapper xfs_attr3_leaf_init function, which exported for
-external use.
+On Mon, Mar 16, 2026 at 03:39:21PM -0700, Darrick J. Wong wrote:
+> On Mon, Mar 16, 2026 at 09:24:15AM +0800, Long Li wrote:
+> > The ri_total checks for SET/REPLACE operations are hardcoded to 3,
+> > but xfs_attri_item_size() only emits a value iovec when value_len > 0,
+> > so ri_total is 2 when value_len == 0.
+> 
+> When can you have a set/replace operation with no value?  Is this the
+> weird case where you're trying to set an attr to zero-length buffer?
+> 
+> --D
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 22 ++++++++++++++++++++++
- fs/xfs/libxfs/xfs_attr_leaf.h |  3 +++
- 2 files changed, 25 insertions(+)
+Yes, the issue can be reproduced using the following command:
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 47f48ae555c0..2b78041e8672 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -1415,6 +1415,28 @@ xfs_attr3_leaf_create(
- 	return 0;
- }
- 
-+/*
-+ * Reinitialize an existing attr fork block as an empty leaf, and attach
-+ * the buffer to tp.
-+ */
-+int
-+xfs_attr3_leaf_init(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		blkno)
-+{
-+	struct xfs_buf		*bp = NULL;
-+	struct xfs_da_args	args = {
-+		.trans		= tp,
-+		.dp		= dp,
-+		.owner		= dp->i_ino,
-+		.geo		= dp->i_mount->m_attr_geo,
-+	};
-+
-+	ASSERT(tp != NULL);
-+
-+	return xfs_attr3_leaf_create(&args, blkno, &bp);
-+}
- /*
-  * Split the leaf node, rebalance, then add the new entry.
-  *
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index aca46da2bc50..72639efe6ac3 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -87,6 +87,9 @@ int	xfs_attr3_leaf_list_int(struct xfs_buf *bp,
- /*
-  * Routines used for shrinking the Btree.
-  */
-+
-+int	xfs_attr3_leaf_init(struct xfs_trans *tp, struct xfs_inode *dp,
-+				xfs_dablk_t blkno);
- int	xfs_attr3_leaf_toosmall(struct xfs_da_state *state, int *retval);
- void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
- 				       struct xfs_da_state_blk *drop_blk,
--- 
-2.39.2
+mkfs.xfs -f /dev/sda
+mount /dev/sda /mnt/test/
+touch /mnt/test/file
+for i in {1..200}; do
+	attr -s "user.attr_$i" -V "value_000000000000000_$i" /mnt/test/file > /dev/null
+done
+echo 1 > /sys/fs/xfs/debug/larp
+mount /dev/sda /mnt/test/
+echo 1 > /sys/fs/xfs/sda/errortag/larp
+attr -s "user.zero" -V "" /mnt/test/file
+echo 0 > /sys/fs/xfs/sda/errortag/larp
+umount /mnt/test
+mount /dev/sda /mnt/test/
+
+
+Damage is reported when mounting again:
+
+[45643.683467] XFS (sda): Internal error xlog_recover_attri_commit_pass2 at line 1052 of file fs/xfs/xfs_attr_item.c.  Caller xlog_recover_items_pass2+0xe1/0x290
+[45643.684743] CPU: 2 UID: 0 PID: 2328 Comm: mount Tainted: G    B               7.0.0-rc3-next-20260312-gcb0d985e40d9-dirty #352 PREEMPT(full)
+[45643.684749] Tainted: [B]=BAD_PAGE
+[45643.684751] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.1-2.fc37 04/01/2014
+[45643.684753] Call Trace:
+[45643.684755]  <TASK>
+[45643.684757]  dump_stack_lvl+0x53/0x70
+[45643.684764]  xfs_corruption_error+0xf9/0x150
+[45643.684770]  ? xlog_recover_items_pass2+0xe1/0x290
+[45643.684774]  xlog_recover_attri_commit_pass2+0x866/0x1380
+[45643.684778]  ? xlog_recover_items_pass2+0xe1/0x290
+[45643.684782]  xlog_recover_items_pass2+0xe1/0x290
+[45643.684786]  xlog_recover_commit_trans+0x6ca/0xa30
+[45643.684791]  ? __pfx_xlog_recover_commit_trans+0x10/0x10
+[45643.684794]  ? xlog_recover_process_ophdr+0x18f/0x400
+[45643.684798]  xlog_recovery_process_trans+0x11b/0x150
+[45643.684802]  xlog_recover_process_data+0x185/0x360
+[45643.684806]  xlog_do_recovery_pass+0x810/0xbf0
+[45643.684811]  ? __pfx_xlog_do_recovery_pass+0x10/0x10
+[45643.684814]  ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+[45643.684821]  ? kasan_save_track+0x14/0x30
+[45643.684826]  ? __kasan_kmalloc+0x8f/0xa0
+[45643.684830]  xlog_do_log_recovery+0x66/0xb0
+[45643.684833]  xlog_do_recover+0x75/0x3b0
+[45643.684837]  xlog_recover+0x25b/0x460
+[45643.684841]  ? __pfx_xlog_recover+0x10/0x10
+[45643.684845]  xfs_log_mount+0x1c1/0x420
+[45643.684850]  xfs_mountfs+0xc9e/0x1c20
+[45643.684853]  ? __link_object+0x10f/0x210
+[45643.684858]  ? __pfx_xfs_mountfs+0x10/0x10
+[45643.684861]  ? xfs_mru_cache_create+0x10a/0x5e0
+[45643.684865]  ? __pfx_xfs_fstrm_free_func+0x10/0x10
+[45643.684869]  ? xfs_mru_cache_create+0x3b5/0x5e0
+[45643.684872]  xfs_fs_fill_super+0xdcd/0x18d0
+[45643.684878]  ? __pfx_xfs_fs_fill_super+0x10/0x10
+[45643.684882]  get_tree_bdev_flags+0x2ec/0x550
+[45643.684888]  ? __pfx_get_tree_bdev_flags+0x10/0x10
+[45643.684893]  ? __pfx_vfs_parse_fs_qstr+0x10/0x10
+[45643.684898]  vfs_get_tree+0x87/0x2d0
+[45643.684903]  fc_mount+0x15/0x1b0
+[45643.684908]  path_mount+0x116b/0x1b00
+[45643.684912]  ? __pfx_path_mount+0x10/0x10
+[45643.684916]  ? kasan_save_track+0x14/0x30
+[45643.684919]  ? user_path_at+0x43/0x50
+[45643.684922]  ? kmem_cache_free+0x248/0x490
+[45643.684928]  __x64_sys_mount+0x210/0x270
+[45643.684932]  ? __pfx___x64_sys_mount+0x10/0x10
+[45643.684936]  do_syscall_64+0xb4/0x5c0
+[45643.684941]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[45643.684945] RIP: 0033:0x7fe945b1123a
+[45643.684949] Code: 48 8b 0d 51 dc 2b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 1e dc 2b 00 f7 d8 64 89 01 48
+[45643.684953] RSP: 002b:00007ffc3102ede8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+[45643.684957] RAX: ffffffffffffffda RBX: 0000559d1d098030 RCX: 00007fe945b1123a
+[45643.684960] RDX: 0000559d1d098230 RSI: 0000559d1d09af20 RDI: 0000559d1d098210
+[45643.684962] RBP: 0000000000000000 R08: 0000000000000000 R09: 00007ffc3102dce8
+[45643.684963] R10: 00000000c0ed0000 R11: 0000000000000246 R12: 0000559d1d098210
+[45643.684966] R13: 0000559d1d098230 R14: 0000000000000000 R15: 00007fe947052184
+
+
 
