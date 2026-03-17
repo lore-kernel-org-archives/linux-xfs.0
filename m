@@ -1,172 +1,190 @@
-Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E68D7346E66
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 02:37:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4CC6309DD2
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 03:43:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773715063; cv=none; b=vARSjLUA7YyccRgOz2K5DddXOvXZi6460k5Pv7HIh8NiUQyEKnzzOC770N0zwmAAAWBeULl/Pp2BKMM97lsn76tlmXn4DsI3RbHPbvfMKGTg7K6YPZ6nJvTtwEVWbXvMw6T68hsOEi7or92ox/sQzEHurM77k658VrBmfyMmAV4=
+	t=1773719014; cv=none; b=SlMW08K7tegYZJOrnCdY68RCaj0HqgqvKDTQHGXscdsJu7C701RgqbXWBunMo9Q6LYoU2RFzJLHItwF9w4W0Bj4fB3ypSbV/OslUGXamugvSrzPw9fp8akTD4zXO3za8j/oKP7In4cH22t/gMX6WsofOD9toYBFeq8IP17C30/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773715063; c=relaxed/simple;
-	bh=ijCCkd1g8KtlX5FeXh3bqwjdNFB1Ee2ugVa4zUX9d7U=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZlJoaniJZJHbJ76rC9d9Rhqngf2I81v7/9TFiulb76y4UJF/tfKbPUIOwvvu/MICSNzO8rdLbzpbqeCLY/k06jGK5E9l4VT9LfZPu8LkKUIRhP9dthF2XjsxflkaLUJsyuW1Mq3Lh0hAXGccUnbw4xa8b8pg+n1Vl4YOY43S9Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Z2FU606R; arc=none smtp.client-ip=113.46.200.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1773719014; c=relaxed/simple;
+	bh=Vx2Q3cE2hrN9rjxcQghOvgAp/x/REgJOhJmxH7onb3M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DQ6qrVJ70VF3DFqwB6B5o6QWh1M/4U5VJSbhQ8evc02xFjAcGInvB/6a0E5Mvf1MLsnmo1JmgqFH8T8fzQkVvC/09k+YPxGzIrt3deBi9Uluntvyv3wU5WGjNpm1AtXXH0xb1UN3PcBFwHF8se5NBfj9X2Z4NL4hAdvMMqtPnLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FQ5MzOqp; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=DQDS4l6D; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Z2FU606R"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=WL8xayYGV+2T2j7/lUxCUrow3+9LV5VcBQh25IRBhBI=;
-	b=Z2FU606RFdotic3oqOKdAXiJhVx9lAEYgq91tvZWEDbxg1yCghFQgOyHX+xEAnA67HHxV9plO
-	6SSkG2GC5nP1cgsIl5aYB2OyCaaRGwpglUUitU2bUkTgNx6zhYG8NIAt3HQ7Ea/hN7LCkbswNK4
-	WzxDfGSEli4aPI0h3v0XNX8=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fZbZQ04tLznTWg;
-	Tue, 17 Mar 2026 10:31:58 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 763B04055B;
-	Tue, 17 Mar 2026 10:37:30 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 17 Mar 2026 10:37:30 +0800
-Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 17 Mar
- 2026 10:37:29 +0800
-Date: Tue, 17 Mar 2026 10:33:20 +0800
-From: Long Li <leo.lilong@huawei.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FQ5MzOqp";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="DQDS4l6D"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773719011;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4pt5Nu9EhoYKBSrDGYVHAoFMnMCMi4CfpJNnzJddGGA=;
+	b=FQ5MzOqpk0jQUGNvI7fGO9FjCoZF7gvnowqBxkJlS+bDtSmo+qf1mEgkUHCscvqbCd7QNA
+	+QptVzTZKjZ5D2nL7Kj1Jg1/iYYKNNMsPHtvH8s3PcC8Fxn4DqgHMg9Ufbznj4GXavmy2P
+	p+JXlWIVm9CfmIGFiGb9iuHRUgbItVU=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-558-LbseZ1IGOo21mxA9O3-Yng-1; Mon, 16 Mar 2026 23:43:29 -0400
+X-MC-Unique: LbseZ1IGOo21mxA9O3-Yng-1
+X-Mimecast-MFC-AGG-ID: LbseZ1IGOo21mxA9O3-Yng_1773719009
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-829bf6406ecso17967986b3a.0
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Mar 2026 20:43:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1773719009; x=1774323809; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=4pt5Nu9EhoYKBSrDGYVHAoFMnMCMi4CfpJNnzJddGGA=;
+        b=DQDS4l6D/1Zdrbc/AzR04c3oRX1MNKm/s+ZQuH/QPIM6onqWul/g5Qz6tMQu73yz42
+         y/PV8VHBDp6MJce8zGYF2yJB3bajhr4SolsYnk6qxb7AAqi4znH2b1piqiXgTI/Yi769
+         veMJyvCWewL2U6KEeXvAwiKu96zMei7Ivt9QNE89MZydn/gl7mdH9fGAR2pYmB4O/vzK
+         Ff6NMFSR9yKIqgv0Pexo94QFxWOSkvvlz0myvc3S0He3x8EC9DB+spb9PEm1YQ1lgdKj
+         mHFPd0aa/ktXGHFpiH3ij5JVW2pqw5yxw3iCoRzezgFYMMN+r4qudgPj7Pjl+QBTIhBm
+         QzSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773719009; x=1774323809;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4pt5Nu9EhoYKBSrDGYVHAoFMnMCMi4CfpJNnzJddGGA=;
+        b=aA/d9chfIhwTycx69FGrZsnMsd9p8/yAlTOEgnDF3C47t+V5tMLma6MtG+k86gL8CN
+         m99C6lrvodKup7WUCEN8yFmAAXBO9afUo12/gyUVWYHVHtIlveYLNsAju+Rb8AnIpNBU
+         rbLYV9ayDIz/HkZfFe4V5oFQRsR0VT6yQugVNh6juvLpyx0YbW4eQyJDOtN3Ts3datCP
+         lRwkpV5vn7w3WenUn+8ZXk/30wVMgs5eA8QnA6ytOeAjCAm5VNbixszq2c//5fUV1Z+v
+         Fp0ereY7eSEg0kRk3llgEfsT1nLHqqlYIrOWSG4nlyZFj060JAQeGkzntN8g8SI9KjTS
+         FUkA==
+X-Forwarded-Encrypted: i=1; AJvYcCXG2WLaFMqb8sRLrfmElEAx226UwRss5MvFQs3EOfhGhJk78BZJ8k/fX57tXBxyFf2m8BO8YvDgkDI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4sLxX3oYj0c65mvWDgv+JOz6UVS7WnZJGHh+ICfzxJAfHKvXY
+	HDFkidSI0DcZuBfbt/8b+VGWLMsVUPiklDz60d5Lro1X2sXsZiBcAeQzgAWIBslioZSjPnPoBJi
+	NJjU7fi2fDPZm7v/La5M4/lM+QyOuyfJSmNvMQHDVtDWxbphhLL8OD+mqXSbXfg==
+X-Gm-Gg: ATEYQzwWDU4+OYgvnRGJtXELH45IzsQenfeYo8yROay1YvCBT72FWRkNkNzBGIi8xbT
+	DQFJv/dDMBEYuUUWuOtK7uFvHGNCVPsDX82csmeGiDw+jIowTBaqSgYy8wSJe5wUKnXKLlFWWJr
+	NTEH/jFEjb9FF1Qyq97cA/eB/J1Hw4cuDjJBp1/U4Z+Y24g7zNL2wTnJBgHIafDQ5kw1Lr2bUD+
+	VXs2LesZlv5qBtZ0IPD3eT0GI0YFi5LXXW1lYxppDvA4w+GjT8uH4AUe0PVH8LJMt0kGIclOCfi
+	1wMOHc70eeND6fO7nSb3VmiSMKp/FTZTKbDppinkXFlGtLv7hGqOqpyGOhGli98AUOM0Az1xMVs
+	gr1subRsvgAD3UX50mg==
+X-Received: by 2002:a05:6a00:988:b0:821:7d7e:41cd with SMTP id d2e1a72fcca58-82a196f533cmr14557395b3a.10.1773719008761;
+        Mon, 16 Mar 2026 20:43:28 -0700 (PDT)
+X-Received: by 2002:a05:6a00:988:b0:821:7d7e:41cd with SMTP id d2e1a72fcca58-82a196f533cmr14557365b3a.10.1773719008296;
+        Mon, 16 Mar 2026 20:43:28 -0700 (PDT)
+Received: from doltdoltdolt ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82a072422desm15393628b3a.1.2026.03.16.20.43.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Mar 2026 20:43:27 -0700 (PDT)
+Date: Tue, 17 Mar 2026 11:43:21 +0800
+From: Zorro Lang <zlang@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <cem@kernel.org>, <linux-xfs@vger.kernel.org>, <david@fromorbit.com>,
-	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: Re: [PATCH 3/3] xfs: simplify iovec validation in
- xlog_recover_attri_commit_pass2
-Message-ID: <abi9cPp1pfsVhsAD@localhost.localdomain>
-References: <20260316012416.2413909-1-leo.lilong@huawei.com>
- <20260316012416.2413909-4-leo.lilong@huawei.com>
- <20260316224632.GE1770774@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>, jack@suse.cz,
+	fstests@vger.kernel.org, amir73il@gmail.com, gabriel@krisman.be,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH 1/1] generic: test fsnotify filesystem error reporting
+Message-ID: <20260317034321.bk47ojmstastkyne@doltdoltdolt>
+References: <177311403420.1186306.10503664469609309721.stgit@frogsfrogsfrogs>
+ <177311403440.1186306.11707487947646813883.stgit@frogsfrogsfrogs>
+ <abfIexgmKjS1Q7bN@infradead.org>
+ <20260316162147.GW1770774@frogsfrogsfrogs>
+ <20260316184041.ji5slfx4yvtfwwzq@doltdoltdolt>
+ <20260316221658.GO6069@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260316224632.GE1770774@frogsfrogsfrogs>
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+In-Reply-To: <20260316221658.GO6069@frogsfrogsfrogs>
 
-On Mon, Mar 16, 2026 at 03:46:32PM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 16, 2026 at 09:24:16AM +0800, Long Li wrote:
-> > Consolidate the per-case ri_total checks into a single comparison by
-> > assigning the expected iovec count to a local variable inside each
-> > switch arm, removing four nearly identical error blocks.
+On Mon, Mar 16, 2026 at 03:16:58PM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 17, 2026 at 02:40:41AM +0800, Zorro Lang wrote:
+> > On Mon, Mar 16, 2026 at 09:21:47AM -0700, Darrick J. Wong wrote:
+> > > On Mon, Mar 16, 2026 at 02:08:11AM -0700, Christoph Hellwig wrote:
+> > > > On Mon, Mar 09, 2026 at 08:50:08PM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > > 
+> > > > > Test the fsnotify filesystem error reporting.
+> > > > 
+> > > > Still would be helpful to explain what is being tested and how and
+> > > > the source of the test tool.
+> > > 
+> > > "Use dmerror to inject a media error for a file's storage, then run some
+> > > IO and make sure that fanotify reports the IO errors."
+> > > 
+> > > (I'm not sure what the process is for updating commit messages once
+> > > something's in patches-in-queue...)
 > > 
-> > Remove the redundant post-parse validation switch. By the time that
-> > block is reached, xfs_attri_validate() has already guaranteed all name
-> > lengths are non-zero via xfs_attri_validate_namelen(), and
-> > xfs_attri_validate_name_iovec() has already returned -EFSCORRUPTED for
-> > NULL names. For the REMOVE case, attr_value and value_len are
-> > structurally guaranteed to be NULL/zero because the parsing loop only
-> > populates them when value_len != 0. All checks in that switch are
-> > therefore dead code.
-> > 
-> > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > ---
-> >  fs/xfs/xfs_attr_item.c | 79 +++++++-----------------------------------
-> >  1 file changed, 12 insertions(+), 67 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> > index 21da995ba4e7..32236f5008ec 100644
-> > --- a/fs/xfs/xfs_attr_item.c
-> > +++ b/fs/xfs/xfs_attr_item.c
-> > @@ -1016,12 +1016,13 @@ xlog_recover_attri_commit_pass2(
-> >  	unsigned int			new_name_len = 0;
-> >  	unsigned int			new_value_len = 0;
-> >  	unsigned int			op, i = 0;
-> > +	unsigned int			expected = 0;
-> >  
-> >  	/* Validate xfs_attri_log_format before the large memory allocation */
-> >  	len = sizeof(struct xfs_attri_log_format);
-> >  	if (item->ri_buf[i].iov_len != len) {
-> >  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> > -				item->ri_buf[0].iov_base, item->ri_buf[0].iov_len);
-> > +				item->ri_buf[i].iov_base, item->ri_buf[i].iov_len);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> >  
-> > @@ -1038,32 +1039,20 @@ xlog_recover_attri_commit_pass2(
-> >  	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
-> >  	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
-> >  		/* Log item, attr name, attr value */
-> > -		if (item->ri_total != 3) {
-> > -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> > -					     attri_formatp, len);
-> > -			return -EFSCORRUPTED;
-> > -		}
-> > +		expected = 3;
-> >  		name_len = attri_formatp->alfi_name_len;
-> >  		value_len = attri_formatp->alfi_value_len;
-> >  		break;
-> >  	case XFS_ATTRI_OP_FLAGS_SET:
-> >  	case XFS_ATTRI_OP_FLAGS_REPLACE:
-> >  		/* Log item, attr name, attr value */
-> > -		if (item->ri_total != 2 + !!attri_formatp->alfi_value_len) {
-> > -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> > -					     attri_formatp, len);
-> > -			return -EFSCORRUPTED;
-> > -		}
-> > +		expected = 2 + !!attri_formatp->alfi_value_len;
-> >  		name_len = attri_formatp->alfi_name_len;
-> >  		value_len = attri_formatp->alfi_value_len;
-> >  		break;
-> >  	case XFS_ATTRI_OP_FLAGS_REMOVE:
-> >  		/* Log item, attr name */
-> > -		if (item->ri_total != 2) {
-> > -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> > -					     attri_formatp, len);
-> > -			return -EFSCORRUPTED;
-> > -		}
-> > +		expected = 2;
-> >  		name_len = attri_formatp->alfi_name_len;
-> >  		break;
-> >  	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
-> > @@ -1071,11 +1060,7 @@ xlog_recover_attri_commit_pass2(
-> >  		 * Log item, attr name, new attr name, attr value, new attr
-> >  		 * value
-> >  		 */
-> > -		if (item->ri_total != 5) {
-> > -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-> > -					     attri_formatp, len);
-> > -			return -EFSCORRUPTED;
-> > -		}
-> > +		expected = 5;
-> >  		name_len = attri_formatp->alfi_old_name_len;
-> >  		new_name_len = attri_formatp->alfi_new_name_len;
-> >  		new_value_len = value_len = attri_formatp->alfi_value_len;
-> > @@ -1085,6 +1070,12 @@ xlog_recover_attri_commit_pass2(
-> >  				     attri_formatp, len);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> > +
-> > +	if (item->ri_total != expected) {
-> > +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+> > patches-in-queue is a scratch branch, I always re-push(-f) to this branch.
+> > So please feel free to tell me what do you want to update in this patch
+> > (I'm going to make the next fstests release soon:).
 > 
-> The downside to this change is that XFS_CORRUPTION_ERROR prints the
-> source file and line number, so now anyone looking through the logs
-> cannot identify a specific line number.  However...
-> 
+> Just the two changes I've mentioned so far in the threads, please.
 
-The corrupted information will output the entire `xfs_attri_log_format`,
-from which the operation type can also be inferred. However, the original
-code outputs more intuitive information, and thus it might be fine to leave
-it unchanged.
+Sure, I just changed the commit log of this patch to:
+
+  "Use dmerror to inject a media error for a file's storage, then run some
+  IO and make sure that fanotify reports the IO errors."
+
+but what's the 2nd change? Did I miss something? ...
+
+> 
+> I've more fixes to make to these tests, so I'll send those patches
+> shortly.
+> 
+> --D
+> 
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > > > +#ifndef FILEID_INO32_GEN
+> > > > > +#define FILEID_INO32_GEN	1
+> > > > > +#endif
+> > > > > +
+> > > > > +#ifndef FILEID_INVALID
+> > > > > +#define	FILEID_INVALID		0xff
+> > > > > +#endif
+> > > > > +
+> > > > > +static void print_fh(struct file_handle *fh)
+> > > > > +{
+> > > > > +	int i;
+> > > > > +	uint32_t *h = (uint32_t *) fh->f_handle;
+> > > > > +
+> > > > > +	printf("\tfh: ");
+> > > > > +	for (i = 0; i < fh->handle_bytes; i++)
+> > > > > +		printf("%hhx", fh->f_handle[i]);
+> > > > > +	printf("\n");
+> > > > > +
+> > > > > +	printf("\tdecoded fh: ");
+> > > > > +	if (fh->handle_type == FILEID_INO32_GEN)
+> > > > > +		printf("inode=%u gen=%u\n", h[0], h[1]);
+> > > > > +	else if (fh->handle_type == FILEID_INVALID && !fh->handle_bytes)
+> > > > > +		printf("Type %d (Superblock error)\n", fh->handle_type);
+> > > > > +	else
+> > > > > +		printf("Type %d (Unknown)\n", fh->handle_type);
+> > > > 
+> > > > 
+> > > > Isn't this always going to print unknown for normal xfs mounts without
+> > > > inode32?
+> > > 
+> > > Yes, though generic/791 filters out the file handle and (TBH) I don't
+> > > really want people getting ideas about cracking file handles.  Probably
+> > > we should just eliminate this whole part of the function, but that would
+> > > make future forklift upgrades from the kernel harder.
+
+... This looks like not a certain decision/change. Is this the 2nd change you want
+to do? If so, could you please provide what's the specific changes you want to make :)
 
 Thanks,
-Long Li
+Zorro
+
+> > > 
+> > > --D
+> > > 
+> > 
+> 
 
