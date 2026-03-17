@@ -1,100 +1,75 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC322D592E;
-	Tue, 17 Mar 2026 13:44:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29FB13E928F;
+	Tue, 17 Mar 2026 14:12:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773755055; cv=none; b=ePKDzP90xQNkfcnFK5QqwjqkTqovSpSB+IRxFldDP67qHkz5cFPae4owkKy6Sz4Z/3qd0EYvhENaFnQVrGR3TN9J0BP5orwwrrY/0rE3qCx9csGn1woyE/NJ69Qa+x0LRGN3Rqc9nittEzhANS73h129LerDN52BJVAvAcISxp4=
+	t=1773756776; cv=none; b=prAAfPzNB/4ZsHAdj6wCy4zwV6C3tbiFRZBq5/AxYtLI8fpHKxBPjGgyNGt50r2UCeL+R7NRTf7IRdVEMn2mmMA7PoJyq4Bxl3qExhsOUjxd8KjycUWNR1XFf6Zcc/QxG4Bcf7UhxeJq+ORdCPgzKuEEAD+8Mf13EKLAmidIlAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773755055; c=relaxed/simple;
-	bh=H5iAoUkv9rrKDqZp/Z4J9ELBVPR6LNcMR/XbORkB2uY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I6Hbo8DgKqOC+8kPKUMub8DcJ4iKywu5j2fRtFOPOEc0fnB2yz/HotpEoXAHq/8rSEIVB3NtNgFJ/gYvQX63swvVsCsLLwEcLOHUxDsgQFqU7f91JfhH4t5BiIrtVgDSHsaBf7yR6R6y+WGNFgS8CijyufWWCByoRAL4FSHWOyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hzD3Xy6Q; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1773756776; c=relaxed/simple;
+	bh=jYs0vTmVRT6uOH1IjdjeoIB4Do10z6X+d+L46WIFxlI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tZS7LPCImprP7dTO6IDEHggxn+lqTbWQ4YNe3w9J2P/xQM/Eyq9Z27f8pWMwgA6l9hmDmO+zFvHiiWe51nh0d2khqzJKSy8dFKSL0SrjB8ks/vbPKPaUbkt8dkgoPmV2CQlGMUZU/CChlnSabKiNsX6NEM+qr3TAEj+Yyt7o/aU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XdcgrmNq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hzD3Xy6Q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=qdlZJQWinV/T/tEukgP9BgoZ1KsPHk6ar7zBuEJioC4=; b=hzD3Xy6QZD6klvvLARweBOZcAr
-	JcldeaRxgQlvlScZbcIaGs5RIPFtN0SJXEvN7m5SJBqDXCWyaNtBPNg8IMA5kVX6xNWcJ4AR7K9kO
-	9DgEl0xclY4VmMRnAQirUPH4NMNlMyOFuDMRt4Pu3+LcltxN/SKRp0Hl5lOSo/aWhxMP93pWnVHsM
-	1XvlITEAkpb08EMoMWi37R6tuaE6RwWhjpjf/34CC3eRS68RAbsfeF5ivhbCSYAxX/uwVS9pJoF+S
-	ANjUAv20kVFjm8TL88pOlN0AT1e4ZPeEjD6aRPQY1mfQwRcF40PY9A45P7PD0S3fTeyt7uhIjACUb
-	x0Uo8K/Q==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2UiS-00000006TEe-1eEm;
-	Tue, 17 Mar 2026 13:44:13 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: brauner@kernel.org,
-	viro@zeniv.linux.org.uk
-Cc: jack@suse.cz,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XdcgrmNq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 391A5C2BCB0;
+	Tue, 17 Mar 2026 14:12:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773756775;
+	bh=jYs0vTmVRT6uOH1IjdjeoIB4Do10z6X+d+L46WIFxlI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=XdcgrmNqXXotlBDSjDf3kkrGFBoVvlpDG0HQsqbuV2G92ow7qVplsefjhkg3XzcmN
+	 1cxFHfIMRmtcQh3qola6xwnJvhs81xGAHWuhPf0A+suAkyurtXLfOUF8QOPKGi0LgB
+	 lL9vOF+P5EbHhYqoscjT1yzDICRMjnWUJbJlg+gfubEa8GOU/cIDkuoBy8rNNvmu6E
+	 uGafW8gifPOxFYAgkGJOSZ2nBe5vn8scr6MXfjqn5a/itVFoqT7drbVazHsxGMtcwe
+	 J7eTY3d9R9+LDNz5uPOVEdOzA5+ltvt+uMxqu6T41SfVuTUbnFWG9h3+VGPbV2Et2O
+	 HqHxsJNxw3LvA==
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	jack@suse.cz,
 	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] fs: clear I_DIRTY_TIME in sync_lazytime
-Date: Tue, 17 Mar 2026 14:44:04 +0100
-Message-ID: <20260317134409.1691317-1-hch@lst.de>
+	linux-xfs@vger.kernel.org,
+	viro@zeniv.linux.org.uk
+Subject: Re: [PATCH] fs: clear I_DIRTY_TIME in sync_lazytime
+Date: Tue, 17 Mar 2026 15:12:45 +0100
+Message-ID: <20260317-weinreben-hofnarren-a6878daccca9@brauner>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260317134409.1691317-1-hch@lst.de>
+References: <20260317134409.1691317-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1091; i=brauner@kernel.org; h=from:subject:message-id; bh=jYs0vTmVRT6uOH1IjdjeoIB4Do10z6X+d+L46WIFxlI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWTuTEx6MnGBYfYtrjQzj1e21uKN7NY2XTcevzrv+7xzA X+uwIXJHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNJO83IsPJsaKV307+b35jm Tosr9Xr2etmpxnPb53ufMHdfkfqefRsjw8/Fvn2X/1fksrjPqt+iLtPpYsSZqn5n0u/a9qMZF2v ecQMA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-For file systems implementing ->sync_lazytime, I_DIRTY_TIME fails to get
-cleared in sync_lazytime, and might cause additional calls to
-sync_lazytime during inode deactivation.  Use the same pattern as in
-__mark_inode_dirty to clear the flag under the inode lock.
+On Tue, 17 Mar 2026 14:44:04 +0100, Christoph Hellwig wrote:
+> For file systems implementing ->sync_lazytime, I_DIRTY_TIME fails to get
+> cleared in sync_lazytime, and might cause additional calls to
+> sync_lazytime during inode deactivation.  Use the same pattern as in
+> __mark_inode_dirty to clear the flag under the inode lock.
 
-Fixes: 5cf06ea56ee6 ("fs: add a ->sync_lazytime method")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/fs-writeback.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 7c75ed7e8979..d8dac1931595 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1711,6 +1711,19 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
- 	}
- }
- 
-+static bool __sync_lazytime(struct inode *inode)
-+{
-+	spin_lock(&inode->i_lock);
-+	if (!(inode_state_read(inode) & I_DIRTY_TIME)) {
-+		spin_unlock(&inode->i_lock);
-+		return false;
-+	}
-+	inode_state_clear(inode, I_DIRTY_TIME);
-+	spin_unlock(&inode->i_lock);
-+	inode->i_op->sync_lazytime(inode);
-+	return true;
-+}
-+
- bool sync_lazytime(struct inode *inode)
- {
- 	if (!(inode_state_read_once(inode) & I_DIRTY_TIME))
-@@ -1718,9 +1731,8 @@ bool sync_lazytime(struct inode *inode)
- 
- 	trace_writeback_lazytime(inode);
- 	if (inode->i_op->sync_lazytime)
--		inode->i_op->sync_lazytime(inode);
--	else
--		mark_inode_dirty_sync(inode);
-+		return __sync_lazytime(inode);
-+	mark_inode_dirty_sync(inode);
- 	return true;
- }
- 
--- 
-2.47.3
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] fs: clear I_DIRTY_TIME in sync_lazytime
+      https://git.kernel.org/vfs/vfs/c/f8b8820a4a16
