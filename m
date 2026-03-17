@@ -1,53 +1,50 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D58835966
-	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 02:02:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E681714D719
+	for <linux-xfs@vger.kernel.org>; Tue, 17 Mar 2026 02:02:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773712963; cv=none; b=K9Po+x75BFXr1+pIkerykKswx8pwjytGZo1yNwsm+/vLUzSqkKv8Zuh5RR5Nwp/a2HTJRyB2LPTnPMAXsDTih54AMyFV3ODQ3AuhOZ/h1kBhi/qCLhkd8q3JtlSiNA1B3eauPR2Erbl0BaBU6JoPgko1VA6ove/+p8lGIUD/9VQ=
+	t=1773712963; cv=none; b=g55SdfpTiTY19DXT+ZzQcVh+rmoSGCuHxhHgmKWBrVM+9uxtd+fngMYIVogjaMYraxFh86SU2iCFTlc2e4xhtAeteH7oiDqe/9w9WVjthL8EymjQ/WqMhgV50QSX8feuyWwhTCKZ8LJbJo2K2yWE29MXDD29nPU5uQtTgqWvH+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773712963; c=relaxed/simple;
-	bh=6FNUFgzkHcyCn2lC4CikmkQaeMMt/8SVSKk0eaF9QxI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PSgQMxR9QcEoU/pGI49CRatL+O964PdCDv1yqH8Pe0gHv38LHf5LobLKiVOwhsULp1XNXMICeFfvztbCVaCwiY5Z/TWSFDg2vqzxb1GSGYwW5qmiTPWhfNVPjz7dpt0p+EZDYFrFSxQ/gCaoH35DuVK415VE7ms1Z24WvrhIscM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=BU1igtbx; arc=none smtp.client-ip=113.46.200.220
+	bh=yBkSp4xGyVWToGnc5DBgf2cg4QSrWjVVMMQQz1/s0vY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hzd2UcAgTW694RLL9gXhp37HtpDMEQeyFS/I2JEBJlqFvZA0iN2BBmpXDHK4mtEA0t3vhIFzcCIEAd+zLxUALAbR3+3vJz9iK1BOOnw6Hb+8X0RztF6TaeJ2SfatsaZs1mD1HPJt/PenwkRwjp8ZRaRXMM2DkfWmNLEP2hxnzIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=pCtkmy0v; arc=none smtp.client-ip=113.46.200.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="BU1igtbx"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="pCtkmy0v"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=mHooaOlagn2WIE43eABcB2QWluy3e8UHKKVU6fb5/fo=;
-	b=BU1igtbxt61AcNzX4WTDOr+bafMtIkBW2UmG9AjKm5aR/NSJO97SjtYLSe+CYf+tHAJmPMzei
-	L5bBX+XXaMDeXLlX7EX7FNSK045q1NgLqfaq7ohv6+Kq7TGQEKzHNNNMptUu+iA5pok7dtgCjXS
-	d2OpkbiEYi4iVrKQzQfoKIQ=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fZZpB3rVVz12Ld4;
-	Tue, 17 Mar 2026 09:57:06 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id AE364404AD;
-	Tue, 17 Mar 2026 10:02:38 +0800 (CST)
+	bh=Uuv+g3cLJyCiu6W8QNNKKiZpjGFXH1R1KVUyhIjM9n4=;
+	b=pCtkmy0vpfN1tF90XWncCXNwXikRITEZG1i0hJ83cEwU8UTykktO9n11RgoFChPlcpqm95NPs
+	PBtyEPfjue91Jc05T/X0n4uAmKOOmZSVBjFjktxXEu9kDMEiLRjhCkGBNFPCnOlD4fEk4SKWkdm
+	4Fj1X3E2nQgQjl22tXor0Q8=
+Received: from mail.maildlp.com (unknown [172.19.162.92])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4fZZpm6PBKz1K96t;
+	Tue, 17 Mar 2026 09:57:36 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5EFF540562;
+	Tue, 17 Mar 2026 10:02:33 +0800 (CST)
 Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 17 Mar 2026 10:02:34 +0800
+ 15.2.1544.11; Tue, 17 Mar 2026 10:02:33 +0800
 Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
  (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Tue, 17 Mar
- 2026 10:02:33 +0800
+ 2026 10:02:32 +0800
 From: Long Li <leo.lilong@huawei.com>
 To: <djwong@kernel.org>, <cem@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
 	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
 	<lonuxli.64@gmail.com>
-Subject: [PATCH v3 2/4] xfs: factor out xfs_attr3_node_entry_remove
-Date: Tue, 17 Mar 2026 09:51:53 +0800
-Message-ID: <20260317015155.589955-3-leo.lilong@huawei.com>
+Subject: [PATCH v3 0/4] xfs: close crash window in attr dabtree inactivation
+Date: Tue, 17 Mar 2026 09:51:51 +0800
+Message-ID: <20260317015155.589955-1-leo.lilong@huawei.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260317015155.589955-1-leo.lilong@huawei.com>
-References: <20260317015155.589955-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,122 +56,82 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
  kwepemn100013.china.huawei.com (7.202.194.116)
 
-Factor out wrapper xfs_attr3_node_entry_remove function, which
-exported for external use.
+Problem
+-------
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+xfs_attr3_node_inactive() cancels all child blocks in the attr dabtree
+via xfs_trans_binval(), relying on a subsequent full attr bmap truncation
+in xfs_attr_inactive() to ensure log recovery never reaches the root
+node.  The child block cancellations and the bmap truncation are
+committed in separate transactions, creating a narrow but real crash
+window.
+
+If the system shuts down after the cancellations commit but before the
+bmap truncation commits, the attr bmap survives recovery intact and
+xlog_recover_process_iunlinks() retries inactivation.  It attempts to
+read the root node via the attr bmap: if the root node was not replayed,
+reading the unreplayed root block maybe triggers a metadata verification
+failure immediately; if it was replayed, following its child pointers to
+unreplayed child blocks triggers the same failure.
+
+Zhang Yi previously attempted to solve this problem [1], but Dave gave
+different advice. Following the approach suggested by Dave Chinner in
+review.
+
+[1] https://patchwork.kernel.org/project/xfs/patch/20230613030434.2944173-3-yi.zhang@huaweicloud.com/
+
+Fix
 ---
- fs/xfs/libxfs/xfs_da_btree.c | 53 ++++++++++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_da_btree.h |  2 ++
- 2 files changed, 44 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 09d4c17b3e7b..ad801b7bd2dd 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -1506,21 +1506,20 @@ xfs_da3_fixhashpath(
- }
- 
- /*
-- * Remove an entry from an intermediate node.
-+ * Internal implementation to remove an entry from an intermediate node.
-  */
- STATIC void
--xfs_da3_node_remove(
--	struct xfs_da_state	*state,
--	struct xfs_da_state_blk	*drop_blk)
-+__xfs_da3_node_remove(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_da_geometry  *geo,
-+	struct xfs_da_state_blk *drop_blk)
- {
- 	struct xfs_da_intnode	*node;
- 	struct xfs_da3_icnode_hdr nodehdr;
- 	struct xfs_da_node_entry *btree;
- 	int			index;
- 	int			tmp;
--	struct xfs_inode	*dp = state->args->dp;
--
--	trace_xfs_da_node_remove(state->args);
- 
- 	node = drop_blk->bp->b_addr;
- 	xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr, node);
-@@ -1536,17 +1535,17 @@ xfs_da3_node_remove(
- 		tmp  = nodehdr.count - index - 1;
- 		tmp *= (uint)sizeof(xfs_da_node_entry_t);
- 		memmove(&btree[index], &btree[index + 1], tmp);
--		xfs_trans_log_buf(state->args->trans, drop_blk->bp,
-+		xfs_trans_log_buf(tp, drop_blk->bp,
- 		    XFS_DA_LOGRANGE(node, &btree[index], tmp));
- 		index = nodehdr.count - 1;
- 	}
- 	memset(&btree[index], 0, sizeof(xfs_da_node_entry_t));
--	xfs_trans_log_buf(state->args->trans, drop_blk->bp,
-+	xfs_trans_log_buf(tp, drop_blk->bp,
- 	    XFS_DA_LOGRANGE(node, &btree[index], sizeof(btree[index])));
- 	nodehdr.count -= 1;
- 	xfs_da3_node_hdr_to_disk(dp->i_mount, node, &nodehdr);
--	xfs_trans_log_buf(state->args->trans, drop_blk->bp,
--	    XFS_DA_LOGRANGE(node, &node->hdr, state->args->geo->node_hdr_size));
-+	xfs_trans_log_buf(tp, drop_blk->bp,
-+	    XFS_DA_LOGRANGE(node, &node->hdr, geo->node_hdr_size));
- 
- 	/*
- 	 * Copy the last hash value from the block to propagate upwards.
-@@ -1554,6 +1553,38 @@ xfs_da3_node_remove(
- 	drop_blk->hashval = be32_to_cpu(btree[index - 1].hashval);
- }
- 
-+/*
-+ * Remove an entry from an intermediate node.
-+ */
-+STATIC void
-+xfs_da3_node_remove(
-+	struct xfs_da_state	*state,
-+	struct xfs_da_state_blk	*drop_blk)
-+{
-+	trace_xfs_da_node_remove(state->args);
-+
-+	__xfs_da3_node_remove(state->args->trans, state->args->dp,
-+			state->args->geo, drop_blk);
-+}
-+
-+/*
-+ * Remove an entry from an intermediate attr node at the specified index.
-+ */
-+void
-+xfs_attr3_node_entry_remove(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_buf		*bp,
-+	int			index)
-+{
-+	struct xfs_da_state_blk blk = {
-+		.index		= index,
-+		.bp		= bp,
-+	};
-+
-+	__xfs_da3_node_remove(tp, dp, dp->i_mount->m_attr_geo, &blk);
-+}
-+
- /*
-  * Unbalance the elements between two intermediate nodes,
-  * move all Btree elements from one node into another.
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 354d5d65043e..afcf2d3c7a21 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -184,6 +184,8 @@ int	xfs_da3_split(xfs_da_state_t *state);
- int	xfs_da3_join(xfs_da_state_t *state);
- void	xfs_da3_fixhashpath(struct xfs_da_state *state,
- 			    struct xfs_da_state_path *path_to_to_fix);
-+void	xfs_attr3_node_entry_remove(struct xfs_trans *tp, struct xfs_inode *dp,
-+			    struct xfs_buf *bp, int index);
- 
- /*
-  * Routines used for finding things in the Btree.
+The fix addresses the atomicity gap at two levels:
+
+(1) In xfs_attr3_node_inactive(), each child block invalidation and the
+    removal of its reference from the parent node are placed in the same
+    transaction, so no parent node ever holds a pointer to a cancelled
+    block at any crash point.  After all children are removed, the empty
+    root node is converted to an empty leaf in the same transaction.
+    This conversion is necessary because xfs_da3_node_verify() rejects
+    a node block with count == 0, whereas xfs_attr3_leaf_verify()
+    explicitly allows it during recovery to accommodate the transient
+    state from the shortform-to-leaf promotion path.
+
+(2) In xfs_attr_inactive(), the attr fork is truncated in two phases.
+    First the child extents are removed.  Then the root block is
+    invalidated and the attr bmap is truncated to zero in a single
+    transaction.  These two operations in the second phase must be
+    atomic: as long as the attr bmap has any non-zero length, recovery
+    can follow it to the root block, so the root block invalidation must
+    commit together with the bmap-to-zero truncation.
+
+
+Changes
+-------
+
+v2->v3:
+ 1) Rewrite Description of xfs_attr3_node_entry_remove and xfs_attr3_leaf_init.
+ 2) Fixed corner case issue where root leaf block has remote value block.
+ 3) Reduced the return exit of xfs_attr3_root_inactive().
+
+v1->v2:
+ 1) Rename xfs_da3_node_entry_remove to xfs_attr3_node_entry_remove.
+ 2) Initializing the structure value when declaring a structure in a function.
+ 3) An assertion is added to xfs_attr3_leaf_init to check whether tp is not null.
+ 4) Fixed syntax style issues.
+
+Long Li (4):
+  xfs: only assert new size for datafork during truncate extents
+  xfs: factor out xfs_attr3_node_entry_remove
+  xfs: factor out xfs_attr3_leaf_init
+  xfs: close crash window in attr dabtree inactivation
+
+ fs/xfs/libxfs/xfs_attr_leaf.c | 22 ++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++
+ fs/xfs/libxfs/xfs_da_btree.c  | 53 +++++++++++++++----
+ fs/xfs/libxfs/xfs_da_btree.h  |  2 +
+ fs/xfs/xfs_attr_inactive.c    | 99 +++++++++++++++++++++--------------
+ fs/xfs/xfs_inode.c            |  3 +-
+ 6 files changed, 130 insertions(+), 52 deletions(-)
+
 -- 
 2.39.2
 
