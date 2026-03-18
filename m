@@ -1,85 +1,46 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 547D52DF155
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 17:34:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0537E3B28D;
+	Wed, 18 Mar 2026 21:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773855294; cv=none; b=jxj7YKbIHXL7GUh4BtKpu+5VUlyvKaHt30sXe3lJl+q5NGxh+KR3grbuW6jwvSzXJr5XLeL7U3Q2MHhb03Jlc35WY84AIKrweLqeWFLDrmr+F4fJBhpd56Z7GxTo/mVkzIIwD990Dyutf18XyoWnZQ/5gw9JYVlgzebHYZXxE2c=
+	t=1773867693; cv=none; b=lWFkMfH94xY8Cr0E8ogtmd1Z2/1xOF4sVmvcBYVrVgRJL14Ng+qa0kljxtbhrvzHnRY+FCkBkBk/ZsDsRQKHfONJcOSc3Y360lQyypRgK0AcIMoKnjs5nxRu9lauPxWQ1a9tGbKxGF9w0cpJTjyi2b8GVFNFEgQA9AjgjdzpiIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773855294; c=relaxed/simple;
-	bh=Q1woKT0TbNUKKrCcewkkizNK4GuccXpVqkhd3fCobcw=;
+	s=arc-20240116; t=1773867693; c=relaxed/simple;
+	bh=60KVRXDEH95d5Xeh9d+hVTbKLSJ3J2qsEzcMDk2f2VI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tMUv89lpZ8qgLdUk9Low/Xf29p0iwJPc1HZpc4c5v1Ie2uis3k0GV3/mV5CyY2Q24yx+In5OegzlBhThTs+saOJE7HxkpOfM+Cy+YiwyFqa/szUous9DD6qcq1RzmGOGtNics8qlbyOF1I2J/OK/lakADwpTfivoynOr9UUN+vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=OdHUqHeY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=hcHEnmfM; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=OdHUqHeY; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=hcHEnmfM; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=apNKN5cBBbtNaY403HsY9G2FwZ53L7A0rwkH7GNP8uPDkDS0XjRtfla7t5WdJ0lXg6bEHZklR6sTvZZLBtDRperhT+IKnC9B6lVdiv28p5z4KI/6P2WiTQaDcXYHnnq/m38u33hs4vG7uzif4JwSK38po7xWg410OEvUDMiMrZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLBZV6Bb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="OdHUqHeY";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="hcHEnmfM";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="OdHUqHeY";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="hcHEnmfM"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7BC2C4D3C1;
-	Wed, 18 Mar 2026 17:34:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1773855291; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D/12NHQ8nrEt/XtZvZ5WsOUauKqjUwGo+xTkJicOm+0=;
-	b=OdHUqHeY6sOjzaByWBpY3dMYxQGjrQDaL+uws7Z88HgdeIfWSEifl4Tvh3o4fmBnbLPmrS
-	R/A7M3nnncP/23dC0NCXw1VqpeueLLXdEri3iEZKJiMDgPLldkTQ4g+23HgiHnGaVc7csq
-	wpZRjUW87QOUkeme3TbNLrWoB8ljKL8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1773855291;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D/12NHQ8nrEt/XtZvZ5WsOUauKqjUwGo+xTkJicOm+0=;
-	b=hcHEnmfM+PlOQtZiBxozn0j83jqAU2UFBvHlO8GTXJwMsaomTi7GBAg1eTEHKS1itI0pV0
-	602T0SeyTsY2FWCw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=OdHUqHeY;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=hcHEnmfM
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1773855291; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D/12NHQ8nrEt/XtZvZ5WsOUauKqjUwGo+xTkJicOm+0=;
-	b=OdHUqHeY6sOjzaByWBpY3dMYxQGjrQDaL+uws7Z88HgdeIfWSEifl4Tvh3o4fmBnbLPmrS
-	R/A7M3nnncP/23dC0NCXw1VqpeueLLXdEri3iEZKJiMDgPLldkTQ4g+23HgiHnGaVc7csq
-	wpZRjUW87QOUkeme3TbNLrWoB8ljKL8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1773855291;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D/12NHQ8nrEt/XtZvZ5WsOUauKqjUwGo+xTkJicOm+0=;
-	b=hcHEnmfM+PlOQtZiBxozn0j83jqAU2UFBvHlO8GTXJwMsaomTi7GBAg1eTEHKS1itI0pV0
-	602T0SeyTsY2FWCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7044C4273B;
-	Wed, 18 Mar 2026 17:34:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id VdxeGzviummKKQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 18 Mar 2026 17:34:51 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 1E6F1A0AFF; Wed, 18 Mar 2026 18:34:51 +0100 (CET)
-Date: Wed, 18 Mar 2026 18:34:51 +0100
-From: Jan Kara <jack@suse.cz>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLBZV6Bb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E87C0C19421;
+	Wed, 18 Mar 2026 21:01:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773867692;
+	bh=60KVRXDEH95d5Xeh9d+hVTbKLSJ3J2qsEzcMDk2f2VI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OLBZV6BbzczMo7mdrH8zKIkSp4+W1vGkRslcDJks+EuMZIojdwHVpdWMKpQgfFtVe
+	 idZcXKfJMLqqXFSFs0Df4BWvRyzkDokUFlP7DHBQiRPv5UWIJw13YuHTpdeQhwyma7
+	 FG8pvukIg3gcFEQXYDNwfAfLHQL0QaiAv7jw1ow0+yIHt6svTrdCw2onZriunT6Sbk
+	 wHWerLuNFDlxkXl/bud/JlFSPKwh9w9BOFKBfCgds6sMj81zPIkzZanjHAQ+d5E5C4
+	 FJmft3879EMtiikfj4YnDbhRShjw2DQF9U3blFL0nAXMjdlPLf81DbaOKTpT7lTejW
+	 sd7Lv3QhdPdlg==
+Date: Thu, 19 Mar 2026 08:01:21 +1100
+From: Dave Chinner <dgc@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fs: clear I_DIRTY_TIME in sync_lazytime
-Message-ID: <my7zbzcijl7w3waamiow6qsfjjoo6gpxx4izvpyhfjxhvp5vnu@ahonzibzgjpa>
-References: <20260317134409.1691317-1-hch@lst.de>
+Cc: Morduan Zang <zhangdandan@uniontech.com>, cem@kernel.org,
+	zhanjun@uniontech.com, dchinner@redhat.com, stable@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com,
+	Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] xfs: use GFP_NOFS in __xfs_trans_alloc
+Message-ID: <absSoRi8oxXSuSZ7@dread>
+References: <24B50BB66059E3C8+20260312072214.475115-1-zhangdandan@uniontech.com>
+ <abMhIabvChMOsUrY@dread>
+ <20260316091827.GA2182@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -88,98 +49,70 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260317134409.1691317-1-hch@lst.de>
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	TO_DN_SOME(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email];
-	RCVD_COUNT_THREE(0.00)[3];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 7BC2C4D3C1
+In-Reply-To: <20260316091827.GA2182@lst.de>
 
-On Tue 17-03-26 14:44:04, Christoph Hellwig wrote:
-> For file systems implementing ->sync_lazytime, I_DIRTY_TIME fails to get
-> cleared in sync_lazytime, and might cause additional calls to
-> sync_lazytime during inode deactivation.  Use the same pattern as in
-> __mark_inode_dirty to clear the flag under the inode lock.
+On Mon, Mar 16, 2026 at 10:18:27AM +0100, Christoph Hellwig wrote:
+> On Fri, Mar 13, 2026 at 07:25:05AM +1100, Dave Chinner wrote:
+> > On Thu, Mar 12, 2026 at 03:22:14PM +0800, Morduan Zang wrote:
+> > > __xfs_trans_alloc() allocates the transaction structure before
+> > > xfs_trans_set_context() establishes the nofs context. If memory reclaim
+> > > enters XFS through xfs_vn_sync_lazytime(), this GFP_KERNEL allocation can
+> > > trigger a warning from the reclaim path.
+> > 
+> > PLease include the warning and stack trace in the commit message.
+> > 
+> > > Use GFP_NOFS for the transaction allocation to avoid filesystem reclaim
+> > > recursion before the nofs context is set.
+> > > 
+> > > Link: https://syzkaller.appspot.com/bug?extid=d78ace33ad4ee69329d5
+> > 
+> > That's a PF_MEMALLOC + __GFP_NOFAIL warning. Has nothing to do
+> > with GFP_NOFS.
 > 
-> Fixes: 5cf06ea56ee6 ("fs: add a ->sync_lazytime method")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good. Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/fs-writeback.c | 18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
+> Yes.
 > 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 7c75ed7e8979..d8dac1931595 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -1711,6 +1711,19 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
->  	}
->  }
->  
-> +static bool __sync_lazytime(struct inode *inode)
-> +{
-> +	spin_lock(&inode->i_lock);
-> +	if (!(inode_state_read(inode) & I_DIRTY_TIME)) {
-> +		spin_unlock(&inode->i_lock);
-> +		return false;
-> +	}
-> +	inode_state_clear(inode, I_DIRTY_TIME);
-> +	spin_unlock(&inode->i_lock);
-> +	inode->i_op->sync_lazytime(inode);
-> +	return true;
-> +}
-> +
->  bool sync_lazytime(struct inode *inode)
->  {
->  	if (!(inode_state_read_once(inode) & I_DIRTY_TIME))
-> @@ -1718,9 +1731,8 @@ bool sync_lazytime(struct inode *inode)
->  
->  	trace_writeback_lazytime(inode);
->  	if (inode->i_op->sync_lazytime)
-> -		inode->i_op->sync_lazytime(inode);
-> -	else
-> -		mark_inode_dirty_sync(inode);
-> +		return __sync_lazytime(inode);
-> +	mark_inode_dirty_sync(inode);
->  	return true;
->  }
->  
-> -- 
-> 2.47.3
+> > Indeed, the stack trace trivially demonstrates the cause - the
+> > sync_lazytime() changes (in 6.19i, IIRC) have put a new XFS
+> > transaction in the iput() path that memory reclaim runs.
 > 
+> The lazytime changes (in 7.0-rc).  And I think they do indeed cause
+> this because we fail to clear I_DIRTY_TIME for some cases.
+> 
+> > We managed to remove all the xfs transactions in this path with the
+> > introduction of the background inodegc infrastructure because
+> > lockdep, memory allocation and other stuff really don't like us
+> > running "must succeed" transactions in the memory reclaim path.
+> > 
+> > Hence putting a new transaction directly in that path is a
+> > regression, and so I suspect the sync_lazytime() call directly from
+> > iput() running a transaction needs to be rethought...
+> 
+> Not a new transaction, but one we didn't hit before.
+
+Sure, but that doesn't change the fact that we should never have put
+this timestamp update transaction in the direct iput_final() path.
+
+> That being said,
+> doing this separate syncing of the dirty time vs just batching it with
+> the write_inode_now in iput_final looks really odd to me.  This goes back
+> to Ted's original commit 0ae45f63d4ef8 adding laztime more than 10 years
+> ago, which unfortunately does not explain the rationale.
+
+Moving it to pair with write_inode_now() by itself doesn't help us
+avoid the transaction in iput_final() context.
+
+It does, however, give us a state flag we can check (I_WILL_FREE) to
+change the behaviour of xfs_vn_sync_lazytime() when called from this
+path. i.e. we can mark the XFS inode as needing async inodegc
+processing and then skip the update transaction.
+
+When VFS inode eviction calls us to destroy the inode, we can
+schedule the inode for GC instead of marking it for immediate
+reclaim. We then can safely run the timestamp update transaction
+from inodegc context. This also allows us to skip the timestamp
+update transaction when running GC on unlinked inodes...
+
+-Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+dgc@kernel.org
