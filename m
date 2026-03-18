@@ -1,42 +1,28 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98C0127456;
-	Wed, 18 Mar 2026 06:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56F93783A4
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 08:14:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773813714; cv=none; b=n017FLZhnfh+jXXVo4xS2tpZOyIzRimZalf0P4nXgjLNvN/oQCBIJqcIOO/8fTM645PMolC1Is3rnutGrBzz2VuCOnAw2KLwnI71EffBkgMZvrxqpsfFmUeYDFuvyytHT3F1bS7KDQOsaqtEU+MxvvV6ze0k0vsflLUIwFT+8Yo=
+	t=1773821677; cv=none; b=YvLeC2aURk29hzamzOWpwLUSV7Rj9McExenQBBPpBs8qeqDrB5WHfmjyd9bgzZyOQjfUk6VqtCWO23E/susgfT/ef3EhwyV4KZCKj6Lqg59DmmpVscE/uYG/A+wmBP7Hn3fWyX2hT3kVdI+ucXpnFX30ehjlivIV1hHcAejDMSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773813714; c=relaxed/simple;
-	bh=Qny+bfVFNeIfiAraVFIqIGaVDB5OpuwjtpxRR9O80F4=;
+	s=arc-20240116; t=1773821677; c=relaxed/simple;
+	bh=opox58GZDaRxh0LR+UQdzY4pn08kVDt3tq9LKsOCJ60=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r0b9PgYy83GBgr9hSGcJYvyuHhRBL5Pg6iUR+kQsfBiBqQclazgyxIcF+TynPGytkoJm/D3fTOThcg5gbTtlv6teEcSbdQOu6glTAzoU22NG0pUEXLda1MbxrEAQSo3iL2Vy3jlVDI3MyLcPKFJSy56ChG0LdAEHdvXGSFNXh2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=I/Xgcuq7; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="I/Xgcuq7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ZhyqQ457E5RwuyIHgNVwn5OGHG0qGJJx/s3CiyAm8Ik=; b=I/Xgcuq7qurw+H33WjzJhKXW0U
-	MNe8ERoS1cQ4Fr6aokN24Fcf5jdiojzcfgmDJSx8fzYuXralYmwsg/hoye+4rK8br3nnuGBujVKxB
-	0RcWv1KUIu+miMgsguBSVnP8y3J8XN2xMVuIpZo/9d7GQbbsYnuRghgmoibqMBPhUPWntdkRpv0dF
-	sWiiu+gRNzpRjFKuA72+WueppwYTr0H48GDmUts+idPi/HLB9Fag778EWgu6sFMcBWo5qETzmFri1
-	X+VLuAiAlgHutC24XMKwtlV55KRGNaParjGK2N1XqF9L5qiwM7rOcu7TMSYsJyi2iwgjTPu4J3pri
-	f4awAbww==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2jyb-00000007p8H-0dvN;
-	Wed, 18 Mar 2026 06:01:53 +0000
-Date: Tue, 17 Mar 2026 23:01:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: zlang@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs/805: adjust for new autofsck fsproperty defaults
-Message-ID: <abo_0X-3Sk4Gt0ED@infradead.org>
-References: <177370372656.2108664.15986990094116651469.stgit@frogsfrogsfrogs>
- <177370372722.2108664.4085087401055083414.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=TMQPhtgbe8DYbem6MtbFh6Jhsz9kJrro96XBA6EZXXTdEGSzqMVEqo84OJOkNfa+z8lVssjzloOZhbg6p0zrEN2kDxqm3Qg0c/7RrRpkk3OFpzB/dRbwPzUMOm8gnbqygheAZ1Z+RfV0bcH1V/xVmVOiGvwp6SEhDCo8Hw0U+PY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E054968BFE; Wed, 18 Mar 2026 09:14:31 +0100 (CET)
+Date: Wed, 18 Mar 2026 09:14:31 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, dlemoal@kernel.org
+Subject: Re: [PATCH v2 4/4] xfs: opencode xfs_zone_record_blocks
+Message-ID: <20260318081431.GA26117@lst.de>
+References: <20260310173709.457047-1-cem@kernel.org> <20260310173709.457047-5-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,18 +31,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <177370372722.2108664.4085087401055083414.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260310173709.457047-5-cem@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Mar 16, 2026 at 04:29:35PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Mar 10, 2026 at 06:36:49PM +0100, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Now that mkfs will set autofsck=repair for filesystems that have both
-> reverse space mappings and file parent pointers enabled, let's stop
-> testing the "no autofsck option at all" scenario to avoid problems with
-> older mkfs.
+> We only have a single caller, no need to keep it in its own function.
 
-Looks good:
+This accidentally dropped the record_blocks trace event.  The patch
+below adds it back.  Feel free to fold it in if that works for you.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+From 6e413887a36cd91af3684d8af357b50538106bea Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 18 Mar 2026 08:58:38 +0100
+Subject: xfs: add back the xfs_zone_record_blocks trace event
+
+Commit 54514abb9891 ("xfs: opencode xfs_zone_record_blocks")
+accidentally removed it.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_zone_alloc.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 7d712d5a5ce0..9d02160c5334 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -291,6 +291,9 @@ xfs_zoned_map_extent(
+ 		}
+ 	}
+ 
++	trace_xfs_zone_record_blocks(oz,
++		xfs_rtb_to_rgbno(tp->t_mountp, new->br_startblock),
++		new->br_blockcount);
+ 	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+ 	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
+ 	rmapip->i_used_blocks += new->br_blockcount;
+-- 
+2.47.3
 
