@@ -1,57 +1,31 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631623D3D12
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 12:14:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0013221FCF
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 14:38:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773836085; cv=none; b=IrMxIXdLFzOuN3tUMX5To2deWvWwaFEEcgMsQI7lLCXEgOk25dOFSe2cadrDuqu7tRz0QH1fu/sz866VF4XC1INYt4JWf1hzi37VBIotAEjAGWZue7W2m3vLJxXOB3JI4Iy0v2Ug2b4pKzpPDxgTjLSnMqBbH1pu3tKU+pbsavg=
+	t=1773844704; cv=none; b=J416ssXDRg3zyTLKb2gPDI+CNZeL5IyX9qZs4sgicNIePId24VbGuF4ZEPNpWxj499lpAdBWjnxZyQVlzK51CWeVOMR3cpTHxfgvo2Grbk158s8oa9lh6kLobTdyQTBHnVAtN6F711sURx5Jli+6m2lerBaz3ksjsxIRz9JXcnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773836085; c=relaxed/simple;
-	bh=befSHgd71AW77CH3rJ5p4qsaD1glz3AWtinSqpoXxOM=;
+	s=arc-20240116; t=1773844704; c=relaxed/simple;
+	bh=5Dw7E3mcDpm2eq+cThkrdXHkRFxk9K6z7I8TKdXMriw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jaATAZ7y8fqASJVG3ZZMbyj5N3mrM6jlHm2y/hEzWoBIUTq6F3xNWFhdSx2gESS9Kx3m7OVpUTBFe+ezD7SzQipoKnaPDGWaNx1qNlH8P/Gay9zBfstiLsnsn9I/TMqLsIMg3niIDqQKhasl3zzp1VniKUw/uP+mGIg4DCfJqqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Fk6BxWFP; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fk6BxWFP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773836083;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1/M6wJWuNVWbofOfOrlP1sNl4+pHQ7Bh1i8eF4jVn9U=;
-	b=Fk6BxWFPHUyQnUc3CgM29j2WeRPyIK2f5sokQaEWVjAlS3OnJBAqheu/iPzLRvJUqsUkia
-	1NJvpuaxXAUZ6FAPeFM2QT7vGQ/RvoYi6ACZQRDwWhfGC8ZIZxl9JRyesA58JEHVnS29RJ
-	/wBooCUG+oCnWuziP9rrWbrUA0KxKmc=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-562-Z29Qyb6lO1Gw5vZZhHoSlA-1; Wed,
- 18 Mar 2026 08:14:40 -0400
-X-MC-Unique: Z29Qyb6lO1Gw5vZZhHoSlA-1
-X-Mimecast-MFC-AGG-ID: Z29Qyb6lO1Gw5vZZhHoSlA_1773836078
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C4D92195604F;
-	Wed, 18 Mar 2026 12:14:38 +0000 (UTC)
-Received: from bfoster (unknown [10.22.89.178])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 275081800576;
-	Wed, 18 Mar 2026 12:14:36 +0000 (UTC)
-Date: Wed, 18 Mar 2026 08:14:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
-	linux-xfs@vger.kernel.org,
-	syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com,
+	 Content-Type:Content-Disposition:In-Reply-To; b=tf2mgxSoV/2CKxxxi1nScti99avI57AMWA1yBPLe4vXv4lEz4M3U7G1H65/XIaazfNIOXHYClhJR057GaFMP31ZlVY5aVMydIH2L27c0nPZfUFExkob/KGtikB70VW+IvbPcacUxxHA4ENgd5ict/037dF5ujJPH0O2RNsmRw9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 40E2C68BFE; Wed, 18 Mar 2026 15:38:13 +0100 (CET)
+Date: Wed, 18 Mar 2026 15:38:12 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 3/4] xfs: switch (back) to a per-buftarg buffer hash
-Message-ID: <abqXKugZMbERr5ji@bfoster>
-References: <20260317134110.1691097-1-hch@lst.de>
- <20260317134110.1691097-4-hch@lst.de>
+Subject: Re: [PATCH 1/4] xfs: don't keep a reference for buffers on the LRU
+Message-ID: <20260318143812.GA21119@lst.de>
+References: <20260317134110.1691097-1-hch@lst.de> <20260317134110.1691097-2-hch@lst.de> <abnIqhTZXZxIb6VS@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,320 +34,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260317134110.1691097-4-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+In-Reply-To: <abnIqhTZXZxIb6VS@dread>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Mar 17, 2026 at 02:40:54PM +0100, Christoph Hellwig wrote:
-> The per-AG buffer hashes were added when all buffer lookups took a
-> per-hash look.  Since then we've made lookups entirely lockless and
-> removed the need for a hash-wide lock for inserts and removals as
-> well.  With this there is no need to sharding the hash, so reduce the
-> used resources by using a per-buftarg hash for all buftargs.
-> 
-> Long after writing this initially, syzbot found a problem in the buffer
-> cache teardown order, which this happens to fix as well by doing the
-> entire buffer cache teardown in one places instead of splitting it
-> between destroying the buftarg and the perag structures.
-> 
-> Link: https://lore.kernel.org/linux-xfs/aLeUdemAZ5wmtZel@dread.disaster.area/
-> Reported-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> Tested-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+On Wed, Mar 18, 2026 at 08:33:30AM +1100, Dave Chinner wrote:
+> The jump with the lock held is kinda nasty. The lock scope can be
+> straight-lined by inverting the logic like so:
 
-Modulo Dave's comments:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_ag.c | 13 ++---------
->  fs/xfs/libxfs/xfs_ag.h |  2 --
->  fs/xfs/xfs_buf.c       | 51 +++++++++++-------------------------------
->  fs/xfs/xfs_buf.h       | 10 +--------
->  fs/xfs/xfs_buf_mem.c   | 11 ++-------
->  5 files changed, 18 insertions(+), 69 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index bd8fbb40b49e..dcd2f93b6a6c 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -110,10 +110,7 @@ xfs_perag_uninit(
->  	struct xfs_group	*xg)
->  {
->  #ifdef __KERNEL__
-> -	struct xfs_perag	*pag = to_perag(xg);
-> -
-> -	cancel_delayed_work_sync(&pag->pag_blockgc_work);
-> -	xfs_buf_cache_destroy(&pag->pag_bcache);
-> +	cancel_delayed_work_sync(&to_perag(xg)->pag_blockgc_work);
->  #endif
->  }
->  
-> @@ -235,10 +232,6 @@ xfs_perag_alloc(
->  	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
->  #endif /* __KERNEL__ */
->  
-> -	error = xfs_buf_cache_init(&pag->pag_bcache);
-> -	if (error)
-> -		goto out_free_perag;
-> -
->  	/*
->  	 * Pre-calculated geometry
->  	 */
-> @@ -250,12 +243,10 @@ xfs_perag_alloc(
->  
->  	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
->  	if (error)
-> -		goto out_buf_cache_destroy;
-> +		goto out_free_perag;
->  
->  	return 0;
->  
-> -out_buf_cache_destroy:
-> -	xfs_buf_cache_destroy(&pag->pag_bcache);
->  out_free_perag:
->  	kfree(pag);
->  	return error;
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 3cd4790768ff..16a9b43a3c27 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -85,8 +85,6 @@ struct xfs_perag {
->  	int		pag_ici_reclaimable;	/* reclaimable inodes */
->  	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
->  
-> -	struct xfs_buf_cache	pag_bcache;
-> -
->  	/* background prealloc block trimming */
->  	struct delayed_work	pag_blockgc_work;
->  #endif /* __KERNEL__ */
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index d585848a6be1..c0a4d0a37f57 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -363,20 +363,6 @@ static const struct rhashtable_params xfs_buf_hash_params = {
->  	.obj_cmpfn		= _xfs_buf_obj_cmp,
->  };
->  
-> -int
-> -xfs_buf_cache_init(
-> -	struct xfs_buf_cache	*bch)
-> -{
-> -	return rhashtable_init(&bch->bc_hash, &xfs_buf_hash_params);
-> -}
-> -
-> -void
-> -xfs_buf_cache_destroy(
-> -	struct xfs_buf_cache	*bch)
-> -{
-> -	rhashtable_destroy(&bch->bc_hash);
-> -}
-> -
->  static int
->  xfs_buf_map_verify(
->  	struct xfs_buftarg	*btp,
-> @@ -434,7 +420,7 @@ xfs_buf_find_lock(
->  
->  static inline int
->  xfs_buf_lookup(
-> -	struct xfs_buf_cache	*bch,
-> +	struct xfs_buftarg	*btp,
->  	struct xfs_buf_map	*map,
->  	xfs_buf_flags_t		flags,
->  	struct xfs_buf		**bpp)
-> @@ -443,7 +429,7 @@ xfs_buf_lookup(
->  	int			error;
->  
->  	rcu_read_lock();
-> -	bp = rhashtable_lookup(&bch->bc_hash, map, xfs_buf_hash_params);
-> +	bp = rhashtable_lookup(&btp->bt_hash, map, xfs_buf_hash_params);
->  	if (!bp || !lockref_get_not_dead(&bp->b_lockref)) {
->  		rcu_read_unlock();
->  		return -ENOENT;
-> @@ -468,7 +454,6 @@ xfs_buf_lookup(
->  static int
->  xfs_buf_find_insert(
->  	struct xfs_buftarg	*btp,
-> -	struct xfs_buf_cache	*bch,
->  	struct xfs_perag	*pag,
->  	struct xfs_buf_map	*cmap,
->  	struct xfs_buf_map	*map,
-> @@ -488,7 +473,7 @@ xfs_buf_find_insert(
->  	new_bp->b_pag = pag;
->  
->  	rcu_read_lock();
-> -	bp = rhashtable_lookup_get_insert_fast(&bch->bc_hash,
-> +	bp = rhashtable_lookup_get_insert_fast(&btp->bt_hash,
->  			&new_bp->b_rhash_head, xfs_buf_hash_params);
->  	if (IS_ERR(bp)) {
->  		rcu_read_unlock();
-> @@ -530,16 +515,6 @@ xfs_buftarg_get_pag(
->  	return xfs_perag_get(mp, xfs_daddr_to_agno(mp, map->bm_bn));
->  }
->  
-> -static inline struct xfs_buf_cache *
-> -xfs_buftarg_buf_cache(
-> -	struct xfs_buftarg		*btp,
-> -	struct xfs_perag		*pag)
-> -{
-> -	if (pag)
-> -		return &pag->pag_bcache;
-> -	return btp->bt_cache;
-> -}
-> -
->  /*
->   * Assembles a buffer covering the specified range. The code is optimised for
->   * cache hits, as metadata intensive workloads will see 3 orders of magnitude
-> @@ -553,7 +528,6 @@ xfs_buf_get_map(
->  	xfs_buf_flags_t		flags,
->  	struct xfs_buf		**bpp)
->  {
-> -	struct xfs_buf_cache	*bch;
->  	struct xfs_perag	*pag;
->  	struct xfs_buf		*bp = NULL;
->  	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
-> @@ -570,9 +544,8 @@ xfs_buf_get_map(
->  		return error;
->  
->  	pag = xfs_buftarg_get_pag(btp, &cmap);
-> -	bch = xfs_buftarg_buf_cache(btp, pag);
->  
-> -	error = xfs_buf_lookup(bch, &cmap, flags, &bp);
-> +	error = xfs_buf_lookup(btp, &cmap, flags, &bp);
->  	if (error && error != -ENOENT)
->  		goto out_put_perag;
->  
-> @@ -584,7 +557,7 @@ xfs_buf_get_map(
->  			goto out_put_perag;
->  
->  		/* xfs_buf_find_insert() consumes the perag reference. */
-> -		error = xfs_buf_find_insert(btp, bch, pag, &cmap, map, nmaps,
-> +		error = xfs_buf_find_insert(btp, pag, &cmap, map, nmaps,
->  				flags, &bp);
->  		if (error)
->  			return error;
-> @@ -848,11 +821,8 @@ xfs_buf_destroy(
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
->  
->  	if (!xfs_buf_is_uncached(bp)) {
-> -		struct xfs_buf_cache	*bch =
-> -			xfs_buftarg_buf_cache(bp->b_target, bp->b_pag);
-> -
-> -		rhashtable_remove_fast(&bch->bc_hash, &bp->b_rhash_head,
-> -				xfs_buf_hash_params);
-> +		rhashtable_remove_fast(&bp->b_target->bt_hash,
-> +				&bp->b_rhash_head, xfs_buf_hash_params);
->  
->  		if (bp->b_pag)
->  			xfs_perag_put(bp->b_pag);
-> @@ -1618,6 +1588,7 @@ xfs_destroy_buftarg(
->  	ASSERT(percpu_counter_sum(&btp->bt_readahead_count) == 0);
->  	percpu_counter_destroy(&btp->bt_readahead_count);
->  	list_lru_destroy(&btp->bt_lru);
-> +	rhashtable_destroy(&btp->bt_hash);
->  }
->  
->  void
-> @@ -1712,8 +1683,10 @@ xfs_init_buftarg(
->  	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
->  			     DEFAULT_RATELIMIT_BURST);
->  
-> -	if (list_lru_init(&btp->bt_lru))
-> +	if (rhashtable_init(&btp->bt_hash, &xfs_buf_hash_params))
->  		return -ENOMEM;
-> +	if (list_lru_init(&btp->bt_lru))
-> +		goto out_destroy_hash;
->  	if (percpu_counter_init(&btp->bt_readahead_count, 0, GFP_KERNEL))
->  		goto out_destroy_lru;
->  
-> @@ -1731,6 +1704,8 @@ xfs_init_buftarg(
->  	percpu_counter_destroy(&btp->bt_readahead_count);
->  out_destroy_lru:
->  	list_lru_destroy(&btp->bt_lru);
-> +out_destroy_hash:
-> +	rhashtable_destroy(&btp->bt_hash);
->  	return -ENOMEM;
->  }
->  
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 3a1d066e1c13..bf39d89f0f6d 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -69,13 +69,6 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_INCORE,		"INCORE" }, \
->  	{ XBF_TRYLOCK,		"TRYLOCK" }
->  
-> -struct xfs_buf_cache {
-> -	struct rhashtable	bc_hash;
-> -};
-> -
-> -int xfs_buf_cache_init(struct xfs_buf_cache *bch);
-> -void xfs_buf_cache_destroy(struct xfs_buf_cache *bch);
-> -
->  /*
->   * The xfs_buftarg contains 2 notions of "sector size" -
->   *
-> @@ -113,8 +106,7 @@ struct xfs_buftarg {
->  	unsigned int		bt_awu_min;
->  	unsigned int		bt_awu_max;
->  
-> -	/* built-in cache, if we're not using the perag one */
-> -	struct xfs_buf_cache	bt_cache[];
-> +	struct rhashtable	bt_hash;
->  };
->  
->  struct xfs_buf_map {
-> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-> index b0b3696bf599..b2fd7276b131 100644
-> --- a/fs/xfs/xfs_buf_mem.c
-> +++ b/fs/xfs/xfs_buf_mem.c
-> @@ -58,7 +58,7 @@ xmbuf_alloc(
->  	struct xfs_buftarg	*btp;
->  	int			error;
->  
-> -	btp = kzalloc_flex(*btp, bt_cache, 1);
-> +	btp = kzalloc_obj(*btp);
->  	if (!btp)
->  		return -ENOMEM;
->  
-> @@ -81,10 +81,6 @@ xmbuf_alloc(
->  	/* ensure all writes are below EOF to avoid pagecache zeroing */
->  	i_size_write(inode, inode->i_sb->s_maxbytes);
->  
-> -	error = xfs_buf_cache_init(btp->bt_cache);
-> -	if (error)
-> -		goto out_file;
-> -
->  	/* Initialize buffer target */
->  	btp->bt_mount = mp;
->  	btp->bt_dev = (dev_t)-1U;
-> @@ -95,15 +91,13 @@ xmbuf_alloc(
->  
->  	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, descr);
->  	if (error)
-> -		goto out_bcache;
-> +		goto out_file;
->  
->  	trace_xmbuf_create(btp);
->  
->  	*btpp = btp;
->  	return 0;
->  
-> -out_bcache:
-> -	xfs_buf_cache_destroy(btp->bt_cache);
->  out_file:
->  	fput(file);
->  out_free_btp:
-> @@ -122,7 +116,6 @@ xmbuf_free(
->  	trace_xmbuf_free(btp);
->  
->  	xfs_destroy_buftarg(btp);
-> -	xfs_buf_cache_destroy(btp->bt_cache);
->  	fput(btp->bt_file);
->  	kfree(btp);
->  }
-> -- 
-> 2.47.3
-> 
-> 
+The current code keeps things most straight by keeping all the
+non-default code in a barnch.  The above with more unlocks in
+multiple branches feels a lot harder to follow.
 
