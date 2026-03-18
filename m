@@ -1,108 +1,70 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E6E3E0C4B
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 14:49:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2E9827EFEE;
+	Wed, 18 Mar 2026 15:20:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773845390; cv=none; b=P7EEkuesTexs98hSdLmnY/YC1tRU3F/C5tU9vVujQH0eI6aXZ8sNHALal7YImbbRDm5K+tT/kXuRhsqHr+jsdDjZ4bkBo3g6eNzqmxdj4VhlgybpCNH0fAF28vrafpIgL01I/dxjY6hdZueZxRDEp5WVq6GalCY3wXnLpFh+Nys=
+	t=1773847217; cv=none; b=kBNcyTQZ3Hwt9yIEw//fx/02QNYhwDIoptFMcqUINBlSAFkwbrluynG2978LnJoweJv2m5w3v8x3NRTUWuHtNm+UydSzvatNvzyAVKwjnTNRnSIVfmy26VulvELLOXSd/t4lnDYuL+5xS25jmagJykox/4q0F7y3qlbuncuR2jE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773845390; c=relaxed/simple;
-	bh=1JctO8e1U7viKi5OgPs07AJ5lU5eyOV63/b0M4XIaYU=;
+	s=arc-20240116; t=1773847217; c=relaxed/simple;
+	bh=jjOZ5Ix/C05VCaQzYTiTMYxFjIXuLb+lb6mt9KewbEM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rHkiV3WqB0S53k4YD8MMfutdRteclrwNtCP/xHh9dBlLjZxxsTdejWtHBnqjOeX/13DfvmZq2IDyOHO3eHNeAYjp2cYiX1fuUAofSCxCh3QGQ9BSlXbN8w+mszi9Wd9LRoTtgvfUXXDKqSHRzsEYReF8li1VQKxkHde7NM+cPqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9B3E968C4E; Wed, 18 Mar 2026 15:49:45 +0100 (CET)
-Date: Wed, 18 Mar 2026 15:49:45 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 2/4] xfs: use a lockref for the buffer reference count
-Message-ID: <20260318144945.GB21119@lst.de>
-References: <20260317134110.1691097-1-hch@lst.de> <20260317134110.1691097-3-hch@lst.de> <abnNSZy-N8ITNKul@dread>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HPXr2BdQUN9nEq1K+1Ny+N+fefIVwqHxDanz8JgC3AGepbQRshUtWr0i1jVE9Qo7uhrSaWwMpvaAF3ZzyjqwrtniMUvjY/1qbvS/1q2CUcyrVelQrj/8CM/ZNutRyRPQCuGAleOqO6XXwWVgSEAHICupyDn9Tpv6bqqIyFVKnwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yb4zyfT5; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yb4zyfT5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=X2ytg4EAJWYHSjXHnrIQJRt6TcKvRbsXR8fx9K5EsRw=; b=yb4zyfT5zYnu0KCd2OrgF/aIli
+	qMdM0w4DGbLVQGxv4SUXeutZhtoYMxoIBhwnDJrggqHo7j970QrMZnmUD+e2aZl9bKTbkyMmoG5jI
+	S9xUYVVI/vMYw1xvWlWObAdZOxmYuRwIlJKvieb2PhlQmAWKh8SYIw/W0+4l4jYjfDyj0cqaBx8Av
+	ouoMN3HWH07kmR8grouxORyhSnS6AUq7YaN7ohd56qJCYp4VAoB1xy0sCdFHyI1MvZWsqC4nh3h+y
+	Bb5gA2xwRog0RtMdebqSNJu0gJrjNf1Dxvhooi59MGNE0JYN6oBivRfegRWXXAH7MMCLum8n8Us6a
+	9mcgVPFQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w2sgu-00000008gwc-1POl;
+	Wed, 18 Mar 2026 15:20:12 +0000
+Date: Wed, 18 Mar 2026 08:20:12 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar@linux.ibm.com>, djwong@kernel.org,
+	hch@infradead.org, cem@kernel.org, david@fromorbit.com,
+	linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+	ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+	hsiangkao@linux.alibaba.com
+Subject: Re: [RFC v1 0/4] xfs: Add support to shrink multiple empty rtgroups
+Message-ID: <abrCrFogLZ_MWTIb@infradead.org>
+References: <20260219055737.769860-1-nirjhar@linux.ibm.com>
+ <cover.1771418537.git.nirjhar.roy.lists@gmail.com>
+ <0e20766d-5855-4514-a6bd-49e32261c162@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <abnNSZy-N8ITNKul@dread>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0e20766d-5855-4514-a6bd-49e32261c162@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Mar 18, 2026 at 08:53:13AM +1100, Dave Chinner wrote:
-> > -	spin_lock(&bp->b_lock);
-> > -	bp->b_hold++;
-> > -	spin_unlock(&bp->b_lock);
-> > +	lockref_get(&bp->b_lockref);
-> >  }
-> 
-> Can we make xfs_buf_hold a static inline in xfs_buf.h now? It is
-> called quite frequently and it's now just a one line wrapper
-> around the lockref code...
+On Wed, Mar 18, 2026 at 08:13:28PM +0530, Nirjhar Roy (IBM) wrote:
+> I am preparing a v2 incorporating all the initial review feedback received
+> so far. In parallel, I am looking into adding shrinkfs support for zoned
+> XFS  -  however, it would be great if we can discuss the current design and
+> get a full review of the changes so far to get this work (shrinkfs for
+> non-zoned realtime groups) into proper shape for the upcoming merge window
+> first and submit zoned XFS shrinkfs support separately afterward. Do you
+> think that make sense?
 
-Well, that plus the trace point.  For which we'd need to pull in
-xfs_trace.h into xfs_buf.h, which I've been trying to avoid.
-
-> 
-> > @@ -1564,10 +1547,10 @@ xfs_buftarg_isolate(
-> >  	struct list_head	*dispose = arg;
-> >  
-> >  	/*
-> > -	 * We are inverting the lru lock vs bp->b_lock order here, so use a
-> > -	 * trylock. If we fail to get the lock, just skip the buffer.
-> > +	 * We are inverting the lru lock vs bp->b_lockref.lock order here, so
-> > +	 * use a trylock. If we fail to get the lock, just skip the buffer.
-> >  	 */
-> > -	if (!spin_trylock(&bp->b_lock))
-> > +	if (!spin_trylock(&bp->b_lockref.lock))
-> >  		return LRU_SKIP;
-> >  
-> >  	/*
-> 
-> You modify this comment and whitespace in the previous patch without
-> any code change, and then do it again in this patch with a code
-> change. Can you collapse that just into a single change in this
-> patch with the code change?
-
-Sure, done.
-
-> >  	xfs_daddr_t		b_rhash_key;	/* buffer cache index */
-> >  	int			b_length;	/* size of buffer in BBs */
-> > -	int			b_hold;		/* reference count */
-> > +	struct lockref		b_lockref;	/* refcount + lock */
-> >  	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-> 
-> IIUC, this adds a 4 byte hole to the structure - b_lockref is an aligned
-> u64...
-
-Yes.
-
-> The first cacheline of the xfs_buf is explicitly packed
-> packed with the fields that a hash lookup needs to
-> minimise cacheline misses during lookup, so we really don't want to
-> screw that up by wasting space in the first cacheline.
-> 
-> Indeed, seeing as we've simplified the structure of the cache index
-> over time and are moving back to a global cache index, we probably
-> need to take another look at exactly where the cacheline boundary
-> sits and exactly what the lockless lookup fast path accesses. i.e.
-> make sure that lookups only access the first cacheline, and there is
-> nothing on that first cacheline that any other concurrent buffer
-> access might contend on (e.g. lru list scanning, wait queues, pure
-> read-only accesses, etc.)
-
-With this change, the first 64-byte cache line ends after b_flags.
-So even as-is it avoid having b_sema spread cache lines (all according
-to b_sema).  So for now I'd like to avoid reordering things in this
-series, even if I agree with the sentiment that a good analysis
-here might be in order.  Maybe wait until willy's series to shrink
-the semaphore lands, which will changes thing a bit again.
+What is your plan for actually migrating data out of the to be shrunk
+region, which is really the deal breaker to make this useful.  Outside
+of that zone support should be really trivial as it just means doing a
+little less work.
 
