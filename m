@@ -1,46 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0537E3B28D;
-	Wed, 18 Mar 2026 21:01:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 764B824A07C;
+	Wed, 18 Mar 2026 22:18:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773867693; cv=none; b=lWFkMfH94xY8Cr0E8ogtmd1Z2/1xOF4sVmvcBYVrVgRJL14Ng+qa0kljxtbhrvzHnRY+FCkBkBk/ZsDsRQKHfONJcOSc3Y360lQyypRgK0AcIMoKnjs5nxRu9lauPxWQ1a9tGbKxGF9w0cpJTjyi2b8GVFNFEgQA9AjgjdzpiIs=
+	t=1773872291; cv=none; b=LKXOgpKmsgTZqXzDTqIXbLKFEJyFvIozM4JkS7E/DhDwTntKgEFCEHewRO6CCGOxh8k6RyjNvzdj+RsJS/vbAipx82SnS68IDBKzU1h0qRTJP03/7o9oEHp+scCPKtOxh58svJfx95E8Ay7seL8K1gR/l2XkE+4/Mgg1NEhhae8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773867693; c=relaxed/simple;
-	bh=60KVRXDEH95d5Xeh9d+hVTbKLSJ3J2qsEzcMDk2f2VI=;
+	s=arc-20240116; t=1773872291; c=relaxed/simple;
+	bh=UDXSWTVAb1RzNbT1dodfSc9/yS6pBWAMOI3W8NucyrY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=apNKN5cBBbtNaY403HsY9G2FwZ53L7A0rwkH7GNP8uPDkDS0XjRtfla7t5WdJ0lXg6bEHZklR6sTvZZLBtDRperhT+IKnC9B6lVdiv28p5z4KI/6P2WiTQaDcXYHnnq/m38u33hs4vG7uzif4JwSK38po7xWg410OEvUDMiMrZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLBZV6Bb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aXu9oCZFE0kjZCSHH+E82F90stz46YUqZaMB+4xTnJi9I4keAEbUyGwBUAlafD5OwyukQiWUGJ+6m4EU00MAK80Z96SOxy236qU/gGztnaSFUCtch3rdNAtLSBxEcMJTdEnRu6RffT8fWGzSf6oAiMLBOBNMTPQR7YTjJp7iC/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZfNihw7+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLBZV6Bb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E87C0C19421;
-	Wed, 18 Mar 2026 21:01:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZfNihw7+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 038FDC19421;
+	Wed, 18 Mar 2026 22:18:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773867692;
-	bh=60KVRXDEH95d5Xeh9d+hVTbKLSJ3J2qsEzcMDk2f2VI=;
+	s=k20201202; t=1773872291;
+	bh=UDXSWTVAb1RzNbT1dodfSc9/yS6pBWAMOI3W8NucyrY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OLBZV6BbzczMo7mdrH8zKIkSp4+W1vGkRslcDJks+EuMZIojdwHVpdWMKpQgfFtVe
-	 idZcXKfJMLqqXFSFs0Df4BWvRyzkDokUFlP7DHBQiRPv5UWIJw13YuHTpdeQhwyma7
-	 FG8pvukIg3gcFEQXYDNwfAfLHQL0QaiAv7jw1ow0+yIHt6svTrdCw2onZriunT6Sbk
-	 wHWerLuNFDlxkXl/bud/JlFSPKwh9w9BOFKBfCgds6sMj81zPIkzZanjHAQ+d5E5C4
-	 FJmft3879EMtiikfj4YnDbhRShjw2DQF9U3blFL0nAXMjdlPLf81DbaOKTpT7lTejW
-	 sd7Lv3QhdPdlg==
-Date: Thu, 19 Mar 2026 08:01:21 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Morduan Zang <zhangdandan@uniontech.com>, cem@kernel.org,
-	zhanjun@uniontech.com, dchinner@redhat.com, stable@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com,
-	Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] xfs: use GFP_NOFS in __xfs_trans_alloc
-Message-ID: <absSoRi8oxXSuSZ7@dread>
-References: <24B50BB66059E3C8+20260312072214.475115-1-zhangdandan@uniontech.com>
- <abMhIabvChMOsUrY@dread>
- <20260316091827.GA2182@lst.de>
+	b=ZfNihw7+jRy3HikAnwY5y2YVVFrXnzcMCFKbTt1gUyEOD92zsA6+7lNDiM+sdkakW
+	 QNeVIjBiPrqeOheAx6OXdqPfMk6E1GeLwQxF305KN9VYAcrB2B8i722wCG29B8VTWS
+	 LwPLci6FjLruvguIzKBx1Po+aTySHw5HngQR9v7CH3vzG6f+pw4qyLf3Lbj3OEBUSS
+	 cUDn5qhBTmt/c78z/q7imaXkNuOe2W83tPgBkL2UNiJPiA65ED5Bh7HCOr3NSXLWlH
+	 +H0dOi0j3GbWgTEQF/Em2LVrgjiZaFqKoOvelufgVJUu7CZBWuL5gocU+5a9RsuVMB
+	 jmFfViDVE88XQ==
+Date: Wed, 18 Mar 2026 15:18:10 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Theodore Tso <tytso@mit.edu>, Ravi Singh <ravising@redhat.com>,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	adilger@dilger.ca, jack@suse.com, cem@kernel.org
+Subject: Re: [PATCH v2] xfs: return default quota limits for IDs without a
+ dquot
+Message-ID: <20260318221810.GM1742010@frogsfrogsfrogs>
+References: <20260312090810.1145908-1-ravising@redhat.com>
+ <20260317065947.306954-1-ravising@redhat.com>
+ <jknk6pwirqp5kgxdwr7qez2qzuycmj4eupknf3yvqzlnkyiu5k@nowg6cwpxqc3>
+ <20260317133159.GA53921@macsyma-wired.lan>
+ <ijwjh525hgf54wclhd4oixvfi3gfrodqrh2pbk7lr3whqw7nqo@k5uotrmekwyt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,70 +48,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260316091827.GA2182@lst.de>
+In-Reply-To: <ijwjh525hgf54wclhd4oixvfi3gfrodqrh2pbk7lr3whqw7nqo@k5uotrmekwyt>
 
-On Mon, Mar 16, 2026 at 10:18:27AM +0100, Christoph Hellwig wrote:
-> On Fri, Mar 13, 2026 at 07:25:05AM +1100, Dave Chinner wrote:
-> > On Thu, Mar 12, 2026 at 03:22:14PM +0800, Morduan Zang wrote:
-> > > __xfs_trans_alloc() allocates the transaction structure before
-> > > xfs_trans_set_context() establishes the nofs context. If memory reclaim
-> > > enters XFS through xfs_vn_sync_lazytime(), this GFP_KERNEL allocation can
-> > > trigger a warning from the reclaim path.
-> > 
-> > PLease include the warning and stack trace in the commit message.
-> > 
-> > > Use GFP_NOFS for the transaction allocation to avoid filesystem reclaim
-> > > recursion before the nofs context is set.
+On Wed, Mar 18, 2026 at 06:29:47PM +0100, Jan Kara wrote:
+> Hello!
+> 
+> On Tue 17-03-26 09:31:59, Theodore Tso wrote:
+> > On Tue, Mar 17, 2026 at 01:19:23PM +0100, Jan Kara wrote:
+> > > On Tue 17-03-26 14:59:47, Ravi Singh wrote:
+> > > > When an ID has no dquot on disk, Q_XGETQUOTA returns -ENOENT even
+> > > > though default quota limits are configured and enforced against that
+> > > > ID.  This means unprivileged users who have never used any resources
+> > > > cannot see the limits that apply to them.
+> > > > 
+> > > > When xfs_qm_dqget() returns -ENOENT for a non-zero ID, return a
+> > > > zero-usage response with the default limits filled in from
+> > > > m_quotainfo rather than propagating the error.  This is consistent
+> > > > with the enforcement behavior in xfs_qm_adjust_dqlimits(), which
+> > > > pushes the same default limits into a dquot when it is first
+> > > > allocated.
+> > > > 
+> > > > Signed-off-by: Ravi Singh <ravising@redhat.com>
 > > > 
-> > > Link: https://syzkaller.appspot.com/bug?extid=d78ace33ad4ee69329d5
+> > > So XFS guys should also review this but from quota POV this looks like a
+> > > right fix to me. So feel free to add:
+> > > 
+> > > Reviewed-by: Jan Kara <jack@suse.cz>
 > > 
-> > That's a PF_MEMALLOC + __GFP_NOFAIL warning. Has nothing to do
-> > with GFP_NOFS.
+> > This was discussed at last week's ext4 conference call, and we
+> > wondered whether we might be better off adding a new
+> > Q_XGETDEFAULTQUOTA or some such which returned the default quota.
+> > This would that the quota userspace utilities would have to be
+> > changed, but it would also mean that userspace could distinguish
+> > between whether the quota limit was due to a default value being used,
+> > or because the user had an actual quota value set.
 > 
-> Yes.
-> 
-> > Indeed, the stack trace trivially demonstrates the cause - the
-> > sync_lazytime() changes (in 6.19i, IIRC) have put a new XFS
-> > transaction in the iput() path that memory reclaim runs.
-> 
-> The lazytime changes (in 7.0-rc).  And I think they do indeed cause
-> this because we fail to clear I_DIRTY_TIME for some cases.
-> 
-> > We managed to remove all the xfs transactions in this path with the
-> > introduction of the background inodegc infrastructure because
-> > lockdep, memory allocation and other stuff really don't like us
-> > running "must succeed" transactions in the memory reclaim path.
+> First thing to note is that the notion of "default limit" is specific to
+> XFS. Other filesystems using quota don't have any default limits. I guess
+> most people here know this but I'm spelling it out so that we are all on
+> the same page.
+
+*I* actually didn't know that, so thank you for pointing that out!!
+
+> > It also means that in the future, if we wanted to change where the
+> > default quota was stored, it would be possible to do that instead of
+> > overloading the quota value for uid/gid 0.
 > > 
-> > Hence putting a new transaction directly in that path is a
-> > regression, and so I suspect the sync_lazytime() call directly from
-> > iput() running a transaction needs to be rethought...
+> > We also speculated that perhaps there might be cases where if some
+> > process might be running without CAP_SYS_ADMIN, there might be a
+> > reason that quota for uid=0 might actually make sense, and so perhaps
+> > some future file system format change might want to decouple where the
+> > default quota was stored.
 > 
-> Not a new transaction, but one we didn't hit before.
+> Right. That's why I didn't like the v1 version of the patch. But v2 version
+> hides the XFS specific behavior of default limits inside XFS function for
+> fetching quotas so that is fully transparent. If XFS decides to change its
+> quota format to support limits for root, it can also change this code
 
-Sure, but that doesn't change the fact that we should never have put
-this timestamp update transaction in the direct iput_final() path.
+Wait, do the other filesystems enforce limits on id 0?
 
-> That being said,
-> doing this separate syncing of the dirty time vs just batching it with
-> the write_inode_now in iput_final looks really odd to me.  This goes back
-> to Ted's original commit 0ae45f63d4ef8 adding laztime more than 10 years
-> ago, which unfortunately does not explain the rationale.
+Also, do those non-xfs filesystems also not have default limits?
 
-Moving it to pair with write_inode_now() by itself doesn't help us
-avoid the transaction in iput_final() context.
+> fetching and filling in default limits for the user. So until XFS decides
+> to change the format, current solution looks fine to me, once it decides to
+> change it, it is easy to change this code as well. But obviously this is
+> fully XFS developers' area of code so they can do whatever they wish :)
 
-It does, however, give us a state flag we can check (I_WILL_FREE) to
-change the behaviour of xfs_vn_sync_lazytime() when called from this
-path. i.e. we can mark the XFS inode as needing async inodegc
-processing and then skip the update transaction.
+/me bets nobody cares that much in xfsland other than not breaking
+userspace tools. ;)
 
-When VFS inode eviction calls us to destroy the inode, we can
-schedule the inode for GC instead of marking it for immediate
-reclaim. We then can safely run the timestamp update transaction
-from inodegc context. This also allows us to skip the timestamp
-update transaction when running GC on unlinked inodes...
+> The only improvement I can see is if we explicitely wanted to expose the
+> XFS default limits in some generic way for userspace tools to show. But
+> then I'd think we don't really need new quotactl, we could just put this
+> into the result of existing Q_XGETQSTATV quotactl.
+> 
+> Overall I don't have a strong opinion on this and consider these questions
+> mostly specific to XFS so XFS guys should decide what they want...
 
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+We're stuck with the old ABI behavior unless you all want to add a
+Q_<whatever>V2 quotactl command.
+
+--D
+
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+> 
