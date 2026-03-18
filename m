@@ -1,40 +1,55 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B66F139890A
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 10:57:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF353A2549
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 11:44:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773831427; cv=none; b=m1spMEPQVoGipaMhG9pMn1p17NcYJh/itLcq3Cpse8NaEJCktUHY606lsJA94Cr//s9Xp5UOeTh/t1q9JCpfuOedaGX5neoEJxkuf195x7IvE5hhTlyYAWnEwPKbVv+uu/UgqQM+0cGmYo5F+8KD1bJ4xA+WufOIYCkflXAwtBY=
+	t=1773834287; cv=none; b=kn9c7i3srUGgpPtKkYUYU5EnnxRvMCn+4VIHjEPkGjlvLajb8dDROfN+v3oD69sjHzkVYsz4Jbpiv+E+iOMhM1BlEIhm8TKH+DTdskDpY3E4FyZm9AtH1qw4BL4fvmP8s/nfZgEfaGPmzQqAjc0SCAi2raPCBXcQQw2a1UcWz4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773831427; c=relaxed/simple;
-	bh=VE8ZtHL27DAHlDTSlrbDN5swyDFSbnrDjtX8QPzBsVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=rbHspF0UfmI+a6LCI4HkyxtfaAeVWLibiiTwOQaIh1zcK9+7es48Kit3yFz2EKds8T67K640PFGyIbxwA+iLx3Pd4ZgyIvgMT9H7QtXz49ZwcAp4q4Ig/sI4VSgIJu8o8ul4bQfe3vblgi3p8L3kOMfh18CDZcynkUSR2FvRBPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nsCMFucT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773834287; c=relaxed/simple;
+	bh=MnnB2YPUhBuztU+MB6IeMx9vtfF+8SffQRsF5EuLw8A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QHhDvrmiRI9/ZWutKcHx3UGqTDZpgk5Q8zFdbwAGRKW7BrAcM/Ux9wHS327E3G8nwrSgnqKesYAfRalqtdcrk7B5pHNPcj5lvf5E3Q7ulrMXdpkbFzWyMuxvjwVF86J0KQ4Tb9pNX1zgrubPxE7G5XWpA3hqV46eB8ARTBzG1Ss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OBNSjloT; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nsCMFucT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12852C2BC87;
-	Wed, 18 Mar 2026 10:57:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773831427;
-	bh=VE8ZtHL27DAHlDTSlrbDN5swyDFSbnrDjtX8QPzBsVs=;
-	h=Date:From:To:Cc:Subject:From;
-	b=nsCMFucTK/LvozkMXfAnnThI3i2ajwh89uP1BJYw/Lm6DlA3UfAZ168dncZiMcNxj
-	 J+ONbmBF20FIHtWfBd44GuvTk2a6KYbYqpl+1lboX3IJmPdgsu59LGRqFmCfTrmhqp
-	 Ro6XmfFcvSRFBhmVP33ywSMU1UYnDqOPtyM4mhxNOr1lmMtOqKUtzpz9+Oy6PdTKyc
-	 nalDd0cOc1Kkom4zLs4ZFdBZaJAAfqYpAeNXaUUp6bL1VcMYvZs9czI5EuNT6zIgNx
-	 YyHr1lwWsjyUxjseivQJ6duza8seqABj6kJriaxSj7oAjNQCygLi5NbRIC7InlMu8o
-	 AXQ7sBBkIRAyw==
-Date: Wed, 18 Mar 2026 11:57:01 +0100
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@kernel.org, axboe@kernel.dk, bage@debian.org, 
-	bfoster@redhat.com, brauner@kernel.org, cem@kernel.org, cmaiolino@redhat.com, 
-	djwong@kernel.org, dlemoal@kernel.org, hans.holmberg@wdc.com, hch@lst.de, 
-	linux-xfs@vger.kernel.org, lukas@herbolt.com, martin.petersen@oracle.com
-Subject: [ANNOUNCE] xfsprogs: v6.19.0 released
-Message-ID: <odpacitkqmoe7lb3nhnttb4li6kmzzjena6ciujf6by6ztiirv@ez2hziuqnl27>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OBNSjloT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773834282;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=r8hOsrzuco3wh7k6MMgwBzXvoJm2wLCgxalWQx1D5/A=;
+	b=OBNSjloTX0veG3m64TATEHgCs9eZevMOENi5mUKoFPnZPRDZnfTLu9lCtbUtQxCGrzbXIF
+	Qc1/ou5KIpAMcV2RlUzOGKcmbGiNCcXWomyXvIC8e6Cwd0t9wtPvqSKYU4/+8EScTxf/+s
+	ASv/QSpngtvcs3PWHn08PqbyDxi3lEw=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-601-x7Jd4HhyOTaktJq93-CVOw-1; Wed,
+ 18 Mar 2026 07:44:39 -0400
+X-MC-Unique: x7Jd4HhyOTaktJq93-CVOw-1
+X-Mimecast-MFC-AGG-ID: x7Jd4HhyOTaktJq93-CVOw_1773834278
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5714018005B3;
+	Wed, 18 Mar 2026 11:44:38 +0000 (UTC)
+Received: from bfoster (unknown [10.22.89.178])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 28A731800351;
+	Wed, 18 Mar 2026 11:44:36 +0000 (UTC)
+Date: Wed, 18 Mar 2026 07:44:34 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 1/4] xfs: don't keep a reference for buffers on the LRU
+Message-ID: <abqQIrwXzB_FiHFr@bfoster>
+References: <20260317134110.1691097-1-hch@lst.de>
+ <20260317134110.1691097-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,123 +58,124 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260317134110.1691097-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi folks,
+On Tue, Mar 17, 2026 at 02:40:52PM +0100, Christoph Hellwig wrote:
+> Currently the buffer cache adds a reference to b_hold for buffers that
+> are on the LRU.  This seems to go all the way back and allows releasing
+> buffers from the LRU using xfs_buf_rele.  But it makes xfs_buf_rele
+> really complicated in differs from how other LRUs are implemented in
+> Linux.
+> 
+> Switch to not having a reference for buffers in the LRU, and use a
+> separate negative hold value to mark buffers as dead.  This simplifies
+> xfs_buf_rele, which now just deal with the last "real" reference,
+> and prepares for using the lockref primitive.
+> 
+> This also removes the b_lock protection for removing buffers from the
+> buffer hash.  This is the desired outcome because the rhashtable is
+> fully internally synchronized, and previously the lock was mostly
+> held out of ordering constrains in xfs_buf_rele_cached.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_buf.c | 139 ++++++++++++++++++-----------------------------
+>  fs/xfs/xfs_buf.h |   8 +--
+>  2 files changed, 53 insertions(+), 94 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d2f3c50d80e7..3cd37f082a69 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+...
+> @@ -1610,11 +1564,12 @@ xfs_buftarg_isolate(
+>  	struct list_head	*dispose = arg;
+>  
+>  	/*
+> -	 * we are inverting the lru lock/bp->b_lock here, so use a trylock.
+> -	 * If we fail to get the lock, just skip it.
+> +	 * We are inverting the lru lock vs bp->b_lock order here, so use a
+> +	 * trylock. If we fail to get the lock, just skip the buffer.
+>  	 */
+>  	if (!spin_trylock(&bp->b_lock))
+>  		return LRU_SKIP;
+> +
+>  	/*
+>  	 * Decrement the b_lru_ref count unless the value is already
+>  	 * zero. If the value is already zero, we need to reclaim the
+> @@ -1624,8 +1579,18 @@ xfs_buftarg_isolate(
+>  		spin_unlock(&bp->b_lock);
+>  		return LRU_ROTATE;
+>  	}
+> +	
 
-The xfsprogs master branch in repository at:
+(Trailing) Whitespace damage here ^, JFYI.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Otherwise LGTM. I like Dave's suggestion, but either way:
 
-has just been updated.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-This release consist mostly of improvements and bugfixes. Corruption of the
-large files in mkfs.xfs protofiles together with a few memory leaks are fixed.
-mkfs.xfs has better calculation of lsunit geometry on 512e and 4kN disks.
-Utilize BLKREPORTZONEV2 ioctl() when possible. xfs_mdrestore is fixed for 4k
-sector disks. On Debian, in favor of dh_installsystemd, xfsprogs doesn't call
-daemon-reload anymore.
+> +	/*
+> +	 * If the buffer is in use, remove it from the LRU for now as we can't
+> +	 * free it.  It will be freed when the last reference drops.
+> +	 */
+> +	if (bp->b_hold > 0) {
+> +		list_lru_isolate(lru, &bp->b_lru);
+> +		spin_unlock(&bp->b_lock);
+> +		return LRU_REMOVED;
+> +	}
+>  
+> -	bp->b_state |= XFS_BSTATE_DISPOSE;
+> +	bp->b_hold = -1;
+>  	list_lru_isolate_move(lru, item, dispose);
+>  	spin_unlock(&bp->b_lock);
+>  	return LRU_REMOVED;
+> @@ -1647,7 +1612,7 @@ xfs_buftarg_shrink_scan(
+>  		struct xfs_buf *bp;
+>  		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+>  		list_del_init(&bp->b_lru);
+> -		xfs_buf_rele(bp);
+> +		xfs_buf_destroy(bp);
+>  	}
+>  
+>  	return freed;
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index e25cd2a160f3..e7324d58bd96 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -68,11 +68,6 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_INCORE,		"INCORE" }, \
+>  	{ XBF_TRYLOCK,		"TRYLOCK" }
+>  
+> -/*
+> - * Internal state flags.
+> - */
+> -#define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
+> -
+>  struct xfs_buf_cache {
+>  	struct rhashtable	bc_hash;
+>  };
+> @@ -159,7 +154,7 @@ struct xfs_buf {
+>  
+>  	xfs_daddr_t		b_rhash_key;	/* buffer cache index */
+>  	int			b_length;	/* size of buffer in BBs */
+> -	unsigned int		b_hold;		/* reference count */
+> +	int			b_hold;		/* reference count */
+>  	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+>  	xfs_buf_flags_t		b_flags;	/* status flags */
+>  	struct semaphore	b_sema;		/* semaphore for lockables */
+> @@ -170,7 +165,6 @@ struct xfs_buf {
+>  	 */
+>  	struct list_head	b_lru;		/* lru list */
+>  	spinlock_t		b_lock;		/* internal state lock */
+> -	unsigned int		b_state;	/* internal state flags */
+>  	wait_queue_head_t	b_waiters;	/* unpin waiters */
+>  	struct list_head	b_list;
+>  	struct xfs_perag	*b_pag;
+> -- 
+> 2.47.3
+> 
+> 
 
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The for-next branch has also been updated to match the state of master.
-
-The new head of the master branch is commit:
-
-2dd2852fd91b48217f91f8205788f09586e95f46
-
-New commits:
-
-Andrey Albershteyn (1):
-      [2dd2852fd91b] xfsprogs: Release v6.19.0
-
-Bastian Germann (1):
-      [b56b8825a89b] debian: Drop Uploader: Bastian Germann
-
-Brian Foster (2):
-      [bcbd49ae01ff] xfs: error tag to force zeroing on debug kernels
-      [e5f4b834bb2f] xfs: set max_agbno to allow sparse alloc of last full inode chunk
-
-Christoph Hellwig (12):
-      [c7a07fadf4ff] include blkzoned.h in platform_defs.h
-      [b7c900385985] libfrog: enable cached report zones
-      [2fbd34e77b7f] xfs: add a xfs_groups_to_rfsbs helper
-      [19a0fe73785d] xfs: use a lockref for the xfs_dquot reference count
-      [222095f4c52a] xfs: add a XLOG_CYCLE_DATA_SIZE constant
-      [d2b51c1cf4fd] xfs: remove xlog_in_core_2_t
-      [ee001dba26ef] xfs: remove the xlog_rec_header_t typedef
-      [6aa2b48a6b66] xfs: validate that zoned RT devices are zone aligned
-      [c250d4da5191] xfs: mark __xfs_rtgroup_extents static
-      [5756ae33c98b] xfs: fix an overly long line in xfs_rtgroup_calc_geometry
-      [705858765a3a] xfs_io: fix fsmap help
-      [69721699daeb] xfs_io: print more realtime subvolume related information in statfs
-
-Damien Le Moal (3):
-      [b3d17aa18f73] xfs: use blkdev_report_zones_cached()
-      [453b0e8be7ef] mkfs: remove unnecessary return value affectation
-      [e2a429986eb9] libfrog: lift common zone reporting code from mkfs and repair
-
-Darrick J. Wong (10):
-      [81bedc02de7d] mkfs: set rtstart from user-specified dblocks
-      [9547c3f44e64] xfs_logprint: print log data to the screen in host-endian order
-      [026ebbb7ef9d] mkfs: quiet down warning about insufficient write zones
-      [49157d0df63a] xfs_mdrestore: fix restoration on filesystems with 4k sectors
-      [609a3154ba08] debian: don't explicitly reload systemd from postinst
-      [783268546e98] xfs_scrub_all: fix non-service-mode arguments to xfs_scrub
-      [39c683bf82ae] misc: fix a few memory leaks
-      [2c9b0236b0d8] libxfs: fix data corruption bug in libxfs_file_write
-      [ca3452967778] mkfs: fix protofile data corruption when in/out file block sizes don't match
-      [32921df27199] mkfs: fix log sunit automatic configuration
-
-Hans Holmberg (1):
-      [396517b382aa] xfs: remove xarray mark for reclaimable zones
-
-Lukas Herbolt (1):
-      [ca1eb448e116] mkfs.xfs fix sunit size on 512e and 4kN disks.
-
-Code Diffstat:
-
- VERSION                   |   2 +-
- configure.ac              |   2 +-
- debian/changelog          |   6 +++
- debian/control            |   2 +-
- debian/postinst           |   3 --
- doc/CHANGES               |  19 ++++++++
- include/libxlog.h         |   4 +-
- include/platform_defs.h   |  15 ++++++
- io/fsmap.c                |   5 +-
- io/stat.c                 |   6 +++
- libfrog/Makefile          |   6 ++-
- libfrog/zones.c           |  59 +++++++++++++++++++++++
- libfrog/zones.h           |  16 +++++++
- libxfs/rdwr.c             |   2 +-
- libxfs/util.c             |   5 +-
- libxfs/xfs_errortag.h     |   6 ++-
- libxfs/xfs_group.h        |   9 ++++
- libxfs/xfs_ialloc.c       |  11 +++--
- libxfs/xfs_log_format.h   |  38 +++++++--------
- libxfs/xfs_ondisk.h       |   6 ++-
- libxfs/xfs_quota_defs.h   |   4 +-
- libxfs/xfs_rtgroup.c      |  53 ++++++++++----------
- libxfs/xfs_rtgroup.h      |  16 +++----
- libxfs/xfs_sb.c           |  15 ++++++
- libxfs/xfs_zones.c        |   2 +-
- libxlog/util.c            |   6 +--
- libxlog/xfs_log_recover.c |  52 +++++++++++---------
- logprint/log_dump.c       |   4 +-
- logprint/log_print_all.c  |   5 +-
- logprint/logprint.c       |   5 ++
- logprint/logprint.h       |   1 +
- man/man8/xfs_logprint.8   |   4 ++
- mdrestore/xfs_mdrestore.c |  17 +++++--
- mkfs/proto.c              |  28 +++++++----
- mkfs/xfs_mkfs.c           | 120 ++++++++++++++++++++++++----------------------
- repair/zoned.c            |  36 +++++---------
- scrub/Makefile            |   2 +-
- scrub/xfs_scrub_all.py.in |   3 +-
- 38 files changed, 386 insertions(+), 209 deletions(-)
- create mode 100644 libfrog/zones.c
- create mode 100644 libfrog/zones.h
-
--- 
-- Andrey
