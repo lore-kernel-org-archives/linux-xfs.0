@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E25E362132
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Mar 2026 08:33:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DEE4259CA9;
+	Wed, 18 Mar 2026 09:13:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773822829; cv=none; b=oF820qkFJiSM2Z1SSZJBZQQdTtHP4yM07bNle5JvdIyGzQH/fUEXjTyEJ2FqP9eUuXsxUVMX2+zs7xATXPqtvyaIvU3uSKufuRGCXIDKdNqcbYZTvjimZphAN96YWUR2J1LX/7EDoyirqg7IezFDzB4CcprkCavZ5P6tQO01aSU=
+	t=1773825228; cv=none; b=COFnDHAT7bp7dnK2HB/k2CsLp925muAcWCFHS9obxx8bJFQSbxxCpQFjqLpDQngPeXQk/Hcoc4qt1L8UU8ODbjluxCRr/y6kuqxfdjTEDB2WcyMzlQtHC1xZ1Z4KQw1IMIFxXIURWGdKg4Cqw84wOLIpZOMCupk3kC65cXBsIqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773822829; c=relaxed/simple;
-	bh=a1jt4hGVolhEGok1iCFWBazdDNaC2KURW4GXDz7VwEg=;
+	s=arc-20240116; t=1773825228; c=relaxed/simple;
+	bh=OF2A7xe8ldRCTf9tSG9WUWI+Gx4Rd00mVFvL14yWztY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b5ZVQy2T1RUH/YCFZymXphRZHAVZomFq3pG49SjmPzWXbSxehQsW/5dLLAYoA9AzlB9L/vfRrwfCwz8v7G+SPSqlvA4gL/oRe2zECD4MQ0NkHhdnfFRxP9RZR/SGlVu47GYtJMDd6qijZxZ/ExK9oAE6cPUzQnqogVS+N7LO1b4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mNgtZemH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=A7XEE7VElY1SmEzEGTW7X42I4k1TZXqsSBU0fPwVO7vQEhK12Fl12NiEop0W8tO1GlRqLPndBLNF3xnJ8WNnVyDGDP/fSZSNv7XzsKP2VoK+vCvpEx4/NKHidP2mjKKM5HbQl0wHscdgiZ6euuZcbAWBD54MlpQqSP1/z6XwWgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=krNfvozf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mNgtZemH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31E0EC19421;
-	Wed, 18 Mar 2026 08:33:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="krNfvozf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFB8CC19421;
+	Wed, 18 Mar 2026 09:13:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773822829;
-	bh=a1jt4hGVolhEGok1iCFWBazdDNaC2KURW4GXDz7VwEg=;
+	s=k20201202; t=1773825227;
+	bh=OF2A7xe8ldRCTf9tSG9WUWI+Gx4Rd00mVFvL14yWztY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mNgtZemHTCKIuWltuH4+u4ALZGJnMd9w2+2038AcAFIG1qHaCQ43nKbnKNadEU345
-	 UyeQ3jp1MVsUTiVgW2jKZmdW6B1KPoYKZ1tDfC/wF8H/dYmSyxqZIoFe8CmNUzsG7E
-	 t4ATGiBK/2BgHcX304JU/mwyxQSDVwuJ/7k+tWa1Z4fJqybbj2Wf2DMSrm1WM4OceB
-	 0RxODj3WHR5vXrsGEeNmGr58/XHJ/s/L7CcCiynk1UAMEMzVf+pIgcdgMH31vbh8tT
-	 8Zfmo29B4HB3ow9y1+QE3QuICu5M1WlvaqlXJlcfjlwt9+H3MEiWFYveNPCa/w4KAr
-	 BhK3t4kEMQVww==
-Date: Wed, 18 Mar 2026 09:33:43 +0100
+	b=krNfvozfS6lx6VQ4ms57uiafFu8hGCANcoQCqwUeN9LX4MtdeotSLUQJ60FDYmRZ1
+	 /mHU8kDanrHlGEfeiT2gz+73a2rAOKAe1IPSukpfbnr9ASmXzCqgg/F4DHs28XlHSP
+	 Ji2kF2UqhXcwFfME9j52Y/dpdeChBdCbz+SIP1imNSlm4g9OtXL3LIsz+7QBkBKHEY
+	 Nq3CmSO5yiGN3AnlP+/X5wsjN1hCUEVZNR/9TNlYH4WmsiMOLVkQFdW0trtVs8FSD/
+	 w5wY7Gw2O8vl+1aNZgNbCSni4MGW1h5JukSw/EMcmKSSntE//hr2bJOz7MxPYOOCqn
+	 /PHNZKYIRVp6Q==
+Date: Wed, 18 Mar 2026 10:13:43 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH v2 4/4] xfs: opencode xfs_zone_record_blocks
-Message-ID: <abpjRgx9rysND3-k@nidhogg.toxiclabs.cc>
-References: <20260310173709.457047-1-cem@kernel.org>
- <20260310173709.457047-5-cem@kernel.org>
- <20260318081431.GA26117@lst.de>
+To: brauner@kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bfoster@redhat.com
+Subject: Re: [PATCH v4 0/8] iomap, xfs: improve zero range flushing and lookup
+Message-ID: <abpsdcySytW3J_2G@nidhogg.toxiclabs.cc>
+References: <20260311162502.192375-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,51 +42,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260318081431.GA26117@lst.de>
+In-Reply-To: <20260311162502.192375-1-bfoster@redhat.com>
 
-On Wed, Mar 18, 2026 at 09:14:31AM +0100, Christoph Hellwig wrote:
-> On Tue, Mar 10, 2026 at 06:36:49PM +0100, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> > 
-> > We only have a single caller, no need to keep it in its own function.
+On Wed, Mar 11, 2026 at 12:24:54PM -0400, Brian Foster wrote:
+> Hi all,
 > 
-> This accidentally dropped the record_blocks trace event.  The patch
-> below adds it back.  Feel free to fold it in if that works for you.
+> No significant changes in v4. A few whitespace fixes throughout and I've
+> added some R-b tags from v3 review. Thanks.
+> 
+> Brian
 
-Woops, thanks. I'm folding it into the original patch adding a small
-note there.
-Thanks!
+Christian, giving the majority of this series belongs to XFS, are you ok
+if I pull this series through XFS tree, including the iomap patch?
+
+Carlos
 
 > 
-> ---
-> From 6e413887a36cd91af3684d8af357b50538106bea Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Wed, 18 Mar 2026 08:58:38 +0100
-> Subject: xfs: add back the xfs_zone_record_blocks trace event
+> v4:
+> - Minor whitespace cleanups.
+> v3: https://lore.kernel.org/linux-fsdevel/20260309134506.167663-1-bfoster@redhat.com/
+> - Inserted new patches 1-2 to fix up zoned mode zeroing.
+> - Appended patch 8 to correctly report COW mappings backed by data fork
+>   holes.
+> - Various minor fixups to logic, whitespace, comments.
+> v2: https://lore.kernel.org/linux-fsdevel/20260129155028.141110-1-bfoster@redhat.com/
+> - Patch 1 from v1 merged separately.
+> - Fixed up iomap_fill_dirty_folios() call in patch 5.
+> v1: https://lore.kernel.org/linux-fsdevel/20251016190303.53881-1-bfoster@redhat.com/
 > 
-> Commit 54514abb9891 ("xfs: opencode xfs_zone_record_blocks")
-> accidentally removed it.
+> Brian Foster (8):
+>   xfs: fix iomap hole map reporting for zoned zero range
+>   xfs: flush dirty pagecache over hole in zoned mode zero range
+>   iomap, xfs: lift zero range hole mapping flush into xfs
+>   xfs: flush eof folio before insert range size update
+>   xfs: look up cow fork extent earlier for buffered iomap_begin
+>   xfs: only flush when COW fork blocks overlap data fork holes
+>   xfs: replace zero range flush with folio batch
+>   xfs: report cow mappings with dirty pagecache for iomap zero range
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_zone_alloc.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  fs/iomap/buffered-io.c |   6 +-
+>  fs/xfs/xfs_file.c      |  17 +++++
+>  fs/xfs/xfs_iomap.c     | 146 +++++++++++++++++++++++++++++++----------
+>  3 files changed, 130 insertions(+), 39 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index 7d712d5a5ce0..9d02160c5334 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -291,6 +291,9 @@ xfs_zoned_map_extent(
->  		}
->  	}
->  
-> +	trace_xfs_zone_record_blocks(oz,
-> +		xfs_rtb_to_rgbno(tp->t_mountp, new->br_startblock),
-> +		new->br_blockcount);
->  	xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
->  	xfs_rtgroup_trans_join(tp, rtg, XFS_RTGLOCK_RMAP);
->  	rmapip->i_used_blocks += new->br_blockcount;
 > -- 
-> 2.47.3
+> 2.52.0
 > 
 > 
