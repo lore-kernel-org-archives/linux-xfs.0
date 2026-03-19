@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52EEE10E3
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:48:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671F10E3
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:49:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895736; cv=none; b=B88SMZJL2p0v95oH/W/eokxkZSXmfQYgbTJL4U+JQwnbcpWPQJmSySLTG3l4wDWhAQYE54OhS+otduNy1Pe/P/mY9mwCycNAYC+17bPWNt/ulVV/x1GryekAqrDOgQYp8t3uDFlftoO8NyP8hPnYMaUnaNOb1/NdA/iJk9w88Zw=
+	t=1773895752; cv=none; b=Z5Ljoa7INmB2v5CKUHkIesepzHKF2V5TWHCIzl6FolKOe7OBnWcwvUVKLp6LSjYJIp7/BwcYjP3WLHhkhsBOSqI4o7q5JpgrPyyvuAOXOm6QbhQR5b7O9P9JwmTnEtrVzwLq/Fi4jFVZOHunZSNBob70hFksBLdQgVvjQ78eT/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895736; c=relaxed/simple;
-	bh=VKI4jbGNOyl9FvIxM0wk1Vj4mzKwR0giNgYGHEtr7so=;
+	s=arc-20240116; t=1773895752; c=relaxed/simple;
+	bh=VRrFoO0Z91ABWAhVmFExJqiYDyvLSSbA1167QamRsIU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WDgf0UDidshENOrA/KitAPEPS6uDAiexWGeTlEryoQ3FGmTP3B2R78g6nePc/vyj2UPQVHr0Pimb0PAkMZlnW3mgRBwjDxEcWn0XHgy2sIIyxNcI7YWHiLBx74CxlCrlYCJ8IfE5C6/CPhTwMmNuHX69CwIGN8g66rgNXNbHbEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MdS4sseq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=daisxrMlZOUYubIT+Uq5MohvV3E2WvtG6Az25vc25jfxcpePBej24RjWUyLG1LySlE65eAm5JT96NBo6NKai4PQ2pVsi/dwW0UtESNGFpkMys7pIqwn5wk52oV/u0nIYuVVz2GVh9v0s+yn+A7UnzuQg2AOni+5Ys+40l1umCP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqBDjTro; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MdS4sseq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8E27C19425;
-	Thu, 19 Mar 2026 04:48:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqBDjTro"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 987B2C19425;
+	Thu, 19 Mar 2026 04:49:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895736;
-	bh=VKI4jbGNOyl9FvIxM0wk1Vj4mzKwR0giNgYGHEtr7so=;
+	s=k20201202; t=1773895751;
+	bh=VRrFoO0Z91ABWAhVmFExJqiYDyvLSSbA1167QamRsIU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MdS4sseqZGl5pqSPc4znWEOiDggdwJxsb4dLYg0B4IBBBYyfefwLJKXhqqSGlqJFe
-	 b/aF3uHJvaVS3RCXEExTer1NmbM/Ll0saSOBVZIVg2KNkJ3ZBYJJF9l40xFmZB+mqw
-	 UpEM0YWo1qbitJPoqHkth5OalzN6fjj4TS9mdBgxZC277D5NGBe3GFWHhssmzwjrUM
-	 oEwvDiI1HUy+Py+utbPsoBEHTj5QeE0ykULJUhbR+NlvzK0az3l3EPR374YzK0IekT
-	 XLZ2qKFHDwVmQ6g4izJUsQJ60RqNHplKn0DJ2Uv/l8w0eCL2TVUwS1JKGzcjSibk3+
-	 BpGufIoeLiFiA==
-Date: Wed, 18 Mar 2026 21:48:55 -0700
-Subject: [PATCH 13/22] xfs_scrub: move disk media verification error injection
+	b=bqBDjTroWrRHdo6cfsowOY0IF8ZU+mkPIrtP0gJxHWWIkAGwzsm5+JfUJGgdvkU0E
+	 xUGCMVJRXVu6HQiGEGRkRUZm7kGt5ZO94+yODhpHcodK6Ub2hmSfJJ0th5fhREsp3N
+	 UYX8ooG4NRHsIwwqXX7UrLP9elux6mMvTqnxHGnARMYJMEpX+CBTvougTBqNCVUbnz
+	 OoDMrBPQI5xZhylAcz5BNARz+U+Y9uz8DLthwsMyejltdWAFmjv/4jN9aGIuuKhUan
+	 /LR24nexzOvV1ZhREMmBam88HtYseL03+j8WLSMRHnHv0tpmPmNZJhErDOTgfAViv+
+	 2BPrj/PiIZuLw==
+Date: Wed, 18 Mar 2026 21:49:11 -0700
+Subject: [PATCH 14/22] xfs_scrub: use the verify media ioctl during phase 6 if
+ possible
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389507178.3681140.1737889167463602377.stgit@frogsfrogsfrogs>
+Message-ID: <177389507197.3681140.12909228499805644066.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 References: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,212 +44,141 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-This isn't really disk-related since it's a knob to make the
-read_verify_pool pretend that the media is defective.  Move this code
-before we add a new media verify path that doesn't require the disk
-abstraction.
+If the kernel suppots the XFS_IOC_VERIFY_MEDIA ioctl, use that to
+perform the phase 6 media scan instead of pwrite or the SCSI VERIFY
+command.  This enables better integration with xfs_healer and fsnotify;
+and reduces the amount of work that userspace has to do.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-[djwong: split off from another hch patch, create a new commit message]
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/disk.c        |   71 -------------------------------------------
- scrub/read_verify.c |   85 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 83 insertions(+), 73 deletions(-)
+ scrub/xfs_scrub.h   |    1 +
+ scrub/phase1.c      |   18 ++++++++++++++++++
+ scrub/read_verify.c |   44 ++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 59 insertions(+), 4 deletions(-)
 
 
-diff --git a/scrub/disk.c b/scrub/disk.c
-index 2cf84d91887587..afce801d3f2076 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -266,63 +266,6 @@ disk_close(
- #define LBASIZE(d)		(1ULL << (d)->d_lbalog)
- #define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 3009a7cd2d97d0..851b4f37db48e4 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -79,6 +79,7 @@ struct scrub_ctx {
  
--/* Simulate disk errors. */
--static int
--disk_simulate_read_error(
--	struct disk		*disk,
--	uint64_t		start,
--	uint64_t		*length)
--{
--	static int64_t		interval;
--	uint64_t		start_interval;
--
--	/* Simulated disk errors are disabled. */
--	if (interval < 0)
--		return 0;
--
--	/* Figure out the disk read error interval. */
--	if (interval == 0) {
--		char		*p;
--
--		/* Pretend there's bad media every so often, in bytes. */
--		p = getenv("XFS_SCRUB_DISK_ERROR_INTERVAL");
--		if (p == NULL) {
--			interval = -1;
--			return 0;
--		}
--		interval = strtoull(p, NULL, 10);
--		interval &= ~((1U << disk->d_lbalog) - 1);
--	}
--	if (interval <= 0) {
--		interval = -1;
--		return 0;
--	}
--
--	/*
--	 * We simulate disk errors by pretending that there are media errors at
--	 * predetermined intervals across the disk.  If a read verify request
--	 * crosses one of those intervals we shorten it so that the next read
--	 * will start on an interval threshold.  If the read verify request
--	 * starts on an interval threshold, we send back EIO as if it had
--	 * failed.
--	 */
--	if ((start % interval) == 0) {
--		dbg_printf("fd %d: simulating disk error at %"PRIu64".\n",
--				disk->d_fd, start);
--		return EIO;
--	}
--
--	start_interval = start / interval;
--	if (start_interval != (start + *length) / interval) {
--		*length = ((start_interval + 1) * interval) - start;
--		dbg_printf(
--"fd %d: simulating short read at %"PRIu64" to length %"PRIu64".\n",
--				disk->d_fd, start, *length);
--	}
--
--	return 0;
--}
--
- /* Read-verify an extent of a disk device. */
- ssize_t
- disk_read_verify(
-@@ -331,20 +274,6 @@ disk_read_verify(
- 	uint64_t		start,
- 	uint64_t		length)
- {
--	if (debug) {
--		int		ret;
--
--		ret = disk_simulate_read_error(disk, start, &length);
--		if (ret) {
--			errno = ret;
--			return -1;
--		}
--
--		/* Don't actually issue the IO */
--		if (getenv("XFS_SCRUB_DISK_VERIFY_SKIP"))
--			return length;
--	}
--
- 	/* Convert to logical block size. */
- 	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
- 		return disk_scsi_verify(disk, BTOLBAT(disk, start),
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index ba04ad3684ebd7..adee67d922fc76 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -168,6 +168,88 @@ read_verify_pool_destroy(
- 	free(rvp);
+ 	/* Data block read verification buffer */
+ 	void			*readbuf;
++	bool			no_verify_ioctl;
+ 
+ 	/* Mutable scrub state; use lock. */
+ 	pthread_mutex_t		lock;
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 16607af4c5f025..abc594898bf2c5 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -213,6 +213,22 @@ mode_from_autofsck(
+ 	goto summarize;
  }
  
-+/* Simulate disk errors. */
-+static int
-+verify_simulate_read_error(
-+	struct read_verify_pool	*rvp,
-+	uint64_t		start,
-+	ssize_t			*length)
++/* Does the XFS driver support media scanning its own disks? */
++static void
++configure_xfs_verify(
++	struct scrub_ctx	*ctx)
 +{
-+	static int64_t		interval;
-+	uint64_t		start_interval;
++	struct xfs_verify_media	me = {
++		/* just probe for support using an empty range */
++		.me_start_daddr	= 0,
++		.me_end_daddr	= 0,
++		.me_dev		= XFS_DEV_DATA,
++	};
 +
-+	/* Simulated disk errors are disabled. */
-+	if (interval < 0)
-+		return 0;
-+
-+	/* Figure out the disk read error interval. */
-+	if (interval == 0) {
-+		char		*p;
-+
-+		/* Pretend there's bad media every so often, in bytes. */
-+		p = getenv("XFS_SCRUB_DISK_ERROR_INTERVAL");
-+		if (p == NULL) {
-+			interval = -1;
-+			return 0;
-+		}
-+		interval = strtoull(p, NULL, 10);
-+		interval &= (rvp->miniosz - 1);
-+	}
-+	if (interval <= 0) {
-+		interval = -1;
-+		return 0;
-+	}
-+
-+	/*
-+	 * We simulate disk errors by pretending that there are media errors at
-+	 * predetermined intervals across the disk.  If a read verify request
-+	 * crosses one of those intervals we shorten it so that the next read
-+	 * will start on an interval threshold.  If the read verify request
-+	 * starts on an interval threshold, we send back EIO as if it had
-+	 * failed.
-+	 */
-+	if ((start % interval) == 0) {
-+		dbg_printf("dev %u: simulating disk error at %"PRIu64".\n",
-+				rvp->dev, start);
-+		return EIO;
-+	}
-+
-+	start_interval = start / interval;
-+	if (start_interval != (start + *length) / interval) {
-+		*length = ((start_interval + 1) * interval) - start;
-+		dbg_printf(
-+"dev %u: simulating short read at %"PRIu64" to length %"PRIu64".\n",
-+				rvp->dev, start, *length);
-+	}
-+
-+	return 0;
-+}
-+
-+/* Read-verify an extent of a disk device. */
-+static ssize_t
-+read_verify_one(
-+	struct read_verify_pool	*rvp,
-+	struct read_verify	*rv,
-+	ssize_t			len)
-+{
-+	if (debug) {
-+		int		ret;
-+
-+		ret = verify_simulate_read_error(rvp, rv->io_start, &len);
-+		if (ret) {
-+			errno = ret;
-+			return -1;
-+		}
-+
-+		/* Don't actually issue the IO */
-+		if (getenv("XFS_SCRUB_DISK_VERIFY_SKIP"))
-+			return len;
-+	}
-+
-+	return disk_read_verify(rvp->ctx->verify_disks[rvp->dev], rvp->readbuf,
-+			rv->io_start, len);
++	if (ioctl(ctx->mnt.fd, XFS_IOC_VERIFY_MEDIA, &me))
++		ctx->no_verify_ioctl = true;
 +}
 +
  /*
-  * Issue a read-verify IO in big batches.
-  */
-@@ -197,8 +279,7 @@ read_verify(
+  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
+  * Anything we've already built will be cleaned up by scrub_cleanup.
+@@ -379,6 +395,8 @@ _("Unable to find realtime device path."));
+ 		}
+ 	}
+ 
++	configure_xfs_verify(ctx);
++
+ 	/*
+ 	 * Everything's set up, which means any failures recorded after
+ 	 * this point are most probably corruption errors (as opposed to
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index adee67d922fc76..f724dfd693d7ab 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -225,12 +225,45 @@ verify_simulate_read_error(
+ 	return 0;
+ }
+ 
++/* Use the XFS media verification ioctl to do the media scan */
++static ssize_t
++ioctl_verify(
++	int			verify_fd,
++	enum xfs_device		dev,
++	uint64_t		start,
++	uint64_t		length,
++	bool			single_step)
++{
++	const uint64_t	orig_start_daddr = BTOBBT(start);
++	struct xfs_verify_media	me = {
++		.me_start_daddr	= orig_start_daddr,
++		.me_end_daddr	= BTOBB(start + length),
++		.me_dev		= dev,
++		.me_rest_us	= bg_mode > 2 ? bg_mode - 1 : 0,
++	};
++	int			ret;
++
++	if (single_step)
++		me.me_flags |= XFS_VERIFY_MEDIA_REPORT;
++
++	ret = ioctl(verify_fd, XFS_IOC_VERIFY_MEDIA, &me);
++	if (ret < 0)
++		return ret;
++	if (me.me_ioerror) {
++		errno = me.me_ioerror;
++		return -1;
++	}
++
++	return BBTOB(me.me_start_daddr - orig_start_daddr);
++}
++
+ /* Read-verify an extent of a disk device. */
+ static ssize_t
+ read_verify_one(
+ 	struct read_verify_pool	*rvp,
+ 	struct read_verify	*rv,
+-	ssize_t			len)
++	ssize_t			len,
++	bool			single_step)
+ {
+ 	if (debug) {
+ 		int		ret;
+@@ -246,8 +279,11 @@ read_verify_one(
+ 			return len;
+ 	}
+ 
+-	return disk_read_verify(rvp->ctx->verify_disks[rvp->dev], rvp->readbuf,
+-			rv->io_start, len);
++	if (rvp->ctx->no_verify_ioctl)
++		return disk_read_verify(rvp->ctx->verify_disks[rvp->dev],
++				rvp->readbuf, rv->io_start, len);
++	return ioctl_verify(rvp->ctx->mnt.fd, rvp->dev, rv->io_start, len,
++			single_step);
+ }
+ 
+ /*
+@@ -279,7 +315,7 @@ read_verify(
  		len = min(rv->io_length, io_max_size);
  		dbg_printf("diskverify %u %"PRIu64" %zu\n", rvp->dev,
  				rv->io_start, len);
--		sz = disk_read_verify(rvp->ctx->verify_disks[rvp->dev],
--				rvp->readbuf, rv->io_start, len);
-+		sz = read_verify_one(rvp, rv, len);
+-		sz = read_verify_one(rvp, rv, len);
++		sz = read_verify_one(rvp, rv, len, io_max_size <= rvp->miniosz);
  		if (sz == len && io_max_size < rvp->miniosz) {
  			/*
  			 * If the verify request was 100% successful and less
