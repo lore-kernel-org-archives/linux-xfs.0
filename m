@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0533351C1C
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:39:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33EC536CE03
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:39:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895156; cv=none; b=PAA/JdSIW+OpwVo0AFzpHwT86S2VvxjEEV+zEgSLesRQr/1sbWmECoWQUXYGlOQc0Tp7EThsRl6Klh+PTCJ954cjv3GeajrIiAfvtzFAFgikbx3HYT/YYCuz3BneitbM5qvQcubnOgmthFrAkopP9V4lmpxKjv83IO6Eet4VhMg=
+	t=1773895172; cv=none; b=hnvDSySp/j+G6JWAs9Lq/9W6pZ1fAhVmQKavGIVondzmjkvMg0/KNqZ9/2FwaYslo40M11mTl9TkG3zjHI0K5rGSiocGDjX5QnJ4JmY8hI54rmlVUOfbRrfG9yW3a2yHhd1vqMPaea8u9SJWaIRNPXPACVh0yVsdpQ7dRMHkyFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895156; c=relaxed/simple;
-	bh=gGC3RipP2/fRaV1kzztHHRTVemJOrv1TWYyA0pQ8UGk=;
+	s=arc-20240116; t=1773895172; c=relaxed/simple;
+	bh=CsvC3znehwZAOtmL95IJ5/kXL+y4zQCp1PM0KNohgAE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CN5sUGaOyaOx5W78v9b+zlg25SgRfg6RQb0PRQF6cFlkQRx2WyQ67emM3tpN+ylTcQ2dD3OdM6Usb8PinpItKYsyfZ3EHHev9EbzsZP5MPUM0XezfAWlOqmQwlXgea4PKrlApGRbje/CEvJiHLfx0nTyaYmoO/3ZEPRLuLg6aP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OJe50rxH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=hiS8LaUZFGl1hJucR50yRYICccM2qLXYjKrsAZrz5aH5ek7XDuGVjkyRzTL5EM1NAQ7ykdY+mEd8X0hCcCBQ4t6Whrpxrsp4wlsegSodL2UlKyYncZiUOfGzbi/SxwGi8uYijc3iG9pYf7XaoGLd44OfSSIejH7LZ74OKDgZz3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLnGlZMk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OJe50rxH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 403C2C19425;
-	Thu, 19 Mar 2026 04:39:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLnGlZMk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA0AC19425;
+	Thu, 19 Mar 2026 04:39:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895156;
-	bh=gGC3RipP2/fRaV1kzztHHRTVemJOrv1TWYyA0pQ8UGk=;
+	s=k20201202; t=1773895172;
+	bh=CsvC3znehwZAOtmL95IJ5/kXL+y4zQCp1PM0KNohgAE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OJe50rxHWbSFT/wjVgW+rEbTuQpIytk6cz1cc6StEKEg1z87xiWNZl8oNV8EUZyUI
-	 UnooYbx7vz9hekFmnonqCoYu2wYfMcShygWjm3EG3KXw2K9Rl7vqbEsdjp7FfBYoAD
-	 O37fEESqiIS33B4G6KSk2My7f5NTcF+foSEAj7WLTPOsOQ0mnI/9NDHBWNNgXcQSDp
-	 iRgCmuXVKeQsTE4l1l4iYpDNmwjkkKP9q3318WNaZb3sC+psHy6iVSzou4UstJL1/8
-	 qU+uxIXB9DQ/rJzLdtcG3W0sTsRRB97YdmvmyRMFs3vbqra857tqWZSKIJUvTQl6Lr
-	 GK42tLNLSOneg==
-Date: Wed, 18 Mar 2026 21:39:15 -0700
-Subject: [PATCH 02/26] libfrog: create healthmon event log library functions
+	b=WLnGlZMkPZl//t7Y+03uG6HZT+cONHYNv7xC+kzMKZ+03HwTwxqcUKRpNhnYR5Teg
+	 v4PBwhZgrWxxnvzXtXfWcpBYuxRrfP9kO77TqiPyJE9rCXONvNuNADr/XoU6bNbUeb
+	 VaAdSf/bUgkD1H1smkUX2khlwaxovnqm6dZtkS2KflW3ZhNIC/Pg36+FWEAV4mt91X
+	 30Tr7Xnd6niAtT8cVrIjbnWQKrGapGcCUBO1Jlxv2wojxwDXXZsZ6Oa59JGH6XukFM
+	 h8s5lM1buufxSLoHso1QM2ZUtMJROlFQnf5eHWwW4jGkfxHlGg/otwuI2FBNftMIp7
+	 TFLLMhhEk52yw==
+Date: Wed, 18 Mar 2026 21:39:31 -0700
+Subject: [PATCH 03/26] libfrog: add support code for starting systemd services
+ programmatically
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506181.3680139.1688788666536997578.stgit@frogsfrogsfrogs>
+Message-ID: <177389506199.3680139.5929771162119754287.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,563 +46,322 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some helper functions to log health monitoring events so that xfs_io
-and xfs_healer can share logging code.
+Add some simple routines for computing the name of systemd service
+instances and starting systemd services.  These will be used by the
+xfs_healer_start service to start per-filesystem xfs_healer service
+instances.
+
+Note that we run systemd helper programs as subprocesses for a couple of
+reasons.  First, the path-escaping functionality is not a part of any
+library-accessible API, which means it can only be accessed via
+systemd-escape(1).  Second, although the service startup functionality
+can be reached via dbus, doing so would introduce a new library
+dependency.  Systemd is also undergoing a dbus -> varlink RPC transition
+so we avoid that mess by calling the cli systemctl(1) program.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/flagmap.h     |   20 +++
- libfrog/healthevent.h |   43 ++++++
- libfrog/Makefile      |    4 +
- libfrog/flagmap.c     |   62 ++++++++
- libfrog/healthevent.c |  360 +++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 489 insertions(+)
- create mode 100644 libfrog/flagmap.h
- create mode 100644 libfrog/healthevent.h
- create mode 100644 libfrog/flagmap.c
- create mode 100644 libfrog/healthevent.c
+ libfrog/systemd.h     |   20 ++++++
+ configure.ac          |    1 
+ include/builddefs.in  |    1 
+ libfrog/Makefile      |    6 ++
+ libfrog/systemd.c     |  177 +++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   19 +++++
+ 6 files changed, 224 insertions(+)
+ create mode 100644 libfrog/systemd.h
+ create mode 100644 libfrog/systemd.c
 
 
-diff --git a/libfrog/flagmap.h b/libfrog/flagmap.h
+diff --git a/libfrog/systemd.h b/libfrog/systemd.h
 new file mode 100644
-index 00000000000000..8031d75a7c02a8
+index 00000000000000..4f414bc3c1e9c3
 --- /dev/null
-+++ b/libfrog/flagmap.h
++++ b/libfrog/systemd.h
 @@ -0,0 +1,20 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
++/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
-+ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
++ * Copyright (c) 2026 Oracle.  All rights reserved.
++ * All Rights Reserved.
 + */
-+#ifndef LIBFROG_FLAGMAP_H_
-+#define LIBFROG_FLAGMAP_H_
++#ifndef __LIBFROG_SYSTEMD_H__
++#define __LIBFROG_SYSTEMD_H__
 +
-+struct flag_map {
-+	unsigned long long	flag;
-+	const char		*string;
++int systemd_path_instance_unit_name(const char *unit_template,
++		const char *path, char *unitname, size_t unitnamelen);
++
++enum systemd_unit_manage {
++	UM_STOP,
++	UM_START,
++	UM_RESTART,
 +};
 +
-+void mask_to_string(const struct flag_map *map, unsigned long long mask,
-+		const char *delimiter, char *buf, size_t bufsize);
++int systemd_manage_unit(enum systemd_unit_manage how, const char *unitname);
 +
-+const char *value_to_string(const struct flag_map *map,
-+		unsigned long long value);
-+
-+#endif /* LIBFROG_FLAGMAP_H_ */
-diff --git a/libfrog/healthevent.h b/libfrog/healthevent.h
-new file mode 100644
-index 00000000000000..6de41bc797100c
---- /dev/null
-+++ b/libfrog/healthevent.h
-@@ -0,0 +1,43 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef LIBFROG_HEALTHEVENT_H_
-+#define LIBFROG_HEALTHEVENT_H_
-+
-+struct hme_prefix {
-+	/*
-+	 * Format a complete file path into this buffer to prevent the logging
-+	 * code from printing the mountpoint and a file handle.  Only works for
-+	 * file-related events.
-+	 */
-+	char		path[MAXPATHLEN];
-+
-+	/* Set this to the mountpoint */
-+	const char	*mountpoint;
-+};
-+
-+static inline bool hme_prefix_has_path(const struct hme_prefix *pfx)
-+{
-+	return pfx->path[0] != 0;
-+}
-+
-+static inline void hme_prefix_clear_path(struct hme_prefix *pfx)
-+{
-+	pfx->path[0] = 0;
-+}
-+
-+static inline void
-+hme_prefix_init(
-+	struct hme_prefix	*pfx,
-+	const char		*mountpoint)
-+{
-+	pfx->mountpoint = mountpoint;
-+	hme_prefix_clear_path(pfx);
-+}
-+
-+void hme_report_event(const struct hme_prefix *pfx,
-+		const struct xfs_health_monitor_event *hme);
-+
-+#endif /* LIBFROG_HEALTHEVENT_H_ */
++#endif /* __LIBFROG_SYSTEMD_H__ */
+diff --git a/configure.ac b/configure.ac
+index 8092b8656ef94b..a9febabc71cfc7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -182,6 +182,7 @@ AC_CONFIG_UDEV_RULE_DIR
+ AC_HAVE_BLKID_TOPO
+ AC_HAVE_TRIVIAL_AUTO_VAR_INIT
+ AC_STRERROR_R_RETURNS_STRING
++AC_HAVE_CLOSE_RANGE
+ 
+ if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
+         AC_PACKAGE_CHECK_UBSAN
+diff --git a/include/builddefs.in b/include/builddefs.in
+index b38a099b7d525a..4a2cb757c0bdb3 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -118,6 +118,7 @@ HAVE_UDEV = @have_udev@
+ UDEV_RULE_DIR = @udev_rule_dir@
+ HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
+ STRERROR_R_RETURNS_STRING = @strerror_r_returns_string@
++HAVE_CLOSE_RANGE = @have_close_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
 diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 927bd8d0957fab..bccd9289e5dd79 100644
+index bccd9289e5dd79..89a0332ae85372 100644
 --- a/libfrog/Makefile
 +++ b/libfrog/Makefile
-@@ -19,11 +19,13 @@ bulkstat.c \
- convert.c \
- crc32.c \
- file_exchange.c \
-+flagmap.c \
- fsgeom.c \
- fsproperties.c \
- fsprops.c \
- getparents.c \
- histogram.c \
-+healthevent.c \
- file_attr.c \
- list_sort.c \
- linux.c \
-@@ -51,11 +53,13 @@ dahashselftest.h \
- div64.h \
- fakelibattr.h \
- file_exchange.h \
-+flagmap.h \
- fsgeom.h \
- fsproperties.h \
- fsprops.h \
- getparents.h \
- handle_priv.h \
-+healthevent.h \
- histogram.h \
- file_attr.h \
- logging.h \
-diff --git a/libfrog/flagmap.c b/libfrog/flagmap.c
+@@ -36,6 +36,7 @@ ptvar.c \
+ radix-tree.c \
+ randbytes.c \
+ scrub.c \
++systemd.c \
+ util.c \
+ workqueue.c \
+ zones.c
+@@ -70,6 +71,7 @@ radix-tree.h \
+ randbytes.h \
+ scrub.h \
+ statx.h \
++systemd.h \
+ workqueue.h \
+ zones.h
+ 
+@@ -90,6 +92,10 @@ ifeq ($(HAVE_GETRANDOM_NONBLOCK),yes)
+ LCFLAGS += -DHAVE_GETRANDOM_NONBLOCK
+ endif
+ 
++ifeq ($(HAVE_CLOSE_RANGE),yes)
++CFLAGS += -DHAVE_CLOSE_RANGE
++endif
++
+ default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
+ 
+ crc32table.h: gen_crc32table.c crc32defs.h
+diff --git a/libfrog/systemd.c b/libfrog/systemd.c
 new file mode 100644
-index 00000000000000..631c4bbc8f1dc0
+index 00000000000000..2d2d2e9be72e6a
 --- /dev/null
-+++ b/libfrog/flagmap.c
-@@ -0,0 +1,62 @@
++++ b/libfrog/systemd.c
+@@ -0,0 +1,177 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (C) 2026 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
 +#include "xfs.h"
++#include <unistd.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/wait.h>
 +
-+#include "platform_defs.h"
-+#include "libfrog/flagmap.h"
++#include "libfrog/systemd.h"
++
++/* Close all fds except for the three standard ones. */
++static void
++close_fds(void)
++{
++	int	max_fd = sysconf(_SC_OPEN_MAX);
++	int	fd;
++
++	if (max_fd < 1)
++		max_fd = 1024;
++
++#ifdef HAVE_CLOSE_RANGE
++	if (close_range(STDERR_FILENO + 1, max_fd, 0) == 0)
++		return;
++#endif
++
++	for (fd = STDERR_FILENO + 1; fd < max_fd; fd++)
++		close(fd);
++}
 +
 +/*
-+ * Given a mapping of bits to strings and a bitmask, format the bitmask as a
-+ * list of strings and hexadecimal number representing bits not mapped to any
-+ * string.  The output will be truncated if buf is not large enough.
++ * Compute the systemd instance unit name for a given path.
++ *
++ * The escaping logic is implemented directly in systemctl so there's no
++ * library or dbus service that we can call.
 + */
-+void
-+mask_to_string(
-+	const struct flag_map	*map,
-+	unsigned long long	mask,
-+	const char		*delimiter,
-+	char			*buf,
-+	size_t			bufsize)
++int
++systemd_path_instance_unit_name(
++	const char		*unit_template,
++	const char		*path,
++	char			*unitname,
++	size_t			unitnamelen)
 +{
-+	const char		*tag = "";
-+	unsigned long long	seen = 0;
-+	int			w;
++	size_t			i;
++	ssize_t			bytes;
++	pid_t			child_pid;
++	int			pipe_fds[2];
++	int			child_status;
++	int			ret;
 +
-+	for (; map->string; map++) {
-+		seen |= map->flag;
++	ret = pipe(pipe_fds);
++	if (ret)
++		return -1;
 +
-+		if (mask & map->flag) {
-+			w = snprintf(buf, bufsize, "%s%s", tag, _(map->string));
-+			if (w > bufsize)
-+				return;
++	child_pid = fork();
++	if (child_pid < 0)
++		return -1;
 +
-+			buf += w;
-+			bufsize -= w;
++	if (!child_pid) {
++		/* child process */
++		char		*argv[] = {
++			"systemd-escape",
++			"--template",
++			(char *)unit_template,
++			"--path",
++			(char *)path,
++			NULL,
++		};
 +
-+			tag = delimiter;
++		ret = dup2(pipe_fds[1], STDOUT_FILENO);
++		if (ret < 0) {
++			perror(path);
++			goto fail;
++		}
++
++		close_fds();
++
++		ret = execvp("systemd-escape", argv);
++		if (ret)
++			perror(path);
++
++fail:
++		exit(EXIT_FAILURE);
++	}
++
++	/*
++	 * Close our connection to stdin so that the read won't hang if the
++	 * child exits without writing anything to stdout.
++	 */
++	close(pipe_fds[1]);
++	bytes = read(pipe_fds[0], unitname, unitnamelen - 1);
++	close(pipe_fds[0]);
++
++	waitpid(child_pid, &child_status, 0);
++	if (!WIFEXITED(child_status) || WEXITSTATUS(child_status) != 0) {
++		errno = 0;
++		return -1;
++	}
++
++	/* Terminate string at first newline or end of buffer. */
++	for (i = 0; i < bytes; i++) {
++		if (unitname[i] == '\n') {
++			unitname[i] = 0;
++			break;
 +		}
 +	}
++	if (i == bytes)
++		unitname[unitnamelen - 1] = 0;
 +
-+	if (mask & ~seen)
-+		snprintf(buf, bufsize, "%s0x%llx", tag, mask & ~seen);
++	return 0;
 +}
 +
-+/*
-+ * Given a mapping of values to strings and a value, return the matching string
-+ * or confusion.
-+ */
-+const char *
-+value_to_string(
-+	const struct flag_map	*map,
-+	unsigned long long	value)
++static const char *systemd_unit_manage_string(enum systemd_unit_manage how)
 +{
-+	for (; map->string; map++) {
-+		if (value == map->flag)
-+			return _(map->string);
++	switch (how) {
++	case UM_STOP:
++		return "stop";
++	case UM_START:
++		return "start";
++	case UM_RESTART:
++		return "restart";
 +	}
 +
-+	return _("unknown value");
++	/* shut up gcc */
++	return NULL;
 +}
-diff --git a/libfrog/healthevent.c b/libfrog/healthevent.c
-new file mode 100644
-index 00000000000000..8520cb3218fb03
---- /dev/null
-+++ b/libfrog/healthevent.c
-@@ -0,0 +1,360 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025-2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+
-+#include "platform_defs.h"
-+#include "libfrog/healthevent.h"
-+#include "libfrog/flagmap.h"
 +
 +/*
-+ * The healthmon log string format is as follows:
++ * Start/stop/restart a systemd unit and let it run in the background.
 + *
-+ * WHICH OBJECT: STATUS
-+ *
-+ * /mnt: 32 events lost
-+ * /mnt agno 0x5 bnobt, rmapbt: sick
-+ * /mnt rgno 0x5 bitmap: sick
-+ * /mnt ino 13 gen 0x3 bmbtd: sick
-+ * /mnt/a bmbtd: sick
-+ * /mnt ino 13 gen 0x3 pos 4096 len 4096: directio_write failed
-+ * /mnt/a pos 4096 len 4096: directio_read failed
-+ * /mnt datadev daddr 0x13 bbcount 0x5: media error
-+ * /mnt: filesystem shut down due to shenanigans, badness
++ * systemctl start wraps a lot of logic around starting a unit, so it's less
++ * work for xfsprogs to invoke systemctl instead of calling through dbus.
 + */
-+
-+static const struct flag_map device_domains[] = {
-+	{ XFS_HEALTH_MONITOR_DOMAIN_DATADEV,	N_("datadev") },
-+	{ XFS_HEALTH_MONITOR_DOMAIN_RTDEV,	N_("rtdev") },
-+	{ XFS_HEALTH_MONITOR_DOMAIN_LOGDEV,	N_("logdev") },
-+	{0, NULL},
-+};
-+
-+static inline const char *
-+device_domain_string(
-+	uint32_t		domain)
++int
++systemd_manage_unit(
++	enum systemd_unit_manage	how,
++	const char			*unitname)
 +{
-+	return value_to_string(device_domains, domain);
-+}
++	pid_t				child_pid;
++	int				child_status;
++	int				ret;
 +
-+static const struct flag_map fileio_types[] = {
-+	{ XFS_HEALTH_MONITOR_TYPE_BUFREAD,	N_("buffered_read") },
-+	{ XFS_HEALTH_MONITOR_TYPE_BUFWRITE,	N_("buffered_write") },
-+	{ XFS_HEALTH_MONITOR_TYPE_DIOREAD,	N_("directio_read") },
-+	{ XFS_HEALTH_MONITOR_TYPE_DIOWRITE,	N_("directio_write") },
-+	{ XFS_HEALTH_MONITOR_TYPE_DATALOST,	N_("media") },
-+	{0, NULL},
-+};
++	child_pid = fork();
++	if (child_pid < 0)
++		return -1;
 +
-+static inline const char *
-+fileio_type_string(
-+	uint32_t		type)
-+{
-+	return value_to_string(fileio_types, type);
-+}
++	if (!child_pid) {
++		/* child starts the process */
++		char		*argv[] = {
++			"systemctl",
++			(char *)systemd_unit_manage_string(how),
++			"--no-block",
++			(char *)unitname,
++			NULL,
++		};
 +
-+static const struct flag_map health_types[] = {
-+	{ XFS_HEALTH_MONITOR_TYPE_SICK,		N_("sick") },
-+	{ XFS_HEALTH_MONITOR_TYPE_CORRUPT,	N_("corrupt") },
-+	{ XFS_HEALTH_MONITOR_TYPE_HEALTHY,	N_("healthy") },
-+	{0, NULL},
-+};
++		close_fds();
 +
-+static inline const char *
-+health_type_string(
-+	uint32_t		type)
-+{
-+	return value_to_string(health_types, type);
-+}
++		ret = execvp("systemctl", argv);
++		if (ret)
++			perror("systemctl");
 +
-+/* Report that the kernel lost events. */
-+static void
-+report_lost(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	printf("%s: %llu %s\n", pfx->mountpoint,
-+			(unsigned long long)hme->e.lost.count,
-+			_("events lost"));
-+	fflush(stdout);
-+}
-+
-+/* Report that the monitor is running. */
-+static void
-+report_running(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	printf("%s: %s\n", pfx->mountpoint, _("monitoring started"));
-+	fflush(stdout);
-+}
-+
-+/* Report that the filesystem was unmounted. */
-+static void
-+report_unmounted(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	printf("%s: %s\n", pfx->mountpoint, _("filesystem unmounted"));
-+	fflush(stdout);
-+}
-+
-+static const struct flag_map shutdown_reasons[] = {
-+	{ XFS_HEALTH_SHUTDOWN_META_IO_ERROR,	N_("metadata I/O error") },
-+	{ XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR,	N_("log I/O error") },
-+	{ XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT,	N_("forced unmount") },
-+	{ XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE,	N_("in-memory state corruption") },
-+	{ XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK,	N_("ondisk metadata corruption") },
-+	{ XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED,	N_("device removed") },
-+	{0, NULL},
-+};
-+
-+/* Report an abortive shutdown of the filesystem. */
-+static void
-+report_shutdown(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	char					buf[512];
-+
-+	mask_to_string(shutdown_reasons, hme->e.shutdown.reasons, ", ", buf,
-+			sizeof(buf));
-+
-+	printf("%s: %s %s\n", pfx->mountpoint,
-+			_("filesystem shut down due to"), buf);
-+	fflush(stdout);
-+}
-+
-+static const struct flag_map inode_structs[] = {
-+	{ XFS_BS_SICK_INODE,	N_("core") },
-+	{ XFS_BS_SICK_BMBTD,	N_("datafork") },
-+	{ XFS_BS_SICK_BMBTA,	N_("attrfork") },
-+	{ XFS_BS_SICK_BMBTC,	N_("cowfork") },
-+	{ XFS_BS_SICK_DIR,	N_("directory") },
-+	{ XFS_BS_SICK_XATTR,	N_("xattr") },
-+	{ XFS_BS_SICK_SYMLINK,	N_("symlink") },
-+	{ XFS_BS_SICK_PARENT,	N_("parent") },
-+	{ XFS_BS_SICK_DIRTREE,	N_("dirtree") },
-+	{0, NULL},
-+};
-+
-+/* Report inode metadata corruption */
-+static void
-+report_inode(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	char					buf[512];
-+
-+	mask_to_string(inode_structs, hme->e.inode.mask, ", ", buf,
-+			sizeof(buf));
-+
-+	if (hme_prefix_has_path(pfx))
-+		printf("%s %s: %s\n",
-+				pfx->path,
-+				buf,
-+				health_type_string(hme->type));
-+	else
-+		printf("%s %s %llu %s 0x%x %s: %s\n",
-+				pfx->mountpoint,
-+				_("ino"),
-+				(unsigned long long)hme->e.inode.ino,
-+				_("gen"),
-+				hme->e.inode.gen,
-+				buf,
-+				health_type_string(hme->type));
-+	fflush(stdout);
-+}
-+
-+static const struct flag_map ag_structs[] = {
-+	{ XFS_AG_GEOM_SICK_SB,		N_("super") },
-+	{ XFS_AG_GEOM_SICK_AGF,		N_("agf") },
-+	{ XFS_AG_GEOM_SICK_AGFL,	N_("agfl") },
-+	{ XFS_AG_GEOM_SICK_AGI,		N_("agi") },
-+	{ XFS_AG_GEOM_SICK_BNOBT,	N_("bnobt") },
-+	{ XFS_AG_GEOM_SICK_CNTBT,	N_("cntbt") },
-+	{ XFS_AG_GEOM_SICK_INOBT,	N_("inobt") },
-+	{ XFS_AG_GEOM_SICK_FINOBT,	N_("finobt") },
-+	{ XFS_AG_GEOM_SICK_RMAPBT,	N_("rmapbt") },
-+	{ XFS_AG_GEOM_SICK_REFCNTBT,	N_("refcountbt") },
-+	{ XFS_AG_GEOM_SICK_INODES,	N_("inodes") },
-+	{0, NULL},
-+};
-+
-+/* Report AG metadata corruption */
-+static void
-+report_ag(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	char					buf[512];
-+
-+	mask_to_string(ag_structs, hme->e.group.mask, ", ", buf,
-+			sizeof(buf));
-+
-+	printf("%s %s 0x%x %s: %s\n",
-+			pfx->mountpoint,
-+			_("agno"),
-+			hme->e.group.gno,
-+			buf,
-+			health_type_string(hme->type));
-+	fflush(stdout);
-+}
-+
-+static const struct flag_map rtgroup_structs[] = {
-+	{ XFS_RTGROUP_GEOM_SICK_SUPER,		N_("super") },
-+	{ XFS_RTGROUP_GEOM_SICK_BITMAP,		N_("bitmap") },
-+	{ XFS_RTGROUP_GEOM_SICK_SUMMARY,	N_("summary") },
-+	{ XFS_RTGROUP_GEOM_SICK_RMAPBT,		N_("rmapbt") },
-+	{ XFS_RTGROUP_GEOM_SICK_REFCNTBT,	N_("refcountbt") },
-+	{0, NULL},
-+};
-+
-+/* Report rtgroup metadata corruption */
-+static void
-+report_rtgroup(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	char					buf[512];
-+
-+	mask_to_string(rtgroup_structs, hme->e.group.mask, ", ", buf,
-+			sizeof(buf));
-+
-+	printf("%s %s 0x%x %s: %s\n",
-+			pfx->mountpoint,
-+			_("rgno"),
-+			hme->e.group.gno,
-+			buf, health_type_string(hme->type));
-+	fflush(stdout);
-+}
-+
-+static const struct flag_map fs_structs[] = {
-+	{ XFS_FSOP_GEOM_SICK_COUNTERS,		N_("fscounters") },
-+	{ XFS_FSOP_GEOM_SICK_UQUOTA,		N_("usrquota") },
-+	{ XFS_FSOP_GEOM_SICK_GQUOTA,		N_("grpquota") },
-+	{ XFS_FSOP_GEOM_SICK_PQUOTA,		N_("prjquota") },
-+	{ XFS_FSOP_GEOM_SICK_RT_BITMAP,		N_("bitmap") },
-+	{ XFS_FSOP_GEOM_SICK_RT_SUMMARY,	N_("summary") },
-+	{ XFS_FSOP_GEOM_SICK_QUOTACHECK,	N_("quotacheck") },
-+	{ XFS_FSOP_GEOM_SICK_NLINKS,		N_("nlinks") },
-+	{ XFS_FSOP_GEOM_SICK_METADIR,		N_("metadir") },
-+	{ XFS_FSOP_GEOM_SICK_METAPATH,		N_("metapath") },
-+	{0, NULL},
-+};
-+
-+/* Report fs-wide metadata corruption */
-+static void
-+report_fs(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	char					buf[512];
-+
-+	mask_to_string(fs_structs, hme->e.fs.mask, ", ", buf, sizeof(buf));
-+
-+	printf("%s %s: %s\n",
-+			pfx->mountpoint,
-+			buf,
-+			health_type_string(hme->type));
-+	fflush(stdout);
-+}
-+
-+/* Report device media corruption */
-+static void
-+report_device_error(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	printf("%s %s %s 0x%llx %s 0x%llx: %s\n", pfx->mountpoint,
-+			device_domain_string(hme->domain),
-+			_("daddr"),
-+			(unsigned long long)hme->e.media.daddr,
-+			_("bbcount"),
-+			(unsigned long long)hme->e.media.bbcount,
-+			_("media error"));
-+	fflush(stdout);
-+}
-+
-+/* Report file range errors */
-+static void
-+report_file_range(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	if (hme_prefix_has_path(pfx))
-+		printf("%s ", pfx->path);
-+	else
-+		printf("%s %s %llu %s 0x%x ",
-+				pfx->mountpoint,
-+				_("ino"),
-+				(unsigned long long)hme->e.filerange.ino,
-+				_("gen"),
-+				hme->e.filerange.gen);
-+	if (hme->type != XFS_HEALTH_MONITOR_TYPE_DATALOST &&
-+	    hme->e.filerange.error)
-+		printf("%s %llu %s %llu: %s: %s\n",
-+				_("pos"),
-+				(unsigned long long)hme->e.filerange.pos,
-+				_("len"),
-+				(unsigned long long)hme->e.filerange.len,
-+				fileio_type_string(hme->type),
-+				strerror(hme->e.filerange.error));
-+	else
-+		printf("%s %llu %s %llu: %s %s\n",
-+				_("pos"),
-+				(unsigned long long)hme->e.filerange.pos,
-+				_("len"),
-+				(unsigned long long)hme->e.filerange.len,
-+				fileio_type_string(hme->type),
-+				_("failed"));
-+	fflush(stdout);
-+}
-+
-+/* Log a health monitoring event to stdout. */
-+void
-+hme_report_event(
-+	const struct hme_prefix			*pfx,
-+	const struct xfs_health_monitor_event	*hme)
-+{
-+	switch (hme->domain) {
-+	case XFS_HEALTH_MONITOR_DOMAIN_MOUNT:
-+		switch (hme->type) {
-+		case XFS_HEALTH_MONITOR_TYPE_LOST:
-+			report_lost(pfx, hme);
-+			return;
-+		case XFS_HEALTH_MONITOR_TYPE_RUNNING:
-+			report_running(pfx, hme);
-+			return;
-+		case XFS_HEALTH_MONITOR_TYPE_UNMOUNT:
-+			report_unmounted(pfx, hme);
-+			return;
-+		case XFS_HEALTH_MONITOR_TYPE_SHUTDOWN:
-+			report_shutdown(pfx, hme);
-+			return;
-+		}
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
-+		report_inode(pfx, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_AG:
-+		report_ag(pfx, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_RTGROUP:
-+		report_rtgroup(pfx, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_FS:
-+		report_fs(pfx, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_DATADEV:
-+	case XFS_HEALTH_MONITOR_DOMAIN_RTDEV:
-+	case XFS_HEALTH_MONITOR_DOMAIN_LOGDEV:
-+		report_device_error(pfx, hme);
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_FILERANGE:
-+		report_file_range(pfx, hme);
-+		break;
++		exit(EXIT_FAILURE);
 +	}
++
++	/* parent waits for process */
++	waitpid(child_pid, &child_status, 0);
++
++	/* systemctl (stop/start/restart) --no-block should return quickly */
++	if (WIFEXITED(child_status) && WEXITSTATUS(child_status) == 0)
++		return 0;
++
++	errno = ENOMEM;
++	return -1;
 +}
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index c5538c30d2518a..b3d87229d3367a 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -347,3 +347,22 @@ puts(strerror_r(0, buf, sizeof(buf)));
+     CFLAGS="$OLD_CFLAGS"
+     AC_SUBST(strerror_r_returns_string)
+   ])
++
++#
++# Check if close_range exists
++#
++AC_DEFUN([AC_HAVE_CLOSE_RANGE],
++  [AC_MSG_CHECKING([for close_range])
++    AC_LINK_IFELSE(
++    [AC_LANG_PROGRAM([[
++#define _GNU_SOURCE
++#include <unistd.h>
++#include <linux/close_range.h>
++  ]], [[
++close_range(0, 0, 0);
++  ]])
++    ], have_close_range=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_close_range)
++  ])
 
