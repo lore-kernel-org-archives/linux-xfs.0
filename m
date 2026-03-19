@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66919318EC4
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:44:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCB1318EC4
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:44:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895454; cv=none; b=ib5uWMU/wKPHjRORGK9NXvYGWqWQKq6VnvEbp9DgOyI8z/Kw6a2g+wcNTXjSQ0FRWCe2+mWl0L0f9c/jt238MsgeHaNyGYRZBnEAPyp13NOUl9pZAcPxdgX4Olf6VuXEgjjpG1K71KwQ66gaBDVbhX76oxk42OAL8jkZRJcec8s=
+	t=1773895469; cv=none; b=rnREAY8Wq/VO48fg/kn9rIuFn1TKJ+0yukWukqGcqSlV+FAuo/7v5YRksS4/YtJ8IkJ3Hsb+vrsutHYczah03qAFV6ivH7AMvtUAoyal29ru730+0Y8JayHp5Hf22mbxcCbg6HQMo2CuQ4RUhbKbjBxW2QH8EtYSNkvmC8vQIiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895454; c=relaxed/simple;
-	bh=gNLcxXvZ1oAd5HrriM/vWAHjDo/rFnJ4H4JoTJmEKvM=;
+	s=arc-20240116; t=1773895469; c=relaxed/simple;
+	bh=hykg1VrfhHJbpomuJPUuVJJwD6qpsE97ieTKNiQ+OOY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qt5fFUOpkNkJngFRcCEpxJKtfdsOcVwUSytvRBbl1M+x64JLx3cvRYoJyZJ7b3Ea1GLXTOaR1DmSP1MQUKNX01r1KcD7RtqrhA3dWWr7+xiAuocxnocw/szUTY8nii5WI9X3QxGWEZd16qs7jopE7dHBQTNSnOj1q+uH0iOuCQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CuqcVtd5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Zoy1j5I8oPb3AN9MF/zyqfllyB9E6eWy2AQh5oGWZscdj90gXVP4LTgzg70Aj3ykHHMDoN6awU27SkRQ427lHBlmADDG1n4wgMzIJcqAQEaJBPnfUbJJjTqnoRdsk5Lpmwiw2CselF72DeQPjCEqOuHHdS5+qGlmyi+xYMxU4aY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YEJlWSZX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CuqcVtd5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C71AC19425;
-	Thu, 19 Mar 2026 04:44:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YEJlWSZX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6A5EC19425;
+	Thu, 19 Mar 2026 04:44:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895454;
-	bh=gNLcxXvZ1oAd5HrriM/vWAHjDo/rFnJ4H4JoTJmEKvM=;
+	s=k20201202; t=1773895469;
+	bh=hykg1VrfhHJbpomuJPUuVJJwD6qpsE97ieTKNiQ+OOY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CuqcVtd5GqW/IsS09dFMGbydgcbFlFkDVLkP2Tyqjqyz7pzT5HAefsUZrxz2pwKLp
-	 hf8SpS6ELyKu4+Hsr05TPSsAriAwK0+V5YXHCUfaRRETFWHr4IES9VtWPOwQAjXeLQ
-	 ruqIHfpLkjXTT4CKDotkyh3dsK+VMgAA507F5KIG1Gy1NcyUcMejyWum7M5gb11YtD
-	 5joVFI2Vb9LHWCFlxIXiOOs95/MF0zqiNunRx2qzqHZahqpVxotSrApVKmUP1nIR8N
-	 3K/PNJE+j1HluWz9TvrXRmyCBS1n9WGMxRkxjsqmhTswFc9jncJtz9lz/9JsCzx/l6
-	 PHZQKerBIMXhQ==
-Date: Wed, 18 Mar 2026 21:44:13 -0700
-Subject: [PATCH 21/26] xfs_healer: add a manual page
+	b=YEJlWSZXwcNMRT5ufVX0piNHwcb5J0aczNI2TGLdiNY6keSeZpbcEeE3n2Dtr06l8
+	 yhu7xpf3a/mlJ36Kmt0iLtLgHLtqGQfuTBZtC47D5pEZrknw0kWcsWhw5RyGV+3WCX
+	 vfuHsEkp1bcg0c+PfdwVWxvUYknwh3gTsUJZEieBixEl97il0voIqrGpDJwpq1C8g8
+	 jqJJtZO4Kw9MTq8nHngrnTxxHcFLGBy2VLbHA1psg+p3NGr7O26g4ZVGX6GVx+BiFW
+	 Cw92JU4BlN9l6QgGo0PTkWIyK188MaSszbwXm/GfMerc/yUdtHsaoukGTBKT55jbfM
+	 82EGcCxm0KxNA==
+Date: Wed, 18 Mar 2026 21:44:29 -0700
+Subject: [PATCH 22/26] xfs_scrub: print systemd service names
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506532.3680139.5151461002772705668.stgit@frogsfrogsfrogs>
+Message-ID: <177389506550.3680139.15247548785964582317.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,228 +45,146 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a new section 8 manpage for this service daemon so others can read
-about what this program is supposed to do.
+Add a hidden switch to xfs_scrub to emit systemd service names for XFS
+services targetting filesystems paths instead of opencoding the
+computation in things like fstests.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/Makefile           |   40 +++++++++++++---
- man/man8/xfs_healer.8       |  109 +++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_healer_start.8 |   37 +++++++++++++++
- 3 files changed, 180 insertions(+), 6 deletions(-)
- create mode 100644 man/man8/xfs_healer.8
- create mode 100644 man/man8/xfs_healer_start.8
+ scrub/xfs_scrub.h |    3 +++
+ scrub/Makefile    |    7 +++++--
+ scrub/xfs_scrub.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 54 insertions(+), 6 deletions(-)
 
 
-diff --git a/man/man8/Makefile b/man/man8/Makefile
-index 5be76ab727a1fe..05710f85ae89ad 100644
---- a/man/man8/Makefile
-+++ b/man/man8/Makefile
-@@ -7,13 +7,41 @@ include $(TOPDIR)/include/builddefs
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 6ee359f4cebd47..041c0fadaa93c0 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -108,6 +108,9 @@ struct scrub_ctx {
+ 	 * this much space per volume.
+ 	 */
+ 	double			fstrim_block_pct;
++
++	/* CLI options, must be int */
++	int			print_svcname;
+ };
  
- MAN_SECTION	= 8
+ /*
+diff --git a/scrub/Makefile b/scrub/Makefile
+index aee49bfce100e2..4aa0a7d836c342 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -8,9 +8,12 @@ include $(builddefs)
  
--ifneq ("$(ENABLE_SCRUB)","yes")
--  MAN_PAGES = $(filter-out xfs_scrub%,$(shell echo *.$(MAN_SECTION)))
--else
--  MAN_PAGES = $(shell echo *.$(MAN_SECTION))
--  MAN_PAGES += xfs_scrub_all.8
-+MAN_PAGES = \
-+	fsck.xfs.8 \
-+	mkfs.xfs.8 \
-+	xfs_admin.8 \
-+	xfs_bmap.8 \
-+	xfs_copy.8 \
-+	xfs_db.8 \
-+	xfs_estimate.8 \
-+	xfs_freeze.8 \
-+	xfs_fsr.8 \
-+	xfs_growfs.8 \
-+	xfs_info.8 \
-+	xfs_io.8 \
-+	xfs_logprint.8 \
-+	xfs_mdrestore.8 \
-+	xfs_metadump.8 \
-+	xfs_mkfile.8 \
-+	xfs_ncheck.8 \
-+	xfs_property.8 \
-+	xfs_protofile.8 \
-+	xfs_quota.8 \
-+	xfs_repair.8 \
-+	xfs_rtcp.8 \
-+	xfs_spaceman.8
+ SCRUB_PREREQS=$(HAVE_GETFSMAP)
+ 
+-scrub_media_svcname=xfs_scrub_media@.service
++XFS_SCRUB_MEDIA_SVCNAME=xfs_scrub_media@.service
+ 
+ ifeq ($(SCRUB_PREREQS),yes)
++CFLAGS+=-DXFS_SCRUB_SVCNAME=\"$(XFS_SCRUB_SVCNAME)\"
++CFLAGS+=-DXFS_SCRUB_MEDIA_SVCNAME=\"$(XFS_SCRUB_MEDIA_SVCNAME)\"
 +
-+ifeq ($(ENABLE_HEALER),yes)
-+  MAN_PAGES += xfs_healer.8
- endif
--MAN_PAGES	+= mkfs.xfs.8
-+ifeq ($(HAVE_HEALER_START_DEPS),yes)
-+  MAN_PAGES += xfs_healer_start.8
-+endif
-+ifeq ($(ENABLE_SCRUB),yes)
-+  MAN_PAGES += xfs_scrub.8 xfs_scrub_all.8
-+endif
+ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
+ XFS_SCRUB_ALL_PROG = xfs_scrub_all.py
+@@ -22,7 +25,7 @@ INSTALL_SCRUB += install-systemd
+ SYSTEMD_SERVICES=\
+ 	$(XFS_SCRUB_SVCNAME) \
+ 	xfs_scrub_fail@.service \
+-	$(scrub_media_svcname) \
++	$(XFS_SCRUB_MEDIA_SVCNAME) \
+ 	xfs_scrub_media_fail@.service \
+ 	xfs_scrub_all.service \
+ 	xfs_scrub_all_fail.service \
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 79937aa8cce4c4..b74dc1635141aa 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -710,6 +710,13 @@ parse_o_opts(
+ 	}
+ }
+ 
++enum long_opt_nr {
++	LOPT_HELP,
++	LOPT_SVCNAME,
 +
- MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
- LSRCFILES	= $(MAN_PAGES)
- DIRT		= mkfs.xfs.8 xfs_scrub_all.8
-diff --git a/man/man8/xfs_healer.8 b/man/man8/xfs_healer.8
-new file mode 100644
-index 00000000000000..eea799f7811a4d
---- /dev/null
-+++ b/man/man8/xfs_healer.8
-@@ -0,0 +1,109 @@
-+.TH xfs_healer 8
-+.SH NAME
-+xfs_healer \- automatically heal damage to XFS filesystem metadata
-+.SH SYNOPSIS
-+.B xfs_healer
-+[
-+.B OPTIONS
-+]
-+.I mount-point
-+.br
-+.B xfs_healer \-V
-+.SH DESCRIPTION
-+.B xfs_healer
-+is a daemon that tries to automatically repair damaged XFS filesystem metadata.
-+.PP
-+.B WARNING!
-+This program is
-+.BR EXPERIMENTAL ","
-+which means that its behavior and interface
-+could change at any time!
-+.PP
-+.B xfs_healer
-+asks the kernel to report all observations of corrupt metadata, media errors,
-+filesystem shutdowns, and file I/O errors.
-+The program can respond to runtime metadata corruption errors by initiating
-+targeted repairs of the suspect metadata or a full online fsck of the
-+filesystem.
++	LOPT_MAX,
++};
 +
-+Normally this program runs as a systemd service.
-+The service is activated via the
-+.I xfs_healer_start
-+service if systemd is supported.
+ int
+ main(
+ 	int			argc,
+@@ -717,11 +724,15 @@ main(
+ {
+ 	struct scrub_ctx	ctx = {
+ 		.fstrim_block_pct = FSTRIM_BLOCK_PCT_DEFAULT,
++		.lock		= (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER,
++		.mode		= SCRUB_MODE_REPAIR,
++		.error_action	= ERRORS_CONTINUE,
+ 	};
+ 	struct phase_rusage	all_pi;
+ 	char			*mtab = NULL;
+ 	FILE			*progress_fp = NULL;
+ 	struct fs_path		*fsp;
++	int			option_index;
+ 	int			vflag = 0;
+ 	int			c;
+ 	int			fd;
+@@ -742,11 +753,25 @@ main(
+ 		goto out_unicrash;
+ 	}
+ 
+-	pthread_mutex_init(&ctx.lock, NULL);
+-	ctx.mode = SCRUB_MODE_REPAIR;
+-	ctx.error_action = ERRORS_CONTINUE;
+-	while ((c = getopt(argc, argv, "a:bC:de:kM:m:no:pTvxV")) != EOF) {
++	struct option long_options[] = {
++		[LOPT_HELP]	   = {"help", no_argument, NULL, 0 },
++		[LOPT_SVCNAME]	   = {"svcname", no_argument, &ctx.print_svcname, 1 },
 +
-+The kernel may not support repairing or optimizing the filesystem.
-+If this is the case, the filesystem must be unmounted and
-+.BR xfs_repair (8)
-+run on the filesystem to fix the problems.
-+.SH OPTIONS
-+.TP
-+.BI \-\-everything
-+Ask the kernel to send us good metadata health events, not only events related
-+to metadata corruption, media errors, shutdowns, and I/O errors.
-+.TP
-+.B \-\-foreground
-+Start enough event handling threads to allow consumption of all online CPUs.
-+If not specified, start exactly one event handling thread.
-+.TP
-+.B \-\-no-autofsck
-+Do not use the
-+.I autofsck
-+filesystem property to decide whether or not to repair corrupt metadata.
-+If the
-+.B \-\-repair
-+option is given, then all corruptions will be repaired.
-+If the
-+.B \-\-repair
-+option is not given, then the program will never try to repair the filesystem.
-+.TP
-+.B \-\-quiet
-+Do not print every event to standard output.
-+.TP
-+.B \-\-repair
-+Always try to repair each piece of corrupt metadata when the kernel tells us
-+about it.
-+If an individual repair fails or the kernel tells us that health events were
-+lost, the
-+.I xfs_scrub
-+service for this mount point will be launched.
-+The default is not to try to repair anything.
-+If this option is specified but the kernel does not support repairs, the
-+program will exit.
-+.TP
-+.B \-\-supported
-+Check if the filesystem supports sending health events.
-+Exits with 0 if it does, and non-zero if not.
-+.TP
-+.BI \-V
-+Prints the version number and exit.
++		[LOPT_MAX]	   = {NULL, 0, NULL, 0 },
++	};
 +
-+.SH AUTOFSCK
-+By default, this program will read the
-+.I autofsck
-+filesystem property to decide if it should try to repair corruptions.
-+If the property is set to the value
-+.B repair
-+then corruptions will be repaired.
-+If the property is not set but the filesystem supports all back-reference
-+metadata (reverse mappings and parent pointers), then corruptions will be
-+repaired.
++	while ((c = getopt_long(argc, argv, "a:bC:de:kM:m:no:pTvxV",
++				long_options, &option_index)) != EOF) {
+ 		switch (c) {
++		case 0:
++			switch (option_index) {
++			case LOPT_HELP:
++				usage();
++				break;
++			default:
++				break;
++			}
++			break;
+ 		case 'a':
+ 			ctx.max_errors = cvt_u64(optarg, 10);
+ 			if (errno) {
+@@ -860,6 +885,23 @@ main(
+ 	if (!ctx.actual_mntpoint)
+ 		ctx.actual_mntpoint = ctx.mntpoint;
+ 
++	if (ctx.print_svcname) {
++		char		unitname[PATH_MAX];
++		const char	*template =
++			scrub_data ? XFS_SCRUB_MEDIA_SVCNAME :
++				     XFS_SCRUB_SVCNAME;
 +
-+See the
-+.BR xfs_scrub (8)
-+manual page for more details on this filesystem property.
++		ret = systemd_path_instance_unit_name(template,
++				ctx.mntpoint, unitname, sizeof(unitname));
++		if (ret) {
++			perror(ctx.mntpoint);
++			return EXIT_FAILURE;
++		}
 +
-+.SH CAVEATS
-+.B xfs_healer
-+is an immature utility!
-+Do not run this program unless you have backups of your data!
-+This program takes advantage of in-kernel scrubbing to verify a given
-+data structure with locks held and can keep the filesystem busy for a
-+long time.
-+The kernel must be new enough to support the SCRUB_METADATA ioctl.
-+.PP
-+If errors are found and cannot be repaired, the filesystem must be
-+unmounted and repaired.
-+.SH SEE ALSO
-+.BR xfs_repair (8)
-+and
-+.BR xfs_scrub (8).
-diff --git a/man/man8/xfs_healer_start.8 b/man/man8/xfs_healer_start.8
-new file mode 100644
-index 00000000000000..9e424432a513fe
---- /dev/null
-+++ b/man/man8/xfs_healer_start.8
-@@ -0,0 +1,37 @@
-+.TH xfs_healer_start 8
-+.SH NAME
-+xfs_healer_start \- starts xfs_healer instances
-+.SH SYNOPSIS
-+.B xfs_healer_start
-+[
-+.B OPTIONS
-+]
-+.br
-+.B xfs_healer \-V
-+.SH DESCRIPTION
-+.B xfs_healer_start
-+starts the xfs_healer service whenever the kernel mounts an XFS filesystem in
-+the current mount namespace.
-+.PP
-+.B WARNING!
-+This program is
-+.BR EXPERIMENTAL ","
-+which means that its behavior and interface
-+could change at any time!
++		printf("%s\n", unitname);
++		return EXIT_SUCCESS;
++	}
 +
-+Normally this program runs as a systemd service.
-+
-+.SH OPTIONS
-+.TP
-+.B \-\-supported
-+Check if the kernel supports listening for mount events.
-+Exits with 0 if it does, and non-zero if not.
-+.TP
-+.BI "\-\-mountns " path
-+Monitor the given mount namespace.
-+Defaults to the mount namespace associated with the process itself.
-+.TP
-+.BI \-V
-+Prints the version number and exit.
-+.SH SEE ALSO
-+.BR xfs_healer (8).
+ 	stdout_isatty = isatty(STDOUT_FILENO);
+ 	stderr_isatty = isatty(STDERR_FILENO);
+ 
 
