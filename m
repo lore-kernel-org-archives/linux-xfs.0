@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671F10E3
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:49:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 680D94317D
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:49:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895752; cv=none; b=Z5Ljoa7INmB2v5CKUHkIesepzHKF2V5TWHCIzl6FolKOe7OBnWcwvUVKLp6LSjYJIp7/BwcYjP3WLHhkhsBOSqI4o7q5JpgrPyyvuAOXOm6QbhQR5b7O9P9JwmTnEtrVzwLq/Fi4jFVZOHunZSNBob70hFksBLdQgVvjQ78eT/g=
+	t=1773895767; cv=none; b=jFDwLJs4R9xfrOFwqe063dqQlkJ0M4tv1SH/TujnGT72t0oMQHtUXWmPXsRcDQzRBSy6wK3y4gFRReMla4sGZaTVgt7twC0rFtLfQFpVSWCw8e7hzbJTXXmYisIef5kXmdvoriReiCIK3iIsTwvHfQIxY97IxL5zKTD+u+XDpJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895752; c=relaxed/simple;
-	bh=VRrFoO0Z91ABWAhVmFExJqiYDyvLSSbA1167QamRsIU=;
+	s=arc-20240116; t=1773895767; c=relaxed/simple;
+	bh=ZNOBeqer5B3JytuK5II2ljsgKFR5T7HZG0gPfqn/iUE=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=daisxrMlZOUYubIT+Uq5MohvV3E2WvtG6Az25vc25jfxcpePBej24RjWUyLG1LySlE65eAm5JT96NBo6NKai4PQ2pVsi/dwW0UtESNGFpkMys7pIqwn5wk52oV/u0nIYuVVz2GVh9v0s+yn+A7UnzuQg2AOni+5Ys+40l1umCP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqBDjTro; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RI+GGoksky/riSiPWmkxQRvLeOIMTTGFUdn/m+r54BDRL7GqWQ+oOVACd3YQfgeVyopft2TS26d7WtGEQsMnCaGGLAddboKv2aZJcIbzJv/8GT5IDEt4eTnnYViMvhSTyAGKaG7eTYH5um37kF8gKOHMPgFVBkrxZJCQpZLrvFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JAyENf/n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqBDjTro"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 987B2C19425;
-	Thu, 19 Mar 2026 04:49:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JAyENf/n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C4FC19425;
+	Thu, 19 Mar 2026 04:49:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895751;
-	bh=VRrFoO0Z91ABWAhVmFExJqiYDyvLSSbA1167QamRsIU=;
+	s=k20201202; t=1773895767;
+	bh=ZNOBeqer5B3JytuK5II2ljsgKFR5T7HZG0gPfqn/iUE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bqBDjTroWrRHdo6cfsowOY0IF8ZU+mkPIrtP0gJxHWWIkAGwzsm5+JfUJGgdvkU0E
-	 xUGCMVJRXVu6HQiGEGRkRUZm7kGt5ZO94+yODhpHcodK6Ub2hmSfJJ0th5fhREsp3N
-	 UYX8ooG4NRHsIwwqXX7UrLP9elux6mMvTqnxHGnARMYJMEpX+CBTvougTBqNCVUbnz
-	 OoDMrBPQI5xZhylAcz5BNARz+U+Y9uz8DLthwsMyejltdWAFmjv/4jN9aGIuuKhUan
-	 /LR24nexzOvV1ZhREMmBam88HtYseL03+j8WLSMRHnHv0tpmPmNZJhErDOTgfAViv+
-	 2BPrj/PiIZuLw==
-Date: Wed, 18 Mar 2026 21:49:11 -0700
-Subject: [PATCH 14/22] xfs_scrub: use the verify media ioctl during phase 6 if
- possible
+	b=JAyENf/nNYEhi5ZpLW0IwdAQCNF0Zsww2eWf7FxyffKXncgbj2SV9ol+1cTBZ4yzO
+	 KJEXHJ1r2KDYRyEJFCn8Sw3MoOQYmdiX2F33+2gu/urUO8iPbma/dLISoncO15yx5f
+	 RZuqR+wwMPjPU7n78zUNmm0zl1OWBntJN1G94sHjUXAu8s15GJDB9xpq2jdXtL0Sts
+	 DHLBCEfKOW6QfGHAEe4mGcFnTeVfKk/WHWk7fOfAqhehd6VM+p7Rp/PxVNfOcPMq7Z
+	 8e73EXG/B3WhfGpej76/sBnQge7A2MSI+Em0Hmks6kNbi5Byu7bpcYE9OvMbJS2/Rc
+	 y+UiF6Panlycw==
+Date: Wed, 18 Mar 2026 21:49:26 -0700
+Subject: [PATCH 15/22] scrub: don't allocate disk for ioctl-based media verify
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389507197.3681140.12909228499805644066.stgit@frogsfrogsfrogs>
+Message-ID: <177389507215.3681140.128799484083601255.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 References: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,142 +43,113 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-If the kernel suppots the XFS_IOC_VERIFY_MEDIA ioctl, use that to
-perform the phase 6 media scan instead of pwrite or the SCSI VERIFY
-command.  This enables better integration with xfs_healer and fsnotify;
-and reduces the amount of work that userspace has to do.
+When the kernel provides the data verification ioctl there is no point
+in allocating struct disk and thus opening the underlying devices.
+Refactor the code so that we don't have to do that, with the added
+benefit of keeping the read verification self-contained in
+read_verify.c for the case where the kernel provides the ioctl.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+[djwong: break up patch]
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub.h   |    1 +
- scrub/phase1.c      |   18 ++++++++++++++++++
- scrub/read_verify.c |   44 ++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 59 insertions(+), 4 deletions(-)
+ scrub/phase1.c |   65 +++++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 45 insertions(+), 20 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 3009a7cd2d97d0..851b4f37db48e4 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -79,6 +79,7 @@ struct scrub_ctx {
- 
- 	/* Data block read verification buffer */
- 	void			*readbuf;
-+	bool			no_verify_ioctl;
- 
- 	/* Mutable scrub state; use lock. */
- 	pthread_mutex_t		lock;
 diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 16607af4c5f025..abc594898bf2c5 100644
+index abc594898bf2c5..f4d50d016c2ebd 100644
 --- a/scrub/phase1.c
 +++ b/scrub/phase1.c
-@@ -213,6 +213,22 @@ mode_from_autofsck(
+@@ -213,8 +213,39 @@ mode_from_autofsck(
  	goto summarize;
  }
  
-+/* Does the XFS driver support media scanning its own disks? */
-+static void
-+configure_xfs_verify(
++/*
++ * We can't do XFS_IOC_VERIFY_MEDIA media verification, so we need to fall back
++ * to reading the disk.  We already opened the data device, now we need to open
++ * the rt and log devices for media verification.
++ */
++static int
++configure_xfs_verify_fallback(
 +	struct scrub_ctx	*ctx)
 +{
-+	struct xfs_verify_media	me = {
-+		/* just probe for support using an empty range */
-+		.me_start_daddr	= 0,
-+		.me_end_daddr	= 0,
-+		.me_dev		= XFS_DEV_DATA,
-+	};
-+
-+	if (ioctl(ctx->mnt.fd, XFS_IOC_VERIFY_MEDIA, &me))
-+		ctx->no_verify_ioctl = true;
-+}
-+
- /*
-  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
-  * Anything we've already built will be cleaned up by scrub_cleanup.
-@@ -379,6 +395,8 @@ _("Unable to find realtime device path."));
- 		}
- 	}
- 
-+	configure_xfs_verify(ctx);
-+
- 	/*
- 	 * Everything's set up, which means any failures recorded after
- 	 * this point are most probably corruption errors (as opposed to
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index adee67d922fc76..f724dfd693d7ab 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -225,12 +225,45 @@ verify_simulate_read_error(
- 	return 0;
- }
- 
-+/* Use the XFS media verification ioctl to do the media scan */
-+static ssize_t
-+ioctl_verify(
-+	int			verify_fd,
-+	enum xfs_device		dev,
-+	uint64_t		start,
-+	uint64_t		length,
-+	bool			single_step)
-+{
-+	const uint64_t	orig_start_daddr = BTOBBT(start);
-+	struct xfs_verify_media	me = {
-+		.me_start_daddr	= orig_start_daddr,
-+		.me_end_daddr	= BTOBB(start + length),
-+		.me_dev		= dev,
-+		.me_rest_us	= bg_mode > 2 ? bg_mode - 1 : 0,
-+	};
-+	int			ret;
-+
-+	if (single_step)
-+		me.me_flags |= XFS_VERIFY_MEDIA_REPORT;
-+
-+	ret = ioctl(verify_fd, XFS_IOC_VERIFY_MEDIA, &me);
-+	if (ret < 0)
-+		return ret;
-+	if (me.me_ioerror) {
-+		errno = me.me_ioerror;
-+		return -1;
++	if (ctx->fsinfo.fs_log) {
++		ctx->verify_disks[XFS_DEV_LOG] = disk_open(ctx->fsinfo.fs_log);
++		if (!ctx->verify_disks[XFS_DEV_LOG]) {
++			str_error(ctx, ctx->mntpoint,
++				_("Unable to open external log device."));
++			return ECANCELED;
++		}
 +	}
 +
-+	return BBTOB(me.me_start_daddr - orig_start_daddr);
++	if (ctx->fsinfo.fs_rt) {
++		ctx->verify_disks[XFS_DEV_RT] = disk_open(ctx->fsinfo.fs_rt);
++		if (!ctx->verify_disks[XFS_DEV_RT]) {
++			str_error(ctx, ctx->mntpoint,
++				_("Unable to open realtime device."));
++			return ECANCELED;
++		}
++	}
++
++	ctx->no_verify_ioctl = true;
++	return 0;
 +}
 +
- /* Read-verify an extent of a disk device. */
- static ssize_t
- read_verify_one(
- 	struct read_verify_pool	*rvp,
- 	struct read_verify	*rv,
--	ssize_t			len)
-+	ssize_t			len,
-+	bool			single_step)
+ /* Does the XFS driver support media scanning its own disks? */
+-static void
++static bool
+ configure_xfs_verify(
+ 	struct scrub_ctx	*ctx)
  {
- 	if (debug) {
- 		int		ret;
-@@ -246,8 +279,11 @@ read_verify_one(
- 			return len;
- 	}
+@@ -225,8 +256,7 @@ configure_xfs_verify(
+ 		.me_dev		= XFS_DEV_DATA,
+ 	};
  
--	return disk_read_verify(rvp->ctx->verify_disks[rvp->dev], rvp->readbuf,
--			rv->io_start, len);
-+	if (rvp->ctx->no_verify_ioctl)
-+		return disk_read_verify(rvp->ctx->verify_disks[rvp->dev],
-+				rvp->readbuf, rv->io_start, len);
-+	return ioctl_verify(rvp->ctx->mnt.fd, rvp->dev, rv->io_start, len,
-+			single_step);
+-	if (ioctl(ctx->mnt.fd, XFS_IOC_VERIFY_MEDIA, &me))
+-		ctx->no_verify_ioctl = true;
++	return ioctl(ctx->mnt.fd, XFS_IOC_VERIFY_MEDIA, &me) == 0;
  }
  
  /*
-@@ -279,7 +315,7 @@ read_verify(
- 		len = min(rv->io_length, io_max_size);
- 		dbg_printf("diskverify %u %"PRIu64" %zu\n", rvp->dev,
- 				rv->io_start, len);
--		sz = read_verify_one(rvp, rv, len);
-+		sz = read_verify_one(rvp, rv, len, io_max_size <= rvp->miniosz);
- 		if (sz == len && io_max_size < rvp->miniosz) {
- 			/*
- 			 * If the verify request was 100% successful and less
+@@ -378,24 +408,19 @@ _("Unable to find realtime device path."));
+ 		fflush(stdout);
+ 	}
+ 
+-	if (ctx->fsinfo.fs_log) {
+-		ctx->verify_disks[XFS_DEV_LOG] = disk_open(ctx->fsinfo.fs_log);
+-		if (!ctx->verify_disks[XFS_DEV_LOG]) {
+-			str_error(ctx, ctx->mntpoint,
+-				_("Unable to open external log device."));
+-			return ECANCELED;
+-		}
++	if (configure_xfs_verify(ctx)) {
++		/*
++		 * ioctl-based media verification is enabled and we already set
++		 * nr_io_threads from the data device, so we no longer need to
++		 * keep this open.
++		 */
++		disk_close(ctx->verify_disks[XFS_DEV_DATA]);
++		ctx->verify_disks[XFS_DEV_DATA] = NULL;
++	} else {
++		error = configure_xfs_verify_fallback(ctx);
++		if (error)
++			return error;
+ 	}
+-	if (ctx->fsinfo.fs_rt) {
+-		ctx->verify_disks[XFS_DEV_RT] = disk_open(ctx->fsinfo.fs_rt);
+-		if (!ctx->verify_disks[XFS_DEV_RT]) {
+-			str_error(ctx, ctx->mntpoint,
+-				_("Unable to open realtime device."));
+-			return ECANCELED;
+-		}
+-	}
+-
+-	configure_xfs_verify(ctx);
+ 
+ 	/*
+ 	 * Everything's set up, which means any failures recorded after
 
