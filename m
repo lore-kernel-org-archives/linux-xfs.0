@@ -1,138 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 764B824A07C;
-	Wed, 18 Mar 2026 22:18:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFC792441A6
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 01:17:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773872291; cv=none; b=LKXOgpKmsgTZqXzDTqIXbLKFEJyFvIozM4JkS7E/DhDwTntKgEFCEHewRO6CCGOxh8k6RyjNvzdj+RsJS/vbAipx82SnS68IDBKzU1h0qRTJP03/7o9oEHp+scCPKtOxh58svJfx95E8Ay7seL8K1gR/l2XkE+4/Mgg1NEhhae8=
+	t=1773883029; cv=none; b=RHednU1FmJZtQj4opAxbf4OPbEqRP8b8Tk31ZOJA5IL9KX7nqx+KQw3qvdaDKKcwCg4DA0pwaU3FJ3fjd1Odbb4yShsAEHwp/HXLGrJ8tvt14z8IxgPz54fNDjmhetgSY7FqIM5B30Z/kItPnmNC495TubzKFIzJ2gcmCsRgX5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773872291; c=relaxed/simple;
-	bh=UDXSWTVAb1RzNbT1dodfSc9/yS6pBWAMOI3W8NucyrY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aXu9oCZFE0kjZCSHH+E82F90stz46YUqZaMB+4xTnJi9I4keAEbUyGwBUAlafD5OwyukQiWUGJ+6m4EU00MAK80Z96SOxy236qU/gGztnaSFUCtch3rdNAtLSBxEcMJTdEnRu6RffT8fWGzSf6oAiMLBOBNMTPQR7YTjJp7iC/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZfNihw7+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773883029; c=relaxed/simple;
+	bh=XPbTsxhdjApXwdbRUf18hY9fsj59n5BF/he5h57L3zw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JmZ6n4HXI65Xau90rrjmD+mjiQmQ4GVqTlEbAwxFt5fRtEnl43Tgpf1n+vjMuymeXMqF3QMyWd4re3HTTSYKbzbpUrWX95XIDy3zh2IoQ5Jl00hKS1VYY7KlQUWP/e4r5xql3bByYueGUIz0KZ/Z0RAqzwZSiKlNCU4edcuWtkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=LJhFVODf; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZfNihw7+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 038FDC19421;
-	Wed, 18 Mar 2026 22:18:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773872291;
-	bh=UDXSWTVAb1RzNbT1dodfSc9/yS6pBWAMOI3W8NucyrY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZfNihw7+jRy3HikAnwY5y2YVVFrXnzcMCFKbTt1gUyEOD92zsA6+7lNDiM+sdkakW
-	 QNeVIjBiPrqeOheAx6OXdqPfMk6E1GeLwQxF305KN9VYAcrB2B8i722wCG29B8VTWS
-	 LwPLci6FjLruvguIzKBx1Po+aTySHw5HngQR9v7CH3vzG6f+pw4qyLf3Lbj3OEBUSS
-	 cUDn5qhBTmt/c78z/q7imaXkNuOe2W83tPgBkL2UNiJPiA65ED5Bh7HCOr3NSXLWlH
-	 +H0dOi0j3GbWgTEQF/Em2LVrgjiZaFqKoOvelufgVJUu7CZBWuL5gocU+5a9RsuVMB
-	 jmFfViDVE88XQ==
-Date: Wed, 18 Mar 2026 15:18:10 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Tso <tytso@mit.edu>, Ravi Singh <ravising@redhat.com>,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	adilger@dilger.ca, jack@suse.com, cem@kernel.org
-Subject: Re: [PATCH v2] xfs: return default quota limits for IDs without a
- dquot
-Message-ID: <20260318221810.GM1742010@frogsfrogsfrogs>
-References: <20260312090810.1145908-1-ravising@redhat.com>
- <20260317065947.306954-1-ravising@redhat.com>
- <jknk6pwirqp5kgxdwr7qez2qzuycmj4eupknf3yvqzlnkyiu5k@nowg6cwpxqc3>
- <20260317133159.GA53921@macsyma-wired.lan>
- <ijwjh525hgf54wclhd4oixvfi3gfrodqrh2pbk7lr3whqw7nqo@k5uotrmekwyt>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="LJhFVODf"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=gWYtibv1Q4mnFFkcyl2KWymJp7yjzfyRk9OXap/+57c=;
+	b=LJhFVODfDqe/5OF2t+1f3yFd2ZoR1PklKtL42LtaVUNJhbOBEnaFSQJ4edJnr07jjRXaAHje6
+	XiSzD+AVRw+his6ZVDCRBC6o7xrkCzJ+SEBAbbNo2U9DhUTTBArjEhnLe9SGGMXdLrpAc1dgLtM
+	Wv0t30sN3Jvf4vE/NRwjIVc=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4fbnhW59q3zcZyc;
+	Thu, 19 Mar 2026 09:11:23 +0800 (CST)
+Received: from dggemv712-chm.china.huawei.com (unknown [10.1.198.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0896340569;
+	Thu, 19 Mar 2026 09:17:04 +0800 (CST)
+Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
+ dggemv712-chm.china.huawei.com (10.1.198.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 19 Mar 2026 09:17:03 +0800
+Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
+ (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 19 Mar
+ 2026 09:17:03 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH v2 1/3] xfs: fix possible null pointer dereference in xfs_attri_recover_work
+Date: Thu, 19 Mar 2026 09:06:16 +0800
+Message-ID: <20260319010618.722448-2-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20260319010618.722448-1-leo.lilong@huawei.com>
+References: <20260319010618.722448-1-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ijwjh525hgf54wclhd4oixvfi3gfrodqrh2pbk7lr3whqw7nqo@k5uotrmekwyt>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemn100013.china.huawei.com (7.202.194.116)
 
-On Wed, Mar 18, 2026 at 06:29:47PM +0100, Jan Kara wrote:
-> Hello!
-> 
-> On Tue 17-03-26 09:31:59, Theodore Tso wrote:
-> > On Tue, Mar 17, 2026 at 01:19:23PM +0100, Jan Kara wrote:
-> > > On Tue 17-03-26 14:59:47, Ravi Singh wrote:
-> > > > When an ID has no dquot on disk, Q_XGETQUOTA returns -ENOENT even
-> > > > though default quota limits are configured and enforced against that
-> > > > ID.  This means unprivileged users who have never used any resources
-> > > > cannot see the limits that apply to them.
-> > > > 
-> > > > When xfs_qm_dqget() returns -ENOENT for a non-zero ID, return a
-> > > > zero-usage response with the default limits filled in from
-> > > > m_quotainfo rather than propagating the error.  This is consistent
-> > > > with the enforcement behavior in xfs_qm_adjust_dqlimits(), which
-> > > > pushes the same default limits into a dquot when it is first
-> > > > allocated.
-> > > > 
-> > > > Signed-off-by: Ravi Singh <ravising@redhat.com>
-> > > 
-> > > So XFS guys should also review this but from quota POV this looks like a
-> > > right fix to me. So feel free to add:
-> > > 
-> > > Reviewed-by: Jan Kara <jack@suse.cz>
-> > 
-> > This was discussed at last week's ext4 conference call, and we
-> > wondered whether we might be better off adding a new
-> > Q_XGETDEFAULTQUOTA or some such which returned the default quota.
-> > This would that the quota userspace utilities would have to be
-> > changed, but it would also mean that userspace could distinguish
-> > between whether the quota limit was due to a default value being used,
-> > or because the user had an actual quota value set.
-> 
-> First thing to note is that the notion of "default limit" is specific to
-> XFS. Other filesystems using quota don't have any default limits. I guess
-> most people here know this but I'm spelling it out so that we are all on
-> the same page.
+When xlog_recover_iget() or xlog_recover_iget_handle() fails, ip is
+not guaranteed to be initialized. Calling xfs_irele(ip) unconditionally
+in the error path may dereference a null pointer.
 
-*I* actually didn't know that, so thank you for pointing that out!!
+Cc: <stable@vger.kernel.org> # v6.9
+Fixes: ae673f534a30 ("xfs: record inode generation in xattr update log intent items")
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/xfs_attr_item.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> > It also means that in the future, if we wanted to change where the
-> > default quota was stored, it would be possible to do that instead of
-> > overloading the quota value for uid/gid 0.
-> > 
-> > We also speculated that perhaps there might be cases where if some
-> > process might be running without CAP_SYS_ADMIN, there might be a
-> > reason that quota for uid=0 might actually make sense, and so perhaps
-> > some future file system format change might want to decouple where the
-> > default quota was stored.
-> 
-> Right. That's why I didn't like the v1 version of the patch. But v2 version
-> hides the XFS specific behavior of default limits inside XFS function for
-> fetching quotas so that is fully transparent. If XFS decides to change its
-> quota format to support limits for root, it can also change this code
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 354472bf45f1..8ebdd0926b89 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -633,7 +633,7 @@ xfs_attri_recover_work(
+ {
+ 	struct xfs_attr_intent		*attr;
+ 	struct xfs_da_args		*args;
+-	struct xfs_inode		*ip;
++	struct xfs_inode		*ip = NULL;
+ 	int				local;
+ 	int				error;
+ 
+@@ -653,7 +653,8 @@ xfs_attri_recover_work(
+ 		break;
+ 	}
+ 	if (error) {
+-		xfs_irele(ip);
++		if (ip)
++			xfs_irele(ip);
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, attrp,
+ 				sizeof(*attrp));
+ 		return ERR_PTR(-EFSCORRUPTED);
+-- 
+2.39.2
 
-Wait, do the other filesystems enforce limits on id 0?
-
-Also, do those non-xfs filesystems also not have default limits?
-
-> fetching and filling in default limits for the user. So until XFS decides
-> to change the format, current solution looks fine to me, once it decides to
-> change it, it is easy to change this code as well. But obviously this is
-> fully XFS developers' area of code so they can do whatever they wish :)
-
-/me bets nobody cares that much in xfsland other than not breaking
-userspace tools. ;)
-
-> The only improvement I can see is if we explicitely wanted to expose the
-> XFS default limits in some generic way for userspace tools to show. But
-> then I'd think we don't really need new quotactl, we could just put this
-> into the result of existing Q_XGETQSTATV quotactl.
-> 
-> Overall I don't have a strong opinion on this and consider these questions
-> mostly specific to XFS so XFS guys should decide what they want...
-
-We're stuck with the old ABI behavior unless you all want to add a
-Q_<whatever>V2 quotactl command.
-
---D
-
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-> 
