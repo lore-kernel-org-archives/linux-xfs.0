@@ -1,135 +1,99 @@
-Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9FDB2441A6
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 01:17:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22182351C1C
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773883034; cv=none; b=WvKaYLQGlfw+beluaFMkEh3UZOHzCV+Gz5ME6tv15bzpFSxRgIfw0qTUquZPC/ye1HsmhaugoniEnijVL6orn5DsvwX5I1OkXhpTuni1K4WhS2Lm0HvfEkuMaMdlbyzPFLg1cURCAzJdfUVnZel/M+86zMHwQWVWfs/7aZeL7EY=
+	t=1773895028; cv=none; b=p5g1LDMTP/abEZDUKQCyoPV/hyWKFC9ETRCnPLC2ONeUrII588zRWTaySTcuQJGaugJmUgMu72DAFgOzjnRmof91OntqsA4GzheRc7hszRXlCpir8IYGRA6EWC5lSyCO38mrVBGoGHEcLItZO1VgxBHG6tdzx16FAUeb4KC6J0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773883034; c=relaxed/simple;
-	bh=0/ckdOirbWLwagdgFTicdHmJkDNZLr+CklvVFS5Vn+Y=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B5bz9Qz8lVjxhqV9SYU7zGjmsyNQ9C5zJajqBktRN+OfBGBN1Qq0yTzaYW9JzhI9+HsvJmZDbqRJXoBeOaAktyXiYPTGRrzyz/DgRVq9f16uVRCv/WDUDi1hQnVkmb1Ml0Ioh5gtFuhZbly/NhS1RbJMIr76MV14AjKUprRECsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=gZMLC9Fe; arc=none smtp.client-ip=113.46.200.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1773895028; c=relaxed/simple;
+	bh=OZzn+5gXy8AVFlekDspiiVJ02TV0kkb8DUiThMpwe8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=slt812gkvngGo0q/hUO/Mq0UtUDcxWQvKlCqWeuCJYNabSxMyOqqDBahbt0Gt93Y8Yc8mN123HGZIb7s/vQ9XT7ilupvWR2E00b5+1o/211a4fcWQ1TeoLO4YKq1288JVrPl9FAQC1UPXt51L6uCWNWLq/0va4xJzzHPfSc5rUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m2L80igJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="gZMLC9Fe"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=xG1/ZENETBtAlIKTZ3SsP7BKqsIsYF4Hfiv+mZyDUUE=;
-	b=gZMLC9FeSJAThUtsE+IBr8UU4BvuSqLSiUjiz0ooz9CABUtscQIIgRXfh68Xhq+57TG9DYet3
-	SXEQINC1u/y1F5I3oWWiSGJFZaIwPcI9XtBPpX6f2a+YG4qrdIVQXL2qD9xGEu+IeXR/Pi0YBrQ
-	0igN/XnVKerYqGVLQt1pOZg=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4fbnhk1Z6Kz12LGC;
-	Thu, 19 Mar 2026 09:11:34 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3AEC640538;
-	Thu, 19 Mar 2026 09:17:05 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 19 Mar 2026 09:17:05 +0800
-Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Thu, 19 Mar
- 2026 09:17:04 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH v2 3/3] xfs: remove redundant validation in xlog_recover_attri_commit_pass2
-Date: Thu, 19 Mar 2026 09:06:18 +0800
-Message-ID: <20260319010618.722448-4-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260319010618.722448-1-leo.lilong@huawei.com>
-References: <20260319010618.722448-1-leo.lilong@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m2L80igJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94BDCC19425;
+	Thu, 19 Mar 2026 04:37:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773895027;
+	bh=OZzn+5gXy8AVFlekDspiiVJ02TV0kkb8DUiThMpwe8M=;
+	h=Date:From:To:Cc:Subject:From;
+	b=m2L80igJ4ULqg2kh3RqEie0cjxb+ryBt8KkTNEk7PWRzRdzdNN9hrkNwFTfM9KfNq
+	 Qo9I3UMgnAzRQOdHn9mpTm211ih219lwEj7cMZ/fmOC43ROD/eWd4/PYofFv8So46q
+	 rYeAY3xRRYdFMqIHa02fEI2cmd/U1UGHA07lPB20K/Aa72BUQkuqWiut0ucw6csvEC
+	 VfQTfl/sbUJ+freIVUqQqiEKNQBfiuyCWYzWDSgTC5nZrNrhhz88W05kgrD+BIC/fz
+	 ZH8Af1hDaRsyB0yaPayEBY2zAL54ycGPzD7M8QLv1KkWpp9rXoF67FDCBEzEaDxDxb
+	 8cW9VWmahAxZQ==
+Date: Wed, 18 Mar 2026 21:37:07 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org,
+	Zorro Lang <zlang@redhat.com>
+Subject: [PATCHBOMB v10] xfsprogs: autonomous self healing of filesystems
+Message-ID: <20260319043707.GO1770774@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Remove the redundant post-parse validation switch. By the time that
-block is reached, xfs_attri_validate() has already guaranteed all name
-lengths are non-zero via xfs_attri_validate_namelen(), and
-xfs_attri_validate_name_iovec() has already returned -EFSCORRUPTED for
-NULL names. For the REMOVE case, attr_value and value_len are
-structurally guaranteed to be NULL/zero because the parsing loop only
-populates them when value_len != 0. All checks in that switch are
-therefore dead code.
+Hi all,
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_attr_item.c | 46 ------------------------------------------
- 1 file changed, 46 deletions(-)
+This patchset contains the userspace and QA changes (xfs_healer) needed
+to put to use all the new kernel functionality to deliver live
+information about filesystem health events (xfs_healthmon.c) to
+userspace and a lot of cleanups to xfs_scrub's media verification.
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 19eaf6b8cd43..b462e15d2329 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -1133,52 +1133,6 @@ xlog_recover_attri_commit_pass2(
- 		return -EFSCORRUPTED;
- 	}
- 
--	switch (op) {
--	case XFS_ATTRI_OP_FLAGS_REMOVE:
--		/* Regular remove operations operate only on names. */
--		if (attr_value != NULL || value_len != 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		fallthrough;
--	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
--	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
--	case XFS_ATTRI_OP_FLAGS_SET:
--	case XFS_ATTRI_OP_FLAGS_REPLACE:
--		/*
--		 * Regular xattr set/remove/replace operations require a name
--		 * and do not take a newname.  Values are optional for set and
--		 * replace.
--		 *
--		 * Name-value set/remove operations must have a name, do not
--		 * take a newname, and can take a value.
--		 */
--		if (attr_name == NULL || name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		break;
--	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
--		/*
--		 * Name-value replace operations require the caller to
--		 * specify the old and new names and values explicitly.
--		 * Values are optional.
--		 */
--		if (attr_name == NULL || name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		if (attr_new_name == NULL || new_name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		break;
--	}
--
- 	/*
- 	 * Memory alloc failure will cause replay to abort.  We attach the
- 	 * name/value buffer to the recovered incore log item and drop our
--- 
-2.39.2
+In userspace, we create a new daemon program that will read the event
+objects and initiate repairs automatically.  This daemon is managed
+entirely by systemd and will not block unmounting of the filesystem
+unless repairs are ongoing.  They are auto-started by a starter
+service that uses fanotify.
 
+When the patchsets under this cover letter are merged, online fsck for
+XFS will at long last be fully feature complete.  The passive scan parts
+have been done since mid-2024, this final part adds proactive repair.
+
+Here's what's left to review, thanks to Christoph for doing a bunch of
+xfs_healer reviews and sharing some cleanups he wanted to see in
+xfs_scrub; and to Zorro for merging the fstests.
+
+[PATCHSET v10 1/2] xfsprogs: autonomous self healing of filesystems
+  [PATCH 19/26] xfs_healer: use statmount to find moved filesystems
+[PATCHSET v10 2/2] xfs_scrub: refactor to XFS_IOC_VERIFY_MEDIA
+  [PATCH 01/22] libfrog: allow bitmap_free to handle a null bitmap
+  [PATCH 02/22] mkfs: rename byte unit conversion macros
+  [PATCH 03/22] libfrog: lift *BYTES helpers to convert.h
+  [PATCH 04/22] xfs_scrub: report truncated devices as media errors
+  [PATCH 05/22] xfs_scrub: fix i18n of the decode_special_owner return
+  [PATCH 07/22] xfs_scrub: move read verification scheduling to
+  [PATCH 09/22] xfs_scrub: don't pass the io_end_arg around everywhere
+  [PATCH 11/22] xfs_scrub: rename nr_io_threads
+  [PATCH 16/22] xfs_scrub: perform media scanning of the log region
+  [PATCH 17/22] xfs_scrub: index read-verify pools by xfs_device ids
+  [PATCH 18/22] xfs_scrub: move failmap and other outputs into
+  [PATCH 19/22] xfs_scrub: clean up device-related error messages
+  [PATCH 20/22] xfs_scrub: drop SCSI_VERIFY code from disk.
+  [PATCH 21/22] xfs_scrub: raise media verification IO limits
+  [PATCH 22/22] xfs_scrub: allow overrides of the media verification IO
+
+v10: cleanups of the media verification code in xfs_scrub
+v9: reorg listmount/statmount, use it to find moved mounts, improve the
+    commit messages and documentation
+v8: clean up userspace for merging now that the kernel part is upstream
+v7: more cleanups of the media verification ioctl, improve comments, and
+    reuse the bio
+v6: fix pi-breaking bugs, make verify failures trigger health reports
+    and filter bio status flags better
+v5: add verify-media ioctl, collapse small helper funcs with only
+    one caller
+v4: drop multiple client support so we can make direct calls into
+    healthmon instead of chasing pointers and doing indirect calls
+v3: drag out of rfc status
+
+--D
