@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 848F43126B9
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:40:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729673126B9
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:40:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895219; cv=none; b=qo2Oes4hqKyMNJZKCfYG6x+TxBmxFnSewTxcgrWP+n3tIxLgzWLOP/tACpYw8EoP+q9pvIyOaH0eXZ98khv5E1SU2Kd4a12aA2kFZaSEhsVWj3xqhBih5TuAkiiesfq/0DmMcuGX9qyRYZ95keVLMpAKiZQeS6wNXdD/2lD2lgQ=
+	t=1773895235; cv=none; b=bd6lpk7kgs/1DE+qYCiB6FdKF9ZzZXpC7mS6pmHpS/z8zTJTfevc51BOb7c3h4P0oyt05Of4UbrKKD6fM/tgEifHd19//hIR4tdsAjMdNFrfyEqyotIUZKII79IWYSBnumucYLhHENR7g17UGP62WlM8WD3SiPsYtX09GSlE/+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895219; c=relaxed/simple;
-	bh=miK84Ec/KFMCzuT66NY5oPsJgS5oIhnKFQXhztaf4K4=;
+	s=arc-20240116; t=1773895235; c=relaxed/simple;
+	bh=w1PdPjvoBJA3X/OdFeTHIssl6xegSLHIaXrr87yL6Y8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d2Y+5fQE6Nl0X6JQ5t6EkJIE9iJsy3+9ahaDHop8ttjG+XkOrUbq/GvvwMygK/rkp3bvxlfo/aQKos3jYUF7C3+pQoq6GRuuaQuSFbRYzMwtXYk8QHsA/XzVp0n5QVX4qdsmem5mQVl/UeSoRCeaMbsqYcUQOldpUNBqJVEkRn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D0CYF5+m; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rle0k45lLf0xkPgjbYEU2b31KgCVWTDse4tpnO9urPtAPri/wefu8ao4zdbgVSErNs4rOx/tRLQEpNfvYHumAdleb/Y8AJbsyWp7CXrTqGT+7n8U/b905kd30efb9Uc4HgPTxVhr7zhyLAeVnNDE2YROk23z4hAnLI/cpjFjXjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUdbORyl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D0CYF5+m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56632C19425;
-	Thu, 19 Mar 2026 04:40:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUdbORyl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0915DC19425;
+	Thu, 19 Mar 2026 04:40:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895219;
-	bh=miK84Ec/KFMCzuT66NY5oPsJgS5oIhnKFQXhztaf4K4=;
+	s=k20201202; t=1773895235;
+	bh=w1PdPjvoBJA3X/OdFeTHIssl6xegSLHIaXrr87yL6Y8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=D0CYF5+mnG0K2vqSnadxdN7FFCof695wUkfjt9uHf/xTkLcM3KkZwFcEx8el3Jykk
-	 k7cu+67KnKLyEiTP+PpTrRgLfRC+VI+TWNgE9qZoiugqqZx89xg860maZF++9smgQp
-	 AInUMcYxPPtLGPzHwtqWNqHNUjisd5JbLQ75x1H/Hc/B1ZzJXPb/rxZ/wj3qTC2n45
-	 aYIMLDPYu4/nZMk45mDFWglCfIVgBYFfrR7FgQoOtno33dfe1NC+eVlzdtbYKavRQG
-	 ELVdGa3kxS3PFY+hMUSuJl4C9QcDX0/xjzdw208CRlIfkXCDnEgn4dy/Skr3s9k39U
-	 9No9VA1kU70QQ==
-Date: Wed, 18 Mar 2026 21:40:18 -0700
-Subject: [PATCH 06/26] man2: document the healthmon ioctl
+	b=XUdbORylNLUzoeB5aNyuuf8lpd+52dC3hiWm5UZIi5rdCjGAF7aGuyScfq0jRJulc
+	 gslu+ZS9y+/SLDp/iDh7unOhl9ALp7+nKvpGmG1dnehZo9GPaTqO59RGnsKPZ0afjJ
+	 Cjysa9BVHtJ43dxySuAWGjWlInl0nS1ZhHZe041tBz4e1OJgYQAAEcFZKC5axL3JOz
+	 L4Qfrpd4r3Md90WRwUFxRAENQB/qqqlAc3uR5fRxq+5S4p78ODYgLZkDV7MVRKRUqy
+	 AK1xklZxO105iL0i762zeGleEZjWfiRspLJL7AYZ/jl5QXcPUN/5cMF5kQMYDkAX1Q
+	 pGrwWtpkisTow==
+Date: Wed, 18 Mar 2026 21:40:34 -0700
+Subject: [PATCH 07/26] man2: document the media verification ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506255.3680139.4188622659315380704.stgit@frogsfrogsfrogs>
+Message-ID: <177389506274.3680139.3846886624031032571.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,568 +45,207 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Document the XFS_IOC_HEALTH_MONITOR and
-XFS_IOC_HEALTH_FD_ON_MONITORED_FS ioctls.
+Document XFS_IOC_VERIFY_MEDIA, which is a new ioctl for xfs_scrub to
+perform media scans on the disks underneath the filesystem.  This will
+enable media errors to be reported to xfs_healer and fsnotify.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 |   75 ++++
- man/man2/ioctl_xfs_health_monitor.2            |  464 ++++++++++++++++++++++++
- 2 files changed, 539 insertions(+)
- create mode 100644 man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
- create mode 100644 man/man2/ioctl_xfs_health_monitor.2
+ man/man2/ioctl_xfs_verify_media.2 |  185 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 185 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_verify_media.2
 
 
-diff --git a/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+diff --git a/man/man2/ioctl_xfs_verify_media.2 b/man/man2/ioctl_xfs_verify_media.2
 new file mode 100644
-index 00000000000000..bbc5ce9bbabf53
+index 00000000000000..bd0d4579f5a364
 --- /dev/null
-+++ b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
-@@ -0,0 +1,75 @@
++++ b/man/man2/ioctl_xfs_verify_media.2
+@@ -0,0 +1,185 @@
 +.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
 +.\"
 +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
 +.\" SPDX-License-Identifier: GPL-2.0+
 +.\" %%%LICENSE_END
-+.TH IOCTL-XFS-HEALTH-FD-ON-MONITORED-FS 2 2026-01-04 "XFS"
++.TH IOCTL-XFS-VERIFY-MEDIA 2 2026-01-09 "XFS"
 +.SH NAME
-+ioctl_xfs_health_fd_on_monitored_fs \- check if the given fd belongs to the same fs being monitored
++ioctl_xfs_verify_media \- verify the media of the devices backing XFS
 +.SH SYNOPSIS
 +.br
 +.B #include <xfs/xfs_fs.h>
 +.PP
-+.BI "int ioctl(int " healthmon_fd ", XFS_IOC_HEALTH_FD_ON_MONITORED_FS, struct xfs_health_file_on_monitored_fs *" arg );
++.BI "int ioctl(int " fd ", XFS_IOC_VERIFY_MEDIA, struct xfs_verify_media *" arg );
 +.SH DESCRIPTION
-+This XFS healthmon fd ioctl asks the kernel driver if the file descriptor
-+passed in via
-+.I arg
-+points to a file on the same filesystem that is being monitored by
-+.IR healthmon_fd .
-+The file descriptor is conveyed in a structure of the following form:
++Verify the media of a storage device backing an XFS filesystem.
++If errors are found, report the error to the kernel so that it can generate
++health events for the health monitoring system and fsnotify.
++The verification request is conveyed in a structure of the following form:
 +.PP
 +.in +4n
 +.nf
-+struct xfs_health_file_on_monitored_fs {
-+	__s32 fd;
-+	__u32 flags;
++struct xfs_verify_error {
++	__u32	me_dev;
++	__u32	me_flags;
++	__u64	me_start_daddr;
++	__u64	me_end_daddr;
++	__u32	me_ioerror;
++	__u32	me_pad;
 +};
 +.fi
 +.in
 +.PP
 +The field
-+.I flags
++.I me_pad
 +must be zero.
 +.PP
 +The field
-+.I fd
-+is a descriptor of an open file.
++.I me_ioerror
++will be set if the ioctl returns success.
 +.PP
-+The argument
-+.I healthmon_fd
-+must be a file opened via the
-+.B XFS_IOC_HEALTH_MONITOR
-+ioctl.
++The fields
++.I me_start_daddr
++and
++.I me_end_daddr
++are the range of the storage device to verify.
++Both values must be in units of 512-byte blocks.
++The
++.I me_start_daddr
++field is inclusive, and the
++.I me_end_daddr
++field is exclusive.
++If
++.I me_end_daddr
++is larger than the size of the device, the kernel will set it to the size of
++the device.
++
++If the system call returns success and any part of the storage device range was
++successfully verified, the
++.I me_start_daddr
++field will be updated to reflect the successful verification.
++If after this update the
++.I me_start_daddr
++is equal to
++.IR me_end_daddr ,
++then the entire range was verified successfully.
++
++If not, then a media error was encountered and the caller should generate a
++series of secondary calls to this ioctl with smaller ranges to discover the
++exact location and type of media error.
++The type of media error will be written to the
++.I me_ioerror
++field.
++
++.PP
++The field
++.I me_dev
++must be one of the following values:
++.RS 0.4i
++.TP
++.B XFS_DEV_DATA
++Verify the data device.
++.TP
++.B XFS_DEV_LOG
++Verify the external log device.
++.TP
++.B XFS_DEV_RT
++Verify the realtime device.
++.RE
++.PP
++The field
++.I me_flags
++is a bitmask of one of the following values:
++.RS 0.4i
++.TP
++.B XFS_VERIFY_MEDIA_REPORT
++Report all media errors to fsnotify.
++.RE
++
++The
++.IR me_max_io_size
++field, if nonzero, will be used as advice for the maximum size of the IO to
++send to the device.
++
++The
++.I me_rest_us
++field will cause the kernel to pause for this many microseconds between IO
++requests.
++
 +.SH RETURN VALUE
-+On error, \-1 is returned, and
++On runtime error, \-1 is returned, and
 +.I errno
 +is set to indicate the error.
-+If the file descriptor points to a file on the same filesystem that is being
-+monitored, 0 is returned.
++If 0 is returned, then
++.I start_daddr
++or
++.I ioerror
++will be updated.
 +.PP
 +.SH ERRORS
 +Error codes can be one of, but are not limited to, the following:
 +.TP
-+.B ESTALE
-+The open file is not on the same filesystem that is being monitored.
++.B EPERM
++The calling process does not have sufficient privilege.
 +.TP
 +.B EINVAL
 +One or more of the arguments specified is invalid.
-+.TP
-+.B EBADF
-+.I arg.fd
-+does not refer to an open file.
 +.TP
 +.B EFAULT
 +The
 +.I arg
 +structure could not be copied into the kernel.
 +.TP
-+.B ENOTTY
-+.I healthmon_fd
-+is not a XFS health monitoring file.
++.B ENODEV
++The device is not present.
++.TP
++.B ENOMEM
++There was not enough memory to perform the verification.
++
++.SH I/O ERRORS
++The
++.I ioerror
++field could be set to one of the following:
++.TP
++.B 0
++The verification I/O succeeded.
++.TP
++.B EOPNOTSUPP
++.TP
++.B ETIMEDOUT
++The kernel timed out the verification I/O command.
++.TP
++.B ENOLINK
++The transportation link to the storage device was down temporarily.
++.TP
++.B EREMOTEIO
++The storage target controller suffered a critical error.
++.TP
++.B ENODATA
++The storage target media suffered a critical error.
++.TP
++.B EILSEQ
++Storage protection metadata did not validate successfully.
++.TP
++.B ENOMEM
++There was not enough memory to allocate an I/O request.
++.TP
++.B ENODEV
++The storage device is offline.
++.TP
++.B ETIME
++The storage device timed out the I/O command.
++.TP
++.B EINVAL
++The I/O request was rejected by the device for being invalid.
++.TP
++.B EIO
++An I/O error occurred but no specific details are available.
++.RE
++.PP
++This list is not exhaustive and may grow in the future.
++
 +.SH CONFORMING TO
 +This API is specific to XFS filesystem on the Linux kernel.
 +.SH SEE ALSO
 +.BR ioctl_xfs_health_monitor (2)
-diff --git a/man/man2/ioctl_xfs_health_monitor.2 b/man/man2/ioctl_xfs_health_monitor.2
-new file mode 100644
-index 00000000000000..269c434515d960
---- /dev/null
-+++ b/man/man2/ioctl_xfs_health_monitor.2
-@@ -0,0 +1,464 @@
-+.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0+
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-HEALTH-MONITOR 2 2026-01-04 "XFS"
-+.SH NAME
-+ioctl_xfs_health_monitor \- read filesystem health events from the kernel
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " dest_fd ", XFS_IOC_HEALTH_MONITOR, struct xfs_health_monitor *" arg );
-+.SH DESCRIPTION
-+This XFS ioctl asks the kernel driver to create a pseudo-file from which
-+information about adverse filesystem health events can be read.
-+This new file will be installed into the file descriptor table of the calling
-+process as a read-only file, and will have the close-on-exec flag set.
-+.PP
-+The specific behaviors of this health monitor file are requested via a
-+structure of the following form:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_health_monitor {
-+	__u64 flags;
-+	__u8  format;
-+	__u8  pad[23];
-+};
-+.fi
-+.in
-+.PP
-+The field
-+.I pad
-+must be zero.
-+.PP
-+The field
-+.I format
-+controls the format of the event data that can be read:
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_FMT_V0
-+Event data will be presented in discrete objects of type struct
-+xfs_health_monitor_event.
-+See below for more information.
-+.RE
-+
-+.PD 1
-+.PP
-+The field
-+.I flags
-+control the behavior of the monitor.
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_VERBOSE
-+Return all health events, including affirmations of healthy metadata.
-+.RE
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+Otherwise, the return value is a new file descriptor.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EEXIST
-+Health monitoring is already active for this filesystem.
-+.TP
-+.B EPERM
-+The caller does not have permission to open a health monitor.
-+Calling programs must have administrative capability, run in the initial user
-+namespace, and the
-+.I fd
-+passed to ioctl must be the root directory of an XFS filesystem.
-+.TP
-+.B EINVAL
-+One or more of the arguments specified is invalid.
-+.TP
-+.B EFAULT
-+The argument could not be copied into the kernel.
-+.TP
-+.B ENOMEM
-+There was not sufficient memory to construct the health monitor.
-+.SH EVENT FORMAT
-+Calling programs retrieve XFS health events by calling
-+.BR read (2)
-+on the returned file descriptor.
-+The read buffer must be large enough to hold at least one event object.
-+Partial objects will not be returned; instead, a short read will occur.
-+
-+Events will be returned in the following format:
-+
-+.PP
-+.in +4n
-+.nf
-+struct xfs_health_monitor_event {
-+	__u32	domain;
-+	__u32	type;
-+	__u64	time_ns;
-+
-+	union {
-+		struct xfs_health_monitor_lost lost;
-+		struct xfs_health_monitor_fs fs;
-+		struct xfs_health_monitor_group group;
-+		struct xfs_health_monitor_inode inode;
-+		struct xfs_health_monitor_shutdown shutdown;
-+		struct xfs_health_monitor_media media;
-+		struct xfs_health_monitor_filerange filerange;
-+	} e;
-+
-+	__u64	pad[2];
-+};
-+.fi
-+.in
-+.PP
-+The field
-+.I time_ns
-+records the timestamp at which the health event was generated, in units of
-+nanoseconds since the Unix epoch.
-+.PP
-+The field
-+.I pad
-+will be zero.
-+.PP
-+The field
-+.I domain
-+indicates the scope of the filesystem affected by the event:
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_MOUNT
-+The entire filesystem is affected.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_FS
-+Metadata concerning the entire filesystem is affected.
-+Details are available through the
-+.I fs
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_AG
-+Metadata concerning a specific allocation group is affected.
-+Details are available through the
-+.I group
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_RTGROUP
-+Metadata concerning a specific realtime allocation group is affected.
-+Details are available through the
-+.I group
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_INODE
-+File metadata is affected.
-+Details are available through the
-+.I inode
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_DATADEV
-+The main data volume is affected.
-+Details are available through the
-+.I media
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_RTDEV
-+The realtime volume is affected.
-+Details are available through the
-+.I media
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_LOGDEV
-+The external log is affected.
-+Details are available through the
-+.I media
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_DOMAIN_FILERANGE
-+File data is affected.
-+Details are available through the
-+.I filerange
-+field.
-+.RE
-+
-+.PP
-+The field
-+.I type
-+indicates what was affected by a health event:
-+.RS 0.4i
-+.PP
-+The following types apply to events from the
-+.B MOUNT
-+domain.
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_RUNNING
-+This filesystem health monitor is now running.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_LOST
-+Health events were lost.
-+Details are available through the
-+.I lost
-+field.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_UNMOUNT
-+The filesystem is being unmounted.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_SHUTDOWN
-+The filesystem has shut down due to problems.
-+Details are available through the
-+.I shutdown
-+field.
-+.RE
-+.PP
-+The following three types apply to events from the
-+.BR FS ,
-+.BR AG ,
-+.BR RTGROUP ,
-+and
-+.B INODE
-+domains.
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_SICK
-+Filesystem metadata has been scanned by online fsck and found to be corrupt.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_CORRUPT
-+A metadata corruption problem was encountered during a filesystem operation
-+outside of fsck.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_HEALTHY
-+Filesystem metadata has either been scanned by online fsck and found to be
-+in good condition, or it has been repaired to good condition.
-+.RE
-+.PP
-+The following type applies to events from the
-+.BR DATADEV ,
-+.BR RTDEV ,
-+and
-+.B LOGDEV
-+domains.
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_MEDIA_ERROR
-+A media error has been observed on one of the storage devices that can be
-+attached to an XFS filesystem.
-+.RE
-+.PP
-+The following types apply to events from the
-+.B FILERANGE
-+domain.
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_BUFREAD
-+An attempt to read (or readahead) from a file failed with an I/O error.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_BUFWRITE
-+An attempt to write dirty data to storage failed with an I/O error.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_DIOREAD
-+A direct read of file data from storage failed with an I/O error.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_DIOWRITE
-+A direct write of file data to storage failed with an I/O error.
-+.TP
-+.B XFS_HEALTH_MONITOR_TYPE_DATALOST
-+A latent media error was discovered on the storage backing part of this file.
-+.RE
-+.RE
-+
-+.PP
-+The union
-+.I e
-+contains further details about the health event:
-+
-+.RS 0.4i
-+.PP
-+The kernel will use no more than 32KiB of memory per monitoring file to queue
-+health events.
-+If this limit is exceeded, an event will be generated to describe how many
-+events were lost:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_lost {
-+	__u64	count;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I count
-+field records the number of events lost.
-+
-+.PP
-+If whole-filesystem metadata experiences a health event, the exact type of
-+that metadata is recorded as follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_fs {
-+	__u32	mask;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I mask
-+field will contain
-+.I XFS_FSOP_GEOM_SICK_*
-+flags that are documented in the
-+.BR ioctl_xfs_fsgeometry (2)
-+manual page.
-+
-+.PP
-+If an allocation group (realtime or data) experiences a health event,
-+the exact type and location of the metadata is recorded as follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_group {
-+	__u32	mask;
-+	__u32	gno;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I mask
-+field will contain
-+.I XFS_AG_SICK_*
-+flags that are documented in the
-+.BR ioctl_xfs_ag_geometry (2)
-+manual page, or the
-+.I XFS_RTGROUP_SICK_*
-+flags that are documented by the
-+.BR ioctl_xfs_rtgroup_geometry (2)
-+manual page.
-+.PP
-+The
-+.I gno
-+field will contain the group number.
-+
-+.PP
-+If a file experiences a health event, the exact type and handle to the file
-+is recorded as follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_inode {
-+	__u32	mask;
-+	__u32	gen;
-+	__u64	ino;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I mask
-+field will contain
-+.I XFS_BS_SICK_*
-+flags that are documented by the
-+.BR ioctl_xfs_bulkstat (2)
-+manual page.
-+.PP
-+The
-+.I ino
-+and
-+.I gen
-+fields describe a handle to the affected file.
-+
-+.PP
-+If the filesystem shuts down abnormally, the exact reasons are recorded as
-+follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_shutdown {
-+	__u32	reasons;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I reasons
-+field is a combination of the following values:
-+.RS 0.4i
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_META_IO_ERROR
-+Metadata I/O errors were encountered.
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR
-+Log I/O errors were encountered.
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT
-+The filesystem was forcibly shut down by an administrator.
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE
-+In-memory metadata are corrupt.
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK
-+On-disk metadata are corrupt.
-+.TP
-+.B XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED
-+Storage devices were removed.
-+.RE
-+
-+.PP
-+If a media error is discovered on the storage device, the exact location is
-+recorded as follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_media {
-+	__u64	daddr;
-+	__u64	bbcount;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I daddr
-+and
-+.I bbcount
-+fields describe the range of the storage that were lost.
-+Both are provided in units of 512-byte blocks.
-+
-+.PP
-+If a problem is discovered with regular file data, the handle of the file
-+and the exact range of the file are recorded as follows:
-+
-+.in +4n
-+.nf
-+struct xfs_health_monitor_filerange {
-+	__u64	pos;
-+	__u64	len;
-+	__u64	ino;
-+	__u32	gen;
-+	__u32	error;
-+};
-+.fi
-+.in
-+.PP
-+The
-+.I ino
-+and
-+.I gen
-+fields describe a handle to the affected file.
-+The
-+.I pos
-+and
-+.I len
-+fields describe the range of the file data that are affected.
-+Both are provided in units of bytes.
-+.PP
-+The
-+.I error
-+field describes the error that occurred.
-+See the
-+.BR errno (3)
-+manual page for more information.
-+.RE
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH SEE ALSO
-+.BR ioctl_xfs_health_samefs (2)
 
