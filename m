@@ -1,83 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45CE43E9F97;
-	Thu, 19 Mar 2026 17:03:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA05C24BBEE
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 17:09:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773939826; cv=none; b=G60JJv3ws4/AFY2dBgScl7OGrZ7c2XQSnDwwtf/qXfyWYlZalUjnlzJS1qgYOeSD1KL4y5H9dNSz3TYkue2MAZv6nO7UQs3mCzUlcyh2LofTqoVysKxD7/1OM+4IgkJ6cER5+fXWa6/2a92yNXMx0nHQYZj4LQhBzgf4diI7/kM=
+	t=1773940179; cv=none; b=VBh1aVlZO6hXxRLC2+ShdKP3TaqaP0BwQZH6bGkv4+mE6OjXkyMM7PkutTlan1sF72GtD4nOwJtJDK8aqsZM13Gn4ZbBTQtTkss5iJ77tACuDH4sPPcY+7VmWnme60ud4FdYkSNA9aoGMT22yFEzRdZVA8j/9Vr8wmnTzCSFS1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773939826; c=relaxed/simple;
-	bh=F9zqK9E4O4jjnMMTNM5mFWuFg4IWtl3pxXGeeyzEVtk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xu45eBXDi4hEN7vBDur1VIx+GIoBUTIC6n8LBvnMvDRWnxZ3wwC8T+Xd0JEv3yMDNhWuaAi3cpYiRrH7W/1y48UY7reJp0jMqLk575OyvqRKWkcJhvtpAkAnR3s2B/NwwuLvFOzDPhkrGjtdzO6+zq/YIyAEUSPlRCfL2CQgUks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pchmygOt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773940179; c=relaxed/simple;
+	bh=LusobrZXLq62PS0Y8pYL4iCRSjCzTW+JHc1ANv5VA5U=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=L+MbCG8wA476onWjkyMjCK2v9GVcZ7O4NdbK3mkdnnEBgxX270JPLujDtsH+JFIZl8ZEeyuUQS3eWsGzFmYdrLCE12C3UukEOnQypCSLRwu98toD3tCmvL40dj7iUxEtimYxd0gJhvLf2Z3tCJtnF48Bd7Zp1sI9IMrlen9mT+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2CjXI+B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pchmygOt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5CFCC19425;
-	Thu, 19 Mar 2026 17:03:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2CjXI+B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2618CC19424;
+	Thu, 19 Mar 2026 17:09:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773939825;
-	bh=F9zqK9E4O4jjnMMTNM5mFWuFg4IWtl3pxXGeeyzEVtk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pchmygOtjwmWmYK5E3bMAoRbtv69lNzGeeVtDvXHjzOycrRkERxLQqc5CS5bXnsyE
-	 R8BSPes3kUPbaHvLWvmrQXOCvhpRg2xEyIUn1L/1PbO+dzMpf73v5LTGGMCq4OATmw
-	 jxYzjJrZ/+O8Z3xAP7Q65UsZq1YGZT7VM8ZS/vjRvLvD2quwhKXIdECaZS4i5bLP+8
-	 iI0RgLvS6W/t0OeoDm7539LJyGWTEPfgRVIZGS05dTNCpZWfg3upHiesYJJzs5QpXJ
-	 rjb1mggiIuIYm5SjCa4dxSkdBpPSwmPCuqUjTYHQXOmyHN9+vknQ/BpiMPSBVUDZc8
-	 ZtZkSE7lhQCBg==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	ebiggers@kernel.org
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	hch@lst.de,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org,
-	djwong@kernel.org
-Subject: [PATCH v5 25/25] xfs: enable ro-compat fs-verity flag
-Date: Thu, 19 Mar 2026 18:02:12 +0100
-Message-ID: <20260319170231.1455553-26-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260319170231.1455553-1-aalbersh@kernel.org>
-References: <20260319170231.1455553-1-aalbersh@kernel.org>
+	s=k20201202; t=1773940179;
+	bh=LusobrZXLq62PS0Y8pYL4iCRSjCzTW+JHc1ANv5VA5U=;
+	h=Date:From:To:Cc:Subject:From;
+	b=f2CjXI+BU87rBynJl0/d60Y/jrvuCOdcT3bFwFU/8Ojgp9OQjb+DKZxRKA7xdIQ4E
+	 rwl2VtTVA13ZhPSkf4cz//CTojs+NqfkLu5t3YL1WYWvd2HZp8w96MwxChqYx5Xp7W
+	 qv4TfqN9eGSpj9Db71xuBoCm1LYzUb21msaS4SClzJIg5dQbfIJlP4V74oRPVd+APW
+	 6lhgnK5ZkPdgW1fVdJmD/gybu2ofgiFy0W7Z75XBX/TdqP0JZUTOs6IpTjw58P3kGo
+	 RWDGV4CMC7ZOsdTPiFl2yiYa4l0lpm/4LXXuGqwyz2bkNzwWj/YfTl2VEm+PyA8qiN
+	 75uehwPtDh3/w==
+Date: Thu, 19 Mar 2026 10:09:38 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Long Li <leo.lilong@huawei.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
+	lonuxli.64@gmail.com
+Subject: [PATCH 1/2] xfs: don't allow UAF in xlog_recover_iget
+Message-ID: <20260319170938.GS1770774@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Finalize fs-verity integration in XFS by making kernel fs-verity
-aware with ro-compat flag.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: add spaces]
+Fix this function to avoid touching the passed in ipp argument until
+we're 100% certain that we're returning zero.  This avoids creating a
+dangling pointer in the caller.  The xfs_irele call in
+xfs_attri_recover_work was never correct and should go away.
+
+Cc: <stable@vger.kernel.org> # v5.15
+Fixes: 4bc619833f738f ("xfs: refactor xfs_iget calls from log intent recovery")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_log_recover.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 4dff29659e40..0ce46c234b9c 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -378,8 +378,9 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
-+		 XFS_SB_FEAT_RO_COMPAT_VERITY)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
--- 
-2.51.2
-
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 09e6678ca4878e..0e91a62348eb79 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1745,21 +1745,23 @@ xlog_recover_iget(
+ 	xfs_ino_t		ino,
+ 	struct xfs_inode	**ipp)
+ {
++	struct xfs_inode	*ip;
+ 	int			error;
+ 
+-	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
++	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_qm_dqattach(*ipp);
++	error = xfs_qm_dqattach(ip);
+ 	if (error) {
+-		xfs_irele(*ipp);
++		xfs_irele(ip);
+ 		return error;
+ 	}
+ 
+-	if (VFS_I(*ipp)->i_nlink == 0)
+-		xfs_iflags_set(*ipp, XFS_IRECOVERY);
++	if (VFS_I(ip)->i_nlink == 0)
++		xfs_iflags_set(ip, XFS_IRECOVERY);
+ 
++	*ipp = ip;
+ 	return 0;
+ }
+ 
