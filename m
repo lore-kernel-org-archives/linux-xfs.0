@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5990F351C1C
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:42:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16F23126B9
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:42:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895360; cv=none; b=kpsdgRYnOjjO5yjagCU3I3yrxfkgTogHN8kr1oPMkOl3jMNeg4/Tw0s6IVu8ofvLo1PdZdbfJCnITQS6TI8YMvy4BU86oeB8f0ePuoNPhmfCEeNv7OCALX0LICrjjgx2BHcMLbaGSNLc6rgTLHSlL4NuZdl+7L76SHq25E/jnDs=
+	t=1773895376; cv=none; b=Yy1FJJUaOslEGo+YnJ31zzb5urDY/3tNRrK+XGENCLTOUFiy5Z6DROUiw20LN58mgVuprCv/rJKUMYRoC1WsJFZn2VlSWS4XwG4nNmZRHmp902NrvMlJrw+97tZBzNZi1hbvA0s3oopqgDmmC4auxyXbN6VAJGOZpqWZDcv+qAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895360; c=relaxed/simple;
-	bh=crWEkosGiOC4Si8MJV/8jUeFh4QIXl78E2+GZMeroko=;
+	s=arc-20240116; t=1773895376; c=relaxed/simple;
+	bh=ee2SMb4r7Ixvqj4mbWpPfyFaG9Gjd1nM6MbvzpIgsnk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jxz1M+adRp5S3HqkOnbGQJgRgIfbl2VotVyyptITwhf1Sq3oPNHJnjoA+7YwuTaWf0hmaR+llM5NbS65T2yJxhe0kaTL8iCv14bZjMsES96BWPpupEfKd6DL6oPGieicEA0rY8dFK4/oqaZS7dfZCw2nVWSCZaGW2vAczIMz5CM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkXlHJDO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=sqmfQJr/V4B2seCW6JB1A4fR/Qfs0iUln5qCvl/vwNmP6HnhakH4BMzx2iGefgn2zPNKZJOS8HBm0Rz8Kix8wnVZb6ouGH2SfFTIDV5OG3tsTD0t9FX6u/9EVepUwNXtM5OgWRQOGfqFDo3qJS+8vHS/uH6thtfCAzCPJ3m2Mf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MO8MV5d9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkXlHJDO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33832C19425;
-	Thu, 19 Mar 2026 04:42:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MO8MV5d9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCA06C19425;
+	Thu, 19 Mar 2026 04:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895360;
-	bh=crWEkosGiOC4Si8MJV/8jUeFh4QIXl78E2+GZMeroko=;
+	s=k20201202; t=1773895375;
+	bh=ee2SMb4r7Ixvqj4mbWpPfyFaG9Gjd1nM6MbvzpIgsnk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GkXlHJDOlk3z/N9fnYIkPLFB1brxV/7MAqsVyuFmi0So1+0Ny5zZcw2t92w+3RYkd
-	 Cp6gQ9tUuuzUCu9COELCaKZgW6ba2bqbRo4GOrNU4zKQlF1K93TQZ/sOjuViK510aW
-	 Axyb07ejV+qpIvweBxXiV4DIP31fVOJYFqpqzKrXk5P5DWffloxX4k0aAnyRgNKvgC
-	 EhCC+fLqFRKg8EYzqQ+LE2JWaSf8g/TEJRSp+3b9TjsvJEl2KaVFuhvLWP0BpUca1P
-	 1/K8f/+oXsOvm9GVbLEgWRCwFz5kmJUQIa9IXoeIV9yjQIXtLrQKybaYUvmUr05qzN
-	 /Z/W1+Xjb0seA==
-Date: Wed, 18 Mar 2026 21:42:39 -0700
-Subject: [PATCH 15/26] xfs_healer: don't start service if kernel support
- unavailable
+	b=MO8MV5d9GlP+N9hlWCcHqZXL+K6O5+KpFkYkvse+6U9iUBEXr/5sJPIt5x+bSJkzF
+	 rTAYDh/L1bPXqnqm0EDlnERgJpjC0KgIAx6CU1Jg8mj5KQIjAgtb9DRUbVlJTRPi5q
+	 VIQrXJk4hroGRHmeMgRGwsxV3f4wI2oUpsdCFfXGk7QBRDdb6uEf/Qy/rcRW4cvxF8
+	 oQqkD23ORXVSgM77uLfXUWFnO3+oWse+e3xjQlL9cqhoUEUqCtARU4wP8yD659hucm
+	 AerQ5e5zpwYFJLWokie23CakkpPLXCP3yE8HVBT7gtSgKDWMSY+SKBJrMPy7D4Cg11
+	 nEDtnMvPUo52Q==
+Date: Wed, 18 Mar 2026 21:42:55 -0700
+Subject: [PATCH 16/26] xfs_healer: use the autofsck fsproperty to select mode
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506421.3680139.56191667814181579.stgit@frogsfrogsfrogs>
+Message-ID: <177389506440.3680139.11657732469932324992.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,158 +45,218 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use ExecCondition= in the system service to check if kernel support for
-the health monitor is available.  If not, we don't want to run the
-service, have it fail, and generate a bunch of silly log messages.
+Make the xfs_healer background service query the autofsck filesystem
+property to figure out which operating mode it should use.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/xfs_healer.h           |    1 +
- healer/xfs_healer.c           |   47 ++++++++++++++++++++++++++++++++---------
- healer/xfs_healer@.service.in |    1 +
- 3 files changed, 39 insertions(+), 10 deletions(-)
+ healer/xfs_healer.h    |    1 
+ libfrog/fsproperties.h |    5 ++
+ healer/xfs_healer.c    |  102 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 105 insertions(+), 3 deletions(-)
 
 
 diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
-index 679bdc95ae48f8..7caa6c66a59c6f 100644
+index 7caa6c66a59c6f..a2a46053928e33 100644
 --- a/healer/xfs_healer.h
 +++ b/healer/xfs_healer.h
-@@ -27,6 +27,7 @@ struct healer_ctx {
- 	int			foreground;
+@@ -28,6 +28,7 @@ struct healer_ctx {
  	int			want_repair;
  	int			print_svcname;
-+	int			support_check;
+ 	int			support_check;
++	int			autofsck;
  
  	/* fd and fs geometry for mount */
  	struct xfs_fd		mnt;
+diff --git a/libfrog/fsproperties.h b/libfrog/fsproperties.h
+index 11d6530bc9a6d6..1cf90d058765b2 100644
+--- a/libfrog/fsproperties.h
++++ b/libfrog/fsproperties.h
+@@ -52,6 +52,11 @@ bool fsprop_validate(const char *name, const char *value);
+ 
+ #define FSPROP_AUTOFSCK_NAME		"autofsck"
+ 
++/* filesystem property name for fgetxattr */
++#define VFS_FSPROP_AUTOFSCK_NAME	(FSPROP_NAMESPACE \
++					 FSPROP_NAME_PREFIX \
++					 FSPROP_AUTOFSCK_NAME)
++
+ enum fsprop_autofsck {
+ 	FSPROP_AUTOFSCK_UNSET = 0,	/* do not set property */
+ 	FSPROP_AUTOFSCK_NONE,		/* no background scrubs */
 diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index 1a26ffe830e5fe..8c48d2d9ee8c2d 100644
+index 8c48d2d9ee8c2d..f4bee495979324 100644
 --- a/healer/xfs_healer.c
 +++ b/healer/xfs_healer.c
-@@ -191,8 +191,14 @@ healer_nproc(
+@@ -6,6 +6,7 @@
+ #include "xfs.h"
+ #include <pthread.h>
+ #include <stdlib.h>
++#include <sys/xattr.h>
+ 
+ #include "platform_defs.h"
+ #include "libfrog/fsgeom.h"
+@@ -13,6 +14,7 @@
+ #include "libfrog/healthevent.h"
+ #include "libfrog/workqueue.h"
+ #include "libfrog/systemd.h"
++#include "libfrog/fsproperties.h"
+ #include "xfs_healer.h"
+ 
+ /* Program name; needed for libfrog error reports. */
+@@ -191,6 +193,63 @@ healer_nproc(
  	return ctx->foreground ? platform_nproc() : 1;
  }
  
-+enum mon_state {
-+	MON_START,
-+	MON_EXIT,
-+	MON_ERROR,
++enum want_repair {
++	WR_REPAIR,
++	WR_LOG_ONLY,
++	WR_EXIT,
 +};
 +
- /* Set ourselves up to monitor the given mountpoint for health events. */
--static int
-+static enum mon_state
- setup_monitor(
- 	struct healer_ctx	*ctx)
- {
-@@ -203,7 +209,7 @@ setup_monitor(
- 	ret = xfd_open(&ctx->mnt, ctx->mntpoint, O_RDONLY);
- 	if (ret) {
- 		perror(ctx->mntpoint);
--		return -1;
-+		return MON_ERROR;
- 	}
- 
- 	ret = try_capture_fsinfo(ctx);
-@@ -274,6 +280,16 @@ setup_monitor(
- 	close(ctx->mnt.fd);
- 	ctx->mnt.fd = -1;
- 
++/* Determine want_repair from the autofsck filesystem property. */
++static enum want_repair
++want_repair_from_autofsck(
++	struct healer_ctx	*ctx)
++{
++	char			valuebuf[FSPROP_MAX_VALUELEN + 1] = { 0 };
++	enum fsprop_autofsck	shval;
++	ssize_t			ret;
++
 +	/*
-+	 * At this point, we know that the kernel is capable of repairing the
-+	 * filesystem and telling us that it needs repairs.  If the user only
-+	 * wanted us to check for the capability, we're done.
++	 * Any OS error (including ENODATA) or string parsing error is treated
++	 * the same as an unrecognized value.
 +	 */
-+	if (ctx->support_check) {
-+		close(mon_fd);
-+		return MON_EXIT;
++	ret = fgetxattr(ctx->mnt.fd, VFS_FSPROP_AUTOFSCK_NAME, valuebuf,
++			FSPROP_MAX_VALUELEN);
++	if (ret < 0)
++		goto no_advice;
++
++	shval = fsprop_autofsck_read(valuebuf);
++	switch (shval) {
++	case FSPROP_AUTOFSCK_NONE:
++		/* don't run at all */
++		ret = WR_EXIT;
++		break;
++	case FSPROP_AUTOFSCK_CHECK:
++	case FSPROP_AUTOFSCK_OPTIMIZE:
++		/* log events, do not repair */
++		ret = WR_LOG_ONLY;
++		break;
++	case FSPROP_AUTOFSCK_REPAIR:
++		/* repair stuff */
++		ret = WR_REPAIR;
++		break;
++	case FSPROP_AUTOFSCK_UNSET:
++		goto no_advice;
 +	}
 +
- 	/*
- 	 * mon_fp consumes mon_fd.  We intentionally leave mon_fp attached to
- 	 * the context so that we keep the monitoring fd open until we've torn
-@@ -305,7 +321,7 @@ setup_monitor(
++	return ret;
++
++no_advice:
++	/*
++	 * For an unrecognized value, log but do not fix runtime corruption if
++	 * backref metadata are enabled.  If no backref metadata are available,
++	 * the fs is too old so don't run at all.
++	 */
++	if (healer_has_rmapbt(ctx) || healer_has_parent(ctx))
++		return WR_LOG_ONLY;
++
++	return WR_EXIT;
++}
++
+ enum mon_state {
+ 	MON_START,
+ 	MON_EXIT,
+@@ -219,14 +278,45 @@ setup_monitor(
+ 		goto out_mnt_fd;
  	}
- 	ctx->queue_active = true;
  
--	return 0;
-+	return MON_START;
+-	if (ctx->want_repair) {
+-		/* Check that the kernel supports repairs at all. */
+-		if (!healer_can_repair(ctx)) {
++	if (ctx->autofsck) {
++		switch (want_repair_from_autofsck(ctx)) {
++		case WR_EXIT:
++			printf("%s: %s\n", ctx->mntpoint,
++ _("Disabling daemon per autofsck directive."));
++			fflush(stdout);
++			close(ctx->mnt.fd);
++			return MON_EXIT;
++		case WR_REPAIR:
++			ctx->want_repair = 1;
++			printf("%s: %s\n", ctx->mntpoint,
++ _("Automatically repairing per autofsck directive."));
++			fflush(stdout);
++			break;
++		case WR_LOG_ONLY:
++			ctx->want_repair = 0;
++			ctx->log = 1;
++			printf("%s: %s\n", ctx->mntpoint,
++ _("Only logging errors per autofsck directive."));
++			fflush(stdout);
++			break;
++		}
++	}
++
++	/* Check that the kernel supports repairs at all. */
++	if (ctx->want_repair && !healer_can_repair(ctx)) {
++		if (!ctx->autofsck) {
+ 			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
+  _("XFS online repair is not supported, exiting"));
+ 			goto out_mnt_fd;
+ 		}
  
- out_mon_fp:
- 	if (ctx->mon_fp)
-@@ -318,7 +334,7 @@ setup_monitor(
- 	if (ctx->mnt.fd >= 0)
- 		close(ctx->mnt.fd);
- 	ctx->mnt.fd = -1;
--	return -1;
-+	return MON_ERROR;
- }
- 
- /* Monitor the given mountpoint for health events. */
-@@ -395,6 +411,7 @@ usage(void)
++		printf("%s: %s\n", ctx->mntpoint,
++ _("XFS online repair is not supported, will report only"));
++		fflush(stdout);
++		ctx->want_repair = 0;
++	}
++
++	if (ctx->want_repair) {
+ 		/* Check for backref metadata that makes repair effective. */
+ 		if (!healer_has_rmapbt(ctx))
+ 			fprintf(stderr, "%s: %s\n", ctx->mntpoint,
+@@ -409,6 +499,7 @@ usage(void)
+ 	fprintf(stderr, _("  --debug       Enable debugging messages.\n"));
+ 	fprintf(stderr, _("  --everything  Capture all events.\n"));
  	fprintf(stderr, _("  --foreground  Process events as soon as possible.\n"));
++	fprintf(stderr, _("  --no-autofsck Do not use the \"autofsck\" fs property to decide to repair.\n"));
  	fprintf(stderr, _("  --quiet       Do not log health events to stdout.\n"));
  	fprintf(stderr, _("  --repair      Always repair corrupt metadata.\n"));
-+	fprintf(stderr, _("  --supported   Check that health monitoring is supported.\n"));
- 	fprintf(stderr, _("  -V            Print version.\n"));
- 
- 	exit(EXIT_FAILURE);
-@@ -407,6 +424,7 @@ enum long_opt_nr {
+ 	fprintf(stderr, _("  --supported   Check that health monitoring is supported.\n"));
+@@ -422,6 +513,7 @@ enum long_opt_nr {
+ 	LOPT_EVERYTHING,
+ 	LOPT_FOREGROUND,
  	LOPT_HELP,
++	LOPT_NO_AUTOFSCK,
  	LOPT_QUIET,
  	LOPT_REPAIR,
-+	LOPT_SUPPORTED,
- 	LOPT_SVCNAME,
- 
- 	LOPT_MAX,
-@@ -439,6 +457,7 @@ main(
+ 	LOPT_SUPPORTED,
+@@ -439,6 +531,7 @@ main(
+ 		.conlock	= (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER,
+ 		.log		= 1,
+ 		.mnt.fd		= -1,
++		.autofsck	= 1,
+ 	};
+ 	int			option_index;
+ 	int			vflag = 0;
+@@ -455,6 +548,7 @@ main(
+ 		[LOPT_EVERYTHING]  = {"everything", no_argument, &ctx.everything, 1 },
+ 		[LOPT_FOREGROUND]  = {"foreground", no_argument, &ctx.foreground, 1 },
  		[LOPT_HELP]	   = {"help", no_argument, NULL, 0 },
++		[LOPT_NO_AUTOFSCK] = {"no-autofsck", no_argument, &ctx.autofsck, 0 },
  		[LOPT_QUIET]	   = {"quiet", no_argument, &ctx.log, 0 },
  		[LOPT_REPAIR]	   = {"repair", no_argument, &ctx.want_repair, 1 },
-+		[LOPT_SUPPORTED]   = {"supported", no_argument, &ctx.support_check, 1 },
- 		[LOPT_SVCNAME]	   = {"svcname", no_argument, &ctx.print_svcname, 1 },
+ 		[LOPT_SUPPORTED]   = {"supported", no_argument, &ctx.support_check, 1 },
+@@ -492,6 +586,8 @@ main(
  
- 		[LOPT_MAX]	   = {NULL, 0, NULL, 0 },
-@@ -490,14 +509,22 @@ main(
- 		return EXIT_SUCCESS;
- 	}
+ 	if (optind != argc - 1)
+ 		usage();
++	if (ctx.want_repair)
++		ctx.autofsck = 0;
  
--	ret = setup_monitor(&ctx);
--	if (ret)
--		goto out_events;
-+	switch (setup_monitor(&ctx)) {
-+	case MON_ERROR:
-+		ret = -1;
-+		break;
-+	case MON_EXIT:
-+		ret = 0;
-+		break;
-+	case MON_START:
-+		ret = 0;
-+		monitor(&ctx);
-+		break;
-+	}
- 
--	monitor(&ctx);
--
--out_events:
- 	teardown_monitor(&ctx);
- 	free((char *)ctx.fsname);
-+	if (ctx.support_check)
-+		return systemd_service_exit_now(ret);
- 	return systemd_service_exit(ret);
- }
-diff --git a/healer/xfs_healer@.service.in b/healer/xfs_healer@.service.in
-index 385257872b0cbb..53f89cf9c4333d 100644
---- a/healer/xfs_healer@.service.in
-+++ b/healer/xfs_healer@.service.in
-@@ -17,6 +17,7 @@ RequiresMountsFor=%f
- [Service]
- Type=exec
- Environment=SERVICE_MODE=1
-+ExecCondition=@pkg_libexec_dir@/xfs_healer --supported %f
- ExecStart=@pkg_libexec_dir@/xfs_healer %f
- SyslogIdentifier=%N
+ 	ctx.mntpoint = argv[optind];
  
 
