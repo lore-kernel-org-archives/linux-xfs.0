@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA05C24BBEE
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 17:09:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50BC2BEC57
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 17:10:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773940179; cv=none; b=VBh1aVlZO6hXxRLC2+ShdKP3TaqaP0BwQZH6bGkv4+mE6OjXkyMM7PkutTlan1sF72GtD4nOwJtJDK8aqsZM13Gn4ZbBTQtTkss5iJ77tACuDH4sPPcY+7VmWnme60ud4FdYkSNA9aoGMT22yFEzRdZVA8j/9Vr8wmnTzCSFS1c=
+	t=1773940245; cv=none; b=QApdKW79jGVJUsgFw0F+SQrsCDFA6uaCRBxsrJbR/Ie11OUC323A2HSh7FRxfabXTE6mgERRqJBh7OKn099rT2vAunPw+BOmkHd5zDTYQcv04Jx9mRIQZWlsAqwbxA7kA0eplmOXzOERLOf5M25IQ2TowhXTdF+9AhrLx/+x09c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773940179; c=relaxed/simple;
-	bh=LusobrZXLq62PS0Y8pYL4iCRSjCzTW+JHc1ANv5VA5U=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=L+MbCG8wA476onWjkyMjCK2v9GVcZ7O4NdbK3mkdnnEBgxX270JPLujDtsH+JFIZl8ZEeyuUQS3eWsGzFmYdrLCE12C3UukEOnQypCSLRwu98toD3tCmvL40dj7iUxEtimYxd0gJhvLf2Z3tCJtnF48Bd7Zp1sI9IMrlen9mT+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2CjXI+B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773940245; c=relaxed/simple;
+	bh=vPxgUrXkwcKAcsLIHNY5Z7AWPQNF70vDhXd69dnbjOs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dvcpXKjMG9W7lkS90+Wd9WUrIHe+OjV/9HND2bI1yjeIBWs9Zbme7rWIQ4Jq/fzLlK7F6DGsITs7yCr7+Ek/6qNDehESv6cdcxu5BJHwNkWZujfrlbk8IcXyqNVO8Vv2EGP33bS7C4OFpkts42xfn6BMq3BGd9iaCyKGYRNPYtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r0n2MXS/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2CjXI+B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2618CC19424;
-	Thu, 19 Mar 2026 17:09:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r0n2MXS/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 588AEC19424;
+	Thu, 19 Mar 2026 17:10:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773940179;
-	bh=LusobrZXLq62PS0Y8pYL4iCRSjCzTW+JHc1ANv5VA5U=;
-	h=Date:From:To:Cc:Subject:From;
-	b=f2CjXI+BU87rBynJl0/d60Y/jrvuCOdcT3bFwFU/8Ojgp9OQjb+DKZxRKA7xdIQ4E
-	 rwl2VtTVA13ZhPSkf4cz//CTojs+NqfkLu5t3YL1WYWvd2HZp8w96MwxChqYx5Xp7W
-	 qv4TfqN9eGSpj9Db71xuBoCm1LYzUb21msaS4SClzJIg5dQbfIJlP4V74oRPVd+APW
-	 6lhgnK5ZkPdgW1fVdJmD/gybu2ofgiFy0W7Z75XBX/TdqP0JZUTOs6IpTjw58P3kGo
-	 RWDGV4CMC7ZOsdTPiFl2yiYa4l0lpm/4LXXuGqwyz2bkNzwWj/YfTl2VEm+PyA8qiN
-	 75uehwPtDh3/w==
-Date: Thu, 19 Mar 2026 10:09:38 -0700
+	s=k20201202; t=1773940245;
+	bh=vPxgUrXkwcKAcsLIHNY5Z7AWPQNF70vDhXd69dnbjOs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=r0n2MXS/2octNoi4N/p2xTPMw714cOF1keVazIw8P1GGTPbC3uW7pqywRLWqS8EHO
+	 ATODlQWaiR3nbh1XjPT25APuFYKSdl4k/mfF9NTZu4d8s/MvrVRooWTIOwcwkg4Jp3
+	 /eJKwx5WyN6fcOJttewZK92WXVRiflp5h/s/nHyCYGq91ikRMwVbRnL9cuT/Wp0jBy
+	 LYJW8hBwN28wuN4kmREf8wsgnQC5fwDtH/+VaTxuqvU8e9WLgTth2NPEJeH//J41EM
+	 fheF+NBkv3JppIbHfJvnsGwHKUHkEfbQeBHhTTHpy0nVy9LtgWjJpEpULxGz2jfD8B
+	 70z8uZLz0ZXFQ==
+Date: Thu, 19 Mar 2026 10:10:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Long Li <leo.lilong@huawei.com>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
 	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com,
 	lonuxli.64@gmail.com
-Subject: [PATCH 1/2] xfs: don't allow UAF in xlog_recover_iget
-Message-ID: <20260319170938.GS1770774@frogsfrogsfrogs>
+Subject: [PATCH 2/2] xfs: don't irele after failing to iget in
+ xfs_attri_recover_work
+Message-ID: <20260319171044.GT1770774@frogsfrogsfrogs>
+References: <20260319170938.GS1770774@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,51 +44,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260319170938.GS1770774@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this function to avoid touching the passed in ipp argument until
-we're 100% certain that we're returning zero.  This avoids creating a
-dangling pointer in the caller.  The xfs_irele call in
-xfs_attri_recover_work was never correct and should go away.
+xlog_recovery_iget* never set @ip to a valid pointer if they return
+zero, so this irele will walk off a dangling pointer.  Fix that.
 
-Cc: <stable@vger.kernel.org> # v5.15
-Fixes: 4bc619833f738f ("xfs: refactor xfs_iget calls from log intent recovery")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: ae673f534a3097 ("xfs: record inode generation in xattr update log intent items")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_recover.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_attr_item.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 09e6678ca4878e..0e91a62348eb79 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1745,21 +1745,23 @@ xlog_recover_iget(
- 	xfs_ino_t		ino,
- 	struct xfs_inode	**ipp)
- {
-+	struct xfs_inode	*ip;
- 	int			error;
- 
--	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
-+	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
- 	if (error)
- 		return error;
- 
--	error = xfs_qm_dqattach(*ipp);
-+	error = xfs_qm_dqattach(ip);
- 	if (error) {
--		xfs_irele(*ipp);
-+		xfs_irele(ip);
- 		return error;
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 354472bf45f145..fe909bc44c3a79 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -653,7 +653,6 @@ xfs_attri_recover_work(
+ 		break;
  	}
- 
--	if (VFS_I(*ipp)->i_nlink == 0)
--		xfs_iflags_set(*ipp, XFS_IRECOVERY);
-+	if (VFS_I(ip)->i_nlink == 0)
-+		xfs_iflags_set(ip, XFS_IRECOVERY);
- 
-+	*ipp = ip;
- 	return 0;
- }
- 
+ 	if (error) {
+-		xfs_irele(ip);
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, attrp,
+ 				sizeof(*attrp));
+ 		return ERR_PTR(-EFSCORRUPTED);
