@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D688C318EC4
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:40:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 848F43126B9
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:40:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895203; cv=none; b=X3aa6gC0utfPDUk8+59NDEjkEy270y1UjTMVm0QFL8hTxCxnn1r/ZWbpANMB2/1tCPMKcPObRrvA/04po3Iybq2b8PEwMq+dlKHRJM1AgHdN9y/PXagHSpAcDx2Fbkr6DHOL0EP2gsDkCXe7woPSIiUJZP45ewyATfrmB5ku4m4=
+	t=1773895219; cv=none; b=qo2Oes4hqKyMNJZKCfYG6x+TxBmxFnSewTxcgrWP+n3tIxLgzWLOP/tACpYw8EoP+q9pvIyOaH0eXZ98khv5E1SU2Kd4a12aA2kFZaSEhsVWj3xqhBih5TuAkiiesfq/0DmMcuGX9qyRYZ95keVLMpAKiZQeS6wNXdD/2lD2lgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895203; c=relaxed/simple;
-	bh=0EAtZY5XEg7gIHFHibC4GuKIqxAu0gVvnldWyaVDUq4=;
+	s=arc-20240116; t=1773895219; c=relaxed/simple;
+	bh=miK84Ec/KFMCzuT66NY5oPsJgS5oIhnKFQXhztaf4K4=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=R+Jey2MEVNKfe5S2VAHh2RBpbR3pmmPRKFiMF5HCYdmxj5g3ktlU7iXBYMgCKqZwsbtWYV6Hj+Hfid0GvgjYHwpPQiRqJkTqUI6Hdimk8Yyhp+yEipwzBAoG7mF5qXpSMDYK2zRATCwr3ULQyRsPeef9x7IdsD7vs+VflW/8os8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DrnvHp55; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=d2Y+5fQE6Nl0X6JQ5t6EkJIE9iJsy3+9ahaDHop8ttjG+XkOrUbq/GvvwMygK/rkp3bvxlfo/aQKos3jYUF7C3+pQoq6GRuuaQuSFbRYzMwtXYk8QHsA/XzVp0n5QVX4qdsmem5mQVl/UeSoRCeaMbsqYcUQOldpUNBqJVEkRn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D0CYF5+m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DrnvHp55"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66D4DC19425;
-	Thu, 19 Mar 2026 04:40:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D0CYF5+m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56632C19425;
+	Thu, 19 Mar 2026 04:40:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895203;
-	bh=0EAtZY5XEg7gIHFHibC4GuKIqxAu0gVvnldWyaVDUq4=;
+	s=k20201202; t=1773895219;
+	bh=miK84Ec/KFMCzuT66NY5oPsJgS5oIhnKFQXhztaf4K4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DrnvHp55zenPdz2HGkw6d7oualeFGjxhhOBfo8Ch3/kJQPjjPkabQmwn+CMtJ0e/j
-	 txiXlma18C3w22lkgMjkCN9OzVu8nQz3eu/Yyzi5scsAGwNKNbL+el2y50s/0Wh1al
-	 o7pgpmQUqfJsMA4qsxXuMwrxooTlurjEDIpqcquXRj2Zv5tM2YAUJh0Oatm/Gb40+G
-	 3fUlL+qAsGbShpPvG0FVUg+kLIa5rkaTI8l2szwvUoFtyxDFRboMj6xarikMV518t5
-	 E+/5/ex4yDFAkBpjRgrPdWj8L8f2x4u72A07CTIlyPOEUf2rTpou6FMh0hI2xCNsfs
-	 i9BEYDKNXtOHg==
-Date: Wed, 18 Mar 2026 21:40:02 -0700
-Subject: [PATCH 05/26] libfrog: add wrappers for listmount and statmount
+	b=D0CYF5+mnG0K2vqSnadxdN7FFCof695wUkfjt9uHf/xTkLcM3KkZwFcEx8el3Jykk
+	 k7cu+67KnKLyEiTP+PpTrRgLfRC+VI+TWNgE9qZoiugqqZx89xg860maZF++9smgQp
+	 AInUMcYxPPtLGPzHwtqWNqHNUjisd5JbLQ75x1H/Hc/B1ZzJXPb/rxZ/wj3qTC2n45
+	 aYIMLDPYu4/nZMk45mDFWglCfIVgBYFfrR7FgQoOtno33dfe1NC+eVlzdtbYKavRQG
+	 ELVdGa3kxS3PFY+hMUSuJl4C9QcDX0/xjzdw208CRlIfkXCDnEgn4dy/Skr3s9k39U
+	 9No9VA1kU70QQ==
+Date: Wed, 18 Mar 2026 21:40:18 -0700
+Subject: [PATCH 06/26] man2: document the healthmon ioctl
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506237.3680139.1264673212982468234.stgit@frogsfrogsfrogs>
+Message-ID: <177389506255.3680139.4188622659315380704.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,391 +45,568 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some wrappers for listmount and statmount so that we don't have to
-open-code the kernel ABI quirks in every utility program that uses it.
-Note that glibc seems to have discussed providing a wrapper in late 2023
-but took no action; and the listmount manpage says that there is no
-glibc wrapper.
+Document the XFS_IOC_HEALTH_MONITOR and
+XFS_IOC_HEALTH_FD_ON_MONITORED_FS ioctls.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux.h       |    8 +++-
- libfrog/statmount.h   |  104 +++++++++++++++++++++++++++++++++++++++++++++++++
- configure.ac          |    5 ++
- include/builddefs.in  |    7 +++
- libfrog/Makefile      |    9 ++++
- libfrog/statmount.c   |   76 ++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4 |   86 +++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 294 insertions(+), 1 deletion(-)
- create mode 100644 libfrog/statmount.h
- create mode 100644 libfrog/statmount.c
+ man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 |   75 ++++
+ man/man2/ioctl_xfs_health_monitor.2            |  464 ++++++++++++++++++++++++
+ 2 files changed, 539 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+ create mode 100644 man/man2/ioctl_xfs_health_monitor.2
 
 
-diff --git a/include/linux.h b/include/linux.h
-index 3ea9016272e688..8972c9596c75f5 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -32,7 +32,13 @@
- #ifdef OVERRIDE_SYSTEM_FSXATTR
- # define fsxattr sys_fsxattr
- #endif
--#include <linux/fs.h> /* fsxattr defintion for new kernels */
-+#ifdef OVERRIDE_SYSTEM_STATMOUNT
-+# define statmount sys_statmount
-+#endif
-+#include <linux/fs.h> /* fsxattr/statmount defintion for new kernels */
-+#ifdef OVERRIDE_SYSTEM_STATMOUNT
-+# undef statmount
-+#endif
- #ifdef OVERRIDE_SYSTEM_FSXATTR
- # undef fsxattr
- #endif
-diff --git a/libfrog/statmount.h b/libfrog/statmount.h
+diff --git a/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
 new file mode 100644
-index 00000000000000..7e281ce93029ff
+index 00000000000000..bbc5ce9bbabf53
 --- /dev/null
-+++ b/libfrog/statmount.h
-@@ -0,0 +1,104 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2026 Oracle.  All rights reserved.
-+ * All Rights Reserved.
-+ */
-+#ifndef __LIBFROG_STATMOUNT_H__
-+#define __LIBFROG_STATMOUNT_H__
-+
-+/* This is the path to the current process' mount namespace file */
-+#define DEFAULT_MOUNTNS_FILE	"/proc/self/ns/mnt"
-+
-+/*
-+ * Believe it or not, listmount and statmount treat a zero value for mnt_ns_fd
-+ * as if that means "use the current process' mount namespace" even though
-+ * Linus Torvalds roared about that with the BPF people.
-+ */
-+#define DEFAULT_MOUNTNS_FD	(0)
-+
-+#ifdef OVERRIDE_SYSTEM_STATMOUNT
-+struct statmount {
-+	__u32 size;		/* Total size, including strings */
-+	__u32 mnt_opts;		/* [str] Options (comma separated, escaped) */
-+	__u64 mask;		/* What results were written */
-+	__u32 sb_dev_major;	/* Device ID */
-+	__u32 sb_dev_minor;
-+	__u64 sb_magic;		/* ..._SUPER_MAGIC */
-+	__u32 sb_flags;		/* SB_{RDONLY,SYNCHRONOUS,DIRSYNC,LAZYTIME} */
-+	__u32 fs_type;		/* [str] Filesystem type */
-+	__u64 mnt_id;		/* Unique ID of mount */
-+	__u64 mnt_parent_id;	/* Unique ID of parent (for root == mnt_id) */
-+	__u32 mnt_id_old;	/* Reused IDs used in proc/.../mountinfo */
-+	__u32 mnt_parent_id_old;
-+	__u64 mnt_attr;		/* MOUNT_ATTR_... */
-+	__u64 mnt_propagation;	/* MS_{SHARED,SLAVE,PRIVATE,UNBINDABLE} */
-+	__u64 mnt_peer_group;	/* ID of shared peer group */
-+	__u64 mnt_master;	/* Mount receives propagation from this ID */
-+	__u64 propagate_from;	/* Propagation from in current namespace */
-+	__u32 mnt_root;		/* [str] Root of mount relative to root of fs */
-+	__u32 mnt_point;	/* [str] Mountpoint relative to current root */
-+	__u64 mnt_ns_id;	/* ID of the mount namespace */
-+	__u32 fs_subtype;	/* [str] Subtype of fs_type (if any) */
-+	__u32 sb_source;	/* [str] Source string of the mount */
-+	__u32 opt_num;		/* Number of fs options */
-+	__u32 opt_array;	/* [str] Array of nul terminated fs options */
-+	__u32 opt_sec_num;	/* Number of security options */
-+	__u32 opt_sec_array;	/* [str] Array of nul terminated security options */
-+	__u64 supported_mask;	/* Mask flags that this kernel supports */
-+	__u64 __spare2[45];
-+	char str[];		/* Variable size part containing strings */
++++ b/man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+@@ -0,0 +1,75 @@
++.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-HEALTH-FD-ON-MONITORED-FS 2 2026-01-04 "XFS"
++.SH NAME
++ioctl_xfs_health_fd_on_monitored_fs \- check if the given fd belongs to the same fs being monitored
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " healthmon_fd ", XFS_IOC_HEALTH_FD_ON_MONITORED_FS, struct xfs_health_file_on_monitored_fs *" arg );
++.SH DESCRIPTION
++This XFS healthmon fd ioctl asks the kernel driver if the file descriptor
++passed in via
++.I arg
++points to a file on the same filesystem that is being monitored by
++.IR healthmon_fd .
++The file descriptor is conveyed in a structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_health_file_on_monitored_fs {
++	__s32 fd;
++	__u32 flags;
 +};
-+#endif
-+
-+/* all the new flags added since the beginning of statmount */
-+
-+#ifndef STATMOUNT_MNT_NS_ID
-+#define STATMOUNT_MNT_NS_ID		0x00000040U	/* Want/got mnt_ns_id */
-+#endif
-+
-+#ifndef STATMOUNT_MNT_OPTS
-+#define STATMOUNT_MNT_OPTS		0x00000080U	/* Want/got mnt_opts */
-+#endif
-+
-+#ifndef STATMOUNT_FS_SUBTYPE
-+#define STATMOUNT_FS_SUBTYPE		0x00000100U	/* Want/got fs_subtype */
-+#endif
-+
-+#ifndef STATMOUNT_SB_SOURCE
-+#define STATMOUNT_SB_SOURCE		0x00000200U	/* Want/got sb_source */
-+#endif
-+
-+#ifndef STATMOUNT_OPT_ARRAY
-+#define STATMOUNT_OPT_ARRAY		0x00000400U	/* Want/got opt_... */
-+#endif
-+
-+#ifndef STATMOUNT_OPT_SEC_ARRAY
-+#define STATMOUNT_OPT_SEC_ARRAY		0x00000800U	/* Want/got opt_sec... */
-+#endif
-+
-+#ifndef STATMOUNT_SUPPORTED_MASK
-+#define STATMOUNT_SUPPORTED_MASK	0x00001000U	/* Want/got supported mask flags */
-+#endif
-+
-+/* flag bits for statmount */
-+#ifndef STATMOUNT_BY_FD
-+#define STATMOUNT_BY_FD		0x00000001U	/* want mountinfo for given fd */
-+#endif
-+
-+#define LISTMOUNT_INIT_CURSOR		(0ULL)
-+
-+int libfrog_listmount(uint64_t mnt_id, int mnt_ns_fd, uint64_t *cursor,
-+		uint64_t *mnt_ids, size_t nr_mnt_ids);
-+
-+int libfrog_statmount(uint64_t mnt_id, int mnt_ns_fd, uint64_t statmount_flags,
-+		struct statmount *smbuf, size_t smbuf_size);
-+
-+int libfrog_fstatmount(int fd, uint64_t statmount_flags,
-+		struct statmount *smbuf, size_t smbuf_size);
-+
-+static inline size_t libfrog_statmount_sizeof(size_t strings_bytes)
-+{
-+	return sizeof(struct statmount) + strings_bytes;
-+}
-+
-+#endif /* __LIBFROG_STATMOUNT_H__ */
-diff --git a/configure.ac b/configure.ac
-index a9febabc71cfc7..cffcaf373cfa5e 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -183,6 +183,11 @@ AC_HAVE_BLKID_TOPO
- AC_HAVE_TRIVIAL_AUTO_VAR_INIT
- AC_STRERROR_R_RETURNS_STRING
- AC_HAVE_CLOSE_RANGE
-+AC_HAVE_LISTMOUNT
-+if test "$have_listmount" = "yes"; then
-+	AC_HAVE_LISTMOUNT_NS_FD
-+	AC_HAVE_STATMOUNT_SUPPORTED_MASK
-+fi
- 
- if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
-         AC_PACKAGE_CHECK_UBSAN
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 4a2cb757c0bdb3..d2d25c8a0ed676 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -119,6 +119,10 @@ UDEV_RULE_DIR = @udev_rule_dir@
- HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
- STRERROR_R_RETURNS_STRING = @strerror_r_returns_string@
- HAVE_CLOSE_RANGE = @have_close_range@
-+HAVE_LISTMOUNT = @have_listmount@
-+HAVE_LISTMOUNT_NS_FD = @have_listmount_ns_fd@
-+HAVE_STATMOUNT_SUPPORTED_MASK = @have_statmount_supported_mask@
-+NEED_INTERNAL_STATMOUNT = @need_internal_statmount@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -141,6 +145,9 @@ endif
- ifeq ($(NEED_INTERNAL_STATX),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_STATX
- endif
-+ifeq ($(NEED_INTERNAL_STATMOUNT),yes)
-+PCFLAGS+= -DOVERRIDE_SYSTEM_STATMOUNT
-+endif
- ifeq ($(HAVE_GETFSMAP),yes)
- PCFLAGS+= -DHAVE_GETFSMAP
- endif
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 89a0332ae85372..22668212f22b93 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -96,6 +96,15 @@ ifeq ($(HAVE_CLOSE_RANGE),yes)
- CFLAGS += -DHAVE_CLOSE_RANGE
- endif
- 
-+ifeq ($(HAVE_LISTMOUNT),yes)
-+CFILES += statmount.c
-+HFILES += statmount.h
-+endif
-+
-+ifeq ($(HAVE_LISTMOUNT_NS_FD),yes)
-+CFLAGS+=-DHAVE_LISTMOUNT_NS_FD
-+endif
-+
- default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
- 
- crc32table.h: gen_crc32table.c crc32defs.h
-diff --git a/libfrog/statmount.c b/libfrog/statmount.c
++.fi
++.in
++.PP
++The field
++.I flags
++must be zero.
++.PP
++The field
++.I fd
++is a descriptor of an open file.
++.PP
++The argument
++.I healthmon_fd
++must be a file opened via the
++.B XFS_IOC_HEALTH_MONITOR
++ioctl.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++If the file descriptor points to a file on the same filesystem that is being
++monitored, 0 is returned.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B ESTALE
++The open file is not on the same filesystem that is being monitored.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EBADF
++.I arg.fd
++does not refer to an open file.
++.TP
++.B EFAULT
++The
++.I arg
++structure could not be copied into the kernel.
++.TP
++.B ENOTTY
++.I healthmon_fd
++is not a XFS health monitoring file.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl_xfs_health_monitor (2)
+diff --git a/man/man2/ioctl_xfs_health_monitor.2 b/man/man2/ioctl_xfs_health_monitor.2
 new file mode 100644
-index 00000000000000..edf17d6080ea42
+index 00000000000000..269c434515d960
 --- /dev/null
-+++ b/libfrog/statmount.c
-@@ -0,0 +1,76 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
++++ b/man/man2/ioctl_xfs_health_monitor.2
+@@ -0,0 +1,464 @@
++.\" Copyright (c) 2025-2026, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-HEALTH-MONITOR 2 2026-01-04 "XFS"
++.SH NAME
++ioctl_xfs_health_monitor \- read filesystem health events from the kernel
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " dest_fd ", XFS_IOC_HEALTH_MONITOR, struct xfs_health_monitor *" arg );
++.SH DESCRIPTION
++This XFS ioctl asks the kernel driver to create a pseudo-file from which
++information about adverse filesystem health events can be read.
++This new file will be installed into the file descriptor table of the calling
++process as a read-only file, and will have the close-on-exec flag set.
++.PP
++The specific behaviors of this health monitor file are requested via a
++structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_health_monitor {
++	__u64 flags;
++	__u8  format;
++	__u8  pad[23];
++};
++.fi
++.in
++.PP
++The field
++.I pad
++must be zero.
++.PP
++The field
++.I format
++controls the format of the event data that can be read:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_FMT_V0
++Event data will be presented in discrete objects of type struct
++xfs_health_monitor_event.
++See below for more information.
++.RE
 +
-+#include <libfrog/statmount.h>
++.PD 1
++.PP
++The field
++.I flags
++control the behavior of the monitor.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_VERBOSE
++Return all health events, including affirmations of healthy metadata.
++.RE
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++Otherwise, the return value is a new file descriptor.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EEXIST
++Health monitoring is already active for this filesystem.
++.TP
++.B EPERM
++The caller does not have permission to open a health monitor.
++Calling programs must have administrative capability, run in the initial user
++namespace, and the
++.I fd
++passed to ioctl must be the root directory of an XFS filesystem.
++.TP
++.B EINVAL
++One or more of the arguments specified is invalid.
++.TP
++.B EFAULT
++The argument could not be copied into the kernel.
++.TP
++.B ENOMEM
++There was not sufficient memory to construct the health monitor.
++.SH EVENT FORMAT
++Calling programs retrieve XFS health events by calling
++.BR read (2)
++on the returned file descriptor.
++The read buffer must be large enough to hold at least one event object.
++Partial objects will not be returned; instead, a short read will occur.
 +
-+int
-+libfrog_listmount(
-+	uint64_t		mnt_id,
-+	int			mnt_ns_fd,
-+	uint64_t		*cursor,
-+	uint64_t		*mnt_ids,
-+	size_t			nr_mnt_ids)
-+{
-+	struct mnt_id_req	req = {
-+		.size		= sizeof(req),
-+		.mnt_id		= mnt_id,
-+#ifdef HAVE_LISTMOUNT_NS_FD
-+		.mnt_ns_fd	= mnt_ns_fd,
-+#else
-+		.spare		= mnt_ns_fd,
-+#endif
-+		.param		= *cursor,
-+	};
-+	int ret = syscall(SYS_listmount, &req, mnt_ids, nr_mnt_ids, 0);
++Events will be returned in the following format:
 +
-+	if (ret > 0)
-+		*cursor = mnt_ids[ret - 1];
++.PP
++.in +4n
++.nf
++struct xfs_health_monitor_event {
++	__u32	domain;
++	__u32	type;
++	__u64	time_ns;
 +
-+	return ret;
-+}
++	union {
++		struct xfs_health_monitor_lost lost;
++		struct xfs_health_monitor_fs fs;
++		struct xfs_health_monitor_group group;
++		struct xfs_health_monitor_inode inode;
++		struct xfs_health_monitor_shutdown shutdown;
++		struct xfs_health_monitor_media media;
++		struct xfs_health_monitor_filerange filerange;
++	} e;
 +
-+int
-+libfrog_statmount(
-+	uint64_t		mnt_id,
-+	int			mnt_ns_fd,
-+	uint64_t		statmount_flags,
-+	struct statmount	*smbuf,
-+	size_t			smbuf_size)
-+{
-+	struct mnt_id_req	req = {
-+		.size		= sizeof(req),
-+		.mnt_id		= mnt_id,
-+#ifdef HAVE_LISTMOUNT_NS_FD
-+		.mnt_ns_fd	= mnt_ns_fd,
-+#else
-+		.spare		= mnt_ns_fd,
-+#endif
-+		.param		= statmount_flags,
-+	};
++	__u64	pad[2];
++};
++.fi
++.in
++.PP
++The field
++.I time_ns
++records the timestamp at which the health event was generated, in units of
++nanoseconds since the Unix epoch.
++.PP
++The field
++.I pad
++will be zero.
++.PP
++The field
++.I domain
++indicates the scope of the filesystem affected by the event:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_MOUNT
++The entire filesystem is affected.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_FS
++Metadata concerning the entire filesystem is affected.
++Details are available through the
++.I fs
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_AG
++Metadata concerning a specific allocation group is affected.
++Details are available through the
++.I group
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_RTGROUP
++Metadata concerning a specific realtime allocation group is affected.
++Details are available through the
++.I group
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_INODE
++File metadata is affected.
++Details are available through the
++.I inode
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_DATADEV
++The main data volume is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_RTDEV
++The realtime volume is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_LOGDEV
++The external log is affected.
++Details are available through the
++.I media
++field.
++.TP
++.B XFS_HEALTH_MONITOR_DOMAIN_FILERANGE
++File data is affected.
++Details are available through the
++.I filerange
++field.
++.RE
 +
-+	return syscall(SYS_statmount, &req, smbuf, smbuf_size, 0);
-+}
++.PP
++The field
++.I type
++indicates what was affected by a health event:
++.RS 0.4i
++.PP
++The following types apply to events from the
++.B MOUNT
++domain.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_RUNNING
++This filesystem health monitor is now running.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_LOST
++Health events were lost.
++Details are available through the
++.I lost
++field.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_UNMOUNT
++The filesystem is being unmounted.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_SHUTDOWN
++The filesystem has shut down due to problems.
++Details are available through the
++.I shutdown
++field.
++.RE
++.PP
++The following three types apply to events from the
++.BR FS ,
++.BR AG ,
++.BR RTGROUP ,
++and
++.B INODE
++domains.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_SICK
++Filesystem metadata has been scanned by online fsck and found to be corrupt.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_CORRUPT
++A metadata corruption problem was encountered during a filesystem operation
++outside of fsck.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_HEALTHY
++Filesystem metadata has either been scanned by online fsck and found to be
++in good condition, or it has been repaired to good condition.
++.RE
++.PP
++The following type applies to events from the
++.BR DATADEV ,
++.BR RTDEV ,
++and
++.B LOGDEV
++domains.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_MEDIA_ERROR
++A media error has been observed on one of the storage devices that can be
++attached to an XFS filesystem.
++.RE
++.PP
++The following types apply to events from the
++.B FILERANGE
++domain.
++.RS 0.4i
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_BUFREAD
++An attempt to read (or readahead) from a file failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_BUFWRITE
++An attempt to write dirty data to storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DIOREAD
++A direct read of file data from storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DIOWRITE
++A direct write of file data to storage failed with an I/O error.
++.TP
++.B XFS_HEALTH_MONITOR_TYPE_DATALOST
++A latent media error was discovered on the storage backing part of this file.
++.RE
++.RE
 +
-+int
-+libfrog_fstatmount(
-+	int			fd,
-+	uint64_t		statmount_flags,
-+	struct statmount	*smbuf,
-+	size_t			smbuf_size)
-+{
-+	struct mnt_id_req	req = {
-+		.size		= sizeof(req),
-+#ifdef HAVE_LISTMOUNT_NS_FD
-+		.mnt_ns_fd	= fd,
-+#else
-+		.spare		= fd,
-+#endif
-+		.param		= statmount_flags,
-+	};
++.PP
++The union
++.I e
++contains further details about the health event:
 +
-+	return syscall(SYS_statmount, &req, smbuf, smbuf_size, STATMOUNT_BY_FD);
-+}
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index b3d87229d3367a..ec4a3ef444b705 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -366,3 +366,89 @@ close_range(0, 0, 0);
-        AC_MSG_RESULT(no))
-     AC_SUBST(have_close_range)
-   ])
++.RS 0.4i
++.PP
++The kernel will use no more than 32KiB of memory per monitoring file to queue
++health events.
++If this limit is exceeded, an event will be generated to describe how many
++events were lost:
 +
-+#
-+# Check if listmount and statmount exist.  Note that statmount came first (6.8)
-+# and listmount came later (6.9), so we'll refuse both if either is missing.
-+#
-+AC_DEFUN([AC_HAVE_LISTMOUNT],
-+  [AC_MSG_CHECKING([for listmount])
-+    AC_LINK_IFELSE(
-+    [AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <unistd.h>
-+#include <linux/mount.h>
-+#include <sys/syscall.h>
-+#include <alloca.h>
-+  ]], [[
-+	struct mnt_id_req	req = {
-+		.size		= sizeof(req),
-+	};
-+	struct statmount	smbuf;
++.in +4n
++.nf
++struct xfs_health_monitor_lost {
++	__u64	count;
++};
++.fi
++.in
++.PP
++The
++.I count
++field records the number of events lost.
 +
-+	syscall(SYS_statmount, &req, &smbuf, 0, 0);
-+	syscall(SYS_listmount, &req, NULL, 0, 0);
-+  ]])
-+    ], have_listmount=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_listmount)
-+  ])
++.PP
++If whole-filesystem metadata experiences a health event, the exact type of
++that metadata is recorded as follows:
 +
-+#
-+# Check if mnt_id_req::mnt_ns_fd exists.  This replaced mnt_id_req::spare in
-+# 6.18, though earlier kernels allowed userspace to assign to spare.
-+#
-+AC_DEFUN([AC_HAVE_LISTMOUNT_NS_FD],
-+  [AC_MSG_CHECKING([for struct mnt_id_req::mnt_ns_fd])
-+    AC_LINK_IFELSE(
-+    [AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <unistd.h>
-+#include <linux/mount.h>
-+#include <sys/syscall.h>
-+#include <alloca.h>
-+  ]], [[
-+	struct mnt_id_req	req = {
-+		.mnt_ns_fd	= 555,
-+	};
++.in +4n
++.nf
++struct xfs_health_monitor_fs {
++	__u32	mask;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_FSOP_GEOM_SICK_*
++flags that are documented in the
++.BR ioctl_xfs_fsgeometry (2)
++manual page.
 +
-+	syscall(SYS_listmount, &req, NULL, 0, 0);
-+  ]])
-+    ], have_listmount_ns_fd=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_listmount_ns_fd)
-+  ])
++.PP
++If an allocation group (realtime or data) experiences a health event,
++the exact type and location of the metadata is recorded as follows:
 +
-+#
-+# Check if statmount::supported_mask (and hence sb_source) exists.  We need
-+# sb_source for xfs_healer_start; and supported_mask for the xfs_io wrapper.
-+# sb_source was added in 6.13 and supported_mask in 6.15.
-+#
-+AC_DEFUN([AC_HAVE_STATMOUNT_SUPPORTED_MASK],
-+  [AC_MSG_CHECKING([for struct statmount::supported_mask])
-+    AC_LINK_IFELSE(
-+    [AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <unistd.h>
-+#include <linux/mount.h>
-+#include <sys/syscall.h>
-+#include <alloca.h>
-+  ]], [[
-+	struct mnt_id_req	req = {
-+		.mnt_ns_fd	= 555,
-+	};
-+	struct statmount	smbuf = {
-+		.supported_mask	= 1,
-+	};
++.in +4n
++.nf
++struct xfs_health_monitor_group {
++	__u32	mask;
++	__u32	gno;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_AG_SICK_*
++flags that are documented in the
++.BR ioctl_xfs_ag_geometry (2)
++manual page, or the
++.I XFS_RTGROUP_SICK_*
++flags that are documented by the
++.BR ioctl_xfs_rtgroup_geometry (2)
++manual page.
++.PP
++The
++.I gno
++field will contain the group number.
 +
-+	syscall(SYS_statmount, &req, &smbuf, 0, 0);
-+  ]])
-+    ], have_statmount_supported_mask=yes
-+       AC_MSG_RESULT(yes),
-+       need_internal_statmount=yes
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_statmount_supported_mask)
-+    AC_SUBST(need_internal_statmount)
-+  ])
++.PP
++If a file experiences a health event, the exact type and handle to the file
++is recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_inode {
++	__u32	mask;
++	__u32	gen;
++	__u64	ino;
++};
++.fi
++.in
++.PP
++The
++.I mask
++field will contain
++.I XFS_BS_SICK_*
++flags that are documented by the
++.BR ioctl_xfs_bulkstat (2)
++manual page.
++.PP
++The
++.I ino
++and
++.I gen
++fields describe a handle to the affected file.
++
++.PP
++If the filesystem shuts down abnormally, the exact reasons are recorded as
++follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_shutdown {
++	__u32	reasons;
++};
++.fi
++.in
++.PP
++The
++.I reasons
++field is a combination of the following values:
++.RS 0.4i
++.TP
++.B XFS_HEALTH_SHUTDOWN_META_IO_ERROR
++Metadata I/O errors were encountered.
++.TP
++.B XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR
++Log I/O errors were encountered.
++.TP
++.B XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT
++The filesystem was forcibly shut down by an administrator.
++.TP
++.B XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE
++In-memory metadata are corrupt.
++.TP
++.B XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK
++On-disk metadata are corrupt.
++.TP
++.B XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED
++Storage devices were removed.
++.RE
++
++.PP
++If a media error is discovered on the storage device, the exact location is
++recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_media {
++	__u64	daddr;
++	__u64	bbcount;
++};
++.fi
++.in
++.PP
++The
++.I daddr
++and
++.I bbcount
++fields describe the range of the storage that were lost.
++Both are provided in units of 512-byte blocks.
++
++.PP
++If a problem is discovered with regular file data, the handle of the file
++and the exact range of the file are recorded as follows:
++
++.in +4n
++.nf
++struct xfs_health_monitor_filerange {
++	__u64	pos;
++	__u64	len;
++	__u64	ino;
++	__u32	gen;
++	__u32	error;
++};
++.fi
++.in
++.PP
++The
++.I ino
++and
++.I gen
++fields describe a handle to the affected file.
++The
++.I pos
++and
++.I len
++fields describe the range of the file data that are affected.
++Both are provided in units of bytes.
++.PP
++The
++.I error
++field describes the error that occurred.
++See the
++.BR errno (3)
++manual page for more information.
++.RE
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl_xfs_health_samefs (2)
 
