@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAE710E3
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:46:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA1910E3
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:46:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895563; cv=none; b=b9/q7SobvHO2E7ts+0htNxkZ/hkHdm0tQg1Rmdwe11PJlhd2InGt4ijRMz1Klu8hb6U2D9taqStcZdECTyeoOCNL2GiCNneTFgjAocEqvEB9AJodPwU+lNqMV8dQMZkZBtO+o+chHgGihAZPAfGN9q+yEESDSA36XUCO1DppIX0=
+	t=1773895579; cv=none; b=Hq3aUmXRtEcwfDeBSs2eACA4d030T+/GS6LupiSaAldaLvtl8IUbX5dVxZI96q+sDmBFFDfLz1RpJOwgToGTcjG7bCw6puEfIBb9cThkXRljSV+j8D+tgeWIAWC4fg7C9xeQ124pgvam5RUlX0OanpZjdHxXEs4xvB8yLBKfO/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895563; c=relaxed/simple;
-	bh=YoJbesoFelplnJ13HqirOhD6+R5HthwA9L8nycb7MPk=;
+	s=arc-20240116; t=1773895579; c=relaxed/simple;
+	bh=cdFz0qA5iGCA9eSwlhz2vreYNKGeHcgnvsHpcsdLENQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iC0MbTBOBjl3hMP4/EQ5AD5bsk/JCUiGgZwSYQSsfDUeEdFxGDoqyp9ErDd7R1YCV4zycqb3M+7HgtaFw/xpR+Pp712Um/g2BKoYM0YnpLjCWHjRkfCYQMuIBCfRfcWQMgVNPFbgMKt6AsuJYbfB1ytsKT2E2voe5SzpU8SSy0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bkpgceZe; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=P3COwdOa0y3M3Cf05n/NhyeapauDtT9wF47bqIGvVkbzzm018Zq8xFrNBJoQVMtUsqb9uMa5F8qmOD6exHE/jhVQDTMUbRYwpwQyn/tU7THNQ1OcvxQ0XEZgUwEZpBNWVR7aPY0MiFyAyCEs/ylXkqHW5AtpR1rDOjICzWCI4to=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r+0vB1qN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bkpgceZe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76805C19425;
-	Thu, 19 Mar 2026 04:46:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r+0vB1qN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14ABFC19425;
+	Thu, 19 Mar 2026 04:46:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895563;
-	bh=YoJbesoFelplnJ13HqirOhD6+R5HthwA9L8nycb7MPk=;
+	s=k20201202; t=1773895579;
+	bh=cdFz0qA5iGCA9eSwlhz2vreYNKGeHcgnvsHpcsdLENQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bkpgceZe1fmGO0goZ5CSg815WOAhIcvuwX38n8ME47on8X6R4Ny5ii8J4O1d0ngD1
-	 E+M5eon09Q+YFgy2bxi3FihIxvynXHLmB0x99o4GWaPu5/f/SLlK4mumQctpcqEJaG
-	 TlyZuIBwef2YJ7K1vlQVFeahj6H3iuZ6Slmw6XjG6o0Cg0Wy3LRIMkdD6SeVtKDGug
-	 fDvah3E7etv0MBGwyJMyzNYlHTRchFD5Y6F4LA3iJSUFv6JcwyTiInwra694sMdCt+
-	 0kcyZdxB60TmpwLPo1rsTxyy0PNjK98rKP6nWmmLcDfIHHh2wFWOqCCmy5VW/i09p+
-	 60UmZsp5EUSXw==
-Date: Wed, 18 Mar 2026 21:46:03 -0700
-Subject: [PATCH 02/22] mkfs: rename byte unit conversion macros
+	b=r+0vB1qNDqckFFHKZ7mfPZFIqZ2vp/HT94V0Zwy/PVNgQNTLRGQWgPPv1JRtrt1Fu
+	 V7MFIQAUe0xUpaWkPKit5Tk+J7vvFFjJtPThxHHOqAA9vfwOt1W15nWeOrXE9y7qnE
+	 uBlMdQYE0uj4UtmPBtJBNj+W0iGtBC5yek2Ifwfywvxy5wJ/gMK4NLT7So3O/hsFjf
+	 YScCEJwPe/hKpF0ktNt+WPWW2Ws2g7JG2J8PAh/yboZjFuS865hQjfAFy6R/b/eD0L
+	 5nJJdh9AVmv03P+ZTT3U3utWwCUTNU9KP7G+qinjPNGtXFN8iQ/llkrx8RAkXYQX8q
+	 bbWvAzSNXJFyg==
+Date: Wed, 18 Mar 2026 21:46:18 -0700
+Subject: [PATCH 03/22] libfrog: lift *BYTES helpers to convert.h
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <177389506977.3681140.16696878706426311389.stgit@frogsfrogsfrogs>
+Message-ID: <177389506995.3681140.10591224413177383851.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 References: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,142 +45,251 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Rename these macros so that we can promote the generic ones in the next
-patch.
+Move these byte unit conversion macros to convert.h and amend the macros
+to cast to unsigned long long to avoid shifting issues.  Now we can use
+these same macros throughout the codebase instead of opencoding shifts
+and possibly suffering from integer shifting problems.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+ libfrog/convert.h         |    7 +++++++
+ db/bmap_inflate.c         |    2 +-
+ libfrog/convert.c         |    7 -------
+ mdrestore/xfs_mdrestore.c |    5 +++--
+ mkfs/xfs_mkfs.c           |    5 +++--
+ repair/agbtree.c          |    3 ++-
+ repair/bmap_repair.c      |    3 ++-
+ repair/xfs_repair.c       |    5 +++--
+ scrub/common.c            |   17 +++++++++--------
+ scrub/phase8.c            |    3 ++-
+ 10 files changed, 32 insertions(+), 25 deletions(-)
 
 
+diff --git a/libfrog/convert.h b/libfrog/convert.h
+index 3e5fbe055986a4..223d3e73c9422b 100644
+--- a/libfrog/convert.h
++++ b/libfrog/convert.h
+@@ -22,4 +22,11 @@ extern uid_t	uid_from_string(char *user);
+ extern gid_t	gid_from_string(char *group);
+ extern prid_t	prid_from_string(char *project);
+ 
++#define EXABYTES(x)	((unsigned long long)(x) << 60)
++#define PETABYTES(x)	((unsigned long long)(x) << 50)
++#define TERABYTES(x)	((unsigned long long)(x) << 40)
++#define GIGABYTES(x)	((unsigned long long)(x) << 30)
++#define MEGABYTES(x)	((unsigned long long)(x) << 20)
++#define KILOBYTES(x)	((unsigned long long)(x) << 10)
++
+ #endif	/* __LIBFROG_CONVERT_H__ */
+diff --git a/db/bmap_inflate.c b/db/bmap_inflate.c
+index 1de6d3439ab3d3..cc7c197e788d7f 100644
+--- a/db/bmap_inflate.c
++++ b/db/bmap_inflate.c
+@@ -437,7 +437,7 @@ bmapinflate_f(
+ 	struct xfs_trans	*tp;
+ 	char			*p;
+ 	unsigned long long	nextents = 0;
+-	unsigned long long	dirty_bytes = 60U << 20; /* 60MiB */
++	unsigned long long	dirty_bytes = MEGABYTES(60);
+ 	unsigned long long	dirty_blocks;
+ 	unsigned int		resblks;
+ 	bool			estimate = false;
+diff --git a/libfrog/convert.c b/libfrog/convert.c
+index 0ceeb389682ae1..65b9e47459e234 100644
+--- a/libfrog/convert.c
++++ b/libfrog/convert.c
+@@ -173,13 +173,6 @@ cvt_u16(
+ 	return i;
+ }
+ 
+-#define EXABYTES(x)	((long long)(x) << 60)
+-#define PETABYTES(x)	((long long)(x) << 50)
+-#define TERABYTES(x)	((long long)(x) << 40)
+-#define GIGABYTES(x)	((long long)(x) << 30)
+-#define MEGABYTES(x)	((long long)(x) << 20)
+-#define KILOBYTES(x)	((long long)(x) << 10)
+-
+ long long
+ cvtnum(
+ 	size_t		blksize,
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 8858026c87dc97..ce7f596a6184fe 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -8,6 +8,7 @@
+ #include "xfs_metadump.h"
+ #include <libfrog/platform.h>
+ #include "libfrog/div64.h"
++#include "libfrog/convert.h"
+ 
+ union mdrestore_headers {
+ 	__be32				magic;
+@@ -92,10 +93,10 @@ final_print_progress(
+ 	if (!mdrestore.show_progress)
+ 		goto done;
+ 
+-	if (bytes_read <= (*cursor << 20))
++	if (bytes_read <= MEGABYTES(*cursor))
+ 		goto done;
+ 
+-	print_progress("%lld MB read", howmany_64(bytes_read, 1U << 20));
++	print_progress("%lld MB read", howmany_64(bytes_read, MEGABYTES(1)));
+ 
+ done:
+ 	if (mdrestore.progress_since_warning)
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f859626afdda36..e0f0bb28e12159 100644
+index e0f0bb28e12159..dd8a48c3633ef0 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -18,9 +18,10 @@
+@@ -15,6 +15,7 @@
+ #include "libfrog/dahashselftest.h"
+ #include "libfrog/fsproperties.h"
+ #include "libfrog/zones.h"
++#include "libfrog/convert.h"
  #include "proto.h"
  #include <ini.h>
  
--#define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
--#define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
--#define MEGABYTES(count, blog)	((uint64_t)(count) << (20 - (blog)))
-+/* Convert a quantity of mega/giga/terabytes into units of blocks */
-+#define TERABLOCKS(count, blog)	((uint64_t)(count) << (40 - (blog)))
-+#define GIGABLOCKS(count, blog)	((uint64_t)(count) << (30 - (blog)))
-+#define MEGABLOCKS(count, blog)	((uint64_t)(count) << (20 - (blog)))
- 
- /*
-  * Realistically, the log should never be smaller than 64MB.  Studies by the
-@@ -28,7 +29,7 @@
-  * latency of the xlog grant head waitqueue when running a heavy metadata
-  * update workload when the log size is at least 64MB.
-  */
--#define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABYTES(64, (blog)))
-+#define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABLOCKS(64, (blog)))
- 
- /*
-  * Use this macro before we have superblock and mount structure to
-@@ -3443,7 +3444,7 @@ validate_supported(
- 	 *
- 	 * 64MB * (8 / 7) * 4 = 293MB
- 	 */
--	if (mp->m_sb.sb_dblocks < MEGABYTES(300, mp->m_sb.sb_blocklog)) {
-+	if (mp->m_sb.sb_dblocks < MEGABLOCKS(300, mp->m_sb.sb_blocklog)) {
- 		fprintf(stderr,
-  _("Filesystem must be larger than 300MB.\n"));
- 		usage();
-@@ -3559,7 +3560,7 @@ _("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\
- 				BBTOB(ft->data.sunit), BBTOB(ft->data.swidth));
- 			ft->data.sunit = 0;
- 			ft->data.swidth = 0;
--		} else if (cfg->dblocks < GIGABYTES(1, cfg->blocklog)) {
-+		} else if (cfg->dblocks < GIGABLOCKS(1, cfg->blocklog)) {
- 			/*
- 			 * Don't use automatic stripe detection if the device
- 			 * size is less than 1GB because the performance gains
-@@ -4056,7 +4057,7 @@ calc_concurrency_ag_geometry(
- 	 */
- 	try_threads = nr_threads;
- 	try_agsize = cfg->dblocks / try_threads;
--	if (try_agsize < GIGABYTES(4, cfg->blocklog)) {
-+	if (try_agsize < GIGABLOCKS(4, cfg->blocklog)) {
- 		do {
- 			try_threads--;
- 			if (try_threads <= def_agcount) {
-@@ -4065,7 +4066,7 @@ calc_concurrency_ag_geometry(
- 			}
- 
- 			try_agsize = cfg->dblocks / try_threads;
--		} while (try_agsize < GIGABYTES(4, cfg->blocklog));
-+		} while (try_agsize < GIGABLOCKS(4, cfg->blocklog));
- 		goto out;
- 	}
- 
-@@ -4413,7 +4414,7 @@ calc_concurrency_rtgroup_geometry(
- 	 */
- 	try_threads = nr_threads;
- 	try_rgsize = cfg->rtblocks / try_threads;
--	if (try_rgsize < GIGABYTES(4, cfg->blocklog)) {
-+	if (try_rgsize < GIGABLOCKS(4, cfg->blocklog)) {
- 		do {
- 			try_threads--;
- 			if (try_threads <= def_rgcount) {
-@@ -4422,7 +4423,7 @@ calc_concurrency_rtgroup_geometry(
- 			}
- 
- 			try_rgsize = cfg->rtblocks / try_threads;
--		} while (try_rgsize < GIGABYTES(4, cfg->blocklog));
-+		} while (try_rgsize < GIGABLOCKS(4, cfg->blocklog));
- 		goto out;
- 	}
- 
-@@ -4516,7 +4517,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
- 		 * If nobody specified a realtime device or the rtgroup size,
- 		 * try 1TB, rounded down to the nearest rt extent.
- 		 */
--		cfg->rgsize = TERABYTES(1, cfg->blocklog);
-+		cfg->rgsize = TERABLOCKS(1, cfg->blocklog);
- 		cfg->rgsize -= cfg->rgsize % cfg->rtextblocks;
- 		cfg->rgcount = 0;
- 	} else if (cfg->rtblocks < cfg->rtextblocks * 2) {
-@@ -4651,7 +4652,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
- 					(cfg->rtblocks % cfg->rgcount != 0);
- 		} else {
- 			/* 256MB zones just like typical SMR HDDs */
--			cfg->rgsize = MEGABYTES(256, cfg->blocklog);
-+			cfg->rgsize = MEGABLOCKS(256, cfg->blocklog);
- 			cfg->rgcount = cfg->rtblocks / cfg->rgsize +
- 					(cfg->rtblocks % cfg->rgsize != 0);
- 		}
-@@ -4692,9 +4693,9 @@ calculate_imaxpct(
- 	 *  - under  1 TB, use XFS_DFL_IMAXIMUM_PCT (25%).
- 	 */
- 
--	if (cfg->dblocks < TERABYTES(1, cfg->blocklog))
-+	if (cfg->dblocks < TERABLOCKS(1, cfg->blocklog))
- 		cfg->imaxpct = XFS_DFL_IMAXIMUM_PCT;
--	else if (cfg->dblocks < TERABYTES(50, cfg->blocklog))
-+	else if (cfg->dblocks < TERABLOCKS(50, cfg->blocklog))
- 		cfg->imaxpct = 5;
- 	else
- 		cfg->imaxpct = 1;
-@@ -5016,7 +5017,7 @@ calc_concurrency_logblocks(
- 	 * If this filesystem is smaller than a gigabyte, there's little to be
- 	 * gained from making the log larger.
- 	 */
--	if (cfg->dblocks < GIGABYTES(1, cfg->blocklog))
-+	if (cfg->dblocks < GIGABLOCKS(1, cfg->blocklog))
- 		goto out;
+@@ -558,7 +559,7 @@ static struct opt_params iopts = {
+ 		  .conflicts = { { NULL, LAST_CONFLICT } },
+ 		  .convert = true,
+ 		  .minval = 1,
+-		  .maxval = 1ULL << 30, /* 1GiB */
++		  .maxval = GIGABYTES(1),
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+@@ -1576,7 +1577,7 @@ discard_blocks(int fd, uint64_t nsectors, int quiet)
+ {
+ 	uint64_t	offset = 0;
+ 	/* Discard the device 2G at a time */
+-	const uint64_t	step = 2ULL << 30;
++	const uint64_t	step = GIGABYTES(2);
+ 	const uint64_t	count = BBTOB(nsectors);
  
  	/*
-@@ -5279,7 +5280,7 @@ _("max log size %d smaller than min log size %d, filesystem is too small\n"),
- 				XFS_MIN_REALISTIC_LOG_BLOCKS(cfg->blocklog));
+diff --git a/repair/agbtree.c b/repair/agbtree.c
+index 983b645e1a35a3..fe28e5e94c575e 100644
+--- a/repair/agbtree.c
++++ b/repair/agbtree.c
+@@ -6,6 +6,7 @@
+ #include <libxfs.h>
+ #include "err_protos.h"
+ #include "libfrog/bitmap.h"
++#include "libfrog/convert.h"
+ #include "slab.h"
+ #include "rmap.h"
+ #include "incore.h"
+@@ -23,7 +24,7 @@ init_rebuild(
+ 	memset(btr, 0, sizeof(struct bt_rebuild));
  
- 		/* And for a tiny filesystem, use the absolute minimum size */
--		if (cfg->dblocks < MEGABYTES(300, cfg->blocklog))
-+		if (cfg->dblocks < MEGABLOCKS(300, cfg->blocklog))
- 			cfg->logblocks = min_logblocks;
+ 	bulkload_init_ag(&btr->newbt, sc, oinfo, NULLFSBLOCK);
+-	btr->bload.max_dirty = XFS_B_TO_FSBT(sc->mp, 256U << 10); /* 256K */
++	btr->bload.max_dirty = XFS_B_TO_FSBT(sc->mp, KILOBYTES(256));
+ 	bulkload_estimate_ag_slack(sc, &btr->bload, est_agfreeblocks);
+ }
  
- 		/* Ensure the chosen size fits within log size requirements */
+diff --git a/repair/bmap_repair.c b/repair/bmap_repair.c
+index 5d1f639be81ff4..192f189de05217 100644
+--- a/repair/bmap_repair.c
++++ b/repair/bmap_repair.c
+@@ -15,6 +15,7 @@
+ #include "bulkload.h"
+ #include "bmap_repair.h"
+ #include "libfrog/util.h"
++#include "libfrog/convert.h"
+ 
+ /*
+  * Inode Fork Block Mapping (BMBT) Repair
+@@ -499,7 +500,7 @@ xrep_bmap_btree_load(
+ 	rb->bmap_bload.get_records = xrep_bmap_get_records;
+ 	rb->bmap_bload.claim_block = xrep_bmap_claim_block;
+ 	rb->bmap_bload.iroot_size = xrep_bmap_iroot_size;
+-	rb->bmap_bload.max_dirty = XFS_B_TO_FSBT(sc->mp, 256U << 10); /* 256K */
++	rb->bmap_bload.max_dirty = XFS_B_TO_FSBT(sc->mp, KILOBYTES(256));
+ 
+ 	/*
+ 	 * Always make the btree as small as possible, since we might need the
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 7bf75c09b94542..6b97a806384096 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -28,6 +28,7 @@
+ #include "quotacheck.h"
+ #include "rcbag_btree.h"
+ #include "rt.h"
++#include "libfrog/convert.h"
+ 
+ /*
+  * option tables for getsubopt calls
+@@ -1321,8 +1322,8 @@ main(int argc, char **argv)
+ 		}
+ 
+ 		max_mem -= mem_used;
+-		if (max_mem >= (1 << 30))
+-			max_mem = 1 << 30;
++		if (max_mem >= GIGABYTES(1))
++			max_mem = GIGABYTES(1);
+ 		libxfs_bhash_size = max_mem / (HASH_CACHE_RATIO *
+ 				(igeo->inode_cluster_size >> 10));
+ 		if (libxfs_bhash_size < 512)
+diff --git a/scrub/common.c b/scrub/common.c
+index a567d2a3c2f14e..34d91525928305 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -11,6 +11,7 @@
+ #include "libfrog/paths.h"
+ #include "libfrog/getparents.h"
+ #include "libfrog/handle_priv.h"
++#include "libfrog/convert.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "progress.h"
+@@ -218,18 +219,18 @@ auto_space_units(
+ {
+ 	if (debug > 1)
+ 		goto no_prefix;
+-	if (bytes > (1ULL << 40)) {
++	if (bytes > TERABYTES(1)) {
+ 		*units = "TiB";
+-		return (double)bytes / (1ULL << 40);
+-	} else if (bytes > (1ULL << 30)) {
++		return (double)bytes / TERABYTES(1);
++	} else if (bytes > GIGABYTES(1)) {
+ 		*units = "GiB";
+-		return (double)bytes / (1ULL << 30);
+-	} else if (bytes > (1ULL << 20)) {
++		return (double)bytes / GIGABYTES(1);
++	} else if (bytes > MEGABYTES(1)) {
+ 		*units = "MiB";
+-		return (double)bytes / (1ULL << 20);
+-	} else if (bytes > (1ULL << 10)) {
++		return (double)bytes / MEGABYTES(1);
++	} else if (bytes > KILOBYTES(1)) {
+ 		*units = "KiB";
+-		return (double)bytes / (1ULL << 10);
++		return (double)bytes / KILOBYTES(1);
+ 	}
+ 
+ no_prefix:
+diff --git a/scrub/phase8.c b/scrub/phase8.c
+index e8c72d8eb851af..0967832da890e3 100644
+--- a/scrub/phase8.c
++++ b/scrub/phase8.c
+@@ -12,6 +12,7 @@
+ #include "libfrog/paths.h"
+ #include "libfrog/workqueue.h"
+ #include "libfrog/histogram.h"
++#include "libfrog/convert.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "progress.h"
+@@ -51,7 +52,7 @@ fstrim_ok(
+  * call so that we can implement decent progress reporting and CPU resource
+  * control.  Pick a prime number of gigabytes for interest.
+  */
+-#define FSTRIM_MAX_BYTES	(11ULL << 30)
++#define FSTRIM_MAX_BYTES	GIGABYTES(11)
+ 
+ /* Trim a certain range of the filesystem. */
+ static int
 
