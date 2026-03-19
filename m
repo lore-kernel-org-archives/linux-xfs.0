@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7403E314A90;
-	Thu, 19 Mar 2026 17:02:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0F73D891E;
+	Thu, 19 Mar 2026 17:02:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773939760; cv=none; b=OFhMPZt++gup7Zey5rtjR2dvFtOR5aJV48F2i2GlSodNvcEpaNmKlhswNXhHXmCb6U5ifk1brEa4srnAy64uwj0strSH0Qmyv9/Wre9x0dNZdoHb3Yx3+tm7qbcHjSz3S7huh2tnK769t9Sy9u37/BaxMRrSzmJQ+CoBQ/q7kJM=
+	t=1773939763; cv=none; b=mfK/1/XAXux+Zrjk89cT3NaYjZC01Qt5lkuQjaAXydslRhbRJHhLOia+jZlHrrGzgh5Ra5nBi7c66OeyHnhe9JDGFilUdvLXQfa8fG8bIfY2vLKthnmkw7uNK7kEKW8zBzEafv+74biUzs/sDxo08HnFu8rmiAZOax/10zxdGTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773939760; c=relaxed/simple;
-	bh=1joVFanxDh8PwgMXEWccLkn6Kcw2pxcU3MySKiM4AmA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Nd8lTE+n9+tI1n0UFZVykcZz9165Hv7jB/T7Fd41hva+5B1mc0h77m8M93r/JV0VZDLe6UASjYZVXaUflUft2XTOd1LMYjsl88qNlfg8nqxg8II3AcllURA8hjz3yp4SGLGuG/wsl+yJUI4PyKFuN5YAW3750I4ihCsdpMKNZuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRKc/RQd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773939763; c=relaxed/simple;
+	bh=1+F7FUyyPtQv6AnDaCaQYOUoe9C0/OM2XaO+4qMrhCg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WeBHfE7/CpGDhsAwiDhILT4owkjtaIBHuWI149cqiANAtMQFIRtWPueNiFEUJxlXWXi2Ic0HyoMWvQwisZ4SkLjAe/ARLLV6/sBZ4Bg3FDqQki92OZFL2hNxsOr/iKepzy/aAKqelnxgL5dr4ccem7AJEwXHKohA+XpCBvWqbaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aMnivIH5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRKc/RQd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2148C19424;
-	Thu, 19 Mar 2026 17:02:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aMnivIH5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D15C2BCB0;
+	Thu, 19 Mar 2026 17:02:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773939760;
-	bh=1joVFanxDh8PwgMXEWccLkn6Kcw2pxcU3MySKiM4AmA=;
-	h=From:To:Cc:Subject:Date:From;
-	b=fRKc/RQdcmF8WuT8iYok51UB0OX4N96zZrvJTOrnqk0grGzC7rNAA1tco0sSQdhrm
-	 aUruzC2WAYo2pMcUeT1Ak91yJCzqnLW0Eq+zQ0SnM/3vEh/xjuUVSr4cGNW8s5gkF8
-	 +sKchm7xrKq4fsS1T4ZdjoyhSGkdCEJe+3uahXPM2rNXCnje1CYVHe/2czSFKJS3SZ
-	 uUdk/oSG1LOvPVGUFSn/KJWfyVcB9YF1FQnnRq7r/TZLV2HYX8nL7RxwkP4VYqfHBW
-	 dFW1SqxWHb/l4PAw/T4AuHkvI4vAtzTzn6MmqgJtg+fx0r1gIkCDgIvJpKm+MhDS5J
-	 Zy+WbVYmn/3aQ==
+	s=k20201202; t=1773939762;
+	bh=1+F7FUyyPtQv6AnDaCaQYOUoe9C0/OM2XaO+4qMrhCg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=aMnivIH57WViMWKRuyFrPz8MkHi3nNIuQwGIkU2qPhrthXhRW81M5TTIaBWkEuTVV
+	 ITYXnULmAP5IA/gtTn1RisgKrsh1OvXEssQ11slT39a7LoAFM55TFVyFY3MzPgXvTX
+	 QeeySVLHtQwA7aphzl+ueqim1wNBqHNvvatl7xwY69QhT6Usk1jepl1MpAGb42weP6
+	 3sKEwPOPmbukO97p+EHwQ2M1iKUQlvYSS86tATNoqLI25QrXZshDjl62LBIZuC4V+S
+	 MjtdlHO4qjiwBKEoDF/Dg1gUUaxDXnoOKul/dUU7zpLr7OxwTmMRPi/old6RENDuWC
+	 Bf8jSaN12rf7Q==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -35,12 +36,13 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-ext4@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
-	djwong@kernel.org,
-	david@fromorbit.com
-Subject: [PATCH v5 00/25] fs-verity support for XFS with post EOF merkle tree
-Date: Thu, 19 Mar 2026 18:01:47 +0100
-Message-ID: <20260319170231.1455553-1-aalbersh@kernel.org>
+	djwong@kernel.org
+Subject: [PATCH v5 01/25] fsverity: report validation errors through fserror to fsnotify
+Date: Thu, 19 Mar 2026 18:01:48 +0100
+Message-ID: <20260319170231.1455553-2-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
+In-Reply-To: <20260319170231.1455553-1-aalbersh@kernel.org>
+References: <20260319170231.1455553-1-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,170 +51,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+Reported verification errors to fsnotify through recently added fserror
+interface.
 
-This patch series adds fs-verity support for XFS. This version stores
-merkle tree beyond end of the file, the same way as ext4 does it. The
-difference is that verity descriptor is stored at the next aligned 64k
-block after the merkle tree last block. This is done due to sparse
-merkle tree which doesn't store hashes of zero data blocks.
-
-The patchset starts with a few fs-verity preparation patches. Then, a
-few patches to allow iomap to work in post EOF region. The XFS fs-verity
-implementation follows.
-
-The tree is read by iomap into page cache at offset of next largest
-folio past end of file. The same offset is used for on-disk.
-
-This patchsets also synthesizes merkle tree block full of hashes of
-zeroed data blocks. This merkle blocks are not stored on disk, they are
-holes in the tree.
-
-Testing. The -g verity is passing for 1k, 8k and 4k with/without quota
-on 4k and 64k page size systems. Tested -g auto for enabled/disabled
-fsverity.
-
-This series based on latest fsverity/for-next with patchset fs generated
-integrity information [1].
-
-kernel:
-https://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfs-linux.git/log/?h=b4/fsverity
-
-xfsprogs:
-https://github.com/alberand/xfsprogs/tree/b4/fsverity
-
-xfstests:
-https://github.com/alberand/xfstests/tree/b4/fsverity
-
-Cc: fsverity@lists.linux.dev
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-
-Cc: david@fromorbit.com
-Cc: djwong@kernel.org
-Cc: ebiggers@kernel.org
-Cc: hch@lst.de
-
-[1]: https://lore.kernel.org/linux-xfs/20260223132021.292832-1-hch@lst.de/
-
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
-Changes in v5:
-- Add fserror_report_data_lost() for data blocks in page spanning EOF
-- Issue fsverity metadata readahead in data readahead
-- iomap_fsverity_write() return type fix
-- Use of S_ISREG(mode)
-- Make 65536 #define instead of open-coded
-- Use transaction per unwritten extent removal
-- Fetch fsverity_info for all fsverity metadata
-- Revert fsverity_folio_zero_hash() stub as used in iomap
-- Extend cancel_unwritten to whole file range to remove cow leftovers
-- Drop delayed allocation on the COW fork on fsverity completion
-Changes in v4:
-- Use fserror interface in fsverity instead of fs callback
-- Hoist pagecache_read from f2fs/ext4 to fsverity
-- Refactor iomap code
-- Fetch fsverity_info only for file data and merkle tree holes
-- Do not disable preallocation, remove unwritten extents instead
-- Offload fsverity hash I/O to fsverity workqueue in read path
-- Store merkle tree at round_up(i_size, 64k)
-- Add a spacing between merkle tree and fsverity descriptor as next 64k
-  aligned block
-- Squash helpers into first user commits
-- Squash on-disk format changes into single commit
-- Drop different offset for pagecache/on-disk
-- Don't zero out pages in higher order folios in write path
-- Link to v3: https://lore.kernel.org/fsverity/20260217231937.1183679-1-aalbersh@kernel.org/T/#t
-Changes in v3:
-- Different on-disk and pagecache offset
-- Use read path ioends
-- Switch to hashtable fsverity info
-- Synthesize merkle tree blocks full of zeroes
-- Other minor refactors
-- Link to v2: https://lore.kernel.org/fsverity/20260114164210.GO15583@frogsfrogsfrogs/T/#t
-Changes in v2:
-- Move to VFS interface for merkle tree block reading
-- Drop patchset for per filesystem workqueues
-- Change how offsets of the descriptor and tree metadata is calculated
-- Store fs-verity descriptor in data fork side by side with merkle tree
-- Simplify iomap changes, remove interface for post eof read/write
-- Get rid of extended attribute implementation
-- Link to v1: https://lore.kernel.org/r/20250728-fsverity-v1-0-9e5443af0e34@kernel.org
+ fs/verity/verify.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Andrey Albershteyn (23):
-  fsverity: report validation errors through fserror to fsnotify
-  fsverity: expose ensure_fsverity_info()
-  fsverity: generate and store zero-block hash
-  fsverity: introduce fsverity_folio_zero_hash()
-  fsverity: pass digest size and hash of the empty block to ->write
-  fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
-  iomap: introduce IOMAP_F_FSVERITY and teach writeback to handle
-    fsverity
-  iomap: obtain fsverity info for read path
-  iomap: issue readahead for fsverity merkle tree
-  iomap: teach iomap to handle fsverity holes and verify data holes
-  iomap: introduce iomap_fsverity_write() for writing fsverity metadata
-  xfs: introduce fsverity on-disk changes
-  xfs: initialize fs-verity on file open
-  xfs: don't allow to enable DAX on fs-verity sealed inode
-  xfs: disable direct read path for fs-verity files
-  xfs: handle fsverity I/O in write/read path
-  xfs: use read ioend for fsverity data verification
-  xfs: add fs-verity support
-  xfs: remove unwritten extents after preallocations in fsverity
-    metadata
-  xfs: add fs-verity ioctls
-  xfs: introduce health state for corrupted fsverity metadata
-  xfs: add fsverity traces
-  xfs: enable ro-compat fs-verity flag
-
-Darrick J. Wong (2):
-  xfs: advertise fs-verity being available on filesystem
-  xfs: check and repair the verity inode flag state
-
- fs/btrfs/verity.c              |   6 +-
- fs/ext4/verity.c               |  36 +--
- fs/f2fs/verity.c               |  34 +--
- fs/iomap/buffered-io.c         |  99 ++++++-
- fs/iomap/trace.h               |   3 +-
- fs/verity/enable.c             |   4 +-
- fs/verity/fsverity_private.h   |   3 +
- fs/verity/open.c               |   8 +-
- fs/verity/pagecache.c          |  55 ++++
- fs/verity/verify.c             |   4 +
- fs/xfs/Makefile                |   1 +
- fs/xfs/libxfs/xfs_bmap.c       |   7 +
- fs/xfs/libxfs/xfs_format.h     |  35 ++-
- fs/xfs/libxfs/xfs_fs.h         |   2 +
- fs/xfs/libxfs/xfs_health.h     |   4 +-
- fs/xfs/libxfs/xfs_inode_buf.c  |   8 +
- fs/xfs/libxfs/xfs_inode_util.c |   2 +
- fs/xfs/libxfs/xfs_sb.c         |   4 +
- fs/xfs/scrub/attr.c            |   7 +
- fs/xfs/scrub/common.c          |  53 ++++
- fs/xfs/scrub/common.h          |   2 +
- fs/xfs/scrub/inode.c           |   7 +
- fs/xfs/scrub/inode_repair.c    |  36 +++
- fs/xfs/xfs_aops.c              |  62 ++++-
- fs/xfs/xfs_bmap_util.c         |   8 +
- fs/xfs/xfs_file.c              |  19 +-
- fs/xfs/xfs_fsverity.c          | 457 +++++++++++++++++++++++++++++++++
- fs/xfs/xfs_fsverity.h          |  28 ++
- fs/xfs/xfs_health.c            |   1 +
- fs/xfs/xfs_inode.h             |   6 +
- fs/xfs/xfs_ioctl.c             |  14 +
- fs/xfs/xfs_iomap.c             |  15 +-
- fs/xfs/xfs_iops.c              |   4 +
- fs/xfs/xfs_message.c           |   4 +
- fs/xfs/xfs_message.h           |   1 +
- fs/xfs/xfs_mount.h             |   4 +
- fs/xfs/xfs_super.c             |   7 +
- fs/xfs/xfs_trace.h             |  46 ++++
- include/linux/fsverity.h       |  23 +-
- include/linux/iomap.h          |  10 +
- 40 files changed, 1035 insertions(+), 94 deletions(-)
- create mode 100644 fs/xfs/xfs_fsverity.c
- create mode 100644 fs/xfs/xfs_fsverity.h
-
+diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+index 4004a1d42875..4ea494da694f 100644
+--- a/fs/verity/verify.c
++++ b/fs/verity/verify.c
+@@ -9,6 +9,7 @@
+ 
+ #include <linux/bio.h>
+ #include <linux/export.h>
++#include <linux/fserror.h>
+ 
+ #define FS_VERITY_MAX_PENDING_BLOCKS 2
+ 
+@@ -203,6 +204,8 @@ static bool verify_data_block(struct fsverity_info *vi,
+ 		 * to verify that any data blocks fully past EOF are all zeroes.
+ 		 */
+ 		if (memchr_inv(dblock->data, 0, params->block_size)) {
++			fserror_report_data_lost(inode, data_pos,
++						 params->block_size, GFP_NOFS);
+ 			fsverity_err(inode,
+ 				     "FILE CORRUPTED!  Data past EOF is not zeroed");
+ 			return false;
+@@ -312,6 +315,7 @@ static bool verify_data_block(struct fsverity_info *vi,
+ 		data_pos, level - 1, params->hash_alg->name, hsize, want_hash,
+ 		params->hash_alg->name, hsize,
+ 		level == 0 ? dblock->real_hash : real_hash);
++	fserror_report_data_lost(inode, data_pos, params->block_size, GFP_NOFS);
+ error:
+ 	for (; level > 0; level--) {
+ 		kunmap_local(hblocks[level - 1].addr);
 -- 
 2.51.2
 
