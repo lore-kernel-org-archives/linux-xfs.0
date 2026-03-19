@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33EC536CE03
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:39:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7573126B9
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 04:39:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773895172; cv=none; b=hnvDSySp/j+G6JWAs9Lq/9W6pZ1fAhVmQKavGIVondzmjkvMg0/KNqZ9/2FwaYslo40M11mTl9TkG3zjHI0K5rGSiocGDjX5QnJ4JmY8hI54rmlVUOfbRrfG9yW3a2yHhd1vqMPaea8u9SJWaIRNPXPACVh0yVsdpQ7dRMHkyFk=
+	t=1773895188; cv=none; b=a3TR2Ur/qGkHEZrdcmBq6CcP/3E1Jklht+w6pWbOEtnmhWt7Qpcap5vP/Ov40z5gjbKx0VSOgg6FXAsKmMFs4s0+qV46OA+4jKz4oDZM8IADSB7rq7FKSD6+rNXtzNHCWxWTvWsZLfmbu7XidKRFiMTuaZE+Gvq2Yzkm0tyeI9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773895172; c=relaxed/simple;
-	bh=CsvC3znehwZAOtmL95IJ5/kXL+y4zQCp1PM0KNohgAE=;
+	s=arc-20240116; t=1773895188; c=relaxed/simple;
+	bh=C6Catj1feyRFPVwOrjzKQ2cRCaEtSBRAtRfUVgqCus8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hiS8LaUZFGl1hJucR50yRYICccM2qLXYjKrsAZrz5aH5ek7XDuGVjkyRzTL5EM1NAQ7ykdY+mEd8X0hCcCBQ4t6Whrpxrsp4wlsegSodL2UlKyYncZiUOfGzbi/SxwGi8uYijc3iG9pYf7XaoGLd44OfSSIejH7LZ74OKDgZz3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLnGlZMk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GiJ2xzAJ3nuHu2Je8KAKPT8bJ9oDZlxsNZiGkdUaU0fcZnODfSPEMtWRog9J9Bzm+q019DARlJukJmPC6dJCpxsz9mHNQWz0c7VJdJnMEcZcZp79r70Eaf8YtYNCv6dY3+YG++jdKLcJI2r18xo967VxjiZL0Wu8dDvTM9tRFfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QLSKzd0U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLnGlZMk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA0AC19425;
-	Thu, 19 Mar 2026 04:39:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QLSKzd0U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5A26C19425;
+	Thu, 19 Mar 2026 04:39:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773895172;
-	bh=CsvC3znehwZAOtmL95IJ5/kXL+y4zQCp1PM0KNohgAE=;
+	s=k20201202; t=1773895187;
+	bh=C6Catj1feyRFPVwOrjzKQ2cRCaEtSBRAtRfUVgqCus8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=WLnGlZMkPZl//t7Y+03uG6HZT+cONHYNv7xC+kzMKZ+03HwTwxqcUKRpNhnYR5Teg
-	 v4PBwhZgrWxxnvzXtXfWcpBYuxRrfP9kO77TqiPyJE9rCXONvNuNADr/XoU6bNbUeb
-	 VaAdSf/bUgkD1H1smkUX2khlwaxovnqm6dZtkS2KflW3ZhNIC/Pg36+FWEAV4mt91X
-	 30Tr7Xnd6niAtT8cVrIjbnWQKrGapGcCUBO1Jlxv2wojxwDXXZsZ6Oa59JGH6XukFM
-	 h8s5lM1buufxSLoHso1QM2ZUtMJROlFQnf5eHWwW4jGkfxHlGg/otwuI2FBNftMIp7
-	 TFLLMhhEk52yw==
-Date: Wed, 18 Mar 2026 21:39:31 -0700
-Subject: [PATCH 03/26] libfrog: add support code for starting systemd services
- programmatically
+	b=QLSKzd0UG1Uz4+uijbe1bvgqtcMJZnqFDm13tYC1QAKaPzlk9/AnWU397weJIHPlG
+	 M9+r+cAz8qAsd2edCelItjdIbAmOIB+QBPJz5/ntFDr6hTWzxIMvcjLFrVV3C1xv6Y
+	 40rveOErV7PZE1pIwHk1INmwjriF966Jv9ryh6sNLJHuABgofVP25el28e3eR8iYQi
+	 NNykLNGgiZ4iJ2c2Z8a1OKHak3TvGYLIROSvReqMe8R4ivJ1zzdbLj92BcqN1uU3ae
+	 uW2tgqdIUJWENxTonG0nhE7D5SdhCNgC1i94ezPkG9yuxqYxsM85X16dNXy9hPOAwn
+	 tev/+a26D/4ow==
+Date: Wed, 18 Mar 2026 21:39:47 -0700
+Subject: [PATCH 04/26] libfrog: hoist a couple of service helper functions
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177389506199.3680139.5929771162119754287.stgit@frogsfrogsfrogs>
+Message-ID: <177389506218.3680139.13991987566556085192.stgit@frogsfrogsfrogs>
 In-Reply-To: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 References: <177389506017.3680139.913759001427336891.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,322 +45,111 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some simple routines for computing the name of systemd service
-instances and starting systemd services.  These will be used by the
-xfs_healer_start service to start per-filesystem xfs_healer service
-instances.
-
-Note that we run systemd helper programs as subprocesses for a couple of
-reasons.  First, the path-escaping functionality is not a part of any
-library-accessible API, which means it can only be accessed via
-systemd-escape(1).  Second, although the service startup functionality
-can be reached via dbus, doing so would introduce a new library
-dependency.  Systemd is also undergoing a dbus -> varlink RPC transition
-so we avoid that mess by calling the cli systemctl(1) program.
+Hoist a couple of service/daemon-related helper functions to libfrog so
+that we can share the code between xfs_scrub and xfs_healer.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libfrog/systemd.h     |   20 ++++++
- configure.ac          |    1 
- include/builddefs.in  |    1 
- libfrog/Makefile      |    6 ++
- libfrog/systemd.c     |  177 +++++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4 |   19 +++++
- 6 files changed, 224 insertions(+)
- create mode 100644 libfrog/systemd.h
- create mode 100644 libfrog/systemd.c
+ libfrog/systemd.h |   28 ++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |   32 +++++++++-----------------------
+ 2 files changed, 37 insertions(+), 23 deletions(-)
 
 
 diff --git a/libfrog/systemd.h b/libfrog/systemd.h
-new file mode 100644
-index 00000000000000..4f414bc3c1e9c3
---- /dev/null
+index 4f414bc3c1e9c3..c96df4afa39aa6 100644
+--- a/libfrog/systemd.h
 +++ b/libfrog/systemd.h
-@@ -0,0 +1,20 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (c) 2026 Oracle.  All rights reserved.
-+ * All Rights Reserved.
-+ */
-+#ifndef __LIBFROG_SYSTEMD_H__
-+#define __LIBFROG_SYSTEMD_H__
-+
-+int systemd_path_instance_unit_name(const char *unit_template,
-+		const char *path, char *unitname, size_t unitnamelen);
-+
-+enum systemd_unit_manage {
-+	UM_STOP,
-+	UM_START,
-+	UM_RESTART,
-+};
-+
-+int systemd_manage_unit(enum systemd_unit_manage how, const char *unitname);
-+
-+#endif /* __LIBFROG_SYSTEMD_H__ */
-diff --git a/configure.ac b/configure.ac
-index 8092b8656ef94b..a9febabc71cfc7 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -182,6 +182,7 @@ AC_CONFIG_UDEV_RULE_DIR
- AC_HAVE_BLKID_TOPO
- AC_HAVE_TRIVIAL_AUTO_VAR_INIT
- AC_STRERROR_R_RETURNS_STRING
-+AC_HAVE_CLOSE_RANGE
+@@ -17,4 +17,32 @@ enum systemd_unit_manage {
  
- if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
-         AC_PACKAGE_CHECK_UBSAN
-diff --git a/include/builddefs.in b/include/builddefs.in
-index b38a099b7d525a..4a2cb757c0bdb3 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -118,6 +118,7 @@ HAVE_UDEV = @have_udev@
- UDEV_RULE_DIR = @udev_rule_dir@
- HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
- STRERROR_R_RETURNS_STRING = @strerror_r_returns_string@
-+HAVE_CLOSE_RANGE = @have_close_range@
+ int systemd_manage_unit(enum systemd_unit_manage how, const char *unitname);
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index bccd9289e5dd79..89a0332ae85372 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -36,6 +36,7 @@ ptvar.c \
- radix-tree.c \
- randbytes.c \
- scrub.c \
-+systemd.c \
- util.c \
- workqueue.c \
- zones.c
-@@ -70,6 +71,7 @@ radix-tree.h \
- randbytes.h \
- scrub.h \
- statx.h \
-+systemd.h \
- workqueue.h \
- zones.h
- 
-@@ -90,6 +92,10 @@ ifeq ($(HAVE_GETRANDOM_NONBLOCK),yes)
- LCFLAGS += -DHAVE_GETRANDOM_NONBLOCK
- endif
- 
-+ifeq ($(HAVE_CLOSE_RANGE),yes)
-+CFLAGS += -DHAVE_CLOSE_RANGE
-+endif
-+
- default: ltdepend $(LTLIBRARY) $(GETTEXT_PY)
- 
- crc32table.h: gen_crc32table.c crc32defs.h
-diff --git a/libfrog/systemd.c b/libfrog/systemd.c
-new file mode 100644
-index 00000000000000..2d2d2e9be72e6a
---- /dev/null
-+++ b/libfrog/systemd.c
-@@ -0,0 +1,177 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2026 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include <unistd.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/wait.h>
-+
-+#include "libfrog/systemd.h"
-+
-+/* Close all fds except for the three standard ones. */
-+static void
-+close_fds(void)
++static inline bool systemd_is_service(void)
 +{
-+	int	max_fd = sysconf(_SC_OPEN_MAX);
-+	int	fd;
-+
-+	if (max_fd < 1)
-+		max_fd = 1024;
-+
-+#ifdef HAVE_CLOSE_RANGE
-+	if (close_range(STDERR_FILENO + 1, max_fd, 0) == 0)
-+		return;
-+#endif
-+
-+	for (fd = STDERR_FILENO + 1; fd < max_fd; fd++)
-+		close(fd);
++	return getenv("SERVICE_MODE") != NULL;
 +}
 +
-+/*
-+ * Compute the systemd instance unit name for a given path.
-+ *
-+ * The escaping logic is implemented directly in systemctl so there's no
-+ * library or dbus service that we can call.
-+ */
-+int
-+systemd_path_instance_unit_name(
-+	const char		*unit_template,
-+	const char		*path,
-+	char			*unitname,
-+	size_t			unitnamelen)
++/* Special processing for a service/daemon program that is exiting. */
++static inline int
++systemd_service_exit(int ret)
 +{
-+	size_t			i;
-+	ssize_t			bytes;
-+	pid_t			child_pid;
-+	int			pipe_fds[2];
-+	int			child_status;
-+	int			ret;
-+
-+	ret = pipe(pipe_fds);
-+	if (ret)
-+		return -1;
-+
-+	child_pid = fork();
-+	if (child_pid < 0)
-+		return -1;
-+
-+	if (!child_pid) {
-+		/* child process */
-+		char		*argv[] = {
-+			"systemd-escape",
-+			"--template",
-+			(char *)unit_template,
-+			"--path",
-+			(char *)path,
-+			NULL,
-+		};
-+
-+		ret = dup2(pipe_fds[1], STDOUT_FILENO);
-+		if (ret < 0) {
-+			perror(path);
-+			goto fail;
-+		}
-+
-+		close_fds();
-+
-+		ret = execvp("systemd-escape", argv);
-+		if (ret)
-+			perror(path);
-+
-+fail:
-+		exit(EXIT_FAILURE);
-+	}
++	/*
++	 * We have to sleep 2 seconds here because journald uses the pid to
++	 * connect our log messages to the systemd service.  This is critical
++	 * for capturing all the log messages if the service fails, because
++	 * failure analysis tools use the service name to gather log messages
++	 * for reporting.
++	 */
++	sleep(2);
 +
 +	/*
-+	 * Close our connection to stdin so that the read won't hang if the
-+	 * child exits without writing anything to stdout.
++	 * If we're being run as a service, the return code must fit the LSB
++	 * init script action error guidelines, which is to say that we
++	 * compress all errors to 1 ("generic or unspecified error", LSB 5.0
++	 * section 22.2) and hope the admin will scan the log for what actually
++	 * happened.
 +	 */
-+	close(pipe_fds[1]);
-+	bytes = read(pipe_fds[0], unitname, unitnamelen - 1);
-+	close(pipe_fds[0]);
-+
-+	waitpid(child_pid, &child_status, 0);
-+	if (!WIFEXITED(child_status) || WEXITSTATUS(child_status) != 0) {
-+		errno = 0;
-+		return -1;
-+	}
-+
-+	/* Terminate string at first newline or end of buffer. */
-+	for (i = 0; i < bytes; i++) {
-+		if (unitname[i] == '\n') {
-+			unitname[i] = 0;
-+			break;
-+		}
-+	}
-+	if (i == bytes)
-+		unitname[unitnamelen - 1] = 0;
-+
-+	return 0;
++	return ret != 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 +}
 +
-+static const char *systemd_unit_manage_string(enum systemd_unit_manage how)
-+{
-+	switch (how) {
-+	case UM_STOP:
-+		return "stop";
-+	case UM_START:
-+		return "start";
-+	case UM_RESTART:
-+		return "restart";
-+	}
-+
-+	/* shut up gcc */
-+	return NULL;
-+}
-+
-+/*
-+ * Start/stop/restart a systemd unit and let it run in the background.
-+ *
-+ * systemctl start wraps a lot of logic around starting a unit, so it's less
-+ * work for xfsprogs to invoke systemctl instead of calling through dbus.
-+ */
-+int
-+systemd_manage_unit(
-+	enum systemd_unit_manage	how,
-+	const char			*unitname)
-+{
-+	pid_t				child_pid;
-+	int				child_status;
-+	int				ret;
-+
-+	child_pid = fork();
-+	if (child_pid < 0)
-+		return -1;
-+
-+	if (!child_pid) {
-+		/* child starts the process */
-+		char		*argv[] = {
-+			"systemctl",
-+			(char *)systemd_unit_manage_string(how),
-+			"--no-block",
-+			(char *)unitname,
-+			NULL,
-+		};
-+
-+		close_fds();
-+
-+		ret = execvp("systemctl", argv);
-+		if (ret)
-+			perror("systemctl");
-+
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	/* parent waits for process */
-+	waitpid(child_pid, &child_status, 0);
-+
-+	/* systemctl (stop/start/restart) --no-block should return quickly */
-+	if (WIFEXITED(child_status) && WEXITSTATUS(child_status) == 0)
-+		return 0;
-+
-+	errno = ENOMEM;
-+	return -1;
-+}
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index c5538c30d2518a..b3d87229d3367a 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -347,3 +347,22 @@ puts(strerror_r(0, buf, sizeof(buf)));
-     CFLAGS="$OLD_CFLAGS"
-     AC_SUBST(strerror_r_returns_string)
-   ])
-+
-+#
-+# Check if close_range exists
-+#
-+AC_DEFUN([AC_HAVE_CLOSE_RANGE],
-+  [AC_MSG_CHECKING([for close_range])
-+    AC_LINK_IFELSE(
-+    [AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <unistd.h>
-+#include <linux/close_range.h>
-+  ]], [[
-+close_range(0, 0, 0);
-+  ]])
-+    ], have_close_range=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_close_range)
-+  ])
+ #endif /* __LIBFROG_SYSTEMD_H__ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 3dba972a7e8d2a..79937aa8cce4c4 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -19,6 +19,7 @@
+ #include "unicrash.h"
+ #include "progress.h"
+ #include "libfrog/histogram.h"
++#include "libfrog/systemd.h"
+ 
+ /*
+  * XFS Online Metadata Scrub (and Repair)
+@@ -866,8 +867,7 @@ main(
+ 	if (stdout_isatty && !progress_fp)
+ 		progress_fp = fdopen(1, "w+");
+ 
+-	if (getenv("SERVICE_MODE"))
+-		is_service = true;
++	is_service = systemd_is_service();
+ 
+ 	/* Initialize overall phase stats. */
+ 	error = phase_start(&all_pi, 0, NULL);
+@@ -960,29 +960,15 @@ main(
+ 	hist_free(&ctx.datadev_hist);
+ 	hist_free(&ctx.rtdev_hist);
+ 
+-	/*
+-	 * If we're being run as a service, the return code must fit the LSB
+-	 * init script action error guidelines, which is to say that we
+-	 * compress all errors to 1 ("generic or unspecified error", LSB 5.0
+-	 * section 22.2) and hope the admin will scan the log for what
+-	 * actually happened.
+-	 *
+-	 * We have to sleep 2 seconds here because journald uses the pid to
+-	 * connect our log messages to the systemd service.  This is critical
+-	 * for capturing all the log messages if the scrub fails, because the
+-	 * fail service uses the service name to gather log messages for the
+-	 * error report.
+-	 *
+-	 * Note: We don't count a lack of kernel support as a service failure
+-	 * because we haven't determined that there's anything wrong with the
+-	 * filesystem.
+-	 */
+ 	if (is_service) {
+-		sleep(2);
++		/*
++		 * Note: We don't count a lack of kernel support as a service
++		 * failure because we haven't determined that there's anything
++		 * wrong with the filesystem.
++		 */
+ 		if (!ctx.scrub_setup_succeeded)
+-			return 0;
+-		if (ret != SCRUB_RET_SUCCESS)
+-			return 1;
++			ret = 0;
++		return systemd_service_exit(ret);
+ 	}
+ 
+ 	return ret;
 
