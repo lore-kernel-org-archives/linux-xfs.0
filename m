@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AA1B285CB6
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2026 15:46:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50DAD2BD030
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2026 16:34:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774021613; cv=none; b=EGk+yHn1DjFLIky2OGd0YP3cjfDl0JA7HCjYPF+S1kW3fBCBNlFh0GGPd+QLKOC23M5gTiadbddhS7G7B64VhjnImuM/mO3jtDs0c6UGwepkInpf/2fUqzpUtgilptCbC1JDgvgrzTPcv9Ge3Idw9SyC08/8eHjIUKhpFAGPCXY=
+	t=1774024485; cv=none; b=GD0N777YW5qXwihGRBHN0Tp/U1YKiPfltbhICtCQVMsYDsep4Kv0u/+nnMrmokXtLSBmWNb173b+E+FFzKok4dTfsDzlbGCICV68QujCEs/u49mdfy8F55vrPAI3dxaYz964etlQba3lhScWmMA6WEnbEKUysiqo+6z20InXse8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774021613; c=relaxed/simple;
-	bh=yx6kx2GRzZqFNkghfr/BNK98g50mH8cHv3wSSvtDmws=;
+	s=arc-20240116; t=1774024485; c=relaxed/simple;
+	bh=E+q0kFQ+EBwWrh6vkKAdLJy3wByBzLm6QJYhxpf0Aic=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SGRPcgOcOepswZSXjI4xkSNiBWi00A+8MbB6VPoJaTUKOZB4AvxR23ygISQJNfjAl5DZxCS+9nntvwwva9QchVV39TyZyOs+vT80NdGAW/unn8+yGna2/q3N+DAbnbhcnwWgLtMbjuBGGuOhY6tbAca+Zyag4n4YGsSflUfE/qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oyr0P/L5; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=B8YHjgZQZ+08uY1xs+iAWs35jKMCPtKa+kTZ+BvJl1nsXrFdEQ4w8mUhT6ZIMu1YTnoYJxpshBLuIxdmObgDPwXU/w1WeL2ShMKXk05IxroyOUTNDmwBngHiCRHQhWEPK4RvQLXcYi+mNAk7DUQmh/lehsmFeHvhZa/uVj4Bep4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dQFeKzAM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oyr0P/L5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2006EC4CEF7;
-	Fri, 20 Mar 2026 15:46:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dQFeKzAM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB70AC4CEF7;
+	Fri, 20 Mar 2026 16:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774021613;
-	bh=yx6kx2GRzZqFNkghfr/BNK98g50mH8cHv3wSSvtDmws=;
+	s=k20201202; t=1774024484;
+	bh=E+q0kFQ+EBwWrh6vkKAdLJy3wByBzLm6QJYhxpf0Aic=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oyr0P/L536AWNYpJlL7egFZR0npsiI/xvdyIyWMTTN7vqvqlQD1Ls2YKlvQAdvKn4
-	 OkiWpe8ghdQf+5IrB8t1MVYi6PncWp9VXlFZmMmqQXVQyfp/H6T0yNweLWxyetafsh
-	 7fQBVEZN8M8sw5H0OT6nesn7d0AXromlwaigTL33Z5UNFxxE6aOsWWJ50nH8slKMYX
-	 /QPgmr0iwih+PIduWbjBVtU96rCYBBZNH+GBt//uiM2bfsErYVjSBZKZ4Iwtxsq0xX
-	 H99pPDC+7XdgSsoUJfgKxezFyYEdfcxPVCFmQPRiNItlLW49vzs6YSH+INYXxbwos2
-	 W4eg7AopSJwAA==
-Date: Fri, 20 Mar 2026 08:46:52 -0700
+	b=dQFeKzAML27ACZNGLmHoE8qSMR7gmUHuSduzatp7KVhYh0M1TXb5uRPlwYu0oLYB/
+	 ACQ/h6Ff72txVm4UGZt4eMuRFabTK87iBIgB35SV+wM+snsODCJqltEpqlpAJXMmpE
+	 zaYjU6MKscyg0UqsTKEwUQzW7PBfwTAA7mK0lV4OhtWmFvdf/k8DGDDzU3Dq+zVPnS
+	 5yALpgdJovOh9bpI2WUPK1gUuNCyu8XWbAfIk7CtnKFHCmfkPQgq1HNMdL0qHFTf15
+	 /rDqtL9Az0eTvOfHhpAjKAPbsinbc10GOK7MGfyBCtCIwKRPVc6VqXRdkeCrpAEm0T
+	 tiIFSONDNhLSQ==
+Date: Fri, 20 Mar 2026 09:34:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/22] xfs_scrub: raise media verification IO limits
-Message-ID: <20260320154652.GD6223@frogsfrogsfrogs>
-References: <177389506832.3681140.14985419190965827651.stgit@frogsfrogsfrogs>
- <177389507326.3681140.15280052926187020484.stgit@frogsfrogsfrogs>
- <abz0ZjMmmFMk3l5e@infradead.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [Bug][xfstests xfs/556] inconsistent {HARDIRQ-ON-W} ->
+ {IN-HARDIRQ-W} usage
+Message-ID: <20260320163444.GE6223@frogsfrogsfrogs>
+References: <20260319194303.efw4wcu7c4idhthz@doltdoltdolt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,27 +42,111 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <abz0ZjMmmFMk3l5e@infradead.org>
+In-Reply-To: <20260319194303.efw4wcu7c4idhthz@doltdoltdolt>
 
-On Fri, Mar 20, 2026 at 12:16:54AM -0700, Christoph Hellwig wrote:
-> On Wed, Mar 18, 2026 at 09:51:00PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > To avoid starving other threads of disk IO resources, the read-verify
-> > pool limits the size of verification IOs to limit bandwidth consumption,
-> > and it is willing to over-verify some amount of unwritten media to
-> > reduce the number of verification IO requests sent to the device.
-> > 
-> > However, these limits were set in 2018 when areal densities were lower
-> > and disk bandwidth was more limited.  Increase them now to reduce scan
-> > time on the author's system by 10% in foreground and 50% in background
-> > mode.
+On Fri, Mar 20, 2026 at 03:43:03AM +0800, Zorro Lang wrote:
+> Hi,
 > 
-> This looks good for now.  At some point we'll need to return to
-> fine-tune this better for different media.
+> While running fstests xfs/556 on kernel 7.0.0-rc4+ (HEAD=04a9f1766954), a
+> lockdep warning was triggered indicating an inconsistent lock state for
+> sb->s_type->i_lock_key.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> The deadlock might occur because iomap_read_end_io (called from a hardware
+> interrupt completion path) invokes fserror_report, which then calls igrab.
+> igrab attempts to acquire the i_lock spinlock. However, the i_lock is frequently
+> acquired in process context with interrupts enabled. If an interrupt occurs while
+> a process holds the i_lock, and that interrupt handler calls fserror_report, the
+> system deadlocks.
+> 
+> I hit this warning several times by running xfs/556 (mostly) or generic/648
+> on xfs. More details refer to below console log.
+> 
+> Thanks,
+> Zorro
 
-<nod> Thanks for reviewing and sharing patches! :)
+Does the patch below fix the lockdep complaint for you?  It fixes it
+here on my local machine...
 
---D
+diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+index fc045f2e4c459e..cf98247e51f81e 100644
+--- a/fs/iomap/bio.c
++++ b/fs/iomap/bio.c
+@@ -8,7 +8,15 @@
+ #include "internal.h"
+ #include "trace.h"
+ 
+-static void iomap_read_end_io(struct bio *bio)
++struct iomap_failed_bio {
++	struct list_head io_list;
++	struct bio *bio;
++};
++
++static DEFINE_SPINLOCK(failed_read_lock);
++static LIST_HEAD(failed_read_list);
++
++static void __iomap_read_end_io(struct bio *bio)
+ {
+ 	int error = blk_status_to_errno(bio->bi_status);
+ 	struct folio_iter fi;
+@@ -18,6 +26,61 @@ static void iomap_read_end_io(struct bio *bio)
+ 	bio_put(bio);
+ }
+ 
++static void
++iomap_fail_reads(
++	struct work_struct	*work)
++{
++	struct iomap_failed_bio	*fb;
++	struct list_head	tmp;
++	unsigned long		flags;
++
++	spin_lock_irqsave(&failed_read_lock, flags);
++	list_replace_init(&failed_read_list, &tmp);
++	spin_unlock_irqrestore(&failed_read_lock, flags);
++
++	while ((fb = list_first_entry_or_null(&tmp, struct iomap_failed_bio,
++			io_list))) {
++		list_del_init(&fb->io_list);
++		__iomap_read_end_io(fb->bio);
++		kfree(fb);
++		cond_resched();
++	}
++}
++
++static DECLARE_WORK(failed_read_work, iomap_fail_reads);
++
++static void iomap_fail_buffered_read(struct iomap_failed_bio *fb)
++{
++	unsigned long flags;
++
++	/*
++	 * Bounce I/O errors to a workqueue to avoid nested i_lock acquisitions
++	 * in the fserror code.  The caller no longer owns the fb reference
++	 * after the spinlock drops.
++	 */
++	spin_lock_irqsave(&failed_read_lock, flags);
++	if (list_empty(&failed_read_list))
++		WARN_ON_ONCE(!schedule_work(&failed_read_work));
++	list_add_tail(&fb->io_list, &failed_read_list);
++	spin_unlock_irqrestore(&failed_read_lock, flags);
++}
++
++static void iomap_read_end_io(struct bio *bio)
++{
++	if (bio->bi_status) {
++		struct iomap_failed_bio *fb = kzalloc_obj(*fb, GFP_ATOMIC);
++
++		if (fb) {
++			fb->bio = bio;
++			INIT_LIST_HEAD(&fb->io_list);
++			iomap_fail_buffered_read(fb);
++			return;
++		}
++	}
++
++	__iomap_read_end_io(bio);
++}
++
+ static void iomap_bio_submit_read(struct iomap_read_folio_ctx *ctx)
+ {
+ 	struct bio *bio = ctx->read_ctx;
