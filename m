@@ -1,53 +1,71 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6583527B32C
-	for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2026 02:22:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A3202DB7B7
+	for <linux-xfs@vger.kernel.org>; Fri, 20 Mar 2026 03:12:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773973353; cv=none; b=RV/1XbPeMPtHzHuEdDm44gxukjkCj9iqUxtRle0NWbm9dirZEG4hecFHjE/BFsAwtzp5gJp6Gj1LL8WA+bdO15DJaM/oZH0x5t9jh1fcH2H5hmKe+DSnjOmYJPYRnsVcEye3i1fLb/Kum36bozYClr63ABUBaEEPnoAoPEmoFYU=
+	t=1773976372; cv=none; b=lsWwjuRR6IPgWrthUc2TDDpeg/VhnDC6WwEJu87qh611zyu8LCwdwUw+wyICSBPlHzBdZ613FvysKWSz8U9u+37r7pywXKNIr/U00ndrRuT2cKyR8uByvpz9AFyZiJQnO4oXBs6bw30VDrAaeO/0Iln2c0mw4Mf3Jm7s1W3vSjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773973353; c=relaxed/simple;
-	bh=VI+nsQRLbNO8nCWieiAJxPli3P7e2RkaMMVda60mla8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pdxAacnNv+w4mWghFz6rn6e7f+wKRk5XaEobR0gnQopN24CRvx8knblrQrOX0Kd2cEDsYuPYkRzd2mEZD6xmITXhwQdU3SgIKy9YmN+xCdEQxZRCA1dCTQI6/8ZvMJvWKAGGlEXvUrB/sgagwu8osooU3CirXPEBihDwo6biflM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=E7aQ4U9X; arc=none smtp.client-ip=113.46.200.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1773976372; c=relaxed/simple;
+	bh=NvV+h593Ou5IBnxtUlqtw1Pyy++rLNAuvH0B1AJ01CI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bzdLsGzvL2hvTKzOV4mXyzs5lnwF08LRZU3rRM85iNrLbBNH+VxdjoCcvG4qs1r79497wvXFpcAggI2JQ6oEa5brg1ODCNj+DuVUFzdE5F68h1IVHQ+zjtCESKJMckphRHVFWCiB+64r4b4ULCQtlSDqYUFjz9gVFLeSfloiFic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J72F7E6l; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="E7aQ4U9X"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=Y2k1sWqweJIiw8b1ct4ttwvK0EppPtRqPDFu1w3RMOA=;
-	b=E7aQ4U9X2liSl2qydxU9pGcset1Sy2m2/PBk5hcalvQNmdDHIrggbPcW7KmHu/khSfGFKFsp0
-	fsViCLpvYwPhl0Kd6J5LOZWjE27n2/+EHnjNnoEYt5Rov6CPmZM+kW7G10/BOxoMFbKblzK9Q1/
-	NEaz+/OCPmO98DVTke7pfWA=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fcR6J33BvzKm4t;
-	Fri, 20 Mar 2026 10:17:28 +0800 (CST)
-Received: from dggemv712-chm.china.huawei.com (unknown [10.1.198.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id AADF04056B;
-	Fri, 20 Mar 2026 10:22:29 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv712-chm.china.huawei.com (10.1.198.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 20 Mar 2026 10:22:18 +0800
-Received: from huawei.com (10.50.159.234) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Fri, 20 Mar
- 2026 10:22:18 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH v3 2/2] xfs: remove redundant validation in xlog_recover_attri_commit_pass2
-Date: Fri, 20 Mar 2026 10:11:30 +0800
-Message-ID: <20260320021130.2936657-3-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20260320021130.2936657-1-leo.lilong@huawei.com>
-References: <20260320021130.2936657-1-leo.lilong@huawei.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J72F7E6l"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2b04fc8851cso14977345ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Mar 2026 20:12:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773976370; x=1774581170; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4I6B8Rx4hDXdmswJxNp2RjYpERKWQN7pv7OUIlU9OXM=;
+        b=J72F7E6l2u5ftLiq8lu2Nf13vGpquLSXaBwhQ9O9g7NEDaBvAUGjKPFvLX7xvspe8g
+         EaGry8PsI97ZptjuIgCIfVYScXFq/x+cg9vce/bRNhSNdcXdUKT+2j5X9KGasqT2F/oO
+         uCV0n7V/E7zhLtT8RE3fmMnpBDv/lRUz+g+fmldFfylwWWs0TViCG3zPae6pviv5E0qF
+         rTB57PYJ2B1H7qS8E5EydNSd67FeToeuJdbUZwT4nmxjbNohFsq5Tl4YmPZpyfAlwrVN
+         x8fn7FOmgBbpotHgBVYqjbxJl3df2Ra7/qo9ekRsry8UUC2afcUYy8d8HV27BAhSWGVz
+         tVuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773976370; x=1774581170;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4I6B8Rx4hDXdmswJxNp2RjYpERKWQN7pv7OUIlU9OXM=;
+        b=d1Ohp9lGErfMgPkeoQHd9PKr6GIiyxDfclYPSzZh7EA9SF/h6PuPJIeMRvvQgHHArF
+         oEgQzltvQZ9r/LAJoZlL3yjT1P6p7ku7kNTdFdrwMfom9l0adxq79eOOABlhuYx8U92l
+         N5njTjFCQr868ySJCMaRw9WUeGyICAeYGBEMTO046bDk7YxZ5OTYT93IBXaddAsM8TI4
+         sc0zh8Ur7wb6uYa/ADc516J1N7WuBljNtH6puVIsOHc+dITnKEbu9vPRRkQLPOdvI/ie
+         8O6Fl8x8YbPGkeHNyVQ7kxIMcFiQbagEHM2fUAFAIV5uraArLn4lPZRtoSocXEZKHK2Y
+         ztyw==
+X-Gm-Message-State: AOJu0YyepYym3y9XEqA4+MejBX/GkfH/vGyvrVlmF8yzjKduvmLRsMw3
+	NwLOWlsQqnDiF+I6y0Vy5rteAaeyJVCoFeGlaKnR6M5zoD6iTDTNONwe
+X-Gm-Gg: ATEYQzyllZLAoDRm3kgFiemPi7kXInhsHggRsgSelopytOGGkcjDYnbWcIWyDYcO2Ds
+	GPLtKio+0dXoiNy282l08i1e3L4H19PLA2w+oBEyVpEasXM3r2XXFRTPZQu/0ESsGfoxj0iRteJ
+	ghtUKUgJ3JHWXy8LZzmRt5x9ijkE60ao4GKsJRMHeKffT6HuhwJmf/13R62pGs2o5kcrgagJakd
+	bHwCCuwnUecFrisL2x0bikubEbjaooFnqDxddd3QtXpklqvxXRs7UEn0daQ3YiR91hguq+qYtJh
+	MQSJdKasmxP0737vVQIdZZBAi49AAEclVSsjBVCzWIWi4XMoVPui/gu4BykF9rJ5qj1CpY0Ah/q
+	AULKNKw5fDMCDdpk8YKV1LPCuu/POQY4+WqSyGWiBkIXqxaa6PEmpHvZ+CSeqiGkzgFSopIHMUy
+	JW1oKPNGD3YLZpytdmMg==
+X-Received: by 2002:a17:903:32c6:b0:2ae:55eb:f82d with SMTP id d9443c01a7336-2b0826d751dmr12591125ad.1.1773976370299;
+        Thu, 19 Mar 2026 20:12:50 -0700 (PDT)
+Received: from localhost ([111.228.63.84])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b083656df5sm7259535ad.44.2026.03.19.20.12.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Mar 2026 20:12:49 -0700 (PDT)
+From: Cen Zhang <zzzccc427@gmail.com>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com,
+	Cen Zhang <zzzccc427@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: annotate data race on li_lsn in CIL formatting vs AIL insertion
+Date: Fri, 20 Mar 2026 10:55:07 +0800
+Message-Id: <20260320025507.3331221-1-zzzccc427@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,82 +73,65 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemn100013.china.huawei.com (7.202.194.116)
 
-Remove the redundant post-parse validation switch. By the time that
-block is reached, xfs_attri_validate() has already guaranteed all name
-lengths are non-zero via xfs_attri_validate_namelen(), and
-xfs_attri_validate_name_iovec() has already returned -EFSCORRUPTED for
-NULL names. For the REMOVE case, attr_value and value_len are
-structurally guaranteed to be NULL/zero because the parsing loop only
-populates them when value_len != 0. All checks in that switch are
-therefore dead code.
+xfs_inode_item_format_core() reads lip->li_lsn without holding any lock
+to embed the last on-disk LSN into the log dinode during CIL commit:
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+    xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
+
+Concurrently, xfs_trans_ail_update_bulk() writes lip->li_lsn under
+ail_lock when inserting items into the AIL after log IO completion:
+
+    lip->li_lsn = lsn;
+
+The CIL context lock (xc_ctx_lock) and the AIL lock (ail_lock) are
+independent and provide no mutual exclusion between these paths.
+
+Under simple interleaving on 64-bit architectures this is benign since
+li_lsn monotonically increases and both old/new values are valid
+checkpoint LSNs.  However, on 32-bit architectures the 64-bit xfs_lsn_t
+can be torn into two 32-bit loads, producing a bogus LSN that could
+cause log recovery to make incorrect replay decisions.  XFS already
+acknowledges this concern via the xfs_trans_ail_copy_lsn() helper which
+takes ail_lock on 32-bit.
+
+Annotate with READ_ONCE()/WRITE_ONCE() to prevent compiler-level
+tearing on all architectures.
+
+Fixes: 93f958f9c41f ("xfs: cull unnecessary icdinode fields")
+Cc: stable@vger.kernel.org
+Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
 ---
- fs/xfs/xfs_attr_item.c | 46 ------------------------------------------
- 1 file changed, 46 deletions(-)
+ fs/xfs/xfs_inode_item.c | 2 +-
+ fs/xfs/xfs_trans_ail.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 83d09635b200..82324f42537b 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -1132,52 +1132,6 @@ xlog_recover_attri_commit_pass2(
- 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 8913036b8024..ef0a0889c580 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -624,7 +624,7 @@ xfs_inode_item_format_core(
+ 	struct xfs_log_dinode	*dic;
+ 
+ 	dic = xlog_format_start(lfb, XLOG_REG_TYPE_ICORE);
+-	xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
++	xfs_inode_to_log_dinode(ip, dic, READ_ONCE(ip->i_itemp->ili_item.li_lsn));
+ 	xlog_format_commit(lfb, xfs_log_dinode_size(ip->i_mount));
+ }
+ 
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 923729af4206..3a0e0c65ebc5 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -831,7 +831,7 @@ xfs_trans_ail_update_bulk(
+ 		} else {
+ 			trace_xfs_ail_insert(lip, 0, lsn);
+ 		}
+-		lip->li_lsn = lsn;
++		WRITE_ONCE(lip->li_lsn, lsn);
+ 		list_add_tail(&lip->li_ail, &tmp);
  	}
  
--	switch (op) {
--	case XFS_ATTRI_OP_FLAGS_REMOVE:
--		/* Regular remove operations operate only on names. */
--		if (attr_value != NULL || value_len != 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		fallthrough;
--	case XFS_ATTRI_OP_FLAGS_PPTR_REMOVE:
--	case XFS_ATTRI_OP_FLAGS_PPTR_SET:
--	case XFS_ATTRI_OP_FLAGS_SET:
--	case XFS_ATTRI_OP_FLAGS_REPLACE:
--		/*
--		 * Regular xattr set/remove/replace operations require a name
--		 * and do not take a newname.  Values are optional for set and
--		 * replace.
--		 *
--		 * Name-value set/remove operations must have a name, do not
--		 * take a newname, and can take a value.
--		 */
--		if (attr_name == NULL || name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		break;
--	case XFS_ATTRI_OP_FLAGS_PPTR_REPLACE:
--		/*
--		 * Name-value replace operations require the caller to
--		 * specify the old and new names and values explicitly.
--		 * Values are optional.
--		 */
--		if (attr_name == NULL || name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		if (attr_new_name == NULL || new_name_len == 0) {
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--					     attri_formatp, len);
--			return -EFSCORRUPTED;
--		}
--		break;
--	}
--
- 	/*
- 	 * Memory alloc failure will cause replay to abort.  We attach the
- 	 * name/value buffer to the recovered incore log item and drop our
 -- 
-2.39.2
+2.34.1
 
