@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C59B338B7A6;
-	Sat, 21 Mar 2026 11:58:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABB7338B7B8;
+	Sat, 21 Mar 2026 11:58:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774094336; cv=none; b=fOrGzBKs6wqcMEx/zVORwRodqGWOJohOJBqtIvOvIyZ6+DQKqz9nb4fjbB+1VIONCTZjnJX0sPiCEbQ5IZM5kkshynBM8KD5iOx93RvTJ+rpMhvTP/rAygHVFKK7yjlOGVwgcRvS3G8CjI6GSWpp6kwy7/Nd64ckPFHHUjm8R8Q=
+	t=1774094338; cv=none; b=nFqIYy/xeY1/f1Ngywba0Bz2JdLW8A+5cQj9JbYZA9BCtwUO7V/sVPBbPLXw3216h2VDNSMJpN+uQofTR1jb0M5zh1I37wUCu1ct5RxUV3AHvf8/pU56DzY6gz6PxzNITySaM65oS8t78Q7DXIADHm4Lorpq3IiyHzjKKTlHcnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774094336; c=relaxed/simple;
-	bh=/MXssURa7qmlNPosGBTMuJB/s2sg32i6UHKROghwJEw=;
+	s=arc-20240116; t=1774094338; c=relaxed/simple;
+	bh=vkD0TMxCQA1e6lAgbwcqQ3f1iU5VP/mMQrrQ8vZ1S1Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GB7p7zgpGtbJGCCKrp5j0z5PUp4lqqLT7+h8fCkMddx0pYtRpFv6Hc+UGzd9BgsHKuF+7YUYMKV4cd7czznn3wnwy3WWpR+0Takv/mFYboSziwF/FrG064N+cOHtXZ13rhN8ZiNt18Htys5ly7EKTftcehZQ/e5J/Ed0DBBSxBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tGfQhbeg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=QPpo+AgNAlh6hbnXtWYToejMd2oVNwgzfA9B4fdJ34c5iBeL8s6s1jgkVNWkt/EajtVK/RRxriZXJP/GoV50lmlD+06tX8dOAOATrik8N2j0f32FAgyGB1eNXJcMBXxNvjyr8jUSKd91pR5xCkiLUp43SNXmBuHwgbePboUEBso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXidf/sq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tGfQhbeg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9B67C19421;
-	Sat, 21 Mar 2026 11:58:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXidf/sq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8B64C2BC87;
+	Sat, 21 Mar 2026 11:58:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774094336;
-	bh=/MXssURa7qmlNPosGBTMuJB/s2sg32i6UHKROghwJEw=;
+	s=k20201202; t=1774094338;
+	bh=vkD0TMxCQA1e6lAgbwcqQ3f1iU5VP/mMQrrQ8vZ1S1Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=tGfQhbegF95xXaQmP9LFwQKQEV5QIkRsVN825cdT0Bt076nsnU5ZzXsM/BfFlbh/X
-	 qCCTxeMgpHvIAG3QVvJlOXM6WhGq/vBBa5pO8lHdD1ruBxzbagoB+5rW9E7TlQC8aN
-	 Nh7GTMDJ35cLjjAHOYbfZ9Ob5u7J0hLQZCbsypz9LbfRK9KntsbSv6bZcIK5VaD1/s
-	 XoUuiXp28ALj6IfgLvBI+yS31xsq/YiT4ZKDIF6pprPvSWojFCclicPBlM/3kf4Br/
-	 1+kmNv3exP7JMHcoVGx/fuGogtH1XGwCiPN5Qn5/KxxgzXrJXzr7YjAn7y3xPBB7O/
-	 SJx3sY7rzzAQA==
+	b=fXidf/sq9eENtimtVptQGgnFzbwZ4NPtTE3g67w/ygJNiu9ID2pSI4WrSncYemtfF
+	 FjdqqiNTWWqzBtSS6zTfg06KaK997rQnoh9UL1aK8Nt0HPvi/evnzDy094rhNph65q
+	 7l8kxkbGslx9l4Tg6czMLniv6mA+du0j+E5SnBeogA9OkMpzdYBMRGr6qp3Sc2Ccw0
+	 0I0l11cR9KcjnMaZawhl2jLV/BYdK6GrIpFSjb2bNzmQmFvygfjO+oC42Wch1TMUz7
+	 EYIPwqB6ajaV0x/Z7OGYKL+1uhqG8OXh/bKtB9fPgmoh1CDQJQbAKQCoTrdI4h+zVE
+	 ZNUApxKL+KthQ==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-btrfs@vger.kernel.org,
 	amir73il@gmail.com,
 	zlang@redhat.com,
 	hch@infradead.org
-Subject: [PATCH v2 8/9] fstests: verify IMA isolation on cloned filesystems
-Date: Sat, 21 Mar 2026 19:58:29 +0800
-Message-ID: <a8553879b23720a1c701cd9314f135150cd5f36b.1774090817.git.asj@kernel.org>
+Subject: [PATCH v2 9/9] fstests: verify exportfs file handles on cloned filesystems
+Date: Sat, 21 Mar 2026 19:58:30 +0800
+Message-ID: <736c214977f6cd2ce25aaa237a49d0907481ee38.1774090817.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1774090817.git.asj@kernel.org>
 References: <cover.1774090817.git.asj@kernel.org>
@@ -48,47 +48,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add testcase to verify IMA measurement isolation when multiple devices
-share the same FSUUID.
+Ensure that exportfs can correctly decode file handles on a cloned
+filesystem across a mount cycle, by file handles generated on a
+cloned device remain valid after mount cycle.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- tests/generic/794     | 103 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/794.out |  10 ++++
- 2 files changed, 113 insertions(+)
- create mode 100644 tests/generic/794
- create mode 100644 tests/generic/794.out
+ tests/generic/795     | 73 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/795.out |  2 ++
+ 2 files changed, 75 insertions(+)
+ create mode 100644 tests/generic/795
+ create mode 100644 tests/generic/795.out
 
-diff --git a/tests/generic/794 b/tests/generic/794
+diff --git a/tests/generic/795 b/tests/generic/795
 new file mode 100644
-index 000000000000..391563b84cfc
+index 000000000000..e7ba146350ee
 --- /dev/null
-+++ b/tests/generic/794
-@@ -0,0 +1,103 @@
++++ b/tests/generic/795
+@@ -0,0 +1,73 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
 +#
-+# FS QA Test 794
-+# Verify IMA isolation on cloned filesystems:
-+# . Mount two devices sharing the same FSUUID (cloned).
-+# . Apply an IMA policy to measure files based on that FSUUID.
-+# . Create unique files on each mount point to trigger measurements.
-+# . Confirm the IMA log correctly attributes events to the respective mounts.
++# FS QA Test No. 795
 +
 +. ./common/preamble
-+. ./common/filter
 +
-+_begin_fstest auto quick clone
++_begin_fstest auto quick exportfs clone
 +
 +_require_test
++_require_exportfs
 +_require_loop
 +_require_nouuid_mountopt
-+
-+[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-+	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
-+[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-+	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
++_require_test_program "open_by_handle"
 +
 +_cleanup()
 +{
@@ -99,52 +91,27 @@ index 000000000000..391563b84cfc
 +	_loop_image_destroy "${devs[@]}" 2> /dev/null
 +}
 +
-+filter_pool()
++# Create test dir and test files, encode file handles and store to tmp file
++create_test_files()
 +{
-+	sed -e "s|${devs[0]}|DEV1|g" -e "s|$mnt1|MNT1|g" \
-+	    -e "s|${devs[1]}|DEV2|g" -e "s|$mnt2|MNT2|g" | _filter_spaces
++	rm -rf $testdir
++	mkdir -p $testdir
++	$here/src/open_by_handle -cwp -o $tmp.handles_file $testdir $NUMFILES
 +}
 +
-+do_ima()
++# Decode file handles loaded from tmp file
++test_file_handles()
 +{
-+	local ima_policy="/sys/kernel/security/ima/policy"
-+	local ima_log="/sys/kernel/security/ima/ascii_runtime_measurements"
-+	local fsuuid
-+	local mnt=$1
-+	local enable=$2
++	local opt=$1
++	local when=$2
 +
-+	# Since the in-memory IMA audit log is only cleared upon reboot,
-+	# use unique random filenames to avoid log collisions.
-+	local foofile=$(mktemp --dry-run foobar_XXXXX)
-+
-+	echo $mnt $enable | filter_pool
-+
-+	[ -w "$ima_policy" ] || _notrun "IMA policy not writable"
-+
-+	fsuuid=$(blkid -s UUID -o value ${devs[0]})
-+
-+	# Load IMA policy to measure file access specifically for this
-+	# filesystem UUID.
-+	if [[ $enable -eq 1 ]]; then
-+		echo "measure func=FILE_CHECK fsuuid=$fsuuid" > "$ima_policy" || \
-+			_notrun "Policy rejected"
-+	fi
-+
-+	# Create a file to trigger measurement and verify its entry in
-+	# the IMA log.
-+	echo "test_data" > $mnt/$foofile
-+
-+	# For $ima_log column entry please ref to
-+	grep $foofile "$ima_log" | awk '{ print $5 }' | filter_pool | \
-+						sed "s/$foofile/FOOBAR_FILE/"
-+
-+	echo "dbg: $mnt $fsuuid $foofile" >> $seqres.full
-+	cat $ima_log | tail -1 >> $seqres.full
-+	echo >> $seqres.full
++	echo test_file_handles after $when
++	$here/src/open_by_handle $opt -i $tmp.handles_file $mnt2 $NUMFILES
 +}
 +
 +devs=()
 +_loop_image_create_clone devs
++mkdir -p $TEST_DIR/$seq
 +mnt1=$TEST_DIR/$seq/mnt1
 +mnt2=$TEST_DIR/$seq/mnt2
 +mkdir -p $mnt1
@@ -155,35 +122,31 @@ index 000000000000..391563b84cfc
 +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
 +						_fail "Failed to mount dev2"
 +
-+do_ima $mnt1 1
-+do_ima $mnt2 0
++NUMFILES=1
++testdir=$mnt2/testdir
 +
-+# Btrfs uses in-memory dynamic temp_fsid
-+echo mount cycle
++# Decode file handles of files/dir after cycle mount
++create_test_files
++
++_unmount $mnt1
 +_unmount $mnt2
-+_mount $mount_opts ${devs[1]} $mnt2 || _fail "Failed to mount dev2"
++_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
++						_fail "Failed to mount dev2"
++_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
++						_fail "Failed to mount dev1"
 +
-+do_ima $mnt1 0
-+do_ima $mnt2 0
++test_file_handles -rp "cycle mount"
 +
 +status=0
 +exit
-diff --git a/tests/generic/794.out b/tests/generic/794.out
+diff --git a/tests/generic/795.out b/tests/generic/795.out
 new file mode 100644
-index 000000000000..492f8b0b0bec
+index 000000000000..774fe7487d65
 --- /dev/null
-+++ b/tests/generic/794.out
-@@ -0,0 +1,10 @@
-+QA output created by 794
-+MNT1 1
-+MNT1/FOOBAR_FILE
-+MNT2 0
-+MNT2/FOOBAR_FILE
-+mount cycle
-+MNT1 0
-+MNT1/FOOBAR_FILE
-+MNT2 0
-+MNT2/FOOBAR_FILE
++++ b/tests/generic/795.out
+@@ -0,0 +1,2 @@
++QA output created by 795
++test_file_handles after cycle mount
 -- 
 2.43.0
 
