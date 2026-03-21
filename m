@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C722E093A;
-	Sat, 21 Mar 2026 11:55:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7986938B15D;
+	Sat, 21 Mar 2026 11:58:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774094155; cv=none; b=sTXajewce+Lx7MIzo+M8ajzJ8EzINKDyig8EUbb/oqTWmxujyzBTN+KEW5iY7ZC/MNpFK+/h5KaMl2TX9CjQHxnzHOdTsbTrzNGsDvLd/t4nyPzgI8KoC00lR0/CCZ7k0iMPmJnv1X8hiQ7wHHBmkPSC2auhMgWDAFMd+USbIfs=
+	t=1774094319; cv=none; b=RhwURBoFuyZqr9rxB10DZnasz8aKBeWrbr7FPpKa6yb7kxXpwzl/8uJDjAjZPtxTzNany+dcpT40G5HuGqk2VHu9/IfUGW5FBHpJLdWQTNQN8GTQQxV7cimlsotKInwrJYCeGA9fRGnulyJwmbpnbIjEc9dvVvgbWkHKRSJS/JQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774094155; c=relaxed/simple;
-	bh=lvL4EldL7WqBWOKOgCGDgpa+YxAUJE4h3UjLrMVTpOA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MEgK+PjB63BI/ZcDR397zzxLLxQSgdWX/9lcLo/YOJNdz8LTfHcwYnDMxDw9/DFL68roPsiijP1im9DK9253erah/g74KzQ9+fgKKIn4RR8w0yHWjaNpLCAoHh4+zKiy0pQl6wgMgzw3my4SjRTe+uSMQg86JkgZ+jo4fh+hT2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c2yrSjrp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774094319; c=relaxed/simple;
+	bh=u45BPGTz+pSWYCpXNvPHDOjmVhhDkrRcZAEszetxCmQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SyiWRj8YYBC1fBVmNDJb/Ixk54QFDKyZ8pFuCraaK3cY1l9e4uxPL5iOFwj6H91q8y6Nt4kXXnEPsNn7yMJuKnSHP5+lzRUMCkXHtolIsL2x544HnRb/u5qtC34lxXk129Ae+y161FKruOyXl3BihLepNIMpUlCAu1jK40KI6V8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mAjy8r1s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2yrSjrp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED8C1C19421;
-	Sat, 21 Mar 2026 11:55:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mAjy8r1s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF850C19421;
+	Sat, 21 Mar 2026 11:58:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774094155;
-	bh=lvL4EldL7WqBWOKOgCGDgpa+YxAUJE4h3UjLrMVTpOA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=c2yrSjrp61VwPbFklVWnVv4dmwlkLmW3i8Y5VW2WU1eJozYguU3uALnpaysX6hqxH
-	 GBD4LgM9ku6WrcJHAXkYVfQ9OsnihBe8/KOFZoSDS8oUfF77Emt60WrtiIpswELE4c
-	 IvCxqGAGmlIageL3sic7he13DGOgh5WzqhgSoZ5qMC2mPzBUl5W9R1yoUJNZAxy+W+
-	 w6L4qns8RY9iE6u/GAGBJiwK9ZNvktz9ZzWly0vMTnm0RBDUkdi0pqS+gdCtq5GSXf
-	 cSAA3tSpYr1ujfdcD3y8PQ79vogZOcnPKZYzzhICU0DbtgqvFMfFhPhaojVTw0Pmk/
-	 T70XTeifx32+A==
+	s=k20201202; t=1774094319;
+	bh=u45BPGTz+pSWYCpXNvPHDOjmVhhDkrRcZAEszetxCmQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=mAjy8r1ssdti7A9Adw+UG2EGuSm018SNsUl6e+7svAzjt5MSjD0BRkOUeXogaLKiM
+	 hRzB/TBK6ItI8d7vGPHxBBA1ts6LmSm/BYtZ61Noio1JR4btlUE7lIV2scxeSyBm/h
+	 R5/T1Z0QCPAz7SeKJY+GIvTnThixdvAiCPHGTdalwnEv7iUPaOVfj1cL/l1EYExGQo
+	 q6lroY+4LZz4kPXqQ+fNPxHhhortJP7+ER2INpwkKshZOGAmZznH+ZhjvIugu75e8l
+	 fmkGhRWt6xOAqwMokBEOK7MsSVyMWA0cJQ3h1VK7hUWr7yfMP9/n4SIbWhr86V4dxp
+	 d7KtcK6FMUvwg==
 From: Anand Jain <asj@kernel.org>
-To: linux-ext4@vger.kernel.org,
-	linux-btrfs@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
+To: fstests@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	amir73il@gmail.com,
+	zlang@redhat.com,
 	hch@infradead.org
-Subject: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid collisions
-Date: Sat, 21 Mar 2026 19:55:19 +0800
-Message-ID: <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
+Subject: [PATCH v2 0/9] fstests: add test coverage for cloned filesystem ids
+Date: Sat, 21 Mar 2026 19:58:21 +0800
+Message-ID: <cover.1774090817.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1774092915.git.asj@kernel.org>
-References: <cover.1774092915.git.asj@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,87 +45,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-statfs() currently reports f_fsid derived from the on-disk UUID.
-Cloned block devices share the same UUID, so distinct ext4 instances
-can return identical f_fsid values. This leads to collisions in
-fanotify.
+v2:
+  - Add new helper _require_nouuid_mountopt() inline with the btrfs and
+    ext4 nouuid mount option, matching xfs.
+  - Clean up background processes in the _cleanup().
+  - Use fsnotifywait(1) instead of a local tool.
+  - Drop the use of SCRATCH_DEV_POOL for generic test cases to keep the
+    existing xfs/ext4 test environment compatible for better coverage.
 
-Encode sb->s_dev into f_fsid instead of using the superblock UUID.
-This provides a per-device identifier and avoids conflicts when
-filesystem is cloned, matching the behavior with xfs.
+v1:
+  https://lore.kernel.org/fstests/cover.1772095513.git.asj@kernel.org
 
-Place this change behind the new mount option "-o nouuid" for ABI
-compatibility.
+Anand Jain (9):
+  fstests: add _require_nouuid_mountopt() helper
+  fstests: add _loop_image_create_clone() helper
+  fstests: add _clone_mount_option() helper
+  fstests: add test for inotify isolation on cloned devices
+  fstests: verify fanotify isolation on cloned filesystems
+  fstests: verify f_fsid for cloned filesystems
+  fstests: verify libblkid resolution of duplicate UUIDs
+  fstests: verify IMA isolation on cloned filesystems
+  fstests: verify exportfs file handles on cloned filesystems
 
-Signed-off-by: Anand Jain <asj@kernel.org>
----
- fs/ext4/ext4.h  |  1 +
- fs/ext4/super.c | 12 ++++++++++--
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ common/config         |   2 +
+ common/rc             |  74 +++++++++++++++++++++++++++
+ tests/generic/790     |  89 ++++++++++++++++++++++++++++++++
+ tests/generic/790.out |   7 +++
+ tests/generic/791     | 116 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/791.out |   7 +++
+ tests/generic/792     |  62 ++++++++++++++++++++++
+ tests/generic/792.out |   7 +++
+ tests/generic/793     |  76 +++++++++++++++++++++++++++
+ tests/generic/793.out |  19 +++++++
+ tests/generic/794     | 103 +++++++++++++++++++++++++++++++++++++
+ tests/generic/794.out |  10 ++++
+ tests/generic/795     |  73 ++++++++++++++++++++++++++
+ tests/generic/795.out |   2 +
+ 14 files changed, 647 insertions(+)
+ create mode 100644 tests/generic/790
+ create mode 100644 tests/generic/790.out
+ create mode 100644 tests/generic/791
+ create mode 100644 tests/generic/791.out
+ create mode 100644 tests/generic/792
+ create mode 100644 tests/generic/792.out
+ create mode 100644 tests/generic/793
+ create mode 100644 tests/generic/793.out
+ create mode 100644 tests/generic/794
+ create mode 100644 tests/generic/794.out
+ create mode 100644 tests/generic/795
+ create mode 100644 tests/generic/795.out
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 293f698b7042..64d98ab64c11 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -1282,6 +1282,7 @@ struct ext4_inode_info {
- 						    * scanning in mballoc
- 						    */
- #define EXT4_MOUNT2_ABORT		0x00000100 /* Abort filesystem */
-+#define EXT4_MOUNT2_NOUUID		0x00000200 /* No duplicate f_fsid for cloned filesystem */
- 
- #define clear_opt(sb, opt)		EXT4_SB(sb)->s_mount_opt &= \
- 						~EXT4_MOUNT_##opt
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 43f680c750ae..65b712af4ad7 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1664,7 +1664,7 @@ static const struct export_operations ext4_export_ops = {
- enum {
- 	Opt_bsd_df, Opt_minix_df, Opt_grpid, Opt_nogrpid,
- 	Opt_resgid, Opt_resuid, Opt_sb,
--	Opt_nouid32, Opt_debug, Opt_removed,
-+	Opt_nouid32, Opt_debug, Opt_removed, Opt_nouuid,
- 	Opt_user_xattr, Opt_acl,
- 	Opt_auto_da_alloc, Opt_noauto_da_alloc, Opt_noload,
- 	Opt_commit, Opt_min_batch_time, Opt_max_batch_time, Opt_journal_dev,
-@@ -1743,6 +1743,7 @@ static const struct fs_parameter_spec ext4_param_specs[] = {
- 	fsparam_u32	("sb",			Opt_sb),
- 	fsparam_enum	("errors",		Opt_errors, ext4_param_errors),
- 	fsparam_flag	("nouid32",		Opt_nouid32),
-+	fsparam_flag	("nouuid",		Opt_nouuid),
- 	fsparam_flag	("debug",		Opt_debug),
- 	fsparam_flag	("oldalloc",		Opt_removed),
- 	fsparam_flag	("orlov",		Opt_removed),
-@@ -1898,6 +1899,7 @@ static const struct mount_opts {
- 	{Opt_acl, 0, MOPT_NOSUPPORT},
- #endif
- 	{Opt_nouid32, EXT4_MOUNT_NO_UID32, MOPT_SET},
-+	{Opt_nouuid, EXT4_MOUNT2_NOUUID, MOPT_SET | MOPT_2},
- 	{Opt_debug, EXT4_MOUNT_DEBUG, MOPT_SET},
- 	{Opt_quota, EXT4_MOUNT_QUOTA | EXT4_MOUNT_USRQUOTA, MOPT_SET | MOPT_Q},
- 	{Opt_usrquota, EXT4_MOUNT_QUOTA | EXT4_MOUNT_USRQUOTA,
-@@ -2389,6 +2391,9 @@ static int ext4_parse_param(struct fs_context *fc, struct fs_parameter *param)
- 			return -EINVAL;
- 		}
- 		return 0;
-+	case Opt_nouuid:
-+		ctx_set_mount_opt2(ctx, EXT4_MOUNT2_NOUUID);
-+		return 0;
- 	}
- 
- 	/*
-@@ -6941,7 +6946,10 @@ static int ext4_statfs(struct dentry *dentry, struct kstatfs *buf)
- 	buf->f_files = le32_to_cpu(es->s_inodes_count);
- 	buf->f_ffree = percpu_counter_sum_positive(&sbi->s_freeinodes_counter);
- 	buf->f_namelen = EXT4_NAME_LEN;
--	buf->f_fsid = uuid_to_fsid(es->s_uuid);
-+	if (test_opt2(sb, NOUUID))
-+		buf->f_fsid = u64_to_fsid(huge_encode_dev(sb->s_bdev->bd_dev));
-+	else
-+		buf->f_fsid = uuid_to_fsid(es->s_uuid);
- 
- #ifdef CONFIG_QUOTA
- 	if (ext4_test_inode_flag(dentry->d_inode, EXT4_INODE_PROJINHERIT) &&
 -- 
 2.43.0
 
