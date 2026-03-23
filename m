@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4969331F98B
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:48:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42F9320A24
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:48:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291686; cv=none; b=CBd3DTxEqQrcKSK8wGlLUxOzjaN3eesh58j/LT7IWR7+Ah1zRZbmeOU9b+HF/BkDsw2WiIp1FSSuqU3wJDmKgEzhiSsUMSJE2vuUqvxzvwk3IhLHketPsbsl80uvMFNaMN2+PfVvFp4sJtAKo8FKhWzSM8nPU3Me+Ti1RViLM6w=
+	t=1774291701; cv=none; b=m8MF8oZ+8BsWbCOL9va5sSd68X8h+yDZgpyKkNB1GhvhRkoiqSCy2xjYIzzvWCkQOVUJMnuhlKFdHPoC7yueX3lCAtxej4KJW9xFo7uOnn7++3nYb/3ZkhcrsBoDRhr7kNt377dzyTpEulJ8ZfrQWgHnLQWWXbQoO9W8bLln3jw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291686; c=relaxed/simple;
-	bh=RG6toFXlU3GW76DCwNGPTtGavVFwPFKzxzDMvSlybeg=;
+	s=arc-20240116; t=1774291701; c=relaxed/simple;
+	bh=YENs4bmcsgJKw/hm0cfjktZQ50SonArZ/+CrwE3/pcA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ncDydHbyx7wUAIzagqj9TELNa0rFDpvmjuKLhtGaaU6r58WhHpmBbuQBqUmH1S9fz/F+zR3nI/6z1zmDiG8WZikigQoqvEfj2AtHBi5LT+jEcd/vEUik+PaKJfguGGZwlWYqx9iv2PRssWfWKRYmgz82x/OQjOKw4sQo0f2/kpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqlPYXMA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RYPTqGj6CdEDE84ayseV6OsJ3T55yV44FsalWoJV17H5W7ED7BZ80X5YOtiUjQ7l97oHSo30x2rrQU7V9WFeO6BRyKaIbzsqfnNPNqM7sVpx0oG1I9lTK3iiygtdzaxhIhetL1oFPK2o32T9XU3lvGXFsAY5b46MRjwVm/Ii9AA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eyXOGW+u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqlPYXMA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C318FC4CEF7;
-	Mon, 23 Mar 2026 18:48:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eyXOGW+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78E8BC2BCB0;
+	Mon, 23 Mar 2026 18:48:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291685;
-	bh=RG6toFXlU3GW76DCwNGPTtGavVFwPFKzxzDMvSlybeg=;
+	s=k20201202; t=1774291701;
+	bh=YENs4bmcsgJKw/hm0cfjktZQ50SonArZ/+CrwE3/pcA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nqlPYXMAqmzgQviEpvdfmrTxlWS04nubJVkf4N4fzYzwn34LfyqEWAwF5sPS6uNuU
-	 N8ZU/fR4Rd2nikptNreB7tlR+3D5JKB/0Q+S3hZ9QebMLoQhIV9KH/LKcp4Vv0oNlE
-	 4GT0lvIyNpVsT+8tO+FbhacB3fmLl78udapOCak7c7vlFhkqLqW0es3rowVMNbK6SS
-	 eRhxJzGZXoMeS8To5v3iP4to3ZfLNEBi/zdEYo6ZCLCkhHoey8icr1awVudjBMo6x1
-	 d1lsWZJREaYwQAkzQ8XUxh0AlMzMrZcLZLzeWdSVTfDmY2be09zYNPFC3/U9QTyk22
-	 lRqrynKfGC7hA==
-Date: Mon, 23 Mar 2026 11:48:05 -0700
-Subject: [PATCH 26/40] xfs: add a method to replace shortform attrs
+	b=eyXOGW+ua80wxyennW3AmKqrmO0CgUTx8h1JJZSe0lW8yR0cPwgzmi3HB2ZF1EZya
+	 uhtL4HbEusP6dzh8KTgvbpwJQizozUU/nE9Ghi99sEVol5VbAtsZfJhsEg17DwfeNa
+	 P4JFlCoDqX83dOfG1jgU/pvI4qPq6bp4j1er1TLr8+IAVOGLKeNF5QcTi3sd5u2Eyw
+	 w4ShRhOB8o4EegQ4WraBgwK8oId8mXajUdw8N0bunnSU/6AxU9PQEZsX5SxHZ4FzZj
+	 LWr8K2nSelNtpIo6vBGFE/Jl3lP1iY5A2akdJv9NFgfwKv1rRCS1hISy4VBm67yUnV
+	 5yWQtxYOJQJQg==
+Date: Mon, 23 Mar 2026 11:48:20 -0700
+Subject: [PATCH 27/40] xfs: fix spacing style issues in xfs_alloc.c
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177429121218.2266274.13411944060969564481.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, shinsj4653@gmail.com, linux-xfs@vger.kernel.org
+Message-ID: <177429121236.2266274.13542319239358959127.stgit@frogsfrogsfrogs>
 In-Reply-To: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 References: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,114 +43,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Shin Seong-jun <shinsj4653@gmail.com>
 
-Source kernel commit: eaec8aeff31d0679eadb27a13a62942ddbfd7b87
+Source kernel commit: 0ead3b72469e52ca02946b2e5b35fff38bfa061f
 
-If we're trying to replace an xattr in a shortform attr structure and
-the old entry fits the new entry, we can just memcpy and exit without
-having to delete, compact, and re-add the entry (or worse use the attr
-intent machinery).  For parent pointers this only advantages renaming
-where the filename length stays the same (e.g. mv autoexec.bat
-scandisk.exe) but for regular xattrs it might be useful for updating
-security labels and the like.
+Fix checkpatch.pl errors regarding missing spaces around assignment
+operators in xfs_alloc_compute_diff() and xfs_alloc_fixup_trees().
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Adhere to the Linux kernel coding style by ensuring spaces are placed
+around the assignment operator '='.
+
+Signed-off-by: Shin Seong-jun <shinsj4653@gmail.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- include/xfs_trace.h    |    1 +
- libxfs/xfs_attr_leaf.h |    1 +
- libxfs/xfs_attr.c      |    4 ++++
- libxfs/xfs_attr_leaf.c |   38 ++++++++++++++++++++++++++++++++++++++
- 4 files changed, 44 insertions(+)
+ libxfs/xfs_alloc.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index 6bbf4007cbbbd9..be9183fc33ad90 100644
---- a/include/xfs_trace.h
-+++ b/include/xfs_trace.h
-@@ -57,6 +57,7 @@
- #define trace_xfs_attr_defer_replace(...)	((void) 0)
- #define trace_xfs_attr_defer_remove(...)	((void) 0)
- #define trace_xfs_attr_sf_addname_return(...)	((void) 0)
-+#define trace_xfs_attr_sf_replace(...)		((void) 0)
- #define trace_xfs_attr_set_iter_return(...)	((void) 0)
- #define trace_xfs_attr_leaf_addname_return(...)	((void) 0)
- #define trace_xfs_attr_node_addname_return(...)	((void) 0)
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index 589f810eedc0d8..aca46da2bc502e 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -46,6 +46,7 @@ struct xfs_attr3_icleaf_hdr {
-  * Internal routines when attribute fork size < XFS_LITINO(mp).
-  */
- void	xfs_attr_shortform_create(struct xfs_da_args *args);
-+int	xfs_attr_shortform_replace(struct xfs_da_args *args);
- void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
- int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
- int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 0b45e72b5478b4..a2611aace8190f 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -1084,6 +1084,10 @@ xfs_attr_replacename(
- 		return 0;
- 	}
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 9f92bd77fad76c..695ed830d139fe 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -372,8 +372,8 @@ xfs_alloc_compute_diff(
+ 	xfs_agblock_t	freeend;	/* end of freespace extent */
+ 	xfs_agblock_t	newbno1;	/* return block number */
+ 	xfs_agblock_t	newbno2;	/* other new block number */
+-	xfs_extlen_t	newlen1=0;	/* length with newbno1 */
+-	xfs_extlen_t	newlen2=0;	/* length with newbno2 */
++	xfs_extlen_t	newlen1 = 0;	/* length with newbno1 */
++	xfs_extlen_t	newlen2 = 0;	/* length with newbno2 */
+ 	xfs_agblock_t	wantend;	/* end of target extent */
+ 	bool		userdata = datatype & XFS_ALLOC_USERDATA;
  
-+	error = xfs_attr_shortform_replace(args);
-+	if (error != -ENOSPC)
-+		return error;
-+
- 	args->op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
+@@ -573,8 +573,8 @@ xfs_alloc_fixup_trees(
+ 	int		i;		/* operation results */
+ 	xfs_agblock_t	nfbno1;		/* first new free startblock */
+ 	xfs_agblock_t	nfbno2;		/* second new free startblock */
+-	xfs_extlen_t	nflen1=0;	/* first new free length */
+-	xfs_extlen_t	nflen2=0;	/* second new free length */
++	xfs_extlen_t	nflen1 = 0;	/* first new free length */
++	xfs_extlen_t	nflen2 = 0;	/* second new free length */
+ 	struct xfs_mount *mp;
+ 	bool		fixup_longest = false;
  
- 	error = xfs_attr_sf_removename(args);
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index f591984c3748ff..90be21a3887642 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -839,6 +839,44 @@ xfs_attr_sf_findname(
- 	return NULL;
- }
- 
-+/*
-+ * Replace a shortform xattr if it's the right length.  Returns 0 on success,
-+ * -ENOSPC if the length is wrong, or -ENOATTR if the attr was not found.
-+ */
-+int
-+xfs_attr_shortform_replace(
-+	struct xfs_da_args		*args)
-+{
-+	struct xfs_attr_sf_entry	*sfe;
-+
-+	ASSERT(args->dp->i_af.if_format == XFS_DINODE_FMT_LOCAL);
-+
-+	trace_xfs_attr_sf_replace(args);
-+
-+	sfe = xfs_attr_sf_findname(args);
-+	if (!sfe)
-+		return -ENOATTR;
-+
-+	if (args->attr_filter & XFS_ATTR_PARENT) {
-+		if (sfe->namelen != args->new_namelen ||
-+		    sfe->valuelen != args->new_valuelen)
-+			return -ENOSPC;
-+
-+		memcpy(sfe->nameval, args->new_name, sfe->namelen);
-+		memcpy(&sfe->nameval[sfe->namelen], args->new_value,
-+				sfe->valuelen);
-+	} else {
-+		if (sfe->valuelen != args->valuelen)
-+			return -ENOSPC;
-+		memcpy(&sfe->nameval[sfe->namelen], args->value,
-+				sfe->valuelen);
-+	}
-+
-+	xfs_trans_log_inode(args->trans, args->dp,
-+			XFS_ILOG_CORE | XFS_ILOG_ADATA);
-+	return 0;
-+}
-+
- /*
-  * Add a name/value pair to the shortform attribute list.
-  * Overflow from the inode has already been checked for.
 
