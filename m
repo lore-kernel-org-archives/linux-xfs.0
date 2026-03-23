@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C484317165
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:48:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8750F17A2FC
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:49:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291733; cv=none; b=th0T+tsbnTrCXl17g8mR0cWhXVb1kMawbnD2o+n0OM3QbwLcI5ie+MHt9AVoSlqbuE3rw+4DapDyy/z7bI8lPoUmVU7XP6IT5/1s1RRnv9Uud56eU8Y6KCTb9gU+gtH9oVAMynUSyI+rf1AtIxQkMe0IxerGSLwLB0YzgXlQyiU=
+	t=1774291748; cv=none; b=ofL7R++qo/Y7/2ytfGxFMlypiZ+s1BylscojylCYt2+F0MnRjLTLHU/pHzg5nqi94RED8sSkd4n76lWmstTZub9dYqP7wSDDX+8CcvxxNl/IFujFL2s+KFuAk7plj0pVtKaUrl8e1Ua+f1g/AX/4ekF5vwbXKwJix2EzAyTDpEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291733; c=relaxed/simple;
-	bh=QZ2wH1Um2G7tYr/e4sJfasK3kgzrplTRpSQShK6xqq8=;
+	s=arc-20240116; t=1774291748; c=relaxed/simple;
+	bh=2dE2YuVgQK72DY6DVbv/0Iga+0ko0sKqqaj61UXPqdg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CzY+wCSs0LRX4orIOQBXmgqnuByO2/pUzaSImkqMOqneQBaGavFr3h9qNZ7vTB+/PE2FXzuF2N9yQMWxicFuTbJJwqcGmZQyYc9tODx84pZHBM8f6tAgXnbqXd3lMsuflrgFcMoaVupIA9bofhR6ogis6uMdF+efI4bWh3YT1sM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G0AdgBJ9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=HxBR5OI4kT+ioOHLB8Ume19zlnvhIDTOtidyEwF21macEWaKl9YAujUQWq7mew9j3ZPQUV2KrngqMtlMfU2O4hOLLzGbU2J2qaGib9hqX+ZgB83WkHKTaI1u16Zj+CtZS2aGsSPlQbB3oFJdHLi3IbrNjQxBtfNM+Forn5rnBiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NEpryjOP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G0AdgBJ9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B023AC4CEF7;
-	Mon, 23 Mar 2026 18:48:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NEpryjOP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61F3AC4CEF7;
+	Mon, 23 Mar 2026 18:49:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291732;
-	bh=QZ2wH1Um2G7tYr/e4sJfasK3kgzrplTRpSQShK6xqq8=;
+	s=k20201202; t=1774291748;
+	bh=2dE2YuVgQK72DY6DVbv/0Iga+0ko0sKqqaj61UXPqdg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=G0AdgBJ98NbQXj1JS8locm7ewA5XL3vHw5AmZiJPybcbqCjOxc1z/3Wmud3WZu0Fy
-	 A2Ue8aPnXt0csqt7HcyrDZIxXOqyfQR+tfq60P+Kmy6NcIEsiPAWtl7ibOAJ1S4LTT
-	 S8BfVWo97GCwny08vK4i3I/PJ9tohbTPMD+1IFVhcOK2kUjNCtLSmRmCx9Ioy44zu4
-	 MmStuOy5f9+J2e67itLyi6xDh3/RCla+9wfgA8dR5+1DWnlxqzF7i0ubYlvY07YNUT
-	 8/RPu3H30HXd2eAGaAh/k3TSzj2f1VIN7dd7P4V9xECEgxoS8vAOf7QH9ywSX/Y4wD
-	 urJyBduw/YMuA==
-Date: Mon, 23 Mar 2026 11:48:52 -0700
-Subject: [PATCH 29/40] xfs: add zone reset error injection
+	b=NEpryjOPUiuWfaRVQkP1ENgNmAiz4dqRt7Rvd0GmlPR76ZTdGx1I/rrChMmm5FvFc
+	 DfkPwTUjCgxsAffpNVWUDflS0T0sZ1oHRJaEh/UsZCKjp1TNXR5Mmifra4FavhL57k
+	 ix7gBf4kZACJRbRa1YH8pszgnYJE4viG7bcj0QOa3wd9K32xkOcmedI4/FHL1KUFxb
+	 k4OyDVf80qm7goXzcK8CQaknrQBzozkj2lsxXUk9Gi4kcYW16Qmpt+i4G4VO2+fgw3
+	 LU0aCgrZ+Is9bV+b1pkc2yZr5VKanQ7rsbdUxkTMQFO2+ZEbFJee1SP7qNcT1bU2ml
+	 ZMQytl0PlwNiw==
+Date: Mon, 23 Mar 2026 11:49:07 -0700
+Subject: [PATCH 30/40] xfs: give the defer_relog stat a xs_ prefix
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: cem@kernel.org, cmaiolino@redhat.com, hans.holmberg@wdc.com, hch@lst.de,
- linux-xfs@vger.kernel.org
-Message-ID: <177429121273.2266274.9047124383772422019.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, dlemoal@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177429121292.2266274.4442724939738182078.stgit@frogsfrogsfrogs>
 In-Reply-To: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 References: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,42 +45,29 @@ Content-Transfer-Encoding: 7bit
 
 From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: 41374ae69ec3a910950d3888f444f80678c6f308
+Source kernel commit: edf6078212c366459d3c70833290579b200128b1
 
-Add a new errortag to test that zone reset errors are handled correctly.
+Make this counter naming consistent with all the others.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_errortag.h |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ libxfs/xfs_defer.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
-index b7d98471684bf1..6de207fed2d892 100644
---- a/libxfs/xfs_errortag.h
-+++ b/libxfs/xfs_errortag.h
-@@ -74,7 +74,8 @@
- #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
- #define XFS_ERRTAG_FORCE_ZERO_RANGE			46
--#define XFS_ERRTAG_MAX					47
-+#define XFS_ERRTAG_ZONE_RESET				47
-+#define XFS_ERRTAG_MAX					48
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 5bd3cbe4cfa1a3..c0d3aa401cbab5 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -558,7 +558,7 @@ xfs_defer_relog(
+ 			continue;
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -135,7 +136,8 @@ XFS_ERRTAG(WB_DELAY_MS,		wb_delay_ms,		3000) \
- XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
- XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
- XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
--XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4)
-+XFS_ERRTAG(FORCE_ZERO_RANGE,	force_zero_range,	4) \
-+XFS_ERRTAG(ZONE_RESET,		zone_reset,		1)
- #endif /* XFS_ERRTAG */
+ 		trace_xfs_defer_relog_intent((*tpp)->t_mountp, dfp);
+-		XFS_STATS_INC((*tpp)->t_mountp, defer_relog);
++		XFS_STATS_INC((*tpp)->t_mountp, xs_defer_relog);
  
- #endif /* __XFS_ERRORTAG_H_ */
+ 		xfs_defer_relog_intent(*tpp, dfp);
+ 	}
 
