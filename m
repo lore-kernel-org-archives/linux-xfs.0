@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B2A2F8BEE
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F2093264F2
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:51:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291873; cv=none; b=sUDnN2ukayFAcoW2zoXYZyq9edjJ/mwtgCmSm4pbQaTEAPzvpGFfCj3v7We/ijVXt+5yf/+38c1ljP4X1Gihilf3klqqbF/apxQAix/cWp3ITiSSaNJSYnwGmN/CUF2rMCzy8m9FzEVxqBEhCAnFT+gbLJ+oYmltU9E03llT4fs=
+	t=1774291889; cv=none; b=t6mNdih0uIOFYYqcyVDACGUNU9E5UFWseGnn2ZlrE9D99laQhjyh1NB7qejd9wycbFIvB5gvQDSRTEkcUO73a0zWGeTT7hbbMGbJUmS8Dd3LB6YpRrQ3GTvrtnDLbWelcWInClhZXpVKErSnh3hF1a2stGcct91n1NKDOgR4aXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291873; c=relaxed/simple;
-	bh=oXqvibuSAihRzyWnUqhR0rN9FzGrRPIgXiI9I7tsUcg=;
+	s=arc-20240116; t=1774291889; c=relaxed/simple;
+	bh=McbFJjlnBD3s7GE85X21dqa9hZuj1j/iQ6TneRqZ6Zk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VFIZImjCqx9ZzZIoLPMLHQHNepVxXmGxmpYPBNW8TEda8WZw3g+oV9LYCzjfJRkYQqucWTgF4iREFXrNXZAs7myzzte13YAXTeioMeCjgtpKcQwdUA56q8E/Pp5XzN6FYhIw35BX0I0+PjBCWesWogVgbfFPxluvBvsFvMPjcH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2sxUG6o; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=olQ3sixNeE6fOe+1muVwkBsYLSbmr9u7sSQCPgjQzqCNeG1piTT3gx5pVQXx+L81qofFcME5eTwBShbJwyuaK0kxVVNfLSfYuIRzwNxUjhjrT0kcOcV4zhxtYY3S+G9AbMxYAfxK7KDGr6/T1nUiRY9UGPd9tz9w9SrK+5yUAE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RD9b5Xbc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2sxUG6o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 422BAC4CEF7;
-	Mon, 23 Mar 2026 18:51:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RD9b5Xbc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E141EC4CEF7;
+	Mon, 23 Mar 2026 18:51:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291873;
-	bh=oXqvibuSAihRzyWnUqhR0rN9FzGrRPIgXiI9I7tsUcg=;
+	s=k20201202; t=1774291888;
+	bh=McbFJjlnBD3s7GE85X21dqa9hZuj1j/iQ6TneRqZ6Zk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=l2sxUG6oDYuU214RwIVKAxlYs9excgPi9MU+xLmnsurEFOxtzy3g5MTLDHu5WiyO/
-	 2Cyjp8ArIhPRr+OEAnCa2vlwCuJcgz+R5zmeSuyhhTFEMTEi/j/H1gfbSw22wUFxs3
-	 SERtRwlBRvgsKg9B9/ZnEKjs/UwLbDpWu7dlbbCU3hTdR5oNsogATxgRgwX6D83Qxr
-	 YURhzMBdWrIolZKAhLkQ87v9oyBqg2dPFcfe4Xpjrv3zzo3aKj1pOr9B7OgTG50uti
-	 LFNVxxEjriNLLZlav24F7RmC4+22Wck2l0biUtZ93WYpIyVWPlDSiifcLXf/Q5yrcL
-	 n6ZOidrQashrg==
-Date: Mon, 23 Mar 2026 11:51:12 -0700
-Subject: [PATCH 38/40] xfs: add static size checks for ioctl UABI
+	b=RD9b5Xbc+Oxuhm9cjI+R4YRTC0JzT/ZGB66UWMSNdDek98XzPWNIBt6garz2C+2Lo
+	 zyuucBrnPwpm7ABfq0sSbGxPlznGp8gWnVefPTrImDsBG/ZPO6bt99vDkBhf9BzMMk
+	 2kJ1WtwT5DaugpyDoBXgtjV5B7sZg1wxr+eBYs1umDO2VBclUyT8cY4PFzMxIOF3FZ
+	 kprOattu/7l/pJImle+QuecUpCTnxL5E6XfLwjQlHCD7aspxISQ6bVBo1brMYNWIv/
+	 Bqvj2dZ52fADNEwLC4FIAdR6RFhIFYokf6ZCBDPcz96xzDcYWv5mtphfpBk+ncQ/do
+	 BJG/D3zrQC98Q==
+Date: Mon, 23 Mar 2026 11:51:28 -0700
+Subject: [PATCH 39/40] xfs: Remove redundant NULL check after __GFP_NOFAIL
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: cem@kernel.org, hch@lst.de, wilfred.mallawa@wdc.com,
+Cc: cem@kernel.org, hch@lst.de, hongao@uniontech.com,
  linux-xfs@vger.kernel.org
-Message-ID: <177429121439.2266274.13426006577633392703.stgit@frogsfrogsfrogs>
+Message-ID: <177429121457.2266274.4931675600736029930.stgit@frogsfrogsfrogs>
 In-Reply-To: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 References: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,83 +44,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+From: hongao <hongao@uniontech.com>
 
-Source kernel commit: 650b774cf94495465d6a38c31bb1a6ce697b6b37
+Source kernel commit: 281cb17787d4284a7790b9cbd80fded826ca7739
 
-The ioctl structures in libxfs/xfs_fs.h are missing static size checks.
-It is useful to have static size checks for these structures as adding
-new fields to them could cause issues (e.g. extra padding that may be
-inserted by the compiler). So add these checks to xfs/xfs_ondisk.h.
+kzalloc() is called with __GFP_NOFAIL, so a NULL return is not expected.
+Drop the redundant !map check in xfs_dabuf_map().
+Also switch the nirecs-sized allocation to kcalloc().
 
-Due to different padding/alignment requirements across different
-architectures, to avoid build failures, some structures are ommited from
-the size checks. For example, structures with "compat_" definitions in
-xfs/xfs_ioctl32.h are ommited.
-
-Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Signed-off-by: hongao <hongao@uniontech.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_ondisk.h |   39 ++++++++++++++++++++++++++++++++++-----
- 1 file changed, 34 insertions(+), 5 deletions(-)
+ libxfs/xfs_da_btree.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
 
-diff --git a/libxfs/xfs_ondisk.h b/libxfs/xfs_ondisk.h
-index 7bccfa7b695c95..23cde1248f019f 100644
---- a/libxfs/xfs_ondisk.h
-+++ b/libxfs/xfs_ondisk.h
-@@ -208,11 +208,6 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
- 	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 969bfc9dee909d..2fce657af5d0b6 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -2712,12 +2712,8 @@ xfs_dabuf_map(
+ 	 * larger one that needs to be free by the caller.
+ 	 */
+ 	if (nirecs > 1) {
+-		map = kzalloc(nirecs * sizeof(struct xfs_buf_map),
+-				GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+-		if (!map) {
+-			error = -ENOMEM;
+-			goto out_free_irecs;
+-		}
++		map = kcalloc(nirecs, sizeof(struct xfs_buf_map),
++			      GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+ 		*mapp = map;
+ 	}
  
--	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
--	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
--
- 	/*
- 	 * Make sure the incore inode timestamp range corresponds to hand
- 	 * converted values based on the ondisk format specification.
-@@ -292,6 +287,40 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_SB_OFFSET(sb_pad,			281);
- 	XFS_CHECK_SB_OFFSET(sb_rtstart,			288);
- 	XFS_CHECK_SB_OFFSET(sb_rtreserved,		296);
-+
-+	/*
-+	 * ioctl UABI
-+	 *
-+	 * Due to different padding/alignment requirements across
-+	 * different architectures, some structures are ommited from
-+	 * the size checks. In addition, structures with architecture
-+	 * dependent size fields are also ommited (e.g. __kernel_long_t).
-+	 */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
-+	XFS_CHECK_STRUCT_SIZE(struct dioattr,			12);
-+	XFS_CHECK_STRUCT_SIZE(struct getbmap,			32);
-+	XFS_CHECK_STRUCT_SIZE(struct getbmapx,			48);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_cursor,	16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_attrlist_ent,		4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_ag_geometry,		128);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_rtgroup_geometry,	128);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_error_injection,	8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom,		256);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_geom_v4,		112);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_counts,		32);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsop_resblks,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_growfs_log,		8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_bulk_ireq,		64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fs_eofblocks,		128);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_fsid,			8);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_metadata,	64);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec,		16);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_scrub_vec_head,	40);
- }
- 
- #endif /* __XFS_ONDISK_H */
 
