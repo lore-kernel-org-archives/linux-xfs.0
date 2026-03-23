@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FCDD320A24
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:47:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4969331F98B
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:48:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291670; cv=none; b=lYVqBBUs9ZTUqkn4s7pc3g1z2c3w6ytowNFblNwf4nhh2XAbGa1UiPucyIT+zBOZWt1TOIoBD9vDGotlPAse4PynnzxmXszn1ueM5vp6IgAaMWjibxxCUyZcp0jUR/EjqF8hIwy5iWHNz3eGzRyfScg4DLFNhbF11+tD0TBmaW4=
+	t=1774291686; cv=none; b=CBd3DTxEqQrcKSK8wGlLUxOzjaN3eesh58j/LT7IWR7+Ah1zRZbmeOU9b+HF/BkDsw2WiIp1FSSuqU3wJDmKgEzhiSsUMSJE2vuUqvxzvwk3IhLHketPsbsl80uvMFNaMN2+PfVvFp4sJtAKo8FKhWzSM8nPU3Me+Ti1RViLM6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291670; c=relaxed/simple;
-	bh=Ca+B02oQnuAx+LIzczob2KDb6Rp8AQP6XDyHsTqDkm4=;
+	s=arc-20240116; t=1774291686; c=relaxed/simple;
+	bh=RG6toFXlU3GW76DCwNGPTtGavVFwPFKzxzDMvSlybeg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CO9PYI9FDsZkG7kYG+ooVlyl21pR3CjIMLu5j6AV7B4QfmafJ0Vh8r9vo2Zg7/uQC7Dr5i+DnzLaWHmOHfzVV/PioAZ4YOdIlNPTAI40SPTITR/PcnkWfHOZ2vEydQfvK80HMDor4Dg5tpfLAQSy3ecBuaC4uWCYy7R0vtcDilA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RLAmGT5s; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ncDydHbyx7wUAIzagqj9TELNa0rFDpvmjuKLhtGaaU6r58WhHpmBbuQBqUmH1S9fz/F+zR3nI/6z1zmDiG8WZikigQoqvEfj2AtHBi5LT+jEcd/vEUik+PaKJfguGGZwlWYqx9iv2PRssWfWKRYmgz82x/OQjOKw4sQo0f2/kpM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqlPYXMA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RLAmGT5s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 210A4C4CEF7;
-	Mon, 23 Mar 2026 18:47:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqlPYXMA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C318FC4CEF7;
+	Mon, 23 Mar 2026 18:48:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291670;
-	bh=Ca+B02oQnuAx+LIzczob2KDb6Rp8AQP6XDyHsTqDkm4=;
+	s=k20201202; t=1774291685;
+	bh=RG6toFXlU3GW76DCwNGPTtGavVFwPFKzxzDMvSlybeg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RLAmGT5srm3ZNHyc7zFYdX4K5tarYoS6vDzCE2D0L1p533UKkT7D0+0jmm+Zsgm8+
-	 yPCbsf2JsR2gueIVpFmHnCH4zMp4evZRiRxTmo+nIQCozhwc8n+qPXI4KGrZjk5Deh
-	 FCk8XXUe8I1DdQLdgaUqoNwY6rSdSEJQLlgrEDRiwpCs9IR4H2qPh7VtCqCJTHsCxi
-	 vxRqy1ru4zBTn/CxFjTkq6jkeCcV92bExot+x0h5lJD/JK4m+sJT8uqNq0uLOQmace
-	 bvFKv0tESzDBkv2jG/UuVuLZkUtrwZogH6/uTp1ozeByHCojBxxudQlWE07weAw4Yy
-	 epJN5iI8W8C+w==
-Date: Mon, 23 Mar 2026 11:47:49 -0700
-Subject: [PATCH 25/40] xfs: speed up parent pointer operations when possible
+	b=nqlPYXMAqmzgQviEpvdfmrTxlWS04nubJVkf4N4fzYzwn34LfyqEWAwF5sPS6uNuU
+	 N8ZU/fR4Rd2nikptNreB7tlR+3D5JKB/0Q+S3hZ9QebMLoQhIV9KH/LKcp4Vv0oNlE
+	 4GT0lvIyNpVsT+8tO+FbhacB3fmLl78udapOCak7c7vlFhkqLqW0es3rowVMNbK6SS
+	 eRhxJzGZXoMeS8To5v3iP4to3ZfLNEBi/zdEYo6ZCLCkhHoey8icr1awVudjBMo6x1
+	 d1lsWZJREaYwQAkzQ8XUxh0AlMzMrZcLZLzeWdSVTfDmY2be09zYNPFC3/U9QTyk22
+	 lRqrynKfGC7hA==
+Date: Mon, 23 Mar 2026 11:48:05 -0700
+Subject: [PATCH 26/40] xfs: add a method to replace shortform attrs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177429121200.2266274.10763636382935688064.stgit@frogsfrogsfrogs>
+Message-ID: <177429121218.2266274.13411944060969564481.stgit@frogsfrogsfrogs>
 In-Reply-To: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 References: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,299 +45,112 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: d693534513d8dcdaafcf855986d0fe0476a47462
+Source kernel commit: eaec8aeff31d0679eadb27a13a62942ddbfd7b87
 
-After a recent fsmark benchmarking run, I observed that the overhead of
-parent pointers on file creation and deletion can be a bit high.  On a
-machine with 20 CPUs, 128G of memory, and an NVME SSD capable of pushing
-750000iops, I see the following results:
-
-$ mkfs.xfs -f -l logdev=/dev/nvme1n1,size=1g /dev/nvme0n1 -n parent=0
-meta-data=/dev/nvme0n1           isize=512    agcount=40, agsize=9767586 blks
-=                       sectsz=4096  attr=2, projid32bit=1
-=                       crc=1        finobt=1, sparse=1, rmapbt=1
-=                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-=                       exchange=0   metadir=0
-data     =                       bsize=4096   blocks=390703440, imaxpct=5
-=                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-log      =/dev/nvme1n1           bsize=4096   blocks=262144, version=2
-=                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-=                       rgcount=0    rgsize=0 extents
-=                       zoned=0      start=0 reserved=0
-
-So we created 40 AGs, one per CPU.  Now we create 40 directories and run
-fsmark:
-
-$ time fs_mark  -D  10000  -S  0  -n  100000  -s  0  -L  8 -d ...
-# Version 3.3, 40 thread(s) starting at Wed Dec 10 14:22:07 2025
-# Sync method: NO SYNC: Test does not issue sync() or fsync() calls.
-# Directories:  Time based hash between directories across 10000 subdirectories with 180 seconds per subdirectory.
-# File names: 40 bytes long, (16 initial bytes of time stamp with 24 random bytes at end of name)
-# Files info: size 0 bytes, written with an IO size of 16384 bytes per write
-# App overhead is time in microseconds spent in the test not doing file writing related system calls.
-
-parent=0               parent=1
-==================     ==================
-real    0m57.573s      real    1m2.934s
-user    3m53.578s      user    3m53.508s
-sys     19m44.440s     sys     25m14.810s
-
-$ time rm -rf ...
-
-parent=0               parent=1
-==================     ==================
-real    0m59.649s      real    1m12.505s
-user    0m41.196s      user    0m47.489s
-sys     13m9.566s      sys     20m33.844s
-
-Parent pointers increase the system time by 28% overhead to create 32
-million files that are totally empty.  Removing them incurs a system
-time increase of 56%.  Wall time increases by 9% and 22%.
-
-For most filesystems, each file tends to have a single owner and not
-that many xattrs.  If the xattr structure is shortform, then all xattr
-changes are logged with the inode and do not require the the xattr
-intent mechanism to persist the parent pointer.
-
-Therefore, we can speed up parent pointer operations by calling the
-shortform xattr functions directly if the child's xattr is in short
-format.  Now the overhead looks like:
-
-$ time fs_mark  -D  10000  -S  0  -n  100000  -s  0  -L  8 -d ...
-
-parent=0               parent=1
-==================     ==================
-real    0m58.030s      real    1m0.983s
-user    3m54.141s      user    3m53.758s
-sys     19m57.003s     sys     21m30.605s
-
-$ time rm -rf ...
-
-parent=0               parent=1
-==================     ==================
-real    0m58.911s      real    1m4.420s
-user    0m41.329s      user    0m45.169s
-sys     13m27.857s     sys     15m58.564s
-
-Now parent pointers only increase the system time by 8% for creation and
-19% for deletion.  Wall time increases by 5% and 9% now.
-
-Close the performance gap by creating helpers for the attr set, remove,
-and replace operations that will try to make direct shortform updates,
-and fall back to the attr intent machinery if that doesn't work.  This
-works for regular xattrs and for parent pointers.
+If we're trying to replace an xattr in a shortform attr structure and
+the old entry fits the new entry, we can just memcpy and exit without
+having to delete, compact, and re-add the entry (or worse use the attr
+intent machinery).  For parent pointers this only advantages renaming
+where the filename length stays the same (e.g. mv autoexec.bat
+scandisk.exe) but for regular xattrs it might be useful for updating
+security labels and the like.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_attr.h   |    6 +++
- libxfs/xfs_attr.c   |   99 +++++++++++++++++++++++++++++++++++++++++++++++++--
- libxfs/xfs_parent.c |   14 ++++---
- 3 files changed, 109 insertions(+), 10 deletions(-)
+ include/xfs_trace.h    |    1 +
+ libxfs/xfs_attr_leaf.h |    1 +
+ libxfs/xfs_attr.c      |    4 ++++
+ libxfs/xfs_attr_leaf.c |   38 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 44 insertions(+)
 
 
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 0e51d0723f9aa3..8244305949deb9 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -573,7 +573,7 @@ struct xfs_trans_res xfs_attr_set_resv(const struct xfs_da_args *args);
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index 6bbf4007cbbbd9..be9183fc33ad90 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -57,6 +57,7 @@
+ #define trace_xfs_attr_defer_replace(...)	((void) 0)
+ #define trace_xfs_attr_defer_remove(...)	((void) 0)
+ #define trace_xfs_attr_sf_addname_return(...)	((void) 0)
++#define trace_xfs_attr_sf_replace(...)		((void) 0)
+ #define trace_xfs_attr_set_iter_return(...)	((void) 0)
+ #define trace_xfs_attr_leaf_addname_return(...)	((void) 0)
+ #define trace_xfs_attr_node_addname_return(...)	((void) 0)
+diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
+index 589f810eedc0d8..aca46da2bc502e 100644
+--- a/libxfs/xfs_attr_leaf.h
++++ b/libxfs/xfs_attr_leaf.h
+@@ -46,6 +46,7 @@ struct xfs_attr3_icleaf_hdr {
+  * Internal routines when attribute fork size < XFS_LITINO(mp).
   */
- static inline bool
- xfs_attr_is_shortform(
--	struct xfs_inode    *ip)
-+	const struct xfs_inode    *ip)
- {
- 	return ip->i_af.if_format == XFS_DINODE_FMT_LOCAL ||
- 	       (ip->i_af.if_format == XFS_DINODE_FMT_EXTENTS &&
-@@ -649,4 +649,8 @@ void xfs_attr_intent_destroy_cache(void);
- int xfs_attr_sf_totsize(struct xfs_inode *dp);
- int xfs_attr_add_fork(struct xfs_inode *ip, int size, int rsvd);
- 
-+int xfs_attr_setname(struct xfs_da_args *args, int rmt_blks);
-+int xfs_attr_removename(struct xfs_da_args *args);
-+int xfs_attr_replacename(struct xfs_da_args *args, int rmt_blks);
-+
- #endif	/* __XFS_ATTR_H__ */
+ void	xfs_attr_shortform_create(struct xfs_da_args *args);
++int	xfs_attr_shortform_replace(struct xfs_da_args *args);
+ void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 175f8572b0f930..0b45e72b5478b4 100644
+index 0b45e72b5478b4..a2611aace8190f 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -1027,6 +1027,91 @@ xfs_attr_add_fork(
- 	return error;
- }
+@@ -1084,6 +1084,10 @@ xfs_attr_replacename(
+ 		return 0;
+ 	}
  
-+/*
-+ * Decide if it is theoretically possible to try to bypass the attr intent
-+ * mechanism for better performance.  Other constraints (e.g. available space
-+ * in the existing structure) are not considered here.
-+ */
-+static inline bool
-+xfs_attr_can_shortcut(
-+	const struct xfs_inode	*ip)
-+{
-+	return xfs_inode_has_attr_fork(ip) && xfs_attr_is_shortform(ip);
-+}
-+
-+/* Try to set an attr in one transaction or fall back to attr intents. */
-+int
-+xfs_attr_setname(
-+	struct xfs_da_args	*args,
-+	int			rmt_blks)
-+{
-+	int			error;
-+
-+	if (!rmt_blks && xfs_attr_can_shortcut(args->dp)) {
-+		args->op_flags |= XFS_DA_OP_ADDNAME;
-+
-+		error = xfs_attr_try_sf_addname(args);
-+		if (error != -ENOSPC)
-+			return error;
-+	}
-+
-+	xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
-+	return 0;
-+}
-+
-+/* Try to remove an attr in one transaction or fall back to attr intents. */
-+int
-+xfs_attr_removename(
-+	struct xfs_da_args	*args)
-+{
-+	if (xfs_attr_can_shortcut(args->dp))
-+		return xfs_attr_sf_removename(args);
-+
-+	xfs_attr_defer_add(args, XFS_ATTR_DEFER_REMOVE);
-+	return 0;
-+}
-+
-+/* Try to replace an attr in one transaction or fall back to attr intents. */
-+int
-+xfs_attr_replacename(
-+	struct xfs_da_args	*args,
-+	int			rmt_blks)
-+{
-+	int			error;
-+
-+	if (rmt_blks || !xfs_attr_can_shortcut(args->dp)) {
-+		xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
-+		return 0;
-+	}
-+
-+	args->op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
-+
-+	error = xfs_attr_sf_removename(args);
-+	if (error)
-+		return error;
-+
-+	if (args->attr_filter & XFS_ATTR_PARENT) {
-+		/*
-+		 * Move the new name/value to the regular name/value slots and
-+		 * zero out the new name/value slots because we don't need to
-+		 * log them for a PPTR_SET operation.
-+		 */
-+		xfs_attr_update_pptr_replace_args(args);
-+		args->new_name = NULL;
-+		args->new_namelen = 0;
-+		args->new_value = NULL;
-+		args->new_valuelen = 0;
-+	}
-+	args->op_flags &= ~XFS_DA_OP_REPLACE;
-+
-+	error = xfs_attr_try_sf_addname(args);
++	error = xfs_attr_shortform_replace(args);
 +	if (error != -ENOSPC)
 +		return error;
 +
-+	xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
+ 	args->op_flags |= XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE;
+ 
+ 	error = xfs_attr_sf_removename(args);
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index f591984c3748ff..90be21a3887642 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -839,6 +839,44 @@ xfs_attr_sf_findname(
+ 	return NULL;
+ }
+ 
++/*
++ * Replace a shortform xattr if it's the right length.  Returns 0 on success,
++ * -ENOSPC if the length is wrong, or -ENOATTR if the attr was not found.
++ */
++int
++xfs_attr_shortform_replace(
++	struct xfs_da_args		*args)
++{
++	struct xfs_attr_sf_entry	*sfe;
++
++	ASSERT(args->dp->i_af.if_format == XFS_DINODE_FMT_LOCAL);
++
++	trace_xfs_attr_sf_replace(args);
++
++	sfe = xfs_attr_sf_findname(args);
++	if (!sfe)
++		return -ENOATTR;
++
++	if (args->attr_filter & XFS_ATTR_PARENT) {
++		if (sfe->namelen != args->new_namelen ||
++		    sfe->valuelen != args->new_valuelen)
++			return -ENOSPC;
++
++		memcpy(sfe->nameval, args->new_name, sfe->namelen);
++		memcpy(&sfe->nameval[sfe->namelen], args->new_value,
++				sfe->valuelen);
++	} else {
++		if (sfe->valuelen != args->valuelen)
++			return -ENOSPC;
++		memcpy(&sfe->nameval[sfe->namelen], args->value,
++				sfe->valuelen);
++	}
++
++	xfs_trans_log_inode(args->trans, args->dp,
++			XFS_ILOG_CORE | XFS_ILOG_ADATA);
 +	return 0;
 +}
 +
  /*
-  * Make a change to the xattr structure.
-  *
-@@ -1107,14 +1192,19 @@ xfs_attr_set(
- 	case -EEXIST:
- 		if (op == XFS_ATTRUPDATE_REMOVE) {
- 			/* if no value, we are performing a remove operation */
--			xfs_attr_defer_add(args, XFS_ATTR_DEFER_REMOVE);
-+			error = xfs_attr_removename(args);
-+			if (error)
-+				goto out_trans_cancel;
- 			break;
- 		}
- 
- 		/* Pure create fails if the attr already exists */
- 		if (op == XFS_ATTRUPDATE_CREATE)
- 			goto out_trans_cancel;
--		xfs_attr_defer_add(args, XFS_ATTR_DEFER_REPLACE);
-+
-+		error = xfs_attr_replacename(args, rmt_blks);
-+		if (error)
-+			goto out_trans_cancel;
- 		break;
- 	case -ENOATTR:
- 		/* Can't remove what isn't there. */
-@@ -1124,7 +1214,10 @@ xfs_attr_set(
- 		/* Pure replace fails if no existing attr to replace. */
- 		if (op == XFS_ATTRUPDATE_REPLACE)
- 			goto out_trans_cancel;
--		xfs_attr_defer_add(args, XFS_ATTR_DEFER_SET);
-+
-+		error = xfs_attr_setname(args, rmt_blks);
-+		if (error)
-+			goto out_trans_cancel;
- 		break;
- 	default:
- 		goto out_trans_cancel;
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index 12e4299840b8ef..d82c38197f4696 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -26,6 +26,7 @@
- #include "xfs_trans_space.h"
- #include "defer_item.h"
- #include "xfs_health.h"
-+#include "xfs_attr_leaf.h"
- 
- struct kmem_cache		*xfs_parent_args_cache;
- 
-@@ -199,8 +200,8 @@ xfs_parent_addname(
- 	xfs_inode_to_parent_rec(&ppargs->rec, dp);
- 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
- 			child->i_ino, parent_name);
--	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_SET);
--	return 0;
-+
-+	return xfs_attr_setname(&ppargs->args, 0);
- }
- 
- /* Remove a parent pointer to reflect a dirent removal. */
-@@ -221,8 +222,8 @@ xfs_parent_removename(
- 	xfs_inode_to_parent_rec(&ppargs->rec, dp);
- 	xfs_parent_da_args_init(&ppargs->args, tp, &ppargs->rec, child,
- 			child->i_ino, parent_name);
--	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_REMOVE);
--	return 0;
-+
-+	return xfs_attr_removename(&ppargs->args);
- }
- 
- /* Replace one parent pointer with another to reflect a rename. */
-@@ -247,12 +248,13 @@ xfs_parent_replacename(
- 			child->i_ino, old_name);
- 
- 	xfs_inode_to_parent_rec(&ppargs->new_rec, new_dp);
-+
- 	ppargs->args.new_name = new_name->name;
- 	ppargs->args.new_namelen = new_name->len;
- 	ppargs->args.new_value = &ppargs->new_rec;
- 	ppargs->args.new_valuelen = sizeof(struct xfs_parent_rec);
--	xfs_attr_defer_add(&ppargs->args, XFS_ATTR_DEFER_REPLACE);
--	return 0;
-+
-+	return xfs_attr_replacename(&ppargs->args, 0);
- }
- 
- /*
+  * Add a name/value pair to the shortform attribute list.
+  * Overflow from the inode has already been checked for.
 
