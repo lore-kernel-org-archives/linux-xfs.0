@@ -1,45 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3A62D5432
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 06:15:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76C11DE3DB
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 06:15:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774246504; cv=none; b=Q+toIoVU2X0I5zL7iHOQy1eOKx34SqI/FruhHQ798bMMg3p36XT3ucKPQpK7H+xHoRfctw58k7WcfCaaT3wIlkmvHlMkMApJWm4ofYf8Dt/CLZUFHDTcQjbRMc7cz8rnkAqnLf1dsVfypfYgw+RVIjGl8/SCNpIQzpNvietJJz0=
+	t=1774246517; cv=none; b=bh0gE1mlMCUsRrc0rnLU6rXNqa8PZwwqIjU2vXWDpENGaS+pkxYeATkkqbiO7jzqf/LQt9/smBhMH9NcIxRn/uj1BjTVKuhaRpWiMaNUdaUPzBoOq0cktoaGElrgvuDTSn39/yGk+xSoRibfuTREGnhmIFyn8BN8YnPq8YaMzPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774246504; c=relaxed/simple;
-	bh=mcWWeb/Tz3YG9BO54fiLT5EP+jiW7rFZczWvNulYkbk=;
+	s=arc-20240116; t=1774246517; c=relaxed/simple;
+	bh=aaa24zVP4Cufp0czV8S3NFS5UeEYtUh/c8yE4oUNRnk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ktMbdwkZ+AU0o+OilsFMUbpiZHCes3Y9oP0W5oljTCQ7yk68t0IoVQIu0f7dQbGUIasgN5LT68uJtcWX6wy0wkCQeP3m5MVNX3DGjdmkwVXtO3hHVddVNF54f/Tkq7OQL9sXfSbfd9aw82A5THr0ED3pe7kdhXA79JRUKM4sIbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=n5uTurcg; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=tAqaO9bjVFkckSGreRMlPgjpK9JSb8akBcWy4SNtQOOmdMMlIkQGBXA0CZlLg58OXiR/Sw2uLNDCJQMsMoOKULDjSZxLSm1iJfb8g8vcFf+oDXnMZLf4Hs1OTemeQ7ECTWVWpG0qov9x3eRtHa662uBGOVvjyB9m0z5CswFa1KU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pBwOMatH; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n5uTurcg"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pBwOMatH"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=mcWWeb/Tz3YG9BO54fiLT5EP+jiW7rFZczWvNulYkbk=; b=n5uTurcgRUCQmfhN9IoRZwfS6V
-	lEZjuM1MzBAb5YF8wDb3KNmzovcNGF0M4//nyW6UpZVXqJUBEcvwFktHLKyB7pYzAntlRE+UCledX
-	oCKgzTQh1W+DVKV0hTfsWQo1lwOha6Q9ZD3LK1MdrArFGLB0N3wABgis/scOyMwq9uAqGJltT2GZI
-	Prok/znSevvzcTnzOVKn9HWfNKkkdqdpzfX4BGhLxSEMopUKpA9ewDCWWD1sAaXsl1as+5sh1txHt
-	Hzep78Uw8N6sgwp/8de7WIO7HL/+7zk7rAtXi/bIYPMANnV2hnHS2c/SHQ9lXmVR3fPeD5FrvylSd
-	YWCDoK+Q==;
+	bh=aaa24zVP4Cufp0czV8S3NFS5UeEYtUh/c8yE4oUNRnk=; b=pBwOMatHR6u9mXAWe8xzwGiRPj
+	+9+fZ6Tg20lAWAeAl1+J5butdp1JPI87paCkC+xKDzexHE7BwgR6USrZK/EKgji9/dBNKkrDZMTFB
+	tPcnY9SpTXUu20VcbZ3YmHW6ds7hTNcO7C8ehMU6+74hmn2btASZI0ZKi5wOowcvZCyjyFg7deH+P
+	YieZWAMF0OlRjXTn8hawypKzBFm+l2CNJCnfr1zaAZ8oiUEOsfSHWOZbVeDt4pwleVMRe9BD55kM5
+	4XofiUKyloTx+wZtw3qLJkzI/rTR1nGOBvivOWJFlXZOa6h4vNNU5/ZN2crTWREIKjYj64oKXz/xu
+	EynMySAg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w4YZ4-0000000G7MW-2DYq;
-	Mon, 23 Mar 2026 06:15:02 +0000
-Date: Sun, 22 Mar 2026 23:15:02 -0700
+	id 1w4YZI-0000000G7Mx-1ELH;
+	Mon, 23 Mar 2026 06:15:16 +0000
+Date: Sun, 22 Mar 2026 23:15:16 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Long Li <leo.lilong@huawei.com>
 Cc: djwong@kernel.org, cem@kernel.org, linux-xfs@vger.kernel.org,
 	david@fromorbit.com, yi.zhang@huawei.com, houtao1@huawei.com,
 	yangerkun@huawei.com, lonuxli.64@gmail.com
-Subject: Re: [PATCH v3 1/2] xfs: fix ri_total validation in
+Subject: Re: [PATCH v3 2/2] xfs: remove redundant validation in
  xlog_recover_attri_commit_pass2
-Message-ID: <acDaZj40D3-j2Y50@infradead.org>
+Message-ID: <acDadB4tpuGhcIfw@infradead.org>
 References: <20260320021130.2936657-1-leo.lilong@huawei.com>
- <20260320021130.2936657-2-leo.lilong@huawei.com>
+ <20260320021130.2936657-3-leo.lilong@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,15 +48,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260320021130.2936657-2-leo.lilong@huawei.com>
+In-Reply-To: <20260320021130.2936657-3-leo.lilong@huawei.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Mar 20, 2026 at 10:11:29AM +0800, Long Li wrote:
-> This problem may cause log recovery failures. The following script can be
-> used to reproduce the problem:
+On Fri, Mar 20, 2026 at 10:11:30AM +0800, Long Li wrote:
+> Remove the redundant post-parse validation switch. By the time that
+> block is reached, xfs_attri_validate() has already guaranteed all name
+> lengths are non-zero via xfs_attri_validate_namelen(), and
+> xfs_attri_validate_name_iovec() has already returned -EFSCORRUPTED for
+> NULL names. For the REMOVE case, attr_value and value_len are
+> structurally guaranteed to be NULL/zero because the parsing loop only
+> populates them when value_len != 0. All checks in that switch are
+> therefore dead code.
 
-Can you add this to xfstests, please?
-
-Otherwise looks good:
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
