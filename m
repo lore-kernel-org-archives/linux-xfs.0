@@ -1,51 +1,77 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F921335BB4
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 06:36:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4409F3164B4;
+	Mon, 23 Mar 2026 07:07:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774247815; cv=none; b=A6p5I850PQ0zLm4WvUmSEG4vrBorpa2XuoU5L0AkMqgTWkowiquswrAD8+6RsneFVTBAohobr7aNb0fmU7yFUZj+qmxjbbf2d322fhxalLQ3wYSzMDJHIdVwJbCznxfdFr5bdLZxeWl7d2XwYyrmg9MQIJfRqfdLpluwslp4I3E=
+	t=1774249676; cv=none; b=erwydNDFu4GsvM/WG57SaOVCa+p41e79nVf2dYv61LXt/Ap4wGHUYoWg3w+tDkeXfJO07oFHGFkM81VPzzsc726OhuZZNqTJ9qfE+d5ItNKrhL0jEhGKiPsub2IJAMhrD27jN3EZKkEMuMToLc9jpnpa5OUo6r/QDwHTEtt86nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774247815; c=relaxed/simple;
-	bh=PPBrm3tluzE92Dob1eASvBA7sI1A86cNofXcvxDJXgc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M7MReo7XEyTFkCjNkOkX4H2HQ1O+EVAjNHBDQxMXsQ75QG58Uqz3hsvRrxrt57toSInzALilf5iXoFHzviCU1u6DkQcEFhD7y5Z+xcZhJ033UKfMzDrNPmKkr15jQ6Dok4wPDUjffD1/3YBsdUbGm21HI3TmKIdku3Ve+l8KNG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 87BE768AFE; Mon, 23 Mar 2026 07:36:41 +0100 (CET)
-Date: Mon, 23 Mar 2026 07:36:41 +0100
+	s=arc-20240116; t=1774249676; c=relaxed/simple;
+	bh=n6/esmbLLYnCWbjYRY2cIW6J4XQPij2omFb4qzktfWQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KEpqNxBh6TPKGo5qYtprDQti0eijhDjO+uwiX1L1WZAlleLea8wVV3XGDoRSXJnhkhEUNp6JT5l/+d5u4D/Q9lYzzHo/g2mjzIHvUtP6UDcjOlh8i4BCZnTWLRTvZyC1R5mfxvkAa7bLhQdvjV9fG0Zkzdkdj0gozpx9AN/xvAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b67nSWLy; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b67nSWLy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=Y0BBALfCpyrhzBLB2pqit20jC5qy1ednoG0tRG1R0MY=; b=b67nSWLyTDSIQ73f4+8uBq7SuB
+	6bEJerb77b+DYbyOm4ggaWzIa7yNneh2m+bRQFK5AxJ/ssCniQErdXYCbHlMRZ/oBz64bJH6Ydba9
+	RQgNA7unYfXNE3onFuaULerHooctTIlpWrKeNnIiilUmexblJm0u5TWkQf/CnQdTjjFd75wsw1NBG
+	cD7A8gnytQDY7NOnrmWrt2NHzts0L0GQNPhm2NemP4cbfIwwjNoxMz9a7m2ou1gRdQHvUOva10sMW
+	QQ+2nSHmN3uKHgRM065u0H50OYeXRPTgjxzA9vhhcMsaR3MYdXkW+N3NohS4xBH9E5k7eIKs/rW+P
+	fcWNiD/w==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w4ZOB-0000000GALn-4AZb;
+	Mon, 23 Mar 2026 07:07:52 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: start gc on zonegc_low_space attribute updates
-Message-ID: <20260323063641.GA24722@lst.de>
-References: <20260320130256.35225-1-hans.holmberg@wdc.com>
+To: Chuck Lever <chuck.lever@oracle.com>,
+	Jeff Layton <jlayton@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>
+Cc: NeilBrown <neil@brown.name>,
+	Olga Kornievskaia <okorniev@redhat.com>,
+	Dai Ngo <Dai.Ngo@oracle.com>,
+	Tom Talpey <tom@talpey.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-nfs@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: support multiple block devices per file system for block-style layouts
+Date: Mon, 23 Mar 2026 08:07:16 +0100
+Message-ID: <20260323070746.2940140-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260320130256.35225-1-hans.holmberg@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-> +		mp->m_zonegc_low_space = val;
-> +		if (!xfs_is_readonly(mp))
-> +			xfs_zone_gc_start(mp);
+Hi all,
 
-Do we need to take s_umount here to prevent races with remount?
-(Not that it has any major effect, but we might as well get it
-tight).
+this series adds support for exporting multiple block devices using
+block-style from nfsd, and uses that to implement support for the XFS
+RT device.  To get there is also first cleans up the block-style layout
+interface in exportfs.
 
-Otherwise looks good.  Do we want a test to ensure this takes
-effect?  And one that it doesn't do anything stupid on a hard
-read-only file system?
-
+Diffstat:
+ MAINTAINERS                    |    2 
+ fs/nfsd/blocklayout.c          |   69 ++++++++++++++++--------------
+ fs/nfsd/export.c               |    3 -
+ fs/nfsd/flexfilelayout.c       |    3 -
+ fs/nfsd/nfs4layouts.c          |   32 ++++---------
+ fs/nfsd/pnfs.h                 |    2 
+ fs/nfsd/xdr4.h                 |    5 +-
+ fs/xfs/xfs_export.c            |    4 -
+ fs/xfs/xfs_pnfs.c              |   93 +++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_pnfs.h              |   11 ++--
+ include/linux/exportfs.h       |   25 +++-------
+ include/linux/exportfs_block.h |   94 +++++++++++++++++++++++++++++++++++++++++
+ 12 files changed, 235 insertions(+), 108 deletions(-)
