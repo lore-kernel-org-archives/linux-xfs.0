@@ -1,45 +1,31 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 162658C1F;
-	Mon, 23 Mar 2026 06:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F921335BB4
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 06:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774246682; cv=none; b=Y0R1a8sZYMg/2M/1pTpfI1svrQ//VhzrIqddfa7Mq6JEvGr0WgGwXsw+7qxjt+meGnV3GPCcV9Re8wQ11qjoxDiv/ti1YhCrAaw1cA1PzIfeGlOi3hkXpgOXBhyisUQrW4utnD1SIBfVthRnz/douw4DS43nffWK0jqhlNn6WRg=
+	t=1774247815; cv=none; b=A6p5I850PQ0zLm4WvUmSEG4vrBorpa2XuoU5L0AkMqgTWkowiquswrAD8+6RsneFVTBAohobr7aNb0fmU7yFUZj+qmxjbbf2d322fhxalLQ3wYSzMDJHIdVwJbCznxfdFr5bdLZxeWl7d2XwYyrmg9MQIJfRqfdLpluwslp4I3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774246682; c=relaxed/simple;
-	bh=cr+kahZ2/t2EpUMpwrP2N5H3I2zs3nZxr7LjchR9w7k=;
+	s=arc-20240116; t=1774247815; c=relaxed/simple;
+	bh=PPBrm3tluzE92Dob1eASvBA7sI1A86cNofXcvxDJXgc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=coyJCLSppcmsadZ0GB+PTVRkLUPKuXnZT52FcSMbGYl95z2+ggkS1t2sNm2Q8lCdnkWJrJa7cKtG5X3fLOqXo9fzsSQDsAeVxPVx8FZYv5VuA9v0CQzQBkuZwjHu9HrteMFG7R63YIE++hrxhcrseEcL30uI4cnZ1emeieDPgqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aFKWEqmZ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aFKWEqmZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=qq9Ch574Mk78jIY+CDuu0xPMYpbUQ/02GbhKWjWT7tk=; b=aFKWEqmZjoUnAND7Oti8tRqFQS
-	rRZiwEit2/yijbx8iey0wIMzpgKjPl1m7nAQzI1/YDvgtZzG0C6QpxiPEkNgUY6Kg7gC7dBd4S5/M
-	7UroMAEmjQ1meU679Gq9EkgFQau7t617hdNyC51Su41igcnkvbIFijYgQMtrtWrjs0pVtBcNBtKqT
-	VIZX6YC5nD/gDr0WJFajhqCtkhxVi87+SxXgBDUiDjYQzchvxHLUrpoA79Q+VhG27WT075MlooZtN
-	PJvLyndjjXT9Boal1Tp5BsnWXU4ynLF7IL9gIE+Yw1xE9LCusQhnOfxWjRnoJ8beOt5QeaRDJQS1n
-	PCEjLusQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w4Ybu-0000000G7UV-3pwN;
-	Mon, 23 Mar 2026 06:17:58 +0000
-Date: Sun, 22 Mar 2026 23:17:58 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-	Tal Zussman <tz2294@columbia.edu>, axboe@kernel.dk,
-	linux-block@vger.kernel.org
-Subject: Re: [Bug][xfstests xfs/556] inconsistent {HARDIRQ-ON-W} ->
- {IN-HARDIRQ-W} usage
-Message-ID: <acDbFtQw0mom798e@infradead.org>
-References: <20260319194303.efw4wcu7c4idhthz@doltdoltdolt>
- <20260320163444.GE6223@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=M7MReo7XEyTFkCjNkOkX4H2HQ1O+EVAjNHBDQxMXsQ75QG58Uqz3hsvRrxrt57toSInzALilf5iXoFHzviCU1u6DkQcEFhD7y5Z+xcZhJ033UKfMzDrNPmKkr15jQ6Dok4wPDUjffD1/3YBsdUbGm21HI3TmKIdku3Ve+l8KNG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 87BE768AFE; Mon, 23 Mar 2026 07:36:41 +0100 (CET)
+Date: Mon, 23 Mar 2026 07:36:41 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Hans Holmberg <hans.holmberg@wdc.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: start gc on zonegc_low_space attribute updates
+Message-ID: <20260323063641.GA24722@lst.de>
+References: <20260320130256.35225-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,26 +34,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260320163444.GE6223@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260320130256.35225-1-hans.holmberg@wdc.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Mar 20, 2026 at 09:34:44AM -0700, Darrick J. Wong wrote:
-> --- a/fs/iomap/bio.c
-> +++ b/fs/iomap/bio.c
-> @@ -8,7 +8,15 @@
->  #include "internal.h"
->  #include "trace.h"
->  
-> -static void iomap_read_end_io(struct bio *bio)
-> +struct iomap_failed_bio {
-> +	struct list_head io_list;
-> +	struct bio *bio;
-> +};
+> +		mp->m_zonegc_low_space = val;
+> +		if (!xfs_is_readonly(mp))
+> +			xfs_zone_gc_start(mp);
 
-Between this and the blockdev dontcache work I really wish we could
-have a generic offload using a percpu lit and workqueue.
+Do we need to take s_umount here to prevent races with remount?
+(Not that it has any major effect, but we might as well get it
+tight).
 
-Also I don't think we need the separate list here, a linked list using
-bi_next should be sufficient and avoid the allocation in the failure
-path.
+Otherwise looks good.  Do we want a test to ensure this takes
+effect?  And one that it doesn't do anything stupid on a hard
+read-only file system?
 
