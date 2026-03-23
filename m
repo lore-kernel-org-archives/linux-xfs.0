@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AFB030596F
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:41:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4BD30DD2A
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:41:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291262; cv=none; b=ngbgRDWckhkdXtYLbZVHxt+JQ5eiB3hJESxetBGUTc79yWJa7UiQqntA4BvCbvkruT6mZj47yl1ql5zH1mucE95H7g7/Sdh0aYwDQI2UMAQ+dTsdqQshonZb04eTIlFHfoiu4da203ZNbTqpi9ywaI0mSS8YmgkmfdggdydHTm4=
+	t=1774291277; cv=none; b=A5U5A6Oc/YwPS0kYrUyFyZmsmMiOm5U54HXqR+cHOTRjQPgcZIofi45deWwREJRiUoJlwcaNwizNA/16TGDnCHh1Cd0Kzqi15eU3+Hp0CW+hWlZQuEvZHk9W0CfwX0ND478K2jnOeHsbloVRVyuUt1PqOOYu2orT/Ek0niHyadI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291262; c=relaxed/simple;
-	bh=jX+U7O5wZ05c8Y2G35qy9Hjn7oROgHNQ05cYKAMUzK8=;
+	s=arc-20240116; t=1774291277; c=relaxed/simple;
+	bh=tL41jWRu3ldQUlUAq3t0SJEkr9fIVe/otkuAwjda5so=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=T5F7o45M1pbfeXPP5OUI4Jd1bAuGN8tRzKGXG4pap+eIUaaBKRKzq1XE6JrZu4WLceNhQ4QpcDUgQZqsx549B1S8DLkMJW/L2AWslPCIbM+swKa+jmXuwwTkhnIsdLBGmLpOl0DjVO7r0czkZ/1pJ3IRqe/0U6xV5aEnJVhueq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PEvt3dit; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=TWzn6P+u8aREzOEW8GSI0wWSr5wRXazdf/g1+tSPtTbjKJQNPyzGdgHLbrtOZmu2b410re9Ve/0zeyj5k4A3w6QszVQbSJncVix1hh/WCU2gTREEkKNl52hV0uZYxCp2ZnXfVpOw12IjZx4Z33p83JejfAwg9SUz5SzkxcPjRGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3koeZNv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PEvt3dit"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1ACBC4CEF7;
-	Mon, 23 Mar 2026 18:41:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3koeZNv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B391C4CEF7;
+	Mon, 23 Mar 2026 18:41:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291261;
-	bh=jX+U7O5wZ05c8Y2G35qy9Hjn7oROgHNQ05cYKAMUzK8=;
+	s=k20201202; t=1774291277;
+	bh=tL41jWRu3ldQUlUAq3t0SJEkr9fIVe/otkuAwjda5so=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PEvt3dit6laineCxwQDrOTLRjCCED38nej4vbw5x9WHuXh9hTsz/g1krslWQ4w+Mr
-	 gr8SUpXMfOstzijYFYPihxom+Thf+78z5SdADAL/HAz2eu3mA3CxxaBsioLCD5AfIw
-	 c89Dl0vJkiLhPWmF3OAakaRAyH+Vrjs918+W3gdE8w85LgifmvcbkQS55Z208EwuqZ
-	 mkHs+ANESwhsW0+bFQqqazflyiVDHmQT8By76Hm0+6PTvCpg9ZSL4R5ddXB8esP/y9
-	 PeRfeEzWC0p99cfNWY9+UJIEeHvAcD1Rw1kk/+ruEtYCP1HJ9AeUq1SWuRi+1slTOJ
-	 2bhKEDFHWAjwA==
-Date: Mon, 23 Mar 2026 11:41:01 -0700
-Subject: [PATCHSET 2/2] xfsprogs: new libxfs code from kernel 7.0
+	b=N3koeZNvbEtrIrj5jlY1EkW8tOMXkZqIMxHnGBc+Hm3pArRtme6DjDs7eDGYkjctw
+	 PW9fjr3zo2OKngM4okKHiJ3s/0U2pmpRACIPEUjqgZR/nHj2sYC7JfcS63TnV3WlfL
+	 DI2NJqE/i0T3FTPdYY9ZtU+g1i/W3244QYqq1QOERpB2usb9NTv6L5zeMRa6hU1dLs
+	 9LKJ0d8KJ23p4fa+3joHOhpxCtrJYBq+1v04wLK/B6nzz9NDIZRrodpUT8/B6R77Er
+	 Rk4cNElpIAEcmTqmkoABIpGtC1O6QDhTMy1v9YcdZnUmRUEcPHJO+okpNJ6VxxqfvR
+	 HtENeexbLnNYw==
+Date: Mon, 23 Mar 2026 11:41:16 -0700
+Subject: [PATCH 1/1] xfs_repair: don't fail on INCOMPLETE attrs in leaf blocks
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: kees@kernel.org, hch@lst.de, cem@kernel.org, cmaiolino@redhat.com,
- mark.tinguely@oracle.com, nirjhar.roy.lists@gmail.com,
- wilfred.mallawa@wdc.com, dlemoal@kernel.org, shinsj4653@gmail.com,
- torvalds@linux-foundation.org, hongao@uniontech.com,
- souptick.joarder@hpe.com, linux-xfs@vger.kernel.org, hans.holmberg@wdc.com,
- linux-xfs@vger.kernel.org
-Message-ID: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
-In-Reply-To: <20260323183941.GJ6223@frogsfrogsfrogs>
-References: <20260323183941.GJ6223@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177429120305.2266172.16996819170156005590.stgit@frogsfrogsfrogs>
+In-Reply-To: <177429120286.2266172.6821817395168865287.stgit@frogsfrogsfrogs>
+References: <177429120286.2266172.6821817395168865287.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,150 +43,82 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This series ports kernel libxfs code to userspace from 7.0-rc5.
+While trying to fix problems in generic/753, I noticed test failures on
+account of xfs_repair:
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+ attribute entry #4 in attr block 0, inode 131 is INCOMPLETE
+ problem with attribute contents in inode 131
+ would clear attr fork
+ bad nblocks 4 for inode 131, would reset to 0
+ bad anextents 1 for inode 131, would reset to 0
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
+Looking at the dumped filesystem, inode 131 is a linked file, and the
+"incomplete" xattr was clearly part of an xfs_attr_set operation that
+failed midway through because the induced log shutdown prevented xfs
+from finishing the creation of a remote xattr.  This kind of thing is
+expected, but instead xfs_repair deletes the entire attr fork!
 
---D
+It's far too drastic to delete every xattr because doing that destroys
+things like security labels.  The kernel won't show incomplete attrs so
+it's not a big deal to leave them attached to the file.  Note that
+xfs_scrub can fix such things.
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-7.0-sync
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * libxfs: fix XFS_STATS_DEC
- * libxfs: port various kernel apis from 7.0
- * libfrog: hoist some utilities from libxfs
- * libfrog: fix missing gettext call in current_fixed_time
- * xfs: start creating infrastructure for health monitoring
- * xfs: create event queuing, formatting, and discovery infrastructure
- * xfs: convey filesystem unmount events to the health monitor
- * xfs: convey metadata health events to the health monitor
- * xfs: convey filesystem shutdown events to the health monitor
- * xfs: convey externally discovered fsdax media errors to the health monitor
- * xfs: convey file I/O errors to the health monitor
- * xfs: check if an open file is on the health monitored fs
- * xfs: add media verification ioctl
- * xfs: move struct xfs_log_iovec to xfs_log_priv.h
- * xfs: directly include xfs_platform.h
- * xfs: remove xfs_attr_leaf_hasname
- * xfs: add missing forward declaration in xfs_zones.h
- * xfs: add a xfs_rtgroup_raw_size helper
- * xfs: split and refactor zone validation
- * xfs: delete attr leaf freemap entries when empty
- * xfs: fix freemap adjustments when adding xattrs to leaf blocks
- * xfs: refactor attr3 leaf table size computation
- * xfs: strengthen attr leaf block freemap checking
- * xfs: reduce xfs_attr_try_sf_addname parameters
- * xfs: speed up parent pointer operations when possible
- * xfs: add a method to replace shortform attrs
- * xfs: fix spacing style issues in xfs_alloc.c
- * xfs: don't validate error tags in the I/O path
- * xfs: add zone reset error injection
- * xfs: give the defer_relog stat a xs_ prefix
- * treewide: Replace kmalloc with kmalloc_obj for non-scalar types
- * Convert 'alloc_obj' family to use the new default GFP_KERNEL argument
- * xfs: Refactoring the nagcount and delta calculation
- * xfs: fix code alignment issues in xfs_ondisk.c
- * xfs: remove metafile inodes from the active inode stat
- * xfs: Add a comment in xfs_log_sb()
- * xfs: remove duplicate static size checks
- * xfs: add static size checks for ioctl UABI
- * xfs: Remove redundant NULL check after __GFP_NOFAIL
- * xfs: fix returned valued from xfs_defer_can_append
----
- include/kmem.h                |   50 ++++++++++
- include/libxfs.h              |    7 -
- include/platform_defs.h       |    8 ++
- include/xfs_fs_compat.h       |    8 --
- include/xfs_trace.h           |    1 
- libfrog/util.h                |   21 ++++
- libxfs/libxfs_api_defs.h      |    2 
- libxfs/xfs_ag.h               |    3 +
- libxfs/xfs_attr.h             |    6 +
- libxfs/xfs_attr_leaf.h        |    1 
- libxfs/xfs_da_format.h        |    2 
- libxfs/xfs_errortag.h         |    8 +-
- libxfs/xfs_fs.h               |  189 +++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_health.h           |    5 +
- libxfs/xfs_log_format.h       |    7 -
- libxfs/xfs_ondisk.h           |   52 +++++++----
- libxfs/xfs_platform.h         |   25 +----
- libxfs/xfs_rtgroup.h          |   15 +++
- libxfs/xfs_zones.h            |    6 +
- libfrog/Makefile              |    4 +
- libfrog/util.c                |  166 +++++++++++++++++++++++++++++++++++
- libxfs/Makefile               |    4 -
- libxfs/buf_mem.c              |    2 
- libxfs/cache.c                |    2 
- libxfs/defer_item.c           |    2 
- libxfs/init.c                 |    2 
- libxfs/inode.c                |    2 
- libxfs/iunlink.c              |    2 
- libxfs/kmem.c                 |    2 
- libxfs/logitem.c              |    2 
- libxfs/rdwr.c                 |    2 
- libxfs/topology.c             |    2 
- libxfs/trans.c                |    2 
- libxfs/util.c                 |  162 ----------------------------------
- libxfs/xfblob.c               |    2 
- libxfs/xfile.c                |    2 
- libxfs/xfs_ag.c               |   32 ++++++-
- libxfs/xfs_ag_resv.c          |    2 
- libxfs/xfs_alloc.c            |   10 +-
- libxfs/xfs_alloc_btree.c      |    2 
- libxfs/xfs_attr.c             |  191 +++++++++++++++++++++++++++-------------
- libxfs/xfs_attr_leaf.c        |  197 ++++++++++++++++++++++++++++++++++-------
- libxfs/xfs_attr_remote.c      |    2 
- libxfs/xfs_bit.c              |    2 
- libxfs/xfs_bmap.c             |    2 
- libxfs/xfs_bmap_btree.c       |    2 
- libxfs/xfs_btree.c            |    2 
- libxfs/xfs_btree_mem.c        |    2 
- libxfs/xfs_btree_staging.c    |    2 
- libxfs/xfs_da_btree.c         |   10 +-
- libxfs/xfs_defer.c            |    8 +-
- libxfs/xfs_dir2.c             |   21 ++--
- libxfs/xfs_dir2_block.c       |    2 
- libxfs/xfs_dir2_data.c        |    2 
- libxfs/xfs_dir2_leaf.c        |    2 
- libxfs/xfs_dir2_node.c        |    2 
- libxfs/xfs_dir2_sf.c          |    2 
- libxfs/xfs_dquot_buf.c        |    2 
- libxfs/xfs_exchmaps.c         |    2 
- libxfs/xfs_group.c            |    2 
- libxfs/xfs_ialloc.c           |    2 
- libxfs/xfs_ialloc_btree.c     |    2 
- libxfs/xfs_iext_tree.c        |    2 
- libxfs/xfs_inode_buf.c        |    6 +
- libxfs/xfs_inode_fork.c       |    2 
- libxfs/xfs_inode_util.c       |    2 
- libxfs/xfs_log_rlimit.c       |    2 
- libxfs/xfs_metadir.c          |    2 
- libxfs/xfs_metafile.c         |    7 +
- libxfs/xfs_parent.c           |   16 ++-
- libxfs/xfs_refcount.c         |    6 +
- libxfs/xfs_refcount_btree.c   |    2 
- libxfs/xfs_rmap.c             |    2 
- libxfs/xfs_rmap_btree.c       |    2 
- libxfs/xfs_rtbitmap.c         |    2 
- libxfs/xfs_rtgroup.c          |    4 -
- libxfs/xfs_rtrefcount_btree.c |    2 
- libxfs/xfs_rtrmap_btree.c     |    2 
- libxfs/xfs_sb.c               |    5 +
- libxfs/xfs_symlink_remote.c   |    2 
- libxfs/xfs_trans_inode.c      |    2 
- libxfs/xfs_trans_resv.c       |    2 
- libxfs/xfs_trans_space.c      |    2 
- libxfs/xfs_types.c            |    2 
- libxfs/xfs_zones.c            |  151 ++++++++-----------------------
- libxlog/xfs_log_recover.c     |    4 -
- repair/zoned.c                |    7 +
- 87 files changed, 990 insertions(+), 533 deletions(-)
- rename libxfs/{libxfs_priv.h => xfs_platform.h} (96%)
+ repair/attr_repair.c |   22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
+
+
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 50159b9a533875..fe4089026cae74 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -571,7 +571,13 @@ process_leaf_attr_remote(
+ 	    !libxfs_attr_namecheck(entry->flags, remotep->name,
+ 				   remotep->namelen) ||
+ 	    be32_to_cpu(entry->hashval) != computed ||
+-	    be32_to_cpu(entry->hashval) < last_hashval ||
++	    be32_to_cpu(entry->hashval) < last_hashval) {
++		do_warn(
++	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
++		return -1;
++	}
++
++	if (!(entry->flags & XFS_ATTR_INCOMPLETE) &&
+ 	    be32_to_cpu(remotep->valueblk) == 0) {
+ 		do_warn(
+ 	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
+@@ -592,6 +598,9 @@ process_leaf_attr_remote(
+ 		return -1;
+ 	}
+ 
++	if (entry->flags & XFS_ATTR_INCOMPLETE)
++		goto out;
++
+ 	value = malloc(be32_to_cpu(remotep->valuelen));
+ 	if (value == NULL) {
+ 		do_warn(
+@@ -708,12 +717,15 @@ process_leaf_attr_block(
+ 		}
+ 
+ 		if (entry->flags & XFS_ATTR_INCOMPLETE) {
+-			/* we are inconsistent state. get rid of us */
+-			do_warn(
++			/*
++			 * Warn about incomplete xattrs but don't zap the
++			 * entire attr fork because that causes loss of
++			 * security labels.  The kernel can handle stray
++			 * incomplete attr entries.
++			 */
++			do_log(
+ 	_("attribute entry #%d in attr block %u, inode %" PRIu64 " is INCOMPLETE\n"),
+ 				i, da_bno, ino);
+-			clearit = 1;
+-			break;
+ 		}
+ 
+ 		/* mark the entry used */
 
