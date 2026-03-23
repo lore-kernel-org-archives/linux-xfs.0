@@ -1,84 +1,86 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5FC62BD11
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 01:48:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11665140E5F
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 03:01:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774230495; cv=none; b=Mj9iSJh290ZiB4iTE7s62p+0rVzfgwQrDadYv4Ohc+U3U61AoQlFcdoBfI+vv0jYY15UZDjlwSY10QAWlI7/JJIjXboE57aSpZ9Ul5E2Zm/hw7a5VO/n6MZT12TFXjoJtr/zIXb52ErKrOVEWR3WxwhbwRZy3/iwU/LCw9V2LY4=
+	t=1774234899; cv=none; b=HY85jEhPuoH+Oo1bbNC/XihkiH6I6LfvIiiFreOKhDlHyy08jpmc0tchn/V4KO6/A8vm1WlEPHzqME/j1pGcMqg2fMoEBwfveUHSExlmIsmhNCV3TcCaujSwXVV6uPPlOQrD2ubZmqC4B/sVoVzserwi+1wLC9xOUsoN6zh5jUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774230495; c=relaxed/simple;
-	bh=cEEN+qS+v0cPQzz26QhVNgxrvSPNC3mjwIeTUXYVsNs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XcJO83RcqlGsxPEPF+BLe6vDgMCVxpt7O0gJaK2I0hFlnyPD5oBfdodWvjSSy/UCGt26tNcqs7ZcZg31bqW+PShIjzebC+X3qQ3oTYbwJfgHt6bEBSYoPIBjiBziXzvFpqykvDnawlBXhIWwBq99KmcKVNN0vCQ7FKtR5nN5QN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QywXo7QM; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PqxRtrVd; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1774234899; c=relaxed/simple;
+	bh=kMPbl2Dxy9QAwmi2DAzeHK7NgmEeElirTgKVHhB+j4Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=GNpYfPK/5Zo4prJkMWo4YRgubWMjCWQgqo8icvmRIcTy2ywUo77Qh7T9gH6aBbhE5wzNcZo5dcvcbracPItPK64t0kDZSAz3EAVolKFLng744MeZODUoE+aFcM7ZPieEXcffrRrJy7GqTEmeOqNonjF7fvfHNIhWZ+/8RpbZmdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Rg/LLIeS; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=dQm3RKy0; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QywXo7QM";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PqxRtrVd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rg/LLIeS";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="dQm3RKy0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774230492;
+	s=mimecast20190719; t=1774234897;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=mYgZZR0kXxMZ2oWd4hYeewbulFpFFbdeDyMrMn7fieg=;
-	b=QywXo7QMiS8MErG8iH7C/zVZM52D4Q3GaEYZ/+Zr35I4wFchNEDytVpEJYL/o4XlBq7IYm
-	NVmgk0n90H2K8YjEHKMc8Zv62hq0fBK6IsEwNDjyCa3/oYNPvoaarqDZ6Yubhtn8u7l5Lu
-	MZrJlkQCiOp8gU7XiBD3h+sn5r+LArw=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=5Oy6gTA/oMYuKJcGhA/xtv3SWmyfDUciochQKNFImkM=;
+	b=Rg/LLIeS7B/EgtqxDq/y/6O8OcS9kbr3DF/mXGuwRysNgLh5yl/6difaOIakANLeSbLdeJ
+	2c32CvT4aTbvU33Vqj/ucbCqFL7q3R9qBbjUM260YcmbT5mZtwXNFv3lgBNhuWlh/zMiDN
+	tdaKOtuIruVHDg3t8LyPW25H+KuiXAU=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-672-mnL9ATz8PK6WxAyihS42LA-1; Sun, 22 Mar 2026 21:48:11 -0400
-X-MC-Unique: mnL9ATz8PK6WxAyihS42LA-1
-X-Mimecast-MFC-AGG-ID: mnL9ATz8PK6WxAyihS42LA_1774230490
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b064f043adso51952445ad.0
-        for <linux-xfs@vger.kernel.org>; Sun, 22 Mar 2026 18:48:11 -0700 (PDT)
+ us-mta-128-4zOTY85FNUaluXjk7z5fdg-1; Sun, 22 Mar 2026 23:01:35 -0400
+X-MC-Unique: 4zOTY85FNUaluXjk7z5fdg-1
+X-Mimecast-MFC-AGG-ID: 4zOTY85FNUaluXjk7z5fdg_1774234895
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b05370ec01so256344735ad.1
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Mar 2026 20:01:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1774230490; x=1774835290; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1774234894; x=1774839694; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mYgZZR0kXxMZ2oWd4hYeewbulFpFFbdeDyMrMn7fieg=;
-        b=PqxRtrVdcZUI4jCZKN0bv4yXxFOj7tU5otOjsSiNGEw+wmpGqPrGl75tIX58zZ8JEI
-         Xh3rVoAnE+HXGwoMEic3rYlvrKwisGAFEcQcwAAoNNpB/rA6LdSP2Bsia0q0I8y20pls
-         EjO8ZIWX5Z5a59Xn11odMu1lZ3W4mtfn8Eh1gREtLSSQVbVG+0/qtbIou5j6HXnGoEUG
-         jeYTOgRqkfpAhdKV8FNOaGEo2uvEDJAnl1RSavt2DedLcCkik2BQOR8N+XoF1LuU1SRD
-         2L1SizCL34ejbWoUmHnlGMrWNJHZZDyD3ZTJbLLKAjZKqv9nucum5q/a6zwg6k9PkN/z
-         p6QQ==
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=5Oy6gTA/oMYuKJcGhA/xtv3SWmyfDUciochQKNFImkM=;
+        b=dQm3RKy0cn4S1d2Mby0HiWIorW5uCLkTXKWmOatxvTLGUk0BATqW9GB3Gx6uqo9HiE
+         HL28sKEqunBDI0mlKh1QGXqB0Bd9oKaDWRTwhAtDsoI5WNjbZfNKv6Jw+9wLTNIP8nWB
+         e63dRatHxsdaymGtu81Vpv9/3aHQ8x7B9gW25ABYF2K7sAcu/okgF5uTcSc9X2+divl9
+         PEYOWUVjP+WWUwGpk5zh5lGoX+WOhvtqjMSAGtpze5DimG1NVfqhrAS/YTuRwsKCftLJ
+         iaKl1Yt2qST95MQf6VeTBzriQAfSiHKcNBCR3J+WxLGUBvLd8h9V8aKx403NyHhFB2Py
+         7BEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774230490; x=1774835290;
+        d=1e100.net; s=20251104; t=1774234894; x=1774839694;
         h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :references:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=mYgZZR0kXxMZ2oWd4hYeewbulFpFFbdeDyMrMn7fieg=;
-        b=LEgi2KXfan8774eE5/DhnfiBtua7t9Nsa54WeCD1JJbBGEcC8sFkr3AML5y7naktly
-         KaRsGqRmMVrlgkzRyUkVgCN6taV+rvj+Ef6kxlLGhtPuu5w/RGDyuliR0vT71/7TyqXH
-         zojon7AKsCZS7vc5ruCRQAwPsg0kRX67xb7VNSE3/GA1rB+u44x97KO+/HwgUJpZE+f1
-         A9hq949AkmZQLarxZTe9uzXtJDFMqzcyZC7NWJdPeT949I03CAj1IAbD8K1uvcT+wWgO
-         /o7GzH9mLtveD5Zkghu8fgs5t3gww9ptqPI7l3DB8C+sOGvF1awDtkfnzjEBogw2LybB
-         ZXgg==
-X-Gm-Message-State: AOJu0Yzqn/eWG9N+M4Ore+KHZj4Yqm9tZtFiZqnrii0bh9uEVILGr6BI
-	f/rsogadrcL+4A3ixbv26qFGxA4f6j8qEaLnKLEuEzaEpjnjnQzO9mxm7pOAEtQKdV/ky+qWEv1
-	Sas9CsWH6z4Rgy++6qxfTNluj2A39tG/4UkHTPrcFwguzuXz7xdZlTVh8bScJTiDTQot6qg==
-X-Gm-Gg: ATEYQzzquGMDr7bgmIrqgmEZZF1z6CTSg4ugh3u8ahx0xKtQmFHrwtw9I5jKjG4qxKl
-	jnFhqRC0HEiykWvN24WfI2wPJ0nwCzTX1gUaXoowDaFl45whAZGTjto8qQOebEDJHpUT8VQwf6C
-	3CLQLAQ0B5Zn+TxAKdTbxe17sYTPWFxt5PEamcH4mfO9sWJT4MjRwBinnB5vEbI5xFwjqU9Szv6
-	bIrs6ID66MytloUNmJcd0vqk7mOV0rBE652IKFQsHgNMfG9XgvcpqGHWfWOCoLh7rHgKJ4u/pck
-	SrD0M16LbeuYph5Sdv7UYU2xl8LaGurRcNmS5xhRbOhwVjUz6gMatDsqJibZFltz+eSj1HyjXFA
-	Q/7DVb3E3hhMYgPYS1GzKDN+m96tUoZtpjIEhLJ1WxmPISeU9ag8t8D990lSahfv0HVeQ0Vg=
-X-Received: by 2002:a17:903:283:b0:2ae:54b2:27c7 with SMTP id d9443c01a7336-2b0827a15ffmr92050655ad.39.1774230490157;
-        Sun, 22 Mar 2026 18:48:10 -0700 (PDT)
-X-Received: by 2002:a17:903:283:b0:2ae:54b2:27c7 with SMTP id d9443c01a7336-2b0827a15ffmr92050515ad.39.1774230489762;
-        Sun, 22 Mar 2026 18:48:09 -0700 (PDT)
+        bh=5Oy6gTA/oMYuKJcGhA/xtv3SWmyfDUciochQKNFImkM=;
+        b=eFCko1y5+jvncx8UR6UG1jS84GFHYHH3/lPaUYRFpgFsT4ZF4gt/94+PB1dD8BgFmp
+         IwoF+1SgYwdXBk42FjZ7PMNCvANNrpVlC9nYiRhCTq3OmCdMS7OULn+Zl8EjSD51A1JG
+         BXIP8wCRjwd0LoQeK605yubk706Nw2bySlLSfNumMd5hUTzZHL53iLRDkbo5XSDopeQj
+         +gB9LJ2Zc1yjej3UWCnIxsD1B7mgseVhCrQ4YjBjvVHdk/8COyUT50qTY8aE/OtK9VNP
+         LLca6HLQi4W2fHVw9dAqbWDIwUx48lskJx45E5QQNhXPjao/jujm97xwtP6oW9nlw+Mr
+         Ztgg==
+X-Gm-Message-State: AOJu0YzscQSY8+uETmmdNZ2z0Wgypik/XrGLW1twgXzFy4TuX3i2DwUM
+	G9fuDtE0yDYbNF+4Vg86nJCekkwsvhftEinC5Ef2ZhEa8zbOrfOGTAV2lrXzkZzVxQmbCoA6u2b
+	Z2nEHDG48HTXvgd0UdLqnwQvemNKkkX7TVxsknDHQ5PijWNvyd7t5RawIe+Pj6VHx7axdKab3uk
+	4Ks/CfcNwCyFW+YKFwp48F3qzFaj5OPXGuUW8yK4kFDmwiOg==
+X-Gm-Gg: ATEYQzwxMvUPiK6iET9SfNYXwi+GUtJH7Eq0UluFdC9nLfN2GCvUiv7nc8P8EilwxPK
+	gAJy7ktwe3svySh1ht8V4IYAaWEsrxEdIZ1PDiXDT7VA69KWTBULTjwgw48w/iNe/s8bWdqhAQV
+	iw9SdwaU2l7uF3n3GNT5Y+gFRzwYLoQ1w2LPM69WZSHxwg1MnohjEGxy7c7IRFhfAC43BrIwtLz
+	vCWW5MU1bi4B/hQvQnBHz+7wW8d+t+YJpUE7IRsMAh4+RjtneYnPKz4qMoD6xUFo7srfpFyt5Nj
+	V4J4vV8kZE2iwnS4pDHglyhiev1d1KR7x7xLvmgbmg9Sq7jqqOx32h7pB0R7N6IC8y4xwnUL+1e
+	EPij53FpoFN1DTt4YiY19Yx526XQVfH3gN81cp75fnHDH/Tq4feJErx0agbhw3avIQ5t8bNg=
+X-Received: by 2002:a17:902:e943:b0:2ae:80bc:9bfb with SMTP id d9443c01a7336-2b0827bc880mr99125145ad.40.1774234894398;
+        Sun, 22 Mar 2026 20:01:34 -0700 (PDT)
+X-Received: by 2002:a17:902:e943:b0:2ae:80bc:9bfb with SMTP id d9443c01a7336-2b0827bc880mr99124865ad.40.1774234893807;
+        Sun, 22 Mar 2026 20:01:33 -0700 (PDT)
 Received: from ?IPV6:2001:8003:4a36:e700:56b6:ee78:9da2:b58f? ([2001:8003:4a36:e700:56b6:ee78:9da2:b58f])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0836554acsm115719105ad.51.2026.03.22.18.48.08
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0836a3066sm90777125ad.75.2026.03.22.20.01.31
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 22 Mar 2026 18:48:09 -0700 (PDT)
-Message-ID: <fce43d76-de74-4767-9435-c0fde65d37ec@redhat.com>
-Date: Mon, 23 Mar 2026 12:48:06 +1100
+        Sun, 22 Mar 2026 20:01:33 -0700 (PDT)
+Message-ID: <8cd00eed-58d1-4c34-8892-fff34504c2e1@redhat.com>
+Date: Mon, 23 Mar 2026 14:01:29 +1100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -86,94 +88,134 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/5] xfsdump, xfsprogs distro builds and DEBUG=
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfsrestore: remove failing assert from
+ noref_elim_recurse
+To: linux-xfs@vger.kernel.org
 References: <20260224071712.1014075-1-ddouwsma@redhat.com>
- <nxyxi6y5hdpr3jpmr3aehoaklpe53qqdrpkf27ejn4ospx4rin@6oib2fgjv3hm>
+ <20260224071712.1014075-5-ddouwsma@redhat.com>
 Content-Language: en-US, en-AU
 From: Donald Douwsma <ddouwsma@redhat.com>
-In-Reply-To: <nxyxi6y5hdpr3jpmr3aehoaklpe53qqdrpkf27ejn4ospx4rin@6oib2fgjv3hm>
+In-Reply-To: <20260224071712.1014075-5-ddouwsma@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 14/3/26 00:12, Andrey Albershteyn wrote:
-> On 2026-02-24 18:17:07, Donald Douwsma wrote:
->> tldr; Fedora builds with -DDEBUG, is that what folk want or expect?
->>
->> We see cases from the field where xfsrestore aborts on an assert(3).
->> In each case there's a real problem that needs to be fixed, but these
->> problems are preventing folk from restoring their data. With the asserts
->> suppressed or removed xfsrestore usually does something sane enough, at
->> worst leaving restored content in the orphanage where a user can find
->> it.
->>
->> This was notably seen with the original xfsdump bind mount fix, now
->> we're seeing asserts fire during cumulative restores in
->> noref_elim_recurse.
->>
->>   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
->>
->> This appears to be caused by a rename to within the tree between restore
->> levels, or a combination of modifications during occurring during the
->> dump. Fixing it will likely require changes in noref_elim_recurse, or
->> tree_post, to ensure elements of the tree are created for these edge
->> cases.
->>
->> But why are we seeing assert(3) active in Fedora based distro builds?
->>
->> xfsprogs and xfsdump m4/package_globals.m4 shows builds should default
->> to DEBUG and xfsdump doc/INSTALL talks about how to turn off asserts and
->> create an optimized build, but only Debian has its build rules in-tree,
->> where they set DEBUG=-DNDEBUG.
->>
->> Building locally on Fedora or similar gets varied results with recent
->> Fedora versions building as if DEBUG=-DNDEBUG was set within the realm
->> of configure or autoconf, which may be misleading people.
->>
->> But for Fedora release builds we can see that they're building with
->> DEBUG=-DDEBUG resulting in gcc called with -DDEBUG in the build logs.
->>
->>   https://src.fedoraproject.org/rpms/xfsdump
->>   https://kojipkgs.fedoraproject.org//packages/xfsdump/3.2.0/4.fc44/data/logs/x86_64/build.log
->>
->>   https://src.fedoraproject.org/rpms/xfsprogs
->>   https://kojipkgs.fedoraproject.org//packages/xfsprogs/6.18.0/2.fc44/data/logs/x86_64/build.log
->>
->> I don't think the intention was to have these build as DEBUG, but that
->> seems to be the current result. But before I dig into this further can I
->> confirm what people think this should do?
->>
->> The following series is illustrative of the changes to build xfsdump
->> cleanly with DEBUG=-DNDEBUG, or the type of downstream workarounds
->> required to help end users hitting problems for the status quo.
->>
->> Don
->>
->> Donald Douwsma (5):
->>   xfsrestore: remove unused variable strctxp
->>   annotate variables only used for assert
->>   xfsrestore: include TREE_DEBUG all builds
+On 24/2/26 18:17, Donald Douwsma wrote:
+> We are getting reports from the field where cumulative restores are
+> aborting due due to a failing assertion.
 > 
-> First 3 patches looks good to me to include, not sure about the
-> rest and the original use of the those asserts.
+>   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
 > 
+> This appears to be caused by a rename within the tree between restore
+> levels, or a combination of modifications occurring during dump.
+> Fixing it will likely require changes in noref_elim_recurse and
+> tree_post, to ensure elements of the tree are created for these edge
+> conditions. Given the state of xfsdump this is a bit risky for
+> maintenance streams.
 
-Thanks for looking over these.
+With some more digging it looks like this is triggered during subtree
+restores. A cumulative restore started by excluding a specific subtree
+with -s doesn't cause subsequent restores to prune the non subtree
+sections from the restore.
 
-I've done a bit more digging and have a reproducer for the recent
-noref_elim_recurse assert, with what I know now the tree debug
-messages may not be as useful.
+This leads to the assert firing when in noref_elim_recurse when its
+asked to handle a rename for a directory not created due to the
+subtree restriction.
 
-Regarding the assert stuff, its a bit of a can of worms, the
-documentation in the build system is misleading, when it was
-written the idea seems to have been to have debug and release
-builds, but Fedora/rpm distros didn't follow that.
+mkdir -p /mnt/scratch/dir1/dir2/dir3
+mkdir -p /mnt/scratch/restore_me/dirA/dirB/dirC
 
-Since then it looks like most packages have moved to assert(3),
-being active for all builds. So perhaps its better to keep it
-that way and remove some of the unused DEBUG options from the
-docs and build scripts.
+xfsdump -L label -M media -l0 -f /tmp/l0.dump /mnt/scratch
+
+mv /mnt/scratch/dir1/dir2 /mnt/scratch/dir10
+
+xfsdump -L label -M media -l2 -f /tmp/l2.dump /mnt/scratch
+
+dir=$(mktemp -d /mnt/scratch/dir_XXX)
+xfsrestore -r -f /tmp/l0.dump -s restore_me $dir
+xfsrestore -r -f /tmp/l2.dump $dir
+## xfsrestore: tree.c:1369: noref_elim_recurse: Assertion `isrealpr' failed.
+
+The subtree filter state was saved in the state file
+
+[root@rhel8 ~]# hexdump -C /mnt/scratch/dir_ILX/xfsrestorehousekeepingdir/state | grep restore_me
+00005010  72 65 73 74 6f 72 65 5f  6d 65 00 00 00 00 00 00  |restore_me......|
+[root@rhel8 ~]# 
 
 
+> While current builds have assert(3) active, remove this one allowing
+> xfsrestore to continue, warning on failing renames for directory nodes
+> that haven't been created. Once the full tree is built referenced
+> directories will end up in the orphanage allowing for user recovery.
+
+This didn't end up in the orphanage, which seems to suggest that the
+subtree option had some affect.
+
+[root@rhel8 xfsdump-dev]# restore/xfsrestore -r -f /tmp/l2.2.dump $dir
+restore/xfsrestore: using file dump (drive_simple) strategy
+restore/xfsrestore: version 3.2.0 (dump format 3.0) - type ^C for status and control
+restore/xfsrestore: searching media for dump
+restore/xfsrestore: examining media file 0
+restore/xfsrestore: dump description: 
+restore/xfsrestore: hostname: rhel8
+restore/xfsrestore: mount point: /mnt/scratch
+restore/xfsrestore: volume: /dev/vdc
+restore/xfsrestore: session time: Mon Mar 23 13:25:57 2026
+restore/xfsrestore: level: 2
+restore/xfsrestore: session label: "label"
+restore/xfsrestore: media label: "media"
+restore/xfsrestore: file system id: cb6c9beb-45a7-42b4-b125-502ed787e4fb
+restore/xfsrestore: session id: 3832f932-2b4f-4f87-841d-f071e4cb3a1c
+restore/xfsrestore: media id: 58d8ce69-90a7-4164-901d-4a64a0f9ba69
+restore/xfsrestore: using online session inventory
+restore/xfsrestore: searching media for directory dump
+restore/xfsrestore: reading directories
+restore/xfsrestore: 16 directories and 21 entries processed
+restore/xfsrestore: directory post-processing
+restore/xfsrestore: WARNING: unable to rename dir dir1/dir2 to dir orphanage/67109056.572736669: No such file or directory
+restore/xfsrestore: restore complete: 0 seconds elapsed
+restore/xfsrestore: Restore Summary:
+restore/xfsrestore:   stream 0 /tmp/l2.2.dump OK (success)
+restore/xfsrestore: Restore Status: SUCCESS
+[root@rhel8 xfsdump-dev]#
+
+[root@rhel8 xfsdump-dev]# find $dir
+/mnt/scratch/dir_P67
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir/state
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir/namreg
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir/tree
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir/dirextattr
+/mnt/scratch/dir_P67/xfsrestorehousekeepingdir/dirattr
+/mnt/scratch/dir_P67/restore_me
+/mnt/scratch/dir_P67/restore_me/dirA
+/mnt/scratch/dir_P67/restore_me/dirA/dirB
+/mnt/scratch/dir_P67/restore_me/dirA/dirB/dirC
+/mnt/scratch/dir_P67/restore_me/dirD
+[root@rhel8 xfsdump-dev]# 
+
+> 
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> ---
+>  restore/tree.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/restore/tree.c b/restore/tree.c
+> index bf89c6a..81666ac 100644
+> --- a/restore/tree.c
+> +++ b/restore/tree.c
+> @@ -1404,12 +1404,13 @@ noref_elim_recurse(nh_t parh,
+>  				Node_free(&cldh);
+>  			}
+>  
+> +			/* Process renames for directories that have been created.
+> +			 */
+>  			if (isrenamepr) {
+>  				nrh_t nrh;
+>  				node_t *renamep;
+>  
+>  				assert(isrefpr);
+> -				assert(isrealpr);
+>  				ok = Node2path(cldh,
+>  						path1,
+>  						_("tmp dir rename src"));
 
