@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E85453B9DA5;
-	Mon, 23 Mar 2026 15:22:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5B93BADA6;
+	Mon, 23 Mar 2026 15:29:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774279352; cv=none; b=VvzHCHegafVJf0nBNZ5vZOhUv6xi+8wuCGF9NmsyebYQwrwn+UD6YRzGjkbtW3fHdRAKsXg0UlavAurkX8AueYV6u+/1Gb9nqixFNRVAgk4wUy2y0j/CjkrYAwV7ofNb9WkWbU86QPafl/1oF0XfpVIPrIDpQcW/mlUTVhCShL8=
+	t=1774279784; cv=none; b=rzYeWbWUuoQosktwW+rHIM2CRCd8i8CSpvLNmQRtSq00tR7O/gKkuflOcVE2JC+rZ+w40f1tayjfSEQLUeAbKYMqyt2D4mS0lxaY33Xk2TZXghR2I4Non/upROyvdRihTmU5buf1Qpeg7vptbfgSfkcnsCgaqdbJD3kS9mJGyDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774279352; c=relaxed/simple;
-	bh=qV7DpFkV+nsnn0tP+Ge2akl4zG5VfoW+Sh+vQpJP5AM=;
+	s=arc-20240116; t=1774279784; c=relaxed/simple;
+	bh=9lta+tyRm/gU47+8BBid2B7jJDSrye7R27Jln0AXetI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KY++Wf2W3G3yvOTu8Evqc50hoZKCBYBNps92C5MU4OaCvmXUZfXLS4QkghgM7icIFegyeR3Q6ZyaKd2o9MbFKyfTzdspRIZXInmzLT20gTz4R4QZTMcZ0YkYuW1MAccI+kkWn3uyL4SZyH02E7nUP9+Z5d6g5KOoc/h/NJWNcjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q0oZuZxR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nCEqJ1d4y2AHDeIjBBBStUqz8UZRt+R92PYnVAPPH64w3Isq7JF3z3GVxhk8bGAgDf613O080QRYew/sWdjPsGVFNBZiSqOO1Jk+U5fsTS0emNqScBwwU0XyiC/BkfqkOfk79e8K8Avrek+yqQLr55pcWDEFG6zM7BAoE0b4xgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rasG51Ui; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q0oZuZxR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD27FC2BC9E;
-	Mon, 23 Mar 2026 15:22:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rasG51Ui"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9CEBC4CEF7;
+	Mon, 23 Mar 2026 15:29:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774279351;
-	bh=qV7DpFkV+nsnn0tP+Ge2akl4zG5VfoW+Sh+vQpJP5AM=;
+	s=k20201202; t=1774279783;
+	bh=9lta+tyRm/gU47+8BBid2B7jJDSrye7R27Jln0AXetI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=q0oZuZxRyOjCleQhidJdnwzAG6fRrhr3J9de6D4XQu+tJyoLPAeh7mmRcsIhwt3nl
-	 LfhRnzvDDBM6o3OukFM9y+4SNBtxOPeIeNEYL/J+7Ftol5g6Hz/gD4CV6KE/8KAUL+
-	 uuWXt0oU/1udRHQTHgn1ohqQqp2EyWACuMV3qlSkYYjPV5ewMUM86cl8rnTC0g8exo
-	 xkM1lLDXH7P92Kb0BMYeSAHoB7jdAcLyUAlh6g/TiVQTdayHHi8u3CPY/25CezVnPK
-	 s5pVs6VjZRZ+HPULb+FJFFmPgCTLUjY6GeFSP6MRKtiAlF0aao/scoa4tCuiW6n4Zl
-	 ha4/7a2N2IBmQ==
-Date: Mon, 23 Mar 2026 08:22:31 -0700
+	b=rasG51Ui2W3fDtHZhLw8ky6R37Z4HXcSUA4MmyqI6uQ/XGjOVYOkMKvvklqnSJZfc
+	 34TqDcMhUHJXvHua3VMvA12FhNnSmA78otdA/xf4C3+Cb9WM7FRgGQ4ot5TNtw1+Rk
+	 49Ntc13gHwGRoZLbmLZq1p8bnujJyNBhusZrqYvrfaHcSSQXL2SMbj/HuTPSzqz9kr
+	 JB6JXnzWihVujw0qadjKOGSPK6y+6fU8xATZ00RdtZyeahvHpyxwa4BP+eEt+pIKJK
+	 yQilOQu5PoAO1AEYAELI6sNJ/UJSfCr3AxqvsmaG+5yfEEtNKu/RSs1H5Yzz7LkGLh
+	 9NTgY4e58BgxA==
+Date: Mon, 23 Mar 2026 08:29:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-	Tal Zussman <tz2294@columbia.edu>, axboe@kernel.dk,
-	linux-block@vger.kernel.org
-Subject: Re: [Bug][xfstests xfs/556] inconsistent {HARDIRQ-ON-W} ->
- {IN-HARDIRQ-W} usage
-Message-ID: <20260323152231.GG6223@frogsfrogsfrogs>
-References: <20260319194303.efw4wcu7c4idhthz@doltdoltdolt>
- <20260320163444.GE6223@frogsfrogsfrogs>
- <acDbFtQw0mom798e@infradead.org>
+To: Theodore Tso <tytso@mit.edu>
+Cc: Anand Jain <asj@kernel.org>, linux-ext4@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+	hch@infradead.org
+Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
+ collisions
+Message-ID: <20260323152943.GH6223@frogsfrogsfrogs>
+References: <cover.1774092915.git.asj@kernel.org>
+ <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
+ <20260323041624.GA11453@mac.lan>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,33 +46,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <acDbFtQw0mom798e@infradead.org>
+In-Reply-To: <20260323041624.GA11453@mac.lan>
 
-On Sun, Mar 22, 2026 at 11:17:58PM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 20, 2026 at 09:34:44AM -0700, Darrick J. Wong wrote:
-> > --- a/fs/iomap/bio.c
-> > +++ b/fs/iomap/bio.c
-> > @@ -8,7 +8,15 @@
-> >  #include "internal.h"
-> >  #include "trace.h"
-> >  
-> > -static void iomap_read_end_io(struct bio *bio)
-> > +struct iomap_failed_bio {
-> > +	struct list_head io_list;
-> > +	struct bio *bio;
-> > +};
+On Sun, Mar 22, 2026 at 11:16:24PM -0500, Theodore Tso wrote:
+> On Sat, Mar 21, 2026 at 07:55:19PM +0800, Anand Jain wrote:
+> > statfs() currently reports f_fsid derived from the on-disk UUID.
+> > Cloned block devices share the same UUID, so distinct ext4 instances
+> > can return identical f_fsid values. This leads to collisions in
+> > fanotify.
+> > 
+> > Encode sb->s_dev into f_fsid instead of using the superblock UUID.
+> > This provides a per-device identifier and avoids conflicts when
+> > filesystem is cloned, matching the behavior with xfs.
 > 
-> Between this and the blockdev dontcache work I really wish we could
-> have a generic offload using a percpu lit and workqueue.
+> As I observed in [1] this leads to collisions when for removable block
+> devices which can be used to mount different file systems.
+> 
+> [1] https://lore.kernel.org/all/20260322203151.GA98947@mac.lan/
+> 
+> > Place this change behind the new mount option "-o nouuid" for ABI
+> > compatibility.
+> 
+> I *really* hate this mount option.  It's not at all obvious what it
+> means for a system administrator who hasn't had the context of reading
+> the e-mail discussion on this subject.
 
-<shrug> For IO errors I don't think it's urgent, but yes it would be
-very nice to have a single mechanism for "kick IO completion to a
-workqueue" type things.
+I don't love 'nouuid' either, because it means something completely
+different in XFS.  'fsid_from_dev' or something would at least be
+clearer about what it's doing...
 
-> Also I don't think we need the separate list here, a linked list using
-> bi_next should be sufficient and avoid the allocation in the failure
-> path.
+> As I stated in [1], I think the f_fsid is a terrible interface that
+> was promulgated by history, and future usage should be strongly
+> discouraged, and the wise programmer won't use it because it has
+> significant compatibility issues.
+> 
+> As such, my personal preference is that we not try to condition it on
+> a mount option, which in all likelihood almost no one will use, and
+> instead just change it so that we hash the file system's UUID and
+> block device number together and use that for ext4's f_fsid.
 
-For now, I'll change this patch to use a bio_list.
+...but why not just set fsid to some approximation of the dev_t like
+XFS and be done with it?
+
+	st->f_fsid = u64_to_fsid(huge_encode_dev(mp->m_ddev_targp->bt_dev))
+
+There are a few other single-bdev filesystems that do this.
 
 --D
+
+> Thoughts, comments?
+> 
+> 						- Ted
+> 
