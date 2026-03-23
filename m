@@ -1,108 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4469F3AF644;
-	Mon, 23 Mar 2026 16:44:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC1F3BED59;
+	Mon, 23 Mar 2026 17:22:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774284287; cv=none; b=r53WQqhnzBuJAwwlcDYBHbUotR4OUgPyu/9SxiCIjjgDWjDwvxV7rhhcai1bKWpiFtWJ62kEFbzHCujr8bk86gYi2WqifJ+Q5E97UH/OGSv/+PNs+ZiQtzxuxNCb8wJu9e9udBAjIWnxLqLAEMFuowJ5ope5g9Ix4iMjhftJK7g=
+	t=1774286530; cv=none; b=YlcQnQTvd4z2jwotunrVAK8xwiyudjD9ll7zzIfQlubxVTQyIOk4BgQW8eykEdUUNowXUa5rNURGsMbvA62uv2ftQ3WpGcHLHFMJ16ihME5+CXhPZW+Mt+TVvW3Q92S2n+rEwaAchUwq+DDlx3w/Jj1MHf2aRWmLfI0XYxjvnxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774284287; c=relaxed/simple;
-	bh=1+A9z4oo4a20DVlIgkoPybZ1mZVXGZUNa9GfgN9BBcE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WlV6gExUuOYbDHEUFyV9XOuEYYB7aUrsjXSp5sTuxtxI25pV9zg07f8Ou60FjqG2G8o504ehsNx/k+wRh9PUghYz5EpvTF7DtDCIAhJS8TnWxhty+eTVk2vR2Pt/a1FJA36GTxwkLBZTYX1f3K7lMM21NHK39xfQMvbATjnwVeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sQGZL9Ti; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774286530; c=relaxed/simple;
+	bh=sJh27ACHhMobpUq8jC5k7ysmfrpJATZRBiIZaWg4O3o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=s/1LNFSHRy2UhdIq5BWub27077db1CmF2ckJyDcHdutLpAfZAaAL0wXJFZ2g59mhoIiSL5fHRuURJmM48ugQWeWhWm+DbPi0L06/5L97fjcOnC0h0Q7TUzOK7TXd1mJf4HGcKNdHaA/qp+Kz2nMAN22P5dQ/VyTxvr6Hn0tKVSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dby7Vm9d; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sQGZL9Ti"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC788C2BC9E;
-	Mon, 23 Mar 2026 16:44:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dby7Vm9d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65394C4CEF7;
+	Mon, 23 Mar 2026 17:22:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774284287;
-	bh=1+A9z4oo4a20DVlIgkoPybZ1mZVXGZUNa9GfgN9BBcE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sQGZL9TiRdrb/TBLkiNI/UjRydjZLNKysGdxkZ2nRGm6STTztk16h/O1g65zHBe/W
-	 GEchgzv+k8u6cdutNdg/lL/4H5aL8uIfhBYqfp48qB+5iVesnqqwimaJc5oADL5njL
-	 w1ajVIWg1Mka+H0F/qY01sgmWpJE0u78gGEGgtPrcCA3NaGZqsSBsV3EZSwgSeQ/CQ
-	 Q5UEWVnKsQnEUJ8HxvXlfVUrYhROtgXNKdPShdjLp2y96P2PMRE8wjpM2cLWYnrdPz
-	 Q/PT10W6eRzhr5Nf8T20+AJ6nRfIVTVYQcJGQe/vveMGrjGSnfg8mtYHhGrCg544L/
-	 rCEci3+X0PTtw==
-Date: Mon, 23 Mar 2026 09:44:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Theodore Tso <tytso@mit.edu>
-Cc: Anand Jain <asj@kernel.org>, linux-ext4@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	hch@infradead.org
-Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
- collisions
-Message-ID: <20260323164446.GB6212@frogsfrogsfrogs>
-References: <cover.1774092915.git.asj@kernel.org>
- <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
- <20260323041624.GA11453@mac.lan>
- <20260323152943.GH6223@frogsfrogsfrogs>
+	s=k20201202; t=1774286530;
+	bh=sJh27ACHhMobpUq8jC5k7ysmfrpJATZRBiIZaWg4O3o=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Dby7Vm9dM02Ac4qaNL70qRL/55VnycO8naCzatwpmUOEzKCjPVxcgzlfFLG2kMjse
+	 GcmsTwJJGWCFGKSexeK0Sshd2x2eHG08sMEyBPHD43kKc0hqmVmghNKLa+KdeWaTmv
+	 J5tTqcsF+Au3FPeipV7A+rGNuycVFvWXGGkfrkepjrBNc3XP8cteR9z/aq2shtSWW/
+	 p6QIRVuvKbT9NM3yVo5+o2SmSLRoTjLZQes/uAMNfE5XSC2MFzEmxkVARWkrj3AOPd
+	 hUfVsOR8OIomxrr35RicBui3RH9F1ykFzUZ4T6gNYHctLDOxDrfJncXksRwiEj4yqV
+	 dVwPUoJtlU+jw==
+From: Kees Cook <kees@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Kees Cook <kees@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH] xfs: Replace strncpy() with strscpy_pad() in tracepoint error paths
+Date: Mon, 23 Mar 2026 10:22:09 -0700
+Message-Id: <20260323172204.work.979-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260323152943.GH6223@frogsfrogsfrogs>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2194; i=kees@kernel.org; h=from:subject:message-id; bh=sJh27ACHhMobpUq8jC5k7ysmfrpJATZRBiIZaWg4O3o=; b=owGbwMvMwCVmps19z/KJym7G02pJDJkHyw7UyMonhBqGXfu3e6lgs0NW/pLCldvzN/9Zca5T7 z9bW5NrRykLgxgXg6yYIkuQnXuci8fb9nD3uYowc1iZQIYwcHEKwETsIhgZWicWPdxYX3Nsq2n+ 6Wu5j/dHhInItk7Kfs42kT0/4AXvOoZ/mho7LjzfO3EJB9uKrTuzijc8sf3N0j/394sZXamSB7Q ecwAA
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 23, 2026 at 08:29:43AM -0700, Darrick J. Wong wrote:
-> On Sun, Mar 22, 2026 at 11:16:24PM -0500, Theodore Tso wrote:
-> > On Sat, Mar 21, 2026 at 07:55:19PM +0800, Anand Jain wrote:
-> > > statfs() currently reports f_fsid derived from the on-disk UUID.
-> > > Cloned block devices share the same UUID, so distinct ext4 instances
-> > > can return identical f_fsid values. This leads to collisions in
-> > > fanotify.
-> > > 
-> > > Encode sb->s_dev into f_fsid instead of using the superblock UUID.
-> > > This provides a per-device identifier and avoids conflicts when
-> > > filesystem is cloned, matching the behavior with xfs.
-> > 
-> > As I observed in [1] this leads to collisions when for removable block
-> > devices which can be used to mount different file systems.
-> > 
-> > [1] https://lore.kernel.org/all/20260322203151.GA98947@mac.lan/
-> > 
-> > > Place this change behind the new mount option "-o nouuid" for ABI
-> > > compatibility.
-> > 
-> > I *really* hate this mount option.  It's not at all obvious what it
-> > means for a system administrator who hasn't had the context of reading
-> > the e-mail discussion on this subject.
-> 
-> I don't love 'nouuid' either, because it means something completely
-> different in XFS.  'fsid_from_dev' or something would at least be
-> clearer about what it's doing...
-> 
-> > As I stated in [1], I think the f_fsid is a terrible interface that
-> > was promulgated by history, and future usage should be strongly
-> > discouraged, and the wise programmer won't use it because it has
-> > significant compatibility issues.
-> > 
-> > As such, my personal preference is that we not try to condition it on
-> > a mount option, which in all likelihood almost no one will use, and
-> > instead just change it so that we hash the file system's UUID and
-> > block device number together and use that for ext4's f_fsid.
-> 
-> ...but why not just set fsid to some approximation of the dev_t like
-> XFS and be done with it?
-> 
-> 	st->f_fsid = u64_to_fsid(huge_encode_dev(mp->m_ddev_targp->bt_dev))
-> 
-> There are a few other single-bdev filesystems that do this.
+Replace the deprecated[1] strncpy() with strscpy_pad() in the
+xfile_create and xmbuf_create tracepoints.
 
-/me reads the rest of both threads, realizes the answer is "because you
-can eject media, mount another media with the same fs, and bizarrely
-they produce the same fsid."
+Both tracepoints use file_path() to resolve a pathname into
+__entry->pathname (a char[MAXNAMELEN] trace ring buffer field). On
+failure, the error path overwrites the buffer with the string literal
+"(unknown)" via strncpy(). The original strncpy() zero-pads the
+remaining 246 bytes (MAXNAMELEN is 256, "(unknown)" is 10 bytes
+including NUL).
 
-I'll point out that for the filesystems that base fsid off of a block
-device, perhaps we should mix in the diskseq to prevent that problem?
+strscpy_pad() preserves this zero-padding, which matters because the
+destination is a trace ring buffer entry: ring buffer slots are not
+zeroed on allocation, and the raw buffer is readable by userspace via
+tracefs. The zero-padding ensures no stale data remains in the
+buffer after the error path overwrites it.
 
-But then someone said the magic words "IMA and fanotify also use fsid"
-and /me backs away from yet another opportunity to argue about
-open-coded file handles from legacy Unix.
+The source is a 10-byte string literal into a 256-byte destination,
+so there is no behavioral change.
 
---D
+Link: https://github.com/KSPP/linux/issues/90 [1]
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ fs/xfs/scrub/trace.h | 3 +--
+ fs/xfs/xfs_trace.h   | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 39ea651cbb75..46c420f51129 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -980,8 +980,7 @@ TRACE_EVENT(xfile_create,
+ 		__entry->ino = file_inode(xf->file)->i_ino;
+ 		path = file_path(xf->file, __entry->pathname, MAXNAMELEN);
+ 		if (IS_ERR(path))
+-			strncpy(__entry->pathname, "(unknown)",
+-					sizeof(__entry->pathname));
++			strscpy_pad(__entry->pathname, "(unknown)");
+ 	),
+ 	TP_printk("xfino 0x%lx path '%s'",
+ 		  __entry->ino,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 813e5a9f57eb..9f9fb86097ed 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -5101,8 +5101,7 @@ TRACE_EVENT(xmbuf_create,
+ 		__entry->ino = file_inode(file)->i_ino;
+ 		path = file_path(file, __entry->pathname, MAXNAMELEN);
+ 		if (IS_ERR(path))
+-			strncpy(__entry->pathname, "(unknown)",
+-					sizeof(__entry->pathname));
++			strscpy_pad(__entry->pathname, "(unknown)");
+ 	),
+ 	TP_printk("dev %d:%d xmino 0x%lx path '%s'",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-- 
+2.34.1
+
