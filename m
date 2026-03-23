@@ -1,82 +1,85 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E2B33C53F
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 07:38:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BF13630B8
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 07:51:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774251496; cv=none; b=WihbVjcA9j5D+s7nQEhRQlD9LixqsRHnOZgGjHq3WdIu86+LBjxl4kEr60JqpVq58wErTzMWGSbCRM2xutzR4dOqYUnMXkId+XlHbjMOt1DC4UJrhj64n3MQfXYbd8f6AOVGqJsAVPRhYl1tcbdYzOschgUvJxp0SVXM0GXYL6A=
+	t=1774252267; cv=none; b=RKNxnGg2LMl+ja9awpFB6CKqPcwghhSj+m2CB+7joHY5sTXo9THCN0KjPh4EjRhlpPGC8mjji8PmtAoEiIFf4raW5rYm1Rxi8ptmU+AhTQmB9dWHuv2B+UakA6uRGZF7HS82fdmzDkW8QJim/V7ma1A9A8oPAryH8s3qzwdHmac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774251496; c=relaxed/simple;
-	bh=W8zk4L8XulFSN42zEB2JwOJUyYb0R04I1cEQViXzRJo=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZNNhn1xAhs18VSz+CadgICQ2XRyWP+DyLVUPYJ7QAQXsMwXuUMEIfN0ItaplTh//YOMGGfuXP0sFUKXUsRg85UFQptQJ1M/Ua+BwOx4cDBhzy1ipJRgaV4ZO4bdoeGkHkiR8CK/ASulwaH+iEQJ9XxFRtfvkEoQLGRR6AQroZhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Mb/La/j3; arc=none smtp.client-ip=113.46.200.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1774252267; c=relaxed/simple;
+	bh=h99xWyQzmiQbd9A46/MI3PbFKW5326KQIlJz94iXc+Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OYe5KdITLYg2AlLmQ4paTPtNlEdZEG6u6RWxFvHldZPIqTNYVz8WpLgFUqyNrojh2xtgV4NtE+sIATB7XP1Os72j5KODyFWccnZoH8+Ng8eUnqtkvyorLH+Cy11z89cafwQljAtRcd/Or2M8HLQAejtVcnKoOmYd4pvuhpubYyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kPGfZs5s; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Mb/La/j3"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=Vdmhnl+GuPSSDnJOAdLMwXcxfnW2GGDGl9PmEtX0ccg=;
-	b=Mb/La/j3AS+m2zJSh7ZKvHpw+eyQE20Ng8zHq1ZIxcyrhBhjbbuw44kWx5nGpwD4EU4DbgW2r
-	SAQMkeD429c0CIrGQ3ulLGjA+zqxyJdTQPpcLuUEp+tzt+oObusqTpcK/clwSXQL/ACsKImaYTP
-	Fa8H1KHXkLx3h+7vqqgYCAM=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4ffPyD5s7SzcZyP;
-	Mon, 23 Mar 2026 15:32:20 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id DB3BE404AD;
-	Mon, 23 Mar 2026 15:38:08 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 23 Mar 2026 15:38:08 +0800
-Received: from localhost (10.50.85.155) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Mon, 23 Mar
- 2026 15:38:08 +0800
-Date: Mon, 23 Mar 2026 15:33:38 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: <djwong@kernel.org>, <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
-	<david@fromorbit.com>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<yangerkun@huawei.com>, <lonuxli.64@gmail.com>
-Subject: Re: [PATCH v3 1/2] xfs: fix ri_total validation in
- xlog_recover_attri_commit_pass2
-Message-ID: <acDs0lV_O3tkKpKc@localhost.localdomain>
-References: <20260320021130.2936657-1-leo.lilong@huawei.com>
- <20260320021130.2936657-2-leo.lilong@huawei.com>
- <acDaZj40D3-j2Y50@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kPGfZs5s"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=s1utFNm2tD8V6GA+ERfcXuGuhFJtp2hs6EapCHxZsfI=; b=kPGfZs5ssrKg/zFFbFeje1qDpJ
+	DVNtpHasGllbWAZTdO5noUf7L6ayZVWwJ/DhxqqbnyPk9IoaI4KJ75jd1sOdEqtF0N2lV3i600mG7
+	3nWytgxr3oY78JU15rH+rBabpmBIJWiM8V16ixg0gLDC3X57yazyXWbwW0ow71HFkxM5H0fXvzrC3
+	QmbWuyw3MYnWF3VII9/Szo1PCoDEWhM0PBXBDloH3xWLvvW0eEV4z9jGNAzbtAGFzXV+6UxHe50T4
+	u2l3+rXxFfn20w3Ihkdf/q8W3yULlA9OGd1PNKyDdF26XSsGkFudaRcDFbaJoOGd8pNF9xX4SfBx5
+	StF4/h/Q==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w4a41-0000000GEeM-1hmN;
+	Mon, 23 Mar 2026 07:51:06 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>,
+	Brian Foster <bfoster@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: buffer cache simplification v6
+Date: Mon, 23 Mar 2026 08:50:50 +0100
+Message-ID: <20260323075102.2952705-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <acDaZj40D3-j2Y50@infradead.org>
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sun, Mar 22, 2026 at 11:15:02PM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 20, 2026 at 10:11:29AM +0800, Long Li wrote:
-> > This problem may cause log recovery failures. The following script can be
-> > used to reproduce the problem:
-> 
-> Can you add this to xfstests, please?
+Hi all,
 
-Okay.
+this series has a few old patches that simplify the LRU handling, and
+moves back to only having a per-buftarg hash now that the buffer hash
+is using the scalable rhashtable.  While some of this looks like
+performance work, performance and scalability is unchanged even on the
+80 core dual socket system I test this on.  Besides cleaning up the
+code nice, it also happens to fix a syzcaller reported use after free
+during buffer shutdown, which happened incidentally because of how the
+tear down of the buftarg vs the perag structures is handled.
 
-> 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> 
+Changes since v5:
+ - fix whitespace damage
 
-Thanks for your review.
+Changes since v4:
+ - don't drop the required first patch from the sent out series.
 
-Long Li
+Changes since v3:
+ - split the change to handling how referenced buffers on the LRU
+   are handled into a separate patch
+
+Changes since v2:
+ - mark b_hold as signed in patch 1 before removing it in patch 2
+ - document the changed locking in xfs_buf_rele_cached.
+
+Changes since v2:
+ - add more details and a link to a commit message
+
+Diffstat:
+ libxfs/xfs_ag.c |   13 ---
+ libxfs/xfs_ag.h |    2 
+ xfs_buf.c       |  237 +++++++++++++++++++-------------------------------------
+ xfs_buf.h       |   20 ----
+ xfs_buf_mem.c   |   11 --
+ xfs_trace.h     |   10 +-
+ 6 files changed, 93 insertions(+), 200 deletions(-)
