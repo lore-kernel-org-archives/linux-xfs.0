@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4BD30DD2A
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:41:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334552F619D
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 18:41:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774291277; cv=none; b=A5U5A6Oc/YwPS0kYrUyFyZmsmMiOm5U54HXqR+cHOTRjQPgcZIofi45deWwREJRiUoJlwcaNwizNA/16TGDnCHh1Cd0Kzqi15eU3+Hp0CW+hWlZQuEvZHk9W0CfwX0ND478K2jnOeHsbloVRVyuUt1PqOOYu2orT/Ek0niHyadI=
+	t=1774291293; cv=none; b=YTI8i2pHC+XmFtPBQYfRjSBZKv+nXx8RAQwKYpWNX6l80Qg8XE1BzgUYnBbiXm9GfylUOJzPoFMDhYZqVFhpkJxZnt2YoSRqRFfVSRy1/LgwPJId5wdGtdN4vFN43sg3xcP0lbiwMgWCm7VmQnvhE7NFieNkPH938gCBUk1chVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774291277; c=relaxed/simple;
-	bh=tL41jWRu3ldQUlUAq3t0SJEkr9fIVe/otkuAwjda5so=;
+	s=arc-20240116; t=1774291293; c=relaxed/simple;
+	bh=ncg0NJ/rxRcCw6PH0ueMZT+hv5+VEhQ2Az8cykSbQHA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TWzn6P+u8aREzOEW8GSI0wWSr5wRXazdf/g1+tSPtTbjKJQNPyzGdgHLbrtOZmu2b410re9Ve/0zeyj5k4A3w6QszVQbSJncVix1hh/WCU2gTREEkKNl52hV0uZYxCp2ZnXfVpOw12IjZx4Z33p83JejfAwg9SUz5SzkxcPjRGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3koeZNv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qQsTRjMKtpYvDtISeg5sRjhxH7Aj134KdWbaaS226qE69STuklfgREYKo8kKk4WL6R7iNJWyaiozaZVNR/B4H6pzqSSVlEn9vdf06oRjJ0HxdI+vkAZu+fg4x+a+ZzHnEADJpio0sunc1OAhHPChobKVJ5P/dCN8i0BSIDqtmHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fgUT5ViG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3koeZNv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B391C4CEF7;
-	Mon, 23 Mar 2026 18:41:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fgUT5ViG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08619C4CEF7;
+	Mon, 23 Mar 2026 18:41:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774291277;
-	bh=tL41jWRu3ldQUlUAq3t0SJEkr9fIVe/otkuAwjda5so=;
+	s=k20201202; t=1774291293;
+	bh=ncg0NJ/rxRcCw6PH0ueMZT+hv5+VEhQ2Az8cykSbQHA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=N3koeZNvbEtrIrj5jlY1EkW8tOMXkZqIMxHnGBc+Hm3pArRtme6DjDs7eDGYkjctw
-	 PW9fjr3zo2OKngM4okKHiJ3s/0U2pmpRACIPEUjqgZR/nHj2sYC7JfcS63TnV3WlfL
-	 DI2NJqE/i0T3FTPdYY9ZtU+g1i/W3244QYqq1QOERpB2usb9NTv6L5zeMRa6hU1dLs
-	 9LKJ0d8KJ23p4fa+3joHOhpxCtrJYBq+1v04wLK/B6nzz9NDIZRrodpUT8/B6R77Er
-	 Rk4cNElpIAEcmTqmkoABIpGtC1O6QDhTMy1v9YcdZnUmRUEcPHJO+okpNJ6VxxqfvR
-	 HtENeexbLnNYw==
-Date: Mon, 23 Mar 2026 11:41:16 -0700
-Subject: [PATCH 1/1] xfs_repair: don't fail on INCOMPLETE attrs in leaf blocks
+	b=fgUT5ViG+lKx9rH6FYAk3N3eud1K8GmsMrLGMRS5NYxI+a0dW4VEeKgeFZUqQ/dyA
+	 l1YvI2Tc6fxP37+1Bt9+LdgQNoFXpTMPbuMtNbmDTg050w7nkWozn6lBnC4TezpjjB
+	 deE0QQcbyh5bx67ZXkMWgaeB6OKXcdt7cwcSQaTUIW+3fWI8gRgFHgaj3Wi1TjQ2ks
+	 GC8Fq8VF+ewQ74KCbrU9Hj/5Mxb9dl3d28gOmvlkVVMxmC3rg8gBsjXDvZ1CuTblWt
+	 EvI9cQwmL9gpva6ukVn/+3DeE6TD4JCdqnZbxCkXn1NXNQkBc9uhnVDw+CbAzOVUuF
+	 uJnuxLjmW38IQ==
+Date: Mon, 23 Mar 2026 11:41:32 -0700
+Subject: [PATCH 01/40] libxfs: fix XFS_STATS_DEC
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177429120305.2266172.16996819170156005590.stgit@frogsfrogsfrogs>
-In-Reply-To: <177429120286.2266172.6821817395168865287.stgit@frogsfrogsfrogs>
-References: <177429120286.2266172.6821817395168865287.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <177429120757.2266274.10399851330751546106.stgit@frogsfrogsfrogs>
+In-Reply-To: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
+References: <177429120538.2266274.13630957356122775655.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,80 +45,30 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While trying to fix problems in generic/753, I noticed test failures on
-account of xfs_repair:
+This macro only takes two arguments in the kernel, so fix the definition
+here too.  All existing callsites #if 0 it into oblivion which is why
+we've never noticed, but an upcoming patch in the libxfs sync will not
+be so lucky.
 
- attribute entry #4 in attr block 0, inode 131 is INCOMPLETE
- problem with attribute contents in inode 131
- would clear attr fork
- bad nblocks 4 for inode 131, would reset to 0
- bad anextents 1 for inode 131, would reset to 0
-
-Looking at the dumped filesystem, inode 131 is a linked file, and the
-"incomplete" xattr was clearly part of an xfs_attr_set operation that
-failed midway through because the induced log shutdown prevented xfs
-from finishing the creation of a remote xattr.  This kind of thing is
-expected, but instead xfs_repair deletes the entire attr fork!
-
-It's far too drastic to delete every xattr because doing that destroys
-things like security labels.  The kernel won't show incomplete attrs so
-it's not a big deal to leave them attached to the file.  Note that
-xfs_scrub can fix such things.
-
+Cc: <linux-xfs@vger.kernel.org> # v4.9.0
+Fixes: ece930fa14a343 ("xfs: refactor xfs_bunmapi_cow")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/attr_repair.c |   22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ libxfs/libxfs_priv.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 50159b9a533875..fe4089026cae74 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -571,7 +571,13 @@ process_leaf_attr_remote(
- 	    !libxfs_attr_namecheck(entry->flags, remotep->name,
- 				   remotep->namelen) ||
- 	    be32_to_cpu(entry->hashval) != computed ||
--	    be32_to_cpu(entry->hashval) < last_hashval ||
-+	    be32_to_cpu(entry->hashval) < last_hashval) {
-+		do_warn(
-+	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
-+		return -1;
-+	}
-+
-+	if (!(entry->flags & XFS_ATTR_INCOMPLETE) &&
- 	    be32_to_cpu(remotep->valueblk) == 0) {
- 		do_warn(
- 	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
-@@ -592,6 +598,9 @@ process_leaf_attr_remote(
- 		return -1;
- 	}
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 5474865a673e9a..f72f07fabdf21e 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -183,7 +183,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define XFS_ILOCK_SHARED		0
+ #define XFS_IOLOCK_EXCL			0
+ #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
+-#define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
++#define XFS_STATS_DEC(mp, count)	do { (mp) = (mp); } while (0)
+ #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
+ #define XFS_TEST_ERROR(a,b)		(false)
  
-+	if (entry->flags & XFS_ATTR_INCOMPLETE)
-+		goto out;
-+
- 	value = malloc(be32_to_cpu(remotep->valuelen));
- 	if (value == NULL) {
- 		do_warn(
-@@ -708,12 +717,15 @@ process_leaf_attr_block(
- 		}
- 
- 		if (entry->flags & XFS_ATTR_INCOMPLETE) {
--			/* we are inconsistent state. get rid of us */
--			do_warn(
-+			/*
-+			 * Warn about incomplete xattrs but don't zap the
-+			 * entire attr fork because that causes loss of
-+			 * security labels.  The kernel can handle stray
-+			 * incomplete attr entries.
-+			 */
-+			do_log(
- 	_("attribute entry #%d in attr block %u, inode %" PRIu64 " is INCOMPLETE\n"),
- 				i, da_bno, ino);
--			clearit = 1;
--			break;
- 		}
- 
- 		/* mark the entry used */
 
