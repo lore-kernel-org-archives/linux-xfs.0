@@ -1,36 +1,76 @@
-Received: from relay.hostedemail.com (smtprelay0010.hostedemail.com [216.40.44.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF87359A94;
-	Mon, 23 Mar 2026 19:24:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB07D367F3B
+	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 20:19:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774293885; cv=none; b=ATiVOvqPJGh+yK7p5R+4sWYrwot8pJKv8xVs10coUxNMIDDnK26ii58guqXx0qmSRSQRm1/hwQmjQrP1mPaxsnMdFfXSQ3j4WTDhCNVUkOclnDERId1kd6HGwyJONHIPkM0m+nXtrCvFBrKgpvXrQda5JBlTgAY9Yj/Kc8viAqs=
+	t=1774297157; cv=none; b=laE8w+HK3R5Gd7+CCLsiNk6pz3wutLHwzy0EzKBLQ1KTqr1Zy4i4MCUh01NYThhR4m37wgWkqe2REljnC4B2KPsQJPSp3hNAit/dkNqKDvBmG0pYhC20OL56/T9BZhJpig4AAztzuoq99FrDnwdRcxVL9eiWie1hniKA+3+H0hU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774293885; c=relaxed/simple;
-	bh=mWyrUOPWTSJoaU6a2GftDk5Ql6QbxVjhOfbP0fwQbSo=;
+	s=arc-20240116; t=1774297157; c=relaxed/simple;
+	bh=Ps82ZXqOu0VF4EUBaCiYeI6G3LGOYrbRYcJ4p/zhW1c=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=skTEjtcNcSekVmU9/IEjkdjlSe0/Q9brHPhrPm6kj1wBxAwboLueLTcYoiecrclRlCYqkP9UGmtNVocrpiDx/8PefIJwdVspHG7XXB17TDmCld9YuK6LW1r4X1ep5LI1X+triKA9kOyd4mbQdthqNOpx7entjPD1f1/gkJ352bE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf13.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay06.hostedemail.com (Postfix) with ESMTP id 803A61B9338;
-	Mon, 23 Mar 2026 19:24:36 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf13.hostedemail.com (Postfix) with ESMTPA id 9D4AB2000E;
-	Mon, 23 Mar 2026 19:24:34 +0000 (UTC)
-Date: Mon, 23 Mar 2026 15:25:14 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
+	 MIME-Version:Content-Type; b=rZ1afd/xhpxM+kUfyMVUA/kM0+w5wR9dbDzWn1trQofJQGj7tiU7Bebzs1PnTAwuift+BieZm+VDO7CgNwKKzslDv6GbbxFo0CUJdyagbJ1s+6X6YgWRCafMVlOp5rJbh/cyfrgVOmaZBEPMEGlIA+5twwhXZsyEd3PvN13Rs9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O8ocNCV2; arc=none smtp.client-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O8ocNCV2"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-43b7ffed973so315935f8f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 13:19:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774297154; x=1774901954; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cr1t9sjlplOUkX17+4RyR0lC0VfTKhvSiQURz0qF41I=;
+        b=O8ocNCV2o0UeNDNiciQQ3TuxdasXCMrAQhT/qfdGF/Df3T4K145yYpl+qLK2fI55z0
+         z+CI/ODShyyRSakDjG6DUxuT3wAVHtpB5DxNgeLUY0FFRcotOzYFt3hRXJ1yEh8MKj6J
+         fa8nM7SegPU2m+4yfApTXZVZ1Wukn/Vb41nHUkXamxsQChi/XdsXGQbGHA1Hur7Yaedt
+         MguWiYEgXS8IBQzheRk3j/JSAtMZleU5tW1tHAG5oFqLvl0N/ulkm8Ey8aochaQC6cfW
+         wXrhhZ6cNwqwAr6HrZeNh/FZR/WmwwyruYVFVdl+owpmqQzeXbMaeOYuaDbNMNQ13w/E
+         ErSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774297154; x=1774901954;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=cr1t9sjlplOUkX17+4RyR0lC0VfTKhvSiQURz0qF41I=;
+        b=by8IcC//UkGqowUgmMTVr2KRXUyNHejeGzXdco8IMrhPBlhZADFn9auuuf6qNrR3q6
+         rgIVjC55wX/Y6Ws01kbJEQRs/zPs/1H+w9S7PeZPlR1SLGzWTTCTeVoBoNgRnkjRpfCh
+         mkNiy+D4wLOZZWQFn7N0+Wfcnagi3oHxNa8wlvup1p2WD/0EDzqlZdhghk4oMhaLXySp
+         caLEqjudKf47uDi6BmnYsIWV4uMaYHyR7KRauW67nSG2bsJWgYDeaAetvFpVcLEi0dAA
+         pX5iUTU/+ttv+TiXKr7WRpQgbFrEJc23KuXf7zJoKWt5dSQ+ogDHXxkx98j1DmUAdpGR
+         2GQA==
+X-Forwarded-Encrypted: i=1; AJvYcCXkjN7DLRhsXxeZyYFMiBgKLt60LB7X1Fpzav/AayfSZwptHYZ8HOIa2xgmgYhFPEcK3jBvC20NPF0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5MAM8BxdMK3qrc4qVA9YC7f4tLq0WSNmGDLFiuKgnBkd17l+k
+	MxWgDwzYvVJ0OtkxtBz0h3FWoHhd7JJvB4KNpsMToOi/jdEDtaTSu13F
+X-Gm-Gg: ATEYQzywisgFYO6xWTUyv5DlIFlstseipx16WU2M42I5Ii7KQyX9uUoiOg6tkPxrLsc
+	B0UGlBpG3TSFOW21KkrCdMWEXAM7sHLha/+oyU/aRkmQV5FskpvstQWZRcThSg2+BIVbPu5TsdP
+	6LI4YnRGwQtLP65tHl6G+K6mNR7ePfe+WP1+s9HmLJsp7jE1dDmliXrAADJxLMUrFYrz+iDeuBY
+	xGHntlT32I8QGXgYQNzn3FQOycPSWbRcsXdJuPPLWn5sILFhw1Y5iU2U913W0HwWKX7zcPo7oaX
+	pQ4O8AAbB8bRy3q7GvjIRBkA28HyEqIf8TguZvHT9cKGPC9YanEIs0HqMJpqS5wH3jGFZe7Q+4F
+	ZVdAdkeJ255hDJfzbTuWZPY1jIMJYk/i9qqzrhT+mDK6SN/aEiOMOtv3YrzAu6HstciW+09a4y3
+	KYmlHcAZ3m52A8Zrc9VvUYGk6p7RQOgbcgtyU9W6MI9JfhhbpkDbLuEg5+D14QHXUB
+X-Received: by 2002:a05:6000:2303:b0:437:8fd6:d849 with SMTP id ffacd0b85a97d-43b6428ab6bmr20344375f8f.54.1774297154043;
+        Mon, 23 Mar 2026 13:19:14 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b6cdfdfa9sm22985479f8f.9.2026.03.23.13.19.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Mar 2026 13:19:13 -0700 (PDT)
+Date: Mon, 23 Mar 2026 20:19:12 +0000
+From: David Laight <david.laight.linux@gmail.com>
 To: Kees Cook <kees@kernel.org>
 Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- Andrey Albershteyn <aalbersh@redhat.com>, linux-kernel@vger.kernel.org,
+ Andrey Albershteyn <aalbersh@redhat.com>, Steven Rostedt
+ <rostedt@goodmis.org>, linux-kernel@vger.kernel.org,
  linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org
 Subject: Re: [PATCH] xfs: Replace strncpy() with strscpy_pad() in tracepoint
  error paths
-Message-ID: <20260323152514.006d96b5@gandalf.local.home>
+Message-ID: <20260323201912.2cb99938@pumpkin>
 In-Reply-To: <20260323172204.work.979-kees@kernel.org>
 References: <20260323172204.work.979-kees@kernel.org>
-X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,13 +79,6 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Stat-Signature: a9cubsx3kmcd96hh31jcpi9ngny15qrs
-X-Rspamd-Server: rspamout04
-X-Rspamd-Queue-Id: 9D4AB2000E
-X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX1+OA4qXrbdyasYTd1S00snUQyBrAGOfLns=
-X-HE-Tag: 1774293874-862539
-X-HE-Meta: U2FsdGVkX197dFKfRjDw6D7qzxrvAo285F4xi2NWRnGrXg2E/UuhAl2a2irUJLf+oaxwjIHt2WtVm7MrHt2LYD1vH0xAQrUP4J+C/eS0ACFVcGilPS9/JaQ2UPfApyPIb4onPfcoobRLgnkF3aWhPFiElFi9jW+oEiplmw2K+4y46mz8YPDS+Nzlze57sFPnI9J3PL1YHCNZzXSLc3NZ0gV0Ns7zgKM5BxSkwqq4bfIbGrTjugwYAZ3aQd2lsf+EPCR2iPqdJLjKfmUlf0keGYkEruu/k+4igf43aeWmfeoo5sUBD+N83a692Q+7bBhY/rJrr8Yk4KwQNKarU0nXLpQr/f6W3Afh+HmsgBz2uYpeZ0TmkgplVA==
 
 On Mon, 23 Mar 2026 10:22:09 -0700
 Kees Cook <kees@kernel.org> wrote:
@@ -65,20 +98,23 @@ Kees Cook <kees@kernel.org> wrote:
 > zeroed on allocation, and the raw buffer is readable by userspace via
 > tracefs. The zero-padding ensures no stale data remains in the
 > buffer after the error path overwrites it.
+
+Eh?
+AFAICT file_path() doesn't zero pad on success.
+Not only that is calls d_path() to do the work and that has the comment:
+
+ * Returns a pointer into the buffer or an error code if the path was
+ * too long. Note: Callers should use the returned pointer, not the passed
+ * in buffer, to use the name! The implementation often starts at an offset
+ * into the buffer, and may leave 0 bytes at the start.
+
+So the code actually looks entirely broken.
+
+	David
+
 > 
 > The source is a 10-byte string literal into a 256-byte destination,
 > so there is no behavioral change.
-
-Hmm, seems to be a lot of waste. Note, the ring buffer now zeros out its
-data on allocation so there's no need to zero pad anything, at least not
-for exposing data. You may expose a previous trace.
-
-Also, why are these using full path size and not just use dynamic array.
-That would be much more efficient in both performance and space.
-
--- Steve
-
-
 > 
 > Link: https://github.com/KSPP/linux/issues/90 [1]
 > Signed-off-by: Kees Cook <kees@kernel.org>
