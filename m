@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 620EB3AD513
-	for <linux-xfs@vger.kernel.org>; Mon, 23 Mar 2026 13:40:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2E83ACA62;
+	Mon, 23 Mar 2026 13:53:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774273211; cv=none; b=nBQ4G5lkafhVq5YAmRKnKi50vUqHYANCUCO1gRcM8G+qGa9WaTdRcHtUtnpgl5GGnmtO9qdEYsInGxx+S0lN1hLnzdsRy91LDt9oPY2UscFvSC7VWLEW2qrw3AgPLdvEzidLiHNfkWox5AzBeNbYOPWgJ4fLJZnCCostgRWgybQ=
+	t=1774274035; cv=none; b=hSNKBV4Fh5c2mgnjgevV7Ls6ej6pM0Ct8+ldohOrT1HHfym+y0ZHRV+ZcCS93xP3N2z1ndsDp7U1r1BM00fme+yqQO73Q1bBRkhfCQbUJ79fpQJEEUKEG7bYdxyCTW1otxh5Y6MhvlZW4Hgx6ypDlR4ZNIjdvrQ9zooNMflYrco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774273211; c=relaxed/simple;
-	bh=9Dpyg3x+Sk+U3kRUJdvpysAh9AH8CKJHWEUbI70f5us=;
+	s=arc-20240116; t=1774274035; c=relaxed/simple;
+	bh=IQ8jMniHFPenBN3fU91Tv+PRwr1LuFt0rHFb85iIBdY=;
 	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=uqTpRZajrzPWYyA1G+zav3aPVppkvLyrmH5uggB9uykckqRQ80BH2hJn3j2edEDi4jvZ5Wc7pXfwbn3HqUYKPPmXP77njYc21GcLX6cg3dlaEmNlS+OGT2Ydffa/MZlbXW3y5r9/F9W2iJmIHjhrU5c3G5ddUvjcCmYN1Q1TwqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iEbLmqL3; arc=none smtp.client-ip=10.30.226.201
+	 Subject:Content-Type; b=oYYhdeskyvXIGpB8vjRUdy75uBF4ps+h1YMlEKM9NzTIugRbKIx6GNksSRCa9D2FIG8j3AqruzwREJ3l3G9gLcc/jtOxIPphIHq0IoSJx3XHOVFtjH6K8KD9i/7n78xsVFfyJnXRQ3tJNPafBamS5YeS/G9utRFaPB55JTITQR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B9AhWagX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iEbLmqL3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D15EC4CEF7;
-	Mon, 23 Mar 2026 13:40:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B9AhWagX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F28F3C4AF09;
+	Mon, 23 Mar 2026 13:53:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774273211;
-	bh=9Dpyg3x+Sk+U3kRUJdvpysAh9AH8CKJHWEUbI70f5us=;
+	s=k20201202; t=1774274035;
+	bh=IQ8jMniHFPenBN3fU91Tv+PRwr1LuFt0rHFb85iIBdY=;
 	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=iEbLmqL3bxeG7z+kPGDzfV+tMPVhaJR3/7wlp122wulkvNVO9th6vqm6SiyoRaU0c
-	 ywPy2xk8T5vE8KiPgx6UVKDQNHk3bXStuVSdSLlTGz37+1xp/iGh71qS31FFEwdm4C
-	 xe5RGWZTAqUDP1VQm1QwxaEmoqGZcTKjMH8A8jbyw6SjTZ2HAryCnahIXaVxUmoA1s
-	 7R4s2PfE29JSwKdi/Kdt99Jc9+4sc66T1M3jojzq9m8y/Meh8GFK5V+AdvVmsJn53h
-	 2W14EMdSeoC32K8duMyQcCkOC2/MCsb/9PGDn5Q8juAwr/2yZCf5PGFjTVB7956QHH
-	 fwAe2QqOplWWQ==
+	b=B9AhWagX9qR/nsvxZXFzRcW8P8QfpPiBGPOVzPKWQMMxUDnd9ebY3MirinGYzuVwc
+	 d0m1kGwWPQf7Z0fbBqecWknToLWogZ496tQuo39zbAy6eWmA2MqsoExUPS7IpIis/6
+	 cF5a/3sQWcV/5ej5f1NgdZs1xNT/xVMeEpWitcfejtPW1m2v6MCPLFH/1FZLvMEyNZ
+	 YeNGCOEQ+qiU1WQ05gHZIqosUtZvcyoauDckROcy9417voTd5+3ltHzw7jYh+xZDHp
+	 uDUKDQTsFanPmRyxL9FxqzSRhE21OMyjgERIKLRlIhrBvPceOex61t/E0yG2g22ogk
+	 Kk1vZNiPk8+YQ==
 Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 13E0AF40077;
-	Mon, 23 Mar 2026 09:40:10 -0400 (EDT)
+	by mailfauth.phl.internal (Postfix) with ESMTP id E599CF4007A;
+	Mon, 23 Mar 2026 09:53:53 -0400 (EDT)
 Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Mon, 23 Mar 2026 09:40:10 -0400
-X-ME-Sender: <xms:uULBaSqAvbG5Yihhtfwuzu2qLHTaiLQV7QoHoWTP3PgbscBZ8uiWyw>
-    <xme:uULBabchHF18oVppJoR4JAihRtjqTsfEKHYzc1yjszSMsfqVb6VzEBc3XCJZyqUmG
-    7QomgeNxacL5EfCiyQR7-BHrSharHt5ThZDGsi0a_bC1BjmiXJj3vM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefudekkeehucetufdoteggodetrf
+  by phl-compute-10.internal (MEProxy); Mon, 23 Mar 2026 09:53:53 -0400
+X-ME-Sender: <xms:8UXBaRXa2BJv_2dGvxmO6U8XNV6hZ6uPzJz_RBDSqFDIO3RJj61BCw>
+    <xme:8UXBacaMLveU2ppd49EEst3xRMKCGEj-y9ViAG5q7qV027uO8MVNSk6hdv-9txJVN
+    jIgWZwyj4VlFReaok30lZ57Vw8iQEmda69QvK4YqRQAVAXki0OoIf_n>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefudekkeekucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
     rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedfvehhuhgt
+    gurhepofggfffhvfevkfgjfhfutgfgsehtqhertdertdejnecuhfhrohhmpedfvehhuhgt
     khcunfgvvhgvrhdfuceotggvlheskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrh
-    hnpefhffekffeftdfgheeiveekudeuhfdvjedvfedvueduvdegleekgeetgfduhfefleen
+    hnpefghfeguedtieeiveeugfevtdejfedukeevgfeggfeugfetgfeltdetueelleelteen
     ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegthhhutg
     hklhgvvhgvrhdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudeifeegleel
     leehledqfedvleekgeegvdefqdgtvghlpeepkhgvrhhnvghlrdhorhhgsehfrghsthhmrg
@@ -51,14 +51,14 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefudekkeehucetufdote
     tghpthhtoheptghhuhgtkhdrlhgvvhgvrhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoh
     epohhkohhrnhhivghvsehrvgguhhgrthdrtghomhdprhgtphhtthhopehtohhmsehtrghl
     phgvhidrtghomh
-X-ME-Proxy: <xmx:uULBaemJHQCoN9xafdBNqp3tAHd9Fis9Si_0rmR895Q2lNXPXhKkMA>
-    <xmx:ukLBacOMsRlxdYHZ1HyqYOK5B2eP82qTtgVpif9N7ligDfDKmJwcMg>
-    <xmx:ukLBaY5CxM87bmFQsfuY_KmoqCWI6T1Vv9fHP2KCiQNZEN9344gUjQ>
-    <xmx:ukLBaQaKsa6K-W7z9af17CEEcVDnTbpTJ42uc7vOvjVZ95DptyWJuw>
-    <xmx:ukLBaVczC-5AbMzpJn_xtiCUF-2sLeQrEm3SRMi7-FjypberLOAYYNFK>
+X-ME-Proxy: <xmx:8UXBaZRXaRACEforABpTg0eCdB3mqplm7uM-O_KC_Hwo9MzSa0uwDg>
+    <xmx:8UXBaZLAYwgNonoDwpdbHNAzEl-Uv9oD65ks0xJ9uu5zdYf-vIuJ9A>
+    <xmx:8UXBabFLBNHVzHBE2RBj_vHxou6osumgPRCy_CK7zHM8dUWA2nwOgg>
+    <xmx:8UXBae3fboWr66KIrkZ3cLySWQPE_SCvpjxA_xGIhJ6LGcXAdwVqqw>
+    <xmx:8UXBabJQyvrEHl9Sj7Z9D-OA7qM4yEW_H3Ymitb17V0T3egGNgJjpXkn>
 Feedback-ID: ifa6e4810:Fastmail
 Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id D88B0780070; Mon, 23 Mar 2026 09:40:09 -0400 (EDT)
+	id BB392780070; Mon, 23 Mar 2026 09:53:53 -0400 (EDT)
 X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -66,8 +66,8 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AIsm7hYmK1tN
-Date: Mon, 23 Mar 2026 09:39:48 -0400
+X-ThreadId: Av6uBezOhwSJ
+Date: Mon, 23 Mar 2026 09:53:33 -0400
 From: "Chuck Lever" <cel@kernel.org>
 To: "Christoph Hellwig" <hch@lst.de>, "Chuck Lever" <chuck.lever@oracle.com>,
  "Jeff Layton" <jlayton@kernel.org>, "Amir Goldstein" <amir73il@gmail.com>
@@ -75,68 +75,180 @@ Cc: NeilBrown <neil@brown.name>, "Olga Kornievskaia" <okorniev@redhat.com>,
  "Dai Ngo" <Dai.Ngo@oracle.com>, "Tom Talpey" <tom@talpey.com>,
  "Carlos Maiolino" <cem@kernel.org>, linux-nfs@vger.kernel.org,
  linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Message-Id: <1fbdc5d9-d95c-4d1a-816e-028ffd1231b0@app.fastmail.com>
-In-Reply-To: <20260323070746.2940140-2-hch@lst.de>
+Message-Id: <736ddc8a-7a28-4900-b3c1-0368cad24085@app.fastmail.com>
+In-Reply-To: <20260323070746.2940140-6-hch@lst.de>
 References: <20260323070746.2940140-1-hch@lst.de>
- <20260323070746.2940140-2-hch@lst.de>
-Subject: Re: [PATCH 1/7] exportfs: split out the ops for layout-based block device
- access
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
+ <20260323070746.2940140-6-hch@lst.de>
+Subject: Re: [PATCH 5/7] nfsd/blocklayout: support GETDEVICEINFO for multiple devices
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
 On Mon, Mar 23, 2026, at 3:07 AM, Christoph Hellwig wrote:
-
-> diff --git a/fs/nfsd/nfs4layouts.c b/fs/nfsd/nfs4layouts.c
-> index ad7af8cfcf1f..616984fe3873 100644
-> --- a/fs/nfsd/nfs4layouts.c
-> +++ b/fs/nfsd/nfs4layouts.c
-> @@ -3,6 +3,7 @@
->   * Copyright (c) 2014 Christoph Hellwig.
->   */
->  #include <linux/blkdev.h>
-> +#include <linux/exportfs_block.h>
->  #include <linux/kmod.h>
->  #include <linux/file.h>
->  #include <linux/jhash.h>
-> @@ -127,6 +128,7 @@ void nfsd4_setup_layout_type(struct svc_export *exp)
+> diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+> index 8ca8fd8f70cb..fb13f86f8eb5 100644
+> --- a/fs/nfsd/blocklayout.c
+> +++ b/fs/nfsd/blocklayout.c
+> @@ -303,15 +303,19 @@ nfsd4_block_get_unique_id(struct gendisk *disk,=20
+> struct pnfs_block_volume *b)
+>  }
+>=20
+>  static int
+> -nfsd4_block_get_device_info_scsi(struct super_block *sb,
+> -		struct nfs4_client *clp,
+> -		struct nfsd4_getdeviceinfo *gdp)
+> +nfsd4_block_get_device_info_scsi(struct block_device *bdev,
+> +		struct nfs4_client *clp, struct nfsd4_getdeviceinfo *gdp)
 >  {
->  #if defined(CONFIG_NFSD_BLOCKLAYOUT) || defined(CONFIG_NFSD_SCSILAYOUT)
->  	struct super_block *sb = exp->ex_path.mnt->mnt_sb;
-> +	struct exportfs_block_ops *bops = sb->s_export_op->block_ops;
->  #endif
-> 
->  	if (!(exp->ex_flags & NFSEXP_PNFS))
-> @@ -136,14 +138,11 @@ void nfsd4_setup_layout_type(struct svc_export *exp)
->  	exp->ex_layout_types |= 1 << LAYOUT_FLEX_FILES;
->  #endif
->  #ifdef CONFIG_NFSD_BLOCKLAYOUT
-> -	if (sb->s_export_op->get_uuid &&
-> -	    sb->s_export_op->map_blocks &&
-> -	    sb->s_export_op->commit_blocks)
-> +	if (bops->get_uuid && bops->map_blocks && bops->commit_blocks)
->  		exp->ex_layout_types |= 1 << LAYOUT_BLOCK_VOLUME;
->  #endif
->  #ifdef CONFIG_NFSD_SCSILAYOUT
-> -	if (sb->s_export_op->map_blocks &&
-> -	    sb->s_export_op->commit_blocks &&
-> +	if (bops->map_blocks && bops->commit_blocks &&
->  	    sb->s_bdev &&
->  	    sb->s_bdev->bd_disk->fops->pr_ops &&
->  	    sb->s_bdev->bd_disk->fops->get_unique_id)
+>  	struct pnfs_block_deviceaddr *dev;
+>  	struct pnfs_block_volume *b;
+>  	const struct pr_ops *ops;
+>  	int ret;
+>=20
+> +	if (bdev_is_partition(bdev))
+> +		return -EINVAL;
+> +	if (!exportfs_bdev_supports_out_of_band_id(bdev))
+> +		return -EINVAL;
+> +
+>  	dev =3D kzalloc_flex(*dev, volumes, 1);
+>  	if (!dev)
+>  		return -ENOMEM;
+> @@ -323,30 +327,28 @@ nfsd4_block_get_device_info_scsi(struct super_bl=
+ock *sb,
+>  	b->type =3D PNFS_BLOCK_VOLUME_SCSI;
+>  	b->scsi.pr_key =3D nfsd4_scsi_pr_key(clp);
+>=20
+> -	ret =3D nfsd4_block_get_unique_id(sb->s_bdev->bd_disk, b);
+> +	ret =3D nfsd4_block_get_unique_id(bdev->bd_disk, b);
+>  	if (ret < 0)
+>  		goto out_free_dev;
+>=20
+>  	ret =3D -EINVAL;
+> -	ops =3D sb->s_bdev->bd_disk->fops->pr_ops;
+> +	ops =3D bdev->bd_disk->fops->pr_ops;
+>  	if (!ops) {
+> -		pr_err("pNFS: device %s does not support PRs.\n",
+> -			sb->s_id);
+> +		pr_err("pNFS: device %pg does not support persistent reservations.\=
+n",
+> +			bdev);
+>  		goto out_free_dev;
+>  	}
+>=20
+> -	ret =3D ops->pr_register(sb->s_bdev, 0, NFSD_MDS_PR_KEY, true);
+> +	ret =3D ops->pr_register(bdev, 0, NFSD_MDS_PR_KEY, true);
+>  	if (ret) {
+> -		pr_err("pNFS: failed to register key for device %s.\n",
+> -			sb->s_id);
+> +		pr_err("pNFS: failed to register key for device %pg.\n", bdev);
+>  		goto out_free_dev;
+>  	}
+>=20
+> -	ret =3D ops->pr_reserve(sb->s_bdev, NFSD_MDS_PR_KEY,
+> +	ret =3D ops->pr_reserve(bdev, NFSD_MDS_PR_KEY,
+>  			PR_EXCLUSIVE_ACCESS_REG_ONLY, 0);
+>  	if (ret) {
+> -		pr_err("pNFS: failed to reserve device %s.\n",
+> -			sb->s_id);
+> +		pr_err("pNFS: failed to reserve device %pd.\n", bdev);
+>  		goto out_free_dev;
+>  	}
+>=20
+> @@ -364,9 +366,16 @@ nfsd4_scsi_proc_getdeviceinfo(struct super_block =
+*sb,
+>  		struct nfs4_client *clp,
+>  		struct nfsd4_getdeviceinfo *gdp)
+>  {
+> -	if (bdev_is_partition(sb->s_bdev))
+> -		return nfserr_inval;
+> -	return nfserrno(nfsd4_block_get_device_info_scsi(sb, clp, gdp));
+> +	struct block_device *bdev =3D sb->s_bdev;
+> +
+> +	if (sb->s_export_op->block_ops->devid_to_bdev) {
+> +		bdev =3D sb->s_export_op->block_ops->devid_to_bdev(sb,
+> +					gdp->gd_devid.dev_idx);
+> +		if (IS_ERR(bdev))
+> +			return nfserrno(PTR_ERR(bdev));
+> +	}
+> +
+> +	return nfserrno(nfsd4_block_get_device_info_scsi(bdev, clp, gdp));
+>  }
+>  static __be32
+>  nfsd4_scsi_proc_layoutcommit(struct inode *inode, struct svc_rqst *rq=
+stp,
 
-block_ops itself is NULL for any filesystem that does not provide
-block layout support (everything other than XFS today).
+LLM review identified this issue:
 
-When an admin exports such a filesystem with pNFS enabled
-(NFSEXP_PNFS), svc_export_parse() calls nfsd4_setup_layout_type(),
-and bops->get_uuid dereferences a NULL pointer.
+402 static void
+403 nfsd4_scsi_fence_client(struct nfs4_layout_stateid *ls, struct nfsd_=
+file *file)
+404 {
+405         struct nfs4_client *clp =3D ls->ls_stid.sc_client;
+406         struct block_device *bdev =3D file->nf_file->f_path.mnt->mnt=
+_sb->s_bdev;
+407         int status;
+408=20
 
-Something like the following would restore the original behavior:
+This always gets the data device. For an RT inode whose layout was
+granted with dev_idx=3D1, PR registration happened on the RT bdev (in
+nfsd4_block_get_device_info_scsi after devid_to_bdev), but the
+preempt here fires against the data bdev.
+                                                                        =
+                                          =20
+The difficulty is that fence_client receives a nfs4_layout_stateid
+and nfsd_file, neither of which carries the dev_idx that was encoded
+in the device ID at layout grant time.
 
-    if (bops && bops->get_uuid && ...)
+So the fix isn't just a one-liner =E2=80=94 it requires threading the de=
+vice
+index (or the bdev) through to the fence path, likely by storing it
+in the layout stateid when the layout is granted.
+
+Pre-series invariant (broken by this series):                           =
+               =20
+                                                                        =
+                                          =20
+Before the series, nfsd4_setup_layout_type checked
+sb->s_bdev->bd_disk->fops->pr_ops directly before enabling LAYOUT_SCSI.
+That guaranteed fence_client could safely dereference sb->s_bdev's
+pr_ops. After the series, the check delegates to
+xfs_fs_layouts_supported, which uses:
+                 =20
+  if (exportfs_bdev_supports_out_of_band_id(sb->s_bdev) ||
+      (mp->m_rtdev_targp &&
+       exportfs_bdev_supports_out_of_band_id(mp->m_rtdev_targp->bt_bdev)=
+))
+      supported |=3D EXPFS_BLOCK_OUT_OF_BAND_ID;                        =
+                                            =20
+
+This means LAYOUT_SCSI can be enabled when only the RT device has
+pr_ops and get_unique_id.
+
+Concrete path to NULL deref:
+
+  1. XFS with RT: data device is plain SATA (no pr_ops), RT device is NV=
+Me (has pr_ops + get_unique_id)
+  2. xfs_fs_layouts_supported =E2=86=92 EXPFS_BLOCK_OUT_OF_BAND_ID set (=
+via RT device)
+  3. nfsd4_setup_layout_type =E2=86=92 enables LAYOUT_SCSI
+  4. Client does LAYOUTGET for RT inode =E2=86=92 map_blocks sets dev_id=
+x=3D1
+  5. Client does GETDEVICEINFO with dev_idx=3D1 =E2=86=92 devid_to_bdev =
+returns RT bdev =E2=86=92 PR register/reserve on RT bdev succeeds
+  6. Recall fails =E2=86=92 nfsd4_scsi_fence_client (line 406): bdev =3D=
+ ...->s_bdev (data device)
+  7. Line 409: bdev->bd_disk->fops->pr_ops->pr_preempt(...) =E2=80=94 pr=
+_ops is NULL =E2=86=92 kernel oops
+
+Even when both devices have pr_ops, the fence still targets the
+wrong device: the client's PR registration is on the RT bdev (done
+during GETDEVICEINFO), but the preempt fires on the data bdev,
+leaving the RT device unfenced.
+
+The issue is reachable on any XFS+RT configuration where the RT
+device supports SCSI persistent reservations but the data device
+does not.
 
 
--- 
+--=20
 Chuck Lever
