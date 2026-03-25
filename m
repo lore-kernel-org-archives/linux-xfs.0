@@ -1,92 +1,93 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9823CFF4A
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 12:08:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D37C3D564A
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 12:38:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774440529; cv=none; b=V4ynyaDH6M5HALHcWFpbLARIcoSjk9uToTdYZ9pwnXH+aw5KmBTsiq+Cc2UDrz+ioPufSycBPQTA72Lqym24S1gX3YNtzMtDDIAmCeaglxWCohT0RymTzTOnaTCzfQvL793whw+pHHKibDVV3xGm+F7JKYotcP/LVXqdcP9fw4c=
+	t=1774442295; cv=none; b=f9iKc8e1woCPDRg4CPqgNVLZaeNpEiVK8/sLKbEjOR+LtjIgr2cMxj3SluBl2IXnk2EFAlW6xobPOBIHkLyRRU8LHfljsx65yJ2fh7JbM5whFHiAacm6f5DXJjIrmMkoHkR/v9tLiJUsw+HDm2S/mmMTybMlAuniu4wUekmtRHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774440529; c=relaxed/simple;
-	bh=LbeAqmlJTzsDU2WI+JQRb0J70AEGN7cPn533Ft2zw3E=;
+	s=arc-20240116; t=1774442295; c=relaxed/simple;
+	bh=B7XEYkMQi5D0EqTXN0etgYXPUL8EADhsGgGCE2iqsCA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SlYvLXnDmIoMID63JUlBEPs0nSCyyDNWYhNXs513Ws7bBn4iXvQGVffvbJzjdCNNvFsEQzp7q78C/yxaejwIO6EBlP7DYfx+zBaGBBriOeqBbuJPyFTwVOKsA2klWBtOlUzO2c+b7Kegut/ASUNEGzfRqNQdF+eVbVIhnx3fXXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=duzdEEoJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=G1yoz54M; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=gWnqmYSEQnnN4Jz5NkCcSrUVY1NKnHqKe55BSbQTXh8QYHdNDwaeapaVy0uSe3LYQVfp5cI9nqPc6BAbfCarbKX9Vg4WjYOQettKt9e6QeEwf5tFVBA17lmodPJJsmOsYaObGra+CX/ckp2S0hacmAcgVI0hPRKQ9xO1rD2fCRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SkCzScCu; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=AOLIh0Ue; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="duzdEEoJ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="G1yoz54M"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SkCzScCu";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="AOLIh0Ue"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774440527;
+	s=mimecast20190719; t=1774442292;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xgQzcNVTgAYMtY/AG+BgYI0+wd9pZeBrIlwhVeuWoe0=;
-	b=duzdEEoJL5glagj1MhAj7wlHDna6M37vbGi2G2LFx6oQh1OAAYx456ElckKtbQlIrfFrm0
-	G91hBCENiJM+gmkOSyFjys82JFRul37zctORey0kxfMdgR23eJbfuFtS7Z9XzH/CtsRMwW
-	RHXhEdsRc17DkToKaZqbTErul2X/5AI=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=zq66uLldOzJDWwFuTQSicat9HZ9onClHiQ97FMgB8gk=;
+	b=SkCzScCuCdyNL1RUnpfJxBIL5F2VO8pgYLuuZuGNC9Z7wh9ucam59gxfaUWvYHjCDdoC+y
+	RRXrtom8b1qSiG/Ppj48o875UHfOfbbJMeJmhANxnVoORpUCS7gtaIhqIe0mXwLjgiLik4
+	ddN8iVF7b7wala8rYTxzBWNqM8iGoBQ=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-657-0YJHqr9XMgmMQRplagJ0HQ-1; Wed, 25 Mar 2026 08:08:45 -0400
-X-MC-Unique: 0YJHqr9XMgmMQRplagJ0HQ-1
-X-Mimecast-MFC-AGG-ID: 0YJHqr9XMgmMQRplagJ0HQ_1774440524
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-4362197d1easo1995026f8f.2
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 05:08:45 -0700 (PDT)
+ us-mta-540-xNS8u1VyOZq2RbWGU71XLg-1; Wed, 25 Mar 2026 08:38:11 -0400
+X-MC-Unique: xNS8u1VyOZq2RbWGU71XLg-1
+X-Mimecast-MFC-AGG-ID: xNS8u1VyOZq2RbWGU71XLg_1774442290
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-486ff4498b2so44110365e9.0
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 05:38:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1774440524; x=1775045324; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1774442290; x=1775047090; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xgQzcNVTgAYMtY/AG+BgYI0+wd9pZeBrIlwhVeuWoe0=;
-        b=G1yoz54MAUMJ2qpywnQfiM+YoKwm+WbO7U3YMxFsBVjE87pW60nS+9Fhh39YXfiDfL
-         iLapvsxdKYIceymdRWKFxXVez0JVDyWdj5FvNWH6sShung2f8VUBoL6BypALZAxjYKmi
-         YHlXDM4t64iIAh3zdi/IHyuKTcC/6QG09rJ4yynQ1X7204q8htvzhmKJj+hL0X6Db/Vd
-         7oMTWZeIVDnn+kjcWwVJMENAjqB7mLj2djM0aQqSvDXSZSvTYldysXNkd8U6nFbFISAq
-         W0VluO3Zn7dBK4vlpJuZf8esRZhiPB4YWxhIkoDVkJ9Brto22z7xDoF18EUze+Xe9QVN
-         +r7g==
+        bh=zq66uLldOzJDWwFuTQSicat9HZ9onClHiQ97FMgB8gk=;
+        b=AOLIh0Ue5a3o1fyEajsXxRCiEAE4Rrq4bwtTWcmkudbfF4EGebeo9SW56XtdYxL7gQ
+         xeW4CNOMySdctnDl5F1p0NWrzINeidFsK1GsBMK5qy8II2QIIYddb+3Fodhb3uT+VKGE
+         1v7e5LdWnAHVsWJeK6ghIqQJmUl6MJOFosAG6lA5C/uDp58EhWy87J3zWlWPJZjfwZK2
+         KWy9GMHLWJUNInaYYcCVszumxavzYJx2dmfjsh7j+8dniUK6L50dzCuKbj5d27T2iZIZ
+         WZQcz9r++SsteOFi0YBkYD1BI3vq48IWcbFzmeCDWMrPkfvMwKPhtayf8UlyVwkx66Ug
+         +ELQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774440524; x=1775045324;
+        d=1e100.net; s=20251104; t=1774442290; x=1775047090;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xgQzcNVTgAYMtY/AG+BgYI0+wd9pZeBrIlwhVeuWoe0=;
-        b=hT7jBnKqTpBKRVxAxW363Ic5ZQDKbgwk/EdjwFf9P4JgmduDbiuQEGYOuDArJqSDhe
-         8xPDb73WlUDFIzK0FDD3W9L0YPayRwdBaD1uhkgVLL4oYC9JfOrpoRs3A/EOamNgrWq7
-         QjUk90/rktlGI0Gc5ckW3wAa5Rz3vNc9PME2FqYUS5KEV+Gr+MKC1dpxIjGWhdF2Qc/9
-         G774Q12N6N1CXuDobB/C6VyYJZe0f8zaJJzDa30Bt6Ag4LJxoz8rd1mE76C1Vgjt84j0
-         UbpWKCBvDMEFrTwpDPM0XayVFu2i4HDPORRnSkpmWtPgzCBgu0mrVmBfP67CPliXjOXK
-         oJqQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUrPwrSj7pIQHtll5JIXteF5rCj05BJ1RXQW4TJqeG2OpmthKLdBO1RH6zDPIeUbifOIxuecLufWHc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YytFB3RcHxxO+pf28wA6pi88BMCqnwCVg7FZalhSqtgzdzBnARC
-	LjNg7x2FR9+BlCVEazzPVFC5hdIJ/aiWZaBtCluEAFeeOkNrRvNNrnt295zTGCmq7Qyv0K6Bk7s
-	cdPCJjjohPI53teMPu4jUPO1FIW8yH0cZRB5bLaUW2IkaqidaIgecZ8Z8vOUe
-X-Gm-Gg: ATEYQzzWQvtTASy+ma3f5AlbEvVusQJrqj0TjAF2xdbIbkGJ9cQqVEcG9z/M8SgL4QK
-	oF6X5t66LIqIzLkq7MiwS27JduY9I1UVZIBad2J3tvojeXz6hif1E/ysxz0wsdw8d3dQ9nbqzgP
-	JXyFfppCc9BCt+vgZMKDrP4roi9lwFy7ZkAfkM9HVC9gLGABbYcQgYtyBmdJtrCA4M908+UdEls
-	QK/R+8St9bXatuhQNFJxHXGUnh+HVC4jCNBEl1tFnh3boFlYQ0lUkGUNtbCs6jV6r2nsBDpgY0H
-	4/fwYipYwPqAcXMyn3hmgG6ymCeSgb7gWe8fFHVVJe9zC1f8awMTiYMjP/5TbAP1BZyfCs79YU0
-	hDcgKKKTKHL26FA==
-X-Received: by 2002:a05:6000:2c0c:b0:43b:436d:782a with SMTP id ffacd0b85a97d-43b88a2168cmr4549294f8f.5.1774440524002;
-        Wed, 25 Mar 2026 05:08:44 -0700 (PDT)
-X-Received: by 2002:a05:6000:2c0c:b0:43b:436d:782a with SMTP id ffacd0b85a97d-43b88a2168cmr4549233f8f.5.1774440523459;
-        Wed, 25 Mar 2026 05:08:43 -0700 (PDT)
+        bh=zq66uLldOzJDWwFuTQSicat9HZ9onClHiQ97FMgB8gk=;
+        b=MBeTT6YG4cG+G4DgmvL5D6mtMYZVPfUpX85RJiGsTlIPkinuj6rRCrZtVxbSI1fiMT
+         CMdZek2GJx1J8c756pEqPkoNYTQTP6PaADmDDkx73AcFqqKZC20zC5u0/xfwjwhf5RfG
+         kAq8YkjtUkfwx5qw+aCQ+39OUcgwBGlCxWd+JJeq202q17Mh4NF3rxMGzZFPaOfB8ok0
+         7+pdWLPG1gsNFz0/3iSJnERM0+CP4k65UYIr2d7wkjcCkeL6dF6TxiBYc6O0pkH0quWV
+         nFm9E8/RaTdybbR9mESvSrgpO9lRlTj0uFr6xCZXoENNh5syJkCKo5IFhtS5alj1BYS1
+         XVoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVMHOrSeE9HUQ/GbOazod6zZvbQeDGRUESZ0AkAuV3ouU7dBB4gwRyQPa2g+dDEry9StGeg4MjAQyA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzoQvgSFPSwBCYt6gPAXNcGs1k3p7/1TxJgDwl1Yf+z6LLv1Tvi
+	BTzrZha8L9cDAiZ7TGVpj/MxFFiLILs2X6GJqGH6RJ+p4LoTbk7yw+pw6ghKeRL3aANP8yC2zAJ
+	hlY1Ko1mlYUIkqkOukSuAirdNqPnMnz4+DDW7+riHbN9XKRjNbYyyCtG27D+b
+X-Gm-Gg: ATEYQzwo5Hc71zsuyQhzd1lSX57/tdHWwwY2twe2UUTmsZmq1MnUl/RviLkiOyPGylf
+	ax8GfCq9oFv6unBwd5nfbWy1HEMRs7R8qvoic3wgNd/OrFE7TBQlszyXhgjEpNBBlITK51UeCog
+	Ompd1UQWl2+kWiG6J5sQrrA7hIQ023Sfhwyw++nQeabcC8PmXGHeevQt4hOQNE2J78PH2droB9B
+	b1ZqU8SAfvn2qcHpvSDFXRZS5c5Qeqm3eoALMBzzBShcP4zCiQVx7jIfu1fjIHXC2EUx4PHSgBj
+	Efpvp1C8ELOKblsEF95Ggjrv4vR80kJ6RxPQJsDLauCl48V5K0966V5c0jO7ubuqtsPFnkQkn2k
+	47YYr5otR1P9+bw==
+X-Received: by 2002:a05:600c:3f16:b0:483:6d42:25c6 with SMTP id 5b1f17b1804b1-4871606db4amr51426135e9.23.1774442289646;
+        Wed, 25 Mar 2026 05:38:09 -0700 (PDT)
+X-Received: by 2002:a05:600c:3f16:b0:483:6d42:25c6 with SMTP id 5b1f17b1804b1-4871606db4amr51425715e9.23.1774442289131;
+        Wed, 25 Mar 2026 05:38:09 -0700 (PDT)
 Received: from thinky ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b90f17158sm216982f8f.8.2026.03.25.05.08.42
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-487116ee57esm120806865e9.14.2026.03.25.05.38.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Mar 2026 05:08:42 -0700 (PDT)
-Date: Wed, 25 Mar 2026 13:08:41 +0100
+        Wed, 25 Mar 2026 05:38:08 -0700 (PDT)
+Date: Wed, 25 Mar 2026 13:38:07 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
 	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, 
 	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
 	linux-btrfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v5 09/25] iomap: issue readahead for fsverity merkle tree
-Message-ID: <nune2zskdoz2buxwj73z652azx4pwwkpsjjluq55mk3odybhym@2lolknvk7ddf>
+Subject: Re: [PATCH v5 07/25] iomap: introduce IOMAP_F_FSVERITY and teach
+ writeback to handle fsverity
+Message-ID: <std5dib2mf5nfd2gf3jbrhujvqr2tytczplopwfy4zrxrrmrgj@py7g4alrifbi>
 References: <20260319170231.1455553-1-aalbersh@kernel.org>
- <20260319170231.1455553-10-aalbersh@kernel.org>
- <20260325080407.GG952@lst.de>
+ <20260319170231.1455553-8-aalbersh@kernel.org>
+ <20260325080021.GF952@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -95,19 +96,81 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260325080407.GG952@lst.de>
+In-Reply-To: <20260325080021.GF952@lst.de>
 
-On 2026-03-25 09:04:07, Christoph Hellwig wrote:
-> On Thu, Mar 19, 2026 at 06:01:56PM +0100, Andrey Albershteyn wrote:
-> > Issue reading of fsverity merkle tree on the fsverity inodes. This way
-> > metadata will be available at I/O completion time.
+On 2026-03-25 09:00:21, Christoph Hellwig wrote:
+> > @@ -353,9 +353,16 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
+> >  {
+> >  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> >  
+> > -	return srcmap->type != IOMAP_MAPPED ||
+> > -		(srcmap->flags & IOMAP_F_NEW) ||
+> > -		pos >= i_size_read(iter->inode);
+> > +	if (srcmap->type != IOMAP_MAPPED)
+> > +		return true;
+> > +
+> > +	if (srcmap->flags & IOMAP_F_NEW)
+> > +		return true;
+> > +
+> > +	if (srcmap->flags & IOMAP_F_FSVERITY)
+> > +		return false;
+> > +
+> > +	return pos >= i_size_read(iter->inode);
 > 
-> Patches 8 to 10 really look like they should be merged to me.  They
-> all add the actual fsverity support to the iomap buffered read path,
-> and merging them and having a single explanation of the side seems
-> helpful both for review and future archeology
+> This might be a good time to document the various reasons for needing
+> zeroing.
 
-I see, thanks, I will merge them.
+something like this?
+
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -344,9 +344,27 @@ static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
+ {
+        const struct iomap *srcmap = iomap_iter_srcmap(iter);
+ 
+-       return srcmap->type != IOMAP_MAPPED ||
+-               (srcmap->flags & IOMAP_F_NEW) ||
+-               pos >= i_size_read(iter->inode);
++       /*
++        * If this block is not mapped, we don't have any backing blocks to read
++        * yet
++        */
++       if (srcmap->type != IOMAP_MAPPED)
++               return true;
++
++       /*
++        * This block just got allocated and does not contain any meaningful data
++        */
++       if (srcmap->flags & IOMAP_F_NEW)
++               return true;
++
++       /*
++        * fsverity metadata is stored past i_size, we need to read it instead of
++        * zeroing
++        */
++       if (srcmap->flags & IOMAP_F_FSVERITY)
++               return false;
++
++       return pos >= i_size_read(iter->inode);
+ }
+
+> 
+> > +/*
+> > + * IO happens beyond inode EOF, fsverity metadata is stored there
+> > + */
+> > +#define IOMAP_F_FSVERITY	(1U << 10)
+> 
+> This comment feels a bit too sparse.  Here is my interpretation of what
+> this flag does:
+> 
+> /*
+>  * Indicates reads and writes of fsverity metadata.
+>  *
+>  * Fsverity metadata is stored after the regular file data and thus beyond
+>  * i_size.
+>  */
+
+Thanks! I will update it
 
 -- 
 - Andrey
