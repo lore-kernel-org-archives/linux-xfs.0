@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BE333E868D;
-	Wed, 25 Mar 2026 16:02:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB393ED5C4;
+	Wed, 25 Mar 2026 16:07:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774454545; cv=none; b=BTET6zQBr3k9K3EHt7UmiCKCCWnk31NBZQlBY49QOzDLhsRfinZSpgB8xFwLVs110j784uJBue/dV3YNKQkpmceojsmUZ+YkGVBv+qZAvFK7+QDnTOTuTzBe2x+MRhFtHV3mzuCMbKQUhkL6wjCVZcAJe5XjL8CGSiyrZ191sK0=
+	t=1774454844; cv=none; b=IDYlxkmVueLW3mfVlkESBcml7wsxYXPVuDGwmLLEFbxYnskNOLfd9awdjUapvIugb6Wg8qBPBUfKlTtEbbGJtvk0shZNKuOu/kTUanOEnBRqK4uvMQQ/JViDMvmb726kC4Ae8nkacNTBzLseo+jPPy40RLYSxBtngyXFNxszFLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774454545; c=relaxed/simple;
-	bh=vJ5xGASjMp/TlxhmM7CCfj7w6GupzT6n+xYGWNCGtRs=;
+	s=arc-20240116; t=1774454844; c=relaxed/simple;
+	bh=15WFwQraSsREHmH5UCN+BSez5z7m4WAaAN6c1R3i/6c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hr7T/QCGwZb7qmKrgrJyIHozFxgYM8FKSadqHjaa0Yja2dknTyQ8tLwB9pBdinxIvjGYK0lNVLanyDGNe/Mb3JVpUyzVmH8xhPI/euqShrTR5n99Wd3sZlHXAAc0FOFRTiqEEN+8dvHC1j4H0B3JD7F/wSRX6AoDoz/BOgUMjwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B+2FchYb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bY5fSbiehHesxHuZgbqsnobCYczFDo3x9DkUBrPjeJZW3C4QLh4Fx1U+X7HkmfqEo5C50mTVVo4wsvr8VSonefDWUz02Og3vuK/ENb4VrZ5rldNsUi/d/JLcqVo7lDufxSxnKBWn7+Ano2Dyfnz4IHEldJsCYttjCl5k3tBhTCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IGVGIIPY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B+2FchYb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4ACCC2BCB3;
-	Wed, 25 Mar 2026 16:02:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IGVGIIPY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D9C9C2BCB2;
+	Wed, 25 Mar 2026 16:07:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774454544;
-	bh=vJ5xGASjMp/TlxhmM7CCfj7w6GupzT6n+xYGWNCGtRs=;
+	s=k20201202; t=1774454843;
+	bh=15WFwQraSsREHmH5UCN+BSez5z7m4WAaAN6c1R3i/6c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=B+2FchYbbkhWOofwvjIv9Q9SCnlXi2yRnZCJyFCjE/4lIXvKo7/3kCKeDOLwQg/34
-	 ZiDtgzoi/papPZGLWU9JlD52PxCDTJ980jG5ZuhDQGf/bgZzvD5effQuMJ6p16xp/F
-	 VBK9/3dNU7Vc1H6G6Fg5kZq9BP22TEMnWs/dKZiaQTlPnPT1yT7hcAB5v1MXGP0q4j
-	 SXTJ1/xW7qVVP9awRDMj5dxDxCTO34dPiQfePoIKCM9W280FQ7CfsnbJDhMI0ONFZ+
-	 za9Vojisydqn+4vOQVw8wIxrFjFDVNSpFv4rltLNOSvB8dTcoLnW0gxg6J2rBsbpe+
-	 KlR96DzdoON3g==
-Date: Wed, 25 Mar 2026 09:02:24 -0700
+	b=IGVGIIPY5KeAwDwktN1B3h1FTo6Ifrj2LJwH0YKT2ruyQCJjVeln1tlq7NXRR7MOx
+	 u3v0Gf/rOmZOc3JV8v8kfyIYxl+G9XD8bZDt3AMkCaXxHxojyIdRzfw3xFi3F4UooT
+	 b5GhFFNj51kDjfwGGRGaMy5DF15Jp8NWmK+TE69PoYWuxkuXQKi1hvjjdlRh2W47Ue
+	 5K/FvwMlFBYntnlhQ2Gl0kcYnyncLPRierVSguNx7Cbi2CuW3lWXGzIsMTJOt5gkpt
+	 ZwyWyu+Whjcfzi0QNMzKuiN+KrD6wsWAJx3JJ+g3mZ0bT+KIVUp/gbKHan/BTjaO1s
+	 K64jfIPSLC+cA==
+Date: Wed, 25 Mar 2026 09:07:23 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>,
@@ -34,13 +34,12 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
 	ebiggers@kernel.org, linux-ext4@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v5 01/25] fsverity: report validation errors through
- fserror to fsnotify
-Message-ID: <20260325160224.GT6223@frogsfrogsfrogs>
+Subject: Re: [PATCH v5 03/25] fsverity: generate and store zero-block hash
+Message-ID: <20260325160723.GU6223@frogsfrogsfrogs>
 References: <20260319170231.1455553-1-aalbersh@kernel.org>
- <20260319170231.1455553-2-aalbersh@kernel.org>
- <20260325075402.GA952@lst.de>
- <3lllvimldwcgi7crh3kgwy3a5z2ng2ugcka52ab47o5mwx4dnu@xyzbelhykn7n>
+ <20260319170231.1455553-4-aalbersh@kernel.org>
+ <20260325075700.GC952@lst.de>
+ <vatqzcvepp7z6iotzayuyh7fajwdqs76pn4o3sdn3f5thiwsjc@dt46ylrbjnkp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,30 +48,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3lllvimldwcgi7crh3kgwy3a5z2ng2ugcka52ab47o5mwx4dnu@xyzbelhykn7n>
+In-Reply-To: <vatqzcvepp7z6iotzayuyh7fajwdqs76pn4o3sdn3f5thiwsjc@dt46ylrbjnkp>
 
-On Wed, Mar 25, 2026 at 12:41:23PM +0100, Andrey Albershteyn wrote:
-> On 2026-03-25 08:54:02, Christoph Hellwig wrote:
-> > On Thu, Mar 19, 2026 at 06:01:48PM +0100, Andrey Albershteyn wrote:
-> > > Reported verification errors to fsnotify through recently added fserror
-> > > interface.
-> > 
-> > Looks good:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Thanks!
+On Wed, Mar 25, 2026 at 01:03:40PM +0100, Andrey Albershteyn wrote:
+> On 2026-03-25 08:57:00, Christoph Hellwig wrote:
+> > Shouldn't we still try to get this out of the fsverity_info first?
 > 
-> > 
-> > Btw, would it make sense to enhance the interface to tell why the
-> > data vs considered lost?  i.e. checksum failure vs
-> 
-> > (part of) device disappeared?
-> 
-> isn't it something filesystem should report even before fsverity
-> gets the page?
+> I don't really understand why, this hash depends on salt (inode
+> specific) and merkle tree block size (also inode specific).
 
-Since the verification code is mostly called from read(ahead)
-completion, doesn't a merkle tree verification failure result in the
-folio remaining !uptodate?  And all that gets compressed to EIO...
+Agreed, the merkle tree geometry and salt inputs are per-file.
+
+I sorta wonder if the file ought to get an autogenerated salt if
+userspace doesn't provide one, but not enough to go digging any deeper
+into "does that make sense?"
 
 --D
