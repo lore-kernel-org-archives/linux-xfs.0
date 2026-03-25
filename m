@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED23372683;
-	Wed, 25 Mar 2026 20:26:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4CE36B047;
+	Wed, 25 Mar 2026 20:34:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774470398; cv=none; b=gZ9Zz2Aev0S+fEtD+vFOckKildk4Z1CNdJZ2F+QUskjlFG1kzPyqvHNtKC4193g8U7ezAyc5Poh6buNPsXfJMVP9Faa2KurrdKTOakxrfwrKv7XxZRfbE95nifJXcfyEvK3LuvWXhHqnB8b75MMLxnABu1ha8Kr/fUDOMmMIPYE=
+	t=1774470897; cv=none; b=PrEwFMkRj+mxOK5/nj1/CxSbxBBD3GUDdqWa+lh9dwZvlcSxVlYbnsU3Bi1tBKaVTje/1mcId4T4JtTqWkJnVf11gz9jL+AXZXYNtkEjYUUkhSCQSBCwL+/4zzT/DOB5UXU+J2mjsrI+pz2OqzNT0cpqIVgnBQZZttUcirUsWrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774470398; c=relaxed/simple;
-	bh=9288nGTYu2PySycaWl6yYADhv0GQ8SwE+yNWJslpqHc=;
+	s=arc-20240116; t=1774470897; c=relaxed/simple;
+	bh=hY080uvPl+LEJJt54gSEYsldkDiD0CJld2/4td8A6aI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jLO0oJG+JQJjdPx/BqyqdSDPNInSUiM6/NthJlmUt/g4DYznKP+Pn/1/gQyk/bqSKPhZWWPFjSY3tElkkf2t00A5yditUxxt6+UcELAeUtqZK+CGfVz3uDmzi89x0x1vgVTJ1/ZO1NvUhWF2O0U204/sYa5mk4YoCff3nIVP1qk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uD5iE6Sj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GTDCCPt1XnREmTiYoWLcMsi3GPVLUzJVYgLFUQ+30kEmb21bqugoNTf6b6lR43tI8HgohqdWcK4b3fFAbWUi/uD55P+7hwN13Dti9ySLON2sN8TGNMxzy/kqRBCOh1CspFOjIM1YuOTQVJn0cl8CXuMuC/g4QexVrdzNdO5DGiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbYBhCbS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uD5iE6Sj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A580C4CEF7;
-	Wed, 25 Mar 2026 20:26:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbYBhCbS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9764DC4CEF7;
+	Wed, 25 Mar 2026 20:34:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774470397;
-	bh=9288nGTYu2PySycaWl6yYADhv0GQ8SwE+yNWJslpqHc=;
+	s=k20201202; t=1774470897;
+	bh=hY080uvPl+LEJJt54gSEYsldkDiD0CJld2/4td8A6aI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uD5iE6SjH9WPG+cYdKim6O8OR5sTVTPtHq+SWQB0fE4gy6fDWyg5VERw0RBdt39LV
-	 feFpMZN1GedzzBxHW87hlZwsy58LhN9KHpA7Hi/redu99FWpLsM8Qz0G8n7RoUxtJy
-	 rvE05dlBbG52qcahxGlHOP2GbjiPMYmYtSO5mjD+9M+LCiWmI40IaZTFIwkz2n0STL
-	 oTdKL6dI8ne31KxPI53rWozgN7njx3Fyl29r6+ZDEwUXQ01S4y+HaaQb1ArdGSUB1K
-	 dsf23HhFH2v+p1HleKK4oWqgDxumGfqfutXLzuzwOQmmIuZTa7igIt6uOpGTY9th0v
-	 lHK4BJH35ihKw==
-Date: Thu, 26 Mar 2026 07:26:26 +1100
+	b=bbYBhCbSSQyOTk2rJFqHAHyFkKsd73IqUwcFy1AxQRkoLCwLLPF6umiKPs2LeSj7H
+	 Hb2Y1u24jgh3bjfi6QzV4qDUu44EkKemZiprOOLgNgmHHUayATDX8gnaSXKhoYUck0
+	 oaxE1niv2eRDUu2vHcH/hKX7Tbh4hCPoz0Y/MIbst2XgsBzoS8Ttync+PNpOfwa3bH
+	 5IVdXJnMAQ6hoLZ/Amx7/4E0zDBlAaMvXFa03NeGgd1xTLyLS8gVLGk4rAzXdR/mU+
+	 6xueRiigw4BkQhn+wkJqXsBN1gQeiEN02uf1TnMkhR3uvyRnMWgxgs0oifdlPY5Cca
+	 fgS5DepuxPWMA==
+Date: Thu, 26 Mar 2026 07:34:45 +1100
 From: Dave Chinner <dgc@kernel.org>
 To: Tal Zussman <tz2294@columbia.edu>
 Cc: Jens Axboe <axboe@kernel.dk>,
@@ -38,11 +38,11 @@ Cc: Jens Axboe <axboe@kernel.dk>,
 	Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
- task-context completion
-Message-ID: <acRE8pp6HxjK7Z74@dread>
+Subject: Re: [PATCH RFC v4 2/3] iomap: use BIO_COMPLETE_IN_TASK for
+ dropbehind writeback
+Message-ID: <acRG5f9QjdEKg2JB@dread>
 References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
- <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+ <20260325-blk-dontcache-v4-2-c4b56db43f64@columbia.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,206 +51,63 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+In-Reply-To: <20260325-blk-dontcache-v4-2-c4b56db43f64@columbia.edu>
 
-On Wed, Mar 25, 2026 at 02:43:00PM -0400, Tal Zussman wrote:
-> Some bio completion handlers need to run in task context but bio_endio()
-> can be called from IRQ context (e.g. buffer_head writeback). Add a
-> BIO_COMPLETE_IN_TASK flag that bio submitters can set to request
-> task-context completion of their bi_end_io callback.
+On Wed, Mar 25, 2026 at 02:43:01PM -0400, Tal Zussman wrote:
+> Set BIO_COMPLETE_IN_TASK on iomap writeback bios when
+> IOMAP_IOEND_DONTCACHE is set. This ensures that bi_end_io runs in task
+> context, where folio_end_dropbehind() can safely invalidate folios.
 > 
-> When bio_endio() sees this flag and is running in non-task context, it
-> queues the bio to a per-cpu list and schedules a work item to call
-> bi_end_io() from task context. A CPU hotplug dead callback drains any
-> remaining bios from the departing CPU's batch.
+> With the bio layer now handling task-context deferral generically, XFS
+> no longer needs to route DONTCACHE ioends through its completion
+> workqueue for page cache invalidation. Remove the DONTCACHE check from
+> xfs_ioend_needs_wq_completion().
 > 
-> This will be used to enable RWF_DONTCACHE for block devices, and could
-> be used for other subsystems like fscrypt that need task-context bio
-> completion.
-> 
-> Suggested-by: Matthew Wilcox <willy@infradead.org>
 > Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 > ---
->  block/bio.c               | 84 ++++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/blk_types.h |  1 +
->  2 files changed, 84 insertions(+), 1 deletion(-)
+>  fs/iomap/ioend.c  | 2 ++
+>  fs/xfs/xfs_aops.c | 4 ----
+>  2 files changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 8203bb7455a9..69ee0d93041f 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -18,6 +18,7 @@
->  #include <linux/highmem.h>
->  #include <linux/blk-crypto.h>
->  #include <linux/xarray.h>
-> +#include <linux/local_lock.h>
+> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+> index e4d57cb969f1..6b8375d11cc0 100644
+> --- a/fs/iomap/ioend.c
+> +++ b/fs/iomap/ioend.c
+> @@ -113,6 +113,8 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+>  			       GFP_NOFS, &iomap_ioend_bioset);
+>  	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
+>  	bio->bi_write_hint = wpc->inode->i_write_hint;
+> +	if (ioend_flags & IOMAP_IOEND_DONTCACHE)
+> +		bio_set_flag(bio, BIO_COMPLETE_IN_TASK);
+>  	wbc_init_bio(wpc->wbc, bio);
+>  	wpc->nr_folios = 0;
+>  	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 76678814f46f..0d469b91377d 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -510,10 +510,6 @@ xfs_ioend_needs_wq_completion(
+>  	if (ioend->io_flags & (IOMAP_IOEND_UNWRITTEN | IOMAP_IOEND_SHARED))
+>  		return true;
 >  
->  #include <trace/events/block.h>
->  #include "blk.h"
-> @@ -1714,6 +1715,60 @@ void bio_check_pages_dirty(struct bio *bio)
+> -	/* Page cache invalidation cannot be done in irq context. */
+> -	if (ioend->io_flags & IOMAP_IOEND_DONTCACHE)
+> -		return true;
+> -
+>  	return false;
 >  }
->  EXPORT_SYMBOL_GPL(bio_check_pages_dirty);
->  
-> +struct bio_complete_batch {
-> +	local_lock_t lock;
-> +	struct bio_list list;
-> +	struct work_struct work;
-> +};
-> +
-> +static DEFINE_PER_CPU(struct bio_complete_batch, bio_complete_batch) = {
-> +	.lock = INIT_LOCAL_LOCK(lock),
-> +};
-> +
-> +static void bio_complete_work_fn(struct work_struct *w)
-> +{
-> +	struct bio_complete_batch *batch;
-> +	struct bio_list list;
-> +
-> +again:
-> +	local_lock_irq(&bio_complete_batch.lock);
-> +	batch = this_cpu_ptr(&bio_complete_batch);
-> +	list = batch->list;
-> +	bio_list_init(&batch->list);
-> +	local_unlock_irq(&bio_complete_batch.lock);
 
-This is just a FIFO processing queue, and it is so wanting to be a
-struct llist for lockless queuing and dequeueing.
+Ok, so higher layers can set it.
 
-We do this lockless per-cpu queue + per-cpu workqueue in XFS for
-background inode GC processing. See struct xfs_inodegc and all the
-xfs_inodegc_*() functions - it may be useful to have a generic
-lockless per-cpu queue processing so we don't keep open coding this
-repeating pattern everywhere.
-
-> +
-> +	while (!bio_list_empty(&list)) {
-> +		struct bio *bio = bio_list_pop(&list);
-> +		bio->bi_end_io(bio);
-> +	}
-> +
-> +	local_lock_irq(&bio_complete_batch.lock);
-> +	batch = this_cpu_ptr(&bio_complete_batch);
-> +	if (!bio_list_empty(&batch->list)) {
-> +		local_unlock_irq(&bio_complete_batch.lock);
-> +
-> +		if (!need_resched())
-> +			goto again;
-> +
-> +		schedule_work_on(smp_processor_id(), &batch->work);
-
-We've learnt that immediately scheduling per-cpu batch
-processing work can cause context switch storms as the queue/dequeue
-steps one work item at a time.
-
-Hence we use a delayed work with a scheduling delay of a singel
-jiffie to allow batches of queue work from a single context to
-complete before (potentially) being pre-empted by the per-cpu
-kworker task that will process the queue...
-
-> +		return;
-> +	}
-> +	local_unlock_irq(&bio_complete_batch.lock);
-> +}
-> +
-> +static void bio_queue_completion(struct bio *bio)
-> +{
-> +	struct bio_complete_batch *batch;
-> +	unsigned long flags;
-> +
-> +	local_lock_irqsave(&bio_complete_batch.lock, flags);
-> +	batch = this_cpu_ptr(&bio_complete_batch);
-> +	bio_list_add(&batch->list, bio);
-> +	local_unlock_irqrestore(&bio_complete_batch.lock, flags);
-> +
-> +	schedule_work_on(smp_processor_id(), &batch->work);
-> +}
-
-Yeah, we definitely want to queue all the pending bio completions
-the interrupt is delivering before we run the batch processing...
-
-> +
->  static inline bool bio_remaining_done(struct bio *bio)
->  {
->  	/*
-> @@ -1788,7 +1843,9 @@ void bio_endio(struct bio *bio)
->  	}
->  #endif
->  
-> -	if (bio->bi_end_io)
-> +	if (!in_task() && bio_flagged(bio, BIO_COMPLETE_IN_TASK))
-> +		bio_queue_completion(bio);
-> +	else if (bio->bi_end_io)
->  		bio->bi_end_io(bio);
->  }
->  EXPORT_SYMBOL(bio_endio);
-> @@ -1974,6 +2031,21 @@ int bioset_init(struct bio_set *bs,
->  }
->  EXPORT_SYMBOL(bioset_init);
->  
-> +/*
-> + * Drain a dead CPU's deferred bio completions. The CPU is dead so no locking
-> + * is needed -- no new bios will be queued to it.
-> + */
-> +static int bio_complete_batch_cpu_dead(unsigned int cpu)
-> +{
-> +	struct bio_complete_batch *batch = per_cpu_ptr(&bio_complete_batch, cpu);
-> +	struct bio *bio;
-> +
-> +	while ((bio = bio_list_pop(&batch->list)))
-> +		bio->bi_end_io(bio);
-> +
-> +	return 0;
-> +}
-
-If you use a llist for the queue, this code is no different to the
-normal processing work.
-
-> +
->  static int __init init_bio(void)
->  {
->  	int i;
-> @@ -1988,6 +2060,16 @@ static int __init init_bio(void)
->  				SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
->  	}
->  
-> +	for_each_possible_cpu(i) {
-> +		struct bio_complete_batch *batch =
-> +			per_cpu_ptr(&bio_complete_batch, i);
-> +
-> +		bio_list_init(&batch->list);
-> +		INIT_WORK(&batch->work, bio_complete_work_fn);
-> +	}
-> +
-> +	cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "block/bio:complete:dead",
-> +				NULL, bio_complete_batch_cpu_dead);
-
-XFS inodegc tracks the CPUs with work queued via a cpumask and
-iterates the CPU mask for "all CPU" iteration scans. This avoids the
-need for CPU hotplug integration...
-
->  	cpuhp_setup_state_multi(CPUHP_BIO_DEAD, "block/bio:dead", NULL,
->  					bio_cpu_dead);
->  
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index 8808ee76e73c..d49d97a050d0 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -322,6 +322,7 @@ enum {
->  	BIO_REMAPPED,
->  	BIO_ZONE_WRITE_PLUGGING, /* bio handled through zone write plugging */
->  	BIO_EMULATES_ZONE_APPEND, /* bio emulates a zone append operation */
-> +	BIO_COMPLETE_IN_TASK, /* complete bi_end_io() in task context */
-
-Can anyone set this on a bio they submit? i.e. This needs a better
-description. Who can use it, constraints, guarantees, etc.
-
-I ask, because the higher filesystem layers often know at submission
-time that we need task based IO completion. If we can tell the bio
-we are submitting that it needs task completion and have the block
-layer guarantee that the ->end_io completion only ever runs in task
-context, then we can get rid of mulitple instances of IO completion
-deferal to task context in filesystem code (e.g. iomap - for both
-buffered and direct IO, xfs buffer cache write completions, etc).
+At this point, I'd suggest that we should not be making random
+one-off changes to the iomap and filesystem layers like this just
+for one operation that needs deferred IO completion work. This needs
+to considered from the overall perspective of how we defer
+completion work -  there are lots of different paths through
+filesystems and/or iomap that require/use task deferal for IO
+completion. We want them all to use the same mechanism - splitting
+deferal between multiple layers depending on IO type is not a
+particularly nice thing to be doing...
 
 -Dave.
 -- 
