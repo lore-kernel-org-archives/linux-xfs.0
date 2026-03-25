@@ -1,91 +1,93 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A25503C9EC1
-	for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 11:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA833D1CAE
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 11:41:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774438465; cv=none; b=Qbk+pzFy3gxZPsT+Cy3Ir5eRsyT0iQAP9xawGuRbWAIqRDHyFVuj/ph+xaqysY3VhWQgYTbVz4n25b1PUrTz2S4osmJxCHv7h3SydE3hgR79oxusmr7Ro+KV/t8stStKp5NQqCfO+36QypI1lXuIWyojFX5kuaIewTXB+ydrdUk=
+	t=1774438890; cv=none; b=cA9rorW0pWCQGUoAyxqs86JmAaQ4O8lsrKEmfRE8hXKDAvm4xeBgQzZvbqELeHkrQMYqidLKFIDZ/jtrXNLQDOF3z8Sgb8N4KbFmu8u6e7fa6IGc0uT4YooaC5nSPWgQ2gyNvgnMVlp9uNm5cweOY3mx5J/qZwQrq1Z7BH7mWCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774438465; c=relaxed/simple;
-	bh=IroKj3t13MG+FM3hFelehM3XmGZE1nt+UtM/5i5NIi8=;
+	s=arc-20240116; t=1774438890; c=relaxed/simple;
+	bh=ld1uLQcQ3wX/aLoEZ5yp05fFuiyLeeDey5H16fj3er4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HsUrmqVO+WJNi/fghfRH9vho+0Lfog6gh2s9Dg+nZKfhTGfYpUL3EEre2bS5CQlFqGxPshPjLs4Ds2NKZ6zrfsGwUVi38+sPppUeSFrWwnrxhAH2GP5o8jUM/paN4aMccBiNFz9rjCSyUezmwq/Tmv7ChZ3JHZLlb23RgRjHBbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=UtmLShqM; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=YEsZcN7X; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=UtmLShqM; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=YEsZcN7X; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=UOehyJOraVJFK+N+lGLzoF9vI5J0MsV8ZTmJPuJMSOb6FNFfbR/Ga1oXBj24qIewMFbOqyYbjeXPmHs+occ7D5cv69Flkt1A5WLYw8JjrH3jWWrUc/HH38moQFcyMbQ10+W4IbWKC75qUmxG0uT3IUYoRWIXztoou6pzEy2SbRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UpeHMCGI; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Wtu0JiVD; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="UtmLShqM";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="YEsZcN7X";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="UtmLShqM";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="YEsZcN7X"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id CAD304D21F;
-	Wed, 25 Mar 2026 11:34:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1774438462; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UpeHMCGI";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wtu0JiVD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1774438888;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Vq2T/vFLDEP46zaZVRN1uNpU0VC/YpLh6v2SVWei6m8=;
-	b=UtmLShqMzuRyUiGIrc0LUydixRU5bwUjdwrjwEFq5t8eSxN454oqsCUrpVZYqt0lyXJtmw
-	FIG9aJxGBGXmsoYB4fgNEYvFwBaO/uWL10wYIkX6oLrtpKKcFn30g0D412Y/hP+lKhAnAx
-	ghe/S51MaTkWbqcYxt0sAIVKeqX1CIY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1774438462;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Vq2T/vFLDEP46zaZVRN1uNpU0VC/YpLh6v2SVWei6m8=;
-	b=YEsZcN7XFcjW0TbV3bB2QjS2CV9b1s5bt3yWQvaFEGEL1x1daCgoVaMJgzQdO2yZNAoWdh
-	6AOwHmLWcAVLXOCg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=UtmLShqM;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=YEsZcN7X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1774438462; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Vq2T/vFLDEP46zaZVRN1uNpU0VC/YpLh6v2SVWei6m8=;
-	b=UtmLShqMzuRyUiGIrc0LUydixRU5bwUjdwrjwEFq5t8eSxN454oqsCUrpVZYqt0lyXJtmw
-	FIG9aJxGBGXmsoYB4fgNEYvFwBaO/uWL10wYIkX6oLrtpKKcFn30g0D412Y/hP+lKhAnAx
-	ghe/S51MaTkWbqcYxt0sAIVKeqX1CIY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1774438462;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Vq2T/vFLDEP46zaZVRN1uNpU0VC/YpLh6v2SVWei6m8=;
-	b=YEsZcN7XFcjW0TbV3bB2QjS2CV9b1s5bt3yWQvaFEGEL1x1daCgoVaMJgzQdO2yZNAoWdh
-	6AOwHmLWcAVLXOCg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BD48244399;
-	Wed, 25 Mar 2026 11:34:22 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 6QsvLj7Iw2nNEQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 25 Mar 2026 11:34:22 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 6FDFDA0B32; Wed, 25 Mar 2026 12:34:18 +0100 (CET)
-Date: Wed, 25 Mar 2026 12:34:18 +0100
-From: Jan Kara <jack@suse.cz>
+	bh=1xEylKt1sFxQZZ3xBGKJ8RdOSFC0up8CAh1cSzczQVQ=;
+	b=UpeHMCGI0OWvsjQMOVzzC4cLslpISysz/kVkR/sZ7aKRK3Sh4CIQRuKbRBB9zDIf5djghI
+	5gzo+6rmKZK4xGgR1i2MABBpJQAHMG6hIDNnXIpLSCgvbl++AercDjnevy0+7HE/vcva5W
+	QpIuhJAqQfecAPQApahcjNHWSfc1wQQ=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-670-rSj0bJ29PL-keuqVUhshiA-1; Wed, 25 Mar 2026 07:41:26 -0400
+X-MC-Unique: rSj0bJ29PL-keuqVUhshiA-1
+X-Mimecast-MFC-AGG-ID: rSj0bJ29PL-keuqVUhshiA_1774438885
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-439c54e0f6aso652399f8f.0
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Mar 2026 04:41:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1774438885; x=1775043685; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1xEylKt1sFxQZZ3xBGKJ8RdOSFC0up8CAh1cSzczQVQ=;
+        b=Wtu0JiVD+ZOnT8ETY7g0l1DNXcvTd6DywMQLr7hyIW1CO08TGRi+GNMzqixlDsdJRn
+         evo01Jx/JvjGV2xcuVSPl8G8gzr8uDz5BV7BI06o9xCV7hU0tIijYgduj7dnV7gqb33W
+         HMIDfexok6vAjCZ4n7eyruOrA+GKKYec8uV1he8WsbyeA8hIkiWSoNsVs+iQcmOyby4A
+         XKHmYnkZoa/MRTLcfWGONxYkUnaM/+7s5cqgNsC+ZoQxS4/JHwDHea9xQA/URDgwvPH2
+         p1P/ocOm+ERXwthsQV2plkzwM2cUJuEJW/cYgPFL43T+fZu8rqYjt6oVfx0vN1yR9e5F
+         Bmzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774438885; x=1775043685;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1xEylKt1sFxQZZ3xBGKJ8RdOSFC0up8CAh1cSzczQVQ=;
+        b=eNXOwZeSv2K1SXIEsP9AUSwIusF6GwDdGyQGXhJ2673/QlTv4pupKsTQ4tUUNXp39G
+         STJ4l6NC942WX1d1qYqe/lHziU7RgKTPmnJB2NfeTYUL9JK9SYep5yKXQkilP89D8puh
+         SKjo4Fhe5JLTS8NZDMlgRUWrW1KzNCRGEaGEgEz2qGaEfNog5r67iMOnti59MVQedE2A
+         2Fg1rc3vH1Oi1Sd6MGdG7+fJAjvCLqbsPZclrsO0xpDsKwzL0MDPmVzAAw5RBd954OoE
+         Spo6esEy+v4b6UYMCypYodg1AQojxiVsK3kowTni41HBMkVTgwM8x6QBFYQXVja7Dki8
+         YNHQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVKySAR8R2SVEGR++W1EMLUZM3u5t/2hmIAhK8XaxwUyB1HoD0aKEI6aGqc7fPqxCsYFQ4RDWhzHsk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIZRQYlF38OD8ACGD5iaz8km5RKwNjuhs+V+O2PpN7WD9+T1mo
+	apoUX+bjNPtHXZyEjgLBB/cM8Uv3Xyzx1+4DCpfW59lGYplAFdyhJCLxFxUL7eWfFMP/DA5UF7U
+	Se4qfioRb2oBZpLesWbcU9YM8Tx2jcAekvNEfLxoraVy/JtPT28sQ4bBlmTW9
+X-Gm-Gg: ATEYQzzlbPFAE5YOEkg7wXJwsJ8yKqG9X8V6AbRhtcMBo1ZFCd+s8Eqq7FlKko0B3CU
+	b7Ao2STLZLOJSPiwf2H4VndH5IGUkYCQ7K/x9fa7LKmF+eb3Tk2JrbGVbmVB9PD85mz29wTc4WI
+	xpXex4+3AMTaU7Ipuf0EarlM5wazWNtIKEj0bPReXnSnpU6bQRQ3HXWJjlf8owVi0b0RmnFvB5g
+	JP6awGotZiZtGvXYn89/U2OMnxzfj4Zfnq9fciTBVcZJ/yZnwGn6B4IPopfmmh48GK/iYGOBKG0
+	Qj3XfWPTJx9QG2+7SIOFwCYRu0lyj/hA7GrfROpojcwBs9+qGSt1HgGV3p0Ev1dlhzihV3kEYzV
+	xYysJ7jP6N/BaXw==
+X-Received: by 2002:a05:6000:2a09:b0:43b:425b:ec3f with SMTP id ffacd0b85a97d-43b80526465mr7202977f8f.4.1774438885306;
+        Wed, 25 Mar 2026 04:41:25 -0700 (PDT)
+X-Received: by 2002:a05:6000:2a09:b0:43b:425b:ec3f with SMTP id ffacd0b85a97d-43b80526465mr7202929f8f.4.1774438884770;
+        Wed, 25 Mar 2026 04:41:24 -0700 (PDT)
+Received: from thinky ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43b6470c239sm46289550f8f.27.2026.03.25.04.41.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Mar 2026 04:41:24 -0700 (PDT)
+Date: Wed, 25 Mar 2026 12:41:23 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Morduan Zang <zhangdandan@uniontech.com>, 
-	dgc@kernel.org, brauner@kernel.org, cem@kernel.org, dchinner@redhat.com, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com, tytso@mit.edu, viro@zeniv.linux.org.uk, zhanjun@uniontech.com
-Subject: Re: [PATCH] xfs: defer lazytime timestamp updates to inodegc during
- eviction
-Message-ID: <pacwesi66thnl2a7ek6i3i74qep4crsmu7kx4oglhhuarvqyjp@dobq2euyexta>
-References: <absSoRi8oxXSuSZ7@dread>
- <6EBD01CF561B83EC+20260320100353.220462-1-zhangdandan@uniontech.com>
- <tet44nv2qc7i7uhrip4gcd7cur2cpn4mmgyh4v6hquaju2xtih@i5s2uco5wemr>
- <20260325063822.GA32067@lst.de>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v5 01/25] fsverity: report validation errors through
+ fserror to fsnotify
+Message-ID: <3lllvimldwcgi7crh3kgwy3a5z2ng2ugcka52ab47o5mwx4dnu@xyzbelhykn7n>
+References: <20260319170231.1455553-1-aalbersh@kernel.org>
+ <20260319170231.1455553-2-aalbersh@kernel.org>
+ <20260325075402.GA952@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -94,62 +96,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260325063822.GA32067@lst.de>
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	ARC_NA(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	RCPT_COUNT_TWELVE(0.00)[14];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	FROM_HAS_DN(0.00)[];
-	URIBL_BLOCKED(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[d78ace33ad4ee69329d5];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -2.51
-X-Spam-Level: 
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: CAD304D21F
+In-Reply-To: <20260325075402.GA952@lst.de>
 
-On Wed 25-03-26 07:38:22, Christoph Hellwig wrote:
-> On Tue, Mar 24, 2026 at 04:14:23PM +0100, Jan Kara wrote:
-> > Isn't this problem already fixed by Christoph's patch
-> > https://lore.kernel.org/all/20260317134409.1691317-1-hch@lst.de ?
+On 2026-03-25 08:54:02, Christoph Hellwig wrote:
+> On Thu, Mar 19, 2026 at 06:01:48PM +0100, Andrey Albershteyn wrote:
+> > Reported verification errors to fsnotify through recently added fserror
+> > interface.
 > 
-> It should.  My question to Ted what we're even trying to do in this
-> context is also still outstanding.
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thanks!
 
-Let me see. One reason is that some filesystems don't cache inodes at VFS
-level (such as XFS but there are others which just always return 1 from
-their ->drop_inode). For these we'd have to come up with some other place
-where they write the outstanding time modification before evicting the
-inode from memory.
+> 
+> Btw, would it make sense to enhance the interface to tell why the
+> data vs considered lost?  i.e. checksum failure vs
 
-Second effect is that without I_DIRTY_TIME writeback in iput()
-__inode_lru_list_add() in iput_final() will not add these inodes to the lru
-list and they won't be added there after flush worker did the dirty time
-writeback either so they'd be sitting in memory pretty much until unmount
-(or until somebody uses them again).
+> (part of) device disappeared?
 
-								Honza
+isn't it something filesystem should report even before fsverity
+gets the page?
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+- Andrey
+
