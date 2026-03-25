@@ -1,36 +1,38 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4CE36B047;
-	Wed, 25 Mar 2026 20:34:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2003308F38;
+	Wed, 25 Mar 2026 20:39:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774470897; cv=none; b=PrEwFMkRj+mxOK5/nj1/CxSbxBBD3GUDdqWa+lh9dwZvlcSxVlYbnsU3Bi1tBKaVTje/1mcId4T4JtTqWkJnVf11gz9jL+AXZXYNtkEjYUUkhSCQSBCwL+/4zzT/DOB5UXU+J2mjsrI+pz2OqzNT0cpqIVgnBQZZttUcirUsWrc=
+	t=1774471169; cv=none; b=lGM1if8Y67vsbVD34l9jPwpq7BK4nvCFxv4qvo2p4K/UOaZ0NywkDJdXJ6YSSc/gSsKgX6dGC33OHSZ+CI8rCwzwIygU5OaRSzo+5Utq66hKjmYxUyEvEvKelR4oDfTv5G+ccqirEidtZny5YdwZkcCHI5Ut+csQMDC2Ws51hM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774470897; c=relaxed/simple;
-	bh=hY080uvPl+LEJJt54gSEYsldkDiD0CJld2/4td8A6aI=;
+	s=arc-20240116; t=1774471169; c=relaxed/simple;
+	bh=AMsmI0aU+DwXjnXDp5MgHzE4DmsSNfqSkmJpzQV7Pp4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GTDCCPt1XnREmTiYoWLcMsi3GPVLUzJVYgLFUQ+30kEmb21bqugoNTf6b6lR43tI8HgohqdWcK4b3fFAbWUi/uD55P+7hwN13Dti9ySLON2sN8TGNMxzy/kqRBCOh1CspFOjIM1YuOTQVJn0cl8CXuMuC/g4QexVrdzNdO5DGiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbYBhCbS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OT5ZW8orIWkZATkA0PJptupOK+fgdvFkUehHhyE4g+UZhwnI7wlAxVbiMgm68gJo+p2GO8CwXl6EwUFPbKFRfjqOy5UNLdsEXC00hkV4qxXFisTLTHUbYr8vz6vWyDwoq7lYMSwsMKywcdj9ywa4sHwtKlyN9VeYe6czrqm/vOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=o4dEHtRV; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbYBhCbS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9764DC4CEF7;
-	Wed, 25 Mar 2026 20:34:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774470897;
-	bh=hY080uvPl+LEJJt54gSEYsldkDiD0CJld2/4td8A6aI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bbYBhCbSSQyOTk2rJFqHAHyFkKsd73IqUwcFy1AxQRkoLCwLLPF6umiKPs2LeSj7H
-	 Hb2Y1u24jgh3bjfi6QzV4qDUu44EkKemZiprOOLgNgmHHUayATDX8gnaSXKhoYUck0
-	 oaxE1niv2eRDUu2vHcH/hKX7Tbh4hCPoz0Y/MIbst2XgsBzoS8Ttync+PNpOfwa3bH
-	 5IVdXJnMAQ6hoLZ/Amx7/4E0zDBlAaMvXFa03NeGgd1xTLyLS8gVLGk4rAzXdR/mU+
-	 6xueRiigw4BkQhn+wkJqXsBN1gQeiEN02uf1TnMkhR3uvyRnMWgxgs0oifdlPY5Cca
-	 fgS5DepuxPWMA==
-Date: Thu, 26 Mar 2026 07:34:45 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o4dEHtRV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=qX+god1XVd2ivXCYier0tY7NsB6ICtw7odjLzfpR+Aw=; b=o4dEHtRV1qXOf0mlPmYYJI7Li5
+	x8pyBl3KLeP8H95MLyv95XfcTpXFj0RR4J/a52leLhCW7ttG0fTz0hqwNNotVSklYRexKk28Pi+1L
+	mcjlPNvgZ0Gd2qr35dYqIgUD3YTHCudurWe6B3yOfjYap5P8QxfRTj1tlT6ekKTUPDDWgv7ZpP93E
+	t5i9d2nuRSHinYSzvotcMDSsacKfGdWyP1c0dDiSNDE807yrFR0EQMc8dSAGK+5z5fV5Ry+sH1cr1
+	MdUoOS3RIk/Elmy2VjrESqB5cqbwrU+QL1Rp0atHaOAP4atcCq2RDO2/YNEi2cVgiXGdhPTHl5FYV
+	zGMsX7LQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w5V0b-0000000GVxU-2CYm;
+	Wed, 25 Mar 2026 20:39:22 +0000
+Date: Wed, 25 Mar 2026 20:39:21 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Dave Chinner <dgc@kernel.org>
+Cc: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
 	Christian Brauner <brauner@kernel.org>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
@@ -38,11 +40,12 @@ Cc: Jens Axboe <axboe@kernel.dk>,
 	Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH RFC v4 2/3] iomap: use BIO_COMPLETE_IN_TASK for
- dropbehind writeback
-Message-ID: <acRG5f9QjdEKg2JB@dread>
+Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
+ task-context completion
+Message-ID: <acRH-fWPKkFFXcLZ@casper.infradead.org>
 References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
- <20260325-blk-dontcache-v4-2-c4b56db43f64@columbia.edu>
+ <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+ <acRE8pp6HxjK7Z74@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,65 +54,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260325-blk-dontcache-v4-2-c4b56db43f64@columbia.edu>
+In-Reply-To: <acRE8pp6HxjK7Z74@dread>
 
-On Wed, Mar 25, 2026 at 02:43:01PM -0400, Tal Zussman wrote:
-> Set BIO_COMPLETE_IN_TASK on iomap writeback bios when
-> IOMAP_IOEND_DONTCACHE is set. This ensures that bi_end_io runs in task
-> context, where folio_end_dropbehind() can safely invalidate folios.
+On Thu, Mar 26, 2026 at 07:26:26AM +1100, Dave Chinner wrote:
+> > @@ -1988,6 +2060,16 @@ static int __init init_bio(void)
+> >  				SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+> >  	}
+> >  
+> > +	for_each_possible_cpu(i) {
+> > +		struct bio_complete_batch *batch =
+> > +			per_cpu_ptr(&bio_complete_batch, i);
+> > +
+> > +		bio_list_init(&batch->list);
+> > +		INIT_WORK(&batch->work, bio_complete_work_fn);
+> > +	}
+> > +
+> > +	cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "block/bio:complete:dead",
+> > +				NULL, bio_complete_batch_cpu_dead);
 > 
-> With the bio layer now handling task-context deferral generically, XFS
-> no longer needs to route DONTCACHE ioends through its completion
-> workqueue for page cache invalidation. Remove the DONTCACHE check from
-> xfs_ioend_needs_wq_completion().
+> XFS inodegc tracks the CPUs with work queued via a cpumask and
+> iterates the CPU mask for "all CPU" iteration scans. This avoids the
+> need for CPU hotplug integration...
+
+Can you elaborate a bit on how this would work in this context?
+I understand why inode garbage collection might do an "all CPU"
+iteration, but I don't understand the circumstances under which
+we'd iterate over all CPUs to complete deferred BIOs.
+
+> > +++ b/include/linux/blk_types.h
+> > @@ -322,6 +322,7 @@ enum {
+> >  	BIO_REMAPPED,
+> >  	BIO_ZONE_WRITE_PLUGGING, /* bio handled through zone write plugging */
+> >  	BIO_EMULATES_ZONE_APPEND, /* bio emulates a zone append operation */
+> > +	BIO_COMPLETE_IN_TASK, /* complete bi_end_io() in task context */
 > 
-> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
-> ---
->  fs/iomap/ioend.c  | 2 ++
->  fs/xfs/xfs_aops.c | 4 ----
->  2 files changed, 2 insertions(+), 4 deletions(-)
+> Can anyone set this on a bio they submit? i.e. This needs a better
+> description. Who can use it, constraints, guarantees, etc.
 > 
-> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-> index e4d57cb969f1..6b8375d11cc0 100644
-> --- a/fs/iomap/ioend.c
-> +++ b/fs/iomap/ioend.c
-> @@ -113,6 +113,8 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
->  			       GFP_NOFS, &iomap_ioend_bioset);
->  	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
->  	bio->bi_write_hint = wpc->inode->i_write_hint;
-> +	if (ioend_flags & IOMAP_IOEND_DONTCACHE)
-> +		bio_set_flag(bio, BIO_COMPLETE_IN_TASK);
->  	wbc_init_bio(wpc->wbc, bio);
->  	wpc->nr_folios = 0;
->  	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 76678814f46f..0d469b91377d 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -510,10 +510,6 @@ xfs_ioend_needs_wq_completion(
->  	if (ioend->io_flags & (IOMAP_IOEND_UNWRITTEN | IOMAP_IOEND_SHARED))
->  		return true;
->  
-> -	/* Page cache invalidation cannot be done in irq context. */
-> -	if (ioend->io_flags & IOMAP_IOEND_DONTCACHE)
-> -		return true;
-> -
->  	return false;
->  }
+> I ask, because the higher filesystem layers often know at submission
+> time that we need task based IO completion. If we can tell the bio
+> we are submitting that it needs task completion and have the block
+> layer guarantee that the ->end_io completion only ever runs in task
+> context, then we can get rid of mulitple instances of IO completion
+> deferal to task context in filesystem code (e.g. iomap - for both
+> buffered and direct IO, xfs buffer cache write completions, etc).
 
-Ok, so higher layers can set it.
-
-At this point, I'd suggest that we should not be making random
-one-off changes to the iomap and filesystem layers like this just
-for one operation that needs deferred IO completion work. This needs
-to considered from the overall perspective of how we defer
-completion work -  there are lots of different paths through
-filesystems and/or iomap that require/use task deferal for IO
-completion. We want them all to use the same mechanism - splitting
-deferal between multiple layers depending on IO type is not a
-particularly nice thing to be doing...
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+Right, that's the idea, this would be entirely general.  I want to do
+it for all pagecache writeback so we can change i_pages.xa_lock from
+being irq-safe to only taken in task context.
