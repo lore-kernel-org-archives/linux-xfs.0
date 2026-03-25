@@ -1,44 +1,34 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384923502A5;
-	Wed, 25 Mar 2026 06:22:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FE0351C37;
+	Wed, 25 Mar 2026 06:38:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774419764; cv=none; b=upmXRYlOuW2mafrwQbac9OQZkkqTcc4kWAHzoS1u69h0B5v2AIpel3wkmLtuuNEc3N619t8Oc+8kaXcZbgt567nZhUhCgqfoiHSDHYCDZhqGiJu2+yocY4nXLJS1iJaCHRI/Wj0/FUYyHjbD4l61V/3KZzOCnImG+qC3GhklFE8=
+	t=1774420708; cv=none; b=g0RpsLghhBHTXyw8NF1vl2mnLs+D5sP/3x49Sf3uLEkd84gSbqyo5CCvKGkybRqKo/jbwje81bW2LAhJ4wT5n19urnUvfGZKBuUtZxi+j8G9/cuWnzOieVih21zAueFn6V5WUjljF+U3Bq6bfRLX+/uXKs4hSt21U+jgRFcGwtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774419764; c=relaxed/simple;
-	bh=ihJZAOpELfWa72rz9zgkyCwNROmQ/BAXIqaNXEnrGHk=;
+	s=arc-20240116; t=1774420708; c=relaxed/simple;
+	bh=UTEEbLYVD1iCwPqVU6o4ZZ7/W47w6mxB6HPoVBwbjCg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DPNRCFM2C5uyWYodBfBJKO5v7ia4OyHjnFr5i8KG11Q73ljzunu7XVBkynHYUUQlCrjnDfJ55givulXsyIwlqq4KAkwsbrHN49TttSJ0fhtuQg8qvZ/dxU2OvF4lWLlGtu2Cv8Mxa3CgmhUXLb2ktqXTf5IVsVoyqBMGSKmXInQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KF9NYGzS; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KF9NYGzS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ihJZAOpELfWa72rz9zgkyCwNROmQ/BAXIqaNXEnrGHk=; b=KF9NYGzS3DUllcLHGy1y/jnCbd
-	yts8n0s7FZU6p24z8Cba1gkmz9J7vTc99J9ZwuCUEdLKJcKPTkLnx2BzDvEVwGLt+L6yGnOBHHzvu
-	0emaZeINwG89FevrersImEukc+AS1HtiqpVDmL6esrKy30ivJnxoUDORvA0sSoba3wW7G3hOps6We
-	EJWlv/k989SZuc90BZd3v5AaUzwr92TOGEmwZIW/EePCFh+n67vZz0jTgIShbFjhBi4tsAJqK3W65
-	m92uB4lvrLsDLm1tJdYE4ukTabi1t0taGsMQnNYsPVKEFaEBCLbLNFmkJQAOIWs4erE1ffO0ni6/r
-	7DBadOQQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w5Hda-00000002mW7-3Eg5;
-	Wed, 25 Mar 2026 06:22:42 +0000
-Date: Tue, 24 Mar 2026 23:22:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Cen Zhang <zzzccc427@gmail.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	baijiaju1990@gmail.com, stable@vger.kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v2] xfs: use xfs_trans_ail_copy_lsn for lockless li_lsn
- read in CIL formatting
-Message-ID: <acN_Mh5I_auSv_VM@infradead.org>
-References: <20260323070949.3769170-1-zzzccc427@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=p87ZERQXNOGl88tEnl+iS6furpwe55M/DzE1qhH7Ozd85U23z1AUDu11zn5C+b6RyePXZezZUiqS+HAGjTDK+PNsqxb9206jWXUd9NvsBDHwWnHC++gfhvnbNYcDDmxJ1Ftd2RN12/qIu2xRa/Ni7vSq5+6jr/JWA/2Es2sIhBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4A4ED68B05; Wed, 25 Mar 2026 07:38:22 +0100 (CET)
+Date: Wed, 25 Mar 2026 07:38:22 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Morduan Zang <zhangdandan@uniontech.com>, dgc@kernel.org,
+	brauner@kernel.org, cem@kernel.org, dchinner@redhat.com, hch@lst.de,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	syzbot+d78ace33ad4ee69329d5@syzkaller.appspotmail.com,
+	tytso@mit.edu, viro@zeniv.linux.org.uk, zhanjun@uniontech.com
+Subject: Re: [PATCH] xfs: defer lazytime timestamp updates to inodegc
+ during eviction
+Message-ID: <20260325063822.GA32067@lst.de>
+References: <absSoRi8oxXSuSZ7@dread> <6EBD01CF561B83EC+20260320100353.220462-1-zhangdandan@uniontech.com> <tet44nv2qc7i7uhrip4gcd7cur2cpn4mmgyh4v6hquaju2xtih@i5s2uco5wemr>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,14 +37,13 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260323070949.3769170-1-zzzccc427@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <tet44nv2qc7i7uhrip4gcd7cur2cpn4mmgyh4v6hquaju2xtih@i5s2uco5wemr>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good to me, even if the additional lock on 32-bit might hurt
-that one person or two running performance critical workloads on
-32-bit systems:
+On Tue, Mar 24, 2026 at 04:14:23PM +0100, Jan Kara wrote:
+> Isn't this problem already fixed by Christoph's patch
+> https://lore.kernel.org/all/20260317134409.1691317-1-hch@lst.de ?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It should.  My question to Ted what we're even trying to do in this
+context is also still outstanding.
 
-But I'd really like to have Dave look over this as he's the resident
-expert in this area.
