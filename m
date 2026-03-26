@@ -1,48 +1,33 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A43E324B33;
-	Wed, 25 Mar 2026 21:04:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E18A1ACEDE;
+	Thu, 26 Mar 2026 00:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774472648; cv=none; b=Kpg3GmOf0cmIp+VesM5BymwL5kfE6mfQHH901BaCBEzXh1JxKwkqmEHCMQm63SIg936MGX20r31/2/cOONYla1uLQSnuTgU+4fL4fhR6vuDM8o13BdQABwdOrcUL2orYICyToxqGXKyMRXk3DDf0xG91KMh86xe+YieXKOOfkcw=
+	t=1774486234; cv=none; b=Xz+BBIPPb079UxNR8pgVe9dduEfTJxk/Up7lTa7b6JdxWqpjOj3V/1Sy3QPImVi8wMVnwj0oFFOwG0usoTJ7DW4NHJV3LM1qzrjIIjpYRPFSeeV/iPdbsrHpAksQvF88OFbJyejrToGouRP0jL3esnPuVMOCOs6pDCv/z07QuDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774472648; c=relaxed/simple;
-	bh=LMWHjGbw+sX+3z/kmSDjzVnY3mVcrSIcPE9m+3Za9So=;
+	s=arc-20240116; t=1774486234; c=relaxed/simple;
+	bh=Ht8ZWVhXe/g5CJUAlXKokY0KJFyDOB6pwC2sG/WX5Q0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YYGBowmXqS/80nTxNnetY1fK4CNBFiybtnoV1M8ARIKZV/WGnH6PPtZq3RJlGY07ZIbeS4E+gOv6CklJiokX2jiyJQwFOW3vlz53kO37xnxuN72b9fjeOoRpbpjRSOn1Aeg/foQPrWaMm/Z0wMxLuUnMyY0YCSlUC4mUeR4EIT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=d+SBetD5; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=mW6yrbGvBrFJ0KcB9B4kQSvLEokOrrq9UvZolumeaUhZ3O1SWkqxUycyv802kO2G5wNp3YHJQUZGnN8Sic8F4g9uW9nUQVNmtNnOhkNUG9Tb5ffqoSmkrUWd/pdeZdYlFmBVH1MzNT1eKFrhNPGNQuILq+MNPJgXeInDndWIsGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m7I5kjO4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="d+SBetD5"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fgzsy2sJbz1XM0nj;
-	Wed, 25 Mar 2026 21:04:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1774472628; x=1777064629; bh=97Z41foFc+tZXOntpL6elWdJ
-	fICUWmGkxy05YMBEDcM=; b=d+SBetD5T0ANFFheTW1fVKWSFv622BZGQ6g+ZEyE
-	UNlC3HQ/P0Ll2JB997Q6LcPJtI+v0U1Clqwcx1FhJR3izYI6raLBgB1ccBDpql9t
-	SDsR2f20v2xMEnwl7XT54GdVTWWDvNYTSv0vTutu8ugaRgu7qeWcu9ryU8tlZaiM
-	RQighKsSFMsM51W+FZM4BSWFc1MifYA5yFIdIvcKQqOvkbzyWC4jlEIZR2qMwknu
-	Lftj++TFcm7/uLSgSjaZUhsBBP5nLMq8N9BuXEWTMmmbMBrjtXdBYQDgpEeH90j/
-	wJoddw+Wy4daftuF0ePYNFACEC9w5GPMp1Ze9+4w1dZ0Mw==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id VRWQ3mJKAFHd; Wed, 25 Mar 2026 21:03:48 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fgzsW1yFlz1XMG4r;
-	Wed, 25 Mar 2026 21:03:42 +0000 (UTC)
-Message-ID: <8f554173-4864-46fc-85e0-0a7f3ca70210@acm.org>
-Date: Wed, 25 Mar 2026 14:03:40 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m7I5kjO4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A7E4C4CEF7;
+	Thu, 26 Mar 2026 00:50:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774486233;
+	bh=Ht8ZWVhXe/g5CJUAlXKokY0KJFyDOB6pwC2sG/WX5Q0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=m7I5kjO4g6s5WNGJwwJRmj49T0+KK1lJaI6pwa4yZp6gh0/AElNfxLRlj4YK2j4NS
+	 zM6PNVcCKUYoVRtCn8wQGHOWgPtOY+8Q2NXDpKV/tQOayzWY7JwcZnvgN6QgnypdNv
+	 x80pilzlIAbDkjKyElKIqHV4msPHiXYL6Ieds2R2uLXqXMR1j3w5oj+0i5bBOo4cnE
+	 i7DmsPM3dngOV2yCL+wqKKSQByp0iof+pXdE+8gzw3ovMRFWhyhL5hnjhvJ31XhY86
+	 R9jDX3YFRlAWKP8GaIwRxa97UsyUEbmL41FAmSfBAecLHzMUtbf8Tj/H/twsp1dGKY
+	 oMYXHB8ER1JAw==
+Message-ID: <858663e3-def5-4cb3-b259-0ba52d830088@kernel.org>
+Date: Wed, 25 Mar 2026 17:50:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,41 +35,35 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
- task-context completion
-To: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
- <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+Subject: Re: [PATCH v2] xfs: start gc on zonegc_low_space attribute updates
+To: Hans Holmberg <hans.holmberg@wdc.com>, Carlos Maiolino <cem@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong"
+ <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ linux-xfs@vger.kernel.org, stable@vger.kernel.org
+References: <20260325124312.26349-1-hans.holmberg@wdc.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260325124312.26349-1-hans.holmberg@wdc.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/25/26 11:43 AM, Tal Zussman wrote:
-> +	schedule_work_on(smp_processor_id(), &batch->work);
+On 2026/03/25 5:43, Hans Holmberg wrote:
+> Start gc if the agressiveness of zone garbage collection is changed
+> by the user (if the file system is not read only).
+> 
+> Without this change, the new setting will not be taken into account
+> until the gc thread is woken up by e.g. a write.
+> 
+> Cc: <stable@vger.kernel.org> # v6.15
+> Fixes: 845abeb1f06a8a ("xfs: add tunable threshold parameter for triggering zone GC")
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 
-Since schedule_work_on() queues work on system_percpu_wq the above call
-has the same effect as schedule_work(&batch->work), isn't it? From the
-workqueue implementation:
+Looks OK to me.
 
-	system_percpu_wq = alloc_workqueue("events", WQ_PERCPU, 0);
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-[ ... ]
 
-	if (req_cpu == WORK_CPU_UNBOUND) {
-		if (wq->flags & WQ_UNBOUND)
-			cpu = wq_select_unbound_cpu(raw_smp_processor_id());
-		else
-			cpu = raw_smp_processor_id();
-
-Thanks,
-
-Bart.
+-- 
+Damien Le Moal
+Western Digital Research
