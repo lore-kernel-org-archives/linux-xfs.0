@@ -1,69 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5AC2D1303;
-	Thu, 26 Mar 2026 12:37:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDCBE26463A
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Mar 2026 13:04:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774528656; cv=none; b=MCxdpo/B+Mjq2+jvwgTsvkzJvRBQFvDU53OA62XScQzdF4Epq46BORX/LieBTwB3RveTLg7wOYm2kLE1GriHacIe6QIANin08pLg4wO2IrOnj3et3PHJGa+3QHPAt1+7zn76sC+wIw27aUFIWTkfcKi2xv1HIiG7sczZ0k09gs4=
+	t=1774530263; cv=none; b=AWoouIR6aDliXMfffxuMO34hPB3FMlEip4EWCKcnDevq07Fai+E3woFyE1/EOR+AHO+L62wT2EBQg2JpAn9CmnCJ2tY/ME92p7C3F1sFjDN/hhj7bCle3K/mwpta4aDvZ2Ahngxx82M18QQNmz5ODDSyoVSvMdm5Dt/jeYl1FSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774528656; c=relaxed/simple;
-	bh=0VYsN61u1J8fd4QXa81OD6Du1W1YTcyl+e9uIPPdeI8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JYpPgsfV0aFkzsdm3ZaUILKxutnWwre2TxMs+66LFUXsAB4qODuaKTCnDnb4FCvbcPsk68wG/j1xWx+ZNk2EYi70MFTJikYl0ANGOL28O3/Z3unPH5DbwaL1+oPQ6mrLMyqGt1JwXOo0ydkJtfhaWhd5QPThAOj2psOM208Wajs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q0u7DZNe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774530263; c=relaxed/simple;
+	bh=DhWQjBRQMtCJrfTe3oozsXIcr/DzUsEMHkkCqN+z1mI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZR2tVBeHxalifQeceDvGzUpBD/mQu7S4oCeni/Mkd7HnK/Ae6FSdnm5+VA1orBAF8v2+8Yydb6R4UMjDyblnRJXmpm42nqq9K1+E8o7L/RXvn2b7VdMf2hRQIcFIIUHN1wjbxucQZK52rKMY6YXEyBj6T6AAl/BmwLX1X7mSGlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bH4OGBJz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q0u7DZNe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79BA9C116C6;
-	Thu, 26 Mar 2026 12:37:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bH4OGBJz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 497AAC116C6;
+	Thu, 26 Mar 2026 13:04:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774528656;
-	bh=0VYsN61u1J8fd4QXa81OD6Du1W1YTcyl+e9uIPPdeI8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=q0u7DZNe4dhAIlCn5oT4MRnI2vdLQBpzorFBsiF9Vo+CeF4EUZn9JS6oViPnCnJqM
-	 kXVlt2qZV0e6wgbKZevL5vwVWSciIYKq4vnWpmFCj5moeD/xxswxLy2RESJugkuLYm
-	 vRu6QyjHt2e9QqnlcHNZA45/Vzmgf6n8qFcDqqJoeLtZKiuyoJGk4oKy8NQQmZnE3W
-	 SCbBmpyPOFgBBXA7iilQoDBU3KT1zg1NMh3UayOzeCZ4B9Wn7s5TRsLsJALvDCxpnu
-	 AVtaVvkY/QbUSBPj2ynop0ewHDSBKHSgGcAlpUz3NfPPs/aErfuebmnAMW204uWfot
-	 AecwV7S+8zV9g==
-Message-ID: <5ff9bc59-f579-4b7a-bc7a-eef411b8e31e@kernel.org>
-Date: Thu, 26 Mar 2026 08:37:34 -0400
+	s=k20201202; t=1774530263;
+	bh=DhWQjBRQMtCJrfTe3oozsXIcr/DzUsEMHkkCqN+z1mI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bH4OGBJzSa+EPKRWpd2jofqQ9eLzO0LY/7GybB+Q9YIkMa7PS2W1mCnRgpHO42FhB
+	 wDMPFkNQrfNiPOsCLQ1CWYIDrtKAZFKYmqj+b0sLLBfI2s4A3Msqj/wplBCYH/FdQ0
+	 iTOfbBZRYIZGG9JwmkRTTKwAj/DLETerGbXZi3F0uLFlj6Y+5x0wfPB22DhtjcMbVq
+	 G9041FVtWdqUmABuwGK2++mzG1wIoCgzsGcatWZZ45A0/O19kMdprNOK2MSKeKlfn+
+	 PqtmaCTtcDrGudIREtOqcMYzkW3z4mufTR7sk7rQAyhRKd1kO60Xd3E8woRB0WSJWF
+	 kPCiJMAz75oUg==
+Date: Thu, 26 Mar 2026 14:04:19 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Long Li <leo.lilong@huawei.com>, linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 2/3] xfs: don't expose stale pointers to callers of
+ xlog_recover_iget
+Message-ID: <acUrniYmDuw6k71m@nidhogg.toxiclabs.cc>
+References: <20260323210157.GM6223@frogsfrogsfrogs>
+ <20260323210351.GN6223@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/7] nfsd/blocklayout: support GETDEVICEINFO for multiple
- devices
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>,
- Amir Goldstein <amir73il@gmail.com>, NeilBrown <neil@brown.name>,
- Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
- Tom Talpey <tom@talpey.com>, Carlos Maiolino <cem@kernel.org>,
- linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-References: <20260323070746.2940140-1-hch@lst.de>
- <20260323070746.2940140-6-hch@lst.de>
- <736ddc8a-7a28-4900-b3c1-0368cad24085@app.fastmail.com>
- <20260326053828.GC23157@lst.de>
-From: Chuck Lever <cel@kernel.org>
-Content-Language: en-US
-Organization: kernel.org
-In-Reply-To: <20260326053828.GC23157@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260323210351.GN6223@frogsfrogsfrogs>
 
-On 3/26/26 1:38 AM, Christoph Hellwig wrote:
-> On Mon, Mar 23, 2026 at 09:53:33AM -0400, Chuck Lever wrote:
+On Mon, Mar 23, 2026 at 02:03:51PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> [full quote reviewed, can you please trim your replies to the relevant
->  parts?]
-All three of my replies to this series were trimmed. I find your replies
-so aggressively trimmed that I lose context. It seems to be a matter of
-taste.
+> Fix this function to avoid exposing a stale pointer to the caller when
+> returning an error code after dqattach fails.
+> 
+> Cc: <stable@vger.kernel.org> # v5.15
+> Fixes: 4bc619833f738f ("xfs: refactor xfs_iget calls from log intent recovery")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Long Li <leo.lilong@huawei.com>
+> ---
+
+Hi.
 
 
--- 
-Chuck Lever
+>  fs/xfs/xfs_log_recover.c |   12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 09e6678ca4878e..0e91a62348eb79 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1745,21 +1745,23 @@ xlog_recover_iget(
+>  	xfs_ino_t		ino,
+>  	struct xfs_inode	**ipp)
+>  {
+> +	struct xfs_inode	*ip;
+>  	int			error;
+>  
+> -	error = xfs_iget(mp, NULL, ino, 0, 0, ipp);
+> +	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_qm_dqattach(*ipp);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error) {
+> -		xfs_irele(*ipp);
+> +		xfs_irele(ip);
+>  		return error;
+>  	}
+>  
+> -	if (VFS_I(*ipp)->i_nlink == 0)
+> -		xfs_iflags_set(*ipp, XFS_IRECOVERY);
+> +	if (VFS_I(ip)->i_nlink == 0)
+> +		xfs_iflags_set(ip, XFS_IRECOVERY);
+>  
+> +	*ipp = ip;
+>  	return 0;
+
+Honestly I tend to agree with Christoph here. I don't really understand
+what bug, real or theoretical, this is trying to fix, other than
+somebody not aborting whatever operation is being done if an error
+is returned.
+
+I don't see any issue with an extra inode pointer being passed on the
+stack here, but I don't see any benefit for this either.
+
+Did you fall into this somehow? Have you seen this into the wild? I'll
+pull the other patches meanwhile, but I think this one deserves more
+discussion.
