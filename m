@@ -1,69 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E18A1ACEDE;
-	Thu, 26 Mar 2026 00:50:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596FD322A00;
+	Thu, 26 Mar 2026 02:44:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774486234; cv=none; b=Xz+BBIPPb079UxNR8pgVe9dduEfTJxk/Up7lTa7b6JdxWqpjOj3V/1Sy3QPImVi8wMVnwj0oFFOwG0usoTJ7DW4NHJV3LM1qzrjIIjpYRPFSeeV/iPdbsrHpAksQvF88OFbJyejrToGouRP0jL3esnPuVMOCOs6pDCv/z07QuDY=
+	t=1774493056; cv=none; b=HXW6E7XC1zsjlKyW44gFqgr53y7kp7H3IBcJURqGjSUmDmhGCOwhsoZVUbjkn94BoHLN9YotQlV38jbU7pPLqJiOz9Uw0voLHQ3awckiMerTYRKCcV1uqPfMk7AceyQNTbP92aRuQ5HAW0SFe0mc9OpQkmnP2w+TDFm8fdC2YtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774486234; c=relaxed/simple;
-	bh=Ht8ZWVhXe/g5CJUAlXKokY0KJFyDOB6pwC2sG/WX5Q0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mW6yrbGvBrFJ0KcB9B4kQSvLEokOrrq9UvZolumeaUhZ3O1SWkqxUycyv802kO2G5wNp3YHJQUZGnN8Sic8F4g9uW9nUQVNmtNnOhkNUG9Tb5ffqoSmkrUWd/pdeZdYlFmBVH1MzNT1eKFrhNPGNQuILq+MNPJgXeInDndWIsGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m7I5kjO4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774493056; c=relaxed/simple;
+	bh=LrDa74kusD0Qs5ckOdznuE3nf+2ULrBRJxIuPhAify8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sOrvuuQlY0G1oSkT64UnU5wZ4/EwNmdlN80sv9EUbp+7ayxRDo7HshksUAkuT1HGtyKq2md2OBFZsnCErHhU/VbZm5Kw42cmimbACWKd+6zP1N2Ti5nflSpfMEyhhyR+CHYHvxYOcwwk8zL6Iof+Vk+DRRUDZ9Z/aeRBV6dEBs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uA9xM8Tl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m7I5kjO4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A7E4C4CEF7;
-	Thu, 26 Mar 2026 00:50:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uA9xM8Tl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1330C4CEF7;
+	Thu, 26 Mar 2026 02:44:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774486233;
-	bh=Ht8ZWVhXe/g5CJUAlXKokY0KJFyDOB6pwC2sG/WX5Q0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=m7I5kjO4g6s5WNGJwwJRmj49T0+KK1lJaI6pwa4yZp6gh0/AElNfxLRlj4YK2j4NS
-	 zM6PNVcCKUYoVRtCn8wQGHOWgPtOY+8Q2NXDpKV/tQOayzWY7JwcZnvgN6QgnypdNv
-	 x80pilzlIAbDkjKyElKIqHV4msPHiXYL6Ieds2R2uLXqXMR1j3w5oj+0i5bBOo4cnE
-	 i7DmsPM3dngOV2yCL+wqKKSQByp0iof+pXdE+8gzw3ovMRFWhyhL5hnjhvJ31XhY86
-	 R9jDX3YFRlAWKP8GaIwRxa97UsyUEbmL41FAmSfBAecLHzMUtbf8Tj/H/twsp1dGKY
-	 oMYXHB8ER1JAw==
-Message-ID: <858663e3-def5-4cb3-b259-0ba52d830088@kernel.org>
-Date: Wed, 25 Mar 2026 17:50:27 -0700
+	s=k20201202; t=1774493056;
+	bh=LrDa74kusD0Qs5ckOdznuE3nf+2ULrBRJxIuPhAify8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uA9xM8TlDA8Ri8x9xtA0d+L2RRzbXKmjjjzhGNTc1Xmkp1rJJZvxU+MF5rSM4+e2V
+	 LyjN8vd5EhgmoQU54pxXJs5H39ssW6qbiajuGgeXnKnQjVWx9hGcvOS+CI0010hwhy
+	 RqcCkc2gFnywy+C38Md08UQ3eg1RgGoV+dyeC+S86RzrUYav/qJYTLzZZEE0ciByZa
+	 RBN80Boij9Tox2W52kPQxb7EWFazDbYgc3I4R+JQHVL/7EMIgzXIf4TgeUkpys/6XE
+	 Kqn1gOvDx87rM/a8YeY+Ka8fp83zg4DnvbrjWcvtKrztj+TPHLcp1Nw9hAFLWZPJ3s
+	 SKICNvt3skN/w==
+Date: Thu, 26 Mar 2026 13:44:03 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Tal Zussman <tz2294@columbia.edu>, Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
+ task-context completion
+Message-ID: <acSdcwclPGXLGwBx@dread>
+References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
+ <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+ <acRE8pp6HxjK7Z74@dread>
+ <acRH-fWPKkFFXcLZ@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] xfs: start gc on zonegc_low_space attribute updates
-To: Hans Holmberg <hans.holmberg@wdc.com>, Carlos Maiolino <cem@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong"
- <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
- linux-xfs@vger.kernel.org, stable@vger.kernel.org
-References: <20260325124312.26349-1-hans.holmberg@wdc.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260325124312.26349-1-hans.holmberg@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <acRH-fWPKkFFXcLZ@casper.infradead.org>
 
-On 2026/03/25 5:43, Hans Holmberg wrote:
-> Start gc if the agressiveness of zone garbage collection is changed
-> by the user (if the file system is not read only).
+On Wed, Mar 25, 2026 at 08:39:21PM +0000, Matthew Wilcox wrote:
+> On Thu, Mar 26, 2026 at 07:26:26AM +1100, Dave Chinner wrote:
+> > > @@ -1988,6 +2060,16 @@ static int __init init_bio(void)
+> > >  				SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+> > >  	}
+> > >  
+> > > +	for_each_possible_cpu(i) {
+> > > +		struct bio_complete_batch *batch =
+> > > +			per_cpu_ptr(&bio_complete_batch, i);
+> > > +
+> > > +		bio_list_init(&batch->list);
+> > > +		INIT_WORK(&batch->work, bio_complete_work_fn);
+> > > +	}
+> > > +
+> > > +	cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "block/bio:complete:dead",
+> > > +				NULL, bio_complete_batch_cpu_dead);
+> > 
+> > XFS inodegc tracks the CPUs with work queued via a cpumask and
+> > iterates the CPU mask for "all CPU" iteration scans. This avoids the
+> > need for CPU hotplug integration...
 > 
-> Without this change, the new setting will not be taken into account
-> until the gc thread is woken up by e.g. a write.
-> 
-> Cc: <stable@vger.kernel.org> # v6.15
-> Fixes: 845abeb1f06a8a ("xfs: add tunable threshold parameter for triggering zone GC")
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Can you elaborate a bit on how this would work in this context?
 
-Looks OK to me.
+It may not even be relevant. I was just mentioning it because if
+someone looks at the xfs_inodegc code (as I suggested) they might
+wonder why there aren't hotplug hooks for a per-cpu queuing
+algorithm and/or why it tracked CPUs with queued items via a CPU
+mask...
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-
+-Dave.
 -- 
-Damien Le Moal
-Western Digital Research
+Dave Chinner
+dgc@kernel.org
