@@ -1,60 +1,60 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87682FB084
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 13:31:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FF482ED154
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 13:32:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774618288; cv=none; b=mRNS7nOh5T0Bcyoes8B/uM7EPnVVgUGQxrlTObB++RzSgJDw8M5ac6F927HBUhbKHPh+wRT3ol4oguuBL+venTHZKv11YvwW/0gov1szWC5ZIOtvTN/0tbK7u4EBUccDOiuEZU/x4vdN9lcbj6qQSJ6kl77Iu5xtBa2pQ4/zjp4=
+	t=1774618376; cv=none; b=dXPzv1BJu3TnYpSf9CjjQJA7gA4bDBFJlnqwH6dWBjsQxoV6QaUoT8G2nbccmAA/kgiFijrMMU8g3GC8PJ1Uy/imX1NIzanclRcH8PpuIK3gW3mHsipNhVtNl3FAArups0AXW70Irr/Ci//MAIHjrkz/q45VxuVNt/IuPnR9IqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774618288; c=relaxed/simple;
-	bh=aWFKLLyrUGMfgtno2wrwFP6oJ6cGkB7K195WAeAuroI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FAvFE2F0eCwX25PXdB3tcHY/fbH8tF2kUD8Yb1LGHuArXOcb4bmT+boOpGAm68w8oxq4Xsxr1PL0Kxsl+fY8ehiM7Y5MQQROrPjiY+7KJKa5sr8QG4x1BRybH2LgPf3lzkivbUQ5S3/h0IQoPDzF4qSTHe+VMzGR70az8X925Dw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Pmz+k6px; arc=none smtp.client-ip=209.85.214.178
+	s=arc-20240116; t=1774618376; c=relaxed/simple;
+	bh=PNjh+nBtoovM25MVmCPA4ZyoI9w3XN6jgyoE16tARQM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QSzqbzyLgL7JWvZnJelAylTO4RnduWNfflJyVp3npNg9434Es/r7XzH+a+nFb0nFX+zlik2bRTrqLijPrelyAwvTEFlTNgFK9YQjdBXZOeRaKEXl0d7A/JO4QCgS9Ijughkv8MrCQck9ryVwI40vEK4L9mr0moh+4jeCw4wWfSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HVAsYc/h; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pmz+k6px"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ad21f437eeso13599635ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 06:31:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HVAsYc/h"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2addb31945aso16971565ad.1
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 06:32:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774618286; x=1775223086; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774618374; x=1775223174; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vc6JenAuJhhJEAB101jmrcNR8nhg35SI5zHqwXmhxIE=;
-        b=Pmz+k6pxijLRP0cqjUp4Mzd/CeOYtCzKGWpNev4OgJQNGGo7qaWLOmCTLYBOk5eOFV
-         ZMmqNzB46TGnaHOiRqd+/6/bFv1wqehOe2Nylo4VtYa2ZkLVWgRSM0V7goVACfRHLSJ2
-         GdKMvzaYScN2Zksrl/NN8iBhZKgAY7FGnzjmwUMo6hz8/fuaxnuF+gwvbqvZxQqQHKFN
-         4oF+u2Hxh7ZG/lzHmMmzdeWGieixAU4feglexR73RZsryZYUzSYcz6XWXiGueFySlnHB
-         Fz9T5Xdlqf1OAvFWv3/eTHDNPK7bOGmih+xwMfZlgIcZQYkeJwWTLrQS+T/oKqEpce3O
-         9fBg==
+        bh=EONMaUpVytMI8mDTZgVkhsH1HsODfwxhYYTYobffMbc=;
+        b=HVAsYc/hEzGlJ8sfhC3A85W9aLu2mel2OEhfeLtDX+VrhsAi+GaB2KyYXVM9eFaXVN
+         Jj8CCKRuTI15YZ1aPJaYfflEZKA0AslUbkL1G2T80ctAygOT6Gyog+CYtFbPnjZQ1SVc
+         mahvRN4Z7UUd0RRDRhuVnOF/CiWvOs6RFX6iocsYGjIwTqNHFUiZME6fcAkpGZCibkfP
+         gZW9cHvn4wfcGVR9UsgOHpPlDw29rq1eOkqS186n/ufIEPiKebVgyBrlc8s0wIW+bqbk
+         8LTvoFDUFI+p7XC3aQMj0V8kK9kM6oaGrMf94H9LZcXiaTACi5PYpLf6kDrNGf+riEFN
+         z5ow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774618286; x=1775223086;
+        d=1e100.net; s=20251104; t=1774618374; x=1775223174;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=vc6JenAuJhhJEAB101jmrcNR8nhg35SI5zHqwXmhxIE=;
-        b=otSkyBgDvoMPwiOKwX+xSdze7TX1cpDoSuC0KHfvDbgxcaplBPHUJ2yltpmg0PJW+w
-         jmfXuOS8HB4ijYxs+psgOcL4ngcm6FhDF/ITAjXJwuYwUhtxSTCxkzyh9T4aeVbt3B7j
-         ZyYDBvIRgxi5hLeD1rhka6mUaNnQ48pqyTzAwazQatWekcUIWNQe9K/d2WVZhgFBXfYj
-         L6rNjGqatGQ85/uEHFASE5E7gccUWrs5TjBLTZZBga6+SUIS1P/S+sPJn1jlAY7q6igO
-         OFId9GbA+fHLKmkbb2KRRBHFLFsJZQXickR8FwBYbmspkjiKhK6EQq4P/6ppcsReuahj
-         2L5w==
-X-Gm-Message-State: AOJu0YyMzaEc287iN9xtnnuc5PFTh3ijE2ljcpacxzST3Yy/zW/WEGuE
-	f574pYkhYgH/AxSISsFkuX0LAR3tpiroCbocKqIoBrnuivUQHxtXX68v
-X-Gm-Gg: ATEYQzwkr8Ulv1dm7+EK9RZJEjQexJwLZUHmORjnsY77r5EIalqD4iL6wOM9Z3yW8DW
-	K5OC0iBUhmDegjrrbXDZwKB/KLjO8zpO+Aoe7TPY+H6Yrv0IaBe0ux5njPjYLXvNNPLrIQ9tH7H
-	nr+eC8k3k4/dlqawv9kSpWNEgi82EBxTZPHVTDUoth1f+sbUKruMvHFQ2sPlaOjd+ZpQ0Ei3gkd
-	qnXB5dtG69U80mHufyUVTrrowwoUj/Neulhwix7vm3Ybx3UztaOLYnzpk1wuuG88eHS4w8gnbqp
-	QkYSfGAcmSvJ6T4NDxOL2AnvEkcr0o1zMy6QAgLZous5ZEIzNg6aJUw4HuxKNOOWf9uRCNF3hoz
-	Jjg63s1jHoDFKUaX2WvUT/KSQ9eksUliFV0qatTuPgvZjTa1fgkcIPAg4wz3Ypapa3U9eXD/598
-	N2zYDwYcsQSkRBY7hEQA==
-X-Received: by 2002:a17:902:d4cf:b0:2b0:51f6:d469 with SMTP id d9443c01a7336-2b0ce5d7ee7mr25182795ad.23.1774618286084;
-        Fri, 27 Mar 2026 06:31:26 -0700 (PDT)
+        bh=EONMaUpVytMI8mDTZgVkhsH1HsODfwxhYYTYobffMbc=;
+        b=fSdGkl+C/Oya78qxyhea/Ip8k4jZ2E8XlHLeQzZ2n87U7Jjgv6JlZsxs5Y+lA+zc5g
+         AS0uen0XIY7mvQMfEAIJH/+9OT+w6A/yvr4pVjHBbFYeU8oCVgQV8erDjaOZDlQ7bpAi
+         Cj5Gq1HeJ7Yc4/qr60IAO/Z9xK5gxOv/VQnRiuBuvuAr6WML8qO0boS3yW0s8C7NOBxt
+         RrY83dhFV/Lai/qAbRKToUFjE8oaWFUHZdfHFrlMjmNCcIhLEPc14Qphki9Iu5EJ3Wni
+         EtXIAY0Y6+0DsSo51C9Z482ppxJmXhP+bR5901PUA0NAIn3sA/5tzg1ffP4I/FEFc/Yu
+         BkUA==
+X-Gm-Message-State: AOJu0YwXlpcUATjzlUEANLFBadsWJraoh7xf7xGvX1p01K7wgF2HVzQr
+	BPJF0vcIMRApJkt4L63B3CpRYM+lSzZHz/j5tHmZrJ++rQ4Y8zZLmsB8
+X-Gm-Gg: ATEYQzxUI+kphn/+jYkjuxnfhXQlSf1rUp3iWdXtmsa7MKciis7woaOsdeQ27BckGDg
+	FZ95qcc1AfFYJTxKXVRnMtd933mJQXfG5Etaf6FAKh9gWDgYEJ436Lb06kYi6ZNs6Ec5aR4kg8D
+	A/bRrilCNdAPliIr1Yhz/Grb4mUCDEDuAzbpVJaDW3OrQG5waVNZeCBwUZ293S3usn5xE4ZO48N
+	cJsZHHsHxirUO7jH0sEU5BXso+AsPfZT68DyaVGsG63VzPi1vUCV9IGzi37mvlE4Dz8pqh6wGYH
+	JDrt6pDHuQA2hD2xnma4oCfvq3fQq6DiaRSzckcU9huR/r+Y4t3fQX8poLpSB7d3AqE5+7/1hMM
+	2aWElBRQcp8nxhjn3ky7ZNgX1pNED2bDKbmLyAdOSl+SzpMuWXu6OexVY7surzYTDCLAMcw09S6
+	4rxqjqdbHz5MVos8CcNtkegNofOdHX
+X-Received: by 2002:a17:903:1ac4:b0:2b2:3eec:c75f with SMTP id d9443c01a7336-2b23eecd14fmr677615ad.28.1774618373775;
+        Fri, 27 Mar 2026 06:32:53 -0700 (PDT)
 Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0bc76bc66sm60170955ad.13.2026.03.27.06.31.21
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0bc7b8adasm82689115ad.33.2026.03.27.06.32.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Mar 2026 06:31:25 -0700 (PDT)
+        Fri, 27 Mar 2026 06:32:53 -0700 (PDT)
 From: Cen Zhang <zzzccc427@gmail.com>
 To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -62,9 +62,9 @@ Cc: linux-xfs@vger.kernel.org,
 	baijiaju1990@gmail.com,
 	Cen Zhang <zzzccc427@gmail.com>,
 	stable@vger.kernel.org
-Subject: [PATCH] xfs: annotate lockless b_flags read in xfs_buf_lock
-Date: Fri, 27 Mar 2026 21:11:52 +0800
-Message-Id: <20260327131152.155617-1-zzzccc427@gmail.com>
+Subject: [PATCH] xfs: annotate lockless bli_flags access in buf item paths
+Date: Fri, 27 Mar 2026 21:14:48 +0800
+Message-Id: <20260327131448.156177-1-zzzccc427@gmail.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -74,42 +74,101 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xfs_buf_lock() reads bp->b_flags before acquiring the buffer semaphore
-to check whether a stale, pinned buffer needs a log force:
+xfs_buf_item_unpin() and xfs_buf_item_committed() read bip->bli_flags
+without holding the buffer lock, while xfs_buf_item_release() clears
+XFS_BLI_LOGGED, XFS_BLI_HOLD, and XFS_BLI_ORDERED under that lock.
+This can happen when an older checkpoint still holds a CIL reference to
+the BLI while a new transaction is finishing with the buffer.
 
-    if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+The lockless readers only test XFS_BLI_STALE and
+XFS_BLI_INODE_ALLOC_BUF, which are disjoint from the bits being
+cleared, so correctness is not affected in practice.  However, the
+plain C accesses still constitute a data race that may allow the
+compiler to optimize them in unexpected ways (e.g., load tearing or
+fused reloads), so they should be marked explicitly.
 
-This races with xfs_trans_dirty_buf(), which modifies b_flags while
-the buffer is locked by a transaction on another CPU.
+Annotate the two lockless reads with READ_ONCE(), make the clearing
+store in xfs_buf_item_release() a WRITE_ONCE(), and use READ_ONCE() in
+the buf-item tracepoint that may snapshot bli_flags without the lock.
 
-The pre-semaphore check is a performance hint: if a stale pinned
-buffer is detected, forcing the log avoids a long wait on the
-semaphore.  Either outcome of the race is benign -- a false positive
-triggers a harmless log force, and a false negative simply means the
-caller blocks on the semaphore and the log force happens later.
-
-Annotate the lockless read with READ_ONCE().
-
-Fixes: ed3b4d6cdc81 ("xfs: Improve scalability of busy extent tracking")
+Fixes: 8e1238508633 ("xfs: remove stale parameter from ->iop_unpin method")
+Fixes: 71e330b59390 ("xfs: Introduce delayed logging core code")
 Cc: stable@vger.kernel.org
 Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
 ---
- fs/xfs/xfs_buf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf_item.c | 18 +++++++++++-------
+ fs/xfs/xfs_trace.h    |  2 +-
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d2f3c50d80e7..6819477307bd 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -988,7 +988,7 @@ xfs_buf_lock(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 8487635579e5..c3d0dc17ee10 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -502,7 +502,8 @@ xfs_buf_item_unpin(
  {
- 	trace_xfs_buf_lock(bp, _RET_IP_);
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	int			stale = bip->bli_flags & XFS_BLI_STALE;
++	unsigned int		flags = READ_ONCE(bip->bli_flags);
++	int			stale = flags & XFS_BLI_STALE;
+ 	int			freed;
  
--	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
-+	if (atomic_read(&bp->b_pin_count) && (READ_ONCE(bp->b_flags) & XBF_STALE))
- 		xfs_log_force(bp->b_mount, 0);
- 	down(&bp->b_sema);
+ 	ASSERT(bp->b_log_item == bip);
+@@ -679,13 +680,14 @@ xfs_buf_item_release(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	bool			hold = bip->bli_flags & XFS_BLI_HOLD;
+-	bool			stale = bip->bli_flags & XFS_BLI_STALE;
++	unsigned int		flags = bip->bli_flags;
++	bool			hold = flags & XFS_BLI_HOLD;
++	bool			stale = flags & XFS_BLI_STALE;
+ 	bool			aborted = test_bit(XFS_LI_ABORTED,
+ 						   &lip->li_flags);
+-	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
++	bool			dirty = flags & XFS_BLI_DIRTY;
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
++	bool			ordered = flags & XFS_BLI_ORDERED;
+ #endif
  
+ 	trace_xfs_buf_item_release(bip);
+@@ -705,7 +707,8 @@ xfs_buf_item_release(
+ 	 * per-transaction state from the bli, which has been copied above.
+ 	 */
+ 	bp->b_transp = NULL;
+-	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
++	WRITE_ONCE(bip->bli_flags,
++		   flags & ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED));
+ 
+ 	/* If there are other references, then we have nothing to do. */
+ 	if (!atomic_dec_and_test(&bip->bli_refcount))
+@@ -792,10 +795,11 @@ xfs_buf_item_committed(
+ 	xfs_lsn_t		lsn)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
++	unsigned int		flags = READ_ONCE(bip->bli_flags);
+ 
+ 	trace_xfs_buf_item_committed(bip);
+ 
+-	if ((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) && lip->li_lsn != 0)
++	if ((flags & XFS_BLI_INODE_ALLOC_BUF) && lip->li_lsn != 0)
+ 		return lip->li_lsn;
+ 	return lsn;
+ }
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 813e5a9f57eb..2069534bb0c1 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -895,7 +895,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = bip->bli_buf->b_target->bt_dev;
+-		__entry->bli_flags = bip->bli_flags;
++		__entry->bli_flags = READ_ONCE(bip->bli_flags);
+ 		__entry->bli_recur = bip->bli_recur;
+ 		__entry->bli_refcount = atomic_read(&bip->bli_refcount);
+ 		__entry->buf_bno = xfs_buf_daddr(bip->bli_buf);
 -- 
 2.34.1
 
