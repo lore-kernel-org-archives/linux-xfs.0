@@ -1,42 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0C03314AC;
-	Fri, 27 Mar 2026 15:22:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB16C262BD
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 19:20:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774624939; cv=none; b=ucpZKizVaORR7LA9vzfI513RGcJIHKl/pkpPyFL1ecBXFvM3MPJ0hY/tQ41rIfv429RQAEf9wk4FfkD9JJTZZUDnVOBs21VW7G2Spftudf4hCAH6fb1XnYVsubjr1IrZfgf/0GMOBkTyEOqevxOVqsq/M3s+dD6Xrsvo0RFgahs=
+	t=1774639251; cv=none; b=i0cG5tnpZYB2mNhywN+nkqYuOelONJvxnUjiEC+oiWnjarLp992lcV/rI1vpEtZGAh5ShTuk68PqlMaFGB36M/uX5J7caVHKSLaoi+bk7JcsbHoqp5BcvUJyeomSsbD8vO/vYl7Z1XhSGIGHeZiaZga8OB53lxPtA7dbFUSd37s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774624939; c=relaxed/simple;
-	bh=TtR7ue4TMqLjiOAa0Dr4QlejDLZp/g/tUeN9gs6Pkyg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vCLBX4NNC5oNcE+jOYsGk0DMD1qQ+RqGSeye1N2hNAcjGvD1a9PttrD1kBERFDgbvCUjxwuWdHiXTzlVLEvKmisvOHAwHqmMIBD+bvZZ/DlK/BiVuCTmRiKC7kd9uGae6AVe3imyoj4v0CipmxYv9mX5pJ1zwZ/0oTUcx8J4jO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t5pGDgMc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774639251; c=relaxed/simple;
+	bh=8QaB7RRlvYiQ5IDFBe2/pua19Q7C4pNA4XWMJZctSCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=P7Bn8r4hUh/+D57KQcSis6cofNBO9fq1bcAoqU/v/Ymn0be3eqBBWALBE7zppIy9ANen3fJ8A8we0h9vW8xfTHhMsE+HO5pR29G3b21/OflcAjMhKDLVYAIGouu6aIsXGAXhtkeMy0t/v7J2tbvW5wzmbUjjEY2m+7luF+IrDEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XY6S2wj8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t5pGDgMc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39869C2BC87;
-	Fri, 27 Mar 2026 15:22:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XY6S2wj8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A055BC19423;
+	Fri, 27 Mar 2026 19:20:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774624939;
-	bh=TtR7ue4TMqLjiOAa0Dr4QlejDLZp/g/tUeN9gs6Pkyg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=t5pGDgMcsqfPd9m40Q/GdhMlo9rQXdHrJZ07naULVx4m/mm2VQI0iahTh6WvUST9P
-	 VVfl/lwhgHhAzOXafZcv619n3o4+vVSUbuSPsdkOk5NH6Pc6drbQmQAtj+OJnOr1T/
-	 1COrXNTAliX0yEZSZlFNhZxKVcPQkZ+puCD5fHcuVyx7SCkk+Ttq8vS26ygP7KTM26
-	 +E9n3ODFeDjJF1U5AGnxzo57/TUuq5keP3u8qv0OBLS8W7jK5pH9Vf+1E1dIvPGVGg
-	 uWhQa/i87CSyM8HARTv1oE+i53GSBJ4bU1htR2szSSDhnEvKw1PC20z4+DF6wgxp5x
-	 yY/UEeCYrqVtg==
-Date: Fri, 27 Mar 2026 08:22:18 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: zlang@kernel.org, fstests@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: test that zone_gc_low_space writes start gc
- for rw fses
-Message-ID: <20260327152218.GC6223@frogsfrogsfrogs>
-References: <20260327123429.39330-1-hans.holmberg@wdc.com>
- <20260327123429.39330-3-hans.holmberg@wdc.com>
+	s=k20201202; t=1774639251;
+	bh=8QaB7RRlvYiQ5IDFBe2/pua19Q7C4pNA4XWMJZctSCg=;
+	h=Date:From:To:Cc:Subject:From;
+	b=XY6S2wj8hec9ih+JwfWCaQJrBPD2fsfYAIdlCXKj0l9MO8PRnk2V7k54a5EzG+Bf4
+	 uoSE5V8qNkRE8oqMd7cB7GJZbrBCPcpVgakQuDJ/HhTDoTKBQqOikP1c1ascPsBpBq
+	 rzktz2BpRCTla3uO3064y0j2UC0fT2AzAvyOv48Nyr5wa5WNmTVG7TiKV+SNgobTm4
+	 pV1VZj2N1rATMFhepVlsGkusziLq06FBXAPoBBiCfkhntEsBxePueNOF5ym1e54Jhj
+	 oocfkqKVwzB9GulveU1s6k+9KEPBh0RYHvZOWirokkVLBulDLWBW1rNFNMeMur7Hn2
+	 4IwILj4tqh9fg==
+Date: Fri, 27 Mar 2026 20:20:47 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: Fixes for v7.0-rc6
+Message-ID: <acZYhpOcsyA3ZhsZ@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,144 +40,82 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260327123429.39330-3-hans.holmberg@wdc.com>
 
-On Fri, Mar 27, 2026 at 01:34:29PM +0100, Hans Holmberg wrote:
-> Test that writes to the sysfs attribute zone_gc_low_space triggers
-> garbage collection for rw (but not ro) file systems.
-> 
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+Hello Linus,
 
-Looks good to me, given what I saw of the kernel patch.  It probably
-needs a _fixed_by_kernel_commit tag once the patch goes upstream.
+Could you please pull patches included in the tag below?
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+As usual, an attempt merge against your current TOT has been successful.
 
---D
+This pull request includes a few important bug fixes, and some code
+refactoring that was necessary for one of the fixes.
+With the exception of the top two patches which are fixes worth sending
+asap, everything else is in linux-next.
 
-> ---
->  common/xfs        | 17 +++++++++++
->  tests/xfs/999     | 72 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |  2 ++
->  3 files changed, 91 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
-> 
-> diff --git a/common/xfs b/common/xfs
-> index c81f939e68d2..45d7f75d2064 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -748,6 +748,23 @@ _xfs_get_scratch_rtdev_bdev()
->  	fi
->  }
->  
-> +# Get a stat from /proc/self/mountstats for a specific mount point
-> +_xfs_get_mountstat() {
-> +	awk -v mount="$1" -v stat="$2" \
-> +		'$0~"mounted on "mount" with fstype xfs"{f=1} f&&index($0,stat){print $NF;exit}' \
-> +		/proc/self/mountstats
-> +}
-> +
-> +# Get the user available blocks for a rt mount
-> +_xfs_get_user_available_rt_blocks() {
-> +	_xfs_get_mountstat "$1" "user available RT blocks:"
-> +}
-> +
-> +# Check if gc is required for a rt mount
-> +_xfs_get_rt_gc_required () {
-> +	_xfs_get_mountstat "$1" "RT GC required:"
-> +}
-> +
->  # Snapshot the metadata on the scratch device
->  _scratch_xfs_metadump()
->  {
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 000000000000..2c5b54368b6d
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,72 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Western Digital Corporation
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Tests that writes to zonegc_low_space will trigger start of garbage
-> +# collection for rw (but not ro) file systems
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto rw zone quick
-> +
-> +. ./common/zoned
-> +
-> +_require_scratch
-> +_require_odirect
-> +
-> +zdev="$(_xfs_get_scratch_rtdev_bdev)"
-> +_require_zoned_device "$zdev"
-> +capacity=$(_zone_capacity 0 $zdev)
-> +_scratch_mkfs_sized $(($capacity * 6)) > $seqres.full 2>&1
-> +
-> +# limit max open zones to avoid gc to trigger before we want it to
-> +export MOUNT_OPTIONS="$MOUNT_OPTIONS -o max_open_zones=2"
-> +_try_scratch_mount || _notrun "mount option not supported"
-> +_require_xfs_scratch_zoned
-> +
-> +# create three zone-sized files and invalidate 95% of the data
-> +for i in $(seq 1 3); do
-> +	filename=$SCRATCH_MNT/data_$i
-> +	dd if=/dev/zero of=$filename bs=1M oflag=direct\
-> +		count=$(($capacity / (1024 * 1024))) >> $seqres.full 2>&1
-> +	truncate -s $(($capacity / 20)) $filename
-> +done
-> +
-> +# remount read-only and set the gc limit to free up unused space
-> +_scratch_remount ro
-> +rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-> +_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-> +
-> +# reclaiming a zone with 5% used blocks should take way less than 1 second
-> +sleep 1
-> +
-> +# gc should not run for read only file systems
-> +rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-> +[ "$rt_available_post" -gt "$rt_available_pre" ] && \
-> +	_fail "gc should not run while read only"
-> +
-> +_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
-> +
-> +# remount rw and check that gc starts, frees up blocks and stops after
-> +# the threshold is set to reclaim the unused blocks
-> +_scratch_remount rw
-> +
-> +rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-> +_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-> +
-> +i=0
-> +while [ $(_xfs_get_rt_gc_required "$SCRATCH_MNT") -eq "1" ]; do
-> +	sleep 1
-> +	let i=$i+1
-> +	[ $i -gt 3 ] && _fail "gc did not complete within a reasonable time"
-> +done
-> +
-> +rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-> +[ "$rt_available_pre" -ge "$rt_available_post" ] && \
-> +	_fail "gc did not free up space"
-> +
-> +echo "Silence is golden"
-> +status=0
-> +
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 000000000000..3b276ca804fc
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> -- 
-> 2.34.1
-> 
-> 
+Thanks,
+Carlos
+
+"The following changes since commit 362c490980867930a098b99f421268fbd7ca05fd:
+
+  xfs: fix integer overflow in bmap intent sort comparator (2026-03-11 13:21:42 +0100)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.0-rc6
+
+for you to fetch changes up to e31c53a8060e134111ed095783fee0aa0c43b080:
+
+  xfs: remove file_path tracepoint data (2026-03-26 14:25:23 +0100)
+
+----------------------------------------------------------------
+xfs: fixes for 7.0-rc6
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Bill Wendling (1):
+      xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+
+Christoph Hellwig (1):
+      xfs: cleanup buftarg handling in XFS_IOC_VERIFY_MEDIA
+
+Darrick J. Wong (2):
+      xfs: don't irele after failing to iget in xfs_attri_recover_work
+      xfs: remove file_path tracepoint data
+
+Long Li (6):
+      xfs: only assert new size for datafork during truncate extents
+      xfs: factor out xfs_attr3_node_entry_remove
+      xfs: factor out xfs_attr3_leaf_init
+      xfs: close crash window in attr dabtree inactivation
+      xfs: fix ri_total validation in xlog_recover_attri_commit_pass2
+      xfs: remove redundant validation in xlog_recover_attri_commit_pass2
+
+Yuto Ohnuki (4):
+      xfs: stop reclaim before pushing AIL during unmount
+      xfs: avoid dereferencing log items after push callbacks
+      xfs: save ailp before dropping the AIL lock in push callbacks
+      xfs: refactor xfsaild_push loop into helper
+
+hongao (1):
+      xfs: scrub: unlock dquot before early return in quota scrub
+
+ fs/xfs/libxfs/xfs_attr.h      |   3 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c |  22 ++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.h |   3 +
+ fs/xfs/libxfs/xfs_da_btree.c  |  53 ++++++++++++++----
+ fs/xfs/libxfs/xfs_da_btree.h  |   2 +
+ fs/xfs/scrub/quota.c          |   4 +-
+ fs/xfs/scrub/trace.h          |  12 +---
+ fs/xfs/xfs_attr_inactive.c    |  95 ++++++++++++++++++-------------
+ fs/xfs/xfs_attr_item.c        |  51 +----------------
+ fs/xfs/xfs_dquot_item.c       |   9 ++-
+ fs/xfs/xfs_handle.c           |   2 +-
+ fs/xfs/xfs_inode.c            |   3 +-
+ fs/xfs/xfs_inode_item.c       |   9 ++-
+ fs/xfs/xfs_mount.c            |   7 ++-
+ fs/xfs/xfs_trace.h            |  47 +++++++++++-----
+ fs/xfs/xfs_trans_ail.c        | 127 +++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_verify_media.c     |  18 +++---
+ fs/xfs/xfs_xattr.c            |   2 +-
+ 18 files changed, 274 insertions(+), 195 deletions(-)"
