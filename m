@@ -1,61 +1,71 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5152367BA;
-	Fri, 27 Mar 2026 12:37:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87682FB084
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 13:31:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774615078; cv=none; b=QSPqNq+bM2ZU2dNy42IpjP/ArIQo2sXyJTE/nXVCNrb2ndMBmIchYUW2CmCSmLyA2p1zieRcSfiO7ctwZ2fsRmlxNm+pO1ybRznVZcAN13EAb1HRi0EmXIZHN4eEVSBXKWxy2/lyOzU6sqmB/Oz8bVB4pyuFo6wzIZyGkE2lPH8=
+	t=1774618288; cv=none; b=mRNS7nOh5T0Bcyoes8B/uM7EPnVVgUGQxrlTObB++RzSgJDw8M5ac6F927HBUhbKHPh+wRT3ol4oguuBL+venTHZKv11YvwW/0gov1szWC5ZIOtvTN/0tbK7u4EBUccDOiuEZU/x4vdN9lcbj6qQSJ6kl77Iu5xtBa2pQ4/zjp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774615078; c=relaxed/simple;
-	bh=Wc0If43kO7wdn9Dgv7G9kAV3VKypieEwudUPxp9Wo9c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ayqcnP68J7lGEQ25WuhfMvihcyNPfpWqfmdhgis713ubrM4sbjYnvwDTLkxwZay5pu82y2SMm2Bb7HJ6b0FtDGg2Zc5TDZ3geV8oBZp3up0Vf6ciun0sbNofwJ4oxHA4vaF3SAPWoQdTvAh5ynCtb90fV/6rGoOHXLgCm/X7I3Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ECRCARJY; arc=none smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1774618288; c=relaxed/simple;
+	bh=aWFKLLyrUGMfgtno2wrwFP6oJ6cGkB7K195WAeAuroI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FAvFE2F0eCwX25PXdB3tcHY/fbH8tF2kUD8Yb1LGHuArXOcb4bmT+boOpGAm68w8oxq4Xsxr1PL0Kxsl+fY8ehiM7Y5MQQROrPjiY+7KJKa5sr8QG4x1BRybH2LgPf3lzkivbUQ5S3/h0IQoPDzF4qSTHe+VMzGR70az8X925Dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Pmz+k6px; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ECRCARJY"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1774615077; x=1806151077;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Wc0If43kO7wdn9Dgv7G9kAV3VKypieEwudUPxp9Wo9c=;
-  b=ECRCARJYl39O8UKNLfZcyzhg/nVdmGbH2541w4s9623uvEst4QU7D5Yr
-   ug+YQ4c89RO1c078GM4CNzSgCk6Ue6TUnx/Cw+OU0D1VJ9MbzQugclb96
-   inQuCW9XEJxLIxTvyJue6y1B1xDarJkEUnLuY9byNTukbvVr9fTCJ5bAl
-   +bL4brFMQXw94mwThN0ZWX+uLF4uJhDuPJvn6QY4qjyvTmlFNP71vL26b
-   W/L1e8+KQzyQ8dfQyMwOC4HkAJnf0+zJ+V64cTBikXRbE50ozfC762+41
-   +qu+mxx1WnyhYJtekXPGkdDOZteuvPY7ogz1+qp45QsAHDiA76cmMh0aN
-   Q==;
-X-CSE-ConnectionGUID: O0CKmfe8S72V0XJKtXvgoQ==
-X-CSE-MsgGUID: FJmXYQvJSdSkPwPyscYoXA==
-X-IronPort-AV: E=Sophos;i="6.23,144,1770566400"; 
-   d="scan'208";a="139679419"
-Received: from unknown (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Mar 2026 20:36:52 +0800
-IronPort-SDR: 69c679d6_L0rrgyKF1UPYOKPJhttIBFfvxsSZ+q7bf+NdoQjOhGHJwo2
- r6fhv4K74EJP2TaN2NAs1CrsQJcTnxvLoOK7IgQ==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Mar 2026 05:36:39 -0700
-WDCIronportException: Internal
-Received: from unknown (HELO gcv.wdc.com) ([10.224.20.49])
-  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2026 05:36:36 -0700
-From: Hans Holmberg <hans.holmberg@wdc.com>
-To: zlang@kernel.org
-Cc: fstests@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: [PATCH v2 2/2] xfs: test that zone_gc_low_space writes start gc for rw fses
-Date: Fri, 27 Mar 2026 13:34:29 +0100
-Message-ID: <20260327123429.39330-3-hans.holmberg@wdc.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260327123429.39330-1-hans.holmberg@wdc.com>
-References: <20260327123429.39330-1-hans.holmberg@wdc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pmz+k6px"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ad21f437eeso13599635ad.0
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Mar 2026 06:31:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774618286; x=1775223086; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vc6JenAuJhhJEAB101jmrcNR8nhg35SI5zHqwXmhxIE=;
+        b=Pmz+k6pxijLRP0cqjUp4Mzd/CeOYtCzKGWpNev4OgJQNGGo7qaWLOmCTLYBOk5eOFV
+         ZMmqNzB46TGnaHOiRqd+/6/bFv1wqehOe2Nylo4VtYa2ZkLVWgRSM0V7goVACfRHLSJ2
+         GdKMvzaYScN2Zksrl/NN8iBhZKgAY7FGnzjmwUMo6hz8/fuaxnuF+gwvbqvZxQqQHKFN
+         4oF+u2Hxh7ZG/lzHmMmzdeWGieixAU4feglexR73RZsryZYUzSYcz6XWXiGueFySlnHB
+         Fz9T5Xdlqf1OAvFWv3/eTHDNPK7bOGmih+xwMfZlgIcZQYkeJwWTLrQS+T/oKqEpce3O
+         9fBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774618286; x=1775223086;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vc6JenAuJhhJEAB101jmrcNR8nhg35SI5zHqwXmhxIE=;
+        b=otSkyBgDvoMPwiOKwX+xSdze7TX1cpDoSuC0KHfvDbgxcaplBPHUJ2yltpmg0PJW+w
+         jmfXuOS8HB4ijYxs+psgOcL4ngcm6FhDF/ITAjXJwuYwUhtxSTCxkzyh9T4aeVbt3B7j
+         ZyYDBvIRgxi5hLeD1rhka6mUaNnQ48pqyTzAwazQatWekcUIWNQe9K/d2WVZhgFBXfYj
+         L6rNjGqatGQ85/uEHFASE5E7gccUWrs5TjBLTZZBga6+SUIS1P/S+sPJn1jlAY7q6igO
+         OFId9GbA+fHLKmkbb2KRRBHFLFsJZQXickR8FwBYbmspkjiKhK6EQq4P/6ppcsReuahj
+         2L5w==
+X-Gm-Message-State: AOJu0YyMzaEc287iN9xtnnuc5PFTh3ijE2ljcpacxzST3Yy/zW/WEGuE
+	f574pYkhYgH/AxSISsFkuX0LAR3tpiroCbocKqIoBrnuivUQHxtXX68v
+X-Gm-Gg: ATEYQzwkr8Ulv1dm7+EK9RZJEjQexJwLZUHmORjnsY77r5EIalqD4iL6wOM9Z3yW8DW
+	K5OC0iBUhmDegjrrbXDZwKB/KLjO8zpO+Aoe7TPY+H6Yrv0IaBe0ux5njPjYLXvNNPLrIQ9tH7H
+	nr+eC8k3k4/dlqawv9kSpWNEgi82EBxTZPHVTDUoth1f+sbUKruMvHFQ2sPlaOjd+ZpQ0Ei3gkd
+	qnXB5dtG69U80mHufyUVTrrowwoUj/Neulhwix7vm3Ybx3UztaOLYnzpk1wuuG88eHS4w8gnbqp
+	QkYSfGAcmSvJ6T4NDxOL2AnvEkcr0o1zMy6QAgLZous5ZEIzNg6aJUw4HuxKNOOWf9uRCNF3hoz
+	Jjg63s1jHoDFKUaX2WvUT/KSQ9eksUliFV0qatTuPgvZjTa1fgkcIPAg4wz3Ypapa3U9eXD/598
+	N2zYDwYcsQSkRBY7hEQA==
+X-Received: by 2002:a17:902:d4cf:b0:2b0:51f6:d469 with SMTP id d9443c01a7336-2b0ce5d7ee7mr25182795ad.23.1774618286084;
+        Fri, 27 Mar 2026 06:31:26 -0700 (PDT)
+Received: from localhost ([111.228.63.84])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0bc76bc66sm60170955ad.13.2026.03.27.06.31.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Mar 2026 06:31:25 -0700 (PDT)
+From: Cen Zhang <zzzccc427@gmail.com>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com,
+	Cen Zhang <zzzccc427@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: annotate lockless b_flags read in xfs_buf_lock
+Date: Fri, 27 Mar 2026 21:11:52 +0800
+Message-Id: <20260327131152.155617-1-zzzccc427@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -64,132 +74,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Test that writes to the sysfs attribute zone_gc_low_space triggers
-garbage collection for rw (but not ro) file systems.
+xfs_buf_lock() reads bp->b_flags before acquiring the buffer semaphore
+to check whether a stale, pinned buffer needs a log force:
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+    if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+
+This races with xfs_trans_dirty_buf(), which modifies b_flags while
+the buffer is locked by a transaction on another CPU.
+
+The pre-semaphore check is a performance hint: if a stale pinned
+buffer is detected, forcing the log avoids a long wait on the
+semaphore.  Either outcome of the race is benign -- a false positive
+triggers a harmless log force, and a false negative simply means the
+caller blocks on the semaphore and the log force happens later.
+
+Annotate the lockless read with READ_ONCE().
+
+Fixes: ed3b4d6cdc81 ("xfs: Improve scalability of busy extent tracking")
+Cc: stable@vger.kernel.org
+Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
 ---
- common/xfs        | 17 +++++++++++
- tests/xfs/999     | 72 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |  2 ++
- 3 files changed, 91 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
+ fs/xfs/xfs_buf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/common/xfs b/common/xfs
-index c81f939e68d2..45d7f75d2064 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -748,6 +748,23 @@ _xfs_get_scratch_rtdev_bdev()
- 	fi
- }
- 
-+# Get a stat from /proc/self/mountstats for a specific mount point
-+_xfs_get_mountstat() {
-+	awk -v mount="$1" -v stat="$2" \
-+		'$0~"mounted on "mount" with fstype xfs"{f=1} f&&index($0,stat){print $NF;exit}' \
-+		/proc/self/mountstats
-+}
-+
-+# Get the user available blocks for a rt mount
-+_xfs_get_user_available_rt_blocks() {
-+	_xfs_get_mountstat "$1" "user available RT blocks:"
-+}
-+
-+# Check if gc is required for a rt mount
-+_xfs_get_rt_gc_required () {
-+	_xfs_get_mountstat "$1" "RT GC required:"
-+}
-+
- # Snapshot the metadata on the scratch device
- _scratch_xfs_metadump()
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index d2f3c50d80e7..6819477307bd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -988,7 +988,7 @@ xfs_buf_lock(
  {
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 000000000000..2c5b54368b6d
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Western Digital Corporation
-+#
-+# FS QA Test No. 999
-+#
-+# Tests that writes to zonegc_low_space will trigger start of garbage
-+# collection for rw (but not ro) file systems
-+#
-+. ./common/preamble
-+_begin_fstest auto rw zone quick
-+
-+. ./common/zoned
-+
-+_require_scratch
-+_require_odirect
-+
-+zdev="$(_xfs_get_scratch_rtdev_bdev)"
-+_require_zoned_device "$zdev"
-+capacity=$(_zone_capacity 0 $zdev)
-+_scratch_mkfs_sized $(($capacity * 6)) > $seqres.full 2>&1
-+
-+# limit max open zones to avoid gc to trigger before we want it to
-+export MOUNT_OPTIONS="$MOUNT_OPTIONS -o max_open_zones=2"
-+_try_scratch_mount || _notrun "mount option not supported"
-+_require_xfs_scratch_zoned
-+
-+# create three zone-sized files and invalidate 95% of the data
-+for i in $(seq 1 3); do
-+	filename=$SCRATCH_MNT/data_$i
-+	dd if=/dev/zero of=$filename bs=1M oflag=direct\
-+		count=$(($capacity / (1024 * 1024))) >> $seqres.full 2>&1
-+	truncate -s $(($capacity / 20)) $filename
-+done
-+
-+# remount read-only and set the gc limit to free up unused space
-+_scratch_remount ro
-+rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-+_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-+
-+# reclaiming a zone with 5% used blocks should take way less than 1 second
-+sleep 1
-+
-+# gc should not run for read only file systems
-+rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-+[ "$rt_available_post" -gt "$rt_available_pre" ] && \
-+	_fail "gc should not run while read only"
-+
-+_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 0
-+
-+# remount rw and check that gc starts, frees up blocks and stops after
-+# the threshold is set to reclaim the unused blocks
-+_scratch_remount rw
-+
-+rt_available_pre="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-+_set_fs_sysfs_attr $SCRATCH_DEV "zoned/zonegc_low_space" 100
-+
-+i=0
-+while [ $(_xfs_get_rt_gc_required "$SCRATCH_MNT") -eq "1" ]; do
-+	sleep 1
-+	let i=$i+1
-+	[ $i -gt 3 ] && _fail "gc did not complete within a reasonable time"
-+done
-+
-+rt_available_post="$(_xfs_get_user_available_rt_blocks "$SCRATCH_MNT")"
-+[ "$rt_available_pre" -ge "$rt_available_post" ] && \
-+	_fail "gc did not free up space"
-+
-+echo "Silence is golden"
-+status=0
-+
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 000000000000..3b276ca804fc
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
+ 	trace_xfs_buf_lock(bp, _RET_IP_);
+ 
+-	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
++	if (atomic_read(&bp->b_pin_count) && (READ_ONCE(bp->b_flags) & XBF_STALE))
+ 		xfs_log_force(bp->b_mount, 0);
+ 	down(&bp->b_sema);
+ 
 -- 
 2.34.1
 
