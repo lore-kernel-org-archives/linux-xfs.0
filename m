@@ -1,60 +1,60 @@
-Received: from pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.26.1.71])
+Received: from pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.12.53.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C43E1F8691;
-	Sat, 28 Mar 2026 17:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.26.1.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF70F3A5E91;
+	Sat, 28 Mar 2026 17:34:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.12.53.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774719265; cv=none; b=FWIeU1xPWtLBXhlO12KxUuxZlO9K2FWhUf3QkCxF6c68uz7JExAsctrxZN109EynEjmIgKjfKZ5qP6ygHAiUeAYHMeFpz/GabOJdwKtrUmxNqzCkIK/4lCakb2XnTYH7PlabIkwlb6Av27cBK4se/ggSyY5T8k9W1MHQVBZ8Hpw=
+	t=1774719271; cv=none; b=rKQlvga3yQKtEJgcp33Fc/0IVeisGyWCqfXNX4pCP/+fq+QsjGkjHwSBfMgmqdihWCy5xsseut/+u4McAypShvvSm0oQzkkbCY86iaf1LL8mi3vNUfMZD/GKZ2XAm+cBr1nWoTTrcLS8jMd+XgIOU6q2ZeM5UB1BJFjOCExNX3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774719265; c=relaxed/simple;
-	bh=Cya3pvOCn7n6qnv0jpt8n8J5Ms1ao7hjqshff4u7JGo=;
+	s=arc-20240116; t=1774719271; c=relaxed/simple;
+	bh=9jEU+8YraxiDlRLkJUxMNE/JapOFMmndlP4uCduP6K8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n9WVROlAoUsJawiQtq3FT+QVFJ+RIZyJmwsTvDkrGmnWWfo9SK4hGwV8+yUCBcv/cNTim8JkWsw7Bxzbvfef8Ulz16di1TcQCBctNut1BtJG9JvYG88/JAV25md/zdSfyXNaMBl5fC17fsL4rZGzTYfC2w1RQr4lrW5fYK6urfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=qxL3530+; arc=none smtp.client-ip=52.26.1.71
+	 MIME-Version:Content-Type; b=UKqRRRJLah9xLPbQ/crC7vvYzAYR01C4fqFCGfm8M9CGObsPLo0q2m9muSwMVkoHon2xTyM5inYRHeyXJzL8lcctGgRzUeJLx6PXKbe+n5PI4mg4kfsLwLvEUf+O+96U/ayzMPp8ZHnHjQUliSKy00dffhPno+ybPmeCrflOwNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=gDuIGrJP; arc=none smtp.client-ip=52.12.53.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="qxL3530+"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="gDuIGrJP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1774719264; x=1806255264;
+  t=1774719269; x=1806255269;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uECJeUV+/3/OKy6DIBk1zna7W1ItnF0abIm96r3OmiA=;
-  b=qxL3530+a1R85EOCV9U/rINaMpDaIMLLvMLZQjYnPRINBsAkjrExpqdG
-   a7WTbgGy6+bGHIjxEft2jpAGOw8cTg2Jg4uK2QbfoEw+HJdJ7ilMlpxqP
-   xjDV00TedZTv4Jm5nAcs/M4/B/Xmml09BzrJfVokDPb/6sXoN6qYYLej3
-   6khhEEo5RiZOHXfW5B9vyi+V0b6xyzEh/jJ8rIa8WAwHtvgsK2xINGG8+
-   SuHyL66clrPz/GAc4Rbwa4lVD+j5QbNlSdaGMPi65jYkSOiG/9cIvfLvb
-   VRZ4Y/3n5QiNJZIRfNJPioz41oOnuxrosGyvHJLncAZIt7vyM6ulSKsi9
-   Q==;
-X-CSE-ConnectionGUID: fjRTNlyiS8GaIO9SEYQljg==
-X-CSE-MsgGUID: 7nA0FplISA6sooJXdoOZEg==
+  bh=xRQC/BJfNJptyxAez1KRMoDYHgoICUPaBIbcbZvc/gI=;
+  b=gDuIGrJPCe4kDVLrLFQr427A2Fsk9OIBiaAjLfXCGPIH5F15/8UMqN6j
+   GsYD0ENruTsDXkOiRua9khR2sRQJJh1j18d0cEE3VbMHk6P49cgmMEYGU
+   giDZWNJKPvsd6AjMxOBhWxLbU1doVU+Lg2kVVJeRiU/hSvOVpPjrLr5tz
+   H2EWsjITtAPuFPISMuDX1/DjFuAY2Di7deHfmo8F5MKY3F8IlYlQ5MSSG
+   AF+vxcit2oZCyCGe3TTtFcspY5aj3DuLqR5Bd1XbWLVVPaYWz9gWcglHv
+   ErOBtjUnZPAXsMQNkJc3gwGK/PaSF2vVdxD3qhsb5b2rv8W0GC/M3kJDu
+   w==;
+X-CSE-ConnectionGUID: WkBHO77/Rd2eV8cLJ2gDGw==
+X-CSE-MsgGUID: 9Vr6wpU1QAiRSksC0QBrEw==
 X-IronPort-AV: E=Sophos;i="6.23,146,1770595200"; 
-   d="scan'208";a="16051438"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2026 17:34:24 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.111:22822]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.60.23:2525] with esmtp (Farcaster)
- id 7fdeb89b-a50f-461d-a4a4-962a3daee988; Sat, 28 Mar 2026 17:34:23 +0000 (UTC)
-X-Farcaster-Flow-ID: 7fdeb89b-a50f-461d-a4a4-962a3daee988
+   d="scan'208";a="15915420"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2026 17:34:27 +0000
+Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:31055]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.23.137:2525] with esmtp (Farcaster)
+ id 482f7662-c221-4cae-bfc6-85d6e2082c6c; Sat, 28 Mar 2026 17:34:27 +0000 (UTC)
+X-Farcaster-Flow-ID: 482f7662-c221-4cae-bfc6-85d6e2082c6c
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
+ EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Mar 2026 17:34:23 +0000
+ Sat, 28 Mar 2026 17:34:26 +0000
 Received: from c889f3b07a0a.amazon.com (10.106.82.39) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Mar 2026 17:34:22 +0000
+ Sat, 28 Mar 2026 17:34:25 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
 To: Carlos Maiolino <cem@kernel.org>
 CC: Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong"
 	<djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>
-Subject: [PATCH 1/2] xfs: fix integer overflow in deferred intent sort comparators
-Date: Sat, 28 Mar 2026 17:34:09 +0000
-Message-ID: <20260328173407.43057-5-ytohnuki@amazon.com>
+Subject: [PATCH 2/2] xfs: fix integer overflow in busy extent sort comparator
+Date: Sat, 28 Mar 2026 17:34:10 +0000
+Message-ID: <20260328173407.43057-6-ytohnuki@amazon.com>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20260328173407.43057-4-ytohnuki@amazon.com>
 References: <20260328173407.43057-4-ytohnuki@amazon.com>
@@ -69,63 +69,36 @@ X-ClientProxiedBy: EX19D038UWC002.ant.amazon.com (10.13.139.238) To
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-xfs_extent_free_diff_items(), xfs_refcount_update_diff_items(), and
-xfs_rmap_update_diff_items() subtract two uint32_t group numbers
-and return the result as int, which can overflow when the difference
-exceeds INT_MAX.
+xfs_extent_busy_ag_cmp() subtracts two uint32_t values (group
+numbers and block numbers) and returns the result as s32. When
+the difference exceeds INT_MAX, the result overflows and the sort
+order is corrupted.
 
 Use cmp_int() instead, as was done in commit 362c49098086 ("xfs:
 fix integer overflow in bmap intent sort comparator").
 
-Fixes: c13418e8eb37 ("xfs: give xfs_rmap_intent its own perag reference")
-Fixes: f6b384631e1e ("xfs: give xfs_extfree_intent its own perag reference")
-Fixes: 00e7b3bac1dc ("xfs: give xfs_refcount_intent its own perag reference")
+Fixes: 4a137e09151e ("xfs: keep a reference to the pag for busy extents")
 Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
 ---
- fs/xfs/xfs_extfree_item.c  | 2 +-
- fs/xfs/xfs_refcount_item.c | 2 +-
- fs/xfs/xfs_rmap_item.c     | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_extent_busy.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 749a4eb9793c..2266d56e37dc 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -387,7 +387,7 @@ xfs_extent_free_diff_items(
- 	struct xfs_extent_free_item	*ra = xefi_entry(a);
- 	struct xfs_extent_free_item	*rb = xefi_entry(b);
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 3efdca3d675b..41cf0605ec22 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -690,9 +690,9 @@ xfs_extent_busy_ag_cmp(
+ 		container_of(l2, struct xfs_extent_busy, list);
+ 	s32 diff;
  
--	return ra->xefi_group->xg_gno - rb->xefi_group->xg_gno;
-+	return cmp_int(ra->xefi_group->xg_gno, rb->xefi_group->xg_gno);
+-	diff = b1->group->xg_gno - b2->group->xg_gno;
++	diff = cmp_int(b1->group->xg_gno, b2->group->xg_gno);
+ 	if (!diff)
+-		diff = b1->bno - b2->bno;
++		diff = cmp_int(b1->bno, b2->bno);
+ 	return diff;
  }
  
- /* Log a free extent to the intent item. */
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 881c3f3a6a24..8bccf89a7766 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -266,7 +266,7 @@ xfs_refcount_update_diff_items(
- 	struct xfs_refcount_intent	*ra = ci_entry(a);
- 	struct xfs_refcount_intent	*rb = ci_entry(b);
- 
--	return ra->ri_group->xg_gno - rb->ri_group->xg_gno;
-+	return cmp_int(ra->ri_group->xg_gno, rb->ri_group->xg_gno);
- }
- 
- /* Log refcount updates in the intent item. */
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index a39fe08dcd8f..2a3a73a8566d 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -267,7 +267,7 @@ xfs_rmap_update_diff_items(
- 	struct xfs_rmap_intent		*ra = ri_entry(a);
- 	struct xfs_rmap_intent		*rb = ri_entry(b);
- 
--	return ra->ri_group->xg_gno - rb->ri_group->xg_gno;
-+	return cmp_int(ra->ri_group->xg_gno, rb->ri_group->xg_gno);
- }
- 
- /* Log rmap updates in the intent item. */
 -- 
 2.50.1
 
