@@ -1,113 +1,86 @@
-Received: from pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.12.53.23])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF70F3A5E91;
-	Sat, 28 Mar 2026 17:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.12.53.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9AA740DFB3;
+	Mon, 30 Mar 2026 00:52:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774719271; cv=none; b=rKQlvga3yQKtEJgcp33Fc/0IVeisGyWCqfXNX4pCP/+fq+QsjGkjHwSBfMgmqdihWCy5xsseut/+u4McAypShvvSm0oQzkkbCY86iaf1LL8mi3vNUfMZD/GKZ2XAm+cBr1nWoTTrcLS8jMd+XgIOU6q2ZeM5UB1BJFjOCExNX3o=
+	t=1774831927; cv=none; b=LVa1/lB0DRxAab3IIixZEWr+5dvSVkgRRK6dVb00fBOaipRC3SmU+s9ha2cYKYGKf50EpoDFQk2Ymtua/lpzbWu7hB0b9jpWLbQT5RMEFAqiclA+/cEEegTsHdVTY34H51wZEFBKIqVoixPm/OX4XCv7SiIFjN4Zv4KRPvWSf+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774719271; c=relaxed/simple;
-	bh=9jEU+8YraxiDlRLkJUxMNE/JapOFMmndlP4uCduP6K8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UKqRRRJLah9xLPbQ/crC7vvYzAYR01C4fqFCGfm8M9CGObsPLo0q2m9muSwMVkoHon2xTyM5inYRHeyXJzL8lcctGgRzUeJLx6PXKbe+n5PI4mg4kfsLwLvEUf+O+96U/ayzMPp8ZHnHjQUliSKy00dffhPno+ybPmeCrflOwNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=gDuIGrJP; arc=none smtp.client-ip=52.12.53.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
+	s=arc-20240116; t=1774831927; c=relaxed/simple;
+	bh=uKNz51piWVofToZhM+NFOqxREDaEtXG2Nv5b2OLoq9A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IVWL4eshM8sXlqBjMs9JvWKbtTl8fj+uUSuNk7VAwk0yNvsmOaF2UqAoR71v/+R9AgMkOFFbEFWhxA3TZ6YKD9vc+JXSy7PAqWMjIaUMY9t2SuUmjwlSo3duXBN+2VaGQ18ipZfsZLn16bGsS26TtaHbw/sEoSAJsa5qN84CqAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A9M6QDaV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="gDuIGrJP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1774719269; x=1806255269;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=xRQC/BJfNJptyxAez1KRMoDYHgoICUPaBIbcbZvc/gI=;
-  b=gDuIGrJPCe4kDVLrLFQr427A2Fsk9OIBiaAjLfXCGPIH5F15/8UMqN6j
-   GsYD0ENruTsDXkOiRua9khR2sRQJJh1j18d0cEE3VbMHk6P49cgmMEYGU
-   giDZWNJKPvsd6AjMxOBhWxLbU1doVU+Lg2kVVJeRiU/hSvOVpPjrLr5tz
-   H2EWsjITtAPuFPISMuDX1/DjFuAY2Di7deHfmo8F5MKY3F8IlYlQ5MSSG
-   AF+vxcit2oZCyCGe3TTtFcspY5aj3DuLqR5Bd1XbWLVVPaYWz9gWcglHv
-   ErOBtjUnZPAXsMQNkJc3gwGK/PaSF2vVdxD3qhsb5b2rv8W0GC/M3kJDu
-   w==;
-X-CSE-ConnectionGUID: WkBHO77/Rd2eV8cLJ2gDGw==
-X-CSE-MsgGUID: 9Vr6wpU1QAiRSksC0QBrEw==
-X-IronPort-AV: E=Sophos;i="6.23,146,1770595200"; 
-   d="scan'208";a="15915420"
-Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-010.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2026 17:34:27 +0000
-Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:31055]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.23.137:2525] with esmtp (Farcaster)
- id 482f7662-c221-4cae-bfc6-85d6e2082c6c; Sat, 28 Mar 2026 17:34:27 +0000 (UTC)
-X-Farcaster-Flow-ID: 482f7662-c221-4cae-bfc6-85d6e2082c6c
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Mar 2026 17:34:26 +0000
-Received: from c889f3b07a0a.amazon.com (10.106.82.39) by
- EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Sat, 28 Mar 2026 17:34:25 +0000
-From: Yuto Ohnuki <ytohnuki@amazon.com>
-To: Carlos Maiolino <cem@kernel.org>
-CC: Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong"
-	<djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>
-Subject: [PATCH 2/2] xfs: fix integer overflow in busy extent sort comparator
-Date: Sat, 28 Mar 2026 17:34:10 +0000
-Message-ID: <20260328173407.43057-6-ytohnuki@amazon.com>
-X-Mailer: git-send-email 2.50.0
-In-Reply-To: <20260328173407.43057-4-ytohnuki@amazon.com>
-References: <20260328173407.43057-4-ytohnuki@amazon.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A9M6QDaV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41A12C116C6;
+	Mon, 30 Mar 2026 00:52:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774831927;
+	bh=uKNz51piWVofToZhM+NFOqxREDaEtXG2Nv5b2OLoq9A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=A9M6QDaVSp92RYm4lYeuWF+ypXxDtO+kGHCnVuQlUInt5OeUYs8gJw1PBA79chNNg
+	 pCKLHwO+Lbx1OwbeSN8m/kf4CL9T8VTXOf9F3d/2KJ8jD7sgeNW6kFVdN0czfONHBl
+	 7M43o/+OIkgKz+3Xc2EcB78//zMzQQaBnqL5jLBzE1GVNx6lw5yRAlg5erqEe5dWvx
+	 MmKUbs31pdSZixXmSmV1BJKh4/C2G7UFckRptbU5OkF5ufhQdC/FL/aoocWkp7EXfz
+	 3r6V+xFR5/gIQ6yuDcGkFzF4EAyqphPn/fXGJavyiqn28/2aLOmnPNtrPTELIYpXdj
+	 zxMB7rqL1bvqg==
+Date: Mon, 30 Mar 2026 11:52:02 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Cen Zhang <zzzccc427@gmail.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: annotate lockless b_flags read in xfs_buf_lock
+Message-ID: <acnJMhFpp42bdW93@dread>
+References: <20260327131152.155617-1-zzzccc427@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D038UWC002.ant.amazon.com (10.13.139.238) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260327131152.155617-1-zzzccc427@gmail.com>
 
-xfs_extent_busy_ag_cmp() subtracts two uint32_t values (group
-numbers and block numbers) and returns the result as s32. When
-the difference exceeds INT_MAX, the result overflows and the sort
-order is corrupted.
+On Fri, Mar 27, 2026 at 09:11:52PM +0800, Cen Zhang wrote:
+> xfs_buf_lock() reads bp->b_flags before acquiring the buffer semaphore
+> to check whether a stale, pinned buffer needs a log force:
+> 
+>     if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+> 
+> This races with xfs_trans_dirty_buf(), which modifies b_flags while
+> the buffer is locked by a transaction on another CPU.
+> 
+> The pre-semaphore check is a performance hint: if a stale pinned
+> buffer is detected, forcing the log avoids a long wait on the
+> semaphore.  Either outcome of the race is benign -- a false positive
+> triggers a harmless log force, and a false negative simply means the
+> caller blocks on the semaphore and the log force happens later.
+> 
+> Annotate the lockless read with READ_ONCE().
 
-Use cmp_int() instead, as was done in commit 362c49098086 ("xfs:
-fix integer overflow in bmap intent sort comparator").
+No. READ_ONCE should not be used to annotate a benign data access
+race. data_race() should be used because all it does is turn off
+KASAN for that access, and unlike READ_ONCE(), there is no code
+change when KASAN is not enabled.
 
-Fixes: 4a137e09151e ("xfs: keep a reference to the pag for busy extents")
-Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
----
- fs/xfs/xfs_extent_busy.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+But, in reality, the race condition here is more than just the
+b_flags access.  There is a big comment above the function explaining what
+the check does, and that the buffer pinned check that precedes the
+b_flags check can race with journal completion, too. SO, if we lose
+the race and trigger the log force, then nothing bad happens, and
+latency is no worse than if we won the race and triggered a log
+force.
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 3efdca3d675b..41cf0605ec22 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -690,9 +690,9 @@ xfs_extent_busy_ag_cmp(
- 		container_of(l2, struct xfs_extent_busy, list);
- 	s32 diff;
- 
--	diff = b1->group->xg_gno - b2->group->xg_gno;
-+	diff = cmp_int(b1->group->xg_gno, b2->group->xg_gno);
- 	if (!diff)
--		diff = b1->bno - b2->bno;
-+		diff = cmp_int(b1->bno, b2->bno);
- 	return diff;
- }
- 
+IOWs, adding READ_ONCE() to these check doesn't actually "annotate"
+anything useful or informative - it's not paired with WRITE_ONCE()
+anywhere (nor would we want to be doing that), and so it's just a
+random, uncommented macro in the code that makes things harder to
+read.
+
+-Dave.
 -- 
-2.50.1
-
-
-
-
-Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
-
-Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
-
-
-
+Dave Chinner
+dgc@kernel.org
