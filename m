@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1266D33344A;
-	Mon, 30 Mar 2026 15:10:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C2D33ADB1
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 15:10:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774883425; cv=none; b=tGXw64XxMFatfSQPJbQq0tQA4dZWs50yIb37TGe0kChgnPLvHVMB5+LrPk+caPgacHvzKm8fDaFboyt0dfVpMvDpHWuQeJVeyCJCp/QXkDbWtJuo6b9ifhK0TzQw2KNDlVb6RGRxoJM5PW5SIgQtW5fGlKRB1YVn4UdLYWAogcQ=
+	t=1774883426; cv=none; b=YIUyZrqAzm1vysD8qhEOgciiYlyJlLAEmUdA+yvmmfbha2zXHXKudXjEVDSTpFy8q5dnPS8ppQDSdnPeVFxHXyyShCarHToRQ5Gt2e2+OdaEAs3owBoW/krpv6DJh2pvxZAHLsMfEikX1BYewHhdI6LQ22KPAQt4yYry2j64zU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774883425; c=relaxed/simple;
-	bh=Nd4MyiAB+HC8PV4nITunLv3it81T+8xr/zQ+qcjkw44=;
+	s=arc-20240116; t=1774883426; c=relaxed/simple;
+	bh=AcDKgdqmQpmwpzkMRvLgvkHS3PJd+NJrvImZLwoy5gk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=g7EfHTzmYACLmLN9472Z1TrwCnMdoFrsWKYMt62uQ+86FKXiZpYhMZZUuqeHaE3fRShXP/P8jFkM3Xf+FK+h6WKZlqjVXLlRpZtKkAko3ujBNvZ4Pl+jR1lylXwRwAhPTq/1ocBQ09Et5SYXDtQGpwlJjSGFjlZKKcsGvs9EGn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SIqlF6uH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=qNNBjpYs5Kjx4XoqYNJwIhGVx2N3fjI4xsVIUpvOA4WVg9175Raqla8O6yTWqxt9KbuAH+RZrOk3iRqX2nPhU+cBClxtQGEya8XILaAYWQmv2uZ9oggyKsiIh9omWeTUYrxJfgQh3UVHBIrgf/LXG7W/HFmJ8YT4h3gB3NIvx1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QZ9f9Xp+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SIqlF6uH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2962BC2BCB1;
-	Mon, 30 Mar 2026 15:10:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QZ9f9Xp+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C38CC19423;
+	Mon, 30 Mar 2026 15:10:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774883424;
-	bh=Nd4MyiAB+HC8PV4nITunLv3it81T+8xr/zQ+qcjkw44=;
+	s=k20201202; t=1774883426;
+	bh=AcDKgdqmQpmwpzkMRvLgvkHS3PJd+NJrvImZLwoy5gk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=SIqlF6uHJ7H9SOQY2WvV+w0Tq3CKio0Gd+nRs3pbseqtrSGkUapvuZ0RMobMoY2fm
-	 wByyfrgE5u6QFfMZ4s0pdVR6yPGeJ1qY0gNsbdZr9whuPHMTgHvyRFPS/2bXM3774w
-	 zyxtbwnRmF/YyveNkI9nlGd5Z8G0ZUMGbDYlBpQ5L/38W4dS8OD3jtE1ZNQY9MnqO4
-	 LFEitvAQzmoR6HcAPW/A6Z8WJ3RC9akiTmblXOKHmidN9/uJyNFyy7jC8FzKoHR7O3
-	 qBM/cl/xqKDDA/RfevbZ7s8TDrrWT6TDoX9cz1plbA1fcQsv2WbuFuTdomJ4VcQ9+V
-	 /telNuYXb6QJw==
+	b=QZ9f9Xp+uGQdft1sylJwxbJWKKiS7iHQSjoq/3NBk21fjTrZ5upPO9FAZQy/NpkAv
+	 kLxcDRAoq0GDxdvd+pfUtaqoYOtmX1V1S0fCLVobvADULqRzSDhTLVz43lpil830zY
+	 gSQ0qgpj39lvMMc8ZtcfBNlOSTFeWC5G84lNNKzkBOXV4gzk6h06Wq2vhj85UBXZFB
+	 AmVPVNJcrjj+Db7D0s+1HZG5VWFGOdV2xqFoNOkAsJ6Ah6kZVifmyudzkXUaxQj6ma
+	 amLPGC23AQy3IGzuyd3zdIsxruEFOQc/zcQ5Ud1K2DRYZ3RGN3w9cgOroGCpCIpM2U
+	 tGf5guQbE9muA==
 From: Carlos Maiolino <cem@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: Dave Chinner <david@fromorbit.com>, 
- "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org, 
- stable@vger.kernel.org
-In-Reply-To: <20260325124312.26349-1-hans.holmberg@wdc.com>
-References: <20260325124312.26349-1-hans.holmberg@wdc.com>
-Subject: Re: [PATCH v2] xfs: start gc on zonegc_low_space attribute updates
-Message-Id: <177488342287.47445.1575593681467138399.b4-ty@kernel.org>
-Date: Mon, 30 Mar 2026 17:10:22 +0200
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260323075102.2952705-1-hch@lst.de>
+References: <20260323075102.2952705-1-hch@lst.de>
+Subject: Re: buffer cache simplification v6
+Message-Id: <177488342488.47445.13885438172744263496.b4-ty@kernel.org>
+Date: Mon, 30 Mar 2026 17:10:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +45,28 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Wed, 25 Mar 2026 13:43:12 +0100, Hans Holmberg wrote:
-> Start gc if the agressiveness of zone garbage collection is changed
-> by the user (if the file system is not read only).
-> 
-> Without this change, the new setting will not be taken into account
-> until the gc thread is woken up by e.g. a write.
-> 
+On Mon, 23 Mar 2026 08:50:50 +0100, Christoph Hellwig wrote:
+> this series has a few old patches that simplify the LRU handling, and
+> moves back to only having a per-buftarg hash now that the buffer hash
+> is using the scalable rhashtable.  While some of this looks like
+> performance work, performance and scalability is unchanged even on the
+> 80 core dual socket system I test this on.  Besides cleaning up the
+> code nice, it also happens to fix a syzcaller reported use after free
+> during buffer shutdown, which happened incidentally because of how the
+> tear down of the buftarg vs the perag structures is handled.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: start gc on zonegc_low_space attribute updates
-      commit: 181ea4e2de422aa0a66f355bd59bccccdd169826
+[1/4] xfs: don't keep a reference for buffers on the LRU
+      commit: 67fe4303972eb6f911f62e2fe6ac7628b17d95c0
+[2/4] xfs: use a lockref for the buffer reference count
+      commit: d02ee47bbeedd10d36cc408f92e645447cf5495d
+[3/4] xfs: switch (back) to a per-buftarg buffer hash
+      commit: 497560b9ef42a4ab22ada7f1ea975a89cd3c5dfa
+[4/4] xfs: don't decrement the buffer LRU count for in-use buffers
+      commit: 8166876aadef90744bb26addc9c5a16b1c8341b5
 
 Best regards,
 -- 
