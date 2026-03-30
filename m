@@ -1,130 +1,67 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 197403D3CE4
-	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 13:16:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44DD33D3CE4
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 13:20:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774876578; cv=none; b=G8hxfVvoJVeH7tYuG416NyyIldxQXG9RFLtGJBdGm0bBw3JR4a9IyJ8nDjS1weNkBB6KLsGEKIvwb/jjfOQLWGNFl5ldvesY/sKGIhIOxoaxKy3PNXyMZVAFJ8NkxqkjRldhBDz5SkHFFYhLCPL6KyCHkm9afMFlgJqNmluyqfs=
+	t=1774876813; cv=none; b=j5eCxACUQoZuSpV8UsQO5N0MJlECKJI63I1rgoplG0LXZXinDzoT7H5XOL49ZEJutGz82urrHgWJYwL7gM6tjgCLDoSmCbOQFKXNDG07B/FKZaqkwW/GxiyyEK23qm+yolmeSXXvgGhxVPEh/uNNEDXbwaMOoFFPw4r3rxYZNgQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774876578; c=relaxed/simple;
-	bh=EC1M5P9ByYyqW3ZdLwhsCB5mvCePEP707GVzvgmfl8Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h0DMX3k2lNWOI07OirG9GuRUAVIBJoQZJKoQWEvSXl3Vmtr3LIKR0txdek75BE8zu+Nlu2Hti2q55dXeCqKvLZbqc1Gzfd70Y0s5z45TOqnnvOYSYPGEp86XQwFiJstGg/syc+ZHq2dyLPF4ARB5cnKbXvTL3QVWAjFYOu9HXcc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LLSyUei1; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1774876813; c=relaxed/simple;
+	bh=RckkfRkC7LzjyZpLmezzaAUi9G1MueiiWZRpPpDeS70=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FHhvXwW/Xa3PUL3aRejSiWwt0gFwejILLsLtcrpSx7MxH9VzHinn1S3AK/42LlMwG+0fKBn/vdVLVTZ1PNfu9Aizwgfo0cDZp0KJ8i/SCvJLiHdUtjt+CK0rEusvxEQJIe2bHXW5hlB6lC3HbYcr9fK1qILizb7yHrSa+xVH+AA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uf2GKmNR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LLSyUei1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nRBXZDnzA+j7dLOyvKWaK4IolBovAM4sUlz0J3FgCPc=; b=LLSyUei1+JUnbwIJtuOYd3ddMx
-	WzSK91ds9USUgW09G6fldor31rG3E2GSfhLoiNO2UmFNu+RWV+L91hxlLoYH4iJzM49vxnOyWkXEa
-	oHD956GOlxZsTNnHjgxhCfAqOnwTsc4IfqCMvZQSpmmwwWLpPc/0Flq/hXXPKPlLCB3Bjmb6zKoIE
-	Z9NHRjdosC7X+tDHfUJJ84okdXBqwALmLiGd76g7Z6r2NTgxZsOEEknfdX942EjqzmxRmrog9kMt9
-	pEoKWEsgZn9DFUq/rCuUuvQCWdLBpjcoHBgXezbYroGMrNot0jZXTmYPcdMbj5FNz/FN4FQxNWABr
-	58g1H50g==;
-Received: from [94.154.173.90] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w7CTX-0000000BKTV-1NuS;
-	Mon, 30 Mar 2026 13:16:15 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: fold xfs_setattr_size into xfs_vn_setattr_size
-Date: Mon, 30 Mar 2026 15:16:00 +0200
-Message-ID: <20260330131607.3904269-3-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260330131607.3904269-1-hch@lst.de>
-References: <20260330131607.3904269-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uf2GKmNR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2E99C4CEF7;
+	Mon, 30 Mar 2026 13:20:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774876812;
+	bh=RckkfRkC7LzjyZpLmezzaAUi9G1MueiiWZRpPpDeS70=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uf2GKmNRNcQ2ht/8ENJFJKwvOYE4gUGzPpzrfJZ15sysv+1zFUTUlk1jsH/YOiry8
+	 FMgcCy5VYlMwwrvc+2rLOtiT8Bk4vzUBn1T3B/i3SaH7rUYBwC78p3EPN1RFxeZUva
+	 ATNSO8uL/ztFQ5jvdDrHn900yjA1NGYj7eDE16H3gmHMQH3Farryd/qT52Eg5p3Ypd
+	 UywoUNWp2rQMWg5jR5o5mpGHCUAgj8K9q8MiXg5kksjrO0Yoh8I3A5sN8nLR+RG4R0
+	 h1NB2lzcWQm74KYR5rewfj0h0U7DxMdMiQe6i9eL+TRlKvQZyoceHwlXLhgpJf2QFz
+	 z7p8vFKfZofmg==
+Date: Mon, 30 Mar 2026 15:20:08 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, 
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: delay opening the GC zone
+Message-ID: <acp4YXKa89OTBY9X@nidhogg.toxiclabs.cc>
+References: <20260330054533.3856339-1-hch@lst.de>
+ <20260330054533.3856339-2-hch@lst.de>
+ <acpnEIzoiBuAJ9E9@nidhogg.toxiclabs.cc>
+ <20260330131257.GA546@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260330131257.GA546@lst.de>
 
-xfs_vn_setattr_size is the only caller of xfs_setattr_size, so merge the
-two functions.
+On Mon, Mar 30, 2026 at 03:12:57PM +0200, Christoph Hellwig wrote:
+> On Mon, Mar 30, 2026 at 02:16:53PM +0200, Carlos Maiolino wrote:
+> > On Mon, Mar 30, 2026 at 07:44:11AM +0200, Christoph Hellwig wrote:
+> > > The code that selects a new GC zone when the previous one is full also
+> > > handles a zone not being set at all.  Make use of that to simplify the
+> > > logic in xfs_zone_gc_mount.
+> > > 
+> > 
+> > I might be wrong, but the subject looks misleading to me, wouldn't be
+> > better to just set it to something like "simplify xfs_zone_gc_mount"?
+> > 
+> > Not a big deal for me, just kind of confused me while reading the patch.
+> > But changing subject or not, feel free to add:
+> 
+> Well, both would be correct, but I think the current subject is more
+> useful as simplify could mean anything.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iops.c | 38 +++++++++++---------------------------
- 1 file changed, 11 insertions(+), 27 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index b0256a4a8aa8..325c2200c501 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -901,20 +901,18 @@ xfs_setattr_nonsize(
- 
- /*
-  * Truncate file.  Must have write permission and not be a directory.
-- *
-- * Caution: The caller of this function is responsible for calling
-- * setattr_prepare() or otherwise verifying the change is fine.
-  */
--STATIC int
--xfs_setattr_size(
-+int
-+xfs_vn_setattr_size(
- 	struct mnt_idmap	*idmap,
- 	struct dentry		*dentry,
--	struct xfs_inode	*ip,
- 	struct iattr		*iattr)
- {
-+	struct inode		*inode = d_inode(dentry);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct inode		*inode = VFS_I(ip);
--	xfs_off_t		oldsize, newsize;
-+	xfs_off_t		oldsize = inode->i_size;
-+	xfs_off_t		newsize = iattr->ia_size;
- 	struct xfs_trans	*tp;
- 	int			error;
- 	uint			lock_flags = 0;
-@@ -927,8 +925,11 @@ xfs_setattr_size(
- 	ASSERT((iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
- 		ATTR_MTIME_SET|ATTR_TIMES_SET)) == 0);
- 
--	oldsize = inode->i_size;
--	newsize = iattr->ia_size;
-+	trace_xfs_setattr(ip);
-+
-+	error = xfs_vn_change_ok(idmap, dentry, iattr);
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Short circuit the truncate case for zero length files.
-@@ -1128,23 +1129,6 @@ xfs_setattr_size(
- 	goto out_unlock;
- }
- 
--int
--xfs_vn_setattr_size(
--	struct mnt_idmap	*idmap,
--	struct dentry		*dentry,
--	struct iattr		*iattr)
--{
--	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
--	int error;
--
--	trace_xfs_setattr(ip);
--
--	error = xfs_vn_change_ok(idmap, dentry, iattr);
--	if (error)
--		return error;
--	return xfs_setattr_size(idmap, dentry, ip, iattr);
--}
--
- STATIC int
- xfs_vn_setattr(
- 	struct mnt_idmap	*idmap,
--- 
-2.47.3
-
+Fair enough
