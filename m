@@ -1,151 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67790346A0C;
-	Mon, 30 Mar 2026 16:04:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57EF434AB19;
+	Mon, 30 Mar 2026 20:45:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774886681; cv=none; b=Peezow10//N5ukJs75NErSfw2vfUXUfJA5pT9JnQjxZDmJnEQ5R8njBmmEyyg7SgNsyyU3+UFJONaewjtaHMJ6Io7wZHdj20qgmMsYYRo+PsA/y4BUO/B5g2eHYB8uuAb2X73er5ss+KZ0lDY/7YPPGMoChMTDXSpwOgMVPaELs=
+	t=1774903542; cv=none; b=MxZ7CuU9qF9JMBZVrafMYxoeFx8Bt1V77TFw8bDBaWURnos90tvCX6QBdJIKZEw7jmS88Ypxqlp1Gvpvo8JwRDml3vsz9dx4/f7Fi8k+1+GkFcq/GkZZ3hHlQBCIQrJwf31W6joc1s+E9M6OESD31TNg3aHYE8Iuh8b91XD4UpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774886681; c=relaxed/simple;
-	bh=yVFBi+DzchKAKYmrxoYixWw07bl3TILTJazdOgkwmgg=;
+	s=arc-20240116; t=1774903542; c=relaxed/simple;
+	bh=HMgpde4EH45cuHT2qmv4PBoDBp5xozGkRli4Usm7r4A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ETVLSLo1e+kTOZBWrOn48rgBEWAjEpToc14GrmRZeCYdkRBsrXvprpn7ZrxYIahHtwmUND6uOelgeBrrau7pqq7F4XOjKC70Ov2FG33ZnfZvqEAcx9UTDe+ETcT6nvjNr9AX8ECybq+/M3siB7oH3knIxD5wLxK6kCKTY9DTX64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eci1rery; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gfo8eNA/OU8xzN1iFgA26LWjdZ4pcC0L5xntaA1jK1eb/WNh7BMoffEpuGTMpKvZVO3rKy7jluUwedWIqG9p5JOqutlTNBLPr7FMcxDjOZhaMRKT98Wa/oXZbR1tOe8pzrua3g7Ev623ZKcNbzHwNX7erNeAcSvynydlVYUk74M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j6pkB5A3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eci1rery"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45ACDC4CEF7;
-	Mon, 30 Mar 2026 16:04:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j6pkB5A3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4ADDC4CEF7;
+	Mon, 30 Mar 2026 20:45:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774886681;
-	bh=yVFBi+DzchKAKYmrxoYixWw07bl3TILTJazdOgkwmgg=;
+	s=k20201202; t=1774903542;
+	bh=HMgpde4EH45cuHT2qmv4PBoDBp5xozGkRli4Usm7r4A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Eci1reryhkv/wF0IWVdaHrsIirTSrKi1kGkvmX3U5ej3t7bQ0E7B27EzujKt04YaX
-	 xzUuuOOVMFUHGGQjc1+Li1glGvnscKa2Yrpq9ORK+ivqTLfBQSe3k0VVIWfBQ2N7Pz
-	 gRPcFLEpMrOaiRl3Rj2PaAClas6nAHopYgrkUmy6MV9eJ86vuuep2vDUQhEBCxGou1
-	 SUAejxFPu1etRUQklyByUROFUOF9y8wa2E63Qd5O0AltLK4PTBNyc07EHCG8SZbr2j
-	 6wJqX3sHRu6ixN3StjynXhX12KP58k3/YcseFTBLdydSApjnxB3zJAMMfJqSLK7xT6
-	 ZYfK/sWNO9Nig==
-Date: Mon, 30 Mar 2026 09:04:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ravi Singh <ravising@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	adilger@dilger.ca, jack@suse.com, cem@kernel.org, hch@infradead.org
-Subject: Re: [PATCH v3] xfs: return default quota limits for IDs without a
- dquot
-Message-ID: <20260330160440.GQ6202@frogsfrogsfrogs>
-References: <20260317065947.306954-1-ravising@redhat.com>
- <20260330061414.1190802-1-ravising@redhat.com>
+	b=j6pkB5A3nH6FFWViMv8wW+sJW4LQnAAjTsQLR1WizO9Y1SQvTt4ETpezXTX6xyM8D
+	 6q7kR3hMNZFT9ZtExdxy/FEihKjaJuIBi0XCSzUP0RfE+0dulkYrKxS2fzoZ2zHT/h
+	 WKiWHUdm7CqbYMHLDTJF/6KzAi5OxXlyfMAfghIJQgsftFAq/R+YhN5FHu8vqFLJHl
+	 iQy7lEE4qe11ZG8pTaySetfxjGk2t9Ysxwh93flsbGTORz3K8bKqkDgl0EQVSPBmX9
+	 PfEmGJ+FcjH7W1Y6A5vsDwMHlQZ/E4SkmKstlOXY38Ex+nM8bMhwk4ribuVX+mlq0A
+	 jhRjnu4+OYPnw==
+Date: Tue, 31 Mar 2026 07:45:31 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: ZhengYuan Huang <gality369@gmail.com>
+Cc: cem@kernel.org, dchinner@redhat.com, djwong@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com, r33s3n6@gmail.com, zzzccc427@gmail.com
+Subject: Re: [PATCH] xfs: avoid inodegc worker flush deadlock
+Message-ID: <acrg64yzAbgb8jte@dread>
+References: <20260328071252.3936506-1-gality369@gmail.com>
+ <acnUybgMAsBA9IEc@dread>
+ <CAOmEq9Vx_sJf1PbD_SFdRyKb+u+kRR8_BPJ_+Ms4tdD895-cVg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260330061414.1190802-1-ravising@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOmEq9Vx_sJf1PbD_SFdRyKb+u+kRR8_BPJ_+Ms4tdD895-cVg@mail.gmail.com>
 
-On Mon, Mar 30, 2026 at 02:14:14PM +0800, Ravi Singh wrote:
-> When an ID has no dquot on disk, Q_XGETQUOTA returns -ENOENT even
-> though default quota limits are configured and enforced against that
-> ID.  This means unprivileged users who have never used any resources
-> cannot see the limits that apply to them.
+On Mon, Mar 30, 2026 at 10:40:13AM +0800, ZhengYuan Huang wrote:
+> On Mon, Mar 30, 2026 at 9:41 AM Dave Chinner <dgc@kernel.org> wrote:
+> > How did the filesystem get to ENOSPC when freeing an inode?
+> > That should not happen, so can you please describe what the system
+> > was doing to trip over this issue?
+> >
+> > i.e. the problem that needs to be understood and fixed here is
+> > "freeing an inode should never see ENOSPC", not "inodegc should not
+> > recurse"...
 > 
-> When xfs_qm_dqget() returns -ENOENT for a non-zero ID, return a
-> zero-usage response with the default limits filled in from
-> m_quotainfo rather than propagating the error.  This is consistent
-> with the enforcement behavior in xfs_qm_adjust_dqlimits(), which
-> pushes the same default limits into a dquot when it is first
-> allocated.
+> Thanks for the reply.
 > 
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Ravi Singh <ravising@redhat.com>
+> This issue was found by our fuzzing tool, and we are still working on
+> a reliable reproducer.
 
-I think it's an improvement that you can now see the (default) limits
-for an otherwise unused qid.
+Is this some new custom fuzzer tool, or just another private syzbot
+instance?
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+More importantly: this is not a failure that anyone is likely to see
+in production systems, right?
 
---D
+> From the logs we have so far, it appears that the filesystem may
+> already be falling back to m_finobt_nores during mount, before the
+> later inodegc/ifree path is reached.
 
-> ---
->  v3:
->   - Return -ENOENT when no default limits are configured
->     instead of returning a zero-filled response (Darrick)
+Which means ifree would have dipped into the reserve block pool
+because when mp->m_finobt_nores is set, we use XFS_TRANS_RESERVE for
+the ifree transaction reservation.
+
+> In particular, we observe
+> repeated per-AG reservation failures during mount, followed by:
 > 
->  v2:
->   - Moved fix from VFS (fs/quota/quota.c) to XFS
->     (fs/xfs/xfs_qm_syscalls.c) per review feedback
->   - Return default limits on ENOENT instead of granting
->     unprivileged access to ID 0's dquot
-> 
->  fs/xfs/xfs_qm_syscalls.c | 43 +++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 42 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index d50b7318c..21a784986 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -391,6 +391,38 @@ xfs_qm_scall_setqlim(
->  	return error;
->  }
->  
-> +/*
-> + * Fill out the default quota limits for an ID that has no dquot on disk.
-> + * Returns 0 if default limits are configured
-> + * and were filled in, -ENOENT otherwise.
-> + */
-> +static int
-> +xfs_qm_scall_getquota_fill_defaults(
-> +	struct xfs_mount	*mp,
-> +	xfs_dqtype_t		type,
-> +	struct qc_dqblk		*dst)
-> +{
-> +	struct xfs_def_quota	*defq;
-> +
-> +	defq = xfs_get_defquota(mp->m_quotainfo, type);
-> +
-> +	if (!defq->blk.soft && !defq->blk.hard &&
-> +	    !defq->ino.soft && !defq->ino.hard &&
-> +	    !defq->rtb.soft && !defq->rtb.hard) {
-> +		return -ENOENT;
-> +	}
-> +
-> +	memset(dst, 0, sizeof(*dst));
-> +	dst->d_spc_softlimit = XFS_FSB_TO_B(mp, defq->blk.soft);
-> +	dst->d_spc_hardlimit = XFS_FSB_TO_B(mp, defq->blk.hard);
-> +	dst->d_ino_softlimit = defq->ino.soft;
-> +	dst->d_ino_hardlimit = defq->ino.hard;
-> +	dst->d_rt_spc_softlimit = XFS_FSB_TO_B(mp, defq->rtb.soft);
-> +	dst->d_rt_spc_hardlimit = XFS_FSB_TO_B(mp, defq->rtb.hard);
-> +
-> +	return 0;
-> +}
-> +
->  /* Fill out the quota context. */
->  static void
->  xfs_qm_scall_getquota_fill_qc(
-> @@ -451,8 +483,17 @@ xfs_qm_scall_getquota(
->  	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
->  	 */
->  	error = xfs_qm_dqget(mp, id, type, false, &dqp);
-> -	if (error)
-> +	if (error) {
-> +		/*
-> +		 * If there is no dquot on disk and default limits are
-> +		 * configured, return them with zero usage so that
-> +		 * unprivileged users can see what limits apply to them.
-> +		 */
-> +		if (error == -ENOENT && id != 0 &&
-> +		    !xfs_qm_scall_getquota_fill_defaults(mp, type, dst))
-> +			return 0;
->  		return error;
-> +	}
->  
->  	/*
->  	 * If everything's NULL, this dquot doesn't quite exist as far as
-> -- 
-> 2.49.0
-> 
-> 
+> ENOSPC reserving per-AG metadata pool, log recovery may fail.
+
+This error doesn't occur in isolation - what other errors were
+reported?
+
+Please post the entire log output from the start of the mount to the
+actual reported failure. That way we know the same things as you do,
+and can make more informed comments about the error rather than
+having to rely on what you think is relevant.
+
+> Based on the current code, my understanding is that when
+> xfs_fs_reserve_ag_blocks fails, XFS can continue mounting in the
+> degraded m_finobt_nores mode. In this state, xfs_inactive_ifree may
+> later take the explicit reservation path, which seems like a plausible
+> way for ifree to encounter ENOSPC.
+
+The nores path sets XFS_TRANS_RESERVE, allowing it to dip into the
+global reserve blocks pool to avoid ENOSPC in most situations.
+However, if it gets ENOSPC, that means the reserve block pool is
+empty, and whatever corruption the fuzzer introduced has produced
+a filesystem that has zero space available to run transactions that
+log recovery needs to run.
+
+IOWs, if the fs is at ENOSPC, and the reserve pool is also empty,
+then we can't run unlinked inode recovery or replay intents because
+the transaction reservations will ENOSPC.  If that's the case, then
+we should be detecting the ENOSPC situation and aborting log
+recovery rather than trying to recover and hitting random ENOSPC
+failures part way through.
+
+i.e. I'm trying to understand the cause of the ENOSPC issue, because
+that will determine how we need to detect whatever on-disk
+corruption the fuzzer created to trigger this issue.
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
