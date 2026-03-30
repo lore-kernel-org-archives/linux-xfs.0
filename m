@@ -1,144 +1,51 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212463D330E;
-	Mon, 30 Mar 2026 13:00:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E58D3C872F
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 13:10:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774875643; cv=none; b=Nvfxj9PGbwvFFzoH/dAlH3r7EL2VmdMlYSfsUmdKXzth29AmN0fPALgNBFc7nmjTNGol/PsIIXkBfV852So719p3NrIl8URZD061JNejmIdXOVQ7jX6P7HykLcVHxKL4glvOdR5G2FB6pa8CIHRpCnGStm6REpf1xA1tUw2Hz4w=
+	t=1774876209; cv=none; b=Y7HjWEmiFxmR/QEBQQxickPcZiVsMDiYcIzP2BtsXKjouAFyF+QSOnAnPglvy7ojQndKolzDjN03rE8huJ8BA145y/XWB7n1VazaWWxd0LPqBqsSVCSETgNJw7JPJts/KBsCWFcqE8ss60g/P6otJxK3ZupttluOsbs+JI9M/Qw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774875643; c=relaxed/simple;
-	bh=4ZXs+A9pcjMtLPNJwJ07VJXuQvoQXojsPMnzob1DonM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JLkRLhQA1LQz1VfLKSfgh0NmJtAR1qqQ17B8cYiuvdspt16GI5NKYtzE256dHvNjIeVU21w5ctL5xxNzS9Ak4jWIyvns7OJkG+jcrNgdli+hL6n6cQU0PFGgD4hVf0k5gy0JkReupU7YRIT3etLanhixKbISELeyfCUzVTpDKLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gQVBaVmY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gQVBaVmY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=0tEuToDFrQXSm22rDALVDqd92ZOgJz7gXRcVbj4Mjg0=; b=gQVBaVmY02XPlPp243KoxL0650
-	qn8PVPOYyDl9AQks+VjLBSkvfuLDzqAKUhFPjlVCRizILWkxfHO2YM59hwShhFp56qTOjUXtJ8/yK
-	SDxXKwWAKaYZ52j0koea7swK5kiXOdRvMj74bCvx8tHTry/jfoU71cJCZBXCtlpwL9Qi2JdYxnBs9
-	r7HfUB9CX+XDRZx9WSVK1BDNQEh01qP2VQzhPRrBTxNmLmZkEDtK201W2vePiV4jyaHiiRQulm5UM
-	76EiaU3jHmso8f2+K1hOoifiN8APSwF1FsYIt8Pp/OrOSPRBnPjY4WXzcEmDo4RIGg5NSEz+3I44Z
-	1aVz0tmA==;
-Received: from [94.154.173.90] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w7CEQ-0000000BItQ-1ONT;
-	Mon, 30 Mar 2026 13:00:38 +0000
+	s=arc-20240116; t=1774876209; c=relaxed/simple;
+	bh=mzQzgH76uZ5GDrnptSNhwrSS7znZ2ieL0J6v2EXMxR0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rX5g0Io+tx9RlIq40Z2/pD8wFSAdXXaESwYELzO1yiwhrp3rPnHIJGb5V8BO3by6wmAslik+MsqIf/3KOXt+43a26rbB5Z2gT8FBkIb76aG0zzq4SeadV/eNGQdn+1jn32CUFLgKN7st0h+2xQ1ywD3abHfOV1JmfVNEJgCNqBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 829D268C7B; Mon, 30 Mar 2026 15:10:05 +0200 (CEST)
+Date: Mon, 30 Mar 2026 15:10:04 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: zlang@kernel.org
-Cc: djwong@kernel.org,
-	dlemoal@kernel.org,
-	hans.holmberg@wdc.com,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: add a test for number of open zones on conventional devices
-Date: Mon, 30 Mar 2026 15:00:29 +0200
-Message-ID: <20260330130029.3902654-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: untangle the open zones reporting in mountinfo
+Message-ID: <20260330131004.GA32486@lst.de>
+References: <20260330054111.3855818-1-hch@lst.de> <20260330054111.3855818-5-hch@lst.de> <20260330054732.GA5079@lst.de> <acpIdXHqg_Y7bHEY@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <acpIdXHqg_Y7bHEY@ryzen>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Test that mounts of zoned file systems on conventional devices don't
-create more open zones than allowed when the last blocks in one or more
-zones have been invalidated.
+On Mon, Mar 30, 2026 at 11:55:01AM +0200, Niklas Cassel wrote:
+> On Mon, Mar 30, 2026 at 07:47:32AM +0200, Christoph Hellwig wrote:
+> > Note that this patch actually requires the "cleanup open GC zone handling"
+> > series.  I had the two the other way around in my local tree, but decided
+> > to send the series with the fix out first after a trivial rebase worked
+> > fine, which obviously wasn't a good enough test.  Sorry.
+> 
+> I don't know if this series should be applied to 7.0 or not, but if so,
+> then I'm guessing that we do not want this series to depend on a cleanup
+> series.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/4201     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/4201.out |  1 +
- 2 files changed, 66 insertions(+)
- create mode 100755 tests/xfs/4201
- create mode 100644 tests/xfs/4201.out
-
-diff --git a/tests/xfs/4201 b/tests/xfs/4201
-new file mode 100755
-index 000000000000..a1f30cb7e739
---- /dev/null
-+++ b/tests/xfs/4201
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Christoph Hellwig.
-+#
-+# FS QA Test No. 4201
-+#
-+# Test that mounts of zoned file systems on conventional devices don't create
-+# more open zones than allowed when the last blocks in one or more zones have
-+# been invalidated.
-+#
-+
-+. ./common/preamble
-+_begin_fstest auto quick zone
-+
-+_require_scratch
-+_require_odirect
-+_require_non_zoned_device $SCRATCH_DEV
-+_require_non_zoned_device $SCRATCH_RTDEV
-+
-+open_zones=5
-+blocks=65536
-+bsize=4096
-+
-+zone_size_mib=$((blocks * bsize / 1024 / 1024))
-+file_size_mib=$((zone_size_mib / 2))
-+nr_files=$((open_zones * 3 - 1))
-+
-+echo "zone size: $zone_size_mib" >>$seqres.full
-+echo "file size: $file_size_mib" >>$seqres.full
-+echo "nr files: $nr_files" >>$seqres.full
-+
-+_scratch_mkfs -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
-+	> "$seqres.full" 2>&1
-+_scratch_mount -o max_open_zones=${open_zones}
-+
-+_require_fs_sysfs zoned/nr_open_zones
-+
-+for i in $(seq 1 $nr_files); do
-+	dd if=/dev/zero of=$SCRATCH_MNT/$i bs=1M count=$file_size_mib \
-+		 oflag=direct > /dev/null 2>&1
-+done
-+
-+rm $SCRATCH_MNT/4
-+rm $SCRATCH_MNT/5
-+rm $SCRATCH_MNT/6
-+rm $SCRATCH_MNT/7
-+
-+_scratch_unmount
-+_scratch_mount -o max_open_zones=${open_zones}
-+
-+max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
-+nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
-+
-+if [ ${max_open} -ne $((open_zones - 1)) ]; then
-+	_fail "Test needs adjustments for multiple open GC zones"
-+fi
-+
-+if [ ${nr_open} -gt ${max_open} ]; then
-+	_fail "Too many open zones: $nr_open/$max_open"
-+fi
-+
-+_scratch_unmount
-+
-+status=0
-+exit
-diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
-new file mode 100644
-index 000000000000..32e395dd4d6d
---- /dev/null
-+++ b/tests/xfs/4201.out
-@@ -0,0 +1 @@
-+QA output created by 4201
--- 
-2.47.3
+Everything here is targetted at 7.1.
 
