@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0981D3CA4A3
-	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 12:29:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49BF221E091
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 12:45:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774873741; cv=none; b=MmfE1oEE4Mfuzrv0ykEgPo968xJ5ShlaKOO3fdAc8cm+V+OrwPpVIP9kxjy6RStN4haoqYxNpQmLy9uvS5UzbzplPCmTTOj0vI/j+WvEJqrslfNLxxx2atxgMVQGVzRU8Mx/Kr/zY8ecPsJxt4FjEL28FAz9B50b54Cjsd7qdR0=
+	t=1774874743; cv=none; b=nEETQXVEbmsnNaUNticSBfnTTBk6DS2ADB9GZTy2j4553LkBaLHft4XkWfUFRv8vlpVXWZJbNWucHeVCgd65K409h1hCSCN1leyj0/RYPHaFKDjCFzFtNx/XGDk6H8Ktz6qz/eGwbzS1aQrkY6Z9fTcdQk9sIPMKywa45NcvZ4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774873741; c=relaxed/simple;
-	bh=Uv2EbVgXAOc+OzOeZ6HjCT7VuyV1CsmiyF+LEC1aEJg=;
+	s=arc-20240116; t=1774874743; c=relaxed/simple;
+	bh=weGESU4AiDEG6wSRTEqpEi0Ya0b+pPsuabbSeZJek4s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l8wbECPi2KR+UiU3khB34ItLkor5vV1U+M6A/oEwAT/W4+gs0bY8wkcNvvjkYbcblMhL8m4xXP/vmsGtPsAHg6EUPryvhLMuBgj7hWWcFqWKXSWyMOLHBqL89IBdHdvq98P8tZkpBkcSZlz1DoS3kWPqg5yLQz9E1teGhmgt5yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J1Ao55cr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BddZNKdLT386MBzwy5xVnKa+4AsIuYVUoXxYCntlAGWrCD2VYnzhJwBF6qV7v/iQpfLqdRU0fLAG9mRHWg1JvEInRgcFxo1w7Xm6GBg+yp/JHThivni2xm4y+jH7Z80YpRklreda5RCwfzEe1twWkQFDDEzqMcZUzMc/0tNY8js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QAy/TPpk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J1Ao55cr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E408C4CEF7;
-	Mon, 30 Mar 2026 12:28:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QAy/TPpk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7644C4CEF7;
+	Mon, 30 Mar 2026 12:45:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774873740;
-	bh=Uv2EbVgXAOc+OzOeZ6HjCT7VuyV1CsmiyF+LEC1aEJg=;
+	s=k20201202; t=1774874743;
+	bh=weGESU4AiDEG6wSRTEqpEi0Ya0b+pPsuabbSeZJek4s=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J1Ao55crmn1rGhbJrc7DG+wCbIF1zy2KPfY3qS1arSBLWHFqm32ExhUWVYCHyqa12
-	 v6vzm3zJm3htDDbCXmX2+sVm11ktsqfbHwv05vpyR0wXTFi1O5ruBlT5N8DgSDJkfi
-	 r2uPm17dpBBpQ5g7eI5Iy3S83W4sky5lF1ZZA+dWIBklUsm+GI+amsGEw9gUftYp4X
-	 9TI23Ktdes/dDCr2eC2oyU4HAWuvfFTki0x6SYIa08zcCEQAMlMkRXWseTpKMEWJRw
-	 DKcUtEHQEtNhiEqYKZc1kSuO3eRyLKrHxwZ5B8hwHN2czvShV7L/VH6gz45j8LcQlY
-	 DJOreAVozCPKg==
-Date: Mon, 30 Mar 2026 14:28:56 +0200
+	b=QAy/TPpkwUkxUcoN3Pf4Amg3Qjd6xjwM9rk/zUtnGb92el4gXYpurVSf2K5nmWO33
+	 90b3DSqw6AhphrU+0BPQbgviQJO/xgkpgUUIc4D4+2sb6/oQvIMF1aEONBw0S38XV9
+	 UCoE2DVD1kc6SiwoAy+scPYcpft3LdY4TTd4c1zZVxfNojY2NevTg7tbXfdcoNodMr
+	 JHeccj9hZHRVdw/MsQ8fAG0FD6Pc1yGQt+tD+hC9fnmVSbv9i1Lc+s/R/lOxXGrxey
+	 TOvUziC0V42jpwUcuCxNP8NmESUSjMLTADhkMNT68bILaYj9CZltvYUYZ0XB+JDLB2
+	 m4ndL61YBYInA==
+Date: Mon, 30 Mar 2026 14:45:38 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Damien Le Moal <dlemoal@kernel.org>, 
 	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] xfs: refactor GC zone selection helpers
-Message-ID: <acpsgY_0mG8Qs-27@nidhogg.toxiclabs.cc>
+Subject: Re: [PATCH 6/7] xfs: streamline GC zone selection
+Message-ID: <acpvUjs4nGXCllRR@nidhogg.toxiclabs.cc>
 References: <20260330054533.3856339-1-hch@lst.de>
- <20260330054533.3856339-6-hch@lst.de>
+ <20260330054533.3856339-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,106 +43,239 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260330054533.3856339-6-hch@lst.de>
+In-Reply-To: <20260330054533.3856339-7-hch@lst.de>
 
-On Mon, Mar 30, 2026 at 07:44:15AM +0200, Christoph Hellwig wrote:
-> Merge xfs_zone_gc_ensure_target into xfs_zone_gc_select_target
-> to keep all zone selection code together.
+On Mon, Mar 30, 2026 at 07:44:16AM +0200, Christoph Hellwig wrote:
+> Currently picking of the GC target zone is done a bit odd, both in the
+> main "can we start new GC cycles" routine and in the low-level block
+> allocator for GC.  This was mostly done to work around the rules for
+> when code in a waitqueue wait loop can sleep.
+> 
+> But there is a trick to check if the process state has been set to
+> running to discover if the wait loop has to be retried all this becomes
+> much simpler.
+
+The final part of the sentence looks odd. But I'm no English native
+either.
+
+Otherwise...
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> So we can just select a GC zone just before writing,
+> and bail out of starting new work if we can't find usable zone.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_zone_gc.c | 45 ++++++++++++++++++++++----------------------
->  1 file changed, 22 insertions(+), 23 deletions(-)
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+>  fs/xfs/xfs_zone_gc.c | 95 +++++++++++++++++++-------------------------
+>  1 file changed, 40 insertions(+), 55 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 3723f5293a64..6ce5a0708a9b 100644
+> index 6ce5a0708a9b..24f20f99ae1a 100644
 > --- a/fs/xfs/xfs_zone_gc.c
 > +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -552,6 +552,9 @@ xfs_zone_gc_steal_open(
->  	return 0;
->  }
+> @@ -383,9 +383,6 @@ xfs_zone_gc_iter_irec(
+>  	struct xfs_rmap_irec	*irec;
+>  	int			error;
 >  
-> +/*
-> + * Ensure we have a valid open zone to write to.
-> + */
->  static struct xfs_open_zone *
+> -	if (!iter->victim_rtg)
+> -		return false;
+> -
+>  retry:
+>  	if (iter->rec_idx == iter->rec_count) {
+>  		error = xfs_zone_gc_query(mp, iter);
+> @@ -555,7 +552,7 @@ xfs_zone_gc_steal_open(
+>  /*
+>   * Ensure we have a valid open zone to write to.
+>   */
+> -static struct xfs_open_zone *
+> +static bool
 >  xfs_zone_gc_select_target(
 >  	struct xfs_mount	*mp)
-> @@ -559,12 +562,25 @@ xfs_zone_gc_select_target(
->  	struct xfs_zone_info	*zi = mp->m_zone_info;
->  	struct xfs_open_zone	*oz = zi->zi_open_gc_zone;
+>  {
+> @@ -568,14 +565,14 @@ xfs_zone_gc_select_target(
+>  		 * zone.
+>  		 */
+>  		if (oz->oz_allocated < rtg_blocks(oz->oz_rtg))
+> -			return oz;
+> +			return true;
 >  
-> +	if (oz) {
-> +		/*
-> +		 * If we have space available, just keep using the existing
-> +		 * zone.
-> +		 */
-> +		if (oz->oz_allocated < rtg_blocks(oz->oz_rtg))
-> +			return oz;
-> +
-> +		/*
-> +		 * Wait for all writes to the current zone to finish before
-> +		 * picking a new one.
-> +		 */
-> +		if (oz->oz_written < rtg_blocks(oz->oz_rtg))
-> +			return NULL;
-> +	}
-> +
+>  		/*
+>  		 * Wait for all writes to the current zone to finish before
+>  		 * picking a new one.
+>  		 */
+>  		if (oz->oz_written < rtg_blocks(oz->oz_rtg))
+> -			return NULL;
+> +			return false;
+>  	}
+>  
 >  	/*
-> -	 * We need to wait for pending writes to finish.
-> +	 * Open a new zone when there is none currently in use.
->  	 */
-> -	if (oz && oz->oz_written < rtg_blocks(oz->oz_rtg))
-> -		return NULL;
-> -
->  	ASSERT(zi->zi_nr_open_zones <=
->  		mp->m_max_open_zones - XFS_OPEN_GC_ZONES);
->  	oz = xfs_open_zone(mp, WRITE_LIFE_NOT_SET, true);
-> @@ -576,23 +592,6 @@ xfs_zone_gc_select_target(
->  	return oz;
+> @@ -589,7 +586,7 @@ xfs_zone_gc_select_target(
+>  	spin_lock(&zi->zi_open_zones_lock);
+>  	zi->zi_open_gc_zone = oz;
+>  	spin_unlock(&zi->zi_open_zones_lock);
+> -	return oz;
+> +	return !!oz;
 >  }
 >  
-> -/*
-> - * Ensure we have a valid open zone to write the GC data to.
-> - *
-> - * If the current target zone has space keep writing to it, else first wait for
-> - * all pending writes and then pick a new one.
-> - */
+>  static void
+> @@ -604,7 +601,7 @@ xfs_zone_gc_end_io(
+>  	wake_up_process(data->mp->m_zone_info->zi_gc_thread);
+>  }
+>  
 > -static struct xfs_open_zone *
-> -xfs_zone_gc_ensure_target(
-> -	struct xfs_mount	*mp)
-> -{
-> -	struct xfs_open_zone	*oz = mp->m_zone_info->zi_open_gc_zone;
+> +static bool
+>  xfs_zone_gc_alloc_blocks(
+>  	struct xfs_zone_gc_data	*data,
+>  	xfs_extlen_t		*count_fsb,
+> @@ -612,11 +609,7 @@ xfs_zone_gc_alloc_blocks(
+>  	bool			*is_seq)
+>  {
+>  	struct xfs_mount	*mp = data->mp;
+> -	struct xfs_open_zone	*oz;
 > -
-> -	if (!oz || oz->oz_allocated == rtg_blocks(oz->oz_rtg))
-> -		return xfs_zone_gc_select_target(mp);
+> -	oz = xfs_zone_gc_select_target(mp);
+> -	if (!oz)
+> -		return NULL;
+> +	struct xfs_open_zone	*oz = mp->m_zone_info->zi_open_gc_zone;
+>  
+>  	*count_fsb = min(*count_fsb, XFS_B_TO_FSB(mp, data->scratch_available));
+>  
+> @@ -638,7 +631,7 @@ xfs_zone_gc_alloc_blocks(
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+>  	if (!*count_fsb)
+> -		return NULL;
+> +		return false;
+>  
+>  	*daddr = xfs_gbno_to_daddr(rtg_group(oz->oz_rtg), 0);
+>  	*is_seq = bdev_zone_is_seq(mp->m_rtdev_targp->bt_bdev, *daddr);
+> @@ -646,7 +639,7 @@ xfs_zone_gc_alloc_blocks(
+>  		*daddr += XFS_FSB_TO_BB(mp, oz->oz_allocated);
+>  	oz->oz_allocated += *count_fsb;
+>  	atomic_inc(&oz->oz_ref);
 > -	return oz;
+> +	return true;
+>  }
+>  
+>  static void
+> @@ -671,6 +664,28 @@ xfs_zone_gc_add_data(
+>  	} while (len);
+>  }
+>  
+> +static bool
+> +xfs_zone_gc_can_start_chunk(
+> +	struct xfs_zone_gc_data	*data)
+> +{
+> +
+> +	if (xfs_is_shutdown(data->mp))
+> +		return false;
+> +	if (!data->scratch_available)
+> +		return false;
+> +
+> +	if (!data->iter.victim_rtg) {
+> +		if (kthread_should_stop() || kthread_should_park())
+> +			return false;
+> +		if (!xfs_zoned_need_gc(data->mp))
+> +			return false;
+> +		if (!xfs_zone_gc_select_victim(data))
+> +			return false;
+> +	}
+> +
+> +	return xfs_zone_gc_select_target(data->mp);
+> +}
+> +
+>  static bool
+>  xfs_zone_gc_start_chunk(
+>  	struct xfs_zone_gc_data	*data)
+> @@ -678,7 +693,6 @@ xfs_zone_gc_start_chunk(
+>  	struct xfs_zone_gc_iter	*iter = &data->iter;
+>  	struct xfs_mount	*mp = data->mp;
+>  	struct block_device	*bdev = mp->m_rtdev_targp->bt_bdev;
+> -	struct xfs_open_zone	*oz;
+>  	struct xfs_rmap_irec	irec;
+>  	struct xfs_gc_bio	*chunk;
+>  	struct xfs_inode	*ip;
+> @@ -687,14 +701,15 @@ xfs_zone_gc_start_chunk(
+>  	unsigned int		len;
+>  	bool			is_seq;
+>  
+> -	if (xfs_is_shutdown(mp))
+> +	if (!xfs_zone_gc_can_start_chunk(data))
+>  		return false;
+>  
+> +	set_current_state(TASK_RUNNING);
+>  	if (!xfs_zone_gc_iter_irec(mp, iter, &irec, &ip))
+>  		return false;
+> -	oz = xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
+> -			&is_seq);
+> -	if (!oz) {
+> +
+> +	if (!xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
+> +			&is_seq)) {
+>  		xfs_irele(ip);
+>  		return false;
+>  	}
+> @@ -713,7 +728,7 @@ xfs_zone_gc_start_chunk(
+>  	chunk->new_daddr = daddr;
+>  	chunk->is_seq = is_seq;
+>  	chunk->data = data;
+> -	chunk->oz = oz;
+> +	chunk->oz = mp->m_zone_info->zi_open_gc_zone;
+>  	chunk->victim_rtg = iter->victim_rtg;
+>  	atomic_inc(&rtg_group(chunk->victim_rtg)->xg_active_ref);
+>  	atomic_inc(&chunk->victim_rtg->rtg_gccount);
+> @@ -1007,33 +1022,6 @@ xfs_zone_gc_reset_zones(
+>  	} while (next);
+>  }
+>  
+> -static bool
+> -xfs_zone_gc_should_start_new_work(
+> -	struct xfs_zone_gc_data	*data)
+> -{
+> -	struct xfs_open_zone	*oz;
+> -
+> -	if (xfs_is_shutdown(data->mp))
+> -		return false;
+> -	if (!data->scratch_available)
+> -		return false;
+> -
+> -	oz = xfs_zone_gc_select_target(data->mp);
+> -	if (!oz || oz->oz_allocated == rtg_blocks(oz->oz_rtg))
+> -		return false;
+> -
+> -	if (!data->iter.victim_rtg) {
+> -		if (kthread_should_stop() || kthread_should_park())
+> -			return false;
+> -		if (!xfs_zoned_need_gc(data->mp))
+> -			return false;
+> -		if (!xfs_zone_gc_select_victim(data))
+> -			return false;
+> -	}
+> -
+> -	return true;
 > -}
 > -
->  static void
->  xfs_zone_gc_end_io(
->  	struct bio		*bio)
-> @@ -615,7 +614,7 @@ xfs_zone_gc_alloc_blocks(
->  	struct xfs_mount	*mp = data->mp;
->  	struct xfs_open_zone	*oz;
+>  /*
+>   * Handle the work to read and write data for GC and to reset the zones,
+>   * including handling all completions.
+> @@ -1083,13 +1071,10 @@ xfs_zone_gc_handle_work(
+>  	}
+>  	blk_finish_plug(&plug);
 >  
-> -	oz = xfs_zone_gc_ensure_target(mp);
-> +	oz = xfs_zone_gc_select_target(mp);
->  	if (!oz)
->  		return NULL;
+> -	if (xfs_zone_gc_should_start_new_work(data)) {
+> -		set_current_state(TASK_RUNNING);
+> -		blk_start_plug(&plug);
+> -		while (xfs_zone_gc_start_chunk(data))
+> -			;
+> -		blk_finish_plug(&plug);
+> -	}
+> +	blk_start_plug(&plug);
+> +	while (xfs_zone_gc_start_chunk(data))
+> +		;
+> +	blk_finish_plug(&plug);
+>  }
 >  
-> @@ -1019,7 +1018,7 @@ xfs_zone_gc_should_start_new_work(
->  	if (!data->scratch_available)
->  		return false;
->  
-> -	oz = xfs_zone_gc_ensure_target(data->mp);
-> +	oz = xfs_zone_gc_select_target(data->mp);
->  	if (!oz || oz->oz_allocated == rtg_blocks(oz->oz_rtg))
->  		return false;
->  
+>  /*
 > -- 
 > 2.47.3
 > 
