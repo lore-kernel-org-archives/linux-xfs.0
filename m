@@ -1,124 +1,181 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E7B9443
-	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 02:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8761036C9D0
+	for <linux-xfs@vger.kernel.org>; Mon, 30 Mar 2026 02:51:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.44
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774838428; cv=pass; b=SoXspRooK+SE/yORQLt+GRCVwldxNi1HI5huneiJkw80RomFeJowAP2bgsf9a7YSxZ3A3lZOe9H6yPL9HZFVNHR65ttvk+l/77s3WPKhYqDf+jq6QhH3ObUWudt85ZTj0jiHbascjDeQhEGPjwbLXl8BJaq0vCQqGnKe3BKn+3Q=
+	t=1774839077; cv=pass; b=oF6hBDnCQrjIqTOHWrpyX/IKQ3z6xJU+Al2Kl3rXK1jJ5/8zkSzGrSqbRQ/hVjeL7M0SF5DnE/mWCO4UiXTh2w41l0hP4YeZn1ehbMNSGCpYE5e0f5yEx0gL+u5v6Ac1mMwfsikwVU7j+M3HL3c76FHJEYnqyCKfCAJ7dyXjnjc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774838428; c=relaxed/simple;
-	bh=SzTDA9I/K/GkhCvZvzroi0PXC7Wi4U9poSRwY/I4MYA=;
+	s=arc-20240116; t=1774839077; c=relaxed/simple;
+	bh=RNK/vnKu/pgZEBtVMkMLbuqixs2u1SksMaUAltp2QDM=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iC7gFMO+1fGPuovL7k+uGciB4rEBAaTH87f0cnmRLs9mUcjj3ZfBsuTZS93CHadvmz1Y8Q1dYkHb5ZRRTCeQ8q9SuF7Kpz4gaxHLSWyO6O/JlZdUXxu1eB3AKUNUtb7cz2dm6GGIR14N8gbAnW2KToUTNQKIA6robFlacVMme5E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cR2PnCXk; arc=pass smtp.client-ip=209.85.208.43
+	 To:Cc:Content-Type; b=auUKxnVQ4F/h62OFQZREfnnZui/JzQX86sxaQT15FJDoTzqts9QjftSvkyy1qRhPHDIRUOCa8NS/uyVM3Vz25CrYBRU5UcsjmQrrI6pBerac9PBLhbrMnxP86ryrRS5TGgwURTJqxKYAFe/cJsQA92OVUKYQe0Hh5XEaDjq4CCg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qwTzhzBI; arc=pass smtp.client-ip=74.125.224.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cR2PnCXk"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-66abe08cdf5so6084863a12.0
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Mar 2026 19:40:26 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1774838425; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qwTzhzBI"
+Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-6500040ef85so3218384d50.1
+        for <linux-xfs@vger.kernel.org>; Sun, 29 Mar 2026 19:51:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774839075; cv=none;
         d=google.com; s=arc-20240605;
-        b=FHmwopXupYKQadd+BtA2GKPnsy1WPR7cdVrMVHEEuGUY1O7rJTh+feMal6EWg9lwoS
-         qwDk1bdWYsS+icIlLxqQu98DrIfGIVL1MMLe/6Lr+OBkIPGAbdT2JVHtM3D1MJu8MFyl
-         4H3ivYHM5ebaa5BgSpvg+hdN+myx831W46k5A40GmNsGEj8SC2EC4LU+OwkhKXtYVq6a
-         1/fzjoIAjXvl4P7rdcdmQcyI++xBTdei0Bbrtnobj/Lwt0peicDk+ea9LLAg0eqL64fb
-         1De2araxL20DV8+9OLAtwIV0pZh5lra9YLGpV1VMksUqG3+0J5UQiB/gYX6vNwl5z28j
-         Ib3w==
+        b=CS8RA6pwYzMC2yGJa53/f+391fPgoKWdt7H/g9y1yGEtxowmPaRPRitOjpSFtgfSJd
+         KPKxhaXY/6z/NMxBwt/LLNGbGbPpF5xlxoLSjth0Tvl/g4mQTmkdydKoTwJwOPacpBPz
+         VDDuvmREEoLhDKLfYHxa+pMRuF7Vq6f3wCZOmXgxYgwpsHsxf+YEmqeUiCAuapsCOUVC
+         rypVMIZRemqnGEeCPkVyx/UwehGbedXVJUUDJ8w1CdmXLCqE0ILfulnP+jSfCJHCeK5a
+         IJJ49jl9zp1e5rUUfgNM1sF5BYQ24xR4gM8zIXjX+hVwODaU/ezuk/mh1NOtHjplI8mF
+         FEvg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=SzTDA9I/K/GkhCvZvzroi0PXC7Wi4U9poSRwY/I4MYA=;
-        fh=cUWcsPmT9qf84cb6yPVlmgkQJuEkyzy9dRRhGEpXhN0=;
-        b=LDY8IGJD54q4FS4Ce6ucUAJw0j3P/rrkHC9Z6GU89SpIobEu/WCmW4e6J3s0td4kSl
-         VqFnPRjGiQr5tPHT+E98SMQyH1UG/tz5ZuKAOw0zV2Owq9Tn5nym9oEJtl3edevIdP0y
-         VHpo/HfTAUlRLiCh75Bu/YuM6DehkenNrK3O92o6X2L9zV0nR1IfxsFXkl+DhbTRmxLa
-         +QZbXMCBk1VNI/f7evUkS64G1NQLisWxKSwOKILEel8krqUco9jM4dFBxdfzrAGh7Jjt
-         SLYjwDhQpPn5Hz2rPlfNbDd81vvAnH1HSubyZdD/Bq7XWMNPiWW2CmwWtsbZiJq/Jx3O
-         Nyyw==;
+        bh=L/pm9TpXLcvckJFncspSQ2WQQxlL1sYTEpU9KK49x3w=;
+        fh=7aFvoLPrUUcjBxkHjLNpLqt7jOQSg1OgWzqhKPnX1d0=;
+        b=LC1hqNrJpoiKO+CM6FaagV0mRcJ0rtvaZ6xdtGsZYXRBUl9onvRMzJJHPHQJVqNBA8
+         ajeH1Tu+0osexJRXlWkXC3svCG60bdXGSXny0E/5yn+pT8VxgZvEkW8OVhbFfyWgx2vV
+         JlcT7x4hVpOO2/fbMYxDDR2ozvAyB0TbudUZDC186+e+sNzzPDI1R+ksKXSjJI+luDkQ
+         Xm4qRZQ+iHhJQTPMV1EE3zn8hh7bbX6rLyNw2rHa6l9277tZOWlcXlL/6bytTVnJLq2o
+         +lP+QuVCwVtSzgSIFud0+yP35Efbd7YcgFVVC8BowlgFnNa2391ZXb8bLMSBW++Kl4Zj
+         v8pw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774838425; x=1775443225; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774839075; x=1775443875; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=SzTDA9I/K/GkhCvZvzroi0PXC7Wi4U9poSRwY/I4MYA=;
-        b=cR2PnCXk4UajrlBTmZLD/Ty5Xyjf5nLeB7XZgEAuOiTL+iGjwD7/etDVwlpMZ9rfIM
-         0olptKNXIKRdNNa/itnVgl9lEvR+C4jZlYz4tKvuBXaIEHPlcTNH9rHDdpwtS+CR4Qtz
-         7QDKXI3EzL3JZVqAhHWjzHr0TdqXVHj4muKhJI41jLiQfEJYCvVvemVueK6hjBX+qX+W
-         QfO4nz0dPJdIi2AJ1ZIOh3WGn7HUbOQXOUtSZAtDUWNM/5T65ni3VnMiIyCSDVQmRuG4
-         0xAgNaFnxUHSFTMUO37BQTyQD5vlkKq+4UtwRrtfUANc5Joe9Fu644BABvn3VTdmROa+
-         1meg==
+        bh=L/pm9TpXLcvckJFncspSQ2WQQxlL1sYTEpU9KK49x3w=;
+        b=qwTzhzBICL0Muxb/f1s6PRi1tTWLc3aZ2kDwQR96UeR06WONd8UCSLo7j6+a6IggnC
+         VveKGUipDYbN+Iel1SatJAHd3Fr3XoconQc15au0LIvyCrva6qHx5XX2pr9QRvDTndck
+         qn1A7x47xNce7tibKXM3SkKl3QSZoO8TulrVrVICBCdFPdSU5s75r4VwBD/iFw8ZK/55
+         DuCZPJ+gJ0svbAwQlclejOYX5NInUOADxbMZsp92yjnaGr1Bbw9iAZnoV34jKS0JDDFz
+         6iaGc7aC7PwYfEtCPxP/XWfcVUl6YKrfp/QxXgUkg4m0G3SmOx1qrhE7DYBhWADg2400
+         4xQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774838425; x=1775443225;
+        d=1e100.net; s=20251104; t=1774839075; x=1775443875;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=SzTDA9I/K/GkhCvZvzroi0PXC7Wi4U9poSRwY/I4MYA=;
-        b=dqLV2jclWd29h8wH2ZuYGBP8EKzg1+mHiNQCkN9emZm45tW6rFPUsh9QrPPFshTDt1
-         4CQoFe6ttZBRefn69j6f059mxmDkqmrFSiqO6YfG6/KiWqkld/tPdjZNnuooJXfTkgSG
-         Rg0hgpS0UPGJ8TkNZK2zp0i0VAzya2+5yasHQm95kqM2J1R+C1dUU4tePNvuY8G0VJfc
-         LxejzTwS98+RhnvqXMyGnQ0x1pu8pVWkbg3FWGKqKcLkivnG8K61jaBgALzQbbo4StNj
-         dugCNL03szPHqyoPamvtmwt6EtMU0/beeAiFpupLEt1uhRGY2uzzvQxK2vbZt4LSffJF
-         LXng==
-X-Forwarded-Encrypted: i=1; AJvYcCUTEc1H/rkf9mbbAB60M7d2vyAqjvcPzZkTDEULpj3P3pqW66aztZP0CQbCE2hZsuAN7S9EmjaLz+Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5x6FxgwFzwx+s0LLzc33GcAhaVi4kYZQb62q/eT4TOQnNtaVj
-	7TPVMPc1i5sp+MmYQPK37Q1hnIrCMH8hT8E7a6fIEgydm3m681D3w30JBSDNHVMNjXCSMFFtGmZ
-	br44SNJYtDBHzv89QAs+pTnSy+hTuA6E=
-X-Gm-Gg: ATEYQzwAyvGlZPAbWV/gp9knfjv6VJv+qCXQM/BZgYmmXzu1AvHN/ZREQ+ptPxhvC/2
-	7JKbznvTVbiJGg8UrsCja+nQQ9WWSy2yUUi5SxUdDzobji1rFIEZqmgM1GTsRPc/XiCM/lu1qT/
-	F/bnE6Hj/yTaLwYXffoWt3m6plWWgE6ZodiVG26By7N220u0Uzv1XSzvVL9klRGnZsBm/fRIGzT
-	R906msPljWxmx/P6PSI4P3xAW9FyqRfwOMleHgicUZgqJj64U2z6mFfhaA0Kgv33+U0W2h4IMmT
-	fMafjlKo1rInhev6YuUFX7XLaxYXD1rTfcHenhu3xzYym5lPwsP01ck=
-X-Received: by 2002:a17:907:1b1f:b0:b93:5e04:a74b with SMTP id
- a640c23a62f3a-b9b507a56e2mr632415266b.31.1774838424618; Sun, 29 Mar 2026
- 19:40:24 -0700 (PDT)
+        bh=L/pm9TpXLcvckJFncspSQ2WQQxlL1sYTEpU9KK49x3w=;
+        b=n4qVpyUA5jCJasTl6IPa3OM9gvVRQ8rA/yccXj0uCfJhosJ2Re9gffM6tLaCEOFxTX
+         XZ3h+9M/+bwEvX5Uf240TCnLw4EZBOdZmnfQF7YgsfauQQ9Wrc7U5PUURhAp/814SWmh
+         dpUGwtzor85qFMjk89Y9o0bpsfpAXHEYTdRhiQf0lV7ffVGUAC7+gS9d6i80N8q+zez3
+         JZpPxXTSg5jRx7b97cEKk9yDFUlOZYygs0m6bZnHr6wyfPhOyvf32/zxwS2vdsxGUZze
+         wNZQo/wEbYXOqYDjRQNai+KtM5wo6qZltHo0xcvv5+nEqOorhAKjMMUjBR1PWqf75zAE
+         Oe2A==
+X-Forwarded-Encrypted: i=1; AJvYcCVJNqRx4Vrvjy0H9bGrlzejJB5DIC9F8/la8cv/ylQ0WLknwcsHmm/OfUUScLWJGnFF3uUf/An517U=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx+b4lY9WBXushsi4S2Jr1RO5E0n4NLeMEN4YGPRsyl6SW2kDmC
+	YzDPX7lLIsASuZ2MuDkAzaZRQmwTm65Q73nnHNjOvBGCp8kqjxJW6wFajFkntCpcmu85SBPnfqG
+	LpKItZIJGyHY3K5atNT9Z+S2TrUIBPRw=
+X-Gm-Gg: ATEYQzx+tFVGywstheLZI5Z1C/3cC3keb7h+bWRPnv2bxB6sSmSyIWHeo7/DPEqvAmH
+	pSOaoHtB5lcwdT2srnOuIue9c7QiIxnZGIm9fYvsLhEmB7+DHXqk/dUXNH+9D8yXA01KIPo2wba
+	r7xgB8hIB7YGidtV20LAJaQ0HrzNAx50uskvfBpwUSp0A0p/gyg5A2mQxzVfKZkyZw92kBHxPhw
+	4obVKZawIQBE2IAqowlozAf43n4janDEaUCJZ7hsX9K0knkZd22ao7x/x8kl6QGMYEXCzXM4lZU
+	YnencYvbFAzFGg+VzGwp
+X-Received: by 2002:a05:690c:e092:b0:79b:d56a:a7c2 with SMTP id
+ 00721157ae682-79bde06b035mr114098427b3.48.1774839075368; Sun, 29 Mar 2026
+ 19:51:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260328071252.3936506-1-gality369@gmail.com> <acnUybgMAsBA9IEc@dread>
-In-Reply-To: <acnUybgMAsBA9IEc@dread>
-From: ZhengYuan Huang <gality369@gmail.com>
-Date: Mon, 30 Mar 2026 10:40:13 +0800
-X-Gm-Features: AQROBzBOO541Q4lXr0qA9kzP7jbtfC29vT7kQKSbgedCDhi-XHPASMGlHuQFd_8
-Message-ID: <CAOmEq9Vx_sJf1PbD_SFdRyKb+u+kRR8_BPJ_+Ms4tdD895-cVg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: avoid inodegc worker flush deadlock
+References: <20260327131448.156177-1-zzzccc427@gmail.com> <acnS4iOihfWL4ay5@dread>
+In-Reply-To: <acnS4iOihfWL4ay5@dread>
+From: Cen Zhang <zzzccc427@gmail.com>
+Date: Mon, 30 Mar 2026 10:51:03 +0800
+X-Gm-Features: AQROBzD8lyNwGbcqekKHhTmk0Q4gpgVmHnWhnWcQE3GVt6kS1rEIV4i0Mce3u4g
+Message-ID: <CAFRLqsXeK6Y_C8=afkxJoMmxtGn8p5HaSy5g5VYpa+gcA3RKiQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: annotate lockless bli_flags access in buf item paths
 To: Dave Chinner <dgc@kernel.org>
-Cc: cem@kernel.org, dchinner@redhat.com, djwong@kernel.org, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	baijiaju1990@gmail.com, r33s3n6@gmail.com, zzzccc427@gmail.com
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	baijiaju1990@gmail.com, stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 30, 2026 at 9:41=E2=80=AFAM Dave Chinner <dgc@kernel.org> wrote=
-:
-> How did the filesystem get to ENOSPC when freeing an inode?
-> That should not happen, so can you please describe what the system
-> was doing to trip over this issue?
->
-> i.e. the problem that needs to be understood and fixed here is
-> "freeing an inode should never see ENOSPC", not "inodegc should not
-> recurse"...
+Hi Dave,
 
-Thanks for the reply.
+> When XFS_BLI_STALE is set in unpin, then by definition the buffer
+> must be locked and the BLI referenced. [...]
+> Hence we only care about the bli_flags when unpin has the only
+> remaining reference to the bli, and in that case the read cannot be
+> racing with anything else changing it's state.
 
-This issue was found by our fuzzing tool, and we are still working on
-a reliable reproducer.
+Thank you for the detailed walkthrough.  You're right about several
+things: READ_ONCE()/WRITE_ONCE() was the wrong tool here, the
+WRITE_ONCE in xfs_buf_item_release() is useless since it's under
+the buffer lock, and the tracepoint change doesn't matter.  I'm
+dropping those.
 
-From the logs we have so far, it appears that the filesystem may
-already be falling back to m_finobt_nores during mount, before the
-later inodegc/ifree path is reached. In particular, we observe
-repeated per-AG reservation failures during mount, followed by:
+However, I want to share the actual concurrent access evidence
+before we decide on the remaining two reads:
 
-ENOSPC reserving per-AG metadata pool, log recovery may fail.
+  (1) xfs_buf_item_unpin:510 reads bli_flags
+  (2) xfs_buf_item_committed:803 reads bli_flags
 
-Based on the current code, my understanding is that when
-xfs_fs_reserve_ag_blocks fails, XFS can continue mounting in the
-degraded m_finobt_nores mode. In this state, xfs_inactive_ifree may
-later take the explicit reservation path, which seems like a plausible
-way for ifree to encounter ENOSPC.
+Both race with two different write paths:
+
+  Write A: xfs_trans_dirty_buf:532  (bli_flags |=3D DIRTY|LOGGED)
+           via new transaction on the same buffer
+  Write B: xfs_buf_item_release:713 (bli_flags &=3D ~LOGGED|HOLD|ORDERED)
+           via iop_committing on xlog_cil_commit path
+
+The concurrent paths are:
+  CPU 0: old checkpoint completing on workqueue
+         =E2=86=92 xlog_cil_committed =E2=86=92 iop_committed / iop_unpin
+  CPU 1: new transaction with the same buffer committing
+         =E2=86=92 xlog_cil_commit =E2=86=92 iop_committing =E2=86=92 iop_r=
+elease
+         (or xfs_trans_dirty_buf during the transaction)
+
+The comment at xlog_cil.c:1856 even acknowledges this:
+  "the CIL checkpoint can race with us and we can run checkpoint
+   completion before we've updated and unlocked the log items"
+
+> IOWs, using READ_ONCE to indicate a data access race is -incorrect-
+> in the cases where we actually use the result of the read.
+
+Agreed.  For xfs_buf_item_unpin(), you're right that stale is
+only consumed on the last-reference path where no concurrent writer
+exists.  But the read at line 510 happens unconditionally _before_
+atomic_dec_and_test(), so on the non-last-reference path it does
+race with the writes listed above.  The value is discarded in that
+case, so there's no semantic issue.
+
+Rather than annotating a race whose result is unused, a cleaner fix
+is to move the stale read to after the freed check, so the read
+only occurs when we actually need the value -- at which point there
+is no race:
+
+    freed =3D atomic_dec_and_test(&bip->bli_refcount);
+    ...
+    if (!freed) { xfs_buf_rele(bp); return; }
+  + stale =3D bip->bli_flags & XFS_BLI_STALE;
+
+This eliminates the concurrent access entirely with no behavior
+change.
+
+> There is no consequential race here, either. Once an BLI is marked
+> as an XFS_BLI_INODE_ALLOC_BUF under the buffer lock [...] that
+> flag never gets cleared from bip->bli_flags.
+
+Correct -- the bit being read (INODE_ALLOC_BUF) is never modified
+by the concurrent writers, so the result is always correct.  But
+the concurrent writes to other bits in the same word (Write A and
+Write B above) do constitute a data access race on that memory
+location.  Since the race is confirmed
+benign, data_race() is the right annotation.
+
+  - if ((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) && ...)
+  + if ((data_race(bip->bli_flags) & XFS_BLI_INODE_ALLOC_BUF) && ...)
+
+So the v2 would be:
+  - Move stale read in xfs_buf_item_unpin() after freed check
+  - data_race() in xfs_buf_item_committed()
+  - Drop everything else (WRITE_ONCE, tracepoint, release-side)
+
+Does this sound reasonable?
+
+Thanks,
+Cen
