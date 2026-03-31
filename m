@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA9A39A7F2
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 12:26:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8223E0C44
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 12:26:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774960007; cv=none; b=n4nRQu7WhpTURzRRJOD8fJAiYDNx9v522xJCFVZy7eEQMmwbb+TJVlUdGqcOicZKWrzXgaa6FLFqFz4qapuOQtK7TiRnx9F37AowS8ySNzwls6n4aP4olm0j/iOvU8gJMdhCnsPjTps5t2gPkHtfmp/JBy7vgv2XIWo8aylteKU=
+	t=1774960008; cv=none; b=RlBtERC6/7fkXdYgFHpUu6P5vhy1+ly1Kb0GWgvRrYHNBczXCYLRJr653LnmDY7/17/dPSOi6ovPlZrSzwGinG9smd/uM3r2THi+pYsxYrAASwPZgeQBK3yTzfOmoVOPPTwr5vnjJSbRpenf+57ZQpEE7MfNWzQCB5nHTV09OvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774960007; c=relaxed/simple;
-	bh=HpOMM0HpiHVcMkW8GU28FrgglKU6mRWo+m4rOGSsOyU=;
+	s=arc-20240116; t=1774960008; c=relaxed/simple;
+	bh=/9zQlxPmQrIeI57KtYGtRA8CmrOn2y9HXROLD8BxMi8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pzHhE7B25AngFqsWMV8u+AsLz+QDz8xziO+QqQaRAFQJXMQSJppZk9HO3sauE/Hm/07Aif6oVdvA23G7ubTPm6Xzd3VrYYmX9WzrkwoEJ4KP8m76dm1kkPz0xfk+sFsj5Q0h26NqzUKxs7Jufo4s+pfEnJ1PAblen0fM2OPeZTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XgpFBQhF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Bl0+q4wXz0Rq9j/Th7nRlAcU/Zy0UDXkZUg1jCFI2PVLPcr9mtUM+Xy5C+WInAPlZ8oF/wMQN/sdlmtoI8lhg9k0p9wqpbFIj8vGJ3BLXw14H62f0VHK7lucdZhRCEqdUxor/tnEN8pTeshnUb1j2LKGyYpebVn2Z+ghqo+oHjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tfBrADRS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XgpFBQhF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAB6CC2BC9E;
-	Tue, 31 Mar 2026 12:26:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tfBrADRS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 439FFC19423;
+	Tue, 31 Mar 2026 12:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774960006;
-	bh=HpOMM0HpiHVcMkW8GU28FrgglKU6mRWo+m4rOGSsOyU=;
+	s=k20201202; t=1774960008;
+	bh=/9zQlxPmQrIeI57KtYGtRA8CmrOn2y9HXROLD8BxMi8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XgpFBQhFxgHFYGfI4za4HM7MR2sNUr3p7pbcUSxBBUi8ZX4Sh/2bVgPQLBm80NIZ5
-	 qCqeEoojbA45y14RMO5xvTLCiMYNQNcPWU10wFN05WpjBH0ef8xTgrAQiVlpBsCk93
-	 iqud0lzvYWG+xZIX9b8rqzOFztCdPCrlZVsv1re1MRSXFOD3PaHZDmyKG+RybM7Vta
-	 z63bqK/IM0OEpBRO3K6lP1TgugWHlONQqUq4nlHMgrTrpjwk8XpOnGLDusdA6waOKl
-	 3wbNJLBn5ASyL8hHrAd4tQBlqJXWvE7LD3iiAJVA2mvsO7/Vvn0XBBP0j6EO1wA4rh
-	 BM4J77vHKiYvw==
+	b=tfBrADRSUT/aAWvM8crK/XwVswe5f4OG0k8MJNmu+zPvSyWfbYo0S2chCx4eMJEjn
+	 DF0tOR8vyoXhP5oHk3mNUZhpIM9Ba0NxBk9nAmKlKjnkOZjiuse/gaVpyMcq6wb2+x
+	 DU7QJ2ShljTZZlZi/XKEgRZMQmkoQ/fJBXxlaoAc21aJZzpf1PSwVKsgnB9A2bf5mU
+	 M2cLSnRIku+i/VjQOjKvHHjgp/ZlhyGhexxGiwB2BKvRVoo7MeWwUNfRYlWjhcZeuu
+	 O8dBpl1xPM96cdj/emNbaYYYjhy7RkvDRqSKyMo7kiwH15Uk+yQpQljjxM/FpJdVbO
+	 bn4SxRhb3TPfA==
 From: cem@kernel.org
 To: aalbersh@redhat.com
 Cc: linux-xfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v3 1/2] fsr: package function should check for negative errors
-Date: Tue, 31 Mar 2026 14:26:30 +0200
-Message-ID: <20260331122639.100956-2-cem@kernel.org>
+Subject: [PATCH v3 2/2] fsr: always print error messages from xfrog_defragrange()
+Date: Tue, 31 Mar 2026 14:26:31 +0200
+Message-ID: <20260331122639.100956-3-cem@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260331122639.100956-1-cem@kernel.org>
 References: <20260331122639.100956-1-cem@kernel.org>
@@ -46,40 +46,50 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-xfrog_defragrange as most other functions from libfrog return
-a negative error value, while xfs_fsr's packfile(), expects
-a positive error value.
+Error messages from xfrog_defragrange() are only printed when
+verbose/debug flags are used.
 
-Whenever xfrog_defragrange fails, the switch case always falls into the
-default clausule, making the error message pointless.
-Fix this by inverting xfrog_defragrange() return value call.
+We had reports from users complaining it's hard to find out the error
+messages lost in the middle of dozens of other informational messages.
+
+Change packfile() behavior to print errors independently of verbose or
+debug flags.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 ---
-V3:
-	Just change xfrog_defragrange() return signal.
+V3: Rebase on top of patch 1 changes
+V2: Update commit description
 
-V2:
-	Change packfile() to check for negative error values
-	instead of changing the return sign from xfrog_defragrange().
-
- fsr/xfs_fsr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fsr/xfs_fsr.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
 diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 8845ff172fcb..390f7c5276df 100644
+index 390f7c5276df..24617f55e329 100644
 --- a/fsr/xfs_fsr.c
 +++ b/fsr/xfs_fsr.c
-@@ -1459,7 +1459,7 @@ packfile(
-         }
- 
- 	/* Swap the extents */
--	error = xfrog_defragrange(file_fd->fd, &xdf);
-+	error = -xfrog_defragrange(file_fd->fd, &xdf);
- 	switch (error) {
+@@ -1464,19 +1464,14 @@ packfile(
  		case 0:
  			break;
+ 	case ENOTSUP:
+-		if (vflag || dflag)
+-			fsrprintf(_("%s: file type not supported\n"), fname);
+ 		break;
+ 	case EFAULT:
+ 		/* The file has changed since we started the copy */
+-		if (vflag || dflag)
+-			fsrprintf(_("%s: file modified defrag aborted\n"),
+-					fname);
++		fsrprintf(_("%s: file modified defrag aborted\n"), fname);
+ 		break;
+ 	case EBUSY:
+ 		/* Timestamp has changed or mmap'ed file */
+-		if (vflag || dflag)
+-			fsrprintf(_("%s: file busy\n"), fname);
++		fsrprintf(_("%s: file busy\n"), fname);
+ 		break;
+ 	default:
+ 		fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
 -- 
 2.53.0
 
