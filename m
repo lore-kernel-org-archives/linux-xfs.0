@@ -1,159 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988563EF0BE;
-	Tue, 31 Mar 2026 10:00:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1513A4F2F;
+	Tue, 31 Mar 2026 10:39:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774951242; cv=none; b=na4lZ8/xd/bDZSA2wiuEs4hn6bb0Ycw24jaST7wJQodXtN/ukJTw8/maXO+9ZMKNo20/wzVXMKsHtalNDYcDzjNk3OXJEySl1Za+ecg9gFTcpKSgjoqS6X46kcx4JnwWRvRy1DKyY/clgAZp7QtLhgK6SIMTDKRJgo0/4rQr+kQ=
+	t=1774953597; cv=none; b=NiA5PvoDnuXp9SZ5CTedsb7U7QuwqMFh/R5xSL5NsC2n5wGt0o6bth5WJzxfa2EYNE4AqmHi7USqCTBi+BpHo/XwXEi59EmmzCpcVPzuiRu02fFNLlqoUNM6wOUrn3pVUZI6OnacYhVkCtcRksjCx3ea55bS/k4C1yirloyUwJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774951242; c=relaxed/simple;
-	bh=kIfAHdgwqSMiKbfTeZE1/gOwbt4WALA+jcJoJHrTTl0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fVCZazGtZDQfxR+wpbaE1UzfiCp6ebu27gdHPgPloURi7mw7t6KTI7UVVUhIfY2mptNDHeHYsOVl8Ktp+G1Os4NWWhf/A6UArGQaM/G/034DES18b8lymwajJfkgjyWbIbm3wsGZLXofZqYSXz9DAsyZmxXkqvwjzK62OoDxL4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BohA6NDm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774953597; c=relaxed/simple;
+	bh=i5WStOZl6vAyzIT7A4hzQwI+IQ620Hpq4xCv5ziUciA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DCF4ZZ5r0ostmZFezYli/l6RmrFpKq16fEWwoa70lHyB+IpjDm6keGFq6Sc/pnHvQuWnZCkeQUUeAp/MajylIDfMdmWCiyqnuWAkRSIz4i8Aoh+yIrAovjhIGYzZYKgZBhf9ydI4I+RidCE8lodWhX/pvUtThQclSz/07hpVAnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uraYR/Dy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BohA6NDm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 839BBC2BCB4;
-	Tue, 31 Mar 2026 10:00:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uraYR/Dy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC62FC19423;
+	Tue, 31 Mar 2026 10:39:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774951242;
-	bh=kIfAHdgwqSMiKbfTeZE1/gOwbt4WALA+jcJoJHrTTl0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=BohA6NDmte7p+pXfoMdFF4uY4nKchDGhz7V6XsBXh/uJ4G1NmKP6kvk0tlo3MRoEx
-	 X4DWpWk/Bbc8mGaF9XWbjv6Alctu4ouKjgblBbD4qZafFPgHqSNq64TcWzucBoYGF5
-	 al/5MltbwduoLwTOliNLW9oVF7RP0YW8NBww5hMYFx43M2XPeHE3+9Lra+xLkDDEm5
-	 hm9utjqeQnS0ZmsZqSluVuuPNlwrMHqE9jl9kc18VqrXGT6HU7YZD2/5SSK3INbrJf
-	 lfhpaqm8YwybVlFUF1B1WYfT2QXxHyjXQD384yGNsqgiy/E8zhlaXHf6hw0vwL5LNw
-	 Fzl5RXkRmaDOQ==
-Message-ID: <26debf2c-7b0c-49bc-b2e6-fc9eb3d8bde0@kernel.org>
-Date: Tue, 31 Mar 2026 19:00:39 +0900
+	s=k20201202; t=1774953597;
+	bh=i5WStOZl6vAyzIT7A4hzQwI+IQ620Hpq4xCv5ziUciA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uraYR/Dybjpku/vFsoxC1uobPoK1Nlz5vvBV9H8hkrz+o/n51AMgUhrRFxc8jlVl+
+	 l+2C8+5GZnJpDD7x9U4OBAmeUEgBxfZUSgj448cf1MZ+CDVy6KVj6qWhzBHfV2FzPl
+	 ThrUjcSJexGTGs5IlneVUnZ+SFLe8odiM7SZMibe1c5GfAlbgWf9wtbz1QSQsPICAb
+	 /HLk2EiDJkgxHExJ0OimngXPkLAj1U9pLPnl9/hW1INwOpMuPKs5n8JQFvjbJcePNK
+	 1lajFD4mWj32eRzb3uYgRa5ehqH0asu1wC8emIli+fyV4WCXqPKMq5Ieq8hh/lPWHs
+	 aS6eDquQLz4Pw==
+Date: Tue, 31 Mar 2026 12:39:50 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Ravi Singh <ravising@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	adilger@dilger.ca, jack@suse.com, djwong@kernel.org, hch@infradead.org
+Subject: Re: [PATCH v3] xfs: return default quota limits for IDs without a
+ dquot
+Message-ID: <acukaX9CqWpcP3d1@nidhogg.toxiclabs.cc>
+References: <20260317065947.306954-1-ravising@redhat.com>
+ <20260330061414.1190802-1-ravising@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: add a test for number of open zones on conventional
- devices
-To: Christoph Hellwig <hch@lst.de>, zlang@kernel.org
-Cc: djwong@kernel.org, hans.holmberg@wdc.com, fstests@vger.kernel.org,
- linux-xfs@vger.kernel.org
-References: <20260330130029.3902654-1-hch@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260330130029.3902654-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260330061414.1190802-1-ravising@redhat.com>
 
-On 3/30/26 22:00, Christoph Hellwig wrote:
-> Test that mounts of zoned file systems on conventional devices don't
-> create more open zones than allowed when the last blocks in one or more
-> zones have been invalidated.
+On Mon, Mar 30, 2026 at 02:14:14PM +0800, Ravi Singh wrote:
+> When an ID has no dquot on disk, Q_XGETQUOTA returns -ENOENT even
+> though default quota limits are configured and enforced against that
+> ID.  This means unprivileged users who have never used any resources
+> cannot see the limits that apply to them.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> When xfs_qm_dqget() returns -ENOENT for a non-zero ID, return a
+> zero-usage response with the default limits filled in from
+> m_quotainfo rather than propagating the error.  This is consistent
+> with the enforcement behavior in xfs_qm_adjust_dqlimits(), which
+> pushes the same default limits into a dquot when it is first
+> allocated.
+> 
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Ravi Singh <ravising@redhat.com>
+
+Looks good,
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > ---
->  tests/xfs/4201     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/4201.out |  1 +
->  2 files changed, 66 insertions(+)
->  create mode 100755 tests/xfs/4201
->  create mode 100644 tests/xfs/4201.out
+>  v3:
+>   - Return -ENOENT when no default limits are configured
+>     instead of returning a zero-filled response (Darrick)
 > 
-> diff --git a/tests/xfs/4201 b/tests/xfs/4201
-> new file mode 100755
-> index 000000000000..a1f30cb7e739
-> --- /dev/null
-> +++ b/tests/xfs/4201
-> @@ -0,0 +1,65 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Christoph Hellwig.
-> +#
-> +# FS QA Test No. 4201
-> +#
-> +# Test that mounts of zoned file systems on conventional devices don't create
-> +# more open zones than allowed when the last blocks in one or more zones have
-> +# been invalidated.
-> +#
+>  v2:
+>   - Moved fix from VFS (fs/quota/quota.c) to XFS
+>     (fs/xfs/xfs_qm_syscalls.c) per review feedback
+>   - Return default limits on ENOENT instead of granting
+>     unprivileged access to ID 0's dquot
+> 
+>  fs/xfs/xfs_qm_syscalls.c | 43 +++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 42 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index d50b7318c..21a784986 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -391,6 +391,38 @@ xfs_qm_scall_setqlim(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Fill out the default quota limits for an ID that has no dquot on disk.
+> + * Returns 0 if default limits are configured
+> + * and were filled in, -ENOENT otherwise.
+> + */
+> +static int
+> +xfs_qm_scall_getquota_fill_defaults(
+> +	struct xfs_mount	*mp,
+> +	xfs_dqtype_t		type,
+> +	struct qc_dqblk		*dst)
+> +{
+> +	struct xfs_def_quota	*defq;
 > +
-> +. ./common/preamble
-> +_begin_fstest auto quick zone
+> +	defq = xfs_get_defquota(mp->m_quotainfo, type);
 > +
-> +_require_scratch
-> +_require_odirect
-> +_require_non_zoned_device $SCRATCH_DEV
-> +_require_non_zoned_device $SCRATCH_RTDEV
+> +	if (!defq->blk.soft && !defq->blk.hard &&
+> +	    !defq->ino.soft && !defq->ino.hard &&
+> +	    !defq->rtb.soft && !defq->rtb.hard) {
+> +		return -ENOENT;
+> +	}
 > +
-> +open_zones=5
-> +blocks=65536
-> +bsize=4096
+> +	memset(dst, 0, sizeof(*dst));
+> +	dst->d_spc_softlimit = XFS_FSB_TO_B(mp, defq->blk.soft);
+> +	dst->d_spc_hardlimit = XFS_FSB_TO_B(mp, defq->blk.hard);
+> +	dst->d_ino_softlimit = defq->ino.soft;
+> +	dst->d_ino_hardlimit = defq->ino.hard;
+> +	dst->d_rt_spc_softlimit = XFS_FSB_TO_B(mp, defq->rtb.soft);
+> +	dst->d_rt_spc_hardlimit = XFS_FSB_TO_B(mp, defq->rtb.hard);
 > +
-> +zone_size_mib=$((blocks * bsize / 1024 / 1024))
-> +file_size_mib=$((zone_size_mib / 2))
-> +nr_files=$((open_zones * 3 - 1))
+> +	return 0;
+> +}
 > +
-> +echo "zone size: $zone_size_mib" >>$seqres.full
-> +echo "file size: $file_size_mib" >>$seqres.full
-> +echo "nr files: $nr_files" >>$seqres.full
-> +
-> +_scratch_mkfs -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
-> +	> "$seqres.full" 2>&1
-> +_scratch_mount -o max_open_zones=${open_zones}
-> +
-> +_require_fs_sysfs zoned/nr_open_zones
-> +
-> +for i in $(seq 1 $nr_files); do
-> +	dd if=/dev/zero of=$SCRATCH_MNT/$i bs=1M count=$file_size_mib \
-> +		 oflag=direct > /dev/null 2>&1
-> +done
-> +
-> +rm $SCRATCH_MNT/4
-> +rm $SCRATCH_MNT/5
-> +rm $SCRATCH_MNT/6
-> +rm $SCRATCH_MNT/7
-
-Hmmm. I think you should delete odd numbered files only since they are going to
-be written at the end of a zone. Otherwise, you make the zone empty, and it will
-thus not be considered as open.
-
-Something like:
-
-for (( i=0; i<$nr_files; i=$(( i + 2 )) )); do
-	rm $SCRATCH_MNT/$(( i + 1))
-done
-
-should generate enough open zones.
-
-> +
-> +_scratch_unmount
-> +_scratch_mount -o max_open_zones=${open_zones}
-> +
-> +max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
-> +nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
-> +
-> +if [ ${max_open} -ne $((open_zones - 1)) ]; then
-> +	_fail "Test needs adjustments for multiple open GC zones"
-> +fi
-> +
-> +if [ ${nr_open} -gt ${max_open} ]; then
-> +	_fail "Too many open zones: $nr_open/$max_open"
-> +fi
-> +
-> +_scratch_unmount
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
-> new file mode 100644
-> index 000000000000..32e395dd4d6d
-> --- /dev/null
-> +++ b/tests/xfs/4201.out
-> @@ -0,0 +1 @@
-> +QA output created by 4201
-
-
--- 
-Damien Le Moal
-Western Digital Research
+>  /* Fill out the quota context. */
+>  static void
+>  xfs_qm_scall_getquota_fill_qc(
+> @@ -451,8 +483,17 @@ xfs_qm_scall_getquota(
+>  	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
+>  	 */
+>  	error = xfs_qm_dqget(mp, id, type, false, &dqp);
+> -	if (error)
+> +	if (error) {
+> +		/*
+> +		 * If there is no dquot on disk and default limits are
+> +		 * configured, return them with zero usage so that
+> +		 * unprivileged users can see what limits apply to them.
+> +		 */
+> +		if (error == -ENOENT && id != 0 &&
+> +		    !xfs_qm_scall_getquota_fill_defaults(mp, type, dst))
+> +			return 0;
+>  		return error;
+> +	}
+>  
+>  	/*
+>  	 * If everything's NULL, this dquot doesn't quite exist as far as
+> -- 
+> 2.49.0
+> 
