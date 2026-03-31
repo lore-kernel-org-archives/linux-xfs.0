@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E35B54035AF
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 15:28:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CF71B4257
+	for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 15:28:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774970888; cv=none; b=Ll8Yyk44Mucl7upnF9Z6V8u7aEOtu3Z1Zx4BthJo99/AYMYj5fTCUXyS1TbYtH+s8khUSpNcvwm95fX1zVWsKIHzOPitTmmgbflhbLUJNP9L13nza4hGeipVMDMawtUlgiZd8G7C7UiMLYSOvJ8L9RmKaWYo9F7R5GPHudgsy4Y=
+	t=1774970891; cv=none; b=DcsLtqjIGnww5EU8BFQurVJn/eg/7o45fUCqS1PIJBZjubNxvQnScaj2DBNIU3tVrWKLRjwwuYqyTUAPfTy9pIalAJGBSp+C6e3rmnjBoiNlIyFuQ90rDTfPGewuqEJmlkOQ3jHwJg25MhkiLsGBsckDV4AUYPZhI13mbIrSJ3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774970888; c=relaxed/simple;
-	bh=Y+VdcjwIAv0PBbcmrt+Nsb4ZxTKS3DwtmCAutkHuZIg=;
+	s=arc-20240116; t=1774970891; c=relaxed/simple;
+	bh=C+tIsFwrl+x+pFaZDi8TPhy9io1mYrspNtDPCaFEMq0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kB+g6jjmiyGmlzcROKcSOdyi/5mi/JpeO+psGhfqREitBxyQvjCJYxr8Kga+HT/Ld5G5JOr3lNOR6CaDi2l0vLHmf6ze8A9bn9XbIi9TuweMsaSxraGoV4TvYNxhrD2DTdaQWSzsnA73d1NVx+c58YoVaaRQLsCc/NKjlgrgaIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EXbicWfK; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=uKViC1oX39i1NkZRj8MTYgqCifZ/snrqH6yxDsUd94WA8h0ZDhc7Ptz6TkpzSIbYtNqQvfwaX8TCs3u0HsMKKJpvcyz3yrRYpmwP1uOisFB7YNfTocXkiOE7jvU+wwZEGNun1/rYQ7PNwZNrO1rAXPzJ0yHp4EwcpWeoI7dn9ko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pWVdITjt; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EXbicWfK"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pWVdITjt"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=eRcMMUmM+hvyOGS5apoU0POJTTxigQ33WGzmlGHJGdE=; b=EXbicWfK7Mj39B9J7kZ4fqk+w6
-	hUAKtqo59n24IT2ACVBJknFUGl8vCK85n62ek9j8+t1oSDBvAgkrJijsG3nL3PscufJNVSzRKa0Su
-	I24/uV59uyLGXYQatmc9kc7y8ikPMDNVj4gdlPSXUcKMnPEK6CAMEoJFsUHa+hArSrfjgwpcgkede
-	RLKbt55kaugiDLgDH0cYkOHQXdLuW1qHQuFIcpBjyBMSQkhx8xjzB/Rwcnkx2E+LZiUkc2aLhKSb2
-	Q67P8rdp+bmd5Yr3YAoMLgRga3E/vX0rqj9/jI2PuY6N15YxZdB11eBm2RaBqJsSlrlKzMyEWV48q
-	3pAPSWCA==;
+	bh=vgM3bQjPeEdbi3spT+YXuwdo3vXy7wB+SUOV546Lwx8=; b=pWVdITjt7v5KpzvLiLwonRSO9G
+	Q/TR1tcHEZ6Y5hcyENPt05/59LksegPIhsAgD1x0X7H9qJ8K42Nc5uj97D6Xw49hd0ljbcg25uUmh
+	0PCnCHmvrQc3+A9ump53bopAv5xWXUDPTj+KttTSUj5zKNAagScU3ZGm31O4boInQjTxlG3f0qSGS
+	c7vp93N6je9b43MfqdYgONsGN+Ml6YcsNOrplHga65Sh7EcjcP7+r0G8BSkg4Ec14+yRkg1sVuyAq
+	DMY+6qAA2qcdDa0/44mX0LK4mqgnJsujPg575e8ooIeLYP2Ivbec3hnhlNd84fTJiJrWkeC7dRrxM
+	U+jnTpgg==;
 Received: from [2a02:1210:321a:af00:3fa:89ae:5c22:a910] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w7b0g-0000000DBEQ-0O6k;
-	Tue, 31 Mar 2026 15:28:06 +0000
+	id 1w7b0j-0000000DBEe-1kTB;
+	Tue, 31 Mar 2026 15:28:09 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org,
 	Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 3/9] xfs: put the open zone later xfs_open_zone_put
-Date: Tue, 31 Mar 2026 17:27:25 +0200
-Message-ID: <20260331152751.4048218-4-hch@lst.de>
+Subject: [PATCH 4/9] xfs: rename xfs_zone_gc_iter_next to xfs_zone_gc_iter_irec
+Date: Tue, 31 Mar 2026 17:27:26 +0200
+Message-ID: <20260331152751.4048218-5-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260331152751.4048218-1-hch@lst.de>
 References: <20260331152751.4048218-1-hch@lst.de>
@@ -51,36 +51,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The open zone is what holds the rtg reference for us.  This doesn't
-matter until we support shrinking, and even then is rather theoretical
-because we can't shrink away a just filled zone in a tiny race window,
-but let's play safe here.
+This function returns the current iterator position, which makes the
+_next postfix a bit misleading.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_zone_alloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_zone_gc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 5f8b6cbeebfd..17a3762aa951 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -182,11 +182,11 @@ xfs_open_zone_mark_full(
- 		list_del_init(&oz->oz_entry);
- 	}
- 	spin_unlock(&zi->zi_open_zones_lock);
--	xfs_open_zone_put(oz);
- 
- 	wake_up_all(&zi->zi_zone_wait);
- 	if (used < rtg_blocks(rtg))
- 		xfs_zone_account_reclaimable(rtg, rtg_blocks(rtg) - used);
-+	xfs_open_zone_put(oz);
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index 0c1e22409ef1..cd4f52af295e 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -374,7 +374,7 @@ xfs_zone_gc_query(
  }
  
- static inline void
+ static bool
+-xfs_zone_gc_iter_next(
++xfs_zone_gc_iter_irec(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_zone_gc_iter	*iter,
+ 	struct xfs_rmap_irec	*chunk_rec,
+@@ -691,7 +691,7 @@ xfs_zone_gc_start_chunk(
+ 	if (xfs_is_shutdown(mp))
+ 		return false;
+ 
+-	if (!xfs_zone_gc_iter_next(mp, iter, &irec, &ip))
++	if (!xfs_zone_gc_iter_irec(mp, iter, &irec, &ip))
+ 		return false;
+ 	oz = xfs_zone_gc_alloc_blocks(data, &irec.rm_blockcount, &daddr,
+ 			&is_seq);
 -- 
 2.47.3
 
