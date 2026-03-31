@@ -1,216 +1,222 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F4D3E023F
-	for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 21:18:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C62B41B36F;
+	Tue, 31 Mar 2026 21:28:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774991899; cv=none; b=kAoghr8V3DNfFoMw+4LYlgTOKZkwqo/e0gPrsM7hvDTv8hBhx+ejOeXT8HeZep7Cgf8ibc9Rs5OPXnQObSntiG+EjbaTgPWdXY61bbpcLuzLCKKXGcFdl3Nkjzonn9hT34XK/y91tgVQzWuPjtj1uyaLowx1lQraD5wlTU525F8=
+	t=1774992515; cv=none; b=qoRRaEvwcvJVdB1yYLcMd9jSbXpctAZshVYIy6vV8kDkoJjYzl2eNAXspndVMHSIVuz+H86Ig1a5Ge100uHz22+QHMGwuudQjiM8GZHyqf+TnAEvEftVSKeZMV+NTykEaAfujQ5Q1xzcAo8l6HO2x3vkYAWxW4LTr41L0eBla4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774991899; c=relaxed/simple;
-	bh=WneSfPwlaQ1re2mwvmDd5q3dH84wCFzAzS6Ge2fHSms=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NLXqZhCKrKcknAoynaJ4BOMEE9J+U2s2oVGoqR43pYOCmDVC91KTeOkCLqWE8K/KySgGlZY9/snpqTQLAB1x/6JQbQQ95/RkAQqkcL17llqHTVn+knnD3A49gpdwaUJAWpSm7tMZZuM03I5MU1YCLzsf7VCbH29GrV8W/aabRzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E1OhWVWq; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ROkQqf4f; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1774992515; c=relaxed/simple;
+	bh=O5Wp6PIWIi6fK+QRdUlQ+iPXF6IQd4G/Ipxw8Y2h6F0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QyStKBJhAI8jcubJHFfnNNsot0XaIB2yEN7YK+064mQMxUoX11dkJs1Ej8mHec9E5BVUrOnOalZEvBuHxKJ1BbcQkhSom5Usxx1m4I5p4J/wWinZh3oU6M0AoyjB1lvjT9n57qOPtidbAhLeMWX/BQ4KUpzwfDBeaufaj8snzew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j81Lyhmt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E1OhWVWq";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ROkQqf4f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774991896;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OKCpa5pplmPPb0BYoR3bxkOcgIRcj2RD5yOLVHcxUOA=;
-	b=E1OhWVWqCGZIBcJo8UDbiuiUDe7952eMpvfXAQJNgR0cUQsvINgvzir1EIp24xlJtE+BoS
-	Elqyi6YZDvY0j0BUelzbg4CEgqwkF6PdZ5cfkWTVSob2lurK7HNrCl8bVdSqmhrGvNe727
-	gc+G+vQuVNhOVb7FLpRTmQ8P5xrqmyk=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-320-HOUedr_xO9u_CTajnGPXUA-1; Tue, 31 Mar 2026 17:18:15 -0400
-X-MC-Unique: HOUedr_xO9u_CTajnGPXUA-1
-X-Mimecast-MFC-AGG-ID: HOUedr_xO9u_CTajnGPXUA_1774991894
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b24308165dso104340195ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Mar 2026 14:18:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1774991894; x=1775596694; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OKCpa5pplmPPb0BYoR3bxkOcgIRcj2RD5yOLVHcxUOA=;
-        b=ROkQqf4fLu5kE5KOX2hoNgQ9+AEaHGjt2VDHT+6deBZFeanL9iZcJhbKoQSomlw2jY
-         90+1uYqWngkT4MMR/PaJ0t/5N7+1MU9E0oXqOs9e58n9PkCd1lxy75U20KL6NtrVRe0z
-         ke6FNFP6gCbIBlWH3ImHqZ6kfeU3z7P/J/ihp0wVBFQRQA7SzSfIwL8phEr3N+H/8+OJ
-         RyyokGAhq8B4NWyZK7jllFguL38rqWJgeSmzHwLeAEnpv/0o/tbEDQHz5i+g7SSTFxtW
-         Pza8OWBl1i+uXZcOGtWTiYzVXplnN8ee2I8lQnJCWoR2CPTm0VRV5hh4KIeE97bxy7wt
-         Pyzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774991894; x=1775596694;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OKCpa5pplmPPb0BYoR3bxkOcgIRcj2RD5yOLVHcxUOA=;
-        b=LcbvwHkwNundZ741B+YQhoYB+R+Cd0AzW9NXLAjFUHd916A9GnzZmG0LZ6JVqhtwRX
-         dl2+IaJHqOkcMkxjzRdG0adP03+ovfFeuSpHcKzDdwUlpR2CLyQuybx8qfm8R0IWYnRy
-         UKH0jzlgjeLh1dXdjSwpmTF71hUb5CTNQWS6gTmB55EkIdI3e4+ZF5zDHS12OXfetD/c
-         bM2tMgstnBsXbL/Uukbs95Il2l4UVbHltqTse8Brxu30bsMvJbSmwg4SHuPxRnQvd89z
-         IzL44XlEYLBUHYgqqMLSWwOcQ89i2QnpOMLgOYCW4jnKs08cnZ1FDiYa5lqxWo/tpT+b
-         Pcbw==
-X-Forwarded-Encrypted: i=1; AJvYcCXXE4n9mc3xmALMVHZj82ycul5llHWUTC/WZ79GjKo3z24STpIMnnNQLmvgO9rpE2XojTiX0Jic5dU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YypnBCc+RZeZ0zdStslKVrv7WtKw0EyKG19sXB5zgxQS+rd+QpS
-	h8WsWhE5rfiw4N56wvAefzX8tsNC4SMAg95SnhH62ndMDdJYuhE1UJcGAD5t6IZrthB+k7HgyHg
-	y8pUppitdzN0QQYEB8ly/Zs2uoTiq7MBK/VVOZJNo7zKDhZ7cZWVclsow5pnt4g==
-X-Gm-Gg: ATEYQzwLm9Q+vK51QVrywm/tvfWShLdKg0BXtJMC9CHCivC/bDMvr+5+qfWhlkd0CSx
-	UZJ7lEoKpSYpqOla+EZ65JRsggQGOwzWR/zeP62bG/DbcNlg2NL9VbHQmIwo8/kGUZJnEXDD+r1
-	tTCPe1d7uX3gCJ3WlN7aWGkXeOCUnPeKYtcaf6IpdTx0nVA5U+iuY+bfJbr3KVrXxJt/QGN0Ob8
-	i3QDWFjV9tRsIhB54DsZBk4g/GXj5BvVmwlBfNXVCnoAGBuHba2QAjHcK3BCrc7nzhsTAMagZ/g
-	0VmkZnkrglF73pVECcuqzqi43zppTBZEKCl3SuTKnjfQ3D8Ad+2JJgA3CCgxm9uo/naAr7kM7Wz
-	95mlBZEJDHmkVF7XULA==
-X-Received: by 2002:a17:903:2ec3:b0:2ae:66c9:494f with SMTP id d9443c01a7336-2b269a8c805mr6677175ad.2.1774991893935;
-        Tue, 31 Mar 2026 14:18:13 -0700 (PDT)
-X-Received: by 2002:a17:903:2ec3:b0:2ae:66c9:494f with SMTP id d9443c01a7336-2b269a8c805mr6676975ad.2.1774991893421;
-        Tue, 31 Mar 2026 14:18:13 -0700 (PDT)
-Received: from doltdoltdolt ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b242676e13sm126291445ad.28.2026.03.31.14.18.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 Mar 2026 14:18:13 -0700 (PDT)
-Date: Wed, 1 Apr 2026 05:18:07 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, djwong@kernel.org, dlemoal@kernel.org,
-	hans.holmberg@wdc.com, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: add a test for number of open zones on
- conventional devices
-Message-ID: <20260331211807.gofhlabxlr3mdxnr@doltdoltdolt>
-References: <20260331152341.4047725-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j81Lyhmt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F73EC19423;
+	Tue, 31 Mar 2026 21:28:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774992515;
+	bh=O5Wp6PIWIi6fK+QRdUlQ+iPXF6IQd4G/Ipxw8Y2h6F0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=j81LyhmtnQk57aq/T0bkR8mecM61ZoxgbjIC2SVzJGKqxUFGcie7GwUQcUVrDq5pW
+	 5/vBDNIT+3ZwJTWr6Tmk1w940+392Nsx15FB87hgmRi9hGu6R3UwpVurGIGNhlu12A
+	 zNhGSf9zrTFfDKr+bqXs+/LbyHcVLa3h23iotWoH0WgpEe+1v6vtEj9tZ8eUS2Bmqc
+	 NigNAl8Y/+un/h2bVvesejWgFj903U+f1Oe7k7CK2n0tK88dk5/YPhvwAs0lG3pKpx
+	 QLZD3a3Alo2ODAqo0YQaTbZ1GxUXjlWlAN5HJ64N7vHEEFNMwIPgkb1e3xnJOe4owc
+	 7zB/IcQz7+uDg==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org,
+	fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	ebiggers@kernel.org
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
+	hch@lst.de,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org,
+	djwong@kernel.org,
+	david@fromorbit.com
+Subject: [PATCH v6 00/22] fs-verity support for XFS with post EOF merkle tree
+Date: Tue, 31 Mar 2026 23:28:01 +0200
+Message-ID: <20260331212827.2631020-1-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.51.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260331152341.4047725-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Mar 31, 2026 at 05:23:20PM +0200, Christoph Hellwig wrote:
-> Test that mounts of zoned file systems on conventional devices don't
-> create more open zones than allowed when the last blocks in one or more
-> zones have been invalidated.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> 
->  - delete odd files
->  - fix the sysfs attr check to be on the scratch and not the test fs
-> 
->  tests/xfs/4201     | 66 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/4201.out |  1 +
->  2 files changed, 67 insertions(+)
->  create mode 100755 tests/xfs/4201
->  create mode 100644 tests/xfs/4201.out
-> 
-> diff --git a/tests/xfs/4201 b/tests/xfs/4201
-> new file mode 100755
-> index 000000000000..150978a9deda
-> --- /dev/null
-> +++ b/tests/xfs/4201
-> @@ -0,0 +1,66 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Christoph Hellwig.
-> +#
-> +# FS QA Test No. 4201
-> +#
-> +# Test that mounts of zoned file systems on conventional devices don't create
-> +# more open zones than allowed when the last blocks in one or more zones have
-> +# been invalidated.
-> +#
-> +
-> +. ./common/preamble
-> +_begin_fstest auto quick zone
-> +
-> +_require_scratch
-> +_require_odirect
-> +_require_non_zoned_device $SCRATCH_DEV
-> +_require_non_zoned_device $SCRATCH_RTDEV
-> +
-> +open_zones=5
-> +blocks=65536
-> +bsize=4096
-> +
-> +zone_size_mib=$((blocks * bsize / 1024 / 1024))
-> +file_size_mib=$((zone_size_mib / 2))
-> +nr_files=$((open_zones * 3 - 1))
-> +
-> +echo "zone size: $zone_size_mib" >>$seqres.full
-> +echo "file size: $file_size_mib" >>$seqres.full
-> +echo "nr files: $nr_files" >>$seqres.full
-> +
-> +_scratch_mkfs -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
-> +	> "$seqres.full" 2>&1
+Hi all,
 
-I usually tack on "|| _fail 'mkfs failed'" after _scratch_mount if it's
-using extra options. That way, we'll know for sure if the mkfs actually
-failed.
+This patch series adds fs-verity support for XFS. This version stores
+merkle tree beyond end of the file, the same way as ext4 does it. The
+difference is that verity descriptor is stored at the next aligned 64k
+block after the merkle tree last block. This is done due to sparse
+merkle tree which doesn't store hashes of zero data blocks.
 
-> +_scratch_mount -o max_open_zones=${open_zones}
-> +
-> +_has_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones || \
-> +	_notrun "This test requires /sys/fs/${FSTYP}/$SCRATCH_DEV/zoned/nr_open_zones"
+The patchset starts with a few fs-verity preparation patches. Then, a
+few patches to allow iomap to work in post EOF region. The XFS fs-verity
+implementation follows.
 
-Can this be replaced with "_require_fs_sysfs_attr" ? _require_fs_sysfs_attr also can
-help to get the real path to the sysfs directory for the fs on a device.
+The tree is read by iomap into page cache at offset of next largest
+folio past end of file. The same offset is used for on-disk.
 
-Thanks,
-Zorro
+This patchsets also synthesizes merkle tree block full of hashes of
+zeroed data blocks. This merkle blocks are not stored on disk, they are
+holes in the tree.
 
-> +
-> +for i in $(seq 1 $nr_files); do
-> +	dd if=/dev/zero of=$SCRATCH_MNT/$i bs=1M count=$file_size_mib \
-> +		 oflag=direct > /dev/null 2>&1
-> +done
-> +
-> +# delete odd numbered files as they should be at the end of the zones
-> +for ((i = 0; i < $nr_files; i = $((i + 2)))); do
-> +	rm $SCRATCH_MNT/$((i + 1))
-> +done
-> +
-> +_scratch_unmount
-> +_scratch_mount -o max_open_zones=${open_zones}
-> +
-> +max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
-> +nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
-> +
-> +if [ ${max_open} -ne $((open_zones - 1)) ]; then
-> +	_fail "Test needs adjustments for multiple open GC zones"
-> +fi
-> +
-> +if [ ${nr_open} -gt ${max_open} ]; then
-> +	_fail "Too many open zones: $nr_open/$max_open"
-> +fi
-> +
-> +_scratch_unmount
+Testing. The -g verity is passing for 1k, 8k and 4k with/without quota
+on 4k and 64k page size systems. Tested -g quick for enabled/disabled
+fsverity.
 
-Is this line part of the test?
+This series based on v7.0-rc6 with patchset fs generated integrity
+information [1].
 
-Thanks,
-Zorro
+kernel:
+https://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfs-linux.git/log/?h=b4/fsverity
 
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
-> new file mode 100644
-> index 000000000000..32e395dd4d6d
-> --- /dev/null
-> +++ b/tests/xfs/4201.out
-> @@ -0,0 +1 @@
-> +QA output created by 4201
-> -- 
-> 2.47.3
-> 
-> 
+xfsprogs:
+https://github.com/alberand/xfsprogs/tree/b4/fsverity
+
+xfstests:
+https://github.com/alberand/xfstests/tree/b4/fsverity
+
+Cc: fsverity@lists.linux.dev
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+
+Cc: david@fromorbit.com
+Cc: djwong@kernel.org
+Cc: ebiggers@kernel.org
+Cc: hch@lst.de
+
+[1]: https://lore.kernel.org/linux-xfs/20260223132021.292832-1-hch@lst.de/
+
+---
+Changes in v6:
+- Removed stub for fsverity_ensure_verity_info() as it's optimized out
+- Rename fsverity_folio_zero_hash() to fsverify_fill_zerohash()
+- Merge patches 8 to 10 into one
+- Merge patch gerating zero_hash and fsverity_fill_zerohash() into one
+- Add kerneldoc to fsverity_ensure_verity_info()
+- Add comments to iomap_block_needs_zeroing()
+Changes in v5:
+- Add fserror_report_data_lost() for data blocks in page spanning EOF
+- Issue fsverity metadata readahead in data readahead
+- iomap_fsverity_write() return type fix
+- Use of S_ISREG(mode)
+- Make 65536 #define instead of open-coded
+- Use transaction per unwritten extent removal
+- Fetch fsverity_info for all fsverity metadata
+- Revert fsverity_folio_zero_hash() stub as used in iomap
+- Extend cancel_unwritten to whole file range to remove cow leftovers
+- Drop delayed allocation on the COW fork on fsverity completion
+Changes in v4:
+- Use fserror interface in fsverity instead of fs callback
+- Hoist pagecache_read from f2fs/ext4 to fsverity
+- Refactor iomap code
+- Fetch fsverity_info only for file data and merkle tree holes
+- Do not disable preallocation, remove unwritten extents instead
+- Offload fsverity hash I/O to fsverity workqueue in read path
+- Store merkle tree at round_up(i_size, 64k)
+- Add a spacing between merkle tree and fsverity descriptor as next 64k
+  aligned block
+- Squash helpers into first user commits
+- Squash on-disk format changes into single commit
+- Drop different offset for pagecache/on-disk
+- Don't zero out pages in higher order folios in write path
+- Link to v3: https://lore.kernel.org/fsverity/20260217231937.1183679-1-aalbersh@kernel.org/T/#t
+Changes in v3:
+- Different on-disk and pagecache offset
+- Use read path ioends
+- Switch to hashtable fsverity info
+- Synthesize merkle tree blocks full of zeroes
+- Other minor refactors
+- Link to v2: https://lore.kernel.org/fsverity/20260114164210.GO15583@frogsfrogsfrogs/T/#t
+Changes in v2:
+- Move to VFS interface for merkle tree block reading
+- Drop patchset for per filesystem workqueues
+- Change how offsets of the descriptor and tree metadata is calculated
+- Store fs-verity descriptor in data fork side by side with merkle tree
+- Simplify iomap changes, remove interface for post eof read/write
+- Get rid of extended attribute implementation
+- Link to v1: https://lore.kernel.org/r/20250728-fsverity-v1-0-9e5443af0e34@kernel.org
+
+Andrey Albershteyn (20):
+  fsverity: report validation errors through fserror to fsnotify
+  fsverity: expose ensure_fsverity_info()
+  fsverity: generate and store zero-block hash
+  fsverity: pass digest size and hash of the empty block to ->write
+  fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
+  iomap: introduce IOMAP_F_FSVERITY and teach writeback to handle
+    fsverity
+  iomap: teach iomap to read files with fsverity
+  iomap: introduce iomap_fsverity_write() for writing fsverity metadata
+  xfs: introduce fsverity on-disk changes
+  xfs: initialize fs-verity on file open
+  xfs: don't allow to enable DAX on fs-verity sealed inode
+  xfs: disable direct read path for fs-verity files
+  xfs: handle fsverity I/O in write/read path
+  xfs: use read ioend for fsverity data verification
+  xfs: add fs-verity support
+  xfs: remove unwritten extents after preallocations in fsverity
+    metadata
+  xfs: add fs-verity ioctls
+  xfs: introduce health state for corrupted fsverity metadata
+  xfs: add fsverity traces
+  xfs: enable ro-compat fs-verity flag
+
+Darrick J. Wong (2):
+  xfs: advertise fs-verity being available on filesystem
+  xfs: check and repair the verity inode flag state
+
+ fs/btrfs/verity.c              |   6 +-
+ fs/ext4/verity.c               |  36 +--
+ fs/f2fs/verity.c               |  34 +--
+ fs/iomap/buffered-io.c         | 109 +++++++-
+ fs/iomap/trace.h               |   3 +-
+ fs/verity/enable.c             |   4 +-
+ fs/verity/fsverity_private.h   |   3 +
+ fs/verity/open.c               |   8 +-
+ fs/verity/pagecache.c          |  55 ++++
+ fs/verity/verify.c             |   4 +
+ fs/xfs/Makefile                |   1 +
+ fs/xfs/libxfs/xfs_bmap.c       |   7 +
+ fs/xfs/libxfs/xfs_format.h     |  35 ++-
+ fs/xfs/libxfs/xfs_fs.h         |   2 +
+ fs/xfs/libxfs/xfs_health.h     |   4 +-
+ fs/xfs/libxfs/xfs_inode_buf.c  |   8 +
+ fs/xfs/libxfs/xfs_inode_util.c |   2 +
+ fs/xfs/libxfs/xfs_sb.c         |   4 +
+ fs/xfs/scrub/attr.c            |   7 +
+ fs/xfs/scrub/common.c          |  53 ++++
+ fs/xfs/scrub/common.h          |   2 +
+ fs/xfs/scrub/inode.c           |   7 +
+ fs/xfs/scrub/inode_repair.c    |  36 +++
+ fs/xfs/xfs_aops.c              |  62 ++++-
+ fs/xfs/xfs_bmap_util.c         |   8 +
+ fs/xfs/xfs_file.c              |  19 +-
+ fs/xfs/xfs_fsverity.c          | 457 +++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsverity.h          |  28 ++
+ fs/xfs/xfs_health.c            |   1 +
+ fs/xfs/xfs_inode.h             |   6 +
+ fs/xfs/xfs_ioctl.c             |  14 +
+ fs/xfs/xfs_iomap.c             |  15 +-
+ fs/xfs/xfs_iops.c              |   4 +
+ fs/xfs/xfs_message.c           |   4 +
+ fs/xfs/xfs_message.h           |   1 +
+ fs/xfs/xfs_mount.h             |   4 +
+ fs/xfs/xfs_super.c             |   7 +
+ fs/xfs/xfs_trace.h             |  46 ++++
+ include/linux/fsverity.h       |  29 ++-
+ include/linux/iomap.h          |  13 +
+ 40 files changed, 1054 insertions(+), 94 deletions(-)
+ create mode 100644 fs/xfs/xfs_fsverity.c
+ create mode 100644 fs/xfs/xfs_fsverity.h
+
+-- 
+2.51.2
 
