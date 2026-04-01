@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5406B2DA765;
-	Wed,  1 Apr 2026 14:04:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 052CE405AA0;
+	Wed,  1 Apr 2026 14:04:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775052285; cv=none; b=Az/v3EEWbHDJad+WDVrvgdHk5ePlZhZpVIiESwNDD+XPTJEqiF0A4630lnCbUcy/qg455GAZwKTAKBI7YWdYnIKHNlnQXFY/pFACtafG73KkjeisCg+otEbEO3HkKtINiDJ4TivxOWXnF8tQwN+EeoQfllycHZMk7/YHnHffIkc=
+	t=1775052288; cv=none; b=YFxxScZXtO4XjvGPIlURJ1aY8lZr2TXOZhtlenxWQC8fk//CYOu91DnBvMQhyDLko7925VbErPOT29RRb6533v0BMP7NnvhivLc/BzKc7mL+WOgcBXKiweWSGvKMJhh1qQnz2tynuCrnARqVVFkKFmxR43a83f7sV5elUrBSD+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775052285; c=relaxed/simple;
-	bh=nBictF88AaO0+yDZh6XlO2i5nxhNTyCQqvkhNILa1cU=;
+	s=arc-20240116; t=1775052288; c=relaxed/simple;
+	bh=AzvSU6mE8Y5eXJg1lXl7EQqAUKcFPQXL5/unNLFxZXU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j8HRHpUZeumRgTBRVviAfcFKlE+oWksTV9kBLg/XqeS6AHsTFR40ICCf14i9wzmjkKJqFGTMs6ESaOKcOEjY+HkRn8noiiINoLzxgB6vf6lpTyqCEGZLJyLmCtf3bo7HyWnt5BBDqopVTotyDsvSmD4/Y2KzMKGznRquAyxe/kA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LXXUtuPO; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=mRgb1q8LNzAhxH7uljANAMKqNdvo7PWEdMpexOmM/VmmNLeHJkfp6JgwYoVYx2nyz+DDvNPZrn9aJ7uwe9+tbMsU1TdD7ATDI+nBEmjL5bAG1rQVPk9VQNyWBGO2jcr5REv0wLM44WfcO1o9aMW2atPZEO0Gic3zKUj91I2q74E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=o4qYU+zV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LXXUtuPO"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o4qYU+zV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=vvFnCsjyaIh/RegMfBgrGzk7vtuxaBfJHejx6dNchvA=; b=LXXUtuPOr+/fEcfgF1OTGLSzGW
-	xEDqpknEbT6EGC4NDXfN7Gg2MVhW3aUV5c/fq0BlHl8/DQxSW+omDPwGj+1hftGOM/avDL7DU3e1v
-	KI1DLw2vLjiWJVrNM35p+2z7QhoN1dn48A3JrJeKSyAGEDRTIk7psHk2tu54ltlzfEV4JX1xBjTLd
-	LaQIdc/dyInLcqRZ/wRxaX1i0QHv4l3uNSqi9fEqedcYI6mq7vEdzuGma8MxBLIqgHYYlAQAlQlDA
-	68WNNQwqYlSQ6jmIuW/g6pE/TCa3o4SpMHx6iCktoUZKGLATNlLuyUTf9ov9LwUfc07XSiTkGN5Ok
-	9v91qv3Q==;
+	bh=mFzMH0GrSf+b4u3GhF8tOcz2ld7hSJIxPaNbUpToAwg=; b=o4qYU+zV+sMsR4AytTARVJxui8
+	8FCa3w9VkLSiL/kdhDOx9Hi5JeKm3M+4+jDrWTt0IvO6j2KP7jZZrfikwEH3GxgpLsM4txRVt52Yd
+	AsPMUWw21j0myjTyhCZaIgi2G/mb2rz+GqfuyjuW7z9t9VrovYYxdXhx9dK4b9/xvOy0d5Pk1C4DB
+	nvBvRWS9S1gIJKDM0rkFOY+5+fBzOVa1lu+ph92hBoVxZ0URVqYkVwaKGv0/MMdP2Wg7z6FRS7vFw
+	8IeOYMKrkzqDvpUWwQ+il7JRXtBTFc24unTW16YDpKRS5JGJV/6j5S8dSK0e5nyfOyhOIcU/0Ecp6
+	zt42dx5A==;
 Received: from [2a02:1210:321a:af00:3fa:89ae:5c22:a910] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w7wBW-0000000FNQL-0CQn;
-	Wed, 01 Apr 2026 14:04:43 +0000
+	id 1w7wBa-0000000FNQx-1FUz;
+	Wed, 01 Apr 2026 14:04:46 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Carlos Maiolino <cem@kernel.org>,
 	linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/4] block: factor out a bio_await helper
-Date: Wed,  1 Apr 2026 16:03:57 +0200
-Message-ID: <20260401140433.125924-3-hch@lst.de>
+Subject: [PATCH 3/4] block: add a bio_submit_or_kill helper
+Date: Wed,  1 Apr 2026 16:03:58 +0200
+Message-ID: <20260401140433.125924-4-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260401140433.125924-1-hch@lst.de>
 References: <20260401140433.125924-1-hch@lst.de>
@@ -50,111 +50,139 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a new helper to wait for a bio and anything chained off it to
-complete synchronous after kicking it.  This factors common code out
-of submit_bio_wait and bio_await_chain and will also be useful for
-file system code and thus is exported.
+Factor the common logic for the ioctl helpers to either submit a bio or
+end if the process is being killed.  As this is now the only user of
+bio_await_chain, open code that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio.c         | 52 +++++++++++++++++++++++++++++++--------------
- include/linux/bio.h |  2 ++
- 2 files changed, 38 insertions(+), 16 deletions(-)
+ block/bio.c     | 23 ++++++++++++++---------
+ block/blk-lib.c | 16 ++--------------
+ block/blk.h     |  2 +-
+ block/ioctl.c   | 11 ++---------
+ 4 files changed, 19 insertions(+), 33 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index f5a058531cd9..c9410804c61a 100644
+index c9410804c61a..9a4fda7867ed 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -1453,6 +1453,35 @@ static void bio_wait_end_io(struct bio *bio)
- 	complete(bio->bi_private);
+@@ -1505,6 +1505,20 @@ static void bio_endio_cb(struct bio *bio, void *priv)
+ 	bio_endio(bio);
  }
  
-+/**
-+ * bio_await - call a function on a bio, and wait until it completes
-+ * @bio:	the bio which describes the I/O
-+ * @kick:	function called to "kick off" the bio
-+ * @priv:	private data passed to @kick.
-+ *
-+ * Wait for the bio as well as any bio chained off it after executing the
-+ * passed in callback @kick.  The wait for the bio is set up before calling
-+ * @kick to ensure that the completion is captured.  If @kick is %NULL,
-+ * submit_bio() is used instead to submit the bio.
-+ *
-+ * Note: this overrides the bi_private and bi_end_io fields in the bio.
++/*
++ * Submit @bio synchronously, or call bio_endio on it if the current process
++ * is being killed.
 + */
-+void bio_await(struct bio *bio, void *priv,
-+	       void (*kick)(struct bio *bio, void *priv))
++int bio_submit_or_kill(struct bio *bio, unsigned int flags)
 +{
-+	DECLARE_COMPLETION_ONSTACK_MAP(done,
-+			bio->bi_bdev->bd_disk->lockdep_map);
++	if ((flags & BLKDEV_ZERO_KILLABLE) && fatal_signal_pending(current)) {
++		bio_await(bio, NULL, bio_endio_cb);
++		return -EINTR;
++	}
 +
-+	bio->bi_private = &done;
-+	bio->bi_end_io = bio_wait_end_io;
-+	if (kick)
-+		kick(bio, priv);
-+	else
-+		submit_bio(bio);
-+	blk_wait_io(&done);
-+}
-+EXPORT_SYMBOL_GPL(bio_await);
-+
- /**
-  * submit_bio_wait - submit a bio, and wait until it completes
-  * @bio: The &struct bio which describes the I/O
-@@ -1466,19 +1495,16 @@ static void bio_wait_end_io(struct bio *bio)
-  */
- int submit_bio_wait(struct bio *bio)
- {
--	DECLARE_COMPLETION_ONSTACK_MAP(done,
--			bio->bi_bdev->bd_disk->lockdep_map);
--
--	bio->bi_private = &done;
--	bio->bi_end_io = bio_wait_end_io;
--	bio->bi_opf |= REQ_SYNC;
--	submit_bio(bio);
--	blk_wait_io(&done);
--
-+	bio_await(bio, NULL, NULL);
- 	return blk_status_to_errno(bio->bi_status);
- }
- EXPORT_SYMBOL(submit_bio_wait);
- 
-+static void bio_endio_cb(struct bio *bio, void *priv)
-+{
-+	bio_endio(bio);
++	return submit_bio_wait(bio);
 +}
 +
  /**
   * bdev_rw_virt - synchronously read into / write from kernel mapping
   * @bdev:	block device to access
-@@ -1514,13 +1540,7 @@ EXPORT_SYMBOL_GPL(bdev_rw_virt);
-  */
- void bio_await_chain(struct bio *bio)
- {
--	DECLARE_COMPLETION_ONSTACK_MAP(done,
--			bio->bi_bdev->bd_disk->lockdep_map);
--
--	bio->bi_private = &done;
--	bio->bi_end_io = bio_wait_end_io;
--	bio_endio(bio);
--	blk_wait_io(&done);
-+	bio_await(bio, NULL, bio_endio_cb);
- 	bio_put(bio);
+@@ -1535,15 +1549,6 @@ int bdev_rw_virt(struct block_device *bdev, sector_t sector, void *data,
  }
+ EXPORT_SYMBOL_GPL(bdev_rw_virt);
  
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 984844d2870b..adcca9ad4eec 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -432,6 +432,8 @@ extern void bio_uninit(struct bio *);
- void bio_reset(struct bio *bio, struct block_device *bdev, blk_opf_t opf);
- void bio_reuse(struct bio *bio, blk_opf_t opf);
- void bio_chain(struct bio *, struct bio *);
-+void bio_await(struct bio *bio, void *priv,
-+	       void (*kick)(struct bio *bio, void *priv));
+-/*
+- * bio_await_chain - ends @bio and waits for every chained bio to complete
+- */
+-void bio_await_chain(struct bio *bio)
+-{
+-	bio_await(bio, NULL, bio_endio_cb);
+-	bio_put(bio);
+-}
+-
+ void __bio_advance(struct bio *bio, unsigned bytes)
+ {
+ 	if (bio_integrity(bio))
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 3213afc7f0d5..688bc67cbf73 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -155,13 +155,7 @@ static int blkdev_issue_write_zeroes(struct block_device *bdev, sector_t sector,
+ 	__blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp, &bio,
+ 			flags, limit);
+ 	if (bio) {
+-		if ((flags & BLKDEV_ZERO_KILLABLE) &&
+-		    fatal_signal_pending(current)) {
+-			bio_await_chain(bio);
+-			blk_finish_plug(&plug);
+-			return -EINTR;
+-		}
+-		ret = submit_bio_wait(bio);
++		ret = bio_submit_or_kill(bio, flags);
+ 		bio_put(bio);
+ 	}
+ 	blk_finish_plug(&plug);
+@@ -236,13 +230,7 @@ static int blkdev_issue_zero_pages(struct block_device *bdev, sector_t sector,
+ 	blk_start_plug(&plug);
+ 	__blkdev_issue_zero_pages(bdev, sector, nr_sects, gfp, &bio, flags);
+ 	if (bio) {
+-		if ((flags & BLKDEV_ZERO_KILLABLE) &&
+-		    fatal_signal_pending(current)) {
+-			bio_await_chain(bio);
+-			blk_finish_plug(&plug);
+-			return -EINTR;
+-		}
+-		ret = submit_bio_wait(bio);
++		ret = bio_submit_or_kill(bio, flags);
+ 		bio_put(bio);
+ 	}
+ 	blk_finish_plug(&plug);
+diff --git a/block/blk.h b/block/blk.h
+index 103cb1d0b9cb..ec4674cdf2ea 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -55,7 +55,7 @@ bool __blk_freeze_queue_start(struct request_queue *q,
+ 			      struct task_struct *owner);
+ int __bio_queue_enter(struct request_queue *q, struct bio *bio);
+ void submit_bio_noacct_nocheck(struct bio *bio, bool split);
+-void bio_await_chain(struct bio *bio);
++int bio_submit_or_kill(struct bio *bio, unsigned int flags);
  
- int __must_check bio_add_page(struct bio *bio, struct page *page, unsigned len,
- 			      unsigned off);
+ static inline bool blk_try_enter_queue(struct request_queue *q, bool pm)
+ {
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 0b04661ac809..fc3be0549aa7 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -153,13 +153,7 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
+ 	nr_sects = len >> SECTOR_SHIFT;
+ 
+ 	blk_start_plug(&plug);
+-	while (1) {
+-		if (fatal_signal_pending(current)) {
+-			if (prev)
+-				bio_await_chain(prev);
+-			err = -EINTR;
+-			goto out_unplug;
+-		}
++	while (!fatal_signal_pending(current)) {
+ 		bio = blk_alloc_discard_bio(bdev, &sector, &nr_sects,
+ 				GFP_KERNEL);
+ 		if (!bio)
+@@ -167,12 +161,11 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
+ 		prev = bio_chain_and_submit(prev, bio);
+ 	}
+ 	if (prev) {
+-		err = submit_bio_wait(prev);
++		err = bio_submit_or_kill(prev, BLKDEV_ZERO_KILLABLE);
+ 		if (err == -EOPNOTSUPP)
+ 			err = 0;
+ 		bio_put(prev);
+ 	}
+-out_unplug:
+ 	blk_finish_plug(&plug);
+ fail:
+ 	filemap_invalidate_unlock(bdev->bd_mapping);
 -- 
 2.47.3
 
