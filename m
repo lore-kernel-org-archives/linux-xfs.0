@@ -1,72 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5752DCBF3
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Apr 2026 19:47:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46A55175A79;
+	Wed,  1 Apr 2026 21:19:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775072876; cv=none; b=tR6HfE7cHQw/iPO327+6wlVH/xQNQLDDor0Sa190feQxdRXtan6kKQ/XWSG4a+SE74eZTPASP9cZbupEt8V095G+gbSmTm0M3DaOh4EFmEye6SrmR9fFxBs7J9yc7ubm0NdXXtvfslUCEqvl0wGATwjILzOhoFXQMydCp3b+D9k=
+	t=1775078344; cv=none; b=o9y4uugMKHGO4xCvNzmTz2BWoPHVg3hWgaT3I0IqKWZYpN4BVGVPviNPvf0nM4ocX42u1f64A7B82CGaNMsaYK74Z6Axn7qJFIBYmCAkf61pXvNMZIC2ujwZDC/jGMcOcnxwrv6YNVX9aE4rNEgKwOh2xz1+ZBfARX76qlzq2q0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775072876; c=relaxed/simple;
-	bh=DzwQdDDYEyW76kNNnjlKjY/HOoYATXdiF4TiJbpeeNE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WvzZ9EbE6gQEq8quFQsW49bHrqjqPz2VD4V7aLd9ZUT6Q7bl/ui6Af6QxA5ubDwDFHseuu9NoMCy4BhCnpgl5aFUYpqXkNd3jgVR1WaxeZk9hpAG95tb0zgQ8JDW0xMnu6tXmA1TfwG7Q4rJE62YvECLjLuB0LpogSRauGkDsHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YSpa7JeR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775078344; c=relaxed/simple;
+	bh=ZUftJy/Eg2vooutQH6w/+XirdMYySx6JVlXp754Vgdk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V5zhdi62WO3MjJvhmedDJg6252op22AGTnw8XdIM0UmPqOYWinnxOk6Q3T5S5+2QnatnUouJcdAzq7LPYYiKd31s1ruI3ISfLhnWs/A1Jp8U+NuAUOvtuRJXQlU+Ikd2Rq5KXfV5m7vGHnI1sPRe883kTvu4z7GMd/SU7jbYf4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jD3Jb1ty; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YSpa7JeR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6143C4CEF7;
-	Wed,  1 Apr 2026 19:47:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jD3Jb1ty"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92E56C4CEF7;
+	Wed,  1 Apr 2026 21:19:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775072875;
-	bh=DzwQdDDYEyW76kNNnjlKjY/HOoYATXdiF4TiJbpeeNE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YSpa7JeRaVkj8DeECRViKRa+RG67ip9Zg7f2RjfQJvsU7PO1ClxihTcopgIDNwYrg
-	 wb2Ci9vpTD/vljfo3s+kEuFuBBJ52DN4ZKneN1duwU8hwSlHYB4zhzkri3F5TyMpuj
-	 QqpCt3AGk5p3v4s337uDmBzG0TP9hTYHv3COcVJ7go2nJgh8Gk8WNMmxXHga1PxpaD
-	 NM0a84bo2kH7PreLwEhHe6HFANq9wNMCkgY7AcZg4tAweF7tjmatDAS/FdX+N8hzqh
-	 pNwwHZMrEqANmBTa9iWY0HOVha/l8fXWK4ZixW9OEP12RvB4gqT0JUZ5L0QsSWrZAt
-	 GBmZoXn9G/Z0Q==
-Message-ID: <204768d9-c456-4c0b-9c8f-e3f0fbc53ca6@kernel.org>
-Date: Thu, 2 Apr 2026 04:47:53 +0900
+	s=k20201202; t=1775078343;
+	bh=ZUftJy/Eg2vooutQH6w/+XirdMYySx6JVlXp754Vgdk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jD3Jb1tyAXHJ7rlEQVgRfpLV2q36bVM+ZajV5KTZtkYLuqlKdfLGdjCpcy0YnRnbi
+	 LoLgBIqHi+42FatuccDnBFDivdoaKpF07bf+PUeofoud0KB0kILvHTwfnNr+wV1Aa6
+	 ojA8OH7ghnBr07KKD5W+MJmxN0ig7il2HpVBOqc3Si1yz5HvBAiqiaYP7rfDfiQXz5
+	 gvCbKx8DnrxuEsyb7EO6QrlJeDeTqifD0tfUem+skhvVcglnV+FvF/Xw4hsMFllqjZ
+	 y+d3meadPcE1/VqbKbjkdKbo9sj1+GwnPXFD2uG1NnYG5a8cUTLgXieYD+hkSeKO8n
+	 ECkQRhTDfjUOA==
+Date: Wed, 1 Apr 2026 14:19:01 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, hch@lst.de,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v6 01/22] fsverity: report validation errors through
+ fserror to fsnotify
+Message-ID: <20260401211901.GF2466@quark>
+References: <20260331212827.2631020-1-aalbersh@kernel.org>
+ <20260331212827.2631020-2-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: fix number of GC bvecs
-To: Christoph Hellwig <hch@lst.de>, cem@kernel.org
-Cc: hans.holmberg@wdc.com, linux-xfs@vger.kernel.org
-References: <20260401135801.124987-1-hch@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260401135801.124987-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260331212827.2631020-2-aalbersh@kernel.org>
 
-On 4/1/26 22:58, Christoph Hellwig wrote:
-> GC scratch allocations can wrap around and use the same buffer twice, and
-> the current code fails to account for that.  So far this worked due to
-> rounding in the block layer, but changes to the bio allocator drop the
-> over-provisioning and generic/256 or generic/361 will not usually fail
-> when running against the current block tree.
+On Tue, Mar 31, 2026 at 11:28:02PM +0200, Andrey Albershteyn wrote:
+> Reported verification errors to fsnotify through recently added fserror
+> interface.
 > 
-> Simply the allocation to always pass the maximum value that is easier to
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/verity/verify.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-s/Simply/Simplify
+Acked-by: Eric Biggers <ebiggers@kernel.org>
 
-> verify, as a saving of up to one bvec per allocation isn't worth the
-> effort to verify a complicated calculated value.
-> 
-> Fixes: 102f444b57b3 ("xfs: rework zone GC buffer management")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>  		if (memchr_inv(dblock->data, 0, params->block_size)) {
+> +			fserror_report_data_lost(inode, data_pos,
+> +						 params->block_size, GFP_NOFS);
+>  			fsverity_err(inode,
+>  				     "FILE CORRUPTED!  Data past EOF is not zeroed");
+>  			return false;
+> @@ -312,6 +315,7 @@ static bool verify_data_block(struct fsverity_info *vi,
+>  		data_pos, level - 1, params->hash_alg->name, hsize, want_hash,
+>  		params->hash_alg->name, hsize,
+>  		level == 0 ? dblock->real_hash : real_hash);
+> +	fserror_report_data_lost(inode, data_pos, params->block_size, GFP_NOFS);
 
-Looks OK to me.
+The first case does the fserror call first and the log message second,
+and the second case does them in the opposite order.  I don't think it
+matters what the order is, but they should be consistent.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
--- 
-Damien Le Moal
-Western Digital Research
+- Eric
