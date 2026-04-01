@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15EF53C73DA;
-	Wed,  1 Apr 2026 22:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37D8C2F25F5;
+	Wed,  1 Apr 2026 23:36:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775082440; cv=none; b=ZLR6zJsLlXFxNaO1plFrMSyk1OXR8xfZlC8GR60iAreJV1EKuXsihSozeKTjGtP1lEdDpen2n3TSiH5FwjdNXf7261Svf7/ZLhEvX/M7zt9HkC4NE0C8nENu29WEspK5R2lc56ECX9Uw6FxEMQjpKO0jtKtm3S+FTa8n6p8Wb1w=
+	t=1775086594; cv=none; b=j2uIKrz0eq2W6L5wi0Xw0MHHw+vCzkddeyURUolN9NODn/i3NAEdATC6GwoRE+VM2ZHfknd2nFqpD0qzKmGlx2xWAeHs3JAGugEQqUkqdNAd8gJzjBGc5JnRj7fV9HzusjLny7bvF6Ejk3COZ95/QvOjX5FSI0yCMZO/XR56M14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775082440; c=relaxed/simple;
-	bh=SYq0ujua23qXK/LmWqJZytMbuhwswv6VTuzwYXfuOO0=;
+	s=arc-20240116; t=1775086594; c=relaxed/simple;
+	bh=ycGJXVbkzn7fjheMc4OWJv/d8Qf8+icFTrjAGQu+PYY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Evz3+cGsWAMbxjqNk5B6Z4gfIzQWRm3SMgR9YdkDo/hSpIRU8gBa8y2V/HkgEeauCHz+tAocT+at6SW+oIY/jWseOtFwVL6FSkKJiFFRX51mjBH4IlcFfjXmXQ2XqPAxC5CMrkYiP+UuNh1L7dkNSZen7Yv/cugc0JYJGBr/Xx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B5PXSPnM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BCzwa6vNJP2ovMy6n4GhUmE8+5UXLV9CZ1ocuX3MmRo2Wt91mLesdYGyMTst/YzXx6Qjkzhki/+WrP4cv+w09JyL9faNTbS5YrkwJJ7BhpAylWJbLT9BSaYCdLVlFPFiFBB6ycdoxmulPgRFTHkGk3z/zubUIJe0qftMbeyawhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BgKk0rA6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B5PXSPnM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E65FBC4CEF7;
-	Wed,  1 Apr 2026 22:27:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BgKk0rA6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B1D4C4CEF7;
+	Wed,  1 Apr 2026 23:36:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775082439;
-	bh=SYq0ujua23qXK/LmWqJZytMbuhwswv6VTuzwYXfuOO0=;
+	s=k20201202; t=1775086593;
+	bh=ycGJXVbkzn7fjheMc4OWJv/d8Qf8+icFTrjAGQu+PYY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=B5PXSPnM0g7dK54PuwCSAWqQJYwrb9QuFC3fNTXETKKaPEJa0LN6Qb71B1NKfCgkg
-	 zJ0YjonIndei8PlYKBNx5dFcfXhWpE+WBZbDACHmNuwim4lfvEmA3bvnNrqmY9fahl
-	 Rl9nb+RqNpAaOMAysgc+seVnfv95Xj1Oym+k9JlAwQFods4T+I06Kf50gAfdZgcbkj
-	 GbdbrTPPg+Vkh1rA4vuOIcDNMaHtAZoEjic2ruqY4tQldFn4TygR5eXvCGwAXISi6S
-	 kJWerpbb33PgwTewr82iGadRDTJWVbaKtQFxcemStEAmZQ7+vEhxTr9EO0FxOa60bl
-	 ti4gyubWkuz8Q==
-Date: Wed, 1 Apr 2026 15:27:17 -0700
+	b=BgKk0rA6/fxQhGIcKv8FeKkLx9QG1BOmW5LafU7rNPUStTaSQn12Xp8PXpvooraBj
+	 VVDPsKmF/xPhrCMm3PYk5eL5mc953y+lTRa7hYSENFIKK5j7GrTMsA2S6+O+6mxXvL
+	 25+bmqUU9f/9voJCxEfJ7dt5YJaAHIEkZrlTwl242SvCwYxN6LvHPBEK5DLynMTMZP
+	 1bpXYt7i5KnQDbH69KIMmOVcco+RRfaPi6y1Q2e6QUk/JeNbmFJOJEx89QIe3e+DFr
+	 1dlUSaYB1WTMcq22LgE4xJ48aor/7AHPOO2RKoo5K6B2dd+IsmDe7VubwMOaqkpmz5
+	 txzsGK8QoS5WA==
+Date: Wed, 1 Apr 2026 16:36:31 -0700
 From: Eric Biggers <ebiggers@kernel.org>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, hch@lst.de,
 	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v6 03/22] fsverity: generate and store zero-block hash
-Message-ID: <20260401222717.GH2466@quark>
+Subject: Re: [PATCH v6 04/22] fsverity: pass digest size and hash of the
+ empty block to ->write
+Message-ID: <20260401233631.GA14247@quark>
 References: <20260331212827.2631020-1-aalbersh@kernel.org>
- <20260331212827.2631020-4-aalbersh@kernel.org>
+ <20260331212827.2631020-5-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,92 +46,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260331212827.2631020-4-aalbersh@kernel.org>
+In-Reply-To: <20260331212827.2631020-5-aalbersh@kernel.org>
 
-On Tue, Mar 31, 2026 at 11:28:04PM +0200, Andrey Albershteyn wrote:
-> Compute the hash of one filesystem block's worth of zeros. A filesystem
-> implementation can decide to elide merkle tree blocks containing only
-> this hash and synthesize the contents at read time.
+On Tue, Mar 31, 2026 at 11:28:05PM +0200, Andrey Albershteyn wrote:
+> Let filesystem iterate over hashes in the block and check if these are
+> hashes of zeroed data blocks. XFS will use this to decide if it want to
+> store tree block full of these hashes.
 > 
-> Let's pretend that there's a file containing six data blocks and whose
-> merkle tree looks roughly like this:
-> 
-> root
->  +--leaf0
->  |   +--data0
->  |   +--data1
->  |   `--data2
->  `--leaf1
->      +--data3
->      +--data4
->      `--data5
-> 
-> If data[0-2] are sparse holes, then leaf0 will contain a repeating
-> sequence of @zero_digest.  Therefore, leaf0 need not be written to disk
-> because its contents can be synthesized.
-> 
-> A subsequent xfs patch will use this to reduce the size of the merkle
-> tree when dealing with sparse gold master disk images and the like.
-> 
-> Add a helper to pre-fill folio with hashes of empty blocks. This will be
-> used by iomap to synthesize blocks full of zero hashes on the fly.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  fs/verity/fsverity_private.h |  3 +++
->  fs/verity/open.c             |  3 +++
->  fs/verity/pagecache.c        | 22 ++++++++++++++++++++++
->  include/linux/fsverity.h     |  8 ++++++++
->  4 files changed, 36 insertions(+)
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 Acked-by: Eric Biggers <ebiggers@kernel.org>
 
-The example given in the commit message is a bit misleading, though.
-Usually there are actually 128 hashes per block, and a block of hashes
-covers 512 KiB.  So this optimization applies only where there is a hole
-in the file's data of size (at least) 512 KiB, aligned to the same
-amount.
+> pass digest size and hash of the empty block to ->write
 
-It's also worth noting that this optimization is being done only for the
-first level.  The levels above that are still being stored.  So, this
-doesn't really enable e.g. exabyte sized sparse regions, as a block will
-still be stored for each 64 MiB (instead of every 512 KiB).
+"empty block" => "all-zeroes block"
 
-I'm okay with this if you want to do this, but I just want to make sure
-its limitations are well-understood.
+(it's not empty, it's all-zeroes)
 
-> +	/* the hash of a merkle block-sized buffer of zeroes */
-> +	u8 zero_digest[FS_VERITY_MAX_DIGEST_SIZE];
+> + * @zero_digest:	the hash of a merkle block-sized buffer of zeroes
 
-"the hash of an all-zeroes block" would be clearer.  This is the hash
-from fsverity_hash_block() which includes the optional salt, not the
-hash from fsverity_hash_buffer() which does not include the salt.
+"a merkle block-sized buffer of zeroes" => "the all-zeroes block"
 
-> +/**
-> + * fsverity_fill_zerohash() - fill folio with hashes of zero data block
-> + * @folio:	folio to fill
-> + * @poff:	offset in the folio to start
-> + * @plen:	length of the range to fill with hashes
+(to hopefully make it clear, as in patch 3, that it's the salted block
+hash, not the value that fsverity_hash_buffer() gives)
 
-Maybe go with (len, offset) for consistency with
-fsverity_verify_blocks().  (I assume the "p" prefix stands for "page",
-which is misleading since this works with a folio.)
+> +	 * @zero_digest: the hash of a merkle block-sized buffer of zeroes
 
-> +void fsverity_fill_zerohash(struct folio *folio, size_t poff, size_t plen,
-> +			      struct fsverity_info *vi)
-> +{
-> +	size_t offset = poff;
-> +
-> +	WARN_ON_ONCE(!IS_ALIGNED(poff, vi->tree_params.digest_size));
-> +	WARN_ON_ONCE(!IS_ALIGNED(plen, vi->tree_params.digest_size));
-> +
-> +	for (; offset < (poff + plen); offset += vi->tree_params.digest_size)
-> +		memcpy_to_folio(folio, offset, vi->tree_params.zero_digest,
-> +				vi->tree_params.digest_size);
-
-This could be done more efficiently, especially on HIGHMEM.  Probably
-fine for now though, especially since the intersection of anyone wanting
-XFS && fsverity && HIGHMEM is likely to be extremely small.
+Likewise.
 
 - Eric
