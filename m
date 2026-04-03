@@ -1,107 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BC8931B803;
-	Thu,  2 Apr 2026 21:58:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7821248F62;
+	Fri,  3 Apr 2026 01:43:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775167107; cv=none; b=k0KTnsXAl0U1zEWJXPFqqxg/0Ps3JXPapOn3I1EGDoeKTvF9US/PyIfdG+xpLI7tvChHd36X2Tl7BxvkXQId6eqjJ0CvRUFjBPnNvmh0R8aT2gMib5ftcekYMyYcmiA1YqUefTFMScCkjx1iMYXus6GRMr0nosElGxpPdOE0UK0=
+	t=1775180631; cv=none; b=WBGIjLvkNGjfvmDS33mk/p5QM0tvz+TuBBrT/4FjyjiZ0JT2TDcyfVNGRuEW7VaghaxW8RY3w3ePZpqg2MSRKZx0MHxZWSJ8U9/UuEtpGRI9uGH/uzKzkq4MuXdofeRJG2ioQ6gi0iMZ1W3vlnxO3NxiIis8FCKkmDC/OCut+6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775167107; c=relaxed/simple;
-	bh=QvUc9vANqYsb1luDp8UYk1f8BqkeVaTMVXLV75eutnQ=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=DVJp2RZb27ELpuSXbKU4Hp/Y6oxtY4GVZi+hvh0cGpfFqwLi3iiECU8FkXW3LsP2E4BFa3lHd7gKiNOQi5H6gIaKO0hKHraIz2ZSgvjaY8pL8Nj3ueFJ33XzKXy8KKHzyLjplHoEp/PCfYJu8MKrJG/teYDsTZ/J1SYs3fWx0zQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBJzCsq7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775180631; c=relaxed/simple;
+	bh=pPAnbZXBvQPAwDcgrirebQ7qX7pU6qPa03X+SuB2zxw=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=SwYLnPwm08sQc7L/RysKZNYXTqkfdbQPU1xl3UUcHEHGoJmMmQo3SXGnrf8xvebU6VvKj2EPVlBq/O6k/SHepilLvpsJQkKQKDo6in3ekOcWFB6luilpc3Yd6WSLhXIgcOOO5P7kAzn38xkLNsZxPNCjibmOj3Rnez1TkAwPCx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=ttN12VBE; arc=none smtp.client-ip=162.62.57.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBJzCsq7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D96C116C6;
-	Thu,  2 Apr 2026 21:58:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775167106;
-	bh=QvUc9vANqYsb1luDp8UYk1f8BqkeVaTMVXLV75eutnQ=;
-	h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-	b=KBJzCsq7TNcgHpU+TWPAd3W8YuuJXdgpviR9Ow38UzYp/E+eDMYCQdUq5+04/Mnru
-	 vF8yruBgH9Kqoxj3RdUA00tDQnEgnr1qE7AXbmqG7qka9IVu/f1eZKTg86JWT+ETrn
-	 TjxI1jdECoYVYFvAydaPvhTr0DLyOkSNS0rHhfEWArmmkmeciwTpFwX+5aQHpstoUl
-	 foXfbAlUvknuR2UINHvJ3kK1f5ozCCWUSVy6PFFL3eEN4gpoDz+keSHvFP6Ep2zvPe
-	 Ej2doeiB7lotVTyVy6ov80wS5IsFWdnGSH4WR6z1XJ7lBV9TObDwXGWdYhpggyK3MT
-	 1b1VbHt8uneOw==
-Date: Thu, 2 Apr 2026 15:58:18 -0600 (MDT)
-From: Paul Walmsley <pjw@kernel.org>
-To: Yury Norov <ynorov@nvidia.com>
-cc: Andrew Morton <akpm@linux-foundation.org>, 
-    "David S. Miller" <davem@davemloft.net>, 
-    "Michael S. Tsirkin" <mst@redhat.com>, Theodore Ts'o <tytso@mit.edu>, 
-    Albert Ou <aou@eecs.berkeley.edu>, Alexander Duyck <alexanderduyck@fb.com>, 
-    Alexander Gordeev <agordeev@linux.ibm.com>, 
-    Alexander Viro <viro@zeniv.linux.org.uk>, 
-    Alexandra Winter <wintera@linux.ibm.com>, 
-    Andreas Dilger <adilger.kernel@dilger.ca>, 
-    Andrew Lunn <andrew+netdev@lunn.ch>, Anna Schumaker <anna@kernel.org>, 
-    Anton Yakovlev <anton.yakovlev@opensynergy.com>, 
-    Arnaldo Carvalho de Melo <acme@kernel.org>, 
-    Aswin Karuvally <aswin@linux.ibm.com>, Borislav Petkov <bp@alien8.de>, 
-    Carlos Maiolino <cem@kernel.org>, 
-    Catalin Marinas <catalin.marinas@arm.com>, Chao Yu <chao@kernel.org>, 
-    Christian Borntraeger <borntraeger@linux.ibm.com>, 
-    Christian Brauner <brauner@kernel.org>, 
-    Claudio Imbrenda <imbrenda@linux.ibm.com>, 
-    Dave Hansen <dave.hansen@linux.intel.com>, 
-    David Airlie <airlied@gmail.com>, 
-    Dominique Martinet <asmadeus@codewreck.org>, 
-    Dongsheng Yang <dongsheng.yang@linux.dev>, 
-    Eric Dumazet <edumazet@google.com>, 
-    Eric Van Hensbergen <ericvh@kernel.org>, 
-    Heiko Carstens <hca@linux.ibm.com>, 
-    Herbert Xu <herbert@gondor.apana.org.au>, Ingo Molnar <mingo@redhat.com>, 
-    Jaegeuk Kim <jaegeuk@kernel.org>, Jakub Kicinski <kuba@kernel.org>, 
-    Jani Nikula <jani.nikula@linux.intel.com>, 
-    Janosch Frank <frankja@linux.ibm.com>, Jaroslav Kysela <perex@perex.cz>, 
-    Jens Axboe <axboe@kernel.dk>, 
-    Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
-    Latchesar Ionkov <lucho@ionkov.net>, Linus Walleij <linusw@kernel.org>, 
-    Madhavan Srinivasan <maddy@linux.ibm.com>, Mark Brown <broonie@kernel.org>, 
-    Michael Ellerman <mpe@ellerman.id.au>, Miklos Szeredi <miklos@szeredi.hu>, 
-    Namhyung Kim <namhyung@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
-    Paolo Abeni <pabeni@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-    Paul Walmsley <pjw@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
-    Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-    Sean Christopherson <seanjc@google.com>, Simona Vetter <simona@ffwll.ch>, 
-    Takashi Iwai <tiwai@suse.com>, Thomas Gleixner <tglx@kernel.org>, 
-    Trond Myklebust <trondmy@kernel.org>, 
-    Tvrtko Ursulin <tursulin@ursulin.net>, Vasily Gorbik <gor@linux.ibm.com>, 
-    Will Deacon <will@kernel.org>, Yury Norov <yury.norov@gmail.com>, 
-    Zheng Gu <cengku@gmail.com>, linux-kernel@vger.kernel.org, x86@kernel.org, 
-    linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, 
-    linux-riscv@lists.infradead.org, kvm@vger.kernel.org, 
-    linux-s390@vger.kernel.org, linux-block@vger.kernel.org, 
-    intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
-    dm-devel@lists.linux.dev, netdev@vger.kernel.org, 
-    linux-spi@vger.kernel.org, linux-ext4@vger.kernel.org, 
-    linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, 
-    linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
-    linux-crypto@vger.kernel.org, linux-mm@kvack.org, 
-    linux-perf-users@vger.kernel.org, v9fs@lists.linux.dev, 
-    virtualization@lists.linux.dev, linux-sound@vger.kernel.org
-Subject: Re: [PATCH 8/8] arch: use rest_of_page() macro where appropriate
-In-Reply-To: <20260304012717.201797-9-ynorov@nvidia.com>
-Message-ID: <ee15482d-22a8-9686-ba64-d216b25d8e68@kernel.org>
-References: <20260304012717.201797-1-ynorov@nvidia.com> <20260304012717.201797-9-ynorov@nvidia.com>
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="ttN12VBE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1775180623; bh=RbbCvnBBaG9Nr3laFCBN7NIigAl9sAI3ZzyDdUPOwew=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ttN12VBEXg42XO2mueN6FrzLwhdOzVcS9PFS7RoA/X/UMpGk8LNZuyP9FW2eh+tz4
+	 diN8r9G1nZqnptIT9n2rLfQv7A1tinTJuEt/WZ2+3EZ5yTvwrsD1/BTyvf1TCBMpfr
+	 XT+Lyq3P8jpeuECuP85w922ajEv8GQO48/y1ODdc=
+Received: from lxu-ped-host.. ([111.198.231.89])
+	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
+	id AE7A185F; Fri, 03 Apr 2026 09:43:39 +0800
+X-QQ-mid: xmsmtpt1775180619tlu8b2pk3
+Message-ID: <tencent_4D4CBF27D046DE52D3067D099C6EDDEECC06@qq.com>
+X-QQ-XMAILINFO: MMwjR1C73eIsFXylMMCRwnZVLHHYhWfeGNAjCgvzclnCPjn+a/G9EXhf/o9FmI
+	 vyXS4LXjMbkCdihrOL4sHNy+KCx3CpQJ4U5nkzLDJd4QW6dWjdeLTF/DOVebvpV+y/hPgfFRKpeU
+	 3fM+MvrKaBFKp+whMU2ZsO2ldOVVrfGB98CyweGZFvvthYTM1EH9mB9AmxP8NHs2RrOZfK/6uCdU
+	 v/1BhF3Ejmnn5acDvKNPcBEYe7hSVgbT+MhEuxWAg6l0qci2ytoYC0Vp0MMrwIFjq5W0qefceMlR
+	 8edMlToTVgKrNGDlxpmoqszV9D3Mry0oOZQyM+VD/0x8EAu+UDo/Nw4SsSZkWGLgy7WlwdTZhzMX
+	 Bm7TSm6U6UurpnOYD4sKYP3UG9jIBheX/PzizE1X2iE1md+wVzGlKgnDBlN4+3pB9487d2b1nPxE
+	 xJm2Xw+KMbkSAlJe3/l7nhYYVIKOfkRDnLGMzC1J2KRkKmJeS3YX91i/rOFhH7uop7AfVr1b94ap
+	 Cr3QlHJH5iSlN/5wTsPxVaBFWIWogEw1xXbAyboT2VoutEwedqsm+px5TQOqCtUr5GwgOE4utfvr
+	 I240SXwe7GVyZY4ziKbxeBA7mqICAcff4XbI4cf3F2c2TeU1cLqQDpw4IYad2E0YlqiB0ORHrERn
+	 3dD2cD3mETlOR8SmyYhTL63xA3T1A6E5w8h8RNH8uNZqLPTAPGsKCYUrfwFYcMGhokXVSZidN0wo
+	 ZIiRmOSoQEmVpw2LZjdqWQXBCswUOKOeanNtgOuv34/FB7vErpIrfw4zNaV+bne9txnyyfUUDeZZ
+	 XsdXysuuVyKjmImt0A7pP/niBvzaSSFNMqOP5POWytrL8kD4AzFX781bjyi61rEmj01sxjKNf7Cj
+	 LITxNmaQPbalN46k/i5lDaVuPM/cd9tbJ3+2ahQnVPQFhaD+q9vwHbJVuXAdm9A4BpJ0lDek4XQb
+	 1C/7FQCC0czmQ4yMInm0zE0ZkB9lNqej4kTXQOn4EdfTsCCl0z93CwpwmERE50rL/ImQiF2TU=
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+From: Edward Adam Davis <eadavis@qq.com>
+To: syzbot+b7dfbed0c6c2b5e9fd34@syzkaller.appspotmail.com
+Cc: cem@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com
+Subject: [PATCH] xfs: reject CRC validation when the log header cannot be retrieved
+Date: Fri,  3 Apr 2026 09:43:39 +0800
+X-OQ-MSGID: <20260403014338.789919-2-eadavis@qq.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <69cebb99.050a0220.2dbe29.0007.GAE@google.com>
+References: <69cebb99.050a0220.2dbe29.0007.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 
-On Tue, 3 Mar 2026, Yury Norov wrote:
+When the traditional algorithm fails to locate the log header, it triggers
+the uninitialized-value issue regarding tmp_rhead_blk reported in [1],
+continuing with the subsequent CRC verification traversal in such a
+scenario is futile.
 
-> Switch arch code to using the macro. No functional changes intended.
-> 
-> Signed-off-by: Yury Norov <ynorov@nvidia.com>
+A check has been added to detect the absence of the log header and prevent
+the execution of the subsequent CRC verification traversal.
 
-Acked-by: Paul Walmsley <pjw@kernel.org> # arch/riscv
+[1]
+BUG: KMSAN: uninit-value in xlog_verify_head+0x6c3/0x910 fs/xfs/xfs_log_recover.c:1058
+ xlog_verify_head+0x6c3/0x910 fs/xfs/xfs_log_recover.c:1058
+ xlog_find_tail+0xc2e/0x1a50 fs/xfs/xfs_log_recover.c:1315
+ xlog_recover+0x6d/0x800 fs/xfs/xfs_log_recover.c:3426
+ xfs_log_mount+0x4da/0x880 fs/xfs/xfs_log.c:617
 
+Local variable tmp_rhead_blk created at:
+ xlog_verify_head+0x81/0x910 fs/xfs/xfs_log_recover.c:1032
 
-- Paul
+Reported-by: syzbot+b7dfbed0c6c2b5e9fd34@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=b7dfbed0c6c2b5e9fd34
+Signed-off-by: Edward Adam Davis <eadavis@qq.com>
+---
+ fs/xfs/xfs_log_recover.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 09e6678ca487..0d1b4bddd193 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1050,6 +1050,9 @@ xlog_verify_head(
+ 	if (error < 0)
+ 		return error;
+ 
++	if (!error)
++		return -EIO;
++
+ 	/*
+ 	 * Now run a CRC verification pass over the records starting at the
+ 	 * block found above to the current head. If a CRC failure occurs, the
+-- 
+2.43.0
+
