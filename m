@@ -1,153 +1,97 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1FB5182D0
-	for <linux-xfs@vger.kernel.org>; Sat,  4 Apr 2026 08:59:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7571F03D2
+	for <linux-xfs@vger.kernel.org>; Sat,  4 Apr 2026 11:43:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775293156; cv=none; b=qoYL3yP8dHgZChiLLy8SoxOntFYf8cKWAw7/quETuVMag4gGQ/C0Hp9KdQqI/XcjiaHBe/JBMryeL30zxD5nTCWAE4daGKGyT4cdxDgMDVXyfzTbemW7rqNgxtWY3naOslIPqYiOmS0CkuhGbACSYPjaHh69wqG7F49nM6mFSik=
+	t=1775302984; cv=none; b=WKz0+uYRNQAM1em9y6gMS9QjazGxmKOp7/NUfCsdKReYlq3tMlSXybXFEnR/gKCTy1PfCKoxea3nWFAm1s1MvYy1Go0WDlWbes9bw5vtKDZo78oYvz7YLxQdSCdHHIr7plxIciM7BaJ3hzgpvAyISdXXggoo67n6qKxJliFPD9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775293156; c=relaxed/simple;
-	bh=uDJtadNJQtVClJNGz6Fgvc0qOOD8ZBGg7n46C9beoAI=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=ryLQ7cuL+1GUphDArlt5bZo30x0Bo+GXumof/3qT3IK+Smwx+PPwatYhhm0/dmHLFe1LMOUzlu2M2ndCr0CZAhpqqqLaTxVg4tDKfav9p+l/Ecdu8xPeOGfKmCNF3M8474lZOuUs8RAHuWI1G3UMcx0SPFiky7LD7WvVfiXfiuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=APBqtasz; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775302984; c=relaxed/simple;
+	bh=Sdc6lsfMAqvIc1+DV7eIbKLZnEMQoI+ANeTpAGO2MHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aFPbBwQb5o+9F5XMHr0Bcjgqgkh/xw/KDPYkHgenQ4ZTtp0j0hcj6QIReLAH8C+BjI/2k7xqvNKBlj/HowAFCPdSGnQ7uH9kBFUydoVLyLza7zJcJIt5OVwwsyyx4ynyZ0jjfYcTj9tz5JmvSpHN+z5s0WG1A02UZn00xJWnEDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PumOeD9P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="APBqtasz"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-35d96be7c13so1524249a91.0
-        for <linux-xfs@vger.kernel.org>; Sat, 04 Apr 2026 01:59:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775293153; x=1775897953; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=+kz27emeQpXLA53ZgoxFIbwzHRJwb1l4CVdcohSXzQg=;
-        b=APBqtasz4vbMdgpdGFkn84GpE9pncljnTKRYGWy7OCdn73MGUaNpbH9ICK96iyOXtP
-         qWoPSebTch8oB9S1Lf1cGZXyuoln8KMRojTscs/tvHggnAc1658CtOLRA+BeqA4bnj1q
-         GHVvYJlh9WMG+Y3h+drLI5mzEtjbUyEYaL0c4DaZyLwQlE8/sswI1ax3IL3uGpELKLkL
-         onydV9tbS6vcy0lEFYyEmX7XAE8G9lK5jJYlMHVQ9WFEPzb2sgCkilQOauIjxB2+LrJ5
-         kgZ0dNOqE/vIlViK3nseWYVMGvwEwJSl8FgRfQUk5hlWiYLU9uAuWLuXCUocIcQ7s1PP
-         NSHA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775293153; x=1775897953;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+kz27emeQpXLA53ZgoxFIbwzHRJwb1l4CVdcohSXzQg=;
-        b=IG/j75rYbCGGpVfWfM8s5r5nXnpGox5EUjohzZOAxVALb8u/TO4+hG7vsiqXMtUa+V
-         h0PJSsJRptQkagH7tCUsNih74ordDua1AhT1JIcFp4c3s9DMc/bWaezfn9O8yDGuCCWj
-         XJ4B69U43eXdiwLSdD9Iz2dUsbaQ8Cs+z1PMSDMc7CnkI8J0JwQrzvalZ6JeVMAoBLQw
-         Rh2dsVOoA+qMzG87wpyZA/Ltcg4V4mR0xPyhZRFf41vL1PDiANFj0ZyFVy4XVXXqcg3B
-         FbQ+1JnKXy4Js4Z771FXRPgphcMDB7lOd9ZG9qOGdxJDvf2N5Yk+o7xZZfQia1rcTb4K
-         ptOg==
-X-Forwarded-Encrypted: i=1; AJvYcCU6R10hlTU90LBt7wOPs54hsx7wyNZNNKNF6f/VZlwGH05U4mRhvtWWLfuKwK4ueEB8F1Pepsrc6aU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YysZrzC4Vo9+z4Y6gnHnZCcgD3DgoagNP7Ej09SI5lumfYBsWFw
-	vBKt0edGRSPznAUSdy/gwzDI3axBvNxJd/NGhB541Rk4lpZOe2LQGYG2Jbf7gBge
-X-Gm-Gg: AeBDieszYKwNlNPaHHtObsBQBl5lJIF/yZvEQg1prEkgOJhgjRL9DUqunj9HUXRZ4Rr
-	takMWYNsU3hRdicJTAFZVkksr2nC8+2T2WW7R2qdRdtKmt3xeKNG3j2ozj5LtLDqmvcJ1DGb1t1
-	IBqg5rNJm2OWG74BLCgaM82gmvIHaYejsb3yCyjtYcAAKYHsVRc3hxDIWuejAK4XEaRbP3ahhfY
-	UyqVNezdZ0gqOwQor9xSeawcUUF0n/XVDVHUlwZVXVp4Jda/EyU79Ua6ehpmfivG5vTctxTQTd3
-	i26LVS75EtnK3HGr4IsO+BweW/2DegvRmvCZ3pRu6ndGJVhT1ZRN0gko7p+tissR/Cmzw4PK3by
-	IATxXWmD+0kQpKfOwEoVcTndRzrfPxWiTTNAFrdJernXajyMoxPemkI8Y11659JmQvjnRQvK16j
-	dzwZans54aZ+WKM10wGPJNhW6C6d0=
-X-Received: by 2002:a17:90b:52cf:b0:35c:195e:112f with SMTP id 98e67ed59e1d1-35dd68b3edamr8054586a91.18.1775293152635;
-        Sat, 04 Apr 2026 01:59:12 -0700 (PDT)
-Received: from [192.168.50.90] ([116.87.14.48])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c76c6491fe0sm6489143a12.11.2026.04.04.01.59.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 04 Apr 2026 01:59:12 -0700 (PDT)
-Message-ID: <5bda3d00-df35-4ea1-b313-2fef6e5c5682@gmail.com>
-Date: Sat, 4 Apr 2026 16:59:08 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PumOeD9P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E12DC19421;
+	Sat,  4 Apr 2026 11:43:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775302984;
+	bh=Sdc6lsfMAqvIc1+DV7eIbKLZnEMQoI+ANeTpAGO2MHc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PumOeD9PrfCj3v4zr0BX/wNZxuf5RFB5qfez52edp4luwHU/CiRNfD3UTaOChEcmX
+	 EkdROTqLeZ75OODQ8ldK3PXDxbTgKGsIdf9tN8jTpl/1Q9zHaPtszrOSMH5E9A3CdY
+	 GW2/4P/IpwL+KLBfwPsOI5iQZ1wq6s69WIA180Y0KgPXaU9s/eJCHeFJ3MCO0qdjPX
+	 aqWvp5ONiewd8C84VKXfPRPp7vr27f8Ddy1GWWPwPXth5sZhFBNhRyNlKFrAtNs4yt
+	 6dbH+tSr1WiEHRdDeQflJUFqDWmDp4rtT8sbWQ+qK+jUPjxNg27Q96wZFbxB4idp5n
+	 gtovYJI9O7XWg==
+Date: Sat, 4 Apr 2026 22:42:59 +1100
+From: Dave Chinner <dgc@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Hang with xfs/285 on 2026-03-02 kernel
+Message-ID: <adDgYCmgNsA9ff3e@dread>
+References: <ac_eUsuxqf6IYN7F@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
- collisions
-From: Anand Jain <anajain.sg@gmail.com>
-To: Theodore Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>,
- "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-xfs@vger.kernel.org, Anand Jain <asj@kernel.org>
-References: <cover.1774092915.git.asj@kernel.org>
- <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
- <20260323041624.GA11453@mac.lan>
- <d4a9970b-e7ed-4e74-be9d-2d08400f9d79@gmail.com>
-Content-Language: en-US
-In-Reply-To: <d4a9970b-e7ed-4e74-be9d-2d08400f9d79@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ac_eUsuxqf6IYN7F@casper.infradead.org>
 
+On Fri, Apr 03, 2026 at 04:35:46PM +0100, Matthew Wilcox wrote:
+> This is with commit 5619b098e2fb so after 7.0-rc6
+> INFO: task fsstress:3762792 blocked on a semaphore likely last held by task fsstress:3762793
+> task:fsstress        state:D stack:0     pid:3762793 tgid:3762793 ppid:3762783 task_flags:0x440140 flags:0x00080800
+> Call Trace:
+>  <TASK>
+>  __schedule+0x560/0xfc0
+>  schedule+0x3e/0x140
+>  schedule_timeout+0x84/0x110
+>  ? __pfx_process_timeout+0x10/0x10
+>  io_schedule_timeout+0x5b/0x80
+>  xfs_buf_alloc+0x793/0x7d0
 
-Hi Ted, Christoph, Darrick,
+-ENOMEM.
 
-As I prepare v3, I'd appreciate your final thoughts on the mount option
-naming and its necessity for ext4.
+It'll be looping here:
 
-For the new option, I am considering:
+fallback:
+        for (;;) {
+                bp->b_addr = __vmalloc(size, gfp_mask);
+                if (bp->b_addr)
+                        break;
+                if (flags & XBF_READ_AHEAD)
+                        return -ENOMEM;
+                XFS_STATS_INC(bp->b_mount, xb_page_retries);
+                memalloc_retry_wait(gfp_mask);
+        }
 
-  -o nodup_f_fsid
+If it is looping here long enough to trigger the hang check timer,
+then the MM subsystem is not making progress reclaiming memory. This
+is probably a 16kB allocation (it's an inode cluster buffer), and
+the allocation context is NOFAIL because it is within a transaction
+(this loop pre-dates __vmalloc() supporting __GFP_NOFAIL)....
 
-  -o unique_f_fsid
+All the other tasks are backed up on the AGI buffer lock held ...
 
-Context:
-Currently, ext4's f_fsid is consistent across reboots but fails to be
-unique when dealing with cloned filesystems (sharing the same UUID). Per
-statfs(2) [1], the primary requirement is that the (f_fsid, ino) pair
-uniquely identifies a file. The man page makes no explicit guarantee
-regarding consistency across mount cycles or reboots.
+>  xfs_buf_get_map+0x651/0xbd0
+>  ? _raw_spin_unlock+0x26/0x50
+>  xfs_trans_get_buf_map+0x141/0x300
+>  xfs_ialloc_inode_init+0x130/0x2c0
+>  xfs_ialloc_ag_alloc+0x226/0x710
+>  xfs_dialloc+0x22d/0x980
 
-Proposal:
-With this fix, f_fsid becomes f(uuid, dev_t). This ensures OS-wide
-uniqueness and maintains consistency as long as the underlying dev_t
-remains stable.
+... here by the task blocked on memory allocation.
 
-Dilemma:
-While statfs(2) [1] suggests f_fsid is "some random stuff," we know
-userspace (NFS, systemd) often treats it as a persistent handle.
+This smells like a persistent ENOMEM/memory reclaim issue and XFS is
+just the messenger...
 
-Do you prefer one of the names above, or is there a more idiomatic ext4
-naming convention I should follow?
-
-Given the ambiguity in the man page, is gating this behind an -o option
-necessary, or should we consider making uniqueness the default behavior?
-
-
-
-[1]
-----------
-statfs(2)
-
-<snap>
-       Nobody knows what f_fsid is supposed to contain (but see below).
-
-<snap>
-   The f_fsid field
-       Solaris,  Irix,  and  POSIX  have  a  system  call  statvfs(2)
-that  returns  a  struct statvfs (defined in <sys/statvfs.h>) containing
-an unsigned long f_fsid. Linux,  SunOS,  HP-UX,  4.4BSD  have  a  system
- call statfs()  that  returns a struct statfs (defined in <sys/vfs.h>)
-containing a fsid_t f_fsid, where fsid_t is defined as struct { int
-val[2]; }.  The same holds for  FreeBSD,  except  that  it  uses  the
-include  file <sys/mount.h>.
-
-       The  general  idea is that f_fsid contains some random stuff such
-that the pair (f_fsid,ino) uniquely determines a file.  Some operating
-systems use (a variation on) the device number, or the device number
-combined with  the  filesystem type.  Several operating systems restrict
-giving out the f_fsid field to the superuser only (and zero it for
-unprivileged users), because this field is used in the filehandle  of
-the  filesystem when NFS-exported, and giving it out is a security concern.
-
-       Under some operating systems, the fsid can be used as the second
-argument to the sysfs(2) system call.
-----------
-
-
-Thanks, Anand
-
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
