@@ -1,269 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A989A23EA97
-	for <linux-xfs@vger.kernel.org>; Sat,  4 Apr 2026 16:36:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBC5E1DED40
+	for <linux-xfs@vger.kernel.org>; Sat,  4 Apr 2026 17:24:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775320607; cv=none; b=M/j2GV8SlHb2WTQ/euV9C9NTBJL7DmwLoRuZY9AsY6kQbEf5fLrSs8GWOmvDZtIaki4qivr9rLsWal8Js7C+Puuys4OuKQVlAmXbtU6/wjVIwIUWxINce0kZjZnY0sIMvn7DQ3+JQCNr+mgTWeOCN1r+c9iWptl/B6jPGfPHHlM=
+	t=1775323492; cv=none; b=L7U4TbYgyDS0/4ViNLmwRQOdFQPnftmGhRLlG0d9VzfsYU17ZOAXhQfoEvBPiQYrDg2XpuZrLwU3jE/d81YMnV3cwBvBuxNrePOiCpzWMtSfoan4plFa+Sp1FlwpWUHzDPM7Ty3bOMUCDdzu5ELGjbivUJMqkWJoNe02fyA4Zuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775320607; c=relaxed/simple;
-	bh=sZXoe47neHD71OqcOAFkuD6YSfRptHS75Dm1d3Xq5X4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=blqANdYfVfab7S3dRinn3qXL9+3GNWSt481MTz9gro7Jb8RPB2v3gugdNFyrRIGMjRmsGbGV7/0F+X1X5mPFv/dnmJfaTOWkNF956b6gqfrdbxqvf3424mJ30Z/F9gsaqKzJ6wmOmLLZ/qpAKZ+SERqrDb+0Aw5eGiEILugI4TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IO0ZqL3/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775323492; c=relaxed/simple;
+	bh=2ilu1jQHox2wTnDUggPiw1YzGE41A4ol+N4ZXaAB6KA=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=CYp3XOqC3oMLOPECN9ezbrRPPfTRISIev00h1pv875cmTq8hxC4VTWIGxqTNDKtJBbvmb0OUUUfYDLyFihDIlnW9f2cU6h64hIVpYeeFZpIdNRiFTBTAJqu6B/BQyWTA31ZM5c1xD6f9TYItfpNu9mAPXGr5I7QuM4FMx+xBny0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kk8rrRmP; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IO0ZqL3/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2483BC19421;
-	Sat,  4 Apr 2026 16:36:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775320607;
-	bh=sZXoe47neHD71OqcOAFkuD6YSfRptHS75Dm1d3Xq5X4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IO0ZqL3/BB0BFaMkMtzdf25aavHyHyKI5XEae+7esxabeBhdc4JxdBOodxB04DqhL
-	 Mt/eX1ZnrAnYgDsOPOeSY1dg1we2ISm6XQnoJOtPptcxENm7dIoZiN0HR/s+GgvTZq
-	 jGUFnoTL1Nkmj6UEB+9nSN1IiYepeLBJFM394wiohN1//VvZWZpGmjkRQaiYOfn9eR
-	 O3tUUM1j4PBq8PzfgqzXLRr4ddHycO73qUokzdl+0W/Su1lxhzJzoAPuCupBvuT/s6
-	 WV0bqw6T3raeRvLxumatd0b6a8UPxE+W7IKq/vP8NYKxso2DaVmt+V6XhibJptEzVB
-	 YTPBxbTCR0YSw==
-From: Zorro Lang <zlang@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 2/2] mkfs: unify validation behavior for data, log and rt dev
-Date: Sun,  5 Apr 2026 00:36:40 +0800
-Message-ID: <20260404163640.1013997-3-zlang@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260404163640.1013997-1-zlang@kernel.org>
-References: <20260404163640.1013997-1-zlang@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kk8rrRmP"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-c76cce85bd9so897892a12.1
+        for <linux-xfs@vger.kernel.org>; Sat, 04 Apr 2026 10:24:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1775323490; x=1775928290; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1oGf/F8Zl1olrj7LHwmAzkM6a8hyoOTJaO/XdIoQa0M=;
+        b=kk8rrRmPpX7wAXHUbZx/ke+qQGAuwWtLhIiRmt5/bjDkrdTaLaP42RRuL8RM9UnR8d
+         iRp2ZawRGYlV5yhKaZmcviKkrYAGB4pQSf84bpqtiD5VN+amsk5ARKpN4Sg4e2VhUvEI
+         MBb5bz7P6wruAhSAA6Q1ZK0SNt+sAGsfQ+rwp02WiBKP3eBFVA6FNoQ49OquAdamIX2Y
+         qcGVIIhbHlf3adsicex7fvdtjycGxax5n0m5XaSGvMNfIsYflUQjl2ly1/dhNIqV9/2Y
+         B91W/A7RMtYE8VXS8ME1KD2Ct9/ZoXvU5Plm32bNXhBxwVQeskDJT/1pdAFnLHkO9omW
+         a7xQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775323490; x=1775928290;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1oGf/F8Zl1olrj7LHwmAzkM6a8hyoOTJaO/XdIoQa0M=;
+        b=RRsKyyP44WS8T5R1Vda2OJPcnmClKY13+Qk5xXjx8M60Poi/CgsfDaxGW2nV29WAm0
+         XDbSSGMuD3N/yVlG4ucPDIruSt4G9lImrv2kvKodZhP8foQgI05qvqcKn2X+Zg6+ufNJ
+         nudesHAaBaZXNvrOzaU+W2uyQJ3xa1UUQ8lHGpaOC8nSaTSXxhOvF8mejanRH/yDSH8d
+         N3EXed8OMrV0lEMSQhpPtiO2rTtXr16AFDoCEL4xVI1Hzw3NLsC4lx+e/eRXo2Ctl8dX
+         BhnuYW1oABIQPKZ1Pg3o+orJ6cmAoKjiqx8KDAWGA7qrDCTvz48DtFMhLVKvgwEC/V4O
+         6Nhg==
+X-Forwarded-Encrypted: i=1; AJvYcCVki00rPhJd1Yo/AIHBLBUrtoXPlrnJzpPdj6cFF5tF9ftZrYDNxbCaM+uOUFPSZjD82TdqMgZZn8Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyO9evV2CS83QyUjgaZVItvh8DZ0cLrwCxxp0WXZEOmdFZDyiL6
+	2G6q2EOGqr1Io2fwo1HxsyTbmWy1vSq2WA2sI4Huht0LoEWOri8U/ohd
+X-Gm-Gg: AeBDies7Vt4bOeuvFKzMJYrX4qCMGTvVF0R75aLm47u0fdwGDqsOIHy5Qar6z8qBDwA
+	MA2d3Lj5cgxLCpxhCclwYvBN/gG45QC0FhOjLLS1O+nIi43DJAKasfxEvT+83sJDHaG1LTZHQG4
+	1yc6V/nRLqMMixjNzeFWo4dCYCM+CUGf9X+8NlajFxhKqXf7bdRUCkcjD0KaG23cQ37Vxu4vmsb
+	9SsLF9gAXv+CL+vNXOSkpoZtVUPfjl6nYCgPhSRglMw+RxZE50M74SPwiMNDc6Wy6/segFKcxSv
+	Z5Gi52mPh6RAUEoDm7+tYc/uQhtAjp8XIJeWn3/p/u39Ko1q4R3ocfsDSVXU9Oj6cJAVYOpuZbZ
+	LKiwPFpp9rHiDWXRHuAA/Ilbc+Tq9gA5VhDBSv79vK1hXmOhrcQue1+H+HUqSZh6u6Tz8sdMjv+
+	/Nwy6W5TodEkhSWSE2uNm6lA==
+X-Received: by 2002:a05:6a20:2454:b0:39b:8dcb:f37d with SMTP id adf61e73a8af0-39f2ee01ce5mr7551700637.17.1775323490281;
+        Sat, 04 Apr 2026 10:24:50 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c76c657e703sm7990160a12.22.2026.04.04.10.24.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 Apr 2026 10:24:49 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Matthew Wilcox <willy@infradead.org>, Salvatore Dipietro <dipiets@amazon.it>
+Cc: linux-kernel@vger.kernel.org, alisaidi@amazon.com, blakgeof@amazon.com, abuehaze@amazon.de, dipietro.salvatore@gmail.com, stable@vger.kernel.org, Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
+In-Reply-To: <adCQTF1PQnlbNMO8@casper.infradead.org>
+Date: Sat, 04 Apr 2026 22:17:33 +0530
+Message-ID: <5x66n04a.ritesh.list@gmail.com>
+References: <20260403193535.9970-1-dipiets@amazon.it> <20260403193535.9970-2-dipiets@amazon.it> <adCQTF1PQnlbNMO8@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The current validation logic in validate_datadev, validate_logdev,
-and validate_rtdev is inconsistent and confusing when checking device
-sizes, particularly when handling file images.
+Matthew Wilcox <willy@infradead.org> writes:
 
-This patch unifies the validation flow by categorizing devices into
-two distinct cases: "regular file" and "block device". Validation is
-now performed separately for each case across all three subvolumes to
-ensure consistent behavior.
+> On Fri, Apr 03, 2026 at 07:35:34PM +0000, Salvatore Dipietro wrote:
+>> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+>> introduced high-order folio allocations in the buffered write
+>> path. When memory is fragmented, each failed allocation triggers
+>> compaction and drain_all_pages() via __alloc_pages_slowpath(),
+>> causing a 0.75x throughput drop on pgbench (simple-update) with 
+>> 1024 clients on a 96-vCPU arm64 system.
+>> 
+>> Strip __GFP_DIRECT_RECLAIM from folio allocations in
+>> iomap_get_folio() when the order exceeds PAGE_ALLOC_COSTLY_ORDER,
+>> making them purely opportunistic.
+>
+> If you look at __filemap_get_folio_mpol(), that's kind of being tried
+> already:
+>
+>                         if (order > min_order)
+>                                 alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
+>
+>  * %__GFP_NORETRY: The VM implementation will try only very lightweight
+>  * memory direct reclaim to get some memory under memory pressure (thus
+>  * it can sleep). It will avoid disruptive actions like OOM killer. The
+>  * caller must handle the failure which is quite likely to happen under
+>  * heavy memory pressure. The flag is suitable when failure can easily be
+>  * handled at small cost, such as reduced throughput.
+>
+> which, from the description, seemed like the right approach.  So either
+> the description or the implementation should be updated, I suppose?
+>
+> Now, what happens if you change those two lines to:
+>
+> 			if (order > min_order) {
+> 				alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
+> 				alloc_gfp |= __GFP_NOWARN;
+> 			}
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
----
+Hi Matthew,
 
-Hi,
+Shouldn't we try this instead? This would still allows us to keep
+__GFP_NORETRY and hence light weight direct reclaim/compaction for
+atleast the non-costly order allocations, right?
 
-validate_datadev, validate_logdev and validate_rtdev, these three functions
-handle xi->*.size, cfg->*blocks, and cli->*size inconsistently while also
-juggling xi->*.isfile status. Three functions ideally have similar validation
-patterns, but instead of following a template, each function has its own
-custom implementation, which invites bugs, maintenance overhead and inconsistent
-behavior, especially for file images.
+ 			if (order > min_order) {
+				alloc_gfp |= __GFP_NOWARN;
+				if (order > PAGE_ALLOC_COSTLY_ORDER)
+					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
+				else
+					alloc_gfp |= __GFP_NORETRY;
+			}
 
-For example, mkfs.xfs works on an empty data file with -d size=xxx:
+-ritesh
 
-# mkfs.xfs -f -d name=/home/emptyfile,size=300m
-meta-data=/home/emptyfile        isize=512    agcount=4, agsize=19200 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=1   metadir=0
-data     =                       bsize=4096   blocks=76800, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-log      =internal log           bsize=4096   blocks=16384, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=0 extents
-         =                       zoned=0      start=0 reserved=0
-
-But for log or rt, we got below weird errors:
-
-# mkfs.xfs -f -l logdev=/home/emptyfile,size=128m /dev/pmem1
-size 128m specified for log subvolume is too large, maximum is 0 blocks
-...
-# mkfs.xfs -f -r rtdev=/home/emptyfile,size=128m /dev/pmem1
-Invalid zero length rt subvolume found
-...
-
-One said the "size=128m" is too large, maximum is 0 (??? due to the file
-size is 0). The other one ignored the "size=128m", just complained the empty
-file.
-
-Thanks,
-Zorro
-
-
- mkfs/xfs_mkfs.c | 115 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 72 insertions(+), 43 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9a93330f..5a2274ed 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3839,34 +3839,37 @@ validate_datadev(
- {
- 	struct libxfs_init	*xi = cli->xi;
- 
--	if (!xi->data.size) {
-+	if (!xi->data.isfile) {
- 		/*
- 		 * if the device is a file, we can't validate the size here.
- 		 * Instead, the file will be truncated to the correct length
- 		 * later on. if it's not a file, we've got a dud device.
- 		 */
--		if (!xi->data.isfile) {
-+		if (!xi->data.size) {
- 			fprintf(stderr, _("can't get size of data subvolume\n"));
- 			usage();
--		} else {
--			if (!cli->dsize) {
-+		}
-+		if (cfg->dblocks) {
-+			/* check the size fits into the underlying device */
-+			if (cfg->dblocks > DTOBT(xi->data.size, cfg->blocklog)) {
- 				fprintf(stderr,
--_("Warning: Empty file needs a data subvolume size by -d size=<value> option\n"));
-+_("size %s specified for data subvolume is too large, maximum is %lld blocks\n"),
-+				        cli->dsize,
-+				        (long long)DTOBT(xi->data.size, cfg->blocklog));
- 				usage();
- 			}
-+		} else {
-+			/* no user size, so use the full block device */
-+			cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
- 		}
--	} else if (cfg->dblocks) {
--		/* check the size fits into the underlying device */
--		if (cfg->dblocks > DTOBT(xi->data.size, cfg->blocklog)) {
-+	} else {
-+		if (!cfg->dblocks && !xi->data.size) {
- 			fprintf(stderr,
--_("size %s specified for data subvolume is too large, maximum is %lld blocks\n"),
--				cli->dsize,
--				(long long)DTOBT(xi->data.size, cfg->blocklog));
-+_("Warning: Empty data file needs a data subvolume size by -d size=<value> option\n"));
- 			usage();
-+		} else if (xi->data.size && !cfg->dblocks) {
-+			cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
- 		}
--	} else {
--		/* no user size, so use the full block device */
--		cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
- 	}
- 
- 	if (cfg->dblocks < XFS_MIN_DATA_BLOCKS(cfg)) {
-@@ -3925,19 +3928,31 @@ _("log size %lld too large for internal log\n"),
- 		usage();
- 	}
- 
--	if (!cfg->logblocks) {
--		if (xi->log.size == 0) {
-+	if (!xi->log.isfile) {
-+		if (!xi->log.size) {
-+			fprintf(stderr, _("can't get size of log subvolume\n"));
-+			usage();
-+		} else if (cfg->logblocks) {
-+			/* check the size fits into the underlying device */
-+			if (cfg->logblocks > DTOBT(xi->log.size, cfg->blocklog)) {
-+				fprintf(stderr,
-+_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-+				        cli->logsize,
-+				        (long long)DTOBT(xi->log.size, cfg->blocklog));
-+				usage();
-+			}
-+		} else {
-+			/* no user size, so use the full block device */
-+			cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
-+		}
-+	} else {
-+		if (!cfg->logblocks && !xi->log.size) {
- 			fprintf(stderr,
--_("unable to get size of the log subvolume.\n"));
-+_("Warning: Empty log file needs a log subvolume size by -l size=<value> option\n"));
- 			usage();
-+		} else if (xi->log.size && !cfg->logblocks) {
-+			cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
- 		}
--		cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
--	} else if (cfg->logblocks > DTOBT(xi->log.size, cfg->blocklog)) {
--		fprintf(stderr,
--_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			cli->logsize,
--			(long long)DTOBT(xi->log.size, cfg->blocklog));
--		usage();
- 	}
- 
- 	if (xi->log.bsize > cfg->lsectorsize) {
-@@ -3968,31 +3983,45 @@ _("size specified for non-existent rt subvolume\n"));
- 		cfg->rtbmblocks = 0;
- 		return;
- 	}
--	if (!xi->rt.size) {
--		fprintf(stderr, _("Invalid zero length rt subvolume found\n"));
--		usage();
--	}
- 
--	if (cli->rtsize) {
--		if (cfg->rtblocks > DTOBT(xi->rt.size, cfg->blocklog)) {
--			fprintf(stderr,
-+	if (!xi->rt.isfile) {
-+		if (!xi->rt.size) {
-+			fprintf(stderr, _("can't get size of realtime subvolume\n"));
-+			usage();
-+		}
-+		if (cfg->rtblocks) {
-+			/* check the size fits into the underlying device */
-+			if (cfg->rtblocks > DTOBT(xi->rt.size, cfg->blocklog)) {
-+				fprintf(stderr,
- _("size %s specified for rt subvolume is too large, maximum is %lld blocks\n"),
--				cli->rtsize,
--				(long long)DTOBT(xi->rt.size, cfg->blocklog));
-+				        cli->rtsize,
-+				        (long long)DTOBT(xi->rt.size, cfg->blocklog));
-+				usage();
-+			}
-+		} else {
-+			/* no user size, so use the full block device */
-+			if (zt->rt.nr_zones) {
-+				cfg->rtblocks = DTOBT(zt->rt.nr_zones * zt->rt.zone_capacity,
-+				                      cfg->blocklog);
-+			} else {
-+				cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-+			}
-+		}
-+	} else {
-+		if (!cfg->rtblocks && !xi->rt.size) {
-+			fprintf(stderr,
-+_("Warning: Empty rt file needs a rt subvolume size by -r size=<value> option\n"));
- 			usage();
-+		} else if (xi->rt.size && !cfg->rtblocks) {
-+			cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
- 		}
--		if (xi->rt.bsize > cfg->sectorsize) {
--			fprintf(stderr, _(
-+	}
-+
-+	if (xi->rt.bsize > cfg->sectorsize) {
-+		fprintf(stderr, _(
- "Warning: the realtime subvolume sector size %u is less than the sector size\n\
- reported by the device (%u).\n"),
--				cfg->sectorsize, xi->rt.bsize);
--		}
--	} else if (zt->rt.nr_zones) {
--		cfg->rtblocks = DTOBT(zt->rt.nr_zones * zt->rt.zone_capacity,
--				      cfg->blocklog);
--	} else {
--		/* grab volume size */
--		cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-+		        cfg->sectorsize, xi->rt.bsize);
- 	}
- 
- 	cfg->rtextents = cfg->rtblocks / cfg->rtextblocks;
--- 
-2.52.0
-
+>
+> Do you recover the performance?
