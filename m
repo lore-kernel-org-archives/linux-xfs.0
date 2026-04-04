@@ -1,97 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.13.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7571F03D2
-	for <linux-xfs@vger.kernel.org>; Sat,  4 Apr 2026 11:43:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 235011531C1;
+	Sat,  4 Apr 2026 12:50:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.13.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775302984; cv=none; b=WKz0+uYRNQAM1em9y6gMS9QjazGxmKOp7/NUfCsdKReYlq3tMlSXybXFEnR/gKCTy1PfCKoxea3nWFAm1s1MvYy1Go0WDlWbes9bw5vtKDZo78oYvz7YLxQdSCdHHIr7plxIciM7BaJ3hzgpvAyISdXXggoo67n6qKxJliFPD9c=
+	t=1775307047; cv=none; b=RFWqGUiYypXEbubCnApAkRi0SLDJ6XnPol3Xdx8fD3Vu3sJQoufVUuqtLgrNsljtUdZuxliibwueWGd7muQAkywutfKXU/OY8XsmhekSFk6wgYOJok+a1X8OaQW6RP/lBB8Ab6ktR2+UC+oalXQZmC2KJe+3RCzickDQB37NGPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775302984; c=relaxed/simple;
-	bh=Sdc6lsfMAqvIc1+DV7eIbKLZnEMQoI+ANeTpAGO2MHc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aFPbBwQb5o+9F5XMHr0Bcjgqgkh/xw/KDPYkHgenQ4ZTtp0j0hcj6QIReLAH8C+BjI/2k7xqvNKBlj/HowAFCPdSGnQ7uH9kBFUydoVLyLza7zJcJIt5OVwwsyyx4ynyZ0jjfYcTj9tz5JmvSpHN+z5s0WG1A02UZn00xJWnEDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PumOeD9P; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775307047; c=relaxed/simple;
+	bh=P/te+KD0J9rMECPDPyLNPpRXKsPe6aC6yoq8W2ao4Nw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T1gXV+5av6rlM+6byHDDDL9la34dzLjjRAZc4446DU19slQjsGQDp+dSuDq/Ur8QMObfNVgepQXQ3ymPXA2hNgycdbSj0lACGCW7MTX3Ax7zbPndCpQgitN3WIm3GeXSsf97w+cpY0GtbDZJW/XWZAKJ3jBZjxs5l90co/RBfKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=IZjvcx48; arc=none smtp.client-ip=52.13.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PumOeD9P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E12DC19421;
-	Sat,  4 Apr 2026 11:43:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775302984;
-	bh=Sdc6lsfMAqvIc1+DV7eIbKLZnEMQoI+ANeTpAGO2MHc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PumOeD9PrfCj3v4zr0BX/wNZxuf5RFB5qfez52edp4luwHU/CiRNfD3UTaOChEcmX
-	 EkdROTqLeZ75OODQ8ldK3PXDxbTgKGsIdf9tN8jTpl/1Q9zHaPtszrOSMH5E9A3CdY
-	 GW2/4P/IpwL+KLBfwPsOI5iQZ1wq6s69WIA180Y0KgPXaU9s/eJCHeFJ3MCO0qdjPX
-	 aqWvp5ONiewd8C84VKXfPRPp7vr27f8Ddy1GWWPwPXth5sZhFBNhRyNlKFrAtNs4yt
-	 6dbH+tSr1WiEHRdDeQflJUFqDWmDp4rtT8sbWQ+qK+jUPjxNg27Q96wZFbxB4idp5n
-	 gtovYJI9O7XWg==
-Date: Sat, 4 Apr 2026 22:42:59 +1100
-From: Dave Chinner <dgc@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: Hang with xfs/285 on 2026-03-02 kernel
-Message-ID: <adDgYCmgNsA9ff3e@dread>
-References: <ac_eUsuxqf6IYN7F@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="IZjvcx48"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1775307046; x=1806843046;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=lP6thk9cUzp3QjFSX27yDwNTPPqLJ1Hkoy80UthEhu0=;
+  b=IZjvcx48RRDCzdVJojNgOrb3m+1JZqRYDHDG7LZO9vXr7kdp+Zj6JXBu
+   6S8lttYB/+uyBXVPaAVo/dj4vrdCqJlOjxNBvVJ0+BFfpUtZbHNQ8yt/h
+   L0C2lkTAWxeR20nxyzQ8EX6g7zCB0XjwU28PF9z7JKouOQmKZuLpb32kn
+   n8OEwWEmEeMzxnGgd71qDeIOvCw7FAtqkQoJdqibNqdtI0ZbOLBSBmel7
+   vVm7n640L17OTa4vZoxksphA/897l+TqrQgHWrDYbxy9IOvxZbCLaQvYU
+   jaBYZUbqZUKiEKfXkggC/yspU+GaGAIXI+Q6nkAuf1Nvo1J9M384yBtM+
+   Q==;
+X-CSE-ConnectionGUID: T4p1uZdSTDCVcPtj+y2Lbw==
+X-CSE-MsgGUID: 3RJYK02ETnygm2uHoj3yRA==
+X-IronPort-AV: E=Sophos;i="6.23,159,1770595200"; 
+   d="scan'208";a="16537733"
+Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
+  by internal-pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Apr 2026 12:50:42 +0000
+Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:18530]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.43.164:2525] with esmtp (Farcaster)
+ id 9fe09342-f0a9-40b0-9cd1-58bcfa997eac; Sat, 4 Apr 2026 12:50:42 +0000 (UTC)
+X-Farcaster-Flow-ID: 9fe09342-f0a9-40b0-9cd1-58bcfa997eac
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sat, 4 Apr 2026 12:50:42 +0000
+Received: from c889f3b07a0a.amazon.com (10.106.82.39) by
+ EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sat, 4 Apr 2026 12:50:41 +0000
+From: Yuto Ohnuki <ytohnuki@amazon.com>
+To: Carlos Maiolino <cem@kernel.org>
+CC: "Darrick J . Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Yuto Ohnuki <ytohnuki@amazon.com>
+Subject: [PATCH] xfs: check directory data block header padding in scrub
+Date: Sat, 4 Apr 2026 13:50:33 +0100
+Message-ID: <20260404125032.37693-2-ytohnuki@amazon.com>
+X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ac_eUsuxqf6IYN7F@casper.infradead.org>
+X-ClientProxiedBy: EX19D045UWC001.ant.amazon.com (10.13.139.223) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-On Fri, Apr 03, 2026 at 04:35:46PM +0100, Matthew Wilcox wrote:
-> This is with commit 5619b098e2fb so after 7.0-rc6
-> INFO: task fsstress:3762792 blocked on a semaphore likely last held by task fsstress:3762793
-> task:fsstress        state:D stack:0     pid:3762793 tgid:3762793 ppid:3762783 task_flags:0x440140 flags:0x00080800
-> Call Trace:
->  <TASK>
->  __schedule+0x560/0xfc0
->  schedule+0x3e/0x140
->  schedule_timeout+0x84/0x110
->  ? __pfx_process_timeout+0x10/0x10
->  io_schedule_timeout+0x5b/0x80
->  xfs_buf_alloc+0x793/0x7d0
+The pad field in xfs_dir3_data_hdr exists for 64-bit alignment and
+should always be zero. The scrub code already checks the pad field for
+leaf and free block headers but was missing the same check for data
+block headers. Add the missing check.
 
--ENOMEM.
+Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+---
+ fs/xfs/scrub/dir.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-It'll be looping here:
-
-fallback:
-        for (;;) {
-                bp->b_addr = __vmalloc(size, gfp_mask);
-                if (bp->b_addr)
-                        break;
-                if (flags & XBF_READ_AHEAD)
-                        return -ENOMEM;
-                XFS_STATS_INC(bp->b_mount, xb_page_retries);
-                memalloc_retry_wait(gfp_mask);
-        }
-
-If it is looping here long enough to trigger the hang check timer,
-then the MM subsystem is not making progress reclaiming memory. This
-is probably a 16kB allocation (it's an inode cluster buffer), and
-the allocation context is NOFAIL because it is within a transaction
-(this loop pre-dates __vmalloc() supporting __GFP_NOFAIL)....
-
-All the other tasks are backed up on the AGI buffer lock held ...
-
->  xfs_buf_get_map+0x651/0xbd0
->  ? _raw_spin_unlock+0x26/0x50
->  xfs_trans_get_buf_map+0x141/0x300
->  xfs_ialloc_inode_init+0x130/0x2c0
->  xfs_ialloc_ag_alloc+0x226/0x710
->  xfs_dialloc+0x22d/0x980
-
-... here by the task blocked on memory allocation.
-
-This smells like a persistent ENOMEM/memory reclaim issue and XFS is
-just the messenger...
-
--Dave.
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index e09724cd3725..2db4def3358c 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -492,7 +492,12 @@ xchk_directory_data_bestfree(
+ 		goto out;
+ 	xchk_buffer_recheck(sc, bp);
+ 
+-	/* XXX: Check xfs_dir3_data_hdr.pad is zero once we start setting it. */
++	if (xfs_has_crc(sc->mp)) {
++		struct xfs_dir3_data_hdr    *hdr3 = bp->b_addr;
++
++		if (hdr3->pad != cpu_to_be32(0))
++			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
++	}
+ 
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out_buf;
 -- 
-Dave Chinner
-dgc@kernel.org
+2.50.1
+
+
+
+
+Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+
+Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
+
+
+
