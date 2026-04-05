@@ -1,113 +1,155 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B048F2877CF;
-	Sat,  4 Apr 2026 20:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D7D2459EA
+	for <linux-xfs@vger.kernel.org>; Sun,  5 Apr 2026 01:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775335615; cv=none; b=N94Tg3Gyx00Srse6dIpRvRyizpK2fUQmOL8Nt7Ibc1GuWgXPNfB40vjKEEtbc6pdghPtPMGMlx6oJcmeOxXf0sCh8lqTsABmA+0DM3+d484t3uR1AO9KUhCffae/V1Afbf+8gaHTNHpZvPtW18N2za94eFRlcKADv8I4heMmgeM=
+	t=1775353104; cv=none; b=h0dZb8aF0NHcutwWtNYTyqebAaRsQ4aftTHFKJvjhj3k+FMN1OQb1RMD1bVI5glq1Ftia3R4HVXXp/UlBbZPD6njCR9Rrwy2+1cbBpjqZRFC4DzosC+Sk2uvU89om0loc0qwgyUvz2+RIyT+8Y8mLpy/8GenLn8fbqNYlLULco4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775335615; c=relaxed/simple;
-	bh=mSTmkv4UXnOl0EgRCt2f8anxnf8qJMHtmD/Nirm1Cbs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RBIDGrXNQRudRACnJ61YLvu4T2WuJrbUsKbZAhN4qVZA2unxuWLKaRW+RwGxE6O3CzeHwhElaRs+94bWeaaIXqDg15uNYaEs1lQ1ZhPqnd4CAlSBCQHwbPyDMO5DsRPLIy4iBNzkt1r8+Pj1/2VJ6G+/2Q0ZjfPYbJAufMgOpos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YQ4CNywE; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1775353104; c=relaxed/simple;
+	bh=ttZ5UOvSYuV+7swKRgQ8dspfpAhsXPOH6YzDMDfJ/Yg=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=tJxIeQDIeqnO5GqGfPZ5YIkyuNRhXbwBN+dCr9O3M+rdEeeNGJRRBvq7bw78sr0B95PBwlSLwJoZNaeVd3TwkssAozu4Drxh2lKdm27ZHAbWGYj6dIXv6KXfF+Qm3V772uVdyqTkhFdihJZLkq9XGzTnOL/1zN3T2qcNxdBf5Iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XTzujzOt; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YQ4CNywE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=hsCkEyNl1lnp1czfTsQmmel5+1299ohDP+2LAG1kJTw=; b=YQ4CNywEPe47yEr9rMZ/tGxSAf
-	vBBrL5CLil1pMIQhxdubKnoQUdmUnLbS5NoUbezngMT/EaxGSGpOfBO7DCsgFWwVgDdrZcIYUbaqA
-	FLqTDwGStPdCw3tiTutzFqbKKGUEpbPfuyBd3Xn7PVermVrMcgfEiXjddNQIY6xj+lq1CSIv89DaX
-	GIiyGil5Lyvz3VmGEHgtbC1DuNsJJqTqLn5Tw0DPBl19vd6PZz0JiYoHj5RqCsiJaWWs1rbFBIXrO
-	9FepSaecvQo5S1O5foXjHHOb9zOmfxt3EnvuGjNt8PYPl0xHNAo37D/HB2pS5kr4w2RkaXzwjV5E/
-	AOyB2mtg==;
-Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w97tJ-0000000GNZd-3hHD;
-	Sat, 04 Apr 2026 20:46:49 +0000
-Date: Sat, 4 Apr 2026 21:46:49 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: Salvatore Dipietro <dipiets@amazon.it>, linux-kernel@vger.kernel.org,
-	alisaidi@amazon.com, blakgeof@amazon.com, abuehaze@amazon.de,
-	dipietro.salvatore@gmail.com, stable@vger.kernel.org,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order
- allocation
-Message-ID: <adF4uWa0pikq9Vea@casper.infradead.org>
-References: <20260403193535.9970-1-dipiets@amazon.it>
- <20260403193535.9970-2-dipiets@amazon.it>
- <adCQTF1PQnlbNMO8@casper.infradead.org>
- <5x66n04a.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XTzujzOt"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-35da01fc0baso2014138a91.2
+        for <linux-xfs@vger.kernel.org>; Sat, 04 Apr 2026 18:38:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1775353102; x=1775957902; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=A/s+fTa/nlSPGUk5KAyxJa+HAMux5I9zV9tdLw5F3NA=;
+        b=XTzujzOtIREl2Riw0SAKGJDNy4IyV7bj7vRSPYS9Uj0Xsl+KjA1RvAJn0Qiy6YXD8F
+         4oQE8hSQsg/n+HYlRPSksM6ST2+KsmM2nmeBDBuBQQTz7ETEIAx1aBisrTva+dcOgKd+
+         QGz6lmOD4IGDYHVq3tSKQJXXm7+Twc98LTzyFgcMDWFIrXoz01faixXfR/C1VyTK0Nk6
+         f2J1jl30GhBSPvsRRs5Q8HMKpgyxl9bnrf0Qjtrczo+i4WwnprBOYB716gVDIHjh2yjs
+         7UXu9Jt77D5AC1z+7IgTa+AiRnLpU3x8y1oWtWJlPFnU5rjV0LV1NuYexai68uuNCp81
+         5ADQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775353102; x=1775957902;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=A/s+fTa/nlSPGUk5KAyxJa+HAMux5I9zV9tdLw5F3NA=;
+        b=sLDLiHjKoTcPFOVI1O+HztB5PZW7n2R05xOvpERbaJ7XC4D+iGdf9kNmRFWG4J3q9j
+         ASNNKc+mHmidzOC07JRVhgtFoe+dqsKPagCVy1z0+imCHyVf+mnvB/QCl8uHYB8qjCaU
+         3mLXlwZDUKmtLC5eYreWmzuDoI3FSNYmaepkxV2BMHz7XjCPZ4ni5qOfFd+i6WJxZITU
+         yE18f9rOqP81qpW/Xo+R1ifjTaNilfpxwX+oRpzXFLM0ws2yyscyopO9z/wVIwi/2wf5
+         FhcX5EfcGQ0BTPQsfq80eC+t++n+YJ3sry+C8wXip5cVKMWRSi1mdVLdm0EHPj3QO6EL
+         G9cA==
+X-Gm-Message-State: AOJu0Yz5Z+SchAape+9ACG8tchmulkKlBa6nVYXeAnxGcVX4XoaO8Ncm
+	uCWcS921NnSj3nqJ+0zN4eoOtqrwK6VtbG+ImJKDF303D7nLpzsx/agkcaVlIw==
+X-Gm-Gg: AeBDietMRvJ7HEi9hfOVjl5JAcQowAW4a8tAlmeByNdE/6REGPVPFWzMwRji22KBo8s
+	nrxGnen7AZy+UAnV3mN712YLcyycYga8seDZfbRr5FjPu+y1Qshw73zfgaJ5fVxeXAZ3e2nwQOd
+	NVQsZtlEbqkDorDvkV2zxRsXPVggzft/VaoZD0m7hVZ9ECrI645Rjppvd8+UKo6CZtyQFVX5p+M
+	rgXNev9dSw2gTiQbTqeKEEvLDotVYljagTHpBIOQUqIMrqtgj5ZG9Qr6lBJyQFhbX5Zi3u9akam
+	tvMf2cKobs5fhBqnir+zgKJ1Dhf3M6C9dlvSpA4mSanoti1BnwIipncilW/wDE/ib/MO0PSnIeb
+	04U3xLzWtcRAEaiHSerlGQHBpsMy+Iz5SD4CNJsKV+LyfkzA8ezn6zRjeILeTOkwhEmH8QCJuo6
+	7dMxAZzBOK+rylL+EGVBFMVHZyh/Bn0gtO
+X-Received: by 2002:a17:902:c942:b0:2b2:42da:25cd with SMTP id d9443c01a7336-2b281889bbfmr94391155ad.45.1775353101998;
+        Sat, 04 Apr 2026 18:38:21 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27497aeffsm97930905ad.43.2026.04.04.18.38.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 Apr 2026 18:38:21 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Dave Chinner <dgc@kernel.org>, Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Hang with xfs/285 on 2026-03-02 kernel
+In-Reply-To: <adDgYCmgNsA9ff3e@dread>
+Date: Sun, 05 Apr 2026 06:33:59 +0530
+Message-ID: <341amd4w.ritesh.list@gmail.com>
+References: <ac_eUsuxqf6IYN7F@casper.infradead.org> <adDgYCmgNsA9ff3e@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5x66n04a.ritesh.list@gmail.com>
 
-On Sat, Apr 04, 2026 at 10:17:33PM +0530, Ritesh Harjani wrote:
-> Matthew Wilcox <willy@infradead.org> writes:
-> 
-> > On Fri, Apr 03, 2026 at 07:35:34PM +0000, Salvatore Dipietro wrote:
-> >> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> >> introduced high-order folio allocations in the buffered write
-> >> path. When memory is fragmented, each failed allocation triggers
-> >> compaction and drain_all_pages() via __alloc_pages_slowpath(),
-> >> causing a 0.75x throughput drop on pgbench (simple-update) with 
-> >> 1024 clients on a 96-vCPU arm64 system.
-> >> 
-> >> Strip __GFP_DIRECT_RECLAIM from folio allocations in
-> >> iomap_get_folio() when the order exceeds PAGE_ALLOC_COSTLY_ORDER,
-> >> making them purely opportunistic.
-> >
-> > If you look at __filemap_get_folio_mpol(), that's kind of being tried
-> > already:
-> >
-> >                         if (order > min_order)
-> >                                 alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
-> >
-> >  * %__GFP_NORETRY: The VM implementation will try only very lightweight
-> >  * memory direct reclaim to get some memory under memory pressure (thus
-> >  * it can sleep). It will avoid disruptive actions like OOM killer. The
-> >  * caller must handle the failure which is quite likely to happen under
-> >  * heavy memory pressure. The flag is suitable when failure can easily be
-> >  * handled at small cost, such as reduced throughput.
-> >
-> > which, from the description, seemed like the right approach.  So either
-> > the description or the implementation should be updated, I suppose?
-> >
-> > Now, what happens if you change those two lines to:
-> >
-> > 			if (order > min_order) {
-> > 				alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
-> > 				alloc_gfp |= __GFP_NOWARN;
-> > 			}
-> 
-> Hi Matthew,
-> 
-> Shouldn't we try this instead? This would still allows us to keep
-> __GFP_NORETRY and hence light weight direct reclaim/compaction for
-> atleast the non-costly order allocations, right?
-> 
->  			if (order > min_order) {
-> 				alloc_gfp |= __GFP_NOWARN;
-> 				if (order > PAGE_ALLOC_COSTLY_ORDER)
-> 					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
-> 				else
-> 					alloc_gfp |= __GFP_NORETRY;
-> 			}
+Dave Chinner <dgc@kernel.org> writes:
 
-Uhh ... maybe?  I'd want someone more familiar with the page allocator
-than I am to say whether that's the right approach.  If it is, that
-seems too complex, and maybe we need a better approach to the page
-allocator flags.
+> On Fri, Apr 03, 2026 at 04:35:46PM +0100, Matthew Wilcox wrote:
+>> This is with commit 5619b098e2fb so after 7.0-rc6
+>> INFO: task fsstress:3762792 blocked on a semaphore likely last held by task fsstress:3762793
+>> task:fsstress        state:D stack:0     pid:3762793 tgid:3762793 ppid:3762783 task_flags:0x440140 flags:0x00080800
+>> Call Trace:
+>>  <TASK>
+>>  __schedule+0x560/0xfc0
+>>  schedule+0x3e/0x140
+>>  schedule_timeout+0x84/0x110
+>>  ? __pfx_process_timeout+0x10/0x10
+>>  io_schedule_timeout+0x5b/0x80
+>>  xfs_buf_alloc+0x793/0x7d0
+>
+> -ENOMEM.
+>
+> It'll be looping here:
+>
+> fallback:
+>         for (;;) {
+>                 bp->b_addr = __vmalloc(size, gfp_mask);
+>                 if (bp->b_addr)
+>                         break;
+>                 if (flags & XBF_READ_AHEAD)
+>                         return -ENOMEM;
+>                 XFS_STATS_INC(bp->b_mount, xb_page_retries);
+>                 memalloc_retry_wait(gfp_mask);
+>         }
+>
+> If it is looping here long enough to trigger the hang check timer,
+> then the MM subsystem is not making progress reclaiming memory. This
+
+Hi Dave,
+
+If that's the case and if we expect the MM subsystem to do memory
+reclaim, shouldn't we be passing the __GFP_DIRECT_RECLAIM flag to our
+fallback loop? I see that we might have cleared this flag and also set
+__GFP_NORETRY, in the above if condition if allocation size is >PAGE_SIZE.
+
+So shouldn't we do?
+
+        if (size > PAGE_SIZE) {
+                if (!is_power_of_2(size))
+                        goto fallback;
+-               gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+-               gfp_mask |= __GFP_NORETRY;
++               gfp_t alloc_gfp = (gfp_mask & ~__GFP_DIRECT_RECLAIM) | __GFP_NORETRY;
++               folio = folio_alloc(alloc_gfp, get_order(size));
++       } else {
++               folio = folio_alloc(gfp_mask, get_order(size));
+        }
+-       folio = folio_alloc(gfp_mask, get_order(size));
+        if (!folio) {
+                if (size <= PAGE_SIZE)
+                        return -ENOMEM;
+                trace_xfs_buf_backing_fallback(bp, _RET_IP_);
+                goto fallback;
+        }
+
+
+-ritesh
+
+> is probably a 16kB allocation (it's an inode cluster buffer), and
+> the allocation context is NOFAIL because it is within a transaction
+> (this loop pre-dates __vmalloc() supporting __GFP_NOFAIL)....
+>
+> All the other tasks are backed up on the AGI buffer lock held ...
+>
+>>  xfs_buf_get_map+0x651/0xbd0
+>>  ? _raw_spin_unlock+0x26/0x50
+>>  xfs_trans_get_buf_map+0x141/0x300
+>>  xfs_ialloc_inode_init+0x130/0x2c0
+>>  xfs_ialloc_ag_alloc+0x226/0x710
+>>  xfs_dialloc+0x22d/0x980
+>
+> ... here by the task blocked on memory allocation.
+>
+> This smells like a persistent ENOMEM/memory reclaim issue and XFS is
+> just the messenger...
+>
+> -Dave.
+> -- 
+> Dave Chinner
+> dgc@kernel.org
