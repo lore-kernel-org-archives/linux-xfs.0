@@ -1,117 +1,66 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EDDA31B833;
-	Mon,  6 Apr 2026 05:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A965E2E1722;
+	Mon,  6 Apr 2026 06:59:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775455068; cv=none; b=TWMfpHIqNesfV/Morl+ZtaeUB470dQv/EilGwfAS96KnmvTpQnhxSI8ISxZm+wQ0BSpw+z3hPvTnOmeBT3GOZl1GvK0IipGLW09qv9MUSRyp7ZeUKKHVGs7RH8D2TU2qXLWkz9FgdfXBKY0lRBqAIc/Yvy6tXlBSF8QMZi7qFz0=
+	t=1775458779; cv=none; b=E0NHQ0vcXR+X2S0WTJ9lpHLybYiGfC41jo58/ydODkdAl+g4ReRVia4XrMeQAIXbvRC1vzfCPZEHy8hphYCVxxfd5y0ioAidMimnKgzzcPkjn3ZIKQTKKYZ7T8ZpK7CZ4ss5JFoHJrQTaQLc948nZxiI6W1bCmtIIxrwdVOMwM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775455068; c=relaxed/simple;
-	bh=5RCkDzsxoob9+QDCxrpF3NUyE0/1oVchsLVVFYtyAP4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rb4ojHCQ1E9jRtnIbwmiHgyH5YO0SOfm82HyYhrHfRS+V6U1iQEtHYk23cevpSuMcBVR7JW27bJyaayemV1lDVJHHFLS49iTwcTZo89c7MKR6+8GA9Hst+pMuFsDaA8pEbmW63+El3xnvwcjQQ+msxMMI4nUTidXBYwLuPPjF34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=B6Yv7qU1; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1775458779; c=relaxed/simple;
+	bh=TINOOEzYXZk6Uyul8GJb/de3g2f7kAZbZ5P/QnqTTIg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XsbYRQLe/9ulhCV1EbyYCFO3jJAIEN/vHWmYxiRgoT2jLHQbjuyjporLQuLr6j5TgnwH6rD3ORKq2qOOMXHNmPC+nf270izIQpoKFd0bLCGILVTDqqCZ18f6aCWfRvc72k7KtC8enVoxQEH2X0GwPPm9+I1eG8DDjGpQoVf4HEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IL7BpSmT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="B6Yv7qU1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=NeLzseTk8X1y6pPPVWXipKEd5An/y7cUypxk5FZQ04c=; b=B6Yv7qU1OKrFwTTKYFpF+yozav
-	3UFpNj/1E+5WUFv/Sbbm3cCQcr7/jvkZOiCE2HhpoJEuT8te/gm0U46JjgeE6J0yFUE8SV9txL04g
-	CKQ0N7LI55dPKwIFoMX9FwKSGSUG8nCFulREIrWcSMv2pzH2j8qDQzKpwaaq9G5mvGZlRqDf76iqT
-	yFhfDnDj9EbVwMXcoagolevcO2UQrWAFAORjc7tTpazqmX77A/bPTjuGfwV90e4PEc7+HniWzBZuh
-	t4jqZ2fwAauTQ8zZZqVb/uYF6mSqtBJax49vgqk7gsHR+psc8SXGbR0WBfwWYSIwyvuDDtsvS3HqY
-	SoKa5sxA==;
-Received: from [2a02:1210:321a:af00:3fa:89ae:5c22:a910] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w9cy2-00000004pVn-3PAk;
-	Mon, 06 Apr 2026 05:57:47 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] xfs: use bio_await in xfs_zone_gc_reset_sync
-Date: Mon,  6 Apr 2026 07:57:23 +0200
-Message-ID: <20260406055728.472919-5-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260406055728.472919-1-hch@lst.de>
-References: <20260406055728.472919-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IL7BpSmT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74D0AC4CEF7;
+	Mon,  6 Apr 2026 06:59:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775458779;
+	bh=TINOOEzYXZk6Uyul8GJb/de3g2f7kAZbZ5P/QnqTTIg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=IL7BpSmTnlnaTWOvOcWyXSjKE+hOwx9vA2ojDNS9lYDWTVvKlJedDG14OG/vBIRbq
+	 ASLwGnENjQ22YZGbM1Luw8PcrAIg7YrJbNzqE1v3m0bljjV5XNMFGfPSeEIEvGen7G
+	 BrFMuVo6+zYlR8Onag77o5zmMLZgNnjRAPPHk3OkUfqI4VuaDXcVyFEchCiOtufSsW
+	 TL556mill9znmaDcMtKALwyCt5Eg9cfwQV2U8Lo1bTmvn/UPxjGFLYqrk7zF7xGENP
+	 dk+bHU9F2F92sjnoasxRzACl9TpV749XU1CXalKfg/T6RhVHD/pa/f6CyemUDwXJHf
+	 Tot3fq4a1ZKuA==
+Message-ID: <5327b55d-d66f-4830-abc7-6a890ebbfef4@kernel.org>
+Date: Mon, 6 Apr 2026 08:59:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/4] block: unify the synchronous bi_end_io callbacks
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Carlos Maiolino <cem@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20260406055728.472919-1-hch@lst.de>
+ <20260406055728.472919-2-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260406055728.472919-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Replace the open-coded bio wait logic with the new bio_await helper.
+On 2026/04/06 7:57, Christoph Hellwig wrote:
+> Put the bio in bio_await_chain after waiting for the completion, and
+> share the now identical callbacks between submit_bio_wait and
+> bio_await_chain.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_zone_gc.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+Looks good to me.
 
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index eebe6f4fee1f..b2626a482563 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -900,9 +900,10 @@ xfs_zone_gc_finish_reset(
- 
- static void
- xfs_submit_zone_reset_bio(
--	struct xfs_rtgroup	*rtg,
--	struct bio		*bio)
-+	struct bio		*bio,
-+	void			*priv)
- {
-+	struct xfs_rtgroup	*rtg = priv;
- 	struct xfs_mount	*mp = rtg_mount(rtg);
- 
- 	trace_xfs_zone_reset(rtg);
-@@ -934,26 +935,16 @@ xfs_submit_zone_reset_bio(
- 	submit_bio(bio);
- }
- 
--static void xfs_bio_wait_endio(struct bio *bio)
--{
--	complete(bio->bi_private);
--}
--
- int
- xfs_zone_gc_reset_sync(
- 	struct xfs_rtgroup	*rtg)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
- 	struct bio		bio;
- 	int			error;
- 
- 	bio_init(&bio, rtg_mount(rtg)->m_rtdev_targp->bt_bdev, NULL, 0,
- 			REQ_OP_ZONE_RESET | REQ_SYNC);
--	bio.bi_private = &done;
--	bio.bi_end_io = xfs_bio_wait_endio;
--	xfs_submit_zone_reset_bio(rtg, &bio);
--	wait_for_completion_io(&done);
--
-+	bio_await(&bio, rtg, xfs_submit_zone_reset_bio);
- 	error = blk_status_to_errno(bio.bi_status);
- 	bio_uninit(&bio);
- 	return error;
-@@ -990,7 +981,7 @@ xfs_zone_gc_reset_zones(
- 		chunk->data = data;
- 		WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
- 		list_add_tail(&chunk->entry, &data->resetting);
--		xfs_submit_zone_reset_bio(rtg, bio);
-+		xfs_submit_zone_reset_bio(bio, rtg);
- 	} while (next);
- }
- 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+
 -- 
-2.47.3
-
+Damien Le Moal
+Western Digital Research
