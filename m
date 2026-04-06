@@ -1,237 +1,136 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949FA40DFDC
-	for <linux-xfs@vger.kernel.org>; Mon,  6 Apr 2026 16:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1D5D3328E6
+	for <linux-xfs@vger.kernel.org>; Mon,  6 Apr 2026 17:05:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775494071; cv=none; b=Frw/FuxohVWD/cIdcDG1zBDUT8QAyd7YcvHgokw4hHhP15rIYuqhLL7OC9mlEYdELVb5bVxFC9PzG2kdrFpF0BhAFsgE17QMTDK6ciphRDozkRzVzykQL/txChT1MPb4KnhmjxRMX7qWp3v+E49nOCm4RncWj5opcJtVWki1c5s=
+	t=1775495139; cv=none; b=RSu8ZNnsdNVYf54jSY5NtQLvnvJ1Zd5/1uP9/VbdEX/Vh+XCsD02eVqP1T8lYGzTuqoYKicUhnUgrcjes9pYBz7ykIXMmzLF42I45ktmHnNzPmUsCU4RYFXoO2IR3mgrdxHIm9/5A2MXInbqiwZ7IRATfON/U0mWDIvNrnhs9sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775494071; c=relaxed/simple;
-	bh=YQjtijkil8IuHS5qRJav6JiZ9AIjX9Xz5Dh89dM/9iA=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=IsSh+NxgBw1Fw2SuQJ3zmgJ7V0Q/fNtzwgGezhOjaEbOJ1vXShlvQe/+5WhpnzvS4KQHerT43rAmZS+tN7FbSo2Oq78f1LO7yeJYziNpdrSB5VJcbC5KVc7mVMYwn1sPYTLXz+djT7xOhUjH9wgo92xGiLkkDeWeuMBmw3vnEgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RxdQmqu/; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775495139; c=relaxed/simple;
+	bh=i1FBzzgd6g25OyRIBCssNPzR0Gi9AaTz7cseTNTRLdE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A80ymExqZjR56M82hhQ/Z/KIK0IBNdLo390fBdT06HuIRJaWJhUVnCJDFKfr9cCqmsVUMe4LE6nzJj/M/s4/ZDXLJ4a9Ce+Kjk6atQvJnC18Sci0ZxCVXQIHUz6styFUcLrvQTdG0mSY29WBNc02Jy4lAGjwid9p3bUBexNtWt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OizCd4ph; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=MvUXOR1A; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RxdQmqu/"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2b23f90f53aso37767275ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Apr 2026 09:47:50 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OizCd4ph";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="MvUXOR1A"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775495137;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+qTwXZ6MKD56LdsiHGj4K7RlXwiXwOsYAGKNXyywo88=;
+	b=OizCd4phDmWtyvS8zyq5FA3JD3LNH5GO7xh2A/NNsEldiKnsIar9IjPQF+t85EQWFAx4us
+	HFl24X7tNAiBYaP3Ve+ouhpMoHPbc7cfRh+Ng6CQ1Xk7McoGcXSoA7FQdOwruBSCoaez+0
+	UaZWeNCURhLVtSNOSd7E/8ow/udUpUA=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-313-7nA3MPojMc6N9bpo7QxZeA-1; Mon, 06 Apr 2026 13:05:36 -0400
+X-MC-Unique: 7nA3MPojMc6N9bpo7QxZeA-1
+X-Mimecast-MFC-AGG-ID: 7nA3MPojMc6N9bpo7QxZeA_1775495135
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-c76c60c74f3so2003536a12.2
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Apr 2026 10:05:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775494069; x=1776098869; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=W78qkfkxPwPcnq1LIM7hcRlp/GGhRAzLsiL+edV0Ccs=;
-        b=RxdQmqu/hjCrRNhyZpdEm3mBsBpAe5wSXH8oLs9fg/yrHiEKXeEX+vWElJnfGdHS8I
-         Sd36NSfE6TvQkVWcS0Sf+fWvosuhzoqK/PkoS8Mc1o4Xd7dEqsapWg2vRrnb9g6agMZe
-         JTF8CpYdt/YAsF/CaL2KKlW8ZOK27gL07Xd+dYrpdx552/dO6E8Gi8HztZ/CfGUwqICu
-         R15nKvtyUIHZA9SkBGiOFN2Mem+Fi3IhbQdNM6GZAA0mUmu2/6jfzYoBfKUrlIWatZk2
-         D4vUpYF8fHMXE7vbSQH4VxUk5eGClF7gqMKY3kWvWoTWFxC2kkeYABir2ALPe2rIj26n
-         +NYA==
+        d=redhat.com; s=google; t=1775495135; x=1776099935; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+qTwXZ6MKD56LdsiHGj4K7RlXwiXwOsYAGKNXyywo88=;
+        b=MvUXOR1AyB7bmTLpeI01yeJB04RzWrqt2LTf2MQAzNHArMI0xaZF5U0JeO0y/j2Lcm
+         1zfpYHFSWLk87ViON1BvykL4fe1L2gvdtxnw8gmJYkBc5zKIF4G6VMC1gkWTuXsqiqBv
+         dD40wSqoKGQRE/Mu9Cj54DEdKc8Dhp53OpRC0fjPMMEwRLJ88rFZMk6Am2tVFO+LkYTQ
+         Jq9J8sAvmdLXHdBOYevsF7NphLH0vn87M0sGau5pKFtyPy+Nr0Szs3RVGmqVI1WScYRG
+         FpPKrNuq2VOjcN5kcLB7j4zgAI6Qwqy9tkxpueA9xvjfWgyu7vYVJMbdtoK8nJSBMDOq
+         q2UA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775494069; x=1776098869;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=W78qkfkxPwPcnq1LIM7hcRlp/GGhRAzLsiL+edV0Ccs=;
-        b=PAg25GgN5C+cVYTzxl5JRsPHr/dBGrOgsO6j+HGdQmUijXcihr4f6lZyGzX1uwTgzo
-         9qK5YglHFdWH37BUstcTmNxK1Ifr+EOkvVN7/QKZu503v3mK/z7W1lRT0jTlaZWGeSy/
-         YInojwvbXK56aODgy6TSyCOdo5Q75hXZO7Rq3mcKYXHI3e5P+EbZjl3JFJUpvp3oasAv
-         GIxMBmILa3COPZUob1Xf2ToIFymDTSl9aIZhvQa9TiASdEIy1Xj8tjG/ZCfqhFnLvQRt
-         nBhz2QivHXVVZcUfdfyZ/ZiZ6u8HECPn90ZtMHEkrqvNWH64apuWuZ5OI0TyTWZf81xl
-         kfPg==
-X-Forwarded-Encrypted: i=1; AJvYcCXGwAbe7+P1d4focT8MAFOMyHneQ8R9yxA9g063RxdQImYhRpdI5L49R/dZAd6LR+C70f69vJ31fcA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXegQgy3b0FBLMJKNFA/jlX21a2UqKF2H+lmrz1l1lhY1NJHUB
-	hmBpaEAFHfp5ZnIdX4ZgqVT9xqy76H2kIPyukjEGtL36LWp0eGdyfFyP/Y2yjA==
-X-Gm-Gg: AeBDievxNAcVGT8x71wQQAVUlfqH1xADG3IISt7z6tsz8Buxq6meBmSJS7Cur6n4z9r
-	zNNb8IGMjK1/bv22rZZJmwC/R+crsyBtxRQXa2mmkJN6GmDKiiIkeOZk47G6Z08wialNz/gQClA
-	6fd8bdPcnF/UH76sWB0SXzRzTKz/aNbkmfrzXA2dwyKhiLmPD6/O8ld+9E+rhVlLKw4HutcYWld
-	AWmpg8Hpf7VQX0emUQhFMoNbw1zcCw98sgIhury03rWHe36JBMgd0OfUusKz+J77N9WHhdAGfHP
-	L+r64pmoA63rOP0AVkJqCzIOG3gtlrkcqk0YTvT8QmehlB0yXNUBYNOcOo8uf2XXdplpInFA9NQ
-	bIYTzSXgBpxfvqHN2Quw1sS/z9m+3Da3OcETlh5+HlnZsHCZAHWXlBeL0PHsrn+3qnHt4OHH5Ch
-	g4Ske5Cm/j3wzlIHEorJUEMw==
-X-Received: by 2002:a17:903:384f:b0:2ae:55eb:f82d with SMTP id d9443c01a7336-2b28167626emr142728685ad.1.1775494069194;
-        Mon, 06 Apr 2026 09:47:49 -0700 (PDT)
-Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b274979500sm194919365ad.44.2026.04.06.09.47.46
+        d=1e100.net; s=20251104; t=1775495135; x=1776099935;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+qTwXZ6MKD56LdsiHGj4K7RlXwiXwOsYAGKNXyywo88=;
+        b=XxXZH6+ptsr5Twf3/UKS1x/xcHbQcqAdhtK5C6adLZnKNzRxB3wj2xro06wY5T/jSv
+         FQptWisp1qfV4uSAEE7uVPjwKjMAvY/RnMis2+7wlmvufesxS5pg26GCIDKNelT4lcbJ
+         jJ174255CLXzOBGTc+dGmIqFSYenlKDspcMq0NhFMAWJt/istYsAkfrnfNUOANvTnCm3
+         pgnlWA96qALAd/iMfzFJY2vV3DUgZaOC7ieUCvOZLUGHvHo8KWJVLzZm8NyIU7c8pdir
+         +Bj6SWfo/koW17u+Wq/GtWO8qV9LLhiB4S046XePM0rqlX6bTCN/WLCzAHZcSig1lsyq
+         zaBA==
+X-Forwarded-Encrypted: i=1; AJvYcCX3STRHL6TSoM4RRZL0lxFgblDNo8KwTYx7mf7PQ4xcB+QiZ2VAuF7P1V3J5yON8I73vtAgLYGJFdM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwN5x0P/RICcZEtHPscs0704oqda/sOgXD1Fe8w+7LGw4liCUtl
+	XVMXQpQgdWkrfRepvZtDbp/H10L4CHpJFPPFtiivw1Ga39gHaEC3adChc5u7Ab+KschjlkKUMKV
+	e3IWq4inOazX0j0JbweEnj1Vurux2fM9MWP+120GbxItDx8Hw4JHxg2hO9sXjvQ==
+X-Gm-Gg: AeBDiev0uK9cUTq+DLUttEX+YbYmAWLVXcJuMM4XAGfr4f90AkT8IQwEnQmudpYpEY/
+	zEfbvUo7T5pdQW18pDn5DBM/XaWFlFGnfXwfQ+l70p4QUn12+BI5crjpw29p+NZGNF5ASY/XW4d
+	kImaLrDuqCtOj0gmqbZG46wBy1of5qHqypaDBIphzit+SZPlf/ibleqJNLE/mrIe2nbpwaPNnii
+	KsVhLE9DYiRzlrIMy7TbJtb2yMpZHWDQUtNuwkUlX1eXTcCz3CW1a5A4RYohlIBRKp820fA5SpV
+	GgBYiHxZJE5VaBU8JqZ4oKH+Q9lZ9wDpPQHy9qVgWqOZlBINYG59liICUPh/5WMH/UcQOYY7w75
+	bmkrmCf1Y5svg5wE7Ng==
+X-Received: by 2002:a05:6a21:a395:b0:39f:64d7:9372 with SMTP id adf61e73a8af0-39f64d798d7mr6631825637.41.1775495135328;
+        Mon, 06 Apr 2026 10:05:35 -0700 (PDT)
+X-Received: by 2002:a05:6a21:a395:b0:39f:64d7:9372 with SMTP id adf61e73a8af0-39f64d798d7mr6631783637.41.1775495134739;
+        Mon, 06 Apr 2026 10:05:34 -0700 (PDT)
+Received: from doltdoltdolt ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c76c6492097sm12917602a12.10.2026.04.06.10.05.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Apr 2026 09:47:48 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Dave Chinner <dgc@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: Hang with xfs/285 on 2026-03-02 kernel
-In-Reply-To: <adLfJwoi1lZhnbjn@dread>
-Date: Mon, 06 Apr 2026 05:57:06 +0530
-Message-ID: <y0j1kk6d.ritesh.list@gmail.com>
-References: <ac_eUsuxqf6IYN7F@casper.infradead.org> <adDgYCmgNsA9ff3e@dread> <341amd4w.ritesh.list@gmail.com> <adLfJwoi1lZhnbjn@dread>
+        Mon, 06 Apr 2026 10:05:34 -0700 (PDT)
+Date: Tue, 7 Apr 2026 01:05:28 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, dlemoal@kernel.org,
+	hans.holmberg@wdc.com, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: add a test for number of open zones on
+ conventional devices
+Message-ID: <20260406170528.sxcm3qcndjhwm7pp@doltdoltdolt>
+References: <20260331152341.4047725-1-hch@lst.de>
+ <20260331211807.gofhlabxlr3mdxnr@doltdoltdolt>
+ <20260401061828.GA24293@lst.de>
+ <20260401075952.ifuz3kqfq3g7c4gf@doltdoltdolt>
+ <20260401140646.GA21703@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260401140646.GA21703@lst.de>
 
+On Wed, Apr 01, 2026 at 04:06:46PM +0200, Christoph Hellwig wrote:
+> On Wed, Apr 01, 2026 at 03:59:52PM +0800, Zorro Lang wrote:
+> > > > > +_scratch_mkfs -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
+> > > > > +	> "$seqres.full" 2>&1
+> > > > 
+> > > > I usually tack on "|| _fail 'mkfs failed'" after _scratch_mount if it's
+> > > > using extra options. That way, we'll know for sure if the mkfs actually
+> > > > failed.
+> > > 
+> > > Yes, that is useful here, especially if we want to support older kernels
+> > > before the zoned device support or !CONFIG_XFS_RT kernels.
+> > 
+> > Oh, if so, we might need _require_realtime. But that's still not enough to
+> > check mkfs.xfs and mount.xfs on old system (then notrun), we might need
+> > more _require_* helpers for this test. What do you think?
+> 
+> 
+> I think _notrun if mkfs or the initial mount fails might be easier and
+> better here.
 
-Thanks Dave for your inputs. I have few more data points on the same.
-It will be nice to know your thoughts on this.
+How about a _require_xfs_mkfs_zoned ?
 
-Dave Chinner <dgc@kernel.org> writes:
+And about `_scratch_mount -o max_open_zones=${open_zones}`, if max_open_zones
+mount option isn't supported, _scratch_mount will fail directly. So how about
 
-> On Sun, Apr 05, 2026 at 06:33:59AM +0530, Ritesh Harjani wrote:
->> Dave Chinner <dgc@kernel.org> writes:
->> 
->> > On Fri, Apr 03, 2026 at 04:35:46PM +0100, Matthew Wilcox wrote:
->> >> This is with commit 5619b098e2fb so after 7.0-rc6
->> >> INFO: task fsstress:3762792 blocked on a semaphore likely last held by task fsstress:3762793
->> >> task:fsstress        state:D stack:0     pid:3762793 tgid:3762793 ppid:3762783 task_flags:0x440140 flags:0x00080800
->> >> Call Trace:
->> >>  <TASK>
->> >>  __schedule+0x560/0xfc0
->> >>  schedule+0x3e/0x140
->> >>  schedule_timeout+0x84/0x110
->> >>  ? __pfx_process_timeout+0x10/0x10
->> >>  io_schedule_timeout+0x5b/0x80
->> >>  xfs_buf_alloc+0x793/0x7d0
->> >
->> > -ENOMEM.
->> >
->> > It'll be looping here:
->> >
->> > fallback:
->> >         for (;;) {
->> >                 bp->b_addr = __vmalloc(size, gfp_mask);
->> >                 if (bp->b_addr)
->> >                         break;
->> >                 if (flags & XBF_READ_AHEAD)
->> >                         return -ENOMEM;
->> >                 XFS_STATS_INC(bp->b_mount, xb_page_retries);
->> >                 memalloc_retry_wait(gfp_mask);
->> >         }
->> >
->> > If it is looping here long enough to trigger the hang check timer,
->> > then the MM subsystem is not making progress reclaiming memory. This
->> 
->> Hi Dave,
->> 
->> If that's the case and if we expect the MM subsystem to do memory
->> reclaim, shouldn't we be passing the __GFP_DIRECT_RECLAIM flag to our
->> fallback loop? I see that we might have cleared this flag and also set
->> __GFP_NORETRY, in the above if condition if allocation size is >PAGE_SIZE.
->> 
->> So shouldn't we do?
->> 
->>         if (size > PAGE_SIZE) {
->>                 if (!is_power_of_2(size))
->>                         goto fallback;
->> -               gfp_mask &= ~__GFP_DIRECT_RECLAIM;
->> -               gfp_mask |= __GFP_NORETRY;
->> +               gfp_t alloc_gfp = (gfp_mask & ~__GFP_DIRECT_RECLAIM) | __GFP_NORETRY;
->> +               folio = folio_alloc(alloc_gfp, get_order(size));
->> +       } else {
->> +               folio = folio_alloc(gfp_mask, get_order(size));
->>         }
->> -       folio = folio_alloc(gfp_mask, get_order(size));
->>         if (!folio) {
->>                 if (size <= PAGE_SIZE)
->>                         return -ENOMEM;
->>                 trace_xfs_buf_backing_fallback(bp, _RET_IP_);
->>                 goto fallback;
->>         }
->
-> Possibly.
->
-> That said, we really don't want stuff like compaction to
-> run here -ever- because of how expensive it is for hot paths when
-> memory is low, and the only knob we have to control that is
-> __GFP_DIRECT_RECLAIM.
->
+  _try_scratch_mount -o max_open_zones=${open_zones} || \
+          _notrun "max_open_zones option is not supported"
 
-Looking at __alloc_pages_direct_compact(), it returns immediately for
-order=0 allocations.
+Or we can have a helper for that, as xfs/642~644 and xfs/668 also need that.
 
+Thanks,
+Zorro
 
-> However, turning off direct reclaim should make no difference in
-> the long run because vmalloc is only trying to allocate a batch of
-> single page folios.
->
-> If we are in low memory situations where no single page folios are
-> not available, then even for a NORETRY/no direct reclaim allocation
-> the expectation is that the failed allocation attempt would be
-> kicking kswapd to perform background memory reclaim.
->
-> This is especially true when the allocation is GFP_NOFS/GFP_NOIO
-> even with direct reclaim turned on - if all the memory is held in
-> shrinkable fs/vfs caches then direct reclaim cannot reclaim anything
-> filesystem/IO related.
->
+> 
 
-So, looking at the logs from Matthew, I think, this case might have
-benefitted from __GFP_DIRECT_RECLAIM, because we have many clean
-inactive file pages. So theoritically, IMO direct reclaim should be able
-to use one of those clean file pages (after it gets direct-reclaimed)
-
-      nr_zone_inactive_file 62769
-      nr_zone_write_pending 0
-
-
-> i.e. background reclaim making forwards progress is absolutely
-> necessary for any sort of "nofail" allocation loop to succeed
-> regardless of whether direct reclaim is enabled or not.
->
-> Hence if background memory reclaim is making progress, this
-> allocation loop should eventually succeed. If the allocation is not
-> succeeding, then it implies that some critical resource in the
-> allocation path is not being refilled either on allocation failure
-> or by background reclaim, and hence the allocation failure persists
-> because nothing alleviates the resource shortage that is triggering
-> the ENOMEM issue.
-
-I agree, background memory reclaim / kswapd thread should have made
-forward progress. 
-
-I am not sure why in this case, we are we hitting hung tasks issues then.
-Could be because of multiple fsstress threads running in parallel (from
-ps -eax output), and maybe some other process ends up using the pages
-reclaimed by background kswapd (just a theory). 
-
->
-> So the question is: where in the __vmalloc allocation path is the
-> ENOMEM error being generated from, and is it the same place every
-> time?
->
-
-Although I can't say for sure, but in this case after looking at the
-code, and knowing that we are not passing __GFP_DIRECT_RECLAIM, it might
-be returning from here (after get_page_from_freelist() couldn't get a
-free page).
-
-__alloc_pages_slowpath() {
-    ...
-	/* Caller is not willing to reclaim, we can't balance anything */
-	if (!can_direct_reclaim)
-		goto nopage;
-
-
-So, with the above data, I think,
-In this case, passing __GFP_DIRECT_RECLAIM in vmalloc fallback path
-might help. And either ways, until we have a page allocated, we anyway
-do an infinite retry, so we may as well pass __GFP_DIRECT_RECLAIM flag
-to it, right?
-
-fallback:
-	for (;;) {
-		bp->b_addr = __vmalloc(size, gfp_mask);
-		if (bp->b_addr)
-			break;
-		if (flags & XBF_READ_AHEAD)
-			return -ENOMEM;
-		XFS_STATS_INC(bp->b_mount, xb_page_retries);
-		memalloc_retry_wait(gfp_mask);
-	}
-
-Thoughts?
-
-I am not sure how easily this issue is reproducible at Matthew's end.
-But let me also keep a kvm guest with the same kernel version to see if
-I can replicate this at my end in an overnight run of xfs/285 in a loop.
-
-
--ritesh
