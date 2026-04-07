@@ -1,95 +1,127 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421DF3264EE
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 14:48:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68CFA33F59E;
+	Tue,  7 Apr 2026 15:00:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775573312; cv=none; b=urxXLZ/YP2RnlMMBYo2XonFxMXDH2lE3Stjd2deh+v98eKk9SlR0/ksdXGJCQ4+5oyJ8B2+er1ZKzaastC9p9YUeGW7EIh61m//x9YPRWO56VOuZubEWZ9nC0OpRJhftiZ6UOKn7Z2JkxePj2ASM60ITEQXPRFLFyymK51T10FQ=
+	t=1775574013; cv=none; b=nTzGYrC7CyUufODDE9UMveq3Yp+ZGX0iGKjU/FLLExi/uOdaz0d0yt3p3vO54MEPTg3R7zFcIw/Xw/sHxTJwakVlbpdg8cftXNFQG6lnZbSQhjXHYwiyy9O/S5c4wEXTwr5Kkszvb6Qg8WZi2tuL4QgAA0fjNx2l/M/l9MmQTfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775573312; c=relaxed/simple;
-	bh=P3GvwR+j8UgQw/D50ZFDRswhdtkd7NU/FARUnxYyiLY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qLz5xM/XPTrnlq6Hq84TMS0/YbAH9jSxIFTeUm+/LhjC2OJskfwh8pupWcGN0S5fGsaDOkQ+3/pgnDwcVIfP2aHN11aeWJ7Q8qGvLGwpfc+ERu3WAtRNZRuBCjKlDWeoA4ac/gTR1iyvtZijOeN+F0xmwe2pAA4CKJjmH+pmjFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=Gv3urCNA; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	s=arc-20240116; t=1775574013; c=relaxed/simple;
+	bh=Fg/kMmhhRbjJ0m7uh1SYJ7lod4Y/6kq6NfqyBJ49mwE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n6aG/p1VLOWNweuNcBZDLETJwIVD3idOVJpJcSxLZFVcdOL0bSQM0oFDg6l2oruCzKGTv1vjKDfQ+3m2Yrhwxz0078NBdqc7EHbxE2TegBzrVXXHCtGxUnzGx9D6TtrJjki9Ofdn7HMdONJqG0j7D+jvyhfUJfLYr3Xvv4bgFuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NqAgn6p7; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="Gv3urCNA"
-Received: from macsyma.thunk.org (pool-173-48-119-176.bstnma.fios.verizon.net [173.48.119.176])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 637EmAXB003208
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 7 Apr 2026 10:48:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1775573292; bh=B6mytxkR/pP/+KrUuQ4BEVU8OOl8s75NsKAPt+dhBVQ=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=Gv3urCNAhxv19PmA9S/iTKCp+SiVD2aAaDI7e3In5igU7PNU9MDX2OPeagQCItyz8
-	 +IO/nF1XWVRA8hHojKbTJX6eHtxITSHmyF/A7frFN87n3+qWFbmtsZ/lhU4uKWkVKF
-	 L/SAQRS7vJFFr4RdteQa+N753FGdm9uVqMnYpiyWVymkGQFT6GiBCEzIgAEZZ9kDQ3
-	 riW+P+99kQKKAqRFGTRPAhaqXEjV8GuWbgdMuMUQ/dDgv7MOIqmShvaANvfrbraOCf
-	 e4rD4yLseMo8U/DxiV1u4CREIwbmX0HncxM4xIegfOkEA5PCMrgtKeYnxl+Z/d8XK2
-	 ACfNFgAOslwvg==
-Received: by macsyma.thunk.org (Postfix, from userid 15806)
-	id 9E5586226E6E; Tue,  7 Apr 2026 10:47:09 -0400 (EDT)
-Date: Tue, 7 Apr 2026 10:47:09 -0400
-From: "Theodore Tso" <tytso@mit.edu>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Anand Jain <anajain.sg@gmail.com>, "Darrick J. Wong" <djwong@kernel.org>,
-        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Anand Jain <asj@kernel.org>
-Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
- collisions
-Message-ID: <20260407144709.GA81690@macsyma-wired.lan>
-References: <cover.1774092915.git.asj@kernel.org>
- <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
- <20260323041624.GA11453@mac.lan>
- <d4a9970b-e7ed-4e74-be9d-2d08400f9d79@gmail.com>
- <5bda3d00-df35-4ea1-b313-2fef6e5c5682@gmail.com>
- <adSUiB9L0sFAd04U@infradead.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NqAgn6p7"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fqq9y11x3z1XMFjh;
+	Tue,  7 Apr 2026 15:00:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1775574000; x=1778166001; bh=W9tkNxEBxYPxkrILtxeQFiPe
+	0qucPnupyHkzIyPwX9Q=; b=NqAgn6p7uYCWnWEXIeA8I54KyXOL3fmYf9TNvFBK
+	Jc4Fcc1UHzXb89kLlCWQpgdd3gD/N7cjscSgYOCBsq0GeKdiYc82Y+JIp5kIs7hP
+	XGGnpnBFq/DCVUX/Knr0bh4CaMa8atB/GM/ZOzhDJIvxQymJgUraYdpA529hAoje
+	MI5aBGHM7fxysBLbaj1uLuDzrextTw/URs638Q5F72GM9gpQm6uzuN0TE+Wi9Ry1
+	R8XYnMJSGJ6hziOEJl+GR1JJDOUQS/vgYI3Kqa+P7DuiZbKPySJx2W3RID5R7uYL
+	fKPXRJA90J6H8mgmO2t19D592rG3m0uSYpSrr9DP3pqm8w==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id QqjXz6Ihd8if; Tue,  7 Apr 2026 15:00:00 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fqq9p56xfz1XM6JZ;
+	Tue,  7 Apr 2026 14:59:58 +0000 (UTC)
+Message-ID: <dbbd5553-1442-4a90-88cd-59348f81cbb7@acm.org>
+Date: Tue, 7 Apr 2026 07:59:57 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <adSUiB9L0sFAd04U@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/5] block: factor out a bio_await helper
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20260407140538.633364-1-hch@lst.de>
+ <20260407140538.633364-4-hch@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260407140538.633364-4-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Apr 06, 2026 at 10:22:16PM -0700, Christoph Hellwig wrote:
-> > Dilemma:
-> > While statfs(2) [1] suggests f_fsid is "some random stuff," we know
-> > userspace (NFS, systemd) often treats it as a persistent handle.
-> > 
-> > Do you prefer one of the names above, or is there a more idiomatic ext4
-> > naming convention I should follow?
-> > 
->
-> My take is that anything that should persist should be an on-disk
-> feature flag, not a mount option.  But I'm not in charge for ext4
+On 4/7/26 7:05 AM, Christoph Hellwig wrote:
+>   /**
+> - * submit_bio_wait - submit a bio, and wait until it completes
+> - * @bio: The &struct bio which describes the I/O
+> + * bio_await - call a function on a bio, and wait until it completes
+> + * @bio:	the bio which describes the I/O
+> + * @submit:	function called to submit the bio
+> + * @priv:	private data passed to @submit
+>    *
+> - * Simple wrapper around submit_bio(). Returns 0 on success, or the error from
+> - * bio_endio() on failure.
+> + * Wait for the bio as well as any bio chained off it after executing the
+> + * passed in callback @submit.  The wait for the bio is set up before calling
+> + * @submit to ensure that the completion is captured.  If @submit is %NULL,
+> + * submit_bio() is used instead to submit the bio.
+>    *
+> - * WARNING: Unlike to how submit_bio() is usually used, this function does not
+> - * result in bio reference to be consumed. The caller must drop the reference
+> - * on his own.
+> + * Note: this overrides the bi_private and bi_end_io fields in the bio.
+>    */
+> -int submit_bio_wait(struct bio *bio)
+> +void bio_await(struct bio *bio, void *priv,
+> +	       void (*submit)(struct bio *bio, void *priv))
+>   {
+>   	DECLARE_COMPLETION_ONSTACK_MAP(done,
+>   			bio->bi_bdev->bd_disk->lockdep_map);
+> @@ -1486,13 +1489,37 @@ int submit_bio_wait(struct bio *bio)
+>   	bio->bi_private = &done;
+>   	bio->bi_end_io = bio_wait_end_io;
+>   	bio->bi_opf |= REQ_SYNC;
+> -	submit_bio(bio);
+> +	if (submit)
+> +		submit(bio, priv);
+> +	else
+> +		submit_bio(bio);
+>   	blk_wait_io(&done);
+> +}
+> +EXPORT_SYMBOL_GPL(bio_await);
 
-My take is that f_fsid is random stuff, as documented by the
-specification, so anyone who tries to depend on it needs to be kept in
-a padding room where they can't hurt themselves or their users.
+[ ... ]
 
-And as far as NFS is concerned, file handles should be based on
-the super block UUID, not statfs's f_fsid, and anyone who wants to
-mount a snapshot as an NFS exported file system at the same time that
-the original file system is mounted is _also_ should be gently coaxed
-into a padding room where they can't hurt themselves or their users.
+>   void bio_await_chain(struct bio *bio)
+>   {
+> -	DECLARE_COMPLETION_ONSTACK_MAP(done,
+> -			bio->bi_bdev->bd_disk->lockdep_map);
+> -
+> -	bio->bi_private = &done;
+> -	bio->bi_end_io = bio_wait_end_io;
+> -	bio_endio(bio);
+> -	blk_wait_io(&done);
+> +	bio_await(bio, NULL, bio_endio_cb);
+>   	bio_put(bio);
+>   }
+The comment above bio_await() says that the callback function passed as 
+third argument submits the bio. The above code passes bio_end_cb as the
+"submit" argument. bio_end_cb() does something else than submitting a
+bio. How about renaming the "submit" argument of bio_await() into
+something else, e.g. "cb" or "callback" to make its role more clear?
 
-The solution that we've used for people who are cloning block devices
-for things like cloud images has been for *years* has been to use
-"tune2fs -U random /dev/sda1".  And this works on mounted file system,
-and (for example) built into various cloud images for Google Cloud
-Engine.
+Thanks,
 
-If we want to change statfs's f_fsid, from one set of "Random stuff"
-to another set of "Random stuff", I don't really mind, but I don't
-think it's worth *either* a mount option, *or* a feature flag, as
-either would be confusing for system adminsitrators when some file
-systems behave one way, and other file systems behave another.
-
-	       	   	    	  - Ted
+Bart.
