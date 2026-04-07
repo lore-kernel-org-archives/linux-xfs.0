@@ -1,47 +1,31 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62375E56A;
-	Tue,  7 Apr 2026 05:43:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948FD37C11B;
+	Tue,  7 Apr 2026 06:27:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775540613; cv=none; b=b5bjBVKHRtsS4i4hW+6yHsaaeoHMJ1sUk2TrxovZg/oqQz4z9FM9IlEGUr6xi+JGyyz4nqohZ3w8P9JslX+cgAr+f6il3aFaNDT8zKQYP3rKSFhDFTfVRF+wlKs2l3Afypw47Y2NUFHnD6FNZO0EpU1xqltzaAA7zWp/8/r+Djg=
+	t=1775543232; cv=none; b=CneKpPsTzpiWc9ATx+J1YFOp44WJqoMhTK1YV5Jskm5RUAFb7QuYw9FkmNxAz63J0ujmYFeVqTNDFBde8F1h5yHTUt44tldQKIXq+iE4sABvYcQYRH7jIjKmGXRH9uFEFWBQ7AyiX9zn7h/6OQEYk/A4uDFFnJB2a8Te7w/ylow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775540613; c=relaxed/simple;
-	bh=Kq9j99vlihk6BLvc+kL+dt1Kvh+X8pe7JMWWCQhMgZw=;
+	s=arc-20240116; t=1775543232; c=relaxed/simple;
+	bh=UskVC7sNLwX68jWNnuOkgr2jPov8fp4A5nPK54jf8K8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y13tIXTCQJAWU2bRubXdnaTBz9fsLLkzbMHxNoolQe1GbwvpZT848cbn8NhvBJssajoYKpl26P/hQ01x9usJqRDr4wixISBidownBsjThTGa9kxvPqF+f9wZAhbdujCJ8H/soyp9LynKBxErX0z0whUMmknxnvonNnMO8EZeUWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TYU3ayYz; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TYU3ayYz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=x+42DFPZ8ULgrHQutIzRZwYEFns9pt8l/Mw1UAOJAmg=; b=TYU3ayYzEvIBrZW8cd3Dy/wxHL
-	S4/mCLrIWigZ2hi/Q29Hgh+oZteURHm7V79KGQD4t6IhlRHH4NbUSnsUBGBmUZpM19A3tcW/UzDEc
-	ElEd3YbqkMeBPIw5r9ZRMFVCMCYnqNNG9VoDMZr1ESPilwEC0rwFGFOmvs6tvYZNUrwNpp3XtkQr3
-	r8vWBUchhsRvLxkobTA4cjsZ5h+3w64oC38hcdqrkH5vgiTZPGn2yNFMXJx2ki+QxyX7SbavEwjU7
-	UtIPpUlYp4bjT16EAjLLu24xZJmj1ZaLvEWqaYk73kfUDkwoCuL9O9mvYSP+hXLKIXNdH9uqwXo7c
-	yHsmET7A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w9zDm-00000005wMC-3Web;
-	Tue, 07 Apr 2026 05:43:30 +0000
-Date: Mon, 6 Apr 2026 22:43:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Edward Adam Davis <eadavis@qq.com>,
-	syzbot+b7dfbed0c6c2b5e9fd34@syzkaller.appspotmail.com,
-	cem@kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [PATCH] xfs: reject CRC validation when the log header cannot be
- retrieved
-Message-ID: <adSZggVszJXysLzM@infradead.org>
-References: <69cebb99.050a0220.2dbe29.0007.GAE@google.com>
- <tencent_4D4CBF27D046DE52D3067D099C6EDDEECC06@qq.com>
- <adO_Rm7EN4vwWaYX@bfoster>
+	 Content-Type:Content-Disposition:In-Reply-To; b=RV+Pr7cZDoO1klNFT8O3DLbLDSRxYQ5H0ncEXzwGwg5pJUx2Y06OSPbpWsEaKonPDRfKUf1TSwCqU8otoOz+87lsnq8dPcU4SStTYvUx5ReGrjLfkbe6FO3zShwu2+oxgE77Z8owAYLj3HtdIy38T7N/UhFRst2Llxgc+akForM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 43F5168C4E; Tue,  7 Apr 2026 08:27:07 +0200 (CEST)
+Date: Tue, 7 Apr 2026 08:27:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, zlang@kernel.org, djwong@kernel.org,
+	dlemoal@kernel.org, hans.holmberg@wdc.com, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: add a test for number of open zones on
+ conventional devices
+Message-ID: <20260407062707.GA6937@lst.de>
+References: <20260331152341.4047725-1-hch@lst.de> <20260331211807.gofhlabxlr3mdxnr@doltdoltdolt> <20260401061828.GA24293@lst.de> <20260401075952.ifuz3kqfq3g7c4gf@doltdoltdolt> <20260401140646.GA21703@lst.de> <20260406170528.sxcm3qcndjhwm7pp@doltdoltdolt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,16 +34,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <adO_Rm7EN4vwWaYX@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260406170528.sxcm3qcndjhwm7pp@doltdoltdolt>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Apr 06, 2026 at 10:12:22AM -0400, Brian Foster wrote:
-> Have you dug into how syzbot triggers this issue?
+On Tue, Apr 07, 2026 at 01:05:28AM +0800, Zorro Lang wrote:
+> > 
+> > I think _notrun if mkfs or the initial mount fails might be easier and
+> > better here.
+> 
+> How about a _require_xfs_mkfs_zoned ?
+> 
+> And about `_scratch_mount -o max_open_zones=${open_zones}`, if max_open_zones
+> mount option isn't supported, _scratch_mount will fail directly. So how about
+> 
+>   _try_scratch_mount -o max_open_zones=${open_zones} || \
+>           _notrun "max_open_zones option is not supported"
+> 
+> Or we can have a helper for that, as xfs/642~644 and xfs/668 also need that.
 
-There is no syzbot reproducer yet.  Unfortunately the patch submitter
-has a history of jumping on unverified syzbot reports and then
-submitting speculative patches based on wrong conclusions.  I'd
-recommend to ignore him when he does that, which means basically
-always.  Hopefully we'll eventually get a syzbot reproducer and can
-then do an actual analysis.
+I'll take a look.  max_open_zones is always supported for zoned xfs
+file systems - the notrun is intended to cover the case where the kernel
+can't mount zoned file systems - either because it is too old, or because
+XFS_RT is not enabled.
 
