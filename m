@@ -1,119 +1,115 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9073B892B;
-	Tue,  7 Apr 2026 14:06:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92293AA514
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 14:22:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775570768; cv=none; b=rsDQO3sSxRSQf1sA1CbL2MRsc8hWiJHSFUX5Z+SIYDIIWomxBiX0tGtc9RdNQ1XhZ0ojyQ+2fIuxEbzuJwbB+rdoZrkg8VZ8KXB8tljOIEU/nfMZwB6RUuJD8i4USJf9UBPuUlF0QuUiZxBYjQ/sv77BekWgabwVyeinJqFNM+I=
+	t=1775571763; cv=none; b=G3LDMJXn2VvizuA3ZSkV2so+o/mogzg0kRW4Lk0KHrQUXVq1CSr79OMwFLVEbQFAGxsnfwI3HBA9/fDdr9ENBDDSC1SWXLupwgIm6ca5VQTlH/+t/DOmhzCx1o8lvhvqAZ5seMSVGKd2SKqr5/ALx7Id5sYBhzCsfK07e7OEgrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775570768; c=relaxed/simple;
-	bh=beNL+OpQSveUr+zvLCoqjR/RUBHr2gsVYBzUJnwxOlY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Kg6zkIFfzbcgIPdRtE0QCO3xaeQtOeHRtNAxR3nlOMrAG73sMXj+SCwT0XmLmAwJpG6FjvfxRlYLW2gIVaJak4sD5yZvdis6fI9q65zniCMqFj9IBH7Za54ELIUKJ42cj/egjgP4KCYEPlUAw8EFILAW0VuYGKkc/kStiIzzRts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IBwDF9OS; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1775571763; c=relaxed/simple;
+	bh=XoiDLUNNgyg2xEAnhOKD0CevZrrQ5TaDHiK2JbsgF0E=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=lEbioapnmVsuSRGQhi8r9B9mWnPONN4PP4Uq0N5mYcJsl4dm21y2qjdbWiJhqCkA8N9jecYyXdI+qsYiIP7u+07DUrK5KGEulMT7GqgZTyLOWQzH+9b/vKdRIkg+OXgchRRxR/U2udornChlnE8FwH3FqdbFBaglNmtSasAKim0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=JCs4ej3v; arc=none smtp.client-ip=209.85.160.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IBwDF9OS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=h5Fr/Lbu7+HBFLT6YRZ3beK2otaI/ShIhiGQh1kzoYw=; b=IBwDF9OShS3QsrK57nxpMeroBb
-	MW3Ag9wGLM4r72CcLhBrVHwjpvP69qVzO0rbUGFT21TSY5ZZxuE7APf17pHeSCatg/KI0VuK7xmDl
-	zJvKkF6brLzEvJr0lo9yAJA9uoJkWbJ3zPYk7BuXQxdiCCBDomFNMeRYswMC2FDu3B0LCJ0oSQpq3
-	hDEb3FKSIMXLTJ9mwe15zCon5uCuFfCb0t65qtoDLrT+ARP7RXuYeSOiF6rCYz10zf4w+tcxUufLM
-	GcQlMBj0ai1vDAc6Js3ugenqMAuCRcolT82ifrNHfx44Bp4P3PJtPjnMhUbXYJ91cjiDB68WtbH5i
-	ARtXtOsA==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1wA74A-00000006YyU-0AJK;
-	Tue, 07 Apr 2026 14:06:06 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: use bio_await in xfs_zone_gc_reset_sync
-Date: Tue,  7 Apr 2026 16:05:28 +0200
-Message-ID: <20260407140538.633364-6-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="JCs4ej3v"
+Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-4138136f02eso3359533fac.2
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Apr 2026 07:22:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1775571760; x=1776176560; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=u2+0a4Es20L8ZKKeR0LXCGBpUxoc39KcuZeJSpi5LyI=;
+        b=JCs4ej3vq+AUdsXGXocKip8w8JpYzlb2dHYAbUEqRzbLiL4OKkutfcyyXTAFPRDhqU
+         7KmwmQOLRvafQBISoFM3I3llfwvDRenAciPJadspsJB8Ot5SHI9euINRjBjOLlMn/kvS
+         SpSHuVVJiwBcJm0VMSWJvoAimjSwNOyMCE1pw1cA/i9wlB7qiBr6cWqp2tJU6sbxehV4
+         8NRn2lRxDZqr4xWAx3QXTpGf/ju195RjP+otJJ2mRnpY3fQS1jYHeev9rhAXLVSsuz0y
+         hSHY/6GUAlRGVavLVaifmACVWU5UwWQAhJeIK0p3naniRMlfU5DzzOHF6obG81ZjzD4K
+         +pUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775571760; x=1776176560;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=u2+0a4Es20L8ZKKeR0LXCGBpUxoc39KcuZeJSpi5LyI=;
+        b=bhQoWY8Q62pq9lR/4zZequ6CQZlb2dGr6VcWHipDUXzIuI7XDX0TFgK17Fei9M2sdV
+         RG5hMS7ROipJ7aZdDc/YPIjSSXRLFqLUzyDUXINElwX8Zd9bmiEM4y8PBeXzhAlkgqPs
+         62kFSswhB1bv7mB+F2550G+XruArCG+qrs9kXBzYUCIFnnyGbSM1Q140GgHt8hg0OZI5
+         aoZ3Az2xDn5xNIIgM8Ma7N52VZjFJSKJcFMyv3WXBQq4lMOKNgQouva0Vh4mSohqkBPP
+         wtMWe401UbKyj1DqQ5H1e8jp9nGyvpL99QXDE3GAkvJt5B3KK1/KK1bgJVoHt/TZmgvN
+         zrjg==
+X-Forwarded-Encrypted: i=1; AJvYcCX474W00XZV04ez6u58RYRqy/JLxMpz+mBuvh6f/wZTjqlCnL+kzB4XmdJufGyGSBtlIV3bwrMb0Io=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxSANGZ6egNKC6kKgmLmvMwUSjQiy7LEvzZ8tYGN1IMqqhNvOmf
+	9Qp2zH/khgJ9YkNDtpxbEtLmaiRFyZ+uggLbcVPd2+Jje56RY/d3u9yblLXJufeKQGZC4tVSg6f
+	ZDbJB
+X-Gm-Gg: AeBDiesq/bXgA74LHSs6pgdoUEsbpn8PL8ly4bVa8nopKNgmIeZBiz9nxYsjqAzrGwX
+	jPXSghNGGfO/TEBDA6/+3xSVUWmzCASYV7hyucCs/UqS70mE94tOnPiBPAqtV0fGrxvcSsbufQE
+	bMdrjpy/+59U5qaA9S6WoqPItKrweBaBcuqq2aKKWhBjKLA/iLFHBVtLuCxnUg/97RX/K1h2eCA
+	Lp5bBOXfeV+7oom04OABrTfPXVYzHHSQ4BLQbNf0U9O4nQU88AieCjotTS73HGd3VbbvdTZ2xmQ
+	V0MaQW6otlhAUXqSR1U2hxSwqDdtKgOzH6Dyqahq4lcjRwvFzr1T2P1fNAQbC1vxykdyaDkgejh
+	6VoerUyY8ljcBxtvowSuyqTwGDQjzdRZ5KA8Ha+DiuwkuI1mujwXNe2CsfOAPrJ12AG862qKEj2
+	F+7WDmxjZ3ci5xQ5/jrIb589zKp97BYI+zLzgj4LBFctqdgM3lRffC+GzorLsgPine+r0QEv+n8
+	OAyi/wQxP4oxA==
+X-Received: by 2002:a05:6870:71ce:b0:423:1d96:70fe with SMTP id 586e51a60fabf-4231d967d91mr8601881fac.21.1775571759601;
+        Tue, 07 Apr 2026 07:22:39 -0700 (PDT)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-42368e39eedsm3906866fac.9.2026.04.07.07.22.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Apr 2026 07:22:39 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Bart Van Assche <bvanassche@acm.org>, 
+ Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org, 
+ linux-xfs@vger.kernel.org
 In-Reply-To: <20260407140538.633364-1-hch@lst.de>
 References: <20260407140538.633364-1-hch@lst.de>
+Subject: Re: refactor submit_bio_wait and bio await helpers v3
+Message-Id: <177557175878.180843.3112896567038730737.b4-ty@b4>
+Date: Tue, 07 Apr 2026 08:22:38 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.1
 
-Replace the open-coded bio wait logic with the new bio_await helper.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
----
- fs/xfs/xfs_zone_gc.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+On Tue, 07 Apr 2026 16:05:23 +0200, Christoph Hellwig wrote:
+> this series factors common code between submit_bio_wait and
+> bio_await_chain into a common helper, and then uses that in XFS
+> as well instead of open coding such functionality.  It also
+> cleans up the submit or kill logic in the ioctl handlers to
+> share more code.
+> 
+> There is another places in btrfs that could be refactored to
+> use this, although it is non-trivial, and I plan to add more
+> users of this helper to XFS in the future.
+> 
+> [...]
 
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index eebe6f4fee1f..b2626a482563 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -900,9 +900,10 @@ xfs_zone_gc_finish_reset(
- 
- static void
- xfs_submit_zone_reset_bio(
--	struct xfs_rtgroup	*rtg,
--	struct bio		*bio)
-+	struct bio		*bio,
-+	void			*priv)
- {
-+	struct xfs_rtgroup	*rtg = priv;
- 	struct xfs_mount	*mp = rtg_mount(rtg);
- 
- 	trace_xfs_zone_reset(rtg);
-@@ -934,26 +935,16 @@ xfs_submit_zone_reset_bio(
- 	submit_bio(bio);
- }
- 
--static void xfs_bio_wait_endio(struct bio *bio)
--{
--	complete(bio->bi_private);
--}
--
- int
- xfs_zone_gc_reset_sync(
- 	struct xfs_rtgroup	*rtg)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
- 	struct bio		bio;
- 	int			error;
- 
- 	bio_init(&bio, rtg_mount(rtg)->m_rtdev_targp->bt_bdev, NULL, 0,
- 			REQ_OP_ZONE_RESET | REQ_SYNC);
--	bio.bi_private = &done;
--	bio.bi_end_io = xfs_bio_wait_endio;
--	xfs_submit_zone_reset_bio(rtg, &bio);
--	wait_for_completion_io(&done);
--
-+	bio_await(&bio, rtg, xfs_submit_zone_reset_bio);
- 	error = blk_status_to_errno(bio.bi_status);
- 	bio_uninit(&bio);
- 	return error;
-@@ -990,7 +981,7 @@ xfs_zone_gc_reset_zones(
- 		chunk->data = data;
- 		WRITE_ONCE(chunk->state, XFS_GC_BIO_NEW);
- 		list_add_tail(&chunk->entry, &data->resetting);
--		xfs_submit_zone_reset_bio(rtg, bio);
-+		xfs_submit_zone_reset_bio(bio, rtg);
- 	} while (next);
- }
- 
+Applied, thanks!
+
+[1/5] xfs: fix number of GC bvecs
+      commit: 452c8f6cbd0ef1408474a875c5c4149a02c7610f
+[2/5] block: unify the synchronous bi_end_io callbacks
+      commit: 65565ca5f99b42fe62b9a10117cca04f4311dc66
+[3/5] block: factor out a bio_await helper
+      commit: 6fa747550e35f0a74e649b19d97055988a25b2e4
+[4/5] block: add a bio_submit_or_kill helper
+      commit: 92c3737a2473ff5b83f90f5c1b353a27492a10f2
+[5/5] xfs: use bio_await in xfs_zone_gc_reset_sync
+      commit: 2d148a214b24b4a2525f649cced0c3e9e57281cd
+
+Best regards,
 -- 
-2.47.3
+Jens Axboe
+
+
 
