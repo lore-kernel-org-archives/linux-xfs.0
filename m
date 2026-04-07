@@ -1,115 +1,95 @@
-Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92293AA514
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 14:22:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421DF3264EE
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 14:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775571763; cv=none; b=G3LDMJXn2VvizuA3ZSkV2so+o/mogzg0kRW4Lk0KHrQUXVq1CSr79OMwFLVEbQFAGxsnfwI3HBA9/fDdr9ENBDDSC1SWXLupwgIm6ca5VQTlH/+t/DOmhzCx1o8lvhvqAZ5seMSVGKd2SKqr5/ALx7Id5sYBhzCsfK07e7OEgrw=
+	t=1775573312; cv=none; b=urxXLZ/YP2RnlMMBYo2XonFxMXDH2lE3Stjd2deh+v98eKk9SlR0/ksdXGJCQ4+5oyJ8B2+er1ZKzaastC9p9YUeGW7EIh61m//x9YPRWO56VOuZubEWZ9nC0OpRJhftiZ6UOKn7Z2JkxePj2ASM60ITEQXPRFLFyymK51T10FQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775571763; c=relaxed/simple;
-	bh=XoiDLUNNgyg2xEAnhOKD0CevZrrQ5TaDHiK2JbsgF0E=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=lEbioapnmVsuSRGQhi8r9B9mWnPONN4PP4Uq0N5mYcJsl4dm21y2qjdbWiJhqCkA8N9jecYyXdI+qsYiIP7u+07DUrK5KGEulMT7GqgZTyLOWQzH+9b/vKdRIkg+OXgchRRxR/U2udornChlnE8FwH3FqdbFBaglNmtSasAKim0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=JCs4ej3v; arc=none smtp.client-ip=209.85.160.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1775573312; c=relaxed/simple;
+	bh=P3GvwR+j8UgQw/D50ZFDRswhdtkd7NU/FARUnxYyiLY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qLz5xM/XPTrnlq6Hq84TMS0/YbAH9jSxIFTeUm+/LhjC2OJskfwh8pupWcGN0S5fGsaDOkQ+3/pgnDwcVIfP2aHN11aeWJ7Q8qGvLGwpfc+ERu3WAtRNZRuBCjKlDWeoA4ac/gTR1iyvtZijOeN+F0xmwe2pAA4CKJjmH+pmjFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=Gv3urCNA; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="JCs4ej3v"
-Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-4138136f02eso3359533fac.2
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Apr 2026 07:22:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1775571760; x=1776176560; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u2+0a4Es20L8ZKKeR0LXCGBpUxoc39KcuZeJSpi5LyI=;
-        b=JCs4ej3vq+AUdsXGXocKip8w8JpYzlb2dHYAbUEqRzbLiL4OKkutfcyyXTAFPRDhqU
-         7KmwmQOLRvafQBISoFM3I3llfwvDRenAciPJadspsJB8Ot5SHI9euINRjBjOLlMn/kvS
-         SpSHuVVJiwBcJm0VMSWJvoAimjSwNOyMCE1pw1cA/i9wlB7qiBr6cWqp2tJU6sbxehV4
-         8NRn2lRxDZqr4xWAx3QXTpGf/ju195RjP+otJJ2mRnpY3fQS1jYHeev9rhAXLVSsuz0y
-         hSHY/6GUAlRGVavLVaifmACVWU5UwWQAhJeIK0p3naniRMlfU5DzzOHF6obG81ZjzD4K
-         +pUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775571760; x=1776176560;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=u2+0a4Es20L8ZKKeR0LXCGBpUxoc39KcuZeJSpi5LyI=;
-        b=bhQoWY8Q62pq9lR/4zZequ6CQZlb2dGr6VcWHipDUXzIuI7XDX0TFgK17Fei9M2sdV
-         RG5hMS7ROipJ7aZdDc/YPIjSSXRLFqLUzyDUXINElwX8Zd9bmiEM4y8PBeXzhAlkgqPs
-         62kFSswhB1bv7mB+F2550G+XruArCG+qrs9kXBzYUCIFnnyGbSM1Q140GgHt8hg0OZI5
-         aoZ3Az2xDn5xNIIgM8Ma7N52VZjFJSKJcFMyv3WXBQq4lMOKNgQouva0Vh4mSohqkBPP
-         wtMWe401UbKyj1DqQ5H1e8jp9nGyvpL99QXDE3GAkvJt5B3KK1/KK1bgJVoHt/TZmgvN
-         zrjg==
-X-Forwarded-Encrypted: i=1; AJvYcCX474W00XZV04ez6u58RYRqy/JLxMpz+mBuvh6f/wZTjqlCnL+kzB4XmdJufGyGSBtlIV3bwrMb0Io=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSANGZ6egNKC6kKgmLmvMwUSjQiy7LEvzZ8tYGN1IMqqhNvOmf
-	9Qp2zH/khgJ9YkNDtpxbEtLmaiRFyZ+uggLbcVPd2+Jje56RY/d3u9yblLXJufeKQGZC4tVSg6f
-	ZDbJB
-X-Gm-Gg: AeBDiesq/bXgA74LHSs6pgdoUEsbpn8PL8ly4bVa8nopKNgmIeZBiz9nxYsjqAzrGwX
-	jPXSghNGGfO/TEBDA6/+3xSVUWmzCASYV7hyucCs/UqS70mE94tOnPiBPAqtV0fGrxvcSsbufQE
-	bMdrjpy/+59U5qaA9S6WoqPItKrweBaBcuqq2aKKWhBjKLA/iLFHBVtLuCxnUg/97RX/K1h2eCA
-	Lp5bBOXfeV+7oom04OABrTfPXVYzHHSQ4BLQbNf0U9O4nQU88AieCjotTS73HGd3VbbvdTZ2xmQ
-	V0MaQW6otlhAUXqSR1U2hxSwqDdtKgOzH6Dyqahq4lcjRwvFzr1T2P1fNAQbC1vxykdyaDkgejh
-	6VoerUyY8ljcBxtvowSuyqTwGDQjzdRZ5KA8Ha+DiuwkuI1mujwXNe2CsfOAPrJ12AG862qKEj2
-	F+7WDmxjZ3ci5xQ5/jrIb589zKp97BYI+zLzgj4LBFctqdgM3lRffC+GzorLsgPine+r0QEv+n8
-	OAyi/wQxP4oxA==
-X-Received: by 2002:a05:6870:71ce:b0:423:1d96:70fe with SMTP id 586e51a60fabf-4231d967d91mr8601881fac.21.1775571759601;
-        Tue, 07 Apr 2026 07:22:39 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-42368e39eedsm3906866fac.9.2026.04.07.07.22.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Apr 2026 07:22:39 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Bart Van Assche <bvanassche@acm.org>, 
- Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org, 
- linux-xfs@vger.kernel.org
-In-Reply-To: <20260407140538.633364-1-hch@lst.de>
-References: <20260407140538.633364-1-hch@lst.de>
-Subject: Re: refactor submit_bio_wait and bio await helpers v3
-Message-Id: <177557175878.180843.3112896567038730737.b4-ty@b4>
-Date: Tue, 07 Apr 2026 08:22:38 -0600
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="Gv3urCNA"
+Received: from macsyma.thunk.org (pool-173-48-119-176.bstnma.fios.verizon.net [173.48.119.176])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 637EmAXB003208
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 7 Apr 2026 10:48:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1775573292; bh=B6mytxkR/pP/+KrUuQ4BEVU8OOl8s75NsKAPt+dhBVQ=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=Gv3urCNAhxv19PmA9S/iTKCp+SiVD2aAaDI7e3In5igU7PNU9MDX2OPeagQCItyz8
+	 +IO/nF1XWVRA8hHojKbTJX6eHtxITSHmyF/A7frFN87n3+qWFbmtsZ/lhU4uKWkVKF
+	 L/SAQRS7vJFFr4RdteQa+N753FGdm9uVqMnYpiyWVymkGQFT6GiBCEzIgAEZZ9kDQ3
+	 riW+P+99kQKKAqRFGTRPAhaqXEjV8GuWbgdMuMUQ/dDgv7MOIqmShvaANvfrbraOCf
+	 e4rD4yLseMo8U/DxiV1u4CREIwbmX0HncxM4xIegfOkEA5PCMrgtKeYnxl+Z/d8XK2
+	 ACfNFgAOslwvg==
+Received: by macsyma.thunk.org (Postfix, from userid 15806)
+	id 9E5586226E6E; Tue,  7 Apr 2026 10:47:09 -0400 (EDT)
+Date: Tue, 7 Apr 2026 10:47:09 -0400
+From: "Theodore Tso" <tytso@mit.edu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Anand Jain <anajain.sg@gmail.com>, "Darrick J. Wong" <djwong@kernel.org>,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Anand Jain <asj@kernel.org>
+Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
+ collisions
+Message-ID: <20260407144709.GA81690@macsyma-wired.lan>
+References: <cover.1774092915.git.asj@kernel.org>
+ <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
+ <20260323041624.GA11453@mac.lan>
+ <d4a9970b-e7ed-4e74-be9d-2d08400f9d79@gmail.com>
+ <5bda3d00-df35-4ea1-b313-2fef6e5c5682@gmail.com>
+ <adSUiB9L0sFAd04U@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <adSUiB9L0sFAd04U@infradead.org>
 
+On Mon, Apr 06, 2026 at 10:22:16PM -0700, Christoph Hellwig wrote:
+> > Dilemma:
+> > While statfs(2) [1] suggests f_fsid is "some random stuff," we know
+> > userspace (NFS, systemd) often treats it as a persistent handle.
+> > 
+> > Do you prefer one of the names above, or is there a more idiomatic ext4
+> > naming convention I should follow?
+> > 
+>
+> My take is that anything that should persist should be an on-disk
+> feature flag, not a mount option.  But I'm not in charge for ext4
 
-On Tue, 07 Apr 2026 16:05:23 +0200, Christoph Hellwig wrote:
-> this series factors common code between submit_bio_wait and
-> bio_await_chain into a common helper, and then uses that in XFS
-> as well instead of open coding such functionality.  It also
-> cleans up the submit or kill logic in the ioctl handlers to
-> share more code.
-> 
-> There is another places in btrfs that could be refactored to
-> use this, although it is non-trivial, and I plan to add more
-> users of this helper to XFS in the future.
-> 
-> [...]
+My take is that f_fsid is random stuff, as documented by the
+specification, so anyone who tries to depend on it needs to be kept in
+a padding room where they can't hurt themselves or their users.
 
-Applied, thanks!
+And as far as NFS is concerned, file handles should be based on
+the super block UUID, not statfs's f_fsid, and anyone who wants to
+mount a snapshot as an NFS exported file system at the same time that
+the original file system is mounted is _also_ should be gently coaxed
+into a padding room where they can't hurt themselves or their users.
 
-[1/5] xfs: fix number of GC bvecs
-      commit: 452c8f6cbd0ef1408474a875c5c4149a02c7610f
-[2/5] block: unify the synchronous bi_end_io callbacks
-      commit: 65565ca5f99b42fe62b9a10117cca04f4311dc66
-[3/5] block: factor out a bio_await helper
-      commit: 6fa747550e35f0a74e649b19d97055988a25b2e4
-[4/5] block: add a bio_submit_or_kill helper
-      commit: 92c3737a2473ff5b83f90f5c1b353a27492a10f2
-[5/5] xfs: use bio_await in xfs_zone_gc_reset_sync
-      commit: 2d148a214b24b4a2525f649cced0c3e9e57281cd
+The solution that we've used for people who are cloning block devices
+for things like cloud images has been for *years* has been to use
+"tune2fs -U random /dev/sda1".  And this works on mounted file system,
+and (for example) built into various cloud images for Google Cloud
+Engine.
 
-Best regards,
--- 
-Jens Axboe
+If we want to change statfs's f_fsid, from one set of "Random stuff"
+to another set of "Random stuff", I don't really mind, but I don't
+think it's worth *either* a mount option, *or* a feature flag, as
+either would be confusing for system adminsitrators when some file
+systems behave one way, and other file systems behave another.
 
-
-
+	       	   	    	  - Ted
