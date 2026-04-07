@@ -1,69 +1,106 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC51F35AC28;
-	Tue,  7 Apr 2026 15:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FBD35B650
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 15:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775574271; cv=none; b=NRa++PioF5J3oWqrGmiSz/yyibZrOL6FH91lPYu9raqE/M40aXGoUwBYjeH2QL+JmeJyKhN21R+GBEpfWNAXoBmQqz5v7pSJWlazBMqGOLBnqIE/mQFeVnG3SNpKmN7e9sBsrKvWtK49wUX8tRwa9fJqxZvBdp9U/h9hR1F4JMA=
+	t=1775574429; cv=none; b=YjM8OTV1s4UTHXk5uABu4IKvYIulJp+xGonFX6pgs6TF1GYXDgVUHkH9jztiYww8VbaTHhQVGaqQKhYTYSf7Kp0PyD3jdFb/o8VBI6+mJz8fCYiNSGDN5YQcwR82Hm1jUvjTAjLZhdb33uGhK8mLqUCeMuLwcQRSiP9mB8601ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775574271; c=relaxed/simple;
-	bh=HcrBDmmJv4yYKxVAJ61q0H20ajQsk738BQsiyU8PHd0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rG/BfmNTVr+lugL/ave+Tf37hCYoeI3cBSAItQwCqtZthDfCLA/f9fUlSz8SbhmO4PCwi6c3iV5gBkcKub7hj3WHPZCUf0QLdxi/H+VlHWLL6+gXDe62J4Qah4NFUVxFHEphX7EvfiXZE7XZvq/mx3poElC8Ukpe5JT3IcIXp0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iFu5Er2O; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1775574429; c=relaxed/simple;
+	bh=T4ClcvFO2zLzXH4ah633+6pQvlRc0Mk01eD4wnZjTyw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PuAaRMaRHjZOKyf3u1CvbXOXKvwUZkE0Zpp4VMUR+YsmowWydkxVv5ZkAhbcERw623O99c3kaw2YyL+3wrJ8ayfAMoUMP+WLMYvIYWKz3RYO+qA1tRG/ngd3+LfJMz9KX18r9FKnDbyLnatfgu8LpfJ2mZzWGRe9KNhWfZSSjZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DUHCyL8H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iFu5Er2O"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fqqH10dtJzlgr41;
-	Tue,  7 Apr 2026 15:04:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1775574265; x=1778166266; bh=PnDhbd6bP51AGi/HkPD2H6xj
-	qKHyL8lacvfprdOpms8=; b=iFu5Er2Ofp7/bvdr9b5hryboVbRTg1Cfx0S/7bPN
-	C7e0niTQFO14rUdQP2VQYKkukUxpzg93bGvS6HXooxM3OXyY3Vg5J2Rx3ALidAep
-	s7Kfu5xU7k3pdvCgKx9hWDVRC1124U9Vpnr+SzwWOAHBcSSvzQ3dFnu7dE8G8o3q
-	78+Uwb8Wd56MYwxwhdjQv+UcX2LpEpnV3WKs/wXu8iA+poDCBp7yyQIifs4vlGtN
-	J7N9PILQOXw6KlcQJ+rTB/5/objJTE4uwDCzw/UZWP56bKOiF4eUy3GRQS6g7Ugh
-	yobX9FepWi9IdYGfwyhiA9AJm39dSfvtaKsqX5YOQCPTNQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id SaMOiiRr0yKu; Tue,  7 Apr 2026 15:04:25 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fqqGv0X6Rzlfc3v;
-	Tue,  7 Apr 2026 15:04:22 +0000 (UTC)
-Message-ID: <22212d59-2041-4ed3-be21-f4b23e3f0d52@acm.org>
-Date: Tue, 7 Apr 2026 08:04:20 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DUHCyL8H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02B26C116C6;
+	Tue,  7 Apr 2026 15:07:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775574429;
+	bh=T4ClcvFO2zLzXH4ah633+6pQvlRc0Mk01eD4wnZjTyw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DUHCyL8HN31wCRaAIxbb1CIdhLfJegB3R0+sMIRXHlj07n8OLydSa6w7t5xK/qvK6
+	 R3EERHkk6AZQwZbNTsureADb1TU6fRzePECWtumMtW0dCqpTqwruf5rI1G63x+DnS8
+	 GyW5nzS44oO5SrDvMei0nGG9ej/VyN0bSi5thbVORClsaYdVUIXFUeuMANqquenMs0
+	 BajMKDYJwPFVfVyOPA5BD0nh6piB6Ur/6JCjdrK5GKK63Q98f9/2wzkjYqjWFVbzmZ
+	 P+bhQHcg4HdfHHpep83qFSFl9vTJqc+v4Ocd6ixWlbHqTQWGcgvwGvdqh+bWyutjxe
+	 ZQhM8kmvHbA3g==
+Date: Tue, 7 Apr 2026 08:07:08 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org
+Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 2/2] fsr: always print error messages from
+ xfrog_defragrange()
+Message-ID: <20260407150708.GE1048989@frogsfrogsfrogs>
+References: <20260407111507.79977-1-cem@kernel.org>
+ <20260407111507.79977-3-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] block: add a bio_submit_or_kill helper
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20260407140538.633364-1-hch@lst.de>
- <20260407140538.633364-5-hch@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260407140538.633364-5-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260407111507.79977-3-cem@kernel.org>
 
-On 4/7/26 7:05 AM, Christoph Hellwig wrote:
-> Factor the common logic for the ioctl helpers to either submit a bio or
-> end if the process is being killed.  As this is now the only user of
-> bio_await_chain, open code that.
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+On Tue, Apr 07, 2026 at 01:15:00PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
+> 
+> Error messages from xfrog_defragrange() are only printed when
+> verbose/debug flags are used.
+> 
+> We had reports from users complaining it's hard to find out the error
+> messages lost in the middle of dozens of other informational messages.
+> 
+> Change packfile() behavior to print errors independently of verbose or
+> debug flags.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+Looks ok,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ---
+> 
+> V4: fix up previous rebase (fprintf accidentally removed)
+> V3: Rebase on top of patch 1 changes
+> V2: Update commit description
+> 
+>  fsr/xfs_fsr.c | 10 +++-------
+>  1 file changed, 3 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 390f7c5276df..e74180c143be 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -1464,19 +1464,15 @@ packfile(
+>  		case 0:
+>  			break;
+>  	case ENOTSUP:
+> -		if (vflag || dflag)
+> -			fsrprintf(_("%s: file type not supported\n"), fname);
+> +		fsrprintf(_("%s: file type not supported\n"), fname);
+>  		break;
+>  	case EFAULT:
+>  		/* The file has changed since we started the copy */
+> -		if (vflag || dflag)
+> -			fsrprintf(_("%s: file modified defrag aborted\n"),
+> -					fname);
+> +		fsrprintf(_("%s: file modified defrag aborted\n"), fname);
+>  		break;
+>  	case EBUSY:
+>  		/* Timestamp has changed or mmap'ed file */
+> -		if (vflag || dflag)
+> -			fsrprintf(_("%s: file busy\n"), fname);
+> +		fsrprintf(_("%s: file busy\n"), fname);
+>  		break;
+>  	default:
+>  		fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
+> -- 
+> 2.53.0
+> 
+> 
