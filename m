@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04709387375;
-	Tue,  7 Apr 2026 11:06:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612543A872C
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Apr 2026 11:09:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775559997; cv=none; b=IvJT0Rid03XV2LtWKzIoX5kcr7jG3n8VU+lvfwSWoijxj2bpM2L09IgzuXU6+ivohfxladWesiC2Xf/FcHN8ozb+WK9UiLrrsq4B12khDU7W+FHxVQbqla/v9Th1Gb3ckxpgsGpi0kH5IbK/h+IyYvMyekIgL3HJiQws8Zp1e0Q=
+	t=1775560183; cv=none; b=N1q8Q11NEWmMMYtPpNURQYx8ElE9nMigcXQafx7KdMKd4GcB5rClCsq7eSLnWDV9jsW2vCVRNuW5qjZroTIczZhSYSfxW9hBXxjaUJbarCaiY4MfAUkR0qYmLxcZeSu+X7wLsJiIQqtVWR6sWVp2BoRozTf7qY7S3QjLH/A5/W4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775559997; c=relaxed/simple;
-	bh=Ul9l6WAXk+XnuKUNInbczs9dI6SZ8VzW2Um1ngKrjoI=;
+	s=arc-20240116; t=1775560183; c=relaxed/simple;
+	bh=1nbQrytkX4LOqrj4mvq50UHNU7wyZvu/IrW0qASsQyA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eHbfplttqw07WPXRHAnWgyNQTaYdzynEHwFjnN5A6YY+NPY0LF01arr2meaYDM3/Z8N6BriXJeuknwuc4RB8Q1rqTkT1/7GL9sdDfowrUpyPYQryAjF1Lwz1Qq4UosNkIRetz7uFEfy2BWbfrqCm/xdromhEhsg1MFuLJWCbb0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IfiAy8O7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GDz+l5BBazNs6OFveybfOgaJa719wz8oNDrwQ4WfRgrNkt04QzDYIvYnYwXANXMe2vAvZoDWg1fHE7IXUMitaMpYRW50O1ZphURWHH/Bw+YziXoFYknWfciIENbBhc7wLEo2gxB6TuL84UXmxz/tJndchje5FVVjQ4XG0PiPn9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ALO/pkJv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IfiAy8O7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CF59C116C6;
-	Tue,  7 Apr 2026 11:06:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ALO/pkJv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 224A6C116C6;
+	Tue,  7 Apr 2026 11:09:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775559996;
-	bh=Ul9l6WAXk+XnuKUNInbczs9dI6SZ8VzW2Um1ngKrjoI=;
+	s=k20201202; t=1775560183;
+	bh=1nbQrytkX4LOqrj4mvq50UHNU7wyZvu/IrW0qASsQyA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IfiAy8O7tr6qIFrRUDnT8KWEEBf33CL3miwwIFdEV61FxEuIv3OrACExxkpmj9rVD
-	 FSeOAAsp2dgXg3zp8EohOqYcb4YYMQtKCY0l1Nk83vEx7TRdqpDmAhLQzd8BZZn969
-	 KZjUyVEi9vsyBVt+sDk7TfnByOchoWZE295OEM/rWfn8gruX7y4VbyNnS9Vdf/xgMS
-	 KgJ0bdA1OLVd8AlD4/jgC2vF0modKmKbuyDceue8gm5VTXYtsuFy+o33Z5RZeLXVrV
-	 jMGzycbSQHs3KzuVZ65Fnj+vAzlLVpQAYzvGH9mEP+sE+ONtwSqrV6x7e8kBZLUjkW
-	 o6Nezw0rUstvA==
-Date: Tue, 7 Apr 2026 13:06:32 +0200
+	b=ALO/pkJvBOSqZQg8zSkeUSAUAz4Oz9cdsS32PS2RuEueqyvCdb5kPeyDMOmV5SfrD
+	 KAz7+UxrHoVl8dW6bTAYr+MmwUfSpKRYfW49451umJqXtP4wVkF1Ah3pOrDqUk6utg
+	 1DeFy8bBOYz7+YUZtWkpEYXdHft5Nq5BRKz98qnCXo40xE77i2L5zl1F24KTnmSAxS
+	 iMt6XTBazJmrgVCoPOpaSW1QFxeDyVRTWIUgt/5ToMMurXaOwxYIn/5A3GN/ZOA9Ei
+	 zNbsMkGq3sw1kceOpGDumTzbBHahgnMZxX7qRlnvd87UWiBDT8Kc4UBYW4wDqyzwrL
+	 id+iC7CJK/UMQ==
+Date: Tue, 7 Apr 2026 13:09:39 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Yuto Ohnuki <ytohnuki@amazon.com>
-Cc: Dave Chinner <dchinner@redhat.com>, 
-	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] xfs: fix potential integer overflow in sort
- comparators
-Message-ID: <adTlLnp4T22rkqGs@nidhogg.toxiclabs.cc>
-References: <20260328173407.43057-4-ytohnuki@amazon.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] fsr: always print error messages from
+ xfrog_defragrange()
+Message-ID: <adTl2U7cr_mvuqV2@nidhogg.toxiclabs.cc>
+References: <20260331122639.100956-1-cem@kernel.org>
+ <20260331122639.100956-3-cem@kernel.org>
+ <20260331160937.GE6223@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,44 +44,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260328173407.43057-4-ytohnuki@amazon.com>
+In-Reply-To: <20260331160937.GE6223@frogsfrogsfrogs>
 
-On Sat, Mar 28, 2026 at 05:34:08PM +0000, Yuto Ohnuki wrote:
-> Several sort comparators in XFS subtract two uint32_t values and
-> return the result as int, which can overflow when the difference
-> exceeds INT_MAX.
+On Tue, Mar 31, 2026 at 09:09:37AM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 31, 2026 at 02:26:31PM +0200, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> > 
+> > Error messages from xfrog_defragrange() are only printed when
+> > verbose/debug flags are used.
+> > 
+> > We had reports from users complaining it's hard to find out the error
+> > messages lost in the middle of dozens of other informational messages.
+> > 
+> > Change packfile() behavior to print errors independently of verbose or
+> > debug flags.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > 
+> > ---
+> > V3: Rebase on top of patch 1 changes
+> > V2: Update commit description
+> > 
+> >  fsr/xfs_fsr.c | 9 ++-------
+> >  1 file changed, 2 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> > index 390f7c5276df..24617f55e329 100644
+> > --- a/fsr/xfs_fsr.c
+> > +++ b/fsr/xfs_fsr.c
+> > @@ -1464,19 +1464,14 @@ packfile(
+> >  		case 0:
+> >  			break;
+> >  	case ENOTSUP:
+> > -		if (vflag || dflag)
+> > -			fsrprintf(_("%s: file type not supported\n"), fname);
 > 
-> Use cmp_int() instead, as was done in commit 362c49098086
-> ("xfs: fix integer overflow in bmap intent sort comparator").
-> 
-> Patch 1 fixes the deferred intent comparators (rmap, extfree, refcount).
-> Patch 2 fixes the busy extent comparator.
-> 
-> Yuto Ohnuki (2):
->   xfs: fix integer overflow in deferred intent sort comparators
->   xfs: fix integer overflow in busy extent sort comparator
-> 
->  fs/xfs/xfs_extent_busy.c   | 4 ++--
->  fs/xfs/xfs_extfree_item.c  | 2 +-
->  fs/xfs/xfs_refcount_item.c | 2 +-
->  fs/xfs/xfs_rmap_item.c     | 2 +-
->  4 files changed, 5 insertions(+), 5 deletions(-)
-> 
+> Err.. did you mean to delete the fsrprintf call here as well?
 
-For the series:
+No, I probably should have messed it up when rebasing on top of patch 1.
+I'll fix it.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> -- 
-> 2.50.1
 > 
+> --D
 > 
-> 
-> 
-> Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
-> 
-> Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
-> 
-> 
-> 
+> >  		break;
+> >  	case EFAULT:
+> >  		/* The file has changed since we started the copy */
+> > -		if (vflag || dflag)
+> > -			fsrprintf(_("%s: file modified defrag aborted\n"),
+> > -					fname);
+> > +		fsrprintf(_("%s: file modified defrag aborted\n"), fname);
+> >  		break;
+> >  	case EBUSY:
+> >  		/* Timestamp has changed or mmap'ed file */
+> > -		if (vflag || dflag)
+> > -			fsrprintf(_("%s: file busy\n"), fname);
+> > +		fsrprintf(_("%s: file busy\n"), fname);
+> >  		break;
+> >  	default:
+> >  		fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
+> > -- 
+> > 2.53.0
+> > 
+> > 
 > 
