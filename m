@@ -1,219 +1,228 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-00364e01.pphosted.com (mx0b-00364e01.pphosted.com [148.163.139.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 159733D9050;
-	Wed,  8 Apr 2026 18:46:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 011362727F3
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2026 18:48:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.139.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775674013; cv=none; b=JHCJvnORWqO0IWVttehAbRMyAn6ZT0S8gl4d8E4z928Vw2YNy2WKhlPmUMG+14jtFCcuocfx+wEoUw3/yeL+ve1mbBM9jRhUVc6o2kx1kksv8X9pToep35xJUc5ARQq/FxGjveOdI3jHT3aqI5xhiaswWmWo8d5oSpFbCbc6n0c=
+	t=1775674121; cv=none; b=eX+D7a5Ky9VJLL8JT5JCmO7Qwq3zo+Pc3Z/+p9MgFrKxXB7Av1kqityPal529PLSv3kcKMtiXg6JBa01oZBz6se6qSiDdOHknYSm9fJ+MZxCe21QkfCHKtit2Lbj5iHezwUB4NyH4yJeh2k7SqXBKmG3nlbuSgXphS2MtpOgWTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775674013; c=relaxed/simple;
-	bh=/5dfLLCFdsBvcQj8bzhKBnfZqvWdbYDBMPSwHi5Ou/s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gV4OAcNEAc6o1d01VbrTVAkXsx4/YnHhqgHPiaCMlUb7BUdH1E8daQqtbIyrHR29DFL0/7dVZzavRZEGV0jOK5hc8jJqMAWZy6UzzJGjsAP/v3Dq57S8zOvZX01ARpMeRcKRR0V2oAajWnGvB4gnmP7W8KF5y4gbyz83Iz/Q59s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=b/boA0s1; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1775674121; c=relaxed/simple;
+	bh=1Ge5gfoGyv0TLiDmdg7VFxgHEnOfWaCDzgyu38mSmrI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=A3YzQdC+5xHJ/2iAKi89MpW/2nbVsQQp9YuSHJylYXfz5lUPBDRJqA3bofvXddYHd2VSCNnQzytv082cfVqHbMITlDcSHNniuzeP7aFDRolxQJuBH3lUNUkZKVlj5evAWZNqR4gRLidiYuM6jv1NTVORQ28sWSjXK79lXbiS1dY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=sR4smn5j; arc=none smtp.client-ip=148.163.139.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="b/boA0s1"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638IUBCd2302408;
-	Wed, 8 Apr 2026 18:46:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=UqhjeDnHacxc+DguG
-	BAg4lyRMb8kf2xKVKHgKUo0dTQ=; b=b/boA0s1d5bxxGIH292nbEDfFlIzo0vQS
-	Lj+GzoqG2ku5LH6RRIGGio4I4hB1EfPsFn/19F92MnqjetYttdgvbGxLfac55t2l
-	6kZPSsnPrSH1i21U4nukUNG3awYQJnhnJmQUODCxt4olnyoxHsSpt2tBdLTn13tb
-	m9GqV7G8ek2EASKNtLdTBt38qoMeU9qrKBMlVEU6cgcqNkOa/JdP108qL97RrWKG
-	tsadwF5g/Fuil8uWNeiYPuCk8ZyXCwaruD3LbXz++OFc4WNLhl3qiKm5KL4pgi9I
-	mVcg4e8Mxx6+MOC9c1k4tZ2AEc0pM14sUJgc7QKNKU07XUzE8xtcQ==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2fhj03-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 08 Apr 2026 18:46:29 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 638FpSrP019008;
-	Wed, 8 Apr 2026 18:46:28 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dcme9gm3r-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 08 Apr 2026 18:46:28 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 638IkRZf59310524
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 8 Apr 2026 18:46:27 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EF2442004B;
-	Wed,  8 Apr 2026 18:46:26 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 54F0120040;
-	Wed,  8 Apr 2026 18:46:23 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.212.72])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Wed,  8 Apr 2026 18:46:23 +0000 (GMT)
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
-        hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
-        Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
-        p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: [RFC PATCH v2 5/5] iomap: Add DSYNC support to writethrough
-Date: Thu,  9 Apr 2026 00:15:46 +0530
-Message-ID: <162ff37dec9295bb76ebadba6ea72ac72cc3c3df.1775658795.git.ojaswin@linux.ibm.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <cover.1775658795.git.ojaswin@linux.ibm.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="sR4smn5j"
+Received: from pps.filterd (m0167076.ppops.net [127.0.0.1])
+	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638IgSGn3449410
+	for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2026 14:48:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps01; bh=Dque
+	R3VMcaZMrGBpK+9TubzW0DI74xoKUrfLcydSJjc=; b=sR4smn5j86SJPqwuEiyD
+	tiO3LrwmcnhTzYNq/puVbFVkdQ23hxVuhAkUQf+XO03Laic8F0LMMB0w65VG4DOi
+	MjEHK9uj7aeFv/l1TdDJ7gbuo31iIbP5xUFzSH0CJ0T9ITcDfIVwPZDh10am+5b7
+	ehPmyJTYiEI9yXGyzY5/G53LdBLNQNKv2p0tRQwtE/byTMVhqGihaAEgsZNWdGjO
+	tyt+uX+NZg+/F+Q+Biwz3IinlnvjWz7wEkUB7z/BDtWx7ZoKXZ5ckuDdC944zQRS
+	FkzIre59ahDNjblioAHT4fKYGPnEl1A9nuKVn1p4YOzRdPlEyPskoRX4KJ4JK+zd
+	rA==
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4dda3r6rjg-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 14:48:32 -0400 (EDT)
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-50d68dbb77bso2112071cf.2
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 11:48:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775674112; x=1776278912;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DqueR3VMcaZMrGBpK+9TubzW0DI74xoKUrfLcydSJjc=;
+        b=e28lc1LMafB0OJSQFyJfq2taPbwC6kXzuCkwAKmQxpjbtwc1bcF+mD8dO4lpVPtsIF
+         ysbTx9yM+ho+iQXIpNuFuaIIlj1Nm88GyURxLHFerzKKvt2gMBt1G/4gPEgL3yKgeB7q
+         1vsNISijWWL1xxucpRr+cZnwKqWuNLVSRzVWy5KuwxfPoEee9UbdgrgHRvYMpghHK1Jg
+         dnTm+kSrUiKfGW+ia09IDIbItXFaMH13g6eZ7F17M88BPmrBlG+NzSZxvjLvi+YGjOH1
+         x533wtQ78mz3bR6oqTmVB4AEQSqL41MOKvCZBzxb8LS2NFJSwq0yQOVEU6dYq+TOL905
+         o6pQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU+1GKmoyKpLeyGAeViB8pR/RtjZhKsBWM7Yhp3mz1FZSbyLOIKZwk53mgqPtV+mMHh6+wv1Qi5QjA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4o8inLlGnIEc2FXaI+8czB41BJzkFsUyZwcOwD+45hvZbltvC
+	NxUSQ6i02lkmm6HHf8xyOKOWFrNK2v3+y/ebQPyZdv+8r3L/ObzQMUTZr74W6CXzd64xGJSxibx
+	hH4L6ivuRCRT09+rs1ojKhJbGT7vTlSELLwQqoNSF1LU8dojmK8yp+DMd6Q==
+X-Gm-Gg: AeBDietNykTzl0hiuBKbfZIMpZUgv1IBAmLFxCm9GmfWV1SUk2ICdXRmbipHMldY3bg
+	W7ISJPiRfM+vEoP16kbGO8FYMKRMvWjGAgKE0GRtXpK+pEdBoOIQmnOPZDZkKKIM6bS0KR4Q2dM
+	jYdpjcd+dkt+eqXvHW4r7SKWbPrnh0JoNMYbMjnpkvtukObUSUq8qNBHkICpoUb0SauNmLVl8PE
+	2eu3ACZAILxeC7Si7t9+Zkqy7I2uT9ssPZrNoy8D9d5R2KUFK7AT/RfHJj0qwlF5f+N7SU5HhWv
+	hPWGBsfw+EU593/T2Y3J1YJrfeDXoeinpU54JHnqKm9trzEnzUHnpZGmp2tsX+Kx+iS7XJC+cY2
+	HyjLfCf0Bq8CcWZqA8WPyvhKhoPp9kQ+GQXXolMaL
+X-Received: by 2002:ac8:5813:0:b0:50b:551d:ca7a with SMTP id d75a77b69052e-50d62d18253mr330224391cf.52.1775674111611;
+        Wed, 08 Apr 2026 11:48:31 -0700 (PDT)
+X-Received: by 2002:ac8:5813:0:b0:50b:551d:ca7a with SMTP id d75a77b69052e-50d62d18253mr330224011cf.52.1775674111155;
+        Wed, 08 Apr 2026 11:48:31 -0700 (PDT)
+Received: from [192.168.129.206] ([216.158.158.246])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d5ea136a1sm148904291cf.25.2026.04.08.11.48.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Apr 2026 11:48:30 -0700 (PDT)
+Message-ID: <01e6c582-fbab-40ec-97ac-02675e6a08ed@columbia.edu>
+Date: Wed, 8 Apr 2026 14:48:30 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE3MCBTYWx0ZWRfX87itVyAk2BZw
- 5zN6CXNfltPIFFRrEFyk869PVeO3cgxSrbmZlzzYBGnb1mdnjf3zpO8wEziXbIsFmagcLb3SuR4
- T52vGnAn6vvAWG39vJ/eBB2BxTyQVw54CRz3a3tLAUNM+uNYcZeIuvuymRGYGTU+nTa6G8IcVcA
- 5KQpuGuuawggPiyDy08JyuhSaEnXGSbc9psXzBKyg9AcrSBirixkttd1S9Jd7SmnYjQ1cUEmu0p
- VKsyhI9AMvepW3hcpinDZYzXRrKUfhGyg//PeDrX/IXryF7XZYRm/XBkcf3LiOp5XiIHtVignxa
- /cY26NUPpYWgQl2R9h5ljUTGL2XTctcHF/8ZPP03g22nWNksmLvBnsQdVeOh95g/PbrEUwZpw2x
- Q5NZa45dMbvltx6Kr34IATMaHn0SRDb/UYKIGJ2KfDL4hNoduv9O6R5WACz/OhzdLq+KGo1sVLE
- ynWayXCnc16PZ48IL3Q==
-X-Authority-Analysis: v=2.4 cv=FsY1OWrq c=1 sm=1 tr=0 ts=69d6a286 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=VnNF1IyMAAAA:8
- a=qsowkHyYPmhlFs6s4IEA:9
-X-Proofpoint-ORIG-GUID: yg4EfJuoyroMIX8kQWusv1PnSFj0EC2h
-X-Proofpoint-GUID: 8y3ULG_eg5bbhD938sHwn0yaRqJi3mqR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-08_05,2026-04-08_01,2025-10-01_01
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
+ task-context completion
+To: Jens Axboe <axboe@kernel.dk>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong"
+ <djwong@kernel.org>,
+        Carlos Maiolino <cem@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
+ <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
+ <c4453f4e-c1a2-4f5a-b278-76b63d5dc4a3@kernel.dk>
+Content-Language: en-US
+From: Tal Zussman <tz2294@columbia.edu>
+In-Reply-To: <c4453f4e-c1a2-4f5a-b278-76b63d5dc4a3@kernel.dk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: aTxCuybE6NUgm-iFuebNpnXgbkyj3JOW
+X-Authority-Analysis: v=2.4 cv=UplT8ewB c=1 sm=1 tr=0 ts=69d6a300 cx=c_pps
+ a=WeENfcodrlLV9YRTxbY/uA==:117 a=mD05b5UW6KhLIDvowZ5dSQ==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=x7bEGLp0ZPQA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=Qm0qsxP7aFY2tkT6R2MF:22
+ a=Da_CJWPV6nPH503sPTwA:9 a=QEXdDO2ut3YA:10 a=kacYvNCVWA4VmyqE58fU:22
+X-Proofpoint-GUID: aTxCuybE6NUgm-iFuebNpnXgbkyj3JOW
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE3NCBTYWx0ZWRfX7nKoDTNILiVn
+ 7/NUD9ZB8lWmVjqVfj9lK21vuhx8BioF0NGp/K9+a5T8IBqa6Gr8463f0B7ygcA9anlPctJMfh0
+ orLpAmTUOS3vNS9JO3nmPSiLWh+tMbkFeSVbMzU2rfrZQY/rc0pZWSmNYZJA0XYV+3p2deJrsnP
+ RT5SNsHfd9KlfOedJL/d4e3SxZgXVPa/fqES/Bc/csU+i+kqYtsXgafcHPrdGMT/Dav8O70hm59
+ OPJgDQ/PwEDz7MO52uCRK/Or6rBZ3zLVrtQwNQq4DHUoI88LN1i+y89KyFItHyZuHGlHx4nPPL8
+ 3GGwDrgWoHC8YO7Ilc/QJedZ922SCkZOKn7jRX2MYyv6salyoKOU6qOZLeXBDgnCmfqgkujtxDc
+ StrD1MnFux/LN+LVeLq6Qf4F9h+mMFXyvdxH6CPhMCnBpR61C3IllAB7E/fOWDpidtuNhABPYFv
+ Yj2mJp/X6baQRBTqOUQ==
+X-Proofpoint-Virus-Version: vendor=nai engine=6800 definitions=11753
+ signatures=596818
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0
- lowpriorityscore=0 clxscore=1015 adultscore=0 malwarescore=0 suspectscore=0
+ priorityscore=1501 bulkscore=10 spamscore=0 phishscore=0 lowpriorityscore=10
+ impostorscore=10 malwarescore=0 clxscore=1015 suspectscore=0 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080170
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080174
 
-Add DSYNC support to writethrough buffered writes. Unlike the usual
-buffered writes where we call generic_write_sync() inline during the
-syscall path, for writethrough we instead sync the data during IO
-completion path, just like dio.
+On 3/25/26 4:14 PM, Jens Axboe wrote:
+> On 3/25/26 12:43 PM, Tal Zussman wrote:
+>> +static void bio_complete_work_fn(struct work_struct *w)
+>> +{
+>> +	struct bio_complete_batch *batch;
+>> +	struct bio_list list;
+>> +
+>> +again:
+>> +	local_lock_irq(&bio_complete_batch.lock);
+>> +	batch = this_cpu_ptr(&bio_complete_batch);
+>> +	list = batch->list;
+>> +	bio_list_init(&batch->list);
+>> +	local_unlock_irq(&bio_complete_batch.lock);
+>> +
+>> +	while (!bio_list_empty(&list)) {
+>> +		struct bio *bio = bio_list_pop(&list);
+>> +		bio->bi_end_io(bio);
+>> +	}
+>> +
+>> +	local_lock_irq(&bio_complete_batch.lock);
+>> +	batch = this_cpu_ptr(&bio_complete_batch);
+>> +	if (!bio_list_empty(&batch->list)) {
+>> +		local_unlock_irq(&bio_complete_batch.lock);
+>> +
+>> +		if (!need_resched())
+>> +			goto again;
+>> +
+>> +		schedule_work_on(smp_processor_id(), &batch->work);
+>> +		return;
+>> +	}
+>> +	local_unlock_irq(&bio_complete_batch.lock);
+>> +}
+> 
+> bool looped = false;
+> 
+> do {
+> 	if (looped && need_resched()) {
+>      		schedule_work_on(smp_processor_id(), &batch->work);
+> 		break;
+> 	}
+> 
+> 	local_lock_irq(&bio_complete_batch.lock);
+> 	batch = this_cpu_ptr(&bio_complete_batch);
+> 	list = batch->list;
+> 	bio_list_init(&batch->list);
+> 	local_unlock_irq(&bio_complete_batch.lock);
+> 
+> 	if (bio_list_empty(&list))
+> 		break;
+> 
+> 	do {
+> 		struct bio *bio = bio_list_pop(&list);
+> 		bio->bi_end_io(bio);
+> 	} while (!bio_list_empty(&list));
+> 	looped = true;
+> } while (1);
+> 
+> would be a lot easier to read, and avoid needing the list manipulation
+> included twice.
 
-This allows aio writethrough to be truly async where the syscall can
-return after IO submission and the sync can then be done asynchronously
-during IO completion time.
+Yep, that looks cleaner. Although do we really need the looped variable?
+Can't we just move the need_resched() check right before the while (1)?
 
-Further, just like dio, we utilize the FUA optimization, if available,
-to avoid syncing the data for DSYNC operations.
+>> +static void bio_queue_completion(struct bio *bio)
+>> +{
+>> +	struct bio_complete_batch *batch;
+>> +	unsigned long flags;
+>> +
+>> +	local_lock_irqsave(&bio_complete_batch.lock, flags);
+>> +	batch = this_cpu_ptr(&bio_complete_batch);
+>> +	bio_list_add(&batch->list, bio);
+>> +	local_unlock_irqrestore(&bio_complete_batch.lock, flags);
+>> +
+>> +	schedule_work_on(smp_processor_id(), &batch->work);
+>> +}
+> 
+> Maybe do something ala:
+> 
+> static void bio_queue_completion(struct bio *bio)
+> {
+> 	struct bio_complete_batch *batch;
+> 	unsigned long flags;
+> 	bool was_empty;
+> 
+> 	local_lock_irqsave(&bio_complete_batch.lock, flags);
+> 	batch = this_cpu_ptr(&bio_complete_batch);
+> 	was_empty = bio_list_empty(&batch->list);
+> 	bio_list_add(&batch->list, bio);
+> 	local_unlock_irqrestore(&bio_complete_batch.lock, flags);
+> 
+> 	if (was_empty)
+> 		schedule_work_on(smp_processor_id(), &batch->work);
+> }
 
-Suggested-by: Dave Chinner <dgc@kernel.org>
-Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
- fs/iomap/buffered-io.c | 37 +++++++++++++++++++++++++++++++++----
- include/linux/iomap.h  |  1 +
- 2 files changed, 34 insertions(+), 4 deletions(-)
+Makes sense, will do!
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 6937f10e2782..8965f603f2cf 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1119,6 +1119,14 @@ static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx
- 	if (!ret) {
- 		ret = wt_ctx->written;
- 		iocb->ki_pos = wt_ctx->pos + ret;
-+
-+		/*
-+		 * If this is a DSYNC write and we couldn't optimize it, make
-+		 * sure we push it to stable storage now that we've written
-+		 * data.
-+		 */
-+		if (iocb_is_dsync(wt_ctx->iocb) && !wt_ctx->use_fua)
-+			ret = generic_write_sync(iocb, ret);
- 	}
- 
- 	kfree(wt_ctx);
-@@ -1173,6 +1181,7 @@ iomap_writethrough_submit_bio(struct iomap_writethrough_ctx *wt_ctx,
- 	struct bio *bio;
- 	unsigned int i;
- 	u64 len = 0;
-+	blk_opf_t opf = REQ_OP_WRITE;
- 
- 	if (!wt_ctx->nr_bvecs)
- 		return;
-@@ -1184,7 +1193,10 @@ iomap_writethrough_submit_bio(struct iomap_writethrough_ctx *wt_ctx,
- 		wt_ops->writethrough_submit(wt_ctx->inode, iomap, wt_ctx->bio_pos,
- 					    len);
- 
--	bio = bio_alloc(iomap->bdev, wt_ctx->nr_bvecs, REQ_OP_WRITE, GFP_NOFS);
-+	if (wt_ctx->use_fua)
-+		opf |= REQ_FUA;
-+
-+	bio = bio_alloc(iomap->bdev, wt_ctx->nr_bvecs, opf, GFP_NOFS);
- 	bio->bi_iter.bi_sector	= iomap_sector(iomap, wt_ctx->bio_pos);
- 	bio->bi_end_io		= iomap_writethrough_bio_end_io;
- 	bio->bi_private		= wt_ctx;
-@@ -1273,6 +1285,19 @@ static int iomap_writethrough_iter(struct iomap_writethrough_ctx *wt_ctx,
- 	if (!(iter->flags & IOMAP_WRITETHROUGH))
- 		return -EINVAL;
- 
-+	/*
-+	 * If we realise that cache flush is neccessary (eg FUA is not present
-+	 * or we need metadata updates) then we turn off the optimization.
-+	 */
-+	if (wt_ctx->use_fua) {
-+		if (iter->iomap.type != IOMAP_MAPPED ||
-+		    (iter->iomap.flags &
-+		     (IOMAP_F_NEW | IOMAP_F_SHARED | IOMAP_F_DIRTY)) ||
-+		    (bdev_write_cache(iter->iomap.bdev) &&
-+		     !bdev_fua(iter->iomap.bdev)))
-+			wt_ctx->use_fua = false;
-+	}
-+
- 	do {
- 		struct folio *folio;
- 		size_t offset;		/* Offset into folio */
-@@ -1545,9 +1570,6 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
- 		return -EINVAL;
- 	if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_DONTCACHE))
- 		return -EINVAL;
--	if (iocb_is_dsync(iocb))
--		/* D_SYNC support not implemented yet */
--		return -EOPNOTSUPP;
- 
- 	/*
- 	 * +1 to max bvecs to account for unaligned write spanning multiple
-@@ -1575,6 +1597,13 @@ ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
- 	wt_ctx->is_aio = !is_sync_kiocb(iocb);
- 	atomic_set(&wt_ctx->ref, 1);
- 
-+	/*
-+	 * Similar to dio, we optimistically set use_fua=true to avoid explicit
-+	 * sync. In case we later realise cache flush is needed we set it back
-+	 * to false.
-+	 */
-+	wt_ctx->use_fua = iocb_is_dsync(iocb) && !(iocb->ki_flags & IOCB_SYNC);
-+
- 	if (!wt_ctx->is_aio)
- 		wt_ctx->waiter = current;
- 	else
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index e99f7c279dc6..579bc48ed39c 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -487,6 +487,7 @@ struct iomap_writethrough_ctx {
- 	unsigned int		flags;
- 	int			error;
- 	bool			is_aio;
-+	bool			use_fua;
- 
- 	union {
- 		/* used during submission and for non-aio completion */
--- 
-2.53.0
+> Outside of these mostly nits, I like this approach. It avoids my main
+> worry with this, which was contention on the list locks. And on the
+> io_uring side, we'll never hit the !in_task() path anyway, as the
+> completions are run from the task always. The bio flag makes sense for
+> this.
+
+Thanks! I'm going to give Dave's llist suggestion a shot on top of this as
+it seems like it'll simplify this nicely. Looks like that'll involve turning
+bio::bi_next into a union with a struct llist_node.
+
+- Tal
 
