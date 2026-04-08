@@ -1,107 +1,51 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79F5233AD9D;
-	Tue,  7 Apr 2026 18:38:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C49D53358BE;
+	Wed,  8 Apr 2026 05:11:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775587081; cv=none; b=bm7mXBisP7yklWHtoH3ThfSkObGbbjFGX02XTqzEaW+phqPxpged7eGUWe41BMnQ63zwG008cig1DC/nVjyMYJjHrJHHIp22tcbxDXOzn0uUofl5ZUsGRuNhxgL1Fe5zBDoYfHEvcCiEzqNYQdHOoz6NDV4AbpMEivRRgJWIcRw=
+	t=1775625116; cv=none; b=eUz7GKm2bzPm5NjnAhEECqI+pBvIpcR6BSknguh9qVH6ZdSJ6bz7wERY5YWv7Mw7FD8yg4ITaDA5w+NHt0uxi4HTyuEnwZk+sgn6sVSXGVOA63dFF6qZ/E7UyhYbPzQgTD1YLfjoWj+DR/mWWmI2TsdXYZKn42N7aWyQxJL5tjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775587081; c=relaxed/simple;
-	bh=HcDQS5ebeH7ZieOVm0mj4e8Ylamz97Bs61GYx75xD0o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hncguWe6EQ6iasTqYK/KguaXkEU1UNWjL5ZfY1GUaon6co4hGawVcuaNxDI8AiDV0ytSDkoaWLFg3N7YzhSuAWiff63GI6NxrL/W+PFM43B9+3ghITOWjd1Qox2+X+2OjAUso0yy5ATC/wad1N+i/cKE9Y846msJjcTNHo1mJS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qhNOQLQ/; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qhNOQLQ/"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fqw1N02k7z1XMG56;
-	Tue,  7 Apr 2026 18:38:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1775587074; x=1778179075; bh=MGl7phjuS++wdWPeaaMrSIv4
-	kIoMoCzHze4rIjNFHzQ=; b=qhNOQLQ/vdcCawHnlyuyL5NBP2Gm3y5rj2rzDcbu
-	7YfB4X/7F7cF602Gz9SjrgOmk43wnI1bvOjyvHfP1TV335yIBs0UzDSdaJZCJA+e
-	Xdh1FqoI1OkxbA2fBRpncH6VjVqARz+FpqiyTn3upYbGM6Wfs3YMfTcnWiDGTK7v
-	sEzC+el58i2eu7wkBOK1ezpg09H+Wl419I3TEeFyl0TM1zb/3PEF+mwh1aJseXM2
-	0jcLJbAxfKftrusLuCk53eYVGOrtcjrjgANYMZp+BYResqhfh+5hF8QiNtIVdGGJ
-	rOhbgwZ5Oq/ejwX0k+GVkXa7eNuXguy2qWgvocYln2VWrg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id PJLtKzVIv03M; Tue,  7 Apr 2026 18:37:54 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fqw1D1V85z1XMFjb;
-	Tue,  7 Apr 2026 18:37:51 +0000 (UTC)
-Message-ID: <b2e8e413-39bf-4255-8aad-a30d7fd676ea@acm.org>
-Date: Tue, 7 Apr 2026 11:37:50 -0700
+	s=arc-20240116; t=1775625116; c=relaxed/simple;
+	bh=o9GPvtgJ++k+I844T2/e4AmsIvqqMlEEeCsO0UJCfp4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bdh5cfqio174Vrk1jVfIuqr8BZAsam7D8q75DVA5hAGQwg83WyFgQFPXz8mGJcCKHaGwc3uNVoF361AOFU33ULqXNHLIbeYerjD3rDha0KkOc8NR/dnhbmOrUys6Ksje0CowxqkCzhHc9YSH9AX+/ska72K4tYfxrFCjeI8sXto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id D0BA568C4E; Wed,  8 Apr 2026 07:11:49 +0200 (CEST)
+Date: Wed, 8 Apr 2026 07:11:49 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] block: factor out a bio_await helper
+Message-ID: <20260408051149.GA23717@lst.de>
+References: <20260407140538.633364-1-hch@lst.de> <20260407140538.633364-4-hch@lst.de> <dbbd5553-1442-4a90-88cd-59348f81cbb7@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] block: add a bio_submit_or_kill helper
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20260407140538.633364-1-hch@lst.de>
- <20260407140538.633364-5-hch@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260407140538.633364-5-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dbbd5553-1442-4a90-88cd-59348f81cbb7@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
+On Tue, Apr 07, 2026 at 07:59:57AM -0700, Bart Van Assche wrote:
+>>   }
+> The comment above bio_await() says that the callback function passed as 
+> third argument submits the bio. The above code passes bio_end_cb as the
+> "submit" argument. bio_end_cb() does something else than submitting a
+> bio. How about renaming the "submit" argument of bio_await() into
+> something else, e.g. "cb" or "callback" to make its role more clear?
 
-On 4/7/26 7:05 AM, Christoph Hellwig wrote:
-> diff --git a/block/ioctl.c b/block/ioctl.c
-> index 0b04661ac809..fc3be0549aa7 100644
-> --- a/block/ioctl.c
-> +++ b/block/ioctl.c
-> @@ -153,13 +153,7 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
->   	nr_sects = len >> SECTOR_SHIFT;
->   
->   	blk_start_plug(&plug);
-> -	while (1) {
-> -		if (fatal_signal_pending(current)) {
-> -			if (prev)
-> -				bio_await_chain(prev);
-> -			err = -EINTR;
-> -			goto out_unplug;
-> -		}
-> +	while (!fatal_signal_pending(current)) {
->   		bio = blk_alloc_discard_bio(bdev, &sector, &nr_sects,
->   				GFP_KERNEL);
->   		if (!bio)
-> @@ -167,12 +161,11 @@ static int blk_ioctl_discard(struct block_device *bdev, blk_mode_t mode,
->   		prev = bio_chain_and_submit(prev, bio);
->   	}
->   	if (prev) {
-> -		err = submit_bio_wait(prev);
-> +		err = bio_submit_or_kill(prev, BLKDEV_ZERO_KILLABLE);
->   		if (err == -EOPNOTSUPP)
->   			err = 0;
->   		bio_put(prev);
->   	}
-> -out_unplug:
->   	blk_finish_plug(&plug);
->   fail:
->   	filemap_invalidate_unlock(bdev->bd_mapping);
+It was called kick and Damien objected politely.  A direct completion
+isn't really distinguishable from a submission anyway, submit_bio
+could complete the bio with an error before doing much.
 
-Without this change, if a fatal signal is pending before the loop 
-starts, -EINTR is returned. With this patch applied, 0 is returned,
-isn't it?
-
-Thanks,
-
-Bart.
