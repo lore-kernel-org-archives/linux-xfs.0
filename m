@@ -1,73 +1,73 @@
 Received: from mx0b-00364e01.pphosted.com (mx0b-00364e01.pphosted.com [148.163.139.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4E237B021
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2026 19:35:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F76127979A
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2026 19:36:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.139.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775676957; cv=none; b=ipPEGGxIGey2yjLB1tDPhLaByaivzHqpgpjOwgcQVP/3E98zY+CSD+64JeWphw/GSDZaW2MqxGaNcvq1ZrHTrkv+Gx9AQfIotHky8ihR5QDqkLOA0WLsveHZsDxNbjIxkdY6umFODVTSCjIx0xx+368yvCTzJddmU2by5Vi9C7k=
+	t=1775677010; cv=none; b=M87yr2Q7fAqnrJ32vfQxlW5y7Z1JHsH40KsuOcK4f0IOu27nFoLyccvvTcnhni6WpIbf//w5F9F5gdhbu8O1rCwTVTj9t5okUHYM7daWHaN2XKhHnRCsjjEkTn9Y3Ie1WX4FF7AB0aUyOkT9AskARYoEUc5jIT3pOqQp5ektFPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775676957; c=relaxed/simple;
-	bh=FtehZzc3TFurHrC37Kc6r2VFZZOATrcOKFy5M3V08TI=;
+	s=arc-20240116; t=1775677010; c=relaxed/simple;
+	bh=XwPRZu5Ld+QTZqlV+HMue7Ds/fH2LaUK/cZVeqKosVM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CfgitnhdFmsenAb3TSZAS4BR4F5r9/f/DdBu5qc1+iUHt8G6i0Hudjdehy2dMd9L4nqYk/6Zk81iEBX7I4TDjfnlLVm8gmqo8E3mZ5FUI+npGtgAiRfaN8dh0d16FrqS4pc//WNGXCZUIb0PDyFDyE6ro0MNG9xZsOwoC60Yl48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=Bh99876D; arc=none smtp.client-ip=148.163.139.74
+	 In-Reply-To:Content-Type; b=EzGLKbYIxcTOU7fQulfTIqYsf6hxuPMDo8pahHGC2Kfaz2g3hbsVW/K2ko7WGGCyJlCdCaUhdOUlL97SA1NK0dhmpz61Jxi61th7FNndJrNtuwHbWE1bhI9Cvdzihrc+5X0p9y7112jnEdT9oPQnAtkUPc9/QBl3rdPS+71AGaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=QA99faMh; arc=none smtp.client-ip=148.163.139.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="Bh99876D"
-Received: from pps.filterd (m0167076.ppops.net [127.0.0.1])
-	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638JNLMC3556911
-	for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2026 15:35:55 -0400
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="QA99faMh"
+Received: from pps.filterd (m0167073.ppops.net [127.0.0.1])
+	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638JPF3u1274194
+	for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2026 15:36:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=E4LG
-	Lk/CDNL83hlgUo8iXk9zFAF5PxXFc3V0NN89y0o=; b=Bh99876DlThe4BSrmYhz
-	BT49B/aYdNpnd5iXtmahdBmWQKp/nLM7EjQidIcVzMQu0zTcB9WhKQoUhcQ56heK
-	5zV2ZTddiaC6RxhQMa/3ecHH0Fzml6zO4IzVbRJpnOjJvzciBUaBCwXgbtXVeneK
-	FP8Xt+w6gyqpBzKGjC7/1oEVDvOHhqumfe7LK/Evxpw9i8BV/Ak2Ti10fNw+JAlH
-	K10VNlfSBV4KFxb6JDcQUQ+uB/at25i24L1wPVi51/y+nQY78gxCvOr5ponpRO2s
-	LXoItPMPFOhAkpFIu+qalKnqsA0rBuc8xR5faWwr1DuNe9DlvITzCPq2Bak+N1Tj
-	Zg==
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4dda3r75jh-1
+	:message-id:mime-version:references:subject:to; s=pps01; bh=96l/
+	i7uyqouj4dytN5MpYVZKfSy3eXi7wDZWJb62Zz8=; b=QA99faMhBQ2CRLNNFL8L
+	qRU0KP4xnwNqn7cMfDQW5hCPv6hts7r/Xd5kZaAY3dSC43v6ijdCL1tNUW26zeG0
+	i00xv5/w0hQP+E/6FmGItYboGNRG00oqthfvGcLHUjewrJYPfEU7rIUhb+rrH3ZI
+	E7MY1V9FjX/Rjvqq6Buhdtpm+GujTj7zgsZPqlGlaK9OmmMVEoPJ8/8i9H/r++Ew
+	xasVMLD228PIgjw2pkPCzEZbfiWSUlXyI0hlkxJ+Un5rnqSYBqPbHFeq+tEtIyhj
+	R4oX1MgQkBQVvA1CNbDR1nsrNcP1286385FwkRZAdf/g5IG6aI/qI16ZN0btyleO
+	5w==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4dda3mfb23-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 15:35:54 -0400 (EDT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-50d5d1c2289so4955941cf.2
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 12:35:54 -0700 (PDT)
+	for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 15:36:48 -0400 (EDT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-50b44f7b7bbso5160761cf.3
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 12:36:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775676954; x=1776281754;
+        d=1e100.net; s=20251104; t=1775677008; x=1776281808;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=E4LGLk/CDNL83hlgUo8iXk9zFAF5PxXFc3V0NN89y0o=;
-        b=GCiasfOmBOekUZITa+acw3B2APL4GSt9n3hJUicuZ4hlGJn/2uDydcp5xZ9ZidTSmj
-         MbLvM6VWpor2RPALD9UsTJUV8d5ExCx2Ih9GDqqJLUBstXtdzKdcXTGu2h4AApsLFWmL
-         v2EwsFgtHE3M+s/q0V/v0CeFOAAeJ4HdSLajTEJBpyu64OuPbix0eFtWioeECApSLzE1
-         FA+CpYZREIDFTm5Xc5cAAV8JzbonzsmltM9fSzyGFG3mk5Ns1mbQt900e03pfMM4CiGD
-         fpzbsrvUGDBT62XHtoCCcXyfEeKx8kt16KTUVssaIEdZtSQik2JyUNOXWa++5LndRSXc
-         fy1A==
-X-Forwarded-Encrypted: i=1; AJvYcCU2GBDiV+XT8KjXcb5GCwrHmEkEODO1wen6Q5GRe+uIFVfbyUqPigGbr0iDd18Ldt6WZQXWYOK6o3Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YznnyhGCLUndxjGvqTFQhl8nqFYZ9YlkHfVTtj0/7k0frIMu6tg
-	twMGGFhkArYeBABKTRu3YUDAe5aOjkRusECJMQNadl64T6u3c5ePSq5apu4BFiblZUe7BIM2H9c
-	gzVWi0fG2KUSJ2qIWjBDmW7+oisfRqygpMlnrhRwFl1QgsGugkf5XPNP2wQ==
-X-Gm-Gg: AeBDieuEkOdE9a3wpyMu8Zfeg5yA4Jo4E9x/GsNgDQx0JJjxtaEvdYnvghw+3eFOEvr
-	nq7KThRatGG24+v6h67jIC/u1ZBiuubjxXg9xAfTacCUFISw/jX91IbyV1+rJPf+kHm9203wM03
-	2osdk8R6GoEWMorCwSBaezKsGCrR724bNidBtyZveq2nYRFnautz3g/piUkiKbhEIW3zr4jPdRR
-	G8/oKk//+NGE0Y0zcXgpYya82t8NswaOR0q79sH37pU4UobodmzYf20N3Bq3LkBABZhkMKMwE5y
-	S2YfO80tJVbr4LTjATWrYalusoKJFjOFvrURWVYzHUNJg1zVFy6D0VHeQ2fKoRQydsww70tyknR
-	v+eMCUoi6qkmX+JphmOrPmTL2LPO7JFIoCxZc5bfL
-X-Received: by 2002:ac8:5908:0:b0:50d:a987:89b2 with SMTP id d75a77b69052e-50da98798fdmr100185531cf.31.1775676954050;
-        Wed, 08 Apr 2026 12:35:54 -0700 (PDT)
-X-Received: by 2002:ac8:5908:0:b0:50d:a987:89b2 with SMTP id d75a77b69052e-50da98798fdmr100185051cf.31.1775676953617;
-        Wed, 08 Apr 2026 12:35:53 -0700 (PDT)
+        bh=96l/i7uyqouj4dytN5MpYVZKfSy3eXi7wDZWJb62Zz8=;
+        b=m42o3Q+4zIBcXzTHaW2XOknh7MOpdk/6tG+hj42oHGWFkS/SEc2ORaaj6P/WXgShYG
+         tgqEzCTxgHMhGygs4NTC41GsxDY9UrQcsLOe30otv/Yqznx692yZIzTikzEuuu42Gecd
+         M8R1uwVeqaYm1wWP7HNwzT1ySmHDX1mPJZiqzSIoaEBGI/qn4Tyrfv3jONN4fZQAc4jX
+         DW16kp8AZQNnGT2cl3HShgNHRYzqln6FfIL1kE5ksoia3NivbIHbM7+QjrIQVs9/rZJy
+         ZlmKLb/eLWeBrEbH0tu9PLHdHIvKY3ejXyljJ1uQQm7I0TN/oASQUuN9YqP+c3UpsBjo
+         zlUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX86k4dlFG8uxy3JTjPW3vuX2wPNd6LpxkNOZeT9ChS90N1AjQroPtijBbGOXouk9d3sMVvk7rU1X8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyweJnNRY02x+9sOfMKTBNt980gw3xBuk+9vcIVZ+Hhthp85p09
+	XiZziIDD83UNtlyAjI51B65r9oAJlGA7ZWlgmryxq95wQOckVUPGSrs2l0qTVgajOuNdfdk2IpN
+	y5o+v7GTvhw1fIbXorMnJVnLJrUrdZ4o/nE5lvP8T7Z/YqCaL+J5QCe9ABg==
+X-Gm-Gg: AeBDietHC+D0TEUtiyg/eTypA3qshzXlk5Al9aWXM/62yUinjUvdYDcRO1NcS3u4DJI
+	AROSbvx7ALgjc1/SnlMuNRgWz+U5p4m2k99Kj/qWZlCXgZJ3gGxqY7OkXOQ4Wqz+BmJfSlzYkOO
+	IQhBIv7jjfEu/4vkaxMYyV+VO+i439QIiR1zSOnFamH5rbxVzyZTjYe3H9Ry5hAQA26WavX8AmW
+	HdOBA/kF7a1TfXII+TVZ+yn46fxEgu57B27M+mkNTSLRamDwUuI5JL/qa4dE7Egk/5+K4pLBxrA
+	5OysQLF7uB2juVXSd4cv6+1araDP5CB/BmHskHi6EstE+OVT2j7w+I/JzBSrrZNMqIlY2BJvZzH
+	XiGh8gU0H8pYNsj/AlfvpOMGafyUpPEpOUYSeHcVo
+X-Received: by 2002:a05:622a:1a86:b0:50d:6b6d:bc17 with SMTP id d75a77b69052e-50dc212b2e3mr10299401cf.23.1775677007883;
+        Wed, 08 Apr 2026 12:36:47 -0700 (PDT)
+X-Received: by 2002:a05:622a:1a86:b0:50d:6b6d:bc17 with SMTP id d75a77b69052e-50dc212b2e3mr10298851cf.23.1775677007355;
+        Wed, 08 Apr 2026 12:36:47 -0700 (PDT)
 Received: from [192.168.129.206] ([216.158.158.246])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d82afc7d5sm126128111cf.30.2026.04.08.12.35.52
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d64752857sm142454931cf.21.2026.04.08.12.36.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Apr 2026 12:35:52 -0700 (PDT)
-Message-ID: <52016a51-58c7-41eb-8824-3c133aab90b2@columbia.edu>
-Date: Wed, 8 Apr 2026 15:35:52 -0400
+        Wed, 08 Apr 2026 12:36:46 -0700 (PDT)
+Message-ID: <c7342d7f-5c92-4a2c-9d00-5f9cf478f4e1@columbia.edu>
+Date: Wed, 8 Apr 2026 15:36:45 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,117 +75,86 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
- task-context completion
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong"
- <djwong@kernel.org>,
+Subject: Re: [PATCH RFC v4 2/3] iomap: use BIO_COMPLETE_IN_TASK for dropbehind
+ writeback
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
         Carlos Maiolino <cem@kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
+        Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 References: <20260325-blk-dontcache-v4-0-c4b56db43f64@columbia.edu>
- <20260325-blk-dontcache-v4-1-c4b56db43f64@columbia.edu>
- <acYdOOpo51xrzNBg@infradead.org>
+ <20260325-blk-dontcache-v4-2-c4b56db43f64@columbia.edu>
+ <acRDyJrkJhnHHMSe@casper.infradead.org>
 Content-Language: en-US
 From: Tal Zussman <tz2294@columbia.edu>
-In-Reply-To: <acYdOOpo51xrzNBg@infradead.org>
+In-Reply-To: <acRDyJrkJhnHHMSe@casper.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: W6JWtrl8gGfvHj1DPqV03NvpcDohBuAd
-X-Authority-Analysis: v=2.4 cv=UplT8ewB c=1 sm=1 tr=0 ts=69d6ae1a cx=c_pps
- a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=mD05b5UW6KhLIDvowZ5dSQ==:17
+X-Proofpoint-GUID: jZzJint8kgWR_vwXXCWLDwEHVDi0MRUC
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE4MyBTYWx0ZWRfX/qaJstqe2pxK
+ Pcohv69Co4+p+9oQacVQhcFNaU66A7JwQcoL2Or/QO+HRNiFKgZctJncGI/d/pwR/G2YQNmI5VP
+ m+Pefrug3fH00cySocfvHhXbirRs4VSXhkp38VBqj7i1fvvr3SEy9qnOccQGsMdhKen7cn8Kl2J
+ oMu+O1xY+2p6fTHvC9I/T2ZkqpGF3DcapzhS28ZwTqLciVd6jLZP8f85V/8PaBlHAxeX35AwFDe
+ m59oHdp1aWgj34bRDM5L1Z0qRI38Qy1hEBrxFxImIYqEWknW83DkyFPabUjZWc+BqzISsfa+ICL
+ 4hbLmK0xByvwnQNsbhus0J03kODIi3BhxhNDQUsuKvuRS+YhkOJycufkiTXyv06ThCN3+YSlvBb
+ 6ZtPce85mKCRFNIMvMyC+aIF+LNUqih4Aljh6eupTgkDo39zpGNI8J30ASWsz33IUUKcP5tL/ND
+ 76/D/BosnH89UCNqphA==
+X-Proofpoint-ORIG-GUID: jZzJint8kgWR_vwXXCWLDwEHVDi0MRUC
+X-Authority-Analysis: v=2.4 cv=X7Fi7mTe c=1 sm=1 tr=0 ts=69d6ae50 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=mD05b5UW6KhLIDvowZ5dSQ==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=x7bEGLp0ZPQA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=Qm0qsxP7aFY2tkT6R2MF:22
- a=h9G_tkD_DQui4U1ChFoA:9 a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22
-X-Proofpoint-GUID: W6JWtrl8gGfvHj1DPqV03NvpcDohBuAd
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE4MyBTYWx0ZWRfXx8BI7L6DsOJo
- eAEqHcD9quNFNb10SdW7Q7sWkjxd4ss5IyzHgrFyhx7OnPYZQSQb4p2G/hXEyHnUmbojOPV8/Po
- a5ZFUA+gYTaM89+8przyVwqKdKmDRh09JK9in4l1LYSXgoC1/ql6YVL9IyEDQ+cGe5mljIlfX/8
- KcLpTJZtgWFmx6L1hIgRCgXIvBzFFRQNSsEIh96QK9rA9lDwnCTX2mSSPPCpt/FGFu4wcpR8gK0
- FXFsMtYGuS14IqOh0PhjpdRHjK03ASI038o5QvyjSWnwMJ8tzLh4/FtWPkJgbO6Pv4lqMLSVRIG
- t1H8W7zPBYvIv+9+hQJbF8dOoedt5DRpq4zrK8YlSUJtNvuX9Ai50m3fGXWferifidXyBHil1MM
- 7CCeWGE0mA+tFPagcrRbyEscAEvVboG9AxZhp202Ee7IoL5Y99yo/0VvT+76kZkzzlrqzIG5FQC
- uCgAdwA/pwZdxldUwmg==
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=jHxIr1HyPKZ_Q5_91PL3:22
+ a=fDzNMwFgse8Xf2NrkjQA:9 a=QEXdDO2ut3YA:10 a=uxP6HrT_eTzRwkO_Te1X:22
 X-Proofpoint-Virus-Version: vendor=nai engine=6800 definitions=11753
  signatures=596818
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=10 spamscore=0 phishscore=0 lowpriorityscore=10
- impostorscore=10 malwarescore=0 clxscore=1015 suspectscore=0 adultscore=0
+ bulkscore=10 priorityscore=1501 impostorscore=10 spamscore=0 phishscore=0
+ adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=10 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080183
 
-
-
-On 3/27/26 2:01 AM, Christoph Hellwig wrote:
-> On Wed, Mar 25, 2026 at 02:43:00PM -0400, Tal Zussman wrote:
->> +static void bio_complete_work_fn(struct work_struct *w)
->> +{
->> +	struct bio_complete_batch *batch;
->> +	struct bio_list list;
->> +
->> +again:
->> +	local_lock_irq(&bio_complete_batch.lock);
->> +	batch = this_cpu_ptr(&bio_complete_batch);
->> +	list = batch->list;
->> +	bio_list_init(&batch->list);
->> +	local_unlock_irq(&bio_complete_batch.lock);
->> +
->> +	while (!bio_list_empty(&list)) {
->> +		struct bio *bio = bio_list_pop(&list);
->> +		bio->bi_end_io(bio);
->> +	}
+On 3/25/26 4:21 PM, Matthew Wilcox wrote:
+> On Wed, Mar 25, 2026 at 02:43:01PM -0400, Tal Zussman wrote:
+>> Set BIO_COMPLETE_IN_TASK on iomap writeback bios when
+>> IOMAP_IOEND_DONTCACHE is set. This ensures that bi_end_io runs in task
+>> context, where folio_end_dropbehind() can safely invalidate folios.
+>> 
+>> With the bio layer now handling task-context deferral generically, XFS
+>> no longer needs to route DONTCACHE ioends through its completion
+>> workqueue for page cache invalidation. Remove the DONTCACHE check from
+>> xfs_ioend_needs_wq_completion().
+>> 
+>> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
+>> ---
+>>  fs/iomap/ioend.c  | 2 ++
+>>  fs/xfs/xfs_aops.c | 4 ----
+>>  2 files changed, 2 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+>> index e4d57cb969f1..6b8375d11cc0 100644
+>> --- a/fs/iomap/ioend.c
+>> +++ b/fs/iomap/ioend.c
+>> @@ -113,6 +113,8 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+>>  			       GFP_NOFS, &iomap_ioend_bioset);
+>>  	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
+>>  	bio->bi_write_hint = wpc->inode->i_write_hint;
+>> +	if (ioend_flags & IOMAP_IOEND_DONTCACHE)
+>> +		bio_set_flag(bio, BIO_COMPLETE_IN_TASK);
+>>  	wbc_init_bio(wpc->wbc, bio);
+>>  	wpc->nr_folios = 0;
+>>  	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
 > 
-> bio_list_pop already does a NULL check, so this could be:
+> Can't we delete IOMAP_IOEND_DONTCACHE, and just do:
 > 
-> 	while ((bio = bio_list_pop(&batch->list)))
-> 		bio->bi_end_io(bio);
+> 	if (folio_test_dropbehind(folio))
+> 		bio_set_flag(&ioend->io_bio, BIO_COMPLETE_IN_TASK);
 > 
-> In fact that same pattern is repeated later, so maybe just add a helper
-> for it?  But I think Dave's idea of just using a llist (and adding a
-> new llist member to the bio for this) seems sensible.  Just don't forget
-> the llist_reverse_order call to avoid reordering.
-
-Will switch to llist.
-
->> +
->> +	local_lock_irq(&bio_complete_batch.lock);
->> +	batch = this_cpu_ptr(&bio_complete_batch);
->> +	if (!bio_list_empty(&batch->list)) {
->> +		local_unlock_irq(&bio_complete_batch.lock);
->> +
->> +		if (!need_resched())
->> +			goto again;
->> +
->> +		schedule_work_on(smp_processor_id(), &batch->work);
->> +		return;
->> +	}
->> +	local_unlock_irq(&bio_complete_batch.lock);
-> 
-> I don't really understand this requeue logic.  Can you explain it?
-
-If new bios were queued while we were processing this batch, we loop back
-and process them, if we don't need to reschedule. If we do need to
-reschedule, we re-queue the work item and return.
-
->> +	schedule_work_on(smp_processor_id(), &batch->work);
-> 
-> We'll probably want a dedicated workqueue here to avoid deadlocks
-> vs other system wq uses.
-> 
->> +static int bio_complete_batch_cpu_dead(unsigned int cpu)
->> +{
->> +	struct bio_complete_batch *batch = per_cpu_ptr(&bio_complete_batch, cpu);
-> 
-> Overly long line.
+> It'd need to move down a few lines in iomap_add_to_ioend() to after
+> bio_add_folio() succeeds.
 > 
 
-Will fix.
-
-Thanks,
-Tal
+Will do, thanks Matthew!
 
