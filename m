@@ -1,73 +1,73 @@
-Received: from mx0b-00364e01.pphosted.com (mx0b-00364e01.pphosted.com [148.163.139.74])
+Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F76127979A
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2026 19:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.139.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F29737EFE9
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Apr 2026 19:44:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775677010; cv=none; b=M87yr2Q7fAqnrJ32vfQxlW5y7Z1JHsH40KsuOcK4f0IOu27nFoLyccvvTcnhni6WpIbf//w5F9F5gdhbu8O1rCwTVTj9t5okUHYM7daWHaN2XKhHnRCsjjEkTn9Y3Ie1WX4FF7AB0aUyOkT9AskARYoEUc5jIT3pOqQp5ektFPI=
+	t=1775677482; cv=none; b=SXHHerns7vdsVLUfZXyyAXWz8QmE5j/IbIfMV22R1eJfZH2zhNxmxVcDMa/HbZjgLEfDXQEpxE7ZAiy9TKj/xJx4nLVoI2IFfJ/V0akFn927mVic7eV3FkgfJL5iVvrA8gGZpfZgBWTfHl7YpBipxa/hNfyJWBQB+O9vQPRmg4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775677010; c=relaxed/simple;
-	bh=XwPRZu5Ld+QTZqlV+HMue7Ds/fH2LaUK/cZVeqKosVM=;
+	s=arc-20240116; t=1775677482; c=relaxed/simple;
+	bh=UKOON8VnufQeIosYs85uC5OQYu8eeg0kTOI170aPmhg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EzGLKbYIxcTOU7fQulfTIqYsf6hxuPMDo8pahHGC2Kfaz2g3hbsVW/K2ko7WGGCyJlCdCaUhdOUlL97SA1NK0dhmpz61Jxi61th7FNndJrNtuwHbWE1bhI9Cvdzihrc+5X0p9y7112jnEdT9oPQnAtkUPc9/QBl3rdPS+71AGaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=QA99faMh; arc=none smtp.client-ip=148.163.139.74
+	 In-Reply-To:Content-Type; b=G8xCZMpnG2tQtQm9n5r6rkffqKdkQOGFTKc2zBuONwaiXKCUnqdPJPgnuUqOLCL0kV7x2rv/z0jmM6wQoCsBklxGsC6jqwXTw/nn3H2y2uF3Pg4Oz1pPaNJbfClta7Wdl+lUZfVz2hyTPeVJfVJxch9k3G3Y262vqs4i1sZR9Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=iUwfPg//; arc=none smtp.client-ip=148.163.135.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="QA99faMh"
-Received: from pps.filterd (m0167073.ppops.net [127.0.0.1])
-	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638JPF3u1274194
-	for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2026 15:36:48 -0400
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="iUwfPg//"
+Received: from pps.filterd (m0167072.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638JN33b992473
+	for <linux-xfs@vger.kernel.org>; Wed, 8 Apr 2026 15:44:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=96l/
-	i7uyqouj4dytN5MpYVZKfSy3eXi7wDZWJb62Zz8=; b=QA99faMhBQ2CRLNNFL8L
-	qRU0KP4xnwNqn7cMfDQW5hCPv6hts7r/Xd5kZaAY3dSC43v6ijdCL1tNUW26zeG0
-	i00xv5/w0hQP+E/6FmGItYboGNRG00oqthfvGcLHUjewrJYPfEU7rIUhb+rrH3ZI
-	E7MY1V9FjX/Rjvqq6Buhdtpm+GujTj7zgsZPqlGlaK9OmmMVEoPJ8/8i9H/r++Ew
-	xasVMLD228PIgjw2pkPCzEZbfiWSUlXyI0hlkxJ+Un5rnqSYBqPbHFeq+tEtIyhj
-	R4oX1MgQkBQVvA1CNbDR1nsrNcP1286385FwkRZAdf/g5IG6aI/qI16ZN0btyleO
-	5w==
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
-	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4dda3mfb23-1
+	:message-id:mime-version:references:subject:to; s=pps01; bh=cQ/T
+	G8NyYW11ar8cP2zAAoS1p0Xy/yaGNX7PKSKfnNI=; b=iUwfPg//iz4QeOnNBzRS
+	26n2mXDCUin867E41bkq6MbXzJHVhjIy/JEpfgrWMmzpIsMffhoxNVTijCNdayK/
+	omdxmyQIaWWqjhhsoGUDrlftst5MjFj746hiLNxRoVv72HAOs+GhT20N0600pdSJ
+	u5kM8hnYgRkZX6K4bIoCR7Qo/G/l5U/VGm6eJWpF8tJjbvRicduLndw2xV5BJFV6
+	2MO5int4NAEXn+ocjmyXJjwWv5Zn7wusO7sw/CSCjPjDYkxyp/CFH6qM1gnEVUvO
+	4Dt9o5W5NtfMdq6ljtr/V5OX8jy9ZDscvwkt3yUFXutNGJ/muM2RT9QZnmgA/w5E
+	Zg==
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4dda3nf8s2-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 15:36:48 -0400 (EDT)
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-50b44f7b7bbso5160761cf.3
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 12:36:48 -0700 (PDT)
+	for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 15:44:39 -0400 (EDT)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-50b220c72bbso6228871cf.1
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Apr 2026 12:44:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775677008; x=1776281808;
+        d=1e100.net; s=20251104; t=1775677478; x=1776282278;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=96l/i7uyqouj4dytN5MpYVZKfSy3eXi7wDZWJb62Zz8=;
-        b=m42o3Q+4zIBcXzTHaW2XOknh7MOpdk/6tG+hj42oHGWFkS/SEc2ORaaj6P/WXgShYG
-         tgqEzCTxgHMhGygs4NTC41GsxDY9UrQcsLOe30otv/Yqznx692yZIzTikzEuuu42Gecd
-         M8R1uwVeqaYm1wWP7HNwzT1ySmHDX1mPJZiqzSIoaEBGI/qn4Tyrfv3jONN4fZQAc4jX
-         DW16kp8AZQNnGT2cl3HShgNHRYzqln6FfIL1kE5ksoia3NivbIHbM7+QjrIQVs9/rZJy
-         ZlmKLb/eLWeBrEbH0tu9PLHdHIvKY3ejXyljJ1uQQm7I0TN/oASQUuN9YqP+c3UpsBjo
-         zlUQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX86k4dlFG8uxy3JTjPW3vuX2wPNd6LpxkNOZeT9ChS90N1AjQroPtijBbGOXouk9d3sMVvk7rU1X8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyweJnNRY02x+9sOfMKTBNt980gw3xBuk+9vcIVZ+Hhthp85p09
-	XiZziIDD83UNtlyAjI51B65r9oAJlGA7ZWlgmryxq95wQOckVUPGSrs2l0qTVgajOuNdfdk2IpN
-	y5o+v7GTvhw1fIbXorMnJVnLJrUrdZ4o/nE5lvP8T7Z/YqCaL+J5QCe9ABg==
-X-Gm-Gg: AeBDietHC+D0TEUtiyg/eTypA3qshzXlk5Al9aWXM/62yUinjUvdYDcRO1NcS3u4DJI
-	AROSbvx7ALgjc1/SnlMuNRgWz+U5p4m2k99Kj/qWZlCXgZJ3gGxqY7OkXOQ4Wqz+BmJfSlzYkOO
-	IQhBIv7jjfEu/4vkaxMYyV+VO+i439QIiR1zSOnFamH5rbxVzyZTjYe3H9Ry5hAQA26WavX8AmW
-	HdOBA/kF7a1TfXII+TVZ+yn46fxEgu57B27M+mkNTSLRamDwUuI5JL/qa4dE7Egk/5+K4pLBxrA
-	5OysQLF7uB2juVXSd4cv6+1araDP5CB/BmHskHi6EstE+OVT2j7w+I/JzBSrrZNMqIlY2BJvZzH
-	XiGh8gU0H8pYNsj/AlfvpOMGafyUpPEpOUYSeHcVo
-X-Received: by 2002:a05:622a:1a86:b0:50d:6b6d:bc17 with SMTP id d75a77b69052e-50dc212b2e3mr10299401cf.23.1775677007883;
-        Wed, 08 Apr 2026 12:36:47 -0700 (PDT)
-X-Received: by 2002:a05:622a:1a86:b0:50d:6b6d:bc17 with SMTP id d75a77b69052e-50dc212b2e3mr10298851cf.23.1775677007355;
-        Wed, 08 Apr 2026 12:36:47 -0700 (PDT)
+        bh=cQ/TG8NyYW11ar8cP2zAAoS1p0Xy/yaGNX7PKSKfnNI=;
+        b=ZaGxCndWdXOQZWz7az5Ty1i+REUA5NZtBuG5d/H/4ZqagYik+ChLn/VDwyGbtlTR71
+         Qqcld95pxqg+OwCQ6E2UDVCUeTMP+jqnQ3bp/mOgqblBXyy5LEtuDmLD86BmXKjJVdwx
+         u9vIv/CIhQ6nypBikY8p6liXtDtdwJ208YGaS/DyG8ewcs3LV+ZvqeV+nUkyMUKAO4vH
+         5u7q+A/R6eg/tJoJTxzTrCvK+MINoOHjGAJbigkuy1zyv/9dd12FGdBskHfiHlxVdXRw
+         jELHSMpkoDbbFAYNW9/vfzTIRXymk16QCBp1VPYiHH5glE1+oCyCniaOrJBgft2aWL5m
+         PlVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVQgmkaM5lofsSrx523122YkiueKlviaUTwmaU36LS+hKNrrRjAcC7v1+sKV0zOehovi99rF5uhjHo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy14k7h3iMDPLKcprrYgspngaUjAHtofLXT8DVyn2ky7VLoIBNN
+	l4R78D6SMkyyK0jZ2VxsivLsknid7znOmQqSXfHC23t8CU6z9ln57yVBzmXXDbkHjd/VTO7DEIp
+	JUyKchSevA6wWxgIBzojZI41GZlOV3ik4JJnR131oBPNYEGYF5f00pgNNImxdoC6Zzg==
+X-Gm-Gg: AeBDietyAakMvRnBrULmX0I65n7pEuGalBpEW9wo2Y/Np8vRENNUy8xFFQ/g2/NdXIS
+	/Rrd8YnXUIsEzbH1CFGSFEKw6mw+px2GNcFk2W5OEUdXdCs9g467vjXX86Kv5KioSAHUee4ee6j
+	rluaU0mzG5Dt3OJugg11fgnKlaoWaWTsCkS5CUY8aKZzYGWv7JW9ScQfwE16v8z5t7HF8T1fcRV
+	21VSZVPWm5QWvqesHhMrseldD+Cm0jTAVvaaXASCVasXpFnfgxwZcr54NxfCTOP/8Pw0kZdKw7f
+	va7oJ7gvMmhh2RdmS07BJQEk4hdNNubtxrW3pKCyEoZjwpdbiwZen1pp4gkCr4Df6aK3AxY23zU
+	gKemwtLj6sRO+lhYY1K1qKrJHr3MOvrA185OfvLNI
+X-Received: by 2002:a05:622a:558b:b0:509:3098:819a with SMTP id d75a77b69052e-50dc22dd2a7mr10872201cf.44.1775677478533;
+        Wed, 08 Apr 2026 12:44:38 -0700 (PDT)
+X-Received: by 2002:a05:622a:558b:b0:509:3098:819a with SMTP id d75a77b69052e-50dc22dd2a7mr10871821cf.44.1775677478076;
+        Wed, 08 Apr 2026 12:44:38 -0700 (PDT)
 Received: from [192.168.129.206] ([216.158.158.246])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d64752857sm142454931cf.21.2026.04.08.12.36.45
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-50d4b1a3fc7sm215560781cf.5.2026.04.08.12.44.37
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Apr 2026 12:36:46 -0700 (PDT)
-Message-ID: <c7342d7f-5c92-4a2c-9d00-5f9cf478f4e1@columbia.edu>
-Date: Wed, 8 Apr 2026 15:36:45 -0400
+        Wed, 08 Apr 2026 12:44:37 -0700 (PDT)
+Message-ID: <9631d652-fd3a-45ac-b8a3-b632b26f6fa5@columbia.edu>
+Date: Wed, 8 Apr 2026 15:44:37 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -93,28 +93,30 @@ From: Tal Zussman <tz2294@columbia.edu>
 In-Reply-To: <acRDyJrkJhnHHMSe@casper.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: jZzJint8kgWR_vwXXCWLDwEHVDi0MRUC
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE4MyBTYWx0ZWRfX/qaJstqe2pxK
- Pcohv69Co4+p+9oQacVQhcFNaU66A7JwQcoL2Or/QO+HRNiFKgZctJncGI/d/pwR/G2YQNmI5VP
- m+Pefrug3fH00cySocfvHhXbirRs4VSXhkp38VBqj7i1fvvr3SEy9qnOccQGsMdhKen7cn8Kl2J
- oMu+O1xY+2p6fTHvC9I/T2ZkqpGF3DcapzhS28ZwTqLciVd6jLZP8f85V/8PaBlHAxeX35AwFDe
- m59oHdp1aWgj34bRDM5L1Z0qRI38Qy1hEBrxFxImIYqEWknW83DkyFPabUjZWc+BqzISsfa+ICL
- 4hbLmK0xByvwnQNsbhus0J03kODIi3BhxhNDQUsuKvuRS+YhkOJycufkiTXyv06ThCN3+YSlvBb
- 6ZtPce85mKCRFNIMvMyC+aIF+LNUqih4Aljh6eupTgkDo39zpGNI8J30ASWsz33IUUKcP5tL/ND
- 76/D/BosnH89UCNqphA==
-X-Proofpoint-ORIG-GUID: jZzJint8kgWR_vwXXCWLDwEHVDi0MRUC
-X-Authority-Analysis: v=2.4 cv=X7Fi7mTe c=1 sm=1 tr=0 ts=69d6ae50 cx=c_pps
- a=JbAStetqSzwMeJznSMzCyw==:117 a=mD05b5UW6KhLIDvowZ5dSQ==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA4MDE4NCBTYWx0ZWRfXyuA/mBElVfs/
+ nXmJB0socg5xyj/rkwOJW03C91Jr9dhvGvXA+zkx8Z9IXuFpYaxdhMsuxZBWeYB9HLl19LFDnHq
+ e9VpEFnB1GOAPN77wB4yazBrUZzjtXJxGThB/iecR2qIfMPaI/1BwcVu28LHb17qCsRQyxh/mZ9
+ HEy0z1Ni5EmTRgHuQugDeRDsJ/JwUL4rMnID4HrghP6UXJi491OjxZ1+bRpzjO3xs291ax1OR2c
+ Dp8LoCimOf8Gr05TVFPJuhYfE4rH3aIz7UWDF8jsmkcOf9AATeeOAnORqKm0NiDAQMPHSqILybM
+ su4HhnZOYQjLC7EOXHuEQNtWzN8QcIbe5BkLy+igpheYCGKDNRKwTg0a+J8wVP7eba97ZQDmxBG
+ ydhDgfo5SNk2312tMZZWAmlfxjKmravq/LfS5Ej854MaKYvi489Oknd19QmHGCwZOo8fOzewi1N
+ fW0o15X776gwDuUgsJw==
+X-Proofpoint-GUID: SjaNe0k4BlY82ldapzDt6N7rWlnxBwZ6
+X-Authority-Analysis: v=2.4 cv=d6HFDxjE c=1 sm=1 tr=0 ts=69d6b027 cx=c_pps
+ a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=mD05b5UW6KhLIDvowZ5dSQ==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=x7bEGLp0ZPQA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=jHxIr1HyPKZ_Q5_91PL3:22
- a=fDzNMwFgse8Xf2NrkjQA:9 a=QEXdDO2ut3YA:10 a=uxP6HrT_eTzRwkO_Te1X:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=SsB-OO3BMngHh3ZO9fOt:22
+ a=X-nALmS6JCAzqVr0gswA:9 a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22
+X-Proofpoint-ORIG-GUID: SjaNe0k4BlY82ldapzDt6N7rWlnxBwZ6
 X-Proofpoint-Virus-Version: vendor=nai engine=6800 definitions=11753
  signatures=596818
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=10 priorityscore=1501 impostorscore=10 spamscore=0 phishscore=0
- adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=10 suspectscore=0
+ clxscore=1015 priorityscore=1501 suspectscore=0 phishscore=0 bulkscore=10
+ impostorscore=10 adultscore=0 malwarescore=0 spamscore=0 lowpriorityscore=10
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080183
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604080184
+
+
 
 On 3/25/26 4:21 PM, Matthew Wilcox wrote:
 > On Wed, Mar 25, 2026 at 02:43:01PM -0400, Tal Zussman wrote:
@@ -156,5 +158,7 @@ On 3/25/26 4:21 PM, Matthew Wilcox wrote:
 > bio_add_folio() succeeds.
 > 
 
-Will do, thanks Matthew!
+Actually, looking into it more, IOMAP_IOEND_DONTCACHE is used as part of
+IOMAP_IOEND_NOMERGE_FLAGS. I think deleting it while maintaining the
+no-merge behavior would be uglier than leaving it in.
 
