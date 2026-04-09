@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BEA33DBD7C;
-	Thu,  9 Apr 2026 16:03:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB3E23B52EB;
+	Thu,  9 Apr 2026 16:03:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775750586; cv=none; b=bwTFkFet96OKQezBdz+1c75SJD4Lxz/pZg3984jKxDXz6VFZ2uOgKRFpzwuLpuS4HxXqEVWPsLKOrXYAc0/5yRm72w4cmvtNWN0WQi4ykVrsSufL9bdgfVsQhinO3yKt1G7GNamS1MYDmrMnTI1ToHWycDPw8NkIOaBs86TikS0=
+	t=1775750595; cv=none; b=i9R5wUrWV0WG/IIlLFb2hRcVKfPCh91Dte+e8SKOUzqwsyaguhJQrHdVVqKjFYROND2VB1UMgOxkFTbqFCNLPA0AtYLyuO6jblL9CuyN1/jAoFfuDVT68W6t1Pm6GXq6jwnLZN5qHeXZrpEtV0xQp4SDyDegq+lsCcrb5oUudng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775750586; c=relaxed/simple;
-	bh=8C+YvCVnj1h+qaRDw3us46NBjE4kdCB2TRbrr+Hct5w=;
+	s=arc-20240116; t=1775750595; c=relaxed/simple;
+	bh=XBV8A5x4O/lGnRTQl5M7AwFOAPOqCch9GmW9n2h2EQM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Hhx7PnZ69sLlFwT3AyIuYi+wxnBrUgJysz4IC3hefebp2WKQH8dREfBugRZRxBSAr7M5DhjOBdvrdADiW0ekYslAr2yNb9iy3Y6o35htg2Qk7CMtOOvtW6dnw80GgSX3tX9H/fr26O+8CEHcLk9FO9Q5fpzVQbnzQxQQ2cEXgBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Gh85pBMa; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Ss7TAzos1FjX+r44V6QqnvQsBkj12N7qO1AgUJHgyzA9iaFGkQDdka8hdwgRn2Qms9jfcKR35n72F5E63H4cq4oECpOUHg9UMMqn7MCGoS2lGIjnoco4schslbtlZI46akD6ZsirWoYJThYZvOGJRfYTGXfPOfgf7DhyKorq0/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3F3zcy+V; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gh85pBMa"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3F3zcy+V"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=h53OigJvhKi2R7WTc8tD2Nme4RfoPqZlyMjNikVjZqA=; b=Gh85pBMata1NecuSQtkzPmgc8E
-	y1ebnQvyYW25FfwUI17O4uZoCDE7vls4dhGt96+ueNNXPYmujBBng7gsL0iUV75VIfe8J6vn2aG6a
-	ZPAfuTRRfoC17tS3PZ0HbJv1P5BeTKx+sfpGs0L3+tw7U6PGAgrkBmMo7Y4EQLOk/ZGBMAtr48oz1
-	ODp7rpGFFHu/QFMmE2Rzpbo44Yj2BbVwHuodmI5KQr7Gywz1TSTAxvyE0uT06c1VVNkVDXeBeHyXX
-	NVVPn66SBi1sP/VgWIzRWLYj9yti124GCrwl0cae7PB2PD5mv3sZQTBrA5TeKG2ipRUAbGSMz64gD
-	Xxu+2rRw==;
+	bh=UxZjZnt4HjRp1aOZHRD4KUmIrZeKTs6gBzw7HkJfrWs=; b=3F3zcy+Vfnn+iIk21Q50Vn0NAO
+	Kxz/C96sZAacyVUlsx/NwKWbVCP6XH38MRwhySAW1NADMxHtNSXg33CaFaKkMAvaLv5RXUakaDTfV
+	jEDqCCRNoH3LF4/qTXm0kdMgccpsqIofPS+KGFVKpaqqzC3IOrpClTxvgVSlHSHHsQYzvmjebFhDx
+	qlNGxYoKHMnwpS0ELkP1LXDCDD7V0nQbfE3uSDqaG8wHH/6H2O6n6Pt8xXn9jBfh0ICR/75SIOLyA
+	7qtN/ho/XjtBlYwj20NQ22uugbOsualVMrURjmEVr77rW3lkG567PhF3Ah1+0H/RAem4oueJ5cH+u
+	a52yIa5A==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1wArqO-0000000At2j-3j5h;
-	Thu, 09 Apr 2026 16:03:01 +0000
+	id 1wArqY-0000000At3S-0RLo;
+	Thu, 09 Apr 2026 16:03:10 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Tal Zussman <tz2294@columbia.edu>,
 	Jens Axboe <axboe@kernel.dk>,
@@ -47,9 +47,9 @@ Cc: Dave Chinner <dgc@kernel.org>,
 	linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 1/8] block: add BIO_COMPLETE_IN_TASK for task-context completion
-Date: Thu,  9 Apr 2026 18:02:14 +0200
-Message-ID: <20260409160243.1008358-2-hch@lst.de>
+Subject: [PATCH 2/8] iomap: use BIO_COMPLETE_IN_TASK for dropbehind writeback
+Date: Thu,  9 Apr 2026 18:02:15 +0200
+Message-ID: <20260409160243.1008358-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260409160243.1008358-1-hch@lst.de>
 References: <20260409160243.1008358-1-hch@lst.de>
@@ -64,183 +64,85 @@ X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.
 
 From: Tal Zussman <tz2294@columbia.edu>
 
-Some bio completion handlers need to run in task context but bio_endio()
-can be called from IRQ context (e.g. buffer_head writeback). Add a
-BIO_COMPLETE_IN_TASK flag that bio submitters can set to request
-task-context completion of their bi_end_io callback.
+Set BIO_COMPLETE_IN_TASK on iomap writeback bios when a dropbehind folio
+is added. This ensures that bi_end_io runs in task context, where
+folio_end_dropbehind() can safely invalidate folios.
 
-When bio_endio() sees this flag and is running in non-task context, it
-queues the bio to a per-cpu lockless list and schedules a delayed work
-item to call bi_end_io() from task context.  The delayed work uses a
-1-jiffie delay to allow batches of completions to accumulate before
-processing. A CPU hotplug dead callback drains any remaining bios from
-the departing CPU's batch.
+With the bio layer now handling task-context deferral generically,
+IOMAP_IOEND_DONTCACHE is no longer needed, as XFS no longer needs to
+route DONTCACHE ioends through its completion workqueue. Remove the flag
+and its NOMERGE entry.
 
-This will be used to enable RWF_DONTCACHE for block devices, and could
-be used for other subsystems like fscrypt that need task-context bio
-completion.
+Without the NOMERGE, regular I/Os that get merged with a dropbehind
+folio will also have their completion deferred to task context.
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
 Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 ---
- block/bio.c               | 83 ++++++++++++++++++++++++++++++++++++++-
- include/linux/blk_types.h |  7 +++-
- 2 files changed, 88 insertions(+), 2 deletions(-)
+ fs/iomap/ioend.c      | 5 +++--
+ fs/xfs/xfs_aops.c     | 4 ----
+ include/linux/iomap.h | 6 +-----
+ 3 files changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 641ef0928d73..550eb770bfa6 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -19,6 +19,7 @@
- #include <linux/blk-crypto.h>
- #include <linux/xarray.h>
- #include <linux/kmemleak.h>
-+#include <linux/llist.h>
+diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+index acf3cf98b23a..892dbfc77ae9 100644
+--- a/fs/iomap/ioend.c
++++ b/fs/iomap/ioend.c
+@@ -237,8 +237,6 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
  
- #include <trace/events/block.h>
- #include "blk.h"
-@@ -1716,6 +1717,51 @@ void bio_check_pages_dirty(struct bio *bio)
- }
- EXPORT_SYMBOL_GPL(bio_check_pages_dirty);
+ 	if (wpc->iomap.flags & IOMAP_F_SHARED)
+ 		ioend_flags |= IOMAP_IOEND_SHARED;
+-	if (folio_test_dropbehind(folio))
+-		ioend_flags |= IOMAP_IOEND_DONTCACHE;
+ 	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
+ 		ioend_flags |= IOMAP_IOEND_BOUNDARY;
  
-+struct bio_complete_batch {
-+	struct llist_head list;
-+	struct delayed_work work;
-+	int cpu;
-+};
+@@ -255,6 +253,9 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
+ 	if (!bio_add_folio(&ioend->io_bio, folio, map_len, poff))
+ 		goto new_ioend;
+ 
++	if (folio_test_dropbehind(folio))
++		bio_set_flag(&ioend->io_bio, BIO_COMPLETE_IN_TASK);
 +
-+static DEFINE_PER_CPU(struct bio_complete_batch, bio_complete_batch);
-+static struct workqueue_struct *bio_complete_wq;
-+
-+static void bio_complete_work_fn(struct work_struct *w)
-+{
-+	struct delayed_work *dw = to_delayed_work(w);
-+	struct bio_complete_batch *batch =
-+		container_of(dw, struct bio_complete_batch, work);
-+	struct llist_node *node;
-+	struct bio *bio, *next;
-+
-+	do {
-+		node = llist_del_all(&batch->list);
-+		if (!node)
-+			break;
-+
-+		node = llist_reverse_order(node);
-+		llist_for_each_entry_safe(bio, next, node, bi_llist)
-+			bio->bi_end_io(bio);
-+
-+		if (need_resched()) {
-+			if (!llist_empty(&batch->list))
-+				mod_delayed_work_on(batch->cpu,
-+						    bio_complete_wq,
-+						    &batch->work, 0);
-+			break;
-+		}
-+	} while (1);
-+}
-+
-+static void bio_queue_completion(struct bio *bio)
-+{
-+	struct bio_complete_batch *batch = this_cpu_ptr(&bio_complete_batch);
-+
-+	if (llist_add(&bio->bi_llist, &batch->list))
-+		mod_delayed_work_on(batch->cpu, bio_complete_wq,
-+				    &batch->work, 1);
-+}
-+
- static inline bool bio_remaining_done(struct bio *bio)
- {
  	/*
-@@ -1790,7 +1836,9 @@ void bio_endio(struct bio *bio)
- 	}
- #endif
+ 	 * Clamp io_offset and io_size to the incore EOF so that ondisk
+ 	 * file size updates in the ioend completion are byte-accurate.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f279055fcea0..0dcf78beae8a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -511,10 +511,6 @@ xfs_ioend_needs_wq_completion(
+ 	if (ioend->io_flags & (IOMAP_IOEND_UNWRITTEN | IOMAP_IOEND_SHARED))
+ 		return true;
  
--	if (bio->bi_end_io)
-+	if (!in_task() && bio_flagged(bio, BIO_COMPLETE_IN_TASK))
-+		bio_queue_completion(bio);
-+	else if (bio->bi_end_io)
- 		bio->bi_end_io(bio);
+-	/* Page cache invalidation cannot be done in irq context. */
+-	if (ioend->io_flags & IOMAP_IOEND_DONTCACHE)
+-		return true;
+-
+ 	return false;
  }
- EXPORT_SYMBOL(bio_endio);
-@@ -1976,6 +2024,24 @@ int bioset_init(struct bio_set *bs,
- }
- EXPORT_SYMBOL(bioset_init);
  
-+/*
-+ * Drain a dead CPU's deferred bio completions.
-+ */
-+static int bio_complete_batch_cpu_dead(unsigned int cpu)
-+{
-+	struct bio_complete_batch *batch =
-+		per_cpu_ptr(&bio_complete_batch, cpu);
-+	struct llist_node *node;
-+	struct bio *bio, *next;
-+
-+	node = llist_del_all(&batch->list);
-+	node = llist_reverse_order(node);
-+	llist_for_each_entry_safe(bio, next, node, bi_llist)
-+		bio->bi_end_io(bio);
-+
-+	return 0;
-+}
-+
- static int __init init_bio(void)
- {
- 	int i;
-@@ -1990,6 +2056,21 @@ static int __init init_bio(void)
- 				SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
- 	}
- 
-+	for_each_possible_cpu(i) {
-+		struct bio_complete_batch *batch =
-+			per_cpu_ptr(&bio_complete_batch, i);
-+
-+		init_llist_head(&batch->list);
-+		INIT_DELAYED_WORK(&batch->work, bio_complete_work_fn);
-+		batch->cpu = i;
-+	}
-+
-+	bio_complete_wq = alloc_workqueue("bio_complete", WQ_MEM_RECLAIM, 0);
-+	if (!bio_complete_wq)
-+		panic("bio: can't allocate bio_complete workqueue\n");
-+
-+	cpuhp_setup_state(CPUHP_BP_PREPARE_DYN, "block/bio:complete:dead",
-+				NULL, bio_complete_batch_cpu_dead);
- 	cpuhp_setup_state_multi(CPUHP_BIO_DEAD, "block/bio:dead", NULL,
- 					bio_cpu_dead);
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 8808ee76e73c..0b55159d110d 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -11,6 +11,7 @@
- #include <linux/device.h>
- #include <linux/ktime.h>
- #include <linux/rw_hint.h>
-+#include <linux/llist.h>
- 
- struct bio_set;
- struct bio;
-@@ -208,7 +209,10 @@ typedef unsigned int blk_qc_t;
-  * stacking drivers)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 2c5685adf3a9..bf49ba71dd42 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -399,16 +399,12 @@ sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
+ #define IOMAP_IOEND_BOUNDARY		(1U << 2)
+ /* is direct I/O */
+ #define IOMAP_IOEND_DIRECT		(1U << 3)
+-/* is DONTCACHE I/O */
+-#define IOMAP_IOEND_DONTCACHE		(1U << 4)
+-
+ /*
+  * Flags that if set on either ioend prevent the merge of two ioends.
+  * (IOMAP_IOEND_BOUNDARY also prevents merges, but only one-way)
   */
- struct bio {
--	struct bio		*bi_next;	/* request queue link */
-+	union {
-+		struct bio	*bi_next;	/* request queue link */
-+		struct llist_node bi_llist;	/* deferred completion */
-+	};
- 	struct block_device	*bi_bdev;
- 	blk_opf_t		bi_opf;		/* bottom bits REQ_OP, top bits
- 						 * req_flags.
-@@ -322,6 +326,7 @@ enum {
- 	BIO_REMAPPED,
- 	BIO_ZONE_WRITE_PLUGGING, /* bio handled through zone write plugging */
- 	BIO_EMULATES_ZONE_APPEND, /* bio emulates a zone append operation */
-+	BIO_COMPLETE_IN_TASK, /* complete bi_end_io() in task context */
- 	BIO_FLAG_LAST
- };
+ #define IOMAP_IOEND_NOMERGE_FLAGS \
+-	(IOMAP_IOEND_SHARED | IOMAP_IOEND_UNWRITTEN | IOMAP_IOEND_DIRECT | \
+-	 IOMAP_IOEND_DONTCACHE)
++	(IOMAP_IOEND_SHARED | IOMAP_IOEND_UNWRITTEN | IOMAP_IOEND_DIRECT)
  
+ /*
+  * Structure for writeback I/O completions.
 -- 
 2.47.3
 
