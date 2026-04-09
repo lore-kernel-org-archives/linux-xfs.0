@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647C63D3490;
-	Thu,  9 Apr 2026 13:14:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 937793D0930;
+	Thu,  9 Apr 2026 13:14:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775740460; cv=none; b=kUTvUf7wNjFN9p65hWhqBsGDeJhDQa91cIorOI11s32uHdF5voCdHSqqNa5zxVeBjzM8yZlboavm88caoNglXWIgzZfMh1SVZV4TJtcI+nvw15l1ZaNEk3yNMABM8ZBqru7lCQJfozHt9S+7n10IzGv1XjaMzREUpMaIZhLAc9M=
+	t=1775740463; cv=none; b=WYRkwIAKPGEQKYVrLPV8/RRrAB41HCcCb2zogYppoMlcJVCJ6EUA3FDbtlIWJ8XdfAzjTcSImswCRajKLRgk8qVnHk4JfwAnK5i/0D44Z0dC8naMtqkXHCUMRyjV+p2qZ7rIlyunTQ85rq+glQEROpaz5yLh1FYTpxJX9+Y0i3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775740460; c=relaxed/simple;
-	bh=AbS2Yqdj6XUOqI6/cjToB96OIoO0+yHzdJktpA4Z80Q=;
+	s=arc-20240116; t=1775740463; c=relaxed/simple;
+	bh=R9xmYqpzgIFigojr0fKbrRlBCOLoFi0C2ZAyyNYRUGM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Q8Zhu2tvoMJvCtbn5Oo/xE0lK6gALQikyilvYDgXtykt0iAxlQNhzBbHHZ5QfvK2LUcNAkFIKXexsRJip3toBT4ipzuSzIDCEGG4BnLuHHypHOUm+nE0jAi4k36HlSW04T5B12ogBXJLuITjuqeL1eVyPRpdWJv9XTTpih76JdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X++ACa7D; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=pYMOkQu7hC4b8M1cE22b8pm3qrSGwxyNIG3NpOg9Iqw2hG7ruphSqhzCwYkrZAptu3GE5t7tALSM4Hc8mtjjQnNbnT/56tlsd2RhpJz0wSGpts8qGkGhlx669mzrfLELuxsTJY3m9IUO6KD3BddJht3+IfTKR3K/7Kajv6i1PIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N+4GpqYM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X++ACa7D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0810C4CEF7;
-	Thu,  9 Apr 2026 13:14:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N+4GpqYM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C29CC4CEF7;
+	Thu,  9 Apr 2026 13:14:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775740460;
-	bh=AbS2Yqdj6XUOqI6/cjToB96OIoO0+yHzdJktpA4Z80Q=;
+	s=k20201202; t=1775740463;
+	bh=R9xmYqpzgIFigojr0fKbrRlBCOLoFi0C2ZAyyNYRUGM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=X++ACa7DLl+MgBznlPIGUiklF6Chxrh9ZHMM4gerK3mUvoBHd+CbxfV5DkLtfzux5
-	 KOp7SmaabkjjnQdnMDRS2OEysOZd34tZ8pvFstTX+YAaIC61xJ2EExX5XPBfwuH8As
-	 YmLYuVldzi9E1Nj4SiNbv7K7CfgEyrrfft5eV5WoySY0yHbYgmdK1lRVTYhmphy/03
-	 oO8fb1WGpGapxlB0ulw55D/rukwTDNDvgmhVF00hdZ7N2w/VCfwVJ/rghg0wchXRne
-	 Gg+c3M5e/Qxp76TJVhox2uKf99wuaCXBoL9xqCFqtQoRUNgElMw9/qaqjsr13/bWnX
-	 rA8ICZpvK3gKA==
+	b=N+4GpqYMpCa77QHI2jc01o/xgt9IIbE6WntWpjngj5XLvNAKvBbnc/H1Mbv46iwyS
+	 Br4UJyOzX+fMFRHgADyerQHz3H5JyLpnQw8msI2tBWd4MQWOqfngWFnf95NS8JUJpU
+	 b1h9KNoNDX6viKe5IW6vkocmLP8FAqGn5lFDBYUuDpcPQt+GBByLaOOAQ+yrpPFb3G
+	 RddDtW/p2Fx23jKUGJ3lsUKX+krQkr8Iv0XIkiuhCsm9EHIDqHCX0MqxN921KPD2cA
+	 dzL59lstSBuq1yp0XHqouaPDu+3bVU9HlmCr+K0MbdIzBhQM+XA1Qn1mb/yHpK1bVg
+	 oOYKqix9G0vLQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v7 03/22] ovl: use core fsverity ensure info interface
-Date: Thu,  9 Apr 2026 15:13:35 +0200
-Message-ID: <20260409131404.1545834-4-aalbersh@kernel.org>
+Subject: [PATCH v7 04/22] fsverity: generate and store zero-block hash
+Date: Thu,  9 Apr 2026 15:13:36 +0200
+Message-ID: <20260409131404.1545834-5-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
 In-Reply-To: <20260409131404.1545834-1-aalbersh@kernel.org>
 References: <20260409131404.1545834-1-aalbersh@kernel.org>
@@ -51,48 +51,154 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-fsverity now exposes fsverity_ensure_verity_info() which could be used
-instead of opening file to ensure that fsverity info is loaded and
-attached to inode.
+Compute the hash of one filesystem block's worth of zeros. A filesystem
+implementation can decide to elide merkle tree blocks containing only
+this hash and synthesize the contents at read time.
 
+Let's pretend that there's a file containing 131 data block and whose
+merkle tree looks roughly like this:
+
+root
+ +--leaf0
+ |   +--data0
+ |   +--data1
+ |   +--...
+ |   `--data128
+ `--leaf1
+     +--data129
+     +--data130
+     `--data131
+
+If data[0-128] are sparse holes, then leaf0 will contain a repeating
+sequence of @zero_digest.  Therefore, leaf0 need not be written to disk
+because its contents can be synthesized.
+
+A subsequent xfs patch will use this to reduce the size of the merkle
+tree when dealing with sparse gold master disk images and the like.
+
+Note that this works only on the first-level (data holes). fsverity
+doesn't store/generate zero_digest for any higher levels.
+
+Add a helper to pre-fill folio with hashes of empty blocks. This will be
+used by iomap to synthesize blocks full of zero hashes on the fly.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Acked-by: Eric Biggers <ebiggers@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/overlayfs/util.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ fs/verity/fsverity_private.h |  3 +++
+ fs/verity/measure.c          |  4 ++--
+ fs/verity/open.c             |  3 +++
+ fs/verity/pagecache.c        | 22 ++++++++++++++++++++++
+ include/linux/fsverity.h     |  8 ++++++++
+ 5 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/fs/overlayfs/util.c b/fs/overlayfs/util.c
-index 2ea769f311c3..8bde5dc31d7d 100644
---- a/fs/overlayfs/util.c
-+++ b/fs/overlayfs/util.c
-@@ -16,6 +16,7 @@
- #include <linux/namei.h>
- #include <linux/ratelimit.h>
- #include <linux/overflow.h>
-+#include <linux/fsverity.h>
- #include "overlayfs.h"
+diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+index 6e6854c19078..881d46f25e08 100644
+--- a/fs/verity/fsverity_private.h
++++ b/fs/verity/fsverity_private.h
+@@ -53,6 +53,9 @@ struct merkle_tree_params {
+ 	u64 tree_size;			/* Merkle tree size in bytes */
+ 	unsigned long tree_pages;	/* Merkle tree size in pages */
  
- /* Get write access to upper mnt - may fail if upper sb was remounted ro */
-@@ -1377,18 +1378,9 @@ char *ovl_get_redirect_xattr(struct ovl_fs *ofs, const struct path *path, int pa
- int ovl_ensure_verity_loaded(const struct path *datapath)
- {
- 	struct inode *inode = d_inode(datapath->dentry);
--	struct file *filp;
++	/* the hash of an all-zeroes block */
++	u8 zero_digest[FS_VERITY_MAX_DIGEST_SIZE];
++
+ 	/*
+ 	 * Starting block index for each tree level, ordered from leaf level (0)
+ 	 * to root level ('num_levels - 1')
+diff --git a/fs/verity/measure.c b/fs/verity/measure.c
+index 6a35623ebdf0..818083507885 100644
+--- a/fs/verity/measure.c
++++ b/fs/verity/measure.c
+@@ -68,8 +68,8 @@ EXPORT_SYMBOL_GPL(fsverity_ioctl_measure);
+  * @alg: (out) the digest's algorithm, as a FS_VERITY_HASH_ALG_* value
+  * @halg: (out) the digest's algorithm, as a HASH_ALGO_* value
+  *
+- * Retrieves the fsverity digest of the given file.  The file must have been
+- * opened at least once since the inode was last loaded into the inode cache;
++ * Retrieves the fsverity digest of the given file. The
++ * fsverity_ensure_verity_info() must be called on the inode beforehand;
+  * otherwise this function will not recognize when fsverity is enabled.
+  *
+  * The file's fsverity digest consists of @raw_digest in combination with either
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index d32d0899df25..875e8850ccba 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -153,6 +153,9 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 		goto out_err;
+ 	}
  
--	if (!fsverity_active(inode) && IS_VERITY(inode)) {
--		/*
--		 * If this inode was not yet opened, the verity info hasn't been
--		 * loaded yet, so we need to do that here to force it into memory.
--		 */
--		filp = kernel_file_open(datapath, O_RDONLY, current_cred());
--		if (IS_ERR(filp))
--			return PTR_ERR(filp);
--		fput(filp);
--	}
-+	if (fsverity_active(inode))
-+		fsverity_ensure_verity_info(inode);
- 
++	fsverity_hash_block(params, page_address(ZERO_PAGE(0)),
++			    params->zero_digest);
++
+ 	params->tree_size = offset << log_blocksize;
+ 	params->tree_pages = PAGE_ALIGN(params->tree_size) >> PAGE_SHIFT;
  	return 0;
+diff --git a/fs/verity/pagecache.c b/fs/verity/pagecache.c
+index 1819314ecaa3..99f5f53eea98 100644
+--- a/fs/verity/pagecache.c
++++ b/fs/verity/pagecache.c
+@@ -2,6 +2,7 @@
+ /*
+  * Copyright 2019 Google LLC
+  */
++#include "fsverity_private.h"
+ 
+ #include <linux/export.h>
+ #include <linux/fsverity.h>
+@@ -56,3 +57,24 @@ void generic_readahead_merkle_tree(struct inode *inode, pgoff_t index,
+ 		folio_put(folio);
  }
+ EXPORT_SYMBOL_GPL(generic_readahead_merkle_tree);
++
++/**
++ * fsverity_fill_zerohash() - fill folio with hashes of zero data block
++ * @folio:	folio to fill
++ * @offset:	offset in the folio to start
++ * @len:	length of the range to fill with hashes
++ * @vi:		fsverity info
++ */
++void fsverity_fill_zerohash(struct folio *folio, size_t offset, size_t len,
++			      struct fsverity_info *vi)
++{
++	size_t off = offset;
++
++	WARN_ON_ONCE(!IS_ALIGNED(offset, vi->tree_params.digest_size));
++	WARN_ON_ONCE(!IS_ALIGNED(len, vi->tree_params.digest_size));
++
++	for (; off < (offset + len); off += vi->tree_params.digest_size)
++		memcpy_to_folio(folio, off, vi->tree_params.zero_digest,
++				vi->tree_params.digest_size);
++}
++EXPORT_SYMBOL_GPL(fsverity_fill_zerohash);
+diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+index 5562271bd628..e4503312d114 100644
+--- a/include/linux/fsverity.h
++++ b/include/linux/fsverity.h
+@@ -201,6 +201,8 @@ bool fsverity_verify_blocks(struct fsverity_info *vi, struct folio *folio,
+ 			    size_t len, size_t offset);
+ void fsverity_verify_bio(struct fsverity_info *vi, struct bio *bio);
+ void fsverity_enqueue_verify_work(struct work_struct *work);
++void fsverity_fill_zerohash(struct folio *folio, size_t poff, size_t plen,
++			      struct fsverity_info *vi);
+ 
+ #else /* !CONFIG_FS_VERITY */
+ 
+@@ -281,6 +283,12 @@ static inline void fsverity_enqueue_verify_work(struct work_struct *work)
+ 	WARN_ON_ONCE(1);
+ }
+ 
++static inline void fsverity_fill_zerohash(struct folio *folio, size_t poff,
++		size_t plen, struct fsverity_info *vi)
++{
++	WARN_ON_ONCE(1);
++}
++
+ #endif	/* !CONFIG_FS_VERITY */
+ 
+ static inline bool fsverity_verify_folio(struct fsverity_info *vi,
 -- 
 2.51.2
 
