@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0603D34A4;
-	Thu,  9 Apr 2026 13:15:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADED3B52EB;
+	Thu,  9 Apr 2026 13:15:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775740501; cv=none; b=ObrjM4ujLGSjFQXNu8QZhhpufwDa1wzqcBmOKhZ8L1T/zG5ttHoTouzfHGOxtEmgOw12RxEzexIVhtLLh+ndzWYxRhgH6fZe4pybnpoGJBbUDkeUCzcs+sDB2SkUzmfQVrKjQLy0pFHJcLFQke+E1tZmrdB5e4zfx1OxSPMlP0g=
+	t=1775740504; cv=none; b=gNpk6MpwZrJrpO45EmoWIiwd9PahISw/QtGK4Zgtau986Hj0OvxmIRP84vt8q6IhXW7BzNfzeqf4MafQgvAWynrY3mL2IkXKq+IoS/amkYmGtnBdWiIpN3Ibr4dFZl8j12AK2Msw6hxRyDIdUE1RHYl9fys8jGG1r9iEAh1osbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775740501; c=relaxed/simple;
-	bh=Huny4r4Jjz1UBLXAMcUst2XzWC1esUlxzb3uDndhMAg=;
+	s=arc-20240116; t=1775740504; c=relaxed/simple;
+	bh=Aq0ZUSqSUefcts6LfugDkZmOSMW+4m4ueZMlzDmeXr4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=buqwSLE7jTL29PLdlRPKvd0iIgnFwRJz5h4rmB2hyQudpKVVLRAbp8eb9XGmtH5EyRIHsjTJ2o5mJuQZTHRUV5W0Ksgvda2eqeVHWQ73K7K1Dwa1SkSp1wlAyqx/SL5KQvmfN1YELyFN14QWPk6A6qTepLBkqwdQ5ekzwcBaVnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1TuV60r; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=pEiOxGtNQKHGP5/ae6LwPFstho87IOMXaiE90IVDa43dgqMn0DopE15wdVk0x/rqrt8krWDniKA2kURq9cV0p5WxtTIUbRDe0ufW4kwfCCVThKgCNGJQ9N019ETmOB+tIKXY9YngFwkfPs5EVNp2M2NgDR8NMY6D1r44SCPNzbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q33568AO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1TuV60r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B90F7C2BCB2;
-	Thu,  9 Apr 2026 13:14:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q33568AO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA001C19424;
+	Thu,  9 Apr 2026 13:15:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775740501;
-	bh=Huny4r4Jjz1UBLXAMcUst2XzWC1esUlxzb3uDndhMAg=;
+	s=k20201202; t=1775740504;
+	bh=Aq0ZUSqSUefcts6LfugDkZmOSMW+4m4ueZMlzDmeXr4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=D1TuV60rIPD8bM8QG5t+BltoGhmXK33cRHEdb+55mNjHnSXKURamC4kVqwSd6lBfS
-	 6QG1Ta8F6BNGlQG/73UsY0PdRaQYygxsA5zgLt11tt2teNf+2ESNpJzdMtXxwyEueK
-	 FP38LpUb8q0XPFaFB9Y1HEwHhoqv4GBJ17sCNd90I44ADZgIT+wOsLsg9j9q0nzoR2
-	 t6Njr0zcIRKyXTg2Grvit3OAxj558DJzNypI8705Fl4NWG855msz1e0ybdIvY76CEM
-	 7wRqeaAvUMpWHGTKWWqvQTVTIE+wJIhA2C2pH9SkWgROa2jaItlGSP3puzho8K6/uO
-	 NU+/5hjr+KJvA==
+	b=q33568AO7AWxTHl3fgruq7ouHkVLuiTVv9J32J96bBb8Q6dpu1gAGXS0LGUXLN+Zy
+	 vn08JYzzAA5dg2Nq9+dyKTjhyDHZkvjXLY1m3qYQ9A0X77OtDNwJBIytldwYEYRRzs
+	 318K2zDvGNZn7F3QoQ6TLyIeGP3ZyrQiuO5nSWrYYNUDH747RJbfOAqvc6kHS1bIf2
+	 6bg6ZKYwAaaFlwBPCpXMfmt122V9IFZSOA60LRgNRAj2UX0avAwcm4nrebAe9Aj0Ep
+	 s3cu9LGlDuRt57qOUC6JzG7LZcAfYXi4KWRZ53U/sqcTM2UtZ3Ibzkdc8E+jALdswC
+	 xUtClO3WoGw7A==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v7 17/22] xfs: remove unwritten extents after preallocations in fsverity metadata
-Date: Thu,  9 Apr 2026 15:13:49 +0200
-Message-ID: <20260409131404.1545834-18-aalbersh@kernel.org>
+Subject: [PATCH v7 18/22] xfs: add fs-verity ioctls
+Date: Thu,  9 Apr 2026 15:13:50 +0200
+Message-ID: <20260409131404.1545834-19-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
 In-Reply-To: <20260409131404.1545834-1-aalbersh@kernel.org>
 References: <20260409131404.1545834-1-aalbersh@kernel.org>
@@ -51,113 +51,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-XFS preallocates spaces during writes. In normal I/O this space, if
-unused, is removed by truncate. For files with fsverity XFS does not use
-truncate as fsverity metadata is stored past EOF.
+Add fs-verity ioctls to enable, dump metadata (descriptor and Merkle
+tree pages) and obtain file's digest.
 
-After we're done with writing fsverity metadata iterate over extents in
-that region and remove any unwritten ones. These would be left overs in
-the holes in the merkle tree and past fsverity descriptor.
+[djwong: remove unnecessary casting]
 
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/xfs_fsverity.c | 67 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+ fs/xfs/xfs_ioctl.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
-index 68d9736d19d9..ef5cf97ad700 100644
---- a/fs/xfs/xfs_fsverity.c
-+++ b/fs/xfs/xfs_fsverity.c
-@@ -21,6 +21,8 @@
- #include "xfs_iomap.h"
- #include "xfs_error.h"
- #include "xfs_health.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include <linux/fsverity.h>
- #include <linux/iomap.h>
- #include <linux/pagemap.h>
-@@ -173,6 +175,63 @@ xfs_fsverity_delete_metadata(
- 	return error;
- }
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index facffdc8dca8..e633d56cad00 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -46,6 +46,7 @@
  
-+static int
-+xfs_fsverity_cancel_unwritten(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		start,
-+	xfs_fileoff_t		end)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSB(mp, start);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end);
-+	struct xfs_bmbt_irec	imap;
-+	int			nimaps;
-+	int			error = 0;
-+	int			done;
-+
-+
-+	while (offset_fsb < end_fsb) {
-+		nimaps = 1;
-+
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
-+				0, &tp);
-+		if (error)
-+			return error;
-+
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-+				&imap, &nimaps, 0);
-+		if (error)
-+			goto out_cancel;
-+
-+		if (nimaps == 0)
-+			goto out_cancel;
-+
-+		if (imap.br_state == XFS_EXT_UNWRITTEN) {
-+			xfs_trans_ijoin(tp, ip, 0);
-+
-+			error = xfs_bunmapi(tp, ip, imap.br_startoff,
-+					imap.br_blockcount, 0, 1, &done);
-+			if (error)
-+				goto out_cancel;
-+
-+			error = xfs_trans_commit(tp);
-+		} else {
-+			xfs_trans_cancel(tp);
-+		}
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+		offset_fsb = imap.br_startoff + imap.br_blockcount;
-+	}
-+
-+	return error;
-+out_cancel:
-+	xfs_trans_cancel(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
-+}
-+
+ #include <linux/mount.h>
+ #include <linux/fileattr.h>
++#include <linux/fsverity.h>
  
- /*
-  * Prepare to enable fsverity by clearing old metadata.
-@@ -248,6 +307,14 @@ xfs_fsverity_end_enable(
- 	if (error)
- 		goto out;
+ /* Return 0 on success or positive error */
+ int
+@@ -1426,6 +1427,19 @@ xfs_file_ioctl(
+ 	case XFS_IOC_VERIFY_MEDIA:
+ 		return xfs_ioc_verify_media(filp, arg);
  
-+	/*
-+	 * Remove unwritten extents left by COW preallocations and write
-+	 * preallocation in the merkle tree holes and past descriptor
-+	 */
-+	error = xfs_fsverity_cancel_unwritten(ip, range_start, LLONG_MAX);
-+	if (error)
-+		goto out;
++	case FS_IOC_ENABLE_VERITY:
++		if (!xfs_has_verity(mp))
++			return -EOPNOTSUPP;
++		return fsverity_ioctl_enable(filp, arg);
++	case FS_IOC_MEASURE_VERITY:
++		if (!xfs_has_verity(mp))
++			return -EOPNOTSUPP;
++		return fsverity_ioctl_measure(filp, arg);
++	case FS_IOC_READ_VERITY_METADATA:
++		if (!xfs_has_verity(mp))
++			return -EOPNOTSUPP;
++		return fsverity_ioctl_read_metadata(filp, arg);
 +
- 	/*
- 	 * Proactively drop any delayed allocations in COW fork, the fsverity
- 	 * files are read-only
+ 	default:
+ 		return -ENOTTY;
+ 	}
 -- 
 2.51.2
 
