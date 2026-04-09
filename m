@@ -1,124 +1,229 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE099383C93
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Apr 2026 09:45:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4622DFF04;
+	Thu,  9 Apr 2026 13:14:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775727930; cv=none; b=lw17IN77xuW5YhPV+2NRTobEG+3d/rfTiaqI3bcJ4rvrNnExu5hPnJhWAbGQpLm16yrOYXDL1sVBLQUHibQj8hT2GzJjYog0ZOeAB/+g2iDxC++QEfuSJZKNT0/3uS5gaB5LaewOzuBGMol+4m06ZkGBRW5qjNN3KcJ5Ki5MBDw=
+	t=1775740451; cv=none; b=DWsI2UDbvbeGk0JhKGhw/Hl06TwYGzvBg00SvgiLcquZ+BKofeUtzYAI5r8SPnx7tIjxcyPuHlbvyIDPuntPTqSkkF34JFtkgUNFf2S039Ql31Nd+d8MrrebnwQK15nbHY++zQswsEXOYTZ62sJ2NwJEIvh68LMRtuQD4KdbImU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775727930; c=relaxed/simple;
-	bh=Y7HPYaMeBrC9oPCMFCEfdGDDpTsf221Nf2WBNd8YlxA=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=JkqyAKolE4OPqWjBuqTJpRe1UhpCe697zrxQLs/uIfQuKYnT6/gnx2Og86RmE9OeDhDHTdlHaVG+RBhDx6nImrb7wH5nauWLGlphSx6xRIld0V9gVs25KRlOUA2UrG5jTHhlbPIPA0xjQJzNgSebPSPfFtMrMWTsdON1Ggglm2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YN5OYwXu; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775740451; c=relaxed/simple;
+	bh=XHuivLwMMMuQ5IK2ZNNilkkW9N5cMAojA4NxR328x2Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HWBsWKMjgcKfEuQVOtzNEYESAT/BYhDTm/UtdjOnHsXbNNplAJtdMX/N8xhDfuFIdR91jCl+UIBtb+wTSNOy4MnCQRGp+rRPbVFqVX9ln10tn7fnFO3qUeyH91wF+y5fClnPeULNRkeLJXREjROiLplNr1YOoyzzmOzhah7DjLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=juRCueRH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YN5OYwXu"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2b24fede2acso4028785ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Apr 2026 02:45:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775727929; x=1776332729; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=4ADfJ2NQprV2qnHtWa7RILUcbgRcQL/MN+0KGK2nuGg=;
-        b=YN5OYwXuJwI4TLfqwZZb6Rj82SPFURoKz5Sjp6cKgi25SraI8oXcz0y6vzsUELYsZ2
-         GDq5AaFvFodzhKO6LbNlx6D2JOT6BRFd2J7tvqolovwXSLw6CSbT2b400FVwd0k1By6D
-         HYLPpUmBakQ7ROTtNK+wWXTx9xTNxckWcI5e8AxfpQCVRek695R2aDgJWcCoB8+jfS34
-         TkP0t/emljanChlYPcV1oZAEiLy/fcopwE6w/NHM/kBJEM9uUs2gu7orEIA1LVLhnWPU
-         oc02HNa2msG3/S4CCrF2pazXAEChdNex1KMS6LWlbomPJ5gJqEalPZX5fFXpjY7/4mi5
-         gHfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775727929; x=1776332729;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4ADfJ2NQprV2qnHtWa7RILUcbgRcQL/MN+0KGK2nuGg=;
-        b=R1ipvuWiPhDz7EdrwsoIBf+m3uxh7pLHBqf45x+92pGNsC7Nh4/MTlni7PWctKO5Sq
-         eGNcbITaUW/UdO2EDfBVPLKLFcrnQqWr4R/FHT7EjBf49Ik/y3X7S/EsrVQOsxuT7ZnO
-         2Jes5JVQ2oDysg1U/o+MBT+B2oLt1uzuWv1m9FM1Zy2nFtc9dG4VeR0KYC8iqXsgwqf5
-         149qPuEunWPRXuqg29K6qqljIVJKUV7KwUvpbAQPWOBupfuM3+oFsGSN1bATM9D/+ZcY
-         /ZFR8blpx7qJCY8/OFPl6TbArqoXmk659IpDMimFUDC3nnHqs1DMDNIUj4Xc3OVg5sL7
-         o17A==
-X-Forwarded-Encrypted: i=1; AJvYcCV8C+JsGpmLeNJ0ckM0PACzpW33ueseS8WSGb3WQP1gu/zSJpHZIN1j6bBe9Q2WjGKpU7JWwGPqy4I=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwONpKGIWPVH8yUlaBphLECAvq6QKhZ6hR8tXTNEdOBe2JNk+ft
-	Ip8pXGQ0yMTg7J/MhooehvLsfyhtOKw18nW7HKF6ZDQx2KMn2AxGlWcf
-X-Gm-Gg: AeBDievID8vlQHjHjjCF58ylEtuydSpXS2faaG5ziHqi5QDI2y2PWkv7/KsDNx2ubbZ
-	zRv6T4GJMdNpPmhznz86Ihh86Q+HYikvlF2XDrgEGbQX1VelvR99D6tpYpLlmHOeUlvoDOzrWoi
-	NPQWF0105GwygEC4SfaY6S2n9j0k8X5F1hUKugBhz+gxcZV4uNBinoWKTimx6vzWFQR3EtHcRYr
-	6/XLyuBzn/mqxbL8w+7pfJmKAxFh4Mra6NMRWVBvqSYVzzxj3nYsJVdCxKAkWmDkDbbN8IatPbY
-	3Ush5BJE69hn5JcLMTw3x6+jOoNWimbMGV/a9b/QAgQXy7Umnq8Rvp1U/ZvTZ0eInYzz6+mfkrk
-	6uB6AoH60q8+v4RwlDVDpqwfU0teUhMW7RxjwHOU9buR2JHXMW1KmWoJaE6a/iBn09xu1MTAXO2
-	cxfho0pfx4Fj3agmq3fVVOnoyqhA==
-X-Received: by 2002:a17:903:37c4:b0:2b0:7b57:830f with SMTP id d9443c01a7336-2b2818e4f2amr251227605ad.33.1775727928999;
-        Thu, 09 Apr 2026 02:45:28 -0700 (PDT)
-Received: from [192.168.50.70] ([116.87.14.48])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b2749a2e42sm214502685ad.56.2026.04.09.02.45.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Apr 2026 02:45:27 -0700 (PDT)
-Message-ID: <22cfbf8d-af9b-462e-b240-67a1de24764f@gmail.com>
-Date: Thu, 9 Apr 2026 17:45:24 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="juRCueRH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A86BC4CEF7;
+	Thu,  9 Apr 2026 13:14:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775740451;
+	bh=XHuivLwMMMuQ5IK2ZNNilkkW9N5cMAojA4NxR328x2Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=juRCueRHbgvSzqEHjAC1sw4Yh/YxC61AcAD54vDKcZ56sGB8JSrwJNLz+4qAdKnbN
+	 b64yFpuR1JW5HTUPZftqjLj8cuDBest43M/P9K0ItuUsygZs+eA57tQXj5lPpDb8BO
+	 KMLPevvxSpzDJx0V7K3A/Trt32UJwHVVYesQjC61vfGt393BQ6I8yJSXhBCCzz/kHF
+	 FG3Gx0sT/TfJv3Vlzq+L1uoeLFY1W5OTwTg8I+I8uvqwYlU2iMTIFcnrdv2Ll2pvGp
+	 yzQzxNTMZQk5qqr/nwElpvD/WgnhKC8TD1IPjPogtlVIi0/GvTFovrFWzOGdzsAy2A
+	 XYNJ7M2ubLwHQ==
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org,
+	fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	ebiggers@kernel.org
+Cc: Andrey Albershteyn <aalbersh@kernel.org>,
+	hch@lst.de,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org,
+	djwong@kernel.org,
+	david@fromorbit.com
+Subject: [PATCH v7 00/22] fs-verity support for XFS with post EOF merkle tree
+Date: Thu,  9 Apr 2026 15:13:32 +0200
+Message-ID: <20260409131404.1545834-1-aalbersh@kernel.org>
+X-Mailer: git-send-email 2.51.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Anand Jain <anajain.sg@gmail.com>
-Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
- collisions
-To: Theodore Tso <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
- <djwong@kernel.org>, linux-ext4@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- Anand Jain <asj@kernel.org>, dsterba@suse.com
-References: <cover.1774092915.git.asj@kernel.org>
- <33e8eb64c304a4d42b60f608c26497bf9a2e9e19.1774092915.git.asj@kernel.org>
- <20260323041624.GA11453@mac.lan>
- <d4a9970b-e7ed-4e74-be9d-2d08400f9d79@gmail.com>
- <5bda3d00-df35-4ea1-b313-2fef6e5c5682@gmail.com>
- <adSUiB9L0sFAd04U@infradead.org> <20260407144709.GA81690@macsyma-wired.lan>
- <3c9e478a-42ef-446f-a8cc-1b4ac970d2ef@gmail.com>
- <20260409041035.GC99725@macsyma-wired.lan>
-Content-Language: en-US
-In-Reply-To: <20260409041035.GC99725@macsyma-wired.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+Hi all,
 
+This patch series adds fs-verity support for XFS. This version stores
+merkle tree beyond end of the file, the same way as ext4 does it. The
+difference is that verity descriptor is stored at the next aligned 64k
+block after the merkle tree last block. This is done due to sparse
+merkle tree which doesn't store hashes of zero data blocks.
 
-> So if the two file systems are identical, the (f_fsid, ino) will
-> uniquely determines a file.  And that's *fine* if f_fsid is the same
-> for statfs(A) and statfs(B).
+The patchset starts with a few fs-verity preparation patches. Then, a
+few patches to allow iomap to work in post EOF region. The XFS fs-verity
+implementation follows.
 
+The tree is read by iomap into page cache at offset of next largest
+folio past end of file. The same offset is used for on-disk.
 
-Got it. Do you mean that since both filesystems are identical,
-statfs(A) and statfs(B) can legitimately return the same values?
+This patchsets also synthesizes merkle tree block full of hashes of
+zeroed data blocks. This merkle blocks are not stored on disk, they are
+holes in the tree.
 
-And if users want them to diverge, the expectation is that they
-should update the UUID (via tune2fs), after which f_fsid would
-also differ. If the UUID isn't changed, then the ambiguity is
-effectively a user responsibility.
+Testing. The -g verity is passing for 1k, 8k and 4k with/without quota
+on 4k and 64k page size systems. Tested -g quick for enabled/disabled
+fsverity. Also, overlay/080 overlay/089 with XFS as base.
 
-I'm not entirely sure what the correct expectation for f_fsid
-should be.
+This series based on v7.0-rc6 with patchset fs generated integrity
+information [1] applied.
 
-My initial idea was to make f_fsid behavior consistent across
-major filesystems so that user space benefits from predictable
-semantics.
+kernel:
+https://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfs-linux.git/log/?h=b4/fsverity
 
-Currently, XFS and Btrfs provide f_fsid values that are unique
-per filesystem, including clones, while ext4 provides uniqueness
-only if the UUID is changed by the user.
+xfsprogs:
+https://github.com/alberand/xfsprogs/tree/b4/fsverity
 
-That said, it may be fine for ext4 to retain this behavior,
-since statfs(2) itself has some inherent ambiguity.
+xfstests:
+https://github.com/alberand/xfstests/tree/b4/fsverity
 
-If there are no further concerns, I'll update the submitted
-test case generic/791 accordingly.
+Cc: fsverity@lists.linux.dev
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-Thanks, Anand
+Cc: david@fromorbit.com
+Cc: djwong@kernel.org
+Cc: ebiggers@kernel.org
+Cc: hch@lst.de
+
+[1]: https://lore.kernel.org/linux-xfs/20260223132021.292832-1-hch@lst.de/
+
+---
+Changes in v7:
+- Move kerneldoc to fsverity_ensure_verity_info() definition
+- Drop patch adding XFS traces
+- Fix overly long line in the comment
+- Make order of fserror and fsverity_error consistent
+- Add overlay patch converting to fsverity_ensure_verity_info()
+Changes in v6:
+- Removed stub for fsverity_ensure_verity_info() as it's optimized out
+- Rename fsverity_folio_zero_hash() to fsverify_fill_zerohash()
+- Merge patches 8 to 10 into one
+- Merge patch gerating zero_hash and fsverity_fill_zerohash() into one
+- Add kerneldoc to fsverity_ensure_verity_info()
+- Add comments to iomap_block_needs_zeroing()
+Changes in v5:
+- Add fserror_report_data_lost() for data blocks in page spanning EOF
+- Issue fsverity metadata readahead in data readahead
+- iomap_fsverity_write() return type fix
+- Use of S_ISREG(mode)
+- Make 65536 #define instead of open-coded
+- Use transaction per unwritten extent removal
+- Fetch fsverity_info for all fsverity metadata
+- Revert fsverity_folio_zero_hash() stub as used in iomap
+- Extend cancel_unwritten to whole file range to remove cow leftovers
+- Drop delayed allocation on the COW fork on fsverity completion
+Changes in v4:
+- Use fserror interface in fsverity instead of fs callback
+- Hoist pagecache_read from f2fs/ext4 to fsverity
+- Refactor iomap code
+- Fetch fsverity_info only for file data and merkle tree holes
+- Do not disable preallocation, remove unwritten extents instead
+- Offload fsverity hash I/O to fsverity workqueue in read path
+- Store merkle tree at round_up(i_size, 64k)
+- Add a spacing between merkle tree and fsverity descriptor as next 64k
+  aligned block
+- Squash helpers into first user commits
+- Squash on-disk format changes into single commit
+- Drop different offset for pagecache/on-disk
+- Don't zero out pages in higher order folios in write path
+- Link to v3: https://lore.kernel.org/fsverity/20260217231937.1183679-1-aalbersh@kernel.org/T/#t
+Changes in v3:
+- Different on-disk and pagecache offset
+- Use read path ioends
+- Switch to hashtable fsverity info
+- Synthesize merkle tree blocks full of zeroes
+- Other minor refactors
+- Link to v2: https://lore.kernel.org/fsverity/20260114164210.GO15583@frogsfrogsfrogs/T/#t
+Changes in v2:
+- Move to VFS interface for merkle tree block reading
+- Drop patchset for per filesystem workqueues
+- Change how offsets of the descriptor and tree metadata is calculated
+- Store fs-verity descriptor in data fork side by side with merkle tree
+- Simplify iomap changes, remove interface for post eof read/write
+- Get rid of extended attribute implementation
+- Link to v1: https://lore.kernel.org/r/20250728-fsverity-v1-0-9e5443af0e34@kernel.org
+
+Andrey Albershteyn (20):
+  fsverity: report validation errors through fserror to fsnotify
+  fsverity: expose ensure_fsverity_info()
+  ovl: use core fsverity ensure info interface
+  fsverity: generate and store zero-block hash
+  fsverity: pass digest size and hash of the all-zeroes block to ->write
+  fsverity: hoist pagecache_read from f2fs/ext4 to fsverity
+  iomap: introduce IOMAP_F_FSVERITY and teach writeback to handle
+    fsverity
+  iomap: teach iomap to read files with fsverity
+  iomap: introduce iomap_fsverity_write() for writing fsverity metadata
+  xfs: introduce fsverity on-disk changes
+  xfs: initialize fs-verity on file open
+  xfs: don't allow to enable DAX on fs-verity sealed inode
+  xfs: disable direct read path for fs-verity files
+  xfs: handle fsverity I/O in write/read path
+  xfs: use read ioend for fsverity data verification
+  xfs: add fs-verity support
+  xfs: remove unwritten extents after preallocations in fsverity
+    metadata
+  xfs: add fs-verity ioctls
+  xfs: introduce health state for corrupted fsverity metadata
+  xfs: enable ro-compat fs-verity flag
+
+Darrick J. Wong (2):
+  xfs: advertise fs-verity being available on filesystem
+  xfs: check and repair the verity inode flag state
+
+ fs/btrfs/verity.c              |   6 +-
+ fs/ext4/verity.c               |  36 +--
+ fs/f2fs/verity.c               |  34 +--
+ fs/iomap/buffered-io.c         | 109 +++++++-
+ fs/iomap/trace.h               |   3 +-
+ fs/overlayfs/util.c            |  14 +-
+ fs/verity/enable.c             |   4 +-
+ fs/verity/fsverity_private.h   |   3 +
+ fs/verity/measure.c            |   4 +-
+ fs/verity/open.c               |  25 +-
+ fs/verity/pagecache.c          |  55 ++++
+ fs/verity/verify.c             |   4 +
+ fs/xfs/Makefile                |   1 +
+ fs/xfs/libxfs/xfs_bmap.c       |   7 +
+ fs/xfs/libxfs/xfs_format.h     |  35 ++-
+ fs/xfs/libxfs/xfs_fs.h         |   2 +
+ fs/xfs/libxfs/xfs_health.h     |   4 +-
+ fs/xfs/libxfs/xfs_inode_buf.c  |   8 +
+ fs/xfs/libxfs/xfs_inode_util.c |   2 +
+ fs/xfs/libxfs/xfs_sb.c         |   4 +
+ fs/xfs/scrub/attr.c            |   7 +
+ fs/xfs/scrub/common.c          |  53 ++++
+ fs/xfs/scrub/common.h          |   2 +
+ fs/xfs/scrub/inode.c           |   7 +
+ fs/xfs/scrub/inode_repair.c    |  36 +++
+ fs/xfs/xfs_aops.c              |  62 ++++-
+ fs/xfs/xfs_bmap_util.c         |   8 +
+ fs/xfs/xfs_file.c              |  19 +-
+ fs/xfs/xfs_fsverity.c          | 455 +++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsverity.h          |  28 ++
+ fs/xfs/xfs_health.c            |   1 +
+ fs/xfs/xfs_inode.h             |   6 +
+ fs/xfs/xfs_ioctl.c             |  14 +
+ fs/xfs/xfs_iomap.c             |  15 +-
+ fs/xfs/xfs_iops.c              |   4 +
+ fs/xfs/xfs_message.c           |   4 +
+ fs/xfs/xfs_message.h           |   1 +
+ fs/xfs/xfs_mount.h             |   4 +
+ fs/xfs/xfs_super.c             |   7 +
+ include/linux/fsverity.h       |  18 +-
+ include/linux/iomap.h          |  13 +
+ 41 files changed, 1017 insertions(+), 107 deletions(-)
+ create mode 100644 fs/xfs/xfs_fsverity.c
+ create mode 100644 fs/xfs/xfs_fsverity.h
+
+-- 
+2.51.2
 
