@@ -1,130 +1,202 @@
-Received: from mail-dl1-f54.google.com (mail-dl1-f54.google.com [74.125.82.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BD2A314A84
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 00:47:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB5B29AAEA
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775782025; cv=none; b=qO6O+gCb939EDb2wHJYwRYWcopKKyBfayd82ViGDcu+JnFvIbBUa7/ZtAYYMlxlCDqzldSQ1aoh7UtrSWyA07ZKryZrWrn8OjsHu2Cqqca9oncO8q9rEUIXd6G6fbbdDgjWekTMzDNtcPI6DVMfxWaEFZb9omgXaxwjxzvQPveA=
+	t=1775801441; cv=none; b=c+3odURz0Gym2rwzktbrbl2zm45mfz9AO2nDoooBrDijjQi/O1qD+rbBAgYIKFPZuvPSLHdBm1R3sSwle8GUUMOuZaHm4WCXh809n19YZv5PbE7gfOOLoRt/cvejgvLz6w7+AR80wjBUdpVcZH4Cn/fHIBeRK5em6iuuIxVeUZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775782025; c=relaxed/simple;
-	bh=5RSqm0i7TAMALBXs719N1oHBv8HwMRI4TbjdGJov0So=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i2UJxL+0T1GsGExumLJQWvOBt1zOALiglaRsIOPLhgztz9joxu2zd0qHRe2O/ihvXDtWI88Dq65zQwNpHrzPyrkbvSH8pVhtlLZ8Y19Rtos/lOXhN7929cQOG1xeQGk962AQyj3+bTZGNpMvDKR/hnYSIfzUJKopgO6tvozRs/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=WL05AItd; arc=none smtp.client-ip=74.125.82.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1775801441; c=relaxed/simple;
+	bh=fnHBgjNwu6XK0ExDkB1V5mmOPnG+dVmVzab7UL/sj5M=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=BLbtn3SDXAJs2w4Rw8NtjtVtS4dnP7it6gUi95doXwzhgtGVMZmlonykhS0zSokkvygMnv//KRmoIchZEcz0PVqfC2ReITiw+YB9CvMf5nwRmyQ1n9pwu4D5/SKGzqmrGBsDvpIkADwbI+FZtUWy7oXDRtiAQSHIXMCkJWwrha4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5ZyTFPc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="WL05AItd"
-Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-12732165d1eso10752886c88.1
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Apr 2026 17:47:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1775782022; x=1776386822; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=8dLqEnr+wCE0zIFZUjHqtBjKoRS3kf2QNeojFry0cDY=;
-        b=WL05AItdw5GBbK/6YpQRx2xq0tzJP8x47J0Zbl8l/X8losGNzCSaDoSyBHSLagUmKC
-         mzb0oB0nm33ulQ9luFZR3p1Yr36j8L0RJqDZRK2ZZxkZsukD3UvntYa0outb/ptdl6N3
-         VCav4Er0OTMZEdPtu77kKoTx4pNp1AtV8/mRCuIh7VrE5zLNmXYxU5eGpMOCBicwh7zA
-         CnX5rlRaIXjywKFCfMd0niM4t0j8Ic7lfKwpLdqJoRE67IM+GLHz24BqQZGC7RurZsYS
-         PLK9sOE/w8z8TwnJV2uE/fnpNYIxLGHADXziHF6Nub7ozUqrGfjIayp1KpM/YfWMgMhO
-         aOfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775782022; x=1776386822;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8dLqEnr+wCE0zIFZUjHqtBjKoRS3kf2QNeojFry0cDY=;
-        b=pagaIqkNfOMRDF8PJHJZXSnn/+1gooUvNaB1ndUo58dR3Zy8OPSblk3Qv8vyVqo6I+
-         6cDLT50hM4syPfx58kb4lOo1QOTKj8L05IDpzNKB36N2HXvifxmLXzXTr0M+cR7Ci2qr
-         GsXK5yJDAChUYaRcwhBxINCteomdTDmLzCdonLJmUe6/gCESfipX8J3RDPxwrSKR/meq
-         NJplbK4SSbUV2GMhNkaByHokMGh3fr9Euu4iTe0yJOdvoFfEDnjtptXRKcw/min1xK1H
-         2p7kkJyv2yb5vT9OV9yBFjunPCW8FWHrsEJHsS2PyQDbsNGFTThGYfhY7NPUwJWzan3S
-         c/sA==
-X-Forwarded-Encrypted: i=1; AJvYcCUo3WXlAwSy6G5xKC5K+2ygQm/GMpkSeW2zayHInIplIlRIwGsN8y18iYPsYZrqLaoyEYclHW9AHW8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx9TZ2gAznvTCRM+if/rw4rnFBirnzsD5+LCQ2IJrJJpYbmyxmR
-	p+ZhdbQ1YGMCBh/+0q5WZOFdkHH5RB+rr49D1onGE9+FbBTzgf6bLmoAxN/aJtV9Btg=
-X-Gm-Gg: AeBDievdv7LLeoJdF/ETnsHTDCAYkryDnP9KuMqt5oEIkSP2kzp5d8NGJ+FVH4RFV04
-	/y9lIMttZWnvLM4WKeT3/DPOaJeHMZ9T+nRBQghuogrBNiybRrGKvSL9m2ZdO8X5cxG5SJYxUIJ
-	YbW2lsLKRt5chPVeaX+OHxMcP7XCOVlO94BF92C43obd91Gc0q//UV+S6HwAn4M2ls0HTkOYOJp
-	0omYxERTxugvHnde4ILmIAHjkLubrNI0p1PhDv72GjYTN2NZ/gNRYGVvyp2cxi9HbtVCrlIJydF
-	hKbfn36RdcPh3jTda9Sc636VrDyljwLWZZe3HSUlCIYQmUH85sNURMrQdi+RVhRDvmrQk91z5vj
-	7rSOKU3qSjw73A12ccrK+T2CNgIMIz269Q215PTBfOClcA6M7IIIlVg4JRDezXUZLdavyRVhYfQ
-	zu+l70ABH16PKaagD7iyXEbxBNcejjw1ZmfLbbcPGDOF/KJskbIfZW9OeF1krEyC0PWB8IhwxtE
-	6Zh7VgHMHIw77XxFqWCL0IJf+eVlc0SywzsQDC5hwqTFUt8R5RjBhk=
-X-Received: by 2002:a05:7022:e986:b0:127:15cd:9f52 with SMTP id a92af1059eb24-12c34e37b1fmr652018c88.5.1775782021786;
-        Thu, 09 Apr 2026 17:47:01 -0700 (PDT)
-Received: from ?IPV6:2600:380:873e:380f:e9e5:ea98:a905:9cbb? ([2600:380:873e:380f:e9e5:ea98:a905:9cbb])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12c34352490sm1530405c88.0.2026.04.09.17.46.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Apr 2026 17:47:01 -0700 (PDT)
-Message-ID: <fb64ba71-7284-4768-979b-84919f2aa5f0@kernel.dk>
-Date: Thu, 9 Apr 2026 18:46:54 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5ZyTFPc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0EDFC2BC9E;
+	Fri, 10 Apr 2026 06:10:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775801441;
+	bh=fnHBgjNwu6XK0ExDkB1V5mmOPnG+dVmVzab7UL/sj5M=;
+	h=Date:Subject:From:To:Cc:From;
+	b=P5ZyTFPcBxnIq9+CUPJt5pWOwo70JmT0jj25+1PBs3FSJwfsB+MUmw3s3teBoefII
+	 DkM82ejrZ+VfbAquopmEqpN8NvfAfsH5pKCPTxTP7i4RiXStZnW3ohIpKn15Y35lMW
+	 G8HCSzVrHJ1Ee1TPqulIkaFB4q42TMmA6E+f3dT6EwwafD3CHYeo2Sp9lbnuf24lBm
+	 CgjoGFxobyLzzJfwUL0Wl0+ML3osH1Hcla4KovoczuPlw72MVHD1LZmMPuskTXQ0d8
+	 L7eOkPrbaUI2SD+IAAKG3fLv/ktKlN2ss7GlPK23gSZf2nSdTPNq1/e8aiskeLDufs
+	 qcmqyn0edUR+w==
+Date: Thu, 09 Apr 2026 23:10:40 -0700
+Subject: [PATCHSET v11 1/2] xfsprogs: autonomous self healing of filesystems
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: aalbersh@kernel.org, djwong@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
- task-context completion
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: Matthew Wilcox <willy@infradead.org>,
- Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
- <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-References: <97b81868-6410-4c79-a242-679a9f04f073@columbia.edu>
- <95F28FA1-5CEF-4E80-BBB7-A429B4437D12@kernel.dk>
- <7e468bd2-e52b-4165-95c6-3f04e1dca21e@columbia.edu>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <7e468bd2-e52b-4165-95c6-3f04e1dca21e@columbia.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-On 4/9/26 12:54 PM, Tal Zussman wrote:
-> 
-> 
-> On 4/8/26 7:36 PM, Jens Axboe wrote:
->> On Apr 8, 2026, at 4:51?PM, Tal Zussman <tz2294@columbia.edu> wrote:
->>>> On 4/8/26 3:51 PM, Jens Axboe wrote:
->>>>> On 4/8/26 12:?48 PM, Tal Zussman wrote: > On 3/25/26 4:?14 PM, Jens Axboe wrote:
->>>>>
->>>>> Thanks! I'm going to give Dave's llist suggestion a shot on top of
->>>>> this as it seems like it'll simplify this nicely. Looks like that'll
->>>>> involve turning bio::bi_next into a union with a struct llist_node.
->>>>
->>>> Since these lists can get long, I'd keep an eye on llist reversal
->>>> overhead there...
->>>>
->>>
->>> Going to send v5 shortly -- tested with and without the llist reversal and
->>> it didn't seem to make much of a difference. This was on a single-disk VM
->>> though, so any stress testing you could do would be very helpful.
->>>
->>
->> With all due respect, a single test like that isn?t going to be that useful. I?d be wary of making that change willy nilly and just thinking ?it?s fine, worked fine on the one case I tested?.
-> 
-> Understood -- unfortunately that's what I have access to at the moment. I
-> can requisition a machine with 2, maybe 3 disks, and test more thoroughly on
-> that before sending the next version, but that'll take a few days. You had
-> previously offered to test on your big box, so was hoping that was still on
-> the table :)
+Hi all,
 
-I can do that, but I'm OOO for the next week, so won't be until I'm
-back.
+This patchset builds new functionality to deliver live information about
+filesystem health events to userspace.  This is done by creating an
+anonymous file that can be read() for events by userspace programs.
+Events are captured by hooking various parts of XFS and iomap so that
+metadata health failures, file I/O errors, and major changes in
+filesystem state (unmounts, shutdowns, etc.) can be observed by
+programs.
 
-> (Although Christoph seems to have proposed moving away from llist again)
+When an event occurs, the hook functions queue an event object to each
+event anonfd for later processing.  Programs must have CAP_SYS_ADMIN
+to open the anonfd and there's a maximum event lag to prevent resource
+overconsumption.  The events themselves can be read() from the anonfd
+as C structs for the xfs_healer daemon.
 
-I think that's a good idea, not a fan of using llist for this, in case
-that wasn't clear. These are per-cpu lists anyway, and having a constant
-overhead is better than needing to reverse an llist. IMHO.
+In userspace, we create a new daemon program that will read the event
+objects and initiate repairs automatically.  This daemon is managed
+entirely by systemd and will not block unmounting of the filesystem
+unless repairs are ongoing.  They are auto-started by a starter
+service that uses fanotify.
 
--- 
-Jens Axboe
+v11: various minor bug fixes detected by static checkers
+v10: move the xfs_scrub cleanups and changes to their own patchset,
+     improve the commit messages to explain why we use getmntent and
+     statmount
+v9: move listmount/statmount to libfrog; improve documentation about why
+    we dance with getmntent; enhance getmntent reconnection with
+    listmount; move --svcname helpers to xfs_{healer,scrub}; improve
+    commit messages; various tweaks to fstests
+v8: clean up userspace for merging now that the kernel part is upstream
+v7: more cleanups of the media verification ioctl, improve comments, and
+    reuse the bio
+v6: fix pi-breaking bugs, make verify failures trigger health reports
+v5: add verify-media ioctl, collapse small helper funcs with only
+    one caller
+v4: drop multiple client support so we can make direct calls into
+    healthmon instead of chasing pointers and doing indirect calls
+v3: drag out of rfc status
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-monitoring
+---
+Commits in this patchset:
+ * libfrog: add a function to grab the path from an open fd and a file handle
+ * libfrog: create healthmon event log library functions
+ * libfrog: add support code for starting systemd services programmatically
+ * libfrog: hoist a couple of service helper functions
+ * libfrog: add wrappers for listmount and statmount
+ * man2: document the healthmon ioctl
+ * man2: document the media verification ioctl
+ * xfs_io: monitor filesystem health events
+ * xfs_io: add a media verify command
+ * xfs_healer: create daemon to listen for health events
+ * xfs_healer: enable repairing filesystems
+ * xfs_healer: use getparents to look up file names
+ * xfs_healer: create a per-mount background monitoring service
+ * xfs_healer: create a service to start the per-mount healer service
+ * xfs_healer: don't start service if kernel support unavailable
+ * xfs_healer: use the autofsck fsproperty to select mode
+ * xfs_healer: run full scrub after lost corruption events or targeted repair failure
+ * xfs_healer: use getmntent to find moved filesystems
+ * xfs_healer: use statmount to find moved filesystems even faster
+ * xfs_healer: validate that repair fds point to the monitored fs
+ * xfs_healer: add a manual page
+ * xfs_scrub: print systemd service names
+ * xfs_io: add listmount and statmount commands
+ * mkfs: enable online repair if all backrefs are enabled
+ * debian/control: listify the build dependencies
+ * debian: enable xfs_healer on the root filesystem by default
+---
+ healer/xfs_healer.h                            |   92 +++
+ include/linux.h                                |    8 
+ io/io.h                                        |    8 
+ libfrog/flagmap.h                              |   23 +
+ libfrog/fsproperties.h                         |    5 
+ libfrog/getparents.h                           |    4 
+ libfrog/healthevent.h                          |   55 ++
+ libfrog/statmount.h                            |  104 ++++
+ libfrog/systemd.h                              |   55 ++
+ scrub/xfs_scrub.h                              |    3 
+ Makefile                                       |    5 
+ configure.ac                                   |   13 
+ debian/control                                 |   14 
+ debian/postinst                                |    8 
+ debian/prerm                                   |   13 
+ debian/rules                                   |    3 
+ healer/Makefile                                |   69 ++
+ healer/fsrepair.c                              |  342 ++++++++++++
+ healer/system-xfs_healer.slice                 |   31 +
+ healer/weakhandle.c                            |  296 ++++++++++
+ healer/xfs_healer.c                            |  693 ++++++++++++++++++++++++
+ healer/xfs_healer@.service.in                  |  108 ++++
+ healer/xfs_healer_start.c                      |  371 +++++++++++++
+ healer/xfs_healer_start.service.in             |   85 +++
+ include/builddefs.in                           |   15 +
+ io/Makefile                                    |    9 
+ io/healthmon.c                                 |  191 +++++++
+ io/init.c                                      |    3 
+ io/listmount.c                                 |  367 +++++++++++++
+ io/verify_media.c                              |  181 ++++++
+ libfrog/Makefile                               |   19 +
+ libfrog/flagmap.c                              |   79 +++
+ libfrog/getparents.c                           |   93 +++
+ libfrog/healthevent.c                          |  477 +++++++++++++++++
+ libfrog/statmount.c                            |   76 +++
+ libfrog/systemd.c                              |  188 +++++++
+ m4/package_libcdev.m4                          |  129 ++++
+ man/man2/ioctl_xfs_health_fd_on_monitored_fs.2 |   75 +++
+ man/man2/ioctl_xfs_health_monitor.2            |  464 ++++++++++++++++
+ man/man2/ioctl_xfs_verify_media.2              |  197 +++++++
+ man/man8/Makefile                              |   40 +
+ man/man8/xfs_healer.8                          |  121 ++++
+ man/man8/xfs_healer_start.8                    |   37 +
+ man/man8/xfs_io.8                              |  133 +++++
+ mkfs/xfs_mkfs.c                                |    9 
+ scrub/Makefile                                 |   16 -
+ scrub/xfs_scrub.c                              |   82 ++-
+ 47 files changed, 5350 insertions(+), 59 deletions(-)
+ create mode 100644 healer/xfs_healer.h
+ create mode 100644 libfrog/flagmap.h
+ create mode 100644 libfrog/healthevent.h
+ create mode 100644 libfrog/statmount.h
+ create mode 100644 libfrog/systemd.h
+ create mode 100644 debian/prerm
+ create mode 100644 healer/Makefile
+ create mode 100644 healer/fsrepair.c
+ create mode 100644 healer/system-xfs_healer.slice
+ create mode 100644 healer/weakhandle.c
+ create mode 100644 healer/xfs_healer.c
+ create mode 100644 healer/xfs_healer@.service.in
+ create mode 100644 healer/xfs_healer_start.c
+ create mode 100644 healer/xfs_healer_start.service.in
+ create mode 100644 io/healthmon.c
+ create mode 100644 io/listmount.c
+ create mode 100644 io/verify_media.c
+ create mode 100644 libfrog/flagmap.c
+ create mode 100644 libfrog/healthevent.c
+ create mode 100644 libfrog/statmount.c
+ create mode 100644 libfrog/systemd.c
+ create mode 100644 man/man2/ioctl_xfs_health_fd_on_monitored_fs.2
+ create mode 100644 man/man2/ioctl_xfs_health_monitor.2
+ create mode 100644 man/man2/ioctl_xfs_verify_media.2
+ create mode 100644 man/man8/xfs_healer.8
+ create mode 100644 man/man8/xfs_healer_start.8
+
