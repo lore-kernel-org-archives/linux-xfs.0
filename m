@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BF1229DB86
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:13:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8E5E226D02
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:14:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775801624; cv=none; b=cAl3f8Afuifqh6ful+azc/39oxL/9iSocfG7vfrcKwTZoTqZEZ7C+natRA1n/y6Vf5GblxOG3QW5WJ6nqJ+H8+lzzn5RBonaUIff7/6A0aGCvmTIhAqOFxYw79Q0JCfDu0xichIHQneVf1NDLnZoV8i2CBnyLWkL2dLuWaKvcGA=
+	t=1775801640; cv=none; b=nWNeVuj9sUZokGRjqubc6K0+rnsraQ/PdmvVr5lzLgWcfpYUbn6DLrQkP+h+ZYJuQ+yZxrWgKmivmHtGsO86IhbHPF7gzGRM/5Cw+4QTzEQ/8PgtxkPQmnGOAJ0mNVp+uE0RtpDkg0rZS2Bx5M2xhFT6AB0pOEK3+x2QFA2wc9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775801624; c=relaxed/simple;
-	bh=YivSS8BHANo9naIepeVLdQSPBEVZI9J29UvHS3z3wlc=;
+	s=arc-20240116; t=1775801640; c=relaxed/simple;
+	bh=Bu+6cuGV5xkSN/Tcx1dUAgmRj/uq1+d9JGsw2Kre4tQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iwzJw1qwqd5ttDt7yZA5cKREAmwU6yPLWzS6tnCPgZc8r254GpuGZ5eNI+R9/y2+jePfQhbf4N6Kgy5XaYQ76htDSVGepeCiz/OtXMBVhD5rygc+Y9rwZzHM8smmIrkV2kevMUOxkpupNGS1PQHiOj5TSmWJFl6nF90P4RJKKXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZjNav3W3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=h84pBn9ra2nUveUdDaJMRxKny01t3z3ypaEABpe9kozVGc+rzkFrStF4aBP2MV7z0RpGJPNGcwzaf0vFbmPyB4QNRus/Grwqom92ntg1naTmf6Gcy0xg4vB3aEeHFHf9k+scNyp5g8452L22dEVXQsjRf33dFHxr8W2PA9QXpCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AZknzQGy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZjNav3W3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 709EFC19421;
-	Fri, 10 Apr 2026 06:13:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AZknzQGy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C895C19421;
+	Fri, 10 Apr 2026 06:14:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775801624;
-	bh=YivSS8BHANo9naIepeVLdQSPBEVZI9J29UvHS3z3wlc=;
+	s=k20201202; t=1775801640;
+	bh=Bu+6cuGV5xkSN/Tcx1dUAgmRj/uq1+d9JGsw2Kre4tQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZjNav3W3y5KyAE3RKF0rGL85TQnkBHTReaIM6ZRYBll1Vn4FBhpjkgX59snG3L3nl
-	 G1ldlWtNO84xpJc/iJEUhWim2oDeQ3vcLyLdAb81UJkZXIf9lYHn09+UAag27thrhe
-	 1i2kTf7cveYDbui6zRUTlzsm1Xn6khAowx9Sn/xTK4+ZaFlZ1LomgHhuVulaoZkek2
-	 Vmau5avQgd8GC1hRbHwmLtmQG9r65zphECbJXSJkgXa7dce+Au5Nwtl1rSqIVoQco8
-	 DXOrgcH1wJBfYON8oYsB5Skpd5spI8yFPXrsvwmZ+Vca6vPOAuqb2j74Yotdpxzw80
-	 8jTKkriGnq6+w==
-Date: Thu, 09 Apr 2026 23:13:44 -0700
-Subject: [PATCH 12/26] xfs_healer: use getparents to look up file names
+	b=AZknzQGyC5Kn6hY4Y7bofLtQxE2kYsd17AwTy+94FA8VoTbClekdOL3NVjFN7bCpE
+	 LS7/8ebGycI/FBgiCNMWnCJddFj4QwYxz2zYHD1JPkzfHRaUjSk6Vu/ZMRqCsMdI7e
+	 dpylQpMBLX/LSRAMf7fOrtAH9KQNhCtx5HO2KjXEwz3UALCoxfbfoZ/kbiW9OoEk26
+	 gdGgsyK/rtQQWDIBhSZRY71t+scmiDpt7thCo/kfimv8FfZwCnF40c53sX4VlHzP1O
+	 w2SHLIujg1jINWhiOOxjXPNOwFIvxB+jTY3K/0M8N+jSgZHnzDoj5CiDTRaEq9KSsz
+	 bJ4mdCDiuKjsQ==
+Date: Thu, 09 Apr 2026 23:13:59 -0700
+Subject: [PATCH 13/26] xfs_healer: create a per-mount background monitoring
+ service
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577384452.2089237.16191067852709669051.stgit@frogsfrogsfrogs>
+Message-ID: <177577384471.2089237.12226277543897733077.stgit@frogsfrogsfrogs>
 In-Reply-To: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 References: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,253 +46,264 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the kernel tells about something that happened to a file, use the
-GETPARENTS ioctl to try to look up the path to that file for more
-ergonomic reporting.
+Create a systemd service definition for our self-healing filesystem
+daemon so that we can run it for every mounted filesystem.  Add a
+hidden switch so that we can print the service unit name for fstests.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/xfs_healer.h |    6 ++++
- healer/fsrepair.c   |   16 ++++++++-
- healer/weakhandle.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
- healer/xfs_healer.c |   45 ++++++++++++++++++++++++++-
- 4 files changed, 149 insertions(+), 4 deletions(-)
+ healer/xfs_healer.h            |    1 
+ healer/Makefile                |   22 ++++++++
+ healer/system-xfs_healer.slice |   31 ++++++++++++
+ healer/xfs_healer.c            |   16 ++++++
+ healer/xfs_healer@.service.in  |  107 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 176 insertions(+), 1 deletion(-)
+ create mode 100644 healer/system-xfs_healer.slice
+ create mode 100644 healer/xfs_healer@.service.in
 
 
 diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
-index a4de1ad32a408f..6d12921245934c 100644
+index 6d12921245934c..679bdc95ae48f8 100644
 --- a/healer/xfs_healer.h
 +++ b/healer/xfs_healer.h
-@@ -61,6 +61,10 @@ static inline bool healer_has_parent(const struct healer_ctx *ctx)
- 	return ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_PARENT;
- }
+@@ -26,6 +26,7 @@ struct healer_ctx {
+ 	int			everything;
+ 	int			foreground;
+ 	int			want_repair;
++	int			print_svcname;
  
-+void lookup_path(struct healer_ctx *ctx,
-+		const struct xfs_health_monitor_event *hme,
-+		struct hme_prefix *pfx);
-+
- /* repair.c */
- int repair_metadata(struct healer_ctx *ctx, const struct hme_prefix *pfx,
- 		const struct xfs_health_monitor_event *hme);
-@@ -71,5 +75,7 @@ int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
- 		struct weakhandle **whp);
- int weakhandle_reopen(struct weakhandle *wh, int *fd);
- void weakhandle_free(struct weakhandle **whp);
-+int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
-+		char *path, size_t pathlen);
+ 	/* fd and fs geometry for mount */
+ 	struct xfs_fd		mnt;
+diff --git a/healer/Makefile b/healer/Makefile
+index 981192b81af626..ee44aaee461250 100644
+--- a/healer/Makefile
++++ b/healer/Makefile
+@@ -22,7 +22,23 @@ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBURCU) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
  
- #endif /* XFS_HEALER_XFS_HEALER_H_ */
-diff --git a/healer/fsrepair.c b/healer/fsrepair.c
-index 907afca3dba8a7..4534104f8a6ac1 100644
---- a/healer/fsrepair.c
-+++ b/healer/fsrepair.c
-@@ -164,7 +164,7 @@ try_repair_rtgroup(
- static void
- try_repair_inode(
- 	struct healer_ctx			*ctx,
--	const struct hme_prefix			*pfx,
-+	const struct hme_prefix			*orig_pfx,
- 	int					mnt_fd,
- 	const struct xfs_health_monitor_event	*hme)
- {
-@@ -182,13 +182,25 @@ try_repair_inode(
- 		{0,		0},
- 	};
- #undef X
--	const struct u32_scrub *f;
-+	struct hme_prefix	new_pfx;
-+	const struct hme_prefix	*pfx = orig_pfx;
-+	const struct u32_scrub	*f;
+-default: depend $(LTCOMMAND)
++XFS_HEALER_SVCNAME=xfs_healer@.service
++CFLAGS += -DXFS_HEALER_SVCNAME=\"$(XFS_HEALER_SVCNAME)\"
++
++ifeq ($(HAVE_SYSTEMD),yes)
++INSTALL_HEALER += install-systemd
++SYSTEMD_SERVICES=\
++	system-xfs_healer.slice \
++	$(XFS_HEALER_SVCNAME)
++OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
++endif
++
++default: depend $(LTCOMMAND) $(SYSTEMD_SERVICES)
++
++%.service: %.service.in $(builddefs)
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@pkg_libexec_dir@|$(PKG_LIBEXEC_DIR)|g" \
++		   < $< > $@
  
- 	foreach_scrub_type(f, hme->e.inode.mask, INODE_STRUCTURES) {
- 		enum repair_outcome	outcome =
- 			xfs_repair_metadata(mnt_fd, f->scrub_type,
- 					0, hme->e.inode.ino, hme->e.inode.gen);
+ include $(BUILDRULES)
  
-+		/*
-+		 * Try again to find the file path, maybe we fixed the dir
-+		 * tree.
-+		 */
-+		if (!hme_prefix_has_path(pfx)) {
-+			lookup_path(ctx, hme, &new_pfx);
-+			if (hme_prefix_has_path(&new_pfx))
-+				pfx = &new_pfx;
-+		}
-+
- 		pthread_mutex_lock(&ctx->conlock);
- 		report_health_repair(pfx, hme, f->event_mask, outcome);
- 		pthread_mutex_unlock(&ctx->conlock);
-diff --git a/healer/weakhandle.c b/healer/weakhandle.c
-index 53df43b03e16cc..8950e0eb1e5a43 100644
---- a/healer/weakhandle.c
-+++ b/healer/weakhandle.c
-@@ -11,6 +11,8 @@
- #include "handle.h"
- #include "libfrog/fsgeom.h"
- #include "libfrog/workqueue.h"
-+#include "libfrog/getparents.h"
-+#include "libfrog/paths.h"
- #include "xfs_healer.h"
+@@ -32,6 +48,10 @@ install-healer: default
+ 	$(INSTALL) -m 755 -d $(PKG_LIBEXEC_DIR)
+ 	$(INSTALL) -m 755 $(LTCOMMAND) $(PKG_LIBEXEC_DIR)
  
- struct weakhandle {
-@@ -113,3 +115,87 @@ weakhandle_free(
++install-systemd: default
++	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
++	$(INSTALL) -m 644 $(SYSTEMD_SERVICES) $(SYSTEMD_SYSTEM_UNIT_DIR)
++
+ install-dev:
  
- 	*whp = NULL;
- }
+ -include .dep
+diff --git a/healer/system-xfs_healer.slice b/healer/system-xfs_healer.slice
+new file mode 100644
+index 00000000000000..b8f5bca03963ff
+--- /dev/null
++++ b/healer/system-xfs_healer.slice
+@@ -0,0 +1,31 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
++# Author: Darrick J. Wong <djwong@kernel.org>
 +
-+struct bufvec {
-+	char	*buf;
-+	size_t	len;
-+};
++[Unit]
++Description=xfs_healer background service slice
++Before=slices.target
 +
-+static int
-+render_path(
-+	const char		*mntpt,
-+	const struct path_list	*path,
-+	void			*arg)
-+{
-+	struct bufvec		*args = arg;
-+	int			mntpt_len = strlen(mntpt);
-+	ssize_t			ret;
++[Slice]
 +
-+	/* Trim trailing slashes from the mountpoint */
-+	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
-+		mntpt_len--;
++# If the CPU usage cgroup controller is available, don't use more than 2 cores
++# for all background processes.  One thread to read events, another to run
++# repairs.
++CPUQuota=200%
++CPUAccounting=true
 +
-+	ret = snprintf(args->buf, args->len, "%.*s", mntpt_len, mntpt);
-+	if (ret < 0 || ret >= args->len)
-+		return 0;
-+
-+	ret = path_list_to_string(path, args->buf + ret, args->len - ret);
-+	if (ret < 0)
-+		return 0;
-+
-+	/* magic code that means we found one */
-+	return ECANCELED;
-+}
-+
-+/* Render any path to this weakhandle into the specified buffer. */
-+int
-+weakhandle_getpath_for(
-+	struct weakhandle	*wh,
-+	uint64_t		ino,
-+	uint32_t		gen,
-+	char			*path,
-+	size_t			pathlen)
-+{
-+	struct xfs_handle	fakehandle;
-+	struct bufvec		bv = {
-+		.buf		= path,
-+		.len		= pathlen,
-+	};
-+	int			mnt_fd;
-+	int			ret;
-+
-+	if (wh->hlen != sizeof(fakehandle)) {
-+		errno = EINVAL;
-+		return -1;
-+	}
-+	memcpy(&fakehandle, wh->hanp, sizeof(fakehandle));
-+	fakehandle.ha_fid.fid_ino = ino;
-+	fakehandle.ha_fid.fid_gen = gen;
-+
-+	ret = weakhandle_reopen(wh, &mnt_fd);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * In the common case, files only have one parent; and what's the
-+	 * chance that we'll need to walk past the second parent to find *one*
-+	 * path that goes to the rootdir?  With a max filename length of 255
-+	 * bytes, we pick 600 for the buffer size.
-+	 */
-+	ret = handle_walk_paths_fd(wh->mntpoint, mnt_fd, &fakehandle,
-+			sizeof(fakehandle), 600, render_path, &bv);
-+	switch (ret) {
-+	case ECANCELED:
-+		/* found a path */
-+		ret = 0;
-+		break;
-+	default:
-+		/* didn't find one */
-+		errno = ENOENT;
-+		ret = -1;
-+		break;
-+	}
-+
-+	close(mnt_fd);
-+	return ret;
-+}
++[Install]
++# As of systemd 249, the systemd cgroupv2 configuration code will drop resource
++# controllers from the root and system.slice cgroups at startup if it doesn't
++# find any direct dependencies that require a given controller.  Newly
++# activated units with resource control directives are created under the system
++# slice but do not cause a reconfiguration of the slice's resource controllers.
++# Hence we cannot put CPUQuota= into the xfs_healer service units directly.
++#
++# For the CPUQuota directive to have any effect, we must therefore create an
++# explicit definition file for the slice that systemd creates to contain the
++# xfs_healer instance units (e.g. xfs_healer@.service) and we must configure
++# this slice as a dependency of the system slice to establish the direct
++# dependency relation.
++WantedBy=system.slice
 diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index 45ec4f28f180d7..71afa0331c8c7e 100644
+index 71afa0331c8c7e..d9ab53c153a456 100644
 --- a/healer/xfs_healer.c
 +++ b/healer/xfs_healer.c
-@@ -34,6 +34,39 @@ open_health_monitor(
- 	return ioctl(mnt_fd, XFS_IOC_HEALTH_MONITOR, &hmo);
- }
+@@ -424,6 +424,7 @@ enum long_opt_nr {
+ 	LOPT_HELP,
+ 	LOPT_QUIET,
+ 	LOPT_REPAIR,
++	LOPT_SVCNAME,
  
-+/* Report either the file handle or its path, if we can. */
-+void
-+lookup_path(
-+	struct healer_ctx			*ctx,
-+	const struct xfs_health_monitor_event	*hme,
-+	struct hme_prefix			*pfx)
-+{
-+	uint64_t				ino = 0;
-+	uint32_t				gen = 0;
-+	int					ret;
+ 	LOPT_MAX,
+ };
+@@ -455,6 +456,7 @@ main(
+ 		[LOPT_HELP]	   = {"help", no_argument, NULL, 0 },
+ 		[LOPT_QUIET]	   = {"quiet", no_argument, &ctx.log, 0 },
+ 		[LOPT_REPAIR]	   = {"repair", no_argument, &ctx.want_repair, 1 },
++		[LOPT_SVCNAME]	   = {"svcname", no_argument, &ctx.print_svcname, 1 },
+ 
+ 		[LOPT_MAX]	   = {NULL, 0, NULL, 0 },
+ 	};
+@@ -491,6 +493,20 @@ main(
+ 
+ 	ctx.mntpoint = argv[optind];
+ 
++	if (ctx.print_svcname) {
++		char	unitname[PATH_MAX];
 +
-+	if (!healer_has_parent(ctx))
-+		return;
++		ret = systemd_path_instance_unit_name(XFS_HEALER_SVCNAME,
++				ctx.mntpoint, unitname, sizeof(unitname));
++		if (ret) {
++			perror(ctx.mntpoint);
++			return EXIT_FAILURE;
++		}
 +
-+	switch (hme->domain) {
-+	case XFS_HEALTH_MONITOR_DOMAIN_INODE:
-+		ino = hme->e.inode.ino;
-+		gen = hme->e.inode.gen;
-+		break;
-+	case XFS_HEALTH_MONITOR_DOMAIN_FILERANGE:
-+		ino = hme->e.filerange.ino;
-+		gen = hme->e.filerange.gen;
-+		break;
-+	default:
-+		return;
++		printf("%s\n", unitname);
++		return EXIT_SUCCESS;
 +	}
 +
-+	ret = weakhandle_getpath_for(ctx->wh, ino, gen, pfx->path,
-+			sizeof(pfx->path));
-+	if (ret)
-+		hme_prefix_clear_path(pfx);
-+}
+ 	ret = setup_monitor(&ctx);
+ 	if (ret)
+ 		goto out_events;
+diff --git a/healer/xfs_healer@.service.in b/healer/xfs_healer@.service.in
+new file mode 100644
+index 00000000000000..385257872b0cbb
+--- /dev/null
++++ b/healer/xfs_healer@.service.in
+@@ -0,0 +1,107 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
++#
++# Copyright (c) 2024-2026 Oracle.  All Rights Reserved.
++# Author: Darrick J. Wong <djwong@kernel.org>
 +
- /* Decide if this event can only be reported upon, and not acted upon. */
- static bool
- event_not_actionable(
-@@ -90,6 +123,13 @@ handle_event(
- 
- 	hme_prefix_init(&pfx, ctx->mntpoint);
- 
-+	/*
-+	 * Try to look up the file name for the file we're about to log or
-+	 * about to repair (which always logs).
-+	 */
-+	if (loggable || will_repair)
-+		lookup_path(ctx, hme, &pfx);
++[Unit]
++Description=Self Healing of XFS Metadata for %f
 +
- 	/*
- 	 * Non-actionable events should always be logged, because they are 100%
- 	 * informational.
-@@ -198,9 +238,10 @@ setup_monitor(
- 
- 	/*
- 	 * Open weak-referenced file handle to mountpoint so that we can
--	 * reconnect to the mountpoint to start repairs.
-+	 * reconnect to the mountpoint to start repairs or to look up file
-+	 * paths for logging.
- 	 */
--	if (ctx->want_repair) {
-+	if (ctx->want_repair || healer_has_parent(ctx)) {
- 		ret = weakhandle_alloc(ctx->mnt.fd, ctx->mntpoint,
- 				ctx->fsname, &ctx->wh);
- 		if (ret) {
++# Explicitly require the capabilities that this program needs
++ConditionCapability=CAP_SYS_ADMIN
++ConditionCapability=CAP_DAC_OVERRIDE
++
++# Must be a mountpoint
++ConditionPathIsMountPoint=%f
++RequiresMountsFor=%f
++
++[Service]
++Type=exec
++Environment=SERVICE_MODE=1
++ExecStart=@pkg_libexec_dir@/xfs_healer %f
++SyslogIdentifier=%N
++
++# Create the service underneath the healer background service slice so that we
++# can control resource usage.
++Slice=system-xfs_healer.slice
++
++# No realtime CPU scheduling
++RestrictRealtime=true
++
++# xfs_healer avoids pinning mounted filesystems by recording the file handle
++# for the provided mountpoint (%f) before opening the health monitor, after
++# which it closes the fd for the mountpoint.  If repairs are needed, it will
++# reopen the mountpoint, resample the file handle, and proceed only if the
++# handles match.  If the filesystem is unmounted, the daemon exits.  If the
++# mountpoint moves, repairs will not be attempted against the wrong filesystem.
++#
++# Due to this resampling behavior, xfs_healer must see the same filesystem
++# mount tree inside the service container as outside, with the same ro/rw
++# state.  BindPaths doesn't work on the paths that are made readonly by
++# ProtectSystem and ProtectHome, so it is not possible to set either option.
++# DynamicUser sets ProtectSystem, so that also cannot be used.  We cannot use
++# BindPaths to bind the desired mountpoint somewhere under /tmp like xfs_scrub
++# does because that pins the mount.
++#
++# Regrettably, this leaves xfs_healer less hardened than xfs_scrub.
++# Surprisingly, this doesn't affect xfs_healer's score dramatically.
++DynamicUser=false
++ProtectSystem=false
++ProtectHome=no
++PrivateTmp=true
++PrivateDevices=true
++
++# Don't let healer complain about paths in /etc/projects that have been hidden
++# by our sandboxing.  healer doesn't care about project ids anyway.
++InaccessiblePaths=-/etc/projects
++
++# No network access
++PrivateNetwork=true
++ProtectHostname=true
++RestrictAddressFamilies=none
++IPAddressDeny=any
++
++# Don't let the program mess with the kernel configuration at all
++ProtectKernelLogs=true
++ProtectKernelModules=true
++ProtectKernelTunables=true
++ProtectControlGroups=true
++ProtectProc=invisible
++RestrictNamespaces=true
++
++# Hide everything in /proc, even /proc/mounts
++ProcSubset=pid
++
++# Only allow the default personality Linux
++LockPersonality=true
++
++# No writable memory pages
++MemoryDenyWriteExecute=true
++
++# Don't let our mounts leak out to the host
++PrivateMounts=true
++
++# Restrict system calls to the native arch and only enough to get things going
++SystemCallArchitectures=native
++SystemCallFilter=@system-service
++SystemCallFilter=~@privileged
++SystemCallFilter=~@resources
++SystemCallFilter=~@mount
++
++# xfs_healer needs these privileges to open the rootdir and monitor
++CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE
++AmbientCapabilities=CAP_SYS_ADMIN CAP_DAC_OVERRIDE
++NoNewPrivileges=true
++
++# xfs_healer doesn't create files
++UMask=7777
++
++# No access to hardware /dev files except for block devices
++ProtectClock=true
++DevicePolicy=closed
++
++[Install]
++WantedBy=multi-user.target
++# If someone tries to enable the template itself, translate that into enabling
++# this service on the root directory at systemd startup time.  In the
++# initramfs, the udev rules in xfs_healer.rules run before systemd starts.
++DefaultInstance=-
 
