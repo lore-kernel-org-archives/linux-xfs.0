@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34ACB2DAFBB
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:22:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13FBD2DAFBB
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:22:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775802140; cv=none; b=OabYcd+WV7mQc5hL3TY6DYRMc1mRD5eDq+UmfFYgjOkqq9e7Xd/Ste5xfCAJbwCFwxtJFzkTihdhrhWHLsos8yVDVjcHGzSjsFtLvHYyuTErcLIozEO4yYRw9+nygSL9cR+f/eD4UkFruGGH2o0+RtrwERI5sL2rrnImcQr/I/g=
+	t=1775802156; cv=none; b=Lv9f6wDqw8JgxVzlU7YcrU9yOi8Ar5ZSvNJ6xmupYX6uPZQ14iakS2OSlr571Iz1m0FjlI1DT4ajxyEeHGuIa3B2UNyuciGc5CZrIfJuA4biaRN8lu9YcuYwzPpIzcol9c8Dh0kd+zKOcKIRjwy/E1bwvlwEsVrmqiAgc4KgHBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775802140; c=relaxed/simple;
-	bh=ymvGLhufBaXhiNkftSeTVxe0h4XA1XxyZ8ME6YQnuzo=;
+	s=arc-20240116; t=1775802156; c=relaxed/simple;
+	bh=rs+P9XULH9U8s3xjouBjVZmDxtucgvSJoEELpVcskDY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DwdsAqtV7BiPRBZ180qmekimwd5M4/+S+prHu21UlAava10THcaxGak1g365LUOhRZQ4SxWIMaPjF5ZquEQtzMrixHVnuCKQoIGDCQQkCLk7aphSJNPntpxtK+kiCGsbFMMsPWs0vTPCHVhIRbGoSLuJINm+b27snnYSpLsQQmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a/0WPRcX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bB9LHGoMSwQvJo/jKjDrBXsDmh8sqIHI1cTmbpbKS5TF2ZIQ+OfK0RBq7VjI8lZJSyNfCqhhcgL5JWvN3BbvMnUES6X496b2iP3Ka5VDdE4bR1qCmisIMbDKe4Jdyf+6neLAYS/zvsA1J5sXfKw0kcWIXGkh8ot0Cy+7r9E4WfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bxf4hSLt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a/0WPRcX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D737C19421;
-	Fri, 10 Apr 2026 06:22:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bxf4hSLt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1DBDC19421;
+	Fri, 10 Apr 2026 06:22:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775802140;
-	bh=ymvGLhufBaXhiNkftSeTVxe0h4XA1XxyZ8ME6YQnuzo=;
+	s=k20201202; t=1775802155;
+	bh=rs+P9XULH9U8s3xjouBjVZmDxtucgvSJoEELpVcskDY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=a/0WPRcXROg9cbomzFLNrE3nSJjL2JqK3PVoQUvICSr1YNBd0dn/PBU9vPoJ6NuDu
-	 mPW0PIpsV+Omi8qFgoSezsrmW3/j9F9FfsFReOVcfzBAU/aAJADo6oAf27J6SVmRfq
-	 2aZrKRmR+V5WNKhShT1nK8yO6TOgnG1O7fGG4wZM4NXzqwHIn/DtPe7CMtnBI5g+eM
-	 OMqgWYN26eb17c6nvQRC12bTofaZfe1/vYshSX4pMjsMQTEP9b3kGLxEBNQPSGXrep
-	 dCNKWpBMnKQE6FuN/Ut09ORWEVbohczKJ1y1X92TndDMV+6IwSvxzl/919vq0mGCQt
-	 FMkLFRqQUjwNg==
-Date: Thu, 09 Apr 2026 23:22:19 -0700
-Subject: [PATCH 19/21] xfs_scrub: clean up device-related error messages
+	b=Bxf4hSLtTRoq2z3sOXNnBr/wpFKkMxbgkMg6f6cxleMMwDozqoTHa1fBWyRn4u9np
+	 9S6UCwDv0Rf2VsMQI+c+Ew9qHbqJKWSRU7Pb6bf4bnp6a/QpAIbmhNdQFYWa5CQoRZ
+	 J5iQCrrVGjNkG97rn72fa0bEj1pwhLaBOX6pVEGGVJoML65le/02ahIOHsQqJO7wIx
+	 09y57D9AAJwmp6hRHCAfjfcVbTyPooBOXe52jojcvkwePqDXBdqhZ0aibx6uahnvH6
+	 yGCo5Me6WrnKNYQC+PYBEaq1RTD82pseta3DnoXr+nNS82/WRaZF35cMYOIsyWxGR9
+	 zwMjhnAq2c9cw==
+Date: Thu, 09 Apr 2026 23:22:35 -0700
+Subject: [PATCH 20/21] xfs_scrub: drop SCSI_VERIFY code from disk.
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577385382.2090237.1150558611184203049.stgit@frogsfrogsfrogs>
+Message-ID: <177577385401.2090237.5513743905882491581.stgit@frogsfrogsfrogs>
 In-Reply-To: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
 References: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,81 +45,265 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use consistent terminology for the data/log/rt device in the error
-messages.
+Now that we have a media verification ioctl in the kernel, drop the
+SCSI_VERIFY code, which enables us to drop the dependency on sg and
+obviates the need to fix some unit-handling bugs in the HDIO_GETGEO
+code.
+
+A subsequent patch will enable larger verification IO sizes, which this
+old code cannot handle.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase6.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ scrub/disk.h            |    2 -
+ doc/README-env-vars.txt |    1 
+ scrub/disk.c            |  133 -----------------------------------------------
+ scrub/read_verify.c     |    5 --
+ scrub/xfs_scrub.c       |    1 
+ 5 files changed, 1 insertion(+), 141 deletions(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index ae3b928df0f263..c273420d42ca14 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -551,7 +551,7 @@ report_all_media_errors(
+diff --git a/scrub/disk.h b/scrub/disk.h
+index 73c73ab57fb5c7..a9155bf1f75eb4 100644
+--- a/scrub/disk.h
++++ b/scrub/disk.h
+@@ -6,7 +6,6 @@
+ #ifndef XFS_SCRUB_DISK_H_
+ #define XFS_SCRUB_DISK_H_
  
- 	ret = report_disk_ioerrs(ctx, vs, XFS_DEV_DATA);
- 	if (ret) {
--		str_liberror(ctx, ret, _("walking datadev io errors"));
-+		str_liberror(ctx, ret, _("walking data device io errors"));
- 		return ret;
+-#define DISK_FLAG_SCSI_VERIFY	0x1
+ struct disk {
+ 	struct stat	d_sb;
+ 	int		d_fd;
+@@ -15,7 +14,6 @@ struct disk {
+ 	unsigned int	d_flags;
+ 	unsigned int	d_blksize;	/* bytes */
+ 	uint64_t	d_size;		/* bytes */
+-	uint64_t	d_start;	/* bytes */
+ };
+ 
+ unsigned int disk_heads(struct disk *disk);
+diff --git a/doc/README-env-vars.txt b/doc/README-env-vars.txt
+index eec59a82513f36..6862dcad71e217 100644
+--- a/doc/README-env-vars.txt
++++ b/doc/README-env-vars.txt
+@@ -17,7 +17,6 @@ Known debug tweaks (pass -d and set the environment variable):
+ XFS_SCRUB_FORCE_ERROR        -- pretend all metadata is corrupt
+ XFS_SCRUB_FORCE_REPAIR       -- repair all metadata even if it's ok
+ XFS_SCRUB_NO_KERNEL          -- pretend there is no kernel ioctl
+-XFS_SCRUB_NO_SCSI_VERIFY     -- disable SCSI VERIFY (if present)
+ XFS_SCRUB_PHASE              -- run only this scrub phase
+ XFS_SCRUB_THREADS            -- start exactly this number of threads
+ 
+diff --git a/scrub/disk.c b/scrub/disk.c
+index afce801d3f2076..ca37724249e551 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -10,8 +10,6 @@
+ #include <fcntl.h>
+ #include <sys/types.h>
+ #include <sys/statvfs.h>
+-#include <scsi/sg.h>
+-#include <linux/hdreg.h>
+ #include "platform_defs.h"
+ #include "libfrog/util.h"
+ #include "libfrog/paths.h"
+@@ -78,113 +76,12 @@ disk_heads(
+ 	return __disk_heads(disk);
+ }
+ 
+-/*
+- * Execute a SCSI VERIFY(16) to verify disk contents.
+- * For devices that support this command, this can sharply reduce the
+- * runtime of the data block verification phase if the storage device's
+- * internal bandwidth exceeds its link bandwidth.  However, it only
+- * works if we're talking to a raw SCSI device, and only if we trust the
+- * firmware.
+- */
+-#define SENSE_BUF_LEN		64
+-#define VERIFY16_CMDLEN	16
+-#define VERIFY16_CMD		0x8F
+-
+-#ifndef SG_FLAG_Q_AT_TAIL
+-# define SG_FLAG_Q_AT_TAIL	0x10
+-#endif
+-static int
+-disk_scsi_verify(
+-	struct disk		*disk,
+-	uint64_t		startblock, /* lba */
+-	uint64_t		blockcount) /* lba */
+-{
+-	struct sg_io_hdr	iohdr;
+-	unsigned char		cdb[VERIFY16_CMDLEN];
+-	unsigned char		sense[SENSE_BUF_LEN];
+-	uint64_t		llba;
+-	uint64_t		veri_len = blockcount;
+-	int			error;
+-
+-	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
+-
+-	llba = startblock + (disk->d_start >> BBSHIFT);
+-
+-	/* Borrowed from sg_verify */
+-	cdb[0] = VERIFY16_CMD;
+-	cdb[1] = 0; /* skip PI, DPO, and byte check. */
+-	cdb[2] = (llba >> 56) & 0xff;
+-	cdb[3] = (llba >> 48) & 0xff;
+-	cdb[4] = (llba >> 40) & 0xff;
+-	cdb[5] = (llba >> 32) & 0xff;
+-	cdb[6] = (llba >> 24) & 0xff;
+-	cdb[7] = (llba >> 16) & 0xff;
+-	cdb[8] = (llba >> 8) & 0xff;
+-	cdb[9] = llba & 0xff;
+-	cdb[10] = (veri_len >> 24) & 0xff;
+-	cdb[11] = (veri_len >> 16) & 0xff;
+-	cdb[12] = (veri_len >> 8) & 0xff;
+-	cdb[13] = veri_len & 0xff;
+-	cdb[14] = 0;
+-	cdb[15] = 0;
+-	memset(sense, 0, SENSE_BUF_LEN);
+-
+-	/* v3 SG_IO */
+-	memset(&iohdr, 0, sizeof(iohdr));
+-	iohdr.interface_id = 'S';
+-	iohdr.dxfer_direction = SG_DXFER_NONE;
+-	iohdr.cmdp = cdb;
+-	iohdr.cmd_len = VERIFY16_CMDLEN;
+-	iohdr.sbp = sense;
+-	iohdr.mx_sb_len = SENSE_BUF_LEN;
+-	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
+-	iohdr.timeout = 30000; /* 30s */
+-
+-	error = ioctl(disk->d_fd, SG_IO, &iohdr);
+-	if (error < 0)
+-		return error;
+-
+-	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
+-			"status %d masked %d msg %d host %d driver %d "
+-			"duration %d resid %d\n",
+-			disk->d_fd, startblock, blockcount, iohdr.info,
+-			iohdr.status, iohdr.masked_status, iohdr.msg_status,
+-			iohdr.host_status, iohdr.driver_status, iohdr.duration,
+-			iohdr.resid);
+-
+-	if (iohdr.info & SG_INFO_CHECK) {
+-		dbg_printf("status: msg %x host %x driver %x\n",
+-				iohdr.msg_status, iohdr.host_status,
+-				iohdr.driver_status);
+-		errno = EIO;
+-		return -1;
+-	}
+-
+-	return blockcount << BBSHIFT;
+-}
+-
+-/* Test the availability of the kernel scrub ioctl. */
+-static bool
+-disk_can_scsi_verify(
+-	struct disk		*disk)
+-{
+-	int			error;
+-
+-	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
+-		return false;
+-
+-	error = disk_scsi_verify(disk, 0, 1);
+-	return error == 0;
+-}
+-
+ /* Open a disk device and discover its geometry. */
+ struct disk *
+ disk_open(
+ 	const char		*pathname)
+ {
+-	struct hd_geometry	bdgeo;
+ 	struct disk		*disk;
+-	bool			suspicious_disk = false;
+ 	int			error;
+ 
+ 	disk = calloc(1, sizeof(struct disk));
+@@ -214,32 +111,11 @@ disk_open(
+ 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
+ 		if (error)
+ 			disk->d_blksize = 0;
+-		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
+-		if (!error) {
+-			/*
+-			 * dm devices will pass through ioctls, which means
+-			 * we can't use SCSI VERIFY unless the start is 0.
+-			 * Most dm devices don't set geometry (unlike scsi
+-			 * and nvme) so use a zeroed out CHS to screen them
+-			 * out.
+-			 */
+-			if (bdgeo.start != 0 &&
+-			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
+-					bdgeo.sectors == 0)
+-				suspicious_disk = true;
+-			disk->d_start = bdgeo.start << BBSHIFT;
+-		} else
+-			disk->d_start = 0;
+ 	} else {
+ 		disk->d_size = disk->d_sb.st_size;
+ 		disk->d_blksize = disk->d_sb.st_blksize;
+-		disk->d_start = 0;
  	}
  
-@@ -563,7 +563,7 @@ report_all_media_errors(
+-	/* Can we issue SCSI VERIFY? */
+-	if (!suspicious_disk && disk_can_scsi_verify(disk))
+-		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
+-
+ 	return disk;
+ out_close:
+ 	close(disk->d_fd);
+@@ -262,10 +138,6 @@ disk_close(
+ 	return error;
+ }
  
- 	ret = report_disk_ioerrs(ctx, vs, XFS_DEV_RT);
- 	if (ret) {
--		str_liberror(ctx, ret, _("walking rtdev io errors"));
-+		str_liberror(ctx, ret, _("walking rt device io errors"));
- 		return ret;
- 	}
+-#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
+-#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
+-#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
+-
+ /* Read-verify an extent of a disk device. */
+ ssize_t
+ disk_read_verify(
+@@ -274,10 +146,5 @@ disk_read_verify(
+ 	uint64_t		start,
+ 	uint64_t		length)
+ {
+-	/* Convert to logical block size. */
+-	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
+-		return disk_scsi_verify(disk, BTOLBAT(disk, start),
+-				BTOLBA(disk, length));
+-
+ 	return pread(disk->d_fd, buf, length, start);
+ }
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index 3334f8d8c79ca2..01a3a8859c5fa8 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -27,10 +27,7 @@
+  * pool takes care of issuing multiple IOs to the device, if possible.
+  */
  
-@@ -725,14 +725,14 @@ phase6_func(
+-/*
+- * Perform all IO in 32M chunks.  This cannot exceed 65536 sectors
+- * because that's the biggest SCSI VERIFY(16) we dare to send.
+- */
++/* Perform all verification IO in 32M chunks. */
+ #define RVP_IO_MAX_SIZE		(33554432)
  
- 	ret = alloc_pool(ctx, &vs, XFS_DEV_DATA);
- 	if (ret) {
--		str_liberror(ctx, ret, _("creating datadev media verifier"));
-+		str_liberror(ctx, ret, _("creating data device media verifier"));
- 		return ret;
- 	}
- 	if (ctx->fsinfo.fs_log) {
- 		ret = alloc_pool(ctx, &vs, XFS_DEV_LOG);
- 		if (ret) {
- 			str_liberror(ctx, ret,
--					_("creating logdev media verifier"));
-+					_("creating log device media verifier"));
- 			goto out_datapool;
- 		}
- 	}
-@@ -740,7 +740,7 @@ phase6_func(
- 		ret = alloc_pool(ctx, &vs, XFS_DEV_RT);
- 		if (ret) {
- 			str_liberror(ctx, ret,
--					_("creating rtdev media verifier"));
-+					_("creating rt device media verifier"));
- 			goto out_logpool;
- 		}
- 	}
-@@ -765,15 +765,15 @@ phase6_func(
- 
- 	ret = clean_pool(&vs, XFS_DEV_DATA, &ctx->bytes_checked, &ok);
- 	if (ret)
--		str_liberror(ctx, ret, _("flushing datadev verify pool"));
-+		str_liberror(ctx, ret, _("flushing data device verify pool"));
- 
- 	ret2 = clean_pool(&vs, XFS_DEV_LOG, &ctx->bytes_checked, &ok);
- 	if (ret2)
--		str_liberror(ctx, ret2, _("flushing logdev verify pool"));
-+		str_liberror(ctx, ret2, _("flushing log device verify pool"));
- 
- 	ret3 = clean_pool(&vs, XFS_DEV_RT, &ctx->bytes_checked, &ok);
- 	if (ret3)
--		str_liberror(ctx, ret3, _("flushing rtdev verify pool"));
-+		str_liberror(ctx, ret3, _("flushing rt device verify pool"));
- 
- 	/*
- 	 * If the verify flush didn't work or we found no bad blocks, we're
+ /*
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index b74dc1635141aa..aae24ec83c1c75 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -111,7 +111,6 @@
+  * XFS_SCRUB_FORCE_ERROR	-- pretend all metadata is corrupt
+  * XFS_SCRUB_FORCE_REPAIR	-- repair all metadata even if it's ok
+  * XFS_SCRUB_NO_KERNEL		-- pretend there is no kernel ioctl
+- * XFS_SCRUB_NO_SCSI_VERIFY	-- disable SCSI VERIFY (if present)
+  * XFS_SCRUB_PHASE		-- run only this scrub phase
+  * XFS_SCRUB_THREADS		-- start exactly this number of threads
+  * XFS_SCRUB_DISK_ERROR_INTERVAL-- simulate a disk error every this many bytes
 
