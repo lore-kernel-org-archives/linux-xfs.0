@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F09318139
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:10:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95EFC29AAEA
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:10:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775801447; cv=none; b=CxXAoT+taCuOEd7bNbZdJQZiUbhZTEsdV8aafiBmVGjmVYL5iEHt1hV+xX1C++RJA/lXOetzvg0zB0onEIvfQO9APVmWHdEV/ZIp8sg5lF3cRo9Z4H/Ge2wSIQBMW2Ov/ORF81oHw7amvWHGxhVt5w0RnXBVw+QEUC+NO0c5kXc=
+	t=1775801452; cv=none; b=eEvkMTgifSiKkJ4+y3HUe3HiIKcdn2oD/5OF9oo3/aeY775SsGSt+V9hkmvMdpoFBHvQnssnuJuy09xAPqD2Uey8MdnSQpWvHz78bnHs8+eUvWk2PpVPtBe303pw7Zkhcn67g2V0M1YrHgMLO5K41KD48kBSSJo+8l1r9FxyY2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775801447; c=relaxed/simple;
-	bh=E8gGMqMIYZ2j+cmKq/ZkiSTcjjyfkrw3v+4PRm+/mjQ=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=MxmU2BPazV9YJpMn6ztxxhstbqSkulJMcJC0CNJLLIbC8kMT5XY53BC5GUqa7yKcalwevS2mMaf9T9xFfwhKIZLxlbZzaRsnlXVSR/PlWQ8RdvO7zU0ccHnrg/SkM/y0ejabmVxoMRsrHCgUEU8mM9puh9E/HPNk1VL+qKueeno=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tzbiQ0Ou; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775801452; c=relaxed/simple;
+	bh=BBUwUsIhQbQ8cygT1u7F0umpf0CFhxBYmOn4B7ozmJ4=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kO19TAxnIWFcgjzFWPLRCcI7GUuEERWsEU27A0t6wlUgkWlAd07KIN0l3G7bIgAjKPpWB3WjnckMZgPAQeQhyjFHNzfSJTdOS/MYJBWTFx2Zku7HBBZx1Gfj3146p11vLQcQgR8NwlbfAGqIHD0p8AQi/fSs35GpXd4QUBuE8xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cIwfbh83; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tzbiQ0Ou"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B805C19421;
-	Fri, 10 Apr 2026 06:10:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cIwfbh83"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53B5AC19421;
+	Fri, 10 Apr 2026 06:10:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775801446;
-	bh=E8gGMqMIYZ2j+cmKq/ZkiSTcjjyfkrw3v+4PRm+/mjQ=;
-	h=Date:Subject:From:To:Cc:From;
-	b=tzbiQ0OucSg1t77cCJ0xJaK6rhG9lnJ7EDJzwFRqQ945p6gRkEKsf6YHO8EG64JrT
-	 KOvyFvf/oNRkzb9gGVLCmRGnakn8fHR6nqcuMYR2fYpwFIaPpUp9AWj9hiI/R61LWQ
-	 56dOmVBRHVIcL+l4FxilxrLX6YpTzRqLLZKstQmRcKjH6/vyDkqusfjkv0hKL7ViHh
-	 aBH/RLLHiI3U5U1v6dwev9dw3eybEB5rZQW9hBL8xeEeB7Dx1a5KIXW4yCMgJ6hk+j
-	 1X3tJeG+C49u+zhCZy+V0y+uavq1MYBW/nn6XXRPmQbyPTNZC2wDttKAn43GO0Zd96
-	 zGKxNt8EtIevg==
-Date: Thu, 09 Apr 2026 23:10:46 -0700
-Subject: [PATCHSET v11 2/2] xfs_scrub: refactor to XFS_IOC_VERIFY_MEDIA
+	s=k20201202; t=1775801452;
+	bh=BBUwUsIhQbQ8cygT1u7F0umpf0CFhxBYmOn4B7ozmJ4=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=cIwfbh837Uig6OUfkuINe4VE/LQ3DIMRLzLueUy+yxkjIFCQoYD2ajPai4WTlGEqJ
+	 aV6ccePaSBTyQIAQuCmC/VOry61Fk4BsXjDA0CKML5pCSrf0+E3KGe/jUmA+OtwLwr
+	 cOnOrKHqa4g/47lYnWDH8E8Ko4je6Edp5JAvsiTTUFclSHYnKaqFcOsTBfGo27bv0m
+	 x0pmk7M4X2luQgbfMOqWaiN4f5Fhd6JaalqWRUIsXzvrebv9fm5lhhMYKbD5oqxB2g
+	 W1inkef7HVOGTaRNQ99o9qY2swTaMfUaoV+p2N4jpzgYKDlacyv/rz5cgV3nQIOyfX
+	 e19dzuQHEpuiw==
+Date: Thu, 09 Apr 2026 23:10:51 -0700
+Subject: [PATCH 01/26] libfrog: add a function to grab the path from an open
+ fd and a file handle
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <177577384249.2089237.7767356657496956062.stgit@frogsfrogsfrogs>
+In-Reply-To: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
+References: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,79 +44,195 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Originally, this was a single patch inside the autonomous self healing
-patchset.  However, various issues brought up during review of the v9
-codebase made it obvious that more cleanups were necessary prior to
-shifting xfs_scrub to use the new media verification ioctl.  Therefore,
-the xfs_scrub changes have been broken out into a separate patchset to
-contain the refactorings and new functionality.
+handle_walk_paths operates on a file handle, but requires that the fs
+has been registered with libhandle via path_to_fshandle.  For a normal
+libhandle client this is the desirable behavior because the application
+*should* maintain an open fd to the filesystem mount.
 
-v11: various minor bug fixes detected by static checkers
-v10: decouple the spacemap iterator and the read-verify pool code,
-     simplify the read-verify apis, use a fixed limit of 8 verify IO
-     threads per device, improve the log media error reporting
+However for xfs_healer this isn't going to work well because the healer
+mustn't pin the mount while it's running.  It's smart enough to know how
+to find and reconnect to the mountpoint, but libhandle doesn't have any
+such concept.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+Therefore, alter the libfrog getparents code so that xfs_healer can pass
+in the mountpoint and reconnected fd without needing libhandle.  All
+we're really doing here is trying to obtain a user-visible path for a
+file that encountered problems for logging purposes; if it fails, we'll
+fall back to logging the inode number.
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-media-verify-ioctl
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * libfrog: allow bitmap_free to handle a null bitmap pointer
- * mkfs: rename byte unit conversion macros
- * libfrog: lift *BYTES helpers to convert.h
- * xfs_scrub: report truncated devices as media errors
- * xfs_scrub: fix i18n of the decode_special_owner return value
- * scrub: remove the unused io_disk field in struct read_verify
- * xfs_scrub: move read verification scheduling to phase6.c
- * scrub: simplify the read_verify_pool_alloc interface
- * xfs_scrub: don't pass the io_end_arg around everywhere
- * scrub: use enum xfs_device for read verification
- * xfs_scrub: rename nr_io_threads
- * scrub: simplify verifier threads calculation
- * xfs_scrub: move disk media verification error injection
- * xfs_scrub: use the verify media ioctl during phase 6 if possible
- * scrub: don't allocate disk for ioctl-based media verify
- * xfs_scrub: perform media scanning of the log region
- * xfs_scrub: index read-verify pools by xfs_device ids
- * xfs_scrub: move failmap and other outputs into read_verify_pool
- * xfs_scrub: clean up device-related error messages
- * xfs_scrub: drop SCSI_VERIFY code from disk.
- * xfs_scrub: raise media verification IO limits
----
- libfrog/convert.h         |    7 +
- scrub/disk.h              |    2 
- scrub/fscounters.h        |    2 
- scrub/read_verify.h       |   34 ++-
- scrub/spacemap.h          |    5 
- scrub/xfs_scrub.h         |    9 -
- db/bmap_inflate.c         |    2 
- doc/README-env-vars.txt   |    1 
- libfrog/bitmap.c          |    3 
- libfrog/convert.c         |    7 -
- mdrestore/xfs_mdrestore.c |    5 
- mkfs/xfs_mkfs.c           |   38 ++--
- repair/agbtree.c          |    3 
- repair/bmap_repair.c      |    3 
- repair/rmap.c             |    3 
- repair/xfs_repair.c       |    5 
- scrub/common.c            |   19 +-
- scrub/disk.c              |  204 --------------------
- scrub/fscounters.c        |    4 
- scrub/phase1.c            |   91 +++++++--
- scrub/phase5.c            |    6 -
- scrub/phase6.c            |  424 +++++++++++++++++++++---------------------
- scrub/phase7.c            |    7 +
- scrub/phase8.c            |    3 
- scrub/read_verify.c       |  451 +++++++++++++++++++++++++++++++++------------
- scrub/xfs_scrub.c         |    1 
- 26 files changed, 701 insertions(+), 638 deletions(-)
+ libfrog/getparents.h |    4 ++
+ libfrog/getparents.c |   93 ++++++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 82 insertions(+), 15 deletions(-)
+
+
+diff --git a/libfrog/getparents.h b/libfrog/getparents.h
+index 8098d594219b4c..e1df30889c7606 100644
+--- a/libfrog/getparents.h
++++ b/libfrog/getparents.h
+@@ -39,4 +39,8 @@ int fd_to_path(int fd, size_t ioctl_bufsize, char *path, size_t pathlen);
+ int handle_to_path(const void *hanp, size_t hlen, size_t ioctl_bufsize,
+ 		char *path, size_t pathlen);
+ 
++int handle_walk_paths_fd(const char *mntpt, int mntfd, const void *hanp,
++		size_t hanlen, size_t ioctl_bufsize, walk_path_fn fn,
++		void *arg);
++
+ #endif /* __LIBFROG_GETPARENTS_H_ */
+diff --git a/libfrog/getparents.c b/libfrog/getparents.c
+index 9118b0ff32db0d..e8f545392634e4 100644
+--- a/libfrog/getparents.c
++++ b/libfrog/getparents.c
+@@ -112,9 +112,13 @@ fd_walk_parents(
+ 	return ret;
+ }
+ 
+-/* Walk all parent pointers of this handle.  Returns 0 or positive errno. */
+-int
+-handle_walk_parents(
++/*
++ * Walk all parent pointers of this handle using the given fd to query the
++ * filesystem.  Returns 0 or positive errno.
++ */
++static int
++handle_walk_parents_fd(
++	int			fd,
+ 	const void		*hanp,
+ 	size_t			hlen,
+ 	size_t			bufsize,
+@@ -123,21 +127,11 @@ handle_walk_parents(
+ {
+ 	struct xfs_getparents_by_handle	gph = { };
+ 	void			*buf;
+-	char			*mntpt;
+-	int			fd;
+ 	int			ret;
+ 
+ 	if (hlen != sizeof(struct xfs_handle))
+ 		return EINVAL;
+ 
+-	/*
+-	 * This function doesn't modify the handle, but we don't want to have
+-	 * to bump the libhandle major version just to change that.
+-	 */
+-	fd = handle_to_fsfd((void *)hanp, &mntpt);
+-	if (fd < 0)
+-		return errno;
+-
+ 	buf = alloc_records(&gph.gph_request, bufsize);
+ 	if (!buf)
+ 		return errno;
+@@ -158,6 +152,29 @@ handle_walk_parents(
+ 	return ret;
+ }
+ 
++/* Walk all parent pointers of this handle.  Returns 0 or positive errno. */
++int
++handle_walk_parents(
++	const void		*hanp,
++	size_t			hlen,
++	size_t			bufsize,
++	walk_parent_fn		fn,
++	void			*arg)
++{
++	char			*mntpt;
++	int			fd;
++
++	/*
++	 * This function doesn't modify the handle, but we don't want to have
++	 * to bump the libhandle major version just to change that.
++	 */
++	fd = handle_to_fsfd((void *)hanp, &mntpt);
++	if (fd < 0)
++		return errno;
++
++	return handle_walk_parents_fd(fd, hanp, hlen, bufsize, fn, arg);
++}
++
+ struct walk_ppaths_info {
+ 	/* Callback */
+ 	walk_path_fn		fn;
+@@ -169,7 +186,11 @@ struct walk_ppaths_info {
+ 	/* Path that we're constructing. */
+ 	struct path_list	*path;
+ 
++	/* Use this much memory per call. */
+ 	size_t			ioctl_bufsize;
++
++	/* Use this fd for calling the getparents ioctl. */
++	int			mntfd;
+ };
+ 
+ /*
+@@ -200,8 +221,14 @@ find_parent_component(
+ 		return errno;
+ 	path_list_add_parent_component(wpi->path, pc);
+ 
+-	ret = handle_walk_parents(&rec->p_handle, sizeof(rec->p_handle),
+-			wpi->ioctl_bufsize, find_parent_component, wpi);
++	if (wpi->mntfd >= 0)
++		ret = handle_walk_parents_fd(wpi->mntfd, &rec->p_handle,
++				sizeof(rec->p_handle), wpi->ioctl_bufsize,
++				find_parent_component, wpi);
++	else
++		ret = handle_walk_parents(&rec->p_handle,
++				sizeof(rec->p_handle), wpi->ioctl_bufsize,
++				find_parent_component, wpi);
+ 
+ 	path_list_del_component(wpi->path, pc);
+ 	path_component_free(pc);
+@@ -222,6 +249,7 @@ handle_walk_paths(
+ {
+ 	struct walk_ppaths_info	wpi = {
+ 		.ioctl_bufsize	= ioctl_bufsize,
++		.mntfd		= -1,
+ 	};
+ 	int			ret;
+ 
+@@ -246,6 +274,41 @@ handle_walk_paths(
+ 	return ret;
+ }
+ 
++/*
++ * Call the given function on all known paths from the vfs root to the inode
++ * described in the handle using an already open mountpoint and fd.  Returns 0
++ * for success or positive errno.
++ */
++int
++handle_walk_paths_fd(
++	const char		*mntpt,
++	int			mntfd,
++	const void		*hanp,
++	size_t			hlen,
++	size_t			ioctl_bufsize,
++	walk_path_fn		fn,
++	void			*arg)
++{
++	struct walk_ppaths_info	wpi = {
++		.ioctl_bufsize	= ioctl_bufsize,
++		.mntfd		= mntfd,
++		.mntpt		= (char *)mntpt,
++	};
++	int			ret;
++
++	wpi.path = path_list_init();
++	if (!wpi.path)
++		return errno;
++	wpi.fn = fn;
++	wpi.arg = arg;
++
++	ret = handle_walk_parents_fd(mntfd, hanp, hlen, ioctl_bufsize,
++			find_parent_component, &wpi);
++
++	path_list_free(wpi.path);
++	return ret;
++}
++
+ /*
+  * Call the given function on all known paths from the vfs root to the inode
+  * referred to by the file description.  Returns 0 or positive errno.
 
