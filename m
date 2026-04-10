@@ -1,85 +1,112 @@
-Received: from pdx-out-014.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-014.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.83.148.184])
+Received: from pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.246.68.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179313DFC85;
-	Fri, 10 Apr 2026 16:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.83.148.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FA7224B1E;
+	Fri, 10 Apr 2026 17:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.246.68.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775840186; cv=none; b=vBc+ws6n+1TVNfrFpT7AW9plXR7tXQ5+WH/WpID863OY6o5QOBD73NKIHIdABEmCbs48c1yP6rLH5r1VQdAORMhgwjoLvM5C3jgivy4PhGGaDN9um+SvbgnmG1tSiTOk17KRW0rQXL68b4c29geL8U7R+z8u4shAAZ68sk5xBVk=
+	t=1775840789; cv=none; b=cRUdtHoPMBauoKDxbr11W+1TGvita4Kg7FXr9tENzw9eIdHI6M5todXfnnYuLnLVkwKx7b23czSIEfpJJZZ8Uv6j8IYd4ro09DeKZP4MyitnIn+d001eVzFOG/r1Og3pYBD/MbnKvR+LdR0BmdW7+91J1Y3GGgMuLheRn8i4bPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775840186; c=relaxed/simple;
-	bh=166ue4NEJQB54wlLBbgI14YwVOhmSYRnmKkaKDjRdE4=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=icrPq0uyzvDnvwUMjmXQLi/4UtTmmVdw9fz6eyBO37fZcr4qGEr+d2MDBKSVTsGhA381Sv7ADhHf3Gmwh10bfucn2Sfajat9Ewsbesz00SnDN5/AE8UqLciDwXVBhfx22koRkgTda9H0aYGZoK/TM3Jq6A6pbgOaFZBO64L7ffQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=W7VCJDNn; arc=none smtp.client-ip=35.83.148.184
+	s=arc-20240116; t=1775840789; c=relaxed/simple;
+	bh=/1sChIBuoB0VviEcJfb7kDAkT6okEUlaGtITyP6nvN0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=McuVf0T2Zi6qJrSlkYZC/jm63Wcw9+zMDm3fEzEBagST7sIWeEzgzNlQfKClJmuUhbZU8KEczM1MXKRUy4yIWssTPbzDF1DlWbasTkvagGrJY3eIk0Q0NSr6Aenuwm9bXRUK+rbikK9DuKMMuABx0lvqQ+vvsOKZ2TzsuIgO0DM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=hFL3kPAK; arc=none smtp.client-ip=44.246.68.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="W7VCJDNn"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="hFL3kPAK"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1775840184; x=1807376184;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xFpXE3465A+Ppkm9PuRxGkyZZnYrgUqAjpeo+2rmocw=;
-  b=W7VCJDNnJY3LpGRd8u9BF5uS5au6CCDrOFsPXL6z/VwuNj+OXGb74QVo
-   +P7sB9tmggJl+dZSd05qsaxePIVUT0ne+MGpS60z3AVNDiJ2FtSRunuzp
-   h5uvHPhNse8ySNhuem1urVfJVWyBCMcN8M/EwQEtIIUR5CIGtu3VaS4ux
-   ZK3hCKY5atlXdalFRdjsWPB6DpAmvbAmQ4LZcg13QfRxO2if+XNZgRFMt
-   ywpac2PWUNybSVz8Gc2lIkaFb3CaNsX45DldWqOHDS5XZ8yTJN3xWjPz5
-   66HhwdliZ3UQqgJ1hy/7ar+h1nlkaMcc5QsUsHBpZUeztBEzmWCXK60oy
-   w==;
-X-CSE-ConnectionGUID: dypPgQxxSumX+LR4INZErA==
-X-CSE-MsgGUID: 4oLnA8VSTVi9ZVVRvE4UEw==
+  t=1775840788; x=1807376788;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=iE5x5E+6YfshAYXbIfKYGNwJY0Yno1amc/LWGz59L64=;
+  b=hFL3kPAK1Upjc1AZTG6q7sT9HRsy57nlQOHPZ7X/Xt3ojzSAkg7hgXhI
+   GVoIiEuPDOaubJzbSPh+rw8h3x6iOL/26FxC77aYGSQi9N3sEIi+Eth/q
+   iuFiGgHdusY34dnwSq9I992/kvV9AUUOmum4R8nwLOmUsyPMF7RJscyZ3
+   oIyKkntAZ9yQhqE8tkkPD2Xofr4E1WW4zvtzOZXBxyaXmsd4aidiq/2Ll
+   h4/i6AzU3jFehdeLnOOaNLl0XRoX598do7nAtqCZ+tMxowu0sG7HtOeXj
+   uaAuFq7vpiu6/nomPScTC9RXVVeIdYqidMraCsET+hLI2kLJ46hIUKscy
+   g==;
+X-CSE-ConnectionGUID: /FBqyDurSoK0PZIAP4Ijaw==
+X-CSE-MsgGUID: nPe6iu1KTySdDk2bDKM0jA==
 X-IronPort-AV: E=Sophos;i="6.23,171,1770595200"; 
-   d="scan'208";a="16801416"
+   d="scan'208";a="17040286"
 Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-014.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 16:56:20 +0000
-Received: from EX19MTAUWA002.ant.amazon.com [205.251.233.178:23697]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.17.68:2525] with esmtp (Farcaster)
- id 6daccc48-94be-4a8a-bfca-2d255c6fe652; Fri, 10 Apr 2026 16:56:20 +0000 (UTC)
-X-Farcaster-Flow-ID: 6daccc48-94be-4a8a-bfca-2d255c6fe652
+  by internal-pdx-out-003.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2026 17:06:25 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:5155]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.6.131:2525] with esmtp (Farcaster)
+ id 925b7213-749b-4c16-9af7-227e919a6bd6; Fri, 10 Apr 2026 17:06:25 +0000 (UTC)
+X-Farcaster-Flow-ID: 925b7213-749b-4c16-9af7-227e919a6bd6
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWA002.ant.amazon.com (10.250.64.202) with Microsoft SMTP Server
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Fri, 10 Apr 2026 16:56:19 +0000
-Received: from c889f3b07a0a.ant.amazon.com (10.106.83.15) by
+ Fri, 10 Apr 2026 17:06:24 +0000
+Received: from c889f3b07a0a.amazon.com (10.106.83.15) by
  EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Fri, 10 Apr 2026 16:56:18 +0000
-Date: Fri, 10 Apr 2026 17:56:15 +0100
+ Fri, 10 Apr 2026 17:06:22 +0000
 From: Yuto Ohnuki <ytohnuki@amazon.com>
-To: Dave Chinner <dgc@kernel.org>
-CC: Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: check da node block pad field during scrub
-Message-ID: <adkrr508BIwuCVYd@c889f3b07a0a.ant.amazon.com>
-References: <20260408174033.4165-2-ytohnuki@amazon.com>
- <adbLQXN3g5XChaJL@dread>
+To: Carlos Maiolino <cem@kernel.org>
+CC: "Darrick J . Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>,
+	<linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Yuto Ohnuki
+	<ytohnuki@amazon.com>
+Subject: [PATCH v3] xfs: check da node block pad field during scrub
+Date: Fri, 10 Apr 2026 18:06:15 +0100
+Message-ID: <20260410170614.8075-2-ytohnuki@amazon.com>
+X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <adbLQXN3g5XChaJL@dread>
-X-ClientProxiedBy: EX19D036UWC003.ant.amazon.com (10.13.139.214) To
+X-ClientProxiedBy: EX19D036UWB001.ant.amazon.com (10.13.139.133) To
  EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Apr 09, 2026 at 07:40:17AM +1000, Dave Chinner wrote:
-> Endian conversion not necessary on comaprison to zero.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> dgc@kernel.org
+The da node block header (xfs_da3_node_hdr) contains a __pad32 field
+that should always be zero. Add a check for this during directory and
+attribute btree scrubbing.
 
-Understood. I'll send v3 without endian conversion.
+Since old kernels may have written non-zero padding without issues, flag
+this as an optimization opportunity (preen) rather than corruption.
 
-Thank you for the review.
-Yuto
+Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+---
+Changes in v3:
+- Drop unnecessary be32_to_cpu() on comparison to zero.
+- Link to v2: https://lore.kernel.org/all/20260408174033.4165-2-ytohnuki@amazon.com/
+Changes in v2:
+- Use xchk_da_set_preen instead of xchk_da_set_corrupt since
+  old kernels may have written non-zero padding without issues.
+- Link to v1: https://lore.kernel.org/all/20260404143043.65268-2-ytohnuki@amazon.com/
+---
+ fs/xfs/scrub/dabtree.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index 1a71d36898b1..c2d6ad59d03e 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -454,7 +454,12 @@ xchk_da_btree_block(
+ 			}
+ 		}
+ 
+-		/* XXX: Check hdr3.pad32 once we know how to fix it. */
++		if (xfs_has_crc(ip->i_mount)) {
++			struct xfs_da3_node_hdr *nodehdr3 = blk->bp->b_addr;
++
++			if (nodehdr3->__pad32)
++				xchk_da_set_preen(ds, level);
++		}
+ 		break;
+ 	default:
+ 		xchk_da_set_corrupt(ds, level);
+-- 
+2.50.1
+
 
 
 
