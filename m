@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29BDC35BDA0
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:20:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3CE41A6815
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:20:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775802015; cv=none; b=cHxq/UsBWb1UtVKknW/1dFHv2T4Z8x4gAsi93kYEIMpCw057OMKPzgZhZo1YYZl/TNUqF2NrlAT2Y2nvGE+dCGFr1LogypchwGnlTRLC9XFCNuq907/UmHBUP/zkNBjj8lAQzDeCpG3tMEIHUA491YF5DJ9duLCjoC2KhFm6RYo=
+	t=1775802030; cv=none; b=LQHuDg26BSiizUzkC+gVA0gzCgDELBpiuVLwCSizo9Iri4qFJdAm98sG9GrqiT8ipmcdnAjt2SPQH7R0BwdZ7owIe7z+b6irevEnJSv2kalWXXtzcrpE+AT9viqriWqrxEWyxd3xNSd9v1wE3J9mxF62yDcXcIHSVZPA+7kpZLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775802015; c=relaxed/simple;
-	bh=dCXCaEh792qNO/1FXYHSa+oSVCJE5gVv/uWzXDoKcXQ=;
+	s=arc-20240116; t=1775802030; c=relaxed/simple;
+	bh=H+zCnATe3sUVYxYRllJ9JIe0aei3dEs+D56m02VtG/8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Iit5Ie0mn4pOe7dp1jJRsYqAS4pH01zpNmhchb/bXIa+xIgS6X4eVFPpXEEILGjfji2z8HKpxnvIZEoq8I+5L6WBX71y5BKpZ0paddPlL2EfJJI7Mz/vJ/uPfc1ZVZrszNl03E1CIfoqvyma1XDbakjuCe+siY9GUzeHV9ieLIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=msoXiCER; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=X0oy8jWxomtl0lyLC5c1oF8UAxIAtbe7Rn7Ts0Tx7X/e+QCZsIX6NSsgjTSapEZILw1vsx1ejkoGOa9ze6QBgQNMWv08ZXpV8k9ecr6wllcRFrsJuj+6gb+rbyE5Q34csSpZ5VubCcXY+hsiuHKnyV0Ns0aVLr+O+BcyYDnhSQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=meV/YPS+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="msoXiCER"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE0D9C19421;
-	Fri, 10 Apr 2026 06:20:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="meV/YPS+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 924A0C19424;
+	Fri, 10 Apr 2026 06:20:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775802015;
-	bh=dCXCaEh792qNO/1FXYHSa+oSVCJE5gVv/uWzXDoKcXQ=;
+	s=k20201202; t=1775802030;
+	bh=H+zCnATe3sUVYxYRllJ9JIe0aei3dEs+D56m02VtG/8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=msoXiCERcIP9ZpgPs6fCsbnpzxGEYPMOyWIElbAQjNu8sj1NkW9Kld79foGcvMyGD
-	 6Vp9cMgxhUtUoRQ4t3UaAX1EsZVr9K7Uc0vStuPw+I9YkTlfR8W9j1dPt2VGfRiNw8
-	 Ay8M4gUzqrdwGdwVx89S9Kn8CocDMrTpBWv3JnROlnA7ENWe8GuLO0XWFRXkM7sB5M
-	 wqUD27YBWHnzufiuqASzLx9Em0q63ToluduK5qOvyqhZf6MGIGx1TFCzKxTwtsOCof
-	 BN/Zg0QbPTjyOeSE89u4wuJkdgJoHcV996P06n9LsRfHiDbin3mmHRHL6SpyPMxu44
-	 kn8RCb5xAwZ2g==
-Date: Thu, 09 Apr 2026 23:20:14 -0700
-Subject: [PATCH 11/21] xfs_scrub: rename nr_io_threads
+	b=meV/YPS+cQSnZYmJ5AAHg3Bep5tbRwLJRTvQip0sSEpkO/bJfxcwejBsBed7LK+nF
+	 vvqqcxjsYpppBmhX5F/Sy80siFXIz1APvuDIgkIUykZaNTMiauwvqYEB7jL4iS3+cg
+	 Wtfm7VtAhNJDgIDrLl/oriRS96kWvwrf/tpd1ZQE0K4jK/7gnVkcsuCMK5fzVG9KDe
+	 1iuUaO+J/tr9WL3x2hYEIlb4LavxD6D+FyUAIlN7zo71cmZBG0+Ma4aBKTdETsneoQ
+	 cxeqpQps6REzk/JeEGVoltmAsDqFbLHzRF4ag8KnI+lVDi8vX/U455IKe41CznUD0J
+	 fRtfl2qV/rYow==
+Date: Thu, 09 Apr 2026 23:20:30 -0700
+Subject: [PATCH 12/21] scrub: simplify verifier threads calculation
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577385234.2090237.6143733154813318851.stgit@frogsfrogsfrogs>
+Message-ID: <177577385253.2090237.9275967585608691676.stgit@frogsfrogsfrogs>
 In-Reply-To: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
 References: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -43,58 +43,98 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
 
-This variable really describes the number of threads that we should
-start up to scan metadata.  Rename it to reduce confusion with the media
-verification code, which also initiates IO.
+Throwing all CPUs at verifying seems like a bad idea for foreground
+scrub, as does abusing I/O opt/min as that says absolutely nothing
+about parallelism.  I can't really think of a better way than manually
+configuring this except maybe kernel hints.  But the current decisions
+are not good defaults, and also are the only user of struct disk for
+file systems using the kernel verify ioctl.
 
+The best default seems to be 8, because verification speed increases
+diminish above that level.  Note that background service mode now obeys
+the thread count restrictions.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+[djwong: rebase atop previous patches, leave disk_heads() alone]
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/xfs_scrub.h |    2 +-
- scrub/common.c    |    2 +-
- scrub/phase1.c    |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ scrub/read_verify.h |    2 ++
+ scrub/phase6.c      |   10 +++++-----
+ scrub/read_verify.c |   20 ++++++++++++++++++--
+ 3 files changed, 25 insertions(+), 7 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index a7e67c37469beb..3009a7cd2d97d0 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -70,7 +70,7 @@ struct scrub_ctx {
- 	struct xfs_fd		mnt;
+diff --git a/scrub/read_verify.h b/scrub/read_verify.h
+index e4b36f6aaa20e1..6a338abb896bc3 100644
+--- a/scrub/read_verify.h
++++ b/scrub/read_verify.h
+@@ -33,4 +33,6 @@ bool try_read_verify_schedule_io(struct read_verify_schedule *rs,
  
- 	/* Number of threads for metadata scrubbing */
--	unsigned int		nr_io_threads;
-+	unsigned int		nr_scan_threads;
+ int read_verify_bytes(struct read_verify_pool *rvp, uint64_t *bytes);
  
- 	/* XFS specific geometry */
- 	struct fs_path		fsinfo;
-diff --git a/scrub/common.c b/scrub/common.c
-index 34d91525928305..95bc0c091eae27 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -275,7 +275,7 @@ scrub_nproc(
- {
- 	if (force_nr_threads)
- 		return force_nr_threads;
--	return ctx->nr_io_threads;
-+	return ctx->nr_scan_threads;
++unsigned int read_verify_nproc(struct scrub_ctx *ctx);
++
+ #endif /* XFS_SCRUB_READ_VERIFY_H_ */
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 9b99d041ed8bf2..266a2bf0e453ae 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -889,11 +889,11 @@ phase6_estimate(
+ 	 * can contribute to the progress counter.  Hence we need to set
+ 	 * nr_threads appropriately to handle that many threads.
+ 	 */
+-	*nr_threads = disk_heads(ctx->verify_disks[XFS_DEV_DATA]);
+-	if (ctx->verify_disks[XFS_DEV_RT])
+-		*nr_threads += disk_heads(ctx->verify_disks[XFS_DEV_RT]);
+-	if (ctx->verify_disks[XFS_DEV_LOG])
+-		*nr_threads += disk_heads(ctx->verify_disks[XFS_DEV_LOG]);
++	*nr_threads = read_verify_nproc(ctx);
++	if (ctx->fsinfo.fs_rt)
++		*nr_threads += read_verify_nproc(ctx);
++	if (ctx->fsinfo.fs_log)
++		*nr_threads += read_verify_nproc(ctx);
+ 	*rshift = 20;
+ 	return 0;
  }
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index 9b692a923dfdf3..ba04ad3684ebd7 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -70,6 +70,22 @@ struct read_verify_pool {
+ 	int			runtime_error;
+ };
  
++unsigned int
++read_verify_nproc(
++	struct scrub_ctx		*ctx)
++{
++	if (force_nr_threads)
++		return force_nr_threads;
++
++	/*
++	 * Throwing all CPUs at verifying seems like a bad idea for foreground
++	 * scrub, as does abusing I/O opt/min as that says absolutely nothing
++	 * about parallelism.  The authors observed diminishing returns on
++	 * verification speed past 8 IO threads, so that's the default.
++	 */
++	return 8;
++}
++
  /*
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 954a62b7e8d711..16607af4c5f025 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -355,7 +355,7 @@ _("Unable to find realtime device path."));
- 		return ECANCELED;
- 	}
+  * Create a thread pool to run read verifiers.
+  *
+@@ -84,8 +100,8 @@ read_verify_pool_alloc(
+ 	struct read_verify_pool		**prvp)
+ {
+ 	struct read_verify_pool		*rvp;
+-	unsigned int			verifier_threads =
+-		disk_heads(ctx->verify_disks[XFS_DEV_DATA]);
++	const unsigned int		verifier_threads =
++		read_verify_nproc(ctx);
+ 	int				ret;
  
--	ctx->nr_io_threads = disk_heads(ctx->verify_disks[XFS_DEV_DATA]);
-+	ctx->nr_scan_threads = disk_heads(ctx->verify_disks[XFS_DEV_DATA]);
- 	if (verbose) {
- 		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
- 				ctx->mntpoint, scrub_nproc(ctx));
+ 	if (rvp_io_max_size() % ctx->mnt.fsgeom.blocksize)
 
