@@ -1,137 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0FE35B63E
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:23:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED0137CD5C
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 10:11:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775802202; cv=none; b=DRgdBp1gqhkt5Sm7bTpLuOy1cB5Pqq0LRuwkFVgEYrxo93NG4mR3vG0LzOrKrT9V/0ypI6ORl8Zt3oBldM2MSaaKkvZ/hgSaGVzB/pR4Nw4f6iKkrQMQ2FISl4gSVd6Y9hcGcfVEo/W4araPrnxCIuyNuf9F2FtLJS2LRiYQLgc=
+	t=1775815872; cv=none; b=nD9gjpeDY6+8/K0LCg24lO6GoJJVIUOxrhP9WWaxGc3wZ1cuWsKfn4KLQcZqlFeW5bd3n412Q9bNB33bp/YxJpwFC+nhRB3iL6N7ZMcxocv74Le3OwQ5O5uSlkGn1ieqi2ecVQ7ZAqhHWZIbxqcX8vASAa8onmBYkzP74Q6RC9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775802202; c=relaxed/simple;
-	bh=Q5NW+2TatqW+glFsQw/MXLyQ2FJq0gD7Ok7fj73u3qY=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=FlhpqqjLGdMqVQMZ4KAR9r7YnQ5DIZNM5vTYr5D3wWBTNjPvSihiWJpDaEoOnRJSOptMRUVPFE2Fenzcg2tBZPp+3Z6cEx36JteB4Q4GxK/Z05wpfsnXnLHvVZsxn7quFCN1UYI4eZRQyksb8+rY44QTs8oq4hZNI/P4esU7udY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DxNEpeGB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775815872; c=relaxed/simple;
+	bh=ZLFmeNnpXMQY5Idoo7GGvp09WItgOs4lD5yrN956unU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uLxu66DK6l60GFDMUvHqAwgplUto/Fh6dKPfjzWTQj63UKydM7OrAez098em2YNGMYlDrADhZ6LV9HsWhSX5giutF1/NX+7/qvKM3PS5HhSRyYv7cndik+AtE3ZznnGnJDVxAa94MHmWHdi5oud+zHtR0PM1EivauqbfpzVstPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dv4bG0k4; arc=none smtp.client-ip=74.125.82.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DxNEpeGB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AEB2C19421;
-	Fri, 10 Apr 2026 06:23:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775802202;
-	bh=Q5NW+2TatqW+glFsQw/MXLyQ2FJq0gD7Ok7fj73u3qY=;
-	h=Date:Subject:From:To:Cc:From;
-	b=DxNEpeGBQSjC4JQMsELu/NoGn0OmRpPBaJKeCnuoN2bfveclVA7w6/2biDjG8PbEH
-	 9xez3n8913Vu3kJgxPJRmkONR5dmKz7xmduq3Zyj8YXLA1sdXVf34E4jbt4/XiyKst
-	 KIraRzU6L7FFDewaeu0GO6IcnseH9Qvu5z7X6IfVJNLHj/eKwEVpsUIZanwvcRs87f
-	 XNp/q6ERPw4ucJaIDyE6aFtRRHuIm4vbdVYZ56YqpLftP4MEXbjbE2TUfv3rGULtsj
-	 hE8+iNm6rMhzHQ6CooKobXQiNwuitzdw6bQqz4bb2SgAyiQm87gRv2zDlFSZT8AHBL
-	 wRAVujdHAyfgQ==
-Date: Thu, 09 Apr 2026 23:23:22 -0700
-Subject: [GIT PULL 2/2] xfs_scrub: refactor to XFS_IOC_VERIFY_MEDIA
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577387561.2091101.3654819947635620622.stg-ugh@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dv4bG0k4"
+Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-2cf1646bd11so3230508eec.1
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 03:11:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1775815870; x=1776420670; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=gs2VW1Gl3mTkG3F5QoajrDkspcE3G+ncg4CJsvRt2CM=;
+        b=dv4bG0k4X1seAhES+7kggOVqW5UIIzap0VMD/MjHTW/IyjOTAu31Dhc9tGqoOCE7u2
+         k4l7szgbDDC7Q0Ep205O8e3QdzARgI1yzvLNbTC3XrYbHGRAfjhHxz08/EX+4WF0AjAT
+         Y9eyJ80GsSKCFqlquiC9PzCfRYJhIloU2y+xsP7cEcaJuJx8z6YO8efBpa2q2VWWkWSP
+         agYac+QIWs4TnXajO4vBg0TjLgEQ3KRngRNq5oojfdQ/M45RCQAT3XeqhAOG2bDXXQgg
+         jYQ3z4JRg/0HJ0JII6ytM5uDx5dHC1FM10UAsvjN33w+Dwy4old6rp0avJ/Xvrh09lZ2
+         s+GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775815870; x=1776420670;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gs2VW1Gl3mTkG3F5QoajrDkspcE3G+ncg4CJsvRt2CM=;
+        b=GaBBg+yesOex05ytUxmb/+ei/NSwp7Uz0PP84okBFQeckazDIg9FOuKUsG+isiq7RP
+         3bLRTD+60vLqWqgY8ZJLlsZarl8+J7IWrMwaQ6yzU7vP6Np5NvHopNLPuWkeeXUpfPrc
+         YVFwsnfP+W9Y7XHUCfdkS73D1ozMZZqfmZ14DXea4QDILixqZqVRA+OcXq0vRqKLUx4y
+         2w33bWGvSukVuMWN5W/mPQ+QivRbffTTzbbNN6006RMD40y3KR15OErHNa53hDSMBaIh
+         T0Gq/9TvLkMBYOOCf2bsLxVw48qYM2V+qKz5+oXfX8sVUVHHqxjzP/sEWaszrU9+8sIP
+         kqrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWJDhOCqOQkmWlkaE5L8xlHlyXwp0maB4gLO+4SJsZlxsW5wBaVb6zvfcCUVmJ/kMKulva/+rff1S4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzbKYm42FytRkT+2j1H2FN6XwXdc5OnQtYZ4Wh56BpYLqasrrDV
+	1c5Wei9PtgS9m+Xq1Y2y9Zs67RgtG3nflLMtJCAIN7zXJtmH2DO0YiBU
+X-Gm-Gg: AeBDievVMuHCrS81Yalg4Y3sPZqfFP+wozuVDnRebqapdONzbmU2UT5/rFtVdIbXol/
+	LckgBN0tUXKoQzeNbDOFUvsUcVP7ysYiwsXHkaiB1hJqRPSMsf5DyULmt9LOFGmcNfgxj2p+Enz
+	pqdksmG+pG6ham3qbHCtUKxloKvDddXkH5dtuLj/M8Ovqllklek10gZRVacgpjsxq/CmEZtfQU3
+	f2udAaUUOQCnu2EtiRbT1B9q5niyjvL9VNlVhRx0kEP53PPSixo/3mbzYrAITV+8HUhGj4u40Em
+	POoNbQ/+O72FJuyxC9HYYSGP3AiubmsBNTS7xlRR1bl/v+/lYb4NBa94r9iT20Hfn5JXLUz0UF5
+	6r5JhXRyMD7BtRXIZVJubh7Yb3mdBeNKB+BDv8Og8+2w2H1kiL0Rd2mK1R2RLQjw+GHcjcYiAU/
+	W0z1hyVNm9Vqe81O8Te5vcIS3aO1vEXdwHulmW+Q4ogstHIg==
+X-Received: by 2002:a05:7301:1f10:b0:2d1:d434:d005 with SMTP id 5a478bee46e88-2d5899a3b93mr1647202eec.20.1775815870421;
+        Fri, 10 Apr 2026 03:11:10 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d55faa42dasm3508726eec.7.2026.04.10.03.11.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Apr 2026 03:11:09 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: cem@kernel.org,
+	djwong@kernel.org,
+	kees@kernel.org
+Cc: alexjlzheng@tencent.com,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
+Date: Fri, 10 Apr 2026 18:11:06 +0800
+Message-ID: <20260410101106.2523665-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi Andrey,
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-Please pull this branch with changes for xfsprogs for 7.0-rc1.
+In xfs_refcount_finish_one(), there's no need to pass
+XFS_ALLOC_FLAG_FREEING to xfs_alloc_read_agf().
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+So remove it.
 
---D
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+---
+ fs/xfs/libxfs/xfs_refcount.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-The following changes since commit bd61d2b9c8527f1f7bf86df45280ab46592bea7d:
-
-debian: enable xfs_healer on the root filesystem by default (2026-04-09 15:30:18 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-media-verify-ioctl_2026-04-09
-
-for you to fetch changes up to 8ef7291a272e4e29e38dda90afec56a983776187:
-
-xfs_scrub: raise media verification IO limits (2026-04-09 15:30:19 -0700)
-
-----------------------------------------------------------------
-xfs_scrub: refactor to XFS_IOC_VERIFY_MEDIA [v11 2/4]
-
-Originally, this was a single patch inside the autonomous self healing
-patchset.  However, various issues brought up during review of the v9
-codebase made it obvious that more cleanups were necessary prior to
-shifting xfs_scrub to use the new media verification ioctl.  Therefore,
-the xfs_scrub changes have been broken out into a separate patchset to
-contain the refactorings and new functionality.
-
-v11: various minor bug fixes detected by static checkers
-v10: decouple the spacemap iterator and the read-verify pool code,
-simplify the read-verify apis, use a fixed limit of 8 verify IO
-threads per device, improve the log media error reporting
-
-With a bit of luck, this should all go splendidly.
-
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-
-----------------------------------------------------------------
-Christoph Hellwig (6):
-scrub: remove the unused io_disk field in struct read_verify
-scrub: simplify the read_verify_pool_alloc interface
-scrub: use enum xfs_device for read verification
-scrub: simplify verifier threads calculation
-xfs_scrub: move disk media verification error injection
-scrub: don't allocate disk for ioctl-based media verify
-
-Darrick J. Wong (15):
-libfrog: allow bitmap_free to handle a null bitmap pointer
-mkfs: rename byte unit conversion macros
-libfrog: lift *BYTES helpers to convert.h
-xfs_scrub: report truncated devices as media errors
-xfs_scrub: fix i18n of the decode_special_owner return value
-xfs_scrub: move read verification scheduling to phase6.c
-xfs_scrub: don't pass the io_end_arg around everywhere
-xfs_scrub: rename nr_io_threads
-xfs_scrub: use the verify media ioctl during phase 6 if possible
-xfs_scrub: perform media scanning of the log region
-xfs_scrub: index read-verify pools by xfs_device ids
-xfs_scrub: move failmap and other outputs into read_verify_pool
-xfs_scrub: clean up device-related error messages
-xfs_scrub: drop SCSI_VERIFY code from disk.
-xfs_scrub: raise media verification IO limits
-
-libfrog/convert.h         |   7 +
-scrub/disk.h              |   2 -
-scrub/fscounters.h        |   2 +-
-scrub/read_verify.h       |  34 +++-
-scrub/spacemap.h          |   5 +
-scrub/xfs_scrub.h         |   9 +-
-db/bmap_inflate.c         |   2 +-
-doc/README-env-vars.txt   |   1 -
-libfrog/bitmap.c          |   3 +
-libfrog/convert.c         |   7 -
-mdrestore/xfs_mdrestore.c |   5 +-
-mkfs/xfs_mkfs.c           |  38 ++--
-repair/agbtree.c          |   3 +-
-repair/bmap_repair.c      |   3 +-
-repair/rmap.c             |   3 +-
-repair/xfs_repair.c       |   5 +-
-scrub/common.c            |  19 +-
-scrub/disk.c              | 204 ---------------------
-scrub/fscounters.c        |   4 +-
-scrub/phase1.c            |  91 +++++++---
-scrub/phase5.c            |   6 +-
-scrub/phase6.c            | 424 +++++++++++++++++++++----------------------
-scrub/phase7.c            |   7 +-
-scrub/phase8.c            |   3 +-
-scrub/read_verify.c       | 451 +++++++++++++++++++++++++++++++++-------------
-scrub/xfs_scrub.c         |   1 -
-26 files changed, 701 insertions(+), 638 deletions(-)
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 40c7f0ff6cf3..0ec6ccd8b4dc 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1414,8 +1414,7 @@ xfs_refcount_finish_one(
+ 	if (rcur == NULL) {
+ 		struct xfs_perag	*pag = to_perag(ri->ri_group);
+ 
+-		error = xfs_alloc_read_agf(pag, tp,
+-				XFS_ALLOC_FLAG_FREEING, &agbp);
++		error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
+ 		if (error)
+ 			return error;
+ 
+-- 
+2.49.0
 
