@@ -1,229 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71BB3164B4
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:19:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CAC733ADB3;
+	Fri, 10 Apr 2026 06:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775801983; cv=none; b=IttB95Fbf02qTaZvEU6KJIcbd1Q1vRXfy3Jomf+E+SqIwgBejBtVtono/2tTJ52gGsHRsvys8xV9bOkEiaY5pG3qMMxPe1JbBJwTHqWHQfYXCJksVyX3LyqxszFOlGwaeGNuDTwIHjCCnpLKdF5uCzYV2usSc0H6V3oLEZTZTfA=
+	t=1775801999; cv=none; b=FjDTHA1h44rDqwAtSpFbA1tegoy8RPMCDRzK0NKfjzxGQwZarrB/AYyZfQMUul8/3nYOWb4sWIrycRH72TbUTSu1C8B0R/wGXpDafdPfe1pc0HeB6pt3niUXeJL8Vb3xgSklJBGly5XrlNH6CK066OslMx7ZCRzsy1igouWtAWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775801983; c=relaxed/simple;
-	bh=Or+OfT5CkFyKZq5412cAXuTk5EF7q0YM4h4QceFYZiQ=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b/iCG5M5dg/BlJU4vS9TzfQ+kO6DPVo0q1OwRk7KnqXJUUi5bXB3zD0MPooqB5crOaOmDSGxZzFLr/R3G99rDZ3E/YS3g4lgoQb5bWxysepHPHTJoq+f2DZiCcVt0mjnhFWz7v8Fj97npjj11B7DLJHLMOoAR0dWv5s8YFBXrAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Opstcp8B; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Opstcp8B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2EFDC19421;
-	Fri, 10 Apr 2026 06:19:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775801983;
-	bh=Or+OfT5CkFyKZq5412cAXuTk5EF7q0YM4h4QceFYZiQ=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Opstcp8BTgzgNQ3x00ej+0+nny/R+uR8nkIhSM6e9+yJ+jYeQ0TTpFvRIXVdIuYRG
-	 7CmAjv825ogOgl8/ReLFnthjTUKCiY+9n6p3ghEjAQbsnfzXsK3d2e5PO3RyBT2v5p
-	 7fSBh8z3lA4ribjIEpYr2/5kJANSWLT1S0GPUnxsfd3nTcd6IJLdUcX1v3U2GlAw0G
-	 vB5aSbbpkvXrppOmiG+mMRRWbRr2fXolYGzaMRt7Vsbgo9EnkEQzY1/rvsDiuVSBvJ
-	 B4Zdu17j0TijmbeQmK3HGI8XqO0Wvuk/Jb075QLCai2muAwg5IlvBrNegVA7eHa7bs
-	 aqNDNhOkNQKiw==
-Date: Thu, 09 Apr 2026 23:19:43 -0700
-Subject: [PATCH 09/21] xfs_scrub: don't pass the io_end_arg around everywhere
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577385197.2090237.15497488305329025076.stgit@frogsfrogsfrogs>
-In-Reply-To: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
-References: <177577384929.2090237.10369276062302001541.stgit@frogsfrogsfrogs>
+	s=arc-20240116; t=1775801999; c=relaxed/simple;
+	bh=4+EqD3YzIPa3Fgi5cN2FOovIS+oyDUHEg1SWegQAuc4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ebPDEXLmk+JdPSSR/+IO+UscY6oRexTDFKOqQHPCYObsqahj2/XP/jD54AJs4ggnR6D4lmZsktMdH2E3qJPRezQ+OzSA4xst3L8gnIRdWHU4+u7M4KqBRZTcmTvc5zaqqG1Zn4wfJwA2SaD7Kl7p5idKxvCFzg3P/3WM5iGdF8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 66B1268B05; Fri, 10 Apr 2026 08:19:53 +0200 (CEST)
+Date: Fri, 10 Apr 2026 08:19:53 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Tal Zussman <tz2294@columbia.edu>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	Jan Kara <jack@suse.cz>, Dave Chinner <dgc@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Gao Xiang <hsiangkao@linux.alibaba.com>,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH 8/8] RFC: use a TASK_FIFO kthread for read completion
+ support
+Message-ID: <20260410061953.GA24795@lst.de>
+References: <20260409160243.1008358-1-hch@lst.de> <20260409160243.1008358-9-hch@lst.de> <2cdaa767-c071-4e84-b9d7-1c944407f5bb@columbia.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2cdaa767-c071-4e84-b9d7-1c944407f5bb@columbia.edu>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Apr 09, 2026 at 03:06:47PM -0400, Tal Zussman wrote:
+> > -#include <linux/llist.h>
+> > +#include <linux/freezer.h>
+> 
+> Why freezer.h and not kthread.h?
 
-The value is the same across all callers and read-verify pools, so let's
-just pass it into read_verify_pool_alloc instead of making temporary
-aliases everywhere and increasing memory usage.
+I needed freezer.h to try to make the thread freezable, but that didn't
+work out.  kthread.h seems to be pulled in implicitly.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- scrub/read_verify.h |    6 ++----
- scrub/phase6.c      |   10 +++++-----
- scrub/read_verify.c |   15 +++++++--------
- 3 files changed, 14 insertions(+), 17 deletions(-)
+> >   struct bio_complete_batch {
+> > -	struct llist_head list;
+> 
+> If we go with this approach, we should remove the newly-added bi_llist from
+> struct bio too.
 
-
-diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-index a46244334268de..165ad8f7af7b6c 100644
---- a/scrub/read_verify.h
-+++ b/scrub/read_verify.h
-@@ -12,7 +12,6 @@ struct disk;
- 
- struct read_verify_schedule {
- 	struct read_verify_pool	*rvp;
--	void			*io_end_arg;
- 	uint64_t		io_start;	/* bytes */
- 	uint64_t		io_length;	/* bytes */
- };
-@@ -23,7 +22,7 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
- 		int error, void *arg);
- 
- int read_verify_pool_alloc(struct scrub_ctx *ctx, struct disk *disk,
--		read_verify_ioerr_fn_t ioerr_fn,
-+		read_verify_ioerr_fn_t ioerr_fn, void *ioerr_arg,
- 		struct read_verify_pool **prvp);
- void read_verify_pool_abort(struct read_verify_pool *rvp);
- int read_verify_pool_flush(struct read_verify_pool *rvp);
-@@ -31,8 +30,7 @@ void read_verify_pool_destroy(struct read_verify_pool *rvp);
- 
- int read_verify_schedule_now(struct read_verify_schedule *rs);
- bool try_read_verify_schedule_io(struct read_verify_schedule *rs,
--		struct read_verify_pool *rvp, uint64_t start, uint64_t length,
--		void *end_arg);
-+		struct read_verify_pool *rvp, uint64_t start, uint64_t length);
- 
- int read_verify_bytes(struct read_verify_pool *rvp, uint64_t *bytes);
- 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 82dadab5737919..1bfc10f9f662ae 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -645,7 +645,7 @@ check_rmap(
- 
- 	/* Schedule the read verify command for (eventual) running. */
- 	scheduled = try_read_verify_schedule_io(rs, rvp, map->fmr_physical,
--			map->fmr_length, vs);
-+			map->fmr_length);
- 	if (scheduled)
- 		return 0;
- 
-@@ -656,7 +656,7 @@ check_rmap(
- 	}
- 
- 	scheduled = try_read_verify_schedule_io(rs, rvp, map->fmr_physical,
--			map->fmr_length, vs);
-+			map->fmr_length);
- 	assert(scheduled);
- 	return 0;
- }
-@@ -761,7 +761,7 @@ phase6_func(
- 		goto out_dbad;
- 	}
- 
--	ret = read_verify_pool_alloc(ctx, ctx->datadev, remember_ioerr,
-+	ret = read_verify_pool_alloc(ctx, ctx->datadev, remember_ioerr, &vs,
- 			&vs.rvp_data);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("creating datadev media verifier"));
-@@ -769,7 +769,7 @@ phase6_func(
- 	}
- 	if (ctx->logdev) {
- 		ret = read_verify_pool_alloc(ctx, ctx->logdev, remember_ioerr,
--				&vs.rvp_log);
-+				&vs, &vs.rvp_log);
- 		if (ret) {
- 			str_liberror(ctx, ret,
- 					_("creating logdev media verifier"));
-@@ -778,7 +778,7 @@ phase6_func(
- 	}
- 	if (ctx->rtdev) {
- 		ret = read_verify_pool_alloc(ctx, ctx->rtdev, remember_ioerr,
--				&vs.rvp_realtime);
-+				&vs, &vs.rvp_realtime);
- 		if (ret) {
- 			str_liberror(ctx, ret,
- 					_("creating rtdev media verifier"));
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 128df2be86898b..bcd923e5f3cbc3 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -49,7 +49,6 @@ rvp_io_max_size(void)
- #define RVP_IO_BATCH_LOCALITY	(65536)
- 
- struct read_verify {
--	void			*io_end_arg;
- 	uint64_t		io_start;	/* bytes */
- 	uint64_t		io_length;	/* bytes */
- };
-@@ -60,6 +59,7 @@ struct read_verify_pool {
- 	void			*readbuf;	/* read buffer */
- 	struct ptcounter	*verified_bytes;
- 	struct disk		*disk;		/* which disk? */
-+	void			*ioerr_arg;
- 	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
- 	size_t			miniosz;	/* minimum io size, bytes */
- 
-@@ -81,6 +81,7 @@ read_verify_pool_alloc(
- 	struct scrub_ctx		*ctx,
- 	struct disk			*disk,
- 	read_verify_ioerr_fn_t		ioerr_fn,
-+	void				*ioerr_arg,
- 	struct read_verify_pool		**prvp)
- {
- 	struct read_verify_pool		*rvp;
-@@ -105,6 +106,7 @@ read_verify_pool_alloc(
- 	rvp->ctx = ctx;
- 	rvp->disk = disk;
- 	rvp->ioerr_fn = ioerr_fn;
-+	rvp->ioerr_arg = ioerr_arg;
- 	ret = -workqueue_create(&rvp->wq, (struct xfs_mount *)rvp,
- 			verifier_threads == 1 ? 0 : verifier_threads);
- 	if (ret)
-@@ -223,14 +225,14 @@ read_verify(
- 					rvp->disk->d_fd, rv->io_start, sz,
- 					read_error);
- 			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, sz,
--					read_error, rv->io_end_arg);
-+					read_error, rvp->ioerr_arg);
- 		} else if (sz == 0) {
- 			/* No bytes at all?  Did we hit the end of the disk? */
- 			dbg_printf("EOF %d @ %"PRIu64" %zu err %d\n",
- 					rvp->disk->d_fd, rv->io_start, sz,
- 					read_error);
- 			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, sz,
--					read_error, rv->io_end_arg);
-+					read_error, rvp->ioerr_arg);
- 			break;
- 		} else if (sz < len) {
- 			/*
-@@ -291,7 +293,6 @@ read_verify_schedule_now(
- 		return errno;
- 	}
- 
--	tmp->io_end_arg = rs->io_end_arg;
- 	tmp->io_start = rs->io_start;
- 	tmp->io_length = rs->io_length;
- 
-@@ -318,8 +319,7 @@ try_read_verify_schedule_io(
- 	struct read_verify_schedule	*rs,
- 	struct read_verify_pool		*rvp,
- 	uint64_t			start,
--	uint64_t			length,
--	void				*end_arg)
-+	uint64_t			length)
- {
- 	uint64_t			req_end;
- 	uint64_t			rv_end;
-@@ -338,7 +338,6 @@ try_read_verify_schedule_io(
- 		rs->rvp = rvp;
- 		rs->io_start = start;
- 		rs->io_length = length;
--		rs->io_end_arg = end_arg;
- 
- 		return true;
- 	}
-@@ -348,7 +347,7 @@ try_read_verify_schedule_io(
- 	 * reporting is the same, and the two extents are close,
- 	 * we can combine them.
- 	 */
--	if (rs->rvp == rvp && rs->io_length > 0 && end_arg == rs->io_end_arg &&
-+	if (rs->rvp == rvp && rs->io_length > 0 &&
- 	    ((start >= rs->io_start && start <= rv_end + RVP_IO_BATCH_LOCALITY) ||
- 	     (rs->io_start >= start &&
- 	      rs->io_start <= req_end + RVP_IO_BATCH_LOCALITY))) {
+Yes.
 
