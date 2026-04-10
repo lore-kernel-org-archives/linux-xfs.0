@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A820133EC
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:15:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28027334692
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Apr 2026 06:15:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775801718; cv=none; b=bpeYZXluRnIGy4gZrUjEWXzAEM8CrErT7pWfMd6N+YT+bQHp9mISuHfQybjaLtV4Zf5WvKBeKT5/SGied2A+hj7ECq2yE7lGApqm+5gnxgd2UehMmHYe6731bL9I2SGQGMeiofWcmqC9+3PjUMrA+2oZ3sS9LyLXXorolRlut+o=
+	t=1775801734; cv=none; b=HwR3Hz1apmund/eHBwXJBIEXwBlqLkf4KEFRNf7zHLNYbtywXYkYBnfHDjEoP25ZOeB0tpYnuJ/xypQ7pkEF/DZkbtjm6KqHHVD2C9DlPNtzX4y4hDW86Km6d/LCNbaROidBNY5tlapH8tDS4uOaVbAINYNDIhwJCFo4qg9VDn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775801718; c=relaxed/simple;
-	bh=lwBh38dN94VCcOWT2NuX0BG0bZ3mWa9eTu715aIh1wA=;
+	s=arc-20240116; t=1775801734; c=relaxed/simple;
+	bh=ca88njvnUKYBpTZ2WCO//ZBpjKeyzjvMe45TlIhdaUk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K+N1qs+o9xOYLTgtlMxOn0LZvpBsw2GLfVCFtfbJz3cQF4QGPRzRTRAoCClzBiOxsDyVivAp7mtOJWjtwbcazS7kMCt/Qzd5oY893bx5rnQ4OpcDLcP47XbhOmVmZnEo91J/DeZ/6T/wAAhwt/85k1SYU1hGlcdRzd2EHU85wdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qMnx6uuI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GYTlNbkFzOJWNkfo5+uLSzVxd623KFbpWLCE5VQEYJ7iTswRe9H4EbR3wItW7nIf3Hf7e6+3LKhdhbcgdGJewLh8nE6Ae4ITs9CrXgC46ryhgrCZTL5GEIT5Lb/49rZqjmMBoA7Jsy2wGlfRQgvDciRl4ZJ0Xyv8mG6zRI/lO7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kt35G5ZZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qMnx6uuI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F244C19421;
-	Fri, 10 Apr 2026 06:15:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kt35G5ZZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B84C19421;
+	Fri, 10 Apr 2026 06:15:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775801718;
-	bh=lwBh38dN94VCcOWT2NuX0BG0bZ3mWa9eTu715aIh1wA=;
+	s=k20201202; t=1775801734;
+	bh=ca88njvnUKYBpTZ2WCO//ZBpjKeyzjvMe45TlIhdaUk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=qMnx6uuImzrHVAyELwcgGc6NSnZ/cF2PFRQffHMhiAIbGgheSS+KncvxURHgVLEUZ
-	 Ah/hw4NoICtt00pDGXoPkYBCPVA5CMaXtxYR8ZIj0AVJuZvZ0FKnQ6wX8EC4FDC71C
-	 bl9fbA/apEAdvz/cb28j5kNjUMNbhkrJ4bLOLXVNkObkjxwuqKovW4pVDrclXmYQDG
-	 2aQVUbS65Qic829llAV+fQH/1+XbJ07JfuXBFEPtMT6PLCD1cl92eM/rwh2cn7rZeL
-	 1y1wI7tkMbiAOOGweS3QAIJcyy4OOKMmCtpcyfAGFe39aFqNaI0M6l8b/frXNrqUEo
-	 NfktpdwY7Cmug==
-Date: Thu, 09 Apr 2026 23:15:17 -0700
-Subject: [PATCH 18/26] xfs_healer: use getmntent to find moved filesystems
+	b=kt35G5ZZOWy8MRJa1cPC1okAwMfkI5zcCtpd9/rDixy+flLqFg8ZqQAi4vowdorvY
+	 aWVzuuy0KDMKdDYlEiRh1OoNCt0CeamYu3nJSFPN+xrSJXirpAbdqH74IbmDGkf3mP
+	 OZTk6V0RywqSW/YGN+IRfWc31Uq6Sn1WVuXOX6Y1aH8N4tnyHl9QNGQVrcFDR9/Egv
+	 mi8PkR7NWK/FfV9sUwiGhpOZBMgvC1uSF/BPqRGTyMuCGt4V4kfKVNvHeyqtNcPc3s
+	 9iFIVBtKi8041Qj0sLjWxQyEAIiasMtHuxbBIrQ+9AItoSALUD1Fc5cHUVRzPjeqS6
+	 wQKMCWmRcZ5JQ==
+Date: Thu, 09 Apr 2026 23:15:33 -0700
+Subject: [PATCH 19/26] xfs_healer: use statmount to find moved filesystems
+ even faster
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <177577384560.2089237.8884868536226415891.stgit@frogsfrogsfrogs>
+Message-ID: <177577384579.2089237.409182767993002795.stgit@frogsfrogsfrogs>
 In-Reply-To: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 References: <177577384104.2089237.6309276904931285911.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,117 +46,208 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's possible that a mounted filesystem can move mountpoints between the
-time of the initial mount (at which point xfs_healer starts) and when
-it actually wants to start a repair.  When this happens,
-weakhandle::mountpoint becomes obsolete and opening it will either fail
-with ENOENT or the handle revalidation will return ESTALE.
+As noted in the previous patch, it's possible that a mounted filesystem
+can move mountpoints between the time of the initial mount (at which
+point xfs_healer starts) and when it actually wants to start a repair.
+The previous patch fixed that problem by using getmntent to walk
+/proc/self/mounts to see if it finds a mount with the same "source"
+name, aka data device.
 
-However, we do still have a means to find the mounted filesystem -- the
-fsname parameter (aka the path to the data device at mount time).  This
-is record in /proc/mounts, which means that we can iterate getmntent to
-see if we can find the mount elsewhere.
+However, this is really slow if there are a lot of filesystems because
+we end up wading through a lot of irrelevant information.  However,
+statmount() can help us here because as of Linux 7.0 we can open the
+passed-in path at startup, call statmount() on it to retrieve the
+mnt_id, and then call it again later with that same mnt_id to find the
+mountpoint.  Luckily xfs_healthmon didn't get merged until 7.0 so it's
+more or less guaranteed to be there if XFS_IOC_HEALTH_MONITOR succeeds.
 
-As documented a few patches ago, this would be easier if we had
-revocable fds that didn't pin mounts, but that's a very huge ask.
+Obviously if this doesn't work, we can fall back to the slow walk.
 
-This getmntent code enables xfs_healer to find a filesystem that has
-been bind mounted in a new place and the original mountpoint detached:
+This statmount code enables xfs_healer to find a filesystem that has
+had its mountpoint moved to a different place in the directory tree
+without the use of bind mounts and without needing to walk the entire
+mount list:
 
-# mount /dev/sda /mnt
-# xfs_healer /mnt &
-# mount /mnt /opt --bind
-# umount /mnt
+# mount -t tmpfs urk /mnt
+# mount --make-rprivate /mnt
+# mkdir -p /mnt/a /mnt/b
+# mount /dev/sda /mnt/a
+# mount --move /mnt/a /mnt/b
 
-The key here is that each bind mount gets a separate struct mount
-object.
+The key here is that the struct mount object is moved, and no new ones
+are created.  Therefore, the original mnt_id is still usable.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- healer/weakhandle.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 51 insertions(+), 4 deletions(-)
+ healer/xfs_healer.h |    7 +++++--
+ healer/weakhandle.c |   24 ++++++++++++++++++++++++
+ healer/xfs_healer.c |   39 +++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 66 insertions(+), 4 deletions(-)
 
 
+diff --git a/healer/xfs_healer.h b/healer/xfs_healer.h
+index e1370323bbd66a..96e146f266629a 100644
+--- a/healer/xfs_healer.h
++++ b/healer/xfs_healer.h
+@@ -39,6 +39,9 @@ struct healer_ctx {
+ 	/* Shared reference to the getmntent fsname for reconnecting */
+ 	const char		*fsname;
+ 
++	/* Mount id for faster reconnecting */
++	uint64_t		mnt_id;
++
+ 	/* weak file handle so we can reattach to filesystem */
+ 	struct weakhandle	*wh;
+ 
+@@ -75,8 +78,8 @@ bool healer_can_repair(struct healer_ctx *ctx);
+ void run_full_repair(struct healer_ctx *ctx);
+ 
+ /* weakhandle.c */
+-int weakhandle_alloc(int fd, const char *mountpoint, const char *fsname,
+-		struct weakhandle **whp);
++int weakhandle_alloc(int fd, const char *mountpoint, uint64_t mnt_id,
++		const char *fsname, struct weakhandle **whp);
+ int weakhandle_reopen(struct weakhandle *wh, int *fd);
+ void weakhandle_free(struct weakhandle **whp);
+ int weakhandle_getpath_for(struct weakhandle *wh, uint64_t ino, uint32_t gen,
 diff --git a/healer/weakhandle.c b/healer/weakhandle.c
-index 849aa2882700d4..5df5207514e38e 100644
+index 5df5207514e38e..358c553f883f3d 100644
 --- a/healer/weakhandle.c
 +++ b/healer/weakhandle.c
-@@ -65,10 +65,14 @@ weakhandle_alloc(
- 	return -1;
- }
+@@ -14,6 +14,7 @@
+ #include "libfrog/getparents.h"
+ #include "libfrog/paths.h"
+ #include "libfrog/systemd.h"
++#include "libfrog/statmount.h"
+ #include "xfs_healer.h"
  
--/* Reopen a file handle obtained via weak reference. */
--int
--weakhandle_reopen(
-+/*
-+ * Reopen a file handle obtained via weak reference, using the given path to a
-+ * mount point.
-+ */
-+static int
-+weakhandle_reopen_from(
- 	struct weakhandle	*wh,
-+	const char		*path,
- 	int			*fd)
- {
+ struct weakhandle {
+@@ -23,6 +24,9 @@ struct weakhandle {
+ 	/* Shared reference to the getmntent fsname for reconnecting */
+ 	const char		*fsname;
+ 
++	/* Mount id for faster reconnecting */
++	uint64_t		mnt_id;
++
+ 	/* handle to root dir */
  	void			*hanp;
-@@ -78,7 +82,7 @@ weakhandle_reopen(
- 
- 	*fd = -1;
- 
--	mnt_fd = open(wh->mntpoint, O_RDONLY);
-+	mnt_fd = open(path, O_RDONLY);
- 	if (mnt_fd < 0)
+ 	size_t			hlen;
+@@ -33,6 +37,7 @@ int
+ weakhandle_alloc(
+ 	int			fd,
+ 	const char		*mountpoint,
++	uint64_t		mnt_id,
+ 	const char		*fsname,
+ 	struct weakhandle	**whp)
+ {
+@@ -51,6 +56,7 @@ weakhandle_alloc(
  		return -1;
  
-@@ -102,6 +106,49 @@ weakhandle_reopen(
- 	return -1;
- }
+ 	wh->mntpoint = mountpoint;
++	wh->mnt_id = mnt_id;
+ 	wh->fsname = fsname;
  
-+/* Reopen a file handle obtained via weak reference. */
-+int
-+weakhandle_reopen(
-+	struct weakhandle	*wh,
-+	int			*fd)
-+{
-+	FILE			*mtab;
-+	struct mntent		*mnt;
-+	int			ret;
-+
-+	/* First try reopening using the original mountpoint */
-+	ret = weakhandle_reopen_from(wh, wh->mntpoint, fd);
+ 	ret = fd_to_handle(fd, &wh->hanp, &wh->hlen);
+@@ -112,6 +118,9 @@ weakhandle_reopen(
+ 	struct weakhandle	*wh,
+ 	int			*fd)
+ {
++	const size_t		smbuf_size =
++		libfrog_statmount_sizeof(PATH_MAX);
++	struct statmount	*smbuf = alloca(smbuf_size);
+ 	FILE			*mtab;
+ 	struct mntent		*mnt;
+ 	int			ret;
+@@ -121,6 +130,21 @@ weakhandle_reopen(
+ 	if (!ret)
+ 		return 0;
+ 
++	/*
++	 * The original mountpoint didn't work, which means the mount might
++	 * have been moved.  Look up the mountpoint for the mount id that we
++	 * captured earlier, which is a quick lookup if there are many mounts.
++	 * Note that @ret is nonzero here.
++	 */
++	ret = libfrog_statmount(wh->mnt_id, DEFAULT_MOUNTNS_FD,
++			STATMOUNT_MNT_POINT, smbuf, smbuf_size);
++	if (ret || !(smbuf->mask & STATMOUNT_MNT_POINT))
++		goto fallback;
++	ret = weakhandle_reopen_from(wh, smbuf->str + smbuf->mnt_point, fd);
 +	if (!ret)
 +		return 0;
 +
++fallback:
+ 	/*
+ 	 * That didn't work, so now walk /proc/mounts to find a mount with the
+ 	 * same fsname (aka xfs data device path) as when we started.
+diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
+index d885eb0a50826b..36e52a71bebfa7 100644
+--- a/healer/xfs_healer.c
++++ b/healer/xfs_healer.c
+@@ -15,6 +15,7 @@
+ #include "libfrog/workqueue.h"
+ #include "libfrog/systemd.h"
+ #include "libfrog/fsproperties.h"
++#include "libfrog/statmount.h"
+ #include "xfs_healer.h"
+ 
+ /* Program name; needed for libfrog error reports. */
+@@ -169,11 +170,45 @@ try_capture_fsinfo(
+ {
+ 	struct mntent		*mnt;
+ 	FILE			*mtp;
+-	char			rpath[PATH_MAX], rmnt_dir[PATH_MAX];
++	const size_t		smbuf_size =
++		libfrog_statmount_sizeof(PATH_MAX + 128);
++	struct statmount	*smbuf = alloca(smbuf_size);
++	char			*rmnt_dir = smbuf->str;
++	char			rpath[PATH_MAX];
++	int			ret;
+ 
+ 	if (!realpath(ctx->mntpoint, rpath))
+ 		return -1;
+ 
 +	/*
-+	 * That didn't work, so now walk /proc/mounts to find a mount with the
-+	 * same fsname (aka xfs data device path) as when we started.
++	 * In Linux 7.0 we can do statmount on an open file, which means that
++	 * we can capture the mnt_id, mount point, and fsname, which can help
++	 * us find a mount --move'd elsewhere in the directory tree.
 +	 */
-+	mtab = setmntent(_PATH_PROC_MOUNTS, "r");
-+	if (!mtab)
++	ret = libfrog_fstatmount(ctx->mnt.fd, STATMOUNT_MNT_POINT, smbuf,
++			smbuf_size);
++	if (ret || !(smbuf->mask & STATMOUNT_MNT_POINT))
++		goto fallback;
++	if (strcmp(rpath, smbuf->str + smbuf->mnt_point))
++		goto fallback;
++
++	ret = libfrog_fstatmount(ctx->mnt.fd,
++			STATMOUNT_SB_SOURCE | STATMOUNT_MNT_BASIC,
++			smbuf, smbuf_size);
++	if (ret || !(smbuf->mask & STATMOUNT_SB_SOURCE))
++		goto fallback;
++
++	ctx->fsname = strdup(smbuf->str + smbuf->sb_source);
++	if (!ctx->fsname)
 +		return -1;
++	ctx->mnt_id = smbuf->mnt_id;
++	return 0;
 +
-+	while ((mnt = getmntent(mtab)) != NULL) {
-+		if (strcmp(mnt->mnt_type, "xfs"))
-+			continue;
-+		if (strcmp(mnt->mnt_fsname, wh->fsname))
-+			continue;
-+
-+		ret = weakhandle_reopen_from(wh, mnt->mnt_dir, fd);
-+		if (!ret)
-+			break;
-+	}
-+
-+	if (*fd < 0) {
-+		errno = ESTALE;
-+		ret = -1;
-+	}
-+
-+	endmntent(mtab);
-+	return ret;
-+}
-+
- /* Tear down a weak handle */
- void
- weakhandle_free(
++fallback:
++	/*
++	 * If statmount isn't available for whatever reason, fall back to
++	 * walking the mount table via getmntent.
++	 */
+ 	mtp = setmntent(_PATH_PROC_MOUNTS, "r");
+ 	if (mtp == NULL)
+ 		return -1;
+@@ -350,7 +385,7 @@ setup_monitor(
+ 	 * paths for logging.
+ 	 */
+ 	if (ctx->want_repair || healer_has_parent(ctx)) {
+-		ret = weakhandle_alloc(ctx->mnt.fd, ctx->mntpoint,
++		ret = weakhandle_alloc(ctx->mnt.fd, ctx->mntpoint, ctx->mnt_id,
+ 				ctx->fsname, &ctx->wh);
+ 		if (ret) {
+ 			fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
 
