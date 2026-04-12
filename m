@@ -1,120 +1,142 @@
-Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B190265CA2
-	for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 16:32:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B75F2363C66
+	for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 19:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776011576; cv=none; b=RhZl3ft9Qd3dcG86duvxQEPJAXk7W7IxS4V/7zHWIJauFFeIIK/C/e+6zGWTMv5k/AQ4XQA+T0UV1/Meqgcc5oUVYIhdz9YhaC6xzmRRamKezW8LBjFSyeLjaL14iaSvNYOD32erJta7kPozchEjmyf3ZJ7FO9s8s5t9h7/B7nk=
+	t=1776023585; cv=none; b=LeoDEX1JodfAd7GOFm7a53Ni/Xg0+6Mx+WrAfU7YbaYe9/9HA/WcQ/P1RQK/cPjZ1lzVpofI6nQ0RvAZPn5N5j7DLCgTvRWGCPYtEuZ3qCuWNz10dIb8Gkwlxf4+e19yShx40fvyEmTGvZ2pSRiJwpVttN44mpmIB4Xprn8snbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776011576; c=relaxed/simple;
-	bh=OkSaRfVTCaTRfOMaVdIbPFpxDCeBnWJjGsnSFRqVwTs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZVPC4RE+Rf3ThzfQu5B1eDpKHkPdkLgBxTFmvs7amIfp5WgnN/V2u3CLnN20xtyN80z1aRW+Exy5d+aMf8Y5MdyKavGl7f6l0kOPpbaHCRAZ2pMHsFxnwUQt9+5s5S65rSXsgErFEsnmSSnyYsO2eV+BOvKDwfraLUX28kKdWA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qxh3g+hi; arc=none smtp.client-ip=74.125.82.176
+	s=arc-20240116; t=1776023585; c=relaxed/simple;
+	bh=gmOF0waEiPjAeADNa5PSDARyWSDvzMIqgLwlZIt8U0Q=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WcrW3xdboi8nbdne+mypESCauPNK2xlOuIiwuZ4CMhNVvc5a2Gsu79auH8vpj01xSqQesCEjzgfgkCGq3qfVrslG81vtPZuvibVlba22d+awizJ74Zu+ieQGIvGGoxIYHwb3PmocAkA6n2zybgPo5081kCzMUSzTMjtM049OMPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Av53Numb; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qxh3g+hi"
-Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-2d868d014a5so378654eec.1
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 09:32:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Av53Numb"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-824c9da9928so2607143b3a.3
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 12:53:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776011575; x=1776616375; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=0cSA5OkmM0TPnDu3ie7jfOPhfLh7tZ3ffN2xci0kb64=;
-        b=Qxh3g+hiTwmn6b3KS5GKG1PcdoSAc47I1nK3hAf1CFGX7FAqxFKTt78MnwRWrTaYiO
-         j2rAWtfeB2hGF8ED1AVQoxSBdK7nYyQRNF/OYez0+1l9/paoPBoRDSMUV95vBJldVFEw
-         qoAJwFD9yFlEkvugRKQbPFVt/7AcyWqe6pMigI1JQH/ufas1OJ1yNq8D6owHSpGXoTU7
-         FwJ9H7xN+nzT89C7upMqPqGqbm0y1EyxQQ3VsMv4ZRbLSe6idtE7tJNE1kBqrmtu7Zlk
-         0qA9x+Vjup/HV0V9i0Tm/vRQJawduOS1W+3yvlJ48O/1s8fYtD289FgPfe6+IhvbD8v7
-         1QIA==
+        d=gmail.com; s=20251104; t=1776023584; x=1776628384; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:date:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MgCkg4u2Qrfr9fRJnSUD7WSR9QFXT508OS0yWkaKGsE=;
+        b=Av53NumbE7+9PkBg4+CZAis10CWZ3O3DJpJu2nQdd4nRdJuPVWnR4OAv03dQh7X5uJ
+         0f7fGTx0QjM2jNjal1L3DgbEVwHiJ24e92DbWQ/A+A9CIY3qgEaXNUssxPzo44+KVccI
+         gxiGgZmIEcF0L9qI420yPwGAFndJ7RCA113Eadc1M4vBXFfXIgWAaLacIfA3C+Pb1b0p
+         Ud9009eZh9iMqW1w/gheZx7jyqswjoG38EGFJigFUnsPc+MKjUHG8ICkoSO0DqrYSZFx
+         8jLyILv5G9HJymgzLXhZ1t6fuCTK2KB/qsB4bf98PhaCV/U8+K0rxejI0ptxoqpbxhMZ
+         eahQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776011575; x=1776616375;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0cSA5OkmM0TPnDu3ie7jfOPhfLh7tZ3ffN2xci0kb64=;
-        b=OG4YyO/J5t9iFizpDrESCIzboTVTr0M58lGWAozrRmmQesGivu2r2ClloKmiKSj8ME
-         h81D0+tnYkZu0HxcY00ORg7ehVSfQcUdOV7bf5BRzwfshJHbzqzazt+W1M9WIBwMZ8HZ
-         m06H9FB/sSOGc+DUVTuFtxQZLorZ6kYL898htY9dqi3G1gUfZWquKF/wxUo0qsuD+HPv
-         Pq2iw8pRr8+FMA2nGCA7ETsduy2aoOKcKHm38sQj4qDGS/eiJQ2LzY0J8ubp2UYC/2Cp
-         Gno+pw9z7jiprnLqYFXPp8r2gUqknZXdLoAJK4FBLUSLr+RqJ0yZhSz9C/+b2P+0i10d
-         q/AA==
-X-Forwarded-Encrypted: i=1; AFNElJ9DprcCA+O67lFDsShY0Uc62xnvrp3+A2MqX0UDzqx4kQiqaS43lw7j8rIxIxfTuHGKD+nJ8gifrVs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgGeN3iNucP7qAQPOLgmIZ6kJ7wiVatM9SQHwWnd6jDq/XYTFv
-	yd3mf9BC4IS1ed5fQt1LUR6BxvQlQobzohkqt+ynx2Ek11+r5NrBrH2d
-X-Gm-Gg: AeBDievsXlrTg4qEwCJbL5X7QANVDs7mzRg/ZphgC69h0O4fPi5szBoRcdvGL/LrmXQ
-	seWMd3vCIIx1Ma6w5YsTh35TaFU+KSZGSfp7pmvVx7DEsXXtLay4dclYloeS5QZ9XygrgX10eAr
-	WZUGMErFNIO9tMVFkhO4ALOCGb0DzvQpnyS5x8f2knxHzCl6qfEmgDjherm8/TpPtSVHb7SNCZc
-	L/wqgQlfcxAS9KQ0Jb5YIaw1m5VR7lgp5Srl5PTQZHmoevQcWLiONFuZELR97Juic/uF/a48+Az
-	wv/wwiR+clPKi4sB2R20NySo5Iln/4WtbxSY10AekXVbyFUC4hnL0o7hxAvShAYSFEOrDSsOHFZ
-	E9a3yFwaS88X259plmyaEeRtDznPIp2JoN5dRcWK4KRKuMgGNdZhB17pG7osLIX/15k8E5lo7sR
-	DqtVQVENKwJfUyHew5BsaCoSLfWHqI7nt3+cA=
-X-Received: by 2002:a05:7300:e828:b0:2ca:7eb4:3e0f with SMTP id 5a478bee46e88-2d586699913mr5322475eec.5.1776011574647;
-        Sun, 12 Apr 2026 09:32:54 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d5630ac330sm12815917eec.29.2026.04.12.09.32.53
+        d=1e100.net; s=20251104; t=1776023584; x=1776628384;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MgCkg4u2Qrfr9fRJnSUD7WSR9QFXT508OS0yWkaKGsE=;
+        b=TWnazS94n4agc4dTz31hnrUIrZXXBFqLAuuPhTCuISwlCRxXrLG4Z5Swi+8/XGtHtC
+         US/Nahpkj7K5tLV5q2onT1jxLwir7Io8iJc1hRxXErANErqmy3I4qGWPtx8A65o7bsPG
+         yq8sOX8BsWfNb0kvALOBlPMp2z1kNRz/hhCJLqrCLu1DoKpvRGZe0RYazZbPqoki+qUH
+         BFfEeBSWiEWXoWRdFd3TY1O+o7UEfFBPUea4/oBnhiVghw8MMEjB4mu5CsD68nTfIctk
+         Sjz4Nueo5zMf5A7a+1Gex9fnLommq2hJ+HG1tVInNP80m0/pox7Aixf84jYKMQ180ZOT
+         ZBHg==
+X-Gm-Message-State: AOJu0Yyn84RTv+h4QsGL3EqsBRg9WOj0gqwDKL0uBYz/hyOV1Q8lwmsd
+	ZRGzyvr8KExuG87uSgyQPkgsLyuZt9BIWKMlWhlP9E9IT7hRjPPjuCR+
+X-Gm-Gg: AeBDietiFUAG2tW8REtVuOTHX2oTihTE9F+c3R945Cu4g9r8OKJToMlmLnJunxDdaGm
+	vtruy7+vmc7wLd9fFE684coFoL4YIOjWdQDSgJcWJ38+/TjJN3AQJYEu4B/vZ4eARWVGWVIKtfP
+	hXAzieM5RKEkFcwApRe5KIMlUNBTDVrFauagk5EcQiQKVDVfnLE99PeMVFxCeDYif5jlAeACiGP
+	q5rNv6u1pt5a3nbrzpzz7mcMPwdCNyQaYcwNlVjBcV3Pb01ttpETiFB+OiuSJjx74/DwZIq5w/e
+	XOMpGVX+xfspgvUQFayVU54ASZw2XlwJfrjed4TZGkZTNZUFZB2J6itmvdxFM3VDamTXZ2uUSZA
+	QQCEHCOiYHnZSuM3v71p9GMKeVHzmKqsEnezHjuaAxz2kKnxFkubKZwmPNEjlFre9rP25veUvxT
+	LX697vk4DuOD7xlqgwhmRj
+X-Received: by 2002:a05:6a00:2ea2:b0:829:b55e:1b27 with SMTP id d2e1a72fcca58-82f0c28b657mr11843235b3a.53.1776023583918;
+        Sun, 12 Apr 2026 12:53:03 -0700 (PDT)
+Received: from zlang-laptop ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f0c50cd34sm9449182b3a.54.2026.04.12.12.53.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Apr 2026 09:32:53 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: alexjlzheng@tencent.com
-Subject: [XFS] Question: can xfs_agfl_free_finish_item exhaust AGFL during bnobt/cntbt split?
-Date: Mon, 13 Apr 2026 00:32:50 +0800
-Message-ID: <20260412163252.3359028-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
+        Sun, 12 Apr 2026 12:53:03 -0700 (PDT)
+From: Zorro Lang <zorro.lang@gmail.com>
+X-Google-Original-From: Zorro Lang <zlang@kernel.org>
+Date: Mon, 13 Apr 2026 03:52:59 +0800
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH 1/2] mkfs: fix assertion failure on empty data file
+Message-ID: <advyLsWynjlIF40m@zlang-laptop>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
+	linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+References: <20260404163640.1013997-1-zlang@kernel.org>
+ <20260404163640.1013997-2-zlang@kernel.org>
+ <20260406152628.GC1048989@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260406152628.GC1048989@frogsfrogsfrogs>
 
-Hi,
+On Mon, Apr 06, 2026 at 08:26:28AM -0700, Darrick J. Wong wrote:
+> On Sun, Apr 05, 2026 at 12:36:39AM +0800, Zorro Lang wrote:
+> > mkfs.xfs triggers an assertion failure, when it trys to make a xfs
+> > on an empty file:
+> >   # echo > emptyfile
+> >   # mkfs.xfs emptyfile
+> >   mkfs.xfs: xfs_mkfs.c:3852: validate_datadev: Assertion `cfg->dblocks' failed.
+> >   Aborted                    (core dumped) mkfs.xfs emptyfile
+> > 
+> > This shouldn't be an assertion, but a warning.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > ---
+> >  mkfs/xfs_mkfs.c | 7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 527a662f..9a93330f 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -3848,8 +3848,13 @@ validate_datadev(
+> >  		if (!xi->data.isfile) {
+> >  			fprintf(stderr, _("can't get size of data subvolume\n"));
+> >  			usage();
+> > +		} else {
+> > +			if (!cli->dsize) {
+> > +				fprintf(stderr,
+> > +_("Warning: Empty file needs a data subvolume size by -d size=<value> option\n"));
+> 
+> I'm not sure why "Warning" is appropriate here -- this error is fatal to
+> the program, and most fatal mkfs error messages don't have a prefix.
 
-I have a question about the deferred AGFL block freeing path and whether it is
-safe from AGFL exhaustion during bnobt/cntbt btree splits.
+Oh, you're right, the mkfs.xfs command failing here is a total failure, not
+just a warning.
 
-When `xfs_agfl_free_finish_item` runs, it calls:
+How about:
+_(Bad empty file, needs a data subvolume size by -d size=<value> option)
 
-    xfs_agfl_free_finish_item
-      -> xfs_free_agfl_block
-           -> xfs_free_ag_extent   (fs/xfs/libxfs/xfs_alloc.c)
-
-`xfs_free_ag_extent` directly manipulates bnobt and cntbt, and inserting a new
-free extent record can trigger a btree split. A split will try to allocate a
-block from the AGFL via `xfs_allocbt_alloc_block` -> `xfs_alloc_get_freelist`.
-If the AGFL is empty at that point, `xfs_alloc_get_freelist` returns
-NULLAGBLOCK and the split fails.
-
-The normal extent-freeing path (`__xfs_free_extent`) guards against this by
-calling `xfs_free_extent_fix_freelist` first, which invokes
-`xfs_alloc_fix_freelist(..., XFS_ALLOC_FLAG_FREEING)` to ensure the AGFL holds
-at least `xfs_alloc_min_freelist(mp, pag)` blocks before touching the btrees.
-
-However, `xfs_agfl_free_finish_item` does not call fix_freelist at all.
-
-The deferred AGFL frees are created by `xfs_alloc_fix_freelist` during its
-shrink phase: blocks are removed from the AGFL immediately (pagf_flcount is
-decremented synchronously by `xfs_alloc_get_freelist`), and their actual return
-to the free space btrees is deferred via `xfs_defer_agfl_block`. After the
-shrink loop, the AGFL sits at exactly `need` blocks.
-
-But before `xfs_agfl_free_finish_item` executes, `xfs_defer_finish_noroll`
-rolls the transaction. Other deferred operations that execute in between—for
-example, regular extent frees (`XFS_DEFER_OPS_TYPE_FREE`) that themselves call
-fix_freelist and may re-shrink the AGFL, or rmapbt operations—could consume
-AGFL blocks and leave the count below `need` by the time our deferred AGFL free
-runs.
-
-So my question is: is there a guarantee that the AGFL will have enough blocks
-to service any btree split needed by `xfs_free_ag_extent` inside
-`xfs_agfl_free_finish_item`? If so, what mechanism provides that guarantee?
-I don't see a fix_freelist call or any equivalent reservation in that code path.
+or any other you feel good.
 
 Thanks,
-Jinliang Zheng
+Zorro
+
+> 
+> Other than that, the logic is sound that we need a softer landing for
+> this scenario.
+> 
+> --D
+> 
+> > +				usage();
+> > +			}
+> >  		}
+> > -		ASSERT(cfg->dblocks);
+> >  	} else if (cfg->dblocks) {
+> >  		/* check the size fits into the underlying device */
+> >  		if (cfg->dblocks > DTOBT(xi->data.size, cfg->blocklog)) {
+> > -- 
+> > 2.52.0
+> > 
+> > 
+> 
