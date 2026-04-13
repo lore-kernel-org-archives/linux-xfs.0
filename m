@@ -1,124 +1,108 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945C53AE6E6
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 14:57:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3FF303CAB
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 15:07:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776092272; cv=none; b=umYbJzc8VYeyxjhngOjnWpyyN7qxT5Qah1u++cPgiXVvLyumN5XELGbL6EQiAM+4OZR/sqHgHGB96T8RVSbZPMCvbKTY5effcDoZ9tFPl+Y8o2aObJO4u243F12Yhbd+2xe2zXSzc7KBVaH43MaTdDBARNsYdcn8CLRsp5RQltk=
+	t=1776092834; cv=none; b=OmwYtLk6nw/PNpcHJ//fDDRPKAuxSa0pyoPgsHvMHvxz0OGjTQmgr9J2HIHCyVQGn1m7vmHAaTHqXn6W6FDexyX68Yf+gYValMCXJ4INs7ZFMZST1NkCIf128lCc+J5IQRMrULCqEYutmEoprzeOzt7P1j9h8U1J9Wt295V439w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776092272; c=relaxed/simple;
-	bh=8xzCu8QZVIWaB+51owuJWZfid/LTY5fMn2BDq0vYHH8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aVmqql6lYBz4sp6/VxR/dDo3qAj4Th+EZ+RddDEETyN/w1pr5LxOei2olJaqqCp6g7RB/rlGdAM7cp0R4T+Qddc1ZULkomk8j7nEsTcExEPCCfDqQwF4nhdsnghPBaht8YNI8sWkUPj4O1YmWlcv9a3gAlUwz2/TJGYGtP3xxd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HwMEWYyL; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Cwc6evFd; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HwMEWYyL";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Cwc6evFd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776092270;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+XXlg2OhuiXB6EXI3h+3Z6Fbnf7T5TecX0/by/2GEdw=;
-	b=HwMEWYyL1DlpgAxRwHeXhBgy2UgYOnowWgPjghxzs0uHk+T0wekKO3sFDPGBDg9QoU6ZwG
-	0rUBwiOCamxWz/xvrM5zv55U0/nZnIpzuzmFPhlH5PInW9+TY3ZDhGSohKjFpcFh51b35+
-	i1QxmPeixCeoLYuGmhoMIF1UKkKavW4=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-473-JbrXGX5ZMzmu0sWzRP5eDA-1; Mon, 13 Apr 2026 10:57:45 -0400
-X-MC-Unique: JbrXGX5ZMzmu0sWzRP5eDA-1
-X-Mimecast-MFC-AGG-ID: JbrXGX5ZMzmu0sWzRP5eDA_1776092264
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-488dcff87b7so12211415e9.2
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 07:57:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776092264; x=1776697064; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+XXlg2OhuiXB6EXI3h+3Z6Fbnf7T5TecX0/by/2GEdw=;
-        b=Cwc6evFd3rs8n6kasih5Hqihoyt4o1/Ga6skaFcGwInVtr1zABQNvOMn8yxD6mm6FV
-         5TzefzF+pSwFR5TXvJKgQNlRkBwtVDKKiFR9L1KgMRiNEXnVXN2nnZHbnrhRt4SscB0A
-         FGyqmE0aTGA2c9pxcESw/gGW7EnpL9EpFn6rePXT0lljJQBI3il2fLCXtG/HvYIMBJRE
-         8zbeArd9hmKzGylMNDTNiduWds4dLFTKpcsSHxx6sxC6d+NIefAxGgCtUYwiRlMQsA7u
-         wQzm/BZuFLNInFKvReUDezI+bAQbHUbhD160QdaMktRsBLYbmR0wvM/3wl8x65sWRB7M
-         3jLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776092264; x=1776697064;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+XXlg2OhuiXB6EXI3h+3Z6Fbnf7T5TecX0/by/2GEdw=;
-        b=h2y4oL5bd3m5OxadwpM7u9hJI3Rt0iHvp0K0gJ0ubxozEoTqM0AcIOxK+EiOqehhzH
-         EGxOYN7OMjH5gtXQXHx4/bnLG5ukVpcyfYZ/eFx2sxZbXLH5+oTgNWmRBSeoPWrU8Z82
-         8aJxZeIGcLq3L2b0eJbGgRvIP2CXBmLvzq0cKz5Z+lRbu96X5hj7JzZInKVyIBGEsrOB
-         TQGXWiyxix1dkRnY8suU+E9/T9+P/uZ154bHYqCRp71taJ/y8vc6NmA5Fap+DK6ABEaV
-         S15y7gcSWlRaiWtUSTKOC3UPfYxTrIAlLwATA3b6VP90FO4zmVJX+VqSgvFqElRmvt+u
-         V1QA==
-X-Forwarded-Encrypted: i=1; AFNElJ9rYcc0Ai1VIA+Y74MzbUd4XhAvw1jXXK99oA50yq7ozPOv0WBzR4TjCV7Ko8bdhjbGr2UabTSn+aA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZpZkR4EM5RlZow0bVwtlP6bPMUf7UYiTNYsYozk8YzcccuCkE
-	qCcb1dPLHQ3gx5IWl8huNN3pGFpUq2pc4ABcP0Obi3xToakfQXF4KWXiCK5N0MTYArJjS2xZDQA
-	90/CvdhMONNEaiE2zV25mSHmMTJ6WtVt8n36NA9t4iANjnIt+U11w49Zalvqw
-X-Gm-Gg: AeBDieuSXNtS2WL0v9C29a33na452F08d5fiM6R7xz8yZEMvNdeaQSP2+6I8H1x5rw1
-	868y7faYZxk30O0hipxmO3X3svBrBurNMz1PasdJ0+b11zlf7rQTvWkd/46Wkum/iRhzdykUa70
-	gsmVsVNiNpderVwg8TBZbNh/gt0RAyATzy5MDtlWWPtNik7AuVSEYDymwUjRsmcVFzMB86QbWxB
-	KVXquk2XB+1rmcS+2vIPdgLBJO0+yTXmCRRbkXFGwHL8Ng0E17/47KN90dr1hmNHRxlAJ4Au2cj
-	urJin6MDW0ISR9roija7zf4IzqkR106fAclPZgHRGC5IX4+P5+NiXu0YoD1WFX/sAjwhtzT5BRT
-	2jKlrGGgBDpFmZw==
-X-Received: by 2002:a05:600c:3149:b0:488:ab26:8fe0 with SMTP id 5b1f17b1804b1-488d68432f2mr192799205e9.15.1776092264138;
-        Mon, 13 Apr 2026 07:57:44 -0700 (PDT)
-X-Received: by 2002:a05:600c:3149:b0:488:ab26:8fe0 with SMTP id 5b1f17b1804b1-488d68432f2mr192798615e9.15.1776092263476;
-        Mon, 13 Apr 2026 07:57:43 -0700 (PDT)
-Received: from thinky ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488d5b3d4dbsm301341195e9.14.2026.04.13.07.57.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Apr 2026 07:57:43 -0700 (PDT)
-Date: Mon, 13 Apr 2026 16:57:41 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, Andreas Tille <tille@debian.org>, 
-	XFS Development Team <linux-xfs@vger.kernel.org>, Anibal Monsalve Salazar <anibal@debian.org>, 
-	Nathan Scott <nathans@debian.org>
-Subject: Re: [PATCH] debian: add version control tags to control
-Message-ID: <knkipaowrdtq3wlxvr3xbjkvbtcu6hb75gmgeo2jkthl4orfin@hmmjv75l72z3>
-References: <20260413143800.GI1048989@frogsfrogsfrogs>
+	s=arc-20240116; t=1776092834; c=relaxed/simple;
+	bh=EnnjG/JV6RL8cDYd1WfVS8KbqcSxFr01DlwQZdx1FW8=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=HO4Hxlvkkd2ptt50qCKmdnsbITS+v19C51e8k+XylJ42/zXaSJs5UR3/8HSswcrVPgPxvnxD6P//GD0XHpMS3YIQmpQqovdXZKZzoCqOpsibfDdl1IBYsK1BvHj+jpX4jEXTudZUd8KPh4HZ+Xnip5LPKJyqx+Kia0b778ySZhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id EB67A180F2E0;
+	Mon, 13 Apr 2026 17:07:05 +0200 (CEST)
+Received: from mail.herbolt.com ([172.168.31.10])
+	by mx0.herbolt.com with ESMTPSA
+	id XvLiOJkG3WmUdgYAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Mon, 13 Apr 2026 17:07:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260413143800.GI1048989@frogsfrogsfrogs>
+Date: Mon, 13 Apr 2026 17:07:05 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, "Darrick J . Wong"
+ <djwong@kernel.org>, dgc@kernel.org, gost.dev@samsung.com,
+ pankaj.raghav@linux.dev, kundan.kumar@samsung.com, cem@kernel.org,
+ hch@infradead.org
+Subject: Re: [PATCH v2 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+In-Reply-To: <20260413133256.3378243-1-p.raghav@samsung.com>
+References: <20260413133256.3378243-1-p.raghav@samsung.com>
+Message-ID: <3c2e979b144ecc02a5c6ea5eaa004bfd@herbolt.com>
+X-Sender: lukas@herbolt.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2026-04-13 07:38:00, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 2026-04-13 15:32, Pankaj Raghav wrote:
+> The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
+> of Zhang Yi's initial patches[1]. Postgres developer Andres also
+> mentioned they would like to use this feature in Postgres [2].
 > 
-> Add some vcs fields to point to the official sources for the debian
-> package (which is to say, upstream xfsprogs).
+> This series has the changes proposed by Dave [3].
 > 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  debian/control |    2 ++
->  1 file changed, 2 insertions(+)
+> I tested the changes with fsstress and fsx based on the xfstests patch 
+> I
+> sent recently to test this flag[4]. generic/363 helped me debug the
+> crash I noticed when I did the initial implementation[3].
 > 
-> diff --git a/debian/control b/debian/control
-> index d50960fba205bb..738f3a15fefe79 100644
-> --- a/debian/control
-> +++ b/debian/control
-> @@ -18,6 +18,8 @@ Build-Depends: debhelper (>= 12),
->   uuid-dev
->  Standards-Version: 4.0.0
->  Homepage: https://xfs.wiki.kernel.org/
-> +Vcs-Browser: https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> +Vcs-Git: https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git -b master
+> Note: The previous version of Lukas's patches got mixed with version
+> numbers. The first patch is v1 while the second patch is v12. I am
+> sending it as v2 to make it uniform.
+> 
+> @Lukas: I didn't notice any activity from you regarding this series
+> since last month, so I decided to send it after spending some time on
+> Dave's feedback. I hope it is ok with you.
+> 
+> Changes since v1 [5.1 5.2]:
+> - Added a new function xfs_bmap_alloc_or_convert_range() based on 
+> Dave's
+>   feedback.
+> - Changed the xfs_falloc_write_zeroes to use
+>   xfs_bmap_alloc_or_convert_range() instead of doing prealloc and
+>   convert approach.
+> 
+> [1] 
+> https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+> [2] 
+> https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
+> [3] 
+> https://lore.kernel.org/linux-xfs/6i2jvzn3lyugjlbgmjzpped3gogzyqv5mpe2uqaifz4vjpaega@pomzoq7ley77/
+> [4] 
+> https://lore.kernel.org/linux-xfs/20260312195308.738189-1-p.raghav@samsung.com/
+> [5.1] 
+> https://lore.kernel.org/linux-xfs/20260309180708.427553-2-lukas@herbolt.com/
+> [5.2] https://lore.kernel.org/linux-xfs/abC1LvRElctaHPe5@dread/
+> 
+> Pankaj Raghav (2):
+>   xfs: add xfs_bmap_alloc_or_convert_range function
+>   xfs: add support for FALLOC_FL_WRITE_ZEROES
+> 
+>  fs/xfs/xfs_bmap_util.c | 165 +++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_bmap_util.h |   3 +
+>  fs/xfs/xfs_file.c      |  56 +++++++++++++-
+>  fs/xfs/xfs_iomap.c     | 113 +---------------------------
+>  fs/xfs/xfs_iomap.h     |   1 +
+>  5 files changed, 227 insertions(+), 111 deletions(-)
+> 
+> 
+> base-commit: e0dc9e0f8da83cb70e2a7e9a10fd3541c2bd9a06
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+> @Lukas: I didn't notice any activity from you regarding this series
+> since last month, so I decided to send it after spending some time on
+> Dave's feedback. I hope it is ok with you.
 
+No worries. I have actually very similar patch ready but run into some 
+issue
+with fsx that i wanted to check first.
 -- 
-- Andrey
-
+-lhe
