@@ -1,122 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8082F366046;
-	Mon, 13 Apr 2026 18:09:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A95E6346AE8
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 22:19:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776103781; cv=none; b=oRfNzwxRydVvfBLP0TcYyfxFt8zxTLZTsSFz+GERnx1p7XXicQyyxyDMCoUBbh+6xbVR2+MCNgHf1PlpA1FSfZOBdc1xnxKElsL1wHs3G9bMyqfkWP4D0ePLbudU0iJQk5rfQM/rXeybN84/X5OeXyrh/vluEW3byi0UfPtZK+8=
+	t=1776118762; cv=none; b=k0QvjKtNjRgCyjXlApG1iQpxjIvtkpThN1uzuT2oWIh48kNQOCwdVPG6NlTwVjfSJ3rW1Nbk+CYrRDLZ5X3DxzPfF2zigsMmSLVyZcgRf/eFCV3p6DmKQtqShkaeA8Ct/u5i4OnKw+goOADqxL0rojDzjyLjWB5m6eUdQwbwVNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776103781; c=relaxed/simple;
-	bh=wkTlNw8fM3o+aR/1pq27qu67bx7LI1s0W5xZbjJ/Mg4=;
+	s=arc-20240116; t=1776118762; c=relaxed/simple;
+	bh=mn5Nie46b7EiSBlO8RAue0pw4yXGG85ddyUQnniBPd0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YZ6h9G2JjjEohHXQ7+ggFToBjbCwqW3Yzyw1UF7wfO1hu474WULJneH34asHwm3Z+bY/94MYKh38/n0gBx7DJQQWPyfWQHO1qSV/t8QJEQpI+UoN2gmV9wScecyrZDPkqrPs9fqFwkFSlK+nkYsOhbjxrUje3chpR//JkRTGQ6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Iq0wcyDD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q/sH4niaQG8B/YDWkR6vjT01cqto/CeNVjkZgs+vZL5okD58ifuRno0yGDurd+wzT3WtMqhcSWfNkT/lQ8lEpU9JEwtVMWLnul9GIqJOItjgDBH+8P1XOaIkdS+dYu//eDZBqxaSpAycScyrs/y3DNrJ9edg8tKM8KcN27BwIg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rHlc6bkY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Iq0wcyDD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54CC5C2BCAF;
-	Mon, 13 Apr 2026 18:09:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rHlc6bkY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39EF1C2BCB5;
+	Mon, 13 Apr 2026 22:19:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776103781;
-	bh=wkTlNw8fM3o+aR/1pq27qu67bx7LI1s0W5xZbjJ/Mg4=;
+	s=k20201202; t=1776118762;
+	bh=mn5Nie46b7EiSBlO8RAue0pw4yXGG85ddyUQnniBPd0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Iq0wcyDDKaA4SMKBpHDZcQI9PyPGQVOdNL2bDUOIxZK/pprpo4QGuLsp+n8xd1bDP
-	 0bd01xU6oJ6Mdu2OMmx+dmne6HWDLjHQTHC47AYLC3pI4+c8XohTxD3iVJVT3K+n6c
-	 BPmo/sdxb/9LAgnDb0RhFQp8r44XhAhr0baXEPEersM7mg3+SOcu+IBhe6tvha6VO6
-	 bUYkf/19P8v0+cUvPpa1QDV6JR9GrvSP6rgmYb92oyUlnq6zF0ZN9yrc/Sa0p8+roq
-	 c/BVetnCgcjWL67yfSVCODnBWdng8Y4Bd3G2dC0Xz6r1ki7Uk6cH5J3OL6HpiRAjyw
-	 dstu2xjSOB/Bw==
-Date: Mon, 13 Apr 2026 11:09:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-Subject: Re: [PATCH] xfs: start inodegc after quota initialization
-Message-ID: <20260413180940.GO1048989@frogsfrogsfrogs>
-References: <20260413004925.84518-1-pedrodemargomes@gmail.com>
+	b=rHlc6bkYD6zCkdFNM0l9uKxYG5MaLTF+cX+WBjff6hqX9JQFAhxBpvEpuHiJSF9UC
+	 hV3phgoUVRKDNcMcnIQTj5dSXrzxzFu55sEVtVWkF0ox2fuqnV3BalRyE0F1NZIv0J
+	 Aylr3jYc6AsFMOmlv1Y6+6+r38zR6g4R9ic6d7G3GJaHv7Ob4Qtk0ByTRaj6XQd6kr
+	 v+Qs2mwB65uV9ZM6aI7icKnkedS7WWbfR6IPwzsRkDf/A8K9ftDZpXGXuRzLGh8vP2
+	 erHkvJ0It6V3X34w2iLpp8nEX/eLLy2YjLc6L95SNrG3lhfaucEmXr/AJTHe2GEJ9a
+	 iSrw10aVvqq9Q==
+Date: Tue, 14 Apr 2026 08:19:01 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: alexjlzheng@tencent.com, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [XFS] Question: can xfs_agfl_free_finish_item exhaust AGFL
+ during bnobt/cntbt split?
+Message-ID: <ad1r1fm8LjFVxi9_@dread>
+References: <adw1dY3MZWzTclIS@dread>
+ <20260413024852.3506926-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260413004925.84518-1-pedrodemargomes@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260413024852.3506926-1-alexjlzheng@tencent.com>
 
-On Sun, Apr 12, 2026 at 09:49:25PM -0300, Pedro Demarchi Gomes wrote:
-> When mounting a xfs filesystem with quotas, if an error occurs in xfs_mount
-> after calling xfs_inodegc_start and before m_quotainfo initialization, the
-> error path will call xfs_inodegc_flush assuming that m_quotainfo was already
-> initialized, causing the following error:
+On Mon, Apr 13, 2026 at 10:48:51AM +0800, Jinliang Zheng wrote:
+> On Mon, 13 Apr 2026 10:14:45 +1000, dgc@kernel.org wrote:
+> > On Mon, Apr 13, 2026 at 12:32:50AM +0800, Jinliang Zheng wrote:
+> > > But before `xfs_agfl_free_finish_item` executes, `xfs_defer_finish_noroll`
+> > > rolls the transaction. Other deferred operations that execute in between—for
+> > > example, regular extent frees (`XFS_DEFER_OPS_TYPE_FREE`) that themselves call
+> > > fix_freelist and may re-shrink the AGFL, or rmapbt operations—could consume
+> > > AGFL blocks and leave the count below `need` by the time our deferred AGFL free
+> > > runs.
+> > 
+> > Even if we run RUIs, CUIs or other EFIs before the AGFL deferred
+> > free, they fix up the freelist for their operations first, and that
+> > reserves space for a deferred AGFL free from the free list.
+> > 
+> > If any other extent allocation/free on that AG is run between the
+> > two transactions (e.g. high level transactions racing on AGF buffer
+> > access) they will also reserve space in the AGFL for a split during
+> > a deferred free.
 > 
-> [   82.411853][   T23] ==================================================================
-> [   82.412678][   T23] BUG: KASAN: null-ptr-deref in mutex_lock (./include/linux/instrumented.h:55 ./include/linux/atomic/atomic-instrumented.h:4457 kernel/locking/mutex.c:159 kernel/locking/mutex.c:289)
-> [   82.413383][   T23] Write of size 8 at addr 0000000000000030 by task kworker/1:0/23
-> [   82.414187][   T23]
-> [   82.414450][   T23] CPU: 1 UID: 0 PID: 23 Comm: kworker/1:0 Not tainted 7.0.0-rc5-00051-gbbeb83d3182a #35 PREEMPT(
-> [   82.414458][   T23] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
-> [   82.414463][   T23] Workqueue: xfs-inodegc/loop0 xfs_inodegc_worker
-> [   82.414478][   T23] Call Trace:
-> [   82.414481][   T23]  <TASK>
-> [   82.414484][   T23]  dump_stack_lvl (lib/dump_stack.c:122)
-> [   82.414494][   T23]  print_report (mm/kasan/report.c:487)
-> [   82.414518][   T23]  kasan_report (mm/kasan/report.c:597)
-> [   82.414541][   T23]  kasan_check_range (mm/kasan/generic.c:? mm/kasan/generic.c:200)
-> [   82.414549][   T23]  mutex_lock (./include/linux/instrumented.h:55 ./include/linux/atomic/atomic-instrumented.h:4457 kernel/locking/mutex.c:159 kernel/locking/mutex.c:289)
-> [   82.414601][   T23]  xfs_qm_dqget_cache_lookup (fs/xfs/xfs_dquot.c:813)
-> [   82.414609][   T23]  xfs_qm_dqget_inode (fs/xfs/xfs_dquot.c:1017)
-> [   82.414678][   T23]  xfs_qm_dqattach_locked (fs/xfs/xfs_qm.c:331)
-> [   82.414688][   T23]  xfs_qm_dqattach (fs/xfs/xfs_qm.c:371)
-> [   82.414696][   T23]  xfs_inactive (fs/xfs/xfs_inode.c:1453)
-> [   82.414733][   T23]  xfs_inodegc_worker (fs/xfs/xfs_icache.c:1946 fs/xfs/xfs_icache.c:1992)
-> [   82.414743][   T23]  process_scheduled_works (kernel/workqueue.c:3281 kernel/workqueue.c:3359)
-> [   82.414755][   T23]  worker_thread (kernel/workqueue.c:?)
-> [   82.414775][   T23]  kthread (kernel/kthread.c:437)
-> [   82.414787][   T23]  ret_from_fork (arch/x86/kernel/process.c:164)
-> [   82.414822][   T23]  ret_from_fork_asm (arch/x86/entry/entry_64.S:255)
-> [   82.414834][   T23]  </TASK>
+> Thank you for the detailed explanation. I have a follow-up question about
+> the case where fix_freelist shrinks the AGFL by more than one block.
 > 
-> To avoid this, call xfs_inodegc_start after quota initialization.
+> When `xfs_alloc_fix_freelist` shrinks an oversized AGFL, it may call
+> `xfs_defer_agfl_block` multiple times in a loop, adding N deferred AGFL
+> free items into the same `xfs_defer_pending` (up to max_items=16 per
+> pending entry).
 > 
-> Reported-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-> Closes: https://lore.kernel.org/all/DDC07F0C-05D2-46B4-9815-E010749FB3DC@gmail.com/
-> Signed-off-by: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
-> ---
->  fs/xfs/xfs_mount.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> In `xfs_defer_finish_noroll`, all N items within that single
+> `xfs_defer_pending` are processed consecutively in the same rolled
+> transaction via `list_for_each_safe`, with no intervening fix_freelist
+> call between them. Each call to `xfs_agfl_free_finish_item` invokes
+> `xfs_free_ag_extent`, which may trigger a full-height split of both bnobt
+> and cntbt, consuming up to `(bnobt_levels + 1) + (cntbt_levels + 1)`
+> AGFL blocks.
+>
+> The initial fix_freelist leaves the AGFL at exactly `need` blocks. If
+> the first deferred free triggers a full-height bnobt+cntbt split and
+> consumes those blocks, the AGFL may already be below `need` — or even
+> exhausted — by the time the second deferred free runs and needs to split.
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index ef1ea8a1238c..d6f75ab41337 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1057,7 +1057,6 @@ xfs_mountfs(
->  		xfs_clear_using_logged_xattrs(mp);
->  
->  	/* Enable background inode inactivation workers. */
-> -	xfs_inodegc_start(mp);
->  	xfs_blockgc_start(mp);
->  
->  	if (xfs_has_metadir(mp)) {
-> @@ -1143,6 +1142,8 @@ xfs_mountfs(
->  		}
->  	}
->  
-> +	xfs_inodegc_start(mp);
+> Is this scenario considered?
 
-Why is it correct to defer inodegc until this point?  Can any code
-between line 1060 and 1145 push an inode to the inodegc mechanism?
-blockgc can unmap blocks from files, so why is it ok to leave the
-blockgc_start call where it is?
+I have considered it, yes.
 
---D
+Remember what I said about considering the probability of something
+occurring before adding complexity to guarantee it will never
+happen.
 
-> +
->  	/*
->  	 * Finish recovering the file system.  This part needed to be delayed
->  	 * until after the root and real-time bitmap inodes were consistently
-> -- 
-> 2.47.3
-> 
-> 
+The above scenario requires both allocbts and the AGFL to be set up
+in such a way that it has multiple full subtrees ready to split in
+both trees, and that the same block frees (from the AGFL) will
+trigger those subtree splits with the same free space record insert.
+
+And the AGFL has to have exactly the right blocks on it *in excess
+of what is required* in to get them deferred in the right order to
+then trigger these subtree splits.
+
+And this has to happen multiple times in consecutive operations.
+
+Can the above happen? Yes.
+
+Will it happen by chance before the heat death of the universe? Probably.
+
+Will it happen in production workloads?  Not very likely at all.
+
+That's the difference between providing theoretical guarantees vs
+practical guarantees.
+
+We can keep playing "but what if we had N+1" type theoretical
+scenarios endlessly here, but reality has to step in at some point.
+We set reservation sizes for "unbound excursions" at a size that is
+large enough for normal operation and largely ignore the cases with
+10^(large negative N) probabilites.
+
+If, in practice, we find the reservation pools are getting exhausted
+in normal production workloads, then we'll either change the
+behaviour that is causing the exhaustion or increase the reservation
+pool size to handle that case.
+
+-Dave.
+
+-- 
+Dave Chinner
+dgc@kernel.org
