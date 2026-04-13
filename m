@@ -1,149 +1,95 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B033B37DEAA
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 13:33:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B06D3822A8
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 14:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776087207; cv=none; b=YjZW9UmlxHkS3Qn/xS+6f/HqCThQP17OiwkSFRD+ZWoK9LxB0jfbfLBklhAMObuab5H01Z6TKOYfDauFG17boyL+MyhYWGgDfT7SQa7Q6QgDMFrSH5OtJ5ER4h/rfv63qM1EH1Ml4DWEG/tpYv/KI8EKwzBC2+sEav1s7psBS7I=
+	t=1776090966; cv=none; b=EetjYJqHSoCWt764w8JwskC+uTsQ2nZJioQTA17bs/yTqf2fj8td0N7kp8u3OFEbKXhUFcoWFXEIdOEMU5GKdGovCWUaYOsQ0y4jXFlVLNXVoIx5ZYutSShZ88yVMHaDVYYxdvFX5dBDRulM56s+oQysm6KmobLf2BS/RZAgHoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776087207; c=relaxed/simple;
-	bh=LzBB4LwmiR3iVDOAGu5BHdftCaajXivzxU+A8a5AMFU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pWuUKY4jwhgtWNx1Hkby3+CX3goc3xJ38hMNAEN3pbN9ZLuBgxeGx5WI0hNuHZf72thllrHogr7rp7dLfLCxFmmMS+HC2TKeigCwT1sJNuAWgCS+ZSfRDC3UAyEpo7HxWTf9S5f+VIUcXtVah+iBQLEbF1dLNneqry5UC/R0ooQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4fvSz02Fr7z9sdM;
-	Mon, 13 Apr 2026 15:33:16 +0200 (CEST)
-Authentication-Results: outgoing_mbo_mout;
-	dkim=none;
-	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
-From: Pankaj Raghav <p.raghav@samsung.com>
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com,
-	lukas@herbolt.com,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	p.raghav@samsung.com,
-	dgc@kernel.org,
-	gost.dev@samsung.com,
-	pankaj.raghav@linux.dev,
-	kundan.kumar@samsung.com,
-	cem@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v2 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Date: Mon, 13 Apr 2026 15:32:56 +0200
-Message-ID: <20260413133256.3378243-3-p.raghav@samsung.com>
-In-Reply-To: <20260413133256.3378243-1-p.raghav@samsung.com>
-References: <20260413133256.3378243-1-p.raghav@samsung.com>
+	s=arc-20240116; t=1776090966; c=relaxed/simple;
+	bh=nBsZ7vXXzFsES/pILTCoxqCY04QBYcNMEeOv76ipu7U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tWaNvU4yQMdTP8QRLrjUPfvWQIcGeu/obFHhuHxo5aF7IzlPSXHHkybsR43bxNlocf29lr21P08wpXnHeRvFBtg4EJn4s7OoMZco3dwmXsxSpC7Wj7775zE/NuF2H56XnOgE3CgmRmsnSQ2rQVR6COcwJ3btplesTp6l2inRACA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ku7LO0jY; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ku7LO0jY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D2BC2BCAF;
+	Mon, 13 Apr 2026 14:36:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776090965;
+	bh=nBsZ7vXXzFsES/pILTCoxqCY04QBYcNMEeOv76ipu7U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ku7LO0jYbbHYMASgSjArtTF+6LfkfsxYF9/1lDnN8iNkMDrKpCl6LUFljGlyBP1Ly
+	 QrhMl9yI5Usf1hIDJDuU3sNbGrUjYEnfWnh0aM2Kla/8qz8KsejurLYwG2ycrdC8s+
+	 zo5pAaEUz69t5XUU7Lr1GpGJCfzho927xtP728bT3TvWzKqjmTFYujbwY0kNDlfSQP
+	 OTB2/YtK74whMNX4QkHzHS5JFiyY10R0qH5Izkc39LLuBeKSwF4P1ykZLl+72FGgfO
+	 pf3O521pWzc8gcxNoXeWBIjKcqBQ/11rxsZkIShK5W1IzoRAi9Z98kHw2O4CNyZPzt
+	 bggdFKxsI1z+A==
+Date: Mon, 13 Apr 2026 07:36:05 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Andreas Tille <tille@debian.org>,
+	XFS Development Team <linux-xfs@vger.kernel.org>,
+	Anibal Monsalve Salazar <anibal@debian.org>,
+	Nathan Scott <nathans@debian.org>
+Subject: Re: Please migrate xfsdump and xfsprogs Debian packaging to Salsa
+Message-ID: <20260413143605.GH1048989@frogsfrogsfrogs>
+References: <ads96yii8bij-UQQ@an3as.eu>
+ <adzGdfbByADzoXWr@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4fvSz02Fr7z9sdM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <adzGdfbByADzoXWr@nidhogg.toxiclabs.cc>
 
-If the underlying block device supports the unmap write zeroes
-operation, this flag allows users to quickly preallocate a file with
-written extents that contain zeroes. This is beneficial for subsequent
-overwrites as it prevents the need for unwritten-to-written extent
-conversions, thereby significantly reducing metadata updates and journal
-I/O overhead, improving overwrite performance.
+On Mon, Apr 13, 2026 at 12:37:20PM +0200, Carlos Maiolino wrote:
+> Hi Andreas.
+> 
+> On Sun, Apr 12, 2026 at 08:38:35AM +0200, Andreas Tille wrote:
+> > Hi XFS Development Team,
+> > 
+> > I'm currently reviewing team-maintained packages that are not exposing
+> > Vcs fields.  I assume for some efficient team work you are maintaining
+> > 
+> >   xfsdump
+> >   xfsprogs 
+> > 
+> > in some Git repository, but the Vcs fields are not set and I could not
+> > find corresponding repositories on Salsa.  I'm not even sure whether you
+> > might have some team space there or whether the Debian team might
+> > sufficiently fulfill your needs.
+> > 
+> > I'd be happy if these packages could be maintained in a publicly visible
+> > Git repository on Salsa, with appropriate Vcs fields set.
+> > 
+> > If there are specific reasons why this is currently not the case, I
+> > would be interested to understand them as well.
+> > 
+> > If you need any help with creating some Git repository I can happily
+> > do so since I have developed some training in doing this.
+> > 
+> > Thanks for your work on XFS in Debian, and best regards,
+> >    Andreas.
+> 
+> I'm not sure what Salsa is, nor what Vcs fields are, I'm assuming this
+> is a Debian specific thing and I'm not that familiar with Debian
+> ecosystem...
+> 
+> I'm assuming this is something debian-specific? Perhaps Nathan can chime
+> in here, because this does not think something related to xfsprogs
+> upstream development?!
+> 
+> I'm not the xfsprogs maintainer though, but this doesn't seem to be
+> concerning with xfsprogs upstream development.
 
-Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_file.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 55 insertions(+), 1 deletion(-)
+It is, in the sense that (at least at one time) the debian/ files in the
+upstream master branch were used to generate the debian packages.
+Nowadays there's a slight divergence every now and then for Debian to
+integrate patch backports to old release.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..99a02982154a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,57 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
- 
-+static int
-+xfs_falloc_write_zeroes(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
-+{
-+	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			new_size = 0;
-+	loff_t			old_size = XFS_ISIZE(ip);
-+	int			error;
-+	unsigned int		blksize = i_blocksize(inode);
-+	loff_t			offset_aligned = round_down(offset, blksize);
-+	bool			did_zero;
-+
-+	if (xfs_is_always_cow_inode(ip) ||
-+	    !bdev_write_zeroes_unmap_sectors(
-+		    xfs_inode_buftarg(XFS_I(inode))->bt_bdev))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-+	if (error)
-+		return error;
-+
-+	error = xfs_free_file_space(ip, offset, len, ac);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Zero the tail of the old EOF block and any space up to the new
-+	 * offset.
-+	 * In the usual truncate path, xfs_falloc_setsize takes care of
-+	 * zeroing those blocks.
-+	 */
-+	if (offset_aligned > old_size)
-+		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-+				NULL, &did_zero);
-+	if (error)
-+		return error;
-+
-+	error = xfs_bmap_alloc_or_convert_range(ip, offset, len,
-+			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO,
-+			new_size ? true : false);
-+	if (error)
-+		return error;
-+
-+	return error;
-+}
-+
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1470,7 +1521,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1522,6 +1573,9 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_ALLOCATE_RANGE:
- 		error = xfs_falloc_allocate_range(file, mode, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		break;
--- 
-2.51.2
-
+--D
