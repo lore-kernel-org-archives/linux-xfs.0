@@ -1,76 +1,39 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B991E98EF
-	for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 20:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12A6077F39
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 00:14:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776024271; cv=none; b=prAUCCs06V7J9hsdjEn8HtagKKWE8G9wMkzxZe8ccTecDJrF0fqnFK+ZlVAkgAKCekD601B1YaZiqMnKzvW+C53Uh/ZZxmHzZAPDJYcZxojwe7ONmt5Et70hV9vY4G6nRlnKM48ZFR+TKSJkcoFBSJCGVrBn5b9KijKOAusOmMY=
+	t=1776039298; cv=none; b=Coz95a+f6uQPHBvIZW7U1nfD7tGR/EP/KDFderVELT516HNMhhMU/IE6spAI+4+ddVMo1e9kr4C+UbTO1TRdJ93QXj4ARlKlP36NMF+moRINLVUJ4IaJrpcwzS/T3W4Cg98E/c+ryJ9wxQAd0viqDAxyl7l9u8aINylqRtLoAa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776024271; c=relaxed/simple;
-	bh=51TnkSlbMfxn71YheRGrQRBWGKB7t9lPIcpIejRAUxw=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lLmsRyvVi/OHNcvvnLZdk/Qty2ZVq1W3B2NuDpHf/aAPUqVl3TOj1itend3AZJHIVjZsyqHs9aZbMQKD2VB6iGfGgvH08h6QqBW3o2iAknq0LscW3X39SWpSt0xVEt3A34RPtDUl6ZNC8HSCsFqUUGaV1ELbMqjewHuSA0afo8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g8xX+JeB; arc=none smtp.client-ip=209.85.216.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776039298; c=relaxed/simple;
+	bh=bQHG97NvXxmRYe3ADvBJpoklFRaDQu2cYyKZsFQIeVM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kXdlPm0q4uCtRphOWTC49qcGM5MuS+8SjVzwl6ge4AWBYFzh1r6SFuq6vEp65uQB5WVARu36L2SAQZpgBaJOlhHvL0MOVccEW1U0dTt/or1xRSb0jN8Y5tGFiGRgKsoC/MYV3iDteCaIm5h+JfxwYOH/a6aYGNz+L2UZFwMHKoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZtKKQYMj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g8xX+JeB"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-35d94f4ee36so2114868a91.3
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Apr 2026 13:04:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776024269; x=1776629069; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:mail-followup-to:message-id:subject:cc:to
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=+n+uvHecK6kDUehBzYAl5Rv5D+nI/Pk+/kCFULnxKRc=;
-        b=g8xX+JeBsBHuPaycfS7LXi5rSuu514cq+R4e2UQ43P263VskAsX1gsXoCnDu2WqUuV
-         YwKvWgv1vI2fburPUseg2Y0NxH9xHXq4X44XtqQwYGPV/XPpqlv4ANCjGwk9R2kw/i1A
-         OOMB44Nn7A/BTppbTxsmneeBPDFddkkUFfjRM7m2hIod9FjzD7RKd6zLzlFizu2ueV5o
-         ye4U28igu61QpBkcQik/hTLuXhn2mdYHL11DzRrNXWOUMJmHtHcod2c3TzQV0UTKh+KR
-         4ahd8adjJraoI1uPWprWMhCnaH27LQWtdP75PZLFtrgb83mPgvN0qV37TvO++czrrGaP
-         NhuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776024269; x=1776629069;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:mail-followup-to:message-id:subject:cc:to
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+n+uvHecK6kDUehBzYAl5Rv5D+nI/Pk+/kCFULnxKRc=;
-        b=R3EDs8beWy1v96EVHhAqBNxGR691Rds+ybqxG7EZubY+Gb/p3+ZyKmPilT71NIffD4
-         ySDjkNvA/7jhi+w+XH3edjEtU4IGVK2mqmGoQDUeDjBf5/gjLCf8sN0f5S+Xiq0TQ1co
-         2NW04fa9XHOrZvyxcvfWRJCsriHDWvG/0z0ILWnAqHlzm9hMHrfoI9w7Nl13CjJHyN5E
-         qyHALHjWo8GZJQGonQn1idEGgMD7K0UfcT3ziyeYkQN+yINfIfgWIfrXsMdTWF8hzM8e
-         K38NVm9QIpGKqTY2iSG2PXjCbkMLZ7IxWfkkjf3lV+DTwAOTLPKYjswYebZ58V//PdJe
-         y4Sg==
-X-Gm-Message-State: AOJu0YxQHayyyITonjDY10c00m8Zpp6bgO89m/VWt1LWBtNT+Sa5KpGY
-	BV2p7wDbZZ2zHWQd6yzBjSetTgJjgVIbBoh40RYV0+J94HKXj0NKTAXqg8csiLD6Ahg=
-X-Gm-Gg: AeBDies11UxbLbWEOLRtySlIfh8sEJYOTAz9cGFPCp/22gLuJxPkQH7cLD+KTwSWdZg
-	C1hA5unuenn+Ln5fh7L5HR9mEi2up/Kw/T3fFIg73gkax4oNo85txrFvLiIOzJaMhO/p65Pln2Y
-	6jctYR1nqbtfv8cr1m4bmPIMIrnnySZL8aKnXJ6VeJYmITm1v2poWFjLQl28vQ2bUiPtjfKK0uO
-	1RKPJKu7H3laWlBmOR7Tef5qnOiZrheAW27Ypfhd6BUJ3E/xJEPdB7NMYX1xd847KY3XbsqJXMT
-	TVEJ/l3rknXRp9k7ZJCSnhfyte9kYjYes98t9ZoAfVYE6HtNa5UT8kMtHbHue0WWjPQrED7+QKl
-	M+gFg1pX/8VAvYt49OZPSp7Kz+ZJhVrV1lSI+S6rIzZjSP2eoQ1CbQzSm9lbEZAWX4934deIlZ1
-	iUyjNM5r6GWd1ZG7UEcyRm
-X-Received: by 2002:a17:90b:4d0e:b0:35b:90e7:c44f with SMTP id 98e67ed59e1d1-35e425381c6mr11085526a91.7.1776024268847;
-        Sun, 12 Apr 2026 13:04:28 -0700 (PDT)
-Received: from zlang-laptop ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35e34e959bcsm13303332a91.0.2026.04.12.13.04.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Apr 2026 13:04:28 -0700 (PDT)
-From: Zorro Lang <zorro.lang@gmail.com>
-X-Google-Original-From: Zorro Lang <zlang@kernel.org>
-Date: Mon, 13 Apr 2026 04:04:24 +0800
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 2/2] mkfs: unify validation behavior for data, log and rt
- dev
-Message-ID: <adv4ME5cK9BQFWdy@zlang-laptop>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
-	linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-References: <20260404163640.1013997-1-zlang@kernel.org>
- <20260404163640.1013997-3-zlang@kernel.org>
- <20260406153726.GD1048989@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZtKKQYMj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3088C19424;
+	Mon, 13 Apr 2026 00:14:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776039297;
+	bh=bQHG97NvXxmRYe3ADvBJpoklFRaDQu2cYyKZsFQIeVM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZtKKQYMjXBxp+Ibhpf8xZjX8n8QKVU6KdHyo0oN5591eE66PtM9gy/X5GSSPT7ewp
+	 sVdRo6F37CL1u3+PbYiq7qPS0kBvG+nRw7PVp+epllvgqpOg6JDwES3C5zGrmlGczo
+	 IrjB2S1vlOVEMf75ODt2cI8WOsL45pLHPQnn8Ip7i1sqn3avfkqY8AvaWt6rKfMwl/
+	 vlbLNbThJ8bDgc2MVKCPu+fbMm4Vu1pVTXOm+WrMZ5gfSqkMMNuwO1xEM4TAt1Oiec
+	 CuvFZw4lIkXiAXoCpZtGxU90i8BgpqOVan5hnO+xsAY0SZylCE387gM4AnqkFPRyjz
+	 GfDz5x5GmsKHQ==
+Date: Mon, 13 Apr 2026 10:14:45 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, alexjlzheng@tencent.com
+Subject: Re: [XFS] Question: can xfs_agfl_free_finish_item exhaust AGFL
+ during bnobt/cntbt split?
+Message-ID: <adw1dY3MZWzTclIS@dread>
+References: <20260412163252.3359028-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,255 +43,128 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260406153726.GD1048989@frogsfrogsfrogs>
+In-Reply-To: <20260412163252.3359028-1-alexjlzheng@tencent.com>
 
-On Mon, Apr 06, 2026 at 08:37:26AM -0700, Darrick J. Wong wrote:
-> On Sun, Apr 05, 2026 at 12:36:40AM +0800, Zorro Lang wrote:
-> > The current validation logic in validate_datadev, validate_logdev,
-> > and validate_rtdev is inconsistent and confusing when checking device
-> > sizes, particularly when handling file images.
-> > 
-> > This patch unifies the validation flow by categorizing devices into
-> > two distinct cases: "regular file" and "block device". Validation is
-> > now performed separately for each case across all three subvolumes to
-> > ensure consistent behavior.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@kernel.org>
-> > ---
-> > 
-> > Hi,
-> > 
-> > validate_datadev, validate_logdev and validate_rtdev, these three functions
-> > handle xi->*.size, cfg->*blocks, and cli->*size inconsistently while also
-> > juggling xi->*.isfile status. Three functions ideally have similar validation
-> > patterns, but instead of following a template, each function has its own
-> > custom implementation, which invites bugs, maintenance overhead and inconsistent
-> > behavior, especially for file images.
-> > 
-> > For example, mkfs.xfs works on an empty data file with -d size=xxx:
-> > 
-> > # mkfs.xfs -f -d name=/home/emptyfile,size=300m
-> > meta-data=/home/emptyfile        isize=512    agcount=4, agsize=19200 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-> >          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-> >          =                       exchange=1   metadir=0
-> > data     =                       bsize=4096   blocks=76800, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=1
-> > log      =internal log           bsize=4096   blocks=16384, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >          =                       rgcount=0    rgsize=0 extents
-> >          =                       zoned=0      start=0 reserved=0
-> > 
-> > But for log or rt, we got below weird errors:
-> > 
-> > # mkfs.xfs -f -l logdev=/home/emptyfile,size=128m /dev/pmem1
-> > size 128m specified for log subvolume is too large, maximum is 0 blocks
-> > ...
-> > # mkfs.xfs -f -r rtdev=/home/emptyfile,size=128m /dev/pmem1
-> > Invalid zero length rt subvolume found
-> > ...
-> > 
-> > One said the "size=128m" is too large, maximum is 0 (??? due to the file
-> > size is 0). The other one ignored the "size=128m", just complained the empty
-> > file.
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > 
-> >  mkfs/xfs_mkfs.c | 115 ++++++++++++++++++++++++++++++------------------
-> >  1 file changed, 72 insertions(+), 43 deletions(-)
-> > 
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 9a93330f..5a2274ed 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -3839,34 +3839,37 @@ validate_datadev(
-> >  {
-> >  	struct libxfs_init	*xi = cli->xi;
-> >  
-> > -	if (!xi->data.size) {
-> > +	if (!xi->data.isfile) {
-> >  		/*
-> >  		 * if the device is a file, we can't validate the size here.
-> >  		 * Instead, the file will be truncated to the correct length
-> >  		 * later on. if it's not a file, we've got a dud device.
-> >  		 */
-> > -		if (!xi->data.isfile) {
-> > +		if (!xi->data.size) {
-> >  			fprintf(stderr, _("can't get size of data subvolume\n"));
-> >  			usage();
-> > -		} else {
-> > -			if (!cli->dsize) {
-> > +		}
-> > +		if (cfg->dblocks) {
-> > +			/* check the size fits into the underlying device */
-> > +			if (cfg->dblocks > DTOBT(xi->data.size, cfg->blocklog)) {
-> >  				fprintf(stderr,
-> > -_("Warning: Empty file needs a data subvolume size by -d size=<value> option\n"));
-> > +_("size %s specified for data subvolume is too large, maximum is %lld blocks\n"),
-> > +				        cli->dsize,
-> > +				        (long long)DTOBT(xi->data.size, cfg->blocklog));
-> >  				usage();
-> >  			}
-> > +		} else {
-> > +			/* no user size, so use the full block device */
-> > +			cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
-> >  		}
-> > -	} else if (cfg->dblocks) {
-> > -		/* check the size fits into the underlying device */
-> > -		if (cfg->dblocks > DTOBT(xi->data.size, cfg->blocklog)) {
-> > +	} else {
-> > +		if (!cfg->dblocks && !xi->data.size) {
-> >  			fprintf(stderr,
-> > -_("size %s specified for data subvolume is too large, maximum is %lld blocks\n"),
-> > -				cli->dsize,
-> > -				(long long)DTOBT(xi->data.size, cfg->blocklog));
-> > +_("Warning: Empty data file needs a data subvolume size by -d size=<value> option\n"));
-> >  			usage();
-> > +		} else if (xi->data.size && !cfg->dblocks) {
-> > +			cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
-> >  		}
-> > -	} else {
-> > -		/* no user size, so use the full block device */
-> > -		cfg->dblocks = DTOBT(xi->data.size, cfg->blocklog);
+On Mon, Apr 13, 2026 at 12:32:50AM +0800, Jinliang Zheng wrote:
+> Hi,
 > 
-> I think this rearrangement preserves all the datadev validation checks,
-> then makes the log/rt validation code look almost the same, except for
-> which variables are accessed.  That change looks ok to me, but it's
-> disappointing that there isn't a third patch that actually refactors all
-> three into a single function, seeing as the commit message talks about
-> unifying the implementations.
+> I have a question about the deferred AGFL block freeing path and whether it is
+> safe from AGFL exhaustion during bnobt/cntbt btree splits.
+> 
+> When `xfs_agfl_free_finish_item` runs, it calls:
+> 
+>     xfs_agfl_free_finish_item
+>       -> xfs_free_agfl_block
+>            -> xfs_free_ag_extent   (fs/xfs/libxfs/xfs_alloc.c)
+> 
+> `xfs_free_ag_extent` directly manipulates bnobt and cntbt, and inserting a new
+> free extent record can trigger a btree split. A split will try to allocate a
+> block from the AGFL via `xfs_allocbt_alloc_block` -> `xfs_alloc_get_freelist`.
+> If the AGFL is empty at that point, `xfs_alloc_get_freelist` returns
+> NULLAGBLOCK and the split fails.
 
-Thanks Darrick, you're right. I actually considered adding another patch
-initially, but I wasn’t entirely confident in the modified logic since we
-lack a regression test case for this specific mkfs.xfs behavior. Although
-I’ve done some manual testing, I wanted to send this out for review first,
-specially the "zt->rt.nr_zones" part, I'm not sure if I have missed
-something. If the general approach looks good, I can send a v2 to have the
-3rd patch.
+And then the filesystem will shut down because of a fatal error in a
+dirty transaction.
 
-Thanks,
-Zorro
+My first question is this: is this actually happening in practice,
+or is this a theoretical concern?
 
-> 
-> --D
-> 
-> >  	}
-> >  
-> >  	if (cfg->dblocks < XFS_MIN_DATA_BLOCKS(cfg)) {
-> > @@ -3925,19 +3928,31 @@ _("log size %lld too large for internal log\n"),
-> >  		usage();
-> >  	}
-> >  
-> > -	if (!cfg->logblocks) {
-> > -		if (xi->log.size == 0) {
-> > +	if (!xi->log.isfile) {
-> > +		if (!xi->log.size) {
-> > +			fprintf(stderr, _("can't get size of log subvolume\n"));
-> > +			usage();
-> > +		} else if (cfg->logblocks) {
-> > +			/* check the size fits into the underlying device */
-> > +			if (cfg->logblocks > DTOBT(xi->log.size, cfg->blocklog)) {
-> > +				fprintf(stderr,
-> > +_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-> > +				        cli->logsize,
-> > +				        (long long)DTOBT(xi->log.size, cfg->blocklog));
-> > +				usage();
-> > +			}
-> > +		} else {
-> > +			/* no user size, so use the full block device */
-> > +			cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
-> > +		}
-> > +	} else {
-> > +		if (!cfg->logblocks && !xi->log.size) {
-> >  			fprintf(stderr,
-> > -_("unable to get size of the log subvolume.\n"));
-> > +_("Warning: Empty log file needs a log subvolume size by -l size=<value> option\n"));
-> >  			usage();
-> > +		} else if (xi->log.size && !cfg->logblocks) {
-> > +			cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
-> >  		}
-> > -		cfg->logblocks = DTOBT(xi->log.size, cfg->blocklog);
-> > -	} else if (cfg->logblocks > DTOBT(xi->log.size, cfg->blocklog)) {
-> > -		fprintf(stderr,
-> > -_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-> > -			cli->logsize,
-> > -			(long long)DTOBT(xi->log.size, cfg->blocklog));
-> > -		usage();
-> >  	}
-> >  
-> >  	if (xi->log.bsize > cfg->lsectorsize) {
-> > @@ -3968,31 +3983,45 @@ _("size specified for non-existent rt subvolume\n"));
-> >  		cfg->rtbmblocks = 0;
-> >  		return;
-> >  	}
-> > -	if (!xi->rt.size) {
-> > -		fprintf(stderr, _("Invalid zero length rt subvolume found\n"));
-> > -		usage();
-> > -	}
-> >  
-> > -	if (cli->rtsize) {
-> > -		if (cfg->rtblocks > DTOBT(xi->rt.size, cfg->blocklog)) {
-> > -			fprintf(stderr,
-> > +	if (!xi->rt.isfile) {
-> > +		if (!xi->rt.size) {
-> > +			fprintf(stderr, _("can't get size of realtime subvolume\n"));
-> > +			usage();
-> > +		}
-> > +		if (cfg->rtblocks) {
-> > +			/* check the size fits into the underlying device */
-> > +			if (cfg->rtblocks > DTOBT(xi->rt.size, cfg->blocklog)) {
-> > +				fprintf(stderr,
-> >  _("size %s specified for rt subvolume is too large, maximum is %lld blocks\n"),
-> > -				cli->rtsize,
-> > -				(long long)DTOBT(xi->rt.size, cfg->blocklog));
-> > +				        cli->rtsize,
-> > +				        (long long)DTOBT(xi->rt.size, cfg->blocklog));
-> > +				usage();
-> > +			}
-> > +		} else {
-> > +			/* no user size, so use the full block device */
-> > +			if (zt->rt.nr_zones) {
-> > +				cfg->rtblocks = DTOBT(zt->rt.nr_zones * zt->rt.zone_capacity,
-> > +				                      cfg->blocklog);
-> > +			} else {
-> > +				cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-> > +			}
-> > +		}
-> > +	} else {
-> > +		if (!cfg->rtblocks && !xi->rt.size) {
-> > +			fprintf(stderr,
-> > +_("Warning: Empty rt file needs a rt subvolume size by -r size=<value> option\n"));
-> >  			usage();
-> > +		} else if (xi->rt.size && !cfg->rtblocks) {
-> > +			cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-> >  		}
-> > -		if (xi->rt.bsize > cfg->sectorsize) {
-> > -			fprintf(stderr, _(
-> > +	}
-> > +
-> > +	if (xi->rt.bsize > cfg->sectorsize) {
-> > +		fprintf(stderr, _(
-> >  "Warning: the realtime subvolume sector size %u is less than the sector size\n\
-> >  reported by the device (%u).\n"),
-> > -				cfg->sectorsize, xi->rt.bsize);
-> > -		}
-> > -	} else if (zt->rt.nr_zones) {
-> > -		cfg->rtblocks = DTOBT(zt->rt.nr_zones * zt->rt.zone_capacity,
-> > -				      cfg->blocklog);
-> > -	} else {
-> > -		/* grab volume size */
-> > -		cfg->rtblocks = DTOBT(xi->rt.size, cfg->blocklog);
-> > +		        cfg->sectorsize, xi->rt.bsize);
-> >  	}
-> >  
-> >  	cfg->rtextents = cfg->rtblocks / cfg->rtextblocks;
-> > -- 
-> > 2.52.0
-> > 
-> > 
-> 
+We don't attempt to provide a 100% guarantee of correctness in free
+space accounting, alloction or freeing algorithms in XFS. Complexity
+is high, and there are lots of corner cases that are extremely
+difficult to reason about. The cost of providing aboslute guarantees
+is ... prohibitive. 
+
+Hence I'd pretty much guarantee the logic and/or math isn't
+comprehensive or water-tight. We won't try to handle the
+really convoluted "many weird things have to align exactly right"
+corner cases, and instead will use things like reservation pools to
+handle them instead. The AGFL is a good example of a reservation
+pool that we make deep enough to handle real world usage without
+needing to care about the complexities of trying to guarantee
+behaviour in exceedingly rare corner cases.
+
+For example, we changed the AGFL reservations for the first time in
+2023 - they were introduced almost 30 years ago (1994), and had
+remained unchanged until then. i.e. commit f63a5b3769ad ("xfs: fix
+internal error from AGFL exhaustion") changed the reservation pool
+to consider two full height splits instead of just one.
+
+i.e. double allocbt splits of enough height to empty the AGFL pool
+are sufficient rare that it took almost 30 years for a single height
+reservation to be found insufficient in practice.
+
+With that change, failing to split during the deferred
+AGFL free would now require two full height splits on the rmap
+btree + two full height splits on both the bnobt and cntbt in the
+-same transaction- to exhaust the AGFL, then the very next
+transaction needs to be a deferred AGFL free that requires another
+bnobt or cntbt split to occur. Those conditions are not going to
+occur very often by chance....
+
+Hence my question: are you actually seeing allocbt splits on
+deferred AGFL frees running out of AGFL blocks in practice, or is
+this a theoretical concern?
+
+> The normal extent-freeing path (`__xfs_free_extent`) guards against this by
+> calling `xfs_free_extent_fix_freelist` first, which invokes
+> `xfs_alloc_fix_freelist(..., XFS_ALLOC_FLAG_FREEING)` to ensure the AGFL holds
+> at least `xfs_alloc_min_freelist(mp, pag)` blocks before touching the btrees.
+
+Yes, because the AGFL has not been prepared for the extent freeing
+operation that is about to take place. xfs_alloc_min_freelist()
+makes sure the AGFL is long enough to handle two full allobct
+splits, one of which accounts for a split during AGFL refill/free
+operations.
+
+> However, `xfs_agfl_free_finish_item` does not call fix_freelist at all.
+
+Because the AGFL size that xfs_alloc_min_freelist() prepared should
+have already taken this into account. And calling fix_freelist() to
+fixup the free list for freeing a block that was taken from the
+freelist means we now have to consider the possibility of recursive
+freeing fixup accounting problems when AGs are near ENOSPC.
+
+> The deferred AGFL frees are created by `xfs_alloc_fix_freelist` during its
+> shrink phase: blocks are removed from the AGFL immediately (pagf_flcount is
+> decremented synchronously by `xfs_alloc_get_freelist`), and their actual return
+> to the free space btrees is deferred via `xfs_defer_agfl_block`. After the
+> shrink loop, the AGFL sits at exactly `need` blocks.
+
+Right, so the deferred free should be the first deferred operation
+in the allocation intent chain. i.e. the generated EFI it will be
+the first intent in the alloc chain processed on transaction commit.
+It should be run before any other pending CUI, RUI and EFI operation
+for that allocation operation will be processed. Hence the AGFL
+should still be in the same state as the initial extent free
+operation left it, and hence should have sufficient remaining blocks
+in the AGFL for a split during the defered AGFL free operation.
+
+> But before `xfs_agfl_free_finish_item` executes, `xfs_defer_finish_noroll`
+> rolls the transaction. Other deferred operations that execute in between—for
+> example, regular extent frees (`XFS_DEFER_OPS_TYPE_FREE`) that themselves call
+> fix_freelist and may re-shrink the AGFL, or rmapbt operations—could consume
+> AGFL blocks and leave the count below `need` by the time our deferred AGFL free
+> runs.
+
+Even if we run RUIs, CUIs or other EFIs before the AGFL deferred
+free, they fix up the freelist for their operations first, and that
+reserves space for a deferred AGFL free from the free list.
+
+If any other extent allocation/free on that AG is run between the
+two transactions (e.g. high level transactions racing on AGF buffer
+access) they will also reserve space in the AGFL for a split during
+a deferred free.
+
+IOWs, the deferred frees typically always run with a AGFL block
+reservation guaranteed by the previous extent alloc/free operation
+that was just completed. It is a rare situtation where the AGFL
+would not have enough blocks on it to perform allocbt splits
+sucessfully, and to have multiple deferred AGFL frees chained
+together is quite unlikely because of the order of intent
+processing...
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
