@@ -1,100 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C03B336885;
-	Tue, 14 Apr 2026 03:58:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA6FF22156C
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 06:08:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776139102; cv=none; b=QWi0nX7ZwqquLU7+gA/QlnRIiMivyAi2sA+Us7pWnSHciKpefvIAcK7JVvoNnnKWz3er6WwQgPQbHbDQu48LmvkSCDL8g8KOwTcZ1AebLGswyXzhoRHz1VfGy4j9U1habKduJ9Lw/EwFTRUKlOvC+1IF0+zXMM+qvTTSNABBLrk=
+	t=1776146902; cv=none; b=Irm92W8HQH8um2XasvgRDDR3bsLWUB2GSM26FGy6XpRU0AllvoH56qx5ERuaXsBCLhMhPVL5r0hUWW8g6UkVlp/MreizcLwnGsfu/ZZuad3uz5SVtktxCFAgqZkc0TBAuvksbiCG8xhpI2CfIR1YVhZpvo8LnlB+cwb9qBtq/bY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776139102; c=relaxed/simple;
-	bh=nNZlM537Hyqn1nvCUsqy8cIcEYWT3hOhE1T39DrFlDI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KavuWCn1M/nRVHcwdZ9hGpcKharwaxuB05ITJfllg99SwAmLD86DMtpLGQF0eeF/7LqOBZBAeWTLv5BdugSgkSX9DGI+KuH7GZdjmPqI3TqJMELIqO0HE7OwiTJ2Czgush0kMrc42lO0ngFs/7KUrVd581hS93qbxQ77mZU5nBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gCujGT8B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776146902; c=relaxed/simple;
+	bh=m3Br1DyQDSBptA1/fcQrgJR2sdqx87dvdwzCyX6l7AI=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=Bqyj6i56GD2VuVtlIrM97ML8tPB1bzaWbg9aTsYEcMLlcFm5kF6VIvbHdmzjHzrpfUv1tLxCTdpDhbWhQah2vS8e5uLGJdkHL/raFwx2rd3kKISMnOWdUFbs2oIDI5UwgpdgOkI4xGB/m81BDBRRyvduGV7iax/5ldFr1Wu3/9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=N41bXPPN; arc=none smtp.client-ip=91.218.175.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gCujGT8B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35020C19425;
-	Tue, 14 Apr 2026 03:58:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776139101;
-	bh=nNZlM537Hyqn1nvCUsqy8cIcEYWT3hOhE1T39DrFlDI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gCujGT8BELYxRQ1GiZP1wdlJc7qqw3YvGS+PNy+/tOgHM33L0wu7O+JrYB3U5xkKb
-	 +gpy67r6CTJtll+VCj6EQFZoTTGXxBL3kq8u83Q+U5ShDegleq06be7JU1hWXilss/
-	 27DIJTfpYlmKv5/p5kI4ePz4kV596f6g4Mdba+snwoG15FeMgJY40WqOq2CwBr1JFM
-	 b+NZrl7h01ia+AXL5j5Z0rdYnfYvKhafSnB7WLB6NLthUGdB8eXRNOwZvT/BwJ710A
-	 HtrRxJVKXoCi6BX5H6+2oPbxNOvZwesCpvIV3XfPSNhM1Ufy/5zPPV5w5T/S3mmvAJ
-	 Y+XvKiXm+k/3Q==
-Message-ID: <91a63739-e905-4e45-aff0-53480de74e50@kernel.org>
-Date: Tue, 14 Apr 2026 05:58:18 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="N41bXPPN"
+Date: Tue, 14 Apr 2026 14:08:05 +0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1776146897;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PEWcpd6z7NSnTOXBVnA8gfmfWf7jiAZOwRce/mM1m+s=;
+	b=N41bXPPNJ5M3XVe/8xB5cz196kbM5pT0S50JcRJaOriB/eFsPSSbYmsGSKIKdnXIYa8MGR
+	8mX2IaIkPrCAs8EbjQyMOPso1zl+WmXGJmk42ENO6TKloZyN2QkCstVxYca9M+9XGiKt/i
+	CtkpSEgQh73NRMmeIYZ3BXzB95KNqRw=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj <pankaj.raghav@linux.dev>
+To: Lukas Herbolt <lukas@herbolt.com>
+CC: linux-xfs@vger.kernel.org, bfoster@redhat.com,
+ "Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org, gost.dev@samsung.com,
+ kundan.kumar@samsung.com, cem@kernel.org, hch@infradead.org,
+ Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH v2 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
+In-Reply-To: <c086dc6d3c95d1aed1ac0950ef3278ea@herbolt.com>
+References: <20260413133256.3378243-1-p.raghav@samsung.com> <20260413133256.3378243-3-p.raghav@samsung.com> <c086dc6d3c95d1aed1ac0950ef3278ea@herbolt.com>
+Message-ID: <21D56E00-7F57-4708-A967-5149023D453C@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: fix memory leak on error in xfs_alloc_zone_info()
-To: Wilfred Mallawa <wilfred.opensource@gmail.com>,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alistair Francis <alistair.francis@wdc.com>,
- Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
- "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>, stable@vger.kernel.org
-References: <20260414034149.1116281-3-wilfred.opensource@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260414034149.1116281-3-wilfred.opensource@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-On 2026/04/14 5:41, Wilfred Mallawa wrote:
-> From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-> 
-> Currently, the 0th index of the zi_used_bucket_bitmap array is not freed on
-> error due to the pre-decrement then evaluate semantic of this while loop used
-
-s/this/the
-
-> in xfs_alloc_zone_info(). Fix it by allowing for the i == 0 case to be covered.
-
-Please limit your commit message text to 74 chars per line.
-(See Documentation/process/submitting-patches.rst, "The canonical patch format"
-section).
-
-> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
-
-I think that the usual order here is to have the Fixes and CC tag before your
-signed-off-by.
-
-> Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
-> Cc: stable@vger.kernel.org
-
-Other than this, looks good to me.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> ---
->  fs/xfs/xfs_zone_alloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index a851b98143c0..c64f9ab743a6 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -1217,7 +1217,7 @@ xfs_alloc_zone_info(
->  	return zi;
->  
->  out_free_bitmaps:
-> -	while (--i > 0)
-> +	while (--i >= 0)
->  		kvfree(zi->zi_used_bucket_bitmap[i]);
->  	kfree(zi);
->  	return NULL;
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Migadu-Flow: FLOW_OUT
 
 
--- 
-Damien Le Moal
-Western Digital Research
+
+
+>> @@ -1470,7 +1521,7 @@ xfs_falloc_allocate_range(
+>>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+>>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+>>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+>> -		 FALLOC_FL_UNSHARE_RANGE)
+>> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+>>=20
+>>  STATIC long
+>>  __xfs_file_fallocate(
+>> @@ -1522,6 +1573,9 @@ __xfs_file_fallocate(
+>>  	case FALLOC_FL_ALLOCATE_RANGE:
+>>  		error =3D xfs_falloc_allocate_range(file, mode, offset, len);
+>>  		break;
+>> +	case FALLOC_FL_WRITE_ZEROES:
+>> +		error =3D xfs_falloc_write_zeroes(file, mode, offset, len, ac);
+>> +		break;
+>>  	default:
+>>  		error =3D -EOPNOTSUPP;
+>>  		break;
+>
+>I have debug option to skip the check of LBPRZ/DLFEAT on the underlying
+>device for testing on regular devices=2E
+>
+
+Ah, this is a good idea=2E I can fold these changes in the next version=2E
+
+FWIW,  there was a bug in QEMU which disabled this feature for emulated NV=
+Me devices which has been fixed now [1]
+
+
+[1]https://lore=2Ekernel=2Eorg/qemu-devel/aa_w-cz2nKsCdkMi@AALNPWKJENSEN=
+=2Eaal=2Escsc=2Elocal/
+
+--
+Pankaj Raghav
