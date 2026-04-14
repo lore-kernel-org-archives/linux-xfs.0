@@ -1,89 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800BA2E8B81
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 07:21:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C48386554;
+	Tue, 14 Apr 2026 07:56:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776151285; cv=none; b=ddysAdI73OKlW19r8TWpMEZZ2jme2+lQ7pDrsbAwv8eiPyrEuB+7Iok2J/xqhmBS+tre4CaM0JQdOjdEDGvBYiLRa5xYOqOxpmSKjUw9sOHTSF8KJXNQmT6fCjxBooPPt4tcwo48Lb50XDO8l0bR2YBzNEEXwmD1IrzPatHaHSk=
+	t=1776153380; cv=none; b=FxRgl++4nFTboGKDSoVNTToNjqlf94bX1lsyTJthKxkDt/NIBkxwRrBfa5sERXIhLV4eWwXknD3jnoUroPKroxW3oR4jKGKdqS5MOlnAMWzagGTVPvEVVkJaYyQkhuXesHVGb+QJWChypob2sCobnRSqFhookrXtubVRQK9JlUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776151285; c=relaxed/simple;
-	bh=rOin3Pv8FmH9s21gwev/4brK8hZJavzBhufSKvf75w8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UnhqeNjaW2/DHRVlrhGJ4j14l+rseapzcJhyc9HHwlvhlBRtpYQ9Bhl2ipGXVERFk2adq21qDVoVM/Ge/EjfsslOZeajnwbm4Ht/81G2VlaoGzFpllnQK8bdSI4tx5PzazHYO0ldKufjm5mN9DATYMdCI/ZcfV01Od3FlAQ1UqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GWV3gk3s; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ad4YRfop; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1776153380; c=relaxed/simple;
+	bh=pWVewNiZ+Kb21Y3Sv3VeuIk1Y12Rj/xzuq6odhHVq08=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=myjAT/PRq1F5Jtqq9iggSZbHdnw6ft80iFLUlWuE3ujagtnntmL8cuomCxdNVcHDjb3wCPPxMjKEIxRS8qK3T10XrxzRfPC0Dn5bP4eUswC3PqotRm9QGR+CVpZxYrl79k0OCjqUDknmXYOun1VqZnI13Bn0sR4g4M9ndSR6gls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=N8oBXd/N; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GWV3gk3s";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ad4YRfop"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776151282;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=DzDvdcj5STpLxm9O+mIbjJO8816UhdLGXaxjYeBxCnI=;
-	b=GWV3gk3sJzC9yYUow5E/7zwkr7d9Plf2P6lV9hWnIcSHVPvV3S1B+bE8p6PqG3sgoW9T/3
-	IOayavVOIexibBwKk0+WczTUpTIYMr+5I5Wwh+5rwBOr540IJR3Dodz9dq2fkBgbfEBfOZ
-	DNQPeDfIeexCs1+Q2lSuvW5hwL7UMH0=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-62-2P7cRvRdM2yKuGH3Ku1Bfg-1; Tue, 14 Apr 2026 03:21:21 -0400
-X-MC-Unique: 2P7cRvRdM2yKuGH3Ku1Bfg-1
-X-Mimecast-MFC-AGG-ID: 2P7cRvRdM2yKuGH3Ku1Bfg_1776151280
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8d5b5d607d1so1030601485a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 00:21:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776151279; x=1776756079; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DzDvdcj5STpLxm9O+mIbjJO8816UhdLGXaxjYeBxCnI=;
-        b=Ad4YRfopwF1DW53kBxfuOVcPbPydER8ytD4GOeaEjMCU4eoPfgLczFRRr6gMfEilSz
-         shvpDrRz0XW1kbibiW1OEgATy2uElilcy0WQGKQM0gdWNTwj9JoiE6c33E/k1oMYB6lL
-         suRi9/KlA/Qwspb5yop+vsN4UFc8wM8lrNufd55xi5fBrHqNioWRcSMJPuwFB0N/0kmg
-         eB6qtBkKMttCJoUhOKRFQfblU1WfoA+pxfGALnHThRBit/UHyom2z1O18I0PRwPHaML5
-         ZzWLFhOFImTWQv9vUDb0GQeBdiCU2kALOhC3nXiKRRWjr59VZ5sueZL9uok9jxECHYac
-         YtJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776151279; x=1776756079;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DzDvdcj5STpLxm9O+mIbjJO8816UhdLGXaxjYeBxCnI=;
-        b=YsHKjPSBxm77PZNFMnU8Jp4JeD5oX3s1l64dAUz954hNC/rtHeZnXCTwVY0LtnScGS
-         QB1+UHvxuE5FH3J6hSSnJ6q2KKyggDASjenODzhAsC+xupp+Ly8WK+bQefChH/ar9ZRk
-         ndozzpWgi70gVX40u9f6J8zGQ2zD9/uwfFWz8rgcb+MkUOa9xLTeTPjqmJn1U4WHq42t
-         XLMj3mxpcB2Jy+UjljG/F0kWQMsrcj73LI1CToWa8fvi+kup6vKo22bX57BEsahbW62I
-         9xK9mlpO6UyKXkxw0hrfmHgqJezllNI1UdfsrnDliASbSRUwDXhB4A3haMPWaX2hQyga
-         wotw==
-X-Gm-Message-State: AOJu0YwKG9e2O7z/RDIBaWO+1rcoWC2fFWf69Q1IfyrrytoQMYCdyzAD
-	FHonwJVYNIGAcGD/xEInn5J4lzqH8qWZiKCB50BPZ9szkP3xZLj43WVYcXn3jPUIi5byDDChySH
-	GbIWscSeGCRXUwTPtLN/WFom/qWY2Bgyjw4+3VtldpaaV0j3pv6eogIl1b8wCRPxmZQfCaC64wN
-	jl/SaYnR3hqNkJo1VSG5S4aJEinCyt6x/sH74M4A6Snk5RmVhU
-X-Gm-Gg: AeBDievaGBG5lQL1GTMW24Atc5NTEFh5tQHCSWntZtcntBocgkCGxZJnVPw/UNxGFh0
-	4jUkpAZ76y1Tsn7XqjSw8RCwr5kPZOrFZsdFbK12U9qqWheI5vgWl04/CL4PIxT8/ukydhcazOR
-	+X5wG5t8S39tVomfE9mEccuhL4VjPg15hmB3FKqLxLk7+AcIWC6kCGCYVkV0bvQyqyzLE/4WUrE
-	NYuySpy+aqV+d6UBruZKVqzW3YhWNhDd3FJflN8fory+y5tCG3jh4ORGzCPLOAxBFDN21nKgsNh
-	xX79knIcSnSC7MuPLQuwMPugPbG9wHGc9fFvSc1rCLvjsX732tL+hTOQIbuJ4Y3TVJ0/Te//3iC
-	+5+3gEPutL+BO9D0y
-X-Received: by 2002:a05:620a:1a11:b0:8cd:b38c:4748 with SMTP id af79cd13be357-8ddcf2b0f8fmr2538054185a.34.1776151279323;
-        Tue, 14 Apr 2026 00:21:19 -0700 (PDT)
-X-Received: by 2002:a05:620a:1a11:b0:8cd:b38c:4748 with SMTP id af79cd13be357-8ddcf2b0f8fmr2538050885a.34.1776151278706;
-        Tue, 14 Apr 2026 00:21:18 -0700 (PDT)
-Received: from fedora.. ([66.187.232.140])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ac849dd312sm116830396d6.9.2026.04.14.00.21.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2026 00:21:18 -0700 (PDT)
-From: Ravi Singh <ravising@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	aalbersh@redhat.com
-Subject: [PATCH] xfs_quota: display default limits for users with zero usage
-Date: Tue, 14 Apr 2026 15:19:21 +0800
-Message-ID: <20260414071921.1226575-1-ravising@redhat.com>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N8oBXd/N"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=WVxMBqL1gFWzzwxQ9lyPCjZhsDPr4E+zJs2+x22l0tM=; b=N8oBXd/NlbjKeY/eh4e8/wJIns
+	yvikCVcCxzRm9QxnRTn35XYr3raCk/+n4hbAGWpdwwDjvG4PtE/W46O747m9NwS9u7c1FPJeePos9
+	2UfODr/A7FOVVlWukNZQSbSCIW17V4fBZMQ3log5KmCDXOSXycT348UEVSmhob+Ki6IObHKEppR67
+	A4VLcKvbGIzrX63ADZU4JWPKcFTtqxZ6tKQsC0ZDAb2XUwuB7pSE0dMBuxCd+Bh2PGDO+d/2zhT3A
+	RMVZB6TYXyNVsaojtnKU0SNUUiBCxNxhdGq0Z69Zy5lw/IvSjIrIJjyL4mf2Xs2I0L2vFp5dWAjnV
+	4RXg5c/Q==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1wCYd7-0000000GvdK-3u07;
+	Tue, 14 Apr 2026 07:56:18 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: zlang@kernel.org
+Cc: djwong@kernel.org,
+	dlemoal@kernel.org,
+	hans.holmberg@wdc.com,
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v3] xfs: add a test for number of open zones on conventional devices
+Date: Tue, 14 Apr 2026 09:55:47 +0200
+Message-ID: <20260414075613.544106-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -91,45 +47,108 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When the kernel returns default quota limits for IDs without a dquot
-on disk, xfs_quota suppresses the output because it only checks
-usage counters (d_bcount, d_icount, d_rtbcount). If all counters
-are zero the line is skipped even though non-zero limits apply.
+Test that mounts of zoned file systems on conventional devices don't
+create more open zones than allowed when the last blocks in one or more
+zones have been invalidated.
 
-Also check the soft/hard limit fields so that quota output is
-displayed whenever limits are configured, even if usage is zero.
-
-This is the userspace companion to the kernel commit:
-"xfs: return default quota limits for IDs without a dquot"
-
-Signed-off-by: Ravi Singh <ravising@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- quota/quota.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/quota/quota.c b/quota/quota.c
-index fea55f03..08a07b20 100644
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -62,11 +62,14 @@ quota_mount(
- 
- 	if (!(flags & VERBOSE_FLAG)) {
- 		count = 0;
--		if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
-+		if ((form & XFS_BLOCK_QUOTA) &&
-+		    (d.d_bcount || d.d_blk_softlimit || d.d_blk_hardlimit))
- 			count++;
--		if ((form & XFS_INODE_QUOTA) && d.d_icount)
-+		if ((form & XFS_INODE_QUOTA) &&
-+		    (d.d_icount || d.d_ino_softlimit || d.d_ino_hardlimit))
- 			count++;
--		if ((form & XFS_RTBLOCK_QUOTA) && d.d_rtbcount)
-+		if ((form & XFS_RTBLOCK_QUOTA) &&
-+		    (d.d_rtbcount || d.d_rtb_softlimit || d.d_rtb_hardlimit))
- 			count++;
- 		if (!count)
- 			return 0;
+Changes since v2:
+ - use raw mkfs to avoid injecting a real RT device
+ - _notrun with a useful message when the mkfs or mount fails due to lack
+   of RT device or zoned block device support
+
+ tests/xfs/4201     | 69 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/4201.out |  1 +
+ 2 files changed, 70 insertions(+)
+ create mode 100755 tests/xfs/4201
+ create mode 100644 tests/xfs/4201.out
+
+diff --git a/tests/xfs/4201 b/tests/xfs/4201
+new file mode 100755
+index 000000000000..56084bca41c0
+--- /dev/null
++++ b/tests/xfs/4201
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2026 Christoph Hellwig.
++#
++# FS QA Test No. 4201
++#
++# Test that mounts of zoned file systems on conventional devices don't create
++# more open zones than allowed when the last blocks in one or more zones have
++# been invalidated.
++#
++
++. ./common/preamble
++_begin_fstest auto quick zone
++
++_require_scratch_nocheck
++_require_odirect
++_require_non_zoned_device $SCRATCH_DEV
++_require_non_zoned_device $SCRATCH_RTDEV
++
++open_zones=5
++blocks=16384
++bsize=4096
++
++zone_size_mib=$((blocks * bsize / 1024 / 1024))
++file_size_mib=$((zone_size_mib / 2))
++nr_files=$((open_zones * 3 - 1))
++
++echo "zone size: $zone_size_mib" >>$seqres.full
++echo "file size: $file_size_mib" >>$seqres.full
++echo "nr files: $nr_files" >>$seqres.full
++
++# don't use _scratch_mkfs/_scratch_mount to avoid injection a real RT device
++$MKFS_XFS_PROG -b size=${bsize} -r zoned=1,rgsize=${blocks}b \
++	$SCRATCH_DEV > "$seqres.full" 2>&1 || \
++		_notrun "Zoned mkfs not supported"
++_mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones} || \
++	_notrun "Zoned allocator not supported"
++
++_has_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones || \
++	_notrun "This test requires /sys/fs/${FSTYP}/$SCRATCH_DEV/zoned/nr_open_zones"
++
++for i in $(seq 1 $nr_files); do
++	dd if=/dev/zero of=$SCRATCH_MNT/$i bs=1M count=$file_size_mib \
++		 oflag=direct > /dev/null 2>&1
++done
++
++# delete odd numbered files as they should be at the end of the zones
++for ((i = 0; i < $nr_files; i = $((i + 2)))); do
++	rm $SCRATCH_MNT/$((i + 1))
++done
++
++_scratch_unmount
++_mount $SCRATCH_DEV $SCRATCH_MNT -o max_open_zones=${open_zones}
++
++max_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/max_open_zones)
++nr_open=$(_get_fs_sysfs_attr $SCRATCH_DEV zoned/nr_open_zones)
++
++if [ ${max_open} -ne $((open_zones - 1)) ]; then
++	_fail "Test needs adjustments for multiple open GC zones"
++fi
++
++if [ ${nr_open} -gt ${max_open} ]; then
++	_fail "Too many open zones: $nr_open/$max_open"
++fi
++
++_scratch_unmount
++
++status=0
++exit
+diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
+new file mode 100644
+index 000000000000..32e395dd4d6d
+--- /dev/null
++++ b/tests/xfs/4201.out
+@@ -0,0 +1 @@
++QA output created by 4201
 -- 
-2.49.0
+2.53.0
 
