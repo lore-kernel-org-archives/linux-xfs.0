@@ -1,160 +1,113 @@
-Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E49322B6F
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 20:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81A2D3D667E
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 23:46:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776198584; cv=none; b=ZgKB8aV7CkDajBsZS7LCZvoAjzmcXgySQisW1s8o+q+Y/peQ1CwYjyuznP/34BnzqItH3HJf+upiQSFixZTPtDgeO8gSQdzia4QA5Qh3AnMR4zD9bD+EjeFgwylVkUGG1OqzfRsPwspllSxouIo2crcOUAFTfy2AHFLj6jvxxJ8=
+	t=1776210401; cv=none; b=iidemu4aGsTaw14o78NfGQ21cnad5yE4gnUW2/5DauTffUTK13IKy4RDDY7J3VwpkzT7XxpOBPOxh8jO0DSYudf12cfwKm3K4vjj1ebwH1h1sa7TDynLkO0p6hsWpP1wWy3p3k+WiJ/yt/jVWwPdIs7ZEEHMM3v/mygnfD/rhqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776198584; c=relaxed/simple;
-	bh=yQFz8DM3su/UkwgPRuXCLRbPCiZ8ugq/3jme6jahFPM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gd9B1Gm2yv2bX+mTAJHT7PqrbOX4QpvJTwqWw0EBVswCgZ4CGpMNrELfC6IM9lTGlUnbkAfMjL+j/P0KWP3xAcG4yyk1am4FV3LbwRktxPiTFbqDuUSEdmDdjMVtgAOVZqWCXfxJ9rwZCAut1PbtMy93HEJlYQYMVmFrCw5a574=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=k22q0YhV; arc=none smtp.client-ip=148.163.135.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
+	s=arc-20240116; t=1776210401; c=relaxed/simple;
+	bh=/2hIp5BZLooUW37+BmEgbWSArMAppLPs2okM3gNV8jo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L7fYFygkJo8nNbdwu/kFl/D674nIQfrvms8y9P/5iWn7PRJ3OKyRog5AxFlfOp74XR7s/tMVQKYnPiJOk/nJHBjrJswU8GeJ0danPZ65C7FfYDFF6OYWKbQE7Wd2NlANjY/niDKiYI2EakyuVP2ViBw0fLdV0+zxQ2RT+8LO+bc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ejhHwtrB; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="k22q0YhV"
-Received: from pps.filterd (m0167070.ppops.net [127.0.0.1])
-	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63EKR5hf1371596
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 16:29:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps01; bh=WXFq
-	nVJ4T9hxAVeyiDV1ooSXjwN82kyD0WFAZyEIayY=; b=k22q0YhVQZiPT7EsK4qY
-	kXKKf20d6Eyoq5zv/bCMosbe1p6ZTAAFqGYN1jql5TMO79N5C7HaZt6Z/cwriJjh
-	i908rxBG1P3Tp2CF3EvYaZY5/Hh5bH5gz+cbWycowOy/ULW12oZEyg7fnlzlbtCW
-	g1tmittXLgbbnNnyoVTcES5p2xk8gc68UqDO+MLS2VTyn0RAe4ulKHNSip2O7W0f
-	wus22rwT2+tQnLCpj7WtrZzSZq7OwUEon5xcKGVHybeez2whx+pca7FQyi3SR4Su
-	EhEEbwNysh4gXoSo/YVDtxTkm4zxUm6aRBUNyXOKjCaGjPahOa1IEuFxK2LP5O6s
-	qg==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4dh87b84m3-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 16:29:35 -0400 (EDT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-8cfc1634e43so696928085a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 13:29:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ejhHwtrB"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-c76cce85bd9so2409045a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 16:46:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776210398; x=1776815198; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=e+aagt8mewkTvyv3R6Dqrd15T0YDKTqKrH1kiymIT8g=;
+        b=ejhHwtrB9EqxqKBxEBH2Cyon+JDPgc9th03SRehxMCuHi/tXl8bxG+sEz+WVEe+sL2
+         auQiqktdFMjf5HApILzs9foRZJAeKxvJYXN9fW1dqUjKNDsfEMhckn1kbJYHn5UKaGDS
+         QWNdc6h+OF2wWw+OzZmO5liCnFwCneVC06sRksBprsSQ+R0kdZoe2NaKvOgA/E6/woiV
+         3vFuVZyzPZbFFfsU1Guuoavj6w+vwI8xoXn+gMj832bsywq7xJC9uXUYsEFeCEAZq1zU
+         wilfqTa8EnYVzD9Av6Uz4zq0GL3uRlWOqC9GgV3MsV5TJykuJ/HH3Jo9B/hBAqexy84G
+         gWDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776198574; x=1776803374;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=WXFqnVJ4T9hxAVeyiDV1ooSXjwN82kyD0WFAZyEIayY=;
-        b=BayClIK2V1tUQvS79awMmQylR3ZGkrErViYmA1ncpgkasme9SewTPLsYTu5Ss/HSUK
-         58fjyN+YMzMCMgI0MVWB86S2oZuIY8h74d/U0PHY8HamXwXSEhe5wX6te/2/OXD5eF6/
-         bnJ8aqbJIRM8+NO5aflMww22Tb9vdRWfyjxqP9nbIVn0RbYyMkFAh8Mij2VeiFeTDERO
-         7JkHsU6V3wHv6aJDkPhJUDNITiwrc7uxxIMs4B0Hp/NmI+MLWDmzP1ijNrm21uzzkLrw
-         ZWiiOc+mK+S5YnCX36jr02+aKb7vRuLfyxPeRTpTP6r9wrKxMlUwX6rPkaG7XyyfMpuy
-         EZQQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9VuxLfuAD3MAU5JLBl9oBblG5mL6QmKIFA0woeaT4j/hidhiDqoM1+7XvBo78ZcS9x66lwixFsVcI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyBwNtbSazBAN2tSK9LyzuJezJxvu9pHeXG6GKF4IRsyNyexonD
-	HH+2BGxlw+rIH0zO4zJ699M5jutuJahBXQ+1rydEPmuH7hBHptns5b+4ONxGkY62WX+Y/RelVgf
-	s3c0MHaaLpMbexb0qgCTQytJIBUE0zfJ55Ha4id05bThpuOIgLKrkqGwIhg==
-X-Gm-Gg: AeBDietJi/VYDX/VTsUbaJCSimbS31y8rMCuj7wNGkjJPjDzLLHrViNbXma8cyS+HYb
-	VyfTxOQ9/9TXr2DkoM800psLImjCyaN25A652VXHUf0NI9B5tnbRrYXBWmvhENkOBruQ6M3/iuo
-	jXYPE+tmCC1RnwLxwsGdR3WnQhfjUFfV0vRiY9C1Sn9ApVUes6HZzjLhiveOK/yyasMZ2gHj8t+
-	+6PBgHoQ9s/vkLxSVbyFKQNuiJDv0EoAJgH2JNk0gBOQNH5agMigtYKzl1qhSs8k+0sp7mRs+ch
-	Rj129S0BJmKrxtTDhE9BkSqel3mRafClluM685i5ZPOLfV+bT8/OaaH7A94Hegjqs+in9YX3SDV
-	f8hZl3gBkc41Cfa6dXzao3LGv1hzlJbvLmup0wXcqMPawVpXzCaAdZVShT8Z0v2TwKeHiZT0=
-X-Received: by 2002:a05:620a:a281:10b0:8de:b9dd:8528 with SMTP id af79cd13be357-8deb9dd85ebmr1694559485a.24.1776198573930;
-        Tue, 14 Apr 2026 13:29:33 -0700 (PDT)
-X-Received: by 2002:a05:620a:a281:10b0:8de:b9dd:8528 with SMTP id af79cd13be357-8deb9dd85ebmr1694555685a.24.1776198573428;
-        Tue, 14 Apr 2026 13:29:33 -0700 (PDT)
-Received: from [192.168.1.62] (dyn-160-39-33-242.dyn.columbia.edu. [160.39.33.242])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ac849db4e6sm131911086d6.4.2026.04.14.13.29.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Apr 2026 13:29:31 -0700 (PDT)
-Message-ID: <fd94b108-22c1-4eb6-8fb4-b009214976dc@columbia.edu>
-Date: Tue, 14 Apr 2026 16:29:29 -0400
+        d=1e100.net; s=20251104; t=1776210398; x=1776815198;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e+aagt8mewkTvyv3R6Dqrd15T0YDKTqKrH1kiymIT8g=;
+        b=T0R/ahYrIBqc/zjrQHqCxo5jC7GIJRGV3Dt6psS8mNys/AcLjDuGSxCRqUkTWBKtjS
+         zKzngRUmUEAB9aRRk499kW+90zKwiEDREFi1laLyQ4CNKRgMNOZd37hFrDH9NqK2sxcG
+         SFi4FuGpraForklrX0KhRbOhuSB6YuEyzWb/0WH6+lLEWj8u+14Q3sjheI/bUYfZ4xhi
+         SPAEoLtppDhmuwrCNBG1w4JhiPOX4hIvivlIZ+QSnTEvArKd8yFrvGGtCOcwJv8Pv/GC
+         1AOW6RNv/Y72C77+++D3mnyv9FjAdj/h/diPKW/mM2uOBtyaEWTD6/O09ToCBGJlnI4F
+         WS6A==
+X-Gm-Message-State: AOJu0YwTRA7ulut8QB0hlbwyM2Vt8Cf/9fC2F+JsNxHzhuT9AF2c1WUW
+	ghV98ITMSLf8l1p+tQK1j+HPtl2u9kVMBNdrJYeh7Sroj7qBP/NkQj2k46h7cA==
+X-Gm-Gg: AeBDietRB8ylClDLl2NnZZKAYiahP6G99IC8tfit3UBi56Dk4d201PcYb8IcOQ3vrvq
+	jp1jpm0CdYY+pMCzVu1JVuQaHDi7JR2TPOmNYMPXK+IAJW9qZalP3egc9bQkMBc74Po2WPfnbBG
+	pzlXDmSyIBAMim7GBQlPtl8elOKq7OEG4D9SqkSj21taMydYj7Wl8C4ABplQcWsuwlUCeF4Jr1K
+	WrlZp1caHump1JIHval2lwBklFKy+X7w3uvN9CnU4XEUFZoz3t8lOGH9HnNnBsk8lTc1KGhUdvW
+	Y7vap6ONbedIKXtRAb7FwqR5OMoQUljb7Xx6BjzHQx6Zwje+Sp0UsDgVGqj3F2cs7K0rb/jAJ3n
+	neeEg+g7qxxWig3KGcydW5WADqo8JxqTxpxisBEojiaywIiKgapRnRvcAFRnfeKD1PYxVob8buZ
+	ivssJynFzkQAU3F81RRWtqYlcTL1olb1k85Durrkw=
+X-Received: by 2002:a05:6a00:886:b0:82f:592f:2ed7 with SMTP id d2e1a72fcca58-82f592f35f5mr3850866b3a.45.1776210398171;
+        Tue, 14 Apr 2026 16:46:38 -0700 (PDT)
+Received: from zenbook ([203.30.245.12])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f6702f900sm153027b3a.2.2026.04.14.16.46.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Apr 2026 16:46:37 -0700 (PDT)
+From: Wilfred Mallawa <wilfred.opensource@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Alistair Francis <alistair.francis@wdc.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	stable@vger.kernel.org,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH v2] xfs: fix memory leak on error in xfs_alloc_zone_info()
+Date: Wed, 15 Apr 2026 09:45:14 +1000
+Message-ID: <20260414234513.1457961-2-wilfred.opensource@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
- task-context completion
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Matthew Wilcox <willy@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong"
- <djwong@kernel.org>,
-        Carlos Maiolino <cem@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-References: <97b81868-6410-4c79-a242-679a9f04f073@columbia.edu>
- <95F28FA1-5CEF-4E80-BBB7-A429B4437D12@kernel.dk>
- <7e468bd2-e52b-4165-95c6-3f04e1dca21e@columbia.edu>
- <fb64ba71-7284-4768-979b-84919f2aa5f0@kernel.dk>
-Content-Language: en-US
-From: Tal Zussman <tz2294@columbia.edu>
-In-Reply-To: <fb64ba71-7284-4768-979b-84919f2aa5f0@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: xkV-jYTvlEEjh673bjYLAVDX2tinXXqI
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDE5MCBTYWx0ZWRfX1cISAGNZ6PEw
- rKB2kylRi5Py/mF2+qq06moHJX8j3spG+tA+0iE8mOhL/oobaOc8hZqgz0BOgkRswum/Ge/tGZw
- EQRN81G12x9eF1V4156dEv6f5Bq9tJ5v0lDAkrwKkVDgZ3JCsIlAI6oM58cNjsClsAfxeWlWkrv
- 3KWDE2ylSginAPckGRsHtRiTCKc5pPWJnm4mi2SrTS7t9Y9/ArMC2o/I/iE74y+r/KJ1yFmRR8i
- ZkryC3lOJcnjY7UgmkiQpDZhAcwIRHOfVNvQlM0Y6zS1nHBzBUDHKYG8YIBvBKlVty8BPcHzt1w
- YICvHjT7UHXx935Mo7I0sdymoQMqDDVz6jzcMsYvDRqVuDjqU5LZbaitkJOTZQtJF8tGBZdmKSO
- 45Z1XuK7EMHTt2jGYS9fWoAxujpSG0DTkAkCO+e74A462LlLMqYmCRqSuahM20vm6XdGTlvP+fj
- av1/3biHcri1OWKQldw==
-X-Authority-Analysis: v=2.4 cv=PanPQChd c=1 sm=1 tr=0 ts=69dea3af cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=GaPK54s0Se3oFqK5NkZy0g==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=x7bEGLp0ZPQA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=svvvyxlR1OQQkelhaPoB:22
- a=g0XPL2zXmNQOemVH8wcA:9 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-ORIG-GUID: xkV-jYTvlEEjh673bjYLAVDX2tinXXqI
-X-Proofpoint-Virus-Version: vendor=nai engine=6800 definitions=11759
- signatures=596818
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=10 spamscore=0 clxscore=1015 phishscore=0 suspectscore=0
- malwarescore=0 lowpriorityscore=10 priorityscore=1501 bulkscore=10
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604070000
- definitions=main-2604140190
+Content-Transfer-Encoding: 8bit
 
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
+Currently, the 0th index of the zi_used_bucket_bitmap array is not freed
+on error due to the pre-decrement then evaluate semantic of the while
+loop used in xfs_alloc_zone_info(). Fix it by allowing for the i == 0
+case to be covered.
 
-On 4/9/26 8:46 PM, Jens Axboe wrote:
-> On 4/9/26 12:54 PM, Tal Zussman wrote:
->> On 4/8/26 7:36 PM, Jens Axboe wrote:
->>> On Apr 8, 2026, at 4:51PM, Tal Zussman <tz2294@columbia.edu> wrote:
->>>>
->>>> Going to send v5 shortly -- tested with and without the llist reversal and
->>>> it didn't seem to make much of a difference. This was on a single-disk VM
->>>> though, so any stress testing you could do would be very helpful.
->>>>
->>>
->>> With all due respect, a single test like that isn?t going to be that useful. I'd be wary of making that change willy nilly and just thinking it's fine, worked fine on the one case I tested?.
->> 
->> Understood -- unfortunately that's what I have access to at the moment. I
->> can requisition a machine with 2, maybe 3 disks, and test more thoroughly on
->> that before sending the next version, but that'll take a few days. You had
->> previously offered to test on your big box, so was hoping that was still on
->> the table :)
-> 
-> I can do that, but I'm OOO for the next week, so won't be until I'm
-> back.
-> 
+Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
+Cc: stable@vger.kernel.org
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+---
+ fs/xfs/xfs_zone_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-No problem, thanks!
-
->> (Although Christoph seems to have proposed moving away from llist again)
-> 
-> I think that's a good idea, not a fan of using llist for this, in case
-> that wasn't clear. These are per-cpu lists anyway, and having a constant
-> overhead is better than needing to reverse an llist. IMHO.
-
-Will change it back for the next version.
-
-> -- 
-> Jens Axboe
-> 
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index a851b98143c0..c64f9ab743a6 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -1217,7 +1217,7 @@ xfs_alloc_zone_info(
+ 	return zi;
+ 
+ out_free_bitmaps:
+-	while (--i > 0)
++	while (--i >= 0)
+ 		kvfree(zi->zi_used_bucket_bitmap[i]);
+ 	kfree(zi);
+ 	return NULL;
+-- 
+2.53.0
 
