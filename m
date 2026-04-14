@@ -1,31 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8178A3A1A38;
-	Tue, 14 Apr 2026 08:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61ABF324B1F
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 09:41:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776155053; cv=none; b=cu4529SjWx7eTH4CEnC4M93AYjabUVw/HwEe03Ky6kXbnlMVBRPgADkLJd0K+0VSOJ9f9vE/KU2NPyaXiqoLD2P+rMLgOWIdycEqXji6MQHIRaLxc1pkh4XbEv0ZTLUFYguh6kbzN9ZGicoiLGxhUWRFgIGQPmwUAw1aseXxO2w=
+	t=1776159661; cv=none; b=Mu0M2YeN61iYG9ebNXqma/K4n5+SzJDT+234MQo+M4A36ybaj59nD/1U78sHyDA9MVB3pAcR/mEzTT28kRgPirziurfkbLmcKn6iCMWC40Q6ydcBmItNukaKHq6hsjZGeHILqlDASufsv4MhiY3LzDQXSyMcN/y+GMXV7yT4Kbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776155053; c=relaxed/simple;
-	bh=dTMATmkItMXEV1SQYZZ4P7+Bbt8t3XatvgBmcTSPYJQ=;
+	s=arc-20240116; t=1776159661; c=relaxed/simple;
+	bh=pL8Jqm68bSe6M/cSVQYolIQ4rCkDDQAsimvARQez6g8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jS42rLl+nKmdNuo40UBDb06EsTrqKaFiGfGXto4/RYYvNl3DTGYWujUEURMrJ0s2M913Wjy4L3jlZFqxcrzPhgcQi7x42XiOD0myGAt/n35bHiCUbCPhl7tcNz0ml2f+yfuyOIUvdvEn8sB3kfFx3BRQQtPkCIl5cAI/Dy3JJTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 312C768CFE; Tue, 14 Apr 2026 10:24:09 +0200 (CEST)
-Date: Tue, 14 Apr 2026 10:24:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH 4/5] block: add a bio_submit_or_kill helper
-Message-ID: <20260414082408.GA11656@lst.de>
-References: <20260407140538.633364-1-hch@lst.de> <20260407140538.633364-5-hch@lst.de> <b2e8e413-39bf-4255-8aad-a30d7fd676ea@acm.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dzv3KG/rv3bUyVJl0nP6JOscxcO4FEEh25BV11if8dHx5nqTtgeiq2u59J0xb5+Yb4uCACu1TpYUzKz+sW1xvM8VnPYu325mXcEzxN47K730/J6WPC4vnkRO7gAvAfD91C4ow/G4mgCZJugiLUl0H+GOcDNOFOd5ELjQ5yGuT7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gg8DhEcM; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gg8DhEcM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B94E5C19425;
+	Tue, 14 Apr 2026 09:40:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776159661;
+	bh=pL8Jqm68bSe6M/cSVQYolIQ4rCkDDQAsimvARQez6g8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gg8DhEcMKc1y+HIO1b2wCvIwDyAhLhb+5STn3sFxiXjOvGJrf9c2Ksyt6GhlJm9V7
+	 8w4Vv9fayq3COwMcvls1x9R0E+d/OCWLOdJKCwZKBUDW4xu4apX5coblkp1O+7p235
+	 Vt3jvDg/sVX3e1dAwGhhcqyN2udeS6Kbr9pHkoSsedvxXK9HwG4h28G3W0CaYyIwOG
+	 HZ5KKpHWS188xdVrkErXh86ZZ5NQsmivIWOzsf626+DPSl6zSiunlIsdBnOoKLS5xb
+	 ODj7+x9UgiTjJF8rLu/CEyryMOs/5c598ON4DbiNnWr7RNuBLc++YY/tAyIQft/SpA
+	 KN9vD1aF54nWg==
+Date: Tue, 14 Apr 2026 11:40:56 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Ravi Singh <ravising@redhat.com>
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, hch@infradead.org, 
+	aalbersh@redhat.com
+Subject: Re: [PATCH] xfs_quota: display default limits for users with zero
+ usage
+Message-ID: <ad4Ln2mvOItizaaP@nidhogg.toxiclabs.cc>
+References: <20260414071921.1226575-1-ravising@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,18 +43,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b2e8e413-39bf-4255-8aad-a30d7fd676ea@acm.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260414071921.1226575-1-ravising@redhat.com>
 
-On Tue, Apr 07, 2026 at 11:37:50AM -0700, Bart Van Assche wrote:
-> Without this change, if a fatal signal is pending before the loop starts, 
-> -EINTR is returned. With this patch applied, 0 is returned,
-> isn't it?
+On Tue, Apr 14, 2026 at 03:19:21PM +0800, Ravi Singh wrote:
+> When the kernel returns default quota limits for IDs without a dquot
+> on disk, xfs_quota suppresses the output because it only checks
+> usage counters (d_bcount, d_icount, d_rtbcount). If all counters
+> are zero the line is skipped even though non-zero limits apply.
+> 
+> Also check the soft/hard limit fields so that quota output is
+> displayed whenever limits are configured, even if usage is zero.
+> 
+> This is the userspace companion to the kernel commit:
+> "xfs: return default quota limits for IDs without a dquot"
+> 
+> Signed-off-by: Ravi Singh <ravising@redhat.com>
 
-I looked at this a bit, and it turns that while this indeed changes the
-behavior for discard, the other ioctls had the return 0 when nothing
-was submitted before the thread got killed behavior, and this makes
-discard match them.
-Given that we won't return from the system call for a fatal kill it
-should not matter.  Adding Keith who wrote all this to confirm.
+Looks good
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+
+> ---
+>  quota/quota.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/quota/quota.c b/quota/quota.c
+> index fea55f03..08a07b20 100644
+> --- a/quota/quota.c
+> +++ b/quota/quota.c
+> @@ -62,11 +62,14 @@ quota_mount(
+>  
+>  	if (!(flags & VERBOSE_FLAG)) {
+>  		count = 0;
+> -		if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
+> +		if ((form & XFS_BLOCK_QUOTA) &&
+> +		    (d.d_bcount || d.d_blk_softlimit || d.d_blk_hardlimit))
+>  			count++;
+> -		if ((form & XFS_INODE_QUOTA) && d.d_icount)
+> +		if ((form & XFS_INODE_QUOTA) &&
+> +		    (d.d_icount || d.d_ino_softlimit || d.d_ino_hardlimit))
+>  			count++;
+> -		if ((form & XFS_RTBLOCK_QUOTA) && d.d_rtbcount)
+> +		if ((form & XFS_RTBLOCK_QUOTA) &&
+> +		    (d.d_rtbcount || d.d_rtb_softlimit || d.d_rtb_hardlimit))
+>  			count++;
+>  		if (!count)
+>  			return 0;
+> -- 
+> 2.49.0
+> 
+> 
