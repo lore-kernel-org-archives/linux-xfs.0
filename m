@@ -1,43 +1,42 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA6FF22156C
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 06:08:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73AE6356A38
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 06:29:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776146902; cv=none; b=Irm92W8HQH8um2XasvgRDDR3bsLWUB2GSM26FGy6XpRU0AllvoH56qx5ERuaXsBCLhMhPVL5r0hUWW8g6UkVlp/MreizcLwnGsfu/ZZuad3uz5SVtktxCFAgqZkc0TBAuvksbiCG8xhpI2CfIR1YVhZpvo8LnlB+cwb9qBtq/bY=
+	t=1776148163; cv=none; b=b75BQ2DrCYVIqmhF7OF1LOfASDc+2eIeFqW2dwrYV4Bt/17iM70I/RfLP6Wmb6IWvCXd2SJNHRIUm3YHtVUEne+NQREL61vfkc4rfx9I/rw+B8S0XRMlAO9mSQAfEQiMG7zv2R7Ci3XVfecpHr0LRYWLqyP6wccEEoEtyH3BJpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776146902; c=relaxed/simple;
-	bh=m3Br1DyQDSBptA1/fcQrgJR2sdqx87dvdwzCyX6l7AI=;
+	s=arc-20240116; t=1776148163; c=relaxed/simple;
+	bh=9zm3j017XYj9zrpbx343x2iiR3SJ7zWBkgBn9Hjhbl8=;
 	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=Bqyj6i56GD2VuVtlIrM97ML8tPB1bzaWbg9aTsYEcMLlcFm5kF6VIvbHdmzjHzrpfUv1tLxCTdpDhbWhQah2vS8e5uLGJdkHL/raFwx2rd3kKISMnOWdUFbs2oIDI5UwgpdgOkI4xGB/m81BDBRRyvduGV7iax/5ldFr1Wu3/9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=N41bXPPN; arc=none smtp.client-ip=91.218.175.181
+	 MIME-Version:Content-Type; b=XZKb/3XPWnaY1PbhUUGka3SjDXSQZBZclo6KPpOu1fryQ6xk8sDw0/hdsRheTYVslRiVJfu/OlwnE8W37LMjv/kr3EwUdWqc81OcG0nvBEBX1zdrEnbjZHmUjNd0yNb933lMPO6tgA0UOb4WJeuCalwqHtpQV305lrp6EI0Oczs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=nNv2H1G8; arc=none smtp.client-ip=91.218.175.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="N41bXPPN"
-Date: Tue, 14 Apr 2026 14:08:05 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="nNv2H1G8"
+Date: Tue, 14 Apr 2026 14:11:10 +0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1776146897;
+	t=1776148157;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=PEWcpd6z7NSnTOXBVnA8gfmfWf7jiAZOwRce/mM1m+s=;
-	b=N41bXPPNJ5M3XVe/8xB5cz196kbM5pT0S50JcRJaOriB/eFsPSSbYmsGSKIKdnXIYa8MGR
-	8mX2IaIkPrCAs8EbjQyMOPso1zl+WmXGJmk42ENO6TKloZyN2QkCstVxYca9M+9XGiKt/i
-	CtkpSEgQh73NRMmeIYZ3BXzB95KNqRw=
+	bh=9zm3j017XYj9zrpbx343x2iiR3SJ7zWBkgBn9Hjhbl8=;
+	b=nNv2H1G85kN/YwQwF8iY+XpPcq53TnKgCJ35S0BeTsKQxFv9y9ZAGGFSZOCfB6LLRybf6m
+	EyLX1atJnAKKZlgggaOxFgrVtRhi9I0lvwng6GLqCm/2eUNKa0HtbAo4tn43T0yjWUvefI
+	UoS3dloZrebAhwFlOiXS9Onqm4Q5uT4=
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Pankaj <pankaj.raghav@linux.dev>
-To: Lukas Herbolt <lukas@herbolt.com>
+To: Lukas Herbolt <lukas@herbolt.com>, Pankaj Raghav <p.raghav@samsung.com>
 CC: linux-xfs@vger.kernel.org, bfoster@redhat.com,
  "Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org, gost.dev@samsung.com,
- kundan.kumar@samsung.com, cem@kernel.org, hch@infradead.org,
- Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH v2 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-In-Reply-To: <c086dc6d3c95d1aed1ac0950ef3278ea@herbolt.com>
-References: <20260413133256.3378243-1-p.raghav@samsung.com> <20260413133256.3378243-3-p.raghav@samsung.com> <c086dc6d3c95d1aed1ac0950ef3278ea@herbolt.com>
-Message-ID: <21D56E00-7F57-4708-A967-5149023D453C@linux.dev>
+ kundan.kumar@samsung.com, cem@kernel.org, hch@infradead.org
+Subject: Re: [PATCH v2 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+In-Reply-To: <3c2e979b144ecc02a5c6ea5eaa004bfd@herbolt.com>
+References: <20260413133256.3378243-1-p.raghav@samsung.com> <3c2e979b144ecc02a5c6ea5eaa004bfd@herbolt.com>
+Message-ID: <FC11AE42-0705-44FD-8F1C-C1A83BD41C37@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,38 +51,19 @@ X-Migadu-Flow: FLOW_OUT
 
 
 
->> @@ -1470,7 +1521,7 @@ xfs_falloc_allocate_range(
->>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
->> -		 FALLOC_FL_UNSHARE_RANGE)
->> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
->>=20
->>  STATIC long
->>  __xfs_file_fallocate(
->> @@ -1522,6 +1573,9 @@ __xfs_file_fallocate(
->>  	case FALLOC_FL_ALLOCATE_RANGE:
->>  		error =3D xfs_falloc_allocate_range(file, mode, offset, len);
->>  		break;
->> +	case FALLOC_FL_WRITE_ZEROES:
->> +		error =3D xfs_falloc_write_zeroes(file, mode, offset, len, ac);
->> +		break;
->>  	default:
->>  		error =3D -EOPNOTSUPP;
->>  		break;
+>> base-commit: e0dc9e0f8da83cb70e2a7e9a
+>> @Lukas: I didn't notice any activity from you regarding this series
+>> since last month, so I decided to send it after spending some time on
+>> Dave's feedback=2E I hope it is ok with you=2E
 >
->I have debug option to skip the check of LBPRZ/DLFEAT on the underlying
->device for testing on regular devices=2E
->
+>No worries=2E I have actually very similar patch ready but run into some =
+issue
+>with fsx that i wanted to check first=2E
 
-Ah, this is a good idea=2E I can fold these changes in the next version=2E
-
-FWIW,  there was a bug in QEMU which disabled this feature for emulated NV=
-Me devices which has been fixed now [1]
-
-
-[1]https://lore=2Ekernel=2Eorg/qemu-devel/aa_w-cz2nKsCdkMi@AALNPWKJENSEN=
-=2Eaal=2Escsc=2Elocal/
+Maybe it is the same issue I ran into as well=2E generic/363 ( fsx that en=
+ables option to do mmap writes on EOF page) helped me debug the issue as it=
+ fails instead of crashing the system=2E For example, generic/127 and xfs/1=
+31 just crashed=2E=20
 
 --
 Pankaj Raghav
