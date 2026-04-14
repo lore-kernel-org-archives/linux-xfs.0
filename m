@@ -1,216 +1,109 @@
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459A1296BCB;
-	Tue, 14 Apr 2026 02:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3149530B529
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Apr 2026 03:42:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776133403; cv=none; b=ohesYXuMbO/109GS3uVeJmdLn5OFmyAwn+GSntZE1mCVwlnSRQ6CcO886blhR81mzwfBWnro7+vVK9CpYvCLQZvmOg2bKnhUap9A/bmpY0g+wUfMhbJvLemWr2A/JYsgcDl9HcjwHe1GHqVclzNKcWj/DgDHgwvgfRN7miMD818=
+	t=1776138170; cv=none; b=UYyCv2GRIX79i6tTkjk9VF9h+9kgiAVT8jY4hV8RGlF/XEI4XPLq9hmK4jm4ob4Nzjb9Y0bQ/smngEA/jXf274AkUjMUX57ruBMcZV8Q54mF/fMsdjHHOZ2WyCWfz1wBkewGL63dSIk8Md3HiVLrcvajr127+9ozsH50Q9ymbLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776133403; c=relaxed/simple;
-	bh=8JFQO1UOjzQs4UukxhVltbj6zV7FF5UO9BfAAoV6JHQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pZ8zMKi+bYCPh+VZY3GAg/p/HzbEsFbj9SiDfweEXApG/nIGQWQu/+dm4QtvUFqVMSRX2pb6WuqGSi/wB1asdvI6yA8Ul68d/JR+xETEeY7M5buqyWigU3DPs6ejia8nXZ1/pzMBX8ZmMUspJzq9mKzkHuMGja+keGMKlTa3qZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=huHC6bO2; arc=none smtp.client-ip=115.124.30.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1776138170; c=relaxed/simple;
+	bh=G1zkKB5J/ZwwzO57UPK0AFrN20hSeHo66GZs4YUYlKw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rgSPSQ6/hxwYW1t8Pxqe7wPkKbWlqxJyJBWQxBf1+VUi9BY12s8FkNxgA78GXwkk08ilO0hfBdiUMDQOWsJBYL6S1aiGgc4RKY6HqBrsK6K7radA/9Xa5AbOyBdayQXXoPp/QkuQ69dBYMsgGzZjWcpjpNkDYKI9rXLCu/4Hmo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TaeDvez/; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="huHC6bO2"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1776133396; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=N5c08oqpW8xInrDeySZRyRa+d0wZsG8dfZpf7bL6oRM=;
-	b=huHC6bO2k9CGeeYB/gfWatfo7N5avmnQ/f02Id5Q5ufjnHtjeRHUavmPRT04xajfhmYgcM2JJNtBNpZEs59lHwsLXMKyx6YeVvXD8F4rWhvVXa5SJiIbaBfnW8d1q/3TMw6UzMEMcNNs7E4p94STdWyohgg8o/oi4R+Bniqiixk=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X1.p49D_1776133393;
-Received: from 30.221.131.198(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X1.p49D_1776133393 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 14 Apr 2026 10:23:14 +0800
-Message-ID: <a7a74185-df02-4906-a0ec-f87e2394aa5f@linux.alibaba.com>
-Date: Tue, 14 Apr 2026 10:23:13 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TaeDvez/"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-35d90833cacso3088764a91.2
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Apr 2026 20:42:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776138168; x=1776742968; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bxcVRDBQYoEvUjV/D/PMX40SNzPhQnuxj7fjLILYmjM=;
+        b=TaeDvez/GmrmfSWFW3V/GjcP2XU9KuVw3/oeBDDh4qIwoY14//41gQpW65X0sD1oBh
+         UDaIe8fCiSGJ+ElO/6ejZVSA8nQXsMy6EHU3PG8xiY+otbYDJL+/rcwx2tV0aEi/eCj3
+         gnwzAeOKwpO42r3mGlz+plFKwALfWRZZoKtQ8xjM8mZJ0dNiE/Ebh+Le7C7Au7dbldJb
+         5kVhCkB4Eun1cA22p0nBbNQKzCprkuvpveWaE0G8X8j+NxONWa6JTXXouUS9QnF9TMX5
+         ZCy+mlOvcbfDzMRZCu43NXxdl9VseMMk4t9otQYW2qzQiTOn73AtGb4jhqc5SS+7YyEC
+         bcOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776138168; x=1776742968;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bxcVRDBQYoEvUjV/D/PMX40SNzPhQnuxj7fjLILYmjM=;
+        b=WpRuJEBsBBJBYdqB7mkOWCLSRRVjd5hvhcl8z/dntxTSFSxy4xSm/m4mvbMW7S3B2y
+         93XaqpzwX8YSwvOvqE85y/dqsaLr+bfX4v0zUNX6t/xNQpijw3eOT3sQQRBQB9O36sxN
+         aBk/Ch/77hiNI1VWUvzUEFjMVul+r4+EdyLFqHeAAZUO6Ih/wmLCzspXf8/J2TfTM8Tz
+         3LYNdRFQQy/DHj2GgwCjuwmFgLLXMH2nqeHCWoZbLyCUksMtyrHTwaUUssIX8FZsiDfx
+         Y+rlXUXeAo14/RpxuvTe8utljTgQU94BS1Ww0Xo5PQapnupgEY3RNYVmGyzXPBQV4nJC
+         u5WQ==
+X-Gm-Message-State: AOJu0YzXKOEtKMMF8lFQONj6Ao9MlPGK7LUQPzED8Z8Mxnscafaeu/Q8
+	IsPz1RydSQYL12yLH0NWoNbznFLgCR90lu06E35yAfZayMFQT2D1sIUtTeJIAQ==
+X-Gm-Gg: AeBDieutlfEc+iabeCUlgdtQ7VEvPBAjktjsB0exE12ONWDW5rIxYYkp/xxfmmH8rdR
+	RU1PujLqYG3qAG47BEJpQMBuWJdBlZJnRWa1zHLC4/P5DWaKRFAhH2qYOKJz69BEFfdQiFiPOr7
+	ztSWhcu7vqL2h/jdSf65lS1B1O8TMuWpm18BXnZRRedQ6A8A7nAPtAepHIOZCAXPCY0XyrBmot1
+	vDs9hq141j3wMDOygXiKe3pppMBZVCFQ7tEHgL41+5zM8dOvs13+bvd2Rw8gNr2mwtged9Bmi0H
+	ntBR5Ob0kmLXOqjYc6kfD/b5eP+qyeCq5OR07845pdC87SKC2trbcWmLZNoPSUuzZFSb7Tri1Mk
+	4fsPkN4SDlp0nH2WkeMEqlmYvv3GdFRzR27IC8T0qiMo5Viap3sWkfI13wGkDQ6bTy0OdNKUADC
+	f/vcbcUsqQDo/l9I2u93wNLAq0vOyF
+X-Received: by 2002:a17:903:2286:b0:2b2:dca5:101b with SMTP id d9443c01a7336-2b2dca51487mr136688535ad.12.1776138168289;
+        Mon, 13 Apr 2026 20:42:48 -0700 (PDT)
+Received: from zenbook ([159.196.5.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b45e949464sm63079895ad.24.2026.04.13.20.42.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Apr 2026 20:42:48 -0700 (PDT)
+From: Wilfred Mallawa <wilfred.opensource@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Alistair Francis <alistair.francis@wdc.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: fix memory leak on error in xfs_alloc_zone_info()
+Date: Tue, 14 Apr 2026 13:41:51 +1000
+Message-ID: <20260414034149.1116281-3-wilfred.opensource@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] RFC: use a TASK_FIFO kthread for read completion
- support
-To: Dave Chinner <dgc@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Tal Zussman <tz2294@columbia.edu>,
- Jens Axboe <axboe@kernel.dk>, "Matthew Wilcox (Oracle)"
- <willy@infradead.org>, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- Sandeep Dhavale <dhavale@google.com>
-References: <20260409160243.1008358-1-hch@lst.de>
- <20260409160243.1008358-9-hch@lst.de> <adl1iqhldFvJwSw-@dread>
- <7f0d072b-97a7-405f-bff5-d3819de2e3dd@linux.alibaba.com>
- <ad2RKNo2FGhpzJQp@dread>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <ad2RKNo2FGhpzJQp@dread>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
+Currently, the 0th index of the zi_used_bucket_bitmap array is not freed on
+error due to the pre-decrement then evaluate semantic of this while loop used
+in xfs_alloc_zone_info(). Fix it by allowing for the i == 0 case to be covered.
 
-On 2026/4/14 08:58, Dave Chinner wrote:
-> On Sat, Apr 11, 2026 at 07:44:43AM +0800, Gao Xiang wrote:
->>
->>
->> On 2026/4/11 06:11, Dave Chinner wrote:
->>> On Thu, Apr 09, 2026 at 06:02:21PM +0200, Christoph Hellwig wrote:
->>>> Commit 3fffb589b9a6 ("erofs: add per-cpu threads for decompression as an
->>>> option") explains why workqueue aren't great for low-latency completion
->>>> handling.  Switch to a per-cpu kthread to handle it instead.  This code
->>>> is based on the erofs code in the above commit, but further simplified
->>>> by directly using a kthread instead of a kthread_work.
->>>>
->>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>>
->>> Can we please not go back to the (bad) old days of individual
->>> subsystems needing their own set of per-cpu kernel tasks just
->>> sitting around idle most of of the time?  The whole point of the
->>> workqueue infrastructure was to get rid of this widely repeated
->>> anti-pattern.
->>>
->>> If there's a latency problem with workqueue scheduling, then we
->>> should be fixing that problem rather than working around it in every
->>> subsystem that thinkgs it has a workqueue scheduling latency
->>> issue...
->>
->> It has been "fixed" but never actually get fixed:
->> https://lore.kernel.org/r/CAB=BE-QaNBn1cVK6c7LM2cLpH_Ck_9SYw-YDYEnNrtwfoyu81Q@mail.gmail.com
->>
->> and workqueues don't have any plan to introduce RT threads;
-> 
-> They don't need to (or should) introduce RT threads. Per-cpu kernel
-> threads already get priority over normal user tasks on scheduling
-> decisions.  However, they do not pre-empt running kernel tasks of
-> the same priority.
-> 
-> In general, kernel threads should not use RT scheduling at all - if
-> the kernel uses RT prioprity tasks then that can interfere with user
-> scheduled RT tasks. This is especially true in this case where a
-> non-RT tasks issue the IO, and the IO completion is then scheduled
-> with RT priority. IOWs, any unprivileged user can now impact the
-> processing time available to, and the response latency of, other
-> RT scheduled tasks the system is running.
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
+Cc: stable@vger.kernel.org
+---
+ fs/xfs/xfs_zone_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-All softirq IO completion already works like this although
-softirq tasks are not strictly called "RT tasks" (i.e. a non-RT
-task issues the IO, and the softirq IO completion will interrupt
-all ongoing tasks).
-
-Basically what we want is to get a non-atomic context instead of
-using the current softirq context for read post-processing and
-switch to the task context immediately as you said, because:
-
-  - Our post-processing needs to work in task contexts since
-    advanced features like compression deduplication need it;
-
-  - Even regardless of our specific requirement needing task
-    contexts, using a dedicated task context for read
-    post-processing is much better than run in the original
-    softirq context:
-
-    - Algorithmic work could take extra time (especially slow
-      LZMA algorithm could take milliseconds on low devices
-      (however, we need a common workflow for all algorithms,
-      including fast algorithms like lz4) and verify work for
-      example); and long processing time will interfere with
-      other remaining softirq tasks like sound-playback
-      / network softirqs;
-
-    - If it is then deferred to softirqd, it just makes this
-      latency issue _worse_.
-
-
-Thus, if there is another dedicated mechanism which can provide
-a lightweight task context and is scheduled to run immediately
-after the softirq: that would fit our requirement and I believe
-it's useful for other various use cases, but currently there is
-no such clean infra; RT threads can just fulfill our requirement
-in a less elegant way.
-
-> 
-> Tejun asked Sandeep if setting the workqueue thread priority to
-> -19 through sysfs (i.e. making them higher priority than normal
-> kernel threads) had the same effect on latency as using a dedicated
-> per-cpu RT task thread. THere was no followup.
-
-I think the issue is that people are not already working on the
-same topic:
-
-  - Unlike large subsystems like XFS, people don't already work on
-    EROFS unless they have new requirements or urgent production
-    issues;
-
-  - The original latency issue was already considered as "done" in
-    2023, and I'm not sure if Sandeep could have the bandwidth to
-    pause his current work and test more setups according to this
-    ongoing discussion in 2026.
-
-> 
-> In theory, this should provide the same benefit, because what RT
-> scheduling is doing is pre-empting any user and kernel task that was
-> running when the interrupt was delivered to execute the completion
-> task immediately.
-
-But anyway, I think nice -19 can be evaluated if Sandeep have time,
-but such nice value should be set by the filesystem instead of
-the userspace since the reason is as above.
-
-Additionally, we also need a way to set nice if we decide to switch
-to the new BIO_COMPLETE_IN_TASK approach as well if the nice way
-really works.
-
-> 
-> Setting the workqueue to use kernel threads of a higher scheduler
-> prioirty should do the same thing, without the need to use dedicated
-> per-cpu RT threads.
-> 
->> If Sandeep has more time, I hope he could have more time to
->> test since I don't work on Android anymore: In principle,
->> I still think RT thread is needed somewhere for such usage
->> since lowest latencies is needed.
-> 
-> All that is needed is for the kworker thread to be scheduled to run
-> immeidately after the interrupt that scheduled the work exits. This
-> does not require dedicated per-cpu kernel tasks or RT scheduling....
-
-Right and not sure, it needs some latency evaluation with
-heavy background/foreground app pressures.
-
-> 
->> Compared to the scheduling latency issues, interested users
->> don't care "individual subsystems needing their own set of
->> per-cpu kernel tasks just sitting around idle most of of
->> the time". If end users care it more, they can just turn
->> it off by Kconfig.
-> 
-> Distros enable all these subsystems all the time, so saying
-> "turn it off via kconfig" is not a viable mitigation
-> strategy. Proliferation of dedicated per-CPU worker task pools is a
-> known problem, and we really don't want to regress back to those
-> days when a typical system had thousands of dedicated per-cpu work
-> queues that largely did nothing most of the time.
-
-That kconfig is off by default, but all Android vendors
-turn it on, and that latency issue is particularly vital
-for Android ecosystem.
-
-Currently RT threads won't be used for other use cases even
-desktop use cases: Android workloads are pretty harsh
-even compared to desktops for example.
-
-Thanks,
-Gao Xiang
-
-> 
-> -Dave.
-> 
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index a851b98143c0..c64f9ab743a6 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -1217,7 +1217,7 @@ xfs_alloc_zone_info(
+ 	return zi;
+ 
+ out_free_bitmaps:
+-	while (--i > 0)
++	while (--i >= 0)
+ 		kvfree(zi->zi_used_bucket_bitmap[i]);
+ 	kfree(zi);
+ 	return NULL;
+-- 
+2.53.0
 
