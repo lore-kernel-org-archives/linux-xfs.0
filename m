@@ -1,43 +1,39 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6B914BF92
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2026 05:36:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2388E30E0D5;
+	Wed, 15 Apr 2026 05:44:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776231376; cv=none; b=tgZxrSghSvCM/tt0dkac6rE14vBM6Jw+7hqNK76RmFaEvidprbYK+EkEmOAgEivOt1WDWvPqV9Pn2ILnCwpp7IBza8L14hRrOk1I7bU/B7z8Ge55cmRECjzdBF5ZRpoy7xxPqyd6HRqfYvTrWlTjTr8cXulQK3lSVOTompC1iNY=
+	t=1776231854; cv=none; b=Ne5eUe2kgx4VBjeea5Im0Vg0anuezH7tsDPkDSZtgz9ra0NG/DH3BXyCpM1YifaPGp2hI8bzTe0AEkls4KbQWfTzNdfoxpzGzfgEZmaTlA8pn577AZOu6dVYY28gg6mWP6sO1UTxjw2uXEiw1zhPHqiVzBXmPbW6MXEo++sJikM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776231376; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1776231854; c=relaxed/simple;
+	bh=wSDA79cXLk2ng7vvxu6ReR9v2Eu5plRJRyhgqvgR4DA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vc9gzuANhzsJ/ZUzGAmlNJxcomwm4IShdEz4soQ16FU1o0R3eDgGdgxFUjIFS0M6EmueGKh+b4OBARy4OThJssRPj/KChGu9Wv+l5pi6NeH0gncNuy8UAuy333Cj75Pq0k5Zs8gauDhphefMf91RwdcLSjfbhu3F46ap+gfn8M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LxjEuuXI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LxjEuuXI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=LxjEuuXIyEly+H3tpvbzk71Hcs
-	LbXMqsWV4MeWluPtRMWSte3YhHUvyCFIWIB/c4HCwjW+s67CZpaLNjyf33QKkrb7wGT5hm6xkZZzH
-	TrFX7F9leZ86GWL85Vt5FyIYJOh1S75i419ShlyaldGbYHAhpx5RsswxphuPRJ+em6FVVmz14f28f
-	V53t7MHoz9+msd41xeYEiaIrDRiGnR0HNaoZHzncuT8b7EY7P86X5yZmn0tbizDQgcKa9H4dvkHQa
-	gx1/j8+G3FXgF8zm7+M4ZoIEOKBq4upQafrAzFIojEdlUJ50QVKITmVTFevX0nxxnwh7v4HBfnkCT
-	81xzajfQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1wCsv8-00000000beT-2P9M;
-	Wed, 15 Apr 2026 05:36:14 +0000
-Date: Tue, 14 Apr 2026 22:36:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_scrub: warn about unicode variation selectors in
- names
-Message-ID: <ad8jzpvuLG8yleO1@infradead.org>
-References: <20260413145700.GJ1048989@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=CGswIvbAkf6ZJcfj3Se+Cz4cIv/MrIsOgjRyLSWeq7A5Gz+0snhKDdDjUxGIJtLQK0MSN4DPIes8PV1wZ/HYCWdhAWdsaS77s5Sf7S4JqeBmUjSD8eq3ytEyK1q+AVaFr2zzeulDkpWwhJqSuTDtZ/+HwjqLPr/R3a8E/LhG5W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B147B68C4E; Wed, 15 Apr 2026 07:44:07 +0200 (CEST)
+Date: Wed, 15 Apr 2026 07:44:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Tal Zussman <tz2294@columbia.edu>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	Jan Kara <jack@suse.cz>, Dave Chinner <dgc@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Gao Xiang <hsiangkao@linux.alibaba.com>,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [PATCH 4/8] FOLD: block: change the defer in task context
+ interface to be procedural
+Message-ID: <20260415054407.GA26893@lst.de>
+References: <20260409160243.1008358-1-hch@lst.de> <20260409160243.1008358-5-hch@lst.de> <adgJqiA0vivaW7NA@casper.infradead.org> <20260410061725.GA24667@lst.de> <adj6iibxNot-yc9X@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +42,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260413145700.GJ1048989@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <adj6iibxNot-yc9X@casper.infradead.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Fri, Apr 10, 2026 at 02:26:34PM +0100, Matthew Wilcox wrote:
+> > Yes.  On the other hand we can actually use it when we don't know if
+> > we need to offload beforehand, which enabls the two later conversions
+> > and probably more.
+> 
+> I don't understand why we need to remove _this_ way to defer completions
+> to take context in order to _add_ the ability to defer completions
+> inside the bi_end_io handler.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+I don't need to, but we'd better have very strong reasons for two ways
+to do the same thing, and I don't really see it here.  But I can give it
+a try if the consensus is that we want to way to do it, and we're not
+worried about people getting the bio-flag one wrong as we could set it
+from ->bi_end_io, but it would not do anything.
