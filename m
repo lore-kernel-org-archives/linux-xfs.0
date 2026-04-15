@@ -1,109 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fhigh-a5-smtp.messagingengine.com (fhigh-a5-smtp.messagingengine.com [103.168.172.156])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36CE30DED1;
-	Wed, 15 Apr 2026 15:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64233E716F
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2026 16:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.156
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776266436; cv=none; b=hN0aTHgXz9VPJ+TqLU1aCDWO1/K36DDvBfOSP51w8HUX5ehTNfzyZ73DcuKmO1efnVeL8+sLYBfRjOtrQAAq0MEtD+ywPKybp11e17pjDqgQ6oJRGAh+v4KiexA7zeTiI2XIo7bL5W3HUhd+D5P/oGDPAorFuVYvr3piPOMPsbg=
+	t=1776271794; cv=none; b=k0z2SdFiydtScNRWnsGD4ZHrUvE6/niWQC+2cT7HZ7Rc94QhKIJY9KzjgHkXhpzCMb23gWLM4C9PBcIF68agTU/kjXqnmD0IfIR8a4E9uPXB3wwmu8Vo16A7p4pniPqWJDZdMzuqKFhJBk0KH4/aaTw5VmPwEBnZxYSy7D0uhYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776266436; c=relaxed/simple;
-	bh=yfTslpqTQOQXpmZjWqpZ+Vp3SA2R8Q+m/vg5qSq/56g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TsZ2gonHdp2GuJIb7aUbBLEOwb+O2HeLm5eoSoZQWV8cITEDT1OS4R73syPbN0ryrdjZuNcnWZfK6cyP5ZdH0elhTVqseZ4g2tZa13XANT4/9/4DPwQp7aiGU5WcHYwf93fc4DLHVnwAkBIQy0DpTPvmCVN6RaZG0PRLM6TZoxs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2WUY6j9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776271794; c=relaxed/simple;
+	bh=0X0Ipxtr+3sFDu2KJcrtIOsqT/wAb4k4TCR3ZR3iFeI=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=E9LUqrM+FZjiQ4di9wMROoPy5pN7AxxHy2OSU+MNO+QfCrENHG3Mvh4ql37diGn25JmgwgMTTqYp0nSWpqysgcKQMXfy7QkZ/cZyQFDmaSB7tt5g5DI9LJV/vYmrgGOOoJVITkH3DwFKU7QNRegMarAWTkySlv1D9fP+20tZDGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=cDZRrR2E; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=NmwLRao2; arc=none smtp.client-ip=103.168.172.156
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2WUY6j9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73E72C19424;
-	Wed, 15 Apr 2026 15:20:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776266436;
-	bh=yfTslpqTQOQXpmZjWqpZ+Vp3SA2R8Q+m/vg5qSq/56g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=f2WUY6j9Mu3PgETgMBKKTzUE3QfPbCbTPO05Cdp30meT+vLs61TV5dGkuVExQEDIv
-	 ZyMVbaBLRuXohCnfUxW0UZEjudwiwyz7HpSS+2iyMf2xg3TOq44Xm4uLV7iOWb4dS9
-	 tlkmQ2/Cb1rdeTmkJO/cHPkv2CWhGzWidnnPI5XYm0/eJOvlSaG/xZ1aCQ/K9LdI1y
-	 F+OO6XMcceLXHGCZENXKijVlSKHjukkspU4fnId5P5dBwrzR2aRc9In9ZGUMgE01nQ
-	 AS2YiEQHP7wXNABAZTfzt10Vatt20TAHSkTCaHWTx+b/j5qpWspB7XuqVaw2CCM/kz
-	 mg1gFQ3qcHSRQ==
-Date: Wed, 15 Apr 2026 08:20:35 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yuto Ohnuki <ytohnuki@amazon.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dgc@kernel.org>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] xfs: check da node block pad field during scrub
-Message-ID: <20260415152035.GC114209@frogsfrogsfrogs>
-References: <20260410170614.8075-2-ytohnuki@amazon.com>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="cDZRrR2E";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="NmwLRao2"
+Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id D1C9D1400147
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2026 12:49:51 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-09.internal (MEProxy); Wed, 15 Apr 2026 12:49:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:content-transfer-encoding:content-type:content-type:date:date
+	:from:from:in-reply-to:message-id:mime-version:reply-to:subject
+	:subject:to:to; s=fm2; t=1776271791; x=1776358191; bh=udIra9UX7/
+	7h43qLM3pGj2xhMY/F7Uw11TkOhlSFj20=; b=cDZRrR2EFOvVEMypxQxAx7LFWI
+	/Wu3qMxgsx5rTOWXC5BiV6h1LsDYsVjNAVaDiJJnZhp151ms7VnFUCLvl2fCgL+f
+	0eVQQxKaysnezQz7XWle1cjMPBwq86dTdZDN5+ZgjIQDHaB5XFms3C8Irqj/qi30
+	eGlhS3TUrlqm8fgtZGJY+he+hGTSAEQQjwpcaHDn3DsoEzaXF+Pbm2+czwzofNx6
+	2YvCkr+M/qDspa+g920LpiWg/K1FW1ik/xXypD/HVvsJd2fFbwoG9v8FjWLL0BeJ
+	/LbYZqDiDBjoSiI+an3OguhecYvyfcVqc1JvLKGaXO9kqW7KTRP48IreKZkg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:content-transfer-encoding:content-type
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
+	1776271791; x=1776358191; bh=udIra9UX7/7h43qLM3pGj2xhMY/F7Uw11Tk
+	OhlSFj20=; b=NmwLRao2bhc3iy3iXm3uzswKS1CS/bguSfqCg8sF1HJvq11+4+c
+	n0rbj5wah8QFkmfgufUEJ5FdHPtvvI0CCAt7LB3VpHxvuOnTVtgY96H9JOPZ/DDq
+	GjBLpa5xn+j+jL32aVq+bCdSeupWxZCo2IHsiqBxum0377wkGBkApsFSe0qCDmNU
+	W35e6TGZz2y9w1BluigyKCH9wkLuZzscpVcw9j/dM+FxryTYgE/KSjX7I4W/aImd
+	KASjUyJP/kgSWoEOnwKYtEwAEmtZpUQe03cfhMPz/TaVgdISNkg0S1/W8oT0ovQM
+	wx9YJgRk5qa3X629QShLWdgk3g0dvgKbArw==
+X-ME-Sender: <xms:r8HfaVS2pbiBc-ZVJ5RzBztTqY8hpcvGUzr-JIyhVZbjd7E9WPsBNQ>
+    <xme:r8HfaVsubhSIdEvzAYTDJ_xMy3urFA01mOiUacHJzCPn5v61vea60ZrENq5_zk4Zw
+    XTLhJSS_BOY1EjciVSG_bCFSFARFzd9tC7LUnkAo0F4Ff9Cec9zW_8>
+X-ME-Received: <xmr:r8HfaQfqldIWYhY3-i9iWxyf-oqtHkytWqnZAxxAZ_kfT0LHoEpqjGL2z5iQkyrLCoxIKjnJtyyy8aHvO4FacqE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeggeeiudcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecunecujfgurhepkfffgggfvffhufgtgfesthejredttddvje
+    enucfhrhhomhepgfhrihgtucfurghnuggvvghnuceoshgrnhguvggvnhesshgrnhguvggv
+    nhdrnhgvtheqnecuggftrfgrthhtvghrnhepteelkeefteevveeludfgkeefvedthefgie
+    evveeutdeguefgffeggfeivedtffeknecuffhomhgrihhnpehgihhthhhusgdrtghomhdp
+    sghtrhhfshdrmhgunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepshgrnhguvggvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohep
+    uddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvg
+    hrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:r8HfaSJwAJOXddQZSP49h_KjrLJa7li1Wwvq4wM6nc2gbIYEmLuQVw>
+    <xmx:r8HfaeY_a3h05tMQBkZYo9NRsQT8DR-IUSeSq8l8oF98yZUEuIN2-w>
+    <xmx:r8HfadvFxb7YTPvEGuhBU74jO5r5cF_Y4L1nz0ttK0-OLBiRsaybmQ>
+    <xmx:r8HfabsJ20ibc0OzVHw_8fPdshqmyZY3YUxu2NA4RXePiSpk3BjMwA>
+    <xmx:r8HfaRQMWUUpqop0CaAA_XaObllhyZxLNb5Qt6BOgvl0oftnpvKZBr4X>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA for
+ <linux-xfs@vger.kernel.org>; Wed, 15 Apr 2026 12:49:51 -0400 (EDT)
+Message-ID: <87c6dc3d-ed23-4ae9-8309-0782ffd9b191@sandeen.net>
+Date: Wed, 15 Apr 2026 11:49:50 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260410170614.8075-2-ytohnuki@amazon.com>
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Should we hook up sashiko.dev?
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Apr 10, 2026 at 06:06:15PM +0100, Yuto Ohnuki wrote:
-> The da node block header (xfs_da3_node_hdr) contains a __pad32 field
-> that should always be zero. Add a check for this during directory and
-> attribute btree scrubbing.
-> 
-> Since old kernels may have written non-zero padding without issues, flag
-> this as an optimization opportunity (preen) rather than corruption.
-> 
-> Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+Hi all - 
 
-Should the dabtree write verifier also set __pad32 to zero, in case the
-kernel encounters a dabtree block writen out before the memset was added
-to xfs_da3_node_create in commit a45086e27dfa21 ("xfs: validate metadata
-LSNs against log on v5 superblocks")?
+"Sashiko is an agentic Linux kernel code review system. It monitors public mailing lists to thoroughly evaluate proposed Linux kernel changes. The system acts like a team of specialized reviewers covering domains from high-level architecture verification and security audits to low-level resource management and concurrency analysis."
 
-This change on its own is correct though, so
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+This is something built by Chris Mason and others, with Google providing the LLM and tokens.
 
---D
+The website sashiko.dev shows these review results for mailing lists it is subscribed to, so you can browse around and see how it works. I've heard reasonably positive feedback from some who've used it already.
 
-> ---
-> Changes in v3:
-> - Drop unnecessary be32_to_cpu() on comparison to zero.
-> - Link to v2: https://lore.kernel.org/all/20260408174033.4165-2-ytohnuki@amazon.com/
-> Changes in v2:
-> - Use xchk_da_set_preen instead of xchk_da_set_corrupt since
->   old kernels may have written non-zero padding without issues.
-> - Link to v1: https://lore.kernel.org/all/20260404143043.65268-2-ytohnuki@amazon.com/
-> ---
->  fs/xfs/scrub/dabtree.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index 1a71d36898b1..c2d6ad59d03e 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -454,7 +454,12 @@ xchk_da_btree_block(
->  			}
->  		}
->  
-> -		/* XXX: Check hdr3.pad32 once we know how to fix it. */
-> +		if (xfs_has_crc(ip->i_mount)) {
-> +			struct xfs_da3_node_hdr *nodehdr3 = blk->bp->b_addr;
-> +
-> +			if (nodehdr3->__pad32)
-> +				xchk_da_set_preen(ds, level);
-> +		}
->  		break;
->  	default:
->  		xchk_da_set_corrupt(ds, level);
-> -- 
-> 2.50.1
-> 
-> 
-> 
-> 
-> Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
-> 
-> Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
-> 
-> 
-> 
-> 
+We could send a PR to request adding linux-xfs, and I think we should try it.
+
+However, if you look at the config, for example for linux-ext4:
+https://github.com/sashiko-dev/sashiko/commit/d921c59
+
+there are options to:
+
+1) reply back to the patch other (or not), and
+2) automatically cc: one more more people on every review if desired
+
+so before single-handedly making this decision for every future patch author
+and/or possible cc: individuals, what do we think?
+
+(One can drive Sashiko from the command line, too, with or without the list
+subscription mentioned above, see the github repo for details.)
+
+Oh, and I guess we could add xfs-specific review prompts, too, see
+https://github.com/masoncl/review-prompts/blob/main/kernel/subsystem/btrfs.md
+for example. EXT4, OTOH, does not have this. (and the btrfs prompt looks quite
+limited right now.) Maybe we could distill the xfs documentation into prompts...
+but I'm getting ahead of myself now.
+
+Thanks,
+-Eric
