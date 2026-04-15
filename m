@@ -1,102 +1,77 @@
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C6B3016E3;
-	Wed, 15 Apr 2026 06:05:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785102C3757;
+	Wed, 15 Apr 2026 06:10:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776233113; cv=none; b=fRPZebTL92CP6T0+889/3wh16wSsI3heWiNGnZqYZzq3XWj7NlAMAqmrPaAz2fE0kctX243omJwoNrc7EBPalu6S5y0UavVOLXISpZbM8e7MZpGFC4m4BPYK1+Xr9weVXM9DO91Ov4fBzEgbR4VA5lFamy8hRY4iklSiPTCp7aw=
+	t=1776233452; cv=none; b=UK+fsv7ARNeAMPJGATXwl6kZOPsCoTHdEOorZXIwDM0+Yx3rYLUbcTP4JsoDZSI2yVTs/ED9xo8C6fgLcOfk/o2yd4NItm19YcdkfT4YIE74IUHVltCDhcYTR92a6A2e/oal1v9z+b4hgRSMNbXp6GqPK5jWJYbEOxe47JlUbtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776233113; c=relaxed/simple;
-	bh=/sLDlG+g3TWPppV6llCcXLve4ZPz3TocgKkmCXrlq2g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r8D+ty9J6S0b3NhMLHRjxW3CLJo84e5/iVq344vSQGb6DZCllaqYU+k1cpTGGMeIBQ54+y/bpqpCNmXj4StuO7I2uXn+RbhEDYNMQlcgdKceLl8DRrHSMeSCUUsPRMR/l3nqCEUVwvV+9Oh7x7kEel3walgjBezElsz3i0EmbIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ZSA6CRRk; arc=none smtp.client-ip=115.124.30.132
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1776233452; c=relaxed/simple;
+	bh=fWQw3DLSMlnGlCAEdvPdGfCpHCJ5msFf0w7S8NxH2FI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eu4YxNTFZ5aFuCat5A+2+zOMmLu8LQ9UUa6iTIAdqE2dr2A6gI+BdeD5F2s0yJIFgnNR4qAm/oYD/0SICrAZEWj7ZMif3PrIAogYjcIXL9D+QxJWKdBGff0ZCyy47qT9RZSvvoo+F+X3Q3CtYvBjlNpJpOlw3hX9b5irzZwwg7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Wwlu1nDv; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ZSA6CRRk"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1776233106; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=Y3Bvp+KpwAJJ/lnzTS+tDvjyO24nE7JkQWZFHl55Uq4=;
-	b=ZSA6CRRkPLs5ZaCQ+6UMjRTROp81wY4lCM7fmr3/Grz00KOKMPQd8907JicuQo/do1TrK15kWBCl6YC4pdzBNYUkB2c/9hLWn3cl9q6xGQCpDmIpPboijSe+8nZk2Nw/y9xl51zofZEYfVRQ1AlTzbHFdtEndMTO4ZTxn78Xgo4=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R561e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=22;SR=0;TI=SMTPD_---0X13erf3_1776233103;
-Received: from 30.221.132.134(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X13erf3_1776233103 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 15 Apr 2026 14:05:04 +0800
-Message-ID: <58d1a07d-e266-4d58-9be9-f1445a68599c@linux.alibaba.com>
-Date: Wed, 15 Apr 2026 14:05:02 +0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Wwlu1nDv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=7aKAAKsTYoxSoqNfxwE2AztxBRZIup6mF9UIRFkQkpg=; b=Wwlu1nDvkuxF0JLEyPMWI6/78x
+	sRW2f/J7mqr2jRUICnnn53a00TfzBdd24MgcENfRMxEsTz33uGwP0NZ51O8rcPsNyi9b8DFyPAvhS
+	KnTODEavAruBEZiUDnXXY6Eld6BkmwGcMYQCNlTds0txOh+uAFPGnOdbjn8pm7P7fSt1J7741+bAT
+	BmsASonS0UFSepXlXdvmCva4GT9Rzo8Lal9lotlhWCy2F7FygwS6ejQ1GUHOryOx81M0MOBdYfMxq
+	jLNTPPRwjZD2nlWaQyua3b9Fq2gNsuY2XO8htreLIGUWGKujRz6A/yWXEUjCW+TSCw78sUVaNBIlo
+	9vnUJo1g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1wCtSZ-00000000dJj-1yV5;
+	Wed, 15 Apr 2026 06:10:47 +0000
+Date: Tue, 14 Apr 2026 23:10:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Tal Zussman <tz2294@columbia.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH RFC v4 1/3] block: add BIO_COMPLETE_IN_TASK for
+ task-context completion
+Message-ID: <ad8r53AmTxjcvTLg@infradead.org>
+References: <97b81868-6410-4c79-a242-679a9f04f073@columbia.edu>
+ <95F28FA1-5CEF-4E80-BBB7-A429B4437D12@kernel.dk>
+ <7e468bd2-e52b-4165-95c6-3f04e1dca21e@columbia.edu>
+ <fb64ba71-7284-4768-979b-84919f2aa5f0@kernel.dk>
+ <fd94b108-22c1-4eb6-8fb4-b009214976dc@columbia.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] RFC: use a TASK_FIFO kthread for read completion
- support
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <dgc@kernel.org>, Tal Zussman <tz2294@columbia.edu>,
- Jens Axboe <axboe@kernel.dk>, "Matthew Wilcox (Oracle)"
- <willy@infradead.org>, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
- Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- Sandeep Dhavale <dhavale@google.com>, Tejun Heo <tj@kernel.org>,
- Lai Jiangshan <jiangshanlai@gmail.com>, Thomas Gleixner <tglx@kernel.org>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Anuj Gupta <anuj20.g@samsung.com>
-References: <20260409160243.1008358-1-hch@lst.de>
- <20260409160243.1008358-9-hch@lst.de> <adl1iqhldFvJwSw-@dread>
- <7f0d072b-97a7-405f-bff5-d3819de2e3dd@linux.alibaba.com>
- <ad2RKNo2FGhpzJQp@dread>
- <a7a74185-df02-4906-a0ec-f87e2394aa5f@linux.alibaba.com>
- <20260415055552.GD26893@lst.de>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <20260415055552.GD26893@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fd94b108-22c1-4eb6-8fb4-b009214976dc@columbia.edu>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-
-
-On 2026/4/15 13:55, Christoph Hellwig wrote:
-> On Tue, Apr 14, 2026 at 10:23:13AM +0800, Gao Xiang wrote:
-
-...
-
+On Tue, Apr 14, 2026 at 04:29:29PM -0400, Tal Zussman wrote:
+> No problem, thanks!
 > 
->>> Tejun asked Sandeep if setting the workqueue thread priority to
->>> -19 through sysfs (i.e. making them higher priority than normal
->>> kernel threads) had the same effect on latency as using a dedicated
->>> per-cpu RT task thread. THere was no followup.
->>
->> I think the issue is that people are not already working on the
->> same topic:
->>
->>   - Unlike large subsystems like XFS, people don't already work on
->>     EROFS unless they have new requirements or urgent production
->>     issues;
->>
->>   - The original latency issue was already considered as "done" in
->>     2023, and I'm not sure if Sandeep could have the bandwidth to
->>     pause his current work and test more setups according to this
->>     ongoing discussion in 2026.
+> >> (Although Christoph seems to have proposed moving away from llist again)
+> > 
+> > I think that's a good idea, not a fan of using llist for this, in case
+> > that wasn't clear. These are per-cpu lists anyway, and having a constant
+> > overhead is better than needing to reverse an llist. IMHO.
 > 
-> Which unfortunately might explain the sad state of Android.  You
-> really need dedicated people around and help to improve core
-> infrastructure, instead of adding random Kconfig choices.
+> Will change it back for the next version.
 
-Sigh, let's not regard it as a technical problem, and it's more
-of a non-technical development resource issue among different
-resource groups & vendors.
+FYI, the prime reason I switched away form the llist is to make sure
+we can atomically check the list emptyness vs the wakeup decision
+in the kthread version.  But if Jens prefers it for other versions as
+well, that's fine.
 
-The detailed background is much much more complex than I could
-write all down explicitly here, but at least I will try to
-contact with Sandeep and more related people to test again
-in 2026 if a cleaner approach can be worked out.
-
-Thanks,
-Gao Xiang
