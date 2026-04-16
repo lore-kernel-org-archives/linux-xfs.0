@@ -1,43 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1FC082866;
-	Thu, 16 Apr 2026 15:27:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF19713AA2D
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 16:54:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776353226; cv=none; b=WVuVbbMRcF7N4CbwgcEDhAwHZ3GL+x8Z1hnx2UhxacMy435VyCt2HGO3cr4pjcLZV2JcbCRfBwnntt5ltyX83vKrNt9hV28jpjleDc9wfr9wXgO7hJepG1dYwiB+I4AOT1j7kUEHy27F/y1uoWtSxOgQbQbm541Ymr+FgD4w0Lc=
+	t=1776358454; cv=none; b=eaGMGJwW+KNunws5ogI1wjXBaAl9zqczuXgwWnAhwvLtVfAaUniQhmZkdqqK+3OqCFG9JwInSHFXwQZ/a0zfxH0tsqQw/DEBU+TY1CcLQNlhtWts0pkjY6HAMpZ6DO+BJeL/DLsgtOThYA8z1+tmvd3PDS0EWwwL/nfY5IAJzeU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776353226; c=relaxed/simple;
-	bh=H4BmPxyqX2E4a8qYvk7g0xnwqxdhSY+TSXE2SIW32J0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZO0SGbP7k91rPtVEN2SrkOvCGq2ucISTUg1EvrkuPZ8hghn8X3bVKnM2sO/bK98tmFHhkwEOvkqnoMw+Enbqs8HEVjmkAgtvqYFsUk/esjo/2AFp6Rp24tKbyVW8DxeOuDsJgyxYpWFujreTzQWTHt7oxq0L03+CLp5gOMpUmq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wk5JJUcc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776358454; c=relaxed/simple;
+	bh=0//tjg8rpXA25jkUeSQ63gVkKeuGlKd/OT7roZ/pau4=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=myiodQh/MTU+9rF/K4mRb9k8GeI+xZ2mQpAQvMrPmHvqyqiUSfyz5lu7cOozYRTO1TwULWf6fIUR+iwcUSzUFk2wEUOE4Y3Sq+A7MFkwyW4Ws7Kytd6NToG9lvoqUkuqULHrj9uDPYBE+gSPoYw6yv88izSmzHadLWZZEUuTEQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nnyG1Jgc; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wk5JJUcc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C1EDC2BCB3;
-	Thu, 16 Apr 2026 15:27:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776353226;
-	bh=H4BmPxyqX2E4a8qYvk7g0xnwqxdhSY+TSXE2SIW32J0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Wk5JJUccoCgVfYPao+2KUosa+4qGSBvc4Nt3UX4Tv8EUx7LGabDYyCeMly4ha2Q3s
-	 ekgjW43HNhDzmJOyVqGrtYhktQheQP8oFoaCzK9FNeywritXUpI7VbHgGGMjPfoP3j
-	 Q+GuzmZ1V5UGH6I2O5la2JbFeu8BlmDF38/lK3QGpebQfttA9f/PhISwLan+71fI8m
-	 WPwf7+AJSswFCCBHTN2axGhbcRn6ScI3stiP9qnqrOGRjB3V8vkvzxT9bYUa9eoK/m
-	 2VDzvH32BTDkLN6dJNpym+L707efOO1WpMI6pZ2iA91MSXDESV8eQPgEFo1caBZGbg
-	 nqeEoNYnCQA+w==
-Date: Thu, 16 Apr 2026 08:27:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Fengnan Chang <fengnanchang@gmail.com>, brauner@kernel.org,
-	hch@infradead.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	lidiangang@bytedance.com,
-	Fengnan Chang <changfengnan@bytedance.com>
-Subject: Re: [PATCH] iomap: avoid memset iomap when iter is done
-Message-ID: <20260416152705.GC114239@frogsfrogsfrogs>
-References: <20260416030642.26744-1-changfengnan@bytedance.com>
- <aeDjui2LGSidEHcJ@bfoster>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nnyG1Jgc"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-82418b0178cso4334596b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 09:54:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776358453; x=1776963253; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:date:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8LJpmivbSlaORaKGrO6bdls+IzjUDvHIFx1V0s83E+8=;
+        b=nnyG1Jgc1lA3alp7vwubKG/+SGky5Bsv5ZfsxN17vKdODvOK59Fumsb9XIAYOjJ/gS
+         XAK0KycU1yY6C5l9CuhKQckgTMqXDuK4/8AkahDnTbVHfakIQ0LFCLnkliiOQcC0xa/B
+         23JuRH9QyZGg4lf8Pex6KSFz4KJhnEWhSGq98C6UJqQ2SYgF3Fpl4GGGFsFMKXr90o05
+         zQaqdPcwZWhymItwJRLGRS0ndS8j2vvz18ReI/2BWdjGgiJjgVVP7exgls7kw9irXJ+a
+         cgnIUGwiCjJubG7zVHAkQ4RngHE+AtXBPulx0ddn1Gy8hx3jNPqPmXneLwz5tvV/RL+w
+         +5+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776358453; x=1776963253;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8LJpmivbSlaORaKGrO6bdls+IzjUDvHIFx1V0s83E+8=;
+        b=GNZApWte8Y/v5Ukf9mkxKMPzfBKjNaW5NUVMyi64/EI1Wqq0BcN0pYZ6TGCerObeCH
+         6xE2tGcEiwV6Ja+O/Wl6jMr5ng6Wa9uJrFnE7irPl98cKq85Nf4j5o4yhbA5+3ZyPAr5
+         h7rock3WlHhQKu3CpuBATi9d2OT/fflIjmL1rE18bWFCLhjd+t1KJS49k9aN+wXyn3EC
+         RwITtWZBXNXzJ8uiTmHNNPjrVupxxvonOmr6b0w+fl6LRP0/q9k0gi43hsleI8SCaUOy
+         NZkEH3NYk09bfgamDFwgpx23vKnLNBh56UX7S2UxuIdLHNs7dGzzGOP3cDX/cJ4rlIqI
+         7EwQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/L5jFLO5jXE4uk7D1/SK07LqIamh32+BqUMu1NA/IljuzWJkF2GDcTzeGsWmvcGaAbqsaOmnEgs4Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxdbLmBZrEJIv1AdnMb9CFomlIdW47Qe/qZVWkDSSPvC1aG9x1p
+	S79VeH3X9lAxmYqi3y3VbbQiDPGbbzxSfG3MrzygkMKuu6FCp5yScrD5
+X-Gm-Gg: AeBDietJUnM0lEJMJJkYOrhJj/nSCv3J8H5i82+MgewxvsPE9XCqSvy/IYmLB9euVti
+	cPpn8r2tmbvsf8VA4xg+dJbGw/XQNOcME+bXm85DqZfQIfeohKEZGWTZ6zMBY8+nHTAZifVBxWj
+	jueZEip2XfmyInNOG2W4047shos5IqYkCirLlqMt6U/F3x6adygHtbAF4O32xPR1PDmFWmCdJyk
+	ATDFQgQLndGY8HWHoj05mOOZMmdWFWlMqHNh97cbL4+gbyHhcXgndTrHEVkeUU26xPXAcjjDr9G
+	nL6Xdc0rsyLAptWaBb8LOXdk4L3dK/2J0iKbDp48jRy/n23NgbaF0SLa4MAUPThVcYXuKLM0ra7
+	awJqyZg//qY20ERKitT3OgQXBeA6zL+CEZPdw1yvskRLR3O+W9Oi33XbxBw997k1ShzIxaL5Yio
+	tGAtazvHu7op+nAwfthE8xe9Pe/AEkwtc=
+X-Received: by 2002:a05:6a00:80f:b0:82f:4386:7989 with SMTP id d2e1a72fcca58-82f8889c55fmr88933b3a.24.1776358452987;
+        Thu, 16 Apr 2026 09:54:12 -0700 (PDT)
+Received: from zlang-mailbox ([64.176.226.21])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f673e0b56sm6929972b3a.37.2026.04.16.09.54.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 09:54:12 -0700 (PDT)
+From: Zorro Lang <zorro.lang@gmail.com>
+X-Google-Original-From: Zorro Lang <zlang@kernel.org>
+Date: Fri, 17 Apr 2026 00:54:06 +0800
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, dlemoal@kernel.org, 
+	hans.holmberg@wdc.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: add a test for number of open zones on
+ conventional devices
+Message-ID: <aeEUGkFh5IQtQRfV@zlang-mailbox>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>, 
+	"Darrick J. Wong" <djwong@kernel.org>, dlemoal@kernel.org, hans.holmberg@wdc.com, 
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20260414075613.544106-1-hch@lst.de>
+ <20260414185914.GB150005@frogsfrogsfrogs>
+ <20260415052239.GA26559@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,84 +81,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aeDjui2LGSidEHcJ@bfoster>
+In-Reply-To: <20260415052239.GA26559@lst.de>
 
-On Thu, Apr 16, 2026 at 09:27:22AM -0400, Brian Foster wrote:
-> On Thu, Apr 16, 2026 at 11:06:42AM +0800, Fengnan Chang wrote:
-> > When iomap_iter() finishes its iteration (returns <= 0), it is no longer
-> > necessary to memset the entire iomap and srcmap structures.
+On Wed, Apr 15, 2026 at 07:22:39AM +0200, Christoph Hellwig wrote:
+> On Tue, Apr 14, 2026 at 11:59:14AM -0700, Darrick J. Wong wrote:
+> > > +_require_scratch_nocheck
+> > > +_require_odirect
+> > > +_require_non_zoned_device $SCRATCH_DEV
+> > > +_require_non_zoned_device $SCRATCH_RTDEV
 > > 
-> > In high-IOPS scenarios (like 4k randread NVMe polling with io_uring),
-> > where the majority of I/Os complete in a single extent map, this wasted
-> > memory write bandwidth, as the caller will just discard the iterator.
-> > 
-> > Use this command to test:
-> > taskset -c 30 ./t/io_uring -p1 -d512 -b4096 -s32 -c32 -F1 -B1 -R1 -X1
-> > -n1 -P1 /mnt/testfile
-> > IOPS improve about 5% on ext4 and XFS.
-> > 
-> > However, we MUST still call iomap_iter_reset_iomap() to release the
-> > folio_batch if IOMAP_F_FOLIO_BATCH is set, otherwise we leak page
-> > references. Therefore, split the cleanup logic: always release the
-> > folio_batch, but skip the memset() when ret <= 0.
-> > 
-> > Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
-> > ---
-> >  fs/iomap/iter.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> > index c04796f6e57f..91eb5e6165ff 100644
-> > --- a/fs/iomap/iter.c
-> > +++ b/fs/iomap/iter.c
-> > @@ -15,8 +15,6 @@ static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
-> >  	}
-> >  
-> >  	iter->status = 0;
-> > -	memset(&iter->iomap, 0, sizeof(iter->iomap));
-> > -	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
-> >  }
-> >  
-> >  /* Advance the current iterator position and decrement the remaining length */
-> > @@ -106,6 +104,9 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  	if (ret <= 0)
-> >  		return ret;
-> >  
-> > +	memset(&iter->iomap, 0, sizeof(iter->iomap));
-> > +	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
-> > +
+> > Seems fine to me still, though I wonder if you still need to check
+> > SCRATCH_RTDEV if you're opencoding the mkfs/mount calls?
 > 
-> This seems reasonable to me in principle, but it feels a little odd to
-> leave a reset helper that doesn't really do a "reset." I wonder if this
-> should be refactored into an iomap_iter_complete() (i.e. "complete an
-> iteration") helper that includes the ret assignment logic just above the
-> reset call and returns it, and then maybe leave a oneline comment above
-> the memset so somebody doesn't blindly fold it back in the future. So
-> for example:
-> 
-> 	ret = iomap_iter_complete(iter);
-> 	if (ret <= 0)
-> 		return ret;
-> 
-> 	/* save cycles and only clear the mappings if we plan to iterate */
-> 	memset(..);
-> 	...
-> 
-> We'd probably have to recheck some of the iter state within the new
-> helper, but that doesn't seem like a big deal to me. Thoughts?
+> This can be dropped now, thanks!
 
-What kind of computer is this where there's a 5% hit to iops from a
-memset of ~150 bytes?
-
---D
-
-> Brian
-> 
-> >  begin:
-> >  	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
-> >  			       &iter->iomap, &iter->srcmap);
-> > -- 
-> > 2.39.5 (Apple Git-154)
-> > 
-> > 
-> 
+Will remove it when I merge it. Thanks!
