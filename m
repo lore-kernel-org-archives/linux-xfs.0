@@ -1,77 +1,78 @@
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0BD37C907
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 12:05:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF5E39B947
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 12:34:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776341143; cv=none; b=scEecy+rzAKoA1/P06lsHlw+23vJCALP9+wGix5eISGiKC++BCK21S2gzkH0J+70XWy0BzSxWiHfdSySynGidjJBpcpbhR076ICJCzmVUQudSfswy1T4tUTQRNfvsEdHCD0p+0T3buznx8jr35aIxolo5HnaKrf9EUIkLScs7vs=
+	t=1776342863; cv=none; b=kOjD9EHUAniLuJJ+olE1moMWXOh60wmh4D3CAvBM5H2j7sSks4TwkWM2ReL66Enyk4GCmZ3IjUZmTdE+G2m08Qt7r0wAiMcjr00JFf2zPyFnCUyNnV+lh4xLXX6QRfQodxz7ASFse7ZKzWQYfnUmK5ZHj9KinG2dRhJD3VUzGp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776341143; c=relaxed/simple;
-	bh=9wHeWQsVrOKXVnqWzrSSyLovqDLP7du8ste6HflDmDc=;
+	s=arc-20240116; t=1776342863; c=relaxed/simple;
+	bh=s71mqQoinwz1Nad3szTLRy+45Affj7FGnL/Omovd0mw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AnOZxQ/s8uCxItEwov7Zp/aCtEjQF+AbOgmbi6DMZGgdIQkRZTjgox1MNOLnclsnpEYz2CH7expFvjspb/7aphWQxz+UMupLLd07ZrE9jgDvmPxc9vUVv7YkAhwyWd0Hkns5rqzK2TUPdKBwm4q4rXGyUhyHq996rPKM0NFfgE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xfBPxdTo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=T4/LdxVK; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xfBPxdTo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=T4/LdxVK; arc=none smtp.client-ip=195.135.223.130
+	 Content-Type:Content-Disposition:In-Reply-To; b=cl243t2ovcQEuQQPzIDYY2Cv9l5afxp/lROovcsRD8Q16KOmLJ+FwKeeW20B8uUFxJ5mjHZ4KMDO9mgEUNU/k47Lr7B5AuQ06o+XhO7VIf1n2j4zgkAQA5uVBGAlKDIGUO9mSPx73RaE0303/A/s8fpcBlJWFxR3tI/yVrSf50A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=2lAvgDJA; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=TRzt6xZc; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=2lAvgDJA; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=TRzt6xZc; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xfBPxdTo";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="T4/LdxVK";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xfBPxdTo";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="T4/LdxVK"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="2lAvgDJA";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="TRzt6xZc";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="2lAvgDJA";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="TRzt6xZc"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 90A296A7F9;
-	Thu, 16 Apr 2026 12:05:39 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1B9866A7EC;
+	Thu, 16 Apr 2026 12:34:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1776341139; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1776342860; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rzic6Sec5CbuqHmkHsjg0YroaADL07uS7ZD4kwHtxlc=;
-	b=xfBPxdToC5U8ErxBtunsRT59prlS+QPeDJbP8MISpIr85lpV8SNIAxskf3Z2TescqwqKRS
-	Mtnx52HZXpkrmMVmR72ez8LpqgrCT+qE7jcgSfOw+7K3PnsjPC1cBwLMpob+aIZ5mpNzJ7
-	EbiGqRohc65yUIINs9Bm8BE8S9K0leE=
+	bh=VfRVQztVxZE1qlczIEiG+Di0cRaEaqEBpXbqpnycMEg=;
+	b=2lAvgDJAq/JoBGC7FwG9XFNG6323BkBaYk2YGa6y2Wg8d7U/VoNhv7l/kpUCDLGwn85Xmc
+	ENOpKOhp0HqlXQ/YdUQ8Z7Wyz128OW/zrrZvn24GDdtEdjm1ehJppkJn/MjHfMWONGzqvN
+	mRUjmYvrDKwjfJeBSaSpOtA3D9fmHZ8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1776341139;
+	s=susede2_ed25519; t=1776342860;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rzic6Sec5CbuqHmkHsjg0YroaADL07uS7ZD4kwHtxlc=;
-	b=T4/LdxVKWKFmDADmBO/WtToF+wVJa/EczIBvCy3ZlXL4Hio4qD/62bOiZV6/MmBly+pEZG
-	78MGpUi8qwmm57Dw==
+	bh=VfRVQztVxZE1qlczIEiG+Di0cRaEaqEBpXbqpnycMEg=;
+	b=TRzt6xZc9OrfkCBcA7qKq99GsLISMToJjn4dVQlYzcKF8VIjubsyHlqCadtqpUpD8Un4UU
+	fqu2kzSHAKnwQcDQ==
 Authentication-Results: smtp-out1.suse.de;
-	none
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=2lAvgDJA;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=TRzt6xZc
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1776341139; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1776342860; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rzic6Sec5CbuqHmkHsjg0YroaADL07uS7ZD4kwHtxlc=;
-	b=xfBPxdToC5U8ErxBtunsRT59prlS+QPeDJbP8MISpIr85lpV8SNIAxskf3Z2TescqwqKRS
-	Mtnx52HZXpkrmMVmR72ez8LpqgrCT+qE7jcgSfOw+7K3PnsjPC1cBwLMpob+aIZ5mpNzJ7
-	EbiGqRohc65yUIINs9Bm8BE8S9K0leE=
+	bh=VfRVQztVxZE1qlczIEiG+Di0cRaEaqEBpXbqpnycMEg=;
+	b=2lAvgDJAq/JoBGC7FwG9XFNG6323BkBaYk2YGa6y2Wg8d7U/VoNhv7l/kpUCDLGwn85Xmc
+	ENOpKOhp0HqlXQ/YdUQ8Z7Wyz128OW/zrrZvn24GDdtEdjm1ehJppkJn/MjHfMWONGzqvN
+	mRUjmYvrDKwjfJeBSaSpOtA3D9fmHZ8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1776341139;
+	s=susede2_ed25519; t=1776342860;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rzic6Sec5CbuqHmkHsjg0YroaADL07uS7ZD4kwHtxlc=;
-	b=T4/LdxVKWKFmDADmBO/WtToF+wVJa/EczIBvCy3ZlXL4Hio4qD/62bOiZV6/MmBly+pEZG
-	78MGpUi8qwmm57Dw==
+	bh=VfRVQztVxZE1qlczIEiG+Di0cRaEaqEBpXbqpnycMEg=;
+	b=TRzt6xZc9OrfkCBcA7qKq99GsLISMToJjn4dVQlYzcKF8VIjubsyHlqCadtqpUpD8Un4UU
+	fqu2kzSHAKnwQcDQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5CF22593A3;
-	Thu, 16 Apr 2026 12:05:39 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F409B593A3;
+	Thu, 16 Apr 2026 12:34:19 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id IPOmFpPQ4GlRBgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 16 Apr 2026 12:05:39 +0000
+	id DSuOO0vX4GmxIgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 16 Apr 2026 12:34:19 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id DCB6FA0B67; Thu, 16 Apr 2026 14:05:34 +0200 (CEST)
-Date: Thu, 16 Apr 2026 14:05:34 +0200
+	id B287FA0B67; Thu, 16 Apr 2026 14:34:15 +0200 (CEST)
+Date: Thu, 16 Apr 2026 14:34:15 +0200
 From: Jan Kara <jack@suse.cz>
 To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
@@ -81,7 +82,7 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	brauner@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 Subject: Re: [RFC PATCH v2 2/5] iomap: Add initial support for buffered
  RWF_WRITETHROUGH
-Message-ID: <5l2pnrwodwbey7lwmysjxldqpm2kbyi7kqp5tqg7xozvaoecuh@dcglcdr3ipnz>
+Message-ID: <52wsh6owrtmznt5xuks6ljwy4zbpyid45x5dbxo5xgssxm4zxy@iue2on3llpfb>
 References: <cover.1775658795.git.ojaswin@linux.ibm.com>
  <d44171d5a1ec783722019ad7d1a4ede0478cc914.1775658795.git.ojaswin@linux.ibm.com>
 Precedence: bulk
@@ -93,75 +94,82 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <d44171d5a1ec783722019ad7d1a4ede0478cc914.1775658795.git.ojaswin@linux.ibm.com>
-X-Spamd-Result: default: False [-2.30 / 50.00];
+X-Spamd-Result: default: False [-2.51 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	SUSPICIOUS_RECIPS(1.50)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
+	MX_GOOD(-0.01)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
 	RCPT_COUNT_TWELVE(0.00)[17];
 	RCVD_TLS_LAST(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
+	FREEMAIL_CC(0.00)[vger.kernel.org,kernel.org,oracle.com,infradead.org,lst.de,gmail.com,suse.cz,mit.edu,samsung.com,anarazel.de,kvack.org];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,kernel.org,oracle.com,infradead.org,lst.de,gmail.com,suse.cz,mit.edu,samsung.com,anarazel.de,kvack.org];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:email,imap1.dmz-prg2.suse.org:helo]
+	TAGGED_RCPT(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email]
+X-Rspamd-Action: no action
 X-Spam-Flag: NO
-X-Spam-Score: -2.30
+X-Spam-Score: -2.51
 X-Spam-Level: 
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 1B9866A7EC
 
-On Thu 09-04-26 00:15:43, Ojaswin Mujoo wrote:
-> This adds initial support for performing buffered non-aio
-> RWF_WRITETHROUGH write. The rough flow for a writethrough write is as
-> follows:
-> 
-> 1. Acquire inode lock
-> 2. initialize writethrough context (wt_ctx) and mark
->    mapping as stable.
-> 3. Start the iomap_iter() loop. For each iomap:
->   3.1. Acquire folio and folio_lock.
->   3.2. perform memcpy from user buffer to the folio and mark it
->        dirty
->   3.3. Wait for any current writeback to complete and then call
->        folio_mkclean() to prevent mmap writes from changing it.
->   3.4. Start writeback on the folio
->   3.5. Add the folio range under write to wt_ctx->bvec and folio_unlock()
->   3.6. If bvec is full, submit the current bvecs for IO.
->   3.7. Repeat 3.2 to 3.6 till the whole iomap is processed. Submit
->        the final set of bvecs for IO.
-> 4. Repeat step 3 till we have no more data to write.
-> 5. Finally, sleep in the syscall thread till all the IOs are
->    completed (refcount == 0). Once that happens, the end io handler will
->    wake us up.
-> 6. Upon waking up, call fs ->end_io() callback (which updates inode
->    size), record any errors and return.
-> 7. inode_unlock()
-> 
-> This design gives buffered writethrough the same semantics as dio and
-> any error in the IO is directly returned to the caller. The design has
-> delibrately open coded the IO submission and completion flow (inspired
-> by dio) rather than reusing the dio functions as accomodating buffered
-> writethrough logic in dio code was polluting it with too many if else
-> conditionals and special cases.
-> 
-> Suggested-by: Jan Kara <jack@suse.cz>
-> Suggested-by: Dave Chinner <dgc@kernel.org>
-> Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Some more thoughs... :)
 
-Overall this looks good to me. Just a few smaller things below:
+> @@ -1096,6 +1097,276 @@ static bool iomap_write_end(struct iomap_iter *iter, size_t len, size_t copied,
+>  	return __iomap_write_end(iter->inode, pos, len, copied, folio);
+>  }
+>  
+> +static ssize_t iomap_writethrough_complete(struct iomap_writethrough_ctx *wt_ctx)
+> +{
+> +	struct kiocb *iocb	= wt_ctx->iocb;
+> +	struct inode *inode	= wt_ctx->inode;
+> +	ssize_t ret		= wt_ctx->error;
+> +
+> +	if (wt_ctx->dops && wt_ctx->dops->end_io) {
+> +		int err = wt_ctx->dops->end_io(iocb, wt_ctx->written,
+> +						wt_ctx->error,
+> +						wt_ctx->flags);
+
+It's a bit odd to use only ->end_io from dops also because we don't really
+use direct IO submission path. So perhaps you can have just an end_io
+handler pointer in iomap_writethrough_ops similarly as you have a
+submission one?
+
+> +		if (err)
+> +			ret = err;
+> +	}
+> +
+> +	mapping_clear_stable_writes(inode->i_mapping);
+> +
+> +	if (!ret) {
+> +		ret = wt_ctx->written;
+> +		iocb->ki_pos = wt_ctx->pos + ret;
+> +	}
+> +
+> +	kfree(wt_ctx);
+> +	return ret;
+> +}
+
+...
 
 > +static int iomap_writethrough_iter(struct iomap_writethrough_ctx *wt_ctx,
 > +				   struct iomap_iter *iter, struct iov_iter *i,
@@ -176,98 +184,142 @@ Overall this looks good to me. Just a few smaller things below:
 > +	unsigned int bs = i_blocksize(iter->inode);
 > +
 > +	/* copied over based on DIO handles these flags */
-			       ^ missing 'how' here
-
-> +ssize_t iomap_file_writethrough_write(struct kiocb *iocb, struct iov_iter *i,
-> +				      const struct iomap_writethrough_ops *wt_ops,
-> +				      void *private)
-> +{
-> +	struct inode *inode = iocb->ki_filp->f_mapping->host;
-> +	struct iomap_iter iter = {
-> +		.inode		= inode,
-> +		.pos		= iocb->ki_pos,
-> +		.len		= iov_iter_count(i),
-> +		.flags		= IOMAP_WRITE | IOMAP_WRITETHROUGH,
-> +		.private	= private,
-> +	};
-> +	struct iomap_writethrough_ctx *wt_ctx;
-> +	unsigned int max_bvecs;
-> +	ssize_t ret;
+> +	if (iter->iomap.type == IOMAP_UNWRITTEN)
+> +		wt_ctx->flags |= IOMAP_DIO_UNWRITTEN;
+> +	if (iter->iomap.flags & IOMAP_F_SHARED)
+> +		wt_ctx->flags |= IOMAP_DIO_COW;
 > +
-> +
-> +	/*
-> +	 * For now we don't support any other flag with WRITETHROUGH
-> +	 */
-> +	if (!(iocb->ki_flags & IOCB_WRITETHROUGH))
+> +	if (!(iter->flags & IOMAP_WRITETHROUGH))
 > +		return -EINVAL;
-> +	if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_DONTCACHE))
-> +		return -EINVAL;
-> +	if (iocb_is_dsync(iocb))
-> +		/* D_SYNC support not implemented yet */
-> +		return -EOPNOTSUPP;
-> +	if (!is_sync_kiocb(iocb))
-> +		/* aio support not implemented yet */
-> +		return -EOPNOTSUPP;
 > +
-> +	/*
-> +	 * +1 to max bvecs to account for unaligned write spanning multiple
-> +	 * folios
-> +	 */
-> +	max_bvecs = DIV_ROUND_UP(
-> +		iov_iter_count(i),
-> +		PAGE_SIZE << mapping_min_folio_order(inode->i_mapping)) + 1;
-
-Can this overflow? iov_iter_count() returns size_t which is ulong.
-
+> +	do {
+> +		struct folio *folio;
+> +		size_t offset;		/* Offset into folio */
+> +		u64 bytes;		/* Bytes to write to folio */
+> +		size_t copied;		/* Bytes copied from user */
+> +		u64 written;		/* Bytes have been written */
+> +		loff_t pos;
+> +		size_t off_aligned, len_aligned;
 > +
-> +	if (max_bvecs > BIO_MAX_VECS)
-> +		max_bvecs = BIO_MAX_VECS;
-> +	if (!max_bvecs)
-> +		max_bvecs = 1;
-
-I don't think 0 is possible here since we do +1 in max_bvecs computation
-above.
-
+> +		bytes = iov_iter_count(i);
+> +retry:
+> +		offset = iter->pos & (chunk - 1);
+> +		bytes = min(chunk - offset, bytes);
+> +		status = balance_dirty_pages_ratelimited_flags(mapping,
+> +							       bdp_flags);
+> +		if (unlikely(status))
+> +			break;
 > +
-> +	wt_ctx = kzalloc(struct_size(wt_ctx, bvec, max_bvecs), GFP_NOFS);
-> +	if (!wt_ctx)
-> +		return -ENOMEM;
-> +
-> +	wt_ctx->iocb = iocb;
-> +	wt_ctx->inode = inode;
-> +	wt_ctx->dops = wt_ops->dops;
-> +	wt_ctx->pos = iocb->ki_pos;
-> +	wt_ctx->new_i_size = i_size_read(inode);
-> +	wt_ctx->max_bvecs = max_bvecs;
-> +	atomic_set(&wt_ctx->ref, 1);
-> +	wt_ctx->waiter = current;
-> +
-> +	mapping_set_stable_writes(inode->i_mapping);
-> +
-
-We should check if mapping is already marked as requiring stable pages
-avoid messing with (in particular clearing) the flag in that case.
-
-> +	while ((ret = iomap_iter(&iter, wt_ops->ops)) > 0) {
-> +		WARN_ON(iter.iomap.type != IOMAP_UNWRITTEN &&
-> +			iter.iomap.type != IOMAP_MAPPED);
-> +		iter.status = iomap_writethrough_iter(wt_ctx, &iter, i, wt_ops);
-> +	}
-> +	if (ret < 0)
-> +		cmpxchg(&wt_ctx->error, 0, ret);
-> +
-> +	if (!atomic_dec_and_test(&wt_ctx->ref)) {
-> +		for (;;) {
-> +			set_current_state(TASK_UNINTERRUPTIBLE);
-> +			if (!READ_ONCE(wt_ctx->waiter))
-> +				break;
-> +			blk_io_schedule();
+> +		/*
+> +		 * If completions already occurred and reported errors, give up
+> +		 * now and don't bother submitting more bios.
+> +		 */
+> +		if (unlikely(data_race(wt_ctx->error))) {
+> +			wt_ctx->nr_bvecs = 0;
+> +			break;
 > +		}
-> +		__set_current_state(TASK_RUNNING);
-> +	}
 > +
-> +	return iomap_writethrough_complete(wt_ctx);
+> +		if (bytes > iomap_length(iter))
+> +			bytes = iomap_length(iter);
+> +
+> +		/*
+> +		 * Bring in the user page that we'll copy from _first_.
+> +		 * Otherwise there's a nasty deadlock on copying from the
+> +		 * same page as we're writing to, without it being marked
+> +		 * up-to-date.
+> +		 *
+> +		 * For async buffered writes the assumption is that the user
+> +		 * page has already been faulted in. This can be optimized by
+> +		 * faulting the user page.
+> +		 */
+> +		if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
+> +			status = -EFAULT;
+> +			break;
+> +		}
+> +
+> +		status = iomap_write_begin(iter, wt_ops->write_ops, &folio,
+> +					   &offset, &bytes);
+> +		if (unlikely(status)) {
+> +			iomap_write_failed(iter->inode, iter->pos, bytes);
+> +			break;
+> +		}
+> +		if (iter->iomap.flags & IOMAP_F_STALE)
+> +			break;
+> +
+> +		pos = iter->pos;
+> +
+> +		if (mapping_writably_mapped(mapping))
+> +			flush_dcache_folio(folio);
+> +
+> +		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+> +		written = iomap_write_end(iter, bytes, copied, folio) ?
+> +			  copied : 0;
+> +
+> +		if (!written)
+> +			goto put_folio;
+> +
+> +		off_aligned = round_down(offset, bs);
+> +		len_aligned = round_up(offset + written, bs) - off_aligned;
+> +
+> +		iomap_folio_prepare_writethrough(folio, off_aligned,
+> +						 len_aligned);
+> +
+> +		if (!wt_ctx->nr_bvecs)
+> +			wt_ctx->bio_pos = round_down(pos, bs);
+> +
+> +		bvec_set_folio(&wt_ctx->bvec[wt_ctx->nr_bvecs], folio,
+> +			       len_aligned, off_aligned);
+
+Shouldn't we zero out the tail of the folio if we are submitting partial
+folio for write?
+
+> +		wt_ctx->nr_bvecs++;
+> +		wt_ctx->written += written;
+> +
+> +		if (pos + written > wt_ctx->new_i_size)
+> +			wt_ctx->new_i_size = pos + written;
+
+I'm probably missing something here but where is i_size update handled? I
+don't see new_i_size used anywhere? Also why is it OK to not call
+pagecache_isize_extended() but that goes with the i_size update...
+
+> +
+> +		if (wt_ctx->nr_bvecs == wt_ctx->max_bvecs)
+> +			iomap_writethrough_submit_bio(wt_ctx, &iter->iomap, wt_ops);
+> +
+> +put_folio:
+> +		__iomap_put_folio(iter, wt_ops->write_ops, written, folio);
+> +
+> +		cond_resched();
+> +		if (unlikely(written == 0)) {
+> +			iomap_write_failed(iter->inode, pos, bytes);
+> +			iov_iter_revert(i, copied);
+> +
+> +			if (chunk > PAGE_SIZE)
+> +				chunk /= 2;
+> +			if (copied) {
+> +				bytes = copied;
+> +				goto retry;
+> +			}
+> +		} else {
+> +			total_written += written;
+> +			iomap_iter_advance(iter, written);
+> +		}
+> +	} while (iov_iter_count(i) && iomap_length(iter));
+
+Overall the differences of this function from iomap_write_iter() seem
+relatively small so maybe it would be possible to just extend
+iomap_write_iter() to support writethrough IO as well? Basically once we've
+copied data into the folio and called iomap_write_end() we can have "if
+writethrough, call function to prepare & submit the folio for IO".
+
+> +
+> +	if (wt_ctx->nr_bvecs)
+> +		iomap_writethrough_submit_bio(wt_ctx, &iter->iomap, wt_ops);
+> +
+> +	return total_written ? 0 : status;
 > +}
+> +
 
 								Honza
 -- 
