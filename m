@@ -1,101 +1,140 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C341739FCA7
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 23:21:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66240238171
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 01:24:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776381703; cv=none; b=sr+TBg4COlEmqodK2pSsLkSSxGAztTy2OfcUMrR0sOwvNJWnWv8T8ypJQAn8jOxBe3UH0DpiAiyo9d4LtitIpBJWwElifhO1BDc2WxrTP6O2UVsyJxAc+wyb6xz99hbii3MZ6/bz4MgU/NbyQit9Ec/HRE8O3HqgbxjVHf9/+f8=
+	t=1776389066; cv=none; b=SNBvnhsFtDOjwPQoG7AI1bzCJ8/hwadYXAGTeQ7fiTMee77p9O32X/dgPIDumZ0sNr/TuiXJlLq86PNzlLZSxNSKHxi39RWNf1IdP0zIQhDntCE06x+6BfWjqZQRrhB13rM20VEZhi2pU1nelfGjVTnlt+6y48d8/BOvvHNc3Uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776381703; c=relaxed/simple;
-	bh=1zJh+gMNLh3n9Gp3wdZERWR7klivM5dIWbl3gOrvCZw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F5zatPnBgcg51QUeyxPkIVQ9SEloS6BS1X3U0lYPXZT+ChLyL6FjI+uQ6uR5gnQlzqDdmxdhMe8317GApZjlqryBqO6LNzsv6hiv5I+rzIor29UJ4eBgsdy0vbm9qKmKzagcuMxOwUXqDgs5EovbTthwz0Po1ohbXL37cd2+teo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=m4J6vtIQ; arc=none smtp.client-ip=209.85.128.49
+	s=arc-20240116; t=1776389066; c=relaxed/simple;
+	bh=Tw/UOvoceKE5QujmyaO+aYDZQJfXIPjW1vWdAuK5CJY=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=QH7GQxZ9vt+V38fZ/u1L9vvt9yBI2IqRhoyDRe9Uy2xurneNGeMMy8BRNyYcIvGUYxsWpkXeNrdetiikN5cti5JazN2kM3C3C4AY+GXVcTKdP61rY9kiGxTEFXhc3zpV3F24UY3OBRrHfeZ/83AEfbvb2wxXMsdiNZzxGMw/fzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r4ZKHWdD; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m4J6vtIQ"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4888375f735so698975e9.3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 16:21:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r4ZKHWdD"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-358e3cc5e7eso93629a91.0
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 18:24:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776381700; x=1776986500; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gtSi1JUHvm8h9ZtScbheLnAanBRgPo0T9nN7jS0tLq8=;
-        b=m4J6vtIQ0er4WBcUyW7Vs+GyWO0eI3k33YIr6/cLkiRai6ad7kokNdfk6bnBBbVgu7
-         p03pcRtlu4Wga1uf7P1AV3TP6JETrN+3zf+UemEd1fio6FClZGj2UzHczYkQcHxdDTeI
-         0s4j0Zw/AGYXKZ9g/3lNbLmfKfUeRDHMBtdOM2LENcL97WWm0tpNQwSV1ityaWu7Eqk+
-         0cASWkUhGEYG+oO9GB4ZqcGIw7nWo7h9rnXljqMD1YnlFu/VCC/Rsv3DkQaFd2f66vQ+
-         64ErKCHXqABWqma8RppIWHqO/jLA7SIT5TAjvYUm0HRoYkwNcSAGjl/tzthmVqZ/Six8
-         LQyA==
+        d=gmail.com; s=20251104; t=1776389065; x=1776993865; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=cpOJeXbfkQGfp2oJxb2u3PSnQNyOEp2e2c25qGS5Duw=;
+        b=r4ZKHWdDGZarPAient8RdIqeZHFIyyeLztwzfm9mgWYxQanoy7gvEscGAUfkCXJaLM
+         KBzM/2oySD+RYhjpNkpzg0bRDOWF0LRsL1d4OnsD98L1kZErgEeex5HOluoXemHZ3FSg
+         0CTzISE8DOvbJeWFldlyGuqemcgYGClczucGH3sxISikMEx1/9HSD7XGRJi/5zOK3Oyq
+         8P2OT35I4uWdJi0tIWH+8HJSx3QY/L6I5sunN/T63KjLZ1ffA8L+NUrL+tlSxfJDFlIG
+         8Vk67M7DYDoLnbJ0YiI1kKN3g9SGfkGdWmCa9Kg94k6xtcd98cjWqoC+SHyzVPZ+zxW4
+         tGgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776381700; x=1776986500;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gtSi1JUHvm8h9ZtScbheLnAanBRgPo0T9nN7jS0tLq8=;
-        b=ei37cyS21nXlKZSflRzbm40BoEXPYz8Sk7EkqOganlVhiaX3C8h3vQLcUeOpZ0gvdm
-         I1emSbWcfGV4ZSr4v8kxFIhgm0XGdlU9Un6Eatg571YkCdZegJcXPd6HIO8HPlG5dPfy
-         CbB6U5IfWQWWdyGPTXJZbXPri6RTeOl3sl9SX/EUhPqCUUTwaJbLzu+kRjPhP63YzEwd
-         bS4DWShYFPg72xKosfJe+/KsJ3qf+DUTGZxEQQgJM+Vim6VGVP5NObuwWUCkbt/cNu6s
-         1zGVVruDRxIVZAsbOXvtvQExlSEAPVVf8TpsZgP1bzEgt11uR2wFGHJVPqSSUEFJ3l7u
-         /DNw==
-X-Forwarded-Encrypted: i=1; AFNElJ9SPU7+vKtn0cUOQ1WIS7GySxaSB+nkZ/I2nwagpRLa2zr1loVgZ6VdO1BsWHzM/K47rd7g1mxiefk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzPIxxwGB61uEEy6fkHzrYpfEz30VvRL6t63NWEC1x/jvvrG0B2
-	WxzoVSVX5cNyUCM3m+czqpKuSS+RhnBkSBCB86w300v353Ku2I0G5Wu0
-X-Gm-Gg: AeBDieu1DP9VQbFg+KEp+yTIu1hT6SFs9v1lcJKZG6xZqtoXlECHyB/skVAoaGDrQQI
-	4sd80OKxS6Zo14TL2t8YTFdI8mp5JKIhdYY4GUmaplwd9uj9SPdaYX1S11PmKasfel3itE0CJj7
-	79yqz1LF3r/goxp6e9Wsd6WYQL6fNGL6KleM84Afj0adi0VWd48uY7qtR+7YS0y6rmHFvU8QjKq
-	nKKsfRyzrO6rzkkl5zAlqBjePcZbvtqT3Jf5HLf2rYC8aA2b7xockus9/YNgfxgI+GZLb6S22lz
-	1gRZHPsIGb6xXGNXuT/rb4DAe1U/CdGp4007thtDfGd0pzoA38X4l13XmqqmrwMonWDYQEKSfbV
-	7b3niW/2W6Hv8LT26i3Yp9EwCN1idmER/pb8nP9kCNMkoGtyXRdHLjEWN95svBPF46bYp5cdLSG
-	exui4Q63dO/Z7QhqyOiLaZqn5OktsVXUZV06R5JoGX1ZmCBAvICLZUPnk6Qjlm4+nPHqhZrTIpT
-	yThRI2Dvn08H6KGGBer
-X-Received: by 2002:a05:600c:34c3:b0:485:41c4:e2e4 with SMTP id 5b1f17b1804b1-488fb792dd0mr7666275e9.23.1776381700006;
-        Thu, 16 Apr 2026 16:21:40 -0700 (PDT)
-Received: from f (cst-prg-89-171.cust.vodafone.cz. [46.135.89.171])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43fe43021cfsm429354f8f.2.2026.04.16.16.21.37
+        d=1e100.net; s=20251104; t=1776389065; x=1776993865;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cpOJeXbfkQGfp2oJxb2u3PSnQNyOEp2e2c25qGS5Duw=;
+        b=Vb8s1EpCrzsstE3JxHCJlPNz3ed0DcvRrksyUEXSs6EoVKOSHdCFkbtUpqbuQjZKcF
+         oCzx+HgFS5tkKIMwykdWftwJk2W9AYshVS/CiWuQLJM0fb0EBGoIAsnyRlFcd1USbb12
+         9l1la/mATD+StZtiAnsNy0mEqE2R1OHxey/MhU8Q6Jo+KN84uDdxrGkzgxuRnHfj/p87
+         wLHoZYp7sAyUTfds2MaFlnDXQbjUPuiPZkjbGOKITl4WXs+B+Wb8cXhqb9JXf7xS+Bll
+         w0CaQ2sBbAx31CyC/+sqZIeyB3SrVFU6GmxMvWQsXME0GA1BoZXjOj5S4QnBygkqj1vU
+         OGUA==
+X-Forwarded-Encrypted: i=1; AFNElJ/PM8nM4mrfInMNIu/oZbis0Knx6R+G+5/czDCWxvAiznXutmRZCodkbO0gYbYhN0WHaJfWpNADwc0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsaRtlK33d86ASMHMwHE8t8okiDV4AIr+J5l7Fl3zISefjsOTr
+	SYYHKff0ivRhEnA8Is+DzAplRwsat2vRuE+az21C1nOI+kpM73xYSoqT
+X-Gm-Gg: AeBDieuejP6Jki+Lc1yrMHoeKNr4u2sTXoMFIXMN1slP/HJTE6V7u7m8lguwvihQ7PO
+	S5IrKRuvSjs9w/8pwe8/wEEpTHZpjtJ8Qr/HjssdGhKVq/+PBd+f+GfbmpcI7gtJod4Ksrzqdr2
+	m6PUhZvJAZmmiab0VLHIBsHqZKh7znobGV12Ie2WdaHSAAMKTxBYgv7Bf9ErfFZheQoHLeJ2zCg
+	tHFzUsCVnncD/pNjkLABzBxPIUG1OqQcwnn4uqXE+TEN0kng/zFASQqCwhR+L0TkjXTDyUSXTjf
+	xcl8Ajg4AsETlGYCuidYgw8Y4ok4SWCm5JWUslvMIMki7qH0u/xAlEHQ20IGaxyw5hMF5H+S4P/
+	qlwTVoNEEKp7PChhYNWvRkxJDr/70VHKUuPrjx4VgbKKiiFAmVUCSe4zDlKYDwRcF8dHa2Mr9k8
+	Knjvuv5xjiAZguJTilM/LBoXiOW870HmmAK5M+n+YaD7I=
+X-Received: by 2002:a17:90b:2fc8:b0:35e:5a4c:9069 with SMTP id 98e67ed59e1d1-3614048a431mr688213a91.14.1776389064664;
+        Thu, 16 Apr 2026 18:24:24 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fab20c6asm1525035ad.58.2026.04.16.18.24.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Apr 2026 16:21:39 -0700 (PDT)
-Date: Fri, 17 Apr 2026 01:20:27 +0200
-From: Mateusz Guzik <mjguzik@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>, 
-	Fengnan Chang <fengnanchang@gmail.com>, brauner@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, lidiangang@bytedance.com, 
-	Fengnan Chang <changfengnan@bytedance.com>
-Subject: Re: [PATCH] iomap: avoid memset iomap when iter is done
-Message-ID: <hgug5jbkwk352zrwcngdofwiy2hq4nk7eq7yvzi6nru5zyebd2@fe64yziutvlk>
-References: <20260416030642.26744-1-changfengnan@bytedance.com>
- <aeDjui2LGSidEHcJ@bfoster>
- <20260416152705.GC114239@frogsfrogsfrogs>
+        Thu, 16 Apr 2026 18:24:23 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Matthew Wilcox <willy@infradead.org>, Salvatore Dipietro <dipiets@amazon.it>
+Cc: linux-kernel@vger.kernel.org, alisaidi@amazon.com, blakgeof@amazon.com, abuehaze@amazon.de, dipietro.salvatore@gmail.com, stable@vger.kernel.org, Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
+In-Reply-To: <5x66n04a.ritesh.list@gmail.com>
+Date: Thu, 16 Apr 2026 20:44:05 +0530
+Message-ID: <ldenszsy.ritesh.list@gmail.com>
+References: <20260403193535.9970-1-dipiets@amazon.it> <20260403193535.9970-2-dipiets@amazon.it> <adCQTF1PQnlbNMO8@casper.infradead.org> <5x66n04a.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260416152705.GC114239@frogsfrogsfrogs>
 
-On Thu, Apr 16, 2026 at 08:27:05AM -0700, Darrick J. Wong wrote:
-> What kind of computer is this where there's a 5% hit to iops from a
-> memset of ~150 bytes?
-> 
+Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
 
-Such a memset is not free in its own right, but here the real problem is
-*how* it is done: by default gcc emits inlined 'rep stosq' which has
-utterly horrid performance (same as 'rep movsq') and in this particular
-case the 2 memsets in the source code result in 2 separate 'rep movsq'
-invocations.
+> Matthew Wilcox <willy@infradead.org> writes:
+>
+>> On Fri, Apr 03, 2026 at 07:35:34PM +0000, Salvatore Dipietro wrote:
+>>> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+>>> introduced high-order folio allocations in the buffered write
+>>> path. When memory is fragmented, each failed allocation triggers
+>>> compaction and drain_all_pages() via __alloc_pages_slowpath(),
+>>> causing a 0.75x throughput drop on pgbench (simple-update) with 
+>>> 1024 clients on a 96-vCPU arm64 system.
+>>> 
+>>> Strip __GFP_DIRECT_RECLAIM from folio allocations in
+>>> iomap_get_folio() when the order exceeds PAGE_ALLOC_COSTLY_ORDER,
+>>> making them purely opportunistic.
+>>
+>> If you look at __filemap_get_folio_mpol(), that's kind of being tried
+>> already:
+>>
+>>                         if (order > min_order)
+>>                                 alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
+>>
+>>  * %__GFP_NORETRY: The VM implementation will try only very lightweight
+>>  * memory direct reclaim to get some memory under memory pressure (thus
+>>  * it can sleep). It will avoid disruptive actions like OOM killer. The
+>>  * caller must handle the failure which is quite likely to happen under
+>>  * heavy memory pressure. The flag is suitable when failure can easily be
+>>  * handled at small cost, such as reduced throughput.
+>>
+>> which, from the description, seemed like the right approach.  So either
+>> the description or the implementation should be updated, I suppose?
+>>
+>> Now, what happens if you change those two lines to:
+>>
+>> 			if (order > min_order) {
+>> 				alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
+>> 				alloc_gfp |= __GFP_NOWARN;
+>> 			}
+>
+> Hi Matthew,
+>
+> Shouldn't we try this instead? This would still allows us to keep
+> __GFP_NORETRY and hence light weight direct reclaim/compaction for
+> atleast the non-costly order allocations, right?
+>
+>  			if (order > min_order) {
+> 				alloc_gfp |= __GFP_NOWARN;
+> 				if (order > PAGE_ALLOC_COSTLY_ORDER)
+> 					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
+> 				else
+> 					alloc_gfp |= __GFP_NORETRY;
+> 			}
+>
 
-I complained about it numerous times, see this to get a taste:
-https://lore.kernel.org/all/20250605164733.737543-1-mjguzik@gmail.com/
+Hi Salvatore,
 
-Also see
-https://lore.kernel.org/all/202504181042.54ea2b8a-lkp@intel.com/
+Did you get a chance to test the above two options (shared by Matthew
+and me)? And were you able to recover the performance back with those?
 
-If memory serves right gcc is going to fix it, so this is largely going
-to clear itself down the road.
+So, in a longer run, as Dave suggested, we might need to fix this by
+maybe considering removing compaction in the direct reclaim path. But I
+guess for fixing it in older kernel releases, we might need a quick fix
+,so maybe worth trying the above suggested changes, perhaps.
+
+Also, I am somehow not able to hit this problem at my end (even after
+creating a bit of memory fragmentation). So please also feel free to
+share the steps, if you have a setup to re-create it easily.
+
+-ritesh
