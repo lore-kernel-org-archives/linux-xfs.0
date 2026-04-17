@@ -1,140 +1,172 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from va-1-111.ptr.blmpb.com (va-1-111.ptr.blmpb.com [209.127.230.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66240238171
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 01:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61BA2AD00
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 02:15:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776389066; cv=none; b=SNBvnhsFtDOjwPQoG7AI1bzCJ8/hwadYXAGTeQ7fiTMee77p9O32X/dgPIDumZ0sNr/TuiXJlLq86PNzlLZSxNSKHxi39RWNf1IdP0zIQhDntCE06x+6BfWjqZQRrhB13rM20VEZhi2pU1nelfGjVTnlt+6y48d8/BOvvHNc3Uw=
+	t=1776392127; cv=none; b=OuBxlJnJ3PQfpb/FFiWeHnxIZq22wPg/EMan/+gxBlQjxUBF0BSoom+5+obNlAzoX3Ru636YtuySAvuXoHdfdrVqG5y4pmQejwnaOXMymUcipXV9RUvaLhgfR9mFTfTKkH4K6dPWaxBmWTy+tjMWjnzCUSkr20gXR3WLWg8kBLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776389066; c=relaxed/simple;
-	bh=Tw/UOvoceKE5QujmyaO+aYDZQJfXIPjW1vWdAuK5CJY=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=QH7GQxZ9vt+V38fZ/u1L9vvt9yBI2IqRhoyDRe9Uy2xurneNGeMMy8BRNyYcIvGUYxsWpkXeNrdetiikN5cti5JazN2kM3C3C4AY+GXVcTKdP61rY9kiGxTEFXhc3zpV3F24UY3OBRrHfeZ/83AEfbvb2wxXMsdiNZzxGMw/fzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r4ZKHWdD; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776392127; c=relaxed/simple;
+	bh=0/lyXGkKFiSZc8pIApTKDpiVFRf4a8ueh+JFKqqvjT4=;
+	h=Cc:Subject:References:Content-Type:Date:Message-Id:To:From:
+	 Mime-Version:In-Reply-To; b=G/TjGtE97EIbWwDGQqfgIA0KR2eYAhxcEU0PiyPVveEyijhh5oTFgsno+OH/OxaTi3urFRKU4ka6YBtIQm3jZAbLrJfPA7+EWEunZjW4riR92KUI55s9YA4PaxHUAEialld9lF0YONIDn59IXQWaVO7ua3xphbds9RkDaLgjVMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=IG4gWBEY; arc=none smtp.client-ip=209.127.230.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r4ZKHWdD"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-358e3cc5e7eso93629a91.0
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 18:24:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776389065; x=1776993865; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=cpOJeXbfkQGfp2oJxb2u3PSnQNyOEp2e2c25qGS5Duw=;
-        b=r4ZKHWdDGZarPAient8RdIqeZHFIyyeLztwzfm9mgWYxQanoy7gvEscGAUfkCXJaLM
-         KBzM/2oySD+RYhjpNkpzg0bRDOWF0LRsL1d4OnsD98L1kZErgEeex5HOluoXemHZ3FSg
-         0CTzISE8DOvbJeWFldlyGuqemcgYGClczucGH3sxISikMEx1/9HSD7XGRJi/5zOK3Oyq
-         8P2OT35I4uWdJi0tIWH+8HJSx3QY/L6I5sunN/T63KjLZ1ffA8L+NUrL+tlSxfJDFlIG
-         8Vk67M7DYDoLnbJ0YiI1kKN3g9SGfkGdWmCa9Kg94k6xtcd98cjWqoC+SHyzVPZ+zxW4
-         tGgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776389065; x=1776993865;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cpOJeXbfkQGfp2oJxb2u3PSnQNyOEp2e2c25qGS5Duw=;
-        b=Vb8s1EpCrzsstE3JxHCJlPNz3ed0DcvRrksyUEXSs6EoVKOSHdCFkbtUpqbuQjZKcF
-         oCzx+HgFS5tkKIMwykdWftwJk2W9AYshVS/CiWuQLJM0fb0EBGoIAsnyRlFcd1USbb12
-         9l1la/mATD+StZtiAnsNy0mEqE2R1OHxey/MhU8Q6Jo+KN84uDdxrGkzgxuRnHfj/p87
-         wLHoZYp7sAyUTfds2MaFlnDXQbjUPuiPZkjbGOKITl4WXs+B+Wb8cXhqb9JXf7xS+Bll
-         w0CaQ2sBbAx31CyC/+sqZIeyB3SrVFU6GmxMvWQsXME0GA1BoZXjOj5S4QnBygkqj1vU
-         OGUA==
-X-Forwarded-Encrypted: i=1; AFNElJ/PM8nM4mrfInMNIu/oZbis0Knx6R+G+5/czDCWxvAiznXutmRZCodkbO0gYbYhN0WHaJfWpNADwc0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwsaRtlK33d86ASMHMwHE8t8okiDV4AIr+J5l7Fl3zISefjsOTr
-	SYYHKff0ivRhEnA8Is+DzAplRwsat2vRuE+az21C1nOI+kpM73xYSoqT
-X-Gm-Gg: AeBDieuejP6Jki+Lc1yrMHoeKNr4u2sTXoMFIXMN1slP/HJTE6V7u7m8lguwvihQ7PO
-	S5IrKRuvSjs9w/8pwe8/wEEpTHZpjtJ8Qr/HjssdGhKVq/+PBd+f+GfbmpcI7gtJod4Ksrzqdr2
-	m6PUhZvJAZmmiab0VLHIBsHqZKh7znobGV12Ie2WdaHSAAMKTxBYgv7Bf9ErfFZheQoHLeJ2zCg
-	tHFzUsCVnncD/pNjkLABzBxPIUG1OqQcwnn4uqXE+TEN0kng/zFASQqCwhR+L0TkjXTDyUSXTjf
-	xcl8Ajg4AsETlGYCuidYgw8Y4ok4SWCm5JWUslvMIMki7qH0u/xAlEHQ20IGaxyw5hMF5H+S4P/
-	qlwTVoNEEKp7PChhYNWvRkxJDr/70VHKUuPrjx4VgbKKiiFAmVUCSe4zDlKYDwRcF8dHa2Mr9k8
-	Knjvuv5xjiAZguJTilM/LBoXiOW870HmmAK5M+n+YaD7I=
-X-Received: by 2002:a17:90b:2fc8:b0:35e:5a4c:9069 with SMTP id 98e67ed59e1d1-3614048a431mr688213a91.14.1776389064664;
-        Thu, 16 Apr 2026 18:24:24 -0700 (PDT)
-Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fab20c6asm1525035ad.58.2026.04.16.18.24.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Apr 2026 18:24:23 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Matthew Wilcox <willy@infradead.org>, Salvatore Dipietro <dipiets@amazon.it>
-Cc: linux-kernel@vger.kernel.org, alisaidi@amazon.com, blakgeof@amazon.com, abuehaze@amazon.de, dipietro.salvatore@gmail.com, stable@vger.kernel.org, Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
-In-Reply-To: <5x66n04a.ritesh.list@gmail.com>
-Date: Thu, 16 Apr 2026 20:44:05 +0530
-Message-ID: <ldenszsy.ritesh.list@gmail.com>
-References: <20260403193535.9970-1-dipiets@amazon.it> <20260403193535.9970-2-dipiets@amazon.it> <adCQTF1PQnlbNMO8@casper.infradead.org> <5x66n04a.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="IG4gWBEY"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1776392119; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=0/lyXGkKFiSZc8pIApTKDpiVFRf4a8ueh+JFKqqvjT4=;
+ b=IG4gWBEYPN7WuL+7hJjpHjd+pK+IA6Gs24WdYh2ASImovTh0jxLUNxrhlDV7voWUTVWDVe
+ c8Whv6nuWQNxsfp2qI4SnWMk+aZFDd4rrX44KPivVwGfu6vWNmL4siOUGdvhXFuopUgDab
+ uQU+yyPTGk9PGkw+b8OqNHr0idPkRr8/eLe/uOPKqJNI/4XQn45w9JBAaGjHtypjHP6OoP
+ MzwivbOPCNeMkZUPiylv3pgmkNPL0ZQ52RXY9I6LavaeAieytLshxTdO0v6WziWlLBxSV8
+ ID1u/HsypE7EIfPgxsZK6eGO2azZJ9PNnBw9x+GAJEhpXvW4R6njVzYzxIn2rw==
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	"Brian Foster" <bfoster@redhat.com>, 
+	"Fengnan Chang" <fengnanchang@gmail.com>, <brauner@kernel.org>, 
+	<hch@infradead.org>, <linux-xfs@vger.kernel.org>, 
+	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
+	<lidiangang@bytedance.com>
+Subject: Re: [PATCH] iomap: avoid memset iomap when iter is done
+References: <20260416030642.26744-1-changfengnan@bytedance.com> <aeDjui2LGSidEHcJ@bfoster> <20260416152705.GC114239@frogsfrogsfrogs>
+	<aeFlvXDShzIuOU9z@dread>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 17 Apr 2026 10:15:14 +0800
+Message-Id: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.2a887e59.940e.4103.87d7.62770ee521ce@bytedance.com>
+To: "Dave Chinner" <dgc@kernel.org>
+From: "changfengnan" <changfengnan@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+In-Reply-To: <aeFlvXDShzIuOU9z@dread>
+X-Lms-Return-Path: <lba+169e197b5+6cf6a2+vger.kernel.org+changfengnan@bytedance.com>
 
-Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
 
-> Matthew Wilcox <willy@infradead.org> writes:
->
->> On Fri, Apr 03, 2026 at 07:35:34PM +0000, Salvatore Dipietro wrote:
->>> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
->>> introduced high-order folio allocations in the buffered write
->>> path. When memory is fragmented, each failed allocation triggers
->>> compaction and drain_all_pages() via __alloc_pages_slowpath(),
->>> causing a 0.75x throughput drop on pgbench (simple-update) with 
->>> 1024 clients on a 96-vCPU arm64 system.
->>> 
->>> Strip __GFP_DIRECT_RECLAIM from folio allocations in
->>> iomap_get_folio() when the order exceeds PAGE_ALLOC_COSTLY_ORDER,
->>> making them purely opportunistic.
->>
->> If you look at __filemap_get_folio_mpol(), that's kind of being tried
->> already:
->>
->>                         if (order > min_order)
->>                                 alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
->>
->>  * %__GFP_NORETRY: The VM implementation will try only very lightweight
->>  * memory direct reclaim to get some memory under memory pressure (thus
->>  * it can sleep). It will avoid disruptive actions like OOM killer. The
->>  * caller must handle the failure which is quite likely to happen under
->>  * heavy memory pressure. The flag is suitable when failure can easily be
->>  * handled at small cost, such as reduced throughput.
->>
->> which, from the description, seemed like the right approach.  So either
->> the description or the implementation should be updated, I suppose?
->>
->> Now, what happens if you change those two lines to:
->>
->> 			if (order > min_order) {
->> 				alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
->> 				alloc_gfp |= __GFP_NOWARN;
->> 			}
->
-> Hi Matthew,
->
-> Shouldn't we try this instead? This would still allows us to keep
-> __GFP_NORETRY and hence light weight direct reclaim/compaction for
-> atleast the non-costly order allocations, right?
->
->  			if (order > min_order) {
-> 				alloc_gfp |= __GFP_NOWARN;
-> 				if (order > PAGE_ALLOC_COSTLY_ORDER)
-> 					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
-> 				else
-> 					alloc_gfp |= __GFP_NORETRY;
-> 			}
->
+> From: "Dave Chinner"<dgc@kernel.org>
+> Date:=C2=A0 Fri, Apr 17, 2026, 06:42
+> Subject:=C2=A0 Re: [PATCH] iomap: avoid memset iomap when iter is done
+> To: "Darrick J. Wong"<djwong@kernel.org>
+> Cc: "Brian Foster"<bfoster@redhat.com>, "Fengnan Chang"<fengnanchang@gmai=
+l.com>, <brauner@kernel.org>, <hch@infradead.org>, <linux-xfs@vger.kernel.o=
+rg>, <linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, <lidian=
+gang@bytedance.com>, "Fengnan Chang"<changfengnan@bytedance.com>
+> On Thu, Apr 16, 2026 at 08:27:05AM -0700, Darrick J. Wong wrote:
+> > On Thu, Apr 16, 2026 at 09:27:22AM -0400, Brian Foster wrote:
+> > > On Thu, Apr 16, 2026 at 11:06:42AM +0800, Fengnan Chang wrote:
+> > > > When iomap_iter() finishes its iteration (returns <=3D 0), it is no=
+ longer
+> > > > necessary to memset the entire iomap and srcmap structures.
+> > > >=C2=A0
+> > > > In high-IOPS scenarios (like 4k randread NVMe polling with io_uring=
+),
+> > > > where the majority of I/Os complete in a single extent map, this wa=
+sted
+> > > > memory write bandwidth, as the caller will just discard the iterato=
+r.
+> > > >=C2=A0
+> > > > Use this command to test:
+> > > > taskset -c 30 ./t/io_uring -p1 -d512 -b4096 -s32 -c32 -F1 -B1 -R1 -=
+X1
+> > > > -n1 -P1 /mnt/testfile
+> > > > IOPS improve about 5% on ext4 and XFS.
+> > > >=C2=A0
+> > > > However, we MUST still call iomap_iter_reset_iomap() to release the
+> > > > folio_batch if IOMAP_F_FOLIO_BATCH is set, otherwise we leak page
+> > > > references. Therefore, split the cleanup logic: always release the
+> > > > folio_batch, but skip the memset() when ret <=3D 0.
+> > > >=C2=A0
+> > > > Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
+> > > > ---
+> > > > =C2=A0fs/iomap/iter.c | 5 +++--
+> > > > =C2=A01 file changed, 3 insertions(+), 2 deletions(-)
+> > > >=C2=A0
+> > > > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> > > > index c04796f6e57f..91eb5e6165ff 100644
+> > > > --- a/fs/iomap/iter.c
+> > > > +++ b/fs/iomap/iter.c
+> > > > @@ -15,8 +15,6 @@ static inline void iomap_iter_reset_iomap(struct =
+iomap_iter *iter)
+> > > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> > > > =C2=A0
+> > > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iter->status =3D 0;
+> > > > - =C2=A0 =C2=A0 =C2=A0 =C2=A0memset(&iter->iomap, 0, sizeof(iter->i=
+omap));
+> > > > - =C2=A0 =C2=A0 =C2=A0 =C2=A0memset(&iter->srcmap, 0, sizeof(iter->=
+srcmap));
+> > > > =C2=A0}
+> > > > =C2=A0
+> > > > =C2=A0/* Advance the current iterator position and decrement the re=
+maining length */
+> > > > @@ -106,6 +104,9 @@ int iomap_iter(struct iomap_iter *iter, const s=
+truct iomap_ops *ops)
+> > > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret <=3D 0)
+> > > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0retur=
+n ret;
+> > > > =C2=A0
+> > > > + =C2=A0 =C2=A0 =C2=A0 =C2=A0memset(&iter->iomap, 0, sizeof(iter->i=
+omap));
+> > > > + =C2=A0 =C2=A0 =C2=A0 =C2=A0memset(&iter->srcmap, 0, sizeof(iter->=
+srcmap));
+> > > > +
+> > >=C2=A0
+> > > This seems reasonable to me in principle, but it feels a little odd t=
+o
+> > > leave a reset helper that doesn't really do a "reset." I wonder if th=
+is
+> > > should be refactored into an iomap_iter_complete() (i.e. "complete an
+> > > iteration") helper that includes the ret assignment logic just above =
+the
+> > > reset call and returns it, and then maybe leave a oneline comment abo=
+ve
+> > > the memset so somebody doesn't blindly fold it back in the future. So
+> > > for example:
+> > >=C2=A0
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 ret =3D iomap_iter_complete(iter);
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (ret <=3D 0)
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return ret;
+> > >=C2=A0
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* save cycles and only clear the mapping=
+s if we plan to iterate */
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 memset(..);
+> > > =C2=A0 =C2=A0 =C2=A0 =C2=A0 ...
+> > >=C2=A0
+> > > We'd probably have to recheck some of the iter state within the new
+> > > helper, but that doesn't seem like a big deal to me. Thoughts?
+> >=C2=A0
+> > What kind of computer is this where there's a 5% hit to iops from a
+> > memset of ~150 bytes?
+>=C2=A0
+> Even small costs can have a big impact when you have to pay it many
+> times.
+>=C2=A0
+> i.e. 2 million IOPS * 2 * 72 bytes per IO =3D 288MB/s of memory being
+> zeroed unnecessarily in very small (inefficient) chunks.
+>=C2=A0
+> That's definitely enough to cause a 5% drop in IOPS when the
+> workload is CPU or memory bandwidth bound....
 
-Hi Salvatore,
+My CPU is=C2=A0 Intel(R) Xeon(R) Platinum 8457C with 1TB RAM, NVMe is=C2=A0
+PS1010 and the system is very idle, only run one command with one core:
+taskset -c 30 ./t/io_uring -p1 -d512 -b4096 -s32 -c32 -F1 -B1 -R1 \
+-X1 -n1 -P1 /mnt/mytest=EF=BC=8CIOPS=C2=A0 improved from 1.9M to 2.0M.
+My test is a CPU bound case=EF=BC=8Cthese two memset operations should
+have taken only about 15 nanoseconds. at 2.0 million IOPS, the total=C2=A0
+CPU time budget per I/O operation averages just 500 nanoseconds.
+Taking into account the impact on the pipeline and the L1 cache, a 5%
+improvement is reasonable.
 
-Did you get a chance to test the above two options (shared by Matthew
-and me)? And were you able to recover the performance back with those?
-
-So, in a longer run, as Dave suggested, we might need to fix this by
-maybe considering removing compaction in the direct reclaim path. But I
-guess for fixing it in older kernel releases, we might need a quick fix
-,so maybe worth trying the above suggested changes, perhaps.
-
-Also, I am somehow not able to hit this problem at my end (even after
-creating a bit of memory fragmentation). So please also feel free to
-share the steps, if you have a setup to re-create it easily.
-
--ritesh
+>=C2=A0
+> -Dave.
+> --=C2=A0
+> Dave Chinner
+> dgc@kernel.org
+>=C2=A0
