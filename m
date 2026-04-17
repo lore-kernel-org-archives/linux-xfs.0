@@ -1,284 +1,91 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C800244661;
-	Fri, 17 Apr 2026 14:00:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9430124679C;
+	Fri, 17 Apr 2026 14:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776434442; cv=none; b=dmZIycXqUbOwe6Md2S5imK9MS+aohsm4hQ2oK3jeE0KpWUqsBuJAZn4B/zPzlgwKMMI2TYwS2SnRtkWPQfQocKIFfY4S+eih/R05/LH0wB/4veQOdHXl03rbnYgFQ0JrwzSXVTecFcSj9e3A7Lj0P8/qhB12VOpNOukDJDC9aZ4=
+	t=1776435514; cv=none; b=gzqUMbEgJtlYsPi2h+0xFYWQsmUtJdaJv3jeRqRcuvw8A0SC5Hgex67JMw8RZQPOFcoHgHxiRBsCaK04EziHnNaWo+D3UBoXYYn1JPE5+54taUYca6oGdc5zPty4GRA+FWk9FS65Lf9dC6gVXUpBvkzl0N/6u2hR1MzT6VQRkwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776434442; c=relaxed/simple;
-	bh=q/XC9Eoviewh46v3S07BQzMFlulsvZZNIxDzk23djEk=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=IktOpp/dsmuJ06N51mfOE9P0kzulDfpoQiSj6cG+HTSCfceX2bdFSfa6LcRBov1AGEbFi8b8YCoahpTgTcir8XByAORUywVUuzXIcPV9sakW2KcmAzUo5sKK7R7tOVGlYMhspMTGzUtjGRry0XOWyHhlGgOk/gJICTwvXXQu29o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=Fjeq2KZx; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
+	s=arc-20240116; t=1776435514; c=relaxed/simple;
+	bh=QRBDwehrIlUDhPTJwM4xFkKcy2A0zqfKM8V+RshiEK8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OcIBfYRxwNd+nIdftZSIZR51uXrN1Mji0WVMdoC4vndXlb+IK9N5WV3M3u0pSmxRr+tDLT5Ib7r/rjkfzcPxI5PXnW6G5tMy8m6o1PYyr4QkkQ4pk3WUZ5WH9zw0h04gW7geAzn40quo5HaAw8ydwuVEuLD2VCEuBI6p/xHSvKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QvB4pCi5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="Fjeq2KZx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:
-	To:From:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=fHbgfj/9xGr25dMaLAnfQ8AX/rDFvANOlKAS/fwwrnA=; b=Fjeq2KZxtNnwlPZxY5JqR9Qebj
-	yhlWt+OFoxke2f6keTmcOTeF7S2jemk9qdptVB7ZI6LHVplygY7epjnpCKdMmPRMhSBIkPZhW1ZmR
-	yBsj2LFjDa4HQXJ149RczsAns7ZWSZ5310pjFyJLejMoDUNi4RWt9MGD2Z3pnpMDdokIcWHtcZiFC
-	9YaqC2WToqrLaJFGM8HjysyrpFFGVWrnkNOv6e37lqaubQA5Z0ilF1AyoOfVP7l034c9IoKD2ow8/
-	Hw8PuPkn5oggE1tDX7sbcBEGFZtwZ4XZ8cVT/0zBQIY5tEmG4plhFG0OrvDuL4mjfvbSv0Xh5v3kZ
-	w9mXqAMA==;
-Received: from [179.244.2.202] (helo=[192.168.68.133])
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128) (Exim)
-	id 1wDjkK-00HUWR-DY; Fri, 17 Apr 2026 16:00:36 +0200
-Message-ID: <11a7a093-6725-4fd3-8ebf-be5988c2674b@igalia.com>
-Date: Fri, 17 Apr 2026 11:00:31 -0300
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QvB4pCi5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D298C2BCB0;
+	Fri, 17 Apr 2026 14:18:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776435514;
+	bh=QRBDwehrIlUDhPTJwM4xFkKcy2A0zqfKM8V+RshiEK8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QvB4pCi5ETz16/ykKBepbphVG4IlJoziQ8G3RjPWqYBHcjcNyyZ2xHztwzoRflrLQ
+	 oAtJaGB6Jzm7QVbyhPEY3ZR/8rnKX7OH3tqnegex9PTrsXbD1d6pByNmmVmhGsgnfO
+	 ir5sXFtiDj7/ZLA6y2CGfbd0s7KTn//umoUx30xqc3F8BFp/Ctgrt2mr3imk/9ppRm
+	 4dCCYtgdUPdJyuI19DbkVAS2wOsfyMfYluM0IywxwbehTqdOFSCRBd+dirD9JVrG2A
+	 cptPvmqqyq6WxvsSR6q6mYCiuooz9QC6lABOn9G6EnEIU03+fPZAymkeIiy0itIdOz
+	 JhzDoJB7dIkAg==
+Date: Fri, 17 Apr 2026 07:18:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Wilfred Mallawa <wilfred.opensource@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix memory leak for data allocated by
+ xfs_zone_gc_data_alloc()
+Message-ID: <20260417141833.GA7751@frogsfrogsfrogs>
+References: <20260417021628.2608734-3-wilfred.opensource@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [syzbot] [xfs?] inconsistent lock state in igrab
-From: Helen Koike <koike@igalia.com>
-To: syzbot <syzbot+5eb0d61dfb76ca12670c@syzkaller.appspotmail.com>,
- cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- syzkaller-bugs@googlegroups.com
-References: <699000b2.050a0220.3a4a67.00a6.GAE@google.com>
- <4507ddab-967a-439d-a8c9-3adcb6da6060@igalia.com>
-Content-Language: en-US
-In-Reply-To: <4507ddab-967a-439d-a8c9-3adcb6da6060@igalia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260417021628.2608734-3-wilfred.opensource@gmail.com>
 
-Re-submitting command without quotes:
-
-#syz fix: iomap: fix lockdep complaint when reads fail
-
-On 4/17/26 10:48 AM, Helen Koike wrote:
-> I couldn't reproduce on upstream/master (3cd8b194bf34) anymore.
-> Bisection pointed that the following commit fixes it (which make sense):
+On Fri, Apr 17, 2026 at 12:16:30PM +1000, Wilfred Mallawa wrote:
+> From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 > 
-> #syz fix: "iomap: fix lockdep complaint when reads fail"
+> In xfs_zone_gc_mount(), on error, a struct xfs_zone_gc_data allocated
+> with xfs_zone_gc_data_alloc() is freed with kfree(), however, this
+> doesn't free the underlying folios or the rmap_irecs.
 > 
-> On 2/14/26 1:57 AM, syzbot wrote:
->> Hello,
->>
->> syzbot found the following issue on:
->>
->> HEAD commit:    8a5203c630c6 Merge tag 'v7.0-rc-part1-smb3-client- 
->> fixes' o..
->> git tree:       upstream
->> console output: https://syzkaller.appspot.com/x/log.txt?x=158b97fa580000
->> kernel config:  https://syzkaller.appspot.com/x/.config? 
->> x=e987256b161b7ac5
->> dashboard link: https://syzkaller.appspot.com/bug? 
->> extid=5eb0d61dfb76ca12670c
->> compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils 
->> for Debian) 2.44
->>
->> Unfortunately, I don't have any reproducer for this issue yet.
->>
->> Downloadable assets:
->> disk image: https://storage.googleapis.com/syzbot-assets/a3e5efac4c35/ 
->> disk-8a5203c6.raw.xz
->> vmlinux: https://storage.googleapis.com/syzbot-assets/d4bd99ed6dad/ 
->> vmlinux-8a5203c6.xz
->> kernel image: https://storage.googleapis.com/syzbot- 
->> assets/228bf34253f1/bzImage-8a5203c6.xz
->>
->> IMPORTANT: if you fix the issue, please add the following tag to the 
->> commit:
->> Reported-by: syzbot+5eb0d61dfb76ca12670c@syzkaller.appspotmail.com
->>
->> I/O error, dev loop8, sector 18692 op 0x0:(READ) flags 0x880700 
->> phys_seg 1 prio class 2
->> ================================
->> WARNING: inconsistent lock state
->> syzkaller #0 Tainted: G             L
->> --------------------------------
->> inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
->> kworker/u8:12/11736 [HC0[0]:SC1[1]:HE1:SE0] takes:
->> ffff88807fafd500 (&sb->s_type->i_lock_key#50){+.?.}-{3:3}, at: 
->> spin_lock include/linux/spinlock.h:351 [inline]
->> ffff88807fafd500 (&sb->s_type->i_lock_key#50){+.?.}-{3:3}, at: 
->> igrab+0x2a/0x230 fs/inode.c:1574
->> {SOFTIRQ-ON-W} state was registered at:
->>    lock_acquire kernel/locking/lockdep.c:5868 [inline]
->>    lock_acquire+0x17c/0x330 kernel/locking/lockdep.c:5825
->>    __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
->>    _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
->>    spin_lock include/linux/spinlock.h:351 [inline]
->>    unlock_new_inode+0x7a/0x330 fs/inode.c:1213
->>    xfs_finish_inode_setup fs/xfs/xfs_inode.h:630 [inline]
->>    xfs_setup_existing_inode fs/xfs/xfs_inode.h:637 [inline]
->>    xfs_iget+0x1196/0x30f0 fs/xfs/xfs_icache.c:814
->>    xfs_mountfs+0x108c/0x20b0 fs/xfs/xfs_mount.c:1072
->>    xfs_fs_fill_super+0x153f/0x1f20 fs/xfs/xfs_super.c:1947
->>    get_tree_bdev_flags+0x38c/0x620 fs/super.c:1694
->>    vfs_get_tree+0x92/0x320 fs/super.c:1754
->>    fc_mount fs/namespace.c:1193 [inline]
->>    do_new_mount_fc fs/namespace.c:3761 [inline]
->>    do_new_mount fs/namespace.c:3837 [inline]
->>    path_mount+0x7d0/0x23d0 fs/namespace.c:4147
->>    do_mount fs/namespace.c:4160 [inline]
->>    __do_sys_mount fs/namespace.c:4349 [inline]
->>    __se_sys_mount fs/namespace.c:4326 [inline]
->>    __x64_sys_mount+0x293/0x310 fs/namespace.c:4326
->>    do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->>    do_syscall_64+0xc9/0xf80 arch/x86/entry/syscall_64.c:94
->>    entry_SYSCALL_64_after_hwframe+0x77/0x7f
->> irq event stamp: 1437372
->> hardirqs last  enabled at (1437372): [<ffffffff8b7b9792>] 
->> __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:151 
->> [inline]
->> hardirqs last  enabled at (1437372): [<ffffffff8b7b9792>] 
->> _raw_spin_unlock_irqrestore+0x52/0x80 kernel/locking/spinlock.c:194
->> hardirqs last disabled at (1437371): [<ffffffff8b7b94a2>] 
->> __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:108 [inline]
->> hardirqs last disabled at (1437371): [<ffffffff8b7b94a2>] 
->> _raw_spin_lock_irqsave+0x52/0x60 kernel/locking/spinlock.c:162
->> softirqs last  enabled at (1437320): [<ffffffff872b1a07>] 
->> spin_unlock_bh include/linux/spinlock.h:396 [inline]
->> softirqs last  enabled at (1437320): [<ffffffff872b1a07>] 
->> nsim_dev_trap_report drivers/net/netdevsim/dev.c:890 [inline]
->> softirqs last  enabled at (1437320): [<ffffffff872b1a07>] 
->> nsim_dev_trap_report_work+0x8c7/0xd10 drivers/net/netdevsim/dev.c:921
->> softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] __do_softirq 
->> kernel/softirq.c:656 [inline]
->> softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] 
->> invoke_softirq kernel/softirq.c:496 [inline]
->> softirqs last disabled at (1437353): [<ffffffff81c7a2cf>] 
->> __irq_exit_rcu+0xef/0x150 kernel/softirq.c:723
->>
->> other info that might help us debug this:
->>   Possible unsafe locking scenario:
->>
->>         CPU0
->>         ----
->>    lock(&sb->s_type->i_lock_key#50);
->>    <Interrupt>
->>      lock(&sb->s_type->i_lock_key#50);
->>
->>   *** DEADLOCK ***
->>
->> 2 locks held by kworker/u8:12/11736:
->>   #0: ffff888079e6c148 ((wq_completion)loop8){+.+.}-{0:0}, at: 
->> process_one_work+0x11ae/0x1840 kernel/workqueue.c:3232
->>   #1: ffffc9001333fc98 ((work_completion)(&worker->work)){+.+.}-{0:0}, 
->> at: process_one_work+0x927/0x1840 kernel/workqueue.c:3233
->>
->> stack backtrace:
->> CPU: 1 UID: 0 PID: 11736 Comm: kworker/u8:12 Tainted: G             
->> L      syzkaller #0 PREEMPT(full)
->> Tainted: [L]=SOFTLOCKUP
->> Hardware name: Google Google Compute Engine/Google Compute Engine, 
->> BIOS Google 01/24/2026
->> Workqueue: loop8 loop_workfn
->> Call Trace:
->>   <IRQ>
->>   __dump_stack lib/dump_stack.c:94 [inline]
->>   dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
->>   print_usage_bug.part.0+0x257/0x340 kernel/locking/lockdep.c:4042
->>   print_usage_bug kernel/locking/lockdep.c:4010 [inline]
->>   valid_state kernel/locking/lockdep.c:4056 [inline]
->>   mark_lock_irq kernel/locking/lockdep.c:4267 [inline]
->>   mark_lock+0x74a/0xa20 kernel/locking/lockdep.c:4753
->>   mark_usage kernel/locking/lockdep.c:4642 [inline]
->>   __lock_acquire+0x103a/0x2630 kernel/locking/lockdep.c:5191
->>   lock_acquire kernel/locking/lockdep.c:5868 [inline]
->>   lock_acquire+0x17c/0x330 kernel/locking/lockdep.c:5825
->>   __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
->>   _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
->>   spin_lock include/linux/spinlock.h:351 [inline]
->>   igrab+0x2a/0x230 fs/inode.c:1574
->>   fserror_report+0x3fd/0x750 fs/fserror.c:159
->>   fserror_report_io include/linux/fserror.h:48 [inline]
->>   iomap_finish_folio_read+0x168/0x2c0 fs/iomap/buffered-io.c:407
->>   iomap_read_end_io+0x11a/0x430 fs/iomap/bio.c:17
->>   bio_endio+0x755/0x8b0 block/bio.c:1709
->>   blk_update_request+0x741/0x1330 block/blk-mq.c:1007
->>   blk_mq_end_request+0x5b/0x420 block/blk-mq.c:1169
->>   lo_complete_rq+0x1d4/0x2a0 drivers/block/loop.c:314
->>   blk_complete_reqs+0xb1/0xf0 block/blk-mq.c:1244
->>   handle_softirqs+0x1ea/0x910 kernel/softirq.c:622
->>   __do_softirq kernel/softirq.c:656 [inline]
->>   invoke_softirq kernel/softirq.c:496 [inline]
->>   __irq_exit_rcu+0xef/0x150 kernel/softirq.c:723
->>   irq_exit_rcu+0x9/0x30 kernel/softirq.c:739
->>   instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1056 
->> [inline]
->>   sysvec_apic_timer_interrupt+0xa3/0xc0 arch/x86/kernel/apic/apic.c:1056
->>   </IRQ>
->>   <TASK>
->>   asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/ 
->> idtentry.h:697
->> RIP: 0010:__raw_spin_unlock_irq include/linux/spinlock_api_smp.h:160 
->> [inline]
->> RIP: 0010:_raw_spin_unlock_irq+0x29/0x50 kernel/locking/spinlock.c:202
->> Code: 90 f3 0f 1e fa 53 48 8b 74 24 08 48 89 fb 48 83 c7 18 e8 fa 9c 
->> 67 f6 48 89 df e8 e2 ea 67 f6 e8 fd 31 93 f6 fb bf 01 00 00 00 <e8> 92 
->> 39 58 f6 65 8b 05 1b 79 6a 08 85 c0 74 06 5b e9 ec a9 94 f5
->> RSP: 0018:ffffc9001333fb30 EFLAGS: 00000202
->> RAX: 000000000015eea7 RBX: ffff888141bdd0c8 RCX: 0000000000000040
->> RDX: 0000000000000000 RSI: ffffffff8dc4d62d RDI: 0000000000000001
->> RBP: ffff888141bdd168 R08: 0000000000000001 R09: 0000000000000000
->> R10: 0000000000000001 R11: 0000000000000000 R12: ffff888141bdd168
->> R13: ffff888141bdd170 R14: ffffffff8e211280 R15: 0000000004208060
->>   spin_unlock_irq include/linux/spinlock.h:401 [inline]
->>   loop_process_work+0xa0a/0x11c0 drivers/block/loop.c:1977
->>   process_one_work+0x9c2/0x1840 kernel/workqueue.c:3257
->>   process_scheduled_works kernel/workqueue.c:3340 [inline]
->>   worker_thread+0x5da/0xe40 kernel/workqueue.c:3421
->>   kthread+0x3b3/0x730 kernel/kthread.c:463
->>   ret_from_fork+0x754/0xaf0 arch/x86/kernel/process.c:158
->>   ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
->>   </TASK>
->> ----------------
->> Code disassembly (best guess):
->>     0:    90                       nop
->>     1:    f3 0f 1e fa              endbr64
->>     5:    53                       push   %rbx
->>     6:    48 8b 74 24 08           mov    0x8(%rsp),%rsi
->>     b:    48 89 fb                 mov    %rdi,%rbx
->>     e:    48 83 c7 18              add    $0x18,%rdi
->>    12:    e8 fa 9c 67 f6           call   0xf6679d11
->>    17:    48 89 df                 mov    %rbx,%rdi
->>    1a:    e8 e2 ea 67 f6           call   0xf667eb01
->>    1f:    e8 fd 31 93 f6           call   0xf6933221
->>    24:    fb                       sti
->>    25:    bf 01 00 00 00           mov    $0x1,%edi
->> * 2a:    e8 92 39 58 f6           call   0xf65839c1 <-- trapping 
->> instruction
->>    2f:    65 8b 05 1b 79 6a 08     mov    %gs:0x86a791b(%rip), 
->> %eax        # 0x86a7951
->>    36:    85 c0                    test   %eax,%eax
->>    38:    74 06                    je     0x40
->>    3a:    5b                       pop    %rbx
->>    3b:    e9 ec a9 94 f5           jmp    0xf594aa2c
->>
->>
->> ---
->> This report is generated by a bot. It may contain errors.
->> See https://goo.gl/tpsmEJ for more information about syzbot.
->> syzbot engineers can be reached at syzkaller@googlegroups.com.
->>
->> syzbot will keep track of this issue. See:
->> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
->>
->> If the report is already addressed, let syzbot know by replying with:
->> #syz fix: exact-commit-title
->>
->> If you want to overwrite report's subsystems, reply with:
->> #syz set subsystems: new-subsystem
->> (See the list of subsystem names on the web dashboard)
->>
->> If the report is a duplicate of another one, reply with:
->> #syz dup: exact-subject-of-another-report
->>
->> If you want to undo deduplication, reply with:
->> #syz undup
+> Use xfs_zone_gc_data_free() to correctly free this memory.
 > 
+> Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
+> Cc: stable@vger.kernel.org
 
+Cc: <stable@vger.kernel.org> # v6.15
+
+[autobackport plz, I need all the help I can get]
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+> ---
+>  fs/xfs/xfs_zone_gc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index e7b33d5a8b3d..2520e57e24a8 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -1230,7 +1230,7 @@ xfs_zone_gc_mount(
+>  	if (data->oz)
+>  		xfs_open_zone_put(data->oz);
+>  out_free_gc_data:
+> -	kfree(data);
+> +	xfs_zone_gc_data_free(data);
+>  	return error;
+>  }
+>  
+> -- 
+> 2.53.0
+> 
+> 
