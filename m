@@ -1,86 +1,108 @@
-Received: from va-1-111.ptr.blmpb.com (va-1-111.ptr.blmpb.com [209.127.230.111])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF91B19E819
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 02:19:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD7919E819
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 02:20:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776392354; cv=none; b=Bwglz/+UBKNMwZawUOt+yZ8tkSAnKk8K8+uNwdXlVhzkyx85D8TaAGPBc/Gh2+abX9iP9ScaniYrzbTQT1a657aH58eQO+v0khF4rGAP7aqbZWM4fuHeq2oxLzomNp+eRYCmaU1DnX5hD1KoURPgL1ROm+j3VlF6loaHfXu+ft8=
+	t=1776392422; cv=none; b=lH6cLuJCG9ARhov89cyuSU3NObpJwOUAYTxEDwJX+knbiESK9CL3ZkHieUvc6tW7U+CVY0DP/U7u3S22LhoFXYcinnFyMJeC2XoXjNKOuINBkNGFsNnyJvzk3CXEH0FK849GQBq54b11vGsb36N+Q0TDZuZgyiP/8P/ktD8kgVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776392354; c=relaxed/simple;
-	bh=jrx+4xUmZU1x4pUeKQda1573iTcGiPF/RQQ5ZPhuFx4=;
-	h=To:Cc:Subject:From:Mime-Version:References:In-Reply-To:Message-Id:
-	 Content-Type:Date; b=uTjU1j5jxuzvlIOG4qFggaf0q5DS1zXdOgxTnNVoElsSHqYTXML6N5ap/ascDK1snBV3Kykl6Uu6YtRsL4rbGSI1qrRBuM2YXiFWx7LfbCyU6k017rfOMjMWHBDtlSyi6yN7vcVRqxr8b5yNZmVVPRpbWMEXXGIeNjdGIOj8LN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=kRbGWf64; arc=none smtp.client-ip=209.127.230.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1776392422; c=relaxed/simple;
+	bh=5j85XGswc2GOHEzFSMXdQ2SxMifDnZPaFHM3gaXODcs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CelSNv5XV/zp56p1YNEZQ7SPZPWMhG70Eukm5no+LaJmoTP7eVVuRs0DYUs/Mi1E33raRV2+oFlhwbhkmHwB9cLmWUX0Z1VdAT/0emMj73MLGLqfCQLHwR2bDs3OStM6Y/DNMXPCaa8+kzczBmnzEVRWEkXM3RPc3ZXL8vNCsKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QXIhdGLh; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="kRbGWf64"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1776392345; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=jrx+4xUmZU1x4pUeKQda1573iTcGiPF/RQQ5ZPhuFx4=;
- b=kRbGWf64Lk45TRaEgh5+GmJk5xSMyi0v6UBDwTZzG3/J301fCwpy4vA46u/Jop3fXVfJGD
- 3R91/Y3CuWX5DxqpKne+soU4NGojZESs3N00FPDWoudn/tJqXGj+66HgoharCnBG5Zf+/w
- TuJuStcIFEbAFV8mnfdLS93L+bqNng4+YKyAICNjikNzINV7v21fYirfPXcdJUYmiLSv+M
- m4UHhcH+ixldNmET8+YX0ZIzg8yLp6ER8fbv4qNV0JnfDL8yhRhX0Z65C2ZZVFF8mgshGG
- vPA2Xu1ntZAeWyB5pOglbbkP+gp4khyWAw3uz7rn05QS8lgJf7jLoHO2iwHVag==
-To: "Mateusz Guzik" <mjguzik@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
-	"Brian Foster" <bfoster@redhat.com>, 
-	"Fengnan Chang" <fengnanchang@gmail.com>, <brauner@kernel.org>, 
-	<hch@infradead.org>, <linux-xfs@vger.kernel.org>, 
-	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
-	<lidiangang@bytedance.com>
-Subject: Re: [PATCH] iomap: avoid memset iomap when iter is done
-From: "changfengnan" <changfengnan@bytedance.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QXIhdGLh"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2b2503753efso1490335ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Apr 2026 19:20:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776392421; x=1776997221; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=aP2NeMu1RlgKc7YK2syJ7UutDazfj2hr54ybuy2pACs=;
+        b=QXIhdGLhqYXyObBouzBFkLZ8hTSLGdPraO2vroZz+QZJ20SQ6T5PGMu+siCObJxFmo
+         E2j7InPQiXEItAN+HnBy6uLJ+9Ui2xZ23XEpffszMJRIiZgZI2BIAcCvymeDU7wIHTHU
+         QRnsUKGHGShaQgOoligJP/ZljpFrHP0Fvz7DYPZ7K+XME8GWgjSVGhB6ehcV5RK0DgKr
+         Lh5FDrQDT0fjQR01kMyU+rB3efmsh87eToCOyGyDPTXwgwdFtlRo/rVMcND2+Se6ehhD
+         fA8luC0H9mV1JhH2BcSsfj8kgXk/AkhlIF5BPsk8vRSgem7v296WZaZfVgvl2pCgO9B8
+         0sVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776392421; x=1776997221;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aP2NeMu1RlgKc7YK2syJ7UutDazfj2hr54ybuy2pACs=;
+        b=R4r9UaxrkGD6tZMbewWmAcfANOA9HIa1IwI9jTfFhLHgnf0bwlZCorlcU/g84Lh4rG
+         yOtr7rH6E/Sor/igKFK6N1cKwgLmaviS9/Kgn475LR6Ggbb1DvCftax50zxeH9IqLx36
+         jS3jcQtHccQhdiMw4m4/FOR6m4eXHMVcQjbkWSLaNs37ucyzCMfiQKCMTw17OJFyd4LE
+         41vaq5BCdJCOK6CI2f7fgzy8/O1paw3NfUq8Vse0T+42kc5oDFf7e91Xt7VHmabZ6p8O
+         VDO3gkNXITc3dC80qmQKeZ2jRE6m6mCUxBY9QC96FTXoOUPTbWJY9q1mKzBx2FoFCIQn
+         WGgw==
+X-Gm-Message-State: AOJu0YyGhWmqNigeF8/0lIVWeGADJ/JMzsrdf59N7Vsji2iCXD6XWaoi
+	/a+1XkYum1UPcI68bWqxrBewky12D+Yw6meNaoCvPAlWsJjY0NBGnSsn3WPSZg==
+X-Gm-Gg: AeBDievr8R0kqUtmAEam02ez0kvsCI2uP0D/gcN5ETRtXlnCFV19HlAWfycqFbiyFcP
+	UOYcqnpNQ+MEzzjo556jRWP7SChIon3MNDLUvezVo6xMcr1a6jEWRR1yMAnXHaAlSLe3wsXT3Lw
+	f/3mHoAHUY4Lus2GP6K5Rt+fJjNW+gnnSUlaGVUeJnfroxMtr8BzRPjzNFBgLidytNx2cYKLABc
+	FoUp39TaBBB3eopFVM5ZCG/W5EjFBMxLoBqPId+raHn17MBivsR2CYdcfFiecFgG/9RftkBZToz
+	Y9RoLoTeu9QhM4I3fIIki8jRbPqwbD9UBjN0JyatI1r73FisnIM/+kfQAETOeQIpCM9vR9RLw/w
+	9fXpAwh0jYfbNIaHEOZk9rlMX4kE7kbF6wH4wYssRIuHrSFPyiY2BIFCB89QewF/QpMiLpoL3fE
+	xxmJZbuS67PW5TmfY0S9GllB3Dy9oxvfucTqNSRzI=
+X-Received: by 2002:a17:903:3d49:b0:2b2:3eec:c75f with SMTP id d9443c01a7336-2b5f9f638f0mr6825755ad.28.1776392420915;
+        Thu, 16 Apr 2026 19:20:20 -0700 (PDT)
+Received: from zenbook ([159.196.5.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fab0db13sm2569645ad.53.2026.04.16.19.20.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 19:20:20 -0700 (PDT)
+From: Wilfred Mallawa <wilfred.opensource@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] xfs: fix memory leak for data allocated by xfs_zone_gc_data_alloc()
+Date: Fri, 17 Apr 2026 12:16:30 +1000
+Message-ID: <20260417021628.2608734-3-wilfred.opensource@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260416030642.26744-1-changfengnan@bytedance.com> <aeDjui2LGSidEHcJ@bfoster> <20260416152705.GC114239@frogsfrogsfrogs>
-	<hgug5jbkwk352zrwcngdofwiy2hq4nk7eq7yvzi6nru5zyebd2@fe64yziutvlk>
-In-Reply-To: <hgug5jbkwk352zrwcngdofwiy2hq4nk7eq7yvzi6nru5zyebd2@fe64yziutvlk>
-Message-Id: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.1dc3ba4b.a0f6.420b.a9f2.f3d89396b545@bytedance.com>
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+169e19897+7df5c7+vger.kernel.org+changfengnan@bytedance.com>
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Apr 2026 10:19:00 +0800
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
 
-> From: "Mateusz Guzik"<mjguzik@gmail.com>
-> Date:=C2=A0 Fri, Apr 17, 2026, 07:21
-> Subject:=C2=A0 Re: [PATCH] iomap: avoid memset iomap when iter is done
-> To: "Darrick J. Wong"<djwong@kernel.org>
-> Cc: "Brian Foster"<bfoster@redhat.com>, "Fengnan Chang"<fengnanchang@gmai=
-l.com>, <brauner@kernel.org>, <hch@infradead.org>, <linux-xfs@vger.kernel.o=
-rg>, <linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, <lidian=
-gang@bytedance.com>, "Fengnan Chang"<changfengnan@bytedance.com>
-> On Thu, Apr 16, 2026 at 08:27:05AM -0700, Darrick J. Wong wrote:
-> > What kind of computer is this where there's a 5% hit to iops from a
-> > memset of ~150 bytes?
-> >=C2=A0
->=C2=A0
-> Such a memset is not free in its own right, but here the real problem is
-> *how* it is done: by default gcc emits inlined 'rep stosq' which has
-> utterly horrid performance (same as 'rep movsq') and in this particular
-> case the 2 memsets in the source code result in 2 separate 'rep movsq'
-> invocations.
-Yes,=C2=A0 two 'rep stosq'.
->=C2=A0
-> I complained about it numerous times, see this to get a taste:
-> https://lore.kernel.org/all/20250605164733.737543-1-mjguzik@gmail.com/
->=C2=A0
-> Also see
-> https://lore.kernel.org/all/202504181042.54ea2b8a-lkp@intel.com/
->=C2=A0
-> If memory serves right gcc is going to fix it, so this is largely going
-> to clear itself down the road.
-Sounds good, I believe there are other similar issues that haven't been
-discovered yet. In this case, removing `memset` is the best option, since
-we don't need it.
+In xfs_zone_gc_mount(), on error, a struct xfs_zone_gc_data allocated
+with xfs_zone_gc_data_alloc() is freed with kfree(), however, this
+doesn't free the underlying folios or the rmap_irecs.
 
->=C2=A0
+Use xfs_zone_gc_data_free() to correctly free this memory.
+
+Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
+Cc: stable@vger.kernel.org
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+---
+ fs/xfs/xfs_zone_gc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index e7b33d5a8b3d..2520e57e24a8 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -1230,7 +1230,7 @@ xfs_zone_gc_mount(
+ 	if (data->oz)
+ 		xfs_open_zone_put(data->oz);
+ out_free_gc_data:
+-	kfree(data);
++	xfs_zone_gc_data_free(data);
+ 	return error;
+ }
+ 
+-- 
+2.53.0
+
