@@ -1,137 +1,130 @@
-Received: from mail-oi1-f206.google.com (mail-oi1-f206.google.com [209.85.167.206])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA7E3A6B86
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 14:31:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.206
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D5625A2A2
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 16:26:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776436283; cv=none; b=MeCZHaevSoIfaDO+TrY6A7rPBcfBhKUdULkcZ+/DbrhUQ+5pyI93m0xfxv1NW+BHd/kbicj2hZrAopevNzYrkQGlbVFseno2m+XA23qfHY3OtHsyt8afgPti4C0ZtVKG1M3uLLVwDYTVUbQV9Nl4AZSUgIQ3zjLZI/cmRkz5gmE=
+	t=1776443202; cv=none; b=QRTK6gMZEMc0emHlq9w8dD7nh/6v59JRbB/5NbwNm4lu8RfmGb5hM1YC1adXNtc1+1zq5VTQ4FHTAOOHtkDxwQwKcreIfvEGM3W6yLCgMuEh1ExzSrE8hb/w8N4l2cRs/61PrCt4gMMGUG/t0l7XEcdE3OrCT48/UixbpSZk7Mk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776436283; c=relaxed/simple;
-	bh=gHpiF0mfwMTwb7tHUIPjUX/iW8lC2YhsGCHq1i5DDbY=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=a8BD69XrPmwIt+rAEIJI5J6YibKkIUBtQuKkcupAfCqFT3SdEQ7nXMuh1Cuqj0GlORyIKt+reuXUO7JNM7sz+XQuAV1g7bKPfPQoHobf4mOcDWaUQsOFg1uR2VvQEw6zFNeg7/dLEvXI3gBbVqrnJ7I5t0CHEJSm5QatqB4JkMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.206
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f206.google.com with SMTP id 5614622812f47-46ef241b62aso585442b6e.0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 07:31:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776436280; x=1777041080;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+	s=arc-20240116; t=1776443202; c=relaxed/simple;
+	bh=AZgGIUTpkW5FbtOGCQl4tYXNPOG/4A/3x/BrNuff6qc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=H8EMWWfHRCEDZID6metyNqZ15MPSjBQWXkFN4j2pdB1p3w588Koq2dSWHsm6EJBvjgIeQ4MXJ+k3bkkvDr1aN65F8BCGK0TzGsWQBTNyVUELsIS+UMkgcXGw4rleyELBEsuhm4BEi5i+rRF/5Jeup+gJWPz1Eb4K3OI5DkW0vK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KJ9Anrxm; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=FcDLkE9Z; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KJ9Anrxm";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="FcDLkE9Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776443200;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=FwrUjomicfs1+UCY2Fv1QCqn4wZdEMSTtTjc8sdcSLo=;
+	b=KJ9AnrxmGXnZf/QfwNPtDP2tHPNyDV+g53YPXCzUbI34TyNKAeGeQmKDa0jOmd2GetO3U0
+	rHqePXK1fd1XTWc7cmAINV8YAIVueIWs2J05zPEoUCp4BxjYDGnDnG3qE4vGt9WzDPBUBi
+	Pg6jepUtSkb2VhjUy7dXIisXaYda/2g=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-622-YJEOdqoJPa2X3xvAx83ebw-1; Fri, 17 Apr 2026 12:26:38 -0400
+X-MC-Unique: YJEOdqoJPa2X3xvAx83ebw-1
+X-Mimecast-MFC-AGG-ID: YJEOdqoJPa2X3xvAx83ebw_1776443198
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-43d705eaa64so959819f8f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Apr 2026 09:26:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1776443197; x=1777047997; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=1tGUFsQbNc7BeWKnVkN7vdgw4XK2T7pn5JC6Wsy8LS8=;
-        b=T9MfE3SaTh75tnTUMtkgiyO8qNneZiMhak3/msLLVjzbKb2CSlOwT4vRm9ntl7bE6w
-         hVpNWmmnrFNNlO2lNRA2hzOfdEuYiTAOnw2Aa5MhcZzWIAb9j/ka7bE1OUAG5dnH1yNJ
-         AQoNiZrSOg/37oM9t9hZX5wSxiYyzv4h356pEbQ/yNX5f/SUSl4mrpaiDJirgCst9wxE
-         V6wX77CLWlVL4ntBWBkDXY03shiXsqjyOKKN0utLUkyngZ3a4lfX0McjNMt3z5asMowg
-         FRYcbRq2zCrvd0h8xTIHS8MBmyVN+Q15ZDOO80efHNg4mtD5VO8m0/ZQJWcU1auF8r7l
-         QeOQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9rnMqOWp/62IrojdFv21wuOGqRS+zpUpQKu8Y2cZ5r3CPObic2yJ6SPi+Sh+73xZtvTR4xu04JhDI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzK0iSMmjhQkrDpe+BnjNNHUFMHYDFDDONLYglzeNT84hCKAMDu
-	/g3aUdbXFJnCzNJMSNnQYdCPjd1R9HfRekrsudY9ssUAHMBD0lfWs/lued0uWdK2ATJqM3pMsLz
-	/01rOzc8hy2pC5zMHRUjTObAzTsoGqkyqrLWf1jnTYtMlUawsRMCqYiwwzi8=
+        bh=FwrUjomicfs1+UCY2Fv1QCqn4wZdEMSTtTjc8sdcSLo=;
+        b=FcDLkE9ZqEFgtOZ53zE/74h6ztho/eDsJM9B98wpkjsIgPqCXmoRkB4CB8CF4SG2Qq
+         66CrfyQiQ7zMypQuUZVErcG/kASehIM1qY9QHaNEfR0+y5OUipU7YElHnkQfw+pF0Hew
+         Mad68GCjSj02T3QSCF/NDsKcjC3evT5oFht76zBUyuCG62I3A4u+W1UHDk02jlRjSn1I
+         LlL7l6Sy9jg16sIfHaYrgXnkOa8dvWYXoyWiy63qjPiFln9mvqEE4WT8osRSyqLb/cdO
+         irNQNBTUy2zYAoHANuS7ANrAmEr7mq+79bHxvC7pjCbjCGRChvfrwCe4RbSZnzJdKMh+
+         Bh0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776443197; x=1777047997;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FwrUjomicfs1+UCY2Fv1QCqn4wZdEMSTtTjc8sdcSLo=;
+        b=DVN5HxiQRJBkPnxu7tiF2FvvCAP0DYdP3F9DJKOdnYRw7U07YxlMLiSf8wsKL0zmsP
+         nfCmohuGbE3YOmTVaIp8Bsnm29FWqMmy2YpbS4Moojt/dlw2Z5sqzlFHUOi2PFEV/xi2
+         yjQ6oz270iKT9cgai7Dy/24T8Ry6DM4rYh8etRQHupcsf7cpjlTECgjn9iM6yQN4ejNE
+         Ij8fwg+pzYiha+B6iCjwvNqno0a5pI+Rv/U4qNwkoS42zhYuoEVT9PRGHXwkMjnh9SfM
+         E6pgaa2RaAe3+LF6JnGcR69r3fE5+sV1gdabn5aEpe1AAhsuO/eLGSabC0uI+SKCssWt
+         44Vw==
+X-Gm-Message-State: AOJu0Yw+4/gm3BMZtsLUnT+6HfuruOj+BH/6Vm1uZz2OaOQojOoxM4V5
+	Gv/jMYXVWVng9H5BRss/IXD+zjDdQLMIrrgT+dtpRJG0A4+qGLs8aAncRwtSazuF3hw2x2NJvA3
+	MIU3yUCONnCWkGH6dv/xhEhj2DbM0I7o3XJRSSsMTMv/MKAROPfApWHuQNSKoSkAs0EBT9Hrroh
+	kY4QwPy6o9Bd/+sIQyDDn7V7DUdj345YT/SFJfrJY50QgC
+X-Gm-Gg: AeBDieuVjo/Eyecm02sKW+JH+U8vlv++XmRl0N+ShsVcmNmYfhfhbEYp2T8oXsFpTKr
+	u90HMuYsn1ctyGTBByXku6/zZ6Ez8/DbRfWe8BbinN1YMBU62u2mP83E/gAYxxDpdvPG7Obs4dl
+	itODq/qmqVef2Rai8TakH4Afoc0riWwuTTkP1ePSm5SUzI5nwVR8J1D3U2H+4QOhr+yK0V6gBwy
+	jbMWveMCurarZjoy4abQlmbRaz4EV5W9+BSv7bCKKcUVrpETg7wcqXkqQ5DXcqeTA9tqD1E6bHI
+	aFd0e7yGcAVZonWp465zC0WTeHa86Rua3dLcnxUPM1GXRb89UOVAJnWFvdYpoGp7LEsA3v+GOcK
+	aOI1PBSbcZWhp5lM3WfI58A==
+X-Received: by 2002:a05:600c:8183:b0:488:b187:3c with SMTP id 5b1f17b1804b1-488fb765ab5mr54676895e9.14.1776443196690;
+        Fri, 17 Apr 2026 09:26:36 -0700 (PDT)
+X-Received: by 2002:a05:600c:8183:b0:488:b187:3c with SMTP id 5b1f17b1804b1-488fb765ab5mr54676335e9.14.1776443196130;
+        Fri, 17 Apr 2026 09:26:36 -0700 (PDT)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fc1cfbf2sm55824965e9.15.2026.04.17.09.26.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Apr 2026 09:26:35 -0700 (PDT)
+Date: Fri, 17 Apr 2026 18:26:34 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org, cmaiolino@redhat.com, djwong@kernel.org, 
+	hch@lst.de, ravising@redhat.com
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 95329f9fa130
+Message-ID: <yuif7zxvzqwp4ko7e3pdny5yrbvzaghd4mqfqccmk34g424lfl@gt2tpexevd2d>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:1511:b0:468:776:1ec3 with SMTP id
- 5614622812f47-4799ca8c122mr1348686b6e.24.1776436280352; Fri, 17 Apr 2026
- 07:31:20 -0700 (PDT)
-Date: Fri, 17 Apr 2026 07:31:20 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <69e24438.050a0220.1de265.0026.GAE@google.com>
-Subject: [syzbot] [iomap?] WARNING in iomap_zero_range
-From: syzbot <syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com>
-To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hello,
+Hi folks,
 
-syzbot found the following issue on:
+The xfsprogs for-next branch in repository at:
 
-HEAD commit:    028ef9c96e96 Linux 7.0
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=11db9036580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d46eab0cfd31c214
-dashboard link: https://syzkaller.appspot.com/bug?extid=9a51b5f7b9b484c57dd1
-compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Unfortunately, I don't have any reproducer for this issue yet.
+has just been updated.
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-028ef9c9.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/f7fbf6f85efa/vmlinux-028ef9c9.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/2bc3ef5a9e1b/bzImage-028ef9c9.xz
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com
+The for-next branch has also been updated to match the state of master.
 
-loop0: detected capacity change from 0 to 4096
-ntfs3(loop0): Different NTFS sector size (1024) and media sector size (512).
-------------[ cut here ]------------
-folio_pos(folio) > iter->inode->i_size
-WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline], CPU#0: syz.0.0/5326
-WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669, CPU#0: syz.0.0/5326
-Modules linked in:
-CPU: 0 UID: 0 PID: 5326 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline]
-RIP: 0010:iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669
-Code: 5d ff 4d 29 e6 4d 39 f7 4d 0f 42 f7 4c 89 74 24 78 4d 85 f6 0f 84 5a 02 00 00 e8 ec ee 5d ff e9 78 fc ff ff e8 e2 ee 5d ff 90 <0f> 0b 90 e9 41 fd ff ff e8 d4 ee 5d ff 90 0f 0b 90 e9 97 fd ff ff
-RSP: 0018:ffffc9000e05f8e0 EFLAGS: 00010287
-RAX: ffffffff8267f47e RBX: ffffea00015643c0 RCX: 0000000000100000
-RDX: ffffc9000eb52000 RSI: 000000000000021a RDI: 000000000000021b
-RBP: ffffc9000e05fc28 R08: ffffea00015643c7 R09: 1ffffd40002ac878
-R10: dffffc0000000000 R11: fffff940002ac879 R12: 0000000000000008
-R13: 1ffffd40002ac87c R14: ffffea00015643e0 R15: 0000000000001000
-FS:  00007f1ef11d66c0(0000) GS:ffff88808ca49000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f1ef05ec2e0 CR3: 0000000044745000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- ntfs_extend_initialized_size+0xcc/0x170 fs/ntfs3/file.c:236
- ntfs_fallocate+0xf21/0x1220 fs/ntfs3/file.c:668
- vfs_fallocate+0x669/0x7e0 fs/open.c:340
- ksys_fallocate fs/open.c:364 [inline]
- __do_sys_fallocate fs/open.c:369 [inline]
- __se_sys_fallocate fs/open.c:367 [inline]
- __x64_sys_fallocate+0xc0/0x110 fs/open.c:367
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x14d/0xf80 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f1ef039c819
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f1ef11d5fe8 EFLAGS: 00000246 ORIG_RAX: 000000000000011d
-RAX: ffffffffffffffda RBX: 00007f1ef0615fa0 RCX: 00007f1ef039c819
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000005
-RBP: 00007f1ef0432c91 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000002 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f1ef0616038 R14: 00007f1ef0615fa0 R15: 00007ffdb8222ed8
- </TASK>
+The new head of the for-next branch is commit:
 
+95329f9fa13040962c5a2a5e91a29ba215eb341f
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+New commits:
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+Darrick J. Wong (3):
+      [1a5eeddf738c] xfs_healer: update weakhandle mountpoint when reconnecting
+      [1068708f7ada] debian: add version control tags to control
+      [95329f9fa130] xfs_scrub: warn about unicode variation selectors in names
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+Ravi Singh (1):
+      [a8eb7b321371] xfs_quota: display default limits for users with zero usage
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
+Code Diffstat:
 
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
+ debian/control      |  2 ++
+ healer/weakhandle.c | 34 +++++++++++++++++++++++++++++++---
+ quota/quota.c       |  9 ++++++---
+ scrub/unicrash.c    | 25 +++++++++++++++++++++++++
+ 4 files changed, 64 insertions(+), 6 deletions(-)
 
-If you want to undo deduplication, reply with:
-#syz undup
+-- 
+- Andrey
+
