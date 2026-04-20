@@ -1,161 +1,181 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5312438F62E
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 09:59:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776679150; cv=pass; b=ERCNVyqUEQ1jh2c90GgtH+KX/B6UWwbuk17EHvtipBjQu83GtyJkqCJJIHbHf0tT0GuHEBA8wBBb0b56EjR/nJPTqhPoTmZCKsAnNV0wjSXqspqEu07ZIODYAYXeS/e54WEHRX96hoGgHDdX0WTZs0gGVyq7xRsyjdIRwST3igY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776679150; c=relaxed/simple;
-	bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ENhrT9fvTO99jo7TC4kBa8Z+PcSZ3siY9Va0k+6xLCMxfoFB4lf6jn+OoZWsr0NvSrE928dkgYwM5vKmJ1QMtf2NjaVuuRq/pIPxalUPUatHILmTpcZnZIS5Iv2JxYHtuc1hHdNReFcfoe6juJ8pdZtV8kE2xK4QsdxUD69+1u8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HlYWisiD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=M1DLN7dz; arc=pass smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CE5392C3C
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 10:06:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776679609; cv=none; b=CAI6D2eIOJIX+Ux+zRhKC7/g9TlRnGRtRbqeBni9ge0eP194AWkySlBiXuEa3hyHQTPp71TzSi/NyVydlojR2bl1s8040QiKaHAEr6Aoj2xePsLIWyHHbNWFElOTapG+YOVVEE5FT1t0ZUGRIUmyXQ5PMPojJidMVJ7QElhS9XA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776679609; c=relaxed/simple;
+	bh=qJIM3jxOWQuyl4KxyZW5vyAnvUOthNi6voO6ikcpLqM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NullQzuut4VIGszGTv8aV9Pl8lp6XKvBow6q1vu7vnYzUV+xjAzq8xG3fWUKEm7GCMYQkBboY0W0nWTF0tjn23oaL3OMJBf7ANw5jW5ldCFY6hIwVDCudSyXRmnUTDmREciet+v800HFtNrha7r0Ftv5XIvi5Kpqw0hW64jbQ5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eu1t7Ako; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=i6TIXHe7; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HlYWisiD";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="M1DLN7dz"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eu1t7Ako";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="i6TIXHe7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776679148;
+	s=mimecast20190719; t=1776679607;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
-	b=HlYWisiDfjcdzdzQ/is+OmR5Z0wKGtI2OJt03uWvC8UsDqBU+rppZFehMbFnE2pj9M5Uxj
-	8gor+XiVhklW9b2S21zlt4L+GE6pHuN33/G5fmVArxPmFgS9kVLrAFkL7+UhrWK6cGBYTs
-	RCEU3EcENWRodeeAaGBxWnDAL1vyEqs=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=dEGLFj4ClIrjd7MZC91OS4EkTEnUoAhP7Kztkq+Ge68=;
+	b=eu1t7AkopnTXjIn0lwEThdZ9J3bCL88d5z4OLhTs3I1m3BDJ2TibVkG844D8dITcXgqRDj
+	8aPMaVDxzLw6Vx1RIllXAIPbIVKTuHNM2IdVcZu+xELdtczoqdQ/fquj1D+Zi7JI5hyKZh
+	/EgprRmbyqZ1wbtOpU7CLAXH2l/v2ow=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-558-ccy_pW3SNCCkOUw3rnSnJA-1; Mon, 20 Apr 2026 05:59:06 -0400
-X-MC-Unique: ccy_pW3SNCCkOUw3rnSnJA-1
-X-Mimecast-MFC-AGG-ID: ccy_pW3SNCCkOUw3rnSnJA_1776679145
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-b90bb54d034so371796866b.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 02:59:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776679145; cv=none;
-        d=google.com; s=arc-20240605;
-        b=CDiipp7fj/JDv0CVI59vUHgIucih0MB/SRXWgrYo7EaZS9LA6OSPnRNxkwwuZV7eR2
-         w0P7nBG0E3n5EqA0JXPN+Uy2B7a8Mlck2Qsaq99gIsKTfr7a42udYqBE1osCsXoF9l3H
-         aVjKrzQZQvzNx2PA4dHPRLtCQwY/x+MZicyropWfRaHunSQK5f9NfIonRLqcBVFoeaix
-         k4XEJQN7MvYKGVi9L0hBxdmHbx7fkYljGlaPyHWL09GTFhRTJKxU7TsWaLKbKkIrkbTz
-         Ir9hEJ/2cO5K9IoYvHir7z1wagJfA0xioxvV4VIQwVbC619xACNJC5CKYnrJp2aEwHZM
-         rAeg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
-        fh=clwkdnuvt6MfNmx4IuNEBXt+jxiS+Mutcf4dJKVBWiU=;
-        b=RTJfvZphJablO7rnFBk2TZoK3oUL5Wr6KbgD1FjI4uDMUKS2SBr0Vi7bsB0hAAKp+z
-         jskcIm6nBJTH5SxR5I7UK06rtrBeApgpKwHZwbGip14Sk6pkoZPq9mMZf0jGIF1OLc7C
-         e3j7hwkRkppW6mOgS2+GY18VGbrZi0kJke5gihn0Tcwt0JtcCFeL6X5JKLOx/OUf4qiv
-         z51o6E7fQ7qsRvHgCR9lxLEm26INaPNGNCw91KXpVKKUyEP6fXzHxjLAXfSGAIYomAPs
-         ob6r7xvBOAKwGlx8nfWQGin2jtu4RqePzKdlmDjvdgPJfaQoO54gkrieHwC/qLw/Jvg9
-         /fIw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+ us-mta-252-BWJCrDb6MHydFgHwr45Rnw-1; Mon, 20 Apr 2026 06:06:46 -0400
+X-MC-Unique: BWJCrDb6MHydFgHwr45Rnw-1
+X-Mimecast-MFC-AGG-ID: BWJCrDb6MHydFgHwr45Rnw_1776679606
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-8eb04352972so107618185a.2
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 03:06:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776679145; x=1777283945; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=redhat.com; s=google; t=1776679605; x=1777284405; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
-        b=M1DLN7dzmjiktBGpxl/tG6WDF7kt6aERi6JJuBhhwyb6CFl4gK7YVivznkGd4gsUwn
-         4wnQYAnkeW48q21WCzwAAX2K5f90pV0hOFp8BZqmb2G1NSGBiKjGLGc294UXvHVM44I3
-         j+YQCE3yHLfNnw2qpgkNJjMdLHPMhU7ETC9RXm96A1JVgiPMtdbNAx/DftbHq3msl2kf
-         TMzlK5w6HiPx/+eZKR+v/pt9h/Or3isiM2lvW2a2zUI4lnmmYeiUEQiH2Gp302d900/e
-         w3diz/urhEiD+sgevp8KPJ/BcHIKg/b6atAQmSCKAsI7DAuDEYOEwtFxpwIsjKfruY5u
-         H/qg==
+        bh=dEGLFj4ClIrjd7MZC91OS4EkTEnUoAhP7Kztkq+Ge68=;
+        b=i6TIXHe7qdX/nXBIJQoWThlr15RoKL0CdjCfrjHLSTu6DrqX8GBdV6oVNBuQJ0StwH
+         sJzWX0GM2kf6jQoFt2n/TgDTQkt3pFgwHHzgLPWxXRwCAJTzWaf1U/U9zDipdAQEzRhq
+         dIlvNhP3nj4XY71ciqdGMCfZD/cZ+3zLKURqQ28OsnPDwWRkLFPFmfvk9rcANMaShKR8
+         VHUHcViNU4TjCwP4skzOgvSdhepN5v9xInksml+w+tgVk7h2pwW6tPi09JKO0ZdQBlgQ
+         RNJTv/l5tp7IepduK31lnd5GW8oMg06AJxE/XAmccd1aKVbnPY4P92MasM+B38lDtkCN
+         LAbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776679145; x=1777283945;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1776679605; x=1777284405;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
-        b=iFz3SWY1EnQLhWhYJMMwvKBKk9gxwa2A+KnZ4USw0sCHGb7fyrvsVsAiAx6u1T7zI6
-         eRlAFyJxA4TagJaNedDuig4hxQgFj1dXW5rWAX57y8+LG/00THfFLc4uKBIecDwgP6X/
-         WAdxK32YSewbyAbGg8jfiVY6BPS73YBxoA74t2dlbi6F/clxk/qDOj5CLpf+W8Ir0SKw
-         vsG+UntEvrz1ZYRSGZYCUs4UOKuMIoUKApvwbhEmFCJ5UWrjbgs0u1IRx0ElTU/mgEM3
-         UE+5740uDG3IVveHHw9FYhdJGs70y4r5UQ58o4rQ7BBzYpt/LsfqaSPSq859fJOAqj2r
-         NMcg==
-X-Gm-Message-State: AOJu0YwISpp5CKD/ppb2IzlOcMoLdj9Z3BK6i4+/tlAb61e+7aJUfEop
-	a8B1uk8jT0mYqd7jy0j0K7rYeLw3tkGg+/oAh3sFFvXV29Z2vwNtiO4XYe1ZIm25viFJ6AaVe2r
-	QQdXNROhuvXS3ZQmtk+RABYNwClXE59cFfWyl792iqllCkrB+b9iisUrgKXPgoQeN9yx+B/SK6Y
-	x1g1iNgZhTR/5aNrU2ZnSHOl8/mGwhe/vBReUb
-X-Gm-Gg: AeBDietILbWBRYOrjs7UKRil6fC8zJFskuTHQqnE/zzUZr/BmUINNl7xIOcklO0oseo
-	j9m1Jby9y6+UOgF1C+eFiGuOqC3kVuRH3648WlDDhoghrDPEeHR4O9KV8LqaOzOQ8oVaD33dQ3Z
-	wlPfO0d8epGABoMglL5rZTb8ZqcThJO17Go/NHdcoQ2Ia/Qhcvu2xWWdDgchknTN6fu4JTSpI6A
-	jVzJHqOzZy9yyuj6I09GTihhJNml+2FIDCS9i6RKuuNu6BH
-X-Received: by 2002:a17:906:ee8a:b0:b9d:7b9d:df02 with SMTP id a640c23a62f3a-ba421debe8emr542313566b.17.1776679144864;
-        Mon, 20 Apr 2026 02:59:04 -0700 (PDT)
-X-Received: by 2002:a17:906:ee8a:b0:b9d:7b9d:df02 with SMTP id
- a640c23a62f3a-ba421debe8emr542311766b.17.1776679144298; Mon, 20 Apr 2026
- 02:59:04 -0700 (PDT)
+        bh=dEGLFj4ClIrjd7MZC91OS4EkTEnUoAhP7Kztkq+Ge68=;
+        b=LwlTjRe8NB09zhxOySbAzEE1lXp/Vj4PO0jaxjGJh6FZyJE891GoCo2Znm/CNWKuxO
+         TQJ2/lIdhldi5LcflkypKWWCC1HOZzrxxPwiLynqytzMMgfAzr3nh7QnVnWo7fWN318y
+         OiDIfF9v2mn9TXWVCEtyy//09Fmn/F3Pl2W+8iPijGzlhNqo3KpoaQymgrrC+HMSYnvg
+         nGgGzkyi6KQNVUKcVgyaCFyP4J/qSNNugujM68UYjaX6df4b49npk9KmCyYbnAzLjdhC
+         DjTaS8yhNaYixIazybwIjgnvQ388NLapKsjSXDf67hcxd+3al+Cbn0tgu/QvD55M5A62
+         34fQ==
+X-Gm-Message-State: AOJu0Yxqo6gRfu8lLx009CwjhS1dNmJBwGNmlhAS51yqyHMZ1g4QfE83
+	joDoTW1dDqQujTnj72wq7oE/n5zbqYVJbSXnwrlrDEwU6lwSdpgTv6MOyUK8uFlViA2aSVzoUHU
+	YTKv6wobtFy9DMPbk1og9ihtm5ukdzLsNXAHkxF4Vbv5IRHOX+rrrmRO5ivpQU0BB9rb/0UOF/X
+	ol5kgJqIN0xJkRFel5zqux8glfTbUoGHdMiHyMMio2fthe0A==
+X-Gm-Gg: AeBDiesH+B/UprJzZNEHifn6QFEBBYK4jE9mPVdRyXSG7rUUpY4xKXucEODiC4oWBMr
+	v7z4N2omKr6db/XjUgJyNnNgsXTjccb0P2F9Yd8nzIau56aJTmAnJodpqaldk0fwgLUx5A6coBc
+	NNPvUyL4jKVL757tSs9m0G4hU75UHKWLAQ0biq0z/3PvH77SsYF0R8WnUGyCuIsD0LF4mNavg/F
+	LXFgKcFiYHK9+pXsB8MrNTDVWcQbRjeV44RArF/dalXdtVI+KVHvbuAes93xB0cDWu0r2cpnOAu
+	+OgY6TrfhyhIpx7qWQSX/TkI2FAEqFnwlDGuhenLIycCuAmIXESKE9L/Sbscfky2VYDkgPMOQsC
+	O4BboWOX5AtWkloJsNYGzF8uthL6W1cqUEtz0tfpYI9Cf2A==
+X-Received: by 2002:a05:620a:27c1:b0:8ea:aa10:7b3f with SMTP id af79cd13be357-8eaaa107d0amr556256985a.1.1776679605165;
+        Mon, 20 Apr 2026 03:06:45 -0700 (PDT)
+X-Received: by 2002:a05:620a:27c1:b0:8ea:aa10:7b3f with SMTP id af79cd13be357-8eaaa107d0amr556252385a.1.1776679604523;
+        Mon, 20 Apr 2026 03:06:44 -0700 (PDT)
+Received: from fedora43-upstream-dev ([66.187.232.140])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8eb19632130sm247061485a.41.2026.04.20.03.06.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Apr 2026 03:06:44 -0700 (PDT)
+From: Ravi Singh <ravising@redhat.com>
+To: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: djwong@kernel.org,
+	dchinner@redhat.com,
+	esandeen@redhat.com,
+	cem@kernel.org
+Subject: [PATCH v2] xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
+Date: Mon, 20 Apr 2026 10:06:37 +0000
+Message-ID: <20260420100637.3584-1-ravising@redhat.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <aeBv_xvDTmuzEhV1@infradead.org>
+References: <aeBv_xvDTmuzEhV1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260415071657.23412-1-ravising@redhat.com> <ad88TluB4FIP3yJV@infradead.org>
- <CAF-d4OvKZOsez5589KUYTjRz05PQHCQ-uRkXu-3iaO3tOjcavA@mail.gmail.com> <aeBv_xvDTmuzEhV1@infradead.org>
-In-Reply-To: <aeBv_xvDTmuzEhV1@infradead.org>
-From: Ravi Singh <ravising@redhat.com>
-Date: Mon, 20 Apr 2026 15:28:52 +0530
-X-Gm-Features: AQROBzD_UsKC0IhQ4Ae2Ri5WaWay6e3YXdaKJYXBxxPywhXucTckxG6JecxZqFA
-Message-ID: <CAF-d4Ose1YMaHy5Jy_QmLwDQvBC7m2Bt5ftzmYnZwheSyhX+EQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: flush delalloc blocks on ENOSPC when creating symlinks
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	djwong@kernel.org, dchinner@redhat.com, esandeen@redhat.com, cem@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 16, 2026 at 10:43=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
-rg> wrote:
->
-> On Wed, Apr 15, 2026 at 06:54:00PM +0530, Ravi Singh wrote:
-> > > While we're at it - do we also want it for tempfiles and scrub?
-> > > i.e., should we move this logic into xfs_trans_alloc_icreate,
-> > > similar to the quota logic?
-> > >
-> > tmpfiles and scrub tempfiles are created without
-> > directory entries, so they don't need a new directory block
-> > allocation and don't hit this ENOSPC path.
->
->
-> But we still ned the ialloc space reservation for all these cases.
->
+xfs_trans_alloc_icreate() can fail with ENOSPC when delalloc
+reservations have consumed most of the available block count
+(fdblocks).  xfs_trans_alloc() already retries internally with
+xfs_blockgc_flush_all(), but that only trims post-EOF speculative
+preallocation and may not free enough space for the transaction
+reservation.
 
-You're right - the ENOSPC comes from xfs_trans_alloc() failing
-to reserve blocks via xfs_dec_fdblocks(), which is the same
- global counter for all callers. Even the smaller
-XFS_IALLOC_SPACE_RES reservation for tmpfiles can fail there
-when delalloc pressure has consumed the available fdblocks.
+Add a retry with xfs_flush_inodes() when xfs_trans_alloc() returns
+ENOSPC.  This forces writeback of all dirty inodes via
+sync_inodes_sb(), converting delalloc reservations to real
+allocations and freeing the over-reserved portion back to fdblocks.
 
-I did try several runs to reproduce the ENOSPC for tmpfile
-creation, but wasn't able to trigger it in practice - the
-smaller reservation makes it much harder to hit. That said,
-the code path is the same and it makes sense to handle it
-centrally rather than leave the gap.
+This fixes all callers of xfs_trans_alloc_icreate() and removes
+the existing caller-level retry from xfs_create(), which is now
+handled centrally.
 
-> > As for moving the logic into xfs_trans_alloc_icreate(),
-> > xfs_flush_inodes() is a heavier operation (sync_inodes_sb).
-> > Pushing it down into xfs_trans_alloc_icreate() would make every
-> > caller pay for that flush, including paths that don't need it.
->
-> Only if we git enospc and need to restart the underlying
-> xfs_trans_alloc call, similar to how it handles quotas.
->
->
+Signed-off-by: Ravi Singh <ravising@redhat.com>
+---
 
-v2 moves the xfs_flush_inodes() retry into
-xfs_trans_alloc_icreate() and removes the existing caller-level
-retry from xfs_create()
+v2:
+ - Moved xfs_flush_inodes() retry into xfs_trans_alloc_icreate()
+   instead of xfs_symlink() (Christoph)
+ - Removed caller-level retry from xfs_create()
+ - All callers now covered: xfs_create, xfs_symlink,
+   xfs_create_tmpfile, xcrep_tempfile_create
 
+ fs/xfs/xfs_inode.c | 6 ------
+ fs/xfs/xfs_trans.c | 9 +++++++++
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-Thanks,
-Ravi
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index beaa26ec62da..9978ac1422fc 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -699,12 +699,6 @@ xfs_create(
+ 	 */
+ 	error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp, resblks,
+ 			&tp);
+-	if (error == -ENOSPC) {
+-		/* flush outstanding delalloc blocks and retry */
+-		xfs_flush_inodes(mp);
+-		error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp,
+-				resblks, &tp);
+-	}
+ 	if (error)
+ 		goto out_parent;
+ 
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index bcc470f56e46..2796634b7d2b 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1186,6 +1186,9 @@ xfs_trans_reserve_more_inode(
+ /*
+  * Allocate an transaction in preparation for inode creation by reserving quota
+  * against the given dquots.  Callers are not required to hold any inode locks.
++ * If the block reservation fails with ENOSPC, flush all delalloc blocks to
++ * reclaim space from speculative preallocation and retry.  This is similar to
++ * the quota retry but targets FS-wide ENOSPC.
+  */
+ int
+ xfs_trans_alloc_icreate(
+@@ -1199,10 +1202,16 @@ xfs_trans_alloc_icreate(
+ {
+ 	struct xfs_trans	*tp;
+ 	bool			retried = false;
++	bool			flushed = false;
+ 	int			error;
+ 
+ retry:
+ 	error = xfs_trans_alloc(mp, resv, dblocks, 0, 0, &tp);
++	if (error == -ENOSPC && !flushed) {
++		xfs_flush_inodes(mp);
++		flushed = true;
++		goto retry;
++	}
+ 	if (error)
+ 		return error;
+ 
+-- 
+2.53.0
 
