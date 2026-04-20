@@ -1,141 +1,161 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96FE7385524
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 08:54:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776675260; cv=none; b=agNciL2gFP+2rzqbD0LMD65EsvOKvOXCDdpyrlaviiLH/Hff5GwiW9nMXtgyG768d+v/qtG5DrujErJn7MFWc0dBC/Wf4iGlPY72oIpn2ymh7E7pTiuKZSExEaGo8RnM2vmk6kfxXe4RWyAiQzWfFTg8sVMYJr+H1Imkt1IBht0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776675260; c=relaxed/simple;
-	bh=dSx76QyoCgSjpxqgeGcqbla4YBk4KSC5LrUnmrtLEws=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YUk114KOu6Xnr7640ZGsu5ul2uA7pzat0PfXm3ycIR6M3I8E7Ph+hXJD2wossmNT3/cKipzl4kUxakch5jXq/UiDMvQOkb97IBpMDcQuht4azfxwRjLUtrce4WgO1GdXZqtHmrxatQpfE+YSa7as9CtXJjvkJ2o5tj7wq4FJ1N4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fmw+RmcT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ga8NOVGH; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5312438F62E
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 09:59:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776679150; cv=pass; b=ERCNVyqUEQ1jh2c90GgtH+KX/B6UWwbuk17EHvtipBjQu83GtyJkqCJJIHbHf0tT0GuHEBA8wBBb0b56EjR/nJPTqhPoTmZCKsAnNV0wjSXqspqEu07ZIODYAYXeS/e54WEHRX96hoGgHDdX0WTZs0gGVyq7xRsyjdIRwST3igY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776679150; c=relaxed/simple;
+	bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ENhrT9fvTO99jo7TC4kBa8Z+PcSZ3siY9Va0k+6xLCMxfoFB4lf6jn+OoZWsr0NvSrE928dkgYwM5vKmJ1QMtf2NjaVuuRq/pIPxalUPUatHILmTpcZnZIS5Iv2JxYHtuc1hHdNReFcfoe6juJ8pdZtV8kE2xK4QsdxUD69+1u8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HlYWisiD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=M1DLN7dz; arc=pass smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fmw+RmcT";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ga8NOVGH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HlYWisiD";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="M1DLN7dz"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776675258;
+	s=mimecast20190719; t=1776679148;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+aQiPPIHxREJ9LojQxFqJyqV/j9nuS5AUjoGZFBuLmU=;
-	b=fmw+RmcT/6w/4VFpPcacHLXp8sSx7E1R44dbsgHNiBgIXt4pQhz3ofCpGv6NWYNdzrsZts
-	W1PQZCIDqyXXwwA8nsBLNeuuc/Hcwcw7RLfW3vZzRXiVBRC/p8uK/A1AOCUqWSRi3v6Szg
-	xv7e+40hcsPp6FVtBZ7DcHDI3t20DCk=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
+	b=HlYWisiDfjcdzdzQ/is+OmR5Z0wKGtI2OJt03uWvC8UsDqBU+rppZFehMbFnE2pj9M5Uxj
+	8gor+XiVhklW9b2S21zlt4L+GE6pHuN33/G5fmVArxPmFgS9kVLrAFkL7+UhrWK6cGBYTs
+	RCEU3EcENWRodeeAaGBxWnDAL1vyEqs=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-215-ZgrHRDGKMNeViD5W3GQAYg-1; Mon, 20 Apr 2026 04:54:16 -0400
-X-MC-Unique: ZgrHRDGKMNeViD5W3GQAYg-1
-X-Mimecast-MFC-AGG-ID: ZgrHRDGKMNeViD5W3GQAYg_1776675256
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-48378df3469so17633365e9.1
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 01:54:16 -0700 (PDT)
+ us-mta-558-ccy_pW3SNCCkOUw3rnSnJA-1; Mon, 20 Apr 2026 05:59:06 -0400
+X-MC-Unique: ccy_pW3SNCCkOUw3rnSnJA-1
+X-Mimecast-MFC-AGG-ID: ccy_pW3SNCCkOUw3rnSnJA_1776679145
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-b90bb54d034so371796866b.0
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 02:59:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776679145; cv=none;
+        d=google.com; s=arc-20240605;
+        b=CDiipp7fj/JDv0CVI59vUHgIucih0MB/SRXWgrYo7EaZS9LA6OSPnRNxkwwuZV7eR2
+         w0P7nBG0E3n5EqA0JXPN+Uy2B7a8Mlck2Qsaq99gIsKTfr7a42udYqBE1osCsXoF9l3H
+         aVjKrzQZQvzNx2PA4dHPRLtCQwY/x+MZicyropWfRaHunSQK5f9NfIonRLqcBVFoeaix
+         k4XEJQN7MvYKGVi9L0hBxdmHbx7fkYljGlaPyHWL09GTFhRTJKxU7TsWaLKbKkIrkbTz
+         Ir9hEJ/2cO5K9IoYvHir7z1wagJfA0xioxvV4VIQwVbC619xACNJC5CKYnrJp2aEwHZM
+         rAeg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
+        fh=clwkdnuvt6MfNmx4IuNEBXt+jxiS+Mutcf4dJKVBWiU=;
+        b=RTJfvZphJablO7rnFBk2TZoK3oUL5Wr6KbgD1FjI4uDMUKS2SBr0Vi7bsB0hAAKp+z
+         jskcIm6nBJTH5SxR5I7UK06rtrBeApgpKwHZwbGip14Sk6pkoZPq9mMZf0jGIF1OLc7C
+         e3j7hwkRkppW6mOgS2+GY18VGbrZi0kJke5gihn0Tcwt0JtcCFeL6X5JKLOx/OUf4qiv
+         z51o6E7fQ7qsRvHgCR9lxLEm26INaPNGNCw91KXpVKKUyEP6fXzHxjLAXfSGAIYomAPs
+         ob6r7xvBOAKwGlx8nfWQGin2jtu4RqePzKdlmDjvdgPJfaQoO54gkrieHwC/qLw/Jvg9
+         /fIw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776675255; x=1777280055; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+aQiPPIHxREJ9LojQxFqJyqV/j9nuS5AUjoGZFBuLmU=;
-        b=ga8NOVGHu2o8GuEunPt+iW9+zndazxyRd8WlD3nAI1L9aoqg0vgMUTWfvkFjVWWVGZ
-         1ohB6c2rN1Oi3tc6IbhyFyAsZbo2Jv/ni+dbA1DEuGpaBWh/9XMVjHQjt5EybORxGWPe
-         VTvZUHFBRD9K7bZ8GIWpDVLAqyuiiy/ILdhWcX4TOfdXdQI09a5w1TZNDvGdqpE37IeN
-         f9Z+ixCndFgg1NagA+91v+v/BzZYb+l1oRehFh8KxZHrN9wgmVGLlfl8NoK3D+/oIlr6
-         Jc/GkIrezFNzRs3SAMYovIOTZw430xqrx+u5hVZGgn6Iv4oVU9U8JUJnahpROn0O+g2p
-         D1nA==
+        d=redhat.com; s=google; t=1776679145; x=1777283945; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
+        b=M1DLN7dzmjiktBGpxl/tG6WDF7kt6aERi6JJuBhhwyb6CFl4gK7YVivznkGd4gsUwn
+         4wnQYAnkeW48q21WCzwAAX2K5f90pV0hOFp8BZqmb2G1NSGBiKjGLGc294UXvHVM44I3
+         j+YQCE3yHLfNnw2qpgkNJjMdLHPMhU7ETC9RXm96A1JVgiPMtdbNAx/DftbHq3msl2kf
+         TMzlK5w6HiPx/+eZKR+v/pt9h/Or3isiM2lvW2a2zUI4lnmmYeiUEQiH2Gp302d900/e
+         w3diz/urhEiD+sgevp8KPJ/BcHIKg/b6atAQmSCKAsI7DAuDEYOEwtFxpwIsjKfruY5u
+         H/qg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776675255; x=1777280055;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+aQiPPIHxREJ9LojQxFqJyqV/j9nuS5AUjoGZFBuLmU=;
-        b=MP3lm9feCjyoUawIUhhCgiKnqVZB9jholsY5hv43l6yxnZkh7DwUteQC1qFk53eOhA
-         S8UXhcTn4ZSyHP5+8WXqVC2CzzwzhxRrgn039OS9zAMLj91u9CCDSWv4v1eJev/549Hm
-         QFPj4JdhqMTY5qrRNDfGCxyrAuEM/AXYK/b6n/sMtzJOlfavzQ01Zqp6SbxQd53NN9iy
-         mc+W75PVbcWU+dKV3Ib0iceSbRLmeBHhsmOTwEOl5q3ikWiYBwpEcLmu8Api9scJuJwN
-         fggCZNgxt2zXN6pcMKIMxckU/K/UUgSnaUrVWPiiEv/YaIh+4KaN4qBdttBTPCvu4SNL
-         QoFQ==
-X-Gm-Message-State: AOJu0YwYEhvudOqT643rKfoDsW2LzwbZItKmLysLECy1VmaAoUt6tt9V
-	yFAEzxdKzFcfvr3jOei2sTaO2+Qt9Kgm/hAi677vO5C1bIBO2u3pVluMogXjnCKk3xUxepq9MVn
-	bUv3n1DcrP9zOHpYNfdOt4faeif14FgmKJQ+VgGh+OtEQsHyvzFpxmQ4zvjR3OFFNmoEU
-X-Gm-Gg: AeBDievO1DqMBVbuNDLeKbn22UrNaXGmlQPr0mLx3i8pvZpI0nXgN6YbpKHkqfKJJfw
-	WD8KdPjBWK1EPq4Nkbmpw8+KJzZWUA3dEiZuk7d745yBM4E9tAxsTblFiZ/22KLh2CoxIFfc5Vy
-	9jNxR51WUgVJaCpHADlwhgTH6H5KRvj2y7f+b3gbQ10oy6jXM4teaI+T8HjrRsJZJDdQ0LOz3Dm
-	kRrcSQulP/I+lO6y8gJcNsVU35PBxiLnNKf5nMjmTsB6w/b2/IPGUfBnL4+3Y+1Ph9XLlNwViyK
-	fzJsHIyZ2ASn68+iWcQ4tyhn6/RI+xyuqCmL/FtZp1Otk/8YaD/m3etBR5T865ps6+6Ql1Rk0MB
-	4ChyP8h7Su5dhpQUvP4wqrg==
-X-Received: by 2002:a05:600c:34ca:b0:48a:761:5816 with SMTP id 5b1f17b1804b1-48a07615b87mr10570145e9.8.1776675255316;
-        Mon, 20 Apr 2026 01:54:15 -0700 (PDT)
-X-Received: by 2002:a05:600c:34ca:b0:48a:761:5816 with SMTP id 5b1f17b1804b1-48a07615b87mr10569805e9.8.1776675254786;
-        Mon, 20 Apr 2026 01:54:14 -0700 (PDT)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48919f54572sm32462695e9.26.2026.04.20.01.54.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2026 01:54:14 -0700 (PDT)
-Date: Mon, 20 Apr 2026 10:54:13 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: Should we hook up sashiko.dev?
-Message-ID: <bvbjjxtpeup63ycakpn3igvcmapwyclkgsqszj5pvjeqjbnkej@7v74qii6s3ws>
-References: <87c6dc3d-ed23-4ae9-8309-0782ffd9b191@sandeen.net>
+        d=1e100.net; s=20251104; t=1776679145; x=1777283945;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=A+0ZYRI4bhrzd4DznVs14BK30lBCNe0iSlUNS3kYy5w=;
+        b=iFz3SWY1EnQLhWhYJMMwvKBKk9gxwa2A+KnZ4USw0sCHGb7fyrvsVsAiAx6u1T7zI6
+         eRlAFyJxA4TagJaNedDuig4hxQgFj1dXW5rWAX57y8+LG/00THfFLc4uKBIecDwgP6X/
+         WAdxK32YSewbyAbGg8jfiVY6BPS73YBxoA74t2dlbi6F/clxk/qDOj5CLpf+W8Ir0SKw
+         vsG+UntEvrz1ZYRSGZYCUs4UOKuMIoUKApvwbhEmFCJ5UWrjbgs0u1IRx0ElTU/mgEM3
+         UE+5740uDG3IVveHHw9FYhdJGs70y4r5UQ58o4rQ7BBzYpt/LsfqaSPSq859fJOAqj2r
+         NMcg==
+X-Gm-Message-State: AOJu0YwISpp5CKD/ppb2IzlOcMoLdj9Z3BK6i4+/tlAb61e+7aJUfEop
+	a8B1uk8jT0mYqd7jy0j0K7rYeLw3tkGg+/oAh3sFFvXV29Z2vwNtiO4XYe1ZIm25viFJ6AaVe2r
+	QQdXNROhuvXS3ZQmtk+RABYNwClXE59cFfWyl792iqllCkrB+b9iisUrgKXPgoQeN9yx+B/SK6Y
+	x1g1iNgZhTR/5aNrU2ZnSHOl8/mGwhe/vBReUb
+X-Gm-Gg: AeBDietILbWBRYOrjs7UKRil6fC8zJFskuTHQqnE/zzUZr/BmUINNl7xIOcklO0oseo
+	j9m1Jby9y6+UOgF1C+eFiGuOqC3kVuRH3648WlDDhoghrDPEeHR4O9KV8LqaOzOQ8oVaD33dQ3Z
+	wlPfO0d8epGABoMglL5rZTb8ZqcThJO17Go/NHdcoQ2Ia/Qhcvu2xWWdDgchknTN6fu4JTSpI6A
+	jVzJHqOzZy9yyuj6I09GTihhJNml+2FIDCS9i6RKuuNu6BH
+X-Received: by 2002:a17:906:ee8a:b0:b9d:7b9d:df02 with SMTP id a640c23a62f3a-ba421debe8emr542313566b.17.1776679144864;
+        Mon, 20 Apr 2026 02:59:04 -0700 (PDT)
+X-Received: by 2002:a17:906:ee8a:b0:b9d:7b9d:df02 with SMTP id
+ a640c23a62f3a-ba421debe8emr542311766b.17.1776679144298; Mon, 20 Apr 2026
+ 02:59:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87c6dc3d-ed23-4ae9-8309-0782ffd9b191@sandeen.net>
+References: <20260415071657.23412-1-ravising@redhat.com> <ad88TluB4FIP3yJV@infradead.org>
+ <CAF-d4OvKZOsez5589KUYTjRz05PQHCQ-uRkXu-3iaO3tOjcavA@mail.gmail.com> <aeBv_xvDTmuzEhV1@infradead.org>
+In-Reply-To: <aeBv_xvDTmuzEhV1@infradead.org>
+From: Ravi Singh <ravising@redhat.com>
+Date: Mon, 20 Apr 2026 15:28:52 +0530
+X-Gm-Features: AQROBzD_UsKC0IhQ4Ae2Ri5WaWay6e3YXdaKJYXBxxPywhXucTckxG6JecxZqFA
+Message-ID: <CAF-d4Ose1YMaHy5Jy_QmLwDQvBC7m2Bt5ftzmYnZwheSyhX+EQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: flush delalloc blocks on ENOSPC when creating symlinks
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	djwong@kernel.org, dchinner@redhat.com, esandeen@redhat.com, cem@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-04-15 11:49:50, Eric Sandeen wrote:
-> Hi all - 
-> 
-> "Sashiko is an agentic Linux kernel code review system. It monitors public mailing lists to thoroughly evaluate proposed Linux kernel changes. The system acts like a team of specialized reviewers covering domains from high-level architecture verification and security audits to low-level resource management and concurrency analysis."
-> 
-> This is something built by Chris Mason and others, with Google providing the LLM and tokens.
-> 
-> The website sashiko.dev shows these review results for mailing lists it is subscribed to, so you can browse around and see how it works. I've heard reasonably positive feedback from some who've used it already.
+On Thu, Apr 16, 2026 at 10:43=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>
+> On Wed, Apr 15, 2026 at 06:54:00PM +0530, Ravi Singh wrote:
+> > > While we're at it - do we also want it for tempfiles and scrub?
+> > > i.e., should we move this logic into xfs_trans_alloc_icreate,
+> > > similar to the quota logic?
+> > >
+> > tmpfiles and scrub tempfiles are created without
+> > directory entries, so they don't need a new directory block
+> > allocation and don't hit this ENOSPC path.
+>
+>
+> But we still ned the ialloc space reservation for all these cases.
+>
 
-I've tried Chris's prompts [1] with Claude for review (the ones
-sashiko is based on), and it didn't produce much of a value. But
-maybe Gemini models/sashiko is better with them.
+You're right - the ENOSPC comes from xfs_trans_alloc() failing
+to reserve blocks via xfs_dec_fdblocks(), which is the same
+ global counter for all callers. Even the smaller
+XFS_IALLOC_SPACE_RES reservation for tmpfiles can fail there
+when delalloc pressure has consumed the available fdblocks.
 
-I think it's still worth trying to enable it for xfs, maybe it will
-give some results. But without Cc imho.
+I did try several runs to reproduce the ENOSPC for tmpfile
+creation, but wasn't able to trigger it in practice - the
+smaller reservation makes it much harder to hit. That said,
+the code path is the same and it makes sense to handle it
+centrally rather than leave the gap.
 
-1: https://github.com/masoncl/review-prompts
+> > As for moving the logic into xfs_trans_alloc_icreate(),
+> > xfs_flush_inodes() is a heavier operation (sync_inodes_sb).
+> > Pushing it down into xfs_trans_alloc_icreate() would make every
+> > caller pay for that flush, including paths that don't need it.
+>
+> Only if we git enospc and need to restart the underlying
+> xfs_trans_alloc call, similar to how it handles quotas.
+>
+>
 
--- 
-- Andrey
+v2 moves the xfs_flush_inodes() retry into
+xfs_trans_alloc_icreate() and removes the existing caller-level
+retry from xfs_create()
 
-> 
-> We could send a PR to request adding linux-xfs, and I think we should try it.
-> 
-> However, if you look at the config, for example for linux-ext4:
-> https://github.com/sashiko-dev/sashiko/commit/d921c59
-> 
-> there are options to:
-> 
-> 1) reply back to the patch other (or not), and
-> 2) automatically cc: one more more people on every review if desired
-> 
-> so before single-handedly making this decision for every future patch author
-> and/or possible cc: individuals, what do we think?
-> 
-> (One can drive Sashiko from the command line, too, with or without the list
-> subscription mentioned above, see the github repo for details.)
-> 
-> Oh, and I guess we could add xfs-specific review prompts, too, see
-> https://github.com/masoncl/review-prompts/blob/main/kernel/subsystem/btrfs.md
-> for example. EXT4, OTOH, does not have this. (and the btrfs prompt looks quite
-> limited right now.) Maybe we could distill the xfs documentation into prompts...
-> but I'm getting ahead of myself now.
-> 
-> Thanks,
-> -Eric
-> 
+
+Thanks,
+Ravi
 
