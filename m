@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 484F939DBF0;
-	Mon, 20 Apr 2026 11:47:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2E839E190;
+	Mon, 20 Apr 2026 11:48:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776685681; cv=none; b=dcNoVXEDM3MADl7oP1qfJz+/IbCjcP05TAuSUn5O20vFRuQqSFIE06We7SK89gV+vZXTTj+ue+J5nZmNvIGRjvtW9IPlw0/j4NaTMiefDhLhQQOzsgQDNEgn7mWVP8wzBp81kYTFj7R65VkU2ZeSp3VKPUWGI7ovIve3Bwvwc7g=
+	t=1776685682; cv=none; b=HOV2AtewtDSZZgEu2FxbH+L7yWmaPMnr4/CGW4ewbxp2W6F2n/M41l0xA8Y1t71FQ8vhhNHdrQ8lr+mtumWJQTA3GiB1/xhCl8e9HEdkPgclHdl+YQ+Ouf2TZmtWjZE5XwU9LtKRXhFgXDNlUzilcaEFwuFs1eOtIVjeTatveAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776685681; c=relaxed/simple;
-	bh=828QqygZ+rCpf7T6T6f7PIgnPBQ8F12tnt1TM4pNE9M=;
+	s=arc-20240116; t=1776685682; c=relaxed/simple;
+	bh=5p8RSIL/qqpPyP2Ea+WCebFmPMKr9xGnDDmczm8lq+k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XPSSaTLDb8yOInQrcslH2wSg6Yu3Rjpd5kT8Hb1zBH6iKxVWg5CPOR1NuJSq4qu+AhjvmfrE01frb3sUK6NnL9gxK5xccuoPLevP+zW8e4pYq110aMg7NoFkbk8/I03xmjrHVoUveLAgBhBZ6YXo3OEa62vERWcsd5OAu1YTWi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kx1zArzN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=RkEdpTnndYSjC0v+lmM545B2tjTr4YCIh1tJHE0dBq47ZE2l3/etk1i8CX6l68Zln6GtQiXRsnVzgj1rN8BhkC3xmoTD2Qbn6jKFvoA1ni+uukMPzcd4EQNkF6riq0+E45gSKORkRWkiSZusixz2sCNzVD92DKgHoGxq92UEDfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FKejZjbd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kx1zArzN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D0ABC2BCB6;
-	Mon, 20 Apr 2026 11:47:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FKejZjbd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83B77C19425;
+	Mon, 20 Apr 2026 11:47:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776685679;
-	bh=828QqygZ+rCpf7T6T6f7PIgnPBQ8F12tnt1TM4pNE9M=;
+	s=k20201202; t=1776685682;
+	bh=5p8RSIL/qqpPyP2Ea+WCebFmPMKr9xGnDDmczm8lq+k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Kx1zArzNtu8cYuU9MH0tTSnlDigYMYO3ULtOdvLjutqy5nJ/5EE/BP21dMWoORPzr
-	 Xy/7kObBvz3PPGcSpXvkfuX+qU9eNPmASp7LjjmCbIum7TrPV8o8N04IWITEnzGfbi
-	 xyP36MQc2LYhvEM67NF569Uo+ZUZUIGxzvCQvr7SfXwdKq0Kj1uSPeedJrmdYX1PDD
-	 T+nll93pwxjhHdjLAyLLPIkpmhtFYHA2Vnf/GZAz/N+CRxJvV2uk/88sdgtQWPpj/N
-	 yWp/K2EoYzghkWHx0rohwZfhQbLcIBjRGlteDFte6GI8VZ3nnL6x6dxABDjGsbf4i/
-	 5ea+R0XZK36AQ==
+	b=FKejZjbdY4Xt9bsYb1u+5N+ij3J3IwSXPRp1BYh4RUh8I5qkaylO1q2dT4Uy5IWd4
+	 8Qol0fNFAGsFJELryHepTKzg0mabjNnQluCr+VKAN40pAxm1O+XwvCg6EHUmYFTjc6
+	 5WYbGJqneMBE4dw9Dao1LacVX9I5mTqtAZEAzzGJcYT7VqCRqP5tNPRK9z51DJieIU
+	 BFbbzkyQgn/+FkpcSH/2MRiCZL0EyRggyeYiZPMaLf5ftmOLQKS6A5wtjRij9wFjt1
+	 43Ck/F1tdZgA53yGVtVxkFQwrjYs578M4VEB9i1oMYzFTDlWIPn/7PYhN6KmuF6sSJ
+	 AOw/JdMFbugNg==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -38,9 +38,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-btrfs@vger.kernel.org,
 	linux-unionfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v8 08/22] iomap: teach iomap to read files with fsverity
-Date: Mon, 20 Apr 2026 13:46:55 +0200
-Message-ID: <20260420114714.1621982-9-aalbersh@kernel.org>
+Subject: [PATCH v8 09/22] iomap: introduce iomap_fsverity_write() for writing fsverity metadata
+Date: Mon, 20 Apr 2026 13:46:56 +0200
+Message-ID: <20260420114714.1621982-10-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
 In-Reply-To: <20260420114714.1621982-1-aalbersh@kernel.org>
 References: <20260420114714.1621982-1-aalbersh@kernel.org>
@@ -52,136 +52,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Obtain fsverity info for folios with file data and fsverity metadata.
-Filesystem can pass vi down to ioend and then to fsverity for
-verification. This is different from other filesystems ext4, f2fs, btrfs
-supporting fsverity, these filesystems don't need fsverity_info for
-reading fsverity metadata. While reading merkle tree iomap requires
-fsverity info to synthesize hashes for zeroed data block.
+This is just a wrapper around iomap_file_buffered_write() to create
+necessary iterator over metadata.
 
-fsverity metadata has two kinds of holes - ones in merkle tree and one
-after fsverity descriptor.
-
-Merkle tree holes are blocks full of hashes of zeroed data blocks. These
-are not stored on the disk but synthesized on the fly. This saves a bit
-of space for sparse files. Due to this iomap also need to lookup
-fsverity_info for folios with fsverity metadata. ->vi has a hash of the
-zeroed data block which will be used to fill the merkle tree block.
-
-The hole past descriptor is interpreted as end of metadata region. As we
-don't have EOF here we use this hole as an indication that rest of the
-folio is empty. This patch marks rest of the folio beyond fsverity
-descriptor as uptodate.
-
-For file data, fsverity needs to verify consistency of the whole file
-against the root hash, hashes of holes are included in the merkle tree.
-Verify them too.
-
-Issue reading of fsverity merkle tree on the fsverity inodes. This way
-metadata will be available at I/O completion time.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/iomap/buffered-io.c | 41 +++++++++++++++++++++++++++++++++++++++--
- include/linux/iomap.h  |  2 ++
- 2 files changed, 41 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c | 25 +++++++++++++++++++++++++
+ include/linux/iomap.h  |  3 +++
+ 2 files changed, 28 insertions(+)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 38c9592fba43..843314852663 100644
+index 843314852663..5c9fd925a62f 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -9,6 +9,7 @@
- #include <linux/swap.h>
- #include <linux/migrate.h>
- #include <linux/fserror.h>
-+#include <linux/fsverity.h>
- #include "internal.h"
- #include "trace.h"
+@@ -1287,6 +1287,31 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+ }
+ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
  
-@@ -561,9 +562,27 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
- 		if (plen == 0)
- 			return 0;
- 
--		/* zero post-eof blocks as the page may be mapped */
--		if (iomap_block_needs_zeroing(iter, pos)) {
-+		/*
-+		 * Handling of fsverity "holes". We hit this for two case:
-+		 *   1. No need to go further, the hole after fsverity
-+		 *	descriptor is the end of the fsverity metadata.
-+		 *
-+		 *   2. This folio contains merkle tree blocks which need to be
-+		 *	synthesized. If we already have fsverity info (ctx->vi)
-+		 *	synthesize these blocks.
-+		 */
-+		if ((iomap->flags & IOMAP_F_FSVERITY) &&
-+		    iomap->type == IOMAP_HOLE) {
-+			if (ctx->vi)
-+				fsverity_fill_zerohash(folio, poff, plen,
-+						       ctx->vi);
-+			iomap_set_range_uptodate(folio, poff, plen);
-+		} else if (iomap_block_needs_zeroing(iter, pos)) {
-+			/* zero post-eof blocks as the page may be mapped */
- 			folio_zero_range(folio, poff, plen);
-+			if (ctx->vi &&
-+			    !fsverity_verify_blocks(ctx->vi, folio, plen, poff))
-+				return -EIO;
- 			iomap_set_range_uptodate(folio, poff, plen);
- 		} else {
- 			if (!*bytes_submitted)
-@@ -614,6 +633,15 @@ void iomap_read_folio(const struct iomap_ops *ops,
- 
- 	trace_iomap_readpage(iter.inode, 1);
- 
-+	/*
-+	 * Fetch fsverity_info for both data and fsverity metadata, as iomap
-+	 * needs zeroed hash for merkle tree block synthesis
-+	 */
-+	ctx->vi = fsverity_get_info(iter.inode);
-+	if (ctx->vi && iter.pos < i_size_read(iter.inode))
-+		fsverity_readahead(ctx->vi, folio->index,
-+				   folio_nr_pages(folio));
++int iomap_fsverity_write(struct file *file, loff_t pos, size_t length,
++		const void *buf, const struct iomap_ops *ops,
++		const struct iomap_write_ops *write_ops)
++{
++	int			ret;
++	struct iov_iter		iiter;
++	struct kvec		kvec = {
++		.iov_base	= (void *)buf,
++		.iov_len	= length,
++	};
++	struct kiocb		iocb = {
++		.ki_filp	= file,
++		.ki_ioprio	= get_current_ioprio(),
++		.ki_pos		= pos,
++	};
 +
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
- 		iter.status = iomap_read_folio_iter(&iter, ctx,
- 				&bytes_submitted);
-@@ -681,6 +709,15 @@ void iomap_readahead(const struct iomap_ops *ops,
- 
- 	trace_iomap_readahead(rac->mapping->host, readahead_count(rac));
- 
-+	/*
-+	 * Fetch fsverity_info for both data and fsverity metadata, as iomap
-+	 * needs zeroed hash for merkle tree block synthesis
-+	 */
-+	ctx->vi = fsverity_get_info(iter.inode);
-+	if (ctx->vi && iter.pos < i_size_read(iter.inode))
-+		fsverity_readahead(ctx->vi, readahead_index(rac),
-+				readahead_count(rac));
++	iov_iter_kvec(&iiter, WRITE, &kvec, 1, length);
 +
- 	while (iomap_iter(&iter, ops) > 0)
- 		iter.status = iomap_readahead_iter(&iter, ctx,
- 					&cur_bytes_submitted);
++	ret = iomap_file_buffered_write(&iocb, &iiter, ops, write_ops, NULL);
++	if (ret < 0)
++		return ret;
++	return ret == length ? 0 : -EIO;
++}
++EXPORT_SYMBOL_GPL(iomap_fsverity_write);
++
+ static void iomap_write_delalloc_ifs_punch(struct inode *inode,
+ 		struct folio *folio, loff_t start_byte, loff_t end_byte,
+ 		struct iomap *iomap, iomap_punch_t punch)
 diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 4506a99d5285..4d9202cae29f 100644
+index 4d9202cae29f..83586f09f365 100644
 --- a/include/linux/iomap.h
 +++ b/include/linux/iomap.h
-@@ -435,6 +435,7 @@ struct iomap_ioend {
- 	loff_t			io_offset;	/* offset in the file */
- 	sector_t		io_sector;	/* start sector of ioend */
- 	void			*io_private;	/* file system private data */
-+	struct fsverity_info	*io_vi;		/* fsverity info */
- 	struct bio		io_bio;		/* MUST BE LAST! */
- };
- 
-@@ -509,6 +510,7 @@ struct iomap_read_folio_ctx {
- 	struct readahead_control *rac;
- 	void			*read_ctx;
- 	loff_t			read_ctx_file_offset;
-+	struct fsverity_info	*vi;
- };
- 
- struct iomap_read_ops {
+@@ -359,6 +359,9 @@ static inline bool iomap_want_unshare_iter(const struct iomap_iter *iter)
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops,
+ 		const struct iomap_write_ops *write_ops, void *private);
++int iomap_fsverity_write(struct file *file, loff_t pos, size_t length,
++		const void *buf, const struct iomap_ops *ops,
++		const struct iomap_write_ops *write_ops);
+ void iomap_read_folio(const struct iomap_ops *ops,
+ 		struct iomap_read_folio_ctx *ctx, void *private);
+ void iomap_readahead(const struct iomap_ops *ops,
 -- 
 2.51.2
 
