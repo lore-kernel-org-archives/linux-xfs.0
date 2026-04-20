@@ -1,104 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pdx-out-002.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-002.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.246.1.125])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6AB33F5BC
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 16:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BC8E2BD11;
+	Mon, 20 Apr 2026 16:14:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.246.1.125
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776701369; cv=none; b=jBLR+PihtA2qbyPfONdHOBg8Nu3B7CgPwZbdUa/T7NQ34z3WGsSSYkpadi9NhbFqoqOX5t3BKLxA3R059nNCAo3hXTAGKglfg7w1f+lN86Z0eSwGM7TdlEmXLP8xAQEdcLRGBUoWkHDvV8Qo2ltGAKa/eZd5oZoELGD4PTIKGck=
+	t=1776701669; cv=none; b=ZUs3iLCcEb+ReQeXNUkcfgGLntAOdaR2Mm/5K2IrYXhzSbNiWSUS71t5XMCnj1MX9W96cHfAi8icib+YhQWU4mMTzT6M26F2jNXpaRxX8oFqzEv3ZSa3TqaBocAGKW49GI0osfF8xqXHQ3fITxmAF7E2j6BOshuAi7Y94gR1+sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776701369; c=relaxed/simple;
-	bh=T7wzd+9PVTQqqJbh54vktlHHbqprWTHNgvr5h37aYCE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=clnrm50JPXy764M4vBRyn03WOPqvAfi5fxWIhsP0FRI4BvRkq+bWRRGlrMYGSMAIzUDU/muchg6pP1oVnzXGKoXCDHshaSlPqXR0n2BakvsaUDahAhImC2XZneDAyRwJqhsT5agnAMHrYlau+xEu0UxrsgqgSqF5bD5RexGM2ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8iWZOcz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776701669; c=relaxed/simple;
+	bh=IxT1LCOphsr/axVCQFZQgJDOzZ5ZGnLfGZfIgVmWzYo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TWRTllb0GXI+C3RmkiecbrhtJfw3dbRtQmuSzX/JAFdDK3rdqN6ARe3zjerFSeb642MCS6o6D6gkSythwkJxG/8/JIoL4V/Ua8tHnsa4NuHZ8gkRee9gcRs57qTFYzPgOyIWvQGdJIQequbQJt4wyYDpybUvAMjD0F6E22U9u7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=Fvx9EM4L; arc=none smtp.client-ip=44.246.1.125
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8iWZOcz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7C0FC19425;
-	Mon, 20 Apr 2026 16:09:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776701369;
-	bh=T7wzd+9PVTQqqJbh54vktlHHbqprWTHNgvr5h37aYCE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=A8iWZOcz7yV1cF7O3JdwJP7rDJyS1N0u/oRoRJTZ/O0U9dZDIFxLSbVVskLsUcDP4
-	 /8m1kzZxxUNAyMuoE7pIIXlQoX93N45JJsnl5rnmS1OJpLLCykviIgSJYVx1Yy4dGA
-	 qYW2oPZ2ay2OphEBjrVUrePUszc4IMK8FcgSn9aTn7xi5id3nvwpOk6dT9Og+LITGh
-	 U8MLFZ5DYgtl0lx0WrNsg15FVHsjShhWX55JaKvZZBH58CyY3mJ9Of5peTLj7iK+o8
-	 N5uKOQ90Q7K7jyVD+0/W0fCs7aehaIKBql5xN0LtY95aMPyvEzZx3kMFFBwT3ipyT/
-	 rTCLnrw1cwNOQ==
-Date: Mon, 20 Apr 2026 18:09:24 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Hans Holmberg <hans.holmberg@wdc.com>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: expose the current zonegc required status in
- sysfs
-Message-ID: <aeZPtHgVAieyBEqo@ryzen>
-References: <20260420135011.624587-4-cassel@kernel.org>
- <20260420135011.624587-6-cassel@kernel.org>
- <41e7ced6-90c0-423a-9a90-4bfa263bdb31@kernel.org>
+	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="Fvx9EM4L"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
+  t=1776701667; x=1808237667;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=4O++pW9Xbgus6i0sqISNyUGab6AsMHTSYNj1rQkW9es=;
+  b=Fvx9EM4LCKhnJKyORTFEvof8XQbqS66CJYl9BN6ec9LemJNBQLpWUa5d
+   yGSn30o13Byp6813v7AeYsqS36N8OH3zJ9Y2nX+fpE6kJ2gDhNC+Wa93r
+   xiqHDDGWh05RR6bA13QbmBf3bXP1iZD1w7c6RlODyMY7IDlE6eOmjT6b4
+   MgDTq0rkCpnRx1f2OyncTNOeVNwtL8sHuI7KuML0qrkTd14XhbOx48Hni
+   HYH7QjgeKtcBRqLs30z8SSGO4WsF7BZUEx2Y8ud/CVyDvPgPp0MYZuo2d
+   mY/9aRF/SOj2aNiv98CG+pvxp3XUM5lxd6Gzj1M/mG3xgZcPJ3b4EkgEE
+   w==;
+X-CSE-ConnectionGUID: fItFHySZTnKCgGaNsgSP0w==
+X-CSE-MsgGUID: M5YpE+EUQMKeBZiFi0AZ1Q==
+X-IronPort-AV: E=Sophos;i="6.23,190,1770595200"; 
+   d="scan'208";a="17744120"
+Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
+  by internal-pdx-out-002.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2026 16:14:24 +0000
+Received: from EX19MTAUWC001.ant.amazon.com [205.251.233.105:15252]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.54.92:2525] with esmtp (Farcaster)
+ id 0fb7fa6e-3822-49ea-b8c0-62c3590e6f16; Mon, 20 Apr 2026 16:14:24 +0000 (UTC)
+X-Farcaster-Flow-ID: 0fb7fa6e-3822-49ea-b8c0-62c3590e6f16
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC001.ant.amazon.com (10.250.64.174) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Mon, 20 Apr 2026 16:14:24 +0000
+Received: from dev-dsk-dipiets-2b-fa1865ee.us-west-2.amazon.com
+ (172.22.139.101) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37; Mon, 20 Apr 2026
+ 16:14:23 +0000
+From: Salvatore Dipietro <dipiets@amazon.it>
+To: <linux-kernel@vger.kernel.org>
+CC: <ritesh.list@gmail.com>, <abuehaze@amazon.com>, <alisaidi@amazon.com>,
+	<blakgeof@amazon.com>, <brauner@kernel.org>, <dipietro.salvatore@gmail.com>,
+	<dipiets@amazon.it>, <djwong@kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>,
+	<willy@infradead.org>, Jan Kara <jack@suse.cz>, Andrew Morton
+	<akpm@linux-foundation.org>
+Subject: [PATCH v2] mm/filemap: avoid costly reclaim for high-order folio allocations
+Date: Mon, 20 Apr 2026 16:14:03 +0000
+Message-ID: <20260420161404.642-1-dipiets@amazon.it>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <41e7ced6-90c0-423a-9a90-4bfa263bdb31@kernel.org>
+X-ClientProxiedBy: EX19D040UWB003.ant.amazon.com (10.13.138.8) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-On Mon, Apr 20, 2026 at 05:47:55PM +0200, Damien Le Moal wrote:
-> On 2026/04/20 15:50, Niklas Cassel wrote:
-> > The current zonegc required status is currently available in
-> > /proc/<pid>/mountstats (which contains stats for all mounted zoned XFS
-> > filesystems), under "RT GC required:".
-> > 
-> > Add a sysfs attribute /sys/fs/xfs/<dev>/zoned/zonegc_required for the same.
-> > This makes it trivial for monitoring software to read the value, for a
-> > specific filesystem, without any complex parsing.
-> > 
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> 
-> As is, I think this is OK, but I wonder if we should not instead call the
-> attribute zonegc_running and use xfs_is_zonegc_running() to test the
-> XFS_OPSTATE_ZONEGC_RUNNING flag for the attribute value ?
-> 
-> The reasoning here is that the GC thread also does zone reset for zones with all
-> blocks invalidated, and in such case we may start the GC thread even when
-> xfs_zoned_need_gc() is false.
-> 
-> And I think it is more interesting to see if the GC thread is running, so doing IOs.
-> 
-> Thoughts ?
+Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+introduced high-order folio allocations in the buffered write path.
+When memory is fragmented, each failed allocation above
+PAGE_ALLOC_COSTLY_ORDER triggers compaction and drain_all_pages() via
+__alloc_pages_slowpath(), causing a 0.75x throughput drop on pgbench
+(simple-update) with  1024 clients on a 96-vCPU arm64 system.
 
-I did originally create two patches:
+In __filemap_get_folio(), for orders above min_order, split the
+allocation behavior by cost:
 
-This patch, which does exactly like "RT GC required:" in /proc/<pid>/mountstats
-(which also calls xfs_zoned_need_gc()).
+ - For orders above PAGE_ALLOC_COSTLY_ORDER: strip
+   __GFP_DIRECT_RECLAIM, making them purely opportunistic. The
+   allocator tries the freelists only and returns NULL immediately if
+   pages are not available.
 
-Another patch that added another sysfs attribute:
-/sys/fs/xfs/<dev>/zoned/zonegc_running
-which like you said, calls xfs_is_zonegc_running(zoned_to_mp(kobj))).
+ - For non-costly orders (between min_order and
+   PAGE_ALLOC_COSTLY_ORDER): use __GFP_NORETRY to allow lightweight
+   direct reclaim without expensive compaction retries.
 
-However, I couldn't come up with a good argument for adding two new sysfs
-attributes that are more or less the same thing, therefore I chose the
-attribute which is equivalent to what we already expose via mountstats.
+With this patch, pgbench throughput recovers to 148k TPS (+67% vs
+regressed baseline), stable across all iterations.
+
+v2: 
+- strip __GFP_DIRECT_RECLAIM to avoid costly reclaim for high-order
+  folio allocations
+- Moved fix from iomap to mm/filemap layer
+
+Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+Cc: stable@vger.kernel.org
+Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
+---
+ mm/filemap.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 4e636647100c..f2343c26dd63 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2007,8 +2007,13 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
+ 			gfp_t alloc_gfp = gfp;
+ 
+ 			err = -ENOMEM;
+-			if (order > min_order)
+-				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
++			if (order > min_order) {
++				alloc_gfp |= __GFP_NOWARN;
++				if (order > PAGE_ALLOC_COSTLY_ORDER)
++					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
++				else
++					alloc_gfp |= __GFP_NORETRY;
++			}
+ 			folio = filemap_alloc_folio(alloc_gfp, order, policy);
+ 			if (!folio)
+ 				continue;
+
+base-commit: c7275b05bc428c7373d97aa2da02d3a7fa6b9f66
+-- 
+2.47.3
 
 
-If you think it is a good idea to have both, then I could just dig up my
-patch from the git reflog, and sent it as well.
-
-However, I think if we add such "GC running" attribute, then for consistency,
-shouldn't we add the same also to mountstats?
 
 
-BTW.. didn't you think about moving the zone resets out from the GC thread?
-If we ever do submit such a patch, then the two attributes would always have
-the same value. So perhaps we should hold off with adding two attributes until
-we know for sure if we will move the zone resets out from the GC thread or not?
+AMAZON DEVELOPMENT CENTER ITALY SRL, viale Monte Grappa 3/5, 20124 Milano, Italia, Registro delle Imprese di Milano Monza Brianza Lodi REA n. 2504859, Capitale Sociale: 10.000 EUR i.v., Cod. Fisc. e P.IVA 10100050961, Societa con Socio Unico
 
 
-Kind regards,
-Niklas
+
