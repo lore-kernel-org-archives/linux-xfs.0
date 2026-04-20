@@ -1,155 +1,80 @@
-Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DB4C332614
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 11:56:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65E392DCF6C
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 13:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776686185; cv=none; b=Bhiw9Lndo2zyPmqSWHb7oW968cXS24BQhj5stkJ7/c4yd1G6JcTGz2iM1N0a5mRQVu6jcr6APcLCFjnQSmU7wDxPGtDFhYkq/5waes8RndVWvSdKDZYBfm1e8tEZFUsJmxW1EmKOZuE2GaxzCOw3FjUHeTuo6gZg3eNkvUklbLM=
+	t=1776693025; cv=none; b=ov5+BkPw9l9l5y+galHrpFCBKGTPzQmCshif+rEeJU4722qnPgnjIRm7eLMnCQliz1jzaq0X5mvBJNGTUpH4ZWstYYwXZDbYyXKFv7yKomPO7wIMKKO62t2KmrXgoGDVBh2I+IMwtBm/XxKYBHUqe03Jz75e0BA3rnAvKSo4XBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776686185; c=relaxed/simple;
-	bh=yYQeHhDuKYxwvEjukQGyDVXUJRhIRZuHKhyF+MSycyU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=urLKeHJqkTI5fvsIMwqohODBBtIaCnvURWu+zt9jmHiR2TVjNTHAEXxBN8YMjU2tzsvj9vJUA4ZcucRnfQpoBjLKXqXAOoln+DUtqHSgHaeOP1Ya/0qkslR0dEhHVZGBqWZe2s9WM99SBqpQQeRNhtn20Hmk7vXfot+I///+H8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BOO3af0g; arc=none smtp.client-ip=95.215.58.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1776693025; c=relaxed/simple;
+	bh=Do+rpu1798e2sVQXOdNtc99sDNE1caizKnCRShjFSQo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YhSMl4xxXyu8WH1s/lxDVvD4YiOHrEv7FAUMdLgCpfUKoKdJI1m7B/u4c65GLD3RwPKw1vaqG5bQSN7ptN494Sv0XBjrn7uYzPxFY8dH+Bw2R3VFQiMtFg/C7j849X/zI7CuozvhJds229TOHAuOxKNym1vbzW0PgSqY9FGnhL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aKJZT1O+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BOO3af0g"
-Date: Mon, 20 Apr 2026 13:56:02 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1776686180;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uAqAKYkhN6D96c96Mv9PAQs6rNA7+9Ka0YDLN+X5iC4=;
-	b=BOO3af0gd3cgHZ6BarDqfWQl4LroCnTbHD7ZxIa8ukzF4qfyDvi5w9ObOE+3H9L6f284ws
-	MyPfwi3MypvbroQc88CJMHlPh2BxedJNolYfQO4EqQdCoh7AotS0k7bMMjnzBOcD9LXa8j
-	GBifeO6xiuzr5WPOIEakFm1d8dj/ljY=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, 
-	ritesh.list@gmail.com, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, 
-	dgc@kernel.org, tytso@mit.edu, p.raghav@samsung.com, andres@anarazel.de, 
-	brauner@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 2/5] iomap: Add initial support for buffered
- RWF_WRITETHROUGH
-Message-ID: <kvxvy26jblhx6sijbhxbpzzwltfoskwkv2suqhop5dq742fn5y@5tlws6pzaol3>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
- <d44171d5a1ec783722019ad7d1a4ede0478cc914.1775658795.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aKJZT1O+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B259C2BCB4;
+	Mon, 20 Apr 2026 13:50:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776693024;
+	bh=Do+rpu1798e2sVQXOdNtc99sDNE1caizKnCRShjFSQo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=aKJZT1O+/AIuYSp9BW0ja4wYkJbiPb1ekWVU5iVDRDqcWs0sn2qPo4qg+5otu4n3M
+	 ZTRYMiZ7Ll2IoS4PIyTD/ErA2ojgKBdEPppI1uc9DGgz4mNT199kYnca0sEgKFdQAD
+	 EHt7zj5hDBSSOjHjEEJA/M71qLQeQ4O24gcqLGn34xHgywU3QPI6JdQQV90gbXWO84
+	 dbNtUknZUtkzKa4UukgwvOemDkgJNwkdFsIbNt48VF0LJBtuC6GQcBt0lHoFBg5bfK
+	 bfXSrX1+SatYZrI4DlXwUU/G+hMLa2vGzM5KZVPVdZKmfh897Lq5z9OZMblA7jmeUV
+	 GZ47Tv3wdGN2Q==
+From: Niklas Cassel <cassel@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	linux-xfs@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/2] xfs: add additional zoned sysfs attributes
+Date: Mon, 20 Apr 2026 15:50:12 +0200
+Message-ID: <20260420135011.624587-4-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d44171d5a1ec783722019ad7d1a4ede0478cc914.1775658795.git.ojaswin@linux.ibm.com>
-X-Migadu-Flow: FLOW_OUT
+X-Developer-Signature: v=1; a=openpgp-sha256; l=815; i=cassel@kernel.org; h=from:subject; bh=Do+rpu1798e2sVQXOdNtc99sDNE1caizKnCRShjFSQo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDKf6QtvTVPYt8//xMwHpd+ZTUqOxV77KXiv+/0Rtf9Hz CsSfqd3d5SwMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BeAiUowMa7oLzty/ePGAFLfr d9m1t/bMkTeVmyqe/Kjg1Sqv1j3mvxh+7At6+EPB6FJgdL1Ij5Pb1VfaX7KfTpqkZzItoKJ1Bj8 jAA==
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-> +
-> +	if (wt_ops->writethrough_submit)
-> +		wt_ops->writethrough_submit(wt_ctx->inode, iomap, wt_ctx->bio_pos,
-> +					    len);
-> +
-> +	bio = bio_alloc(iomap->bdev, wt_ctx->nr_bvecs, REQ_OP_WRITE, GFP_NOFS);
+Hello all,
 
-We might want to check if bio_alloc succeeded here.
+This series adds:
+/sys/fs/xfs/<dev>/zoned/nr_free_zones
+and
+/sys/fs/xfs/<dev>/zoned/zonegc_required
 
-> +	bio->bi_iter.bi_sector	= iomap_sector(iomap, wt_ctx->bio_pos);
-> +	bio->bi_end_io		= iomap_writethrough_bio_end_io;
-> +	bio->bi_private		= wt_ctx;
-> +
-> +	for (i = 0; i < wt_ctx->nr_bvecs; i++)
-> +		__bio_add_page(bio, wt_ctx->bvec[i].bv_page,
-> +				wt_ctx->bvec[i].bv_len,
-> +				wt_ctx->bvec[i].bv_offset);
-> +
-> +	atomic_inc(&wt_ctx->ref);
-> +	submit_bio(bio);
-> +	wt_ctx->nr_bvecs = 0;
-> +}
-> +
-<snip>
-> +
-> +/**
-> + * iomap_writethrough_iter - perform RWF_WRITETHROUGH buffered write
-> + * @wt_ctx: writethrough context
-> + * @iter: iomap iter holding mapping information
-> + * @i: iov_iter for write
-> + * @wt_ops: the fs callbacks needed for writethrough
-> + *
-> + * This function copies the user buffer to folio similar to usual buffered
-> + * IO path, with the difference that we immediately issue the IO. For this we
-> + * utilize IO submission and completion mechanism that is inspired by dio.
-> + *
-> + * Folio handling note: We might be writing through a partial folio so we need
-> + * to be careful to not clear the folio dirty bit unless there are no dirty blocks
-> + * in the folio after the writethrough.
-> + */
-> +static int iomap_writethrough_iter(struct iomap_writethrough_ctx *wt_ctx,
-> +				   struct iomap_iter *iter, struct iov_iter *i,
-> +				   const struct iomap_writethrough_ops *wt_ops)
-> +
-> +{
-> +	ssize_t total_written = 0;
-> +	int status = 0;
-> +	struct address_space *mapping = iter->inode->i_mapping;
-> +	size_t chunk = mapping_max_folio_size(mapping);
-> +	unsigned int bdp_flags = (iter->flags & IOMAP_NOWAIT) ? BDP_ASYNC : 0;
-> +	unsigned int bs = i_blocksize(iter->inode);
-> +
-> +	/* copied over based on DIO handles these flags */
-> +	if (iter->iomap.type == IOMAP_UNWRITTEN)
-> +		wt_ctx->flags |= IOMAP_DIO_UNWRITTEN;
-> +	if (iter->iomap.flags & IOMAP_F_SHARED)
-> +		wt_ctx->flags |= IOMAP_DIO_COW;
-> +
-> +	if (!(iter->flags & IOMAP_WRITETHROUGH))
-> +		return -EINVAL;
-> +
-> +	do {
-> +		struct folio *folio;
-> +		size_t offset;		/* Offset into folio */
-> +		u64 bytes;		/* Bytes to write to folio */
-> +		size_t copied;		/* Bytes copied from user */
-> +		u64 written;		/* Bytes have been written */
-> +		loff_t pos;
-> +		size_t off_aligned, len_aligned;
-> +
-> +		bytes = iov_iter_count(i);
-> +retry:
-> +		offset = iter->pos & (chunk - 1);
-> +		bytes = min(chunk - offset, bytes);
-> +		status = balance_dirty_pages_ratelimited_flags(mapping,
-> +							       bdp_flags);
-> +		if (unlikely(status))
-> +			break;
-> +
-> +		/*
-> +		 * If completions already occurred and reported errors, give up
-> +		 * now and don't bother submitting more bios.
-> +		 */
-> +		if (unlikely(data_race(wt_ctx->error))) {
+These values are already available in /proc/<pid>/mountstats, however,
+mountstats will unconditionally print the stats for all mounted zoned XFS
+filesystems.
 
-In the unlikely scenario where we encounter an error, do we have to also
-clear the writeback flag on all the folios that is part of this
-bvec until now?
+Making the same information in /sys/fs/xfs/<dev>/zoned/ makes it easier
+for monitoring tools software to read the values for a specific filesystem.
 
-Something like explicitly iterate over wt_ctx->bvec[0] through 
-wt_ctx->bvec[nr_bvecs - 1], manually call folio_end_writeback(bvec[i].bv_page)
-on them, and then discard the bvecs by setting the nr_bvecs = 0;
 
-I am wondering if the folios that were processed until now will be in
-PG_WRITEBACK state which can affect reclaim as we never clear the flag.
+Kind regards,
+Niklas
 
-> +			wt_ctx->nr_bvecs = 0;
-> +			break;
-> +		}
-> +
+Niklas Cassel (2):
+  xfs: expose the number of free zones in sysfs
+  xfs: expose the current zonegc required status in sysfs
 
---
-Pankaj
+ Documentation/admin-guide/xfs.rst |  8 ++++++++
+ fs/xfs/xfs_sysfs.c                | 23 +++++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
+
+
+base-commit: 2ffc6900d5c3a7cd59becda2aa67581d9bd3858e
+-- 
+2.53.0
+
