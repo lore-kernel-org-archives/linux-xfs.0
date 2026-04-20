@@ -1,25 +1,28 @@
 Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C95D39B483
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 10:56:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F24C3876DB
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 10:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776682564; cv=none; b=d8AMm8qup5Y8dDw1jRdkZBvZAhiwCie475g6rRrzMhqqV0LrDMTMphI2jaa0S4AXd9qi/PAG1/ordf4sDWfqMS41iSFsIWjzmPm9b9zikqQg40JgY7vxY45AejvAk3RS3zpd3gsRDCX8jMFlf833MI0HlnECkGYb2a7etgWIZxU=
+	t=1776682569; cv=none; b=b5cstueMw0c5P6HiBAvSmiRkrwbE8QO7g9XIsV0PKC6LS8BmHozyyabAKaOb5pc/AoqDeRPY29Bvme+xvQOAKfTSzBUEPQpvgE//2K9UbyQ8Dn9t60mgMIDnoEEkQuB0CP6dDQfM/m0NR870ZahYDDEDY/7P8qaQ3fxDahgrGY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776682564; c=relaxed/simple;
-	bh=jjW38mOuwaDy9WHXOxOwO7ZZNdqJdg0aroVESTYpZj0=;
+	s=arc-20240116; t=1776682569; c=relaxed/simple;
+	bh=3kSaZXC1CmOVkP4F/T95Zvg22FlLR4evYJps3NLvZ3I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dAZDF35763xx4BVUuSdHfsFGrzhGo3ieygET+xcuSzYYp1dsHgOHM6vOqO5GMsI8fz1pmMaiW+ODMw0OTT3A7JNGPQZ8mQckjP8AG4yEYvhUuoaQD7H8AQ0uM0dhRJSSPEFcPUqu4qqX1Z8wIc3Sb1pQlTWq+0rkojqJFopsP9c=
+	 MIME-Version; b=KDPM5glRBMaV5MS79gxIOJ9Cs1PEzuSpn0EDobvF/Wo6aebLvB/kQ2s7/K8IK4UTWVvEZSLQ4/ypGUY4/aB9idgwEHy0HIZmHA3CPWbdwd1oTZD90UODW54lPJ5Y1bs/e3um7zEtovDJY/VX0aEA5iQYNFBPUw8f7ut4NdWnv90=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.151
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4fzj8G6vW6z9trl;
-	Mon, 20 Apr 2026 12:55:58 +0200 (CEST)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4fzj8N1ydjz9v1Q;
+	Mon, 20 Apr 2026 12:56:04 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
 From: Pankaj Raghav <p.raghav@samsung.com>
 To: linux-xfs@vger.kernel.org
 Cc: bfoster@redhat.com,
@@ -33,9 +36,9 @@ Cc: bfoster@redhat.com,
 	kundan.kumar@samsung.com,
 	cem@kernel.org,
 	hch@infradead.org
-Subject: [PATCH v3 2/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Date: Mon, 20 Apr 2026 12:55:38 +0200
-Message-ID: <20260420105539.3644999-3-p.raghav@samsung.com>
+Subject: [PATCH v3 3/3] xfs: add a sysfs entry to enable write zeroes even if HW does not support it
+Date: Mon, 20 Apr 2026 12:55:39 +0200
+Message-ID: <20260420105539.3644999-4-p.raghav@samsung.com>
 In-Reply-To: <20260420105539.3644999-1-p.raghav@samsung.com>
 References: <20260420105539.3644999-1-p.raghav@samsung.com>
 Precedence: bulk
@@ -45,107 +48,92 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4fzj8N1ydjz9v1Q
 
-If the underlying block device supports the unmap write zeroes
-operation, this flag allows users to quickly preallocate a file with
-written extents that contain zeroes. This is beneficial for subsequent
-overwrites as it prevents the need for unwritten-to-written extent
-conversions, thereby significantly reducing metadata updates and journal
-I/O overhead, improving overwrite performance.
+From: Lukas Herbolt <lukas@herbolt.com>
 
-Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+Add a xfs sysfs entry that will not return ENOTSUPP for
+FALLOC_FL_WRITE_ZEROES flag in fallocate even if the hardware does not
+support deallocate on write zeroes. This is useful for testing this
+feature independent of the HW underneath.
+
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 ---
-I would like to get feedback on calling xfs_zero_range in
-xfs_falloc_write_zeroes function. It gets the job done but I am
-wondering if there is a better of handling zeroing out between old EOF
-and new offset.
-
- fs/xfs/xfs_file.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 55 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_file.c   |  3 ++-
+ fs/xfs/xfs_sysctl.h |  1 +
+ fs/xfs/xfs_sysfs.c  | 25 +++++++++++++++++++++++++
+ 3 files changed, 28 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..99a02982154a 100644
+index 99a02982154a..d70959a855db 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,57 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
+@@ -1388,7 +1388,8 @@ xfs_falloc_write_zeroes(
+ 	if (xfs_is_always_cow_inode(ip) ||
+ 	    !bdev_write_zeroes_unmap_sectors(
+ 		    xfs_inode_buftarg(XFS_I(inode))->bt_bdev))
+-		return -EOPNOTSUPP;
++		if (!xfs_globals.allow_write_zero)
++			return -EOPNOTSUPP;
  
-+static int
-+xfs_falloc_write_zeroes(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
+ 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+ 	if (error)
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index ed9d896079c1..ef46cfdfae43 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -86,6 +86,7 @@ struct xfs_globals {
+ 	int	mount_delay;		/* mount setup delay (secs) */
+ 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+ 	bool	always_cow;		/* use COW fork for all overwrites */
++	bool    allow_write_zero;       /* Allow WRITE_ZERO on any HW */
+ };
+ extern struct xfs_globals	xfs_globals;
+ 
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 676777064c2d..ed35f5919fbd 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -315,6 +315,30 @@ bload_node_slack_show(
+ }
+ XFS_SYSFS_ATTR_RW(bload_node_slack);
+ 
++static ssize_t
++allow_write_zero_store(
++       struct kobject  *kobject,
++       const char      *buf,
++       size_t          count)
 +{
-+	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			new_size = 0;
-+	loff_t			old_size = XFS_ISIZE(ip);
-+	int			error;
-+	unsigned int		blksize = i_blocksize(inode);
-+	loff_t			offset_aligned = round_down(offset, blksize);
-+	bool			did_zero;
++       ssize_t         ret;
 +
-+	if (xfs_is_always_cow_inode(ip) ||
-+	    !bdev_write_zeroes_unmap_sectors(
-+		    xfs_inode_buftarg(XFS_I(inode))->bt_bdev))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-+	if (error)
-+		return error;
-+
-+	error = xfs_free_file_space(ip, offset, len, ac);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Zero the tail of the old EOF block and any space up to the new
-+	 * offset.
-+	 * In the usual truncate path, xfs_falloc_setsize takes care of
-+	 * zeroing those blocks.
-+	 */
-+	if (offset_aligned > old_size)
-+		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-+				NULL, &did_zero);
-+	if (error)
-+		return error;
-+
-+	error = xfs_bmap_alloc_or_convert_range(ip, offset, len,
-+			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO,
-+			new_size ? true : false);
-+	if (error)
-+		return error;
-+
-+	return error;
++       ret = kstrtobool(buf, &xfs_globals.allow_write_zero);
++       if (ret < 0)
++               return ret;
++       return count;
 +}
 +
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1470,7 +1521,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1522,6 +1573,9 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_ALLOCATE_RANGE:
- 		error = xfs_falloc_allocate_range(file, mode, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		break;
++static ssize_t
++allow_write_zero_show(
++       struct kobject  *kobject,
++       char            *buf)
++{
++       return sysfs_emit(buf, "%d\n", xfs_globals.allow_write_zero);
++}
++XFS_SYSFS_ATTR_RW(allow_write_zero);
++
++
+ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(bug_on_assert),
+ 	ATTR_LIST(log_recovery_delay),
+@@ -324,6 +348,7 @@ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(larp),
+ 	ATTR_LIST(bload_leaf_slack),
+ 	ATTR_LIST(bload_node_slack),
++	ATTR_LIST(allow_write_zero),
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(xfs_dbg);
 -- 
 2.51.2
 
