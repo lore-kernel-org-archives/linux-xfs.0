@@ -1,178 +1,248 @@
-Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65FDD347514
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 12:04:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460DC3D9DCE
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 14:58:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776773056; cv=none; b=fY4LbJbypXR9IiKVPKMp3KtKfyNwhGDv3iJ9Fm4eIkTSBfNNFaUM+kmkZE7pYMkmfRg/g0n2KyHvspr26v1DstqysS1hQDUM0Btvy7YBmGngJz5PYw+dZ3a5GBfNf90+ico2CkcH7Ikt5euREA1WRk5GEw8tyK9wqD5aG0G0Duw=
+	t=1776783484; cv=none; b=U7JngwxmDZ1i6aCoKboODmafEueoaYGq7rs7v5NrhUYvCx75PftlBxR/NqS7gWwHp0xNvFXz/hC66vD70MRXZ/UIWW2Ow8IhJ4VJd3MVOp6kpPb89g1P3/Hh85ipO80bSIPMOg/FuWH3/VnYN0VYbw4eElKEVBBjYb1PktKsSsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776773056; c=relaxed/simple;
-	bh=PhciIxgiiA5ddt051NDOgiae67LGOLqltKK8xM/6Sp8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OzAw5BNzqylC3wKlxvMhVsMDAwOO/+f7ll0FfVmmLJs3BCNCazdHMAbzx+0QxplYdXrht8pTSqsS2+9i1pBkQbUu3o7SryCfp7/tAbcyc+OK2Z+8OBx1iPEWEiNabJn1O+CihfmZgr/Tj7k2rnRNMl/+alX2Fl0mSYJHtPzoB54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dKIfn5Jo; arc=none smtp.client-ip=74.125.82.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776783484; c=relaxed/simple;
+	bh=2cS8DG+1F7Stl1YCx+/6ZIvwSKe91xs628vO96RnGdA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KOyJh4wrSQW5Kr1bUM4q4nWJcjV+tgSO+rBNP7hQ2S8u1eWsdSGP6cMHqRJ8m0Fn5qc8En5AwxUG8xqUceeBKBsyRYAljVBVJGdG7Eb3myL6pvBvO905YgkVjBD6xZCyNZt8Q3572D9yRAiW96l5FVoPvtNeiCC/P0j7sGjw4Wk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ty2729dv; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dKIfn5Jo"
-Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-2b4520f6b32so5297290eec.0
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 05:04:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776773054; x=1777377854; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WC25I4L4LKQAZMVUaJZY4pHqgCaxsSTXVf3rLxAH518=;
-        b=dKIfn5JoS61n/Q2jj3FVEUY5XgMi9zW4HW7PF377tBdx/qlUStvCMObfjizyXCfXst
-         U1PPzIdwxfdG9IamUVFaXrD6UwLMCPBMplFdcezD+cU77ZUlQqyO4xUoGVSQAcZ92PG2
-         nwY74MHfnN82EmGFlsKrGOscan+BZy+LGarlGqkFOe3iLcb5bdvtv3Nh4nUUUcwa6gOy
-         E3beyOK2jl8/oJupUxjcqrGJTENrVyZtJ3iw0oIuS8tW0BGvoC/N4yUulJQHfRir2Ft5
-         ZXOSgTF3wkD4Mf/RYl/+f1xh0JUnVKvDgA9F+QZZG7V7e8xP3aWLhYob/RJfPhhfxJB2
-         X9rQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776773054; x=1777377854;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=WC25I4L4LKQAZMVUaJZY4pHqgCaxsSTXVf3rLxAH518=;
-        b=TqYLe566pttJmU9UNt38epgWPAKEKLOe9ZZTW8II6j/dibTYHjfKvqcGYn5XI0QlBZ
-         r7R2NeV8xpUNX7ub0OwfsMv1XaWPdrJZA3QcDWGaBk0Wu1OLi68KMp43vZQJdG8sJFpt
-         txDz+jpyd0FhNwghluPm7zOB1OmMR5dYrleM/Lr/ABz9dPOUsWykUulPJAr2eYYq6H+i
-         5vRNFKrGYnoA2OMZyKfxteeW96bv0Vhe05BLArSxqyMBuFLJ8o9ip4s8x91i6af8iO41
-         3qHD5TrNsGwKgAt/4Ndsz6Q0QDUUb4TCf0ZTakwCyQlArWkv4ArdSDL8x7DxLZOyFxyS
-         uv4A==
-X-Forwarded-Encrypted: i=1; AFNElJ+/86GdB7Of2c+PlfGz5ZotRWoGtixxOEduDHFRj1E7V3InGOk2O4tfIwex9entRbeooNlFGJ5Sx5M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSN6zKPU8vQwCY1MAO+O9B1ZijcjJGNtpD2s6LVckIoBDEJbaO
-	hUsidWiLNv+y74fPLWfG9Mn2kgJNKf7bDpj9tqAV8LaMO7t0LPsP6Xz7
-X-Gm-Gg: AeBDietkoyKVvG59nFhXCnK57PTlKGGBicAwtR0/RGFXN3sCySabGJ7MFuzlnQX0R4D
-	NMpiCz//QAzUPSQrjNzacRorfCDsYdWC3uZk6w3ID55sxWb+o6KmObylSMhszgNU7vno1HAh4Ti
-	ZPCUjY3q7ULNN8xiAUUhYMEbLbOUNX5qjR0ycg7tfqDs4CdPwBjoLEso7ElPYQiFlUxRfV2pLJt
-	D/Jo8GTCHgae/kemy9OTlUHfEWeqF9Rm6ez1XdiKa22D2teL2QYaA0VxBDpJ+RswsFL9CQ4YVig
-	cxaUL85LXynB1Xy7n7yVQb4O1QzHnNsW9db5avoAMrvNqwuO+Mw+Vk2o6dJ+RawijSxSPp4bv9h
-	cjqwNfRw1oOLSNiadvGtNd4J3S0RJEWGI3DUMQlu8OfshyLUtsflDdOfszLyZPCWomNPpEl4UDl
-	7BqtGck7RK5pNh58rQq3GyGA6HlfgdCpFYDx5DbA5seI1KCg==
-X-Received: by 2002:a05:7300:4313:b0:2d2:96e8:1bf5 with SMTP id 5a478bee46e88-2e464eaa3ecmr8603231eec.3.1776773054151;
-        Tue, 21 Apr 2026 05:04:14 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2e53a4a7ff1sm18679807eec.9.2026.04.21.05.04.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Apr 2026 05:04:13 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: dgc@kernel.org
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	djwong@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [XFS] Question: can xfs_agfl_free_finish_item exhaust AGFL during bnobt/cntbt split?
-Date: Tue, 21 Apr 2026 20:04:11 +0800
-Message-ID: <20260421120412.2161716-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <ad1r1fm8LjFVxi9_@dread>
-References: <ad1r1fm8LjFVxi9_@dread>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ty2729dv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776783481;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=F6DE3OT5oYYorchGLGDGJ06r2J8ji/lw/OrmVm4cspM=;
+	b=Ty2729dvljPLvr8hlb36cfRBdK1o0tQMEkH6TG43WbJAYCtWr22SQ9DxRTTEdLH8j6pdOM
+	9pDz9mIy8uzfaXlqDFHAgOrJAObv3YcKfB3WOzmzz3hzbLblEYmyYB6NqNtjFZJNdh4upE
+	TokF+bTTutYH9nwiSbswWQQzf5vWmsM=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-648-bXfI62PGO8ShbQ4GsVJonQ-1; Tue,
+ 21 Apr 2026 10:57:54 -0400
+X-MC-Unique: bXfI62PGO8ShbQ4GsVJonQ-1
+X-Mimecast-MFC-AGG-ID: bXfI62PGO8ShbQ4GsVJonQ_1776783473
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DAF3E1800454;
+	Tue, 21 Apr 2026 14:57:52 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.73])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 785981956095;
+	Tue, 21 Apr 2026 14:57:50 +0000 (UTC)
+Date: Tue, 21 Apr 2026 10:57:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: syzbot <syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com>
+Cc: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	ntfs3@lists.linux.dev
+Subject: Re: [syzbot] [iomap?] WARNING in iomap_zero_range
+Message-ID: <aeeQZ6EiEUB3G1Gb@bfoster>
+References: <69e24438.050a0220.1de265.0026.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <69e24438.050a0220.1de265.0026.GAE@google.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, 14 Apr 2026 08:19:01 +1000， dgc@kernel.org wrote:
-> On Mon, Apr 14, 2026 at 10:48:51AM +0800, Jinliang Zheng wrote:
-> > On Mon, 13 Apr 2026 10:14:45 +1000, dgc@kernel.org wrote:
-> > > On Mon, Apr 13, 2026 at 12:32:50AM +0800, Jinliang Zheng wrote:
-> > > > But before `xfs_agfl_free_finish_item` executes, `xfs_defer_finish_noroll`
-> > > > rolls the transaction. Other deferred operations that execute in between—for
-> > > > example, regular extent frees (`XFS_DEFER_OPS_TYPE_FREE`) that themselves call
-> > > > fix_freelist and may re-shrink the AGFL, or rmapbt operations—could consume
-> > > > AGFL blocks and leave the count below `need` by the time our deferred AGFL free
-> > > > runs.
-> > > 
-> > > Even if we run RUIs, CUIs or other EFIs before the AGFL deferred
-> > > free, they fix up the freelist for their operations first, and that
-> > > reserves space for a deferred AGFL free from the free list.
-> > > 
-> > > If any other extent allocation/free on that AG is run between the
-> > > two transactions (e.g. high level transactions racing on AGF buffer
-> > > access) they will also reserve space in the AGFL for a split during
-> > > a deferred free.
-> > 
-> > Thank you for the detailed explanation. I have a follow-up question about
-> > the case where fix_freelist shrinks the AGFL by more than one block.
-> > 
-> > When `xfs_alloc_fix_freelist` shrinks an oversized AGFL, it may call
-> > `xfs_defer_agfl_block` multiple times in a loop, adding N deferred AGFL
-> > free items into the same `xfs_defer_pending` (up to max_items=16 per
-> > pending entry).
-> > 
-> > In `xfs_defer_finish_noroll`, all N items within that single
-> > `xfs_defer_pending` are processed consecutively in the same rolled
-> > transaction via `list_for_each_safe`, with no intervening fix_freelist
-> > call between them. Each call to `xfs_agfl_free_finish_item` invokes
-> > `xfs_free_ag_extent`, which may trigger a full-height split of both bnobt
-> > and cntbt, consuming up to `(bnobt_levels + 1) + (cntbt_levels + 1)`
-> > AGFL blocks.
-> >
-> > The initial fix_freelist leaves the AGFL at exactly `need` blocks. If
-> > the first deferred free triggers a full-height bnobt+cntbt split and
-> > consumes those blocks, the AGFL may already be below `need` — or even
-> > exhausted — by the time the second deferred free runs and needs to split.
-> > 
-> > Is this scenario considered?
-> 
-> I have considered it, yes.
-> 
-> Remember what I said about considering the probability of something
-> occurring before adding complexity to guarantee it will never
-> happen.
-> 
-> The above scenario requires both allocbts and the AGFL to be set up
-> in such a way that it has multiple full subtrees ready to split in
-> both trees, and that the same block frees (from the AGFL) will
-> trigger those subtree splits with the same free space record insert.
-> 
-> And the AGFL has to have exactly the right blocks on it *in excess
-> of what is required* in to get them deferred in the right order to
-> then trigger these subtree splits.
-> 
-> And this has to happen multiple times in consecutive operations.
-> 
-> Can the above happen? Yes.
-> 
-> Will it happen by chance before the heat death of the universe? Probably.
-> 
-> Will it happen in production workloads?  Not very likely at all.
-> 
-> That's the difference between providing theoretical guarantees vs
-> practical guarantees.
+cc Konstantin, ntfs3 list
 
-Thank you for your reply.
-
-And, I have a follow-up question again.
-
-Will xfs_allocbt_free_block()/xfs_rmapbt_free_block() -> xfs_alloc_put_freelist()
-cause AGFL to become full and then overflow?
-
-thanks,
-Jinliang Zheng.
-
+On Fri, Apr 17, 2026 at 07:31:20AM -0700, syzbot wrote:
+> Hello,
 > 
-> We can keep playing "but what if we had N+1" type theoretical
-> scenarios endlessly here, but reality has to step in at some point.
-> We set reservation sizes for "unbound excursions" at a size that is
-> large enough for normal operation and largely ignore the cases with
-> 10^(large negative N) probabilites.
+> syzbot found the following issue on:
 > 
-> If, in practice, we find the reservation pools are getting exhausted
-> in normal production workloads, then we'll either change the
-> behaviour that is causing the exhaustion or increase the reservation
-> pool size to handle that case.
+> HEAD commit:    028ef9c96e96 Linux 7.0
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=11db9036580000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=d46eab0cfd31c214
+> dashboard link: https://syzkaller.appspot.com/bug?extid=9a51b5f7b9b484c57dd1
+> compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
 > 
-> -Dave.
+> Unfortunately, I don't have any reproducer for this issue yet.
 > 
-> -- 
-> Dave Chinner
-> dgc@kernel.org
+> Downloadable assets:
+> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-028ef9c9.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/f7fbf6f85efa/vmlinux-028ef9c9.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/2bc3ef5a9e1b/bzImage-028ef9c9.xz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com
+> 
+> loop0: detected capacity change from 0 to 4096
+> ntfs3(loop0): Different NTFS sector size (1024) and media sector size (512).
+> ------------[ cut here ]------------
+> folio_pos(folio) > iter->inode->i_size
+> WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline], CPU#0: syz.0.0/5326
+> WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669, CPU#0: syz.0.0/5326
+
+FYI this warning basically means we're attempting to zero a folio that
+starts beyond EOF. It warns because if the folio starts beyond EOF,
+writeback may throw it away instead of submitting I/O, making the
+zeroing ineffective.
+
+> Modules linked in:
+> CPU: 0 UID: 0 PID: 5326 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
+> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+> RIP: 0010:iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline]
+> RIP: 0010:iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669
+> Code: 5d ff 4d 29 e6 4d 39 f7 4d 0f 42 f7 4c 89 74 24 78 4d 85 f6 0f 84 5a 02 00 00 e8 ec ee 5d ff e9 78 fc ff ff e8 e2 ee 5d ff 90 <0f> 0b 90 e9 41 fd ff ff e8 d4 ee 5d ff 90 0f 0b 90 e9 97 fd ff ff
+> RSP: 0018:ffffc9000e05f8e0 EFLAGS: 00010287
+> RAX: ffffffff8267f47e RBX: ffffea00015643c0 RCX: 0000000000100000
+> RDX: ffffc9000eb52000 RSI: 000000000000021a RDI: 000000000000021b
+> RBP: ffffc9000e05fc28 R08: ffffea00015643c7 R09: 1ffffd40002ac878
+> R10: dffffc0000000000 R11: fffff940002ac879 R12: 0000000000000008
+> R13: 1ffffd40002ac87c R14: ffffea00015643e0 R15: 0000000000001000
+> FS:  00007f1ef11d66c0(0000) GS:ffff88808ca49000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f1ef05ec2e0 CR3: 0000000044745000 CR4: 0000000000352ef0
+> Call Trace:
+>  <TASK>
+>  ntfs_extend_initialized_size+0xcc/0x170 fs/ntfs3/file.c:236
+>  ntfs_fallocate+0xf21/0x1220 fs/ntfs3/file.c:668
+>  vfs_fallocate+0x669/0x7e0 fs/open.c:340
+>  ksys_fallocate fs/open.c:364 [inline]
+>  __do_sys_fallocate fs/open.c:369 [inline]
+>  __se_sys_fallocate fs/open.c:367 [inline]
+>  __x64_sys_fallocate+0xc0/0x110 fs/open.c:367
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+>  do_syscall_64+0x14d/0xf80 arch/x86/entry/syscall_64.c:94
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+I was poking through the code a bit out of curiosity and playing with
+Claude and I think it was able to come up with a reproducer. I don't
+know if this is the same circumstance as syzbot (we'll see if it
+eventually spits out its own reproducer), but it relies on formatting
+with a larger cluster size than page size.
+
+Basically what it's doing is creating a non-cluster aligned i_valid size
+based on completing some writes, a slightly larger also unaligned
+i_size, and then running fallocate up to the full i_size. AFAICS this
+means the falloc will leave i_size alone and fall into the
+is_supported_holes block, which will call into
+ntfs_extend_initialized_size() using the rounded up cluster end to zero
+the range from i_valid to the end of the cluster. If say the cluster
+size is 16k and i_size is not in the last 4k of the EOF cluster, then I
+suppose we're going to end up trying to zero a folio that starts beyond
+i_size. I'll append the script that Claude came up with that reproduces
+the warning for me.
+
+I'm not totally sure what the best fix is here. It seems like this is
+already playing games with i_size to handle the KEEP_SIZE case, so
+perhaps a quick hack might be to coopt that to handle this case as well.
+Maybe another option is to split the zeroing to only iomap zero through
+the end of the EOF folio and use another mechanism to zero the rest of
+the cluster, or zero it earlier at alloc time, etc. But anyways, I
+suspect NTFS3 developers will have a better handle on this than I..
+
+Brian
+
+--- 8< ---
+
+Claude generated reproducer script:
+
+#!/bin/bash
+#
+# NTFS3 fallocate bug reproducer
+#
+# Tests whether ntfs_fallocate() tries to zero folios beyond i_size
+# when using sparse files with cluster_size > PAGE_SIZE
+#
+
+set -e
+
+IMG=./ntfs_test.img
+MOUNT=/mnt
+FILE=$MOUNT/testfile
+
+echo "=== NTFS3 Fallocate Bug Test ==="
+echo ""
+
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then
+    echo "ERROR: Must run as root"
+    exit 1
+fi
+
+# Check for mkfs.ntfs
+if ! command -v mkfs.ntfs &> /dev/null; then
+    echo "ERROR: mkfs.ntfs not found (install ntfs-3g)"
+    exit 1
+fi
+
+# Clear WARN_ON_ONCE state so we can see warnings on repeated runs
+echo "[1] Clearing WARN_ON_ONCE state..."
+if [ -f /sys/kernel/debug/clear_warn_once ]; then
+    echo 1 > /sys/kernel/debug/clear_warn_once
+    echo "    Cleared"
+else
+    echo "    /sys/kernel/debug/clear_warn_once not found (debugfs not mounted?)"
+fi
+
+# Create image file
+echo "[2] Creating 100M image file..."
+truncate -s 100M $IMG
+
+# Setup loop device
+echo "[3] Setting up loop device..."
+DEV=$(losetup -f)
+losetup $DEV $IMG
+echo "    Using $DEV"
+
+# Format
+echo "[4] Formatting with 16K clusters..."
+mkfs.ntfs -f -c 16384 -q $DEV
+
+# Mount
+echo "[5] Mounting with -o sparse to /mnt..."
+mount -t ntfs3 -o sparse $DEV $MOUNT
+
+# Create test file
+echo "[6] Creating file with i_valid=4995, i_size=4995..."
+dd if=/dev/urandom of=$FILE bs=999 count=1 seek=4 conv=notrunc status=none 2>/dev/null
+sync
+
+echo "[7] Extending i_size to 5000 (i_valid stays at 4995)..."
+truncate -s 5000 $FILE
+
+echo "[8] Running: fallocate -l 5000 $FILE"
+echo ""
+echo "Bug trigger: This should try to zero up to cluster boundary (16384)"
+echo "while i_size=5000, causing iomap to process folios at 8192 and 12288"
+echo "which start beyond EOF."
+echo ""
+
+if fallocate -l 5000 $FILE 2>&1; then
+    echo "-> fallocate completed"
+else
+    echo "-> fallocate failed: $?"
+fi
+
+# Cleanup
+echo ""
+echo "[9] Cleaning up..."
+umount $MOUNT
+losetup -d $DEV
+rm -f $IMG
+
+echo ""
+echo "Done. Check 'dmesg | tail' for kernel warnings."
+
