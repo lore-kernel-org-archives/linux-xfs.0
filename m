@@ -1,57 +1,39 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460DC3D9DCE
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 14:58:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30751212D7C;
+	Tue, 21 Apr 2026 15:04:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776783484; cv=none; b=U7JngwxmDZ1i6aCoKboODmafEueoaYGq7rs7v5NrhUYvCx75PftlBxR/NqS7gWwHp0xNvFXz/hC66vD70MRXZ/UIWW2Ow8IhJ4VJd3MVOp6kpPb89g1P3/Hh85ipO80bSIPMOg/FuWH3/VnYN0VYbw4eElKEVBBjYb1PktKsSsA=
+	t=1776783852; cv=none; b=RWL26aAovjqi3/LZc8faMNX2wQWRxPhCcVDV6TDsjYFc0QP6nQUVCmoH9CSMmEYx41Pu8lmxJculOmnPEmhb+3umUhXLJCmA/SJXz5quvEAYTRnwugabJYQYJrTKlVUp8MyPKnEbHcwrjrv8jVS6f6BQJhK31WkMU/CE8ld6S1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776783484; c=relaxed/simple;
-	bh=2cS8DG+1F7Stl1YCx+/6ZIvwSKe91xs628vO96RnGdA=;
+	s=arc-20240116; t=1776783852; c=relaxed/simple;
+	bh=iodPNTVqOt+4HU9IU7Wcchfl2Sqeuw7NlY+wOvnhkpk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KOyJh4wrSQW5Kr1bUM4q4nWJcjV+tgSO+rBNP7hQ2S8u1eWsdSGP6cMHqRJ8m0Fn5qc8En5AwxUG8xqUceeBKBsyRYAljVBVJGdG7Eb3myL6pvBvO905YgkVjBD6xZCyNZt8Q3572D9yRAiW96l5FVoPvtNeiCC/P0j7sGjw4Wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ty2729dv; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=qUZncuUOV9hw47U1MROrh06P687nKlA0kSNczDkljy6G/AHJrPLKVh2N12CpVmWmdy37xWRtrfUatzObpKRujfjQC/ne0PBqQlRR2QqVqwa91GlnEqz1yKsHu6RF+C04Ga29qE58oBNzM1hCYaIe/xOsbcoXTBtAYY00+frCHes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBvHOK/Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ty2729dv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776783481;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=F6DE3OT5oYYorchGLGDGJ06r2J8ji/lw/OrmVm4cspM=;
-	b=Ty2729dvljPLvr8hlb36cfRBdK1o0tQMEkH6TG43WbJAYCtWr22SQ9DxRTTEdLH8j6pdOM
-	9pDz9mIy8uzfaXlqDFHAgOrJAObv3YcKfB3WOzmzz3hzbLblEYmyYB6NqNtjFZJNdh4upE
-	TokF+bTTutYH9nwiSbswWQQzf5vWmsM=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-648-bXfI62PGO8ShbQ4GsVJonQ-1; Tue,
- 21 Apr 2026 10:57:54 -0400
-X-MC-Unique: bXfI62PGO8ShbQ4GsVJonQ-1
-X-Mimecast-MFC-AGG-ID: bXfI62PGO8ShbQ4GsVJonQ_1776783473
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DAF3E1800454;
-	Tue, 21 Apr 2026 14:57:52 +0000 (UTC)
-Received: from bfoster (unknown [10.22.88.73])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 785981956095;
-	Tue, 21 Apr 2026 14:57:50 +0000 (UTC)
-Date: Tue, 21 Apr 2026 10:57:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: syzbot <syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com>
-Cc: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	ntfs3@lists.linux.dev
-Subject: Re: [syzbot] [iomap?] WARNING in iomap_zero_range
-Message-ID: <aeeQZ6EiEUB3G1Gb@bfoster>
-References: <69e24438.050a0220.1de265.0026.GAE@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBvHOK/Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C134C2BCB0;
+	Tue, 21 Apr 2026 15:04:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776783852;
+	bh=iodPNTVqOt+4HU9IU7Wcchfl2Sqeuw7NlY+wOvnhkpk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OBvHOK/YDeNfusN383/Yum1RvhJi1cPwHzURDvqwEa9F371ADiwpIEoqpRpvJcr1V
+	 1VLwy178i22J1q9dEKmGsjeltKzFwVuyLosufsAZlsPstWnFZ5ojZGceM9ieBDhzIg
+	 gtpy7+1ObY/xQJco6CkBfFbTVZKozUaUTgQZXK8ONxqS/K3ZFRIyb/TL7f3pYOZi0P
+	 BpdSM5rJCSJ7ITwKNVsTr9XtNu8nSVcLmhmGJAq/saccsuGKuSg20nJWbglHKaRYt5
+	 Rp7yoIOG2bqZgaCHO05+RYW5+WImDivYetkKVQpZX/XzYPNHKQIbttqnNXKb1aYpsm
+	 mvLs7ctQHmVhQ==
+Date: Tue, 21 Apr 2026 08:04:11 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Yuto Ohnuki <ytohnuki@amazon.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Dave Chinner <dgc@kernel.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: sanitize da node pad field on write
+Message-ID: <20260421150411.GB7751@frogsfrogsfrogs>
+References: <20260421054311.25301-2-ytohnuki@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,189 +42,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <69e24438.050a0220.1de265.0026.GAE@google.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+In-Reply-To: <20260421054311.25301-2-ytohnuki@amazon.com>
 
-cc Konstantin, ntfs3 list
-
-On Fri, Apr 17, 2026 at 07:31:20AM -0700, syzbot wrote:
-> Hello,
+On Tue, Apr 21, 2026 at 06:43:12AM +0100, Yuto Ohnuki wrote:
+> The DA node block header (xfs_da3_node_hdr) contains a __pad32 field
+> that should always be zero. Prior to commit a45086e27dfa21 ("xfs:
+> validate metadata LSNs against log on v5 superblocks"),
+> xfs_da3_node_create() did not zero the full header, so __pad32 could
+> contain stale data on older filesystems.
 > 
-> syzbot found the following issue on:
+> Clear this field in the write verifier to ensure it is corrected
+> whenever the block is next written to disk.
 > 
-> HEAD commit:    028ef9c96e96 Linux 7.0
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=11db9036580000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=d46eab0cfd31c214
-> dashboard link: https://syzkaller.appspot.com/bug?extid=9a51b5f7b9b484c57dd1
-> compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
+> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Unfortunately, I don't have any reproducer for this issue yet.
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index ad801b7bd2dd..f6054a47d24c 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -318,6 +318,8 @@ xfs_da3_node_write_verify(
+>  	if (bip)
+>  		hdr3->info.lsn = cpu_to_be64(bip->bli_item.li_lsn);
+>  
+> +	hdr3->__pad32 = 0;
+
+Looks good to me, thanks for clearing this todo :)
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> +
+>  	xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
+>  }
+>  
+> -- 
+> 2.50.1
 > 
-> Downloadable assets:
-> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-028ef9c9.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/f7fbf6f85efa/vmlinux-028ef9c9.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/2bc3ef5a9e1b/bzImage-028ef9c9.xz
 > 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+9a51b5f7b9b484c57dd1@syzkaller.appspotmail.com
 > 
-> loop0: detected capacity change from 0 to 4096
-> ntfs3(loop0): Different NTFS sector size (1024) and media sector size (512).
-> ------------[ cut here ]------------
-> folio_pos(folio) > iter->inode->i_size
-> WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline], CPU#0: syz.0.0/5326
-> WARNING: fs/iomap/buffered-io.c:1561 at iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669, CPU#0: syz.0.0/5326
-
-FYI this warning basically means we're attempting to zero a folio that
-starts beyond EOF. It warns because if the folio starts beyond EOF,
-writeback may throw it away instead of submitting I/O, making the
-zeroing ineffective.
-
-> Modules linked in:
-> CPU: 0 UID: 0 PID: 5326 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-> RIP: 0010:iomap_zero_iter fs/iomap/buffered-io.c:1561 [inline]
-> RIP: 0010:iomap_zero_range+0x8cf/0xd00 fs/iomap/buffered-io.c:1669
-> Code: 5d ff 4d 29 e6 4d 39 f7 4d 0f 42 f7 4c 89 74 24 78 4d 85 f6 0f 84 5a 02 00 00 e8 ec ee 5d ff e9 78 fc ff ff e8 e2 ee 5d ff 90 <0f> 0b 90 e9 41 fd ff ff e8 d4 ee 5d ff 90 0f 0b 90 e9 97 fd ff ff
-> RSP: 0018:ffffc9000e05f8e0 EFLAGS: 00010287
-> RAX: ffffffff8267f47e RBX: ffffea00015643c0 RCX: 0000000000100000
-> RDX: ffffc9000eb52000 RSI: 000000000000021a RDI: 000000000000021b
-> RBP: ffffc9000e05fc28 R08: ffffea00015643c7 R09: 1ffffd40002ac878
-> R10: dffffc0000000000 R11: fffff940002ac879 R12: 0000000000000008
-> R13: 1ffffd40002ac87c R14: ffffea00015643e0 R15: 0000000000001000
-> FS:  00007f1ef11d66c0(0000) GS:ffff88808ca49000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f1ef05ec2e0 CR3: 0000000044745000 CR4: 0000000000352ef0
-> Call Trace:
->  <TASK>
->  ntfs_extend_initialized_size+0xcc/0x170 fs/ntfs3/file.c:236
->  ntfs_fallocate+0xf21/0x1220 fs/ntfs3/file.c:668
->  vfs_fallocate+0x669/0x7e0 fs/open.c:340
->  ksys_fallocate fs/open.c:364 [inline]
->  __do_sys_fallocate fs/open.c:369 [inline]
->  __se_sys_fallocate fs/open.c:367 [inline]
->  __x64_sys_fallocate+0xc0/0x110 fs/open.c:367
->  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->  do_syscall_64+0x14d/0xf80 arch/x86/entry/syscall_64.c:94
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-
-I was poking through the code a bit out of curiosity and playing with
-Claude and I think it was able to come up with a reproducer. I don't
-know if this is the same circumstance as syzbot (we'll see if it
-eventually spits out its own reproducer), but it relies on formatting
-with a larger cluster size than page size.
-
-Basically what it's doing is creating a non-cluster aligned i_valid size
-based on completing some writes, a slightly larger also unaligned
-i_size, and then running fallocate up to the full i_size. AFAICS this
-means the falloc will leave i_size alone and fall into the
-is_supported_holes block, which will call into
-ntfs_extend_initialized_size() using the rounded up cluster end to zero
-the range from i_valid to the end of the cluster. If say the cluster
-size is 16k and i_size is not in the last 4k of the EOF cluster, then I
-suppose we're going to end up trying to zero a folio that starts beyond
-i_size. I'll append the script that Claude came up with that reproduces
-the warning for me.
-
-I'm not totally sure what the best fix is here. It seems like this is
-already playing games with i_size to handle the KEEP_SIZE case, so
-perhaps a quick hack might be to coopt that to handle this case as well.
-Maybe another option is to split the zeroing to only iomap zero through
-the end of the EOF folio and use another mechanism to zero the rest of
-the cluster, or zero it earlier at alloc time, etc. But anyways, I
-suspect NTFS3 developers will have a better handle on this than I..
-
-Brian
-
---- 8< ---
-
-Claude generated reproducer script:
-
-#!/bin/bash
-#
-# NTFS3 fallocate bug reproducer
-#
-# Tests whether ntfs_fallocate() tries to zero folios beyond i_size
-# when using sparse files with cluster_size > PAGE_SIZE
-#
-
-set -e
-
-IMG=./ntfs_test.img
-MOUNT=/mnt
-FILE=$MOUNT/testfile
-
-echo "=== NTFS3 Fallocate Bug Test ==="
-echo ""
-
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo "ERROR: Must run as root"
-    exit 1
-fi
-
-# Check for mkfs.ntfs
-if ! command -v mkfs.ntfs &> /dev/null; then
-    echo "ERROR: mkfs.ntfs not found (install ntfs-3g)"
-    exit 1
-fi
-
-# Clear WARN_ON_ONCE state so we can see warnings on repeated runs
-echo "[1] Clearing WARN_ON_ONCE state..."
-if [ -f /sys/kernel/debug/clear_warn_once ]; then
-    echo 1 > /sys/kernel/debug/clear_warn_once
-    echo "    Cleared"
-else
-    echo "    /sys/kernel/debug/clear_warn_once not found (debugfs not mounted?)"
-fi
-
-# Create image file
-echo "[2] Creating 100M image file..."
-truncate -s 100M $IMG
-
-# Setup loop device
-echo "[3] Setting up loop device..."
-DEV=$(losetup -f)
-losetup $DEV $IMG
-echo "    Using $DEV"
-
-# Format
-echo "[4] Formatting with 16K clusters..."
-mkfs.ntfs -f -c 16384 -q $DEV
-
-# Mount
-echo "[5] Mounting with -o sparse to /mnt..."
-mount -t ntfs3 -o sparse $DEV $MOUNT
-
-# Create test file
-echo "[6] Creating file with i_valid=4995, i_size=4995..."
-dd if=/dev/urandom of=$FILE bs=999 count=1 seek=4 conv=notrunc status=none 2>/dev/null
-sync
-
-echo "[7] Extending i_size to 5000 (i_valid stays at 4995)..."
-truncate -s 5000 $FILE
-
-echo "[8] Running: fallocate -l 5000 $FILE"
-echo ""
-echo "Bug trigger: This should try to zero up to cluster boundary (16384)"
-echo "while i_size=5000, causing iomap to process folios at 8192 and 12288"
-echo "which start beyond EOF."
-echo ""
-
-if fallocate -l 5000 $FILE 2>&1; then
-    echo "-> fallocate completed"
-else
-    echo "-> fallocate failed: $?"
-fi
-
-# Cleanup
-echo ""
-echo "[9] Cleaning up..."
-umount $MOUNT
-losetup -d $DEV
-rm -f $IMG
-
-echo ""
-echo "Done. Check 'dmesg | tail' for kernel warnings."
-
+> 
+> Amazon Web Services EMEA SARL, 38 avenue John F. Kennedy, L-1855 Luxembourg, R.C.S. Luxembourg B186284
+> 
+> Amazon Web Services EMEA SARL, Irish Branch, One Burlington Plaza, Burlington Road, Dublin 4, Ireland, branch registration number 908705
+> 
+> 
+> 
+> 
