@@ -1,160 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 456073451C8;
-	Mon, 20 Apr 2026 23:59:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D143BB5A
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 02:01:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776729588; cv=none; b=IFtIjH9FB2YvZMybkiMpPuiCSrwLmMaxwwrDITT9mfgXOr0TViwcUJU26EbrOnmADaqC8NIS1xs3HZD7VG9IUzWJqeGAUjl9OcLVkIyV+NaJ+OVvmvxN2t5URJeAQq2Fo/hAjAgRMyH3feF1qSzpL9UdURn/YD4PwBbXphkb0qM=
+	t=1776736917; cv=none; b=otbfrp80JEG1RQNvCMxm/oijDM9t4r4acWAkYBgTGZlE2E5rBCxzTReQOk3JZioCfrSWqT0yO5mrg3Q/3K2ckpF9suoxpleQnLctvY7JDUsuKUWDuZz73GdFDqigmHPAq6AhDDXvkW10CcchZ8IOQRYLQwWxrbL2TtAm3Z3nyvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776729588; c=relaxed/simple;
-	bh=MMIK8ekJu08qDIh4FXjwAkAb5gYATo0TZerNr1wZ41Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ewdG4XjLH/87GqDqAwFcVccSGBzrhyEa0iMmqafPAtw/YO4YSd+rTGnpb/7/JUOHVinGjH6nTMX9bBinKbEkIC4jQZPcruUHt0oRukeaRJ3jLTEUoObpZAbVStLv1BovjAhTNE4/SFOZEUXHRWFswkD6gNNK6Z0vroDl/TpRRjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKRq7WL6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776736917; c=relaxed/simple;
+	bh=l9bRz9UeCPAV9DA8Zy5r0ie/prB1/Xr8Z+QnqVjykhA=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=YTksbPcsLw6S5nA/qaMckbJFGYgVDw3SFRcGL1YxeEfQBa39tBVojBaxnSuteABEZydwpo2VpbOi4Pj9MarR1uLk6nJoYBunUG+HmVl94Jf+F64Qai6ELZ9jK+uBLIfpIWSiAgjUC1rB71hNm1sYaoh6QFbioCD0ZqHl4uufYTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XskVbg+B; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKRq7WL6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A904FC19425;
-	Mon, 20 Apr 2026 23:59:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776729588;
-	bh=MMIK8ekJu08qDIh4FXjwAkAb5gYATo0TZerNr1wZ41Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eKRq7WL6E2lHWHXTDDFXRJHQUpYIfYpHwv9urqmsWJllcxQVz0Mj8kAenpKZlE60Z
-	 m53+Hsf7domFWiIN9JrHk9eu7P849uctSkbOPqhI/D9M8aV/kh/oegnJoSdwq4DLD/
-	 Y7uWy+wrZ4SF6DJ0gTyFdIJSZ8afJ9f4FCOrKCB2TC+rB14SAhIhu3suotjANQEokk
-	 c5rh+lVatIXlrOcnQLLw4775gr0CLRjzqZrexkxsnRJlSAgjQOgIWj0HQVupGkino3
-	 lWge1tbjjR+ZU50HwTrVVzxqWSts5s44aha7ifq7tUczGgpLESA+jXT6NxNZ3I5Uye
-	 KPJm0lDLMxukQ==
-Date: Tue, 21 Apr 2026 09:59:37 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: changfengnan <changfengnan@bytedance.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Fengnan Chang <fengnanchang@gmail.com>, brauner@kernel.org,
-	djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	lidiangang@bytedance.com
-Subject: Re: [RFC PATCH] iomap: add fast read path for small direct I/O
-Message-ID: <aea96YRt2aHJsM96@dread>
-References: <20260414122647.15686-1-changfengnan@bytedance.com>
- <ad_h0JMX2Jo-QODG@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.bd12b07f.c444.4fe0.8460.b6fed4af7332@bytedance.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XskVbg+B"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2aaf43014d0so22586875ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Apr 2026 19:01:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776736915; x=1777341715; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=HAfyiA5fxqYXT4gYRX9zfWikwnCgQwE5e6No9OGkL8Y=;
+        b=XskVbg+BJsj32X8H+Rf6+BXY8Llvyd4yvTB+mmbWcDkA4v3GBhKwVjRazy9zkOig2F
+         AU6Fkl9QCa2PEDPsghPR4e3v64RfZoq7mjp8DkxoGFQv/yfhWgiDQZ4umrmGHfjos8Nj
+         7B0KwN9ejXrLewIz+edRFUmOl8F81dtnlpQV6qAkW1NfsS8s3xh1PZgbRHfwA12NxAUy
+         fL4Xm3DisCW9om0yRpixnwxFLAjdgLCakxCQDVMatIqYPxBSiRZaNsfDNI5N1aMuiQz9
+         38EozjmEDteXe24b68MG4VTErQ64u7m8Hu7zJNcVw3DJb05GLVtll5pTE+PxUUBpkSpz
+         cEKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776736915; x=1777341715;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HAfyiA5fxqYXT4gYRX9zfWikwnCgQwE5e6No9OGkL8Y=;
+        b=sigzhNCVX1Z194PnOZ2bfoR0eU8z4Dpk7QkGYEYHTNfX39j+eui3Qw467OOSEzCfy2
+         Pje9qmQKIG2CVX2AMQaiu7ye10JXGUMxYgbWDR8VmM/3XxCTCoHo5cMWZW/EkpY4E6P+
+         vNWA2gE4fkJ+E8uvj35g9ZIqXqAmnZjsCl8/2RMDsd/shsWZvqXmNctTcOZSOKYPatYC
+         QeCTlMuKxK0HEWImavQMhtKYBLtJiMGVP7ZC2gbUMy9yl3bPCy8UKfQQxpRDlIUSD3oi
+         kE3n6nKFmFqkj+MedrVjaT6KINTv7YwwVhDwmS/dHOT1bSM5AhJKe/1GMwvdSymSLfp5
+         hmxg==
+X-Forwarded-Encrypted: i=1; AFNElJ//OWSzER0dVNamx+XGllNMaZh5UDO8BxLexifsQUG7rS9zCACzZP9yKvwlf/nCxeTkPhdKfJ4wDbo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzuLeEa4q03bTQ5VTrSihhjkxqN/Oo41tyf1ves3JRNLPMtduLt
+	VFNQ1ZJNV4hyPRB1Fs4hKiu7a2LF9UZx9KlNeB2sKpS+ntG3CA4ryf5G
+X-Gm-Gg: AeBDievxDkw8V9zbobT+y9LiZLxujdus8YxC7OYQr3R0gKOWnBlkYycX5J0DJ0XmmBq
+	Z3Y9LxdD+LxMr4Q8gKnlofuO8k97mBskk0sh9Ny+VE6Aao4SbZqEF9A5saMCcjLsdpk7cYxPRxp
+	7ZKZo/DEPxCJyIm5oG50HuYVfMCZohu2qYMxT3fPFXGpF+nyEsQw2wdaoA8BSIaoW1xrcxkH5Mm
+	l9L3pmuND0wtcLT0Xmy2DVjINikXkdu1jr7MTRmUUHbS6nP/rHK+z4wjTiwc7V/O3t8fLvD1zzA
+	at/FTEWGYHevTR56aPhZLK7ICl+G+UWFK7Q8JUac8Ef/SydxiWEmMvrd7EBdSCHsWS71DohpFWx
+	p8AlnvtY6RTiZguX1XE/YuyVH4PqKufA3gSSx/jz5vr9rnK3lIVdSXavRQjaBc4HNkz5EDe7W5L
+	LapxtytaS3ARKNr0RElDFdOt6CvPooige2
+X-Received: by 2002:a17:903:1988:b0:2b4:5cea:f618 with SMTP id d9443c01a7336-2b5f9e7823fmr164463225ad.3.1776736915460;
+        Mon, 20 Apr 2026 19:01:55 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fa9ff3b4sm149129515ad.2.2026.04.20.19.01.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Apr 2026 19:01:54 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: Matthew Wilcox <willy@infradead.org>, abuehaze@amazon.de, alisaidi@amazon.com, blakgeof@amazon.com, brauner@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
+In-Reply-To: <aeZ0Kp8dBqjsyWki@casper.infradead.org>
+Date: Tue, 21 Apr 2026 06:46:19 +0530
+Message-ID: <cxztt8nw.ritesh.list@gmail.com>
+References: <ldenszsy.ritesh.list@gmail.com> <20260420163328.22104-1-dipiets@amazon.it> <aeZ0Kp8dBqjsyWki@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.bd12b07f.c444.4fe0.8460.b6fed4af7332@bytedance.com>
 
-On Thu, Apr 16, 2026 at 11:22:08AM +0800, changfengnan wrote:
-> This is test 4k randread with QD 512 in io_uring poll mode. 
-> If you use fio, almost like this, but ./t/io_uring  can get higher IOPS.
-> fio \
->   --name=io_uring_test \
->   --ioengine=io_uring \
->   --filename=/mnt/testfile \
->   --direct=1 \
->   --rw=randread \
->   --bs=4096 \
->   --iodepth=512 \
->   --iodepth_batch_submit=32 \
->   --iodepth_batch_complete_min=32 \
->   --hipri=1 \
->   --fixedbufs=1 \
->   --registerfiles=1 \
->   --nonvectored=1 \
->   --sqthread_poll=1
+Matthew Wilcox <willy@infradead.org> writes:
 
-Ok, given the way fio works, the iodepth batching will result in in
-the code submitting repeated batches of 32 read Io submissions in a
-single 'syscall'.
+> On Mon, Apr 20, 2026 at 04:33:28PM +0000, Salvatore Dipietro wrote:
+>> I have submitted a v2 of the patch based on Ritesh's suggestion.
+>> https://lore.kernel.org/linux-mm/20260420161404.642-1-dipiets@amazon.it/T/#u
+>
+> ... but without linking back to this thread, so nobody who was exposed
+> to that thread for the first time knows about this one.  That's poor form.
 
-If you change the size of this batch, how does it change the
-performance of both vanilla and patched IO paths? i.e. does this
-optimisation provide a benefit over a range of IO submission
-patterns, or is it only evident when the CPU is running a IO-uring
-microbenchmark and userspace is doing no real work on the IO buffers
-being submitted?
+Yup.
+Also, given the Maintainers (willy, Christoph, Dave) shown their
+dis-interest in taking the patch in it's current form, the right way is
+to get back with performance data with both the approaches (which we
+were discussing) and first get the consensus from everyone, before
+proposing this as a patch :).
 
-Also, 'fixedbufs=1' leads me to beleive that this is using the same
-set of buffer memory for all IOs, and hence we've probably got a
-cache-hot data set here. Hence: is userspace reading the buffers at
-IO completion (i.e. emulating the application actually consuming the
-data that is being read from the disk), or are they remaining
-untouched by userspace and immediately reused for the next IO
-submission batch?
+Having said that, we do care if a genuine performance issue gets
+reported. In that context, I wanted to understand your setup a bit from
+memory fragmentation perspective. Are you trying to simulate memory
+fragmentation and then benchmarking? Or was this problem hitting when
+you run simply run the reproduction steps mentioned in your cover
+letter?
 
-> > > Profiling the ext4 workload reveals that a significant portion of CPU
-> > > time is spent on memory allocation and the iomap state machine
-> > > iteration:
-> > >   5.33%  [kernel]  [k] __iomap_dio_rw
-> > >   3.26%  [kernel]  [k] iomap_iter
-> > >   2.37%  [kernel]  [k] iomap_dio_bio_iter
-> > >   2.35%  [kernel]  [k] kfree
-> > >   1.33%  [kernel]  [k] iomap_dio_complete
-> > 
-> > Hmm read is usually under a shared lock for inode as well as extent
-> > lookup so we should ideally not be blocking too much there. Can you
-> > share a bit more detailed perf report. I'd be interested to see where
-> > in iomap_iter() are you seeing the regression?
-> Are there enough images of the flame diagram? I’ve attached them.
-> ext4_poll_7.svg is without this patch, iomap_fast.svg is with this patch.
 
-I've had a look at them, and the biggest change in CPU usage is that
-bio_alloc_bioset() disappears from the graph. In the vanilla kernel,
-that accounts for 6.05% of the cpu samples.
+BTW - I was following the other thread too where PREEMPT_LAZY problem
+was getting discussed. And from what I understood, you mentioned [1]
+enabling THP on the system made that problem go away. Also it looks like
+enabling THP is the right thing to do for this kind of workload. Does
+that also mean enabling THP fixed this problem too? Do you still hit
+memory fragmentation and/or similar throughput drop w/o this fix after
+you enable THP? It will be good to know those details too please.
 
-Let's put this in a table:
+[1]: https://lore.kernel.org/all/20260403191942.21410-1-dipiets@amazon.it/T/#md88ca4258766e897e432df85874d197db476c7d1
 
-function		vanilla		patched		saved
-----------		-------		-------		-----
-ext4_file_read_iter	54.75		46.85		-7.90
-iomap_dio_rw		49.21		40.69		-8.52
-----
-bio_alloc_bioset	 6.05		1.77		-4.28
-iomap_dio_bio_iter	25.44
-iomap_iter		15.02
-iomap_dio_fast_read_async		39.82
+-ritesh
 
-(subtotals)		46.51		41.59		-4.99
-----
-bio_alloc_bioset	 6.05		1.77		-4.28
-bio_init		 4.52		0.00		-4.52
-
-More than 50% of the difference in CPU usage between the two code
-paths is entirely from bio_init() overhead.
-
-That makes no sense to me. The fast path still requires bios to be
-allocated and have bio_init() called on them, and we are doing many
-more of those calls every second. Why is this overhead not showing
-up in the fast path profile -at all-?
-
-> > > I attempted several incremental optimizations in the __iomap_dio_rw()
-> > > path to close the gap:
-> > > 1. Allocating the `bio` and `struct iomap_dio` together to avoid a
-> > >    separate kmalloc. However, because `struct iomap_dio` is relatively
-> > >    large and the main path is complex, this yielded almost no
-> > >    performance improvement.
-
-Yet this is exactly what you do in the fast path. Why did it not
-provide any improvement for the existing code when it is an implied
-beneficial optimisation for the new fast path?
-
-I'm clearly missing something here. I'm trying to work out why the
-profiles show what they do, but there's differences between them
-that do make obvious sense to me.
-
-It would also be useful to have XFS profiles, because it has a
-larger CPU cache footprint than ext4. If what the profiles are
-showing is a result of CPU cache residency artifacts, then we'll see
-different profile (and, potentially, performance) artifacts with
-XFS...
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
