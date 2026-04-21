@@ -1,88 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out198-147.us.a.mail.aliyun.com (out198-147.us.a.mail.aliyun.com [47.90.198.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DC133A63EB;
-	Tue, 21 Apr 2026 22:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B20137AA81
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 23:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.198.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776811004; cv=none; b=hIgLYYx928DAoToeLVYLcgqNZPOJ0SXNJ6AJXz2aoydMFQOVvxGFnkJB0utS9+ircbnV/p4qk9m8+d3dryTZHJ2AcJ2S41EqAjhAitSFKO3xudFWNnoaU2+Z1Cm/PKvli4dFHkf7SrMLboVwMNF94gv+8VxR918kgEtR2N+TeoY=
+	t=1776812730; cv=none; b=lkAgY7ZAqitrGOqBYvljbK4xdlRzKzgNIddMIwSog9hKEB7OS0Ry4XgBpY8axu/qUsSY9E4pIXwT/Io7R9lTpy03YlzcFepZTO9FAnhvNgvVYj3SYA9IAXg4fyv0oLNmkPS4YjkO/H1VjMJt1D2/RwHZJ0kc4t1ZbYoP3zzGfpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776811004; c=relaxed/simple;
-	bh=rYR0EGH23chj/ciflhN3Y7j6+4nUJvtKtjJgmfOTNCM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eD47B7FicTFXIEsSxQee9iCNkhPHfDBws17oFekYw/B8s6xqivpOoAIPP09S2N3VRkSYfzNRWTwZ7TPXKvJOrtyPi3ZdOCEMnzhrNKvFU5zE/Wz7ykPekSezZ5+Pam2rfKHDbpPYFBMf1NRkw/FHYHU3N/1wYwB8EyVvYM0c6wE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZeqVzWu; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZeqVzWu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20101C2BCB0;
-	Tue, 21 Apr 2026 22:36:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776811004;
-	bh=rYR0EGH23chj/ciflhN3Y7j6+4nUJvtKtjJgmfOTNCM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NZeqVzWuq4Rdqk0BR09Dntk1fNswuCIsSupoE3qSDO7moEPj23S2jCqAC9WkNjAJr
-	 /hbqtMhhqkjbJkwDnPDyvQyowhWR0TIeq8HbK5gve2asVK9iNKtjefbho/OHys3DUV
-	 ZDKsQtubKlSSMPKeF+qzXF49C9zCY//xARTn6zqpq7qJPIwo0Cj8JPgBpMX4LP0D4J
-	 dU9Dw1breSgV4xDOmoqkdBh/pkSDM1MHlnkvlAP/cmKHoDm6f8D7QUOyD05p+9h2fC
-	 Akp6sj66DpNOm/6dk4D95m0a9uUxLmgNO+B33dRS08X3EqlDdylHxJ9tJMYY6gS9I1
-	 Ro0mv57Kd9myg==
-Date: Wed, 22 Apr 2026 08:36:37 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Fengnan <changfengnan@bytedance.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Fengnan Chang <fengnanchang@gmail.com>, brauner@kernel.org,
-	djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	lidiangang@bytedance.com
-Subject: Re: [RFC PATCH] iomap: add fast read path for small direct I/O
-Message-ID: <aef79R24wFemmUdN@dread>
-References: <20260414122647.15686-1-changfengnan@bytedance.com>
- <ad_h0JMX2Jo-QODG@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.bd12b07f.c444.4fe0.8460.b6fed4af7332@bytedance.com>
- <aea96YRt2aHJsM96@dread>
- <87674d63-c8cb-4135-8d76-84f52e90ac2e@bytedance.com>
+	s=arc-20240116; t=1776812730; c=relaxed/simple;
+	bh=hiPljp1xLehYPakrYd5/t0do4ncNFnS5yr06hsetCvw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Zt66YlSNacSIjqu+eEy1HUfqz+WJushP3klqDogUU5pSV2QVXJuhKTryxLORz6XHy/YSc49uZlce23pQhggNuW70UJwgHyiC7w93id/ZaKxpT0U5qdFOU9bfGrgfxtzS+EWNhLl1q3dmR0V9FiqMMgoc/4MhQV4cvvkRdRJ8LeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com; spf=pass smtp.mailfrom=e16-tech.com; arc=none smtp.client-ip=47.90.198.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=e16-tech.com
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.04688288|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.108126-0.00193365-0.889941;FP=15342186217492778747|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037025160;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.hHGs8.K_1776812715;
+Received: from T7610-el9.e16-tech.com(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.hHGs8.K_1776812715 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Wed, 22 Apr 2026 07:05:16 +0800
+From: Wang Yugui <wangyugui@e16-tech.com>
+To: linux-xfs@vger.kernel.org
+Cc: Wang Yugui <wangyugui@e16-tech.com>
+Subject: [ RFC ] xfs: 4K inode support
+Date: Wed, 22 Apr 2026 07:05:15 +0800
+Message-ID: <20260421230515.2234-1-wangyugui@e16-tech.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260421094204.A743.409509F4@e16-tech.com>
+References: <20260421094204.A743.409509F4@e16-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <87674d63-c8cb-4135-8d76-84f52e90ac2e@bytedance.com>
 
-On Tue, Apr 21, 2026 at 11:19:31AM +0800, Fengnan wrote:
-> 在 2026/4/21 07:59, Dave Chinner 写道:
-> > I'm clearly missing something here. I'm trying to work out why the
-> > profiles show what they do, but there's differences between them
-> > that do make obvious sense to me.
-> >
-> > It would also be useful to have XFS profiles, because it has a
-> > larger CPU cache footprint than ext4. If what the profiles are
-> > showing is a result of CPU cache residency artifacts, then we'll see
-> > different profile (and, potentially, performance) artifacts with
-> > XFS...
-> The XFS flame graph is also attached now.
-> IOPS: 1.92M->2.3M.
+use case for 4K inode
+- simpler logic for 4Kn device, and less lock.
+- better performance for directory with many files.
+- maybe inline data support later.
 
-The callchains in both XFS flame graphs are completely bogus:
+TODO:
+still crash in xfs_trans_read_buf_map() when mount a 4K inode xfs now.
 
-<io_uring entry>
-....
-io_read
-__io_read
-xfs_inode_free_eofblocks
-xfs_prep_free_cowblocks
-iomap_dio_rw
-iomap_dio_simple_read
-xfs_mountfs
-....
+---
+ fs/xfs/libxfs/xfs_format.h   | 2 +-
+ fs/xfs/libxfs/xfs_metafile.c | 2 +-
+ fs/xfs/libxfs/xfs_sb.c       | 1 +
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-Can you regenerate the profiles, please, and this time check that
-they make sense before posting them?
-
--Dave.
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 779dac59b1f3..84cce8d268e6 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1079,7 +1079,7 @@ enum xfs_dinode_fmt {
+  * Inode minimum and maximum sizes.
+  */
+ #define	XFS_DINODE_MIN_LOG	8
+-#define	XFS_DINODE_MAX_LOG	11
++#define	XFS_DINODE_MAX_LOG	12
+ #define	XFS_DINODE_MIN_SIZE	(1 << XFS_DINODE_MIN_LOG)
+ #define	XFS_DINODE_MAX_SIZE	(1 << XFS_DINODE_MAX_LOG)
+ 
+diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
+index cf239f862212..9db799576775 100644
+--- a/fs/xfs/libxfs/xfs_metafile.c
++++ b/fs/xfs/libxfs/xfs_metafile.c
+@@ -98,7 +98,7 @@ xfs_metafile_resv_can_cover(
+ 	 * isn't critical unless there also isn't enough free space.
+ 	 */
+ 	return xfs_compare_freecounter(mp, XC_FREE_BLOCKS,
+-			rhs - mp->m_metafile_resv_avail, 2048) >= 0;
++			rhs - mp->m_metafile_resv_avail, 4096) >= 0;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 38d16fe1f6d8..39424a7c74df 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -734,6 +734,7 @@ xfs_validate_sb_common(
+ 	case 512:
+ 	case 1024:
+ 	case 2048:
++	case 4096:
+ 		break;
+ 	default:
+ 		xfs_warn(mp, "inode size of %d bytes not supported",
 -- 
-Dave Chinner
-dgc@kernel.org
+2.36.2
+
