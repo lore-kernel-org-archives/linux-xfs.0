@@ -1,182 +1,178 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3EF93A4511
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 09:02:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65FDD347514
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 12:04:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776762171; cv=none; b=mBvvuG9wwa7HQCPtM9SdvFFXl8S9b/RnRKRiVMjRW3ATLTof9878csc6Y48zhavxIlrXZbjl9t/Nx6ZH3x5LfgpQ+iqyfKKzFzBD0ygf24VqFGrBlPReBWcp68mGt41v1DpN63jtRrQSPwsqHxJFKWB8hxYwcnKEAu08pTfwQBc=
+	t=1776773056; cv=none; b=fY4LbJbypXR9IiKVPKMp3KtKfyNwhGDv3iJ9Fm4eIkTSBfNNFaUM+kmkZE7pYMkmfRg/g0n2KyHvspr26v1DstqysS1hQDUM0Btvy7YBmGngJz5PYw+dZ3a5GBfNf90+ico2CkcH7Ikt5euREA1WRk5GEw8tyK9wqD5aG0G0Duw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776762171; c=relaxed/simple;
-	bh=PtUQkhF8ODo+uUc8J4/pGSkHu0QMqX1x2kVB2oV6dAg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tRDPJgU709SoP3CiXfJNIMldha6mi4JCf287KvWves/40xp7sNC5uT9D3EZVZbG2WPYne6Cak0au52KS2BqQwagYB5Lo5357ueuxu7oXWx4wuEtBbnrxxRlvKgQCpGnvT7xFY6kmj1HVVYKAiPtId7x8rVkOzfFhgHx+1IiEi1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YxtO80Py; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1776773056; c=relaxed/simple;
+	bh=PhciIxgiiA5ddt051NDOgiae67LGOLqltKK8xM/6Sp8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=OzAw5BNzqylC3wKlxvMhVsMDAwOO/+f7ll0FfVmmLJs3BCNCazdHMAbzx+0QxplYdXrht8pTSqsS2+9i1pBkQbUu3o7SryCfp7/tAbcyc+OK2Z+8OBx1iPEWEiNabJn1O+CihfmZgr/Tj7k2rnRNMl/+alX2Fl0mSYJHtPzoB54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dKIfn5Jo; arc=none smtp.client-ip=74.125.82.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YxtO80Py"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4891f6b6388so1011905e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 02:02:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dKIfn5Jo"
+Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-2b4520f6b32so5297290eec.0
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Apr 2026 05:04:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1776762168; x=1777366968; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=D1tUMNKsUka20XG67YhLFUj+hBxuaCOCgy+TNZlHY/s=;
-        b=YxtO80Py/n3gxmHgHjs6Eh2Bk/cI921/+YOfcAx40aw+LmhohQLDFN1GIT4Wp077ua
-         Y4jmQInmJHK8GCoDFgXDFcH+vwSsEUjI5gHcJU0ZgC2MfQSZkQGp1rWISfvGxl7W3yny
-         fVXbiZNfhKawTeLkjmeRLfPw5dOJ2lmBbtU4hPu8MtuY984kNYJBjzvHXOK5mFej75ue
-         w1lnfg0a+JuRFDsl/Vo3f5dJcvMOc4S9hTN+B1+ODqq4paqSR39Q9BNAYnvXuWxE3blK
-         0kGKgYXhct+6Td08nRtNpfWJ8E0Tdu8IV2PPtP+hqfaComPktR3Qfw008gI8uOJWS8kq
-         PUQA==
+        d=gmail.com; s=20251104; t=1776773054; x=1777377854; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WC25I4L4LKQAZMVUaJZY4pHqgCaxsSTXVf3rLxAH518=;
+        b=dKIfn5JoS61n/Q2jj3FVEUY5XgMi9zW4HW7PF377tBdx/qlUStvCMObfjizyXCfXst
+         U1PPzIdwxfdG9IamUVFaXrD6UwLMCPBMplFdcezD+cU77ZUlQqyO4xUoGVSQAcZ92PG2
+         nwY74MHfnN82EmGFlsKrGOscan+BZy+LGarlGqkFOe3iLcb5bdvtv3Nh4nUUUcwa6gOy
+         E3beyOK2jl8/oJupUxjcqrGJTENrVyZtJ3iw0oIuS8tW0BGvoC/N4yUulJQHfRir2Ft5
+         ZXOSgTF3wkD4Mf/RYl/+f1xh0JUnVKvDgA9F+QZZG7V7e8xP3aWLhYob/RJfPhhfxJB2
+         X9rQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776762168; x=1777366968;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=D1tUMNKsUka20XG67YhLFUj+hBxuaCOCgy+TNZlHY/s=;
-        b=TXKH9FJONo4tGgNCatTPV/70eWzHj8zACGMSHDQdAmxyQxnVnyKuyhX4Sn3XaYsjmi
-         UqL7NgMKDX2TL/NoL+PtTYu4R3+MI68LRL8Bk1gGPVQRv66Te4gW1ypbtA/eEnB6lnEK
-         MgPm3LVfiaaUT+il9RHqFp6K1dKKfgefV00A/liFdnpBqCgajoBhS8rHL/KBBUPLXNxf
-         8SZXAMgJpcF1/UCAkvg27fXMUhPvQ5QrU8T35j0Ok+OTyNwj7jrvjpb8DOAsnGrNgQoJ
-         q30DWL6gNOtccjmzS3AXyNAEG+kB5Be+e+6xWKMOdste6paKWsMEIPeoE1Lv7NbDZp/h
-         ZrWw==
-X-Forwarded-Encrypted: i=1; AFNElJ+VeqJnl7n8wwV6v4NxypGNdUvDyi24YDVf9tm6d4hQAdPKxkl3rT//3SOohisjwfd1NIPltkYeRr4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyaVmd1zzFM5qQbNANnODNThXoQDWSc61+2MfHckyV52TrgHN0d
-	gxICwGM9UNHVy8K2TbUbE1gf3676tPVCh+chcOyt6lOpTiQ+HU5aoGB72YfOqjSZ3v4=
-X-Gm-Gg: AeBDievh5BqDTPyhStFx0JGqaxFkD7lHyMZ4Kfs+6DwcLqhUGdPrrl1EjFlOW/HVVW9
-	L5FQHB1c6LxsVa4OLZBLDx5k234T8qXzOg4jB3mjvh8I0cUqLmltyoLscv/ASx9YoIxu9ppn/UG
-	P196kYaPzRThh46Mz8auTmOf3zXtzrr1Kqgkw0B4ws9Vs7rUQI7BInNJv6o0kSnUm/HWGvlozll
-	GLQnqtRE7VIqDXn6Uk/BZB8MhPCTrtJTLZGBjAr6/GOD+a9Pdiy5sWU1Mhbq48DeMTkVbdZRKSC
-	qGctPY9BQnnrT+heJGHxsAhYV7vF4ZN0jz+quqE2JLv7fqzbwpKjUTf7ekD6EYFfWV19l02ESqK
-	kEC3Yfs5SiJO2cFAi8ICtli+QBezXiBWQAP4x+8WLJI6lehxKimxDAzmYxeLMLnEVYO1ywcJvWL
-	DGKNGM8n9FNK+0KtGOoH+NvwFn0EwWx37BnjaW9+LeB6josLIaKH6GjeWf/XfHMQuUzIPi
-X-Received: by 2002:a05:600c:4746:b0:488:ac4b:59d1 with SMTP id 5b1f17b1804b1-488fb7ab49cmr115940905e9.8.1776762168051;
-        Tue, 21 Apr 2026 02:02:48 -0700 (PDT)
-Received: from ?IPV6:2001:1a48:8:903:1ed6:4f73:ce38:f9d4? ([2001:1a48:8:903:1ed6:4f73:ce38:f9d4])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4891c08faffsm269654935e9.1.2026.04.21.02.02.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Apr 2026 02:02:47 -0700 (PDT)
-Message-ID: <1f50ce04-20e6-46a0-9d8a-00a5f7a74967@suse.com>
-Date: Tue, 21 Apr 2026 11:02:45 +0200
+        d=1e100.net; s=20251104; t=1776773054; x=1777377854;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=WC25I4L4LKQAZMVUaJZY4pHqgCaxsSTXVf3rLxAH518=;
+        b=TqYLe566pttJmU9UNt38epgWPAKEKLOe9ZZTW8II6j/dibTYHjfKvqcGYn5XI0QlBZ
+         r7R2NeV8xpUNX7ub0OwfsMv1XaWPdrJZA3QcDWGaBk0Wu1OLi68KMp43vZQJdG8sJFpt
+         txDz+jpyd0FhNwghluPm7zOB1OmMR5dYrleM/Lr/ABz9dPOUsWykUulPJAr2eYYq6H+i
+         5vRNFKrGYnoA2OMZyKfxteeW96bv0Vhe05BLArSxqyMBuFLJ8o9ip4s8x91i6af8iO41
+         3qHD5TrNsGwKgAt/4Ndsz6Q0QDUUb4TCf0ZTakwCyQlArWkv4ArdSDL8x7DxLZOyFxyS
+         uv4A==
+X-Forwarded-Encrypted: i=1; AFNElJ+/86GdB7Of2c+PlfGz5ZotRWoGtixxOEduDHFRj1E7V3InGOk2O4tfIwex9entRbeooNlFGJ5Sx5M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSN6zKPU8vQwCY1MAO+O9B1ZijcjJGNtpD2s6LVckIoBDEJbaO
+	hUsidWiLNv+y74fPLWfG9Mn2kgJNKf7bDpj9tqAV8LaMO7t0LPsP6Xz7
+X-Gm-Gg: AeBDietkoyKVvG59nFhXCnK57PTlKGGBicAwtR0/RGFXN3sCySabGJ7MFuzlnQX0R4D
+	NMpiCz//QAzUPSQrjNzacRorfCDsYdWC3uZk6w3ID55sxWb+o6KmObylSMhszgNU7vno1HAh4Ti
+	ZPCUjY3q7ULNN8xiAUUhYMEbLbOUNX5qjR0ycg7tfqDs4CdPwBjoLEso7ElPYQiFlUxRfV2pLJt
+	D/Jo8GTCHgae/kemy9OTlUHfEWeqF9Rm6ez1XdiKa22D2teL2QYaA0VxBDpJ+RswsFL9CQ4YVig
+	cxaUL85LXynB1Xy7n7yVQb4O1QzHnNsW9db5avoAMrvNqwuO+Mw+Vk2o6dJ+RawijSxSPp4bv9h
+	cjqwNfRw1oOLSNiadvGtNd4J3S0RJEWGI3DUMQlu8OfshyLUtsflDdOfszLyZPCWomNPpEl4UDl
+	7BqtGck7RK5pNh58rQq3GyGA6HlfgdCpFYDx5DbA5seI1KCg==
+X-Received: by 2002:a05:7300:4313:b0:2d2:96e8:1bf5 with SMTP id 5a478bee46e88-2e464eaa3ecmr8603231eec.3.1776773054151;
+        Tue, 21 Apr 2026 05:04:14 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2e53a4a7ff1sm18679807eec.9.2026.04.21.05.04.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Apr 2026 05:04:13 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: dgc@kernel.org
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [XFS] Question: can xfs_agfl_free_finish_item exhaust AGFL during bnobt/cntbt split?
+Date: Tue, 21 Apr 2026 20:04:11 +0800
+Message-ID: <20260421120412.2161716-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <ad1r1fm8LjFVxi9_@dread>
+References: <ad1r1fm8LjFVxi9_@dread>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order
- allocation
-Content-Language: en-US
-To: Dave Chinner <dgc@kernel.org>, Salvatore Dipietro <dipiets@amazon.it>
-Cc: linux-kernel@vger.kernel.org, alisaidi@amazon.com, blakgeof@amazon.com,
- abuehaze@amazon.de, dipietro.salvatore@gmail.com, willy@infradead.org,
- stable@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, "Ritesh Harjani (IBM)"
- <ritesh.list@gmail.com>, Christoph Hellwig <hch@infradead.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>, Michal Hocko <mhocko@suse.com>,
- "David Hildenbrand (Red Hat)" <david@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>
-References: <20260403193535.9970-1-dipiets@amazon.it>
- <20260403193535.9970-2-dipiets@amazon.it> <adLlrSZ5oRAa_Hfd@dread>
-From: Vlastimil Babka <vbabka@suse.com>
-In-Reply-To: <adLlrSZ5oRAa_Hfd@dread>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 4/6/26 00:43, Dave Chinner wrote:
-> On Fri, Apr 03, 2026 at 07:35:34PM +0000, Salvatore Dipietro wrote:
->> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
->> introduced high-order folio allocations in the buffered write
->> path. When memory is fragmented, each failed allocation triggers
->> compaction and drain_all_pages() via __alloc_pages_slowpath(),
->> causing a 0.75x throughput drop on pgbench (simple-update) with 
->> 1024 clients on a 96-vCPU arm64 system.
->> 
->> Strip __GFP_DIRECT_RECLAIM from folio allocations in
->> iomap_get_folio() when the order exceeds PAGE_ALLOC_COSTLY_ORDER,
->> making them purely opportunistic.
->> 
->> Fixes: 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Salvatore Dipietro <dipiets@amazon.it>
-
-BTW, backporting perf regressions fixes to 6.6, when they are only reported
-at the time 7.0 is released, might be too risky. There will likely be a
-different workload that will regress as a result, no matter what we do.
-
->> ---
->>  fs/iomap/buffered-io.c | 15 ++++++++++++++-
->>  1 file changed, 14 insertions(+), 1 deletion(-)
->> 
->> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
->> index 92a831cf4bf1..cb843d54b4d9 100644
->> --- a/fs/iomap/buffered-io.c
->> +++ b/fs/iomap/buffered-io.c
->> @@ -715,6 +715,7 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
->>  struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
->>  {
->>  	fgf_t fgp = FGP_WRITEBEGIN | FGP_NOFS;
->> +	gfp_t gfp;
->>  
->>  	if (iter->flags & IOMAP_NOWAIT)
->>  		fgp |= FGP_NOWAIT;
->> @@ -722,8 +723,20 @@ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
->>  		fgp |= FGP_DONTCACHE;
->>  	fgp |= fgf_set_order(len);
->>  
->> +	gfp = mapping_gfp_mask(iter->inode->i_mapping);
->> +
->> +	/*
->> +	 * If the folio order hint exceeds PAGE_ALLOC_COSTLY_ORDER,
->> +	 * strip __GFP_DIRECT_RECLAIM to make the allocation purely
->> +	 * opportunistic.  This avoids compaction + drain_all_pages()
->> +	 * in __alloc_pages_slowpath() that devastate throughput
->> +	 * on large systems during buffered writes.
->> +	 */
->> +	if (FGF_GET_ORDER(fgp) > PAGE_ALLOC_COSTLY_ORDER)
->> +		gfp &= ~__GFP_DIRECT_RECLAIM;
+On Tue, 14 Apr 2026 08:19:01 +1000， dgc@kernel.org wrote:
+> On Mon, Apr 14, 2026 at 10:48:51AM +0800, Jinliang Zheng wrote:
+> > On Mon, 13 Apr 2026 10:14:45 +1000, dgc@kernel.org wrote:
+> > > On Mon, Apr 13, 2026 at 12:32:50AM +0800, Jinliang Zheng wrote:
+> > > > But before `xfs_agfl_free_finish_item` executes, `xfs_defer_finish_noroll`
+> > > > rolls the transaction. Other deferred operations that execute in between—for
+> > > > example, regular extent frees (`XFS_DEFER_OPS_TYPE_FREE`) that themselves call
+> > > > fix_freelist and may re-shrink the AGFL, or rmapbt operations—could consume
+> > > > AGFL blocks and leave the count below `need` by the time our deferred AGFL free
+> > > > runs.
+> > > 
+> > > Even if we run RUIs, CUIs or other EFIs before the AGFL deferred
+> > > free, they fix up the freelist for their operations first, and that
+> > > reserves space for a deferred AGFL free from the free list.
+> > > 
+> > > If any other extent allocation/free on that AG is run between the
+> > > two transactions (e.g. high level transactions racing on AGF buffer
+> > > access) they will also reserve space in the AGFL for a split during
+> > > a deferred free.
+> > 
+> > Thank you for the detailed explanation. I have a follow-up question about
+> > the case where fix_freelist shrinks the AGFL by more than one block.
+> > 
+> > When `xfs_alloc_fix_freelist` shrinks an oversized AGFL, it may call
+> > `xfs_defer_agfl_block` multiple times in a loop, adding N deferred AGFL
+> > free items into the same `xfs_defer_pending` (up to max_items=16 per
+> > pending entry).
+> > 
+> > In `xfs_defer_finish_noroll`, all N items within that single
+> > `xfs_defer_pending` are processed consecutively in the same rolled
+> > transaction via `list_for_each_safe`, with no intervening fix_freelist
+> > call between them. Each call to `xfs_agfl_free_finish_item` invokes
+> > `xfs_free_ag_extent`, which may trigger a full-height split of both bnobt
+> > and cntbt, consuming up to `(bnobt_levels + 1) + (cntbt_levels + 1)`
+> > AGFL blocks.
+> >
+> > The initial fix_freelist leaves the AGFL at exactly `need` blocks. If
+> > the first deferred free triggers a full-height bnobt+cntbt split and
+> > consumes those blocks, the AGFL may already be below `need` — or even
+> > exhausted — by the time the second deferred free runs and needs to split.
+> > 
+> > Is this scenario considered?
 > 
-> Adding these "gfp &= ~__GFP_DIRECT_RECLAIM" hacks everywhere
-> we need to do high order folio allocation is getting out of hand.
+> I have considered it, yes.
 > 
-> Compaction improves long term system performance, so we don't really
-> just want to turn it off whenever we have demand for high order
-> folios.
+> Remember what I said about considering the probability of something
+> occurring before adding complexity to guarantee it will never
+> happen.
 > 
-> We should be doing is getting rid of compaction out of the direct
-> reclaim path - it is -clearly- way too costly for hot paths that use
-> large allocations, especially those with fallbacks to smaller
-> allocations or vmalloc.
+> The above scenario requires both allocbts and the AGFL to be set up
+> in such a way that it has multiple full subtrees ready to split in
+> both trees, and that the same block frees (from the AGFL) will
+> trigger those subtree splits with the same free space record insert.
 > 
-> Instead, memory reclaim should kick background compaction and let it
-> do the work. If the allocation path really, really needs high order
-> allocation to succeed, then it can direct the allocation to retry
-> until it succeeds and the allocator itself can wait for background
-> compaction to make progress.
+> And the AGFL has to have exactly the right blocks on it *in excess
+> of what is required* in to get them deferred in the right order to
+> then trigger these subtree splits.
 > 
-> For code that has fallbacks to smaller allocations, then there is no
-> need to wait for compaction - we can attempt fast smaller allocations
-> and continue that way until an allocation succeeds....
+> And this has to happen multiple times in consecutive operations.
+> 
+> Can the above happen? Yes.
+> 
+> Will it happen by chance before the heat death of the universe? Probably.
+> 
+> Will it happen in production workloads?  Not very likely at all.
+> 
+> That's the difference between providing theoretical guarantees vs
+> practical guarantees.
 
-So, should we do a LSF/MM session?
+Thank you for your reply.
 
-But I think in any case, the page allocator needs to know which allocations
-do have the fallback. __GFP_NORETRY exists for this. Here it wasn't tried at
-all, in v2 [1] it was, but not alone. I'd start from __GFP_NORETRY alone,
-and then we can look at tweaking what it does if it's currently insufficient.
+And, I have a follow-up question again.
 
-We could have a helper to encapsulate this "turn this allocation to a
-lightweight fallbackable one", which would add __GFP_NORETRY. It probably
-already exists somewhere but not gfp.h. But I'm not sure we can simply
-change GFP_KERNEL to start failing more for non-costly orders. We've
-discussed that a lot in the past :)
+Will xfs_allocbt_free_block()/xfs_rmapbt_free_block() -> xfs_alloc_put_freelist()
+cause AGFL to become full and then overflow?
 
-[1] https://lore.kernel.org/all/20260420161404.642-1-dipiets@amazon.it/
+thanks,
+Jinliang Zheng.
 
+> 
+> We can keep playing "but what if we had N+1" type theoretical
+> scenarios endlessly here, but reality has to step in at some point.
+> We set reservation sizes for "unbound excursions" at a size that is
+> large enough for normal operation and largely ignore the cases with
+> 10^(large negative N) probabilites.
+> 
+> If, in practice, we find the reservation pools are getting exhausted
+> in normal production workloads, then we'll either change the
+> behaviour that is causing the exhaustion or increase the reservation
+> pool size to handle that case.
+> 
 > -Dave.
-
+> 
+> -- 
+> Dave Chinner
+> dgc@kernel.org
