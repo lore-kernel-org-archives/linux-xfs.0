@@ -1,113 +1,116 @@
-Received: from fhigh-b4-smtp.messagingengine.com (fhigh-b4-smtp.messagingengine.com [202.12.124.155])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B2F7237713
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 02:09:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F41A01B87C9
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 02:19:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776910155; cv=none; b=uJpEhAnf0AoZ6vKKntXDnrGJfRcsoSODmlPDGNbZhP+VjnI0ew26hIKmtrZOKJ0GJZpgK/e16L5X0Ult34tRh7xI7q1/uleZTEdlnL5geH+HS2yzn9LnY9F8o076hZAbV0XMmMKIwTlN3oSg4S7cdTkEfYaFEpobpql9KRsbPVQ=
+	t=1776910747; cv=none; b=FwU0wcI3resOOpAM9ESNTHBTUpZiwkPuEv1jUMS6SHMjW5Rzy67IA1J6LkOz5X/8gAVDyUacS0HL6PUpxn+a1BUWX6W1IsMnMwbGdZXVEgB1Kdg7iNqSOfSosMd9iS/X7+hA/vC3vQunpgeTdUzVWM7eJDmzj5g8NXKiUX1YEJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776910155; c=relaxed/simple;
-	bh=jgiSgeoEuXwnwcW6uRucXZ2COxDXZIvhy0qWRCInLRc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MDOjbcbDZv769w+ejVfnr5r1U2KKDyzkCGqYji/s8wqxXFLWaNk6e136L4cToSH/m6Ud1QbLy+JJyDLgL5jUIRJ8qXmDMcrbOAVcEbxePIXF/8Ofn02z7nIvOF5mND/oELotwvhJ+Cx9liYQqW9nh9OMM7BFg2XzdZbAoUcs02g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=kVLgzB8B; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=gz9uGN+S; arc=none smtp.client-ip=202.12.124.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1776910747; c=relaxed/simple;
+	bh=gMkQhECJ20tmW8beDJagjq56KCQvAnVeH7VA0zR433M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WLpb0AFmjUTvLM2QTKTKGfYLJpn1f4NaNlh5IQ4f5eHdHmvqP5A0EmnxBOcMFdvBeCvS9cyXwi9zMSts0uQzb3dTiGyLoMBOkHIymRB9vcmQcnyYmPdxp7KimXkWfMsDE9Kn/8kv5fZ1cQooF0xSGjUUcvU/kVPsr8h7UO6wQZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rRjxwzEE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="kVLgzB8B";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="gz9uGN+S"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 97E517A0253;
-	Wed, 22 Apr 2026 22:09:12 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Wed, 22 Apr 2026 22:09:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1776910152;
-	 x=1776996552; bh=XvGCx90RFlo/nf+hUmG390bg7ipfrFLbJwWem+ZaC6k=; b=
-	kVLgzB8B0ggIITmgdejZbglN3F56JCcSXEnFmYKT1jCk0IlgavOakp3ohAK2cXa5
-	273uS3bdo246zix6TivB5sMxElPbTFKoIpDhek5BgEOu9fpGiQpcsM6W9Evif5Ld
-	aBTxUyVWeJousJ5PAdcISmHKVnwW5UcGhGvT6dlEKF4hbdluyoIqXQKz4+i8lb3j
-	BN2XvdfEg+eFgXOiD+pfJeA51fPUUycMCh2XFs69xNfCF0fYb4+FMyD7UqcQb9hg
-	a8bYMU/xLnIcDcwJLJofQ4JPfTDWWgpIOMt6P4opblds6rHxyXrvtxxMSazO4CQG
-	Rk7aTQH3UjgIFJWfOf82yw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776910152; x=
-	1776996552; bh=XvGCx90RFlo/nf+hUmG390bg7ipfrFLbJwWem+ZaC6k=; b=g
-	z9uGN+ShGpkVjUX6aieJR7r7fYLX7QF6m6cw9UaTBRyqyNPTUuWRprjjVVnvkqqm
-	V4LM6b5ehwiahMwhtSBd/rNEEXkVBnK+uvQFNA18EeUPPHy2unYE4zgu++Z2IPUt
-	JuWI6hs7kmgfONrHYVHtxFfDG6N52SxDTGxQ4VPjyFoYYfaxYA893XX9UEBIt3eK
-	AigIDm762vWMzNuegRqrHmCtOaDDBXJq3bMvhUr8TY+SK0WHQc8cudhcs8fGN/RE
-	ahb7yVAdgowQrUMAHOFe+ya+g1H6+lD9rHZ+wDxpNnH84vINg8HpHZZuoP4IGLqo
-	coMJyk1j1ayv/DM7/ubKw==
-X-ME-Sender: <xms:R3_paWeNG0KaQ34qxPsHA4PUr5CipAinq74DioUGuYa3989hS1wEYg>
-    <xme:R3_paXq2i0V7BX0hZEBJkNlDmp-okRuchduhMPtikEdRz3H0QH_7EH0ztLf7NR6lz
-    iQA9Qn9bCyrROx_m_Do0dbDxadOfovOzkEzia7B9nmwHePj_SaR7w>
-X-ME-Received: <xmr:R3_paU5WZFu2j4zmlh7I0V9q9UNraxJNt78u1p0HkehlsL6KsTzFw9VGEZBbwFenQ5t_-WoQSmD-W5nSEQLUjauH>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeiheeludcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpefkffggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomhepgfhrihgtucfu
-    rghnuggvvghnuceoshgrnhguvggvnhesshgrnhguvggvnhdrnhgvtheqnecuggftrfgrth
-    htvghrnhepveeikeeuteefueejtdehfeefvdegffeivdejjeelfffhgeegjeeutdejueel
-    hfdvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepsh
-    grnhguvggvnhesshgrnhguvggvnhdrnhgvthdpnhgspghrtghpthhtohepfedpmhhouggv
-    pehsmhhtphhouhhtpdhrtghpthhtohepfigrnhhghihughhuihesvgduiedqthgvtghhrd
-    gtohhmpdhrtghpthhtohepughgtgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhi
-    nhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:R3_padpW9Ss5-O6xFa-Ef9O7u5oCtonoOnFOwVhqxmOpgCi2IK8fug>
-    <xmx:R3_paWhS16oXy9ybfqini-BTEVyF8LkafFrG5rHVDStnO1ZmGxkf6w>
-    <xmx:R3_paXIHKWRm6u7K4UkOao6y-1fpsv88xp-v8TU7i68aB_r1WIXAEA>
-    <xmx:R3_paWChE6ls8RpQUNPtI2ksx9gQYznDIpHI5U4ZaeM00o2U0O8_FA>
-    <xmx:SH_pac4-KkUFpfAw40fJNp_1dDc4JeFl0Cisq9RrS-t9Pn0ZxNK_gBWd>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 22 Apr 2026 22:09:11 -0400 (EDT)
-Message-ID: <e7f42338-04f0-4f71-8b33-8f90f6bcfbf3@sandeen.net>
-Date: Wed, 22 Apr 2026 21:09:10 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rRjxwzEE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4284DC19425;
+	Thu, 23 Apr 2026 02:19:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776910746;
+	bh=gMkQhECJ20tmW8beDJagjq56KCQvAnVeH7VA0zR433M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rRjxwzEE1+T0BwmmRifONgRoQDcReR53mQ5rKeMVNL+Xfvh2/BOteFcYnB4ydXZ+B
+	 r1UV2qLjh5wSV9N1y7Hcoocp/rBAF3vm/WbJV8x8LEnW0e9hZBGd6g9auouY5NJT56
+	 BXS5XIuSORrv+tAhBgnVf5DiubuThlYBlQPDStCQk693InJkiEfr3KK3SSY9wzeHrm
+	 zQQshy8NQm/zxMd+CM/TeQZHEbmRxuspOFzKu+luyTqQnaWS5cg0WBaty7ZfxsIcao
+	 uxbL7y9gHqo2BKUzz9RTBQOYTD+IGowiGEJBpl0u3eiahbQO+wrnmuGC0udUFB4t4i
+	 sD8SXPmq9VjnA==
+Date: Thu, 23 Apr 2026 12:18:59 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Wang Yugui <wangyugui@e16-tech.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [ RFC ] xfs: 4K inode support
+Message-ID: <aemBk-rEnj6Or-76@dread>
+References: <20260421230515.2234-1-wangyugui@e16-tech.com>
+ <aelAeiyiAyFiJUgQ@dread>
+ <20260423070227.B2C6.409509F4@e16-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [ RFC ] xfs: 4K inode support
-To: Wang Yugui <wangyugui@e16-tech.com>, Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-References: <20260421230515.2234-1-wangyugui@e16-tech.com>
- <aelAeiyiAyFiJUgQ@dread> <20260423070227.B2C6.409509F4@e16-tech.com>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20260423070227.B2C6.409509F4@e16-tech.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 4/22/26 6:02 PM, Wang Yugui wrote:
-> Thanks a lot for these info.
+On Thu, Apr 23, 2026 at 07:02:27AM +0800, Wang Yugui wrote:
+> Hi,
 > 
-> the basic logic is that, for 4Kn device, the min io size is already 4K. 
-> and 4Kn device(SSD and RAID) because more common now.
+> > On Wed, Apr 22, 2026 at 07:05:15AM +0800, Wang Yugui wrote:
+> > > use case for 4K inode
+> > > - simpler logic for 4Kn device, and less lock.
+> > 
+> > Nope, neither of these are true.
+> > 
+> > There is no change in logic when inode sizes change, and there is no
+> > change in locking as inode size changes.
+> > 
+> > This is because inodes are allocated in chunks of 64, and they are
+> > read and written in clusters of 32 inodes. Hence all that changing
+> > the size of the inode does is change the size of the inode cluster
+> > buffer.
+.....
 
 > On a 4Kn device, we can I/O one single inode of 4K size without interaction with
 > other inode? so mabye better performance for high speed ssd such as pcie gen5/gen6?
 
-We already do efficient reads of inodes, even on 4kn devices. As Dave
-explained, "inodes are allocated in chunks of 64, and they are read and written
-in clusters of 32 inodes." Even with the smallest 512-byte inodes, we do inode IO
-in efficiently sized batches. Reading larger clusters of larger inodes filled with
-mostly-zeros will not improve performance in any way. It will only waste IO,
-memory, and disk space.
+Yes, you can do lots of 4kB IOs, but you can move more data in/out
+of memory by doing 8kB IOs, yes?
 
--Eric
+In reality, on-disk inodes are not independent. They are allocated
+and freed in contiguous chunks of 64 inodes, and the inode cluster
+buffer is used for bulk initialisation, logging unlinked list
+changes, etc.
 
-> Best Regards
-> Wang Yugui (wangyugui@e16-tech.com)
-> 2026/04/23
+Application operations on inodes often occur in batches, and XFS's
+inode allocation algorithms usually provide physical locality of
+inodes for a given workload. Hence for typical data set access
+patterns, inode clustering usually results in a reduction of inode
+IO due to increases in inode cluster buffer cache hit ratios.
 
+If you want to test whether 8kB inode cluster buffers 
+result in higher performance than using 32 inodes per buffer,
+then you can do that with some tweaks to the sb->sb_inoalignmt
+value set by mkfs.xfs. See the xfs_ialloc_setup_geometry() function
+for details on how to modify that setting during mkfs to influence
+the cluster buffer size the kernel will configure.
+
+If you create a filesytem with 2kB inodes and a 8kB cluster buffer
+size, you are going to see a different performance profile compared
+to using a 64kB inode cluster buffer. It will very much depend on
+the workload  and cache hit patterns as to whether that is a
+performance win or a performance degradation.
+
+The typical situation is that smaller cluster buffers reduces cache
+hits and so increase both metadata IOPS (read and write) and
+per-metadata operation CPU overhead due to needing to manage more
+buffers (e.g. inode chunk allocation now has to allocate,
+initialise, log and write back 16 buffers instead of 2). 
+Workloads that benefit from smaller buffers tend to have large
+working sets of inodes (i.e. don't fit in cache) and low
+physical locality in their inode access patterns (i.e. random file
+access patterns). There aren't a lot of workloads with those
+characteristics, espcially with modern servers have hundreds of GBs
+to TBs of RAM in them.
+
+So before you start asking us to review code changes, first show us
+that we can meaningfully improve application performance by reducing
+inode cluster sizes and increasing the number of inode metadata IOPS
+needed for any given inode intensive workload....
+
+-Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
