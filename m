@@ -1,214 +1,170 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E64234C9A3
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 21:03:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776978190; cv=pass; b=WrdKpxBJIZALHGBMobETbL83IcmZYJZ6vaVTw5+j4nqmxLH3Wzg+RBFiR23AcvgQ5C51D8Xqtu+SAoLrLovUFygGeQKXndV3A+lULfHlwflX8gKR3Mbx9+tjG1WovWx72VHu1doDPTkoe+e5Dx4FKm2qB/bN0dnlhxz/+JbYWws=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776978190; c=relaxed/simple;
-	bh=xhEH603J8v85yHWTGq8ZnN7Uus4HM3riSO2QoNgy+fs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CoDCLAnOuvZ+VfsGq6MMrpuF4vBYp0fzwV4njV/seMf/ypdj07ZHHJuN3++GevtbtcVTWvZujh9diOb7goScUTRgcCkoynFy4nAByiNrHMctL2a2dM9BXP5UFXjnZ+m1+j4JGR3bEaPdghICUC6LGPewUj2q2e9mS+qoWQHxq8s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rDvAu1SN; arc=pass smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E916637C0E2;
+	Thu, 23 Apr 2026 23:54:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776988486; cv=none; b=kjGPu0dhWSmhwSXBGAEWLGbcH1ABKdQ8D0aDgV+b7ROU3dn03qVqFc6GRVneYrY+L9C+eoXpo4KEN12eNPhpcpaNXHEzalP894kWhz8hjEa2+uSqT/6/POYH3e3PYDDujQbtNVbLek/tBS8BANMWoFBbYchOPzcVo94AKX9+fCI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776988486; c=relaxed/simple;
+	bh=nagBPIpdRQa10G3bzPDgD2eBKZdrwZkzTPtDAzYbtOQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LBqj3RO70se2xDb7RCI18XcGNGA28XsiljIYjk3dLhTMgmpqdxqxQgl8ZkgwwESlX09lWA/EDqPwfIRHfnb1oOixo09wGiT9UQcYqFHpVBBLEskGRc3RvRPu+BxSr4RAmwoY7Ht/4otqveEvf2VTYK4NHO20iKyRyjXSPL44LNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BqBqBWtJ; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rDvAu1SN"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-8a4b8c3a30bso80923726d6.3
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 14:03:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776978188; cv=none;
-        d=google.com; s=arc-20240605;
-        b=BUAdC7m+MNbJtfzjONp12RVv2ICARFjHhHKZxqCAHPGuCwjTJTIwQE7csusqoSDlfL
-         +kX7NUMNL1Td8G0vId7mPqLJouGMbBFSpYvVhs1r17Lret7PES8fxC4qLsH06zky5jW/
-         Sw81r7XMFQ9Zjv54fHegynhbZ9Mv9XVRpUMlaUtmgDhhG7Fi4JKRoatpwYmH75dustJq
-         RPnm9fV5GtKa8LoqG2c/oWjkdw2TcVHjxZzDwM4NKQmVOVPWSDU7UMFSsZqpj/3KhscZ
-         Uvx6REnhWHP0KQoOIH0v7kRyMCHzBZFepw0MauxvIGN9wEYM5qU6UGU1tokNQ3vd2L+D
-         Pj5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=PB9D2kfgkJFOe3p8pXvyrrOYHUrSUtT15eUJWPkJgQk=;
-        fh=/3rQNiscFXRG7/4RfigFSM9/ZXgv9S6prFpYxxkNIsw=;
-        b=WmHOKUz0bR3HHkiK5SLFT4vH5MtgPfW4mobF1GNp/KFeBOVbBB/nqRUG0wMf1ft0Tq
-         ieAHWpp/AxmF0p1S55/PlcEYSJVWK9K+HKxzeka5Mxukp6YKvAz+96hI75lssGuq0Vh7
-         ALSjH4ZYjXYBMUba2NtG20s4QY43RiPliFypzCtiGugw7FP34f8ALd0NYuMKRjVn5g7M
-         IUMuNc1kS3PnCwZvhzg7fT2z/S5nbU0BEpjlSYUWK7WmNDE6yhFIfDea6aRyuxvZhB89
-         6WgRzGQWOLuv7dXGXA2Zf6uBHrJg214FHBB1RJV6Oz9xythpO4hnnHltA0vFyOGNaPuQ
-         0wvQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776978188; x=1777582988; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PB9D2kfgkJFOe3p8pXvyrrOYHUrSUtT15eUJWPkJgQk=;
-        b=rDvAu1SNNCNFOtPGGZA1Ilm0Le5RC3HqJ0wXokdqmzOLVNi8lHw7GMMZu9w9TKLwL2
-         97WG5/8zvZHB8yvJKvWest8upLdKisDZ7H05Ka5/vdYNhsrnM3D9ri/hCBGJJWSYMJ6A
-         4aV5pN8ZpW+OvUAVyQXtCxyz+lKlPQ3JSP3K8P+ESur67eGHrRIzYUzsXwVHkCd6yj2/
-         ctzXdJjsBXDJTbKbibVy0FNHQzCBCqmL0wFBtBXUGYA9rjTxlgcuc+yyfB6WixhGhej1
-         k1hqtskE52BY3YNgHMeEYZ4kRq1QB4GqeTj/Zh+a80rccrsXdmSCnU6wEvXr81Y4Mp/o
-         /xVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776978188; x=1777582988;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=PB9D2kfgkJFOe3p8pXvyrrOYHUrSUtT15eUJWPkJgQk=;
-        b=DHvK/8y3PrKmVZFvKf1dFPiCV1+px8QenmF1sc846xNBf05ix9w7VKerYLxOr+OeSL
-         gpK+DFo5ay2XePjTR8JkUmTAEo/v43jeO3zCmLK4EkGvt3m2ThXhY8Ebwjv5FfSb2FK5
-         FuE1NUR0ka/pCJ7C5DbhRdKim1h8Ln0SFGtLZpRCO67NJvLOkhq+phZPwEnAhTOzCeFs
-         ujX7hL1lTDOEP3Lhy+U1y6j1dylMXFxWLAdllbjoChm6dJ1zdyZLNy0HriJdtk4Kk7ch
-         fR2s1S7dm5BDfCWO7pZr43wKLej102MuMlYnbbBhY18lM7SDqv7Rn6h19IPVjHW+HR9F
-         rc2Q==
-X-Forwarded-Encrypted: i=1; AFNElJ8HO7I3up+n3CHubd8TRMU4Nh56gZSHMSc31dkUPU8NniKhz5RekFzENPPi3YFkKike6pYW38kx0Tk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyIoW1EAIKoIq3epnsVgNSs79I0Jqtib6VDrNHdY8nZya3jN4qw
-	ZA9c38Sidr2Erdv4NFY98F7eTlIE/gNsbq4rOoGzjr+T69fV8AJLDNR23ia+4zHPTYPW8rcTAKz
-	fSc/eKzX+PZQFLUGkizeDD7oMCJuWlatNB1m6
-X-Gm-Gg: AeBDieuZqPEpMEydb8ZvN8rprGlPZnf0yjz5C7kQQNS6L6q6QlEsECHwp//W24s78gX
-	drZ+BKZpQa2RUAUFA+eVqV4JH5aZJFvnZP01lybLv+bfFBcUlI9DolTrXbctCVQc4qA7Fwpu6Kb
-	OMvOHSjMT71h+r4Z9VbZ9TR5UpftULDRaQpk7T9YtAZTeLOnsomiac3tFA8B3NoeOSJm+IoNf46
-	Qyqnv6zdtH/O8ckcX3sj2jpvyHqDowVXGH26AbVY6vCeswa9n6JwzEixd/VismRKD2MuRhRTsme
-	0vdto56KxyTW+r+j0ZV6lQF8/LvM7AxWkW/aj/k0wlOWsD64rmnX1xvTgt4dJG0GpdWKaadmPjh
-	EMzM1VH+3kGJSOVDfyfVD51pzum6ib7yKGci8Vh1FfkVTD9jklkYlHub0tlSlLa/T2UwgC+aaS3
-	aWdvgF9VIOcs/w5+sZXsy6uxOktrsZMjc=
-X-Received: by 2002:ad4:5d65:0:b0:8ae:6282:df2e with SMTP id
- 6a1803df08f44-8b02822456emr461252066d6.44.1776978187970; Thu, 23 Apr 2026
- 14:03:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BqBqBWtJ"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63NILGAX3229030;
+	Thu, 23 Apr 2026 23:54:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=NyZUs9RcJWsPCXqiAFbbwt3NY3+KB5
+	ydyk2N2aDclQU=; b=BqBqBWtJ51aKRs1v1ejXoCLyzZgFsyCqN2peRL7cjd/J0c
+	rxnuxZgILW8vlzeRiigp1Y9kgbQhmcInD5fWdDx+43KAiXj1KIJzPE4OoEL6U3eO
+	b7Qqj9pOacGXuouO/Wy2hrH6I7L0sYdmMPUwr8KXI8KSTAipYBorE0u0NQg4149W
+	4x+HL7LGhnBybCjBt4UHM+Zd/cwG7INdnkjPHF9T90c4QzJn0YG/fpfEp5F8HceE
+	XDpjly+wE4fqyG4UlPs502Ax72WLIgeVsMpJDaJcJZXQxhsov99lT3X3HmYJfHLp
+	e8cMe7s2g1918VKiXuokZjo5G+gmF3EmGWivI/mQ==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dpeu2b9cm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 23 Apr 2026 23:54:09 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63NNoWoH006542;
+	Thu, 23 Apr 2026 23:54:08 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dpjkyrpxx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 23 Apr 2026 23:54:07 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63NNs54142533294
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 23 Apr 2026 23:54:06 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E2F4120043;
+	Thu, 23 Apr 2026 23:54:05 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C0A0220040;
+	Thu, 23 Apr 2026 23:53:59 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.219.54])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu, 23 Apr 2026 23:53:59 +0000 (GMT)
+Date: Fri, 24 Apr 2026 05:23:56 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
+        hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
+        Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
+        p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap &
+ xfs
+Message-ID: <aeqxFKaw1uOk1GuZ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1775658795.git.ojaswin@linux.ibm.com>
+ <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260423-case-sensitivity-v10-0-c385d674a6cf@oracle.com> <20260423-case-sensitivity-v10-10-c385d674a6cf@oracle.com>
-In-Reply-To: <20260423-case-sensitivity-v10-10-c385d674a6cf@oracle.com>
-From: Steve French <smfrench@gmail.com>
-Date: Thu, 23 Apr 2026 16:02:56 -0500
-X-Gm-Features: AQROBzDF43-id-Qgk6rRbL0HPyUPTg1w8GYo4-J0uBb2d6IfD5ElWAtE-TtbFxA
-Message-ID: <CAH2r5mu1Wg_9tZCjei-xF357UjKR+h6jQr9zey39v59rx9quZQ@mail.gmail.com>
-Subject: Re: [PATCH v10 10/17] cifs: Implement fileattr_get for case sensitivity
-To: Chuck Lever <cel@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
-	linux-nfs@vger.kernel.org, linux-api@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, hirofumi@mail.parknet.co.jp, 
-	linkinjeon@kernel.org, sj1557.seo@samsung.com, yuezhang.mo@sony.com, 
-	almaz.alexandrovich@paragon-software.com, slava@dubeyko.com, 
-	glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu, 
-	adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org, pc@manguebit.org, 
-	ronniesahlberg@gmail.com, sprasad@microsoft.com, trondmy@kernel.org, 
-	anna@kernel.org, jaegeuk@kernel.org, chao@kernel.org, hansg@kernel.org, 
-	senozhatsky@chromium.org, Chuck Lever <chuck.lever@oracle.com>, 
-	Steve French <stfrench@microsoft.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-GUID: -nl9_K83Kzn9u7skxJWMWCIcGNgHNF2y
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDIzMiBTYWx0ZWRfX8PqZYRV+bedE
+ hsO8a0m/D+pucfImoyw014nW7oP3jzKYYaf/TJtc3eSY/OQDD2dHyzcMinGRcTvyx4AI/HscdrA
+ p6JdEScmepGWWYATYuSuYP5oAtI8JCrZljnfhdEr1SIR+24Ob+ukLdx467L3sCAU5A1avxqqahM
+ CIQTvlp8CHdZQz2r+Mpf9151cRifjBS19KhBBZQ8y3kuQelXKdcjebdPlU6+wJrIUZ2b7nPZid3
+ ykimUKZl+JP8dwj+rJhitIMXjgDWR9OChwNdNraC9nJn5ssDS463sEyEs9BlBGspEKmLLJdeXQ3
+ nNPlZfjYoGhblrIEJozMXrBt11OOVreHNqOPudQkkODpYFeFNwhp2Pf1kDYtZZ9QHzErdUIP7Df
+ 1tlNGeRk8vpIBTQ7A5tIMmEviO3GjF/QASiwui4MiNMan2zREeDVQSFV8ZhxSXMzQwH5OaU3v37
+ kV0SqKEpDdb/zb9x3mw==
+X-Authority-Analysis: v=2.4 cv=C8LZDwP+ c=1 sm=1 tr=0 ts=69eab121 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=kj9zAlcOel0A:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=NEAV23lmAAAA:8
+ a=rsA8cc2tDGwubhWhQn0A:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-ORIG-GUID: id_LFKqk8OLTXWmlKq-3TLgzfsarewvz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-23_03,2026-04-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 priorityscore=1501 malwarescore=0
+ lowpriorityscore=0 clxscore=1015 bulkscore=0 impostorscore=0 spamscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
+ definitions=main-2604230232
 
-Should this also be checking if the SMB3.1.1 Linux Extensions or SMB
-POSIX Extensions are negotiated (ie the server supports case
-sensitivity)?
+On Thu, Apr 23, 2026 at 02:25:43PM +0200, Pankaj Raghav (Samsung) wrote:
+> > 
+> > 
+> > * Testing Notes (UPDATED) *
+> > 
+> > - I've added support for RWF_WRITETHROUGH to fsx and fsstress in
+> >   xfstests and these patches survive fsx with integrity verification as
+> >   well as fsstress parallel stressing.
+> > - -g quick with blocks size == page size and blocksize < pagesize shows
+> >   no new regressions.
+> 
+> I am hitting a very strange error in generic/127. I deconstructed it in
+> to two commands that can reproduce the issue:
+> 
+> ```
+> $ dd if=/dev/zero of=/media/test/fsx_lite_nommap bs=262144 count=1
+> 
+> $ /root/home/xfstests/ltp/fsx -l 262144 -o 65536 -S 191110531 -N 100000 -L -R -W /media/test/fsx_lite_nommap
+> mapped writes DISABLED
+> Seed set to 191110531
+> main: filesystem does not support exchange range, disabling!
+> main: atomic writes need O_DIRECT (-Z), disabling!
+> short read: 0x0 bytes instead of 0x6c7f
+> LOG DUMP (1 total operations):
+> 1(  1 mod 256): READ     0x39381 thru 0x3ffff   (0x6c7f bytes)
+> Log of operations saved to "/media/test/fsx_lite_nommap.fsxops"; replay with --replay-ops
+> fsx: save_buffer: .fsxgood file too short... will save 0x0 bytes instead of 0x40000
+> : Operation not supported
+> Correct content saved for comparison
+> (maybe hexdump "/media/test/fsx_lite_nommap" vs "/media/test/fsx_lite_nommap.fsxgood")
+> ```
+> 
+> This is on a bs == ps (4k block size) xfs filesystem.
+> ```
+> $ xfs_info /media/test/
+> meta-data=/dev/nvme1n1           isize=512    agcount=4, agsize=2097152 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+> data     =                       bsize=4096   blocks=8388608, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=16384, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> ```
+> 
+> The same test passes if I pass `-G` to fsx parameters(disabling writethrough).
+> 
+> The error is coming when we do a read operation which feels very
+> strange. Could you run this in your setup and see if you can reproduce
+> them? I still do not know where the issue is coming from or it is
+> because of my test setup.
 
-On Thu, Apr 23, 2026 at 8:20=E2=80=AFAM Chuck Lever <cel@kernel.org> wrote:
->
-> From: Chuck Lever <chuck.lever@oracle.com>
->
-> Upper layers such as NFSD need a way to query whether a filesystem
-> handles filenames in a case-sensitive manner. Report CIFS/SMB case
-> handling behavior via the FS_XFLAG_CASEFOLD flag.
->
-> CIFS servers (typically Windows or Samba) are usually case-insensitive
-> but case-preserving, meaning they ignore case during lookups but store
-> filenames exactly as provided.
->
-> The implementation reports case sensitivity based on the nocase mount
-> option, which reflects whether the client expects the server to perform
-> case-insensitive comparisons. When nocase is set, the mount is reported
-> as case-insensitive.
->
-> The callback is registered in all three inode_operations structures
-> (directory, file, and symlink) to ensure consistent reporting across
-> all inode types.
->
-> Acked-by: Steve French <stfrench@microsoft.com>
-> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
-> ---
->  fs/smb/client/cifsfs.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->
-> diff --git a/fs/smb/client/cifsfs.c b/fs/smb/client/cifsfs.c
-> index 2025739f070a..9b70ffa3e01d 100644
-> --- a/fs/smb/client/cifsfs.c
-> +++ b/fs/smb/client/cifsfs.c
-> @@ -30,6 +30,7 @@
->  #include <linux/xattr.h>
->  #include <linux/mm.h>
->  #include <linux/key-type.h>
-> +#include <linux/fileattr.h>
->  #include <uapi/linux/magic.h>
->  #include <net/ipv6.h>
->  #include "cifsfs.h"
-> @@ -1199,6 +1200,22 @@ struct file_system_type smb3_fs_type =3D {
->  MODULE_ALIAS_FS("smb3");
->  MODULE_ALIAS("smb3");
->
-> +static int cifs_fileattr_get(struct dentry *dentry, struct file_kattr *f=
-a)
-> +{
-> +       struct cifs_sb_info *cifs_sb =3D CIFS_SB(dentry->d_sb);
-> +       struct cifs_tcon *tcon =3D cifs_sb_master_tcon(cifs_sb);
-> +
-> +       /*
-> +        * The nocase mount option installs case-insensitive dentry
-> +        * operations on this superblock. SMB preserves case on the
-> +        * wire and at rest, so the mount matches FS_XFLAG_CASEFOLD
-> +        * semantics: case-folded lookup, verbatim storage.
-> +        */
-> +       if (tcon->nocase)
-> +               fa->fsx_xflags |=3D FS_XFLAG_CASEFOLD;
-> +       return 0;
-> +}
-> +
->  const struct inode_operations cifs_dir_inode_ops =3D {
->         .create =3D cifs_create,
->         .atomic_open =3D cifs_atomic_open,
-> @@ -1217,6 +1234,7 @@ const struct inode_operations cifs_dir_inode_ops =
-=3D {
->         .listxattr =3D cifs_listxattr,
->         .get_acl =3D cifs_get_acl,
->         .set_acl =3D cifs_set_acl,
-> +       .fileattr_get =3D cifs_fileattr_get,
->  };
->
->  const struct inode_operations cifs_file_inode_ops =3D {
-> @@ -1227,6 +1245,7 @@ const struct inode_operations cifs_file_inode_ops =
-=3D {
->         .fiemap =3D cifs_fiemap,
->         .get_acl =3D cifs_get_acl,
->         .set_acl =3D cifs_set_acl,
-> +       .fileattr_get =3D cifs_fileattr_get,
->  };
->
->  const char *cifs_get_link(struct dentry *dentry, struct inode *inode,
-> @@ -1261,6 +1280,7 @@ const struct inode_operations cifs_symlink_inode_op=
-s =3D {
->         .setattr =3D cifs_setattr,
->         .permission =3D cifs_permission,
->         .listxattr =3D cifs_listxattr,
-> +       .fileattr_get =3D cifs_fileattr_get,
->  };
->
->  /*
->
+Hey Pankaj, I think the xfstests branch I shared might have been missing
+one small fix that can cause this issue. I've update the branch with the
+fix, can you give it a try:
+
+https://github.com/OjaswinM/xfstests/tree/iomap-buf-writethrough2
+
+Regards,
+Ojaswin
+
+> 
 > --
-> 2.53.0
->
->
-
-
---=20
-Thanks,
-
-Steve
+> Pankaj
