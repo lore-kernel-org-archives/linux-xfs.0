@@ -1,77 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C0324E4A1
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 05:20:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D15D2868A9;
+	Thu, 23 Apr 2026 05:49:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776921644; cv=none; b=WqGmnPxLpp++iFlu7YmhmTd68r2Quda17i4U1ifW8wzoKSVWRFhIDmoCy+ni9BGbHQInpKrT95bu/Dnod1NYb6oGczlHCKSm1G8bHdiEKnfEoNh77wFiXeYcbsfYWarqWNcuU2sBqzvd7C2/qR37bEg/GEGt/ADYWeFKUtCSR/I=
+	t=1776923353; cv=none; b=QcXR+GbeMuaAuqnL6HoBTIiBjX9iG+CasTCDWIgGsOu14vpAXsNK/m0pwmdu9GYXqm25t4n/khmn3g2sNm+KHOdp5kKxNp8AkuoBzc8bypQ8fbhEc9bb7JvlxAz3drjMdX4Rbra7rtWlmNomUy5qNlYu/Ir2n0TNSaYihKg+vMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776921644; c=relaxed/simple;
-	bh=veocLgDgNUGiPFVbn5rQLuikntKrMSAnajySTD3BziU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fmrbMvH1/4YmoReiMC7kNQfHJYg85Zp3SZaBbe4MSbXvguJ7sNByEjyKIQxCEG9hYvasmN3U+q6yNbkA3YyDuGRalTNDxsMEvrqGciPj3YctOO1Vnpom1rJbLp/vr8pXB3r0EixTctgmFZG7bW6od6hxwGQlh9nKFKRjtc1BB24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=urGbQ1L1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1776923353; c=relaxed/simple;
+	bh=KDxzkvM08iZ1n+znZEcdqWNiL8ZgPsUKuUA2rGBREWw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lNlHFz3YUfX0w9GkM+NeZyFijxj7bZ/OViYEQkIzum0r0v3KkEysx8YTAv3Slzh8p4KWRJU5afmSV8zKYmcHut1YXOjgwpjrhWDVuxyx8/gzZ1hV7XRYVnRliK0O291TNvvk3QBVrp8hY/uxqoXAxfjA4zdGSM6WcWOpHe+3gB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Pyl35UR7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="urGbQ1L1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88F31C4AF0B
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 05:20:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776921644;
-	bh=veocLgDgNUGiPFVbn5rQLuikntKrMSAnajySTD3BziU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=urGbQ1L1FtVrPVuHFKu2wUW+C2JojDLhdtfSXzCLMl19rFN/1lbaVeU16896z7aFS
-	 khlEHBXkB92Vh2i6hEkabJ7n5ttTeR/OTGs4duBc8mpLW9jADLeYppFgz+nLBoG/LF
-	 DCRy5TPREr7PVyN8mu1+VhsS9+pRTt9kYlPc2wlxeH+eIMRoQg/nnOq9YXau8gZwZh
-	 2k3YndH/UUpDooAKRmZ1dnIY4jWtf1kuAi6m+k5lFWYytQdfkkqmxVmEGoQ9xIY1IB
-	 tB1SJ1tf89cyhZlbG2Nhi4Of/Bq3E2JXhNMTDYRWvyFJvP5L9uiFalUUb8Wl5WhD8b
-	 DUfzj+TBl3WNA==
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6714f678bdaso10290299a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Apr 2026 22:20:44 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ/Ep2ENPd8ZJE8bK0VaTlzoX0kJERag1ojSPIU/ocV0UTNKKdVtOv3Z/cj0EdItf7yPcHvBfavnkpc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yztzwq5FqLksjdNUIcDstQY+E42+bHgjTGNrbrfilJm/WdIrtcq
-	/Li2IZQNi1qF7EEWW2sCS+nnxBM5FS8xE8ca26rsOnr7Ifu6REYwzrWSGnUAEgaYPPxMacBiJi/
-	BvZvIhF3sBkuHHj+5R9FcJeqZo0W9mX8=
-X-Received: by 2002:a05:6402:2b98:b0:672:a20b:3781 with SMTP id
- 4fb4d7f45d1cf-672bfc12952mr10871100a12.0.1776921642902; Wed, 22 Apr 2026
- 22:20:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pyl35UR7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=mH1ddnuN59lMkrFuCSAsacD4xLHTN8u5J5HYKL1a30Y=; b=Pyl35UR7IThUYMTHIm+a/cWSYX
+	0HrBz+M3TGEKzSWdKkcQsDCPbJSKoGmd2h16jwadfiZiHdmi7R9VIimlWhAq72JKHtzWSxYnHCljN
+	BEJa5uH8cKX03Kcxzln18lRfQ0/0U2SgBqqGIku3huprWeijw848UTViTVs/t9x15PFxl1o5x0grr
+	wRKK5FNDrjl3ovm5LenRwUJ96hspfUBY7IlNFCcCqt3Kygy87NU3zo4dMCg6mPBwXtee15tTX42eq
+	dgd7Bh5XsdUMTqQ9V0A99cI9pXFBD47noKmZxggGcDoFth2bQAlLMZEF1Q3aw0JTcj1gTOBJyHXXm
+	Ek0YrS2w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1wFmw0-0000000B5Ai-2394;
+	Thu, 23 Apr 2026 05:49:08 +0000
+Date: Wed, 22 Apr 2026 22:49:08 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, hyc.lee@gmail.com,
+	linux-fsdevel@vger.kernel.org,
+	Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	Gao Xiang <xiang@kernel.org>
+Subject: Re: [PATCH] ntfs: use page allocation for resident attribute inline
+ data
+Message-ID: <aemy1Pyl2W7JYKVl@infradead.org>
+References: <20260422104627.8193-1-linkinjeon@kernel.org>
+ <aejFTDGOnDbQ3OJK@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260422104627.8193-1-linkinjeon@kernel.org> <aejFTDGOnDbQ3OJK@casper.infradead.org>
- <CAKYAXd-RQrrpXH0R_Y87r53h0-KCDGVOtm5RaqTGETMEq-LYpg@mail.gmail.com>
- <20260422152832.GR7727@frogsfrogsfrogs> <bd33abf2-5024-4a1d-bb75-a0359d64da1b@linux.alibaba.com>
-In-Reply-To: <bd33abf2-5024-4a1d-bb75-a0359d64da1b@linux.alibaba.com>
-From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Thu, 23 Apr 2026 14:20:30 +0900
-X-Gmail-Original-Message-ID: <CAKYAXd8MioYXt9o6md2TaKrg4Y9KXycoDXZ5d1c2AYfbz0N-OQ@mail.gmail.com>
-X-Gm-Features: AQROBzDeQv8yh636X0aPpYEp31jfK00vlKvcX1GZPlNy2s3IjY2PSQaco_jqu7A
-Message-ID: <CAKYAXd8MioYXt9o6md2TaKrg4Y9KXycoDXZ5d1c2AYfbz0N-OQ@mail.gmail.com>
-Subject: Re: [PATCH] ntfs: use page allocation for resident attribute inline data
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Matthew Wilcox <willy@infradead.org>, hyc.lee@gmail.com, 
-	linux-fsdevel@vger.kernel.org, Christian Brauner <brauner@kernel.org>, 
-	linux-xfs@vger.kernel.org, Gao Xiang <xiang@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aejFTDGOnDbQ3OJK@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-> >
-> > I think the check is wrong.  We rely on the filesystem to point
-> > iomap::inline_data to kernel memory that is at least iomap::length bytes
-> > in size.  If that crosses a PAGE_SIZE boundary that's fine, so long as
-> > the caller actually mapped that much memory.  IOWs, if you have an
-> > iomap:
-> >
-> > {pos = 0, inline_data = 0xB0000, length = 32768, ...}
-> >
-> > then we trust that you really did map all of the MDA text mode memory
-> > and that memcpy'ing 100 bytes to pos 4090 is ok.
-> >
-> > (Perhaps this is a relic of the bs<=ps days?)
->
-> Anyway, as said before, I think that particular assertion
-> can be removed too.
-Okay, I will submit the patch for this.
-Thanks!
+On Wed, Apr 22, 2026 at 01:55:40PM +0100, Matthew Wilcox wrote:
+> On Wed, Apr 22, 2026 at 07:46:27PM +0900, Namjae Jeon wrote:
+> > The current kmemdup() based allocation for IOMAP_INLINE can result in
+> > inline_data pointer having a non-zero page offset. This causes
+> > iomap_inline_data_valid() to fail the check:
+> > 
+> >     iomap->length <= PAGE_SIZE - offset_in_page(iomap->inline_data)
+> > 
+> > and triggers the kernel BUG at fs/iomap/buffered-io.c:1061.
+> 
+> Hang on, hang on, hang on.
+> 
+> First, maybe this check is too strict.  I'm sure it's true for EROFS,
+> but I don't see why it should be true for everybody.  Perhaps we should
+> delete this check or relax it?
+
+I think the current check should just go.  ->iomap_inline_data is
+treated as a normal linear address everywhere, so any offset in page
+check is weird.
+
+> Second, why are you calling kmemdup() to begin with?  This seems
+> entirely pointless; the iomap code is going to call memcpy() on it.
+> You're supposed to just be pointing into your data structures.
+
+Yes.
+
