@@ -1,122 +1,142 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F24D37B010;
-	Thu, 23 Apr 2026 10:13:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B0B3E9F8C;
+	Thu, 23 Apr 2026 11:53:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776939205; cv=none; b=Rwqq/RDjLHiTkYglC2rVYnw8CEC4KdWWH6v1TU+MtVsH0enCVa0TUd8sUhgZb6ktrNAogBu1Ike095PpS1msdZw9AAyq84NnpbtFVT0qzg5jYyyoBgxZgsX9ms8iCggxobbUbaWg+569pLLnMKQxekeg2xvph/ZZ5BVN57Oz0Vg=
+	t=1776945202; cv=none; b=RVg4D6gVlKzxEU5SqvGjCIynreygk98gykV7WR/RsBwjd8xD1DJeAzrEoQe175ljCphi7mEXlnDQxxYHR+pGmdTqJrCuGvLpUTS4BzzTI3RGpqEDs3lahb8Vf+E4OEDod5cRt8Gneae2Zpl+o9XfMF4UMYrKpbKiaPouj6bQoYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776939205; c=relaxed/simple;
-	bh=K4Lk1yd4zNxDyY4nq1bvT5b+mRYFblpcaudogec2wlg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W8vzUs3GMgREZ3s0FJSJ/g2g/rhF63aEUjJihn330ugPl15rXSaGuGXxu17bz75C1SkCAz6h3qAK1m28fGDtYOfr66RCsrCfVPdwwbPnAyd39snpd+DRHyRw7nITdvkqkBdGKwe4NTKt957UeP1OHZ215GgKx5OWfHjUbyiLDqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=WCZmRDi0; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1776945202; c=relaxed/simple;
+	bh=cHE9hrag1OMIex+WXfpjDqBpsMmIUcQJHMPd4Y7yd1s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YkH0lrMQ/TNGycozH0QwASwP/85ogKDrj9EEWkdgogtKkbHY5eqSOKbT5+HS1806WbjDXGOlhMXYt2Yx3bA8S8n5iXDAaDEkKv+AKd7vKmtB7YIMfa7H6CjE19asJvkVdyCqbiTqzQEstj2hkFfzB9O5rM1Xh6ZsRhOaVtsdMP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R6p905u8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="WCZmRDi0"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63N72hrQ3514991;
-	Thu, 23 Apr 2026 10:13:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=dlMyu09z/j1n9Md0vd7d/g/7lLJhke
-	D2jEsYTzV9u3E=; b=WCZmRDi0ZWi0hocRIo/9zaCYREzzpmcm3qyAnfZoCp+s7G
-	2FlPC+bCu3bXVVnx30SxnciE8FpnVmlfGfMZqVLC8e3YCfOSrBDUB619DaL/jWt5
-	LPHFuXRm6rchtndKwNV3r9rqus+BvXBy8CL/L/V8OS6HtEwYHyekbP2w/Wle9I8b
-	gm72L0aoiK30TRsH9s/MVd6AX9E1rBd4Ezr1ZfDlL8baR69cbBzHZsZLeLEj4VmF
-	UCAghll2sx7o3lSk1T13V9/HWfHts+djTsLmVs+H2XLEW4wCLSz0WHMbPxD4CTSW
-	3mLgtQeUuuM9TZcPebJ8ghpczdI2FPxtRXgrs3rA==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dpeu283dw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Apr 2026 10:12:59 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63NA5Gdc025791;
-	Thu, 23 Apr 2026 10:12:58 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dpjkxx4pk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Apr 2026 10:12:58 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63NACvI151970556
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 23 Apr 2026 10:12:57 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1260E2006A;
-	Thu, 23 Apr 2026 10:12:57 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6C6872005A;
-	Thu, 23 Apr 2026 10:12:53 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.123.13.2])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 23 Apr 2026 10:12:53 +0000 (GMT)
-Date: Thu, 23 Apr 2026 15:42:50 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
-        ritesh.list@gmail.com, jack@suse.cz,
-        Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
-        p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 1/5] mm: Refactor folio_clear_dirty_for_io()
-Message-ID: <aenwolyKbNkEUoNA@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
- <a35d5d65953cd9bdead0843d09c4cfc9d1fd65aa.1775658795.git.ojaswin@linux.ibm.com>
- <20260415061423.GA27588@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6p905u8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20254C2BCB5;
+	Thu, 23 Apr 2026 11:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776945202;
+	bh=cHE9hrag1OMIex+WXfpjDqBpsMmIUcQJHMPd4Y7yd1s=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=R6p905u8w5riLWLBL7tRdD5S09cDEbJnPwWB5RVXAG2eZ8l9DVcz9BdD1snxlZ2Zl
+	 DQHKLZweSXptmoepemPcv3MQMKXrko/qLSf8d9gekZ9FC9npj1Rl5+g83VEnO+lLev
+	 xBFP7nCswuXz722eHK8fJ8BLo5Gk/F0+fuLGkDdxYxjQkDltUnC+j+R3mwxhrUbqzi
+	 NJO+IaFgHoRmOtUENV0fUO142ajvIUPYaRG9OYAFDVcHCovlg6DI0cyER+NKMDRgNh
+	 vxODO9xb+7N3kQKZvCTki45OQYoSORg/oovwJEvPkMCBEsAvK4tl5B50itIMRurf/p
+	 QTWH9qc+XS8KQ==
+From: Christian Brauner <brauner@kernel.org>
+To: Chuck Lever <chuck.lever@oracle.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-api@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	hirofumi@mail.parknet.co.jp,
+	linkinjeon@kernel.org,
+	sj1557.seo@samsung.com,
+	yuezhang.mo@sony.com,
+	almaz.alexandrovich@paragon-software.com,
+	slava@dubeyko.com,
+	glaubitz@physik.fu-berlin.de,
+	frank.li@vivo.com,
+	tytso@mit.edu,
+	adilger.kernel@dilger.ca,
+	cem@kernel.org,
+	sfrench@samba.org,
+	pc@manguebit.org,
+	ronniesahlberg@gmail.com,
+	sprasad@microsoft.com,
+	trondmy@kernel.org,
+	anna@kernel.org,
+	jaegeuk@kernel.org,
+	chao@kernel.org,
+	hansg@kernel.org,
+	senozhatsky@chromium.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v9 00/17] Exposing case folding behavior
+Date: Thu, 23 Apr 2026 13:52:39 +0200
+Message-ID: <20260423-notorisch-marmorieren-3b1376711a8f@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260422-case-sensitivity-v9-0-be023cc070e2@oracle.com>
+References: <20260422-case-sensitivity-v9-0-be023cc070e2@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260415061423.GA27588@lst.de>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDA5NSBTYWx0ZWRfX/CHxngqa649t
- j9M2qpy573q8FzPAryA9nKtjALTKA1XqZxu+ypVGk6buxzA02ZNfKV9gU8LIuIe6mJClgHpnkVw
- MJQkSifxA23ZzOAAasAuvhvDzfRRnQXWmmscmeI0pgwG2P53w1DWFDR1r33LDW3bAhbulxqlPbu
- 2neJ/qORAgkLz0b0QujvpQL+CGcuQEo2DLTpqabmCeFotFtYG8oRWQbnVWv0p6x0RomZp2b890H
- XYIQCITKaw2I84n6a4WdqNmrw7zKFRjARTfDY73aJIIkGxJgWCf9KUhhNbEVoTBg99hsW+cX/bd
- Tjj6p/ncYdzeJ5yiPUb9c0rJGHyyEWG84BaCP1qt47aEEQb3KiUSI23fIELXmLFjVeF4flyjLwG
- 9TiQfevMFEe2FfijYZ3A+bkH7xg85LVfUi0vWwzXA23p/vch4Eurb2AlZDOZRCpVAnlTlrGxdGV
- rCQgPJIuZ3ZOT6bRFLA==
-X-Proofpoint-ORIG-GUID: XTTshxLL2roUixq6z9yt4ZsXIEIoXVk7
-X-Proofpoint-GUID: U-rVCM7FmNZ9J077xKzi80K_3zE9V6TE
-X-Authority-Analysis: v=2.4 cv=XMUAjwhE c=1 sm=1 tr=0 ts=69e9f0ac cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=kj9zAlcOel0A:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=PBd0Sfe-wFWcs0skatUA:9
- a=CjuIK1q_8ugA:10 a=ZXulRonScM0A:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-23_02,2026-04-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 clxscore=1015 priorityscore=1501 impostorscore=0 bulkscore=0
- spamscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604230095
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3216; i=brauner@kernel.org; h=from:subject:message-id; bh=cHE9hrag1OMIex+WXfpjDqBpsMmIUcQJHMPd4Y7yd1s=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS+4pDrrGXLlji/IJ4rYraNoNkSc4YNzkphLnvaDBjuH ZDgN+7oKGVhEONikBVTZHFoNwmXW85TsdkoUwNmDisTyBAGLk4BmIiFB8M/i54I8d9+l7+JLPRe ZprEUqdyJzW9MtJsd1YHj5vI9ksXGH6zpfMemLRMIbdowdo3hucvvTqjdGrTptvGfolrD63muVD ACAA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 15, 2026 at 08:14:23AM +0200, Christoph Hellwig wrote:
-> On Thu, Apr 09, 2026 at 12:15:42AM +0530, Ojaswin Mujoo wrote:
-> > @@ -2847,8 +2847,11 @@ EXPORT_SYMBOL(__folio_cancel_dirty);
-> >   *
-> >   * This incoherency between the folio's dirty flag and xarray tag is
-> >   * unfortunate, but it only exists while the folio is locked.
-> > + *
-> > + * For some cases we might not want to do mkclean, eg, if we've already taken
-> > + * care of it, hence pass the should_mkclean flag to indicate if its needed.
-> >   */
+On Wed, 22 Apr 2026 19:29:54 -0400, Chuck Lever wrote:
+> Following on from
 > 
-> The kerneldoc should move down to the exported version. 
+> https://lore.kernel.org/linux-nfs/20251021-zypressen-bazillus-545a44af57fd@brauner/T/#m0ba197d75b7921d994cf284f3cef3a62abb11aaa
+> 
+> I'm attempting to implement enough support in the Linux VFS to
+> enable file services like NFSD and ksmbd (and user space
+> equivalents) to provide the actual status of case folding support
+> in local file systems. The default behavior for local file systems
+> not explicitly supported in this series is to reflect the usual
+> POSIX behaviors:
+> 
+> [...]
 
-Hey Christoph, sure thanks I'll take care of it in next version.
+Applied to the vfs-7.2.casefold branch of the vfs/vfs.git tree.
+Patches in the vfs-7.2.casefold branch should appear in linux-next soon.
 
-Regards,
-ojaswin
-> 
-> 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: master
+
+[01/17] fs: Move file_kattr initialization to callers
+        https://git.kernel.org/vfs/vfs/c/a46401c7dc2f
+[02/17] fs: Add case sensitivity flags to file_kattr
+        https://git.kernel.org/vfs/vfs/c/1dd697879cf2
+[03/17] fat: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/2b124bb86cdb
+[04/17] exfat: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/9b8b66549c8e
+[05/17] ntfs3: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/7d0fbb53b0c2
+[06/17] hfs: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/024b4a69abaf
+[07/17] hfsplus: Report case sensitivity in fileattr_get
+        https://git.kernel.org/vfs/vfs/c/22a319bfe8b8
+[08/17] ext4: Report case sensitivity in fileattr_get
+        https://git.kernel.org/vfs/vfs/c/75fd84cb0922
+[09/17] xfs: Report case sensitivity in fileattr_get
+        https://git.kernel.org/vfs/vfs/c/29323822bece
+[10/17] cifs: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/4444c82e69a6
+[11/17] nfs: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/6f3f50885bd9
+[12/17] f2fs: Add case sensitivity reporting to fileattr_get
+        https://git.kernel.org/vfs/vfs/c/e8d671306a8f
+[13/17] vboxsf: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/f5e334b94179
+[14/17] isofs: Implement fileattr_get for case sensitivity
+        https://git.kernel.org/vfs/vfs/c/764609f76826
+[15/17] nfsd: Report export case-folding via NFSv3 PATHCONF
+        https://git.kernel.org/vfs/vfs/c/06726ac88bb5
+[16/17] nfsd: Implement NFSv4 FATTR4_CASE_INSENSITIVE and FATTR4_CASE_PRESERVING
+        https://git.kernel.org/vfs/vfs/c/d129f0419eb3
+[17/17] ksmbd: Report filesystem case sensitivity via FS_ATTRIBUTE_INFORMATION
+        https://git.kernel.org/vfs/vfs/c/8179d08606e8
