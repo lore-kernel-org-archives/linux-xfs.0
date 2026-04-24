@@ -1,124 +1,91 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E916637C0E2;
-	Thu, 23 Apr 2026 23:54:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E53E39FD9
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2026 00:12:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776988486; cv=none; b=kjGPu0dhWSmhwSXBGAEWLGbcH1ABKdQ8D0aDgV+b7ROU3dn03qVqFc6GRVneYrY+L9C+eoXpo4KEN12eNPhpcpaNXHEzalP894kWhz8hjEa2+uSqT/6/POYH3e3PYDDujQbtNVbLek/tBS8BANMWoFBbYchOPzcVo94AKX9+fCI=
+	t=1776989538; cv=none; b=InGnE09E7no0biuls2sAEW8I1ThZeioVg3ClRVn0T/SmRZWP4RPQtXsusOMmmnGTJre0Ty5Mw6g9QQnK7J67ZlMaDVNV3eEdr4qwtxdxaJoFX9+q38wvlU4vByLENdwd9vpcjXDRGGVaEdrsGlI5AKTd0BpfGvukCHonnce9lVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776988486; c=relaxed/simple;
-	bh=nagBPIpdRQa10G3bzPDgD2eBKZdrwZkzTPtDAzYbtOQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LBqj3RO70se2xDb7RCI18XcGNGA28XsiljIYjk3dLhTMgmpqdxqxQgl8ZkgwwESlX09lWA/EDqPwfIRHfnb1oOixo09wGiT9UQcYqFHpVBBLEskGRc3RvRPu+BxSr4RAmwoY7Ht/4otqveEvf2VTYK4NHO20iKyRyjXSPL44LNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BqBqBWtJ; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1776989538; c=relaxed/simple;
+	bh=XUklBuxQ2R8t0MQwbgJOYOExxkhn4Qal0gehME6MLIg=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=Ix2oaXHeJ9ZuAz7oOFZv/LK8vGd7dyaqcSVCNP1lCI/S24Rf9oUq18cXABf3wEGnewfd8NN4mE//Ucasinhyc6YgI8ogo1hlaOXRpIYmDYS3eyniIKirIUt208g3rH37wpgzz+90p6MFRj0ovOO4aMFBYSAwwywZREiqvtfvkV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=We0SraTw; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BqBqBWtJ"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63NILGAX3229030;
-	Thu, 23 Apr 2026 23:54:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=NyZUs9RcJWsPCXqiAFbbwt3NY3+KB5
-	ydyk2N2aDclQU=; b=BqBqBWtJ51aKRs1v1ejXoCLyzZgFsyCqN2peRL7cjd/J0c
-	rxnuxZgILW8vlzeRiigp1Y9kgbQhmcInD5fWdDx+43KAiXj1KIJzPE4OoEL6U3eO
-	b7Qqj9pOacGXuouO/Wy2hrH6I7L0sYdmMPUwr8KXI8KSTAipYBorE0u0NQg4149W
-	4x+HL7LGhnBybCjBt4UHM+Zd/cwG7INdnkjPHF9T90c4QzJn0YG/fpfEp5F8HceE
-	XDpjly+wE4fqyG4UlPs502Ax72WLIgeVsMpJDaJcJZXQxhsov99lT3X3HmYJfHLp
-	e8cMe7s2g1918VKiXuokZjo5G+gmF3EmGWivI/mQ==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dpeu2b9cm-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Apr 2026 23:54:09 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63NNoWoH006542;
-	Thu, 23 Apr 2026 23:54:08 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dpjkyrpxx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 Apr 2026 23:54:07 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63NNs54142533294
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 23 Apr 2026 23:54:06 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E2F4120043;
-	Thu, 23 Apr 2026 23:54:05 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C0A0220040;
-	Thu, 23 Apr 2026 23:53:59 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.219.54])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 23 Apr 2026 23:53:59 +0000 (GMT)
-Date: Fri, 24 Apr 2026 05:23:56 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
-        hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
-        Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
-        p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap &
- xfs
-Message-ID: <aeqxFKaw1uOk1GuZ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
- <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="We0SraTw"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35da01fc0baso4565107a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 17:12:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776989537; x=1777594337; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=/FcUz0voUt4L6VgJUyW4964a1uPVYvz+VsQOTuJZDE4=;
+        b=We0SraTwXYHH3GXxeiHH/l8YfN5e1uFRVSTwGSvLC8PYd1/OM1yvtlve9VS7KbO4Ps
+         6NZmxBbH52KaxjUrGwfYv7WQ1vSJa90/kzYuEH4OgDVlFyyEqMJp4y4F0YtphkwBvWd4
+         iS+5jUnWwbrSxwunc4YPYXgc8jEX7sCz9e8qnEJgwYQyUjUM6flU77X3pAbaNWtyxJ/Y
+         iufIcA4GPUn0W3UgnkzdJSiICbysD6Yza6G2D95WSp+Z0L5YtBi5VsEk+Zz5R7GMiy/G
+         6gDwCMS3bTlN7DM48IUUr6sciI/KbF9ua6ZBzdJA0MrwFZzwofD2oMi0I9phDS+Jyjll
+         gcJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776989537; x=1777594337;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/FcUz0voUt4L6VgJUyW4964a1uPVYvz+VsQOTuJZDE4=;
+        b=LfZhFKvApYZ89a7DLxD58wcp+VwiwScqE3oNKlEVGm20UTdLg8OU/fZ7o7NvQVUfwB
+         /1QYvWqta0DGJhEph+eiPGV6dFFVpGoubtJU0qOkia7IjUJgm+Ix9jRavXLtW/PxW5kR
+         KJtuEfWuLXcubJuXqNqMgDX3A5CA7Xp+3jwTjMSlrCBhr3PW7PLVV+zlphEGA2ZSBsBX
+         V0FCF1pUlJ4chx01LmSw6qlXy3PgcZ+jRVezcAtYzAiRnsorod9ha8ZHnVNf1ANtQz6q
+         /kdD4GrROsHGTa/8BxUwpfMOV6lSTWgTJ9gma0NMHdIU59+GZDpnDpM9EbqK/xFkq1KZ
+         uyHQ==
+X-Gm-Message-State: AOJu0YwGQMAjiQ8guwfpShmBZx8ApPjZ3UXu7cLVlVI2WcrqqSHsijLz
+	cY+ILl8UgkINxDmxSpSUH9zCC0TXriJ5EGUjCs+IxzY9FlH+q7vOzz5t
+X-Gm-Gg: AeBDietpnLQ5hqYyrIl/hLwfeTYrYg+3ssrOODHGhHnT6vAaXd95qRjqzymfsHBY/4C
+	3hvn0MiGjxjCDFJSXD3DMTOiZXPIOIl8Pz5e4uidC203cyT9mkLPG9C1BIAEPtVfs8lzyyIDtyK
+	n/IMPNfY11ZMXByxKVQceMOJWXK/+jBIXH9r1GTNHdCJa2Z1AeKCLzLtcF3VD07w76jO3+uf9cG
+	tsFqBh18QrGKkjVfTzyi9AD/LnRjVJUg5SupoZkww3uEZgGthalh7Simo8IodgT92WQ174AFuLB
+	x6fdXG/hfqbL2JgrUaEQJgS5G/yvykBLkpbwYA7EZVMd63hS4ojWYSLRCBR0m0IGBiv822Q7rJi
+	jPPP+6M8Am2QzP9iYSOitX7KB90RoKCXQOaq+HGmDUzMvjDi5u72gRe68F2ipIMbmBnDVyMMEE3
+	90Kzp4tS8YD/AXbPF41a2gj9VnNHRl4f31
+X-Received: by 2002:a17:903:1ac6:b0:2b0:c90f:44b2 with SMTP id d9443c01a7336-2b5f9e8252bmr308135805ad.12.1776989536590;
+        Thu, 23 Apr 2026 17:12:16 -0700 (PDT)
+Received: from pve-server ([49.205.216.49])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fa9ff71esm213485585ad.8.2026.04.23.17.12.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Apr 2026 17:12:15 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>, Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu, p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap & xfs
+In-Reply-To: <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
+Date: Fri, 24 Apr 2026 05:39:23 +0530
+Message-ID: <340lte18.ritesh.list@gmail.com>
+References: <cover.1775658795.git.ojaswin@linux.ibm.com> <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: -nl9_K83Kzn9u7skxJWMWCIcGNgHNF2y
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDIzMiBTYWx0ZWRfX8PqZYRV+bedE
- hsO8a0m/D+pucfImoyw014nW7oP3jzKYYaf/TJtc3eSY/OQDD2dHyzcMinGRcTvyx4AI/HscdrA
- p6JdEScmepGWWYATYuSuYP5oAtI8JCrZljnfhdEr1SIR+24Ob+ukLdx467L3sCAU5A1avxqqahM
- CIQTvlp8CHdZQz2r+Mpf9151cRifjBS19KhBBZQ8y3kuQelXKdcjebdPlU6+wJrIUZ2b7nPZid3
- ykimUKZl+JP8dwj+rJhitIMXjgDWR9OChwNdNraC9nJn5ssDS463sEyEs9BlBGspEKmLLJdeXQ3
- nNPlZfjYoGhblrIEJozMXrBt11OOVreHNqOPudQkkODpYFeFNwhp2Pf1kDYtZZ9QHzErdUIP7Df
- 1tlNGeRk8vpIBTQ7A5tIMmEviO3GjF/QASiwui4MiNMan2zREeDVQSFV8ZhxSXMzQwH5OaU3v37
- kV0SqKEpDdb/zb9x3mw==
-X-Authority-Analysis: v=2.4 cv=C8LZDwP+ c=1 sm=1 tr=0 ts=69eab121 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=kj9zAlcOel0A:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=NEAV23lmAAAA:8
- a=rsA8cc2tDGwubhWhQn0A:9 a=CjuIK1q_8ugA:10
-X-Proofpoint-ORIG-GUID: id_LFKqk8OLTXWmlKq-3TLgzfsarewvz
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-23_03,2026-04-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 suspectscore=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 clxscore=1015 bulkscore=0 impostorscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2604230232
 
-On Thu, Apr 23, 2026 at 02:25:43PM +0200, Pankaj Raghav (Samsung) wrote:
-> > 
-> > 
-> > * Testing Notes (UPDATED) *
-> > 
-> > - I've added support for RWF_WRITETHROUGH to fsx and fsstress in
-> >   xfstests and these patches survive fsx with integrity verification as
-> >   well as fsstress parallel stressing.
-> > - -g quick with blocks size == page size and blocksize < pagesize shows
-> >   no new regressions.
-> 
+"Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev> writes:
+
+>> 
+>> 
+>> * Testing Notes (UPDATED) *
+>> 
+>> - I've added support for RWF_WRITETHROUGH to fsx and fsstress in
+>>   xfstests and these patches survive fsx with integrity verification as
+>>   well as fsstress parallel stressing.
+>> - -g quick with blocks size == page size and blocksize < pagesize shows
+>>   no new regressions.
+>
 > I am hitting a very strange error in generic/127. I deconstructed it in
 > to two commands that can reproduce the issue:
-> 
+>
 > ```
 > $ dd if=/dev/zero of=/media/test/fsx_lite_nommap bs=262144 count=1
-> 
+>
 > $ /root/home/xfstests/ltp/fsx -l 262144 -o 65536 -S 191110531 -N 100000 -L -R -W /media/test/fsx_lite_nommap
 > mapped writes DISABLED
 > Seed set to 191110531
@@ -133,7 +100,32 @@ On Thu, Apr 23, 2026 at 02:25:43PM +0200, Pankaj Raghav (Samsung) wrote:
 > Correct content saved for comparison
 > (maybe hexdump "/media/test/fsx_lite_nommap" vs "/media/test/fsx_lite_nommap.fsxgood")
 > ```
-> 
+
+
+This looks like fsx has a problem where while testing writethrough
+support we ftruncate the file size to 0 instead of file_size.
+
+@Ojaswin,
+
+I think we should have it like this I guess.
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index c9901f65..3b11b1b5 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -2095,7 +2095,7 @@ test_writethrough_io(void)
+                return 0;
+        }
+
+-       if (ftruncate(fd, 0) != 0) {
++       if (!lite && ftruncate(fd, file_size) != 0) {
+                perror("test_writethrough_io: failed to ftruncate to 0\n");
+                exit(132);
+        }
+
+-ritesh
+
+>
 > This is on a bs == ps (4k block size) xfs filesystem.
 > ```
 > $ xfs_info /media/test/
@@ -148,23 +140,13 @@ On Thu, Apr 23, 2026 at 02:25:43PM +0200, Pankaj Raghav (Samsung) wrote:
 >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
 > realtime =none                   extsz=4096   blocks=0, rtextents=0
 > ```
-> 
+>
 > The same test passes if I pass `-G` to fsx parameters(disabling writethrough).
-> 
+>
 > The error is coming when we do a read operation which feels very
 > strange. Could you run this in your setup and see if you can reproduce
 > them? I still do not know where the issue is coming from or it is
 > because of my test setup.
-
-Hey Pankaj, I think the xfstests branch I shared might have been missing
-one small fix that can cause this issue. I've update the branch with the
-fix, can you give it a try:
-
-https://github.com/OjaswinM/xfstests/tree/iomap-buf-writethrough2
-
-Regards,
-Ojaswin
-
-> 
+>
 > --
 > Pankaj
