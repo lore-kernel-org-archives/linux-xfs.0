@@ -1,116 +1,147 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E53E39FD9
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2026 00:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9CFF12E1E9
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2026 00:20:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776989538; cv=none; b=InGnE09E7no0biuls2sAEW8I1ThZeioVg3ClRVn0T/SmRZWP4RPQtXsusOMmmnGTJre0Ty5Mw6g9QQnK7J67ZlMaDVNV3eEdr4qwtxdxaJoFX9+q38wvlU4vByLENdwd9vpcjXDRGGVaEdrsGlI5AKTd0BpfGvukCHonnce9lVM=
+	t=1776990054; cv=none; b=Dea6c+nMTZLBkB1S0r67JES9UAQZ1utAA/XyLmQVOSbmRArDQk4MGL+HSCg1yHdeaOot2xqe38V1cuDNaP6A0nu7GjQjpmqHu9gqqyLA8WyL6m1OjFsyhKxrPjKrmhOwTIpS99gGhSdapBfcqMzldtlIn3CZI14H/p6F6PhroAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776989538; c=relaxed/simple;
-	bh=XUklBuxQ2R8t0MQwbgJOYOExxkhn4Qal0gehME6MLIg=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=Ix2oaXHeJ9ZuAz7oOFZv/LK8vGd7dyaqcSVCNP1lCI/S24Rf9oUq18cXABf3wEGnewfd8NN4mE//Ucasinhyc6YgI8ogo1hlaOXRpIYmDYS3eyniIKirIUt208g3rH37wpgzz+90p6MFRj0ovOO4aMFBYSAwwywZREiqvtfvkV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=We0SraTw; arc=none smtp.client-ip=209.85.216.52
+	s=arc-20240116; t=1776990054; c=relaxed/simple;
+	bh=ZsvTnr8rmneCg+vcDnTWrnIkur6DWp7wqWbXFJZanb0=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=W6qOCIENaT+a6/COSc6fVoPMVD2afTf+Yi4Y1W2u8DOaMsNlu/3NVJN3GU3qUZLHhL5iLeRrsoy+nuqYDtAIvzC6y828tf3YblJkTFK5FyOiRr9BUO+aWTlwkV93PM52q9mChaHeYZ6FZrLde88l+4c6IHwtno/GdMhvTtQxjM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OLPw/nTE; arc=none smtp.client-ip=209.85.215.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="We0SraTw"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35da01fc0baso4565107a91.2
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 17:12:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OLPw/nTE"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c6e2355739dso2937953a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 17:20:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776989537; x=1777594337; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1776990051; x=1777594851; darn=vger.kernel.org;
         h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=/FcUz0voUt4L6VgJUyW4964a1uPVYvz+VsQOTuJZDE4=;
-        b=We0SraTwXYHH3GXxeiHH/l8YfN5e1uFRVSTwGSvLC8PYd1/OM1yvtlve9VS7KbO4Ps
-         6NZmxBbH52KaxjUrGwfYv7WQ1vSJa90/kzYuEH4OgDVlFyyEqMJp4y4F0YtphkwBvWd4
-         iS+5jUnWwbrSxwunc4YPYXgc8jEX7sCz9e8qnEJgwYQyUjUM6flU77X3pAbaNWtyxJ/Y
-         iufIcA4GPUn0W3UgnkzdJSiICbysD6Yza6G2D95WSp+Z0L5YtBi5VsEk+Zz5R7GMiy/G
-         6gDwCMS3bTlN7DM48IUUr6sciI/KbF9ua6ZBzdJA0MrwFZzwofD2oMi0I9phDS+Jyjll
-         gcJw==
+        bh=9prmMr/fIcHvT4Kdkrzhrvvq7KnrqsNR3KWHLAQJlTo=;
+        b=OLPw/nTEc4VV/fGl72Jh3oyWioMlTarv34Z7UVF5gv52vAnYgGs8KJ5jcPmq6Ukp6X
+         UiT/zy0J5ThhcHsSty1uGkPVKZZZ1lYQhP4fMZMunzwrkXkeg86EX0/TI24rpmlb8ugY
+         ps/2DlMVBHif1iTKhihZ3VGWgWNodOWSR9CZt8EDdXO9bq5+5lSsKYMATPL+RgnkaXLu
+         a9djnWakBlRJcxaswuZGzATNYw4pMZd+vnuULnRSZe3H+C49O3c3eHNNhJVAKAH7qmJA
+         Qi78eYu/E2GIm2lJAUAzE0ig4o+VFKQ00taRTNJBZoyFIkVVrNfv9zKgaSXJcBN68kZu
+         FDag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776989537; x=1777594337;
+        d=1e100.net; s=20251104; t=1776990051; x=1777594851;
         h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/FcUz0voUt4L6VgJUyW4964a1uPVYvz+VsQOTuJZDE4=;
-        b=LfZhFKvApYZ89a7DLxD58wcp+VwiwScqE3oNKlEVGm20UTdLg8OU/fZ7o7NvQVUfwB
-         /1QYvWqta0DGJhEph+eiPGV6dFFVpGoubtJU0qOkia7IjUJgm+Ix9jRavXLtW/PxW5kR
-         KJtuEfWuLXcubJuXqNqMgDX3A5CA7Xp+3jwTjMSlrCBhr3PW7PLVV+zlphEGA2ZSBsBX
-         V0FCF1pUlJ4chx01LmSw6qlXy3PgcZ+jRVezcAtYzAiRnsorod9ha8ZHnVNf1ANtQz6q
-         /kdD4GrROsHGTa/8BxUwpfMOV6lSTWgTJ9gma0NMHdIU59+GZDpnDpM9EbqK/xFkq1KZ
-         uyHQ==
-X-Gm-Message-State: AOJu0YwGQMAjiQ8guwfpShmBZx8ApPjZ3UXu7cLVlVI2WcrqqSHsijLz
-	cY+ILl8UgkINxDmxSpSUH9zCC0TXriJ5EGUjCs+IxzY9FlH+q7vOzz5t
-X-Gm-Gg: AeBDietpnLQ5hqYyrIl/hLwfeTYrYg+3ssrOODHGhHnT6vAaXd95qRjqzymfsHBY/4C
-	3hvn0MiGjxjCDFJSXD3DMTOiZXPIOIl8Pz5e4uidC203cyT9mkLPG9C1BIAEPtVfs8lzyyIDtyK
-	n/IMPNfY11ZMXByxKVQceMOJWXK/+jBIXH9r1GTNHdCJa2Z1AeKCLzLtcF3VD07w76jO3+uf9cG
-	tsFqBh18QrGKkjVfTzyi9AD/LnRjVJUg5SupoZkww3uEZgGthalh7Simo8IodgT92WQ174AFuLB
-	x6fdXG/hfqbL2JgrUaEQJgS5G/yvykBLkpbwYA7EZVMd63hS4ojWYSLRCBR0m0IGBiv822Q7rJi
-	jPPP+6M8Am2QzP9iYSOitX7KB90RoKCXQOaq+HGmDUzMvjDi5u72gRe68F2ipIMbmBnDVyMMEE3
-	90Kzp4tS8YD/AXbPF41a2gj9VnNHRl4f31
-X-Received: by 2002:a17:903:1ac6:b0:2b0:c90f:44b2 with SMTP id d9443c01a7336-2b5f9e8252bmr308135805ad.12.1776989536590;
-        Thu, 23 Apr 2026 17:12:16 -0700 (PDT)
+        bh=9prmMr/fIcHvT4Kdkrzhrvvq7KnrqsNR3KWHLAQJlTo=;
+        b=p+bF+A1LdlZQg6yHrmNxGFX1BkFgFbTP5MyOp22z4HwTIwkP4e73Fk8dAFMnzfl/YZ
+         yQpf7QelEO6VudJB513WCUzA9fITpjN4v4wKQBJR7bjSiYojK50N+NtPI5ITPHSBUL7C
+         /jDBv74Ad1SjsPIZeG/TdMuDYBXCI6DTKah+Q0Z8pwUuHtk1dWyml0oPzrljrlLADn2d
+         aLo3oCWM7CmZhshVadMXLgzwO88e1Jshzjcq9ghcy/u6333tKBWViCHL6Qry9cx6u+HI
+         BJxC81YdjcQQfTK8SDoigMaW3AyjyDCTE5RGu9HWJP2t2UpnoUBKDnRrRZKD5SJwPlR2
+         ynPw==
+X-Gm-Message-State: AOJu0YxH/p0ng5L2dxQI9+kg2q3gDViazv1mwhD+iHm85cZqBHE/lDKQ
+	s06H/2FHSDd5dF19YwDGFAkkrIIVMQEH/mH1Q5MJV50CzMMBm2a2VIG7ZVAglQ==
+X-Gm-Gg: AeBDievaBmvsAqfE5d8d8A5TmmH2uy6/+i50hhPTJRlQtGcGTdiBgqbwTPFuRjvxOfN
+	mPATkf5alCRStntVsG5oa6wh3y1IMn35J+HLRZ2klQUX0/eGT9XhBnFprozOQyasvpRwG9RjzJ+
+	FQP/l0BNkodmwEPHgb4aNJMEBsrFlMvmpk2Bc1NHq8bPSbytezvBAY3WmKVEauMtXLOjlLyZ6UU
+	62htUhy0cf8Wm9HuSdtu62LpFBmhTZKF6ucQWg4Bz4QLymuBKrc7bFZPfdUUYNPPfiURw3dukFw
+	vCnhY8Ikn/MG9rq3qMqGhreegiQEXghVb9rJ2ANWP79EuS2sm4E5QBDLaXYQWLhamtBtA9P8tya
+	rlNxSwAZVi8mNu8mV5xbCz6+30vRxyuU6wI+A7GgzKPmHbmhemXdCkiGy8HMpeD6RgDViYSCIoQ
+	7L/3znyqOtpvZ0dwhbGOc2eKofGXmkdWSo
+X-Received: by 2002:a05:6a21:329b:b0:3a0:129a:9748 with SMTP id adf61e73a8af0-3a08d76d958mr31549415637.25.1776990051094;
+        Thu, 23 Apr 2026 17:20:51 -0700 (PDT)
 Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fa9ff71esm213485585ad.8.2026.04.23.17.12.10
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7976f92183sm15156744a12.3.2026.04.23.17.20.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Apr 2026 17:12:15 -0700 (PDT)
+        Thu, 23 Apr 2026 17:20:50 -0700 (PDT)
 From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>, Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>, "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org, hch@lst.de, jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu, p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap & xfs
-In-Reply-To: <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
-Date: Fri, 24 Apr 2026 05:39:23 +0530
-Message-ID: <340lte18.ritesh.list@gmail.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com> <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble>
+In-Reply-To: <aeqxFKaw1uOk1GuZ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+Date: Fri, 24 Apr 2026 05:47:17 +0530
+Message-ID: <1pg5tdo2.ritesh.list@gmail.com>
+References: <cover.1775658795.git.ojaswin@linux.ibm.com> <4og3axdvzyfpfx4o2rhcnwdsggha2kfoerausxx52vd6jc2hzq@u72iwxrxxble> <aeqxFKaw1uOk1GuZ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 
-"Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev> writes:
+Ojaswin Mujoo <ojaswin@linux.ibm.com> writes:
 
+> On Thu, Apr 23, 2026 at 02:25:43PM +0200, Pankaj Raghav (Samsung) wrote:
+>> > 
+>> > 
+>> > * Testing Notes (UPDATED) *
+>> > 
+>> > - I've added support for RWF_WRITETHROUGH to fsx and fsstress in
+>> >   xfstests and these patches survive fsx with integrity verification as
+>> >   well as fsstress parallel stressing.
+>> > - -g quick with blocks size == page size and blocksize < pagesize shows
+>> >   no new regressions.
 >> 
+>> I am hitting a very strange error in generic/127. I deconstructed it in
+>> to two commands that can reproduce the issue:
 >> 
->> * Testing Notes (UPDATED) *
+>> ```
+>> $ dd if=/dev/zero of=/media/test/fsx_lite_nommap bs=262144 count=1
 >> 
->> - I've added support for RWF_WRITETHROUGH to fsx and fsstress in
->>   xfstests and these patches survive fsx with integrity verification as
->>   well as fsstress parallel stressing.
->> - -g quick with blocks size == page size and blocksize < pagesize shows
->>   no new regressions.
+>> $ /root/home/xfstests/ltp/fsx -l 262144 -o 65536 -S 191110531 -N 100000 -L -R -W /media/test/fsx_lite_nommap
+>> mapped writes DISABLED
+>> Seed set to 191110531
+>> main: filesystem does not support exchange range, disabling!
+>> main: atomic writes need O_DIRECT (-Z), disabling!
+>> short read: 0x0 bytes instead of 0x6c7f
+>> LOG DUMP (1 total operations):
+>> 1(  1 mod 256): READ     0x39381 thru 0x3ffff   (0x6c7f bytes)
+>> Log of operations saved to "/media/test/fsx_lite_nommap.fsxops"; replay with --replay-ops
+>> fsx: save_buffer: .fsxgood file too short... will save 0x0 bytes instead of 0x40000
+>> : Operation not supported
+>> Correct content saved for comparison
+>> (maybe hexdump "/media/test/fsx_lite_nommap" vs "/media/test/fsx_lite_nommap.fsxgood")
+>> ```
+>> 
+>> This is on a bs == ps (4k block size) xfs filesystem.
+>> ```
+>> $ xfs_info /media/test/
+>> meta-data=/dev/nvme1n1           isize=512    agcount=4, agsize=2097152 blks
+>>          =                       sectsz=4096  attr=2, projid32bit=1
+>>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>>          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+>> data     =                       bsize=4096   blocks=8388608, imaxpct=25
+>>          =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+>> log      =internal log           bsize=4096   blocks=16384, version=2
+>>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>> ```
+>> 
+>> The same test passes if I pass `-G` to fsx parameters(disabling writethrough).
+>> 
+>> The error is coming when we do a read operation which feels very
+>> strange. Could you run this in your setup and see if you can reproduce
+>> them? I still do not know where the issue is coming from or it is
+>> because of my test setup.
 >
-> I am hitting a very strange error in generic/127. I deconstructed it in
-> to two commands that can reproduce the issue:
+> Hey Pankaj, I think the xfstests branch I shared might have been missing
+> one small fix that can cause this issue. I've update the branch with the
+> fix, can you give it a try:
 >
-> ```
-> $ dd if=/dev/zero of=/media/test/fsx_lite_nommap bs=262144 count=1
+> https://github.com/OjaswinM/xfstests/tree/iomap-buf-writethrough2
 >
-> $ /root/home/xfstests/ltp/fsx -l 262144 -o 65536 -S 191110531 -N 100000 -L -R -W /media/test/fsx_lite_nommap
-> mapped writes DISABLED
-> Seed set to 191110531
-> main: filesystem does not support exchange range, disabling!
-> main: atomic writes need O_DIRECT (-Z), disabling!
-> short read: 0x0 bytes instead of 0x6c7f
-> LOG DUMP (1 total operations):
-> 1(  1 mod 256): READ     0x39381 thru 0x3ffff   (0x6c7f bytes)
-> Log of operations saved to "/media/test/fsx_lite_nommap.fsxops"; replay with --replay-ops
-> fsx: save_buffer: .fsxgood file too short... will save 0x0 bytes instead of 0x40000
-> : Operation not supported
-> Correct content saved for comparison
-> (maybe hexdump "/media/test/fsx_lite_nommap" vs "/media/test/fsx_lite_nommap.fsxgood")
-> ```
 
+Ohk, just noticed your reply, after sending a response...
 
-This looks like fsx has a problem where while testing writethrough
-support we ftruncate the file size to 0 instead of file_size.
+Thinking it again, I agree we should just always ftruncate it back to
+the original file_size. Because we might have changed to file size while
+testing the writethrough support.
 
-@Ojaswin,
+Thanks for fixing it! This fix looks right to me.
 
-I think we should have it like this I guess.
-
+~# git diff
 diff --git a/ltp/fsx.c b/ltp/fsx.c
-index c9901f65..3b11b1b5 100644
+index c9901f65..720bca83 100644
 --- a/ltp/fsx.c
 +++ b/ltp/fsx.c
 @@ -2095,7 +2095,7 @@ test_writethrough_io(void)
@@ -118,35 +149,17 @@ index c9901f65..3b11b1b5 100644
         }
 
 -       if (ftruncate(fd, 0) != 0) {
-+       if (!lite && ftruncate(fd, file_size) != 0) {
++       if (ftruncate(fd, file_size) != 0) {
                 perror("test_writethrough_io: failed to ftruncate to 0\n");
                 exit(132);
         }
 
 -ritesh
 
+
+> Regards,
+> Ojaswin
 >
-> This is on a bs == ps (4k block size) xfs filesystem.
-> ```
-> $ xfs_info /media/test/
-> meta-data=/dev/nvme1n1           isize=512    agcount=4, agsize=2097152 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
-> data     =                       bsize=4096   blocks=8388608, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=16384, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> ```
->
-> The same test passes if I pass `-G` to fsx parameters(disabling writethrough).
->
-> The error is coming when we do a read operation which feels very
-> strange. Could you run this in your setup and see if you can reproduce
-> them? I still do not know where the issue is coming from or it is
-> because of my test setup.
->
-> --
-> Pankaj
+>> 
+>> --
+>> Pankaj
