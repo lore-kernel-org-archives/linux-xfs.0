@@ -1,100 +1,149 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1922918CBE1
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2026 05:07:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777007269; cv=none; b=u/Qx4xk+BdFLub5rdTH8mpHnyImf0/C4OG2o78/t4UYlDrqASZcRkEYr6vwlEDzXF2vVDNqrK7pgAuS0x1AqPA7DF/C5w697wSXbDWJrCo2hK8Fllhus+jvffXPYQRmGul6zPsqt5jn9FxWeeU1gh9s+q72AhKsgD48ox+DF0fU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777007269; c=relaxed/simple;
-	bh=xjE9giv7tBRG1qaYQTvNP0u8qwf+IGSEwMfTzYr2PSQ=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=OwqoRx6u/+rL2mj1P5yGm0UV85Impc3mhfehAOjlS8SN3zlynqBT3wr3vb8z33ncpre9FpBslu3yMJrFOklu2J2pxfRy0m/pwPsejfY+/QcisNysvD0If4Ha0bs13r2K8HTYVvD7oIpUYZsKsKq5LUW5angkoSZo3c9JvY79XBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C8WhI9gB; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35FCD33ADA8
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Apr 2026 06:57:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777013855; cv=pass; b=WgXSpgzOsTvOy2wrEqC6LyhpjvR5ElDNXT3bb7HrL+QIj2xVZBoxmFXCUXp67/WA4/mEHppfYKNKFt+LkOQoMegUyNUIeSVZN30U83G4OGBZOs4DiPytmZL6LeoN+A14sozoC1f0Vij7C9cpog8zD2H892/Habhxy9/wycew3/A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777013855; c=relaxed/simple;
+	bh=4GwIzdJUx2Kcw3exRRGxOr0HKxo9w+nymN/e/RTmPds=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Tcd/25K0PR+juigrGyJNt29jaAg7OaSq7AlVbIWhC70QaU2GhwYJfshfC2C3+VKsw2TwJ7FzNefe1qPzoat/Kn8T/XBJzcGQGHDzIo9J1CLI9l0xDiMaR0rqPK9IJf8b9z8XL6+NR2YCG06nUNULCSuMTM6YYDYiQXQqtBRgHug=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Vceu4Ny8; arc=pass smtp.client-ip=209.85.218.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C8WhI9gB"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-35d95017a68so4931517a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 22:07:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vceu4Ny8"
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-b9c3e2cf3c0so1333655766b.1
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Apr 2026 23:57:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777013852; cv=none;
+        d=google.com; s=arc-20240605;
+        b=KfVOrqgOd7yDU97tXSUZ2umlOS7qFjY5k6aTkXss35UAQqgL+Et/sbFXnvpOW7hxFp
+         1dn3BGmYKMOScmb8Dt/UBfESxODvwjQ822caGlYPzyDcViv8rRz5ira5a17easlkTZOR
+         K2EzYax1qRMHCoI6ZE92D/Jnn1S9U7A4bki/N+WjKBUf4qXaZLodXwofJC+4lurT7V+m
+         Pp3LRLChSkyf/2j/OKEMWViI9dIRfchKGKCj/Rrpp7EvphSDu/Djq24OxCsmpWs9yYER
+         m4uby4f8r6sBtc6GM7YuhyKgjHJhYFXz/NYmdgG5K5B7CtI/QBeePfBrsxaQnlRdqFw6
+         c6uQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=1xbLIQ5Fuluw6Mpoy6KL9m+Q4rOLvVceUe/0sWgR12M=;
+        fh=hFwdn3wpCOgyaVutAhdzfHwpUKhKiOkw2e4/18a01v0=;
+        b=bahHe/6TI4kJx7jz/kXcFDih7d61am6CcAJwcUx8xbfYzYjoHUv988ujYi87J1u7qA
+         qVCVos1TOWOuDc313Cdu5T0sBe98VTLDh2L3r8qc9t0sq8HPWGQMDDKRorgMtC1w0Pn6
+         TlH1L7V8N+gqjzItA6emHgZif7k6bsnZQ2jA+irO+GFZPklaLDvuWhCzqXbfqRnK+dGR
+         rX99QZ74QLisWHrwAi3Wq3cJJRI5IDs4QMZEsZd24PLhKm3MwuFx4UZuZveDJqbDFpis
+         Z1jhS82q0gmjA4z2cmcpes2e1gSTBz/MIQmNRAohseYPcc80/HZugKdbWUjfxzZ/D8xQ
+         OcGQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777007267; x=1777612067; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=oUFDhoYbNqo8dXYU9en7BHWBBYUPonRzR5+Mg8X7c5M=;
-        b=C8WhI9gB64nKmKFNu2IIgwL5+uw9cdtVTyVvXmR4B8Nd8TFmWQyOZdoX9kAmP2GNWJ
-         cdYW2V7CqkVy/fgtjLnNvALeQJP4FxxyHEzFL3VN6LUgrWtkjqNPXV+aMGx7vdTVijz/
-         jkRcDBBxfn7fR9IHLZfdQRRzF6zpHdoeipom0DQnO7KsY84TkGRzj5nEcoLONdhIv0ZJ
-         BR8l7jFrbrbcl5Tx21iu4GVRsOvi9JXuATiAQOgvM/CPrtDIgAcIcOz6K0FlQeZe/gSZ
-         bazq4Gjt0oKtzzvm8Ffd0X0pp7yz16y02XS5dIHphtH0sb75XrH4c6jfg6hZvonGdXw0
-         yjmw==
+        d=gmail.com; s=20251104; t=1777013852; x=1777618652; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1xbLIQ5Fuluw6Mpoy6KL9m+Q4rOLvVceUe/0sWgR12M=;
+        b=Vceu4Ny8UZu8PbfbIEgniftLgcdI2HzgBkg9IeOIuXmIHPnIteJYqtKU4sQV0jmLiz
+         lC3GOlIwWtYDlCQ7l6L1o9uAWFpkoVaDOAarneBeRRJjhajystXP17BP9/0KYxc+ssZz
+         iTnyzlt27dNoBBys2Mhh+4BqWUpl0x/k7Sa74ADLZEoP0WEZChfL4RrOw6T6o71qnAtA
+         S5wyo3h+OOYkD1G73vqyf1AzL2709mN0PKIccT6j8b2XcluVMuSYmdY/4S3B9viK3Hu8
+         9FUbmj1z7KG+Cq391gWwBmy3ctuLf2P3jqNZ0yiM9MpBXo/gSTLjeXFTveh6hpoKaLI/
+         +7bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777007267; x=1777612067;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oUFDhoYbNqo8dXYU9en7BHWBBYUPonRzR5+Mg8X7c5M=;
-        b=ak+ZmsrqNGhaoggugS6MLlSTuZE2kMm1egsElypwHTWyv+H5JoQGkBGQRy5Pn7DqXJ
-         t4NUqj+nIiEm5+Kln43s+it4EmuKFkKx3ijb0y18LULMUvCYD/Blrxeg6ERWJjSZWAAJ
-         kgHzSXuiOHcNLEkWuxcZ+S3nz7cmx0XngZA/uOUKlTUOI9UMy59o5NBXpJeqAj5xNd25
-         nGqeBUCXcFGn7j+YxCsIbA2ExTHPoS7ExmBtyvxMWInzUtbKD+HBKOiqW3zp37+j4RUB
-         sEyhbmiWILZKTz+Jw5asJ6HPrb9WOASNocC9vxVTA5+xf7bJmGniPUX+iUmiAcu1mmIy
-         XU/w==
-X-Forwarded-Encrypted: i=1; AFNElJ+SEgr9r/rHVdvrFfn+DaU4LZeLSrjGzD9bk+SzeAzGYOwbhfV2P63O3vA3j+0oEy15/H1ADJZuyyk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcSSu8TmNGHeni6kcIi0HkK16b1pxM7usQ1zeYfCPk0TYV+dDq
-	hntLHaHZCyK6uFzIAbqbSostzZ9PSyF/nax3snyVSZRLcWjMFGYx+K0z
-X-Gm-Gg: AeBDieve+xDyuBzzBmeiO00dzKiTn8wASfAQsg5rRGwqGO8cGotp2Jih7L4OuvH+276
-	HeM9jLftpUKH0+QJ3O0sY3SQaSe/ge9NaIiaUoeCf3axYG+B1vlZonLt+dPMX105N9O2zFGROjG
-	WeZfvEph8RsDCxdra28rpkVnlCHsKtcEw1OWXNL1t+/XWVMubRmQhCK65GapbsAHvUMwUBApB5p
-	hFQfrN3LjHb3N5HLEy/MT5NPA8dZFgJ0X7bwwqbwCw9oaHx+2LvIqTt1gWHr6wvaxBW6BnCQDsX
-	BGquRozX+Py+Kffq+/h3voMTTZQI/tRERowaYNBPkTtheaGE9Wel8bt0ixImCaAhKoGGhf3vDqa
-	eV2rU1gmH8pcSdaRrmFHxg/NdPOEps0OwWd1nA299+uJ4IxiY/bxQSMJELmifKvVMX/Gsozr9Vn
-	JGkFeVrTZFtv2k0F6IHZmuf9hjOgmuBP/T+fTBcWbF/g4=
-X-Received: by 2002:a17:90b:5890:b0:35e:5723:85e3 with SMTP id 98e67ed59e1d1-361403f12ddmr31417110a91.9.1777007267369;
-        Thu, 23 Apr 2026 22:07:47 -0700 (PDT)
-Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3613fab1c32sm8342149a91.5.2026.04.23.22.07.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Apr 2026 22:07:46 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christian Brauner <brauner@kernel.org>, lsf-pc@lists.linux-foundation.org, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, Pankaj Raghav <pankaj.raghav@linux.dev>, Andres Freund <andres@anarazel.de>, djwong@kernel.org, john.g.garry@oracle.com, hch@lst.de, Luis Chamberlain <mcgrof@kernel.org>, dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com, tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
-In-Reply-To: <aer0wd2Ig0hjN3R0@casper.infradead.org>
-Date: Fri, 24 Apr 2026 10:20:27 +0530
-Message-ID: <v7dhrmgc.ritesh.list@gmail.com>
-References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev> <wlxxrx10.ritesh.list@gmail.com> <aer0wd2Ig0hjN3R0@casper.infradead.org>
+        d=1e100.net; s=20251104; t=1777013852; x=1777618652;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=1xbLIQ5Fuluw6Mpoy6KL9m+Q4rOLvVceUe/0sWgR12M=;
+        b=oEmiCeYK+1uAclgVax5ahdnJz+dnJZB+setWpTYWp0wyHsyjGDP0zTfsQaHuwC6YjU
+         IwQxep6Ht1LTSFwa6r++u3x3G/0wNcSdi4fpYQRrYGzVB7CMjmErBqetFSItxab0CUgh
+         29ZSD/JcBasumJtcTbhDvDuEavnQweAKeTXbb6GMg7QghrOJBI39/9uWT1y0tBLGXayE
+         MSr/JPEt0jnUE+AehgPXGYPFJmLA+ddQxGS6k6dfdI9+sCA876piFwvlyE7BzvTBR+Ih
+         xhpA57RmoRw2eGqJpr1WOS6b3pAocQ8Z+ylvILUKfUuxQbxKt8v3rYRfDSR4DGYWW7vw
+         mkng==
+X-Forwarded-Encrypted: i=1; AFNElJ9AUYN+KwopF+vUFkMs4t04MwU56mHkdFoW0FPiVP2Cb/Lq9HEVqLeWiMIgpTQmhcDxKtOff3VswZw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+AugpR7/gxczq79JYjkOZODrGuvrt4tZy6TN2uQ9cUS19GIMj
+	PJk0jEdHRtjR2m4WXhjB9lxr+eZ68XChYWqE/xlCOaHHyWjpkrzCtjg1l7QcJ7Yg2X36gPpiiMD
+	SLwHRdWLrmVewVust8jhBUgM2LDNdeUY=
+X-Gm-Gg: AeBDieux7YdkIzr8Na8EnxI6govFg/r/+LQzCIQ9BkqZ3evakfkn6Az4oxnJvu+ax9i
+	2YWbPmpHpSx6TGFmrStGDe0PFsQ76LDxyXplheFiuiinfvJPDI//w1Lkz6Wn3kRqBgYUHIvfJ3G
+	0miSb6qE4Eeea9xOm1Uyz2YxkHT2aXHDPsMD5YRmoJYnN2MvmyL19w3Vo4sDD7CbTZ7Jg3tszw5
+	uTd3cCgAKUbJj3S890WYUa3/lZNPQJ4CWFwwlmVvchKewH2UJeSn1fV7IPvk0qiW130YODf6sdL
+	+hrPZwzv6xrsQ48w6Dn9+ft3idpMCt+4iHIv4OSZUIqZnkEAnmKsb0+fBSmiW0c=
+X-Received: by 2002:a17:907:97ca:b0:b9f:9e7a:bcd2 with SMTP id
+ a640c23a62f3a-ba41a632e8cmr1588080466b.38.1777013852060; Thu, 23 Apr 2026
+ 23:57:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <d0c4d95b-8064-4a7e-996d-7ad40eb4976b@linux.dev>
+ <wlxxrx10.ritesh.list@gmail.com> <aer0wd2Ig0hjN3R0@casper.infradead.org> <v7dhrmgc.ritesh.list@gmail.com>
+In-Reply-To: <v7dhrmgc.ritesh.list@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 24 Apr 2026 08:57:18 +0200
+X-Gm-Features: AQROBzA7au-Rxnv_gU_TeRNbE7y_vZ61_PUN4YtNXKiJVY5WHIMs7q432z4NtWM
+Message-ID: <CAOQ4uxi0bTwj7oCWR1iOhqzPkB94cVgh=9Prh1kHxnObuLCz0g@mail.gmail.com>
+Subject: Re: [LSF/MM/BPF TOPIC] Buffered atomic writes
+To: Ritesh Harjani <ritesh.list@gmail.com>, Matthew Wilcox <willy@infradead.org>
+Cc: Christian Brauner <brauner@kernel.org>, lsf-pc@lists.linux-foundation.org, 
+	Jan Kara <jack@suse.cz>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, 
+	Pankaj Raghav <pankaj.raghav@linux.dev>, Andres Freund <andres@anarazel.de>, djwong@kernel.org, 
+	john.g.garry@oracle.com, hch@lst.de, Luis Chamberlain <mcgrof@kernel.org>, 
+	dchinner@redhat.com, Javier Gonzalez <javier.gonz@samsung.com>, gost.dev@samsung.com, 
+	tytso@mit.edu, p.raghav@samsung.com, vi.shah@samsung.com, 
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Matthew Wilcox <willy@infradead.org> writes:
-
-> On Fri, Apr 24, 2026 at 06:32:03AM +0530, Ritesh Harjani wrote:
->> We were thinking if it is possible to extend the Buffered Atomic Write
->> session into two "continuous" halves of 30mins each (total of 60mins)?
+On Fri, Apr 24, 2026 at 7:07=E2=80=AFAM Ritesh Harjani <ritesh.list@gmail.c=
+om> wrote:
 >
-> This is painful because you've requested me, plus both Storage and FS.
-> FS has lots of space, but I don't, and Storage is also pretty full.
-
-I see, sorry about making your (and PC) life difficult here. I know it's
-a lot of planning :(
-
-I think, both FS+IO folks will be interested to discuss both of these
-topics. Do you think breaking this into two discontiguous session help
-us plan better maybe? In case if we don't have any continuous slot, then
-maybe we can split those into two.
-
+> Matthew Wilcox <willy@infradead.org> writes:
 >
-> Do you need me for the full hour or just half of it?
+> > On Fri, Apr 24, 2026 at 06:32:03AM +0530, Ritesh Harjani wrote:
+> >> We were thinking if it is possible to extend the Buffered Atomic Write
+> >> session into two "continuous" halves of 30mins each (total of 60mins)?
+> >
+> > This is painful because you've requested me, plus both Storage and FS.
+> > FS has lots of space, but I don't, and Storage is also pretty full.
+>
+> I see, sorry about making your (and PC) life difficult here. I know it's
+> a lot of planning :(
+>
+> I think, both FS+IO folks will be interested to discuss both of these
+> topics. Do you think breaking this into two discontiguous session help
+> us plan better maybe? In case if we don't have any continuous slot, then
+> maybe we can split those into two.
+>
 
-Although I understand buffered writethrough is an FS related area, but I
-am sure a new writethrough I/O path is an overlap for you in page cache
-as well :)  So, yes, it will be good to have your feedback on the second
-part of this discussion which is - buffered write-through for buffered
-atomic writes.
+I scheduled the two sessions as you requested 9:30-10:30
+for FS+IO and moved Parallel Writeback to Wednesday
+across the MM CXL session.
 
-Thanks again for considering it!
+> >
+> > Do you need me for the full hour or just half of it?
+>
+> Although I understand buffered writethrough is an FS related area, but I
+> am sure a new writethrough I/O path is an overlap for you in page cache
+> as well :)  So, yes, it will be good to have your feedback on the second
+> part of this discussion which is - buffered write-through for buffered
+> atomic writes.
+>
 
--ritesh
+Matthew,
+
+I don't know why Parallel Writeback was scheduled as an MM session,
+but if you think it should include MM, could you move the CXL session
+to the now free MM slot on Monday 9:30, so that we can extend
+Parallel Writeback into MM?
+
+This will allow you to participate in the atomic buffered write sessions.
+
+Thanks,
+Amir.
