@@ -1,158 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B2A1A680A;
-	Sat, 25 Apr 2026 01:54:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D64485B21A
+	for <linux-xfs@vger.kernel.org>; Sun, 26 Apr 2026 06:28:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777082041; cv=none; b=FJFogCECkPhM2D4+IO6WGLszkdeUjQrrLux7pOgnCsZ7Y/ktWTdgNuPrpFQ5kPFe+WQhql9iw/jFdMVBiwqdhBsvyd+JfHC7x/lU1fN52unHj7W42nd5oxHkijQeR+tZHWAwdhMyc0qe4rHciUYyqvaSpQm+yoQAwPeimVB23x0=
+	t=1777184934; cv=none; b=cLGTofV6++oC5SP48md6bgG+ZaYkYRFj7zC3bkc7LI6d0okI8ZSQRem5ZRelz1DXhW33SVDtF/WVJC18oc+ou3q0rNJGFMMhFTgiEe9cKLBmYcqcCnH9+hkfMa8rn+/MdpWH9OvlWsed/+sIzUSFnLHvKN3yQIkl0fI3Op05Rls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777082041; c=relaxed/simple;
-	bh=WLSj6q07XGhooB1eQG/mkk9y+n+R25fNe7TfBGbYD6w=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=NzF2bq7UfJwANGQ/6DSaw/NOYqMCxvN3PzTsIHFQDgCUKSuNsoASeiU+Gs3UbJn46A7hx9LIysiAlgNdGjmKBDLPJXSiv9dMBU1PIBKBBxFKOGSWEHLu1D1OJSKMJtrdtb933TLOguaMvIF+bpDOrssc/7UCA/TO/oBcQtdxMJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f+14oXfN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777184934; c=relaxed/simple;
+	bh=GKc5fn8cAxo8vOQ+6BrowLOsE4kaG2euF9Gx/fTWt4E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t8KWw44HCoxUl68ngE4hzdCLjZtYReqgaXCREP3g4pcE4kcBN7hpOr7Oa+j7/CdgIIQ/ROIop02SpW4T1dt1cjAAt7GrCAF0r7SaXfkf/P7N6MlB5XvesJaYVmgyLGqOMAaEZ54Nhfo3AKAGz9meVH03yyiRoAW9t3A38QS24kQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=oeKpelTn; arc=none smtp.client-ip=95.215.58.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f+14oXfN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7D17C19425;
-	Sat, 25 Apr 2026 01:53:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777082041;
-	bh=WLSj6q07XGhooB1eQG/mkk9y+n+R25fNe7TfBGbYD6w=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=f+14oXfNcR0y15fPuFCLp01DM94FDXmSl7es75IIr1L4hSm26GQHflKCsS/T+fCH7
-	 IxqfvoCKWbcfqftl4glsZxs+3SLtpgCSHkUnoMkglQnXkjw8a835IAnJcl8opIY16Q
-	 xv98I0Bf1eJu9VneyqPhqDYrv1soNLxAtCRxTBoZgaso5zHqEi/IZrDgdjx0pqW+1k
-	 q7i/n+YROp2Wc52rxre4Ly05gxHjM/SxH+6EyIOxW92CC92MxiA9etHi4sB1HWl4GK
-	 0Gf+QAJNHfBajMT+x7Fie4+Ju0FdgF/okPWs5a5teM3S7e6T5r6L9oGSMyjya+IOR9
-	 sQL/+aD7qtmew==
-From: Chuck Lever <cel@kernel.org>
-Date: Fri, 24 Apr 2026 21:53:17 -0400
-Subject: [PATCH v11 15/15] ksmbd: Report filesystem case sensitivity via
- FS_ATTRIBUTE_INFORMATION
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="oeKpelTn"
+Message-ID: <4315ac3f-cf0b-484b-a925-0e539a1bfff2@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1777184930;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JecWUIgfgo7vZ7f5H1X7xSHgikkXOcpBTnzxsEo47VM=;
+	b=oeKpelTn3SEdQjNofPzNjchTQ282h8U4yiWj96kKTabjaqhLGJO1yla4fwHjol7GfJhrjs
+	1DdV08Xq6QbhqhdTo0VAKLsO7wYZ0lM2VodBO1TJb/KlpwBvjOd8oN33HFCoUINhD+XVSj
+	4p73a/VbMHkjnUqcnOtXlyQi+jrkEto=
+Date: Sun, 26 Apr 2026 08:28:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: Re: [PATCH v3 3/3] xfs: add a sysfs entry to enable write zeroes even
+ if HW does not support it
+To: Christoph Hellwig <hch@infradead.org>,
+ Pankaj Raghav <p.raghav@samsung.com>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
+ "Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org,
+ gost.dev@samsung.com, andres@anarazel.de, kundan.kumar@samsung.com,
+ cem@kernel.org
+References: <20260420105539.3644999-1-p.raghav@samsung.com>
+ <20260420105539.3644999-4-p.raghav@samsung.com>
+ <aet1u528eM5jQyCG@infradead.org>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <aet1u528eM5jQyCG@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260424-case-sensitivity-v11-15-de5619beddaf@oracle.com>
-References: <20260424-case-sensitivity-v11-0-de5619beddaf@oracle.com>
-In-Reply-To: <20260424-case-sensitivity-v11-0-de5619beddaf@oracle.com>
-To: Al Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
- linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
- linux-nfs@vger.kernel.org, linux-api@vger.kernel.org, 
- linux-f2fs-devel@lists.sourceforge.net, hirofumi@mail.parknet.co.jp, 
- linkinjeon@kernel.org, sj1557.seo@samsung.com, yuezhang.mo@sony.com, 
- almaz.alexandrovich@paragon-software.com, slava@dubeyko.com, 
- glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu, 
- adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org, 
- pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com, 
- trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org, chao@kernel.org, 
- hansg@kernel.org, senozhatsky@chromium.org, 
- Chuck Lever <chuck.lever@oracle.com>, 
- Roland Mainz <roland.mainz@nrubsig.org>
-X-Mailer: b4 0.16-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2777;
- i=chuck.lever@oracle.com; h=from:subject:message-id;
- bh=bR19bllkdkbQhQ2DCXklF79gERXw2neFVWEG5vaHCMI=;
- b=owEBbQKS/ZANAwAKATNqszNvZn+XAcsmYgBp7B6RlXNMlI/rLhCwMFhVMU8ZABGegjkofRPR2
- ncJdim+heqJAjMEAAEKAB0WIQQosuWwEobfJDzyPv4zarMzb2Z/lwUCaewekQAKCRAzarMzb2Z/
- l1LND/4uqOXdd199YF0FpQLa57v96XaDEDTz2tsuu1Jy8Rm2pkaAXnt2S5mPdS/8jzkzmi8Oi6m
- X8XT6xcacj3KsdAAFTD22vS6WbgVdTAmqK65TET+/SmvLrIeaDdev8EEZnZoBoYSTPSDAcTs7qV
- 1Uzz5TZXPXu3LL9lifyrHKczsHxRp/BhX7soqltLsQ/MxdspB+mJfx5/pIOCT9FPWeBmGpkBUFQ
- t9OKuJS/b7g1R1HG1MXBx4SpEXth/mJZ1Y8+k0eeAnED3Tht8jjnMCAaVaqKxHbreQp7dpGLCMs
- j4ROrEqRnwFuKYciW5JQW7Fon0sKdOQmNBiKcE0B3SaJP0v/xGQRvJUOjixSrhd214JwfTiNl5L
- 1EUZwcRevf0/4qphDqBbebHD67q0dsygv4qA/5muzo7Bfa1+btVRlfqttC7WyiRVKuAfZ4m9rU0
- HVG15pYcsZmOR5wT9PMxrhUCsRgWMpLtFW5MBUffzk5W5LYIvWxFS1WJg80XNFH2jKKenkyhHeo
- ontQczLzlnKsa/hSS8eetl3DOOvi/08TkI+xVlQAwzjrv9UpaOcOxuS1OOK1n4bHUnSiclMjqhK
- 7uTnYGGYWBmJx9yRhyzZXRZ06a/PyRhr6U3THDwc+IzuK3t4jHMf9Y0ul1U2EHaUgGawkyjbTRu
- 9PR5DEbJBJC+XtA==
-X-Developer-Key: i=chuck.lever@oracle.com; a=openpgp;
- fpr=28B2E5B01286DF243CF23EFE336AB3336F667F97
+X-Migadu-Flow: FLOW_OUT
 
-From: Chuck Lever <chuck.lever@oracle.com>
+On 4/24/26 15:52, Christoph Hellwig wrote:
+> On Mon, Apr 20, 2026 at 12:55:39PM +0200, Pankaj Raghav wrote:
+>> From: Lukas Herbolt <lukas@herbolt.com>
+>>
+>> Add a xfs sysfs entry that will not return ENOTSUPP for
+>> FALLOC_FL_WRITE_ZEROES flag in fallocate even if the hardware does not
+>> support deallocate on write zeroes. This is useful for testing this
+>> feature independent of the HW underneath.
+> 
+> I don't think it is.  We can easily test this using a loop or scsi_debug
+> device.  And in fact should by adding an xfstests that uses such
+> synthetic devices.
+> 
 
-FS_ATTRIBUTE_INFORMATION responses have always reported
-FILE_CASE_SENSITIVE_SEARCH and FILE_CASE_PRESERVED_NAMES
-unconditionally. Case-insensitive filesystems like exFAT, and
-casefolded directories on ext4 or f2fs, have no way to signal
-their actual semantics to SMB clients.
+This makes sense. Also this avoids adding hardware specific knobs in the filesystem.
 
-Now that filesystems expose case behavior through ->fileattr_get,
-query it via vfs_fileattr_get() and translate the FS_XFLAG_CASEFOLD
-and FS_XFLAG_CASENONPRESERVING flags into the corresponding SMB
-attributes. Filesystems without ->fileattr_get continue reporting
-default POSIX behavior (case-sensitive, case-preserving).
-
-SMB's FS_ATTRIBUTE_INFORMATION reports per-share attributes from
-the share root, not per-file. Shares mixing casefold and
-non-casefold directories report the root directory's behavior.
-
-Acked-by: Namjae Jeon <linkinjeon@kernel.org>
-Reviewed-by: Roland Mainz <roland.mainz@nrubsig.org>
-Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
----
- fs/smb/server/smb2pdu.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
-
-diff --git a/fs/smb/server/smb2pdu.c b/fs/smb/server/smb2pdu.c
-index ee32e61b6d3c..face5390c614 100644
---- a/fs/smb/server/smb2pdu.c
-+++ b/fs/smb/server/smb2pdu.c
-@@ -14,6 +14,7 @@
- #include <linux/falloc.h>
- #include <linux/mount.h>
- #include <linux/filelock.h>
-+#include <linux/fileattr.h>
- 
- #include "glob.h"
- #include "smbfsctl.h"
-@@ -5541,16 +5542,33 @@ static int smb2_get_info_filesystem(struct ksmbd_work *work,
- 	case FS_ATTRIBUTE_INFORMATION:
- 	{
- 		FILE_SYSTEM_ATTRIBUTE_INFO *info;
-+		struct file_kattr fa = {};
- 		size_t sz;
-+		u32 attrs;
-+		int err;
- 
- 		info = (FILE_SYSTEM_ATTRIBUTE_INFO *)rsp->Buffer;
--		info->Attributes = cpu_to_le32(FILE_SUPPORTS_OBJECT_IDS |
--					       FILE_PERSISTENT_ACLS |
--					       FILE_UNICODE_ON_DISK |
--					       FILE_CASE_PRESERVED_NAMES |
--					       FILE_CASE_SENSITIVE_SEARCH |
--					       FILE_SUPPORTS_BLOCK_REFCOUNTING);
-+		attrs = FILE_SUPPORTS_OBJECT_IDS |
-+			FILE_PERSISTENT_ACLS |
-+			FILE_UNICODE_ON_DISK |
-+			FILE_SUPPORTS_BLOCK_REFCOUNTING;
- 
-+		err = vfs_fileattr_get(path.dentry, &fa);
-+		/*
-+		 * -EINVAL: ntfs-3g and other FUSE filesystems that lack
-+		 * FS_IOC_FSGETXATTR support.
-+		 */
-+		if (err && err != -ENOIOCTLCMD && err != -ENOTTY &&
-+		    err != -EINVAL) {
-+			path_put(&path);
-+			return err;
-+		}
-+		if (!(fa.fsx_xflags & FS_XFLAG_CASEFOLD))
-+			attrs |= FILE_CASE_SENSITIVE_SEARCH;
-+		if (!(fa.fsx_xflags & FS_XFLAG_CASENONPRESERVING))
-+			attrs |= FILE_CASE_PRESERVED_NAMES;
-+
-+		info->Attributes = cpu_to_le32(attrs);
- 		info->Attributes |= cpu_to_le32(server_conf.share_fake_fscaps);
- 
- 		if (test_share_config_flag(work->tcon->share_conf,
-
--- 
-2.53.0
-
+--
+Pankaj
