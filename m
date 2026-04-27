@@ -1,133 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E99551E4BE;
-	Mon, 27 Apr 2026 09:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8070927603C
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 10:16:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777281509; cv=none; b=sxxn2UYu5uqsr64F76xgh49oublyNJMrlbdPvsr3a0PBJRCbyIRHfAakcmfN8CP2aJNI43P2EaYKqrBjckrAqU8GarAmNiyRinVsJ/dccFQLhj0qhdBow6OhkjF+bK5Tl8CRWz3i52rI1taOYXnmvK6eiKxYPhN11A2OeD4LgOA=
+	t=1777284985; cv=none; b=dGd4cAkKmwE5E6K2iIZpFK/lYWMfUAAZrYqUmBnp7NcEqRxDDGMO5drZQFPPvHhCL2HWmfb6nwiK1jH2WGq72wWXdq3zclLs7SomKi/0+i/ryuwSQ3Gxub9IJiGA9Kfq1VP2cEJk4Dje/PrqCFhQSit058NEE/9e1dUDCh2x8FM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777281509; c=relaxed/simple;
-	bh=gdPOygJQcdhwkXiNTM+hJwzII1oH2iN1Avurh1yipic=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gxv66TRxT0brpIcz38AayltFd23e/morZkSUpkzbcPAm5fQOWr/OYISjiXraaejODknE543zgvksury/b6kYPlHhUBuH+O/2e6XkeHnCquoEZHj36o1y25hoDD7ubbhL+gdaETdXBKNqvSApd8rfIJc7YMVR3fPxMpk/gPRAJp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ovSMLHYI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777284985; c=relaxed/simple;
+	bh=MVzRp4OGUxMMdWcsFlN4qWeIX4Qazp+n6VnfWzrAamk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QN6bP5zw9wFosFhyZkc/YJJYkpmEgzr4wYifGPEkq4xwHmpg7TN9FuWrj6iCSfI9dzGNV7evRqi3FMryt/XdaYQzBPrjIRci68vW1iLwhrpBUOgdL8SZqkYBnu8B4snGQDRnNZbgD8cdjmdmN4iOu+1xvSYeshbE39Buehv5PM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ipf/P+mJ; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ovSMLHYI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA766C19425;
-	Mon, 27 Apr 2026 09:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777281508;
-	bh=gdPOygJQcdhwkXiNTM+hJwzII1oH2iN1Avurh1yipic=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ovSMLHYIWW4/LRrNff/7pdKgYfm0M4f7+gGF2/qb6OL3faIum2hYd+EHjSizs2glj
-	 ViY/rR7vPxjNYMPieWBo3VnTTTzX7myNEsHxG88NQyIXq2G5TDOxU7t3Dd78B4prHQ
-	 R6QuOoFPhxGaxhOYy1GzuzF0JZ7iPinxsxJZGriuF5APN8HsLGbVxhCViEVbOYcH0y
-	 DGCtuN5zArAi9/2qnxjQu8Nsy3VudgvlhJXmsryKw7DIS7Qhac+IhJZnRtn7txnMu2
-	 sBcgEx5C9HzBNtv+IJuI5hXwbSC8kZyAXX70YRHR53gZHenaLOFeQv1TCT3UFjy7qC
-	 eCYE5ix9TOLwQ==
-Date: Mon, 27 Apr 2026 11:18:23 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Ravi Singh <ravising@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de, 
-	djwong@kernel.org, dchinner@redhat.com, esandeen@redhat.com
-Subject: Re: [PATCH v3] xfs: flush delalloc blocks on ENOSPC in
- xfs_trans_alloc_icreate
-Message-ID: <ae8p1wX_EXPLuBrC@nidhogg.toxiclabs.cc>
-References: <20260422073959.10056-1-ravising@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ipf/P+mJ"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-35d94f4ee36so6000849a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 03:16:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777284984; x=1777889784; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pdggqY40OkypkTlyFCDPbQJ5t8fWVIZTWFDYfO2J5OM=;
+        b=ipf/P+mJXMFbjUJOYSs6xDia98wvHxaAjL40BuOuATATeYYLy8jD4ZwaXBY/oAKIdh
+         zjaj0NamCDeLhyrr5M+LMwmeI1uVFnx7/08SowVtFlhKSBTVTWKKTUEZ8KNcgBmPROTy
+         ldoe5bO5NygjFrhfyuf2aOV3hoTanFTK7pfmuMrUReOGmcZqGSEvIWFtMZ7VqCcRlYfB
+         buyXAsmV20TiqYI8RdE1yjWNDGSbd43ejYakfLlhhqPXZC++Uo8JY1+ZvmYBGf+W9W40
+         2w0mh6cOUOWUVi9x/Ds2eWSE+fyZdBjt2mFX+6raVVEnv6+VfUyLQ163UOJ3LRyDC0qz
+         dleA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777284984; x=1777889784;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=pdggqY40OkypkTlyFCDPbQJ5t8fWVIZTWFDYfO2J5OM=;
+        b=stwP3yKQbEtmV9YPFOoBt0yrIYvTqlC3KjJ5mWHXoryblSw1O2I/FgbeOwVX9rkNu+
+         yonqkmcWL7GMj0nFuJEQ7ABOcIFN0OGqHGMTwBBBdig8Z3/HeSWhMiVWecC+JSavXt5J
+         sADEQZfaSstvNJft3kOIANBSNwbnjObrGvm6fU91KSHazAtLziRCgCRXl+9SWBYQkE/3
+         7LGRCVd+UPhmP2gyO1viWFXOX5Ce/9g9RUHR+52Nrl2z0FmPldzTRxpsveBZgC614iKv
+         O2VosZRtHt1plZyOjA9s5QEoaf3msWGyvJ3epMbB83aZhhs4Sj96yboHfumqxgOesDcY
+         Wd4A==
+X-Forwarded-Encrypted: i=1; AFNElJ/X31kGCMuh8qaylAkdjVP0YjLrSAEkbzldZusEMFEFDHBvAJ+oqqdFQoQBExNWYjlnDWFngxCrxjg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyKWYlMwWLzPDTV+OaEPbTn5PUnpZQeJxT0p3tlHG/8OuhA3ExG
+	a1qWR0NoLWGTuqOA9c9n/kL3yu+gwi2JC6YUs52yyO2l50dZGJTQNZ+U
+X-Gm-Gg: AeBDiesGtHS4+fzg0eVRa4qj4FAhpe2mpk8MPvGbk83askkPQbeYRSXGpsjX1WfP344
+	a5GBJnTRgjfuTNvy6f2R3JAJ1uIgyz4RWmzCgA1s2W4nfFA5423RUWpyLWXVgLrs6NpdJJvbbdC
+	RaZG3pflI7MQ62S0LGMq2F6HoreuZS8OyMnet8XBNwCbaY0MGCKKFRMOfu/Eyp/PgKVgSEuA/02
+	wbZsRQl3XbFhtNjdY7ys3HyroO6y+/xPf6MRG+Ioxu1ZBRKdGpjz5sAmCOiW52N/6V5/3rYYgOo
+	/0V5OJUzVReneU0OwFEoJ8G0o35x5lx8MAKstBczv86WL+JwlqMRdKzFnw+6v8nx0XNOrv5DcPm
+	U/AJt499ti4k2gQ9jq6kSLLhP02rLqMw1m6VY8pEt33FRQX83WH+K2iNWrSnMGT3aefEucZFgcJ
+	jokrtMeWx5T61vJhVjbleQ7Hw7Y8K/9TmS9bFTzA==
+X-Received: by 2002:a17:90b:5544:b0:35b:90e7:c44f with SMTP id 98e67ed59e1d1-361403e1016mr40055142a91.7.1777284983849;
+        Mon, 27 Apr 2026 03:16:23 -0700 (PDT)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3613f56ecbesm11872541a91.0.2026.04.27.03.16.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Apr 2026 03:16:23 -0700 (PDT)
+Message-ID: <a7df722a-834a-44f0-87ad-d0da5a813e6b@gmail.com>
+Date: Mon, 27 Apr 2026 18:16:19 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260422073959.10056-1-ravising@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/3] ext4: derive f_fsid from block device to avoid
+ collisions
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Theodore Tso <tytso@mit.edu>, "Darrick J. Wong" <djwong@kernel.org>,
+ linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, Anand Jain <asj@kernel.org>, dsterba@suse.com
+References: <5bda3d00-df35-4ea1-b313-2fef6e5c5682@gmail.com>
+ <adSUiB9L0sFAd04U@infradead.org> <20260407144709.GA81690@macsyma-wired.lan>
+ <3c9e478a-42ef-446f-a8cc-1b4ac970d2ef@gmail.com>
+ <20260409041035.GC99725@macsyma-wired.lan>
+ <22cfbf8d-af9b-462e-b240-67a1de24764f@gmail.com>
+ <20260409131238.GC18443@macsyma-wired.lan>
+ <b593ab17-afaf-4128-97eb-0ab9c23dec5c@gmail.com>
+ <aeHikJwRmFdDg5FW@infradead.org>
+ <cd9c0147-18cf-464d-86e2-12342a992ebc@gmail.com>
+ <aempTb5TyKG0vPL0@infradead.org>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <aempTb5TyKG0vPL0@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 22, 2026 at 07:39:59AM +0000, Ravi Singh wrote:
-> xfs_trans_alloc_icreate() can fail with ENOSPC when delalloc
-> reservations have consumed most of the available block count
-> (fdblocks).  xfs_trans_alloc() already retries internally with
-> xfs_blockgc_flush_all(), but that only trims post-EOF speculative
-> preallocation and may not free enough space for the transaction
-> reservation.
-> 
-> Add a retry with xfs_flush_inodes() when xfs_trans_alloc() returns
-> ENOSPC.  This forces writeback of all dirty inodes via
-> sync_inodes_sb(), converting delalloc reservations to real
-> allocations and freeing the over-reserved portion back to fdblocks.
-> 
-> This fixes all callers of xfs_trans_alloc_icreate() and removes
-> the existing caller-level retry from xfs_create(), which is now
-> handled centrally.
-> 
-> Signed-off-by: Ravi Singh <ravising@redhat.com>
-> ---
 
-Looks good
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+On 23/4/26 13:08, Christoph Hellwig wrote:
+> On Wed, Apr 22, 2026 at 07:39:57PM +0800, Anand Jain wrote:
+>>> No, T10 does not actually mandate unique identifiers, NVMe does, but the
+>>> implementations are often totally broken.
+>>
+>> Right. Newer SPC-3 (and above) compliant devices must support
+>> the Inquiry CDB EVPD flag and provide page 0x83 for identification,
+>> which is what we typically use for multipathing.
 > 
-> v3:
->  - Moved comment to sit above the flush+retry code (Christoph)
+> But there is no requirement for it to contain something useful.
 > 
-> v2:
->  - Moved xfs_flush_inodes() retry into xfs_trans_alloc_icreate()
->    instead of xfs_symlink() (Christoph)
->  - Removed caller-level retry from xfs_create()
->  - All callers now covered: xfs_create, xfs_symlink,
->    xfs_create_tmpfile, xcrep_tempfile_create
+>> These are globally unique. And, we can overlook legacy
+>> drives, as they've probably been past their EOSL for a while now.
 > 
+> We have absolutely no useful identifiers for most USB devices.
+> NVMe devices have broken identifiers all the time as well.
 > 
->  fs/xfs/xfs_inode.c |  6 ------
->  fs/xfs/xfs_trans.c | 11 +++++++++++
->  2 files changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index beaa26ec62da..9978ac1422fc 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -699,12 +699,6 @@ xfs_create(
->  	 */
->  	error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp, resblks,
->  			&tp);
-> -	if (error == -ENOSPC) {
-> -		/* flush outstanding delalloc blocks and retry */
-> -		xfs_flush_inodes(mp);
-> -		error = xfs_trans_alloc_icreate(mp, tres, udqp, gdqp, pdqp,
-> -				resblks, &tp);
-> -	}
->  	if (error)
->  		goto out_parent;
->  
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index bcc470f56e46..148cc32449c1 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -1199,10 +1199,21 @@ xfs_trans_alloc_icreate(
->  {
->  	struct xfs_trans	*tp;
->  	bool			retried = false;
-> +	bool			flushed = false;
->  	int			error;
->  
->  retry:
->  	error = xfs_trans_alloc(mp, resv, dblocks, 0, 0, &tp);
-> +	if (error == -ENOSPC && !flushed) {
-> +		/*
-> +		 * Flush all delalloc blocks to reclaim space from speculative
-> +		 * preallocation.  This is similar to the quota retry below
-> +		 * but targets FS-wide ENOSPC.
-> +		 */
-> +		xfs_flush_inodes(mp);
-> +		flushed = true;
-> +		goto retry;
-> +	}
->  	if (error)
->  		return error;
->  
-> -- 
-> 2.53.0
-> 
-> 
+> So no, you can't.
+ Agreed. I have dropped the plan to rely on hardware identifiers;
+ the lack of consistency in USB/NVMe firmware makes them a
+ non-starter for a stable identifier.
+
+ The updated patch set, excluding the ext4 changes, has been
+ submitted to the mailing list. Fstests test case updated as well.
+
+Thanks, Anand
