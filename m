@@ -1,91 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E903C6609
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 13:26:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CFB33C7DF1;
+	Mon, 27 Apr 2026 13:26:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777296369; cv=none; b=ZL/0o97nQpcILJDmeauEDcj/8f+v9VZ1L83C5r92SVhX/4UdVWpwRj+pO0Rf+j8DeUEkL1IR8MJ2JDBlZvvYa3EkFS7ROASttdR0rXQSYkxiOtyfj2Iagetp5LHWoclP6P/uvHlZwb8N6ZLvT0JzpwDiWhs3+f7yKmPyLyBP0xk=
+	t=1777296379; cv=none; b=mMGs7Xs2UYjNTpL9pOYYxtv2UpDzg1SM1IJP1WGCPXSuXhdOfB9RGG5hfMwQErHb1Dtvhr5Dw507EE5xKtdtx6rdk2+/bQSrB9RxIVW+8KhScSOnUM2B5i2ZAyD+Z7pQ9IpEVvAsMWrvlWL6efX6XI2TmI5q0dYkvT+OWngfvSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777296369; c=relaxed/simple;
-	bh=d40b6do6mSX6I+pJ7RTWIoHJIdH9WeoUIL1VQuibdQY=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=pNvS3ZdeN+tusWA/ICukrGuK6BJz8YwKUz5KMnP6ehLkf4Ouo4FBqXmFHUc0l8SWFSDDRVkC/rTx8nRklT4rg2P88GSZ5JC3PpECtp/NmaYKbaflPYUlAWRQ3AbV8zb4JS2cFe6DM+apACwJdGUu/nVMk30JKUzU4c/qHrf9YO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e+dgNeud; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777296379; c=relaxed/simple;
+	bh=zq5KYIKHAByzw8BZAhMPDv90ScHw3Ru9T95XjtIurXc=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=EGhl0Cflrhj4lm2s8IEqUjEf9Dq+FcEmD1/9gHYfU8JvUQagAYGwyk7n7vLk/bXuacr2Zh5Hvw/mbSpfQhRF3ad2U6hY+n+zPvcx+JfUAkoqxp+5KB3vDFEeyEPJNwiUo3Skw9fSd2Y6oFysC5dzgMf8Kf5/6h0l2EVXBhHTILU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tlga6+lX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e+dgNeud"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1180C2BCB5
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 13:26:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tlga6+lX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65421C19425;
+	Mon, 27 Apr 2026 13:26:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777296369;
-	bh=d40b6do6mSX6I+pJ7RTWIoHJIdH9WeoUIL1VQuibdQY=;
-	h=Date:From:To:Subject:From;
-	b=e+dgNeudPv/kxGgwEoNbbC1bUFWY5v34RhU0X9Nap+RI+wAwyKgrn3rg7Ls6AqV+k
-	 +bHzTJcFr3TloAY2l6+QQ2C7wa5cg/eEGPlR9yUG99ulHw/EYFUk74ObZuBZOsSinp
-	 FUsCTtxETb4X8p6Qip/12PlM+x4UwzCukD3G9yjP8qXYI0wZofKxN4lgeredNiNFCz
-	 mloywWND0BuL8kSkpl4rY+BViLq2+t6146pbrOXldFdudXoVB3W6E2ZxQT59dWnkOB
-	 Pah9lD77o+XvQ7hiQ1lGc+ZW2C5DfuEWpr9xYsAlFbg0kqoApa+HZo11IFD3goTmL3
-	 NiVqefnjRTALQ==
-Date: Mon, 27 Apr 2026 15:26:05 +0200
+	s=k20201202; t=1777296378;
+	bh=zq5KYIKHAByzw8BZAhMPDv90ScHw3Ru9T95XjtIurXc=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=tlga6+lXsrrmBrRtOYOPw4oj+lG7Ws5wNxMTtqjrktF0/BSKn299n9cqe5IECS3ui
+	 XGmCTdZFAJr3rxBh1e6cFc2kV6Me+UVWQI1WEvFID/+T6s38f/4NdKNbrJCWCi/4jh
+	 y5SPZ2NL4vaJybG1RJOII/tf7vjW2LThw4pMX321qGDEfuTIkqgGXgB/ayXOrrToBM
+	 RuFZJpzPbGeDy0EneIl3mmPcWDBS5VNVccL5pwtkz0ryjD/+w4Y8NVcbeS9xagHw6O
+	 iZbERAApO8df1E/whFCaUY4umKoZXvwh0mH30/Dq/EWqgWCsKmF+GVBo2QmZUkjltt
+	 wm6PeKlrXfGuQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 87e63466c9fc
-Message-ID: <ae9jarjvEDYL0G-Z@nidhogg.toxiclabs.cc>
+To: djwong@kernel.org, kees@kernel.org, alexjlzheng@gmail.com
+Cc: alexjlzheng@tencent.com, linux-xfs@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20260410101106.2523665-1-alexjlzheng@tencent.com>
+References: <20260410101106.2523665-1-alexjlzheng@tencent.com>
+Subject: Re: [PATCH] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
+Message-Id: <177729637708.100803.10895271333001567849.b4-ty@kernel.org>
+Date: Mon, 27 Apr 2026 15:26:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
+On Fri, 10 Apr 2026 18:11:06 +0800, alexjlzheng@gmail.com wrote:
+> In xfs_refcount_finish_one(), there's no need to pass
+> XFS_ALLOC_FLAG_FREEING to xfs_alloc_read_agf().
+> 
+> So remove it.
+> 
+> 
 
-Hi folks,
+Applied to for-next, thanks!
 
-The for-next branch of the xfs-linux repository at:
+[1/1] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
+      commit: bfb4dc533d0abaca07013dd71e6b5c6f182232b3
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-has just been updated to 7.1-rc1 and a few fixes.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-87e63466c9fc xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
-
-8 new commits:
-
-Jinliang Zheng (1):
-      [bfb4dc533d0a] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
-
-Ravi Singh (1):
-      [87e63466c9fc] xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
-
-Wilfred Mallawa (2):
-      [592975da8c3c] xfs: fix memory leak on error in xfs_alloc_zone_info()
-      [af47a4be6a90] xfs: fix memory leak for data allocated by xfs_zone_gc_data_alloc()
-
-Yuto Ohnuki (4):
-      [00dd8d7ec525] xfs: zero entire directory data block header region at init
-      [8fbb1877dfa5] xfs: zero directory data block padding on write verification
-      [939919ccddfc] xfs: check directory data block header padding in scrub
-      [fca20fcb76a2] xfs: check da node block pad field during scrub
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_dir2_data.c | 18 +++++++++++-------
- fs/xfs/libxfs/xfs_refcount.c  |  3 +--
- fs/xfs/scrub/common.c         | 11 +++++++++++
- fs/xfs/scrub/common.h         |  2 ++
- fs/xfs/scrub/dabtree.c        |  7 ++++++-
- fs/xfs/scrub/dir.c            |  7 ++++++-
- fs/xfs/xfs_inode.c            |  6 ------
- fs/xfs/xfs_trans.c            | 11 +++++++++++
- fs/xfs/xfs_zone_alloc.c       |  2 +-
- fs/xfs/xfs_zone_gc.c          |  2 +-
- 10 files changed, 50 insertions(+), 19 deletions(-)
