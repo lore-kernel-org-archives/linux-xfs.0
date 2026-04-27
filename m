@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C5673B0ADD
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 12:09:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 292653B5850
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 12:09:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777291776; cv=none; b=bItyqzUOvgdjc1MDfTGWwCO+fqbH0z5hUfUm6wkboeNc9Cmc/TAXPLbX9XXPs92PuZL6qLpgjD6Lr89hn/n2LmVZe0+tRnFn5XDKJ+mDU9J33F+ahvSnvh3AVCJ/ijBeIpIyurlF22Y7ai91rrTkSupqcMe3YNWQTcxWa0xIL5g=
+	t=1777291778; cv=none; b=pLFfke3bKTBJ0rrzCmTT+UVu42+qTMrHlqirKj9j9YcaP+TifYsXjWtXM4b3e3SAEf2BQU9Lsj/g0xOnCJRGI4aXGRKj8qYlouliSY8lzmO7PLjcSXJVojnwzJ1lJaiWUSFqJWkWUf5416u2LxGf6uuPYMR5f5tQbRnjHqEGkxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777291776; c=relaxed/simple;
-	bh=yOXRtehkSYBIHmV3r2b7b5IARsZtzlBhrsgrCoaNgCs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=j+x6NSdJImBjPNaNpiiqVqRs4Xv/0H1oR+g9C/Hhk5M9V34t2TURSzdlYiMiU6NEiykRZXIhfULX49Agve5aBQ3MWHLzfoZhldJUISdIbtvs0RFEjVyBJL74H4k1wHvlJONd9KdJM16qOL9mDqy1PBE8+3/5iaZnSc0BhAl1nOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pvgoDdp8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777291778; c=relaxed/simple;
+	bh=9cRvaO69WXQIsxnSoUWP4QwujF+lMi9adjUSGuqh7aM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VRELwOIEGA0J24bc4m9Pe48EP5T3OLmv9vL7LnsKiTktKZQeMZPlZKdBW9WsIejY/ndrB9sn7GIpydobApEfQ/qXXZdFFjwGeAkh5axyLDi0NMyzGlsO+elNsH8dHaqeK97Ia2FfAteqkm0g2ztg6ps98xUc2akCr7wVYrteu5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zrk0xlrn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pvgoDdp8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D867AC19425;
-	Mon, 27 Apr 2026 12:09:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zrk0xlrn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0000AC2BCB5;
+	Mon, 27 Apr 2026 12:09:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777291775;
-	bh=yOXRtehkSYBIHmV3r2b7b5IARsZtzlBhrsgrCoaNgCs=;
-	h=From:To:Cc:Subject:Date:From;
-	b=pvgoDdp8+e3kbRFZ7o4Jh5ZYnvrh317emctdq/fMHmurnAu25C93Z7JUB+S6GSOgs
-	 /Z8pWwtz45l5pgvM4t8prFdqBcGf7fUT1/LV2UxpTgPdQkQHCPwIBoH4HBvxBykGdl
-	 fmERw0umkZCysGMSeB668NwICpUhk32+V5PkqWMA///8IUx1qMa2Upfs0rUK8iMzVW
-	 nl4Ubb+B+WrJOinI1FtxKK7emYAE9xckAaZ5mf4SQ3qAQWhv9tz9cVk+VCoBsL2kJT
-	 9wRaXJuy2YngWEcUYvx0RQDvVmkOZmgcEcjGrE95qqVIYE8Ds3AJDbD+SHy1nij7cK
-	 9JDAQ8R/pemeQ==
+	s=k20201202; t=1777291777;
+	bh=9cRvaO69WXQIsxnSoUWP4QwujF+lMi9adjUSGuqh7aM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Zrk0xlrnGuR1PaIXXZY2ebVrNz2RhUB6D2HMFP14La1QrSk5iy+2O2ZQ8u1rStWhZ
+	 J39W5CyWG1NLmdwl41fOnaStKsmbimRDxZhQwgfSM/Q2j9H2hHxAfMt72OZ7g7kJyB
+	 +FCCAbBtNQvwcbEI0puucvUBbWOnpb/jxTwFV3jIsMaghIcIYs0njPkmLPKupbGamC
+	 D7SFiARsJoF950meKqHVyyVXsSmOsCB7K6YsfwS2zKZi2+PNQ8Oyl44zvE/C9wQrZR
+	 XZvGpuflq9TcaP53lVsKUhadZNPgFrl7UM4Gzd0EbzaxvsywHLBOvLJWiESJ2Uke1W
+	 Jhc7IE1pSJFfQ==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org
 Cc: cem@kernel.org,
@@ -33,10 +34,12 @@ Cc: cem@kernel.org,
 	leo.lilong@huawei.com,
 	morbo@google.com,
 	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH 0/3] xfsprogs: libxfs-v7.0-sync
-Date: Mon, 27 Apr 2026 14:09:05 +0200
-Message-ID: <20260427120908.52254-1-aalbersh@kernel.org>
+Subject: [PATCH 1/3] xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+Date: Mon, 27 Apr 2026 14:09:06 +0200
+Message-ID: <20260427120908.52254-2-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
+In-Reply-To: <20260427120908.52254-1-aalbersh@kernel.org>
+References: <20260427120908.52254-1-aalbersh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,57 +48,71 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+From: Bill Wendling <morbo@google.com>
 
-This is libxfs sync to v7.0 with a few missing patches. The most of the sync was
-done by Darrick as part of his xfs_healer/health monitoring series.
+Source kernel commit: e5966096d0856d071269cb5928d6bc33342d2dfd
 
-The __counted_by_ptr is NOPed. This attribute existed before but without
-pointer support, so this can not be easily wrapped by has_attribute. This will
-require build checks to check compiler version which doesn't seem to be a
-practice in xfsprogs.
+Add the `__counted_by_ptr` attribute to the `buffer` field of `struct
+xfs_attr_list_context`. This field is used to point to a buffer of
+size `bufsize`.
 
-Range-diff attached below.
+The `buffer` field is assigned in:
+1. `xfs_ioc_attr_list` in `fs/xfs/xfs_handle.c`
+2. `xfs_xattr_list` in `fs/xfs/xfs_xattr.c`
+3. `xfs_getparents` in `fs/xfs/xfs_handle.c` (implicitly initialized to NULL)
 
-Git Tag:
-https://git.kernel.org/pub/scm/linux/kernel/git/aalbersh/xfsprogs-dev.git tags/libxfs-v7.0-sync_2026-04-27
+In `xfs_ioc_attr_list`, `buffer` was assigned before `bufsize`. Reorder
+them to ensure `bufsize` is set before `buffer` is assigned, although
+no access happens between them.
 
-Bill Wendling (1):
-  xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
+In `xfs_xattr_list`, `buffer` was assigned before `bufsize`. Reorder
+them to ensure `bufsize` is set before `buffer` is assigned.
 
-Long Li (2):
-  xfs: factor out xfs_attr3_node_entry_remove
-  xfs: factor out xfs_attr3_leaf_init
+In `xfs_getparents`, `buffer` is NULL (from zero initialization) and
+remains NULL. `bufsize` is set to a non-zero value, but since `buffer`
+is NULL, no access occurs.
 
- include/platform_defs.h |  3 +++
- libxfs/xfs_attr.h       |  3 ++-
- libxfs/xfs_attr_leaf.c  | 22 +++++++++++++++++
- libxfs/xfs_attr_leaf.h  |  3 +++
- libxfs/xfs_da_btree.c   | 53 ++++++++++++++++++++++++++++++++---------
- libxfs/xfs_da_btree.h   |  2 ++
- 6 files changed, 74 insertions(+), 12 deletions(-)
+In all cases, the pointer `buffer` is not accessed before `bufsize` is set.
 
+This patch was generated by CodeMender and reviewed by Bill Wendling.
+Tested by running xfstests.
+
+Signed-off-by: Bill Wendling <morbo@google.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+---
+ include/platform_defs.h | 3 +++
+ libxfs/xfs_attr.h       | 3 ++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index b2d80597a83a..5a829db66e08 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -330,4 +330,7 @@ struct kvec {
+ #define BLK_ZONE_COND_ACTIVE	0xff
+ #endif
+ 
++/* xfs_attr.h */
++#define __counted_by_ptr(member)
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index 8244305949de..67fd9c75ac3f 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -55,7 +55,8 @@ struct xfs_attr_list_context {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_inode	*dp;		/* inode */
+ 	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
+-	void			*buffer;	/* output buffer */
++	/* output buffer */
++	void			*buffer __counted_by_ptr(bufsize);
+ 
+ 	/*
+ 	 * Abort attribute list iteration if non-zero.  Can be used to pass
 -- 
 2.51.2
 
--- 
-1:  d67701f62d9a ! 1:  df91bc3bdc9b xfs: annotate struct xfs_attr_list_context with __counted_by_ptr
-    @@ Commit message
-         Signed-off-by: Carlos Maiolino <cem@kernel.org>
-         Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-     
-    + ## include/platform_defs.h ##
-    +@@ include/platform_defs.h: struct kvec {
-    + #define BLK_ZONE_COND_ACTIVE      0xff
-    + #endif
-    + 
-    ++/* xfs_attr.h */
-    ++#define __counted_by_ptr(member)
-    ++
-    + #endif    /* __XFS_PLATFORM_DEFS_H__ */
-    +
-      ## libxfs/xfs_attr.h ##
-     @@ libxfs/xfs_attr.h: struct xfs_attr_list_context {
-        struct xfs_trans        *tp;
-2:  d3b48de1f7db = 2:  e7aab724c89a xfs: factor out xfs_attr3_node_entry_remove
-3:  a0a6a995a5b5 = 3:  922f14a9b776 xfs: factor out xfs_attr3_leaf_init
