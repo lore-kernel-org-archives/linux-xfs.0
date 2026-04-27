@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 951403CAE92;
-	Mon, 27 Apr 2026 13:26:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6581B3CEB84;
+	Mon, 27 Apr 2026 13:26:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777296383; cv=none; b=Lem0rG9spOHXoHWL1pZa7DTiAhujR/JDFcy5JY7xn+LP4YDLy/dpckMAcQXzWwIjVREHPX/nU4ON0V+cv1fmzhml0y2TUPpkZKIUDJ5nkPgXZrsvlLGVIH7UYSV1BYmywP+JUN3d3PxZ2OmaRafyIfW6IDP4EnSruapVbxI2QHg=
+	t=1777296385; cv=none; b=H5tE2IgFsGNSxuFFK08DQU/b6XUrgoaIERZwTTP/job0rlOsNcFH6iQubPpQ01sbu3l3qmCTJCnMpagM4yodZHC/bX3zKbYm+RdQplJqhM+Ax9pmb47L1nrPJVYN+mUG8lPiPK3LwxxtkWccZ/IP1D5Q2xlTNFfpApJqJBXa9nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777296383; c=relaxed/simple;
-	bh=8jobtfdUiyeFErqAGFvHM8dAx+nn/UW0iXInDIFpj8Y=;
+	s=arc-20240116; t=1777296385; c=relaxed/simple;
+	bh=87aWx7xhsAQb2FDwkSkXZ1QoTCDGxsiTk72A/vQl/rE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=AQiBTIiFZ3+4RPXjpbQlW8UT7QUaKQ3JzEYpPbRnRo13SBVCculrOhe+92R00oBvRBaJoUx4Z6K5o+sMAaZ/HMgYQya5BalrMNpxCYo+iF0gHT/Z+zqT1bbh2HlP9PU52AxQcRNs3afVAqHvP910sQEXIZH5eptEw7luX/QXHwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2gYhX1C; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YQ8WFbTByrRF6gm8bR6UZlKdRYrubp1/CQpcnIR4DygU6L8Yh+cJJrE3f7qAbS7Dz0xbSoFBCqNuxvO/grswUnAJBCjtyU2DBfDVqD0XhJac2Ri3LUpEPiKPcJUthztv+WsMX0fPJC8117OgiAp10Y1jCylds7Wei/vthI77Jxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Db8CIdVq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2gYhX1C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC716C19425;
-	Mon, 27 Apr 2026 13:26:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Db8CIdVq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1F5C2BCB4;
+	Mon, 27 Apr 2026 13:26:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777296383;
-	bh=8jobtfdUiyeFErqAGFvHM8dAx+nn/UW0iXInDIFpj8Y=;
+	s=k20201202; t=1777296385;
+	bh=87aWx7xhsAQb2FDwkSkXZ1QoTCDGxsiTk72A/vQl/rE=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=F2gYhX1CNDDNCpjNk3N7lX4Oe1ldDc0+ML4RlczEBHDA518735Odi0w/fHzPI6Uoy
-	 jTMlAM2i3liQXpcLJ7p/OMICx4FGYtBPBaGKovF0kU+F1Hcvd1MDoqGT/gU9q3jNxq
-	 ONUYLq0Sc0LLqkakXXaoTPgzkusIyAO2T6pujAxNkI83GcNzD/8CheUCt9LKVCCJLU
-	 YuEddEZnGJKzLuHT/nptyvjIW8AQvTQ7kTtWPdnxIsz1rRkPxvESasNqxyBvJc5/LK
-	 ca8vJXfWN68+5+q5vKIe00rjjpCgVBDM9kNE4YoluosbxdzQ70pMZXn2/ScsUKWqo8
-	 OxLCyZlSWfJeQ==
+	b=Db8CIdVqwYXVOvI/70lsDNkEOrwD8d97wAukc/tUs6IZAKEV6ts2uenc7dJoYDqAs
+	 MZc9/+g2Po81nnivaT1kuDzjs361YDRq6LEZ4GYf8qf/UGu/aFStvEPv/gi3/OU0tp
+	 +FTRPWZ2H7PLA+9PAXvoPUf2K/ntRnjLPZAoySY2DfGry2PguHie5UB1167axvseYb
+	 PP7vyefTK2+/emXKWDm6QWMfUFmJb1QgUPjbIsw5BlZe4iL0t22hxqZ6xq6nya/Bax
+	 C4EXD2kJ0skyPiEWEUL87mbs+ZK8uID0F9V4TlpS/k5Imi+LT4O1n62hffBwpx4+ZF
+	 nSqAj3alpNm/w==
 From: Carlos Maiolino <cem@kernel.org>
 To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Wilfred Mallawa <wilfred.opensource@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, 
- Alistair Francis <alistair.francis@wdc.com>, 
- Hans Holmberg <hans.holmberg@wdc.com>, 
- "Darrick J . Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Wilfred Mallawa <wilfred.mallawa@wdc.com>, stable@vger.kernel.org, 
- Carlos Maiolino <cmaiolino@redhat.com>
-In-Reply-To: <20260414234513.1457961-2-wilfred.opensource@gmail.com>
-References: <20260414234513.1457961-2-wilfred.opensource@gmail.com>
-Subject: Re: [PATCH v2] xfs: fix memory leak on error in
- xfs_alloc_zone_info()
-Message-Id: <177729638055.100803.10209353936035687972.b4-ty@kernel.org>
-Date: Mon, 27 Apr 2026 15:26:20 +0200
+Cc: Hans Holmberg <hans.holmberg@wdc.com>, 
+ "Darrick J . Wong" <djwong@kernel.org>, 
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>, stable@vger.kernel.org
+In-Reply-To: <20260417021628.2608734-3-wilfred.opensource@gmail.com>
+References: <20260417021628.2608734-3-wilfred.opensource@gmail.com>
+Subject: Re: [PATCH] xfs: fix memory leak for data allocated by
+ xfs_zone_gc_data_alloc()
+Message-Id: <177729638335.100803.1638951468319151843.b4-ty@kernel.org>
+Date: Mon, 27 Apr 2026 15:26:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,18 +48,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
 
-On Wed, 15 Apr 2026 09:45:14 +1000, Wilfred Mallawa wrote:
-> Currently, the 0th index of the zi_used_bucket_bitmap array is not freed
-> on error due to the pre-decrement then evaluate semantic of the while
-> loop used in xfs_alloc_zone_info(). Fix it by allowing for the i == 0
-> case to be covered.
+On Fri, 17 Apr 2026 12:16:30 +1000, Wilfred Mallawa wrote:
+> In xfs_zone_gc_mount(), on error, a struct xfs_zone_gc_data allocated
+> with xfs_zone_gc_data_alloc() is freed with kfree(), however, this
+> doesn't free the underlying folios or the rmap_irecs.
+> 
+> Use xfs_zone_gc_data_free() to correctly free this memory.
 > 
 > 
+> [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix memory leak on error in xfs_alloc_zone_info()
-      commit: 592975da8c3ca87b043077e6eafa37665eae7936
+[1/1] xfs: fix memory leak for data allocated by xfs_zone_gc_data_alloc()
+      commit: af47a4be6a90c8bfc874f9994ac9c15813b9718b
 
 Best regards,
 -- 
