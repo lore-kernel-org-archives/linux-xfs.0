@@ -1,116 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C72F36CDE8
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 12:09:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E903C6609
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 13:26:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777291782; cv=none; b=IJTwqOsVjv1MirAXvb7dIGdusPKy44/J3gNFPyQ3c1zR5Bcdq5wEmzZYDZ4qQB+mf2fppzaZ1+r7QKYoaQzuf/qfFXJQKXGurdu4QJWegt3s2xqVw3Tu418eSZMACSmUeAGM1ma0rBs11mnKo/QdkqshoRmuBrsreomB/+rFeoQ=
+	t=1777296369; cv=none; b=ZL/0o97nQpcILJDmeauEDcj/8f+v9VZ1L83C5r92SVhX/4UdVWpwRj+pO0Rf+j8DeUEkL1IR8MJ2JDBlZvvYa3EkFS7ROASttdR0rXQSYkxiOtyfj2Iagetp5LHWoclP6P/uvHlZwb8N6ZLvT0JzpwDiWhs3+f7yKmPyLyBP0xk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777291782; c=relaxed/simple;
-	bh=hK5oUgXp6lW1N9yIY211Z4m1ZJpYi10Z91MRAM6dA28=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qhOA4P3tSRdnBSJdc5FuHjp4S18b1rxktVVvqXD+RTIBCVYvRyOUvYp+cSbBdpYH9uOt2Qz3EvZsGFbq+xq91On/P9YlLYJHf7mDUbQO6CE2zFYx42i7vf/zkWCw3AtD3whxMIxnxZvu7/oHuMYWc0G37E7YmWim+HePYziuxhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OtcyXklE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777296369; c=relaxed/simple;
+	bh=d40b6do6mSX6I+pJ7RTWIoHJIdH9WeoUIL1VQuibdQY=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=pNvS3ZdeN+tusWA/ICukrGuK6BJz8YwKUz5KMnP6ehLkf4Ouo4FBqXmFHUc0l8SWFSDDRVkC/rTx8nRklT4rg2P88GSZ5JC3PpECtp/NmaYKbaflPYUlAWRQ3AbV8zb4JS2cFe6DM+apACwJdGUu/nVMk30JKUzU4c/qHrf9YO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e+dgNeud; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OtcyXklE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ED19C2BCB7;
-	Mon, 27 Apr 2026 12:09:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e+dgNeud"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1180C2BCB5
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 13:26:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777291781;
-	bh=hK5oUgXp6lW1N9yIY211Z4m1ZJpYi10Z91MRAM6dA28=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OtcyXklEQOYyD/kZmp5R3WyChTHqZBBOCkmtzOY0kkXTC47hNd0MRs97ar8Q42So4
-	 QAfmsh4IKHi3bimzUllv+O2zpVC5bWWgY/zCd4U0uzKO6MEenPI4QnA+9PenRuYIHe
-	 bwX3Zr/vepY08n1xvUY8olzZWu3Wr3JIoJxjC7Ly4hDP2vWjUsqToAfp+Erq5w4ZIS
-	 GjISODSF/WdPomrckzR8wZ+wE5Sv0wmRWTspWQBs2sZEcr0BYefcaAOCGJaXty2jdf
-	 HaI85cQCm7rCUODYaeKuamsrRYwcYbaeYwbt/j+rCFzA/iqBMPUFSEEgyHf+20Z/Bt
-	 LuPJ/F4tQUoaw==
-From: Andrey Albershteyn <aalbersh@kernel.org>
+	s=k20201202; t=1777296369;
+	bh=d40b6do6mSX6I+pJ7RTWIoHJIdH9WeoUIL1VQuibdQY=;
+	h=Date:From:To:Subject:From;
+	b=e+dgNeudPv/kxGgwEoNbbC1bUFWY5v34RhU0X9Nap+RI+wAwyKgrn3rg7Ls6AqV+k
+	 +bHzTJcFr3TloAY2l6+QQ2C7wa5cg/eEGPlR9yUG99ulHw/EYFUk74ObZuBZOsSinp
+	 FUsCTtxETb4X8p6Qip/12PlM+x4UwzCukD3G9yjP8qXYI0wZofKxN4lgeredNiNFCz
+	 mloywWND0BuL8kSkpl4rY+BViLq2+t6146pbrOXldFdudXoVB3W6E2ZxQT59dWnkOB
+	 Pah9lD77o+XvQ7hiQ1lGc+ZW2C5DfuEWpr9xYsAlFbg0kqoApa+HZo11IFD3goTmL3
+	 NiVqefnjRTALQ==
+Date: Mon, 27 Apr 2026 15:26:05 +0200
+From: Carlos Maiolino <cem@kernel.org>
 To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	djwong@kernel.org,
-	hch@lst.de,
-	leo.lilong@huawei.com,
-	morbo@google.com,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH 3/3] xfs: factor out xfs_attr3_leaf_init
-Date: Mon, 27 Apr 2026 14:09:08 +0200
-Message-ID: <20260427120908.52254-4-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260427120908.52254-1-aalbersh@kernel.org>
-References: <20260427120908.52254-1-aalbersh@kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 87e63466c9fc
+Message-ID: <ae9jarjvEDYL0G-Z@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Long Li <leo.lilong@huawei.com>
 
-Source kernel commit: e65bb55d7f8c2041c8fdb73cd29b0b4cad4ed847
+Hi folks,
 
-Factor out wrapper xfs_attr3_leaf_init function, which exported for
-external use.
+The for-next branch of the xfs-linux repository at:
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Long Li <leo.lilong@huawei.com>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- libxfs/xfs_attr_leaf.c | 22 ++++++++++++++++++++++
- libxfs/xfs_attr_leaf.h |  3 +++
- 2 files changed, 25 insertions(+)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 90be21a38876..6aaa7ff10959 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -1412,6 +1412,28 @@ xfs_attr3_leaf_create(
- 	return 0;
- }
- 
-+/*
-+ * Reinitialize an existing attr fork block as an empty leaf, and attach
-+ * the buffer to tp.
-+ */
-+int
-+xfs_attr3_leaf_init(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		blkno)
-+{
-+	struct xfs_buf		*bp = NULL;
-+	struct xfs_da_args	args = {
-+		.trans		= tp,
-+		.dp		= dp,
-+		.owner		= dp->i_ino,
-+		.geo		= dp->i_mount->m_attr_geo,
-+	};
-+
-+	ASSERT(tp != NULL);
-+
-+	return xfs_attr3_leaf_create(&args, blkno, &bp);
-+}
- /*
-  * Split the leaf node, rebalance, then add the new entry.
-  *
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index aca46da2bc50..72639efe6ac3 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -87,6 +87,9 @@ int	xfs_attr3_leaf_list_int(struct xfs_buf *bp,
- /*
-  * Routines used for shrinking the Btree.
-  */
-+
-+int	xfs_attr3_leaf_init(struct xfs_trans *tp, struct xfs_inode *dp,
-+				xfs_dablk_t blkno);
- int	xfs_attr3_leaf_toosmall(struct xfs_da_state *state, int *retval);
- void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
- 				       struct xfs_da_state_blk *drop_blk,
--- 
-2.51.2
+has just been updated to 7.1-rc1 and a few fixes.
 
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+87e63466c9fc xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
+
+8 new commits:
+
+Jinliang Zheng (1):
+      [bfb4dc533d0a] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
+
+Ravi Singh (1):
+      [87e63466c9fc] xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
+
+Wilfred Mallawa (2):
+      [592975da8c3c] xfs: fix memory leak on error in xfs_alloc_zone_info()
+      [af47a4be6a90] xfs: fix memory leak for data allocated by xfs_zone_gc_data_alloc()
+
+Yuto Ohnuki (4):
+      [00dd8d7ec525] xfs: zero entire directory data block header region at init
+      [8fbb1877dfa5] xfs: zero directory data block padding on write verification
+      [939919ccddfc] xfs: check directory data block header padding in scrub
+      [fca20fcb76a2] xfs: check da node block pad field during scrub
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_dir2_data.c | 18 +++++++++++-------
+ fs/xfs/libxfs/xfs_refcount.c  |  3 +--
+ fs/xfs/scrub/common.c         | 11 +++++++++++
+ fs/xfs/scrub/common.h         |  2 ++
+ fs/xfs/scrub/dabtree.c        |  7 ++++++-
+ fs/xfs/scrub/dir.c            |  7 ++++++-
+ fs/xfs/xfs_inode.c            |  6 ------
+ fs/xfs/xfs_trans.c            | 11 +++++++++++
+ fs/xfs/xfs_zone_alloc.c       |  2 +-
+ fs/xfs/xfs_zone_gc.c          |  2 +-
+ 10 files changed, 50 insertions(+), 19 deletions(-)
