@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DAD03D4117;
-	Tue, 28 Apr 2026 08:34:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD732D0614;
+	Tue, 28 Apr 2026 08:34:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777365274; cv=none; b=fj7vFdlrIEkGvVl9zwuB2t6M1aP2P0mHHBzQ/DJrm2Dm7fDndNNY9Kzr0RFzP/UhRwwaKjoywhAZp+7iJjw81daAp8rMvk2yBhaR5PGp8tDjsySCjtugiyLpQOpHdCrfSBEPgeGPpZq32Jm5P41hOUrcKGe+cE/NYFsKtQhGowk=
+	t=1777365277; cv=none; b=gLV0tXN7LE7hIyA99CNE0No66hjeluBdeptbGZV4nbsm19PvrY9jp+IPppYcBqwVACAAD9YXbODs3qJZQ0Mbfa64OFtB1GGuzbCVJwZOW1FKgAs7kNogRLNBuwyHaHNIo2n1DupRivBkfRYir90Pe1ZHu+96aEC5AAGor9j4uUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777365274; c=relaxed/simple;
-	bh=l2TuE4Dq3W00QnGqh26ac7WtX/eqBCa3lcQ4ZM8TF1E=;
+	s=arc-20240116; t=1777365277; c=relaxed/simple;
+	bh=wPwMqkZVCP+6/reA6SK7YxDZjcmllpxADXdpUpSnyII=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bQz739AF6Cmgjzbk6L0Tu7gzWv7S4iCyCS2bpCH+5xw3dFCionsyDYMgMQfZLeo5Doxm43SqLfqgqomArTkexc37BEM8u8FhdFvBuaykUGCJx3k6daHK8zHpbJuwGAJWN5CGb7LRSbZnFt9GR2dg9YRJY1l3b0p/HELzxIbZCkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YMwK2SQ6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=JJG/tcPWEFto8tSj4ePiDkqYbnuUVTMegoaegfSWvaxwfxjbigFrPjXks/W9Z6G2Cy4nznHYnIgdMzBKLwguhaDMphej5dic03xD6H7bJX3q0Zev7Nr7yJaWOXBD90RkmyabB9YJXXPLLmxBuXdIskx4J6XYqgqAgXErQlu3Exk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t9ZMXoKR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMwK2SQ6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 698DBC2BCB9;
-	Tue, 28 Apr 2026 08:34:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t9ZMXoKR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69AFFC2BCB5;
+	Tue, 28 Apr 2026 08:34:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777365273;
-	bh=l2TuE4Dq3W00QnGqh26ac7WtX/eqBCa3lcQ4ZM8TF1E=;
+	s=k20201202; t=1777365276;
+	bh=wPwMqkZVCP+6/reA6SK7YxDZjcmllpxADXdpUpSnyII=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YMwK2SQ6PuOpeyfRJw58qAZtdcj0ld0MHefAaomuol/byqLyagL8z2OnXDvQ88nAe
-	 VgRYaBrpWNw1GDwBgpJwJbzz5QlIvIOrqAQ/sImd1mHsAgk746ujTCQXHlQjobP+vx
-	 SsOQ0JJbSqzH4c8wvITLmHPprh8vM1hkgcB5xq3xiWP+w0+nW0xBCtrHNAkKWMYzq/
-	 gw5oVMGNE0A0oDI3340xvs7oK+Tm4CFF/nXxbKYLxiXEmxy8W/rd7LUfGxguEiY3Dk
-	 GH5DA2auZZ1xuXTWyzvLOeKNPYCGHxmijpda4QWfmRKPrzcwgD93RSLUFbmq6+zFiP
-	 D7KVqTgTWS6Ug==
+	b=t9ZMXoKR5ANeYvE79Fh8pEkH8q9bhRypTa5oGL/KlDlAJ1ib0NtcRKddftcuf+bm1
+	 WgSqrnOGv4l/8yRnP0O7OREhH7IFcZcuYcdFEk5d39GVdCL1nUrbJTQ7fK7XMCY67D
+	 dVGqllWYD5KiExvQnUyyuZakEXGGzYX/jKXUiFaHA0YZJzWvVPt29/+1M9ekFB4TXF
+	 W/7boZZ3dp89mgyLgyNuYqTpKix+T6hwRgqRHCF60VizWXaXunYyEHVB77RJtXyyXJ
+	 Nlt9bvkjjDKc9Y1aAYujBoV9WpO7pfSbKEML2SUQP9WL4zkWBTap4ls6DQ+YR4pPpj
+	 dlDYPe95j98sA==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -38,9 +38,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-btrfs@vger.kernel.org,
 	linux-unionfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v9 13/22] xfs: disable direct read path for fs-verity files
-Date: Tue, 28 Apr 2026 10:33:19 +0200
-Message-ID: <20260428083332.768693-14-aalbersh@kernel.org>
+Subject: [PATCH v9 14/22] xfs: handle fsverity I/O in write/read path
+Date: Tue, 28 Apr 2026 10:33:20 +0200
+Message-ID: <20260428083332.768693-15-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.51.2
 In-Reply-To: <20260428083332.768693-1-aalbersh@kernel.org>
 References: <20260428083332.768693-1-aalbersh@kernel.org>
@@ -52,45 +52,248 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The direct path is not supported on verity files. Attempts to use direct
-I/O path on such files should fall back to buffered I/O path.
+For write/writeback set IOMAP_F_FSVERITY flag telling iomap to not
+update inode size and to not skip folios beyond EOF.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Initiate fsverity writeback with IOMAP_F_FSVERITY set to tell iomap
+should not skip folio that is dirty beyond EOF.
+
+In read path let iomap know that we are reading fsverity metadata. So,
+treat holes in the tree as request to synthesize tree blocks and hole
+after descriptor as end of the fsverity region.
+
+Introduce a new inode flag meaning that merkle tree is being build on
+the inode.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/xfs_file.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/Makefile          |  1 +
+ fs/xfs/libxfs/xfs_bmap.c |  7 +++++++
+ fs/xfs/xfs_aops.c        | 16 +++++++++++++++-
+ fs/xfs/xfs_fsverity.c    | 21 +++++++++++++++++++++
+ fs/xfs/xfs_fsverity.h    | 20 ++++++++++++++++++++
+ fs/xfs/xfs_inode.h       |  6 ++++++
+ fs/xfs/xfs_iomap.c       | 15 +++++++++++++--
+ 7 files changed, 83 insertions(+), 3 deletions(-)
+ create mode 100644 fs/xfs/xfs_fsverity.c
+ create mode 100644 fs/xfs/xfs_fsverity.h
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a980ac5196a8..6fa9835f9531 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -282,7 +282,8 @@ xfs_file_dax_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
--	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
-+	struct inode		*inode = iocb->ki_filp->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret = 0;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 9f7133e02576..38b7f51e5d84 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -149,6 +149,7 @@ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+ xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
+ xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
++xfs-$(CONFIG_FS_VERITY)		+= xfs_fsverity.o
  
- 	trace_xfs_file_dax_read(iocb, to);
-@@ -333,6 +334,14 @@ xfs_file_read_iter(
+ # notify failure
+ ifeq ($(CONFIG_MEMORY_FAILURE),y)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7a4c8f1aa76c..931d02678d19 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -41,6 +41,8 @@
+ #include "xfs_inode_util.h"
+ #include "xfs_rtgroup.h"
+ #include "xfs_zone_alloc.h"
++#include "xfs_fsverity.h"
++#include <linux/fsverity.h>
+ 
+ struct kmem_cache		*xfs_bmap_intent_cache;
+ 
+@@ -4451,6 +4453,11 @@ xfs_bmapi_convert_one_delalloc(
+ 	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
+ 	XFS_STATS_INC(mp, xs_xstrat_quick);
+ 
++	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION) &&
++	    XFS_FSB_TO_B(mp, bma.got.br_startoff) >=
++		    xfs_fsverity_metadata_offset(ip))
++		flags |= IOMAP_F_FSVERITY;
++
+ 	ASSERT(!isnullstartblock(bma.got.br_startblock));
+ 	xfs_bmbt_to_iomap(ip, iomap, &bma.got, 0, flags,
+ 				xfs_iomap_inode_sequence(ip, flags));
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f279055fcea0..9503252a0fa4 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -22,6 +22,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_zone_alloc.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_fsverity.h"
+ #include <linux/bio-integrity.h>
+ 
+ struct xfs_writepage_ctx {
+@@ -339,12 +340,16 @@ xfs_map_blocks(
+ 	int			retries = 0;
+ 	int			error = 0;
+ 	unsigned int		*seq;
++	unsigned int		iomap_flags = 0;
+ 
  	if (xfs_is_shutdown(mp))
  		return -EIO;
  
-+	/*
-+	 * In case fs-verity is enabled, we also fallback to the buffered read
-+	 * from the direct read path. Therefore, IOCB_DIRECT is set and need to
-+	 * be cleared (see generic_file_read_iter())
-+	 */
-+	if (fsverity_active(inode))
-+		iocb->ki_flags &= ~IOCB_DIRECT;
+ 	XFS_ERRORTAG_DELAY(mp, XFS_ERRTAG_WB_DELAY_MS);
+ 
++	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
++		iomap_flags |= IOMAP_F_FSVERITY;
 +
- 	if (IS_DAX(inode))
- 		ret = xfs_file_dax_read(iocb, to);
- 	else if (iocb->ki_flags & IOCB_DIRECT)
+ 	/*
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+@@ -432,7 +437,8 @@ xfs_map_blocks(
+ 	    isnullstartblock(imap.br_startblock))
+ 		goto allocate_blocks;
+ 
+-	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, 0, XFS_WPC(wpc)->data_seq);
++	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0, iomap_flags,
++			  XFS_WPC(wpc)->data_seq);
+ 	trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -705,6 +711,14 @@ xfs_vm_writepages(
+ 			},
+ 		};
+ 
++		/*
++		 * Writeback does not work for folios past EOF, let it know that
++		 * I/O happens for fsverity metadata and this restriction need
++		 * to be skipped
++		 */
++		if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
++			wpc.ctx.iomap.flags |= IOMAP_F_FSVERITY;
++
+ 		return iomap_writepages(&wpc.ctx);
+ 	}
+ }
+diff --git a/fs/xfs/xfs_fsverity.c b/fs/xfs/xfs_fsverity.c
+new file mode 100644
+index 000000000000..6e6a8636a577
+--- /dev/null
++++ b/fs/xfs/xfs_fsverity.c
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2026 Red Hat, Inc.
++ */
++#include "xfs_platform.h"
++#include "xfs_format.h"
++#include "xfs_inode.h"
++#include "xfs_shared.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_fsverity.h"
++#include "xfs_fsverity.h"
++#include <linux/fsverity.h>
++#include <linux/iomap.h>
++
++loff_t
++xfs_fsverity_metadata_offset(
++	const struct xfs_inode	*ip)
++{
++	return round_up(i_size_read(VFS_IC(ip)), XFS_FSVERITY_START_ALIGN);
++}
+diff --git a/fs/xfs/xfs_fsverity.h b/fs/xfs/xfs_fsverity.h
+new file mode 100644
+index 000000000000..5771db2cd797
+--- /dev/null
++++ b/fs/xfs/xfs_fsverity.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2026 Red Hat, Inc.
++ */
++#ifndef __XFS_FSVERITY_H__
++#define __XFS_FSVERITY_H__
++
++#include "xfs_platform.h"
++
++#ifdef CONFIG_FS_VERITY
++loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip);
++#else
++static inline loff_t xfs_fsverity_metadata_offset(const struct xfs_inode *ip)
++{
++	WARN_ON_ONCE(1);
++	return ULLONG_MAX;
++}
++#endif	/* CONFIG_FS_VERITY */
++
++#endif	/* __XFS_FSVERITY_H__ */
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index bd6d33557194..6df48d68a919 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -415,6 +415,12 @@ static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
+  */
+ #define XFS_IREMAPPING		(1U << 15)
+ 
++/*
++ * fs-verity's Merkle tree is under construction. The file is read-only, the
++ * only writes happening are for the fsverity metadata.
++ */
++#define XFS_VERITY_CONSTRUCTION	(1U << 16)
++
+ /* All inode state flags related to inode reclaim. */
+ #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
+ 				 XFS_IRECLAIM | \
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 9c2f12d5fec9..71ccd4ff5f48 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -32,6 +32,8 @@
+ #include "xfs_rtbitmap.h"
+ #include "xfs_icache.h"
+ #include "xfs_zone_alloc.h"
++#include "xfs_fsverity.h"
++#include <linux/fsverity.h>
+ 
+ #define XFS_ALLOC_ALIGN(mp, off) \
+ 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
+@@ -1789,6 +1791,9 @@ xfs_buffered_write_iomap_begin(
+ 		return xfs_direct_write_iomap_begin(inode, offset, count,
+ 				flags, iomap, srcmap);
+ 
++	if (xfs_iflags_test(ip, XFS_VERITY_CONSTRUCTION))
++		iomap_flags |= IOMAP_F_FSVERITY;
++
+ 	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+@@ -2113,12 +2118,17 @@ xfs_read_iomap_begin(
+ 	bool			shared = false;
+ 	unsigned int		lockmode = XFS_ILOCK_SHARED;
+ 	u64			seq;
++	unsigned int		iomap_flags = 0;
+ 
+ 	ASSERT(!(flags & (IOMAP_WRITE | IOMAP_ZERO)));
+ 
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
++	if (fsverity_active(inode) &&
++	    (offset >= xfs_fsverity_metadata_offset(ip)))
++		iomap_flags |= IOMAP_F_FSVERITY;
++
+ 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+ 	if (error)
+ 		return error;
+@@ -2132,8 +2142,9 @@ xfs_read_iomap_begin(
+ 	if (error)
+ 		return error;
+ 	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
+-	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags,
+-				 shared ? IOMAP_F_SHARED : 0, seq);
++	iomap_flags |= shared ? IOMAP_F_SHARED : 0;
++
++	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
+ }
+ 
+ const struct iomap_ops xfs_read_iomap_ops = {
 -- 
 2.51.2
 
