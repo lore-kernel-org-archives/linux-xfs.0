@@ -1,284 +1,169 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB4C3D9DDD
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 18:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777314753; cv=pass; b=gAKYkx9Hiitb9OD22tT4L07mI46FuHMWfrDTmEeNXmnR8bUJTQ+RpTARUky3xzYcFjgONaTX3SMtFTDJ+a8n1JqI3G682zPIX7JYyiBU0FiXEkEWhcubZB3JLQjTblYYVkeiy+vzl8KeTVnJQSis5OsuQbtmha04WEvhKx2455s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777314753; c=relaxed/simple;
-	bh=UtOgge0cKqxumGSXf9uYQ1KZS1aYFNESYpleFuFar0E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hlQ50JbHdAtXnBGiuJ2cFLwVSBGcRE6KyncrFRNXxQRRKJFHQ7q9yPtvKBxfTlGYczQJHWn5mRYpmbSoaQDE30uP61ia77Yw48TMTjNRm0WQ9RE25Ut8AWvb6oSGPvxxPNOiZhvhuGTbOyVRYw8f4aNNluWRLEB/flnhVrSpan8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=anHhRmwO; arc=pass smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BCC62C0261;
+	Tue, 28 Apr 2026 01:32:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777339946; cv=none; b=mXbaMEbJSXUOyX3ZIl0igT5+DXrIZ2/War7ajcoT6KzgBUY4GhpWzBkdwt692lOll1emEFzrE/mL9/0k3DgGTJXGKG9Eh2BDDwkspSX/lKIE5N64GX4miirElAWzTFAUB6ItC6HBovsdRhkgpughLCMwGYiu4TMhYqPYMcXjhT0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777339946; c=relaxed/simple;
+	bh=wHz+5U7YZ1YUh8S3O/ePJZetSOyRqZDheoo8PdaQubw=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=N2jpiuN9jPABaedwxyU7PmstflMduKRDTmshwNjcUJ2ZPyjg5EPE2bz1k5nDcnlc3plx33Iymgo2Ly3/qibxjcknLJ52QVAzBtZlqTkk5XO7qClWlFl9VxHVHkPbk37mp9BgrQvv6qpZYYEhAD7gp125gSwqd/pxmhY+8RThD6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOhfDvzD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="anHhRmwO"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-b93698bb57aso1927144566b.0
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 11:32:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777314750; cv=none;
-        d=google.com; s=arc-20240605;
-        b=i0AhfYgWFSuZLnFHWgF4/c/3QBDmK8Ps6qE1f4utJvLyViyYiIuvBzHvc1LGkBRUt1
-         bO/60nlbhAFSWvbxuWHYazNXBr0nOfgIyHIgTKeDHAaKiLNrEftLbT//saYrAGHkYXuA
-         FZwPrcuaZFFuWFnLbFO/9j+W3QaX9zMRbImEXiY3N9QdRZVZ4/ZSfGeEBZVHl7pXZU21
-         dvsEY0UzDfPzs496M4vSWFCWNjftN/mASDTpC1zvGMVhkinrWHrmzO20fxE47Ceh3WsF
-         7QJThKOFDFzDt6xeAIagfqjyHE+12QV9fOt0IIRn+7lTHNpTzeXQZKYpcuoMeQIUmX9s
-         dxMg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=L9JTKa0ULOAWGOj4v37Nl/p/NjTeX7BfvfYT/LUVbrM=;
-        fh=KLMsXetNe757FDeUpfaujCcmza0je3aIW7G9b/TNvPo=;
-        b=avYTahtK7kkzLP3nJhhMSolYQx7pnnHKDNzqyP0eGQc00fvggfVOZNSXoUuaH1mfVT
-         E5GiXa9ZZDxaAtDn//iTi8RtAZSIlt2ID8ZJD1RY/EordCzFxGGvgtFfSo1HwVQqe39T
-         LehLWNMhnL1jFmCzfnE1TCogcB1mGl9PSxoeA+c7PHVF0Zf3X5aHd/XGhP9/QFSYgViM
-         XEzMZw9Zs5ZOsQVkxeyf5QK097LUUfHj6Rat5Yv32WigivRyFa9uT4W9B2MQLdcOaAqF
-         BsixaahJzQwd3iEd8xTx4NyYZsx+cM1ZmSbMoC0AbMgFX4opYdF2io2akM9hkP/yED8b
-         73jg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777314750; x=1777919550; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=L9JTKa0ULOAWGOj4v37Nl/p/NjTeX7BfvfYT/LUVbrM=;
-        b=anHhRmwO4YFeLi3N5o05MH8P/pxhkpPbYCSoUjimbV78+R+ExaRXfTklIZKlqynIlu
-         qjbYJmTe36PbdBm/GsQHB0D/8/7WCHJINdYJtoEKU5g2MuofVF5/OlwjHQgTYfOHbxkQ
-         nd9arxqSUGTA/Gbw9226LYPz/MvZY158yvnhQQuAzqfc3KBVqvT6zaLpZyydfE9VhHOh
-         4kGTXTnnO2yN0uigAf/3mpRoRDgYj8LWEfjWPnELeCDYT+dCMAkrBBRe9PODKxCo8NG+
-         +PzfETh/4YVmwRDUAMJ1sv8VCJ/YOAE7/lOYkfiEN01ssyrqG7aSfOhcN/HfpnGiDaJq
-         mKzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777314750; x=1777919550;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=L9JTKa0ULOAWGOj4v37Nl/p/NjTeX7BfvfYT/LUVbrM=;
-        b=Jd91jOa7LCjDY6ynx+pEvDK/Rj5He9QMtYykQVFc90CALAKh5ZCGxk1Gb+2RWyGpxo
-         /ZxiJKj2ZuA92eyxMd91m+0f+8TvjGiuV38dHj36oB/SxR2BqF+3X7rpjaRxi7tQg/lP
-         A2UJSswZXHFWgCH2tybfAT0miSm1phO+i7jn77+Ur4VJJNaVE23Nng9OKHlFiMPpvo9u
-         tc5RhF/vBQF5qKVzPT643Pr0GaovBq5HN1Jx/nv9NbFMKg4jpsSqzwgjX/H8t2yAZEWq
-         C2uwghoFSh2lkpH/szXVP+EO/tuJRBDmRtqs+kwsz7Mc/Uyn6HgVzvefZ593qhiEna2L
-         IIgQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+FUhUawv5vdemmUx8Sa9K1wLNwqkLHoU6Gb6yHVQOAc590JNuzigf0KzU68gSZLrwdTGq3ITNjpzk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDw8A2ny8bJQiyLfGIVel1XL3VavMextjnmLAXEuNg8BoFk2PW
-	ADpfkqGqXpcCSw4QvgSbxijSdy8EDB6m8o1NVliyFJ62F1FBLf1YdcaBrBSorJwfrqaS/RMNt4c
-	k0uogjE64h6ciY7FzDia9LNpyU191z7o=
-X-Gm-Gg: AeBDieuMCTiSt7U1gVbrncAInatWDPgAQau2Tom1y6OA0pFwpkN1qYqE4+sF3Q3Ty8L
-	xKbYE+eNoYhEucJURUR0yDUlGAc8GUq+o3rk3nqGqMIjZ3hH4mT4alz3iRGwDlN+iSGqM0L0jiA
-	T6pND/6rot5iv7t2pUhxcOGetsdMHmWPvc8mFaLhsZYbmmZ+bDrE30mK9cZbFDwCHxygr5Z3wD4
-	ZEzRh2rJBmnZiKEe332Pn5yz1TilghO9hI2Rar/N1nuzpaNKF9lPdi0xiUWTK1klUyj26eyp6Qe
-	t3zlDWYXFugkPgUFnHzzfXRnT2knpXsAxpyRoVXj871fUyHHa0R2
-X-Received: by 2002:a17:907:7b84:b0:b98:8494:3174 with SMTP id
- a640c23a62f3a-bb7ed02e493mr14116166b.24.1777314749580; Mon, 27 Apr 2026
- 11:32:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOhfDvzD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F80C2BCB8;
+	Tue, 28 Apr 2026 01:32:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777339946;
+	bh=wHz+5U7YZ1YUh8S3O/ePJZetSOyRqZDheoo8PdaQubw=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=TOhfDvzDaluU/j7Kds/kem7583xdqoHSELQ2x559IB9y0NQQNXIyzGBe6Fqbj/oYL
+	 HDM4jXg3bM9cjeEpaA6UdmNgruCW0rC5TyBRUOno+ir17RijO8NOgZqdoGNXn7XgIT
+	 EdF6NZGZUZgLwy74Fuq0NNuvvlu+7UwuiRf7BFCJxWEqwH0d15FUxo9qcUscCUFGNc
+	 BxRVwKIgWZ0PBiiG0NR9CjyM58Mb8CgM5Pj5NpqM0ptb7OY+g2TosBdIJpj7xTYFjv
+	 57pFveojlFHAesXaWck2CXVYspyIEIQiLPiM41p2XnkyOFZoB0mLHGNy9v7h0INder
+	 MX09Rw2Na6AMQ==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 0EEA6F4006D;
+	Mon, 27 Apr 2026 21:32:24 -0400 (EDT)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Mon, 27 Apr 2026 21:32:24 -0400
+X-ME-Sender: <xms:Jw7waTdxAlNGjpqkcmYs-AuhVm8o6a2ys9cH7oPKakERIjM35CzggQ>
+    <xme:Jw7waUByBHZtpz_cO4UMWr0VoT7wNaP3SOQWx1_VsC9VZI3f0qKIOJlPWIqNFK_qx
+    eTGs3Us4qmDCHQRAYK3eICv5OzGaEwL7XdPlGXhSJQN84a8D--lFa4>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdektddvhecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpefoggffhffvvefkjghfufgtgfesthhqredtredtjeenucfhrhhomhepfdevhhhutghk
+    ucfnvghvvghrfdcuoegtvghlsehkvghrnhgvlhdrohhrgheqnecuggftrfgrthhtvghrnh
+    eptdduhfeuteeileehtdegledvhfdvieefveelleeludelfeetvdfhteetjeetffdvnecu
+    ffhomhgrihhnpehsrghshhhikhhordguvghvnecuvehluhhsthgvrhfuihiivgeptdenuc
+    frrghrrghmpehmrghilhhfrhhomheptghhuhgtkhhlvghvvghrodhmvghsmhhtphgruhht
+    hhhpvghrshhonhgrlhhithihqdduieefgeelleelheelqdefvdelkeeggedvfedqtggvlh
+    eppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpdhnsggprhgtphhtthho
+    peefgedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepshgvnhhoiihhrghtshhkhi
+    estghhrhhomhhiuhhmrdhorhhgpdhrtghpthhtoheprgguihhlghgvrhdrkhgvrhhnvghl
+    seguihhlghgvrhdrtggrpdhrtghpthhtohepshhlrghvrgesughusggvhihkohdrtghomh
+    dprhgtphhtthhopehrohhnnhhivghsrghhlhgsvghrghesghhmrghilhdrtghomhdprhgt
+    phhtthhopegrnhhnrgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghrrghunhgvrh
+    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheptggvmheskhgvrhhnvghlrdhorhhgpdhr
+    tghpthhtoheptghhrghosehkvghrnhgvlhdrohhrghdprhgtphhtthhopegujhifohhngh
+    eskhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:Jw7waQ4Xow-t11J593OXzv-Gwl0Byd6MFv6z4UpYTD9UNKvdBWnqag>
+    <xmx:KA7waYbam4XDlg9sbJKf1HWcmAANgKgDVgaJ3EUUVdDrsHM_F7ioEA>
+    <xmx:KA7waSoQNfBCkKag9VRPAnKAGom1WVXc4rDrBOYssIOmltGlTsaAYg>
+    <xmx:KA7wafIyNoQwaeh8KjYI0_7YlZVPbx8Hm9QpSej1pjj1LmcPjLYiZA>
+    <xmx:KA7wadZV4ms4hY1uafi9BlfHPsflm006PYfpHyB8gesdt20AVsIDU3u9>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id D0C61780075; Mon, 27 Apr 2026 21:32:23 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1777281778.git.asj@kernel.org> <4777ecd14815b92c9e8577ed4d073d0f999e51ef.1777281778.git.asj@kernel.org>
-In-Reply-To: <4777ecd14815b92c9e8577ed4d073d0f999e51ef.1777281778.git.asj@kernel.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 27 Apr 2026 20:32:18 +0200
-X-Gm-Features: AVHnY4K3_LMeu73jac9TFiNYcw67v9zWVy-SF3D1BeO7qe-VO7kSEp3Js4m6UMk
-Message-ID: <CAOQ4uxhcrETXWo33=-Y_21xyb7wm6kZ2mGOZo7K_U7EBXQBMSw@mail.gmail.com>
-Subject: Re: [PATCH v3 4/9] fstests: verify fanotify isolation on cloned filesystems
-To: Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-f2fs@vger.kernel.org, zlang@redhat.com, hch@infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Apr 2026 21:32:03 -0400
+From: "Chuck Lever" <cel@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ linux-nfs@vger.kernel.org, linux-api@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net,
+ "OGAWA Hirofumi" <hirofumi@mail.parknet.co.jp>,
+ "Namjae Jeon" <linkinjeon@kernel.org>,
+ "Sungjong Seo" <sj1557.seo@samsung.com>,
+ "Yuezhang Mo" <yuezhang.mo@sony.com>,
+ almaz.alexandrovich@paragon-software.com,
+ "Viacheslav Dubeyko" <slava@dubeyko.com>,
+ "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
+ frank.li@vivo.com, "Theodore Tso" <tytso@mit.edu>,
+ adilger.kernel@dilger.ca, "Carlos Maiolino" <cem@kernel.org>,
+ "Steve French" <sfrench@samba.org>, "Paulo Alcantara" <pc@manguebit.org>,
+ "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
+ "Shyam Prasad N" <sprasad@microsoft.com>,
+ "Trond Myklebust" <trondmy@kernel.org>,
+ "Anna Schumaker" <anna@kernel.org>, "Jaegeuk Kim" <jaegeuk@kernel.org>,
+ "Chao Yu" <chao@kernel.org>, "Hans de Goede" <hansg@kernel.org>,
+ senozhatsky@chromium.org, "Chuck Lever" <chuck.lever@oracle.com>,
+ "Roland Mainz" <roland.mainz@nrubsig.org>
+Message-Id: <3fd6dcbf-ece6-459e-b114-1d8b95035acf@app.fastmail.com>
+In-Reply-To: <20260427155636.GC7751@frogsfrogsfrogs>
+References: <20260424-case-sensitivity-v11-0-de5619beddaf@oracle.com>
+ <20260424-case-sensitivity-v11-8-de5619beddaf@oracle.com>
+ <20260427155636.GC7751@frogsfrogsfrogs>
+Subject: Re: [PATCH v11 08/15] xfs: Report case sensitivity in fileattr_get
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Apr 27, 2026 at 12:20=E2=80=AFPM Anand Jain <asj@kernel.org> wrote:
->
-> Verify that fanotify events are correctly routed to the appropriate
-> watcher when cloned filesystems are mounted.
-> Helps verify kernel's event notification distinguishes between devices
-> sharing the same FSID/UUID.
->
-> Signed-off-by: Anand Jain <asj@kernel.org>
-> ---
->  common/config         |   1 +
->  tests/generic/801     | 115 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/801.out |   7 +++
->  3 files changed, 123 insertions(+)
->  create mode 100644 tests/generic/801
->  create mode 100644 tests/generic/801.out
->
-> diff --git a/common/config b/common/config
-> index 605a57947a40..1588bdcb1aa1 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -243,6 +243,7 @@ export PARTED_PROG=3D"$(type -P parted)"
->  export XFS_PROPERTY_PROG=3D"$(type -P xfs_property)"
->  export FSCRYPTCTL_PROG=3D"$(type -P fscryptctl)"
->  export INOTIFYWAIT_PROG=3D"$(type -P inotifywait)"
-> +export FSNOTIFYWAIT_PROG=3D"$(type -P fsnotifywait)"
->
->  # udev wait functions.
->  #
-> diff --git a/tests/generic/801 b/tests/generic/801
-> new file mode 100644
-> index 000000000000..3f64e4de2206
-> --- /dev/null
-> +++ b/tests/generic/801
-> @@ -0,0 +1,115 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-> +#
-> +# FS QA Test 801
-> +# Verify fanotify FID functionality on cloned filesystems by setting up
-> +# watchers and making sure notifications are in the correct logs files.
-> +
-> +. ./common/preamble
-> +
-> +_begin_fstest auto quick mount clone
-> +
-> +_require_test
-> +_require_loop
 
-insufficient check for mounting a blockdev fs
 
-> +_require_command "$FSNOTIFYWAIT_PROG" fsnotifywait
-> +
-> +[ "$FSTYP" =3D "ext4" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
+On Mon, Apr 27, 2026, at 11:56 AM, Darrick J. Wong wrote:
+> On Fri, Apr 24, 2026 at 09:53:10PM -0400, Chuck Lever wrote:
+>> From: Chuck Lever <chuck.lever@oracle.com>
+>>=20
+>> Upper layers such as NFSD need to query whether a filesystem
+>> is case-sensitive. Add FS_XFLAG_CASEFOLD to xfs_ip2xflags()
+>> when the filesystem is formatted with the ASCIICI feature
+>> flag. This serves both FS_IOC_FSGETXATTR (via xfs_fill_fsxattr() in
+>> xfs_fileattr_get()) and XFS_IOC_BULKSTAT (which populates bs_xflags
+>> directly from xfs_ip2xflags()), so bulkstat consumers and per-inode
+>> queries see a consistent view of the filesystem's case-folding
+>> behavior.
+>>=20
+>> XFS always preserves case. XFS is case-sensitive by default, but
+>> supports ASCII case-insensitive lookups when formatted with the
+>> ASCIICI feature flag.
+>>=20
+>> Reviewed-by: Roland Mainz <roland.mainz@nrubsig.org>
+>> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
+>> ---
 
-Fix before merging
+> I don't understand this at all.  Yes, FS_XFLAG_CASEFOLD is readonly,
+> but how does clearing FS_CASEFOLD_FL from the fileattr_get output
+> (without clearing XFLAG_CASEFOLD!) solve anything?  This makes the
+> reported output inconsistent between fsgetxattr and getflags -- one
+> reports case folding, the other reports no casefolding.
 
-Other than that it looks ok.
+The masking is a misplaced reaction to a sashiko review on the
+v9 predecessor of this patch [1], which pointed out that v9 set
+FS_XFLAG_CASEFOLD in fa->fsx_xflags after xfs_fill_fsxattr() had
+already synced fa->flags, leaving the two views inconsistent in
+the other direction, and that bulkstat would miss the flag for
+the same reason. Moving the injection into xfs_ip2xflags() fixed
+both gaps -- but it also surfaced FS_CASEFOLD_FL on the legacy
+view, so chattr's RMW through FS_IOC_SETFLAGS hits the EOPNOTSUPP
+gate at the top of xfs_fileattr_set(). Hiding it from getflags
+was the wrong place to address that.
 
-Thanks,
-Amir.
+> If you want to avoid fileattr_set returning EINVAL when setting
+> attributes due to the casefold flag, then don't you want to check
+> the flag state vs. xfs_has_asciici() in the *fileattr_set* path?
 
-> +       "ext4: derive f_fsid from block device to avoid collisions"
-> +
-> +_cleanup()
-> +{
-> +       cd /
-> +       [[ -n $pid1 ]] && { kill -TERM "$pid1" 2> /dev/null; wait $pid1; =
-}
-> +       [[ -n $pid2 ]] && { kill -TERM "$pid2" 2> /dev/null; wait $pid2; =
-}
-> +       umount $mnt1 $mnt2 2>/dev/null
-> +       _loop_image_destroy "${devs[@]}" 2> /dev/null
-> +       rm -r -f $tmp.*
-> +}
-> +
-> +monitor_fanotify()
-> +{
-> +       local mmnt=3D$1
-> +       exec stdbuf -oL $FSNOTIFYWAIT_PROG -m -F -S -e create "$mmnt" 2>&=
-1
-> +}
-> +
-> +fsid_to_fid_parts()
-> +{
-> +       local fsid=3D$1
-> +       # Pad to 16 hex chars (64-bit), then split into two 32-bit halves
-> +       local padded=3D$(printf '%016x' "0x${fsid}")
-> +       local hi=3D$(printf '%x' "0x${padded:0:8}")   # strips leading ze=
-ros
-> +       local lo=3D$(printf '%x' "0x${padded:8:8}")   # strips leading ze=
-ros
-> +       echo "${hi}.${lo}"
-> +}
-> +
-> +devs=3D()
-> +_loop_image_create_clone devs
-> +mkdir -p $TEST_DIR/$seq
-> +mnt1=3D$TEST_DIR/$seq/mnt1
-> +mnt2=3D$TEST_DIR/$seq/mnt2
-> +mkdir -p $mnt1
-> +mkdir -p $mnt2
-> +
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $m=
-nt1 || \
-> +                                               _fail "Failed to mount de=
-v1"
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $m=
-nt2 || \
-> +                                               _fail "Failed to mount de=
-v2"
-> +
-> +fsid1=3D$(stat -f -c "%i" $mnt1)
-> +fsid2=3D$(stat -f -c "%i" $mnt2)
-> +
-> +[[ "$fsid1" =3D=3D "$fsid2" ]] && \
-> +       _notrun "Require clone filesystem with unique f_fsid"
-> +
-> +log1=3D$tmp.fanotify1
-> +log2=3D$tmp.fanotify2
-> +
-> +pid1=3D""
-> +pid2=3D""
-> +echo "Setup FID fanotify watchers on both mnt1 and mnt2"
-> +( monitor_fanotify "$mnt1" > "$log1" ) &
-> +pid1=3D$!
-> +( monitor_fanotify "$mnt2" > "$log2" ) &
-> +pid2=3D$!
-> +sleep 2
-> +
-> +echo "Trigger file creation on mnt1"
-> +touch $mnt1/file_on_mnt1
-> +sync
-> +sleep 1
-> +
-> +echo "Trigger file creation on mnt2"
-> +touch $mnt2/file_on_mnt2
-> +sync
-> +sleep 1
-> +
-> +echo "Verify fsid in the fanotify"
-> +kill $pid1 $pid2
-> +wait $pid1 $pid2 2>/dev/null
-> +pid1=3D""
-> +pid2=3D""
-> +
-> +e_fsid1=3D$(fsid_to_fid_parts "$fsid1")
-> +e_fsid2=3D$(fsid_to_fid_parts "$fsid2")
-> +
-> +echo $fsid1 $e_fsid1 $fsid2 $e_fsid2 >> $seqres.full
-> +cat $log1 >> $seqres.full
-> +cat $log2 >> $seqres.full
-> +
-> +if grep -qF "$e_fsid1" "$log1" && ! grep -qF "$e_fsid2" "$log1"; then
-> +       echo "SUCCESS: mnt1 events found"
-> +else
-> +       [ ! -s "$log1" ] && echo "  - mnt1 received no events."
-> +       grep -qF "$e_fsid2" "$log1" && echo "  - mnt1 received event from=
- mnt2."
-> +fi
-> +
-> +if grep -qF "$e_fsid2" "$log2" && ! grep -qF "$e_fsid1" "$log2"; then
-> +       echo "SUCCESS: mnt2 events found"
-> +else
-> +       [ ! -s "$log2" ] && echo "  - mnt2 received no events."
-> +       grep -qF "$e_fsid1" "$log2" && echo "  - mnt2 received event from=
- mnt1."
-> +fi
-> +
-> +status=3D0
-> +exit
-> diff --git a/tests/generic/801.out b/tests/generic/801.out
-> new file mode 100644
-> index 000000000000..d7b318d9f27c
-> --- /dev/null
-> +++ b/tests/generic/801.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 801
-> +Setup FID fanotify watchers on both mnt1 and mnt2
-> +Trigger file creation on mnt1
-> +Trigger file creation on mnt2
-> +Verify fsid in the fanotify
-> +SUCCESS: mnt1 events found
-> +SUCCESS: mnt2 events found
-> --
-> 2.43.0
->
+Yep. For v12 I=E2=80=99ll drop the fa->flags mask and add FS_CASEFOLD_FL
+to the allowlist in xfs_fileattr_set(), gated on xfs_has_asciici(mp).
+xfs_flags2diflags() already has no clause for CASEFOLD, so the
+FSSETXATTR path silently no-ops it the same way it does for
+FS_XFLAG_HASATTR, and FS_XFLAG_CASEFOLD is in FS_XFLAG_RDONLY_MASK
+so FSSETXATTR strips it centrally. Both views then agree, and a
+chattr round-trip is accepted as a no-op.
+
+The hfsplus patch in this series carries the same pattern --
+FS_XFLAG_CASEFOLD is set after fileattr_fill_flags() so that
+FS_CASEFOLD_FL stays out of fa->flags and dodges the EOPNOTSUPP
+gate in hfsplus_fileattr_set(). I will fix it the same way.
+
+Thanks for the catch!
+
+[1] https://sashiko.dev/#/patchset/20260422-case-sensitivity-v9-0-be023c=
+c070e2@oracle.com?part=3D9
+
+
+--=20
+Chuck Lever
