@@ -1,169 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BCC62C0261;
-	Tue, 28 Apr 2026 01:32:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643F8175A72
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Apr 2026 06:42:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777339946; cv=none; b=mXbaMEbJSXUOyX3ZIl0igT5+DXrIZ2/War7ajcoT6KzgBUY4GhpWzBkdwt692lOll1emEFzrE/mL9/0k3DgGTJXGKG9Eh2BDDwkspSX/lKIE5N64GX4miirElAWzTFAUB6ItC6HBovsdRhkgpughLCMwGYiu4TMhYqPYMcXjhT0=
+	t=1777358577; cv=none; b=PAPXs/1Gm58udrY1XyrewPdoNZCM1GbYrMt8eGJ1BBc/zxorgTzAmAEu3YqIIHZhBnOz6vtdOyu7+Wx0OHTsGwPbi4qTlXe60PRIOguB59v2gFi/qi0w+L1vbLWU7Ctz6QZxmSOzRDXnQAAKxabPuq8bbGpFucx55La8HMg+x8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777339946; c=relaxed/simple;
-	bh=wHz+5U7YZ1YUh8S3O/ePJZetSOyRqZDheoo8PdaQubw=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=N2jpiuN9jPABaedwxyU7PmstflMduKRDTmshwNjcUJ2ZPyjg5EPE2bz1k5nDcnlc3plx33Iymgo2Ly3/qibxjcknLJ52QVAzBtZlqTkk5XO7qClWlFl9VxHVHkPbk37mp9BgrQvv6qpZYYEhAD7gp125gSwqd/pxmhY+8RThD6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOhfDvzD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777358577; c=relaxed/simple;
+	bh=fYJ5mHq4QmSl4hLr4psYfYMsXpthq+yhOwVDuodRaIs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C7mTJIVnfARehUJsyesTsrHe+D1Tem+N31b4RVB/ox1CcNhRbjHAZBuWdn7cMqSFYlZ1tFNCcQ4AC0oWFgPsKVXvTo/W63KRVdvv8culB2yO8gp8Jt5O8pwkqRZIMJ3U7sOmWjT9e3apuN0MXAv9AV3OjqAg4YSjR1e+EYlZx5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tBHcnA/h; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOhfDvzD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F80C2BCB8;
-	Tue, 28 Apr 2026 01:32:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777339946;
-	bh=wHz+5U7YZ1YUh8S3O/ePJZetSOyRqZDheoo8PdaQubw=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=TOhfDvzDaluU/j7Kds/kem7583xdqoHSELQ2x559IB9y0NQQNXIyzGBe6Fqbj/oYL
-	 HDM4jXg3bM9cjeEpaA6UdmNgruCW0rC5TyBRUOno+ir17RijO8NOgZqdoGNXn7XgIT
-	 EdF6NZGZUZgLwy74Fuq0NNuvvlu+7UwuiRf7BFCJxWEqwH0d15FUxo9qcUscCUFGNc
-	 BxRVwKIgWZ0PBiiG0NR9CjyM58Mb8CgM5Pj5NpqM0ptb7OY+g2TosBdIJpj7xTYFjv
-	 57pFveojlFHAesXaWck2CXVYspyIEIQiLPiM41p2XnkyOFZoB0mLHGNy9v7h0INder
-	 MX09Rw2Na6AMQ==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 0EEA6F4006D;
-	Mon, 27 Apr 2026 21:32:24 -0400 (EDT)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Mon, 27 Apr 2026 21:32:24 -0400
-X-ME-Sender: <xms:Jw7waTdxAlNGjpqkcmYs-AuhVm8o6a2ys9cH7oPKakERIjM35CzggQ>
-    <xme:Jw7waUByBHZtpz_cO4UMWr0VoT7wNaP3SOQWx1_VsC9VZI3f0qKIOJlPWIqNFK_qx
-    eTGs3Us4qmDCHQRAYK3eICv5OzGaEwL7XdPlGXhSJQN84a8D--lFa4>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdektddvhecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpefoggffhffvvefkjghfufgtgfesthhqredtredtjeenucfhrhhomhepfdevhhhutghk
-    ucfnvghvvghrfdcuoegtvghlsehkvghrnhgvlhdrohhrgheqnecuggftrfgrthhtvghrnh
-    eptdduhfeuteeileehtdegledvhfdvieefveelleeludelfeetvdfhteetjeetffdvnecu
-    ffhomhgrihhnpehsrghshhhikhhordguvghvnecuvehluhhsthgvrhfuihiivgeptdenuc
-    frrghrrghmpehmrghilhhfrhhomheptghhuhgtkhhlvghvvghrodhmvghsmhhtphgruhht
-    hhhpvghrshhonhgrlhhithihqdduieefgeelleelheelqdefvdelkeeggedvfedqtggvlh
-    eppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpdhnsggprhgtphhtthho
-    peefgedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepshgvnhhoiihhrghtshhkhi
-    estghhrhhomhhiuhhmrdhorhhgpdhrtghpthhtoheprgguihhlghgvrhdrkhgvrhhnvghl
-    seguihhlghgvrhdrtggrpdhrtghpthhtohepshhlrghvrgesughusggvhihkohdrtghomh
-    dprhgtphhtthhopehrohhnnhhivghsrghhlhgsvghrghesghhmrghilhdrtghomhdprhgt
-    phhtthhopegrnhhnrgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghrrghunhgvrh
-    eskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheptggvmheskhgvrhhnvghlrdhorhhgpdhr
-    tghpthhtoheptghhrghosehkvghrnhgvlhdrohhrghdprhgtphhtthhopegujhifohhngh
-    eskhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:Jw7waQ4Xow-t11J593OXzv-Gwl0Byd6MFv6z4UpYTD9UNKvdBWnqag>
-    <xmx:KA7waYbam4XDlg9sbJKf1HWcmAANgKgDVgaJ3EUUVdDrsHM_F7ioEA>
-    <xmx:KA7waSoQNfBCkKag9VRPAnKAGom1WVXc4rDrBOYssIOmltGlTsaAYg>
-    <xmx:KA7wafIyNoQwaeh8KjYI0_7YlZVPbx8Hm9QpSej1pjj1LmcPjLYiZA>
-    <xmx:KA7wadZV4ms4hY1uafi9BlfHPsflm006PYfpHyB8gesdt20AVsIDU3u9>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id D0C61780075; Mon, 27 Apr 2026 21:32:23 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tBHcnA/h"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-834da62e52dso319544b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Apr 2026 23:42:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777358576; x=1777963376; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wJT0Q2+TNC0iQL2BZKm7PxCYejNErSFxDX4dcCZU2IY=;
+        b=tBHcnA/hTkDN0WztdYUH4kvsFbM74MdUJDBMMWdZeygESyV2qZ5q4p9Up30kQ6dwyp
+         XvACJHNVT/MLUWTkHORDbjN0rw4tOx23YJnV52/WHbyBK86N8PV9w96jmkNhiVrvT2Qz
+         1+yPS3FX5il0WQjfcYA/AHcw1yKT6kakcGaEyS19OqV+jGoSdpVOltzEV+EJKlLdhJem
+         WuVJcdmglXp8HN07xgUK+tKnPzlwWpZ6L+ti/SE7XqRIZlJnFjcnEG38j2DKHLfnFdvL
+         ZaEyVM0WMngvP0vzBqWSrnx+kowZ3C1tnU7HX6ObZOnVKsx57QHssjB2lurLw+sLwN+r
+         eKqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777358576; x=1777963376;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wJT0Q2+TNC0iQL2BZKm7PxCYejNErSFxDX4dcCZU2IY=;
+        b=S5Gk7X+tSYoTimFrEDfMvd1InQa5cC6Yw3OTFZSFu3h0oA1//mgxkSIfUJDEkCslav
+         BS3o1f0qNOCypVJFOWjuQ1vyl4++vc/2fdXBW/9p1Gfj4NFpi+JDaFA8DWbcEbgdmSwn
+         Qlw/clBeWGvmhbbQoYCLOfg1QDO5iwXJOEIH7g+nYpG/OXjYVVpU82beE1VMOhTFIarw
+         kvIgZppu31L2oMr3u8CJjf8SohHAZ7ZiFBnCaRAnB3rkKUbAD9MVlPyuA1K8id0GfHQy
+         iZe+8Bf2CtH352aVrB/iSOho9lOuHRVAYCdBCSThHulKMXXq6NP2lnVt0fXJ0/SS/del
+         N0AQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8u53i/a345MJ4KUJXhGMUIqTc8qu1npYt5NpuvTCERW1sluMPKmKZ7y60X50oG8bEJ4+Q4vqK8/To=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzmWZ6RF6NqwTYXP2pRHLzK1bnJpQXOIztmMU1yyfNwOK5muwot
+	joRiyq/eRteQie9bQJUpDsKUBcP/YIEFK0Zwn5wmSriafaR96TsJ/H23
+X-Gm-Gg: AeBDies6agsETVfRfcRIO0P2L0hMqSIYIekgoStEyOfEuotOeVrbumcv8iftotouqre
+	B4/ysmSKMrLTmqU/sVsCbOHT1PE17NOXcdvE+kTt03XoCyH2fPeSmwE42vFrKEFzkpqPwg+nLRx
+	R3wk8TFddf0deKGYYuEEAJ4o6yg1CbQ+eHNyNmsTLvNZDRmrA77hvdlLuOh9e0c0dXFKHEHYgq6
+	69aUfUSV4XGem2TBANB1i7/POx4j7V2ARSJq/oqcGGmpQYWyDegKaY7jEx9zBRPd3G+6KZr6oY/
+	Vd3+u5mctN9RA5V9u0yT3epGPXZZmO6Pr5IFfwo5eAE+xc4rhso6IphKOJKK9+HAEWetGl2W+vH
+	bsiGGz+zjFp5r9mEjqt1O9JDTJMs+x4wzw2zogt9dr9DqDeu0HTqD4nEgfF61sURoI8xuTU3POR
+	hWNVYPxQ5xmV9BIxlbEAvaKpmJN0Zjv+owk+hoAg==
+X-Received: by 2002:a05:6a00:12c1:b0:829:8c08:d1f4 with SMTP id d2e1a72fcca58-834ddbec0e6mr1846825b3a.39.1777358575700;
+        Mon, 27 Apr 2026 23:42:55 -0700 (PDT)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-834dae07945sm1904377b3a.9.2026.04.27.23.42.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Apr 2026 23:42:55 -0700 (PDT)
+Message-ID: <71447b65-0390-47a6-b0ec-7727a3009256@gmail.com>
+Date: Tue, 28 Apr 2026 14:42:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 27 Apr 2026 21:32:03 -0400
-From: "Chuck Lever" <cel@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-api@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net,
- "OGAWA Hirofumi" <hirofumi@mail.parknet.co.jp>,
- "Namjae Jeon" <linkinjeon@kernel.org>,
- "Sungjong Seo" <sj1557.seo@samsung.com>,
- "Yuezhang Mo" <yuezhang.mo@sony.com>,
- almaz.alexandrovich@paragon-software.com,
- "Viacheslav Dubeyko" <slava@dubeyko.com>,
- "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
- frank.li@vivo.com, "Theodore Tso" <tytso@mit.edu>,
- adilger.kernel@dilger.ca, "Carlos Maiolino" <cem@kernel.org>,
- "Steve French" <sfrench@samba.org>, "Paulo Alcantara" <pc@manguebit.org>,
- "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
- "Shyam Prasad N" <sprasad@microsoft.com>,
- "Trond Myklebust" <trondmy@kernel.org>,
- "Anna Schumaker" <anna@kernel.org>, "Jaegeuk Kim" <jaegeuk@kernel.org>,
- "Chao Yu" <chao@kernel.org>, "Hans de Goede" <hansg@kernel.org>,
- senozhatsky@chromium.org, "Chuck Lever" <chuck.lever@oracle.com>,
- "Roland Mainz" <roland.mainz@nrubsig.org>
-Message-Id: <3fd6dcbf-ece6-459e-b114-1d8b95035acf@app.fastmail.com>
-In-Reply-To: <20260427155636.GC7751@frogsfrogsfrogs>
-References: <20260424-case-sensitivity-v11-0-de5619beddaf@oracle.com>
- <20260424-case-sensitivity-v11-8-de5619beddaf@oracle.com>
- <20260427155636.GC7751@frogsfrogsfrogs>
-Subject: Re: [PATCH v11 08/15] xfs: Report case sensitivity in fileattr_get
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/9] fstests: add _loop_image_create_clone() helper
+To: Amir Goldstein <amir73il@gmail.com>, Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-f2fs@vger.kernel.org, zlang@redhat.com, hch@infradead.org
+References: <cover.1777281778.git.asj@kernel.org>
+ <05ace38b54ea49f462bcd6274c4a2528192e6949.1777281778.git.asj@kernel.org>
+ <CAOQ4uxjEcHiqzB+JrnzDExMcBuTbLaPT5qQcEDX0GO0TX7hp=g@mail.gmail.com>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <CAOQ4uxjEcHiqzB+JrnzDExMcBuTbLaPT5qQcEDX0GO0TX7hp=g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 
 
-On Mon, Apr 27, 2026, at 11:56 AM, Darrick J. Wong wrote:
-> On Fri, Apr 24, 2026 at 09:53:10PM -0400, Chuck Lever wrote:
->> From: Chuck Lever <chuck.lever@oracle.com>
->>=20
->> Upper layers such as NFSD need to query whether a filesystem
->> is case-sensitive. Add FS_XFLAG_CASEFOLD to xfs_ip2xflags()
->> when the filesystem is formatted with the ASCIICI feature
->> flag. This serves both FS_IOC_FSGETXATTR (via xfs_fill_fsxattr() in
->> xfs_fileattr_get()) and XFS_IOC_BULKSTAT (which populates bs_xflags
->> directly from xfs_ip2xflags()), so bulkstat consumers and per-inode
->> queries see a consistent view of the filesystem's case-folding
->> behavior.
->>=20
->> XFS always preserves case. XFS is case-sensitive by default, but
->> supports ASCII case-insensitive lookups when formatted with the
->> ASCIICI feature flag.
->>=20
->> Reviewed-by: Roland Mainz <roland.mainz@nrubsig.org>
->> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
+On 28/4/26 02:31, Amir Goldstein wrote:
+> On Mon, Apr 27, 2026 at 12:19 PM Anand Jain <asj@kernel.org> wrote:
+>>
+>> Introduce _loop_image_create_clone() and _loop_image_destroy() to mkfs an
+>> image file and clone it to another image file, and attach a loop device to
+>> them. And its destroy part.
+>>
+>> Signed-off-by: Anand Jain <asj@kernel.org>
 >> ---
+>>  common/rc | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 44 insertions(+)
+>>
+>> diff --git a/common/rc b/common/rc
+>> index 9632b211b58f..0e7b7eb1d98f 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -1503,6 +1503,50 @@ _scratch_resvblks()
+>>         esac
+>>  }
+>>
+>> +_loop_image_create_clone()
+>> +{
+>> +       local -n _ret=$1
+>> +       local pre_clone_tune_func=$2
+>> +       local img_file=$TEST_DIR/${seq}.img
+>> +       local img_file_clone=$TEST_DIR/${seq}_clone.img
+>> +       local size=$(_small_fs_size_mb 128) # Smallest possible
+>> +       local loop_devs
+>> +
+>> +       size=$((size * 1024 * 1024))
+>> +       $XFS_IO_PROG -f -c "truncate $size" $img_file
+>> +
+>> +       loop_devs=$(_create_loop_device $img_file)
+>> +       _ret=($loop_devs)
+>> +
+>> +       case $FSTYP in
+>> +       xfs)
+>> +               _mkfs_dev "-s size=4096" $img_file
+>> +               ;;
+>> +       btrfs)
+>> +               _mkfs_dev $img_file
+>> +               ;;
+>> +       *)
+>> +               _mkfs_dev $img_file
+> 
+> You making a wrong assumption that FSTYP can format the loop devices
+> 
+> You should add _require_block_device $SCRATCH_DEV
+> to all your tests or maybe nicer, add:
+> 
+> _require_loop_mountable which requires loop and block dev fs
+> and use this requirement instead of just _require_loop in all tests.
+> 
 
-> I don't understand this at all.  Yes, FS_XFLAG_CASEFOLD is readonly,
-> but how does clearing FS_CASEFOLD_FL from the fileattr_get output
-> (without clearing XFLAG_CASEFOLD!) solve anything?  This makes the
-> reported output inconsistent between fsgetxattr and getflags -- one
-> reports case folding, the other reports no casefolding.
+Thanks. I've fixed this in v4 by adding
+  _require_block_device $TEST_DEV
+Since SCRATCH_DEV is not required.
 
-The masking is a misplaced reaction to a sashiko review on the
-v9 predecessor of this patch [1], which pointed out that v9 set
-FS_XFLAG_CASEFOLD in fa->fsx_xflags after xfs_fill_fsxattr() had
-already synced fa->flags, leaving the two views inconsistent in
-the other direction, and that bulkstat would miss the flag for
-the same reason. Moving the injection into xfs_ip2xflags() fixed
-both gaps -- but it also surfaced FS_CASEFOLD_FL on the legacy
-view, so chattr's RMW through FS_IOC_SETFLAGS hits the EOPNOTSUPP
-gate at the top of xfs_fileattr_set(). Hiding it from getflags
-was the wrong place to address that.
+I didn't create a new _require_loop_mountable() helper.
+Both _require_loop() and _require_block_device() are
+used both together across other existing tests;
+I prefer not to deviate into cleaning that up in this
+patch set.
 
-> If you want to avoid fileattr_set returning EINVAL when setting
-> attributes due to the casefold flag, then don't you want to check
-> the flag state vs. xfs_has_asciici() in the *fileattr_set* path?
+v4 is in the ML for rvb.
 
-Yep. For v12 I=E2=80=99ll drop the fa->flags mask and add FS_CASEFOLD_FL
-to the allowlist in xfs_fileattr_set(), gated on xfs_has_asciici(mp).
-xfs_flags2diflags() already has no clause for CASEFOLD, so the
-FSSETXATTR path silently no-ops it the same way it does for
-FS_XFLAG_HASATTR, and FS_XFLAG_CASEFOLD is in FS_XFLAG_RDONLY_MASK
-so FSSETXATTR strips it centrally. Both views then agree, and a
-chattr round-trip is accepted as a no-op.
-
-The hfsplus patch in this series carries the same pattern --
-FS_XFLAG_CASEFOLD is set after fileattr_fill_flags() so that
-FS_CASEFOLD_FL stays out of fa->flags and dodges the EOPNOTSUPP
-gate in hfsplus_fileattr_set(). I will fix it the same way.
-
-Thanks for the catch!
-
-[1] https://sashiko.dev/#/patchset/20260422-case-sensitivity-v9-0-be023c=
-c070e2@oracle.com?part=3D9
+Thanks, Anand
 
 
---=20
-Chuck Lever
+> Thanks,
+> Amir.
+
