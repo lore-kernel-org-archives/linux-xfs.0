@@ -1,188 +1,229 @@
-Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED56127A916;
-	Tue, 28 Apr 2026 15:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8E9378D94;
+	Wed, 29 Apr 2026 15:58:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777388573; cv=none; b=VvWwS2MzhYjupoegemQ/dOGESzOy7sVyej534DQmwcfDtv3wY9cI3wnRqu/WS7qek+0tJIdbQLMratromQ6IA2ERSJvf3z8sukl3+UtYKKuv40VF50E9CMFaMWC5VBtG1pJXP7UDkIhtiJShl5mU3M4QqUV6OnUvlPBLegvlFDQ=
+	t=1777478294; cv=none; b=UVjzMWTTzxv6oMib5T0YWohGZPWNBSFhRXqRXEHGojwj1mSR0we/OzOINBL7M3jomYIaH8ah+yjuxH8M+21KywhZXo1QplBp4/B0121PF6j7EvflIP+Oax2ch72Fd7D7wkPDiFNLVpBOk1meuu1PFAeZgr/2z6aoPsQbr6RAaI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777388573; c=relaxed/simple;
-	bh=iR5dhkcHU5VCBpUITHDa/CgQ+skWyHmfxA70XA8Ykuk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rQNsGv8LU5KjAxbcZhepazi0TEFMTvSKKD3MXBwjoXbXz142iwvVcj2Z/JiSWgl7+my/TB73DYEqoznAb/Ft6cwpdqx2/W8ZSFLyVpFFsExsLOAE33ZGeRJtaLOLdbPcbK3KvXpEn7pMMgEup8h+64Hkei6jW20idvpfgvPsXG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=G05Xv6oG; arc=none smtp.client-ip=52.42.203.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1777478294; c=relaxed/simple;
+	bh=KsPVkbPTQvZIiITBc96uAYQ++oG/gAhe9Qiffk/P85Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EZ1buBuhaOUxGwU5o1S6uwQQ8MUSf/GE0iwuJYkQI7Opueb01JOjXO9hqUksH5ZSKANR+KaABT67xxISGG6KjSJ5FAdRuqTzaiQuKjMjbt4F5YR1m6NbRmsldvLn8hGfj3BLald2voj5JilM4+Mo0H0gQNy4GvL0ruekdOefQlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aMAoj6Mq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="G05Xv6oG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1777388571; x=1808924571;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=iR5dhkcHU5VCBpUITHDa/CgQ+skWyHmfxA70XA8Ykuk=;
-  b=G05Xv6oGZuwfnvVHUk6QTzzSPKMJ//KlavJ6HJLZicFSfwiUn8E3DbXo
-   botX81ZWs5duVWgjnqqWQtQDtgjBkegIYp9fMEgbVMoq4kJsGMskVsEGv
-   FaaeGG4faVosbruO9RICjzy25iuMGUm4aFU9ZVyfaJHn+yHOSNKIqkLL9
-   8KynO6PxunB1aefdimKhkvYo7Zj4TDZ1yttboVQG8pWi0XPpOgwTHu2Pj
-   OfEIyILQGaMxKl8gjsxi6rSgcyPYl1CAAmuJuiCEjGfTsZetSSFcE/JI1
-   Vy8TSlUKI4NW8XJRn9UnY7hehrBLNvNRCCaA+OoONV5RSJlVCSz6wOgqh
-   Q==;
-X-CSE-ConnectionGUID: S+NRVQ54ScmBWO36YfRgMA==
-X-CSE-MsgGUID: Q3INsoH7StqcMg2azulpcg==
-X-IronPort-AV: E=Sophos;i="6.23,204,1770595200"; 
-   d="scan'208";a="18387508"
-Received: from ip-10-5-12-219.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.12.219])
-  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2026 15:02:48 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.111:19298]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.57.50:2525] with esmtp (Farcaster)
- id bf7d9290-f8e5-4068-a080-26b327ef5529; Tue, 28 Apr 2026 15:02:48 +0000 (UTC)
-X-Farcaster-Flow-ID: bf7d9290-f8e5-4068-a080-26b327ef5529
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Tue, 28 Apr 2026 15:02:47 +0000
-Received: from dev-dsk-dipiets-2b-fa1865ee.us-west-2.amazon.com
- (172.22.139.101) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37; Tue, 28 Apr 2026
- 15:02:47 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <ritesh.list@gmail.com>
-CC: <abuehaze@amazon.com>, <alisaidi@amazon.com>, <blakgeof@amazon.com>,
-	<brauner@kernel.org>, <dipietro.salvatore@gmail.com>, <dipiets@amazon.it>,
-	<djwong@kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-	<linux-xfs@vger.kernel.org>, <stable@vger.kernel.org>, <willy@infradead.org>
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
-Date: Tue, 28 Apr 2026 15:02:38 +0000
-Message-ID: <20260428150240.3009-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cxztt8nw.ritesh.list@gmail.com>
-References: <cxztt8nw.ritesh.list@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aMAoj6Mq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC226C19425;
+	Wed, 29 Apr 2026 15:58:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777478293;
+	bh=KsPVkbPTQvZIiITBc96uAYQ++oG/gAhe9Qiffk/P85Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aMAoj6Mqk3ZG5lbBajvPAKetVT0ONLYQMou++2W3WY4dgnSaOFB4SnyhRmOO3124t
+	 O3MOWCw6/L8tqcik2gUmkW1WjGSPW4N2V2I08HFymF3W6EDcJxNWLQmnMc0a203ASJ
+	 Z6IKi6GnQiDAWEVuq/DwAcSVG9zj3o0ir2PfhE+ykJwU8qT9IG+EXq53GVo+x0Jw10
+	 SyGqlT64alXKAt0+57OF70Z86EmPKmRqb82uHYbpNGIOt7Y1FELpxZ++aSayW0sqah
+	 k9/i1YLqeqJXaH6UGpwVpTXYSl0fw77TtDD3xr03n3W2jjGJhTFZ4TnSPjKWODM9bs
+	 4tnwa73lQgVcQ==
+Date: Wed, 29 Apr 2026 08:58:13 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, hch@lst.de
+Subject: Re: [bug report] xfs/806 sporadic failure
+Message-ID: <20260429155813.GD7751@frogsfrogsfrogs>
+References: <ae7-c9s0KVBRsSy3@shinmob>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D044UWB003.ant.amazon.com (10.13.139.168) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ae7-c9s0KVBRsSy3@shinmob>
 
-T24gNC8yMS8yNiAwMDo0MywgUml0ZXNoIEhhcmphbmkgd3JvdGU6Cj4gQWxzbywgZ2l2ZW4gdGhl
-IE1haW50YWluZXJzICh3aWxseSwgQ2hyaXN0b3BoLCBEYXZlKSBzaG93biB0aGVpcgo+IGRpcy1p
-bnRlcmVzdCBpbiB0YWtpbmcgdGhlIHBhdGNoIGluIGl0J3MgY3VycmVudCBmb3JtLCB0aGUgcmln
-aHQgd2F5IGlzCj4gdG8gZ2V0IGJhY2sgd2l0aCBwZXJmb3JtYW5jZSBkYXRhIHdpdGggYm90aCB0
-aGUgYXBwcm9hY2hlcyAod2hpY2ggd2UKPiB3ZXJlIGRpc2N1c3NpbmcpIGFuZCBmaXJzdCBnZXQg
-dGhlIGNvbnNlbnN1cyBmcm9tIGV2ZXJ5b25lLCBiZWZvcmUKPiBwcm9wb3NpbmcgdGhpcyBhcyBh
-IHBhdGNoIDopLgoKVGhhbmsgeW91IGZvciB0aGUgZm9sbG93LXVwIGFuZCB0aGUgYWRkaXRpb25h
-bCBjb250ZXh0LCBSaXRlc2guCkkgbWlnaHQgaGF2ZSBtaXN1bmRlcnN0b29kIHRoZSBwcmV2aW91
-cyByZXF1ZXN0IGFuZCB3aWxsIG1ha2Ugc3VyZSB0byAKbGluayBiYWNrIHRvIHByZXZpb3VzIHBh
-dGNoIHZlcnNpb25zIGluIHRoZSBmdXR1cmUuCkhlcmUgYXJlIHRoZSBwZXJmb3JtYW5jZSByZXN1
-bHRzIHRoYXQgd2UgaGF2ZSBjb2xsZWN0ZWQgb24gb3VyIGVuZCB3aXRoCnRoZSBwcm9wb3NlZCBw
-YXRjaGVzOgoKCnwgUGF0Y2ggICAgICAgICAgICAgICAgfCAgICBSdW4gMSAgIHwgICAgUnVuIDIg
-ICB8ICAgIFJ1biAzICAgfCAgIEF2ZXJhZ2UgICB8ICUgdnMgQmFzZWxpbmUgfAp8LS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLTp8LS0tLS0tLS0tLS06fC0tLS0tLS0tLS0tOnwtLS0t
-LS0tLS0tLS06fDotLS0tLS0tLS0tLS0tOnwKfCBCYXNlbGluZSAgICAgICAgICAgICB8IDEwNyww
-NjQuNjEgfCAgOTcsMDQzLjg2IHwgMTAxLDgzMC43OCB8IDEwMSw5NzkuNzUgIHwgICAgICAg4oCU
-ICAgICAgIHwKfCBQcm9wb3NlZCBwYXRjaCAgICAgICB8IDE0NiwwMTIuMjMgfCAxMzYsMzkyLjM2
-IHwgMTQxLDE3OC4wMCB8IDE0MSwxOTQuMjAgIHwgICAgKzM4LjQ1JSAgICB8CnwgUml0ZXNoJ3Mg
-c3VnZ2VzdGlvbiAgfCAxNDcsNDgxLjUwIHwgMTMzLDA2OS4wMyB8IDEzNywwNTEuMzAgfCAxMzks
-MjAwLjYxICB8ICAgICszNi41MCUgICAgfAp8IE1hdHRoZXcncyBzdWdnZXN0aW9uIHwgMTQ1LDY1
-My45MSB8IDE0NCwxNjkuMjQgfCAxNDEsNzY4LjMxIHwgMTQzLDg2My44MiAgfCAgICArNDEuMDcl
-ICAgIHwKCgpPbiA0LzIxLzI2IDAwOjQzLCBSaXRlc2ggSGFyamFuaSB3cm90ZToKPiBJbiB0aGF0
-IGNvbnRleHQsIEkgd2FudGVkIHRvIHVuZGVyc3RhbmQgeW91ciBzZXR1cCBhIGJpdCBmcm9tCj4g
-bWVtb3J5IGZyYWdtZW50YXRpb24gcGVyc3BlY3RpdmUuIEFyZSB5b3UgdHJ5aW5nIHRvIHNpbXVs
-YXRlIG1lbW9yeQo+IGZyYWdtZW50YXRpb24gYW5kIHRoZW4gYmVuY2htYXJraW5nPyBPciB3YXMg
-dGhpcyBwcm9ibGVtIGhpdHRpbmcgd2hlbgo+IHlvdSBydW4gc2ltcGx5IHJ1biB0aGUgcmVwcm9k
-dWN0aW9uIHN0ZXBzIG1lbnRpb25lZCBpbiB5b3VyIGNvdmVyCj4gbGV0dGVyPwoKQWxsIHJlc3Vs
-dHMgd2VyZSBjb2xsZWN0ZWQgb24gZnJlc2ggQVdTIGluc3RhbmNlcyBhcyBkZXNjcmliZWQgaW4g
-dGhlCmNvdmVyIGxldHRlci4gUGF0Y2ggWzFdIGhhcyBiZWVuIGFwcGxpZWQgb24gYWxsIGluc3Rh
-bmNlcyB0byBhdm9pZCB0aGUKb3RoZXIgcmVncmVzc2lvbi4gVGhlIGluc3RhbmNlIGhhcyBiZWVu
-IHJlc3RhcnRlZCB0byBwaWNrIHVwIHRoZSBwYXRjaGVkCmtlcm5lbCBhbmQgZW5zdXJlIGNsZWFu
-IG1lbW9yeSBiZWZvcmUgaW5zdGFsbGluZyBhbmQgc3RhcnRpbmcgdGhlClBvc3RncmVTUUwgYmVu
-Y2htYXJrIHZpYSByZXByby1jb2xsZWN0aW9uIFsyXS4gCldlIGRvIG5vdCB1c2UgYW55IHRvb2wg
-dG8gZnJhZ21lbnQgdGhlIG1lbW9yeSBpbiBhZHZhbmNlLiBDb2xsZWN0aW5nIAptZW1vcnkgbWV0
-cmljIG9mIHRoaXMgc3lzdGVtLCB3ZSBub3RpY2VkIHRoYXQgfjQwJSBvZiBtZW1vcnkgaXMgdXNl
-ZCBieQpQYWdlVGFibGVzIHNpbmNlIFBvc3RncmVTUUwgc3Bhd25zIGEgbmV3IHByb2Nlc3MgZm9y
-IGVhY2ggY2xpZW50IGxpbWl0aW5nCnNpZ25pZmljYW50bHkgdGhlIGF2YWlsYWJsZSBjYWNoaW5n
-IGFuZCBmcmVlIG1lbW9yeS4KClBvc3RncmVTUUwgd3JpdGUgcGF0dGVybiBjb25zaXN0cyBtb3N0
-bHkgb2YgOC8xNiBLQiBkYXRhIGJ1dCBkdXJpbmcgCnRoZSBkYXRhYmFzZSBjaGVja3BvaW50cywg
-YnkgZGVmYXVsdCBldmVyeSA1IG1pbnV0ZXMsIGl0IGZsdXNoZXMgd3JpdGUtYWhlYWQKbG9ncyB0
-byBkaXNrLCB3aGljaCB1c2VzIGxhcmdlIGZvbGlvcy4gQXQgdGhpcyBwb2ludCwgdGhlIHN5c3Rl
-bSBhdHRlbXB0cyB0bwpzYXRpc2Z5IHRoZSBmb2xpbyBhbGxvY2F0aW9uIHJlcXVlc3QsIHRyaWdn
-ZXJpbmcgdGhlIHJlZ3Jlc3Npb24gYW5kIGZhbGxpbmcKaW50byB0aGUgc2xvdyBwYXRoLCBhcyBz
-aG93biBieSB0aGUgTGludXggcGVyZiBwcm9maWxlIGJlbG93OgoKICBgLTAuMjYlLV9fYXJtNjRf
-c3lzX3B3cml0ZTY0CiAgICBgLTAuMjYlLXZmc193cml0ZQogICAgICBgLTAuMjYlLXhmc19maWxl
-X3dyaXRlX2l0ZXIKICAgICAgICBgLTAuMjYlLXhmc19maWxlX2J1ZmZlcmVkX3dyaXRlCiAgICAg
-ICAgICBgLTAuMjYlLWlvbWFwX2ZpbGVfYnVmZmVyZWRfd3JpdGUKICAgICAgICAgICAgYC0wLjI2
-JS1pb21hcF93cml0ZV9pdGVyCiAgICAgICAgICAgICAgYC0wLjIyJS1pb21hcF93cml0ZV9iZWdp
-bgogICAgICAgICAgICAgICAgYC0wLjIyJS1pb21hcF9nZXRfZm9saW8KICAgICAgICAgICAgICAg
-ICAgYC0wLjIyJS1fX2ZpbGVtYXBfZ2V0X2ZvbGlvCiAgICAgICAgICAgICAgICAgICAgYC0wLjIx
-JS1maWxlbWFwX2FsbG9jX2ZvbGlvLT5hbGxvY19wYWdlcwogICAgICAgICAgICAgICAgICAgICAg
-YC0wLjIwJS1fX2FsbG9jX3BhZ2VzX3Nsb3dwYXRoCiAgICAgICAgICAgICAgICAgICAgICAgIHwt
-MC4xMiUtX19hbGxvY19wYWdlc19kaXJlY3RfY29tcGFjdAogICAgICAgICAgICAgICAgICAgICAg
-ICB8IGAtMC4xMiUtdHJ5X3RvX2NvbXBhY3RfcGFnZXMKICAgICAgICAgICAgICAgICAgICAgICAg
-fCAgIGAtMC4xMSUtY29tcGFjdF96b25lCiAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgIGAt
-MC4xMSUtaXNvbGF0ZV9taWdyYXRlcGFnZXMKICAgICAgICAgICAgICAgICAgICAgICAgYC0wLjA3
-JS1fX2RyYWluX2FsbF9wYWdlcwogICAgICAgICAgICAgICAgICAgICAgICAgIGAtMC4wNyUtZHJh
-aW5fcGFnZXNfem9uZQogICAgICAgICAgICAgICAgICAgICAgICAgICAgYC0wLjA3JS1mcmVlX3Bj
-cHBhZ2VzX2J1bGsKClRoaXMgaXMgYWxzbyB2aXNpYmxlIGluIHRoZSBpbnRlcm1lZGlhdGUgUEdC
-ZW5jaCByZXN1bHRzLCB3aGljaCBkcm9wCnNpZ25pZmljYW50bHkgZHVyaW5nIGNoZWNrcG9pbnQg
-dGltZSBleGVjdXRpb246CgojIE5vcm1hbCBleGVjdXRpb246ClsyMDI2MDQyMS4xNDE1MDVdIFtJ
-TkZPXSBwcm9ncmVzczogNjYwLjAgcywgMTM4ODI4LjIgdHBzLCBsYXQgNy41MDkgbXMgc3RkZGV2
-IDE2Ljk4NSwgMCBmYWlsZWQKWzIwMjYwNDIxLjE0MTUxNV0gW0lORk9dIHByb2dyZXNzOiA2NzAu
-MCBzLCAxNTE1MDUuMSB0cHMsIGxhdCA2LjcwOCBtcyBzdGRkZXYgOC4zMDgsIDAgZmFpbGVkClsy
-MDI2MDQyMS4xNDE1MjVdIFtJTkZPXSBwcm9ncmVzczogNjgwLjAgcywgMTY2NTU4LjcgdHBzLCBs
-YXQgNi4xOTAgbXMgc3RkZGV2IDYuNTM3LCAwIGZhaWxlZApbMjAyNjA0MjEuMTQxNTM1XSBbSU5G
-T10gcHJvZ3Jlc3M6IDY5MC4wIHMsIDE0MTI2Ny4xIHRwcywgbGF0IDcuMjQ2IG1zIHN0ZGRldiA1
-Ljk1MSwgMCBmYWlsZWQKCiMgRHVyaW5nIGNoZWNrcG9pbnRzOgkKWzIwMjYwNDIxLjE0MTYwNV0g
-W0lORk9dIHByb2dyZXNzOiA3MjAuMCBzLCA1NDExOS44IHRwcywgbGF0IDE4Ljg5NCBtcyBzdGRk
-ZXYgODEuODE2LCAwIGZhaWxlZApbMjAyNjA0MjEuMTQxNjE1XSBbSU5GT10gcHJvZ3Jlc3M6IDcz
-MC4wIHMsIDU1MTg0LjcgdHBzLCBsYXQgMTguNTY0IG1zIHN0ZGRldiAxMi43MjksIDAgZmFpbGVk
-ClsyMDI2MDQyMS4xNDE2MjVdIFtJTkZPXSBwcm9ncmVzczogNzQwLjAgcywgMzczMzQuMCB0cHMs
-IGxhdCAyNy4zMDIgbXMgc3RkZGV2IDI1LjA2MCwgMCBmYWlsZWQKWzIwMjYwNDIxLjE0MTYzNV0g
-W0lORk9dIHByb2dyZXNzOiA3NTAuMCBzLCA1MzM4Ny42IHRwcywgbGF0IDE5LjI1OSBtcyBzdGRk
-ZXYgMTguMzEzLCAwIGZhaWxlZApbMjAyNjA0MjEuMTQxNjQ1XSBbSU5GT10gcHJvZ3Jlc3M6IDc2
-MC4wIHMsIDQxMjQ3LjMgdHBzLCBsYXQgMjQuODA1IG1zIHN0ZGRldiAyNC4xMTYsIDAgZmFpbGVk
-CgoKT24gNC8yMS8yNiAwMDo0MywgUml0ZXNoIEhhcmphbmkgd3JvdGU6Cj4gQlRXIC0gSSB3YXMg
-Zm9sbG93aW5nIHRoZSBvdGhlciB0aHJlYWQgdG9vIHdoZXJlIFBSRUVNUFRfTEFaWSBwcm9ibGVt
-Cj4gd2FzIGdldHRpbmcgZGlzY3Vzc2VkLiBBbmQgZnJvbSB3aGF0IEkgdW5kZXJzdG9vZCwgeW91
-IG1lbnRpb25lZCBbMV0KPiBlbmFibGluZyBUSFAgb24gdGhlIHN5c3RlbSBtYWRlIHRoYXQgcHJv
-YmxlbSBnbyBhd2F5LiBBbHNvIGl0IGxvb2tzIGxpa2UKPiBlbmFibGluZyBUSFAgaXMgdGhlIHJp
-Z2h0IHRoaW5nIHRvIGRvIGZvciB0aGlzIGtpbmQgb2Ygd29ya2xvYWQuIERvZXMKPiB0aGF0IGFs
-c28gbWVhbiBlbmFibGluZyBUSFAgZml4ZWQgdGhpcyBwcm9ibGVtIHRvbz8gRG8geW91IHN0aWxs
-IGhpdAo+IG1lbW9yeSBmcmFnbWVudGF0aW9uIGFuZC9vciBzaW1pbGFyIHRocm91Z2hwdXQgZHJv
-cCB3L28gdGhpcyBmaXggYWZ0ZXIKPiB5b3UgZW5hYmxlIFRIUD8gSXQgd2lsbCBiZSBnb29kIHRv
-IGtub3cgdGhvc2UgZGV0YWlscyB0b28gcGxlYXNlLgoKV2UgaGF2ZSBydW4gbW9yZSBiZW5jaG1h
-cmtzIChhcyBiYXNlbGluZSkgd2l0aCBQb3N0Z3JlU1FMIGh1Z2VfcGFnZXMgb3B0aW9ucwoob24s
-IG9mZikgcHJlLWFsbG9jYXRpbmcgdGhlIHNoYXJlZCBidWZmZXIgbWVtb3J5IHdpdGggInZtLm5y
-X2h1Z2VwYWdlcyIKKH4yNSUgb2YgdG90YWwgbWVtb3J5LCAyTUIgc2l6ZSkgYW5kIFRyYW5zcGFy
-ZW50IEh1Z2UgUGFnZXMgKFRIUCkgb3B0aW9ucwooYWx3YXlzLCBtYWR2aXNlLCBuZXZlcikuIFBv
-c3RncmVTUUwgcGVyZm9ybWFuY2UgaW1wcm92ZXMgb25seSB3aGVuClBvc3RncmVTUUwgaHVnZV9w
-YWdlcyBvcHRpb24gd2l0aCBwcmUtYWxsb2NhdGVkIG1lbW9yeSBpcyBlbmFibGVkLgpUSFAgaGFz
-IG5vIHNpZ25pZmljYW50IGVmZmVjdCBvbiBQb3N0Z3JlU1FMIG9yIHN5c3RlbSBwZXJmb3JtYW5j
-ZSBpbiB0aGlzCmNhc2UuCgp8IFBHIGh1Z2VfcGFnZXMgKyBwcmUtYWxsb2MgbWVtIHwgVEhQICAg
-ICB8ICAgUnVuIDEgfCAgIFJ1biAyIHwgICBSdW4gMyB8IEF2ZXJhZ2UgfAp8LS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS18LS0tLS0tLS06fC0tLS0tLS0tOnwtLS0tLS0t
-LTp8LS0tLS0tLS06fAp8IG9uICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgbmV2ZXIgICB8
-IDE4OSw0MTggfCAxODcsNzY0IHwgMTg4LDIwNyB8IDE4OCw0NjMgfAp8IG9uICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHwgYWx3YXlzICB8IDE4OCw4MTMgfCAxODksNzk4IHwgMTkwLDAzMiB8
-IDE4OSw1NDggfAp8IG9uICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgbWFkdmlzZSB8IDE4
-Nyw0MDUgfCAxOTIsMjM0IHwgMTg5LDIwMSB8IDE4OSw2MTMgfAp8IG9mZiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHwgbmV2ZXIgICB8IDEwMiw2MDkgfCAxMDksMzk0IHwgMTAwLDg2OCB8IDEw
-NCwyOTAgfAp8IG9mZiAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgYWx3YXlzICB8ICA5MCwy
-NzQgfCAxMDMsODMxIHwgMTAyLDUxNSB8ICA5OCw4NzQgfAp8IG9mZiAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwgbWFkdmlzZSB8ICA5MCw1MDggfCAxMDMsODU1IHwgIDk2LDU3NCB8ICA5Niw5
-NzkgfAoKClsxXSBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyNjA0MDMxOTE5NDIuMjE0
-MTAtMS1kaXBpZXRzQGFtYXpvbi5pdC9ULyNtOGJhZWVhZjQ4YWE3YWU1MzQyYzhjMmRiOGY0ZTFj
-MjdlMDNjMTM2OApbMl0gaHR0cHM6Ly9naXRodWIuY29tL2F3cy9yZXByby1jb2xsZWN0aW9uLmdp
-dAoKCgpBTUFaT04gREVWRUxPUE1FTlQgQ0VOVEVSIElUQUxZIFNSTCwgdmlhbGUgTW9udGUgR3Jh
-cHBhIDMvNSwgMjAxMjQgTWlsYW5vLCBJdGFsaWEsIFJlZ2lzdHJvIGRlbGxlIEltcHJlc2UgZGkg
-TWlsYW5vIE1vbnphIEJyaWFuemEgTG9kaSBSRUEgbi4gMjUwNDg1OSwgQ2FwaXRhbGUgU29jaWFs
-ZTogMTAuMDAwIEVVUiBpLnYuLCBDb2QuIEZpc2MuIGUgUC5JVkEgMTAxMDAwNTA5NjEsIFNvY2ll
-dGEgY29uIFNvY2lvIFVuaWNvCgoK
+On Mon, Apr 27, 2026 at 03:16:44PM +0900, Shin'ichiro Kawasaki wrote:
+> Hello Darrick and all,
+> 
+> Recently, I observed a sporadic failure of xfs/806. If does not fail always,
+> but fails in steady manner in the last a few months. I would like to ask if
+> anyone has any insights about the failure.
+> 
+> I started observing that failure in February. It was observed with various test
+> target devices, zoned/non-zoned, null_blk/tcmu/HDD. The failure was not
+> recreated easiliy. Recently, I found that I can recreate the failure in stable
+> manner using dm-crypt on my SMR HDDs and by repeating the test cases from
+> xfs/803 to xfs/806.
+> 
+>    The failure can be recrated by running xfs/806 many times (> 200 times), but
+>    it looks recreated sooner by repeating xfs/803 to xfs/806.
+> 
+> The failure is observed with recent xfs/for-next branch.
+> 
+> On falure, the fstests console looks like this:
+> ------------------------------------------------------------------------------
+> xfs/803      12s ...  12s
+> xfs/804      12s ...  12s
+> xfs/805      9s ...  9s
+> xfs/806      13s ... - output mismatch (see /home/kts/kernel-test-suite/src/xfstests/results//xfs/806.out.bad)
+>     --- tests/xfs/806.out       2026-03-26 22:40:32.089917897 +0900
+>     +++ /home/kts/kernel-test-suite/src/xfstests/results//xfs/806.out.bad       2026-04-27 09:21:27.164750487 +0900
+>     @@ -1,6 +1,7 @@
+>      QA output created by 806
+>      Info: TEST_DIR/806.mount: Checking and repairing per autofsck directive.
+>     -Info: TEST_DIR/806.mount: Disabling scrub per autofsck directive.
+>     +mount: /var/kts/test/806.mount: /var/kts/test/806.somefile is already mounted.
 
+Huh.  It's very strange that the fs is still mounted, yet the unmount
+didn't print anything about that.
+
+>     +Info: TEST_DIR/806.mount: Checking and repairing per autofsck directive.
+>      Info: TEST_DIR/806.mount: Checking per autofsck directive.
+>      Info: TEST_DIR/806.mount: Optimizing per autofsck directive.
+>     ...
+>     (Run 'diff -u /home/kts/kernel-test-suite/src/xfstests/tests/xfs/806.out /home/kts/kernel-test-suite/src/xfstests/results//xfs/806.out.bad'  to see the entire diff)
+> Ran: xfs/803 xfs/804 xfs/805 xfs/806
+> Failures: xfs/806
+> ------------------------------------------------------------------------------
+> 
+> As you can see, the mount command fails with the "/var/kts/test/806.somefile is
+> already mounted." message. The test case does mount multiple times. The step of
+> mount failure is not always same, but the failure message is same always.
+> 
+> Dmesg does not leave anything looks suspecious to me [1].
+> 
+> FYI, here I share the steps I use to recreate the failure. I use a QEMU test
+> node with Fedora 43. SMR HDDs are exposed to the QEMU VM via PCI passthrough.
+
+Fedora 43, so xfsprogs isn't new enough to have xfs_healer.
+
+>   # Set up dm-crypt on two SMR HDDs, /dev/sdc and /dev/sdd. Offset and size are
+>   # chosen to have 16 conventional zones and 144 sequential write required zones.
+>   $ sudo dd if=/dev/random of=/tmp/keyfile bs=1 count=256
+>   $ sudo cryptsetup open --batch-mode --type plain --cipher aes-cbc-essiv:sha256 --key-size 256 --key-file /tmp/keyfile --offset 382730240 --size 83886080 /dev/sdc test1  
+>   $ sudo cryptsetup open --batch-mode --type plain --cipher aes-cbc-essiv:sha256 --key-size 256 --key-file /tmp/keyfile --offset 382730240 --size 83886080 /dev/sdd test2
+> 
+>   # prepare local.config
+>   $ cat ./local.config
+>   export TEST_DIR=/var/kts/test
+>   export TEST_DEV="/dev/mapper/test1"
+>   export KEEP_DMESG=yes
+>   export FSTYP=xfs
+>   export MKFS_OPTIONS=""
+>   export SCRATCH_MNT=/var/kts/scratch
+>   export SCRATCH_DEV="/dev/mapper/test2"
+>   export FSX_AVOID=-a
+> 
+>   # format TEST_DEV
+>   $ sudo mkfs.xfs /dev/mapper/test1
+> 
+>   # repeat test cases from xfs/803 to xfs/806 200 times.
+>   $ for ((i=0;i<200;i++)); do echo $i; if ! sudo ./check xfs/803 xfs/804 xfs/805 xfs/806; then break; fi; done
+> 
+> With the steps, the failures is recreated at 20th repeat at earliest, or 120th
+> repeat when it takes longer.
+> 
+> Using this environment, I did quick printk debug, and found that do_umount()
+> in fs/namespace.c returns -EBUSY on failure case. But I'm not sure why it
+> happens.
+> 
+> Quote from fs/namespace.c:
+> ------------------------------------------------------------------------------
+>         event++;
+>         if (flags & MNT_DETACH) {
+>                 umount_tree(mnt, UMOUNT_PROPAGATE);
+>                 retval = 0;
+>         } else {
+>                 smp_mb(); // paired with __legitimize_mnt()
+>                 shrink_submounts(mnt);
+>                 retval = -EBUSY;   <===================================== here
+>                 if (!propagate_mount_busy(mnt, 2)) {
+>                         umount_tree(mnt, UMOUNT_PROPAGATE|UMOUNT_SYNC);
+>                         retval = 0;
+>                 }
+>         }
+> ------------------------------------------------------------------------------
+> 
+> Any advice will be welcomed. If I can do anything in my test environment,
+> please let me know.
+
+Hrmm.  Let me try this case (loop image on test fs on dmcrypted smr hdd)
+in the lab when I'm back from travelling tomorrow.  I wonder if there's
+some sort of delay in unmounting, though nothing stands out immediately.
+
+--D
+
+> 
+>   System maintenance is planned for my test machines in the first week of May.
+>   So, my action on my test environment may take some time.
+> 
+> 
+> [1] dmesg
+> 
+> [ 1966.727914] [ T137522] run fstests xfs/803 at 2026-04-27 13:47:54
+> [ 1972.747786] [ T138553] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1973.406021] [ T138576] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 1973.419142] [ T138576] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1973.568485] [ T138576] XFS (dm-0): Ending clean mount
+> [ 1973.570947] [ T138576] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 1973.577722] [ T138576] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 1973.937017] [ T138621] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1975.775968] [ T137522] run fstests xfs/804 at 2026-04-27 13:48:03
+> [ 1977.795592] [ T139088] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 1977.807396] [ T139088] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1977.922463] [ T139088] XFS (dm-0): Ending clean mount
+> [ 1977.925319] [ T139088] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 1977.932679] [ T139088] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 1978.971340] [ T139191] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1980.413770] [ T139283] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 1980.426461] [ T139283] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1980.550420] [ T139283] XFS (dm-0): Ending clean mount
+> [ 1980.552682] [ T139283] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 1980.558805] [ T139283] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 1983.784203] [ T139478] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1984.571368] [ T139670] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 1984.582316] [ T139670] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1984.698207] [ T139670] XFS (dm-0): Ending clean mount
+> [ 1984.700759] [ T139670] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 1984.708996] [ T139670] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 1985.237069] [ T137522] run fstests xfs/805 at 2026-04-27 13:48:13
+> [ 1991.545779] [ T140080] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1992.390589] [ T140272] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 1992.400273] [ T140272] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 1992.510456] [ T140272] XFS (dm-0): Ending clean mount
+> [ 1992.513019] [ T140272] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 1992.519907] [ T140272] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 1993.060516] [ T137522] run fstests xfs/806 at 2026-04-27 13:48:21
+> [ 1996.241717] [ T140594] loop0: detected capacity change from 0 to 20971520
+> [ 1996.286338] [ T140594] XFS (loop0): Mounting V5 Filesystem cdb36045-8330-48c7-b1a4-82c5d7ed21e1
+> [ 1996.308568] [ T140594] XFS (loop0): Ending clean mount
+> [ 1996.388493] [ T140613] XFS (loop0): Unmounting Filesystem cdb36045-8330-48c7-b1a4-82c5d7ed21e1
+> [ 1996.599702] [ T140615] loop0: detected capacity change from 0 to 20971520
+> [ 1996.638831] [ T140615] XFS (loop0): Mounting V5 Filesystem 3218c7d6-c4a4-4f5a-b9bc-c1ba7ada7e6d
+> [ 1996.661288] [ T140615] XFS (loop0): Ending clean mount
+> [ 1996.727650] [ T140630] XFS (loop0): Unmounting Filesystem 3218c7d6-c4a4-4f5a-b9bc-c1ba7ada7e6d
+> [ 1996.927360] [ T140632] loop0: detected capacity change from 0 to 20971520
+> [ 1996.965520] [ T140632] XFS (loop0): Mounting V5 Filesystem 15db07f7-722e-401e-8f22-856ceeedeed6
+> [ 1996.983714] [ T140632] XFS (loop0): Ending clean mount
+> [ 1997.058905] [ T140651] XFS (loop0): Unmounting Filesystem 15db07f7-722e-401e-8f22-856ceeedeed6
+> [ 1997.256820] [ T140653] loop0: detected capacity change from 0 to 20971520
+> [ 1997.294703] [ T140653] XFS (loop0): Mounting V5 Filesystem 98713c32-802b-4179-8ec6-fcc89968b76e
+> [ 1997.312428] [ T140653] XFS (loop0): Ending clean mount
+> [ 1997.385745] [ T140672] XFS (loop0): Unmounting Filesystem 98713c32-802b-4179-8ec6-fcc89968b76e
+> [ 1997.574544] [ T140674] loop0: detected capacity change from 0 to 20971520
+> [ 1997.616104] [ T140674] XFS (loop0): Mounting V5 Filesystem 45368b30-8413-48b4-becc-4e787f833e42
+> [ 1997.638100] [ T140674] XFS (loop0): Ending clean mount
+> [ 1997.916462] [ T140706] XFS (loop0): Unmounting Filesystem 45368b30-8413-48b4-becc-4e787f833e42
+> [ 1998.076829] [ T140708] loop0: detected capacity change from 0 to 20971520
+> [ 1998.113814] [ T140708] XFS (loop0): Mounting V5 Filesystem 2f115ed5-8d6d-4a03-97fb-4b2215947ec6
+> [ 1998.132609] [ T140708] XFS (loop0): Ending clean mount
+> [ 1998.225237] [ T140727] XFS (loop0): Unmounting Filesystem 2f115ed5-8d6d-4a03-97fb-4b2215947ec6
+> [ 2000.147618] [ T140793] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 2001.085155] [ T140984] XFS (dm-0): EXPERIMENTAL zoned RT device feature enabled.  Use at your own risk!
+> [ 2001.094211] [ T140984] XFS (dm-0): Mounting V5 Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> [ 2001.212889] [ T140984] XFS (dm-0): Ending clean mount
+> [ 2001.215370] [ T140984] XFS (dm-0): limiting open zones to 36 due to total zone count (144)
+> [ 2001.221959] [ T140984] XFS (dm-0): 144 zones of 65536 blocks (36 max open zones)
+> [ 2001.680831] [ T141027] XFS (dm-0): Unmounting Filesystem 4586471c-c0d6-4e61-b808-4ba3976a8732
+> 
