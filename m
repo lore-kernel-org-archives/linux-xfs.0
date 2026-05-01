@@ -1,150 +1,73 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB23D3A1684
-	for <linux-xfs@vger.kernel.org>; Fri,  1 May 2026 11:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A34D163CB
+	for <linux-xfs@vger.kernel.org>; Fri,  1 May 2026 12:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777634458; cv=none; b=UAPcR31Ur389TWryCOOwv+CkcwjvSQzEHMarvC9qCkRzr2wborm3UcTjS25TmUBxp0bwA2VNEtAxPwMPDjcDVQzrmF6uCDcydxbFmFJyoEjzTlLkW99ZKBJ1IbqynOTOQ0khAT1l0LVd9N5am2S6dtiZ/VjrhuXFtjG7c+UvY3A=
+	t=1777639633; cv=none; b=PNU5cNcgbqUo9XN9SrbNVTtaXKly59KzAKwkrSDPd2kiR9gnoc33Ss8zERuEVsg38DNUNYCCGAJZkOxG4SIH8AWFv657WOcW6CezJTB48LDRkJcclKGOF4wUQQs7eF0FSCErnyI3jwQ13e3H416X2TlzaHcbXFde+kZmHcsUU7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777634458; c=relaxed/simple;
-	bh=LzBB4LwmiR3iVDOAGu5BHdftCaajXivzxU+A8a5AMFU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=adNuGTlh7tvyn7H1cETMQmkcMuSHz0cKRC25lwMW3ehL76+ht5/FMBeABziktuZizdWUe9naS3yoCM+f25bjDIx34zWo7DWQTdLqs56TPXl5SOBtsvRbl8vAEW5N+Fye7XPgMjaTQ6l/Kg/MZFHxHdRNWlKVwH024Qta9E6HyaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4g6T9q3CCzz9v0R;
-	Fri,  1 May 2026 13:20:47 +0200 (CEST)
-Authentication-Results: outgoing_mbo_mout;
-	dkim=none;
-	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
-From: Pankaj Raghav <p.raghav@samsung.com>
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com,
-	lukas@herbolt.com,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	p.raghav@samsung.com,
-	dgc@kernel.org,
-	gost.dev@samsung.com,
-	pankaj.raghav@linux.dev,
-	andres@anarazel.de,
-	kundan.kumar@samsung.com,
-	cem@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v4 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Date: Fri,  1 May 2026 13:20:26 +0200
-Message-ID: <20260501112026.673609-3-p.raghav@samsung.com>
-In-Reply-To: <20260501112026.673609-1-p.raghav@samsung.com>
-References: <20260501112026.673609-1-p.raghav@samsung.com>
+	s=arc-20240116; t=1777639633; c=relaxed/simple;
+	bh=JRdAIbEd8Sih0praIIu5xO9MV2oSKjhDSo8+TYN+5jo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EYCO6XxRbPlJod61ZRh3h7W5NS1A7O8j14Ba+Y4IbTIuqWTwxcCPsMQv58wMxAl0cJx1Xy67nDK1kXanYGzMoFSiZ0pgF2BpjAsk1cHF6fEmmFuJ/av2X5AIgQxbeG4F4rHHcBTwUrKgJj5dFMUchZs/ENJ3yoP7CilTZnLxoYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=k9plhMvp; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="k9plhMvp"
+Date: Fri, 1 May 2026 14:46:51 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1777639618;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=P2DQ7lVTQGdAyrhQUfdOOsiMFPtIk6TyVGXTF4nXjsU=;
+	b=k9plhMvpl9eb1QNqbmbWFa/4XQzTVJtH4stAOwfwPNKu2RuuJ5S/2ha4Q8weCX9JHJmtma
+	98uVFVbz3E5Ae4pA0jd4ogf6ri8Ec03NZ52voIDyVC4ghNRab4VVNVxVcOtLMyEVJ4WBN4
+	H1KTa+aIoy78L+HX9EMiasnYlEF+YD0=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] block: pass a minsize argument to bio_iov_iter_bounce
+Message-ID: <jgzzl7e6qzea5ohma2tdma2rndlaj4ouohsiwohpz22w3aiqvp@czndpvnggd3q>
+References: <20260430132019.312405-1-hch@lst.de>
+ <20260430132019.312405-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4g6T9q3CCzz9v0R
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260430132019.312405-2-hch@lst.de>
+X-Migadu-Flow: FLOW_OUT
 
-If the underlying block device supports the unmap write zeroes
-operation, this flag allows users to quickly preallocate a file with
-written extents that contain zeroes. This is beneficial for subsequent
-overwrites as it prevents the need for unwritten-to-written extent
-conversions, thereby significantly reducing metadata updates and journal
-I/O overhead, improving overwrite performance.
+On Thu, Apr 30, 2026 at 03:20:04PM +0200, Christoph Hellwig wrote:
+> When bouncing for block size > PAGE_SIZE file systems, the bio needs to
+> be big enough to fit an entire block.
 
-Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_file.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 55 insertions(+), 1 deletion(-)
+We set the alignment to fs_block_size when IOMAP_DIO_FSBLOCK_ALIGNED is
+set. And we always set IOMAP_DIO_FSBLOCK_ALIGNED in btrfs for dio 
+reads/writes. IIUC, it was added to support bs > PS block sizes in btrfs.
+But in XFS, we set it only for CoW inodes (xfs_is_always_cow_inode is true).
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..99a02982154a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,57 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
- 
-+static int
-+xfs_falloc_write_zeroes(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
-+{
-+	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			new_size = 0;
-+	loff_t			old_size = XFS_ISIZE(ip);
-+	int			error;
-+	unsigned int		blksize = i_blocksize(inode);
-+	loff_t			offset_aligned = round_down(offset, blksize);
-+	bool			did_zero;
-+
-+	if (xfs_is_always_cow_inode(ip) ||
-+	    !bdev_write_zeroes_unmap_sectors(
-+		    xfs_inode_buftarg(XFS_I(inode))->bt_bdev))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-+	if (error)
-+		return error;
-+
-+	error = xfs_free_file_space(ip, offset, len, ac);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Zero the tail of the old EOF block and any space up to the new
-+	 * offset.
-+	 * In the usual truncate path, xfs_falloc_setsize takes care of
-+	 * zeroing those blocks.
-+	 */
-+	if (offset_aligned > old_size)
-+		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-+				NULL, &did_zero);
-+	if (error)
-+		return error;
-+
-+	error = xfs_bmap_alloc_or_convert_range(ip, offset, len,
-+			XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO,
-+			new_size ? true : false);
-+	if (error)
-+		return error;
-+
-+	return error;
-+}
-+
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1470,7 +1521,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1522,6 +1573,9 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_ALLOCATE_RANGE:
- 		error = xfs_falloc_allocate_range(file, mode, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		break;
+The commit message seems to indicate this is needed for all filesystems
+that support bs > PS configurations. Am I missing something here?
+
+Otherwise the patch looks good to me.
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/bio.c          | 23 +++++++++++++----------
+>  fs/iomap/direct-io.c |  2 +-
+>  include/linux/bio.h  |  3 ++-
+>  3 files changed, 16 insertions(+), 12 deletions(-)
+> 
 -- 
-2.51.2
-
+Pankaj
