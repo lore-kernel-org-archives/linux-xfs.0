@@ -1,72 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74DC93FE373
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2026 16:57:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A246D3A0E92
+	for <linux-xfs@vger.kernel.org>; Fri,  1 May 2026 11:20:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777568246; cv=none; b=jYErfas0Ul/Q9jbLJ19x4Tp+atBEn4vyumA5noCXmcs8OLtzUJ+UHzOHgFT20BDCKx0qD8QkMJBzb80izz6Yj7adDCwK85mAtXToIOWilLkT+x5aXGtpf18vvsc4jNNfunBDJD43HN0toAWbBqPHGiWxBzhulGGMwEMkzb+44Zw=
+	t=1777634445; cv=none; b=rMa13bTlRXG0HtNbeQ9faAFO3LXCPV4qkWnG4dgbEuq2h3bmz0vutMXj8zM1kPfcBfy7ZIOZE+nO2hfYkuXy9g+lxCR49Go9O32DVKzsXjqp3DDN6cOTaIPeFtoumNNo8xfD9xWcPC/O7gfWtoReQfJvkyh2P/kTUBxwkPO7wKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777568246; c=relaxed/simple;
-	bh=mDR9afFLBIKGkd9QqjEVHZIm30y6nz3Y7uxOYbjchSA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S/7XY7LicGpf984d6u0/X9eP8K8Z89vNiaa7jPkut85+8k6ASdKRgNp+gL68JKA/WLq2YWJGp8hlw28YEmr9iwHD+7QNpXMOvDvY5jfnNdtrsuGw1Ic9uTFelcDI76NC3ZHePhrLGbsdEqucrK3iSWQCaGFc54ZEyuga4e73B/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XdlGx4It; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XdlGx4It"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F11DBC2BCB3;
-	Thu, 30 Apr 2026 16:57:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777568246;
-	bh=mDR9afFLBIKGkd9QqjEVHZIm30y6nz3Y7uxOYbjchSA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XdlGx4ItLLY8vpxpWuuUnvArNbIj9Zc9xREirPR9/Mj4F3XmWILHQk4CZzdFh3iou
-	 /dQq7AId9wf3j/Fg4aYvzSlq4RzF0Vh+k83sojgg/pOn8NHS504pBHlcHXvUPpflyK
-	 2oWyjXx/mFgueG5YZTbIn7CiwbQxosuI6EAfAd6iitmwkVsAdABr7PLrtGxSsvClT0
-	 HKmdBICjzH16JVvZHPJxD0gEh3TuJfZCWI/kcGtL866NWPfI1lzkusIxGb3gBQOu/D
-	 fwWtZ0rY/9UYtbSjbsbw6+5PjKAiNKirzEjwwbzzmapcT11hhSt/VSLl920NwS8PLr
-	 O9UhQZCSAswmQ==
-Date: Thu, 30 Apr 2026 18:57:21 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Patrick Fischer <patrick.fischer@siedl.net>, 
-	Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_scrub_all: fix deadlock if lsblk produces a lot of
- output
-Message-ID: <rqtvmfqbp3bypw4ueczjdo4r4sip2h52jigp6oej7ystol2vlh@ewcstbssx336>
-References: <20260430155406.GF7751@frogsfrogsfrogs>
+	s=arc-20240116; t=1777634445; c=relaxed/simple;
+	bh=ZzHXJ4X7iMH9i2aegzD+c2AmtefxIEdZj8iE79chdcw=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=MgbzJs9Aqr8/4AnswTTmBdCWrdaGEXREMeoBqcEY0k/ZQdAF7YXmzhQ9o3d2DJPuo8dlnXnssK5ggsltYp7q5efPpyP9idTfE9PpX5tsDtcC4dEDJ1QpLlcorxuu7KK5rqypiW29iyVS5yTx0CPwxUyiKnFFQXO1cntqMbUtEiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4g6T9f1Crnz9tPB;
+	Fri,  1 May 2026 13:20:38 +0200 (CEST)
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: linux-xfs@vger.kernel.org
+Cc: bfoster@redhat.com,
+	lukas@herbolt.com,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	dgc@kernel.org,
+	gost.dev@samsung.com,
+	pankaj.raghav@linux.dev,
+	andres@anarazel.de,
+	kundan.kumar@samsung.com,
+	cem@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v4 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+Date: Fri,  1 May 2026 13:20:24 +0200
+Message-ID: <20260501112026.673609-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260430155406.GF7751@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 
-On 2026-04-30 08:54:06, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Patrick Fischer reported a deadlock in find_mounts() that is the result
-> of lsblk producing so much output that it fills the pipe buffer.  When
-> this happens, lsblk blocks on write()ing the pipe, at which point
-> waiting for lsblk to exit will also block forever.
-> 
-> Now that we can be reasonably assured that everyone has Python 3.5
-> (because RHEL6 is long dead), we can replace this whole mess with a call
-> to subprocess.run that captures the output.  The json library can
-> convert a byte array directly to a python dict, which means we don't
-> need to concatenate iterated lines or any of that stuff anymore.
-> 
-> Reported-by: patrick.fischer@siedl.net
-> Link: https://lore.kernel.org/linux-xfs/323580211.1220195.1777554001363.JavaMail.zimbra@siedl.net/
-> Cc: <linux-xfs@vger.kernel.org> # v4.15.0
-> Fixes: f1dca11cad1308 ("xfs_scrub: create a script to scrub all xfs filesystems")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
+of Zhang Yi's initial patches[1]. Postgres developer Andres also
+mentioned they would like to use this feature in Postgres [2].
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+This series has the changes proposed by Dave [3].
 
+I tested the changes with fsstress and fsx based on the xfstests patch I
+sent recently to test this flag[4]. generic/363 helped me debug the
+crash I noticed when I did the initial implementation[3].
+
+Changes since v3:
+- Introduce xfs_bmap_alloc_or_convert_range() in xfs_iomap.c for easy
+  review experience (christoph)
+- Add extsz hint and rt support in xfs_bmap_alloc_or_convert_range()
+
+Changes since v2:
+- Add allow_write_zeroes to xfs_global so that we can enable this
+  feature independent of the HW underneath.
+
+Changes since v1 [5.1 5.2]:
+- Added a new function xfs_bmap_alloc_or_convert_range() based on Dave's
+  feedback.
+- Changed the xfs_falloc_write_zeroes to use
+  xfs_bmap_alloc_or_convert_range() instead of doing prealloc and
+  convert approach.
+
+[1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+[2] https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
+[3] https://lore.kernel.org/linux-xfs/6i2jvzn3lyugjlbgmjzpped3gogzyqv5mpe2uqaifz4vjpaega@pomzoq7ley77/
+[4] https://lore.kernel.org/linux-xfs/20260312195308.738189-1-p.raghav@samsung.com/
+[5.1] https://lore.kernel.org/linux-xfs/20260309180708.427553-2-lukas@herbolt.com/
+[5.2] https://lore.kernel.org/linux-xfs/abC1LvRElctaHPe5@dread/
+
+Pankaj Raghav (2):
+  xfs: add xfs_bmap_alloc_or_convert_range function
+  xfs: add support for FALLOC_FL_WRITE_ZEROES
+
+ fs/xfs/xfs_file.c  |  56 +++++++++++-
+ fs/xfs/xfs_iomap.c | 215 ++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_iomap.h |   2 +
+ 3 files changed, 210 insertions(+), 63 deletions(-)
+
+
+base-commit: ad345c96913e1a5b507cea4e49d22e91d5947f56
 -- 
-- Andrey
+2.51.2
+
