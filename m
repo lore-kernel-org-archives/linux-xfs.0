@@ -1,33 +1,38 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp-in-1.gedalya.net (mail.gedalya.net [170.39.119.235])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9152C859;
-	Mon,  4 May 2026 07:54:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1879131326C
+	for <linux-xfs@vger.kernel.org>; Mon,  4 May 2026 10:56:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.39.119.235
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777881295; cv=none; b=gs6QWghnXGu6txMiNnXIP8nLRolq6xHXPMBD4aoHnSQrzcvlvmUg3Xn5KyvGxoPn1QkO3tnIkg6vshmJaYAjJG7DE939t8O5hBhCAYXq/bXyZAQKo/NKgNiVAB5BhZ3R7iO9b5dKG02bZ6kNwkTtq3ZgK4NbEstC/LAtEnvqjM4=
+	t=1777892197; cv=none; b=aXBD7EJplddpK2hOfm6mgmGxmiUGLmpWPsBxpQC3VsVzYSk1o+NoUPP63UpwwqbLxYPyPAXvt4RnmbMkF1zsBw0bWw/9THiO1R3K/JOX3FwooTxvTBerciM61L4Z1zNuzlaJZdYyn0ONDG0eUc7TAT9/38KJrJ/RacHYbrJ8Zbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777881295; c=relaxed/simple;
-	bh=CAXj9xyWc1aE1Yll4TCnkoDiCPvKt/BnzayChhJOaOE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tf0FEESHGfYGFTYHwW8F8CnPONurCPQQO2ECkZamSg9ipfyw44oUuOufk1B6zaYaFgxIOx3IlguGwANV1Un0pSY2TjT2A9OSwr+3aD8Q631Xe/yTCWkW8EFTq3s8Fb+dF+rVs5TckyIP/DtEAaMwJ6qSWRu68eRRqXWAwKdwHuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FB9/5zfH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777892197; c=relaxed/simple;
+	bh=qNEF6v/G+wJxfNuUt+vg9w9qb31a8IEeqtWl4/Ok3KE=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=UwlvlOUCml38tVblFTUigLF0IzoPs0NTTzuGJmMNbHVa+v2M2CH5tEbXz3KD44TLsiM6j6QTwaGRG5RNe8CdmsL+Fflm5rj4nqhmH9el2ncneZGwUTrf/dXtypgjbcnmFxE+qKC0+J9DJNldzqjDjq/4Sy9tvVd2iWX2lT0oANY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gedalya.net; spf=pass smtp.mailfrom=gedalya.net; dkim=pass (2048-bit key) header.d=gedalya.net header.i=@gedalya.net header.b=m3KXFN0y; arc=none smtp.client-ip=170.39.119.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gedalya.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gedalya.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FB9/5zfH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD09CC2BCB8;
-	Mon,  4 May 2026 07:54:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777881295;
-	bh=CAXj9xyWc1aE1Yll4TCnkoDiCPvKt/BnzayChhJOaOE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=FB9/5zfH25uUjpjPPQ5zy01kmPmRxMrLyK4TkeIq+yMks5WTBAdv2mcc1ENE0vK1n
-	 zawnJhdMMeUnS5GChe3IpImRPVlcKQygZtOAJq1t/e8fMcgGAjooOdwDLhswIvnxS/
-	 s3VmIkgywraM64O/mGT7MBHWUeGHI/Bxi1kFYQbCC95q+ZXWCH5dR4/EsKPfuBRsWo
-	 lMMrA0HQ8lJPy7kAV3iXDWWmox7tQ6y0PdV7t7jsy4W3B2ZohRIXI0HdR9mLwymqWV
-	 Pz2NuP7atrMv4gMqs3mJXHD50JvtXzENrT1BFwsexkMDL/E5KScqbwhfudMkwkg0JY
-	 umGAikf/4zy+w==
-Message-ID: <d5d99db2-9d34-4caf-bcc8-c4a3af561901@kernel.org>
-Date: Mon, 4 May 2026 09:54:49 +0200
+	dkim=pass (2048-bit key) header.d=gedalya.net header.i=@gedalya.net header.b="m3KXFN0y"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=gedalya.net
+	; s=rsa1; h=Content-Transfer-Encoding:Content-Type:Subject:From:To:
+	MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+	Content-Description; bh=qNEF6v/G+wJxfNuUt+vg9w9qb31a8IEeqtWl4/Ok3KE=; b=m3KXF
+	N0yjdxN4/3d4UTDbCBoIF593CTnsDm0obczYvpc2DL6rYD3Wck29A+Ku+F58iWaUIku6QEvfkSF9A
+	1CIAo1FKZ/13Hx1czqxV22X93hKLqtXmMyLqvh3unxIR7e38WKc7e3BZUPqUX35z8jypoHl1fkxnb
+	LV8t1oH5PgWw560JiEMxmbynf6MSj5+HJC5ZQuSZ+7hNqI1JNDktEToaT8gLs1ZutxMM6usY5ytLf
+	7gyaVmyL7yRr0/hb6UGgNyoguyCs26fcxH/I+WjfR0Ogln1NMSGNmtg2dp9dZzxVxFqSuyZnUTa4Y
+	+S2NKplLToXNhqUBNhf2i46tv6awA==;
+Received: from [192.168.9.10]
+	by smtp-in-1.gedalya.net with esmtpsa  (TLS1.3) tls TLS_AES_128_GCM_SHA256
+	(Exim 4.98)
+	(envelope-from <gedalya@gedalya.net>)
+	id 1wJquK-00000004MYB-0QqB
+	for linux-xfs@vger.kernel.org;
+	Mon, 04 May 2026 10:52:12 +0000
+Message-ID: <8961ee4a-3830-498b-a432-5545695db599@gedalya.net>
+Date: Mon, 4 May 2026 17:52:09 +0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,73 +40,27 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap &
- xfs
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-Cc: djwong@kernel.org, john.g.garry@oracle.com, willy@infradead.org,
- hch@lst.de, ritesh.list@gmail.com, jack@suse.cz,
- Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
- p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, pankaj.raghav@linux.dev,
- p.raghav@samsung.com, Daniel Gomez <da.gomez@samsung.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
 Content-Language: en-US
-From: Daniel Gomez <da.gomez@kernel.org>
-In-Reply-To: <cover.1775658795.git.ojaswin@linux.ibm.com>
+To: linux-xfs@vger.kernel.org
+From: Gedalya <gedalya@gedalya.net>
+Subject: xfs_scrub: UNICRASH_BIDI_MIXED
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 08/04/2026 20.45, Ojaswin Mujoo wrote:
-> Hi all,
-> 
-> This is the v2 RFC to add buffered writethrough support to iomap and
-> xfs. The changes made are mostly to get the writethrough implementation
-> more inline with how dio handles writes. 
-> 
-> 
+Hi,
 
-I gave these series a run with kdevops and fstests using the following
-profiles: xfs-crc-logdev, xfs-crc, xfs-reflink-logdev, xfs-reflink.
+xfs_scrub looks for file names mixing right-to-left and left-to-right characters. However, it is rather unrealistic for a file name to contain only right-to-left characters.
 
-Note that I applied all patches on top of v7.1-rc1 and xfstest-dev
-patches from Ojaswin have been rebased on latest master [1].
+First, well-known file name extensions are not internationalized. While the file name can be in non-latin letters, the extension will be in latin. Hence you would expect to see file names such as עברית.pdf .
 
-Link:
-https://github.com/dagomez137/xfstests-dev/tree/iomap-buf-writethrough2 [1].
+Even if we consider file names without an extension, or if we exclude the extension from the test, a file name can be, for example, a title of an article, as when you save a web page as a PDF file. In non-latin texts, titles, or sentences in general, often contain words in latin script. Technical or scientific terms, or names of published works, and many other things are often written in their original latin script. Whether the file name was suggested by software or manually written, it would often contain an RTL/LTR mix. This is entirely normal and not problematic in any way. To a user of an RTL language, a requirement to avoid any LTR characters seems utterly bizarre.
 
-In general, some of the results here seem flaky. But let me know what
-you think. I'll try to confirm the possible regressions with another
-full run.
+I don't know what the original motivation for this test was. Perhaps it can be entirely removed. If not, then perhaps it should be possible to disable it, or perhaps it can be disabled by default.
 
+As it stands, a systemd timer is shipped which runs the scrub periodically which should exit cleanly. But I have it reporting useless warnings, and sending an email about that.
 
-Summary per profile:
+Thanks for your consideration.
 
-* xfs-crc-logdev: no regressions or fixes found
-* xfs-crc:
-  * generic/753 fixed. This test failed on 7.1.0-rc1 run but succeeded
-on 7.1.0-rc1-00005-gc6a39600d3c3.
-* xfs-reflink-logdev:
-  * generic/415 failed on 7.1.0-rc1-00005-gc6a39600d3c3. I tried to
-replicate the issue by just running generic/415 (not the entire test
-suite), and I couldn't replicate it.
-* xfs-reflink:
-  * generic/457 failed on 7.1.0-rc1-00005-gc6a39600d3c3.
-  * generic/561 failed on 7.1.0-rc1 but not on
-7.1.0-rc1-00005-gc6a39600d3c3.
+Gedalya
 
-
-Here the full report list for each A/B profile test run:
-
-
-http://htmlpreview.github.io/?https://github.com/dagomez137/kdevops-results-archive-wt/blob/main/workflows/fstests/results/r0001/fstests-report-7.1.0-rc1-vs-7.1.0-rc1-00005-gc6a39600d3c3-r0001-qsu-xfs-crc-logdev.html
-
-
-http://htmlpreview.github.io/?https://github.com/dagomez137/kdevops-results-archive-wt/blob/main/workflows/fstests/results/r0001/fstests-report-7.1.0-rc1-vs-7.1.0-rc1-00005-gc6a39600d3c3-r0001-qsu-xfs-crc.html
-
-
-http://htmlpreview.github.io/?https://github.com/dagomez137/kdevops-results-archive-wt/blob/main/workflows/fstests/results/r0001/fstests-report-7.1.0-rc1-vs-7.1.0-rc1-00005-gc6a39600d3c3-r0001-qsu-xfs-reflink-logdev.html
-
-
-http://htmlpreview.github.io/?https://github.com/dagomez137/kdevops-results-archive-wt/blob/main/workflows/fstests/results/r0001/fstests-report-7.1.0-rc1-vs-7.1.0-rc1-00005-gc6a39600d3c3-r0001-qsu-xfs-reflink.html
 
