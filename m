@@ -1,133 +1,121 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41D034EF1C
-	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 12:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0161E478E42
+	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 17:12:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777985216; cv=none; b=uhkRQWAKxJ1S4auSqsJXPb3Ix2KrSagvmenNxmLMTaWe4zSu38ItQ3adhN/Wc6X0fSmDN5HzE180aZxQ+9JwrhD9DaO+Co8iETH/3jWeEtodMIS5/36Iz7yFAktwY0dge0ujKXbBhtbGOHh/JRJ5GyfIo4uBpgqiNGc2/Tq7TLI=
+	t=1778001145; cv=none; b=gs6cwSrR0/5s7wFJIvneEW4OD5gfQDwxAIKPW6Q/09DOH3LfwYR0Bjzr2xgLqiYkrNEdzr/KrZYKDm9eD0M/tfTFQqrdpi5Ea/vYFtFSGXepTy87tCrgKo7sGFkMzagdP5Ro62IgjOs4X/LVztUIMvRG3rkQG2TR6L8SOZkziJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777985216; c=relaxed/simple;
-	bh=WdLTUHQ4IK4gD4WmP/5C10CZKhgvSk2Zoahi5p0xF50=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=M3zmWp8lknxa/IYqgdjrAIbn74lMEwK1KkfWPk4HZPV1iwmqOXaRs07Repj0eHNhX1OHXbO4bieQ8/LnZVz/53Dwilh6hQsu/91SOx4NSVwyygqVuM/Xg4qfdOPH+Zz0P5odOZYTHCeCNOSdrss+QQdvcx0HRFf1K+Vr1QlGbhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T7/AraZP; arc=none smtp.client-ip=209.85.215.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778001145; c=relaxed/simple;
+	bh=BOAMLhGibzY8dU+TYqRAVazmmze2Z+LNTokPHSs/RMk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CCvgay7Nbcvt0Dx3kaXyZDhZ746nDoMJW245Lnr+NSbSNh1eyxaECHc9ZlAcrq54yugtV3sfkBoEE2qrqqlglZFINq7CZkljFpoVywM+I2Iq8DElFb9pQkgmY1sGsYVzP3wcQHdy+YMbqtkKPNuNbMFnltuV6u6kF9jY1xdmLQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g0kpIo2q; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=SxAwx8Wz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T7/AraZP"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c7b9f54d3deso3254542a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 05:46:52 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g0kpIo2q";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="SxAwx8Wz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778001143;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Re8L5VNQ6X7Ul65xsY7zZhFOtn1lHBQxtKJrczxY8jI=;
+	b=g0kpIo2qiPSoMe+MLkD96hea87EE/C9Sy7PKQ8osMce1PVv9ui6VwJrNIngQLHtM0usRGR
+	9En5Yu3P3jwh0s9Wfdzgb+TYMey6RaZKVm5zl68XI5Ju/SNHpbhXKBU15ZsAqv5TFLaCV6
+	EfMj928QWdFlkvzZc4XcuMBVniQoJT4=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-668-438sozZfMguAXQTV3gnqQw-1; Tue, 05 May 2026 13:12:21 -0400
+X-MC-Unique: 438sozZfMguAXQTV3gnqQw-1
+X-Mimecast-MFC-AGG-ID: 438sozZfMguAXQTV3gnqQw_1778001139
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4836abfc742so48829165e9.0
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 10:12:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777985212; x=1778590012; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DyER5HkMLx02h4jPGr5WinKEOkBh5cJM3fYlZo/LlRk=;
-        b=T7/AraZPleuemDEYkCUtpuIoTGkWBXFQHZF5vjLMdGyWackC+tihcH8gFzCi2O/7cL
-         2EA/jTLBcojkIz+6s2CkMHxVdr2Rnh4Fif/cffkzfc6BI3qoLdsfF3Cra8jjwZuZl+X9
-         0hfPsT9gL6JSj6u7U2w+dj3SmGZgxEBOoyV+EaHsRe4idcJsZBhoN4RwFSHMKB/F7tV9
-         ++7Dc99rb51g8Mn23t2+ej28AILbaLYLAGrEKGqVGa5zO0D/FlMz07tV7JslVwoDpdY2
-         nHzYqy52NdSw/Q/G7cGyE8FL+42qyCpj3O4SC0zLwtit4q3vMDaep5+SYuGuNkK5t5Dt
-         7l4A==
+        d=redhat.com; s=google; t=1778001139; x=1778605939; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Re8L5VNQ6X7Ul65xsY7zZhFOtn1lHBQxtKJrczxY8jI=;
+        b=SxAwx8WztDie6iu/LLmM59kP0odZbvq0i0sTMJtsfq0txEt/XGlizSLGP6zya8OnKv
+         i8EyGMsljY3hoFMxrSdGSnjju643XncmBnO7sKt02DYEXK0ImovRNn5Rxwmiak5aRBBL
+         dMqSDaakyrey7bMuMRVJUDUG4nRMkvyp9cfR7akS14cFv/7Ee7sXrN/9vzTmODHODzfm
+         fa48upAhrSEwK5731GxaZ//InI5tk6vZk3RiK8D7c4tv7tM9RK/nCqXcrQVfkpfjTVnT
+         a9rPSgxgu3birYu+tp5pJr91VS9BWI3ZaUPG+z+Jf9xLWgRanZeeVRIbx5FUZi/YruPo
+         hVOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777985212; x=1778590012;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DyER5HkMLx02h4jPGr5WinKEOkBh5cJM3fYlZo/LlRk=;
-        b=M8P/i8/pPhGoIBOH+wC0aCfBRXocHNJShvx9jtNu5+Sj7tE9uqSXUDvWWV/MlliFPQ
-         x8+1h4+iEM5CssboqvgpZMr4/t2mScokPbVwcrfo872bgFe5Bls6YrbdWDBCHLk2iFVT
-         +IGuXkpHjYbH79u/G6jTTTT/S4ECVE87zYCRgTktodNDsS/tvK1V3Y0FXTbBSyBPGIFI
-         xs6/JjO3kqHY9Lw6KOqIxaeD1ZZh83yHxJyNfh9tvC3xWXyCsywmKZHEGrSO8e3LVx+n
-         DaLEyy9poVDfchQft2qFm5KwRLgCJK+YzMXxlWfLbfzIPYe3Tny8RUQUE/WXiHkTjbzG
-         HKgw==
-X-Gm-Message-State: AOJu0Ywbc8B1Zg5KlhOLelZSQ3+0Spzmguf9SjSkIQYdmT9CiHXc8I8R
-	eGZWinDUo667leA7KF5GaiVRfKB/boLFr8C2vES651Sm3aO1S0ftfy2u
-X-Gm-Gg: AeBDietqTP2KJCs9qRmkL28nPWRmj9szETnTOUi1rocFk5oPWR/k3yB/DcMN4JdxycO
-	Hb+UADQemga4c6dy5JWCddFDTLQw41ccFDsaA+D2sGS7eOTDvudjTH2X2dVeGp7w5jKKViRNs51
-	+Si5IeUyuEUO370xCAWuT2+fvfdMSRPqX7QvA9I4+qbgwVcut3k0WdEff42wgvXf3rtnxdChmbm
-	RjCyYNUfEw47oL6xex/n4Ftrep6QF+WWT21gZ7lzrSdiY4Cl3N2YEgAQETqydPU2HZ48oGyzkAW
-	4ugit1bvrGA/a43lD8rtCZN41S+Yf+EVtYUKPAajLySFP008RM8vd1ld6kzN5cZeESdESs/2SvK
-	5WxGG3ahxm92hf3+Sj0AY9RK3S1jnx3pMVBNf1404bDRPKJH2femLJcrREQoYzHzWu3PqmUlAM7
-	RCqWmMvsmEE2/xCCzRTy20eJolGAVB
-X-Received: by 2002:a05:6a21:3293:b0:39f:794f:94d8 with SMTP id adf61e73a8af0-3aa3b63574amr3326987637.29.1777985211486;
-        Tue, 05 May 2026 05:46:51 -0700 (PDT)
-Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8025008cb9sm7678986a12.30.2026.05.05.05.46.44
+        d=1e100.net; s=20251104; t=1778001139; x=1778605939;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Re8L5VNQ6X7Ul65xsY7zZhFOtn1lHBQxtKJrczxY8jI=;
+        b=abKcSezEmqoa+NFzc7a3UWiy97WK9RqwMsBHA0ciFZsy1EMHbMWxN58rahveKW60bv
+         6ZLHRn79Y5MhDR1YmKEtDkVrhSa+NkN30mm6BFawsgr4ZmmHspzNaAj64YftquYTmzOU
+         tkpTbCLHLjLuU4J/wCKw8bj1zT6wcq34WSYn4PXTzUgPvJO1kdyEoVJ+WmezEohypwlu
+         dsc0XLUVi/m6ANGYMLgQPHHEE+DNKuuCi1XC+iGwDe8tkrxPQhYSNMwAn8/5mFBLPrTt
+         soqwI0KgHifRXiLOF7wcdizWEM1NXGcqw6M8Abp4NyQohmMBS3IgwZQIMgOm38NOQsy9
+         8O9Q==
+X-Gm-Message-State: AOJu0Yy98Zi6XrctX00uxc0xqORiVNUVlonQRyxFw9GlWBh/PYN49ZVQ
+	YkK3MsO+/KzUscQL69d3LBCb/JZ39keaWlSPY9bfoM92AUo3sAHuwiey62XUt1tBdRNGIpVbTyX
+	eWI5E/wXCzuziKCmcgk8ZHfJAPi89Sum9TLnJJBqW32n9Zk902fGqPgUB7ew2
+X-Gm-Gg: AeBDieukkTcBA23qlGd16KBD3dmvhQ3y12mCHXPL4fOr3KWgXkzF/NqKjGURALcNL/D
+	yJ+j5dzUtpDZnNt8mUjVJ88yW+w0BQMj4mi71s0aCA6gs9jC1aLuZA2LfNia+de/IsW9x79h/Uh
+	bFUm39ZiynY21QcxtQ5Tuwr0Ve+IcCKl8vjztViez/8vaKsRjQNKU7BtTxuvYMTmaD8Y4aYYdRQ
+	6AXzgbdyQYWcJXgFaJq+BLas5YcRrKiw6nThipY47LzzCSXtOpjthnNAbMY34+fpk1npGN0Gcea
+	de6zh2uRUitUW+/1kuW+ZTJVxPt2eHNgsKI74CbJB/EUW47ky/JS3IXxIDfHsSSamOwkybuwt0G
+	RLrf4aMmOeHds0+LPfOg/3A==
+X-Received: by 2002:a05:600c:6dcc:b0:48a:5301:bb5c with SMTP id 5b1f17b1804b1-48e51f2f786mr1281365e9.16.1778001139236;
+        Tue, 05 May 2026 10:12:19 -0700 (PDT)
+X-Received: by 2002:a05:600c:6dcc:b0:48a:5301:bb5c with SMTP id 5b1f17b1804b1-48e51f2f786mr1280995e9.16.1778001138741;
+        Tue, 05 May 2026 10:12:18 -0700 (PDT)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45055960aa2sm5698737f8f.29.2026.05.05.10.12.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 May 2026 05:46:51 -0700 (PDT)
-From: Cen Zhang <zzzccc427@gmail.com>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	baijiaju1990@gmail.com,
-	Cen Zhang <zzzccc427@gmail.com>
-Subject: [PATCH] xfs: snapshot i_disk_size before truncate writeback
-Date: Tue,  5 May 2026 20:46:39 +0800
-Message-Id: <20260505124639.1346827-1-zzzccc427@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        Tue, 05 May 2026 10:12:18 -0700 (PDT)
+Date: Tue, 5 May 2026 19:12:17 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Donald Douwsma <ddouwsma@redhat.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfsrestore: only process subtrees that are selected
+Message-ID: <cz3pjkyt3it3cgopz7rhd6jljo2z7pa4dwsqaxf6e4zwyurkk3@3fibareria4k>
+References: <20260326025443.1569874-1-ddouwsma@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260326025443.1569874-1-ddouwsma@redhat.com>
 
-xfs_setattr_size() updates the in-core i_size and truncates the page
-cache before it writes back the range between the on-disk EOF and the new
-EOF.  The range calculation currently samples ip->i_disk_size without the
-inode ILOCK.
+On 2026-03-26 13:54:43, Donald Douwsma wrote:
+> We are getting reports from the field where xfsrestore is aborting due
+> to the failed assertion:
+> 
+>   # xfsrestore -r -f /tmp/l0.dump -s somedir /mnt/scratch
+>   ...
+>   # xfsrestore -r -f /tmp/l2.dump /mnt/scratch
+>   ...
+>   xfsrestore: 8 directories and 7 entries processed
+>   xfsrestore: directory post-processing
+>   xfsrestore: tree.c:1369: noref_elim_recurse: Assertion `isrealpr' failed.
+> 
+> This occurs for cumulative restores where the initial restore has used
+> the subtree option to limit the trees being restored. If a subsequent
+> restore encounters a rename for a node outside of the selected trees it
+> aborts when It cannot find the directory to rename.
+> 
+> Make sure we skip processing for directories outside the selected trees
+> when eliminating unreferenced nodes in tree post processing.
+> 
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 
-Buffered unwritten-extent completion can advance ip->i_disk_size from
-xfs_iomap_write_unwritten() under XFS_ILOCK_EXCL at the same time.  A
-stale coherent value is harmless here because concurrent EOF advancement
-only makes the pre-transaction writeback range conservative, but a
-lockless 64-bit load can tear on 32-bit builds and create a bogus range
-start or condition.  That can cause the null-files avoidance writeback to
-be skipped or shortened before the size change is logged.
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-Snapshot ip->i_disk_size under XFS_ILOCK_SHARED after truncate_setsize()
-and use that snapshot for the writeback decision and range start.
-
-Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
----
- fs/xfs/xfs_iops.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 208543e..a531715 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -915,6 +915,7 @@ xfs_setattr_size(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	xfs_off_t		oldsize, newsize;
-+	xfs_fsize_t		ondisk_size;
- 	struct xfs_trans	*tp;
- 	int			error;
- 	uint			lock_flags = 0;
-@@ -1024,6 +1025,9 @@ xfs_setattr_size(
- 	 * guaranteed not to write stale data past the new EOF on truncate down.
- 	 */
- 	truncate_setsize(inode, newsize);
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	ondisk_size = ip->i_disk_size;
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	/*
- 	 * We are going to log the inode size change in this transaction so
-@@ -1034,9 +1038,9 @@ xfs_setattr_size(
- 	 * otherwise those blocks may not be zeroed after a crash.
- 	 */
- 	if (did_zeroing ||
--	    (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)) {
-+	    (newsize > ondisk_size && oldsize != ondisk_size)) {
- 		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
--						ip->i_disk_size, newsize - 1);
-+						ondisk_size, newsize - 1);
- 		if (error)
- 			return error;
- 	}
 -- 
-2.43.0
+- Andrey
 
