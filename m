@@ -1,132 +1,133 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB53B386C2D
-	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 11:28:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41D034EF1C
+	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 12:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777980490; cv=none; b=t1wuKiUkSwbCsjok1+BBh+cvjh0eJZ7zm5S64haT/hkEpq+5GuJXmaHmg5nOx0uZfMf1aULtbWoHqV3f8PqEezqqZnki9z5v2pZALyGfi7HGAK435jSAVRUbBzceHW/BNRbFwUjI4TPoiqGugGYs9mRUgLMkZV2lTUHOU26Sbro=
+	t=1777985216; cv=none; b=uhkRQWAKxJ1S4auSqsJXPb3Ix2KrSagvmenNxmLMTaWe4zSu38ItQ3adhN/Wc6X0fSmDN5HzE180aZxQ+9JwrhD9DaO+Co8iETH/3jWeEtodMIS5/36Iz7yFAktwY0dge0ujKXbBhtbGOHh/JRJ5GyfIo4uBpgqiNGc2/Tq7TLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777980490; c=relaxed/simple;
-	bh=A9+bBwRm4tcI9WqXvMLTg4Z680bMdwokTJxmA2KvchE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cF4a6MMzCoUPX2UbuKb+reT1LdpJdPM+HpgBIpy3P4lxSTYQJ3CV3/FuaejF/Buas5xC/vepxdColwj2Cps+3GBb4H7MwN4iF1clpQf0B6d/MmmUze1WZt4ps4oBF/tJauu4X7C69bYDNebQq5qnwz6tFPNO8/PSPMMXDPYt3eI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=epHlIBJ9; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=o2/B0VtI; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1777985216; c=relaxed/simple;
+	bh=WdLTUHQ4IK4gD4WmP/5C10CZKhgvSk2Zoahi5p0xF50=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=M3zmWp8lknxa/IYqgdjrAIbn74lMEwK1KkfWPk4HZPV1iwmqOXaRs07Repj0eHNhX1OHXbO4bieQ8/LnZVz/53Dwilh6hQsu/91SOx4NSVwyygqVuM/Xg4qfdOPH+Zz0P5odOZYTHCeCNOSdrss+QQdvcx0HRFf1K+Vr1QlGbhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T7/AraZP; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="epHlIBJ9";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="o2/B0VtI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1777980487;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wlJXkICY7/NJxL/9AYhO8zivjAii1TrRuI2FlSWeJFM=;
-	b=epHlIBJ9D/+mUITrHp2KnPgvzubkrTmRmXtYeN7TQMsb5L8IKecatXnxo//puEG0DkcCz8
-	gQOxhgicvx4aq7I1cU49GwVs4y0fWxcrxs8ZXYoTuhpnUCMeRjOCmipnEyz9RXg3N4LaJg
-	AG6bvXIpvP9RxBLtcNOA4j2b7KOHufI=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-587-4APVOrvQMhizwc1IckV46g-1; Tue, 05 May 2026 07:28:06 -0400
-X-MC-Unique: 4APVOrvQMhizwc1IckV46g-1
-X-Mimecast-MFC-AGG-ID: 4APVOrvQMhizwc1IckV46g_1777980485
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-4411a36715dso3643901f8f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 04:28:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T7/AraZP"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c7b9f54d3deso3254542a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 05:46:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1777980485; x=1778585285; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=wlJXkICY7/NJxL/9AYhO8zivjAii1TrRuI2FlSWeJFM=;
-        b=o2/B0VtIb6/BernGmmgepHCgwIgba7FnzhWcBDIZstAkgaT5fUNyGgCNv19ZKV3xNd
-         9xf8uR54/L6zuVU+B6jrhywjP+AHYHoCjqG3lQKtvXarLTb1Z52oqP6nNYn//lRoJOhV
-         3FtZDwJec6TLhcjC7WJye3FSxMU6jyyuxGvPk74/T4k9ZAI0RECNUOaWHRCebAWWX7bi
-         vhLG637/XtIISKPW2sj7xoK84E/VtCHhAm6lNwmPE+vT31CRBT1zmks9pXSOToXvAkcb
-         bgBO6DJoAyfHJO7rhJ7nlh8Qq5E+VeV7MkTl9sOAfyYEG7KDknZfTr90lWkFRjh0t5Ux
-         NxBw==
+        d=gmail.com; s=20251104; t=1777985212; x=1778590012; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=DyER5HkMLx02h4jPGr5WinKEOkBh5cJM3fYlZo/LlRk=;
+        b=T7/AraZPleuemDEYkCUtpuIoTGkWBXFQHZF5vjLMdGyWackC+tihcH8gFzCi2O/7cL
+         2EA/jTLBcojkIz+6s2CkMHxVdr2Rnh4Fif/cffkzfc6BI3qoLdsfF3Cra8jjwZuZl+X9
+         0hfPsT9gL6JSj6u7U2w+dj3SmGZgxEBOoyV+EaHsRe4idcJsZBhoN4RwFSHMKB/F7tV9
+         ++7Dc99rb51g8Mn23t2+ej28AILbaLYLAGrEKGqVGa5zO0D/FlMz07tV7JslVwoDpdY2
+         nHzYqy52NdSw/Q/G7cGyE8FL+42qyCpj3O4SC0zLwtit4q3vMDaep5+SYuGuNkK5t5Dt
+         7l4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777980485; x=1778585285;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wlJXkICY7/NJxL/9AYhO8zivjAii1TrRuI2FlSWeJFM=;
-        b=P6vfELmkEwNQRIB1dMIBc+7wj1Udh4M6i2OmDM3o+rTv96DVp2i+LQXJ8xdsGl7ErK
-         lt2Prnr1PQyj8YL2uVyztjXArbeiIM1HC0th8WK4eXEzK4iTNtiuq6SQdAdGmmu9k/Kj
-         tzDaJyANMd4hvLzItvjuBzmOPGQTGdcDWHy1kVtGdTZxtgdlrbkNr3Nue2nZOWDDXitd
-         vFHKfDQTCuAGnip27/WusXGuZ0BspMTRGDi9E5b+1Hx37sILf7/DzJ/09BZc+218UAni
-         u2MqdvRad7jIqvK358Rt/01z9KwmecmC/8si0l3wp7bRUQcno3mBfsclw8kIgG+eQ/ep
-         jcyA==
-X-Forwarded-Encrypted: i=1; AFNElJ8aEzUtpUhekIkf4L5pRfXT++RGsltNZkdxwsFP+O77n5KoAXgbdyC4u4nxedjBb6jj46XFLttSdBI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzr9GB8bOQF4lwZbs+shzPvQwqXswSaqVpy/fGMFlrLK0+zu1BG
-	ICu3VF7141yZJGcRQSOAYD0HAxWhEt5+IbseiuqS+af9p/fmXPIzxQSaDI1eaG3mR6OHp71Bh0P
-	OL7IGddN+3lgrPvw8nafJV98oqgy4rGCX8knXZpV/NMOGVi6w8qWval9RPXilJGKOc+cH
-X-Gm-Gg: AeBDievM4AFqP0m1DAyoINU5Zuryq3vmUYGJvk+qozoZRxPf5k84Ygs8pJmMO6NHS0U
-	GDC3I+AjoOi+nsqH8/zDrbNM3j5SvFq+i3dxHApXmqxsgqfBnd/Bnmk4AnSTRvz7nE5nbCw06Wq
-	DvcUKhRiOUi0UE3zg8JJRw/EVeCy8Uehq1Ri+WttaLgSAocJg0Cq8d17qWRvXglnyb9uZS1mh6l
-	awEV46cfp0P8bCp/dhHqenn0yfSQZZmgG9j7LHOfrISEZ2HVSq17xwPDbbT9+hQybcEfsCK02qe
-	oBjNlbyfoVqEBsK2Ha9GjaMsg+I2Bp7Jb1hCS//j6NHPBKom0ZgBYU73pp/XwT2HPGFYMhA63H4
-	g/0d4JXT5OQEePMaNW+q/Rw==
-X-Received: by 2002:a05:6000:240f:b0:44a:198a:5256 with SMTP id ffacd0b85a97d-45005a97615mr5024019f8f.24.1777980484836;
-        Tue, 05 May 2026 04:28:04 -0700 (PDT)
-X-Received: by 2002:a05:6000:240f:b0:44a:198a:5256 with SMTP id ffacd0b85a97d-45005a97615mr5023843f8f.24.1777980483733;
-        Tue, 05 May 2026 04:28:03 -0700 (PDT)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45055960811sm3953225f8f.27.2026.05.05.04.28.03
+        d=1e100.net; s=20251104; t=1777985212; x=1778590012;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DyER5HkMLx02h4jPGr5WinKEOkBh5cJM3fYlZo/LlRk=;
+        b=M8P/i8/pPhGoIBOH+wC0aCfBRXocHNJShvx9jtNu5+Sj7tE9uqSXUDvWWV/MlliFPQ
+         x8+1h4+iEM5CssboqvgpZMr4/t2mScokPbVwcrfo872bgFe5Bls6YrbdWDBCHLk2iFVT
+         +IGuXkpHjYbH79u/G6jTTTT/S4ECVE87zYCRgTktodNDsS/tvK1V3Y0FXTbBSyBPGIFI
+         xs6/JjO3kqHY9Lw6KOqIxaeD1ZZh83yHxJyNfh9tvC3xWXyCsywmKZHEGrSO8e3LVx+n
+         DaLEyy9poVDfchQft2qFm5KwRLgCJK+YzMXxlWfLbfzIPYe3Tny8RUQUE/WXiHkTjbzG
+         HKgw==
+X-Gm-Message-State: AOJu0Ywbc8B1Zg5KlhOLelZSQ3+0Spzmguf9SjSkIQYdmT9CiHXc8I8R
+	eGZWinDUo667leA7KF5GaiVRfKB/boLFr8C2vES651Sm3aO1S0ftfy2u
+X-Gm-Gg: AeBDietqTP2KJCs9qRmkL28nPWRmj9szETnTOUi1rocFk5oPWR/k3yB/DcMN4JdxycO
+	Hb+UADQemga4c6dy5JWCddFDTLQw41ccFDsaA+D2sGS7eOTDvudjTH2X2dVeGp7w5jKKViRNs51
+	+Si5IeUyuEUO370xCAWuT2+fvfdMSRPqX7QvA9I4+qbgwVcut3k0WdEff42wgvXf3rtnxdChmbm
+	RjCyYNUfEw47oL6xex/n4Ftrep6QF+WWT21gZ7lzrSdiY4Cl3N2YEgAQETqydPU2HZ48oGyzkAW
+	4ugit1bvrGA/a43lD8rtCZN41S+Yf+EVtYUKPAajLySFP008RM8vd1ld6kzN5cZeESdESs/2SvK
+	5WxGG3ahxm92hf3+Sj0AY9RK3S1jnx3pMVBNf1404bDRPKJH2femLJcrREQoYzHzWu3PqmUlAM7
+	RCqWmMvsmEE2/xCCzRTy20eJolGAVB
+X-Received: by 2002:a05:6a21:3293:b0:39f:794f:94d8 with SMTP id adf61e73a8af0-3aa3b63574amr3326987637.29.1777985211486;
+        Tue, 05 May 2026 05:46:51 -0700 (PDT)
+Received: from localhost ([111.228.63.84])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8025008cb9sm7678986a12.30.2026.05.05.05.46.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 May 2026 04:28:03 -0700 (PDT)
-Date: Tue, 5 May 2026 13:28:02 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Gedalya <gedalya@gedalya.net>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs_scrub: drop the warning about mixed bidirectional
- codepoints in names
-Message-ID: <vl3rhbudi4352qxtf32tg46xujdh35swx5y7ridcweklm2q3su@fp3whcm6fcyy>
-References: <20260504170852.GH7751@frogsfrogsfrogs>
+        Tue, 05 May 2026 05:46:51 -0700 (PDT)
+From: Cen Zhang <zzzccc427@gmail.com>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com,
+	Cen Zhang <zzzccc427@gmail.com>
+Subject: [PATCH] xfs: snapshot i_disk_size before truncate writeback
+Date: Tue,  5 May 2026 20:46:39 +0800
+Message-Id: <20260505124639.1346827-1-zzzccc427@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260504170852.GH7751@frogsfrogsfrogs>
 
-On 2026-05-04 10:08:52, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Gedalya complained about receiving warnings about mixed bidirectional
-> codepoints in a filename:
-> 
-> "First, well-known file name extensions are not internationalized. While
-> the file name can be in non-latin letters, the extension will be in
-> latin. Hence you would expect to see file names such as עברית.pdf ."
-> 
-> Gedalya goes on to point out that file names can be created from (say)
-> the title of an article, which might itself mix RTL and LTR characters.
-> Both uses are totally fair, but regrettably unfamiliar to 2018-era me.
-> 
-> Unicode TR 36 even weasel-words its own recommendation: "As much as
-> possible, avoid mixing right-to-left and left-to-right characters in a
-> single name."  Maybe I should have paid more attention to weasel
-> wording in specifications. :P
-> 
-> Let's fix this by removing the warning altogether.
-> 
-> Reported-by: gedalya@gedalya.net
-> Link: https://lore.kernel.org/linux-xfs/8961ee4a-3830-498b-a432-5545695db599@gedalya.net/
-> Link: https://www.unicode.org/reports/tr36/tr36-15.html#Bidirectional_Text_Spoofing
-> Cc: <linux-xfs@vger.kernel.org> # v4.16.0
-> Fixes: baa9ed8dca213f ("xfs_scrub: check name for suspicious characters")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+xfs_setattr_size() updates the in-core i_size and truncates the page
+cache before it writes back the range between the on-disk EOF and the new
+EOF.  The range calculation currently samples ip->i_disk_size without the
+inode ILOCK.
 
-lgtm
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+Buffered unwritten-extent completion can advance ip->i_disk_size from
+xfs_iomap_write_unwritten() under XFS_ILOCK_EXCL at the same time.  A
+stale coherent value is harmless here because concurrent EOF advancement
+only makes the pre-transaction writeback range conservative, but a
+lockless 64-bit load can tear on 32-bit builds and create a bogus range
+start or condition.  That can cause the null-files avoidance writeback to
+be skipped or shortened before the size change is logged.
 
+Snapshot ip->i_disk_size under XFS_ILOCK_SHARED after truncate_setsize()
+and use that snapshot for the writeback decision and range start.
+
+Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
+---
+ fs/xfs/xfs_iops.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 208543e..a531715 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -915,6 +915,7 @@ xfs_setattr_size(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct inode		*inode = VFS_I(ip);
+ 	xfs_off_t		oldsize, newsize;
++	xfs_fsize_t		ondisk_size;
+ 	struct xfs_trans	*tp;
+ 	int			error;
+ 	uint			lock_flags = 0;
+@@ -1024,6 +1025,9 @@ xfs_setattr_size(
+ 	 * guaranteed not to write stale data past the new EOF on truncate down.
+ 	 */
+ 	truncate_setsize(inode, newsize);
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	ondisk_size = ip->i_disk_size;
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 	/*
+ 	 * We are going to log the inode size change in this transaction so
+@@ -1034,9 +1038,9 @@ xfs_setattr_size(
+ 	 * otherwise those blocks may not be zeroed after a crash.
+ 	 */
+ 	if (did_zeroing ||
+-	    (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)) {
++	    (newsize > ondisk_size && oldsize != ondisk_size)) {
+ 		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						ip->i_disk_size, newsize - 1);
++						ondisk_size, newsize - 1);
+ 		if (error)
+ 			return error;
+ 	}
 -- 
-- Andrey
+2.43.0
 
