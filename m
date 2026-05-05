@@ -1,109 +1,97 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9AA1A6805
-	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 17:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 639C9313543
+	for <linux-xfs@vger.kernel.org>; Tue,  5 May 2026 22:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778001169; cv=none; b=CuGij++ZVqczWEPS5+o3Y2iJZCsYv8Z7dyllh+cXyOQtAoR8ShugyfHtc83lJoO851zWWxm6dlR+uWP93O2LClevGHmdLA146x2eOwDfhfIV4qUiKu4QokNZkR78y82MsxWC8DueysbDbKjgnd9tGjE5/ITbpq3yOOUeFwwquW0=
+	t=1778021449; cv=none; b=CaoJt1jFWfPAjZRnVC275KvPP2H3sPva5iUSW5M4IDenN5tmx5Op8LLouwGPeVMPalJnZnSup/T18YF0HuSMPzcseEs+5E5txTlCo7fZGmRDHTIcplgYzN44YiA1D2BN7qkxkrZzM/SUtpCZrO5k/81s+BybYuQMMrEsuZZlB/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778001169; c=relaxed/simple;
-	bh=a1z/NZlPGPz0LIcY87SAa6pI93bKQHmt3HQnMQShrCc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OM9xO7enXoax/0aafAk6KhuEHJEKV+r1Tjk3ukZUtWkNuJY8l+6oSiAAZ8df5hYX6tojZ1UbxVE5g7692Pd/vJGX2VlUah63ijFS4CKsPz+ORIm3If+a6F7zrUJRAzNWTV0NDE3hcU9nfwldnrRbZ3FXFmFDYNE30Gnr3N2CmXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ri19fZyk; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=raR9RdK5; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778021449; c=relaxed/simple;
+	bh=JRv12lRYsbsqyvc3pxn1uVE9cZLZ6GJxKUPYmzFD/wk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Epmszumq1u+tXwrdAEA82IhByrTRFGbj7y1AU77hjlXGwUfhFqklJ4UatYQbfxbyBYv+1JyRL8GR6uG/eikh/rADdkd6esZKwYsT79esnWTG5vUvFJzVGwV1hkaAh2TRGJ1hqxWwU7iilOYGrQp2gzhTj9Jk/3O6Yjywwtmrl0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fp71KwHA; arc=none smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ri19fZyk";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="raR9RdK5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778001162;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9pP6CmEhCIsO2nQrf4te9scrBlc5AJw7miQRdY5uxiM=;
-	b=Ri19fZykMUfVkTYn7QHd2XtrJLURGMQM3Th1uPCrdf7gmaEKUoRiISlguDZpbimWOVb8Cq
-	rqEODQWtPGuTu8aoaH+K9wB0DikFwWzTt+WyCBv1K0h6DVvYo9yCX1j+NLpa+WPYXp0FZ9
-	hrbQE5yW8HXAcVZvF9piW/4PWSoxXTk=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-340-v_iyS5GiN4CV5XkkYAryWA-1; Tue, 05 May 2026 13:12:41 -0400
-X-MC-Unique: v_iyS5GiN4CV5XkkYAryWA-1
-X-Mimecast-MFC-AGG-ID: v_iyS5GiN4CV5XkkYAryWA_1778001160
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4836abfc742so48830825e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 10:12:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fp71KwHA"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5a0ff30b240so8555165e87.0
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2026 15:50:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1778001160; x=1778605960; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9pP6CmEhCIsO2nQrf4te9scrBlc5AJw7miQRdY5uxiM=;
-        b=raR9RdK5RRq/Vco2czCggKgqG0gJrna5BoGxisnuST098dGEsMQ8QVfpP6r3xkM0kA
-         3VrKr8cZoFbjyF9Ln1sjMXVukEDY75Rp/wQ2g6mhMRQuK2fS9FVNLO5W4xrxgZTzcACo
-         fFNP3yjZbnmMgEr3JwMsvrY5Mp2KZ55nNR/E1ZiR1vFyQ0FF4iGuJ3AvDzGKuxHGS/vd
-         dfTYogxJMhCKepwaohecqhzo0E+/3mMfx2TItLW+4CHJadUD4FhM9W5XVMDL5rWAiJYQ
-         KJukqoGjwVCA9AQvAgJadS9PPgPk0lJyM6whdUjBVcNiQCD3DRmcU981v09r/yR3TgPb
-         PZ1Q==
+        d=gmail.com; s=20251104; t=1778021446; x=1778626246; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yTX7CA8f4PTXzhU85qwu4yXE6mQp0vfx6y41lfYM6Ss=;
+        b=fp71KwHArxN7i2GDo0w1G+hlIMsigT2iZPvpXvx5AZ993+AenUw4zXUhR3CCbGQUkz
+         Qnov4CabD2eHwn9OvSNH8+O7dz8sDfMOeSpaZH5S5FT3PcaD6gb2ld/J4YCgybJ211Ap
+         H1TD5lFpyVxFIUlZDhmQiFnbuzKeR6ci1p+PhPGxNnjwgL3+eNPHqhGauRXzM89hLRJN
+         i7BtG/C6rZX/hj4jQ8rb/Hc4aYDgNy9b2f71Tq3w3+eWIYS6D0eh3wxUeRY36tNlNGpJ
+         gG2OOFtmc8kPbfWf3Q1lqr8fjbtkxrNAJB+xar9+L3F/u6vKYBETnsADEvtCvz5IIScj
+         LDug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778001160; x=1778605960;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9pP6CmEhCIsO2nQrf4te9scrBlc5AJw7miQRdY5uxiM=;
-        b=XuhXrw5gHAviWBJyh2HsiVzUYxPTaMRNlI57+uTRBvTlyaFQdek2tl/4GLGJ+1/lI9
-         U/XEiQmoXm1u6EtGEF/RFpV2Q3kDVpCbp2vlBadSFjtBWslm4yGjs7LxX2t7K8X7u78f
-         s/ekwaB68rsP3G+UpfzzHeQymVfNFE4vnenKLJx6Y5Ttumw5oWxbqxluuOej83N6eJm2
-         K+pGnLHHqVeN/23u9mqIEPg5xaLQyMUjBCmCsJr+qmV2EHTHb5jj0KbbkmrnT93zDbLV
-         p2tY1RtTJJaTHTXl6ksf/XLJSzDhxavKQ9xnYXG2pebADrB2RyxaZv4LyCikALePlWU8
-         +rew==
-X-Forwarded-Encrypted: i=1; AFNElJ/DNtvHYUat/U/3LTKPtJKF3LkDzTcLQ1ugN/gZpFmJPgZ8nHgSOChXyr64BO8Z8tyJL6Z0ROrblYk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxsG+KThKXj3Gw5hsUGpXTwHEbN5PVUbauC+6dXgbq52SDcHs89
-	84B850fAH9D2PJbI91VWYFZFh2VRzmtwJj86QUMfHJRaGV0mj+OpP+sCtC1ghYQs/8RMdrYi6eC
-	xHhAhRr2fKBT98MEC6gUMkIhmoyL85P+lkLOaDN5bElaAGGJRQONxFnY3qRfX
-X-Gm-Gg: AeBDiet+k4Mqg4KNSG5Wm/QVmbhkFFRCYkN69UfYENAzjBW8gi3+sCllSsxRpfEh7AE
-	9OMmniHpUxqjH57kmtBWMas9+3Dde/7WbAT35ukrLVFY58JQOWJfpmWDgs4VhJH4IhpeO0c3xee
-	a7WTf78B+bXQQTf4W5JkEdeLFvYlKArPCzGO/cBnieR7OgILAVtoREw2+2CvZ5Pn75QMxFpd7Bt
-	vy5WHiB+rh/528DC13XCsUEUIPruRhLFppYMFcRZXA6ACSE8sK3kw7jFZ0t1P3RV/7PETaVOCWh
-	ir77gra6iusK02sEwdxp/xjLR1n3B8eGd6iaW2I2WKiWlUptK5vqAoKqmniljJGiGm2T0yNsR0w
-	QCBHqMCwPrtTKIDYY7ofBOg==
-X-Received: by 2002:a05:600c:3548:b0:488:c40b:c8a4 with SMTP id 5b1f17b1804b1-48e51e097a2mr2197565e9.1.1778001159920;
-        Tue, 05 May 2026 10:12:39 -0700 (PDT)
-X-Received: by 2002:a05:600c:3548:b0:488:c40b:c8a4 with SMTP id 5b1f17b1804b1-48e51e097a2mr2197135e9.1.1778001159336;
-        Tue, 05 May 2026 10:12:39 -0700 (PDT)
-Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-450524831cdsm6543722f8f.5.2026.05.05.10.12.38
+        d=1e100.net; s=20251104; t=1778021446; x=1778626246;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yTX7CA8f4PTXzhU85qwu4yXE6mQp0vfx6y41lfYM6Ss=;
+        b=aMXuCHilja8vMjEDlYZo9k+ZSzSw99MgcklpygCh++TyxDlJVLrik9GfYHVoKuC/HM
+         l9G4x7kJeVvMX7oPIEGcCid3pOYX7Xz+RR/5cYa5NbLfEriE6aaa1g3lAtq8FgiIzggf
+         o8gge79kXNO+WIi2TDo3LBhQMUm0TFXRfcqhDIzlnRg+9XzS7B0ZcGgoTaAPI1/tj1vt
+         eQ7fl2D47WkPDbVz2yNpPXYC4quBLsSpiAXyFcVQPRb5/2iUHu9PrCwqegilgDXWH0+C
+         WCZJ7zzBiuMn/wl30M7NY6/d157mY5F0oWvqOIadXkvmcJQZM9S3w+yc22jx3WdCpxhk
+         tPhA==
+X-Gm-Message-State: AOJu0Yxs+v5059dOMDGVQO14pM8OGxuQzCVeVwVEmQp8DtYNFZsa38Yv
+	vo6X9GVFNScHFKzr2jOxmseo7ibtQSXuosty1edN0V9tvfvXuHqUHjTgui2pfMY3
+X-Gm-Gg: AeBDietNoB2GTL0LmWPtKMVoOUVt0xkM5wD7goZ90/Zn2zfgpegu9FHlR7Xz7Jv65wC
+	Lh18yJEBHps5wWfn/7RE/aGvo6pRskAsTNgOAzOfmm9sibce4qlV5AWqLWyiyaA/yUuv5Jy0jFi
+	P83tJq1jOIaafOEWlv6hKYokJ44aeTjL2UrKgmZv7JrGVkR/bcBBHEswHb6RHpLPU1FaltuPtnt
+	yTfoCbxZwuwEBuQoajoWmhvU/kEing9+O6WB00cQFk0sSWFVhhbT+m9t9GMu0QynwDN6m3B1GgG
+	tvBxPxM+5oUyWhxRJircaVmNWhyluDfRfBQLo3rFMHPxmhIqlH8weMyzZcDK07/Xr1h2/qMEZVX
+	cu8wdF55eJ0mMbIbDzNXXCVDjuZkZ0lV3tcyEh5l5pC1PMipPmMkSb7X0rClrT6GyxycjI/RIG3
+	M341ljgS3yREaNQdSwe+CPQH53jmX7UgFJpndLPiGWcwGepDjupW2iaqzI97th70qnrjVhoT2Ku
+	Hw7Cg==
+X-Received: by 2002:a05:6512:b82:b0:5a2:abe6:7bcd with SMTP id 2adb3069b0e04-5a887ce3354mr198980e87.19.1778021446168;
+        Tue, 05 May 2026 15:50:46 -0700 (PDT)
+Received: from Shofiq.home (87-92-218-151.rev.dnainternet.fi. [87.92.218.151])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5a85c22df41sm4312132e87.2.2026.05.05.15.50.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 May 2026 10:12:39 -0700 (PDT)
-Date: Tue, 5 May 2026 19:12:38 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Donald Douwsma <ddouwsma@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test xfsdump subtree restores
-Message-ID: <q35bobvlsz66pdqqg5ie6q3xqqflw7kckwvk3hl42hqc5rtcn3@h7kaiwi5vl6l>
-References: <20260326025443.1569874-1-ddouwsma@redhat.com>
- <20260326030012.1571545-1-ddouwsma@redhat.com>
+        Tue, 05 May 2026 15:50:45 -0700 (PDT)
+From: Md Shofiqul Islam <shofiqtest@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	linux-kernel@vger.kernel.org,
+	Md Shofiqul Islam <shofiqtest@gmail.com>
+Subject: [PATCH] xfs: Fix typo in comment
+Date: Wed,  6 May 2026 01:50:44 +0300
+Message-ID: <20260505225044.6484-1-shofiqtest@gmail.com>
+X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260326030012.1571545-1-ddouwsma@redhat.com>
+Content-Transfer-Encoding: 8bit
 
-On 2026-03-26 14:00:12, Donald Douwsma wrote:
-> Regression test for cumulative restores where a directory has been
-> renamed outside of the subtree being restored triggering the assert:
-> 
->   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
-> 
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+Fix spelling mistake in comment:
+ - occured -> occurred
+---
+ fs/xfs/xfs_notify_failure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
-
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index 64c8afb93..b994ff15d 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -350,7 +350,7 @@ xfs_dax_notify_dev_failure(
+ 	/*
+ 	 * Shutdown fs from a force umount in pre-remove case which won't fail,
+ 	 * so errors can be ignored.  Otherwise, shutdown the filesystem with
+-	 * CORRUPT flag if error occured or notify.want_shutdown was set during
++	 * CORRUPT flag if error occurred or notify.want_shutdown was set during
+ 	 * RMAP querying.
+ 	 */
+ 	if (mf_flags & MF_MEM_PRE_REMOVE)
 -- 
-- Andrey
+2.51.1
 
