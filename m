@@ -1,162 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A2221A447
-	for <linux-xfs@vger.kernel.org>; Wed,  6 May 2026 15:05:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFBD3F0759
+	for <linux-xfs@vger.kernel.org>; Wed,  6 May 2026 16:37:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778079916; cv=none; b=tq7KgWG1d/S7AsYTbklzXHalKPlC5jmlMl5lGNrZjgU9WZQxuDeqwrUtWkJAU6ua9r/93llr0FXo+241u3WYMfIZN1/TAwa5/lzGbNMCRENP14vkhnTZ/i59TYTGpz5e2292l2MgK4KWEG6F2BrGwwWQfHf6LX1sns9iSehJ2iQ=
+	t=1778085426; cv=none; b=N89INyk8/H/co0qk76UlvNXM+ajbMKEgWJJcuNA7ghed8j0WKVD7Q04Ay3w9Rxsd39fhdlb1w/8hQgK5rBcIDflfHWXnLa9yDxW/JTMq12cv72z4n9NmDEe0NLLMt4w3PX/3WC4h+TXMHjNhT8mEPzlQUATbhJoWvLefQg0KIag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778079916; c=relaxed/simple;
-	bh=urs3YFlTV46KBbZeBcGifT0K1wHHN/W61Ulg5d8+iGw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KiFRtBA1jL5Jsqyj8pSxdSJuqngOV1o0qfWjsQaIlsXUZmHgF4xUzQlB8bfR237/zlKgmCkoLm+JmJaFk7BjmO+dwp2nsvGcV4lVh9pi1oBYSYLXYUcBUBgrGsxU4nd7kuMW4T4KmS4yEdztJ1ZD4Thn3scykr+UjNww+lIqhl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZjfVeo4J; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778085426; c=relaxed/simple;
+	bh=5bHtuy0sCeuAj2tjlyhJtiGZEL1Whf182f56eH+H21c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PnHgINZKR5wT7OXuUtJ4SyWgWVwPB/1mcgb7L5dDV8EiYJoQzKgpJt8gW+h30hq2TSV0ab5xFk+o/tCUPvMhbtLzKEUrWUYt20RvCE475DQsxL+cpSleBEnqIBYp7YF8AwIIBS+sKQ3Bl7u2iGYGHW3V5gzaovZTglDfsQYhh5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rRBm+J0u; arc=none smtp.client-ip=209.85.208.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZjfVeo4J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCF0DC2BCB8;
-	Wed,  6 May 2026 15:05:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778079916;
-	bh=urs3YFlTV46KBbZeBcGifT0K1wHHN/W61Ulg5d8+iGw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZjfVeo4JXH31kHEWMJjdJlZbHh1G2GnVizF0mO+kX8IhcJCgwAKiSBcvI8hy/YISS
-	 mdSAtJJNCB0Jm8l7cAu6tWlNjJlV/nwhi8eUXyGBnnIwAzcLvq5LGuV0cEecKzAA+P
-	 w9z9N/Xwum776fxLV9aTL0jqS++3TGVfmIupi70mhikdO+WjqcAzpmUhZOSy8XgpJT
-	 81MzQ1hffQHXAHg7mxl8C7tCMrE/xCeO4rAQGylUzLPlXLI5Pi0siT4XL4SYD4RI7h
-	 s/R0NiGHPsjSQfzTTdZ7j0E9F33TTOEhcizjinwZVbFtUe/gMmNTcgbPRkhAoMDr+J
-	 Puf2IgsxlfnLw==
-Date: Wed, 6 May 2026 17:05:11 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Andres Freund <andres@anarazel.de>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
-	Christian Brauner <brauner@kernel.org>, Pankaj <pankaj.raghav@linux.dev>
-Subject: Re: Increase in XFS journal flushes with (direct_write;fdatasync)+
-Message-ID: <aftQP63r22Q9SWb9@andromeda.toxiclabs.cc>
-References: <IS8F8EYS5pW4UU5a3jxOTy-f18EgkDa_2zAUswRgTm6NVtvmajAaQyu9CDxkTelDnfXfCl7L_692C77zRAxwFQ==@protonmail.internalid>
- <7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rRBm+J0u"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-39393ec4ed0so42549621fa.0
+        for <linux-xfs@vger.kernel.org>; Wed, 06 May 2026 09:37:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778085422; x=1778690222; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6T/FntyDjZ2Qi3KeHTozHInxL5pNQcRPqrX9tiVywuw=;
+        b=rRBm+J0u92lN+W4xy4KdoHUdcEsd/XxPfs2rMP0Jb1G4yfr1khyEFCtIR2+z/TD26N
+         hnac++nGandjEpkqKt1L37H6b7aKbZmFhSJJXcETJopOofy1w6QYn7nSaplNoVfMosOV
+         KruSbRl5+gqal82CbGPDmN2V9dsTRTQgZgOKajC2QHjMZS8JwbDx6O4DGzG9/FC0ARvr
+         vc9snVCNBLw/1wZyINnS4PmJZwZYEpAwP+JqCWksmPFCdVuj+uAPYJ82cScTQxFdf2gg
+         gN665+yuE5bP98phHcT/IgnZeY+X7cAfrTtX2aL4LAdIroQbHXKTludL4TiqGd121tOk
+         prEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778085422; x=1778690222;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6T/FntyDjZ2Qi3KeHTozHInxL5pNQcRPqrX9tiVywuw=;
+        b=rQcXi4Uk8CCl9kkoDzTrhBHdVeuBE9Nip5rzIaIbGyyicOUHxxfpCXRDlIh9p5tH9/
+         XW4lMGRtKFmPnZzGPhQcB3pNJUtLA9313CN8ft/PDL+ydzJMh30kD6vNAnNf/AL/NsPG
+         hjUYL3ukgqPSpBydRVvUMRKabpvbHyWk4SBb31piIMH+/f1pr/y3ZOtn4mrEemP/PHV2
+         hazl7veEwmQjEeMVb7+VnhmR1Q+grf2UgTg2VRIgLhimJ5oJjN0761ljdUSEwHLsuICI
+         2z7L5kNoM12snlWqk3EJYkG3WsNzI96RU0W+ov/5tzXWq4CSav3tOSR+nM3hdr5Fwsqc
+         l49w==
+X-Gm-Message-State: AOJu0Yz6rdQgazcyIHbzrWUpeSq1szN3XZXNTF6L+syikbnQwO8AiWYE
+	yiP9s8jA99Eq983Cm9ffdCRnTcJAmi2xE9EREvG+SXVpzbFISm1yzYCBvR73duaH
+X-Gm-Gg: AeBDietVZwsBDHLShR3nm3ZK/dmjr0ExwJ4ncFuY3prqLIN1fvpUWsPKCY4aNiRqCzl
+	YUSKeN13ki0LPgiqxnoLFL+BdtLHgyU1YMcXxftqhakUw7exmkAGOo/Bnnt3b+lBipe/8BOqPWG
+	7mWu1v72cdB/QGG2k0PcakGezPgAusuGFtZUaKCyK0u4d8xTLkjYkiBfHi18oa3fE9FUatVmqSg
+	NZZyE7ZjnF3v/SIK/hWrN6HkRPRBAqsZ/ooRryY3dPG0qvMjFFRuv7SUArK8tN42yINHzKBe2+c
+	c7s6vGcRR4Mq7LlP1RpI1jFIV7yNetDPXX6AtBNhL9krFCZ+ZnhqHZtwHW2QSTPriWWud0lq4aK
+	s5SrgSd3hozw6ocCIvkE1TpE/pZtZnzj/Y0O8xE18szZxJ3efz996/cx5Tll8nVMrxsQlKLDyT5
+	ow9c3x82jXBKMW4MHYEEaFM/7QOHXhFyroe6cwb2TYd2K4eU+r4K0/fW1tfS2eZSpHbPW+tDFNj
+	wA=
+X-Received: by 2002:a05:651c:12cb:b0:38f:f8f3:6c47 with SMTP id 38308e7fff4ca-393c40a326dmr17654361fa.4.1778085421845;
+        Wed, 06 May 2026 09:37:01 -0700 (PDT)
+Received: from Shofiq (87-92-218-151.rev.dnainternet.fi. [87.92.218.151])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-393a11fcf41sm28292031fa.26.2026.05.06.09.37.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 May 2026 09:37:01 -0700 (PDT)
+From: Md Shofiqul Islam <shofiqtest@gmail.com>
+To: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Md Shofiqul Islam <shofiqtest@gmail.com>,
+	cem@kernel.org,
+	djwong@kernel.org
+Subject: [PATCH v2] xfs: Fix typo in comment
+Date: Wed,  6 May 2026 19:36:58 +0300
+Message-ID: <20260506163658.2318-1-shofiqtest@gmail.com>
+X-Mailer: git-send-email 2.54.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r>
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 06, 2026 at 09:26:25AM -0400, Andres Freund wrote:
-> Hi,
-> 
-> While looking at performance issues on Samsung client drives due to slow FUA,
-> I tried to reproduce older numbers on a recent kernel.  And couldn't, at first
-> - but not because the problem went away, but because the fdatasync numbers
-> (which shouldn't use FUA) got *much* worse.
-> 
-> These drives have FUA writes that are slower than full flushes, making
-> O_DIRECT|O_DSYNC writes perform poorly and fdatasync() comparatively better.
-> 
-> 
-> What I'm seeing is that with recent kernels the fdatasync() performance is
-> roughly as bad as the O_DSYNC, whereas previously it was > 2x as
-> fasts. blktrace showed that there are ongoing FUA writes during a workload
-> with just overwriting writes and an fdatasync after every write.
-> 
-> 
-> At first I thought it was a regression between 7.0..7.1-rc2, but that turned
-> out to be only because the 7.0 machine did not have lazytime enabled. After
-> fixing that discrepancy, the regression is also visible in 7.0.  I have
-> confirmed it's not visible in 6.18.
-> 
-> Repro Workload:
-> 
-> fio --directory ${mountpoint}/fio/ --overwrite 1 --size=$((4096*123)) --buffered 0 --bs=4096 --rw=write --name write-fdatasync --fdatasync=1 |grep IOPS
-> 
-> On v7.1-rc2-5-g6d35786de2811:
-> 
-> mounted with lazytime:
-> write: IOPS=158, BW=636KiB/s (651kB/s)(492KiB/774msec); 0 zone resets
-> 
-> mounted with nolazyatime:
-> write: IOPS=594, BW=2377KiB/s (2434kB/s)(492KiB/207msec); 0 zone resets
-> 
-> 
-> 
-> Running it with perf stat and a few events [1] shows:
-> 
-> using lazytime
->   write: IOPS=174, BW=697KiB/s (714kB/s)(492KiB/706msec); 0 zone resets
-> 
->  Performance counter stats for 'fio --directory /srv/fio/ --overwrite 1 --size=503808 --buffered 0 --bs=4096 --rw=write --name write-fdatasync --fdatasync=1':
-> 
->                123      syscalls:sys_enter_pwrite64
->                122      syscalls:sys_exit_fdatasync
->                121      xfs:xlog_iclog_write
->                121      xfs:xlog_iclog_sync
->                123      xfs:xfs_file_direct_write
->                122      xfs:xfs_update_time
->                122      xfs:xfs_log_reserve
->                123      xfs:xfs_trans_add_item
->                  8      writeback:writeback_dirty_inode
->                122      xfs:xfs_trans_commit
-> 
->        1.170287744 seconds time elapsed
-> 
->        0.192673000 seconds user
->        0.054510000 seconds sys
-> 
-> 
-> using nolazytime
->   write: IOPS=672, BW=2689KiB/s (2753kB/s)(492KiB/183msec); 0 zone resets
-> 
->  Performance counter stats for 'fio --directory /srv/fio/ --overwrite 1 --size=503808 --buffered 0 --bs=4096 --rw=write --name write-fdatasync --fdatasync=1':
-> 
->                123      syscalls:sys_enter_pwrite64
->                122      syscalls:sys_exit_fdatasync
->                  1      xfs:xlog_iclog_write
->                  1      xfs:xlog_iclog_sync
->                123      xfs:xfs_file_direct_write
->                 55      xfs:xfs_update_time
->                 55      xfs:xfs_log_reserve
->                 55      xfs:xfs_trans_add_item
->                  7      writeback:writeback_dirty_inode
->                 55      xfs:xfs_trans_commit
-> 
->        0.667253953 seconds time elapsed
-> 
->        0.160385000 seconds user
->        0.061264000 seconds sys
-> 
-> 
-> The relevant difference presumably is that nolazytime has a lot more log
-> flushes (xfs:xlog_iclog_sync).
-> 
-> 
-> ext4 does not show that behaviour.
-> 
-> 
-> Presumably this happened as part of
-> 
-> commit 74554251dfc9374ebf1a9dfc54d6745d56bb9265
-> Merge: 996812c453caf 77ef2c3ff5916
-> Author: Linus Torvalds <torvalds@linux-foundation.org>
-> Date:   2026-02-09 11:25:01 -0800
-> 
->     Merge tag 'vfs-7.0-rc1.nonblocking_timestamps' of git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs
-> 
->     Pull vfs timestamp updates from Christian Brauner:
->      "This contains the changes to support non-blocking timestamp updates.
-> 
-> Or in one of the followup fixes.  Hence CCing the folks involved in that.
+Fix spelling mistake in comment:
+ - occured -> occurred
 
-Thanks for the info, I'll look into it next week assuming nobody looks
-into it first.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Md Shofiqul Islam <shofiqtest@gmail.com>
+---
+ fs/xfs/xfs_notify_failure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> 
-> Greetings,
-> 
-> Andres Freund
-> 
-> 
-> [1] mountpoint=/srv; for opt in lazytime nolazytime; do echo "using $opt"; mount $mountpoint -o remount,$opt && perf stat -e syscalls:sys_enter_pwrite64,syscalls:sys_exit_fdatasync,xfs:xlog_iclog_write,xfs:xlog_iclog_sync,xfs:xfs_file_direct_write,xfs:xfs_update_time,xfs:xfs_log_reserve,xfs:xfs_trans_add_item,writeback:writeback_dirty_inode,xfs:xfs_trans_commit fio --directory ${mountpoint}/fio/ --overwrite 1 --size=$((4096*123)) --buffered 0 --bs=4096 --rw=write --name write-fdatasync --fdatasync=1 |grep IOPS || break;done
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index 64c8afb935..b994ff15d5 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -350,7 +350,7 @@ xfs_dax_notify_dev_failure(
+ 	/*
+ 	 * Shutdown fs from a force umount in pre-remove case which won't fail,
+ 	 * so errors can be ignored.  Otherwise, shutdown the filesystem with
+-	 * CORRUPT flag if error occured or notify.want_shutdown was set during
++	 * CORRUPT flag if error occurred or notify.want_shutdown was set during
+ 	 * RMAP querying.
+ 	 */
+ 	if (mf_flags & MF_MEM_PRE_REMOVE)
+-- 
+2.54.0.windows.1
+
