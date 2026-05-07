@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E6C363C46
-	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 12:03:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95CA3EE1F1
+	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 12:17:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778155422; cv=none; b=qbhhhpgreVsmATV8tWh6TSE2L386EUX9kW316gZvVYK26Ny6nd2XtRI0Aeox2cbN3tkdnXZvqYuy4FjOMZvoW7xVtatdBcYT/h8nt4QHyz6vfAVqZ/pDGrZcivxSnGL5c2iofp4NiGCzLHnj4O1GrwaL9rTCH7nkdQLdB+ZV4OI=
+	t=1778156227; cv=none; b=GxMIRTTkIeJ1BJHn8qc8tG4Jkre8ttv1iOTtQXtpLD7uLtfIAtsWNXj7w2rtQDuBIGVIvGN5/YrhvVk7Fr6H+kAGiz5ID6DsR0+879xXrk9/0c0tpmWhJC33KMWn6uita7EvXCgal2wF60Um+kDiRAxa4oHu54XWMvOmb4D9xdE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778155422; c=relaxed/simple;
-	bh=wfqPW2LGbLENEXpy8LuNb+M/QLyhLRXPCpzLkVHqOgc=;
+	s=arc-20240116; t=1778156227; c=relaxed/simple;
+	bh=+WPNjgw8FlEbVSXdbMbypZJbOckQMgbf8dIDIa9h+ZY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VH1lnv9KEaBzpcq+L/bsuYEw6fRR8299slkv/7926r/xKFNIcankLoMfjbUG3d5bc9mMYH4lO3WvcOiQpIy8ODJCJQIpYDjXeUAITbHKx0Or0F19YtHnTabo7FkV2AsOqa7zgER4ISPLSMG6E2rL1MeFmaiAXEY/436M8s0MxD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cu7uoz/G; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=g24V8RKxhFqtCfK+UH+ExejGyMJKxfsuabXSGpZpngzUYa36uHM4crw6lgxaM9cWuewhfBX7KAHA0th9wvEZ1bpxYUixQxgzJ0HVz9n9bpb1Jc8GDGny7PwacOS4IpYrDo/LwDGYygocMTkYfh+/DWQ2OIXA8qkreLgKBrbiMwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FRngfCiz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cu7uoz/G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAEEFC2BCB2;
-	Thu,  7 May 2026 12:03:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FRngfCiz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E8E7C2BCB8;
+	Thu,  7 May 2026 12:17:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778155422;
-	bh=wfqPW2LGbLENEXpy8LuNb+M/QLyhLRXPCpzLkVHqOgc=;
+	s=k20201202; t=1778156226;
+	bh=+WPNjgw8FlEbVSXdbMbypZJbOckQMgbf8dIDIa9h+ZY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cu7uoz/Gs015aasusO1spkSGtK/jAj06n3UVxypLYy1BFk0yJ9fvI6r7MuYdHfTFD
-	 2vbZJpRozsQNB+E7uDKXdEkaGm4YTqTxwVZ1JjmvULGqSJImq5OIxo4I/XqGArf9tu
-	 wUhgTec6+SHjkr3BwAWh3RnnerOADBSh2N7iBVaA5mlnPD9SCNFbSexsUhv7dkcolX
-	 wIpUqT7+IWsU5Ud5e0RyyLCB7fUx+wwpucfkK2Gl5WATQ9wLG8BU5g8w9eN8xlptw9
-	 lKA8J6Ha8276X1IU0qy8qw6PXgqEvIv7yX9gGk99EDBbZEIoZnOr8NPLs/Ka77dlxO
-	 qCh2Txhpv4cCg==
-Date: Thu, 7 May 2026 14:03:36 +0200
+	b=FRngfCizoD9bEHlIysi9RtrOnXT7MJq0HoA24/UEZ8lP5CeDhOCuqfMtC8yD6r3N5
+	 9vt8797AlNXo+HZx4PN/lEM3ie2nPt5YxlhhnD3F4A+VjQaTu2K04J9L5g52C3MEBu
+	 aF1yR7oknA175hD5ojWpAoeqlGZaYauJNY/iOzuemmRmSl7lj2ctJ5k0htyEUSfEJA
+	 AfEf9YADBr/af8XYh6QgZL1sN7C9wkkIwBXYUqlC9zbl+3sk7GS1MagsUz1nQz+xtm
+	 Dhzw6X/+YsM3j/qGTiS6jHIES6Tg32C9L2agvm1GXRFgtnMPFUxHPYQTK34tHKUU2u
+	 NW4EkPWyKJBxA==
+Date: Thu, 7 May 2026 14:17:00 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix the "limiting open zones" message
-Message-ID: <afx_kMVF9ceuLSpO@andromeda.toxiclabs.cc>
-References: <HYHgM8Lvj3Ce71h7t3w8IoIbd82x5Hgpe8yCYLOtiTr3DyHzlP6eD94oePbrGzgBwSdU-nw8XgrQ5ZATUn3WVg==@protonmail.internalid>
- <20260507052457.1305016-1-hch@lst.de>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: improve RT geometry validation
+Message-ID: <afyAzghWC9_lwf13@andromeda.toxiclabs.cc>
+References: <wV6uRtt8Mdv0dR-Ory4pMu4E-SDYDmUrTwaPRauY7S4lM07r4ogMmp38xxeF3FNG3X_E46ujDJHX94Lq_Oe-Vg==@protonmail.internalid>
+ <20260507052543.1305129-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,31 +42,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260507052457.1305016-1-hch@lst.de>
+In-Reply-To: <20260507052543.1305129-1-hch@lst.de>
 
-On Thu, May 07, 2026 at 07:24:57AM +0200, Christoph Hellwig wrote:
-> The xfs logging macros include a newline, remove the \n, which adds an
-> extra one.
+On Thu, May 07, 2026 at 07:25:35AM +0200, Christoph Hellwig wrote:
+> Make sure the rtgcount is plausible for the given RT group size.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_zone_alloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_sb.c | 22 +++++++++++++++-------
+>  1 file changed, 15 insertions(+), 7 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index a851b98143c0..e79f9e652dbb 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -1170,7 +1170,7 @@ xfs_calc_open_zones(
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 47322adb7690..c0354f43704f 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -302,17 +302,25 @@ xfs_validate_rt_geometry(
+>  		return false;
 > 
->  	if (bdev_open_zones && bdev_open_zones < mp->m_max_open_zones) {
->  		mp->m_max_open_zones = bdev_open_zones;
-> -		xfs_info(mp, "limiting open zones to %u due to hardware limit.\n",
-> +		xfs_info(mp, "limiting open zones to %u due to hardware limit.",
->  			bdev_open_zones);
+>  	if (xfs_sb_is_v5(sbp) &&
+> -	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED)) {
+> +	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
+> +		uint64_t		nr_rgs;
+>  		uint32_t		mod;
+> 
+>  		/*
+> -		 * Zoned RT devices must be aligned to the RT group size,
+> -		 * because garbage collection assumes that all zones have the
+> -		 * same size to avoid insane complexity if that weren't the
+> -		 * case.
+> +		 * Check that the number of rgcounts is plausible for the RG
+> +		 * size.
+> +		 */
+> +		nr_rgs = div_u64_rem(sbp->sb_rextents, sbp->sb_rgextents, &mod);
+> +		if (nr_rgs != sbp->sb_rgcount + !!mod)
+> +			return false;
+> +
+> +		/*
+> +		 * Zoned RT devices must be aligned to the RT group size because
+> +		 * garbage collection assumes that all zones have the same size
+> +		 * to avoid insane complexity if that weren't the case.
+>  		 */
+> -		div_u64_rem(sbp->sb_rextents, sbp->sb_rgextents, &mod);
+> -		if (mod)
+> +		if ((sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED) &&
+> +		    mod > 0)
+>  			return false;
 >  	}
 
+Looks good
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 
 > 
 > --
