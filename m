@@ -1,36 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9E934E74D
-	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 22:11:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83745344DB5
+	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 22:11:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778191877; cv=none; b=k4yuKpLfVXAlzVZUkZaXbOxMemYh3mFn4VZPHJ2ecVwjV00/ZcKUXHkJF1NSrUtomsOTVTFUFVacfHuUZMiWIbltQT6M9+nTcGK+U2p/HgD/SS8j4V5VmfOUCBMlFqVlmJiInuQqWm98hHte+ALBVfT4odbejedTBXB/zzMpHRo=
+	t=1778191882; cv=none; b=aYpgynUatufSl31FooTr0FUJVG9d9Qgd0+Hhe32njYbJSNYv276uDF26NEm/4bHZgkoREjbpvC/KWW+27d2RjyII/x0xM/uyc3YJaQDOBu91Mm1TM1LvNAgLsnP+1EuzPCROqPG1PV2LcXk00XpWG6rJbEQdn/jd/n56A0Z4IrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778191877; c=relaxed/simple;
-	bh=TxnaDXKVVmt8t7KCTL4iuaf89atTAdL/L+1gHjhVkyE=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=p4aA+1pZJlP/m43udYN2FBD6+Syd/Q9PAEoPC+3c9FFhXc48JUwls6EtgOR8IQ+4DN3EmYsai7dvwVop1xdECpHgqui5y/MdVMptFrKToPUakkXzmSfpaDG/4WwEE4r3g6NfjVkkrnNZofLksMYn3GrtymNrW9zRFmozojtktN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kmT6Zcoz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778191882; c=relaxed/simple;
+	bh=K9yUlSULdjzFCQcvd/veeGOGkGxDnFpOKaClo5d08ko=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=f2PgaO971ON3eBEAeob3uJ49IS9Gk1SyYTL9+drHQdE90sZaN6weVaG7vsOICCVHV767q6XtR4XACau8SDFJtzvGOIbwmggP9WbJgmtOQX9oG8ZcMg+UNYsgRCQuhme66H5HXPOtqdgBhzpbqOOJEu9mXwyXN5cCzTl6Vs6OpfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JhkhlRxy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kmT6Zcoz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A97B6C2BCB2;
-	Thu,  7 May 2026 22:11:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JhkhlRxy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5530FC2BCB2;
+	Thu,  7 May 2026 22:11:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778191876;
-	bh=TxnaDXKVVmt8t7KCTL4iuaf89atTAdL/L+1gHjhVkyE=;
+	s=k20201202; t=1778191882;
+	bh=K9yUlSULdjzFCQcvd/veeGOGkGxDnFpOKaClo5d08ko=;
 	h=Date:Subject:From:To:Cc:From;
-	b=kmT6Zcozxpt8EbZU1mjdhayJwZZV0OqXhuASNl54Rpr9BnGY/+6wTRu/iGfJ/g+pu
-	 6TCy6pfgacgoyeW3U7h/48lnjDCtWd/lNPt+SzI6o+pFX/O0+G60IQ7Pa3Xb81RBZ6
-	 VwyCzVyiaaJLYQypBtnZtKM7sSdCK5WZKxpy8dYuO1Dasp2TPmjlJfRg3wOlzeXSxZ
-	 7DZwi/Z3CCfwf1gb0eiERsgstHbz2tY3LkR6X+fw+hvOhss8gL1PzplZxm2B6+5Ghk
-	 KqeLLqKjunaYs6UFt7JRSm4xMiIaOx6BtAnUenNoyIHsZR3H+sAWuRBHKAwI/Rrpgo
-	 lSlUl2IiAUAhg==
-Date: Thu, 07 May 2026 15:11:16 -0700
-Subject: [PATCHSET 1/2] xfsprogs: various bug fixes for 7.1
+	b=JhkhlRxyCK8lXm60RXLJKR1oFHUoba6mqNHvjku76zg/N4ZKoJuUQ20c41EP7PB8u
+	 RGk38eFhChpmjgTLqF3VmprvvVAwbPlNFM/8g+PuzIPKViBJp8h7h+zBzAVF5vPB2p
+	 /9C2yORBjozuDzwdwOtvmQkxoVJ7E9paQJGj+5ZWshYWvD6NVQR04YAyHolAwCv+jW
+	 tkuejTmqdIQimOJqZKAC+lrm7hVZ+8L7Kh/KdmH4i1AevBXzmi3duCCTaeaJwxcH9g
+	 b13Zb2jwPe/yYuYLIL8UFUBbiGFtoeyC5vI6/Sq/az1UdxMi7V8m18UhnsSQkaBPkh
+	 DmZj1103oWFGw==
+Date: Thu, 07 May 2026 15:11:21 -0700
+Subject: [PATCHSET 2/2] xfsprogs: new libxfs code from kernel 7.1
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <177819182629.3486034.5026297034156212262.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com,
+ bfoster@redhat.com, cem@kernel.org, wilfred.mallawa@wdc.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <177819182887.3486206.18149824043863236840.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,7 +44,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-This series contains miscellaneous bugfixes.
+This series ports kernel libxfs code to userspace from 7.1-rc2.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -52,22 +54,15 @@ Comments and questions are, as always, welcome.
 
 --D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-7.1-sync
 ---
 Commits in this patchset:
- * platform_defs.h: fix __counted_by_ptr annotation
- * xfs_scrub_all: remove dead code
- * xfs_scrub: remove dead code
+ * xfs: add write pointer to xfs_rtgroup_geometry
+ * xfs: switch (back) to a per-buftarg buffer hash
 ---
- include/platform_defs.h   |    2 ++
- scrub/unicrash.c          |    7 -------
- scrub/xfs_scrub_all.py.in |    6 ------
- 3 files changed, 2 insertions(+), 13 deletions(-)
+ libxfs/xfs_ag.h |    2 --
+ libxfs/xfs_fs.h |    5 ++++-
+ libxfs/xfs_ag.c |   13 ++-----------
+ 3 files changed, 6 insertions(+), 14 deletions(-)
 
