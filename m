@@ -1,38 +1,41 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E11734F497
-	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 09:21:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AF53E1D11
+	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 11:36:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778145690; cv=none; b=cGJ1FOmSV2zgckkyLIbb7Ijk//udv4ePVbdMlzBRdOZgicJ0GhNw28gUHlqSHcHc+srLtBDW6c+2GAqLN82TxtEBy284Dy2c8aD07kuUvkmU658ZQKyIyke+V4LkSqmRWBHmonbVJKzW4Udw6Bw4VpnUEA3o+D/lhTUYJJVQSQ4=
+	t=1778153787; cv=none; b=dzgTQQ0+dSQbgAiRsLhzQoxU9nElXkFh6Iybrl7/HFuYShpYfWiueEO5PMqhNnagEfHiCEq57tyG5yQjIIWQafSfpTlwm+slM9+z0/dUWD7e1RTGEQ0GCHJWupfBB4EfOhoRwz0gpliL0OVjLBzlyVcRIdlCTEy7IVoGy2Us73Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778145690; c=relaxed/simple;
-	bh=ZJC8mprVwWo583tIRvOh0mthBjgcXQqS/BF/zwTJYbY=;
+	s=arc-20240116; t=1778153787; c=relaxed/simple;
+	bh=aIzSRFpzbZKrZAg0CdLRwPfMtjsPOTrzXfZBVf8TcrM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RmBTWmzgV/J7csXdnZoydNGl5c0mLum6PM/YHO05gh283LJbj18PZZSFHOmJrGm1RFcuNt0dv2g5BFz8tOGcAAhOx7sYDMVSBIwwTllV0b8yHspOCokXikiFU+4WT6qExPLGYl4hblMyx1S/EgQvDZKccqXZl9sy+EpBf5vsyQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kdRB8Ktp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=I2/M155nXZG7QTQPWIeu+GXCkCKVSZIC27v125+yDwmyoPaV9rQLxbFQc2ik+IQm0gVFlMRFc5zLgfEfGgyf5LkYO8T703Ytu+M2ku0DeZwSa7acocJvQKqh3K1LigCkYuQ/cq3X+zNlykgND2VI8b2uDlKe5WS2M2yp+Dw86Qk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CcWg6z93; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdRB8Ktp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E44CC2BCB2;
-	Thu,  7 May 2026 09:21:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778145689;
-	bh=ZJC8mprVwWo583tIRvOh0mthBjgcXQqS/BF/zwTJYbY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kdRB8Ktp0Sq289L5kFGaBCesvaPQryfuH5EIWD8JwNUOpBPtlQxLM7urzSZcF6vy/
-	 1ogtaTkctiAsQf27ppt9TPdjglfWk9Bq7ZeJ77svF84+JmVxdrucSat9L10WkGgsaO
-	 so2+17eKgKccCK8oDdfUp/U0FKIdhliyj9wkvUwppiBTAXy4Rd1tRamSs6RhK0Cy/7
-	 RrhlbUota8DVwFB1xlo6VrjYeJgg/4PtqKXsmtsdI7VZNf2JrolUNfJlt0yGyjRKTX
-	 FDt1Ip7iV07l8JCfOjVrpu0BQPaJdxzfbZQUzRo8bVt4Yeid3WIEgGT2HU7s3pGVqQ
-	 sr/KNLGCF3AAg==
-Date: Thu, 7 May 2026 11:21:26 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CcWg6z93"
+Date: Thu, 7 May 2026 13:36:11 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1778153782;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4NFNbXeizyMJeFRyQ0zqvAkaI3oQ1Ivi1F4fsjx4hM4=;
+	b=CcWg6z93RLUAYOt6b8PebBFtG6LN8/BiZ3sSNGleI1EaK7j0gCO+4B0ilPburpo+69Vhrv
+	OUxIYztOTU3K1GYUBlU/SHwgoLiFkLG739RZ1ECv8AQ6dQUwgqNMapHh0R/UxR18YcwpIv
+	0jXaIcNmItuy5W0ilFuVQ+MDzVVSrdk=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix the "limiting open zones" message
-Message-ID: <a3rzpekmyzfwy5aiqnpkrmryufjb6na6bhts3p7c33acrjxq2z@4otgli5meezc>
-References: <20260507052457.1305016-1-hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] block: pass a minsize argument to bio_iov_iter_bounce
+Message-ID: <7a24ulsyoczubsjc2y4rkv7tkgqzpo7ehkkljdytyo6tzqdw24@avwve4kr7tzy>
+References: <20260507050153.1298375-1-hch@lst.de>
+ <20260507050153.1298375-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,16 +44,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260507052457.1305016-1-hch@lst.de>
+In-Reply-To: <20260507050153.1298375-2-hch@lst.de>
+X-Migadu-Flow: FLOW_OUT
 
-On 2026-05-07 07:24:57, Christoph Hellwig wrote:
-> The xfs logging macros include a newline, remove the \n, which adds an
-> extra one.
+On Thu, May 07, 2026 at 07:01:47AM +0200, Christoph Hellwig wrote:
+> When bouncing for block size > PAGE_SIZE file systems that require
+> file system block size alignment (e.g. zoned XFS), the bio needs to
+> be big enough to fit an entire block.
+
+Not related to the patch but I am wondering why we don't need this for
+non-zoned bs > PS configurations.
+
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good to me
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+Looks good.
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
 
 -- 
-- Andrey
+Pankaj
