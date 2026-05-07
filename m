@@ -1,49 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3D4F221FBB;
-	Thu,  7 May 2026 05:02:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5F146DCE1;
+	Thu,  7 May 2026 05:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778130128; cv=none; b=E+3Lv8kWT3QK2nUokeq6+eJNQkkEBXnsKaff+hjFM9216dFY7WCP6M3PWbAQI7VE4plw9YnasCl64iLBx4aFQ4vKvNP16SsDMY0qsCf4MmFkft2SRciCudseqAQhbCMecj4mqfZT9hCn0tW/OBGwwj4ExWUqZBEyFDoYSnpctyk=
+	t=1778130595; cv=none; b=lKAa9c8DNklSKjtHuanDYWmzqBjWubdyeE69G0zpwCCOvZbIzT+l67mh8IU7hvoaYlfWY4rQLfzH4fiSLWtWPMGS0PIx5ZQpSkBLRvQOBfDrfU/H1dBTjGgTAgfE4gaQgEqEQW0/mBDMxi1obUSUArUdN2CSWKAyp252uQ1t5Ss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778130128; c=relaxed/simple;
-	bh=7EBB5GHCkHN0TskgiyxxoRk10u5pmW6e6NqBn22cBxg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GQu0oZwbP6QCeTJxaySeHMIPqWH0RbvVjfcaW+Ugk4sbwm2G5C5JF3hQF82kGQBSTZstgRfeR83Hzb+t5MB3ww9gcSE5AeiIGgQjuI/0cCHnUqzlykwFkYWYrqloZby5r3pL7hDwoSd1E9yF/4QNwMN1cppmj5HE2c6jBLH8yrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4vRWR5Kw; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1778130595; c=relaxed/simple;
+	bh=60RZ8CDA9nJq53Bgjv5eQn0K5+iNXyyqTfwdr3qtc+8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZrqTgBsyEEo2H/Pn0Rb2Gb71VzmPpodjF2SCHmGoDbsGaHQAhYMuSThoL1wV7iXLjBLLpSh6DG8eJawnSccyXAUL7Z9HJ/FS+Kft0+kyjvRvdYaY4OzL+J1UOgcc2QDP+lukX7UgDLxwz9NNdLiz+FTX3V66/bb9EB6fnvSFVl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nszfFJBL; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4vRWR5Kw"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nszfFJBL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mDN+B9dh+NPxIY/UB0rdWyWd3aHMT0pACMhP7a3XzOM=; b=4vRWR5KwZkPPg6LdybCjDetnMH
-	A786va23jzt+cNxDaQrkM1wCrgRFjCPqJ4yW1c7ObSPJbIbywzAQJ0KVmKVW1q9c4lXp7lTV/h0xg
-	EAozP7kAbsPbqXtQZLcRo8qoJZ5Zplu3py19VrFTSzqM9Mt8omQh5ZgoBgYQHMAzu3hxgKkitJgaE
-	5eyk9b1Kg6wJIGFSVtMy0fTsyGDoY5OzN5Mx1d403nxlqnr3FVXrkxNZQ5+ozA7sIvafvzrDG4S3V
-	69RyS218hsdpCJEK5prxb0Qz2zgXTe2widhoN1sAMCkcjY/YK20A+zkXFICxIwPbd1hZkcZC8husb
-	B8vFbepQ==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=cWi8oeCR0E3IVT4+bFt5o7KazDbGSRMxa8sp1Ulq6Wg=; b=nszfFJBLM/f+KzUYw4TOiZTffo
+	z6LCFhcDGQdASUYkslt+YQnwQw66jfSF68Z4gxDrbfCexUaWzu0DABoxj7yS+/EYWk7OZ7mr8nWPs
+	YE1tctRwQeQZleN24Sgb63Q4CCG5e+4V+t/QE/L1wag5MXUmDA/2hJTiAqiBjrN5jyYKlJ9Mp2MjY
+	IsRwWXhT/XKiAQjSBY1/B0edijM7sR2sbivdGSyYxAtbv0PybArsnPbGJn3P7BDYDSo8W02lI9IcQ
+	XWwLe/7exiNMe3DKDbg4+oHZ2h+N84TYq7EHXvkk6l7rhzjU6kCyquO7EdeJpFkDRMyaFYcX4hQKH
+	Q/atJjcg==;
 Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wKqsA-00000002lyY-17sW;
-	Thu, 07 May 2026 05:02:06 +0000
+	id 1wKqzg-00000002mZY-3EDP;
+	Thu, 07 May 2026 05:09:53 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Pankaj Raghav <pankaj.raghav@linux.dev>,
-	linux-block@vger.kernel.org,
+To: zlang@kernel.org
+Cc: djwong@kernel.org,
 	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 2/2] block: align down bounces bios
-Date: Thu,  7 May 2026 07:01:48 +0200
-Message-ID: <20260507050153.1298375-3-hch@lst.de>
+	fstests@vger.kernel.org
+Subject: [PATCH] xfs/216: pass -t xfs to _mount
+Date: Thu,  7 May 2026 07:09:49 +0200
+Message-ID: <20260507050950.1300316-1-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260507050153.1298375-1-hch@lst.de>
-References: <20260507050153.1298375-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,36 +47,29 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Just like for the extract user pages path, we need to align down the
-size to the supported boundary.
+Without this, mount probes different file system type, which ended up
+exposing kernel bugs in blocksize > PAGE_SIZE bugs in tons of
+legacy file systems.  Bypass that by forcing XFS and making the
+mount a little more efficient.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ tests/xfs/216 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index f3e5d8bea08c..5f10900b3f42 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1345,7 +1345,7 @@ static int bio_iov_iter_bounce_write(struct bio *bio, struct iov_iter *iter,
- 
- 	if (!bio->bi_iter.bi_size)
- 		return -ENOMEM;
--	return 0;
-+	return bio_iov_iter_align_down(bio, iter, minsize - 1);
- }
- 
- static int bio_iov_iter_bounce_read(struct bio *bio, struct iov_iter *iter,
-@@ -1383,7 +1383,7 @@ static int bio_iov_iter_bounce_read(struct bio *bio, struct iov_iter *iter,
- 	bvec_set_folio(&bio->bi_io_vec[0], folio, bio->bi_iter.bi_size, 0);
- 	if (iov_iter_extract_will_pin(iter))
- 		bio_set_flag(bio, BIO_PAGE_PINNED);
--	return 0;
-+	return bio_iov_iter_align_down(bio, iter, minsize - 1);
- }
- 
- /**
+diff --git a/tests/xfs/216 b/tests/xfs/216
+index 091c11d08642..2096dd9b53d9 100755
+--- a/tests/xfs/216
++++ b/tests/xfs/216
+@@ -57,7 +57,7 @@ _do_mkfs()
+ 		echo -n "fssize=${i}g "
+ 		$MKFS_XFS_PROG -f -b size=4096 -l version=2 \
+ 			-d size=${i}g $loop_mkfs_opts $loop_dev |grep log
+-		_mount $loop_dev $LOOP_MNT
++		_mount -t xfs $loop_dev $LOOP_MNT
+ 		echo "test write" > $LOOP_MNT/test
+ 		_unmount $LOOP_MNT > /dev/null 2>&1
+ 	done
 -- 
 2.53.0
 
