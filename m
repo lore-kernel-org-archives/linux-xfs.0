@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B21918050;
-	Thu,  7 May 2026 18:45:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801A1175A85;
+	Thu,  7 May 2026 20:21:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778179556; cv=none; b=IpZMiQs7Ut8HwkCMFulZztRA/KeM7GYr0uNAeY8vbrKmqGqoeu/anhAKBE/5R6XVGrVn374Co5Hz30SEkoU5g5VmRBUzqv9ulD5vwEQR8SNMXqxVFMKlch0Fxezx0D38OKlyQeetWPdgQ2W20svGYa0iTzbqEG48vgvn3uos3es=
+	t=1778185265; cv=none; b=jf0bd8HhjKxJS27n+k7SXUkPexm2Ag1T010v5BoWqHz0tlHQg2z1dKjN9cL6Zwi8EsoXa5rQRqUKS/+DLLi+A8fhE8fWqJ9qZfMGuBckFY5ZaoEK7NQAU2knD+u3EFC7lK5NJfRSLpt+V9kYlzKKx02n2mmIJ4kPzPDiRdzdk90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778179556; c=relaxed/simple;
-	bh=xODJt3kT5G8TLC9mn4j20YekxNnn4c/8rEQj1l2HUTY=;
+	s=arc-20240116; t=1778185265; c=relaxed/simple;
+	bh=tD8py6U0e7L6UhPQPJi5qYuBjRmS263KJiaioSan1ks=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uyRVLofLv9hzfECAWNuVQyentsXOW/kzOyixAJDadmIppLHzydMk78HdOeRSP3h+d8Jx+HMQkm/nfG7iCUNSmuq5/nBtG9q6caj5SdP6kh9jQRJnYb/ty3tHkvyUj1ub+nvsGOl83XfNIF6j1cBCUg3Re+08JFEQCr50X59353c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZBGYLsPV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IP9n4CYmMATeP7+KZftI6To7xLvcAc4hha+fzgez+cIGTRsFqYOXf+aP/sKn8aWX8w2IqcyjhcpQfWGzgo5EjTA/jFHRWhX0YkO9Tdd41gJw0q8gUday2hVNsIpBBvsRCURYLiqKTDZTi01JUTB9/DcjV++KyVqycw8kw3STbkU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dpMDx/Pg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZBGYLsPV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB12DC2BCB2;
-	Thu,  7 May 2026 18:45:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dpMDx/Pg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6557FC2BCB2;
+	Thu,  7 May 2026 20:21:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778179555;
-	bh=xODJt3kT5G8TLC9mn4j20YekxNnn4c/8rEQj1l2HUTY=;
+	s=k20201202; t=1778185265;
+	bh=tD8py6U0e7L6UhPQPJi5qYuBjRmS263KJiaioSan1ks=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZBGYLsPVf0ZdRMPfF0iRVgNSnmruLVmhW5kAoFf9jQFnEZIv6omYNNP6XrtTL4kBu
-	 jP9rr1Wdn3tCVXCJNY48yEgztaqs40GNBO1fdVvp5Bk4tJHr5Y9UPJHRIMBjbd1MZA
-	 dqf4OK7p37hGOyuY8qJZGZq+19C+dnT0IQypboSCO+ucWH8qsD32EdsN2Bw57+G1rh
-	 7P27cWsYzJEXDdK+vbgXiQISxaI04dr60goeymyFbT3G2nA/QA92cDIDCRdONcwM6F
-	 H3z8NsOm+AgiLY7TcjE3tUeS8UqQiCaCmDeG/d8nQbWANJixnMprmwVzIgkKvtTVyl
-	 AUtCTMDa706JQ==
-Date: Fri, 8 May 2026 02:45:45 +0800
+	b=dpMDx/Pg4TmbJr9ZvqT7t7ldaFhuiW081o5nuciCK9xQ7dymxSwvb8z8wqwyAFig2
+	 ah9M+A7BrMaMAc8ifD6XVmWvEqZSJl6qu3Vi4Zaubm0kqdvhwvAX9iWVkEQGWWsybr
+	 Y+r8K24L5K4Bel7pOLLRW9yf6AwpP5Y5H62D2EWGO6rVLdkSAcsVmJUW3cSwuO+SEv
+	 oy2sqcduu2boXuTT0ZqzUOlLX8oTTS1nMhF1pZw9jt8J/Eb2P4Vwis0lJm49SoTdNU
+	 ovNEF9GhIo9Af3/qQ77T2D8Ul9PM3inRTZkzBzI8quZPppPfvkEL46eQIwEIWoJJ3z
+	 kO4/eHHQzubxA==
+Date: Fri, 8 May 2026 04:20:54 +0800
 From: Zorro Lang <zlang@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH] xfs/216: pass -t xfs to _mount
-Message-ID: <afzdcdQ-t8gzlRyY@zlang-mailbox>
-Mail-Followup-To: Christoph Hellwig <hch@lst.de>, djwong@kernel.org, 
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-References: <20260507050950.1300316-1-hch@lst.de>
+To: Theodore Tso <tytso@mit.edu>
+Cc: fstests@vger.kernel.org, xfs-list <linux-xfs@vger.kernel.org>, 
+	ext4-list <linux-ext4@vger.kernel.org>, btrfs-list <linux-btrfs@vger.kernel.org>
+Subject: Re: [PATCH RFC] check: add new option "--loop <n>" which runs each
+ test multiple times
+Message-ID: <afzyQgqrhZEtMcc0@zlang-mailbox>
+Mail-Followup-To: Theodore Tso <tytso@mit.edu>, fstests@vger.kernel.org, 
+	xfs-list <linux-xfs@vger.kernel.org>, ext4-list <linux-ext4@vger.kernel.org>, 
+	btrfs-list <linux-btrfs@vger.kernel.org>
+References: <20260415213248.1795275-1-tytso@mit.edu>
+ <20260505133409.GA49070@macsyma.local>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,38 +47,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260507050950.1300316-1-hch@lst.de>
+In-Reply-To: <20260505133409.GA49070@macsyma.local>
 
-On Thu, May 07, 2026 at 07:09:49AM +0200, Christoph Hellwig wrote:
-> Without this, mount probes different file system type, which ended up
-> exposing kernel bugs in blocksize > PAGE_SIZE bugs in tons of
-> legacy file systems.  Bypass that by forcing XFS and making the
-> mount a little more efficient.
+On Tue, May 05, 2026 at 03:34:09PM +0200, Theodore Tso wrote:
+> On Wed, Apr 15, 2026 at 05:32:48PM -0400, Theodore Ts'o wrote:
+> > Teach the check script a new option --loop, which re-run each test
+> > multiple times.  This works very similarly to to -L, which will retry
+> > a particular test after it first fails, except that the test is rerun
+> > unconditionally.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> Ping?  Does anyone have a preference between adding a new option,
+> --loop, or changing the heaviour of the -i option?
 
-This change makes sense to me, thanks for fixing one more lbs testing
-failure.
+Hi Ted,
 
-Reviewed-by: Zorro Lang <zlang@kernel.org>
+Personally, I feel that once we have --loop, the existing -i starts to lose
+its value. --loop is far more effective at catching specific, flaky bugs due
+to its stashing logic.
 
->  tests/xfs/216 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Furthermore, if we eventually add something like --loop-while-successful, then
+-I also becomes redundant. It might be worth considering a more unified naming
+convention in the long run, perhaps renaming -L to --loop-on-fail and keeping
+everything under the --loop-* family. This would be much clearer for other users
+than the current mix of single-letter flags.
+
+Welcome any further feedback. Also, feel free to weigh in if you have concerns
+about the potential impact of renaming these option names.
+
+Thanks,
+Zorro
+
 > 
-> diff --git a/tests/xfs/216 b/tests/xfs/216
-> index 091c11d08642..2096dd9b53d9 100755
-> --- a/tests/xfs/216
-> +++ b/tests/xfs/216
-> @@ -57,7 +57,7 @@ _do_mkfs()
->  		echo -n "fssize=${i}g "
->  		$MKFS_XFS_PROG -f -b size=4096 -l version=2 \
->  			-d size=${i}g $loop_mkfs_opts $loop_dev |grep log
-> -		_mount $loop_dev $LOOP_MNT
-> +		_mount -t xfs $loop_dev $LOOP_MNT
->  		echo "test write" > $LOOP_MNT/test
->  		_unmount $LOOP_MNT > /dev/null 2>&1
->  	done
-> -- 
-> 2.53.0
+> > This differs from the "-i <n>" option, which iterates each set of
+> > tests <n> times instead of each test.  The -i option is problematic in
+> > two ways.  First, it doesn't save the test artifacts from each test run.
+> > This is unfortunate because when the developer is trying to debug a
+> > flaky test failure, running "check -i 100" will run a test 100 times,
+> > but if only the 42nd test fails, the NNN.out.bad file for that failing
+> > test run is not preserved.  The second difference between --loop and
+> > -i is the result.xml file is rewritten after each test set, so we do
+> > not have the cumulative statistics of the 100 test runs in the junit
+> > XML file.
+> 
+> 						- Ted
 > 
