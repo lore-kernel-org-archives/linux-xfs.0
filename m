@@ -1,158 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC663BAD80;
-	Thu,  7 May 2026 08:55:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522B2372B28;
+	Thu,  7 May 2026 09:21:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778144116; cv=none; b=OBnnHZCOFXd9K3AN0RxUxooUtOW4w1PIWrY0NkU9bl/8Mby8JyJ9swC5KpBvIV7iWdexHpPfabU3eGLt6x+jnq380Gjgh1XZnqYIogCLdVGPm+7mVKzdoMnV8FnN/657vd02cRTjRNnBGaYku8iWi8J5QOT0OiGza4pMd2csHmQ=
+	t=1778145662; cv=none; b=Bw1PGhk9gihuBhFxUxZGFSvL1he9Vz+VM2dZ3E9bT80Zt5+/gQxgDjwZaKj0ql2xa5Xm6IZsS2SqHJqaYbZlEwXkjEln+k3KXCf8pL4W2FIgHARvJW5QpMETlQiDaL0Y02vuoZIQ+xi2RrAVd8KasW2YRyDUOVWFVW1f2dTirxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778144116; c=relaxed/simple;
-	bh=qee/kCsMg8C4eRFPxmiZaknm+clMPDWXLjgwoKgpYx8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pdajCaflUUgPAZ4Lw+CORI/591/aRO5Gs5RIRVPv4r72/of+kGcp4yM3qxw4ayfh8vm3KRWxPGLN8UFIsv0o4Xw3b76n1QxqhNeWphRwA65wbpXTsNdzEA85fqdHD+cYesSjvj1LFLBWkBOP/hQiZDdlNcOMH0zmaaCDrU5MHss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vHelsEcj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778145662; c=relaxed/simple;
+	bh=hBsAO8fnpvcErMUsuWE1R6rz+u7E+mxjWysxYV7xGy0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PYz17rOlCgVHhHA4BrKHu5j2yZP4gZ0MsFRVPJtbcSfozqJoe5YYkBSAsjbeJQIdUNhkjHOAZ2l7ZOGQC/XmvoaI/POZQes8aLFrrAt1NihAh9L1rzR9S7gFq/bfb1JkfyTRL9tHyhs3ebFZt518CVPQZ1vr+owkcq4AHd+Zz3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f58gOThE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vHelsEcj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95A08C2BCC4;
-	Thu,  7 May 2026 08:55:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f58gOThE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A90B1C2BCB8;
+	Thu,  7 May 2026 09:20:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778144114;
-	bh=qee/kCsMg8C4eRFPxmiZaknm+clMPDWXLjgwoKgpYx8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=vHelsEcj24pQruLyPkpHtNvcTqrgcxdW5XrAWAHws6zFy8dlmD3lhphWbo6rNoHKL
-	 pxyKS1lhXpPJY63Pd8/e3qqMQ0aJSwahOYJ5VgRlEX5x9Co+/NVq47XMe389xvO4To
-	 ef2DV1LLfLHw+byjCIfpNwL7N6t8NwMfqmlrEbLB94MK8/QVfBUlOsnE2pmfqZqs6C
-	 AgaxUYFWWzGLZHC20yFP04gqVXcotfKbRyjiSlnWoYWl524oYM7+a7jPCdrnHSPMmN
-	 RuMcRAMn9+ju2vxK9JkVEjzjq+73rGNPmKsZkgkus6BIYXF58eDMi19sSaGrOG8HsF
-	 snrkCWaSAvDxw==
-From: Chuck Lever <cel@kernel.org>
-Date: Thu, 07 May 2026 04:53:08 -0400
-Subject: [PATCH v14 15/15] ksmbd: Report filesystem case sensitivity via
- FS_ATTRIBUTE_INFORMATION
+	s=k20201202; t=1778145660;
+	bh=hBsAO8fnpvcErMUsuWE1R6rz+u7E+mxjWysxYV7xGy0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=f58gOThE4kky1cywgV70xthRVl7sJkCSSmTZqy7Bhr2LO9ADbzLAki84HvumgY4mf
+	 TRfz1WyTA6tWELe6lhqAiKVkFFN8aV2iS1AkU6yCgCTj5IYc/Nhp8PSESqT1j6+ZOy
+	 bOJVjW9TcoXmbCJSpUdTNWqS/q0NcKAl6evWB6hGC/1F+O3eG00FZqNk+kl8F2kYGY
+	 q9pQLj5aCP4EdRaQuixHn3xnbzflzeD6uTw+cqp2NEO7upaacRlkriWGz5LPgx4NXm
+	 6i0jSKsfiTmLXY+PSXpt/TYoui38m3g1s4+KiynFToUu13NXTAY4yjPR2dKN5zRBzB
+	 g2PkqBuLb2JjQ==
+Date: Thu, 7 May 2026 11:20:56 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs/216: pass -t xfs to _mount
+Message-ID: <76ufvvhb7jn7dtrrctm7aodiqdqlefvinobkbd33fz255aszwi@awbpr6dknvrs>
+References: <20260507050950.1300316-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260507-case-sensitivity-v14-15-e62cc8200435@oracle.com>
-References: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
-In-Reply-To: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
-To: Al Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
- linux-xfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
- linux-nfs@vger.kernel.org, linux-api@vger.kernel.org, 
- linux-f2fs-devel@lists.sourceforge.net, hirofumi@mail.parknet.co.jp, 
- linkinjeon@kernel.org, sj1557.seo@samsung.com, yuezhang.mo@sony.com, 
- almaz.alexandrovich@paragon-software.com, slava@dubeyko.com, 
- glaubitz@physik.fu-berlin.de, frank.li@vivo.com, tytso@mit.edu, 
- adilger.kernel@dilger.ca, cem@kernel.org, sfrench@samba.org, 
- pc@manguebit.org, ronniesahlberg@gmail.com, sprasad@microsoft.com, 
- trondmy@kernel.org, anna@kernel.org, jaegeuk@kernel.org, chao@kernel.org, 
- hansg@kernel.org, senozhatsky@chromium.org, 
- Chuck Lever <chuck.lever@oracle.com>, 
- Roland Mainz <roland.mainz@nrubsig.org>
-X-Mailer: b4 0.16-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2812;
- i=chuck.lever@oracle.com; h=from:subject:message-id;
- bh=3j19l6mVyr/XReBrhpdSBMPAL80WouHe9sT+TihiyQM=;
- b=owEBbQKS/ZANAwAKATNqszNvZn+XAcsmYgBp/FL2hcwnjdqaNi/5q9kxt3YlM3d3QqSqstzKs
- 8W45Omd9QCJAjMEAAEKAB0WIQQosuWwEobfJDzyPv4zarMzb2Z/lwUCafxS9gAKCRAzarMzb2Z/
- l52vD/9oAzBTyM4xiFJ5QM41gLgiHj7PUdc2Q3lbIQ/lVfup4pis2Im+cGTpEumnlnsanTB+zf2
- FvmRrt8XkGFC32KiHFduHpw9zBL3jUOmcNiQtT+Bqs7MlCQ6DYk3z9T6CNo+QCfCxhtQIrXwJpH
- b8i/mvekEn8IjtcWAXENLEFsjSiZx9E3HCsGhQgNfoRAyD3dE8+4XkNwDzee2Dc5eKM3v5QFSqU
- RnV+cDOufTwJcVeblHkNhsgNCOB0ROntWVU9H8zQFUM2hyZlG+QT0ymaZT5Q7NQkJ6cLbhIbS+S
- l5FdnBjx3AUYQvQ2KPUSBC4kHru8d4OYlvjNi1D+jJhl27RB628LDCQLJrFTeFkAyoRnbmEIG9S
- 6AfCHIJ8Sdjp2kd4eCPbjbBj8l1X5wf8oAOXwLv72MaN0Y3H1eMi4jkgnhpEvzGsXKSDVEJbjXu
- HRICff28yGMX1lc9goVmC4Cs2pdp2KV6Sfjoy4kSYmJzTsSfUG1S5DTdu72bHl637v4GP5RgJfO
- f2NplDdE1Y8eNR0Qgm6WRdJsYAKksiNbK9dw0cmpJm/P5cowWFNYpLvd8yDIRKSvO+dyuQidfSp
- xuQul1Sgfz6933XPhNxs5EtyeDs8YsRhH4UzKDUFSOIIXnktBJpP78JrP5mKqcHv+7YEuDmr0p4
- ehpAkeTd/qm4/gw==
-X-Developer-Key: i=chuck.lever@oracle.com; a=openpgp;
- fpr=28B2E5B01286DF243CF23EFE336AB3336F667F97
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260507050950.1300316-1-hch@lst.de>
 
-From: Chuck Lever <chuck.lever@oracle.com>
+On 2026-05-07 07:09:49, Christoph Hellwig wrote:
+> Without this, mount probes different file system type, which ended up
+> exposing kernel bugs in blocksize > PAGE_SIZE bugs in tons of
+> legacy file systems.  Bypass that by forcing XFS and making the
+> mount a little more efficient.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-FS_ATTRIBUTE_INFORMATION responses have always reported
-FILE_CASE_SENSITIVE_SEARCH and FILE_CASE_PRESERVED_NAMES
-unconditionally. Case-insensitive filesystems like exFAT, and
-casefolded directories on ext4 or f2fs, have no way to signal
-their actual semantics to SMB clients.
-
-Now that filesystems expose case behavior through ->fileattr_get,
-query it via vfs_fileattr_get() and translate the FS_XFLAG_CASEFOLD
-and FS_XFLAG_CASENONPRESERVING flags into the corresponding SMB
-attributes. Filesystems without ->fileattr_get continue reporting
-default POSIX behavior (case-sensitive, case-preserving).
-
-SMB's FS_ATTRIBUTE_INFORMATION reports per-share attributes from
-the share root, not per-file. Shares mixing casefold and
-non-casefold directories report the root directory's behavior.
-
-Acked-by: Namjae Jeon <linkinjeon@kernel.org>
-Reviewed-by: Roland Mainz <roland.mainz@nrubsig.org>
-Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
----
- fs/smb/server/smb2pdu.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
-
-diff --git a/fs/smb/server/smb2pdu.c b/fs/smb/server/smb2pdu.c
-index ee32e61b6d3c..cf0bc453a036 100644
---- a/fs/smb/server/smb2pdu.c
-+++ b/fs/smb/server/smb2pdu.c
-@@ -14,6 +14,7 @@
- #include <linux/falloc.h>
- #include <linux/mount.h>
- #include <linux/filelock.h>
-+#include <linux/fileattr.h>
- 
- #include "glob.h"
- #include "smbfsctl.h"
-@@ -5541,16 +5542,33 @@ static int smb2_get_info_filesystem(struct ksmbd_work *work,
- 	case FS_ATTRIBUTE_INFORMATION:
- 	{
- 		FILE_SYSTEM_ATTRIBUTE_INFO *info;
-+		struct file_kattr fa = {};
- 		size_t sz;
-+		u32 attrs;
-+		int err;
- 
- 		info = (FILE_SYSTEM_ATTRIBUTE_INFO *)rsp->Buffer;
--		info->Attributes = cpu_to_le32(FILE_SUPPORTS_OBJECT_IDS |
--					       FILE_PERSISTENT_ACLS |
--					       FILE_UNICODE_ON_DISK |
--					       FILE_CASE_PRESERVED_NAMES |
--					       FILE_CASE_SENSITIVE_SEARCH |
--					       FILE_SUPPORTS_BLOCK_REFCOUNTING);
-+		attrs = FILE_SUPPORTS_OBJECT_IDS |
-+			FILE_PERSISTENT_ACLS |
-+			FILE_UNICODE_ON_DISK |
-+			FILE_SUPPORTS_BLOCK_REFCOUNTING;
- 
-+		err = vfs_fileattr_get(path.dentry, &fa);
-+		/*
-+		 * -EINVAL, -EOPNOTSUPP: ntfs-3g and other FUSE
-+		 * filesystems that lack FS_IOC_FSGETXATTR support.
-+		 */
-+		if (err && err != -ENOIOCTLCMD && err != -ENOTTY &&
-+		    err != -EINVAL && err != -EOPNOTSUPP) {
-+			path_put(&path);
-+			return err;
-+		}
-+		if (!(fa.fsx_xflags & FS_XFLAG_CASEFOLD))
-+			attrs |= FILE_CASE_SENSITIVE_SEARCH;
-+		if (!(fa.fsx_xflags & FS_XFLAG_CASENONPRESERVING))
-+			attrs |= FILE_CASE_PRESERVED_NAMES;
-+
-+		info->Attributes = cpu_to_le32(attrs);
- 		info->Attributes |= cpu_to_le32(server_conf.share_fake_fscaps);
- 
- 		if (test_share_config_flag(work->tcon->share_conf,
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
 -- 
-2.53.0
-
+- Andrey
