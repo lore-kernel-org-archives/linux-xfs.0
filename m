@@ -1,41 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F69C3168EB;
-	Thu,  7 May 2026 16:59:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6309633B6D5
+	for <linux-xfs@vger.kernel.org>; Thu,  7 May 2026 17:17:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778173172; cv=none; b=nAcowvgCFxvFfrtaZrAX2tZCyIdQGfxHR44RGoMZykDficalqW68TW6G8/1E6XCDWjM6ocEfzFgAV3pFHZaNRDCb/40sEDRcg8OOfUpnLoasuMY8T2O8on+BaIcu+nqUshKVufe2PX5n/3Q3EhwaaMy4lhpCfCLof580HVQZbnA=
+	t=1778174279; cv=none; b=OwewpK1EHW8u2rj63JvbmJN1bdKnysJILDwO7V6HBUKhHjN6PAoqiNtEClL2i++VKxD5eqodd0AbrQP8kwN5VAXecwbBM9z/Wk/545pIi/SeHZDCRQqH+EETEIP20VJgL0UDBCXQeSSYqb6Wmut7REV3KG4ctPJPMcvlvWBvHRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778173172; c=relaxed/simple;
-	bh=ek/Md6JzFPfBZoqQU5pjBss6iHzzAzSSXUnzvfGAxDg=;
+	s=arc-20240116; t=1778174279; c=relaxed/simple;
+	bh=1uNGP+aKHdEyZ+6iWWPeGYIMU4fA5KIF+Fs3mGoSm8M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XuqUdFYBFfqBg3T5PWun0u47CBV4e1YkUS4XheSIcDUiFZRKnHo/XAJFsDplVjGA+5tVcc0R8gHNTQeAqstl4vqsop8lgzQ3DowFuuk/b7jPWbcurpufiIu48lwpJfGz46kPknAYqFLI8MXctowIp0borPDQoE1o7pPV8Lo1Uo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MdeO8zoZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nw9Gk6TcEhXcq3W6DKrTTW7SgaAWhicwTUbdmbh4KW6h7VXZWyQkHzxiiXMQRi/PGcHF2WWOzulIQCHsfK132yq0eF04io5gxBjlWZmCzv+tCknhNruZYgTVUGrCqtdwBG58MR578Y2Vd7TOiFP4Xkms3SD8lIygbpnrpYezWmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZUq3F3EC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MdeO8zoZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CE52C2BCB2;
-	Thu,  7 May 2026 16:59:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZUq3F3EC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C5B7C2BCB2;
+	Thu,  7 May 2026 17:17:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778173171;
-	bh=ek/Md6JzFPfBZoqQU5pjBss6iHzzAzSSXUnzvfGAxDg=;
+	s=k20201202; t=1778174279;
+	bh=1uNGP+aKHdEyZ+6iWWPeGYIMU4fA5KIF+Fs3mGoSm8M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MdeO8zoZNxRs7i6JQ827p8jQrfR7In/sG2gqunF4zyWetq8Y23meB41sbK6R4IcfV
-	 zFhWFp9FqYYJWo8SrNBg967CMwLXvVPSxD+FL3BuF1aMgzjIiXd4qxgfdV0txFMcYT
-	 PxsBnDiYmtk7Qm3uEE+jvbL/S/gt35s9si/Km+VGw7aIMAaLTFKYv7maaVAJfx8gtc
-	 agAssArxPZtpAX9uO2PwNDoO9irFyOd783cV27R7kh6kpuKa1bGjT03Ptio5+zbdAA
-	 PlmzIzCRM0L63teKTyF9AVkuSMizv/LVy7KAc+8vcdSa3vFiJ4oHMW2k+dWyyiOg/3
-	 6lJdIDbOi/WTw==
-Date: Fri, 8 May 2026 00:59:23 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Donald Douwsma <ddouwsma@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: test xfsdump subtree restores
-Message-ID: <afy-9iJYNqDdXgml@zlang-mailbox>
-Mail-Followup-To: Donald Douwsma <ddouwsma@redhat.com>, 
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20260326025443.1569874-1-ddouwsma@redhat.com>
- <20260326030012.1571545-1-ddouwsma@redhat.com>
+	b=ZUq3F3ECuP4NReQIFZsjJLL+shjsXcC4Zz9INgVHrCUWsrq9Kt7JHjieoRQQlM/Z4
+	 sWo6nNoJ/PZO2me7Pd7F+etibrsJvARNXKtI8DAlRgK5vNoLpZADyYVSlmIG9yw0P4
+	 RTUajp0zASon5AvV4FQBMoyNfH4ls9a2agVi+Qomy4GmQai/q9F0pPfOfRIvJC5tYS
+	 oNEZUsHNxV4qDLjH0IBMbYcBONqq0hi4MAEOH8JoKMtX6IuUj7adBJ8b8tcizr2CNZ
+	 BYQoRXcRyu4m7+gNC9zIVPDHWo8eOZ0uT25dFPVbrIY/vzMIyx1keCuUVPD9EgNa+5
+	 brJZUymP+pX4A==
+Date: Thu, 7 May 2026 10:17:58 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: improve RT geometry validation
+Message-ID: <20260507171758.GJ7751@frogsfrogsfrogs>
+References: <20260507052543.1305129-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,110 +41,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260326030012.1571545-1-ddouwsma@redhat.com>
+In-Reply-To: <20260507052543.1305129-1-hch@lst.de>
 
-On Thu, Mar 26, 2026 at 02:00:12PM +1100, Donald Douwsma wrote:
-> Regression test for cumulative restores where a directory has been
-> renamed outside of the subtree being restored triggering the assert:
+On Thu, May 07, 2026 at 07:25:35AM +0200, Christoph Hellwig wrote:
+> Make sure the rtgcount is plausible for the given RT group size.
 > 
->   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
-> 
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/xfs/995     | 51 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/995.out |  2 ++
->  2 files changed, 53 insertions(+)
->  create mode 100755 tests/xfs/995
->  create mode 100644 tests/xfs/995.out
+>  fs/xfs/libxfs/xfs_sb.c | 22 +++++++++++++++-------
+>  1 file changed, 15 insertions(+), 7 deletions(-)
 > 
-> diff --git a/tests/xfs/995 b/tests/xfs/995
-> new file mode 100755
-> index 00000000..54172572
-> --- /dev/null
-> +++ b/tests/xfs/995
-> @@ -0,0 +1,51 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Red Hat.  All Rights Reserved.
-> +#
-> +# FS QA Test 995
-> +#
-> +# Regression test for cumulative restores where a directory has been
-> +# renamed outside of the subtree being restored resulting in
-> +#
-> +#   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto dump
-> +
-> +_fixed_by_git_commit xfsdump XXXXXXX \
-> +	"xfsrestore: only process subtrees that are selected"
-> +
-> +# Override the default cleanup function.
-> +_cleanup()
-> +{
-> +	_cleanup_dump
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +
-> +# Import common functions.
-> +. ./common/dump
-> +
-> +# Modify as appropriate.
-> +_require_scratch
-> +_scratch_mkfs_xfs >>$seqres.full
-> +_scratch_mount
-> +
-> +mkdir -p $SCRATCH_MNT/a/b/c/d/e/f/g
-> +mkdir -p $SCRATCH_MNT/restore_me/B/C/D/E/F/G
-> +
-> +_do "$XFSDUMP_PROG -L "lab_l0" -M "test" -l0 -f $tmp.dump.l0 $SCRATCH_MNT"
-> +
-> +mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/1
-> +
-> +_do "$XFSDUMP_PROG -L "lab_l2" -M "test" -l2 -f $tmp.dump.l2 $SCRATCH_MNT"
-> +
-> +dir=$(mktemp -d $SCRATCH_MNT/restore_XXX)
-> +_do "$XFSRESTORE_PROG -f $tmp.dump.l0 -r -s restore_me $dir"
-> +_do "$XFSRESTORE_PROG -f $tmp.dump.l2 -r $dir"
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 47322adb7690..c0354f43704f 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -302,17 +302,25 @@ xfs_validate_rt_geometry(
+>  		return false;
+>  
+>  	if (xfs_sb_is_v5(sbp) &&
+> -	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED)) {
+> +	    (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR)) {
+> +		uint64_t		nr_rgs;
+>  		uint32_t		mod;
+>  
+>  		/*
+> -		 * Zoned RT devices must be aligned to the RT group size,
+> -		 * because garbage collection assumes that all zones have the
+> -		 * same size to avoid insane complexity if that weren't the
+> -		 * case.
+> +		 * Check that the number of rgcounts is plausible for the RG
+> +		 * size.
+> +		 */
+> +		nr_rgs = div_u64_rem(sbp->sb_rextents, sbp->sb_rgextents, &mod);
+> +		if (nr_rgs != sbp->sb_rgcount + !!mod)
+> +			return false;
 
-Hi Donald,
+Isn't this already covered by xfs_validate_sb_rtgroups?
 
-I almost forgot we had this _do helper :)
 
-I think your test target is the 2nd xfsrestore command line (about incremental
-changes), a comment might be good.
-
-I saw used four _do calls here. I just checked the logic of the _do helper, I
-suspect your current usage might prevent the test from catching command failures,
-allowing it to 'successfully' continue...
-
-A simple fix would be adding a "note" as a first argument to each _do helper call,
-e.g:
-  _do "Full dump" "$XFSDUMP_PROG ..."
-Once all four calls are updated this way, we can remove the "test $? -ne 0 && exit"
-lines too, and rely on golden image matching to detect any failures. What do you
-think?
-
-Thanks,
-Zorro
+	groups = howmany_64(sbp->sb_rextents, sbp->sb_rgextents);
+	if (groups != sbp->sb_rgcount) {
+		xfs_warn(mp,
+"Realtime groups (%u) do not cover the entire rt section; need (%llu) groups.",
+				sbp->sb_rgcount, groups);
+		return -EINVAL;
+	}
 
 > +
-> +test $? -ne 0 && exit
-> +
-> +echo Silence is golden
-> +# success, all done
-> +_exit 0
-> diff --git a/tests/xfs/995.out b/tests/xfs/995.out
-> new file mode 100644
-> index 00000000..776fa6f2
-> --- /dev/null
-> +++ b/tests/xfs/995.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 995
-> +Silence is golden
-> -- 
-> 2.47.3
-> 
-> 
+> +		/*
+> +		 * Zoned RT devices must be aligned to the RT group size because
+> +		 * garbage collection assumes that all zones have the same size
+> +		 * to avoid insane complexity if that weren't the case.
+>  		 */
+> -		div_u64_rem(sbp->sb_rextents, sbp->sb_rgextents, &mod);
+> -		if (mod)
+> +		if ((sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_ZONED) &&
+> +		    mod > 0)
+>  			return false;
+
+And shouldn't this be in xfs_validate_sb_zoned?
+
+Or do you want this in xfs_validate_rt_geometry because that's what
+xfs_repair calls to check the superblock?
+
+--D
