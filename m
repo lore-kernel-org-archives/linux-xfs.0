@@ -1,163 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FF536E460
-	for <linux-xfs@vger.kernel.org>; Fri,  8 May 2026 11:42:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F2813876B9
+	for <linux-xfs@vger.kernel.org>; Fri,  8 May 2026 11:48:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778240530; cv=none; b=J8Vf8PwV4EuDOJRjIowafc0pmCjvlvdSHR/+wh1CWNH20C3AwNmhBMiLSdBtAkkbpSal91eUHCf0XHUfPtWOQwTDYQSy/TcbylmH95vz/6euq66B13Q63jXnXDpZ15Nprd1IfLx/eNKAAaYqximBelSPEQLg4x8MxeICduvvZZg=
+	t=1778240893; cv=none; b=UVOAuWlbfQrANkuOJYKvrA3uXEYM9y//KZGbXQVOCyf7HsHVSMQJQtapyiGyaT3bSy68s/ANZGLV+e7zW6fl5bfExNpXvqP0EO7xG4ig/cGjfCnWsOXy7DYHODZjxyaUM9PhKl2f546o5IbRTieYSACxSRHoJkO4JNIChML6Q44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778240530; c=relaxed/simple;
-	bh=/1lBsycYON3yda8UD2pew2Vv7glN223jGhtgzQjpFtg=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=S2VN20fjNMgxozJsbDPoXfFHwGN9JpUZ7/h2S9DT/UtCKdeGFgTnelMIOgtvtNZuujE4BfrIY4q+zB1+g1s2lCNS8FUam5y00leFf1+pQKXuuEsEDgmaPLzsmHABOiILCFbqRGk0b76JlCcCUeW5akZtIssBvvLOI+QiG3+ThSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ot+ceEQw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778240893; c=relaxed/simple;
+	bh=nziNqBrsm2FeR1iC9Af05i2L3D0e2L4MvhONWf0OuKI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pfuVrVXxA5r40YFe5y3RNldJzjCVilUMaUta5URTqfKuBS1jVVTiScfu7DQVHASq0HdwC9vxVZELwOU4Jf5dVpI88zRXLBhH9N0wV/CoERaFoqHAzmlCcWxtgpTf5Ag+B3ebHcxTfMvsZh3SIFLkyHi3PfXIG45xaAcZZ00jzs0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FK1BbhDb; arc=none smtp.client-ip=95.215.58.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ot+ceEQw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 352E9C2BCB8;
-	Fri,  8 May 2026 11:42:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778240529;
-	bh=/1lBsycYON3yda8UD2pew2Vv7glN223jGhtgzQjpFtg=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=ot+ceEQwo6u9gJvcmwZixnKZSybeYFjD1sr4hpo45P18wAOsyVW/qzgn7JHVgL2mV
-	 T7MJSEq6sDCu7rUjFelY7iAH16bwiCmtzTpbpXW1ygdtz03a2R5aio62Hy+AVVeUFV
-	 YNOU4pFg+rFwyBY7SewxxRPBVaujITuv77ONgMw3gLXizu9J7FqL40irY1ADmIw466
-	 3S38hhxov1Xk31kgNp/PryuHS1LwUOB8RPXyNUNJle/zkw7hzOOj0CpU/R7ctDGuSV
-	 oWf29Qv1Eh7DI5havKYM3zuBcxS4ndUGxBj7RfWwc4sT/+izrxfPKh8i1+JR1sAoTQ
-	 UlG1E5dPoviCw==
-Message-ID: <08a84b78e83a61b7dd661df32ac31d87b98ccc9c.camel@kernel.org>
-Subject: Re: Increase in XFS journal flushes with (direct_write;fdatasync)+
-From: Jeff Layton <jlayton@kernel.org>
-To: Christoph Hellwig <hch@lst.de>, Pankaj Raghav <pankaj.raghav@linux.dev>
-Cc: Andres Freund <andres@anarazel.de>, linux-xfs@vger.kernel.org, Carlos
- Maiolino <cem@kernel.org>, Christian Brauner <brauner@kernel.org>,
- gost.dev@samsung.com, 	p.raghav@samsung.com
-Date: Fri, 08 May 2026 07:42:06 -0400
-In-Reply-To: <20260508084346.GA19951@lst.de>
-References: 
-	<7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r>
-	 <paibiwpjxhdmfrjq3tn7gbdvgtarm4yvtid7qu5zchhyptdlhx@w7lwvjhevsj6>
-	 <20260508081047.GA19748@lst.de>
-	 <610346dc-ba8d-471f-be38-2429c5646416@linux.dev>
-	 <20260508084346.GA19951@lst.de>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FK1BbhDb"
+Message-ID: <334a4d92-887d-4572-b153-25906148601e@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1778240889;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wwbh1yNCb3Q2GmZSGcO8l454Q6r2eJjWWBpUU8tFR64=;
+	b=FK1BbhDbd3L7gqcru5ZHK2BpskTeEZpGi+7hbZeGqW7WI3pGARkeWKCeUpABbhlSNocUg3
+	NjAXQn2vH42cJMifQ9/sVMSHkH2LswvXzc1j1DWHXqAbgaRApMHzMwbKXU4OWiA7oOndXy
+	txHMwQJbS7JrftjgP0vWMV7BGvHiWdk=
+Date: Fri, 8 May 2026 13:47:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Subject: Re: Increase in XFS journal flushes with (direct_write;fdatasync)+
+To: Jeff Layton <jlayton@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: Andres Freund <andres@anarazel.de>, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, Christian Brauner <brauner@kernel.org>,
+ gost.dev@samsung.com, p.raghav@samsung.com
+References: <7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r>
+ <paibiwpjxhdmfrjq3tn7gbdvgtarm4yvtid7qu5zchhyptdlhx@w7lwvjhevsj6>
+ <20260508081047.GA19748@lst.de>
+ <610346dc-ba8d-471f-be38-2429c5646416@linux.dev>
+ <20260508084346.GA19951@lst.de>
+ <08a84b78e83a61b7dd661df32ac31d87b98ccc9c.camel@kernel.org>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pankaj Raghav <pankaj.raghav@linux.dev>
+In-Reply-To: <08a84b78e83a61b7dd661df32ac31d87b98ccc9c.camel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, 2026-05-08 at 10:43 +0200, Christoph Hellwig wrote:
-> On Fri, May 08, 2026 at 10:29:38AM +0200, Pankaj Raghav wrote:
-> >                 } else {
-> > -                       if (inode_maybe_inc_iversion(inode, !!dirty))
-> > +                       /*
-> > +                        * Don't force iversion increment for pure lazy=
-time
-> > +                        * updates (when dirty is set to I_DIRTY_TIME o=
-nly).
-> > +                        */
-> > +                       if (inode_maybe_inc_iversion(inode,
-> > +                                                    dirty !=3D I_DIRTY=
-_TIME))
-> >                                 dirty |=3D I_DIRTY_SYNC;
-> >                 }
-> >         }
-> >=20
-> > If you are tests are passing, then I can send a fix as a separate patch=
-.
->=20
-> The comment needs to explain the why and not the how.   AFAICS the
-> why is that lazytime is not propagated to the disk at this mount,
-> so incrementing i_version should not happen, but I'm adding Jeff
-> for insights.
->=20
->=20
 
-That looks correct to me. I think the logic here is:
+>> The comment needs to explain the why and not the how.   AFAICS the
+>> why is that lazytime is not propagated to the disk at this mount,
+>> so incrementing i_version should not happen, but I'm adding Jeff
+>> for insights.
+>>
+>>
+> 
+> That looks correct to me. I think the logic here is:
+> 
+> If we're going to disk anyway, then we might as well force an i_version
+> update. In the case where we're not (dirty == I_DIRTY_TIME), then we
+> only want to do an i_version update if someone has queried it. If an
+> i_version update does occur, then we need to go to disk by setting
+> I_DIRTY_SYNC.
 
-If we're going to disk anyway, then we might as well force an i_version
-update. In the case where we're not (dirty =3D=3D I_DIRTY_TIME), then we
-only want to do an i_version update if someone has queried it. If an
-i_version update does occur, then we need to go to disk by setting
-I_DIRTY_SYNC.
---=20
-Jeff Layton <jlayton@kernel.org>
+Does this reflect the why:
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 6a3cbc7dcd28..62c579a0cf7d 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2124,7 +2124,13 @@ static int inode_update_cmtime(struct inode *inode, unsigned int flags)
+                            inode_iversion_need_inc(inode))
+                                return -EAGAIN;
+                } else {
+-                       if (inode_maybe_inc_iversion(inode, !!dirty))
++                       /*
++                        * Don't force iversion increment for pure lazytime
++                        * updates (I_DIRTY_TIME only), let I_VERSION_QUERIED
++                        * dictate whether the increment is needed.
++                        */
++                       if (inode_maybe_inc_iversion(inode,
++                                                    dirty != I_DIRTY_TIME))
+                                dirty |= I_DIRTY_SYNC;
+                }
+        }
+
+
+--
+Pankaj
