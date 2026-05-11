@@ -1,82 +1,52 @@
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C8B17B418
-	for <linux-xfs@vger.kernel.org>; Mon, 11 May 2026 04:32:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C934A3BAD90
+	for <linux-xfs@vger.kernel.org>; Mon, 11 May 2026 08:56:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778473948; cv=none; b=sZxlZsjILrT2aK48WFMW2f5tzMOVWXf791d1/e/hUH1MzVsoWib1MEJ5/MFeK4yoEUEus2dRq5j1daGpGo5I54ymhCOkzp2o9PXmzvPpIXz9C3GHjTQ9GVmYLCyDx2qYE1KdFLBTWIMWYd7NHVDcRnzDzw0xlhDxUBqZpL8vq3s=
+	t=1778489811; cv=none; b=Iqi+zzPs7xiaZ1w9UP+7XUKax9r+vwzSHxdIo1cco6HfgkFUipiunSXLqjlyhyxD7WCSVldrfJsjk3WUGpo4/Vr8AIb+PwQKdGOfUdiah/JKxamAqUuhquIk2qn+EeXtSzgCGR0Lu/n71OIP7SmQrtp3Hra1N/Z/hsvWfASC1Ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778473948; c=relaxed/simple;
-	bh=Nnbu9YacsEnm+nBld6qHAuvVVc/Kvel4G3imiyZ6r+I=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=uHzKd/WZ8e+AMl59WNVNA+PU6Yizp1puwsaDboT2VSGQTH+yIsC5kzRq3ZMQj7gGP3DL2mL95hjX6xW5K5Q1ZSeK75bB25+/J499O89OJ18AIb25MaNr3ss4EZVSWmY0HS/BlF3KPGKJS/FhT7/bDwbAm7bFkInRGF64IZ+NRcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-68e924f632bso6855257eaf.0
-        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2026 21:32:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778473944; x=1779078744;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Unx2HmUNdU6SVLFgPE9vQe65CD0gW0Uu+YAQ5W9WIX8=;
-        b=nifzlYEwe3WKp8vbo9cF3Nnvih/mbBATURnFJJvSQBLSHBlr5yRPbt0RREVhOcgwBg
-         oaTiGaaYbpanEKNvf3IOyRCA/5lmuYqm4xHO+62ENlMwjozCoH+9uZ+A5SrXmu1ciBuI
-         /5VgyONtsAPlZvMvUs/WH7tELQFh4NEIAWFLc8W49d+8bYoADiu4d48diTv3bvZweYbr
-         dtwYDvB8+vW7s77FczPQ0MUzjzKw5qmBqWD06Sd94+nJgw/VYmFNOJ7py0VNtAnaH85V
-         8zSEzxRAdn/lkKez33V37nlqSekWdligS5CMNLyw7ZeZvdCHxJ8Gi4OrwW4RaJ7PClGF
-         Z+yA==
-X-Forwarded-Encrypted: i=1; AFNElJ/76c9VjMTY5b2WyPMc0LH2YOXkZVXcgU6RPk3gJ/VasD6iq3+uVT9Rrr7Ok+AyvqbCkD/WcdX8zCY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxkhoHGCFqw3nnIXYQRYw5akcL9o5ZGk8kkER/G8ZxJRGlR4yDW
-	UebtrTxQIk2K+Itd1bvmQ13cFcylsoFnsNK0rh/B6e0rg4R6mvcyOQr542sEEvD5QqA2DPHrD8Z
-	C46Of4fGmeudZHcnDhsUvOVguoumxqrYWDsa3BOZLNuMDH/xnVb1+4lzHzlg=
+	s=arc-20240116; t=1778489811; c=relaxed/simple;
+	bh=izop3LthyGEenI5lWqcHlst2Lx6srKFIBx4MiTJ2IlU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tr+D7mXNSCx7YvueOi9gLPUS9ahcUWK2ZgGbe4K5ybS/UdIEsjOf8yw8bW25rp4HS2+Sv9VsNZDxP0a9QHrLDkkfdJy7ncgM4gO98gKw7s4RDGvxGoWJ0fyHitukVAHRBnr18q9jHhkoXlWusjL75GRZu9/MnXWSNA8VaSbM0iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CF7A468BEB; Mon, 11 May 2026 10:56:45 +0200 (CEST)
+Date: Mon, 11 May 2026 10:56:45 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Pankaj Raghav <pankaj.raghav@linux.dev>
+Cc: Jeff Layton <jlayton@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Andres Freund <andres@anarazel.de>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: Increase in XFS journal flushes with (direct_write;fdatasync)+
+Message-ID: <20260511085645.GA1186@lst.de>
+References: <7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r> <paibiwpjxhdmfrjq3tn7gbdvgtarm4yvtid7qu5zchhyptdlhx@w7lwvjhevsj6> <20260508081047.GA19748@lst.de> <610346dc-ba8d-471f-be38-2429c5646416@linux.dev> <20260508084346.GA19951@lst.de> <08a84b78e83a61b7dd661df32ac31d87b98ccc9c.camel@kernel.org> <334a4d92-887d-4572-b153-25906148601e@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a4a:ee03:0:b0:694:8b8a:b44f with SMTP id
- 006d021491bc7-69b25b4a347mr6868669eaf.13.1778473944438; Sun, 10 May 2026
- 21:32:24 -0700 (PDT)
-Date: Sun, 10 May 2026 21:32:24 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a015bd8.050a0220.1036b8.000f.GAE@google.com>
-Subject: [syzbot] Monthly xfs report (May 2026)
-From: syzbot <syzbot+listc026387efc9f1b608228@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <334a4d92-887d-4572-b153-25906148601e@linux.dev>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hello xfs maintainers/developers,
+On Fri, May 08, 2026 at 01:47:58PM +0200, Pankaj Raghav wrote:
+> -                       if (inode_maybe_inc_iversion(inode, !!dirty))
+> +                       /*
+> +                        * Don't force iversion increment for pure lazytime
+> +                        * updates (I_DIRTY_TIME only), let I_VERSION_QUERIED
+> +                        * dictate whether the increment is needed.
+> +                        */
+> +                       if (inode_maybe_inc_iversion(inode,
+> +                                                    dirty != I_DIRTY_TIME))
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+Looks good, thanks!
 
-During the period, 0 new issues were detected and 0 were fixed.
-In total, 14 issues are still open and 30 have already been fixed.
-
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 2947    Yes   INFO: task hung in sync_inodes_sb (5)
-                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
-<2> 131     Yes   INFO: task hung in xfs_buf_item_unpin (2)
-                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
-<3> 12      Yes   KASAN: slab-use-after-free Write in xlog_cil_committed
-                  https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
