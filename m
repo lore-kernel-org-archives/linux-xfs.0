@@ -1,61 +1,75 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-1-111.ptr.blmpb.com (va-1-111.ptr.blmpb.com [209.127.230.111])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A053290A9;
-	Mon, 11 May 2026 12:20:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA35F381B13
+	for <linux-xfs@vger.kernel.org>; Mon, 11 May 2026 12:36:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778502052; cv=none; b=Ltx2wyV4Xn+mCGoLWUfdJ3Y6cwPJkv3vEvrnY/Nbf+zLd++fqKHItWm/zTg37cZ9CJF18QfmZht5NkTq+MLrMSt4h+spq7+2mAHWD3ICdQrSjKJV9+k9tSEBMIEDnBVVMh/9UMQ8cXvUmk74+ZAl+RJxZ2G+WtUqIHAKiFbpiX8=
+	t=1778502988; cv=none; b=W6XpoNRfNxuHKnxyLPRX+monJUiOe24w3aAY2TwjYE40zD3+INxiD7pnYWswe6p8Xy0i4UX4Sb0eCt6cTRq/5JjM0+JXHOAdXtE/0pBQPLNSdKRTwddH66vkWJiLQnOt+UU0fadCFzwrPgbqlsjdHe0E9Nz3GFnjupbMJ+/w9Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778502052; c=relaxed/simple;
-	bh=TJgCyGjRP7Cd1B0AgdYU3HzVRQl07T0gvx/RLIXfjCU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A1uXy769uiNa2c9dbvsOiRfUUwnOQnpTAaudDEkvw2f4S5bwP/SpL8DmvxvofZV9wdIIqnqFAvKB/iB0L/ZnZoNIFEO/+ZUnZATZpthw/TirPRUWywjFXSzhhWawmIFgLLXXoGVZISCLbDN5ZZe4XxRaWItnWZ5zWBv4x5weojw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=tL8K+JDb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1778502988; c=relaxed/simple;
+	bh=LnYr1/Cze3pikba9e2nBisqWKsyalcxTm+QXQWL/03U=;
+	h=Message-Id:Subject:From:In-Reply-To:Date:To:Cc:Mime-Version:
+	 References:Content-Type; b=XMiYiwJhDEMhnCA/4eUjfBbUHgXuZ0lDDN4IGcl+/HN4uTaTQS8lPNgH4c8T6zs/YZHcjb46VaVAKKkcmKABa0sU4tWrXqsaVrNx0/JjgBc7EldMkvsA8bBkAXpQNmwB+JGJ+jTL7XQ/ARJ6Fdte44TQJhlSlM2eimoVpvp14Gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=VXfXcMgX; arc=none smtp.client-ip=209.127.230.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tL8K+JDb"
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="VXfXcMgX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=aTya8XkyZ2UJhqML1s9qHapx4jQeioYW8TaotHw2q4Y=; b=tL8K+JDbpUaryLgwRwxHNwM6Kn
-	T3KzcvFFYprZIOdtP+c93npC2TloZ3DS9r28BJOLaShN+sQ0R1gtd9fGTXK6WYsK0v50oDd4+4iN+
-	0JU2kyc+KLU7lfkBkzEbq9O0r3jkQsRc4TgLwgLxuyl0gZ27Ofm2CtMus36XRInQ/aV0sB1pg26qC
-	U2qWKpRqvsN51rfWOZlSkdVNH1tMaxaPOYqtTRji7QmHISyNpy1/Hq6e9WUn/xtFf+xBDvpCA1CtZ
-	C/NVuMcqtGmrn8amdh/khHgcTgZh9N7MY1SBbW6KvxgdwncokP88q+PqiHjIIQM8UTIPK23CHr08X
-	w3XetS9A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wMPcu-0000000DVgB-1u8H;
-	Mon, 11 May 2026 12:20:48 +0000
-Date: Mon, 11 May 2026 05:20:48 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: changfengnan <changfengnan@bytedance.com>
-Cc: brauner@kernel.org, djwong@kernel.org, hch@infradead.org,
-	ojaswin@linux.ibm.com, dgc@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lidiangang@bytedance.com
+ s=2212171451; d=bytedance.com; t=1778502976; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=LnYr1/Cze3pikba9e2nBisqWKsyalcxTm+QXQWL/03U=;
+ b=VXfXcMgXf5PezoFbHmqDG546UXE5DVOMq8J+wki9opzFfS5FTPW51Tcl1MbnqeigNnbzZs
+ m8QnuH4gWVJVQqTNUtnAPmp0f03NdTgTw9YEQ+Sxcu+nNSF3H0NMdfdwMLfbf0yWXsKy6u
+ AyPm6bwryxgQrVftraAXN9kD1Nny+c5Vl5cCPdx/+PHyLVmbYQZT8+dG5IZ9Euge8Z9zZT
+ l52twwf0s/TbukJzzD7hJdPl6b3lwfielKNiADiSUx0jZJ4orhweQnyU/rcMmebqc6yjFA
+ ZdqqrZwiueLye8f8ccTWEu+frIIMr24oh0HZdTc+TX6BjRVpYY+K837aGlrT9A==
+Message-Id: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.919415a3.f115.4675.9766.1280cec4aa93@bytedance.com>
 Subject: Re: [PATCH v2] iomap: add simple read path for small direct I/O
-Message-ID: <agHJoGlwx4MxTQbr@infradead.org>
-References: <20260428114730.14384-1-changfengnan@bytedance.com>
- <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.4a56b91c.8a12.4668.b740.76ff3633f48f@bytedance.com>
+From: "changfengnan" <changfengnan@bytedance.com>
+In-Reply-To: <agHJoGlwx4MxTQbr@infradead.org>
+X-Lms-Return-Path: <lba+16a01cd3e+beb1c0+vger.kernel.org+changfengnan@bytedance.com>
+Date: Mon, 11 May 2026 20:36:12 +0800
+To: "Christoph Hellwig" <hch@infradead.org>
+Cc: <brauner@kernel.org>, <djwong@kernel.org>, <hch@infradead.org>, 
+	<ojaswin@linux.ibm.com>, <dgc@kernel.org>, <linux-xfs@vger.kernel.org>, 
+	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <lidiangang@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.4a56b91c.8a12.4668.b740.76ff3633f48f@bytedance.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+References: <20260428114730.14384-1-changfengnan@bytedance.com> <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.4a56b91c.8a12.4668.b740.76ff3633f48f@bytedance.com>
+	<agHJoGlwx4MxTQbr@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 11, 2026 at 08:09:51PM +0800, changfengnan wrote:
-> Ping.
 
-Assisted-by: AI slop is at the end of my todo list sorry.
+> From: "Christoph Hellwig"<hch@infradead.org>
+> Date:=C2=A0 Mon, May 11, 2026, 20:21
+> Subject:=C2=A0 Re: [PATCH v2] iomap: add simple read path for small direc=
+t I/O
+> To: "changfengnan"<changfengnan@bytedance.com>
+> Cc: <brauner@kernel.org>, <djwong@kernel.org>, <hch@infradead.org>, <ojas=
+win@linux.ibm.com>, <dgc@kernel.org>, <linux-xfs@vger.kernel.org>, <linux-f=
+sdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, <linux-kernel@vger.k=
+ernel.org>, <lidiangang@bytedance.com>
+> On Mon, May 11, 2026 at 08:09:51PM +0800, changfengnan wrote:
+> > Ping.
+>=C2=A0
+> Assisted-by: AI slop is at the end of my todo list sorry.
+Get.
+>=C2=A0
+> If you take all responsibily for it and understand what you are doing,
+> please drop it. =C2=A0If not it'll need to wait until everyone else is
+> served.
+I fully understand what I=E2=80=99m editing, and I=E2=80=99ll take full res=
+ponsibility for it.
+I used AI to help me review and test this, and I=E2=80=99ll remove it in la=
+ter version.
 
-If you take all responsibily for it and understand what you are doing,
-please drop it.  If not it'll need to wait until everyone else is
-served.
+>=C2=A0
