@@ -1,105 +1,82 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com [209.85.161.69])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F0D1A682C;
-	Sun, 10 May 2026 06:49:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C8B17B418
+	for <linux-xfs@vger.kernel.org>; Mon, 11 May 2026 04:32:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778395756; cv=none; b=CWZ7KOMB80I8Csk7YnAxq+BYvu/pO3KGSpN0lQg1qLcyACu1wV68Ey+r+cvVdwmh1iJwkB7PrPzyiBJY5ddc3whWj0oFLJ3fLu+FYhm6PFQKRzrWWm5IniivrB+z8e5X9Qqjw1i1F1+bvgTPinakqNzvtZZgfln8rdeCqpMZMb8=
+	t=1778473948; cv=none; b=sZxlZsjILrT2aK48WFMW2f5tzMOVWXf791d1/e/hUH1MzVsoWib1MEJ5/MFeK4yoEUEus2dRq5j1daGpGo5I54ymhCOkzp2o9PXmzvPpIXz9C3GHjTQ9GVmYLCyDx2qYE1KdFLBTWIMWYd7NHVDcRnzDzw0xlhDxUBqZpL8vq3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778395756; c=relaxed/simple;
-	bh=EzWGUfdYQiOout0YGYrTVDE/d950ERQgy6ztJqCnLAU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=udp9G83oA8YolI1XzSsAAIA8LvBi6ONcjl8uXkK7m24DZ7og/19Xmg5oKaqHWb6f/+qBQQSeGekoqewOgNGPLc59ucJ7zoMONkHXONdiBhaTdzXDMplip4h4vMJ+bP0+7bJ+DRoYoU4HKvoTmBauZhSQLx+F4luoNgpHLvFQ0Mg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=V6ssRhYl; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="V6ssRhYl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=M6
-	OZnrQ9NTeHYNCkVb0G8z8BWsRuRZ5gWA3G+JUn7e8=; b=V6ssRhYlEaEe3sy+zi
-	8QYJ5qLm/MHBATW+V8hI7DsjTWLV4mAFZhAoGW39pTCjwFXo/CRs1SE/nAX1OHhM
-	h2OGIOAsxLZ4ZyzosfFn+XD1lt8G05UxW+IvhVC1RHbYasfCFAMjAG8FuV5kZp2N
-	cexFV8nkjktvvpGPeMJ+NxGVU=
-Received: from czl-ubuntu-pc.. (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wC3s+5IKgBqZG8YAg--.60749S2;
-	Sun, 10 May 2026 14:48:41 +0800 (CST)
-From: Chi Zhiling <chizhiling@163.com>
-To: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: brauner@kernel.org,
-	djwong@kernel.org,
-	hch@lst.de,
-	sj1557.seo@samsung.com,
-	yuezhang.mo@sony.com,
-	Chi Zhiling <chizhiling@kylinos.cn>,
-	Namjae Jeon <linkinjeon@kernel.org>
-Subject: [PATCH] iomap: add dirty page control to iomap_zero_iter
-Date: Sun, 10 May 2026 14:47:37 +0800
-Message-ID: <20260510064737.437597-1-chizhiling@163.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1778473948; c=relaxed/simple;
+	bh=Nnbu9YacsEnm+nBld6qHAuvVVc/Kvel4G3imiyZ6r+I=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=uHzKd/WZ8e+AMl59WNVNA+PU6Yizp1puwsaDboT2VSGQTH+yIsC5kzRq3ZMQj7gGP3DL2mL95hjX6xW5K5Q1ZSeK75bB25+/J499O89OJ18AIb25MaNr3ss4EZVSWmY0HS/BlF3KPGKJS/FhT7/bDwbAm7bFkInRGF64IZ+NRcg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-68e924f632bso6855257eaf.0
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2026 21:32:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778473944; x=1779078744;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Unx2HmUNdU6SVLFgPE9vQe65CD0gW0Uu+YAQ5W9WIX8=;
+        b=nifzlYEwe3WKp8vbo9cF3Nnvih/mbBATURnFJJvSQBLSHBlr5yRPbt0RREVhOcgwBg
+         oaTiGaaYbpanEKNvf3IOyRCA/5lmuYqm4xHO+62ENlMwjozCoH+9uZ+A5SrXmu1ciBuI
+         /5VgyONtsAPlZvMvUs/WH7tELQFh4NEIAWFLc8W49d+8bYoADiu4d48diTv3bvZweYbr
+         dtwYDvB8+vW7s77FczPQ0MUzjzKw5qmBqWD06Sd94+nJgw/VYmFNOJ7py0VNtAnaH85V
+         8zSEzxRAdn/lkKez33V37nlqSekWdligS5CMNLyw7ZeZvdCHxJ8Gi4OrwW4RaJ7PClGF
+         Z+yA==
+X-Forwarded-Encrypted: i=1; AFNElJ/76c9VjMTY5b2WyPMc0LH2YOXkZVXcgU6RPk3gJ/VasD6iq3+uVT9Rrr7Ok+AyvqbCkD/WcdX8zCY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxkhoHGCFqw3nnIXYQRYw5akcL9o5ZGk8kkER/G8ZxJRGlR4yDW
+	UebtrTxQIk2K+Itd1bvmQ13cFcylsoFnsNK0rh/B6e0rg4R6mvcyOQr542sEEvD5QqA2DPHrD8Z
+	C46Of4fGmeudZHcnDhsUvOVguoumxqrYWDsa3BOZLNuMDH/xnVb1+4lzHzlg=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wC3s+5IKgBqZG8YAg--.60749S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tFy3tFyxAr4xXFWUuF1xZrb_yoW8AF45pF
-	Z5KF4vkr4xX3yxZFs7CF95Zryjvan3Gr47G3yYg3y5A398ZF1jyr1qgFW293Wxtryjkr1Y
-	vr4q934xtr1UArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jjQ6JUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbC3Ao31GoAKkplfgAA3k
+X-Received: by 2002:a4a:ee03:0:b0:694:8b8a:b44f with SMTP id
+ 006d021491bc7-69b25b4a347mr6868669eaf.13.1778473944438; Sun, 10 May 2026
+ 21:32:24 -0700 (PDT)
+Date: Sun, 10 May 2026 21:32:24 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a015bd8.050a0220.1036b8.000f.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (May 2026)
+From: syzbot <syzbot+listc026387efc9f1b608228@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Chi Zhiling <chizhiling@kylinos.cn>
+Hello xfs maintainers/developers,
 
-This patch prepares the iomap framework for exFAT's upcoming migration to
-iomap. During testing of the exFAT iomap branch with xfstests generic/299
-on a VM with 8GB RAM and a 40GB disk, system unresponsiveness was observed.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-iomap_zero_iter() lacked dirty page throttling, which could cause memory
-pressure when exFAT's valid_size mechanism triggers large-scale zeroing
-operations during writes beyond valid_size.
+During the period, 0 new issues were detected and 0 were fixed.
+In total, 14 issues are still open and 30 have already been fixed.
 
-Align iomap_zero_iter() with iomap_write_iter() by adding
-balance_dirty_pages_ratelimited() to throttle dirty page generation during
-large zeroing operations. Also add cond_resched() to provide voluntary
-rescheduling points during long-running loops.
+Some of the still happening issues:
 
-Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
-Cc: Namjae Jeon <linkinjeon@kernel.org>
+Ref Crashes Repro Title
+<1> 2947    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<2> 131     Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<3> 12      Yes   KASAN: slab-use-after-free Write in xlog_cil_committed
+                  https://syzkaller.appspot.com/bug?extid=4e6ee73c0ae4b6e8753f
+
 ---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-exFAT iomap migration:
-https://lore.kernel.org/linux-fsdevel/20260507124238.7313-1-linkinjeon@kernel.org/
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
- fs/iomap/buffered-io.c | 4 ++++
- 1 file changed, 4 insertions(+)
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d7b648421a70..f6955786c8ad 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1543,6 +1543,8 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 		size_t offset;
- 		bool ret;
- 
-+		balance_dirty_pages_ratelimited(iter->inode->i_mapping);
-+
- 		bytes = min_t(u64, SIZE_MAX, bytes);
- 		status = iomap_write_begin(iter, write_ops, &folio, &offset,
- 				&bytes);
-@@ -1571,6 +1573,8 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
- 		if (WARN_ON_ONCE(!ret))
- 			return -EIO;
- 
-+		cond_resched();
-+
- 		status = iomap_iter_advance(iter, bytes);
- 		if (status)
- 			break;
--- 
-2.43.0
-
+You may send multiple commands in a single email message.
