@@ -1,177 +1,785 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 567BB370D62;
-	Mon, 11 May 2026 11:24:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAEEF37B01C
+	for <linux-xfs@vger.kernel.org>; Mon, 11 May 2026 12:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778498666; cv=none; b=GcXEThEW3cY2qZlYlOKrGm6DUyhmGVZQyE2MeZ09MS9O3YV3njnnLeg3cdlEL3yrRteXX8UvyE+qzbvTRdiE8lmI9dMkUSrqdSrsmu4B6qes8XIMpWr73ya1SYq8DEnFs5sxoqlsiH+o9A1X3picuLUSGwPi2HonHm1xUGZ/GE0=
+	t=1778501410; cv=none; b=f48ymQ10gNSo/EAmfOUAAaO3Bjol2PpOmPvjfERG2KF6vrf1BgCzPur/18P5E2dfalLNqSva0L64TVEYdClsL21zjjHlYGPaHXyyitTBT2/dUQitfQBZh5wqns+ANJE7vwQVILbG6hy2CEqXMyjQGfdBV9Bzc9JMvlArMUIHwSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778498666; c=relaxed/simple;
-	bh=X9Yzs6MXnr7GwGlSqrI6nO/GdxD0gfBJ9fmITWkhi3o=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=W0GkYjWXIpGE3THSaI2WiodNtBTVzob2v8IJaDCt4ah5sTjWWERi+NrQdzrWIrbtauuRAd+IGrwrQg+cfFIqANUZTpttd6AgVAOxmcYqu557I1wn9PqlLZ/ZQoHzKTRFo/RjIiz85JcecluBXGG383Meas21Ko4keByO1kLsRwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ea3IY8rx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778501410; c=relaxed/simple;
+	bh=ZBJ4h5nCWBanrV2m09PbsOLPmlSGZqOJ0JeVjN3uV+4=;
+	h=Date:Mime-Version:Content-Type:Message-Id:To:Subject:From:
+	 References:In-Reply-To; b=GHzbYP0K55baDXJ1pLdOHOn7xIi+qunZzg9+HP1z/2gjzTFcP5OvE/4mJP73kiTp0mxvBWOGFPABf9Z9isUeU8GD6zPMAeBLpjRUhU0Lq6ht9wPJGvMVnSJ/3alurE9cgWKCpUPMz9dYJ2urWJvvlc0Ret1XB2ynEV2kLQmuXOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=RZ3JW151; arc=none smtp.client-ip=209.127.230.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ea3IY8rx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98665C2BCFD;
-	Mon, 11 May 2026 11:24:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778498665;
-	bh=X9Yzs6MXnr7GwGlSqrI6nO/GdxD0gfBJ9fmITWkhi3o=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=Ea3IY8rxW2ASicFziOnazPKPE32surKlTINbqUaJ/WQ3e/Mu1TAhrX8Oa9E1tjkyZ
-	 e+1X9HKRc4LozVhVWOsYLVpRt3+/vYclXo5akOok8nybXgJP/SPEGbol+b1tD7Wp/N
-	 iZ+TYMqm8VHsfdl/44twC95H+Q5/f2IQTyn9GUY2w2xcORg6hMvkkuTiWKMzkBwPY+
-	 ZU48lTAwkcK4xUJ04HWUsHDNGcbOnMdZ/PAodT01bkQDZadmvRXoaWHNzmaOTkDvPo
-	 0Xqgx29BgT2SCDDhhX2rqQBDF/m+6rMt7qX21yQ9GFNA6RfH/FQpoVIer01eU14+f8
-	 fMRHtVKp6EWSQ==
-Message-ID: <46670e8eb6306f7d528841f85a46a44e5790459a.camel@kernel.org>
-Subject: Re: [PATCH] fs: fix forced iversion increment on lazytime timestamp
- updates
-From: Jeff Layton <jlayton@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>, Alexander Viro
-	 <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Andres Freund <andres@anarazel.de>, 
- Carlos Maiolino	 <cem@kernel.org>, linux-xfs@vger.kernel.org, hch@lst.de,
- open list	 <linux-kernel@vger.kernel.org>, pankaj.raghav@linux.dev, Jan
- Kara <jack@suse.cz>
-Date: Mon, 11 May 2026 07:24:21 -0400
-In-Reply-To: <20260511111918.1793689-1-p.raghav@samsung.com>
-References: <20260511111918.1793689-1-p.raghav@samsung.com>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="RZ3JW151"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1778501396; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=ZBJ4h5nCWBanrV2m09PbsOLPmlSGZqOJ0JeVjN3uV+4=;
+ b=RZ3JW151cILG3IbduLJ6woi8F2hqiFvJD6F2usKNntQ9kjY4NcahoUBGPU3kj288DVeFMT
+ VS2l/+Q4/x8+lNyJXAaqDWg5lqNdXu2WLb/Dqpe5/nNl0VhvY4xO2nKiqagL+/Mm3+JA5k
+ PUYh7AJ1pqqVxbktnxiTu1HoRjo0r/0Gwfdfka9d47rG/OCpRD99UXJap12PTskhu448BX
+ FR7qh5hKbdcdCePp9TvBJsgf2pY0SFQBkqJJimsZ6P0G6+0hDTWKSw6mxoJn7a0Z+qmNPF
+ dHcneS3fcPRUFGi1D2YFeKm/T2l1gljCPO8KhTHAi18pJUMM8aXfZ0rp3U1Gvg==
+Date: Mon, 11 May 2026 20:09:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+16a01c712+52d5db+vger.kernel.org+changfengnan@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.4a56b91c.8a12.4668.b740.76ff3633f48f@bytedance.com>
+To: <brauner@kernel.org>, <djwong@kernel.org>, <hch@infradead.org>, 
+	<ojaswin@linux.ibm.com>, <dgc@kernel.org>, <linux-xfs@vger.kernel.org>, 
+	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <lidiangang@bytedance.com>
+Subject: Re: [PATCH v2] iomap: add simple read path for small direct I/O
+From: "changfengnan" <changfengnan@bytedance.com>
+References: <20260428114730.14384-1-changfengnan@bytedance.com>
+In-Reply-To: <20260428114730.14384-1-changfengnan@bytedance.com>
 
-On Mon, 2026-05-11 at 13:19 +0200, Pankaj Raghav wrote:
-> When updating timestamps with lazytime enabled, if only I_DIRTY_TIME is
-> set (pure lazytime update), inode_maybe_inc_iversion() should not be
-> forced to increment i_version. The force parameter should only be true
-> when actual data or metadata changes require an iversion bump.
->=20
-> The current code uses "!!dirty" which evaluates to true whenever dirty
-> has any bits set, including the I_DIRTY_TIME bit alone. This forces an
-> iversion increment on every lazytime timestamp update, which then sets
-> I_DIRTY_SYNC, triggering expensive log flushes on subsequent fdatasync
-> calls. Andres reported this issue when he noticed a perf regression[1].
->=20
-> Fix this by using "dirty !=3D I_DIRTY_TIME" as the force parameter. This
-> passes false for pure lazytime updates (allowing the I_VERSION_QUERIED
-> optimization to work), while still forcing the increment when dirty
-> contains other flags indicating real changes that require iversion
-> updates.
->=20
-> [1] https://lore.kernel.org/linux-xfs/7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv=
-74wx56ocdothkc6@ekfiadtkfn2r/
->=20
-> Fixes: 85c871a02b03 ("fs: add support for non-blocking timestamp updates"=
-)
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Ping.
+
+> From: "Fengnan Chang"<changfengnan@bytedance.com>
+> Date:=C2=A0 Tue, Apr 28, 2026, 19:48
+> Subject:=C2=A0 [PATCH v2] iomap: add simple read path for small direct I/=
+O
+> To: <brauner@kernel.org>, <djwong@kernel.org>, <hch@infradead.org>, <ojas=
+win@linux.ibm.com>, <dgc@kernel.org>, <linux-xfs@vger.kernel.org>, <linux-f=
+sdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, <linux-kernel@vger.k=
+ernel.org>, <lidiangang@bytedance.com>
+> Cc: "Fengnan Chang"<changfengnan@bytedance.com>
+> When running 4K random read workloads on high-performance Gen5 NVMe
+> SSDs, the software overhead in the iomap direct I/O path
+> (__iomap_dio_rw) becomes a significant bottleneck.
+>=C2=A0
+> Using io_uring with poll mode for a 4K randread test on a raw block
+> device:
+> taskset -c 30 ./t/io_uring -p1 -d512 -b4096 -s32 -c32 -F1 -B1 -R1 -X1
+> -n1 -P1 /dev/nvme10n1
+> Result: ~3.2M IOPS
+>=C2=A0
+> Running the exact same workload on ext4 and XFS:
+> taskset -c 30 ./t/io_uring -p1 -d512 -b4096 -s32 -c32 -F1 -B1 -R1 -X1
+> -n1 -P1 /mnt/testfile
+> Result: ~1.84M IOPS
+>=C2=A0
+> Profiling the ext4 workload reveals that a significant portion of CPU
+> time is spent on memory allocation and the iomap state machine
+> iteration:
+> =C2=A0 5.33% =C2=A0[kernel] =C2=A0[k] __iomap_dio_rw
+> =C2=A0 3.26% =C2=A0[kernel] =C2=A0[k] iomap_iter
+> =C2=A0 2.37% =C2=A0[kernel] =C2=A0[k] iomap_dio_bio_iter
+> =C2=A0 2.35% =C2=A0[kernel] =C2=A0[k] kfree
+> =C2=A0 1.33% =C2=A0[kernel] =C2=A0[k] iomap_dio_complete
+>=C2=A0
+> Introduce simple reads to reduce the overhead of iomap, simple read path
+> is triggered when the request satisfies:
+> - I/O size is <=3D inode blocksize (fits in a single block, no splits).
+> - No custom `iomap_dio_ops` (dops) registered by the filesystem.
+>=C2=A0
+> After this optimization, the heavy generic functions disappear from the
+> profile, replaced by a single streamlined execution path:
+> =C2=A0 4.83% =C2=A0[kernel] =C2=A0[k] iomap_dio_simple_read
+>=C2=A0
+> With this patch, 4K random read IOPS on ext4 increases from 1.84M to
+> 2.19M in the original single-core io_uring poll-mode workload.
+>=C2=A0
+> Below are the test results using fio:
+>=C2=A0
+> =C2=A0 fs =C2=A0 =C2=A0workload =C2=A0 =C2=A0 =C2=A0 qd =C2=A0 =C2=A0simp=
+le=3D0 =C2=A0 =C2=A0 =C2=A0simple=3D1 =C2=A0 =C2=A0 =C2=A0gain
+> =C2=A0 ext4 =C2=A0libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 18,7=
+38 =C2=A0 =C2=A0 =C2=A0 =C2=A018,761 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.12%
+> =C2=A0 ext4 =C2=A0libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 128 =C2=A0 455,383 =
+=C2=A0 =C2=A0 =C2=A0 471,473 =C2=A0 =C2=A0 =C2=A0 +3.53%
+> =C2=A0 ext4 =C2=A0libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 256 =C2=A0 453,273 =
+=C2=A0 =C2=A0 =C2=A0 468,555 =C2=A0 =C2=A0 =C2=A0 +3.37%
+> =C2=A0 ext4 =C2=A0libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 512 =C2=A0 447,320 =
+=C2=A0 =C2=A0 =C2=A0 469,036 =C2=A0 =C2=A0 =C2=A0 +4.85%
+> =C2=A0 ext4 =C2=A0io_uring =C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 18,798 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A018,824 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.14%
+> =C2=A0 ext4 =C2=A0io_uring =C2=A0 =C2=A0 =C2=A0 128 =C2=A0 503,834 =C2=A0=
+ =C2=A0 =C2=A0 528,353 =C2=A0 =C2=A0 =C2=A0 +4.87%
+> =C2=A0 ext4 =C2=A0io_uring =C2=A0 =C2=A0 =C2=A0 256 =C2=A0 503,635 =C2=A0=
+ =C2=A0 =C2=A0 527,617 =C2=A0 =C2=A0 =C2=A0 +4.76%
+> =C2=A0 ext4 =C2=A0io_uring =C2=A0 =C2=A0 =C2=A0 512 =C2=A0 501,802 =C2=A0=
+ =C2=A0 =C2=A0 527,882 =C2=A0 =C2=A0 =C2=A0 +5.20%
+> =C2=A0 ext4 =C2=A0io_uring_poll =C2=A01 =C2=A0 =C2=A0 19,246 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A019,270 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.12%
+> =C2=A0 ext4 =C2=A0io_uring_poll =C2=A0128 =C2=A0 1,463,343 =C2=A0 =C2=A0 =
+1,565,019 =C2=A0 =C2=A0 +6.95%
+> =C2=A0 ext4 =C2=A0io_uring_poll =C2=A0256 =C2=A0 1,651,112 =C2=A0 =C2=A0 =
+1,888,182 =C2=A0 =C2=A0 +14.36%
+> =C2=A0 ext4 =C2=A0io_uring_poll =C2=A0512 =C2=A0 1,632,641 =C2=A0 =C2=A0 =
+1,893,259 =C2=A0 =C2=A0 +15.96%
+> =C2=A0 xfs =C2=A0 libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 18,7=
+15 =C2=A0 =C2=A0 =C2=A0 =C2=A018,734 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.10%
+> =C2=A0 xfs =C2=A0 libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 128 =C2=A0 452,974 =
+=C2=A0 =C2=A0 =C2=A0 473,459 =C2=A0 =C2=A0 =C2=A0 +4.52%
+> =C2=A0 xfs =C2=A0 libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 256 =C2=A0 454,435 =
+=C2=A0 =C2=A0 =C2=A0 470,855 =C2=A0 =C2=A0 =C2=A0 +3.61%
+> =C2=A0 xfs =C2=A0 libaio =C2=A0 =C2=A0 =C2=A0 =C2=A0 512 =C2=A0 456,796 =
+=C2=A0 =C2=A0 =C2=A0 473,047 =C2=A0 =C2=A0 =C2=A0 +3.56%
+> =C2=A0 xfs =C2=A0 io_uring =C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 18,755 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A018,795 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.21%
+> =C2=A0 xfs =C2=A0 io_uring =C2=A0 =C2=A0 =C2=A0 128 =C2=A0 509,459 =C2=A0=
+ =C2=A0 =C2=A0 534,819 =C2=A0 =C2=A0 =C2=A0 +4.98%
+> =C2=A0 xfs =C2=A0 io_uring =C2=A0 =C2=A0 =C2=A0 256 =C2=A0 509,853 =C2=A0=
+ =C2=A0 =C2=A0 536,051 =C2=A0 =C2=A0 =C2=A0 +5.14%
+> =C2=A0 xfs =C2=A0 io_uring =C2=A0 =C2=A0 =C2=A0 512 =C2=A0 507,926 =C2=A0=
+ =C2=A0 =C2=A0 533,558 =C2=A0 =C2=A0 =C2=A0 +5.05%
+> =C2=A0 xfs =C2=A0 io_uring_poll =C2=A01 =C2=A0 =C2=A0 19,230 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A019,269 =C2=A0 =C2=A0 =C2=A0 =C2=A0+0.20%
+> =C2=A0 xfs =C2=A0 io_uring_poll =C2=A0128 =C2=A0 1,467,398 =C2=A0 =C2=A0 =
+1,567,840 =C2=A0 =C2=A0 +6.84%
+> =C2=A0 xfs =C2=A0 io_uring_poll =C2=A0256 =C2=A0 1,636,852 =C2=A0 =C2=A0 =
+1,878,917 =C2=A0 =C2=A0 +14.79%
+> =C2=A0 xfs =C2=A0 io_uring_poll =C2=A0512 =C2=A0 1,639,495 =C2=A0 =C2=A0 =
+1,874,813 =C2=A0 =C2=A0 +14.35%
+>=C2=A0
+> Assisted-by: Gemini:gemini-3.1-pro-preview
+> Assisted-by: Codex:gpt-5-5
+> Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
 > ---
->  fs/inode.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
->=20
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 6a3cbc7dcd28..62c579a0cf7d 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -2124,7 +2124,13 @@ static int inode_update_cmtime(struct inode *inode=
-, unsigned int flags)
->  			    inode_iversion_need_inc(inode))
->  				return -EAGAIN;
->  		} else {
-> -			if (inode_maybe_inc_iversion(inode, !!dirty))
-> +			/*
-> +			 * Don't force iversion increment for pure lazytime
-> +			 * updates (I_DIRTY_TIME only), let I_VERSION_QUERIED
-> +			 * dictate whether the increment is needed.
-> +			 */
-> +			if (inode_maybe_inc_iversion(inode,
-> +						     dirty !=3D I_DIRTY_TIME))
->  				dirty |=3D I_DIRTY_SYNC;
->  		}
->  	}
->=20
-> base-commit: 4cd074ae20bbcc293bbbce9163abe99d68ae6ae0
-
-Reviewed-by: Jeff Layton <jlayton@kernel.org>
+> =C2=A0fs/iomap/direct-io.c | 382 ++++++++++++++++++++++++++++++++++++++++=
++--
+> =C2=A01 file changed, 371 insertions(+), 11 deletions(-)
+>=C2=A0
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index e911daedff65a..807d8c628a464 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -9,6 +9,9 @@
+> =C2=A0#include <linux/iomap.h>
+> =C2=A0#include <linux/task_io_accounting_ops.h>
+> =C2=A0#include <linux/fserror.h>
+> +#include <linux/kobject.h>
+> +#include <linux/sysfs.h>
+> +#include <linux/init.h>
+> =C2=A0#include "internal.h"
+> =C2=A0#include "trace.h"
+> =C2=A0
+> @@ -236,20 +239,26 @@ static void iomap_dio_done(struct iomap_dio *dio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_complete_work(&dio->aio.work)=
+;
+> =C2=A0}
+> =C2=A0
+> -static void __iomap_dio_bio_end_io(struct bio *bio, bool inline_completi=
+on)
+> +static inline void iomap_dio_bio_release_pages(struct bio *bio,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned int dio=
+_flags, bool error)
+> =C2=A0{
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio *dio =3D bio->bi_private;
+> -
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio->flags & IOMAP_DIO_BOUNCE) {
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_iov_iter_unb=
+ounce(bio, !!dio->error,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dio->flags & IOMAP_DIO_USER_BACKED=
+);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & IOMAP_DIO_BOUNCE) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_iov_iter_unb=
+ounce(bio, error,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dio_flags & IOMAP_DIO_USER_BACKED)=
+;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_put(bio=
+);
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0} else if (dio->flags & IOMAP_DIO_USER_BACKE=
+D) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0} else if (dio_flags & IOMAP_DIO_USER_BACKED=
+) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_check_p=
+ages_dirty(bio);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_release=
+_pages(bio, false);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_put(bio=
+);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +}
+> +
+> +static void __iomap_dio_bio_end_io(struct bio *bio, bool inline_completi=
+on)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio *dio =3D bio->bi_private;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_bio_release_pages(bio, dio->flags,=
+ !!dio->error);
+> =C2=A0
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* Do not touch bio below, we just gave=
+ up our reference. */
+> =C2=A0
+> @@ -387,6 +396,14 @@ static ssize_t iomap_dio_bio_iter_one(struct iomap_i=
+ter *iter,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> =C2=A0}
+> =C2=A0
+> +static inline unsigned int iomap_dio_alignment(struct inode *inode,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct block_dev=
+ice *bdev, unsigned int dio_flags)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & IOMAP_DIO_FSBLOCK_ALIGNED)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return i_blocksi=
+ze(inode);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return bdev_logical_block_size(bdev);
+> +}
+> +
+> =C2=A0static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap=
+_dio *dio)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0const struct iomap *iomap =3D &iter->io=
+map;
+> @@ -405,10 +422,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *ite=
+r, struct iomap_dio *dio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * File systems that write out of place=
+ and always allocate new blocks
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * need each bio to be block aligned as=
+ that's the unit of allocation.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED)
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0alignment =3D fs=
+_block_size;
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0else
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0alignment =3D bd=
+ev_logical_block_size(iomap->bdev);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0alignment =3D iomap_dio_alignment(inode, iom=
+ap->bdev, dio->flags);
+> =C2=A0
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((pos | length) & (alignment - 1))
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return -EIN=
+VAL;
+> @@ -880,12 +894,350 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter=
+ *iter,
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL_GPL(__iomap_dio_rw);
+> =C2=A0
+> +struct iomap_dio_simple_read {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct kiocb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0*iocb;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0size_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0size;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0dio_flags;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0state;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0union {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct task_stru=
+ct =C2=A0 =C2=A0 =C2=A0 =C2=A0*waiter;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct work_stru=
+ct =C2=A0 =C2=A0 =C2=A0 =C2=A0work;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Align @bio to a cacheline boundary so tha=
+t, combined with the
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * front_pad passed to bioset_init(), the bi=
+o sits at the start of
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * a cacheline in memory returned by the (HW=
+CACHE-aligned) bio
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * slab. =C2=A0This keeps the hot fields blo=
+ck layer touches on submit
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * and completion (bi_iter, bi_status, ...) =
+within a single line.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio =C2=A0 =C2=A0 =C2=A0 =C2=A0bio __=
+__cacheline_aligned_in_smp;
+> +};
+> +
+> +static struct bio_set iomap_dio_simple_read_pool;
+> +
+> +/*
+> + * In the async simple read path, we need to prevent bio_endio() from
+> + * triggering iocb->ki_complete() before the submitter has returned
+> + * -EIOCBQUEUED. Otherwise, the caller might free the iocb concurrently.
+> + *
+> + * We use a three-state rendezvous to synchronize the submitter and end_=
+io:
+> + *
+> + * IOMAP_DIO_SIMPLE_SUBMITTING: Initial state set before submitting the =
+bio.
+> + *
+> + * IOMAP_DIO_SIMPLE_QUEUED: The submitter has safely queued the IO and w=
+ill
+> + * return -EIOCBQUEUED. If end_io sees this state, it takes over and cal=
+ls
+> + * ki_complete().
+> + *
+> + * IOMAP_DIO_SIMPLE_DONE: end_io fired before the submitter finished the
+> + * submit path. end_io sets this state and does nothing else. The submit=
+ter
+> + * will see this state and handle the completion synchronously (bypassin=
+g
+> + * ki_complete() and returning the actual result).
+> + */
+> +enum {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0IOMAP_DIO_SIMPLE_SUBMITTING =3D 0,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0IOMAP_DIO_SIMPLE_QUEUED,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0IOMAP_DIO_SIMPLE_DONE,
+> +};
+> +
+> +static ssize_t iomap_dio_simple_read_finish(struct kiocb *iocb,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bio,=
+ ssize_t ret)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct inode *inode =3D file_inode(iocb->ki_=
+filp);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio_simple_read *sr =3D bio->bi=
+_private;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (likely(!ret)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D sr->size=
+;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iocb->ki_pos +=
+=3D ret;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fserror_report_i=
+o(inode, FSERR_DIRECTIO_READ, iocb->ki_pos,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->size, ret, GFP_NOFS);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_bio_release_pages(bio, sr->dio_fla=
+gs, ret < 0);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> +}
+> +
+> +static ssize_t iomap_dio_simple_read_complete(struct kiocb *iocb,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bio)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct inode *inode =3D file_inode(iocb->ki_=
+filp);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ssize_t ret;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0WRITE_ONCE(iocb->private, NULL);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D iomap_dio_simple_read_finish(iocb, b=
+io,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0blk_status_to_errno(bio->bi_status));
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0inode_dio_end(inode);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_iomap_dio_complete(iocb, ret < 0 ? ret=
+ : 0, ret > 0 ? ret : 0);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> +}
+> +
+> +static void iomap_dio_simple_read_complete_work(struct work_struct *work=
+)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio_simple_read *sr =3D
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0container_of(wor=
+k, struct iomap_dio_simple_read, work);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct kiocb *iocb =3D sr->iocb;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ssize_t ret;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D iomap_dio_simple_read_complete(iocb,=
+ &sr->bio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0iocb->ki_complete(iocb, ret);
+> +}
+> +
+> +static void iomap_dio_simple_read_async_done(struct iomap_dio_simple_rea=
+d *sr)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct kiocb *iocb =3D sr->iocb;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(sr->bio.bi_status)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct inode *in=
+ode =3D file_inode(iocb->ki_filp);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0INIT_WORK(&sr->w=
+ork, iomap_dio_simple_read_complete_work);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0queue_work(inode=
+->i_sb->s_dio_done_wq, &sr->work);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_simple_read_complete_work(&sr->wor=
+k);
+> +}
+> +
+> +static void iomap_dio_simple_read_end_io(struct bio *bio)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio_simple_read *sr =3D bio->bi=
+_private;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sr->waiter) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct task_stru=
+ct *waiter =3D sr->waiter;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0WRITE_ONCE(sr->w=
+aiter, NULL);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_wake_io_task=
+(waiter);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (likely(atomic_read(&sr->state) =3D=3D IO=
+MAP_DIO_SIMPLE_QUEUED) ||
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_cmpxchg(&sr->state, IOM=
+AP_DIO_SIMPLE_SUBMITTING,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 IOMAP_DIO_SIMPLE_DONE) =3D=3D IOMAP_DIO_SIMPLE_QUEUED)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_simple=
+_read_async_done(sr);
+> +}
+> +
+> +static inline bool iomap_dio_simple_read_supported(struct kiocb *iocb,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iov_iter =
+*iter, unsigned int dio_flags)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct inode *inode =3D file_inode(iocb->ki_=
+filp);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0size_t count =3D iov_iter_count(iter);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (iov_iter_rw(iter) !=3D READ)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return false;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Simple read is an optimization for small =
+IO. Filter out large IO
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * early as it's the most common case to fai=
+l for typical direct IO
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * workloads.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (count > inode->i_sb->s_blocksize)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return false;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & (IOMAP_DIO_FORCE_WAIT | IOMA=
+P_DIO_PARTIAL))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return false;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (iocb->ki_pos + count > i_size_read(inode=
+))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return false;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return true;
+> +}
+> +
+> +static ssize_t iomap_dio_simple_read(struct kiocb *iocb,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iov_iter =
+*iter, const struct iomap_ops *ops,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0void *private, u=
+nsigned int dio_flags)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct inode *inode =3D file_inode(iocb->ki_=
+filp);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0size_t count =3D iov_iter_count(iter);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0int nr_pages;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio_simple_read *sr;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned int alignment;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_iter iomi =3D {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.inode =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D inode,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.pos =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D iocb->ki_pos,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.len =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D count,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.flags =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D IOMAP_DIRECT,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.private =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0=3D private,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bio;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bool wait_for_completion =3D is_sync_kiocb(i=
+ocb);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ssize_t ret;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & IOMAP_DIO_BOUNCE)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0nr_pages =3D bio=
+_iov_bounce_nr_vecs(iter, REQ_OP_READ);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0else
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0nr_pages =3D bio=
+_iov_vecs_to_alloc(iter, BIO_MAX_VECS);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (iocb->ki_flags & IOCB_NOWAIT)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomi.flags |=3D =
+IOMAP_NOWAIT;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D kiocb_write_and_wait(iocb, count);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0inode_dio_begin(inode);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ops->iomap_begin(inode, iomi.pos, co=
+unt, iomi.flags,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 &iomi.iomap, &iomi.srcmap);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0inode_dio_end(in=
+ode);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (iomi.iomap.type !=3D IOMAP_MAPPED ||
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomi.iomap.offset > iomi.pos |=
+|
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomi.iomap.offset + iomi.iomap=
+.length < iomi.pos + count) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D -ENOTBLK=
+;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_iomap_e=
+nd;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0alignment =3D iomap_dio_alignment(inode, iom=
+i.iomap.bdev, dio_flags);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((iomi.pos | count) & (alignment - 1)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D -EINVAL;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_iomap_e=
+nd;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(!inode->i_sb->s_dio_done_wq)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D sb_init_=
+dio_done_wq(inode->i_sb);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret < 0)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0goto out_iomap_end;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_iomap_dio_rw_begin(iocb, iter, dio_fla=
+gs, 0);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (user_backed_iter(iter))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dio_flags |=3D I=
+OMAP_DIO_USER_BACKED;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio =3D bio_alloc_bioset(iomi.iomap.bdev, nr=
+_pages,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 REQ_OP_READ | REQ_SYNC | REQ_IDLE,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 GFP_KERNEL, &iomap_dio_simple_read_pool)=
+;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0sr =3D container_of(bio, struct iomap_dio_si=
+mple_read, bio);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0fscrypt_set_bio_crypt_ctx(bio, inode, iomi.p=
+os >> inode->i_blkbits,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0GFP_KERNEL);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->iocb =3D iocb;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->dio_flags =3D dio_flags;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_iter.bi_sector =3D iomap_sector(&iom=
+i.iomap, iomi.pos);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_ioprio =3D iocb->ki_ioprio;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_private =3D sr;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_end_io =3D iomap_dio_simple_read_end=
+_io;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & IOMAP_DIO_BOUNCE)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D bio_iov_=
+iter_bounce(bio, iter);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0else
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D bio_iov_=
+iter_get_pages(bio, iter, alignment - 1);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(ret))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_bio_put=
+;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (bio->bi_iter.bi_size !=3D count) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iov_iter_revert(=
+iter, bio->bi_iter.bi_size);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D -ENOTBLK=
+;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto out_bio_rel=
+ease_pages;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->size =3D bio->bi_iter.bi_size;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((dio_flags & IOMAP_DIO_USER_BACKED) &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0!(dio_flags & IOMAP_DIO_BOUNCE=
+))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_set_pages_di=
+rty(bio);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (iocb->ki_flags & IOCB_NOWAIT)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_opf |=3D=
+ REQ_NOWAIT;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if ((iocb->ki_flags & IOCB_HIPRI) && !wait_f=
+or_completion) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio->bi_opf |=3D=
+ REQ_POLLED;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_set_polled(b=
+io, iocb);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0WRITE_ONCE(iocb-=
+>private, bio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (wait_for_completion) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->waiter =3D c=
+urrent;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_crypto_submi=
+t_bio(bio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_set(&sr->=
+state, IOMAP_DIO_SIMPLE_SUBMITTING);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sr->waiter =3D N=
+ULL;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_crypto_submi=
+t_bio(bio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D -EIOCBQU=
+EUED;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ops->iomap_end)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ops->iomap_end(i=
+node, iomi.pos, count, count, iomi.flags,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 &iomi.iomap);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (wait_for_completion) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0for (;;) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0set_current_state(TASK_UNINTERRUPTIBLE);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0if (!READ_ONCE(sr->waiter))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0blk_io_schedule();
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0__set_current_st=
+ate(TASK_RUNNING);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D iomap_di=
+o_simple_read_finish(iocb, bio,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_status_to_errno(bio->bi_status=
+));
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0inode_dio_end(in=
+ode);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_iomap_dio_=
+complete(iocb, ret < 0 ? ret : 0,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ret >=
+ 0 ? ret : 0);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0} else if (atomic_cmpxchg(&sr->state, IOMAP_=
+DIO_SIMPLE_SUBMITTING,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0IOMAP_DIO_SIMPLE_QUEUED) =
+=3D=3D
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 IOMAP_DI=
+O_SIMPLE_DONE) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D iomap_di=
+o_simple_read_complete(iocb, bio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_iomap_dio_=
+rw_queued(inode, iomi.pos, count);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> +
+> +out_bio_release_pages:
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dio_flags & IOMAP_DIO_BOUNCE)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_iov_iter_unb=
+ounce(bio, true, false);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0else
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_release_page=
+s(bio, false);
+> +out_bio_put:
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_put(bio);
+> +out_iomap_end:
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ops->iomap_end)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ops->iomap_end(i=
+node, iomi.pos, count, 0, iomi.flags,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 &iomi.iomap);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0inode_dio_end(inode);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> +}
+> +
+> =C2=A0ssize_t
+> =C2=A0iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0const struc=
+t iomap_ops *ops, const struct iomap_dio_ops *dops,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned in=
+t dio_flags, void *private, size_t done_before)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct iomap_dio *dio;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0ssize_t ret;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Fast path for small, block-aligned reads =
+that map to a single
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * contiguous on-disk extent.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 *
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * @dops must be NULL: a non-NULL @dops mean=
+s the caller wants its
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * ->end_io / ->submit_io hooks invoked, and=
+ in particular wants its
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bios to be allocated from the filesystem-=
+private @dops->bio_set
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * (whose front_pad sizes a filesystem-priva=
+te wrapper around the
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bio). =C2=A0The fast path instead allocat=
+es from the shared
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * iomap_dio_simple_read_pool, whose front_p=
+ad matches
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * struct iomap_dio_simple_read; the two wra=
+ppers are not
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * interchangeable, so we must fall back to =
+__iomap_dio_rw() in
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * that case.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 *
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * @done_before must be zero: a non-zero cal=
+ler-accumulated residual
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * cannot be carried through a single-bio in=
+line completion.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 *
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * -ENOTBLK is the private sentinel returned=
+ by iomap_dio_simple_read()
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * when it decides the request does not fit =
+the fast path.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * In that case we proceed to the generic __=
+iomap_dio_rw() slow
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * path. =C2=A0Any other errno is a real res=
+ult and is propagated as-is,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 * in particular -EAGAIN for IOCB_NOWAIT mus=
+t reach the caller.
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!dops && !done_before &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iomap_dio_simple_read_supporte=
+d(iocb, iter, dio_flags)) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D iomap_di=
+o_simple_read(iocb, iter, ops, private, dio_flags);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret !=3D -EN=
+OTBLK)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0return ret;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> =C2=A0
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dio =3D __iomap_dio_rw(iocb, iter, ops,=
+ dops, dio_flags, private,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 done_before);
+> @@ -894,3 +1246,11 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *i=
+ter,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return iomap_dio_complete(dio);
+> =C2=A0}
+> =C2=A0EXPORT_SYMBOL_GPL(iomap_dio_rw);
+> +
+> +static int __init iomap_dio_init(void)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0return bioset_init(&iomap_dio_simple_read_po=
+ol, 4,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 offsetof(struct iomap_dio_simple_read, bio),
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 BIOSET_NEED_BVECS | BIOSET_PERCPU_CACHE);
+> +}
+> +fs_initcall(iomap_dio_init);
+> --=C2=A0
+> 2.39.5 (Apple Git-154)
+>=C2=A0
