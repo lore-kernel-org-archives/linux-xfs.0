@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 974FC368D5C;
-	Tue, 12 May 2026 07:16:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF383672AA;
+	Tue, 12 May 2026 07:17:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778570199; cv=none; b=mDh9H/Z6wS4Gwsn9XZEwR04t9EgGRXFrKiLQ5ftFTpIHzHrJud2D7Iq/44PxqFD9QG8eG5Tw0HJq54O0k/u4cr8dYHlM3R/zsJtiMqZqkZCpMTSSyTJ2pEFM6ynCafDhowcPjChB63N/sqJqPc50e0Jgr+juafa95ePrNd/pM8w=
+	t=1778570231; cv=none; b=cXN34lT5QMNiVO9eVo9kdgOSRLkKjH24rjAGAujp/bg+hrQw9RfE9i5uLKGAqaauEE00saQN9dN07wnnV/RVK/Ef7kHLZyL/8VpovuT6gZBtn2oMjF5Et7gQdpxpUysZiUIQgB6zUIODTa/eTUv2U/QO3RV9Z0A4w7vr2JZ8M04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778570199; c=relaxed/simple;
-	bh=nKvg9k4i7+/FdWNoLP39fTA2AIBDoli2gh2Xo3a+f/U=;
+	s=arc-20240116; t=1778570231; c=relaxed/simple;
+	bh=98mFo7pkXXhyp9+X2ioMv1DmZPs1w2tyrej7VobxKEk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b4VC67BR7w3ST6ZEssqYWFjMdbYkqgUTM8SgK7oBbLocMYXildzYJF35C7OBQOWPXset+PjG77y0MyyOlHs/h8H2vNRwpjVitr8Ny95MmrAScgyKPLJmBrynzCZyKerAh9Y2luRxiXFHP+renhLiWk+yoY8jWaceieUrOHmyzP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iw4jpXeE; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Ha/i7zdGB6FtKgcJ1zBEyjKhuLsojwdfoqpcJzeNzULp9yVt2fZjfw8HlqRiex3H1WbX1Dz7mI2fv2h38oXqyg2VglYk3K2TdDCR+rZhfQLNGlLKImtCxH1MYEvUkGnMW97OgVbClA2eWVfaEmIKlMxr4N+VE+PN83IRmrVdDNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iIrRBVhM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iw4jpXeE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E618C2BCB0;
-	Tue, 12 May 2026 07:16:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iIrRBVhM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FB1EC2BCB0;
+	Tue, 12 May 2026 07:17:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778570198;
-	bh=nKvg9k4i7+/FdWNoLP39fTA2AIBDoli2gh2Xo3a+f/U=;
+	s=k20201202; t=1778570230;
+	bh=98mFo7pkXXhyp9+X2ioMv1DmZPs1w2tyrej7VobxKEk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=iw4jpXeE4iOTdRjtloaKtPRiHhRVD9YnDTRygvwHuj80w5Lt/GGuuos8S4Oa2+A4Z
-	 ID/zwJQlick5hyU4VnwvCe6wnMLR7YE22/84JKPCiUWJE12TXkUBwoW0Xx2o2Y8Kbc
-	 Ap/ZZWL6+KNR2fCfNMakCOH0HKbNFRfpp1IrwQXWNsRyjaMjSJeMwYfsVxKH432Az1
-	 +dfRTVKY4Sm+FYuGhaV5UL3jeIxzP+M4dP/TEGsLXxEyYvgq3HndEAdgOqi/TC+AS7
-	 TEKARoNX1z73Pn9qVgIaMUuNjbH5til+b8JTgFa+cH3UZwf+2RvwC+OmA8Cl38G9Nu
-	 8hXejv+EqUw2Q==
-Message-ID: <f34a9a4e-3d0a-405b-a3be-6400642bde44@kernel.org>
-Date: Tue, 12 May 2026 16:16:32 +0900
+	b=iIrRBVhMsfcFd8c2S3m3a8T0kcFhIOtgvw+B1wc4Z+F9AGHqa2Q4wJLfDihSwuvKA
+	 9EHcoUhMUamvE0OG5XYIdztmYfey90VXjjTFqwg3o2L6rXQ9SkypKXMe5MeYQjKCPU
+	 tsvV+fBHpWRp4j166nAtQPNhdKJVpvb+lAwRMS+df1+5x7pjtjuYvfzhnW29hq2GtH
+	 8o1S+/mUmIon2yUaU3SJRUwZKHtx6T6N+tJJ2t2uoihJJtq2Ym+RSFldlpzI/doRk8
+	 3JxjxZkF5Srvye0Gf8WDLX0nDvfUzScbFHdd73uZu3gax6MKiiqMjCYtozBL3MMONV
+	 pmRlkBWUhk5hA==
+Message-ID: <44a01a39-c902-4c54-a7a6-07bc1f4d5f06@kernel.org>
+Date: Tue, 12 May 2026 16:17:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/12] swap,fs: move swapfile operations to struct
- file_operations
+Subject: Re: [PATCH 04/12] swap: restrict to regular files or block devices
 To: Christoph Hellwig <hch@lst.de>, Andrew Morton
  <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
  Kairui Song <kasong@tencent.com>
@@ -54,34 +53,23 @@ Cc: Christian Brauner <brauner@kernel.org>,
  linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
  linux-cifs@vger.kernel.org
 References: <20260512053625.2950900-1-hch@lst.de>
- <20260512053625.2950900-4-hch@lst.de>
+ <20260512053625.2950900-5-hch@lst.de>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260512053625.2950900-4-hch@lst.de>
+In-Reply-To: <20260512053625.2950900-5-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 5/12/26 14:35, Christoph Hellwig wrote:
-> The swap operations have nothing to do with the address_space, which is
-> used for pagecache operations.  Move them to struct file_operations
-> instead.  This will allow moving the block device special cases into
-> block/fops.c subsequently.
-> 
-> Pass struct file first to ->swap_activate as file operations typically
-> get the file or iocb as first argument and use swap_activate instead of
-> swapfile_activate in all names to be consistent.
-> 
-> Note that while the trivial iomap wrappers are moved to a new file when
-> applicable to keep them local to the file operation instances, complex
-> implementation are kept in their existing place.  It might be worth to
-> move them in follow-on patches if the maintainers desire so.
+> Various swap code assumes it runs either on a block device or on a
+> regular file.  Make this restriction explicit using checks right
+> after opening the file.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks OK to me.
-
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
 
 -- 
 Damien Le Moal
