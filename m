@@ -1,77 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B775747ECE2;
-	Tue, 12 May 2026 07:41:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFDDC495521
+	for <linux-xfs@vger.kernel.org>; Tue, 12 May 2026 08:39:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778571674; cv=none; b=JDPRYa5bdtCrmARhpSiC3kOJGROCgry1GN+LCdgGZU9YSlVJi2w8X/9HIQ+byVn3HZxfQjSA7zIjxEtSXhO5xQTEKwQSonwdMYXlAnCWcwaZe+eThpMFzEt267LQXlPTmOSEn48nWd2lBL9+DRmeHx2hWbKTgefWUEqnbuqbSZo=
+	t=1778575174; cv=none; b=MiNDIkRCeKWlxX1FRZzrtQLhmKjSOkB50gWt3qfyJP8Bge92jRyp9ujwUl7aUmiJND4fLoxs26aIcqw7CfwefqsTBU8xTga26LzyHiqLYcfFbBKFU3YkFMdvHhgd8QFJBNnsStZDaKke2pQQ3qX6CM09ZTMADsSBHoKYwh5wQ84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778571674; c=relaxed/simple;
-	bh=uHgramlR2UsacSFL8Nsu5N5X+GjYLWlhcrhT4BezNyc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QJzVP9tRXTen1F5ISYncIRmYHoqwQ0rCsTN0GZSqwrMykVNip2g/HJo8BUgKy8HrpRNHXU/jDtAfDnIDReggMkL9bMJUNtktVCdfHv+1omqwXZR2MOVoWKIXts/UJGtEPV19ha3qpE2VVY5HMZVI0tRw2x8tLV3n7HYpiQ0YZoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O9sk2Vp/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778575174; c=relaxed/simple;
+	bh=d6s6Fv11m3RiwQB01QrFeM/8D5tCgGXZufiNj/HXXco=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=BMei0K5JYDQI3K9xyzTX5jwPKYvRiZGY8BdXjnH2FVEbEeLFCFB1m7UBHWorNQ1yBY0NQNjkgrB9+tEuYT4bhajGRnInMqdIfjSTDFzEZhUp3m5r3vbQEPrTytV1uEwTXQFVCDwy0+8gCTox6De/TsUbpBG/aPN0qGL0kY4GkIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rv3U0wrS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O9sk2Vp/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9C56C2BCB0;
-	Tue, 12 May 2026 07:41:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rv3U0wrS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1ABEC2BCB0;
+	Tue, 12 May 2026 08:39:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778571674;
-	bh=uHgramlR2UsacSFL8Nsu5N5X+GjYLWlhcrhT4BezNyc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=O9sk2Vp/6GejyLBdgb0tqXl6XI8Ee217W/WOaFreEgpDwIvDrdcYs5L+UvVMSDEtr
-	 VQS8spmPo1GjuFg8lOqv6BgC/h2D4BVJV7320DvGlZ0uQw9DMip1t5wzR+QZ+PZqvX
-	 4euKkWF/7dSzn05IMr0YYsxImiQ5qB0q+sVlxBJaaa2seN5mPMPKL9DHtjsuYB7qn5
-	 VPCiIaEbt797FILjsA9YdVx/DZCl4+YtNpBHarBuSuyC5IfT8VPCxxOsG44wp00wG0
-	 nipgyIPW9XvlM+VpiwqXL2eRV69/I7/NkoZhH5IsZAm++5jfr2M3jbXO5AbKZHbT+w
-	 9wE+XnHRqTRmA==
-Message-ID: <ec8ae080-56de-490d-a1a3-e646e4a2d629@kernel.org>
-Date: Tue, 12 May 2026 16:41:08 +0900
+	s=k20201202; t=1778575172;
+	bh=d6s6Fv11m3RiwQB01QrFeM/8D5tCgGXZufiNj/HXXco=;
+	h=Date:From:To:Cc:Subject:From;
+	b=rv3U0wrSrr07a0epzAtLbz0YVVjJZcC7NtLLWzC9wl4AhLIuSTTnY1gfnyss6Xv91
+	 6GumXFH52ruOJsQHLmkSBWNASrl1Cx4+IyEp/zgSs1VgxMlB2ITylcSu5MPVfGS/Co
+	 HDjF2k3a2dmzv/oJ8N1y4fB3pP7UXZnHH/dbFfikCw5mX9TCSNl7HFo0GUrC+TiQta
+	 U8Cke1zi3yvD57aa1af7Pav0cUWy/1zVi5bVp8Ptw/Prc6i/9c0d7hRfto/ydsaxD4
+	 dgwGrax52ouXPrgaPM0ChdDwRq6oXLaEAju77JhgfwV+GvajrRK8FkH3Rc2v35O4ic
+	 Ay50kp+ApI9OA==
+Date: Tue, 12 May 2026 10:39:29 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org, ddouwsma@redhat.com, hch@lst.de
+Subject: [ANNOUNCE] xfsdump: v3.3.0 released
+Message-ID: <yu4bqjh2oejn7t7ttsn6ibfziwwzcknhgg64xpl2gzbxsaa5ms@aai4qli3d7ea>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/12] swap: move swap_info_struct to mm/swap.h
-To: Christoph Hellwig <hch@lst.de>, Andrew Morton
- <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>
-Cc: Christian Brauner <brauner@kernel.org>,
- "Darrick J . Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
- Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
- Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>,
- Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>,
- Carlos Maiolino <cem@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
- linux-cifs@vger.kernel.org
-References: <20260512053625.2950900-1-hch@lst.de>
- <20260512053625.2950900-13-hch@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260512053625.2950900-13-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 5/12/26 14:35, Christoph Hellwig wrote:
-> swap_info_struct is now internal to the MM subsystem, so remove it from
-> the public header.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi folks,
 
-Looks OK to me.
+The xfsdump master branch in repository at:
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
 
+has just been updated.
+
+This release consist mainly of the fix in xfsrestore, the issues was occuring
+for cumulative restores with subtree option. The renames outside of the subtree
+caused assert fire aborting restore.
+
+In addition this release includes maintainer tooling update.
+
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
+
+The for-next branch has also been updated to match the state of master.
+
+The new head of the master branch is commit:
+
+04051066b6c66218717cb6cbfd51e96df393d183
+
+New commits:
+
+Andrey Albershteyn (3):
+      [523dea982158] xfsdump: fix permissions on files installed by libtoolize
+      [7033f078face] xfsdump: update release.sh
+      [04051066b6c6] xfsdump: Release v3.3.0
+
+Donald Douwsma (1):
+      [dd63de5d42e1] xfsrestore: only process subtrees that are selected
+
+Code Diffstat:
+
+ Makefile                  |   3 +
+ VERSION                   |   2 +-
+ configure.ac              |   2 +-
+ debian/changelog          |   6 ++
+ doc/CHANGES               |   5 ++
+ release.sh                | 197 ++++++++++++++++++++++++++++++++++++++++++----
+ restore/tree.c            |   7 ++
+ tools/git-contributors.py | 168 +++++++++++++++++++++++++++++++++++++++
+ 8 files changed, 374 insertions(+), 16 deletions(-)
+ create mode 100755 tools/git-contributors.py
 
 -- 
-Damien Le Moal
-Western Digital Research
+- Andrey
