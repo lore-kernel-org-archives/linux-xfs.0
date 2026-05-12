@@ -1,84 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39E63AC0C1;
-	Tue, 12 May 2026 05:34:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEDA53B7744;
+	Tue, 12 May 2026 05:36:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778564055; cv=none; b=KLuBJWGzwevQ2mp69zJzUY06P4eJnD52hsXlNOi74iFsU/CadLhOa3wqNVjJ4D7QhwYDagbIghO6xbbmg25+p6iX7oWxthDfGY5DbvriI0kYIaLK5AiM28GtcQMX9OoV84cA4h4fzqHA8bJnD7Oe1ngOdXapzw+OzBviwNJgKgs=
+	t=1778564208; cv=none; b=T7dHhhPt/U6aIJa6HWkdyj/VQXrESpZ0RNvnjIyPAvm7cnU8gx/1Z5dXW0ybbmND14xbN0bsR44MgHIGNQu9gIbtxGq11yUTm5MqVBuljRcUAgHAHjmXxrUKncva7Z1QvG4vWcYFJWwVocSb+rVjjwi7xfJpFY73AsS4yAyP6dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778564055; c=relaxed/simple;
-	bh=FCH7gTOxA12SA68v/sIkzd6BLPmsEb//w7clXTM1A+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kYvOnCi+dVPo4gnoLoI2l1MQ7g05wNnZDKdYI28r0w0EafEnOjNk/7AoZSzX/d9X+vphnzl13qMY5ny4O1i3aMIlLLi5C1Ght1agb+RqDJOrqOANtNSPQWDzeIUc49N3IUV9PD/0AHKOosV09nA/VvxWRwFzVK37GHlmx8pTmfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=udv5SPwc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778564208; c=relaxed/simple;
+	bh=XFV7RR6J0X5n+Nu9/rm5rxtB2SpA+lJioNk9zcWWi6A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AjCbxmtOUPouerY+7M3/W4D8PgmAEb/nnKmBQR3Q34qRquXNWu2cWv+gBihqgwR42QJMYEPjotlxua1V9luRn6eEtDr/LVd6oLEg1PqN8HlJI5sslZF1GM1Nyw4NoLt5m9T2nX8bk5HK79ElCx1DaGmzabD77py8pkp82nNBM9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KIK+jQvS; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="udv5SPwc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22987C2BCB8;
-	Tue, 12 May 2026 05:34:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778564054;
-	bh=FCH7gTOxA12SA68v/sIkzd6BLPmsEb//w7clXTM1A+w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=udv5SPwcBINb+acnp3C0E8LzQFBT5EoIjPhPt2UDnXivhk0t533KRvwMdGPDsaSWk
-	 Lp8hexpqRkBDCRW5DQa9vZMVpk2X37Jiau+/gpH0yAXctaj2sH/dxBrd5Roq+neMH7
-	 Z/IpZiAwhiGdrTmkXPIE9uq/d/0CFCjDgvK1Y2mjxiIs3r5H8ok/qc7pKOcZASHnz+
-	 9aHg3Mg2rA5RBg+OMAKywY5i3vfCGDZTc0kD/oN3iZbyphzrK9yN8CRn20BLfc82Zk
-	 plyIigwT/HZvTKBfYbh6sfH3VUfiiOls+0Wi64/b67hxHf4fUxQlxQWtQtzASMl968
-	 iD9N+65Q/jsGw==
-Date: Tue, 12 May 2026 15:34:08 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Cen Zhang <zzzccc427@gmail.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	baijiaju1990@gmail.com
-Subject: Re: [PATCH] xfs: snapshot current CIL sequence under xc_push_lock
-Message-ID: <agK70ItEH4FC8YH4@dread>
-References: <20260506015811.3420895-1-zzzccc427@gmail.com>
- <afwJ-eNE-NbSjRU6@dread>
- <CAFRLqsU-_omAuPFk+oXB1WtoH=_GZZFMg4bpXv3EhbzsjLt4VA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KIK+jQvS"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=L6G3lv4jbdMbQ4QsNCiCXE8kA9OQYRVEnsOclxNjvlk=; b=KIK+jQvSnKRXIFRrePcKSt8tSC
+	gTDIoVa3ilaBJgAv2JyiBq1oBQNEEVuR8cAKQZACHFbXeQgzOq5bCCS43yMoo3rZpQpygSiDzL+5p
+	k8ewxMk5abPknkbI0BLQkk18U//bp1Se74dgd8ytTOIwgIqIRD8+j0upZnmtm9RP/nG0Iay4iv5BI
+	0R0Ux2iGn5C8GSW0QkgvHRpchKQA0HU/3surCqZ+w6g1XBcpaQIEofBGAUjsWIOw9fW5TdRUHOoZH
+	pIElcotsE4NXj4I4GC6C78nmVfU4K8GqhWK2VIAj1M/0+2fkttDIMP1Vqdy9WFOxCQtHvlSJJWz7z
+	NqzmFnXw==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wMfnF-0000000FfDa-0NfM;
+	Tue, 12 May 2026 05:36:33 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	"Darrick J . Wong " <djwong@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	David Sterba <dsterba@suse.com>,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Chao Yu <chao@kernel.org>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Steve French <sfrench@samba.org>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-block@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org
+Subject: improve the swap_activate interface
+Date: Tue, 12 May 2026 07:35:16 +0200
+Message-ID: <20260512053625.2950900-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAFRLqsU-_omAuPFk+oXB1WtoH=_GZZFMg4bpXv3EhbzsjLt4VA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, May 07, 2026 at 12:34:23PM +0800, Cen Zhang wrote:
-> In the past, when I sent more direct/raw reports from my testing, some of
-> them were reasonably treated as bot-like reports. Since then I have been
-> trying to better understand the reports before sending them, so that I
-> can submit more useful and actionable issues or patches. Clearly I still
-> got this wrong here.
+Hi all,
 
-The important thing is to explain how you found the issue, how it
-can be reproduced the impact of the bug being fixed, etc.
-Describing a race condition and it's fix purely in theoretical terms
-and omitting all other context makes it feel very "bot driven" as
-they tend to lack all context other than code analysis and the
-change itself...
+Darrick recently posted iomap support for fuse-iomap, which was trivial
+but a bit ugly, which triggered me into looking how this could be done
+in a cleaner way.  The result of that is this fairly big series that
+reworks how the MM code calls into the file system to activate swap
+files to make it much cleaner and easier to use.
 
-Think about how you'd describe the impact of the bug to someone, and
-how'd they'd diagnose the problem if it were occuring on their
-system. A good commit message should allow a user to identify the
-problem (and the fix) from it's contents...
+I've tested this with swap devices manually, and using the swap tests
+in xfstests on btrfs, ext3, ext4, f2fs and xfs to exercise the different
+implementation.  Out of those all passed, but f2fs actually notruns all
+tests even in the baseline as it requires special preparation for
+swapfiles which never got wired up in xfstests.
 
-> I will take your comments seriously and be more careful in future
-> reports, especially when reasoning about subsystem-specific semantics
-> such as XFS log/CIL behavior.
-
-You don't need to get it 100% right before you post a fix - it's
-often much faster to post an RFC or ask a question and get immediate
-feedback than to try to be perfect on the first submission.
-
-> Thanks again for the explanation, and sorry again for the noise.
-
-It's not noise when people are listening and learning - that makes
-it time well spent IMO. :)
-
--Dave,
--- 
-Dave Chinner
-dgc@kernel.org
+Diffstat:
+ Documentation/filesystems/iomap/operations.rst |    3 
+ Documentation/filesystems/locking.rst          |   35 +--
+ Documentation/filesystems/vfs.rst              |   40 ++--
+ block/fops.c                                   |   15 +
+ fs/btrfs/btrfs_inode.h                         |    3 
+ fs/btrfs/file.c                                |    4 
+ fs/btrfs/inode.c                               |   72 -------
+ fs/ext4/file.c                                 |    6 
+ fs/ext4/inode.c                                |   11 -
+ fs/f2fs/data.c                                 |   50 -----
+ fs/f2fs/f2fs.h                                 |    2 
+ fs/f2fs/file.c                                 |    4 
+ fs/iomap/swapfile.c                            |  165 +++---------------
+ fs/nfs/direct.c                                |    1 
+ fs/nfs/file.c                                  |   21 --
+ fs/nfs/nfs4file.c                              |    3 
+ fs/ntfs/aops.c                                 |    8 
+ fs/ntfs/file.c                                 |    6 
+ fs/smb/client/cifsfs.c                         |   18 +
+ fs/smb/client/cifsfs.h                         |    3 
+ fs/smb/client/file.c                           |   16 -
+ fs/xfs/xfs_aops.c                              |   48 -----
+ fs/xfs/xfs_file.c                              |   39 ++++
+ fs/zonefs/file.c                               |   30 +--
+ include/linux/fs.h                             |   11 -
+ include/linux/iomap.h                          |    5 
+ include/linux/nfs_fs.h                         |    3 
+ include/linux/swap.h                           |  129 +-------------
+ mm/page_io.c                                   |   45 ----
+ mm/swap.h                                      |   92 ++++++++++
+ mm/swapfile.c                                  |  227 ++++++++++++++-----------
+ 31 files changed, 471 insertions(+), 644 deletions(-)
