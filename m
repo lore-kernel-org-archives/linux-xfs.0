@@ -1,67 +1,78 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77B6B379C5E;
-	Tue, 12 May 2026 07:20:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E5E368D73;
+	Tue, 12 May 2026 07:21:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778570432; cv=none; b=W0wNDpy7IWhlgxGAl4BUKSY5jP4NfI48FBVAdHdkk4sczHPWtiVdaM0ChFdyBG557c1+ZRa4Hy3v+5Zv8ypSjVEvGyu6IN5M+WHIiRPBjEiHfQRKYjcdmjeZu9oWiwjoXutb3IvUuAkD2wUC3c6/j+wX9bnJOdlAgHDFFH7vkmw=
+	t=1778570514; cv=none; b=QiGidzJNIbj2atDtQU06z30+7yyC5hNZkSeCuXiuvsW7SojVymPRosFVZzUT8JtpSw3+1P/35W0weuQUCZNN4CQKoesklOChWVhYUE/CPbOmua88BTzEYMxtNbc47pyP5wIVb2Pr+ZFHPtl0fsDu1Si1yJvFDyjrle85BykYn0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778570432; c=relaxed/simple;
-	bh=WO5TyXSQt3jZoSF/CLHx8igk7yg6Gis1Q53sIKXHzJk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=chrVct6NfREA0uQhR96K1D1wXwv6zcux6n7XQfglxQdmPnHv+L8tvutOMjgeukIF1QHO73BP+U9tZT+S1ihOPADkTcZcqLXXh/xPP+H5ybClbbrLIwNAMTus9VdzAngf4K/J5a97I0NgSqWbES9Mr88xXD1tWuhvM0dTBv4+ONk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id EB1E668B05; Tue, 12 May 2026 09:20:22 +0200 (CEST)
-Date: Tue, 12 May 2026 09:20:22 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>,
-	Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Chao Yu <chao@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Hyunchul Lee <hyc.lee@gmail.com>, Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org
-Subject: Re: [PATCH 01/12] swap: remove the maxpages variable in sys_swapon
-Message-ID: <20260512072022.GA32622@lst.de>
-References: <20260512053625.2950900-1-hch@lst.de> <20260512053625.2950900-2-hch@lst.de> <03dddf72-8755-4ebf-ba79-456377f0f25d@kernel.org>
+	s=arc-20240116; t=1778570514; c=relaxed/simple;
+	bh=Xq9+eEnZyp37k7qXEaOdw0f0Snu5QZQtlvjD1+MYRu4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RfxmrbloaMw6v5C+To3ERIGqHbBla+E80Xub1TbWYajfFfBGodg+MTGIV4MzWJemYp0lzjpXIGPBvRZE4xKvZaoSlqi2PaE3fyFIIhmSpOKvBTSQZphhCCJD/ELFTe9v7wHaJoXfW0nMr9bANJrUHda/ATa9/GBmWbryM7SxYtI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HpnCduju; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HpnCduju"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F004C2BCB8;
+	Tue, 12 May 2026 07:21:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778570514;
+	bh=Xq9+eEnZyp37k7qXEaOdw0f0Snu5QZQtlvjD1+MYRu4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HpnCdujuSs0wcUGzR0lQTqIJ531e+c+TnGuoVAcjOUCcPqOGeNyWvcWsmYWSE3jxq
+	 mF9lVHlk8lkWBf0HidM6p3rU5VPTfQGMU6Po421XDufDTQigS16W5xwg2srgvuTKs/
+	 KXvnNJ/6OzLv9KM2ZGR1T2oxhsd+sSbbrbqvxmSKTihw1tl6w2uJS9X1KEKKjpadNN
+	 4nuq5EdnivRdW3Qm2oZhiQCb3YBa3DVhaw2PQmZBwhcU/a2lCEilJYilNG/IlNeDSI
+	 ro2YyO3EhmNbLo3hYTXPpvz/utb7tHvG+kyLD+U0Yk9qQMEGGIMuLHEz7RaJRZq/gj
+	 LeQ/tiiv2eo8A==
+Message-ID: <217f91d9-4d5f-47a6-ad20-0404968b8e08@kernel.org>
+Date: Tue, 12 May 2026 16:21:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <03dddf72-8755-4ebf-ba79-456377f0f25d@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/12] swap,block: limit swap file size to device size
+To: Christoph Hellwig <hch@lst.de>, Andrew Morton
+ <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+ "Darrick J . Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
+ Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>,
+ Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>,
+ Carlos Maiolino <cem@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+ linux-cifs@vger.kernel.org
+References: <20260512053625.2950900-1-hch@lst.de>
+ <20260512053625.2950900-8-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260512053625.2950900-8-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, May 12, 2026 at 04:08:35PM +0900, Damien Le Moal wrote:
-> On 5/12/26 14:35, Christoph Hellwig wrote:
-> > Always use si->max which is updated setup_swap_extents instead of copying
-> > into and out of maxpages.
+On 5/12/26 14:35, Christoph Hellwig wrote:
+> Don't blindly pass the value from the swap header to swap_add_extent,
+> but instead the device size rounded down to page granularity.  This
+> activated the sanity checking in the core code that catches a too large
+> value in the swap header.
 > 
-> Checking mm/swapfile.c, I see s->max being set only in swapon(). Is this a typo
-> or am I misunderstanding this sentence ?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It is updated by the file system methods or the generic implementation
-called by setup_swap_extents currently.  So the above is a bit imprecise.
+Looks OK to me, though this maybe could be folded in the previous patch ?
 
-The next patch then removes this confusing update.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
+-- 
+Damien Le Moal
+Western Digital Research
