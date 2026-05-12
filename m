@@ -1,62 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1803825B0AA;
-	Tue, 12 May 2026 12:09:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0020A39B978
+	for <linux-xfs@vger.kernel.org>; Tue, 12 May 2026 12:09:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778587741; cv=none; b=EnJDGeLTfLEQPbbaq2rSsxOFzA+t27Cw0x1LOdZXUFY2cwvWH91aBjaPX/ysRYzMqqQixlrRD9djS1Aw1zBWR7Z9tSGRaIrEh+lrMVkF0Ojrx+d1e6sx1G+MvGUucK7dTmTCOCqOsIYM1KxgSRQ8RLXNiKOeeoIyIEceg4W4x6Y=
+	t=1778587762; cv=none; b=ais9UsY4s3zp0RT1N2ZtlxmCvj/fCKkopQzNPO6CSwMiQ7/7HkcMgbpsWpXLvXwxBy8Zsx6ZzqJMSh1t51NlRbDv5qpFYEBON/SsOTLDO1vPuqaGQiqME4xaevMiVrainDOVBUTDenFrHfGAwFoaptELxx328SOheCieQ2N2Neg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778587741; c=relaxed/simple;
-	bh=7Jtxs5aK0BpmgB9EjYc07GrLzlZwlT+RKu5BmrpAe2M=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=mhakGHeddDPxI19i4mfEYVzHdrPzw5KgGuQkOn1K9QumlV/swI0gPlYRsu5Tnqi83Jai/HF6j6NCdsur/YC0emhzrt7hSRmD8lOm6X7EAFEARE7K/A3EF9ZAM+z1KbpaxZf3erO5C3rTsJmYtxmf94SX71S6oJc+8nVJY4RtX38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fqi9H+pi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778587762; c=relaxed/simple;
+	bh=E7cTjkD0EuHWM6nhmwxE2F2ek5+6IK9jEzLrGcEhsi4=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=eTNq//aNjTjC7vlyyJnmepFjvoaFx9It6Sxeos0zCBEQjq1Q1y+jfxFQpdKFm77G32mI1WwkTV53bsbxIr10pyETWnEIyznNULzG1iZFkq4ngEgMMcyMtT4R6OCPvx1KiJa4AFN/1go7Mc+KPObG0JDI5P6OVRRp7J2EyWy9/Ck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jkFLjVnU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fqi9H+pi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFCEBC2BCF6;
-	Tue, 12 May 2026 12:08:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jkFLjVnU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2652EC2BCB0
+	for <linux-xfs@vger.kernel.org>; Tue, 12 May 2026 12:09:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778587740;
-	bh=7Jtxs5aK0BpmgB9EjYc07GrLzlZwlT+RKu5BmrpAe2M=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=Fqi9H+pi9bRHUDAdkNWCODaH5YV/+yluKwD1+czCeIf7XtHEC8F2Ol24UxSSX9+9e
-	 QVkKzqtEERW7btIauLoxClMQEVtnG1+6nYzylfvF+D4vakn83z6pqzcBeI505aG7zK
-	 3JgvNCPcwb8FLw6YOf1ueH40/HmvTAV8NTcmQcU1FuKnqq0rpoRsdqdeKkq6CxkwF4
-	 PcV0tSEXclb+uZSFlpxKUqmqb+aZp/CzAEz04Z53LpPdwThaOujXKcgnrh6+L3vIGP
-	 c/Cw9FL0TO1u9glnuWabKrE2zXEeIAk151tRvHFTdujhaBKt2ghMlELMD+xSSr5lGh
-	 8dbWe7+OFxRkg==
+	s=k20201202; t=1778587761;
+	bh=E7cTjkD0EuHWM6nhmwxE2F2ek5+6IK9jEzLrGcEhsi4=;
+	h=Date:From:To:Subject:From;
+	b=jkFLjVnUBpLzusXFlLLz5IBvVcanO7VThhHqBI/sCZdChAOu7rmZn3FZgbs1RGJWa
+	 LiOgIN8nrnxyrGdKHlI8OBCq8Hgdb8OSw6a0BUpt82n51MIjObYVrJf/N/IpW4Wa6F
+	 qaFx9OZq0JkaeHGN6NHRY2gsL1NR0opxnha3+EVXabSGxI6vEmXzlCN4VOCMi1vf/n
+	 O34wMXtaqh+WBTsyA5o+ftLN4mg5uscxQef7RfDKG+t8dKpIm5gZkkCcBDpjxUQX78
+	 h43/caFQJ1C7dCKJCq8fLDfgG6riZN645nklfqcPPpwRDyDbW1GpYmjnOFDwYZ1G2W
+	 7VtAHd6KOy7EQ==
+Date: Tue, 12 May 2026 14:09:18 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Md Shofiqul Islam <shofiqtest@gmail.com>
-Cc: djwong@kernel.org
-In-Reply-To: <20260506163658.2318-1-shofiqtest@gmail.com>
-References: <20260506163658.2318-1-shofiqtest@gmail.com>
-Subject: Re: [PATCH v2] xfs: Fix typo in comment
-Message-Id: <177858773946.168431.12839270938040613714.b4-ty@kernel.org>
-Date: Tue, 12 May 2026 14:08:59 +0200
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 509fdeb3326b
+Message-ID: <agMYXfzboNQzP6tx@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Wed, 06 May 2026 19:36:58 +0300, Md Shofiqul Islam wrote:
-> Fix spelling mistake in comment:
->  - occured -> occurred
-> 
-> 
 
-Applied to for-next, thanks!
+Hi folks,
 
-[1/1] xfs: Fix typo in comment
-      commit: 509fdeb3326be0db055e88d0f689a3888f147f90
+The for-next branch of the xfs-linux repository at:
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+509fdeb3326b xfs: Fix typo in comment
+
+2 new commits:
+
+Christoph Hellwig (1):
+      [5082d8835070] xfs: fix the "limiting open zones" message
+
+Md Shofiqul Islam (1):
+      [509fdeb3326b] xfs: Fix typo in comment
+
+Code Diffstat:
+
+ fs/xfs/xfs_notify_failure.c | 2 +-
+ fs/xfs/xfs_zone_alloc.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
