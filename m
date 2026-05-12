@@ -1,140 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE16D3FFADC;
-	Mon, 11 May 2026 14:56:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD023033DE
+	for <linux-xfs@vger.kernel.org>; Tue, 12 May 2026 05:25:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778511402; cv=none; b=asLXdIO0yo2kxZwWiathP4+DFEdHOC5rDf1rBoTfpFKnFqD1RpY0EnBN2WX56oTNs9K7qxcEp/DTGwWr4pQWH2rZy9YHOXkZYaN54P7l/epqYDV/Uaw9RrJVxNkx9nHSt9RepUHb+oEQTVF5Gxkj6ynN7XUtBGNYMftHUhHGs6Q=
+	t=1778563548; cv=none; b=s5yANmX0kkYJ/efqxLCerFgmCKpQ3dXX9vk5aZJ7IiMvj+hZca5aOL+zRe5RDTnpYvj1rcdt1oBZUG+1kA9NLXFQC4Lm31yor83TvE404t7OGS5wz5NUFvmTDmO465h4uHZLL2BIlwmis53xPYGZg05KIHHl4iEPB4rABZwX4i0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778511402; c=relaxed/simple;
-	bh=RbMFSQRfHlsC61fn89QVW4CaFzV0E4rdaOIbFWO+Bzs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jpzjd+VagFE0lcyaXJWVTAGXqGn4Qtda2ZZSiXAoQfqhHMS+woHf2wCa0Zp0zoTlsvvGLZ0jEICI+EX0tvsAzfN9HPdtW0X2/OlV0M+mu7nKGSNV5L5WbOB1rpzIVWNjKHnfenKmcwyDVPihas8td5GyPWVFkeCpCMhLlzOHoOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JrsxxS6T; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778563548; c=relaxed/simple;
+	bh=hXItnFK1UmSi0b0rWCJdwb88leV1vRHlv1ko6JVy43g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=drPC6oRoBs1DXHFdfZ+mTmzJg7u7g++TrHOsusZFmM1490YAIwDwb01cPpwafzsh+kg0nvHXVMAYj+peaVqY0H35WaDlnNIrfmIfpuC+C5cPaF/rZG7rnbCYnksX2FZBlGAOPkrmNDaV2i8y4FHhbZGO5e+0oWetx9HSlXEf9rM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iv+SG/i2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JrsxxS6T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8561DC2BCB0;
-	Mon, 11 May 2026 14:56:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iv+SG/i2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFD6EC2BCB8;
+	Tue, 12 May 2026 05:25:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778511401;
-	bh=RbMFSQRfHlsC61fn89QVW4CaFzV0E4rdaOIbFWO+Bzs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=JrsxxS6T6cY3TjCGu6OHQPrsLAOetrh6sLmIpD/hrlJl96QfexJKThlojmYOCSTAU
-	 /qHcK2fzEFC0oYhzm05gYE5qDnwlffSx8Gl+CqaGv5tgy3A7vRMdxsGEu3OnM84ymS
-	 Gn4Rg5EeYTMO1nGC5kroP+VBEu+opZFuUr3A9rzP0mSnHVt2gVkzsEzyjxcKHDxrSC
-	 GuYYGhy2A1JTdwhBpZPqIViHt4RHQesh62EM9BJWb3bDCmlkBW4/ci7W1G0HSgyALC
-	 yFqs4oGsJhc9QSVCc8QXQqXx3fJcMHcsWwCgO8wGV301WDDEA9+QgbVDx6mi3rE9Zk
-	 4fDN3Fp6oD7iA==
-From: Christian Brauner <brauner@kernel.org>
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-api@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	hirofumi@mail.parknet.co.jp,
-	linkinjeon@kernel.org,
-	sj1557.seo@samsung.com,
-	yuezhang.mo@sony.com,
-	almaz.alexandrovich@paragon-software.com,
-	slava@dubeyko.com,
-	glaubitz@physik.fu-berlin.de,
-	frank.li@vivo.com,
-	tytso@mit.edu,
-	adilger.kernel@dilger.ca,
-	cem@kernel.org,
-	sfrench@samba.org,
-	pc@manguebit.org,
-	ronniesahlberg@gmail.com,
-	sprasad@microsoft.com,
-	trondmy@kernel.org,
-	anna@kernel.org,
-	jaegeuk@kernel.org,
-	chao@kernel.org,
-	hansg@kernel.org,
-	senozhatsky@chromium.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Roland Mainz <roland.mainz@nrubsig.org>,
-	Steve French <stfrench@microsoft.com>
-Subject: Re: [PATCH v14 00/15] Exposing case folding behavior
-Date: Mon, 11 May 2026 16:55:36 +0200
-Message-ID: <20260511-verglast-abtropfen-f5fe2ccc79ba@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
-References: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
+	s=k20201202; t=1778563547;
+	bh=hXItnFK1UmSi0b0rWCJdwb88leV1vRHlv1ko6JVy43g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iv+SG/i2OgPql4j9f418fM+CpaAtjFhQgTcnocHFVZHHbtWz5MZ6UKa8cMhRZKVrB
+	 F/NK3T2rkeGacTHBqHQIpVRwWzIaW78NUeih7/i0iVdL86+LnpaA8uy9RrPzvjrHXt
+	 Pvu+QbWrtckr+ilqGPn5xMV7OGqkmxJ0A/VYHXpDdyg8kPE5YQTz4V4wpvwfSUVB4D
+	 ANe3hgRnHul8RLThIwDhLUHQTnJix+Vda5Wm3qR/mJrjA98B8rjWCgEj3eI488pQBh
+	 yOp8VeDcKrD/wrpyh1xKlcNesagS+CEo/F7JhCp82ekJfXE6AqV9OFTxEWKMT/Cq90
+	 33i0osvzWdwQQ==
+Date: Tue, 12 May 2026 15:25:41 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+Cc: Andres Freund <andres@anarazel.de>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Christian Brauner <brauner@kernel.org>, gost.dev@samsung.com,
+	p.raghav@samsung.com
+Subject: Re: Increase in XFS journal flushes with (direct_write;fdatasync)+
+Message-ID: <agK51XboX2fc2ll7@dread>
+References: <7ys6erh3nnyeerv2nybyfvp7dmaknuxrlxv74wx56ocdothkc6@ekfiadtkfn2r>
+ <paibiwpjxhdmfrjq3tn7gbdvgtarm4yvtid7qu5zchhyptdlhx@w7lwvjhevsj6>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2780; i=brauner@kernel.org; h=from:subject:message-id; bh=RbMFSQRfHlsC61fn89QVW4CaFzV0E4rdaOIbFWO+Bzs=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQxvpPbtsTxReIhiawSkz4fxtPZ528qMl/imcesmKL13 /6nsuz9jlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIlc1GdkmHzU8leE55X+3sNn 78m6LK502/+sdc7fo0p/K2XXs3lf+sDI0Gqcuu1Ta8aS/b6pqm89GV3elm66eiFAVePnoS0rlp+ 7zAEA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <paibiwpjxhdmfrjq3tn7gbdvgtarm4yvtid7qu5zchhyptdlhx@w7lwvjhevsj6>
 
-On Thu, 07 May 2026 04:52:53 -0400, Chuck Lever wrote:
-> Christian, let's lock this one in. I will post subsequent changes
-> as delta patches.
+On Thu, May 07, 2026 at 10:34:43PM +0200, Pankaj Raghav (Samsung) wrote:
+> On Wed, May 06, 2026 at 09:26:25AM -0400, Andres Freund wrote:
+> > Hi,
+> > 
+> > While looking at performance issues on Samsung client drives due to slow FUA,
+> > I tried to reproduce older numbers on a recent kernel.  And couldn't, at first
+> > - but not because the problem went away, but because the fdatasync numbers
+> > (which shouldn't use FUA) got *much* worse.
+> > 
+> > These drives have FUA writes that are slower than full flushes, making
+> > O_DIRECT|O_DSYNC writes perform poorly and fdatasync() comparatively better.
+> > 
+> > 
+> > What I'm seeing is that with recent kernels the fdatasync() performance is
+> > roughly as bad as the O_DSYNC, whereas previously it was > 2x as
+> > fasts. blktrace showed that there are ongoing FUA writes during a workload
+> > with just overwriting writes and an fdatasync after every write.
+> > 
+> > 
+> > At first I thought it was a regression between 7.0..7.1-rc2, but that turned
+> > out to be only because the 7.0 machine did not have lazytime enabled. After
+> > fixing that discrepancy, the regression is also visible in 7.0.  I have
+> > confirmed it's not visible in 6.18.
 > 
-> Following on from:
+> I was able to reproduce this issue. The commit causing the issue is
+> indeed from nonblocking timestamps series as you indicated 
+> (fs: add support for non-blocking timestamp updates).
 > 
-> https://lore.kernel.org/linux-nfs/20251021-zypressen-bazillus-545a44af57fd@brauner/T/#m0ba197d75b7921d994cf284f3cef3a62abb11aaa
+> In inode_update_cmtime, we have the following changes as a part of the
+> series:
+> ...
+> mtime_changed = !timespec64_equal(&now, &mtime);
+> 	if (mtime_changed || !timespec64_equal(&now, &ctime))
+> 		dirty = inode_time_dirty_flag(inode);  // #1
 > 
-> [...]
+> 	/*
+> 	 * Pure timestamp updates can be recorded in the inode without blocking
+> 	 * by not dirtying the inode.  But when the file system requires
+> 	 * i_version updates, the update of i_version can still block.
+> 	 * Error out if we'd actually have to update i_version or don't support
+> 	 * lazytime.
+> 	 */
+> 	if (IS_I_VERSION(inode)) {
+> 		if (flags & IOCB_NOWAIT) {
+> 			if (!(inode->i_sb->s_flags & SB_LAZYTIME) ||
+> 			    inode_iversion_need_inc(inode))
+> 				return -EAGAIN;
+> 		} else {
+> 			if (inode_maybe_inc_iversion(inode, !!dirty)) //#2
+> 				dirty |= I_DIRTY_SYNC;
+> 		}
+> 	}
+> 
+> ...
 
-Now on the correct branch and pushed out.
+Ugh. Given we don't support i_version as an externally visible
+change_cookie any more (we have multigrained timestamps for that
+now), why do we still set SB_I_VERSION and jump
+through all these complex hoops to set maintain something we don't
+actually need?
 
----
+i.e. going back to ip->di_version++ whenever the inode is logged to
+maintain the on-disk change version would make things so much
+simpler here...
 
-Applied to the vfs-7.2.casefold branch of the vfs/vfs.git tree.
-Patches in the vfs-7.2.casefold branch should appear in linux-next soon.
+Cheers,
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: master
-
-[01/15] fs: Move file_kattr initialization to callers
-        https://git.kernel.org/vfs/vfs/c/14c3197ecf07
-[02/15] fs: Add case sensitivity flags to file_kattr
-        https://git.kernel.org/vfs/vfs/c/3035e4454142
-[03/15] fat: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/c92db2ca726f
-[04/15] exfat: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/27e0b573dd4a
-[05/15] ntfs3: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/eeb7b37b9700
-[06/15] hfs: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/b6fe046c3023
-[07/15] hfsplus: Report case sensitivity in fileattr_get
-        https://git.kernel.org/vfs/vfs/c/a6469a15eefe
-[08/15] xfs: Report case sensitivity in fileattr_get
-        https://git.kernel.org/vfs/vfs/c/c9da43e4e5c3
-[09/15] cifs: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/e50bc12f5a36
-[10/15] nfs: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/92d67628a1a9
-[11/15] vboxsf: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/ef14aa143f1d
-[12/15] isofs: Implement fileattr_get for case sensitivity
-        https://git.kernel.org/vfs/vfs/c/7bbd51b1d748
-[13/15] nfsd: Report export case-folding via NFSv3 PATHCONF
-        https://git.kernel.org/vfs/vfs/c/211cb2ba4877
-[14/15] nfsd: Implement NFSv4 FATTR4_CASE_INSENSITIVE and FATTR4_CASE_PRESERVING
-        https://git.kernel.org/vfs/vfs/c/01ee7c3d2e23
-[15/15] ksmbd: Report filesystem case sensitivity via FS_ATTRIBUTE_INFORMATION
-        https://git.kernel.org/vfs/vfs/c/0164df1d1de7
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
