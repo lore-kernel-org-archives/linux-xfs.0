@@ -1,56 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A85B9385D6B;
-	Tue, 12 May 2026 17:10:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741693D45E4
+	for <linux-xfs@vger.kernel.org>; Tue, 12 May 2026 17:19:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778605829; cv=none; b=i1wpDAG1YU4yv/8aRb6zN3WnlsdA2yz4cgBcSodM+Bo/IjlkejggUzkZiBGwCWMQ9HNUY2FMyWoshHGssjGEqorLxY/5DP5WVlbowTPOL7OD1muH9hLxNHf60Aq5mV59/8LCMZJCKK2bbAtH8hoiOH1BlwGw1K2Shydd8q2Q4kI=
+	t=1778606372; cv=none; b=O9b+gFF2TxQBdAUj9br9BYSJ1dJ5CpFHxcCBgleVeftwb8V37kdcRWS7tYgow/V7MuoFu/gKQOy7reoiZXSunKf/Kg2Aqm6osJX4xYExib++W3AhHFb2X15FO8/K/7FhvJWU/3PEk4ZUEX16XSqRf+4Mbtj+n2iZlhJEqVxI+JU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778605829; c=relaxed/simple;
-	bh=UIMc6Epq1jKVpYoN8NQkrsbH35Z/rxkSt0+cjObPXEg=;
+	s=arc-20240116; t=1778606372; c=relaxed/simple;
+	bh=/nBG2fKIoTuZ8p8fS3b1oIi+1M4sdTALQx4Ta+VZRBg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vF2Rh4X0Meb/cIxqTxT8Dd9Bs+Y7KK5rNJkI5VbdgkYjg7f3MHRUe8iQ3sHnmh1y2+vYUcUBCjpyNC3Kz8BYRym8YdjUSjKvhOiYsjKBvCFVD4zAhrUnRJVxilOY5Q0e/FuK27y+4qxd+pwUduBgo0zznzSI3iflkOrJaoqL+kI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cwQyUKQ7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=eC/03mCavMIvJf+SMOsBOWwlQkYeB/Kuip0G2wNFTRcIxm5q/lDZZaafkJWiaHG86Ag++soENUMt5a9cMF1hGO8+mrWkNNEeWGY3jH2QPspl6yhlgx8QdsxcpfKK30oDazI3bT8mSbjvDWF3Ul4hAFDG4mUYsRr7TabDMWgTCII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KV6GKZj1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cwQyUKQ7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BEBEC2BCB0;
-	Tue, 12 May 2026 17:10:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KV6GKZj1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1702BC2BCB0;
+	Tue, 12 May 2026 17:19:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778605829;
-	bh=UIMc6Epq1jKVpYoN8NQkrsbH35Z/rxkSt0+cjObPXEg=;
+	s=k20201202; t=1778606372;
+	bh=/nBG2fKIoTuZ8p8fS3b1oIi+1M4sdTALQx4Ta+VZRBg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cwQyUKQ7/ehswE6htqBY9YS5WZtrPNKyBqWQCvZt3MGoMAZl38WrdS4VCCUoTtce5
-	 3HXiMl5gnt6E8BE0Wlgn1JAAx+a721k2CiMTFjCC1q/33PgDsydSqQVOEZ0c/aEcPh
-	 qqMPItxUFu2pzF96J9wTatigpI1eNoG4appb93SUembefpNXfS+dQ3jx5Zjo7T9pg+
-	 Mru+31A2ZvAy//NyZ0pamvIuUJ6MRZj/QrOw+oPtdc5YksLDWF2zrWsZK+3k4Y36/N
-	 kUKgR6D21j3nHYHX3zYVq674GjpOqIAusFNnu8t7U2Rep60jDIv6s7wrNPKcxawCYO
-	 7JJLf2m6C5FqQ==
-Date: Tue, 12 May 2026 10:10:28 -0700
+	b=KV6GKZj1W7u4FZZ5nx22+Ny+UQMX1CMs2aJfTgEuEQQu5uiHEtmcgyAzP5nPG5h9z
+	 pYY/VMNa2xKUto72/ZmF051T8RpqHflzOb8eWuf8eAlZIBD1nsogMU+w6de1QyXOj9
+	 W70JhWk8Sw6qhgV8dfngbvnAkxzdwAhPyKQFr4jYUA9TjOXTUT2l0v6SzrMc4dS7Bv
+	 x7p+8yP63281k0naPekqqGMQT4OGDT4ynnHHS6/T3B/LcNKCcL+/PUV93PtytxZ5GJ
+	 v2wo8WLa03GL/4B7JOqpZqpQETGaih/rNi5HebX3cwVrRGXMy/etaLYyl9lUrBOUHx
+	 GTxOq6Ub4dR5A==
+Date: Tue, 12 May 2026 10:19:31 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>,
-	Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Chao Yu <chao@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Hyunchul Lee <hyc.lee@gmail.com>, Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org
-Subject: Re: [PATCH 12/12] swap: move swap_info_struct to mm/swap.h
-Message-ID: <20260512171028.GM9555@frogsfrogsfrogs>
-References: <20260512053625.2950900-1-hch@lst.de>
- <20260512053625.2950900-13-hch@lst.de>
+To: yebin <yebin@huaweicloud.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, dgc@kernel.org
+Subject: Re: [bug report] kernel BUG at fs/xfs/xfs_message.c:102!
+Message-ID: <20260512171931.GN9555@frogsfrogsfrogs>
+References: <6A031038.9030708@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,288 +41,159 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260512053625.2950900-13-hch@lst.de>
+In-Reply-To: <6A031038.9030708@huaweicloud.com>
 
-On Tue, May 12, 2026 at 07:35:28AM +0200, Christoph Hellwig wrote:
-> swap_info_struct is now internal to the MM subsystem, so remove it from
-> the public header.
+On Tue, May 12, 2026 at 07:34:16PM +0800, yebin wrote:
+> Hello Darrick and all,
 > 
+> Recently, I encountered a problem where a BUG was triggered in the write-back process.
+> The detailed problem information is as follows:
+> ```
+> XFS (sde): Corruption of in-memory data (0x8) detected at xfs_trans_mod_sb+0xaa6/0xc60 (fs/xfs/xfs_trans.c:351).  Shutting.
+> XFS (sde): Please unmount the filesystem and rectify the problem(s)
+> XFS: Assertion failed: tp->t_blk_res || tp->t_fdblocks_delta >= 0, file: fs/xfs/xfs_trans.c, line: 610
+> ------------[ cut here ]------------
+> kernel BUG at fs/xfs/xfs_message.c:102!
+> Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
+> RIP: 0010:assfail+0x9f/0xb0
+> Code: fe 84 db 75 20 e8 51 2e 33 fe 0f 0b 5b 5d 41 5c 41 5d c3 cc cc cc cc 48 c7 c7 58 ae 2b 8d e8 08 73 a2 fe eb cc e8 310
+> RSP: 0018:ffffc9000f6372e0 EFLAGS: 00010293
+> RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffffffff838c91a6
+> RDX: ffff8881a856bb00 RSI: ffffffff838c91cf RDI: 0000000000000001
+> RBP: 0000000000000000 R08: 0000000000000001 R09: fffff52001ec6ded
+> R10: 0000000000000001 R11: 0000000000000001 R12: ffffffff8a956520
+> R13: 0000000000000262 R14: 0000000000000000 R15: ffffffffffffffff
+> FS:  00007f7ee1f5b740(0000) GS:ffff88878bb45000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f0e632788f0 CR3: 00000001b524a000 CR4: 00000000000006f0
+> Call Trace:
+>  <TASK>
+>  xfs_trans_unreserve_and_mod_sb+0xb86/0xd00
+>  __xfs_trans_commit+0x38b/0xe00
+>  xfs_trans_commit+0xeb/0x1a0
+>  xfs_bmapi_convert_one_delalloc+0xbca/0x1270
+>  xfs_bmapi_convert_delalloc+0x101/0x350
+>  xfs_writeback_range+0x76c/0x12d0
+>  iomap_writeback_folio+0x9ed/0x2100
+>  iomap_writepages+0x13c/0x2a0
+>  xfs_vm_writepages+0x278/0x330
+>  do_writepages+0x247/0x5c0
+>  filemap_writeback+0x22c/0x2e0
+>  xfs_file_release+0x442/0x580
+>  __fput+0x407/0xb50
+>  fput_close_sync+0x114/0x210
+>  __x64_sys_close+0x94/0x120
+>  do_syscall_64+0xc4/0xf80
+>  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> ```
+> 
+> After analyzing the above issues, the possible triggering process
+> is as follows:
+> ```
+> xfs_bmapi_convert_delalloc
+>  xfs_bmapi_convert_one_delalloc
+>   xfs_bmapi_allocate
+>    xfs_bmap_add_extent_delay_real
+>     da_old = startblockval(PREV.br_startblock); // da_old = 5
+>     case BMAP_LEFT_FILLING:
+>      ifp->if_nextents++;  // 21 + 1 = 22
+>      if (xfs_bmap_needs_btree(bma->ip, whichfork))  // 22 > 21
+>       xfs_bmap_extents_to_btree     // convert to btree
+>         cur->bc_ino.allocated++;
+>       da_new = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(bma->ip, temp),
+>                                startblockval(PREV.br_startblock) -
+>                                (bma->cur ? bma->cur->bc_ino.allocated : 0));  // da_new = 5 - 1 = 4
+>       PREV.br_startblock = nullstartblock(da_new); //xfs_bmapi_convert_one_delalloc() return
+> 
+>                                                  xfs_bmap_del_extent_real
+>                                                    case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:
+>                                                     ifp->if_nextents--;  // 22 - 1 = 21
+>                                                     if (xfs_bmap_needs_btree(ip, whichfork))
+>                                                       xfs_bmap_extents_to_btree
+>                                                     else
+>                                                       xfs_bmap_btree_to_extents  // convert to extents
+> ... // Alternate a few times in the middle.
+> da_old = 4
+> da_old = 3
+> da_old = 2
+> da_old = 1
+> ...
+> xfs_bmapi_convert_delalloc
+>  xfs_bmapi_convert_one_delalloc
+>   error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, XFS_TRANS_RESERVE, &tp);  // Both blocks and rtextents are 0
+>    tp = kmem_cache_zalloc(xfs_trans_cache, GFP_KERNEL | __GFP_NOFAIL);
+>    error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+>    if (blocks > 0)
+>     error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
+>     tp->t_blk_res += blocks;    // The value of blocks is 0, so the value of tp->t_blk_res is 0
+>    xfs_bmapi_allocate
+>     xfs_bmap_add_extent_delay_real
+>      da_old = startblockval(PREV.br_startblock); // da_old = 0
+>      case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING:   // The current delay extent is just exhausted.
+>       ifp->if_nextents++;  // 21 + 1 + 22
+> 
+>     if (xfs_bmap_needs_btree(bma->ip, whichfork))  // 22 > 21
+>      error = xfs_bmap_extents_to_btree(bma->tp, bma->ip, &bma->cur, da_old > 0, &tmp_logflags, whichfork);     // Converted to btree. da_old > 0 is false.
+>       args.wasdel = wasdel;   //  wasdel is false
+>       error = xfs_alloc_vextent(&args);
+>        xfs_alloc_ag_vextent(args, 0)
+>         xfs_ag_resv_alloc_extent(args->pag, args->resv, args);
+>          case XFS_AG_RESV_NONE:
+>           field = args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS : XFS_TRANS_SB_FDBLOCKS; //args->wasdel  == false
+>           xfs_trans_mod_sb(args->tp, field, -(int64_t)args->len);
+>            case XFS_TRANS_SB_FDBLOCKS:
+>             if (delta < 0)
+>              tp->t_blk_res_used += (uint)-delta;
+>              if (tp->t_blk_res_used > tp->t_blk_res)  // ***tp->t_blk_res is 0, thus triggering xfs_force_shutdown()***
+>               xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> ```
+> 
+> The logic that triggers the issue above was designed by me to facilitate the
+> construction of the problem. Besides the scenario where XFS_DINODE_FMT_BTREE
+> and XFS_DINODE_FMT_EXTENTS are converted back and forth, there is also the
+> scenario of btree splitting.
+> 
+> The core reason for the issue is that in xfs_bmapi_convert_delalloc(), the
+> call to xfs_bmap_worst_indlen() calculates the worst-case number of reserved
+> blocks, which is the number of additional blocks required after a complete
+> conversion of the entire delayed extent. It assumes that the entire conversion
+> process is atomic. However, the current process cannot guarantee such atomicity.
+> In the case of a fragmented filesystem, the most extreme scenario is that every
+> block conversion triggers a full btree split, in which case the reserved blocks
+> are far from sufficient. When this issue is triggered, the filesystem fragmentation
+> in the environment is indeed quite severe.
+> 
+> Further analysis of this abnormal model shows that because the reserved blocks
+> are continuously consumed, they may eventually exceed the reserved amount. When
+> the space is nearly exhausted, xfs_bmap_extents_to_btree() may fail to allocate
+> blocks, triggering a warning. This failure to allocate additional blocks can lead
+> to issues with normal block allocation.
+> 
+> Additionally, in xfs_bmap_add_extent_delay_real(), if a delayed extent is split
+> into two, xfs_bmap_worst_indlen() is recalculated to reserve blocks. In the case
+> of nearly exhausted space, it may be impossible to reserve the newly required
+> blocks, leading to a writeback failure.
+> 
+> During the reservation phase, reserving more blocks by considering the worst-case
+> scenario would require occupying a lot of extra space, which is not very practical.
+> I was thinking that we could convert all the delay extents at once to ensure
+> atomicity, which would ensure that the two issues analyzed above do not exist.
+> However, I am not sure what negative impacts this approach might have. The only
+> thing I can think of is that the reserved space would be repeatedly allocated and
+> released, but I believe the current logic already has similar situations.
+> 
+> I haven't thought of a better solution at the moment. I wonder if anyone has any
+> good ideas?
 
-Even more cleaning out of swap.h is nice, so
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I haven't.  With EFI-based space freeing in transactions, as a
+theoretical last resort you could steal a block from an EFI instead of
+scanning the bnobt/cntbt.  This would mitigate the nastiness of repeated
+split/merge cycles but you'd have to be careful about block reuse.
 
 --D
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  include/linux/swap.h | 98 +-------------------------------------------
->  mm/swap.h            | 92 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 94 insertions(+), 96 deletions(-)
 > 
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 95237ee065c2..31eef9b74949 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -16,9 +16,9 @@
->  #include <uapi/linux/mempolicy.h>
->  #include <asm/page.h>
->  
-> -struct notifier_block;
-> -
->  struct bio;
-> +struct notifier_block;
-> +struct swap_info_struct;
->  
->  #define SWAP_FLAG_PREFER	0x8000	/* set if swap priority specified */
->  #define SWAP_FLAG_PRIO_MASK	0x7fff
-> @@ -178,29 +178,6 @@ struct sysinfo;
->  struct writeback_control;
->  struct zone;
->  
-> -/*
-> - * Max bad pages in the new format..
-> - */
-> -#define MAX_SWAP_BADPAGES \
-> -	((offsetof(union swap_header, magic.magic) - \
-> -	  offsetof(union swap_header, info.badpages)) / sizeof(int))
-> -
-> -enum {
-> -	SWP_USED	= (1 << 0),	/* is slot in swap_info[] used? */
-> -	SWP_WRITEOK	= (1 << 1),	/* ok to write to this swap?	*/
-> -	SWP_DISCARDABLE = (1 << 2),	/* blkdev support discard */
-> -	SWP_DISCARDING	= (1 << 3),	/* now discarding a free cluster */
-> -	SWP_SOLIDSTATE	= (1 << 4),	/* blkdev seeks are cheap */
-> -	SWP_BLKDEV	= (1 << 6),	/* its a block device */
-> -	SWP_ACTIVATED	= (1 << 7),	/* set after swap_activate success */
-> -	SWP_FS_OPS	= (1 << 8),	/* swapfile operations go through fs */
-> -	SWP_AREA_DISCARD = (1 << 9),	/* single-time swap area discards */
-> -	SWP_PAGE_DISCARD = (1 << 10),	/* freed swap page-cluster discards */
-> -	SWP_STABLE_WRITES = (1 << 11),	/* no overwrite PG_writeback pages */
-> -	SWP_SYNCHRONOUS_IO = (1 << 12),	/* synchronous IO is efficient */
-> -					/* add others here before... */
-> -};
-> -
->  #define SWAP_CLUSTER_MAX 32UL
->  #define SWAP_CLUSTER_MAX_SKIPPED (SWAP_CLUSTER_MAX << 10)
->  #define COMPACT_CLUSTER_MAX SWAP_CLUSTER_MAX
-> @@ -219,56 +196,6 @@ enum {
->  #define SWAP_NR_ORDERS		1
->  #endif
->  
-> -/*
-> - * We keep using same cluster for rotational device so IO will be sequential.
-> - * The purpose is to optimize SWAP throughput on these device.
-> - */
-> -struct swap_sequential_cluster {
-> -	unsigned int next[SWAP_NR_ORDERS]; /* Likely next allocation offset */
-> -};
-> -
-> -/*
-> - * The in-memory structure used to track swap areas.
-> - */
-> -struct swap_info_struct {
-> -	struct percpu_ref users;	/* indicate and keep swap device valid. */
-> -	unsigned long	flags;		/* SWP_USED etc: see above */
-> -	signed short	prio;		/* swap priority of this type */
-> -	struct plist_node list;		/* entry in swap_active_head */
-> -	signed char	type;		/* strange name for an index */
-> -	unsigned int	max;		/* size of this swap device */
-> -	unsigned long *zeromap;		/* kvmalloc'ed bitmap to track zero pages */
-> -	struct swap_cluster_info *cluster_info; /* cluster info. Only for SSD */
-> -	struct list_head free_clusters; /* free clusters list */
-> -	struct list_head full_clusters; /* full clusters list */
-> -	struct list_head nonfull_clusters[SWAP_NR_ORDERS];
-> -					/* list of cluster that contains at least one free slot */
-> -	struct list_head frag_clusters[SWAP_NR_ORDERS];
-> -					/* list of cluster that are fragmented or contented */
-> -	unsigned int pages;		/* total of usable pages of swap */
-> -	atomic_long_t inuse_pages;	/* number of those currently in use */
-> -	struct swap_sequential_cluster *global_cluster; /* Use one global cluster for rotating device */
-> -	spinlock_t global_cluster_lock;	/* Serialize usage of global cluster */
-> -	struct rb_root swap_extent_root;/* root of the swap extent rbtree */
-> -	struct block_device *bdev;	/* swap device or bdev of swap file */
-> -	struct file *swap_file;		/* seldom referenced */
-> -	struct completion comp;		/* seldom referenced */
-> -	spinlock_t lock;		/*
-> -					 * protect map scan related fields like
-> -					 * inuse_pages and all cluster lists.
-> -					 * Other fields are only changed
-> -					 * at swapon/swapoff, so are protected
-> -					 * by swap_lock. changing flags need
-> -					 * hold this lock and swap_lock. If
-> -					 * both locks need hold, hold swap_lock
-> -					 * first.
-> -					 */
-> -	struct work_struct discard_work; /* discard worker */
-> -	struct work_struct reclaim_work; /* reclaim worker */
-> -	struct list_head discard_clusters; /* discard clusters list */
-> -	struct plist_node avail_list;   /* entry in swap_avail_head */
-> -};
-> -
->  static inline swp_entry_t page_swap_entry(struct page *page)
->  {
->  	struct folio *folio = page_folio(page);
-> @@ -423,10 +350,7 @@ int find_first_swap(dev_t *device);
->  extern unsigned int count_swap_pages(int, int);
->  extern sector_t swapdev_block(int, pgoff_t);
->  extern int __swap_count(swp_entry_t entry);
-> -extern bool swap_entry_swapped(struct swap_info_struct *si, swp_entry_t entry);
->  extern int swp_swapcount(swp_entry_t entry);
-> -struct backing_dev_info;
-> -extern struct swap_info_struct *get_swap_device(swp_entry_t entry);
->  sector_t swap_folio_sector(struct folio *folio);
->  
->  /*
-> @@ -452,20 +376,7 @@ bool folio_free_swap(struct folio *folio);
->  swp_entry_t swap_alloc_hibernation_slot(int type);
->  void swap_free_hibernation_slot(swp_entry_t entry);
->  
-> -static inline void put_swap_device(struct swap_info_struct *si)
-> -{
-> -	percpu_ref_put(&si->users);
-> -}
-> -
->  #else /* CONFIG_SWAP */
-> -static inline struct swap_info_struct *get_swap_device(swp_entry_t entry)
-> -{
-> -	return NULL;
-> -}
-> -
-> -static inline void put_swap_device(struct swap_info_struct *si)
-> -{
-> -}
->  
->  #define get_nr_swap_pages()			0L
->  #define total_swap_pages			0L
-> @@ -497,11 +408,6 @@ static inline int __swap_count(swp_entry_t entry)
->  	return 0;
->  }
->  
-> -static inline bool swap_entry_swapped(struct swap_info_struct *si, swp_entry_t entry)
-> -{
-> -	return false;
-> -}
-> -
->  static inline int swp_swapcount(swp_entry_t entry)
->  {
->  	return 0;
-> diff --git a/mm/swap.h b/mm/swap.h
-> index a77016f2423b..70974495bf15 100644
-> --- a/mm/swap.h
-> +++ b/mm/swap.h
-> @@ -8,6 +8,79 @@ struct swap_iocb;
->  
->  extern int page_cluster;
->  
-> +/*
-> + * We keep using same cluster for rotational device so IO will be sequential.
-> + * The purpose is to optimize SWAP throughput on these device.
-> + */
-> +struct swap_sequential_cluster {
-> +	unsigned int next[SWAP_NR_ORDERS]; /* Likely next allocation offset */
-> +};
-> +
-> +/*
-> + * The in-memory structure used to track swap areas.
-> + */
-> +struct swap_info_struct {
-> +	struct percpu_ref users;	/* indicate and keep swap device valid. */
-> +	unsigned long	flags;		/* SWP_USED etc: see above */
-> +	signed short	prio;		/* swap priority of this type */
-> +	struct plist_node list;		/* entry in swap_active_head */
-> +	signed char	type;		/* strange name for an index */
-> +	unsigned int	max;		/* size of this swap device */
-> +	unsigned long *zeromap;		/* kvmalloc'ed bitmap to track zero pages */
-> +	struct swap_cluster_info *cluster_info; /* cluster info. Only for SSD */
-> +	struct list_head free_clusters; /* free clusters list */
-> +	struct list_head full_clusters; /* full clusters list */
-> +	struct list_head nonfull_clusters[SWAP_NR_ORDERS];
-> +					/* list of cluster that contains at least one free slot */
-> +	struct list_head frag_clusters[SWAP_NR_ORDERS];
-> +					/* list of cluster that are fragmented or contented */
-> +	unsigned int pages;		/* total of usable pages of swap */
-> +	atomic_long_t inuse_pages;	/* number of those currently in use */
-> +	struct swap_sequential_cluster *global_cluster; /* Use one global cluster for rotating device */
-> +	spinlock_t global_cluster_lock;	/* Serialize usage of global cluster */
-> +	struct rb_root swap_extent_root;/* root of the swap extent rbtree */
-> +	struct block_device *bdev;	/* swap device or bdev of swap file */
-> +	struct file *swap_file;		/* seldom referenced */
-> +	struct completion comp;		/* seldom referenced */
-> +	spinlock_t lock;		/*
-> +					 * protect map scan related fields like
-> +					 * inuse_pages and all cluster lists.
-> +					 * Other fields are only changed
-> +					 * at swapon/swapoff, so are protected
-> +					 * by swap_lock. changing flags need
-> +					 * hold this lock and swap_lock. If
-> +					 * both locks need hold, hold swap_lock
-> +					 * first.
-> +					 */
-> +	struct work_struct discard_work; /* discard worker */
-> +	struct work_struct reclaim_work; /* reclaim worker */
-> +	struct list_head discard_clusters; /* discard clusters list */
-> +	struct plist_node avail_list;   /* entry in swap_avail_head */
-> +};
-> +
-> +/*
-> + * Max bad pages in the new format..
-> + */
-> +#define MAX_SWAP_BADPAGES \
-> +	((offsetof(union swap_header, magic.magic) - \
-> +	  offsetof(union swap_header, info.badpages)) / sizeof(int))
-> +
-> +enum {
-> +	SWP_USED	= (1 << 0),	/* is slot in swap_info[] used? */
-> +	SWP_WRITEOK	= (1 << 1),	/* ok to write to this swap?	*/
-> +	SWP_DISCARDABLE = (1 << 2),	/* blkdev support discard */
-> +	SWP_DISCARDING	= (1 << 3),	/* now discarding a free cluster */
-> +	SWP_SOLIDSTATE	= (1 << 4),	/* blkdev seeks are cheap */
-> +	SWP_BLKDEV	= (1 << 6),	/* its a block device */
-> +	SWP_ACTIVATED	= (1 << 7),	/* set after swap_activate success */
-> +	SWP_FS_OPS	= (1 << 8),	/* swapfile operations go through fs */
-> +	SWP_AREA_DISCARD = (1 << 9),	/* single-time swap area discards */
-> +	SWP_PAGE_DISCARD = (1 << 10),	/* freed swap page-cluster discards */
-> +	SWP_STABLE_WRITES = (1 << 11),	/* no overwrite PG_writeback pages */
-> +	SWP_SYNCHRONOUS_IO = (1 << 12),	/* synchronous IO is efficient */
-> +					/* add others here before... */
-> +};
-> +
->  #ifdef CONFIG_THP_SWAP
->  #define SWAPFILE_CLUSTER	HPAGE_PMD_NR
->  #define swap_entry_order(order)	(order)
-> @@ -352,6 +425,13 @@ static inline int non_swapcache_batch(swp_entry_t entry, int max_nr)
->  	return i;
->  }
->  
-> +bool swap_entry_swapped(struct swap_info_struct *si, swp_entry_t entry);
-> +struct swap_info_struct *get_swap_device(swp_entry_t entry);
-> +static inline void put_swap_device(struct swap_info_struct *si)
-> +{
-> +	percpu_ref_put(&si->users);
-> +}
-> +
->  #else /* CONFIG_SWAP */
->  struct swap_iocb;
->  static inline struct swap_cluster_info *swap_cluster_lock(
-> @@ -498,5 +578,17 @@ static inline int non_swapcache_batch(swp_entry_t entry, int max_nr)
->  {
->  	return 0;
->  }
-> +static inline bool swap_entry_swapped(struct swap_info_struct *si,
-> +		swp_entry_t entry)
-> +{
-> +	return false;
-> +}
-> +static inline struct swap_info_struct *get_swap_device(swp_entry_t entry)
-> +{
-> +	return NULL;
-> +}
-> +static inline void put_swap_device(struct swap_info_struct *si)
-> +{
-> +}
->  #endif /* CONFIG_SWAP */
->  #endif /* _MM_SWAP_H */
-> -- 
-> 2.53.0
+> Thanks,
+> Ye Bin
 > 
 > 
