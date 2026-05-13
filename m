@@ -1,111 +1,103 @@
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C94D3A9611
-	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9CBB3A426D
+	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:56:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778702141; cv=none; b=dbvNA6hm3HI7X7t4T7WUKpIIH7kxkkxvZqN9wCRpQSGsfky2cNH/TzJAAChHR/p/8mFWHHslolXQQp0fvnT1kZmemlRb1dtaR2K0NcGLisD4Ab6iDXQggJG+kdG24f8h/6tZX9meGrj0icVZJAsuJQytkb8LwHVP7cvzU5bZNt0=
+	t=1778702175; cv=none; b=Ws4SQ/kxGJHl2BJ88wtuhKWWp5T9d0mNvvuR8SNB9nyfzqlNQSFD/Q0vS6DaWcNF5eqkrRAeXee+bm9Vrw+YCg2VLwaNAzTiB6cVM+FsA3C4EuZdnOePzM7fQtcMqTP/7/kgzNoOvpnWApNWFMlkUyFLaPsZ6oTt0CunCbLCH8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778702141; c=relaxed/simple;
-	bh=6q+Jlew0Fwj+Ewp6UZdrRl4SO/A/6VSjk4celCdXvTU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=pAz3uhfJHkhNLE/5lYRa/KT2EM0N+44daX7Ks7FfmURTHtGGO9Zdv3wE9Plzeaark4Xj2u/0Bu+IYti4ScWM6ucrStHyrxY/8ECuvzTy78KG6zcptcc22aT5tv8V35bv3RYkGck1LyYTAMyK9drhF8ml3oXzI8uMrAHKxWGOABA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=Huic3uXR; arc=none smtp.client-ip=209.85.210.45
+	s=arc-20240116; t=1778702175; c=relaxed/simple;
+	bh=DZwcPmH+04E4hEMYfZxmWOphebXi2TK5M+0gKLhYoho=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=oFYG1IpBPwM31AFyUMXNT7dcVZ84dbIN1jBbiMEV0WxBob1wdIeeYWULBCN67i6jC2kZYz6w1pH46y4DxV0zPYgb+NRzsbJrYEt11fZruSkagobp+EDbcY0D92exmo3G8MpF0MvnnvNc/i9GE7OagxessYex0aEgAcyLBuT7MD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=f6Pt21f3; arc=none smtp.client-ip=209.85.210.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="Huic3uXR"
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7dea1272943so3794016a34.0
-        for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 12:55:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="f6Pt21f3"
+Received: by mail-ot1-f43.google.com with SMTP id 46e09a7af769-7dcd689829eso6349812a34.3
+        for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 12:56:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1778702138; x=1779306938; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=63STWXd9Wzpt4PhrJ/B9urLFnYXotN9z6wtEWKI/5Zc=;
-        b=Huic3uXRAqUq/jmsHa2NBsfRiXjoa/vPexojOpjASE6BgTsG807o2YheMpXGIUXneP
-         Z/t2sWQS3wgDk4th5MIBHDd067Y1kMlVWCEjV4FO296ftCeE7RJTRHYNwpjubvg9sL/y
-         eQsPuYpW1kV1+d/FTPihD7q4dApBVKwbwJcsFWrxshG5R0Xayu5Hwaw1jE/Es2NZkMQw
-         FwBjiASSdWnVgovI4rGAhJ18S6KcfbOdTdVapvkk3Kq/4IPJ9nAkEo66Bwxs4rSF3CAM
-         xJ7UUsc+ZBHMC7eR0L17Re+wDZw+wcOo1p6/jkj0/iS8dD/A2XRBZ2Mk6kPrE+9Sl1xM
-         YuHA==
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1778702171; x=1779306971; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=krbyiVc8jSJdhIcgAt5f1amAPCSUW93oLBkGCtEucHU=;
+        b=f6Pt21f3Ba14Ughj5nW6FhvEeVxnfyxR9Hfd9N7qfBD4kWEcfzBLegRro2xaxCtbp1
+         4TEoU78u9kP28JeO9U0b8EcJsREKriT3MhAY0wmftebymQVxymEiXhRfPXSHFih4UZ0v
+         NKdxQz6d/Gcpy1N+ZW++VET0zyzI8kGSKr0chlV0oQCAGSlmfIRglFiX3+Q2QuiyoiA/
+         YzfcMT3DtoJcyUtulPMnUF7dCBTrkTklahLRCYunTq0esIWG+yJ14TQbHoz6U2KgOpUC
+         mBWxUlVHn2a6ztPjnlaFqb31OFSIOAgBZs9PPmQTBx0tJ0uZJO81Y1Bh+1IiVQA+kjsQ
+         jNCg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778702138; x=1779306938;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=63STWXd9Wzpt4PhrJ/B9urLFnYXotN9z6wtEWKI/5Zc=;
-        b=CsT6lhofqwg+Sd9vF7p0HzCyvft97W6KXAIzdtYfLDjqhyl+kN46l6N0y9Td/vtZJC
-         4aARtcq4V0jw5ChWg7v7qIT30dyc8mYgooktY/5f386sxLZBqvYenA/s6at9CXsRTLso
-         qTFqTCG66y8EVI7AWBIxPyaW9+7T07e07HcSVNUHijpIuwrFEgceh7Go29WQb+UfXdt0
-         QdL4JOUMdwj/Q9/gceX82qjhh9ZxbE7vWbyWuOzArkTfQstn2QO70wrgbCrh1HckmRa1
-         AlAaOSXSGF/PjA3xPxnoz0CDTvYcA+RjtipJXCUBuk6vJgmIc2ELysPgZmdU5laUlIbj
-         jptA==
-X-Forwarded-Encrypted: i=1; AFNElJ/dQcAWOH75nuUzXt1trUNRNk2aGxZUL373/+fCV6dHJ8atkcyYAUxP4Xbc/L2lqTb0jFH7gYq0Qbg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCD6u6+x+pzpjVESHy0xpzfUZjfy3m9a2QI+Kljdu5tgh901m0
-	Up9ovB3Hov3RglAQLxYqkYowUQHn2Iwoavj1Dpm6uWXr9hWwIdCxlRUOVlMIFBXnOxY=
-X-Gm-Gg: Acq92OHd4n7lQayMybjPuVUps7Revva94ykiDEZ6/gbyLfRvm0LGNK7SbF7tqh68juO
-	AKhnmu0IkeMrln+Txh6Qff6PDm4OoyvLiepC2x9cGzBRku+dzO2Sfm1BfziIj3UFK3noGudMZgw
-	VqJ5KEtja5j0mxaxDq8yiFxdw6gX9uAqcpSOJ7FdvA5GZMPE9YQHst7a//QzlMcZYcPPlJKbrZg
-	myhJsSoGZGHQT8LI7IN9WNAjiqJOuwfoaWAP1tsqz2+eXrphUBUSggP0s3POLfuVIaeMoNEUa4k
-	FW1t/OVPQYT88d6AdqNuhxdhdQMMC/Wd9ZerCIAdzNPIJuhc53UvrsFFAQ69jsrbRnAA0PV08K/
-	3gWBfOvH+O+PBcmEk+SbfJruGou4WKsAbQee0tihYyRH1gTKbsA4ZzOulH6AXJ+xnN7uUzU1xTD
-	/26x5bHqcMcfvLkhRrjYqb+7OPZ3z303JzQ+OYw05GXptC7y1hHJcOWxXRkZVSz3RJ5Xl/qP6cJ
-	6CmcF34udCDUg==
-X-Received: by 2002:a05:6830:6ac2:b0:7de:b878:3106 with SMTP id 46e09a7af769-7e3da08eecemr2719920a34.7.1778702138210;
-        Wed, 13 May 2026 12:55:38 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7e3f3edbff9sm260584a34.21.2026.05.13.12.55.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 May 2026 12:55:37 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, 
- "Darrick J. Wong" <djwong@kernel.org>, 
- Pankaj Raghav <pankaj.raghav@linux.dev>, linux-block@vger.kernel.org, 
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-In-Reply-To: <20260507050153.1298375-1-hch@lst.de>
-References: <20260507050153.1298375-1-hch@lst.de>
-Subject: Re: fix block layer bounce buffering for block size > PAGE_SIZE v2
-Message-Id: <177870213725.543218.16808866598223942501.b4-ty@b4>
-Date: Wed, 13 May 2026 13:55:37 -0600
+        d=1e100.net; s=20251104; t=1778702171; x=1779306971;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=krbyiVc8jSJdhIcgAt5f1amAPCSUW93oLBkGCtEucHU=;
+        b=QEm0yW/pSeJqKjW/4gWcbxKO+mDYC88eAUp4Aw5N1wK710lY0qvM72p90zkWixy+B0
+         O9IXN6IzdgwU5xS4drhkTD6RpleZURb1Zs9vJ3RHEiLkbSov7GuDXAUOFLXt7aul5/kp
+         Yq7HpBsmbL2DZ3SwEi1KyH51vXipqXLUZMXR7tw9cZww3N6TxlsesCtDhFAq1q1IUuz8
+         6cMpuR0mbfS3qNQLOSq3l4E5CtSRQgFGm/C5EPxx2rn38m2A0UO9iaxyJE3t5Eo3YeEh
+         lJVPdbRsoWc7viHpDxgPQq1DMBsjg3u9qHluf/DvzKdZQabnonIEcBSVqAlnUwbXPsKY
+         j3tQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/C8KoZhlGZqBHsMqdAOITprnjN/u9LrvhVcPnLZPQK4duiewm8ADLkVz9cAhDlXxrFJ/998SImsRQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywnpy5eSEL3Ckje1A/rac07+/DQ6GONJ1FR8d5Vltf1yWEHlMwN
+	Kpzg0gSgb0nK9yTumagFV98OMj23HCWDyybIo7q/ywvbAmZ1kJdFhB+bNu4KKdWc8inff4jNRq3
+	wG9bg
+X-Gm-Gg: Acq92OEVXJQLWuAElCli4eA4Q45hh4vB46GRTVFSVk1Lsx18BofEhU3zJbAHytTdV0o
+	3ozCIhbYmnOzYOPV8SK41TAnffjXSFjxofXKNLgt6iWUp+35EZO7fYya2PzNmK0e6whDS9MXcKi
+	keRtWf/mRrabGIdxIumhBlxiqbEIaw85MfkZtBzLXc5KIVFHbDuBNLbtCauGm0AQLVJPtf7ye/D
+	zrX7lkFe14cFMvwiXDOQU2gLw7/hgo+bvm5uNifvTtMTVSiPJocxhnkkHJPDso6aF0h7Lofd4oY
+	y1PtX4B4ynPGsUfRNBkKS88xZ8S6QFkfo0vC72W32tZln5tTavPRY1KDoBlsGxG3U+wSMmmNeFR
+	h/pQp48U/MIBM5LCacUEGbmZt5F/+VAKFuHtxL7ENgOdKcjI0dTL9lZtMNbPtcplm7KzqRMjeQm
+	mbaIuCKE5DUdqVZKBJUZBt9Mv/E2dujqW2SZOLUbGHeoTISXwFVBJ1FdA34NPPdzVH30MTYWXE7
+	qtYqCxc
+X-Received: by 2002:a05:6820:152a:b0:694:9a67:edf6 with SMTP id 006d021491bc7-69b78d81c1cmr2797284eaf.17.1778702170672;
+        Wed, 13 May 2026 12:56:10 -0700 (PDT)
+Received: from [192.168.1.102] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-69b25cb58b2sm10339019eaf.8.2026.05.13.12.56.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 May 2026 12:56:10 -0700 (PDT)
+Message-ID: <30acedd3-e994-4810-8952-613b7d0bd9ca@kernel.dk>
+Date: Wed, 13 May 2026 13:56:09 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: fix block layer bounce buffering for block size > PAGE_SIZE v2
+From: Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>,
+ Pankaj Raghav <pankaj.raghav@linux.dev>, linux-block@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20260507050153.1298375-1-hch@lst.de>
+ <683792db-32fc-4765-9ba6-3712af01676c@kernel.dk>
+Content-Language: en-US
+In-Reply-To: <683792db-32fc-4765-9ba6-3712af01676c@kernel.dk>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
 
-
-On Thu, 07 May 2026 07:01:46 +0200, Christoph Hellwig wrote:
-> this series has two fixes that make the new block layer bounce
-> buffering code work for the block size > PAGE_SIZE case.
+On 5/13/26 11:15 AM, Jens Axboe wrote:
+> On 5/6/26 11:01 PM, Christoph Hellwig wrote:
+>> Hi all,
+>>
+>> this series has two fixes that make the new block layer bounce
+>> buffering code work for the block size > PAGE_SIZE case.
+>>
+>> Changes since v1:
+>>  - update a commit log to better describe the applicability
 > 
-> Changes since v1:
->  - update a commit log to better describe the applicability
-> 
-> Diffstat:
->  block/bio.c          |   27 +++++++++++++++------------
->  fs/iomap/direct-io.c |    2 +-
->  include/linux/bio.h  |    3 ++-
->  3 files changed, 18 insertions(+), 14 deletions(-)
-> 
-> [...]
+> Can we get some Fixes tags on these, please?
 
-Applied, thanks!
+Looked myself to not delay this any further, both marked with:
 
-[1/2] block: pass a minsize argument to bio_iov_iter_bounce
-      commit: 32d5019ed3b6ff4439cb075fb275f655c8a2059c
-[2/2] block: align down bounces bios
-      commit: e7b8b3c5b2a65595d506ffedafac66f0a11fbdc2
+Fixes: 8dd5e7c75d7b ("block: add helpers to bounce buffer an iov_iter into bios")
 
-Best regards,
 -- 
 Jens Axboe
-
-
-
