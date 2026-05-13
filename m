@@ -1,42 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0743F4108
-	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 13:44:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFA438655A;
+	Wed, 13 May 2026 14:59:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778679841; cv=none; b=SkWqqhvkEYH950/+xZxiMkCwySUggFn+Jq7Q2mo74SXD/NLeUbCpnrRhkyDsmQBw9aG1QAGo44uVTfvRnCQ9/4uM29/upGlhE8lVUAxpO6KAi0iQ24W+dWQ+QOM99d6Oozh+R8uUOmX1dW/geVDb4xw/eRPJ8cfPO1wmff+Mxok=
+	t=1778684361; cv=none; b=iTK1QhfmhcdYbhmyQoPdM4VrW7HzWoI3PtTB101iNjpQXqUEouYHpZk1olqfT4B6LFqCTRT5yRrHRnekBCrOC5b8ONsdLjVCul4tZP9p1DGGaA2oL6sHF3Tyd3Jo/xSZBrkajesE/xWKD5KrbKXeOJJj9bq5NgrI/WxMgGf0Cjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778679841; c=relaxed/simple;
-	bh=Bb/oSp9jSi7F39De4S+SEYqjWHyFeI1172DsRA84Q68=;
+	s=arc-20240116; t=1778684361; c=relaxed/simple;
+	bh=zbNHyyDRYAeGo6U86F5ea4LHa32zJh59lyteWOe4KGw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B/Xr0sABVZvVtjfkiAq4hCgt6GyTdZFsqDTOKoYb6tRh/OULXpmcdEL3gdUMt90htBC1/ajofBzoX4uEC5zEs1L1ZAaxJQUdJucLPnyBpDyVeRPvzb43+TqQBetC7F2aCNUnlQHtHWR9GVXk1vGviJEUPYj/3jomzC3eZnfSRoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TseXaPDH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZhMrupf3fZ6ls6FVHJp880rovHBrIpAxXmr8lnULIEhJPSrZiYAzG1/w8BjXXkWF/YlY651QuhNX2j5B0SV0hm4xGTDZ21uo84LwcqRDo7Umyj2OVhM7le6YNRunOLF4FBm+8lkkdyqRsJLIWqZH3UgwwtbbnGAmzRD9RgyiUzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iIhYEKx5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TseXaPDH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B0CEC2BCB7;
-	Wed, 13 May 2026 13:43:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iIhYEKx5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D47CC2BCB3;
+	Wed, 13 May 2026 14:59:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778679840;
-	bh=Bb/oSp9jSi7F39De4S+SEYqjWHyFeI1172DsRA84Q68=;
+	s=k20201202; t=1778684360;
+	bh=zbNHyyDRYAeGo6U86F5ea4LHa32zJh59lyteWOe4KGw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TseXaPDHRg8Wu5tp0Jj8Tg6Q+33AphooNFa1JqdmxRn1jyn55SjfwB4OK1lBjDq9K
-	 cUeQ898Av9tJ1r24SvphTHjX16dJzPEvU2L6q9ksU+RNCNzfuyCgupZVPOFEpNEeUL
-	 x12otOwdVXGEBeArYwTkjykobuYojvWBZRre5yyuMLH02UHbhAC6+E4iWPonnLe9ZD
-	 9ldAyNWY4Z0BMNcPiKzyHgqqevYYCYmc2regUMSfspXV7tBAVKbD39VbVkSjmzXBee
-	 inolYf4yV5BNJPZCisp9WjgRwktLk5Bh+DrTShy/9wcQRzNykkk3LEYXQAWiw2qkGM
-	 OgbdjfXcycBnA==
-Date: Wed, 13 May 2026 23:43:51 +1000
-From: Dave Chinner <dgc@kernel.org>
-To: Hans Holmberg <hans.holmberg@wdc.com>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: return -ENOENT for unallocated inodes in
- xfs_imap_lookup
-Message-ID: <agSAF-9YFa1ODMIG@dread>
-References: <20260513063745.8067-1-hans.holmberg@wdc.com>
+	b=iIhYEKx51XcVXCXizSytP4ZvhZtiBJmIPf+6O8Mktq3AJeEzUzkfq9zJFMxWWOQN/
+	 aoWFZ5To1myUEqEdw7VallkySu/iGPAldgKZg0gl6xnLSnuloIhSu3lBTLqysfs1I0
+	 Skg4f9BktAuE18yvvQRJ70VrpwY5SAV36hi26w0P9GMsQkbf7JD+SNU9HxSde3AnHu
+	 bo3a4ZV9/09phwV+AioQvcuqmfuB2eTSN/4uxVBmpiaTeWdd95EFcAzHk3DTbz/8je
+	 v+mVMmUJ6OM8tMNlaOTQXwFxTd7uJskcOql+wcSZWQ2REyC0QM0b5EqoBwpRfC7ETk
+	 FtuJsAzYKU1jA==
+Date: Wed, 13 May 2026 07:59:19 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>,
+	Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+	Chao Yu <chao@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Hyunchul Lee <hyc.lee@gmail.com>, Steve French <sfrench@samba.org>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org
+Subject: Re: [PATCH 08/12] swap,iomap: simplify iomap_swapfile_iter
+Message-ID: <20260513145919.GP9555@frogsfrogsfrogs>
+References: <20260512053625.2950900-1-hch@lst.de>
+ <20260512053625.2950900-9-hch@lst.de>
+ <20260512170204.GI9555@frogsfrogsfrogs>
+ <20260513065608.GA2250@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,48 +61,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260513063745.8067-1-hans.holmberg@wdc.com>
+In-Reply-To: <20260513065608.GA2250@lst.de>
 
-On Wed, May 13, 2026 at 08:37:45AM +0200, Hans Holmberg wrote:
-> Under heavy garbage collection pressure from RocksDB workloads,
-> filesystem shutdowns can occur in xfs_zone_gc_iter_irec when
-> xfs_iget() returns -EINVAL.
+On Wed, May 13, 2026 at 08:56:08AM +0200, Christoph Hellwig wrote:
+> On Tue, May 12, 2026 at 10:02:04AM -0700, Darrick J. Wong wrote:
+> > OH.  Now I remember why -- it's to handle contiguous mixed mappings
+> > better.
+> > 
+> > Let's say that you have a 1k fsblock filesystem and 4k base pages.  You
+> > fallocate an 8G swap file and then mkswap it.  The first mapping is a 1k
+> > written mapping at offset 0 for the swap header, followed by an 8388607k
+> > unwritten mapping at offset 3k.
+> > 
+> > The PAGE_SIZE rounding code in iomap_swapfile_add_extent will round the
+> > end of that first mapping down to zero and ignore it.  The second
+> > mapping will be treated as if it were a 8388604k mapping starting at
+> > offset 4096.  Now the page counts are wrong and the swapon fails.
 > 
-> xfs_zone_gc_iter_irec expects -ENOENT when garbage collection races
-> with file deletion,
+> Do we care about this use case?  I guess you did as you implemented
+> his, but still?
 
-xfs_iget() returns -ENOENT when a lookup races with an unlink on the
-cache hot side. When the inode is not in cache, it cannot race with
-file deletion.
+We do, because mkswap -F uses fallocate nowadays:
 
-If we miss the cache, it will go read the inode from disk and then
-check the state of it before inserting it into the cache. If the
-inode mode is zero on disk, then we raced with unlink and -ENOENT
-will be returned.
+$ mkswap -s 4194304 -F a
+Setting up swapspace version 1, size = 4 MiB (4190208 bytes)
+no label, UUID=bc9746bf-e200-4944-927c-80d83872f1cb
+$ filefrag -v a
+Filesystem type is: 58465342
+File size of a is 4194304 (1024 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:  411383552.. 411383552:      1:            
+   1:        1..    1023:  411383553.. 411384575:   1023:             last,unwritten,eof
+a: 1 extent found
 
-IOWs, a plain xfs_iget() call will handle races with unlink...
+> > A more generic solution to this would be to change add_swap_extent to
+> > take sector_t addr and length values and use them to construct a bitmap
+> > representing contiguous physical space on the bdev, accounting of course
+> > for PAGE_SIZE alignment.  Except for the swap header page, every other
+> > contiguously set page-aligned region in the bitmap gets added to the
+> > swap extent map.
+> 
+> You don't even need a bitmap, just do basically the same checks as
+> the iomap code when moving to a new swap extent after moving to use
+> the sector_t.  And it really should anyway, as the current abuse of
+> sector_t to store a disk offset in PAGE_SIZE units is pretty gross.
 
-> so that blocks belonging to deleted files can be
-> skipped gracefully. Returning -EINVAL instead causes the GC code to
-> treat this as a fatal error and forces a shutdown.
+Oh, I meant this to handle the particularly gross case where the fsblock
+size is smaller than a base page, but there are a very large number of
+file mappings that point to a physically contiguous extent but are not
+in logical order:
 
-If it passes in XFS_IGET_UNTRUSTED to xfs_iget(), then it is saying
-the inode number comes from an unknown source and that may be invalid.
-Hence we do more rigorous and costly checks on the inode number
-(like force a btree lookup) if it is not already validated and in
-cache. If any of these validation checks fail we return EINVAL to
-indicate it was an invalid inode number.
+{.offset=0, .length=1k, .addr=7},
+{.offset=1, .length=1k, .addr=6},
+{.offset=2, .length=1k, .addr=5},
+{.offset=3, .length=1k, .addr=4},
+{.offset=4, .length=1k, .addr=3},
+{.offset=5, .length=1k, .addr=2},
+{.offset=6, .length=1k, .addr=1},
+{.offset=7, .length=1k, .addr=0},
 
-IOWs, xfs_iget(XFS_IGET_UNTRUSTED) callers need to handle -EINVAL,
-because validity checking the inode number is what the caller -asked
-it to do-.
+That's two pages of swapfile, but with the current layout accumulation
+code we "cannot" find either.
 
-If you are using inode number from a trusted source (i.e. internal
-filesystem metadata like a directory data block or rmapbt) then you
-don't need XFS_IGET_UNTRUSTED. The inode number is known to be good,
-modulo races with unlink which xfs_iget() handles anyway...
-
--Dave.
--- 
-Dave Chinner
-dgc@kernel.org
+--D
