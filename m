@@ -1,50 +1,50 @@
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C5383B777B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:31:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D743AC0F0
+	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:31:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778700711; cv=none; b=AUOMBhGELrFqpS5WLBCt75kfKfkg7LAOsa94Ia3TV8gXRWH6HE9jYkF0Bn5OTUbedxsvbwc8OjIPAnpnD2+mPFumcJ65zvcEJd1WIIXg2CPCFQ9+xxWvWI5znP7CPq856NN3mf9BI/0d3Umt84n0Nfm5CUOY2sAMZ6TPsKJk6cM=
+	t=1778700717; cv=none; b=hcIfUobdB3ehT0QN0PoL/UXgMZKisoVGdX9yEZ3/B6SMOBPLXdTX4ndDAVMyG8zmDyYMe5N9MFx+QyHZebB2cYVEs4qqKDXZlDysvDzEGqi0GYldBKOZI4KzJ8z0KQSYzeEdDO5q7PEIXmVz+B+C2/0eNqMMqBBrquHYnCcJIbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778700711; c=relaxed/simple;
-	bh=VhO+DD11IWwkIstmwYaDuntC7BAn0TeatopwYcRWLD4=;
+	s=arc-20240116; t=1778700717; c=relaxed/simple;
+	bh=bPSzBltpqbz023judXexxILYXsAsLPvxrb9cWxUDGww=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KTxUcx6SLl3ifM5jRdMVXD7dAlxwav8m/zrsBCru1VQK2u2IW1HMhWev5utONryfJcoRjYuJllw+78fC4kVTPMesDJiezwgn4Qf8+IAD4R3jBwUW6ZAzvgWJltLVDL4wtEdFLixdM+srxZPCIXHlWDnLQkJnovl7H3S8hvbboyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=BocN3xqX; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=luJ1yYgF; arc=none smtp.client-ip=195.135.223.130
+	 MIME-Version; b=sIUU5VkSjh9QnQHRkWSznI5Z0uOv85kCisd6YJMApy77uu4NDaV9Mx+xmj97mM34wIaW1/jZvNAwJv6XzKhu3gJGFB/sch6bQBVwd6K7qSaQJBvuE5En8c5ZMXpmFJDBdpOmZr2DmAfGewEgpa/EhG5sBJkC2VSEFPjQDsXg1kM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=FvnPrm8F; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=FvnPrm8F; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="BocN3xqX";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="luJ1yYgF"
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="FvnPrm8F";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="FvnPrm8F"
 Received: from localhost.localdomain (unknown [10.128.32.2])
-	by smtp-out1.suse.de (Postfix) with ESMTP id F21006A802
-	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:31:46 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTP id 4A8146A82F
+	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 19:31:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1778700707; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1778700710; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YYZbR37KegtY3iCKDW/z9oswetniZwuYG62OPCDjvco=;
-	b=BocN3xqXPJVj40iveLmjzQFYIx/V5CF0QtOjAumeUat5G3h/W6tr6c2XdOMmkl2lQFk0fk
-	ZEGnwnl+Pf9hUm+ZCt+SOvsS2RIrTLxPZWxj6ZdPoDrr7KYPSVGTBHsFja5AFeNs8iYKhl
-	VcVKx8qkBtZcWdIOztPhXSjmGjHzDH0=
+	bh=w+Xr2ShSuOzbWcEFPV1o/KRzbf6leOcx70AXFgTAykM=;
+	b=FvnPrm8F15j67hKvnWeEc4NrBRWYJ+wV+RoX/hUdVs1GMkHL5qBeXRaRg+aOvmaYD8+lCJ
+	FgDBcoT3k3JcQgQYJPmXlik5NUwFtf5lurq8N+QeXVoNpysWXQyZV5JjI2U+q2WhC0sDyR
+	C3oaerw2ddWdIwuTmZWg1jC5xQ/WC6g=
 Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1778700706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1778700710; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YYZbR37KegtY3iCKDW/z9oswetniZwuYG62OPCDjvco=;
-	b=luJ1yYgFxc79EWrm7/ZyzwTHBXmnKrI+0uh6TV7d9XF67ExvwkaWPXSndmWw+sxr0pP3Jl
-	UvXKpHS8JMPPGyCyJPKaYSt5MaagL/nntEkqIII+JSF20nOsXQ3PJUb+QXbyeginB7IfzX
-	yhAWklexU3hFNnX9z1YAgbvcK+IGlT8=
+	bh=w+Xr2ShSuOzbWcEFPV1o/KRzbf6leOcx70AXFgTAykM=;
+	b=FvnPrm8F15j67hKvnWeEc4NrBRWYJ+wV+RoX/hUdVs1GMkHL5qBeXRaRg+aOvmaYD8+lCJ
+	FgDBcoT3k3JcQgQYJPmXlik5NUwFtf5lurq8N+QeXVoNpysWXQyZV5JjI2U+q2WhC0sDyR
+	C3oaerw2ddWdIwuTmZWg1jC5xQ/WC6g=
 From: Anthony Iliopoulos <ailiop@suse.com>
 To: <linux-xfs@vger.kernel.org>
-Subject: [PATCH 1/4] configure: always check for statmount supported_mask
-Date: Wed, 13 May 2026 21:30:37 +0200
-Message-ID: <20260513193040.2130-2-ailiop@suse.com>
+Subject: [PATCH 2/4] libfrog: add missing statmount flag definitions
+Date: Wed, 13 May 2026 21:30:38 +0200
+Message-ID: <20260513193040.2130-3-ailiop@suse.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20260513193040.2130-1-ailiop@suse.com>
 References: <20260513193040.2130-1-ailiop@suse.com>
@@ -56,13 +56,13 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Spam-Flag: NO
-X-Spam-Score: -2.79
-X-Spamd-Result: default: False [-2.79 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+X-Spam-Score: -2.75
+X-Spamd-Result: default: False [-2.75 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
 	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.19)[-0.945];
+	NEURAL_HAM_SHORT(-0.15)[-0.760];
 	MIME_GOOD(-0.10)[text/plain];
 	RCPT_COUNT_ONE(0.00)[1];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
@@ -74,39 +74,37 @@ X-Spamd-Result: default: False [-2.79 / 50.00];
 	MIME_TRACE(0.00)[0:+];
 	FROM_EQ_ENVFROM(0.00)[];
 	TO_DN_NONE(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,configure.ac:url,localhost.localdomain:helo]
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,localhost.localdomain:helo]
 X-Spam-Level: 
 
-On systems with kernel headers older than v6.8 that preceed the addition
-of the statmount syscall, have_listmount will be set to false and thus
-checking of the statmount supported_mask is being skipped since the
-check is currently conditional to listmount support.
-
-This causes compilation failures since need_internal_statmount will not
-be set, and thus struct statmount will not be available to xfs_healer.
-
-Fix this by always checking for statmount supported_mask support even
-when listmount is not available.
+Add definitions for STATMOUNT_MNT_BASIC and STATMOUNT_MNT_POINT to support
+compilation of xfs_healer on systems with older kernel headers that predate
+the statmount syscall (introduced in v6.8).
 
 Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
 ---
- configure.ac | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ libfrog/statmount.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/configure.ac b/configure.ac
-index 2ac5e3d8181a..fe2ffddd9ec4 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -192,8 +192,8 @@ AC_HAVE_CLOSE_RANGE
- AC_HAVE_LISTMOUNT
- if test "$have_listmount" = "yes"; then
- 	AC_HAVE_LISTMOUNT_NS_FD
--	AC_HAVE_STATMOUNT_SUPPORTED_MASK
- fi
-+AC_HAVE_STATMOUNT_SUPPORTED_MASK
- AC_HAVE_FANOTIFY_MOUNTINFO
+diff --git a/libfrog/statmount.h b/libfrog/statmount.h
+index 7e281ce93029..b6f1338830a0 100644
+--- a/libfrog/statmount.h
++++ b/libfrog/statmount.h
+@@ -52,6 +52,14 @@ struct statmount {
  
- if test "$enable_ubsan" = "yes" || test "$enable_ubsan" = "probe"; then
+ /* all the new flags added since the beginning of statmount */
+ 
++#ifndef STATMOUNT_MNT_BASIC
++#define STATMOUNT_MNT_BASIC		0x00000002U     /* Want/got mnt_... */
++#endif
++
++#ifndef STATMOUNT_MNT_POINT
++#define STATMOUNT_MNT_POINT		0x00000010U     /* Want/got mnt_point */
++#endif
++
+ #ifndef STATMOUNT_MNT_NS_ID
+ #define STATMOUNT_MNT_NS_ID		0x00000040U	/* Want/got mnt_ns_id */
+ #endif
 -- 
 2.49.0
 
