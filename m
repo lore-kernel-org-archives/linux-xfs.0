@@ -1,171 +1,186 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3546B36A03B
-	for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 20:34:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778704458; cv=pass; b=PPQpPOL+dgoDx7ik7lnAHzMZmNk8j0B8WprxVFuEgFnqf7vLsEHEpulp1SXcj/NbNnh9chKHFmma9l3BJbv/L6X+jxxmyKWf7pE2jIaO2sCYcDFfykZ2beAXf4modJkk3Si2xvN4HjBOSRpsOvGbDuwnz7YZCst5XP7ItdgOCfs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778704458; c=relaxed/simple;
-	bh=QqaIYA8X3X6Tew9rng99hk3rmPCslU/eWwD53qMGzFE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MRJndSIKAIqmM9iyokNuOaNdCBfk4G601cIPRvguc0lG3FZGFcRZxkKq35byWZqfv+JkHzpLibnlZ+hkJImwWay0FkY+8qbVIWB4M4m1b+vog5NbIfK0zmnOwfep9UQ7XS8GdyzrfCK1aKGRGxMj3p5Cdduec//DnWCd5dudtis=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AD9fcV9D; arc=pass smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDA7274FD1;
+	Thu, 14 May 2026 00:25:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778718315; cv=none; b=pdOm3mMFYShP6VtmfOhIqMY2YUYh+Mfbr6QjRnQXjGs8B0gudXoFTGi3efpvgpGfw9hsQLxo3s4CkXY1qQ3xzuDvyPocqHj89Q/sXjWuoLiPOrcdgmbp3atNP9u/G/aRtQRXf+0EdztAD7EkDxxbY9hlxrtxZp+7mpjVURPONVQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778718315; c=relaxed/simple;
+	bh=FbMTjnorNQFOtNMPI75AZb8bZeDg7/Ourokg1M5OV28=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=d+BFL1btnuGzim1cRO78MZX9DNLA3eVR0L45gkOSmCl5DYVSM2KauCoEJBlLKmoihWN2w1Or57XYqupLx/uJutLh8bL9iBkcVE1ve8ASjxenBh6EupGyKmK3alFN1sFnuPKLgGkcHZgzBWf+AzDpm+9hsmMR3G3NpKw3kfvpNxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j76Nykre; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AD9fcV9D"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-8b6dd874471so94179296d6.0
-        for <linux-xfs@vger.kernel.org>; Wed, 13 May 2026 13:34:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778704455; cv=none;
-        d=google.com; s=arc-20240605;
-        b=g7KGF3k7CX1u7IWW0lyJr72XzqSlsTvDEv0WdPd2KMy1ey/Lpwm9UxF2uYnEePWFkU
-         7mL1Byu6BYCzGQXwGmQC30SxIlgLjy4eaLXg2JV5e3Sbp8WHsHrdQMoyYCJ43k/w0RDh
-         Lxy+VyYT7oKIoiz6sL8NiwDvvnrjkAZ87vugI25cmxdi6l8fqZ/aFPlImnoh1xclAb9u
-         RQDbnRzyGHm4HyqlNyXKROwBObcdtvpIWm7sdFNOHIJpZc9oj9dH5KdT0amvE68KP6OF
-         BFrOEjNUynsAzhGtHm8ndpwzZumCjhOSyeZL064M3BgwWL+03HwFb8s8BkW7cRkhnBkw
-         QlKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=YffvRc4ueiaHAv5vxRd/K/yTD1qBPNZn3LhENW3N4xg=;
-        fh=CIIRCRYtmFHgMUIhQNk72yTNXo4rjP3YR0t7AZCNxuM=;
-        b=Xa6yXxE5X9TsuF7dC9LYfPaV09fAAFPPzyJcf/trdijS3JhKGJifT8KcBgnShpSyug
-         udgMpf6ZTmDEIHpIU6y/fsEgA3TiRlbUnMiJH60cpHgyfbbRlHAd81Gp94fN0MXqQ/O0
-         4fHsINSt3YKkHCBk8lTKRqDO6a2DZ8ZNMtFT+PYJtW8f0uxJOXchhsb1SYKWcJd1byy5
-         dFlgQiSjbUgKI7Gx4sgGVfm5jpR3G+crnV/MQ1tffG0R1ooCF7mtoJN2PSTLpK7VgXNk
-         pDg1tNPCTvrOXxUofo85HyI4Tf7MsSSZA0kjz+cG80mB/L1tLnYJTjwxfR5LzGvVnqJy
-         udiw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778704455; x=1779309255; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YffvRc4ueiaHAv5vxRd/K/yTD1qBPNZn3LhENW3N4xg=;
-        b=AD9fcV9DHYgDCefhJ2zSXZDp5IsgxaGD+U0MOWxRyeVB9HxtlwiRupMCngACCv3gN3
-         DM2QnrQXjV+sYmnB7buk4J5Dt6tGrh1OPZBWVQB8b9fCQmOKih3ywWgVh1komLd2T6S9
-         Iw0vFCUrddNFBUe65lmXniDofheSzrnXitWFheF975H4HOv5OAkzK3mkvFZBQzbbEFO5
-         3CBUV04Gi5ikM28vxU2ZcJDeIaaPgXBzn1SOf42ImQdPsuYoVzWX98ke8U7+4SKfTYHq
-         rgiLecCrmAZpjPBD/RK6amLrzQARySCD79r299h/pV/nX/61R2SXk8dj58MY+M4wHe8N
-         AnCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778704455; x=1779309255;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=YffvRc4ueiaHAv5vxRd/K/yTD1qBPNZn3LhENW3N4xg=;
-        b=sbDorvgL+noQoMPmArnVaqzGJ5tVREQ3cSFVmsYTYxe2DEEEhUgwMfwPMbt4OjcnK0
-         rln51x5JUngK9R17AicAgmAMe2OEeX3IIhbFb9u7Gj7Bmy79rqOKQWQ6JcwuTj5QZ6p6
-         9r7fQy9AJ7acv/JdprmPxW/imoeLGJJamMdFn6Dmd4XwU91KKde4YFYAz4duYxJPAb9P
-         LuK5UoKssYpT1RTZJux+hL/HsrpQXCLneOPkBwEaLKKZjmEf+43Ttpe4GXUzYYIOx+VW
-         xCrBD7kg52Gu2/GSmOfddHqoG6yO3tl43HzyelfcMPCKlg4cAy3c+ELAYgWhlb0YcBEU
-         Us4A==
-X-Forwarded-Encrypted: i=1; AFNElJ/yEc9r49wq5q+gfCllVhq3vCUbb4YCuD7W2FknNrsXttwAlXS1C1HX8m+nnjtecPbpLrIL6xnXZWg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3gxha2T/EDmLfZj4UsGzQRVDiuKDYi7nZbdDL5ESBMuwbFnY9
-	bTQM9LaNViLaXN7aYep7rSW+bTGtG0VX70SpFs1B+rsaQkFb1TDPLRbsNzHJGbQ3Opdz2QwkhAV
-	Y3B8cGAEGWFtWPG32/nXxjFRZgO942fs=
-X-Gm-Gg: Acq92OHbuZNbHNvpdb9cuE7sLz2OIbuQqTZeeFVE1ujq2WFFb6h72+s08GzkqJidxpY
-	/a6u7L8cB6aMl1xP12TDKI3LY6rqUHEo8UHNMPvfK8yP2KdNxssy9hosrCRMXKKDXI7eJ1qgtf/
-	I9AVVoUZ9yPo4mBpnReZFTv1GdmEBhypM5/iBoOdhQwpZyJJPIBUK5v6myPF3W4tz8TwBpMsQNR
-	dTdzyl7Hau/VsfF4NtQpKhPcDTJstuulrmxZHkCTTkZw0Ugol2EDz0uoJTQrj7eMEBBh662jJLa
-	35T8LlPTqAC/VGfpYpT7M5W2TezRW88ypq92lf6QSoyH3qMXr8Tu0sRcf2670/cVpxjdZV6ZVil
-	4As3T1ttLQE7uahO8m0WCd4j4tB3a8MJQVMKwu6vCNNZL3hBugU1fWvgjE8rcZ57UDE5d+VBzN7
-	3xOWXNK8wlj5k9cpWxlvCeDQ==
-X-Received: by 2002:a05:6214:8009:b0:8a0:846e:8850 with SMTP id
- 6a1803df08f44-8c7b9d6a34dmr79395336d6.20.1778704455206; Wed, 13 May 2026
- 13:34:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j76Nykre"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9DDDC19425;
+	Thu, 14 May 2026 00:25:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778718314;
+	bh=FbMTjnorNQFOtNMPI75AZb8bZeDg7/Ourokg1M5OV28=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=j76NykrePn8FVHusgBIzzCIWvOkkNl7gnjaXqR9ZbH/Yi2TCS5xdkExqOINiFCS4A
+	 PaGwHz9mXMHd9vRO2rBCP/RgdhpYcZUATTnue+XcOm2301P3E8cxS6fVorDeB6UpSW
+	 4nb2qJ9tpOzJ3JEvTpRqZdDthBbLszXzDrR0LXGjCRvi99h4qyroDy3NhY7DuKhNvD
+	 lh7FHhs4CjS22etStX/+OZ5uOlFk/s4F0sHOkYB+3hncLYnRNYpITg5vNyAvEgepnp
+	 p9Gn02+7C/g2vYQjor1ZeIi2WSLMlD5JIVDpBUh7WRa+ifsC+Y8wZXEtbHvW/kmw/O
+	 7DbFo6aoNjggg==
+Date: Wed, 13 May 2026 17:25:13 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dai Ngo <dai.ngo@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
+ LAYOUTGET
+Message-ID: <20260514002513.GQ9555@frogsfrogsfrogs>
+References: <20260512172238.2495085-1-dai.ngo@oracle.com>
+ <agQhzg-0aeISwOGW@infradead.org>
+ <961eb355-2f52-47a0-9399-e050a4e535a2@oracle.com>
+ <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260512053625.2950900-1-hch@lst.de>
-In-Reply-To: <20260512053625.2950900-1-hch@lst.de>
-From: Steve French <smfrench@gmail.com>
-Date: Wed, 13 May 2026 15:34:03 -0500
-X-Gm-Features: AVHnY4LdSaGvyovg6RvG5pKhPWnEZkoZnNgrzQdw3V-htIBym1ah9EOHikjxM8Q
-Message-ID: <CAH2r5msnYVb3hhXHwqDVHGGC1h4E6mLCRS4ktCrQoD9zdUW81g@mail.gmail.com>
-Subject: Re: improve the swap_activate interface
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>, 
-	Kairui Song <kasong@tencent.com>, Christian Brauner <brauner@kernel.org>, 
-	"Darrick J . Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>, 
-	"Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>, 
-	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
-	Namjae Jeon <linkinjeon@kernel.org>, Hyunchul Lee <hyc.lee@gmail.com>, 
-	Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, Carlos Maiolino <cem@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, 
-	linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
 
-I just tried this on 7.1-rc3 with the swap patches (full kernel build,
-on Ubuntu 25,10) and boot failed with out of memory which I had never
-seen before.  Any idea how to workaround this with the swap patch
-series, or is there a fix for this in the swap series already?
+On Wed, May 13, 2026 at 10:28:31AM -0700, Dai Ngo wrote:
+> Hi Christoph,
+> 
+> On 5/13/26 8:50 AM, Dai Ngo wrote:
+> > 
+> > On 5/13/26 12:01 AM, Christoph Hellwig wrote:
+> > > On Tue, May 12, 2026 at 10:21:53AM -0700, Dai Ngo wrote:
+> > > > A single LAYOUTGET request from the client can cause the server to
+> > > > issue multiple calls to xfs_fs_map_blocks() for different offsets
+> > > > within the same extent. Because the use of XFS_BMAPI_ENTIRE flag,
+> > > > these calls can produce overlapping mappings.
+> > > > 
+> > > > As a result, the LAYOUTGET reply sent to the NFS client may contain
+> > > > overlapping extents. This creates ambiguity in extent selection for a
+> > > > given file range, which can lead to incorrect device selection,
+> > > > inconsistent handling of datastate, and ultimately data corruption or
+> > > > protocol violations on the client side.
+> > > Please also add a check to the client that catches this and doesn't
+> > > use the layout that has extents outside the requested range. And maybe
+> > > warn about it as well.
+> > 
+> > The returned extents cover exactly the range requested in the LAYOUTGET
+> > op. However these extents are overlapping. For example, here is the
+> > on-the-wire capture of the LAYOUTGET operation and reply showing the
+> > overlapping extents:
+> > 
+> >     Network File System, Ops(3): SEQUENCE, PUTFH, LAYOUTGET
+> >         [Program Version: 4]
+> >         [V4 Procedure: COMPOUND (1)]
+> >         Tag: <EMPTY>
+> >         minorversion: 2
+> >         Operations (count: 3): SEQUENCE, PUTFH, LAYOUTGET
+> >             Opcode: SEQUENCE (53)
+> >             Opcode: PUTFH (22)
+> >             Opcode: LAYOUTGET (50)
+> >                 layout available?: No
+> >                 layout type: LAYOUT4_SCSI (5)
+> >                 IO mode: IOMODE_RW (2)
+> >                 offset: 122880
+> >                 length: 65536
+> >                 min length: 4096
+> >                 StateID
+> >                 maxcount: 4096
+> >         [Main Opcode: LAYOUTGET (50)]
+> >         Network File System, Ops(3): SEQUENCE PUTFH LAYOUTGET
+> >         [Program Version: 4]
+> >         [V4 Procedure: COMPOUND (1)]
+> >         Status: NFS4_OK (0)
+> >         Tag: <EMPTY>
+> >         Operations (count: 3)
+> >             Opcode: SEQUENCE (53)
+> >             Opcode: PUTFH (22)
+> >             Opcode: LAYOUTGET (50)
+> >                 Status: NFS4_OK (0)
+> >                 return on close?: Yes
+> >                 StateID
+> >                 Layout Segment (count: 1)
+> >                     offset: 122880
+> >                     length: 77824
+> >                     IO mode: IOMODE_RW (2)
+> >                     layout type: LAYOUT4_SCSI (5)
+> >                     SCSI Extents (count: 2)
+> >                         extent 0
+> >                             device ID: 01000000000000000000000000000000
+> >                             file offset: 122880
+> >                             length: 53248
+> >                             volume offset: 339460096
+> >                             extent state: INVALID_DATA (2)
+> >                         extent 1
+> >                             device ID: 01000000000000000000000000000000
+> >                             file offset: 122880
+> >                             length: 77824
+> >                             volume offset: 339460096
+> >                             extent state: INVALID_DATA (2)
+> >         [Main Opcode: LAYOUTGET (50)]
+> 
+> After reviewing ext_tree_insert(), with assist from Codex, I think this
+> function handles overlapping extents properly. The only issue I see in
+> ext_tree_insert() is the accuracy of the return error code, EINVAL instead
+> of ENOMEM, when kmemdup() fails.
+> 
+> Since ext_tree_insert seems to handle overlapping extents fine, do you
+> think it's worth it to fix xfs_fs_map_blocks() to avoid returning overlap
+> extents?
+> 
+> IMHO, I think we still should fix xfs_fs_map_blocks() to avoid any overhead
+> and complication in ext_tree_insert having to handle overlapping extents.
 
-On Tue, May 12, 2026 at 12:41=E2=80=AFAM Christoph Hellwig <hch@lst.de> wro=
-te:
->
-> Hi all,
->
-> Darrick recently posted iomap support for fuse-iomap, which was trivial
-> but a bit ugly, which triggered me into looking how this could be done
-> in a cleaner way.  The result of that is this fairly big series that
-> reworks how the MM code calls into the file system to activate swap
-> files to make it much cleaner and easier to use.
->
-> I've tested this with swap devices manually, and using the swap tests
-> in xfstests on btrfs, ext3, ext4, f2fs and xfs to exercise the different
-> implementation.  Out of those all passed, but f2fs actually notruns all
-> tests even in the baseline as it requires special preparation for
-> swapfiles which never got wired up in xfstests.
->
-> Diffstat:
->  Documentation/filesystems/iomap/operations.rst |    3
->  Documentation/filesystems/locking.rst          |   35 +--
->  Documentation/filesystems/vfs.rst              |   40 ++--
->  block/fops.c                                   |   15 +
->  fs/btrfs/btrfs_inode.h                         |    3
->  fs/btrfs/file.c                                |    4
->  fs/btrfs/inode.c                               |   72 -------
->  fs/ext4/file.c                                 |    6
->  fs/ext4/inode.c                                |   11 -
->  fs/f2fs/data.c                                 |   50 -----
->  fs/f2fs/f2fs.h                                 |    2
->  fs/f2fs/file.c                                 |    4
->  fs/iomap/swapfile.c                            |  165 +++---------------
->  fs/nfs/direct.c                                |    1
->  fs/nfs/file.c                                  |   21 --
->  fs/nfs/nfs4file.c                              |    3
->  fs/ntfs/aops.c                                 |    8
->  fs/ntfs/file.c                                 |    6
->  fs/smb/client/cifsfs.c                         |   18 +
->  fs/smb/client/cifsfs.h                         |    3
->  fs/smb/client/file.c                           |   16 -
->  fs/xfs/xfs_aops.c                              |   48 -----
->  fs/xfs/xfs_file.c                              |   39 ++++
->  fs/zonefs/file.c                               |   30 +--
->  include/linux/fs.h                             |   11 -
->  include/linux/iomap.h                          |    5
->  include/linux/nfs_fs.h                         |    3
->  include/linux/swap.h                           |  129 +-------------
->  mm/page_io.c                                   |   45 ----
->  mm/swap.h                                      |   92 ++++++++++
->  mm/swapfile.c                                  |  227 ++++++++++++++----=
--------
->  31 files changed, 471 insertions(+), 644 deletions(-)
->
+I don't know enough about the nfs blocklayout code to say for sure, but
+it seems like you want to upsert the mapping returned by
+xfs_fs_map_blocks into the "ext_tree" right?
 
+And by "upsert" I mean "clear out any mappings for the (offset, length)
+range, then insert the new mapping", sort of like what the fuse iomap
+cache does:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/tree/fs/fuse/fuse_iomap_cache.c?h=fuse-iomap-cache_2026-05-07#n1682
 
---=20
-Thanks,
+or I guess the xfs scrub bitmap support code does when you set a range:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/tree/fs/xfs/scrub/bitmap.c?h=fuse-iomap-cache_2026-05-07#n395
 
-Steve
+But as I said before, I don't know if "two mappings retrieved in rapid
+succession that overlap" is actually an NFS error.
+
+--D
+
+> -Dai
+> 
+> > 
+> > -Dai
+> > 
+> > > 
+> > > > Also drop the check for (!error) since it was checked after call to
+> > > > xfs_bmapi_read().
+> > > > 
+> > > > Fixes: cc6c40e09d7b1 ("NFSD/blocklayout: Support multiple
+> > > > extents per LAYOUTGET").
+> > > > Signed-off-by: Dai Ngo <dai.ngo@oracle.com>
+> > > > ---
+> > > >   fs/xfs/xfs_pnfs.c | 6 +++---
+> > > >   1 file changed, 3 insertions(+), 3 deletions(-)
+> > > > 
+> > > > - This patch is based on top of the patch:
+> > > >    xfs: fix use of uninitialized imap in xfs_fs_map_blocks error path
+> > > The error changes should go into that patch, so please resend it with
+> > > that fixes.  Maybe as a series together with this patch to keep them
+> > > together.
+> > > 
+> > > > @@ -172,6 +172,7 @@ xfs_fs_map_blocks(
+> > > >       offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> > > >         lock_flags = xfs_ilock_data_map_shared(ip);
+> > > > +    bmapi_flags = 0;    /* return map for requested range only */
+> > > Just remove the variable and hard code the 0 in the xfs_bmapi_read call.
+> > > 
+> > 
+> 
