@@ -1,192 +1,402 @@
-Received: from mail-pj1-f66.google.com (mail-pj1-f66.google.com [209.85.216.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD5131AF33
-	for <linux-xfs@vger.kernel.org>; Thu, 14 May 2026 16:07:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEB6335555
+	for <linux-xfs@vger.kernel.org>; Thu, 14 May 2026 16:27:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778774842; cv=none; b=uSBU/mr+co3D51XDBNe46k+ZuhyXGUDnL1Fw2cpDpqTXwTGyPfWTaH0GWCULgajOZlX8jnd/iA3qePqOAVF+Sh6BmccHG+M6nYXGTK2wJZxLQJvZIpJSRwAmFChPApDXSaQJozFQdiKi/dGfBMP+OkqBDnsSj5Kzaw8qVA6zAcE=
+	t=1778776039; cv=none; b=FYLPfagvSFrFNIlsKrwK7a26ny0UEh1BDEcNbFBYCoQSA/iW0pyOZx60gL7+CisfUIawCw9avePP0UeX8yonmPvO3p4bAEAOLIACE3eS7mhEwfecTBjQ5dRd547LJNDXUO6Pk62D5F5FZ20zFFgD4o9f1UJrSKwKYAOb19+bJfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778774842; c=relaxed/simple;
-	bh=FVTUG/4xkMXTb1X9qaDdg5ObG9NX3sFDqwFVAHxN1kk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AR1bIty3lZa2qxyzhGsPYHTn5Mh9Lc6/EmnsSBgyOX+oHfDVjZfYRxSV3Ie/Be5oYm1VnCHxsJwFUKRqilBP7L1gNLGHlbVPMpDu6CkepmtpFrBuMtTRx19I+hv+GMuhJTYSnp4ORqCUaxKbuMV6Aor75O2W6VRu920MSzMCmsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gHYNnCx/; arc=none smtp.client-ip=209.85.216.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778776039; c=relaxed/simple;
+	bh=zH7Eu9Qw66yOrAmVcEAdpj6yt50kOOuNTWEOYVIsDxI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BbrNg0JvxQmL8/W5RaotaHGgkj24FEMbrfDTi1teYCcaBVBGrPsDToN3ejNgsNg1uMmTjCMJsaDjV1r3dJeVxXJVQxY8N+lA4JvIK5OGinZrool04nQN1p46dzzjyKsSaJilXBE/UC8xbDpP9aNiFgQGb5GS0vbNZUOO6+UAwUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mBlynT/F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gHYNnCx/"
-Received: by mail-pj1-f66.google.com with SMTP id 98e67ed59e1d1-366087480d8so7321305a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2026 09:07:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778774841; x=1779379641; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xZBFX5zjwHu5P1DUvlI+NaYzNR+wqWefatYxwvoYC14=;
-        b=gHYNnCx/MwrNpE5bmB9gFRlmU2l8bqHRb/9d/AjmB6xP3Z5sxfuE5Q463TcqKZ67yW
-         TQhtb/NArBKPvWhAScb0BqR5yu/mxTQsKWt4Ia2d8zPWHxSd1TaxYr9GHNrbwUrthVdN
-         o6ocEnQMYLCn7LQJ56UPh/J0WMXj+PtgxOgxgpK2eLvl7xK+Au9EKDGs36tekQnYNTPW
-         dU9UaNPIIqYigHaA7O3lfiu7y3AOpiqsnZsy/xmmY1zK+C8mPpg1kMwGjMQMyCahlTFJ
-         qzHkWivpbGl6H4kOjBw/FzgMIT9ycL9wGD7tb6q9MzrG/XUTDzHlTdcDrtId4T5kz8Ot
-         Nc+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778774841; x=1779379641;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xZBFX5zjwHu5P1DUvlI+NaYzNR+wqWefatYxwvoYC14=;
-        b=nt7uVrlLx8S91VT/YgBuKaZ7HiTWJ4hW34kwpWRsC1tnZeIVvOqU2sCJrBsH8nRt5a
-         jNFb80+3k21YA7pKjpgpbLWcEVyHrHPmCnK8wfpnDm0tm5q24N4TEfGkFhvD2wYk3Yix
-         KMD4SQDJiQSe4GeqJyv0XlI+APENTy+gS3OoT6i9Dh51kHWp/xHgPKnmopCqy200Sdxf
-         RiAQepGg3Ayo+XJivj9SNBjDTdAlSD01tTtXhErRFpQGaTRcC/ITRkq6H80qTyUZNgiX
-         IOty4wQa9s4OcrXUATTMDPdQV3NmkKv0mackjs2mTgFSE2gDR/3yqS6PifVjYH+cJ7kb
-         xZwA==
-X-Gm-Message-State: AOJu0YwRyDOf+6BvcVG5M6BWN4Ht70hGX5WCwoL67uS2a8k0MJvAm1FL
-	4BV5iwtDr9asN3NntUVMDLaH4T8JvGdc0NZ7TIGoSHh1c2/vlUPItoeJ
-X-Gm-Gg: Acq92OEtHAN9RAiO/QMuleP+/I6sSSGkQb45Bu3+wxt9nWdLx8YwgZwOaXrIxQjeHqW
-	nFuqJcQannIr9bp78t/xGtbwntmXL7imEx5XpEQtSaOLs9yIyeOYb79+mV2eh0W/OzgNkUW9CkQ
-	utzRYq+sIwV+qJ2EQzVNCKWcP+LLlaw0bNNZUAiTHn1THpNmDXNZnVvGLwZ5WDL0y6xD+OTRL9Q
-	Qc+G7q+l2UjoRu2p6vtl4d0uGz971JSkcQ1vZJ0YiutQA1E8CGk0qJhkGTPjZ8MmvrBED5thyr8
-	fFuExxzbCSaBSy25qemtB+LuMVu9AgmzSHWDc93HptsOuVd+j/b4rCAZPAjKxct1wWhiTA0ii9N
-	tmEFh8qffCGDBcLLBAYcpmeQXdp7DfIx7EjYssDfrbROVVVGoloJ+q+ZAc5IBVfqwwATTroepvS
-	v3O8GOj/qmsIct1bk0x4c3OPnofa1kMOs3iNmnfAVuYg==
-X-Received: by 2002:a17:90b:2248:b0:368:341a:a925 with SMTP id 98e67ed59e1d1-36951c97685mr14970a91.23.1778774840424;
-        Thu, 14 May 2026 09:07:20 -0700 (PDT)
-Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36951434eafsm83602a91.10.2026.05.14.09.07.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2026 09:07:20 -0700 (PDT)
-From: Zhang Cen <rollkingzzc@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zerocling0077@gmail.com,
-	2045gemini@gmail.com,
-	Zhang Cen <rollkingzzc@gmail.com>
-Subject: [PATCH] xfs: drain inodegc before quota teardown on mount failure
-Date: Fri, 15 May 2026 00:07:12 +0800
-Message-Id: <20260514160712.2260541-1-rollkingzzc@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mBlynT/F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ADF0C2BCB3;
+	Thu, 14 May 2026 16:27:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778776039;
+	bh=zH7Eu9Qw66yOrAmVcEAdpj6yt50kOOuNTWEOYVIsDxI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mBlynT/FzkHRzuKOmR8xNxcA8QnQV21i1fbkdvPHcoijL4RNgkbCCpbfsLELsfudk
+	 I1CyWzKzemXT4xMr4HoVLYXpmTP+XPZxevtrN+ijs5wkcVpDqebFgcabuXlIR2apGy
+	 D69eJqo3NcfFRN8fn31N95Ls+zQZcBSiZ0NBQDcHsrCPfVMQpPzTHm30QQ77N3XI2w
+	 O4N3OstJ2iWg27gt2WgtZOZh5/YT9c8cUNXf0v5MtZxu1S0FU/JtVkuOUg/eh9yfRy
+	 y2zhoW0ahHqgxysZJopPunoa8uHqCF6Ov+09zmLZogEzFsfIg/Tx0naV/WuzkSxHU9
+	 IoMknrfnvaf7Q==
+Date: Thu, 14 May 2026 09:27:18 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: sandeen@sandeen.net, aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/1] xfsprogs: mkfs.xfs add default configuration
+ file.
+Message-ID: <20260514162718.GX9555@frogsfrogsfrogs>
+References: <20260514143716.893814-2-lukas@herbolt.com>
+ <20260514143716.893814-3-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260514143716.893814-3-lukas@herbolt.com>
 
-xfs_mountfs() starts background inodegc before mount completion. If a
-later setup step fails, the out_agresv unwind can release the quota
-inodes via xfs_qm_unmount_quotas() while m_qflags still leave dqattach
-enabled, and the common failure path can destroy mp->m_quotainfo via
-xfs_qm_unmount() before the first common inodegc drain.
+On Thu, May 14, 2026 at 04:37:17PM +0200, Lukas Herbolt wrote:
+> Various users may prefer different default values. Having a default config
+> file will allow them to utilize it without the need specifying configuration
+> file on command line.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+>  include/builddefs.in |  1 +
+>  mkfs/Makefile        |  3 ++
+>  mkfs/mkfs.xfs.conf   | 50 ++++++++++++++++++++++++++++++
+>  mkfs/xfs_mkfs.c      | 72 +++++++++++++++++++++++++++++++++++++++-----
+>  4 files changed, 119 insertions(+), 7 deletions(-)
+>  create mode 100644 mkfs/mkfs.xfs.conf
+> 
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 3b52d1afd703..b635a7cd08a6 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -59,6 +59,7 @@ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+>  PKG_LOCALE_DIR	= @datadir@/locale
+>  PKG_DATA_DIR	= @datadir@/@pkg_name@
+>  MKFS_CFG_DIR	= @datadir@/@pkg_name@/mkfs
+> +MKFS_SYSCONF_DIR = @sysconfdir@
+>  PKG_STATE_DIR	= @localstatedir@/lib/@pkg_name@
+>  
+>  XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_STAMP=$(PKG_STATE_DIR)/xfs_scrub_all_media.stamp
+> diff --git a/mkfs/Makefile b/mkfs/Makefile
+> index fb1473324cde..57cee687eb1e 100644
+> --- a/mkfs/Makefile
+> +++ b/mkfs/Makefile
+> @@ -21,6 +21,7 @@ CFGFILES = \
+>  	lts_6.12.conf \
+>  	lts_6.18.conf
+>  
+> +LCFLAGS += -DMKFS_CFG_DIR=\"$(MKFS_CFG_DIR)\" -DMKFS_SYSCONF_DIR=\"$(MKFS_SYSCONF_DIR)\"
+>  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
+>  	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
+>  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+> @@ -45,6 +46,8 @@ install: default
+>  	$(INSTALL) -m 755 $(XFS_PROTOFILE) $(PKG_SBIN_DIR)/xfs_protofile
+>  	$(INSTALL) -m 755 -d $(MKFS_CFG_DIR)
+>  	$(INSTALL) -m 644 $(CFGFILES) $(MKFS_CFG_DIR)
+> +	$(INSTALL) -m 755 -d $(MKFS_SYSCONF_DIR)
+> +	$(INSTALL) -m 644 mkfs.xfs.conf $(MKFS_SYSCONF_DIR)
 
-That leaves two teardown windows for an inodegc worker that resumes
-xfs_inactive(): dqget can still need qi_*quotaip after
-xfs_qm_unmount_quotas(), and the quota cache lookup still dereferences
-mp->m_quotainfo until xfs_qm_unmount() finishes. Normal unmount and the
-quotacheck abort path already drain inodegc before those teardown
-stages.
+At first I thought "gee, are we not supposed to dump config files into
+/etc anymore?" but maybe that's a crazy ro-root/systemd thing.  I guess
+that at least it /is/ in the spirit of /etc/mke2fs.conf.
 
-Fix this by draining inodegc twice on the mount failure path: once on
-out_agresv before dropping AG reservations and calling
-xfs_qm_unmount_quotas(), and again on the common teardown path before
-xfs_qm_unmount(). Keep xfs_unmount_flush_inodes() in place afterwards so
-that reclaim queued by quota, realtime, root, or metadir teardown still
-runs after xfs_qm_unmount() releases quota inodes on partially
-initialized mounts.
+>  install-dev:
+>  
+> diff --git a/mkfs/mkfs.xfs.conf b/mkfs/mkfs.xfs.conf
+> new file mode 100644
+> index 000000000000..76f5ab4d4d8e
+> --- /dev/null
+> +++ b/mkfs/mkfs.xfs.conf
+> @@ -0,0 +1,50 @@
+> +# mkfs.xfs default configuration file
+> +#
+> +# This file documents some of the options recognised by mkfs.xfs config file.
+> +# Adjust any value to override it system-wide.
+> +#
+> +# Command-line options always take precedence over values in this file.
+> +# A specific config file can be selected with: mkfs.xfs -c options=<path>
+> +
+> +[block]
+> +#size = 4096
+> +
+> +[metadata]
+> +#crc = 1
+> +#finobt = 1
+> +#inobtcount = 1
+> +#rmapbt = 1
+> +#reflink = 1
+> +#bigtime = 1
+> +#metadir = 0
+> +#autofsck = 0
+> +
+> +[inode]
+> +#align = 1
+> +# The default value is 25% for filesystems under 1TB,#5% for filesystems under
+> +# 50TB and 1% for filesystems over 50TB.
+> +#
+> +#maxpct = 25
+> +#size = 512
+> +#perblock = 8
+> +#attr = 2
+> +#projid32bit = 1
+> +#sparse = 1
+> +#nrext64 = 1
+> +#exchange = 1
+> +
+> +[data]
+> +# -1 = autodetect (use CPU count only on solid-state devices), 0 = disabled
+> +#concurrency = -1
+> +
+> +[log]
+> +#internal = 1
+> +#version = 2
+> +#lazy-count = 1
+> +# -1 = autodetect (use CPU count only on solid-state devices), 0 = disabled
+> +#concurrency = -1
+> +
+> +[realtime]
+> +# -1 = autodetect (use CPU count only on solid-state devices), 0 = disabled
+> +#concurrency = -1
 
-The buggy scenario involves two paths, with each column showing the order
-within that path:
+Oh, I see.  The "-1" changes scattered throughout are to make it so that
+you can specify that as a concurrency= option.  I had mistakenly thought
+pre-coffee that they were adding a new value.
 
-path A label: mount failure unwind      path B label: inodegc worker
-1. xfs_mountfs() starts inodegc and     1. Recovery or eviction leaves an
-   later jumps into out_agresv.            ordinary inode queued for
-                                           background inactivation.
-2. out_agresv used to reach             2. xfs_inodegc_worker() runs
-   xfs_qm_unmount_quotas(), which          xfs_inactive() on that inode.
-   releases qi_*quotaip while           3. xfs_inactive() calls
-   m_qflags still allow dqattach.          xfs_qm_dqattach().
-3. The common unwind later reached      4. dqattach follows m_qflags into
-   xfs_qm_unmount(), which purged          dqget, which may need the quota
-   dquots and destroyed                    inodes and mp->m_quotainfo being
-   mp->m_quotainfo.                        torn down by the unwind.
-4. The first common inodegc drain
-   used to happen only after quota
-   teardown had started.
+However, I think "concurrency=auto" would be more ergonomic for users.
 
-Sanitizer validation reported:
-general protection fault
-Call trace:
-  xfs_qm_dqget_cache_lookup() (?:?)
-  trace_function() (kernel/trace/trace.h:806)
-  xfs_qm_dqget_inode() (?:?)
-  ring_buffer_unlock_commit() (kernel/trace/ring_buffer.c:4306)
-  xfs_qm_dqattach_locked() (?:?)
-  srso_alias_return_thunk() (arch/x86/include/asm/nospec-branch.h:375)
-  xfs_qm_dqattach() (?:?)
-  xfs_free_eofblocks() (?:?)
-  xfs_inactive() (?:?)
-  xfs_inodegc_worker() (?:?)
-  process_one_work() (kernel/workqueue.c:3200)
-  worker_thread() (?:?)
-  kthread() (?:?)
-  _raw_spin_unlock_irq() (kernel/locking/spinlock.c:204)
-  ret_from_fork() (?:?)
-  __switch_to() (?:?)
-  ret_from_fork_asm() (?:?)
+	/*
+	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
+	 * If this cannot be determined, fall back to the default AG geometry.
+	 * "auto" means use CPU count only solid-state devices
+	 */
+	if (!value || !strcmp(value, "nr_cpus"))
+		optnum = 1;
+	else if (!strcmp(value, "auto"))
+		optnum = -1;
+	else
+		optnum = getnum(value, opts, subopt);
 
-Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
+	if (optnum == 1)
+		cli->data_concurrency = nr_cpus();
+	else
+		cli->data_concurrency = optnum;
 
-Signed-off-by: Zhang Cen <rollkingzzc@gmail.com>
+Also note that the explicit strcmp carveout for "auto" (and "nr_cpus")
+means you don't have to tweak minval below.
 
----
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b24195f570cd..e8a870482d1a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1228,6 +1228,12 @@ xfs_mountfs(
- 	return 0;
- 
-  out_agresv:
-+	/*
-+	 * Drain ordinary inodegc before we drop per-AG reservations or tear
-+	 * down quota state.  Background inactivation can still attach dquots
-+	 * here, and dqget can still need the quota inodes.
-+	 */
-+	xfs_inodegc_flush(mp);
- 	xfs_fs_unreserve_ag_blocks(mp);
- 	xfs_qm_unmount_quotas(mp);
- 	if (xfs_has_zoned(mp))
-@@ -1236,24 +1242,25 @@ xfs_mountfs(
- 	xfs_rtunmount_inodes(mp);
-  out_rele_rip:
- 	xfs_irele(rip);
--	/* Clean out dquots that might be in memory after quotacheck. */
--	xfs_qm_unmount(mp);
-  out_free_metadir:
- 	if (mp->m_metadirip)
- 		xfs_irele(mp->m_metadirip);
- 
- 	/*
--	 * Inactivate all inodes that might still be in memory after a log
--	 * intent recovery failure so that reclaim can free them.  Metadata
--	 * inodes and the root directory shouldn't need inactivation, but the
--	 * mount failed for some reason, so pull down all the state and flee.
-+	 * Flush inodegc before we destroy quotainfo.  This is the first drain
-+	 * for paths that bypass out_agresv, and it also catches any reclaim
-+	 * queued by the quota, realtime, root, or metadir teardown above.
- 	 */
- 	xfs_inodegc_flush(mp);
- 
-+	/* Clean out dquots that might be in memory after quotacheck. */
-+	xfs_qm_unmount(mp);
-+
- 	/*
- 	 * Flush all inode reclamation work and flush the log.
- 	 * We have to do this /after/ rtunmount and qm_unmount because those
--	 * two will have scheduled delayed reclaim for the rt/quota inodes.
-+	 * will have scheduled delayed reclaim for the rt/quota/root/metadir
-+	 * inodes.
- 	 *
- 	 * This is slightly different from the unmountfs call sequence
- 	 * because we could be tearing down a partially set up mount.  In
+Whatever we end up adding for a "just use the defaults" value, that
+ought to be a separate patch from the one that adds the defaults config
+file.
+
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index dd8a48c3633e..dbf15eca3442 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -44,6 +44,11 @@
+>   */
+>  #define WHACK_SIZE (128 * 1024)
+>  
+> +/*
+> + * Default configuration file which can keep distro specific values.
+> + */
+> +#define MKFS_DEFAULT_CFGFILE	MKFS_SYSCONF_DIR "/mkfs.xfs.conf"
+> +
+>  /*
+>   * XXX: The configured block and sector sizes are defined as global variables so
+>   * that they don't need to be passed to getnum/cvtnum().
+> @@ -51,6 +56,11 @@
+>  static unsigned int		blocksize;
+>  static unsigned int		sectorsize;
+>  
+> +/*
+> + * Set to true while parsing the config file so option handlers know the source
+> + */
+> +static bool			parsing_cfgfile;
+> +
+>  /*
+>   * Enums for each CLI parameter type are declared first so we can calculate the
+>   * maximum array size needed to hold them automatically.
+> @@ -264,6 +274,7 @@ struct opt_params {
+>  		bool		str_seen;
+>  		bool		convert;
+>  		bool		is_power_2;
+> +		bool		from_file;
+>  		struct _conflict {
+>  			struct opt_params	*opts;
+>  			int			subopt;
+> @@ -472,7 +483,7 @@ static struct opt_params dopts = {
+>  		  .conflicts = { { &dopts, D_AGCOUNT },
+>  				 { &dopts, D_AGSIZE },
+>  				 { NULL, LAST_CONFLICT } },
+> -		  .minval = 0,
+> +		  .minval = -1,
+>  		  .maxval = INT_MAX,
+>  		  .defaultval = 1,
+>  		},
+> @@ -672,7 +683,7 @@ static struct opt_params lopts = {
+>  				 { &lopts, L_FILE },
+>  				 { &lopts, L_DEV },
+>  				 { NULL, LAST_CONFLICT } },
+> -		  .minval = 0,
+> +		  .minval = -1,
+>  		  .maxval = INT_MAX,
+>  		  .defaultval = 1,
+>  		},
+> @@ -827,7 +838,7 @@ static struct opt_params ropts = {
+>  				 { &ropts, R_RGSIZE },
+>  				 { NULL, LAST_CONFLICT } },
+>  		  .convert = true,
+> -		  .minval = 0,
+> +		  .minval = -1,
+>  		  .maxval = INT_MAX,
+>  		  .defaultval = 1,
+>  		},
+> @@ -1072,6 +1083,7 @@ struct cli_params {
+>  	int	blocksize;
+>  
+>  	char	*cfgfile;
+> +	bool	cfgfile_had_options;
+>  	char	*protofile;
+>  
+>  	enum fsprop_autofsck autofsck;
+> @@ -1654,10 +1666,12 @@ check_opt(
+>  		if (sp->seen)
+>  			respec(opts->name, opts->subopts, index);
+>  		sp->seen = true;
+> +		sp->from_file = parsing_cfgfile;
+>  	} else {
+>  		if (sp->str_seen)
+>  			respec(opts->name, opts->subopts, index);
+>  		sp->str_seen = true;
+> +		sp->from_file = parsing_cfgfile;
+>  	}
+>  
+>  	/* check for conflicts with the option */
+> @@ -1806,6 +1820,7 @@ set_data_concurrency(
+>  	/*
+>  	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
+>  	 * If this cannot be determined, fall back to the default AG geometry.
+> +	 * -1 means autodetect (use CPU count only on solid-state devices).
+>  	 */
+>  	if (!value || !strcmp(value, "nr_cpus"))
+>  		optnum = 1;
+> @@ -1814,6 +1829,8 @@ set_data_concurrency(
+>  
+>  	if (optnum == 1)
+>  		cli->data_concurrency = nr_cpus();
+> +	else if (optnum == -1)
+> +		cli->data_concurrency = -1;
+>  	else
+>  		cli->data_concurrency = optnum;
+>  }
+> @@ -1954,6 +1971,7 @@ set_log_concurrency(
+>  	/*
+>  	 * "nr_cpus" or 1 means set the concurrency level to the CPU count.  If
+>  	 * this cannot be determined, fall back to the default computation.
+> +	 * -1 means autodetect (use CPU count only on solid-state devices).
+>  	 */
+>  	if (!value || !strcmp(value, "nr_cpus"))
+>  		optnum = 1;
+> @@ -1962,6 +1980,8 @@ set_log_concurrency(
+>  
+>  	if (optnum == 1)
+>  		cli->log_concurrency = nr_cpus();
+> +	else if (optnum == -1)
+> +		cli->log_concurrency = -1;
+>  	else
+>  		cli->log_concurrency = optnum;
+>  }
+> @@ -2175,6 +2195,7 @@ set_rtvol_concurrency(
+>  	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
+>  	 * If this cannot be determined, fall back to the default rtgroup
+>  	 * geometry.
+> +	 * -1 means autodetect (use CPU count only on solid-state devices).
+>  	 */
+>  	if (!value || !strcmp(value, "nr_cpus"))
+>  		optnum = 1;
+> @@ -2183,6 +2204,8 @@ set_rtvol_concurrency(
+>  
+>  	if (optnum == 1)
+>  		cli->rtvol_concurrency = nr_cpus();
+> +	else if (optnum == -1)
+> +		cli->rtvol_concurrency = -1;
+>  	else
+>  		cli->rtvol_concurrency = optnum;
+>  }
+> @@ -2336,9 +2359,32 @@ parse_cfgopt(
+>  		if (!subopts[i])
+>  			break;
+>  		if (strcasecmp(name, subopts[i]) == 0) {
+> +			struct subopt_param	*sp = &sop->opts->subopt_params[i];
+> +			int			j;
+> +
+> +			/*
+> +			 * Command line options take precedence over config file
+> +			 * options. If this option or any option that conflicts
+> +			 * with it was already set from the command line, skip
+> +			 * the config file value silently.
+
+Currently, config file options take precedence over CLI options:
+
+$ mkfs.xfs -c options=/usr/share/xfsprogs/mkfs/lts_6.6.conf -i nrext64=0 /tmp/a
+-i nrext64 option respecified
+
+So I guess this patch is changing that policy too?
+
+--D
+
+> +			 */
+> +			if ((sp->seen || sp->str_seen) && !sp->from_file)
+> +				return true;
+> +			for (j = 0; j < MAX_CONFLICTS; j++) {
+> +				struct _conflict	*con = &sp->conflicts[j];
+> +				struct subopt_param	*csp;
+> +
+> +				if (con->subopt == LAST_CONFLICT)
+> +					break;
+> +				csp = &con->opts->subopt_params[con->subopt];
+> +				if ((csp->seen || csp->str_seen) && !csp->from_file)
+> +					return true;
+> +			}
+> +
+>  			ret = (sop->parser)(sop->opts, i, value, cli);
+>  			if (ret)
+>  				goto invalid_opt;
+> +			cli->cfgfile_had_options = true;
+>  			return true;
+>  		}
+>  	}
+> @@ -5749,10 +5795,21 @@ cfgfile_parse(
+>  {
+>  	int			error;
+>  
+> -	if (!cli->cfgfile)
+> -		return;
+> +	bool	default_cfgfile = !cli->cfgfile;
+> +
+> +	if (!cli->cfgfile) {
+> +		/*
+> +		 * No config file specified on the command line. Use the default
+> +		 * system-wide config file if it exists, otherwise do nothing.
+> +		 */
+> +		if (access(MKFS_DEFAULT_CFGFILE, F_OK) != 0)
+> +			return;
+> +		cli->cfgfile = MKFS_DEFAULT_CFGFILE;
+> +	}
+>  
+> +	parsing_cfgfile = true;
+>  	error = ini_parse(cli->cfgfile, cfgfile_parse_ini, cli);
+> +	parsing_cfgfile = false;
+>  	if (error) {
+>  		if (error > 0) {
+>  			fprintf(stderr,
+> @@ -5773,8 +5830,9 @@ cfgfile_parse(
+>  		}
+>  		exit(1);
+>  	}
+> -	printf(_("Parameters parsed from config file %s successfully\n"),
+> -		cli->cfgfile);
+> +	if (!default_cfgfile || cli->cfgfile_had_options)
+> +		printf(_("Parameters parsed from config file %s successfully\n"),
+> +			cli->cfgfile);
+>  }
+>  
+>  static void
+> -- 
+> 2.54.0
+> 
+> 
