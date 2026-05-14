@@ -1,87 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70189425CDD;
-	Thu, 14 May 2026 14:37:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F50041B345
+	for <linux-xfs@vger.kernel.org>; Thu, 14 May 2026 14:38:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778769463; cv=none; b=Kq22/IhIdrhgTmzJu/3O1ZPMOGhKDCZqhUQw9bO3YPwAz8vSiWYFl48yKOzGWwd1ISMn5CIUfIQ7Oe45x+34jmfmRzf6T5Az3RHla+KmE4pJfQas2kHnZNjX4v1LlEep9TvWRwZmvKgk7byM9K52dOE3Zy5jPQJIDKFJ8WjDArM=
+	t=1778769486; cv=none; b=FRmaoosMwk7PdTMwyZJQ6G6WmusXE3YQnMSaizbaIwyI6ms5viTeKrDrJOFJB7hEKPMMu9z87w33vnzUnj0rJb2q/ufcwqeb1PVpQ6fNruNpKza9CCMjAj45LVqLPpefn2rpaF2/PFteUXB35cSZ2cyY66mpchfhGTQYJQKBFVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778769463; c=relaxed/simple;
-	bh=rZgHzTbgnHHmJN6qZy+N8eVodksxfqXSK4VW1S+0K7I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vFkiBDDYbEp00R78eB9VgEmswgpkjN0qZMeB57XVM4El9vAXW8NMJYLkt813QCViQomfAnrdFLMTmguF4oIQN9NGy0afP+Jkbr0HTWv3eIiSsYNCnsR4aUEmggxtljGiUnvY6W3kf7HFwOhIgIjkZFkXO+DnY1TRNvXXTUmPmao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSzgITkm; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSzgITkm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 451D6C2BCB3;
-	Thu, 14 May 2026 14:37:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778769463;
-	bh=rZgHzTbgnHHmJN6qZy+N8eVodksxfqXSK4VW1S+0K7I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WSzgITkmGehUccFbXTWsPk0QgXndYmpZfV7daj62F/XhP97o2McXRouYZH6CLLFwV
-	 gqggLlEnZ1PXfTjjROCChaOh3grRD106tHztsRAi1luciA9n5+Z6uR56rq/zS3XA3J
-	 YnLMKpNKptZSqQ+7fG/Q9tObtVhW9ctnptKEFbI0pchM2CLBhnLGtH34yqCKRQvOGW
-	 7tLS0IrpYKXpaGZv8TAHtOKGVHyfly3YPOjDQLKY9xULeUNIZ2PiNzkPf4rTYC4WT+
-	 mEMhTAGHxkOSdsjXj9RG0qveXJ811sNv6MaeF7a5Pg1xBtEyPItjOhZC5D9DOj0U/p
-	 Zv4alA42osiJw==
-Date: Thu, 14 May 2026 07:37:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>,
-	Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Chao Yu <chao@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Hyunchul Lee <hyc.lee@gmail.com>, Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org
-Subject: Re: [PATCH 09/12] swap: push down setting sis->bdev into
- ->swap_activate
-Message-ID: <20260514143742.GB9531@frogsfrogsfrogs>
-References: <20260512053625.2950900-1-hch@lst.de>
- <20260512053625.2950900-10-hch@lst.de>
- <20260512170846.GJ9555@frogsfrogsfrogs>
- <20260513055806.GC1236@lst.de>
- <acd6428b-a352-4f7b-a349-b2c9e341fd87@kernel.org>
- <20260513074608.GA3693@lst.de>
- <b37ca8a7-289e-45a0-8cbd-eb14d7453b97@kernel.org>
+	s=arc-20240116; t=1778769486; c=relaxed/simple;
+	bh=uKUFuXsJlk7tgHywEBxk6AhExYiAnCDICBHdN+SwyMQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fO4ZL0xSAKaXjE+1I6BrlUjhjemXbwuQIvGYDpV0NwddNhhwjbfQ0AoDcZ6X4Q/LMotkI/WRj7wOLTWfTliJ4r91GjJrMFqcoj0fzAjnvQOMpRygoSu9g9ssC84pLQXrD8tpFrqS9OHn/+0SEclKtFUJKbx+OkJMxRI01Nzdk74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id 31806180F2D5;
+	Thu, 14 May 2026 16:37:56 +0200 (CEST)
+Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id CA8RA0TeBWpZsSoAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Thu, 14 May 2026 16:37:56 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: djwong@kernel.org,
+	sandeen@sandeen.net,
+	aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [RFC PATCH 0/1] Add default config file for mkfs.xfs
+Date: Thu, 14 May 2026 16:37:16 +0200
+Message-ID: <20260514143716.893814-2-lukas@herbolt.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b37ca8a7-289e-45a0-8cbd-eb14d7453b97@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 13, 2026 at 04:58:37PM +0900, Damien Le Moal wrote:
-> On 5/13/26 16:46, Christoph Hellwig wrote:
-> > On Wed, May 13, 2026 at 04:44:53PM +0900, Damien Le Moal wrote:
-> >> Hmmm... With zonefs, swap files can be created on top of conventional zone
-> >> files. So enforcing "no swap on zoned device" here would break that.
-> > 
-> > We can check that none of the extents fall onto sequential zones instead
-> > of just devices.
-> > 
-> > I still wonder why you bother with swap to zonefs at all, though.
-> 
-> Yeah. I do not think anyone actually use that... But since it is there from the
-> start, kind of stuck with it now.
+Hi all,
+The default values cannot always satisfy everybody and users/packagers should
+be able to override defaults without the need of specifying configuration file
+on command line. It was previously discussed in here [1]. 
 
-Ahh, right, I forgot that zoned devices can have conventional zones
-where swap would actually work.  Question withdrawn.
+The proposed patch adds /etc/mkfs.xfs.conf where the default values can be set.
+It also lightly changes the default behavior for -l/-d/-r concurrency allowing 
+now to be set to -1 to keep autodetection on SSDs.
 
---D
+[1]
+https://lore.kernel.org/linux-xfs/84c8a5e5-938d-4745-996d-4237009c9cc5@sandeen.net/
+
+Lukas Herbolt (1):
+  xfsprogs: mkfs.xfs add default configuration file.
+
+ include/builddefs.in |  1 +
+ mkfs/Makefile        |  3 ++
+ mkfs/mkfs.xfs.conf   | 50 ++++++++++++++++++++++++++++++
+ mkfs/xfs_mkfs.c      | 72 +++++++++++++++++++++++++++++++++++++++-----
+ 4 files changed, 119 insertions(+), 7 deletions(-)
+ create mode 100644 mkfs/mkfs.xfs.conf
+
+-- 
+2.54.0
+
