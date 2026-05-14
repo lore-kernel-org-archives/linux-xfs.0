@@ -1,115 +1,87 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DAF03C4553;
-	Thu, 14 May 2026 06:34:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70189425CDD;
+	Thu, 14 May 2026 14:37:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778740493; cv=none; b=cV2vwuMxAwMSydUevGLEjV2YlXcxiXI0SjFQemApVznrD2bbPFI5Ri0FA9RBuz06KA4SUAGmvnW0hN4O/CVQR02C7lq8aw3p9v69omS5exWOa8mIhvH6f9UkzR0c8Lot1LG3rWiVVqkEgSFgyoAYiNXbunZ0jDejGq6aT+a13lA=
+	t=1778769463; cv=none; b=Kq22/IhIdrhgTmzJu/3O1ZPMOGhKDCZqhUQw9bO3YPwAz8vSiWYFl48yKOzGWwd1ISMn5CIUfIQ7Oe45x+34jmfmRzf6T5Az3RHla+KmE4pJfQas2kHnZNjX4v1LlEep9TvWRwZmvKgk7byM9K52dOE3Zy5jPQJIDKFJ8WjDArM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778740493; c=relaxed/simple;
-	bh=yve/zbgSuUshC2W///tJeSfhRFvCvYaK5aTaNm0cRnE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OrlmPO0Ub0mzlTJV8L/G8/N8qcpk/iJzF2Mt+DiuY1GnazRm1sw2KzXYWL3N/cQ8EHjt2yG6rr4Bg5BiBbrBeYgSyWbf6uUMMx+6J95PGwu+0tSgYs/ry8bXKTvCjNRFiz965BEU/WlU2u0/rxRy0lhHUHd0Cr4fvw1qqzD6pdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gGLBj4WbrzKHMQM;
-	Thu, 14 May 2026 14:33:49 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D99CE40574;
-	Thu, 14 May 2026 14:34:44 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP4 (Coremail) with SMTP id gCh0CgCnb1v4bAVqIcT3CA--.41732S6;
-	Thu, 14 May 2026 14:34:44 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	brauner@kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	yizhang089@gmail.com,
-	yangerkun@huawei.com,
-	yukuai@fnnas.com
-Subject: [PATCH 2/4] iomap: support invalidating partial folios
-Date: Thu, 14 May 2026 14:29:53 +0800
-Message-ID: <20260514062955.1183976-3-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260514062955.1183976-1-yi.zhang@huaweicloud.com>
-References: <20260514062955.1183976-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1778769463; c=relaxed/simple;
+	bh=rZgHzTbgnHHmJN6qZy+N8eVodksxfqXSK4VW1S+0K7I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=vFkiBDDYbEp00R78eB9VgEmswgpkjN0qZMeB57XVM4El9vAXW8NMJYLkt813QCViQomfAnrdFLMTmguF4oIQN9NGy0afP+Jkbr0HTWv3eIiSsYNCnsR4aUEmggxtljGiUnvY6W3kf7HFwOhIgIjkZFkXO+DnY1TRNvXXTUmPmao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSzgITkm; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSzgITkm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 451D6C2BCB3;
+	Thu, 14 May 2026 14:37:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778769463;
+	bh=rZgHzTbgnHHmJN6qZy+N8eVodksxfqXSK4VW1S+0K7I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WSzgITkmGehUccFbXTWsPk0QgXndYmpZfV7daj62F/XhP97o2McXRouYZH6CLLFwV
+	 gqggLlEnZ1PXfTjjROCChaOh3grRD106tHztsRAi1luciA9n5+Z6uR56rq/zS3XA3J
+	 YnLMKpNKptZSqQ+7fG/Q9tObtVhW9ctnptKEFbI0pchM2CLBhnLGtH34yqCKRQvOGW
+	 7tLS0IrpYKXpaGZv8TAHtOKGVHyfly3YPOjDQLKY9xULeUNIZ2PiNzkPf4rTYC4WT+
+	 mEMhTAGHxkOSdsjXj9RG0qveXJ811sNv6MaeF7a5Pg1xBtEyPItjOhZC5D9DOj0U/p
+	 Zv4alA42osiJw==
+Date: Thu, 14 May 2026 07:37:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, David Sterba <dsterba@suse.com>,
+	Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+	Chao Yu <chao@kernel.org>, Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Hyunchul Lee <hyc.lee@gmail.com>, Steve French <sfrench@samba.org>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org
+Subject: Re: [PATCH 09/12] swap: push down setting sis->bdev into
+ ->swap_activate
+Message-ID: <20260514143742.GB9531@frogsfrogsfrogs>
+References: <20260512053625.2950900-1-hch@lst.de>
+ <20260512053625.2950900-10-hch@lst.de>
+ <20260512170846.GJ9555@frogsfrogsfrogs>
+ <20260513055806.GC1236@lst.de>
+ <acd6428b-a352-4f7b-a349-b2c9e341fd87@kernel.org>
+ <20260513074608.GA3693@lst.de>
+ <b37ca8a7-289e-45a0-8cbd-eb14d7453b97@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnb1v4bAVqIcT3CA--.41732S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF1xtrW5Jw48tw18Kr4fAFb_yoW8Cr43pF
-	W3KrWDGryDGr17uw17Ca1fXF1j9a9xXFy7CFW3Gw1a9Fs8Jw1qgFyUKa1Ygay7JryxAF1S
-	vrsFgFyvqF15A3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
-	vjDU0xZFpf9x0JUQXo7UUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b37ca8a7-289e-45a0-8cbd-eb14d7453b97@kernel.org>
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On Wed, May 13, 2026 at 04:58:37PM +0900, Damien Le Moal wrote:
+> On 5/13/26 16:46, Christoph Hellwig wrote:
+> > On Wed, May 13, 2026 at 04:44:53PM +0900, Damien Le Moal wrote:
+> >> Hmmm... With zonefs, swap files can be created on top of conventional zone
+> >> files. So enforcing "no swap on zoned device" here would break that.
+> > 
+> > We can check that none of the extents fall onto sequential zones instead
+> > of just devices.
+> > 
+> > I still wonder why you bother with swap to zonefs at all, though.
+> 
+> Yeah. I do not think anyone actually use that... But since it is there from the
+> start, kind of stuck with it now.
 
-Current iomap_invalidate_folio() can only invalidate an entire folio. If
-we truncate a partial folio on a filesystem where the block size is
-smaller than the folio size, it will leave behind dirty bits for the
-truncated or punched blocks. During the write-back process, it will
-attempt to map the invalid hole range. Fortunately, this has not caused
-any real problems so far because the ->writeback_range() function
-corrects the length.
+Ahh, right, I forgot that zoned devices can have conventional zones
+where swap would actually work.  Question withdrawn.
 
-However, the implementation of FALLOC_FL_ZERO_RANGE in ext4 depends on
-the support for invalidating partial folios. When ext4 partially zeroes
-out a dirty and unwritten folio, it does not perform a flush first like
-XFS. Therefore, if the dirty bits of the corresponding area cannot be
-cleared, the zeroed area after writeback remains in the written state
-rather than reverting to the unwritten state. Fix this by supporting
-invalidation of partial folios.
-
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
-This is taken from:
- https://lore.kernel.org/linux-fsdevel/20240812121159.3775074-3-yi.zhang@huaweicloud.com/
-No code changes, only update the commit message to explain why Ext4
-needs this.
-
- fs/iomap/buffered-io.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 64351a448a8b..876c2f507f58 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -761,6 +761,8 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
- 		WARN_ON_ONCE(folio_test_writeback(folio));
- 		folio_cancel_dirty(folio);
- 		ifs_free(folio);
-+	} else {
-+		iomap_clear_range_dirty(folio, offset, len);
- 	}
- }
- EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
--- 
-2.52.0
-
+--D
