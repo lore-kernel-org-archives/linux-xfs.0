@@ -1,68 +1,56 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE47A145B11;
-	Fri, 15 May 2026 11:50:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3413AD514
+	for <linux-xfs@vger.kernel.org>; Fri, 15 May 2026 13:32:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778845854; cv=none; b=PuQchgFsidEcA2HVAOB1+2kMuDtfRs70m/pCUc6w2SUPdRkZUPhetauR5Ut9A46KPymQphBo2V/qVvh+zWcpafkm9e0MGw26W8GyMpP7CY6NOua1Pjo9KDlSIppVBFI7qxtuxGtuNyE1vkGpfYilePUd8pz4OjT6Vo4L+KB5/Ls=
+	t=1778851942; cv=none; b=q2B2XFvGMvlcsbaBcvWLj89rrKGmwPeEAW/h7mYfbSn8i7AGJf+60qARsxlD4ebsH36JlqlIusytTUx35m2uMnV1lrhtsUuA04es39WyTg2KLmIxVlzOQCnlxcDMN3OX8uzMFd5NXztSyTZUXIUKlfke/KSuEvtGUFnjDjwUCzk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778845854; c=relaxed/simple;
-	bh=kakgVAuYPlpSqQpQSzN4cmRZNLF/hMxdvUlEurtEuLA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X7RT+JdIsMV+ms7/4V+49hAPjYwaO/Ux7mS+E+yxBNI0LElBlwLO2b0qT777lsxcsfehOPscSlBoGbbIXPTVRajTM3vFQCeOEFNTOtRRrdIQVR37syE5zCq1dt0iyqd36MwdsjsS8O0YrkNJGQRFaM+p30XLYRaxIPJV17+7+h0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fN5iWf1O; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1778851942; c=relaxed/simple;
+	bh=Mj1KWA09zOC0oZu2H4ZbzQ3mr9ABWp5F/CziUY3jgyw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XyWdvIYLy9dJAfm0GYQvZ8CqTCymqvy6vQn+kWU3Yyc2DdLPEsHw8ypKwHmjYMfY6TEM+IF9/M5MTS2jf4tYD5okZpfwpYT3qFCHBF+RNwj56ylHOH+y7dXy4Z8PgYM4Q0oDVOjA8DnvZJOQrCiQiva6gaZq+wPV5n6A4WiV+7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=il9LdSqq; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fN5iWf1O"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="il9LdSqq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=DGV3K+cqUR8Ce8SGbBCPSLLbWZgPh4ItqsLdKVh7CS0=; b=fN5iWf1OZCQABYrc1vaYQ4BPNW
-	CdGWwroHSHk1rgFT2o0qIenT1mXU8giwLTfRjJpzOIaHLM6y9pgupeVGSfYVan5P4hcxDbeHupSQg
-	AB7VqNiKwrZS9mou6UXIkz+zFJ4mM83mOpNkO1UIhj5sBU4T4yShxBPqjGguSrFb9sBKqn6KlQp91
-	8XqV0R7YQqNdR0A46zycotqolrnvXV3teB84lMyh7AKIWHZri/vOSNpGJ+YtNAqhe4HMquR5xgzBu
-	sce+JTXew+0PNWTTklWVsUhPueAxaZ8xcAoJIpPYckEQQFzpAztb65XRIvLZsLpiHTRnqT/LfT1qE
-	e89BNRdg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wNr47-00000008FI2-0NXI;
-	Fri, 15 May 2026 11:50:51 +0000
-Date: Fri, 15 May 2026 04:50:51 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dai Ngo <dai.ngo@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
- LAYOUTGET
-Message-ID: <agcIm53ZQ8-P7dX6@infradead.org>
-References: <20260512172238.2495085-1-dai.ngo@oracle.com>
- <agQhzg-0aeISwOGW@infradead.org>
- <961eb355-2f52-47a0-9399-e050a4e535a2@oracle.com>
- <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=L9PyRQRKufBwf5WLJUOkvVRGXBSBByl1X0BQTuCuIVs=; b=il9LdSqqkzuHYP1HCMJw6fk3O1
+	yu1ZIgcKal3KRnwcQL1PmFyIr9SIRZBXJ+QnjF60rOQAqxkWLmbsxc/8yHLMJTyzb2mm37QaZv1KE
+	vb/BeCdkBBFs62vK6sakzw9gnHAs0AdBwExNajTS8r8Go3qwGOwaepHPbSN60PBtjM68/r8hgwkkN
+	cIa5yqiUwitTjk7s9GiEPTtWPhBX5bCRuZAISOyKdMNLTMG9Z1rmudNvEyVHOMkNXBJZqDNGKNGqk
+	HPGo80J4e2fLa4gWbjcCMYbfmVLdIANbKrc/703ibRCG/63NkBXA17azvXr5vL8jFkllQQLy5zi77
+	RElfzESw==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wNseH-00000008S5m-26Lq;
+	Fri, 15 May 2026 13:32:17 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	linux-xfs@vger.kernel.org
+Subject: fix a buffer lookup against removal race
+Date: Fri, 15 May 2026 15:31:57 +0200
+Message-ID: <20260515133212.4039831-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, May 13, 2026 at 10:28:31AM -0700, Dai Ngo wrote:
-> After reviewing ext_tree_insert(), with assist from Codex, I think this
-> function handles overlapping extents properly. The only issue I see in
-> ext_tree_insert() is the accuracy of the return error code, EINVAL instead
-> of ENOMEM, when kmemdup() fails.
-> 
-> Since ext_tree_insert seems to handle overlapping extents fine, do you
-> think it's worth it to fix xfs_fs_map_blocks() to avoid returning overlap
-> extents?
+Hi all,
 
-Oh, we absolutely should not return overlapping extents of the same
-class.  So the bug fix itself is good, I was just hoping we could also
-improve the sanity checking on the client side.
+this fixes a bug introduced in the buffer caching changes in 7.0.
 
+Andrey originally found this when testing the fsverity series, and Carlos
+came up with a reproducer using xfstests generic/579 with the fsverity
+bits stripped out on upstream.  I'll look at adding this as a separate
+test as well.
