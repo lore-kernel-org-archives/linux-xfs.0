@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC93B4C9542
-	for <linux-xfs@vger.kernel.org>; Fri, 15 May 2026 15:34:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B00FA3FF1A3
+	for <linux-xfs@vger.kernel.org>; Fri, 15 May 2026 15:47:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778859293; cv=none; b=B0qIAvjC29DHstJDn6XB/49op4QkLhcJrpVDtgoX9Zooowka2Wt8wVD4jk/0w4337Spp7Rp3y4bKFXRjhGd2iYIc/nY3Qcbo5g4bhZfrq8qs49JJmk411ioOPNZ50DykycBj0CnoiBgetTP01eV17BOI9OH7sj8alOX/2Xg6EsY=
+	t=1778860041; cv=none; b=Hl3A8fBOqYVlRPxQxGNUVXXGOXLLYzZWYbv7EuTNFBfsjGSjFFmQJMOF1+f3GnuTu8kSIo7J2JEy7tB+FtbPeVL5d9tf2Y8XEddhNbAJp6O2nMss4VFKloLB0KhuSBW00heHQJniNca1cyDRt6H8hJm6OKpx1g4H1qolzZJ/wbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778859293; c=relaxed/simple;
-	bh=fTwFnM2V6S7H83/SbFDh4CdoSy1gyXo2pg6Ep2agp34=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hpMsCP5OMcDI2D3yqYk6x53YIVubPF0GWgosX1fzXQI9cNHFvjsOZoCy66A5bF52kw7EXeBStZcE7M7wpKvyGKUO9EKrcZVzyyks5EgoVg2HUCg5gNno1gI7zAlB00nYNqL4E36Uut+X+gZWvUZQ+6iELB04nrr8+49bhf6RdR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PWqvDthx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778860041; c=relaxed/simple;
+	bh=8Kcy8SsfY/PYkfYONe5XipLy4Ld4goOY+BjuS6sLSgg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=O7fxCKfVvCVKWODpdF8YguiH4Btuw8ICUGqPzDsJenMipt1BVT32Jvc/LsM9z8mOHBhFhvsG1z+GDsPyPzQDJxPenpBjolKYLgKwpZgI+s3SSEowTHYWfYXO0sz4NLdpaW/MDGxmAEVBkGkQvALIUHWPny0aVWrLcWvSloO3psM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tt5TJ1rg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PWqvDthx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F224C2BCB0;
-	Fri, 15 May 2026 15:34:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tt5TJ1rg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78108C2BCB0;
+	Fri, 15 May 2026 15:47:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778859292;
-	bh=fTwFnM2V6S7H83/SbFDh4CdoSy1gyXo2pg6Ep2agp34=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PWqvDthx4cmaN8MhwiXD8C4z2BCeTWmD6h7WOdPENJNWIiFyQ5YsfxxJcvC48wfDd
-	 j//p5hzOk5WHDm+XjTBz3tKXnGQ9Aa7AMOzZpszxN2mrIOehSE0YuF920zIpn8kJje
-	 EgXIyDJ81Ss7bi9BQtUh4pYJG8XtYwFyWKftejk8hWi0mrTYB9TyDaqEVafptQgN+n
-	 STB71SCRUKvXDTTbhCwa+JUcUIn+YdXr1VBPOn/jzoqHNQ4lwW8SNN2uk1u2FBmUQt
-	 nMrS0yyvBK4PKgWUHl3cUDkn3B1w4Gx9Ez47Si5SzRXsz2SvXV7FXP7sR3WaGrlhxD
-	 Ytml8cKmj98Lw==
-Date: Fri, 15 May 2026 17:34:48 +0200
+	s=k20201202; t=1778860041;
+	bh=8Kcy8SsfY/PYkfYONe5XipLy4Ld4goOY+BjuS6sLSgg=;
+	h=Date:From:To:Cc:Subject:From;
+	b=tt5TJ1rgY7t3zeXqhhplsSz4wp/5BKtPX00WHV/zmwbUfPgl3Sj3KG7NsysixByS2
+	 FyHG3cqkbz+ucAZqd56Xa2q9PK6SQKbLKX87yLhI3BVmBdY3QM26KL5x5MnzaNrDsD
+	 fr0U7R1dyADdydpj+H3AfUgjfKZ8Qa4QG/T/FI2V1gYKIA3oh0wEN+zFwow7fxySqm
+	 +ucoWowaFaNAtLPC62itCxaYdtcIqQPeFMUjA1mmEZq+RjC3TE/mm74nxyNItbyhIx
+	 5nQIKoemcE/LfySQ9rhPx9RYR3qI/4TEaf7BGz5cZ83ih8OFrKrBcHRQHEZkVDeyOh
+	 9G0C+sMA8bWtQ==
+Date: Fri, 15 May 2026 17:47:17 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix a buffer lookup against removal race
-Message-ID: <agc9D2vgoIl46T2M@nidhogg.toxiclabs.cc>
-References: <20260515133212.4039831-1-hch@lst.de>
- <20260515133212.4039831-2-hch@lst.de>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: Fixes for v7.1-rc4
+Message-ID: <agc_BzMjfmkuojM5@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,115 +40,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260515133212.4039831-2-hch@lst.de>
 
-On Fri, May 15, 2026 at 03:31:58PM +0200, Christoph Hellwig wrote:
-> When a buffer is freed either by LRU eviction or because it is unset,
-> the lockref is marked as dead instantly, which prevents the buffer from
-> being used after finding it in the buffer hash in xfs_buf_lookup and
-> xfs_buf_find_insert.  But the latter will then not add the new buffer to
-> the hash because it already found an existing buffer.
-> 
-> Fix this using in two places:  Remove the buffer from the hash before
-> marking the lockref dead so that that no buffer with a dead lockref can
-> be found in the hash, but if we find one in xfs_buf_find_insert due to
-> store reordering, handle this case correctly instead of returning an
-> unhashed buffer.
-> 
-> Fixes: 67fe4303972e ("xfs: don't keep a reference for buffers on the LRU")
-> Reported-by: Andrey Albershteyn <aalbersh@redhat.com>
-> Reported-by: Carlos Maiolino <cem@kernel.org>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Hello Linus,
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Could you please pull patches included in the tag below?
 
->  fs/xfs/xfs_buf.c | 33 +++++++++++++++++++++++----------
->  1 file changed, 23 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 580d40a5ee57..a095a5c0a01f 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -472,6 +472,7 @@ xfs_buf_find_insert(
->  	/* The new buffer keeps the perag reference until it is freed. */
->  	new_bp->b_pag = pag;
->  
-> +retry:
->  	rcu_read_lock();
->  	bp = rhashtable_lookup_get_insert_fast(&btp->bt_hash,
->  			&new_bp->b_rhash_head, xfs_buf_hash_params);
-> @@ -480,8 +481,15 @@ xfs_buf_find_insert(
->  		error = PTR_ERR(bp);
->  		goto out_free_buf;
->  	}
-> -	if (bp && lockref_get_not_dead(&bp->b_lockref)) {
-> -		/* found an existing buffer */
-> +	if (bp) {
-> +		/*
-> +		 * If there is an existing buffer with a dead lockref, retry
-> +		 * until the new buffer is added or usable buffer is found.
-> +		 */
-> +		if (!lockref_get_not_dead(&bp->b_lockref)) {
-> +			rcu_read_unlock();
-> +			goto retry;
-> +		}
->  		rcu_read_unlock();
->  		error = xfs_buf_find_lock(bp, flags);
->  		if (error)
-> @@ -820,15 +828,20 @@ xfs_buf_destroy(
->  	ASSERT(__lockref_is_dead(&bp->b_lockref));
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
->  
-> +	if (bp->b_pag)
-> +		xfs_perag_put(bp->b_pag);
-> +	xfs_buf_free(bp);
-> +}
-> +
-> +static inline void
-> +xfs_buf_kill(
-> +	struct xfs_buf		*bp)
-> +{
->  	if (!xfs_buf_is_uncached(bp)) {
->  		rhashtable_remove_fast(&bp->b_target->bt_hash,
->  				&bp->b_rhash_head, xfs_buf_hash_params);
-> -
-> -		if (bp->b_pag)
-> -			xfs_perag_put(bp->b_pag);
->  	}
-> -
-> -	xfs_buf_free(bp);
-> +	lockref_mark_dead(&bp->b_lockref);
->  }
->  
->  /*
-> @@ -851,7 +864,7 @@ xfs_buf_rele(
->  	return;
->  
->  kill:
-> -	lockref_mark_dead(&bp->b_lockref);
-> +	xfs_buf_kill(bp);
->  	list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
->  	spin_unlock(&bp->b_lockref.lock);
->  
-> @@ -1433,7 +1446,7 @@ xfs_buftarg_drain_rele(
->  		return LRU_SKIP;
->  	}
->  
-> -	lockref_mark_dead(&bp->b_lockref);
-> +	xfs_buf_kill(bp);
->  	list_lru_isolate_move(lru, item, dispose);
->  	spin_unlock(&bp->b_lockref.lock);
->  	return LRU_REMOVED;
-> @@ -1545,7 +1558,7 @@ xfs_buftarg_isolate(
->  		return LRU_ROTATE;
->  	}
->  
-> -	lockref_mark_dead(&bp->b_lockref);
-> +	xfs_buf_kill(bp);
->  	list_lru_isolate_move(lru, item, dispose);
->  	spin_unlock(&bp->b_lockref.lock);
->  	return LRU_REMOVED;
-> -- 
-> 2.53.0
-> 
+An attempt merge against your current TOT has been successful.
+
+This contains a few bug fixes, nothing really special stands out.
+
+Thanks,
+Carlos
+
+"The following changes since commit 254f49634ee16a731174d2ae34bc50bd5f45e731:
+
+  Linux 7.1-rc1 (2026-04-26 14:19:00 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-7.1-rc4
+
+for you to fetch changes up to 509fdeb3326be0db055e88d0f689a3888f147f90:
+
+  xfs: Fix typo in comment (2026-05-11 12:58:38 +0200)
+
+----------------------------------------------------------------
+xfs: fixes for v7.1-rc4
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: fix the "limiting open zones" message
+
+Jinliang Zheng (1):
+      xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
+
+Md Shofiqul Islam (1):
+      xfs: Fix typo in comment
+
+Ravi Singh (1):
+      xfs: flush delalloc blocks on ENOSPC in xfs_trans_alloc_icreate
+
+Wilfred Mallawa (2):
+      xfs: fix memory leak on error in xfs_alloc_zone_info()
+      xfs: fix memory leak for data allocated by xfs_zone_gc_data_alloc()
+
+Yuto Ohnuki (4):
+      xfs: zero entire directory data block header region at init
+      xfs: zero directory data block padding on write verification
+      xfs: check directory data block header padding in scrub
+      xfs: check da node block pad field during scrub
+
+ fs/xfs/libxfs/xfs_dir2_data.c | 18 +++++++++++-------
+ fs/xfs/libxfs/xfs_refcount.c  |  3 +--
+ fs/xfs/scrub/common.c         | 11 +++++++++++
+ fs/xfs/scrub/common.h         |  2 ++
+ fs/xfs/scrub/dabtree.c        |  7 ++++++-
+ fs/xfs/scrub/dir.c            |  7 ++++++-
+ fs/xfs/xfs_inode.c            |  6 ------
+ fs/xfs/xfs_notify_failure.c   |  2 +-
+ fs/xfs/xfs_trans.c            | 11 +++++++++++
+ fs/xfs/xfs_zone_alloc.c       |  4 ++--
+ fs/xfs/xfs_zone_gc.c          |  2 +-
+ 11 files changed, 52 insertions(+), 21 deletions(-)"
