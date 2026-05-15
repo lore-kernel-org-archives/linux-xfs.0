@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1F0403149
-	for <linux-xfs@vger.kernel.org>; Fri, 15 May 2026 17:33:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7E493F8894
+	for <linux-xfs@vger.kernel.org>; Fri, 15 May 2026 17:44:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778866385; cv=none; b=hMKbRNyVyocOhgNwz+XYglu3/iezh1Ls7AC6jNrNjKbsaTcxcJfp0V3wxY0wV2qKmUv1yxVKhioUbucEaf3Aa0bbwW3OeqAVVqFn2yqeLUOuVOdtaQKJP8aFn04bQNGW7iPerMW5PVHmx42B0CKCUmkIxRCetm9KYQX3jEasQPw=
+	t=1778867097; cv=none; b=Bb9He/e1srIs/HzHn2TQflFIlJUT3QQk1rYKCRS5RTBJudk/MxiEedYIF9oKYMnegTUX9PsvkEa4UBHISgD6t9J3K3tXLqNFsEmwNERbz2yhpUoL45m3tUtixW6xY66MiF7K4rNxGtkfxNeTKii9NByWmAjgQamYtuDn2eaTY88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778866385; c=relaxed/simple;
-	bh=RObeO/wPdTxkWQ4+0o0ujAtNpChBuEKYCMTvVrpJ7Dg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ElhT5EPthkeSP2iv7qPWvOiiJNwMOuDOf/F5jIIAa5FkmPn0yTPR3FD6d7hW/kV38WWaI0kF6YO3BGoyD8ap2+5ySfdaRUViEDZxd7UEocJvzcPnpic0sH5/XlXi7Mn3fTClBzqgo9X9SnRnxc/LGWCL0AoyrHbmV2oXDGkgjO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r4P2ShzM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778867097; c=relaxed/simple;
+	bh=6fCaB3apd6vhSsv+6m3ItKq6KkH8E/dZed7/nRERkJ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=m2TQt4dNUelWYLpbMzxLe1ZIrYu9z2ZErhf/PhEDBN0CiCwXc5dC+/JQ0i4M7YxGMRSLm+y7cN2Bg6OCq3bFmIIMEwIEvptTmmkETVGj+xnIVkiE+sMf9LSMMDRX923bHYo7Em/bjayc+4BzbIYIKJha6sNMS1TXwcaicO0murI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q1X87NAO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r4P2ShzM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5125BC2BCC7;
-	Fri, 15 May 2026 17:33:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q1X87NAO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C636BC2BCB0;
+	Fri, 15 May 2026 17:44:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778866385;
-	bh=RObeO/wPdTxkWQ4+0o0ujAtNpChBuEKYCMTvVrpJ7Dg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=r4P2ShzMiY6FsqnPomYf6xpgJx9Fp5H9CGQvg5vsqRIip/MS/nVX+ofpB+Y3KSIqH
-	 dcMGkz/Vq9bR4kM10XuuujlG9gFQRJGUXWca1cwkxP7HAVOCK68UijLgS0vCBW0rhU
-	 2ZZvKtWEjz8zVGUFklr5d7lQ/jzjpnIihe9buas9xmDRqvssmX9Q7uRTHJxKZ9Yjbr
-	 CrzZ9aaAAFZT31UaRKboH3SXQe1E8a4vRA/VhfxCMx2uDDBn9Kis/LuTSe74ysJ7uU
-	 ztCL+FoPxQrmpezEvJPlVgptvx6KVZvWhzfB3UM3eC8YP2QC7yzR5WTgZgcClhzS/6
-	 mOfzRq7QYJY+A==
-Date: Fri, 15 May 2026 10:33:04 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: ailiop@suse.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libfrog: add missing HAVE_LISTMOUNT flag
-Message-ID: <20260515173304.GD9555@frogsfrogsfrogs>
-References: <20260515102357.90358-1-aalbersh@kernel.org>
+	s=k20201202; t=1778867097;
+	bh=6fCaB3apd6vhSsv+6m3ItKq6KkH8E/dZed7/nRERkJ0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Q1X87NAOYFqkIiTgJK1XmM93BIq+v17wLz0qtlP+8zTwM/VVWJIvVWFdzGTRCQG+L
+	 d1JoRD6r7RLB3g/eh/jEgQSwBf7kdAOI0oQxSuBIN6TazWchFTrRv+0eWn8kYGQtdv
+	 XdP38fObIDAUMQGVo4Pl3aVTw+GcMmO5+1jXRr7QP4W0cKJf4oh/Vq3v1ICMGIzpkQ
+	 DiLj7wAiSarcKQInnhkeRna05VnxruQ1pbO4w0Jk1uxF+8xLwQULwhTHR3tfFyBbUA
+	 PmAJLDS7ghUifsXa4yOD6/0bd75LKpMHRYmYL06lGP1o7tjGMaebHghuC5L42iCYfq
+	 FaSbPaIXEbK0Q==
+Date: Fri, 15 May 2026 19:44:53 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@kernel.org, ailiop@suse.com, djwong@kernel.org, hch@lst.de, 
+	linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs: for-next updated to b623033285fa
+Message-ID: <m5ggtwyzilbszthawlxz3u3ctf7ncncl7zosk3pr5lla4bojgv@gysoo7h5aaap>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,36 +41,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260515102357.90358-1-aalbersh@kernel.org>
 
-On Fri, May 15, 2026 at 12:23:56PM +0200, Andrey Albershteyn wrote:
-> New stubs are wrapped with HAVE_LISTMOUNT, but this flag is not
-> added if HAVE_LISTMOUNT is set.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+Hi folks,
 
-Makes sense to me
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+The xfsprogs for-next branch in repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> ---
->  libfrog/Makefile | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/libfrog/Makefile b/libfrog/Makefile
-> index 22668212f22b..6ada83407e48 100644
-> --- a/libfrog/Makefile
-> +++ b/libfrog/Makefile
-> @@ -97,6 +97,7 @@ CFLAGS += -DHAVE_CLOSE_RANGE
->  endif
->  
->  ifeq ($(HAVE_LISTMOUNT),yes)
-> +CFLAGS += -DHAVE_LISTMOUNT
->  CFILES += statmount.c
->  HFILES += statmount.h
->  endif
-> -- 
-> 2.51.2
-> 
-> 
+has just been updated.
+
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
+
+The new head of the for-next branch is commit:
+
+b623033285faa158581ba5d345797c8a9ae66ada
+
+New commits:
+
+Andrey Albershteyn (2):
+      [6149155d0589] xfsprogs: update release.sh with fixes from xfsdump
+      [b623033285fa] libfrog: add missing HAVE_LISTMOUNT flag
+
+Anthony Iliopoulos (4):
+      [5a26358ae3d9] configure: always check for statmount supported_mask
+      [877f0e57a10d] libfrog: add missing statmount flag definitions
+      [b30356f25335] libfrog: add fallback stubs for libfrog_statmount and fstatmount
+      [434afafebb3d] gitignore: add xfs_healer binaries and services
+
+Darrick J. Wong (3):
+      [66fff0c12fda] platform_defs.h: fix __counted_by_ptr annotation
+      [7329ba24ac39] xfs_scrub_all: remove dead code
+      [46efb75687bd] xfs_scrub: remove dead code
+
+Code Diffstat:
+
+ .gitignore                |  3 +++
+ configure.ac              |  2 +-
+ include/platform_defs.h   |  2 ++
+ libfrog/Makefile          |  1 +
+ libfrog/statmount.h       | 22 +++++++++++++++++++++-
+ release.sh                | 20 +++++++++-----------
+ scrub/unicrash.c          |  7 -------
+ scrub/xfs_scrub_all.py.in |  6 ------
+ 8 files changed, 37 insertions(+), 26 deletions(-)
+
+-- 
+- Andrey
