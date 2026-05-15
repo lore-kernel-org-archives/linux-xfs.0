@@ -1,43 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8132E3EFFB8;
-	Fri, 15 May 2026 16:18:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C43403151;
+	Fri, 15 May 2026 17:30:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778861888; cv=none; b=ATZkXIynC4yzS4fH0b4OMzjHIQ8GsEj1KCVkdopGloWbP73WV/voVn4SRjoYiBazCAtwFBiFcK4eCZ+lC3ZPr2VBowGENRXGhpMRchrRI2/p9G6bfbheARdAmAvBAm5O5Y0nu8tMNVvy+TuUVBBvD4PnGVAxmnW1Qom29fkOpk0=
+	t=1778866248; cv=none; b=q/MFJEfLI+NMK1Zj2gcqJleiWDorVVa58w2uz6T39JR+7VVd2M4izQDGy/aBy2va98ZkzVKcFy4k3pYGCQzJ39eSnva75hdsZLFjYeOXMle/9shb6Jc9P0sk6eqz7v75GIQJZP22YCumX9UwSkJ/iHJzCZAsL0umiX8xQLW6Yug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778861888; c=relaxed/simple;
-	bh=w59zBbstMl6Tk3zg+4TmT/x6E5g1Zhr0wsvNMkfsehE=;
+	s=arc-20240116; t=1778866248; c=relaxed/simple;
+	bh=5nt6EvBqOR8ML1SWq7SYKTUPIupueoHdr4o8sHmleqk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=exhgdlnrZwRrlOLUQTXXPeLSDU1LHvcMKAapd2tueNQd7vORLw8HwzCMQNZDC+MEITz+ZaChQ1jc1bNjzrzWjn/+uj+u7xfvFKOOxgDikxUrGDq3UCPBNQQfBR6u1bDax2Cp6wTKXilzl4KHzL7gsDgC7L1YrjlcQhH11fT5w0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IBpuFKkx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QNngXlJwYQ+ywOOgDHDRGD0edWFxjggA2UL6BEb1sqj6fyoO+oD5meh07pc6W4x2XOY7ohCws6lepZlIDUhjr/AX6RsYXvjxrHR0rXzhc+vGxEA3zB65Huwl2339SLScAzkEWPHAhGDP5oE+a0/TquNEjqbIOrL9OZwE1KGA3Mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=omMqj2ly; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBpuFKkx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288D6C2BCB0;
-	Fri, 15 May 2026 16:18:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="omMqj2ly"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BFBBC2BCB0;
+	Fri, 15 May 2026 17:30:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778861888;
-	bh=w59zBbstMl6Tk3zg+4TmT/x6E5g1Zhr0wsvNMkfsehE=;
+	s=k20201202; t=1778866248;
+	bh=5nt6EvBqOR8ML1SWq7SYKTUPIupueoHdr4o8sHmleqk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IBpuFKkxU4QoGh/G3KBZgdE6AsaGGn96X6gM1RJKlsZ1bFVW6lYp5skmd+JPetL8P
-	 pKfqsTadEy57mDeQcmIU4KzMhY1POAsDgXYrB6T5ZdDx91yhVLYK7QvQYa4Ok0fRPE
-	 q3QTR5MM+PY+cD+kfT2pbH++uoGMED05nNpcDjpXEfE60BITzo7xE3OCPCZwR+pAl8
-	 fjBcsh8S44v6PtJM2EBAXoPOU2AAOiIhZ6t7gwcon1AUJfX4y+l74LqKVYNiuRFaNa
-	 Hacenk1cwEOyDGwmdMhtidwjsB4cd9AdILFmJ5Mbc21jYQuGFRJ3LESrqFg7tSATgM
-	 FWb7QMc6LaGPQ==
-Date: Sat, 16 May 2026 00:18:00 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: djwong@kernel.org, fstests@vger.kernel.org, 
-	xfs-list <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2 4/4] xfs/21{6,7} Use default -l concurrency=0 on
- mkfs.xfs that supports it
-Message-ID: <agdHA0DP8-Yrg1xy@zlang-mailbox>
-Mail-Followup-To: Lukas Herbolt <lukas@herbolt.com>, djwong@kernel.org, 
-	fstests@vger.kernel.org, xfs-list <linux-xfs@vger.kernel.org>
-References: <20260514113910.866888-2-lukas@herbolt.com>
- <20260514113910.866888-10-lukas@herbolt.com>
+	b=omMqj2lylQEYB0UacPMXHDI3WxIzlqwrNpCe+9WJNfCdJcvbd/CoMHEVDlUhD/NPW
+	 TXwwUBu1W0bXz0gy3KRxqIUWexmOYWjzLNlBFEYb9OnxaG/SYMkJGy36Zc95hghSvL
+	 phlN1EgJ7T+LPnDSspOBnkNg3pbon3qe1Su4kDGsBmzXLUzE+5awajiUSs8fkns6Gw
+	 UKgzb0R+Pn+a6Rt8EYmHVLZ24Vn/M9NIY48J3J2/rjau1LBqMPTYFAaVIu9ihfZD5K
+	 pJWdn4y9ABMXdEouNwUWqHHahgKvk33+cNw6Y9fTB7/JeC2KLhkA1tiRXBJKDlbaxr
+	 sVC0I71Krf43A==
+Date: Fri, 15 May 2026 10:30:47 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, brauner@kernel.org, hch@infradead.org,
+	yi.zhang@huawei.com, yizhang089@gmail.com, yangerkun@huawei.com,
+	yukuai@fnnas.com
+Subject: Re: [PATCH 4/4] iomap: fix out-of-bounds bitmap_set() with
+ zero-length range
+Message-ID: <20260515173047.GC9555@frogsfrogsfrogs>
+References: <20260514062955.1183976-1-yi.zhang@huaweicloud.com>
+ <20260514062955.1183976-5-yi.zhang@huaweicloud.com>
+ <20260514181053.GB9555@frogsfrogsfrogs>
+ <827c4380-4251-40af-bc14-207111736464@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,76 +48,130 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260514113910.866888-10-lukas@herbolt.com>
+In-Reply-To: <827c4380-4251-40af-bc14-207111736464@huaweicloud.com>
 
-On Thu, May 14, 2026 at 01:39:15PM +0200, Lukas Herbolt wrote:
-> The XFS concurrency optimization breaks the log sizing check on
-> systems with non-rotational disks and high amount of CPUs. Default to
-> the old behavior with -l concurrency=0 and with -d concurrency=0.
+On Fri, May 15, 2026 at 09:50:08AM +0800, Zhang Yi wrote:
+> On 5/15/2026 2:10 AM, Darrick J. Wong wrote:
+> > On Thu, May 14, 2026 at 02:29:55PM +0800, Zhang Yi wrote:
+> >> From: Zhang Yi <yi.zhang@huawei.com>
+> >>
+> >> ifs_set_range_dirty() and ifs_set_range_uptodate() compute last_blk
+> >> as (off + len - 1) >> i_blkbits.  When off is 0 and len is 0, the
+> >> unsigned subtraction underflows to SIZE_MAX, producing a huge
+> >> last_blk and nr_blks value that causes bitmap_set() to write far
+> >> beyond the ifs->state allocation.
+> >>
+> >> Regarding ifs_set_range_uptodate(), it is temporarily safe because len
+> >> cannot be passed in as 0. However, for ifs_set_range_dirty() this is
+> >> reachable from __iomap_write_end(): when copy_folio_from_iter_atomic()
+> >> returns 0 (e.g. user buffer fault) and the folio is already uptodate,
+> >> the guard at the top of __iomap_write_end() does not trigger because
+> >> !folio_test_uptodate() is false, and iomap_set_range_dirty() is called
+> >> with copied == 0.
+> >>
+> >> Add a !len guard to both functions before the computation, so that a
+> >> zero-length range is a no-op.
+> >>
+> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> >> ---
+> >>  fs/iomap/buffered-io.c | 23 +++++++++++++++--------
+> >>  1 file changed, 15 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> >> index 27ab33edbdee..6fe5f7e998fd 100644
+> >> --- a/fs/iomap/buffered-io.c
+> >> +++ b/fs/iomap/buffered-io.c
+> >> @@ -67,11 +67,14 @@ static bool ifs_set_range_uptodate(struct folio *folio,
+> >>  		struct iomap_folio_state *ifs, size_t off, size_t len)
+> >>  {
+> >>  	struct inode *inode = folio->mapping->host;
+> >> -	unsigned int first_blk = off >> inode->i_blkbits;
+> >> -	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+> >> -	unsigned int nr_blks = last_blk - first_blk + 1;
+> >> +	unsigned int first_blk, last_blk;
+> >>  
+> >> -	bitmap_set(ifs->state, first_blk, nr_blks);
+> >> +	if (!len)
+> >> +		return true;
+> >> +
+> >> +	first_blk = off >> inode->i_blkbits;
+> >> +	last_blk = (off + len - 1) >> inode->i_blkbits;
+> >> +	bitmap_set(ifs->state, first_blk, last_blk - first_blk + 1);
+> >>  	return ifs_is_fully_uptodate(folio, ifs);
+> >>  }
+> >>  
+> >> @@ -203,13 +206,17 @@ static void ifs_set_range_dirty(struct folio *folio,
+> >>  {
+> >>  	struct inode *inode = folio->mapping->host;
+> >>  	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+> >> -	unsigned int first_blk = (off >> inode->i_blkbits);
+> >> -	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+> >> -	unsigned int nr_blks = last_blk - first_blk + 1;
+> >> +	unsigned int first_blk, last_blk;
+> >>  	unsigned long flags;
+> >>  
+> >> +	if (!len)
+> >> +		return;
+> >> +
+> >> +	first_blk = off >> inode->i_blkbits;
+> >> +	last_blk = (off + len - 1) >> inode->i_blkbits;
+> >>  	spin_lock_irqsave(&ifs->state_lock, flags);
+> >> -	bitmap_set(ifs->state, first_blk + blks_per_folio, nr_blks);
+> >> +	bitmap_set(ifs->state, first_blk + blks_per_folio,
+> >> +		   last_blk - first_blk + 1);
+> > 
+> > I'm curious about the inconsistency in the computations between
+> > ifs_clear_range_dirty and ifs_set_range_dirty now.  In the function that
+> > clears dirty bits, off/len are rounded inwards:
+> > 
+> > 	unsigned int first_blk = round_up(off, i_blocksize(inode)) >>
+> > 				 inode->i_blkbits;
+> > 	unsigned int last_blk = (off + len) >> inode->i_blkbits;
+> > 	unsigned long flags;
+> > 
+> > 	if (first_blk >= last_blk)
+> > 		return;
+> > 
+> > 	spin_lock_irqsave(&ifs->state_lock, flags);
+> > 	bitmap_clear(ifs->state, first_blk + blks_per_folio,
+> > 		     last_blk - first_blk);
+> > 
+> > but here we're still rounding outwards:
+> > 
+> > 	if (!len)
+> > 		return;
+> > 
+> > 	first_blk = off >> inode->i_blkbits;
+> > 	last_blk = (off + len - 1) >> inode->i_blkbits;
+> > 	spin_lock_irqsave(&ifs->state_lock, flags);
+> > 	bitmap_set(ifs->state, first_blk + blks_per_folio,
+> > 		   last_blk - first_blk + 1);
+> > 
+> > That doesn't quite sound right to me without an explanation in the code,
+> > which currently lacks one.  I *think* the reason for the discrepancy is
+> > that if we want to dirty part of an fsblock, we need to mark the whole
+> > block dirty in the ifs so that all the blocks get written out; but when
+> > we're clearing dirty bits, we want to leave an fsblock dirty if we only
+> > wrote back part of that fsblock.  Does that sound right?
+> > 
+> > --D
+> > 
 > 
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> ---
->  changes v2:
-> 	use default mkfs.xfs for scratch device
-> 	remove the double check -l/-d as those were introduced together
-
-This patch is good to me, thanks for fixing.
-
-Reviewed-by: Zorro Lang <zlang@kernel.org>
-
->  tests/xfs/216 | 6 +++++-
->  tests/xfs/217 | 7 ++++++-
->  2 files changed, 11 insertions(+), 2 deletions(-)
+> Yes, that's right. The primary purpose of clearing the dirty bit is for
+> invalidating a partial folio(e.g., when punching hole). Only when a full
+> fsblock has been invalidated can its corresponding dirty bit be cleared.
+> Write-back operations never seem to write back only part of a fsblock.
 > 
-> diff --git a/tests/xfs/216 b/tests/xfs/216
-> index 091c11d08642..0148e7f4de3e 100755
-> --- a/tests/xfs/216
-> +++ b/tests/xfs/216
-> @@ -22,13 +22,17 @@ _cleanup()
->  
->  _require_scratch
->  _scratch_mkfs_xfs >/dev/null 2>&1
-> +if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
-> +	loop_mkfs_opts="-l concurrency=0"
-> +else
-> +	loop_mkfs_opts=""
-> +fi
->  _scratch_mount
->  
->  _require_loop
->  LOOP_IMG=$SCRATCH_MNT/test_fs
->  LOOP_MNT=$SCRATCH_MNT/test_fs_dir
->  
-> -loop_mkfs_opts=
->  $MKFS_XFS_PROG 2>&1 | grep -q rmapbt && \
->  	loop_mkfs_opts="$loop_mkfs_opts -m rmapbt=0"
->  $MKFS_XFS_PROG 2>&1 | grep -q reflink && \
-> diff --git a/tests/xfs/217 b/tests/xfs/217
-> index dae6ce55f475..23aae842d1fb 100755
-> --- a/tests/xfs/217
-> +++ b/tests/xfs/217
-> @@ -21,6 +21,11 @@ _cleanup()
->  
->  _require_scratch
->  _scratch_mkfs_xfs >/dev/null 2>&1
-> +if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
-> +	loop_mkfs_opts="-l concurrency=0 -d concurrency=0"
-> +else
-> +	loop_mkfs_opts=""
-> +fi
->  _scratch_mount
->  # 16T mkfs requires a bit over 2G free
->  _require_fs_space $SCRATCH_MNT 2202000
-> @@ -34,7 +39,7 @@ _do_mkfs()
->  	for i in $*; do
->  		echo -n "fssize=${i}g "
->  		$MKFS_XFS_PROG -f -b size=4096 -l version=2 \
-> -			-d size=${i}g $loop_dev |grep log
-> +			-d size=${i}g $loop_dev $loop_mkfs_opts |grep log
->  		_mount $loop_dev $LOOP_MNT
->  		echo "test write" > $LOOP_MNT/test
->  		_unmount $LOOP_MNT > /dev/null 2>&1
-> -- 
-> 2.54.0
+> I can add comments for them in my next iteration.
+
+Sounds good, thank you.
+
+(Does this patch also need a fixes tag like Joanne asked?)
+
+--D
+
+> Thanks,
+> Yi.
+> 
 > 
 > 
