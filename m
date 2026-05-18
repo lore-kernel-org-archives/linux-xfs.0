@@ -1,64 +1,105 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD993246F4;
-	Mon, 18 May 2026 06:49:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF2835F180
+	for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 06:52:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779086978; cv=none; b=TLsyZ+pua7WpisRNUGTRfIUTaWZsa+qEpuJn27A5DN9AtcAB1Uto9iyKEy+hYw1m9BupVa5T630euGYBLTyTyd/WIOj+W64qzjsONpMZtzeiUIccQ7Y4tcZ/A9Y+7UKo6BeaylyuvBeiSTPRd8IUFKoLIQKkcTokKtwFkb/4gfk=
+	t=1779087175; cv=none; b=IhgYzRpo1aj/RkzRnGTEr/wO7yxVo6pkw3+2FP0wV44zUblS6KiVQNM0qu0fJOpKf8/cOEDLkgn/lcVFFWL6uTncw8+0HPI9uL8TYMGAVqqPVbYxL3gRLlVgJca7jGzt7p3olcUwAuMwULmxzZ/5BR8P2VUxQ0LdFTvVwTVsHko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779086978; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hR7GCSnoeEG9jy0U37q2X0i+N8za9SHQeBRBLZT1W+GLjd46AzZrqeznlabe1lvreFvjaD343fEez43rYmS1Yk78Q9T/cmtIpc5ODVMLRlTdrA6lYOCVXDS73vsCuaoPWALfAnAbfBuecE1ejrPhuip4RuRLAEY2MgOqK5W4xZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=y+ZQWG99; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1779087175; c=relaxed/simple;
+	bh=S8k56k+xD3tsNxcTFIcvs1YnAchNHw/+6X8WYNTDfNg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q0pLGnbXQw4RyQzhUYA3U+choHFsqa6qQ0plj02zAAS8ytSOqmgyDrMJNSQkWrjX6If/iDek6jHavGX+Qw1dUmA7djAhbtfhiK3hZmDPm8fKAAs9SbMFeeyeg56Im+F7wEEz1VeqUAaAFQBem836FKR4pFxQxvPNJ9bzP/24cFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=d7MjHsP+; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="y+ZQWG99"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=y+ZQWG99KWsb1eZb4FvaLqYaSS
-	szp/N9NlUhi/oHPPTa2hbs+HFNsC6pOjGqv13yWoN1cyel2aVLKgAASEe2g9qGUha0HJrfzw8vm+4
-	+O3Fv7vSZVw/V6K3TyE/YJoD92d/gTqp+kaf3C0SaqLpb5dFBP3Hpy0anT8uh1TebpfS3UvCN1O5K
-	iXrDur0cowmlbMyD53As+vUPWRqIhaesPQ4ZuYT532qALCgd24hnumaBQQSOQq0kcCyETDTqRQ45F
-	QJFl/qUuOyKLrXIUO0CxcaS7H/kpP+4fHXelfv/xrA5RufPPVZVeJCf43SHZybeVWNU+b1GZ4INhC
-	lAYvz1nA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wOrnD-0000000ETmj-2usq;
-	Mon, 18 May 2026 06:49:36 +0000
-Date: Sun, 17 May 2026 23:49:35 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Tal Zussman <tz2294@columbia.edu>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <dgc@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, Gao Xiang <xiang@kernel.org>
-Subject: Re: [PATCH v6 4/4] block: enable RWF_DONTCACHE for block devices
-Message-ID: <agq2f2ozYfAwwqcD@infradead.org>
-References: <20260514-blk-dontcache-v6-0-782e2fa7477b@columbia.edu>
- <20260514-blk-dontcache-v6-4-782e2fa7477b@columbia.edu>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="d7MjHsP+"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1779087173; x=1810623173;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=S8k56k+xD3tsNxcTFIcvs1YnAchNHw/+6X8WYNTDfNg=;
+  b=d7MjHsP+vnajhGH40z01QUlHKEgytB3ZWiwBOf2eUkLnTZieaXck5/iF
+   kuQefNIY9wWWCGro0iLmsALb9yPtotKUFVZ87nhc8dI2NTBGpU6G3keZj
+   4c2uNKF9T0SRZetr/BUu1HrwlZSXM0seAKbeUR4Fj10UyC+3CQok/r7RK
+   DrfUvpl4PXSRXANDYwjgkhf8sVjpJuecOg2T04UXfoikm/yMnuT3M9sEf
+   WNViCd2EbY7iLuNqIX8O1OtW0M1Z1v6Wc7zpWK3e+rggnfc1rOf4zaOZJ
+   e4T7zowk5YbZO76DicqdpIxJ/GAvkDzibj+dtuJNZQJm+1JcIZBbWi+AJ
+   w==;
+X-CSE-ConnectionGUID: MtcJCTGaQqeXvjmzh+EhZA==
+X-CSE-MsgGUID: Kx4KotN3TX2QIayw58rWtw==
+X-IronPort-AV: E=Sophos;i="6.23,241,1770566400"; 
+   d="scan'208";a="145655688"
+Received: from unknown (HELO uls-op-esad1-o.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 May 2026 14:52:47 +0800
+X-CSE-ConnectionGUID: YjKpQOkxRCiJQxdbazQ8QA==
+X-CSE-MsgGUID: FBZC+UHKRz6hCD1KXe95hg==
+IronPort-SDR: 6a0ab72f_UzL5aOffGYekAwHpFlCTDbWFeKFdjsn8cGyxagEa5qAGD+e
+ rQWY9vy+KP3tYb/lP4avqmWroxJrLCU+f+W7pqg==
+Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
+  by uls-op-esad1-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 May 2026 23:52:30 -0700
+X-CSE-ConnectionGUID: OiNGd7c5TYe7NrB/k74BBQ==
+X-CSE-MsgGUID: ExkpdtowRMqa73HqMmEQpA==
+WDCIronportException: Internal
+Received: from wdap-gqqtcuxayi.ad.shared (HELO gcv.wdc.com) ([10.224.16.26])
+  by uls-op-esai1-o.wdc.com with ESMTP; 17 May 2026 23:52:29 -0700
+From: Hans Holmberg <hans.holmberg@wdc.com>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH v2] xfs: handle racing deletions in xfs_zone_gc_iter_irec
+Date: Mon, 18 May 2026 08:52:24 +0200
+Message-ID: <20260518065224.9066-1-hans.holmberg@wdc.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260514-blk-dontcache-v6-4-782e2fa7477b@columbia.edu>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-Looks good:
+Under heavy garbage collection pressure from RocksDB workloads,
+filesystem shutdowns can occur in xfs_zone_gc_iter_irec when
+xfs_iget() returns -EINVAL for deleted files.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fix this by handling -EINVAL just like we handle -ENOENT, allowing
+zone GC to safely ignore stale mappings.
+
+Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
+Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+---
+
+v2:
+- handle -EINVAL in the the caller in stead of switching error code
+  in xfs_imap_lookup
+
+v1:
+https://lore.kernel.org/linux-xfs/20260513063745.8067-1-hans.holmberg@wdc.com/
+
+
+ fs/xfs/xfs_zone_gc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index fedcc47048af..96f14d811db2 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -400,7 +400,7 @@ xfs_zone_gc_iter_irec(
+ 		/*
+ 		 * If the inode was already deleted, skip over it.
+ 		 */
+-		if (error == -ENOENT) {
++		if (error == -ENOENT || error == -EINVAL) {
+ 			iter->rec_idx++;
+ 			goto retry;
+ 		}
+-- 
+2.34.1
 
