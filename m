@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 225A8330D36
-	for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 11:14:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DAB8377ECE
+	for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 11:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779102876; cv=none; b=u6O5r95ZtMy+6eX3HOVcgDaAOfOSZGSR5ov9g5bbF9TNcOYTeNpElfs6tm2bGnXyqhoDWF+ZTTk/OmUEz8wjUKBulZ+fvPUzgUzF1gfuErGicnxWAa2XCGlEwlDtQV2K50E5+qXgRDKEntW1l6N9teR1xa0W7MuSczUJsz5uZS8=
+	t=1779102887; cv=none; b=SIZEF99hsztvMI8gvpNVOyBQO3OnnG1Wo4GoIryofcip+Cy/LIl7USpZcfhI78athJiAV5wzHjD/xt2sxLJB0dsBoLT92DbBwRmG6UG34aGaXxVqNj74WWojm7mY0ObFtmIqXlXZ/rTEWnsrC2n7W+2ZZjDP7HH8I0I0SVUsxS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779102876; c=relaxed/simple;
-	bh=xrKJA8wSXW6LbWa6kozlLRpXtpNggEBdnSKy69O6jCw=;
+	s=arc-20240116; t=1779102887; c=relaxed/simple;
+	bh=0s9rdQxS+6jv08A0sdYAG6efiWlEZ6x5Y0LmV3rlJMI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B7El65EZOEOX7deVroaRPpmZ0zac4H5bkzgBK2u/hcoxskk3P6Kz1QodFzBRH88lgz+MW7ukGrnFwMPoMBvwhWb7uBgi9Chk+3ac/bIDq8oque9+AJ3CKB07hJWyvE2XGPmJtX1ut1U4m8z/VXzoKdTw0Es9cIkX0NI+ewp2N18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g7w08tC8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mHKe+Nk/3oA/0ASaf3neoXIotz6PswbQhpK7AgxWvXlieWL+tvMzDgPiKFurJyKT0xNd0O8eKDc5LBUtfc0CJzdhLS65wZ3GFHr4Uf0JSfV9dG5iJqdHIT84oesiRBFBJoIuojgL9YUp5hhjV+AawkxZQcy5XVXXtq4GBX/mQvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ri+lSrRW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g7w08tC8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D6D1C2BCB7;
-	Mon, 18 May 2026 11:14:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ri+lSrRW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF4ADC2BCC6;
+	Mon, 18 May 2026 11:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779102875;
-	bh=xrKJA8wSXW6LbWa6kozlLRpXtpNggEBdnSKy69O6jCw=;
+	s=k20201202; t=1779102886;
+	bh=0s9rdQxS+6jv08A0sdYAG6efiWlEZ6x5Y0LmV3rlJMI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=g7w08tC8ErLJ3lKLZjQiyvXT3nrYYHtcSaPgmfiEK24+hmU7DRASi5+6JiIwfp/Jd
-	 eUnWNrH6cPcJ83ywBF5PRR+fmk4ZzmFWmi1CUX92gskkC650cLNCfJ5kwqz1AgsJ0r
-	 tLTk1bmxlnWTk2lmlxw1QBTop12i0m5nx9bShBLciUGPbBFeogy5AZ6g96Lm/ecnum
-	 kDp4JycrMxOmqPRiUGtOS9QKRtlar84ra5JpuVO73hVIW49pSzK3HQ7lZpeLDpedSK
-	 7A4ZrFNtuJqOoFQFdIRPsaGvjM7NyyOSFMu++woY7bo9gRRRLy6oi16/uQbtMIFnyT
-	 6BHKbWf0Nwy8w==
-Date: Mon, 18 May 2026 13:14:31 +0200
+	b=ri+lSrRW6d2aGAE81wziNGHfSCkqttUjXn5hxJfQQaWMS+gMycVDlYjZgsB439WeT
+	 snHy6EEonHrLD8e8f1pDHyj4ZBxRqcTwj5hXZLuTVRlnmrJmbDKgikYU6BtOkn7fzw
+	 iJtmWudyIKZPdwDpiY7q5q4BWGjF5Iv/KwQktOzEFnwGj2yDCqHFYIdF54nNpXCIFx
+	 NpomhlnWxO1+PHbanrGffPEQ6RRejCoU4pnVi47IO31VPiJPrMYKLAePnjIDiCOOQD
+	 IJjHM5isJDNLiXoR7V+8fdjr/QgzHPBaxsegRZz9GeZrTDPSTh76FqGWedT9DPDryz
+	 jUcMSSdN5ovYA==
+Date: Mon, 18 May 2026 13:14:43 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] xfs: add a xfs_rmap_inode_owner helper
-Message-ID: <agrzt5K9OVTPObMs@nidhogg.toxiclabs.cc>
+Subject: Re: [PATCH 4/9] xfs: add a xfs_rmap_inode_bmbt_owner
+Message-ID: <agr0ncVOQWCT5gnx@nidhogg.toxiclabs.cc>
 References: <20260515135103.4042407-1-hch@lst.de>
- <20260515135103.4042407-6-hch@lst.de>
+ <20260515135103.4042407-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,103 +42,202 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260515135103.4042407-6-hch@lst.de>
+In-Reply-To: <20260515135103.4042407-5-hch@lst.de>
 
-On Fri, May 15, 2026 at 03:50:26PM +0200, Christoph Hellwig wrote:
-> Add a small wrapper for initializing the rmap owner to i_ino.
+On Fri, May 15, 2026 at 03:50:25PM +0200, Christoph Hellwig wrote:
+> Add a small wrapper for initializing the bmbt owner to i_ino.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-This and the previous one, provides very little gain IMHO, do you intend
-to get rid of xfs_rmap_ino_owner and xfs_rmap_inode_bmbt_owner? It seems
-to me they could simply be replaced by these new helpers instead of just
-wrapping them into these new ones.
-A little disclaimer: I didn't look into the next patches yet to see if
-it will all make sense later.
-
-I'm adding a RwB here and on the previous one because the patches look
-correct but I'd like to see what others think about those too.
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  fs/xfs/libxfs/xfs_rmap.h | 2 ++
->  fs/xfs/scrub/bmap.c      | 6 +++---
->  fs/xfs/scrub/reap.c      | 3 +--
->  4 files changed, 7 insertions(+), 6 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c       | 4 ++--
+>  fs/xfs/libxfs/xfs_bmap_btree.c | 4 ++--
+>  fs/xfs/libxfs/xfs_btree.c      | 4 ++--
+>  fs/xfs/libxfs/xfs_rmap.h       | 2 ++
+>  fs/xfs/scrub/bmap.c            | 2 +-
+>  fs/xfs/scrub/bmap_repair.c     | 4 ++--
+>  fs/xfs/scrub/newbt.c           | 2 +-
+>  fs/xfs/scrub/reap.c            | 2 +-
+>  fs/xfs/scrub/rtrefcount.c      | 2 +-
+>  fs/xfs/scrub/rtrmap.c          | 3 +--
+>  10 files changed, 15 insertions(+), 14 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 066d13e97ec9..9920e2df62b0 100644
+> index a11a8aee5b79..066d13e97ec9 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -819,7 +819,7 @@ xfs_bmap_local_to_extents(
->  	args.mp = ip->i_mount;
->  	args.total = total;
->  	args.minlen = args.maxlen = args.prod = 1;
-> -	xfs_rmap_ino_owner(&args.oinfo, ip->i_ino, whichfork, 0);
-> +	xfs_rmap_inode_owner(&args.oinfo, ip, whichfork, 0);
+> @@ -602,7 +602,7 @@ xfs_bmap_btree_to_extents(
+>  	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
+>  		return error;
 >  
->  	/*
->  	 * Allocate a block.  We know we need only one, since the
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, ip, whichfork);
+>  	error = xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo,
+>  			XFS_AG_RESV_NONE, 0);
+>  	if (error)
+> @@ -676,7 +676,7 @@ xfs_bmap_extents_to_btree(
+>  	memset(&args, 0, sizeof(args));
+>  	args.tp = tp;
+>  	args.mp = mp;
+> -	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&args.oinfo, ip, whichfork);
+>  
+>  	args.minlen = args.maxlen = args.prod = 1;
+>  	args.wasdel = wasdel;
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index 1c7165df483a..8683574566e2 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -217,7 +217,7 @@ xfs_bmbt_alloc_block(
+>  	memset(&args, 0, sizeof(args));
+>  	args.tp = cur->bc_tp;
+>  	args.mp = cur->bc_mp;
+> -	xfs_rmap_ino_bmbt_owner(&args.oinfo, cur->bc_ino.ip->i_ino,
+> +	xfs_rmap_inode_bmbt_owner(&args.oinfo, cur->bc_ino.ip,
+>  			cur->bc_ino.whichfork);
+>  	args.minlen = args.maxlen = args.prod = 1;
+>  	args.wasdel = cur->bc_flags & XFS_BTREE_BMBT_WASDEL;
+> @@ -280,7 +280,7 @@ xfs_bmbt_free_block(
+>  	struct xfs_owner_info	oinfo;
+>  	int			error;
+>  
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, ip, cur->bc_ino.whichfork);
+>  	error = xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo,
+>  			XFS_AG_RESV_NONE, 0);
+>  	if (error)
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 71d65f2fa005..ea85c5fbe531 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -5607,7 +5607,7 @@ xfs_btree_alloc_metafile_block(
+>  
+>  	ASSERT(xfs_is_metadir_inode(ip));
+>  
+> -	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, cur->bc_ino.whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&args.oinfo, ip, cur->bc_ino.whichfork);
+>  	error = xfs_alloc_vextent_start_ag(&args, XFS_INODE_TO_FSB(ip));
+>  	if (error)
+>  		return error;
+> @@ -5639,7 +5639,7 @@ xfs_btree_free_metafile_block(
+>  
+>  	ASSERT(xfs_is_metadir_inode(ip));
+>  
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, ip, cur->bc_ino.whichfork);
+>  	error = xfs_free_extent_later(tp, fsbno, 1, &oinfo, XFS_AG_RESV_METAFILE,
+>  			0);
+>  	if (error)
 > diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-> index 7188459f61cf..6016fd5fcad9 100644
+> index 5f39f6e53cd1..7188459f61cf 100644
 > --- a/fs/xfs/libxfs/xfs_rmap.h
 > +++ b/fs/xfs/libxfs/xfs_rmap.h
-> @@ -37,6 +37,8 @@ xfs_rmap_ino_owner(
+> @@ -21,6 +21,8 @@ xfs_rmap_ino_bmbt_owner(
 >  	if (whichfork == XFS_ATTR_FORK)
 >  		oi->oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
 >  }
-> +#define xfs_rmap_inode_owner(oi, ip, whichfork, offset) \
-> +	xfs_rmap_ino_owner(oi, (ip)->i_ino, whichfork, offset)
+> +#define xfs_rmap_inode_bmbt_owner(oi, ip, whichfork) \
+> +	xfs_rmap_ino_bmbt_owner(oi, (ip)->i_ino, whichfork)
 >  
->  static inline bool
->  xfs_rmap_should_skip_owner_update(
+>  static inline void
+>  xfs_rmap_ino_owner(
 > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index 2ad223f0bc8a..67861102cdb9 100644
+> index d40534bf9ef9..2ad223f0bc8a 100644
 > --- a/fs/xfs/scrub/bmap.c
 > +++ b/fs/xfs/scrub/bmap.c
-> @@ -352,7 +352,7 @@ xchk_bmap_rt_iextent_xref(
->  	case XFS_DATA_FORK:
->  		xchk_bmap_xref_rmap(info, irec, rgbno);
->  		if (!xfs_is_reflink_inode(info->sc->ip)) {
-> -			xfs_rmap_ino_owner(&oinfo, info->sc->ip->i_ino,
-> +			xfs_rmap_inode_owner(&oinfo, info->sc->ip,
->  					info->whichfork, irec->br_startoff);
->  			xchk_xref_is_only_rt_owned_by(info->sc, rgbno,
->  					irec->br_blockcount, &oinfo);
-> @@ -407,7 +407,7 @@ xchk_bmap_iextent_xref(
->  	case XFS_DATA_FORK:
->  		xchk_bmap_xref_rmap(info, irec, agbno);
->  		if (!xfs_is_reflink_inode(info->sc->ip)) {
-> -			xfs_rmap_ino_owner(&oinfo, info->sc->ip->i_ino,
-> +			xfs_rmap_inode_owner(&oinfo, info->sc->ip,
->  					info->whichfork, irec->br_startoff);
->  			xchk_xref_is_only_owned_by(info->sc, agbno,
->  					irec->br_blockcount, &oinfo);
-> @@ -419,7 +419,7 @@ xchk_bmap_iextent_xref(
->  		break;
->  	case XFS_ATTR_FORK:
->  		xchk_bmap_xref_rmap(info, irec, agbno);
-> -		xfs_rmap_ino_owner(&oinfo, info->sc->ip->i_ino,
-> +		xfs_rmap_inode_owner(&oinfo, info->sc->ip,
->  				info->whichfork, irec->br_startoff);
->  		xchk_xref_is_only_owned_by(info->sc, agbno, irec->br_blockcount,
->  				&oinfo);
+> @@ -600,7 +600,7 @@ xchk_bmap_btree(
+>  
+>  	/* Check the btree structure. */
+>  	cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, ip, whichfork);
+>  	error = xchk_btree(sc, cur, xchk_bmapbt_rec, &oinfo, info);
+>  	xfs_btree_del_cursor(cur, error);
+>  out:
+> diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
+> index 822a4af43833..f5791ad21e41 100644
+> --- a/fs/xfs/scrub/bmap_repair.c
+> +++ b/fs/xfs/scrub/bmap_repair.c
+> @@ -760,7 +760,7 @@ xrep_bmap_build_new_fork(
+>  	 * Prepare to construct the new fork by initializing the new btree
+>  	 * structure and creating a fake ifork in the ifakeroot structure.
+>  	 */
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, rb->whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, sc->ip, rb->whichfork);
+>  	error = xrep_newbt_init_inode(&rb->new_bmapbt, sc, rb->whichfork,
+>  			&oinfo);
+>  	if (error)
+> @@ -833,7 +833,7 @@ xrep_bmap_remove_old_tree(
+>  	struct xfs_owner_info	oinfo;
+>  
+>  	/* Free the old bmbt blocks if they're not in use. */
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, rb->whichfork);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, sc->ip, rb->whichfork);
+>  	return xrep_reap_fsblocks(sc, &rb->old_bmbt_blocks, &oinfo);
+>  }
+>  
+> diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
+> index 6ab0eff7d2ea..c82f4631fd9c 100644
+> --- a/fs/xfs/scrub/newbt.c
+> +++ b/fs/xfs/scrub/newbt.c
+> @@ -145,7 +145,7 @@ xrep_newbt_init_metadir_inode(
+>  
+>  	ASSERT(xfs_is_metadir_inode(sc->ip));
+>  
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, XFS_DATA_FORK);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, sc->ip, XFS_DATA_FORK);
+>  
+>  	ifp = kmem_cache_zalloc(xfs_ifork_cache, XCHK_GFP_FLAGS);
+>  	if (!ifp)
 > diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-> index cd90ecae3ffb..fcd14c1703ea 100644
+> index fff23932828b..cd90ecae3ffb 100644
 > --- a/fs/xfs/scrub/reap.c
 > +++ b/fs/xfs/scrub/reap.c
-> @@ -1249,8 +1249,7 @@ xreap_bmapi_select(
->  	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
->  			sc->sa.pag);
+> @@ -1205,7 +1205,7 @@ xrep_reap_metadir_fsblocks(
+>  	ASSERT(xfs_is_metadir_inode(sc->ip));
 >  
-> -	xfs_rmap_ino_owner(&oinfo, rs->ip->i_ino, rs->whichfork,
-> -			imap->br_startoff);
-> +	xfs_rmap_inode_owner(&oinfo, rs->ip, rs->whichfork, imap->br_startoff);
->  	error = xfs_rmap_has_other_keys(cur, agbno, 1, &oinfo, crosslinked);
+>  	xreap_configure_agextent_limits(&rs);
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, XFS_DATA_FORK);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, sc->ip, XFS_DATA_FORK);
+>  	error = xfsb_bitmap_walk(bitmap, xreap_fsmeta_extent, &rs);
 >  	if (error)
->  		goto out_cur;
+>  		return error;
+> diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
+> index 4951cc271788..0d10ce2910c2 100644
+> --- a/fs/xfs/scrub/rtrefcount.c
+> +++ b/fs/xfs/scrub/rtrefcount.c
+> @@ -555,7 +555,7 @@ xchk_rtrefcountbt(
+>  	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+>  		return error;
+>  
+> -	xfs_rmap_ino_bmbt_owner(&btree_oinfo, rtg_refcount(sc->sr.rtg)->i_ino,
+> +	xfs_rmap_inode_bmbt_owner(&btree_oinfo, rtg_refcount(sc->sr.rtg),
+>  			XFS_DATA_FORK);
+>  	error = xchk_btree(sc, sc->sr.refc_cur, xchk_rtrefcountbt_rec,
+>  			&btree_oinfo, &rrc);
+> diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
+> index 8b1a8389d32f..043be93c7148 100644
+> --- a/fs/xfs/scrub/rtrmap.c
+> +++ b/fs/xfs/scrub/rtrmap.c
+> @@ -244,7 +244,6 @@ int
+>  xchk_rtrmapbt(
+>  	struct xfs_scrub	*sc)
+>  {
+> -	struct xfs_inode	*ip = rtg_rmap(sc->sr.rtg);
+>  	struct xfs_owner_info	oinfo;
+>  	struct xchk_rtrmap	cr = { };
+>  	int			error;
+> @@ -253,7 +252,7 @@ xchk_rtrmapbt(
+>  	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+>  		return error;
+>  
+> -	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, XFS_DATA_FORK);
+> +	xfs_rmap_inode_bmbt_owner(&oinfo, rtg_rmap(sc->sr.rtg), XFS_DATA_FORK);
+>  	return xchk_btree(sc, sc->sr.rmap_cur, xchk_rtrmapbt_rec, &oinfo, &cr);
+>  }
+>  
 > -- 
 > 2.53.0
 > 
