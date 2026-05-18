@@ -1,100 +1,242 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD18288C3D
-	for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 14:44:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91F81ABEDE;
+	Mon, 18 May 2026 19:03:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779115485; cv=none; b=P4vWWPPiGRONFps+GupWTNFB0IMQmYonREji9KAexmvcENtvJVHetAplzIFQZViVZ3I1ZdUeupEBLrQHqDkU2dLl0+jjgcuDCLjk9ifJ8yHHVxS/3I6XCCJf/z5LH2mHln6/yE10LBtE3CWW7Qpy7UR6N1ZyFsdIeisjALAKQ64=
+	t=1779131024; cv=none; b=m2J/AmYW3suYp6wJOOqHSUyasTzooxPjWD6cbXCv7ZcFknoUZhEiBx0QGR54O49gq7qe/Q+uuZ79tawvIdXzXYI7SlarWC0/iy9JRkLgngsqCxyMz/pFXM9lejcMGK/8uKWK1Y86n5uH+QqFp2pDQROVthTDr5KCgVxfXBlacF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779115485; c=relaxed/simple;
-	bh=u1htIQ+cBGbRbD9P6U7xix0lnFYW5IXNgGXzrDz+aWQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fPA0MIrIz0h0wRnRwN275+05W7YhqIwNrv2eDMR6TyvVPTqh4C1Mk94RWE7C0Xf7h+beOeyrTz8uMZLNxYb0+3iLR1SDAz/QeqqHJ2nhXSS52L3tvdtx9WDzSSrm8F0UyVW12HFBTQ146vXcplogLtBqQPd3BGONURGHFWk8VnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fRtytCeZ; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779131024; c=relaxed/simple;
+	bh=MBVyvLGS/0TJW2hGuvN8brXC6CoLB0ptAQYJLoYU+/A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tz/hERG4Ov5L4pKqWwzf5bQ4VTnSHtJRKlXpikP1Lz6gxnHpIolqT7wWn3MTuSujqUAoD1o14yc+MxNzi9gWOkiiahARC9e/fPlm9wHC8FLFc3pSpCFLZ2DEe9s2qj0/j5sEV7tXPT9Ek6FOeTjp/3xYORNoOyxX56GgneX88hY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UFk7QRJF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fRtytCeZ"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-835399c11e0so997068b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 07:44:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779115483; x=1779720283; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5QC+PoU+YwXsRW92BuD7PelfR56JvKbxUHG8raaMFfs=;
-        b=fRtytCeZJc3KHI8ohi8X0/fY1f4yrucjpV8tLF7hueQbc7DcIlFk8pXKPDTbwV3e/Y
-         ON1zw0N/cmgme+DlpRm8MKUWkg3dJRt0qcHjnrh6F5x2KLVtxymcPzqGHfKrHoDlOCR1
-         3UAK24Hm7H2IUeU67cAYZLz25BFK9eReckj+cTijftv2lcsaDQYeekLzhjVd/o64gZlH
-         GCfaZOwEncJjd1JSZsnzFJ9Ee7OiGPuFz+MaqCXQhLp4CPpJypHK+ttGMzmqwmKIdN4C
-         cVRStWKwlyV+AylL3vNd6cCSqja5EGGhhVykEQg3mrNB2pAidjRq1fWpjaiDmi2xzmhj
-         uOsA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779115483; x=1779720283;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5QC+PoU+YwXsRW92BuD7PelfR56JvKbxUHG8raaMFfs=;
-        b=R/+WkY2mhQEIP3DjtE274ndfSMzXyuZlAGi8WsBQWYjqtd/h31s30Ysa3wP4+LEPQv
-         Xr2qHn2b85wrXVvFw9Pa3YhWifr41areTxYKqeRcejE4n5KD8uZNLEBdF8t5TiLwTFt7
-         FrGco0ibFSgBeq/UKr6FxgPUBx2nYJ4q8FCGJdOw2IaJMw6QwShgNfFOVk0f9BegcliP
-         Kxnwx82r+NKsTQQ5mTjSELptAg9ruD4DEFYlRaYS/lrTkRMpOVExp3aWDe3fBqKTmjvD
-         63hl4wLinjz9o0rY+8+fqDgzMAK25hhUWxtyMpb17vc3iM80O0fBK6ILyJUisNXYNen9
-         3EjQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+VJshCHWyiJ0tZ5NZH1jAo8Ay31TAN19/zM0V2V3h7IBioMSKtoaXWcfqSu2U63DBepX2v3/E/Wj8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3Xso3y4tMcdzZN7jm7C2YHSEiUr1GeMMvJ7LMxQHeiU5Dk1yG
-	jjq8NjiilBnm/AaZA5SHzwxPvJzimqiN7yWR4MCIH0GE6ZLpuR697dYz
-X-Gm-Gg: Acq92OHeMFfJeYZGM2CZFMn5FzTO/ujdv0ZyeelPmmpmP8UvICmHMDf8duQxhFWtsv5
-	sUTWxNHJ7VYj7UOBOyJV3w+US2gM8gDQrgujl6iFXYyYACzKV/FnPtxclM1YJ0yRFwdsbTJY4wz
-	/HAwfy/lqAAvP8Qa7AMxp+8o4Fj3A7wPx43zotpneltT2D2v/ugcm/IAlOo7E1BkQqevxxxdSQ4
-	CWgtH4h8wgzU6AFmQR+TN5UzDiSovkCCDoLI8fP2ZnzuerHGSTboF1/MDDI9c5GQJwKSKa4ie11
-	B0v9iSz7KUWh3wzIeaXubDUHuDr/Nc8PJxIxpxNGrCFYjz+OtnOqinuqetClRJGnhFr/eI8+Xqn
-	nhWJDT1PxFdETThw0BOwukYBP4fp2YLI8SLGABwLM7ZRDRcSSiCv6CSddx3P+AKZBaggVv4KH6g
-	SHa6YrJyZ5jLquZW27Ftw0uEkZN1Q=
-X-Received: by 2002:a05:6a00:2992:b0:82c:e692:1f91 with SMTP id d2e1a72fcca58-83f33df6ca2mr16284317b3a.39.1779115483338;
-        Mon, 18 May 2026 07:44:43 -0700 (PDT)
-Received: from [192.168.50.90] ([116.87.14.48])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83f19c5b4bfsm15394428b3a.28.2026.05.18.07.44.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 May 2026 07:44:43 -0700 (PDT)
-Message-ID: <82a93174-6897-46af-8602-d7ac9d2d9dc3@gmail.com>
-Date: Mon, 18 May 2026 22:44:39 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFk7QRJF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEC19C4AF09;
+	Mon, 18 May 2026 19:03:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779131024;
+	bh=MBVyvLGS/0TJW2hGuvN8brXC6CoLB0ptAQYJLoYU+/A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UFk7QRJFz8lbC9sarxOdkR3AQFPGYDWZBigMHQuNhF5ZBc4wXmr54tSAnq/ctEbK1
+	 ScFOgO+r1cGiD7Ha3Oyh8SNWL5bUYwaTNeBO32Y+AozwsHLYNRva3hCNlfsXxO/b4h
+	 Muc9arwL3oibr/LjimHWzXWvc/jxoz0CJkivYVySaM7LQAgKmovRgRDI++fAgcSRwG
+	 RyAose+C53+h1pkdK32ol+K7rvsEsww3UkfDrWMU7fP5/gAqmLPQs5882B+nppCqiY
+	 hjJilOxmroZcxT61K5AqcWC5Twc3anHfJlqg+edVoj3f2kbX6tcysbn4vLpC/jRPb7
+	 yJMMQ5TmPdJlg==
+Date: Tue, 19 May 2026 03:03:37 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, fstests@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [PATCH] generic: add a test that stresses metadata eviction
+Message-ID: <agtbqjAxUsCsLwyr@zlang-mailbox>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>, 
+	Carlos Maiolino <cem@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	Eric Biggers <ebiggers@kernel.org>
+References: <20260518062514.506071-1-hch@lst.de>
+ <agsEQ9TjHelfbWXr@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 9/9] fstests: btrfs: test UUID consistency for clones
- with metadata_uuid
-To: Christoph Hellwig <hch@infradead.org>, Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-f2fs@vger.kernel.org, amir73il@gmail.com, zlang@redhat.com,
- djwong@kernel.org
-References: <cover.1777357320.git.asj@kernel.org>
- <d079b3f7cce446b0c5bc0762226957b960c7a3ac.1777357321.git.asj@kernel.org>
- <agK9MC0ufkTJj-zu@infradead.org>
-Content-Language: en-US
-From: Anand Jain <anajain.sg@gmail.com>
-In-Reply-To: <agK9MC0ufkTJj-zu@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <agsEQ9TjHelfbWXr@nidhogg.toxiclabs.cc>
 
-On 12/5/26 13:40, Christoph Hellwig wrote:
-> On Tue, Apr 28, 2026 at 02:42:59PM +0800, Anand Jain wrote:
->> Btrfs uses the metadata_uuid superblock feature to change the on-disk UUID
->> without rewriting every block header. This patch adds a sanity check to
->> ensure UUID consistency when a filesystem with metadata_uuid enabled is
->> cloned.
+On Mon, May 18, 2026 at 02:27:42PM +0200, Carlos Maiolino wrote:
+> On Mon, May 18, 2026 at 08:24:53AM +0200, Christoph Hellwig wrote:
+> > The fsverity test generic/759 could be used to reproduce a regression in
+                              ^^^
+                              579
+
+> > the xfs buffer hashing.  Carlos Maiolino figured out that even removing
+> > the fsverity-specific bits would reproduce the issue.  This test is
+> > thus a copy of generic/759 with the fsverity bits striped out, and
+> > run 5 times as that seems to be the threshold at which the issue
+> > reproduces reliably.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> > 
+> > Not sure how to best credit Eric for the original patch and Carlos
+> > for the extraction, any ideas?
 > 
-> xfs does the same.
+> To be fair, Andrey initially suggested stripping off the fs-verity
+> parts, IIRC because he wanted to isolate his own series from this crash.
+> My role was mostly reproduce it and hunt the bug down.
+> Risking to come with yet another tag, perhaps something like:
 > 
-> Can we abstract out the uuid change and generalize the test?
+> Based-on-generic-579-by: <Eric...>
+> 
+> It doesn't look ugly to me, but who knows...
 
-Sure. let me try.
+Hmm... Generally, we state which case was copied/forked from in the introductory
+comments of the case and in the commit log. If you want to specifically mention
+the original author, I think we can add a dedicated line in the commit log, for
+example:
 
-Thanks.
+  'This case is copied from generic/579, which was written by Eric Biggers.'
+
+Currently, we don’t have a formal commit trailer to define this specific scenario,
+but perhaps this is a good opportunity for us to discuss and agree on one. After
+all, copying and modifying existing cases happens quite often in xfstests. For
+example, we could specify the source case in the commit body, and then add a
+commit trailer likes "Based-on-code-by", the whole things like:
+
+   This case is copied by generic/579, I removed the fsverity-specific part to
+   reproduce ....
+   ...
+
+   Based-on-code-by: Eric Biggers <ebiggers@google.com>
+   Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+What do you and others think?
+
+> 
+> > 
+> >  tests/generic/4201     | 108 +++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/4201.out |   2 +
+> >  2 files changed, 110 insertions(+)
+> >  create mode 100755 tests/generic/4201
+> >  create mode 100644 tests/generic/4201.out
+> > 
+> > diff --git a/tests/generic/4201 b/tests/generic/4201
+> > new file mode 100755
+> > index 000000000000..fc367beeadaf
+> > --- /dev/null
+> > +++ b/tests/generic/4201
+> > @@ -0,0 +1,108 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright 2019 Google LLC
+
+I saw you tried to keep the original copyright of generic/579. I'm not sure if
+we can have two Copyright lines at here, one is yours, the other is the original
+one?
+
+Thanks,
+Zorro
+
+> > +#
+> > +# FS QA Test generic/4201
+> > +#
+> > +# Race dropping file systems caches vs fsstress an repeated reading of files.
+> > +# Based on generic/579 with the fsverity bits stripped out, and an increased
+> > +# number of runs.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto stress
+> > +
+> > +stop_run()
+> > +{
+> > +	# Stop all subprocesses.
+> > +	_kill_fsstress
+> > +	touch $tmp.done
+> > +	wait
+> > +}
+> > +
+> > +_cleanup()
+> > +{
+> > +	stop_run
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +. ./common/filter
+> > +
+> > +fsv_file_size=10000000
+> > +nproc_enabler=$((4 * LOAD_FACTOR))
+> > +nproc_reader=$((6 * LOAD_FACTOR))
+> > +nproc_stress=$((3 * LOAD_FACTOR))
+> > +runtime=$((20 * TIME_FACTOR))
+> > +
+> > +run_test()
+> > +{
+> > +	rm -rf $tmp.done
+> > +
+> > +	# Create the test files and start the fs-verity enabler processes.
+> > +	for ((proc = 0; proc < nproc_enabler; proc++)); do
+> > +		orig_file=$SCRATCH_MNT/orig$proc
+> > +		fsv_file=$SCRATCH_MNT/fsv$proc
+> > +		head -c $fsv_file_size /dev/urandom > $orig_file
+> > +		(
+> > +			while [ ! -e $tmp.done ]; do
+> > +				rm -f $fsv_file
+> > +				cp $orig_file $fsv_file
+> > +				# Give the readers some time to read from the file.
+> > +				sleep 0.$((RANDOM % 100))
+> > +			done
+> > +		) &
+> > +	done
+> > +
+> > +	# Start the reader processes.
+> > +	for ((proc = 0; proc < nproc_reader; proc++)); do
+> > +		(
+> > +			while [ ! -e $tmp.done ]; do
+> > +				# Choose a random file for each iteration, so that
+> > +				# sometimes multiple processes read from the same file.
+> > +				i=$((RANDOM % nproc_enabler))
+> > +				orig_file=$SCRATCH_MNT/orig$i
+> > +				fsv_file=$SCRATCH_MNT/fsv$i
+> > +
+> > +				# After the copy from $orig_file to $fsv_file has
+> > +				# completed, the contents of these two files should
+> > +				# match, regardless of whether verity has been enabled
+> > +				# or not yet (or is currently being enabled).
+> > +				cmp $orig_file $fsv_file |& _filter_scratch | \
+> > +					sed -e "s/'//g" | \
+> > +					grep -v "SCRATCH_MNT/fsv$i: No such file or directory" | \
+> > +					grep -v "EOF on SCRATCH_MNT/fsv$i"
+> > +				done
+> > +		) &
+> > +	done
+> > +
+> > +	# Start a process that occasionally runs 'sync && drop_caches'.  This makes more
+> > +	# reads go through fs-verity for real, rather than just returning pagecache.
+> > +	(
+> > +		while [ ! -e $tmp.done ]; do
+> > +			sleep 2.$((RANDOM % 100))
+> > +			_scratch_sync && echo 3 > /proc/sys/vm/drop_caches
+> > +		done
+> > +	) &
+> > +
+> > +	# Start the fsstress processes.
+> > +	_run_fsstress_bg -p $nproc_stress -l 0 -d $SCRATCH_MNT/stressdir
+> > +
+> > +	# Run for a while.
+> > +	sleep $runtime
+> > +
+> > +	stop_run
+> > +}
+> > +
+> > +for i in $(seq 1 5); do
+> > +	echo "Starting run $i" >> $seqres.full
+> > +
+> > +	_scratch_mkfs &>> $seqres.full
+> > +	_scratch_mount
+> > +	run_test
+> > +	_scratch_unmount
+> > +done
+> > +
+> > +echo "Silence is golden"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/4201.out b/tests/generic/4201.out
+> > new file mode 100644
+> > index 000000000000..2c3f3d42ff3f
+> > --- /dev/null
+> > +++ b/tests/generic/4201.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 4201
+> > +Silence is golden
+> > -- 
+> > 2.53.0
+> > 
+> > 
