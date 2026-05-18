@@ -1,46 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048183AEF4E
-	for <linux-xfs@vger.kernel.org>; Mon, 18 May 2026 06:02:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CF773DEAC7;
+	Mon, 18 May 2026 06:25:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779084152; cv=none; b=tuyIUiEKZ++E5jARWvdO35sJI/+kQ351A4G+QLDJJczJnQ5O2dD7/6Tx6T59jD4RUueR9P/V0ffzcMYGyBMfmC58Xq1hqwou47o6F1DXByRlPguYSzOrZCHqVlMLzyNNKle5YUJIm2TzahEhsp92aZYJJagM/5I8evK1RPWxzm8=
+	t=1779085526; cv=none; b=k3ovpjzGP/X+2B2OzjO7dVhgiI66apntGMoER06mojGSgPBxybsjS0n196hxEvnwFMpqdKnl38g6t1qQgN6ZbpEHKcHbzql7p7jHkD47B7zaYNwhcADxB7OzCyIw3zbJ3eBvrBwfARnFTOpbQU04uQQ2s8WmcYk5kEJSbuylayY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779084152; c=relaxed/simple;
-	bh=FbwG05mJy6vKPcPZg7S7hIeU7dluy+vyY2B5wrjcpT0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=udkY27NkQPTLqdJGZtnrKzVMvJm3Uihoy8/FcHxNowOo7eccMiXi2I6meflCY6z5Mq4PnsjPbrnX5cOQmA8BXckJmdxKNUwuWAICeo950KGOreOkfv7U9v+UKZWYFnH1wuf7rsUImCmprctnVF6zNQfy0ONEagEe/UUBIcwSAKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aIqk1KBI; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1779085526; c=relaxed/simple;
+	bh=K8fKyKyfyT9B6YRo5/qqTrnTjKtGKmREFYfyWC98iuU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q+mQ8eMrHVUSA1zuJG2KElvDFVxpJ+9OsGRXaQi4EEbenqGx2rSM6SbOmyhnjpRcTnTSwOevjgr3EIfly8Ve6LCFncuCJd6u7U5tEuHASpIJkhStuPSPSK6VY7DaOz9MLiRTdaLCyun09MMWHxaTpRKI6PFm/f38UnGz1DsKtYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xxDosa/r; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aIqk1KBI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xxDosa/r"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=uCh1204SoE2G9g/G0lDDawVihLElLoLH7Er2Y+C3cLU=; b=aIqk1KBIlKUnS++Fj9/oRBIbNh
-	JmGyPd3715JPgXz/zDgZ0AQuk6TlIobZLJKr8mGsdifjJ/yNnFumuEeD3Yd5RwUhYJj49Ve9dAXWr
-	ysuWO37w7gvZzULNz6r3YkjFVsHbwXAiVi7j6exLJw4vzr430ROlUctti2uKHs/MfCCzxrMPEyyhG
-	eYl88BnoMEktxZow9zXnWNEM6xFdCc8JgnRU4nkxJcW66ZOcfaqIf1bPT2hnjgze2VpCf/zBR7x6u
-	Be8XuyqHf6kkGFk8QPE2T7MP08OVd1Y9IXnqYdPaifvSHXnkDPEZb02MqdpjNAuWdhrGwPAZ4hhQP
-	L+HscImQ==;
-Received: from 213-147-166-103.nat.highway.webapn.at ([213.147.166.103] helo=localhost)
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=HsQzlFWA5M7uaynzHzr3yG7GBzj5xJfNKrSW2p4kcso=; b=xxDosa/rrEsZUUrPSI3+F3QlVj
+	DeuUqW/QVHgQweeAXINoWJlDs+4OwW+kuuzwo1uSKMh56xu6ST6wREbALtNmTB3cFMW+DEu9QxB5U
+	Osy6fqm/CJA6mc2gRZNBY+NrtZpkn/DqoxKDCYzfh2471ilgCIL8bh2aRay+dDwfwwdi8ggstMvAK
+	KO9sFiDDCXHEUZ+SbBXmKVB8xjvrPeKMaHT+pWwRMcHBcLWcSfsXf1uKY3KSEB67ya4NouOccM9K7
+	1y8mbO8Qfir5l5uJsdaRGuhStNqLpRo6/di8xsuLS+RbMws8wHB8AtrSUY9puFOr8jY6I0mFh939u
+	QW4VUPXQ==;
+Received: from [2001:4bb8:2ee:fcf2:e6ad:a575:3e60:e254] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wOr3X-0000000ENRX-0QtF;
-	Mon, 18 May 2026 06:02:23 +0000
+	id 1wOrPk-0000000EQJo-07jE;
+	Mon, 18 May 2026 06:25:20 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	Dave Chinner <dgc@kernel.org>,
+To: zlang@kernel.org
+Cc: cmaiolino@redhat.com,
+	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix a buffer lookup against removal race
-Date: Mon, 18 May 2026 08:02:05 +0200
-Message-ID: <20260518060209.502179-2-hch@lst.de>
+Subject: [PATCH] generic: add a test that stresses metadata eviction
+Date: Mon, 18 May 2026 08:24:53 +0200
+Message-ID: <20260518062514.506071-1-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260518060209.502179-1-hch@lst.de>
-References: <20260518060209.502179-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,110 +47,147 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When a buffer is freed either by LRU eviction or because it is unset,
-the lockref is marked as dead instantly, which prevents the buffer from
-being used after finding it in the buffer hash in xfs_buf_lookup and
-xfs_buf_find_insert.  But the latter will then not add the new buffer to
-the hash because it already found an existing buffer.
+The fsverity test generic/759 could be used to reproduce a regression in
+the xfs buffer hashing.  Carlos Maiolino figured out that even removing
+the fsverity-specific bits would reproduce the issue.  This test is
+thus a copy of generic/759 with the fsverity bits striped out, and
+run 5 times as that seems to be the threshold at which the issue
+reproduces reliably.
 
-Fix this using in two places:  Remove the buffer from the hash before
-marking the lockref dead so that that no buffer with a dead lockref can
-be found in the hash, but if we find one in xfs_buf_find_insert due to
-store reordering, handle this case correctly instead of returning an
-unhashed buffer.
-
-Fixes: 67fe4303972e ("xfs: don't keep a reference for buffers on the LRU")
-Reported-by: Andrey Albershteyn <aalbersh@redhat.com>
-Reported-by: Carlos Maiolino <cem@kernel.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c | 34 ++++++++++++++++++++++++----------
- 1 file changed, 24 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 580d40a5ee57..0cea458f1353 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -472,6 +472,7 @@ xfs_buf_find_insert(
- 	/* The new buffer keeps the perag reference until it is freed. */
- 	new_bp->b_pag = pag;
- 
-+retry:
- 	rcu_read_lock();
- 	bp = rhashtable_lookup_get_insert_fast(&btp->bt_hash,
- 			&new_bp->b_rhash_head, xfs_buf_hash_params);
-@@ -480,8 +481,16 @@ xfs_buf_find_insert(
- 		error = PTR_ERR(bp);
- 		goto out_free_buf;
- 	}
--	if (bp && lockref_get_not_dead(&bp->b_lockref)) {
--		/* found an existing buffer */
-+	if (bp) {
-+		/*
-+		 * If there is an existing buffer with a dead lockref, retry
-+		 * until the new buffer is added, or a usable buffer is found.
-+		 */
-+		if (!lockref_get_not_dead(&bp->b_lockref)) {
-+			rcu_read_unlock();
-+			cpu_relax();
-+			goto retry;
-+		}
- 		rcu_read_unlock();
- 		error = xfs_buf_find_lock(bp, flags);
- 		if (error)
-@@ -820,15 +829,20 @@ xfs_buf_destroy(
- 	ASSERT(__lockref_is_dead(&bp->b_lockref));
- 	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
- 
-+	if (bp->b_pag)
-+		xfs_perag_put(bp->b_pag);
-+	xfs_buf_free(bp);
+Not sure how to best credit Eric for the original patch and Carlos
+for the extraction, any ideas?
+
+ tests/generic/4201     | 108 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/4201.out |   2 +
+ 2 files changed, 110 insertions(+)
+ create mode 100755 tests/generic/4201
+ create mode 100644 tests/generic/4201.out
+
+diff --git a/tests/generic/4201 b/tests/generic/4201
+new file mode 100755
+index 000000000000..fc367beeadaf
+--- /dev/null
++++ b/tests/generic/4201
+@@ -0,0 +1,108 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright 2019 Google LLC
++#
++# FS QA Test generic/4201
++#
++# Race dropping file systems caches vs fsstress an repeated reading of files.
++# Based on generic/579 with the fsverity bits stripped out, and an increased
++# number of runs.
++#
++. ./common/preamble
++_begin_fstest auto stress
++
++stop_run()
++{
++	# Stop all subprocesses.
++	_kill_fsstress
++	touch $tmp.done
++	wait
 +}
 +
-+static inline void
-+xfs_buf_kill(
-+	struct xfs_buf		*bp)
++_cleanup()
 +{
-+	lockref_mark_dead(&bp->b_lockref);
- 	if (!xfs_buf_is_uncached(bp)) {
- 		rhashtable_remove_fast(&bp->b_target->bt_hash,
- 				&bp->b_rhash_head, xfs_buf_hash_params);
--
--		if (bp->b_pag)
--			xfs_perag_put(bp->b_pag);
- 	}
--
--	xfs_buf_free(bp);
- }
- 
- /*
-@@ -851,7 +865,7 @@ xfs_buf_rele(
- 	return;
- 
- kill:
--	lockref_mark_dead(&bp->b_lockref);
-+	xfs_buf_kill(bp);
- 	list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
- 	spin_unlock(&bp->b_lockref.lock);
- 
-@@ -1433,7 +1447,7 @@ xfs_buftarg_drain_rele(
- 		return LRU_SKIP;
- 	}
- 
--	lockref_mark_dead(&bp->b_lockref);
-+	xfs_buf_kill(bp);
- 	list_lru_isolate_move(lru, item, dispose);
- 	spin_unlock(&bp->b_lockref.lock);
- 	return LRU_REMOVED;
-@@ -1545,7 +1559,7 @@ xfs_buftarg_isolate(
- 		return LRU_ROTATE;
- 	}
- 
--	lockref_mark_dead(&bp->b_lockref);
-+	xfs_buf_kill(bp);
- 	list_lru_isolate_move(lru, item, dispose);
- 	spin_unlock(&bp->b_lockref.lock);
- 	return LRU_REMOVED;
++	stop_run
++	rm -f $tmp.*
++}
++
++. ./common/filter
++
++fsv_file_size=10000000
++nproc_enabler=$((4 * LOAD_FACTOR))
++nproc_reader=$((6 * LOAD_FACTOR))
++nproc_stress=$((3 * LOAD_FACTOR))
++runtime=$((20 * TIME_FACTOR))
++
++run_test()
++{
++	rm -rf $tmp.done
++
++	# Create the test files and start the fs-verity enabler processes.
++	for ((proc = 0; proc < nproc_enabler; proc++)); do
++		orig_file=$SCRATCH_MNT/orig$proc
++		fsv_file=$SCRATCH_MNT/fsv$proc
++		head -c $fsv_file_size /dev/urandom > $orig_file
++		(
++			while [ ! -e $tmp.done ]; do
++				rm -f $fsv_file
++				cp $orig_file $fsv_file
++				# Give the readers some time to read from the file.
++				sleep 0.$((RANDOM % 100))
++			done
++		) &
++	done
++
++	# Start the reader processes.
++	for ((proc = 0; proc < nproc_reader; proc++)); do
++		(
++			while [ ! -e $tmp.done ]; do
++				# Choose a random file for each iteration, so that
++				# sometimes multiple processes read from the same file.
++				i=$((RANDOM % nproc_enabler))
++				orig_file=$SCRATCH_MNT/orig$i
++				fsv_file=$SCRATCH_MNT/fsv$i
++
++				# After the copy from $orig_file to $fsv_file has
++				# completed, the contents of these two files should
++				# match, regardless of whether verity has been enabled
++				# or not yet (or is currently being enabled).
++				cmp $orig_file $fsv_file |& _filter_scratch | \
++					sed -e "s/'//g" | \
++					grep -v "SCRATCH_MNT/fsv$i: No such file or directory" | \
++					grep -v "EOF on SCRATCH_MNT/fsv$i"
++				done
++		) &
++	done
++
++	# Start a process that occasionally runs 'sync && drop_caches'.  This makes more
++	# reads go through fs-verity for real, rather than just returning pagecache.
++	(
++		while [ ! -e $tmp.done ]; do
++			sleep 2.$((RANDOM % 100))
++			_scratch_sync && echo 3 > /proc/sys/vm/drop_caches
++		done
++	) &
++
++	# Start the fsstress processes.
++	_run_fsstress_bg -p $nproc_stress -l 0 -d $SCRATCH_MNT/stressdir
++
++	# Run for a while.
++	sleep $runtime
++
++	stop_run
++}
++
++for i in $(seq 1 5); do
++	echo "Starting run $i" >> $seqres.full
++
++	_scratch_mkfs &>> $seqres.full
++	_scratch_mount
++	run_test
++	_scratch_unmount
++done
++
++echo "Silence is golden"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/4201.out b/tests/generic/4201.out
+new file mode 100644
+index 000000000000..2c3f3d42ff3f
+--- /dev/null
++++ b/tests/generic/4201.out
+@@ -0,0 +1,2 @@
++QA output created by 4201
++Silence is golden
 -- 
 2.53.0
 
