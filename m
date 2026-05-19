@@ -1,42 +1,50 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BC98370AEC
-	for <linux-xfs@vger.kernel.org>; Tue, 19 May 2026 14:10:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 895CB2690EC;
+	Tue, 19 May 2026 14:59:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779199838; cv=none; b=bSUNnQp+OtWeUyvPoQGuTrEGdIP7qh8G2RRshiPyTvt6TQYIma+2yIRwH1y0XdP9oCDaWIuA4gHNwF599keCCl4FYsbDBnjUiYf5vA8WqmktOJs5nAU+1pv0LHapCdtBUF0xyzJ4MYw8H2mhdvlycV9qP6HTFuW4vjzAJ5M6db0=
+	t=1779202790; cv=none; b=YjDxfvIu98mgUaBrEnU9RtGgwb2nH8BdNb4bpAiTQKOrzk/XtQ8caKKmPnDKBfZ/P8DlUygw9A/MXgcb/dzjP+6PHRMpRVmftWBXD/S5QisETam/YtcHI4XP0/dnRFfljEVkwPOkZyeZDfi+ylbDSePhV9nvUhRFeysYJeI9rHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779199838; c=relaxed/simple;
-	bh=9qTvmfguMjcejW3iW2gLcg+J1kuVdWcpzToJBzL2oEU=;
+	s=arc-20240116; t=1779202790; c=relaxed/simple;
+	bh=eJBwjfOZxIJAwmCkYYYu+7ClYV8SZV8YtcOqLakZ4gU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gt/zuLyu2wQzcXS47UIpqv5APorOWAEqf6EFqDolOyLAd8LFZI8hMxXBS2gKbtcQZlvVw2ABcwu6k6HN28KrxLXNogghSvcCn0pQ3ipiHdkHI7Z5ih4jCVkDx2vtJXm9alj9Afh1SFEvLzZl0Vv29Kq7wS6P3xOjnTs53gYMaqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIKBjovN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=N5uup1u/pHX7MD2LWBiVl7y6ONz/9K3LEROdVtSx/vHFxrjEjMoGONGma1qlfw4KNELvMdIToUalHdA+RDHWKGwsoXgTpxNS5sPm+FDSln/xOtnYyo59Q/HUtd/v6rXbO5UOiosXqks7cErqsqy7FcZX8TBbCW3FgDD8X+Pn/0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iDYcNGk+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIKBjovN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47F0C2BCB3;
-	Tue, 19 May 2026 14:10:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iDYcNGk+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D5ECC2BCB3;
+	Tue, 19 May 2026 14:59:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779199838;
-	bh=9qTvmfguMjcejW3iW2gLcg+J1kuVdWcpzToJBzL2oEU=;
+	s=k20201202; t=1779202790;
+	bh=eJBwjfOZxIJAwmCkYYYu+7ClYV8SZV8YtcOqLakZ4gU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VIKBjovNJDi1WqcBsqUS09amC3Iaw2/5GTf2um0ryIgopa2tQnzSt35rY79yqGny1
-	 eqCnw9VRwNkjvpFOdXSo3BVGpEHD5Vp8kW/Y+IfyE5KL6Kx+POJfmkLinap9UA9Cud
-	 i3E1LTqLarAGqecbSpAJh87E5XFQTsn6ZiySNRbyGiBIAKKPMJxIfd1Dj8TDAuIAXa
-	 bFjIehLPtg+Ogs6CbgO+CljQ7PvNqbL57iK7MLa9TgXvLflqfgmqdzuMN9vAIEjFJc
-	 MmqVI209/tdWvu2RGJKba03rKcEfNhPhpBqDqwrc0F8jzFNc87E1XkNEWw70fmn4xz
-	 AuRd2eJP5d5nw==
-Date: Tue, 19 May 2026 07:10:37 -0700
+	b=iDYcNGk+W87espzbLwYeIaaHULL09yJc3sXDkJ7lIeqwnuPr/GRwTWAItwECAwbmH
+	 ckJyVXMakc4dgDLft1DmVqzJXKxhYc1PuGV7xAnRa2ZCDvh7frg0VlZAHcW9/cZEN0
+	 cCGSkxiLjdd2Zfh12QtKMwLLRRIiF+kSsg+tO2sLfD8BlVIuJfjClHAbE3XLMTcqt0
+	 1tTzizzwULWsEW8tdydOKHcoVJEUU4Vl3t0l3FG6SqhoCn1YKIxFoyRMu7mbMfJdfp
+	 zsPoIEDj+ZyLRx7T7Ugg9kz8H+v8xIU91E6j3t5KD3eLx/dcPx5kt4pk2Rw6xkqovn
+	 PVivVR0J+iIog==
+Date: Tue, 19 May 2026 07:59:49 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lukas Herbolt <lukas@herbolt.com>, sandeen@sandeen.net,
-	aalbersh@kernel.org, linux-xfs@vger.kernel.org,
-	Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [RFC PATCH] mkfs: allow specification of default options via
- configuration file
-Message-ID: <20260519141037.GG9555@frogsfrogsfrogs>
-References: <20260514150653.GW9555@frogsfrogsfrogs>
- <agwisMUPPeYa5qDM@infradead.org>
+To: Dai Ngo <dai.ngo@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <dgc@kernel.org>,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
+ LAYOUTGET
+Message-ID: <20260519145949.GH9555@frogsfrogsfrogs>
+References: <961eb355-2f52-47a0-9399-e050a4e535a2@oracle.com>
+ <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
+ <20260514002513.GQ9555@frogsfrogsfrogs>
+ <26365a46-bdac-4e8a-a951-de904c3e5606@oracle.com>
+ <ageSguSyf2kBY33a@dread>
+ <b9860332-7b1e-448e-869a-ad59d8d5b7c0@oracle.com>
+ <agqfBPRWXQDR2ImG@infradead.org>
+ <606c4cea-70d2-4601-9db2-611cd35c3687@oracle.com>
+ <agwDhixPAAA0-cTa@infradead.org>
+ <55c7c22a-8edb-4833-be3f-1f6555ba90ed@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,60 +53,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <agwisMUPPeYa5qDM@infradead.org>
+In-Reply-To: <55c7c22a-8edb-4833-be3f-1f6555ba90ed@oracle.com>
 
-On Tue, May 19, 2026 at 01:43:28AM -0700, Christoph Hellwig wrote:
-> On Thu, May 14, 2026 at 08:06:53AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Ted asked for the ability to set default mkfs options, but to retain the
-> > ability respecify options via a separate configuration file or cli
-> > options.  This would be useful for running fstests with the default
-> > featureset of (say) Linux 5.15 LTS, while still allowing individual
-> > testcases to provide their own overrides.  It's certainly less messy
-> > than what Ted does today, which is a bash script that copies the desired
-> > config file and changes things.
+On Tue, May 19, 2026 at 06:44:18AM -0700, Dai Ngo wrote:
 > 
-> Looks reasonable, do you have a test for it as well?
-
-Somewhere, yeah :)
-
-> > +static inline int
-> > +getopt_mkfs(
+> On 5/18/26 11:30 PM, Christoph Hellwig wrote:
+> > On Mon, May 18, 2026 at 12:55:17PM -0700, Dai Ngo wrote:
+> > > As shown, the file map changes. Entry# 7 and 8 before the NFSD calls
+> > > merged into entry#7 after the calls. So there must be some activities
+> > > that cause the map to change. I don't know whether the activities were
+> > > triggered by NFS or something in XFS or the block device layer.
+> > Hmm.  We only insert layouts (and search for conflicts) after calling
+> > ->proc_layoutget.  So this might be racy against unwritten extent
+> > conversion, or other writers, which is a bit of an issue.  I guess
+> > we need to fix nfsd4_layoutget to insert an in-progress layout before
+> > calling into ->layouget.
 > 
-> I don't think there's much of a point in the inline here.
-> 
-> > +	int			argc,
-> > +	char *const		argv[],
-> > +	const struct option	*longopts,
-> > +	int			*longindex)
-> > +{
-> > +	return getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
-> > +			longopts, longindex);
-> > +}
-> 
-> Why does this hardcode the short options, but requires the caller to
-> pass in the long options (which are the same for both callers)?
+> I can't quite see the race condition regarding layoutget here. Could you
+> please explain?
 
-long_options is a local variable which contains a pointer into cli,
-which is another local variable in main().
+/me has no idea about nfs layouts but has thoughts anyway :)
 
-I could have made a fugly macro with implicit variable access, but that
-was yuck.
+1) xfs_fs_map_blocks only takes i_rwsem and XFS_ILOCK; it doesn't take
+the mmap invalidation lock.  Does that mean that pagefaults could wander
+in and mess with the layout?
 
-> > +	while ((c = getopt_mkfs(argc, argv, long_options, &option_index)) != EOF) {
-> 
-> Killing the long_opts would also avoid the overly long line here and in
-> the other call site.
+(I think the race that Christoph is referring to here is that any other
+thread can wander in and change the mapping after a ->map_blocks call
+returns, because nfs isn't holding any kind of lock on the inode)
 
-I could just shorten it to "lopts" or something.
+2) Now that NFS apparently can serve up multiple mappings at once,
+should ->map_blocks pass in an array element count so that we can do
+multiple iomaps in a single lock cycle?
 
-> > +		if (c == 'c') {
-> > +			parse_subopts(c, optarg, defcfg_subopt_tab, &cli);
-> > +		}
-> 
-> Spurious braces.
-
-Will fix.
+3) Do the reflink and realtime inode checks need to be re-assessed after
+grabbing the ilock since they can change?
 
 --D
+
+> > > However, based on this data I think it's better to change the bmapi_flags
+> > > from XFS_BMAPI_ENTIRE to '0' to address the overlap issue.
+> > We absolutely should be doing that as I said from my first reply.
+> > Still trying to understand what is going on here at a higher level,
+> > though.
+> 
+> I'll resubmit the patch series with both fixes combined: the uninitialized
+> imap handling in the error path and the replacement of XFS_BMAPI_ENTIRE
+> with 0.
+> 
+> Thanks,
+> -Dai
+> 
+> 
