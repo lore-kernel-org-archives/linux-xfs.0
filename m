@@ -1,79 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B720E3BE642;
-	Tue, 19 May 2026 20:39:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12F36366DA3;
+	Tue, 19 May 2026 20:47:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779223153; cv=none; b=UDBz0DKrjqidjcIJn7Eqasi1vB2uKC6GgLj0ORBxWOvlzIaVdv/qHRst9CeFCVMS4Q4P51fzQSyiyypvvQWTScurOCGq48fHop1oT/HCjDSu8eSWjObnr7xQlhDLGQhfWGpXKVa7rjF8JwJmCjp/jk14wi/LmYypgzwtUlHuNMw=
+	t=1779223656; cv=none; b=VKiY69E8isuW8EGIX9O62sDXUWz1dsL6lVIUT3ZXml5KSBYU2b8JrVBw2LSwbjQJrrfqBp9Hnv/huamGwHOpSAq2fD7RObokYtuEc66L6QHwyXazq/0uSaO4hDK7H4WY2gG47IjQLcqrpuZybOrMEMihk66IsuI9r3o2UiKOMPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779223153; c=relaxed/simple;
-	bh=mtwp1O+fWLCXvgs8V6s2T95rtcXXphqWM/EFL7u/pkE=;
+	s=arc-20240116; t=1779223656; c=relaxed/simple;
+	bh=sjdqVwnwiLRX5iocH/+AnP/7Gx0pQHJMzhczuC6eDhg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T/bQQ0BCkonSCp5rMAwQ6uOCg3cHtBhbuZVmI7dRZUr21FKyxlzpdV76vhgmSbKKpuGp62fVQjkFZOOvlpaV8Uf7Vx9b3DENNNprrc/qkxHSvglyHRKgdOaldA6vVEGBd3TuWULoYzZC9/66Y1cLIUfFReJMl1jFiKdquCOhhtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YOrj7sY7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=rdGtRFVN7a13KWsXIdHJ+o/Pzk/Wlse4kR+gMQM7NhI+gAqAunwj9ugFSD9aJetqTmkiU5GZhH+ORQA7qtm0Lz0E6YiRYZeEUWwuf1jwUDwm0GsCI8MEb7LHrHQiGQXP50ad6BG40otiv3pxvV5WRBTFVspu4pTpLGZ6RdOxRQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dwsA+duq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YOrj7sY7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67E651F000E9;
-	Tue, 19 May 2026 20:39:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dwsA+duq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43A8D1F000E9;
+	Tue, 19 May 2026 20:47:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779223152;
-	bh=qTVY2rUdXHo+MZi2M+iCzj1a9NH32hn1MLg6kvsoxEE=;
+	s=k20260515; t=1779223654;
+	bh=MtTD+PAUL8JXQt07D1QorlucFcBKTmTOO7YeP4C7NTI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YOrj7sY7VhnXcfQq7rurk4k7VGRqHxW9734GrAiBBUYXS71DYrpadRsScHs2jC8QM
-	 2jnQCSL8ZgJIC8eitVi2GXh3J2b4s7OFIBORcalQgRrGT81i0SRkeDRgs6XT+oNnES
-	 kE9WBlM4aQs5w9i74pu3tzdkZjfjq+t+NF3wqgwy5eydVu6WWtyNiHv/AQU1WRy0Bp
-	 xQ/hIG1fp6AKlViD5Pn/TIJfbDn1xunfzOAwrH0mVDFhkLkLWASVha+lXxJl2J560I
-	 SQm3hXpWk/5XGY6R8PpeAzT4NkM+07fMxuRTl1Akp3dqFBeUnhWoIpNNQhl06rYaoF
-	 mNCki9fHvTHnQ==
-Date: Wed, 20 May 2026 04:39:04 +0800
+	b=dwsA+duq8D8+ps2aOP7gum8MD0oOa2/KbawGhz4IbBeEplyaBaHj3wgKZqy4zDB1r
+	 28pS41xYC2BbVhhn/Ycc2utvsupEDgyHwQ++d0lDzm8luVzRC3bt/22t+9ztQ/oP8X
+	 /fpGi1ZO2N214/oOxQucX/ZKDVG3xPzBiKL4ABXftuOaZER/pU8VvyDpMvvh9buQor
+	 0IC0c6HGy4xluLGo69srlm2jWbnXR/oqnl8OHPWtQk6RN+In1zXSn1KHCdweQdqJ9E
+	 XhBeDS0bw01eowMHB7C1Tx/niWbyyMuwpdQmGnlZ5CIAe8XBAZhjfrZQ2VjazLWK44
+	 jgBxcGYidxSog==
+Date: Wed, 20 May 2026 04:47:28 +0800
 From: Zorro Lang <zlang@kernel.org>
-To: Theodore Tso <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>
-Subject: Re: [PATCH] generic: add a test that stresses metadata eviction
-Message-ID: <agzIe4JbAlfi86W7@zlang-mailbox>
-Mail-Followup-To: Theodore Tso <tytso@mit.edu>, 
-	Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, fstests@vger.kernel.org, 
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, fstests@vger.kernel.org, 
 	linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [PATCH] generic: add a test that stresses metadata eviction
+Message-ID: <agzL2KZgrXHb-1wR@zlang-mailbox>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>, 
+	Carlos Maiolino <cem@kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	Eric Biggers <ebiggers@kernel.org>
 References: <20260518062514.506071-1-hch@lst.de>
  <agsEQ9TjHelfbWXr@nidhogg.toxiclabs.cc>
  <agtbqjAxUsCsLwyr@zlang-mailbox>
- <20260519125704.GA30408@macsyma-wired.lan>
+ <20260519083758.GA15916@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260519125704.GA30408@macsyma-wired.lan>
+In-Reply-To: <20260519083758.GA15916@lst.de>
 
-On Tue, May 19, 2026 at 08:57:04AM -0400, Theodore Tso wrote:
+On Tue, May 19, 2026 at 10:37:58AM +0200, Christoph Hellwig wrote:
 > On Tue, May 19, 2026 at 03:03:37AM +0800, Zorro Lang wrote:
-> > Currently, we don’t have a formal commit trailer to define this
-> > specific scenario, but perhaps this is a good opportunity for us to
-> > discuss and agree on one.
+> > On Mon, May 18, 2026 at 02:27:42PM +0200, Carlos Maiolino wrote:
+> > > On Mon, May 18, 2026 at 08:24:53AM +0200, Christoph Hellwig wrote:
+> > > > The fsverity test generic/759 could be used to reproduce a regression in
+> >                               ^^^
+> >                               579
 > 
-> My suggestion is that this should go in a comment of the forked test, e.g.
+> Yeah.
 > 
-> # Based on generic/579 with fsverity-specific bits removed
+> > Hmm... Generally, we state which case was copied/forked from in the introductory
+> > comments of the case and in the commit log. If you want to specifically mention
+> > the original author, I think we can add a dedicated line in the commit log, for
+> > example:
 > 
-> That way, if someone fixes a problem in generic/579 in the future, a
-> quick grep might turn up other tests that need a similar adjustment.
-> The commit trailer doesn't seem as useful to me since it's harder to
-> find.
+> If Eric is fine with that I can stick to the normal rule.
+> 
+> > What do you and others think?
+> 
+> I don't really care at all.  I just want to make sure I don't smub
+> everyone involved with this the wrong way :)
 
-Thanks Ted, since Eric agreed with this as well and there are no other
-objections, I think we can hold off on creating a new git trailer. Let's
-just proceed as usual: mention the original case number in the commit log,
-and also add it to the case's initial comments would make it easier to track.
+I've merged this patch with above typo fixes. Please feel free to check
+patches-in-queue branch.
 
 Thanks,
 Zorro
 
 > 
-> 							- Ted
 > 
