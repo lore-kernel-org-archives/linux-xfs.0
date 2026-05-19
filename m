@@ -1,53 +1,32 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F8F320CD1;
-	Tue, 19 May 2026 06:30:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C4903C7E18
+	for <linux-xfs@vger.kernel.org>; Tue, 19 May 2026 07:15:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779172241; cv=none; b=NobZNpzYdUxcy0QHk7bRlC82oa3l6R6u4YRfDuEZIQ3yE7cSpv/ZwiI1EU86nRZy/VP0x2R5ybaoZWHXo/bUBBkrBTqXAUg0UFUMdG9cDauDxz262kqhqIZidsTD8YlRZmreYt/eLo0tBPZmd4eoqG2OUuJprWENjDgWA6Nn/+w=
+	t=1779174960; cv=none; b=agq6g2EoylCDuFUyGdq0hwL96urqqdBMiTIhUgM7Ap9NbDegyaKwhnyLBhThEZ9WZLEI6Ge4cIqV33I/JPV4jt8a3KI7ioXFiRjP22YwETNzNUvgSY5kx/Uq1z28j+tzkNHbfFCLDSyLkYuhvp66tmVTbSQ14W4uxnbG2p3Aq6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779172241; c=relaxed/simple;
-	bh=xLAlEyVJjznWZTrFyh93caOES0WRTjEyDleACNebGBc=;
+	s=arc-20240116; t=1779174960; c=relaxed/simple;
+	bh=mTcRILPj80qvwC63Z3V7uOVbK6rzjdqecDtD9c/uZfw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ITgTuIz84qaWMC5MDNIm6i9z7kfWmjhKOqh73FG3O1/mehBE8HXZeX8/Vol3CokaH5svdFU+UK+EC737rLdpBJ626MKedoPCCtCVP9QSvshUaVh8jpEHnRL2K83VeOg6MHiVebywAgJklVJfoJoCtQSJvNegidmuW17ZjdApiNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uMd1d7bG; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uMd1d7bG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=DTsq3YybtPCTcONnROVePslNe++MYvP355QbI5+eeWk=; b=uMd1d7bGjp/ODh+GRc6gJRS6bf
-	2ZOnwF+jSH3J2gavrn6VeOO1j2eHhK6BWp+z51R2t1GurmTiG91KQp04ELtIIy86pmpEeczSxEHDO
-	DUe/yz4C1UIs+AD3seqDhY079IT6jclbuPF7ilQlYgnuc+0OjID58kmqdMidH/odBSFuxKd4EKFTU
-	g4c9CmZowIMP73XnDu4yN4dnaY4w07Okw4wQq24B/7FGgCyiJtuzEbEhFFNx7Fr8IIr5N3/UIjgkg
-	qJ9Gj0sGMJhXjQlJV2HSRVTJ22gBXI9vDAgG83CmdWtuPda7POx67R5Gpo+d9Cb0Io9f5nG1Ztf+x
-	kvwM/xhQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wPDyI-00000000LXr-0YO8;
-	Tue, 19 May 2026 06:30:30 +0000
-Date: Mon, 18 May 2026 23:30:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dai Ngo <dai.ngo@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <dgc@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
- LAYOUTGET
-Message-ID: <agwDhixPAAA0-cTa@infradead.org>
-References: <20260512172238.2495085-1-dai.ngo@oracle.com>
- <agQhzg-0aeISwOGW@infradead.org>
- <961eb355-2f52-47a0-9399-e050a4e535a2@oracle.com>
- <06d9b1ae-e46f-459c-bcb4-1a5ca4ded4b0@oracle.com>
- <20260514002513.GQ9555@frogsfrogsfrogs>
- <26365a46-bdac-4e8a-a951-de904c3e5606@oracle.com>
- <ageSguSyf2kBY33a@dread>
- <b9860332-7b1e-448e-869a-ad59d8d5b7c0@oracle.com>
- <agqfBPRWXQDR2ImG@infradead.org>
- <606c4cea-70d2-4601-9db2-611cd35c3687@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=iI6FRtbnYQ8DmoUHltO/XveHUsGBnyGkft5XuiUlzvXGDUbjYa91ixO3hLcXrbj12NeENHh1astQuTZN93ZTxbELPl3H8PzrhOuGUBdMlp4zqQI5IgN+hJSORJIXBS9DhKaP0YHQes0nCn9wtKG4WdVWRHBajh//wYjhparXlr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id C1AF568C4E; Tue, 19 May 2026 09:15:56 +0200 (CEST)
+Date: Tue, 19 May 2026 09:15:56 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Hans Holmberg <hans.holmberg@wdc.com>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: handle racing deletions in
+ xfs_zone_gc_iter_irec
+Message-ID: <20260519071556.GA10037@lst.de>
+References: <20260518065224.9066-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,25 +35,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <606c4cea-70d2-4601-9db2-611cd35c3687@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260518065224.9066-1-hans.holmberg@wdc.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, May 18, 2026 at 12:55:17PM -0700, Dai Ngo wrote:
-> As shown, the file map changes. Entry# 7 and 8 before the NFSD calls
-> merged into entry#7 after the calls. So there must be some activities
-> that cause the map to change. I don't know whether the activities were
-> triggered by NFS or something in XFS or the block device layer.
+On Mon, May 18, 2026 at 08:52:24AM +0200, Hans Holmberg wrote:
+> Under heavy garbage collection pressure from RocksDB workloads,
+> filesystem shutdowns can occur in xfs_zone_gc_iter_irec when
+> xfs_iget() returns -EINVAL for deleted files.
+> 
+> Fix this by handling -EINVAL just like we handle -ENOENT, allowing
+> zone GC to safely ignore stale mappings.
 
-Hmm.  We only insert layouts (and search for conflicts) after calling
-->proc_layoutget.  So this might be racy against unwritten extent
-conversion, or other writers, which is a bit of an issue.  I guess
-we need to fix nfsd4_layoutget to insert an in-progress layout before
-calling into ->layouget.
+While I'd prefer -ENOENT returns for not malformed but potentially
+out of data inodes, this works as well with a small loss in error
+checking:
 
-> However, based on this data I think it's better to change the bmapi_flags
-> from XFS_BMAPI_ENTIRE to '0' to address the overlap issue.
-
-We absolutely should be doing that as I said from my first reply.
-Still trying to understand what is going on here at a higher level,
-though.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
