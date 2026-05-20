@@ -1,71 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70AF881724;
-	Wed, 20 May 2026 19:07:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C496B313293
+	for <linux-xfs@vger.kernel.org>; Wed, 20 May 2026 22:08:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779304042; cv=none; b=l3VFQGDqP8uwB4NDI/kQMd7SI7T30N+oN6QtfE+oAEhf2wQ6AMTz08natDH5A0tADddN3C+/Mb2Qd+B4/tkOcCrPtK2KPlLg8mslSZ8K8F8KetMbbV88kyEbfzRZ5OWhlx21nIdDlaMYs6dwIqL/jo1svBUaBm9j7hR06WvEmJA=
+	t=1779314895; cv=none; b=sXKU5KHvp00mt6iRo0JdgPSLYEep/5Bm2XdKOVIxSQaOgwgDGcv8oaumEdKEFJxc4cJZXG5mrS0erkxMYPgYPlUQdl8WOJXOZmAMkgqbLnQtuIV9j5+m2ffxIXbSjUwZB75EAjjIyLulpmPjllVS0uRecNsXqTe2TAIeQDpdccM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779304042; c=relaxed/simple;
-	bh=w13NPPgdfG2sQ24gdIRbEaqnI4X0VH5g3sga/D7rTgk=;
+	s=arc-20240116; t=1779314895; c=relaxed/simple;
+	bh=GvMI6GZ6LhvTDZecYkpbYTgU6jedPDRWg3orSOZbT+w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k0EiI+Itd+EYzhFYPliXqZh2wtxEWLnyN0yiLB4Hbtohn1wTsenZp2V+qp0q/0cfV4xXuhXNYKNiw+3gllHHNX37kUzxdy9F6S32p6j36pUf+9GRKopT6/WeS+u8B5QM3ytW9pSRnjHowie8TmVs7nTAjbV0vu8AWtP+DTby38E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNWkxPBa; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=LyhfbiZKZ4nGX2H6JL2JYaQ5+3w0bdllmibBH7ou4tyj/YDfKK6tp27c5D/i6jWUYoOI1KVq6ci2FUmsPDoKnJfVVAIN0Q05NCAe11jimaTGXjhab7qnhWS2V/bma8lMbko3kj7Mo6kjsGPrz4h9C4IsDqmW41lkRqRN8tauBrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kgUDSO+6; arc=none smtp.client-ip=209.85.208.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNWkxPBa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B33DA1F000E9;
-	Wed, 20 May 2026 19:07:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779304041;
-	bh=TuPPbPM8zpAe4QryA/1tthxBDo9k7tG+N3NSiznpDNI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VNWkxPBavgvYKU9722kNE74XIMhBMVW+G4jyKQJ0nm7VoG+oe3Wf7Bdz8zwHUOCsp
-	 BUUK0HGdj/G1ZfTfgY31uAmqaBCMaKDYXRUczZgX0F/7glO62VhDb+Pp0rRP8Ntxss
-	 tx7P4nXzdrCw1EIoPvQtbkvhOmZS3hCJ1flylpqcUBMtxxa7G0bs94xeTsu+FGT1j4
-	 P+04tUdFUJMWGgONqolYkbzqUDNPi76D6j51YQ/9bOu97Hkmm6DDbHVhKX6aLnI0eH
-	 RY5naeBLVTgeqqoPZPRfvlV4WzL/6vOsZlInhn3QKirVl3Us58ghxELQEZKDlfHpj0
-	 oQpMazXCUUQGQ==
-Date: Wed, 20 May 2026 19:07:19 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, hch@lst.de,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	djwong@kernel.org, Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [PATCH v10 03/22] ovl: use core fsverity ensure info interface
-Message-ID: <20260520190719.GB3424023@google.com>
-References: <20260520123722.405752-1-aalbersh@kernel.org>
- <20260520123722.405752-4-aalbersh@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kgUDSO+6"
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-39397d63804so1272411fa.2
+        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2026 15:08:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779314892; x=1779919692; darn=vger.kernel.org;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=EvSI9lGtRBDdBjj3Ro7aY2gU3MVGI1l1ASVg3vXh40E=;
+        b=kgUDSO+6diQVbvh4rTthlTlxGmPojbeu7AykCjOh9wcUo9p2m+OtYlW1IqVEEF/ODB
+         4RjYOI5joJ/La1avp9i/xixwX8MuUT33AI2bSUuSR/a+GLuED3hUlTrqdoP5CSue7UI1
+         Nk441GhPRu4B9jaQ0u41DRAUuvuIf3BF8PLwE+ptFTVaA2kRflY6y/ViuwmFPVdGGukp
+         OK1Oh9rD7GUpYPTFBGaB8zQVGyoLnf6CpNvrcyv5SBREDsKRjPYb7Cck/tlQJ6HHUZW7
+         JqRAjYeXJ6KtgkcPEPw45SoshASvyyddoCfirWByeDHC1l9kUj3rfA2E4RHdtJtNnIj3
+         O0ZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779314892; x=1779919692;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=EvSI9lGtRBDdBjj3Ro7aY2gU3MVGI1l1ASVg3vXh40E=;
+        b=FU1DWAuR6/EDIB2+u4QGOeyY9FNGREK1rWEGnNDTAUeph/GnAvaj0gNYJEamLxrioN
+         FtVj+MRpffk86mS6iJXoMP3HjcJkxA7G0lHkj3oy5dyTyvYRrsVm/kw29kKC1nOgBRgL
+         QGv8Y4lzcTySWPK2Ssd1apnZe6ylhbD9YWoqZk78EMO65vk21vNrYI1KOy8dVjowODFE
+         +K/OgKdlEH/6krv/sbZXxzgmIcTcVjA+1/R1bAgO/ookMuLvLKNy1Y34hWB3eiVKZz+d
+         7mQHlKRy+vgBiBQvSkG8PdTqIEAyqXRNTYmiMRJ4X7CxU4hzqmfdfjU5XOLL8VCouu4p
+         ojUw==
+X-Forwarded-Encrypted: i=1; AFNElJ/zfEl8N2sPfNqhi5Dillq83IKMQJ+aghgizvDFNaADuwUhdqTlMX+G0mQgmQIFyNA0eylFrZjEyqM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxwQvNqo5Upz6ITNnjEDYv6ohyW4SovsW3ru1zcyG0qc1zJi1k0
+	5q+1PSySYvOef7K9nlM7nek9t3HxQHCVJZun6lvI4OqIf/5gTkTcd/jk
+X-Gm-Gg: Acq92OHkBDKQp32x1Ln8s/GyGA52oo0gB8MaH1kc0cOuA++Sgi3W+CpIxTVVtF/z7WJ
+	4+lS56KIcHD8/GCDs4jI3DoKBfmeYcGWpatWbJ7vUrvJq86M3hnjW2BRpC44SA8fK+sAUbFgNE1
+	PPLcEqIgqbhnq0TXmZGaoYFtS7LIq+X4MeU+BTQzUr0fk0KyXlycXrgBT7M+ZjRGK0O3S+kg3Qq
+	p+9PSzlF0PqFqJaOuH0Yrm2rfUxe/M6Q/Dc5A8sDRMJvqQpBPrbuXK5pYeABl+Yb5MAfKrBufNc
+	rC6svqeKFHn7fgLNnBHGx5Jl4JgeJrC4g1QuiXp1dow/dAXRQleRvBHtKN1KOFMvXpngA5t1X91
+	/BXAzkSwODOYke3zt7aGS3Uq3anuAGW1vRo7gO/he6k63gF+9wlXOGG7sS9c0YDmBmV+E9puYsq
+	Ve9ZtGG0TvrYuG/QK7VjS/hG/kvj8H5UKWzolOyeVsv/A8ePyJ
+X-Received: by 2002:a2e:9d89:0:b0:393:bffa:d815 with SMTP id 38308e7fff4ca-395ca5ff64cmr455481fa.21.1779314891777;
+        Wed, 20 May 2026 15:08:11 -0700 (PDT)
+Received: from SC-WS-02452.corp.sbercloud.ru ([62.183.16.67])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-395887dfbbfsm32241421fa.40.2026.05.20.15.08.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 May 2026 15:08:11 -0700 (PDT)
+Date: Thu, 21 May 2026 01:08:09 +0300
+From: Sergey Bashirov <sergeybashirov@gmail.com>
+To: Dai Ngo <dai.ngo@oracle.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, 
+	cem@kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	Sergey Bashirov <sergeybashirov@gmail.com>
+Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
+ LAYOUTGET
+Message-ID: <c5dgxtly3l66e6ukv7isresztq5le5mtyoyk4wqldolu5x3hqo@dx62gtu6o2w6>
+References: <b9860332-7b1e-448e-869a-ad59d8d5b7c0@oracle.com>
+ <agqfBPRWXQDR2ImG@infradead.org>
+ <606c4cea-70d2-4601-9db2-611cd35c3687@oracle.com>
+ <agwDhixPAAA0-cTa@infradead.org>
+ <55c7c22a-8edb-4833-be3f-1f6555ba90ed@oracle.com>
+ <20260519145949.GH9555@frogsfrogsfrogs>
+ <ag1vwFHoYatausLK@infradead.org>
+ <e55a29a9-ed18-4e3a-8378-f712bcbc940f@oracle.com>
+ <20260520164856.GI9555@frogsfrogsfrogs>
+ <790b9c07-7b32-499c-913f-9b50f019ba21@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260520123722.405752-4-aalbersh@kernel.org>
+In-Reply-To: <790b9c07-7b32-499c-913f-9b50f019ba21@oracle.com>
+User-Agent: NeoMutt/20231103
 
-On Wed, May 20, 2026 at 02:37:01PM +0200, Andrey Albershteyn wrote:
-> fsverity now exposes fsverity_ensure_verity_info() which could be used
-> instead of opening file to ensure that fsverity info is loaded and
-> attached to inode.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> Acked-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/overlayfs/util.c | 14 +++-----------
->  1 file changed, 3 insertions(+), 11 deletions(-)
+Hello Christoph, Dai, Darrick,
+Thanks for the add!
 
-Reviewed-by: Eric Biggers <ebiggers@kernel.org>
+On Tue, May 19, 2026 at 10:34:20AM -0700, Dai Ngo wrote:
+> I think this is what happened.
+>
+> Assuming the current map of the file as follow:
+>
+>   0000-4095: IOMAP_UNWRITTEN - block allocated
+>   4096-8191: IOMAP_HOLE - no block allocated
+>   8192-12287: IOMAP_UNWRITTEN - block allocated
+>
+> NOTE:
+>    . the bmapi_flags used by xfs_bmapi_read is set to XFS_BMAPI_ENTIRE.
+>    . the nimaps count is set to 1. xfs_bmapi_read can return only 1 extent.
+>
+> 1st call from nfsd to xfs_fs_map_blocks(), specifying offset 0, length 12288 and
+> write is true.
+>
+> Extent Returned:
+>
+>   - offset: 0
+>   - length: 4096 bytes (one filesystem block)
+>   - type: IOMAP_UNWRITTEN (existing preallocated extent)
+>   - addr: physical block number of the first unwritten extent.
+>
+> 2nd call from nfsd to xfs_fs_map_blocks(), specifying offset 4096, length 8192
+> and write is true.
+>
+> Returned Extent:
+>
+>   - offset: 4096
+>   - length: 4096 bytes (one filesystem block)
+>   - type: IOMAP_UNWRITTEN (freshly allocated unwritten extent)
+>   - addr: physical block number assigned when filling the hole at 4096
+>
+> 3rd call from nfsd to xfs_fs_map_blocks(), specifying offset 8192, length
+> 4096 and write is true.
+>
+> Returned Extent
+>
+>   - offset: 0
+>   - length: 12288 bytes (three contiguous blocks)
+>   - type: IOMAP_UNWRITTEN
+>   - addr: physical address of the merged unwritten allocation
+>
+> After the second call, filling the hole merged the three unwritten segments
+> into a single extent (br_startoff = 0, br_blockcount = 3). When the third call
+> looks up the range starting at 8192, xfs_bmapi_read() finds that single extent.
+> Because XFS_BMAPI_ENTIRE is set, xfs_bmapi_trim_map() bypasses trimming and
+> returns the full extent to xfs_bmbt_to_iomap().
 
-I'm still confused by the new implementation of fsverity_active() that
-got introduced by "fsverity: use a hashtable to find the fsverity_info",
-though.  I should have caught this during review of that commit.  For
-one its comment is outdated, but also the memory barrier seems to be
-specific to the fsverity_get_info() caller and probably should be moved
-to there.  Anyway, that's not directly related to this patch.
+Great job! I think so too.
 
-- Eric
+On Wed, May 20, 2026 at 08:09:29AM -0700, Dai Ngo wrote:
+> On 5/20/26 1:24 AM, Christoph Hellwig wrote:
+> >
+> > > 2) Now that NFS apparently can serve up multiple mappings at once,
+> > > should ->map_blocks pass in an array element count so that we can do
+> > > multiple iomaps in a single lock cycle?
+> >
+> > I guess we need to do that, or revert the code to provide multiple maps
+> > for now.
+>
+> I think we should address the immediate problem first by replacing XFS_BMAPI_ENTIRE
+> with 0, and handle support for returning multiple map entries from a single
+> call to xfs_fs_map_blocks() in follow-up patches. That work is more involved,
+> as it requires coordinated changes in both the nfsd and XFS code.
+
+Agree with Dai. I believe that a revert is unnecessary as the upcoming
+patchset should fix the issue. At the same time, passing the array element
+count to the XFS code to find all iomaps in one lock cycle is a great
+direction for further improvement.
+
+During LAYOUTGET processing, before extents are mapped, the nfsd server
+allocates a layout stateid and takes a lease on the file. Consequently,
+it is impossible for multiple clients to acquire layouts to the same file
+simultaneously. The server will first recall the layout from one client
+and then grant it to another. Additionally, two LAYOUTGET requests to the
+same file from a single client cannot be processed simultaneously as well,
+they are strictly ordered by the seqid. Thus, I do not know a race condition
+with two processes/threads accessing the same file via pNFS. And direct
+access to XFS on the MDS server, bypassing pNFS, is strictly discouraged,
+since it may have unexpected side effects regardless of this issue.
+
+--
+Sergey Bashirov
