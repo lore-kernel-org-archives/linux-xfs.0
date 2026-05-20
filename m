@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0D53FE652;
-	Wed, 20 May 2026 18:52:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384C91A8F7B;
+	Wed, 20 May 2026 19:01:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779303124; cv=none; b=tIo9gyue6k8JlzNmCjyscWPqmWpw915ytvDU6evRsdgTAi5J2ZEKyrtZMpBaP9VNLAk7vIrXc3oLswCUBW9LAirSncEVvgSqnh2pTMGPEIe4/jntHtLiEWa9Z2BP0Zt02OXzEg7iHDutm7VoWmpKjADGk4/mjhANiRyiam3L3GQ=
+	t=1779303674; cv=none; b=t9ixLKWucHGJbwvQFbULI/plS0mqszGU1lyIrsxWS7EbrUyUPHt93KygjcptFASxS6CAcaXZAPh/9ac8EEfUE9uqbqhUGLFsTCo346/A/eJxPhl5eT1vNdOgyg4GAttWKlXVtybU+Ovkgs77CXyIEvVzKVLg8BByQ24guQOQaDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779303124; c=relaxed/simple;
-	bh=S9IS+5gtJXSSpxuNaGfrSCotdh3Cj09XFPaf9CWKLYc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=bqO6sY7TTp/TCRQ6/j/pDVrm5ICxk8dbPKv1BGDfcDE5ZleRds9s92sYeznUIaplfQq/5DBokxydJx/A6AUeNA3NeIxfQA7sGUPO7wSVQizcP7iO2dz2dwK4COAgkgYE/17lH5bd0mA6OJcZGkA29kOReDEy8eg+TZ5g2hfWblw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mOdsO7n8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779303674; c=relaxed/simple;
+	bh=0JCTltW5TAlYHhA9eyunDDclyuA8a/98HPjAuhYl/s8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sHXTaMsmRYKOGHSPSD/OmBC1sspwjoeVs82DmVKM+Q5/+G/pVv2snRi3YlDmsY788/buaw+MCSCv6WHYoNb9Xx5PMQbnsWHpXaTtY/hWMCaboZV/Yf9d60SsgN3/zEb5XoRtx8qQYqAI6jB9vy9IpkpUDbEGXtPbgfwm87L5XWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJqbqs2X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mOdsO7n8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 59C801F000E9;
-	Wed, 20 May 2026 18:52:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJqbqs2X"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C5F0E1F000E9;
+	Wed, 20 May 2026 19:01:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779303123;
-	bh=fac7YQtva8Ggeq4uKOSfB2rCA9x80cPq9/PKU8QrQD4=;
-	h=Date:From:To:Cc:Subject;
-	b=mOdsO7n8ZAky+PG1fx54GY4POPndqezFTA+jaoMRDoQS4DOljbFv1RMEe2kRkHU7m
-	 TU58aINCYj0mtSl3wB39XgEtGAioPdszSCLJ5ucOTITIPl66tBMjTiuV+jDYSthEMj
-	 N5MRHViOrAesWZQhPledGWBsTOscdHb02sk/fppnjajB404MwgFxYhKa30EPq0Clbo
-	 1lwe61XC0i6MAyFR8f7P6MiMSv18+oAERawkJWUBg5FGttQTtzwG/5XqtlIaazhcKX
-	 bC2Ou8wdITBdQWt4fNeGIM36l2OphsLYhzu4b29Pv5r6j4rvbSfZqOHw4wqNNQfN1n
-	 OK8gpsSAPDVnw==
-Date: Wed, 20 May 2026 11:52:02 -0700
+	s=k20260515; t=1779303672;
+	bh=4+VVGvuyBcp1llZ3R46cjwoUXNVFuY7GgRgEwV1yoxg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WJqbqs2XzWkCpZNHWNla+/rg8PTahSVHtbPKZIe9Ap1XHdMwH+naxl+dMrOOduHoW
+	 BBCNCftcfTXwcGd3fN7rJb8Ejov3OE0VuF5kNTTaq7bcJsBKuJYIR/gpMnuaZ+MXtd
+	 a0KbXReCIhF+gB+96AlzGYjSDOUsQPcLzAo+d3x0dddKQJ162dP+FhfeCSXKdHkFzY
+	 7+IFDdhzAFxFQ15S0vrS39Z42k9kswiAD3oCpA2NYqUrp35/2mkcWwKNQx2aMWUUBv
+	 dTKced1CrTo+CZGrSBuC5qOkWFLPoI6rV81/JPDQjznRRJIvfEW04wYqIvmsJS4xYN
+	 joksrczkky3pQ==
+Date: Wed, 20 May 2026 12:01:12 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Zorro Lang <zlang@kernel.org>
 Cc: fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH 1/2] common/xfs: fix _scratch_mkfs_xfs_supports_concurrency
-Message-ID: <20260520185202.GD9544@frogsfrogsfrogs>
+Subject: [PATCH 2/2] xfs/21[67]: fix mkfs log concurrency detection
+Message-ID: <20260520190112.GE9544@frogsfrogsfrogs>
+References: <20260520185202.GD9544@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,44 +41,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260520185202.GD9544@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-generic/347 regresses when external logs are in the configuration:
+Both of these tests use _scratch_mkfs_xfs_supports_concurrency to detect
+if they should be adding -lconcurrency=0 to the mkfs options that are
+used to format a loop device.
 
- --- a/generic/347.out		2025-07-15 14:45:15.044714644 -0700
- +++ b/generic/347.out.bad	2026-05-18 23:17:01.687750781 -0700
- @@ -1,2 +1,36 @@
-  QA output created by 347
- -=== completed
- +Cannot specify both -l logdev and -l concurrency
- +Usage: mkfs.xfs
+However, this doesn't work in practice because of three factors: 1) the
+scratch device could have an external log set up; 2) the loop device
+does /not/ have an external log device; and 3) -lconcurrency isn't
+compatible with -llogdev.
 
-Since this actually tests running mkfs.xfs with $SCRATCH_OPTIONS, the
-helper ought to have detected that you can't give both.  Unfortunately,
-there's a weird switch that turns -l into -d even though they're not
-quite the same option.  Delete that, and fix the indentation (tabs, not
-spaces) in the helper.
+Fix this by creating a more general mkfs option detection helper and use
+that once we have the loop device set up.
 
 Cc: <fstests@vger.kernel.org> # v2026.05.17
-Fixes: 7f162f5bcf50fc ("common/xfs: helper function to check if -l/-d/-r concurrecy flags.")
+Fixes: ffc8bad17e5b2f ("xfs/21{6,7} Use default -l concurrency=0 on mkfs.xfs that supports it")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/xfs |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ common/xfs    |   15 +++++++++++++++
+ tests/xfs/216 |    9 ++++-----
+ tests/xfs/217 |    9 ++++-----
+ 3 files changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/common/xfs b/common/xfs
-index 4b3a7f7d153282..88299acdd086be 100644
+index 88299acdd086be..232d40fd5e01b1 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -2431,8 +2431,7 @@ _require_xfs_healer()
- # -l/-d concurrency came in same xfsprogs release v6.7
-  _scratch_mkfs_xfs_supports_concurrency()
- {
--    local arg="${1:-d}"
-+	local arg="${1:-d}"
- 
--    test "$arg" = "-l" && arg="-d"
--    _scratch_mkfs_xfs_supported "$arg" concurrency=0
-+	_scratch_mkfs_xfs_supported "$arg" concurrency=0
+@@ -64,6 +64,21 @@ _scratch_mkfs_xfs_opts()
+ 	echo "$MKFS_XFS_PROG $SCRATCH_OPTIONS $mkfs_opts"
  }
+ 
++_mkfs_xfs_supported()
++{
++	local mkfs_opts=$*
++
++	$MKFS_XFS_PROG -f -N $MKFS_OPTIONS $mkfs_opts
++	local mkfs_status=$?
++
++	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
++	# $mkfs_opts, try again without $MKFS_OPTIONS
++	if [ $mkfs_status -ne 0 -a -n "$mkfs_opts" ]; then
++		$MKFS_XFS_PROG -f -N $mkfs_opts
++		mkfs_status=$?
++	fi
++	return $mkfs_status
++}
+ 
+ _scratch_mkfs_xfs_supported()
+ {
+diff --git a/tests/xfs/216 b/tests/xfs/216
+index e3be9f3fe39ee0..bd98ee4dbfe960 100755
+--- a/tests/xfs/216
++++ b/tests/xfs/216
+@@ -22,11 +22,6 @@ _cleanup()
+ 
+ _require_scratch
+ _scratch_mkfs_xfs >/dev/null 2>&1
+-if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
+-	loop_mkfs_opts="-l concurrency=0"
+-else
+-	loop_mkfs_opts=""
+-fi
+ _scratch_mount
+ 
+ _require_loop
+@@ -76,6 +71,10 @@ mkdir $LOOP_MNT
+ 
+ loop_dev=$(_create_loop_device $LOOP_IMG)
+ 
++if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 $loop_dev &>> $seqres.full; then
++	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0"
++fi
++
+ # walk over standard sizes (up to 256GB)
+ _do_mkfs 1 2 4 8 16 32 64 128 256
+ 
+diff --git a/tests/xfs/217 b/tests/xfs/217
+index 5b210627b5ed18..5ba0b2198eb84f 100755
+--- a/tests/xfs/217
++++ b/tests/xfs/217
+@@ -21,11 +21,6 @@ _cleanup()
+ 
+ _require_scratch
+ _scratch_mkfs_xfs >/dev/null 2>&1
+-if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
+-	loop_mkfs_opts="-l concurrency=0 -d concurrency=0"
+-else
+-	loop_mkfs_opts=""
+-fi
+ _scratch_mount
+ # 16T mkfs requires a bit over 2G free
+ _require_fs_space $SCRATCH_MNT 2202000
+@@ -63,6 +58,10 @@ fi
+ 
+ loop_dev=$(_create_loop_device $LOOP_IMG)
+ 
++if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 -d concurrency=0 $loop_dev &>> $seqres.full; then
++	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0 -d concurrency=0"
++fi
++
+ #
+ # walk over "new" sizes supported by recent xfsprogs.
+ # Note that the last test is for 16TB-1GB as 32bit platforms only support
