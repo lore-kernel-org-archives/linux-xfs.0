@@ -1,176 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92ABF3E0245;
-	Thu, 21 May 2026 13:00:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAAAC3DB322
+	for <linux-xfs@vger.kernel.org>; Thu, 21 May 2026 13:10:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779368442; cv=none; b=sQdA5BH8fgpp4zpBrcOL+lmS1JpUh8lo2M6BLB17bFDTIks1wW/GIQdSjiCfKeHtB/GjtH36sd+/CwkRs6Wr56DyidCQj6/0ETLynCfN++wJi9loU/ZHoZBKHOGIPYhp7AIV4+wQuN9jFswbJclR9+HznOV2mabnFH9oxoU5w6k=
+	t=1779369042; cv=none; b=iJbUTBhG8ZyLEKbWaZBN4l+SiPKKY4/Cj0XRycY7bxyEcxXi7jo0eg7yQ4qokGJmC8BvYy+N/SW9j/+hZyR24ncnuzDVeZjFMatdu1umj8XV81xnPk6Ez3JOW2rqQgewVo3XKqrQwsMibxmJHbODYLlW/aiYKlPxcqcZ5rYGRm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779368442; c=relaxed/simple;
-	bh=WjZE0lw+kIRrw88mlLLxcHIB9y8pNWWlx7yQb5ZhhZg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=L1aLxBT8oFXsH7AMoWUj/R8hCel4wOu64fcGqNtmUR1rYAtjd+uJZFsxHCnchCtMP+5mSIaH4Tln7PwphNvNeUpaNBnqQFWmqXeNV0SLxmL5kwIyiUCD0hNuEsqDS/qGNKHPvgReXMAqgAA0MdMBeSnNfMSBv4dF3gb252ReggY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mmBgGEW6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779369042; c=relaxed/simple;
+	bh=jX4JZvwPm/rEPVJFzf/ejOA6DjYxYRHfgyp4VE85mTY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IqLyEdAcNoYx3d5PmLy7PO5SbppqKJfre9EdDcCXm7EHc+GFK7Nkrek/erS0B6AlqvHBlS4ojbs/l4hLna+jicz85wHjI36SXUb4NryO/3qorElb0Mqcju4FbWO0rSA1B87FdmMadXErs+hCxWeeYCaZJO4rrK1OfOliXhx+d1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L0gHfgbZ; arc=none smtp.client-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mmBgGEW6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A22CB1F000E9;
-	Thu, 21 May 2026 13:00:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779368441;
-	bh=aZN8mbxtxCFUtRaR4pRYVfr1zIJ/p51FRse13QkQL2c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mmBgGEW666V3vs6bbPrzdpAB75Xa8bVqh0fnqGCruA3HHxU7YXhGx/abxAUeA23yn
-	 B68uNZScFWSPlyEXIISlcxzI005MY8TQUCS/1Rab43VOcnO85LuyeHqQWJJzumY+ID
-	 B3gROxDWebjMsJKTYvCepJKl4MtOWYnpjr/IHBnRa1PUlfO/5xwUhrsHmnfwnLWCXP
-	 s3KadBZOcdCtcJFAjMN4/C2eQBDALmojcMVtb2j82+hPRzONSiYNe7b8KPr43ph1hh
-	 TUzfcdFaiTraGURXz3TSBsMz3/EixK9zfGFmJPc75E0KZeast6f9SWmOQ6RQ6HbEX6
-	 p39JtG/F5t7dQ==
-From: Anand Jain <asj@kernel.org>
-To: fstests@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-f2fs@vger.kernel.org,
-	amir73il@gmail.com,
-	zlang@redhat.com,
-	hch@infradead.org
-Subject: [PATCH v5 10/10] fstests: test UUID consistency for clones with metadata_uuid
-Date: Thu, 21 May 2026 20:55:00 +0800
-Message-ID: <b1001bb1a90b81ee8b60914dd8211efd37b98bc4.1779367627.git.asj@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1779367627.git.asj@kernel.org>
-References: <cover.1779367627.git.asj@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L0gHfgbZ"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-838d0b7c950so4330989b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 21 May 2026 06:10:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779369040; x=1779973840; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=G4yDEmmytiLp8y/IlWHiohedbGrR4sjKi+TCYvwlxxo=;
+        b=L0gHfgbZ0lNXv8VzDT6T4RAlAMMWK8/8f3ZL92OEZALzVmq/w9h6nmxqTJ/EXHFFU6
+         XUCxt0pAYX415Neyr3ZBVTEqiscISanap1vHo71qbPqOWFTBiWkoO7zMCXWWTO0wMGM+
+         M5bTpa76oM3uLO3HBpSU/MllwaKcEAW9u4Ew+EX0obHRBIx8ajJntiH3Gfdg+pbu7AC8
+         q9xtkKx3wSdZE1kuLkl2hzMH46FgDCNSAsFRbbAJNrIgtElZMmHHRbjrXcM0q7eoJbAm
+         CjZFLoU+0UnEZnWfu1/qArHmJz6L5lwIlWpbNH7kTFkJoEj0fz8U3Vt2dBFOzmBJomIr
+         Z5fA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779369040; x=1779973840;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=G4yDEmmytiLp8y/IlWHiohedbGrR4sjKi+TCYvwlxxo=;
+        b=M7iwJkH4D2EbujLF1S881FgLBMvfVC17Raian40ladK+4eRgDHDGaLh4t17oDGnRwG
+         C3dOETc/AW9o8dA64rfX5W7tHBA86Sp1Qi28JU3k9RjBtmJYA3J5FWIPPLEtYEwtg0Jg
+         ZsS/IZ41pBzDiN4DnPDejZn0Ucp1jO2tfH+l8ImQBolBvs6yC7goHKbOtxXSiTCyDFlZ
+         mUK/vnaOEOMnM6wxxngEyiAp2LSPhqhF02LwPjk5im0NeOTBfhpAYVhS8E1yBcc6afvg
+         0gyOT9Ri87EJt91ebUB7QKXmKseRwV8XQw2a3mrtOYBMzK32rH0OLb8B+HbU/GUEfajA
+         0Yrg==
+X-Forwarded-Encrypted: i=1; AFNElJ/q0jiExd39hGxO1SS8BN2Dqn4aX4QAGJaEBoG1SV6C2j4Dp1bQ3cQtjVERGpMP8d2hv+fExe9JA5I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyrXpANlMl8Z7hbyuLoP+EPyBff6TTf9IIfiQcJHxGpw/wS5OaS
+	7Wj73hhJEKQ9BFKDQKlEjztqUTi3cubeVNkc/IXk+ZKfhw/qmudLihfpgLRFzg==
+X-Gm-Gg: Acq92OHxWX1JkKyQnQeRJQzWJgKbXvpiNdeoPnJfIxuvNU0QuN20Ue9mP9ftr51+dAV
+	EYrPvz5ryHJiHTMCHWJDLYagIVL9Zk9dON3TvSeklBJEQVpfdmBSsxagyPaS1EymIzO65/gA0iZ
+	GXybWVmgVDG+6oxU/Nkm/jDNdWhdLDjU6yniO1spvrKDFIFajy1fHMA9JpRHimNohQsdmv4+CPA
+	YA7NMPbI/tqV0zys61vyJM2b2gY55nB2HHl/JD66B3yzkgM7R6sKBULjjtp3gSoUu5AdxsP2OZN
+	QPsAUtjBvkc7CacJ/xomrsb0JtBWwC3i0QyNqWm4mPKDBDMBsWYabIZlNXYgVX8n5wfnYVnpHJq
+	ANuUFhfFgZKXrj1WoOxxjF+buRsG49B2pnfe+RRPBCpojihkceipBXamdSCxM6+gv0LSGdrzBnT
+	TLPop6mzueGzClFxtbY8LSVQ787YM=
+X-Received: by 2002:a05:6a00:228e:b0:835:6d99:3f88 with SMTP id d2e1a72fcca58-8414adf3933mr3055752b3a.23.1779369040007;
+        Thu, 21 May 2026 06:10:40 -0700 (PDT)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84154a010d3sm1319228b3a.18.2026.05.21.06.10.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 May 2026 06:10:39 -0700 (PDT)
+Message-ID: <fbc03a78-0a6c-4c3a-9608-656d0df83d29@gmail.com>
+Date: Thu, 21 May 2026 21:10:36 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 09/10] fstests: add pre_clone_tune_uuid() healper
+To: fstests@vger.kernel.org, zlang@redhat.com, Zorro Lang <zlang@kernel.org>
+Cc: linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-f2fs@vger.kernel.org, amir73il@gmail.com,
+ hch@infradead.org, Anand Jain <asj@kernel.org>
+References: <cover.1779367627.git.asj@kernel.org>
+ <0d9f455d20145103faaf4e45262ee44418cbaca1.1779367627.git.asj@kernel.org>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <0d9f455d20145103faaf4e45262ee44418cbaca1.1779367627.git.asj@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Btrfs and xfs uses the metadata_uuid superblock feature to change the
-on-disk UUID without rewriting every block header. This patch adds a
-sanity check to ensure UUID consistency when a filesystem with
-metadata_uuid enabled is cloned.
 
-Signed-off-by: Anand Jain <asj@kernel.org>
----
- tests/generic/806     | 78 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/806.out | 19 +++++++++++
- 2 files changed, 97 insertions(+)
- create mode 100644 tests/generic/806
- create mode 100644 tests/generic/806.out
 
-diff --git a/tests/generic/806 b/tests/generic/806
-new file mode 100644
-index 000000000000..222d138976d3
---- /dev/null
-+++ b/tests/generic/806
-@@ -0,0 +1,78 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-+#
-+# FS QA Test 806
-+#
-+# Verify that the cloned filesystem UUID remains consistent, even when the
-+# `metadata_uuid` feature is enabled.
-+#
-+
-+. ./common/preamble
-+. ./common/filter
-+
-+_begin_fstest auto quick mount clone
-+
-+_require_test
-+_require_block_device $TEST_DEV
-+_require_loop
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.*
-+	umount $mnt1 $mnt2 2>/dev/null
-+	_loop_image_destroy "${devs[@]}" 2> /dev/null
-+}
-+
-+filter_pool()
-+{
-+	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
-+	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
-+}
-+
-+print_info()
-+{
-+	local mntpt=$1
-+	local tgt=$(findmnt -no SOURCE $mntpt)
-+	local fsuuid=$(blkid -s UUID -o value $tgt)
-+
-+	echo "mntpt=$mntpt tgt=$tgt fsuuid=$fsuuid" >> $seqres.full
-+	echo
-+	findmnt -o SOURCE,TARGET,UUID "$tgt" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+	awk -v dev="$tgt" '$1 == dev { print $1, $2 }' /proc/self/mounts | \
-+								filter_pool
-+	df --all --output=source,target "$tgt" | tail -n +2 | filter_pool
-+}
-+
-+devs=()
-+_loop_image_create_clone devs pre_clone_tune_uuid
-+mkdir -p $TEST_DIR/$seq
-+mnt1=$TEST_DIR/$seq/mnt1
-+mnt2=$TEST_DIR/$seq/mnt2
-+mkdir -p $mnt1
-+mkdir -p $mnt2
-+
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+
-+print_info $mnt1
-+print_info $mnt2
-+
-+echo
-+echo "**** mount cycle ****"
-+_unmount $mnt1
-+_unmount $mnt2
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+
-+print_info $mnt1
-+print_info $mnt2
-+
-+status=0
-+exit
-diff --git a/tests/generic/806.out b/tests/generic/806.out
-new file mode 100644
-index 000000000000..7315e791ba51
---- /dev/null
-+++ b/tests/generic/806.out
-@@ -0,0 +1,19 @@
-+QA output created by 806
-+
-+DEV1 MNT1 FSUUID
-+DEV1 MNT1
-+DEV1 MNT1
-+
-+DEV2 MNT2 FSUUID
-+DEV2 MNT2
-+DEV2 MNT2
-+
-+**** mount cycle ****
-+
-+DEV1 MNT1 FSUUID
-+DEV1 MNT1
-+DEV1 MNT1
-+
-+DEV2 MNT2 FSUUID
-+DEV2 MNT2
-+DEV2 MNT2
--- 
-2.43.0
+On 21/5/26 20:54, Anand Jain wrote:
+> pre_clone_tune_uuid() changes the UUID of the golden filesystem before it
+> is cloned.
+> 
+> Signed-off-by: Anand Jain <asj@kernel.org>
+> ---
+>  common/rc | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/common/rc b/common/rc
+> index 7ae9877918c8..1b3a32d9ea9b 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -1517,6 +1517,26 @@ _scratch_resvblks()
+>  	esac
+>  }
+>  
+> +pre_clone_tune_uuid()
+
+
+I missed the "_" prefix for pre_clone_tune_uuid() to match
+the common/rc style.
+
+Zorro,
+
+If there are no other rerolls, can you please fix it at merge
+or should I resend?
+
+Thanks
+
+
+> +{
+> +	local temp_mnt=$TEST_DIR/${seq}_mnt
+> +	local dev=$1
+> +
+> +	case $FSTYP in
+> +	xfs)
+> +		_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +		$XFS_ADMIN_PROG -U generate $dev >> $seqres.full
+> +		;;
+> +	btrfs)
+> +		_require_command "$BTRFS_TUNE_PROG" "btrfstune"
+> +		$BTRFS_TUNE_PROG -m $dev
+> +		;;
+> +	*)
+> +		_notrun "Require filesystem with metadata_uuid feature"
+> +		;;
+> +	esac
+> +}
+> +
+>  _loop_image_create_clone()
+>  {
+>  	local -n _ret=$1
 
