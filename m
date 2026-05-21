@@ -1,177 +1,226 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C496B313293
-	for <linux-xfs@vger.kernel.org>; Wed, 20 May 2026 22:08:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7722A32B115
+	for <linux-xfs@vger.kernel.org>; Thu, 21 May 2026 03:53:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779314895; cv=none; b=sXKU5KHvp00mt6iRo0JdgPSLYEep/5Bm2XdKOVIxSQaOgwgDGcv8oaumEdKEFJxc4cJZXG5mrS0erkxMYPgYPlUQdl8WOJXOZmAMkgqbLnQtuIV9j5+m2ffxIXbSjUwZB75EAjjIyLulpmPjllVS0uRecNsXqTe2TAIeQDpdccM=
+	t=1779335604; cv=none; b=pr/i+kZ65kU0oBzSqttoM8y8FBH7nUYkOw/6oSNDA05dVapTMj7tN/cddQVlmeIpdW2xcEHvYRrwWj/HI9b9ferU3X/TQj4NXLQneV0dQornq7cwEif104GO7+UBhv1RavYB/VZB9IkMJOHgl+IJ8SFs/cPBTzAs3MQX74QHQok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779314895; c=relaxed/simple;
-	bh=GvMI6GZ6LhvTDZecYkpbYTgU6jedPDRWg3orSOZbT+w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LyhfbiZKZ4nGX2H6JL2JYaQ5+3w0bdllmibBH7ou4tyj/YDfKK6tp27c5D/i6jWUYoOI1KVq6ci2FUmsPDoKnJfVVAIN0Q05NCAe11jimaTGXjhab7qnhWS2V/bma8lMbko3kj7Mo6kjsGPrz4h9C4IsDqmW41lkRqRN8tauBrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kgUDSO+6; arc=none smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779335604; c=relaxed/simple;
+	bh=eok54mhCucuigz/kkExUggB/hcLzC5H+qAC9NqM0TWA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=PthEryh1xsIp4w0Wdunv9Q0Gw7SR8mc51y82H5ofTUe8okO6h+03yAhUNiTsoJqqdpEDf9fLzOtAGr3CsqXm6j3Z6IIE+oxGadWWYi/NDZ3zm6a04iYaykwX3PosLHdtNN9MgOCcyCQTDdKEr04JBy5TpeATBIhwCfCgRj+pjus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eL+2L3zW; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=X4Tc+Vin; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kgUDSO+6"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-39397d63804so1272411fa.2
-        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2026 15:08:13 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eL+2L3zW";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="X4Tc+Vin"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779335599;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GCau9b/qRv6sn0ASGLiE3kHwpQdsZ+lHvqgPOEmWsVI=;
+	b=eL+2L3zWGR/DkO98TF43vFmJM1oNYWGD78NcYyOjmrYixtMXWYYum8TQ3D/wVJILPfnxhN
+	iyO9b1TySpxZKnUh6+XnF8IeHkvKBdBhB9JzrAP4MKlr3LR/xXCtjyAJvs7ZLn5MVL/YTW
+	8TQCgmut2QcmFPS6FPDN2mvGcHuQGcU=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-127-rD9aYX9NPfuo5f9RpMrN_A-1; Wed, 20 May 2026 23:53:12 -0400
+X-MC-Unique: rD9aYX9NPfuo5f9RpMrN_A-1
+X-Mimecast-MFC-AGG-ID: rD9aYX9NPfuo5f9RpMrN_A_1779335590
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3662990c03fso4770436a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2026 20:53:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779314892; x=1779919692; darn=vger.kernel.org;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EvSI9lGtRBDdBjj3Ro7aY2gU3MVGI1l1ASVg3vXh40E=;
-        b=kgUDSO+6diQVbvh4rTthlTlxGmPojbeu7AykCjOh9wcUo9p2m+OtYlW1IqVEEF/ODB
-         4RjYOI5joJ/La1avp9i/xixwX8MuUT33AI2bSUuSR/a+GLuED3hUlTrqdoP5CSue7UI1
-         Nk441GhPRu4B9jaQ0u41DRAUuvuIf3BF8PLwE+ptFTVaA2kRflY6y/ViuwmFPVdGGukp
-         OK1Oh9rD7GUpYPTFBGaB8zQVGyoLnf6CpNvrcyv5SBREDsKRjPYb7Cck/tlQJ6HHUZW7
-         JqRAjYeXJ6KtgkcPEPw45SoshASvyyddoCfirWByeDHC1l9kUj3rfA2E4RHdtJtNnIj3
-         O0ZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779314892; x=1779919692;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+        d=redhat.com; s=google; t=1779335590; x=1779940390; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=EvSI9lGtRBDdBjj3Ro7aY2gU3MVGI1l1ASVg3vXh40E=;
-        b=FU1DWAuR6/EDIB2+u4QGOeyY9FNGREK1rWEGnNDTAUeph/GnAvaj0gNYJEamLxrioN
-         FtVj+MRpffk86mS6iJXoMP3HjcJkxA7G0lHkj3oy5dyTyvYRrsVm/kw29kKC1nOgBRgL
-         QGv8Y4lzcTySWPK2Ssd1apnZe6ylhbD9YWoqZk78EMO65vk21vNrYI1KOy8dVjowODFE
-         +K/OgKdlEH/6krv/sbZXxzgmIcTcVjA+1/R1bAgO/ookMuLvLKNy1Y34hWB3eiVKZz+d
-         7mQHlKRy+vgBiBQvSkG8PdTqIEAyqXRNTYmiMRJ4X7CxU4hzqmfdfjU5XOLL8VCouu4p
-         ojUw==
-X-Forwarded-Encrypted: i=1; AFNElJ/zfEl8N2sPfNqhi5Dillq83IKMQJ+aghgizvDFNaADuwUhdqTlMX+G0mQgmQIFyNA0eylFrZjEyqM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxwQvNqo5Upz6ITNnjEDYv6ohyW4SovsW3ru1zcyG0qc1zJi1k0
-	5q+1PSySYvOef7K9nlM7nek9t3HxQHCVJZun6lvI4OqIf/5gTkTcd/jk
-X-Gm-Gg: Acq92OHkBDKQp32x1Ln8s/GyGA52oo0gB8MaH1kc0cOuA++Sgi3W+CpIxTVVtF/z7WJ
-	4+lS56KIcHD8/GCDs4jI3DoKBfmeYcGWpatWbJ7vUrvJq86M3hnjW2BRpC44SA8fK+sAUbFgNE1
-	PPLcEqIgqbhnq0TXmZGaoYFtS7LIq+X4MeU+BTQzUr0fk0KyXlycXrgBT7M+ZjRGK0O3S+kg3Qq
-	p+9PSzlF0PqFqJaOuH0Yrm2rfUxe/M6Q/Dc5A8sDRMJvqQpBPrbuXK5pYeABl+Yb5MAfKrBufNc
-	rC6svqeKFHn7fgLNnBHGx5Jl4JgeJrC4g1QuiXp1dow/dAXRQleRvBHtKN1KOFMvXpngA5t1X91
-	/BXAzkSwODOYke3zt7aGS3Uq3anuAGW1vRo7gO/he6k63gF+9wlXOGG7sS9c0YDmBmV+E9puYsq
-	Ve9ZtGG0TvrYuG/QK7VjS/hG/kvj8H5UKWzolOyeVsv/A8ePyJ
-X-Received: by 2002:a2e:9d89:0:b0:393:bffa:d815 with SMTP id 38308e7fff4ca-395ca5ff64cmr455481fa.21.1779314891777;
-        Wed, 20 May 2026 15:08:11 -0700 (PDT)
-Received: from SC-WS-02452.corp.sbercloud.ru ([62.183.16.67])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-395887dfbbfsm32241421fa.40.2026.05.20.15.08.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 15:08:11 -0700 (PDT)
-Date: Thu, 21 May 2026 01:08:09 +0300
-From: Sergey Bashirov <sergeybashirov@gmail.com>
-To: Dai Ngo <dai.ngo@oracle.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <dgc@kernel.org>, 
-	cem@kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	Sergey Bashirov <sergeybashirov@gmail.com>
-Subject: Re: [PATCH 1/1] xfs: fix overlapping extents returned for pNFS
- LAYOUTGET
-Message-ID: <c5dgxtly3l66e6ukv7isresztq5le5mtyoyk4wqldolu5x3hqo@dx62gtu6o2w6>
-References: <b9860332-7b1e-448e-869a-ad59d8d5b7c0@oracle.com>
- <agqfBPRWXQDR2ImG@infradead.org>
- <606c4cea-70d2-4601-9db2-611cd35c3687@oracle.com>
- <agwDhixPAAA0-cTa@infradead.org>
- <55c7c22a-8edb-4833-be3f-1f6555ba90ed@oracle.com>
- <20260519145949.GH9555@frogsfrogsfrogs>
- <ag1vwFHoYatausLK@infradead.org>
- <e55a29a9-ed18-4e3a-8378-f712bcbc940f@oracle.com>
- <20260520164856.GI9555@frogsfrogsfrogs>
- <790b9c07-7b32-499c-913f-9b50f019ba21@oracle.com>
+        bh=GCau9b/qRv6sn0ASGLiE3kHwpQdsZ+lHvqgPOEmWsVI=;
+        b=X4Tc+VinEJCWkAcQqXOz9kZKpQ2uQe16SGW3ba1TSKrAFdP9bmMWQGtDjDIWIzmJ8N
+         927UfiT8p28KczeMN/SnqaKa1rGVKHCAPwAxXfEHVyzszl74b6aOxd3I5nCnYKmPmMeC
+         7Z7lzJ/JH5EqQsVVaPPC4zUao+8wIjY5F0CkMligoXYSbMiAeWl88bKSCHza7ySjDjes
+         nic5QcscPqNu76DG87O4JMD2wA7DRt5q11TNUN6T9x5YMlRokuLo9ILGjzAf05LrHMoH
+         hDqUpF4gXV23mSq+d1ukrIaAwJaMXboXRCtjvlz3tIf1mQYWmOiBSaDSKxeP0D6IJ3m1
+         WLYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779335590; x=1779940390;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GCau9b/qRv6sn0ASGLiE3kHwpQdsZ+lHvqgPOEmWsVI=;
+        b=IdLVLu47egUTB76OTtpJXwdBqn18s98o/JkzbcKaee28g6/BCwNub0GorbzwzOmWRO
+         vhMccY6/bVAUK+/PNlVR4FOE6xr3M97yzoS975PfX3T/1F5RWj//VXqxw20ogAKI2nSm
+         oRADojKRNA4M3CkUbhj1jXlXoYOc+BFYD8wHKK2+jn5e/Ji60tQs9/QG22aRc2i90TND
+         07FFVdB2llJckOt+ulgnMOz9I2roXZQkzCj/gRixVY3ClzJaZh2QQ8LTI4whWi8u/63x
+         j5HH4Smfci3LcgkIHz4a4Yi63Kw+TGK8+TqZTTpcORj2g5u51FGyh6yB4yNh00jeNBlZ
+         ibEA==
+X-Forwarded-Encrypted: i=1; AFNElJ8e7aZFm5ksGLEAo5L381EEDuzfngNO2XbuuDxWDlnidSAO0V5YbsibGL6oSLKP+Mf0xqoA82HgSeU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcPbXRHaN7b0KNmy3bDp0XmvA0e3WyHYO69zu3RD/bM020Cctv
+	iv6nBMqyv5QrvNRr+/qeL8xXT1n3mjSkf4Wlr373Mxypyq4kd74nNFi8NQ49TkuOaAFKRGAPPwL
+	PXVblGfYA9M+N8VWWSsHOW5j3UO+b/ZQzzuuYz53oLfu9YcKXg6MvrtTsU2nOfTQfG7NwfA==
+X-Gm-Gg: Acq92OFJlG3wm1YfLj6iFnZWsxjcikkkr5CKHB4vMSg+kF9VagHwBtqm4rMNZbxa3zB
+	4V5umMbmhBWIrbJPDk8YvxxsiTdThTx83Kmx810LuEfXDDqZbYFZ7VB38IdX2VGNHIVmW2p2a0j
+	HMqHBT4l2hL+b3WfCoklRMeYxQmyWFRycxAGbzFBEs9fQbaiqnlIfeHF9wCgrE7VepIZxgxwNZe
+	pubkwvEJE2DMKbfj5DrL0CDXG5H88kvmMHWE0pFN5JLu7ohWe8/IqkDK2Tb+1dYOnl7QjkZqO6m
+	1FuafEH3UqHrC0afxkm0K/TpurM6FDxxTkzVDaD1E/8bc2xpnh4knNNWdD+DmKDD7GtK4+RAoaH
+	uK3SuTkWK2h7tAt6nwhHhLfA0A6JEiNmX0IFEIFUvo5gw+amnXzH+0f99HY+Wr0hNfbAgfrw=
+X-Received: by 2002:a17:90b:48:b0:369:7944:d723 with SMTP id 98e67ed59e1d1-36a48e237c0mr845135a91.4.1779335589861;
+        Wed, 20 May 2026 20:53:09 -0700 (PDT)
+X-Received: by 2002:a17:90b:48:b0:369:7944:d723 with SMTP id 98e67ed59e1d1-36a48e237c0mr845107a91.4.1779335589362;
+        Wed, 20 May 2026 20:53:09 -0700 (PDT)
+Received: from ?IPV6:2001:8003:4a36:e700:56b6:ee78:9da2:b58f? ([2001:8003:4a36:e700:56b6:ee78:9da2:b58f])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36a46c1ed73sm294477a91.3.2026.05.20.20.53.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 May 2026 20:53:08 -0700 (PDT)
+Message-ID: <22768917-d555-44fb-a757-8cd88a6e8553@redhat.com>
+Date: Thu, 21 May 2026 13:53:05 +1000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <790b9c07-7b32-499c-913f-9b50f019ba21@oracle.com>
-User-Agent: NeoMutt/20231103
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: test xfsdump subtree restores
+To: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20260326025443.1569874-1-ddouwsma@redhat.com>
+ <20260326030012.1571545-1-ddouwsma@redhat.com>
+ <afy-9iJYNqDdXgml@zlang-mailbox>
+Content-Language: en-US, en-AU
+From: Donald Douwsma <ddouwsma@redhat.com>
+In-Reply-To: <afy-9iJYNqDdXgml@zlang-mailbox>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello Christoph, Dai, Darrick,
-Thanks for the add!
+G'day Zorro,
 
-On Tue, May 19, 2026 at 10:34:20AM -0700, Dai Ngo wrote:
-> I think this is what happened.
->
-> Assuming the current map of the file as follow:
->
->   0000-4095: IOMAP_UNWRITTEN - block allocated
->   4096-8191: IOMAP_HOLE - no block allocated
->   8192-12287: IOMAP_UNWRITTEN - block allocated
->
-> NOTE:
->    . the bmapi_flags used by xfs_bmapi_read is set to XFS_BMAPI_ENTIRE.
->    . the nimaps count is set to 1. xfs_bmapi_read can return only 1 extent.
->
-> 1st call from nfsd to xfs_fs_map_blocks(), specifying offset 0, length 12288 and
-> write is true.
->
-> Extent Returned:
->
->   - offset: 0
->   - length: 4096 bytes (one filesystem block)
->   - type: IOMAP_UNWRITTEN (existing preallocated extent)
->   - addr: physical block number of the first unwritten extent.
->
-> 2nd call from nfsd to xfs_fs_map_blocks(), specifying offset 4096, length 8192
-> and write is true.
->
-> Returned Extent:
->
->   - offset: 4096
->   - length: 4096 bytes (one filesystem block)
->   - type: IOMAP_UNWRITTEN (freshly allocated unwritten extent)
->   - addr: physical block number assigned when filling the hole at 4096
->
-> 3rd call from nfsd to xfs_fs_map_blocks(), specifying offset 8192, length
-> 4096 and write is true.
->
-> Returned Extent
->
->   - offset: 0
->   - length: 12288 bytes (three contiguous blocks)
->   - type: IOMAP_UNWRITTEN
->   - addr: physical address of the merged unwritten allocation
->
-> After the second call, filling the hole merged the three unwritten segments
-> into a single extent (br_startoff = 0, br_blockcount = 3). When the third call
-> looks up the range starting at 8192, xfs_bmapi_read() finds that single extent.
-> Because XFS_BMAPI_ENTIRE is set, xfs_bmapi_trim_map() bypasses trimming and
-> returns the full extent to xfs_bmbt_to_iomap().
+On 8/5/26 02:59, Zorro Lang wrote:
+> On Thu, Mar 26, 2026 at 02:00:12PM +1100, Donald Douwsma wrote:
+>> Regression test for cumulative restores where a directory has been
+>> renamed outside of the subtree being restored triggering the assert:
+>>
+>>   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
+>>
+>> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+>> ---
+>>  tests/xfs/995     | 51 +++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/995.out |  2 ++
+>>  2 files changed, 53 insertions(+)
+>>  create mode 100755 tests/xfs/995
+>>  create mode 100644 tests/xfs/995.out
+>>
+>> diff --git a/tests/xfs/995 b/tests/xfs/995
+>> new file mode 100755
+>> index 00000000..54172572
+>> --- /dev/null
+>> +++ b/tests/xfs/995
+>> @@ -0,0 +1,51 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2026 Red Hat.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 995
+>> +#
+>> +# Regression test for cumulative restores where a directory has been
+>> +# renamed outside of the subtree being restored resulting in
+>> +#
+>> +#   xfsrestore: tree.c:1421: noref_elim_recurse: Assertion 'isrealpr' failed
+>> +#
+>> +. ./common/preamble
+>> +_begin_fstest auto dump
+>> +
+>> +_fixed_by_git_commit xfsdump XXXXXXX \
+>> +	"xfsrestore: only process subtrees that are selected"
+>> +
+>> +# Override the default cleanup function.
+>> +_cleanup()
+>> +{
+>> +	_cleanup_dump
+>> +	cd /
+>> +	rm -r -f $tmp.*
+>> +}
+>> +
+>> +# Import common functions.
+>> +. ./common/dump
+>> +
+>> +# Modify as appropriate.
+>> +_require_scratch
+>> +_scratch_mkfs_xfs >>$seqres.full
+>> +_scratch_mount
+>> +
+>> +mkdir -p $SCRATCH_MNT/a/b/c/d/e/f/g
+>> +mkdir -p $SCRATCH_MNT/restore_me/B/C/D/E/F/G
+>> +
+>> +_do "$XFSDUMP_PROG -L "lab_l0" -M "test" -l0 -f $tmp.dump.l0 $SCRATCH_MNT"
+>> +
+>> +mv $SCRATCH_MNT/a/b/c $SCRATCH_MNT/1
+>> +
+>> +_do "$XFSDUMP_PROG -L "lab_l2" -M "test" -l2 -f $tmp.dump.l2 $SCRATCH_MNT"
+>> +
+>> +dir=$(mktemp -d $SCRATCH_MNT/restore_XXX)
+>> +_do "$XFSRESTORE_PROG -f $tmp.dump.l0 -r -s restore_me $dir"
+>> +_do "$XFSRESTORE_PROG -f $tmp.dump.l2 -r $dir"
+> 
+> Hi Donald,
+> 
+> I almost forgot we had this _do helper :)
+> 
+> I think your test target is the 2nd xfsrestore command line (about incremental
+> changes), a comment might be good.
 
-Great job! I think so too.
+Ack
 
-On Wed, May 20, 2026 at 08:09:29AM -0700, Dai Ngo wrote:
-> On 5/20/26 1:24 AM, Christoph Hellwig wrote:
-> >
-> > > 2) Now that NFS apparently can serve up multiple mappings at once,
-> > > should ->map_blocks pass in an array element count so that we can do
-> > > multiple iomaps in a single lock cycle?
-> >
-> > I guess we need to do that, or revert the code to provide multiple maps
-> > for now.
->
-> I think we should address the immediate problem first by replacing XFS_BMAPI_ENTIRE
-> with 0, and handle support for returning multiple map entries from a single
-> call to xfs_fs_map_blocks() in follow-up patches. That work is more involved,
-> as it requires coordinated changes in both the nfsd and XFS code.
+> I saw used four _do calls here. I just checked the logic of the _do helper, I
+> suspect your current usage might prevent the test from catching command failures,
+> allowing it to 'successfully' continue...
 
-Agree with Dai. I believe that a revert is unnecessary as the upcoming
-patchset should fix the issue. At the same time, passing the array element
-count to the XFS code to find all iomaps in one lock cycle is a great
-direction for further improvement.
+*sigh* thanks for pointing this out, I switched to using _do for the ease of
+redirecting to seqres.full. I found having the full output available was useful
+when investigating (coupled with adding -v tree=debug).
 
-During LAYOUTGET processing, before extents are mapped, the nfsd server
-allocates a layout stateid and takes a lease on the file. Consequently,
-it is impossible for multiple clients to acquire layouts to the same file
-simultaneously. The server will first recall the layout from one client
-and then grant it to another. Additionally, two LAYOUTGET requests to the
-same file from a single client cannot be processed simultaneously as well,
-they are strictly ordered by the seqid. Thus, I do not know a race condition
-with two processes/threads accessing the same file via pNFS. And direct
-access to XFS on the MDS server, bypassing pNFS, is strictly discouraged,
-since it may have unexpected side effects regardless of this issue.
+I couldn't figure out why my failing test started succeeding even though it aborted,
+which is why i added the test.
 
---
-Sergey Bashirov
+The second two are a duplicate, earlier I had a bunch more cases, including
+restoring without -s, and restoring the l2 dump on its own, must have fumbled a 
+cut-n-pasta, I'll revise to cover these edge cases.
+
+> A simple fix would be adding a "note" as a first argument to each _do helper call,
+> e.g:
+>   _do "Full dump" "$XFSDUMP_PROG ..."
+
+> Once all four calls are updated this way, we can remove the "test $? -ne 0 && exit"
+> lines too, and rely on golden image matching to detect any failures. What do you
+> think?
+
+Once i fix _do the coredump control may start working again, in which case we'd see
+a failure with "[dumped core]".
+
+Don
+
+> 
+>> +
+>> +test $? -ne 0 && exit
+>> +
+>> +echo Silence is golden
+>> +# success, all done
+>> +_exit 0
+>> diff --git a/tests/xfs/995.out b/tests/xfs/995.out
+>> new file mode 100644
+>> index 00000000..776fa6f2
+>> --- /dev/null
+>> +++ b/tests/xfs/995.out
+>> @@ -0,0 +1,2 @@
+>> +QA output created by 995
+>> +Silence is golden
+>> -- 
+>> 2.47.3
+>>
+>>
+
