@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA99C3C4B6F;
-	Thu, 21 May 2026 13:00:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D3CE28C2BF;
+	Thu, 21 May 2026 13:00:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779368421; cv=none; b=rLAxkcaxh5iDAXl+dUFPWRZJmhPSjkGw3hrgzN15XA1yO5gLAc4ZwrJ6ico+LpXxNVm1zDT/US8Pv1S7lWnJ2U3VjEOcAIIttAkBhEL+5gFSkOSkKwdjsX7Hg+kd101HIdbxNeEChyGCTZ4gQKg+F57SYxFeiqCXCmocmoS+IDE=
+	t=1779368424; cv=none; b=MQatjiDXm4zlyA1YJ1KFKbPq2IXjaV7sjWteEV6IteUn50Gol7SyMgXDWU9G1dDz/5ySF1dkMq4UiL9alC3DJtrOXrk/MGgOrrAWa/RRbZrTisxzFUENpRCBMzUss+KAfRnc67wipC7zEQXJzwlIP3HV0FfJL+ms5Decdl2enyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779368421; c=relaxed/simple;
-	bh=lTrvuXxExE10OEigacKYmmIjXxJQhiTwCHFqDdH9hqo=;
+	s=arc-20240116; t=1779368424; c=relaxed/simple;
+	bh=g9fTmXWgQx7/PuDf9S0UWI2714XxdBXWGdYNDI44wP0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ge7xOOiCkAHFM4D/PURHeNzf10dIPdtBe0BktynJ5A7XDu2s1ZOPJMnAB7Gc6ivCsVuAcP4iVJ1B2kr0YId6CFakumttCCBrP4La2s7Kt+CTp1FeWvauFXMbSm16myMbZq/ZmK0zoA2rzJZiq5KdPtTuto9dXMBvWkE5QQ3BV/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtM5dhXK; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=c5NcZtDKiqUDjkZ8mxvYwJx9UDP08bXIgPqipL3Yva9AnwMYDxHmgx8N022E0hmJ5zpe7btw72pozsoF+YTO7/gfop985cqzQePf5GKvpD1KlpX/bphRGhlzuZOjcCYFPaX+Cz2wOIVqsUFjqsAEJk5gtaV7JMk3I5KuqUltvMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d88Cjvt8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtM5dhXK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C01691F00A3B;
-	Thu, 21 May 2026 13:00:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d88Cjvt8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1987E1F000E9;
+	Thu, 21 May 2026 13:00:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779368420;
-	bh=9Z4SvBTgWBlzorMQ2pTfq/12pqow7XUweRVuHGZ3yNk=;
+	s=k20260515; t=1779368422;
+	bh=vG/YK5moXGTayxb1rHKajaSrBu43PHIUn54D0m2olwA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TtM5dhXKbEElXaYgTzsZk1X8NTzZCMV4gtwbktgkoz0jpGsfjo77n6TBgsufHJE8V
-	 1x9UqmQdnTihYpxn89aDMVDpQQVlfqKsYvmv3dIGjr6yznlnS5RW5plVUtKny5ScWv
-	 hvoIasU7dT+UoaiBjxEy81ylTnOJQM63gBaxTffuwkn6AaPdhPveuOUocn2ZdPEJhY
-	 Xq0jhSic+yz5PSNWzAcJDYbIsiInZH5Zh7JFH04SN4CrgCcEUEVH7dP9qw4rT3OIui
-	 axPQl1rWOpw+yFhuA5JsdTD28h1y2VtdsqOSbzY84XZQsXu8m/CZVZO/emPMYbJmR0
-	 HQVO8upebX6tg==
+	b=d88Cjvt8qxgvXtFfwcFRHpA5HeJOgJqQ4P5KqpQO6I4LCRIvxyxodJN96moevzOFV
+	 MA9SRrQo6lEkCnKyNYV8xbKeDx0hXaaJ6fN6kNHoMH+NGD3/plxN9OLuuj+ye8jz0h
+	 4UoKvm0SmNkAF8B+LFiJpjSuCo62ETvOZL2MrtOFhy2iqdOEhMPMdfu7vA1jB4G8SJ
+	 iuUtIGUdun7NuNlhdnULFRyw/qVPwarjlqwrzlU+ajtxsD7OMN/0jKScVpGMLCPTXH
+	 wrwIADoaRCgFcSGiZDIFsZ0wvaGoGoIRmBG5OUACiCcAyM7qNFQRHfyDOE1fyq098t
+	 iC2/48LVPbgSg==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc: linux-btrfs@vger.kernel.org,
 	amir73il@gmail.com,
 	zlang@redhat.com,
 	hch@infradead.org
-Subject: [PATCH v5 01/10] fstests: add _loop_image_create_clone() helper
-Date: Thu, 21 May 2026 20:54:51 +0800
-Message-ID: <7b0edc0be51fd3ba222a4d0f204cd406c98085d8.1779367627.git.asj@kernel.org>
+Subject: [PATCH v5 02/10] fstests: add _clone_mount_option() helper
+Date: Thu, 21 May 2026 20:54:52 +0800
+Message-ID: <028aae746adda2053ab618518b538b136048cc52.1779367627.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1779367627.git.asj@kernel.org>
 References: <cover.1779367627.git.asj@kernel.org>
@@ -49,76 +49,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce _loop_image_create_clone() and _loop_image_destroy() to mkfs an
-image file and clone it to another image file, and attach a loop device to
-them. And its destroy part.
+Adds _clone_mount_option() helper function to handle filesystem-specific
+requirements for mounting cloned devices. Abstract the need for -o nouuid
+on XFS.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- common/rc | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
+ common/rc | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/common/rc b/common/rc
-index 9632b211b58f..a2ee23c45003 100644
+index a2ee23c45003..7ae9877918c8 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -1503,6 +1503,56 @@ _scratch_resvblks()
- 	esac
+@@ -397,6 +397,20 @@ _scratch_mount_options()
+ 					$SCRATCH_DEV $SCRATCH_MNT
  }
  
-+_loop_image_create_clone()
++_clone_mount_option()
 +{
-+	local -n _ret=$1
-+	local pre_clone_tune_func="$2"
-+	local img_file=$TEST_DIR/${seq}.img
-+	local img_file_clone=$TEST_DIR/${seq}_clone.img
-+	local size=$(_small_fs_size_mb 128) # Smallest possible
-+	local loop_devs
++	local mount_opts=""
 +
-+	_require_fs_space $TEST_DIR $((size * 1024))
-+
-+	_create_file_sized $((size * 1024 * 1024)) $img_file ||
-+				_fail "Failed: Create $img_file $size"
-+
-+	loop_devs=$(_create_loop_device $img_file)
-+	_ret=($loop_devs)
-+
-+	case $FSTYP in
++	case "$FSTYP" in
 +	xfs)
-+		_mkfs_dev "-s size=4096" ${loop_devs[0]}
-+		;;
-+	btrfs)
-+		_mkfs_dev ${loop_devs[0]}
++		mount_opts="-o nouuid"
 +		;;
 +	*)
-+		_mkfs_dev ${loop_devs[0]}
-+		;;
 +	esac
 +
-+	# Only execute if the function argument is not empty
-+	if [ -n "$pre_clone_tune_func" ]; then
-+		$pre_clone_tune_func ${loop_devs[0]}
-+	fi
-+
-+	sync ${loop_devs[0]}
-+	cp $img_file $img_file_clone
-+
-+	loop_devs="$loop_devs $(_create_loop_device $img_file_clone)"
-+
-+	_ret=($loop_devs)
++	echo $mount_opts
 +}
 +
-+_loop_image_destroy()
-+{
-+	for d in "$@"; do
-+		local f=$(losetup --noheadings --output BACK-FILE $d)
-+		_destroy_loop_device "$d"
-+		[ -n "$f" ] && rm -f "$f"
-+	done
-+}
- 
- # Repair scratch filesystem.  Returns 0 if the FS is good to go (either no
- # errors found or errors were fixed) and nonzero otherwise; also spits out
+ _supports_filetype()
+ {
+ 	local dir=$1
 -- 
 2.43.0
 
