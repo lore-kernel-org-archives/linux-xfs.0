@@ -1,133 +1,108 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E683AD51A
-	for <linux-xfs@vger.kernel.org>; Mon, 25 May 2026 07:58:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBFC3DE441
+	for <linux-xfs@vger.kernel.org>; Mon, 25 May 2026 08:20:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779695916; cv=none; b=fdv2iT60muvWNy6pfYTTswR1zWo2j2Ii50s3C0TL5Um+mJP1pwNdxsJIXZfxJeyU4yQIdCHlrHR6YufqxBKmx7Ol5t8ZB2qbeVZSZV3zKVFZYovKy9pkVVUulF2SLBvq+nUvaOYRzHNg8fPeBJu0ll18BGR4rL+nRnIRoZAYXRU=
+	t=1779697227; cv=none; b=bz46WUPY7TEf4/htNDLKBDtlg36GXqRIlITKTyrMZOgg5cQ+sM/2/RpOu3/6+mDGYMsKPzPo/hZUzocuJ7LFmvdGKUYKSzeGHpIdauHh4ne82t/qh6QckTtfoqsnJltfKREA5qdtJ+LFJuVxdRMjkVUSKwf9VzRAjBriIeLp+As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779695916; c=relaxed/simple;
-	bh=c0tNzFZE5LyovI1SYbZVltwE791+ggqBjaz2beBdWWs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SYIPGU3+CNCWxpcGEzL3rKVCUJ+cG6QiU6SqHwn0H+hBXzglxGE/sz8XpOeP2kiB0i/3BttNcPhqW27oivpeoM8OXAdci0BJCFw0kEqFZIlIT3OhTHfMqZOunwWSsh0wimlYu6JXzBmJGcFGJPV/xkY4rRtXirz7oX+Yxef0lv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 260DA180F2D5;
-	Mon, 25 May 2026 09:58:31 +0200 (CEST)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id rrOwOhUBFGoUrzcAKEJqOA:T6
-	(envelope-from <lukas@herbolt.com>); Mon, 25 May 2026 09:58:31 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: djwong@kernel.org,
-	sandeen@sandeen.net,
-	aalbersh@kernel.org,
-	dgc@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [RFC PATCH v2 5/5] xfsprogs: mkfs.xfs clean up unused dft option in various validators
-Date: Mon, 25 May 2026 09:57:52 +0200
-Message-ID: <20260525075752.4159504-6-lukas@herbolt.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260525075752.4159504-1-lukas@herbolt.com>
-References: <20260525075752.4159504-1-lukas@herbolt.com>
+	s=arc-20240116; t=1779697227; c=relaxed/simple;
+	bh=e8rEW29dCniH2gKK6PkMgFes4ymdMVTdoX5svgA4o5Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=N651uErScvXysrumKi4JuquDCyDMYFVhbRRtbueWASCTGjUlj8sKvfggwsiQxNMlXrx4TtQdEHp0nv0YOr6anCG1z0/olKTv8/glnPUlqSI0XdI7DbEXOWvh1BG2bFqp0IfsqSCti4uKNLCnptlLZ/Xtt45tsluD0Yw5tZZNPbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A9X0o17Z; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A9X0o17Z"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-c8095d7d75bso3702655a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 25 May 2026 01:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779697225; x=1780302025; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rP2XwVbHYZOzOgD0rZjER3jPkSEkCdbeWs9oiQjvBWs=;
+        b=A9X0o17Zr89QqXeFZ+ZRnPmMd2mdJwS5yCF7yiSkMvG81FroLZQXuGSjBdM7ah4Q7+
+         HH50kzRRnTXkVj9b1mBXISGxmwNJxtnCaaA8kovV/oXbiqjKV4S0alRvDF6fbmS7BEO4
+         xJPUmMkg8cmyAq+BlQYrnN9ZzD9yjvNyF4XoI7LsxnJmS1RtXYxwUBeqHJszbj007Wmz
+         AWZ6t8MXHhDOKNLct4zlD0+wxXz5z1xle2G7pTGZVk0nNBR1cxCrMILtddJuf5CuwSUQ
+         38C34iH2ziiDnC5uldEajKL/TJBfV3RlvP7MkmSGy+jSTzJqjDmS8AH339dS6DnKm8GE
+         KWyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779697225; x=1780302025;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rP2XwVbHYZOzOgD0rZjER3jPkSEkCdbeWs9oiQjvBWs=;
+        b=bi1uQuLFG6SxR2k75C7PgDXkmXtR51fmifIgee9mlTFGMz38rzEOLfwSYEcAyQpXdV
+         CGoJqakDazyjXm/qzWrikitoqc+E6vlKS9L+UWuRXuZUJ+O1gXq/jos3jpbFHPW+6Ja5
+         5CUpOf7geph8pnjYdDoEjb5Py1lA3GedFlO3QNATXYYzTU4/M+ho3hqryvoJPlku+8bs
+         68qqAdNQahZya6lW7ISCK0pV3x2SGtQ+VVRgrJRdXhNJIzWRn88qr6J47wFXCHBBEMmJ
+         0a0QWL6G2mbShGhNa4I9tnLWY0whx+bO1ac8+Pr7Ec8h/AphU9Hottg8WO/EqBTbV0eD
+         MR3Q==
+X-Forwarded-Encrypted: i=1; AFNElJ8u8SAtR9NyntdUTpbsMRS3nrM/yDSWJJBWTZm74ANQJpJgMhVnMp5QxBRDzn5bJ4kikrj8ovkvjoc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkBN8nDj9KDbp19MCwXuGDOk6G8yNx/CzWrT6Fs0Xzca+CJU29
+	kmWaerUTIMqW0P2ti2ydAdRvbSD+JWnvwzbb6wVGWMT8GuzNDXDuQSGR
+X-Gm-Gg: Acq92OH+AXHrdVMIoJqxGVR71wHgOASosbZy71jnse420hcjnEKTHfIgmEDrKIswqOu
+	/sbMQRl10xwX6BwUjUzrrhqB10G8bBYh8wqD9T9Ur67ZkF/JqqfYGy+h2mF7COYkaarOVCNqOVg
+	Vuy/+lpM7rOVqqLvRONTOF+8cM4nLppF+MRaK0Hptnbb376J7nvXFIKbv8QC/D63v30hWwbAZhY
+	4pcMk0NdYtxjmLGiiNwvQKf47FjhSNlTmHi8V2M8nE/ktm6KPprt8O7zSv4jbUxl0mGj/0nnrw0
+	ZhZblsM1Cf6s4OOwjDzbSQ4nosKWEavuT/ghUWY6VDkRkk7mCzjdJ0dVM7AiuxmlKOTMmJrEvqF
+	ZRTjxuLVMZGVJQX0iTFzupNxVnpCoki9nwLgGdqNLraoXH8CPTy0WibXjhY6cBqx5fo3+r78YWK
+	4tkNW0XWhNh7hf+zcYe+zlyF48Bgo=
+X-Received: by 2002:a05:6a20:3c8e:b0:3aa:55eb:a5fb with SMTP id adf61e73a8af0-3b328d15f18mr14912245637.23.1779697225436;
+        Mon, 25 May 2026 01:20:25 -0700 (PDT)
+Received: from [192.168.50.90] ([116.87.14.48])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c852056d767sm7212551a12.25.2026.05.25.01.20.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 May 2026 01:20:25 -0700 (PDT)
+Message-ID: <0f774a12-7355-45de-bf95-4c98193d4727@gmail.com>
+Date: Mon, 25 May 2026 16:20:21 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 04/10] fstests: verify fanotify isolation on cloned
+ filesystems
+To: Christoph Hellwig <hch@infradead.org>, Anand Jain <asj@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, amir73il@gmail.com, zlang@redhat.com
+References: <cover.1779367627.git.asj@kernel.org>
+ <bfc0c92a33bf5a129dad4c3e4c76973e7a6cec74.1779367627.git.asj@kernel.org>
+ <ahP2OOXmwsM87j9D@infradead.org>
+Content-Language: en-US
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <ahP2OOXmwsM87j9D@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The struct cli_params dft was only used in validate_blocksize().
-Now the cli.blocksize is always set either over bld_dflt or
-file_dflt or from command line/config file. All the other functions
-are not accessing the dft in their body.
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- mkfs/xfs_mkfs.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index cb9c528021d6..5d1d27235a72 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2392,7 +2392,6 @@ static void
- validate_sectorsize(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct cli_params	*dft,
- 	struct fs_topology	*ft,
- 	int			dry_run,
- 	int			force_overwrite)
-@@ -2481,18 +2480,19 @@ _("block size %d cannot be smaller than sector size %d\n"),
- static void
- validate_blocksize(
- 	struct mkfs_params	*cfg,
--	struct cli_params	*cli,
--	struct cli_params	*dft)
-+	struct cli_params	*cli)
- {
- 	/*
- 	 * Blocksize and sectorsize first, other things depend on them
- 	 * For RAID4/5/6 we want to align sector size and block size,
- 	 * so we need to start with the device geometry extraction too.
-+	 *
-+	 * The cli->blocksize size is already set from the bld_dflt
-+	 * or from file_dflt or via command line. We just need to check
-+	 * if the value is within our limits.
- 	 */
--	if (!cli->blocksize)
--		cfg->blocksize = dft->blocksize;
--	else
--		cfg->blocksize = cli->blocksize;
-+
-+	cfg->blocksize = cli->blocksize;
- 	cfg->blocklog = libxfs_highbit32(cfg->blocksize);
- 
- 	/* validate block sizes are in range */
-@@ -2522,7 +2522,6 @@ static void
- validate_log_sectorsize(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct cli_params	*dft,
- 	struct fs_topology	*ft)
- {
- 
-@@ -2714,7 +2713,6 @@ static void
- validate_zoned(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct cli_params	*dft,
- 	struct zone_topology	*zt)
- {
- 	if (!cli->xi->data.isfile) {
-@@ -6163,8 +6161,8 @@ main(
- 	 * Extract as much of the valid config as we can from the CLI input
- 	 * before opening the libxfs devices.
- 	 */
--	validate_blocksize(&cfg, &cli, &bld_dft);
--	validate_sectorsize(&cfg, &cli, &bld_dft, &ft, dry_run, force_overwrite);
-+	validate_blocksize(&cfg, &cli);
-+	validate_sectorsize(&cfg, &cli, &ft, dry_run, force_overwrite);
- 
- 	/*
- 	 * XXX: we still need to set block size and sector size global variables
-@@ -6173,8 +6171,8 @@ main(
- 	blocksize = cfg.blocksize;
- 	sectorsize = cfg.sectorsize;
- 
--	validate_log_sectorsize(&cfg, &cli, &bld_dft, &ft);
--	validate_zoned(&cfg, &cli, &bld_dft, &zt);
-+	validate_log_sectorsize(&cfg, &cli, &ft);
-+	validate_zoned(&cfg, &cli, &zt);
- 	validate_sb_features(&cfg, &cli);
- 
- 	/*
--- 
-2.54.0
+On 25/5/26 15:11, Christoph Hellwig wrote:
+>> +export FSNOTIFYWAIT_PROG="$(type -P fsnotifywait)"
+> 
+> Same comment about adding new common bits outside of test cases applies,
 
+Got it.
+
+> but why use both inotify and fsnotify?
+> 
+
+The SYSCALL and stuffs until fsnotify_..() are different,
+so I decided to keep them both.
+
+>> +[[ "$fsid1" == "$fsid2" ]] && \
+>> +	_notrun "Require clone filesystem with unique f_fsid"
+> 
+> Please add a comment why this happens.  I also have to say I find
+> the if syntax easier to follow then && with a line continuation.
+
+Got it. If statements are better for readability.
+Also, I'll add comments.
