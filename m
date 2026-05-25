@@ -1,46 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40133BFE50;
-	Mon, 25 May 2026 07:11:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CC13BFE5A;
+	Mon, 25 May 2026 07:13:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779693113; cv=none; b=dp55kBJfnKAeO7cRqFaYA7WE+qc3w+mc3BZlJWVh1h4k6H4xg1fRp/Tgn4sDSmVSaI+bBG/lNPfA7NV/uRlooirlPSF/AYLL5Fpwb8QtOeF+uTTU5mejwrUM+HnvH4Hzw+TXstcqeeOD6EgpaF1enrwYkNM8siGFg07fuf2GaIU=
+	t=1779693192; cv=none; b=YiD4BPO6KiYF0//Z3ltmAVeXjIfIrJL2IcW9C4zi9I5UIQbLMZH05CKJh82BkxsfgMCzgqfDJm1Q83In84XQ5gF9DOPSwN2JCu6houpRLHmaMLBF3P1qismmSeVeWAI+D3LW+Ib8xp5NIQki8gq346crPF/Ggjrk2ryDcchdfcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779693113; c=relaxed/simple;
-	bh=FouUt+dGBKmvdfU7CrVUd7euP+mnCDRi7EIxc8h4a3g=;
+	s=arc-20240116; t=1779693192; c=relaxed/simple;
+	bh=FS5ThuxsvmIuClkshV+avduWtQeuuHgNW8Ws9Gcbb7Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pQNvMgCLSxN5DjTE2jQ75pq1gK3kCiJRCWNAuQCdu27WGZfFGElOdhTmmHUhZxw2OEj0drCDnMjHiMGYDLAIZnzKCXDT+9ycQy9rD8aLAbT6D0gTraHug0ewOxjRPww3a4A+UFyUfIabKAz0gwjARYJpEwrn1bqY30tcu1JjKOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1A9EkQLr; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=G5jfVLDrwTJfYb7NNK5iHyqgDLwuIBJ+nRBki2xkWMkHi44ied2q1XvkQ+ESuwRC9m4nEgRA0CiPj7vcoMkNVgpOg9Ct+eWYEm/0CrL3AKUYSjWziaaJKQ9FH5KlPOInKAgG+xDWMktLUsmI1zkM48r9L28LCgNl+Wbhh1qdwnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rja6ZMgw; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1A9EkQLr"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rja6ZMgw"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=xqcxhYP71Y45aA5yA9zJWnZB6u8t86CEsBFptEY8fj0=; b=1A9EkQLrKBcFUFwj6aS6K6lXCJ
-	ASmNZPmU+odZG3FRd6nhizJsMn238rFOAmrMbyf6mh/Zd7gVSeIrbyChFhXyTGI+ljzOG1XhfnnE+
-	bqgfAztY/aWKqN/VYg8zggDZtoLbjAyK1fpTU5k8toSkjDaasnhmyKrDvBdtP0jbgLJsdHNQ3NWUG
-	KYZ0Yenu2dOFGi2LI8GOdhijZCjLuDa9N8c9aCPlf/jvwKlX8O4AUunr3xL6tbDeDsLnUa9qthr9G
-	cyxpnxPXKUlFM8ZQ6VorUqmo/I1fOy8MskuKMcVTq26JZTM6zL86ZXYFl/jx/b9tP99f7BEAPm33M
-	dbEmNyGA==;
+	bh=J+0lw6yfGWbYib4LjYGQU8KARgYeOuTXyg6uoz1irQ0=; b=rja6ZMgwmYky+Mgp3cOdXeyx1e
+	BWeT3Dll/ki7OhlFpBcbMZUinH5ZAdARDxNfcaYorr5hdha1ZmpqsjV2AZtvooTbwix9xU+Qt1cGX
+	f20cVi1CL6K1T2wq5wvN+v+mmk5jxvZTOrU3TGNB8a0AmHwJY1+iDiPIViCXsd/YqYDGlXj/4mQAa
+	iNYS/iNzCk+jDDD4E9ybBwQucdVLe0ZXpXJ6HX14XmesUwdgFqPSrlBuCQGNlDceCsRox81VQ8VVD
+	FKFY/ikLOxUPiZxa9Gjm3AiiXRkvQcHewhCnhQllKIyVN9ieSKgzJ6bUKEO5DQkebUtTspjL2i4jY
+	iPAyGYew==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wRPTc-0000000GVCw-0Mn5;
-	Mon, 25 May 2026 07:11:52 +0000
-Date: Mon, 25 May 2026 00:11:52 -0700
+	id 1wRPUs-0000000GVL4-446x;
+	Mon, 25 May 2026 07:13:10 +0000
+Date: Mon, 25 May 2026 00:13:10 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, amir73il@gmail.com,
-	zlang@redhat.com, hch@infradead.org
-Subject: Re: [PATCH v5 04/10] fstests: verify fanotify isolation on cloned
- filesystems
-Message-ID: <ahP2OOXmwsM87j9D@infradead.org>
+	zlang@redhat.com
+Subject: Re: [PATCH v5 05/10] fstests: verify f_fsid for cloned filesystems
+Message-ID: <ahP2hjv9zl_WL1kg@infradead.org>
 References: <cover.1779367627.git.asj@kernel.org>
- <bfc0c92a33bf5a129dad4c3e4c76973e7a6cec74.1779367627.git.asj@kernel.org>
+ <a24645463979d0550e0010030995b0ed609215c1.1779367627.git.asj@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,17 +48,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bfc0c92a33bf5a129dad4c3e4c76973e7a6cec74.1779367627.git.asj@kernel.org>
+In-Reply-To: <a24645463979d0550e0010030995b0ed609215c1.1779367627.git.asj@kernel.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-> +export FSNOTIFYWAIT_PROG="$(type -P fsnotifywait)"
+On Thu, May 21, 2026 at 08:54:55PM +0800, Anand Jain wrote:
+> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
+> +	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
+> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
+> +	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
 
-Same comment about adding new common bits outside of test cases applies,
-but why use both inotify and fsnotify?
-
-> +[[ "$fsid1" == "$fsid2" ]] && \
-> +	_notrun "Require clone filesystem with unique f_fsid"
-
-Please add a comment why this happens.  I also have to say I find
-the if syntax easier to follow then && with a line continuation.
+Seems like these are stuck on the btrfs list.  Any progress on that?
 
