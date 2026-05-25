@@ -1,43 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8ED64C6C;
-	Mon, 25 May 2026 05:46:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFCE5358388;
+	Mon, 25 May 2026 05:53:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779687969; cv=none; b=QscpQK1fXdsAW7htUQyzu42YJpb8EMJk3hNIsoYw1PtCWtn64L6XBNaOif2+8dKyLRMV3pk7SOiukD68S8/dKP8ZfKdlOHh4aWK4hC0G86DI60eQbT3XWyprWEy7YJkCrxM+rAYQT3yYnD5U8gMz8ERWHocgZb9VpvinOwhAvTI=
+	t=1779688409; cv=none; b=UZQzCLOLIJJEf6U+9KTDz7sLYdrYJ5ONd1T6H7B4PI+8q+k41KhOvEKJ6f+E1o5jnarE0PvL+XM/yyiYwxiBOZCsfJ9pl5Ru++1rr5RBTsiV1T7gs6pcq9OjHY3Ihl5fKpEq5iJkJUa5zAlI3j5QZQuuYV7o70YNyqIopuQqJis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779687969; c=relaxed/simple;
-	bh=/GBEXiJOQ9iVyh3wxD8nfcKej4CigHNC+aqUWVebcZw=;
+	s=arc-20240116; t=1779688409; c=relaxed/simple;
+	bh=VqnqfM5JRdCnP8OqgyGUpiZMaborgwh7Dqt2Yzo6ClI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uNt2cBzmpPTWu2B0qpbZ5e49bihAir3gZDF8N7WaFZ5uWCoRyEBvWQUyPkXm6SCI0H5Qfoe2xkkn8Szqz4zMeSPAHxOdl8UNbcS8QnAqwngi3BqeM2UouJBHYelhxXIrkH7Rff/hB7c9FmDOMYtyFX0n43YtIGkdtO7xajbJDJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EIzoPeyB; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=VfOVOmty2U/HXTFwEvYhOcvPbettoyY79s6YamLZmUKaDTar5WIg/PwDaLfT5w5GwMI4i+xaZLn2MU5FnOGJ5feCx1dAiA/McUDWXXMpJdGE8s10qtIsXzeenmW5nRhvVGuKtWCQMNoHfm+yqsNGZ2PDEJS0Rr/nZgpQrIJVF5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YBpY0Vee; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EIzoPeyB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YBpY0Vee"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3NagG/NgweZdgeta53PE7ol2Vpe8KLdnMkAzX0cduo0=; b=EIzoPeyBcWMy5fkRY1dFho4/LT
-	xYytPyVxv7QzDixyD/pxmfjGoVfcpQrhV/S606o7Dz+K8EKmEIhHLe3TeUaNeaqBu5ynKQ07gWLhj
-	LXD14kIC0qd9yvBuwEYoksw8X6bKghXCgfe98Je+R8A0HEsfPSnkMfqezlwEr02Jv9wfM7ngRWLOz
-	VyoiTpcicOBJrL3CDmcG3HIOBNbohN69p/dNaTwCAzC4POJZ58UlXd0CGTqUsc5iTuDnNVuEk3Eca
-	8jUjZhl7aKh3UdO4ysp4mKdiJKgLQEm6Wcumd4gNbJGGKmS0Hq6D0izxvpo9AaG89hN3cn/2JhoP3
-	w3ecsIag==;
+	bh=DNnm6uON4ElQK2cQDHmHIp2XCM9lRWOT2u5V1xpH1lE=; b=YBpY0Veelnz1HLa1zOExoIMkTe
+	UxFgAbeG440UGGZ0blpsKi0qmY56nwBQ3jWr1vTFfCsL4kR4mzz83KXfxf+jFqvGo78TENaGCIgOT
+	gokQ6+iQ7oGH3xVvwaXoMIhWMsI8+35bQ87qerPEiIf7s8mh/QlHxiDCDEqBVeNsSqOL+rQwQpti9
+	4oYSxkDwK485dqG1GLXptMWJG5Op5fYsZK+4WN6K+4Bl+OvYh40qCwMoxV1khkrJq4smCxo6weCn/
+	lxByTISWBEgVq4UMqy0XJZvc550/3wM0dSO/OK2SozSrGLkDVnx9aETkBiW84GEeG7KphfWlMOKj3
+	A+d+S1fQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wRO8e-0000000GM4y-1gKV;
-	Mon, 25 May 2026 05:46:08 +0000
-Date: Sun, 24 May 2026 22:46:08 -0700
+	id 1wROFk-0000000GMa4-2JsX;
+	Mon, 25 May 2026 05:53:28 +0000
+Date: Sun, 24 May 2026 22:53:28 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs/21[67]: fix mkfs log concurrency detection
-Message-ID: <ahPiIAJNwjiZ9PTR@infradead.org>
-References: <20260520185202.GD9544@frogsfrogsfrogs>
- <20260520190112.GE9544@frogsfrogsfrogs>
+To: Qing Ming <a0yami@mailbox.org>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH] xfs: remove file privileges after XFS_IOC_SWAPEXT
+Message-ID: <ahPj2PLdjNC9QWIF@infradead.org>
+References: <20260524063820.45459-1-a0yami@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,29 +45,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260520190112.GE9544@frogsfrogsfrogs>
+In-Reply-To: <20260524063820.45459-1-a0yami@mailbox.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, May 20, 2026 at 12:01:12PM -0700, Darrick J. Wong wrote:
-> +_mkfs_xfs_supported()
+On Sun, May 24, 2026 at 02:38:20PM +0800, Qing Ming wrote:
+> XFS_IOC_SWAPEXT exchanges the data forks of two regular files. This
+> changes file contents and therefore needs the same privilege stripping
+> that ordinary write paths apply.
+> 
+> The legacy ioctl currently completes the exchange without removing
+> SUID/SGID bits or file capabilities. As a result, a privileged inode can
+> retain those attributes after its data fork has been replaced.
+> 
+> Pass the file objects into xfs_swap_extents() and call file_remove_privs()
+> for both files after the exchange commits, before dropping the outer
+> inode and mapping locks. This matches the XFS_IOC_EXCHANGE_RANGE finish
+> path.
 
-Can you add a top of function comment explaininging this helper?
+Not sure this makes much sense, as xfs_swap_extents is used for
+defragmentation, including system-wide one, and this would drop the
+suid bit from existing suid bit files and break the system.
 
-> +{
-> +	local mkfs_opts=$*
-> +
-> +	$MKFS_XFS_PROG -f -N $MKFS_OPTIONS $mkfs_opts
-> +	local mkfs_status=$?
-> +
-> +	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
-> +	# $mkfs_opts, try again without $MKFS_OPTIONS
-> +	if [ $mkfs_status -ne 0 -a -n "$mkfs_opts" ]; then
-> +		$MKFS_XFS_PROG -f -N $mkfs_opts
-> +		mkfs_status=$?
-> +	fi
+I don't think there is a security issue as the target file needs to
+be writable to the user performing the operation, and the owning uid/gid
+has to match as well.
 
-Do we want this for a helper like this?  The automatic dropping of
-options has been a major source of mess, and if we're using a helper
-that checks to see if mkfs works, returning false and then _notrun()ing
-would seem like the saner option in general.
+I think the issue is more that XFS_IOC_COMMIT_RANGE drops the suid
+and could thus cause problems when used by fsr.
 
