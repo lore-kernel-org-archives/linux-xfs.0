@@ -1,26 +1,26 @@
 Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C2D3D6467
-	for <linux-xfs@vger.kernel.org>; Mon, 25 May 2026 07:58:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E683AD51A
+	for <linux-xfs@vger.kernel.org>; Mon, 25 May 2026 07:58:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779695913; cv=none; b=FNBcAPkwQvwyEPwXGtHqTrIL6gMbvlaj452UyOb37rUovicWXBnkVXIwKDbzivgTaXl82jUF9kIbCeC4O1DcdGHP4y96GvUBXwb2ssJKYiBUfiRHPuLTkthvnNki4tNPvlZy5xlEMcdYD7lFavE32mP/cpr3WiuaGCbFIkIgtlo=
+	t=1779695916; cv=none; b=fdv2iT60muvWNy6pfYTTswR1zWo2j2Ii50s3C0TL5Um+mJP1pwNdxsJIXZfxJeyU4yQIdCHlrHR6YufqxBKmx7Ol5t8ZB2qbeVZSZV3zKVFZYovKy9pkVVUulF2SLBvq+nUvaOYRzHNg8fPeBJu0ll18BGR4rL+nRnIRoZAYXRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779695913; c=relaxed/simple;
-	bh=rNsKUTUtmmU+YKYlWCIPnPsStFCAqWbdJr/xzT5z+J0=;
+	s=arc-20240116; t=1779695916; c=relaxed/simple;
+	bh=c0tNzFZE5LyovI1SYbZVltwE791+ggqBjaz2beBdWWs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GNfjmM+EQP0sLNXzMJ23p8SU3I/XIdLHG46K4QDiqBeBdh5LC9yr5fMpbVgJD/TIqt/qjDd0CPeYfv/K3puucDD4UZte1lQZiF9tzhz6ro41vAGfeYArETHCPq4pHf4dEOA0QfvhPzdcQOKZR5RXR6tf+nmp2zYbPTPELVyK18k=
+	 MIME-Version; b=SYIPGU3+CNCWxpcGEzL3rKVCUJ+cG6QiU6SqHwn0H+hBXzglxGE/sz8XpOeP2kiB0i/3BttNcPhqW27oivpeoM8OXAdci0BJCFw0kEqFZIlIT3OhTHfMqZOunwWSsh0wimlYu6JXzBmJGcFGJPV/xkY4rRtXirz7oX+Yxef0lv8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
 Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 397E2180F246;
-	Mon, 25 May 2026 09:58:28 +0200 (CEST)
+	by mx0.herbolt.com (Postfix) with ESMTP id 260DA180F2D5;
+	Mon, 25 May 2026 09:58:31 +0200 (CEST)
 Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
 	by mx0.herbolt.com with ESMTPSA
-	id rrOwOhUBFGoUrzcAKEJqOA:T5
-	(envelope-from <lukas@herbolt.com>); Mon, 25 May 2026 09:58:28 +0200
+	id rrOwOhUBFGoUrzcAKEJqOA:T6
+	(envelope-from <lukas@herbolt.com>); Mon, 25 May 2026 09:58:31 +0200
 From: Lukas Herbolt <lukas@herbolt.com>
 To: djwong@kernel.org,
 	sandeen@sandeen.net,
@@ -28,9 +28,9 @@ To: djwong@kernel.org,
 	dgc@kernel.org
 Cc: linux-xfs@vger.kernel.org,
 	Lukas Herbolt <lukas@herbolt.com>
-Subject: [RFC PATCH v2 4/5] xfs_admin: add -d option to manage default mkfs config file
-Date: Mon, 25 May 2026 09:57:51 +0200
-Message-ID: <20260525075752.4159504-5-lukas@herbolt.com>
+Subject: [RFC PATCH v2 5/5] xfsprogs: mkfs.xfs clean up unused dft option in various validators
+Date: Mon, 25 May 2026 09:57:52 +0200
+Message-ID: <20260525075752.4159504-6-lukas@herbolt.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260525075752.4159504-1-lukas@herbolt.com>
 References: <20260525075752.4159504-1-lukas@herbolt.com>
@@ -42,110 +42,92 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add -d <file> to install a config file as the system-wide mkfs.xfs
-default, and -d clear to remove it. The default config directory is
-substituted at build time from the configured sysconfdir. The
-xfs_admin.sh is now generated from xfs_admin.sh.in to set the default
-config file location bsed on the ./configure.
+The struct cli_params dft was only used in validate_blocksize().
+Now the cli.blocksize is always set either over bld_dflt or
+file_dflt or from command line/config file. All the other functions
+are not accessing the dft in their body.
 
 Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 ---
- .gitignore                           |  3 +++
- db/Makefile                          | 11 ++++++++--
- db/{xfs_admin.sh => xfs_admin.sh.in} | 30 ++++++++++++++++++++++++++--
- 3 files changed, 40 insertions(+), 4 deletions(-)
- rename db/{xfs_admin.sh => xfs_admin.sh.in} (70%)
+ mkfs/xfs_mkfs.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/.gitignore b/.gitignore
-index eb3decd108be..fc695dbbd0b1 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -89,3 +89,6 @@ cscope.*
- # docs
- /man/man8/mkfs.xfs.8
- /man/man8/xfs_scrub_all.8
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index cb9c528021d6..5d1d27235a72 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2392,7 +2392,6 @@ static void
+ validate_sectorsize(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct cli_params	*dft,
+ 	struct fs_topology	*ft,
+ 	int			dry_run,
+ 	int			force_overwrite)
+@@ -2481,18 +2480,19 @@ _("block size %d cannot be smaller than sector size %d\n"),
+ static void
+ validate_blocksize(
+ 	struct mkfs_params	*cfg,
+-	struct cli_params	*cli,
+-	struct cli_params	*dft)
++	struct cli_params	*cli)
+ {
+ 	/*
+ 	 * Blocksize and sectorsize first, other things depend on them
+ 	 * For RAID4/5/6 we want to align sector size and block size,
+ 	 * so we need to start with the device geometry extraction too.
++	 *
++	 * The cli->blocksize size is already set from the bld_dflt
++	 * or from file_dflt or via command line. We just need to check
++	 * if the value is within our limits.
+ 	 */
+-	if (!cli->blocksize)
+-		cfg->blocksize = dft->blocksize;
+-	else
+-		cfg->blocksize = cli->blocksize;
 +
-+#generated bash
-+db/xfs_admin.sh
-diff --git a/db/Makefile b/db/Makefile
-index e36e775eee60..b9016d2a057b 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -67,7 +67,8 @@ CFILES = $(HFILES:.h=.c) \
- 	iunlink.c \
- 	rdump.c \
- 	timelimit.c
--LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
-+LSRCFILES = xfs_admin.sh.in xfs_ncheck.sh xfs_metadump.sh
-+LDIRT = xfs_admin.sh
++	cfg->blocksize = cli->blocksize;
+ 	cfg->blocklog = libxfs_highbit32(cfg->blocksize);
  
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
- 	  $(LIBPTHREAD)
-@@ -79,10 +80,16 @@ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
- CFLAGS += -DENABLE_EDITLINE
- endif
+ 	/* validate block sizes are in range */
+@@ -2522,7 +2522,6 @@ static void
+ validate_log_sectorsize(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct cli_params	*dft,
+ 	struct fs_topology	*ft)
+ {
  
--default: depend $(LTCOMMAND)
-+default: depend $(LTCOMMAND) xfs_admin.sh
+@@ -2714,7 +2713,6 @@ static void
+ validate_zoned(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct cli_params	*dft,
+ 	struct zone_topology	*zt)
+ {
+ 	if (!cli->xi->data.isfile) {
+@@ -6163,8 +6161,8 @@ main(
+ 	 * Extract as much of the valid config as we can from the CLI input
+ 	 * before opening the libxfs devices.
+ 	 */
+-	validate_blocksize(&cfg, &cli, &bld_dft);
+-	validate_sectorsize(&cfg, &cli, &bld_dft, &ft, dry_run, force_overwrite);
++	validate_blocksize(&cfg, &cli);
++	validate_sectorsize(&cfg, &cli, &ft, dry_run, force_overwrite);
  
- include $(BUILDRULES)
+ 	/*
+ 	 * XXX: we still need to set block size and sector size global variables
+@@ -6173,8 +6171,8 @@ main(
+ 	blocksize = cfg.blocksize;
+ 	sectorsize = cfg.sectorsize;
  
-+xfs_admin.sh: xfs_admin.sh.in $(TOPDIR)/include/builddefs
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@mkfs_syscfg_dir@|$(MKFS_SYSCFG_DIR)|g" \
-+		< $< > $@
-+	$(Q)chmod a+x $@
-+
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh.in
-similarity index 70%
-rename from db/xfs_admin.sh
-rename to db/xfs_admin.sh.in
-index 52a658ba4a54..e87a64467662 100755
---- a/db/xfs_admin.sh
-+++ b/db/xfs_admin.sh.in
-@@ -13,11 +13,37 @@ REPAIR_OPTS=""
- IO_OPTS=""
- REPAIR_DEV_OPTS=""
- LOG_OPTS=""
--USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
-+MKFS_DEFAULT_CFGDIR="@mkfs_syscfg_dir@"
-+MKFS_DEFAULT_CFGFILE="$MKFS_DEFAULT_CFGDIR/default.conf"
-+USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-d file|clear] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+-	validate_log_sectorsize(&cfg, &cli, &bld_dft, &ft);
+-	validate_zoned(&cfg, &cli, &bld_dft, &zt);
++	validate_log_sectorsize(&cfg, &cli, &ft);
++	validate_zoned(&cfg, &cli, &zt);
+ 	validate_sb_features(&cfg, &cli);
  
--while getopts "c:efjlL:O:pr:uU:V" c
-+while getopts "c:d:efjlL:O:pr:uU:V" c
- do
- 	case $c in
-+	d)	if [ "$OPTARG" = "clear" ]; then
-+			rm -f "$MKFS_DEFAULT_CFGFILE"
-+			status=$?
-+			if [ $status -eq 0 ]; then
-+				echo "Removed $MKFS_DEFAULT_CFGFILE"
-+			else
-+				echo "xfs_admin: failed to remove $MKFS_DEFAULT_CFGFILE" 1>&2
-+			fi
-+		else
-+			if [ ! -f "$OPTARG" ]; then
-+				echo "xfs_admin: cannot read '$OPTARG'" 1>&2
-+				exit 2
-+			fi
-+			mkdir -p "$MKFS_DEFAULT_CFGDIR" &&
-+			cp "$OPTARG" "$MKFS_DEFAULT_CFGFILE"
-+			status=$?
-+			if [ $status -eq 0 ]; then
-+				echo "Installed $OPTARG as $MKFS_DEFAULT_CFGFILE"
-+			else
-+				echo "xfs_admin: failed to install $MKFS_DEFAULT_CFGFILE" 1>&2
-+			fi
-+		fi
-+		exit $status
-+		;;
- 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG
- 		require_offline=1
- 		;;
+ 	/*
 -- 
 2.54.0
 
