@@ -1,36 +1,36 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BAD33F7A82;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B66993F9F20;
 	Tue, 26 May 2026 12:33:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779798801; cv=none; b=XJ8/90cSmSZ0yMpO1MmqHXMxSQkoc32VV/+G/Kt036z6tz8V0wnE+Kbea7xlCw0Caxs1IVr30cw1FiF8NDjIx7/GIXzGE+Sb8ZrMFHeyQIVyTXNw/HLxe7gjaeZZn3zUrHtVpZFFslMtN4P0jtvur5qLuueu25H6VNd05A2ASgM=
+	t=1779798802; cv=none; b=jl+njtFI0hCZRcyeJQvjzbO10nXALm1ZVRgpcX3SPRts5OvNaaWxZtzu+m44JdqN1QqPRsLixQ4KdFZXodIRf0bNq+Px6D4/HCRe6ElECbJrbQOOK7ICwWUzamK8JfkxBbr5/wE3L1G4OwWgGuCuqQjHqeoDUKkjWBunYEuD050=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779798801; c=relaxed/simple;
-	bh=lqZx1n1Q5AGAZrMchbnMcQzHA3rt1w75o3QGv84JgXE=;
+	s=arc-20240116; t=1779798802; c=relaxed/simple;
+	bh=AMtJttOvlD+gIPcPblslUbJK29b/IZh0VeF2aWb5xIg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GyA/XyV3nJ6JssaPJFb0qGU2dhfxoZSWcnDAkVdWqhQESfYGlL2V5Fj5x8OXYVqyvzDUB8snBXt/wMtPRnXBv7kyEFFz3uWGG7Eq3oPD9lEeL2UkAn+1DI+o7Q6rXVVPhNsHwLuAKes28bqnnYsvXnDxMDhFmP+ujLFTFOtIbyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=dviJ5/uZ; arc=none smtp.client-ip=54.92.39.34
+	 MIME-Version; b=rPQ0od6zsCE3V+VnLnfO0cbehmAh40bjP0+QTsvmQNIninq3hFLKtwwqAya3laL5ssKb+YQoewTidaAOVY+3Dh4UFCnIvGkgNem8XJ0tZxQYjntuceygFIQysddrjsPE/Gd4cznQVi3BgOAya1RBZiO+Ib+T2cqhHIBtlXpk+ls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=ObqPSM1R; arc=none smtp.client-ip=54.207.22.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="dviJ5/uZ"
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="ObqPSM1R"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1779798780;
-	bh=b2TGr66TxG71n4gVQ7lKB85drS4BhXt8ftql4mur/GY=;
+	s=onoh2408; t=1779798777;
+	bh=HnXnYYfJIh8r/AeHcKb5dZ88fCwf5GpkD4QQ0bkrv1I=;
 	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=dviJ5/uZP4Ki8jAp1o4hIeZ6ST9BGzZtF+tXDnIxOxl6vO56sGHFNbprHUM9UJy8Z
-	 vxyUMOlqdN/O6sTmcRJ/X8mIMv7Ca124+Rfxns7lrwnWJ9QYbFwHSCUUQaBuSdRbnm
-	 doGLkQScelQPijGlN8Mg+ln8PWvqRgIb/FXDxl5c=
-X-QQ-mid: esmtpsz20t1779798776t2bc0846a
-X-QQ-Originating-IP: zaGli83rFYizyqOhxiQabr+t9qK8uw9jBsbXKjpCEp0=
+	b=ObqPSM1RQgWyjNH8gXTY8RgTBPcBwHIBAIOWx/XLdH8UfacwNj0/c9EyAkRWlq0+O
+	 sOhC+7hoZb7FzG6d7BI/jtQETL7rut7Mz49qSAPbJ67bYX8I+KWGwwJr1+J/0GvWNO
+	 g22+YdsdjrV5JM+kEmoACrKWX/+6PI7ffaLjFdJs=
+X-QQ-mid: esmtpsz20t1779798772t338ea2d9
+X-QQ-Originating-IP: BbDABHiK42ls+9M8IONtC+hkA4O5rPBWod3d7MAMfL0=
 Received: from localhost.localdomain ( [123.114.60.34])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Tue, 26 May 2026 20:32:54 +0800 (CST)
+	id ; Tue, 26 May 2026 20:32:51 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 7825738485686643237
+X-BIZMAIL-ID: 17762609845750498593
 EX-QQ-RecipientCnt: 5
 From: Yingjie Gao <gaoyingjie@uniontech.com>
 To: linux-xfs@vger.kernel.org
@@ -38,9 +38,9 @@ Cc: cem@kernel.org,
 	djwong@kernel.org,
 	linux-kernel@vger.kernel.org,
 	Yingjie Gao <gaoyingjie@uniontech.com>
-Subject: [PATCH 2/2] xfs: fix rtgroup cleanup in CoW fork repair
-Date: Tue, 26 May 2026 20:32:43 +0800
-Message-Id: <20260526123243.1078867-3-gaoyingjie@uniontech.com>
+Subject: [PATCH 1/2] xfs: fix error returns in CoW fork repair
+Date: Tue, 26 May 2026 20:32:42 +0800
+Message-Id: <20260526123243.1078867-2-gaoyingjie@uniontech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20260526123243.1078867-1-gaoyingjie@uniontech.com>
 References: <20260526123243.1078867-1-gaoyingjie@uniontech.com>
@@ -53,58 +53,67 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
 Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
-X-QQ-XMAILINFO: OB2Lc9hvzYNzyoR9SmMv8TzFqu06dkn+dm18N0/hbnVg7zFwQViZVcTO
-	YZkXQWypx8Q+klOZKVRCUUGNgYNfEs+Kd0H3x7kArMJQNwjLRsUHCsH+oLQDf8/OuewTf1S
-	aMw+EwX3m/fc7ihgJ/T5u4b9TF813v9fijYAiFp9tURGis+mrN9kUwNUrjn4WVhcDiWO6QH
-	R7mwZskwcRmD7nJYwu13ge9k6GuIydismI8P06oS4XYbetSYZGY9na2OznkrtnM9x8SJCzw
-	PljxUiFhETIsODAvCeazw0q/35gnA++dNhTcEMpaFVCYmquNVXmIGiXK270xfiJN8U4ffBG
-	C1yCvIYZV0x31/Ttx1rIGe8wH9mZZoX2CNtWWmqrVB7wrD7f99oSIHMtobPqGGMjdUSD5h/
-	I5hiCToDQG8Qzqgi7kzHeNlCLWNqcNo9zdOjU9m3JzGjvCrBQK53R2CBt/VPmSnJVSA42VA
-	vaCcspCKTdFrX+i7AUgAXgscd0jqTbgXVhjw7FGAj5d4fJ16ber22BS5y8RokAtwaezJehZ
-	vMF9jy0jCy34tcY7o3ZY5pFFByfKDErEwOlJgfujdCseRCEo48B1kz7tCkwTQmqGddWmITc
-	QRmKIe4wXrpm2nzeoeVCsAIx7TP44tqbCk71lhHu2WyskYadDJzPs1jb8C2QNu8u+Al6VJZ
-	e+fNjyIpXLuYnpBCk6C4fGEQBkIhdcWpSeoYN45sKHdntjN6a2FJaJ6PygLoiSpWB9RXDA/
-	/65OIUzZ8grKe/QqMRkAMwGfZ2qTonwsMbpu3BAF6270UIV9laRex8zEVk6ZNLREn365t26
-	520UEjh29ss2pgv4Nu6IQLTuOAwg0PW7FtYev0P/PY3IBofQ9qdWWUpGsCeMd/g0MN2L3eb
-	Z8QPt+ql88QnLm8IBoCdbtMMaE3aRU7yYGpVXLvwLOWFKD5/sb4st4VcYWoLPj6E5zbr9Qc
-	h98jYUODLKpn/xA5BGnSpskY7GKHLC6wq+V8kXCuZoARnJl+278g8TmFZ+BmtbPDjihZLzJ
-	WsW0raOOWO81WeCmB5zitvszYoFUmqn3ooXgs+Y5SvJbEDX9C7ZpB/TSAzH2CyLro78yZ6V
-	QYjFXJ5bmQcK74fDLAtaJrZYEdtzS+k1HRpzESE7UvLtwb6rNjQWE6hvl/9V6KlOA==
-X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+X-QQ-XMAILINFO: MP8czXAw5bCi78MP0FzgvGucDLfW2E8fme+0kakIslmdEmgoSSd7tjbn
+	T2OMhfMGVIX+aQEKnBmtOR5ch2KJU8ipO3qN00EL8dH4j8441FV2imPCv3Iz1KVr6xU9kjn
+	eokjczKOB/UZQ8UI3Uv8Po6TpA16Q5MvqBrYi31ninJm7Za5rohZgw3Ur48MCo55mfjZx/I
+	uERfhiqYehQm5TnWj4uu7NX6NHhlv++ebUFFomSkT6Sc3vBjd4rLFgHQhDLrHB6qdH/Gq5x
+	HLZlBqYdhM/j7s9zs6LPSpwrxl6Blm74hwPccfbqtOCJcuo6MO04FAg/lr0ln6w2zLp13nS
+	SdnEPlclfpfKnUdM/jRSanXH/uxIs5U4RfxNF+40otBvaOL9UpSpXy5TOUYQkGudP2ypk8Z
+	GcxrbRagvMm/2EQJb7XmgMH/hHtUL954VPdhbDG/cSX7UWArJd065vb7KDrpwqeGcxVXGNk
+	rnj/Qqw5jiBF+xPT463KU/XVBVs/w0FNog0xd5dieKSRyBCmN0S+/OqCIeji9t0f68tYgNd
+	QaE470JNF7RY95cxaaarcUTsdbsUIDCUbahBSonhYgAB0x2wNxUmjuV0lOPjsXuQit75X8d
+	5pvTfhfSV0hp+VyAuVqSWxISDV9AKIPEcDdGo9Udna67qs+J8N0rdI1YbPtUcuEm6QbWika
+	p4bN+6UMEw6zoEicwBlfeqzA5VMXaAFCnjjXkeOfgCo4nrRLruNZwHSSyNL69VADpuyl6F3
+	3IYVtuDQCkNoz8SO8rKTUZJNyOEJ3+8neZ0fXQ7ickotfwCQeO8pEyc7cP8G0CciNA8iG4J
+	HZjiRbpFO9oRvuAiBIg6yJZT7EBZKM8EFI97frT5/NhAU26cxqBa8X7ytt1mCv6R+qf3jcw
+	Gl14udVzh2/PB2QQQZLbyxX30rBSgy/KxuRB1WDzUsI0CvksBfvAJsUd4JjsFJZQatKM2TL
+	bVT6uIyxvy7IqRbcaJ3qKt2D0YyHBEIBl7cC1YSrHhCmwbdFwWS0j4gIY6twull3jHXCswn
+	03YS+85Dq7LuI9WsUtzl5coH59z4/LzxqLXBmbvgEmbDjjlAu50PryzRxbvINE4WExh4mry
+	fP7wghaTM5wtDzEjoeZpP9b8/99CkZ0qA==
+X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
 X-QQ-RECHKSPAM: 0
 
-The realtime CoW fork repair scan initializes scrub rtgroup state
-before it checks whether the whole mapping should be rebuilt.  That
-state includes realtime btree cursors, rtgroup locks, and an extra
-sr->rtg reference.
+The non-realtime CoW fork repair scan returns success after the
+common cleanup labels, even if the AG setup, btree queries, or bitmap
+updates failed.  This can make online repair continue with an
+incomplete bad-file-offset bitmap instead of stopping at the original
+error.
 
-If marking the full mapping fails in the force-rebuild path, the code
-jumps directly to out_rtg.  That only drops the local rtgroup reference
-and skips the scrub rtgroup cleanup, leaving the cursors, lock, and
-sr->rtg reference behind.
+The force-rebuild path has the opposite cleanup problem: if marking
+the entire mapping fails, it returns directly and skips the scrub AG
+context and perag reference cleanup.
 
-Jump to out_sr instead so this error path matches the other failures
-after xrep_rtgroup_init().
+Send force-rebuild failures through the existing cleanup label and
+return the saved error from the function.  Successful scans still
+return zero.
 
-Fixes: fd97fe111208 ("xfs: fix CoW forks for realtime files")
+Fixes: dbbdbd008632 ("xfs: repair problems in CoW forks")
 Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
 ---
- fs/xfs/scrub/cow_repair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/cow_repair.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
-index bc3838bac71a..bff25cf74e29 100644
+index bffc4666ce60..bc3838bac71a 100644
 --- a/fs/xfs/scrub/cow_repair.c
 +++ b/fs/xfs/scrub/cow_repair.c
-@@ -389,7 +389,7 @@ xrep_cow_find_bad_rt(
+@@ -304,14 +304,14 @@ xrep_cow_find_bad(
  		error = xrep_cow_mark_file_range(xc, xc->irec.br_startblock,
  				xc->irec.br_blockcount);
  		if (error)
--			goto out_rtg;
-+			goto out_sr;
+-			return error;
++			goto out_sa;
  	}
  
- out_sr:
+ out_sa:
+ 	xchk_ag_free(sc, &sc->sa);
+ out_pag:
+ 	xfs_perag_put(pag);
+-	return 0;
++	return error;
+ }
+ 
+ /*
 -- 
 2.20.1
 
