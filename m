@@ -1,72 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A64238C2A9
-	for <linux-xfs@vger.kernel.org>; Tue, 26 May 2026 09:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4149A3D9684;
+	Tue, 26 May 2026 09:59:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779789417; cv=none; b=iXUBo9hpUn6kb3O53f5/vmKvR4Gg1zLl0JkrXH7441mDJ7lFYyDzguw6JkcqsnFk5R2wEmJrl8tI+wow1+SVWzXp68XPtCaC4KnHbhK5/4JankL6r5SS98XcA7Nw2lvKVW04ww8yDWn9KWPcVBta/rKsPO/O+o+aG0FmAH10kFA=
+	t=1779789555; cv=none; b=E88tg1Zj8Qzg3CGMlnK5uY1hv+SyOlybhzpf5kgsM7ezZmSqgrfnvkCGCZf5buS7obhI54JTyeCxSObzr6r6nGbgH/e/4koNuiUgXd9PorqVDieoU5eewtMNFF9YYpq/WaNulobS+/3XeuddObTYUCKJ0zkxEO1C+n7xCyLW4XI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779789417; c=relaxed/simple;
-	bh=6DNiYusiPgUa0tGC4zzIjpsnvgiLJpuYXPSGucfgApI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=a8q9kRAjmcWDuDTF9edUxgSC4jDQoJ2PXCtup2vNqkfdL5ZITm23HgwYPUXY7iJCFtGOztXvyxO69+ow6tQLibYFp5J6QTH5SIxyLs8edbm6Y0A7NLlxEKDffa0db9+JZNOSRWBfp8VkbH1jlcOeB003UWKcd+CfRRz3Ol2X0Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SpK55+nQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779789555; c=relaxed/simple;
+	bh=Zw1TSSK6g04CBf2TGQwjnWLwuDpehO8X1fD61DHbPOk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HV5c8xi9XJcX9NYD6psZ1NOeYyEaiB3EqPBOR36UVBz0qBkgnmfYzBAH9FBw1g2alBAo+ErEa4uwbenhN87hMZNHc0D1VsG+09uBzMJzbOMrFmscZGDMje8y+K5hFrPrdzxS+z52GE+1P3eflSvFu5vwsbdBEj//fYMt0McFscE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=njhfWZRX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SpK55+nQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14B671F000E9;
-	Tue, 26 May 2026 09:56:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="njhfWZRX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F07DC1F000E9;
+	Tue, 26 May 2026 09:59:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779789416;
-	bh=eUVQDjdOrWHl4twJJN9eUCBtZQNR8sD8UZZUNjkW89Q=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=SpK55+nQww5P4qVrLugMgCq2PcXGzuQW6uv+gxoQ1lf8zqFjYTMznZZHwqD83RcFw
-	 /INfLbVBOV0kprKEqB5UI4zmYTFIJaPz+sEoq2np5AcAyyxQkFCX4+hIiLMpRSJZJB
-	 y+uwr2ZFxbhYaCaY/FdNZ7d3UV6WYYytLLcZqHdZwOVmMe1C0E54gpvB4rCNzoi+/b
-	 YM5FyeRBjRdLDmqfgorMdyM7BrO72tJjie+JJFv7tgqyjGvbr8obqoCjh4t3f6l9BP
-	 h2MsriqWzvsEjY/4G0zDlYyDyU0VnqgwTQEoUqVqXMPfloOLwBwF4WX3vC4fmcpBC+
-	 Kehqy/Ei9D0+Q==
+	s=k20260515; t=1779789554;
+	bh=ZO3jtRwjNzTBIPLXstW+scdVYEtP74LhQLhGQHd+Xf8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=njhfWZRXyBPXi50Q8ofxeg1y0jt6sv+/inC6lXvLZJj/dEJ+P4t3K8XBDMLsDxxYX
+	 KFNYISM+XavX4XLzM477G55cBfDzeGl5tVRVALQrDZVLOIqa8qqeQIFca/YKMs+jgJ
+	 n+X/jsdz0G7n87o8rRq1M4nNCFDKYp9LIY77DApbrVvmMtlYScC08xnQ+q67yCQTDc
+	 xCwHJkbGNUTZDA3eaZeqvlAIK2eRmSe988nEEENzoFOaA1MApZIUvZwBCuniZ/AYzJ
+	 LsgV0YxHFZ46+HkTsc5W+XManJ1qmOUtlSU7FnbSt3KfHMO/PyETugaPnMFob6mgU3
+	 DVL688YbyTnBg==
+Date: Tue, 26 May 2026 11:59:10 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, Dave Chinner <dgc@kernel.org>, 
- linux-xfs@vger.kernel.org
-In-Reply-To: <20260518060209.502179-2-hch@lst.de>
-References: <20260518060209.502179-1-hch@lst.de>
- <20260518060209.502179-2-hch@lst.de>
-Subject: Re: [PATCH] xfs: fix a buffer lookup against removal race
-Message-Id: <177978941479.58275.15523992116589847341.b4-ty@kernel.org>
-Date: Tue, 26 May 2026 11:56:54 +0200
+To: Dai Ngo <dai.ngo@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: fix use of uninitialized imap in
+ xfs_fs_map_blocks error path
+Message-ID: <ahVu58wxfoAbL2oS@nidhogg.toxiclabs.cc>
+References: <20260520003503.2399326-1-dai.ngo@oracle.com>
+ <20260520003503.2399326-2-dai.ngo@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260520003503.2399326-2-dai.ngo@oracle.com>
 
-On Mon, 18 May 2026 08:02:05 +0200, Christoph Hellwig wrote:
-> When a buffer is freed either by LRU eviction or because it is unset,
-> the lockref is marked as dead instantly, which prevents the buffer from
-> being used after finding it in the buffer hash in xfs_buf_lookup and
-> xfs_buf_find_insert.  But the latter will then not add the new buffer to
-> the hash because it already found an existing buffer.
+On Tue, May 19, 2026 at 05:32:58PM -0700, Dai Ngo wrote:
+> xfs_fs_map_blocks() acquires the data map lock and then calls
+> xfs_bmapi_read(). If xfs_bmapi_read() fails, the function currently
+> still falls through to xfs_bmbt_to_iomap(), which consumes an
+> uninitialized imap record and may return invalid data to the caller.
 > 
-> Fix this using in two places:  Remove the buffer from the hash before
-> marking the lockref dead so that that no buffer with a dead lockref can
-> be found in the hash, but if we find one in xfs_buf_find_insert due to
-> store reordering, handle this case correctly instead of returning an
-> unhashed buffer.
+> Fix this by releasing the data map lock and returning immediately when
+> xfs_bmapi_read() reports an error. This prevents xfs_bmbt_to_iomap()
+> from being called with an uninitialized xfs_bmbt_irec.
 > 
-> [...]
+> Fixes: 527851124d10f ("xfs: implement pNFS export operations")
+> Signed-off-by: Dai Ngo <dai.ngo@oracle.com>
+> ---
 
-Applied to for-next, thanks!
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-[1/1] xfs: fix a buffer lookup against removal race
-      commit: c69439a891ccb37ede5d68539636337c6bd92fab
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
-
+>  fs/xfs/xfs_pnfs.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index 221e55887a2a..b792e066b403 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -174,12 +174,15 @@ xfs_fs_map_blocks(
+>  	lock_flags = xfs_ilock_data_map_shared(ip);
+>  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+>  				&imap, &nimaps, bmapi_flags);
+> +	if (error) {
+> +		xfs_iunlock(ip, lock_flags);
+> +		goto out_unlock;
+> +	}
+>  	seq = xfs_iomap_inode_sequence(ip, 0);
+>  
+>  	ASSERT(!nimaps || imap.br_startblock != DELAYSTARTBLOCK);
+>  
+> -	if (!error && write &&
+> -	    (!nimaps || imap.br_startblock == HOLESTARTBLOCK)) {
+> +	if (write && (!nimaps || imap.br_startblock == HOLESTARTBLOCK)) {
+>  		if (offset + length > XFS_ISIZE(ip))
+>  			end_fsb = xfs_iomap_eof_align_last_fsb(ip, end_fsb);
+>  		else if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
+> -- 
+> 2.47.3
+> 
+> 
