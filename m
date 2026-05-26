@@ -1,66 +1,72 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ECC53B95F8;
-	Tue, 26 May 2026 06:28:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A64238C2A9
+	for <linux-xfs@vger.kernel.org>; Tue, 26 May 2026 09:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779776906; cv=none; b=gcvN9g7lPn+gy7iJSFwdebaiD+NycUYGh5+JG5zt36uvS6J92dczK0DyXEbLXyKEPcFCHCQI5nJS4zKmC9B2IPULLWpqFS1Hm/xcOMxkQ2oNOdd1GGOJWCmRG49OnzEbmCDjUT477PZgel8Q5wnP1RYSzuP+4fhR9fpDnqe2b0E=
+	t=1779789417; cv=none; b=iXUBo9hpUn6kb3O53f5/vmKvR4Gg1zLl0JkrXH7441mDJ7lFYyDzguw6JkcqsnFk5R2wEmJrl8tI+wow1+SVWzXp68XPtCaC4KnHbhK5/4JankL6r5SS98XcA7Nw2lvKVW04ww8yDWn9KWPcVBta/rKsPO/O+o+aG0FmAH10kFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779776906; c=relaxed/simple;
-	bh=eJ7jRwehY73ImatYjxu/aEAlJNNAbkN9PtVeqywRRB4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k4eoE/OHmeIiOQUQkrh7HThnd4dNXNgF4yPeaexRiF063G7YWFnEAjf95UUeuyXS790jAFhI6vx4Rpo0m/BlaTdWaWCnNj+mcuBiA8xxBbIemIUjEPEw0TovVq7i0/vDUPmy2hWs4/ZcJs3A3UE/INN48xV53gfTwbC7oT1cIN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=44e8K56X; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1779789417; c=relaxed/simple;
+	bh=6DNiYusiPgUa0tGC4zzIjpsnvgiLJpuYXPSGucfgApI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=a8q9kRAjmcWDuDTF9edUxgSC4jDQoJ2PXCtup2vNqkfdL5ZITm23HgwYPUXY7iJCFtGOztXvyxO69+ow6tQLibYFp5J6QTH5SIxyLs8edbm6Y0A7NLlxEKDffa0db9+JZNOSRWBfp8VkbH1jlcOeB003UWKcd+CfRRz3Ol2X0Kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SpK55+nQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="44e8K56X"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=xNnhllXN4PH1PswmwIq+byFVY0ywT1w/V53Mn+v+WME=; b=44e8K56XCbSzl9XMYBQBY825Vr
-	Rg9NFcfIL43/WxtRvCAoufWkGF9IWtVVWufHwA58SFNZg0svF8KrVO7Gkr0fN2rM5TqPjR84UWmHP
-	wdVWRfvZ74ad4XNAMQ1/VYb8ov+VUR0SG8nQN1rVODEgntDLHaXe+acrKQhTdIu5jfIDh2+4uxxe6
-	9b665vhyJMBSq0kT8GNuFt8cjTqoqAUWzUe1++evbfOTntPBLRSTAbjKrIMM/i639htOtr4Ett6fQ
-	cvHDmv2Q10owx/Qc2r6fFkasj9dV2kuuvlfBe6KPy0Kn6zxs7lCKDP6+otJcLs7rkx2zakdc6X8+D
-	f6oWgP1w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wRlH4-00000001ANo-3qjV;
-	Tue, 26 May 2026 06:28:22 +0000
-Date: Mon, 25 May 2026 23:28:22 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Anand Jain <anajain.sg@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Anand Jain <asj@kernel.org>,
-	fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	amir73il@gmail.com, zlang@redhat.com
-Subject: Re: [PATCH v5 03/10] fstests: add test for inotify isolation on
- cloned devices
-Message-ID: <ahU9hpwrXyZChw9X@infradead.org>
-References: <cover.1779367627.git.asj@kernel.org>
- <1c60be06ce79778404079c8b1c1d2e09f64cb38e.1779367627.git.asj@kernel.org>
- <ahP1tCc81ascjwxJ@infradead.org>
- <edadc872-5796-4cff-934b-cee66fde79d2@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SpK55+nQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14B671F000E9;
+	Tue, 26 May 2026 09:56:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779789416;
+	bh=eUVQDjdOrWHl4twJJN9eUCBtZQNR8sD8UZZUNjkW89Q=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=SpK55+nQww5P4qVrLugMgCq2PcXGzuQW6uv+gxoQ1lf8zqFjYTMznZZHwqD83RcFw
+	 /INfLbVBOV0kprKEqB5UI4zmYTFIJaPz+sEoq2np5AcAyyxQkFCX4+hIiLMpRSJZJB
+	 y+uwr2ZFxbhYaCaY/FdNZ7d3UV6WYYytLLcZqHdZwOVmMe1C0E54gpvB4rCNzoi+/b
+	 YM5FyeRBjRdLDmqfgorMdyM7BrO72tJjie+JJFv7tgqyjGvbr8obqoCjh4t3f6l9BP
+	 h2MsriqWzvsEjY/4G0zDlYyDyU0VnqgwTQEoUqVqXMPfloOLwBwF4WX3vC4fmcpBC+
+	 Kehqy/Ei9D0+Q==
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, Dave Chinner <dgc@kernel.org>, 
+ linux-xfs@vger.kernel.org
+In-Reply-To: <20260518060209.502179-2-hch@lst.de>
+References: <20260518060209.502179-1-hch@lst.de>
+ <20260518060209.502179-2-hch@lst.de>
+Subject: Re: [PATCH] xfs: fix a buffer lookup against removal race
+Message-Id: <177978941479.58275.15523992116589847341.b4-ty@kernel.org>
+Date: Tue, 26 May 2026 11:56:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <edadc872-5796-4cff-934b-cee66fde79d2@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Mon, May 25, 2026 at 04:35:58PM +0800, Anand Jain wrote:
-> > Also any reason to rely on the obsolete inotify instead of fsnotify?
+On Mon, 18 May 2026 08:02:05 +0200, Christoph Hellwig wrote:
+> When a buffer is freed either by LRU eviction or because it is unset,
+> the lockref is marked as dead instantly, which prevents the buffer from
+> being used after finding it in the buffer hash in xfs_buf_lookup and
+> xfs_buf_find_insert.  But the latter will then not add the new buffer to
+> the hash because it already found an existing buffer.
 > 
-> fsnotify is exercised in patch 4/10.
-> IMO, exercising inotify ensures we don't break legacy stuff.
+> Fix this using in two places:  Remove the buffer from the hash before
+> marking the lockref dead so that that no buffer with a dead lockref can
+> be found in the hash, but if we find one in xfs_buf_find_insert due to
+> store reordering, handle this case correctly instead of returning an
+> unhashed buffer.
+> 
+> [...]
 
-fanotity and inotify use exactly the same backends, so I'm not sure
-why testing both matters.  Not that I care very strongly, I'm just a
-bit confused.
+Applied to for-next, thanks!
+
+[1/1] xfs: fix a buffer lookup against removal race
+      commit: c69439a891ccb37ede5d68539636337c6bd92fab
+
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
