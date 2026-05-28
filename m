@@ -1,78 +1,90 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7553E928C;
-	Thu, 28 May 2026 12:20:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB033EDAAD
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 12:29:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779970815; cv=none; b=Ehbu7MgQu/jCeez/CHTIotCxYYB22h3Pl8P9fVZe8mE/jQSUTaxI1EYC0JCOi29NFO+e3LWkQKix7TkbR/PkfN5MdqlJCjmk+CUV9XnYKU9LyT4TXzGFn8zJKX2NMuUhrkXWVIs7MQZdY+AfP/k9VPwdVEqEETTzQ14JqtVJzi0=
+	t=1779971352; cv=none; b=WpybHqcCiPhbbV7H/GFQTTGjSck4FeOkRYDiEA7hNhEYzPV7YeAaciMRKTwttGHohEHGkq0juR1GCa6/lyrNFljX2ju2J17koZCQsu7tRFqXgkxKXT8Xk8AlQYZOCkOp9xcuRgWhOWZBUCWeovKJkX8C2pYcpNj9Ic/Owpbhr9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779970815; c=relaxed/simple;
-	bh=KBjHBm6+FMUZTNQGaz9411xTcFVD7lUMw7HDcOvZjE8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OB8iS+hHkOy0+GX1oEQrnoOVssuQUx9v3ZO8YRyfD8EAdFdfcuRSKkb6EVTFLsdsH1coI0adShYIJ2vs4eRgU+nWA/1Rr0Fi1DtRIwXSedL27n7lYA2L/SNiqWPLFvPzLyZGvkRiuoaitqMr8rmFmoGUbP4+Rxrvz9zw0TCQ/R8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y7HGiqwA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779971352; c=relaxed/simple;
+	bh=dN4QtAdl8dPE5Pb5U6TJ84l/hQBItVNZNJrweGSQRu4=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=D0Dke1i2qtUjjTqttB9WaJWiqT3RFhicG0lrQ8g6IYzbgeUxeU8PK5vZ+OsrCt1zkRkr/J6g2htjIjrI0olFlJnNFWj6qtDXop+FCzgi4tAE9FMwTlSUtxlG9umQCc4Rb4CqZ5TBRurNwlFaoUPjdFpowlScRuKDlxFf85oGdzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gAuYOICt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y7HGiqwA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9937F1F00A3A;
-	Thu, 28 May 2026 12:20:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gAuYOICt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0F031F00A3A
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 12:29:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779970814;
-	bh=VKwY9ioZhVoPUqtTyA0BwlFjGKc+POdWjVXqGmhMxaQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Y7HGiqwAUe1nf03HOJRK6Iaw755bslZammK1+0efrRGASVM6Ws69wszEvqTmNRgm8
-	 gnzzpdYOH706bywHqbKXllSClMMYk+jGuvHGtklya9XlCeVKCLEzxPEF5//Ru4tSZh
-	 SQrQd3bOLYpqaWM/X3vsFncLmhfGWnK0R3q2LtIF/Klss5lyJ4Zw5osf4I3wOSeaSH
-	 qLlSc+y4JQFjgXhLOOtkxCZD7efPEhYbMSaPhkdOpo1L2mhlKOx4i+ml9UfuLbNFdh
-	 5eqKj2tWGIQ18hH0H+u3gk8kdqHBaj53qmnIgqfoIMY9CJZi7W+nAkNjMxcj8U4Yrd
-	 xS5kNLPeHFY/Q==
-Date: Thu, 28 May 2026 14:20:08 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, 
-	Andrey Albershteyn <aalbersh@redhat.com>, Andrey Albershteyn <aalbersh@kernel.org>, 
-	linux-xfs@vger.kernel.org, fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	ebiggers@kernel.org, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	djwong@kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v10 00/22] fs-verity support for XFS with post EOF merkle
- tree
-Message-ID: <20260528-offiziell-luftleer-misswirtschaft-3503bda2ad70@brauner>
-References: <20260520123722.405752-1-aalbersh@kernel.org>
- <20260521090705.GA14254@lst.de>
- <gcw7zcg6p4s2egpufwizfig72g6ren7jfmuz5mqskkpb7xepww@e3v35j7bk7dc>
- <ag7uW7KQ5mVyCGEv@nidhogg.toxiclabs.cc>
- <20260522-unbehagen-baumethode-erlesen-811a4065eeac@brauner>
- <20260522120757.GA21041@lst.de>
- <ahVzkf8JoKP-kSC2@nidhogg.toxiclabs.cc>
+	s=k20260515; t=1779971351;
+	bh=dCTEehwApwSYpfEm2pCSmjE3sw/wIAeEDfBH8KsByUU=;
+	h=Date:From:To:Subject;
+	b=gAuYOICt/NJkvJT1lIBIrA1Y77HHdYXFNFgz+l1f6I+KKejJ6gsUWgp0wrKQpjM95
+	 11lA2HpaLSCY9n4JhI9sQB5GD/26LwYk4MUFCElbZBvk6czrY0XAsDi6LVatV+rgx7
+	 ahM1oBq0c5pZRSrGSAm5V9UJz5PXEkMwT78ySww/UPXR6bJoH7TEDYFrf6/svYAorr
+	 74Om7uW/AxgFX/nvbIzpb8nhKrY+Q+G0DC3gWgBwJyYGa+fVetUEySQFKCaH1dyWRE
+	 irr8s/9ynp9/mHvmm3AYGRhRQW+wjbldpS/bR2pUy2aiDRd4hinoE7IpVuMxwmqrTL
+	 G0fY3fla0/NzA==
+Date: Thu, 28 May 2026 14:29:08 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to c1b17bee804a
+Message-ID: <ahg08ifd5q_jOkCL@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ahVzkf8JoKP-kSC2@nidhogg.toxiclabs.cc>
 
-On Tue, May 26, 2026 at 12:19:43PM +0200, Carlos Maiolino wrote:
-> On Fri, May 22, 2026 at 02:07:57PM +0200, Christoph Hellwig wrote:
-> > On Fri, May 22, 2026 at 12:03:20PM +0200, Christian Brauner wrote:
-> > > > I was expecting this to come through xfs tree too if Eric and Christian
-> > > > agree.
-> > > 
-> > > You may take it through the xfs tree if there are no conflicts with
-> > > vfs-7.2.iomap. If there are I want to add the iomap changes into
-> > > vfs-7.2.iomap that you can pull in.
-> > 
-> > Merging the iomap bits through the iomap branch might make sense, given
-> > that iomap usually tends to see quite a bit of activity.
-> > 
-> 
-> That sounds good to me. If you want to go ahead and pull in the iomap
-> bits, do so, and give me a heads up when you do it so I'll pull your
-> branch locally.
 
-Great, can the series please be resent based on current vfs-7.2.iomap
-then please? Because the iomap changes in this series don't apply
-cleanly on vfs-7.2.iomap so we already have merge conflicts...
+Hi folks,
+
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+c1b17bee804a xfs: Remove mention of PageWriteback
+
+9 new commits:
+
+Christoph Hellwig (3):
+      [32da0ae8defd] xfs: drop the RTG reference later in xfs_ioc_rtgroup_geometry
+      [2c5bcddde423] xfs: factor rtgroup geom write pointer reporting into a helper
+      [c53f9b627a6c] xfs: abort mount if xfs_fs_reserve_ag_blocks fails
+
+Dai Ngo (2):
+      [ed47e798adcc] xfs: fix use of uninitialized imap in xfs_fs_map_blocks error path
+      [92ad95ab8dc7] xfs: fix overlapping extents returned for pNFS LAYOUTGET
+
+Hans Holmberg (1):
+      [6f4d98bb8b4d] xfs: handle racing deletions in xfs_zone_gc_iter_irec
+
+Matthew Wilcox (Oracle) (1):
+      [c1b17bee804a] xfs: Remove mention of PageWriteback
+
+Yingjie Gao (2):
+      [f92659c50b76] xfs: fix error returns in CoW fork repair
+      [c734e8bf321d] xfs: fix rtgroup cleanup in CoW fork repair
+
+Code Diffstat:
+
+ fs/xfs/scrub/cow_repair.c | 12 +++---------
+ fs/xfs/xfs_ioctl.c        | 47 +++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_mount.c        |  7 +++++--
+ fs/xfs/xfs_pnfs.c         | 11 +++++++----
+ fs/xfs/xfs_reflink.c      | 14 +++++++-------
+ fs/xfs/xfs_zone_gc.c      |  2 +-
+ 6 files changed, 50 insertions(+), 43 deletions(-)
