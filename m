@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C7A8313E2B;
-	Thu, 28 May 2026 04:06:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B56E313E2B;
+	Thu, 28 May 2026 04:06:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779941192; cv=none; b=jE8chQJrPN4rbOtVuELqV5/93n4Hemi2MbjcM/DOmeGYFBfZjgyZIWVzPz35lsoElktYJeq2HZODCcZuOo4aPs67lAd9Hsj/JPTq0ynKcvBgETNF735FwbfGsXfd3k7puJDHX/VJUQ5ocKbR3OKXrqX3A+JaDFkbhU8CzsPmHn4=
+	t=1779941194; cv=none; b=NntLdzcVCaIDSpZkuk68WICkjzraSViDfa4NVJpkjVLv3y9944zIsXisXf12tcDCO4GH7joTFY7xCMuXJCRs0hIMYXGb0E4LGN8jZ5zqTDl5mh0/RjPuwtmhvqM20k4lyLzdBGbaAnWr+76RGLFYWgMwU8k1qBV3v6pc16xiiYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779941192; c=relaxed/simple;
-	bh=dwf1Frz49BcW8zHTGUJ7/c5ax//HXgsZhx/8B4vFU80=;
+	s=arc-20240116; t=1779941194; c=relaxed/simple;
+	bh=Vv7hsbI3vJyMGJlds7EjtZBqWR0b+qfx8M3pi8lwAjQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ut4tM+7uiq3LwV1ZKV0IqI6b1NB0OBwfqYSHhLVlxIpGOjPq+GqkBRV7YwI2zgtRLs+rFtrCE65N1axap3Pui+CT/5HumxBOISyQC/Kja4QC+qEtJAJbEDpAHfTkRfd/GATyXv41wOBPWG4Tfr4syPPOBTKVpZ7/Vil1DmIKrTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iLjlDQz+; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Jp3JJoZUj+4DTMPt8Qqnzq+JCWO+L83YzWnsUPGvW8ggDTwjFgHWbiDDaIWsARibuhbGow124Kpg3ZNYroxujQxexg5N0ZJO/B6Bq2hOeRF03NsGBs8GTNO8cU+d82MzTch+7v35CM8+/ll26kSul6Dymi7T6LQM/wUy/8EfyqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nZexiFWL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iLjlDQz+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FE521F00A3A;
-	Thu, 28 May 2026 04:06:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nZexiFWL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B506E1F000E9;
+	Thu, 28 May 2026 04:06:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779941191;
-	bh=cA76/PYw1pPj8n2hc9fHEPPWqFsIP0EVym6yQnBFCxU=;
+	s=k20260515; t=1779941193;
+	bh=7n0Nsl40Fw8pzsga6mqykSNEctGK2l6RNst2Rut9Pjo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iLjlDQz+bwVuH+CLTRgxwCKHxBT6/CSFYZy5OGndfsskO37Nsv468yumlcUrD8ahQ
-	 JEkii97cPaPADyAY6OCOXP/SUNJYqWd9c8rlwHwxlRLbGwItizEw+nODpw4zYV7ctn
-	 RSD4m/k5gy5el5lTSWbFKgd4Cl5ABdpaw6VGtzyM5l1N2L7reBv4R7/MdrmI6yyRbK
-	 8dthUojsqc1ueAFjThviKUdCRtEKynycQbUiJBBzAcTWD4pfcAJM/6i1Y97s0nvkjd
-	 n2/DwxZLcqX65h39sBadH/ebny2QFN7y/kSuVmJryQ7I2C4xRc7zYod60hSrSDWcAV
-	 6HoR2T3wP6rRg==
+	b=nZexiFWLnDTo2Fh7TyZ/Q0NPjoqk4hrd3g2PYPWoFiN/0weGUYii5ltA+VtV6aKWO
+	 IQeAuHmU2kKV2mpc/da8GWjaJN8y1QQUrfKt0GaqKfChHvND7fkX3p+8Tbyx+8wbLQ
+	 ettTJI6/63vCgDjDTcy0VkDwlN/F5K3rfyQuM2hHZSWmfx/pNWKpWZB5Dv6fcvWR4d
+	 CWJfOD8NjLPvRT86kM9mg4Bg6zD06BrRhTtnlGHinhvyjhoiZARGmv4UlqSA6D56t1
+	 8K0utVSsjoSJygLq+5e5ZJ6pIB+tJkKaaY1XmT+Ak3dabWZb0mIzDDosofZdaTaafw
+	 Mm6dEs1rt7eCQ==
 From: Anand Jain <asj@kernel.org>
 To: fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org,
@@ -34,9 +34,9 @@ Cc: linux-btrfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net,
 	zlang@redhat.com,
 	hch@infradead.org
-Subject: [PATCH v6 09/11] fstests: verify exportfs file handles on cloned filesystems
-Date: Thu, 28 May 2026 12:05:40 +0800
-Message-ID: <3d74747ec4149c9166ee9db301b8e4533f822085.1779939330.git.asj@kernel.org>
+Subject: [PATCH v6 10/11] fstests: add _change_metadata_uuid helper
+Date: Thu, 28 May 2026 12:05:41 +0800
+Message-ID: <c906338d34767c8f244171e0cf87558c19cdeab5.1779939330.git.asj@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1779939330.git.asj@kernel.org>
 References: <cover.1779939330.git.asj@kernel.org>
@@ -48,112 +48,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Ensure that exportfs can correctly decode file handles on a cloned
-filesystem across a mount cycle, by file handles generated on a
-cloned device remain valid after mount cycle.
+_change_metadata_uuid changes the UUID of the golden filesystem before it
+is cloned.
 
 Signed-off-by: Anand Jain <asj@kernel.org>
 ---
- tests/generic/805     | 80 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/805.out |  2 ++
- 2 files changed, 82 insertions(+)
- create mode 100644 tests/generic/805
- create mode 100644 tests/generic/805.out
+ common/rc | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/tests/generic/805 b/tests/generic/805
-new file mode 100644
-index 000000000000..5827eee039df
---- /dev/null
-+++ b/tests/generic/805
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-+#
-+# FS QA Test No. 805
-+# Verify that file handles encoded on a cloned filesystem remain valid and
-+# resolvable via open_by_handle across a mount cycle and mount order swap.
-+
-+. ./common/preamble
-+
-+_begin_fstest auto quick exportfs clone
-+
-+_require_test
-+_require_block_device $TEST_DEV
-+_require_exportfs
-+_require_loop
-+_require_test_program "open_by_handle"
-+
-+_cleanup()
+diff --git a/common/rc b/common/rc
+index 5446552aed92..79be51e4da31 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1537,6 +1537,29 @@ _scratch_resvblks()
+ 	esac
+ }
+ 
++# Change the metadata UUID of the given device to a newly generated one.
++# Args:
++#   $1: Block device path to modify.
++_change_metadata_uuid()
 +{
-+	cd /
-+	rm -r -f $tmp.*
-+	_unmount $mnt1 2>/dev/null
-+	_unmount $mnt2 2>/dev/null
-+	_loop_image_destroy "${devs[@]}" 2> /dev/null
++	local temp_mnt=$TEST_DIR/${seq}_mnt
++	local dev=$1
++
++	case $FSTYP in
++	xfs)
++		_require_command "$XFS_ADMIN_PROG" "xfs_admin"
++		$XFS_ADMIN_PROG -U generate $dev >> $seqres.full
++		;;
++	btrfs)
++		_require_command "$BTRFS_TUNE_PROG" "btrfstune"
++		$BTRFS_TUNE_PROG -m $dev
++		;;
++	*)
++		_notrun "Require filesystem with metadata_uuid feature"
++		;;
++	esac
 +}
 +
-+# Create test dir and test files, encode file handles and store to tmp file
-+create_test_files()
-+{
-+	rm -rf $testdir
-+	mkdir -p $testdir
-+	$here/src/open_by_handle -cwp -o $tmp.handles_file $testdir $NUMFILES
-+}
-+
-+# Attempt to read and decode the saved file handles on the targeted mount point.
-+test_file_handles()
-+{
-+	local opt=$1
-+	local when=$2
-+
-+	echo test_file_handles after $when
-+	$here/src/open_by_handle $opt -i $tmp.handles_file $mnt2 $NUMFILES
-+}
-+
-+# Setup base loop device and its clone
-+devs=()
-+_loop_image_create_clone devs
-+mkdir -p $TEST_DIR/$seq
-+mnt1=$TEST_DIR/$seq/mnt1
-+mnt2=$TEST_DIR/$seq/mnt2
-+mkdir -p $mnt1
-+mkdir -p $mnt2
-+
-+# Mount both identical UUID filesystems simultaneously
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+
-+NUMFILES=1
-+testdir=$mnt2/testdir
-+
-+# Decode file handles of files/dir after cycle mount
-+create_test_files
-+
-+# Cycle mounts and reverse initialization sequence to check if
-+# file handle lookups are okay
-+_unmount $mnt1
-+_unmount $mnt2
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+
-+# Verify file handles can still be resolved post-mount-cycle
-+test_file_handles -rp "cycle mount"
-+
-+status=0
-+exit
-diff --git a/tests/generic/805.out b/tests/generic/805.out
-new file mode 100644
-index 000000000000..29b11ec77ffb
---- /dev/null
-+++ b/tests/generic/805.out
-@@ -0,0 +1,2 @@
-+QA output created by 805
-+test_file_handles after cycle mount
+ # Create a small loop image, run an optional tuning function ($2) on it,
+ # clone it, and attach both to loop devices, returned in ($1).
+ # Args:
 -- 
 2.43.0
 
