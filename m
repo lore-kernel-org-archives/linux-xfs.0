@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0544B30C63B
-	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 04:57:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18FDE173
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:00:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779944258; cv=none; b=YUGV2MJoSWHryIWbPAB4X+8Ok4ZKvmcCYmE7yHV0wKmi/4vdotMbDHouud2jFk0DUip9VD9dkNa2Mc2oG5l/OPE1pYvRchBl2e2ZlXh3S1foQUFqFks+WoSlpaQChwKWdWph7TZ88xju60FSCgTQN399SjHj/DcSzqqpj9mNEhw=
+	t=1779944459; cv=none; b=aI70vR3BIbrzo4EzXuAr9RXycFyDrXm6Vl8mwHtQqExbjyBDNSwyfdhvEPURGzNow4itqRMK8LZBH89tSNxq3cnbO1evT6m7djUuVJjGyjYfGN9LTTx/+9QU6XPmSFXod3oSxOGXzqTjtqfdzVltThJgBPVeuIbtHvS5s0fM2Oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779944258; c=relaxed/simple;
-	bh=FYhivVqh1po6E98iHUjtDxh3T5G9eiBdC0pgheJfKhU=;
+	s=arc-20240116; t=1779944459; c=relaxed/simple;
+	bh=1pQXO+UuP2jg1u0sA4ElE6h1EY6ZHESGSwypD4uu62w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nFVZzNgzldQ5kB0rr9xgRuk6PKSomE9S3SaBj0aDKFceoCu4PQMQI4gcalXg9ldB+XWkYOgCCofjpf7yf+ha3/xKsX2k+2MvmutYBnxFyMi9Yd4+SpbjStIQEmsetdU9blNgp1aj6Yw+TsVl9I1gO8I6GjFQq6nm3hHB+KCQ7gA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TBU2PMp9; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hr1eZvbvhIcv6kMni+N67rXBukcdy6T51uzgynZQHzNU8E46vgxeZfuNiINCDlkYq/SoHRzhPeq9Y4u6G+yrFAmaOMKgcZGyITQra9LcXnb57PIpBEzLJN9AdrVQIB8UGndHzfOMf6emdsVmt2L+xH17umejum0sitSKuVZf6yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Smfj17Zg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TBU2PMp9"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 917171F000E9;
-	Thu, 28 May 2026 04:57:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Smfj17Zg"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A307E1F000E9;
+	Thu, 28 May 2026 05:00:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779944256;
-	bh=i7UrKKLspMFdZlVFmSFbynAr/+HJ5KHNzygcLmQuqP4=;
+	s=k20260515; t=1779944457;
+	bh=JNY5nBgSdW+P7F0wS7nsNSCl1S3ptDjSjdA4bdaecgE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TBU2PMp9W5ca5OqrhbAep6Og7NJxu0FciYFpD1UbHIBHhllEVtWXHHAVuGC58Cfn5
-	 WiW+8VsKjnyOl7bNCiLRV6aUjfU7+FSApkFs6CKe/ABfla+nlprLdX7E3Kf4FgzMLy
-	 pplUfULxTLYFPNCAyHsoMSq4asaejZV8yBsgDYwOz8Ca4KDP1dbXAtNAbhck4SSaMa
-	 DzReezllbsjuFGIaFugrA16CP9YK1u9xqjft68KSmb7pmOWEIfxxqPTgk8zlr5VdRN
-	 ISluhHqIpxyAP6UfGkg9uTuTK6dHaa1ueuSe4oGvCDfR66H0cN3/1gChUXHFXGmu9q
-	 beTxfN7wDfTnQ==
-Date: Wed, 27 May 2026 21:57:36 -0700
+	b=Smfj17Zg2g2GoH6imQwpLf1CUN+JeGUbPJSc7Z6SgTrqd5rs0MiJhwyl/lm/lhJ3+
+	 4XXOmoOlr0CKc8+PrhSTgpozku3KRoD4i9CyxvL9i4xIT0+hN2b7vDvdCeOSHD5tUw
+	 HxB0hxIjbyCN/1NKyt7K/lUnAcMriPseFWFhLzyKRoKoBI8U0Ia+8jmR2+qpEu8aLx
+	 SZLErUtA42d0BOKJM4FhnAn6Aa5Bg5N5ibIZ3Aqi35q3EeteZJevguWjatVU1XCAI6
+	 QOpwCgtiS0IArZayHheRQ3iEidjPf56SDvf1POhPCWsDVGurFbDy5Q7BJb2Hkjob5L
+	 UFeqf2vZnU/Og==
+Date: Wed, 27 May 2026 22:00:57 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Lukas Herbolt <lukas@herbolt.com>
 Cc: sandeen@sandeen.net, aalbersh@kernel.org, dgc@kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v2 3/5] xfsprogs: mkfs.xfs add auto|autodetect value
- for -d/l/r concurrency
-Message-ID: <20260528045736.GE6078@frogsfrogsfrogs>
+Subject: Re: [RFC PATCH v2 4/5] xfs_admin: add -d option to manage default
+ mkfs config file
+Message-ID: <20260528050057.GF6078@frogsfrogsfrogs>
 References: <20260525075752.4159504-1-lukas@herbolt.com>
- <20260525075752.4159504-4-lukas@herbolt.com>
+ <20260525075752.4159504-5-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,69 +44,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260525075752.4159504-4-lukas@herbolt.com>
+In-Reply-To: <20260525075752.4159504-5-lukas@herbolt.com>
 
-On Mon, May 25, 2026 at 09:57:50AM +0200, Lukas Herbolt wrote:
-> Add autodetect|auto value for concurrency option to restore the current
-> default behavior concurrency detection on SSDs.
+On Mon, May 25, 2026 at 09:57:51AM +0200, Lukas Herbolt wrote:
+> Add -d <file> to install a config file as the system-wide mkfs.xfs
+> default, and -d clear to remove it. The default config directory is
+> substituted at build time from the configured sysconfdir. The
+> xfs_admin.sh is now generated from xfs_admin.sh.in to set the default
+> config file location bsed on the ./configure.
 > 
 > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 > ---
->  mkfs/xfs_mkfs.c | 11 ++++++++++-
+>  .gitignore                           |  3 +++
+>  db/Makefile                          | 11 ++++++++--
+>  db/{xfs_admin.sh => xfs_admin.sh.in} | 30 ++++++++++++++++++++++++++--
+>  3 files changed, 40 insertions(+), 4 deletions(-)
+>  rename db/{xfs_admin.sh => xfs_admin.sh.in} (70%)
+> 
+> diff --git a/.gitignore b/.gitignore
+> index eb3decd108be..fc695dbbd0b1 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -89,3 +89,6 @@ cscope.*
+>  # docs
+>  /man/man8/mkfs.xfs.8
+>  /man/man8/xfs_scrub_all.8
+> +
+> +#generated bash
+> +db/xfs_admin.sh
+> diff --git a/db/Makefile b/db/Makefile
+> index e36e775eee60..b9016d2a057b 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -67,7 +67,8 @@ CFILES = $(HFILES:.h=.c) \
+>  	iunlink.c \
+>  	rdump.c \
+>  	timelimit.c
+> -LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+> +LSRCFILES = xfs_admin.sh.in xfs_ncheck.sh xfs_metadump.sh
+> +LDIRT = xfs_admin.sh
+>  
+>  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBURCU) \
+>  	  $(LIBPTHREAD)
+> @@ -79,10 +80,16 @@ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+>  CFLAGS += -DENABLE_EDITLINE
+>  endif
+>  
+> -default: depend $(LTCOMMAND)
+> +default: depend $(LTCOMMAND) xfs_admin.sh
+>  
+>  include $(BUILDRULES)
+>  
+> +xfs_admin.sh: xfs_admin.sh.in $(TOPDIR)/include/builddefs
+> +	@echo "    [SED]    $@"
+> +	$(Q)$(SED) -e "s|@mkfs_syscfg_dir@|$(MKFS_SYSCFG_DIR)|g" \
+> +		< $< > $@
+> +	$(Q)chmod a+x $@
+> +
+>  install: default
+>  	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+>  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh.in
+> similarity index 70%
+> rename from db/xfs_admin.sh
+> rename to db/xfs_admin.sh.in
+> index 52a658ba4a54..e87a64467662 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh.in
+> @@ -13,11 +13,37 @@ REPAIR_OPTS=""
+>  IO_OPTS=""
+>  REPAIR_DEV_OPTS=""
+>  LOG_OPTS=""
+> -USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+> +MKFS_DEFAULT_CFGDIR="@mkfs_syscfg_dir@"
+> +MKFS_DEFAULT_CFGFILE="$MKFS_DEFAULT_CFGDIR/default.conf"
+> +USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-d file|clear] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+>  
+> -while getopts "c:efjlL:O:pr:uU:V" c
+> +while getopts "c:d:efjlL:O:pr:uU:V" c
+>  do
+>  	case $c in
+> +	d)	if [ "$OPTARG" = "clear" ]; then
 
-Needs a manual page change to note that you can say -d concurrency=auto.
+I wish this were a long option (e.g. xfs_admin --set-defaults /root/my.cfg)
+but I don't have a clue how to do this in bash.
 
-Otherwise the logic and comment changes look good to me.
+> +			rm -f "$MKFS_DEFAULT_CFGFILE"
+> +			status=$?
+> +			if [ $status -eq 0 ]; then
+> +				echo "Removed $MKFS_DEFAULT_CFGFILE"
+> +			else
+> +				echo "xfs_admin: failed to remove $MKFS_DEFAULT_CFGFILE" 1>&2
+> +			fi
+> +		else
+> +			if [ ! -f "$OPTARG" ]; then
+> +				echo "xfs_admin: cannot read '$OPTARG'" 1>&2
+
+Shouldn't this be -r(eadable) not -f(ile path exists) given the error
+message?
+
+This new functionality also needs a manpage update.
 
 --D
 
->  1 file changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index bff7d078901c..cb9c528021d6 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1838,9 +1838,12 @@ set_data_concurrency(
->  	/*
->  	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
->  	 * If this cannot be determined, fall back to the default AG geometry.
-> +	 * "auto" or "autodetect" means auto-detect based on storage type.
->  	 */
->  	if (!value || !strcmp(value, "nr_cpus"))
->  		optnum = 1;
-> +	else if (!strcmp(value, "auto") || !strcmp(value, "autodetect"))
-> +		optnum = -1;
->  	else
->  		optnum = getnum(value, opts, subopt);
->  
-> @@ -1986,9 +1989,12 @@ set_log_concurrency(
->  	/*
->  	 * "nr_cpus" or 1 means set the concurrency level to the CPU count.  If
->  	 * this cannot be determined, fall back to the default computation.
-> +	 * "auto" or "autodetect" means auto-detect based on storage type.
->  	 */
->  	if (!value || !strcmp(value, "nr_cpus"))
->  		optnum = 1;
-> +	else if (!strcmp(value, "auto") || !strcmp(value, "autodetect"))
-> +		optnum = -1;
->  	else
->  		optnum = getnum(value, opts, subopt);
->  
-> @@ -2206,10 +2212,13 @@ set_rtvol_concurrency(
->  	/*
->  	 * "nr_cpus" or "1" means set the concurrency level to the CPU count.
->  	 * If this cannot be determined, fall back to the default rtgroup
-> -	 * geometry.
-> +	 * geometry. * "auto" or "autodetect" means auto-detect based on
-> +	 * storage type.
->  	 */
->  	if (!value || !strcmp(value, "nr_cpus"))
->  		optnum = 1;
-> +	else if (!strcmp(value, "auto") || !strcmp(value, "autodetect"))
-> +		optnum = -1;
->  	else
->  		optnum = getnum(value, opts, subopt);
->  
+> +				exit 2
+> +			fi
+> +			mkdir -p "$MKFS_DEFAULT_CFGDIR" &&
+> +			cp "$OPTARG" "$MKFS_DEFAULT_CFGFILE"
+> +			status=$?
+> +			if [ $status -eq 0 ]; then
+> +				echo "Installed $OPTARG as $MKFS_DEFAULT_CFGFILE"
+> +			else
+> +				echo "xfs_admin: failed to install $MKFS_DEFAULT_CFGFILE" 1>&2
+> +			fi
+> +		fi
+> +		exit $status
+> +		;;
+>  	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG
+>  		require_offline=1
+>  		;;
 > -- 
 > 2.54.0
 > 
