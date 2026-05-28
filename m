@@ -1,181 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 032012FE566;
-	Thu, 28 May 2026 04:06:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DD333438B9;
+	Thu, 28 May 2026 04:44:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779941197; cv=none; b=dcrGSRwNF08xOcPtcdCGYmVGnC0VUQnMaoUuOOMwJAkv6oC7TYRLQScOOmRW2vJZ6xd+qmebqd8PBpz+lji2gNUlUuLVPv5dt7uzSfA9Xb8f33EXZzdvTZXkQPFtnnUF5hkxgKUDZB76FDNKiHn3C0HP9qonuLplQEKnGqGKKZM=
+	t=1779943484; cv=none; b=lKmIecN4T4CS5jMEfjEeBsfpOUI8dTNgAUT7qlpC/pd6Tvt3HEvWUtApiCgmvF8XZryM7GdFCalAjKisdLfZifnR8vZp2sb+wD45rnLrydQ5MxPmM+6JMZTSVtc3SD/3eHbbUCsUHfFAFSdzRrgx0YjmDOu7mAK1Tj0HCHfJ7dY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779941197; c=relaxed/simple;
-	bh=T3y5Ubl6Z8Tp6IEXPJe2DFjhXXWg7Gvm+jZyW2VSeYc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HoUlTEIu/cJHkFLN5FExrzMBKcSc5j7qas3qzpduP7WmFC7wKzNMzvm7akWwhwsTKY9bBLBw7WcHdA53HjW+GPgQkcd0Pvw/emBUV0aBPyBX5aarbrqwjEJR7ifS1ZXPAcw4I2zvLHe9X0bxXFVRvTabf9bfL7T+Ay0HyUfREzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gzYvDBOU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779943484; c=relaxed/simple;
+	bh=Cj3UqSHUHgaivDq+KTxlSkeLUMdl2F7INewSUc55kM4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kPGRc2v9cH8GuQ2gL0w43YOXbWCfa67xrca2/2sAkUZTekYhR3OF4LRli6Npdq6lkoGDG1m5SAlE83h3HbtPPDZotX8Z4/JtMxZvyyyO0JbNkrvmHUj3Afxy7BI3R2HTo7eUvVvBQRnMTgPPp9bTLQkg9MZJxMl7SHX0jnjtGTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WpfraCfE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gzYvDBOU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 053371F00A3A;
-	Thu, 28 May 2026 04:06:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WpfraCfE"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 0F0871F000E9;
+	Thu, 28 May 2026 04:44:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779941195;
-	bh=kB/sRmK5BV5dTZE/cUtAhVaEQ2ruW0M5KZKPeAAY27g=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gzYvDBOUQ0T1gYNMYXkfyeC42OZ03c2+jbrlcPl/EVsAlgzaLEXR+YLDkXdx0ssqn
-	 XIyV6I+g0V2VirbeQNOWCNX285oA7CKMkGKJ0gJJeWsw2uDD01clR0yreyBgKZ3luw
-	 9aZY5cGUogShv9kifCaskMwKnim3dixTleMzTz2HDyaixSWW8TcIQdxyYFWnxrABeP
-	 LIN1fqNjmGCEntrogjJjNa5FUp77JV4lj5kiGUzHdmDXrrceIS9yMnRRiMSQTmMn2s
-	 Jcyk8Mfev6g4AdOBdndTb+354j0wHSJsNN8O0Md69vYYXEV4MYXr1k4fkDQM2Ejlic
-	 1IkAIFjCadmoQ==
-From: Anand Jain <asj@kernel.org>
-To: fstests@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	zlang@redhat.com,
-	hch@infradead.org
-Subject: [PATCH v6 11/11] fstests: test UUID consistency for clones with metadata_uuid
-Date: Thu, 28 May 2026 12:05:42 +0800
-Message-ID: <7937f3961e03df55fb358a114dc67cfca3fa5f33.1779939330.git.asj@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1779939330.git.asj@kernel.org>
-References: <cover.1779939330.git.asj@kernel.org>
+	s=k20260515; t=1779943483;
+	bh=3DVDcLVVUPDMVvYhzxZSFh7FfqKTh4g4C4CBuZH9qIc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WpfraCfEjkEVyCA+73yKCA3dle2iUKWooyIW48Hiuy4T4gJpN+tUmlcrd+0oLwC7+
+	 3jW4ZCZxjNj1Vh/DwXcGZ/xX1R4dnJuMyARBQsZsNMoAi097NDl2agkFB68wVuQakP
+	 K/Uy0tjc5h6Xz5LcEK9S4fYnT7/QccQJiTbbTq8uBotCAFXnuiiD5JPHMp0I9Kmeco
+	 FwLmG+4AWOK01gnB2S1S/GxGurSFHaD4sn476CC0V3UWBwqiloFSdW85xGc8g/o/OT
+	 AlNNnBo9eK5oOJ1FmwN36NO0oeb/oUppPfLK3DrsTwP0V5OY49KXmWkM4BPlTvXJXJ
+	 zZ2kQeqND7WMQ==
+Date: Wed, 27 May 2026 21:44:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Yingjie Gao <gaoyingjie@uniontech.com>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] xfs: fix error returns in CoW fork repair
+Message-ID: <20260528044442.GA6078@frogsfrogsfrogs>
+References: <20260527033902.1524007-1-gaoyingjie@uniontech.com>
+ <20260527043134.1550710-1-gaoyingjie@uniontech.com>
+ <20260527043134.1550710-2-gaoyingjie@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260527043134.1550710-2-gaoyingjie@uniontech.com>
 
-Btrfs and xfs uses the metadata_uuid superblock feature to change the
-on-disk UUID without rewriting every block header. This patch adds a
-sanity check to ensure UUID consistency when a filesystem with
-metadata_uuid enabled is cloned.
+On Wed, May 27, 2026 at 12:31:33PM +0800, Yingjie Gao wrote:
+> xrep_cow_find_bad() returns success after the cleanup labels even if
+> AG setup, btree queries, or bitmap updates failed. This can make
+> repair continue with an incomplete bad-file-offset bitmap instead of
+> stopping at the original error.
+> 
+> The force-rebuild path has a related cleanup problem. If
+> xrep_cow_mark_file_range() fails, the function returns directly and
+> skips the scrub AG context and perag cleanup.
+> 
+> Let the force-rebuild path fall through to the existing cleanup code
+> and return the saved error after cleanup.
+> 
 
-Signed-off-by: Anand Jain <asj@kernel.org>
----
- tests/generic/806     | 84 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/806.out | 19 ++++++++++
- 2 files changed, 103 insertions(+)
- create mode 100644 tests/generic/806
- create mode 100644 tests/generic/806.out
+Cc: <stable@vger.kernel.org> # v6.8
 
-diff --git a/tests/generic/806 b/tests/generic/806
-new file mode 100644
-index 000000000000..801671fb9ce9
---- /dev/null
-+++ b/tests/generic/806
-@@ -0,0 +1,84 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-+#
-+# FS QA Test 806
-+#
-+# Verify that the cloned filesystem UUID remains consistent, even when the
-+# `metadata_uuid` feature is enabled.
-+#
-+
-+. ./common/preamble
-+. ./common/filter
-+
-+_begin_fstest auto quick mount clone
-+
-+_require_test
-+_require_block_device $TEST_DEV
-+_require_loop
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.*
-+	umount $mnt1 $mnt2 2>/dev/null
-+	_loop_image_destroy "${devs[@]}" 2> /dev/null
-+}
-+
-+filter_pool()
-+{
-+	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
-+	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
-+}
-+
-+# Collect and print device resolution properties across user-space tools
-+print_info()
-+{
-+	local mntpt=$1
-+	local tgt=$(findmnt -no SOURCE $mntpt)
-+	local fsuuid=$(blkid -s UUID -o value $tgt)
-+
-+	echo "mntpt=$mntpt tgt=$tgt fsuuid=$fsuuid" >> $seqres.full
-+	echo
-+	findmnt -o SOURCE,TARGET,UUID "$tgt" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+	awk -v dev="$tgt" '$1 == dev { print $1, $2 }' /proc/self/mounts | \
-+								filter_pool
-+	df --all --output=source,target "$tgt" | tail -n +2 | filter_pool
-+}
-+
-+# Create base loop device and its clone, applying the metadata_uuid tuning
-+# callback to the base filesystem before the copy occurs.
-+devs=()
-+_loop_image_create_clone devs _change_metadata_uuid
-+mkdir -p $TEST_DIR/$seq
-+mnt1=$TEST_DIR/$seq/mnt1
-+mnt2=$TEST_DIR/$seq/mnt2
-+mkdir -p $mnt1
-+mkdir -p $mnt2
-+
-+# Mount both clone and baseline
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+
-+print_info $mnt1
-+print_info $mnt2
-+
-+# Cycle mounts and reverse the initialization order to ensure UUID tracking
-+# doesn't mismatch or flip when metadata_uuid optimization is active.
-+echo
-+echo "**** mount cycle ****"
-+_unmount $mnt1
-+_unmount $mnt2
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+
-+print_info $mnt1
-+print_info $mnt2
-+
-+status=0
-+exit
-diff --git a/tests/generic/806.out b/tests/generic/806.out
-new file mode 100644
-index 000000000000..7315e791ba51
---- /dev/null
-+++ b/tests/generic/806.out
-@@ -0,0 +1,19 @@
-+QA output created by 806
-+
-+DEV1 MNT1 FSUUID
-+DEV1 MNT1
-+DEV1 MNT1
-+
-+DEV2 MNT2 FSUUID
-+DEV2 MNT2
-+DEV2 MNT2
-+
-+**** mount cycle ****
-+
-+DEV1 MNT1 FSUUID
-+DEV1 MNT1
-+DEV1 MNT1
-+
-+DEV2 MNT2 FSUUID
-+DEV2 MNT2
-+DEV2 MNT2
--- 
-2.43.0
+(please make life easier for Theodorics A and B who are half-assing LTS
+QA these days)
 
+> Fixes: dbbdbd008632 ("xfs: repair problems in CoW forks")
+> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+> ---
+>  fs/xfs/scrub/cow_repair.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
+> index bffc4666ce60..a6ff09ace43d 100644
+> --- a/fs/xfs/scrub/cow_repair.c
+> +++ b/fs/xfs/scrub/cow_repair.c
+> @@ -300,18 +300,15 @@ xrep_cow_find_bad(
+>  	 * on the debugging knob, replace everything in the CoW fork.
+>  	 */
+>  	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD) ||
+> -	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
+> +	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+>  		error = xrep_cow_mark_file_range(xc, xc->irec.br_startblock,
+>  				xc->irec.br_blockcount);
+> -		if (error)
+> -			return error;
+
+I personally would have stuck with the v1 logic of turning that into a
+"goto out_sa" but either way is correct.
+
+With the cc tag added,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+
+> -	}
+>  
+>  out_sa:
+>  	xchk_ag_free(sc, &sc->sa);
+>  out_pag:
+>  	xfs_perag_put(pag);
+> -	return 0;
+> +	return error;
+>  }
+>  
+>  /*
+> -- 
+> 2.20.1
+> 
+> 
