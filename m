@@ -1,166 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f194.google.com (mail-pl1-f194.google.com [209.85.214.194])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658AC25F7B9
-	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:24:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AFF814ABE
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:31:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779945886; cv=none; b=f7OpZSTAGzaxeNLMXxSy6zRID57l0+0aS7vlVo5wemXGBWdJAjluXgGuarq0kf0nCxQUeftYYOtOQNWVOu17ANqWusVX11xP3DnZ694joNrlbzYUooX+2ZyiY2AhiiHYk6RklU6LaUCayzi6tVEbPn9V9YRjrvDh603ootcbISg=
+	t=1779946296; cv=none; b=YXoA95Mo+FF8NfMoADON18QIkx9n5OiU3p+aCZQDifoJUHmNyTd6sxmR1L+8KCYGU2HpbXwAk7TTq+eePL/FzDZzRo8zbEqO+FQtSIQj/b2ZsTFrPg/1b8fy4r5hAkz2CEbBGSw+384yay26uz9oj6d3oERW/DpeFXr6OUeEw4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779945886; c=relaxed/simple;
-	bh=rZX7wZF1eusJKfsqUcV0J+oFMGNelxSBBTtfedxhaXQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CSdynui8aP5w8+UYAKNvNesMrzimhhhGWQqXNdI/K4tMY9Lbr4llFZT8vglPbJDBnTuahVH+jaZBmgltYfcylug7vPmFM4tV86EcFeVkSEPs+umWquKgqMbufTSIipTN8pbufSQT7rK2rQ81/8X93aCtxNcGJpc7WrmLMZaf94Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YEub7kO1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779946296; c=relaxed/simple;
+	bh=4BnOYYTb7T97RMTGXTcfR2Md0+TeHYXB4VU6gbyex0I=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Blm5zluuH9mhEcBGPdZPKjyp7QYHL6C9rvOk+pysti+2Ti3M64FeIXSv2H/mx01mS8d1CpMxKmtmMQuqH/YM+uRhY4jeetMnnLjR8pt5tqhw0iJmJcqFk9JZav870YRXwloxu4ZuTuY+o0u50VTtIdRGtuBMOx/NemGRb64FQJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jultqHbB; arc=none smtp.client-ip=209.85.214.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YEub7kO1"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 336BA1F000E9;
-	Thu, 28 May 2026 05:24:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779945885;
-	bh=vJAff9rozTEFreCHTQt/j35VAiwy0xY+vh7bBvG6mec=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YEub7kO1Gx04/pNg3SJ6UXYQKN/SIom/OOXfXYuZRMSCpArMwvtLDzzCL9EmWwxyV
-	 yOfCFRYEiUg7W/z09uTwZ6f7yVUlZP4rbSeg4hqda4QTcbfqItXg0+37QgrJLVjUzo
-	 naPdGxLKSHlPztT2oRxrQIx34wLFWDHnukltztilQCUEiNQGh8U22h+3oT3eyrkG0u
-	 zb3cLwQy9R7XwWy7PndvdGxk9PUWsgNTnH1VHSmMKcK+/xn1ur9N16CYhcWTtwi4rs
-	 w/zd0dH4ezBaB4I0S/YbS1TrXNvbCDI4rMRaHdRFnCKERnDez6S67JRZ/RLTGQX8IB
-	 3/QjnvA+JkQDA==
-Date: Wed, 27 May 2026 22:24:44 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: remove struct xfs_inode.i_ino
-Message-ID: <20260528052444.GK6078@frogsfrogsfrogs>
-References: <20260515135103.4042407-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jultqHbB"
+Received: by mail-pl1-f194.google.com with SMTP id d9443c01a7336-2ba3e3c4f87so129876135ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2026 22:31:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779946294; x=1780551094; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fFLT2sWkrj/RA6HeZzNRNeQFBEPLyGDvfOL2SeEC/uE=;
+        b=jultqHbB+7fk9zDG9hPzFpt1aBRYNAD6e8BIUoi4gOso10uBHwKTTl6UJAMIHMt6uJ
+         E1yaqggzh7v11NqJK33PKscyo44vVA/QCTk/x54rcAHE7Gl2QxC3vYkc5YQrW1rscJ8a
+         2/U5EuiYXElm1139265B8bIbqX8l0uX0e7a33N72fAEAfRswSbeiAZ634WOKp7xq40zT
+         bkdYyMcR0MRU27yAODvn9dgu7u266zjpT35IkyiiNURC+4mpS/gbPiW8r9QZvv8htGB5
+         U2IZ7QtwtCgwUq1Aq/tMyfIoAMPzHiLt+l+7Rw/wZu26q6veBSmLim34cX2lwcrO2ll6
+         IFyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779946294; x=1780551094;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=fFLT2sWkrj/RA6HeZzNRNeQFBEPLyGDvfOL2SeEC/uE=;
+        b=MZdnHn7NeiUQxRsCDpitOS1Ma2Guiy7Ak/x3O5FuTRAcBdv+zu/P74uTFfUIkoQ3Zs
+         cxvu/08Q1PDz4EzIVYdWKcBpBpa7uiMKboD6X9v9DdmIfb94KA4LFSnep1yNnWFiFmr0
+         K0Ug5bV6JMy3G9FnGGgAs3Vej6nuh4Qu9ck8IWMMWlLNgZNsmr7RwDu9Bn8KHIY2815t
+         m7yQ7Bgdu6IACkn/hJRSZWav8maQyuexcf5I8xUMsv5E++hTE5rQQrq9iUzkXQEyRscK
+         FLs2wDK7WjvV27UUO/ickRD1wwaklifnTZFmPwRYqdi08c2LkRYWrp8duAuHP40kyv3L
+         mLsA==
+X-Forwarded-Encrypted: i=1; AFNElJ+y/kxn2xfnlc91jhvwo5yfOsjI3Shi3rWsNs+4Xw0UFWgzBbfMm3AfddVGPclRIj7C+YSWkFETvYo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwjydT1a+UehtRC06MTwxyIM+i9pValXHmbsFCrAj0pxeiPLh0x
+	ubqHV06rUB0BV9k+HuksMiQXVs056V/nNhMuITyUHdl0y+rspNp8A2ZQ
+X-Gm-Gg: Acq92OEeh3Ir4stt+7kahZMJOk9EYnDbKLX+1ottipUfvxc3bLPiz60WIxswAdutz++
+	GaDCzinjX6sBU6wqTFFfwziZy/Pyb3dUNVZd75Ymwm0moubL0nsYLPgPtcFuIEu0dgIJUXuWwck
+	T2n3+4EciODBA9GYTTMqgLviragaGStQMAMYZGO3WsGr3gsBJF7S0hCP+6LVN9bSUQjP22PBjVJ
+	mHaRIgYx/zYduZw9tgU8kt5dv5YKCxyn0L80ZZXrzsT/JK2nClBogancv1vLazADQHUBqLl0CdO
+	nr71UAynRDXiqcNHTuNwwd2QD07wdm9p8fVAfDLTIO9WHJMrMPW5ghezk0flAHS5krkacOWZAOg
+	M+8MxE8smMY7/TzCLoGC4pZqWyE0NPw2cYR99u0EvGJHmI34jBA5TopXJYkXqWvIlkRsaOHYNr3
+	fHS8EBxsT7LmH3TTavVj/s/fy28bYuy+WOtd+86slcRA==
+X-Received: by 2002:a17:903:240e:b0:2bd:907:2cf0 with SMTP id d9443c01a7336-2beb0632925mr287109895ad.32.1779946294313;
+        Wed, 27 May 2026 22:31:34 -0700 (PDT)
+Received: from localhost ([111.228.63.84])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2beb5695a75sm217440825ad.14.2026.05.27.22.31.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 May 2026 22:31:33 -0700 (PDT)
+From: Zhang Cen <rollkingzzc@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Zhang Cen <rollkingzzc@gmail.com>,
+	zerocling0077@gmail.com,
+	2045gemini@gmail.com
+Subject: Re: [PATCH] xfs: drain inodegc before quota teardown on mount failure
+Date: Thu, 28 May 2026 13:31:28 +0800
+Message-Id: <20260528053128.3036120-1-rollkingzzc@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <agwh6darf9q52za7@infradead.org>
+References: <agwh6darf9q52za7@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260515135103.4042407-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Fri, May 15, 2026 at 03:50:21PM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> now that the VFS inode i_ino field is always a u64, there is no need
-> to duplicate the inode number in the XFS inode.
-> 
-> This series first adds a few helpers to reduce i_ino reference, and
-> then switches the rest of the code over.  A new I_INO helper is added
-> to shorten the dereference and to make userspace porting easier.
-> 
-> After this and the rw_semaphore shrink that went into 7.1-rc, it might
-> be time to look into re-packing the xfs_inode, but that is left for
-> another series.
+Hi Christoph,
 
-Mechanically these patches all look ok to me, aside from my question
-about why not use static inline helpers instead of macros.
+Sorry, I missed this reply earlier and only noticed it now from the
+public archive.
 
---D
+> How did you run into this?  Normal xfstests under a new sanitizer?
 
-> Diffstat:
->  libxfs/xfs_attr.c             |    2 
->  libxfs/xfs_attr_leaf.c        |    2 
->  libxfs/xfs_bmap.c             |   20 ++----
->  libxfs/xfs_bmap_btree.c       |    8 +-
->  libxfs/xfs_btree.c            |   18 ++---
->  libxfs/xfs_btree_staging.c    |    2 
->  libxfs/xfs_da_btree.c         |    2 
->  libxfs/xfs_dir2.c             |   44 +++++++-------
->  libxfs/xfs_dir2_node.c        |    2 
->  libxfs/xfs_dir2_sf.c          |    4 -
->  libxfs/xfs_exchmaps.c         |    8 +-
->  libxfs/xfs_format.h           |    6 +
->  libxfs/xfs_ialloc.c           |    4 -
->  libxfs/xfs_inode_buf.c        |    4 -
->  libxfs/xfs_inode_fork.c       |    6 -
->  libxfs/xfs_inode_util.c       |   13 +---
->  libxfs/xfs_metadir.c          |    2 
->  libxfs/xfs_parent.c           |    8 +-
->  libxfs/xfs_parent.h           |    2 
->  libxfs/xfs_rmap.c             |    6 -
->  libxfs/xfs_rmap.h             |    4 +
->  libxfs/xfs_rtbitmap.c         |    4 -
->  libxfs/xfs_rtrefcount_btree.c |    4 -
->  libxfs/xfs_rtrmap_btree.c     |    4 -
->  libxfs/xfs_symlink_remote.c   |    6 -
->  scrub/agheader_repair.c       |   20 ++----
->  scrub/attr.c                  |    4 -
->  scrub/attr_repair.c           |   16 ++---
->  scrub/bmap.c                  |   24 +++----
->  scrub/bmap_repair.c           |    8 +-
->  scrub/common.c                |   26 ++++----
->  scrub/common.h                |    6 +
->  scrub/cow_repair.c            |    3 
->  scrub/dabtree.c               |    4 -
->  scrub/dir.c                   |   24 +++----
->  scrub/dir_repair.c            |   42 ++++++-------
->  scrub/dirtree.c               |   24 +++----
->  scrub/dirtree_repair.c        |    4 -
->  scrub/findparent.c            |   33 +++++-----
->  scrub/inode.c                 |   18 ++---
->  scrub/inode_repair.c          |    5 -
->  scrub/iscan.c                 |    2 
->  scrub/listxattr.c             |   10 +--
->  scrub/metapath.c              |   16 ++---
->  scrub/newbt.c                 |    8 --
->  scrub/nlinks.c                |   34 +++++------
->  scrub/nlinks_repair.c         |    6 -
->  scrub/orphanage.c             |   10 +--
->  scrub/parent.c                |   31 ++++------
->  scrub/parent_repair.c         |   18 ++---
->  scrub/quotacheck.c            |    2 
->  scrub/readdir.c               |   12 +--
->  scrub/reap.c                  |    5 -
->  scrub/repair.c                |    2 
->  scrub/rmap_repair.c           |    2 
->  scrub/rtbitmap.c              |   16 ++---
->  scrub/rtbitmap_repair.c       |    2 
->  scrub/rtrefcount.c            |    2 
->  scrub/rtrefcount_repair.c     |    2 
->  scrub/rtrmap.c                |    3 
->  scrub/rtrmap_repair.c         |    4 -
->  scrub/rtsummary.c             |   14 ++--
->  scrub/rtsummary_repair.c      |    2 
->  scrub/scrub.c                 |    2 
->  scrub/symlink_repair.c        |    8 +-
->  scrub/tempfile.c              |    2 
->  scrub/trace.c                 |    2 
->  scrub/trace.h                 |  116 ++++++++++++++++++-------------------
->  xfs_aops.c                    |    2 
->  xfs_attr_item.c               |    4 -
->  xfs_attr_list.c               |   12 +--
->  xfs_bmap_item.c               |    4 -
->  xfs_bmap_util.c               |    4 -
->  xfs_dir2_readdir.c            |    4 -
->  xfs_error.c                   |    2 
->  xfs_exchmaps_item.c           |    4 -
->  xfs_exchrange.c               |    4 -
->  xfs_export.c                  |    8 +-
->  xfs_filestream.c              |    6 -
->  xfs_handle.c                  |    4 -
->  xfs_healthmon.c               |    6 -
->  xfs_icache.c                  |   56 +++++++++---------
->  xfs_inode.c                   |   37 +++++-------
->  xfs_inode.h                   |   19 ++----
->  xfs_inode_item.c              |    8 +-
->  xfs_inode_item_recover.c      |    4 -
->  xfs_ioctl.c                   |    2 
->  xfs_iomap.c                   |    4 -
->  xfs_iops.c                    |    3 
->  xfs_iunlink_item.c            |    2 
->  xfs_mount.c                   |    2 
->  xfs_qm.c                      |   10 +--
->  xfs_quotaops.c                |    2 
->  xfs_reflink.c                 |    4 -
->  xfs_symlink.c                 |    6 -
->  xfs_trace.h                   |  129 ++++++++++++++++++++----------------------
->  xfs_trans.c                   |    2 
->  xfs_trans_dquot.c             |    6 -
->  xfs_xattr.c                   |    2 
->  99 files changed, 564 insertions(+), 577 deletions(-)
-> 
+This was not from normal xfstests.  I reproduced it in a KASAN-enabled
+QEMU guest with a disposable quota-enabled XFS image, then forced a late
+mount failure after quota setup while tracing the inodegc and quota
+teardown path.  The failing ordering was:
+
+  xfs_qm_mount_quotas()
+  late mount failure
+  xfs_qm_unmount_quotas()
+  xfs_qm_unmount() / xfs_qm_destroy_quotainfo()
+  xfs_inodegc_flush()
+
+with inodegc still able to reach the dqattach/dqget side during the
+teardown window.
+
+> This looks good.
+
+Thanks.
+
+> This is later in the teardown order than where I'd expect it. The
+> first thing that can bring in quotainodes is xfs_qm_newmount.  I'd
+> expect a new label placed above out_rtunmount to handle this.  Is
+> there a reason I'm missing why this won't work?
+
+No, I don't think you are missing anything.  A separate label above
+out_rtunmount is the cleaner place for this.  I'll send a v2 that keeps
+the out_agresv inodegc drain before xfs_qm_unmount_quotas(), adds an
+out_qm_unmount label above out_rtunmount, and routes the later
+post-quota failure paths through that label.
+
+I'll also fix the trailer spacing in v2.
+
+Thanks,
+Zhang
