@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289032DEA9D;
-	Thu, 28 May 2026 08:08:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6934336A374
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 08:13:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779955710; cv=none; b=tDZSPK5QJT2Mf5F4AL65wQD0N4YaulzkScnaaBBWfbVec6tKocgS8XZH0iNQNX/2Va2ZD8VdweKSsIciORFkde1whBidf++FpnSi5QmDeLDgQ2wlyXxUS2qy0PtgNRYRgYA2h6gyFtdPPguoB9ik0x9CoxY+g5xiu0u/vg/WDOc=
+	t=1779956000; cv=none; b=pxuLGFJQ1CRkxE8LxGzGfh3FbfvnZiawO3l5ZN6ExawMKSPnwHtb42S2pjC1Pe3LH9JaodyoWYVM3mEHvucc3+Y3dfUx0efHaEV8oVpkMWOwdHMp59JV9ZIwVZcOHFK2W67lU0cJRRHaW/SSmicy4GNXyP0fby76pphJyadr68c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779955710; c=relaxed/simple;
-	bh=olUVkg2ik03OPqGlFduN6tpE6jI1yKvf1yCckOn1gmM=;
+	s=arc-20240116; t=1779956000; c=relaxed/simple;
+	bh=2+w2QlUcCj6ojzR/+4++P+YCncgOgkQUlY92Eqvrw6s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Pn3EUuMSUd5KlePJA9efLKH8qk8c+ibYz7S87VDULZeaRgTU/uv+J3TQ+BEBCG/N/fg3zw/0tML3u8y2LlaB2PcY5eCL7bjoeQWFZ67InmYIy2oloc6PgT6tZ7fOprb8eQvANzjKo5K1pO+iSNBH60DLyL7ooUAukaJvlONO/5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LNcpTe9H; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=skK+3jwYVaNZPn221XKiN7Xr/itGuhEN1cUj8Gu7lv5+RU/vIG1H0RTpSOh33u+6apl8A9mAiuznqDdLOq4NjR+JjmNDRzJOqNfi9dCjswVS6g0aQcVRseLEXhwVbknoO8zgqpxhVohmUvK7W2Zp4LEWp7GyQXVb+JtckGksIOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mj+HJLqS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LNcpTe9H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2BCF1F000E9;
-	Thu, 28 May 2026 08:08:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mj+HJLqS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C70C21F000E9;
+	Thu, 28 May 2026 08:13:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779955709;
-	bh=s2HhVu8YXLYLwwjdvNTJudSPfaAmwdYndWc3dCCFhFg=;
+	s=k20260515; t=1779955999;
+	bh=44rukWKqvtLTMAIYCJvvX208tPhCKOa8LC7jpBweww0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LNcpTe9H3T06TmJKAlnQthvehkgVpsQRiB8367HfYEAHvZVwGnOq3VKtqu0/Gcv5G
-	 arGl2edbJngGjNtAuDgInKdQv1rZv4JDDJdYW4Ja7C5xlzkWENTqwxNTsjt1+/Nuz3
-	 lkK+3FaSiC9AuwgIY1SY0LZ7aSesjgBrbmhgo+4O3aRlQHvFa8JXuNkp1R6ezsWafE
-	 DNhQ15b0SI6G6cZjdd4f631mCtZzY3tVPXu86VxKnBPqtYM5mwilX76GZVgFt+1nM+
-	 Zs+CbUtGrqamSXIqcPgC8v4qY1ZWZyl5yAwePAw+HUoc6VJaIRQwjGERXrzraKMzEO
-	 sakkLIynKsCbg==
-Date: Thu, 28 May 2026 10:08:25 +0200
+	b=mj+HJLqSLSAJns4d86Jh61BOMzWKGr7tV6gnaEJM8hBbGFyDQlAfM2MGO3+Fv6WKS
+	 gHamLgD8NKmPY5t4vLVkX2Wis82gUDk8MkkvOv8Uz+uD8QsE+eIzSluQroUOVjqJVf
+	 qB1bXN4BQD5VutVIyuDXT/7qe3vvchW5LNvTRLjqezqVf5VgIglGirwQpkoSv7BkvL
+	 bFksh1w2b6R4+vJP5HyzKZcFqPldrCpnodD2BhGu8CedVlpiveKXAdfQLnP+T0heYA
+	 /S34fJB+PRtF9SyXPRKfXxrMj3YgvqXbApGZVVJ2EjE3wMtUsA6zw6D3+jCjKz5FdD
+	 E8jShCzX6lwnw==
+Date: Thu, 28 May 2026 10:13:14 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Yingjie Gao <gaoyingjie@uniontech.com>, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] xfs: fix error returns in CoW fork repair
-Message-ID: <ahf37XHxzi9ziV1l@nidhogg.toxiclabs.cc>
-References: <20260527033902.1524007-1-gaoyingjie@uniontech.com>
- <20260527043134.1550710-1-gaoyingjie@uniontech.com>
- <20260527043134.1550710-2-gaoyingjie@uniontech.com>
- <20260528044442.GA6078@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: drop the RTG reference later in
+ xfs_ioc_rtgroup_geometry
+Message-ID: <ahf5FEmC-zUGKJ8E@nidhogg.toxiclabs.cc>
+References: <20260527123941.2319377-1-hch@lst.de>
+ <20260527123941.2319377-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,74 +44,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260528044442.GA6078@frogsfrogsfrogs>
+In-Reply-To: <20260527123941.2319377-2-hch@lst.de>
 
-On Wed, May 27, 2026 at 09:44:42PM -0700, Darrick J. Wong wrote:
-> On Wed, May 27, 2026 at 12:31:33PM +0800, Yingjie Gao wrote:
-> > xrep_cow_find_bad() returns success after the cleanup labels even if
-> > AG setup, btree queries, or bitmap updates failed. This can make
-> > repair continue with an incomplete bad-file-offset bitmap instead of
-> > stopping at the original error.
-> > 
-> > The force-rebuild path has a related cleanup problem. If
-> > xrep_cow_mark_file_range() fails, the function returns directly and
-> > skips the scrub AG context and perag cleanup.
-> > 
-> > Let the force-rebuild path fall through to the existing cleanup code
-> > and return the saved error after cleanup.
-> > 
+On Wed, May 27, 2026 at 02:39:28PM +0200, Christoph Hellwig wrote:
+> Keep the rtgroup reference until after reporting the write pointer, as
+> that uses it.  Right now this is not a major issue as we don't support
+> shrinking file systems in a way that makes RTGs go away, but let's stick
+> to the proper reference counting to prepare for that.
 > 
-> Cc: <stable@vger.kernel.org> # v6.8
-> 
-> (please make life easier for Theodorics A and B who are half-assing LTS
-> QA these days)
+> Fixes: c6ce65cb17aa ("xfs: add write pointer to xfs_rtgroup_geometry")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I can add this at commit time
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+> ---
+>  fs/xfs/xfs_ioctl.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
 > 
-> > Fixes: dbbdbd008632 ("xfs: repair problems in CoW forks")
-> > Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
-> > ---
-> >  fs/xfs/scrub/cow_repair.c | 7 ++-----
-> >  1 file changed, 2 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
-> > index bffc4666ce60..a6ff09ace43d 100644
-> > --- a/fs/xfs/scrub/cow_repair.c
-> > +++ b/fs/xfs/scrub/cow_repair.c
-> > @@ -300,18 +300,15 @@ xrep_cow_find_bad(
-> >  	 * on the debugging knob, replace everything in the CoW fork.
-> >  	 */
-> >  	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD) ||
-> > -	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
-> > +	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
-> >  		error = xrep_cow_mark_file_range(xc, xc->irec.br_startblock,
-> >  				xc->irec.br_blockcount);
-> > -		if (error)
-> > -			return error;
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 46e234863644..737afcb5652a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -433,9 +433,8 @@ xfs_ioc_rtgroup_geometry(
+>  		return -EINVAL;
+>  
+>  	error = xfs_rtgroup_get_geometry(rtg, &rgeo);
+> -	xfs_rtgroup_put(rtg);
+>  	if (error)
+> -		return error;
+> +		goto out_put_rtg;
+>  
+>  	if (xfs_has_zoned(mp)) {
+>  		xfs_rtgroup_lock(rtg, XFS_RTGLOCK_RMAP);
+> @@ -453,8 +452,10 @@ xfs_ioc_rtgroup_geometry(
+>  	}
+>  
+>  	if (copy_to_user(arg, &rgeo, sizeof(rgeo)))
+> -		return -EFAULT;
+> -	return 0;
+> +		error = -EFAULT;
+> +out_put_rtg:
+> +	xfs_rtgroup_put(rtg);
+> +	return error;
+>  }
+>  
+>  /*
+> -- 
+> 2.53.0
 > 
-> I personally would have stuck with the v1 logic of turning that into a
-> "goto out_sa" but either way is correct.
-> 
-> With the cc tag added,
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> --D
-> 
-> 
-> > -	}
-> >  
-> >  out_sa:
-> >  	xchk_ag_free(sc, &sc->sa);
-> >  out_pag:
-> >  	xfs_perag_put(pag);
-> > -	return 0;
-> > +	return error;
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 2.20.1
-> > 
-> > 
 > 
