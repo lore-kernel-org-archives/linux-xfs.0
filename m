@@ -1,77 +1,72 @@
-Received: from mail-pl1-f194.google.com (mail-pl1-f194.google.com [209.85.214.194])
+Received: from mail-pj1-f65.google.com (mail-pj1-f65.google.com [209.85.216.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AFF814ABE
-	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD55078F26
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:35:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779946296; cv=none; b=YXoA95Mo+FF8NfMoADON18QIkx9n5OiU3p+aCZQDifoJUHmNyTd6sxmR1L+8KCYGU2HpbXwAk7TTq+eePL/FzDZzRo8zbEqO+FQtSIQj/b2ZsTFrPg/1b8fy4r5hAkz2CEbBGSw+384yay26uz9oj6d3oERW/DpeFXr6OUeEw4Q=
+	t=1779946562; cv=none; b=MDklQze7J/IQrlaSQW1MvsLjOn0zucawBPAS7N6Jwi7/Xe45SJe+q1m6y7vTz5GIhPz7JjrvS4oftCeRH1PM9H9nEYXf/8CmtkElJ5Euh2ixa8CzNrHmT/QKSHMvUO23kl7kZGeqvm/+bg2KjN8BLpKzE2q5cS224ahkVWOlRTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779946296; c=relaxed/simple;
-	bh=4BnOYYTb7T97RMTGXTcfR2Md0+TeHYXB4VU6gbyex0I=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Blm5zluuH9mhEcBGPdZPKjyp7QYHL6C9rvOk+pysti+2Ti3M64FeIXSv2H/mx01mS8d1CpMxKmtmMQuqH/YM+uRhY4jeetMnnLjR8pt5tqhw0iJmJcqFk9JZav870YRXwloxu4ZuTuY+o0u50VTtIdRGtuBMOx/NemGRb64FQJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jultqHbB; arc=none smtp.client-ip=209.85.214.194
+	s=arc-20240116; t=1779946562; c=relaxed/simple;
+	bh=PmMBSSQOwrY3wTAPMf/51qrLvIqEO7uPriuBMkyldYY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mHngW6+9j5a0I/5WgUiuytZt5/Iex0dLAhosKELTsqfwUeCFeTTQkSjeMhjXVt1xHG345JFF8ljWyfgfsPBUtWZg2o6H1F0W8tMgdm1PcNcp+Lvtoa6Nf9fhvz7FJcYs/pO9TABKfRnrS/WRijUu1Z7uha0u6IaO92GY2v8XXuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BFlXWRDc; arc=none smtp.client-ip=209.85.216.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jultqHbB"
-Received: by mail-pl1-f194.google.com with SMTP id d9443c01a7336-2ba3e3c4f87so129876135ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2026 22:31:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BFlXWRDc"
+Received: by mail-pj1-f65.google.com with SMTP id 98e67ed59e1d1-36ab8816a35so2612459a91.1
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2026 22:35:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779946294; x=1780551094; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fFLT2sWkrj/RA6HeZzNRNeQFBEPLyGDvfOL2SeEC/uE=;
-        b=jultqHbB+7fk9zDG9hPzFpt1aBRYNAD6e8BIUoi4gOso10uBHwKTTl6UJAMIHMt6uJ
-         E1yaqggzh7v11NqJK33PKscyo44vVA/QCTk/x54rcAHE7Gl2QxC3vYkc5YQrW1rscJ8a
-         2/U5EuiYXElm1139265B8bIbqX8l0uX0e7a33N72fAEAfRswSbeiAZ634WOKp7xq40zT
-         bkdYyMcR0MRU27yAODvn9dgu7u266zjpT35IkyiiNURC+4mpS/gbPiW8r9QZvv8htGB5
-         U2IZ7QtwtCgwUq1Aq/tMyfIoAMPzHiLt+l+7Rw/wZu26q6veBSmLim34cX2lwcrO2ll6
-         IFyg==
+        d=gmail.com; s=20251104; t=1779946559; x=1780551359; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jEcLv72SgXWCsu9Ow9ZF5fDTMQLKci6Ciiyqk71jcRE=;
+        b=BFlXWRDcwDIKAcVVCwra6Vmt32P2MClVIDvC5zJfmnq7kCGWBvrRCgA4b1tOBzasCG
+         TuujjjAP203qHQYvrmCK04/JbGhWUeAJCtUvFtVjZna5ODdgpvzuzAQKqkZguXJ2oylH
+         782c2xZobdxseFm12n6IoXghAavE09Dn6zPZniyez6I9wonCJ1R2Lb8BXsJ4xxye1OVj
+         kCH4G2e92vDpTnhPxDv+pOL0MLBtIF0X84TAK/rVweXevZ/j+LpVX68//YAMBIdyosSw
+         jj54Wb7SFA8k3b0G5Aran+Vya5Qwh5hRNoJevvT4kZ2ReTiUrS1bch8dM4yBe4/HhwyH
+         hUYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779946294; x=1780551094;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=fFLT2sWkrj/RA6HeZzNRNeQFBEPLyGDvfOL2SeEC/uE=;
-        b=MZdnHn7NeiUQxRsCDpitOS1Ma2Guiy7Ak/x3O5FuTRAcBdv+zu/P74uTFfUIkoQ3Zs
-         cxvu/08Q1PDz4EzIVYdWKcBpBpa7uiMKboD6X9v9DdmIfb94KA4LFSnep1yNnWFiFmr0
-         K0Ug5bV6JMy3G9FnGGgAs3Vej6nuh4Qu9ck8IWMMWlLNgZNsmr7RwDu9Bn8KHIY2815t
-         m7yQ7Bgdu6IACkn/hJRSZWav8maQyuexcf5I8xUMsv5E++hTE5rQQrq9iUzkXQEyRscK
-         FLs2wDK7WjvV27UUO/ickRD1wwaklifnTZFmPwRYqdi08c2LkRYWrp8duAuHP40kyv3L
-         mLsA==
-X-Forwarded-Encrypted: i=1; AFNElJ+y/kxn2xfnlc91jhvwo5yfOsjI3Shi3rWsNs+4Xw0UFWgzBbfMm3AfddVGPclRIj7C+YSWkFETvYo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwjydT1a+UehtRC06MTwxyIM+i9pValXHmbsFCrAj0pxeiPLh0x
-	ubqHV06rUB0BV9k+HuksMiQXVs056V/nNhMuITyUHdl0y+rspNp8A2ZQ
-X-Gm-Gg: Acq92OEeh3Ir4stt+7kahZMJOk9EYnDbKLX+1ottipUfvxc3bLPiz60WIxswAdutz++
-	GaDCzinjX6sBU6wqTFFfwziZy/Pyb3dUNVZd75Ymwm0moubL0nsYLPgPtcFuIEu0dgIJUXuWwck
-	T2n3+4EciODBA9GYTTMqgLviragaGStQMAMYZGO3WsGr3gsBJF7S0hCP+6LVN9bSUQjP22PBjVJ
-	mHaRIgYx/zYduZw9tgU8kt5dv5YKCxyn0L80ZZXrzsT/JK2nClBogancv1vLazADQHUBqLl0CdO
-	nr71UAynRDXiqcNHTuNwwd2QD07wdm9p8fVAfDLTIO9WHJMrMPW5ghezk0flAHS5krkacOWZAOg
-	M+8MxE8smMY7/TzCLoGC4pZqWyE0NPw2cYR99u0EvGJHmI34jBA5TopXJYkXqWvIlkRsaOHYNr3
-	fHS8EBxsT7LmH3TTavVj/s/fy28bYuy+WOtd+86slcRA==
-X-Received: by 2002:a17:903:240e:b0:2bd:907:2cf0 with SMTP id d9443c01a7336-2beb0632925mr287109895ad.32.1779946294313;
-        Wed, 27 May 2026 22:31:34 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1779946559; x=1780551359;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jEcLv72SgXWCsu9Ow9ZF5fDTMQLKci6Ciiyqk71jcRE=;
+        b=hJn+xu02SD0ElqhzcPislkeZriVBx0LIZySOX2dTir3qdW7gcO2QhhGqGLQR69waa5
+         KOeU5abH7jJWbrG3+fZq2lzaoLwTBG5Y8hQC2nIRmwL/oTx9YS1P36hmMEGv3ia9zccY
+         37N2Swu8s26mvypDpltk2tBJ3+IGNCQ7PMDFIodm00+h1VIyFssjLIYQx5itv9gTZuwA
+         Cb70+sMfWeA6WZjbKLV/4lBbzzMEkFyb6zQ2Lg8GojoGQK4adVivfJUdM2l3kDrGeqNb
+         3e8kyi27FQK39EpckYGnitPlFpogG+0knj4ygiVAahqRgaZ/wWIyvOPwbEE0b22gCtgE
+         aBKA==
+X-Gm-Message-State: AOJu0Yw+k1lqmf+Z4OZivqzGFBKr/fbynjSD2mc3ZL4kZTJYynr6I2hL
+	TKzHt9PUI1Z6EpjjAb3G7i6ZK0ktzsLBjmX1081LP9oBMPVbyZGYNKkm
+X-Gm-Gg: Acq92OHTX0Ehtq4tyGMqyCAPCv5FO2KCiEkt3JLyjdBsSWOOrr2687/Rxq5haHPZk2H
+	VIKaxo4y6MMLU8DOW79CmmecGeliQV/XclqcwD0FteoT79CMrEwnchBTxdgCkQra4V8uj6wqSPU
+	t3Bsd0GRgQ/LZoYPR/QBgw71ykPxMJ68JKRVqsXD/WcNqudNkicLZUoL35tDXNq5MQiC+ctmutH
+	0oBoi2/tgZF0JS4UhtWqIrZY+x/7JDOhdYnupJRfcaS6H2BCdqoRJ4S8VjK4I9t5+C5wK0Q4Ihx
+	EGe7H872mXfzJZWmtZ2Ji2xgwMJtFYfxeWqbI2WVocT4mO/uCyr0FjhAJAt9QU8ZVhWIkb//Kc6
+	2+Ud0h8RVMJR49xcxGDfJI4fp0gXh9QXcEgI8IzTSAwtiyW87VdxzdA2ORxm0OtdcplVx2iPrEh
+	5mcx+/JYe1myDV9sxcOfef2attp8xoiyBSWyWc/Nd4EQ==
+X-Received: by 2002:a17:90b:4c50:b0:369:d704:d944 with SMTP id 98e67ed59e1d1-36a6741f011mr24463407a91.4.1779946559118;
+        Wed, 27 May 2026 22:35:59 -0700 (PDT)
 Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2beb5695a75sm217440825ad.14.2026.05.27.22.31.31
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36b7e7f99basm355720a91.3.2026.05.27.22.35.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 May 2026 22:31:33 -0700 (PDT)
+        Wed, 27 May 2026 22:35:58 -0700 (PDT)
 From: Zhang Cen <rollkingzzc@gmail.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org,
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Zhang Cen <rollkingzzc@gmail.com>,
+	Christoph Hellwig <hch@infradead.org>,
 	zerocling0077@gmail.com,
-	2045gemini@gmail.com
-Subject: Re: [PATCH] xfs: drain inodegc before quota teardown on mount failure
-Date: Thu, 28 May 2026 13:31:28 +0800
-Message-Id: <20260528053128.3036120-1-rollkingzzc@gmail.com>
+	2045gemini@gmail.com,
+	Zhang Cen <rollkingzzc@gmail.com>
+Subject: [PATCH v2] xfs: drain inodegc before quota teardown on mount failure
+Date: Thu, 28 May 2026 13:35:54 +0800
+Message-Id: <20260528053554.3047829-1-rollkingzzc@gmail.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <agwh6darf9q52za7@infradead.org>
-References: <agwh6darf9q52za7@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,43 +75,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Christoph,
+xfs_mountfs() starts background inodegc before mount completion. If a
+later setup step fails after quota setup, the failure unwind can destroy
+quota state while an inodegc worker is still able to resume
+xfs_inactive().
 
-Sorry, I missed this reply earlier and only noticed it now from the
-public archive.
+There are two related windows. First, out_agresv can still call
+xfs_qm_unmount_quotas() while m_qflags allow dqattach, so dqget can
+still need quota inodes that are being released. Second, failures after
+xfs_qm_newmount() can destroy mp->m_quotainfo before inodegc has been
+drained, while xfs_qm_dqattach() can still follow m_qflags into the
+quota cache.
 
-> How did you run into this?  Normal xfstests under a new sanitizer?
+Normal unmount and the quotacheck abort path already drain inodegc before
+quota teardown. Do the same for mount failure. Drain inodegc at out_agresv
+before dropping AG reservations and quota inodes. Add an out_qm_unmount
+label above out_rtunmount so failures after xfs_qm_newmount() drain
+inodegc before xfs_qm_unmount() destroys quotainfo.
 
-This was not from normal xfstests.  I reproduced it in a KASAN-enabled
-QEMU guest with a disposable quota-enabled XFS image, then forced a late
-mount failure after quota setup while tracing the inodegc and quota
-teardown path.  The failing ordering was:
+This was reproduced in a KASAN QEMU setup that forced a late
+xfs_mountfs() failure after quota setup and widened the inodegc/dqattach
+window. The failure reported a general protection fault in
+xfs_qm_dqget_cache_lookup() from the inodegc worker path:
 
-  xfs_qm_mount_quotas()
-  late mount failure
-  xfs_qm_unmount_quotas()
-  xfs_qm_unmount() / xfs_qm_destroy_quotainfo()
-  xfs_inodegc_flush()
+  xfs_qm_dqget_cache_lookup()
+  xfs_qm_dqget_inode()
+  xfs_qm_dqattach_locked()
+  xfs_qm_dqattach()
+  xfs_free_eofblocks()
+  xfs_inactive()
+  xfs_inodegc_worker()
 
-with inodegc still able to reach the dqattach/dqget side during the
-teardown window.
+Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
+Signed-off-by: Zhang Cen <rollkingzzc@gmail.com>
+---
+v2:
+- Add an out_qm_unmount label above out_rtunmount, as Christoph suggested.
+- Keep the out_agresv inodegc drain before xfs_qm_unmount_quotas().
+- Describe the KASAN/QEMU validation setup and fix trailer spacing.
 
-> This looks good.
+ fs/xfs/xfs_mount.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-Thanks.
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index b24195f570cd8..39ce56e866060 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1156,7 +1156,7 @@ xfs_mountfs(
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 	if (error) {
+ 		xfs_warn(mp, "log mount finish failed");
+-		goto out_rtunmount;
++		goto out_qm_unmount;
+ 	}
+ 
+ 	/*
+@@ -1174,7 +1174,7 @@ xfs_mountfs(
+ 	if (xfs_has_zoned(mp)) {
+ 		error = xfs_mount_zones(mp);
+ 		if (error)
+-			goto out_rtunmount;
++			goto out_qm_unmount;
+ 	}
+ 
+ 	/*
+@@ -1228,16 +1228,29 @@ xfs_mountfs(
+ 	return 0;
+ 
+  out_agresv:
++	/*
++	 * Drain ordinary inodegc before we drop per-AG reservations or tear
++	 * down quota state.  Background inactivation can still attach dquots
++	 * here, and dqget can still need the quota inodes.
++	 */
++	xfs_inodegc_flush(mp);
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 	xfs_qm_unmount_quotas(mp);
+ 	if (xfs_has_zoned(mp))
+ 		xfs_unmount_zones(mp);
++ out_qm_unmount:
++	/*
++	 * xfs_qm_newmount() can bring quota inodes into the mount.  Drain
++	 * inodegc before destroying quotainfo because background inactivation
++	 * can still attach dquots.
++	 */
++	xfs_inodegc_flush(mp);
++	/* Clean out dquots that might be in memory after quotacheck. */
++	xfs_qm_unmount(mp);
+  out_rtunmount:
+ 	xfs_rtunmount_inodes(mp);
+  out_rele_rip:
+ 	xfs_irele(rip);
+-	/* Clean out dquots that might be in memory after quotacheck. */
+-	xfs_qm_unmount(mp);
+  out_free_metadir:
+ 	if (mp->m_metadirip)
+ 		xfs_irele(mp->m_metadirip);
 
-> This is later in the teardown order than where I'd expect it. The
-> first thing that can bring in quotainodes is xfs_qm_newmount.  I'd
-> expect a new label placed above out_rtunmount to handle this.  Is
-> there a reason I'm missing why this won't work?
-
-No, I don't think you are missing anything.  A separate label above
-out_rtunmount is the cleaner place for this.  I'll send a v2 that keeps
-the out_agresv inodegc drain before xfs_qm_unmount_quotas(), adds an
-out_qm_unmount label above out_rtunmount, and routes the later
-post-quota failure paths through that label.
-
-I'll also fix the trailer spacing in v2.
-
-Thanks,
-Zhang
+base-commit: eb3f4b7426cfd2b79d65b7d37155480b32259a11
+-- 
+2.43.0
