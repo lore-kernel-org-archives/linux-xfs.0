@@ -1,41 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B366D2E4257
-	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658AC25F7B9
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 05:24:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779945828; cv=none; b=Hm1YRuDDrqL2Mg0nAIw4MgDhJ8HovoqNbaxsh62TzvyGY55jsT5ADPtNfbTZW2nlZp5OQuCaKwn9OLzGtmrgFy08EoCZ0tAQllKJ0XtqsUePiQ5lt02rzCfabrkatE3C9w6htJEM2JA41UMoLWCZ/96RltZICY4m6D9BxK8Do1o=
+	t=1779945886; cv=none; b=f7OpZSTAGzaxeNLMXxSy6zRID57l0+0aS7vlVo5wemXGBWdJAjluXgGuarq0kf0nCxQUeftYYOtOQNWVOu17ANqWusVX11xP3DnZ694joNrlbzYUooX+2ZyiY2AhiiHYk6RklU6LaUCayzi6tVEbPn9V9YRjrvDh603ootcbISg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779945828; c=relaxed/simple;
-	bh=P9yAYaI0dzn2x8ZBSqe8PxpspG7KluH8jeoys6S7lt4=;
+	s=arc-20240116; t=1779945886; c=relaxed/simple;
+	bh=rZX7wZF1eusJKfsqUcV0J+oFMGNelxSBBTtfedxhaXQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YLd5bT6eVU6cgk0ai90vIXPtUR96j/+ZQb4BPCR/Hkm2wc/lK6vqhSabsB5gn5/Jy+M1QoorufKkigeDpglXmStmTDkQuqKxbiBqUpoCgnK8IWmCICyNsJ8lMaxRG1SqHEWxElr8jw1Xlb2/nl+Gq2zrhlZ+HLp2ZnjuX7tsTUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ldgMPweH; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=CSdynui8aP5w8+UYAKNvNesMrzimhhhGWQqXNdI/K4tMY9Lbr4llFZT8vglPbJDBnTuahVH+jaZBmgltYfcylug7vPmFM4tV86EcFeVkSEPs+umWquKgqMbufTSIipTN8pbufSQT7rK2rQ81/8X93aCtxNcGJpc7WrmLMZaf94Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YEub7kO1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ldgMPweH"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 365251F000E9;
-	Thu, 28 May 2026 05:23:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YEub7kO1"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 336BA1F000E9;
+	Thu, 28 May 2026 05:24:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779945827;
-	bh=VrxM12sl/I94ZrLYVEkAFA1VKISyztXLaX2yBdQSrCg=;
+	s=k20260515; t=1779945885;
+	bh=vJAff9rozTEFreCHTQt/j35VAiwy0xY+vh7bBvG6mec=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ldgMPweHdsSWwKTgwR2x3dcCyLj1QglzSxnkiNI+x5vNkXjWmhfInYTGAVxtPsr1s
-	 sZgfHm5mYL88O+EnJUByEF0iAtUp8YA22LVO/5JeBvBfywaMkWr7GAP/K+LSz1uQPN
-	 laF1bIvzCDlKQnJu4uMOkpemCymRh76vrsxZPf1Fr+s/cwJCR49u1OQ5LwWXIwp0It
-	 QqvmiubeKDFOKGDFzAr88vWEgJchUYg9am9VWvRq/Wepq2S51Yqsfxd4rBd3Q5UFz4
-	 rQlW9JK+zACukoIOlrn4VrwQs1WN34HhBkZflYvmyf3TX2dUtDpYqFruSPmYcMMtbz
-	 iiw1DPfGIWYaQ==
-Date: Wed, 27 May 2026 22:23:46 -0700
+	b=YEub7kO1Gx04/pNg3SJ6UXYQKN/SIom/OOXfXYuZRMSCpArMwvtLDzzCL9EmWwxyV
+	 yOfCFRYEiUg7W/z09uTwZ6f7yVUlZP4rbSeg4hqda4QTcbfqItXg0+37QgrJLVjUzo
+	 naPdGxLKSHlPztT2oRxrQIx34wLFWDHnukltztilQCUEiNQGh8U22h+3oT3eyrkG0u
+	 zb3cLwQy9R7XwWy7PndvdGxk9PUWsgNTnH1VHSmMKcK+/xn1ur9N16CYhcWTtwi4rs
+	 w/zd0dH4ezBaB4I0S/YbS1TrXNvbCDI4rMRaHdRFnCKERnDez6S67JRZ/RLTGQX8IB
+	 3/QjnvA+JkQDA==
+Date: Wed, 27 May 2026 22:24:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] xfs: add a xfs_rmap_inode_owner helper
-Message-ID: <20260528052346.GJ6078@frogsfrogsfrogs>
+Subject: Re: remove struct xfs_inode.i_ino
+Message-ID: <20260528052444.GK6078@frogsfrogsfrogs>
 References: <20260515135103.4042407-1-hch@lst.de>
- <20260515135103.4042407-6-hch@lst.de>
- <agrzt5K9OVTPObMs@nidhogg.toxiclabs.cc>
- <20260518131639.GA7774@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,27 +41,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260518131639.GA7774@lst.de>
+In-Reply-To: <20260515135103.4042407-1-hch@lst.de>
 
-On Mon, May 18, 2026 at 03:16:39PM +0200, Christoph Hellwig wrote:
-> On Mon, May 18, 2026 at 01:14:31PM +0200, Carlos Maiolino wrote:
-> > On Fri, May 15, 2026 at 03:50:26PM +0200, Christoph Hellwig wrote:
-> > > Add a small wrapper for initializing the rmap owner to i_ino.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > This and the previous one, provides very little gain IMHO, do you intend
-> > to get rid of xfs_rmap_ino_owner and xfs_rmap_inode_bmbt_owner? It seems
-> > to me they could simply be replaced by these new helpers instead of just
-> > wrapping them into these new ones.
-> > A little disclaimer: I didn't look into the next patches yet to see if
-> > it will all make sense later.
+On Fri, May 15, 2026 at 03:50:21PM +0200, Christoph Hellwig wrote:
+> Hi all,
 > 
-> My direct aim was to reduce uses of i_ino so I looked for common
-> patterns.  I also generally prefer APIs that pass typesave objects
-> over those passing integers as handles wherever possible.
+> now that the VFS inode i_ino field is always a u64, there is no need
+> to duplicate the inode number in the XFS inode.
+> 
+> This series first adds a few helpers to reduce i_ino reference, and
+> then switches the rest of the code over.  A new I_INO helper is added
+> to shorten the dereference and to make userspace porting easier.
+> 
+> After this and the rw_semaphore shrink that went into 7.1-rc, it might
+> be time to look into re-packing the xfs_inode, but that is left for
+> another series.
 
-I'm curious, then, why are most of these new helpers macros instead of
-type-checkable static inline functions?
+Mechanically these patches all look ok to me, aside from my question
+about why not use static inline helpers instead of macros.
 
 --D
+
+> Diffstat:
+>  libxfs/xfs_attr.c             |    2 
+>  libxfs/xfs_attr_leaf.c        |    2 
+>  libxfs/xfs_bmap.c             |   20 ++----
+>  libxfs/xfs_bmap_btree.c       |    8 +-
+>  libxfs/xfs_btree.c            |   18 ++---
+>  libxfs/xfs_btree_staging.c    |    2 
+>  libxfs/xfs_da_btree.c         |    2 
+>  libxfs/xfs_dir2.c             |   44 +++++++-------
+>  libxfs/xfs_dir2_node.c        |    2 
+>  libxfs/xfs_dir2_sf.c          |    4 -
+>  libxfs/xfs_exchmaps.c         |    8 +-
+>  libxfs/xfs_format.h           |    6 +
+>  libxfs/xfs_ialloc.c           |    4 -
+>  libxfs/xfs_inode_buf.c        |    4 -
+>  libxfs/xfs_inode_fork.c       |    6 -
+>  libxfs/xfs_inode_util.c       |   13 +---
+>  libxfs/xfs_metadir.c          |    2 
+>  libxfs/xfs_parent.c           |    8 +-
+>  libxfs/xfs_parent.h           |    2 
+>  libxfs/xfs_rmap.c             |    6 -
+>  libxfs/xfs_rmap.h             |    4 +
+>  libxfs/xfs_rtbitmap.c         |    4 -
+>  libxfs/xfs_rtrefcount_btree.c |    4 -
+>  libxfs/xfs_rtrmap_btree.c     |    4 -
+>  libxfs/xfs_symlink_remote.c   |    6 -
+>  scrub/agheader_repair.c       |   20 ++----
+>  scrub/attr.c                  |    4 -
+>  scrub/attr_repair.c           |   16 ++---
+>  scrub/bmap.c                  |   24 +++----
+>  scrub/bmap_repair.c           |    8 +-
+>  scrub/common.c                |   26 ++++----
+>  scrub/common.h                |    6 +
+>  scrub/cow_repair.c            |    3 
+>  scrub/dabtree.c               |    4 -
+>  scrub/dir.c                   |   24 +++----
+>  scrub/dir_repair.c            |   42 ++++++-------
+>  scrub/dirtree.c               |   24 +++----
+>  scrub/dirtree_repair.c        |    4 -
+>  scrub/findparent.c            |   33 +++++-----
+>  scrub/inode.c                 |   18 ++---
+>  scrub/inode_repair.c          |    5 -
+>  scrub/iscan.c                 |    2 
+>  scrub/listxattr.c             |   10 +--
+>  scrub/metapath.c              |   16 ++---
+>  scrub/newbt.c                 |    8 --
+>  scrub/nlinks.c                |   34 +++++------
+>  scrub/nlinks_repair.c         |    6 -
+>  scrub/orphanage.c             |   10 +--
+>  scrub/parent.c                |   31 ++++------
+>  scrub/parent_repair.c         |   18 ++---
+>  scrub/quotacheck.c            |    2 
+>  scrub/readdir.c               |   12 +--
+>  scrub/reap.c                  |    5 -
+>  scrub/repair.c                |    2 
+>  scrub/rmap_repair.c           |    2 
+>  scrub/rtbitmap.c              |   16 ++---
+>  scrub/rtbitmap_repair.c       |    2 
+>  scrub/rtrefcount.c            |    2 
+>  scrub/rtrefcount_repair.c     |    2 
+>  scrub/rtrmap.c                |    3 
+>  scrub/rtrmap_repair.c         |    4 -
+>  scrub/rtsummary.c             |   14 ++--
+>  scrub/rtsummary_repair.c      |    2 
+>  scrub/scrub.c                 |    2 
+>  scrub/symlink_repair.c        |    8 +-
+>  scrub/tempfile.c              |    2 
+>  scrub/trace.c                 |    2 
+>  scrub/trace.h                 |  116 ++++++++++++++++++-------------------
+>  xfs_aops.c                    |    2 
+>  xfs_attr_item.c               |    4 -
+>  xfs_attr_list.c               |   12 +--
+>  xfs_bmap_item.c               |    4 -
+>  xfs_bmap_util.c               |    4 -
+>  xfs_dir2_readdir.c            |    4 -
+>  xfs_error.c                   |    2 
+>  xfs_exchmaps_item.c           |    4 -
+>  xfs_exchrange.c               |    4 -
+>  xfs_export.c                  |    8 +-
+>  xfs_filestream.c              |    6 -
+>  xfs_handle.c                  |    4 -
+>  xfs_healthmon.c               |    6 -
+>  xfs_icache.c                  |   56 +++++++++---------
+>  xfs_inode.c                   |   37 +++++-------
+>  xfs_inode.h                   |   19 ++----
+>  xfs_inode_item.c              |    8 +-
+>  xfs_inode_item_recover.c      |    4 -
+>  xfs_ioctl.c                   |    2 
+>  xfs_iomap.c                   |    4 -
+>  xfs_iops.c                    |    3 
+>  xfs_iunlink_item.c            |    2 
+>  xfs_mount.c                   |    2 
+>  xfs_qm.c                      |   10 +--
+>  xfs_quotaops.c                |    2 
+>  xfs_reflink.c                 |    4 -
+>  xfs_symlink.c                 |    6 -
+>  xfs_trace.h                   |  129 ++++++++++++++++++++----------------------
+>  xfs_trans.c                   |    2 
+>  xfs_trans_dquot.c             |    6 -
+>  xfs_xattr.c                   |    2 
+>  99 files changed, 564 insertions(+), 577 deletions(-)
+> 
