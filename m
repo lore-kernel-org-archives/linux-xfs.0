@@ -1,38 +1,31 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45BB5379980
-	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 08:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69E30370ACB
+	for <linux-xfs@vger.kernel.org>; Thu, 28 May 2026 08:25:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779956637; cv=none; b=XLvJpDugwf17/XcHZM3kuKjLasPPSqoZy/PE5QSSebwHRPzxJibWRVbnxQJqZBRpnMlneAVBGFAJL24sdYN8HucmsRtqnNJZ0w0rHbfWsZA+072vfdYLii+E+KzX3uowzoX/juMCP1hsIo3ilaf1QBZHE95S0t8yw6vsBHGnt7k=
+	t=1779956728; cv=none; b=oVwAXs/25MFex8h6IGpcp0KFLV4OCCv1KLIpoljA+k9bzJ0I1oomFN3wHEm2f8RZiuqmrnjk/ESMuNqJc1QgvtTqW0SNGwBXcsT7k9xiF7NBxLk4BJI6JQM9SPv+oiC6tw6WhPCd0BFzn1d1Hh9NguJgxM9B9tTiO8xQ40eACmQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779956637; c=relaxed/simple;
-	bh=wYhUSOPF5qqV66cf1v59MeyHX4GfUhX7DRwZYTJZqQQ=;
+	s=arc-20240116; t=1779956728; c=relaxed/simple;
+	bh=2suLIaAgjJraBIG1iWI6T6zutOO8SWQQkFXyteDmNCU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KMsIXCr0OURYnTBiFYrn1A5xlsFoe5XC2FIyaIZpy4wOCOgwAkd5g7d+V/lC9l8AICzb1FNTs/4xvV1zJEMmIFh2ToMyaolPkUFpurnETBfN+s1W2DgcTjBv0DHvQoaeOsLu8VKbzbC23q4iZZuv4RJTZsuiw4ydibKwxwLi9R4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JwNTprlZ; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JwNTprlZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52BF11F000E9;
-	Thu, 28 May 2026 08:23:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779956632;
-	bh=tf7SNuIOE0pTOoBLII0Z5Cq9SNBWVo+zFvnjYHNwVnA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JwNTprlZMTJsgvRAW4H+VHpU05Z7/XQyV8x8LZP5cbccSsbzKm9BP/48xqNCAvufl
-	 PrpDhEx19Aq41I/p7TFKuT1hZUERT5DhsmeIu5XXFJHNfza5rMWieppy2e3gvt7Wp2
-	 dp0A9FjBqk0VexxwD1L07i8R574wrgPevpJ6EZdGpKvUFMgdKXyTs+WziL3fDyFNa9
-	 vxI8/HXOWFYLCJiB6GT4uCn6otdVRowJzoP8Y78o3Pdo/wEcK1EVJdw4UFB344gFJE
-	 3fC3WMLpAsDnJAb6XTqH2um1MSeqQ28nuQN4pmJJnXinUyjgqof0KaUM5R2Fp9t46o
-	 9vwJ9bMEOBHVw==
-Date: Thu, 28 May 2026 10:23:48 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: abort mount if xfs_fs_reserve_ag_blocks fails
-Message-ID: <ahf7jeQcRwEhkgWC@nidhogg.toxiclabs.cc>
-References: <20260527123243.2316101-1-hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=S645VJLpdWldzQX+7UY/s+ZEOcijz7UC1TtaIeEPIkOcVSW17IH2wvMabJK3O8ouBxZGaX9V5/HnncrhYBHmcWzc3BkuuCllR7mZJkwcAZZPMoAhbUmZR8xJ99ImwYGTUiMFAE3F70vjbOLEchANXr9vocmWa8afhC6ZShyYzgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B013B68BEB; Thu, 28 May 2026 10:25:17 +0200 (CEST)
+Date: Thu, 28 May 2026 10:25:17 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: drop the experimental warning for the zoned
+ allocator
+Message-ID: <20260528082517.GA6620@lst.de>
+References: <20260527123941.2319377-1-hch@lst.de> <20260527123941.2319377-4-hch@lst.de> <4038eaae-4551-4a22-8f75-3b4037a6a5af@kernel.org> <ahf6Ahku3KY9W1Gy@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,43 +34,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260527123243.2316101-1-hch@lst.de>
+In-Reply-To: <ahf6Ahku3KY9W1Gy@nidhogg.toxiclabs.cc>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, May 27, 2026 at 02:32:37PM +0200, Christoph Hellwig wrote:
-> xfs_mountfs currently ignores all errors from xfs_fs_reserve_ag_blocks,
-> which can lead to the mount path continuing on corruption errors.
-> Fix the check to only ignore -ENOSPC as in other callers, and unwind for
-> all other errors.
+On Thu, May 28, 2026 at 10:20:52AM +0200, Carlos Maiolino wrote:
+> > Do we want to compact the numbering and change this to 19 ?
 > 
-> Fixes: 81ed94751b15 ("xfs: fix log intent recovery ENOSPC shutdowns when inactivating inodes")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I'd agree with Christoph and not reuse the warn number but perhaps I'm
+> just being overly cautious as we don't have a 'stable' version which
+> zoned support would be backported to :P
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+There's a lot of holes in this number space.  I can send an incremental
+patch to compact it.
 
-> ---
->  fs/xfs/xfs_mount.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index b24195f570cd..7aa51826b1ca 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1149,9 +1149,12 @@ xfs_mountfs(
->  	 * blocks.
->  	 */
->  	error = xfs_fs_reserve_ag_blocks(mp);
-> -	if (error && error == -ENOSPC)
-> +	if (error) {
-> +		if (error != -ENOSPC)
-> +			goto out_rtunmount;
->  		xfs_warn(mp,
-> -	"ENOSPC reserving per-AG metadata pool, log recovery may fail.");
-> +"ENOSPC reserving per-AG metadata pool, log recovery may fail.");
-> +	}
->  	error = xfs_log_mount_finish(mp);
->  	xfs_fs_unreserve_ag_blocks(mp);
->  	if (error) {
-> -- 
-> 2.53.0
-> 
-> 
