@@ -1,162 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DAED2E7391;
-	Fri, 29 May 2026 04:39:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D253E37E301
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 05:44:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780029597; cv=none; b=bVhZbPvFLnDoyeCUa1B8yUBLQuQi34qIQuyod/96FnkBOlIO5GVojVPFOAH1PO9m0pxuy/cJViXGnFV1+HYEJ6kRJoz6AqyfnE1uRziS5GwdzI8Dhohl1ZY8rvB+TpXS+Bl87ysSbJ9w/cTv3h/7MN4UJgc5mrQjzaQTkzKNuYM=
+	t=1780033448; cv=none; b=kkfQNSxjj3hMQ0ZiK2SpcCWu3oIkaNt+UEAQf0m9CWjNUaKC9yAbRRvRNn/HnLK+DNfSPgegxzO8X2T+0sfujBhWayWcRWfbvI6D1Oh5eNFcWQg8JIWZ0qtlGLu7uddFecANMsttd8Wgqw8kNu91yyKESb0PQKS/4xYcDUtlLU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780029597; c=relaxed/simple;
-	bh=0LchzAw0rNobSeSvJsgPyZuJg/OSVCJgLjz7FG0eiGs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XWmLIThiS2oBNxkJW3dzMsL/q/khrOUKP5WTldcvEVhH/sZBzVtkbG2eaI+6cJi8vl6Q0E012GuHR0L9Ifd16WiFJZpaKVRXOp8el1GcWTk023x6+zukEgTlyRoaGs/4c/DDXJXOgmCSDeHFdO+bH8l0xwICJWhxdkXR8VsWCi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZ+hKT45; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780033448; c=relaxed/simple;
+	bh=PwXi65n1O0YrKTNjqVqiuC+wPrfeuPopte/I7DJNV1A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=njvjqNbQfZWSbRouEOm4bIfUY72Qpj5VAQUNjY/gXRjZFD/744iiTlvRIc5DF+0WCTywtUzndg0QlDf9UCCZTS/0KP71Y7lcX7miiBB4+Hc3RE2zZUFp6NPwYgRoB2BwmrOLIv90wgtDZEokyPEApqEPK3JOfEVTGNqZBeRrOXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0H+LxkGK; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZ+hKT45"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C44AD1F00893;
-	Fri, 29 May 2026 04:39:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780029595;
-	bh=8W0wLWUEVCd1iMnz4p4LRMZLuTVASNeXNrW/n7LnqKA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OZ+hKT45oS1XCcQ318yI/N+b3pMC41KzsYRP8If9zg+AMzclXSDd1tVLyxgsUjzso
-	 XlAd11dr6PzJsYf76l6W92SjuLhFlVoP22/IzyBG30Gveo76GuAOhRQQsWelcWngP+
-	 PvLhjJ4JvHB1iOIjsSvMBxm+ufsBHWYiGJJ3Zq46oTUOV+DeyAZCWEtqGUwoiL+Cxn
-	 poHbidH2TBQS2xbKHW5IITtdWxRwDW/zdPT2zVlvFr8vNWxwuNRcNN8tbA+Lnb4Sh+
-	 D/adQOiWgU9NpphKHRfU6xfvix8X1JbJ4EeUx1A9QstnEbUSHcRXtEK6UiuhpeHkDn
-	 AG4dkB7qPJJOw==
-Date: Thu, 28 May 2026 21:39:55 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
-	hch@infradead.org
-Subject: Re: [PATCH v6 06/11] fstests: verify f_fsid for cloned filesystems
-Message-ID: <20260529043955.GG6070@frogsfrogsfrogs>
-References: <cover.1779939330.git.asj@kernel.org>
- <e029755044a32de6ec2a0d3391f3ff0089fc3c30.1779939330.git.asj@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0H+LxkGK"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=bdzS+hT4nJT+GwQ0tamyy2X3ri9mQ4x79n91vJH1YPE=; b=0H+LxkGKjxAOeKfRQ+A8xIgDl/
+	mJcP2r95556RQg/mc9NCQFfONWoGMcn9XGonjfp78poFx3LIFJJWO9NI1ZXSBiJcJDKjvwZ8lzdlo
+	BBXY2+EjAFTulSBE1QI+nCZOx778mKT0sStJOX56tF7yiI8IZ54hPlE+Q3Po4uKdMt5dAR0IUzn/n
+	P8R6Vrnq1xc+LpjwqPvtfrovvn1atopxfkZsmtHjNlbgE67c2znCtfMBW+Bx6TVtzkrTfpdi7E+tp
+	9aAGv1bAvATuMT1bTM+G7lzpBZvHA8Osz2JH6aTA7WtzYkExoHnxe//LQJL0LfBNunYX1BsjTJkip
+	rcbvBJTQ==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wSq0t-00000006lyN-0eGx;
+	Fri, 29 May 2026 05:44:07 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: remove the call to xfs_buf_reverify in xfs_trans_read_buf_map
+Date: Fri, 29 May 2026 07:43:58 +0200
+Message-ID: <20260529054404.2720366-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e029755044a32de6ec2a0d3391f3ff0089fc3c30.1779939330.git.asj@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, May 28, 2026 at 12:05:37PM +0800, Anand Jain wrote:
-> Verify that the cloned filesystem provides an f_fsid that is persistent
-> across mount cycles, yet unique from the original filesystem's f_fsid.
+xfs_trans_read_buf_map asserts bp->b_ops is non-NULL just before
+calling xfs_buf_reverify which is a no-op if bp->b_ops is set, making the
+call dead code ever since it as added in commit 1aff5696f3e0 ("xfs: always
+assign buffer verifiers when one is provided").
 
-Might want to add that last part to the test description itself, because
-otherwise I don't know what 'verify' means.
+Remove the useless call, mark xfs_buf_reverify static and clean up the
+branch dealing with a buffer attached to the transaction in a bit by
+deduplicating and keeping together the asserts and removing the bip
+variable only used once outside of asserts and tracing.
 
-> Signed-off-by: Anand Jain <asj@kernel.org>
-> ---
->  tests/generic/802     | 67 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/802.out |  7 +++++
->  2 files changed, 74 insertions(+)
->  create mode 100644 tests/generic/802
->  create mode 100644 tests/generic/802.out
-> 
-> diff --git a/tests/generic/802 b/tests/generic/802
-> new file mode 100644
-> index 000000000000..653e74e11b53
-> --- /dev/null
-> +++ b/tests/generic/802
-> @@ -0,0 +1,67 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-> +#
-> +# FS QA Test 802
-> +# Verify f_fsid and s_uuid of cloned filesystems across mount cycle.
-> +
-> +. ./common/preamble
-> +
-> +_begin_fstest auto quick mount clone
-> +
-> +_require_test
-> +_require_block_device $TEST_DEV
-> +_require_loop
-> +
-> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-> +	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
-> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-> +	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf.c       |  2 +-
+ fs/xfs/xfs_buf.h       |  1 -
+ fs/xfs/xfs_trans_buf.c | 39 ++++-----------------------------------
+ 3 files changed, 5 insertions(+), 37 deletions(-)
 
-_fixed_by_fs_commit?
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 0cea458f1353..3ce12fe1c307 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -623,7 +623,7 @@ _xfs_buf_read(
+  * type.  If repair can't establish that, the buffer will be left in memory
+  * with NULL buffer ops.
+  */
+-int
++static int
+ xfs_buf_reverify(
+ 	struct xfs_buf		*bp,
+ 	const struct xfs_buf_ops *ops)
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index bf39d89f0f6d..b3cd1c7029f1 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -365,7 +365,6 @@ int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize,
+ 
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+-int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
+ bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
+ 
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 95db73a37e57..7e17b93fe9ad 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -234,7 +234,6 @@ xfs_trans_read_buf_map(
+ 	const struct xfs_buf_ops *ops)
+ {
+ 	struct xfs_buf		*bp = NULL;
+-	struct xfs_buf_log_item	*bip;
+ 	int			error;
+ 
+ 	*bpp = NULL;
+@@ -251,9 +250,10 @@ xfs_trans_read_buf_map(
+ 	if (bp) {
+ 		ASSERT(xfs_buf_islocked(bp));
+ 		ASSERT(bp->b_transp == tp);
+-		ASSERT(bp->b_log_item != NULL);
+ 		ASSERT(!bp->b_error);
+ 		ASSERT(bp->b_flags & XBF_DONE);
++		ASSERT(atomic_read(&bp->b_log_item->bli_refcount) > 0);
++		ASSERT(bp->b_ops);
+ 
+ 		/*
+ 		 * We never locked this buf ourselves, so we shouldn't
+@@ -264,39 +264,8 @@ xfs_trans_read_buf_map(
+ 			return -EIO;
+ 		}
+ 
+-		/*
+-		 * Check if the caller is trying to read a buffer that is
+-		 * already attached to the transaction yet has no buffer ops
+-		 * assigned.  Ops are usually attached when the buffer is
+-		 * attached to the transaction, or by the read caller if
+-		 * special circumstances.  That didn't happen, which is not
+-		 * how this is supposed to go.
+-		 *
+-		 * If the buffer passes verification we'll let this go, but if
+-		 * not we have to shut down.  Let the transaction cleanup code
+-		 * release this buffer when it kills the tranaction.
+-		 */
+-		ASSERT(bp->b_ops != NULL);
+-		error = xfs_buf_reverify(bp, ops);
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp, __return_address);
+-
+-			if (tp->t_flags & XFS_TRANS_DIRTY)
+-				xfs_force_shutdown(tp->t_mountp,
+-						SHUTDOWN_META_IO_ERROR);
+-
+-			/* bad CRC means corrupted metadata */
+-			if (error == -EFSBADCRC)
+-				error = -EFSCORRUPTED;
+-			return error;
+-		}
+-
+-		bip = bp->b_log_item;
+-		bip->bli_recur++;
+-
+-		ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-		trace_xfs_trans_read_buf_recur(bip);
+-		ASSERT(bp->b_ops != NULL || ops == NULL);
++		bp->b_log_item->bli_recur++;
++		trace_xfs_trans_read_buf_recur(bp->b_log_item);
+ 		*bpp = bp;
+ 		return 0;
+ 	}
+-- 
+2.53.0
 
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.*
-> +	umount $mnt1 $mnt2 2>/dev/null
-> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
-> +}
-> +
-> +# Setup base loop device and its clone
-> +devs=()
-> +_loop_image_create_clone devs
-> +mkdir -p $TEST_DIR/$seq
-> +mnt1=$TEST_DIR/$seq/mnt1
-> +mnt2=$TEST_DIR/$seq/mnt2
-> +mkdir -p $mnt1
-> +mkdir -p $mnt2
-> +
-> +# Mount both filesystems simultaneously using mandatory clone mount options
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-> +						_fail "Failed to mount dev1"
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-> +						_fail "Failed to mount dev2"
-> +
-> +# Capture baseline filesystem IDs for comparison
-> +fsid_scratch=$(stat -f -c "%i" $mnt1)
-> +fsid_clone=$(stat -f -c "%i" $mnt2)
-> +
-> +echo "**** fsid initially ****"
-> +echo $fsid_scratch | sed -e "s/$fsid_scratch/FSID_SCRATCH/g"
-> +echo $fsid_clone | sed -e "s/$fsid_clone/FSID_CLONE/g"
-
-Why echo only to sed?
-
---D
-
-> +
-> +# Verify that the fsids remain stable after a mount cycle, even when the
-> +# mount order is reversed.
-> +echo "**** fsid after mount cycle ****"
-> +_unmount $mnt1
-> +_unmount $mnt2
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-> +						_fail "Failed to mount dev2"
-> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-> +						_fail "Failed to mount dev1"
-> +
-> +# Compare post mount-cycle values against the baseline
-> +stat -f -c "%i" $mnt1 | sed -e "s/$fsid_scratch/FSID_SCRATCH/g"
-> +stat -f -c "%i" $mnt2 | sed -e "s/$fsid_clone/FSID_CLONE/g"
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/802.out b/tests/generic/802.out
-> new file mode 100644
-> index 000000000000..d1e008f122bb
-> --- /dev/null
-> +++ b/tests/generic/802.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 802
-> +**** fsid initially ****
-> +FSID_SCRATCH
-> +FSID_CLONE
-> +**** fsid after mount cycle ****
-> +FSID_SCRATCH
-> +FSID_CLONE
-> -- 
-> 2.43.0
-> 
-> 
