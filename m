@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9050F35B62C;
-	Fri, 29 May 2026 04:30:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20F7D2E7391
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 04:33:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780029057; cv=none; b=PhPRbR734kji5UzXnfvn4l2Bn+FffVozJa8OSlmpCxmr70Qf1yLLAL+oIkbPxJeUQKrN08dr/8gnyyBI4LahDyLMWs4jbuciHn2y4kvKF038IaVQNQRcP1zDgnx2ZIb/8AyeGXesWGGO+mxh6ppsQz5pAg452CFucUHuaDgFzus=
+	t=1780029195; cv=none; b=u1onj6q/NwOHVcCLR/9TTzmeVczkf/mF7eJbmtr04I9WIOepn+tuY8tXIahn620Yppi/VwHepZ7mvmbJ7gmF3EhADIbhEagCE8uNfAs43gaoVfcV3L4LFE6niLBLhuVbkAiWMV6tVYRPb+DmBcWzYU6OGIQOBNxtZ2GV9ZyuvQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780029057; c=relaxed/simple;
-	bh=nR0sNMeomPmRDTFjnJZawaXlH/LQGYr4CP1PtlY1C5I=;
+	s=arc-20240116; t=1780029195; c=relaxed/simple;
+	bh=MqCLGcLtYL7b7+UXxjgN6mxgMoOiYdrRW0vdRr8/62Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZUwHevO1SIN+UEezbzP9SBfW2fgFqzcvhIY5jEM3YWx53JQhQAgQnMIdX7sC681tvLnAF9icu0g1w1i7a/KJZ9fhm9AeMJTCuSsYczkvZodDweV/7kJLwCOpB0q2hGDZ/Yh6yRF2zMxLa3sqD6thggbA+DHFDZtcPjPOa1pDNGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HUZJMAQ4; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=FfGb+X12q118mlSuILcfHEn8qGEDP3AFE2fFE1/zVKSa7c/cSV/NrbAu1SdYsUYXOfTTY42CrXrpLUqBPB0vgexYtFVC1mpqbFpBwC3G8LFDs+ph/yY7xRrn023SF1hYE5SBm6c2yLwmOkOd4zyj72OKrXB9ctIvRolsZIXto6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lvvDiOUg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HUZJMAQ4"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 616A81F00893;
-	Fri, 29 May 2026 04:30:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lvvDiOUg"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E498F1F00893;
+	Fri, 29 May 2026 04:33:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780029056;
-	bh=Y9i3D99952aoMze26KNO+B5RKcPVXLOJ/Le5dJq03VQ=;
+	s=k20260515; t=1780029194;
+	bh=pgpsBIduSmsSHDrKI23BrEZlAPpYhQEx/QMoR3u3AeM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HUZJMAQ4JW93nEK7Ak/B7yekzr0L9gilaId6xBXrCVUiqg92v5fqrUBFr8h0m5Oog
-	 iA+F1hNKwTjPIft3PnmQJLznIaw3uwRhlW/yO7iC6nc8mrwKxZ11Spi1tT+/ltMTpz
-	 7IQPG4fRwkqsLrp7gsjSrEflI1XB+p7SzvOC1/uWggWjXTk/JblEv4qBAS+YJQcAmv
-	 1m5mUzzgTHR4ortXnd/whkXqrlJYQ7+pU1pNwuXhBj+kA2rpGXRvx+mxNzirF6cAF+
-	 mbVFiwiesQ8295To0Sx1dqDr+Q3kddrBX2CkGYiqz8GDTn65esC1eMNj51RB/Q+2I1
-	 Iler0emvl6uXw==
-Date: Thu, 28 May 2026 21:30:56 -0700
+	b=lvvDiOUguaTB3TSAgVg9A/Z2jtUla3Q0M7syp9yAlvM9qbMFVxFtwAxKsvE8cudd5
+	 uWEckr7aFg7wxnFh/MU232lKgqusApZtDIdfJaF79dLO4zHt2fwpP3N6uBoMZt339o
+	 w33VRViN7seHVgeAqJtB4EzWj92ZmEBMld20IdweiBtPADTuUB8ywGkAc62HjMmqOh
+	 mpv4vAuytiXNIDjdiNMf9F/nQNOEBksiDMkSHd5kvnk7KsW4ZdDteIGpHk/AxKTThS
+	 X8s2kwic/X9Ft1x+2Hlc3Ep8UrHG7xZQxgEAFkgaOZrdjKfTc0YJTkVRRG6fAwP0bi
+	 GYCu11/CI+jWg==
+Date: Thu, 28 May 2026 21:33:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Anand Jain <asj@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
-	hch@infradead.org
-Subject: Re: [PATCH v6 04/11] fstests: add _require_unique_f_fsid() helper
-Message-ID: <20260529043056.GE6070@frogsfrogsfrogs>
-References: <cover.1779939330.git.asj@kernel.org>
- <983ed0f63318c930379ee74220f23aa558c16d51.1779939330.git.asj@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: remove struct xfs_inode.i_ino
+Message-ID: <20260529043313.GL6078@frogsfrogsfrogs>
+References: <20260515135103.4042407-1-hch@lst.de>
+ <20260528052444.GK6078@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,66 +42,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <983ed0f63318c930379ee74220f23aa558c16d51.1779939330.git.asj@kernel.org>
+In-Reply-To: <20260528052444.GK6078@frogsfrogsfrogs>
 
-On Thu, May 28, 2026 at 12:05:35PM +0800, Anand Jain wrote:
-> Add a helper to check if the target filesystem supports unique f_fsid
-> tracking across cloned or snapshot instances.
+On Wed, May 27, 2026 at 10:24:44PM -0700, Darrick J. Wong wrote:
+> On Fri, May 15, 2026 at 03:50:21PM +0200, Christoph Hellwig wrote:
+> > Hi all,
+> > 
+> > now that the VFS inode i_ino field is always a u64, there is no need
+> > to duplicate the inode number in the XFS inode.
+> > 
+> > This series first adds a few helpers to reduce i_ino reference, and
+> > then switches the rest of the code over.  A new I_INO helper is added
+> > to shorten the dereference and to make userspace porting easier.
+> > 
+> > After this and the rw_semaphore shrink that went into 7.1-rc, it might
+> > be time to look into re-packing the xfs_inode, but that is left for
+> > another series.
 > 
-> Certain filesystems like XFS, Btrfs, and F2FS ensure unique f_fsid
-> identifiers per filesystem instance. However, Ext4 derives its f_fsid
-> directly from its superblock UUID, which leads to identical f_fsid
-> values on cloned images until the UUID is manually modified by userspace.
-> 
-> Introduce _require_unique_f_fsid() to allow test cases requiring strict
-> f_fsid uniqueness to skip gracefully on unsupported filesystems.
-> 
-> Signed-off-by: Anand Jain <asj@kernel.org>
-> ---
->  common/rc | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/common/rc b/common/rc
-> index 937f478963b4..5446552aed92 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -6314,6 +6314,27 @@ _require_fanotify_ioerrors()
->  	_notrun "$FSTYP does not support fanotify ioerrors"
->  }
->  
-> +# Ext4 derives f_fsid from the superblock UUID, meaning clones share the
-> +# same f_fsid until their UUIDs diverge. Conversely, XFS, Btrfs,
-> +# and F2FS ensure f_fsid remains unique per filesystem instance (often by
-> +# deriving it from the UUID and underlying block device.)
-> +#
-> +# Across all filesystems, a UUID collision causes libblkid tools to return
-> +# non-deterministic device mappings. It is ultimately the responsibility
+> Mechanically these patches all look ok to me, aside from my question
+> about why not use static inline helpers instead of macros.
 
-"device mappings", as in /dev/disk/by-id/$UUID ?
+...and now that you've answered those questions, I'm satisfied that this
+series is all good to go (to the QA system for further testing), so:
 
-> +# of the userspace utility or use-case to enforce uniqueness when a clone
-> +# diverges. For details, see mailing list thread discussions titled:
-> +#      "ext4: derive f_fsid from block device to avoid collisions".
-
-How about providing a direct lore link?
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +_require_unique_f_fsid()
-> +{
-> +	# Skip the test if the filesystem does not enforce unique f_fsids
-> +	# natively. Checking this dynamically requires recreating a clone
-> +	# layout, so we use a static lookup based on FSTYP.
-> +	if [ "$FSTYP" == "ext4" ]; then
-> +		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
-> +	fi
-> +}
-> +
-> +
->  # Computes a percentage of the available space in a filesystem and
->  # returns that quantity in MB. The percentage must not contain a percent
->  # sign ("%").
-> -- 
-> 2.43.0
+> --D
 > 
+> > Diffstat:
+> >  libxfs/xfs_attr.c             |    2 
+> >  libxfs/xfs_attr_leaf.c        |    2 
+> >  libxfs/xfs_bmap.c             |   20 ++----
+> >  libxfs/xfs_bmap_btree.c       |    8 +-
+> >  libxfs/xfs_btree.c            |   18 ++---
+> >  libxfs/xfs_btree_staging.c    |    2 
+> >  libxfs/xfs_da_btree.c         |    2 
+> >  libxfs/xfs_dir2.c             |   44 +++++++-------
+> >  libxfs/xfs_dir2_node.c        |    2 
+> >  libxfs/xfs_dir2_sf.c          |    4 -
+> >  libxfs/xfs_exchmaps.c         |    8 +-
+> >  libxfs/xfs_format.h           |    6 +
+> >  libxfs/xfs_ialloc.c           |    4 -
+> >  libxfs/xfs_inode_buf.c        |    4 -
+> >  libxfs/xfs_inode_fork.c       |    6 -
+> >  libxfs/xfs_inode_util.c       |   13 +---
+> >  libxfs/xfs_metadir.c          |    2 
+> >  libxfs/xfs_parent.c           |    8 +-
+> >  libxfs/xfs_parent.h           |    2 
+> >  libxfs/xfs_rmap.c             |    6 -
+> >  libxfs/xfs_rmap.h             |    4 +
+> >  libxfs/xfs_rtbitmap.c         |    4 -
+> >  libxfs/xfs_rtrefcount_btree.c |    4 -
+> >  libxfs/xfs_rtrmap_btree.c     |    4 -
+> >  libxfs/xfs_symlink_remote.c   |    6 -
+> >  scrub/agheader_repair.c       |   20 ++----
+> >  scrub/attr.c                  |    4 -
+> >  scrub/attr_repair.c           |   16 ++---
+> >  scrub/bmap.c                  |   24 +++----
+> >  scrub/bmap_repair.c           |    8 +-
+> >  scrub/common.c                |   26 ++++----
+> >  scrub/common.h                |    6 +
+> >  scrub/cow_repair.c            |    3 
+> >  scrub/dabtree.c               |    4 -
+> >  scrub/dir.c                   |   24 +++----
+> >  scrub/dir_repair.c            |   42 ++++++-------
+> >  scrub/dirtree.c               |   24 +++----
+> >  scrub/dirtree_repair.c        |    4 -
+> >  scrub/findparent.c            |   33 +++++-----
+> >  scrub/inode.c                 |   18 ++---
+> >  scrub/inode_repair.c          |    5 -
+> >  scrub/iscan.c                 |    2 
+> >  scrub/listxattr.c             |   10 +--
+> >  scrub/metapath.c              |   16 ++---
+> >  scrub/newbt.c                 |    8 --
+> >  scrub/nlinks.c                |   34 +++++------
+> >  scrub/nlinks_repair.c         |    6 -
+> >  scrub/orphanage.c             |   10 +--
+> >  scrub/parent.c                |   31 ++++------
+> >  scrub/parent_repair.c         |   18 ++---
+> >  scrub/quotacheck.c            |    2 
+> >  scrub/readdir.c               |   12 +--
+> >  scrub/reap.c                  |    5 -
+> >  scrub/repair.c                |    2 
+> >  scrub/rmap_repair.c           |    2 
+> >  scrub/rtbitmap.c              |   16 ++---
+> >  scrub/rtbitmap_repair.c       |    2 
+> >  scrub/rtrefcount.c            |    2 
+> >  scrub/rtrefcount_repair.c     |    2 
+> >  scrub/rtrmap.c                |    3 
+> >  scrub/rtrmap_repair.c         |    4 -
+> >  scrub/rtsummary.c             |   14 ++--
+> >  scrub/rtsummary_repair.c      |    2 
+> >  scrub/scrub.c                 |    2 
+> >  scrub/symlink_repair.c        |    8 +-
+> >  scrub/tempfile.c              |    2 
+> >  scrub/trace.c                 |    2 
+> >  scrub/trace.h                 |  116 ++++++++++++++++++-------------------
+> >  xfs_aops.c                    |    2 
+> >  xfs_attr_item.c               |    4 -
+> >  xfs_attr_list.c               |   12 +--
+> >  xfs_bmap_item.c               |    4 -
+> >  xfs_bmap_util.c               |    4 -
+> >  xfs_dir2_readdir.c            |    4 -
+> >  xfs_error.c                   |    2 
+> >  xfs_exchmaps_item.c           |    4 -
+> >  xfs_exchrange.c               |    4 -
+> >  xfs_export.c                  |    8 +-
+> >  xfs_filestream.c              |    6 -
+> >  xfs_handle.c                  |    4 -
+> >  xfs_healthmon.c               |    6 -
+> >  xfs_icache.c                  |   56 +++++++++---------
+> >  xfs_inode.c                   |   37 +++++-------
+> >  xfs_inode.h                   |   19 ++----
+> >  xfs_inode_item.c              |    8 +-
+> >  xfs_inode_item_recover.c      |    4 -
+> >  xfs_ioctl.c                   |    2 
+> >  xfs_iomap.c                   |    4 -
+> >  xfs_iops.c                    |    3 
+> >  xfs_iunlink_item.c            |    2 
+> >  xfs_mount.c                   |    2 
+> >  xfs_qm.c                      |   10 +--
+> >  xfs_quotaops.c                |    2 
+> >  xfs_reflink.c                 |    4 -
+> >  xfs_symlink.c                 |    6 -
+> >  xfs_trace.h                   |  129 ++++++++++++++++++++----------------------
+> >  xfs_trans.c                   |    2 
+> >  xfs_trans_dquot.c             |    6 -
+> >  xfs_xattr.c                   |    2 
+> >  99 files changed, 564 insertions(+), 577 deletions(-)
+> > 
 > 
