@@ -1,332 +1,254 @@
-Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ED463909B1
-	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 19:27:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6876E337B97
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 20:46:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.135.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780082849; cv=none; b=OjresE+33rsG5atg0d3jRvy/wicH5BeZUuFL5ujtaLJ3QL5Cctk5Hyu2L6hktHi9ODsaz14y65CwqLYThaHCBrZ2aWN6pKw8kNpud7KKJPeeZ+/2Hjf8pLDaIghkIaG+ZXEW/UNVUm/ur3qgzAym2/GqN/4aArxExm8eK7itbFs=
+	t=1780087587; cv=none; b=E2/eA/Sallg4YygyBG47G+DPxeuvD1laoh2Fm/oRKws7Pw8tV0qK9Axe/ZZB0+5TEuliHHLzEVO5PkBUmyJPQoSuJ9FFgp5BG7FN1dLy6bOGFAtt6Q2AlOnQug6Mkl4G6l94MFIhqbdu/gGzz/ylrE9Fw8sGqYYjgOA90q/BoQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780082849; c=relaxed/simple;
-	bh=gB1U8bKM/wiOIdkRr9Pd+jw+4hTWsXjbCn/1NejxI1s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nxmum/3DmHEAqAzoTKiwKt+0IzVA45mT39bZSru3Y1YLzl5wFesUp27qk12FIpHmBAMDUjZxxeM9lpp3igNr4jyftaHSwRjBy60NnzKe1N64H7GPl+sg2GluT8KJc0y097LUfnmxHmAB+siyPHhh9LdjNCa5WP0DRHiS96tX3lo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redpanda.com; spf=pass smtp.mailfrom=redpanda.com; dkim=pass (2048-bit key) header.d=redpanda.com header.i=@redpanda.com header.b=lGLmdkkV; arc=none smtp.client-ip=209.85.219.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redpanda.com
+	s=arc-20240116; t=1780087587; c=relaxed/simple;
+	bh=Dgt9gdgsSTGz25LNKdlg6p96v9ORYzbnwBkkNl+zH0w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bh0pd9iHbMBFAalwveGAVGwe1LM0RzON1P1HtZMt3UneihuieiI0mh9IidYnZe4CCRQnTydCinZK4qkpJfn2jeYBmtL7wpvkfc8dswbK2UmSPEC8Kyjizxy/Vhst6gjjuhkBGDtLJ6GL4UkLZXafs4g1YBKsFuccW2xSQCEX5J0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu; spf=pass smtp.mailfrom=columbia.edu; dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b=fNdL0jd2; arc=none smtp.client-ip=148.163.135.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=redpanda.com header.i=@redpanda.com header.b="lGLmdkkV"
-Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-8cce87d7995so12095706d6.0
-        for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 12:27:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redpanda.com; s=google; t=1780082847; x=1780687647; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=1T7lRX1vJ1Wj9JNwItxpA7mGR6CIeTgq8xgA3eOaQnM=;
-        b=lGLmdkkVigib5vd4v0G36O53/bNSBdZqSqiCGkwab+wzBTx7PnO7bkM1H6nuiKsamm
-         XDv2CuDfv4WOXZWNTUKRyyn73v1bEvUMTUbdikzMDDBpx6gfxst5uWWUCCw8awX3kGrJ
-         pesLvVWESyoBDNqc54zFC1YzDxP0PCRdnmoBZUwpQeXTOyGPdbT8r7UBhfRVZ9om37cI
-         lM3QeT0AxTcMKScT1tiCHVxAPFKb0sj1YXj9vkpkxJRKlk0FKc0mvib9WPwJYGAvQRs8
-         HfOO8UYHhd4aXkC/hRwHQsgnLB2hfkaK44R/svxI/T4m/GYgO02YNTl4MmOvT9wpJFiT
-         e1Ag==
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.b="fNdL0jd2"
+Received: from pps.filterd (m0167068.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64TKhSMi981305
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 16:46:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps01; bh=Tu3y
+	zxbzT574lf/x8+7GuddK+9mUu+iNaUikqjzhrDc=; b=fNdL0jd2jEZLLdEDzHwo
+	hg9oAn2A09Nc/UhTjZBmS2wSISfSJcrx7iHnycx2ggqMsmdYhM48Qp6dn8zJwdYB
+	985sLAgkwtmSCT8teAzwTA6OhaIFRxvl6MhKiUIHzXRQSYgRkuDKU0XNg2X2RpBr
+	0P7NHA2+A2rGk69mahYeBod1zrBCcJUIzU4maJzE4t8BG1N9Hc/8nKnhiSDo4Nh4
+	Ch5XzOjEOBE/jVetXJBtepua7x9ftMeGTiaGWhJ+DI1yELSJMypkbL8bJpLS0OQb
+	sCO7ehhxuKMpXZEyP0t++n/X9s8DuU67L6dejzRsJ12iZiflWRTJYEZgsZtHx+T6
+	gg==
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4efhmg86s7-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 16:46:18 -0400 (EDT)
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-90ccab62c33so1543780385a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 13:46:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780082847; x=1780687647;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1T7lRX1vJ1Wj9JNwItxpA7mGR6CIeTgq8xgA3eOaQnM=;
-        b=f8gfruU90dOu7xv9ECcih1zCWTImgx2wZWdu2QCg4jmV7jy6V+grAk+daQvqbLoa4e
-         IWmJDv1d5EjWXf8jRRra2WoKpNNQ0zlJzZ2lpLMFOh4nOi8iq3HIPZ+FyeEVxfx3iNum
-         GO7rBc4ZhzLd3jKW4X/tz21jTVmRTFGK774KnM85iJ+O8pKhais59Wtov/KEwLc8FD3/
-         JfEbowIV6MI6YOGLFvpdbaa3T6tGdHEfsIUl9NGjznuoEAC6EyRgI//QmaZmT8G9nphu
-         /h1de/PdoeG/QZDZbhgYkXbHF4MK7/t5OQRXPCrqLtomSC7tsxiLhzEf7hxxPDdVj+fx
-         bKzw==
-X-Forwarded-Encrypted: i=1; AFNElJ/ehNyBEiMQwhV9dvpikfGgZtiW0kvf3naQaV0xswxKi2tPWpHRdv5odNdq6ID/w52+SJxZm3/qPUw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6jSlo+cligSm5tYJJrDGa6YR0VYiKLQ+89T5KwVijVh8/lFbq
-	AVEYXkL0DQOyy4jewci4a0ehfPR0nujyQj+kEJDM1eFLUjsoqK48+9CNvJhf71HTd5fVQIQSJoe
-	ixgOVrRtJZSz0EIzQKQw9fqQGKkmLjPM4C/77Dll2rbQydsRG8+5VZvrU
-X-Gm-Gg: Acq92OFdqQ8zHzbbF8WDaFoPJfcopEub59tjCYnNfrtA+o1/25Vie2gaOXGagEWcB4x
-	zPZm7KuuJFrw2jUmqPdLf6gdF8Cn/e/9hyGSuNGzxbqOejO3HgJPoJfuhMoGk8d9IDKb22b6Foo
-	5Zb7ky5z9lU2OYdclN83+N2IcqIMFSan3OA6+IFUgh+Qn6Cm/sw+7fpp3iyMiT1zrY2O5amHpkV
-	ypQY1YRH0ceg9trW4QVa7f00/VRrz1FlOKYkDmaqbJ2qL846yXThT4hGSTWLn4bvK6dekWEv7Lt
-	yDO7tMm+auucNVZTkVBdZUYlhJNFcyh/+Mb4PfIpso7cuxd31rGg4KNU52hsRncU9MeQd7PWvWp
-	LT5iXM7IG1pF/geKdhNURkEAIjjznP4d8e8fVmnuU0omKuuYTpuV0T8epzkpRZAJx/CmymikrMp
-	iwu2KddE2IqKRg0elTm8N/VSal7wHRnfpNvzwSmBdY4VDgO2gt
-X-Received: by 2002:ad4:5b87:0:b0:8cc:3546:262b with SMTP id 6a1803df08f44-8ccefd84a0emr18556836d6.24.1780082846949;
-        Fri, 29 May 2026 12:27:26 -0700 (PDT)
-Received: from fedora.tail5a808e.ts.net ([72.228.86.65])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ccea2163b0sm25284466d6.38.2026.05.29.12.27.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 May 2026 12:27:26 -0700 (PDT)
-From: Brandon Allard <brandon@redpanda.com>
-To: fstests@vger.kernel.org
-Cc: zlang@kernel.org,
-	linux-xfs@vger.kernel.org,
-	Brandon Allard <brandon@redpanda.com>
-Subject: [PATCH] xfs: test NOWAIT DIO writes that span written/unwritten boundaries
-Date: Fri, 29 May 2026 15:27:14 -0400
-Message-ID: <20260529192714.21602-1-brandon@redpanda.com>
-X-Mailer: git-send-email 2.52.0
+        d=1e100.net; s=20251104; t=1780087578; x=1780692378;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Tu3yzxbzT574lf/x8+7GuddK+9mUu+iNaUikqjzhrDc=;
+        b=oQ51pk6nxpv1/XRrKDM2suedcv7EDmMuZDXYvJTcLloLVQj7vyReeAFyMl7x55P/QD
+         I1UsLX44H81N66puu71IPelDAPcjFe7kHKU62KnXdvOCUYkd0S4cILhq0ob6kS8o53r3
+         s18l3f7CpT+ComhvAaq/VgZ2e8xoydGGyPxU6B0fPLVSOb0xvZlewc/EdLmVt/M6L0cH
+         rCwRIKJ+NloGpUALH2L8NH6fuofQsgiZy6IwbpPPDrYYL0EBIEOeiv3z///QYKdTY0OO
+         EEujUXFTo17w+mW+HS9UFbb9bXhXb2G/tatBodpGmPZWLpJ/eypWKv8h/dTMk5jpkzZP
+         IVOw==
+X-Forwarded-Encrypted: i=1; AFNElJ/FKp5y/2pkNvkXfy7PopxLyphVggOnj/d+6y4lHAB2QDey0wB/6KOuRU2gWxzZS0pxdxjU0xlJZZM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzXMEykybzi7TJqSlwfT/c1AYac1Vrhu1CVjvF8oSnv7Za/aVUP
+	8O5BmW8Hth5uhz+An5W0XmCgb10Kajlw0E3VkqbKqiNstpcQIRTGavZOU/NVQ/YuvizbcocM+Zt
+	RGlWqDuCmf5LmONnxaco2UJLrx357PWyEkZ15pUKDqYaPlMXQscyqYJ/kVg==
+X-Gm-Gg: Acq92OG/vjQYPwQZrucLEVyywQvbkUFBfZLCBJK6+4mnMpcgtfkLRSZQ8x1a/yLdZKe
+	LcaHr+m6IfTrABgl3GOEg/O63wgPSqZsw9fFGcREVvx7g0Gysx96/Nfq4K0xGFhCOUhCjBopbyn
+	+aTf/tihfirXzM7jptzL6KwHSGXJU7KegTsshcqEkzFFvh8jFeAEb8WDaJroWqz1Odim4pt5+NP
+	YGeVoWkP9/ckvHLjhlhM32rRBFc9wCeTXvTfmOICZ1AMLvzVL2cq5XYMgEUeD1NDLi7icqjmWoB
+	t6zcBHT5yKndSuEFfrg6LNe5REHFu5rO0mXTaU93dJzUjrwH4gG02/IHhCRUNB4xP25E6it2i7F
+	H+8dthdiUXYpthtFDuQ9c5MmsOeUc0cHIl3si7hb7Djsmz96Ep+Sh3mBaXrfpCbMzFJHxzUaoYF
+	/5ucGfbqVUJMnyxD4V404Vb3yXiA==
+X-Received: by 2002:a05:620a:27cf:b0:914:b65f:6afe with SMTP id af79cd13be357-9153d93295cmr223977785a.1.1780087577723;
+        Fri, 29 May 2026 13:46:17 -0700 (PDT)
+X-Received: by 2002:a05:620a:27cf:b0:914:b65f:6afe with SMTP id af79cd13be357-9153d93295cmr223970285a.1.1780087577139;
+        Fri, 29 May 2026 13:46:17 -0700 (PDT)
+Received: from ?IPV6:2600:4040:974e:fe00:c8bb:325f:9d37:a5f? ([2600:4040:974e:fe00:c8bb:325f:9d37:a5f])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-915324a5502sm300290485a.21.2026.05.29.13.46.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 May 2026 13:46:16 -0700 (PDT)
+Message-ID: <80cb53f3-e7e5-4f96-bacc-f9fb7661d976@columbia.edu>
+Date: Fri, 29 May 2026 16:46:15 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/4] block: add task-context bio completion
+ infrastructure
+To: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong"
+ <djwong@kernel.org>,
+        Carlos Maiolino <cem@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dave Chinner <dgc@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, Gao Xiang <xiang@kernel.org>
+References: <20260514-blk-dontcache-v6-0-782e2fa7477b@columbia.edu>
+ <20260514-blk-dontcache-v6-1-782e2fa7477b@columbia.edu>
+ <agq2KRd8RkP1TAf5@infradead.org>
+ <ea1fa305-3ba2-4cfd-b7cb-86875032a300@columbia.edu>
+ <ahPbaSEoNA755Nt3@infradead.org>
+ <f1b8eeb6-2397-4f48-a21a-a023eb0c80ab@columbia.edu>
+ <rkb5oei6cx2erbyininczz6ukbnquqheexhu7tznn5rslkkdn7@b4kpdyhdwdb6>
+ <ahbq0RdUyLIPiItB@infradead.org>
+Content-Language: en-US
+From: Tal Zussman <tz2294@columbia.edu>
+In-Reply-To: <ahbq0RdUyLIPiItB@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Gm-Spam: 0
-X-Gm-Phishy: 0
+X-Authority-Analysis: v=2.4 cv=WL9PmHsR c=1 sm=1 tr=0 ts=6a19fb1a cx=c_pps
+ a=50t2pK5VMbmlHzFWWp8p/g==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=NGcC8JguVDcA:10 a=x7bEGLp0ZPQA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Da8U98TiO7q1upZEImrf:22 a=usPcmh10W0ubT8QP8_c3:22 a=glsx1xNwX7j2ZVJJCoYA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
+X-Proofpoint-ORIG-GUID: us-28EgcYYNe1YN-6zPORNmf3mF5T2bv
+X-Proofpoint-GUID: us-28EgcYYNe1YN-6zPORNmf3mF5T2bv
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI5MDIwNiBTYWx0ZWRfX4Ztqx2R1IPR5
+ f24gTXdalf0lEhBHKGViXLX5XWpwv4PT+6egEnCM1j6mTDvSuPraJyj/h0UGd2a/qAQ+eQC7+nq
+ P6NFDSovAhJ45FUT00Yvkta8m1eg8l2ju0z+FX+W++CzBiOwEwn06Hn0g22VsPt9W9Ihw7EwtC9
+ x93z1NQ/NALct2GUbXRT9QGBRxUx3Vp14HXtfWJLm0gR3ugKTEF5bFKB/M8VvUWtJbAhRYD5nkE
+ LWcrNsl1jHCCN79ll+D7XBoC+qtAR/xL7el4jyo4dE7i9h9qxfxNlif04vFbooPd2jKG14T5c7/
+ As+xsCKNgtTK6z/AQw9snebAQ2NvQ/Q8wxTM2EZctoHDDeMEeR9wiqjMb8CPOLPHMBZ4wanhxZ5
+ 8JFLjKRSxKCLRN9JvikYY0yscyLehwhuMWDQrBDrp66H472DwIfh0EzR+afpvavpStX4MRcKZR9
+ i6vgS+2fuD3PynmWg7Q==
+X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11801
+ signatures=596817
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=10 spamscore=0 adultscore=0 bulkscore=10
+ phishscore=0 priorityscore=1501 impostorscore=10 clxscore=1015 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605290206
 
-Add a regression test exercising IOMAP_NOWAIT direct-IO writes around
-the written/unwritten extent boundary that arises from preallocated
-sequential append workloads.
+On 5/27/26 9:00 AM, Christoph Hellwig wrote:
+> On Wed, May 27, 2026 at 11:42:28AM +0200, Jan Kara wrote:
+>> > I ran some experiments with fio on both XFS and a raw block device. Five
+>> > iterations each for 60s. Results below.
+>> > 
+>> > TLDR: Removing the delay doesn't significantly decrease user-visible
+>> > latency or otherwise improve performance, but does significantly reduce
+>> > throughput and increase context switches in some workloads (e.g. C).
+>> > I think it makes sense to leave the delay as-is. Thoughts?
+>> 
+>> Thanks for the test! One question below:
+> 
+> Thanks from me as well!
+> 
+>> 
+>> > Results:
+>> > 
+>> > Workloads (all `uncached=1`):
+>> >   A: rw=write     bs=128k iodepth=1   ioengine=pvsync2     # XFS
+>> >   B: rw=write     bs=128k iodepth=128 ioengine=io_uring    # XFS
+>> >   C: rw=randwrite bs=4k   iodepth=32  ioengine=io_uring    # XFS
+>> >   D: rw=rw 50/50  bs=64k  iodepth=32  ioengine=io_uring    # XFS
+>> >   E: rw=write     bs=128k iodepth=128 ioengine=io_uring    # raw /dev/nvmeXn1
+>> >   F: rw=write     bs=128k iodepth=128 numjobs=4
+>> >      + vm.dirty_bytes=64MB, vm.dirty_background_bytes=32MB # XFS
+>> > 
+>> > Mean ± stddev across 5 iterations:
+>> > 
+>> >     metric                     delay=1           delay=0     delta
+>> >     --------------------------------------------------------------
+>> > 
+>> >   A seq 128k qd1
+>> >     BW (MB/s)                4333 ± 27         4374 ± 34     +0.9%
+>> >     p99   (us)              36.2 ± 0.8        35.8 ± 0.4     -1.1%
+>> >     p999  (us)               3260 ± 75         3228 ± 29     -1.0%
+>> >     ctx-switches          184 k ± 59 k     3.68 M ± 65 k    +1903%
+>> >     cs / io                0.09 ± 0.03       1.86 ± 0.03    +1888%
+>> >     avg bios/run            80.4 ± 0.6         1.1 ± 0.0    -98.7%
+>> 
+>> So 1 jiffie delay is (with default HZ=1000) 1ms. That means for this load
+>> the completion latency should be at least 1000us but your results show p99
+>> latency of 36. What am I missing?
+> 
+> Yes, this looks a bit odd.  Unless there's multiple threads submitting
+> and somehow the completions get batched this should complete one
+> bio at a time and be the worst case for the delay scheme.
 
-Commit 883a790a8440 ("xfs: don't allow NOWAIT DIO across extent
-boundaries") added a guard in xfs_direct_write_iomap_begin that returns
--EAGAIN under IOMAP_NOWAIT when the imap returned by xfs_bmapi_read
-does not cover the entire requested range. A subsequent kernel patch
-coalesces a (NORM, UNWRITTEN) pair into a single in-memory iomap when
-the two records are physically contiguous on disk, restoring the
-success path for the workload above.
+Sorry, I should've clarified - the latency here is the userspace-visible
+I/O completion latency (i.e. fio's clat value).
 
-The test covers five scenarios:
-  A. NOWAIT DIO inside a single NORM extent must succeed.
-  B. NOWAIT DIO inside a single UNWRITTEN extent must succeed.
-  C. NOWAIT DIO spans NORM->UNWRITTEN, contiguous must succeed
-     (the new code path).
-  D. NOWAIT DIO spans UNWRITTEN->NORM, contiguous must return
-     -EAGAIN (asymmetric guard; only N->U is safe to merge).
-  E. NOWAIT DIO spans NORM->HOLE must return -EAGAIN (hole guard
-     from 883a790a8440 preserved).
+I ran again and traced to get the actual time from __bio_complete_in_task()
+to calling ->bi_end_io(). The results match the 1 jiffie delay now:
 
-The scratch filesystem is mounted with -o lazytime so the NOWAIT path
-does not bail in the mtime-update transaction (a separate -EAGAIN
-source unrelated to extent-boundary handling). It is mkfs'd with
--b size=4096 so byte offsets in the golden output are stable across
-host architectures.
+  metric                  delay=1  delay=0
 
-Signed-off-by: Brandon Allard <brandon@redpanda.com>
+  A seq 128k qd1
+    fio clat p99             38us     36us
+    bio cb p50             1.23ms    2.5us
+    bio cb p99             4.13ms   1.44ms
+    bio cb p999            5.01ms   2.63ms
 
-This test exercises behavior introduced by the accompanying kernel
-patch "xfs: coalesce contiguous unwritten suffix into iomap for NOWAIT
-writes" posted to linux-xfs:
-  https://lore.kernel.org/linux-xfs/20260529191100.4142371-1-brandon@redpanda.com/
+  B seq 128k qd128
+    fio clat p99           8.74ms   8.85ms
+    bio cb p50             1.27ms    3.1us
+    bio cb p99             4.05ms   2.27ms
+    bio cb p999            4.91ms   2.77ms
 
-Scenario C will fail on kernels that do not include that patch. If the
-kernel patch is accepted, the XXXXXXXXXXXXX placeholder in
-_fixed_by_kernel_commit should be replaced with the real commit SHA.
----
- tests/xfs/842     | 152 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/842.out |  42 +++++++++++++
- 2 files changed, 194 insertions(+)
- create mode 100755 tests/xfs/842
- create mode 100644 tests/xfs/842.out
+  C rand 4k qd32
+    fio clat p99           8.16ms   8.11ms
+    bio cb p50             1.09ms   97.7us
+    bio cb p99             3.73ms   2.06ms
+    bio cb p999           11.87ms   3.79ms
 
-diff --git a/tests/xfs/842 b/tests/xfs/842
-new file mode 100755
-index 0000000..ab93dc3
---- /dev/null
-+++ b/tests/xfs/842
-@@ -0,0 +1,152 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Redpanda Data, Inc.
-+#
-+# FS QA Test No. 842
-+#
-+# Test several scenarios for RWF_NOWAIT direct-IO writes on XFS, focused on
-+# the WRITTEN<->UNWRITTEN extent boundary case.
-+#
-+# Background:
-+#   Commit 883a790a8440 ("xfs: don't allow NOWAIT DIO across extent
-+#   boundaries") added a guard in xfs_direct_write_iomap_begin that returns
-+#   -EAGAIN under IOMAP_NOWAIT when the imap returned by xfs_bmapi_read does
-+#   not span the entire requested range. The guard prevents NOWAIT callers
-+#   from observing short writes when the range needs multiple bios.
-+#
-+#   For sequential append-DIO workloads with adaptive preallocation, requests
-+#   regularly straddle a NORM extent (just-written head) and a physically
-+#   contiguous UNWRITTEN extent (preallocated tail). A single bio covers both
-+#   safely; no short-write hazard exists. A subsequent fix coalesces the two
-+#   records in the in-memory iomap and reports the merged range as UNWRITTEN
-+#   so the completion handler converts the suffix normally.
-+#
-+# Scenarios:
-+#   A. NOWAIT DIO inside a single NORM extent          -- must succeed
-+#   B. NOWAIT DIO inside a single UNWRITTEN extent     -- must succeed
-+#   C. NOWAIT DIO spans NORM -> UNWRITTEN, physically  -- must succeed
-+#      contiguous (the fix)
-+#   D. NOWAIT DIO spans UNWRITTEN -> NORM, physically  -- must fail (-EAGAIN)
-+#      contiguous (coalesce path is intentionally
-+#      asymmetric: only N->U is safe to merge)
-+#   E. NOWAIT DIO spans NORM -> HOLE                   -- must fail (-EAGAIN)
-+#      (hole guard from 883a790a8440 preserved)
-+#
-+# The scratch filesystem MUST be mounted with -o lazytime; without it the
-+# NOWAIT path bails earlier in the mtime-update transaction (separate
-+# -EAGAIN source unrelated to extent-boundary handling) and scenarios B/C
-+# would return -EAGAIN for the wrong reason.
-+#
-+# The scratch filesystem is mkfs'd with -b size=4096 so byte offsets in the
-+# golden output are stable across host architectures.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick rw prealloc
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_scratch_unmount 2>/dev/null
-+}
-+
-+# Import common functions.
-+. ./common/filter
-+
-+_require_scratch
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "pwrite" "-N"
-+
-+_fixed_by_kernel_commit XXXXXXXXXXXXX \
-+	"xfs: coalesce contiguous unwritten suffix into iomap for NOWAIT writes"
-+
-+_scratch_mkfs_xfs -b size=4096 >> $seqres.full 2>&1
-+_scratch_mount "-o lazytime"
-+
-+# Defensive: confirm mkfs honored the requested block size. The offsets in
-+# the golden output assume bsize == 4096.
-+bsize=$(_get_file_block_size $SCRATCH_MNT)
-+[ "$bsize" -eq 4096 ] || _notrun "fs block size is $bsize, expected 4096"
-+
-+# All offsets/sizes are multiples of the 4096-byte block size enforced above.
-+HEAD_BYTES=4096       # 1 block (NORM head after split)
-+TAIL_BYTES=32768      # 8 blocks (UNWRITTEN tail / NORM tail)
-+ALLOC_BYTES=36864     # 9 blocks (HEAD + TAIL, one allocation)
-+SPAN_BYTES=8192       # 2 blocks (spans a single extent boundary)
-+
-+# Return 0 if the first two extents in $1 are physically adjacent.
-+# _filter_xfs_io_fiemap emits one space-separated record per extent:
-+#   first_logical last_logical first_physical last_physical (512-byte sectors).
-+_extents_are_contiguous()
-+{
-+	$XFS_IO_PROG -c "fiemap" "$1" 2>/dev/null \
-+		| _filter_xfs_io_fiemap \
-+		| awk 'NR==1 { end=$4 } NR==2 { exit !(end + 1 == $3) }'
-+}
-+
-+# Scenario A: NOWAIT DIO inside a single NORM extent. Must succeed.
-+echo
-+echo "== A: NOWAIT DIO inside a single NORM extent (must succeed) =="
-+fa=$SCRATCH_MNT/A
-+$XFS_IO_PROG -fd -c "pwrite -S 0xaa 0 $ALLOC_BYTES" $fa | _filter_xfs_io
-+$XFS_IO_PROG -d -c "pwrite -N -V 1 -S 0xbb -b $SPAN_BYTES 0 $SPAN_BYTES" $fa \
-+	| _filter_xfs_io
-+od -A d -t x1 -N $SPAN_BYTES $fa
-+
-+# Scenario B: NOWAIT DIO inside a single UNWRITTEN extent. Must succeed.
-+echo
-+echo "== B: NOWAIT DIO inside a single UNWRITTEN extent (must succeed) =="
-+fb=$SCRATCH_MNT/B
-+$XFS_IO_PROG -fdt -c "falloc 0 $ALLOC_BYTES" $fb | _filter_xfs_io
-+$XFS_IO_PROG -d -c "pwrite -N -V 1 -S 0xcc -b $SPAN_BYTES 0 $SPAN_BYTES" $fb \
-+	| _filter_xfs_io
-+od -A d -t x1 -N $SPAN_BYTES $fb
-+
-+# Scenario C: NOWAIT DIO spans NORM -> UNWRITTEN, physically contiguous.
-+echo
-+echo "== C: NOWAIT DIO spans NORM->UNWRITTEN, contiguous (must succeed) =="
-+fc=$SCRATCH_MNT/C
-+# The allocator preserves physical contiguity across the split, which is
-+# what we need to exercise the coalesce path.
-+$XFS_IO_PROG -fdt -c "falloc 0 $ALLOC_BYTES" $fc | _filter_xfs_io
-+$XFS_IO_PROG -d -c "pwrite -S 0xdd 0 $HEAD_BYTES" $fc | _filter_xfs_io
-+
-+if ! _extents_are_contiguous $fc; then
-+	_notrun "C: allocator placed split extents non-contiguously, cannot exercise W<->U coalesce on this run"
-+fi
-+
-+$XFS_IO_PROG -d -c "pwrite -N -V 1 -S 0xee -b $SPAN_BYTES 0 $SPAN_BYTES" $fc \
-+	| _filter_xfs_io
-+od -A d -t x1 -N $SPAN_BYTES $fc
-+
-+# Scenario D: NOWAIT DIO spans UNWRITTEN -> NORM (physically contiguous).
-+echo
-+echo "== D: NOWAIT DIO spans UNWRITTEN->NORM, contiguous (must EAGAIN) =="
-+fd=$SCRATCH_MNT/D
-+$XFS_IO_PROG -fdt -c "falloc 0 $ALLOC_BYTES" $fd | _filter_xfs_io
-+$XFS_IO_PROG -d -c "pwrite -S 0x11 $TAIL_BYTES $HEAD_BYTES" $fd | _filter_xfs_io
-+
-+if ! _extents_are_contiguous $fd; then
-+	_notrun "D: allocator placed split extents non-contiguously, cannot exercise U<->W asymmetric guard on this run"
-+fi
-+
-+# Span ends at offset (TAIL_BYTES + HEAD_BYTES), crosses the U->N boundary.
-+span_d_off=$((TAIL_BYTES - HEAD_BYTES))
-+$XFS_IO_PROG -d -c "pwrite -N -V 1 -S 0x22 -b $SPAN_BYTES $span_d_off $SPAN_BYTES" $fd
-+# Confirm the would-be data was not written: tail block should still be 0x11.
-+od -A d -t x1 -j $TAIL_BYTES -N $HEAD_BYTES $fd
-+
-+# Scenario E: NOWAIT DIO spans NORM -> HOLE.
-+echo
-+echo "== E: NOWAIT DIO spans NORM->HOLE (must EAGAIN) =="
-+fe=$SCRATCH_MNT/E
-+$XFS_IO_PROG -fd -c "pwrite -S 0x33 0 $HEAD_BYTES" $fe | _filter_xfs_io
-+$XFS_IO_PROG -d -c "pwrite -N -V 1 -S 0x44 -b $SPAN_BYTES 0 $SPAN_BYTES" $fe
-+# Confirm: head block must still hold the original 0x33 pattern; if the
-+# NOWAIT write had partial-committed, we would see 0x44 here instead.
-+od -A d -t x1 -N $HEAD_BYTES $fe
-+
-+status=0
-+exit
-diff --git a/tests/xfs/842.out b/tests/xfs/842.out
-new file mode 100644
-index 0000000..6cbfc2a
---- /dev/null
-+++ b/tests/xfs/842.out
-@@ -0,0 +1,42 @@
-+QA output created by 842
-+
-+== A: NOWAIT DIO inside a single NORM extent (must succeed) ==
-+wrote 36864/36864 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+0000000 bb bb bb bb bb bb bb bb bb bb bb bb bb bb bb bb
-+*
-+0008192
-+
-+== B: NOWAIT DIO inside a single UNWRITTEN extent (must succeed) ==
-+wrote 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+0000000 cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc
-+*
-+0008192
-+
-+== C: NOWAIT DIO spans NORM->UNWRITTEN, contiguous (must succeed) ==
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 8192/8192 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+0000000 ee ee ee ee ee ee ee ee ee ee ee ee ee ee ee ee
-+*
-+0008192
-+
-+== D: NOWAIT DIO spans UNWRITTEN->NORM, contiguous (must EAGAIN) ==
-+wrote 4096/4096 bytes at offset 32768
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+pwrite: Resource temporarily unavailable
-+0032768 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
-+*
-+0036864
-+
-+== E: NOWAIT DIO spans NORM->HOLE (must EAGAIN) ==
-+wrote 4096/4096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+pwrite: Resource temporarily unavailable
-+0000000 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33
-+*
-+0004096
--- 
-2.52.0
+  D mixed 64k qd32
+    fio clat p99            981us   1.03ms
+    bio cb p50             1.14ms   39.5us
+    bio cb p99             2.83ms    275us
+    bio cb p999            3.06ms    595us
+
+  E raw 128k qd128
+    fio clat p99          26.97ms  27.34ms
+    bio cb p50             1.58ms   41.5us
+    bio cb p99             2.98ms    325us
+    bio cb p999            3.02ms    575us
+
+  F mem-pressure
+    fio clat p99          29.75ms  30.43ms
+    bio cb p50             1.32ms    2.5us
+    bio cb p99             3.73ms   2.48ms
+    bio cb p999            4.62ms   2.83ms
+
+Note that in the above, the C degradation didn't reproduce as much. The
+bandwidth does go down from 64.5 MB/s with delay=1 to 54.9 MB/s with delay=0,
+but it's a much smaller drop. I ran it several more times and ran into the
+degradation ~20% of the time. The lack of batching means the completion
+kworker fires for nearly every bio, leading to heavier preemption when a
+writer is placed on a CPU that receives many completion IRQs. The degradation
+seems to occur when the writers are migrated less often, leading to more
+preemption. But I haven't dug into why the scheduler chooses to migrate more
+in some runs vs. others. However, when pinning to 16 cores, the difference
+between delay=0 and delay=1 goes away.
+
+C specifically also seems to get worse because we're doing random writes to a
+sparse file, so each bio goes through the IOMAP_IOEND_UNWRITTEN path and the
+completion path is heavier, leading to more CPU stealing from the writing
+threads compared to the other workloads.
+
+>> >   C rand 4k qd32
+>> >     BW (MB/s)               66.2 ± 0.8        44.6 ± 7.4    -32.7%
+>> >     p99   (us)              8002 ± 174      17990 ± 6800   +124.8%
+>> >     p999  (us)             11390 ± 554     31890 ± 11076   +180.0%
+>> >     ctx-switches         3.67 M ± 45 k    3.59 M ± 106 k     -2.2%
+>> >     cs / io                3.78 ± 0.04       5.62 ± 0.83    +48.7%
+>> >     avg bios/run            32.3 ± 1.0         3.1 ± 0.3    -90.5%
+>> 
+>> I'm somewhat surprised how larger is the completion latency is here without
+>> the delay. Is that due to a contention on local lock between the IO completion
+>> interrupt and the worker? Or why is the completion latency so big here when
+>> the case B with more IOs in flight, less bios per run, still had significantly
+>> lower latency in the delay=0 case?
+> 
+> Note that in the past we had major problems with workqueue scheduling
+> latency.  At some point these got mitigated a lot, but if they are back
+> for this workload that might be one reason.
+> 
 
