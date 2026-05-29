@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AAC33438AE;
-	Fri, 29 May 2026 09:44:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B1535E1A0
+	for <linux-xfs@vger.kernel.org>; Fri, 29 May 2026 10:09:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780047844; cv=none; b=VnmiQ5iaJ+q+fPVcBdRntBoFyieeMS4nSKuhnruBFoonxgeNRt0rOgH4WL9S7ztrF4tYUttTILrzSN3kC26ZR1n8Is3Pdw+YzAVHbZhDiKWenjhXulhzMObsgHLzaiHMF9123ubqWz/Gj7r4ozSegA8tbHLQvuGXQZLM3AtaabA=
+	t=1780049356; cv=none; b=Ogld6qkvGLPAXACtPk/9NDzSQxJtOkwJcDLtr3PTFC9GV6pNnt/C/zOPKFb8dmRK7+3HnTmDMbTlILVCJ0wioTggrtLXTeTEXP2k+gitPGDpMR9/FoG9yvR7p8I/nvptE3CjJbKhZKVC7fjZeNXlIpmlnlQkcijtxvW1GunlAJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780047844; c=relaxed/simple;
-	bh=db3FdRcbU1MEaFXIXjET/dr9/wZidQ6n79YDyRjybsg=;
+	s=arc-20240116; t=1780049356; c=relaxed/simple;
+	bh=EPMTwiDOXVylEPAhKvUmE+FpfLCEUQ+PEeHd11itXH0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ELyJYbkvkWKZGb8zo1j+52OGucidAQruXEhFiGjg0oVFja2tMN+lUU924YnjbpvLD9P1bIYDTSBgRntld379e28dVUMA8ygaGE/9Ez3DT6K7ut4uypo/R+lNh+xHznPPtjiGvDVOt7lWIlgQ1bBN70i0meF31JkvbQj1I3QBBLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MvSSFBJj; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=EsPis+5KLMYvlPj6lfCFxkQbYEtDVhhpRWnH1xlx89S9eSmZhzMsWFXvY5eicT0stWLPyeFQCVcDgzxaz4Yu8w9h+pTfnefYYJdrMjKcHGBXvUAlhutya8g7mx5/EU6+UfSgWth0EQxQXCuigjotzmis9TvGsO2JEryR1zmOYYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UUXnRWcH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MvSSFBJj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BA7F1F00893;
-	Fri, 29 May 2026 09:44:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UUXnRWcH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 728AF1F00893;
+	Fri, 29 May 2026 10:09:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780047843;
-	bh=sKnwz7Gm8Rh+uRM1r6Z5oSiz/RqFWDqG1PplxNq0KUk=;
+	s=k20260515; t=1780049352;
+	bh=KULO0aBhWZHCd1YmF1l1nDlieQ3OtWCmHPFgJvyHzKE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MvSSFBJjSsoJx34wZcC41qtz5kx5G7eXrJGoozB39zTZfFvYLSpuR36nwdqQbJak0
-	 3qK1oa7YX5Gzbz0eMyTHkDVBqOwv9PB+Zy0XWpU+UeyGh79kACr5SMNloU9lNlFFS7
-	 IsD+fTiOxfj8CBHJ9iMmu0qUfGZUbPRGfnMEnlxuxKLPCwNi4IqdQTfXd8RixSrlNH
-	 FH+sLeqewrmvWKlaVcR2X1uIoSYCLf6mVY87LDVv3S8NDSfSCOaiTMs2rrbUTf4sV+
-	 LjAgfL7yN3EkicyKVtNwfKcNHuJjvyjqNBujE3Vezz0eQh6uEPdcGcZisLJVLN23+8
-	 /csVCo6J+JmKw==
-Date: Fri, 29 May 2026 17:43:57 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs/21[67]: fix mkfs log concurrency detection
-Message-ID: <ahleJoQHhZpYwyJW@zlang-mailbox>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
-	fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-References: <20260520185202.GD9544@frogsfrogsfrogs>
- <20260520190112.GE9544@frogsfrogsfrogs>
+	b=UUXnRWcHEwxT0eFDwpjGL3eimr3jjSXg4Qp+OaAbdlKoZTOI4suwzA2x0t/vSANEu
+	 q3GW6Cr2HJDPJXXdDjUoQR6WFzduKn3ioQGJPvWNsH+t5LMVm/8YrbRD84j6VEkW74
+	 sB4OsNgTqj3Gjs+2JQLn4xEmSz7o/H4nQHaAGg0EWeWw7QiH4t6wK+FROrILtSm3Y+
+	 SloO1ikIrdrSs2qcTm+seFI++O0+XxLarkui2WXlGMUHmdveoqDGgf/J8yYRRtke+k
+	 FwePr2KTbF7SoGgK/0rivDBx+YxaTxMozpS26VCpcPNnHehC2L1rRlTp9EgymqEnnr
+	 rHoRYZqJO1Nww==
+Date: Fri, 29 May 2026 12:09:08 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: remove the call to xfs_buf_reverify in
+ xfs_trans_read_buf_map
+Message-ID: <ahlltC242JMoTBeZ@nidhogg.toxiclabs.cc>
+References: <20260529054404.2720366-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,123 +42,122 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260520190112.GE9544@frogsfrogsfrogs>
+In-Reply-To: <20260529054404.2720366-1-hch@lst.de>
 
-On Wed, May 20, 2026 at 12:01:12PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, May 29, 2026 at 07:43:58AM +0200, Christoph Hellwig wrote:
+> xfs_trans_read_buf_map asserts bp->b_ops is non-NULL just before
+> calling xfs_buf_reverify which is a no-op if bp->b_ops is set, making the
+> call dead code ever since it as added in commit 1aff5696f3e0 ("xfs: always
+> assign buffer verifiers when one is provided").
 > 
-> Both of these tests use _scratch_mkfs_xfs_supports_concurrency to detect
-> if they should be adding -lconcurrency=0 to the mkfs options that are
-> used to format a loop device.
+> Remove the useless call, mark xfs_buf_reverify static and clean up the
+> branch dealing with a buffer attached to the transaction in a bit by
+> deduplicating and keeping together the asserts and removing the bip
+> variable only used once outside of asserts and tracing.
+
+Looks good,
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > 
-> However, this doesn't work in practice because of three factors: 1) the
-> scratch device could have an external log set up; 2) the loop device
-> does /not/ have an external log device; and 3) -lconcurrency isn't
-> compatible with -llogdev.
-> 
-> Fix this by creating a more general mkfs option detection helper and use
-> that once we have the loop device set up.
-> 
-> Cc: <fstests@vger.kernel.org> # v2026.05.17
-> Fixes: ffc8bad17e5b2f ("xfs/21{6,7} Use default -l concurrency=0 on mkfs.xfs that supports it")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  common/xfs    |   15 +++++++++++++++
->  tests/xfs/216 |    9 ++++-----
->  tests/xfs/217 |    9 ++++-----
->  3 files changed, 23 insertions(+), 10 deletions(-)
+>  fs/xfs/xfs_buf.c       |  2 +-
+>  fs/xfs/xfs_buf.h       |  1 -
+>  fs/xfs/xfs_trans_buf.c | 39 ++++-----------------------------------
+>  3 files changed, 5 insertions(+), 37 deletions(-)
 > 
-> diff --git a/common/xfs b/common/xfs
-> index 88299acdd086be..232d40fd5e01b1 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -64,6 +64,21 @@ _scratch_mkfs_xfs_opts()
->  	echo "$MKFS_XFS_PROG $SCRATCH_OPTIONS $mkfs_opts"
->  }
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 0cea458f1353..3ce12fe1c307 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -623,7 +623,7 @@ _xfs_buf_read(
+>   * type.  If repair can't establish that, the buffer will be left in memory
+>   * with NULL buffer ops.
+>   */
+> -int
+> +static int
+>  xfs_buf_reverify(
+>  	struct xfs_buf		*bp,
+>  	const struct xfs_buf_ops *ops)
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index bf39d89f0f6d..b3cd1c7029f1 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -365,7 +365,6 @@ int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize,
 >  
-> +_mkfs_xfs_supported()
-> +{
-> +	local mkfs_opts=$*
-
-While it seems mkfs.xfs doesn't currently receive arguments with spaces, or
-using "$@" might be safer, e.g.
-
-  local -a mkfs_opts=("$@")
-  $MKFS_XFS_PROG -f -N $MKFS_OPTIONS "${mkfs_opts[@]}"
-
-> +
-> +	$MKFS_XFS_PROG -f -N $MKFS_OPTIONS $mkfs_opts
-> +	local mkfs_status=$?
-> +
-> +	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
-> +	# $mkfs_opts, try again without $MKFS_OPTIONS
-> +	if [ $mkfs_status -ne 0 -a -n "$mkfs_opts" ]; then
-> +		$MKFS_XFS_PROG -f -N $mkfs_opts
-> +		mkfs_status=$?
-> +	fi
-> +	return $mkfs_status
-> +}
-
-Since we now have _mkfs_xfs_supported, should we call it inside
-_scratch_mkfs_xfs_supported ?
-
-Thanks,
-Zorro
-
+>  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
 >  
->  _scratch_mkfs_xfs_supported()
+> -int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+>  bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
+>  bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
+>  
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 95db73a37e57..7e17b93fe9ad 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -234,7 +234,6 @@ xfs_trans_read_buf_map(
+>  	const struct xfs_buf_ops *ops)
 >  {
-> diff --git a/tests/xfs/216 b/tests/xfs/216
-> index e3be9f3fe39ee0..bd98ee4dbfe960 100755
-> --- a/tests/xfs/216
-> +++ b/tests/xfs/216
-> @@ -22,11 +22,6 @@ _cleanup()
+>  	struct xfs_buf		*bp = NULL;
+> -	struct xfs_buf_log_item	*bip;
+>  	int			error;
 >  
->  _require_scratch
->  _scratch_mkfs_xfs >/dev/null 2>&1
-> -if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
-> -	loop_mkfs_opts="-l concurrency=0"
-> -else
-> -	loop_mkfs_opts=""
-> -fi
->  _scratch_mount
+>  	*bpp = NULL;
+> @@ -251,9 +250,10 @@ xfs_trans_read_buf_map(
+>  	if (bp) {
+>  		ASSERT(xfs_buf_islocked(bp));
+>  		ASSERT(bp->b_transp == tp);
+> -		ASSERT(bp->b_log_item != NULL);
+>  		ASSERT(!bp->b_error);
+>  		ASSERT(bp->b_flags & XBF_DONE);
+> +		ASSERT(atomic_read(&bp->b_log_item->bli_refcount) > 0);
+> +		ASSERT(bp->b_ops);
 >  
->  _require_loop
-> @@ -76,6 +71,10 @@ mkdir $LOOP_MNT
+>  		/*
+>  		 * We never locked this buf ourselves, so we shouldn't
+> @@ -264,39 +264,8 @@ xfs_trans_read_buf_map(
+>  			return -EIO;
+>  		}
 >  
->  loop_dev=$(_create_loop_device $LOOP_IMG)
->  
-> +if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 $loop_dev &>> $seqres.full; then
-> +	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0"
-> +fi
-> +
->  # walk over standard sizes (up to 256GB)
->  _do_mkfs 1 2 4 8 16 32 64 128 256
->  
-> diff --git a/tests/xfs/217 b/tests/xfs/217
-> index 5b210627b5ed18..5ba0b2198eb84f 100755
-> --- a/tests/xfs/217
-> +++ b/tests/xfs/217
-> @@ -21,11 +21,6 @@ _cleanup()
->  
->  _require_scratch
->  _scratch_mkfs_xfs >/dev/null 2>&1
-> -if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
-> -	loop_mkfs_opts="-l concurrency=0 -d concurrency=0"
-> -else
-> -	loop_mkfs_opts=""
-> -fi
->  _scratch_mount
->  # 16T mkfs requires a bit over 2G free
->  _require_fs_space $SCRATCH_MNT 2202000
-> @@ -63,6 +58,10 @@ fi
->  
->  loop_dev=$(_create_loop_device $LOOP_IMG)
->  
-> +if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 -d concurrency=0 $loop_dev &>> $seqres.full; then
-> +	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0 -d concurrency=0"
-> +fi
-> +
->  #
->  # walk over "new" sizes supported by recent xfsprogs.
->  # Note that the last test is for 16TB-1GB as 32bit platforms only support
+> -		/*
+> -		 * Check if the caller is trying to read a buffer that is
+> -		 * already attached to the transaction yet has no buffer ops
+> -		 * assigned.  Ops are usually attached when the buffer is
+> -		 * attached to the transaction, or by the read caller if
+> -		 * special circumstances.  That didn't happen, which is not
+> -		 * how this is supposed to go.
+> -		 *
+> -		 * If the buffer passes verification we'll let this go, but if
+> -		 * not we have to shut down.  Let the transaction cleanup code
+> -		 * release this buffer when it kills the tranaction.
+> -		 */
+> -		ASSERT(bp->b_ops != NULL);
+> -		error = xfs_buf_reverify(bp, ops);
+> -		if (error) {
+> -			xfs_buf_ioerror_alert(bp, __return_address);
+> -
+> -			if (tp->t_flags & XFS_TRANS_DIRTY)
+> -				xfs_force_shutdown(tp->t_mountp,
+> -						SHUTDOWN_META_IO_ERROR);
+> -
+> -			/* bad CRC means corrupted metadata */
+> -			if (error == -EFSBADCRC)
+> -				error = -EFSCORRUPTED;
+> -			return error;
+> -		}
+> -
+> -		bip = bp->b_log_item;
+> -		bip->bli_recur++;
+> -
+> -		ASSERT(atomic_read(&bip->bli_refcount) > 0);
+> -		trace_xfs_trans_read_buf_recur(bip);
+> -		ASSERT(bp->b_ops != NULL || ops == NULL);
+> +		bp->b_log_item->bli_recur++;
+> +		trace_xfs_trans_read_buf_recur(bp->b_log_item);
+>  		*bpp = bp;
+>  		return 0;
+>  	}
+> -- 
+> 2.53.0
+> 
+> 
