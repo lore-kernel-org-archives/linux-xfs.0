@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59DF2379989
-	for <linux-xfs@vger.kernel.org>; Sat, 30 May 2026 06:35:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A73A274B5C;
+	Sat, 30 May 2026 06:37:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780122934; cv=none; b=NkHVvz5nEEyr6Dlxgvz0Z31fuJfN0DVgsagaGAeCr54+hEhzqLRS3qb4DPVUn+I5Cf2/f3yZcWwMiDYuqWSVezjD0TUSM6GfVpX+Iwn6vndi/htlcxo2NcHPHkpy6jgQOOdHbbE67XX5sxMU8HRKQxHntYcGXVTkSPfdITe2TNs=
+	t=1780123064; cv=none; b=U4Xy3QFjsP/1dnxgvM/65pUN5FtKn+el+RY+072ltOwdZdzu1x8LFeKos75IwHovQRME4wOoCTzCVzOwRxBzlbrZwYFd7rcVTgq0wjPFTHRW3dEWl+zQy3TC6K8jbrLM1BG3MZ3mVmnDMKzkA8PAoYUZwT0bQ6+NNIrJvWZtHkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780122934; c=relaxed/simple;
-	bh=loVTfW3EUDzjdCrZ0aksP4UFmMWs2IIU7itY8RrAO6U=;
+	s=arc-20240116; t=1780123064; c=relaxed/simple;
+	bh=gEiLYM2doJphVnKry/4lwBBYT6Td5kWBst9SCeRY4i8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=o1UTVPmcUGEGC4eTqmwZr/YmLzU9yD7CPeddpdHEU0OOeTWX5ZHZ20o7hrIfFIWTHeraQOQB8/rZIs08ODnQ/WIX6uD2842XsJmXE+w+h8v0K5B4P2xixhtQ1tMCSc8nuKimC5wiztgoOp5A9+KQHPFNpducuBWRRegziCPlVxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nh0FrTOn; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NKEkWftJNyVovuu7ejnMxrriOvQUtWnUpdB2gqKBrPZf4URKKcqk+yf5oUQVjZhrJ7jB2o/xchuiDzYKIMSyTay/aaPG4fQqQqcVzGxqDNYehWRGbpXtW2bL3+jQn1jbwDcbdDpS0qawqGaCyRiJkE7JKNnrsKGJ1qrFt2PRmmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NdxXmZ8c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nh0FrTOn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDCF21F00893;
-	Sat, 30 May 2026 06:35:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NdxXmZ8c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 532B11F00893;
+	Sat, 30 May 2026 06:37:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780122933;
-	bh=ch1oKXO4J5NuY6MKq2FiuWdhrnnOb9w6dPthQTVPYl4=;
+	s=k20260515; t=1780123063;
+	bh=Mzd8gJewC6ZnzoHSZe0g9lGsqiB7x1YwPjmy3uHsLJ8=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=nh0FrTOniiL4P3eMmb3dBb75fZJMVmrNXghKdZzxQ1M0m+HE0RRXMyaoGvmucV2zC
-	 87NTdsdwKCBUzH4A19vxbWI97deMvSAN1SYkRGKZnNXb4phJoq9pDYfSax58D7U+iL
-	 q4coSy502eb2+wnB7TOWHB/Qsa0yc4qaRw0L3v7wFRk8qfzijf9xSM6P8gylzcVxk7
-	 YzNQXqUNWa1s+M6PnH6yo+1/mEMSRfHXUhn7xC9iTl6RxVmIfRzxf7TyIWzedh1Q3d
-	 RG+YT9ud91Pwg7VEQLSLA00+ICEiHkyTftFgL2Bmv6uIiWXfXkyXI/ye4Aob0XBhOE
-	 aPmHctyIDRhEw==
+	b=NdxXmZ8cpAMtFoutTjErUjVgPVF1lhWu4Xr3G5az1fxws6LfqDq1Tcp9dpaKCciR+
+	 uw5j4DDFS+vtxkufjRjRuYkH9XglS+aP1rpg/F3PizHvZXEUlfVDqrkhH428aViO0Z
+	 lcQdew2FTS6VRW9ZHBkeJYP2xNtteoWfXjQa0/yFBF2RtK/q8kVhFzkVIfQEjWF7j0
+	 +VQPpQbfjfcklLna3J9VwxuQsggqVCyrVHCrqQydtdSoySf5hcc7tG+L/rHpTFf5EJ
+	 ZjrcIexopAM9847aV1DjXXJDUxhI3eD3Bhbp5rYy0gLZ+o/yDAq/ZK6HfyVwprmTBw
+	 vcu+dxLYCrlfQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J . Wong" <djwong@kernel.org>, 
- Hans Holmberg <hans.holmberg@wdc.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, 
- Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20260518065224.9066-1-hans.holmberg@wdc.com>
-References: <20260518065224.9066-1-hans.holmberg@wdc.com>
-Subject: Re: [PATCH v2] xfs: handle racing deletions in
- xfs_zone_gc_iter_irec
-Message-Id: <178012293148.22116.17058353589303629949.b4-ty@b4>
-Date: Sat, 30 May 2026 08:35:31 +0200
+To: Dai Ngo <dai.ngo@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+In-Reply-To: <20260520003503.2399326-1-dai.ngo@oracle.com>
+References: <20260520003503.2399326-1-dai.ngo@oracle.com>
+Subject: Re: [PATCH 0/2] xfs: correct pNFS layout mappings
+Message-Id: <178012306198.22275.7605201361489277249.b4-ty@b4>
+Date: Sat, 30 May 2026 08:37:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +44,24 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Mon, 18 May 2026 08:52:24 +0200, Hans Holmberg wrote:
-> Under heavy garbage collection pressure from RocksDB workloads,
-> filesystem shutdowns can occur in xfs_zone_gc_iter_irec when
-> xfs_iget() returns -EINVAL for deleted files.
+On Tue, 19 May 2026 17:32:57 -0700, Dai Ngo wrote:
+> This patch series fixes pNFS layout mapping issues exposed by running
+> xfstests generic/075 against an NFSv4.2 block layout export. The first
+> change stops xfs_fs_map_blocks() from propagating an uninitialized
+> mapping record after xfs_bmapi_read() fails.
 > 
-> Fix this by handling -EINVAL just like we handle -ENOENT, allowing
-> zone GC to safely ignore stale mappings.
+> The second change removes the XFS_BMAPI_ENTIRE flag so each request
+> only returns the range the client asked for, eliminating overlapping
+> in LAYOUTGET replies.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: handle racing deletions in xfs_zone_gc_iter_irec
-      commit: bc95fa240a1b8ae64d3dabe87cbe103b912afc45
+[1/2] xfs: fix use of uninitialized imap in xfs_fs_map_blocks error path
+      commit: 97bdbf2613eb89428b739ce09d1a6e1c8435a286
+[2/2] xfs: fix overlapping extents returned for pNFS LAYOUTGET
+      commit: 36ca6f11424a5b6d92b88df37c40bf2fe825d5a0
 
 Best regards,
 -- 
