@@ -1,94 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 717C135966
-	for <linux-xfs@vger.kernel.org>; Sat, 30 May 2026 06:35:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59DF2379989
+	for <linux-xfs@vger.kernel.org>; Sat, 30 May 2026 06:35:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780122908; cv=none; b=tu3OnL4T1n0SUHzQe+8psZaYPTL4pg1RGYtt2IeU2pPbOA3q01pBhibDTYkF//QB1RO3FMYvWBalSUbfUhRjrkeSDT4tFS/Co3e7MQD0kDQxXqUiD7d9WkFto7/iGIXUQlWwJuS77RjtnYw+t+XeS78xaCQ7iMJwS8+FPuaLiIk=
+	t=1780122934; cv=none; b=NkHVvz5nEEyr6Dlxgvz0Z31fuJfN0DVgsagaGAeCr54+hEhzqLRS3qb4DPVUn+I5Cf2/f3yZcWwMiDYuqWSVezjD0TUSM6GfVpX+Iwn6vndi/htlcxo2NcHPHkpy6jgQOOdHbbE67XX5sxMU8HRKQxHntYcGXVTkSPfdITe2TNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780122908; c=relaxed/simple;
-	bh=BzzGyUDx4B8et40NvWdt4RVCLps91ae/oVlXdYaUQwU=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=RnVYlRSIIUT/cCDqToxouA50ZngYc3LBC2ozPj1rx6AWC0dlazMp4gsFuAlpHFvjfHW4Oto3WAVgwCzAr7YEdK6zpWOiUMBf1SQWu8TAH6iQKH2fUP+iKg8D+8PL9aSB9cysKXd5YO4x+1r/ExhhAim5mpNUczqZ0jiemOlRPA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kvAzqN9q; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780122934; c=relaxed/simple;
+	bh=loVTfW3EUDzjdCrZ0aksP4UFmMWs2IIU7itY8RrAO6U=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=o1UTVPmcUGEGC4eTqmwZr/YmLzU9yD7CPeddpdHEU0OOeTWX5ZHZ20o7hrIfFIWTHeraQOQB8/rZIs08ODnQ/WIX6uD2842XsJmXE+w+h8v0K5B4P2xixhtQ1tMCSc8nuKimC5wiztgoOp5A9+KQHPFNpducuBWRRegziCPlVxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nh0FrTOn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kvAzqN9q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D78F1F00893
-	for <linux-xfs@vger.kernel.org>; Sat, 30 May 2026 06:35:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nh0FrTOn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDCF21F00893;
+	Sat, 30 May 2026 06:35:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780122907;
-	bh=pnXTzDUEel2vFqlnjNnJjpbTI+dLxdyxigujx6B47QY=;
-	h=Date:From:To:Subject;
-	b=kvAzqN9qRZdK+o+XQly8BjgT+UkIAPExyvvpWrLCPNHAAlX3MUK1irSd6Cp0l1ToJ
-	 zBaUwzhiP57HdXwwo34LOU+ZxR55jABvkSzIoCCWZJ3zRxIWHnR2bQGidDrYlZ/RuV
-	 2ouP0BAT45KUmtlPfqb8NWS8MYJ0TuxNx0O8Ib/LBMUr+f12Jaqwk8vvzjmxs3bS00
-	 6I1Cq6sEj0NdKxkddekbuL+YzYKybeQAtY/iVv8wjK+vEGEz4Dwr1IRkS3l3D0zbFQ
-	 pKN10LM1s24DWAupvwqbgT3+bw8qAtxIDwVWHvwDVgS0qFeP1loNJCpYMIMfgrztin
-	 YkQbxPHfAhs4A==
-Date: Sat, 30 May 2026 08:35:03 +0200
+	s=k20260515; t=1780122933;
+	bh=ch1oKXO4J5NuY6MKq2FiuWdhrnnOb9w6dPthQTVPYl4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=nh0FrTOniiL4P3eMmb3dBb75fZJMVmrNXghKdZzxQ1M0m+HE0RRXMyaoGvmucV2zC
+	 87NTdsdwKCBUzH4A19vxbWI97deMvSAN1SYkRGKZnNXb4phJoq9pDYfSax58D7U+iL
+	 q4coSy502eb2+wnB7TOWHB/Qsa0yc4qaRw0L3v7wFRk8qfzijf9xSM6P8gylzcVxk7
+	 YzNQXqUNWa1s+M6PnH6yo+1/mEMSRfHXUhn7xC9iTl6RxVmIfRzxf7TyIWzedh1Q3d
+	 RG+YT9ud91Pwg7VEQLSLA00+ICEiHkyTftFgL2Bmv6uIiWXfXkyXI/ye4Aob0XBhOE
+	 aPmHctyIDRhEw==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next **REBASED** to dabfaca8140f
-Message-ID: <ahqEd3riQNrXWlzz@nidhogg.toxiclabs.cc>
+To: "Darrick J . Wong" <djwong@kernel.org>, 
+ Hans Holmberg <hans.holmberg@wdc.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, 
+ Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org
+In-Reply-To: <20260518065224.9066-1-hans.holmberg@wdc.com>
+References: <20260518065224.9066-1-hans.holmberg@wdc.com>
+Subject: Re: [PATCH v2] xfs: handle racing deletions in
+ xfs_zone_gc_iter_irec
+Message-Id: <178012293148.22116.17058353589303629949.b4-ty@b4>
+Date: Sat, 30 May 2026 08:35:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
+On Mon, 18 May 2026 08:52:24 +0200, Hans Holmberg wrote:
+> Under heavy garbage collection pressure from RocksDB workloads,
+> filesystem shutdowns can occur in xfs_zone_gc_iter_irec when
+> xfs_iget() returns -EINVAL for deleted files.
+> 
+> Fix this by handling -EINVAL just like we handle -ENOENT, allowing
+> zone GC to safely ignore stale mappings.
+> 
+> [...]
 
-Hi folks,
+Applied to for-next, thanks!
 
-The for-next branch of the xfs-linux repository at:
+[1/1] xfs: handle racing deletions in xfs_zone_gc_iter_irec
+      commit: bc95fa240a1b8ae64d3dabe87cbe103b912afc45
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-has just been **REBASED**.
-
-FWIW, I had a problem with my testing system and I couldn't properly
-test those patches for this -rc, I'll send those patches early next
-week.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-dabfaca8140f xfs: Remove mention of PageWriteback
-
-9 new commits:
-
-Christoph Hellwig (3):
-      [c316bb56bf4d] xfs: drop the RTG reference later in xfs_ioc_rtgroup_geometry
-      [2fa29c1a1677] xfs: factor rtgroup geom write pointer reporting into a helper
-      [8070a50b8897] xfs: abort mount if xfs_fs_reserve_ag_blocks fails
-
-Dai Ngo (2):
-      [97bdbf2613eb] xfs: fix use of uninitialized imap in xfs_fs_map_blocks error path
-      [36ca6f11424a] xfs: fix overlapping extents returned for pNFS LAYOUTGET
-
-Hans Holmberg (1):
-      [bc95fa240a1b] xfs: handle racing deletions in xfs_zone_gc_iter_irec
-
-Matthew Wilcox (Oracle) (1):
-      [dabfaca8140f] xfs: Remove mention of PageWriteback
-
-Yingjie Gao (2):
-      [fcf4faba9f98] xfs: fix error returns in CoW fork repair
-      [c3e073894379] xfs: fix rtgroup cleanup in CoW fork repair
-
-Code Diffstat:
-
- fs/xfs/scrub/cow_repair.c | 12 +++---------
- fs/xfs/xfs_ioctl.c        | 47 +++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_mount.c        |  7 +++++--
- fs/xfs/xfs_pnfs.c         | 11 +++++++----
- fs/xfs/xfs_reflink.c      | 14 +++++++-------
- fs/xfs/xfs_zone_gc.c      |  2 +-
- 6 files changed, 50 insertions(+), 43 deletions(-)
