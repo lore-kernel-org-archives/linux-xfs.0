@@ -1,74 +1,61 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92D13783AE
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Jun 2026 12:44:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96253DA7EA
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Jun 2026 15:16:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780317869; cv=none; b=W5ioJwRgVNOLkH35HMAXJZUfSo5QpJuiHjjQ0me/35ZYeYHRIaQUZpBQRcXsCGgd2E++/6KG47FgpjKDr0OeG+eSxMfW/Nzb9TliG/NA4dfAU62DSBGQ/yo9KZF99EJx9o6gnI68flvIhOAy47SuIGETdNmXw92gwXR9AdS1ZNc=
+	t=1780326991; cv=none; b=TBCj83jH15ccSsMTatlsrqJJZPdp1n3ZEow89dQLETJ0PmAcD2wIZQW5t7Hsx0fvXTJcq71+Hk8hVpA4xAAXj9fYjjaD97q1D5q4tVvCVdcIQ2BTwhaiyzlVouAQBCOrbliHcDnahVsyIiImXslqrSgIKubor6KRkHODjUQtsCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780317869; c=relaxed/simple;
-	bh=4Jr0dJCUNiw7tyG+tmaivModrIj0ELFy8ZxZrXJBFsk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ar81upc2EzCU3z6tJ8AypGqBzYWGXwkbZSoJ02nUWY2VWXlwHwa6QHZnWIApn09uE2bQriygQ5mZVOM/EuzegsbFpOSIovwTYU+Oa3Js9pRVX2P6lcVxqP9kJ0iUPS3O2OESLtR/JdNRgF3Y1hmv22AtNzkGPMTXKhdb9GnrGS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=u25YEB5v; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1780326991; c=relaxed/simple;
+	bh=ERuBwiKA7cNOxPGa26G/eiFiuszJdqd1F2QBLZJCA2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CcQijShWiTy0RVZ2ofGrosRSYBfqas+r9z/jbQWPySUsSkXYiI+Dp1dLmgTYGUSgcn/pS8dvDZGkrcO9sdD67dmGEaD21csuwwmkY7809LfUcxMjSDSDjzuCNCtSIDmmCho3vjcV+zwTQllSPCWcisqI1O01+jRUWKZira7BrVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ECO1cgQs; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u25YEB5v"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ECO1cgQs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=NQTvgj7wfbWpJtRggSn823dCTjwKK70DBoRMI+bHgUw=; b=u25YEB5vICZb9mHEqJE+C4QyZc
-	iYuBynikFBE93D5zKCqdZ3206vO+AsImU1vHDuNswAwV00ZehSApU4mQgbVW0DaOBn5wIuzzbNgpu
-	O1m2MUPVrWOMxJ/nk1v1Cje3ORyDSQeqSgIE6Dh7rYeukL7PL6ubjgcf/eYAYxnCVWInwy3WSZutb
-	01tr3VFIW1n+DMmZ1K/8R4TgtFC0kIlNPi569Y1BQ+hvjCcFL6XzNUCCq2eoNofAv2AqYTOT70mlO
-	ARu7LgjttValf72eG3rOC6DH7exbqKeeU+8s2c6Tt0B3VDZ/2MlV5vlzc4DpdHoRjN19w8j/WjeaR
-	DPm0LBJA==;
-Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wU20J-0000000BA2n-1n0X;
-	Mon, 01 Jun 2026 12:44:28 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=btWzzYZRmTuSRiItw9DYShXPZbaWdufGunNUJULJPzI=; b=ECO1cgQsiFYiuwU2PB+UoZksHj
+	dS7CRRj+eZB3GJCMTH0A6foNljiDVP0+lNvUp/YVjjdGk9r3JA4PQBh70CYKfdnt4QbVFoh9PfQuV
+	NHq7GTshApy5IoZPA+MYtQytPRiLs8y9BFOeeXxQYNYC6KqOBh0UoNh2KCi4f11ldScQ2jYkfYMla
+	UCXX5YPM3/NSxiWz5uA1yYhOkQXrZ2bIRGsqrRejq7Dib3pgnWI3cKQdS1oNCm+Cz5TgyUp/DR+ob
+	EomMNFjIscJlnQ4bEdRsqEUJv0PfdJ0rPJ3P8jNWoVhXsZafFx+nGeG2T80VCxZpNTXZqevn4uOYf
+	8BdgyYjg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wU4NO-0000000BMLn-3XZ0;
+	Mon, 01 Jun 2026 15:16:26 +0000
+Date: Mon, 1 Jun 2026 08:16:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Romain Naour <romain.naour@smile.fr>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: mark struct xfs_imap as __packed
-Date: Mon,  1 Jun 2026 14:43:51 +0200
-Message-ID: <20260601124410.3508980-6-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260601124410.3508980-1-hch@lst.de>
-References: <20260601124410.3508980-1-hch@lst.de>
+Subject: Re: [PATCH] xfsprogs: include/buildrules: fix ltdep
+Message-ID: <ah2iSidP71J0jx2H@infradead.org>
+References: <20260531194553.1378795-1-romain.naour@smile.fr>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260531194553.1378795-1-romain.naour@smile.fr>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This returns 2 bytes of padding at the to struct xfs_inode into which
-this structure is embedded.
+On Sun, May 31, 2026 at 09:45:53PM +0200, Romain Naour wrote:
+> Unlikely the xfsprogs build system misbehave when a directory in
+> the path contain ".o".
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This sentence doesn't parse for me.
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 57192adc7744..f3624532b023 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -16,7 +16,7 @@ struct xfs_dinode;
- struct xfs_imap {
- 	xfs_agblock_t	im_agbno;	/* starting agbno of inode cluster */
- 	unsigned short	im_boffset;	/* offset in inode cluster in bytes */
--};
-+} __packed;
- 
- int	xfs_read_icluster(struct xfs_perag *pag, struct xfs_trans *tp,
- 		xfs_agblock_t agbno, struct xfs_buf **bpp);
--- 
-2.53.0
+>  .ltdep: $(CFILES) $(HFILES)
+> -	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
+> +	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o:,\1.lo:,' > .ltdep
+
+The change itself looks fine, though.
 
