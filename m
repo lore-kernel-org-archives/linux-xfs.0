@@ -1,60 +1,118 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A3430EF95;
-	Tue,  2 Jun 2026 07:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF2537EFE2;
+	Tue,  2 Jun 2026 10:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780384038; cv=none; b=TLaLZJf0NcxO5T1K5fecEVDp0vDN6g6rdqg3u5Vec2cHrOrRQrIh6abwvsNJFfPyOoOg9VBFS7FVVExxV6MsMmwq8Pe8z2c+2wr9FhGKy33VCOdVjqBNyO0XlzWxeDvqCRicHt1s+ff1Hrhg7Nxm7uS7QqVOIhvP6/t3j262YTw=
+	t=1780395022; cv=none; b=q93NuGytkaRHq+U6NZRrRJKFfhcWYOvz0gqLeWnVhDFWoBbTVnMJAE06bWNWQWnupaS5coR0JH4QL/pg8QCdk6WmwT0nz5UmOeq/GydSGcnoV+PcYYJQcqlgUlshXqEEkpYv9MupjQZm5VLTQCY+B7WWDbP6UPbhHWLhnMv7lJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780384038; c=relaxed/simple;
-	bh=sd8+wtIXL9d4vn2RENMDxzMtK5OOTQHoTXX41GOCiq8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r8RParsIFPz78GRl0zxsvsnBtNeJjzx+fqDJDkO0keiP6j76LOZuIkGW9rrV12X/S28EZ+EeiGJWtkNHSxwXJUiB/AZo+UmckCtppkbfX2zU//9KdnteP+/CtuduKZJYXFE9ct62cqMtD71vfxs8IlLbcXPnT9RtTsipHcYqNl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rqKuxHxU; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1780395022; c=relaxed/simple;
+	bh=8PAOYH0N838UHayA/tOONu2IcWfdoIg+edZyFkLDa8o=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=aBVaKIhRuFzO7d96YbbuWIg0ElqAO97dznr5EgUWB191j4A4pPOHCgJpALqnpk0BWu0NChvV7UqUKKGAYjZiCPbCRN67CcXMZikgVbXvTMIBXQYfVDuktOwTZKvNVRmaY9LFOTtfAdud56tkh3X1J/WGMIG9UL1+iqi5VUlk/0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S4YSpK4f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rqKuxHxU"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=JSo6t83JEgsfHYAPDYHjcuFTnrO0WBP5pDJ67CZXD4A=; b=rqKuxHxU/Ye+Be/5B8kjCzYV0y
-	K8HcmEMWWB6ESqJ3WxJVopA1fH7n9Y7uFAyURh2HsNnEBbvHAFwbtV3pQD9E9VAn0MZhJPWAbaxP5
-	Jhx75oWq0WfoB6B/+GgM/XbJE3yAgNttWXWCYJoTLeaPJ999ToBHQbXsKcn5Z88QqDn4ELustK8Vv
-	XyVKKW1tepc5uziw+tMMxOQ/58Td6m9hyHrRg/0p99+rCt96Cf+ZaO87Rqv3XLUtfMci0qA24h+ws
-	4QpZ/p35BqM1gWyg+alepBA54izLmxYr0xiA5cT8iRFGvf5Z2/GYJDdd0SbaO/vIZsAtM60OqTvWk
-	szrNQREg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wUJDW-0000000CQVN-2cof;
-	Tue, 02 Jun 2026 07:07:14 +0000
-Date: Tue, 2 Jun 2026 00:07:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Mikhail Lobanov <m.lobanov@rosa.ru>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Cen Zhang <rollkingzzc@gmail.com>
-Subject: Re: [PATCH] xfs: skip dquot attach when m_quotainfo is not set up
-Message-ID: <ah6BIsvEitNW5Edb@infradead.org>
-References: <20260531155211.43803-1-m.lobanov@rosa.ru>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S4YSpK4f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2201F00893;
+	Tue,  2 Jun 2026 10:10:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780395020;
+	bh=0sPLzsNzNrE5sYBDRc7UQyK3KG2m+vueA9urvjX/WEs=;
+	h=From:Subject:Date:To:Cc;
+	b=S4YSpK4f2pH92GwKlT/TH7osx/3MRT19koRieRsuI8QrPrzw9Y4FYYnYq0otMcoyp
+	 VSHl8KQnZDBBKDmDUPyKjCMUWJ6ZGoOengV4oTpi2xqiMC4Yjmy78OEQcCssvY+VZu
+	 DqL0TX5jcsKhAYFp0YcTJIZz7cPNS7drfGUuWJbMB9lNcwUoC7WbeQWEf0vvEytf4g
+	 E2hEwx3SZQkoNeSkVDldR9nbV1lcHQM+HfWvflJSfugCh/uOt4BzAXg3uR21ZxXMDF
+	 TQG+Ip0ZgtZRMEhGNLTRZiLwK11BdWG0F8eUdP2xTsna7AngAggXRan6Z6nnT86IXO
+	 VpU0aTWvxNBfQ==
+From: Christian Brauner <brauner@kernel.org>
+Subject: [PATCH RFC 0/8] fs: support freeze/thaw/mark_dead/sync with shared
+ devices
+Date: Tue, 02 Jun 2026 12:10:06 +0200
+Message-Id: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260531155211.43803-1-m.lobanov@rosa.ru>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAP+rHmoC/yWM0QqCQBAAf0X2uRU90KLXoA/oNUJu7za9Mk921
+ QLx39N6nGGYGZQlsMIxmUF4Chpit0K+S8A1tqsZg18ZTGbKrMwMvqM8UceeBcnzVDWx9SxV3Ua
+ yLR4c2YILQ+wLWB+98D18fv8rXM4nuP2ljvRgN2znLSOrjCS2c82mXlYHlnTapzmKy2FZvtNKv
+ tmoAAAA
+X-Change-ID: 20260602-work-super-bdev_holder_global-8cba5e52bed5
+To: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
+ linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>, 
+ David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, 
+ Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, 
+ Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
+X-Mailer: b4 0.16-dev-fffa9
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2309; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=8PAOYH0N838UHayA/tOONu2IcWfdoIg+edZyFkLDa8o=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWTJreG4GXYx+0Zi52NGHc+ynRf2b+1hern5Se/Jry/CN
+ IQiT9qzdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzktTsjw7bF/kr3QxgvK7a9
+ qGtq7bnpZLzseI7IvqWc+y5dOfCuehYjw8kbi46lLWmzqL7e/awsJuK+hcjZUx3XwhU5tbNsg4Q
+ ucwMA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Hi Mikhail,
+Note, this is on the border between RFC/POC and so I haven't pushed this
+through testing yet. But I don't want to waste more time on this before
+showing it.
 
-this also seems to be somewhat related to Mikhail's fixes in a similar
-area.  I just replied there, and my gut feeling here is that if we
-are in a mount failure path, we're probably better not doing any
-inode inactivation, because well, we failed to mount the file system,
-so we better don't do anything to the persistent data structures.
+I surveyed various fs implementations because I want the ability to
+extend userspace the ability to manage what devices can be onlined in a
+centralized way without having to force every fs to care about this.
+
+I realized that erofs allows sharing block devices with multiple
+superblocks. Any freeze, thaw, removal, or sync on those devices will
+not be communicated to the superblocks using it and our current
+infrastructure is unable to deal with this.
+
+This attempts to add the ability to go from device number to all the
+superblock using that device, iterate through them one-by-one and
+perform actions on them. For most fses this is a 1:1 mapping but for
+erofs its a 1:many mapping.
+
+This is not unreasonable infastructure to support in my opinion. I
+played around with some ideas for this and I want to send out an RFC to
+gather some early input.
+
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+Christian Brauner (8):
+      fs, block: move blk_mode_t and fop_flags_t into <linux/types.h>
+      fs: add a global device to super block hash table
+      fs: refuse to claim any frozen block device
+      xfs: port to fs_bdev_file_open_by_path()
+      btrfs: open via dedicated fs bdev helpers
+      ext4: open via dedicated fs bdev helpers
+      erofs: open via dedicated fs bdev helpers
+      super: make fs_holder_ops private
+
+ fs/btrfs/dev-replace.c   |   6 +-
+ fs/btrfs/ioctl.c         |   4 +-
+ fs/btrfs/volumes.c       |  26 ++-
+ fs/erofs/data.c          |   6 +
+ fs/erofs/internal.h      |  10 ++
+ fs/erofs/super.c         |  66 +++++--
+ fs/erofs/zdata.c         |  10 +-
+ fs/ext4/super.c          |  12 +-
+ fs/super.c               | 452 ++++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_buf.c         |   2 +-
+ fs/xfs/xfs_super.c       |  10 +-
+ include/linux/blkdev.h   |   9 -
+ include/linux/fs.h       |   2 -
+ include/linux/fs/super.h |   7 +
+ include/linux/types.h    |   2 +
+ 15 files changed, 433 insertions(+), 191 deletions(-)
+---
+base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+change-id: 20260602-work-super-bdev_holder_global-8cba5e52bed5
 
