@@ -1,137 +1,87 @@
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C26361DD2;
-	Tue,  2 Jun 2026 16:25:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60CD145FE0;
+	Tue,  2 Jun 2026 20:09:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780417549; cv=none; b=Okiz5nVBR8Jxi/ShnMKppPs2EwWQdiChFLkwcWQvCVeL0FJW6PBCMX5apuRsYN8XCd7yrtSwi88ZwLXXJTJQpTMIahtC1iVivhFEvcr8Y84whLGVGntOWB/UQxSfTFodsrO0mfiju+lPF/1wi7dtyTYska1YHfaCI62R5K7TYhU=
+	t=1780430972; cv=none; b=q3XulPBu0ICLOvAEOogky0CGvSUMJbNdehUNJNNA9794TNyDjha8V7S8/jW/wWiKKi/SeFlUfx0rWVR/2QKAqr9T1LsXokYW5ABilMWamF+US4gRa+VKlBGrm+a4R2UoTDSN4F5QXZF9f7aGZA6F36L1wsWkkuNH8dmqTSX0QD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780417549; c=relaxed/simple;
-	bh=r+WdoKCvunqOYeDwnUd0iG3+8WJfyoo/VBVmmShWDKY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HtZoNL0OlXseoChmZ3g6GvUOPQpffV9JQFrfZ1qIENHEVer15wTSN7EJhpadzYrqNcAX/HG9xhVVaPv4TcRNS8A+kawdMgg64IawNxBYnbb1Bu8hd0rBvJUdDVYhYCVkbVNd2kzWvsu0uiBJeIgR+hLA4NsNqv1LjqTzcKDR3I0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=QHT/h0Kj; arc=none smtp.client-ip=115.124.30.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1780430972; c=relaxed/simple;
+	bh=dse0fSeQIzHmXLihQLU4iYzX1+cWq3tl1wF5/UYdSKc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b3FmJvE6F2zwzsYjgIPTz+DwrWx6wmsOK5jGrJal0Ojw8GFkSgRmJe2l2xf3obo36IojhUQlyzDme8ZmB9uM7VBEzygwF7NBTO8HIKW/YtYReYKfU97/8ByGp10uIeowRBoj7p7Q9KvUxKQcmJDcOS4NWUwJrjpbqUNOwq+kHk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BvpO3Eb7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="QHT/h0Kj"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1780417533; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=EpbqZJcq9Oh/PxoRgOKb2trtx+eeWnzATpjIZdwAlPw=;
-	b=QHT/h0KjMDQS0rMG27/RWqAxkygw6EmL7udbD7FEH2jh3c9tBklITTQYWhI90yFZxrVwFpI8iW8BPR7TuU3u+2ucLe3Jf0EWI7QPjloGi0vZkOdDXv5hMypKBkzfpdto+IG9qF6rzhM0v62IYfrRt4CjQ1RujRZmXy6z6HTOnrY=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R931e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X44xNwS_1780417532;
-Received: from 30.120.66.214(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X44xNwS_1780417532 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 03 Jun 2026 00:25:33 +0800
-Message-ID: <7c5bfcf0-36a3-4cc6-bf31-6af4fc901c37@linux.alibaba.com>
-Date: Wed, 3 Jun 2026 00:25:31 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BvpO3Eb7"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 677AF1F00893;
+	Tue,  2 Jun 2026 20:09:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780430971;
+	bh=RCTqdMUIQL2wPOqBPUz/XcErDodBJvj0B3QqO1rdp0s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BvpO3Eb7BPEzluCrqCkH6rc3op61E+WQQNdp6Wrul7YVkgjPb9iGzbb8nx4aRzq1k
+	 7WKSykOfbdkIm0doMDJ7D49fjaAdH2edxb860X94/FKyZN5dR3IzNjvTWUNOY/dd+i
+	 KLoZM6ywHHypWr/X51FxTpjjni9U6DlCijss6pt5OYtdguTTQgZizdeQgkETXJffCU
+	 1fjWCwMnLmUAuHa8tMWRgJ4bi2Ia4zZ5vXyYrRNfLnXb9hnevvz+7BqUfU1G5fMucL
+	 gCSv363bK4/GQQnIGxxcZ1hkc5BQUSntVyuJZY3z9WuhDcWyKHuCCJkfUqTo4HO8Fc
+	 VW5WjoSNEMBMg==
+Date: Tue, 2 Jun 2026 13:09:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Disha Goel <disgoel@linux.ibm.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] common/defrag: Skip defrag tests on DAX-enabled
+ filesystems
+Message-ID: <20260602200930.GB6054@frogsfrogsfrogs>
+References: <20260602101418.55131-1-disgoel@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 7/8] erofs: open via dedicated fs bdev helpers
-To: Christian Brauner <brauner@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
- linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>,
- David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
- Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org,
- Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org,
- Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
-References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
- <20260602-work-super-bdev_holder_global-v1-7-bb0fd82f3861@kernel.org>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <20260602-work-super-bdev_holder_global-v1-7-bb0fd82f3861@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260602101418.55131-1-disgoel@linux.ibm.com>
 
-
-
-On 2026/6/2 18:10, Christian Brauner wrote:
-> Route opens through fs_bdev_file_open_by_path() so each external device
-> is registered against the correct superblock, and convert the matching
-> releases.
+On Tue, Jun 02, 2026 at 03:44:18PM +0530, Disha Goel wrote:
+> Online defragmentation is not supported on DAX-enabled filesystems
+> because DAX bypasses the page cache required for defrag operations.
 > 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> Add check in _require_defrag() to skip tests when DAX is enabled,
+> avoiding false failures on ext4/301-304, ext4/308 and generic/018.
+> 
+> Signed-off-by: Disha Goel <disgoel@linux.ibm.com>
 > ---
->   fs/erofs/data.c     |  6 +++++
->   fs/erofs/internal.h | 10 ++++++++
->   fs/erofs/super.c    | 66 +++++++++++++++++++++++++++++++++++++++++++----------
->   fs/erofs/zdata.c    | 10 +++++---
->   4 files changed, 77 insertions(+), 15 deletions(-)
+>  common/defrag | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/fs/erofs/data.c b/fs/erofs/data.c
-> index 44da21c9d777..5220585293df 100644
-> --- a/fs/erofs/data.c
-> +++ b/fs/erofs/data.c
-> @@ -69,6 +69,9 @@ int erofs_init_metabuf(struct erofs_buf *buf, struct super_block *sb,
->   {
->   	struct erofs_sb_info *sbi = EROFS_SB(sb);
->   
-> +	if (erofs_is_shutdown(sb))
-> +		return -EIO;
-> +
->   	buf->file = NULL;
->   	if (in_metabox) {
->   		if (unlikely(!sbi->metabox_inode))
-> @@ -236,6 +239,9 @@ int erofs_map_dev(struct super_block *sb, struct erofs_map_dev *map)
->   		}
->   		up_read(&devs->rwsem);
->   	}
-> +	if (erofs_is_shutdown(sb) ||
-> +	    (map->m_dif && READ_ONCE(map->m_dif->dead)))
-> +		return -EIO;
+> diff --git a/common/defrag b/common/defrag
+> index 055d0d0e..28db2f7a 100644
+> --- a/common/defrag
+> +++ b/common/defrag
+> @@ -6,6 +6,10 @@
+>  
+>  _require_defrag()
+>  {
+> +    # Defragmentation is not supported on DAX-enabled filesystems
+> +    if echo "$MOUNT_OPTIONS" | grep -qw "dax"; then
+> +        _notrun "Defragmentation not supported on DAX-enabled filesystem"
+> +    fi
 
-Take a quick look at the code, maybe we can just add
-the SHUTDOWN status only since I don't think remove an
-individual blob device is useful for the typical image
-use cases, so there is no need adding `dead` for each
-individual extra device.
+Defrag doesn't work on XFS on DAX as well?  It seems to work fine on my
+VMs...
 
-and just bail out if erofs_is_shutdown() at the very
-beginning of erofs_map_dev()?
+<confused>
 
->   	return 0;
->   }
->   
+--D
 
-...
-
-> diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c
-> index 43bb5a6a9924..89ae91935364 100644
-> --- a/fs/erofs/zdata.c
-> +++ b/fs/erofs/zdata.c
-> @@ -1697,11 +1697,15 @@ static void z_erofs_submit_queue(struct z_erofs_frontend *f,
->   			continue;
->   		}
->   
-> -		/* no device id here, thus it will always succeed */
->   		mdev = (struct erofs_map_dev) {
->   			.m_pa = round_down(pcl->pos, sb->s_blocksize),
->   		};
-> -		(void)erofs_map_dev(sb, &mdev);
-> +		if (erofs_map_dev(sb, &mdev)) {
-> +			/* the backing device is gone; fail the batch */
-> +			q[JQ_SUBMIT]->eio = true;
-> +			qtail[JQ_SUBMIT] = &pcl->next;
-> +			continue;
-> +		}
-
-It needs some injection tests anyway.
-
-May I ask if it's an urgent 7.2 work? If not, I could
-make a preparation patch for the upcoming 7.2 cycle
-to handle erofs_map_dev() failure here so you don't
-need to bother with this in this patchset.
-
-I will seek more time to resolve the recent todos
-yet always intercepted by other unrelated stuffs.
-
-Thanks,
-Gao Xaing
+>      case "$FSTYP" in
+>      xfs)
+>          # xfs_fsr does preallocates, require "falloc"
+> -- 
+> 2.45.1
+> 
+> 
