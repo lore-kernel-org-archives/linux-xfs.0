@@ -1,91 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-106112.protonmail.ch (mail-106112.protonmail.ch [79.135.106.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0DB3DE453;
-	Tue,  2 Jun 2026 10:10:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D886736A03A
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2026 11:25:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780395052; cv=none; b=LyoeI9qVRlJtlUlNgGCL7fR5bzUjhmSjxjW7mN12lF9DeTW4vuxc8s11w/ZG76BIOr+PNYn43V0vbyCEMMn9htlLstM5R0nnHu/J6dG20fZp6B7Gk4toHEw+K74WJx587FaCVgHqxglhLPpQUIhxvWfwGEVro23L1NlkQLvTSm0=
+	t=1780399514; cv=none; b=ehQRflZKFYRcC1xV8kxBbmKyaM0bahDlsJDon9U31VRtP2bKqIXQPLeoT+kIpSHNr+KJ/BtB3o0ooVg8PKgk4MNwZ8XPYerK/pLWg0XAR8iU0LZ6PI2zOmLMRV66Cux0gLGEkv8g7bfbVheWqN4l2GbnPZ7tMVH2SqjKnS9CiSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780395052; c=relaxed/simple;
-	bh=R23GnSj4U5c2eVlp7JGCCBg/KF5c+QIHjrFm4diCqAg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=KFX6sFk7tJVOJH457T0DcdTM4VlKtdDXXy+qGKDiZGzqrFqYk29ZJOgq6eX5sTGoH/8ndqTg5OJXzbcIryYB92V6b5fnN6uCOA+reCMpy7vfmKGHwjJBzXJ7nRGJSUEGpEBDlb94UPHf5WRnb7l8I1it+iOPGCRWKeDJQqYG/eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mKNi+CFk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780399514; c=relaxed/simple;
+	bh=2U7LOhtHbcyKAmZ6eeBAVMhUtbgVnFD5Bpo7D9+65uo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=inlKAwmxF/YoCFl0KfehuWxjHRFvEuvZ6uo4uYDGzMwxz0H6CGhNtfDK/VWw1+wHf96xkHxxmRpXlqt1A4hcgUPjHr7ndxGDP4HwczpdEUhWeI0K8bpsMFbqgd1MssLhDIj1IIldQFhkq6bwaizzp9+Ps58PJBn1OMZrx674LPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=theesfeld.net; spf=pass smtp.mailfrom=theesfeld.net; dkim=pass (2048-bit key) header.d=theesfeld.net header.i=@theesfeld.net header.b=nf++OdoY; arc=none smtp.client-ip=79.135.106.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=theesfeld.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=theesfeld.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mKNi+CFk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D83D01F0089B;
-	Tue,  2 Jun 2026 10:10:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780395051;
-	bh=xLOTdT8r5c8v5N1ZxNPQflZse6scSqS6hKPK2aBGU3s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=mKNi+CFkSwIzUT3XyErbW7NUlsQGaqz8SaV5mqOF5zpDbz/Z2aM0kkT5r/xonBqSS
-	 vIFBYSRF+Y8Qd3Y6kSLOMq50Pny91d27GC/z9QyA+IJiPhCrRbZTVnGXRcDUVZ3Fci
-	 g/R73rSa92eMq4puOjqbtYwgQAq7fvtIK8/LASaNsHS50nl3qVNyqz/HvQ5ro3+msv
-	 fET0bfi0cVeWzh85VyG67UF1iASgo8srRq+Gid4B29ynv3MA+95OhVeC1VvC9f0QAk
-	 /2TbB1DSzJrILBmkHgNiC4DL3kp8cR7aSg2Bs/ifoereNRYuW6WCHfDvwXCB1CYHaI
-	 2Uc9x28TrzuRw==
-From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 02 Jun 2026 12:10:14 +0200
-Subject: [PATCH RFC 8/8] super: make fs_holder_ops private
+	dkim=pass (2048-bit key) header.d=theesfeld.net header.i=@theesfeld.net header.b="nf++OdoY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=theesfeld.net;
+	s=protonmail2; t=1780399510; x=1780658710;
+	bh=oVSFITDaMDcl8F5hxC/fPH9w/x2e4vNGrwqofJcPWKQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:From:To:
+	 Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=nf++OdoYgmrBJGlOqboAAeyuvwSEzGeFOx/3+v+2PYYKn8Ns1lvpOXFWfVI33kJ3O
+	 Pwkq0zlW/TwQIKdxAaXctGO84Vgj1QdlYurK7GdELL5a1OS9NvR57MEVlr9vVUnP4i
+	 Dksb/5uUM7AOiPdHqrFatWdDYuGYtiG07P/JZs+dvxQ4n33pn34Ho+TdqKn+xVJN8N
+	 jHR4MqwHnjL73MUFOMqEqkJ11hzeqwp/oaCP+Y1aXK7rwfb0NB9fZtgMl7ez2JDo77
+	 cVM0USQt6K41aT2cSb5cTKu9w9A6b/Hne2SBm9SZl18o6I4T6JviOEx3cSbGqfgi2H
+	 J+/q/izIuQycQ==
+X-Pm-Submission-Id: 4gV7m52t7Fz2Scpl
+From: William Theesfeld <william@theesfeld.net>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] xfs: convert dquot iterator map allocation to kmalloc_objs()
+Date: Tue,  2 Jun 2026 07:25:08 -0400
+Message-ID: <20260602112508.25581-1-william@theesfeld.net>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260601191858.608270-1-william@theesfeld.net>
+References: <20260601191858.608270-1-william@theesfeld.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260602-work-super-bdev_holder_global-v1-8-bb0fd82f3861@kernel.org>
-References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
-In-Reply-To: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
-To: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, 
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
- linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>, 
- David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, 
- Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, 
- Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>
-X-Mailer: b4 0.16-dev-fffa9
-X-Developer-Signature: v=1; a=openpgp-sha256; l=764; i=brauner@kernel.org;
- h=from:subject:message-id; bh=R23GnSj4U5c2eVlp7JGCCBg/KF5c+QIHjrFm4diCqAg=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWTJreGY//RPxrQiwUNbMteaBZSkHhQ+tUBJbYLZtUb7N
- /9tbhXXdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEyExYThn+0q8UN3BJ6GPdTU
- uvE8205tyuMZvh/sl79WLi21dk76FcPwvyRUiS+vibv687R6c4v1F9+JxWQGFKy13a/tYX3sksg
- tFgA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-There's no need to expose it anymore.
+v1 converted the open-coded kmalloc(N * sizeof(*p), ...) in
+xfs_qm_reset_dqcounts_buf() to kmalloc_array().  Per review feedback
+from Carlos Maiolino on the v1 thread, switch instead to the
+kmalloc_objs() helper, which is the preferred form for new XFS code
+and matches the style of recent conversions elsewhere in fs/xfs/.
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+While touching this, also drop the __GFP_NOFAIL flag and handle the
+allocation failure explicitly by returning -ENOMEM.  The function
+already has callers that propagate errors out of quotacheck setup,
+so an early -ENOMEM is harmless and avoids relying on the allocator
+to retry forever on memory pressure.
+
+No functional change for the success path.
+
+Signed-off-by: William Theesfeld <william@theesfeld.net>
 ---
- fs/super.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_qm.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/super.c b/fs/super.c
-index cea743f699e4..983c2fbf5202 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1643,13 +1643,12 @@ static int fs_bdev_thaw(struct block_device *bdev)
- 	return error;
- }
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 7bd15d9e7..83e8d80bc 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1170,8 +1170,9 @@ xfs_qm_reset_dqcounts_buf(
+ 	if (qip->i_nblocks == 0)
+ 		return 0;
  
--const struct blk_holder_ops fs_holder_ops = {
-+static const struct blk_holder_ops fs_holder_ops = {
- 	.mark_dead		= fs_bdev_mark_dead,
- 	.sync			= fs_bdev_sync,
- 	.freeze			= fs_bdev_freeze,
- 	.thaw			= fs_bdev_thaw,
- };
--EXPORT_SYMBOL_GPL(fs_holder_ops);
+-	map = kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
+-			GFP_KERNEL | __GFP_NOFAIL);
++	map = kmalloc_objs(*map, XFS_DQITER_MAP_SIZE, GFP_KERNEL);
++	if (!map)
++		return -ENOMEM;
  
- static int fs_bdev_register(struct file *bdev_file, struct super_block *sb)
- {
-
+ 	lblkno = 0;
+ 	maxlblkcnt = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
 -- 
-2.47.3
+2.54.0
 
