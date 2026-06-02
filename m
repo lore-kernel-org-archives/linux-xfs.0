@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89104199931
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2026 04:58:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EAC8199931
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2026 04:58:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780376301; cv=none; b=F8Qs2BV4bSKosQ5r8tj/wmuvVwZvec4LH7n1JL1Qtd45dwapLwasw3oebSQD/ODU3bj/eAh2bnrCxgXlWXkOl9S2xcfrRVMK5vI0Ken8RnKxmwsBKd43YqQTsKKl12ith7wHlrmXEIO+l7FoO/kruX7jIJ1jPNJjL6t8hueXmPE=
+	t=1780376316; cv=none; b=Om/sJ3XGVoNNOdoRUhGWzL3GkM6QOBq0YGlKfS6XJs/DDcxhMKehk2BQS2rsUY6pi+Ll0kb/DJJyPXXYMQh4RApifvQuIjqhZyyS7rtJBXZra6zbzyJxuCNS38hRRfj304dVcETNIM3/I2tUuN4fauwq1KFzWdFKGabZlkJ/C+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780376301; c=relaxed/simple;
-	bh=uDpMfTyuPIBMrfFdmiWIJq0XcJmdqW87UeIYTQ8YhNA=;
+	s=arc-20240116; t=1780376316; c=relaxed/simple;
+	bh=Pqr1L9Nqpg5VQMlXjW4kONKvWvFxhAt3pUv93mtje00=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GKzYu6p/6X4lMSSdvPjt4X3a1zYsbXvn/pMj1Zpkkztlp92wnFx0bHI4J5XXH7aSmWvAUdffA2/x5oTNG7yyh5rPevhdUtj2fAsBtrArI7hct+dz5iRGkGPpF0hDdjUMNfXdPvYNEzutYGBSCQIPe5575F/c51aFmELC6hXnEaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KfREPPRU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JQUlci5QsQZl6rpc6kHWd03LQuSbM6nzY6sMl8huMNWYM4QTFrKfOoqO5DhemknlSrMhEKj28FJy+UviIahySkSeqMb95shSm3wBpTJ3znD4bLZEfAgWIgk533xk4q+dsdKtTvwcZCP/L7Bsozo0AJ67NsGQicCQ3GOlGspXlWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e++vQuwt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KfREPPRU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 178D01F00893;
-	Tue,  2 Jun 2026 04:58:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e++vQuwt"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 965581F00893;
+	Tue,  2 Jun 2026 04:58:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780376300;
-	bh=NQnuyCUuXVXXmHeYQYWQGxePQK1ubUClnfsoUSnIoUU=;
+	s=k20260515; t=1780376315;
+	bh=1fPcArWXjVNa7kCK4F0R3tnKeIBuqnRjOfmFbge3np8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=KfREPPRUwafKOUmskuvfqFVLfLcYSP48NZPdOIowsdC9ReIvrfT2iueibWZOBjrdq
-	 4XkOlzyJNALoBVwRmlz5mJkaSPXoXb71jbgJwomDp5UNls22tgjRT1BZ7Dt5w4M0Wu
-	 PcllYPGHXkVBKBNGqnbFzJqYI8Q80iNC/ow2X9u6WkiE5sQNfkYAZQRRr6cgRE4sRK
-	 P9lxlEUm/NPbkzq23NVQ8LLOiPbEt6/b1cLpcdYj++Ib7tPNs5rh2ARtppQQkhl5ap
-	 0dZPSNrqeTk5TXg3Gbwtp3BXt7qG7m4PrWkDsa2uK0wcqcrwq7gM7/K5w/BTt4k8tg
-	 PWgJ6JnP2vJhg==
-Date: Mon, 01 Jun 2026 21:58:19 -0700
-Subject: [PATCH 1/7] xfs_healer: fix error reporting
+	b=e++vQuwt813tHgmn+j+gLzqE0QG2W5lPP6GsXe3tjtxrrPGba1z65HtMIgj2hEHWv
+	 J081Ng77CaVKLHqrPtHG4UYxbEphyz2f2rSfIdZgJ0HJK6oe4a2Wnca2STMlMMeUTH
+	 gVu1xjCoYxqYgIzZxYTGYSc3SvJP1vlnmdh1+xMZN+mx/BUKcWJ4a9KDtZ/UsteheL
+	 aJDgudtrxBNL8NGM2QKjVA3mCSJI2iHL3HAOfFZxGf3+Tj/3QlKDQX6hH6KYzAZSzb
+	 ztdulHRKX32aEO7Op8FaqAYPaYHN4yJ5KmzD2tZPrvCjZvgIHFmg7grZcbcVcKO7XO
+	 awFZ2zKon6w8A==
+Date: Mon, 01 Jun 2026 21:58:35 -0700
+Subject: [PATCH 2/7] xfs_healer: recommend offline fsck for XCORRUPT repairs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178037627061.588879.3503165728247541179.stgit@frogsfrogsfrogs>
+Message-ID: <178037627080.588879.10740056483979935139.stgit@frogsfrogsfrogs>
 In-Reply-To: <178037627011.588879.6129023788062831734.stgit@frogsfrogsfrogs>
 References: <178037627011.588879.6129023788062831734.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,60 +45,30 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Codex complains about incorrect error reporting logic here -- in the
-first place we totally fail to pick up errno; in the second, we do, but
-with inverted sign.  Fix both.
+If the kernel thinks the repair succeeded but the re-scrub cannot
+complete the cross-referencing checks, we should recommend an offline
+repair instead of reporting the repair as completely successful or
+unnecessary.  Codex noticed the omitted flag check here.
 
 Cc: <linux-xfs@vger.kernel.org> # v7.0.0
-Fixes: b9b03770197d19 ("xfs_healer: create daemon to listen for health events")
+Fixes: 6f0f35a87c8797 ("xfs_healer: enable repairing filesystems")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- healer/xfs_healer.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ healer/fsrepair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/healer/xfs_healer.c b/healer/xfs_healer.c
-index 36e52a71bebfa7..4ea8d86ac9114a 100644
---- a/healer/xfs_healer.c
-+++ b/healer/xfs_healer.c
-@@ -453,7 +453,7 @@ setup_monitor(
- 	 * the kernel as quickly as we can.  Note that the kernel won't accrue
- 	 * more than 32K of internal events before it starts dropping them.
- 	 */
--	ret = workqueue_create_bound(&ctx->event_queue, ctx, healer_nproc(ctx),
-+	ret = -workqueue_create_bound(&ctx->event_queue, ctx, healer_nproc(ctx),
- 			1048576 / sizeof(struct xfs_health_monitor_event));
- 	if (ret) {
- 		errno = ret;
-@@ -503,10 +503,12 @@ monitor(
+diff --git a/healer/fsrepair.c b/healer/fsrepair.c
+index 002e5e78fcf22e..3f9bd39de9cec6 100644
+--- a/healer/fsrepair.c
++++ b/healer/fsrepair.c
+@@ -23,7 +23,7 @@ static enum repair_outcome from_repair_oflags(uint32_t oflags)
+ 	if (oflags & (XFS_SCRUB_OFLAG_CORRUPT | XFS_SCRUB_OFLAG_INCOMPLETE))
+ 		return REPAIR_FAILED;
  
- 		nr = fread(hme, sizeof(*hme), 1, ctx->mon_fp);
- 		if (ferror(ctx->mon_fp)) {
-+			int error = errno;
-+
- 			pthread_mutex_lock(&ctx->conlock);
- 			fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
- 					_("error reading event file"),
--					strerror(ret));
-+					strerror(error));
- 			pthread_mutex_unlock(&ctx->conlock);
- 			free(hme);
- 			ret = -1;
-@@ -521,7 +523,7 @@ monitor(
- 			mounted = false;
+-	if (oflags & XFS_SCRUB_OFLAG_XFAIL)
++	if (oflags & (XFS_SCRUB_OFLAG_XFAIL | XFS_SCRUB_OFLAG_XCORRUPT))
+ 		return REPAIR_PROBABLY_OK;
  
- 		/* handle_event owns hme if the workqueue_add succeeds */
--		ret = workqueue_add(&ctx->event_queue, handle_event, 0, hme);
-+		ret = -workqueue_add(&ctx->event_queue, handle_event, 0, hme);
- 		if (ret) {
- 			pthread_mutex_lock(&ctx->conlock);
- 			fprintf(stderr, "%s: %s: %s\n", ctx->mntpoint,
-@@ -529,6 +531,7 @@ monitor(
- 					strerror(ret));
- 			pthread_mutex_unlock(&ctx->conlock);
- 			free(hme);
-+			ret = -1;
- 			break;
- 		}
- 	} while (nr > 0 && mounted);
+ 	if (oflags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
 
