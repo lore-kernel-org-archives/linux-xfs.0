@@ -1,75 +1,46 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4701829A31C;
-	Tue,  2 Jun 2026 06:55:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EFBE2F7EF5;
+	Tue,  2 Jun 2026 07:01:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780383303; cv=none; b=H9WCBNumPRQZ0uTBG2o22hySPf+7OpQQf7NQHn9SPrKiqonTmrgb/AvWyXz6d/F77SXavhQZO9vEIUr7rSecDQatYczpwb/9DYr4gNp7E21509uTIgNAFwTf/D9EBQNz54rCOSF2C/XdWyniLyoPLWOraJqDay87TzOMeWO9piU=
+	t=1780383716; cv=none; b=oVwF/1phQFYX9dyJwrCHT77ICcHZMClb7BQNVqJ5C82dyq87KKYInT5PCx7CGI2J30Sik3Np5gGGt1f7oKZR3f3jOJPukwj0+RaUJIC0K00eGWC4201wpD3h1AIhhyBsjOMRovzAdfrkyJCKxgczz1mvPgievfwRzZkgNpSD9M0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780383303; c=relaxed/simple;
-	bh=PEcRV3ln06wPZWBUaDm17PV14nWg91zdPBb1asFx6gE=;
+	s=arc-20240116; t=1780383716; c=relaxed/simple;
+	bh=e8LkO+yKbu9jFD8awj1QU/6WypQ7wB3Qj/oHubsRTbc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P01NY1q5h7I7+Quaaulsq/7FZngV5lVTPERIzM4J5kSGKX2wTGWdZJh2As0TNfbBS8B0uKx2tQyV7hvxqbo+XgEQiRdB5+5BMPnEVDJ5oJVaXDjFfL2eE3KQQAP4DJfLvtIvsFZ0LzimJytPRwc3gLaOqxgUGdObqy2FzwRnXyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=UjGZRuJT; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=t+8qMxW1PVhb4fp+cypMg0QZwB+f6parEOFuf6h2Pnsiiesactv65SZBCV+duT5AdBiy4tBPzxzwbvv+MR8WdmIeF9I0sx2AKfJ1sh50a7lY3DV9X27XKFgvpLHKTaD/piomcgEI+jkFrUNoQUu/ztxYdZv+Yq8bFCD587Dj/1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=S0uQqDl5; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="UjGZRuJT"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 651GQdOW3295133;
-	Tue, 2 Jun 2026 06:54:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=azyPBhysyV4g+I5FC5hYmzOA7/DTfO
-	zRYV+TgiZsgAs=; b=UjGZRuJTIyh+wW4psq3TgQ7K7y5QfQMZH6OTp+BG4dkmDJ
-	76D8oBdy0p9O/urR/8A9KXVobZY6plDHefG66EdBbNw2lgb/aW9Pq5aMU6+olXXc
-	qCiTBqXOZ17cpiCJJAsQ5B478A8dAUv6rdl8XnF9gocPknGBG6v4Xv4b57ywGEWu
-	Z5G3CctaAZl4sYGGe67ZlRj2UrYAwsGOzGj65i1zcefgiye4WyxPAZIziVhXg1/4
-	uVZuE2TMNMoqdBXL5oLR67k5US+hOM9uMBoEizkH5v0USXiuoP38FznVc0N+pHH0
-	3oee0PyrO8bgNU2cK4oyDgxIhEABK1vpJQG+uEHQ==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4efnahmech-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 02 Jun 2026 06:54:16 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6526s8P3013816;
-	Tue, 2 Jun 2026 06:54:15 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ega7qa6jf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 02 Jun 2026 06:54:15 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6526sEVF56623600
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 2 Jun 2026 06:54:14 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 26BF120043;
-	Tue,  2 Jun 2026 06:54:14 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B8CFE20040;
-	Tue,  2 Jun 2026 06:54:09 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.123.13.2])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue,  2 Jun 2026 06:54:09 +0000 (GMT)
-Date: Tue, 2 Jun 2026 12:24:07 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Daniel Gomez <da.gomez@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-        john.g.garry@oracle.com, willy@infradead.org, ritesh.list@gmail.com,
-        jack@suse.cz, Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org,
-        tytso@mit.edu, p.raghav@samsung.com, andres@anarazel.de,
-        brauner@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        pankaj.raghav@linux.dev, Daniel Gomez <da.gomez@samsung.com>
-Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap &
- xfs
-Message-ID: <ah5-D51KPxM-lgHi@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com>
- <d5d99db2-9d34-4caf-bcc8-c4a3af561901@kernel.org>
- <agQPtTx2EXHr10Nn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <ah24DlQobLjjDTGt@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <20260602054743.GA32657@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S0uQqDl5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=BYFvv0WL2nD26pmCw2XdTthm82oeti8G0FwCMxb/xgc=; b=S0uQqDl5pjNooTBgME6c6uChu3
+	w39UtnWzBsfadMXigQ8UXJ0ln+yqwbVO5NKAbUICH/87bszqL7AsYndOsjhXo29tuCRcFFngE34Hx
+	Np3yHPA8zjPT7Abo2xIgMEKiIMaFPMLF2znXPYPmeBKWh9yLNIL4NR/nc0VJeYVjBwttT6KmugXYT
+	+BKhEtNqc9oVt48RmRUWQfjHcn1BBHXjb8iDNxNe5rCPWczyCLCPkXLeohZA910R5+GlfumnVXT5/
+	spR9inkS9mCEveKxF1Lrar5zUg7FFVPweThq2NNmZaR++wWnNPNtzFwTbA2KM84f3RESuzwoK0FGh
+	WYSBZ2bw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wUJ8J-0000000CQCj-0aSJ;
+	Tue, 02 Jun 2026 07:01:51 +0000
+Date: Tue, 2 Jun 2026 00:01:51 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Cen Zhang <rollkingzzc@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	zerocling0077@gmail.com, 2045gemini@gmail.com
+Subject: Re: [PATCH] xfs: drain inodegc before quota teardown on mount failure
+Message-ID: <ah5_31tVIHX1RD7y@infradead.org>
+References: <agwh6darf9q52za7@infradead.org>
+ <20260528053128.3036120-1-rollkingzzc@gmail.com>
+ <ahf9j4G0sdSx0Ti5@infradead.org>
+ <CAB7XQsFyZgJqraMaDbpR-nPpZNkvbAscjp6qGjSPOAtUPBET1Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,70 +49,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260602054743.GA32657@lst.de>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDA1OSBTYWx0ZWRfX+71z47PaWB2B
- vNndWMdiWWmMj3ZIPpVWGD5p+2c/9zFyNcAKPRkFbRotwIDGDJLrRhZgh471UPw7eEuuMYnSJVe
- 5xVWVUl9Xx8wcfxINn8nVtsHhozfCcAqmE6WUIGDkRappWMKnxnx3+csdzcXFWUEUiZX/7OtWRE
- V8K/VI6lQhn1/3spDBLGIiBUvKdqD0LNlX7z2deGGup80ykjxVRlco4ntQ0EPzKpZcsbqbrZ9dy
- yqDXcTDwiONwmM2/DPLurto/AAnqj3b5gN6Ue9BVGHTi4KVggFFe272HumkkQt6uBcxxxhzsH8N
- pjoC6WOw/goXFrqFsmgGAm8c8k81wQGB8xuIJLNLr1/p4U9S2GMePFWUnqgrxES+ucVQQEKrWEy
- FPp+kNVWHQxZWSD6L6YA9Ose2Et+djg0FYpaLoRUFCWgnChkYscsk0m2xmSIKDXDP0rRDPK5NlS
- p76bQLOoLhK0Wt1A2DA==
-X-Proofpoint-ORIG-GUID: nibAEZvf3c6xmr4xgEIJIOcU81GPtqOV
-X-Authority-Analysis: v=2.4 cv=cOzQdFeN c=1 sm=1 tr=0 ts=6a1e7e19 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=kj9zAlcOel0A:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=hhuWuiOL4SiSWFdKcnEA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: 2Vk8eMUcoTVI1KE_6lVXeY-buYjiBWU2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-01_07,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0
- malwarescore=0 phishscore=0 suspectscore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606020059
+In-Reply-To: <CAB7XQsFyZgJqraMaDbpR-nPpZNkvbAscjp6qGjSPOAtUPBET1Q@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jun 02, 2026 at 07:47:43AM +0200, Christoph Hellwig wrote:
-> On Mon, Jun 01, 2026 at 10:19:18PM +0530, Ojaswin Mujoo wrote:
-> > 
-> > So this week I spent some time looking into the failure of g/457. 
-> > I was able to replicate it in my setup and after analysing it, this is
-> > actually an issue in my xfstests patch. The issue is that to verify
-> > RWF_WRITETHROUGH support I do a 4kb write on the fd during the test prep
-> > phase. However "out-of-band" write makes the actual contents of the file
-> > different from what fsx expected (It reads it in before the problematic
-> > write), causing the test failure. 
+On Thu, May 28, 2026 at 09:28:02PM +0800, Cen Zhang wrote:
+> In my local attempts, a mount-failure errortag after
+> xfs_qm_mount_quotas() was not enough by itself, because ordinary test
+> setup did not reliably leave an inodegc item that would enter the
+> dqattach/eofblocks path during the mount-failure unwind.
 > 
-> Why does this get out of sync?  One of the arguments for RWF_WRITETHROUGH
-> vs direct I/O was that it avoids the content getting out of sync.
+> The draft I have locally uses two DEBUG-only errortags:
 > 
+>   - mount_fail_after_qm_mount_quotas
+> 
+>     This injects -EIO immediately after xfs_qm_mount_quotas().
+> 
+>   - force_inodegc_eofblocks
+> 
+>     This makes a regular inode released after quotacheck scanning go
+>     through inodegc/eofblocks cleanup, and delays that inodegc work so
+>     the mount-failure unwind can reach quota teardown first.
 
-Hey Christoph, I think I was a bit vague in my explanation. So this
-issue is not in the kernel but in fsx. Basically fsx does something
-like:
+This sounds pretty useful, but I actually have a different
+question:
 
-1. Read in the file contents and store it in a local good_buffer
-2. Detect support for various IO types (writethrough, dontcache etc)
-  2.1 To detect writethrough support, I perform a 
-	pwrite("4kb of 0s", file, flag=RWF_WRITETHROUGH) and look out for
-	EOPNOTSUPP.
-3. Start running the test
-  3.1 Whenever we perform a write operation in fsx we use fsx write
-	wrappers which also update the good_buffer before writing to file.
-4. During fsync, we write the good_buffer to a golden output file and
-   also set a dm_logwrite mark. Later, we replay the dm_logwrites mark
-	 and then check if the file matches the golden o/p file.
+>   Workqueue: xfs-inodegc/vdc xfs_inodegc_worker
+>   xfs_qm_dqget_cache_lookup()
+>   xfs_qm_dqget_inode()
+>   xfs_qm_dqattach_locked()
+>   xfs_qm_dqattach()
+>   xfs_free_eofblocks()
+>   xfs_inactive()
+>   xfs_inodegc_worker()
 
-The issue here is that fsx's golden output was not correct cause in step
-2.1 I was using pwritev2() directly instead of using fsx wrappers to do
-the write which was not updating the good_buffer. Hence, good_buffer
-went out of sync from what was actually supposed to be in the file.
-g/457 thought this was a corruption however it was a bug in my fsx
-writethrough support patch.
+What kind of inode do we actually get here?  I guess your test
+case reproduces an unclean shutdown and this processes inodes
+that otherwise would have been processed on unmount?
 
-Regards,
-ojaswin
+I'm kinda tempted to just make xfs_can_free_eofblocks return false
+during early mount (or rather during mount failure), as trying
+to fix all the corner cases here seems like an uphill battle (
+also see the sashiko review)
+
