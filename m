@@ -1,36 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C67F392C46;
-	Tue,  2 Jun 2026 05:47:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6071039A076;
+	Tue,  2 Jun 2026 05:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780379270; cv=none; b=Solm1AnFVKEFeVwEasgJJ5UbtX1h9BGUZgkje1+qg6Hz7P2yGZu04BXOKTkPtgaV+HZQv2xtNioALV+VWtJLEuQb6tdgo8dQg9/F8I0FJjCn/OCxwHisEthoy4HqfvEmit4nAGgsSqB6yk4iGTCpnV6zTPAoes+viFrNIpdcWJg=
+	t=1780379809; cv=none; b=c2ztiLQGvefTCytW0BGmv7OIlsCF3avSlVriJysXqByRkuB+g84TOTL4UfmpVCsmDoE+mt7UATSz4BEIT6jSIysJ7sJ+pKVXZ7mdkkkPcHihsfROVRlMlaewmjzBnwvLyuod88WQN9gR3C2MjqqSXGnqmECl8knnqBqr0IBXr0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780379270; c=relaxed/simple;
-	bh=y1rI1NHuPlxQfS+yEmKjAWz7zKQC0BO4MVwvE1LEFUo=;
+	s=arc-20240116; t=1780379809; c=relaxed/simple;
+	bh=Ae+clnVLdwzEJCQHftrNjijx/po5BB5s5ebv9yLkg/c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k8bYVviHz0wnRlZMuuaiCxuSScjSCGzCkw8+qGyjCe9v/Dber6Fxhc4vH1lRlf53xKzp70nnFOfz8jmhWOPAS3D4Xgkal8JvUAJVMPJifks6f8xhtWXlJrzG6+I1OQdFaVwQ17We+HYJFlHghYD3b8Ofdxuzkfhs58QuQWevAJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 5ACDD68B05; Tue,  2 Jun 2026 07:47:43 +0200 (CEST)
-Date: Tue, 2 Jun 2026 07:47:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: Daniel Gomez <da.gomez@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, djwong@kernel.org,
-	john.g.garry@oracle.com, willy@infradead.org, hch@lst.de,
-	ritesh.list@gmail.com, jack@suse.cz,
-	Luis Chamberlain <mcgrof@kernel.org>, dgc@kernel.org, tytso@mit.edu,
-	p.raghav@samsung.com, andres@anarazel.de, brauner@kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	pankaj.raghav@linux.dev, Daniel Gomez <da.gomez@samsung.com>
-Subject: Re: [RFC PATCH v2 0/5] Add buffered write-through support to iomap
- & xfs
-Message-ID: <20260602054743.GA32657@lst.de>
-References: <cover.1775658795.git.ojaswin@linux.ibm.com> <d5d99db2-9d34-4caf-bcc8-c4a3af561901@kernel.org> <agQPtTx2EXHr10Nn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com> <ah24DlQobLjjDTGt@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=juLGkQeU2OoRNmw+HMjgpo8qzC7ybcHmy4YyR1cLysEAli57HPR+HAc338mM1Bbc6H9UbJGqBMAyaxsEncO/ThaCerBUsEldx4qXoAWR9u5BU0vuNYB9yuEmpjFgmThRArBum7ptjOPCDhkDxDiNhmOHLTb62MJ4TJ7qzHvSPAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aFXZzDEP; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aFXZzDEP"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Ae+clnVLdwzEJCQHftrNjijx/po5BB5s5ebv9yLkg/c=; b=aFXZzDEPnbQA8+vlv/pIYelMHg
+	hcdYbPnrOBDfiF166RTyceGEyTl5CJjbND8Tr+Pw0Ju8fsvtXF3WHOEhC2fuMe4axieGEEiz4ig9Q
+	JuFCRgD4WyhDeG3n8BjcijHVQy/LZbFDNRts925gwNDGviiYW7fmiLfgCh+7EPNVLfOK3kn0Y1xs8
+	kMiGsNYXtMlTT1RHCLU9QnKlBZAT1zCfjYDqpLpYZw+BY6ud4SHrtG6tB3/rVXeNIxkDijpwvDSZN
+	cCQJk54CcSjAEW7oZNoa5LMlsFZ7cdLB6oteO7MlwXniiLSZaP/eYAy2hgaWIPsTRnigpVbrxifAu
+	0e5nQBtA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wUI7L-0000000CLvQ-3m9w;
+	Tue, 02 Jun 2026 05:56:47 +0000
+Date: Mon, 1 Jun 2026 22:56:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: William Theesfeld <william@theesfeld.net>,
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: convert dquot iterator map allocation to
+ kmalloc_array()
+Message-ID: <ah5wn3fk1ijxEVNy@infradead.org>
+References: <20260601191858.608270-1-william@theesfeld.net>
+ <20260602051444.GU6078@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,19 +48,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ah24DlQobLjjDTGt@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20260602051444.GU6078@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jun 01, 2026 at 10:19:18PM +0530, Ojaswin Mujoo wrote:
-> 
-> So this week I spent some time looking into the failure of g/457. 
-> I was able to replicate it in my setup and after analysing it, this is
-> actually an issue in my xfstests patch. The issue is that to verify
-> RWF_WRITETHROUGH support I do a 4kb write on the fd during the test prep
-> phase. However "out-of-band" write makes the actual contents of the file
-> different from what fsx expected (It reads it in before the problematic
-> write), causing the test failure. 
+On Mon, Jun 01, 2026 at 10:14:44PM -0700, Darrick J. Wong wrote:
+> Macros these days...
 
-Why does this get out of sync?  One of the arguments for RWF_WRITETHROUGH
-vs direct I/O was that it avoids the content getting out of sync.
+In in the new world order this should be kmalloc_objs anyway.
+
+And when we touch this, we should probably drop the NOFAIL and add
+allocation failure handling.
 
