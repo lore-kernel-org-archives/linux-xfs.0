@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FD231A681B
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2026 04:42:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14B982DA74C
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2026 04:43:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780375325; cv=none; b=Hv0PDP4KTMwjJIHfqr9l5Y0D9iDLoY2dcOcPwxkqQir2QPdun3zkm20s97+9sTwGhcUOZr+8JI6q14SQw/JP+h1KKWNFn9RobFXszKfMsiWiB2xq7aBIYw+yQ/2IPR2k6aBhMKoMuMMAUqWFB77Yo2FZGTgE+zeINpuZcY1oXK0=
+	t=1780375418; cv=none; b=Gtirf/V7+EX83h/P1dj4gMx8As1PU8wmw09rxLJRu/jEOW24PVaHaQ5Ag6SQUvMoUr8muLrJP4bBXkwJiUY5SHNBHQ5pOu9Znrj9WL8hsJkZbkfpL5rn4dIXYGzecgUYK/1AGYkrlvD4YP+mv39fFPjJLPXbFcAOBj76NfUV3TE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780375325; c=relaxed/simple;
-	bh=j4dm/KXalVhxk2bjHX5hUbnQAXkdHBLJeJNTDeiC4C8=;
+	s=arc-20240116; t=1780375418; c=relaxed/simple;
+	bh=9BOJrYvytndQ6N87cxzlqhxZdxC6pPDHTnwASaLWN18=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VQjSqyBNdjY+ZR7UO46LXik1WhKMDIUj4mN4b6E/IZUWrGKfQAvcX8R4fXXDyW33svpMNsFyt7+pWVtX+b4efPia5bQLtVp21vJsg4VqSMpJFLB7ApnMbPOLQ+mCSZZIxq2ddynhZ4lxQE6l4CCTAtXeDebVGUFCy4cfW8zxHhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k/1B/Kf9; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PVIO1Jgq7lttYTpnbctc2bEnJqYY5v7ZTZm8yJ9Bbx1trqTjngV9KQcZnhxvkGOq4s/StQlOFatJhso+A2uTNCnjNW5i+jSl0ALM6vmg4V8SQru5puvRBVQ7pl3Owc++BD6B5zIDuBwhV3VGqnrRMc9XjWhIpL1wwgw9MROkwC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ilPfNmtr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k/1B/Kf9"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 98B601F00893;
-	Tue,  2 Jun 2026 04:42:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ilPfNmtr"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 988581F00898;
+	Tue,  2 Jun 2026 04:43:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780375323;
-	bh=SHU6fu8hfbbhnWh4eB9cb4wskwxv1kqdPfnQghtipXg=;
+	s=k20260515; t=1780375416;
+	bh=CNeQYjParNniHqKO1y6upQNxehDVdeMfCnXaSiR5Fxg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=k/1B/Kf9vbsSO5F5e4RGgGdLAuos4bsapagOjoXN7cMddo6RAmjAYEK/EVV/VUI/D
-	 fngvP+CEw49T7kf7ANWa3fEXl+EVcnspaAHX+kWHEQU6SBh5zvvGBObYiQgebbv4Z1
-	 py76dYecXlz1JuHCRPWDItnDQIxXeQKdzRsCsgBTZ5omO7bURa0c0L5zASe287+RWC
-	 rTPoX9JYXQtfYe7Th+tr2On/LLKAE+Q3oi7omkOr9WhmJnoC2vz3IPbu6vAEFnyrxf
-	 M+bRRP4uFWLTrhXEa/5jauWa1Iww3U5v4kVxkqZFNiAvff0qqVLz/lWN8I2BoTZEbt
-	 /hgjTOEqkjFqw==
-Date: Mon, 1 Jun 2026 21:42:03 -0700
+	b=ilPfNmtrhj4fsPnkXJyIC0kVGs0sBdRGY5EyTtb9P7jnS5CEq4ur8T2IsyF1nJQ+u
+	 6USNrfqOJ7XqLr793NsBxrb+pyi/TronYqbRz/Zcv/k3quKP5QYDu2Kcw6rSufdL95
+	 aC9F9ScC5gBG3LmS4xg4cGNwMGtoug0qoC/ZzdwYpMegc4ICPivi0T8J3HggUG/uyh
+	 iSbcdtj/tGmuvRjCjTsYWxpb+qMx3sDQg0R0eYXRUE9qZmMdDmoXhohVzHYtx51LcF
+	 l27TU4OQqBwnhhiN9fBEx0UCWJKgU1ntd8Y+uz1fM85WXUOCu9c62QhmgJf2aWvsC/
+	 20x5/C6JjubDw==
+Date: Mon, 1 Jun 2026 21:43:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	Nirjhar Roy <nirjhar.roy.lists@gmail.com>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: cleanup xfs_growfs_compute_deltas
-Message-ID: <20260602044203.GN6078@frogsfrogsfrogs>
-References: <20260601110824.3392683-1-hch@lst.de>
- <20260601110824.3392683-3-hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs: remove im_len field in struct xfs_imap
+Message-ID: <20260602044336.GO6078@frogsfrogsfrogs>
+References: <20260601124410.3508980-1-hch@lst.de>
+ <20260601124410.3508980-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,128 +42,177 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260601110824.3392683-3-hch@lst.de>
+In-Reply-To: <20260601124410.3508980-3-hch@lst.de>
 
-On Mon, Jun 01, 2026 at 01:07:53PM +0200, Christoph Hellwig wrote:
-> xfs_growfs_compute_deltas has an odd calling conventions, and looks
-> very convoluted due to the use of do_div and strangely named and typed
-> variables.
-> 
-> Rename it, make it return the agcount and let the caller calculate the
-> delta.  The internally use the better div_u64_rem helper and descriptive
-> variable names and types.  Also add a comment describing what the
-> function is used for.
+On Mon, Jun 01, 2026 at 02:43:48PM +0200, Christoph Hellwig wrote:
+> im_len is always set to the same value for a given file system,
+> which makes it redundant.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-AFAICT the logic is the same before and after, so
+Yeah, we don't need to be wasting memory on that...
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
-Though I half wonder if that XFS_MAX_AGNUMBER+1 comparison is really
-correct.  MAX_AGNUMBER is defined to be ((xfs_agnumber_t)-2) so we're
-checking if an unsigned 32-bit number is greater than 0xFFFFFFFF?
-Which is also NULLAGNUMBER?
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_ag.c | 44 ++++++++++++++++++++----------------------
->  fs/xfs/libxfs/xfs_ag.h |  5 ++---
->  fs/xfs/xfs_fsops.c     |  4 +++-
->  3 files changed, 26 insertions(+), 27 deletions(-)
+>  fs/xfs/libxfs/xfs_ialloc.c    | 10 +++++-----
+>  fs/xfs/libxfs/xfs_inode_buf.c |  3 ++-
+>  fs/xfs/libxfs/xfs_inode_buf.h |  1 -
+>  fs/xfs/scrub/ialloc.c         |  4 ++--
+>  fs/xfs/scrub/ialloc_repair.c  |  1 -
+>  fs/xfs/scrub/inode_repair.c   | 11 +++++++----
+>  fs/xfs/xfs_inode_item.c       |  3 ++-
+>  7 files changed, 18 insertions(+), 15 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 0c5f0548021f..095af128d2fb 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -863,32 +863,30 @@ xfs_ag_shrink_space(
->  	return err2;
->  }
->  
-> -void
-> -xfs_growfs_compute_deltas(
-> +/*
-> + * Return the agcount for the new file system size passed in *nb and adjust *nb
-> + * when it has to be reduced because of maximum AG count or because it would
-> + * create a below minimum size AG.
-> + */
-> +xfs_agnumber_t
-> +xfs_growfs_compute_agcount(
->  	struct xfs_mount	*mp,
-> -	xfs_rfsblock_t		*nb,
-> -	int64_t			*deltap,
-> -	xfs_agnumber_t		*nagcountp)
-> +	xfs_rfsblock_t		*nb)
->  {
-> -	xfs_rfsblock_t	nb_div, nb_mod;
-> -	int64_t		delta;
-> -	xfs_agnumber_t	nagcount;
-> -
-> -	nb_div = *nb;
-> -	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
-> -	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
-> -		nb_div++;
-> -	else if (nb_mod)
-> -		*nb = nb_div * mp->m_sb.sb_agblocks;
-> -
-> -	if (nb_div > XFS_MAX_AGNUMBER + 1) {
-> -		nb_div = XFS_MAX_AGNUMBER + 1;
-> -		*nb = nb_div * mp->m_sb.sb_agblocks;
-> +	xfs_agnumber_t		agcount;
-> +	xfs_extlen_t		remainder;
-> +
-> +	agcount = div_u64_rem(*nb, mp->m_sb.sb_agblocks, &remainder);
-> +	if (agcount > XFS_MAX_AGNUMBER + 1) {
-> +		agcount = XFS_MAX_AGNUMBER + 1;
-> +		remainder = 0;
-> +	}
-> +	*nb = (xfs_rfsblock_t)agcount * mp->m_sb.sb_agblocks;
-> +	if (remainder >= XFS_MIN_AG_BLOCKS) {
-> +		*nb += remainder;
-> +		agcount++;
->  	}
-> -	nagcount = nb_div;
-> -	delta = *nb - mp->m_sb.sb_dblocks;
-> -	*deltap = delta;
-> -	*nagcountp = nagcount;
-> +	return agcount;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 8aa4266c5571..fd22fe598931 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -329,12 +329,11 @@ struct aghdr_init_data {
->  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
->  int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
->  			xfs_extlen_t delta);
-> -void
-> -xfs_growfs_compute_deltas(struct xfs_mount *mp, xfs_rfsblock_t *nb,
-> -			int64_t *deltap, xfs_agnumber_t *nagcountp);
->  int xfs_ag_extend_space(struct xfs_perag *pag, struct xfs_trans *tp,
->  			xfs_extlen_t len);
->  int xfs_ag_get_geometry(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
-> +xfs_agnumber_t xfs_growfs_compute_agcount(struct xfs_mount *mp,
-> +		xfs_rfsblock_t *nb);
->  
->  static inline xfs_fsblock_t
->  xfs_agbno_to_fsb(
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 436857356a0a..67624a804a7f 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -124,7 +124,9 @@ xfs_growfs_data_private(
->  			mp->m_sb.sb_rextsize);
->  	if (error)
->  		return error;
-> -	xfs_growfs_compute_deltas(mp, &nb, &delta, &nagcount);
-> +
-> +	nagcount = xfs_growfs_compute_agcount(mp, &nb);
-> +	delta = nb - mp->m_sb.sb_dblocks;
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index a3fe4e5b1cdd..6ea7e96a07b4 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2552,7 +2552,6 @@ xfs_imap(
+>  		XFS_INO_TO_OFFSET(mp, ino);
+>  out:
+>  	imap->im_blkno = xfs_agbno_to_daddr(pag, cluster_agbno);
+> -	imap->im_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
+>  	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
 >  
 >  	/*
->  	 * Reject filesystems with a single AG because they are not
+> @@ -2561,12 +2560,13 @@ xfs_imap(
+>  	 * read_buf and panicing when we get an error from the
+>  	 * driver.
+>  	 */
+> -	if ((imap->im_blkno + imap->im_len) >
+> +	if (imap->im_blkno +
+> +	    XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster) >
+>  	    XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)) {
+>  		xfs_alert(mp,
+> -	"%s: (im_blkno (0x%llx) + im_len (0x%llx)) > sb_dblocks (0x%llx)",
+> -			__func__, (unsigned long long) imap->im_blkno,
+> -			(unsigned long long) imap->im_len,
+> +	"%s: (im_blkno (0x%llx) + len (0x%x)) > sb_dblocks (0x%llx)",
+> +			__func__, imap->im_blkno,
+> +			XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster),
+>  			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
+>  		return -EINVAL;
+>  	}
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 88e27d567df3..ecc50daa67ba 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -137,7 +137,8 @@ xfs_imap_to_bp(
+>  	int			error;
+>  
+>  	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+> -			imap->im_len, 0, bpp, &xfs_inode_buf_ops);
+> +			XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster),
+> +			0, bpp, &xfs_inode_buf_ops);
+>  	if (xfs_metadata_is_sick(error))
+>  		xfs_agno_mark_sick(mp, xfs_daddr_to_agno(mp, imap->im_blkno),
+>  				XFS_SICK_AG_INODES);
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> index 8d43d2641c73..54870796da41 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> @@ -15,7 +15,6 @@ struct xfs_dinode;
+>   */
+>  struct xfs_imap {
+>  	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+> -	unsigned short	im_len;		/* length in BBs of inode chunk */
+>  	unsigned short	im_boffset;	/* inode offset in block in bytes */
+>  };
+>  
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 911dc0f9a79d..a7192ba29262 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -395,7 +395,6 @@ xchk_iallocbt_check_cluster(
+>  	 */
+>  	ir_holemask = (irec->ir_holemask & cluster_mask);
+>  	imap.im_blkno = xfs_agbno_to_daddr(to_perag(bs->cur->bc_group), agbno);
+> -	imap.im_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
+>  	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino) <<
+>  			mp->m_sb.sb_inodelog;
+>  
+> @@ -406,7 +405,8 @@ xchk_iallocbt_check_cluster(
+>  	}
+>  
+>  	trace_xchk_iallocbt_check_cluster(to_perag(bs->cur->bc_group),
+> -			irec->ir_startino, imap.im_blkno, imap.im_len,
+> +			irec->ir_startino, imap.im_blkno,
+> +			XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster),
+>  			cluster_base, nr_inodes, cluster_mask, ir_holemask,
+>  			XFS_INO_TO_OFFSET(mp, irec->ir_startino +
+>  					  cluster_base));
+> diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
+> index 608c7022ac15..2d7b9ce968dc 100644
+> --- a/fs/xfs/scrub/ialloc_repair.c
+> +++ b/fs/xfs/scrub/ialloc_repair.c
+> @@ -306,7 +306,6 @@ xrep_ibt_process_cluster(
+>  	 * either inode btree.
+>  	 */
+>  	imap.im_blkno = xfs_agbno_to_daddr(sc->sa.pag, cluster_bno);
+> -	imap.im_len = XFS_FSB_TO_BB(mp, igeo->blocks_per_cluster);
+>  	imap.im_boffset = 0;
+>  	error = xfs_imap_to_bp(mp, sc->tp, &imap, &cluster_bp);
+>  	if (error)
+> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+> index c84657add97a..8d180673b76b 100644
+> --- a/fs/xfs/scrub/inode_repair.c
+> +++ b/fs/xfs/scrub/inode_repair.c
+> @@ -1547,6 +1547,7 @@ xrep_dinode_core(
+>  	struct xrep_inode	*ri)
+>  {
+>  	struct xfs_scrub	*sc = ri->sc;
+> +	struct xfs_mount	*mp = sc->mp;
+>  	struct xfs_buf		*bp;
+>  	struct xfs_dinode	*dip;
+>  	xfs_ino_t		ino = sc->sm->sm_ino;
+> @@ -1559,8 +1560,10 @@ xrep_dinode_core(
+>  		return error;
+>  
+>  	/* Read the inode cluster buffer. */
+> -	error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
+> -			ri->imap.im_blkno, ri->imap.im_len, 0, &bp, NULL);
+> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +			ri->imap.im_blkno,
+> +			XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster),
+> +			0, &bp, NULL);
+>  	if (error)
+>  		return error;
+>  
+> @@ -1583,10 +1586,10 @@ xrep_dinode_core(
+>  write:
+>  	/* Write out the inode. */
+>  	trace_xrep_dinode_fixed(sc, dip);
+> -	xfs_dinode_calc_crc(sc->mp, dip);
+> +	xfs_dinode_calc_crc(mp, dip);
+>  	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_DINO_BUF);
+>  	xfs_trans_log_buf(sc->tp, bp, ri->imap.im_boffset,
+> -			ri->imap.im_boffset + sc->mp->m_sb.sb_inodesize - 1);
+> +			ri->imap.im_boffset + mp->m_sb.sb_inodesize - 1);
+>  
+>  	/*
+>  	 * In theory, we've fixed the ondisk inode record enough that we should
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 2307ce96f753..3256495202cf 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -647,13 +647,14 @@ xfs_inode_item_format(
+>  {
+>  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+>  	struct xfs_inode	*ip = iip->ili_inode;
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_inode_log_format *ilf;
+>  
+>  	ilf = xlog_format_start(lfb, XLOG_REG_TYPE_IFORMAT);
+>  	ilf->ilf_type = XFS_LI_INODE;
+>  	ilf->ilf_ino = I_INO(ip);
+>  	ilf->ilf_blkno = ip->i_imap.im_blkno;
+> -	ilf->ilf_len = ip->i_imap.im_len;
+> +	ilf->ilf_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
+>  	ilf->ilf_boffset = ip->i_imap.im_boffset;
+>  	ilf->ilf_fields = XFS_ILOG_CORE;
+>  	ilf->ilf_size = 2; /* format + core */
 > -- 
 > 2.53.0
 > 
