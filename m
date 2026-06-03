@@ -1,69 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034883019AA;
-	Wed,  3 Jun 2026 13:42:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4EB393DFB;
+	Wed,  3 Jun 2026 14:20:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780494132; cv=none; b=iN4TU9Pi7FD87mtYldybu8UsiawYnaY4eVxoHr3Efu0/FXYPAq9oxoWHOH9TeNcwV1KUkSly/twz7NiH41ALh9KLmiyiW2eDedBmXoArR4XW1YAZCGELaGdBCH/hMGaQGrZFilfYFt/KZM2v2KU2XlBfypVEZp2rYp4w2HKDhYY=
+	t=1780496424; cv=none; b=qwWVF4i17Sh2Y2wX8G+oA0MyiuXaJQXh2KYZtmFfry979z4Vdjr1ufo0VqhZBsDgR8h6sawwKMRzWYRgo+4uJd83hJ10rgqgskL4YXEnxVkKPZZz7qQ1CAT+CBTWRoU1TlKIOpJGxonQxO2bUihK/H5TyXvppCGoIgd9YDixImQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780494132; c=relaxed/simple;
-	bh=20NIHqWNkYzNtWsw5gcXIpkfj7VXIC9slkxS6qDvrqU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YuBwSDkkf+PPe9xeulw9YkSL1oMc1TyGec+TQvWMwS9FuSWL6rhyqFomlZW2C4HgVA3il0L7XdQU2mF0LMvjuOYWmUELXejr2x9cijXNl+8V2MTXmfRMFQ98zInotHPT3reEmVksqTA0D+ky87fzl4LZOKLRM9MN45tPa0/O6nQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kkHGJzvF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780496424; c=relaxed/simple;
+	bh=C1G80uloHWbUU6TtGpDyrrZ5fYXrguyugxVwzv3/exY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BaRNT3ik0vxFVEUFY1W7enf6wcbtsSLKqU3aYLptGEgLhIGJIS8A26qijXc04kuXQHSBSKGscpwwFpFdzxXsbq5k7pS+4zZsTzhzYdF9iYskU73/mMDC7iSR7cCNvu6nab4xePSFFR7px4O7p93FYUr3iJtpL2lV5m923GYV2C4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XjBvNZsp; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kkHGJzvF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4F8C1F00893;
-	Wed,  3 Jun 2026 13:42:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780494131;
-	bh=20NIHqWNkYzNtWsw5gcXIpkfj7VXIC9slkxS6qDvrqU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kkHGJzvFmAwfe3z2sRaxyWOciskIY5l8XO36H8XCn7X5GWfWbSBONcHL3hBYcW/gY
-	 ZlqPSY13HQrlaQOmPDtp35fUJLoonxsA9tJYNvzbrqbhfD3CFuDndt7/P6fdcBhamn
-	 XgXphrAI0uEyeDchylT4q46uU76+EIBZTAR8mBPW/a4pifkUFt9gqDWjnbzsrvbSgg
-	 G76X7bKtjuPCY+Lfmw6SN7GU01neZ5VaSqQSXKKxdaBZ5Y1znFYNcEYK3ODCsorEO0
-	 M4H/hTOFuTRLsflTDrUSEfNcd4ZzTlc+om3ghi5m8D1Ly+p3ITZcQyXtaDPJFhXkhL
-	 OBM8VgOGRJ8EQ==
-Date: Wed, 3 Jun 2026 15:42:05 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, 
-	linux-ext4@vger.kernel.org, Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org, 
-	Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH RFC 7/8] erofs: open via dedicated fs bdev helpers
-Message-ID: <20260603-nieder-ausdehnen-siebdruck-aa96f40ebec6@brauner>
-References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
- <20260602-work-super-bdev_holder_global-v1-7-bb0fd82f3861@kernel.org>
- <7c5bfcf0-36a3-4cc6-bf31-6af4fc901c37@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XjBvNZsp"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65360Rdx085385;
+	Wed, 3 Jun 2026 14:20:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=cs4FH4
+	t13OX6OckvaNIKxHNFja8bAQpbZHTYZ+p74Fo=; b=XjBvNZspEGKzuCkat9z4mp
+	lcm/gzKaiv7AclEur67E78UXHuHC2129mGk/ZYJ/DO9NqR8ZLYS5NyLmzJXrIxoV
+	l1L8sdSyFHOUBZdCAVGpiQFB4qjvCk3UAEZDBj/8EPcdU9Qs7Igfon5pII/oa6ID
+	D8MkRA/VzByu0MXW5tcigQVv0Y9K6it91VfyLFVt5Apq6UZ0laMXJfA5IBI/67uu
+	qRj31uLTfz1N8z6v4kCYWC2ATgxwfQI4E1C7UdQo8x3q141cely++NjXM3FsK6B3
+	0bWndFW9F53TfrblWFBAyXpqVQD5sufxLcPQ7pHvWicXV4KlNvw2PSBaRsGNNMVw
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4efpaeatn6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 03 Jun 2026 14:20:19 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 653E99wK030529;
+	Wed, 3 Jun 2026 14:20:19 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4egakw0n0u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 03 Jun 2026 14:20:19 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 653EKHM847055354
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 3 Jun 2026 14:20:17 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 421BD20049;
+	Wed,  3 Jun 2026 14:20:17 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AEC6E20040;
+	Wed,  3 Jun 2026 14:20:15 +0000 (GMT)
+Received: from [9.124.223.193] (unknown [9.124.223.193])
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Wed,  3 Jun 2026 14:20:15 +0000 (GMT)
+Message-ID: <6405e164-3749-40d0-afbe-8e2ec6807b84@linux.ibm.com>
+Date: Wed, 3 Jun 2026 19:50:14 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <7c5bfcf0-36a3-4cc6-bf31-6af4fc901c37@linux.alibaba.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] common/defrag: Skip defrag tests on DAX-enabled
+ filesystems
+Content-Language: en-GB
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, ritesh.list@gmail.com,
+        ojaswin@linux.ibm.com, xfs <linux-xfs@vger.kernel.org>
+References: <20260602101418.55131-1-disgoel@linux.ibm.com>
+ <20260602200930.GB6054@frogsfrogsfrogs>
+From: Disha Goel <disgoel@linux.ibm.com>
+In-Reply-To: <20260602200930.GB6054@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Authority-Analysis: v=2.4 cv=Zt3d7d7G c=1 sm=1 tr=0 ts=6a203824 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=O_2PV3spL_lJ-ijEIfUA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: WLhPtRNsMg4jLAE3G5aifuuPa8EDqQAm
+X-Proofpoint-ORIG-GUID: 9warEHkdJVfIBME6a2S_1Yft8OwWOSWQ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAzMDEzNiBTYWx0ZWRfX+lbXKLB7SR6Y
+ djPoTmYuyUEPw4aM41eP1C1m/9piYQ13Qq7wfe39J1ihDloD/HyImpOMWE8ZA6aeEM7fjeGwdhr
+ K77EWzuNggyTWwdR4ny4jmA6MvDmgHuZyK+84Way+a6/Syvvbg9W0BLvhKp8rbdixruibO+ZpeA
+ 3snsLbV9F6gNq7M7mQ+Eh88omVEPuMb52eTLetnmu+nf3QqOScEaKZHgy1GEKSYIQPFhzAVH2yf
+ qhYx6PnQJ92iXo64QoGs0U1pijFS9VGD12y/jzUlJQrdbziGwtp+DJqeP006ZXViDPxQn5APodH
+ 7EZ9blmcwztKs30Zx2/S92vNvyltEt3HmsG8CKUlpWdUcQDMuZA+vulpddjmZq9lT67JiCwRfac
+ ZRQ/EIWv/y5RSy01tvE7AlvGfyeLTBSzb00/yPnQWizUN47FrPUl82lMx1YL2BdyDrurLV0ttZe
+ 725yW5Gq46pZZdO1X5g==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-03_04,2026-05-28_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 suspectscore=0 priorityscore=1501 bulkscore=0 clxscore=1011
+ phishscore=0 spamscore=0 malwarescore=0 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606030136
 
-> May I ask if it's an urgent 7.2 work? If not, I could
+On 03/06/26 1:39 am, Darrick J. Wong wrote:
+> On Tue, Jun 02, 2026 at 03:44:18PM +0530, Disha Goel wrote:
+>> Online defragmentation is not supported on DAX-enabled filesystems
+>> because DAX bypasses the page cache required for defrag operations.
+>>
+>> Add check in _require_defrag() to skip tests when DAX is enabled,
+>> avoiding false failures on ext4/301-304, ext4/308 and generic/018.
+>>
+>> Signed-off-by: Disha Goel <disgoel@linux.ibm.com>
+>> ---
+>>   common/defrag | 4 ++++
+>>   1 file changed, 4 insertions(+)
+>>
+>> diff --git a/common/defrag b/common/defrag
+>> index 055d0d0e..28db2f7a 100644
+>> --- a/common/defrag
+>> +++ b/common/defrag
+>> @@ -6,6 +6,10 @@
+>>   
+>>   _require_defrag()
+>>   {
+>> +    # Defragmentation is not supported on DAX-enabled filesystems
+>> +    if echo "$MOUNT_OPTIONS" | grep -qw "dax"; then
+>> +        _notrun "Defragmentation not supported on DAX-enabled filesystem"
+>> +    fi
+> 
+> Defrag doesn't work on XFS on DAX as well?  It seems to work fine on my
+> VMs...
+> 
 
-No no, it's way too late for that this cycle.
+Thank you for pointing this out. You're right — I missed that xfs defrag
+works fine with dax.
 
-> make a preparation patch for the upcoming 7.2 cycle
-> to handle erofs_map_dev() failure here so you don't
-> need to bother with this in this patchset.
+I'll fix this in v2 to only skip for ext4.
 
-Sounds good. I take it you can just do this yourself without me.
+> <confused>
+> 
+> --D
+> 
+>>       case "$FSTYP" in
+>>       xfs)
+>>           # xfs_fsr does preallocates, require "falloc"
+>> -- 
+>> 2.45.1
+>>
+>>
 
-> I will seek more time to resolve the recent todos
+-- 
+Regards,
+Disha
 
-Thanks!
-
-> yet always intercepted by other unrelated stuffs.
-
-:)
