@@ -1,87 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60CD145FE0;
-	Tue,  2 Jun 2026 20:09:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC2CC378D9A;
+	Wed,  3 Jun 2026 05:28:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780430972; cv=none; b=q3XulPBu0ICLOvAEOogky0CGvSUMJbNdehUNJNNA9794TNyDjha8V7S8/jW/wWiKKi/SeFlUfx0rWVR/2QKAqr9T1LsXokYW5ABilMWamF+US4gRa+VKlBGrm+a4R2UoTDSN4F5QXZF9f7aGZA6F36L1wsWkkuNH8dmqTSX0QD4=
+	t=1780464508; cv=none; b=LWtCr/uPCKXB64Ey8HqDaLn8qCY1tOuF9igRC9h3ozcpVU3etejOzU48rnls96X/vglrP2uAnQhGEI2qycZvE8vW+MJMSuRLaQu9AiKyA2lSFAmGlGuO832pQKTKfa0W25NNqRAKknTF+F/dKmkq7PkjIztD69Fr0yvul9S/9IU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780430972; c=relaxed/simple;
-	bh=dse0fSeQIzHmXLihQLU4iYzX1+cWq3tl1wF5/UYdSKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b3FmJvE6F2zwzsYjgIPTz+DwrWx6wmsOK5jGrJal0Ojw8GFkSgRmJe2l2xf3obo36IojhUQlyzDme8ZmB9uM7VBEzygwF7NBTO8HIKW/YtYReYKfU97/8ByGp10uIeowRBoj7p7Q9KvUxKQcmJDcOS4NWUwJrjpbqUNOwq+kHk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BvpO3Eb7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780464508; c=relaxed/simple;
+	bh=MgjwGS+JDA9ZschaeIpkaDYye2zoo1yfAG+rk4JJ1mo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ON9D6FHVgOuvgTh9qbe6TQRCIrkmzNj3oc4HNX7tXuId56D9zp5zC+uVKZ0Af5pS7dlYQ2U/hHvZI2wYKAHpiuekqPBgkE/hXOWy4tduO4T9khsr39PNGMjKA64w+QEeOJ76n8oGO0skhl25k4oM4Fi7bm0JXq+84aGD6r+Vj2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=YYr7uYNG; arc=none smtp.client-ip=216.71.154.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BvpO3Eb7"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 677AF1F00893;
-	Tue,  2 Jun 2026 20:09:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780430971;
-	bh=RCTqdMUIQL2wPOqBPUz/XcErDodBJvj0B3QqO1rdp0s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BvpO3Eb7BPEzluCrqCkH6rc3op61E+WQQNdp6Wrul7YVkgjPb9iGzbb8nx4aRzq1k
-	 7WKSykOfbdkIm0doMDJ7D49fjaAdH2edxb860X94/FKyZN5dR3IzNjvTWUNOY/dd+i
-	 KLoZM6ywHHypWr/X51FxTpjjni9U6DlCijss6pt5OYtdguTTQgZizdeQgkETXJffCU
-	 1fjWCwMnLmUAuHa8tMWRgJ4bi2Ia4zZ5vXyYrRNfLnXb9hnevvz+7BqUfU1G5fMucL
-	 gCSv363bK4/GQQnIGxxcZ1hkc5BQUSntVyuJZY3z9WuhDcWyKHuCCJkfUqTo4HO8Fc
-	 VW5WjoSNEMBMg==
-Date: Tue, 2 Jun 2026 13:09:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Disha Goel <disgoel@linux.ibm.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] common/defrag: Skip defrag tests on DAX-enabled
- filesystems
-Message-ID: <20260602200930.GB6054@frogsfrogsfrogs>
-References: <20260602101418.55131-1-disgoel@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YYr7uYNG"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1780464506; x=1812000506;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=MgjwGS+JDA9ZschaeIpkaDYye2zoo1yfAG+rk4JJ1mo=;
+  b=YYr7uYNG3rLrX/GUq8qi5B5vzgdXLL22wxDnLBRahM/z9uJRw+aA7/bq
+   TGBXJE8wBric5/9hciyg/ZXFAu+aQQubPezbz9CkSJlYFSj66gD2JOgct
+   vyJlsEArINRcgMQRXBBDL3oSFGkEO0MgPEP3KvfFmYLm6fCi98Pq3AiUO
+   lfMyfaXvmm1izAy+QR0xJckd75eDGHKa2Ths9arepl/xP/0omLNUSTJ+i
+   s/7+i57j7WvWqWR5xJHjuED7nWeP9JgFo2gaUSFhpz6mNmgiM+EzMWwcA
+   tFKlVlVb51/nFMUAZnfGEAFw08a6yJTpWXQajK7feFJdH3RMAWpXHkI1R
+   g==;
+X-CSE-ConnectionGUID: Fx0iCadoTT6vs+9C/NWA/g==
+X-CSE-MsgGUID: td+6HK3tQWWUsC15d4qh/g==
+X-IronPort-AV: E=Sophos;i="6.24,184,1774281600"; 
+   d="scan'208";a="144184440"
+Received: from unknown (HELO uls-op-esad1-o.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2026 13:27:17 +0800
+X-CSE-ConnectionGUID: 4rf/gAUlTsmOUsgtiw3Ikg==
+X-CSE-MsgGUID: 7g+mknUgQFSCzCpg2cAMrQ==
+IronPort-SDR: 6a1fbb2b_PAXTINkKnt3ZnqZynGFFTMgmL64EnTicENpQIRrB+moARjc
+ 5Zi2I7Pv7VpwkRAULIJ+nYYv6Vu3eG4URYdwkDQ==
+Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
+  by uls-op-esad1-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2026 22:27:05 -0700
+X-CSE-ConnectionGUID: d3/fGswURDGPH/BtD+9c3Q==
+X-CSE-MsgGUID: AH923LPJQ1KJOSt7qOLwkw==
+WDCIronportException: Internal
+Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.67.30])
+  by uls-op-esai1-o.wdc.com with ESMTP; 02 Jun 2026 22:27:07 -0700
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH] common/filestreams: check zoned device before mkfs with small dsize
+Date: Wed,  3 Jun 2026 14:27:06 +0900
+Message-ID: <20260603052706.349877-1-shinichiro.kawasaki@wdc.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260602101418.55131-1-disgoel@linux.ibm.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 02, 2026 at 03:44:18PM +0530, Disha Goel wrote:
-> Online defragmentation is not supported on DAX-enabled filesystems
-> because DAX bypasses the page cache required for defrag operations.
-> 
-> Add check in _require_defrag() to skip tests when DAX is enabled,
-> avoiding false failures on ext4/301-304, ext4/308 and generic/018.
-> 
-> Signed-off-by: Disha Goel <disgoel@linux.ibm.com>
-> ---
->  common/defrag | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/common/defrag b/common/defrag
-> index 055d0d0e..28db2f7a 100644
-> --- a/common/defrag
-> +++ b/common/defrag
-> @@ -6,6 +6,10 @@
->  
->  _require_defrag()
->  {
-> +    # Defragmentation is not supported on DAX-enabled filesystems
-> +    if echo "$MOUNT_OPTIONS" | grep -qw "dax"; then
-> +        _notrun "Defragmentation not supported on DAX-enabled filesystem"
-> +    fi
+The test case xfs/170 performs file stream tests and must be skipped for
+zoned scratch devices since the filestream feature is not supported. The
+test calls _require_xfs_scratch_non_zoned() to check if the scratch
+device is zoned.
 
-Defrag doesn't work on XFS on DAX as well?  It seems to work fine on my
-VMs...
+This check is done after _try_scratch_mkfs_xfs() with a small dsize
+parameter. However, mkfs.xfs creates an inode for each zone, and when a
+zoned device has many zones, the small dsize causes metadata area
+shortage and mkfs fails. This unexpected failure causes the test to fail
+even though it should be skipped for zoned devices.
 
-<confused>
+Move the zoned device check to occur before the constrained mkfs. First
+perform a usual mkfs without the small dsize parameter to ensure the
+device can be properly checked for zoned mode, then verify it's non-
+zoned before proceeding with the small dsize mkfs.
 
---D
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+---
+ common/filestreams | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
->      case "$FSTYP" in
->      xfs)
->          # xfs_fsr does preallocates, require "falloc"
-> -- 
-> 2.45.1
-> 
-> 
+diff --git a/common/filestreams b/common/filestreams
+index ace8f3b7..838b5921 100644
+--- a/common/filestreams
++++ b/common/filestreams
+@@ -86,6 +86,14 @@ _test_streams() {
+ 	# off the filestreams allocator.
+ 	unset SCRATCH_RTDEV
+ 
++	# Skip these tests on zoned file systems as filestreams don't work
++	# with the zoned allocator, and the operation below would force it into
++	# the tiny data section only used for metadata anyway.
++	_try_scratch_mkfs_xfs >/dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_require_xfs_scratch_non_zoned
++	_scratch_unmount 2>/dev/null
++
+ 	local size=`expr $agsize \* 1024 \* 1024 \* $agcount`
+ 	_try_scratch_mkfs_xfs -dsize=$size,agcount=$agcount >/dev/null 2>&1 \
+ 		|| _fail "mkfs failed"
+@@ -99,11 +107,6 @@ _test_streams() {
+ 		_scratch_mount
+ 	fi
+ 
+-	# Skip these tests on zoned file systems as filestreams don't work
+-	# with the zoned allocator, and the above would force it into the
+-	# tiny data section only used for metadata anyway.
+-	_require_xfs_scratch_non_zoned
+-
+ 	cd $SCRATCH_MNT
+ 
+ 	# start $stream_count streams
+-- 
+2.54.0
+
