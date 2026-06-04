@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96CF2351C34
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:06:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD202253A1
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:06:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780553202; cv=none; b=KH1VsKI2oyf+NDSIdCpJeYo2IWUp+06V2rknKFB4RsPc9kgVnstCF/+WZFUfszU/b6TjZ8+zDLNxGe3kh94khd0057Omb0ZvybFp8Ynpfq6ixUHAkfeug7B41VRiHvFd3e12PsfmDQApxwU6/8u4Fvvb/Dzc9uOlYGU69j8x50s=
+	t=1780553218; cv=none; b=JZz7/NRuvzWFQpFDlf0MVV2vrBz/oaAU4G57AcpHeAI5O15mM5bDojqAcWEWdU2Ndfclh3MVHphB0pIyvtlvByrZ02rW9Nq18wwKW2c5oZ/Dej934g5P8HTQtfAdgZiduS4EbukwqIAMmyD0UmWCbimKrsTku8qGcJBPI73BlS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780553202; c=relaxed/simple;
-	bh=kVO/U0Lw1ijuDyOCN+SqP/GrVVEZ2c9R7IAwSj4lW9k=;
+	s=arc-20240116; t=1780553218; c=relaxed/simple;
+	bh=EuQqjHdVUwamkGlDxAe6SwJgtWchqPq4IL9n3Mzxiq0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y3v5WfXWfU96NjPdC48v3RlOXMFPFDfRKwPJhecHb/f/77tU33vekiOph191g9mt7ieSZtguNkS0UojZ/xj8PuWWa6Q0yn73thpqqfewdIt2O5LhuzUzSCI0pPRHi7vvBNutgjjKxqU9LZ6+CNqHp1pi7F5/Q6qw+a54jAeGPNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiEkSI9n; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=KKWxZrUqlcaC1/ezT1TKY/LZ8gdoKDExdJZi5QRqwAjTz0aUpnLa8uDErAuLG9jBOAiUqOp3MIiHbG+mwaSEqg826ooRqwEsR0ITfhk1XYv/lgLqlOnavhqsrzAFvC4vLb6RrN7+z/A7GmSFjWBFSXmYSQZlFdN+VqsWebtZ3MQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8CNcfCv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiEkSI9n"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3CD5A1F00893;
-	Thu,  4 Jun 2026 06:06:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8CNcfCv"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BD0521F00893;
+	Thu,  4 Jun 2026 06:06:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780553201;
-	bh=35gexlYb1v5dy6wWNWYKxIT81fBNjhvXHNWwIeggink=;
+	s=k20260515; t=1780553216;
+	bh=WN4gCr9cwNj5XsN+GOCfNr2o1yPDfPIuz2fxNn125Z8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=HiEkSI9nzf7/kXwsmKKOvIbQzwjpb0srbvh/TnFDCf4Bywc7ODGmsMBfO951h8Hrw
-	 /gtW3rLydMoYy5JSK78LhiQK7lrwwEThgyfw4DdS1I1csdtBj3tWbneRzB4b30phpZ
-	 z3kRXjmwp5c0+VndOd53g/Q6ZiZ8tko6vJoIhkZaOAr3TwNs5LjYJiMPYd7vhTRjZp
-	 JHNOvC7jhP37TgCBCXbD7Tqta+Tgvo1l1WoHGRlmmixrOiEwVBMD162GA/PW45IWOU
-	 ytNhvAe4amhpXfqu8VH2tD6glPkxS3s2roCSN+dDtABT9IrTx7+W6zrZZ4oNDaDpjP
-	 My2JiWZE8LEBg==
-Date: Wed, 03 Jun 2026 23:06:40 -0700
-Subject: [PATCH 09/21] xfs_scrub: fix work estimation for rtgroups filesystems
+	b=T8CNcfCvBnr4IWDW3wtkLq5G7spezDE31280LeHbzAxR33LS3yJ5+R9ugVn9Fo79L
+	 iKhVpg7zvDGH0coJt2kiR2l7Tu53NTXvRKxWBs6bDG641XPaonmUTBs5EMT0RXEgum
+	 W/BzqBtl1DzucbcS0eOZqZhArf750F98H3CefA0YFL4kQScT5y/eJnFjCUwL9pXWkA
+	 FsVlctMhMieYqd+ovQSGe3wfwsRoE6b9MDkuPBqbuSr/QHqbk0xSWa64PIDOdJElFO
+	 QiDpD8uHCGEE8a3/5x7fOo7FDhqgBtwhWmjm0AZ/FUiecU8J2I4y8wfk4pGkXPvI39
+	 cT52fv+2Yw5iw==
+Date: Wed, 03 Jun 2026 23:06:56 -0700
+Subject: [PATCH 10/21] xfs_scrub: don't report media errors in specially-owned
+ areas as file data
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178055303275.2608728.8921400065325146466.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <178055303293.2608728.8048137726163765459.stgit@frogsfrogsfrogs>
 In-Reply-To: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,85 +46,38 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Codex noticed that phase2_func queues up scrub work items for every
-rtgroup in the system and tracks progress towards that number of work
-items, but that it doesn't include the rtgroups in the estimate.  This
-leads to the user-papercut of the progressbar quickly advancing to 100%
-and then wedging there for most of the rt metadata scan.  Let's fix this
-by amending the group estimator function.
+If a media error occurs for some disk space that has a "special" owner,
+we mustn't try to walk parent pointers because special owners are not
+files.  If it's an extent map, we shouldn't accidentally fall into
+reporting that as file data loss.  This was, like the rest, found by
+Codex.
 
-Cc: <linux-xfs@vger.kernel.org> # v6.13.0
-Fixes: 241d915d69d4ae ("xfs_scrub: scrub realtime allocation group metadata")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/xfs_scrub.h |    2 +-
- scrub/phase2.c    |    2 +-
- scrub/scrub.c     |   15 +++++++++++++--
- 3 files changed, 15 insertions(+), 4 deletions(-)
+ scrub/phase6.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 851b4f37db48e4..ce98693a674d9d 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -131,7 +131,7 @@ int phase7_func(struct scrub_ctx *ctx);
- int phase8_func(struct scrub_ctx *ctx);
- 
- /* Progress estimator functions */
--unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
-+unsigned int scrub_estimate_group_work(struct scrub_ctx *ctx);
- unsigned int scrub_estimate_iscan_work(struct scrub_ctx *ctx);
- int phase2_estimate(struct scrub_ctx *ctx, uint64_t *items,
- 		    unsigned int *nr_threads, int *rshift);
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-index c7828c332e7c3a..8de77429f05d60 100644
---- a/scrub/phase2.c
-+++ b/scrub/phase2.c
-@@ -416,7 +416,7 @@ phase2_estimate(
- 	unsigned int		*nr_threads,
- 	int			*rshift)
- {
--	*items = scrub_estimate_ag_work(ctx);
-+	*items = scrub_estimate_group_work(ctx);
- 	*nr_threads = scrub_nproc(ctx);
- 	*rshift = 0;
- 	return 0;
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 12ed87f07d9f6c..c9b75eb041e460 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -534,9 +534,9 @@ scrub_item_check_file(
- 	return 0;
- }
- 
--/* How many items do we have to check? */
-+/* How many items do we have to check for per-AG and per-rtgroup work? */
- unsigned int
--scrub_estimate_ag_work(
-+scrub_estimate_group_work(
- 	struct scrub_ctx		*ctx)
- {
- 	const struct xfrog_scrub_descr	*sc;
-@@ -553,10 +553,21 @@ scrub_estimate_ag_work(
- 		case XFROG_SCRUB_GROUP_FS:
- 			estimate++;
- 			break;
-+		case XFROG_SCRUB_GROUP_RTGROUP:
-+			/*
-+			 * rtbitmap and rtsummary exist on non-rt/non-rtgroup
-+			 * filesystems, but we schedule the other rtgroup
-+			 * metadata for scanning (even if it won't do
-+			 * anything), so we must include those in the
-+			 * estimation as well.
-+			 */
-+			estimate += max(1, ctx->mnt.fsgeom.rgcount);
-+			break;
- 		default:
- 			break;
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index c273420d42ca14..cd9bb26bf88628 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -436,6 +436,8 @@ report_ioerr_fsmap(
+ 		} else {
+ 			str_corrupt(ctx, buf, _("media error in %s."), type);
  		}
- 	}
 +
- 	return estimate;
- }
++		return 0;
+ 	}
  
+ 	if (can_use_pptrs(ctx)) {
+@@ -454,6 +456,8 @@ report_ioerr_fsmap(
+ 				attr ? _("extended attribute") :
+ 				       _("file data"));
+ 		str_corrupt(ctx, buf, _("media error in extent map"));
++
++		return 0;
+ 	}
+ 
+ 	/*
 
