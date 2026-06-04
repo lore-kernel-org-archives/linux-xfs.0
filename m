@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD202253A1
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:06:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACD633D564B
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:07:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780553218; cv=none; b=JZz7/NRuvzWFQpFDlf0MVV2vrBz/oaAU4G57AcpHeAI5O15mM5bDojqAcWEWdU2Ndfclh3MVHphB0pIyvtlvByrZ02rW9Nq18wwKW2c5oZ/Dej934g5P8HTQtfAdgZiduS4EbukwqIAMmyD0UmWCbimKrsTku8qGcJBPI73BlS4=
+	t=1780553233; cv=none; b=Yb5rASumvByszh81+hDtwiRBl8+g3Vwu27Gb9RLfejDmh4RzOi+7ZOOxupeGe8cksxTx8CCmO0RM+1FaB28mCmYl/93xQmJCMY4+dG/F2J+jifrJJGnoGXm9hQiMdwmTB5n45O00QdgDnevziDjAga2iOh8ZClMJnLCRtHHFufM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780553218; c=relaxed/simple;
-	bh=EuQqjHdVUwamkGlDxAe6SwJgtWchqPq4IL9n3Mzxiq0=;
+	s=arc-20240116; t=1780553233; c=relaxed/simple;
+	bh=/S6064qy+G5LGXei9qxZrkU6lgnXb9eSA4eScMkGWms=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KKWxZrUqlcaC1/ezT1TKY/LZ8gdoKDExdJZi5QRqwAjTz0aUpnLa8uDErAuLG9jBOAiUqOp3MIiHbG+mwaSEqg826ooRqwEsR0ITfhk1XYv/lgLqlOnavhqsrzAFvC4vLb6RrN7+z/A7GmSFjWBFSXmYSQZlFdN+VqsWebtZ3MQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8CNcfCv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=V7e9oYNaIU8EE868lOvsLInTOEG8tez6tg1zbtuGLGX+VsuK+GuxAedkLyYv1rjwD2aXwOWm4T8o4k0WUixp5JEReM4hgKoW2UXG9H2dAPkzUCbrFQDm7F66Zz9OJw6KrSxc+i8NAhNboXTf1cilY2sJqO8rBfPD880nqTvlg+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q9ycjc80; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8CNcfCv"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BD0521F00893;
-	Thu,  4 Jun 2026 06:06:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q9ycjc80"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 49E811F00893;
+	Thu,  4 Jun 2026 06:07:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780553216;
-	bh=WN4gCr9cwNj5XsN+GOCfNr2o1yPDfPIuz2fxNn125Z8=;
+	s=k20260515; t=1780553232;
+	bh=2iVaL5G/eVstkXVrRnnsWRnnuAU0RMgUYKo0Mm8yP/A=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=T8CNcfCvBnr4IWDW3wtkLq5G7spezDE31280LeHbzAxR33LS3yJ5+R9ugVn9Fo79L
-	 iKhVpg7zvDGH0coJt2kiR2l7Tu53NTXvRKxWBs6bDG641XPaonmUTBs5EMT0RXEgum
-	 W/BzqBtl1DzucbcS0eOZqZhArf750F98H3CefA0YFL4kQScT5y/eJnFjCUwL9pXWkA
-	 FsVlctMhMieYqd+ovQSGe3wfwsRoE6b9MDkuPBqbuSr/QHqbk0xSWa64PIDOdJElFO
-	 QiDpD8uHCGEE8a3/5x7fOo7FDhqgBtwhWmjm0AZ/FUiecU8J2I4y8wfk4pGkXPvI39
-	 cT52fv+2Yw5iw==
-Date: Wed, 03 Jun 2026 23:06:56 -0700
-Subject: [PATCH 10/21] xfs_scrub: don't report media errors in specially-owned
- areas as file data
+	b=Q9ycjc80b+qBUapp/crUhOi0YvnBgo57mtSLGzWZO9B5ysDUsD8t5XMSv1qpuJVi3
+	 JWHup7vo2qBuGKGryuIEtRreuzi1iE5d9p/olBrtTdQaQLs0T6UjlTbubfLu5mHk6B
+	 FPM0p/r259+7puaIquTqKPJXsgeRBzfGYscta+e2sSkXUVAGP03cN7BHcJQCSN6ErZ
+	 m2EuU3fGx4V7+dIo/DZmhK6xcA43oJZM0TlY/1lqq+aWzXqBKm8JOqr1i9B23FKsCY
+	 yxo8ReHGsPCfXMXwwVKc6xccmwbY+AI6DqzAUcSUnwZJj5vKqhK6j2Jf5tpsaisiXI
+	 +4OUQQyC6kVlA==
+Date: Wed, 03 Jun 2026 23:07:11 -0700
+Subject: [PATCH 11/21] xfs_scrub: return SCRUB_RET_OPERROR if unicode
+ collision detection fails to initialize
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178055303293.2608728.8048137726163765459.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <178055303312.2608728.7622814423707470375.stgit@frogsfrogsfrogs>
 In-Reply-To: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,38 +46,27 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a media error occurs for some disk space that has a "special" owner,
-we mustn't try to walk parent pointers because special owners are not
-files.  If it's an extent map, we shouldn't accidentally fall into
-reporting that as file data loss.  This was, like the rest, found by
-Codex.
+If we can't initialize libicu, we should report that as an operational
+failure via exitcode instead of "success".  Codex found this one.
 
+Cc: <linux-xfs@vger.kernel.org> # v5.11.0
+Fixes: ff8717e52b7364 ("xfs_scrub: load and unload libicu properly")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/phase6.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ scrub/xfs_scrub.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index c273420d42ca14..cd9bb26bf88628 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -436,6 +436,8 @@ report_ioerr_fsmap(
- 		} else {
- 			str_corrupt(ctx, buf, _("media error in %s."), type);
- 		}
-+
-+		return 0;
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index aae24ec83c1c75..80b56f8baef611 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -749,6 +749,7 @@ main(
+ 		fprintf(stderr,
+ 	_("%s: couldn't initialize Unicode library.\n"),
+ 				progname);
++		ret = SCRUB_RET_OPERROR;
+ 		goto out_unicrash;
  	}
  
- 	if (can_use_pptrs(ctx)) {
-@@ -454,6 +456,8 @@ report_ioerr_fsmap(
- 				attr ? _("extended attribute") :
- 				       _("file data"));
- 		str_corrupt(ctx, buf, _("media error in extent map"));
-+
-+		return 0;
- 	}
- 
- 	/*
 
