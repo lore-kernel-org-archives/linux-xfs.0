@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066E8199385
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:04:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 764502FC893
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:04:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780553073; cv=none; b=Ww+IFp4oluLXtyp+H41J4bU8+panFbYvpYOCVuMnLldW1LwxY1XW+VyH7Ux9S9N69ipXHUTk9imiv/jM04H7qLzDhyx8+Xf+6Te8F5ZG96xHTaIKu1WbzRtnVJSS+1EAoH/CMPs1nTYgd0u7DS8IFFu152EBBFRVNIRDBIADmkA=
+	t=1780553078; cv=none; b=Q5g2gCInqwXe4IKdmB1Cuy+xY7XomuFjMAxAFPixoz3FeRXDg9F830OMvjaP81uTin/6qluCqd8AT+X9ansEQyXiYWpaLTlqFXrdJlx+Nsvkp6pxwsIEx6g+kTNiPR2qUm6QRPKUOq3/q29lYw6524FqxPFghfcg6Nld5s5VWBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780553073; c=relaxed/simple;
-	bh=K62FU2HREgjaaGSRk5c4YffRbHoupfKlaHTY0YuppcA=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=HEELXGY5AhMNU3t3xOJJ8MkCP6Bl5o7wRZoQdujPsGkQShBOY+aEsp4qx/12K7kgKwv6Pci51yBQhTnhm3WWr7k6/dcB/CWoy/UnIj08OvUPJb2HvopEsj6mx6qAQvtcTVlr8JNzTRL8CGHWJpgr8EN42cKdvirI+Xv0IbNChRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kh0TTs/T; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780553078; c=relaxed/simple;
+	bh=aBH/KZc4q4IWktN1dYo1fB5Dd9sf9C+t38jG6vCD5/I=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=h29e9ZgNy2ptZ53sxROWHR8xC6uH2/oAcl8ZC5lmK4b3OL0mHil/qXQr8OAnEZAnsXq8U62xXg65Vfg/pbtDawUoEJ7l3GHw260gk9nj5xQfPI0IIKHs/jSoMi9+wNNxQPQthDZKJh+9FTDstGwCnzX2XDch8VvcPnQT0qaV0EI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=icpj2Alt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kh0TTs/T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8B6F21F00893;
-	Thu,  4 Jun 2026 06:04:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="icpj2Alt"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 17EA81F00893;
+	Thu,  4 Jun 2026 06:04:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780553071;
-	bh=hbHxbbuxhJMX4Vn+bKGmivX3LaLPNquNUW5yTfqY1x0=;
-	h=Date:Subject:From:To:Cc;
-	b=kh0TTs/Tp7IrgDKFa0ehmV+aJ9HS4kXVZ+lG1BpcuqWuMHYchC1jR9yY697qS8Yow
-	 WQ1H+sBG9UhGMOMxh7jJTD8YsfPtYo4gPhSUAQQAMnqYRCbZHQG2EGDig6qkquQtsA
-	 nWUNZg7IrPkwCkb2haGC544P7hst2fLIRK087v25omRL1dQBt24B7BNnn+v973t4jM
-	 rdstL3Au0UG4OXOK1fKCy4mosoxGY1Kdfu5W0UXhWeODG8FxbiqDIybA8JESslTwgL
-	 xgnkK7cYehdMfA6tXRk2rEjBaKrG5ou2+rtBLX16WVh2v38HWKXr2VIQpR4ZFjBLjb
-	 PwesLCeQ3ACHw==
-Date: Wed, 03 Jun 2026 23:04:30 -0700
-Subject: [PATCHSET] xfs_scrub: codex-inspired bug fixes for 7.1
+	s=k20260515; t=1780553077;
+	bh=1ukpzaStwt84CM6ArzDzSVcV3bXtO3kvz0WtttL4504=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=icpj2Alth0yS3GTWXscBtf96iSagruDndCbB80+Sn2syw5QherwQNtCOVP3+aEPlq
+	 1ohoCSBxNQ0EwCqvg3W81fpsBMmafdh7y85DtyeOsMj/YEZnMmoGdB6tVGxGHP8l5a
+	 jv+bDjRozIUjnA9lfEyzEWCkHLA1fEgWLrmd5ZpWjc9cHdJKjf+fpzl97yKXdUV1oq
+	 DnY5taYxC9LeomJw8PsWi8BUS7dwS4ezZN7xunlx2RIarzp8Pa92Ma0XSgXt+Vr0SM
+	 tmALyfUlN5jIFnElEk7f5Tf0xwFcZLGABl/Fp5hfYTf0BZceHzPKX2+slR3e0CxEiX
+	 9MKk8npadpVYA==
+Date: Wed, 03 Jun 2026 23:04:36 -0700
+Subject: [PATCH 01/21] xfs_scrub_media_fail: reduce security lockdowns to
+ avoid postfix problems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
+Message-ID: <178055303127.2608728.13759559996989386020.stgit@frogsfrogsfrogs>
+In-Reply-To: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
+References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,66 +44,87 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-I then threw Codex at the entirety of the xfs_scrub codebase to see what
-kinds of problems it would report.  I picked off the obviously
-delusional complaints, and fixed the rest as well.  There are a lot of
-fixes here, but most of them are for nitpicky details that C is terrible
-at, footgun fixes, and missing corner case handling.
+The same lockdown logic of commit 9042fcc08eed6a ("xfs_scrub_fail:
+tighten up the security on the background systemd service") was applied
+to the media scan failure reporting service.  Therefore, it's also
+broken on systems that have setgid mailer programs (e.g. postfix).
+Fix this by applying the same change from commit 15fd6fc686d5ce here
+too.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-codex-fixes
+Cc: <linux-xfs@vger.kernel.org> # v6.17.0
+Fixes: 15fd6fc686d5ce ("xfs_scrub_fail: reduce security lockdowns to avoid postfix problems")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-Commits in this patchset:
- * xfs_scrub_media_fail: reduce security lockdowns to avoid postfix problems
- * xfs_scrub_all: fix broken command line string array construction
- * xfs_scrub_all_fail: reduce security lockdowns to avoid postfix problems
- * xfs_scrub_fail: send content headers for xfs_scrub_all failures
- * xfs_scrub: fix uninitialized variable
- * xfs_scrub: fix integer overflows
- * xfs_scrub: don't count internal log space in the data device used count
- * xfs_scrub: widen scrub and repair dependency mask
- * xfs_scrub: fix work estimation for rtgroups filesystems
- * xfs_scrub: don't report media errors in specially-owned areas as file data
- * xfs_scrub: return SCRUB_RET_OPERROR if unicode collision detection fails to initialize
- * xfs_scrub: fix nonsense advice after a scrub finds errors
- * xfs_scrub: don't allow NAN as fstrim percentage
- * xfs_scrub: reset bulkstat pointer on retry
- * xfs_scrub: don't return garbage value from bulkstat_the_rest
- * xfs_scrub: don't continue with phase1 if autofsck=none
- * xfs_scrub: don't crash trying to complain about clean health
- * xfs_scrub: fix inverted return value from ptvar_get
- * xfs_scrub: don't obscure repair failures in repair_list_schedule
- * xfs_scrub: bitmap iteration functions must retur
- * xfs_scrub: read verification isn't ok if it hit runtime errors
----
- scrub/scrub_private.h                  |    2 +
- scrub/xfs_scrub.h                      |    2 +
- scrub/inodes.c                         |   17 +++++++--
- scrub/phase1.c                         |    5 ++-
- scrub/phase2.c                         |    2 +
- scrub/phase3.c                         |    4 +-
- scrub/phase4.c                         |   11 ++++--
- scrub/phase5.c                         |    4 +-
- scrub/phase6.c                         |    4 ++
- scrub/phase7.c                         |    4 --
- scrub/phase8.c                         |    2 +
- scrub/read_verify.c                    |    2 +
- scrub/repair.c                         |   10 +++--
- scrub/scrub.c                          |   23 +++++++++---
- scrub/xfs_scrub.c                      |   18 ++++++++--
- scrub/xfs_scrub_all.py.in              |    2 +
- scrub/xfs_scrub_all_fail.service.in    |   59 +++-----------------------------
- scrub/xfs_scrub_fail.in                |    2 +
- scrub/xfs_scrub_media_fail@.service.in |   58 ++-----------------------------
- 19 files changed, 84 insertions(+), 147 deletions(-)
+ scrub/xfs_scrub_media_fail@.service.in |   58 ++------------------------------
+ 1 file changed, 3 insertions(+), 55 deletions(-)
+
+
+diff --git a/scrub/xfs_scrub_media_fail@.service.in b/scrub/xfs_scrub_media_fail@.service.in
+index 97c0e090721d65..e354dda146f1e3 100644
+--- a/scrub/xfs_scrub_media_fail@.service.in
++++ b/scrub/xfs_scrub_media_fail@.service.in
+@@ -19,58 +19,6 @@ SupplementaryGroups=systemd-journal
+ # can control resource usage.
+ Slice=system-xfs_scrub.slice
+ 
+-# No realtime scheduling
+-RestrictRealtime=true
+-
+-# Make the entire filesystem readonly and /home inaccessible, then bind mount
+-# the filesystem we're supposed to be checking into our private /tmp dir.
+-ProtectSystem=full
+-ProtectHome=yes
+-PrivateTmp=true
+-RestrictSUIDSGID=true
+-
+-# Emailing reports requires network access, but not the ability to change the
+-# hostname.
+-ProtectHostname=true
+-
+-# Don't let the program mess with the kernel configuration at all
+-ProtectKernelLogs=true
+-ProtectKernelModules=true
+-ProtectKernelTunables=true
+-ProtectControlGroups=true
+-ProtectProc=invisible
+-RestrictNamespaces=true
+-
+-# Can't hide /proc because journalctl needs it to find various pieces of log
+-# information
+-#ProcSubset=pid
+-
+-# Only allow the default personality Linux
+-LockPersonality=true
+-
+-# No writable memory pages
+-MemoryDenyWriteExecute=true
+-
+-# Don't let our mounts leak out to the host
+-PrivateMounts=true
+-
+-# Restrict system calls to the native arch and only enough to get things going
+-SystemCallArchitectures=native
+-SystemCallFilter=@system-service
+-SystemCallFilter=~@privileged
+-SystemCallFilter=~@resources
+-SystemCallFilter=~@mount
+-
+-# xfs_scrub needs these privileges to run, and no others
+-CapabilityBoundingSet=
+-NoNewPrivileges=true
+-
+-# Failure reporting shouldn't create world-readable files
+-UMask=0077
+-
+-# Clean up any IPC objects when this unit stops
+-RemoveIPC=true
+-
+-# No access to hardware device files
+-PrivateDevices=true
+-ProtectClock=true
++# No further restrictions because some installations may have MTAs such as
++# postfix, which require the ability to run setgid programs and other
++# foolishness.
 
