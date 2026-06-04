@@ -1,149 +1,169 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mout.web.de (mout.web.de [212.227.17.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE7053F5BFE
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 09:04:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D2B299931;
+	Thu,  4 Jun 2026 09:21:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780563880; cv=none; b=GlFtpIpu8OpSsbLofIP2f8UeXbHeCUeZxB5sIe5dRfXvDHCtcC5tEb1lk7XoSsbqL2Kz9kuJU5EK1tRlcHoyEd9EYS7qFf/mRvhUYixJ1as2MnNSnDFumFAC0l83Ns9Kqm3z+TVEHSvhCvYH+bmdxokfjxZN/oHZPUJH6AWGCyY=
+	t=1780564865; cv=none; b=dM5J0N9pwafxPtBkusdyEEK/PopwjBCurkjZrYqV/yHuATI6zjGjixDNW3AJUxug+tyisIltQ8BekhLBg4ejiKuhCdhXBB2RYe8aKzuWj8kPpnZtmB82ocl0XfYz7DXxpRUzq5WKO74wfrFKav+ks56QkAJQ4B3/ISjJgWvosKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780563880; c=relaxed/simple;
-	bh=PDUUSU7kmVZUxeHMY1MJ5BVFtGwJ68ein9IpwK/HpUg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CfCoY2Xi6Fpvq9utRfEQpRNxQx6KY+ravMzgH8k9CFioGdAT2KZuM//W5nYIadZklNVWteFc19oNW6llZplB0qQ7PX9zzLm8a5F1GjJCyjH4id1BoT3tnADxNPz0AA7z9WzUqeXDL1GSLAkdQzTMOi0WdtZZWhPhT8DduszsGK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OX0cU1VZ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Qz9GLDgt; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1780564865; c=relaxed/simple;
+	bh=GdOew+tYHtQ5Hcu2NWMfqH5/ep5H9fCijwne8QJ2pPI=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=kk6F+fI5aQ0We8rzgb+70kH/lasPIiAuX7UNg09OCGMIx1u+167vMIg8Z+iJ/3wPuEHyrnb5HwdQtMpPNG9evrJLxD1gJi5/8lfrozAog+YXqc28B5MG29J2UuqQ1PJTr+VXmn77hyzbwwN0UJiCtOsTahYFB2QNH+wActHpI1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=X8EmY728; arc=none smtp.client-ip=212.227.17.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OX0cU1VZ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Qz9GLDgt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1780563876;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2lQs9dI0tAeFPaJ8i1YwQIsal8XYYdyr4lp1F85T2xk=;
-	b=OX0cU1VZzlzQXUJiY0B5ejGyseFhdkB4n7aBW/tHtF3vXB6jvkQJ58nYLfVWzAJrHwxSGv
-	jl5i5uSfsa7NYGN30V658NXVInBl/ALnwYReJ81SZZigU7zNkTW5sqVsskKpYoT5GQfrkO
-	HSm0xNw3D8LRQjrm+UVrrRfE93bd1Vc=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-207-vZKHsl4EM6SXq4Y7zCNgXA-1; Thu, 04 Jun 2026 05:04:35 -0400
-X-MC-Unique: vZKHsl4EM6SXq4Y7zCNgXA-1
-X-Mimecast-MFC-AGG-ID: vZKHsl4EM6SXq4Y7zCNgXA_1780563874
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-45eef10d5ebso240627f8f.0
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Jun 2026 02:04:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1780563874; x=1781168674; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2lQs9dI0tAeFPaJ8i1YwQIsal8XYYdyr4lp1F85T2xk=;
-        b=Qz9GLDgtLtISnCfgP/4urs6jsoO4Q4b9/whS91RL5tIMBYkAqf30YvWT9E3QDi7l/Q
-         QyOi0ycgRCwywfL8W0BkAKo/dRS1HhC1SUbF8j7uUT7ipAZ+YMKJQtM/k9XumtfIVxbn
-         bxGcCjGX2kN205Qmc/HEe7kkdoKweYVdypewv2jJmfeDpLw2vUTFWuAssI9DANnBTZoB
-         9jCC4k2pMXQQH+10xJJAGqE27mj931J4fLsC+ZQ91eA+IXFkn6/C8SqemPhFjMHTt2aI
-         OaQF5GfZSAqUCgpASg0uiyqRbM19a60sRZ+xKIK266mpRsZcsjBbbpk3liP9wbTyy7hg
-         v45g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780563874; x=1781168674;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2lQs9dI0tAeFPaJ8i1YwQIsal8XYYdyr4lp1F85T2xk=;
-        b=OSjlcTazsJs6wBtNDCtMSssWKUlbRn5ZQVFhajZWVxngzBQfQabiKvTlqSg0DVRdVS
-         d77k9oqxwS8+gbgDlqy5s8o5cmA3YC1C7gaxZN/GSsyTtiLeodBqVB03uTtF7ehxAHoi
-         Q4PgKhFDcqP3dPrx8RcVUh+iOI//NDohmwT1HEWgrdg04YMXIHPgCQroC8j67K/CrPEP
-         c06EuREgKplhOJhkuVUN6yBMOU1ViYacekvq5FzHWrjCdO3QOezO1xkro1sQdIdOTcTj
-         isAm5bmCgMjtjSCaOyKM3Mv1lG5RnCwLJ60vl4+2ArM9dKWhdDecG3e4srfbbgCje3YU
-         xxDw==
-X-Forwarded-Encrypted: i=1; AFNElJ+yhm5qWeNzzoga9UYsCIpQdYvYM+rcrwCo7l6RQUxD75Wy5T/yAmcirRp9vZejsZhlGBkdcZuSYC0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFd3S/IaaUtmIj2HIN3SIUQSeVb3rifQ27pZcVt1Jp7qhkN9pl
-	/ebmbCYS/DD3A406wuxYw5mCm87Tjm92TxEEOBEa+LkSD/+373gJmUjetS2+e9Pnw8r0jMToIQR
-	R80AiuPjLXY3sGr4nqEHZ9EehSswqPeif6fdoB61rIVmmtJXPw3fX/lDVNI9N
-X-Gm-Gg: Acq92OHjKW035e5jUNk5UFPS0Cl4Z8inT7UntoH2L+DrmpzZMxOaF80GxsKQsF+ijSv
-	5CBmFo6IIOQ2dBRvmK1zJt0vhKUJ6islW0LC+ao32W/Ft85Y/CvsW9NlBBMexkTd55CdQjvtBLK
-	H5KD6pabEC1tENpQAIZlErdGhv093FnbCsFNv9foN4RVvBRBD9wZ+Eh02WpqqNalkH0GDpRvaPP
-	QS+k/UCe3XP5RsYi7AKHr3R4wNGo9fMZQkrEHlleRwCHUGGHfruLrGERKhunawOvShRqraoQGn2
-	1KFSdhUHQGLrWB8bbJ0TmBY0XoqIELgvP0Vi4l7KGnhnJTSVLSffpuNkh/LiNbtfts4v1HdnqeR
-	LU5LqW652yjQq+c8KK2vn631pRPJy03RpFh+pabsguj9AtXnBjRXyFtGS6UJDlfRu+gU=
-X-Received: by 2002:a05:6000:43d4:20b0:460:f36:79b0 with SMTP id ffacd0b85a97d-4602182b90dmr8717140f8f.19.1780563874016;
-        Thu, 04 Jun 2026 02:04:34 -0700 (PDT)
-X-Received: by 2002:a05:6000:43d4:20b0:460:f36:79b0 with SMTP id ffacd0b85a97d-4602182b90dmr8717074f8f.19.1780563873372;
-        Thu, 04 Jun 2026 02:04:33 -0700 (PDT)
-Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2dcde3sm16539954f8f.1.2026.06.04.02.04.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 02:04:32 -0700 (PDT)
-Date: Thu, 4 Jun 2026 11:04:32 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, fsverity@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	djwong@kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v10 00/22] fs-verity support for XFS with post EOF merkle
- tree
-Message-ID: <aiE_YQc6SGSdWlcE@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20260520123722.405752-1-aalbersh@kernel.org>
- <20260521090705.GA14254@lst.de>
- <gcw7zcg6p4s2egpufwizfig72g6ren7jfmuz5mqskkpb7xepww@e3v35j7bk7dc>
- <ag7uW7KQ5mVyCGEv@nidhogg.toxiclabs.cc>
- <20260522-unbehagen-baumethode-erlesen-811a4065eeac@brauner>
- <20260522120757.GA21041@lst.de>
- <ahVzkf8JoKP-kSC2@nidhogg.toxiclabs.cc>
- <20260528-offiziell-luftleer-misswirtschaft-3503bda2ad70@brauner>
- <fjdfwhwi4aogyiaoijwvw6w4npuu5mbt6ua6fkhwcp5ajlm543@ume2fkxg36cb>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="X8EmY728"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1780564857; x=1781169657; i=markus.elfring@web.de;
+	bh=50b+ig6q8ovEDpNTzNYDDc5vKohbSlPP3u/KUTRnGyA=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:From:
+	 Subject:Content-Type:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=X8EmY728WcdfNdZkak24FwU9Y15maiDkpdRkKLphIqwfY8TElFNZKhKd0/9Cagyu
+	 5FZSx+OE0rQm2ZrtPFiVB8CXM47Sm08G01c57k6BcM8njGeH0OnQRLVFEnNl2NN79
+	 wymhgg6aOrK6cY5XvTbtTaC+gpoE6n2637K1SJWjSCoSskj4vp8REhkVDT3pThluD
+	 PzqMSXCuXdfIOo4ytdQEe6YXqytOFT2m4SKnfa4laIw+DCus5/CXPY4NeoTDm6ii1
+	 xMVnQk+vE7PZ04OFjuG9JrLuCF6PyRlqIhjx/mz7hdBYhihSwmH95TgNDVWDS6xlH
+	 syFWZ+KP6LEcAfqOAg==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from client.hidden.invalid by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MALiL-1wOmaQ3JrX-002jJv; Thu, 04
+ Jun 2026 11:20:57 +0200
+Message-ID: <995bacb6-881a-4fa0-b2c8-190882522f54@web.de>
+Date: Thu, 4 Jun 2026 11:20:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fjdfwhwi4aogyiaoijwvw6w4npuu5mbt6ua6fkhwcp5ajlm543@ume2fkxg36cb>
+User-Agent: Mozilla Thunderbird
+To: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
+Content-Language: en-GB, de-DE
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+From: Markus Elfring <Markus.Elfring@web.de>
+Subject: [PATCH] xfs: Simplify data output in xfs_zoned_show_stats()
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:jwklWPRX7/G79tC9BhhrEYITkJBJ0Q12XL2Llf6msvrdEy/lsIm
+ NfBT2RuWrpMaZl2HLvhclEE38U0ph0oxantm5gvu2E/6KVLF+LSY/2uyvxfJX4B0Nz+Sn/7
+ xGo7lipJPMs06CSvKcNKLSPiUPzZmR1qfg2ZVr1WAToUK597cIg3EBbyPaFkx9Sd7hL0rcd
+ b9mbl5PCS9IqICWP5wHxw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:bR9v9waIJ8M=;pl7IIer917m3ogrvCDNMZUPFmcF
+ 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
+ zHUpiuUCpOQcIAAWcg=
 
-On 2026-05-28 16:50:45, Andrey Albershteyn wrote:
-> On 2026-05-28 14:20:08, Christian Brauner wrote:
-> > On Tue, May 26, 2026 at 12:19:43PM +0200, Carlos Maiolino wrote:
-> > > On Fri, May 22, 2026 at 02:07:57PM +0200, Christoph Hellwig wrote:
-> > > > On Fri, May 22, 2026 at 12:03:20PM +0200, Christian Brauner wrote:
-> > > > > > I was expecting this to come through xfs tree too if Eric and Christian
-> > > > > > agree.
-> > > > > 
-> > > > > You may take it through the xfs tree if there are no conflicts with
-> > > > > vfs-7.2.iomap. If there are I want to add the iomap changes into
-> > > > > vfs-7.2.iomap that you can pull in.
-> > > > 
-> > > > Merging the iomap bits through the iomap branch might make sense, given
-> > > > that iomap usually tends to see quite a bit of activity.
-> > > > 
-> > > 
-> > > That sounds good to me. If you want to go ahead and pull in the iomap
-> > > bits, do so, and give me a heads up when you do it so I'll pull your
-> > > branch locally.
-> > 
-> > Great, can the series please be resent based on current vfs-7.2.iomap
-> > then please? Because the iomap changes in this series don't apply
-> > cleanly on vfs-7.2.iomap so we already have merge conflicts...
-> > 
-> 
-> hmm do you mean this branch?
-> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/log/?h=vfs-7.2.iomap
-> 
-> patches 07..09 seems to apply cleanly. The only conflict I see is in
-> the overlayfs patch 03. This is because [1] (is in -rc5) is missing
-> in vfs-7.2.iomap.
-> 
-> [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/fs/overlayfs/util.c?h=v7.1-rc5&id=0c8c88b8eb82a2a41bec5f17c076d6312dc40316
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 4 Jun 2026 11:16:01 +0200
 
-Christian, ping
+Move the specification for a line break from a seq_puts() call
+to a seq_printf() call.
 
-Would be nice to have iomap in vfs, so Carlos can pull and test the
-rest
+The source code was transformed by using the Coccinelle software.
 
--- 
-- Andrey
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+=2D--
+ fs/xfs/xfs_zone_info.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_zone_info.c b/fs/xfs/xfs_zone_info.c
+index 47b475e21af8..57e3acabeee4 100644
+=2D-- a/fs/xfs/xfs_zone_info.c
++++ b/fs/xfs/xfs_zone_info.c
+@@ -75,10 +75,8 @@ xfs_zoned_show_stats(
+ 	struct xfs_zone_info	*zi =3D mp->m_zone_info;
+ 	struct xfs_open_zone	*oz;
+=20
+-	seq_puts(m, "\n");
+-
+-	seq_printf(m, "\tuser free RT blocks: %lld\n",
+-		xfs_sum_freecounter(mp, XC_FREE_RTEXTENTS));
++	seq_printf(m, "\n\tuser free RT blocks: %lld\n",
++		   xfs_sum_freecounter(mp, XC_FREE_RTEXTENTS));
+ 	seq_printf(m, "\treserved free RT blocks: %lld\n",
+ 		mp->m_free[XC_FREE_RTEXTENTS].res_avail);
+ 	seq_printf(m, "\tuser available RT blocks: %lld\n",
+=2D-=20
+2.54.0
 
