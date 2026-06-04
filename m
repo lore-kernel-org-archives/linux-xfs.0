@@ -1,223 +1,103 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6E23264D8
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 10:15:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F159741B34E;
+	Thu,  4 Jun 2026 12:00:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780568116; cv=none; b=GWChnkiN1ftsor8h6DgDxSzhDgh2ifq3FXaEHRuDg6GeqkWNXml0ZJVWykCFcxR/+/rfmFawQLkg5e1Ph69ilqPtvMcq7TAhv+wvvF83krp45PCcpHYTcVyABFBtg761QEkxjVhqeuJt3wXrV0pk9HGbFO0vHRlRR9aSFi28v5M=
+	t=1780574413; cv=none; b=OTptTgqJioCtbrw36xf0cW3ZmxABH47nCgE7irR/gvYiBpf6Vij4VNNpCJt+iJyQOcRG2jTiXh2/IXM7h71q6G5xnDw9SssPr/WdfvISeTZz3ez+zn/wCAi+J06777j3NESASNr+cropoRs7oGjiBaL4hT3W2hjnhm+Y5HHdK20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780568116; c=relaxed/simple;
-	bh=HmkirvdHWBQSnzzpxQh/91zGNBQ0p8yCLme1mREyhuo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=O/q8FpQG6/reR65teQn4EYP0s6cOzlWwKiT81ciivIRYpcMvXfFKwbcN7cSNHxe/pGVIxzeJW0WXUWghLDBtcky7jQgfkAp9P+08XI+NK8uK1VIpMrlQ13josA37FNEfNxnDu9VSjKaj7VWCR9ZonDRIFc6CF/dKJKdP8CKKEUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gWL6R5CGHz9vGY;
-	Thu,  4 Jun 2026 12:15:11 +0200 (CEST)
-Authentication-Results: outgoing_mbo_mout;
-	dkim=none;
-	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
-From: Pankaj Raghav <p.raghav@samsung.com>
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com,
-	lukas@herbolt.com,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	p.raghav@samsung.com,
-	dgc@kernel.org,
-	gost.dev@samsung.com,
-	pankaj.raghav@linux.dev,
-	andres@anarazel.de,
-	kundan.kumar@samsung.com,
-	hch@lst.de,
-	cem@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v5 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Date: Thu,  4 Jun 2026 12:14:42 +0200
-Message-ID: <20260604101442.2613872-3-p.raghav@samsung.com>
-In-Reply-To: <20260604101442.2613872-1-p.raghav@samsung.com>
-References: <20260604101442.2613872-1-p.raghav@samsung.com>
+	s=arc-20240116; t=1780574413; c=relaxed/simple;
+	bh=yTiLymGix0Xy4q03aIU8uxZlq237YZY33OmzdOyx3ow=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B/XYeK54/TcqgXE5MiUxalI6eZKrcuf3KNQK+NT616yaAv+Ba/Zc7MM+JwWO8Wx/sb8+cYLytSeCinu1Y+pniNOeCSKuucpUXWFr23qF0IpXYu2eQv9wbZxEDyx8jPZhazutofcZOsZW4Rqpbikitzxui9mWjRhqpCypD8vPdXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bWlMIyVA; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bWlMIyVA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78CC21F00893;
+	Thu,  4 Jun 2026 12:00:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780574412;
+	bh=eUGKeM7sI2oL66NeOVj98HdQqnjDqpuEH+7R/CzDGX8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=bWlMIyVAfft41ZQCGzhI+SyhA9T/HLftfr8rJJGYdx5Uaqre8IIqdBMzPHBJBhrpV
+	 v/fE9puQ+K/giOQZ9M2RFrSBhcMOgGztSfJcwe2y4/6Eb8oun9fL01b0HCnkU7+SNm
+	 gSS1xffYq9sOdePq6pcGFGR1u0LOmjqTSJ5tNJePAOFySwP85TjKpV09ntzTwTYhC+
+	 ptUfdeSrDKTbcwsjQ5cWX0issdDT0V8jWDPnxMRlnRe8mOABWSYpvMzxr231lgKtxz
+	 zRPn9mAgi9NO7O6DZbP+SbH8o7I2pqJ3mQmiKSXYhSF/yk+c5+vaklddgJMcuBtjiK
+	 6jEpkLP8hKKig==
+Date: Thu, 4 Jun 2026 14:00:07 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+	Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, fsverity@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, ebiggers@kernel.org, linux-ext4@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	djwong@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v10 00/22] fs-verity support for XFS with post EOF merkle
+ tree
+Message-ID: <20260604-holen-rundum-ausfechten-2193b39da363@brauner>
+References: <20260520123722.405752-1-aalbersh@kernel.org>
+ <20260521090705.GA14254@lst.de>
+ <gcw7zcg6p4s2egpufwizfig72g6ren7jfmuz5mqskkpb7xepww@e3v35j7bk7dc>
+ <ag7uW7KQ5mVyCGEv@nidhogg.toxiclabs.cc>
+ <20260522-unbehagen-baumethode-erlesen-811a4065eeac@brauner>
+ <20260522120757.GA21041@lst.de>
+ <ahVzkf8JoKP-kSC2@nidhogg.toxiclabs.cc>
+ <20260528-offiziell-luftleer-misswirtschaft-3503bda2ad70@brauner>
+ <fjdfwhwi4aogyiaoijwvw6w4npuu5mbt6ua6fkhwcp5ajlm543@ume2fkxg36cb>
+ <aiE_YQc6SGSdWlcE@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4gWL6R5CGHz9vGY
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <aiE_YQc6SGSdWlcE@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 
-If the underlying block device supports the unmap write zeroes
-operation, this flag allows users to quickly preallocate a file with
-written extents that contain zeroes. This is beneficial for subsequent
-overwrites as it prevents the need for unwritten-to-written extent
-conversions, thereby significantly reducing metadata updates and journal
-I/O overhead, improving overwrite performance.
+On Thu, Jun 04, 2026 at 11:04:32AM +0200, Andrey Albershteyn wrote:
+> On 2026-05-28 16:50:45, Andrey Albershteyn wrote:
+> > On 2026-05-28 14:20:08, Christian Brauner wrote:
+> > > On Tue, May 26, 2026 at 12:19:43PM +0200, Carlos Maiolino wrote:
+> > > > On Fri, May 22, 2026 at 02:07:57PM +0200, Christoph Hellwig wrote:
+> > > > > On Fri, May 22, 2026 at 12:03:20PM +0200, Christian Brauner wrote:
+> > > > > > > I was expecting this to come through xfs tree too if Eric and Christian
+> > > > > > > agree.
+> > > > > > 
+> > > > > > You may take it through the xfs tree if there are no conflicts with
+> > > > > > vfs-7.2.iomap. If there are I want to add the iomap changes into
+> > > > > > vfs-7.2.iomap that you can pull in.
+> > > > > 
+> > > > > Merging the iomap bits through the iomap branch might make sense, given
+> > > > > that iomap usually tends to see quite a bit of activity.
+> > > > > 
+> > > > 
+> > > > That sounds good to me. If you want to go ahead and pull in the iomap
+> > > > bits, do so, and give me a heads up when you do it so I'll pull your
+> > > > branch locally.
+> > > 
+> > > Great, can the series please be resent based on current vfs-7.2.iomap
+> > > then please? Because the iomap changes in this series don't apply
+> > > cleanly on vfs-7.2.iomap so we already have merge conflicts...
+> > > 
+> > 
+> > hmm do you mean this branch?
+> > https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/log/?h=vfs-7.2.iomap
+> > 
+> > patches 07..09 seems to apply cleanly. The only conflict I see is in
+> > the overlayfs patch 03. This is because [1] (is in -rc5) is missing
+> > in vfs-7.2.iomap.
+> > 
+> > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/fs/overlayfs/util.c?h=v7.1-rc5&id=0c8c88b8eb82a2a41bec5f17c076d6312dc40316
+> 
+> Christian, ping
+> 
+> Would be nice to have iomap in vfs, so Carlos can pull and test the
+> rest
 
-Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_bmap_util.c | 19 ++++++++++--
- fs/xfs/xfs_bmap_util.h |  1 +
- fs/xfs/xfs_file.c      | 66 +++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 82 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7466267f6c60..d175a1057f13 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -643,11 +643,18 @@ xfs_free_eofblocks(
- }
- 
- /*
-- * Allocate space for a file according to @mode:
-+ * Allocate space or convert extents for a file according to @mode:
-  *
-  * XFS_ALLOC_FILE_SPACE_PREALLOC:
-  * Preallocate unwritten extents across the range and mark the inode as
-  * preallocated.
-+ *
-+ * XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-+ * Allocate written extents over holes and convert unwritten extents in the
-+ * range to written extents, initialising both to contain zeroes.
-+ *
-+ * This function does not update the file size; callers that extend the file
-+ * are responsible for updating it once the extents are allocated.
-  */
- int
- xfs_alloc_file_space(
-@@ -688,6 +695,10 @@ xfs_alloc_file_space(
- 		bmapi_flags = XFS_BMAPI_PREALLOC;
- 		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
- 		break;
-+	case XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-+		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-+		nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -776,8 +787,10 @@ xfs_alloc_file_space(
- 			allocatesize_fsb -= imapp->br_blockcount;
- 		}
- 
--		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		if (mode == XFS_ALLOC_FILE_SPACE_PREALLOC) {
-+			ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-+			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		}
- 
- 		error = xfs_trans_commit(tp);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 232b4c48247e..e3d506ca9610 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -57,6 +57,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- /* preallocation and hole punch interface */
- enum xfs_alloc_file_space_mode {
- 	XFS_ALLOC_FILE_SPACE_PREALLOC,
-+	XFS_ALLOC_FILE_SPACE_WRITE_ZEROES,
- };
- 
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e90ea6ebdc8e..37623baaaed6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,67 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
- 
-+static int
-+xfs_falloc_write_zeroes(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
-+{
-+	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			new_size = 0;
-+	loff_t			old_size = XFS_ISIZE(ip);
-+	int			error;
-+	unsigned int		blksize = i_blocksize(inode);
-+	loff_t			offset_aligned = round_down(offset, blksize);
-+	bool			did_zero;
-+
-+	if (xfs_is_always_cow_inode(ip) ||
-+	    !bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-+	if (error)
-+		return error;
-+
-+	error = xfs_free_file_space(ip, offset, len, ac);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Zero the tail of the old EOF block and any space up to the new
-+	 * offset.
-+	 * In the usual truncate path, xfs_falloc_setsize takes care of
-+	 * zeroing those blocks.
-+	 */
-+	if (offset_aligned > old_size) {
-+		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
-+		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-+				NULL, &did_zero);
-+		if (error)
-+			return error;
-+
-+	}
-+
-+	error = xfs_alloc_file_space(ip, offset, len,
-+			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * xfs_falloc_setsize() would re-zero the written extents via
-+	 * iomap_zero_range(). Use xfs_setfilesize() instead.
-+	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
-+	 * size to it.
-+	 */
-+	if (new_size > i_size_read(inode))
-+		i_size_write(inode, new_size);
-+
-+	return xfs_setfilesize(ip, offset, len);
-+}
-+
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1473,7 +1534,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1525,6 +1586,9 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_ALLOCATE_RANGE:
- 		error = xfs_falloc_allocate_range(file, mode, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		break;
--- 
-2.51.2
+Applied but note IOMAP_F_FSVERITY
+changed from (1U << 10) to (1U << 11) since we have another flag
+addition this cycle.
 
