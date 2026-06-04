@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1431A1A23B1
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:06:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96CF2351C34
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2026 06:06:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780553187; cv=none; b=KFSNy+7DRAUHQV8EyM6wjK80uHCq/DeS9ZA5fW+sFuPhuROu1DEQoFfBqA85YnYnGMcTfY+bbXHksTw9Od3q+dOVsbNGM09c3dl5Jf+yTyFGEfglkTZIvqiLcx40eOqNny+rNm/ZkVaDxA9FkMPMPPukfzGPgF9lmrEVKdpfO64=
+	t=1780553202; cv=none; b=KH1VsKI2oyf+NDSIdCpJeYo2IWUp+06V2rknKFB4RsPc9kgVnstCF/+WZFUfszU/b6TjZ8+zDLNxGe3kh94khd0057Omb0ZvybFp8Ynpfq6ixUHAkfeug7B41VRiHvFd3e12PsfmDQApxwU6/8u4Fvvb/Dzc9uOlYGU69j8x50s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780553187; c=relaxed/simple;
-	bh=HwWLjl8ndVWACvhGqo8PP1ip4daTeiQhPRHVpMdi/Zs=;
+	s=arc-20240116; t=1780553202; c=relaxed/simple;
+	bh=kVO/U0Lw1ijuDyOCN+SqP/GrVVEZ2c9R7IAwSj4lW9k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pU1a659LkHai2mRosnAtEyEdqK1aPRYPZuMDrTAEu0F3zrRna2UtmWFSnvUhAzjJTGagLo/llPHLuDV/7I7zsM/zRGS5zTIvbzxNS2zq3C0stBZTyjK+rBOdYlWlxmiI91xS/W8ZMY31OcG9zfZnDGm2AiGFWjGCecqqG1FYjt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHr5iq+H; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Y3v5WfXWfU96NjPdC48v3RlOXMFPFDfRKwPJhecHb/f/77tU33vekiOph191g9mt7ieSZtguNkS0UojZ/xj8PuWWa6Q0yn73thpqqfewdIt2O5LhuzUzSCI0pPRHi7vvBNutgjjKxqU9LZ6+CNqHp1pi7F5/Q6qw+a54jAeGPNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiEkSI9n; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHr5iq+H"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AD0E01F00898;
-	Thu,  4 Jun 2026 06:06:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiEkSI9n"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3CD5A1F00893;
+	Thu,  4 Jun 2026 06:06:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780553185;
-	bh=Vk7hfiJRJV9+pyb7idz807R1hXMZhmxq9f130w/Xhho=;
+	s=k20260515; t=1780553201;
+	bh=35gexlYb1v5dy6wWNWYKxIT81fBNjhvXHNWwIeggink=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=FHr5iq+HGsaAqNsS7DdIGU5vLqDY61S5DMU914XbCMb6nF+ckBuiali8rlsu1lmva
-	 3StjAnRKDvx5QW7lWjgQJXv93R/RGyWbh78jzSA4/u+Eq9uFXAuRJGzz4tUgT3NWBs
-	 jEJFMP9scsyHE7U++wtGl+7vYRd3AeGZ9FEabkOZvhgbIMA9ymGATEG3fRkUW7Ek66
-	 UFqmnP//6KsS7QHxALg7Z3JDnl17pxIA4o1cZHYJCxMP3694CxQ01Vy9vr6nmIRZ7v
-	 lNJNf8dheNQ2+2HE/74P63B6BEdSGe5Fk1qYR52Fupnyw4K6r/LpfJhO5cGL8VjkHW
-	 It/xGgNuhCZdw==
-Date: Wed, 03 Jun 2026 23:06:25 -0700
-Subject: [PATCH 08/21] xfs_scrub: widen scrub and repair dependency mask
+	b=HiEkSI9nzf7/kXwsmKKOvIbQzwjpb0srbvh/TnFDCf4Bywc7ODGmsMBfO951h8Hrw
+	 /gtW3rLydMoYy5JSK78LhiQK7lrwwEThgyfw4DdS1I1csdtBj3tWbneRzB4b30phpZ
+	 z3kRXjmwp5c0+VndOd53g/Q6ZiZ8tko6vJoIhkZaOAr3TwNs5LjYJiMPYd7vhTRjZp
+	 JHNOvC7jhP37TgCBCXbD7Tqta+Tgvo1l1WoHGRlmmixrOiEwVBMD162GA/PW45IWOU
+	 ytNhvAe4amhpXfqu8VH2tD6glPkxS3s2roCSN+dDtABT9IrTx7+W6zrZZ4oNDaDpjP
+	 My2JiWZE8LEBg==
+Date: Wed, 03 Jun 2026 23:06:40 -0700
+Subject: [PATCH 09/21] xfs_scrub: fix work estimation for rtgroups filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178055303256.2608728.4779400218969576550.stgit@frogsfrogsfrogs>
+Message-ID: <178055303275.2608728.8921400065325146466.stgit@frogsfrogsfrogs>
 In-Reply-To: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,112 +45,85 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Codex observes:
+Codex noticed that phase2_func queues up scrub work items for every
+rtgroup in the system and tracks progress towards that number of work
+items, but that it doesn't include the rtgroups in the estimate.  This
+leads to the user-papercut of the progressbar quickly advancing to 100%
+and then wedging there for most of the rt metadata scan.  Let's fix this
+by amending the group estimator function.
 
-"Since `XFS_SCRUB_TYPE_NR` is now 33 (`XFS_SCRUB_TYPE_RTREFCBT` is 32),
-any scheduled scrub item drives this loop to `j == 32`, where `1U << j`
-shifts a 32-bit unsigned value by its width. That is undefined behavior
-(and will trip UBSan or allow miscompilation of dependency scheduling);
-the dependency mask and shift need to use a type wide enough for all
-scrub types, e.g.  `1ULL`/`uint64_t`."
-
-The presence of a shift overflow is correct, since there are now 33
-scrub type codes.  However, the local loop variable isn't the only
-problem here -- scrub_deps and repair_deps are masks, and they aren't
-wide enough.  As a result, there's a lurking logic bomb because RTREFCBT
-will never get selected.
-
-Fortunately this is benign because no scrub/repair type depends on
-RTREFCBT, which is why we haven't seen any complaints.  But let's
-eliminate an avenue for us to forget to fix the problem.  Widen the
-masks and the local variable to fix the problem.
-
-Cc: <linux-xfs@vger.kernel.org> # v6.14.0
-Fixes: b71fbe4c3da263 ("xfs: scrub the realtime refcount btree")
+Cc: <linux-xfs@vger.kernel.org> # v6.13.0
+Fixes: 241d915d69d4ae ("xfs_scrub: scrub realtime allocation group metadata")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/scrub_private.h |    2 +-
- scrub/repair.c        |    8 ++++----
- scrub/scrub.c         |    8 ++++----
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ scrub/xfs_scrub.h |    2 +-
+ scrub/phase2.c    |    2 +-
+ scrub/scrub.c     |   15 +++++++++++++--
+ 3 files changed, 15 insertions(+), 4 deletions(-)
 
 
-diff --git a/scrub/scrub_private.h b/scrub/scrub_private.h
-index c5e0a7c08be056..629ef4405225eb 100644
---- a/scrub/scrub_private.h
-+++ b/scrub/scrub_private.h
-@@ -118,6 +118,6 @@ scrub_item_schedule_retry(struct scrub_item *sri, unsigned int scrub_type)
- bool scrub_item_call_kernel_again(struct scrub_item *sri, uint8_t work_mask,
- 		const struct scrub_item *old);
- bool scrub_item_schedule_work(struct scrub_item *sri, uint8_t state_flags,
--		const unsigned int *schedule_deps);
-+		const uint64_t *schedule_deps);
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 851b4f37db48e4..ce98693a674d9d 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -131,7 +131,7 @@ int phase7_func(struct scrub_ctx *ctx);
+ int phase8_func(struct scrub_ctx *ctx);
  
- #endif /* XFS_SCRUB_SCRUB_PRIVATE_H_ */
-diff --git a/scrub/repair.c b/scrub/repair.c
-index c3a8b3179600a6..5d821655877b80 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -28,8 +28,8 @@
-  * the filesystem if the btree root pointers in the AG headers are wrong.
-  * Dependencies cannot cross scrub groups.
-  */
--#define DEP(x) (1U << (x))
--static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
-+#define DEP(x) (1ULL << (x))
-+static const uint64_t repair_deps[XFS_SCRUB_TYPE_NR] = {
- 	[XFS_SCRUB_TYPE_BMBTD]		= DEP(XFS_SCRUB_TYPE_INODE),
- 	[XFS_SCRUB_TYPE_BMBTA]		= DEP(XFS_SCRUB_TYPE_INODE),
- 	[XFS_SCRUB_TYPE_BMBTC]		= DEP(XFS_SCRUB_TYPE_INODE),
-@@ -250,7 +250,7 @@ repair_item_dependencies_ok(
- 	const struct scrub_item	*sri,
- 	unsigned int		scrub_type)
+ /* Progress estimator functions */
+-unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
++unsigned int scrub_estimate_group_work(struct scrub_ctx *ctx);
+ unsigned int scrub_estimate_iscan_work(struct scrub_ctx *ctx);
+ int phase2_estimate(struct scrub_ctx *ctx, uint64_t *items,
+ 		    unsigned int *nr_threads, int *rshift);
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index c7828c332e7c3a..8de77429f05d60 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -416,7 +416,7 @@ phase2_estimate(
+ 	unsigned int		*nr_threads,
+ 	int			*rshift)
  {
--	unsigned int		dep_mask = repair_deps[scrub_type];
-+	uint64_t		dep_mask = repair_deps[scrub_type];
- 	unsigned int		b;
- 
- 	for (b = 0; dep_mask && b < XFS_SCRUB_TYPE_NR; b++, dep_mask >>= 1) {
-@@ -434,7 +434,7 @@ repair_item_boost_priorities(
- 	unsigned int			scrub_type;
- 
- 	foreach_scrub_type(scrub_type) {
--		unsigned int		dep_mask = repair_deps[scrub_type];
-+		uint64_t		dep_mask = repair_deps[scrub_type];
- 		unsigned int		b;
- 
- 		if (repair_item_count_needsrepair(sri) == 0 || !dep_mask)
+-	*items = scrub_estimate_ag_work(ctx);
++	*items = scrub_estimate_group_work(ctx);
+ 	*nr_threads = scrub_nproc(ctx);
+ 	*rshift = 0;
+ 	return 0;
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index de687af687d32d..12ed87f07d9f6c 100644
+index 12ed87f07d9f6c..c9b75eb041e460 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -28,8 +28,8 @@
-  * Bitmap showing the correctness dependencies between scrub types for scrubs.
-  * Dependencies cannot cross scrub groups.
-  */
--#define DEP(x) (1U << (x))
--static const unsigned int scrub_deps[XFS_SCRUB_TYPE_NR] = {
-+#define DEP(x) (1ULL << (x))
-+static const uint64_t scrub_deps[XFS_SCRUB_TYPE_NR] = {
- 	[XFS_SCRUB_TYPE_AGF]		= DEP(XFS_SCRUB_TYPE_SB),
- 	[XFS_SCRUB_TYPE_AGFL]		= DEP(XFS_SCRUB_TYPE_SB) |
- 					  DEP(XFS_SCRUB_TYPE_AGF),
-@@ -472,7 +472,7 @@ bool
- scrub_item_schedule_work(
- 	struct scrub_item	*sri,
- 	uint8_t			state_flags,
--	const unsigned int	*schedule_deps)
-+	const uint64_t		*schedule_deps)
- {
- 	unsigned int		scrub_type;
- 	unsigned int		nr = 0;
-@@ -486,7 +486,7 @@ scrub_item_schedule_work(
- 			continue;
+@@ -534,9 +534,9 @@ scrub_item_check_file(
+ 	return 0;
+ }
  
- 		foreach_scrub_type(j) {
--			if (schedule_deps[scrub_type] & (1U << j))
-+			if (schedule_deps[scrub_type] & (1ULL << j))
- 				sri->sri_state[j] |= SCRUB_ITEM_BARRIER;
+-/* How many items do we have to check? */
++/* How many items do we have to check for per-AG and per-rtgroup work? */
+ unsigned int
+-scrub_estimate_ag_work(
++scrub_estimate_group_work(
+ 	struct scrub_ctx		*ctx)
+ {
+ 	const struct xfrog_scrub_descr	*sc;
+@@ -553,10 +553,21 @@ scrub_estimate_ag_work(
+ 		case XFROG_SCRUB_GROUP_FS:
+ 			estimate++;
+ 			break;
++		case XFROG_SCRUB_GROUP_RTGROUP:
++			/*
++			 * rtbitmap and rtsummary exist on non-rt/non-rtgroup
++			 * filesystems, but we schedule the other rtgroup
++			 * metadata for scanning (even if it won't do
++			 * anything), so we must include those in the
++			 * estimation as well.
++			 */
++			estimate += max(1, ctx->mnt.fsgeom.rgcount);
++			break;
+ 		default:
+ 			break;
  		}
+ 	}
++
+ 	return estimate;
+ }
  
 
