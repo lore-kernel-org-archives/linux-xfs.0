@@ -1,32 +1,36 @@
-Received: from forward101b.mail.yandex.net (forward101b.mail.yandex.net [178.154.239.148])
+Received: from forward204b.mail.yandex.net (forward204b.mail.yandex.net [178.154.239.153])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA40B3B71B1;
-	Fri,  5 Jun 2026 09:32:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780823B71DE;
+	Fri,  5 Jun 2026 09:40:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.153
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780651956; cv=none; b=QfzSEgcjO5RzV07eq9hMzNrUlBWKHzGW1aDuW37NvdXjqHUMEMPBSQN25UjQUSv74Lg/81QsbxtmdYRIfW/gH76evWXekHVgxY3meREJCja+Nn8296QQt54lrl+jfGLULf2y43RYoUofJFvc1hCVvMb3UnH1509ZJYP1iqaCbBs=
+	t=1780652410; cv=none; b=RBLx9VUg+RUYkPSaB4CVEZtIgeNJ7GxoR5+DwvT0TN2F0YHuHLlRYPks5++gwDjBme+iFQVz7kJVevA+h8Lr4ZZLlJ59A1pUQOIjq1Uhw6hfr7rCCxKbLEst4MuBB1hpJ8InU9JUwhg0pYhX4ppEnYhO+KOn5z/BWrcBWkgFCBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780651956; c=relaxed/simple;
-	bh=YMPIb3Wqbn6oFZKeRGkStfSdljScs8OuAeqJ88oHCbw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=LasHY3px9SQWYTd1LT+1kr58AFI74SN8Fi1etH1KtmdogGzflF8dKGOUO3ZG7uDSOsboyrQKBnGyGOD8pEn5jAtOAmfF32BSWYTVGWLnRabNrUQJ9bnFvNHJzDkXFQ6/g6JkpFU5mm/TII6p7umIaNS/4+k5E0OKChzDFmWraQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=aAfgppsw; arc=none smtp.client-ip=178.154.239.148
+	s=arc-20240116; t=1780652410; c=relaxed/simple;
+	bh=roCXYPwvem0HZaM9ukG3CrWuJmtMPpmRuAXrDHxxlHs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Aby/HWbNnCHE5ZuFeymu0j7kzHDXvMwuS3V+/BygJXsrDqnpTJgYa4LkDruC1Q7+rocclIxeL91OtJZtKLzg8QmEc8DcLLKdtm85YJ6/+LPQ5RZRhW096FTcQbOcTbHZe9SaybQL01M1DVb1pAPAzkxerVk+WlpJILnDz/q5qhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=D+/b6ilQ; arc=none smtp.client-ip=178.154.239.153
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rosa.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="aAfgppsw"
+	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="D+/b6ilQ"
+Received: from forward103b.mail.yandex.net (forward103b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d103])
+	by forward204b.mail.yandex.net (Yandex) with ESMTPS id 1EF6383E1D;
+	Fri, 05 Jun 2026 12:32:36 +0300 (MSK)
 Received: from mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net [IPv6:2a02:6b8:c11:2281:0:640:870e:0])
-	by forward101b.mail.yandex.net (Yandex) with ESMTPS id B6975C0074;
-	Fri, 05 Jun 2026 12:32:26 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net (smtp) with ESMTPSA id MWeqWPKg7eA0-ZUIdjwp2;
-	Fri, 05 Jun 2026 12:32:25 +0300
+	by forward103b.mail.yandex.net (Yandex) with ESMTPS id 17421C0087;
+	Fri, 05 Jun 2026 12:32:28 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net (smtp) with ESMTPSA id MWeqWPKg7eA0-iJWxteS4;
+	Fri, 05 Jun 2026 12:32:27 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rosa.ru; s=mail;
-	t=1780651945; bh=Bqwg2k+EIq2Oc3zzFvIOmt0U1aaUxHYWf4rCTj43P+A=;
-	h=Message-Id:Date:Cc:Subject:To:From;
-	b=aAfgppswN0ezvLiBRRs+Yin3Y8u9D9Zlnt2gTjDDgOMiZ7+aZx4vrJV60TTRFcKx0
-	 LW/qaPp3mLEb3Qkz0cALxHl4ey8IOxrrTgr6HkTCstne4+Iz7duRon7CbJReW7RFns
-	 eXXTepV4/SmF9+5nQlCb5vrS9fMh8ajkYQCcwax8=
+	t=1780651947; bh=g+XUwVkUAtWXygctQq+TDJNPTYD7p6c+pE2o5+duqC4=;
+	h=Message-Id:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=D+/b6ilQ9NVEvi4MqcmyyxQBwD4kdRa8vG5fgUFK4x0XRQGhAwbPwPmJjOw/VSk2Z
+	 v2Xf8H7+kpEftWRo1CvlYOtT4kElOce8+dyJ4tyOzNeAIQTR1eJvJUibIHtj1wY0yJ
+	 n94TGJyd5aUMK/zbWS32K5Z8ySNoVy5m1Pv1Ma2w=
 Authentication-Results: mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net; dkim=pass header.i=@rosa.ru
 From: Mikhail Lobanov <m.lobanov@rosa.ru>
 To: cem@kernel.org
@@ -37,10 +41,12 @@ Cc: djwong@kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org,
 	m.lobanov@rosa.ru
-Subject: [PATCH v3 1/2] xfs: skip inode inactivation on a shut down mount
-Date: Fri,  5 Jun 2026 12:32:21 +0300
-Message-Id: <20260605093222.8555-1-m.lobanov@rosa.ru>
+Subject: [PATCH v3 2/2] xfs: shut down the filesystem on a failed mount
+Date: Fri,  5 Jun 2026 12:32:22 +0300
+Message-Id: <20260605093222.8555-2-m.lobanov@rosa.ru>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20260605093222.8555-1-m.lobanov@rosa.ru>
+References: <20260605093222.8555-1-m.lobanov@rosa.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,76 +55,102 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-XFS already declines to inactivate inodes on a shut down mount, but only
-at queue time: xfs_inode_mark_reclaimable() calls
-xfs_inode_needs_inactive(), which returns false when the mount is shut
-down ("If the log isn't running, push inodes straight to reclaim"), and
-then drops the dquots and marks the inode reclaimable directly.
+A corrupt/crafted XFS image can make mount fail after background inode
+inactivation has already been enabled.  xfs_mountfs() turns on inodegc
+(xfs_inodegc_start()) right after log recovery, but the quota subsystem
+(mp->m_quotainfo) is only allocated much later, in xfs_qm_newmount() /
+xfs_qm_mount_quotas().  The quota accounting flags in mp->m_qflags are
+parsed from the mount options before xfs_mountfs() even runs.
 
-An inode that was queued for background inactivation while the mount was
-still live is not covered by that check: the inodegc worker still calls
-xfs_inactive() on it even after the mount has been shut down in the
-meantime.  Inactivation modifies persistent metadata and runs
-transactions that cannot complete on a shut down mount, and it relies on
-subsystems (e.g. quota) that a torn down, or never fully set up, mount
-may not have available.
+If the mount then aborts in between - e.g. xfs_rtmount_inodes() failing
+with "failed to read RT inodes" - the unwind path flushes the inodegc
+queue, which inactivates the inodes that are still queued, and
+xfs_inactive() calls xfs_qm_dqattach().  That path trusts
+XFS_IS_QUOTA_ON() (the flag is set) and dereferences the not yet
+allocated mp->m_quotainfo:
 
-Honour the same invariant at gc time.  In xfs_inodegc_inactivate(), skip
-xfs_inactive() when the mount is shut down and just make the inode
-reclaimable.  As the inode then goes straight to reclaim, drop its dquots
-in that case too - exactly as the straight-to-reclaim path in
-xfs_inode_mark_reclaimable() already does - so the dquot references are
-not leaked.  xfs_qm_dqdetach() is a no-op when no dquots are attached.
+  XFS (loop0): failed to read RT inodes
+  Oops: general protection fault, probably for non-canonical address
+        0xdffffc000000002a: 0000 [#1] PREEMPT SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x0000000000000150-0x0000000000000157]
+  Workqueue: xfs-inodegc/loop0 xfs_inodegc_worker
+  RIP: 0010:__mutex_lock+0xfe/0x930
+  Call Trace:
+   xfs_qm_dqget_cache_lookup+0x63/0x7f0
+   xfs_qm_dqget_inode+0x336/0x860
+   xfs_qm_dqattach_one+0x232/0x4e0
+   xfs_qm_dqattach_locked+0x2c6/0x470
+   xfs_qm_dqattach+0x46/0x70
+   xfs_inactive+0x988/0xe80
+   xfs_inodegc_worker+0x27c/0x730
 
-On its own this is a consistency fix with the existing queue-time
-behaviour; it is also a prerequisite for shutting the mount down in the
-xfs_mountfs() failure path in the following patch.
+The NULL m_quotainfo deref is only one symptom.  The deeper problem is
+that a failed mount should not be inactivating inodes at all: it must
+not write to the (possibly corrupt, only partially set up) persistent
+metadata of a filesystem we just refused to mount, and the subsystems
+inactivation relies on may not be initialised.
+
+Mark the filesystem shut down before flushing the inodegc queue in the
+xfs_mountfs() failure path.  With the preceding patch a shut down mount
+no longer inactivates the queued inodes: xfs_inodegc_inactivate() drops
+them straight to reclaim instead.  They are still pulled down so reclaim
+can free them (which is why the flush was added in commit ab23a7768739
+("xfs: per-cpu deferred inode inactivation queues")), but without
+touching the on-disk structures - matching that comment's own "pull down
+all the state and flee" intent.
+
+Use SHUTDOWN_META_IO_ERROR for the shutdown: it is the generic "cannot
+safely touch metadata" reason already used elsewhere in this file and in
+the xfs_ifree() failure path, and unlike SHUTDOWN_FORCE_UMOUNT it does
+not log a misleading "User initiated shutdown received".  A failed mount
+is not necessarily on-disk corruption (it can be a transient I/O or
+resource error), so SHUTDOWN_CORRUPT_ONDISK would not be accurate either.
+
+Found by fuzzing XFS with syzkaller (corrupt image mount); reproduced and
+verified under QEMU/KASAN.
 
 Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
 Signed-off-by: Mikhail Lobanov <m.lobanov@rosa.ru>
 ---
-v3: split out of the v2 single patch as a prep patch, and additionally
-    drop the attached dquots in the shutdown branch to avoid leaking
-    references when an inode queued while the mount was live is processed
-    after a (normal) shutdown - spotted in review of v2.
+v3: depend on the preceding "skip inode inactivation on a shut down
+    mount" prep patch instead of doing both changes in one patch; use
+    SHUTDOWN_META_IO_ERROR instead of SHUTDOWN_FORCE_UMOUNT (no
+    misleading "User initiated shutdown" message, no message special
+    casing); reflow the comment to stay within 80 columns.
 
 v2: https://lore.kernel.org/linux-xfs/aiKA7vVQ_RxT_YOr@infradead.org/T/#t
 v1: https://lore.kernel.org/linux-xfs/ah6BIsvEitNW5Edb@infradead.org/
 
- fs/xfs/xfs_icache.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2040a9292ee6..1f725804be17 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1940,10 +1940,25 @@ static int
- xfs_inodegc_inactivate(
- 	struct xfs_inode	*ip)
- {
--	int			error;
-+	int			error = 0;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index b24195f570cd..37fb69165502 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1243,11 +1243,19 @@ xfs_mountfs(
+ 		xfs_irele(mp->m_metadirip);
 
- 	trace_xfs_inode_inactivating(ip);
--	error = xfs_inactive(ip);
-+
-+	/*
-+	 * If the filesystem has been shut down - for example a mount that
-+	 * failed after background inactivation was enabled - do not
-+	 * inactivate the inode.  Inactivation modifies persistent metadata,
-+	 * its transactions cannot complete on a shut down mount, and the
-+	 * subsystems it relies on (e.g. quota, mp->m_quotainfo) may not be
-+	 * set up.  Drop any attached dquots and make the inode reclaimable,
-+	 * the same way xfs_inode_mark_reclaimable() does when it sends an
-+	 * inode straight to reclaim.
-+	 */
-+	if (!xfs_is_shutdown(ip->i_mount))
-+		error = xfs_inactive(ip);
-+	else
-+		/* Going straight to reclaim, so drop the dquots. */
-+		xfs_qm_dqdetach(ip);
- 	xfs_inodegc_set_reclaimable(ip);
- 	return error;
+ 	/*
+-	 * Inactivate all inodes that might still be in memory after a log
+-	 * intent recovery failure so that reclaim can free them.  Metadata
+-	 * inodes and the root directory shouldn't need inactivation, but the
+-	 * mount failed for some reason, so pull down all the state and flee.
++	 * The mount has failed.  Mark the filesystem shut down so that any
++	 * inodes still queued for background inactivation are dropped
++	 * straight to reclaim instead of being inactivated: a failed mount
++	 * must not write to the (possibly corrupt, only partially set up)
++	 * persistent metadata, and parts of the mount it would need - e.g.
++	 * the quota subsystem (mp->m_quotainfo) - may never have been
++	 * initialised.
++	 *
++	 * Flush the queue so that those inodes are pulled down and reclaim
++	 * can free them; with the fs shut down xfs_inodegc_inactivate()
++	 * turns each one reclaimable without touching the on-disk structures.
+ 	 */
++	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+ 	xfs_inodegc_flush(mp);
 
+ 	/*
 --
 2.43.0
