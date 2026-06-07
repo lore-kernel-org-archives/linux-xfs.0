@@ -1,138 +1,156 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from forward103d.mail.yandex.net (forward103d.mail.yandex.net [178.154.239.214])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E787340403;
-	Fri,  5 Jun 2026 17:49:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AECEE317163;
+	Sun,  7 Jun 2026 18:30:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.214
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681770; cv=none; b=rvEcumkAOZwP1q+y35nCT7PT3vyJhOdULQgp4YvIwBg9bcHbwBK3GaTkdft+LOX+cSSNkuLuFrDeFqNgse5O0u8A0cvRJDwEQHFrgaRv57wdoMJ6LckLH/Gp7V+X+rR2/l8AyOB1jM2Z4hdVZaXPypXCrAlGCLWvNqsq4g8XUXE=
+	t=1780857052; cv=none; b=r8a4qPz5Ol+wRkhPrX29SQq5a56IwMMg3P4O8QsV6tJlNe4vZf++G3Z7rSmLQNS8R6h3JLsEM5yYhEU+pMvZdrhOmqfOpRNaZJx8IMQMnXRsO/9TokRgFGR+Kw2/HYb4ZrfeqopOmDW/CLdKfxVR62FyuZD0aRB3jv9J283PzBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681770; c=relaxed/simple;
-	bh=dy4u70W5MKNVoq6oFbiplrDTm9TM2QiFe5+pHwmBQGk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=trz2maoP2hL0k8BUlC1gcmMpKb1dJFGOoZYcXnHXx7seaoi06/h17KrdhabMBIWWOJ79C6Y0oZJSKpBWUnmXV+0IiUnsDHC/SR3XOxye5OJrMWha33xk4xK6ZUbwF7dO3htfxxRQ+oiKT8Gk2hgk8DYN7W0bbEN1lAtV5ITgC2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a0D+2Ezp; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1780857052; c=relaxed/simple;
+	bh=9NZUnz7hwPAV+FOkZl0fryQaSg0S//ndmUssZtrS6yk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QfI+KZkYOm5akTwU+a/3aLn0arNw+zYtTrmNzlrWv5Xzis2Sk9EfxyjB8yjky99vJN1zq10Qe3bFRYxsr1Q/uc+oAIfoapLZGulik5NqLXdxH9VdPqupp29MFwQ9+T/8kJCQ5/FZWXePDdQ9sTNE1bQ8c1wLQkpWtvSZ6bFSCAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=cdLjJcU1; arc=none smtp.client-ip=178.154.239.214
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rosa.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a0D+2Ezp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780681763; x=1812217763;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=dy4u70W5MKNVoq6oFbiplrDTm9TM2QiFe5+pHwmBQGk=;
-  b=a0D+2EzpfAEzupg26RXtSuNWSS8tynsPShtv2RxoTu2fKZlPELR7yGy5
-   mFu3yWmc4jFCbX2B6kyvdfVC6Na0Z2Kn4HKPBvTnEhr8YqkDeUxfRYvsP
-   YTN5bfx9YAeo9zpr60kp/EPC5RxJ40oJ0V9Womd+TpN0LJfPbliU5fa4D
-   9dbYZ/EAPBxgpvwOoc3ux1MBgfY+otxXtTazQipG7bSlCNx5QIJaLIGER
-   ny9Deu50Ifpzh1uv6vFgm999tZ2+LW7YMhLBWMmApT7uX5HWTQHSSWNVW
-   M1spciL3AK9DlYzfI8KSkRExnudEEbH5IvsD/xjPK6+/wgpacBpvNUUdc
-   Q==;
-X-CSE-ConnectionGUID: wUbMzHSlSoaf+QImVOkNYw==
-X-CSE-MsgGUID: b3YpRxDuRKK0BYdmLb80/g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11808"; a="80554167"
-X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="80554167"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2026 10:49:22 -0700
-X-CSE-ConnectionGUID: IREbTB0bQf2FExNWvwdqSA==
-X-CSE-MsgGUID: 0hgxeySORtSoLlyP9CsudA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="248829603"
-Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
-  by orviesa003.jf.intel.com with ESMTP; 05 Jun 2026 10:49:20 -0700
-Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wVYfU-000000002cf-2v6t;
-	Fri, 05 Jun 2026 17:49:16 +0000
-Date: Fri, 5 Jun 2026 19:48:24 +0200
-From: kernel test robot <lkp@intel.com>
-To: Mikhail Lobanov <m.lobanov@rosa.ru>, cem@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, djwong@kernel.org, david@fromorbit.com,
-	hch@infradead.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org,
-	m.lobanov@rosa.ru
-Subject: Re: [PATCH v3 2/2] xfs: shut down the filesystem on a failed mount
-Message-ID: <202606051954.GRmELwA9-lkp@intel.com>
-References: <20260605093222.8555-2-m.lobanov@rosa.ru>
+	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="cdLjJcU1"
+Received: from mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net [IPv6:2a02:6b8:c43:da5:0:640:db94:0])
+	by forward103d.mail.yandex.net (Yandex) with ESMTPS id 27383C006B;
+	Sun, 07 Jun 2026 21:30:31 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net (smtp) with ESMTPSA id RUMHNYleJuQ0-Lljhqsi6;
+	Sun, 07 Jun 2026 21:30:30 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rosa.ru; s=mail;
+	t=1780857030; bh=y+AW3hQjAr3u9P6F1m4JRfnbvPvL0BMCU06OzQoet7Q=;
+	h=Message-Id:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=cdLjJcU1twR/kGnIc+4jDp5tJQ0CDRYyOjjH9YxfIx3m0abI27vZ3L2IDb6I8XCwA
+	 lxy9BuKeTxu9+cXAVyE0UutQM1NhZk5GA+6DxOLT4LLndPWpLolJozXKSo14LRR8bv
+	 wsWorvkd8SU1YL1VnIIaMM0Qw/M6WrKDCJsY6wV4=
+Authentication-Results: mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net; dkim=pass header.i=@rosa.ru
+From: Mikhail Lobanov <m.lobanov@rosa.ru>
+To: cem@kernel.org
+Cc: m.lobanov@rosa.ru,
+	djwong@kernel.org,
+	david@fromorbit.com,
+	hch@infradead.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v4 2/2] xfs: shut down the filesystem on a failed mount
+Date: Sun,  7 Jun 2026 21:30:26 +0300
+Message-Id: <20260607183026.37700-2-m.lobanov@rosa.ru>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20260607183026.37700-1-m.lobanov@rosa.ru>
+References: <20260607183026.37700-1-m.lobanov@rosa.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260605093222.8555-2-m.lobanov@rosa.ru>
+Content-Transfer-Encoding: 8bit
 
-Hi Mikhail,
+A corrupt/crafted XFS image can make mount fail after background inode
+inactivation has already been enabled.  xfs_mountfs() turns on inodegc
+(xfs_inodegc_start()) right after log recovery, but the quota subsystem
+(mp->m_quotainfo) is only allocated much later, in xfs_qm_newmount() /
+xfs_qm_mount_quotas().  The quota accounting flags in mp->m_qflags are
+parsed from the mount options before xfs_mountfs() even runs.
 
-kernel test robot noticed the following build warnings:
+If the mount then aborts in between - e.g. xfs_rtmount_inodes() failing
+with "failed to read RT inodes" - the unwind path flushes the inodegc
+queue, which inactivates the inodes that are still queued, and
+xfs_inactive() calls xfs_qm_dqattach().  That path trusts
+XFS_IS_QUOTA_ON() (the flag is set) and dereferences the not yet
+allocated mp->m_quotainfo:
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on linus/master v7.1-rc6 next-20260605]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+  XFS (loop0): failed to read RT inodes
+  Oops: general protection fault, probably for non-canonical address
+        0xdffffc000000002a: 0000 [#1] PREEMPT SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x0000000000000150-0x0000000000000157]
+  Workqueue: xfs-inodegc/loop0 xfs_inodegc_worker
+  RIP: 0010:__mutex_lock+0xfe/0x930
+  Call Trace:
+   xfs_qm_dqget_cache_lookup+0x63/0x7f0
+   xfs_qm_dqget_inode+0x336/0x860
+   xfs_qm_dqattach_one+0x232/0x4e0
+   xfs_qm_dqattach_locked+0x2c6/0x470
+   xfs_qm_dqattach+0x46/0x70
+   xfs_inactive+0x988/0xe80
+   xfs_inodegc_worker+0x27c/0x730
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mikhail-Lobanov/xfs-shut-down-the-filesystem-on-a-failed-mount/20260605-175001
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20260605093222.8555-2-m.lobanov%40rosa.ru
-patch subject: [PATCH v3 2/2] xfs: shut down the filesystem on a failed mount
-config: i386-allnoconfig-bpf (https://download.01.org/0day-ci/archive/20260605/202606051954.GRmELwA9-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260605/202606051954.GRmELwA9-lkp@intel.com/reproduce)
+The NULL m_quotainfo deref is only one symptom.  The deeper problem is
+that a failed mount should not be inactivating inodes at all: it must
+not write to the (possibly corrupt, only partially set up) persistent
+metadata of a filesystem we just refused to mount, and the subsystems
+inactivation relies on may not be initialised.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202606051954.GRmELwA9-lkp@intel.com/
+Mark the filesystem shut down before flushing the inodegc queue in the
+xfs_mountfs() failure path.  With the preceding patch a shut down mount
+no longer inactivates the queued inodes: xfs_inodegc_inactivate() drops
+them straight to reclaim instead.  They are still pulled down so reclaim
+can free them (which is why the flush was added in commit ab23a7768739
+("xfs: per-cpu deferred inode inactivation queues")), but without
+touching the on-disk structures - matching that comment's own "pull down
+all the state and flee" intent.
 
-All warnings (new ones prefixed by >>):
+Use SHUTDOWN_META_IO_ERROR for the shutdown: it is the generic "cannot
+safely touch metadata" reason already used elsewhere in this file and in
+the xfs_ifree() failure path, and unlike SHUTDOWN_FORCE_UMOUNT it does
+not log a misleading "User initiated shutdown received".  A failed mount
+is not necessarily on-disk corruption (it can be a transient I/O or
+resource error), so SHUTDOWN_CORRUPT_ONDISK would not be accurate either.
 
-   fs/xfs/xfs_icache.c: In function 'xfs_inodegc_inactivate':
->> fs/xfs/xfs_icache.c:1961:36: warning: suggest braces around empty body in an 'else' statement [-Wempty-body]
-    1961 |                 xfs_qm_dqdetach(ip);
-         |                                    ^
+Found by fuzzing XFS with syzkaller (corrupt image mount); reproduced and
+verified under QEMU/KASAN.
 
+Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
+Signed-off-by: Mikhail Lobanov <m.lobanov@rosa.ru>
+---
+v4: no change to this patch; resent as part of the series.  v4 of patch
+    1/2 braces the if/else to silence a -Wempty-body W=1 warning.
 
-vim +/else +1961 fs/xfs/xfs_icache.c
+v3: depend on the preceding "skip inode inactivation on a shut down
+    mount" prep patch instead of doing both changes in one patch; use
+    SHUTDOWN_META_IO_ERROR instead of SHUTDOWN_FORCE_UMOUNT (no
+    misleading "User initiated shutdown" message, no message special
+    casing); reflow the comment to stay within 80 columns.
 
-  1933	
-  1934	/*
-  1935	 * Free all speculative preallocations and possibly even the inode itself.
-  1936	 * This is the last chance to make changes to an otherwise unreferenced file
-  1937	 * before incore reclamation happens.
-  1938	 */
-  1939	static int
-  1940	xfs_inodegc_inactivate(
-  1941		struct xfs_inode	*ip)
-  1942	{
-  1943		int			error = 0;
-  1944	
-  1945		trace_xfs_inode_inactivating(ip);
-  1946	
-  1947		/*
-  1948		 * If the filesystem has been shut down - for example a mount that
-  1949		 * failed after background inactivation was enabled - do not
-  1950		 * inactivate the inode.  Inactivation modifies persistent metadata,
-  1951		 * its transactions cannot complete on a shut down mount, and the
-  1952		 * subsystems it relies on (e.g. quota, mp->m_quotainfo) may not be
-  1953		 * set up.  Drop any attached dquots and make the inode reclaimable,
-  1954		 * the same way xfs_inode_mark_reclaimable() does when it sends an
-  1955		 * inode straight to reclaim.
-  1956		 */
-  1957		if (!xfs_is_shutdown(ip->i_mount))
-  1958			error = xfs_inactive(ip);
-  1959		else
-  1960			/* Going straight to reclaim, so drop the dquots. */
-> 1961			xfs_qm_dqdetach(ip);
-  1962		xfs_inodegc_set_reclaimable(ip);
-  1963		return error;
-  1964	
+v2: https://lore.kernel.org/linux-xfs/aiKA7vVQ_RxT_YOr@infradead.org/T/#t
+v1: https://lore.kernel.org/linux-xfs/ah6BIsvEitNW5Edb@infradead.org/
 
+ fs/xfs/xfs_mount.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index b24195f570cd..37fb69165502 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1243,11 +1243,19 @@ xfs_mountfs(
+ 		xfs_irele(mp->m_metadirip);
+
+ 	/*
+-	 * Inactivate all inodes that might still be in memory after a log
+-	 * intent recovery failure so that reclaim can free them.  Metadata
+-	 * inodes and the root directory shouldn't need inactivation, but the
+-	 * mount failed for some reason, so pull down all the state and flee.
++	 * The mount has failed.  Mark the filesystem shut down so that any
++	 * inodes still queued for background inactivation are dropped
++	 * straight to reclaim instead of being inactivated: a failed mount
++	 * must not write to the (possibly corrupt, only partially set up)
++	 * persistent metadata, and parts of the mount it would need - e.g.
++	 * the quota subsystem (mp->m_quotainfo) - may never have been
++	 * initialised.
++	 *
++	 * Flush the queue so that those inodes are pulled down and reclaim
++	 * can free them; with the fs shut down xfs_inodegc_inactivate()
++	 * turns each one reclaimable without touching the on-disk structures.
+ 	 */
++	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+ 	xfs_inodegc_flush(mp);
+
+ 	/*
 --
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.43.0
