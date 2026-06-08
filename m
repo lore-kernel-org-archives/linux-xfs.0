@@ -1,133 +1,148 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0BC3B8BA5;
-	Mon,  8 Jun 2026 10:23:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9AC33546FE
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Jun 2026 11:25:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780914231; cv=none; b=nfqZnwGJq5Qbtvd2inHrI98V+BM+6cU6E7TLq2LXAtD5q2xcwLncY8hpg+V8007WXxstA/nCykD2SMoHSL75unl7eZYUn8V5J0ZIid5Q7buHE4gKhptDDCJyieF98KN5a5WGLMA16qFfo7DpiWTgx2MsH/RuXHHDM3wKfhmW+Is=
+	t=1780917958; cv=none; b=gXdyljgw4MphAgddU360vIZXDkRRxNGW9BDpH5Q4AuKucPzvGwp9K9R+TeIuPuG2vVEJxcBIZfJCMd4X5nDH4r+DN2h5hFBSyVnSDPDFXRPrIyJFZOU7h00XdOFH63XbNMpQdRjfxlWtVj650OAu03GXiLACiaPUh1FT9q+Drbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780914231; c=relaxed/simple;
-	bh=yFroTsxMoyGyLVbYUE4ZAISy4tR84QoNnQ6Pd2QnGiY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PDQpYTGJuZPXNIp1tjkkmWyA5EJvFEhqMX5nbZ+HdJzrLIy4b2+TUPE7lBMbwHilOPwTK7tggcpd4Te28KmRJIToUyuQZVUclCSsiFKPnaD2kiIJkj3znJfZ0/hPFD8l56U9ACrXwWawVghPKF1SMZ1F9KiaUYGX4oqOwEH/ioM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=MNxAD268; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1780917958; c=relaxed/simple;
+	bh=Nos/rPu8mosDxtzbjbN48ABj9LWoLbxrgxG6sPHs7qM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i+tB1VQ7kAyh5CyyFCGffzB0gDZQN+nT2z2aYBI2iRwdkcuDLdv7szlZYl57x1qOVJsKoRK0IJcyyH/2pSlOtTiA26Nn6DwOz1cKIRNNBny5edhg+EqpVNcxCbAob4n8T106RwsX050JjlCG1AidN2OPH8TPmIjckCP+pT3XvLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QQPpdTX9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="MNxAD268"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 657JF1CO3711216;
-	Mon, 8 Jun 2026 10:23:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=Xh9qce66+IJFbnXRatQkRCySdWtsqLisqhjzMZqwu
-	PY=; b=MNxAD268UqhJiTkpGM9EmxBCgIyzkO6x4sYrIcLTHT+9/ZpdQAYD49W+Z
-	JZCgnVqCocXpBlN9xY8LlcFpEqV4mOCSmWSoQhdKHYyXzKcw6wBXIaSyxDULUF0A
-	VuSc4gNdzHS/Tk+l0xOv5EGfg6mfrPNayF2g8eMwxof0QjX3ykwVywtCoaJE4PYV
-	64uRs3qhPLlFjZyuAwp2FweJXtTYC3heg7Hlk2L7UJcNVx3C0z1VRCvL9o3CWjSt
-	GtHFmQH2bcIIKqLLRXfC/e4/7Q5rEoo1DZq/GSJHSprD3G/GZoGR2GMHSEIjQGdh
-	cK7r9yKyPOSpsMiRkZwpg7bkrkMFQ==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4emb23psut-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 08 Jun 2026 10:23:48 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 658AJdNp009127;
-	Mon, 8 Jun 2026 10:23:47 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4emx8vvy90-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 08 Jun 2026 10:23:47 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 658ANhpe57344426
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 8 Jun 2026 10:23:43 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 89A3E2004E;
-	Mon,  8 Jun 2026 10:23:43 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 86C4F20040;
-	Mon,  8 Jun 2026 10:23:41 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.39.26.125])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  8 Jun 2026 10:23:41 +0000 (GMT)
-From: Disha Goel <disgoel@linux.ibm.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-        ojaswin@linux.ibm.com, djwong@kernel.org,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: [PATCH v3] common/defrag: skip defrag tests on DAX-enabled filesystems
-Date: Mon,  8 Jun 2026 15:53:28 +0530
-Message-ID: <20260608102328.40916-1-disgoel@linux.ibm.com>
-X-Mailer: git-send-email 2.45.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QQPpdTX9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8958E1F00893;
+	Mon,  8 Jun 2026 11:25:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780917957;
+	bh=0Qkc8IDSFpkqYEndgaEptlKqrB/Eg3cm70YlZLtygMc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=QQPpdTX9ehJINEH+AllOIOibytlTyxarfDzsfRmSDlntJGM2uojDFyUg6F3TuuTJc
+	 mV/uWNtjpDdwqFE0/TQU+JfG5781AEiRwcvDzJ3XV0nB03amZC6jWFrBMzpMn4+Ulv
+	 8qdaivv2FBINXADj1AycPC//GSkmmxYpogzgXucWFZJsQqFwQTvGs+RkXIy8gzDB56
+	 WHfldBzrA+1SCB+Y4RUpBPgF8yy6s6gqLfFFQ7DWmrsB1HR1oYWRxzo3MTrYvFjeow
+	 m/r4iUyIeZlqHc1bl29kbsjS8Tro8JeRElMBMZzQl4YBn9mSi5ZivxjdjDBruJ9Q9q
+	 cPkmVFX8V+HKg==
+Date: Mon, 8 Jun 2026 13:25:53 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] xfs: cleanup xfs_imap
+Message-ID: <aiamu81-g6dpwwRT@nidhogg.toxiclabs.cc>
+References: <20260601124410.3508980-1-hch@lst.de>
+ <20260601124410.3508980-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=b4uCJNGx c=1 sm=1 tr=0 ts=6a269834 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=2rdxVvfoxuaEPwCrBBkA:9
-X-Proofpoint-ORIG-GUID: 4ii1CnxzA8vtLckAbLZqJ8d3HSKTa5kJ
-X-Proofpoint-GUID: TgcKqz0t2BK30RAAgJdOw7s3tf1xfPZp
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA5NCBTYWx0ZWRfX2JZd5nHWfkUk
- 73DfNB+TciWzhL1XiPE4LYhvmGFbllidhKgz6iVy6Ias2eHaMmrdEozSCsj1ha5GfgG5zagX0OI
- W6Y6xXQFQlVXhh4pL5gxQXXgNPPJaZcBqAX06cbvsp6VSZCuqo0eQAM6ZyaebBwCYDDtKNkrCA6
- Iu+QCO5TBfMj2DkksF5jHseQX/83pS0uLWFi27JU2uZvhXyLcd4Twgb7EIrIbqF9v+37ju37pE+
- ehhQk8FC6M3P9FMop/sWx/U3AbuoN5W88vezBahWzCit0EZ1IN+fiILZly8624i7vqtLUI5Ezzq
- RUpDfk2ZPcZltzqOICrDkQiy2s0mz8a0FMfEkr1uq+0bJNL8SkJrrn+n3nlKUTmZsOhgn1k8ANF
- CvoRTvIz7im8tQ6ZejZ1lU498TOIrYLm5XOtMdvLsswO3p1Gs4Q0k4ZnC4lQxljzOw0slE+s7vd
- 6roo+OLScZiD4rtZ7Kw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-08_02,2026-06-05_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 spamscore=0 bulkscore=0 phishscore=0 priorityscore=1501
- lowpriorityscore=0 adultscore=0 malwarescore=0 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080094
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260601124410.3508980-2-hch@lst.de>
 
-Online defragmentation is not supported on ext4 DAX-enabled filesystems.
-The ext4 defrag ioctl (EXT4_IOC_MOVE_EXT) returns EOPNOTSUPP when used
-on DAX files.
+On Mon, Jun 01, 2026 at 02:43:47PM +0200, Christoph Hellwig wrote:
+> Reshuffle the code a bit so that the imap_lookup and filling out of the
+> xfs_imap structure aren't duplicated.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Add an ext4-specific check in _require_defrag() to skip tests when DAX
-is enabled, avoiding false failures on ext4/301-304, ext4/308, and
-generic/018.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-XFS defrag works with DAX, so this check is ext4-specific.
-
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Disha Goel <disgoel@linux.ibm.com>
-Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
-Changes in v3:
-- Move the DAX check inside the ext4 case statement as
-  suggested by Darrick
-
- common/defrag | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/common/defrag b/common/defrag
-index 055d0d0e..baf05d94 100644
---- a/common/defrag
-+++ b/common/defrag
-@@ -13,6 +13,8 @@ _require_defrag()
-         DEFRAG_PROG="$XFS_FSR_PROG"
- 	;;
-     ext4)
-+        __scratch_uses_fsdax && _notrun "ext4 online defrag not supported with DAX"
-+
- 	testfile="$TEST_DIR/$$-test.defrag"
- 	donorfile="$TEST_DIR/$$-donor.defrag"
- 	bsize=`_get_block_size $TEST_DIR`
--- 
-2.45.1
-
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 64 +++++++++++++++++---------------------
+>  1 file changed, 29 insertions(+), 35 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 8d6a4fe4228c..a3fe4e5b1cdd 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2511,44 +2511,38 @@ xfs_imap(
+>  	 * inodes in stale state on disk. Hence we have to do a btree lookup
+>  	 * in all cases where an untrusted inode number is passed.
+>  	 */
+> -	if (flags & XFS_IGET_UNTRUSTED) {
+> -		error = xfs_imap_lookup(pag, tp, agino, agbno,
+> -					&chunk_agbno, &offset_agbno, flags);
+> -		if (error)
+> -			return error;
+> -		goto out_map;
+> -	}
+> +	if (!(flags & XFS_IGET_UNTRUSTED)) {
+> +		/*
+> +		 * If the inode cluster size is the same or smaller than the
+> +		 * blocksize, get to the buffer by simple arithmetics.
+> +		 */
+> +		if (M_IGEO(mp)->blocks_per_cluster == 1) {
+> +			cluster_agbno = agbno;
+> +			offset = XFS_INO_TO_OFFSET(mp, ino);
+> +			ASSERT(offset < mp->m_sb.sb_inopblock);
+> +			goto out;
+> +		}
+>  
+> -	/*
+> -	 * If the inode cluster size is the same as the blocksize or
+> -	 * smaller we get to the buffer by simple arithmetics.
+> -	 */
+> -	if (M_IGEO(mp)->blocks_per_cluster == 1) {
+> -		offset = XFS_INO_TO_OFFSET(mp, ino);
+> -		ASSERT(offset < mp->m_sb.sb_inopblock);
+> -
+> -		imap->im_blkno = xfs_agbno_to_daddr(pag, agbno);
+> -		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+> -		imap->im_boffset = (unsigned short)(offset <<
+> -							mp->m_sb.sb_inodelog);
+> -		return 0;
+> -	}
+> +		/*
+> +		 * If the inode chunks are aligned, use simple maths to find the
+> +		 * location.
+> +		 */
+> +		if (M_IGEO(mp)->inoalign_mask) {
+> +			offset_agbno = agbno & M_IGEO(mp)->inoalign_mask;
+> +			chunk_agbno = agbno - offset_agbno;
+> +			goto out_map;
+> +		}
+>  
+> -	/*
+> -	 * If the inode chunks are aligned then use simple maths to
+> -	 * find the location. Otherwise we have to do a btree
+> -	 * lookup to find the location.
+> -	 */
+> -	if (M_IGEO(mp)->inoalign_mask) {
+> -		offset_agbno = agbno & M_IGEO(mp)->inoalign_mask;
+> -		chunk_agbno = agbno - offset_agbno;
+> -	} else {
+> -		error = xfs_imap_lookup(pag, tp, agino, agbno,
+> -					&chunk_agbno, &offset_agbno, flags);
+> -		if (error)
+> -			return error;
+> +		/*
+> +		 * Otherwise we have to do a btree lookup to find the location.
+> +		 */
+>  	}
+>  
+> +	error = xfs_imap_lookup(pag, tp, agino, agbno, &chunk_agbno,
+> +			&offset_agbno, flags);
+> +	if (error)
+> +		return error;
+> +
+>  out_map:
+>  	ASSERT(agbno >= chunk_agbno);
+>  	cluster_agbno = chunk_agbno +
+> @@ -2556,7 +2550,7 @@ xfs_imap(
+>  		 M_IGEO(mp)->blocks_per_cluster);
+>  	offset = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
+>  		XFS_INO_TO_OFFSET(mp, ino);
+> -
+> +out:
+>  	imap->im_blkno = xfs_agbno_to_daddr(pag, cluster_agbno);
+>  	imap->im_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
+>  	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+> -- 
+> 2.53.0
+> 
+> 
