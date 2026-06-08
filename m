@@ -1,197 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230CC408008;
-	Mon,  8 Jun 2026 14:59:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8573732B11F
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Jun 2026 16:03:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780930766; cv=none; b=DYpn7sRol/tvV9PXzV3DzvXJ7rGx1kmSUke2OeW3nNc9ZXS9A7NS1PiyBrN+1ZXPErUM/kOBrzP201QdaH3FCCqrrU9cJNuqrfWkrVtQo+mdRotySEOVQHIVdIbT+LpjqNqrpaAd53YKgih0+8IsyRRCCJ4Rk4JvUoo1SP1Uncw=
+	t=1780934594; cv=none; b=MYUvk/0NMLDW9LnzZSOEc7PnERam58SF0HLpNH8Nh5oEqX8Le/r3VbYZo69xdEHTW6td1X+OM8HGqZrFyzNu1m4moGyLwsJA0oa6HIMmkfToqFo9u6l9RDLCA2/hJ8vDvZHuf+Mqz9ktsYp7rdsQPbXkt+qqFXlo898TqXobGCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780930766; c=relaxed/simple;
-	bh=HmDOSXQx7i2XjtJYq+q3DTWBCiyZoqUEp12WVkqP4ZM=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=J+q9O2oAB4tZnBz1r839u+Br0IoQ7n0ffISX4Hz4/ANmaCGrNZRSc2lj47gzZ4Hp95wGmET+dq/37cektwqlkp+hWvH6morbZ98lkcgUWxGQsDXa0dbBRsm0gjvl1uIOZIa2a+u06Y35zqw53VKnTJSTh65Yzm4WwEtFCOtGD94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lh4KA5B+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780934594; c=relaxed/simple;
+	bh=3OEYPQ0LuldlA4kK0ltSgEasEnp1AHL6R+Hk8t53mTc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=k3PKHGrhOfvWMXMcvQPGPTUPi/AKu9LA5eLDKz5x4/re6Ix2CUeWmhBb4Df5xRxiP3l2ynjUbKQxHOwyw4sqdryDnxdJ9yKoZBvQXPJ3F+cDbDz5rb2KKDjvmMDfOQuX1eCesmdDuzBGoXtMbtBaNsrOnnNjzp2w7kiuspVXOqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XaBBT3N9; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lh4KA5B+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD62F1F0089A;
-	Mon,  8 Jun 2026 14:59:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780930763;
-	bh=JnAZ1H5PgHjSI2fcCNl7cro1QFov5yMV1RvlkQXKBX4=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To;
-	b=Lh4KA5B+YOKFtiIUsG3/u9KKoH0uT2tpJj+5j6PO6jQoeMqkxqVGLFkEzX4kQn7mv
-	 bmJN/1L1+qlZwJc+MS4xN4OxLCGv280bLg4UkmtArdU0Dzdke+AoAO1uRpINuGxgk0
-	 O2Zv+KyLlRHxwKrMeG4EV/n6JrK9/eUBaKfpoqsAPIsN4NOx1j7RuevL6r03OMjMew
-	 8I1Ujur15CZsA7+RorFRg3fFbr442sA7S6CvliB+yDkz/OUeOu4erJwtIrj5JsnMqs
-	 1opL7zjP97l2KitDssyhRS/F/M+tONTKhbg2Qc6z9RrPcYYE0bE8IEdXdA+J6d72c4
-	 RGyB8Oy+Us9SA==
-Message-ID: <cad74c16-ecb3-41ba-b349-66814abcf5e9@kernel.org>
-Date: Mon, 8 Jun 2026 22:59:18 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XaBBT3N9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1780934592;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EDh9iLkNa5MgatT3zv9wGFe3hH6UdmFTOJoPoHnhCQY=;
+	b=XaBBT3N9bXLl38bREbhtoaxB9a3YmUxRGZDi54qLxr9gxHDU6V456C/GNsIHYsZN3fkg2G
+	TQozF9F66N+mFU7sgQEMXWljPEIyrE9hxk/Vsqf2qFoSJZho93H0c7Ap7sTPP1z9/F8yHt
+	eyhoFcMdY9OHqq0RCIs9cyFLZQZR44Y=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-493-qfFibvlWP7e46SMOpHdpkg-1; Mon,
+ 08 Jun 2026 12:03:05 -0400
+X-MC-Unique: qfFibvlWP7e46SMOpHdpkg-1
+X-Mimecast-MFC-AGG-ID: qfFibvlWP7e46SMOpHdpkg_1780934583
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4A2C71800605;
+	Mon,  8 Jun 2026 16:03:03 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.93])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 85CE11955BE0;
+	Mon,  8 Jun 2026 16:03:01 +0000 (UTC)
+Date: Mon, 8 Jun 2026 12:02:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Gregg Leventhal <gleventhal@janestreet.com>
+Cc: hch@infradead.org, djwong@kernel.org,
+	Eric Hagberg <ehagberg@janestreet.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org
+Subject: Re: [BUG] iomap/io_uring: O_APPEND async buffered write silently
+ re-appends a data chunk (corruption) on XFS, 6.1.y/6.12.y
+Message-ID: <aibns0xP6IVVNWh3@bfoster>
+References: <CAFN_u7FrgM4Dzie2jjkLwWV8P0dvUG_Wwy3Q9B3-2HnnWiDu8w@mail.gmail.com>
+ <aiLxe-9Sub8cI3Py@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Anand Suveer Jain <asj@kernel.org>
-Subject: Re: [PATCH v6 06/11] fstests: verify f_fsid for cloned filesystems
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com, hch@infradead.org
-References: <cover.1779939330.git.asj@kernel.org>
- <e029755044a32de6ec2a0d3391f3ff0089fc3c30.1779939330.git.asj@kernel.org>
- <20260529043955.GG6070@frogsfrogsfrogs>
-Content-Language: en-US
-In-Reply-To: <20260529043955.GG6070@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aiLxe-9Sub8cI3Py@bfoster>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 29/5/26 12:39, Darrick J. Wong wrote:
-> On Thu, May 28, 2026 at 12:05:37PM +0800, Anand Jain wrote:
->> Verify that the cloned filesystem provides an f_fsid that is persistent
->> across mount cycles, yet unique from the original filesystem's f_fsid.
+On Fri, Jun 05, 2026 at 11:55:39AM -0400, Brian Foster wrote:
+...
 > 
-> Might want to add that last part to the test description itself, because
-> otherwise I don't know what 'verify' means.
+> One thing I might try here is to see if just deferring append writes to
+> !NOWAIT context avoids this problem because I wonder how sane that sort
+> of retry situation really is. I'm not quite sure what the expectations
+> are in that sort of case. Is that something that's easy to test? Of
+> course that wouldn't prevent this issue if other applications have this
+> same write pattern.
 > 
-
-
-Looks like there's going to be v7, I have updated the test description..
-
--------
-+# Check that the cloned filesystem provides an f_fsid that is persistent
-+# across mount cycles if the block device maj:min remains unchanged.
--------
-
->> Signed-off-by: Anand Jain <asj@kernel.org>
->> ---
->>  tests/generic/802     | 67 +++++++++++++++++++++++++++++++++++++++++++
->>  tests/generic/802.out |  7 +++++
->>  2 files changed, 74 insertions(+)
->>  create mode 100644 tests/generic/802
->>  create mode 100644 tests/generic/802.out
->>
->> diff --git a/tests/generic/802 b/tests/generic/802
->> new file mode 100644
->> index 000000000000..653e74e11b53
->> --- /dev/null
->> +++ b/tests/generic/802
->> @@ -0,0 +1,67 @@
->> +#! /bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
->> +#
->> +# FS QA Test 802
->> +# Verify f_fsid and s_uuid of cloned filesystems across mount cycle.
->> +
->> +. ./common/preamble
->> +
->> +_begin_fstest auto quick mount clone
->> +
->> +_require_test
->> +_require_block_device $TEST_DEV
->> +_require_loop
->> +
->> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
->> +	"btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
->> +[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
->> +	"btrfs: derive f_fsid from on-disk fsuuid and dev_t"
-> 
-> _fixed_by_fs_commit?
+> Another potential option for a stable only fix might be tweak the iomap
+> code to not update i_size for append (&& nowait?) writes until an
+> iter->pos update is imminent, but I think we'd need to be careful there
+> due to the pagecache_isize_extended() call. I think that's more for
+> non-append cases, but I'd have to take a closer look. Maybe we could
+> also replace that iov_iter revert with a hardcoded advance of the iomap
+> iter and emulate the same behavior as newer kernels. That seems
+> cleanest actually, but again needs some thought and testing...
 > 
 
-Oh right! I completely forgot about the new helper _fixed_by_fs_commit.
-Now fixed. Thanks.
+The above is harder than I initially thought because iomap_iter()
+expects the iter->pos to reflect the original position. This gets into
+some of the dependency patches in the associated rework series.
 
--[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-+_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
-         "btrfs: use on-disk uuid for s_uuid in temp_fsid mounts"
--[ "$FSTYP" = "btrfs" ] && _fixed_by_kernel_commit xxxxxxxxxxxx \
-+_fixed_by_fs_commit btrfs xxxxxxxxxxxx \
-         "btrfs: derive f_fsid from on-disk fsuuid and dev_t"
+Another idea that came to mind is to try and just replace the -EAGAIN
+return sequence from the low level iterator with a flag that triggers
+-EAGAIN from the next iter advance. The idea here is to allow the write
+to return partial completion (i.e. so no iov_iter revert) without having
+to return an error from the lowest level in the stack. I had claude come
+up with a quick patch [1] for reference/experimentation.
 
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	rm -r -f $tmp.*
->> +	umount $mnt1 $mnt2 2>/dev/null
->> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
->> +}
->> +
->> +# Setup base loop device and its clone
->> +devs=()
->> +_loop_image_create_clone devs
->> +mkdir -p $TEST_DIR/$seq
->> +mnt1=$TEST_DIR/$seq/mnt1
->> +mnt2=$TEST_DIR/$seq/mnt2
->> +mkdir -p $mnt1
->> +mkdir -p $mnt2
->> +
->> +# Mount both filesystems simultaneously using mandatory clone mount options
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
->> +						_fail "Failed to mount dev1"
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
->> +						_fail "Failed to mount dev2"
->> +
->> +# Capture baseline filesystem IDs for comparison
->> +fsid_scratch=$(stat -f -c "%i" $mnt1)
->> +fsid_clone=$(stat -f -c "%i" $mnt2)
->> +
->> +echo "**** fsid initially ****"
->> +echo $fsid_scratch | sed -e "s/$fsid_scratch/FSID_SCRATCH/g"
->> +echo $fsid_clone | sed -e "s/$fsid_clone/FSID_CLONE/g"
-> 
-> Why echo only to sed?
-> 
+This is based on v6.12 stable and compile tested only. It needs more
+review and testing in general but might be worth throwing your
+reproducer at if you can..?
 
-I tried to keep both the .out log and the script readable.
-Since a bare echo FSID_SCRATCH and echo FSID_CLONE has no
-clear reference to $fsid_scratch and $fsid_clone, I just
-added a little extra code around them.
+Brian
 
-However, I'm completely fine with removing both viz,
-expected output and its script (for the first mount part).
-As I'm pretty sure there will be a v7 now, ;-)
-I can make those changes.
+[1]
 
-Thanks, Anand
-
->> +
->> +# Verify that the fsids remain stable after a mount cycle, even when the
->> +# mount order is reversed.
->> +echo "**** fsid after mount cycle ****"
->> +_unmount $mnt1
->> +_unmount $mnt2
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
->> +						_fail "Failed to mount dev2"
->> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
->> +						_fail "Failed to mount dev1"
->> +
->> +# Compare post mount-cycle values against the baseline
->> +stat -f -c "%i" $mnt1 | sed -e "s/$fsid_scratch/FSID_SCRATCH/g"
->> +stat -f -c "%i" $mnt2 | sed -e "s/$fsid_clone/FSID_CLONE/g"
->> +
->> +status=0
->> +exit
->> diff --git a/tests/generic/802.out b/tests/generic/802.out
->> new file mode 100644
->> index 000000000000..d1e008f122bb
->> --- /dev/null
->> +++ b/tests/generic/802.out
->> @@ -0,0 +1,7 @@
->> +QA output created by 802
->> +**** fsid initially ****
->> +FSID_SCRATCH
->> +FSID_CLONE
->> +**** fsid after mount cycle ****
->> +FSID_SCRATCH
->> +FSID_CLONE
->> -- 
->> 2.43.0
->>
->>
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 0178292c1864..956700441f6a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1037,10 +1037,9 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		}
+ 	} while (iov_iter_count(i) && length);
+ 
+-	if (status == -EAGAIN) {
+-		iov_iter_revert(i, total_written);
+-		return -EAGAIN;
+-	}
++	if (status == -EAGAIN)
++		iter->iomap.flags |= IOMAP_F_ASYNC_RETRY;
++
+ 	return total_written ? total_written : status;
+ }
+ 
+diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+index 79a0614eaab7..6021b09ddc2f 100644
+--- a/fs/iomap/iter.c
++++ b/fs/iomap/iter.c
+@@ -22,6 +22,7 @@
+ static inline int iomap_iter_advance(struct iomap_iter *iter)
+ {
+ 	bool stale = iter->iomap.flags & IOMAP_F_STALE;
++	bool async_retry = iter->iomap.flags & IOMAP_F_ASYNC_RETRY;
+ 
+ 	/* handle the previous iteration (if any) */
+ 	if (iter->iomap.length) {
+@@ -35,6 +36,8 @@ static inline int iomap_iter_advance(struct iomap_iter *iter)
+ 		iter->len -= iter->processed;
+ 		if (!iter->len)
+ 			return 0;
++		if (async_retry)
++			return -EAGAIN;
+ 	}
+ 
+ 	/* clear the state for the next iteration */
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index d204dcd35063..8d60073a255d 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -74,9 +74,14 @@ struct vm_fault;
+  * IOMAP_F_STALE indicates that the iomap is not valid any longer and the file
+  * range it covers needs to be remapped by the high level before the operation
+  * can proceed.
++ *
++ * IOMAP_F_ASYNC_RETRY indicates that a buffered write made partial progress
++ * but needs to return -EAGAIN to trigger an async retry. The iter has already
++ * been advanced to reflect the partial progress.
+  */
+ #define IOMAP_F_SIZE_CHANGED	(1U << 8)
+ #define IOMAP_F_STALE		(1U << 9)
++#define IOMAP_F_ASYNC_RETRY	(1U << 10)
+ 
+ /*
+  * Flags from 0x1000 up are for file system specific usage:
 
