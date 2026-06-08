@@ -1,49 +1,43 @@
-Received: from forward200d.mail.yandex.net (forward200d.mail.yandex.net [178.154.239.221])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F92328635;
-	Sun,  7 Jun 2026 18:36:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1944071D2
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Jun 2026 05:02:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780857410; cv=none; b=c3gkDtpNYST3hfBJtmwZXvcK8oezmwOegumPwmFHRLIgxkjFYCEa3qn6tvTRFO81236AQnSqr7LMKqgSI9W8bskOHB59FXHjVK0ckR5P0eampyX7qas0Z9d5Jgq2Yylqa4fOUxYG7uU8+d8Ph+u/RONZE+GdqRuiOC6V0xp4/Qc=
+	t=1780894936; cv=none; b=DKBBPGiUEoTHGJMFcoC9chvFpRUiVd0ZT5wHJvBqJPze3QLl/eMCj4oNd015n3gidCXcuH8ubgo99C9svz+ZW2iAkKVJIm/Q3Qpqo7SIISSBkWTySM9mh/2ZMbtBJdf7sLj3OtyoUudZoKI/jAr+PfIFMIqlG6xnIY3afVhg4As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780857410; c=relaxed/simple;
-	bh=lFG+z1nGjpHX1ZGDU1xuzzSo/ovUV9kfB8zIz74tk4A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Mkc9hyR8a4ftrCRcXQQulqf1Xme2bnyG5M9HzZ5rGmjuBm8I194pol5KBF/bNrhar4oeifOF1C1DrZCnTKQqsOLv9wz6VLsnh+5qpO8MMnziAAtPfqWpSmJx4lyyVDQlQBoUztjDqPsPF67qULmrdpJHjCecafFL7A98TDzOC2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=mDIZ5BAK; arc=none smtp.client-ip=178.154.239.221
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rosa.ru
+	s=arc-20240116; t=1780894936; c=relaxed/simple;
+	bh=Hs8/AGHHb6on4pTgsOq1igC2x03jmEPiFsBnI0Myjak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gZSiHaifakcqL17x0pQcZ1P+7DireIFTJz/ItkVtfwT/thKgAfrCzCm91O/YHSviTcOK4kvsb4kre4sv5/aMv6pNLCrnwpuHUNEMAAmBWEyX9PWBKGVYQW4b78q3Vl2eLPpvIKdjL2RU1FWg/bUDab7q0suAIChhZ8R7GMRmGRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NEj97YlA; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="mDIZ5BAK"
-Received: from forward100d.mail.yandex.net (forward100d.mail.yandex.net [IPv6:2a02:6b8:c41:1300:1:45:d181:d100])
-	by forward200d.mail.yandex.net (Yandex) with ESMTPS id 7C0BF81C50;
-	Sun, 07 Jun 2026 21:30:39 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net [IPv6:2a02:6b8:c43:da5:0:640:db94:0])
-	by forward100d.mail.yandex.net (Yandex) with ESMTPS id 00A4DC0067;
-	Sun, 07 Jun 2026 21:30:30 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net (smtp) with ESMTPSA id RUMHNYleJuQ0-gw55lWUg;
-	Sun, 07 Jun 2026 21:30:29 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rosa.ru; s=mail;
-	t=1780857029; bh=hR7YxN+Uvt/i4XyEMU4DPcgVK3ILs/z9yJBPeHAkTVc=;
-	h=Message-Id:Date:Cc:Subject:To:From;
-	b=mDIZ5BAKNeolrU+m0uHudYUlCBrgoj6Hn962UFZZ0HC8Tjx1ec0mikiEh6liiyXxi
-	 Az6d4QZ8FNH1Ci5Qy6wb+lW8VJP9lsnlK9FNVQyFLeF2mMgVXJJNaTQeH9hakgQGcn
-	 TLqCj+ziDM6zOY7gINdrLuoNiKeLOdo4l3hdePmQ=
-Authentication-Results: mail-nwsmtp-smtp-production-main-99.klg.yp-c.yandex.net; dkim=pass header.i=@rosa.ru
-From: Mikhail Lobanov <m.lobanov@rosa.ru>
-To: cem@kernel.org
-Cc: m.lobanov@rosa.ru,
-	djwong@kernel.org,
-	david@fromorbit.com,
-	hch@infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: [PATCH v4 1/2] xfs: skip inode inactivation on a shut down mount
-Date: Sun,  7 Jun 2026 21:30:25 +0300
-Message-Id: <20260607183026.37700-1-m.lobanov@rosa.ru>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NEj97YlA"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=AW6dCsYqT5eHFOV3hF5p8+lQrz7HDGbbbmnn1g8DI3o=; b=NEj97YlADLHtGfTXMc/TwnZMhV
+	JA3RbUW1myoHVhkvgL5nyCiILLyiGnPWHsKpTkLTEo3wXFGgQrjSqEqkZbDjm9iDY5NpDTC+VSFIY
+	BRCXh1GwADHiV4ntUcMJMSPrBCkcLqdHYtKgTxbB3bN3OqRIJmbRN47c1IfYOT37PZqiUpW6TmfQ9
+	ER/meGDHkit72SiJMnsQ6bJNRWqzumkHESq/iu1HhCA3+4pkAqF58L2H6Fw4XUV40fSbqK1Z2HegQ
+	l+4CvWpAjDighbznCyKP4sXSm2xUBPd1wSSzlBcCkQscqlAvYSC8U+UyT17jtEQvhjwuKOlYa0coj
+	KcEeuWkA==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wWS7n-00000002obg-0HJu;
+	Mon, 08 Jun 2026 05:02:11 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Nirjhar Roy <nirjhar.roy.lists@gmail.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: fix dblocks adjustment in growfs v2
+Date: Mon,  8 Jun 2026 07:01:54 +0200
+Message-ID: <20260608050207.1203276-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,83 +45,24 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-XFS already declines to inactivate inodes on a shut down mount, but only
-at queue time: xfs_inode_mark_reclaimable() calls
-xfs_inode_needs_inactive(), which returns false when the mount is shut
-down ("If the log isn't running, push inodes straight to reclaim"), and
-then drops the dquots and marks the inode reclaimable directly.
+Hi all,
 
-An inode that was queued for background inactivation while the mount was
-still live is not covered by that check: the inodegc worker still calls
-xfs_inactive() on it even after the mount has been shut down in the
-meantime.  Inactivation modifies persistent metadata and runs
-transactions that cannot complete on a shut down mount, and it relies on
-subsystems (e.g. quota) that a torn down, or never fully set up, mount
-may not have available.
+the first patch fixes a possible incorrect sb_dblocks when growfs gits
+the maximum agcount or a too small AG.  The second then cleans up the
+surrounding code to be better readable.
 
-Honour the same invariant at gc time.  In xfs_inodegc_inactivate(), skip
-xfs_inactive() when the mount is shut down and just make the inode
-reclaimable.  As the inode then goes straight to reclaim, drop its dquots
-in that case too - exactly as the straight-to-reclaim path in
-xfs_inode_mark_reclaimable() already does - so the dquot references are
-not leaked.  xfs_qm_dqdetach() is a no-op when no dquots are attached.
+Btw, is there any reason to have this code in xfs_ag.c?  It is only used
+by growfs and not at all in userspace, so having it in xfs_fsops.c would
+seem more natural.
 
-On its own this is a consistency fix with the existing queue-time
-behaviour; it is also a prerequisite for shutting the mount down in the
-xfs_mountfs() failure path in the following patch.
+Changes since v1:
+ - clarify what we wrong in the commit log for patch 1
+ - use a 64-bit agno variable in patch 2 to deal with 32-bit overflows
 
-Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-Signed-off-by: Mikhail Lobanov <m.lobanov@rosa.ru>
----
-v4: brace both branches of the if/else.  Without CONFIG_XFS_QUOTA
-    xfs_qm_dqdetach() expands to nothing, leaving the else with an empty
-    body, which trips -Wempty-body on a W=1 build (i386-allnoconfig,
-    reported by the kernel test robot).
-
-v3: split out of the v2 single patch as a prep patch, and additionally
-    drop the attached dquots in the shutdown branch to avoid leaking
-    references when an inode queued while the mount was live is processed
-    after a (normal) shutdown - spotted in review of v2.
-
-v2: https://lore.kernel.org/linux-xfs/aiKA7vVQ_RxT_YOr@infradead.org/T/#t
-v1: https://lore.kernel.org/linux-xfs/ah6BIsvEitNW5Edb@infradead.org/
-
- fs/xfs/xfs_icache.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2040a9292ee6..1f725804be17 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1940,10 +1940,26 @@ static int
- xfs_inodegc_inactivate(
- 	struct xfs_inode	*ip)
- {
--	int			error;
-+	int			error = 0;
-
- 	trace_xfs_inode_inactivating(ip);
--	error = xfs_inactive(ip);
-+
-+	/*
-+	 * If the filesystem has been shut down - for example a mount that
-+	 * failed after background inactivation was enabled - do not
-+	 * inactivate the inode.  Inactivation modifies persistent metadata,
-+	 * its transactions cannot complete on a shut down mount, and the
-+	 * subsystems it relies on (e.g. quota, mp->m_quotainfo) may not be
-+	 * set up.  Drop any attached dquots and make the inode reclaimable,
-+	 * the same way xfs_inode_mark_reclaimable() does when it sends an
-+	 * inode straight to reclaim.
-+	 */
-+	if (!xfs_is_shutdown(ip->i_mount)) {
-+		error = xfs_inactive(ip);
-+	} else {
-+		/* Going straight to reclaim, so drop the dquots. */
-+		xfs_qm_dqdetach(ip);
-+	}
- 	xfs_inodegc_set_reclaimable(ip);
- 	return error;
-
---
-2.43.0
+Diffstat:
+ libxfs/xfs_ag.c |   44 +++++++++++++++++++++-----------------------
+ libxfs/xfs_ag.h |    5 ++---
+ xfs_fsops.c     |    4 +++-
+ 3 files changed, 26 insertions(+), 27 deletions(-)
