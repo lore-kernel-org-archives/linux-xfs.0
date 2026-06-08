@@ -1,74 +1,170 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCBC33D6FD
-	for <linux-xfs@vger.kernel.org>; Mon,  8 Jun 2026 11:53:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB4E4071E3;
+	Mon,  8 Jun 2026 14:39:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780919594; cv=none; b=p/RlgjBVHnov4f8J357Wd0aF9P8Z5drdAKqdV7ydFVCkv6c8Vc5c6WK9v7JfkseUfUFyF9pX39/Yg86wjbUvf+kP0jro6rBc+EtNSnDttd52eU1q5wEDWWDUgjUjgsiKExSUc0b0cIZqRasTzSDO6OHfzTah6F8WyDKCvR6JAoM=
+	t=1780929550; cv=none; b=AOL0BIa5yhrSqceFFZRSwGPyJSAcBEeyywyvQ4EkapmJrkJpr7vgK+UfoDZ3igN4MXGAa8x/jF2/do5IBGD6+dEMct70tJEYWAzlv2wrzz9Z+75uiVVnRePwFdZSL2OMbljIceTXw3h2mAM48Y8tOWrEqCsdmvBIIhh+XJY8Qfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780919594; c=relaxed/simple;
-	bh=p7TE6lVtf22i6nq3kEOP2YnIm7xfh8ZOd453ARwNvjE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OlhmPr8YXCOC5PPf4YfG3hOLb3n2YBbUrDa0PzHIX0wxKOOR0DIeXAQ1Uu6aTdgHvlTsi6EN8pj5Z+ZDKqPOWW/gwtmx18jMRBawl34Fp02shD4k0+ylF9/h+P1VbH0/MQDTK43jFzoGH2FpBAqCcDncCij04CveqcJqmD4fvko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IsBWh3pW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780929550; c=relaxed/simple;
+	bh=IET4gOLg/GiuDH2G5sH6S/R5samsShL+Ri7O9a/SgzU=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=aPZ6U8dxbhZEog8jGc4ETvd6dxSCKOFl59KMFH2/XKClbP+G/S0hbcnCT5XwkDViX3hC2Gj8K6BpYdfRhdmmx5vPkY7SscikBWa22KbbwGSF/suP8eF+csREC36RU2lrD8uYV2AvEqaU2N1pEJwO+M7ONqsXPMBQL91ZDB/xoR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BzxHlb01; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IsBWh3pW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBC021F00893;
-	Mon,  8 Jun 2026 11:53:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BzxHlb01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6183B1F00898;
+	Mon,  8 Jun 2026 14:39:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780919593;
-	bh=TI9x0nz424aSFQMT/WRXb1EjRijY2pzNQjEWzTHOPaE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IsBWh3pWBDmR8zYzS1d/UEGL1qfmeNLLnE975u3tJXWWaFCXfGWybspCfBcpG1jj0
-	 ZJcfGiOIcwhVk3FtQSkHNla/+D2jVyFNMp06H0L22J01oZ0wNg5noshW9hYmLDZdbD
-	 QPOSJgZDmqnzfaQZVXdozAWIl82ar1ifzxQgGG0ho1YLmo1W82TWP31VYHu6MrgpIq
-	 +wKdDF4xdTJNCmB8U9Wmj3P8QMCuEOh49JHXRzFy2Gf97G/ML9TVKsFJJFVe84GCsp
-	 L8qq1gGqI7Ur92EAW1iG0SYTvHEVyQLXeqWxRN3bnxxpZDtii06kTH/I9h6Cj6Q5JW
-	 SGItlRJTJ25oQ==
-Date: Mon, 8 Jun 2026 13:53:10 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: mark struct xfs_imap as __packed
-Message-ID: <aiatHy6BS4LIXsU-@nidhogg.toxiclabs.cc>
-References: <20260601124410.3508980-1-hch@lst.de>
- <20260601124410.3508980-6-hch@lst.de>
+	s=k20260515; t=1780929549;
+	bh=b2IFtj8GrIFcfIZoR8REKv1zaTaDXNqjayO7wEM71no=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To;
+	b=BzxHlb01ARgm2lzi8SbGzOcsX4mGRQ8MAu9rvu3N3vgFzzZ2CKZK1x7BOruElyHt+
+	 FuxTReh67hbF0e0jJgoi+YaBTXy+8WjhQ1bcr1snZd6xZcozL41RMCH+tcci5WBpi4
+	 h/NaOarVTQ6hrihI3l3N54LD+SIG57NMPTfYkKoV9BorGrdQ+qv3RJLizbYwav60Rw
+	 dI8ubnz6eOS4cHH+AyUG9Npemc0M2uLTHFdRUomBcLsU44ER2v4zXV1PiuMUO4CBfu
+	 epEXt1IS6qUmNotNBXIWs7uA7UVBJH8jQwBJrpw58gxfg2bwyyLCV1yEsdlyQd8e6Q
+	 auHB1SIm6tXZg==
+Message-ID: <9c0989d8-202f-42ab-9347-df082c25aa72@kernel.org>
+Date: Mon, 8 Jun 2026 22:39:04 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260601124410.3508980-6-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+From: Anand Suveer Jain <asj@kernel.org>
+Subject: Re: [PATCH v6 01/11] fstests: add _loop_image_create_clone() helper
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com, hch@infradead.org
+References: <cover.1779939330.git.asj@kernel.org>
+ <421c7cdd5aae27b99d04dddf08c5d9df79c2f790.1779939330.git.asj@kernel.org>
+ <20260529042743.GB6070@frogsfrogsfrogs>
+Content-Language: en-US
+In-Reply-To: <20260529042743.GB6070@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jun 01, 2026 at 02:43:51PM +0200, Christoph Hellwig wrote:
-> This returns 2 bytes of padding at the to struct xfs_inode into which
-> this structure is embedded.
+On 29/5/26 12:27, Darrick J. Wong wrote:
+> On Thu, May 28, 2026 at 12:05:32PM +0800, Anand Jain wrote:
+>> Introduce _loop_image_create_clone() and _loop_image_destroy() to mkfs an
+>> image file and clone it to another image file, and attach a loop device to
+>> them. And its destroy part.
+>>
+>> Signed-off-by: Anand Jain <asj@kernel.org>
+>> ---
+>>  common/rc | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 63 insertions(+)
+>>
+>> diff --git a/common/rc b/common/rc
+>> index 79189e7e6e94..d7e3e0bdfb1e 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -1520,6 +1520,69 @@ _scratch_resvblks()
+>>  	esac
+>>  }
+>>  
+>> +# Create a small loop image, run an optional tuning function ($2) on it,
+>> +# clone it, and attach both to loop devices, returned in ($1).
+>> +# Args:
+>> +#   $1: Nameref to return the array of allocated loop devices [base, clone].
+>> +#   $2: Optional callback function to tune the base filesystem before cloning.
+>> +_loop_image_create_clone()
+>> +{
+>> +	local -n _ret=$1
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> That switch   ^^ is very clever.  I always wondered how one did indirect
+> variables in bash.
+> 
+>> +	local pre_clone_tune_func="$2"
+>> +	local img_file=$TEST_DIR/${seq}.img
+>> +	local img_file_clone=$TEST_DIR/${seq}_clone.img
+>> +	local size=$(_small_fs_size_mb 128) # Smallest possible
+>> +	local loop_devs
+>> +
+>> +	# Since we copy the block device image, we keep its size small.
+>> +	_require_fs_space $TEST_DIR $((size * 1024))
+>> +
+>> +	_create_file_sized $((size * 1024 * 1024)) $img_file ||
+>> +				_fail "Failed: Create $img_file $size"
+>> +
+>> +	loop_devs=$(_create_loop_device $img_file)
+>> +	_ret=($loop_devs)
+> 
+> Should this check that a loopdev actually got created?
+> 
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hmm, in the function _create_loop_device(), we are
+calling _fail if create fails, so no need to duplicate, right?
 
-> ---
->  fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>> +	case $FSTYP in
+>> +	xfs)
+>> +		_mkfs_dev "-s size=4096" ${loop_devs[0]}
+>> +		;;
+>> +	btrfs)
+>> +		_mkfs_dev ${loop_devs[0]}
+>> +		;;
+>> +	*)
+>> +		_mkfs_dev ${loop_devs[0]}
+>> +		;;
+>> +	esac
+>> +
+>> +	# Only execute if the function argument is not empty
+>> +	if [ -n "$pre_clone_tune_func" ]; then
+>> +		$pre_clone_tune_func ${loop_devs[0]}
+>> +	fi
+>> +
+>> +	sync ${loop_devs[0]}
+>> +	cp $img_file $img_file_clone
+>> +
+
+
+>> +	loop_devs="$loop_devs $(_create_loop_device $img_file_clone)"
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 57192adc7744..f3624532b023 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -16,7 +16,7 @@ struct xfs_dinode;
->  struct xfs_imap {
->  	xfs_agblock_t	im_agbno;	/* starting agbno of inode cluster */
->  	unsigned short	im_boffset;	/* offset in inode cluster in bytes */
-> -};
-> +} __packed;
->  
->  int	xfs_read_icluster(struct xfs_perag *pag, struct xfs_trans *tp,
->  		xfs_agblock_t agbno, struct xfs_buf **bpp);
-> -- 
-> 2.53.0
+> 	local lodev="$(_create_loop_device ...)"
 > 
+> 	test -z "$lodev" && _fail "second loopdev not created"
+> 	_ret+=("$lodev")
+> 
+> ?
+
+If the second `_create_loop_device()` happens to fail, it will
+already have called `_fail`, so "second loopdev..." won't be
+used at all.
+
+
+Thanks, Anand
+
+
+
+>> +
+>> +	_ret=($loop_devs)
+>> +}
+>> +
+>> +# Teardown loop devices and delete their underlying backing image files.
+>> +# Accepts a list of loop device paths (e.g., /dev/loop0 /dev/loop1).
+>> +_loop_image_destroy()
+>> +{
+>> +	for d in "$@"; do
+>> +		# Retrieve the path of the backing file
+>> +		local f=$(losetup --noheadings --output BACK-FILE $d)
+>> +
+>> +		# Detach the loop device from the backing file
+>> +		_destroy_loop_device "$d"
+>> +
+>> +		# Clean up the backing disk image file
+>> +		[ -n "$f" ] && rm -f "$f"
+>> +	done
+>> +}
+>>  
+>>  # Repair scratch filesystem.  Returns 0 if the FS is good to go (either no
+>>  # errors found or errors were fixed) and nonzero otherwise; also spits out
+>> -- 
+>> 2.43.0
+>>
+>>
+
