@@ -1,92 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6722E3AB29D;
-	Tue,  9 Jun 2026 14:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F2D364942
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jun 2026 16:20:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781017065; cv=none; b=oif+U+aVrkHjyBLJlUBAZXYPWJhYsTyT2+D3F+q7LVT1GqPWLZuaANtxw/CSi9nF1e1j0foqciniCvMuo3VTxDkflJqG+c6mlSuOSLAqSdO9S/Rz3DWM5FTDOkG1vm38b/UdtfeK0rdxeqi/zW4qpaAkBjX9CQnARWFSn+haAiU=
+	t=1781022050; cv=none; b=rF9ZmRDfFEPVYgRGqO9VSfgQNN9b0vbHROr66lpbCbu11HvU8bim4dUjlvCejjO2M6jeIhOiAPNEGRl7UoJBODY8HZQVkEOKDQlrBKIusvn7h5ElGRztXjOQps9XyP76Fu7O1ifbUKntObDQBuBStOUlLRIf1QaUIjM6Q1sZ/+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781017065; c=relaxed/simple;
-	bh=wv/JeWepOy4P9psAtehOgtQUYgHnGS45M0DQiZ9HAVM=;
+	s=arc-20240116; t=1781022050; c=relaxed/simple;
+	bh=kdzjhGbLB/20GSErxZ1mVIgUWD0e739DSeSt3mySW70=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SYHq9LlL+LLggO2jxQXnSwbuCKj4+I0MVUbUbJYP0EgVyMCOSbAR5Qu/Tg1YK01e4h8PfCL0OqX3YyaVwutrZpoxVdiGpLVaZ6qpipJxef8EQt5qx29gx1T9CXgVeQpiKrHP2xERlM32Y6v7WN36vTWaNMIgXoWl6eKxMamdP8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wiy+C/g6; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=NSiDkJ5aK9cW4tWsfIWlx6/xdl12AzTTqKjr8NZd0fvwZ4+b8UWH/47Or1rk7JEchS6J2/ijVVk75wEkL/2dMs6STJp3/S/OmN3GhdKgcP2CFDW6LeW8t7HBkHwISPxGYMGlIHxm16NwCJUHJvBOs8JPOSAT9/qdSgcVVTC2Rbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZaITzZKC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wiy+C/g6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AED171F00893;
-	Tue,  9 Jun 2026 14:57:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781017060;
-	bh=cuqgcuXeS4rHJ0/9tcD5W0K7ogSUdW74eXMt0RRoUio=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Wiy+C/g6NPYueyM9Kr8gGAgHb+aho1Vrm7zaQ3+6z06MReohHggBmP/al/6eKgh/8
-	 vrtYdeUyXEDtcfjt9GsOYPXvxaZayY1m071ZHsOBU3Ar9arHtcj0LzSql/OqIBk0oI
-	 Xt1Hk0evO/AdbFwD7s0gokaj+7KOSKLEjsAYSq81V7jD232QFhvDoDCClTqjfqftXf
-	 Y/d15dFKFPcTAogIXXpyAgikM9SI41SoZLnA90QlTANO3UnbbhIlO4b8HEwRfM8oTI
-	 nzJ0uSroyYtMbLO7RWD3/3bNdlRF2Jh3S8aNOv+p6GZYezxjZNoSrSmZ2e5E12BYge
-	 h0GZsqxVIIPZA==
-Date: Tue, 9 Jun 2026 07:57:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yingjie Gao <gaoyingjie@uniontech.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: fix inode ref leak in attr intent recovery
-Message-ID: <20260609145740.GC6078@frogsfrogsfrogs>
-References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
- <20260609111619.1866748-2-gaoyingjie@uniontech.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZaITzZKC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781022048;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oQTypC+zUo+gB9LA59kpzVIAOOhzbl/lP+y21Fa313o=;
+	b=ZaITzZKCJinn3Fk1Ya+L3C9Ldh2nm+TeFZwnkgOA/zgvrbTT2AhbdLSKwEiEk8cZiDdcEt
+	lyG7tXPblsfmzYCmM0z0UbO13u2uS8/NCDnA42WSCS6ML1X4kaO95JTrQ+uQ3X9u2dvJZB
+	F0H91sEsZlNAgLOkUP1hkEk9thGUFlM=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-679-Qh-hSxSlPOiKJiFO7uVcJA-1; Tue,
+ 09 Jun 2026 12:20:46 -0400
+X-MC-Unique: Qh-hSxSlPOiKJiFO7uVcJA-1
+X-Mimecast-MFC-AGG-ID: Qh-hSxSlPOiKJiFO7uVcJA_1781022043
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0D239180AC70;
+	Tue,  9 Jun 2026 16:20:42 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.93])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3EAA01956053;
+	Tue,  9 Jun 2026 16:20:40 +0000 (UTC)
+Date: Tue, 9 Jun 2026 12:20:38 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Eric Hagberg <ehagberg@janestreet.com>
+Cc: Gregg Leventhal <gleventhal@janestreet.com>, hch@infradead.org,
+	djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org
+Subject: Re: [BUG] iomap/io_uring: O_APPEND async buffered write silently
+ re-appends a data chunk (corruption) on XFS, 6.1.y/6.12.y
+Message-ID: <aig9Vm2a_13bPc5G@bfoster>
+References: <CAFN_u7FrgM4Dzie2jjkLwWV8P0dvUG_Wwy3Q9B3-2HnnWiDu8w@mail.gmail.com>
+ <aiLxe-9Sub8cI3Py@bfoster>
+ <aibns0xP6IVVNWh3@bfoster>
+ <CAAH4uRB+Bh9UEVEW8Sb2yM4YhB-Q5UJ6KJJXari3DDF3n3S+-g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260609111619.1866748-2-gaoyingjie@uniontech.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAAH4uRB+Bh9UEVEW8Sb2yM4YhB-Q5UJ6KJJXari3DDF3n3S+-g@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Jun 09, 2026 at 07:16:18PM +0800, Yingjie Gao wrote:
-> xfs_attri_recover_work() grabs the target inode, attaches it to the
-> reconstructed attr work item, and adds that work item to the defer
-> pending list.
+On Mon, Jun 08, 2026 at 01:17:10PM -0400, Eric Hagberg wrote:
+> On Mon, Jun 8, 2026 at 12:03 PM Brian Foster <bfoster@redhat.com> wrote:
+> > Another idea that came to mind is to try and just replace the -EAGAIN
+> > return sequence from the low level iterator with a flag that triggers
+> > -EAGAIN from the next iter advance. The idea here is to allow the write
+> > to return partial completion (i.e. so no iov_iter revert) without having
+> > to return an error from the lowest level in the stack. I had claude come
+> > up with a quick patch [1] for reference/experimentation.
+> >
+> > This is based on v6.12 stable and compile tested only. It needs more
+> > review and testing in general but might be worth throwing your
+> > reproducer at if you can..?
 > 
-> If xfs_attr_recover_work() fails to allocate the recovery transaction,
-> it returns immediately without dropping the inode reference.  The later
-> cancel path only frees the attr work item state, so the inode reference
-> leaks.
+> With that patch applied, the reproducer runs clean - no errors - and
+> gets roughly the same performance (maybe slightly better) as when run
+> against a 6.18 kernel on the same VM.
 > 
-> Release the inode before returning the transaction allocation failure.
-> 
-> Fixes: e70fb328d527 ("xfs: recreate work items when recovering intent items")
-> Cc: <stable@vger.kernel.org> # v6.8
-> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
-> ---
->  fs/xfs/xfs_attr_item.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index deab14f31b38..c3d96c7a5bca 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -773,8 +773,10 @@ xfs_attr_recover_work(
->  	}
->  	resv = xlog_recover_resv(&resv);
->  	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
-> -	if (error)
-> +	if (error) {
-> +		xfs_irele(ip);
 
-Seems fine but I wonder why you don't just add an out_rele label on the
-line above the existing xfs_irele() call and make this goto there?
+Thanks for testing. I'll look into some more regression testing of this
+patch and try to clean it up and post it for proper review for stable.
 
---D
+Are you using the reproducer program in your original mail to test? If
+so, does it require some concurrent memory pressure to reproduce, and
+are you using anything in particular for that?
 
->  		return error;
-> +	}
->  	args->trans = tp;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -- 
-> 2.20.1
+That test seems small enough that we could potentially include it in
+fstests, though I'm still not so sure about the mem pressure part..
+Since you guys wrote the test, any interest in porting into fstests? If
+not I can look into it.
+
+Brian
+
+> Thanks,
+> -Eric
 > 
-> 
+
