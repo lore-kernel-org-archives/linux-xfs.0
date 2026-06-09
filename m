@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 807F042B750
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jun 2026 14:56:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6722E3AB29D;
+	Tue,  9 Jun 2026 14:57:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781016972; cv=none; b=WUZli2FUP6VFnqQREIKoE3hICKTLbXg4/hLirrc1O6F5Qh5j0i/Oo0M0xLN9+7gX7SBt2LMe6eEHDWXHtXHnTrV6d3laAmjeN92fW+WAPfktpvnTxOlQsONK0/11sCAV0UmjSG+NWWflLzPZ3uGJtgFykHEqDPyIDbzTvDETXe8=
+	t=1781017065; cv=none; b=oif+U+aVrkHjyBLJlUBAZXYPWJhYsTyT2+D3F+q7LVT1GqPWLZuaANtxw/CSi9nF1e1j0foqciniCvMuo3VTxDkflJqG+c6mlSuOSLAqSdO9S/Rz3DWM5FTDOkG1vm38b/UdtfeK0rdxeqi/zW4qpaAkBjX9CQnARWFSn+haAiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781016972; c=relaxed/simple;
-	bh=ZHUJV51gB56M+6+pA3D/xveLvpv9Kn/iW4BRtnQlo2Q=;
+	s=arc-20240116; t=1781017065; c=relaxed/simple;
+	bh=wv/JeWepOy4P9psAtehOgtQUYgHnGS45M0DQiZ9HAVM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iytpe6gHeOe+S67Lkdn6pJsbcQykug7+KPfbgyrB9NK6yTFdRC5o/ywNe4sM6ZMPKrPcfGlU4so2w02/xpxGfhnHugvb04LsP3B9xXhU49OfiHmzJDHVHt3mo6uZu1FRuTTrrfNlMH7xX7WM5mb1Lxrq6vBrrES6Co1021VoguM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XOxff0I6; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SYHq9LlL+LLggO2jxQXnSwbuCKj4+I0MVUbUbJYP0EgVyMCOSbAR5Qu/Tg1YK01e4h8PfCL0OqX3YyaVwutrZpoxVdiGpLVaZ6qpipJxef8EQt5qx29gx1T9CXgVeQpiKrHP2xERlM32Y6v7WN36vTWaNMIgXoWl6eKxMamdP8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wiy+C/g6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XOxff0I6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1FBE21F00893;
-	Tue,  9 Jun 2026 14:56:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wiy+C/g6"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AED171F00893;
+	Tue,  9 Jun 2026 14:57:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781016967;
-	bh=tVFWlYM8W/pF6gEQ9qle2mWVw3uXDlyiPfiEerUQyLU=;
+	s=k20260515; t=1781017060;
+	bh=cuqgcuXeS4rHJ0/9tcD5W0K7ogSUdW74eXMt0RRoUio=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=XOxff0I6PUow0QhfBAfSOAe8jKxS/Y8a9BlPmpiRylCkswcQH1Us00oIEmyFCRezL
-	 KFwu2ovH1wf54ioFLi4MstWj/bI8PxK4dOsUMgGvVu06G4MG2E0BzrZrYQJ1FndAoU
-	 boNzALXrUxNMi86pRUqFGuAflzYk1NfmOVdGvApGRvqhaLrfUyaudtVPnBkJESVzLu
-	 CbjKiW5KRp+aUMWHuchje3zBD+J9has+lIuVQTXnMljfD16yMeVQYQvBpqOfaYhUGl
-	 NRjJpq4MxMdTU55yEeDBwpwznKG/S5lr+cupQuCcxTJ4Gmf4KjnixoQRnZ1vX9UwiR
-	 d2zZgnU8nH71Q==
-Date: Tue, 9 Jun 2026 07:56:06 -0700
+	b=Wiy+C/g6NPYueyM9Kr8gGAgHb+aho1Vrm7zaQ3+6z06MReohHggBmP/al/6eKgh/8
+	 vrtYdeUyXEDtcfjt9GsOYPXvxaZayY1m071ZHsOBU3Ar9arHtcj0LzSql/OqIBk0oI
+	 Xt1Hk0evO/AdbFwD7s0gokaj+7KOSKLEjsAYSq81V7jD232QFhvDoDCClTqjfqftXf
+	 Y/d15dFKFPcTAogIXXpyAgikM9SI41SoZLnA90QlTANO3UnbbhIlO4b8HEwRfM8oTI
+	 nzJ0uSroyYtMbLO7RWD3/3bNdlRF2Jh3S8aNOv+p6GZYezxjZNoSrSmZ2e5E12BYge
+	 h0GZsqxVIIPZA==
+Date: Tue, 9 Jun 2026 07:57:40 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: factor out a xfs_add_free_zone helper
-Message-ID: <20260609145606.GB6078@frogsfrogsfrogs>
-References: <20260609075655.1698743-1-hch@lst.de>
- <20260609075655.1698743-2-hch@lst.de>
+To: Yingjie Gao <gaoyingjie@uniontech.com>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: fix inode ref leak in attr intent recovery
+Message-ID: <20260609145740.GC6078@frogsfrogsfrogs>
+References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
+ <20260609111619.1866748-2-gaoyingjie@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,84 +43,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260609075655.1698743-2-hch@lst.de>
+In-Reply-To: <20260609111619.1866748-2-gaoyingjie@uniontech.com>
 
-On Tue, Jun 09, 2026 at 09:56:41AM +0200, Christoph Hellwig wrote:
-> Add a helper for adding a zone to the free pool in preparation of adding
-> another caller.
+On Tue, Jun 09, 2026 at 07:16:18PM +0800, Yingjie Gao wrote:
+> xfs_attri_recover_work() grabs the target inode, attaches it to the
+> reconstructed attr work item, and adds that work item to the defer
+> pending list.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> If xfs_attr_recover_work() fails to allocate the recovery transaction,
+> it returns immediately without dropping the inode reference.  The later
+> cancel path only frees the attr work item state, so the inode reference
+> leaks.
+> 
+> Release the inode before returning the transaction allocation failure.
+> 
+> Fixes: e70fb328d527 ("xfs: recreate work items when recovering intent items")
+> Cc: <stable@vger.kernel.org> # v6.8
+> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+> ---
+>  fs/xfs/xfs_attr_item.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index deab14f31b38..c3d96c7a5bca 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -773,8 +773,10 @@ xfs_attr_recover_work(
+>  	}
+>  	resv = xlog_recover_resv(&resv);
+>  	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
+> -	if (error)
+> +	if (error) {
+> +		xfs_irele(ip);
 
-I might've called this xfs_zone_mark_free but I don't care passionately
-about the name.
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Seems fine but I wonder why you don't just add an out_rele label on the
+line above the existing xfs_irele() call and make this goto there?
 
 --D
 
-> ---
->  fs/xfs/xfs_zone_alloc.c | 11 +++++++++--
->  fs/xfs/xfs_zone_alloc.h |  1 +
->  fs/xfs/xfs_zone_gc.c    |  4 +---
->  3 files changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index 5e297b75a85f..0a7c4863eefb 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -944,6 +944,14 @@ xfs_zone_rgbno_is_valid(
->  			rtg_rgno(rtg), XFS_RTG_FREE);
->  }
+>  		return error;
+> +	}
+>  	args->trans = tp;
 >  
-> +void
-> +xfs_add_free_zone(
-> +	struct xfs_rtgroup	*rtg)
-> +{
-> +	xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
-> +	atomic_inc(&rtg_mount(rtg)->m_zone_info->zi_nr_free_zones);
-> +}
-> +
->  static void
->  xfs_free_open_zones(
->  	struct xfs_zone_info	*zi)
-> @@ -1082,8 +1090,7 @@ xfs_init_zone(
->  
->  	if (write_pointer == 0) {
->  		/* zone is empty */
-> -		atomic_inc(&zi->zi_nr_free_zones);
-> -		xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
-> +		xfs_add_free_zone(rtg);
->  		iz->available += rtg_blocks(rtg);
->  	} else if (write_pointer < rtg_blocks(rtg)) {
->  		/* zone is open */
-> diff --git a/fs/xfs/xfs_zone_alloc.h b/fs/xfs/xfs_zone_alloc.h
-> index 8b2ef98c81ef..cc16cc328763 100644
-> --- a/fs/xfs/xfs_zone_alloc.h
-> +++ b/fs/xfs/xfs_zone_alloc.h
-> @@ -42,6 +42,7 @@ void xfs_zoned_wake_all(struct xfs_mount *mp);
->  bool xfs_zone_rgbno_is_valid(struct xfs_rtgroup *rtg, xfs_rgnumber_t rgbno);
->  void xfs_mark_rtg_boundary(struct iomap_ioend *ioend);
->  
-> +void xfs_add_free_zone(struct xfs_rtgroup *rtg);
->  uint64_t xfs_zoned_default_resblks(struct xfs_mount *mp,
->  		enum xfs_free_counter ctr);
->  void xfs_zoned_show_stats(struct seq_file *m, struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index f03211e4354a..670e05d2dadd 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -924,9 +924,7 @@ xfs_zone_gc_finish_reset(
->  		goto out;
->  	}
->  
-> -	xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
-> -	atomic_inc(&zi->zi_nr_free_zones);
-> -
-> +	xfs_add_free_zone(rtg);
->  	xfs_zoned_add_available(mp, rtg_blocks(rtg));
->  
->  	wake_up_all(&zi->zi_zone_wait);
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
 > -- 
-> 2.53.0
+> 2.20.1
 > 
 > 
