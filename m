@@ -1,49 +1,52 @@
-Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30EA337A485;
-	Tue,  9 Jun 2026 11:18:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD202346FB0
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Jun 2026 12:30:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781003887; cv=none; b=QVBJUY6wguM0OfIiKYgsv0DYwyfLfq7SaFa+Z+PSMFDvgD8axLcSgohsESRk+EXGzsDOd9Kv4kyExu+D+Md/DrCFkQTmd+/owo5DYP3SqGh0O6vhAadx9GwU5SGdVHqWS3n6KPohQQ+htk3T79ImjAWPxSov+0P6+lrfjDkX5Uw=
+	t=1781008259; cv=none; b=hnnUIzwTgUDcz9iUabD71pkVpSEB8PgUWFPjUIDWCQDSMDZkTyo6S46++PLpPjr79mXNzI4s2zmCPGXYD3o2lyhSpO+coRS0kdOqir83fWrvcJRIote/nS24eIeIHlfysyOcW1pgzHs3P5hAiOgVTwF+jMBHdzK0NSveOqlqJXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781003887; c=relaxed/simple;
-	bh=dbvpVx2cv8np2bqIEEzxPoktTsXzgTT+PzjCcSuLtfc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PmIWUhuLroPIYBelxyQ28b86jmxJa94AjktXrVY7FoIQzlhYpmYKpWRiIxzef0MlPEPcf70Dnjl59zYfTS512ob7QceoZ4m2rUIE6oIZzboMR0cm7+qpAHLL6Rv3pPTZDoPQNRpmlBQGqPOcferXEhA/zpZB+z2LN47iDlTza2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=OVQE4uBM; arc=none smtp.client-ip=18.132.163.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1781008259; c=relaxed/simple;
+	bh=nPG03SmqZwOcjX8/12Y3rN+1O64E3sALVV5t3j5yv6U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f/2VY21BjoBVty/LINqlDIXTXNAb1BvsP9EZxULJtWl8LDr4UeZhmWOH9g7jQVGy6aFzCLa0HIPRsufW15PMC/b6cBQuIU3qtSPvI3l+RR5WIllrbMsRRfc4xaggpnz3fK97imaMHeWyeJe7gGXt/wyyoijbDTXyp/oNTO6HCSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xL6tUdLv; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="OVQE4uBM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1781003861;
-	bh=tuI97Mne40XeKY7vsUSNMcNz1Jv4TIyj+yACwEkVHmQ=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=OVQE4uBMOVXRbxYK/RMHTkahebhDWSK8cBeZAR6BxoqwSAdyY2nkP3c8uTk+8Zu+t
-	 8B1Q1WHIk12VJ2l2LLVk4+UZVRWUZgJ62EwtHcB8y7TjBHqBFdgvzaPZE9XZ1QS47w
-	 OTjThPJRnNbgb9AXW7LizYvfwJEng8MujPvOLEMs=
-X-QQ-mid: zesmtpgz5t1781003856tb994cc8b
-X-QQ-Originating-IP: 3+EfPb8l9Hkhc3/8PW7E9GukyMdXBllV9cNeflCCSmg=
-Received: from localhost.localdomain ( [123.114.60.34])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Tue, 09 Jun 2026 19:17:30 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 13479416758889949156
-EX-QQ-RecipientCnt: 5
-From: Yingjie Gao <gaoyingjie@uniontech.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	djwong@kernel.org,
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xL6tUdLv"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1781008254;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=gSmhLbRZiCMLmvUSNQ09XQZBUjKHV+qKidrVgGQPtjM=;
+	b=xL6tUdLvO6wGf/3x5Mz4uaE7Lf7/4EskVXo/P2dSlSfwoRuhGCMkji/5Y2L2/fQPurQWhF
+	vjGt7pbV7bzOhX82Yj03E58N+R5IWqGcIM0UJL7FGy6s1Jb4gIrp6RYHf7nIsd3i19HxhV
+	mjaJZlEr5mJaXetgmCzeJfrWRziwUbE=
+From: Usama Arif <usama.arif@linux.dev>
+To: brauner@kernel.org,
+	jack@suse.cz,
+	linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Yingjie Gao <gaoyingjie@uniontech.com>
-Subject: [PATCH 2/2] xfs: clean up attr intent recovery error paths
-Date: Tue,  9 Jun 2026 19:16:19 +0800
-Message-Id: <20260609111619.1866748-3-gaoyingjie@uniontech.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
-References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-mm@kvack.org
+Cc: hughd@google.com,
+	boris@bur.io,
+	clm@fb.com,
+	dsterba@suse.com,
+	linux-btrfs@vger.kernel.org,
+	cem@kernel.org,
+	linux-xfs@vger.kernel.org,
+	shakeel.butt@linux.dev,
+	hannes@cmpxchg.org,
+	riel@surriel.com,
+	kernel-team@meta.com,
+	Usama Arif <usama.arif@linux.dev>
+Subject: [PATCH] fs/super: skip non-memcg-aware nr_cached_objects in memcg slab shrink
+Date: Tue,  9 Jun 2026 05:30:47 -0700
+Message-ID: <20260609123047.1948242-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,94 +54,89 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
-X-QQ-XMAILINFO: MZIGq93qkLWz3t81fiuwaxi+bTbI+7WCOdL5fFAW2VWaSQyFjc6DRs9b
-	HWU+3Tt6cjdLq1t855u10jwB/ljHC8BPTLInXRyIJbmXshTCtb0sp+HBCrSkxsg/vNnrnLM
-	khg/yjjU3JDGkoGjCbdw5RXgnBjmayWejUsvY7+P6P+DTsX492F/eMZUHn8L+TTaLqZpiSK
-	/LokRz0dhT5C4EKAYbNMQJVO5Ycto/akzh3Mj4dwQwsuClNn9DkXdqVMGXl8qbg5W2/F9cS
-	bCaaweo1EsgwLd8bv4Msv1NTQ2O1mD52JgXUoQxg/pze7nwsoXuOhtV2CgzXmaEqTOBTi7A
-	IAOt0ReEzyj4sZFz3HYkL+YFDxvAWmszzU+qROEO3DFJSzDwEhT93e84rUKuAHD+J1/pxyr
-	ZndO4i4tTCBMJkf2NQyJTYFK706HHmWNDfKqQhl0A5DCXTggZVf3meAK+5wlPBDFemJ46LD
-	++uKVUJN6s9+xJ/svxXACoMzYwiSpr1oaWOIb/+bHNwBsrCvTcok4F8CzgSDtGuSt0YkpKG
-	zkKg7U8QS7iuSURCgIbpi27aHP4Gv0eAJ+J6M9V4XB2ICGS9VLdLLTxfV6q0XdqQbPj8Eoo
-	z6nuqCSqUVpTkIm0N8Dzzg0eb/6F4n1G1TDVPQGdDzUYWC/isPegWuziKlo7CGGFLRWQ1jb
-	2NIy2ibh1speHJxBOdpLdcTlInmUnTKUUk1pQmMpRu8vPknEgymGjcCiRNZwKi0VVbTWQr6
-	um8cHXqs1DjOqdudtRrn2g1BpDrVJ6k/MidiGjTeC2janEwY8AKW+trrlBPxfqGjhmo+civ
-	i9UjvPYQhgZfS1AkzQwNMkEMq0CU6oX0HdAl41xTZ6mI6ZCcCop1vSCV85TgObb9/Icmt1m
-	PkQZCX94iC6AjdRCfP/pl+mD4AQR4IFqBeJ/YeSQKB2xqk6E8Uyct1lygCG6daHax2OzbeW
-	0u0SfcoOfY++XOD31Zh1PZykdKR1BfLpXSlYTYt5jQrfKoPPM8QVRKDVd3dMVH9JmVLONG3
-	pmpvcjjW/e9NYrjngxFLRfDowS2iX7ULltXdVENpczYwIcvPqW7K3/SsjgU5mCJw+Xs7zIH
-	g==
-X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
-X-QQ-RECHKSPAM: 0
+X-Migadu-Flow: FLOW_OUT
 
-xfs_attr_recover_work() still uses a backward goto from out_cancel to
-out_unlock, and the transaction allocation failure path returns from the
-middle of the function.
+The super_block shrinker is registered with SHRINKER_MEMCG_AWARE because its
+dentry and inode LRUs are memcg-aware (via list_lru). But the optional
+->nr_cached_objects() hooks that the shrinker also drives are not memcg-aware:
+btrfs extent maps and xfs inode reclaim operate on filesystem-global
+state, and shmem's unused-huge shrinker walks a per-superblock shrinklist.
+None of them filter by sc->memcg.
 
-Restructure the cleanup labels into the same linear fallthrough style
-used by the neighboring bmap and exchmaps recovery helpers.  Initialize
-the local error variable to zero as those helpers do as well, which
-makes the shared return path easier to follow.
+The mismatch shows up under memcg-heavy slab reclaim. shrink_slab_memcg()
+calls do_shrink_slab() once per (memcg, NUMA node) pair for every memcg
+whose bit is set in the per-superblock shrinker bitmap, which on a busy
+host means hundreds of calls per reclaim pass. Each scan queues the same
+global shrinker work item that's already kicked from the root path.
 
-No functional change intended.
+Because btrfs/xfs global count is typically non-zero on any in-use filesystem,
+the returned total stays positive even if a memcg's own dentry/inode LRUs
+are empty. shrink_slab_memcg() therefore never clears the SB shrinker bit
+in the memcg bitmap, so subsequent reclaim passes from the same memcg
+re-enter super_cache_count() and pay for the global counter walk again.
 
-Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+Restrict ->nr_cached_objects() to the global shrink path (sc->memcg NULL
+or root). The memcg-aware dentry/inode LRUs keep being counted and
+scanned per memcg as before; only the global fs-specific hooks are skipped.
+The root/global shrink path still drives those hooks; only their
+invocation from non-root memcg slab reclaim is removed.
+
+Signed-off-by: Usama Arif <usama.arif@linux.dev>
 ---
- fs/xfs/xfs_attr_item.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+ fs/super.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index c3d96c7a5bca..f8aa9dd80bb9 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -739,7 +739,7 @@ xfs_attr_recover_work(
- 	struct xfs_trans_res		resv;
- 	struct xfs_attri_log_format	*attrp;
- 	struct xfs_attri_log_nameval	*nv = attrip->attri_nameval;
--	int				error;
-+	int				error = 0;
- 	unsigned int			total = 0;
- 
- 	/*
-@@ -773,10 +773,8 @@ xfs_attr_recover_work(
- 	}
- 	resv = xlog_recover_resv(&resv);
- 	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
--	if (error) {
--		xfs_irele(ip);
--		return error;
--	}
-+	if (error)
-+		goto out_rele;
- 	args->trans = tp;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
-@@ -791,13 +789,20 @@ xfs_attr_recover_work(
- 		goto out_cancel;
- 
- 	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
--out_unlock:
-+	if (error)
-+		goto out_unlock;
-+
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_irele(ip);
--	return error;
-+	return 0;
-+
- out_cancel:
- 	xfs_trans_cancel(tp);
--	goto out_unlock;
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+out_rele:
-+	xfs_irele(ip);
-+	return error;
+diff --git a/fs/super.c b/fs/super.c
+index 378e81efe643..5216c5dbd4c4 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -24,6 +24,7 @@
+ #include <linux/export.h>
+ #include <linux/slab.h>
+ #include <linux/blkdev.h>
++#include <linux/memcontrol.h>
+ #include <linux/mount.h>
+ #include <linux/security.h>
+ #include <linux/writeback.h>		/* for the emergency remount stuff */
+@@ -169,6 +170,19 @@ static void super_wake(struct super_block *sb, unsigned int flag)
+ 	wake_up_var(&sb->s_flags);
  }
  
- /* Re-log an intent item to push the log tail forward. */
++/*
++ * The s_op->nr_cached_objects hooks (used for example by btrfs and xfs)
++ * operate on filesystem-global state and ignore sc->memcg. Driving them
++ * from per-memcg shrink_slab_memcg() invocations only burns CPU walking
++ * per-cpu counters and queueing duplicate work: the actual reclaim happens on
++ * the global path (kswapd or root direct reclaim) regardless. Restrict them
++ * to that path.
++ */
++static inline bool super_fs_objects_eligible(struct shrink_control *sc)
++{
++	return !sc->memcg || mem_cgroup_is_root(sc->memcg);
++}
++
+ /*
+  * One thing we have to be careful of with a per-sb shrinker is that we don't
+  * drop the last active reference to the superblock from within the shrinker.
+@@ -198,7 +212,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+ 	if (!super_trylock_shared(sb))
+ 		return SHRINK_STOP;
+ 
+-	if (sb->s_op->nr_cached_objects)
++	if (sb->s_op->nr_cached_objects && super_fs_objects_eligible(sc))
+ 		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+ 	inodes = list_lru_shrink_count(&sb->s_inode_lru, sc);
+@@ -259,7 +273,8 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+ 		return 0;
+ 	smp_rmb();
+ 
+-	if (sb->s_op && sb->s_op->nr_cached_objects)
++	if (sb->s_op && sb->s_op->nr_cached_objects &&
++	    super_fs_objects_eligible(sc))
+ 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+ 	total_objects += list_lru_shrink_count(&sb->s_dentry_lru, sc);
 -- 
-2.20.1
+2.52.0
 
