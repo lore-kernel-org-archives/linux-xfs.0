@@ -1,46 +1,46 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D8BC3E5576;
-	Tue,  9 Jun 2026 08:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672FC3ACA43;
+	Tue,  9 Jun 2026 11:17:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780992062; cv=none; b=nqiaLaHEPk/uT+x5K2bOQ4ZGyNoZh4x4Dp+ZHIM5ubFSa7Gu9ij67+P/yCiVYl/A8wU522wMPkJeXlXk+pUdfs6V8jl7zUrw1vzbfjiAzE1rPrTCNuXnchjrjdGMG26PxS2Ob8DDv0UejYwQmt4uhCWQcuFnUvnWrUN+X1oYPnk=
+	t=1781003858; cv=none; b=ct7EzP1jYTLWSwxBCN9lZPI+k/Rp8H0CD5JlYHIYJ0b2ebhuEjcdkXCxTtEih+QoAzuCWinJitYbE7YBWW/ZiZIwh68KVZpm9xj+bshn0d/TYVWlTcvRjA75NMd4K+t7AQGzTVTAnB2y3xUfLnXjJaylQfJSMtWNpxgM8XPXLok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780992062; c=relaxed/simple;
-	bh=tBacwFS/BczM+sHs9KSU/gyEhz4Qw2HgZPcQn44qgYk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GnK6Hr009BJ8eNfR0dPWTN2r+4WmNs21BWkemGWubqKPLwe0qEH8bnK2OzrsomHVP958qjRH2YHvfiJXLckNXdXvGg6yJcT1ZzsbDHjwQ51km0NQFUyj6AOpZewBQmWM+yPe0j3uD06bifSoC6lF6/VKqj+tBmOw+uYApUUNAkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eQDsng5R; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1781003858; c=relaxed/simple;
+	bh=ScL84qa76Z292/f0XsEinRsYlVqQkRnRiiKwEY7h16U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rS4zQgVW66KXqAPI2aI1HGMijOxvaNpBvFG3CmCJA0rCASitoNbilx+RP7f1VHcV34zsvuOr7BiSbBTPom1GatgK42MLMu5dZHt7J9TyfefNO6sm0zjmm/G6pTzJKpZ/cpBuRhMh00ZzSJRsokYlAee9koGgAaW+NcDuGd/0250=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=GekOWab0; arc=none smtp.client-ip=54.92.39.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eQDsng5R"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=1029TNOsgX61sWwEzzed/mZCzr7LZfpAn8vlfI5rH6E=; b=eQDsng5RZ8XJnXoqyyH8hdfE78
-	/DRKpFNIiUfsLghCT2v89OHE1FfAZ+IJyTeD2GKRJa7MWPG2NBiBSJtnHw45dd78QXIzhreKVbdeA
-	jAUqUD1EM9953NaDYt2cHitMvMplHzYm5oW5IyyirLMCrJ0YWkTnYevLFzWenFdv63wnI5Menvo5B
-	5cHlIjdwCvSoitDebyETYYWvPtw3DHTlkANSk8UJaCH9fm63fctiSFOAQwU3ZoL4EK/AWTOLba1eG
-	/TF3UkgZf622yee/vaj7Sh1OCipOuGl352D/h53O8yD7GIFpJmV3Yq57JlkEXlxFnY2doU0xTVkQd
-	kxyzho6w==;
-Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wWrOO-000000051Gy-25k3;
-	Tue, 09 Jun 2026 08:01:01 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: test that a grown RT section can be filled
-Date: Tue,  9 Jun 2026 10:00:44 +0200
-Message-ID: <20260609080051.1712103-3-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260609080051.1712103-1-hch@lst.de>
-References: <20260609080051.1712103-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="GekOWab0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781003838;
+	bh=UgtN+oB4FcagJkTFTS4P1GpJ1+B7pOqtyMC1DRlgFl0=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=GekOWab0Ds7U52uZeoLs+SgEMMpMc7V0EBK5jaWyh1p+6X88jToFQckq7yrO+hRE5
+	 0HeXqx4rNdfPwcJkd6QP7Y1S2Yd4PkV6re+WAgp2CqXgP69kuPNFHUOHxtfOCHokeH
+	 6R43zMoGiGdGICCociGCySMYTAuyHyB0dMQQ+u70=
+X-QQ-mid: zesmtpgz5t1781003833tabc8093b
+X-QQ-Originating-IP: abG4cnEg0X5sVg3eFKFW4C2owj9uEdAHchTDyl6Ix1Q=
+Received: from localhost.localdomain ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 09 Jun 2026 19:17:11 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 14170577481076518643
+EX-QQ-RecipientCnt: 5
+From: Yingjie Gao <gaoyingjie@uniontech.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org,
+	djwong@kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yingjie Gao <gaoyingjie@uniontech.com>
+Subject: [PATCH 0/2] xfs: fix inode leak and clean up attr intent recovery
+Date: Tue,  9 Jun 2026 19:16:17 +0800
+Message-Id: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,91 +48,47 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
+X-QQ-XMAILINFO: NvGGTAUhB2iWNMfvTlXi7oCIgH7ypEo9ma5X1Cnm2iluJ9wo7HoXLmYx
+	2WJmPUPX3SbaPUng9ZORFuFx6uLjpC8BjixIUwR+l/V/LgCyq+Ewxo34+qCHJkEd0caDl0x
+	LcMZ1G9MBMQiebJlOWUjf0QiE0orOtbbNz0vywIiT0BRYAnNU0RvDJH6mGcEI86NI2NcilD
+	1thQNtAPtvF+CL0eXUP0UaEIVruZcLA/2fFaOpF9cC0UBdDcaN4SQkQ0UM+w8BDayjL/xyh
+	zvQfn6qux9Zh3RcF+kmlTmUL4cpfT1CohUlMyXQN2kZREifzQCFoe9fRZkG9xMoJIo5c8qH
+	QQoHLV+N4StC1h/fcpfQBH8tMyKILshuttcpB0Q31fx8gs4lClFP70BPZ1sGYc767d2HBhp
+	OraPyyH5r4KnvNTT/ptYpVn8itDgS1MJ8zQLPjniZ99QCHW3KQdsvJbwFdPYmZotL2gsy/x
+	lahccwW0glaXV4tNhmvQHbuY/dsHs019+8mjLoCfbYhLYXk6AbTC0MJj0SHi+ioBzJ2UMJO
+	dsqrSr4MZAGE2Jk93xMTQg964lqq/zw6xNqDd6pbpWAeHGp7IClnbjcjTkGojuc+rwNnH1e
+	R08fduRxw6Nje5PDKz6ztjXosB6xbmx+E8X6sDPOcq6UvJ/B+MIOy4Iz/srmX7fmZQ8uAKz
+	pP6heQ4uxN8Vii5/DcWv0UHLyJpjDlfLPNIGZBk/9jWgtTztx4iMk2BfJirHpU5diTb1a9G
+	6d0t+hrm9IJgLi5iscQ8RjRcInEmICyGNcFx/XA2KB7EgUKzxuA5/Dkvcot7owmBmkaIvhk
+	nxzIO21qokmQrM7+Y/+TlYnlmPIaQ7lP5YCKm3MQqs6t7/TUiwdvlwktge7ZJdZi+dOhw2v
+	IvB19Hbmz7nPEsvqNHavzdVGIkWi1xIsPIvYeP/GK32yCFWagu5fgyrpu+NOqAqbTrlLMUV
+	nwqmAZcLR4S1ayDEqQrEAL+Ab5Ri9dcEs7a74Mh5kfhMbRPgo/rILu0N79S/0iIXlOm8e24
+	Xlx0sUZUN53sSBMqwK
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
-This reproduces issues with zoned growfs.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/4201     | 58 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/4201.out |  3 +++
- 2 files changed, 61 insertions(+)
- create mode 100755 tests/xfs/4201
- create mode 100644 tests/xfs/4201.out
+The first patch fixes a leaked inode reference in
+xfs_attr_recover_work() when transaction allocation fails after the
+recovered attr work item has been attached to the defer pending list.
 
-diff --git a/tests/xfs/4201 b/tests/xfs/4201
-new file mode 100755
-index 000000000000..1f1c8e7eb140
---- /dev/null
-+++ b/tests/xfs/4201
-@@ -0,0 +1,58 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2026 Christoph Hellwig.
-+#
-+# FS QA Test No. 4201
-+#
-+# Test that the entire device capacity can be used after resizing a realtime
-+# device.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick realtime growfs zone
-+
-+. ./common/filter
-+. ./common/zoned
-+
-+_require_scratch
-+_require_external_realtime_device
-+
-+minrtdevsize=$((5 * 1024 * 1024)) #kB
-+rtdevsize=`_get_device_size $SCRATCH_RTDEV`
-+if [ $rtdevsize -lt $minrtdevsize ]; then
-+	_notrun "SCRATCH_RTDEV device too small, $rtdevsize < $minrtdevsize"
-+fi
-+
-+_scratch_mkfs -r size=1g  >> $seqres.full 2>&1
-+rblocks=`_scratch_xfs_get_sb_field rblocks`
-+
-+_scratch_mount
-+_xfs_force_bdev realtime $SCRATCH_MNT
-+free_zones_pre=$(_xfs_get_mountstat $SCRATCH_MNT "free zones:")
-+
-+echo "Growing file system"
-+$XFS_GROWFS_PROG $SCRATCH_MNT -R $((2 * rblocks)) >> $seqres.full 2>&1 || \
-+	_fail "growfs failed"
-+
-+# For zoned file systems, check that the growfs did increase the available free
-+# zones.  This avoids a hang on unfixed kernels when filling later.
-+free_zones_post=$(_xfs_get_mountstat $SCRATCH_MNT "free zones:")
-+if _has_fs_sysfs_attr $SCRATCH_DEV "zoned/max_open_zones"; then
-+	if [ "$free_zones_pre" == "$free_zones_post" ]; then
-+		_fail "growfs did not increase free zones"
-+	fi
-+fi
-+
-+echo "Filling grown file system"
-+writesize_mb=32
-+dd if=/dev/zero of=$SCRATCH_MNT/fill bs=${writesize_mb}M oflag=direct \
-+	>> $seqres.full 2>&1
-+
-+blocksize=$(_get_block_size $SCRATCH_MNT)
-+free_blocks=$(stat -f $SCRATCH_MNT -c '%f')
-+
-+# check that we really mostly filled the file system
-+_within_tolerance "free space after fill" \
-+	$free_blocks $((writesize_mb * 1024 * 1024 / blocksize)) 100%
-+
-+status=0
-+exit
-diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
-new file mode 100644
-index 000000000000..2e7ac4019f3f
---- /dev/null
-+++ b/tests/xfs/4201.out
-@@ -0,0 +1,3 @@
-+QA output created by 4201
-+Growing file system
-+Filling grown file system
+The second patch cleans up the same function's exit paths so they follow
+the same linear cleanup style as the neighboring bmap and exchmaps
+recovery helpers, and initializes the local error variable in the same
+style.
+
+Thanks,
+Yingjie
+
+Yingjie Gao (2):
+  xfs: fix inode ref leak in attr intent recovery
+  xfs: clean up attr intent recovery error paths
+
+ fs/xfs/xfs_attr_item.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
 -- 
-2.53.0
-
+2.20.1
