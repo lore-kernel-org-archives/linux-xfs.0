@@ -1,40 +1,42 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BC663655D5;
-	Wed, 10 Jun 2026 05:12:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2835C2F5A13
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Jun 2026 05:14:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781068366; cv=none; b=HRWa6JPmTBVZ2bOfEuaxsqIG4v0mvk3sLTsNstd+Sa0OaPIRoRI6wqork26t72KUhYASW3g1gemq4kPQRfPxaEIJTtdyYqdzU80gpAirmw+P/BFVB7Yhfpoiv0t1lFLg/T1fb+0dGJDO26LRU2rbg07JEwqiIq8ddwewIVGua+c=
+	t=1781068448; cv=none; b=Ek7dbF7dRZBJC8UqY/40Zna8malbDWq/w7s6GPiuF9radMDxPsmxQW81OefdyrW1X1fYOgmUmI5GXK+iuqVx0e8pGZhmf1kzcf0KmCyP/q6U+EeSO/4ju2npRjWE50PbLwR5cAaKBqYOlVJQfr1JEDsp8FqP9RCQpwRmgyi6H80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781068366; c=relaxed/simple;
-	bh=9deeTKqEK9tdY67dUFu1hzxQZLWT5qO78Hr/sO2Bv4w=;
+	s=arc-20240116; t=1781068448; c=relaxed/simple;
+	bh=Rwf9KgWsIjvqsxpkagabIXGwWmolFFBXC7JQ+xf7VQU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E5afYMjzOfqos5prHckyn+KhR4KCzpW1a1METRKCbz1GC/mGyeZRp6KpivMk8EmFkCPlpPHaMfxouWv1vw5Z35Kgxr2nQUI90ZT425Tto7mTN/DMfjklZMKGLNKCQwstiRbo5J0WgKHh1awnlaFIYZJotIfJGI5wfq9+GiDJcSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Crhd4uam; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=HeCAqZ/I64avM3J4ZOSGy2v/FWRqBcgT6uk+ZMAtaym9nCokStbtKdpRaismKIL1R+oWGdcxfiXAThCLzQibjn4SGjR0HDV+5nFLGFpKzsWe/byX02EXAg6O4EPdKa5ILjzWaN0nu/lg2Zzl+nxb00hM6Mz1Qoc9uB2rUwhzz5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hYV7XjhL; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Crhd4uam"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D87AA1F00893;
-	Wed, 10 Jun 2026 05:12:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781068364;
-	bh=wthpo5jxGmLosKXdG2K1WL/x1t1DqeEbvSzsayuuYZg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Crhd4uamRkIE8/3VysyF9fGWCWkXOIQXtyQZhbt6n2KGPNXnyMXCB5VjKXV0irdaZ
-	 aYGVGhvSq0lu7+tS1YeNgQCLxM07N/06KVBsbMYSBcdlhVh/QoBVyFHbBxA5OCSha0
-	 4bus2Lk62S5fumx+AMKIZpVmtULeYVvxaKldy9Oj9AgLuOCDFiS3a2bYTJDDg8BsyR
-	 /7E7sIEX5dlCKAts9LNhxjKD1cHB66RO+WewSOu/COOV7ogpQd04aAleRoSheN7Pwo
-	 KQMKIGYJkWuvSHNnOSvu2qczHmbHfi08JjoyPD09Sxdom+p2GFVLBUlwavkKZo0Mpq
-	 KL2/TotQC67cw==
-Date: Tue, 9 Jun 2026 22:12:44 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yingjie Gao <gaoyingjie@uniontech.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: clean up attr intent recovery error paths
-Message-ID: <20260610051244.GG6078@frogsfrogsfrogs>
-References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
- <20260610022028.79846-1-gaoyingjie@uniontech.com>
- <20260610022028.79846-3-gaoyingjie@uniontech.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hYV7XjhL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=+jmq/7UF6nOfdCUQ1XCXnJCxzMO9uT6vPqnL96siVYY=; b=hYV7XjhLGN+KoaFqzXf6OPaAdf
+	xVq5R6gbr36uqqp1yNPpwAonpLJfE1NXR4Hgz7g0dhl/LjmqYXkIZGGZdde5N3HMthV0nHNrcIVfB
+	cSvIrR2Qwl21iJrfQ43LM1wtQSMX4aD/Jm1cDzywh/Mv7w+ucbSwg0QEQ5i4ToUnbEcNzosD4Kl/f
+	WN04NU2Koyu8SCkeOvj1d+jeCDMFilJS4xclIuxrL8ikhX/yQIzu0asFMpm4Iu/wEdrTVtI0hxGMP
+	ou0COk3dq/ZLA42QbdzyAnpJeyrMFkBh229SedjLmjZCqCSjc7u2PEWmsAxkNWg06IgkdYRVMJIWT
+	jERpsSTA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wXBGQ-00000006oa5-2c32;
+	Wed, 10 Jun 2026 05:14:06 +0000
+Date: Tue, 9 Jun 2026 22:14:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Carlos Maiolino <cem@kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix pointer arithmetic error on 32-bit systems
+Message-ID: <aijynolhADA0Gcjl@infradead.org>
+References: <20260610045724.GS6095@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,66 +45,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260610022028.79846-3-gaoyingjie@uniontech.com>
+In-Reply-To: <20260610045724.GS6095@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jun 10, 2026 at 10:20:28AM +0800, Yingjie Gao wrote:
-> xfs_attr_recover_work() still uses a backward goto from out_cancel to
-> out_unlock.
+On Tue, Jun 09, 2026 at 09:57:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> The translation of the old XFS_BMBT_KEY_ADDR macro into a static
+> function is not correct on 32-bit systems because the sizeof() argument
+> went from being a xfs_bmbt_key_t (i.e. a struct) to a (struct
+> xfs_bmbt_key *) (i.e. a pointer to the same struct).  On 64-bit systems
+> this turns out ok because they are the same size, but on 32-bit systems
+> this is catastrophic because they are not the same size.  So far there
+> have been no complaints, most likely because the xfs developers urge
+> against running it on 32-bit systems.  But this needs fixing asap.
 
-What's so bad about backwards gotos?
+Eww.  I think we either need working 32-bit CI, or officially mark
+32-bit as deprecated..
 
---D
+The fix looks good:
 
-> Restructure the cleanup labels into the same linear fallthrough style
-> used by the neighboring bmap and exchmaps recovery helpers.  Initialize
-> the local error variable to zero as those helpers do as well, which
-> makes the shared return path easier to follow.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
-> ---
->  fs/xfs/xfs_attr_item.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 841838bc1d0f..f8aa9dd80bb9 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -739,7 +739,7 @@ xfs_attr_recover_work(
->  	struct xfs_trans_res		resv;
->  	struct xfs_attri_log_format	*attrp;
->  	struct xfs_attri_log_nameval	*nv = attrip->attri_nameval;
-> -	int				error;
-> +	int				error = 0;
->  	unsigned int			total = 0;
->  
->  	/*
-> @@ -789,14 +789,20 @@ xfs_attr_recover_work(
->  		goto out_cancel;
->  
->  	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	xfs_irele(ip);
-> +	return 0;
-> +
-> +out_cancel:
-> +	xfs_trans_cancel(tp);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  out_rele:
->  	xfs_irele(ip);
->  	return error;
-> -out_cancel:
-> -	xfs_trans_cancel(tp);
-> -	goto out_unlock;
->  }
->  
->  /* Re-log an intent item to push the log tail forward. */
-> -- 
-> 2.20.1
-> 
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
