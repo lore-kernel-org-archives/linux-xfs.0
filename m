@@ -1,99 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8824A32;
-	Wed, 10 Jun 2026 05:00:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C888B3644CF;
+	Wed, 10 Jun 2026 05:06:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781067633; cv=none; b=rAnBRNxBptUoPZaQ71ZA1l4tB4Yhrlj0018o5D0pvJF9yVb69eYEAouEULJdr9vKSDOg5Nbr2Nzm0Kf7nc9C4b1XR3eOwpvu9DBJc0ANwxtxqLuLoUvTD/OkPDQAIC4GpLIwFlHq8mEGpZkNm+zRjKuo9ZvZNX63yxuoiK8MBKU=
+	t=1781068012; cv=none; b=sW2NCmnbuVO0Nojhq0jS+szE4wluAhpOCsp3aqHudWHpbCHf9rta5b0MEqh2NDPYIOU8YYYl0ZgAYpD3u3Y6mbemnmTenwUXXjPpWNyEJ3PBXGB/FJK4nKNjIqQa6ipxLKb25Pa8ATec7u0KmfI+WnWjwn/Z7RtYl8NTbqomCJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781067633; c=relaxed/simple;
-	bh=KV3Gn+8cf7Pp+/wunO8+5tk/xzn9Na27+sBpnfgr03s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mh6DvzlxewueVMtSwGTIr8yvFiBmQy+j6y9Iihs9kMF4X5OunpGQ/jUJDzCvTf6NEMp4w/S9N/3XG7WQF0cXAFnyR+P+PKUZiFcDK2lD3Ac0mxUGiwFyPiz4soSTpEM0h9Ij6vRisJMWN4xzD1Vn19S22tDoBaR4b3jZsC/eZq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dVDe2QeV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781068012; c=relaxed/simple;
+	bh=c8ovQH4aHy9vKB9NqBpiCjK2G6mBcBJh1WABdh00AZs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IuC4ZxU8bI/tteiHYj2FrGZY1JLTH1uYc328xbHAg67QXw0o6X2jloQbrmLWbBkFa7YySX6S3EfuuMiEdjdoDGxRPR4Hbw67X4Xc0DUdl9DkjG9Z7XLHSj6ZG50N4kSqZ+IBbegfHnKOOB0hGuozFAbB1BVD08dEWgSuF3zh7vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FyHSTQ0f; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dVDe2QeV"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6CA031F00893;
-	Wed, 10 Jun 2026 05:00:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781067632;
-	bh=lUAvqflCpaW5B6Ldgvps0KJCZIBpBLVyYKw02shUYxQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=dVDe2QeVb+X2CsahXRI5DQjnvRyBjzTy4RId4J5RSE2QO2ZCl45Jw6sCN4+SAp1Th
-	 q2eW4E/69XzZlIVfwLADu1Mek5CTDXfkeSpAtm58A6OHdyNnwg9FN1z+ZM4qGCclCO
-	 IGSAc3uRVA/43dC5fDqfdaMXal+KSzy7xhQHeuVg67YCZV6WKLdBqUa7a/Dj4DgrWa
-	 vjPS6WQC/rhrVfU1PKv4Dy0uwSw1n7a2A1CldEHF74JLw4ZwytmPdMV1UNdvb/7jDw
-	 yQyvFF66XX1pfrkRQC6Qyj/DSqGSJBzcGMshPxLmnQS31dqE6Ph1gSVffGvxIIzm6I
-	 VbIa+FUX1AW7w==
-Date: Tue, 9 Jun 2026 22:00:32 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yingjie Gao <gaoyingjie@uniontech.com>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] xfs: fix inode ref leak in attr intent recovery
-Message-ID: <20260610050032.GD6078@frogsfrogsfrogs>
-References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
- <20260610022028.79846-1-gaoyingjie@uniontech.com>
- <20260610022028.79846-2-gaoyingjie@uniontech.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FyHSTQ0f"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=qKT7cBZl24itlaRMk0gx2b8KhJCqdbYRIr2TNHxsnvQ=; b=FyHSTQ0fYcOVvMC+TVT57ueGhn
+	Nv9SveejGcmVxAaLtRDzZ1IJVPj+0a/HrMcCw7+HltgGX4JX+sTOVwulwDHdqkeuuXg2L1KqyCw5H
+	6QRQ9k29vMjOdqLbEvjVL6Nk3sx4izhYh7UR/iUVR2xSEWs0t2V47Cw8SNXCA450Xm/HyHVajHirc
+	KP7Fk9PjbzPJRnhZs6BFGgK8D/cdcCW1FbUxYbGSjak+lqGR9xRdR1TNmhLjkDLjx4KnbwVuabmhT
+	3M48EfTrbYU70uWXOzmgPadXdu6GXBnrEWcNBKc2pYqt1jpC4yZx2u2KojeBe2y3Ylh7/M9BtLdxV
+	7LhTe/pg==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wXB9K-00000006nvU-46gP;
+	Wed, 10 Jun 2026 05:06:47 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: brauner@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: [PATCH] iomap: pass the correct len to fserror_report_io in __iomap_write_begin
+Date: Wed, 10 Jun 2026 07:06:42 +0200
+Message-ID: <20260610050642.1906695-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260610022028.79846-2-gaoyingjie@uniontech.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Jun 10, 2026 at 10:20:27AM +0800, Yingjie Gao wrote:
-> xfs_attri_recover_work() grabs the target inode, attaches it to the
-> reconstructed attr work item, and adds that work item to the defer
-> pending list.
-> 
-> If xfs_attr_recover_work() fails to allocate the recovery transaction,
-> it returns immediately without dropping the inode reference.  The later
-> cancel path only frees the attr work item state, so the inode reference
-> leaks.
-> 
-> Send the failure through the existing cleanup path so the inode
-> reference is dropped before the function returns the error.
-> 
-> Fixes: e70fb328d527 ("xfs: recreate work items when recovering intent items")
-> Cc: <stable@vger.kernel.org> # v6.8
-> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+len is size of the (larger) write request, plen is the range for which
+the read failed here.
 
-Looks good,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Fixes: a9d573ee88af ("iomap: report file I/O errors to the VFS")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d7b648421a70..bcf4559e9aa7 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -850,7 +850,7 @@ static int __iomap_write_begin(const struct iomap_iter *iter,
+ 			if (status < 0)
+ 				fserror_report_io(iter->inode,
+ 						  FSERR_BUFFERED_READ, pos,
+-						  len, status, GFP_NOFS);
++						  plen, status, GFP_NOFS);
+ 			if (status)
+ 				return status;
+ 		}
+-- 
+2.53.0
 
-> ---
->  fs/xfs/xfs_attr_item.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index deab14f31b38..841838bc1d0f 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -774,7 +774,7 @@ xfs_attr_recover_work(
->  	resv = xlog_recover_resv(&resv);
->  	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
->  	if (error)
-> -		return error;
-> +		goto out_rele;
->  	args->trans = tp;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> @@ -791,6 +791,7 @@ xfs_attr_recover_work(
->  	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +out_rele:
->  	xfs_irele(ip);
->  	return error;
->  out_cancel:
-> -- 
-> 2.20.1
-> 
-> 
