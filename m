@@ -1,33 +1,38 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC772E9729
-	for <linux-xfs@vger.kernel.org>; Tue,  9 Jun 2026 23:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF4833E345;
+	Wed, 10 Jun 2026 01:54:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781047237; cv=none; b=Mc+MKXaso+QizqJghVm2cKPMb4POtkrupG2Tpac0jlh1Eth8RvBY62Pi7oEd7kc+qM45ox7HODjtT4WSVlA7FZWhPLuTUtr9oSa9fFpCRw9Of3sxTgB7QoMx8pBRTvZG9r8FH+LaJrkQJjw9/dhXy4IMgRvYXV6ahkxvE7iJUdo=
+	t=1781056500; cv=none; b=hSXhHpoN/QCdEx6yGxSx+Y1BvJu/iJNVUinffvF5na5KYErUYlhMjMdWtvUuckf9AylAT4glyBQY9v/TXC5/nRI/sCGQjerUGDIgfbpE/M+gpifvARm8sQInC/NDvZqidCj/KncuRKpXNp7ra4lgN3O56a+81/At/pUSUriTCAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781047237; c=relaxed/simple;
-	bh=7FuqQ1rY93QTg25qHOTTIg53mKZwnZY2Mxigz7ZLO/8=;
+	s=arc-20240116; t=1781056500; c=relaxed/simple;
+	bh=4LvQd217BGdpi81N8qdbm0p0HFJ6Q4x5aGe6K8l5ihg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tumWuNKzawNbAWlzAjxEI5vEKagdXqy59Ie7tUoRD/fng0FMD8cjY8Y1LD2pPXoGmdkDNlhKjhnYJgSJl4zdehrYIf1b9AfjJWqaC9L+dqemEV1u0+L3obW9tz4U994QuhsJF6Wd9zVVkSRVfu93QNBYeM1qwrVhQTar1C5vpNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lw5i2c82; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=I1ESUP94sRdLjIJ7fq5xkfKUCP7IZcbK1VApOlGPDlW9gEZtYLF82oPz3sTeUYYh2SuncNqM8b1rr9yG4AH4zsjG3BCxFnADSMTYjy4Lhhd9ZmYSE+jssglnhJQoSHqLrfVj8/AR2UZmydHY287x1wjlbRyfYVASNtdHnPPoPEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=kiDnRcg0; arc=none smtp.client-ip=18.132.163.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lw5i2c82"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87C5B1F00893;
-	Tue,  9 Jun 2026 23:20:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781047235;
-	bh=MV1JqTDc0fnIEPqlADUMdcjg7vfYN/c5VRJ89k6RpvU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=lw5i2c82/GyLl7cHVR2PSyoaZktk/mTdre+P6nvuoBkFC3kPtDeIR5vIH9kTpaAKP
-	 BLbJ0SpVnto16ctZNS+oa/lBMaaPCwJMIYSTyQFpg0JrpZXkHmOJeGo/GXwtrfVySW
-	 vVKjSwjXsio5Nj/N5Cfv96VsKpfVUPlom8SekmqMz8yZYvKcRskpT5QqOcM4pZgBTD
-	 r1NJ6aGfbjlcwnp5IZCl9jST1YvnAtbevyDsmU1+HJJa9y2Zo3Cidr7aYB1l3M7OvQ
-	 EtDivgtrDxLjr1PifjnHcMfjvTLdKYxmYbLtLTdlKT1Nk4LILYOaHxSAxFRzDQvukT
-	 fqWlL+7i1Wu8A==
-Message-ID: <46e85fe2-ab35-4630-a062-7e4ac91e2e9a@kernel.org>
-Date: Wed, 10 Jun 2026 07:20:25 +0800
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="kiDnRcg0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781056472;
+	bh=F3DirVOKyUwhn5Lv6YUro5fh6nGzSl+Nj5X7Vj/68Ww=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From;
+	b=kiDnRcg0VtF3JJDp1ww91mkWeLcL+x2UJG3vr79RrfgA/nYyWOHHuv6A1HYD/lIzU
+	 9afngTxgGCxKtLSRajcqd1oAKJFj5UhOJcmlnj8FhboelrPJJrpojxFlKawnd4yFYl
+	 N/QmKCuguO4t06Rsw/GKXbHRg5u1ZYxxHYX6MMPI=
+X-QQ-mid: zesmtpsz4t1781056465te676f59d
+X-QQ-Originating-IP: +0Ijq6I+EaG/bkoeO+MlKyewpJjLqb7P3KEQ3efNftg=
+Received: from [10.10.73.104] ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 10 Jun 2026 09:54:23 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 11930092679216207127
+Message-ID: <41ABF3A1A793ED1B+7c04334b-ed81-42bc-8215-c2714e852015@uniontech.com>
+Date: Wed, 10 Jun 2026 09:54:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,72 +40,91 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] xfs: only log freed extents for the current RTG in
- zoned growfs
-To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
-Cc: Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-References: <20260609075655.1698743-1-hch@lst.de>
- <20260609075655.1698743-4-hch@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260609075655.1698743-4-hch@lst.de>
+Subject: Re: [PATCH 1/2] xfs: fix inode ref leak in attr intent recovery
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, cem@kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
+ <20260609111619.1866748-2-gaoyingjie@uniontech.com>
+ <20260609145740.GC6078@frogsfrogsfrogs>
+From: Yingjie Gao <gaoyingjie@uniontech.com>
+Reply-To: 20260609145740.GC6078@frogsfrogsfrogs
+In-Reply-To: <20260609145740.GC6078@frogsfrogsfrogs>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
+X-QQ-XMAILINFO: MQPu5pFEJFN4aubmtHOK3c5n7bU62tcIKJ2+4xACHjIdODM/gp4Lzn95
+	sYeuaD/NQtorvGsH79myZ4ip6IBqxxsJqVSA/92E8FCjAt9932xD7Lvkin8lNOvrF/MbNWE
+	Jf1TnH/1Y+rbi/p7csII54JLwH6RiZm82YLQ08ZpnOVLqxOv4ip6vZqwHOkER5TBYCzmJyd
+	I6hYh383crgJo2rRA4wP9Mei0RKb/LiUu+vVHb6f2pxivlDPQuoz88nRw6nTl/nLw3ZKgVE
+	2zRaxhZ3rBjJMEwus73RiCqNSiE0LIHSOmiw1S3Ma/I1F4WXL8T8sal1VCmCy2RzmbCEJcJ
+	rUV6/irqbvI3BeNBIeszWmCt1jDe7n8H21oHNZwW2wQSdPBHqHuY48fwOHpy/duc1HWo6Qk
+	lfr6Wju4oGtXOtBD8itd4eod8wb/lQowMJ05CYaygxCt0w1TM7RyUi71tsoqlV6NL+5n3sr
+	Kbftsa8IGSCqOu8st6fsITw9EsLB9VM0hHNaJshoWvtaXqH0ehVEU0k3HoBTDFcGK36xyEs
+	xP+1NBg8I2kDNi3YS06zIiYeniq2k/bgayFrYpanqtkOgcaaQRYQPMrNVCAP+arJ/nkLiGU
+	/KUGZEtI+VUfUZch4MUHlrZ/AmfeSdWX9l8XFamJrpNZBxWpptzTDb4GRjbn2GK2B12z0SZ
+	1njqOAt0LSDLplURMg/16XB/EU8AOlqZxh71tSXZ25YYTvGGLWDogFpZaj0BZnnjXLZfFAp
+	GdzjFt1NFOms6jJZALQ32e8Dfzq1z1DzAe6IF9ilTmVX+HJZbYFVNS7eIt2rdheuPqh7Qm+
+	y/IG9QjlfhF4pXbYa7iJj7g8OXmqqjcw8jtZ4B6TZ/oV6wMAGlv2WTJICPw5pf7Jd1QTlsN
+	PgTbTnwySHEVo8eKBTTTT8Tp3EVVs3nIPCWlQjaawSYpWGk7ROxVWO6WSRigklRFvayRQIk
+	5C4Q7GoZxQMaio0ytHCgX3IKKG2Rm0PrNKQh4Ix9KKF4KzGfUjc3QE2GG99CM8nHuFvWD3t
+	YmPfNqP8TiDuXv5X3sFriqSewbPs5CNiuT8vKnWMiTxRRjN+Nq
+X-QQ-XMRINFO: MSVp+SPm3vtSihJ23AUW6lZVBoTKQpsVvQ==
+X-QQ-RECHKSPAM: 0
 
-On 2026/06/09 15:56, Christoph Hellwig wrote:
-> Otherwise a power fail or crash during growfs could lead to an
-> elevated sb_rblocks counter.
+
+
+在 2026/6/9 22:57, Darrick J. Wong 写道:
+> On Tue, Jun 09, 2026 at 07:16:18PM +0800, Yingjie Gao wrote:
+>> xfs_attri_recover_work() grabs the target inode, attaches it to the
+>> reconstructed attr work item, and adds that work item to the defer
+>> pending list.
+>>
+>> If xfs_attr_recover_work() fails to allocate the recovery transaction,
+>> it returns immediately without dropping the inode reference.  The later
+>> cancel path only frees the attr work item state, so the inode reference
+>> leaks.
+>>
+>> Release the inode before returning the transaction allocation failure.
+>>
+>> Fixes: e70fb328d527 ("xfs: recreate work items when recovering intent items")
+>> Cc: <stable@vger.kernel.org> # v6.8
+>> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+>> ---
+>>  fs/xfs/xfs_attr_item.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+>> index deab14f31b38..c3d96c7a5bca 100644
+>> --- a/fs/xfs/xfs_attr_item.c
+>> +++ b/fs/xfs/xfs_attr_item.c
+>> @@ -773,8 +773,10 @@ xfs_attr_recover_work(
+>>  	}
+>>  	resv = xlog_recover_resv(&resv);
+>>  	error = xfs_trans_alloc(mp, &resv, total, 0, XFS_TRANS_RESERVE, &tp);
+>> -	if (error)
+>> +	if (error) {
+>> +		xfs_irele(ip);
 > 
-> Note that the step function is much simpler compared to the classic RT
-> allocator, as zoned RT sections must be allocated to zone and thus
-
-s/zone/zones
-
-> realtime group boundaries, and also because the rtextsize is fixed to a
-> single FSB.
+> Seems fine but I wonder why you don't just add an out_rele label on the
+> line above the existing xfs_irele() call and make this goto there?
 > 
-> Fixes: 01b71e64bb87 ("xfs: support growfs on zoned file systems")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_rtalloc.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> --D
 > 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index fd07c1a18615..728f444fbc30 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -890,8 +890,7 @@ xfs_growfs_rt_sb_fields(
->  
->  static int
->  xfs_growfs_rt_zoned(
-> -	struct xfs_rtgroup	*rtg,
-> -	xfs_rfsblock_t		nrblocks)
-> +	struct xfs_rtgroup	*rtg)
->  {
->  	struct xfs_mount	*mp = rtg_mount(rtg);
->  	struct xfs_mount	*nmp;
-> @@ -903,7 +902,8 @@ xfs_growfs_rt_zoned(
->  	 * Calculate new sb and mount fields for this round.  Also ensure the
->  	 * rtg_extents value is uptodate as the rtbitmap code relies on it.
->  	 */
-> -	nmp = xfs_growfs_rt_alloc_fake_mount(mp, nrblocks,
-> +	nmp = xfs_growfs_rt_alloc_fake_mount(mp,
-> +			mp->m_sb.sb_rgextents * (rtg_rgno(rtg) + 1),
->  			mp->m_sb.sb_rextsize);
->  	if (!nmp)
->  		return -ENOMEM;
-> @@ -1219,7 +1219,7 @@ xfs_growfs_rtg(
->  	}
->  
->  	if (xfs_has_zoned(mp)) {
-> -		error = xfs_growfs_rt_zoned(rtg, nrblocks);
-> +		error = xfs_growfs_rt_zoned(rtg);
->  		goto out_rele;
->  	}
->  
-
+Good point, I'll update the patch and send a v2.
+Thanks for the review.
 
 -- 
-Damien Le Moal
-Western Digital Research
+Yingjie
+>>  		return error;
+>> +	}
+>>  	args->trans = tp;
+>>  
+>>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>> -- 
+>> 2.20.1
+>>
+>>
+> 
+
