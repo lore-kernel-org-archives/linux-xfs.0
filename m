@@ -1,44 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6501732B112
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Jun 2026 05:07:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 549EF349CCF;
+	Wed, 10 Jun 2026 05:07:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781068059; cv=none; b=cKfPSHJwyPJAPMu1y5QpVpLDgJfl10G53exUTokY2lGdPUR5ddthXxddw7/2uPQjpwfA8PbiihCZ353UhmdgUqSalAc8pC20NsihOn9ZDDCEqp/iY3UBo8zhm+8VGDcAYj570WodNq+kcA35Y7eM5+SJE4/NUfvS5eCJXCFjon8=
+	t=1781068062; cv=none; b=nHEBzZ0Hz3zN5SeixvzI0nO2oBruasc1p5keAA1bZGSIWLg356AJwWYGWkI0aTayDv0lpGQbrcKV8tTTEiw2itWP5RYXOTYQqEiWUb8BSotlhHdDY5kSGYJYljzOAFiaFGheWcFjXl+fyaRKFFbbt816i9jqTHM0R/wQyaCIsuA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781068059; c=relaxed/simple;
-	bh=Xw2ge3XcHYGqQP9PcN+eNx4PJKlBGlTiJJtQYUkiltw=;
+	s=arc-20240116; t=1781068062; c=relaxed/simple;
+	bh=cNPVQn2OgGoFhfAuY++UbAD/Bdyrtuunx8YG+TNh9gA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=geAsLEANshmiV/0dyB5uoroRsNTae6X5N5/J+BEdwrMZXTG+VHBmD6MEHFURFY6JKn5Vi7+GM5yDFKXDGd67F3lBV8Bn//3zonVvm9ajCWAQiWWN+9ELGwPFQ/vQk5Dzsp8/rklcO403/2rF0ncpikztexQ/Bs1z00T2Z2f59U0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rLj2yxUY; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=N6/N/YVKNdnE4iDNog7DeSj8JWMstqOqH3DwfrRp85AYCmz8ahvOetB2LCef0ZSz+l63BjwHf3NiHoct67vCquXIFboSUv8FbhNPZDEfWIZYRUGlCZnGZeZ5KMwouLW15uSkxSdNu/aPQDxO2MS6whVUQ1ztQakmk0fAW5FLUWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=q2IzERXs; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rLj2yxUY"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q2IzERXs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=SW3k027OpyooNze9fn9tlRCFopQxHJsGlJMLstmcVeE=; b=rLj2yxUYXgQHxIwHdEx3JNl3tp
-	t7KSMESWUadygHBGWNF974znarlK9LwJsHqp4HtAVSZqeYd0wazWCUNBdDnjnPsFi5Mkd4XbVGCvQ
-	/9H/aTaA5KWCW+uYNuQ2AhlGuI1dqwox2owxElYjuyi90aqauOoPHUqCCSqtoibhtkAT+DDofQxIS
-	5OGHzYv9opHHa8tePKWxUm5s7kc1/RBazAMVfAMQy1DKbIvrZNFzgpZFa1ZD7DsY2CgN3OxXgwIgP
-	NAKYs+5ddcT9rVrkNIo0lSBuBz3SzN2fr8vdoIA8iAbJLZDDdj2ijOcOHozkOxQMzOa/zRji3iO2Y
-	yqI/wjcA==;
+	bh=QsD1nrQGxwECGADxFT4VtFhWnUq6d9NJMsZUI0rJPZI=; b=q2IzERXspgStpY/UAmRw8bBJgS
+	QF2yQoITzphGE+T8DfBRZgNrdkuYSVzQHp1zIsOvfx9D41tuffjxH6bIwuZdbtrWk4tx4yytb7zu+
+	nF07Ll2IeYeAY/jmeL1JE4ZwefEbItnWL2epVl+C49eoiSr2uOsIJWGY9F6+BMnCUxHF/dIeTybX+
+	9kR4zf0nLVHtoeHuSKAHgNjbZ2N0s42mcK7tdYiFCrZStedl4XKNZg6FjnwRKtTmCbxI0Af2YJ4KK
+	DuRhstUnWuuiIPaOHA5MNWVLZSvKdAh2qffcmTQtzBO7nniQfmfjCjHwZ2A0i6mxXZFyC9Gz5gNLs
+	jUEG7Otg==;
 Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wXBA9-00000006o7d-1x0P;
-	Wed, 10 Jun 2026 05:07:37 +0000
+	id 1wXBAC-00000006o7o-3G2l;
+	Wed, 10 Jun 2026 05:07:41 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	linux-xfs@vger.kernel.org,
+	stable@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 1/3] xfs: factor out a xfs_zone_mark_free helper
-Date: Wed, 10 Jun 2026 07:07:19 +0200
-Message-ID: <20260610050731.1906760-2-hch@lst.de>
+Subject: [PATCH 2/3] xfs: add newly added RTGs to the free pool in growfs
+Date: Wed, 10 Jun 2026 07:07:20 +0200
+Message-ID: <20260610050731.1906760-3-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260610050731.1906760-1-hch@lst.de>
 References: <20260610050731.1906760-1-hch@lst.de>
@@ -51,74 +52,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a helper for adding a zone to the free pool in preparation of adding
-another caller.
+When growing a zoned RT section, the newly added RTGs also need to be
+tagged as free in the radix tree and add to the nr_free_zones counters.
+Call xfs_add_free_zone to do that, otherwise using up the newly added
+space will wait for free zones forever.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 01b71e64bb87 ("xfs: support growfs on zoned file systems")
+Cc: <stable@vger.kernel.org> # v6.15
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_zone_alloc.c | 11 +++++++++--
- fs/xfs/xfs_zone_alloc.h |  1 +
- fs/xfs/xfs_zone_gc.c    |  4 +---
- 3 files changed, 11 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_rtalloc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 5e297b75a85f..08d8b34f467e 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -944,6 +944,14 @@ xfs_zone_rgbno_is_valid(
- 			rtg_rgno(rtg), XFS_RTG_FREE);
- }
- 
-+void
-+xfs_zone_mark_free(
-+	struct xfs_rtgroup	*rtg)
-+{
-+	xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
-+	atomic_inc(&rtg_mount(rtg)->m_zone_info->zi_nr_free_zones);
-+}
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 153f3c378f9f..debbcefdf07f 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -933,6 +933,14 @@ xfs_growfs_rt_zoned(
+ 	mp->m_features |= XFS_FEAT_REALTIME;
+ 	xfs_rtrmapbt_compute_maxlevels(mp);
+ 	xfs_rtrefcountbt_compute_maxlevels(mp);
 +
- static void
- xfs_free_open_zones(
- 	struct xfs_zone_info	*zi)
-@@ -1082,8 +1090,7 @@ xfs_init_zone(
- 
- 	if (write_pointer == 0) {
- 		/* zone is empty */
--		atomic_inc(&zi->zi_nr_free_zones);
--		xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
-+		xfs_zone_mark_free(rtg);
- 		iz->available += rtg_blocks(rtg);
- 	} else if (write_pointer < rtg_blocks(rtg)) {
- 		/* zone is open */
-diff --git a/fs/xfs/xfs_zone_alloc.h b/fs/xfs/xfs_zone_alloc.h
-index 8b2ef98c81ef..abf8358bb266 100644
---- a/fs/xfs/xfs_zone_alloc.h
-+++ b/fs/xfs/xfs_zone_alloc.h
-@@ -42,6 +42,7 @@ void xfs_zoned_wake_all(struct xfs_mount *mp);
- bool xfs_zone_rgbno_is_valid(struct xfs_rtgroup *rtg, xfs_rgnumber_t rgbno);
- void xfs_mark_rtg_boundary(struct iomap_ioend *ioend);
- 
-+void xfs_zone_mark_free(struct xfs_rtgroup *rtg);
- uint64_t xfs_zoned_default_resblks(struct xfs_mount *mp,
- 		enum xfs_free_counter ctr);
- void xfs_zoned_show_stats(struct seq_file *m, struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-index f03211e4354a..f76a09130852 100644
---- a/fs/xfs/xfs_zone_gc.c
-+++ b/fs/xfs/xfs_zone_gc.c
-@@ -924,9 +924,7 @@ xfs_zone_gc_finish_reset(
- 		goto out;
- 	}
- 
--	xfs_group_set_mark(rtg_group(rtg), XFS_RTG_FREE);
--	atomic_inc(&zi->zi_nr_free_zones);
--
++	/*
++	 * Finally add the newly added zone to the freelist and add the space
++	 * to the available counter.  The order is important here: only add
++	 * the available space after the zones, as available space guarantees
++	 * that zones to back it are available.
++	 */
 +	xfs_zone_mark_free(rtg);
- 	xfs_zoned_add_available(mp, rtg_blocks(rtg));
- 
- 	wake_up_all(&zi->zi_zone_wait);
+ 	xfs_zoned_add_available(mp, freed_rtx);
+ out_free:
+ 	kfree(nmp);
 -- 
 2.53.0
 
