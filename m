@@ -1,85 +1,171 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E03C52DCBFA
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Jun 2026 15:45:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2BE034AB03
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Jun 2026 17:34:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781106324; cv=none; b=Ei0uMq54tNIuWyNT/ORTcTV5f4JuOfTrOUlTLr4GTcbZ66DEqrfrcqeufvEmFE7ZHMHvC0AN1J73qiJNnr/bvfagXqkioMobsGK2SZDlZ0HGL2H4+cmYWZkWBFL4FcdFJtyuvYv5su/THZ93JFwXQp6Q8PcVT0OJSOCEVzq49Js=
+	t=1781112862; cv=none; b=ccHZWx8EC9+JbAiRdRoPYGl81+dTI/4dgREqxauPsobCvcrQALONQp4gsvgyy157vEPevkfT2l8tKCwidOs0Hv+FC4bxQOtMcuVMgjcp1+hM4v3UZQ5CDBpXfhm9LsKwr497Yi3CCssUSmG3q6y0HIWw2x5Gm/yxEl7R40djWgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781106324; c=relaxed/simple;
-	bh=TggmjViF/l8halHk5NgQbyyKK6rev0jd6+0H3dpU4KU=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=uyjmtCLNRB8QonNFq0fptlYk5V/bSWlxeHhsUC8VhQrfABlLI+ejV1WuZlRjxX7RSToNU7ONnGFktHnjhY11rJZR2sjxI9vUUPWs6Orr5r6K6xdGMXwgSwdWrw2IvKFlLh02nOiJhHN4guPSXkUmOGwii7eIVJewhkOVV9c/bDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eYhaGQu5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781112862; c=relaxed/simple;
+	bh=hvqgbsrBRXUaMJphi0xOHdhb/O3o5jtTUlIvVUaKvR4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=evEUhCAOh8wP9DTFdNm3bBf5OHJM+UYhrtE+ThceMmIw9divesE6tgLGfW9ScoIn4M2b61OBe+LDqXJ9BY5NvDbs59eYEZkrqvF7SpdRFDoGdxxb6LNPoAm14So/O/L2KU/jSr/nx0VJYuAAm0GsvhIzHJek/fYmz5tOOKYzK5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NkoHFKw+; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eYhaGQu5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D21C01F00893
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Jun 2026 15:45:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781106323;
-	bh=nqOrn4hI7f9FDEMCo+5JgcVHL+lh28kUvwn5swVUCQQ=;
-	h=Date:From:To:Subject;
-	b=eYhaGQu5Xj8KRF2sgSXrgDtjJ9BAdzGr7IT8uy0inmh3T23Qdm8+cU947SPLT0hp2
-	 pbVJCrsGZWf2Glh0V8kXQktVAzuo8Sqe88EjJNErNs5EjsFIliaXKBzvELzIaYD93I
-	 KUHRIAOOrkzOKS/hKcgmeessD5WTFnW2B6mecGYhLuRpCqhrKqO7EaUu/R50f8Px1Q
-	 urpeyZhqhcJNKnMcakBP2yQtJvMY8DwM8ia1uSzj1fcvfPn6gA0VmqRSLRb/7x83d+
-	 KWBoIRHFzQEoHxKFSC5EHUIOt9pKl8nFeBTVeMyJeC8cAj6rWWRtdaqFfE/D/Np7X5
-	 ZjNxNVc8PbCzw==
-Date: Wed, 10 Jun 2026 17:45:19 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to dfac6ba84819
-Message-ID: <aimGf3Kmrfe9MluF@nidhogg.toxiclabs.cc>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NkoHFKw+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781112859;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=u5lOfnqz6cdvQq+455ibVbtGRpcoEQAcIdcUZsugK+8=;
+	b=NkoHFKw+9u+7pSMi36EV7noXp9tZ3oEA5BJOqdYKqU2/zELK/ZIhAWY/haWj9fryJM43Ao
+	tdVXGhvXVI36JdeyEibhRa4vTZABXABp7EZnA20HCVzxkGpTKinyJTEsbx06YE1PZd3hmR
+	3mGr67YMuFj3m/rxlJLdATr8LrLhdYY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-49-bvmQV3fVPWK-8eCh33Dk7w-1; Wed,
+ 10 Jun 2026 13:34:13 -0400
+X-MC-Unique: bvmQV3fVPWK-8eCh33Dk7w-1
+X-Mimecast-MFC-AGG-ID: bvmQV3fVPWK-8eCh33Dk7w_1781112851
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E380D1964CE4;
+	Wed, 10 Jun 2026 17:34:10 +0000 (UTC)
+Received: from bfoster (unknown [10.22.80.93])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8AE271800586;
+	Wed, 10 Jun 2026 17:34:08 +0000 (UTC)
+Date: Wed, 10 Jun 2026 13:34:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: Gregg Leventhal <gleventhal@janestreet.com>
+Cc: Eric Hagberg <ehagberg@janestreet.com>, hch@infradead.org,
+	djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org
+Subject: Re: [BUG] iomap/io_uring: O_APPEND async buffered write silently
+ re-appends a data chunk (corruption) on XFS, 6.1.y/6.12.y
+Message-ID: <aimgDnzB_NYqOTx1@bfoster>
+References: <CAFN_u7FrgM4Dzie2jjkLwWV8P0dvUG_Wwy3Q9B3-2HnnWiDu8w@mail.gmail.com>
+ <aiLxe-9Sub8cI3Py@bfoster>
+ <aibns0xP6IVVNWh3@bfoster>
+ <CAAH4uRB+Bh9UEVEW8Sb2yM4YhB-Q5UJ6KJJXari3DDF3n3S+-g@mail.gmail.com>
+ <aig9Vm2a_13bPc5G@bfoster>
+ <CAFN_u7ELBj3YKncm6HA4-QUNyi-a3qPDEYxuLP+skVhm-r87uw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAFN_u7ELBj3YKncm6HA4-QUNyi-a3qPDEYxuLP+skVhm-r87uw@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
+On Tue, Jun 09, 2026 at 01:14:40PM -0400, Gregg Leventhal wrote:
+> I reproduce it by running 25 ~ concurrent instances of the attached reproducer,
+> each writing its own file, on an otherwise-idle 15 GB VM:
+> 
+>   DIR=$(mktemp -d /tmp/uring.XXXXXX)
+>   for i in {1..25}; do
+>       ./repro_uring_dup "$DIR/file_$i" 120 48 &
+>   done
+> ...
+> *** CORRUPTION DETECTED in /tmp/UmgK/file_17.1 ***
+>   bytes kernel said it wrote (sum of CQE results): 53621960
+>   actual file size:                                56218824
+>   extra (duplicated) bytes:                        2596864
+>   first mismatching offset: 6791168 (0x67a000)  page_aligned=YES
+>     expected u64 848896 but found 524288 (content from byte offset
+> 4194304 reappeared here)
+>   (file kept for inspection)
+> 
+> 
+> 
+>   wait
+> 
+> *** CORRUPTION DETECTED in /tmp/Gznx/file_18.2 ***
+>   bytes kernel said it wrote (sum of CQE results): 58112616
+>   actual file size:                                60303976
+>   extra (duplicated) bytes:                        2191360
+>   first mismatching offset: 2191360 (0x217000)  page_aligned=YES
+>     expected u64 273920 but found 0 (content from byte offset 0 reappeared here)
+>   (file kept for inspection)
+> 
 
-Hi folks,
+Thanks. I had to bump up the concurrency a bit and then was able to
+reproduce.
 
-The for-next branch of the xfs-linux repository at:
+The patch I sent survived my regression testing but when taking another
+look at the upstream patch, I realized something else I had previously
+missed. The code in master doesn't actually return -EAGAIN directly
+along with partial completion. It just returns the partial completion,
+loops again in iomap, and then presumably returns -EAGAIN at that point
+which makes its way back to io_uring. I think that is mostly harmless
+but technically a bug in the upstream patch as the intent was to be able
+to advance the iter, return -EAGAIN, and let the operation unwind from
+there.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I think this actually leaves at least a couple options here. One is that
+we could presumably just do the same thing on stable as current master:
+forget the flag and just remove the iov revert and direct -EAGAIN return
+at the cost of one more iter before returning to the caller. Another is
+to fix up the code in master and use the patch I posted as a customized
+stable backport of that.
 
-has just been updated.
+WRT the latter I suppose we could also just stick with this patch for
+stable and I can follow up with a separate patch for the loop thing on
+master. Hmm.. I want to think about it a little more so if any iomap
+folks have Opinions in the meantime, let me know.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+Brian
 
-The new head of the for-next branch is commit:
+> 
+> On Tue, Jun 9, 2026 at 12:20 PM Brian Foster <bfoster@redhat.com> wrote:
+> >
+> > On Mon, Jun 08, 2026 at 01:17:10PM -0400, Eric Hagberg wrote:
+> > > On Mon, Jun 8, 2026 at 12:03 PM Brian Foster <bfoster@redhat.com> wrote:
+> > > > Another idea that came to mind is to try and just replace the -EAGAIN
+> > > > return sequence from the low level iterator with a flag that triggers
+> > > > -EAGAIN from the next iter advance. The idea here is to allow the write
+> > > > to return partial completion (i.e. so no iov_iter revert) without having
+> > > > to return an error from the lowest level in the stack. I had claude come
+> > > > up with a quick patch [1] for reference/experimentation.
+> > > >
+> > > > This is based on v6.12 stable and compile tested only. It needs more
+> > > > review and testing in general but might be worth throwing your
+> > > > reproducer at if you can..?
+> > >
+> > > With that patch applied, the reproducer runs clean - no errors - and
+> > > gets roughly the same performance (maybe slightly better) as when run
+> > > against a 6.18 kernel on the same VM.
+> > >
+> >
+> > Thanks for testing. I'll look into some more regression testing of this
+> > patch and try to clean it up and post it for proper review for stable.
+> >
+> > Are you using the reproducer program in your original mail to test? If
+> > so, does it require some concurrent memory pressure to reproduce, and
+> > are you using anything in particular for that?
+> >
+> > That test seems small enough that we could potentially include it in
+> > fstests, though I'm still not so sure about the mem pressure part..
+> > Since you guys wrote the test, any interest in porting into fstests? If
+> > not I can look into it.
+> >
+> > Brian
+> >
+> > > Thanks,
+> > > -Eric
+> > >
+> >
+> 
 
-dfac6ba84819 xfs: cleanup xfs_growfs_compute_deltas
-
-7 new commits:
-
-Christoph Hellwig (6):
-      [16fc9d358d12] xfs: factor out a xfs_zone_mark_free helper
-      [ae3692c7f440] xfs: add newly added RTGs to the free pool in growfs
-      [44cccefe6574] xfs: only log freed extents for the current RTG in zoned growfs
-      [327e58826eb7] xfs: initialize iomap->flags earlier in xfs_bmbt_to_iomap
-      [4cb6e89a3d90] xfs: pass back updated nb from xfs_growfs_compute_deltas
-      [dfac6ba84819] xfs: cleanup xfs_growfs_compute_deltas
-
-Darrick J. Wong (1):
-      [84eec3f7fc73] xfs: fix pointer arithmetic error on 32-bit systems
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ag.c         | 44 ++++++++++++++++++++----------------------
- fs/xfs/libxfs/xfs_ag.h         |  5 ++---
- fs/xfs/libxfs/xfs_bmap_btree.h |  2 +-
- fs/xfs/xfs_fsops.c             |  4 +++-
- fs/xfs/xfs_iomap.c             |  2 +-
- fs/xfs/xfs_rtalloc.c           | 16 +++++++++++----
- fs/xfs/xfs_zone_alloc.c        | 11 +++++++++--
- fs/xfs/xfs_zone_alloc.h        |  1 +
- fs/xfs/xfs_zone_gc.c           |  4 +---
- 9 files changed, 51 insertions(+), 38 deletions(-)
