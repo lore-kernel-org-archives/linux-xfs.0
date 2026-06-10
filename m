@@ -1,38 +1,32 @@
-Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
+Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FD1D3812EC;
-	Wed, 10 Jun 2026 06:52:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3817381B10;
+	Wed, 10 Jun 2026 06:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781074376; cv=none; b=Rr1yirrernep2l5HN/II1BEIUqdFreiejhwhlBjmtiIKg3Ss75gushpZ9W1bk4QeHLycFh7dNeZjfzyzQhkwFRLM6xjUcSlFTP+rjFKOHpwe9jKeLx4o8z0cgBAoIyaUVy2E9DERcTDE0QWDFts1c6qU9NoWU57TunpZKjZikYs=
+	t=1781074568; cv=none; b=HIPpeupgSTQEVDgRvQsPRJrnON1epPhsR7vQtiPZloOYK8h0rnJMNujW0qPF662+N6Xnmls1+tU9m/fjIU/gZzWsiW0KfV9EdiMoLgA4AjN80CP2xOoARsY2aiXE5h8bDmIkLLFDFIBWxcrZtXSpaZ668x9s75C4znxpSfHTOGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781074376; c=relaxed/simple;
-	bh=3p9Dd7GMpwwck1Uq6YJL9SRbCVpaEm9FJWEyGP9pJw0=;
+	s=arc-20240116; t=1781074568; c=relaxed/simple;
+	bh=rRDfpSzw3X6enhuhpGqG6t8VOaobODgmutXYPZvFcJg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WoglHqrfIvGrXRKBxpLWSEWyVD3z5PVNqQNRUMFCzaIe62C3u3m25l7OJq6ZQGuNrqEJ8/E4+KUk7UJkT0AbKYGvoSesq7R+BidDB3YY/jNpsLkGcaAb/BhkKoPBTa0XbnAix+//Zy8si0I3jGqMH0OOQWc0QvunSqz22fA4nSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Hb1GVBTh; arc=none smtp.client-ip=54.204.34.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	 In-Reply-To:Content-Type; b=BIV4QqlhujrT17+c8450TMq2cE90pC2cpniEEr7pom0515Rh8MqJSQ5cA6UmOD2dlj3Do9et2YkHhxfpPA810P5sU732tPuhUj4SBtX3DfTwuUhOjV6644JZ1DJzARhTaIEtvjzAYE2cck0hRV1NAD9MjoqIs0Kaonli9NjV4cs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=aNQ7PbRk; arc=none smtp.client-ip=115.124.30.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Hb1GVBTh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1781074363;
-	bh=zVxlLmh+4iHbTGFSqeEZnJaRv5RPyLtw5BKJjQwnxiU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From;
-	b=Hb1GVBThq6kWnx9ZctPOJMaZrNOVOBVDbaUm20djAFlnrUy4uqhsC+PkNs+h6cQ7v
-	 LJDnl64h71QcXuXJTr4o2dBP80pWYuJ2R+K/CkKNRwnuqZGUffmHyHGzDUunn35pf4
-	 kpgpT+N0CJqXF723D+d8TueY+JIqn7sO1fvEUe08=
-X-QQ-mid: esmtpsz18t1781074355tdc876336
-X-QQ-Originating-IP: gQcmQNmlA22RIrP6wIRf42eIb/sgXeVk/SUzdvbe7MI=
-Received: from [10.10.73.104] ( [123.114.60.34])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 10 Jun 2026 14:52:33 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 7191369297312506617
-Message-ID: <0591D4C494338FF3+72bb0510-1249-43fb-8faf-5724514baf59@uniontech.com>
-Date: Wed, 10 Jun 2026 14:52:33 +0800
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="aNQ7PbRk"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1781074556; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=tHKZXlYHzQiuz4CuXIVUBayRBgQEvDJmST6DE9mf+8g=;
+	b=aNQ7PbRkZItFf11r6vye/H8dRDn2Z6ZAjuVVWvn0YNKanggFZPXafrhDoQui5jX0eHL87te9FysI5HQa/o/wTuo4pGFqDZdwSkh4X9Fmze5auj2q9kC249IitnczyEeadQwx8k3Dv6Ayl1JqDryyulYUiVOs5hAajrIAlZLwxGU=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R961e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X4ZbVxy_1781074555;
+Received: from 30.221.130.225(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X4ZbVxy_1781074555 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 10 Jun 2026 14:55:56 +0800
+Message-ID: <e4aa171b-ac0f-4cd1-8605-91a3f82a4faf@linux.alibaba.com>
+Date: Wed, 10 Jun 2026 14:55:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,80 +34,181 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] xfs: fix inode leak and clean up attr intent
- recovery
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org, linux-kernel@vger.kernel.org
-References: <20260609111619.1866748-1-gaoyingjie@uniontech.com>
- <20260610022028.79846-1-gaoyingjie@uniontech.com>
- <aikEYaj5E-JXHhBS@nidhogg.toxiclabs.cc>
-From: Yingjie Gao <gaoyingjie@uniontech.com>
-Reply-To: aikEYaj5E-JXHhBS@nidhogg.toxiclabs.cc
-In-Reply-To: <aikEYaj5E-JXHhBS@nidhogg.toxiclabs.cc>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
-X-QQ-XMAILINFO: NFNrK8KlcSCRXyli6d9GKpF95IpsfNh2ctz4l0WVbXjLYY9ygN8kf8Jg
-	v6ZWdcOU6jsf73CbQoPoKLUioGRfAHTcNAtTjiMJR/y67ah5bZzMGayYcj6N+9w3cWgDFds
-	IfB94gkGjBAW+IX5x3CgofRuWJpH9SFwvczBy8keFN1IsttZp8ESsbhbqBmW/GSafuGtwP3
-	m6qd8zzqmcbNNfIsTBtVIZrzi1cRUGjKaazBv9NDmT1wIR/a7i207fRim7HfToIcwq2kUCp
-	kiQP1krsPRnHKKCBg0SLfyFxJm+jWK76uZwUEHu3s4bdVtJ8dvVvHIb1agq/IPzusZmke2w
-	AcCLFohjl3Crob2C+Sfqqwmx5hbzuL0z7gp8/r/Ptq6m7ApdyG73N0BZ6I0lR7XsM9q6AK1
-	hbyTYWuFbd+41oh09CWdJvLTIZeO9oVxM3jtk2mDNJ1ayA9NJAeEM0T2tbacot05U9kYziw
-	pUxXZvX8mmxBxE3PeIUQCtDm8A+8IFhqv7Z2Z65ybgyISULLc/N9lOh1xMTaiXwaGZd0zYS
-	XWeL91i6bQjOyPt4yS2DwUkz528M7rtuDcZk9VemqEn9AebAy1jrWpr/WX50w6CrQKBEEFh
-	u2EOnAOvxOslNFMh+4F3OPgbelkZJE3lv9lU7RnqwMZruepd7lpvMpz2FteXSOpHGlrIjkD
-	grDPnDKvifGp2kHxZUIxWPSQA+hnl9+8oyoCMq1DRze3MVfN3lrEh8uReIbGMW0cvyVQ70h
-	LNUTnl5YLzQRzZ/ohrXE/R5YSJ1IQ7wOb0nsPkr2TlLi2AEPhYE/0/82oS+qaiWPuKwTP4H
-	md/BVfmojTiYmcrl0smVpaL+D+wq+LBBtdJR/CGV+q/rqz1YB1cOqaSqp0pwyrxyBx0ywLy
-	q3PjEv98CLdzyGdjIm0upDayoHoG3gcFSnMjqwB3BfDqiocQx/gzo9c4czA3eA75U6klyA0
-	c+rJqr9tHQkX0yFvtsdIBCOXWfytwurCxWw7VwV84XtpUE6mRRx5y5jszu+MbX/yLnX6/aE
-	xlC1NNT9y3Dq3vS9RCT8AlSUS//Ok=
-X-QQ-XMRINFO: MSVp+SPm3vtSOMZOz9FXV91ojphix8iJBQ==
-X-QQ-RECHKSPAM: 0
+Subject: Re: [PATCH RFC 7/8] erofs: open via dedicated fs bdev helpers
+To: Christian Brauner <brauner@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
+ linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>,
+ David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+ Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org,
+ Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org,
+ Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
+ <20260602-work-super-bdev_holder_global-v1-7-bb0fd82f3861@kernel.org>
+ <7c5bfcf0-36a3-4cc6-bf31-6af4fc901c37@linux.alibaba.com>
+ <20260603-nieder-ausdehnen-siebdruck-aa96f40ebec6@brauner>
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <20260603-nieder-ausdehnen-siebdruck-aa96f40ebec6@brauner>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-在 2026/6/10 14:30, Carlos Maiolino 写道:
-> On Wed, Jun 10, 2026 at 10:20:26AM +0800, Yingjie Gao wrote:
->> Hi all,
->>
->> The first patch fixes a leaked inode reference in
->> xfs_attr_recover_work() when transaction allocation fails after the
->> recovered attr work item has been attached to the defer pending list.
->>
->> The second patch cleans up the same function's exit paths so they follow
->> the same linear cleanup style as the neighboring bmap and exchmaps
->> recovery helpers, and initializes the local error variable in the same
->> style.
->>
->> Changes since v1:
->> - route the transaction allocation failure through out_rele in patch 1,
->>   as Darrick suggested;
->> - keep patch 2 focused on the remaining cleanup-path reshaping and the
->>   local error initialization.
-> 
-> Please avoid sending new versions in-reply-to the previous version. Send
-> them as a new thread.
-> 
-Understood, sorry about that.  I will make sure new versions are sent
-as separate threads going forward.
+Hi Christian,
 
-Thanks,
-Yingjie
-```
->>
->> Thanks,
->> Yingjie
->>
->> Yingjie Gao (2):
->>   xfs: fix inode ref leak in attr intent recovery
->>   xfs: clean up attr intent recovery error paths
->>
->>  fs/xfs/xfs_attr_item.c | 17 ++++++++++++-----
->>  1 file changed, 12 insertions(+), 5 deletions(-)
->>
->> -- 
->> 2.20.1
->>
+On 2026/6/3 21:42, Christian Brauner wrote:
+>> May I ask if it's an urgent 7.2 work? If not, I could
 > 
+> No no, it's way too late for that this cycle.
+> 
+>> make a preparation patch for the upcoming 7.2 cycle
+>> to handle erofs_map_dev() failure here so you don't
+>> need to bother with this in this patchset.
+> 
+> Sounds good. I take it you can just do this yourself without me.
+> 
+>> I will seek more time to resolve the recent todos
+> 
+> Thanks!
+> 
+>> yet always intercepted by other unrelated stuffs.
+> 
+> :)
+
+I removed .shutdown() and .remove_bdev() implementations since I
+think it doesn't quite seem necessary for immutable fses, but
+would like to know your thoughts too, my overall own comments are
+documented in the commit message below:
+
+
+ From 933f6c6f2e704116d9a15815c880196bec7b9ee3 Mon Sep 17 00:00:00 2001
+From: Christian Brauner <brauner@kernel.org>
+Date: Tue, 2 Jun 2026 12:10:13 +0200
+Subject: [PATCH] erofs: open via dedicated fs bdev helpers
+
+Route opens through fs_bdev_file_open_by_path() so each external device
+is registered against the correct superblock, and convert the matching
+releases.
+
+Gao Xiang: I think typical immutable filesystems don't need .shutdown()
+and .remove_bdev() for the following reasons:
+
+  - blk_mark_disk_dead() sets GD_DEAD in advance of fs_bdev_mark_dead()
+    so that the following bios will fail immediately; block_device
+    references are still valid so it seems overkill to handle dead
+    blockdevs in the deep filesystem I/O submission path.
+
+  - Immutable filesystems like EROFS don't have write paths and journals,
+    so they don't need to block writes (i.e., new dirty pages), metadata
+    changes, and abort journals.
+
+  - The comment above loop_change_fd() documents a valid read-only use
+    case we need to support anyway, but it calls disk_force_media_change()
+    which will call fs_bdev_mark_dead() later: we don't want loop_change_fd()
+    shutdowns the active filesystems and return -EIO unconditionally.
+
+Currently I think the default behavior (shrink_dcache_sb + evict_inodes)
+in fs_bdev_mark_dead() is enough for immutable filesystems, tried to
+document in the commit here for later reference.
+
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+---
+  fs/erofs/super.c | 35 +++++++++++++++++++++++------------
+  1 file changed, 23 insertions(+), 12 deletions(-)
+
+diff --git a/fs/erofs/super.c b/fs/erofs/super.c
+index 802add6652fd..def9cbfbc9d8 100644
+--- a/fs/erofs/super.c
++++ b/fs/erofs/super.c
+@@ -153,8 +153,8 @@ static int erofs_init_device(struct erofs_buf *buf, struct super_block *sb,
+  	} else if (!sbi->devs->flatdev) {
+  		file = erofs_is_fileio_mode(sbi) ?
+  				filp_open(dif->path, O_RDONLY | O_LARGEFILE, 0) :
+-				bdev_file_open_by_path(dif->path,
+-						BLK_OPEN_READ, sb->s_type, NULL);
++				fs_bdev_file_open_by_path(dif->path,
++						BLK_OPEN_READ, sb->s_type, sb);
+  		if (IS_ERR(file)) {
+  			if (file == ERR_PTR(-ENOTBLK))
+  				return -EINVAL;
+@@ -843,11 +843,16 @@ static int erofs_fc_reconfigure(struct fs_context *fc)
+
+  static int erofs_release_device_info(int id, void *ptr, void *data)
+  {
++	struct super_block *sb = data;
+  	struct erofs_device_info *dif = ptr;
+
+  	fs_put_dax(dif->dax_dev, NULL);
+-	if (dif->file)
+-		fput(dif->file);
++	if (dif->file) {
++		if (S_ISBLK(file_inode(dif->file)->i_mode))
++			fs_bdev_file_release(dif->file, sb);
++		else
++			fput(dif->file);
++	}
+  	erofs_fscache_unregister_cookie(dif->fscache);
+  	dif->fscache = NULL;
+  	kfree(dif->path);
+@@ -855,18 +860,19 @@ static int erofs_release_device_info(int id, void *ptr, void *data)
+  	return 0;
+  }
+
+-static void erofs_free_dev_context(struct erofs_dev_context *devs)
++static void erofs_free_dev_context(struct erofs_dev_context *devs,
++				   struct super_block *sb)
+  {
+  	if (!devs)
+  		return;
+-	idr_for_each(&devs->tree, &erofs_release_device_info, NULL);
++	idr_for_each(&devs->tree, &erofs_release_device_info, sb);
+  	idr_destroy(&devs->tree);
+  	kfree(devs);
+  }
+
+-static void erofs_sb_free(struct erofs_sb_info *sbi)
++static void erofs_sb_free(struct erofs_sb_info *sbi, struct super_block *sb)
+  {
+-	erofs_free_dev_context(sbi->devs);
++	erofs_free_dev_context(sbi->devs, sb);
+  	kfree(sbi->fsid);
+  	kfree_sensitive(sbi->domain_id);
+  	if (sbi->dif0.file)
+@@ -879,8 +885,13 @@ static void erofs_fc_free(struct fs_context *fc)
+  {
+  	struct erofs_sb_info *sbi = fc->s_fs_info;
+
+-	if (sbi) /* free here if an error occurs before transferring to sb */
+-		erofs_sb_free(sbi);
++	/*
++	 * Freed here only if an error occurs before the sb is set up; at that
++	 * point no block-backed device has been claimed (that happens in
++	 * fill_super), so the NULL sb never reaches fs_bdev_file_release().
++	 */
++	if (sbi)
++		erofs_sb_free(sbi, NULL);
+  }
+
+  static const struct fs_context_operations erofs_context_ops = {
+@@ -936,7 +947,7 @@ static void erofs_kill_sb(struct super_block *sb)
+  	erofs_drop_internal_inodes(sbi);
+  	fs_put_dax(sbi->dif0.dax_dev, NULL);
+  	erofs_fscache_unregister_fs(sb);
+-	erofs_sb_free(sbi);
++	erofs_sb_free(sbi, sb);
+  	sb->s_fs_info = NULL;
+  }
+
+@@ -948,7 +959,7 @@ static void erofs_put_super(struct super_block *sb)
+  	erofs_shrinker_unregister(sb);
+  	erofs_xattr_prefixes_cleanup(sb);
+  	erofs_drop_internal_inodes(sbi);
+-	erofs_free_dev_context(sbi->devs);
++	erofs_free_dev_context(sbi->devs, sb);
+  	sbi->devs = NULL;
+  	erofs_fscache_unregister_fs(sb);
+  }
+--
+2.43.5
+
 
