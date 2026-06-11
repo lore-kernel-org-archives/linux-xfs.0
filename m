@@ -1,42 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF0EA376BE8;
-	Thu, 11 Jun 2026 10:05:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB462DC767
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 10:18:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781172328; cv=none; b=sv4+7C2BZirDi/tIeLiHcyfcbQ+gez5Rmn/GzBtrdF+DPEjUecuIfc2HNSsv2YoaRahiSs9jN9zGVbTHhkDNw7Qh+ZvWoLYgYSXwPd+kajzj5Gn96YSb27ScmVJrUScJU4D9X0uC/3lYKR0bgKa1xZh4NuuB2wB6cV/N7/3teO4=
+	t=1781173121; cv=none; b=qhvW0ReUBZ+Q5gLxopxdNUUW3uPqDiTB0OzEfGeXcT829YEXJfp5lODUuUj8T04e1FZm/ghDlaanqVWpT1+mr1mlpeNPZbXSpaQaOmBVINGayUZ3ItJOFWRY6H8OyhCLKCRk1AL4b/XrlfMdReQNorObpjLkYj2fn4qA49Q7jJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781172328; c=relaxed/simple;
-	bh=slkSgqvlvaokGL2aQqREVszt5Yca5ISJw/S6ugNEyBc=;
+	s=arc-20240116; t=1781173121; c=relaxed/simple;
+	bh=NL/8YnlxidLgF6bd5FRVM90hHA/RpGzN1HXDssP7fNk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BRO94av/s3gwBE7Tki+pfCtp+iKjVjy5Y92Y5p7mOl9ci4LWhldYO2VNlN+fPFcdtIgv4k7ETMXQTYSwaeMxhV51c3uKcsDd0COGI646wHz2zM8YiKfUzfs3RL/9Q0WX8Xx/SXttlFF4vBQTj2pYgqsMz0Uv8QLGHWYR5Lj656E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PH6lPKSu; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=OsjKME8Dd1OKtBsSpEqC3/VABaxcY+1pomKbHYHW4c0i8+XiOf4yky2839IEvtv6jNWu9/fbnng+5VtuIY1AtKejMXuxmXtV42/3gPHy+pAYWmd7y7oWIneyQMYtoIqcJ4IBSo/LZmyQ0xHcSz/cuU0b+dJQb1s2C3jbOZ5ge4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l/+4YZqE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PH6lPKSu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 505791F00893;
-	Thu, 11 Jun 2026 10:05:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l/+4YZqE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BE501F00893;
+	Thu, 11 Jun 2026 10:18:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781172327;
-	bh=G1wrc7bULXcsUx3is2pOZWD0oQ3p8AYlULlCrIY/zqE=;
+	s=k20260515; t=1781173120;
+	bh=kepuyj6qqbnxK/ob14Oq96NZ5gADSz1vyo57ySS1luI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=PH6lPKSuwE9w0QX3PbCxw3gca69PTX76fniZ7oOlqJp8H/rIbvZg/xKmzRFXZcBWx
-	 MF+4eC68fSehCu2M9nVR+DZW98ucpnO1nKI3+W5czuC3N5pFdqoegRtfQojYqu1kpB
-	 8S3lN8dmFQvwqxNyG0gCtZJwcbYJAuCr5E20KzIiPyQIBUkwoBuehWqrj1koYuoVUq
-	 TYr4qDFogrD7FVS+VooUO2MBeTvcNxLFpx5huWkVfAHNEEJzcmRErca/E/kaLagrJo
-	 vZUEIR2owfZ46jH7CW/N8nuoYO/o/gFP4xVaPR/raYhCsy5mXe6aHdGGvimhpt+r8o
-	 xgvFYDnu8cN/g==
-Date: Thu, 11 Jun 2026 12:05:22 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: brauner@kernel.org, linux-block@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] iomap: enforce DIO alignment check in iomap
-Message-ID: <aiqBvF93P4NjfaDR@nidhogg.toxiclabs.cc>
-References: <20260610145218.141369-1-cem@kernel.org>
- <20260611055744.GA18538@lst.de>
+	b=l/+4YZqERZgFmC7lfycQaZnZa1kNQrvux4rCumbyswimvZuMVlTdq0Ispti92boom
+	 gUWV+/xexwwJQz3bJjYSbVyGUegnRVKj++NgOfmKGZlp1rVtI3k0HCbynqGcB21bYC
+	 wB+pp9n50EiXEEk4hTgR7gGRXms6zRe2VJk4cBtGeatDd4OZAbZ2ZpvM8iNW6+0JR7
+	 KTLBlafZ/oAMazUXDqPeiqGY17Y2tKJxJLJHi+0kCcAgkIJrsEhKjdx+rYfunvwkaP
+	 loDJsuZPOgW0UBnQ1SkHseOJDMbzyEdXfT/JjfcOF2Q75TvIZffEkAcOt0ih481JVY
+	 nh9d/p76Ar2lQ==
+Date: Thu, 11 Jun 2026 12:18:37 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: Romain Naour <romain.naour@smile.fr>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH] xfsprogs: include/buildrules: fix ltdep
+Message-ID: <aiqGr4ZwkBbfW_U9@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <20260531194553.1378795-1-romain.naour@smile.fr>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,76 +41,58 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260611055744.GA18538@lst.de>
+In-Reply-To: <20260531194553.1378795-1-romain.naour@smile.fr>
 
-On Thu, Jun 11, 2026 at 07:57:44AM +0200, Christoph Hellwig wrote:
-> On Wed, Jun 10, 2026 at 04:52:11PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> > 
-> > The DIO alignment check has been lifted from iomap layer to rely on the
-> > block layer to enforce proper alignment when issuing direct IO
-> > operations. This though, depending on the IO size and buffer address
-> > passed to the IO operation may lead to user-visible behavior change.
-> > 
-> > This has been caught initially by LTP test diotest4 running on
-> > PPC architecture, where the test fails because a read() operation
-> > with a supposedly misaligned buffer succeeds instead of an expected
-> > -EINVAL.
-> > This has no direct relationship with PPC, but seems to do with the
-> > IO size crossing page borders or not.
+On 2026-05-31 21:45:53, Romain Naour wrote:
+> Our CI uses "/builds/buildroot.org/buildroot" as build directory.
+> Unlikely the xfsprogs build system misbehave when a directory in
+> the path contain ".o".
 > 
-> I don't understand the problem here.  Why do we want to insist on a
-> failure when we can support it?  I think the test is just broken.
-
-The problem I see here from my POV is this changed the behavior expected
-from the syscalls when the passed in buffer is misaligned as the read()
-(in the test) succeeds when the passed in buffer does not match the
-alignment requirements (see below).
-
-I am pretty happy in declaring this a test bug, but I thought it would be
-worth starting a discussion about the sudden/unexpected behavior change.
-Not to mention now different filesystems will have different alignment
-requirements which seems at least "weird" to me. I mean, now suddenly
-iomap-based filesystems have a more relaxed alignment constraint than
-for example btrfs.
-
+> While generating .ltdep, the sed command used to convert object file
+> (.o) to libtool object (.lo) replace buildroot.org by buildroot.lorg.
 > 
-> > The problematic behavior is reproducible on x86 by reducing the IO size
-> > to something < PAGE_SIZE, so the misaligned read()s will also be accepted
-> > by the block layer.
+>   .ltdep: $(CFILES) $(HFILES)
+>     $(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
 > 
-> What do you mean with misaligned here?  For a long time the kernel
-> supports basically arbitrary low memory alignment for diret I/O,
-> just bounded by the device capabilities (typical 4 byte alignment).
-
-The test sends to read() a buffer misplaced by 1 byte (see below) which
-doesn't match the system's alignment constraints at least from the user
-passed buffer perspective.
-I've been assuming it should match device's dma_alignment constraints.
-The typical 4 byte alignment indeed is the requirement from my PPC
-machine, but not for my x86:
-
+> Building libfrog
+>     [CC]     gen_crc32table
+>     [GENERATE] crc32table.h
+> gmake[4]: *** No rule to make target '/builds/buildroot.lorg/buildroot/test-output/TestXfs/host/include/urcu.h', needed by 'avl64.lo'.  Stop.
 > 
-> The supported memory alignment is reported in the statx
-> dio_mem_align.  What does that say compared to the alignment
-> expectations in this test?
+> Update the sed command to avoid this effect.
+> 
+> Fixes:
+> https://gitlab.com/buildroot.org/buildroot/-/jobs/14607335648
+> 
+> Signed-off-by: Romain Naour <romain.naour@smile.fr>
+> ---
+>  include/buildrules | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/buildrules b/include/buildrules
+> index 871e92db..3fabbe5a 100644
+> --- a/include/buildrules
+> +++ b/include/buildrules
+> @@ -140,7 +140,7 @@ rmltdep:
+>  	$(Q)rm -f .ltdep
+>  
+>  .ltdep: $(CFILES) $(HFILES)
+> -	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
+> +	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o:,\1.lo:,' > .ltdep
+>  
+>  depend: rmdep .dep
+>  
+> -- 
+> 2.54.0
+> 
+> 
 
-From my x86:
-dio_mem_align: 512
-dio_offset_align: 512
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-From PPC:
-dio_mem_align: 4
-dio_offset_align: 512
+I will pull this and update the sentence Christoph pointed out to:
+> xfsprogs build system misbehave when a file path contains ".o".
 
-But this does not explain how the following call would succeed in either
-case (below one taken from PPC):
 
-openat(dirfd=AT_FDCWD, pathname="testdata-4.135256", flags=O_RDWR|O_DIRECT) = 3
-_llseek(fd=3, offset=4096, result=[4096], whence=SEEK_SET) = 0
-read(arg1=0x3, arg2=0x1003af80001, arg3=0x1000) = 0x1000
-
-The passed in address 0x1003af80001 is one byte misaligned and shouldn't
-(at least in theory) ever be accepted no? Or am I missing something
-else?
-
+-- 
+- Andrey
