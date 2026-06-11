@@ -1,135 +1,82 @@
-Received: from va-1-114.ptr.blmpb.com (va-1-114.ptr.blmpb.com [209.127.230.114])
+Received: from mail-oa1-f72.google.com (mail-oa1-f72.google.com [209.85.160.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7312C3E63B6
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 12:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.114
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D653F99F4
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 12:32:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781179480; cv=none; b=tRlqSx+Y34Uj+82s7ywvXsaKPBnkLN/zvv5wo5MhT5/wp9fdN8J/7DNzpw+hB5VsbbhPYA3i72mmNfF2uB9NeUCJygYLcibrMB2KE6xY0ia0H4Dmt2bVJ3qYERlrrhxHE5UDh4TxS9/BW45Rgi5hytxHhabmgc6BAKnHHtPHsYQ=
+	t=1781181143; cv=none; b=XlmAhRukS4BlEvjNV2EYDLsDkWBmP4A4tm5F56DJvtgExBpv1wljAw8VYJqY6YMMmiGNMDXZNVlKfaZIhP+zntpoeEfhGl/Oi5b7ESookeTXf6a36HBdTXCOkngMuwkoBzbv+WMqkHbtiX3+xbo8iIn4h4ie9DUdjjlmw3NLvAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781179480; c=relaxed/simple;
-	bh=uQUF9Xqx89luykxEpk3DwSoDVKAaGgQdsXZa7rBK+6Y=;
-	h=Date:Cc:From:Mime-Version:References:In-Reply-To:Content-Type:To:
-	 Subject:Message-Id; b=cJM6mUriRpaK6JxCdTfKDaNkx/q+j2rkpz/D9e/zXCt7C7WUQC5tVSI5D/J6nR+uxMEjNf6AnRwfp/YAd5GMFVKoPvd8Wzt64bn0tTABXVqYeIvdKUXFPA6+740EMOh4nujYUSSdgC+ZwwxyedHGxHl1UM1X5iU5gkAWYDYS2Qo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=OqJFn4e8; arc=none smtp.client-ip=209.127.230.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="OqJFn4e8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1781179473; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=HAqbApc74Vvmxdiwfv58VrOQf84K2/1rA7Lf7R9JEmI=;
- b=OqJFn4e8Iq9UB5tEsj3Uww/KgF3bk7ZlpuMtSJsdVPB405v6uI492a6wuINvd8no+PAsx5
- rjONwDxs7P7lgGamKKpDau7VdtzsaIkYhlDcJTOn12xy1SD02698Z6LkqUu4tefG8R1oAx
- M5DcNxYtDTFo2mAyMQP6LXSuLHmShF1KKd3Ge9jqXMivxkyDrXlCFUdi24CxpEEL7LKdn8
- hg0eXZHCqn4pchZu8yzOmgUqeiNWTEN8jrJlxs122a1Y/xxjOHwblFQRb/MfuAUfMeBz1Q
- LizppIP6rwJ4JpilajZbmaf57Cnt2k8PZfai18eky5tg02PQa6ejKrfMd1pWYg==
-Date: Thu, 11 Jun 2026 20:04:14 +0800
-Content-Transfer-Encoding: quoted-printable
-Cc: <brauner@kernel.org>, <djwong@kernel.org>, <hch@infradead.org>, 
-	<ojaswin@linux.ibm.com>, <dgc@kernel.org>, <linux-xfs@vger.kernel.org>, 
-	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <lidiangang@bytedance.com>, 
-	<p.raghav@samsung.com>
-From: "Fengnan" <changfengnan@bytedance.com>
+	s=arc-20240116; t=1781181143; c=relaxed/simple;
+	bh=K6I3lHOkO+Rk/phgb0uI1DhsWN1D8TYv3z+CgwCHMSA=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=a0qMwDytK4NDkZI5PbqDSVI6KcfY+KBm/6jWn/6h1dV9Ie6l3nXo2AXZ9dBSqZyu2TUpU38FIcILfW4vK+yHRZTd22iOz4PBZPlZRB7Ly+Elpf40gk63qoXmJbxsFwS5pecs+2YwZ345AHBGjaGwVAZl24aCENPS9bjsZp7CtXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oa1-f72.google.com with SMTP id 586e51a60fabf-440d5e1d5e4so1278378fac.1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 05:32:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781181141; x=1781785941;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=jLwaesaouIHjQnJt0P35TUCfA/FolyBqG8HDYF9xS6g=;
+        b=Jlc2UE08BPQBA/c3ffo0fWmNpZXCtSxWWjxTvNCSnpY8NMHKAl6+JbThQWA6riCAau
+         kLXgpPI29v9VkKQgqueHxdTqDM1IX2R2CH2yny2ouxLgtYpMYcimJmBDoNtCC6Gh7j9S
+         vTAaPI5C3+acP3r2j2gYppgIt2uPNzsij4JlOsif1p7tgz8Zm4uCh60GJMP72TyRG+Af
+         lsvFoJESP5BkV471v9zNupGNcAzmiNoyGnGk7FFRvLTbBeXH/ZwfsQS1BMz/IyVyJ0GC
+         v/OimGc1u0XwxOT0j5CixSVdgEP3AbMV2LohIpCdIH7GV9nkuIUmpZaWqUuZMJgN/aWG
+         wApA==
+X-Forwarded-Encrypted: i=1; AFNElJ/c83uYuBLmlAvatz7b75ztaSJTr2S27JlURmSe3C4f2jMVZUW8N+JFQBP8R1AOAhW0r/wfraidY8g=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywe7zGBTFq3yMl9Ci8Ob75JCZ9dTETVndy5OaS+7OSHWK9Dx/mw
+	1UZMkRMg5VCuMwtHPTOgX37w15kxa7oWgFasfRYPxw+wP2jIB9VyAmoH/w6PqBw61TvkoPnNifr
+	GhlyhwZjqQhhkQx90GeG9qh7Ri+EI60jZPugBCl4U5v8dW2z/FfnKfeHkqGk=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260608073134.95964-1-changfengnan@bytedance.com> <mmbe4kdeqg6zlblhysi27qno22dtkaahv7bzslaqopsg4k3qs7@nofv525nnl6c>
-In-Reply-To: <mmbe4kdeqg6zlblhysi27qno22dtkaahv7bzslaqopsg4k3qs7@nofv525nnl6c>
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26a2aa44f+b35cc0+vger.kernel.org+changfengnan@bytedance.com>
-User-Agent: Mozilla Thunderbird
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-Subject: Re: [PATCH v4] iomap: add simple read path for small direct I/O
-Message-Id: <94fac0c6-13fe-4d5d-a794-04b43678a295@bytedance.com>
-X-Original-From: Fengnan <changfengnan@bytedance.com>
+MIME-Version: 1.0
+X-Received: by 2002:a05:6820:4c0e:b0:69d:7fdb:3416 with SMTP id
+ 006d021491bc7-69ecaf194a3mr1447053eaf.21.1781181140857; Thu, 11 Jun 2026
+ 05:32:20 -0700 (PDT)
+Date: Thu, 11 Jun 2026 05:32:20 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a2aaad4.58e8d1cc.3928d.0005.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Jun 2026)
+From: syzbot <syzbot+list55f8a7c32ffa86f08685@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-=E5=9C=A8 2026/6/11 17:36, Pankaj Raghav (Samsung) =E5=86=99=E9=81=93:
->> +static ssize_t iomap_dio_simple_read_complete(struct kiocb *iocb,
->> +		struct bio *bio)
->> +{
->> +	struct inode *inode =3D file_inode(iocb->ki_filp);
->> +	ssize_t ret;
->> +
->> +	WRITE_ONCE(iocb->private, NULL);
->> +
->> +	ret =3D iomap_dio_simple_read_finish(iocb, bio,
->> +			blk_status_to_errno(bio->bi_status));
->> +
->> +	inode_dio_end(inode);
->> +	trace_iomap_dio_complete(iocb, ret < 0 ? ret : 0, ret > 0 ? ret : 0);
-> Shouldn't the second parameter here be
-> blk_status_to_errno(bio->bi_status)?
->
-> I think that will be more meaningful for tracing here.
-> trace_iomap_dio_complete(iocb, blk_status_to_errno(bio->bi_status), ret);
-Makes sense. I=E2=80=99ll update it in the next version.
+Hello xfs maintainers/developers,
 
->
-> <snip>
->> +	return ret;
->> +}
->> +
->> +	sr->iocb =3D iocb;
->> +	sr->dio_flags =3D dio_flags;
->> +
->> +	bio->bi_iter.bi_sector =3D iomap_sector(&iomi.iomap, iomi.pos);
->> +	bio->bi_ioprio =3D iocb->ki_ioprio;
->> +	bio->bi_private =3D sr;
->> +	bio->bi_end_io =3D iomap_dio_simple_read_end_io;
->> +
->> +	if (dio_flags & IOMAP_DIO_BOUNCE)
->> +		ret =3D bio_iov_iter_bounce(bio, iter, count);
->> +	else
->> +		ret =3D bio_iov_iter_get_pages(bio, iter, alignment - 1);
->> +	if (unlikely(ret))
->> +		goto out_bio_put;
->> +
->> +	if (bio->bi_iter.bi_size !=3D count) {
->> +		iov_iter_revert(iter, bio->bi_iter.bi_size);
->> +		ret =3D -ENOTBLK;
->> +		goto out_bio_release_pages;
->> +	}
->> +
->> +	sr->size =3D bio->bi_iter.bi_size;
->> +
->> +	if ((dio_flags & IOMAP_DIO_USER_BACKED) &&
->> +	    !(dio_flags & IOMAP_DIO_BOUNCE))
->> +		bio_set_pages_dirty(bio);
->> +
->> +	if (iocb->ki_flags & IOCB_NOWAIT)
->> +		bio->bi_opf |=3D REQ_NOWAIT;
->> +	if ((iocb->ki_flags & IOCB_HIPRI) && !wait_for_completion) {
->> +		bio->bi_opf |=3D REQ_POLLED;
->> +		bio_set_polled(bio, iocb);
-> This results in build failure as the following patch removed this call:
-> https://lore.kernel.org/linux-block/20260518062917.506483-1-hch@lst.de/
->
-> I think this call can just be removed as you are setting REQ_POLLED
-> anyway.
-You=E2=80=99re right. I=E2=80=99ll update that in the next version too.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-Thanks.
+During the period, 0 new issues were detected and 0 were fixed.
+In total, 15 issues are still open and 30 have already been fixed.
 
->
->> +		WRITE_ONCE(iocb->private, bio);
->> +	}
->> +
->> +	if (wait_for_completion) {
->> +		sr->waiter =3D current;
->> +		blk_crypto_submit_bio(bio);
->> +	} else {
->> +		atomic_set(&sr->state, IOMAP_DIO_SIMPLE_SUBMITTING);
->> +		sr->waiter =3D NULL;
->> +		blk_crypto_submit_bio(bio);
->> +		ret =3D -EIOCBQUEUED;
->> +	}
->> +
-> --
-> Pankaj
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 3       No    KMSAN: uninit-value in xlog_sync
+                  https://syzkaller.appspot.com/bug?extid=97f2c05378c5d68dcb8c
+<2> 2951    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<3> 140     Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
