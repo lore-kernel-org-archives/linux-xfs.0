@@ -1,33 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 266A82F0C74;
-	Thu, 11 Jun 2026 05:57:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53287347FEE
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 08:25:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781157472; cv=none; b=bvui2xDC4GSso5wLf1AVkviRbF2NLtcg8ETqpkMYj+XYovu/vsDzLPW9bwfQilv/g9FQ8nFrPIWOQbXHpI1itLCR+uiW+/12HrsB4lPSjlhQ5Th4SaEr1RyAhpwGo5j8XrlFKlqTkBtc+E1V23TptmxBtFb3fCUNaeIkwaXtyrM=
+	t=1781166342; cv=none; b=ECUJFwdFE7F/MacYcabwYdxi65JOS8HmtfvYNRj+nVi5Fa0A0YKtTUDHgmqD0uUTJaLo1v2f2QZ/KqbbicYyuV5ObgOZR2JkqMrZ7pXGO7QzVwDtZ69IsK0o574MXp2t+ZZ4ueXoVa+OjPIuiq02dTIqTTFiwCGqTGGUzbjZ8oM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781157472; c=relaxed/simple;
-	bh=wTVWMr869qNxAZImCrP1/AI/tgL3odwId2Js0rwLe5k=;
+	s=arc-20240116; t=1781166342; c=relaxed/simple;
+	bh=lfFV/uj9Wm2jnH4iXZfONmZME1DFknFiQfBqXUj9gik=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lznlwX3dcrwm2OWaBSJKPQTGyLzv0iv2bB0JooSKqFdf71ga3r+9AkdV2FvkjbrLyMP2YXXZM/fTn6tieYBJwyBlz0c7iWrWlZ7yI6mK4RTBiuw8BtV/Ek/72zO/UcKo6ll6sxljYhQ0rpwIr2TqFXNsrwUOfJl4NmpvCxqrskE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AD53468B05; Thu, 11 Jun 2026 07:57:44 +0200 (CEST)
-Date: Thu, 11 Jun 2026 07:57:44 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: brauner@vger.kernel.org, linux-block@vger.kernel.devel,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
-	Hannes Reinecke <hare@suse.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] iomap: enforce DIO alignment check in iomap
-Message-ID: <20260611055744.GA18538@lst.de>
-References: <20260610145218.141369-1-cem@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=shNUE8Im5EkmDrwynDJkh9mlvD6arEv5YFrY4WbHUy9zyvd5DmvJZ1oY1EqpYxKxv5VE0lqpKW8hL0g+tMbFPNAlug6Q2VkYfcldfAo8VyYzSDr30PsblgiVNHuSOBcTi0An1i+aOiIpktexbuaZ3ffMzRXEnP2jd3HEfQS0Frg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nqfLEtp/; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nqfLEtp/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ABFC1F00893;
+	Thu, 11 Jun 2026 08:25:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781166341;
+	bh=lV0/A89wjCRfwNks57dr+kWhXEJWgfavPBYh00pFbjg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=nqfLEtp/Uw4bU+Ayn+Uq2z2bEoaByNI9JvaG57VPsLHyfm8zEZkKJ8vslLhzJxrd3
+	 Wo2isvsVZcLDH+P3j0C464CUnJuNd30+xjCHRaa1MOlSyVSZGFxFHv6SKFdnRKg9WF
+	 MzAzYaVdK1uEy6r8g9x6tYgxblZgsIcOFBp5psq8Ri1H6qRBkAUDXFlJLsP6dkIhkm
+	 wkQjjTWSmVGmWJDzLgC8VF+Yl7meDQrKAb+JuGMVxYhtPxLjaC35NicBHtstgiHGM+
+	 CAytwmRTRsibUAewRdguSKHbSZkEpOfzbGThdF3H2G574YP/nNpLYZ1h+Tw8OGeZ/U
+	 ihF54G3/A+duQ==
+Date: Thu, 11 Jun 2026 10:25:37 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 07/21] xfs_scrub: don't count internal log space in the
+ data device used count
+Message-ID: <aipw50Gj8c9e8-Fv@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
+ <178055303238.2608728.8986838126430623871.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,35 +43,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260610145218.141369-1-cem@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <178055303238.2608728.8986838126430623871.stgit@frogsfrogsfrogs>
 
-On Wed, Jun 10, 2026 at 04:52:11PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
+On 2026-06-03 23:06:09, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The DIO alignment check has been lifted from iomap layer to rely on the
-> block layer to enforce proper alignment when issuing direct IO
-> operations. This though, depending on the IO size and buffer address
-> passed to the IO operation may lead to user-visible behavior change.
+> Internal logs are not considered free space, so for the data device
+> they've already been subtracted from xfs_fsop_counts::freedata by
+> XFS_IOC_FSCOUNTS.  This causes overcounting in the phase 7 reporting.
 > 
-> This has been caught initially by LTP test diotest4 running on
-> PPC architecture, where the test fails because a read() operation
-> with a supposedly misaligned buffer succeeds instead of an expected
-> -EINVAL.
-> This has no direct relationship with PPC, but seems to do with the
-> IO size crossing page borders or not.
+> Cc: <linux-xfs@vger.kernel.org> # v7.0.0
+> Fixes: 95a92c5cecb2e1 ("xfs_scrub: perform media scanning of the log region")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-I don't understand the problem here.  Why do we want to insist on a
-failure when we can support it?  I think the test is just broken.
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-> The problematic behavior is reproducible on x86 by reducing the IO size
-> to something < PAGE_SIZE, so the misaligned read()s will also be accepted
-> by the block layer.
-
-What do you mean with misaligned here?  For a long time the kernel
-supports basically arbitrary low memory alignment for diret I/O,
-just bounded by the device capabilities (typical 4 byte alignment).
-
-The supported memory alignment is reported in the statx
-dio_mem_align.  What does that say compared to the alignment
-expectations in this test?
+-- 
+- Andrey
