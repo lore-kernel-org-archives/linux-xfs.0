@@ -1,82 +1,82 @@
-Received: from mail-oa1-f72.google.com (mail-oa1-f72.google.com [209.85.160.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D653F99F4
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 12:32:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C07893F0743;
+	Thu, 11 Jun 2026 12:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781181143; cv=none; b=XlmAhRukS4BlEvjNV2EYDLsDkWBmP4A4tm5F56DJvtgExBpv1wljAw8VYJqY6YMMmiGNMDXZNVlKfaZIhP+zntpoeEfhGl/Oi5b7ESookeTXf6a36HBdTXCOkngMuwkoBzbv+WMqkHbtiX3+xbo8iIn4h4ie9DUdjjlmw3NLvAo=
+	t=1781182670; cv=none; b=cZxvoA3TlOSwru6jhAOt93AMqAEytnzBELX+Mv/AUZ3a7BhQC1AgPaNj/q9ehhFs8DdF8d3I/n9y+hWoAgOFkr3kXIzKtw1eXWU1IQalsYIbA3SROLpC3Ji0Qsz/LPfpquF8OH0/QOAczWk5jrOyCB5tbnFBo8Jir+qiMSMT8ws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781181143; c=relaxed/simple;
-	bh=K6I3lHOkO+Rk/phgb0uI1DhsWN1D8TYv3z+CgwCHMSA=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=a0qMwDytK4NDkZI5PbqDSVI6KcfY+KBm/6jWn/6h1dV9Ie6l3nXo2AXZ9dBSqZyu2TUpU38FIcILfW4vK+yHRZTd22iOz4PBZPlZRB7Ly+Elpf40gk63qoXmJbxsFwS5pecs+2YwZ345AHBGjaGwVAZl24aCENPS9bjsZp7CtXA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa1-f72.google.com with SMTP id 586e51a60fabf-440d5e1d5e4so1278378fac.1
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 05:32:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781181141; x=1781785941;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=jLwaesaouIHjQnJt0P35TUCfA/FolyBqG8HDYF9xS6g=;
-        b=Jlc2UE08BPQBA/c3ffo0fWmNpZXCtSxWWjxTvNCSnpY8NMHKAl6+JbThQWA6riCAau
-         kLXgpPI29v9VkKQgqueHxdTqDM1IX2R2CH2yny2ouxLgtYpMYcimJmBDoNtCC6Gh7j9S
-         vTAaPI5C3+acP3r2j2gYppgIt2uPNzsij4JlOsif1p7tgz8Zm4uCh60GJMP72TyRG+Af
-         lsvFoJESP5BkV471v9zNupGNcAzmiNoyGnGk7FFRvLTbBeXH/ZwfsQS1BMz/IyVyJ0GC
-         v/OimGc1u0XwxOT0j5CixSVdgEP3AbMV2LohIpCdIH7GV9nkuIUmpZaWqUuZMJgN/aWG
-         wApA==
-X-Forwarded-Encrypted: i=1; AFNElJ/c83uYuBLmlAvatz7b75ztaSJTr2S27JlURmSe3C4f2jMVZUW8N+JFQBP8R1AOAhW0r/wfraidY8g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywe7zGBTFq3yMl9Ci8Ob75JCZ9dTETVndy5OaS+7OSHWK9Dx/mw
-	1UZMkRMg5VCuMwtHPTOgX37w15kxa7oWgFasfRYPxw+wP2jIB9VyAmoH/w6PqBw61TvkoPnNifr
-	GhlyhwZjqQhhkQx90GeG9qh7Ri+EI60jZPugBCl4U5v8dW2z/FfnKfeHkqGk=
+	s=arc-20240116; t=1781182670; c=relaxed/simple;
+	bh=7bZGVRT0DhiWZNeC8c4lB5IolUZPRHoFVK8bVkRGXkM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=F9n/dBqDZcmfTLbld61zCDX3mBXkFF+AWLnV8GQxRJ33r31LtnxQsKwItvIGhCx7laIlJ1z89WbxRvJCl0rBswdDlswjyxhMFzgfVupBKnnxfnH7FFOKHKx9pk94+tOriurjUhTWP8ILVF29osxciaRkG6gxDa+O9HqDYkZ8PTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KDGya4v/; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KDGya4v/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 083931F00893;
+	Thu, 11 Jun 2026 12:57:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781182669;
+	bh=1ctt5OAwkKL514gYSQNmnyp3VCA1JVT2AtlVpBHYAww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=KDGya4v//RF7fwWtpssMjfATwauPkYxd0rgrv3YSJZgFPihbx0nN9aNT1oJBZqS3G
+	 TK7aoh+GVEAJWOENOq/nLrdm1zT4W9lMChHe6R/K3Q2ARWhYJXXxRdf507NdLd1rhL
+	 fpJqV/J9rHUiz1mCGU0KNtEEVbSBujkUo8Xdqwr9Vk9Df9cFtczhr9CPWprkbc6SYx
+	 E/7qnj2ItKejT3+iTbJRCBzGqsOSIAEy9/Qqzd6iJbGCxDoATPYGF0Pqr9/Q4Xbthc
+	 LQe+/neVuoGGqBOXkz6sFhb38nYvn86eqnG49VrTZ3EhDsC+IM09yt9wSt9hbmIcrR
+	 WItNWZbk/eGvQ==
+Date: Thu, 11 Jun 2026 06:57:47 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] iomap: enforce DIO alignment check in iomap
+Message-ID: <aiqwy5DfHI79KXuZ@kbusch-mbp>
+References: <20260610145218.141369-1-cem@kernel.org>
+ <20260611055744.GA18538@lst.de>
+ <aiqBvF93P4NjfaDR@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:4c0e:b0:69d:7fdb:3416 with SMTP id
- 006d021491bc7-69ecaf194a3mr1447053eaf.21.1781181140857; Thu, 11 Jun 2026
- 05:32:20 -0700 (PDT)
-Date: Thu, 11 Jun 2026 05:32:20 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a2aaad4.58e8d1cc.3928d.0005.GAE@google.com>
-Subject: [syzbot] Monthly xfs report (Jun 2026)
-From: syzbot <syzbot+list55f8a7c32ffa86f08685@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aiqBvF93P4NjfaDR@nidhogg.toxiclabs.cc>
 
-Hello xfs maintainers/developers,
+On Thu, Jun 11, 2026 at 12:05:22PM +0200, Carlos Maiolino wrote:
+> The passed in address 0x1003af80001 is one byte misaligned and shouldn't
+> (at least in theory) ever be accepted no? Or am I missing something
+> else?
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+It's entirely possible a device supports byte aligned addresses. The
+block layer just doesn't let a driver report that. So either it really
+was successful because you found a bug that skips the alignment checks,
+or your device silently corrupted your payload.
 
-During the period, 0 new issues were detected and 0 were fixed.
-In total, 15 issues are still open and 30 have already been fixed.
-
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 3       No    KMSAN: uninit-value in xlog_sync
-                  https://syzkaller.appspot.com/bug?extid=97f2c05378c5d68dcb8c
-<2> 2951    Yes   INFO: task hung in sync_inodes_sb (5)
-                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
-<3> 140     Yes   INFO: task hung in xfs_buf_item_unpin (2)
-                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+Anyway, my earlier suggestion should work. Ming thinks it may go to far,
+though, in not taking the optimization when it was possible. So here's
+an alternative suggestion that should get things working as expected:
 
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+diff --git a/block/blk.h b/block/blk.h
+index 1a2d9101bba04..4c31762d6fb5f 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -404,6 +404,9 @@ static inline bool bio_may_need_split(struct bio *bio,
+        bv = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+        if (bio->bi_iter.bi_size > bv->bv_len - bio->bi_iter.bi_bvec_done)
+                return true;
++
++       if ((bv->bv_offset | bv->bv_len) & lim->dma_alignment)
++               return true;
+        return bv->bv_len + bv->bv_offset > lim->max_fast_segment_size;
+ }
+ 
+-- 
