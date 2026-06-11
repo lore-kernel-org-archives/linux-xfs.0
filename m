@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE752D5940
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:05:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FAF33BE63F
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:05:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781186702; cv=none; b=MDbBJdWXbfX18orzeb1ZG6jTeIpLjkhFP5cf5CcmnuFxEoCDE1h738763/6nfxJu8eU5NP7aWmZoQ5H2PlSuWkXWEmTOqtH7IB+5MkxYYRhxQHaa8oBC9XjzKVwFXGUu3qkWm49Q74MkBinG6upLPMYFvAcBpqanYSIwv6xdHec=
+	t=1781186708; cv=none; b=o24uZWrdj///ewVIOdLzZhPA6sQF0ozS1i3xiQiPPwMqmW3Ygsh4FabaoLWU7VACIbTZieXsL/LJ4RPcZJwHqd5fM1j56MqbWHv3RBaR7e4CwqjU3266mdymPwcqor0k8nbUzm7nu3frtmaMnhwMm0HEsqSJxu8GrMU3kqXiUMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781186702; c=relaxed/simple;
-	bh=dTNstQyYN7e4v10GPIiQC4upDzkiGDZejs9h8lSFQYI=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=NkOadREYalCGFUD3xcZDinrGF7KcDWqXG36h5xdL9DhJs5A5d+VCd6X9CDAet8Dq0l6to7NWmLGY73TgBkAbKIn3U069DDAeHmrU3jl/taMrPjPUuTPLStwmL1c/bNRIaxt2VA70qmbxoN4AKsNMeVdQIeX3BpEy+10IZ0YGeSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G0ZG02RR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781186708; c=relaxed/simple;
+	bh=dcMkHvoNgxGb5PXv991Awe9naKU0zth4DyDgWD0FvSA=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eudft8wDR4RyHEbewdJuoz4qLkpsROj/BR3o4djSUeMcT0DOi+GQzXXR2jFjUSyeqlo2nqiz7eb82jN/UnZhIaN1fQq5CTD6nGyewuhWd7wSuIOaUdv5dPRN8Vtre9LKuhnTjYbiBKqnBdh5/xl5wK+YiqQqsap/jqvNZefvjLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+2jD9o4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G0ZG02RR"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2DD6D1F00893;
-	Thu, 11 Jun 2026 14:05:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+2jD9o4"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AD3501F00893;
+	Thu, 11 Jun 2026 14:05:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781186701;
-	bh=Ddv1i+IMcYFQkYLQSFV+rGDH6CMJwgg3kHVAVXgI8+Q=;
-	h=Date:Subject:From:To:Cc;
-	b=G0ZG02RR7uXYRDo5eFNunE+nvD+D8GBkE/S/NUX5cU7iDp2n0CNTDfXsyD7jgp7YO
-	 mXDGNQUQghmwpuXGKJMSCM5k4q3P6yR4vJQPjekFl5/rK5Vf/x0pb1b6t8z9wIlnf2
-	 hZxticYbERjuTdLZ3FJRiW06colGxmthNA1mitJC4hUTzLnGe2xZxbcQiz56Rsu0hc
-	 nUC4jg+3LsRqeknlR/Y20d72MUkyS35HFnRTRae3JS1yRovigJJrU+85cpRQsNOJZr
-	 +QY00cpPJqhOU5QMugjBp/usJffqyjvfz9dn00jYV7T2WC33PgCBpKUMILY6PjJROA
-	 MrEm8bSDK433w==
-Date: Thu, 11 Jun 2026 07:05:00 -0700
-Subject: [PATCHSET] xfs_healer: codex-inspired bug fixes, part 2
+	s=k20260515; t=1781186706;
+	bh=HP2Uaahludg7BAWpacwGf/ubozn8BkhDFtKkXumtkn0=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References;
+	b=R+2jD9o4MWGHfdYz69CScPwgGYG9TkrlpH/mLkZFNfydwJrpY46AcamK+U/n7gEPq
+	 Eixa4lKowKbUHf+Dt5aiIeOfI+CE7VZWU6PylaAp4/MUlGD3G99SlQSWEZwCsp5pSI
+	 sUjqasjCBkqhTAmcdyWpzqiEneeoc5KcT3Jf6HbMgsWbJwFB51nEwqRrbYq+jDp/wY
+	 0rlCJTu7g4VU/P+B79OkSY2XKCG19IYdtNfGOBiSmR/X5M8YdS8eTPrbN6DI0ArEqM
+	 l75EBJ4Ktu7SDGCIxCBNe5ZjIl1pc4SKhctGVv6vOPVod1r9o2JbuIIOUcNsUVHmhj
+	 Cqd5R3+obotMA==
+Date: Thu, 11 Jun 2026 07:05:06 -0700
+Subject: [PATCH 1/6] libfrog: fix buffer overflow in getparents path_to_string
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+Message-ID: <178118661261.728615.14375517216210339386.stgit@frogsfrogsfrogs>
+In-Reply-To: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,33 +43,33 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a second batch of xfs_healer fixes resulting from Codex reviews.
+Codex points out rather indirectly that snprintf returns the number of
+bytes that would be formatted into the buffer excluding the null
+terminator.  However, it won't format more bytes than the size
+parameter, so the proper way to detect overflows is to compare the
+return value against the size parameter.  Fix that.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=healer-codex-fixes2
+Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+Fixes: 56f6ba21e97756 ("libfrog: add parent pointer support code")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-Commits in this patchset:
- * libfrog: fix buffer overflow in getparents path_to_string
- * xfs_healer: don't allow aliasing of mon_fd in setup_monitor
- * xfs_healer_start: check listmount when doing a --check
- * xfs_healer_start: fix static checking
- * xfs_healer_start: increase statmount buffer size
- * xfs_healer: allow AF_UNIX socket access for xfs_healer instances
----
- healer/Makefile               |    5 +++++
- healer/xfs_healer.c           |    1 +
- healer/xfs_healer@.service.in |    4 ++--
- healer/xfs_healer_start.c     |   43 +++++++++++++++++++++++++++++++++++++----
- libfrog/getparents.c          |    2 +-
- 5 files changed, 48 insertions(+), 7 deletions(-)
+ libfrog/getparents.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/libfrog/getparents.c b/libfrog/getparents.c
+index e8f545392634e4..8a53c64332c839 100644
+--- a/libfrog/getparents.c
++++ b/libfrog/getparents.c
+@@ -355,7 +355,7 @@ path_to_string(
+ 		mntpt_len--;
+ 
+ 	ret = snprintf(gpi->buf, gpi->len, "%.*s", mntpt_len, mntpt);
+-	if (ret != mntpt_len)
++	if (ret >= gpi->len)
+ 		return ENAMETOOLONG;
+ 	gpi->written += ret;
+ 
 
