@@ -1,44 +1,33 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC07305E28
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 05:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 266A82F0C74;
+	Thu, 11 Jun 2026 05:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781157160; cv=none; b=l2/J1eNbzDCGrzZHbQVCBh1KciIop5qHeQZMtqaYXalt6/Ad2swsHvdIHnPRqLUqF81cZ3xTf7Ul0A0jGJv9MS0sF66Pq63B70c7S4gnkxfOO3QdQkJ7VWCCHjM3EVi+BVNWvfxz1Zt+rGlAdh/gvsUDyfDoRPLecbnb0xQBLYM=
+	t=1781157472; cv=none; b=bvui2xDC4GSso5wLf1AVkviRbF2NLtcg8ETqpkMYj+XYovu/vsDzLPW9bwfQilv/g9FQ8nFrPIWOQbXHpI1itLCR+uiW+/12HrsB4lPSjlhQ5Th4SaEr1RyAhpwGo5j8XrlFKlqTkBtc+E1V23TptmxBtFb3fCUNaeIkwaXtyrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781157160; c=relaxed/simple;
-	bh=q5sUughJxVhgqOqc8HdD1x/l70nzRaOXBRcF9GgHrUE=;
+	s=arc-20240116; t=1781157472; c=relaxed/simple;
+	bh=wTVWMr869qNxAZImCrP1/AI/tgL3odwId2Js0rwLe5k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ihhwp/erpm5gghQ84OGEbFJ71gKulhdRZdpXvzObPWSAnewNeEijVUzshRacyWxKqtFJqIU4LfjZkCESAOv0LrF9gPPXw6jGCcBX+ubBR9kNZGSw/VyFhBSVjIrwMCgxvvpbjmg070ceJuIvOv2zLIL4pdu/UXaVdz1gMdc60Pw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rqAgU3f7; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rqAgU3f7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=jC3AI9BcjfHlMQz0CJmpoHS5/XY+GL7b+KrNX7g/LfE=; b=rqAgU3f7m1du2ifQ5X6oXA6l9A
-	LZHzigHqcHH+SR38Rmj70x6Y/9R/pt5aYz0pJgz9O0CC4rEWIVd2LWl3G9QDu++x2T60LelFVbAEZ
-	HtGu2QDwQiQUZEVqpjbrGefz5+5NeRMHHupSv9Ds5iIRS9DjhnwdJms6fTOpULK83Gxr+C0FuidFL
-	AbaVOH8hxmYLJZ8eIkyi8tdZ/IGWBW4JHlExjN0bou/6kFgqHuLb+S3CeIU72esP462OPKhSrtRXN
-	PoENAx84IaVXWP4Yk3hqqkH/JWt3QGCMKkSjGHcyyUz00LLWLPBHzGiceECV5ACqynG17xq2c0XFz
-	6YZl6T/w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wXYLC-00000008lcp-3FhW;
-	Thu, 11 Jun 2026 05:52:34 +0000
-Date: Wed, 10 Jun 2026 22:52:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Yao Sang <sangyao@kylinos.cn>, linux-xfs@vger.kernel.org,
-	cem@kernel.org, Christoph Hellwig <hch@infradead.org>,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH] xfs: shut down zoned file systems on writeback errors
-Message-ID: <aipNIhAyRkSWIlDF@infradead.org>
-References: <20260611015305.1583003-1-sangyao@kylinos.cn>
- <20260611021303.GH6078@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=lznlwX3dcrwm2OWaBSJKPQTGyLzv0iv2bB0JooSKqFdf71ga3r+9AkdV2FvkjbrLyMP2YXXZM/fTn6tieYBJwyBlz0c7iWrWlZ7yI6mK4RTBiuw8BtV/Ek/72zO/UcKo6ll6sxljYhQ0rpwIr2TqFXNsrwUOfJl4NmpvCxqrskE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id AD53468B05; Thu, 11 Jun 2026 07:57:44 +0200 (CEST)
+Date: Thu, 11 Jun 2026 07:57:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: brauner@vger.kernel.org, linux-block@vger.kernel.devel,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
+	Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] iomap: enforce DIO alignment check in iomap
+Message-ID: <20260611055744.GA18538@lst.de>
+References: <20260610145218.141369-1-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,40 +36,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260611021303.GH6078@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260610145218.141369-1-cem@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jun 10, 2026 at 07:13:03PM -0700, Darrick J. Wong wrote:
-> > file system shutdown from the ioend completion path. The existing
-> > shutdown path wakes zoned allocation waiters and makes future space
-> > waits return -EIO instead of leaving tasks stuck waiting for progress.
+On Wed, Jun 10, 2026 at 04:52:11PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> File writeback errors taking down the entire filesystem?  That's pretty
-> drastic. :(
-
-Right now that is the only sane thing we can do, because..
-(we should probably have a different shutdown code for it, including
-similar checks in the GC code).
-
-> If writes to a zone fail, do subsequent writes to that zone also fail?
-
-Unless it is a transient retryable error which should not bubble up
-to the file system: yes;
-
+> The DIO alignment check has been lifted from iomap layer to rely on the
+> block layer to enforce proper alignment when issuing direct IO
+> operations. This though, depending on the IO size and buffer address
+> passed to the IO operation may lead to user-visible behavior change.
 > 
-> Is it possible either to requeue the failed writes to another zone?  Or
-> at least offline the zone and wake up the writers to convey the EIO?
+> This has been caught initially by LTP test diotest4 running on
+> PPC architecture, where the test fails because a read() operation
+> with a supposedly misaligned buffer succeeds instead of an expected
+> -EINVAL.
+> This has no direct relationship with PPC, but seems to do with the
+> IO size crossing page borders or not.
 
-... what would be your model for errors be?  Right now the existing
-devices we've deal with will not return errors until they are really
-dead, which has been normal for devices for a while.  There can be
-transient errors from the device or transport, but the drivers / block
-layers are supposed to deal with this.
+I don't understand the problem here.  Why do we want to insist on a
+failure when we can support it?  I think the test is just broken.
 
-Yao: can you explain what errors your are seeing?  I.e. full nvme
-dmesg output that tells us the status code?  Or are you just doing
-error injection for testing.
-Either way we should probably document our error handling model and
-back it up with tests injecting errors and verifying we conform to
-this model.
+> The problematic behavior is reproducible on x86 by reducing the IO size
+> to something < PAGE_SIZE, so the misaligned read()s will also be accepted
+> by the block layer.
 
+What do you mean with misaligned here?  For a long time the kernel
+supports basically arbitrary low memory alignment for diret I/O,
+just bounded by the device capabilities (typical 4 byte alignment).
+
+The supported memory alignment is reported in the statx
+dio_mem_align.  What does that say compared to the alignment
+expectations in this test?
