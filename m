@@ -1,38 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D52F2C0F91
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:33:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DD0347BA9;
+	Thu, 11 Jun 2026 15:47:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781188439; cv=none; b=N1DJpMMACynaMKunUOhd60k3kxhX1Tb5klWIiEHPkOsNbGp+SmFkYo/mQ8PGGWR/osIRgVKY5JtjZPmipb7sbitEaFkqRVRS0wH4GOZCPv87rP1e+AKiuGmzmC9Yqebf2eo5sldXHacPkgeJrlcK8dhF1KBhBf5Ph70B48logXk=
+	t=1781192836; cv=none; b=nKp4h7FMj9LjhocPepyj0CPzwl0PXc74tSsoMVRnTJmPw1fypEKawUsPF4gp816Y+evYwlzBzR/1gajWjqB9sgsCARPoFveQjI6JK3N/Tlhy8Qz4KGvEyYhkRp0YvVzH/xrjJtkHjXTpc8EwbJQfII7PtSOxqcWa6LwWEk8A6lA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781188439; c=relaxed/simple;
-	bh=F04WZ/I3P6YRxSDm9cBbLUojNSRizYCioEnDQ002uLE=;
+	s=arc-20240116; t=1781192836; c=relaxed/simple;
+	bh=8n+BI3OKNYyEQzhY7WJaQAuqUJR8cz2phN56WMbMPjM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fXwAN5Rd4iYfvrpjHaZ8OFrRyLzQICl/ZSlC5ZYAgFiW2JDZvsR58w9o1h+oXPps7z7jseWSGJ5qYVvAu3CliiWRW599RZihfQ7xUNn+aUnGq1aGf2EBCW/13jmf3RREPPkkSDk4B19JVBofV+LNM44IgxkLz5G5/KzBSH7dHWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c/exHQwq; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=aTVeO7wqv48vW2YV50f5uPSTysp8DxFvRwFk2Otf9jdqv4bpwKsQXzqHD+HjOZlbrRWrqlwSSCclKK76bsujHb2Qxn9jIlIFyFIopMDLEFaJc/9uA3HoKqyMrBshcPhhOUh80ddnH9G5eEm3Ky0r+xrXM8k2xJ3CPY1VKr3m1bA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OxUMj8Wg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c/exHQwq"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D04F71F00893;
-	Thu, 11 Jun 2026 14:33:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OxUMj8Wg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC8191F00893;
+	Thu, 11 Jun 2026 15:47:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781188437;
-	bh=BFFsHzgeSdb8fXdG9zxwf9dxSM1FZ8bMtw/7MuWa00g=;
+	s=k20260515; t=1781192833;
+	bh=BQkY18XefNqHuldFMe2cnw1QPjj3SW+tXUJsMH5FJnM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=c/exHQwq67Krf/CHb9BWLDRF4xC04dQhByTk4uSXodmrLhnA8mG4JUgQfHTmOEYCF
-	 eHql68Z277SD19bLJKv8RF/rrkb8ItXs4E8608shhDyaIe6xWK4V2H3P8Cmqm/AJuF
-	 kvfnm6e05q8vz7SD6K9dMOqsaPMfZ5isGLeJOeCixoYGwKkCz7PECZDfyp4mBfoSFz
-	 tr5XbGRUKJtYeIHzayj6r5+pLqorgx8+tNjoazCxMUBEPvIjfFCCf7XVqZfEHHCdCR
-	 AN2Ivf2RJx7YnmR82uxqFFr6s6BLE/OnMTqsFcXwWmQVoHpMrgY0qZQm+vOCrxJFQH
-	 vFP/LpCwXl9sA==
-Date: Thu, 11 Jun 2026 07:33:57 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
-Subject: [PATCH 7/6] xfs_healer: don't put the slice file in LDIRT
-Message-ID: <20260611143357.GJ6078@frogsfrogsfrogs>
-References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+	b=OxUMj8Wg/0kU/3/9D/M0S0dPwarM5mvjI3beqGNVZsqtn0EejhgLsRfEIvz19hT8X
+	 Io6XXY/3XOj1TJ3oQuozk9TC4DZ989nWw95qo9BKgmnqrcpgbPHmz9FSDSZvfbUvqt
+	 qusYoSXSq6cfQqeQIznV8U7/1natL2ILShgNXozAmOY05XdiLTSrpmykluw6rkm85p
+	 67QYDpaNT8NpKKw3ktT7WRedmG54dtU9VUsF5iDo+kOR+o/zhtTh5SYaKTlY+KH+y3
+	 VGLLLQp/mStYtDSVMP2ewOvFrHTFPMIuGn048dK70NXD2k7HOWIHYJclYPsIJbGGuD
+	 x8uCGuZ5HeiDw==
+Date: Thu, 11 Jun 2026 17:47:07 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@kernel.org>, brauner@kernel.org, 
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Hannes Reinecke <hare@suse.de>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] iomap: enforce DIO alignment check in iomap
+Message-ID: <airX6BmMQ14Rvjcb@nidhogg.toxiclabs.cc>
+References: <20260610145218.141369-1-cem@kernel.org>
+ <20260611055744.GA18538@lst.de>
+ <aiqBvF93P4NjfaDR@nidhogg.toxiclabs.cc>
+ <aiqwy5DfHI79KXuZ@kbusch-mbp>
+ <20260611133833.GA14645@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,39 +48,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+In-Reply-To: <20260611133833.GA14645@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jun 11, 2026 at 03:38:33PM +0200, Christoph Hellwig wrote:
+> On Thu, Jun 11, 2026 at 06:57:47AM -0600, Keith Busch wrote:
+> > It's entirely possible a device supports byte aligned addresses. The
+> > block layer just doesn't let a driver report that. So either it really
+> > was successful because you found a bug that skips the alignment checks,
+> > or your device silently corrupted your payload.
 
-The slice file isn't generated, it's merely copied as-is when installed.
-Therefore it shouldn't be in LDIRT.
+I tried this on different hardware, I find it hard to say all those
+devices were corrupting the payload.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- healer/Makefile |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+> > 
+> > Anyway, my earlier suggestion should work. Ming thinks it may go to far,
+> > though, in not taking the optimization when it was possible. So here's
+> > an alternative suggestion that should get things working as expected:
+> 
+> The fix below looks like it is addressing a real bug.  I'm not sure if
+> Carlos is hitting it, but we were missing the alignment checks for
+> single-bvec fast path bios so far indeed.
 
-diff --git a/healer/Makefile b/healer/Makefile
-index a95ef9586d369b..e3c41e668da59e 100644
---- a/healer/Makefile
-+++ b/healer/Makefile
-@@ -37,17 +37,16 @@ INSTALL_HEALER += install-systemd
- SYSTEMD_SERVICES=\
- 	system-xfs_healer.slice \
- 	$(XFS_HEALER_SVCNAME)
-+LDIRT += $(XFS_HEALER_SVCNAME)
- OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
- endif # HAVE_SYSTEMD
- 
- ifeq ($(HAVE_HEALER_START_DEPS),yes)
- BUILD_TARGETS += xfs_healer_start
--LDIRT += xfs_healer_start xfs_healer_start.o
-+LDIRT += xfs_healer_start xfs_healer_start.o xfs_healer_start.service
- SYSTEMD_SERVICES += xfs_healer_start.service
- endif # xfs_healer_start deps
- 
--LDIRT += $(SYSTEMD_SERVICES)
--
- default: depend $(BUILD_TARGETS) $(SYSTEMD_SERVICES)
- 
- ifeq ($(CHECKSRC),2)
+You left context out so I'm assuming by the fix you meant Keith's patch.
+I can give it a spin and see if it fixes the behavior I'm talking
+about. Give me some time as I have a bunch of stuff to do tonight so
+likely I will only manage to try this tomorrow.
