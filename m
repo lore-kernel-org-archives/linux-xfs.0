@@ -1,39 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23837286D70
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 02:13:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC07305E28
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 05:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781143988; cv=none; b=mRXCsL62XnJLAr8aJCOB4PsKyIxjep/0E2fDT0Ii5fmKX1S93YnlVqFvOb1BVkJGIo0GkQE1aETXn/sgkoX4u56lkEibxkmniGjmd82LozR4kEuyGyFW2KxUWFwDahe3fNZmQce/X+rkABa+9+qMghJMqxqGtqkx+TKSzS9FYWw=
+	t=1781157160; cv=none; b=l2/J1eNbzDCGrzZHbQVCBh1KciIop5qHeQZMtqaYXalt6/Ad2swsHvdIHnPRqLUqF81cZ3xTf7Ul0A0jGJv9MS0sF66Pq63B70c7S4gnkxfOO3QdQkJ7VWCCHjM3EVi+BVNWvfxz1Zt+rGlAdh/gvsUDyfDoRPLecbnb0xQBLYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781143988; c=relaxed/simple;
-	bh=VuX1D/TgNya1zzU6Y74+Apek9EaJ9J6cKFhl2szNpTI=;
+	s=arc-20240116; t=1781157160; c=relaxed/simple;
+	bh=q5sUughJxVhgqOqc8HdD1x/l70nzRaOXBRcF9GgHrUE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SqenZw7ecGs3HZ+F8bIYqG0G0G+6o5uI8SF74+SGkVDQPByGa8prJMmdo+B8Au0zoM4eHnLHDkGtu4Iz1vuunetvyouW1IgLsmOmQDTpCrA7oacdEYZKWZBV8aN7S72mNTaxhiYqT/GFG+RprufYUgXUXP2Bem3saGLMtcgUsUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZObN5DOd; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ihhwp/erpm5gghQ84OGEbFJ71gKulhdRZdpXvzObPWSAnewNeEijVUzshRacyWxKqtFJqIU4LfjZkCESAOv0LrF9gPPXw6jGCcBX+ubBR9kNZGSw/VyFhBSVjIrwMCgxvvpbjmg070ceJuIvOv2zLIL4pdu/UXaVdz1gMdc60Pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rqAgU3f7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZObN5DOd"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 826681F00899;
-	Thu, 11 Jun 2026 02:13:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781143984;
-	bh=EKZCyx0FInygfaesRMmJR1LHuHRvYkOLGWXn2aggU+o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZObN5DOd1xszpyU3NqbHpcwOGdwefhfLp5qHKfXL8Bg0oOW2Cd/hJED7j8o9iXahq
-	 6kssbULsD2JNwaryE9MXLx/pwajb+hI8Z22wPKH9r8NFSGtzbo6R8jlRqtlXakVQf0
-	 7//wSs5mZoHuH49eWkL3JxWfYWn4J6vrwsmOBzpt2V9gCrfB7+0L2sTrnRstTG7jrt
-	 q3Quslnubj2JMPnPgRnOop/CgFWX37chOatqkg8jXhY5QdX/rurSvmFHAS3sC4W64U
-	 74dTCh6TJTwuRWvKRyOii4Vl40Xs3ffUcFmpRA2OHq00Ca6diZSyhTRpRI8hkAMqAF
-	 UX5udKEUgSgfw==
-Date: Wed, 10 Jun 2026 19:13:03 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yao Sang <sangyao@kylinos.cn>
-Cc: linux-xfs@vger.kernel.org, cem@kernel.org,
-	Christoph Hellwig <hch@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rqAgU3f7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=jC3AI9BcjfHlMQz0CJmpoHS5/XY+GL7b+KrNX7g/LfE=; b=rqAgU3f7m1du2ifQ5X6oXA6l9A
+	LZHzigHqcHH+SR38Rmj70x6Y/9R/pt5aYz0pJgz9O0CC4rEWIVd2LWl3G9QDu++x2T60LelFVbAEZ
+	HtGu2QDwQiQUZEVqpjbrGefz5+5NeRMHHupSv9Ds5iIRS9DjhnwdJms6fTOpULK83Gxr+C0FuidFL
+	AbaVOH8hxmYLJZ8eIkyi8tdZ/IGWBW4JHlExjN0bou/6kFgqHuLb+S3CeIU72esP462OPKhSrtRXN
+	PoENAx84IaVXWP4Yk3hqqkH/JWt3QGCMKkSjGHcyyUz00LLWLPBHzGiceECV5ACqynG17xq2c0XFz
+	6YZl6T/w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wXYLC-00000008lcp-3FhW;
+	Thu, 11 Jun 2026 05:52:34 +0000
+Date: Wed, 10 Jun 2026 22:52:34 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Yao Sang <sangyao@kylinos.cn>, linux-xfs@vger.kernel.org,
+	cem@kernel.org, Christoph Hellwig <hch@infradead.org>,
+	Damien Le Moal <dlemoal@kernel.org>
 Subject: Re: [PATCH] xfs: shut down zoned file systems on writeback errors
-Message-ID: <20260611021303.GH6078@frogsfrogsfrogs>
+Message-ID: <aipNIhAyRkSWIlDF@infradead.org>
 References: <20260611015305.1583003-1-sangyao@kylinos.cn>
+ <20260611021303.GH6078@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,88 +47,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260611015305.1583003-1-sangyao@kylinos.cn>
+In-Reply-To: <20260611021303.GH6078@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jun 11, 2026 at 09:53:05AM +0800, Yao Sang wrote:
-> Zoned writeback allocates space from an open zone and advances the
-> in-memory allocation state before submitting the bio.  The completion
-> path only records the written blocks and updates the mapping on success.
-> If the write fails, XFS cannot tell how far the device write pointer
-> advanced and cannot safely roll the open zone accounting back.
+On Wed, Jun 10, 2026 at 07:13:03PM -0700, Darrick J. Wong wrote:
+> > file system shutdown from the ioend completion path. The existing
+> > shutdown path wakes zoned allocation waiters and makes future space
+> > waits return -EIO instead of leaving tasks stuck waiting for progress.
 > 
-> This was observed while investigating xfs/643 and xfs/646 on an external
-> ZNS realtime device. A writeback error after consuming space from an
-> open zone left later writers waiting for open-zone or GC progress that
-> could not happen. xfs/643 exposed this through the GC defragmentation
-> path, while xfs/646 exposed the same failure mode through the
-> truncate/EOF-zeroing space wait path.
-> 
-> There is no local recovery path in ioend completion that can restore a
-> consistent zoned allocation state after the device has rejected the
-> write. Treat writeback errors for zoned inodes as fatal and force a
-> file system shutdown from the ioend completion path. The existing
-> shutdown path wakes zoned allocation waiters and makes future space
-> waits return -EIO instead of leaving tasks stuck waiting for progress.
+> File writeback errors taking down the entire filesystem?  That's pretty
+> drastic. :(
 
-File writeback errors taking down the entire filesystem?  That's pretty
-drastic. :(
+Right now that is the only sane thing we can do, because..
+(we should probably have a different shutdown code for it, including
+similar checks in the GC code).
 
-If writes to a zone fail, do subsequent writes to that zone also fail?
+> If writes to a zone fail, do subsequent writes to that zone also fail?
 
-Is it possible either to requeue the failed writes to another zone?  Or
-at least offline the zone and wake up the writers to convey the EIO?
+Unless it is a transient retryable error which should not bubble up
+to the file system: yes;
 
-(hch might have better ideas...)
+> 
+> Is it possible either to requeue the failed writes to another zone?  Or
+> at least offline the zone and wake up the writers to convey the EIO?
 
---D
+... what would be your model for errors be?  Right now the existing
+devices we've deal with will not return errors until they are really
+dead, which has been normal for devices for a while.  There can be
+transient errors from the device or transport, but the drivers / block
+layers are supposed to deal with this.
 
-> Signed-off-by: Yao Sang <sangyao@kylinos.cn>
-> ---
-> Zoned writeback allocates space from an open zone before submitting the
-> bio.  If the device later rejects the write, XFS cannot reliably recover
-> the in-core open-zone allocation state from ioend completion, because it
-> cannot know whether or how far the device write pointer advanced.
-> 
-> The issue was investigated with xfs/643 and xfs/646 on an external ZNS
-> realtime device.  Both tests can expose the same failure mode once a
-> writeback error happens after consuming open-zone space:
-> 
-> - xfs/643 exposes it through the GC defragmentation path.
-> - xfs/646 exposes it through the truncate/EOF-zeroing space wait path.
-> 
-> Without forcing shutdown, later writers can wait for open-zone or GC
-> progress that will never arrive. Forcing shutdown wakes the existing
-> zoned allocation waiters and turns later waits into -EIO.
-> 
-> Tested with:
-> - xfstests: xfs/642, xfs/643, xfs/644,
->   xfs/646, xfs/647 
-> 
->  fs/xfs/xfs_aops.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1a82cf625a08..4bcb47da5989 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -139,6 +139,16 @@ xfs_end_ioend_write(
->  	 */
->  	error = blk_status_to_errno(ioend->io_bio.bi_status);
->  	if (unlikely(error)) {
-> +		/*
-> +		 * Zoned writes update the in-core open zone accounting before
-> +		 * I/O submission.  A failed write leaves that state inconsistent,
-> +		 * so shut down the filesystem instead of letting later writers
-> +		 * wait forever for open zone space to become available.
-> +		 */
-> +		if (is_zoned) {
-> +			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-> +			goto done;
-> +		}
->  		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
->  			ASSERT(!is_zoned);
->  			xfs_reflink_cancel_cow_range(ip, offset, size, true);
-> -- 
-> 2.25.1
-> 
-> 
+Yao: can you explain what errors your are seeing?  I.e. full nvme
+dmesg output that tells us the status code?  Or are you just doing
+error injection for testing.
+Either way we should probably document our error handling model and
+back it up with tests injecting errors and verifying we conform to
+this model.
+
