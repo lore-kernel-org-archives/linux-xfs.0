@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26DA6411664
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:05:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB56D2DA76C
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:05:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781186739; cv=none; b=RjLFvFvbICgsAfHosriX25DFhmTB+OKo8MLza2r4gJSRhM5TJtwuQ+UR+KuGmnCOY1BfcJj2v4LUcDUAH/981cGgx9I9cpuXpJWbLceTRix9Y3U1IN8QwYYgV7qmHT8619bfslNVi2k+W7hS8MfPz+jkxql4d0XwN+4RuQfsy04=
+	t=1781186754; cv=none; b=INPA+btbNAbv/HHBoNtVSFEN+Yd2TVJO6Oaj2Jna4V26uJNcYlewjLf6FfxEUMIrw/Hcs/yzO4OIFPhnAD2x8DKiZPotgosJoPGqT51j4IrPKjebjpMz4IFia0ySOsUzn8VvvjkRpTdv+0oCPXeS5AgUSS1AA+R9FEFndEOT2+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781186739; c=relaxed/simple;
-	bh=py/VYKXAticp4CLi4Ewk9FYGBTro7E/UlkXaPz+OBWI=;
+	s=arc-20240116; t=1781186754; c=relaxed/simple;
+	bh=j26GpgUZLcwKgvA3naSb5STDjT8J8YKYivfPDV5Hvgg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LUiU2x2u6Of6Cn+WP4ngAB6f1f23u1JewTvuYrLlIPpVJtCyLlC3XXbG9DhfJ4IGH3j44AP1TSTvc97uGkSoguoz/SKR0Up7xprJi1XDzw7Ysowz31X9qgbEfRefDI50hnYlLHZ2xCguqotP49tb5dZkucnf9YbSkGEumky9vac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g+hXWMdy; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=SMqcnUpLzbWcWlP8Bv/0QcPwN20j3rgJxIQAK7ADJPwyMDICVDHIjMeOB+k4smkrb0OUt7DKtni1YQPAdUvZoFPvpsfo4QzxNpcbf9i7SXnvqIziTNZtUA4ndofew0d77hN7WAuFScuV6JjNhLTxpGBYHm9tiqZgyMNgrEY0dY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e4K0UROq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g+hXWMdy"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B5D171F0089C;
-	Thu, 11 Jun 2026 14:05:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e4K0UROq"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3E1931F00893;
+	Thu, 11 Jun 2026 14:05:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781186737;
-	bh=yRODLjZV2W90lbb2gU6TR0prtaITvwSNJFJjIITibN4=;
+	s=k20260515; t=1781186753;
+	bh=KYUzbb+G0t2EByx2N6P0ZR92BhFxYEUMRbaiQ2xonc4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=g+hXWMdypJfgk8/MnrnvjqR1aVzpoQ9XzlNZM3ISmJYyzsFgcBSBRh7tiZMa/6z+t
-	 wMY51kfXjOEKQAIvNX8Hb+pBM/jjt/BmjKGnFQPxrOdMUxqYaLP9uYzuau5TPhobHT
-	 kyFgWMubmqo9/K61XhZJWimM+PM7NiqFyI1Ok0vPWZQU9Rgx9PD/CwEIkSUNlrx9Ng
-	 jonVSsHYvC5sE9Z1IJp74wUR29dcG0wkza2E1eeUB20+/ovrCVVM/v6w/vRZkDjj8F
-	 YPK/qAYnzecVp7aZlEBdQdRS34b6/G1H5scDbcoxeuN8LoinzuL3MWe9mzex8S6i+n
-	 f0Pk9GAqmY24Q==
-Date: Thu, 11 Jun 2026 07:05:37 -0700
-Subject: [PATCH 3/6] xfs_healer_start: check listmount when doing a --check
+	b=e4K0UROqqZXSpndyI1HXyCcbh6sBfaVP49VF1iswwYJ3FhRcILiAHuFQibCefHLKJ
+	 GG0Lli7pweSHO0B7SrJqZiBym756DApMIv9GvniktGUUKuQwzWWrtWWjboNoe1CzOd
+	 QeO7FHo+BOiNZNzYdeZuEC2xneU65y+ghiTSDdnavHwx9XqWAuo4gGLQ5En8i7vH2/
+	 IIY9DTGoo/86YLQg6/YCQx7o2GdvGliinQcSnwNd7H0SnCmpl6rVw/oShKMxp1pscP
+	 oWNJ6/I30Y/8ujEf+0JZPSXT/GNSMDQDwtU+SGB0oWSe9BGK1q5VovLvYi37hS4HFZ
+	 LtDZBcwRu+lbA==
+Date: Thu, 11 Jun 2026 07:05:52 -0700
+Subject: [PATCH 4/6] xfs_healer_start: fix static checking
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178118661298.728615.3080573416824854151.stgit@frogsfrogsfrogs>
+Message-ID: <178118661316.728615.15344702808600397376.stgit@frogsfrogsfrogs>
 In-Reply-To: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
 References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,59 +45,32 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Codex noticed that xfs_healer_start doesn't try out listmount() when
-it's doing a --check.  Because systemd uses --check for an
-ExecCondition, if it's run on a pre-6.9 kernel (very unlikely) then the
-service will fail instead of simply not being run.  Fix that.
+Fix static checking for the startup program's source code.  Alternately,
+we could move it to its own subdirectory.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- healer/xfs_healer_start.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ healer/Makefile |    5 +++++
+ 1 file changed, 5 insertions(+)
 
 
-diff --git a/healer/xfs_healer_start.c b/healer/xfs_healer_start.c
-index 19fd132808611c..6bf2b9bf854e6d 100644
---- a/healer/xfs_healer_start.c
-+++ b/healer/xfs_healer_start.c
-@@ -157,6 +157,28 @@ handle_mount_event(
- 	}
- }
+diff --git a/healer/Makefile b/healer/Makefile
+index abdddf0eaa5ae1..d2d764d6142193 100644
+--- a/healer/Makefile
++++ b/healer/Makefile
+@@ -49,9 +49,14 @@ endif # xfs_healer_start deps
  
-+/* Make sure listmount actually works so we can start up existing mounts */
-+static int
-+check_listmount(
-+	int			mnt_ns_fd)
-+{
-+	uint64_t		mnt_ids[1];
-+	uint64_t		cursor = LISTMOUNT_INIT_CURSOR;
-+	int			ret;
-+
-+	ret = libfrog_listmount(LSMT_ROOT, mnt_ns_fd, &cursor, mnt_ids, 1);
-+	if (ret >= 0)
-+		return 0;
-+
-+	if (errno == ENOSYS)
-+		fprintf(stderr, "%s\n",
-+ _("This program requires the listmount system call."));
-+	else
-+		perror("listmount");
-+
-+	return -1;
-+}
-+
- #define NR_MNT_IDS		(32)
+ default: depend $(BUILD_TARGETS) $(SYSTEMD_SERVICES)
  
- /* Start healer services for existing XFS mounts. */
-@@ -336,6 +358,10 @@ main(
- 	}
++ifeq ($(CHECKSRC),2)
++xfs_healer_start: $(SUBDIRS) xfs_healer_start.o
++.PHONY: xfs_healer_start
++else
+ xfs_healer_start: $(SUBDIRS) xfs_healer_start.o $(LTDEPENDENCIES)
+ 	@echo "    [LD]     $@"
+ 	$(Q)$(LTLINK) -o $@ $(LDFLAGS) xfs_healer_start.o $(LDLIBS)
++endif
  
- 	if (support_check) {
-+		ret = check_listmount(mnt_ns_fd);
-+		if (ret)
-+			goto out;
-+
- 		/*
- 		 * We're being run as an ExecCondition process and we've
- 		 * decided to start the main service.  There is no need to wait
+ %.service: %.service.in $(builddefs)
+ 	@echo "    [SED]    $@"
 
