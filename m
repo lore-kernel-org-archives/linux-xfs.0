@@ -1,219 +1,139 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F5A1319848
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 11:41:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B90603BED74;
+	Thu, 11 Jun 2026 11:56:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781178062; cv=none; b=Onnlwblve8ffvWysfNhEi8ThBKUqlIFicMoD0n0wd5Gpq/djG9Eb9BHIYuDKmmzRzlI5sZyZ78sO1GKnaumggfV9OfkxOwJC6Cw+kLxVFH48SiGlMezZiLOldNX2fWftqRAqWNG5QSC8CdeCr9LgFylvZIHJiOEWulFFZ4nJSTc=
+	t=1781178993; cv=none; b=M+71L8yRbeSt77DEdBQriWLo8oZcsIBfqevhP1nnXTCj8AKjsL83s/74tfoMEaAQm0ZXBD5ChvLsYVkothGy2pMqFVrbsJCACu8mVTp2ndfk6qlhDGOT0k5eIPTlEovzFMMw8gAhgp17iOS9oHpMRHh6wSoKGFpP//P9I9Ud3+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781178062; c=relaxed/simple;
-	bh=NbC5TRuysuj4KMXop7PUbosR1hfio1Ikr1c4beahW+I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ledfUXDU6mBpGO+78UPm9rD5vfpLXV8zfs5lNDGVwZhx26ZmiiQtM16L02c/wXrbcJjCQz9jRXohrmqiEVASUzZO+cn4p1sbgu+by024mnfebyn7kNGROo45Q3JIAR9drF4VsWr5TfC+xMPC3GqcsN1Ii0eOdJxqY0KNM72Ndk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gbghB4B0Hz9vB3;
-	Thu, 11 Jun 2026 13:40:58 +0200 (CEST)
-From: Pankaj Raghav <p.raghav@samsung.com>
-To: linux-xfs@vger.kernel.org
-Cc: bfoster@redhat.com,
-	lukas@herbolt.com,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	p.raghav@samsung.com,
-	dgc@kernel.org,
-	gost.dev@samsung.com,
-	pankaj.raghav@linux.dev,
-	andres@anarazel.de,
-	kundan.kumar@samsung.com,
-	hch@lst.de,
-	cem@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Date: Thu, 11 Jun 2026 13:40:29 +0200
-Message-ID: <20260611114029.176200-4-p.raghav@samsung.com>
-In-Reply-To: <20260611114029.176200-1-p.raghav@samsung.com>
-References: <20260611114029.176200-1-p.raghav@samsung.com>
+	s=arc-20240116; t=1781178993; c=relaxed/simple;
+	bh=qb/KPND+WLYrkrhZ01DwKQrgaWGrFzLDaVTSHnPzstg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rHqN57uDKm37TnJ1J8XnFk9SAfLimyM99GwZ1zwy9HtQv1cr5Tnco5FmHNhcHBgy3yz5cRBdS50PiBYcb2XAArCeSp8aj6DfVvQKWnQYASfhBMY0/cGKxBkBJLhllTrcEaosCyNnsFwecBGakRQ55BDEeHWqcDB8SU/F5lEUgWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=VUwLDkOL; arc=none smtp.client-ip=54.206.34.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="VUwLDkOL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781178845;
+	bh=mE9lHqft7baR+OMiGttbIHqSKgrRPf79mOCpJgwzkBE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From;
+	b=VUwLDkOLmPmfdDjmnvSmk3uCyxllbtg5YiL9DnOpI031R+Xp2Hgdl8KM2MtQeHm5L
+	 BexeV0bEe+decHXBRRccRE0t1TeVfsGb6F+ZFxg+Ap8SqoSqUjJonUiJM3MimU+tVH
+	 9rAinc/b12qEs9rQMuneifNxvZhVt6kc0omR/kps=
+X-QQ-mid: esmtpsz19t1781178837t185b680b
+X-QQ-Originating-IP: bR/S/SZp7kdCgXjfgm328VQPKGA4o6kbuOh48Qak764=
+Received: from [10.7.13.51] ( [1.85.7.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 11 Jun 2026 19:53:55 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 13920602790602334213
+EX-QQ-RecipientCnt: 9
+Message-ID: <7EC39CB0E7CAEBEC+80edf818-6c82-4d25-aafa-b400f7b4c553@uniontech.com>
+Date: Thu, 11 Jun 2026 19:49:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: fix use-after-free of buf_log_item in
+ xlog_cil_build_lv_chain
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cem@kernel.org, djwong@kernel.org, dchinner@redhat.com,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+ niecheng1@uniontech.com, zhanjun@uniontech.com, gouhaojake@163.com
+References: <20260604094233.8492-1-gouhao@uniontech.com>
+ <ailYf4UzSLplTR3f@infradead.org>
+Reply-To: ailYf4UzSLplTR3f@infradead.org
+From: Gou Hao <gouhao@uniontech.com>
+In-Reply-To: <ailYf4UzSLplTR3f@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-2
+X-QQ-XMAILINFO: MZ9X7MyfBLbl13Fq0vi9C06qxuodjM1w03PgGtUrjzTw3QdU/iY8QVKm
+	Hyl3NoCKoH4ASN8O3boHkYurVjUizz/yHak4kkbUVoyp60Gmj9S1X/dZN1aOu94R1DoVCJ3
+	1lbnAjipUSqMolhFLIc6zOsUBa9RfOuEhRZb78G+tjw5cDUUNHxdgZRkxXVpDpCquy6rxgf
+	qNo3G5jHfbmqNXkdbjXcqiwJKn6OoJ19eP0UPhAHhqUkYhydJic70QiYy6fmsahenP+D982
+	eh5NUeiAT3+VF8JK5RqU5xWb9HvleqK5FmVyiIeY0xyG+416+Src+//FyyiddPucvrKyqLi
+	1O3jC5VA0K/R80nl0XMtIBimIVLl4F9wZl/h+f3jIrAIWKEYr/bGxpQmaHu8d2sJ48rI6Tq
+	xqOriVcPF+9vDeOAKSTCzfUgevfl5AuNV9OZhG7WLu1sdPRUDJAiByJuwldawnhImN5P7wP
+	wIrjeVXZnNu0oj7ekSOLs4coZqQIQeGI5vLb4rL+KGFFxMLX5+0Lzsw5RnYKSc30Bg/wi3z
+	G3ZTFHS+L9eRjRqc8mDG937hVph7TFRoP1ngdH0QvYzDWaHA4NdoUpsMDW+nLXuhHHP5flA
+	ncs6SRRCVDRZTdsM/RpZ4AWTvzzjbKFC8Aa+HUk7eyA7YgNdhPZ61N27xalXzXTmxFfsYyF
+	uQ0lSMAkc9OneQIvQgihMV46pRx0urCmR3Moz+TJS9zVDWqTRT1RhLQ/m5AiJF8k/n6zXKC
+	Vq4I2cV2JH5Aq6x5W+LW77yns5+mty8/UHtNL6r5Mf05Lcf74sf8htE6o5e41MWU1D4QByp
+	xsNPktOS4yinaPCyzoTLA0h56weq/IG6ODMW29oJjGRbolhWKBdYWdtBxKTl1O0qvlmpfho
+	Kk34MMy8Abm/6lzWOlfzkyTt+z0iQ3ozbqllya+KD+B7wj70GLRGCal1W7hSHX/Mh5a1sBz
+	SMLl/3P/YpxbB1tHr1c1uuXEHlTOTvhGLwYXggiij6gPq4sh2G7fENNrEiTdzeRvpScD7uT
+	GKKlIFJAHmE7bRtoQRppJ1sEds2nrOKPU8dQGO/WmHAHDUO6eMLEtTdsbrnhDiB7DpRmvLF
+	9ufA/qS+KUb
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-If the underlying block device supports the unmap write zeroes
-operation, this flag allows users to quickly preallocate a file with
-written extents that contain zeroes. This is beneficial for subsequent
-overwrites as it prevents the need for unwritten-to-written extent
-conversions, thereby significantly reducing metadata updates and journal
-I/O overhead, improving overwrite performance.
 
-Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/xfs/xfs_bmap_util.c | 19 ++++++++++--
- fs/xfs/xfs_bmap_util.h |  1 +
- fs/xfs/xfs_file.c      | 66 +++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 82 insertions(+), 4 deletions(-)
+On 6/10/26 20:28, Christoph Hellwig wrote:
+> On Thu, Jun 04, 2026 at 05:42:33PM +0800, Gou Hao wrote:
+>> xfs_buf_item_done() frees the buf_item via xfs_buf_item_relse() but
+>> does not remove the item from the CIL log_items list (li_cil). When the
+>> item is freed through an error/shutdown/abort path before the CIL push
+>> worker processes it, the freed memory remains linked in ctx->log_items.
+>>
+>> The CIL push worker in xlog_cil_build_lv_chain() then dereferences
+>> the freed object via item->li_lv, triggering a KASAN slab-use-after-free.
+>> For details, see Link[1].
+> There's no reproducer there.  Do you have a local one?
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 8dfb3c1e3759..55722b815117 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -643,11 +643,18 @@ xfs_free_eofblocks(
- }
- 
- /*
-- * Allocate space for a file according to @mode:
-+ * Allocate space or convert extents for a file according to @mode:
-  *
-  * XFS_ALLOC_FILE_SPACE_PREALLOC:
-  * Preallocate unwritten extents across the range and mark the inode as
-  * preallocated.
-+ *
-+ * XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-+ * Allocate written extents over holes and convert unwritten extents in the
-+ * range to written extents, initialising both to contain zeroes.
-+ *
-+ * This function does not update the file size; callers that extend the file
-+ * are responsible for updating it once the extents are allocated.
-  */
- int
- xfs_alloc_file_space(
-@@ -688,6 +695,10 @@ xfs_alloc_file_space(
- 		bmapi_flags = XFS_BMAPI_PREALLOC;
- 		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
- 		break;
-+	case XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-+		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-+		nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -776,8 +787,10 @@ xfs_alloc_file_space(
- 			allocatesize_fsb -= imapp->br_blockcount;
- 		}
- 
--		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		if (mode == XFS_ALLOC_FILE_SPACE_PREALLOC) {
-+			ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-+			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		}
- 
- 		error = xfs_trans_commit(tp);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 232b4c48247e..e3d506ca9610 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -57,6 +57,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- /* preallocation and hole punch interface */
- enum xfs_alloc_file_space_mode {
- 	XFS_ALLOC_FILE_SPACE_PREALLOC,
-+	XFS_ALLOC_FILE_SPACE_WRITE_ZEROES,
- };
- 
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e90ea6ebdc8e..37623baaaed6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1368,6 +1368,67 @@ xfs_falloc_force_zero(
- 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
- }
- 
-+static int
-+xfs_falloc_write_zeroes(
-+	struct file		*file,
-+	int			mode,
-+	loff_t			offset,
-+	loff_t			len,
-+	struct xfs_zone_alloc_ctx *ac)
-+{
-+	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			new_size = 0;
-+	loff_t			old_size = XFS_ISIZE(ip);
-+	int			error;
-+	unsigned int		blksize = i_blocksize(inode);
-+	loff_t			offset_aligned = round_down(offset, blksize);
-+	bool			did_zero;
-+
-+	if (xfs_is_always_cow_inode(ip) ||
-+	    !bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-+	if (error)
-+		return error;
-+
-+	error = xfs_free_file_space(ip, offset, len, ac);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Zero the tail of the old EOF block and any space up to the new
-+	 * offset.
-+	 * In the usual truncate path, xfs_falloc_setsize takes care of
-+	 * zeroing those blocks.
-+	 */
-+	if (offset_aligned > old_size) {
-+		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
-+		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-+				NULL, &did_zero);
-+		if (error)
-+			return error;
-+
-+	}
-+
-+	error = xfs_alloc_file_space(ip, offset, len,
-+			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * xfs_falloc_setsize() would re-zero the written extents via
-+	 * iomap_zero_range(). Use xfs_setfilesize() instead.
-+	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
-+	 * size to it.
-+	 */
-+	if (new_size > i_size_read(inode))
-+		i_size_write(inode, new_size);
-+
-+	return xfs_setfilesize(ip, offset, len);
-+}
-+
- /*
-  * Punch a hole and prealloc the range.  We use a hole punch rather than
-  * unwritten extent conversion for two reasons:
-@@ -1473,7 +1534,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1525,6 +1586,9 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_ALLOCATE_RANGE:
- 		error = xfs_falloc_allocate_range(file, mode, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		break;
--- 
-2.51.2
+No, I don't have one either. It's just based on code analysis.
 
+
+>> Add down_read() on xc_ctx_lock before list_del_init() in
+>> xfs_buf_item_done() to safely remove the item from the CIL list.  This
+>> uses the same lock that protects CIL list operations: insertions are
+>> done under xc_ctx_lock read-side (xlog_cil_insert_items) and removals
+>> under write-side (xlog_cil_build_lv_chain).  The read lock is safe here
+>> because xfs_buf_item_done() is always called in process context (workqueue
+>> or direct I/O wait) and cannot deadlock with the CIL push worker which
+>> holds the write lock during xlog_cil_build_lv_chain - the worker does not
+>> trigger metadata buffer I/O that would call xfs_buf_item_done().
+> This looks like a more general issue as we should never free anything
+> that is still on the CIL. I.e. it looks like we have even more issues
+> with the buf item state machine here :(
+>
+>> Reported-by: syzbot+598a791b31c498b63c6b@syzkaller.appspotmail.com
+>> Closes: https://lore.kernel.org/all/6a069a95.050a0220.2921a.0006.GAE@google.com/T/ [1]
+>> Fixes: 816c330b605c ("xfs: factor out stale buffer item completion")
+>> Cc: stable@vger.kernel.org
+>> Suggested-by: Zhan Jun <zhanjun@uniontech.com>
+>> Signed-off-by: Gou Hao <gouhao@uniontech.com>
+>> ---
+>>   fs/xfs/xfs_buf_item.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+>> index 8487635579e5..75529dfd1170 100644
+>> --- a/fs/xfs/xfs_buf_item.c
+>> +++ b/fs/xfs/xfs_buf_item.c
+>> @@ -1067,6 +1067,11 @@ void
+>>   xfs_buf_item_done(
+>>   	struct xfs_buf		*bp)
+>>   {
+>> +	if (bp->b_log_item->bli_item.li_log->l_cilp) {
+>> +		down_read(&bp->b_log_item->bli_item.li_log->l_cilp->xc_ctx_lock);
+>> +		list_del_init(&bp->b_log_item->bli_item.li_cil);
+>> +		up_read(&bp->b_log_item->bli_item.li_log->l_cilp->xc_ctx_lock);
+>> +	}
+>>   	/*
+>>   	 * If we are forcibly shutting down, this may well be off the AIL
+>>   	 * already. That's because we simulate the log-committed callbacks to
+>> -- 
+>> 2.20.1
+>>
+>>
+> ---end quoted text---
+>
