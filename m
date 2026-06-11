@@ -1,76 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB56D2DA76C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E19023EAC9B
 	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:05:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781186754; cv=none; b=INPA+btbNAbv/HHBoNtVSFEN+Yd2TVJO6Oaj2Jna4V26uJNcYlewjLf6FfxEUMIrw/Hcs/yzO4OIFPhnAD2x8DKiZPotgosJoPGqT51j4IrPKjebjpMz4IFia0ySOsUzn8VvvjkRpTdv+0oCPXeS5AgUSS1AA+R9FEFndEOT2+U=
+	t=1781186754; cv=none; b=anSpFgFbD38kkNXlU/toA6BV6nFGVdLBjbQ6UU2ys0pK8kxOX6fBM5OlS2h1U6rBUEqIgDNab574rTo8BXcUL5OgJy0FnBhuzOUsokVmROCRFG/PM9EDOOFem6OjJLKCWhrpFat14pIDMq6tvQfVl8sUC7lLs763b5iaK7/7qxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1781186754; c=relaxed/simple;
-	bh=j26GpgUZLcwKgvA3naSb5STDjT8J8YKYivfPDV5Hvgg=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SMqcnUpLzbWcWlP8Bv/0QcPwN20j3rgJxIQAK7ADJPwyMDICVDHIjMeOB+k4smkrb0OUt7DKtni1YQPAdUvZoFPvpsfo4QzxNpcbf9i7SXnvqIziTNZtUA4ndofew0d77hN7WAuFScuV6JjNhLTxpGBYHm9tiqZgyMNgrEY0dY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e4K0UROq; arc=none smtp.client-ip=100.103.45.18
+	bh=zOGkKj1Nh6ue3ni3y4xdmKFAJYNmFbQcbfwNL+F87mA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=h+r8oGULIIhItI2lKnxX39e1xRla9SlrvW3fbj12y3qCpm9ewlV9yPz6VaKHvNAsTauXn7JSA7/0lbbgIAOi0VAFZAsI9LYm0PMRWjzVS3aqoBUTPMxSi1B4nYWsu8lsND81QxWqmiiJYlfz95zl4ywAAGpk/nb1WFHvUBDH9bQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c/V3/rdM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e4K0UROq"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3E1931F00893;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c/V3/rdM"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BAA7E1F00898;
 	Thu, 11 Jun 2026 14:05:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1781186753;
-	bh=KYUzbb+G0t2EByx2N6P0ZR92BhFxYEUMRbaiQ2xonc4=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=e4K0UROqqZXSpndyI1HXyCcbh6sBfaVP49VF1iswwYJ3FhRcILiAHuFQibCefHLKJ
-	 GG0Lli7pweSHO0B7SrJqZiBym756DApMIv9GvniktGUUKuQwzWWrtWWjboNoe1CzOd
-	 QeO7FHo+BOiNZNzYdeZuEC2xneU65y+ghiTSDdnavHwx9XqWAuo4gGLQ5En8i7vH2/
-	 IIY9DTGoo/86YLQg6/YCQx7o2GdvGliinQcSnwNd7H0SnCmpl6rVw/oShKMxp1pscP
-	 oWNJ6/I30Y/8ujEf+0JZPSXT/GNSMDQDwtU+SGB0oWSe9BGK1q5VovLvYi37hS4HFZ
-	 LtDZBcwRu+lbA==
-Date: Thu, 11 Jun 2026 07:05:52 -0700
-Subject: [PATCH 4/6] xfs_healer_start: fix static checking
+	bh=iW+QkwGc7vAxyr9vPiwjlrBkIPxYc6GI7Y3OgGd0GfI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=c/V3/rdMfPfOvlaMbX54nQoifj7Cb/e1e9W+0qEhBrUB/igAvYbAcJSrLV24h1vA1
+	 U07W2wdqvjpGJMQIvnFEyHeylh4PiQ4AWWyQAmEeoKLFD639hEhl/R+XZvleRviGrM
+	 DOFBnV+KDt3XN2OcjuIMcicPPYJrFCmW/8N9GLY6Iuw7G7M6vW0Kp8zVHZg+jQzMwG
+	 PkUfg0Ez+7gJ2yVi1mat59y2CRU4Adn8M6zWazIDBW8vptDanfkVgMSBB0/uUcehL+
+	 c+QWmdBsC6Z/U7MovDQ10/vt0UPUD4IQ8dF9wuPqetAPwCWFVDyOzy/7uylUXee1JN
+	 PsOb/403ap7QA==
+Date: Thu, 11 Jun 2026 07:05:53 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org, djwong@kernel.org
-Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178118661316.728615.15344702808600397376.stgit@frogsfrogsfrogs>
-In-Reply-To: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
-References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 10/21] xfs_scrub: don't report media errors in
+ specially-owned areas as file data
+Message-ID: <20260611140553.GI6078@frogsfrogsfrogs>
+References: <178055303007.2608728.11678159907532979668.stgit@frogsfrogsfrogs>
+ <178055303293.2608728.8048137726163765459.stgit@frogsfrogsfrogs>
+ <aip8bIhSvpgEtqvF@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aip8bIhSvpgEtqvF@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jun 11, 2026 at 11:14:39AM +0200, Andrey Albershteyn wrote:
+> On 2026-06-03 23:06:56, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > If a media error occurs for some disk space that has a "special" owner,
+> > we mustn't try to walk parent pointers because special owners are not
+> > files.  If it's an extent map, we shouldn't accidentally fall into
+> > reporting that as file data loss.  This was, like the rest, found by
+> > Codex.
+> > 
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> Looks good to me
+> Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-Fix static checking for the startup program's source code.  Alternately,
-we could move it to its own subdirectory.
+Hey, thanks for reviewing this!  I have a few more fixes on the way...
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- healer/Makefile |    5 +++++
- 1 file changed, 5 insertions(+)
+--D
 
-
-diff --git a/healer/Makefile b/healer/Makefile
-index abdddf0eaa5ae1..d2d764d6142193 100644
---- a/healer/Makefile
-+++ b/healer/Makefile
-@@ -49,9 +49,14 @@ endif # xfs_healer_start deps
- 
- default: depend $(BUILD_TARGETS) $(SYSTEMD_SERVICES)
- 
-+ifeq ($(CHECKSRC),2)
-+xfs_healer_start: $(SUBDIRS) xfs_healer_start.o
-+.PHONY: xfs_healer_start
-+else
- xfs_healer_start: $(SUBDIRS) xfs_healer_start.o $(LTDEPENDENCIES)
- 	@echo "    [LD]     $@"
- 	$(Q)$(LTLINK) -o $@ $(LDFLAGS) xfs_healer_start.o $(LDLIBS)
-+endif
- 
- %.service: %.service.in $(builddefs)
- 	@echo "    [SED]    $@"
-
+> -- 
+> - Andrey
+> 
