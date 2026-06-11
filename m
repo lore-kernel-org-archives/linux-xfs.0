@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B04840D57A
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:06:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7989921773D
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2026 14:06:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781186801; cv=none; b=u56wk3l2sLFzNLNidOPo/0KmK7EjxIi+SL0BgoJP4XJhkpfOa609QFVI9pnl1FpxUgZP7VGedI0wfWsNLMfrZOMZSbM/6KclAZae/SV06EnB6cUVUA+MuyKe3WYDRoHoLRHRFBrULL4yUzMqOOsaLSNhP5ES0LTn4ydcJxrchV4=
+	t=1781186816; cv=none; b=lnGrsnVjaN2uFphV+IUKNXNuf5vTC33xqUfl3AXs+ec+ubklN4oi3vToIYc5FmjgZvY9/lcmU7WNUKuXcmoXiIp0Ci23g0OCNlH0mwAmzV5RPLA71e0B9868wK9M9VjyQaAP+n3vEB1/YB6LfyT0AIMIhxVWDPZMWQAuTpJr8bA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781186801; c=relaxed/simple;
-	bh=+jH9soWuDGLBXBhQJZDh9mxKnVj64H+rAFCSHze0Yjo=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=sAG+lgrsHN61oRNZwxDAGizfwA3kY9BM9wKh/Jy9t+ytpsQUL8iVpcfoHhRhBavdjvzFfZjSBc2/2Gbmlz+dJyD9sbRw8uOlStUh+yKneMfXrLGgnWkwEf/ETLs2oQIf8OtOoTJin1s02x+4GY/klqOcT/ydBRyMffrkm0+4uZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eORykdvF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781186816; c=relaxed/simple;
+	bh=FWjk9dMBoTol/A6cEvK8eAJOGu0MujjXpBL6sWG3kYs=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=ZnqOPtWiPSiCTFTi08F0KY/PoY3f0jkB9MHQSkA0qU55+J6sgk/9GDRm7s/wdgzQnCaxc5SdT+mb70oQ8pFt/zvhA5VvAEY5goSd6GPmEfd7GaV/9N2R6+J6vuOsyQtjOB7UbhBzZpOyX+f4EB+2YlC0CbaGmZJRS8iwlpjA57U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kZx5XAiV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eORykdvF"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C6D4B1F00899;
-	Thu, 11 Jun 2026 14:06:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZx5XAiV"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4769F1F00893;
+	Thu, 11 Jun 2026 14:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781186799;
-	bh=rTalFYEiyU8roNjivtY7MH2ajTGVhKG/R+0lElkz7EE=;
+	s=k20260515; t=1781186815;
+	bh=Z6qQ3HkK94kELI33syCIPG/1yLa0FbEr7sQCRlFOxws=;
 	h=Date:Subject:From:To:Cc;
-	b=eORykdvFjDuTHlFSqytk+kIRukGWgL/fQrRyBI0YQz7HYU5eL802i8rLsCpt1Uq/S
-	 4FBH7VL2rct0jSllOnXnU9KwgvUx21Qg7iC5SC3uIR8rJWhxB1gV0Y5iXsLDMbGmOB
-	 8OkxSgq0aSQ636q9LBR/fc9+C/XYu0pUkGkB0QpGp3QezEftuf3EoDJa0G6f5GIG+w
-	 1Ptxb8+W5QvjUVUycxy+lUGJK6kGMCQSp7jGM4gaKBa7tR7HQOxCdt2MxcEVNmRDJk
-	 mOnXsFK9tde4EQnJJYl9jo95IPu/tnlxXCdaSAzsGIcUiU1OvlC0vPXuBiYagpE+Bp
-	 fTXqpYc65iEBw==
-Date: Thu, 11 Jun 2026 07:06:39 -0700
-Subject: [GIT PULL 1/2] xfs_healer: codex-inspired bug fixes for 7.1
+	b=kZx5XAiVrD83rX5YVzft99mfaoJ27JTfumaOtWxFoEOY1g3iMBRlkoml1CfRwiEw7
+	 KyQg/T/jAi76sOWfF/ER3BJ4Pyv8U2V/1DUFjVOxNNX6sEMzOKlEueO2B3aY+RMlmc
+	 egJZl6lYPUwsfvlaRCp9nFtgHR+iQ7n9AW9WSLys3vx4rJh/HEw4iCCK3BhY70IXP+
+	 gXFJmLBg5lz8hI7QLSZlqSsD77W2lA57rRdaWzMClCxSbJsDqFOEKaYqLsVeWaS7Nf
+	 Ecn+/yn0Frfn3UffCdaVsiYi7UcwurqTvNWZPw+DG/py0rk4N+8FNHm9aHZ/aZMLYo
+	 J8T23y3KCvGfg==
+Date: Thu, 11 Jun 2026 07:06:55 -0700
+Subject: [GIT PULL 2/2] xfs_scrub: codex-inspired bug fixes for 7.1
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178118660821.726932.157875301598186384.stg-ugh@frogsfrogsfrogs>
+Message-ID: <178118660875.726932.5792903598501308259.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,45 +50,73 @@ encounter any problems.
 
 --D
 
-The following changes since commit 80239046c0dece6ef0d56413637f8af22d3b074d:
-
-xfsprogs: Release v7.0.1 (2026-05-19 12:48:43 +0200)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/healer-codex-fixes_2026-06-11
-
-for you to fetch changes up to c8a61717cd2aa9b23ae826088d90f5517de8a368:
+The following changes since commit c8a61717cd2aa9b23ae826088d90f5517de8a368:
 
 xfs_healer: coordinate access to weakhandle::mntpoint correctly (2026-06-11 07:02:53 -0700)
 
-----------------------------------------------------------------
-xfs_healer: codex-inspired bug fixes for 7.1 [1/8]
+are available in the Git repository at:
 
-For the time being, I have an OpenAI Codex account through my employer.
-I decided to throw it at the entirety of the xfs_healer codebase to see
-what kinds of problems it would report.  I picked off the obviously
-delusional complaints, and fixed the rest.  Most of these are minor
-details except for the last one, which actually could cause crashes if
-the mountpoint moves around a lot.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-codex-fixes_2026-06-11
+
+for you to fetch changes up to 46eb78d0807912d97d7c730904117701a9f5c920:
+
+xfs_scrub: read verification isn't ok if it hit runtime errors (2026-06-11 07:02:55 -0700)
+
+----------------------------------------------------------------
+xfs_scrub: codex-inspired bug fixes for 7.1 [2/8]
+
+I then threw Codex at the entirety of the xfs_scrub codebase to see what
+kinds of problems it would report.  I picked off the obviously
+delusional complaints, and fixed the rest as well.  There are a lot of
+fixes here, but most of them are for nitpicky details that C is terrible
+at, footgun fixes, and missing corner case handling.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (7):
-xfs_healer: fix error reporting
-xfs_healer: recommend offline fsck for XCORRUPT repairs
-xfs_healer: initialize variable here
-xfs_healer: run a full xfs_scrub repair if we don't know how to do a spot repair
-xfs_healer: fix Makefile errors
-xfs_healer: don't leak wh->mntpoint if fd_to_handle fails
-xfs_healer: coordinate access to weakhandle::mntpoint correctly
+Darrick J. Wong (21):
+xfs_scrub_media_fail: reduce security lockdowns to avoid postfix problems
+xfs_scrub_all: fix broken command line string array construction
+xfs_scrub_all_fail: reduce security lockdowns to avoid postfix problems
+xfs_scrub_fail: send content headers for xfs_scrub_all failures
+xfs_scrub: fix uninitialized variable
+xfs_scrub: fix integer overflows
+xfs_scrub: don't count internal log space in the data device used count
+xfs_scrub: widen scrub and repair dependency mask
+xfs_scrub: fix work estimation for rtgroups filesystems
+xfs_scrub: don't report media errors in specially-owned areas as file data
+xfs_scrub: return SCRUB_RET_OPERROR if unicode collision detection fails to initialize
+xfs_scrub: fix nonsense advice after a scrub finds errors
+xfs_scrub: don't allow NAN as fstrim percentage
+xfs_scrub: reset bulkstat pointer on retry
+xfs_scrub: don't return garbage value from bulkstat_the_rest
+xfs_scrub: don't continue with phase1 if autofsck=none
+xfs_scrub: don't crash trying to complain about clean health
+xfs_scrub: fix inverted return value from ptvar_get
+xfs_scrub: don't obscure repair failures in repair_list_schedule
+xfs_scrub: bitmap iteration functions must retur
+xfs_scrub: read verification isn't ok if it hit runtime errors
 
-healer/Makefile     |  4 +++-
-healer/fsrepair.c   | 28 ++++++++++++++++++++----
-healer/weakhandle.c | 61 ++++++++++++++++++++++++++++++++++++++---------------
-healer/xfs_healer.c |  9 +++++---
-4 files changed, 77 insertions(+), 25 deletions(-)
+scrub/scrub_private.h                  |  2 +-
+scrub/xfs_scrub.h                      |  2 +-
+scrub/inodes.c                         | 17 +++++++---
+scrub/phase1.c                         |  5 ++-
+scrub/phase2.c                         |  2 +-
+scrub/phase3.c                         |  4 +--
+scrub/phase4.c                         | 11 ++++---
+scrub/phase5.c                         |  4 +--
+scrub/phase6.c                         |  4 +++
+scrub/phase7.c                         |  4 ---
+scrub/phase8.c                         |  2 +-
+scrub/read_verify.c                    |  2 +-
+scrub/repair.c                         | 10 +++---
+scrub/scrub.c                          | 23 +++++++++----
+scrub/xfs_scrub.c                      | 18 ++++++++---
+scrub/xfs_scrub_all.py.in              |  2 +-
+scrub/xfs_scrub_all_fail.service.in    | 59 ++++------------------------------
+scrub/xfs_scrub_fail.in                |  2 ++
+scrub/xfs_scrub_media_fail@.service.in | 58 ++-------------------------------
+19 files changed, 84 insertions(+), 147 deletions(-)
 
