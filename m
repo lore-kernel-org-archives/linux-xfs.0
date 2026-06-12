@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766F137AA7D;
-	Fri, 12 Jun 2026 08:01:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEE96364022;
+	Fri, 12 Jun 2026 08:04:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781251319; cv=none; b=D6krPIRcA1EVN4HgQ6RcNDnft+ELztkruCfCvJggXzPxjWXHBOf01Y6oi/b5hk9Hzfo9swFZhQELC8PSBeQ7yfUkBoiKDoyQBVg+86JK4Y8WaC9PcYqxytfH/dh1q0mR+Tl2h9da3cKzoz8wj1dSZ8oe+TlC9bIejsrpoWEPnxQ=
+	t=1781251473; cv=none; b=GHCUD/yIf2uW0iwCnvy1r00sefqKJnoevQmYvMqILcFXm3OOSHyXc7Cc3SSWIsGWV2thZEKkpHZdWpn4ds7ZMwpqODqCxRlN+sjOQ/Lop9C5NHF+XCxW+JFNnEBqLCe4sMv/P5qEEBIPRBtIyzsQYQGvwTI5cmKpvFt8fCU0KnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781251319; c=relaxed/simple;
-	bh=LuThkiNiCMWKZdkoI5tE3Y/39OXHX3h/X8fWTILJDJQ=;
+	s=arc-20240116; t=1781251473; c=relaxed/simple;
+	bh=TH04H+GRBZfDZ1FLROksCDBC9BC621Kkov4M+5FyVgI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qmiQMxgJqN79E5qhLCvsJfyUZ744nbOMgZgWdXl3+i8+PI+Yf1iGb9R95t5MCVW/7NWAEPwZUMlQupVjhwEMOf9LtekZBoFzytZelfFLzgJRnaXqFojSBkIfuUz0a4+N8OSD841zTAAYSZCHBymiPFZLF8pcfAauie9Cf7cOw3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MjstcFXd; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=LYCVeYEz8Xf5JHYuR2tbH+49nl/8Hae7l/lj6orhBBI6q7lm36qBjEw0EL/d7dLux0X8IIYlIHGa//wBvdehw+YaUIPhL8mbyI/zxnPs85UPlh2s1/5TY81QEynvj/Aw0AT/srqQRQbp0xuqVqoeNzuZbju7QhqZ2wWp3JUrttA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wc5Cag2Z; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MjstcFXd"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wc5Cag2Z"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=7jD/MDoTJEp59NIG3rOHJIeJwr7qwvbaSlX946skE5M=; b=MjstcFXdao1aRwyyZFKF/fflDR
-	lS8zRrZghT1BIJVSgucqKLuxpgXsG51cbowL7H/i5TPiMX+lS24R8Hhv4bLFZRyH4D5UHo/oqHFnL
-	9rHXGaFZ3mNjHKBJN0YUHK5NpAho622YfZCAKT22BxYNNsUjbNuOYOk+n0j2riY6HIJ6QKQREcvDx
-	2bLjMEDy80oALtrFdQ5cbb8mSCd7wzNOi4LUgNKb5nLU0UTY3GW9iHH5nt7P+pbfQPN52dc9OKRl1
-	pvJmARgZmdMVlnKnNYOnRQzsrNyRb1Ntr+IJ0VoLmjzTm3SORmeEyfibamTf9JZi5CWdNAauoBU3/
-	+zbe4eoQ==;
+	bh=0ihkg1BpPN6WDh+Xj+gutcck2344hxpx3EQTJxaNIzM=; b=wc5Cag2Zc4drAvR4ORaMcn9cZS
+	mnahB9H3My+1sQ6zybnO5AG9bad2yEZveqEdNU7DYahkvGihQqLxraVFiDpD1U8j3GDPJ9wewnkTj
+	Iwoa1F+MfjOQJwWSmhxkQfjE/sg5xmWO354Ka4uc3Siptoz3fQYlhaovas52qkEnrPJZY9+cR/cXA
+	HA/jQEo7z+966L2nK6GHdVXTONE1ip31wzYgOM+k3fjfsWIG0H9VK6h5J6bEFciAcCzYhqSU1saYV
+	u3X/KNzq3KkNQj7q8p5+MUxls3XKjmh/P626GdTKZHuskhLQwjrmqLS+GYt0lKwVXGM0fIC3SPyMO
+	yfbrodNQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wXwps-0000000AXKq-0u6x;
-	Fri, 12 Jun 2026 08:01:52 +0000
-Date: Fri, 12 Jun 2026 01:01:52 -0700
+	id 1wXwsM-0000000AXjf-1g9e;
+	Fri, 12 Jun 2026 08:04:26 +0000
+Date: Fri, 12 Jun 2026 01:04:26 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Gao Xiang <hsiangkao@linux.alibaba.com>
 Cc: Christoph Hellwig <hch@infradead.org>,
@@ -41,13 +41,14 @@ Cc: Christoph Hellwig <hch@infradead.org>,
 	Joanne Koong <joannelkoong@gmail.com>
 Subject: Re: don't merge bios over iomap boundaries, was: Re: [PATCH] erofs:
  prevent buffered read bio merges across device chunks
-Message-ID: <aiu88BAe1EqxpeOB@infradead.org>
+Message-ID: <aiu9imWL_c1eyerw@infradead.org>
 References: <20260612033244.993507-1-zhaoyifan28@huawei.com>
  <58bef9af-0926-4948-b917-e38c3793f596@linux.alibaba.com>
  <aiumQL8LEWQX_Nag@infradead.org>
  <62f6e9bc-cfb3-441c-a3b7-301b8649f0ae@linux.alibaba.com>
  <aiuw0QvFIhEWUPG-@infradead.org>
  <04d8ea84-1955-4f1e-b5f2-f142fa1971ba@linux.alibaba.com>
+ <befed994-02bc-42f8-945c-2aea3e3b10b2@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,42 +57,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <04d8ea84-1955-4f1e-b5f2-f142fa1971ba@linux.alibaba.com>
+In-Reply-To: <befed994-02bc-42f8-945c-2aea3e3b10b2@linux.alibaba.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jun 12, 2026 at 03:19:30PM +0800, Gao Xiang wrote:
+On Fri, Jun 12, 2026 at 03:35:38PM +0800, Gao Xiang wrote:
+> btw, there may be be some edge cases like:
+> written | hole | written | hole | written ...
 > 
+> and if bios cannot across multiple iomaps, bios could be
+> amplified according to the shuffle pattern even all written
+> data is consecutive on disk (the block allocator may
+> allocate written blocks consecutively.)
 > 
-> On 2026/6/12 15:10, Christoph Hellwig wrote:
-> > On Fri, Jun 12, 2026 at 02:54:47PM +0800, Gao Xiang wrote:
-> > > hmm, currently erofs could return block-sized iomap (if the chunk
-> > > size is 4k) even it can be merged with the following chunks.
-> > > 
-> > > Previously it was fairly good since consecutive chunks will be
-> > > added to the current bio if possible, but after this patch,
-> > > there will be a lot of 4k bios.
-> > > 
-> > > But if iomap goes into this way, I could make iomap_begin maps
-> > > more chunks in one shot, but that needs more changes in erofs,
-> > > it's fine anyway.
-> > > 
-> > > ... I was thinking the following diff (space-damaged):
-> > 
-> > That should work too for your case.  But we definitively have various
-> > cases where merging over iomaps is a bad idea.  You'll also end up with
-> > other efficiency gains by merging consecutive entries, especially for
-> > direct I/O and when using large folios.
-> 
-> Yes, optimizing erofs chunk mapping would be more
-> efficient, will work out one soon, but Yifan can test
-> your patch in parallel.
-> 
-> Also, if "iomap: submit read bio after each extent" is
-> applied, I guess some merging condition in
-> iomap_bio_read_folio_range() can be removed since they
-> won't be reached in any case. (deadcode)
+> Anyway, I never tried to argue with this cases (yet both
+> previous buffer-head and mpage codebase will merge this
+> except for some specific exceptions), maybe it's just a
+> pure artificial pattern and I'm worried too much.
 
-I guess we can't hit the sector check anymore indeed, assuming
-we never get non-contiguos readeahead requests, which I think is
-true.
+We actually just had something like this come for XFS even
+with the current merging:
 
+https://lore.kernel.org/linux-xfs/6csdtjn33va4ivyycr4uh2ogac22xput4kgzxzt3mczdkvwjaf@37audfdijskv/T/#t
+
+
+although this involves REQ_NOWAIT and thus is a bit more complicated.
+But the merging scheme discussed there should also help with your
+above case in general.
