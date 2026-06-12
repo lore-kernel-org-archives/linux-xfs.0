@@ -1,58 +1,62 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 950653624CE
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 09:18:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1E313AB5AC
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 09:51:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781255908; cv=none; b=UUZ1e/ECOCWWUj+4rvhRCqHD2FW8jy0KThqgPGtmGAOVVP3aG5QaRK7wxk8nVaY28XMtv6Wz+hamubDa23MaOC3EiFipIzH14AJQZiOwhYaWSc5nH9rryW1bOkuiakN3e/6i+4F0PHxpJL3xzo9QbUTm4VS5KWhpkB+w1zr1dhw=
+	t=1781257906; cv=none; b=drOhIGYWCiQeQGdYmw+ZIZkx0Ub0eS7AAJO1aFgvPHYTefLANT2lJdHdj+jRQgLhUf9YdcEYA22N3kCNSTTUVlRv75K54Z6z4ahVk0nMX3G5XhSvTQZ0bF1sWqIAyd/CK1n1g1gPrqymX1IV+nOAY5gBPY1d8R8lYqINk8aOqnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781255908; c=relaxed/simple;
-	bh=E9I/iJZAq3OWXfj+aXS63SqOM4Q9SPBIbbO/GO5dBzk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ICy64REIFerdjCnc2QrGxu9FKtrmwA2R6UKEih8Rtg3yKaAnzpJSacb9ztzLZUSUlBFKQh3Y/s98BBUqWqNoLrjXysq8b6x8z0SJXI3hC557tlpHM9er+YEZ2LWOR0s5kR2RwHTJUNfX/Rp15+/geKLkLpomsDM7K/+T89PNFso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: a74a8b76663f11f1aa26b74ffac11d73-20260612
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
-	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED, SN_EXISTED
-	SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF
-	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:0261d20f-9050-4ec1-9a9e-935c65c837a7,IP:10,
-	URL:0,TC:0,Content:100,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACT
-	ION:release,TS:135
-X-CID-INFO: VERSION:1.3.12,REQID:0261d20f-9050-4ec1-9a9e-935c65c837a7,IP:10,UR
-	L:0,TC:0,Content:100,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACT
-	ION:quarantine,TS:135
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c93f9f26f58611ff70c981b8b40086be,BulkI
-	D:260612171821883Y6K66,BulkQuantity:0,Recheck:0,SF:10|66|78|127|850|865|89
-	8,TC:nil,Content:3|15|50,EDM:5,IP:-2,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:
-	nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,AR
-	C:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ASC,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: a74a8b76663f11f1aa26b74ffac11d73-20260612
-X-User: sangyao@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <sangyao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 228280803; Fri, 12 Jun 2026 17:18:20 +0800
-From: Yao Sang <sangyao@kylinos.cn>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	hch@lst.de,
-	Yao Sang <sangyao@kylinos.cn>
-Subject: [PATCH] xfs: add a data I/O shutdown reason
-Date: Fri, 12 Jun 2026 17:17:43 +0800
-Message-Id: <20260612091743.256304-1-sangyao@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1781257906; c=relaxed/simple;
+	bh=2cLqly4j3WhxDZr4OJpbMXTyg3xkhFy8CoBLk1YDuiY=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Zu3ZZ7G3sYVc6deAjx0XnLy8noiWQ80ZsCSN9V/qxvUaOD4K+P/LH5t2vnaDMcnyGmEh5n7j/4junBy1jstJEyV4IQm6YXXzGScSAF4mTpbrA46POzrDwwImE4cdA4pAJHqiWr9Pclg3UNNOw7xsec8tO2HKzqRRa9pF2K7JN9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=aUCBdWG0; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=aUCBdWG0; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="aUCBdWG0";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="aUCBdWG0"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id BF67875EC1;
+	Fri, 12 Jun 2026 09:51:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1781257899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=zx1SP72U6TXb2Yduv9Z749/hZGUblXFK21ICZpUDatk=;
+	b=aUCBdWG0zJxfuN6XMQLBTxTzaBJ0yd37bl68eS5vPWW62/O/ZLVYmU/r17Ju81UInGEihp
+	qMLLnQKMDvZmcpNQZdn0X+J9AMWmgG0AJLIe6RaiNzM6/O9G3UFrFVBKZ+L3TlF1bBjYVt
+	yxZbciSC+CyEjb87HFJmJF+DixZOEhY=
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1781257899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=zx1SP72U6TXb2Yduv9Z749/hZGUblXFK21ICZpUDatk=;
+	b=aUCBdWG0zJxfuN6XMQLBTxTzaBJ0yd37bl68eS5vPWW62/O/ZLVYmU/r17Ju81UInGEihp
+	qMLLnQKMDvZmcpNQZdn0X+J9AMWmgG0AJLIe6RaiNzM6/O9G3UFrFVBKZ+L3TlF1bBjYVt
+	yxZbciSC+CyEjb87HFJmJF+DixZOEhY=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C24DE779A7;
+	Fri, 12 Jun 2026 09:51:37 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id uh/jG6nWK2r+FgAAD6G6ig
+	(envelope-from <wqu@suse.com>); Fri, 12 Jun 2026 09:51:37 +0000
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v3 0/4] btrfs: use IOMAP_DIO_BOUNCE flag instead of falling back to buffered IO
+Date: Fri, 12 Jun 2026 19:21:11 +0930
+Message-ID: <cover.1781253428.git.wqu@suse.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,109 +64,94 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid,imap1.dmz-prg2.suse.org:helo];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[4];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_NONE(0.00)[];
+	RCVD_TLS_ALL(0.00)[]
+X-Spam-Level: 
+X-Spam-Score: -2.80
 
-The zoned writeback shutdown path added for failed zoned data writes uses
-SHUTDOWN_META_IO_ERROR because there is no shutdown reason for data I/O
-errors.
+[CHANGELOG]
+v3:
+- Fix a bug in error handling of bio_iov_iter_bounce_write()
+  Which can lead to generic/708 failure on btrfs.
 
-That makes the shutdown look like a metadata failure even though the
-failed I/O was user data writeback. Add a data I/O shutdown reason and
-use it for unrecoverable zoned writeback errors.
+- Respect nofault flag in bio_iov_iter_bounce_write()
+  To avoid btrfs specific deadlocks.
 
-Wire the new reason into the shutdown trace output and the health
-monitoring event mask so userspace can distinguish data writeback
-shutdowns from metadata and log I/O failures.
+- Reject NOWAIT and BOUNCE direct IOs
+  Since BOUNCE always allocate pages using GFP_KERNEL, which can sleep
+  and break NOWAIT requirement, has to reject such combination.
 
-Signed-off-by: Yao Sang <sangyao@kylinos.cn>
----
-This is a follow-up to the accepted zoned writeback shutdown fix:
+v2:
+- Rework the comment in btrfs_dio_write()
 
-xfs: shut down zoned file systems on writeback errors
-https://lore.kernel.org/all/20260611015305.1583003-1-sangyao@kylinos.cn/
+Commit 968f19c5b1b7 ("btrfs: always fallback to buffered write if the
+inode requires checksum") solved the csum mismatch caused by unstable
+direct IO buffers, it has a pretty hefty performance penalty.
 
-It also addresses Christoph's follow-up suggestion to use a dedicated
-shutdown reason for unrecoverable data writeback errors instead of
-reporting this path as a metadata I/O error.
+Meanwhile upstream iomap has introduce IOMAP_DIO_BOUNCE flag to get
+stable buffers meanwhile without falling back to buffered IOs.
 
- fs/xfs/libxfs/xfs_fs.h | 1 +
- fs/xfs/xfs_aops.c      | 2 +-
- fs/xfs/xfs_fsops.c     | 3 +++
- fs/xfs/xfs_healthmon.c | 1 +
- fs/xfs/xfs_mount.h     | 4 +++-
- 5 files changed, 9 insertions(+), 2 deletions(-)
+Using that flag btrfs can reach 95% of the original zero-copy direct IO
+performance, almost 2x the current buffered fallback performance.
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 185f09f327c0..4223a51a8c3d 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -1089,6 +1089,7 @@ struct xfs_health_monitor_inode {
- #define XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE	(1u << 3)
- #define XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK	(1u << 4)
- #define XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED	(1u << 5)
-+#define XFS_HEALTH_SHUTDOWN_DATA_IO_ERROR	(1u << 6)
- 
- /* shutdown */
- struct xfs_health_monitor_shutdown {
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2a0c54256e93..19412fa95953 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -147,7 +147,7 @@ xfs_end_ioend_write(
- 		 * available.
- 		 */
- 		if (is_zoned) {
--			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+			xfs_force_shutdown(mp, SHUTDOWN_DATA_IO_ERROR);
- 			goto done;
- 		}
- 		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8d64d904d73c..0decf3a02bed 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -516,6 +516,9 @@ xfs_do_force_shutdown(
- 	} else if (flags & SHUTDOWN_DEVICE_REMOVED) {
- 		tag = XFS_PTAG_SHUTDOWN_IOERROR;
- 		why = "Block device removal";
-+	} else if (flags & SHUTDOWN_DATA_IO_ERROR) {
-+		tag = XFS_PTAG_SHUTDOWN_IOERROR;
-+		why = "Unrecoverable Data I/O Error";
- 	} else {
- 		tag = XFS_PTAG_SHUTDOWN_IOERROR;
- 		why = "Metadata I/O Error";
-diff --git a/fs/xfs/xfs_healthmon.c b/fs/xfs/xfs_healthmon.c
-index 4521ffdab9f1..1e9bae340c1e 100644
---- a/fs/xfs/xfs_healthmon.c
-+++ b/fs/xfs/xfs_healthmon.c
-@@ -684,6 +684,7 @@ static const struct flags_map shutdown_map[] = {
- 	{ SHUTDOWN_CORRUPT_INCORE,	XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE },
- 	{ SHUTDOWN_CORRUPT_ONDISK,	XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK },
- 	{ SHUTDOWN_DEVICE_REMOVED,	XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED },
-+	{ SHUTDOWN_DATA_IO_ERROR,	XFS_HEALTH_SHUTDOWN_DATA_IO_ERROR },
- };
- 
- static inline unsigned int
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 66a02d1b9ad7..5fd45426356f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -666,13 +666,15 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, uint32_t flags, char *fname,
- #define SHUTDOWN_CORRUPT_INCORE	(1u << 3) /* corrupt in-memory structures */
- #define SHUTDOWN_CORRUPT_ONDISK	(1u << 4)  /* corrupt metadata on device */
- #define SHUTDOWN_DEVICE_REMOVED	(1u << 5) /* device removed underneath us */
-+#define SHUTDOWN_DATA_IO_ERROR	(1u << 6) /* unrecoverable data write failed */
- 
- #define XFS_SHUTDOWN_STRINGS \
- 	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
- 	{ SHUTDOWN_LOG_IO_ERROR,	"log_io" }, \
- 	{ SHUTDOWN_FORCE_UMOUNT,	"force_umount" }, \
- 	{ SHUTDOWN_CORRUPT_INCORE,	"corruption" }, \
--	{ SHUTDOWN_DEVICE_REMOVED,	"device_removed" }
-+	{ SHUTDOWN_DEVICE_REMOVED,	"device_removed" }, \
-+	{ SHUTDOWN_DATA_IO_ERROR,	"data_io" }
- 
- /*
-  * Flags for xfs_mountfs
+However during my tests, there are several bugs related to iomap that
+can lead to direct IO test case failures:
+
+- generic/708
+  Results garbage in the end of the writes, is a bug in the error
+  handling of a short copy.
+
+  Fixed in the first patch.
+
+- Deadlock if using the page cache as direct IO buffer
+  This is because bio_iov_iter_bounce_write() doesn't respect
+  iov_iter::nofault flag.
+
+  Fixed in the second patch.
+
+- Possible NOWAIT and BOUNCE conflicts
+  BOUNCE flag for both reads and writes will allocate new folios using
+  GFP_KERNEL, which can sleep and break NOWAIT requirement.
+
+  Reject such combination in iomap_dio_bio_iter() directly in the 3rd
+  patch.
+
+And the final one will enable btrfs to use IOMAP_DIO_BOUNCE flag, so
+that even with data checksum we do not need to fallback to buffered IO
+and reclaim most of the dropped direct IO performance.
+
+Qu Wenruo (4):
+  block: revert the iov_iter after a short copy in
+    bio_iov_iter_bounce_write()
+  block: respect iov_iter::nofault flag in bio_iov_iter_bounce_write()
+  iomap: reject NOWAIT and BOUNCE direct IOs
+  btrfs: use IOMAP_DIO_BOUNCE flag instead of falling back to buffered
+    IO
+
+ block/bio.c          | 10 ++++++---
+ fs/btrfs/direct-io.c | 53 ++++++++++++++++++++------------------------
+ fs/iomap/direct-io.c |  4 ++++
+ 3 files changed, 35 insertions(+), 32 deletions(-)
+
 -- 
-2.25.1
+2.54.0
 
