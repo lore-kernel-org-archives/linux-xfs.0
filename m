@@ -1,93 +1,93 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A21352017
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 12:47:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802B23D3482
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 12:48:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.44
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781268474; cv=pass; b=O4eZumfWok62IKCGQfLtsO0Ey3Baq3qd36vBUTM7pyeaiyLLTa1MmNR0LU2npcJEBG/ceyo6IliOgEklrTrpXLsQekFbmkqmqAwoEyRmY1Fe1PxtScq17NbzweuilJeVu5fIsJyicV427RrLbezfR019mADxZDoBZvjIBsJ43tU=
+	t=1781268506; cv=pass; b=YFu4j91KlcqSScIvDZ9JpoW4+7Y0BI59TdmPFWQJ5OvZrmc2gKm9OwwbKsaNR9ADkOQS/8n6A2EEEteVxvk7ktoPQFTUbp+1fOB04DmKlfjP4IYSV6hb0CDd9BfldSMFMhjo7jsEMe350IzpjuBMaOSQNL8+xJCnUwsHnnAE7A0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781268474; c=relaxed/simple;
-	bh=VGmZesSSLmZNxPo3Ssa1PEm8Mb+/hE2Hz3enV10zimU=;
+	s=arc-20240116; t=1781268506; c=relaxed/simple;
+	bh=wzyefegPQ56HaP/L1vGqh6l0U8XZBoOuHJKAbUD1xfE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ROXXC7AIY9uAX83mAqzjAOiRLY9cjPMllra/DLQHRYtnqjr/4txOnlDPOUqepOfxdutd6di51LmTzT7A2xLTLB3mDS86GwcgSF11vRmuuXFwn6h32s5kFCqGzzrF3aTVJbeg5Htfp5EkPez9ZfY6/CcQwizO1F+/2dNASR1LWW4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A6gL2C66; arc=pass smtp.client-ip=209.85.218.49
+	 To:Cc:Content-Type; b=aC9D0ArjdQbpIg4DK8jyZcPOpbgIJq/VzvXB7WrtOmwjcdO6ICC22W/Z3TbRPp509bnVjqML3q/udQLLpudRikzZc2nWm8egWJ04EeQYOEoZZVVOFXiF9ICuQLHLtjQG6G0yLxsjRBGxu8Ycv+Rt9NTWoR5BEYA4wFAWPOFw6b4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mZ/Sas0R; arc=pass smtp.client-ip=209.85.218.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A6gL2C66"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-bec3f69d343so141796066b.0
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 05:47:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781268471; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mZ/Sas0R"
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-bec423a5265so177483366b.1
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 05:48:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781268503; cv=none;
         d=google.com; s=arc-20240605;
-        b=elEd5w04Ml1xsiEppBgJGF+Cm8SIJgACcW+BPU2xKUBkPw/yqi4VPo0jeZ2TNaVl98
-         0CbVs/Ta9npD9vPGqbU2mTq4pdMm/BP8TQHWZ3SFMf95WR9TF7Rx3mZdNiQZ3ABDA2UG
-         SOO+OPU33jsXd+9xzy0U88PFAB3OdKNh6Vh7cRx745a7eQgvozriAhVqJi+9FW8WsQ0+
-         4MkixG3MvTJmwlasKQtJ39+QZQ/3/YHjpBZFRD50+BX1z5gscKMxwprTtEGf89Hlg49e
-         mcEE/2laXFvMyCOp0sp9pKclkY17cXZ3BpZiNJ5/Z0iMVbN/uE6ryNiHIaT+k6BGHdLA
-         R05Q==
+        b=ejwSvDP4sEAiBEbEHaSrlmV53javkpyYpFVctwBSmmuxGm77W7v/VDbliF2xgztD8g
+         BBifQSH+UdziE5KfBkZCCC5lkbtmq/ydF9LhHQzJzFfehKjKLpNOwjpNreS9umcV8yVp
+         EwjJxxlIzWimoXP8N+ZVLftST1o8tWf6fZzo3QTArYlKGRd5ZDwTp/UhLGfnt4Pr5WcI
+         4cE7xmYdx1z4TwxAXpfTalIZkYn8PrSn6FmI8/a9SH9R7peY2iVtAJaq0R4maLv58o/V
+         9UH8V8aGk0XZShRQgZ2XKutW4nz1bi+6KiHA6MeCN0H2IuB1rKRndfY4C4n6vXQE13XD
+         QJeg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=ag2eGDwU8syV1RH+N+wd/1kZqB8xDggym7Gt+/wUo1w=;
-        fh=NpOHYtWGMDxFu7wcUdEBEkLLYTw2yTTvYMg60PuYglY=;
-        b=TJaVdsrE9lf93jRoM5pMz2JxQ87gwAWEdS/tJfoPxlaIEQ7g2Z0GXVStVkxZPQdRPM
-         t04deuO6tk8QmqJMw7aZpvDqwmuVAzYdY7ti+Uocb1ygDlrjjuHHGtksh6WHaA3VLb38
-         7MdMgOvN9wQ44b1/zSDuonWGRsSEvWrZUREGXo6y7qtFdBWJ+QP2vJ5FKNX22agcd0Eb
-         YR9ekXh2YDD8IFQVKsBTXqx7CInBRUGrwN4RTQ/lgZajVTh33ddy68GC6oKtMD2nEmDN
-         T7Hf01ElCw2LJPTduTAE8sFNmU3AjCCkGCKDbsdF4MFjyUf+KD/i/QEciYAUnrdktRXl
-         tPOQ==;
+        bh=C/B24oGIDZCDxK/eGLCqt4DHARmDrIFcF//V/k+AUtA=;
+        fh=fIH5XONVf3M0S7BkBgHY+1H0ZsiGUP7dXw6Hs8fno+g=;
+        b=jGHzrMzGflfL4KkN0Awf54SUKLbg42XtB3uej6mxnf2ouZI3TfjpJBLgMSZe7myHn/
+         4uFfqfpfFbFK07Z8fGxIqDxYA1WszNUQiIOCi0kg/frr/dzAQjmakFt+51iZ+oT1Gyck
+         pq+PsfqIyuPgcxCoX9zDPsQfd75kzfXUYSaxKv8yc5rUv6+jqIYrosAjQgH7KVFcNynC
+         ve7YDCtXVQ/EWDCYUyiBVJRClpSPgXCBFeGB8zAwP8GCeOUHOuzPCgwZiziMTvCwdnBW
+         70iUBMuXLLYUwzfNEae6V4OnQ/W8nZw53vqFDfx8IebzsGs5bMCJIDNTnk6ffbASyf7d
+         IMvw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781268471; x=1781873271; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1781268503; x=1781873303; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ag2eGDwU8syV1RH+N+wd/1kZqB8xDggym7Gt+/wUo1w=;
-        b=A6gL2C666izy4LslmsVY7Xhck06JSIpkQnRI0xUymeTeKo35orxWH6gU5kBkeq8MH2
-         wcNcxZOsZ/8UMcSMwBwUPSMTjMw15BmmWnjS9wHyeyXdoL2ZPSwLRPEGYx8q3y9irDf4
-         3FrrGjFDJO0bq1i8ZMNtMJBCqF85EYRxINh6WYJvsDLsdoa1GENYswhdKE/TLpSAR6w8
-         ogzuvX0UNuZEvv1jH53qcGrXJ+GNyeDazgC3EaZq2jck1P+K/fnf1DK5yImgsPpzHf8+
-         92MdyrW1gfyKyu1FFzKBTwttu66vHKFbBhDhSwbuCcn9v/sw5k06/s616B8rll1p04e5
-         xxgw==
+        bh=C/B24oGIDZCDxK/eGLCqt4DHARmDrIFcF//V/k+AUtA=;
+        b=mZ/Sas0Rr2Ae8XJV2K1x12ancKIjrL82SpdoTRjGXrRNLDLc5civ9lnTN6CaIEv0Qt
+         6aCOaEmTWrdkWw6WZExJ2gdOX/4jcexU/Lq61MEsA1ZaCwEXuUuv2pJI4NVEJxop9ZyS
+         FFJU/FvhJgs+FQCakUAvvo4/nvvwEhv76wSw5iPFufVk8s7YtbeoSeAIe1RikWYA97R0
+         CHeeq/oDMtj+V1Xek7smLhv0bSXhanpezgdmaRa8D5QIKFIWnA5VLbF+z/pYjtOWLCCB
+         LWQUz+hi4N9AByrt2Cz3UXD7yNvUxyd0tHw9Ay5G+0IWB+EI92+H5oYtcOVMcOchMZ0Y
+         2nCg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781268471; x=1781873271;
+        d=1e100.net; s=20251104; t=1781268503; x=1781873303;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=ag2eGDwU8syV1RH+N+wd/1kZqB8xDggym7Gt+/wUo1w=;
-        b=Rmv6EMpgnOrfKj1Khz2lCH/Bijk12Bzd7om3Ct1nJrVQShq8TifHl1Oxr0mCSuFUsZ
-         WLDRHhPlhAjm4neqKeSIOADDScYlEceYGukFA/+2RzuxGBJbhamD7XMFI8ia1o3lIj1z
-         qDpLlfMHneM00JxjZU6DVKn9Ugl7158tFqGtphzzOMi/E0KoBHM2SdZuTJfU2gAUGJB/
-         Ag3ezjoblIQ6v1JDyaWk+he0lg/H2rC1BEkR7tXtNw58B5RskElH6L2caTAycH1iHoJ/
-         BuHMl9frjiCc5pvSE4b2Bn0IiyLjB5pY5xNxwYWy6zAZb2tElbNaxmLSOGx4mQ5eKbnK
-         VCVg==
-X-Forwarded-Encrypted: i=1; AFNElJ+zmjGwd1+9vuaJIFk7mn6GwQ3vDI+WJ8z91ZF0+QX/qAuVfXOS4Jn2i1flnuOZvKSP6gq6C33/Wfo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVBmpyXnx/9uhtwYE/mgSfmkbEoLBdrrkRLVwZ4h051qHxVrfY
-	wKjJUAx50c0K1S0rSNt/P/r119Jo9Sgu35hrRZj/6cuwEBTuab/o00FCa0Ydm7LbDBFRKT4+NMR
-	sAhtdA9y5zzHVrzxc5+Yam14Ya7ehces=
-X-Gm-Gg: Acq92OHMLXEoiCj6Im0eIsUQLJ4p0ZNh5hW7j4yaTL3xFKsyL4Kw/LGZOM22iSdhaBQ
-	9TDidc0bEL/f+bWrhneSXsnLNOjy3aWFRBV7K72MrVOWVSde8VN1qlUqlCtYCKwISbmKZ1fSaAV
-	47pPTSzrX0wopA4quG9Xx6uRDI7jXvCM9WxgUveRQgSB8CBkq7XFWRl3u4G4Lr1Kqifyd8vkSlT
-	6w0wWa5cEqOpT03Lk5kViJW2VluNY7JGwI76V7dL5KFs4aqb5Abj+nAwhD2vFbT7mtKWWKtlQS6
-	B0x1ppWftFye1wg7OCwwYurjQqfW5rvj+T8GsPWfbZ2WeGn82w==
-X-Received: by 2002:a17:907:2708:b0:bee:9809:3ccd with SMTP id
- a640c23a62f3a-bfe279319d1mr96864466b.4.1781268470807; Fri, 12 Jun 2026
- 05:47:50 -0700 (PDT)
+        bh=C/B24oGIDZCDxK/eGLCqt4DHARmDrIFcF//V/k+AUtA=;
+        b=LzNc73cESjMYheDEAGZKulArgMW13BKf6on/KJY6/PVsrWoxsqnVDVRLgjrLOqRmiB
+         vMHsK/nXcicXIMxYIEHmw4wfJw0337BwPtRJgFcPOZ0ajif3TwpndNx/2tyh+htY+OAg
+         dTLJSKtQG5VjOOH0y+cEn8Sw0iB1huhQCi6qozuCvIXp7FffjzY4kB7KkP8plq441xZP
+         H6/cwytYptoqkNCEs576xdvSzYnS0GnqYYT3HU6naQW0m8rxOyl3fKy2WmoZqZo4fVwI
+         FKSHgUZzZYPxVY/J6FFoBBwUHML1Xk6rNAZImOZ+TWUKJvKfdaBEC/WW2OPO1SJIurFY
+         ksgQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8km7V1kp/PYUZJn1ke9ncKTv1vaueu8rEqYIuE3GNXTNxDIjHFbtteoTZprUEdC/9FXtrAipRornw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyX0GeOwlOYuhHuf/tG2LBW6WkXRUSXr0Efq15fkzTduUhxCVWP
+	E4/PCTygOhH6DD5dwN4gKh7a677/HZZVFo7FfprfIxBzOffT4nuQw7oyLkU9lNl8D1G/EvRKgpO
+	hyLVyTOIcO5itEW96kxv+r5RmlZjDkzc=
+X-Gm-Gg: Acq92OE+iEU5s5ipeQiZNJPMSSZjQuleebXwlPBaPhuKUz+kXxTasxiSC00y10Tw5S8
+	0c4FzELqsxeS+JQcIzcijhmSsDp6ai0mLzwuMUqtoyBlur14X7qqNK6XocF0Y9aLrEpXCHkzpH2
+	9xRS3qEZuCrHcylOobwOAm85CFUu64pplnJb1ycCOFkp9BvV5siH2kb+iYNA09ptLgNuyWz0kyb
+	f8mIPnGJ9DJS8u8OuOsZ8NFD/8Ec/G5cEkrCxj8jM0jlUXVsgx28EOz91T8Sve9Z7PnjmPTWLyI
+	DsQW9gs4hazyWOowLPAGrw97bSHeyp5vNVXTcJg9G7ofaLj2Gw==
+X-Received: by 2002:a17:907:7212:b0:bd5:7c2:7622 with SMTP id
+ a640c23a62f3a-bfe2c09ded7mr139483466b.49.1781268502503; Fri, 12 Jun 2026
+ 05:48:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260612114917.2192-1-aditya.ansh182@gmail.com> <20260612114917.2192-3-aditya.ansh182@gmail.com>
-In-Reply-To: <20260612114917.2192-3-aditya.ansh182@gmail.com>
+References: <20260612114917.2192-1-aditya.ansh182@gmail.com> <20260612114917.2192-2-aditya.ansh182@gmail.com>
+In-Reply-To: <20260612114917.2192-2-aditya.ansh182@gmail.com>
 From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Date: Fri, 12 Jun 2026 18:17:39 +0530
-X-Gm-Features: AVVi8CeC_1Qypk47107-i_0fcvy4vjJWMWXCU0OrEsgpWvmHotAkLK4JijrbJLE
-Message-ID: <CAK5ssPPaX69jy_GGw4Qw=7JQPoc+quz8jqnep3uN7FCqFsxaYw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] xfs: prevent close() from hanging on frozen filesystems
+Date: Fri, 12 Jun 2026 18:18:11 +0530
+X-Gm-Features: AVVi8Ce1MI2RmRgthudlq6kJ37NVTS7dG9j4zOH4Owck4u_ON47J8q_fURPt-co
+Message-ID: <CAK5ssPNGQcpodPo2kWpxjqC7kvmwu+GPc_RGqTY_ip9QSpbfPw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] xfs: add a XFS_TRANS_WRITECOUNT_TRYLOCK flag
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
@@ -107,141 +107,78 @@ On Fri, Jun 12, 2026 at 5:20=E2=80=AFPM Aditya Srivastava
 >
 > From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
 >
-> When a file with active speculative post-EOF preallocations is closed,
-> xfs_file_release() synchronously triggers xfs_free_eofblocks() to clean
-> them up. This requires allocating a write transaction (xfs_trans_alloc),
-> which blocks indefinitely if the filesystem is currently frozen or in the
-> process of freezing, as it waits to acquire the superblock's write lock.
+> Introduce a new transaction allocation flag, XFS_TRANS_WRITECOUNT_TRYLOCK=
+.
+> When this flag is specified, __xfs_trans_alloc() attempts to obtain
+> freeze protection using sb_start_intwrite_trylock() instead of blocking
+> indefinitely on sb_start_intwrite().
 >
-> As a result, a close() system call on a read-write file descriptor can
-> hang indefinitely in percpu_rwsem_wait() until the filesystem is thawed,
-> even if the file is closed by a non-writer process or after all writing
-> activity has already ceased.
+> If the trylock fails, the allocation is aborted gracefully: the freshly
+> allocated transaction handle is freed, and the function returns the
+> appropriate error pointer ERR_PTR(-EAGAIN), which is then propagated
+> to the caller by xfs_trans_alloc().
 >
-> To fix this properly and avoid any potential race conditions where a free=
-ze
-> might come in immediately after a writable check, pass the new
-> XFS_TRANS_WRITECOUNT_TRYLOCK flag to xfs_trans_alloc() when freeing
-> speculative preallocations in xfs_file_release().
->
-> If xfs_free_eofblocks() returns -EAGAIN on a trylock failure, we cleanly
-> bypass setting XFS_EOFBLOCKS_RELEASED on the inode, ensuring subsequent
-> releases or the background blockgc garbage collector can successfully ret=
-ry
-> the cleanup once the filesystem thaws.
->
-> Also, rename the flags parameter in xfs_free_eofblocks() to trans_flags a=
-s
-> suggested to make its usage stand out, and update existing callers to
-> pass 0 to preserve standard blocking paths.
+> Also add an assertion in __xfs_trans_alloc() to ensure that both
+> XFS_TRANS_NO_WRITECOUNT and XFS_TRANS_WRITECOUNT_TRYLOCK are never
+> specified at the same time, as they are mutually exclusive.
 >
 > Suggested-by: Christoph Hellwig <hch@infradead.org>
 > Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
 > ---
->  fs/xfs/xfs_bmap_util.c | 9 +++++----
->  fs/xfs/xfs_bmap_util.h | 2 +-
->  fs/xfs/xfs_file.c      | 8 +++++---
->  fs/xfs/xfs_icache.c    | 2 +-
->  fs/xfs/xfs_inode.c     | 2 +-
->  5 files changed, 13 insertions(+), 10 deletions(-)
+>  fs/xfs/libxfs/xfs_shared.h |  3 +++
+>  fs/xfs/xfs_trans.c         | 12 +++++++++++-
+>  2 files changed, 14 insertions(+), 1 deletion(-)
 >
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 0ab00615f1ad..faf0630717dc 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -574,7 +574,8 @@ xfs_can_free_eofblocks(
->   */
->  int
->  xfs_free_eofblocks(
-> -       struct xfs_inode        *ip)
-> +       struct xfs_inode        *ip,
-> +       uint                    trans_flags)
->  {
->         struct xfs_trans        *tp;
->         struct xfs_mount        *mp =3D ip->i_mount;
-> @@ -604,9 +605,9 @@ xfs_free_eofblocks(
->                 return 0;
->         }
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index b1e0d9bc1f7d..68d22b6cddd3 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -164,6 +164,9 @@ void        xfs_log_get_max_trans_res(struct xfs_moun=
+t *mp,
+>  /* Transaction has locked the rtbitmap and rtsum inodes */
+>  #define XFS_TRANS_RTBITMAP_LOCKED      (1u << 9)
 >
-> -       error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, =
-&tp);
-> +       error =3D xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, tra=
-ns_flags, &tp);
->         if (error) {
-> -               ASSERT(xfs_is_shutdown(mp));
-> +               ASSERT(error =3D=3D -EAGAIN || xfs_is_shutdown(mp));
->                 return error;
->         }
->
-> @@ -928,7 +929,7 @@ xfs_prepare_shift(
->          * into the accessible region of the file.
->          */
->         if (xfs_can_free_eofblocks(ip)) {
-> -               error =3D xfs_free_eofblocks(ip);
-> +               error =3D xfs_free_eofblocks(ip, 0);
->                 if (error)
->                         return error;
->         }
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index c477b3361630..c13774aa0892 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -66,7 +66,7 @@ int   xfs_insert_file_space(struct xfs_inode *, xfs_off=
-_t offset,
->
->  /* EOF block manipulation functions */
->  bool   xfs_can_free_eofblocks(struct xfs_inode *ip);
-> -int    xfs_free_eofblocks(struct xfs_inode *ip);
-> +int    xfs_free_eofblocks(struct xfs_inode *ip, uint trans_flags);
->
->  int    xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
->                          struct xfs_swapext *sx);
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 845a97c9b063..76c9b2fe7c51 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1806,9 +1806,11 @@ xfs_file_release(
->          */
->         if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
->             xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-> -               if (xfs_can_free_eofblocks(ip) &&
-> -                   !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
-> -                       xfs_free_eofblocks(ip);
-> +               if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
-> +                   xfs_can_free_eofblocks(ip) &&
-> +                   !xfs_free_eofblocks(ip, XFS_TRANS_WRITECOUNT_TRYLOCK)=
-)
-> +                       xfs_iflags_set(ip, XFS_EOFBLOCKS_RELEASED);
+> +/* Try lock filesystem superblock for freeze protection */
+> +#define XFS_TRANS_WRITECOUNT_TRYLOCK   (1u << 10)
 > +
->                 xfs_iunlock(ip, XFS_IOLOCK_EXCL);
->         }
+>  /*
+>   * Field values for xfs_trans_mod_sb.
+>   */
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 148cc32449c1..3860e44d6439 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -216,10 +216,18 @@ __xfs_trans_alloc(
+>         struct xfs_trans        *tp;
 >
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 2040a9292ee6..c575b4acb24c 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1259,7 +1259,7 @@ xfs_inode_free_eofblocks(
->         *lockflags |=3D XFS_IOLOCK_EXCL;
+>         ASSERT(!(flags & XFS_TRANS_RES_FDBLKS) || xfs_has_lazysbcount(mp)=
+);
+> +       ASSERT(!((flags & XFS_TRANS_NO_WRITECOUNT) &&
+> +                (flags & XFS_TRANS_WRITECOUNT_TRYLOCK)));
 >
->         if (xfs_can_free_eofblocks(ip))
-> -               return xfs_free_eofblocks(ip);
-> +               return xfs_free_eofblocks(ip, 0);
->
->         /* inode could be preallocated */
->         trace_xfs_inode_free_eofblocks_invalid(ip);
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 9978ac1422fc..1c75f51af4d7 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1423,7 +1423,7 @@ xfs_inactive(
->                  * reference to the inode at this point anyways.
->                  */
->                 if (xfs_can_free_eofblocks(ip))
-> -                       error =3D xfs_free_eofblocks(ip);
-> +                       error =3D xfs_free_eofblocks(ip, 0);
->
->                 goto out;
->         }
+>         tp =3D kmem_cache_zalloc(xfs_trans_cache, GFP_KERNEL | __GFP_NOFA=
+IL);
+> -       if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+> +       if (flags & XFS_TRANS_WRITECOUNT_TRYLOCK) {
+> +               if (!sb_start_intwrite_trylock(mp->m_super)) {
+> +                       kmem_cache_free(xfs_trans_cache, tp);
+> +                       return ERR_PTR(-EAGAIN);
+> +               }
+> +       } else if (!(flags & XFS_TRANS_NO_WRITECOUNT)) {
+>                 sb_start_intwrite(mp->m_super);
+> +       }
+>         xfs_trans_set_context(tp);
+>         tp->t_flags =3D flags;
+>         tp->t_mountp =3D mp;
+> @@ -252,6 +260,8 @@ xfs_trans_alloc(
+>          */
+>  retry:
+>         tp =3D __xfs_trans_alloc(mp, flags);
+> +       if (IS_ERR(tp))
+> +               return PTR_ERR(tp);
+>         WARN_ON(mp->m_super->s_writers.frozen =3D=3D SB_FREEZE_COMPLETE);
+>         error =3D xfs_trans_reserve(tp, resp, blocks, rtextents);
+>         if (error =3D=3D -ENOSPC && want_retry) {
 > --
 > 2.47.3
 >
