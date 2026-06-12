@@ -1,211 +1,144 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F21237CD3A
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 12:05:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DF233B3C11
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 12:10:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781265955; cv=none; b=czHiEJhMe56odhl3jjp4LojCbXI/XGo/g39qrz3860TvAAzmIrIQBg8v9kqGjjNXBSyAj9cc+SMyXPED1hOZlv4RMXhMbi9MVzF9cLEn8bcLRCMCZ6dpM0WSMrVvkd1rl+BBppJa4JZam4LApfJPntaYG/VHTx9/EK2SlLgP8N4=
+	t=1781266256; cv=none; b=pdnDmR23G4DZcxETaAdesMgzoVoQ0bvIdw/J/I4w1lL09vQxUMW9HEO5eQQ/q4ZH5xkKrTaZn2oK0ADHH0Pn8GxSKz0EA9rfF8gsUiGvcyr+s1UbRHajHj6UBGFqFmnuoSSEWGLY0bMyZ+KERp0jsRnGJCeB8If4qhbnOewN+oA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781265955; c=relaxed/simple;
-	bh=nsdGdRnewbkphCvqP+UZ2H9JLYrAPvPh7iBMkhu9FiI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sJRjnL4OWhDNGfiZle7AaMcG0z6HwGU6A3CIkODJvExNzkMkgkARutYiwwf3eL97xbxjKv81vmfTsjWsh1lpmW645xWWlyyQudE10wDY9qpw06cy2mpGcBFOT8lXrFF12mFur3vBscf4Ex7ZJiOZi+bFQC0AA0zDoic6vknXc7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QYOWVfN9; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781266256; c=relaxed/simple;
+	bh=HZ9Ks0XPk0YTR1RMBY9S7/jI8tTrBBoWbjsfOfflUkk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=g4szdn+2vM73TEuhXtm2byWQo4gskKnLEp93n89zgwm7ohhjd3JFoHPlhsWTcfVZ5hwImchsp3HlNjvY+jV4MlPYdjufGdll7+dCL/xvZuZoFMOADe7++68PxWCS+aYcnUncm/IjwS953sbL9mENTOicsDwgV7ekVnpJaDuEh7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TUf2NX/d; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QYOWVfN9"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c0c2c7e0c5so5703425ad.1
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jun 2026 05:05:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781265954; x=1781870754; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fQOC3hYWZyES9WLzkPg8MyHU7k3IwFGtS7FQklxrDKo=;
-        b=QYOWVfN99EoK6wrdmmtNi880fpY9wgDqf4T+3LXVvkrDYIqeP5DTsr2CDDCLrc7IDl
-         UZbJkh5MWbPbSt8LAXZBd2z5QJkEkG+j3yOuICEjKr6GGtO+2TuTktvzZVq/Js5FjKdC
-         YFKrBgxhM/goz9J/AMEp04Ag6NWtxM4Uzvd13c6PdCeIXNc3awNhWKbAubEPDd/1dG5j
-         +kYR4e2dhoEPAE7Q6YJfVFoSzASnJEi4ZSeDpYh6i15DI/OtE5lqxW6D/Cv3zBPZ7cKr
-         2kgjUswLpVa6Mf63RU2jJxoIvUn9pXCLV3tbzo+EkHfAJr68mbnJosrYvjNYA21Noq+A
-         bWfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781265954; x=1781870754;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fQOC3hYWZyES9WLzkPg8MyHU7k3IwFGtS7FQklxrDKo=;
-        b=d9Zvb2z+xG7apnjuAxXqWNWeEBBBqPyyin7TcGa10sZ0Oc+nrJMiO+etJkMYalIfum
-         Mpr0uRlNQWqYl+ZP02PWAf1RUMWpCf4Itpn+YS2Sg67NGJJnVC3McQSR+kyTbUU+ynV5
-         gUWohr3FaLqSWDNQ++1JHYC+PDQ7rCMLVgrQWcBBXFMfNxY/7RF6jIkNXaGv/c2Mi3+W
-         +V2BOp+Kgi/LGR/gaSmuz+d3FzTOC9V+bm2i6ASIAdF5BaIARNBneaNEf/7jF74kVdr1
-         zzPYmWRooet0OT4tHOiKuGRs6DZ5UtHJzbY8xbgTfaUkVYUhEtZucAdw0RVc+69tdVGt
-         Z9FQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/agdKKFBYzCYJBmVdk9bTGH+NXjLA/nf8ELrhfSSqrgmCG6M1q6T+6J0Gt+NpV1VZQH3GTVpArULA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSmwIdvH2tOVOv979ReO5BNSXJaqnQpHmBRqhSGClPEl/nI22x
-	VLFi2K0HMpbQuBjQCwgW2soAXDenR7SuSskD3/WqkqE0h//okL4t3v04hQ+qehQdPJpjIg==
-X-Gm-Gg: Acq92OF49QCWNi030booNEFJzaDzDTwECQJHJyREedL/5xC1vZNwHB9mBCGPtOJjiRU
-	UXpUXGBR/GWNKfvb03XSoR3uHyRgeql3yEmSeJWtlcEtCWSCaghDCDm4zV9rbdrGI0af/p2St88
-	gNCRsioJKhHLzmpufbNL7GIoPVQ1xJ4NqG0GUlDAahUM4Y4fJw4lB38tXMmrlssvMwJ27i5Q3Xj
-	wLdD4E3rAzuwxVS6/DxdDX2WkFX6V/JUQHNQuhmyj0EgXOWJvJUgnv8/VkF+ogFpx2c6gbpGrlh
-	1GExszEFpkf2sWaSAzNg9SIU/6fYyU/mAx69Lsn+qQTSqxsqHiwQx/0rlM9EoWs4rAi7raUqEAY
-	UHh7BIYibiR4qxvQfPv3kvwez/K90RMzS2TMANu247R9Um49KArQ3AnpSJTkPOvj8jIHWQ8L/2m
-	IWjHnIijBweNWBznUejyHhcRpf/vJAF/bQczgAONA1MUggrjQstyXwzhC4mU3ygr29mjAr/+Omy
-	WrjK6QYJSVrH2FV4JJ/thu7HzZ/pfd9HBbxZdoKYfm5NXGAYcCMgH9O6Yn8/RUe94RwsAo7Jhbd
-	fEzHgVjVCuHo2KiW89uRdp+QrQKyxowMc+vQ
-X-Received: by 2002:a17:902:e807:b0:2b2:ec46:dfed with SMTP id d9443c01a7336-2c4126540abmr29253775ad.31.1781265953660;
-        Fri, 12 Jun 2026 05:05:53 -0700 (PDT)
-Received: from cs-1047136853211-default.asia-southeast1-a.c.d33bddc1d573818c7-tp.internal (139.104.87.34.bc.googleusercontent.com. [34.87.104.139])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c42f1f0f24sm19145025ad.3.2026.06.12.05.05.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Jun 2026 05:05:53 -0700 (PDT)
-From: Aditya Srivastava <aditya.ansh182@gmail.com>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TUf2NX/d"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781266253;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=bAG/aaleL+KGNyeyu+ILijGdPmXoI66HYof8HAvsvrY=;
+	b=TUf2NX/dH0A2qlAmsVR3POew2TeyrpedRB57yNnrAKObnVYKU7Rp/PkHYdhAKADbIN05Yd
+	vMrJ5ySFJSYKYGquasO0zYdlrWzry9GEdof88S2SuR2FEdSoeZXyjHr6ZI3Embc8QScHFM
+	L8uYAxpeYDbDd/68M8/pnAV8p0IE3AA=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-5-3v5IX6EUPKqTgzN8ju9jJw-1; Fri,
+ 12 Jun 2026 08:10:50 -0400
+X-MC-Unique: 3v5IX6EUPKqTgzN8ju9jJw-1
+X-Mimecast-MFC-AGG-ID: 3v5IX6EUPKqTgzN8ju9jJw_1781266249
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CFA21800A7B;
+	Fri, 12 Jun 2026 12:10:49 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.80.93])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4E1E33008B34;
+	Fri, 12 Jun 2026 12:10:48 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: stable@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Subject: [PATCH v3 2/2] xfs: prevent close() from hanging on frozen filesystems
-Date: Fri, 12 Jun 2026 12:05:39 +0000
-Message-ID: <20260612120540.2319-1-aditya.ansh182@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	Gregg Leventhal <gleventhal@janestreet.com>,
+	Eric Hagberg <ehagberg@janestreet.com>
+Subject: [PATCH 6.12.y] iomap: don't revert iov_iter on partially completed buffered writes
+Date: Fri, 12 Jun 2026 08:10:47 -0400
+Message-ID: <20260612121047.397754-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+Gregg reports that the iomap retry behavior for nonblocking (nowait)
+append writes is broken. The problem occurs when an append write is
+first submitted in non-blocking mode (i.e. via io_uring), partially
+completes before hitting -EAGAIN, and then is resubmitted from
+blocking context.
 
-When a file with active speculative post-EOF preallocations is closed,
-xfs_file_release() synchronously triggers xfs_free_eofblocks() to clean
-them up. This requires allocating a write transaction (xfs_trans_alloc),
-which blocks indefinitely if the filesystem is currently frozen or in the
-process of freezing, as it waits to acquire the superblock's write lock.
+The specific problem is that at least one iteration of the loop in
+iomap_write_iter() completes in non-blocking context and thus has
+bumped i_size. The next iteration hits -EAGAIN, reverts the iov_iter
+and returns. io_uring retries the entire append write from blocking
+context, but since i_size has already been increased, the data that
+was partially written on the first attempt is rewritten at the new
+i_size. This is essentially an intra-write data corruption since the
+data written to the file does not reflect the write from userspace.
 
-As a result, a close() system call on a read-write file descriptor can
-hang indefinitely in percpu_rwsem_wait() until the filesystem is thawed,
-even if the file is closed by a non-writer process or after all writing
-activity has already ceased.
+This problem is already fixed on master as of commit 1a1a3b574b97
+("iomap: advance the iter directly on buffered writes"). That commit
+was primarily intended to clean up iomap iter state tracking, but it
+also happened to remove the iov_iter revert and thus accidentally
+fix this problem as well. Without the revert, iomap will commit
+partial progress internally and loop once more before it more than
+likely hits -EAGAIN and returns partial progress consistent with the
+inode updates. This means the blocking retry from io_uring will pick
+up where the first attempt left off at the current i_size and
+perform the remainder of the write correctly.
 
-To fix this properly and avoid any potential race conditions where a freeze
-might come in immediately after a writable check, pass the new
-XFS_TRANS_WRITECOUNT_TRYLOCK flag to xfs_trans_alloc() when freeing
-speculative preallocations in xfs_file_release().
-
-If xfs_free_eofblocks() returns -EAGAIN on a trylock failure, we cleanly
-bypass setting XFS_EOFBLOCKS_RELEASED on the inode, ensuring subsequent
-releases or the background blockgc garbage collector can successfully retry
-the cleanup once the filesystem thaws.
-
-Also, rename the flags parameter in xfs_free_eofblocks() to trans_flags as
-suggested to make its usage stand out, and update existing callers to
-pass 0 to preserve standard blocking paths.
-
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+Cc: <stable@vger.kernel.org>
+Fixes: 18e419f6e80a ("iomap: Return -EAGAIN from iomap_write_iter()")
+Reported-by: Gregg Leventhal <gleventhal@janestreet.com>
+Reported-by: Eric Hagberg <ehagberg@janestreet.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 9 +++++----
- fs/xfs/xfs_bmap_util.h | 2 +-
- fs/xfs/xfs_file.c      | 8 +++++---
- fs/xfs/xfs_icache.c    | 2 +-
- fs/xfs/xfs_inode.c     | 2 +-
- 5 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0ab00615f1ad..faf0630717dc 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -574,7 +574,8 @@ xfs_can_free_eofblocks(
-  */
- int
- xfs_free_eofblocks(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	uint			trans_flags)
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -604,9 +605,9 @@ xfs_free_eofblocks(
- 		return 0;
- 	}
+Hi all,
+
+This relates to the discussion here[1]. Refer to the link for further
+details and the custom reproducer. Since this is a stable-only patch,
+I'd like to see at least one ack if possible from an iomap developer.
+
+Note that this patch introduces an extra iomap iteration in the write
+iter path before an -EAGAIN will return, but I went this route because
+this is current upstream behavior and I didn't want to introduce novel
+behavior in -stable, as trivial as it might be. This was initially
+developed as a custom/selective backport of 1a1a3b574b97, but as it
+turns out this is also effectively a revert of commit 18e419f6e80a. So
+FWIW, this is somewhat historical behavior as well.
+
+I plan to float a patch upstream to fix that loop wart soon. That would
+seem overkill to fix in stable to me, but if it does prove necessary we
+can revisit something like the custom version posted in [1] as a
+stable-worthy variant. I'd just prefer to only do that if/after that
+change proves acceptable upstream.
+
+Finally, note that I'm not intimately familiar with -stable process so
+I'm just sending a 6.12.y version here. Earlier branches can either also
+include this, revert 18e419f6e80a directly, or I can post targeted
+patches if needed. Thoughts, reviews, flames appreciated.
+
+Brian
+
+[1] https://lore.kernel.org/linux-fsdevel/CAFN_u7FrgM4Dzie2jjkLwWV8P0dvUG_Wwy3Q9B3-2HnnWiDu8w@mail.gmail.com/
+
+ fs/iomap/buffered-io.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 0178292c1864..5f885286b2f4 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1037,10 +1037,6 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		}
+ 	} while (iov_iter_count(i) && length);
  
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, trans_flags, &tp);
- 	if (error) {
--		ASSERT(xfs_is_shutdown(mp));
-+		ASSERT(error == -EAGAIN || xfs_is_shutdown(mp));
- 		return error;
- 	}
+-	if (status == -EAGAIN) {
+-		iov_iter_revert(i, total_written);
+-		return -EAGAIN;
+-	}
+ 	return total_written ? total_written : status;
+ }
  
-@@ -928,7 +929,7 @@ xfs_prepare_shift(
- 	 * into the accessible region of the file.
- 	 */
- 	if (xfs_can_free_eofblocks(ip)) {
--		error = xfs_free_eofblocks(ip);
-+		error = xfs_free_eofblocks(ip, 0);
- 		if (error)
- 			return error;
- 	}
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b3361630..c13774aa0892 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -66,7 +66,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip);
--int	xfs_free_eofblocks(struct xfs_inode *ip);
-+int	xfs_free_eofblocks(struct xfs_inode *ip, uint trans_flags);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
- 			 struct xfs_swapext *sx);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..76c9b2fe7c51 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1806,9 +1806,11 @@ xfs_file_release(
- 	 */
- 	if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
- 	    xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
--		if (xfs_can_free_eofblocks(ip) &&
--		    !xfs_iflags_test_and_set(ip, XFS_EOFBLOCKS_RELEASED))
--			xfs_free_eofblocks(ip);
-+		if (!xfs_iflags_test(ip, XFS_EOFBLOCKS_RELEASED) &&
-+		    xfs_can_free_eofblocks(ip) &&
-+		    !xfs_free_eofblocks(ip, XFS_TRANS_WRITECOUNT_TRYLOCK))
-+			xfs_iflags_set(ip, XFS_EOFBLOCKS_RELEASED);
-+
- 		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	}
- 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2040a9292ee6..c575b4acb24c 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1259,7 +1259,7 @@ xfs_inode_free_eofblocks(
- 	*lockflags |= XFS_IOLOCK_EXCL;
- 
- 	if (xfs_can_free_eofblocks(ip))
--		return xfs_free_eofblocks(ip);
-+		return xfs_free_eofblocks(ip, 0);
- 
- 	/* inode could be preallocated */
- 	trace_xfs_inode_free_eofblocks_invalid(ip);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 9978ac1422fc..1c75f51af4d7 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1423,7 +1423,7 @@ xfs_inactive(
- 		 * reference to the inode at this point anyways.
- 		 */
- 		if (xfs_can_free_eofblocks(ip))
--			error = xfs_free_eofblocks(ip);
-+			error = xfs_free_eofblocks(ip, 0);
- 
- 		goto out;
- 	}
 -- 
-2.47.3
+2.54.0
 
