@@ -1,102 +1,180 @@
-Received: from mail-pj1-f68.google.com (mail-pj1-f68.google.com [209.85.216.68])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48FED3C3C07
-	for <linux-xfs@vger.kernel.org>; Sat, 13 Jun 2026 08:13:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5341A3154;
+	Sun, 14 Jun 2026 16:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781338413; cv=none; b=Y4QufC17cq8bGPMXbT80vyb1g/7IOMWO9eq4xno+qbYZ5+tvL6udL5B9JxzNG9YZxZDjm2qDOXAi/at3eVi5BSR1H0aNFZ8Xo0Gexqta+btYDmFRYDSQiWBV6wmuskyBSRBmJelaAqRniFsFT37LxZMs5vs9xFdTgbc+UWfvdU8=
+	t=1781453958; cv=none; b=leaRMfCkMHHXoZD3HXs7wkOC9Msv4hyQB6ni/olNkzG40VmXm67bMetgHEIO4dnCXAze2QOJVuC2dtvGDmMpiVouOmjUIOsV8kH5fQXVYz72tVkDkCCCjfhDoXo2mOgN0bYZ0UU8u7MV7viHnzf3bfIhLTLwxNrDJzFevfBdGn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781338413; c=relaxed/simple;
-	bh=joUaGFct2DoPnYiVYvdUR5Zha0jVgohYXldhAfMVt4w=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iOmMa7CxAdUOnKjUAlZqM4JXVkg6kVTnQm1+zkO6YtGbWtirkv1yAa8jM5FCXFdLrvh+6FD8/ZWvc6IZ9NNkM8k5Fue9Hp07Iyb3JLuJkbsgERYVeCfhZ3kopgY3Ke13wLSfh2HGuxpeuExpvII3TEsw+T+LFtrt9lUT6xUm73Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S99l+Gil; arc=none smtp.client-ip=209.85.216.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781453958; c=relaxed/simple;
+	bh=KaO8gT4tUV5B23JGf0XsActcU5fldX0oKwmNqrJyJ6k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wf2SG0EL4XatlYS/qkyTCmyI3O9n11MePQz3sOS55FdPC9n/OPBeES9gXx2z1joxv0p90r1PlOvJz3NZfUPjXPCHN7QBDL9ulMoOIGz/jXUXSMSnIfNDj3TR+0YNtU8Tb3TTsCpNw2+C7x7KrAASikp63LuCFfDpsgTICijo9RE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ozQcBFOa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S99l+Gil"
-Received: by mail-pj1-f68.google.com with SMTP id 98e67ed59e1d1-36b95eb4bb4so1127873a91.3
-        for <linux-xfs@vger.kernel.org>; Sat, 13 Jun 2026 01:13:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781338412; x=1781943212; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=joUaGFct2DoPnYiVYvdUR5Zha0jVgohYXldhAfMVt4w=;
-        b=S99l+GiloRyCH4oFwREU+ODvJl2uwkZiBo5OdT/FzcjQ7okLpxBj2eXWvIoSjiBp2S
-         Xeo1JuIuQCf+SFEIAnqjWFf6P9HzsnOdq6T01+q1Png09EHShUoBCgMpRrsom+xd+c2W
-         Z7CM7xMzlg+tBHZxp7Jlzf8XXqBUuHn/KMBNwiTaI1CkuNXCX4YmuBCQ3wMtG8SxOvMu
-         NN6eyGed8i/sPgPb4O57dVkc/x11xMl/g6GaTdW5TYrh9r2MCcrSISZSSeaN5kYSqOYW
-         M49RLb4nu0Mr8O7Q25gwFHh2MzJHQEFF0MyBxN5rEcqA38CEqnDyIn0kJWQKWWP9rRoP
-         U+mg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781338412; x=1781943212;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=joUaGFct2DoPnYiVYvdUR5Zha0jVgohYXldhAfMVt4w=;
-        b=hvihAdOXbvy9z6f3HjXRrEvJeEtoH0Cvmy2FYf1pXtwnyQi+ViTYcQf43oakGf2jYm
-         7tUD1h8YxVf4bRIyvfTI7uKAaCasxONS7bXvRSOQ+UyuO9kBDZvT2q+Fy7F/ElIWM45I
-         ZR4e0KXs0dDp1txivpwjdgPGDfLuf9vU0IRNG4tYX3m92K3z5UWw1NJwIA4NDme0Y9Do
-         yMZ0YnwpTE115OVgWO2S4Y6Zj+RcqVqVdaMNXGY3WjeA1td5zPCxVyLfSZAyb0gTuB/a
-         kcq8v+R6/35G2vIt0+Ud1bWSa5bR+5fdO0pAJcxb4Ua7+iM3As777o1ZEt1gsHb6UG8p
-         SfqA==
-X-Forwarded-Encrypted: i=1; AFNElJ90povO9EDCj0VXiI6rKZ9inA09xUTvDCQXqXA+AELNOIxVAoVsDqib2edGcnSWVd1EKJKJhkTDYLU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxab8IYRHYCf0UmVtPbKX1k0HI6GJA/Qt8QtM+M0CNl6Loj+3SX
-	bAxNJRvPsyw0X3GNd/uo5wDr0apJiNsWyUpcr5nBGbMvy1VTc0oLMYzC
-X-Gm-Gg: Acq92OGSQco0oJQyekeIYmUjVV96hKsVUIFYhX/ygrYCMkhZVeiv11TaN6YAKLi3N5I
-	6bb3QphIBLZGXNIJdGESNcqb9Oqhue5qXobT7bBzHWvkf96BnVsQof31Gf/jlXxNVg5zdFkHBeE
-	MK4F31zoQewg007hY2kvUfyXXWVYcWhuRMYjCW7nrB0kgwRtdvfWOdfxs88f/4k8881GVndGCZm
-	VNTtm/338QnZ8hfAox5C77bEYR6qtPrsOXAodCMDSwoR8SorRGAryTKh6rnjbK5OXhTq3R73Ixr
-	sZ7X2hWbPGvjdPX3qeML6qGwL6DZD46cbcJjJa8dQNUlQZb/cV8eoOnTkFBMapjCdDOrNtxY/uD
-	+xYUATmbAVKwgN+ewc292RA8WH+te414901NbLkls7x/3U8fv7aTjqy8tGyWSllRUTTBaM5t3mP
-	YYi3mSOShroalFwvjm/mDx
-X-Received: by 2002:a17:90b:3885:b0:36b:bb66:fbd0 with SMTP id 98e67ed59e1d1-37a01a3bcc3mr6292806a91.4.1781338411517;
-        Sat, 13 Jun 2026 01:13:31 -0700 (PDT)
-Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c866519faabsm3985393a12.24.2026.06.13.01.13.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 13 Jun 2026 01:13:30 -0700 (PDT)
-From: Zhang Cen <rollkingzzc@gmail.com>
-To: Mikhail Lobanov <m.lobanov@rosa.ru>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Zhang Cen <rollkingzzc@gmail.com>
-Subject: Re: [PATCH v5 2/2] xfs: shut down the filesystem on a failed mount
-Date: Sat, 13 Jun 2026 16:13:22 +0800
-Message-Id: <20260613081322.895929-1-rollkingzzc@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260610191904.12533-2-m.lobanov@rosa.ru>
-References: <20260610191904.12533-1-m.lobanov@rosa.ru> <20260610191904.12533-2-m.lobanov@rosa.ru>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ozQcBFOa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C9581F000E9;
+	Sun, 14 Jun 2026 16:19:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781453957;
+	bh=PNuxEM99/y7723edkgySQDIwMboaNFTSOe8LBczRJJk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ozQcBFOan1m9NJmegiPIa0m3rMgBl8qfS+lkUY2pnButSLVhNzY62jdK/3JzuRue6
+	 pkl3BkOVhQ9E/jHLuDmOUVeR9Hq8CKfgfyIwlGdX8n+z0s1Dhw2m7wH7iyw4yQCapG
+	 +5kiT4fzQD4357sn8CQNniaGvkif21PrkJo4xGr7f1VbVGDzQImPgozplYrdIekR78
+	 i3z7qSNRR2iFpL9ugGgWtvFXtk0aQ1gz0lyK+p6gGgh523EgbAtrLk3kd+UVMarY4J
+	 p5tVM3+7jqcRWsGYczsV39SDuuOQQKjauYRZtSrARtPT80hcKtxmwKITksPZhDZtMr
+	 j0AajpVBfaZrA==
+Date: Mon, 15 Jun 2026 00:19:09 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Yao Sang <sangyao@kylinos.cn>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de, 
+	djwong@kernel.org
+Subject: Re: [PATCH] xfs/333: test zoned realtime writeback EIO shutdown
+Message-ID: <ai7LiV1TrX5D_E2J@zlang-mailbox>
+Mail-Followup-To: Yao Sang <sangyao@kylinos.cn>, fstests@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, hch@lst.de, djwong@kernel.org
+References: <20260612074231.1109213-1-sangyao@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260612074231.1109213-1-sangyao@kylinos.cn>
 
-Hi Mikhail and Christoph,
+On Fri, Jun 12, 2026 at 03:42:31PM +0800, Yao Sang wrote:
+> Create a zoned realtime filesystem with a single user data open zone,
+> dirty one zone worth of data, and inject a writeback error on the
+> realtime device.
+> 
+> After disabling fault injection, fsync a second write.  The filesystem
+> must already be shut down so that the second fsync fails quickly instead
+> of waiting for zoned allocation progress.
+> 
+> Signed-off-by: Yao Sang <sangyao@kylinos.cn>
+> ---
+> This is a test for the XFS zoned writeback shutdown fix posted as:
+> https://lore.kernel.org/all/20260611015305.1583003-1-sangyao@kylinos.cn/
+> 
+> Tested on a ZNS realtime XFS setup with fail_make_request enabled.  The
+> test passes with the v2 XFS fix applied.  On a kernel without that fix,
+> the second fsync waits behind the consumed open zone and reproduces the
+> hung writer condition.
+> 
+>  tests/xfs/333     | 69 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/333.out |  1 +
+>  2 files changed, 70 insertions(+)
+>  create mode 100755 tests/xfs/333
+>  create mode 100644 tests/xfs/333.out
+> 
+> diff --git a/tests/xfs/333 b/tests/xfs/333
+> new file mode 100755
+> index 00000000..aafee4c3
+> --- /dev/null
+> +++ b/tests/xfs/333
+> @@ -0,0 +1,69 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Kylin Software.
+> +#
+> +# FS QA Test No. 333
+> +#
+> +# Check that an unrecoverable writeback error on a zoned realtime device shuts
+> +# down the filesystem.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick rw zone eio
+> +
+> +. ./common/filter
+> +. ./common/fail_make_request
+> +. ./common/zoned
+> +
+> +_require_debugfs
+> +_require_scratch_nocheck
+> +_require_realtime
+> +_require_block_device $SCRATCH_RTDEV
+> +_require_zoned_device $SCRATCH_RTDEV
+> +_require_command "$BLKZONE_PROG" blkzone
+> +_require_fail_make_request
+> +
+> +_cleanup()
+> +{
+> +	[ -n "$SCRATCH_RTDEV" ] && \
+> +		_bdev_fail_make_request $SCRATCH_RTDEV 0 > /dev/null 2>&1
+> +	_disallow_fail_make_request > /dev/null 2>&1
+> +	_scratch_unmount > /dev/null 2>&1
+> +	cd /
+> +	rm -r -f $tmp.*
+> +}
+> +_register_cleanup _cleanup
+   ^^^^^^^^^^^^^^^^^
+This line isn't necessary. Since "_register_cleanup _cleanup" is called in
+_begin_fstest, it only registers the function name (not function instance).
+The latest definition will be called automatically, so there's no need to
+worry.
 
-Sorry for the delayed follow-up. I was tied up with other work recently and
-did not get a chance to continue following up on this issue.
+> +
+> +zone_capacity=$(_zone_capacity 0 $SCRATCH_RTDEV)
+> +echo "zone capacity: $zone_capacity" >> $seqres.full
+> +
+> +_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +
+> +# Leave only one open zone for user data.  If writeback fails after consuming
+> +# it, further writers must either see shutdown or wait forever for zone space.
+> +export MOUNT_OPTIONS="$MOUNT_OPTIONS -o max_open_zones=2"
+> +_try_scratch_mount || _notrun "mount option not supported"
+> +_require_xfs_scratch_zoned 1
+> +
+> +_prepare_for_eio_shutdown $SCRATCH_DEV
+   ^^^^^^^^^^^^^^^^^^^^^^^^^
+This line is already called in _try_scratch_mount, don't need to call it again,
+except you want to run it on another device.
 
-This series appears to address the same mount-failure inodegc/quota teardown
-race that I reported earlier here:
+> +
+> +testfile=$SCRATCH_MNT/writeback-error
+> +waitfile=$SCRATCH_MNT/wait-for-zone
+> +
+> +$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $zone_capacity" $testfile \
+> +	>> $seqres.full 2>&1 || _fail "failed to dirty test file"
+> +
+> +_allow_fail_make_request 100 100000 0 > /dev/null
+> +_bdev_fail_make_request $SCRATCH_RTDEV 1 > /dev/null
+> +
+> +$XFS_IO_PROG -c "fsync" $testfile >> $seqres.full 2>&1 && \
+> +	_fail "fsync succeeded despite realtime device error"
+> +
+> +_bdev_fail_make_request $SCRATCH_RTDEV 0 > /dev/null
+> +_disallow_fail_make_request > /dev/null
+> +
+> +$XFS_IO_PROG -f -c "pwrite -S 0x59 0 4k" -c "fsync" $waitfile \
+> +	>> $seqres.full 2>&1 && \
+> +	_fail "filesystem did not shut down after zoned writeback error"
 
-https://lore.kernel.org/linux-xfs/20260528053554.3047829-1-rollkingzzc@gmail.com/
+OK, others looks good to me.
 
-Could you please carry the following tags?
+Since above changes are straightforward, if you don't have any other updates
+that require a V2, I can just remove those two redundant lines for you when
+merging.
 
-Reported-by: Zhang Cen <rollkingzzc@gmail.com>
-Closes: https://lore.kernel.org/linux-xfs/20260528053554.3047829-1-rollkingzzc@gmail.com/
+Reviewed-by: Zorro Lang <zlang@kernel.org>
 
 Thanks,
-Zhang Cen
+Zorro
+
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/333.out b/tests/xfs/333.out
+> new file mode 100644
+> index 00000000..3e11d156
+> --- /dev/null
+> +++ b/tests/xfs/333.out
+> @@ -0,0 +1 @@
+> +QA output created by 333
+> -- 
+> 2.25.1
+> 
