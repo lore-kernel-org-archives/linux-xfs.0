@@ -1,134 +1,212 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8953E5A35;
-	Mon, 15 Jun 2026 12:13:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675A23B3893
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Jun 2026 13:17:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781525617; cv=none; b=ej3IihvZNtGTdadEPhlIcg/WCqIUOzA76VGnS3qqG/HnxFKDNoIbp3xbnr9n6s95q4IwrVOkhSnOHx/c7SLg+ZbyO3tXIHmBmD/VkW2O3x9pEFEXWeNLlC8TSW3v8mJdqpgYnYRPLrKvqskBIFiQ1gTGX96J9/+jXcBO3MoVLo4=
+	t=1781529453; cv=none; b=LBPpp/VE5ygpFCcdM+qaK/ojdM+FWYPebAHNKivhr8ZDk+sNFklydT0OLlDUhwlEyn04EcXUB7VuE3Kp7vGCOnFGH/uFtwV2Vlzgmus+WkjgPzO+oYscfN641tJozFn/rarDCFYjuUXM7221c118+bWQLemrU+7AgUCiOizfCbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781525617; c=relaxed/simple;
-	bh=5fBSnn+IRkj9PuEy6n+0YAjtAvKTxa1IcBI7l3BM/Kw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CiSPjEllPoHLh3tkpxpzoYUxtsOP5qOJobGqkP2Tc9OkwdqxBgmB06wjXFumpPMRzb584Y0HwkhkNEsBGWJjHgkXsX6WuenrhHsCsVos7nzBthx9+W09kP37YuEMMdzbepqfZE690SQoGMdrezGDWKBIh1p39L8OvFyl2nT69G8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=F0EutZ3L; arc=none smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1781529453; c=relaxed/simple;
+	bh=sxV8qJN9auKTPlL5YtnThwxmlkp68g3zFX+rcxhPfQ4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=k+zoUvanSDOD6Z46BIJEDPwFTTkzDYz0tt3RVO5c98lmEHxaX9fsK0AOJUsL46wcCSTJxOgdJgDvSa0W5fWMhjX4wL8lezzhF8j2+6KOL9r3aUTuBCTjJGmGVuCkdF7iGBJCNx/NGGDsGBmSzuYbXy3ZQcvRSr4wNijp5PGmUwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=RGcP2c+x; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=s0KUO/GI; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=RGcP2c+x; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=s0KUO/GI; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="F0EutZ3L"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1781525616; x=1813061616;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5fBSnn+IRkj9PuEy6n+0YAjtAvKTxa1IcBI7l3BM/Kw=;
-  b=F0EutZ3LPTic4nGXymALDfBSFWdxBAubmafiPQCD8XKBtAUSVw18Wf0g
-   Jf0O5/2pNjlnAK97XolyxbCc2/ef7YpwrluTQdIjHE+7xQPdshLSQWE6X
-   Ihwu7DiS6tiNzI498JTtiK1UFmTyN/ra6m4hmVOUtJ81zYv27CKVBIbwe
-   eln7s71INidMoskEi7u40OWAmNavUFQkpsE6n1UyGX69I91wmEiKCypOs
-   aEn9Gr+OPyOB76zewU1q1OrrIxuM95Gq5GRzhLY4rkwv4F/djJJ7EVk6l
-   Voyr4jUB1F6VgzcBnWJDYVB4fab2buQl2xfNNMweoVfPTN9guyGXYesMW
-   g==;
-X-CSE-ConnectionGUID: zYLEr53xS4mJ7hPfSzMU5A==
-X-CSE-MsgGUID: QvAfHLXNTAGBhk+BB/2fjA==
-X-IronPort-AV: E=Sophos;i="6.24,206,1774281600"; 
-   d="scan'208";a="145032002"
-Received: from unknown (HELO uls-op-esad1-o.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Jun 2026 20:13:29 +0800
-X-CSE-ConnectionGUID: UErOt1NTQ2+S4xYbDUrY3Q==
-X-CSE-MsgGUID: Lo2RdKdnRIqiEWOU4KLV7Q==
-IronPort-SDR: 6a2fec4b_WGeymY1vmZNDNRE97cYBMfiBZlPekLxQNArjelOI3ewaMlV
- JXSz3OsMLQodx42RY7yym0R55xHdex7VJpXT7Rw==
-Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
-  by uls-op-esad1-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Jun 2026 05:12:58 -0700
-X-CSE-ConnectionGUID: GjaDYeRiTnerkjVhTutP6A==
-X-CSE-MsgGUID: KJZ+WBoSTiq5CHfFPDYHEQ==
-WDCIronportException: Internal
-Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.67.30])
-  by uls-op-esai1-o.wdc.com with ESMTP; 15 Jun 2026 05:12:58 -0700
-From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: fstests@vger.kernel.org,
-	Zorro Lang <zlang@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>
-Cc: linux-xfs@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] xfs/013: fix ENOSPC handling
-Date: Mon, 15 Jun 2026 21:12:57 +0900
-Message-ID: <20260615121257.512060-1-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="RGcP2c+x";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="s0KUO/GI";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="RGcP2c+x";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="s0KUO/GI"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 4FD0075ABF;
+	Mon, 15 Jun 2026 13:17:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1781529450; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Uv8IPf6skenuMT7p9mPdAVsyScDMwwJt8Kiedh2MkwQ=;
+	b=RGcP2c+x9eZ42Gt+1x9wknGtatuI6Bnw2lCSN83Y7WSVE4c7lrXelM4niozeiuv0AL60AS
+	RVcv8ETIEHiQWfJUXu6thwrh1vGZz+/MRz3+pN3pX8rEzRo5NvoSvAt5wwDiPnr+q6z8GP
+	jBpAalQcfE5e/xclzhpeu7VWvk60nRs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1781529450;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Uv8IPf6skenuMT7p9mPdAVsyScDMwwJt8Kiedh2MkwQ=;
+	b=s0KUO/GIDk9rEGnSrDw1+nZSES8372IGKHe22X4ECF7gbZ48K5RmVRgvzqG2Tp1uvwM0rm
+	kSaQysxLuxKSMYAw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=RGcP2c+x;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b="s0KUO/GI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1781529450; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Uv8IPf6skenuMT7p9mPdAVsyScDMwwJt8Kiedh2MkwQ=;
+	b=RGcP2c+x9eZ42Gt+1x9wknGtatuI6Bnw2lCSN83Y7WSVE4c7lrXelM4niozeiuv0AL60AS
+	RVcv8ETIEHiQWfJUXu6thwrh1vGZz+/MRz3+pN3pX8rEzRo5NvoSvAt5wwDiPnr+q6z8GP
+	jBpAalQcfE5e/xclzhpeu7VWvk60nRs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1781529450;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Uv8IPf6skenuMT7p9mPdAVsyScDMwwJt8Kiedh2MkwQ=;
+	b=s0KUO/GIDk9rEGnSrDw1+nZSES8372IGKHe22X4ECF7gbZ48K5RmVRgvzqG2Tp1uvwM0rm
+	kSaQysxLuxKSMYAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 45ADB779A7;
+	Mon, 15 Jun 2026 13:17:30 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id wI78EGr7L2ruJQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 15 Jun 2026 13:17:30 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id DE192A12D2; Mon, 15 Jun 2026 15:17:29 +0200 (CEST)
+Date: Mon, 15 Jun 2026 15:17:29 +0200
+From: Jan Kara <jack@suse.cz>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: hch@infradead.org, aalbersh@redhat.com, cem@kernel.org, 
+	linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>, ailiopoulos@suse.com
+Subject: Re: [PATCH 1/1] mkfs.xfs fix sunit size on 512e and 4kN disks.
+Message-ID: <ptb5fg2wmlanfsvwawgcye6a2ezevrdnxfq4oxhwoialvgfjld@is3nzrdegqzk>
+References: <20260219114405.31521-3-lukas@herbolt.com>
+ <20260219114405.31521-6-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260219114405.31521-6-lukas@herbolt.com>
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 4FD0075ABF
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_COUNT_THREE(0.00)[3];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[herbolt.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-Commit 000813899afb ("fstests: scale some tests for high CPU count
-sanity") replaced "touch" with "echo -n >" to speed up file creation by
-using a shell builtin redirection instead of forking and execing an
-external binary. However, this broke the ENOSPC filtering the test
-relies on.
+On Thu 19-02-26 12:44:09, Lukas Herbolt wrote:
+> Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
+> As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
+> and so we set lsu to blocksize. But we do not check the the size if
+> lsunit can be bigger to fit the disk geometry.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 
-When the scratch filesystem fills up, the shell redirection "> $dir/$i"
-fails instead of the "touch" command. The shell applies redirections
-left-to-right, so "> $dir/$i" is attempted before "2>&1". Because
-opening the file fails immediately with ENOSPC, the command never runs
-and the shell writes the error message "No space left on device" to the
-stderr instead of the pipe. Then the error message is not passed to
-"filter_enospc" and leaks into the test output, causing the test case
-failure. The failure is recreated by running the test case with rather
-small size of block devices, such as 128MiB null_blk:
+During our performance testing we have noticed that this patch changes the
+size of log stripe unit on a disk behind megaraid_sas controller from 4k to
+64k (which is understandable as the disk reports 64k minimum_io_size). This
+actually causes a performance regression (about 40%) for dbench with 1
+client as it is very fsync-heavy and thus commits lots of tiny transactions
+and with larger log blocks the logging overhead just seems larger. dbench
+is kind of pathological load but I assume other more relevant fsync
+intensive loads could experience a regression as well.
 
-xfs/013            - output mismatch (see /home/test/xfstests/results//xfs/013.out.bad)
-    --- tests/xfs/013.out	2026-05-28 16:52:16.881159200 +0900
-    +++ /home/test/xfstests/results//xfs/013.out.bad	2026-06-11 17:20:36.269003467 +0900
-    @@ -5,3 +5,12305 @@
-     naming   =VERN bsize=XXX
-     log      =LDEV bsize=XXX blocks=XXX
-     realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-    +/home/test/xfstests/tests/xfs/013: line 45: /var/scratch/dir2/19013: No space left on device
-    +/home/test/xfstests/tests/xfs/013: line 45: /var/scratch/dir2/6452: No space left on device
-    +/home/test/xfstests/tests/xfs/013: line 45: /var/scratch/dir2/14964: No space left on device
-    +/home/test/xfstests/tests/xfs/013: line 45: /var/scratch/dir2/10051: No space left on device
-    ...
-    (Run 'diff -u /home/test/xfstests/tests/xfs/013.out /home/test/xfstests/results//xfs/013.out.bad'  to see the entire diff)
+I think one of the reasons why 4k log IO actually ends up performing better
+with this disk is that the controller has a battery backed cache (a few GB
+large) and thus it's able to absorb smaller log writes and merge them into
+properly sized IO so larger half-empty log blocks are just pure overhead
+for it.
 
-To fix the ENOSPC handling, wrap the redirection in a brace group so
-that "2>&1" is applied to the group before the inner redirection is
-attempted. The redirection failure is then written to the group's
-stderr, which is piped into "filter_enospc". This keeps the faster
-builtin file creation than the "touch" command as the trigger commit
-intended.
+This commit sadly doesn't contain any quantification how bad small log IO
+is for 4kN or 512e drives so that one could weight it against the
+regression for higher-end storage. Anyway, I'm not sure something needs to
+be done here as there likely isn't a value that works for everyone. I just
+wanted to provide a data point that this isn't a universal win and maybe it
+needs to be considered what's the most sensible default.
 
-Fixes: 000813899afb ("fstests: scale some tests for high CPU count sanity")
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- tests/xfs/013 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+								Honza
 
-diff --git a/tests/xfs/013 b/tests/xfs/013
-index fd011445..2e9b9850 100755
---- a/tests/xfs/013
-+++ b/tests/xfs/013
-@@ -28,7 +28,7 @@ _create()
- 	mkdir -p $dir
- 	for i in $(seq 0 $count)
- 	do
--		echo -n > $dir/$i 2>&1 | filter_enospc
-+		{ echo -n > $dir/$i ; } 2>&1 | filter_enospc
- 	done
- }
- 
-@@ -42,7 +42,7 @@ _rand_replace()
- 	do
- 		file=$((RANDOM % count))
- 		rm -f $dir/$file
--		echo -n > $dir/$file 2>&1 | filter_enospc
-+		{ echo -n > $dir/$file ; } 2>&1 | filter_enospc
- 	done
- }
- 
+
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b34407725f76..1b6334e9adce 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3647,7 +3647,7 @@ check_lsunit:
+>  	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
+>  		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
+>  
+> -	if (lsu) {
+> +	if (cli->lsu) {
+>  		/* verify if lsu is a multiple block size */
+>  		if (lsu % cfg->blocksize != 0) {
+>  			fprintf(stderr,
+> -- 
+> 2.53.0
+> 
+> >From 2771375662c9edce25d7268bc71cc6db35a0d5c7 Mon Sep 17 00:00:00 2001
+> From: Lukas Herbolt <lukas@herbolt.com>
+> Date: Fri, 26 Sep 2025 12:48:39 +0200
+> Subject: [PATCH 1/1] mkfs.xfs fix sunit size on 512e and 4kN disks.
+> 
+> Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
+> As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
+> and so we set lsu to blocksize. But we do not check the the size if
+> lsunit can be bigger to fit the disk geometry.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b34407725f76..1b6334e9adce 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3647,7 +3647,7 @@ check_lsunit:
+>  	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
+>  		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
+>  
+> -	if (lsu) {
+> +	if (cli->lsu) {
+>  		/* verify if lsu is a multiple block size */
+>  		if (lsu % cfg->blocksize != 0) {
+>  			fprintf(stderr,
+> -- 
+> 2.53.0
+> 
 -- 
-2.54.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
