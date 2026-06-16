@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945C8377006;
-	Tue, 16 Jun 2026 14:08:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A45E43DA51;
+	Tue, 16 Jun 2026 14:08:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781618935; cv=none; b=S9j+MCVTVMpYg4VzCezBd/XnIHSLn8r7rrZO/7n49L3TnuqbJUMvSmx6Kc1H10qpbobrkHZCWZM2Ib3JswEYz75zbWwB7uyOvlzA88DBi8G1T13QzBaJSvbO2OC9uAyt6NGo3yrk+IfI/Srzr0y9Gfv9CrJ4H6Zsyzk2WXE/su8=
+	t=1781618939; cv=none; b=LqD082AH5J0EfT5Zkf+J1YGNxk9ig+z63ZfQULfcSwvYDibaMvi30Fk7q/aV5Y47XUETko2EArXle7TwHjsjOfn05o9zdP2Ospd+kXUiqqcwniBa4K/BvdoqYd7ree6TMsjo2O+mvedFGN+BntCr9dqRYOGscTnyIjYeqtI5TYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781618935; c=relaxed/simple;
-	bh=8k1zf1Xhv1DGOeFMfDC/l7TAYeTE4+X4pRdFgzN3Qrk=;
+	s=arc-20240116; t=1781618939; c=relaxed/simple;
+	bh=qvtFS8Lr84dJBr8irgZxZ3qqnPvYlFg8UNVTahpR3ds=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=gNeYH/GEpQEvdXUSBTFdw/9Wgmmpk2QqiRIDO4hYgzwLcXEmXBZbVlfftOBaB8nNANlVjdkd37c4UNbRgItpbh3FwA7jSuhTDDIRIJMyDmt8sEiEQ+q0skJySi/ZRRoorxLujJh3PNGarwp5RYa4ehJzt8oKw+KgKj04XiRkBBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YErVXEEI; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=ijlcyW0ShyBTwrEZaZWzfsGoUvgv/0r1VD+CvhK9noBQIAC9XjS3KuXDIRS/peuRxmH8UhTzAuwyl50ORr54mzhbYM9EABZcodyPDNBW0tkYuYCBXcc95RuMcDqourqj3SVR+16pj7vHdQltmCh+SnNtEV7cLWNT8Wvqwx3g1o4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VJ3UaXsz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YErVXEEI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E595E1F00A3A;
-	Tue, 16 Jun 2026 14:08:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VJ3UaXsz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5E1D1F00AC4;
+	Tue, 16 Jun 2026 14:08:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781618934;
-	bh=YhQnc85bhNppX3ZWtjMTIiQZA5BWEXOerB7NxvXiEsY=;
+	s=k20260515; t=1781618938;
+	bh=jyk+CgoW+m5rVgz4pEmy12TufZuRoXjKBOU5hRik7pA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=YErVXEEI97QukE5WwtZDkNCrh8zvAAbO493SZHRJP0UY6wJSXsDkm6g0fuf9t9afl
-	 2C8tMUrhnBFGhPb0rvQCfBuWiiSn2SxN70646xDlZO8j0aCkHdO048moY9huSDpywc
-	 mt9bIk16S6sk2fia2i+A0gWOOr+95pS+2uIZlWwps3NzBdFi+ilPqtOH87ie53KdiH
-	 cQxZTYhOSI5AFxACkQQXT9FrQOpFFFnBEwcerrLpfxZUzp4VNmLC9j1Q4Bd79BWX0a
-	 dPB0ZLfCwPlm6YNJTVxB81iH3rUTNjG1cbFd5nTAm2uyFcAbt07aD7aIC22I9yTKQx
-	 OjcvPNxqXfZYQ==
+	b=VJ3UaXszlXPVuZuam+qBXCCDrxZIpxk9S1AdD9ftU8NvHmNH6lPc2+/u4iD9DOhZa
+	 1imF35uPSagyWC5SC5hai+K845p0dZgl3IKZEb/O4DIgbCzG9AdNvCJpDkBmTNEOnA
+	 Xwy2jP3kp3vAjRd5DxFGY9mljC2uWTexjPthT/Kq/VXgk0LsLWpq9uDSsrzbHcUVel
+	 Y4EWfZhXPD39NyxWX8C7JiNKtqz3QVIqHpIpUYph/+xc3PCCsIC+TOZPIfXhVqHaKn
+	 RHiR7tvHaVOQ3fskl/lOXLnk82Z9r/Tlcf17ElvpPtPvOVOWphNmLonUUEHjXkV3Dk
+	 xm4jU5jZHO4yg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 16 Jun 2026 16:08:21 +0200
-Subject: [PATCH RFC v2 05/18] ext4: use anonymous devices for KUnit test
- superblocks
+Date: Tue, 16 Jun 2026 16:08:22 +0200
+Subject: [PATCH RFC v2 06/18] ocfs2: don't reset s_dev on dismount
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260616-work-super-bdev_holder_global-v2-5-7df6b864028e@kernel.org>
+Message-Id: <20260616-work-super-bdev_holder_global-v2-6-7df6b864028e@kernel.org>
 References: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 In-Reply-To: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 To: Jan Kara <jack@suse.cz>
@@ -52,96 +51,44 @@ Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  linux-erofs@lists.ozlabs.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.16-dev-4090c
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2549; i=brauner@kernel.org;
- h=from:subject:message-id; bh=8k1zf1Xhv1DGOeFMfDC/l7TAYeTE4+X4pRdFgzN3Qrk=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZRty7rJkuyThlafyx1mIfjotdVpZ67EFinW+lVrsm6
- M7QlP3UUcrCIMbFICumyOLQbhIut5ynYrNRpgbMHFYmkCEMXJwCMJFjvxkZNh5cy6Npvn9z+LWY
- x3cOHzqavPJzxZ1Uvcs2TCKPvDzWaDMyzIoU7rjsZfN8+0tGuzPhUV/+TPWL69tZnSwxqedB5X8
- nLgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1104; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=qvtFS8Lr84dJBr8irgZxZ3qqnPvYlFg8UNVTahpR3ds=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZRtzLYJveuCfB9VyszzyjZfN+vvJYfU5V6e3TP8/Kp
+ q/T/17p01HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjARy1uMDAfVqjjX5ORN+/2s
+ eamGMff/tzMUytcJzfNlsLv1/bNviCfD/1J++VB/gTWG7efSHxSYm8QFBh7Sl86Rez83e1GuT6Y
+ LDwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-The mballoc and extents KUnit tests create superblocks through
-sget_fc() with a set callback that never assigns s_dev and a kill_sb
-that only calls generic_shutdown_super().
+ocfs2_dismount_volume() has reset sb->s_dev to zero since the original
+merge in ccd979bdbce9 ("[PATCH] OCFS2: The Second Oracle Cluster
+Filesystem") as part of scrubbing the super_block. Nothing reads the
+field afterwards: all ocfs2-internal uses are mount-time log and trace
+prints, and dev_t-keyed superblock lookups skip a dying superblock
+anyway - s_root is gone before ->put_super runs and super_lock()
+refuses SB_DYING superblocks.
 
-The upcoming global device-to-superblock table registers every
-superblock under its s_dev, so each superblock needs a unique device
-number. Allocate a proper anonymous device via set_anon_super_fc() and
-release it through kill_anon_super().
+The upcoming device-to-superblock table registers every superblock
+under its s_dev. Drop the reset instead of leaving a superblock around
+whose s_dev contradicts its registration.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/ext4/extents-test.c | 9 ++-------
- fs/ext4/mballoc-test.c | 9 ++-------
- 2 files changed, 4 insertions(+), 14 deletions(-)
+ fs/ocfs2/super.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/ext4/extents-test.c b/fs/ext4/extents-test.c
-index bd7795a82607..c3836ecb89f9 100644
---- a/fs/ext4/extents-test.c
-+++ b/fs/ext4/extents-test.c
-@@ -126,11 +126,6 @@ struct kunit_ext_test_param {
- 	struct kunit_ext_data_state exp_data_state[3];
- };
+diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
+index 4870e680c4e5..df9ebff25dab 100644
+--- a/fs/ocfs2/super.c
++++ b/fs/ocfs2/super.c
+@@ -1882,7 +1882,6 @@ static void ocfs2_dismount_volume(struct super_block *sb, int mnt_err)
  
--static void ext_kill_sb(struct super_block *sb)
--{
--	generic_shutdown_super(sb);
--}
--
- static int ext_init_fs_context(struct fs_context *fc)
- {
- 	return 0;
-@@ -138,13 +133,13 @@ static int ext_init_fs_context(struct fs_context *fc)
- 
- static int ext_set(struct super_block *sb, struct fs_context *fc)
- {
--	return 0;
-+	return set_anon_super_fc(sb, fc);
+ 	ocfs2_delete_osb(osb);
+ 	kfree(osb);
+-	sb->s_dev = 0;
+ 	sb->s_fs_info = NULL;
  }
  
- static struct file_system_type ext_fs_type = {
- 	.name		 = "extents test",
- 	.init_fs_context = ext_init_fs_context,
--	.kill_sb	 = ext_kill_sb,
-+	.kill_sb	 = kill_anon_super,
- };
- 
- static void extents_kunit_exit(struct kunit *test)
-diff --git a/fs/ext4/mballoc-test.c b/fs/ext4/mballoc-test.c
-index d90da44aadbd..a3b33ed2c172 100644
---- a/fs/ext4/mballoc-test.c
-+++ b/fs/ext4/mballoc-test.c
-@@ -59,11 +59,6 @@ static const struct super_operations mbt_sops = {
- 	.free_inode	= mbt_free_inode,
- };
- 
--static void mbt_kill_sb(struct super_block *sb)
--{
--	generic_shutdown_super(sb);
--}
--
- static int mbt_init_fs_context(struct fs_context *fc)
- {
- 	return 0;
-@@ -72,7 +67,7 @@ static int mbt_init_fs_context(struct fs_context *fc)
- static struct file_system_type mbt_fs_type = {
- 	.name			= "mballoc test",
- 	.init_fs_context	= mbt_init_fs_context,
--	.kill_sb		= mbt_kill_sb,
-+	.kill_sb		= kill_anon_super,
- };
- 
- static int mbt_mb_init(struct super_block *sb)
-@@ -136,7 +131,7 @@ static void mbt_mb_release(struct super_block *sb)
- 
- static int mbt_set(struct super_block *sb, struct fs_context *fc)
- {
--	return 0;
-+	return set_anon_super_fc(sb, fc);
- }
- 
- static struct super_block *mbt_ext4_alloc_super_block(void)
 
 -- 
 2.47.3
