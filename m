@@ -1,88 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 397744418DF;
-	Tue, 16 Jun 2026 15:19:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69FB478E50;
+	Tue, 16 Jun 2026 16:36:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781623172; cv=none; b=otUZUfQv4J5PVXC09nmVI5EFSgE607uvnHz/ZDcuVHF9LvSTYYvwtb7VSabJycaqI+sVKDOpVceTzeqRW8GYWvmaHUTAvPFWUGL9CrKk2lKTRhq0Lqao6LTIohEo29selZtNqktMZ4jsOrf7jIezmFGfXp4FM9kagHikpJjCyz0=
+	t=1781627768; cv=none; b=Elbpvyq1qLLQIGti/DzmYKT9iTcx4cCAQb2+HxZ1TaeHeeL4NOIz5lJGiW1v5IrdeKHKdYtwxvKCGOt9h7q4RxPCWqU2ql142MwATpG8W16CSEMNbysSHuIcQK16lfm1euiNKtiUvqdimKraK8jnv/BLdJwDhSJRvRX1/Ne1EHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781623172; c=relaxed/simple;
-	bh=fnM67QtKDbK8xZKF0hGe2BloDUuVbND5ZSldQPQ92vQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sfGm7apQRoUoptLRm7qiybabZCHwZrjuyVZZL3yBGMlas7GzgcuU6RCklW4iHzznp7H+fp3o5YuhCZEcmKlFTljfWfLlMg9Dhqz4PY66TEeqZNi6UCFY/buRSb1maufhIKZorVXcy0aW2SvjdC5X1DgePrP605JscVU0TECB5ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C3KHeFMf; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781627768; c=relaxed/simple;
+	bh=B4jBFIdFiNtDsmQMyWWPd+1DnLb23kwsj3MeQY91MXI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aqqhmFdGLDlSi+6bx0TApCptVkEMLA5WAmZxzB3OyCRhJqDdkKEhEbCGvfuEKjCBAFYYBIqwKC6HpZzuASZ/uQEz0T6co41l4TbFgku94hZc6j7pwDDok4iG9tWGrPHev1XpKP1/oNs5/DW3bS4BYUQlpTM9/HsgeVL787rpQe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ewlVQ0VJ; arc=none smtp.client-ip=115.124.30.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C3KHeFMf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A73A1F00A3E;
-	Tue, 16 Jun 2026 15:19:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781623170;
-	bh=juOgUzeXy3XGsInNpe15bufLEDlOx+XQzIp5A397JkY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=C3KHeFMfPC+yAaSzIg0d95m3I0xEpDsWlEwoaPTaoJYfJNDKmTv0cKSZzfbbqc/Wu
-	 d8akawUi2BghCvAvmcEZuhA3kfz3EKR5coklh4zJ3VKagdyvPjIftRaVpdj913u1s1
-	 K3nWzCRQGfqvcgJH3rQlu5kPL3I3tsC12bpvccsgaixq/ewzcDBZaNKj7UEjUIcS/V
-	 0whVK+dEe/g8IyC4ymEkWjZ1nKTeBmsQ+TpuUxZ7RR5tY0sUiLwcJ2g88pAwV9kzeM
-	 CI9cdL91HodKXSF6pakZ+9nvoRMoav0GjecnDRdjd31LHvVLTYwCQH0xPigTZ7hKpv
-	 T5OvUAgdpT3fg==
-Date: Tue, 16 Jun 2026 17:19:25 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, Chris Mason <clm@fb.com>, 
-	David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, 
-	linux-ext4@vger.kernel.org, Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org
-Subject: Re: [PATCH RFC 2/8] fs: add a global device to super block hash table
-Message-ID: <20260616-gepumpt-gemischt-verblassen-b4cec29c7a6e@brauner>
-References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
- <20260602-work-super-bdev_holder_global-v1-2-bb0fd82f3861@kernel.org>
- <20260616123443.GA21024@lst.de>
- <20260616-fragil-duktus-nachverfolgen-60f54584c206@brauner>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ewlVQ0VJ"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1781627751; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=B4jBFIdFiNtDsmQMyWWPd+1DnLb23kwsj3MeQY91MXI=;
+	b=ewlVQ0VJdl+Fpp2fMC+W/NUu1xBr1uhTfrpAfYrk9n6RgK1AVz14eASzWwamx1z173BwE+71D4aYMDP9qSu25wylUGoScMjYWryeBaOLe1u+cCoLz11JnLGaQczY5CwocuAi/MCnPSgMJxiHvg2uYoLv04My44R/jdyAX3LT8hc=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R191e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0X5.qxzD_1781627749;
+Received: from 30.120.66.214(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X5.qxzD_1781627749 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 17 Jun 2026 00:35:50 +0800
+Message-ID: <8f1c032b-b951-4d0d-93fa-229248993f2c@linux.alibaba.com>
+Date: Wed, 17 Jun 2026 00:35:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260616-fragil-duktus-nachverfolgen-60f54584c206@brauner>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 2/8] fs: add a global device to super block hash table
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+ Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+ linux-ext4@vger.kernel.org, Gao Xiang <xiang@kernel.org>,
+ linux-erofs@lists.ozlabs.org
+References: <20260602-work-super-bdev_holder_global-v1-0-bb0fd82f3861@kernel.org>
+ <20260602-work-super-bdev_holder_global-v1-2-bb0fd82f3861@kernel.org>
+ <20260616123443.GA21024@lst.de>
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <20260616123443.GA21024@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 16, 2026 at 04:59:53PM +0200, Christian Brauner wrote:
-> On Tue, Jun 16, 2026 at 02:34:43PM +0200, Christoph Hellwig wrote:
-> > On Tue, Jun 02, 2026 at 12:10:08PM +0200, Christian Brauner wrote:
-> > > fs_holder_ops recovers the owning superblock from bdev->bd_holder, which
-> > > forces the holder to be exactly one superblock and prevents several
-> > > superblocks from sharing one block device. That's what erofs is doing.
-> > > 
-> > > Introduce a global dev_t-keyed rhltable mapping each block device to the
-> > > superblock(s) using it. The holder argument becomes purely the block
-> > > layer's exclusivity token (a superblock, or a file_system_type for
-> > > shared devices) and is no longer needed by the fs specific callbacks.
-> > 
-> > Err, no.  block devices need to have a specific owner.  If erofs wants
-> > to share a device between superblock it needs to come up with an entity
-> > that owns the block devices which is not a superblock.
-> 
-> It already did.
-> 
-> > IMHO sharing devices between superblocks is a bad idea, but that ship
-> > has sailed, but please keep it contained inside of erofs.
-> 
-> We need a simple device number to superblock mapping anyway and that can
-> simply be centralized in the vfs. And it can work with anon device
-> numbers and block device numbers uniformly.
 
-Plus, after we're done we then also have a centry place where we can
-intercept what devices can be mounted by a filesystem uniformly.
 
-My first approach for this was of course to just add fs_file_open_by_*()
-wrappers and move the relevant security hook into there. But while doing
-this - ignoring the ton of bugs I found - I realized that having a
-mapping so we can go from device number to superblock is very helpful.
+On 2026/6/16 20:34, Christoph Hellwig wrote:
 
-We could of course keep the mapping just local to erofs but I see no
-reason why the vfs cannot just provide this ability natively given that
-it has all the required machinery. I'll let Jan chime in as well.
+> IMHO sharing devices between superblocks is a bad idea, but that ship
+> has sailed, but please keep it contained inside of erofs.
+
+I'm not sure why it's a bad idea, for example,
+the immutable layer model is already applied to layered virtual
+block formats (such as qcow2) and layered fs like overlayfs.
+
+and I think device mappers may have some similar immutable
+approaches as shared layers but works in a slight different
+way.
+
+The principle is that each instance uses shared blobs in a
+read-only way, and that is almost a simple and safest way
+to share data among filesystem instances.
+
+Yet I don't want to argue with that since it's pretty common
+for years and I've seen no practical risk using this model.
+
+Thanks,
+Gao Xiang
