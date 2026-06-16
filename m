@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C90C3BB11A;
-	Tue, 16 Jun 2026 14:09:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E8F407CD0;
+	Tue, 16 Jun 2026 14:09:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781618954; cv=none; b=OnQaMhIwRRTtGszbI7SBv/v1aInetDsBaxnXvCekfXWY6UQpBxuCIZLFEydDdrTS4Pp8v4pIi5ax/ksAmAUVGUOpxLLjCRu3XHZSCNz7I7EPQMIr32k2SnXap1ZaaGd2rccyiRrTuvYZ/nIQHRaJ67SJGi6KtF26ngh39OXNGXA=
+	t=1781618958; cv=none; b=KohkwottcSzCk5PAo2+cvqc8gvDD5csgBucl21azKjjjoF1r9Nej4+f3gOBsH3XzxyXJGcQTuqSIVZlPp5bczx9+qDkstnzkOOb0XmTEhcpKE7BzRSHASRwTwC4IEEJIVWOrVYEXgidnu7ZTM4nvsnOLDtBf0b6FQvh956a2snw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781618954; c=relaxed/simple;
-	bh=WAS9v0eXyVZhv6xmqXDDzRmVWFkX855PUkKhakPqLu4=;
+	s=arc-20240116; t=1781618958; c=relaxed/simple;
+	bh=mEavDJy+fkdUc8IBWKjs2UM866Kx5OEdydgBKLvNJwI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fsZ6PHL3ImJhW8WJ0fswC1rg11dPFFJ6o+F3SONsoQScSF4XQQnpkNFRysW2iMxWoXqNIngOBCvgZ7vb82M3wTUxyfy8JhZKKxIbUHI3+0Ye+Sx7x0gValoFi4+UlJjbrdVgVVylbDw43iH6LdnocLKhWu6Gkj3NuWo9bHGhjPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y8TQODWF; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=i3NNuvPt20/5Rz4wIRI376+74xoovoLuXWvvE84ivDV6n0Lh6ZAt6bS3v/V/SWWCweaeBNQBg0hVOeQ8Lho3GqaniC23JMsVZEJZj/RS/PquIFw39XmLPMH+jMoK2d6Sh2P7qA3p5xueIGc/3AGWSTd9grBcYd0He8Ww8+OXDyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcApXdFf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y8TQODWF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0D4E1F00A3A;
-	Tue, 16 Jun 2026 14:09:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcApXdFf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93E671F00A3F;
+	Tue, 16 Jun 2026 14:09:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781618953;
-	bh=XwlYHCXEjgOfBd9eMDiRNWEu85T7O7itSinaXNxPYa0=;
+	s=k20260515; t=1781618956;
+	bh=Is8R3wvaCq/80vj1DXKU0n4cGeOyh4O2DUMSCyO+wtE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Y8TQODWF+48JAbRxowOyxKTpW1leNmA3ssR1Z0UPIJWpiv9O2uXDVTneST3naTvrM
-	 4KDRzktedgORUun6XI06jlQ12vXro1Mi6YyfLphuWxwkFuOTlHoltifJNLTuN472mJ
-	 KAo/ZX2JT6PSCVWmZsGmj8nuVSdGiXu4oOawkfqEN9WTnRCdpJI4HupKiXr0tbMscc
-	 rff7IWjKUkLtdS7AMaOmapYbtV/kcVCQetg42wuITzOd/inL03S0L2pZJAI0tNFmB1
-	 8Mfh738rihlNQsJTK3XkQpCrrVvwXyK2pwiBDEhlPG3yxJNa4Tf8d0+2k7mhDAvMVE
-	 n/oDlsPW+0cmA==
+	b=WcApXdFfYYYKjKwwroYDEmWqiKf8LsKq1xZJ/+ThX43fSpdUpzlicaz96+1qaRxSo
+	 DlF3HFcwGG/E5T2G/JSXGhneiDFiaJZtUOrfByxmRwpS6eaJ2O4xYIWldm0YG0yTOn
+	 sj+gjoCm1wmNH10dqcrAB2NsHTNxP4lwrzomS2+Bd+UM2HqgQbcL4mu1QPeLVrByr/
+	 cPqInXaWJvx0zs4gs1FHE1cwUd7Jy7SPgYdhGRm06rGrKazUSEyff9D3uHVMEVM8K3
+	 XjSrcKU8XL+GRy0xxsW3cfSbIqcxYF0SoNgPf8W+yflfSUVbX3IGfVHoP4fYqqI6yU
+	 DKTo9j2IEaJ6Q==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 16 Jun 2026 16:08:26 +0200
-Subject: [PATCH RFC v2 10/18] btrfs: open via dedicated fs bdev helpers
+Date: Tue, 16 Jun 2026 16:08:27 +0200
+Subject: [PATCH RFC v2 11/18] ext4: open via dedicated fs bdev helpers
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260616-work-super-bdev_holder_global-v2-10-7df6b864028e@kernel.org>
+Message-Id: <20260616-work-super-bdev_holder_global-v2-11-7df6b864028e@kernel.org>
 References: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 In-Reply-To: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 To: Jan Kara <jack@suse.cz>
@@ -49,128 +49,79 @@ Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, 
  linux-ext4@vger.kernel.org, Gao Xiang <xiang@kernel.org>, 
  linux-erofs@lists.ozlabs.org, 
- "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- syzbot@syzkaller.appspotmail.com
+ "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.16-dev-4090c
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4154; i=brauner@kernel.org;
- h=from:subject:message-id; bh=WAS9v0eXyVZhv6xmqXDDzRmVWFkX855PUkKhakPqLu4=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZRtw7OLVr6p+VW3/mZXMa7HkUX1DuszZep79hKlvAb
- OOWVxl+HaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNRfMnw38WNaeKu6wHf/6oe
- lWMRbZyerGmwY1foFS+hPF698PlfrjH8d/4ocOz//MUl7NNfJ+38qNVecMvfcnvO0T1pS1+9jfF
- /ygcA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2024; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=mEavDJy+fkdUc8IBWKjs2UM866Kx5OEdydgBKLvNJwI=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZRtw/777zxln1Gg6hy+86lq71uK52TVV/ggaDjGXHR
+ 7P/82UndpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwk9i3DP0275KOKq+ari5eI
+ VrQu8TB8t+OwjVe20bTnVeVnrm6x9Wb4K3nmZUBeQdm864XnxYVXvAw/V/ghdfKEz38CbaVuVpu
+ VMgAA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Route the device opens through fs_bdev_file_open_by_path() so each device
-is registered against the superblock, and convert the matching releases
-to fs_bdev_file_release().
+Route the external journal device open through fs_bdev_file_open_by_dev()
+so it is registered against the superblock, and convert the matching
+releases to fs_bdev_file_release().
 
-The temporary identification opens that only read the superblock and
-close again pass a NULL holder and keep using bdev_fput().
-
-On the close path the superblock is taken from bdev_file->private_data
-(the holder set at open) rather than device->fs_info->sb: a mount that
-fails before btrfs_init_devices_late() runs leaves device->fs_info NULL,
-which close_fs_devices() would otherwise dereference.
-
-Tested-by: syzbot@syzkaller.appspotmail.com
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/btrfs/volumes.c | 29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+ fs/ext4/super.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index 2d9e2ca09c5f..02abbfce5ea3 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -480,7 +480,12 @@ btrfs_get_bdev_and_sb(const char *device_path, blk_mode_t flags, void *holder,
- 	struct block_device *bdev;
- 	int ret;
- 
--	*bdev_file = bdev_file_open_by_path(device_path, flags, holder, &fs_holder_ops);
-+	if (holder)
-+		*bdev_file = fs_bdev_file_open_by_path(device_path, flags,
-+						       holder, holder);
-+	else
-+		*bdev_file = bdev_file_open_by_path(device_path, flags, NULL,
-+						    NULL);
- 
- 	if (IS_ERR(*bdev_file)) {
- 		ret = PTR_ERR(*bdev_file);
-@@ -495,7 +500,7 @@ btrfs_get_bdev_and_sb(const char *device_path, blk_mode_t flags, void *holder,
- 	if (holder) {
- 		ret = set_blocksize(*bdev_file, BTRFS_BDEV_BLOCKSIZE);
- 		if (ret) {
--			bdev_fput(*bdev_file);
-+			fs_bdev_file_release(*bdev_file, holder);
- 			goto error;
- 		}
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7283108d7609..2b5301a3bcfb 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -5793,7 +5793,7 @@ failed_mount8: __maybe_unused
+ 	brelse(sbi->s_sbh);
+ 	if (sbi->s_journal_bdev_file) {
+ 		invalidate_bdev(file_bdev(sbi->s_journal_bdev_file));
+-		bdev_fput(sbi->s_journal_bdev_file);
++		fs_bdev_file_release(sbi->s_journal_bdev_file, sb);
  	}
-@@ -503,7 +508,10 @@ btrfs_get_bdev_and_sb(const char *device_path, blk_mode_t flags, void *holder,
- 	*disk_super = btrfs_read_disk_super(bdev, 0, false);
- 	if (IS_ERR(*disk_super)) {
- 		ret = PTR_ERR(*disk_super);
--		bdev_fput(*bdev_file);
-+		if (holder)
-+			fs_bdev_file_release(*bdev_file, holder);
-+		else
-+			bdev_fput(*bdev_file);
- 		goto error;
- 	}
+ out_fail:
+ 	invalidate_bdev(sb->s_bdev);
+@@ -5972,9 +5972,9 @@ static struct file *ext4_get_journal_blkdev(struct super_block *sb,
+ 	struct ext4_super_block *es;
+ 	int errno;
  
-@@ -727,7 +735,7 @@ static int btrfs_open_one_device(struct btrfs_fs_devices *fs_devices,
- 
- error_free_page:
- 	btrfs_release_disk_super(disk_super);
--	bdev_fput(bdev_file);
-+	fs_bdev_file_release(bdev_file, holder);
- 
- 	return -EINVAL;
- }
-@@ -1087,7 +1095,7 @@ static void __btrfs_free_extra_devids(struct btrfs_fs_devices *fs_devices,
- 			continue;
- 
- 		if (device->bdev_file) {
--			bdev_fput(device->bdev_file);
-+			fs_bdev_file_release(device->bdev_file, device->bdev_file->private_data);
- 			device->bdev = NULL;
- 			device->bdev_file = NULL;
- 			fs_devices->open_devices--;
-@@ -1127,10 +1135,12 @@ void btrfs_free_extra_devids(struct btrfs_fs_devices *fs_devices)
- /* Release a device that was made unfreezable for a membership change. */
- void btrfs_release_device_allow_freeze(struct file *bdev_file)
- {
-+	struct super_block *sb = bdev_file->private_data;
-+
- 	/* Yield before allow (strand-safe); file still open for the allow (UAF-safe). */
- 	bdev_yield_claim(bdev_file);
- 	bdev_allow_freeze(file_bdev(bdev_file));
+-	bdev_file = bdev_file_open_by_dev(j_dev,
++	bdev_file = fs_bdev_file_open_by_dev(j_dev,
+ 		BLK_OPEN_READ | BLK_OPEN_WRITE | BLK_OPEN_RESTRICT_WRITES,
+-		sb, &fs_holder_ops);
++		sb, sb);
+ 	if (IS_ERR(bdev_file)) {
+ 		ext4_msg(sb, KERN_ERR,
+ 			 "failed to open journal device unknown-block(%u,%u) %ld",
+@@ -6034,7 +6034,7 @@ static struct file *ext4_get_journal_blkdev(struct super_block *sb,
+ out_bh:
+ 	brelse(bh);
+ out_bdev:
 -	bdev_fput(bdev_file);
 +	fs_bdev_file_release(bdev_file, sb);
+ 	return ERR_PTR(errno);
  }
  
- static void btrfs_close_bdev(struct btrfs_device *device, bool allow_freeze)
-@@ -1147,7 +1157,8 @@ static void btrfs_close_bdev(struct btrfs_device *device, bool allow_freeze)
- 	if (allow_freeze)
- 		btrfs_release_device_allow_freeze(device->bdev_file);
- 	else
--		bdev_fput(device->bdev_file);
-+		fs_bdev_file_release(device->bdev_file,
-+				     device->bdev_file->private_data);
+@@ -6073,7 +6073,7 @@ static journal_t *ext4_open_dev_journal(struct super_block *sb,
+ out_journal:
+ 	ext4_journal_destroy(EXT4_SB(sb), journal);
+ out_bdev:
+-	bdev_fput(bdev_file);
++	fs_bdev_file_release(bdev_file, sb);
+ 	return ERR_PTR(errno);
  }
  
- static void btrfs_close_one_device(struct btrfs_device *device)
-@@ -2894,8 +2905,8 @@ struct file *btrfs_open_device_deny_freeze(const char *path,
- 		return ERR_PTR(ret);
- 	}
+@@ -7490,7 +7490,7 @@ static void ext4_kill_sb(struct super_block *sb)
+ 	kill_block_super(sb);
  
--	bdev_file = bdev_file_open_by_dev(file_bdev(probe_file)->bd_dev,
--					  BLK_OPEN_WRITE, sb, &fs_holder_ops);
-+	bdev_file = fs_bdev_file_open_by_dev(file_bdev(probe_file)->bd_dev,
-+					     BLK_OPEN_WRITE, sb, sb);
- 	if (IS_ERR(bdev_file))
- 		bdev_allow_freeze(file_bdev(probe_file));
- 	bdev_fput(probe_file);
+ 	if (bdev_file)
+-		bdev_fput(bdev_file);
++		fs_bdev_file_release(bdev_file, sb);
+ }
+ 
+ static struct file_system_type ext4_fs_type = {
 
 -- 
 2.47.3
