@@ -1,72 +1,76 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67153C277B
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Jun 2026 03:38:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E499B3C277B
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Jun 2026 03:38:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781581124; cv=none; b=OImkVRGiq4AQ3nFJLi0bqdgzZaBNBPlQMVJeVRUjoeYlN5vTYvDk4pUwAR619+GknhT9fQPF3IZ9qkAoUnHt8X1CuWb0qTZY1uAlQ+3/SOoAeou8BfLvM0kKl2axKR28gXuf4zieHpLsO9/OXnpV0byb6AQh0Jtr0QW65m3MIUE=
+	t=1781581128; cv=none; b=KJSSqdSR7fx/XHKPzj4WHcztTPLIMHnfdQqrxxYEoyDEmt7U99n5cKR/cWBJvLqrtfgdCSEPW5ZNz1mlLdu0o0JrLEJUtSG/VWqmDWYGPHlV/8h1jIvsCRoWeD5R7LiRehrw+UXQCnTMNaOObeLZFminTRlRi0LDaIWKh1ZFa3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781581124; c=relaxed/simple;
-	bh=3PqVFK5Qs0v/UFqiFxhGkEcgLMlIZo7+73kLHHeWDrs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c1YEv//n+HVxhMIFsS/c+hRdtYAGHdNDXF6SY3ejvsdOPlyX71A+k1JwPglNcXioXFBYx95fMatcTFHVs7ONFRaktRFFzVutGrL83tJfi/B6xPfQlteKVMnsd05i8+txRr46G23lqaIQrCBtA12wXnQVQk44mcy8H+lV43bEHYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FG3I1dux; arc=none smtp.client-ip=209.85.215.176
+	s=arc-20240116; t=1781581128; c=relaxed/simple;
+	bh=4YugNqzpU/MUU8LPDCZyOxYQnpDvya+z7cWnHsiF4do=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=e2AH0BBgBh5RfbLEYplZ6+bZrEdz2TefQ7N5mR8VK2D7fFcnDFEC8a7KnkTwcAs6s7qHeimgr9vkCJFoNopmkBHOZdUqjfyAs04in1/ZqKlFqye9UT38+CbCkueF46r3dqbQ0+/ulX4wS3BOSIpRAUnvj9J9QO6Yt0Y4En7rK6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B6nX7kAw; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FG3I1dux"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-c8584e80bd9so1522593a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Jun 2026 20:38:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B6nX7kAw"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c8587427468so1639448a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Jun 2026 20:38:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781581121; x=1782185921; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7cuipR5nyTRkoxASlXFyDRKdwacwZuLB0SxqeVX2e4U=;
-        b=FG3I1duxDMGiaK98e0ELBatHPFgkDu9iwZLK/H3KQXssI4v1ghWTFe9SNGfm8KpzIT
-         7rygkMGvuP+2+U9WuTRfFbER8iiPOoAP5fhP8T4j9RrUCjsXEduNSqZ3sFrT1LPc44f+
-         c8pH73d2WkC6eGVeQ8BaLvukhFbqFY/vwRZ3W8eVPQyXa+M+rGWfOtRidJ7Lj69Umi8S
-         H18Evfe77CHXgjZDBu3DjD8JA1Yh2J8cZtMpA9rJofE7/2ia+MU3TPU3zoqVZ42GBHe/
-         mKebzEwFr1lHq/SmJzwh+ngUn4K514PL8CMeO98aLQuS8vyUt64w5MQagdGmaRBAyVNH
-         qMqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781581121; x=1782185921;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1781581126; x=1782185926; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7cuipR5nyTRkoxASlXFyDRKdwacwZuLB0SxqeVX2e4U=;
-        b=IGwtv2TRFodle/YBpxZ5k5+E70bkyklTnDrUEjjn/h2jXnGIykfIZ3b4tg+P4eQSAZ
-         zqd7elNZNBovlcrcyiTTwS3sEnQ26B3GkwN97Ujak8q/hd02NKm1I+DbwEuLtVgfPUas
-         W68ii0xTOxU0iCJ8bfp/5TqBvAd2FdsHwUFoWY6B1UrnLyzJ8Low/mh7n0YkI72SpBF5
-         IuoyHZjCtL1gEhvanvZJTJtLQ0Wi/khYmeVNEFnHTBzjb3oJQgmoUiKfIZBksBmOLJDH
-         X+o6ODMwsuULJpfUzf8gu3ttKfRv+vql2Qjmp5cx0fyGGIWDPK3gHPsq25zSwJD0WDo4
-         1axg==
-X-Gm-Message-State: AOJu0Yw+KCut5/TTKmpFk/BHXwa3vqps2AaCREeSPRqY4g2xjn1n5nn8
-	3WmS9XjeSNDhgssZiGiSUqFgt3Lnhf9TsGnpBPoiYMybys7PHehbXxTD
-X-Gm-Gg: Acq92OFfiw/KtsasZmdam3a1Q1kAv8E+e5TPX1YzDXabcI6tZ+/LjyJpjXbyOvG1gtN
-	XZBozq2xCFc3Apzzrkno8xzmWziPVajK3WCYliD/P+HHNESYt253E2xq7ILsM7zihc6fRPv6Q6A
-	qNQA+39PKUDcaUp5NvdmwpuqyYFYa8Lz5hcMxsrOU+qi9NRg9TMNYSY1wJ38Lph+d9uF9whlVwE
-	J55qZP3QyL5P5Cwis6aqBdTTBKyDKdjIb36Tl525LE12e0kt75F1ugDYa1IqvmFece/qj8EAWJg
-	wYi4ExtnhNHZATzTH8mNZ1rxmQlGyvKhzjA97BTGQ0fEtAw1YtLnkbC7kFjslt2utaCV11qtDiR
-	H5YgZhBA7T32rPdZIbkArOBZORf+Ea9sXTbHdpEFxm75MPrcFvQaOCGxNW/bWght7RA3Y2xgv18
-	JGVdj+ColNllbz6OsQtkkMUMOP8X3paxzx6IQg7gNIQUpFwUbQocUXppzRVhhNnRbcVvE5pXpnL
-	u2GpQyUjX+/ISemru8HHIo6+FLroH50by78rhkyEXZjEyoib6pPxnt6eZm5SvBw3ttHSdKRH2r5
-	1SrUeaBbTYMm34pCuflBY081EpgrGIvV8E6T
-X-Received: by 2002:a05:6a20:c6ca:b0:3a2:f75f:73ef with SMTP id adf61e73a8af0-3b7e4d4fdf1mr1898224637.37.1781581121039;
-        Mon, 15 Jun 2026 20:38:41 -0700 (PDT)
+        bh=iIvjY/yXmZebAH6dkGtl5V3Mcnn9oZGqccC0KLbuVys=;
+        b=B6nX7kAwps9xUaZM5wXjMYlU+74/npn7BSHkUWhiC01V0ZXNkgC6cIXyryoDAVN7Tp
+         dQP2PmB7rI7pgRk1oHBSSIcDbgBAx+sufddGlKJiVs5CYnN2ZHOxvG121lL+vDodZNIk
+         Yb5xJGw+PcODgwHQGujw2tUTwZCxLgV11N4XiwcaGtNxiILnjTp0Ww57z2l8JdjIf5eE
+         T1WeKzpaKAtKn4GsUB1KWoDmvn69LZne2jQ8Qjm5CW3SrXrgmZAlJGDqpcxKgN2EYqmK
+         eNaEdze/XUR3kBYbj4suiQwMJfp8qeS1MVR9bWdM34Had8GtS4/c2EgidpBaRm5GposD
+         yU5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781581126; x=1782185926;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=iIvjY/yXmZebAH6dkGtl5V3Mcnn9oZGqccC0KLbuVys=;
+        b=dEUMJNBfQXAAWW7LGlLLscSZcr7UpvZTI7llptpiYptb/VUH9SITuUa9it5T3QaxWP
+         IERyFJWF+7YywRuhXeZvqR8cwDD/hZbp8zGJVCWfSuyG8XxDBwEwmNMdbQAaPviD8BMw
+         51DkntxZ1G7/eYtivfVc2z6k0EKPfA/VqaCoWYnvfOemyUykg/I3jWLEc815ip43eEFp
+         TDVqH4TPhi0YFYZ1mNQ8Mizuk677ufBRQ6QIlyaISQtHqcjIVwFv2JrxZuOKC9ygUUcB
+         l1Gv6yTtaUQGPGocGobnyF2S5PQpGLMl/Je1hN8MaaFYSnEutaXT9eIqky/Um9nRd4ue
+         fgzg==
+X-Gm-Message-State: AOJu0YzflySN3ztxTAHC2g4q3o9451FDPYHveUX96IbXiq8A5VWELGtc
+	22HUrQDNouj+YDE64ql6NtIK6LrZDSqzdjqOrsgmy2W4Fpb4lU+SL/Z7
+X-Gm-Gg: Acq92OGJbY9IswySiDMYLjoqwiOjx/USVKxDokRh7IEOA67R3quswm16iae5iyBrtlt
+	h1Nx3i+SxiAFBD10QoxXZM+Ah3uJEv/G/TRr/rYibDppo+iMrcveFWuGEYadMVlKGeNTG4zc+9c
+	a/YxamgwpSJXyqhjT47o8Jk1CWr9Tj1yIyUkmq+T05sF+rHXRWb2QOWFW+pIXn9h7JHDgKPt0tB
+	UukTEdghNp/Ut44BKN1vNqO2GZXwe+TP/g2TxMbuw8emKn0eZx5LK0FIdOCFQxY3WpPQaROanm0
+	f1E5s1NmLXJQnvToaeion80rguPyyrmS7ZpAb5yCPgMytV+S0wSfhsLp67MCoeW/yCg4gdgISzZ
+	ebYMcVocYFHEPrebntarY5LUbeAStxyIdQo/b5UxYTPAEKuoWR6Gb422Xlz4XsGSRXGz+ivD/lD
+	1/B7YuWVYmx5t6tWUFb3g0jlPTUlZZeFmMJlrcfUMxyrTUjGFK0UwOTQKEn4OhlKUL4Y4kcrqXB
+	WZqfHDTYoh97frQCkCK4RskJBjbBrAUil47sZZ4xKluLEr0bg0joPI/3rL+PloOdXQnQObGZzyi
+	jtMj+Fd+RTrNNMKnqBjUoPL/hzqPaEEWN6lhjYk10sJUtRo=
+X-Received: by 2002:a05:6300:408d:b0:3b4:b26e:bab2 with SMTP id adf61e73a8af0-3b7e4951a26mr2018884637.2.1781581126219;
+        Mon, 15 Jun 2026 20:38:46 -0700 (PDT)
 Received: from cs-1047136853211-default.asia-southeast1-b.c.d33bddc1d573818c7-tp.internal (229.231.21.34.bc.googleusercontent.com. [34.21.231.229])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c866325d156sm10304173a12.13.2026.06.15.20.38.39
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c866325d156sm10304173a12.13.2026.06.15.20.38.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2026 20:38:40 -0700 (PDT)
+        Mon, 15 Jun 2026 20:38:45 -0700 (PDT)
 From: Aditya Srivastava <aditya.ansh182@gmail.com>
 To: Carlos Maiolino <cem@kernel.org>,
 	Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
-Subject: [PATCH v4 0/2] xfs: resolve close() deadlocks on frozen filesystems
-Date: Tue, 16 Jun 2026 03:38:18 +0000
-Message-ID: <20260616033821.2238-1-aditya.ansh182@gmail.com>
+Subject: [PATCH v4 1/2] xfs: add a XFS_TRANS_WRITECOUNT_TRYLOCK flag
+Date: Tue, 16 Jun 2026 03:38:19 +0000
+Message-ID: <20260616033821.2238-2-aditya.ansh182@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260616033821.2238-1-aditya.ansh182@gmail.com>
+References: <20260616033821.2238-1-aditya.ansh182@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,162 +81,74 @@ Content-Transfer-Encoding: 8bit
 
 From: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
 
-Hi Carlos and Christoph,
+Introduce a new transaction allocation flag, XFS_TRANS_WRITECOUNT_TRYLOCK.
+When this flag is specified, __xfs_trans_alloc() attempts to obtain
+freeze protection using sb_start_intwrite_trylock() instead of blocking
+indefinitely on sb_start_intwrite().
 
-Apologies for the mailing list noise in v3; those patches were
-accidentally sent as unthreaded emails due to a local Git configuration.
-This v4 series is properly threaded under the cover letter standalone,
-and has a distinct subject line to prevent mail client threading
-collisions.
+If the trylock fails, the allocation is aborted gracefully: the freshly
+allocated transaction handle is freed, and the function returns the
+appropriate error pointer ERR_PTR(-EAGAIN), which is then propagated
+to the caller by xfs_trans_alloc().
 
-This is version 4 of the patch series addressing the close() system call
-hanging indefinitely on frozen XFS filesystems (Bugzilla #205833).
+Also add an assertion in __xfs_trans_alloc() to ensure that both
+XFS_TRANS_NO_WRITECOUNT and XFS_TRANS_WRITECOUNT_TRYLOCK are never
+specified at the same time, as they are mutually exclusive.
 
-Based on Christoph's feedback, I have made the following improvements:
-- Split the changes into a clean, 2-patch series separating the new
-  trylock flag implementation from the deadlock fix itself.
-- Extracted the case history, reproducer code, and discussion from the
-  commit logs into this cover letter to keep commit logs surgically
-  focused.
-- Adjusted the parameter name in xfs_free_eofblocks() to trans_flags to
-  make its usage stand out.
-- Implemented a much cleaner, race-free state preservation logic in
-  xfs_file_release() by omitting pre-setting XFS_EOFBLOCKS_RELEASED
-  on the inode, setting it only upon successful truncation.
-- Simplified the transaction allocation block, renamed the flag to
-  XFS_TRANS_WRITECOUNT_TRYLOCK, and added the requested mutual-exclusivity
-  assertion in __xfs_trans_alloc().
-- Set up this series to be posted standalone (not threaded as a reply)
-  per the standard kernel guidelines.
-
-As requested, I have also submitted the corresponding regression test to
-the xfstests mailing list (using tests/xfs/842 with a GPLv2-licensed
-helper program). The fstests maintainer (Zorro Lang) reviewed the test
-and has indicated that he will wait for this kernel patch to make it
-through before merging the test suite additions.
-
-THE REAL-WORLD IMPACT (BUGZILLA & DOWNSTREAM CASES)
-==================================================
-
-When speculative post-EOF blocks are closed on XFS, the release path
-synchronously attempts to free them via xfs_free_eofblocks(). This
-allocates a write transaction (xfs_trans_alloc) which blocks
-indefinitely on the superblock freeze write lock (sb_start_intwrite)
-under fsfreeze.
-
-This behavior has a long history of causing severe system disruption:
-- Downstream Red Hat Bugzilla 1474726 (dating back to 2017) details
-  complete system hangs during system backups when rsync and fsfreeze
-  are used. Even seemingly harmless read-only commands like
-  'cat /var/log/messages' would hang on close() in __sb_start_write
-  via xfs_free_eofblocks, requiring a hard reboot.
-- Downstream LeApp integration test scenarios consistently hit this hang.
-
-Hanging on close() frequently triggers container healthcheck failures,
-systemd service timeouts, and cluster failover cascades, which is
-disruptive to user-space applications that view close() as resource
-reclamation. No other major Linux filesystem (ext4, btrfs, etc.)
-synchronously allocates write transactions during close() system calls.
-
-THE SOLUTION: NON-BLOCKING SUPERBLOCK TRYLOCK
-=============================================
-
-Instead of performing racy pre-checks, this series introduces
-XFS_TRANS_WRITECOUNT_TRYLOCK. When specified, __xfs_trans_alloc()
-attempts to obtain freeze protection using sb_start_intwrite_trylock().
-If that fails, it aborts allocation gracefully and returns -EAGAIN.
-
-We then pass XFS_TRANS_WRITECOUNT_TRYLOCK during xfs_file_release(). If
-the truncation fails due to a frozen filesystem (-EAGAIN), we cleanly
-bypass setting XFS_EOFBLOCKS_RELEASED on the inode, ensuring subsequent
-releases or the background blockgc garbage collector can successfully
-clean them up once thawed.
-
-REPRODUCER DETAILS (GPLV2 LICENSED)
-===================================
-
-As requested, I have added a GPLv2-compatible license to the C
-reproducer provided below, and I have also sent a corresponding patch to
-the xfstests mailing list. The fstests maintainer (Zorro Lang) reviewed
-the patch and indicated that he will wait for this kernel patch series
-to be merged before pulling the test suite additions.
-
-Compile with -pthread:
-
-    /*
-     * GPLv2-compatible XFS freeze close() hang reproducer.
-     * Copyright (c) 2026 Aditya Prakash Srivastava. All Rights Reserved.
-     */
-    #define _GNU_SOURCE
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <unistd.h>
-    #include <fcntl.h>
-    #include <pthread.h>
-    #include <sys/ioctl.h>
-    #include <sys/vfs.h>
-    #include <linux/fs.h>
-    #include <libgen.h>
-
-    volatile int close_started = 0;
-    volatile int close_completed = 0;
-
-    void *close_thread(void *arg) {
-        int fd = *(int *)arg;
-        close_started = 1;
-        close(fd);
-        close_completed = 1;
-        return NULL;
-    }
-
-    int main(int argc, char *argv[]) {
-        struct statfs sfs;
-        if (statfs(argv[1], &sfs) < 0) {
-            char *dir_buf = strdup(argv[1]);
-            char *parent_dir = dirname(dir_buf);
-            if (statfs(parent_dir, &sfs) < 0) {
-                perror("statfs");
-                free(dir_buf);
-                return 1;
-            }
-            free(dir_buf);
-        }
-        if (sfs.f_type != 0x58465342) return 1;
-
-        int freeze_fd = open(dirname(strdup(argv[1])), O_RDONLY);
-        int write_fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        char buf[65536] = {0};
-        for (int i = 0; i < 320; i++) write(write_fd, buf, sizeof(buf));
-
-        ioctl(freeze_fd, FIFREEZE, 0);
-        pthread_t thread;
-        pthread_create(&thread, NULL, close_thread, &write_fd);
-        while (!close_started) usleep(1000);
-        usleep(1000000); // Wait 1s
-        if (!close_completed) printf("SUCCESS: close() hung!\n");
-        ioctl(freeze_fd, FITHAW, 0);
-        pthread_join(thread, NULL);
-        unlink(argv[1]);
-        return 0;
-    }
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=205833
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1474726
-
-Aditya Prakash Srivastava (2):
-  xfs: add a XFS_TRANS_WRITECOUNT_TRYLOCK flag
-  xfs: prevent close() from hanging on frozen filesystems
-
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Aditya Prakash Srivastava <aditya.ansh182@gmail.com>
+---
  fs/xfs/libxfs/xfs_shared.h |  3 +++
- fs/xfs/xfs_bmap_util.c     |  9 +++++----
- fs/xfs/xfs_bmap_util.h     |  2 +-
- fs/xfs/xfs_file.c          |  8 +++++---
- fs/xfs/xfs_icache.c        |  2 +-
- fs/xfs/xfs_inode.c         |  2 +-
  fs/xfs/xfs_trans.c         | 12 +++++++++++-
- 7 files changed, 27 insertions(+), 11 deletions(-)
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index b1e0d9bc1f7d..68d22b6cddd3 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -164,6 +164,9 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ /* Transaction has locked the rtbitmap and rtsum inodes */
+ #define XFS_TRANS_RTBITMAP_LOCKED	(1u << 9)
+ 
++/* Try lock filesystem superblock for freeze protection */
++#define XFS_TRANS_WRITECOUNT_TRYLOCK	(1u << 10)
++
+ /*
+  * Field values for xfs_trans_mod_sb.
+  */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 148cc32449c1..3860e44d6439 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -216,10 +216,18 @@ __xfs_trans_alloc(
+ 	struct xfs_trans	*tp;
+ 
+ 	ASSERT(!(flags & XFS_TRANS_RES_FDBLKS) || xfs_has_lazysbcount(mp));
++	ASSERT(!((flags & XFS_TRANS_NO_WRITECOUNT) &&
++		 (flags & XFS_TRANS_WRITECOUNT_TRYLOCK)));
+ 
+ 	tp = kmem_cache_zalloc(xfs_trans_cache, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
++	if (flags & XFS_TRANS_WRITECOUNT_TRYLOCK) {
++		if (!sb_start_intwrite_trylock(mp->m_super)) {
++			kmem_cache_free(xfs_trans_cache, tp);
++			return ERR_PTR(-EAGAIN);
++		}
++	} else if (!(flags & XFS_TRANS_NO_WRITECOUNT)) {
+ 		sb_start_intwrite(mp->m_super);
++	}
+ 	xfs_trans_set_context(tp);
+ 	tp->t_flags = flags;
+ 	tp->t_mountp = mp;
+@@ -252,6 +260,8 @@ xfs_trans_alloc(
+ 	 */
+ retry:
+ 	tp = __xfs_trans_alloc(mp, flags);
++	if (IS_ERR(tp))
++		return PTR_ERR(tp);
+ 	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+ 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+ 	if (error == -ENOSPC && want_retry) {
 -- 
 2.47.3
 
