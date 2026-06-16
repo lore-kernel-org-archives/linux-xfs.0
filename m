@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D4CF43DA25;
-	Tue, 16 Jun 2026 14:09:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC9B43DA25;
+	Tue, 16 Jun 2026 14:09:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781618977; cv=none; b=PxKUDMUV2KnluFs42YVEBTXUhA591GxKLkvGflS3HQomYwg72Fkxzur3bvj//HtYyEeBHJnWYZtfF7/rWVTi5TyYTqBqPagd3sDL1yIXSYVfYL5XJCMsllih/iI/4C4D2QzkL63Yr0qfbOGEzItb71JQ49OhGMftWIB8tMF9K74=
+	t=1781618981; cv=none; b=IgAMu0Ay6rKvL7KkxD7+eyMRX8f8aph+uZ46mEC78mrEisJpfUkgBV+KY3do+7lTwfoUepeknQL8sxp88EWvSbzB+eyrxtkP4lcIDFYXWa6DA9n1BXtLFfWH8zB5RgMbGy0MrheCSJg8bHsurmsFN0pbV9cvQ1NuzXGYifydFx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781618977; c=relaxed/simple;
-	bh=OtwyzN33qcp3Tprake7kNYtJqUhDTVNsJipaTKEubwM=;
+	s=arc-20240116; t=1781618981; c=relaxed/simple;
+	bh=9HmtDEDStqmbZmIMCUWgddWqXAIThv58DpWYSnfHEN8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pd6pRRf1Bd/WGAb/CtlQKg+/tSwFqMWcMr2yr/HWhSXL03d/l9yg8qu2MXoVwCvSGjOqAZPmALiXD1kv3uzgFYSMTjPYX8YRcA6/srJEHjItKUDkNOa5WUoew3QB71mzbb/gmdWnmvV92h8vUIegiPZftpaMK5LF6lWzJFgWvV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QNk8Pde8; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=thC7A1KwcTmPqlH7YF5Dv/zrLVLnnosxgCxu87zcbJ8kOqj9Mtcw4pJ01te9yGp1FVye3m2nRvFA8uIlnil3jq5VVp9X09+Nz9zQuiP/c4ex33u28muDavtdJL66K2F7pVyST1mUUc7kox1CaZOWPiKqbw48iS8UuUJrDT5q2V4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fGv1SWC6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QNk8Pde8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5FD11F00AC4;
-	Tue, 16 Jun 2026 14:09:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fGv1SWC6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EDB11F000E9;
+	Tue, 16 Jun 2026 14:09:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781618976;
-	bh=aTcPWezXgQ5+ASGJFKrfJE2MFrpVhk3GuVEmxFiscQY=;
+	s=k20260515; t=1781618979;
+	bh=rRMc9kMufhtL5v6eg77W3bJ5eLcFDC/5FLFQgRBwgUw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=QNk8Pde81+c7bz69IC0LrqDsR1/mXDO52tE+dSEVlTe7lMbb7fhh8KvJfcB+mdK1j
-	 L9uA2jfjMpAtXaozInTXS9WAaM48C4YFenMHIKmBY/UuV8up1sH9vRm1cUkjOUBup3
-	 ptLH455DhZPnM+LFkkLkNYmUwDc34HwFOVfrQraizZbA0mjELJOz9p3h9r80RVVQwE
-	 bEV3aQrkfYrOTN3UtEL+mbqgyUvD3+nFnltDkNASM1m/APM0sO/yJSNZk8W6I+RX3A
-	 ib3/4f79FL0DxavjHTYT9JvAij/YnqJSmSNEdL276TmLIkLwbTaAa4ScF2oV0Qha7M
-	 U1Dij6CJxoD0A==
+	b=fGv1SWC6fLifdCoGjEb6SbAJe65q/UaRIrA50zk5LlsWkOyH6SSrYS9935kLj3fxJ
+	 waRRSXfPj4o4aqawZav1zjhouAaabY0b+APeY3yyL/nHbb3Ul0qYiZUvo2X6+y4AWG
+	 qI+5mSwNTdG1AsQvul/ds2mgHaHr8ZAfPCvpXaJBCnLxcrheWDhZB0CNx8PXfVIqUP
+	 b45Bugt4XIyBtZKyEnmt7ZLlJIT7cU07X6nEAMkcAYxE0RRWCQ3180uppikYxDuA6A
+	 VG6Jw6Rd/c2IK2c/PSP7mnU93etJ9AjGbGiIMtIoERDyv4mFjzZ+CPLbyzivUbkONs
+	 YrOKlwiW8iK/A==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 16 Jun 2026 16:08:32 +0200
-Subject: [PATCH RFC v2 16/18] super: make fs_holder_ops private
+Date: Tue, 16 Jun 2026 16:08:33 +0200
+Subject: [PATCH RFC v2 17/18] fs: look up the superblock via the device
+ table in user_get_super()
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260616-work-super-bdev_holder_global-v2-16-7df6b864028e@kernel.org>
+Message-Id: <20260616-work-super-bdev_holder_global-v2-17-7df6b864028e@kernel.org>
 References: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 In-Reply-To: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org>
 To: Jan Kara <jack@suse.cz>
@@ -51,63 +52,117 @@ Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  linux-erofs@lists.ozlabs.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.16-dev-4090c
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1644; i=brauner@kernel.org;
- h=from:subject:message-id; bh=OtwyzN33qcp3Tprake7kNYtJqUhDTVNsJipaTKEubwM=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZRtyXtw26x3kveDp/QJy3R8bk6qXGTds7JFa7tyat3
- +euxxjaUcrCIMbFICumyOLQbhIut5ynYrNRpgbMHFYmkCEMXJwCMBExb0aGU/ftebO63h2sKS7X
- uSzP5dE1eULVkapbrpaTd3mZ/b6iyPBPXcGu+N2X7Hsb/v/lOVoVFL9q1QJm7ynK+ttnmixKunW
- BDwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3616; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=9HmtDEDStqmbZmIMCUWgddWqXAIThv58DpWYSnfHEN8=;
+ b=kA0DAAoWkcYbwGV43KIByyZiAGoxWN+g2BMFfjjyx0eEgKp8uxwbtpLCXZ1u++jmYieteacES
+ oh1BAAWCgAdFiEEQIc0Vx6nDHizMmkokcYbwGV43KIFAmoxWN8ACgkQkcYbwGV43KKB9gEApvkp
+ dtTqpOq8kInsSwhVrk/cmhKt1ogA/Y6whKasJtYBAN3/I0SnAfnUmjGkBjhaY+GrRiNnPZgQ+sC
+ FYmb5s2oE
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Now that filesystems open and claim their block devices through
-fs_bdev_file_open_by_{dev,path}(), nothing outside fs/super.c references
-fs_holder_ops. Make it static and drop its declaration from blkdev.h.
+user_get_super() still finds the superblock for a device number by
+walking the global super_blocks list under sb_lock. Every superblock is
+registered in the device table under its s_dev since sget_fc() inserts
+it there, including superblocks on anonymous devices, so use the table
+instead.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+The refcount-pinning cursor helpers super_dev_{get,first,next}() only
+touch table state and do not depend on CONFIG_BLOCK, so drop the
+CONFIG_BLOCK guard around them: their new caller serves anonymous
+devices as well (ustat() on e.g. tmpfs) and is built without
+CONFIG_BLOCK. The guard falls in this patch rather than separately
+since without this caller the helpers would be unused without
+CONFIG_BLOCK.
+
+The pinned entry holds a passive reference on the superblock so
+super_lock() can be called directly; once the superblock is locked grab
+a passive reference for the caller before dropping the pin.
+
+The device table contains more than the old walk could find: a
+superblock is also registered for every additional device it claims
+(the xfs log and realtime devices, btrfs member devices, the ext4
+external journal, erofs blob devices). Don't filter those out:
+specifying any device a filesystem uses now resolves to that
+filesystem, so ustat() and quotactl() work on e.g. the xfs log device
+or a btrfs member device (the latter used to fail outright as btrfs
+superblocks carry an anonymous s_dev that never matches a member
+device). When several superblocks share a device (erofs blob devices)
+the first live superblock wins.
+
+The cursor also keeps scanning past dying superblocks where the old
+walk gave up after the first s_dev match, so a mount racing with the
+unmount of the same device (or with the reuse of a recycled anonymous
+dev_t) finds the live superblock where the old walk could spuriously
+return NULL.
+
+This removes the last s_dev-keyed walk of the super_blocks list and
+takes ustat() and quotactl()'s block device lookup off sb_lock
+entirely.
+
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/super.c             | 3 +--
- include/linux/blkdev.h | 7 -------
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ fs/super.c | 28 ++++++++--------------------
+ 1 file changed, 8 insertions(+), 20 deletions(-)
 
 diff --git a/fs/super.c b/fs/super.c
-index a83f58755cf8..2d0a07861bfc 100644
+index 2d0a07861bfc..93f24aea75c4 100644
 --- a/fs/super.c
 +++ b/fs/super.c
-@@ -1624,13 +1624,12 @@ static int fs_bdev_thaw(struct block_device *bdev)
- 	return error;
+@@ -501,7 +501,6 @@ static int super_dev_register(struct super_block *sb)
+ 	return err;
  }
  
--const struct blk_holder_ops fs_holder_ops = {
-+static const struct blk_holder_ops fs_holder_ops = {
- 	.mark_dead		= fs_bdev_mark_dead,
- 	.sync			= fs_bdev_sync,
- 	.freeze			= fs_bdev_freeze,
- 	.thaw			= fs_bdev_thaw,
- };
--EXPORT_SYMBOL_GPL(fs_holder_ops);
- 
- static struct super_dev *super_dev_lookup(dev_t dev, struct super_block *sb)
+-#ifdef CONFIG_BLOCK
+ static struct super_dev *super_dev_get(struct rhlist_head *pos)
  {
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index cee548184a7b..45225b4f7193 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1772,13 +1772,6 @@ struct blk_holder_ops {
- 		__releases(&bdev->bd_holder_lock);
- };
+ 	struct super_dev *sb_dev;
+@@ -535,7 +534,6 @@ static struct super_dev *super_dev_next(struct super_dev *prev)
+ 	super_dev_put(prev);
+ 	return sb_dev;
+ }
+-#endif
  
--/*
-- * For filesystems using @fs_holder_ops, the @holder argument passed to
-- * helpers used to open and claim block devices via
-- * bd_prepare_to_claim() must point to a superblock.
-- */
--extern const struct blk_holder_ops fs_holder_ops;
+ static void kill_super_notify(struct super_block *sb)
+ {
+@@ -1044,29 +1042,19 @@ EXPORT_SYMBOL(iterate_supers_type);
+ 
+ struct super_block *user_get_super(dev_t dev, bool excl)
+ {
+-	struct super_block *sb;
 -
- /*
-  * Return the correct open flags for blkdev_get_by_* for super block flags
-  * as stored in sb->s_flags.
+-	spin_lock(&sb_lock);
+-	list_for_each_entry(sb, &super_blocks, s_list) {
+-		bool locked;
++	struct super_dev *sb_dev;
+ 
+-		if (sb->s_dev != dev)
+-			continue;
++	for (sb_dev = super_dev_first(dev); sb_dev; sb_dev = super_dev_next(sb_dev)) {
++		struct super_block *sb = sb_dev->sd_sb;
+ 
+-		if (!refcount_inc_not_zero(&sb->s_passive))
++		if (!super_lock(sb, excl))
+ 			continue;
+ 
+-		spin_unlock(&sb_lock);
+-
+-		locked = super_lock(sb, excl);
+-		if (locked)
+-			return sb;
+-
+-		put_super(sb);
+-		spin_lock(&sb_lock);
+-		break;
++		/* The pinned entry holds a passive reference, take our own. */
++		refcount_inc(&sb->s_passive);
++		super_dev_put(sb_dev);
++		return sb;
+ 	}
+-	spin_unlock(&sb_lock);
+ 	return NULL;
+ }
+ 
 
 -- 
 2.47.3
