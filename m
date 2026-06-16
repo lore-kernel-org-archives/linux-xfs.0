@@ -1,47 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9532B283FE5
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Jun 2026 13:15:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6B72BE026;
+	Tue, 16 Jun 2026 13:31:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781615727; cv=none; b=LC+WBhFl2yQPXTVDlrZyhxVqOW5OJHW40lcjeGl1mIGtpmHvGPV1kQBUef5NdWLqHQvr/tLbSJfYYQ57IxDyF8au6tNqfuzaPzFOFTLLwpUGknX6bHzM0sTpv0LzMzdYmlk8czYH2hre3r80BoehwhiaaC0rBuJwll1aI6eS7lI=
+	t=1781616701; cv=none; b=QYbckgngqoMfq06UrU/awt20DW4RTPOzSkUqPx/UY1jTkhzCJOMrXZ8m/lIPujSH+K+83s0iCqWMygQqTdFe9DhUbCgvKK4ICXs6TqjdWCi5jRb5qUL63eQ9xpb26RjdUq2xxGCy6Kmz2il8sYE9pdCgWXB6/Jna0RhggIm0Wjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781615727; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jux3zddsFjIKxmEaCRpTkvV7wS57sTsSSa9Gs9AwYvlP9yT2yMQukHuysVn+WsC2GTfAmxAobjx7wp8sgDPQHnOJvLP8muQAj8mSoPM3moSn5g1nC19b64/z9cIOHqyayM8lp+w1MDTgllh1osb3XmR2kUVH2o9v4FhqIZw1ybg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HE5qsywf; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1781616701; c=relaxed/simple;
+	bh=BTsFxLJimawtoe7HwSUkU6BfYRMpE+5vTHPsq/M0BwI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=GHuhLZATe+g4fCRa8w93m78FW0RVIwB46qYFNyO8vJKlqrs+pmo+oV1TfPsFrudmeJa0eTwp5sOrBrt2CZ+7wWSLzeRdnHa0VEF1yw8mJWaliEOsUAQzP+RfMD0gISlIWaE2nagJHwIjpnA6DMkPmhsr4UA26uXnCtHb3VBFes0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SHQrRDJf; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HE5qsywf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SHQrRDJf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=HE5qsywfTRHXm7I9YV5PkwBgyr
-	xDxM/yqhrde7NmN24Wk/bi4thcpz52dNqpT2TGnjaZyL5yViZiAnz8mheZMBXN4w6LZBlewj29Hb2
-	jCCDSl2VaiGhMD9yDt0Xkfy/AaqjkoxJnZhKkTUCUt3XGrhNpYMpKwEQBDnOKHAETshtI7lJwHjT5
-	5fJkby8Gl8QsrJ+HKotIIK3AaIiqYQ7L/OfMyRsHpXqSymSvSjG7b91LP3JcE5I+RDOCNes/gLx0C
-	+RMiJD16ng+/sHFCjgwDgY1kuRwwez2K3YDtSluNj7yFcSZUpevFP6kG5eTIvjd0NWPXREITGHPXk
-	02TNDd3A==;
+	:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding
+	:Content-ID:Content-Description:References;
+	bh=li/q7nG5OrUyFHVdKJCEGvzSB4i/lEH7jxizLG5hQkc=; b=SHQrRDJfcDwVYGoZNoTaXlHlkh
+	M+D+ZAY1tWe2WQKByW66Ag86ZaP9wcu3/YD1NgP1M0HM8PKV/89xThVV5TdP7Xim1so+FS0hBfcUQ
+	ixDzNh4aUg6zjJPWxenOzYPeXnf0EFgl3R3EmTk+bLPQH6m9p1VSKCqZZmCALZk2q3QAPazfUf6P6
+	cxKNNcq6QHZ+iWr9nkFLDA4HhyyZW3uGNf2Vycng3Ki/93fAfkbDGsJbYpK/9d1S706dBuOm4brf/
+	t65K4XnoSfzDRPhENXdYrv4jDgnEoNlYziZb3ByR3SuR4MM9iHNAgrkDVPrUv8mXt+xGXm2Dz5+AY
+	lbA/Te8A==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wZTdV-0000000Fozw-3YBG;
-	Tue, 16 Jun 2026 13:15:25 +0000
-Date: Tue, 16 Jun 2026 06:15:25 -0700
+	id 1wZTtE-0000000FqUR-1WKL;
+	Tue, 16 Jun 2026 13:31:40 +0000
+Date: Tue, 16 Jun 2026 06:31:40 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Pankaj Raghav <p.raghav@samsung.com>
 Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
 	"Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org,
 	gost.dev@samsung.com, pankaj.raghav@linux.dev, andres@anarazel.de,
-	kundan.kumar@samsung.com, hch@lst.de, cem@kernel.org,
-	hch@infradead.org
-Subject: Re: [PATCH v6 2/3] xfs: add an allocation mode to
- xfs_alloc_file_space()
-Message-ID: <ajFMbT9sLGflpZXg@infradead.org>
-References: <20260611114029.176200-1-p.raghav@samsung.com>
- <20260611114029.176200-3-p.raghav@samsung.com>
+	kundan.kumar@samsung.com, cem@kernel.org,
+	Zhang Yi <yi.zhang@huawei.com>, linux-fsdevel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
+Message-ID: <ajFQPANpajmFuKpi@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,10 +48,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260611114029.176200-3-p.raghav@samsung.com>
+In-Reply-To: <20260611114029.176200-4-p.raghav@samsung.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+[API questions for Zhang and -fsdevel/ -api below)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> +	unsigned int		blksize = i_blocksize(inode);
+> +	loff_t			offset_aligned = round_down(offset, blksize);
+
+I think this actually needs to found up instead of rounding down.
+
+> +	/*
+> +	 * Zero the tail of the old EOF block and any space up to the new
+> +	 * offset.
+> +	 * In the usual truncate path, xfs_falloc_setsize takes care of
+> +	 * zeroing those blocks.
+> +	 */
+> +	if (offset_aligned > old_size) {
+> +		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
+> +		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
+> +				NULL, &did_zero);
+> +		if (error)
+> +			return error;
+> +	}
+
+... then this will properly zero from the old i_size to the first block
+boundary after the old size.
+
+> +	error = xfs_alloc_file_space(ip, offset, len,
+> +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
+
+... and here we need to pass offset_aligned instead of offset and
+a new calculated len based on the last block boundary, and then
+zero again after that.  That is assuming FALLOC_FL_WRITE_ZEROES
+allows unaligned ranges for file systems.  The block code doesn't,
+but I can't quite follow the ext4 code if it does or not, and there
+is no mention of FALLOC_FL_WRITE_ZEROES even in the latest man-pages
+tree.
+
+Maybe we also want xfstests that try unaligned FALLOC_FL_WRITE_ZEROES
+and make sure no existing data before the range is lost and the
+entire range is zeroed?
+
+
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * xfs_falloc_setsize() would re-zero the written extents via
+> +	 * iomap_zero_range(). Use xfs_setfilesize() instead.
+> +	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
+> +	 * size to it.
+> +	 */
+> +	if (new_size > i_size_read(inode))
+> +		i_size_write(inode, new_size);
+
+I think Sashiko is right that we need a pagecache_isize_extended and
+filemap_write_and_wait_range calls here.
 
