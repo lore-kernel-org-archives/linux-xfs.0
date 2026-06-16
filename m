@@ -1,223 +1,500 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C841E4502F;
-	Tue, 16 Jun 2026 01:00:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E0F3A9DA4
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Jun 2026 02:09:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781571636; cv=none; b=POcndiPTVLeMdxp3IVJ9owPQFVKeodsPf5d1948qjRdlGnOlJHpuIQ3GWCTc/7Ybf2YI53E6Mb439dPUAi1kAt3/A0fUT/VOjMRMtBfUTx4OYf5r4mApSnRZTTakb5SPe9SHTnfT2OGgIJXHe/nnyaJ7fKugag674ZkZTSyS8z0=
+	t=1781575778; cv=none; b=s5UTcLEuNQIHv3h5Po8nmpS1SYmcvl7kGk/IwwXRxknyA/u9GZdAcCe6JhElNz327h7Mzc3XfL1DcqbDgD2X/n10kO4IXQykkJ0AvP+/shGYhHbMO2YBdpo7zl5cWCJLHhrm2t0l2KC9DjasL01nSFXipMXK5fzhe906f8pHACg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781571636; c=relaxed/simple;
-	bh=bINlx1vsKPxkzN1+mgLXCxuLVXXMZHg0ZesDqWVPMM4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pThMXkvDWXjGVfmMgErgmFIHpd+bwgLxsCdKr2QmDRiWJCBHx8Bskm45RSKvLda8G0zHpbyOSeUZlX0xyfoPbGBGSxvLWsRAHgK6PRJfunWF5GB8gFTc8dRZx6xeJ7bfS1cntcpioW3w9avZakONiHEFRvLK13c+UgkOSWHsqBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com; spf=pass smtp.mailfrom=gmx.com; dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b=JXxBJbrL; arc=none smtp.client-ip=212.227.17.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.com
+	s=arc-20240116; t=1781575778; c=relaxed/simple;
+	bh=Byd+1RTQsy7uYj6NF/iH6yiBYS4MvhKTJHY4rT5RQn8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=orWwCaqAHrJOBs6xNwx3FUeGRj8c32zXD10Z/KkVz8s3hUFVvILhbzS3WA8Uc+Z3okuOD4FI7otqrpFNz2J0azEmhvHKMidby9FwKb8A6zv6YT5F3p1RorYZ7oiu/1fPl2AkKvh3bjkAguzEVJIvloNCp2NpuEvSMUZSj+nPG/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=HWuumbYG; arc=none smtp.client-ip=54.207.22.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b="JXxBJbrL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.com;
-	s=s31663417; t=1781571632; x=1782176432; i=quwenruo.btrfs@gmx.com;
-	bh=A4U19UbvxQvq3N1vzmqxeuwdxTB8VQH8BL1NS9H7F4w=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=JXxBJbrLv5ri4wN1I0SZjtW4z5L4zA/F+Y/tGwzyK6q/+RfFrY2DCEukubCjaxkd
-	 NI0NJ2m/Goqtyi3T/7WOLMgK7vesjPzKAQm8vVgXuV4nZUPEKv8MN5NwjW8wNKrwX
-	 F3CZAyF/nfoO44+ngyZohHe7sYOq0D3yyjJYXM+WmoB+Zwg2dWubhgouR1wSPKVN9
-	 If+1m3k1LaGz3drcRAjsZEPDvunmZT8q8LO3AEMyKUxJeJw2Sqd3+XwGO+EnM49gO
-	 H8BR0fu0nCHBe7Ix2bmSNuYhJwSQBKX+J69h4qlQCJC15T0t+r5P/4RpFT7nhOrSS
-	 mowwB2W/Qwjry24ytg==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx104
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1Mf078-1x6jNF31B4-00ohpW; Tue, 16
- Jun 2026 03:00:32 +0200
-Message-ID: <8a0e1881-fe73-4912-95f9-8eac998840d5@gmx.com>
-Date: Tue, 16 Jun 2026 10:30:27 +0930
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="HWuumbYG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781575759;
+	bh=Ym/ooa218ctJpP4W/JQbe4PIXkJIyhcJi809ew/V1a4=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=HWuumbYGqVooAHvj27ZodYBhxwS8JR6BEC5biNGc6m+iBUNGFdHb+pzed4K0eh9ij
+	 gZmzaby8iKtR76PpFqxRsnDwkzHAf/NS9DuGBdFuYnn8V5xRrhqmktm6fZbA7KNDAr
+	 aQCJRdo9j/aiXgCTxsBnU3dxXSuJ6IRFP0UkPeR8=
+X-QQ-mid: zesmtpgz3t1781575754t4435d57b
+X-QQ-Originating-IP: 1Tu+C5DqDTuLXRbqy4HShNu8waqerlQTZ8A/h8d0ll4=
+Received: from localhost.localdomain ( [1.85.7.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 16 Jun 2026 10:09:13 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 14924059360273864008
+EX-QQ-RecipientCnt: 3
+From: caina <caina@uniontech.com>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	caina <caina@uniontech.com>
+Subject: [PATCH] xfs: clean up spelling and grammar errors in comments
+Date: Tue, 16 Jun 2026 10:09:12 +0800
+Message-Id: <20260616020912.11409-1-caina@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/4] iomap: reject NOWAIT and BOUNCE direct IOs
-To: Christoph Hellwig <hch@infradead.org>, Qu Wenruo <wqu@suse.com>
-Cc: linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <cover.1781253428.git.wqu@suse.com>
- <3d739b6dc37e34ca2a2a3780d12d0288a4060d57.1781253428.git.wqu@suse.com>
- <ajAU1yLd32BCiCNj@infradead.org>
- <efa3f1f9-20c2-44c0-914c-5e34a40235a1@gmx.com>
-Content-Language: en-US
-From: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNIlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT7CwJQEEwEIAD4CGwMFCwkI
- BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1YAUJEP5a
- sQAKCRDCPZHzoSX+qF+mB/9gXu9C3BV0omDZBDWevJHxpWpOwQ8DxZEbk9b9LcrQlWdhFhyn
- xi+l5lRziV9ZGyYXp7N35a9t7GQJndMCFUWYoEa+1NCuxDs6bslfrCaGEGG/+wd6oIPb85xo
- naxnQ+SQtYLUFbU77WkUPaaIU8hH2BAfn9ZSDX9lIxheQE8ZYGGmo4wYpnN7/hSXALD7+oun
- tZljjGNT1o+/B8WVZtw/YZuCuHgZeaFdhcV2jsz7+iGb+LsqzHuznrXqbyUQgQT9kn8ZYFNW
- 7tf+LNxXuwedzRag4fxtR+5GVvJ41Oh/eygp8VqiMAtnFYaSlb9sjia1Mh+m+OBFeuXjgGlG
- VvQFzsBNBFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcga
- CbPEwhLj1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj
- /IrRUUka68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fN
- GSsRb+pKEKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0
- q1eW4Jrv0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEv
- ABEBAAHCwHwEGAEIACYCGwwWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCZxF1gQUJEP5a0gAK
- CRDCPZHzoSX+qHGpB/kB8A7M7KGL5qzat+jBRoLwB0Y3Zax0QWuANVdZM3eJDlKJKJ4HKzjo
- B2Pcn4JXL2apSan2uJftaMbNQbwotvabLXkE7cPpnppnBq7iovmBw++/d8zQjLQLWInQ5kNq
- Vmi36kmq8o5c0f97QVjMryHlmSlEZ2Wwc1kURAe4lsRG2dNeAd4CAqmTw0cMIrR6R/Dpt3ma
- +8oGXJOmwWuDFKNV4G2XLKcghqrtcRf2zAGNogg3KulCykHHripG3kPKsb7fYVcSQtlt5R6v
- HZStaZBzw4PcDiaAF3pPDBd+0fIKS6BlpeNRSFG94RYrt84Qw77JWDOAZsyNfEIEE0J6LSR/
-In-Reply-To: <efa3f1f9-20c2-44c0-914c-5e34a40235a1@gmx.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:RBUiGNEiqqK6Rl8QqoijwZFpmD8iBSb2LgafUubjHNL7c5+184D
- 6ahJbKfUmtorrwVhZe9VggGwdEpfhapKNKKz3i4Nyx34eO6CLyephBza20lcNvhxjYHTtgw
- q8ZE/Kr/FyjfANCDS2fxjfkOtmommmsNHqHQLvx4WxrWEl7k3tst7CHkP+0VEpfjQaoWDJB
- LR90NFOhTxCBK245xMTOQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:s+Wv0IIj/LI=;/lEFo5psYN22FfAFVNbzJCOHdQU
- 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
- wwUhKQ==
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: NY6OurWw+pG/r9ja7HTZDebK27IafUFQruyUAy0/fVXBZHrv3ecjLhIz
+	q2j2JprlRKZ/PhEAxx89NAwSB5aWlxbUwL0wQf1DPQDrV1VS8Sfq/4ooKCtRIFzUC8eS8T4
+	55gd+xhmCwbvgTyjgeFp3EAx6OtpPxyV3UzyJmVMQG8Qwh2z/BsBxKSVy6dLePdpwSmIHMr
+	vkSX7B9f+stAR9d05TvWP+OHNokPYYx7R6AuxnsF4jcPvnLtUkxe/YHsUlwpqnO1crmtZP2
+	GQFAZvzyF99yNlJiAvAKXR1rlvVufxwq0AW6lrQDyqeRdiE0+XvLJy3PW8VpSk+kbjdgiOX
+	VlXiSJHtqhvrR/LCsVj4pWQwOGfCuX0JGLRDsrQW+A91HQD0/l14SpziaCcJPthwVAz5e6n
+	9f+St9sWu/gZIzEWVnoX1dqjfuSl8OTzT0t6qe8079WepamKIKvNJGSFGlrn/yxqN7i67Rf
+	/tfWkS9RRAnU5JQvh0H1QJLtLYGz80J+kkwWJjFJUdCzuwt++jUVTdMzUyDDG0pJBz/SaH6
+	WyGNNSAmQIHR01rF0W5Tslh1R020mGlpUqlXnboyMmiHntJUNV3+6Tg4oHJ4cIrFHBLrhCZ
+	3/e7k3x/XLKvNxqPjcUFzYU4hP+3q6KWpBiaBQS12fJvfj1UrFwL4hHRP3wGA7PVgXH5Eeg
+	HScYu+x/cVhR11kUlE9DKtqh7r3KxHphRErjXldm5Uv5EgGML6uA+jjvCTivtf2cKz2NSyW
+	wnHFlVeuIor7TKwNLXVNpHx76uA+YNzOVL+LL2YwvX9vpEOJEhYLt+udDvDZQoyxlk1DV6C
+	eRnOyj9zreU+5WgPCyIQIzpvcI/IqYJnoO2xBEz7JLtyVPeFl8IEmtszNMnalmFyH4I954f
+	2w5C05wyS/UQ/gi/aYg+8sPyEKFYgbjJolSXL8fllra8mR+FCn4A7WQvbNTu0veN36PMNsR
+	nkaNVqPehKXutnI2h16QzKBCpxZiihn8rAZWyWAAOWMRnLXt0BLker19N9g8+9EymSRM6Y0
+	LVYpfrvGLo2KMbOaX97x4i0vxtn/td5hiVsdY/5jNtCP4c+xUqbBz+rjgVmIWB4DI0obfDr
+	3ZEUGYiGQO+YP5BU9hszfc=
+X-QQ-XMRINFO: OWPUhxQsoeAVwkVaQIEGSKwwgKCxK/fD5g==
+X-QQ-RECHKSPAM: 0
 
+Clean up various spelling mistakes and grammar errors found in comments
+across the XFS filesystem code.
 
+This is a follow-up cleanup to improve code readability. No functional
+changes.
 
-=E5=9C=A8 2026/6/16 08:13, Qu Wenruo =E5=86=99=E9=81=93:
->=20
->=20
-> =E5=9C=A8 2026/6/16 00:35, Christoph Hellwig =E5=86=99=E9=81=93:
->> On Fri, Jun 12, 2026 at 07:21:14PM +0930, Qu Wenruo wrote:
->>> If a direct IO requires bounced pages for stable buffer, it will alway=
-s
->>> allocate memory, and both bio_iov_iter_bounce_write() and
->>> bio_iov_iter_bounce_read() are allocating pages using GFP_KERNEL, whic=
-h
->>> can sleep and break NOWAIT requirement.
->>>
->>> So we need to reject such NOWAIT and BOUNCE direct IO in
->>> iomap_dio_bio_iter().
->>
->> That's a bit heavy handed. Just do a noretry allocation.
->=20
->  From the comment of __GFP_NORETRY:
->=20
->  =C2=A0* %__GFP_NORETRY: The VM implementation will try only very lightw=
-eight
->  =C2=A0* memory direct reclaim to get some memory under memory pressure =
-(thus
->  =C2=A0* it can sleep).
->=20
-> It looks like NORETRY can still sleep, thus again breaking NOWAIT=20
-> requirement.
->=20
-> I think you're talking about GFP_NOWAIT?
->=20
+Signed-off-by: caina <caina@uniontech.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c     |  6 +++---
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_btree.c     |  6 +++---
+ fs/xfs/scrub/alloc_repair.c   |  4 ++--
+ fs/xfs/scrub/btree.c          |  2 +-
+ fs/xfs/scrub/repair.c         |  4 ++--
+ fs/xfs/xfs_bmap_util.c        |  2 +-
+ fs/xfs/xfs_buf_item_recover.c |  4 ++--
+ fs/xfs/xfs_inode.c            |  4 ++--
+ fs/xfs/xfs_inode_item.c       |  2 +-
+ fs/xfs/xfs_log.c              | 10 +++++-----
+ fs/xfs/xfs_log_cil.c          | 12 ++++++------
+ fs/xfs/xfs_log_recover.c      |  2 +-
+ fs/xfs/xfs_notify_failure.c   |  4 ++--
+ fs/xfs/xfs_trans.c            | 10 +++++-----
+ fs/xfs/xfs_trans_buf.c        |  2 +-
+ 16 files changed, 38 insertions(+), 38 deletions(-)
 
-After scanning the code for related memory allocation, there are some=20
-other locations doing memory allocation, including but not limited to:
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index d99602bcc16f..8695b22d88ff 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -37,7 +37,7 @@ struct workqueue_struct *xfs_alloc_wq;
+ #define	XFSA_FIXUP_CNT_OK	2
+ 
+ /*
+- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
++ * Size of the AGFL.  For CRC-enabled filesystems we steal a couple of slots in
+  * the beginning of the block for a proper header with the location information
+  * and CRC.
+  */
+@@ -770,7 +770,7 @@ xfs_alloc_fixup_trees(
+  *
+  * However, we can't even do that for v4 format filesystems because there are
+  * old versions of mkfs out there that does not initialise the AGFL to known,
+- * verifiable values. HEnce we can't tell the difference between a AGFL block
++ * verifiable values. Hence we can't tell the difference between a AGFL block
+  * allocated by mkfs and a corrupted AGFL block here on v4 filesystems.
+  *
+  * As a result, we can only fully validate AGFL block numbers when we pull them
+@@ -3608,7 +3608,7 @@ xfs_alloc_vextent_finish(
+ 	 * ABBA AGF deadlocks because a future allocation attempt in this
+ 	 * transaction may attempt to lock a lower number AGF.
+ 	 *
+-	 * We can't release the AGF until the transaction is commited, so at
++	 * We can't release the AGF until the transaction is committed, so at
+ 	 * this point we must update the "first allocation" tracker to point at
+ 	 * this AG if the tracker is empty or points to a lower AG. This allows
+ 	 * the next allocation attempt to be modified appropriately to avoid
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2b78041e8672..24be0fb6e56d 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1701,7 +1701,7 @@ xfs_attr3_leaf_add_work(
+ 			/*
+ 			 * This freemap entry starts at the old end of the
+ 			 * leaf entry array, so we need to adjust its base
+-			 * upward to accomodate the larger array.
++			 * upward to accommodate the larger array.
+ 			 */
+ 			diff = sizeof(struct xfs_attr_leaf_entry);
+ 		} else if (ichdr->freemap[i].size > 0 &&
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 7012f3570c8d..b072222c1b8d 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -398,7 +398,7 @@ xfs_btree_check_ptr(
+  * Calculate CRC on the whole btree block and stuff it into the
+  * long-form btree header.
+  *
+- * Prior to calculting the CRC, pull the LSN out of the buffer log item and put
++ * Prior to calculating the CRC, pull the LSN out of the buffer log item and put
+  * it into the buffer so recovery knows what the last modification was that made
+  * it to disk.
+  */
+@@ -436,7 +436,7 @@ xfs_btree_fsblock_verify_crc(
+  * Calculate CRC on the whole btree block and stuff it into the
+  * short-form btree header.
+  *
+- * Prior to calculting the CRC, pull the LSN out of the buffer log item and put
++ * Prior to calculating the CRC, pull the LSN out of the buffer log item and put
+  * it into the buffer so recovery knows what the last modification was that made
+  * it to disk.
+  */
+@@ -4739,7 +4739,7 @@ xfs_btree_visit_blocks(
+  * Change the owner of a btree.
+  *
+  * The mechanism we use here is ordered buffer logging. Because we don't know
+- * how many buffers were are going to need to modify, we don't really want to
++ * how many buffers we are going to need to modify, we don't really want to
+  * have to make transaction reservations for the worst case of every buffer in a
+  * full size btree as that may be more space that we can fit in the log....
+  *
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index dce6ab0429dc..0b40de6331f7 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
+ }
+ 
+ /*
+- * Sort the free extents by length so so that we can put the records into the
++ * Sort the free extents by length so that we can put the records into the
+  * cntbt in the correct order.  Don't let userspace kill us if we're resorting
+  * after allocating btree blocks.
+  */
+@@ -751,7 +751,7 @@ xrep_abt_build_new_trees(
+ 		goto err_cur;
+ 
+ 	/*
+-	 * If we need to re-sort the free extents by length, do so so that we
++	 * If we need to re-sort the free extents by length, do so that we
+ 	 * can put the records into the cntbt in the correct order.
+ 	 */
+ 	if (needs_resort) {
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 786b1e7c4dc3..0e90ac00717d 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -342,7 +342,7 @@ xchk_btree_block_check_siblings(
+ 	/*
+ 	 * Does the left & right sibling pointers match the adjacent
+ 	 * parent level pointers?
+-	 * (These function absorbs error codes for us.)
++	 * (These functions absorb error codes for us.)
+ 	 */
+ 	error = xchk_btree_block_check_sibling(bs, level, -1, &leftsib);
+ 	if (error)
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index ac8c592579bd..f8e66e1f885d 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -368,7 +368,7 @@ xrep_calc_ag_resblks(
+ 		 * used blocks.  However, with reflink it's possible to have
+ 		 * more than one rmap record per AG block.  We don't know how
+ 		 * many rmaps there could be in the AG, so we start off with
+-		 * what we hope is an generous over-estimation.
++		 * what we hope is a generous over-estimation.
+ 		 */
+ 		if (xfs_has_reflink(mp))
+ 			rmapbt_sz = xfs_rmapbt_calc_size(mp,
+@@ -1257,7 +1257,7 @@ xrep_metadata_inode_forks(
+ 
+ /*
+  * Set up an in-memory buffer cache so that we can use the xfbtree.  Allocating
+- * a shmem file might take loks, so we cannot be in transaction context.  Park
++ * a shmem file might take looks, so we cannot be in transaction context.  Park
+  * our resources in the scrub context and let the teardown function take care
+  * of them at the right time.
+  */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0ab00615f1ad..151c4e68e0c8 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1607,7 +1607,7 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 
+ 	/*
+-	 * Lock and join the inodes to the tansaction so that transaction commit
++	 * Lock and join the inodes to the transaction so that transaction commit
+ 	 * or cancel will unlock the inodes from this point onwards.
+ 	 */
+ 	xfs_lock_two_inodes(ip, XFS_ILOCK_EXCL, tip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 02b95b89d1b5..768358b12576 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -227,7 +227,7 @@ xlog_recover_validate_buf_type(
+ 
+ 	/*
+ 	 * We can only do post recovery validation on items on CRC enabled
+-	 * fielsystems as we need to know when the buffer was written to be able
++	 * filesystems as we need to know when the buffer was written to be able
+ 	 * to determine if we should have replayed the item. If we replay old
+ 	 * metadata over a newer buffer, then it will enter a temporarily
+ 	 * inconsistent state resulting in verification failures. Hence for now
+@@ -806,7 +806,7 @@ xlog_recover_do_primary_sb_buffer(
+  *
+  * The magic number might not match the buffer type we are going to recover
+  * (e.g. reallocated blocks), so we ignore the xfs_buf_log_format flags.  Hence
+- * extract the LSN of the existing object in the buffer based on it's current
++ * extract the LSN of the existing object in the buffer based on its current
+  * magic number.  If we don't recognise the magic number in the buffer, then
+  * return a LSN of -1 so that the caller knows it was an unrecognised block and
+  * so can recover the buffer.
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9978ac1422fc..86392ff08960 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1750,7 +1750,7 @@ xfs_ifree_cluster(
+ 		 * IO and it won't be unlocked until the cluster freeing has
+ 		 * been committed to the journal and the buffer unpinned. If it
+ 		 * is written, we want to know about it, and we want it to
+-		 * fail. We can acheive this by adding a write verifier to the
++		 * fail. We can achieve this by adding a write verifier to the
+ 		 * buffer.
+ 		 */
+ 		bp->b_flags |= XBF_DONE;
+@@ -2658,7 +2658,7 @@ xfs_irele(
+ }
+ 
+ /*
+- * Ensure all commited transactions touching the inode are written to the log.
++ * Ensure all committed transactions touching the inode are written to the log.
+  */
+ int
+ xfs_log_force_inode(
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 4ae81eed0442..bd78762c7701 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -978,7 +978,7 @@ xfs_iflush_ail_updates(
+ 
+ 		/*
+ 		 * dgc: Not sure how this happens, but it happens very
+-		 * occassionaly via generic/388.  xfs_iflush_abort() also
++		 * occasionally via generic/388.  xfs_iflush_abort() also
+ 		 * silently handles this same "under writeback but not in AIL at
+ 		 * shutdown" condition via xfs_trans_ail_delete().
+ 		 */
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f807f8f4f705..b76eb47505e7 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -415,7 +415,7 @@ xfs_log_reserve(
+  * before we tear down the AIL.
+  *
+  * We avoid processing actively referenced iclogs so that we don't run callbacks
+- * while the iclog owner might still be preparing the iclog for IO submssion.
++ * while the iclog owner might still be preparing the iclog for IO submission.
+  * These will be caught by xlog_state_iclog_release() and call this function
+  * again to process any callbacks that may have been added to that iclog.
+  */
+@@ -446,7 +446,7 @@ xlog_state_shutdown_callbacks(
+ }
+ 
+ /*
+- * Flush iclog to disk if this is the last reference to the given iclog and the
++ * Flush iclog to disk if this is the last reference to the given iclog and
+  * it is in the WANT_SYNC state.
+  *
+  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
+@@ -632,7 +632,7 @@ xfs_log_mount(
+ 	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
+ 
+ 	/*
+-	 * Now the log has been fully initialised and we know were our
++	 * Now the log has been fully initialised and we know where our
+ 	 * space grant counters are, we can initialise the permanent ticket
+ 	 * needed for delayed logging to work.
+ 	 */
+@@ -1554,7 +1554,7 @@ xlog_write_iclog(
+ 	 * triggered during unmount, and that can occur asynchronously to the
+ 	 * unmount thread, and hence we need to ensure that completes before
+ 	 * tearing down the iclogbufs.  Hence we need to hold the buffer lock
+-	 * across the log IO to archieve that.
++	 * across the log IO to achieve that.
+ 	 */
+ 	down(&iclog->ic_sema);
+ 	if (xlog_is_shutdown(log)) {
+@@ -1747,7 +1747,7 @@ xlog_sync(
+ 	if (bno + BTOBB(count) > log->l_logBBsize)
+ 		xlog_split_iclog(log, iclog->ic_header, bno, count);
+ 
+-	/* calculcate the checksum */
++	/* calculate the checksum */
+ 	iclog->ic_header->h_crc = xlog_cksum(log, iclog->ic_header,
+ 			iclog->ic_datap, XLOG_REC_SIZE, size);
+ 	/*
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index edc368938f30..572cb864ddce 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -253,7 +253,7 @@ xlog_cil_iovec_space(
+  * the incoming modification. Then during the formatting of the item we can swap
+  * the active buffer with the new one if we can't reuse the existing buffer. We
+  * don't free the old buffer as it may be reused on the next modification if
+- * it's size is right, otherwise we'll free and reallocate it at that point.
++ * its size is right, otherwise we'll free and reallocate it at that point.
+  *
+  * This function builds a vector for the changes in each log item in the
+  * transaction. It then works out the length of the buffer needed for each log
+@@ -1223,7 +1223,7 @@ struct xlog_cil_trans_hdr {
+  *
+  * This is the only place we write a transaction header, so we also build the
+  * log opheaders that indicate the start of a log transaction and wrap the
+- * transaction header. We keep the start record in it's own log vector rather
++ * transaction header. We keep the start record in its own log vector rather
+  * than compacting them into a single region as this ends up making the logic
+  * in xlog_write() for handling empty opheaders for start, commit and unmount
+  * records much simpler.
+@@ -1369,7 +1369,7 @@ xlog_cil_cleanup_whiteouts(
+  * allocation context. However, we do not want to block on memory reclaim
+  * recursing back into the filesystem because this push may have been triggered
+  * by memory reclaim itself. Hence we really need to run under full GFP_NOFS
+- * contraints here.
++ * constraints here.
+  */
+ static void
+ xlog_cil_push_work(
+@@ -1539,7 +1539,7 @@ xlog_cil_push_work(
+ 	 * checks for this - ACTIVE can be either a past completed iclog or a
+ 	 * future iclog being filled, while WANT_SYNC through SYNC_DONE can be a
+ 	 * past or future iclog awaiting IO or ordered IO completion to be run.
+-	 * In the latter case, if it's a future iclog and we wait on it, the we
++	 * In the latter case, if it's a future iclog and we wait on it, we
+ 	 * will hang because it won't get processed through to ic_force_wait
+ 	 * wakeup until this commit_iclog is written to disk.  Hence we use the
+ 	 * iclog header lsn and compare it to the commit lsn to determine if we
+@@ -1574,7 +1574,7 @@ xlog_cil_push_work(
+ 	 *
+ 	 * If the push caller needs the commit to be immediately stable and the
+ 	 * commit_iclog is not yet marked as XLOG_STATE_WANT_SYNC to indicate it
+-	 * will be written when released, switch it's state to WANT_SYNC right
++	 * will be written when released, switch its state to WANT_SYNC right
+ 	 * now.
+ 	 */
+ 	ctx->commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
+@@ -1984,7 +1984,7 @@ xlog_cil_force_seq(
+ 
+ 	/*
+ 	 * We detected a shutdown in progress. We need to trigger the log force
+-	 * to pass through it's iclog state machine error handling, even though
++	 * to pass through its iclog state machine error handling, even though
+ 	 * we are already in a shutdown state. Hence we can't return
+ 	 * NULLCOMMITLSN here as that has special meaning to log forces (i.e.
+ 	 * LSN is already stable), so we return a zero LSN instead.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 09e6678ca487..7da909930fa8 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2293,7 +2293,7 @@ xlog_recovery_process_trans(
+ 
+ 	/*
+ 	 * Callees must not free the trans structure. We'll decide if we need to
+-	 * free it or not based on the operation being done and it's result.
++	 * free it or not based on the operation being done and its result.
+ 	 */
+ 	switch (flags) {
+ 	/* expected flag values */
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index b994ff15d5e4..86a6fe23446d 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -281,10 +281,10 @@ xfs_dax_notify_dev_failure(
+ 		xfs_info(mp, "Device is about to be removed!");
+ 		/*
+ 		 * Freeze fs to prevent new mappings from being created.
+-		 * - Keep going on if others already hold the kernel forzen.
++		 * - Keep going on if others already hold the kernel frozen.
+ 		 * - Keep going on if other errors too because this device is
+ 		 *   starting to fail.
+-		 * - If kernel frozen state is hold successfully here, thaw it
++		 * - If kernel frozen state is held successfully here, thaw it
+ 		 *   here as well at the end.
+ 		 */
+ 		kernel_frozen = xfs_dax_notify_failure_freeze(mp) == 0;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 148cc32449c1..9f093320e749 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -84,7 +84,7 @@ xfs_trans_free(
+  * permanent log reservation of the given transaction.  The remaining
+  * unused block and rt extent reservations are also inherited.  This
+  * implies that the original transaction is no longer allowed to allocate
+- * blocks.  Locks and log items, however, are no inherited.  They must
++ * blocks.  Locks and log items, however, are not inherited.  They must
+  * be added to the new transaction explicitly.
+  */
+ STATIC struct xfs_trans *
+@@ -1056,7 +1056,7 @@ xfs_trans_roll(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the inode to it, and reserve quota.
++ * Allocate a transaction, lock and join the inode to it, and reserve quota.
+  *
+  * The caller must ensure that the on-disk dquots attached to this inode have
+  * already been allocated and initialized.  The caller is responsible for
+@@ -1184,7 +1184,7 @@ xfs_trans_reserve_more_inode(
+ }
+ 
+ /*
+- * Allocate an transaction in preparation for inode creation by reserving quota
++ * Allocate a transaction in preparation for inode creation by reserving quota
+  * against the given dquots.  Callers are not required to hold any inode locks.
+  */
+ int
+@@ -1234,7 +1234,7 @@ xfs_trans_alloc_icreate(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the inode to it, and reserve quota
++ * Allocate a transaction, lock and join the inode to it, and reserve quota
+  * in preparation for inode attribute changes that include uid, gid, or prid
+  * changes.
+  *
+@@ -1348,7 +1348,7 @@ xfs_trans_alloc_ichange(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the directory and child inodes to it,
++ * Allocate a transaction, lock and join the directory and child inodes to it,
+  * and reserve quota for a directory update.  If there isn't sufficient space,
+  * @dblocks will be set to zero for a reservationless directory update and
+  * @nospace_error will be set to a negative errno describing the space
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 95db73a37e57..f8e98f8b97e4 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -274,7 +274,7 @@ xfs_trans_read_buf_map(
+ 		 *
+ 		 * If the buffer passes verification we'll let this go, but if
+ 		 * not we have to shut down.  Let the transaction cleanup code
+-		 * release this buffer when it kills the tranaction.
++		 * release this buffer when it kills the transaction.
+ 		 */
+ 		ASSERT(bp->b_ops != NULL);
+ 		error = xfs_buf_reverify(bp, ops);
+-- 
+2.20.1
 
-- iomap_dio_alloc_bio()
-   This one is a little tricky, if we pass GFP_NOWAIT, we can break the
-   old assumption that the function will always return a bio.
-
-- fscrypt_set_bio_crypt_ctx()
-   This one is fine so far, as neither XFS nor btrfs support fscrypt yet.
-
-And any memory allocation failure in NOWAIT mode should return -EAGAIN,=20
-not -ENOMEM so that the caller can retry in blocking mode as a fallback.
-
-To me, considering NOWAIT itself is only an optimistic flag, and caller=20
-should always have a blocking mode as fallback, I'd prefer to reject=20
-NOWAIT + BOUNCE direct writes completely inside btrfs for now.
-
-And leave all the missing NOWAIT handling in iomap in a dedicated series.
-
-Would that be acceptable to you?
-
-Thanks,
-Qu
