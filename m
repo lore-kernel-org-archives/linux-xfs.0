@@ -1,45 +1,46 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6B72BE026;
-	Tue, 16 Jun 2026 13:31:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 506CD2BE026;
+	Tue, 16 Jun 2026 13:32:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781616701; cv=none; b=QYbckgngqoMfq06UrU/awt20DW4RTPOzSkUqPx/UY1jTkhzCJOMrXZ8m/lIPujSH+K+83s0iCqWMygQqTdFe9DhUbCgvKK4ICXs6TqjdWCi5jRb5qUL63eQ9xpb26RjdUq2xxGCy6Kmz2il8sYE9pdCgWXB6/Jna0RhggIm0Wjg=
+	t=1781616724; cv=none; b=cjoMg3J8MaLUXXzR+dxvPX1AR0/OZnzdVvIGOQtkQb9efD5rsLeXO2DUgblwpX+ztq961Sb/JJx4rJckMVmyCFd54rchIHlVTVGrDcCUq93s+HCGcVebp/gjQsOL7pUCRlEyTSyJLjSqUuGY9/NpndhMGAGqQ0n0mxtSC14YhDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781616701; c=relaxed/simple;
-	bh=BTsFxLJimawtoe7HwSUkU6BfYRMpE+5vTHPsq/M0BwI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=GHuhLZATe+g4fCRa8w93m78FW0RVIwB46qYFNyO8vJKlqrs+pmo+oV1TfPsFrudmeJa0eTwp5sOrBrt2CZ+7wWSLzeRdnHa0VEF1yw8mJWaliEOsUAQzP+RfMD0gISlIWaE2nagJHwIjpnA6DMkPmhsr4UA26uXnCtHb3VBFes0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SHQrRDJf; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1781616724; c=relaxed/simple;
+	bh=9Lg1J7A4O8tyIczW9feMfYwxsXwLwMsgsLPQDTWGkPQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UJMywr+mTo0l9x8SMr0J4XpgtiOEZ+fJQflTMgVejF93M5naR0pJm+BpFPWH94s+7HeBpfYNB7jRkweYirGeojhmGw0hSdll95iXaSR062zn4HTXSUmWin6i3jbYqKshoMcf4fQVx1CVNb0Q09ljFgPApS4GzM5lFrIYzapS1dE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=nMSzF8R3; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SHQrRDJf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding
-	:Content-ID:Content-Description:References;
-	bh=li/q7nG5OrUyFHVdKJCEGvzSB4i/lEH7jxizLG5hQkc=; b=SHQrRDJfcDwVYGoZNoTaXlHlkh
-	M+D+ZAY1tWe2WQKByW66Ag86ZaP9wcu3/YD1NgP1M0HM8PKV/89xThVV5TdP7Xim1so+FS0hBfcUQ
-	ixDzNh4aUg6zjJPWxenOzYPeXnf0EFgl3R3EmTk+bLPQH6m9p1VSKCqZZmCALZk2q3QAPazfUf6P6
-	cxKNNcq6QHZ+iWr9nkFLDA4HhyyZW3uGNf2Vycng3Ki/93fAfkbDGsJbYpK/9d1S706dBuOm4brf/
-	t65K4XnoSfzDRPhENXdYrv4jDgnEoNlYziZb3ByR3SuR4MM9iHNAgrkDVPrUv8mXt+xGXm2Dz5+AY
-	lbA/Te8A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wZTtE-0000000FqUR-1WKL;
-	Tue, 16 Jun 2026 13:31:40 +0000
-Date: Tue, 16 Jun 2026 06:31:40 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
-	"Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org,
-	gost.dev@samsung.com, pankaj.raghav@linux.dev, andres@anarazel.de,
-	kundan.kumar@samsung.com, cem@kernel.org,
-	Zhang Yi <yi.zhang@huawei.com>, linux-fsdevel@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Message-ID: <ajFQPANpajmFuKpi@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="nMSzF8R3"
+Received: by linux.microsoft.com (Postfix, from userid 1216)
+	id EA72620B716A; Tue, 16 Jun 2026 06:31:41 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EA72620B716A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1781616701;
+	bh=1L59/F0MlY1PyEzER7lNpGooBsayOF3108pPWJiREgc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nMSzF8R3JSbBi1eOF8Be5Wy4X8vcUC7njNyiUG+qm9C5qEoEqbSs1iZvQ6oC+mu+f
+	 SmPhvl1pt/2//CrxP0CuSUbSjru44o/8wWC2/PYUpbhHiUh43Wf0ZGVVv5cF/fZVH0
+	 zI3e3jHR7HFsk9j4HM+VB6U953Rt/VvCuMr+1KI8=
+Date: Tue, 16 Jun 2026 09:31:41 -0400
+From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Sasha Levin <sashal@kernel.org>, Fedor Pchelkin <pchelkin@ispras.ru>,
+	Leah Rumancik <leah.rumancik@gmail.com>, stable@vger.kernel.org,
+	xfs-stable@lists.linux.dev, "Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Catherine Hoang <catherine.hoang@oracle.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	lvc-project@linuxtesting.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6.6 0/4] fix kernel crash for xfs/235 test
+Message-ID: <ajFQPY2m2A6ltvTH@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20250322143418.216654-1-pchelkin@ispras.ru>
+ <aisAxyXVxf4wql2u@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <20260612233110.2-1-sashal@kernel.org>
+ <ajBQPNuKCruxhkXX@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <ajD3Gb-vQkGU0N6b@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,61 +49,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260611114029.176200-4-p.raghav@samsung.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ajD3Gb-vQkGU0N6b@nidhogg.toxiclabs.cc>
 
-[API questions for Zhang and -fsdevel/ -api below)
+Cc: linux-xfs@vger.kernel.org
 
-> +	unsigned int		blksize = i_blocksize(inode);
-> +	loff_t			offset_aligned = round_down(offset, blksize);
+On Tue, Jun 16, 2026 at 09:13:45AM +0200, Carlos Maiolino wrote:
+> On Mon, Jun 15, 2026 at 03:19:24PM -0400, Hamza Mahfooz wrote:
+> > Cc: Carlos Maiolino <cem@kernel.org>
+> 
+> FWIW I don't maintain the stable trees I really don't have time for
+> that. Darrick/Leah have been doing a best effort case for that, but
+> again, this is mostly a best effort so we shouldn't expect them to be
+> looking/picking up every single possible patch suggested for stable.
+> 
 
-I think this actually needs to found up instead of rounding down.
+Now that you mention it, the xfs-stable mailing list seems to be pretty
+much dead (i.e. the last time fixes from it were merged into stable was
+almost a year ago). I guess no one is really working on it anymore?
 
-> +	/*
-> +	 * Zero the tail of the old EOF block and any space up to the new
-> +	 * offset.
-> +	 * In the usual truncate path, xfs_falloc_setsize takes care of
-> +	 * zeroing those blocks.
-> +	 */
-> +	if (offset_aligned > old_size) {
-> +		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
-> +		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-> +				NULL, &did_zero);
-> +		if (error)
-> +			return error;
-> +	}
-
-... then this will properly zero from the old i_size to the first block
-boundary after the old size.
-
-> +	error = xfs_alloc_file_space(ip, offset, len,
-> +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-
-... and here we need to pass offset_aligned instead of offset and
-a new calculated len based on the last block boundary, and then
-zero again after that.  That is assuming FALLOC_FL_WRITE_ZEROES
-allows unaligned ranges for file systems.  The block code doesn't,
-but I can't quite follow the ext4 code if it does or not, and there
-is no mention of FALLOC_FL_WRITE_ZEROES even in the latest man-pages
-tree.
-
-Maybe we also want xfstests that try unaligned FALLOC_FL_WRITE_ZEROES
-and make sure no existing data before the range is lost and the
-entire range is zeroed?
-
-
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * xfs_falloc_setsize() would re-zero the written extents via
-> +	 * iomap_zero_range(). Use xfs_setfilesize() instead.
-> +	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
-> +	 * size to it.
-> +	 */
-> +	if (new_size > i_size_read(inode))
-> +		i_size_write(inode, new_size);
-
-I think Sashiko is right that we need a pagecache_isize_extended and
-filemap_write_and_wait_range calls here.
-
+> > 
+> > On Fri, Jun 12, 2026 at 08:20:34PM -0400, Sasha Levin wrote:
+> > > On Wed, Jun 11, 2026 at 02:39:03PM -0400, Hamza Mahfooz wrote:
+> > > > Any idea what happened to this series? It resolves an issue that I've
+> > > > hit in a production environment FWIW.
+> > > >
+> > > > Series is:
+> > > >
+> > > > Tested-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+> > > 
+> > > Thanks for the nudge, and thanks Fedor for putting the backport together.
+> > > 
+> > > We generally don't take XFS backports without a maintainer signing off on them,
+> > > so right now we're waiting for one to do so :)
+> > > 
+> > > --
+> > > Thanks,
+> > > Sasha
