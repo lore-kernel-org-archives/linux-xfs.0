@@ -1,159 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE882FE59C;
-	Wed, 17 Jun 2026 11:21:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A537F271A71
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 11:42:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781695279; cv=none; b=KwUz0xP0OcLxWSvm8KzxYRqudEQdFEt9gUIC1JhhWdV+cmH4iE9YYY/kmunsRemWQxRfRlFw+gEBdDmKxdVr7qKQsXiDhIHe8rutVgALoyb9FXfnsCmgD4UgA2b6DcP846U/LfrSLGX1W4YiEhM9tW3LrH6snlKFUVHF/Yqpamo=
+	t=1781696579; cv=none; b=CXrcfA1Od1D/CpwokHth5j0RmUjQKdiRfLQvrNCtzbhZeRQ0iJhHitGf+RQm7M/wjMx8nH8ZujlsM46chCgud7ukLHiool07+qgGvkijR7RJDWbekxbG4BYe6YAQRcuLE0cbjiAuvewU/cPYtvl66RKYbTPQ242jrqXIJUr/k5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781695279; c=relaxed/simple;
-	bh=tP+rzeiwVmUa4nR6xHtbZjF3mtJAU9ICVrvCdW3HQX8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IJucNqqhCOq+2CRsT7XBdth2LDx911yKMJglFfI2lCQfl0T1bGL7rRDG2tbMCnZRSvNMBSdpJ7RirqJ1roq66MPfJ/E7dib+c1mlaa7KoL0UhM/vo50VjjvzNYh0Qc2011IGdaaym3ejyUU9G507338kC/YDsnhlIanjdTsFf/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcnZlyNq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781696579; c=relaxed/simple;
+	bh=IGwM/eBfzi3jxrzplcOShTe+PJAIsBp8WpPaiCkQvGM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EsFyVAxRFmqZk0dimm9JHgsdRof02g/uwV5//4wsTnsrbdhhbv4QcnWIkT+hEt9lCDJEJyGHwFw+2JVJ+wuKK1k0errh7q0COc8URt0kGNDfVVgZ7pbRoIMPEUUh3gcQRHWjqs8HwXWfqhLdf36xwaB72VM/BOOFCYgqcl4WoXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XVfxMRke; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcnZlyNq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 866FB1F00A3E;
-	Wed, 17 Jun 2026 11:21:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781695276;
-	bh=qcH4sN23EYZsX+hkptHPBiYMtvNCnMjEtuTUDDaOdLg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IcnZlyNqeJg9cOc8R+KHh1pthzTkpcj4oV+dULG88BsbeA5nf4xvkEP36pzJanbGv
-	 2NyGQt3aqbXlIIAYdMI+4W0qV1SpytTX6W/aaKEt5XCnbwLtM9dKxQmC90R6SOT3UQ
-	 WCEcJbDfKLIsYAwd0uHgz9rDX0WEQa/FeWw9uU/1iV4EO92hs6lGhn85XbrkpLmwyE
-	 dBFPw2x5uww5GRh5IcMQTNq+tOpLrLRGNzgZT/Z4+FhuEns0JFdYxXv7GIigDMh8LO
-	 T6zClUoAtdDuPdGl76kzedEf7jKmMrLnfpazQciZYVsNtVnG5PHUlnsvZCMiTXbYO7
-	 KO0iX3OL9iMrA==
-From: Anand Jain <asj@kernel.org>
-To: fstests@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	zlang@redhat.com,
-	hch@infradead.org,
-	djwong@kernel.org
-Subject: [PATCH v7 11/11] fstests: test UUID consistency for clones with metadata_uuid
-Date: Wed, 17 Jun 2026 19:20:38 +0800
-Message-ID: <01427e737e37032c9cead978a6f79c981f4b92b4.1781694879.git.asj@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1781694879.git.asj@kernel.org>
-References: <cover.1781694879.git.asj@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XVfxMRke"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781696576;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=VN9WNHTA1ZjmNHefd5fG67Hik0Y72dU4DcgNv+nHzjM=;
+	b=XVfxMRkesP7bgZIyqYTfyeSMdhcQV+3naDfdtXRJ7c1OFjRvUxOozHQ2NZCoqKZHP3qiO1
+	ha3pP2Cp27e6U5si8QOv0w8YtFCZQCOOrjVoKSwfJrUPhEoPHVnMo1ELUZb0VFufvHG/d+
+	l0tw9tEJP1m2FSBUuHuY2EkeM01XDj8=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-564-ImLf3wXcMfuynWNEtOIWKg-1; Wed,
+ 17 Jun 2026 07:42:55 -0400
+X-MC-Unique: ImLf3wXcMfuynWNEtOIWKg-1
+X-Mimecast-MFC-AGG-ID: ImLf3wXcMfuynWNEtOIWKg_1781696574
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 63CE219540DE;
+	Wed, 17 Jun 2026 11:42:54 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.89.36])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D9CC71955BC2;
+	Wed, 17 Jun 2026 11:42:53 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] iomap: always return status from iomap_write_iter
+Date: Wed, 17 Jun 2026 07:42:53 -0400
+Message-ID: <20260617114253.635751-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Btrfs and xfs uses the metadata_uuid superblock feature to change the
-on-disk UUID without rewriting every block header. This patch adds a
-sanity check to ensure UUID consistency when a filesystem with
-metadata_uuid enabled is cloned.
+iomap_write_iter() returns either an error code or 0 if partial
+progress has been made. The error sanitization was required in the
+past because the return value was used by iomap_iter() to determine
+how much progress was made, and thus what to pass to ->iomap_end()
+and how much to advance the iter.
 
-Signed-off-by: Anand Jain <asj@kernel.org>
+Now that iter handlers advance the iter incrementally and progress
+is separate from return status, this is no longer needed.
+iomap_iter() infers partial progress directly from the iter state
+and similarly, iomap_file_buffered_write() uses iter.pos to
+determine whether to return a short write or an error code.
+
+This also eliminates a minor quirk in the write iteration where if
+an error interrupts a partial write, we'd have to loop back into
+iomap_write_iter() once more and run into the error a second time
+before iomap terminates the operation and returns the error. With
+the error code returned directly and separate from write progress,
+we can complete the operation and return from iomap_iter()
+immediately.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/generic/806     | 74 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/806.out |  6 ++++
- 2 files changed, 80 insertions(+)
- create mode 100644 tests/generic/806
- create mode 100644 tests/generic/806.out
+ fs/iomap/buffered-io.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/tests/generic/806 b/tests/generic/806
-new file mode 100644
-index 000000000000..6d3166491006
---- /dev/null
-+++ b/tests/generic/806
-@@ -0,0 +1,74 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
-+#
-+# FS QA Test 806
-+#
-+# Verify that the cloned filesystem UUID remains consistent, even when the
-+# `metadata_uuid` feature is enabled.
-+#
-+
-+. ./common/preamble
-+. ./common/filter
-+
-+_begin_fstest auto quick mount clone
-+
-+_require_test
-+_require_block_device $TEST_DEV
-+_require_loop
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -r -f $tmp.*
-+	umount $mnt1 $mnt2 2>/dev/null
-+	_loop_image_destroy "${devs[@]}" 2> /dev/null
-+}
-+
-+filter_pool()
-+{
-+	sed -e "s|${devs[0]}|DEV1|g" -e "s|${mnt1}|MNT1|g" \
-+	    -e "s|${devs[1]}|DEV2|g" -e "s|${mnt2}|MNT2|g" | _filter_spaces
-+}
-+
-+# Create base loop device and its clone, applying the metadata_uuid tuning
-+# callback to the base filesystem before the copy occurs.
-+devs=()
-+_loop_image_create_clone devs _change_metadata_uuid
-+mkdir -p $TEST_DIR/$seq
-+mnt1=$TEST_DIR/$seq/mnt1
-+mnt2=$TEST_DIR/$seq/mnt2
-+mkdir -p $mnt1
-+mkdir -p $mnt2
-+
-+# Get the uuid from the source device
-+fsuuid=$(blkid -s UUID -o value ${devs[0]})
-+
-+# Mount both clone and baseline
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+
-+findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+
-+# Cycle mounts and reverse the initialization order to ensure UUID tracking
-+# doesn't mismatch or flip when metadata_uuid optimization is active.
-+echo "**** mount cycle ****"
-+_unmount $mnt1
-+_unmount $mnt2
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
-+						_fail "Failed to mount dev2"
-+_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
-+						_fail "Failed to mount dev1"
-+
-+findmnt -o SOURCE,TARGET,UUID "${devs[0]}" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+findmnt -o SOURCE,TARGET,UUID "${devs[1]}" | tail -n +2 | \
-+				sed -e "s/${fsuuid}/FSUUID/g" | filter_pool
-+
-+status=0
-+exit
-diff --git a/tests/generic/806.out b/tests/generic/806.out
-new file mode 100644
-index 000000000000..918f422ecddf
---- /dev/null
-+++ b/tests/generic/806.out
-@@ -0,0 +1,6 @@
-+QA output created by 806
-+DEV1 MNT1 FSUUID
-+DEV2 MNT2 FSUUID
-+**** mount cycle ****
-+DEV1 MNT1 FSUUID
-+DEV2 MNT2 FSUUID
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8d4806dc46d4..fb1f60130cd0 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1156,7 +1156,6 @@ static bool iomap_write_end(struct iomap_iter *iter, size_t len, size_t copied,
+ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 		const struct iomap_write_ops *write_ops)
+ {
+-	ssize_t total_written = 0;
+ 	int status = 0;
+ 	struct address_space *mapping = iter->inode->i_mapping;
+ 	size_t chunk = mapping_max_folio_size(mapping);
+@@ -1252,12 +1251,11 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 				goto retry;
+ 			}
+ 		} else {
+-			total_written += written;
+ 			iomap_iter_advance(iter, written);
+ 		}
+ 	} while (iov_iter_count(i) && iomap_length(iter));
+ 
+-	return total_written ? 0 : status;
++	return status;
+ }
+ 
+ ssize_t
 -- 
-2.43.0
+2.54.0
 
