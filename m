@@ -1,81 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B65643F54AE;
-	Wed, 17 Jun 2026 13:17:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49AED35E95E;
+	Wed, 17 Jun 2026 19:34:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781702267; cv=none; b=hJ/zX+Aw+4vQjDW+PwZMvDbQNq49qAdT41+LrnMun9Ok34yaD4lpsvczSVSBW4eC+bm1QXf0zjfxtVJu6MnvMNY3mtd/EdL2+bAR7T7Yh39DswB2nZjL9vZaCOSHZDwUM9jEOHYqYo4dB3jxEm1wlYn6BeWrUfT19/MOPh5VDVo=
+	t=1781724845; cv=none; b=PNc9iMRSkopY0FfHvtvCZ+6VZO/VbnwFKjPmwwoNyENyN7/Qnus5FuAtD07CCjA9DvKh6Zd8r1tQYfOQTwzX9ROP9Hxd+uDq2IvHkEPWduY/sRrC5UZNBmwqtp+gqWPZo2F+s/1iH/PF/RnaB0/SOSIIGg3pruWFDtpd/xe4cn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781702267; c=relaxed/simple;
-	bh=YQeax/jw/6gyy/zMrMRBgesBAxyAFZRrHD/WGCSD4N0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=thopv280K4p1TMgkWC9SWZCMYRKuw74TxTjAeMOgd1mQqzeHWmwKoxRvFy2GapZuzPv7YJ4FyR5rJi8GFqnYIvBeD+3sXBUbCyCfXL8Tt1k3xBTZU7qfT/HcvACiFMkKxWNfSqxGwUi63WNtB399Iqv1NHV7iI9Q95pKq0zZDQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kcseBwJV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781724845; c=relaxed/simple;
+	bh=LnCfn0L8uW2K4ERRnDZfGkhWpJ5MFK/ivLwIyMb3UaM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f49jWBEeIPlSTwAPl9EM0IXZ0vd+DjNITQZrBFIBuy/MAr4fm3JMOHD7lF5LkFqsdjkYhwoYEhNakiScTJwv4GI1707HJX7Ar78wYTQq5j+n57s8AW0JrGSpniE1y67ef/W7VH0H3ddgo3WytxloRmfvcfjiv+LE6Sx7p+qLoCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D+qM9qgh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kcseBwJV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2A711F00A3A;
-	Wed, 17 Jun 2026 13:17:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D+qM9qgh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC7171F000E9;
+	Wed, 17 Jun 2026 19:34:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781702266;
-	bh=h6YWwZA+K4Pgd1tTW/ZkwrOBGEJ3MGr76cKv503XNyo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=kcseBwJV5sSdm5n0TMibN3g0OeFoi5zDELTFkLsIgFqLwrtX12B2o4ulvI9p4HlFt
-	 odwPiRVeOs93mkK2ijAbSNHBgmLGWrJlMWpxDP/6wQzNpuGe2CbpYCPpoETpuf9ees
-	 f6gfy/z9wTEXUkvLTGiX5AT/7KUr/SbyZfSEkf4laEciO2xHAyjhORUqgeAi3BDyb6
-	 I7Wph4hRWzyHbrmgYWAW68B1dQPJQaqZ1q2k4vQOoQN4Up1uXTUw+YUGkT+odSblpX
-	 YKlZRvCVX8nqtViDLl8B+xg6HComcVdFqW0Ua4Y+iUIYfSAo5aJGTKMCEouzZCLmmb
-	 3mW20vhz5y4nw==
-From: Christian Brauner <brauner@kernel.org>
-To: djwong@kernel.org,
-	hch@lst.de,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Fengnan Chang <changfengnan@bytedance.com>
-Cc: Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v1] iomap: release pages on atomic dio size mismatch
-Date: Wed, 17 Jun 2026 15:17:40 +0200
-Message-ID: <20260617-anrief-spinat-gockel-d6afafd0a725@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260612044041.10677-1-changfengnan@bytedance.com>
-References: <20260612044041.10677-1-changfengnan@bytedance.com>
+	s=k20260515; t=1781724843;
+	bh=ffTa6hHqaK5+3W/CzirDC27Xv4cD99ayVp21XfNvBT4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=D+qM9qgh1RCkp4OaBaHqkLm1u7rA8G/drXle19wNaPkdaDW2rZ9NmvQRGwg/3h1xj
+	 5TmfMOUn59Rs8o0UD03K/Qr3+jFGJOXyQtIDZsbtkDVULuJxA+lp8QSpT9MwzzAviY
+	 zaFqBorGE2TlChE8R+XpaJehjU0Hm0y/LTbrGoKYhUtzLG5POxCBY6166/+hxUv69o
+	 045pgf7JllLISNCQhxa5EruCk4h89mP4sy81cM0uHl5K3EslQr0M4Q18/4oXgLm6Ct
+	 Qt+s+f9vTHYzFXLidlt8LhRofdrSIJsH2IuAyZmC6zszIWm56MDfG4v+cjdpkxJqQB
+	 f6X+5uQMCbrhg==
+Date: Thu, 18 Jun 2026 03:33:59 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: Disha Goel <disgoel@linux.ibm.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, ritesh.list@gmail.com, 
+	ojaswin@linux.ibm.com, djwong@kernel.org
+Subject: Re: [PATCH v3] common/defrag: skip defrag tests on DAX-enabled
+ filesystems
+Message-ID: <ajL2TaegDxDpPPk8@zlang-mailbox>
+Mail-Followup-To: Disha Goel <disgoel@linux.ibm.com>, 
+	fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org
+References: <20260608102328.40916-1-disgoel@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1192; i=brauner@kernel.org; h=from:subject:message-id; bh=YQeax/jw/6gyy/zMrMRBgesBAxyAFZRrHD/WGCSD4N0=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZzSv1mLeHw1bmWvky/YNhGTJfvi28XBcqIynTE7J+5 VuzeialjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIl4/Gb4nxMn8/sL69eMS0+M Tebd7/8/661wNdPha+2f1rYfzHLius3IcNxv4/oH7HdYog/dcmw9n3g86rBwoGPYoi3b9l7jacp xYwcA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260608102328.40916-1-disgoel@linux.ibm.com>
 
-On Fri, 12 Jun 2026 12:40:41 +0800, Fengnan Chang wrote:
-> If bio_iov_iter_get_pages() or the bounce helper succeeds but builds a
-> short bio, the REQ_ATOMIC size check rejects it before submission.  The
-> old error path only dropped the bio reference, leaving any pages already
-> attached to the bio unreleased.
+On Mon, Jun 08, 2026 at 03:53:28PM +0530, Disha Goel wrote:
+> Online defragmentation is not supported on ext4 DAX-enabled filesystems.
+> The ext4 defrag ioctl (EXT4_IOC_MOVE_EXT) returns EOPNOTSUPP when used
+> on DAX files.
 > 
-> Release or unbounce the pages before falling through to out_put_bio on
-> this error path.
+> Add an ext4-specific check in _require_defrag() to skip tests when DAX
+> is enabled, avoiding false failures on ext4/301-304, ext4/308, and
+> generic/018.
 > 
-> [...]
+> XFS defrag works with DAX, so this check is ext4-specific.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Disha Goel <disgoel@linux.ibm.com>
+> Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> ---
+> Changes in v3:
+> - Move the DAX check inside the ext4 case statement as
+>   suggested by Darrick
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+Make sense to me,
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+Reviewed-by: Zorro Lang <zlang@kernel.org>
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/1] iomap: release pages on atomic dio size mismatch
-      https://git.kernel.org/vfs/vfs/c/7d9491184bf7
+> 
+>  common/defrag | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/common/defrag b/common/defrag
+> index 055d0d0e..baf05d94 100644
+> --- a/common/defrag
+> +++ b/common/defrag
+> @@ -13,6 +13,8 @@ _require_defrag()
+>          DEFRAG_PROG="$XFS_FSR_PROG"
+>  	;;
+>      ext4)
+> +        __scratch_uses_fsdax && _notrun "ext4 online defrag not supported with DAX"
+> +
+>  	testfile="$TEST_DIR/$$-test.defrag"
+>  	donorfile="$TEST_DIR/$$-donor.defrag"
+>  	bsize=`_get_block_size $TEST_DIR`
+> -- 
+> 2.45.1
+> 
+> 
