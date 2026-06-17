@@ -1,89 +1,89 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5794071EC
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 10:34:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F7B405C54
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 10:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781692482; cv=none; b=gndjS7m1znQHh88JbbGgO9qp3ZRJQfpeddmXWV2z2KvPPHrHpro4MrCBIW6sNnPichAlSSVMoTGtUjk1xPqhvwNe9A7x+7l6GUwlzPHUWjVVDc0YmLwmeXzWZh7xKRycgReBr//G34QJtrj+zP+jV+P8cVeFaC+lquxul5QWES4=
+	t=1781692504; cv=none; b=pkPc0ETSiEAOv79tiMTwfzZs13XkaL6ZuK2eS/9a5/QC4M8PxWAmKAurwktR9z3jRi4meNQdxSTZROWcjb5aSvh93XmMSdLvkiErZHSqpgxbuXc/hH1PCfteIDXCuo31fKifZqCoYsRe1IqjV1A4ib2u26lTJbgVlWzMCmF2geY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781692482; c=relaxed/simple;
-	bh=9aW1rhkkIbM+Q+KgcsUjwLGzPDXVM//pQ4QgOMLunpo=;
+	s=arc-20240116; t=1781692504; c=relaxed/simple;
+	bh=7LvJBNrCOsdO+Iqg7GxV85IP0uM/07EsbX5Zo/PdvTU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IgoF1B/0zciSgGRHiOwW8/A73LG9HzZhwFNu3z0Mwse2EHw46hr0D381G5WLxqtxeCDIoybliDIuSB96Qex9sqGKVfWjp9HD6m8X+xiczKui5Rhdkc9fUTfdTMjXClP9pPA5NkBv7RiUix0uEqiigVUHpBhhrIFomraR1DBkSww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NU2nirhG; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=WwkA0+5N; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=MTE47LV1ze2Sv07H+OnDHsiGbSdqck/CufEN9rJWFiTBwaDv16dkZWcMHhH8RS5p7IcQGdrjB2YkRWtvJE3EP+FZn5kqB6BUp9/NVLeWEhJ4vRC4FTu65F/4MaKPXhmG/XrkYDUA3oZb539xHR8pHKgfzp6RjsczmL/66CM/9vY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dxpFmEwt; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=KpE2CKQr; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NU2nirhG";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="WwkA0+5N"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dxpFmEwt";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="KpE2CKQr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781692477;
+	s=mimecast20190719; t=1781692499;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qYQ25JXF2h3u5YJax92+p7fDtQAgPJjHiW8JQ4HKvkA=;
-	b=NU2nirhGD9EOIJYsnYI6GRDcT21uRMbgzn8zVSa9k3c0zlwHX8ECr8edpzLvTfQ7BDQubh
-	65+FR997exHAA7XUk4+EUN7MH+EittXW9NUfutXyXRNx+udElUai6ONFU+QyKMW8D2TjcP
-	QdP1r2GlF1bOv9LojEgygYh575t6fwY=
+	bh=hrtxT73Xq7XoN/8m1K2SzFEraWMChjq663Y9uWGHxXE=;
+	b=dxpFmEwtghX3F4r7gdnxsDavJRC0qEynKSlFnDcDFNZMqfzokqnbEb4ZKsPxJTrrMqVFn3
+	Y2TnFKGKd+il+ivza5p4ZdMhmDY4b789qScf1LL8uA7APL5eZ0n8uSc9Mcx7ybLcdxjiOG
+	CNtuxn82W/n/xP4LfVDH8vom866Z4XA=
 Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
  [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-464-DGToIMYSOiqwEL6A8qLKkA-1; Wed, 17 Jun 2026 06:34:36 -0400
-X-MC-Unique: DGToIMYSOiqwEL6A8qLKkA-1
-X-Mimecast-MFC-AGG-ID: DGToIMYSOiqwEL6A8qLKkA_1781692475
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-460129ef947so3837954f8f.1
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 03:34:35 -0700 (PDT)
+ us-mta-279-3RbPXbEdMeuQLuuv53u8wA-1; Wed, 17 Jun 2026 06:34:57 -0400
+X-MC-Unique: 3RbPXbEdMeuQLuuv53u8wA-1
+X-Mimecast-MFC-AGG-ID: 3RbPXbEdMeuQLuuv53u8wA_1781692496
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-4625e71d3ccso469894f8f.0
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 03:34:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1781692475; x=1782297275; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1781692496; x=1782297296; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qYQ25JXF2h3u5YJax92+p7fDtQAgPJjHiW8JQ4HKvkA=;
-        b=WwkA0+5Nx9RSX8a5jW9koCWwET6ta9tv4vRa3nLRPbJkJ01hy0s/S2TMJJv354IXrn
-         kwnJckrN1uHAlvPbAKETMGPyAsa/DgED6JE7sJHI7qsnY89rvYIbODXYoolyxpvOgSAX
-         KuHStNLYN4jYDDBv8ixMqW+iOY7S2byGClbSppZ/kyMx+dHLgRgrhou1Nr86g1NEC3FE
-         pRHTOxKIMgWro3OE7Te/dbvpjPLoWQ5Sjqh/lqdOn+TrieDnftrn+fbgIUjMtxJ5IdkB
-         MFrpXfT/9nGmt7BnLJMaMbdihsXOIXzkzi9iHrCwmz4sRzWeWb5otqCsXhFNEC2YMjEH
-         B3nw==
+        bh=hrtxT73Xq7XoN/8m1K2SzFEraWMChjq663Y9uWGHxXE=;
+        b=KpE2CKQrUbkKSk0kl+A7Rg7Wyp2Sl6LatZTT3b0cUcLSxtnoKHWQDaPByNB/xUC/9k
+         7BDdTuAQrs6CLVu1LT5JFEcf0fNc++oBxfPB0yGo8F2baODf6Lgo+Z0zEUeT4XMvGwL3
+         dzvxUiXAzc5Aal/LFlVXJtPZxjJHbNoWAoDpC52BOpyieNQl4OyMwr95xatNHP0diTJk
+         Fl0fbzJYZhxD9Y6ttFPJQscZv+M7efehvQOAthAzfV+ALWATKNwkd2zuKQQhelgkIHuV
+         yunELSvIm9DNsODISp2OXT3zBeBGltC4mKK/EjRF5orc+kRRjtRbQmzMgRyCUQxYBsAb
+         zXbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781692475; x=1782297275;
+        d=1e100.net; s=20251104; t=1781692496; x=1782297296;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=qYQ25JXF2h3u5YJax92+p7fDtQAgPJjHiW8JQ4HKvkA=;
-        b=jEXn3wqCKkD2qHct6W/ZYVu0YbvlF2Z78BRcnaTrZO95C/sAy7fwAnkZKVLOEcPiZc
-         ercHKkinXtRQBCKIdlmh5I9cq3k3ihRHcgXfjLuP9jBHsIWQ2Qhfdezgkadh84H8NbZp
-         dofIaxmGf/mCq2he6sD5dU7RlVmk0yBRTLasPfh9SahI0NR0O+g3c9iDBxFpOpCGoMV3
-         mDiELCNQe9rr7M4wT0lCYjalxFU9GdMhEvVSCkyTkN22xHJlFL3kzlmaZ1JmczIBuVeE
-         Zn/xPOmrHLgDn1B+nYHtbE8WXOfFbmIiZR+h3pgj0ZehaCKd84t+kWrhwqj2DoNYTL9j
-         FUZg==
-X-Forwarded-Encrypted: i=1; AFNElJ9c0UCQFCsScnw0xBCu0KFoQtnz/Tp/X90+27oNiZI5eDsOrCjKyMVHFp9QiZ0zqRWBl8GvlAlF7gQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzo0cDjMD4KjcjWNj2Ih1ZlkWiFJ4O/xguA7ogFhQmnm1nUBYal
-	r7zGI+75jzHpYMrrx9KDIEsDnQ9DRa7PpYPn5t7wvxLc3hx+0Gs7j2S4u16KPEu6UhGvf+mgi/W
-	FvWg0BdWOVCarlCKYzV9p1asskca000amPBqtu1qeOJJWgYiyBeSxmK408oSR
-X-Gm-Gg: Acq92OHaIXbb8GaJ+ojGsj/ykxE60Es4yFrPL/SUYNiW2BboIbnpj9IAVEwWC656Is3
-	RG2GtBb+AJHW3FxJBYjmr6C8MdG9gVy76hiAzT3wFAZSxYijdHs4Ier+AVwj9xaX3o+3jj0iT2q
-	XtTb/joossGTO+DwmrhRSeETuvWFwN3n6G3AjLUWfFsD2sNXSqp8Y1KM46dsKu9MXd3ysh/JQh1
-	qfD7/mxKbcl29fUNts3MolteeE3hsQVmftKTF8Dl3SvBPD4ccz5ad844D+pAv5GJ+v18dJ5n93G
-	IoFxSDxzN3D9ySa/gBWYwGt5A79BwAe7HWeDJHmGV3owcrjDU1A5WXV22qRXOA2fB8b/9Zq9fU+
-	aQ8xgGmbo6weEwp34BEMz15iCcsdjwocwjHON9EQXpCjz1Q==
-X-Received: by 2002:a05:600c:8189:b0:490:b355:9c70 with SMTP id 5b1f17b1804b1-492333aaa9emr53396635e9.11.1781692474631;
-        Wed, 17 Jun 2026 03:34:34 -0700 (PDT)
-X-Received: by 2002:a05:600c:8189:b0:490:b355:9c70 with SMTP id 5b1f17b1804b1-492333aaa9emr53395995e9.11.1781692474079;
-        Wed, 17 Jun 2026 03:34:34 -0700 (PDT)
+        bh=hrtxT73Xq7XoN/8m1K2SzFEraWMChjq663Y9uWGHxXE=;
+        b=aezd/y/rgz2Xsq09BlUZbREM6b7++684Ta2K1KJXASZs9vkMK88ouYUXUv9bld6Jcf
+         ewKOHj2JLOihJOXgVNArKWkubLX3pkoLbZJchca46MwRMR/kb/b9PUD/5SjAZHEGI4/+
+         kdZOB2DM/CBmwJitqPZ8af6ZYDcikjvtA/Z+kiXtQfcR+D547Zog63lHKTAYLJIIVZbk
+         1SAdxruWEhjF8Gj+X8kis3QkWOQMkCGrJTKEExXfc+YpunboupPlHbV3NLNwrQ1m9bhM
+         PVDP3WPU3C+wSm+Va08cXlpsWn1Ta9fRTLg3trq/qzhzDq+iaBoRyCpl1sC+z5Aw/+O1
+         gZpA==
+X-Forwarded-Encrypted: i=1; AFNElJ/WBL8DX+Ewlh+eletGw1W7dMKFi9zwsZ5VWY9ZYH9yDBS7bdtq1gt4gg/tKdQjP5iPs8hbkTRdTdk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQLUjmPbxC5JXd8AiX/gXlijmWbg+nS9OCWgZvmBqJiRdGyAGV
+	FqMZ5h2bERWze6CmrVOuDrkEJOyVreUp5lxQE90dyu+8bIoFUqFiTNKh0x1fvlQUjioH7TMd6co
+	hVqr2hysYzkibvoWQaWJlooq8ziS+JQjzAZq7Ivz74dyf+g7mUQp2lyqLTagdWXqQxK/P
+X-Gm-Gg: AfdE7cm0OPoUq9VTeG8uM118nPVXNGzAICzM/dowmc/7NG5L6DfjdSjeCXxnZKeFSzd
+	eYDrziQmAfT0eF1sA3NeDEfC3uFUTc/eeN9e8vnXHKBBPYg7wXIb8cH7898zE7Z5ViUj9bFxWtE
+	yMzHaAguRPyqvejOsUl6sEYxJFc2O73uFYm3yGQpnSIiaKjnmblNZ2+48oZVU3SFeCdRM0hnAiY
+	mFgaHuPbMI8giLSThHbx+ZdWNhlUbEcCzkaExh5l7j7/kHTyhqDgJUrtKd5PoO89ZP4Kmf/JI4F
+	bX0l83ufKMzwrsDOsdgH2qDfGWHoBzfTWWQFgiKMOADa+svkqMoW2GkeXtQbjWozZ8VqYBpieef
+	H7n0JDFUqpDjTKS58FfhTXcxNYblaeGMRCLxKKTqlxShAPQ==
+X-Received: by 2002:adf:e846:0:b0:460:2e53:a6f6 with SMTP id ffacd0b85a97d-4626acf77ffmr2746850f8f.12.1781692496418;
+        Wed, 17 Jun 2026 03:34:56 -0700 (PDT)
+X-Received: by 2002:adf:e846:0:b0:460:2e53:a6f6 with SMTP id ffacd0b85a97d-4626acf77ffmr2746806f8f.12.1781692495853;
+        Wed, 17 Jun 2026 03:34:55 -0700 (PDT)
 Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-492368602a6sm3752565e9.0.2026.06.17.03.34.33
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b0d70sm53208390f8f.19.2026.06.17.03.34.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 03:34:33 -0700 (PDT)
-Date: Wed, 17 Jun 2026 12:34:33 +0200
+        Wed, 17 Jun 2026 03:34:55 -0700 (PDT)
+Date: Wed, 17 Jun 2026 12:34:55 +0200
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs_healer_start: check listmount when doing a
- --check
-Message-ID: <ajJ4KyLDOyhvHa9s@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 2/6] xfs_healer: don't allow aliasing of mon_fd in
+ setup_monitor
+Message-ID: <ajJ4PwifqmpwaRJN@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
 References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
- <178118661298.728615.3080573416824854151.stgit@frogsfrogsfrogs>
+ <178118661279.728615.16193461564655914882.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -92,16 +92,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178118661298.728615.3080573416824854151.stgit@frogsfrogsfrogs>
+In-Reply-To: <178118661279.728615.16193461564655914882.stgit@frogsfrogsfrogs>
 
-On 2026-06-11 07:05:37, Darrick J. Wong wrote:
+On 2026-06-11 07:05:21, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Codex noticed that xfs_healer_start doesn't try out listmount() when
-> it's doing a --check.  Because systemd uses --check for an
-> ExecCondition, if it's run on a pre-6.9 kernel (very unlikely) then the
-> service will fail instead of simply not being run.  Fix that.
+> As the comment says, mon_fp consumes ownership of mon_fd.  Therefore, we
+> should set mon_fd to -1 so that we can't use it further on.  Codex
+> complains about this logic bomb.
 > 
+> Cc: <linux-xfs@vger.kernel.org> # v7.0.0
+> Fixes: b9b03770197d19 ("xfs_healer: create daemon to listen for health events")
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 Looks good to me
