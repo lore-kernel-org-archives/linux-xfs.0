@@ -1,112 +1,100 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A537F271A71
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 11:42:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E94AD3F1AB2;
+	Wed, 17 Jun 2026 12:31:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781696579; cv=none; b=CXrcfA1Od1D/CpwokHth5j0RmUjQKdiRfLQvrNCtzbhZeRQ0iJhHitGf+RQm7M/wjMx8nH8ZujlsM46chCgud7ukLHiool07+qgGvkijR7RJDWbekxbG4BYe6YAQRcuLE0cbjiAuvewU/cPYtvl66RKYbTPQ242jrqXIJUr/k5U=
+	t=1781699472; cv=none; b=K1obk/JTsYf0fCZnb7ZCE/+P8d6OFh+6h+/Z1xiVU0LpxelhQSegVpq3xXv73i2ZgqBdYbufUpTvB+kvdWtvn7nEEciIs9C2l+znDj08nZFHThh4q0MiIDtVT0cmKnmZC8R+6Y4AxhECXpnermaBna1ng301cz/ROVY7kEw8Ys4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781696579; c=relaxed/simple;
-	bh=IGwM/eBfzi3jxrzplcOShTe+PJAIsBp8WpPaiCkQvGM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EsFyVAxRFmqZk0dimm9JHgsdRof02g/uwV5//4wsTnsrbdhhbv4QcnWIkT+hEt9lCDJEJyGHwFw+2JVJ+wuKK1k0errh7q0COc8URt0kGNDfVVgZ7pbRoIMPEUUh3gcQRHWjqs8HwXWfqhLdf36xwaB72VM/BOOFCYgqcl4WoXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XVfxMRke; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781699472; c=relaxed/simple;
+	bh=GrGTI8a4oj/pksGdFmbK0N88ozLr60wbX3NY439HgAg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=niZOgyz80oKxVUsGF/VVfWTUSt7Pu+FMYs7MolDUktG3Y3NNgkkkaKQX6JqKqqdV6im7n2B+8wfCf1RRMFp7JVCEMDrdOdfYh9fGhgMEP4gk5zKV8EXLYMRuxdvYX3Ft2110lJCUms4Q6dG+2KkUC/GRdXXv4MLSVMIB7+f2cLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAmUlqUK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XVfxMRke"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781696576;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=VN9WNHTA1ZjmNHefd5fG67Hik0Y72dU4DcgNv+nHzjM=;
-	b=XVfxMRkesP7bgZIyqYTfyeSMdhcQV+3naDfdtXRJ7c1OFjRvUxOozHQ2NZCoqKZHP3qiO1
-	ha3pP2Cp27e6U5si8QOv0w8YtFCZQCOOrjVoKSwfJrUPhEoPHVnMo1ELUZb0VFufvHG/d+
-	l0tw9tEJP1m2FSBUuHuY2EkeM01XDj8=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-564-ImLf3wXcMfuynWNEtOIWKg-1; Wed,
- 17 Jun 2026 07:42:55 -0400
-X-MC-Unique: ImLf3wXcMfuynWNEtOIWKg-1
-X-Mimecast-MFC-AGG-ID: ImLf3wXcMfuynWNEtOIWKg_1781696574
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 63CE219540DE;
-	Wed, 17 Jun 2026 11:42:54 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.89.36])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D9CC71955BC2;
-	Wed, 17 Jun 2026 11:42:53 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] iomap: always return status from iomap_write_iter
-Date: Wed, 17 Jun 2026 07:42:53 -0400
-Message-ID: <20260617114253.635751-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAmUlqUK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 588481F000E9;
+	Wed, 17 Jun 2026 12:31:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781699470;
+	bh=uLu8ShXl0Y2YxWQom10gkSNouCyBlM04U9LSELPsG9Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WAmUlqUKvUP+p7yOixVSlSWFhtTdaKcNfjOrHvTIDMEQbJoZG5nE5hFweeqWxWFjs
+	 hDqBVTAbjgYYuY4/SfoZZ1q67bf3FKq30fYfaJo8Ts6BtufqRg7AmizH67IOSy6FPm
+	 HcaYZydmmW6HvDRYBPxRLpSnWfcYR7qcyWeI7PsgEyojsFoBvnxHYuI2g9S4euYNk5
+	 CioB0mIXp+g5eDSTlaPvKSy44dUeMsQrOZBZKxHOkDc9jc1HKFFQ1PH/dKCQtVrc4Y
+	 /bjNVzYrA5u0ULZv9aTuI1qH0T5UNGxHvVFXFn6qImu55yrq1VXl57hdz1Xkfrk7hD
+	 xWepBqtVdnJQA==
+Date: Wed, 17 Jun 2026 14:31:01 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+	Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>, Sasha Levin <sashal@kernel.org>, 
+	Fedor Pchelkin <pchelkin@ispras.ru>, stable@vger.kernel.org, xfs-stable@lists.linux.dev, 
+	Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, lvc-project@linuxtesting.org, linux-xfs@vger.kernel.org, 
+	Leah Rumancik <leah.rumancik@gmail.com>
+Subject: Re: [PATCH 6.6 0/4] fix kernel crash for xfs/235 test
+Message-ID: <ajKSytW_sBFJaBTW@nidhogg.toxiclabs.cc>
+References: <20250322143418.216654-1-pchelkin@ispras.ru>
+ <aisAxyXVxf4wql2u@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <20260612233110.2-1-sashal@kernel.org>
+ <ajBQPNuKCruxhkXX@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <ajD3Gb-vQkGU0N6b@nidhogg.toxiclabs.cc>
+ <ajFQPY2m2A6ltvTH@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <ajFabPtI8UGfkyix@nidhogg.toxiclabs.cc>
+ <CACzhbgS59uCYhjX80__+nPjEx=N8mKUsYyFS1+aRDpMA-b-VXQ@mail.gmail.com>
+ <CAOQ4uxgXqmP49FV3b_cKDD_703bRHz0fjm=k=FmNytsPpnKx3g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <CAOQ4uxgXqmP49FV3b_cKDD_703bRHz0fjm=k=FmNytsPpnKx3g@mail.gmail.com>
 
-iomap_write_iter() returns either an error code or 0 if partial
-progress has been made. The error sanitization was required in the
-past because the return value was used by iomap_iter() to determine
-how much progress was made, and thus what to pass to ->iomap_end()
-and how much to advance the iter.
+On Wed, Jun 17, 2026 at 11:19:25AM +0200, Amir Goldstein wrote:
+> On Tue, Jun 16, 2026 at 7:33 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+> >
+> > I have changed teams so I no longer work on kernel and I don't believe
+> > my xfs maintenance work was backfilled ;(
+> >
+> > On Tue, Jun 16, 2026 at 7:19 AM Carlos Maiolino <cem@kernel.org> wrote:
+> > >
+> > > On Tue, Jun 16, 2026 at 09:31:41AM -0400, Hamza Mahfooz wrote:
+> > > > Cc: linux-xfs@vger.kernel.org
+> > > >
+> > > > On Tue, Jun 16, 2026 at 09:13:45AM +0200, Carlos Maiolino wrote:
+> > > > > On Mon, Jun 15, 2026 at 03:19:24PM -0400, Hamza Mahfooz wrote:
+> > > > > > Cc: Carlos Maiolino <cem@kernel.org>
+> > > > >
+> > > > > FWIW I don't maintain the stable trees I really don't have time for
+> > > > > that. Darrick/Leah have been doing a best effort case for that, but
+> > > > > again, this is mostly a best effort so we shouldn't expect them to be
+> > > > > looking/picking up every single possible patch suggested for stable.
+> > > > >
+> > > >
+> > > > Now that you mention it, the xfs-stable mailing list seems to be pretty
+> > > > much dead (i.e. the last time fixes from it were merged into stable was
+> > > > almost a year ago). I guess no one is really working on it anymore?
+> > >
+> > > IIRC Darrick started it, I personally never worked on it, but I didn't
+> > > follow the evolution there.
+> 
+> I think at this point we can officially declare xfs in stable <= 6.6
+> unmaintained
+> maybe need to send patches to LTS MAINTAINERS.
+> 
+> The best chance in this case to apply the requested fix to 6.6.y is that the
+> author (Darrick) approves it.
 
-Now that iter handlers advance the iter incrementally and progress
-is separate from return status, this is no longer needed.
-iomap_iter() infers partial progress directly from the iter state
-and similarly, iomap_file_buffered_write() uses iter.pos to
-determine whether to return a short write or an error code.
-
-This also eliminates a minor quirk in the write iteration where if
-an error interrupts a partial write, we'd have to loop back into
-iomap_write_iter() once more and run into the error a second time
-before iomap terminates the operation and returns the error. With
-the error code returned directly and separate from write progress,
-we can complete the operation and return from iomap_iter()
-immediately.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/iomap/buffered-io.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 8d4806dc46d4..fb1f60130cd0 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1156,7 +1156,6 @@ static bool iomap_write_end(struct iomap_iter *iter, size_t len, size_t copied,
- static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
- 		const struct iomap_write_ops *write_ops)
- {
--	ssize_t total_written = 0;
- 	int status = 0;
- 	struct address_space *mapping = iter->inode->i_mapping;
- 	size_t chunk = mapping_max_folio_size(mapping);
-@@ -1252,12 +1251,11 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
- 				goto retry;
- 			}
- 		} else {
--			total_written += written;
- 			iomap_iter_advance(iter, written);
- 		}
- 	} while (iov_iter_count(i) && iomap_length(iter));
- 
--	return total_written ? 0 : status;
-+	return status;
- }
- 
- ssize_t
--- 
-2.54.0
-
+Unfortunately this might be true. But let's wait for Darrick's input
+please. He's on vacations this week so will be unfair to make any
+decisions in this matter without his input.
+Also he has been still poking people to tag patches with LTS versions
+so even though he might not me dealing with the xfs-stable, he might still
+be driving work on LTS trees.
