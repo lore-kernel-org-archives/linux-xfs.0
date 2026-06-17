@@ -1,100 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E94AD3F1AB2;
-	Wed, 17 Jun 2026 12:31:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B65643F54AE;
+	Wed, 17 Jun 2026 13:17:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781699472; cv=none; b=K1obk/JTsYf0fCZnb7ZCE/+P8d6OFh+6h+/Z1xiVU0LpxelhQSegVpq3xXv73i2ZgqBdYbufUpTvB+kvdWtvn7nEEciIs9C2l+znDj08nZFHThh4q0MiIDtVT0cmKnmZC8R+6Y4AxhECXpnermaBna1ng301cz/ROVY7kEw8Ys4=
+	t=1781702267; cv=none; b=hJ/zX+Aw+4vQjDW+PwZMvDbQNq49qAdT41+LrnMun9Ok34yaD4lpsvczSVSBW4eC+bm1QXf0zjfxtVJu6MnvMNY3mtd/EdL2+bAR7T7Yh39DswB2nZjL9vZaCOSHZDwUM9jEOHYqYo4dB3jxEm1wlYn6BeWrUfT19/MOPh5VDVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781699472; c=relaxed/simple;
-	bh=GrGTI8a4oj/pksGdFmbK0N88ozLr60wbX3NY439HgAg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=niZOgyz80oKxVUsGF/VVfWTUSt7Pu+FMYs7MolDUktG3Y3NNgkkkaKQX6JqKqqdV6im7n2B+8wfCf1RRMFp7JVCEMDrdOdfYh9fGhgMEP4gk5zKV8EXLYMRuxdvYX3Ft2110lJCUms4Q6dG+2KkUC/GRdXXv4MLSVMIB7+f2cLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WAmUlqUK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781702267; c=relaxed/simple;
+	bh=YQeax/jw/6gyy/zMrMRBgesBAxyAFZRrHD/WGCSD4N0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=thopv280K4p1TMgkWC9SWZCMYRKuw74TxTjAeMOgd1mQqzeHWmwKoxRvFy2GapZuzPv7YJ4FyR5rJi8GFqnYIvBeD+3sXBUbCyCfXL8Tt1k3xBTZU7qfT/HcvACiFMkKxWNfSqxGwUi63WNtB399Iqv1NHV7iI9Q95pKq0zZDQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kcseBwJV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WAmUlqUK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 588481F000E9;
-	Wed, 17 Jun 2026 12:31:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kcseBwJV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2A711F00A3A;
+	Wed, 17 Jun 2026 13:17:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781699470;
-	bh=uLu8ShXl0Y2YxWQom10gkSNouCyBlM04U9LSELPsG9Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WAmUlqUKvUP+p7yOixVSlSWFhtTdaKcNfjOrHvTIDMEQbJoZG5nE5hFweeqWxWFjs
-	 hDqBVTAbjgYYuY4/SfoZZ1q67bf3FKq30fYfaJo8Ts6BtufqRg7AmizH67IOSy6FPm
-	 HcaYZydmmW6HvDRYBPxRLpSnWfcYR7qcyWeI7PsgEyojsFoBvnxHYuI2g9S4euYNk5
-	 CioB0mIXp+g5eDSTlaPvKSy44dUeMsQrOZBZKxHOkDc9jc1HKFFQ1PH/dKCQtVrc4Y
-	 /bjNVzYrA5u0ULZv9aTuI1qH0T5UNGxHvVFXFn6qImu55yrq1VXl57hdz1Xkfrk7hD
-	 xWepBqtVdnJQA==
-Date: Wed, 17 Jun 2026 14:31:01 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
-	Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>, Sasha Levin <sashal@kernel.org>, 
-	Fedor Pchelkin <pchelkin@ispras.ru>, stable@vger.kernel.org, xfs-stable@lists.linux.dev, 
-	Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, lvc-project@linuxtesting.org, linux-xfs@vger.kernel.org, 
-	Leah Rumancik <leah.rumancik@gmail.com>
-Subject: Re: [PATCH 6.6 0/4] fix kernel crash for xfs/235 test
-Message-ID: <ajKSytW_sBFJaBTW@nidhogg.toxiclabs.cc>
-References: <20250322143418.216654-1-pchelkin@ispras.ru>
- <aisAxyXVxf4wql2u@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
- <20260612233110.2-1-sashal@kernel.org>
- <ajBQPNuKCruxhkXX@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
- <ajD3Gb-vQkGU0N6b@nidhogg.toxiclabs.cc>
- <ajFQPY2m2A6ltvTH@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
- <ajFabPtI8UGfkyix@nidhogg.toxiclabs.cc>
- <CACzhbgS59uCYhjX80__+nPjEx=N8mKUsYyFS1+aRDpMA-b-VXQ@mail.gmail.com>
- <CAOQ4uxgXqmP49FV3b_cKDD_703bRHz0fjm=k=FmNytsPpnKx3g@mail.gmail.com>
+	s=k20260515; t=1781702266;
+	bh=h6YWwZA+K4Pgd1tTW/ZkwrOBGEJ3MGr76cKv503XNyo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=kcseBwJV5sSdm5n0TMibN3g0OeFoi5zDELTFkLsIgFqLwrtX12B2o4ulvI9p4HlFt
+	 odwPiRVeOs93mkK2ijAbSNHBgmLGWrJlMWpxDP/6wQzNpuGe2CbpYCPpoETpuf9ees
+	 f6gfy/z9wTEXUkvLTGiX5AT/7KUr/SbyZfSEkf4laEciO2xHAyjhORUqgeAi3BDyb6
+	 I7Wph4hRWzyHbrmgYWAW68B1dQPJQaqZ1q2k4vQOoQN4Up1uXTUw+YUGkT+odSblpX
+	 YKlZRvCVX8nqtViDLl8B+xg6HComcVdFqW0Ua4Y+iUIYfSAo5aJGTKMCEouzZCLmmb
+	 3mW20vhz5y4nw==
+From: Christian Brauner <brauner@kernel.org>
+To: djwong@kernel.org,
+	hch@lst.de,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Fengnan Chang <changfengnan@bytedance.com>
+Cc: Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v1] iomap: release pages on atomic dio size mismatch
+Date: Wed, 17 Jun 2026 15:17:40 +0200
+Message-ID: <20260617-anrief-spinat-gockel-d6afafd0a725@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260612044041.10677-1-changfengnan@bytedance.com>
+References: <20260612044041.10677-1-changfengnan@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1192; i=brauner@kernel.org; h=from:subject:message-id; bh=YQeax/jw/6gyy/zMrMRBgesBAxyAFZRrHD/WGCSD4N0=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQZzSv1mLeHw1bmWvky/YNhGTJfvi28XBcqIynTE7J+5 VuzeialjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIl4/Gb4nxMn8/sL69eMS0+M Tebd7/8/661wNdPha+2f1rYfzHLius3IcNxv4/oH7HdYog/dcmw9n3g86rBwoGPYoi3b9l7jacp xYwcA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxgXqmP49FV3b_cKDD_703bRHz0fjm=k=FmNytsPpnKx3g@mail.gmail.com>
 
-On Wed, Jun 17, 2026 at 11:19:25AM +0200, Amir Goldstein wrote:
-> On Tue, Jun 16, 2026 at 7:33 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> >
-> > I have changed teams so I no longer work on kernel and I don't believe
-> > my xfs maintenance work was backfilled ;(
-> >
-> > On Tue, Jun 16, 2026 at 7:19 AM Carlos Maiolino <cem@kernel.org> wrote:
-> > >
-> > > On Tue, Jun 16, 2026 at 09:31:41AM -0400, Hamza Mahfooz wrote:
-> > > > Cc: linux-xfs@vger.kernel.org
-> > > >
-> > > > On Tue, Jun 16, 2026 at 09:13:45AM +0200, Carlos Maiolino wrote:
-> > > > > On Mon, Jun 15, 2026 at 03:19:24PM -0400, Hamza Mahfooz wrote:
-> > > > > > Cc: Carlos Maiolino <cem@kernel.org>
-> > > > >
-> > > > > FWIW I don't maintain the stable trees I really don't have time for
-> > > > > that. Darrick/Leah have been doing a best effort case for that, but
-> > > > > again, this is mostly a best effort so we shouldn't expect them to be
-> > > > > looking/picking up every single possible patch suggested for stable.
-> > > > >
-> > > >
-> > > > Now that you mention it, the xfs-stable mailing list seems to be pretty
-> > > > much dead (i.e. the last time fixes from it were merged into stable was
-> > > > almost a year ago). I guess no one is really working on it anymore?
-> > >
-> > > IIRC Darrick started it, I personally never worked on it, but I didn't
-> > > follow the evolution there.
+On Fri, 12 Jun 2026 12:40:41 +0800, Fengnan Chang wrote:
+> If bio_iov_iter_get_pages() or the bounce helper succeeds but builds a
+> short bio, the REQ_ATOMIC size check rejects it before submission.  The
+> old error path only dropped the bio reference, leaving any pages already
+> attached to the bio unreleased.
 > 
-> I think at this point we can officially declare xfs in stable <= 6.6
-> unmaintained
-> maybe need to send patches to LTS MAINTAINERS.
+> Release or unbounce the pages before falling through to out_put_bio on
+> this error path.
 > 
-> The best chance in this case to apply the requested fix to 6.6.y is that the
-> author (Darrick) approves it.
+> [...]
 
-Unfortunately this might be true. But let's wait for Darrick's input
-please. He's on vacations this week so will be unfair to make any
-decisions in this matter without his input.
-Also he has been still poking people to tag patches with LTS versions
-so even though he might not me dealing with the xfs-stable, he might still
-be driving work on LTS trees.
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] iomap: release pages on atomic dio size mismatch
+      https://git.kernel.org/vfs/vfs/c/7d9491184bf7
