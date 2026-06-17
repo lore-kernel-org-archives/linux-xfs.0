@@ -1,43 +1,89 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187933C3C0E
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 09:45:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 944D43D9024
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 10:21:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781689539; cv=none; b=FZ8RJIp1C6NA3FGrIivF32yJb0oAAlBVKFbK8kv+5Pk1gDMF2vHi22czfIDaxkPSFpFMaozRnU9RH8HhW23JnkoZ4Gh+c+MAPeu3hV2vdJPt+3mU2gH+E3URUiMlfDCl9TV+zRZ4d2MQiMMpWeh+NQoP6+txT63uIxNG1POd+34=
+	t=1781691676; cv=none; b=I5PO/hcahrVsfLilwzltJCId+KZP/y2sbzuAPwbpe0z39tcDhhrK84Ngo8A28OAtWY58udQuhCVRzYOGMfEU4sQ/DfkDGk4LUZPO1DPb2qypkLKYV7WmiX37+BRnfaqwz+lRw0UO2n3Pw12nZ1ezKAz8o1f9kDBiCqwYcho8G2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781689539; c=relaxed/simple;
-	bh=twlOvb2CoVN4w6Fqz+WMhzH21a+mb1zXpVSvI9ZJFIo=;
+	s=arc-20240116; t=1781691676; c=relaxed/simple;
+	bh=iFjHXCOkHms8733u2YS89Y4W983Y10t3ytnSjC7f+SQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q4R9TTue9zj8DaDVQ+2JW/XshBfXLeLx1zF5qWscVjqwdC92Xx4uamOAWegMowznOPrCaVS9XT6klcnerZh7bK98k7Jvjt/P57GVvGFZxC/o6Xdu+ApAZ3uKIWDD5biWmztRlVYyer48BgYtK+6ZNnaHkCY3TukJCK1JML4MBVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ojt4Em5S; arc=none smtp.client-ip=91.218.175.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=FbV7olKd5tmC/vBZv7qf/CldyD+x6J7dpsard2Umk2GZZxs2xKNfpQQot6hfXaqpGp84b0aiCrcm+i21BkxyVej71yeGAhF0FjHtUHzIfj9QojaAB1OaArkmnWJ4sa7v+pGsGUV6RYlu7Sk5rOqmWZQPefwEj/3xK6FIb27zJo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UNabP+jf; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Sd3jVxn7; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ojt4Em5S"
-Date: Wed, 17 Jun 2026 11:44:47 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1781689525;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UNabP+jf";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Sd3jVxn7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781691668;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=iL7gXwiArhbYanz54F/a7E15TsUWqUH8XIrYW1qiax8=;
-	b=Ojt4Em5SHuyFXs9QY6b73RwCDIQDbvdtVcKgdMlW3LgG+n2ZVYHXHKBK7u+PCH+rrDEl0o
-	yiObqmlx3BFsj7v3nqctpQsRycOh20V87BQ8ZGnugasoIfzkR0qbMUXwNyn3QKm6NleG3y
-	FcVcCbB2ccO0b5SqQ82iSBp/yd0Hl/Q=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, 
-	bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong" <djwong@kernel.org>, 
-	dgc@kernel.org, gost.dev@samsung.com, andres@anarazel.de, 
-	kundan.kumar@samsung.com, cem@kernel.org, Zhang Yi <yi.zhang@huawei.com>, 
-	linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
-Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Message-ID: <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
-References: <20260611114029.176200-4-p.raghav@samsung.com>
- <ajFQPANpajmFuKpi@infradead.org>
+	bh=JFPjjdZ2csUsNrDKtk2Mr8R6p8O/uPdh2r9FCPzwJMY=;
+	b=UNabP+jf7SBMB38KnvPdnTbYbuOH9EgX0jsznBp/f83OrOdxmUEFth0d+4ojUo17BcpkKB
+	VZWADMugt4aMPkSzRlFnacHEUBCJENVdaq5PISukSDAKyubY7IKNuVTpRtk3DvYrzKHHMn
+	WG0qnLZBMAFCme3gyHnTbFXlAG0wjSE=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-348-LTB2C8ukN5OoZvKCUZEsUA-1; Wed, 17 Jun 2026 06:21:06 -0400
+X-MC-Unique: LTB2C8ukN5OoZvKCUZEsUA-1
+X-Mimecast-MFC-AGG-ID: LTB2C8ukN5OoZvKCUZEsUA_1781691665
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-490ae461f8dso42502325e9.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jun 2026 03:21:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1781691665; x=1782296465; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JFPjjdZ2csUsNrDKtk2Mr8R6p8O/uPdh2r9FCPzwJMY=;
+        b=Sd3jVxn7rzurCsnKJidOK4xFz2SpM4D4CAL1lVaRturZPjVGPyRK84SU1lpVvv5UFf
+         UDBxBGBXc+eyUBH60xFO6BAD0IoNDcP3fAoPsKtSlz54BWkOUfofXLjep82UjgLG/Bs4
+         FH73lghYB2IZBI4TAkiy+H2C1P/FlKWQ8FL2B8NtHHC7MBDhO8ZurL1Tigd5Y9+Jjo4t
+         kAcrilwQwSPnc5BpZTsy8O+RG8LT6Ba5nk7T454gZMruecfK9mcXPTF9ZvYjtyp0FS8r
+         URWZTEig8b3bV5/EYSQeM/tWs+JkE4E/XqCDbsWWRF1TN3yMbQSxoIJIk6gVS7xiH2os
+         5hnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781691665; x=1782296465;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JFPjjdZ2csUsNrDKtk2Mr8R6p8O/uPdh2r9FCPzwJMY=;
+        b=FjthPQjBRJde/RMWxZf0YvJDJjkrJya6PVlfEqh7GJNodWwx6cGK+gH4xJz5su/vqq
+         RHjen7aHBACZN+5BMEdYaWr3ATQk00Jm4Tq081DsmJnFuLK1EOXos/54xwNCi+lxMuDo
+         SZj1WtgpCrZM7l5NJzC2uL1irtTFWd4GF1G2CVS2AhD9REKNzuVL4LLDl9eQgBxS/0/k
+         rIT1nv+f4XgO4FzPR5uRhOEkoysWF0qQRISgpbbd0ienbK5GqNRoMZafQEm9W0evBMCA
+         kFvOjGVNcQR5CPh/dmrEplexdbOGd5HAvXAn80vmWr+Dh7DAnUUOSM8Po+bxJc3qn4Xn
+         MigQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9ovfLf5neIT4+C4zeogZdc2rxQFjWpkc2zb6C81jvFTkNN1GjB/BepDqSSVWskyzsebnJDroBck+s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyPG2IWxPvWYTgyS4C3kLjujxpMFD0rBLEVf/7CQOQDtjsi5BJ7
+	xJjG779g7M1KetU0gaMlJjNBAQGTZ2Uxr9xX9AlTq0+R14c1FBh8HQ1/Ozzcle/kY7d71+RQfK7
+	oc800sB9/e0kjiJA7dV05F44VdwYnqG+JcNAsqVfaOslDAya9KUAj5RHfRfv5dZsJV7jP
+X-Gm-Gg: Acq92OG5c+xJ1lOUfhSTJfuY4EUhX6/UQmFodhO0dw7gXUh9QQZlnpjTbWudF4A+24w
+	L/hAxm070sA+nMjDKwvdXMguanF2uldw05x7I8M76ZfON3BPw3wUDUcdhman5ea6kA1cYi6BHB4
+	/lc6HNIf7qI1aqrQPYSJg6LwUT4T+rQJxaj4wCehp7qj/J9iNmje6kx3oF+BbiNAAHbuDQ0Oxrt
+	l5g98TBay/XsmKOPp3QSdFP6bbOsWlQanyqYMp70tR6SFObgX5MyPqbUk2V69vxPgCP7JM8S/vM
+	+mlJkDh7AoV5nplL6j0rcefHmlX8gWIRcCicQ6vSsAwDp8w0fKmfHkx8TnxKoWgnIHb/t+7FayM
+	NCDLRTeeZHh1vDnGL2o6i3rS9Gu+4nydduRNbqvnXxi17zQ==
+X-Received: by 2002:a05:600c:828c:b0:490:be14:bfda with SMTP id 5b1f17b1804b1-4923339fd76mr58254055e9.6.1781691665421;
+        Wed, 17 Jun 2026 03:21:05 -0700 (PDT)
+X-Received: by 2002:a05:600c:828c:b0:490:be14:bfda with SMTP id 5b1f17b1804b1-4923339fd76mr58253275e9.6.1781691664833;
+        Wed, 17 Jun 2026 03:21:04 -0700 (PDT)
+Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4922fa891acsm152291985e9.9.2026.06.17.03.21.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2026 03:21:04 -0700 (PDT)
+Date: Wed, 17 Jun 2026 12:21:02 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 6/6] xfs_healer: allow AF_UNIX socket access for
+ xfs_healer instances
+Message-ID: <ajJ0pQ96_aeJ5hhr@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <178118661216.728615.4369200471498381381.stgit@frogsfrogsfrogs>
+ <178118661353.728615.8408589793793380068.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,96 +92,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ajFQPANpajmFuKpi@infradead.org>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <178118661353.728615.8408589793793380068.stgit@frogsfrogsfrogs>
 
-On Tue, Jun 16, 2026 at 06:31:40AM -0700, Christoph Hellwig wrote:
-> [API questions for Zhang and -fsdevel/ -api below)
+On 2026-06-11 07:06:23, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > +	unsigned int		blksize = i_blocksize(inode);
-> > +	loff_t			offset_aligned = round_down(offset, blksize);
+> When xfs_healer cannot fix a filesystem problem on its own,
+> run_full_repair function tries to start an xfs_scrub service instance to
+> scan the entire filesystem.  Unfortunately, as Codex points out, the
+> service definition for xfs_healer instances doesn't allow AF_UNIX
+> sockets, so that will fail.  Relax the security posture so that we can
+> do that.
 > 
-> I think this actually needs to found up instead of rounding down.
-> 
-> > +	/*
-> > +	 * Zero the tail of the old EOF block and any space up to the new
-> > +	 * offset.
-> > +	 * In the usual truncate path, xfs_falloc_setsize takes care of
-> > +	 * zeroing those blocks.
-> > +	 */
-> > +	if (offset_aligned > old_size) {
-> > +		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
-> > +		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
-> > +				NULL, &did_zero);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> 
-> ... then this will properly zero from the old i_size to the first block
-> boundary after the old size.
+> Cc: <linux-xfs@vger.kernel.org> # v7.0.0
+> Fixes: 88825fe0de0df2 ("xfs_healer: create a per-mount background monitoring service")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Hmm, right now we do this:
+Oh, it's systemctl<->systemd who need AF_UNIX socket, couldn't find
+where xfs_healer uses sockets :)
 
-|----------|----------|----------|
-    ^      ^     ^    ^
-    |      |     |    |
- old_size  |   offset |
-           |          |
-	off_rd       off_ru
+Looks good to me
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
-At the moment, we zero out old_size to off_rd and pass offset to
-xfs_alloc_file_space. xfs_alloc_file_space rounds down the offset to off_rd.
+-- 
+- Andrey
 
-What you are proposing is to zero out old_size to off_ru, and pass
-off_ru to xfs_alloc_file_space. I don't exactly understand the
-difference.
-
-> 
-> > +	error = xfs_alloc_file_space(ip, offset, len,
-> > +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-> 
-> ... and here we need to pass offset_aligned instead of offset and
-> a new calculated len based on the last block boundary, and then
-> zero again after that.  That is assuming FALLOC_FL_WRITE_ZEROES
-> allows unaligned ranges for file systems.  The block code doesn't,
-> but I can't quite follow the ext4 code if it does or not, and there
-> is no mention of FALLOC_FL_WRITE_ZEROES even in the latest man-pages
-> tree.
-
-
-I can't find any references to FALLOC_FL_WRITE_ZEROES in the man pages
-master branch. Maybe we missed it. I can send a separate patch for that
-once we have some clarity on the API.
-> 
-> Maybe we also want xfstests that try unaligned FALLOC_FL_WRITE_ZEROES
-> and make sure no existing data before the range is lost and the
-> entire range is zeroed?
-> 
-
-I added FALLOC_FL_WRITE_ZEROES support to ltp (both fsx and fsstress).
-For example, generic/363 tests for unaligned writes and checks for any
-stale data. By default, I think we do unaligned reads, writes and
-truncate in fsx.
-
-> 
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * xfs_falloc_setsize() would re-zero the written extents via
-> > +	 * iomap_zero_range(). Use xfs_setfilesize() instead.
-> > +	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
-> > +	 * size to it.
-> > +	 */
-> > +	if (new_size > i_size_read(inode))
-> > +		i_size_write(inode, new_size);
-> 
-> I think Sashiko is right that we need a pagecache_isize_extended and
-> filemap_write_and_wait_range calls here.
-> 
-
-Ok. Current fsx or fsstress did not expose this
-problem. I will look into this. Thanks Christoph.
-
---
-Pankaj
