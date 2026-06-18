@@ -1,181 +1,185 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mxchg03.rrz.uni-hamburg.de (mxchg03.rrz.uni-hamburg.de [134.100.38.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11C9E27FD4B
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 14:41:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 101C0343887
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 21:05:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.100.38.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781793708; cv=none; b=GZtekEyzoWxLLHN3jDvjcfPaxLjX+hJF/e1gjSJvMXHmJYFvD/MoUUqYfxGO16kM7IvEc1znfBwz53Z/RArh7c5Aw/xsCRTbCPezLjjS4afU0DTGSeeGLPvm5STL0KuY5rWnCLpXmh418fDh3cPCcDuIXEA1fcL+az4Yacbs9y0=
+	t=1781816755; cv=none; b=gT6MD5V9gcIpoLoaB6Q30Z7maCKVkJsEcwGZ8oi/Pi5km2IF74974r2Fdwonq8ArnZjxovS2PNqC1IkS+ntloPWN89OCw7kl4Y+32bAfU5Jvxmq3rBqQXHp/tY/pXxmMg78HGdVxRFR9GN1yNzaXAoF3FG7EH5kabpV+fIAdbYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781793708; c=relaxed/simple;
-	bh=/lZMMQ6vAe8RJdh9C/6jeLxyly6OgUf1sJLzBGLGGzU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mvCz6rqbY3P2dqU4e82EXN0LMoXHHm37M4pTwRHn/eV7I/EdqtmCJ3iQQRHDmgib03HGxIS83EebRJoSPxoi6oa87RcenKNS9Cdr21wKyKMW5j9INCfWrUsy5vlrVKJKzSnYGARk6YyD6dCRc5XnFLk+R5TpcobT2jN+lrsPYnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EUQAl77C; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=t/ta+GHf; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781816755; c=relaxed/simple;
+	bh=qXQGM6WjiN3nEr37wWIbCPHnoyQ5iJ7Yw8y7nM9VQto=;
+	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cOvbHKdmM1nKRSu16ML+PsaL1dEML+N5aj8/DrEcy6ZHAbnzBkXYSLLfH8wHa2rMC/2VoKeW3Qz1GprkQoX6MMHN91fR343jTsBp7s1bstYiYDU/dj2q1Tnopw2PmP1vFaLDPkY+u1/f0wx58EcFHjR5hDii4sRLpPYAOyorXR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=uni-hamburg.de; spf=pass smtp.mailfrom=uni-hamburg.de; dkim=pass (2048-bit key) header.d=uni-hamburg.de header.i=@uni-hamburg.de header.b=FSk88L9g; arc=none smtp.client-ip=134.100.38.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=uni-hamburg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uni-hamburg.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EUQAl77C";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="t/ta+GHf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781793706;
+	dkim=pass (2048-bit key) header.d=uni-hamburg.de header.i=@uni-hamburg.de header.b="FSk88L9g"
+Received: from mxchg03.rrz.uni-hamburg.de (mxchg03.rrz.uni-hamburg.de [134.100.38.113])
+	by mxchg03.rrz.uni-hamburg.de (Postfix) with ESMTPS id 4ghCtZ1lHxz2xDG
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 23:05:42 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uni-hamburg.de;
+	s=rrzs003; t=1781816742;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=W6niK79Uh7JrcT6GCfrgjeLqhMhhcMy+nrLNdKDBkmE=;
-	b=EUQAl77CY8UjCgu2gZHnMXSY3Do/KQ9YP09kw8A+r5d1s27sPHxQk45h5Q65F1VNsgkMxv
-	NoTYrH4Kt7tgn35a0zWMIDyTJ2bXl5NF81krLpJlD3n2x6AS8FsMzJqmV3W7CQc3Hj+2jQ
-	9/1uiDUqEWBv5ShsfHpTMn9ccDPXdug=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-86-jj7XUqEbNd2vF24FB2EgPg-1; Thu, 18 Jun 2026 10:41:45 -0400
-X-MC-Unique: jj7XUqEbNd2vF24FB2EgPg-1
-X-Mimecast-MFC-AGG-ID: jj7XUqEbNd2vF24FB2EgPg_1781793704
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2bf11699875so14166635ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 07:41:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1781793704; x=1782398504; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=W6niK79Uh7JrcT6GCfrgjeLqhMhhcMy+nrLNdKDBkmE=;
-        b=t/ta+GHfveDrRLiqo02racMxiSYDQJ6/BtkSsJWUXYDY4O0eo9ynMAEeUDuAbu6See
-         PMWPWujQhpZwgwgn1oajTLL8PI0MHlW6ucG8fleaOeUYBUAA4b7feDWbhjnD03ci9gNf
-         qyXGFSuRsD+QP3zrQG87jFxeJBXrKVqud/ckwj6/NoQJ7/PWJsKhTLYHJqcIJW6pS0w7
-         f61dN+2zxdyuqsRSlZ1HAxUozGNC26nZ/eCzMqeu9yM56VtBgo0uReJoVXA5HqndlW6q
-         BPUULglbdxDCMnQmTO45S9eRuK/SX027j1Gs+ymPujfzXozNlBewj/BreSwM84fX+X9C
-         B8vA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781793704; x=1782398504;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=W6niK79Uh7JrcT6GCfrgjeLqhMhhcMy+nrLNdKDBkmE=;
-        b=S2eXttspJmjKweekyEzwvxAq6hJSkUMktTm63RzlgXR1fAYpyZGPMXxTyB1C0+MOPz
-         VH4kkf0BrJBaEoSv7rRT3RRPm3OsHzablyVHpy7RqZtE07hJh0mro/G+4pHG2BBHKoap
-         8viHUbw9GqOacJlN3yov2bRy5ym+UfC9St8FkPd1yKya4WE1LksmMPXKzsHnRrsQJVfl
-         gIIVPs5TkMSgodhAjvTRtS3/O1uN07gss3LWZkmhaO5R7HcvjdDbnytnSYQezji9jQL7
-         43gZsC8xFgi2abkAX9ZMEnSAwtA1ODxvlfzIU+yQpYJzzSzgGTg2n57nNyzEbqm7IJrD
-         oJFg==
-X-Gm-Message-State: AOJu0Yzwi+lj91caGYEBOKp3KOueMZSmdVDVfGcf4WrAOjXVZ12qa3mM
-	LzEbMsCSUkr3HB8cdE+BAi12U1idSHHSQtv9nMhRmAhDAbZkusoV5v+E2i4y6dRYKreNj7Syj3U
-	sAPaYb6wNqOjQkHEzWQjAjKHHQIXpc5kFVTkLIlWumvPWl+sWQFFQ6aBeqmye0pABlOxUgkI0e2
-	SXhqk2XchjZ5vKhnbAS7W41FPNAeR5eF/Wq7rHWTByTkSf9w==
-X-Gm-Gg: AfdE7cn2fiIqElZGcVnmLuMVsDZmYRdwjYiCZ4SdvnPSr1gVP3nsJLKYgC/JnT0dOoF
-	PiIAh5FaiCmfTABLx3UkHrHpLS+nGqNGSnz7sz0eY6wHAmeO47bhRnOwyFbmeL6Zy9s/Y/ZMs77
-	z5UMIZZCpeNKOAoQ3Nn6fRb17YmHW1sfktPmmAKKuREsq7lCquc9lDG/s7axn+eUe1sbICxQbT7
-	ysXFFU4mCNdmG2aDKT2azYj+jn3T5BebOBRgqqgB+prTHLGjrxZ9rSj/OQOnQ3xOOBzT1c1D80i
-	yDWkuLBqQTl9mxJsTvZOjpNzMe6D4xLjzXM39V74xcokP+pKV2Eu5WBCNon5ksFglLR0nkfxbLD
-	fR8n8dhoriJu/kl6EhmfokhSl7keqGBpWYqg4/shosC6aVztxKA==
-X-Received: by 2002:a17:902:da86:b0:2c1:88a1:9839 with SMTP id d9443c01a7336-2c6de510376mr39102735ad.11.1781793703994;
-        Thu, 18 Jun 2026 07:41:43 -0700 (PDT)
-X-Received: by 2002:a17:902:da86:b0:2c1:88a1:9839 with SMTP id d9443c01a7336-2c6de510376mr39102135ad.11.1781793703196;
-        Thu, 18 Jun 2026 07:41:43 -0700 (PDT)
-Received: from msinguru-thinkpadp1gen4i.bengluru.csb ([2401:4900:883b:a538:bbed:f34c:15f2:e487])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c433558449sm210367665ad.78.2026.06.18.07.41.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jun 2026 07:41:42 -0700 (PDT)
-From: Manognya Singuru <msinguru@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: aalbersh@redhat.com,
-	Manognya Singuru <msinguru@redhat.com>
-Subject: [PATCH] mkfs: fix filesystem and log size units
-Date: Thu, 18 Jun 2026 20:11:11 +0530
-Message-ID: <20260618144111.178311-1-msinguru@redhat.com>
-X-Mailer: git-send-email 2.54.0
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=b2gPJSXSZ3PAZmyI239iMr1HG4++JQnXd2pdipG9vWk=;
+	b=FSk88L9gN+elzDILpHkJvot/ISgGgpNdBMf9NaqZY3RpAT5hc6W2NTxzQ3YArBGyWE94i/
+	a1PcnTIFYer44CKCF9vg+N//sMvmv1v2vpXkzPKK9812MNhHgQy0AnR1aqXPH+BvWUldTR
+	XlgHFszDH1eeBkpWRqxhNo/LGkK5fBwqswQpR43RGetrChaMC5gzG/UBXMVPQvdZSaOxyV
+	RzmTU1AmVu4KB2bEzofv6/JOHjlfUtLMAsK2OAjM9Y+VXi+jsWGtjcBDwnDdaZaR3ghHOJ
+	jFdGsp0UV3p5JLLOD5IkLbxbp5nYC6JATtfqU1PS/Vk2aDHjcmxwWP+x8tkMRg==
+Received: from exchange.uni-hamburg.de (EX-S-MR06.uni-hamburg.de [134.100.84.89])
+	by mxchg03.rrz.uni-hamburg.de (Postfix) with ESMTPS id 4ghCtZ0qyhz2xCx
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 23:05:42 +0200 (CEST)
+Received: from plasteblaster (134.100.32.91) by EX-S-MR06.uni-hamburg.de
+ (134.100.84.89) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Thu, 18 Jun
+ 2026 23:05:41 +0200
+Date: Thu, 18 Jun 2026 23:05:40 +0200
+From: "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
+To: <linux-xfs@vger.kernel.org>
+Subject: Re: XFS group quota circumvention via NFS and chgrp
+Message-ID: <20260618230540.424cceee@plasteblaster>
+In-Reply-To: <20260616110804.5d26ff85@plasteblaster>
+References: <20260616110804.5d26ff85@plasteblaster>
+Organization: =?UTF-8?B?VW5pdmVyc2l0w6R0?= Hamburg
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: EX-S-MR08.uni-hamburg.de (134.100.84.91) To
+ EX-S-MR06.uni-hamburg.de (134.100.84.89)
+X-Rspamd-UID: 55e48e
+X-Rspamd-UID: 4cfdcb
 
-The actual thresholds enforced by mkfs are in MiB and GiB but the
-error messages and documentation report the limits as MB and GB.
+Am Tue, 16 Jun 2026 11:08:04 +0200
+schrieb "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>:
 
-Update the filesystem and log size threshold messages, comments,
-and man page to use MiB and GiB.
+> Dear Linux XFS folks,
+>=20
+> I noticed that xfs group quotas can be circumvented via NFS* on vanilla
+> Kernel 6.6.x (slightly differing versions on client and server) as
+> follows:
 
-Signed-off-by: Manognya Singuru <msinguru@redhat.com>
----
- man/man8/mkfs.xfs.8.in |  6 +++---
- mkfs/xfs_mkfs.c        | 14 +++++++-------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+I was asked off-list to provide an easier reproducer. Let's try this:
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index fbafc5c7..c4dee4fe 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -463,7 +463,7 @@ is required if
- is given. Otherwise, it is only needed if the filesystem should occupy
- less space than the size of the special file.
- 
--The data section must be at least 300MB in size.
-+The data section must be at least 300MiB in size.
- .TP
- .BI sunit= value
- This is used to specify the stripe unit for a RAID device or a
-@@ -805,8 +805,8 @@ described above. The overriding minimum value for size is 512 blocks.
- With some combinations of filesystem block size, inode size,
- and directory block size, the minimum log size is larger than 512 blocks.
- 
--The log must be at least 64MB in size.
--The log cannot be more than 2GB in size.
-+The log must be at least 64MiB in size.
-+The log cannot be more than 2GiB in size.
- .TP
- .BI version= value
- This specifies the version of the log. The current default is 2,
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index dd8a48c3..cbc703cc 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -25,10 +25,10 @@
- #define MEGABLOCKS(count, blog)	((uint64_t)(count) << (20 - (blog)))
- 
- /*
-- * Realistically, the log should never be smaller than 64MB.  Studies by the
-+ * Realistically, the log should never be smaller than 64MiB.  Studies by the
-  * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
-  * latency of the xlog grant head waitqueue when running a heavy metadata
-- * update workload when the log size is at least 64MB.
-+ * update workload when the log size is at least 64MiB.
-  */
- #define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABLOCKS(64, (blog)))
- 
-@@ -3435,19 +3435,19 @@ validate_supported(
- 		return;
- 
- 	/*
--	 * We don't support filesystems smaller than 300MB anymore.  Tiny
-+	 * We don't support filesystems smaller than 300MiB anymore.  Tiny
- 	 * filesystems have never been XFS' design target.  This limit has been
- 	 * carefully calculated to prevent formatting with a log smaller than
- 	 * the "realistic" size.
- 	 *
--	 * If the realistic log size is 64MB, there are four AGs, and the log
-+	 * If the realistic log size is 64MiB, there are four AGs, and the log
- 	 * AG should be at least 1/8 free after formatting, this gives us:
- 	 *
--	 * 64MB * (8 / 7) * 4 = 293MB
-+	 * 64MiB * (8 / 7) * 4 = 293MiB
- 	 */
- 	if (mp->m_sb.sb_dblocks < MEGABLOCKS(300, mp->m_sb.sb_blocklog)) {
- 		fprintf(stderr,
-- _("Filesystem must be larger than 300MB.\n"));
-+ _("Filesystem must be larger than 300MiB.\n"));
- 		usage();
- 	}
- 
-@@ -3458,7 +3458,7 @@ validate_supported(
- 	if (mp->m_sb.sb_logblocks <
- 			XFS_MIN_REALISTIC_LOG_BLOCKS(mp->m_sb.sb_blocklog)) {
- 		fprintf(stderr,
-- _("Log size must be at least 64MB.\n"));
-+ _("Log size must be at least 64MiB.\n"));
- 		usage();
- 	}
- 
--- 
-2.54.0
+1. Prepare/start a VM in the terminal.
 
+dd if=3D/dev/zero of=3Dxfs.img bs=3D1M count=3D500
+wget -O debian-live.iso https://gitlab.com/api/v4/projects/74667529/package=
+s/generic/debian-libre-live/13.3.0/debian-live-13.3.0-amd64-libre-standard.=
+iso
+isoinfo -R -i debian-live.iso -x /live/vmlinuz > vmlinuz
+isoinfo -R -i debian-live.iso -x /live/initrd.img > initrd.img
+qemu-system-x86_64 -nographic -enable-kvm -smp 2 -m 4G \
+  -cdrom debian-live.iso -drive index=3D0,driver=3Draw,file=3Dxfs.img \
+  -kernel vmlinuz -initrd initrd.img -append "boot=3Dlive components consol=
+e=3DttyS0 ro"
+
+Login as user/live, and sudo su, or prepend sudo all the time below, if
+you prefer.
+
+2. In the VM, as root:
+
+apt install -y nfs-kernel-server
+mkfs.xfs -f /dev/sda
+mount -o usrquota,grpquota /dev/sda /srv
+xfs_quota -x -c 'limit -g bsoft=3D1m bhard=3D2m -d' /srv
+echo "auxgrp:x:1001:user" >> /etc/group
+mkdir -p /srv/share/user
+chown user:user /srv/share/user
+echo "/srv localhost(fsid=3D0,rw)" >> /etc/exports
+echo "/srv/share localhost(fsid=3D1,rw)" >> /etc/exports
+systemctl restart nfs-kernel-server
+mount localhost:/share /mnt/
+
+# First blob. Works.
+su user -c 'dd if=3D/dev/zero of=3D/mnt/user/blob1 bs=3D2M count=3D1'
+# Second blob. Fails:
+su user -c 'dd if=3D/dev/zero of=3D/mnt/user/blob2 bs=3D2M count=3D1'
+# Show the limited state.
+xfs_quota -x -c report /srv
+# Move one block to the other group, filling its quota.
+su user -c 'chgrp auxgrp /mnt/user/blob1'
+# Now write the second blob.
+su user -c 'dd if=3D/dev/zero of=3D/mnt/user/blob2 bs=3D2M count=3D1'
+# Magic: Move that away, getting out of auxgrp quota.
+su user -c 'chgrp auxgrp /mnt/user/blob2'
+xfs_quota -x -c report /srv
+
+# For fun: Just fill the disk.
+# side fact: I froze qemu with 100% CPU load when having a sync
+# command in the loop instead of sleep. It's one of those days where
+# I step onto bugs everywhere.
+n=3D3
+while su user -c "dd if=3D/dev/zero of=3D/mnt/user/blob$n bs=3D2M count=3D1=
+" &&
+sleep 0.1 &&
+su user -c "chgrp auxgrp /mnt/user/blob$n"
+do
+  n=3D$((n+1))
+done
+xfs_quota -x -c report /srv
+
+Result after the individual writes:
+
+User quota on /srv (/dev/sda)
+                               Blocks                    =20
+User ID          Used       Soft       Hard    Warn/Grace    =20
+---------- --------------------------------------------------=20
+root                0          0          0     00 [--------]
+user             4096          0          0     00 [--------]
+
+Group quota on /srv (/dev/sda)
+                               Blocks                    =20
+Group ID         Used       Soft       Hard    Warn/Grace    =20
+---------- --------------------------------------------------=20
+root                0       1024       2048     00 [--------]
+user                0       1024       2048     00 [--------]
+auxgrp           4096       1024       2048     00 [--none--]
+
+This shouldn't be possible. Should it? After the writing loop, I get
+
+2097152 bytes (2.1 MB, 2.0 MiB) copied, 0.0206776 s, 101 MB/s
+1+0 records in
+1+0 records out
+2097152 bytes (2.1 MB, 2.0 MiB) copied, 0.0204505 s, 103 MB/s
+dd: closing output file '/mnt/user/blob14': Disk quota exceeded
+User quota on /srv (/dev/sda)
+                               Blocks                    =20
+User ID          Used       Soft       Hard    Warn/Grace    =20
+---------- --------------------------------------------------=20
+root                0          0          0     00 [--------]
+user            28612          0          0     00 [--------]
+
+Group quota on /srv (/dev/sda)
+                               Blocks                    =20
+Group ID         Used       Soft       Hard    Warn/Grace    =20
+---------- --------------------------------------------------=20
+root                0       1024       2048     00 [--------]
+user             1988       1024       2048     00  [7 days]
+auxgrp          26624       1024       2048     00 [--none--]
+
+It quite consistently stops at blob14. I don't quite get why, though.
+Inode size does not count into block quota for xfs, right? Why be able
+to write 13 blobs, but not 14, when the quota is filled at one already?
+
+Different questions. The main question is: Why I am able to move data
+beyond the group quota?
+
+
+Alrighty then,
+
+Thomas
+
+--=20
+Dr. Thomas Orgis
+HPC @ Universit=C3=A4t Hamburg
