@@ -1,187 +1,123 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E255317176;
-	Thu, 18 Jun 2026 03:22:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2651614A4F0;
+	Thu, 18 Jun 2026 05:38:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.19.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781752978; cv=none; b=WFKl/CBIn8+CFK7x7TswzZEo7oqkyR+Q16V4PHHO62FBuHn0IdjpoW97Ak2sc40HOIGyiviqLc5Y02OaawwXwNsscz1OXI5+GWXlA7k1WJSK7tJAswR5zCYzgTnpFCkHGjeMUqLaCNNem+lF6Y/vgxuJBNjIs+D7an3p7KRPzgA=
+	t=1781761138; cv=none; b=lH72tbdpRgOiiDuDDRmuKjIvABlGLXc9g8jOSkbd14b6Bt+7rdHPe/xnr1i8/Db3Ie7k/JOtjTj8ciSaXaHL7Epnz0FjBJ0GLUzRcHqkFVs0HWLX2QuOr84+tB4wmphnLXzFgCi4ARsCMr5ys6Crpwp1V5VYXdwnj3Tw0P2xx+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781752978; c=relaxed/simple;
-	bh=9rSr0BuC3/p7eOU64GOlz03qURNFdo6OAayxM2Vyl5E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JimwQ1XOu+GvRKdvq7eR6NFQoBQoqM12STkkk3UvtOgkE2vvtXQn/smNekspocP7DNo44nGU0m9Knwbgtm6SKq7P1fodswTcXZ6pxej0K6FgisnqL+IyHO3KguynLVqgROQtbpsKxOtyq4JUyjPLVL6VBeSOG0FiCrNDMAEiuVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4ggmHX5588zYQtw0;
-	Thu, 18 Jun 2026 11:22:16 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 477E44084A;
-	Thu, 18 Jun 2026 11:22:48 +0800 (CST)
-Received: from [10.174.178.253] (unknown [10.174.178.253])
-	by APP1 (Coremail) with SMTP id cCh0CgB3ej+GZDNqgtnGCA--.30334S3;
-	Thu, 18 Jun 2026 11:22:48 +0800 (CST)
-Message-ID: <557b2e5c-7c65-48de-87a9-6fba21eca99f@huaweicloud.com>
-Date: Thu, 18 Jun 2026 11:22:45 +0800
+	s=arc-20240116; t=1781761138; c=relaxed/simple;
+	bh=IkbVrwSXsN+LvCQbZHgrWhSk0jDjOlOVX5PZneGM/CI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WwKSxUW5jYB98UxrUS519Q7262+Pbjlc1Q0h5z0xGgIDULxd5Shwr0dLiwxQfQon1Ct/rEL76+IUMtZCNsLSvngHwQew39wZTUA0t4/8J+4/DQcW5EhqCH+i8goQbV6JNT9OGJ/BlnM/QLinqBiF8yTb4tF5Xt3KXBpuxHKBYtw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Il5uT2Zy; arc=none smtp.client-ip=54.207.19.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Il5uT2Zy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781761119;
+	bh=Jfjicr/Uq6rXbROf/o9dsOjgPOIpx39JW65GVsjEOEM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=Il5uT2ZyZ2T70GqmhtkQ0nzjrc3G9BMh85+yap6+eA9KpFXCAKVBu5PAYq4apG4ko
+	 zf3jy194S/zGgfX4+S8SpGrokXdP+Lijb/tvScYCbiE0HrRYfPYAEiJ9YkC9sHFGJr
+	 Q40HCSMonc7cQGt/i0N7EMDqZfeHFXsSPvTK4wWk=
+X-QQ-mid: esmtpsz16t1781761104t36f65629
+X-QQ-Originating-IP: QGumPhGBLA4UrIrRdFdheu4Zip1xZw4KbM6pb6SvPBM=
+Received: from uos-PC ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 18 Jun 2026 13:38:23 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 9772218393939188370
+EX-QQ-RecipientCnt: 5
+From: Morduan Zang <zhangdandan@uniontech.com>
+To: brauner@kernel.org
+Cc: linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	djwong@kernel.org,
+	Morduan Zang <zhangdandan@uniontech.com>
+Subject: [PATCH] iomap: guard io_size EOF trim against concurrent truncate underflow
+Date: Thu, 18 Jun 2026 13:38:20 +0800
+Message-ID: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>,
- Christoph Hellwig <hch@infradead.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org,
- bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong"
- <djwong@kernel.org>, dgc@kernel.org, gost.dev@samsung.com,
- andres@anarazel.de, kundan.kumar@samsung.com, cem@kernel.org,
- linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
-References: <20260611114029.176200-4-p.raghav@samsung.com>
- <ajFQPANpajmFuKpi@infradead.org>
- <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgB3ej+GZDNqgtnGCA--.30334S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuryDGw13Jr15Xry5WF4rKrg_yoWrWrW7pr
-	ZxKFnxKFWDtryjqr10vw1kXw1093s7GF17CrW5G348Z398AFyxK3sFgrW0grZrGr4kZ3WF
-	qFs0gFy8WFy5Z3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
-	v3UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: MCg5+ArSTX6coVIP43qz2U0EKxT1jP4fk/AIzb429zJLAhsHB53oOFHx
+	qUaq9yes93BiknZ3fhRyAF9rFV/2IqFBjTmb+ea+C7m9JPavgbxJXRiJlaz1BGY9NqmG6ej
+	tkRbQB8387BHdwffv+P9MsSoGi7xH8gd97BA7HWsRlTIfhdPpE+I59TBRUfjdIX82SujiUR
+	z/v3UZ6tBzS7tW5EqUIWQwdbhvGnV3SENe4okfrNVPw+nQ6HqND/0APT4b7SJWxjCQ4gaSN
+	M1VMcvlqJUb1j5qcCrOWBNzuUrHMkM7upgs5YrKVIUiz7kJMhE2If8bfJWFWgkef7iQsC5w
+	9TE1mqslX2qTFtwxf192tS9pHhzHbuhO5mBELrUAIPFjJI4KsgKNj6QXs02ljk4LDl0Bs1M
+	ka2Uk+3VEZl5Z5aqcRZ19UdvzazbS2woXlfCIMD35n1QgcIumERvnReB0PeLkznTKsm++i8
+	KBKpAZHvsIzJ3SRjvmtK3R2Mb4uXyIf3fyZ6IxVdbYp/nBluy+v1u8gpPVXKY88GrNEASS/
+	idrW/e8yeE7OpnGDgIIMRgzZpOEWbMGM6GeXsd0ZPXtiR8XPnQXexe791mnfBMaa8hMBJN4
+	5bSZsJKroydI0xl4u57Z4wa1Okebye8zo8UNz2HHa98zRZbiNzKDlOcnf6R0MII0d101OPg
+	Nr2h1gNiWY8+F1w1IGNTjcqkDHuArFtXeYuAkcXEftbMJoq/lXuoZ6TylJ7f6L1GLY9TgdY
+	ctu4NND7BKWEzZ9Rmq6KY7zgfKZrZ+o3kB9dAxNifet4NKb7yQZ+MNKO+rl4fvQfgJd/9TK
+	3KAUgQMzJg/3/EojkOzoFrB3C0T1dTAS7jSfTixE1ufadXxNUB51hL2iipyKOR5o0Ulo5/h
+	L+4mYu3q24snF8zDHqHmp0TT/o6t3+uWSDDyKnb8SKStH7n2/bHRaK7N0ChEvoPNfebWn7Q
+	gQB7VH3yx1f8YzFNCLjwQaz75J+/aN1lZtWXh1pPh8DTKhJ5a0F4ZBlqPyhSxYcT4xCSFxt
+	hjtXO+T03TUTjLOpUn0bx9dhIT/iXULkSh2z9X2w==
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+X-QQ-RECHKSPAM: 0
 
-On 6/17/2026 5:44 PM, Pankaj Raghav (Samsung) wrote:
-> On Tue, Jun 16, 2026 at 06:31:40AM -0700, Christoph Hellwig wrote:
->> [API questions for Zhang and -fsdevel/ -api below)
->>
->>> +	unsigned int		blksize = i_blocksize(inode);
->>> +	loff_t			offset_aligned = round_down(offset, blksize);
->>
->> I think this actually needs to found up instead of rounding down.
->>
->>> +	/*
->>> +	 * Zero the tail of the old EOF block and any space up to the new
->>> +	 * offset.
->>> +	 * In the usual truncate path, xfs_falloc_setsize takes care of
->>> +	 * zeroing those blocks.
->>> +	 */
->>> +	if (offset_aligned > old_size) {
->>> +		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
->>> +		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
->>> +				NULL, &did_zero);
->>> +		if (error)
->>> +			return error;
->>> +	}
->>
->> ... then this will properly zero from the old i_size to the first block
->> boundary after the old size.
-> 
-> Hmm, right now we do this:
-> 
-> |----------|----------|----------|
->     ^      ^     ^    ^
->     |      |     |    |
->  old_size  |   offset |
->            |          |
-> 	off_rd       off_ru
-> 
-> At the moment, we zero out old_size to off_rd and pass offset to
-> xfs_alloc_file_space. xfs_alloc_file_space rounds down the offset to off_rd.
-> 
-> What you are proposing is to zero out old_size to off_ru, and pass
-> off_ru to xfs_alloc_file_space. I don't exactly understand the
-> difference.
+iomap: fix zero padding data issue in concurrent append writes
+changed ioend accounting so that io_size tracks only valid data
+within EOF.  This trims io_size when a writeback range extends
+past end_pos:
 
-IMO, FALLOC_FL_WRITE_ZEROES should handle the unaligned cases, if the
-'offset' and 'end' are not block-size aligned, then:
+    ioend->io_size += map_len;
+	if (ioend->io_offset + ioend->io_size > end_pos)
+            ioend->io_size = end_pos - ioend->io_offset;
 
-1) if the two blocks straddling the boundaries have not yet been allocated,
-   or allocated as unwritten, we should round outward the allocation range
-   and zero out all allocated blocks, including those two boundary blocks.
-2) if the blocks at the boundaries are already in the written state — which
-   can occur when we call FALLOC_FL_WRITE_ZEROES within the file size. We
-   should be careful here: we should only zero the ranges [offset, offset_ru)
-   and [end_rd, end) for the boundary blocks, leaving the already-written
-   portions of the boundary blocks intact.
+However, ioend can be created before a concurrent truncate shrinks
+the file.  In that case, end_pos can move below ioend->io_offset
+before the trim happens.  The subtraction then becomes negative, but
+the result is stored in size_t io_size, causing an unsigned wrap to
+a huge value.
 
-Thoughs?
+A wrapped io_size can mislead append detection and corrupt
+completion-time size handling, since filesystem end_io paths consume
+io_size for decisions such as on-disk EOF updates and unwritten/COW
+completion ranges.
 
-Regarding the second point, the current ext4 implementation has an issue —
-it zeroes out the entire boundary blocks. I overlooked this previously, and
-I appreciate you pointing it out.
+Fix this by clamping io_size to zero when EOF has moved to or before
+the ioend start offset.  This preserves the original intent of trimming
+io_size to valid in-EOF data while avoiding the underflow.
 
-> 
->>
->>> +	error = xfs_alloc_file_space(ip, offset, len,
->>> +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
->>
->> ... and here we need to pass offset_aligned instead of offset and
->> a new calculated len based on the last block boundary, and then
->> zero again after that.  That is assuming FALLOC_FL_WRITE_ZEROES
->> allows unaligned ranges for file systems.  The block code doesn't,
->> but I can't quite follow the ext4 code if it does or not, and there
->> is no mention of FALLOC_FL_WRITE_ZEROES even in the latest man-pages
->> tree.
-> 
-> 
-> I can't find any references to FALLOC_FL_WRITE_ZEROES in the man pages
-> master branch. Maybe we missed it. I can send a separate patch for that
-> once we have some clarity on the API.
+Fixes: 51d20d1dacbe ("iomap: fix zero padding data issue in concurrent append writes")
+Signed-off-by: Morduan Zang <zhangdandan@uniontech.com>
+---
+ fs/iomap/ioend.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Yeah, I missed to update the man pages last year. Thanks.
-
-Best Regards,
-Yi.
-
->>
->> Maybe we also want xfstests that try unaligned FALLOC_FL_WRITE_ZEROES
->> and make sure no existing data before the range is lost and the
->> entire range is zeroed?
->>
-> 
-> I added FALLOC_FL_WRITE_ZEROES support to ltp (both fsx and fsstress).
-> For example, generic/363 tests for unaligned writes and checks for any
-> stale data. By default, I think we do unaligned reads, writes and
-> truncate in fsx.
-> 
->>
->>> +	if (error)
->>> +		return error;
->>> +
->>> +	/*
->>> +	 * xfs_falloc_setsize() would re-zero the written extents via
->>> +	 * iomap_zero_range(). Use xfs_setfilesize() instead.
->>> +	 * Update in-core i_size first as xfs_setfilesize() clamps the on-disk
->>> +	 * size to it.
->>> +	 */
->>> +	if (new_size > i_size_read(inode))
->>> +		i_size_write(inode, new_size);
->>
->> I think Sashiko is right that we need a pagecache_isize_extended and
->> filemap_write_and_wait_range calls here.
->>
-> 
-> Ok. Current fsx or fsstress did not expose this
-> problem. I will look into this. Thanks Christoph.
-> 
-> --
-> Pankaj
-> 
+diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
+index acf3cf98b23a..0c391a66db6f 100644
+--- a/fs/iomap/ioend.c
++++ b/fs/iomap/ioend.c
+@@ -297,8 +297,12 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
+ 	 * appending writes.
+ 	 */
+ 	ioend->io_size += map_len;
+-	if (ioend->io_offset + ioend->io_size > end_pos)
+-		ioend->io_size = end_pos - ioend->io_offset;
++	if (ioend->io_offset + ioend->io_size > end_pos) {
++		if (end_pos > ioend->io_offset)
++			ioend->io_size = end_pos - ioend->io_offset;
++		else
++			ioend->io_size = 0;
++	}
+ 
+ 	wbc_account_cgroup_owner(wpc->wbc, folio, map_len);
+ 	return map_len;
+-- 
+2.50.1
 
