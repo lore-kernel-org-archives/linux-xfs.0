@@ -1,107 +1,69 @@
-Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D37FB39B48E
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 13:26:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38322D9797;
+	Thu, 18 Jun 2026 13:36:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781789200; cv=none; b=NHmuWl1ax8OuzxttXiPpue3bYNzZ/eIye0Ln8m5Se0KS0/ocwgqa5xNSiNRJVpps4lW4MVKHKQoLUL3M3QWAFcWcggGwVGl11kN8EMMNAfxMxe6+5hT4FS4KpAPc9b+YsTvXxSf/N01nEcA0T76bY+nu/RLggqHfUoCwjMtaWoA=
+	t=1781789778; cv=none; b=YRE0MZEJdZRc7wqCjHwVFXDQ575z+rJZazJDLRHmcjKl4pn2lxQ17FEMGlqN9rsRmYJSZIrslOfVh9ezi1eVAjeNZJMFhOQzK6CAFuEobNdB/8x0tiYAhWAOyn8khR/SgAAGjlpMF7I47SusLusamO29AZ1D5xtL2uzrQcIutsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781789200; c=relaxed/simple;
-	bh=85FVe5eMXL0RXQE7ZBuauYhsUfQACOXhAjbKsfHTVm0=;
+	s=arc-20240116; t=1781789778; c=relaxed/simple;
+	bh=sonGjLaZC0lDrmBmtUKK0doqbc7i2VKlukN2A67cIFY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LeHObBqvTpgwRmmYvQ9H1YhB7QVziM1WFerLuSn+oDi79pue6gFaqgrbv/WtxOv2YOECme+oiZghFahaxX8Vo5HJWFbqk8hFS4tTNqkXciRVF5cSu/y1qVS4Kd1ksPHCobKC2ZgNhx6FltHGdJeYicHJ48Nn8djwv8MdiLLrnOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X9ehMrBC; arc=none smtp.client-ip=91.218.175.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=dJgN4G8Kz8JWc+iw7YRmjx7OCSU3WWnfteyIw8sJ5RJWkoqvqUgVnjWAUOdS2JHztds1fVWlfHDsCWneQezDd1oY307Efq1oYPM16ggpoYFm+6jbM+WScVScRZC7FAykyLuprWzXJzCH/Ktvx8wjS/h5GUI0MwXsztxExVRS/aQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DH9xhWtb; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X9ehMrBC"
-Date: Thu, 18 Jun 2026 15:26:14 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1781789187;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ykkxA0qJEUzQ0tfsBRheC21s+kMLf1SZIiy0Lrd0cQk=;
-	b=X9ehMrBCC1ncXh+jowJQAjmQYteyVkHRoh4eFKUfvyV+3CVRPVVg42dMh+/pvn7FMUHYJT
-	pq78jxwUC5SD4fTpbn2bEGljPQPzjliggUJl8Qa8D+LqwAf0QI9cq55xre86ReMrHDyEYx
-	DgC2lsb13rfZtAUwLx0q+tyuaKoB4CE=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, 
-	bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong" <djwong@kernel.org>, 
-	dgc@kernel.org, gost.dev@samsung.com, andres@anarazel.de, 
-	kundan.kumar@samsung.com, cem@kernel.org, Zhang Yi <yi.zhang@huawei.com>, 
-	linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
-Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Message-ID: <xklmkbxoh7yfm5mkxxpp72wfifngzr2v4nfrn3lgzc57ep7nkj@louxc6z3gfmk>
-References: <20260611114029.176200-4-p.raghav@samsung.com>
- <ajFQPANpajmFuKpi@infradead.org>
- <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
- <ajOzoBt_peOCtNUm@infradead.org>
- <au3yznolpebvd5vphmzv73fzosdy7bxrb45kv56n734jnwwj3l@43d7sqlef27k>
- <ajO8AHsMFolUQLra@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DH9xhWtb"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=NXWxqJMqoPNVH4ARTPzVTzSz7t0UDeI67i4rv8moi8I=; b=DH9xhWtbkAchcO8mqC2CsW0DZ4
+	8T/txr8dvGfp//cUib7Gb8k1upCrXtZa55r6/HvYYf2hZ8JxhYfxSsD6pr8efx2+6D8ZIOg4bfKYO
+	odX+5yl6vdDidK0Hm3iVbRldkYICdAyfDsU+EXBE+44P91tVFOy0EoyeuJRqb8D1SVxfycv6vKxdj
+	el0GsVLqQMhtSLHwnStsvxEYuWwFsji4dcK+6J9DNSL/SFw3m9+YLHx6JTq/aC/iF4Jh9DZm92Aj/
+	vj4BubFVtVW/2qpa4pEEd/t1vTchCWLJ4emVMTju4DvQeC0Pi0NMoMMytioN3/PLT8GagWKWJhWJk
+	JmzL0rjQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1waCui-00000001N3f-3OjP;
+	Thu, 18 Jun 2026 13:36:12 +0000
+Date: Thu, 18 Jun 2026 06:36:12 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Morduan Zang <zhangdandan@uniontech.com>
+Cc: hch@infradead.org, brauner@kernel.org, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: guard io_size EOF trim against concurrent
+ truncate underflow
+Message-ID: <ajP0TDAkqaO5Znyv@infradead.org>
+References: <ajO1fOJZlmICeSAv@infradead.org>
+ <B234832D26F10C59+20260618110320.545750-1-zhangdandan@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ajO8AHsMFolUQLra@infradead.org>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <B234832D26F10C59+20260618110320.545750-1-zhangdandan@uniontech.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jun 18, 2026 at 02:36:00AM -0700, Christoph Hellwig wrote:
-> On Thu, Jun 18, 2026 at 11:28:15AM +0200, Pankaj Raghav (Samsung) wrote:
-> > > But I guess not unaligned FALLOC_FL_WRITE_ZEROES?
-> > 
-> >         -r readbdy: 4096 would make reads page aligned (default 1)
-> >         -t truncbdy: 4096 would make truncates page aligned (default 1)
-> >         -w writebdy: 4096 would make writes page aligned (default 1)
-> > 
-> > FALLOC_FL_WRITE_ZEROES comes under truncate. So I would assume we also
-> > do that. That is how I also found the issue with offset > EOF. I will
-> > take a look or else, I will add a test case to test this condition!
-> 
-> A targeted test using xfs_io that does FALLOC_FL_WRITE_ZEROES on an
-> unaligned range and then checks that the data around it is preserved
-> while the unaligned data in the range is zeroed would also be useful.
-> 
+On Thu, Jun 18, 2026 at 07:03:07PM +0800, Morduan Zang wrote:
+> No, I do not have a workload reproducer. I noticed this while reviewing
+> the EOF trim in 51d20d1dacbe for backport — our static analysis flagged
+> that end_pos - ioend->io_offset is assigned to size_t without ensuring
+> end_pos >= ioend->io_offset.
 
+Ok, makes sense.
 
-|----------|----------|----------|----------|----------|
-           ^     ^    ^                     ^     ^    ^
-           |     |    |                     |     |    |
-           |   offset |                     |    end   |
-           |          |                     |          |
-	off_rd       off_ru              end_rd       end_ru
+> If you consider this path unreachable in practice I am happy to drop the
+> patch. Otherwise, the guard itself is small and only affects the trim
+> branch — I can send a v2 with your suggested ordering if you think it is
+> worth hardening even without a reproducer.
 
+I don't think it's impossible.  Just curious where this change comes
+from and hoping for a reproducer if we can come up with one.
 
-I wrote a simple test case for unaligned FALLOC_FL_WRITE_ZEROES. The
-existing code **does not** overwrite any user data. Here is why:
-
-- xfs_free_file_space (punch hole) punches inward (offset_ru -> end_rd)
-  and zeroes out from (offset -> offset_ru) and (end_rd -> end) with
-  xfs_zero_range
-
-- Luckily, even though we consider offset_rd to end_ru in
-  alloc_file_space, XFS_BMAPI_ZERO will skip zeroing already written
-  edge blocks and only offset_ru -> end_rd are zeroed using unmap zero range.
-  ( (offset -> offset_ru) -> EXT_NORM, (offset_ru -> end_rd) -> HOLE,
-  (end_rd -> end) -> EXT_NORM)
-
-I didn't think it through but the code still holds for these cases. This
-might be the reason why fsx did not complain? I will also document this
-in the patch.
-
-But as you said, we need a xfstest for this boundary block checks in case
-some behaviour changes in the future.
-
-I guess apart from this, the only change is to address persisting data
-when offset > old_size as sashiko reported.
-
-Let me know what you think.
---
-Pankaj
