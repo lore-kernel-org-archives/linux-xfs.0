@@ -1,150 +1,244 @@
-Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F29F286417;
-	Thu, 18 Jun 2026 14:23:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD1A35DA6F
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 14:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781792638; cv=none; b=a5lDPKg3Ia1oaSbXC7PRuXl/pYlIjQH6f2LXoPfjcyhwoE+o+WsyxPSRRkQxUCUuL4AEMDG/sKzhCho+7nMdg/g62NX+caOcDolHXain5CNim8ofIBvsujQV1wmyKnJE/MNkiFxrD0hgO0DP7afNNOnyD7dEmZ0A/wGolhZiNVc=
+	t=1781792789; cv=none; b=hUhEViXVmZvrYGq/oiZsK+bjQUpIi2+SgjZdt7ZzREQHUfkSmVcWW8QPavd5bEt9xj6r9EW1gj+jhQGuKeh/qyLepiF3yz+ikIstFh/Hbb1HfIB9fHIyxEf5+gYINpHcM19bZMJUXTLel0opfsuW+BSbeW4m4sMxWjrJ5JWyjm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781792638; c=relaxed/simple;
-	bh=rKUr7r0TBIB2aJKjp9fzyC4h2HPvxK6GpjkpFSav4as=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=tjrwkKwlI7ANBY+4CdC+6q2STM4umDFrbXj1/DL7A3gku6UEKMTfs0gRRsjd6xeHX7I+e6tz+BwZynICEU2WuquuwWvwTOsC/z7MGZJRNfgYBEShg2ZwVzxCtWneK5nw6z/GOuj48d6qITHYS7R/CDeUFTk0YXPRa/cwUvReLV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=eZGND/Xi; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=UnzgWEAc; arc=none smtp.client-ip=103.168.172.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1781792789; c=relaxed/simple;
+	bh=LzFQs2MHTaHygI4LlY5jt51rIpLHsgVp9C3UrBa7sF8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XMQ47eSTzt9Deg730Nqm6Npwe5Em6g4zUCuE2Xmf7d3RyfTRtnYUISYDargpaAm4ZDQpwc52ACgS88q3ju00ci/TPsZqtuC/21L1XGQrNcZSooG7TqRdM6NdpdOhf8hO934kzO12h/3D1116Lf8rE0ii2LrLCwyh4V5Cztuy8i8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=E7w7aSgO; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=FPZ6cOcJ; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Vf/L7LMb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=NzDkm8dm; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="eZGND/Xi";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="UnzgWEAc"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfout.phl.internal (Postfix) with ESMTP id 6350AEC026A;
-	Thu, 18 Jun 2026 10:23:55 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-09.internal (MEProxy); Thu, 18 Jun 2026 10:23:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1781792635;
-	 x=1781879035; bh=MfU79gB2jY7GUP3YvDiOu94taTP682gF79pMq2QCGYc=; b=
-	eZGND/XiejWaS7zm8yEg7uu33p2mkCF9KugWiknTELiaF3NVkce+yKqtynHJQ6Hg
-	4N9yfgzi8voB45iIIPOQqcfx8JXz2IXXGOcxYEnhC+eYC+gc6Dn2apCskzW9cG8o
-	tsbCObQXMBhT/DunLFD1MXQ3gFrk10jCrJ5XnxKT9IyEh1104Am+jnk2e2RD7z6h
-	5lruRCvDFQ+kT2oGptuKUens/IxI+cmbUOlitAavzalR8xs5i7WwcfuroqpwXEGX
-	T5vcppBVvTORFjhCmj2/XMhCBaxrwEbuRc7SQ5Ecwbka0l2VPxHSAfB11vBu8/lJ
-	4wgl+lIzOfrr7mX88Qojjw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781792635; x=
-	1781879035; bh=MfU79gB2jY7GUP3YvDiOu94taTP682gF79pMq2QCGYc=; b=U
-	nzgWEAc7vANRYJ0glNUDw6Y2gks1qPEl1HhZopaSsKrNzvPvbWOsbZU1AO/va6+P
-	JmPDSfFZdIGYPZtm7ddfvVd7lTfwORB8BHj5aiDAGn/ZSjwShQsYvTCTe4oRGrzl
-	iIE3d74RtNV+vaInZihC6E7Cr/qPk4di4zuaX6q5P+3JoPguZGoiP8CD5vGTzKOB
-	uGcUf9Il8ZIWQZLSEc4iyG26Q4DqSvP8hh3nLdt0yRk5PSOqpTogk3aw5EM/+1Xo
-	WgL8Gck3Aq+KdpdfeUgnvvQNzzRoB3J9XaSoXpg87bUBpMeVc65oH9utnXrSXxs9
-	/PcxNcMO3+HilsQI602+w==
-X-ME-Sender: <xms:e_8zaorfnSpu9YpPm7s0HCg0fH584qnaT_SkdBaTIARn8M0cgBBNEA>
-    <xme:e_8zavWX9UmhCthKrP8qJqDRv0rna4uS1N6nJqIk1OIuAwXEM7Z0kzefb_1QAyzxI
-    N065qZiGpW-QFqu_nNlDOGNzIhNRt934UEPBKPE3W9T5BjKQ291x3M>
-X-ME-Received: <xmr:e_8zaralqPcMUYawenxn8l1Pfcg27gzHLT5L7iDuXUUWqZEc-UG-TTAzLSHFwiscLHl7UGAfiE_K6vcIxq4WN5URFO9FpA>
-X-ME-Proxy-Cause: dmFkZTFwKXOv5Jhf36HwedmcfcXPkzbjFO2sYa827fHn4elTj9o2QupGAJ07mM3kdU2bCf
-    CmF/PmP73Ssny+Ynh2BuixWxPkCzNOvvjbzWk1W/HmtNuqPnxa2K9Kh6Gn6o4E7EVbaNcd
-    V7+c9cacPkUdmuxi7pQBIiRasiGy+L0j0miBmvqqeBdkn0ebhn/hUavjnnpD8ZCopsJoLE
-    Toio3RUtU6UTL4M6THDv111WwPgkR6lJ2q+bGLRrTMnipzf1pE1AgAfUpR4g1tt5SjIRvK
-    gubh/e5B6RxMQzAyC9N5YzjOw7+CKd5dmWShbrUARktah96lpHWkQzv8UWuDwPYKydWRhG
-    nHP+RnYmgtcqu5CW8TrOKIB5bqChgnWvCqOqa/Q+if6AzngfvL/6pwTYMK1bJ79qiWcrUO
-    YPT3H+gWfS/Xx6cbEUhhT6bvaMAuRerscHdPC1Khiw+8xcr5yz/16KUPwjefVr58GVdCha
-    8yyfti6qtD2jOtVKlgqotQHvCW0Frz+8j9PqTITA+r7edXgQ036RBfBaP13Mu4tNytxHxa
-    G07CLUu90iGAEO7zeR/ivDcPpSYGX9QY9w9Y0wO7abzfhX49P6vu0Q5aZ1LIb9lZmmTGDn
-    YpA/CbmWo3dl97y0TBqiWoBmvEqTKM6Ne0C+YF5X4/7Sgj9OiQA+O1ShKI5g
-X-ME-Proxy: <xmx:e_8zakdyxeFBUYjfTtp2ekuMoCN6tDZynoZq5b22wjOcVoHFjvv8QQ>
-    <xmx:e_8zat3NC-WcVMEwy4IM2Kb6ih5iEnm6DZ29PyVo84pM2rFGv_hxxw>
-    <xmx:e_8zajIwIB3c6VyjbbJxKUkR1ulaUYvG4FtHP2O7M4Hx09GfjXGLXQ>
-    <xmx:e_8zakEvpq_6485_QSnHLdjB1kP3txyMX0g0g8KrWp6coji_gywLuQ>
-    <xmx:e_8zajHbQwFPNRp5stKO_PxYZ80eaUcERi9BjzzJ6Cj5RPQ_0fFsjpsD>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 18 Jun 2026 10:23:54 -0400 (EDT)
-Message-ID: <325bdef5-487e-49d7-90d4-3418e2ae7799@sandeen.net>
-Date: Thu, 18 Jun 2026 09:23:52 -0500
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="E7w7aSgO";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="FPZ6cOcJ";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Vf/L7LMb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="NzDkm8dm"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B506075F38;
+	Thu, 18 Jun 2026 14:26:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1781792786; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3nBTSAFLZWoC3PysnA6b/+hH4FfP0bc0bS97qROFMb8=;
+	b=E7w7aSgOtnaguNa6ZwxnpBPFQ0TaVIrJaFzZVTGai7Q1GKhXenyWr3t8unofUv6n/drpWE
+	hfrRS3HNjUlssOgJwMk6WfD6MTz4jhQFFbHQ2zYszvxh7zCaIHj+u7GFhqIjfT5yCSp6cT
+	hQdpypD6EL0q7XI5bSh0SG8X/rblIVw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1781792786;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3nBTSAFLZWoC3PysnA6b/+hH4FfP0bc0bS97qROFMb8=;
+	b=FPZ6cOcJx+gQ7DSm9rs8s+aUM9o6TPbqz39QQ+O7BCfMQy1/WTjh+sj7KZIF+L96tMMOQL
+	hwt3RgDXsWCuWOAg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="Vf/L7LMb";
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=NzDkm8dm
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1781792784; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3nBTSAFLZWoC3PysnA6b/+hH4FfP0bc0bS97qROFMb8=;
+	b=Vf/L7LMbhvTW2oePUbEbyqRzRV04eTxzyl5caEyrIU6vfwOjNHy+OKRAg+wa2BP56VDyun
+	0vlxQcnJYF3+53do3m6jQmQEfB6Kup8qptVHtw9B+SCIZnCs3pnFeNjw/8MBxWE9D3ej5n
+	eT/yKsOz4BvxF/DrE4gRDyjXLRGgno4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1781792784;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3nBTSAFLZWoC3PysnA6b/+hH4FfP0bc0bS97qROFMb8=;
+	b=NzDkm8dmm333GNGV25Mbtkg3oogOcD4Nmk+3zdfhFyaEaa5j1ytPFdMlKloNBXZWf7UCNG
+	xp96Y/Bo2n90UODw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9BF61779A8;
+	Thu, 18 Jun 2026 14:26:24 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Wu8KJhAANGpdGgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 18 Jun 2026 14:26:24 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 37368A12D9; Thu, 18 Jun 2026 16:26:09 +0200 (CEST)
+Date: Thu, 18 Jun 2026 16:26:09 +0200
+From: Jan Kara <jack@suse.cz>
+To: Tal Zussman <tz2294@columbia.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, 
+	Jens Axboe <axboe@kernel.dk>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Carlos Maiolino <cem@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Dave Chinner <dgc@kernel.org>, Bart Van Assche <bvanassche@acm.org>, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Gao Xiang <xiang@kernel.org>
+Subject: Re: [PATCH v6 1/4] block: add task-context bio completion
+ infrastructure
+Message-ID: <4jtsjd2sbsn2w7fzfwb7wwowz72r4kc6345ckkkcjoxjbbwjwn@rkl44x3o3sgy>
+References: <20260514-blk-dontcache-v6-0-782e2fa7477b@columbia.edu>
+ <20260514-blk-dontcache-v6-1-782e2fa7477b@columbia.edu>
+ <agq2KRd8RkP1TAf5@infradead.org>
+ <ea1fa305-3ba2-4cfd-b7cb-86875032a300@columbia.edu>
+ <ahPbaSEoNA755Nt3@infradead.org>
+ <f1b8eeb6-2397-4f48-a21a-a023eb0c80ab@columbia.edu>
+ <rkb5oei6cx2erbyininczz6ukbnquqheexhu7tznn5rslkkdn7@b4kpdyhdwdb6>
+ <ahbq0RdUyLIPiItB@infradead.org>
+ <80cb53f3-e7e5-4f96-bacc-f9fb7661d976@columbia.edu>
+ <cuyklvhnt37xwk3jlr2iyyxxkzvt4bsf5iqv2gag4ixdicnbk2@rfqgjlclwesz>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] xfs/078: disable all concurrency scaling
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Lukas Herbolt <lukas@herbolt.com>,
- Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-References: <20260618134834.237647-1-hch@lst.de>
- <20260618134834.237647-2-hch@lst.de>
- <997e50d2-83d8-4b41-9c2a-749e5c85bf4b@sandeen.net>
-Content-Language: en-US
-In-Reply-To: <997e50d2-83d8-4b41-9c2a-749e5c85bf4b@sandeen.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <cuyklvhnt37xwk3jlr2iyyxxkzvt4bsf5iqv2gag4ixdicnbk2@rfqgjlclwesz>
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: B506075F38
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCPT_COUNT_TWELVE(0.00)[17];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DWL_DNSWL_BLOCKED(0.00)[suse.cz:dkim];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-On 6/18/26 8:54 AM, Eric Sandeen wrote:
-> On 6/18/26 8:48 AM, Christoph Hellwig wrote:
->> Disable concurrency scaling to avoid mismatching output on systems with
->> a large CPU count.
->>
->> Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon 01-06-26 13:04:41, Jan Kara wrote:
+> On Fri 29-05-26 16:46:15, Tal Zussman wrote:
+> > On 5/27/26 9:00 AM, Christoph Hellwig wrote:
+> > > On Wed, May 27, 2026 at 11:42:28AM +0200, Jan Kara wrote:
+> > >> > I ran some experiments with fio on both XFS and a raw block device. Five
+> > >> > iterations each for 60s. Results below.
+> > >> > 
+> > >> > TLDR: Removing the delay doesn't significantly decrease user-visible
+> > >> > latency or otherwise improve performance, but does significantly reduce
+> > >> > throughput and increase context switches in some workloads (e.g. C).
+> > >> > I think it makes sense to leave the delay as-is. Thoughts?
+> > >> 
+> > >> Thanks for the test! One question below:
+> > > 
+> > > Thanks from me as well!
+> > > 
+> > >> 
+> > >> > Results:
+> > >> > 
+> > >> > Workloads (all `uncached=1`):
+> > >> >   A: rw=write     bs=128k iodepth=1   ioengine=pvsync2     # XFS
+> > >> >   B: rw=write     bs=128k iodepth=128 ioengine=io_uring    # XFS
+> > >> >   C: rw=randwrite bs=4k   iodepth=32  ioengine=io_uring    # XFS
+> > >> >   D: rw=rw 50/50  bs=64k  iodepth=32  ioengine=io_uring    # XFS
+> > >> >   E: rw=write     bs=128k iodepth=128 ioengine=io_uring    # raw /dev/nvmeXn1
+> > >> >   F: rw=write     bs=128k iodepth=128 numjobs=4
+> > >> >      + vm.dirty_bytes=64MB, vm.dirty_background_bytes=32MB # XFS
+> > >> > 
+> > >> > Mean ± stddev across 5 iterations:
+> > >> > 
+> > >> >     metric                     delay=1           delay=0     delta
+> > >> >     --------------------------------------------------------------
+> > >> > 
+> > >> >   A seq 128k qd1
+> > >> >     BW (MB/s)                4333 ± 27         4374 ± 34     +0.9%
+> > >> >     p99   (us)              36.2 ± 0.8        35.8 ± 0.4     -1.1%
+> > >> >     p999  (us)               3260 ± 75         3228 ± 29     -1.0%
+> > >> >     ctx-switches          184 k ± 59 k     3.68 M ± 65 k    +1903%
+> > >> >     cs / io                0.09 ± 0.03       1.86 ± 0.03    +1888%
+> > >> >     avg bios/run            80.4 ± 0.6         1.1 ± 0.0    -98.7%
+> > >> 
+> > >> So 1 jiffie delay is (with default HZ=1000) 1ms. That means for this load
+> > >> the completion latency should be at least 1000us but your results show p99
+> > >> latency of 36. What am I missing?
+> > > 
+> > > Yes, this looks a bit odd.  Unless there's multiple threads submitting
+> > > and somehow the completions get batched this should complete one
+> > > bio at a time and be the worst case for the delay scheme.
+> > 
+> > Sorry, I should've clarified - the latency here is the userspace-visible
+> > I/O completion latency (i.e. fio's clat value).
+> > 
+> > I ran again and traced to get the actual time from __bio_complete_in_task()
+> > to calling ->bi_end_io(). The results match the 1 jiffie delay now:
+> > 
+> >   metric                  delay=1  delay=0
+> > 
+> >   A seq 128k qd1
+> >     fio clat p99             38us     36us
+> >     bio cb p50             1.23ms    2.5us
+> >     bio cb p99             4.13ms   1.44ms
+> >     bio cb p999            5.01ms   2.63ms
 > 
-> I think this papers over what I still feel is a problem in mkfs.xfs
-> behavior, but that's a different issue and making tests pass is good, so:
+> So I'm clearly missing something fundamental as I don't see how can fio
+> reported IO completion time be lower than the end_io callback latency...
+> Ahh, it is the strange meaning of clat in fio in combination with sync
+> engine where clat means: "how long after the syscall has returned the data
+> is ready". Which for sync engine is immediately so the clat number is
+> meaningless. I think reporting 'lat' numbers from fio would make more
+> sense but whatever.
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Er, hang on - let me retract that. Lukas sent a series to address
-this problem too, right, and one of the things he added in his series
-is a helper to determine whether the concurrency options even exist,
-so that this can continue to run on older xfsprogs, which seems like
-a good idea, no?
-
-https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/commit/?h=for-next&id=7f162f5bcf50fc32c7e3b432e7ff189571a3151f
-
-which added _scratch_mkfs_xfs_supports_concurrency()
-
->> ---
->>  tests/xfs/078 | 8 +++++---
->>  1 file changed, 5 insertions(+), 3 deletions(-)
->>
->> diff --git a/tests/xfs/078 b/tests/xfs/078
->> index 6057aeea12ab..8ef52614b125 100755
->> --- a/tests/xfs/078
->> +++ b/tests/xfs/078
->> @@ -57,9 +57,11 @@ _grow_loop()
->>  	$XFS_IO_PROG -f -c "truncate $original" $LOOP_IMG
->>  	loop_dev=`_create_loop_device $LOOP_IMG $bsize`
->>  
->> -	dparam=""
->> +	# Disable concurrency scaling to avoid output differences due to large
->> +	# CPU counts.
->> +	mkfs_opts="-d concurrency=0 -l concurrency=0 -r concurrency=0"
->>  	if [ -n "$agsize" ]; then
->> -		dparam="-d agsize=$agsize"
->> +		mkfs_opts="$mkfs_opts -d agsize=$agsize"
->>  	fi
->>  
->>  	echo
->> @@ -67,7 +69,7 @@ _grow_loop()
->>  	echo
->>  
->>  	echo "*** mkfs loop file (size=$original)"
->> -	$MKFS_XFS_PROG -b size=$bsize $dparam $loop_dev | \
->> +	$MKFS_XFS_PROG -b size=$bsize $mkfs_opts $loop_dev | \
->>  		_filter_mkfs 2>/dev/null
->>  
->>  	echo "*** extend loop file"
+> The bio cb latency indeed looks like what I'd roughly expect now. And
+> notice how the median latency of IO completion is 1.23ms in delay=1 case
+> and your throughput isn't abbysmal only because writes end up accumulating
+> in the page cache and writeback infrastructure ends up submitting a lot of
+> writeback IOs in parallel (you have ~80 bios to complete per run which
+> amortizes the latency to decent level).
 > 
+> However if you'd have IO that were to use BIO_COMPLETE_IN_TASK
+> infrastructure which doesn't have so many IOs in flight (like direct IO
+> with lower queue depth which has to do extent conversion on completion),
+> you would very much see the latency hit on your throughput as well. In the
+> extreme case of qd=1 direct IO you'd reduce the throughput to ~4MB/s.
 > 
+> Now I'm not saying the delay is bad - it is a tradeoff with clear wins in
+> CPU overhead your benchmarks are showing. I just wanted to point out
+> there's also the cost side which your benchmarks don't show very clearly.
+> So we might need to keep some stats showing how many IO completions we are
+> offloading per second on each CPU and switch to delaying the work only once
+> it crosses a threshold like 1000000/HZ per second or so (so we at most
+> double the IO latency by delaying the end_io callback).
 
+Any progress here? The patchset looks really promising so I'd love to have
+it completed :)
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
