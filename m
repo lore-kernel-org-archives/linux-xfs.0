@@ -1,112 +1,107 @@
-Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206])
+Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4B539280C;
-	Thu, 18 Jun 2026 11:04:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.19.206
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D37FB39B48E
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 13:26:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781780674; cv=none; b=nmh6ozfoV1b7VDg4JA+FOkmKWoVvQuUxpjnIObGBx4UO0w8mV1SbnIaePGdq9BHQzELRAdcqhwid0Sr1BiuXyzwfjV5N/m1S9ej2npxs7R8LQZyltsUrdfPeyK9ssayvzbKxLvm5L8PNvaW4h8KFWZUT+7fmtvGX/7zd73ELEOU=
+	t=1781789200; cv=none; b=NHmuWl1ax8OuzxttXiPpue3bYNzZ/eIye0Ln8m5Se0KS0/ocwgqa5xNSiNRJVpps4lW4MVKHKQoLUL3M3QWAFcWcggGwVGl11kN8EMMNAfxMxe6+5hT4FS4KpAPc9b+YsTvXxSf/N01nEcA0T76bY+nu/RLggqHfUoCwjMtaWoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781780674; c=relaxed/simple;
-	bh=k4e8VI2O6aCir3gLj+hc1Yb89ZGIrDT4hvPm/oW85R4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lpu7l4wIQhBC/el23shggUoStJE+ZsZDjeDDbBMRCwhjq5psOFmOYXAU2zMAxXzrFWQNKVkR9SVLnNbBRQOeHIdbv9egYt+i6jSTtJ9uNnb6J17SKrpGBPTs2aopz3lNnzpPcOtxDvTDWlPBCK3vNoRidR2zjjvhoGFtFiBk55o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=I/suEA3E; arc=none smtp.client-ip=54.207.19.206
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1781789200; c=relaxed/simple;
+	bh=85FVe5eMXL0RXQE7ZBuauYhsUfQACOXhAjbKsfHTVm0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LeHObBqvTpgwRmmYvQ9H1YhB7QVziM1WFerLuSn+oDi79pue6gFaqgrbv/WtxOv2YOECme+oiZghFahaxX8Vo5HJWFbqk8hFS4tTNqkXciRVF5cSu/y1qVS4Kd1ksPHCobKC2ZgNhx6FltHGdJeYicHJ48Nn8djwv8MdiLLrnOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=X9ehMrBC; arc=none smtp.client-ip=91.218.175.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="I/suEA3E"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1781780620;
-	bh=4Uv/pgyvmN9X6UsDOCog3Tj8FogTWj8HbhKGBVSsB9g=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=I/suEA3EW1RxiXHHXDrm7FqEwmxnC8Wqvt5jCePTky1r5hSKxjc9TFAzfCcDk843K
-	 cZmaX9RS4l974jbceBeONi9btSIJ4z5j3+yZ9azYFnJ3BRhV3Ke4PfFQSKk+uMmvDA
-	 oBozza2iU4ToIhB3DrRYkXbC0/b1u4BPNqpGSfUk=
-X-QQ-mid: zesmtpsz2t1781780602t0fd0fe5f
-X-QQ-Originating-IP: 7lbwlNd0ySkfmwckAiimiktunjYCmQadgslhkgnGx+I=
-Received: from uos-PC ( [113.57.152.160])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 18 Jun 2026 19:03:20 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 9547551119723904798
-EX-QQ-RecipientCnt: 6
-From: Morduan Zang <zhangdandan@uniontech.com>
-To: hch@infradead.org
-Cc: brauner@kernel.org,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	zhangdandan@uniontech.com
-Subject: Re: [PATCH] iomap: guard io_size EOF trim against concurrent truncate underflow
-Date: Thu, 18 Jun 2026 19:03:07 +0800
-Message-ID: <B234832D26F10C59+20260618110320.545750-1-zhangdandan@uniontech.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <ajO1fOJZlmICeSAv@infradead.org>
-References: <ajO1fOJZlmICeSAv@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="X9ehMrBC"
+Date: Thu, 18 Jun 2026 15:26:14 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1781789187;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ykkxA0qJEUzQ0tfsBRheC21s+kMLf1SZIiy0Lrd0cQk=;
+	b=X9ehMrBCC1ncXh+jowJQAjmQYteyVkHRoh4eFKUfvyV+3CVRPVVg42dMh+/pvn7FMUHYJT
+	pq78jxwUC5SD4fTpbn2bEGljPQPzjliggUJl8Qa8D+LqwAf0QI9cq55xre86ReMrHDyEYx
+	DgC2lsb13rfZtAUwLx0q+tyuaKoB4CE=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, 
+	bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong" <djwong@kernel.org>, 
+	dgc@kernel.org, gost.dev@samsung.com, andres@anarazel.de, 
+	kundan.kumar@samsung.com, cem@kernel.org, Zhang Yi <yi.zhang@huawei.com>, 
+	linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
+Message-ID: <xklmkbxoh7yfm5mkxxpp72wfifngzr2v4nfrn3lgzc57ep7nkj@louxc6z3gfmk>
+References: <20260611114029.176200-4-p.raghav@samsung.com>
+ <ajFQPANpajmFuKpi@infradead.org>
+ <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
+ <ajOzoBt_peOCtNUm@infradead.org>
+ <au3yznolpebvd5vphmzv73fzosdy7bxrb45kv56n734jnwwj3l@43d7sqlef27k>
+ <ajO8AHsMFolUQLra@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
-X-QQ-XMAILINFO: Nr7dWBUWFJSOKMB0cPljmrF9awokqYZJ4PBpVkGQOFoNZnD260hIF0Wl
-	Ka8rvV8o0KaWnm16+bF0AtmSo5yvsJ/z9ML8YN10wRiyIve6DRrVKiSrU8jPa/LjJC8kpgC
-	7Vx45CGaTknPZ+Xf9hX7ALCWbTMQ/6HSVRTB6OkUQZZMeNHAa6uX18hsgZ9litqhHdv/biF
-	wzz8AvIyKA5N+qrfBekDtJox+F287IFiSZd329M1H2krrEqDW55pr0mZS2g83Ccunpu8HVV
-	e4UWZd/LypM3WKrJ5wKoHoKieRw5xGNObuHbMfGZshDTUy2efyYNiq62R1byI/rF/X0N0ZQ
-	tMJ0EP0IQlaF0tFxc7uTEBKfYIP0Sla0Eux8XGfcKaWGleKPTP2S4fQTrw5J/jfpvFmskOH
-	gZXbEcqLvtIdeoJOihGmVuPVIpVXO7n31kyom4OxCi/n5bbSlKyg/zR3+1LweOb5X8Agxhn
-	T/mtL46UHAZYXYA4Uwc1EfnwDlDIAviEmSwlmUxDsYRhpvnQlebBOpHv7xOq0hYrLp5zZ3E
-	0fqu7UBIP64I0o2wOK8A84zVxIzzNarpl8Uj9nIe9S+0senG90zzdapFV6SJ+J6Rwn0h7Kd
-	gunQ2oJJgDjPCCjj1A/5wVsRQVBlZGPm5RmeddSEKg8mFCE20pe4Bto3u3unh5SQfDI64mO
-	75PiXHkFS8LN2yGF44jV58+kw9z3YDSwr/tUwFE30P34U8czNqGd5vIOI5xDj9sZ7ZmGMHM
-	TpFEP39FIDSEO/VjGYIHdoElTWa/NyEe1Oy2DBCAKZo5xfLYUt6oeq6VdtPCbFkHR7VFEcT
-	of/1ufUJ5FSgVZjv6rTjDpL/7IfJ1RW+7iRl6WVir+PvRwORrAdZHjj5yWk7MC16I3Meq/r
-	3SFyNjtmDZfgtMZsxCQZpPGGKUXd7RPb2MwE/l1UvWu8nAbEyp7y82eabWkvjFe6BbYFs1Y
-	bCvhQfdim3SQ9zPiwTBZjUUQFh4WMPT3DR9AOPLnlJ3VRkEu9vaAA4gm8VQj2K4g5ocixhF
-	Q9QdqpCFoadQPWtjqF1vmFNAmJRbmraqkt6ghn8Vc7u7fVb2Wc3jnJdxaSdc0=
-X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ajO8AHsMFolUQLra@infradead.org>
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jun 18, 2026 at 01:38:20PM +0800, Christian Brauner wrote:
-> Do you have examples for this?  I.e. did you hit this with a workload,
-> or did you just look over the code for issues?
+On Thu, Jun 18, 2026 at 02:36:00AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 18, 2026 at 11:28:15AM +0200, Pankaj Raghav (Samsung) wrote:
+> > > But I guess not unaligned FALLOC_FL_WRITE_ZEROES?
+> > 
+> >         -r readbdy: 4096 would make reads page aligned (default 1)
+> >         -t truncbdy: 4096 would make truncates page aligned (default 1)
+> >         -w writebdy: 4096 would make writes page aligned (default 1)
+> > 
+> > FALLOC_FL_WRITE_ZEROES comes under truncate. So I would assume we also
+> > do that. That is how I also found the issue with offset > EOF. I will
+> > take a look or else, I will add a test case to test this condition!
+> 
+> A targeted test using xfs_io that does FALLOC_FL_WRITE_ZEROES on an
+> unaligned range and then checks that the data around it is preserved
+> while the unaligned data in the range is zeroed would also be useful.
+> 
 
-No, I do not have a workload reproducer. I noticed this while reviewing
-the EOF trim in 51d20d1dacbe for backport — our static analysis flagged
-that end_pos - ioend->io_offset is assigned to size_t without ensuring
-end_pos >= ioend->io_offset.
 
-I have not been able to trigger this in testing yet, so I do not want to
-overstate the practical impact. That said, once the trim path is taken
-with end_pos <= io_offset, the current code clearly wraps io_size, which
-seems wrong relative to the intent of that commit (io_size should reflect
-valid in-EOF data, i.e. zero in that case). Filesystem completion paths
-also use io_size for range decisions beyond a simple EOF update.
+|----------|----------|----------|----------|----------|
+           ^     ^    ^                     ^     ^    ^
+           |     |    |                     |     |    |
+           |   offset |                     |    end   |
+           |          |                     |          |
+	off_rd       off_ru              end_rd       end_ru
 
-If you consider this path unreachable in practice I am happy to drop the
-patch. Otherwise, the guard itself is small and only affects the trim
-branch — I can send a v2 with your suggested ordering if you think it is
-worth hardening even without a reproducer.
 
-> I find this a bit hard to read due to different paramter ordering,
-> i.e. why not:
->
-> if (ioend->io_offset + ioend->io_size > end_pos) {
->         if (ioend->io_offset >= end_pos)
->                 ioend->io_size = 0;
->         else
->                 ioend->io_size = end_pos - ioend->io_offset;
-> }
+I wrote a simple test case for unaligned FALLOC_FL_WRITE_ZEROES. The
+existing code **does not** overwrite any user data. Here is why:
 
-If you are fine with this change, I will send a v2 with this ordering to
-improve code quality.
+- xfs_free_file_space (punch hole) punches inward (offset_ru -> end_rd)
+  and zeroes out from (offset -> offset_ru) and (end_rd -> end) with
+  xfs_zero_range
 
-Thanks,
-Morduan Zang
+- Luckily, even though we consider offset_rd to end_ru in
+  alloc_file_space, XFS_BMAPI_ZERO will skip zeroing already written
+  edge blocks and only offset_ru -> end_rd are zeroed using unmap zero range.
+  ( (offset -> offset_ru) -> EXT_NORM, (offset_ru -> end_rd) -> HOLE,
+  (end_rd -> end) -> EXT_NORM)
+
+I didn't think it through but the code still holds for these cases. This
+might be the reason why fsx did not complain? I will also document this
+in the patch.
+
+But as you said, we need a xfstest for this boundary block checks in case
+some behaviour changes in the future.
+
+I guess apart from this, the only change is to address persisting data
+when offset > old_size as sashiko reported.
+
+Let me know what you think.
+--
+Pankaj
