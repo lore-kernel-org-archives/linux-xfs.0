@@ -1,43 +1,45 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from out-186.mta1.migadu.com (out-186.mta1.migadu.com [95.215.58.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 496583002A0;
-	Thu, 18 Jun 2026 09:08:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73CAF3CF034
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2026 09:28:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781773694; cv=none; b=unAg17JPJCOpWVwjdvUFXO23nZjZ6VlHptO/fPq6OmLQOxcFvkcHdeixIsYg/YQ97z3iNPWJmbsrOtCZSBpylHci0oShVwGIPt/jEdL3yE0tRalvJzd2QMEJjDQWotPpxUAgpHCn5NWZczc/GH02VUt1Z7+ZIoFsc6GOd/hJ3zg=
+	t=1781774919; cv=none; b=SbGvgb/pXf/azSuqcfwi4OUPLVbI4Lzx5Mh4hob1PiJphLjDvqNiopajRugbKPI0ymY7qRhH9RG0RaqMcO5mpS6cbLket0lUKI0ItZWT9VLZuIGC2X5XvSRZfDYnRm+DiBhVJbCoECX9G8Sw+s8v8lu4cxiK8pdczFJOxgLRuqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781773694; c=relaxed/simple;
-	bh=gfSrckcHQyoUgjYKDVXmoh6mLVyEiDdBExVER+swGiM=;
+	s=arc-20240116; t=1781774919; c=relaxed/simple;
+	bh=Imqd3PMwxob70q733lh+Zcw/+83hIq+TAuSRfoyvU2s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ikpxH+mzoXoM6QVdf5YURvVkhKXThVu0u4bXdGUWTYj8SptGpzVAzNaHU164qw1+zn06ZE9AJG6/zSDhonjTe3h5W+jIynSVyiJTxhD/K/OU5sPQ2ka9SeldPrt+0Nta9yIug9LyX/Xv9LyvHzqOjlgu3dGTli93VEVSd+4ONeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=au3NywWB; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=hCqnf0KyMllCPxyXaSj+r/dNAKfRhneKRHJmsv9X4wWK8dww3N4sn+MhoZaQeRpoVGV7qRrzrtWal0iBGPi/v3nD7qDfGBv3Qcy++AQLKecJERg3l5IHvYBPo1zAfluKBI+RwqWCeogImjFcKTboqhX1uxels9/m+pYS5+N5AIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=A2Rkn0JF; arc=none smtp.client-ip=95.215.58.186
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="au3NywWB"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FgcTKf0RyLC5PpOE8rfAPR/SwhzB/QavyW3YdrbgiQk=; b=au3NywWB4QwXWyseo5vvCjbgwU
-	NENJ8DtjHQp+Ub2Gi8TXqTh77HzWMxVjMOOV67kioFFxopngljT3ILuw779Do2yjMbUzWx6YbzTG/
-	TKgFpkRVQVtQmmsTu2LwgDC+VNWSPEfUWf7SMsqzSWYoB3kPpWu+QcBmBL85n/EKLnJn6dfqF7MAO
-	7ASOtrJY80d+kAc4gOt3eiqaBhgQMrqAEFBJTEuGa5iill2l8u6AA7HJb7MipIZspadnv+loc+JKz
-	NMSu/MqiVr3fgE0ESCWkm/pfcuFfCkmfFWoiYAtzYQQpVzjcb79dl4htDeHXhyWt1EmrcX8nF1Dzb
-	kDeWf+Mg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wa8jM-00000000tuj-39Eh;
-	Thu, 18 Jun 2026 09:08:12 +0000
-Date: Thu, 18 Jun 2026 02:08:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Morduan Zang <zhangdandan@uniontech.com>
-Cc: brauner@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH] iomap: guard io_size EOF trim against concurrent
- truncate underflow
-Message-ID: <ajO1fOJZlmICeSAv@infradead.org>
-References: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="A2Rkn0JF"
+Date: Thu, 18 Jun 2026 11:28:15 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1781774905;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=x4shRaP6IA88GTRNtOJcUJssU4CN4YUqzVDciqr0Xkg=;
+	b=A2Rkn0JFU7ADX30BhVsjhDn7N+Qrd2IDoutoi3fKDjqki/2rKC5IVOjmEMGK9pxjMkscvP
+	a1JEkd/g1OBjLB1RM3yPD95foCpDI7dmpLAvqQk/I2E/Rp3y+69M4fYlCh2Ygx7/AobLMS
+	0e5YRCk2NSynwVy3XFMtZnNPqKiOCZU=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org, 
+	bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong" <djwong@kernel.org>, 
+	dgc@kernel.org, gost.dev@samsung.com, andres@anarazel.de, 
+	kundan.kumar@samsung.com, cem@kernel.org, Zhang Yi <yi.zhang@huawei.com>, 
+	linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
+Message-ID: <au3yznolpebvd5vphmzv73fzosdy7bxrb45kv56n734jnwwj3l@43d7sqlef27k>
+References: <20260611114029.176200-4-p.raghav@samsung.com>
+ <ajFQPANpajmFuKpi@infradead.org>
+ <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
+ <ajOzoBt_peOCtNUm@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,38 +48,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ajOzoBt_peOCtNUm@infradead.org>
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jun 18, 2026 at 01:38:20PM +0800, Morduan Zang wrote:
-> However, ioend can be created before a concurrent truncate shrinks
-> the file.  In that case, end_pos can move below ioend->io_offset
-> before the trim happens.  The subtraction then becomes negative, but
-> the result is stored in size_t io_size, causing an unsigned wrap to
-> a huge value.
+On Thu, Jun 18, 2026 at 02:00:16AM -0700, Christoph Hellwig wrote:
+> On Wed, Jun 17, 2026 at 11:44:47AM +0200, Pankaj Raghav (Samsung) wrote:
+> > > Maybe we also want xfstests that try unaligned FALLOC_FL_WRITE_ZEROES
+> > > and make sure no existing data before the range is lost and the
+> > > entire range is zeroed?
+> > > 
+> > 
+> > I added FALLOC_FL_WRITE_ZEROES support to ltp (both fsx and fsstress).
+> > For example, generic/363 tests for unaligned writes and checks for any
+> > stale data. By default, I think we do unaligned reads, writes and
+> > truncate in fsx.
 > 
-> A wrapped io_size can mislead append detection and corrupt
-> completion-time size handling, since filesystem end_io paths consume
-> io_size for decisions such as on-disk EOF updates and unwritten/COW
-> completion ranges.
+> But I guess not unaligned FALLOC_FL_WRITE_ZEROES?
 
-Do you have examples for this?  I.e. did you hit this with a workload,
-or did you just look over the code for issues?
+        -r readbdy: 4096 would make reads page aligned (default 1)
+        -t truncbdy: 4096 would make truncates page aligned (default 1)
+        -w writebdy: 4096 would make writes page aligned (default 1)
 
-> +	if (ioend->io_offset + ioend->io_size > end_pos) {
-> +		if (end_pos > ioend->io_offset)
-> +			ioend->io_size = end_pos - ioend->io_offset;
-> +		else
-> +			ioend->io_size = 0;
-> +	}
+FALLOC_FL_WRITE_ZEROES comes under truncate. So I would assume we also
+do that. That is how I also found the issue with offset > EOF. I will
+take a look or else, I will add a test case to test this condition!
 
-I find this a bit hard to read due to different paramter ordering,
-i.e. why not:
-
-	if (ioend->io_offset + ioend->io_size > end_pos) {
-		if (ioend->io_offset >= end_pos)
-			ioend->io_size = 0;
-		else
-			ioend->io_size = end_pos - ioend->io_offset;
-	}
-
+Thanks.
+--
+Pankaj
