@@ -1,75 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63ABE35BDC7;
-	Fri, 19 Jun 2026 08:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A349733F8B2;
+	Fri, 19 Jun 2026 08:15:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781856810; cv=none; b=uKdFwQCB+Y2xaXDEwsjL+TlvOdAlPmW/ShFA2gkLVV5ih08mzyPqC9ZHFIYCPA25g9368HN7aAfnrrDXRMvpcPVqWQDrvMH8XmU9k1bMB6dO92QQJkLbq3gpiFP0UhlTnX6bvOREdtpRw1vK+QDcUnKV2cyZSZzdUPWkaqqNX60=
+	t=1781856917; cv=none; b=Vi8VlKlKM6AcsXFtikoGiddNolBmHRhkBowE4hvzIWGbU+7D6v5WEhpEvsymjOOsUG+Tm1wsCXhnWenL4O9ROXbqKUsFgup9zCrzgFhnc8Y2nIQ7V5pu26N0I2XBQIncQOh08HXHwdDsOb/MpxRp04k+FTDZMJ405d01/vo5Ifs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781856810; c=relaxed/simple;
-	bh=USTIsNUMIvMPl7g/s/q2uIweJKme94PTrp8NsVpU03U=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=TrEVe4hxl/5VGUVIDpYXN4kO35B7VjkKCNBOE0C3ISdOXliVmKAM/3SSlsXRZ0KV727O9d0kl59oqIlZW41duCmRqoXm48OIVb5JF16mCaO9eqQNypjs7yHftSqbvqivANJ37Fpx9Se7b+6Je+VNV/Dur73TmdAGqZ+h4bT2ZvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLhd9C7e; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781856917; c=relaxed/simple;
+	bh=TJ/5N3qcXoJ8MWSXQuOomI9KXw8NWOruAShKtcam2Qc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eV5zlbYbagqYiU/4ZgVB5Fw627b6imgGeFjWTfMgh1Vmxg6LVQEMUwx8yqV3ZLkyWcoqeqFRIDK8X+PUlD7C1kHpSYFO4/uXrjXDDfa7IYB5CPphq1ItSLtNuypEewADfUVQEzM7O8jNttrCL252llUOFJb7cm51peKNxMd3W2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=gBmOSTpv; arc=none smtp.client-ip=115.124.30.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLhd9C7e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 546F71F000E9;
-	Fri, 19 Jun 2026 08:13:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781856809;
-	bh=NOJ+Rr88HAThqep/zXjz1/FrJiSqscTdZ/HzMyjxsMY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=OLhd9C7e18DMVUGNfJ16kf9NqwKlYBvFuynO3XAqNqY7IDHXC6zHE3V1zgtZqmzQl
-	 8HmZOFSMdEAq5KW/IVIcM7BssuF3FZXJon9QW7TPpDEDdhxKIFUESBkTq4aqb0xsCu
-	 +gn9nSz5yX96dqzkMPvcNZTcEg4qiYyZjHB6JzD5VQ6X2jg4+WQNdYiBqWQKQj413/
-	 l92ZrrlPwkXyiMX7EK9834iJ9PV7JR9njmJwQkeufMI+12GVdZFb622RUaMet77QQt
-	 Q0GyZTs+ViBMYCgNVS8QaU8trA3OtlRplQbLHMtKtIqH3/71fBFEqPLriaX7purSD9
-	 EkytgcP1dqHaw==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20260617114253.635751-1-bfoster@redhat.com>
-References: <20260617114253.635751-1-bfoster@redhat.com>
-Subject: Re: [PATCH] iomap: always return status from iomap_write_iter
-Message-Id: <178185680256.142447.15042938287249585186.b4-ty@b4>
-Date: Fri, 19 Jun 2026 10:13:22 +0200
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="gBmOSTpv"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1781856912; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=H09kVhZKvVnGT/8zcbwbAdfiVXItBYmg1/F6osgjWjA=;
+	b=gBmOSTpvxv2GrMbo1l6bqE7cUADSr7/hNGJ8olj97hmd/qEVC3FRGFfBpC2RkT6WJ8QuOJRc6r58+2rg8es04K+z+Ewu+WItGL71qOSC8YJ08l2DFvYhO2te4brVBKm4vV95q3MSqLMakCeVAaNt5CYp3ypKPOxXaUCvpXJWLWQ=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R451e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0X59ET.U_1781856911;
+Received: from 30.120.66.214(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X59ET.U_1781856911 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 19 Jun 2026 16:15:11 +0800
+Message-ID: <e2f45d1c-c4ad-482e-8a3c-8072209eec1b@linux.alibaba.com>
+Date: Fri, 19 Jun 2026 16:15:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] iomap: submit read bio after each extent
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>
+Cc: Kelu Ye <yekelu1@huawei.com>, Yifan Zhao <zhaoyifan28@huawei.com>,
+ Ritesh Harjani <ritesh.list@gmail.com>, Joanne Koong
+ <joannelkoong@gmail.com>, linux-erofs@lists.ozlabs.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20260619050105.439956-1-hch@lst.de>
+ <20260619050105.439956-2-hch@lst.de>
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <20260619050105.439956-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.16-dev-aeb64
-X-Developer-Signature: v=1; a=openpgp-sha256; l=883; i=brauner@kernel.org;
- h=from:subject:message-id; bh=USTIsNUMIvMPl7g/s/q2uIweJKme94PTrp8NsVpU03U=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSZ/FKXy2Deun5ryzGW7ilV6315V6c9/zchV1Hdlclo8
- 8TZq4+2dpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExEkY+RYdLbNXL3vPQ0T919
- p9G42/nF6/64L2wlV46oTdsyJW/bw0CGPzx6LZOuLYq5bRq0dG2Fd836rZWzdA4/+MivrrroueP
- 0tawA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-On Wed, 17 Jun 2026 07:42:53 -0400, Brian Foster wrote:
-> iomap: always return status from iomap_write_iter
 
-Applied to the vfs-7.3.misc branch of the vfs/vfs.git tree.
-Patches in the vfs-7.3.misc branch should appear in linux-next soon.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+On 2026/6/19 13:00, Christoph Hellwig wrote:
+> Currently the iomap buffered read path tries to build up read context
+> (i.e. bios for the typical block based case) over multiple iomaps as
+> long as the sector matches.  This does not take into account files
+> that can map to multiple different devices.  While this could be fixed
+> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
+> over iomaps actually was a problem for the not yet merged ext2 iomap
+> port, as that does want to send out I/O at the end of an indirect
+> block mapped range.
+> 
+> So instead of adding more checks move over to a model where a bio
+> only spans a single iomap.  File systems can still create iomap
+> that span more than an extent if they want to build larger I/O.
+> 
+> Reported-by: Kelu Ye <yekelu1@huawei.com>
+> Reported-by: Yifan Zhao <zhaoyifan28@huawei.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.3.misc
-
-[1/1] iomap: always return status from iomap_write_iter
-      https://git.kernel.org/vfs/vfs/c/39987163d6dc
-
+Thanks,
+Gao Xiang
