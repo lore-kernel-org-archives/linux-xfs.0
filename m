@@ -1,85 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1D7371D17;
-	Fri, 19 Jun 2026 10:16:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7973B38B4;
+	Fri, 19 Jun 2026 16:56:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781864187; cv=none; b=nffZ2orLrDU23uyJTFED/7ojILt/g7kRFV1xjCBhTuYvGRXy+6z+jdCIe0Cu82VXP4OWECgg1ZHX5qf9ZlK+4ZTQ9I/wxVjXEppF4oOCYdBgxh+GfTDvgunX0H6MoG5qz1y6eYIAsL00zUAPjtgDbtst2JqVlJdR8nsnnT2gY58=
+	t=1781888182; cv=none; b=MdCbQ9lOe9Ltze0Kkl7lGXDmozbslxJhHiv7NXCJZgS8mNqXMHNegtUwSXaxFO2TVzI3B85dHLS64MZaeLZKprPp4xn6u5T/jo2rObtUp3zo/zusBKV5UBw4t0FTzhtpn41KbQ4XwS9Hdta1qySfFztgcpbbM4zS8VHk6GtLP9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781864187; c=relaxed/simple;
-	bh=tn0AV2gYpBnl6skQdfrlTXr7GXWTF+FHRBN4aCvCt5w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SDoFx8cRSFgo6EV3giamUlY0sbOgh48pRS+8pn9Sv4C218+v41xXrm2BQ7rn+lPe9dVem3a0C9rRxFmXTlrkRD8CNusaDrA4Em7mmhMOcbZMEUeyb4SB6BMQEAjHHgThvLVgjDLfvBtksQ9h+d8e71cSjPFpv6w2INMX93Ez8Mo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UWzW85yS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781888182; c=relaxed/simple;
+	bh=ikxZrrHtTEwRwlSyKa2TSoeJ3Jvgpjp6HfvvF3KoJj4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LF8NK1/supuYydlwLZervtUQaqZugPokkJR45eQc9pjGa8ygiuxM1xl5TrwkwFjErfJ/kZs/JxAdjL5I5u29Aa3VMOOAidoD2EEx01WMrTotK/w0gcMfUwH02hLj1EVnPQUYVYCPwkSxn8jSwIuqsFh++JcLadWMCbEwB55+0LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Shn1glci; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UWzW85yS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E291A1F000E9;
-	Fri, 19 Jun 2026 10:16:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Shn1glci"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5F0B1F000E9;
+	Fri, 19 Jun 2026 16:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781864184;
-	bh=T4Ku6vxk8hJWYI5hTD/JvplJiBVBM2hA5xPuKUywqtM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UWzW85ySRdjp0ho+faIX+ktbjM7q0E71ZtySVmHB/lVksOkWs35ujR/kmWxc8PucY
-	 d57zq/tQ0SpuUcEsoTMhQjfDBNpBccmyqE0960iJZvb7wPhVcCsnVwOk6EJFUS48+W
-	 23W7iGHjVNZ7wvPZmG/w0ZOETozKdf20KjzfaaepQ2z6Pm+bztuSfNf691rYrTrtVE
-	 ZbygRWbI7Chha4MkTeSYI04PFr63DUfViiz8/ix+pexFnGub2diHQMuRG/Ra6pKcWu
-	 Cc6twnKRPzc9n2sX330e43I70bDRH9RmWYM7GSDuvj70NBSTWfQ7+sYeW8UMyWjYCg
-	 DamksD6HmZNVg==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Kelu Ye <yekelu1@huawei.com>,
-	Yifan Zhao <zhaoyifan28@huawei.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: submit read bio after each extent
-Date: Fri, 19 Jun 2026 12:15:56 +0200
-Message-ID: <20260619-kundgeben-hippen-abrunden-643fba56e35d@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260619050105.439956-2-hch@lst.de>
-References: <20260619050105.439956-2-hch@lst.de>
+	s=k20260515; t=1781888181;
+	bh=9Pc+roecy0N9fcSZhZ72+qSw1o+IjhE+4/qpcF1Vmgk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Shn1glcirGu1wXLyw5SX0iBWhoHUNgPUYmU8oRgEF5R3UfunAR/3yR1wGLaOhqZl6
+	 MpE/n+QWAPWVxdK3LJ8/X2j33uGDZ0TvVuTjBkn7bpSkSlyuSrMWvO9ep3WkVTOO05
+	 mbhAU6MeJya50Kd3/vda+WFYnkAzPRZywQm3HkKzDDozrePtQdjbXWwifpBJuDTJeD
+	 6wh1fWSUDSDkVniWShwwXXFI74T7qKkPY8t422Qa6eciuECvWYLv0KFqR04t4BbFPL
+	 UQj8fLdwGxzyj9eiyahw7qYBlKUc/U8Bz+AvhujKQxITT/mvPTlAYM4cvpW45DlAjg
+	 Ra8kcktUx+xLg==
+Date: Fri, 19 Jun 2026 09:54:48 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org,
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
+	djwong@kernel.org
+Subject: Re: [PATCH v10 03/22] ovl: use core fsverity ensure info interface
+Message-ID: <20260619165448.GB3223@sol>
+References: <20260520123722.405752-1-aalbersh@kernel.org>
+ <20260520123722.405752-4-aalbersh@kernel.org>
+ <20260520190719.GB3424023@google.com>
+ <CAOQ4uxh_hfiSwMw8ABhhrz7GguZWjHEiBmvb3eq16Wfqw0+ZrQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1368; i=brauner@kernel.org; h=from:subject:message-id; bh=tn0AV2gYpBnl6skQdfrlTXr7GXWTF+FHRBN4aCvCt5w=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSZin2KPFU0f2ZCVoTv/yyj999qeNO2TPv1csPWjGUcZ YsMU4XsO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYSvJeR4bHukrfPUs2Dan+e sT67jWeTzn5FpivTp9zfrJbuWrcpew8jw0ypS5991LL4kudO+cE6a1nLxunxkZl5pm8nLNQqYc8 S5AYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxh_hfiSwMw8ABhhrz7GguZWjHEiBmvb3eq16Wfqw0+ZrQ@mail.gmail.com>
 
-On Fri, 19 Jun 2026 07:00:53 +0200, Christoph Hellwig wrote:
-> Currently the iomap buffered read path tries to build up read context
-> (i.e. bios for the typical block based case) over multiple iomaps as
-> long as the sector matches.  This does not take into account files
-> that can map to multiple different devices.  While this could be fixed
-> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
-> over iomaps actually was a problem for the not yet merged ext2 iomap
-> port, as that does want to send out I/O at the end of an indirect
-> block mapped range.
+On Fri, Jun 19, 2026 at 09:28:31AM +0200, Amir Goldstein wrote:
+> On Wed, May 20, 2026 at 9:07 PM Eric Biggers <ebiggers@kernel.org> wrote:
+> >
+> > On Wed, May 20, 2026 at 02:37:01PM +0200, Andrey Albershteyn wrote:
+> > > fsverity now exposes fsverity_ensure_verity_info() which could be used
+> > > instead of opening file to ensure that fsverity info is loaded and
+> > > attached to inode.
+> > >
+> > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > > Acked-by: Amir Goldstein <amir73il@gmail.com>
+> > > ---
+> > >  fs/overlayfs/util.c | 14 +++-----------
+> > >  1 file changed, 3 insertions(+), 11 deletions(-)
+> >
+> > Reviewed-by: Eric Biggers <ebiggers@kernel.org>
+> >
+> > I'm still confused by the new implementation of fsverity_active() that
+> > got introduced by "fsverity: use a hashtable to find the fsverity_info",
+> > though.  I should have caught this during review of that commit.  For
+> > one its comment is outdated, but also the memory barrier seems to be
+> > specific to the fsverity_get_info() caller and probably should be moved
+> > to there.  Anyway, that's not directly related to this patch.
 > 
-> [...]
+> Eric, Andrey,
+> 
+> Did you see the Sashiko review for this patch and others in this series?
+> 
+> https://sashiko.dev/#/patchset/20260520123722.405752-1-aalbersh%40kernel.org
+> 
+> It annotated some review comments as high and critical.
+> For this patch it is about interaction with fscrypt.
+> 
+> Please take a look and say if this is concerning or false positive.
 
-Applied to the vfs-7.3.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-7.3.iomap branch should appear in linux-next soon.
+Yes, this patch is broken and should be dropped.  I need to remember to
+look at the Sashiko reviews for other people's patches and not just
+trust that the submitter will.  Fortunately this one wasn't applied yet.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+I pointed out the HIGHMEM performance bug in
+"fsverity: generate and store zero-block hash" earlier
+(https://lore.kernel.org/linux-fsdevel/20260401222717.GH2466@quark/).  I
+assume it was decided that no one will care about the combination of XFS
+&& fsverity && HIGHMEM.  But the XFS folks should double-check that.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Andrey, could you check the Sashiko reviews for the other patches too?
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-7.3.iomap
-
-[1/1] iomap: submit read bio after each extent
-      https://git.kernel.org/vfs/vfs/c/dce5617fca3a
+- Eric
