@@ -1,41 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14A8823DD;
-	Fri, 19 Jun 2026 08:25:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1D7371D17;
+	Fri, 19 Jun 2026 10:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781857528; cv=none; b=u5wJlfJIVlxQcLgDzumU577OZe6wbNYYfKQ2nMkUxFO3loxMweiPbXgeejq04xUTYjEAytv8OgeyysmQSJZnz2/O0N0h2fq0Bet2twcwPk8wPm/+Sj1RS1ZOpEtR966WJ1w/E0x9FpHWubd+j09ElbVvY8WqN7PqX+8wmwe2FEM=
+	t=1781864187; cv=none; b=nffZ2orLrDU23uyJTFED/7ojILt/g7kRFV1xjCBhTuYvGRXy+6z+jdCIe0Cu82VXP4OWECgg1ZHX5qf9ZlK+4ZTQ9I/wxVjXEppF4oOCYdBgxh+GfTDvgunX0H6MoG5qz1y6eYIAsL00zUAPjtgDbtst2JqVlJdR8nsnnT2gY58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781857528; c=relaxed/simple;
-	bh=JAoXastpqbLfEbaMJJVXBQkuSJqPcM3uC249DpZhMOY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=UNIUUNXPPniaugGUK03P2XG9XAh3A3aLLFKYmASDXEO1tsxDv29qhyD5CKJSn0sSkf9H1JlnN3tGxvbFrhvXKnPZkmXaasEoiLQbLFRJ4ZTThvdPmZlyYcX3hnuS/V8gnaNDvm40LaHUbNTfzgFpnVMHokC77FoXmNcvIbCArFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnEaZ5rK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781864187; c=relaxed/simple;
+	bh=tn0AV2gYpBnl6skQdfrlTXr7GXWTF+FHRBN4aCvCt5w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SDoFx8cRSFgo6EV3giamUlY0sbOgh48pRS+8pn9Sv4C218+v41xXrm2BQ7rn+lPe9dVem3a0C9rRxFmXTlrkRD8CNusaDrA4Em7mmhMOcbZMEUeyb4SB6BMQEAjHHgThvLVgjDLfvBtksQ9h+d8e71cSjPFpv6w2INMX93Ez8Mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UWzW85yS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnEaZ5rK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AEB51F000E9;
-	Fri, 19 Jun 2026 08:25:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UWzW85yS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E291A1F000E9;
+	Fri, 19 Jun 2026 10:16:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781857527;
-	bh=KRZUzo39MsJfwpIcRF9lV0M/rGo1K2di/pvIPlBo/Iw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=RnEaZ5rK59+kW6NHSATqoGBus8/ku/YLORDYaZF605GjPjga+PPNNKjX++RdaMovC
-	 KHpIRlrffZsVl9M4GVoiE+SNeJ/Piyiuxz58u40kku3E5qqahg/zGHVss01R24pSSO
-	 gYCQH0atQKPuq8yAjV6qjBeEf7jpLhUzVYbitrg+rJE6tMloqOPLmWdw2KgmpALdmj
-	 aBoIRldvmzLkknIrpzmQc98CzfIABpZZiCdIsKZgBIrkGI984OFTnOQAOcCADzBela
-	 SBeYgGO9aqEHqbC5WLRsFRb3s+5WQi9MPFbqAEOn+P3aCMgvIhfGzMS8g+F1Pv8gqa
-	 DjBwjKXb9V7cg==
+	s=k20260515; t=1781864184;
+	bh=T4Ku6vxk8hJWYI5hTD/JvplJiBVBM2hA5xPuKUywqtM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=UWzW85ySRdjp0ho+faIX+ktbjM7q0E71ZtySVmHB/lVksOkWs35ujR/kmWxc8PucY
+	 d57zq/tQ0SpuUcEsoTMhQjfDBNpBccmyqE0960iJZvb7wPhVcCsnVwOk6EJFUS48+W
+	 23W7iGHjVNZ7wvPZmG/w0ZOETozKdf20KjzfaaepQ2z6Pm+bztuSfNf691rYrTrtVE
+	 ZbygRWbI7Chha4MkTeSYI04PFr63DUfViiz8/ix+pexFnGub2diHQMuRG/Ra6pKcWu
+	 Cc6twnKRPzc9n2sX330e43I70bDRH9RmWYM7GSDuvj70NBSTWfQ7+sYeW8UMyWjYCg
+	 DamksD6HmZNVg==
 From: Christian Brauner <brauner@kernel.org>
-To: Morduan Zang <zhangdandan@uniontech.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
- djwong@kernel.org
-In-Reply-To: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
-References: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
-Subject: Re: [PATCH] iomap: guard io_size EOF trim against concurrent
- truncate underflow
-Message-Id: <178185751919.166019.3738199100239942302.b4-ty@b4>
-Date: Fri, 19 Jun 2026 10:25:19 +0200
+To: "Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] iomap: submit read bio after each extent
+Date: Fri, 19 Jun 2026 12:15:56 +0200
+Message-ID: <20260619-kundgeben-hippen-abrunden-643fba56e35d@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260619050105.439956-2-hch@lst.de>
+References: <20260619050105.439956-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,22 +50,24 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.16-dev-aeb64
-X-Developer-Signature: v=1; a=openpgp-sha256; l=910; i=brauner@kernel.org;
- h=from:subject:message-id; bh=JAoXastpqbLfEbaMJJVXBQkuSJqPcM3uC249DpZhMOY=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSZ/Pm246XtzPmBzcq8GyTY3OpS723cfUTkYEuOzcGdV
- w48OP6RoaOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAi5+0Z/pl/fBbT/+Afn0ph
- uUuWCq/ifemNjmF3fSwi0l/8OB7ZVszI8Ke988Zz63c+Zx74zLh4OrnnVZFA/K/PDt5Xnte5+ZZ
- ncQAA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1368; i=brauner@kernel.org; h=from:subject:message-id; bh=tn0AV2gYpBnl6skQdfrlTXr7GXWTF+FHRBN4aCvCt5w=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSZin2KPFU0f2ZCVoTv/yyj999qeNO2TPv1csPWjGUcZ YsMU4XsO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYSvJeR4bHukrfPUs2Dan+e sT67jWeTzn5FpivTp9zfrJbuWrcpew8jw0ypS5991LL4kudO+cE6a1nLxunxkZl5pm8nLNQqYc8 S5AYA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Thu, 18 Jun 2026 13:38:20 +0800, Morduan Zang wrote:
-> iomap: guard io_size EOF trim against concurrent truncate underflow
+On Fri, 19 Jun 2026 07:00:53 +0200, Christoph Hellwig wrote:
+> Currently the iomap buffered read path tries to build up read context
+> (i.e. bios for the typical block based case) over multiple iomaps as
+> long as the sector matches.  This does not take into account files
+> that can map to multiple different devices.  While this could be fixed
+> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
+> over iomaps actually was a problem for the not yet merged ext2 iomap
+> port, as that does want to send out I/O at the end of an indirect
+> block mapped range.
+> 
+> [...]
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+Applied to the vfs-7.3.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs-7.3.iomap branch should appear in linux-next soon.
 
 Please report any outstanding bugs that were missed during review in a
 new review to the original patch series allowing us to drop it.
@@ -70,8 +79,7 @@ Note that commit hashes shown below are subject to change due to rebase,
 trailer updates or similar. If in doubt, please check the listed branch.
 
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
+branch: vfs-7.3.iomap
 
-[1/1] iomap: guard io_size EOF trim against concurrent truncate underflow
-      https://git.kernel.org/vfs/vfs/c/2cd97101983e
-
+[1/1] iomap: submit read bio after each extent
+      https://git.kernel.org/vfs/vfs/c/dce5617fca3a
