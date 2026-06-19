@@ -1,82 +1,136 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1662F2BD030;
-	Fri, 19 Jun 2026 05:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781845791; cv=none; b=ic7FGGad5lLWXQGle+LC0KtrWku9XswKBOwEOJYxbUnjcGv7dCkqmEOCJFdeeBXlf61CWyTytZTXfw8MwgIhj+AZ0jmfWyOU/CAY8O/N1Vp50zWnyO22tvH31YqW0QIIG4D2/viC0c4SB9kbKdyX6nwyY4PO4nc8vz5rhiZP/cM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781845791; c=relaxed/simple;
-	bh=XBrtyquqMbAyHwcnhhrI9Zqt0xI8ELrbifDkTSPA0jI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qa5zOIC0TRcNmcpi6QwVMnkv+5RcWr8WiTRzucYEweFmLWA1xOqFNI26xCfiMsSxil8YbW4AVdAJ/V96/IEBuycVpNKL75h5+KkS5nojiqUiviyaxdHAk6+n0H2/iotKeuLGLuknzREuSDXAJ4tztVht+DhrrL5XZ5tjJTU3FwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=si53DRt4; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBE7B3148C5
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Jun 2026 07:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781854126; cv=pass; b=c2AtUI1Evn/X1JwbmXnhWM/emCIYGPEtf8S9W136QH8CPLQt8LT3zyqEy77KGRlxig/yIFrUPESPe8dFakqEmE6DEwL+NBvXolDt2LxPSCVii2GuCcreDHyycuHdgm46lJlEVvcIm7kIU+P3QOyCXmXPYMCMDsLeSkjpCEiRnyE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781854126; c=relaxed/simple;
+	bh=PLjuf5U1Ldp+lKMspivltGTyqfvutQwDbWwFfF6CvPI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FBeLyryBmqRviRnju4nkmhg9HpOdKw02F4Ra+gdXlyXxaHYJcZfeuIzwX19e4htO2wEh/+lIuFf/XMxOtDtHE2eEBOIhH4Jd5pxtahqz6Rgh/A2tb2qUpR+PYwLk6jA3LibGolC0f2M1hiTHZlGGjQnZUwf6stnupN3F4i4l0FA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EKTQcXfm; arc=pass smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="si53DRt4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=NVXOgHUS+LduAtENeg+2GVeOuWCVyGbfS0c0OCg9MMk=; b=si53DRt4IozxllBd8PoRjfJ9eM
-	sk21mgljShTHQE9cpoPK2ITntOOhRfd/6n25idUM65gF33CB3/Ps/TOQtzKxzoqYnsUBqRSY11i8F
-	rgan/mDvPUoDgrXsdXvos+GEVU93jj5TLfgNESh+pTQtl8qH8RDjaT0VxdSOM+360pusjMHbxpry/
-	ULZ9yDf0rfzKUX3QoF8KOsuE015t+533cE7/XVIITdHTUpK3usgR2ClX7rZZJRunidZ7BWxgA7XBu
-	FsglKj12goXOz7dtuIm+yUJAqolgn7liC8odJEYVtAp/HfyJRURaCu3/WGpbpczCI2kHvTWm7Ez0E
-	c0yDrqrw==;
-Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1waRUC-00000001zqT-3oXC;
-	Fri, 19 Jun 2026 05:09:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Lukas Herbolt <lukas@herbolt.com>,
-	Eric Sandeen <sandeen@sandeen.net>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: [PATCH 2/2] xfs/216: disable all concurrency scaling
-Date: Fri, 19 Jun 2026 07:09:29 +0200
-Message-ID: <20260619050937.444488-3-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260619050937.444488-1-hch@lst.de>
-References: <20260619050937.444488-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EKTQcXfm"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-695427c153fso2478255a12.1
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jun 2026 00:28:44 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781854123; cv=none;
+        d=google.com; s=arc-20240605;
+        b=B8OTpVaoeyN7aOx1q4/lnSlFyRJ6WIU2JhAsUcp6F22fYo4fvf4cWwUH/z3Y8a3AvV
+         LpL+lPT3DddW5+eDY0h4Yqx41SwV1n6i+fZqF3wlZkbViadgOSgNRHfqbT9bYypUv01g
+         ABJ1cG8/I0yZS7MR47erlb0qlzrA9GY8y+fjeG3zcukV1OYTtevvXfKguNPJ4aN9RwyG
+         GasckmgfmIv44ezv1+NC9Ci2tMcG+a6W9dmakd7ZTk6lhnJz3E0eX1NQSheaLiTCAOBH
+         46fhCn+b630j7gLbBxcNrmdhpU1hyTnu6ADAoqLl/7ieL+Hwu+dws84EQU0UEK8t4b+X
+         JhcA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=cXsAttpCRAfo1jUwXpOflkS7AbE4OJcRHMhxuP67MIc=;
+        fh=jL045auBh6ig1bWjfj0inyRWqB+BZJsfAnQVDeZ/f7o=;
+        b=k27kXzhO6eWN/yNs5xYsJBF4+z4s2DTk1D+gosGOlGFEAUF2JNrwKpGjg32elgCpou
+         kFPpLVq71Pe/w1ihBpFKjCdMCd0fzdy/kB24tS+Sf/5AYLyyvtmMCYZ5qz3Ya4L+NKf2
+         YJs97oNeQmWrm9sN3ML4i2gGsE94OTD/wRwfrXLRsqJ/wK1UjNkkEuZfOL2UefMFuEPw
+         FzidNhtkfhPHzU9IiiYc9bNqO4shXnOxWzC0849sEAM9qbmv24VspczRRIdKpTjf0PIG
+         +b2GKVRydU3JNrzwif/faUyBZvC2NxBQRs0rgtm47lye3BYBk1axPGEiscyxlNfVvm1v
+         RwEQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781854123; x=1782458923; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cXsAttpCRAfo1jUwXpOflkS7AbE4OJcRHMhxuP67MIc=;
+        b=EKTQcXfmTpSi/O7oXABloqzK4/JL++I7lANtSI92FSwbPSaHSyI+Ly8uLgGGwc1czJ
+         YtYQI1UH6Uizdt0GwLZqdw2hO65NG7CfVB0eP71OayhIh1bgU1DaOg15/9a9kMa2zgBW
+         zdQNfNRTcXpnOjFC0pWD2Qy8AAunFSt5GVlRmax9ecbpzBv06uE4YFJ4+8celdU/Mj1B
+         MGNL1NDGi6M4Os0QZhfGMRwpocG1MmdFdOgNugrBvNpnHeADOFto20dQ5EA6cQgJtC5/
+         S6OL7JKPrJ0cmvFh1esu4XnUeP+wn0wTEaOxYUfcyAwVCO0NjXfBZnXTUOLQKFc0fC2I
+         AXOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781854123; x=1782458923;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=cXsAttpCRAfo1jUwXpOflkS7AbE4OJcRHMhxuP67MIc=;
+        b=ddxaP3NLGX17pny30OCJI5E/uuPSpScDE0e6Na9ThQM+YHMoUT04g+obX6t3ByvpNu
+         Ut14bjEkJtVdC4GwjjIfZAL7gmjHj4DUMmpV3prx/MiK62ZY+jLnFZe+kvMdN/z68zte
+         2g8+WhB2LwkjO7sE2qYNVA3cYzddvaoCiIa+j0PxQ7o8UqNlb3ow8LQguN4Hneb/eotU
+         /6z4kMQuVI3hcC4QVzh7aRcRx0rpkwrdft65+nTHmRkZ6jRAo0h+lwf/XMYHuogWwyuN
+         8WuhcfU5ViUYaQSa2M2jMqnjWVVlvFApaSj04ayxsa7PhGYkPEeFtEHnOsMQ62ZC8JhB
+         j1Xw==
+X-Forwarded-Encrypted: i=1; AFNElJ8n+QLU8ystd4zppvNZYK9+m44IH89Iex4D0N0mLUja8fKskTW08n1qW9avdGg3XNxfJWSk2nSNaRE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLhFXdOFz3BwBHFxzxD1vR6x6G6k+7DZdtBF/xZLdT9N2WpM7M
+	Ymmyenr+AkhRoPaCTTUJe5oPfVAWcdxHTKZjcpSLaEMhs9jhhTc/cK9T5W+ZOtwtnPRw04mIXlf
+	MhWC82LwEtSQYYw8Cpq+3w+ZYac0vcIo=
+X-Gm-Gg: AfdE7cmdOlWD5OjphDxFcdGWFki0WvfwrsZcyxlY4LbCMpWw3PYDrmLypsdTlZgMGnJ
+	m18z0JT8+wsIF/x2f9zT+YIaM19b9hTM6gBQiPNaJI2VYjDm35hertp/7IL5CnAzWWQndNRluyb
+	j7kYHiB7mWq3X8+Wknp23Lx/JLJVGtu+rckTiU/6wCiAkzbNRZTwLGF9bTjjQZYYoKo1Vu8ELu+
+	B66uIDZnpywUT3E1fGgpqgo3IU3Zzuq8iJl2V6BpKD9qQ1exrwi1EGseQQMgKCeyT6yjVyJsYOE
+	UpY7zBS7juC9A8mdXGpiYrfDJ/JKO+zHfbQSdMxrSw==
+X-Received: by 2002:a05:6402:5107:b0:695:572a:7ab5 with SMTP id
+ 4fb4d7f45d1cf-69711e00675mr1216968a12.19.1781854123208; Fri, 19 Jun 2026
+ 00:28:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20260520123722.405752-1-aalbersh@kernel.org> <20260520123722.405752-4-aalbersh@kernel.org>
+ <20260520190719.GB3424023@google.com>
+In-Reply-To: <20260520190719.GB3424023@google.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 19 Jun 2026 09:28:31 +0200
+X-Gm-Features: AVVi8CcyPPKNjODd0CeG8qbXXsZeOsRanxA9PmKFMYeTLACw7w0uBX2gqOCDc0w
+Message-ID: <CAOQ4uxh_hfiSwMw8ABhhrz7GguZWjHEiBmvb3eq16Wfqw0+ZrQ@mail.gmail.com>
+Subject: Re: [PATCH v10 03/22] ovl: use core fsverity ensure info interface
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, hch@lst.de, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-btrfs@vger.kernel.org, linux-unionfs@vger.kernel.org, djwong@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This test currently disables log concurrency scaling, but even the
-data device concurrency scaling can create mismatching output on
-systems with a large CPU count.
+On Wed, May 20, 2026 at 9:07=E2=80=AFPM Eric Biggers <ebiggers@kernel.org> =
+wrote:
+>
+> On Wed, May 20, 2026 at 02:37:01PM +0200, Andrey Albershteyn wrote:
+> > fsverity now exposes fsverity_ensure_verity_info() which could be used
+> > instead of opening file to ensure that fsverity info is loaded and
+> > attached to inode.
+> >
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > Acked-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >  fs/overlayfs/util.c | 14 +++-----------
+> >  1 file changed, 3 insertions(+), 11 deletions(-)
+>
+> Reviewed-by: Eric Biggers <ebiggers@kernel.org>
+>
+> I'm still confused by the new implementation of fsverity_active() that
+> got introduced by "fsverity: use a hashtable to find the fsverity_info",
+> though.  I should have caught this during review of that commit.  For
+> one its comment is outdated, but also the memory barrier seems to be
+> specific to the fsverity_get_info() caller and probably should be moved
+> to there.  Anyway, that's not directly related to this patch.
 
-Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- tests/xfs/216 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Eric, Andrey,
 
-diff --git a/tests/xfs/216 b/tests/xfs/216
-index 1749647c11f7..ce8bb528410b 100755
---- a/tests/xfs/216
-+++ b/tests/xfs/216
-@@ -23,7 +23,7 @@ _cleanup()
- _require_scratch
- _scratch_mkfs_xfs >/dev/null 2>&1
- if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
--	loop_mkfs_opts="-l concurrency=0"
-+	loop_mkfs_opts="-d concurrency=0 -l concurrency=0 -r concurrency=0"
- else
- 	loop_mkfs_opts=""
- fi
--- 
-2.53.0
+Did you see the Sashiko review for this patch and others in this series?
 
+https://sashiko.dev/#/patchset/20260520123722.405752-1-aalbersh%40kernel.or=
+g
+
+It annotated some review comments as high and critical.
+For this patch it is about interaction with fscrypt.
+
+Please take a look and say if this is concerning or false positive.
+
+Thanks,
+Amir.
