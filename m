@@ -1,74 +1,77 @@
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A349733F8B2;
-	Fri, 19 Jun 2026 08:15:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14A8823DD;
+	Fri, 19 Jun 2026 08:25:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781856917; cv=none; b=Vi8VlKlKM6AcsXFtikoGiddNolBmHRhkBowE4hvzIWGbU+7D6v5WEhpEvsymjOOsUG+Tm1wsCXhnWenL4O9ROXbqKUsFgup9zCrzgFhnc8Y2nIQ7V5pu26N0I2XBQIncQOh08HXHwdDsOb/MpxRp04k+FTDZMJ405d01/vo5Ifs=
+	t=1781857528; cv=none; b=u5wJlfJIVlxQcLgDzumU577OZe6wbNYYfKQ2nMkUxFO3loxMweiPbXgeejq04xUTYjEAytv8OgeyysmQSJZnz2/O0N0h2fq0Bet2twcwPk8wPm/+Sj1RS1ZOpEtR966WJ1w/E0x9FpHWubd+j09ElbVvY8WqN7PqX+8wmwe2FEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781856917; c=relaxed/simple;
-	bh=TJ/5N3qcXoJ8MWSXQuOomI9KXw8NWOruAShKtcam2Qc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eV5zlbYbagqYiU/4ZgVB5Fw627b6imgGeFjWTfMgh1Vmxg6LVQEMUwx8yqV3ZLkyWcoqeqFRIDK8X+PUlD7C1kHpSYFO4/uXrjXDDfa7IYB5CPphq1ItSLtNuypEewADfUVQEzM7O8jNttrCL252llUOFJb7cm51peKNxMd3W2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=gBmOSTpv; arc=none smtp.client-ip=115.124.30.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1781857528; c=relaxed/simple;
+	bh=JAoXastpqbLfEbaMJJVXBQkuSJqPcM3uC249DpZhMOY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=UNIUUNXPPniaugGUK03P2XG9XAh3A3aLLFKYmASDXEO1tsxDv29qhyD5CKJSn0sSkf9H1JlnN3tGxvbFrhvXKnPZkmXaasEoiLQbLFRJ4ZTThvdPmZlyYcX3hnuS/V8gnaNDvm40LaHUbNTfzgFpnVMHokC77FoXmNcvIbCArFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnEaZ5rK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="gBmOSTpv"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1781856912; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=H09kVhZKvVnGT/8zcbwbAdfiVXItBYmg1/F6osgjWjA=;
-	b=gBmOSTpvxv2GrMbo1l6bqE7cUADSr7/hNGJ8olj97hmd/qEVC3FRGFfBpC2RkT6WJ8QuOJRc6r58+2rg8es04K+z+Ewu+WItGL71qOSC8YJ08l2DFvYhO2te4brVBKm4vV95q3MSqLMakCeVAaNt5CYp3ypKPOxXaUCvpXJWLWQ=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R451e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0X59ET.U_1781856911;
-Received: from 30.120.66.214(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X59ET.U_1781856911 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 19 Jun 2026 16:15:11 +0800
-Message-ID: <e2f45d1c-c4ad-482e-8a3c-8072209eec1b@linux.alibaba.com>
-Date: Fri, 19 Jun 2026 16:15:10 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnEaZ5rK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AEB51F000E9;
+	Fri, 19 Jun 2026 08:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781857527;
+	bh=KRZUzo39MsJfwpIcRF9lV0M/rGo1K2di/pvIPlBo/Iw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=RnEaZ5rK59+kW6NHSATqoGBus8/ku/YLORDYaZF605GjPjga+PPNNKjX++RdaMovC
+	 KHpIRlrffZsVl9M4GVoiE+SNeJ/Piyiuxz58u40kku3E5qqahg/zGHVss01R24pSSO
+	 gYCQH0atQKPuq8yAjV6qjBeEf7jpLhUzVYbitrg+rJE6tMloqOPLmWdw2KgmpALdmj
+	 aBoIRldvmzLkknIrpzmQc98CzfIABpZZiCdIsKZgBIrkGI984OFTnOQAOcCADzBela
+	 SBeYgGO9aqEHqbC5WLRsFRb3s+5WQi9MPFbqAEOn+P3aCMgvIhfGzMS8g+F1Pv8gqa
+	 DjBwjKXb9V7cg==
+From: Christian Brauner <brauner@kernel.org>
+To: Morduan Zang <zhangdandan@uniontech.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ djwong@kernel.org
+In-Reply-To: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
+References: <863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com>
+Subject: Re: [PATCH] iomap: guard io_size EOF trim against concurrent
+ truncate underflow
+Message-Id: <178185751919.166019.3738199100239942302.b4-ty@b4>
+Date: Fri, 19 Jun 2026 10:25:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: submit read bio after each extent
-To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>
-Cc: Kelu Ye <yekelu1@huawei.com>, Yifan Zhao <zhaoyifan28@huawei.com>,
- Ritesh Harjani <ritesh.list@gmail.com>, Joanne Koong
- <joannelkoong@gmail.com>, linux-erofs@lists.ozlabs.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20260619050105.439956-1-hch@lst.de>
- <20260619050105.439956-2-hch@lst.de>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <20260619050105.439956-2-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16-dev-aeb64
+X-Developer-Signature: v=1; a=openpgp-sha256; l=910; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=JAoXastpqbLfEbaMJJVXBQkuSJqPcM3uC249DpZhMOY=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSZ/Pm246XtzPmBzcq8GyTY3OpS723cfUTkYEuOzcGdV
+ w48OP6RoaOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAi5+0Z/pl/fBbT/+Afn0ph
+ uUuWCq/ifemNjmF3fSwi0l/8OB7ZVszI8Ke988Zz63c+Zx74zLh4OrnnVZFA/K/PDt5Xnte5+ZZ
+ ncQAA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
+On Thu, 18 Jun 2026 13:38:20 +0800, Morduan Zang wrote:
+> iomap: guard io_size EOF trim against concurrent truncate underflow
 
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-On 2026/6/19 13:00, Christoph Hellwig wrote:
-> Currently the iomap buffered read path tries to build up read context
-> (i.e. bios for the typical block based case) over multiple iomaps as
-> long as the sector matches.  This does not take into account files
-> that can map to multiple different devices.  While this could be fixed
-> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
-> over iomaps actually was a problem for the not yet merged ext2 iomap
-> port, as that does want to send out I/O at the end of an indirect
-> block mapped range.
-> 
-> So instead of adding more checks move over to a model where a bio
-> only spans a single iomap.  File systems can still create iomap
-> that span more than an extent if they want to build larger I/O.
-> 
-> Reported-by: Kelu Ye <yekelu1@huawei.com>
-> Reported-by: Yifan Zhao <zhaoyifan28@huawei.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-Thanks,
-Gao Xiang
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
+
+[1/1] iomap: guard io_size EOF trim against concurrent truncate underflow
+      https://git.kernel.org/vfs/vfs/c/2cd97101983e
+
