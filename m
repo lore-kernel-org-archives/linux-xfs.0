@@ -1,71 +1,60 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5361E4AF;
-	Fri, 19 Jun 2026 04:57:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54AB2301474;
+	Fri, 19 Jun 2026 05:01:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781845025; cv=none; b=EHG0zFyPXUf2yOHSIFiGIA+IXilk2jZnmanS9zwnZR+movJ7DkFRujOQspNAt3eFe6DlUecwpEqviQcRTUi2OdFs3n7OkgGKMKQFOvXTFZHZd13XF1vjnQ/QIc4+36qBWcvlP+xqDsUBVnyJ1q207IGirv16yZ8BqiCIwW5ClZE=
+	t=1781845277; cv=none; b=RpyN/aqVCAkOXs+RHXw5mO1imBSGKSG8vQWWWy/JRJ2A0hWp9+uL7ekxqQ8OnxE4ghZCny3gvB9u+83EQZv3edoZ3MJ4AqYgicPzsYSWbynu49IRENHU6z9mMr9+HlKwH0TUK4Mhhe5uuUfdAYOt2fEFAbImX0IyWbpzqcCTcOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781845025; c=relaxed/simple;
-	bh=LRjcQfszsIpjPUS2nfRKnGhGzIGqREtMvLolD629Z04=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PMvNFqTpie1Lv0X79UCK0hO9/bN33CgGT0OTywMi8awP1b8cLO/ggrTyvghFAekv8kbbVyefnI59OL+cgRStBXnfhqt87u2UCmOf9YthH3jdqQGw/8Fj2eJrN3vesU2crHAGHTHubOV8K41IJ++ySa1Bp7ct7sAK7ea/Z9pKyso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4B2C568AFE; Fri, 19 Jun 2026 06:57:01 +0200 (CEST)
-Date: Fri, 19 Jun 2026 06:57:00 +0200
+	s=arc-20240116; t=1781845277; c=relaxed/simple;
+	bh=EqObGat2cNnwACUojFU010e5hYh91aj49AOBv0BG5nY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MZGNhSA/BPJmrJUOFQbvvuU2fzINQTco0E8Qi0+oKWoq6+kgKLHMxDRMx9VW6whMdOoMTa/VI+w+M84Wgr4ohxBOZyzfwM9WEsoWCTjybQagGPLgdGUne/pe/bJdVmTyljra0QnVDJOrrqN3OH4AGHX1CRWg6s97OaEBhV1BztQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KBxf7AR7; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KBxf7AR7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=3RTdskEA4tzXBpUPTIzVtRb3u/Fp36An/J4SqIF2JFo=; b=KBxf7AR7O9I/8vH/No1JC1CG+F
+	XnkEev87+xTe+fGLXth4ggbMJV/yvapF7rSHBRYXnd2BOQhAVnOheex6E7SxmQ20oFhmX3245LsFe
+	deE2nuD06R4QMKWmEa+YfojzSKpZa9xagOyxoP8i7+JU4n4vzkzjhp50eAJvk3mDBrb7a00cTrlXG
+	6VG4JaecJnqKsruepYFvmnwTd5M8Qy0RSp510WWRLVpCoStZ+tvlUVKSQyn8od96vNr+pXMJl/S38
+	Ld0qO8GCucUPZMQJtG8KAwvKOCVIE+FpOBO6lyGilTGefQ+d+NmBIb/GMgOzjiumnJEbQaetjTfJd
+	01DiwEOQ==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1waRLr-00000001zi3-0VdP;
+	Fri, 19 Jun 2026 05:01:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>,
-	Zorro Lang <zlang@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Lukas Herbolt <lukas@herbolt.com>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs/078: disable all concurrency scaling
-Message-ID: <20260619045700.GA24871@lst.de>
-References: <20260618134834.237647-1-hch@lst.de> <20260618134834.237647-2-hch@lst.de> <997e50d2-83d8-4b41-9c2a-749e5c85bf4b@sandeen.net> <325bdef5-487e-49d7-90d4-3418e2ae7799@sandeen.net> <ajSgfekizOMFT0SB@shinmob>
+To: Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: don't build bios/contexts over multiple iomaps
+Date: Fri, 19 Jun 2026 07:00:52 +0200
+Message-ID: <20260619050105.439956-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ajSgfekizOMFT0SB@shinmob>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jun 19, 2026 at 10:55:21AM +0900, Shin'ichiro Kawasaki wrote:
-> On Jun 18, 2026 / 09:23, Eric Sandeen wrote:
-> > On 6/18/26 8:54 AM, Eric Sandeen wrote:
-> > > On 6/18/26 8:48 AM, Christoph Hellwig wrote:
-> > >> Disable concurrency scaling to avoid mismatching output on systems with
-> > >> a large CPU count.
-> > >>
-> > >> Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> > >> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > I think this papers over what I still feel is a problem in mkfs.xfs
-> > > behavior, but that's a different issue and making tests pass is good, so:
-> > > 
-> > > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > Er, hang on - let me retract that. Lukas sent a series to address
-> > this problem too, right, and one of the things he added in his series
-> > is a helper to determine whether the concurrency options even exist,
-> > so that this can continue to run on older xfsprogs, which seems like
-> > a good idea, no?
-> > 
-> > https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/commit/?h=for-next&id=7f162f5bcf50fc32c7e3b432e7ff189571a3151f
-> > 
-> > which added _scratch_mkfs_xfs_supports_concurrency()
-> 
-> I agree, I think we can add the change below on top of this patch.
-> Regardless of the change, I confirmed that this patch avoids the failure
-> that I reported. Thanks!
+Hi all,
 
-Thanks, I'll add that.
-
+this patch changes how iomap submits bios for reads.  The old behavior
+to build up bios across iomap was already considered problematic for
+a while, but we now ran into a erofs bug because of it, so it's time
+to finally fix it.
