@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F3DB372064
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 10:39:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB7440D567
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 12:17:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782124780; cv=none; b=KYdEw267qUbpk7f5mHO0KX2WtUPAX7t8XoaBI4rPDjmuYqrovUIGFwQi192w/IYBbmmbUo+m7pB2VvwzlqTZJp+NHN8QPEtEEEm9TEygICNxisvvmsGP5g8wC40LSwWGMQkRrt8IWBJdvulrUKpf0iZhJeFlg13uh11+YcFZUOI=
+	t=1782130630; cv=none; b=DRTaN2diFv4oD1jperjAawJQZQ0/PBS7AI78eJBaq7KBH3wN4WALBLgQazUjItoImaiC6nIV8lZ8F7k2AJvatsVk/d4jmjTAktSb1/w5zBmiPAc1/4V98nPZNW/XKpFjJPmV7UfFxsA9P4FRODYZj4VfYeRp5e3Hx2ouyYd7uT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782124780; c=relaxed/simple;
-	bh=uiEbiYKahMf6hnCe89UT4kje1hgmWwkwv05vH6ZWJhM=;
+	s=arc-20240116; t=1782130630; c=relaxed/simple;
+	bh=WJ4+wJQlAkfVzuQ+9cpSBRbJEypugF++ekKtPcbRGko=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WpNqmW5YjcUzsScl2FpapVzEQH3cRJ9i8gqCeiSMDEGp2yt4Temw0M/R/eqoR47VghZInOgmQYZ8INFwGqlte77MM4BfzlbGKTzc7VkIeWxeX7451VRYiPBe7VbTIKZchKaasMVi/Ek1ZB6vxN1v6tgQRk/PQOqfpyNeVtoOdPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wz0uQRV7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=jHH9pZgSE+NyZqzOvIADsC64b3mgVndS6kwzBjNYMsKM7alI4/rSPnSsxdGq4SeNuhDNfDqrgpVoTmZw/bGDnDRZAZB28N3zDRrJ4joO1iTUXKhq8JV7SD6vKDVuf1iTlUSA1vrcUpg3xzmp6xnc2n3YOkdOeOqPeosMXLfHJg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oUgBsiI7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wz0uQRV7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42C561F00A3A;
-	Mon, 22 Jun 2026 10:39:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oUgBsiI7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F9F1F000E9;
+	Mon, 22 Jun 2026 12:17:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782124779;
-	bh=iOccRgpEJeFhF3TDHXehCMSza7J9XhSh7D1nYAKp7sM=;
+	s=k20260515; t=1782130628;
+	bh=AG5jUS7us8aonCd78GS/QTz4owq0Z6AZCJl5SF+d62U=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Wz0uQRV7DeuhYGpdGS9UbY8FuFx/bLyens2O4avC9lr3IrCxHzcr6G5XSIznqhIuh
-	 x0Qu73YiWcf366rXQi/ZvquDEQAHawS4zJHX2YFIPF4IVsdxZ5NycGw0FL4GWcqQrm
-	 Er1jYpXIqdUhEb4RRql2N82PMHQ1PRSMUuQf5i/YjmjtnokRZlNi1FPz9AgET2f9mr
-	 XrxhzMZf6lkKMIczUm84Jf+pBDSDn+Gsl4OzrY2ONlrPwuvSCM3Fw+yUPccOMf33oy
-	 delRPS3Jb+vMh2ulVrUUVIML2IIRbMtazeEYiYomsolBeczVcMKs4MuDqcYvfo5sPi
-	 Qxh/tVdm6I8CQ==
-Date: Mon, 22 Jun 2026 12:39:35 +0200
+	b=oUgBsiI7N7l2YVFCBgwhrK/XsBN5dRCtnpUs1/PPaEpuHh85mPQexaR09i3KQDLFy
+	 3rT6M7PLQGmeUJzGA75Z2j8VL6qim02B3JAV7H4EB/0vT928GCON7bTPCBpPvyJL3E
+	 3l5Rq2iMoWjk/usuN8LuWfsSwb3EMzK2sms750uRfpPIVLocKX9mmScM/CqYks0OMN
+	 Emi988juGzT9Oy66hxxr/aauSsHHJAL769TTxbcN5MBrkRvzxTChff8z2hE8NdKlJi
+	 iG8EF+EcrJQdKRqQo1/bfF8eTG8ed3qSU//MEbehNTbx6KPKsz03FPo3pm1erev2/B
+	 BDLssLUmEvRxg==
+Date: Mon, 22 Jun 2026 14:17:04 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Manognya Singuru <msinguru@redhat.com>
-Cc: linux-xfs@vger.kernel.org, aalbersh@redhat.com
-Subject: Re: [PATCH] mkfs: fix filesystem and log size units
-Message-ID: <ajkQ3mLRYF2D2zf0@nidhogg.toxiclabs.cc>
-References: <20260618144111.178311-1-msinguru@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: split up xfs_buf_alloc_backing_mem
+Message-ID: <ajknuzEqH6gNYA5b@nidhogg.toxiclabs.cc>
+References: <20260617055814.3842058-1-hch@lst.de>
+ <20260617055814.3842058-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,101 +42,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260618144111.178311-1-msinguru@redhat.com>
+In-Reply-To: <20260617055814.3842058-2-hch@lst.de>
 
-On Thu, Jun 18, 2026 at 08:11:11PM +0530, Manognya Singuru wrote:
-> The actual thresholds enforced by mkfs are in MiB and GiB but the
-> error messages and documentation report the limits as MB and GB.
+On Wed, Jun 17, 2026 at 07:58:02AM +0200, Christoph Hellwig wrote:
+> Split out helpers for folio and vmalloc allocations to prepare for a bug
+> fix.
 > 
-> Update the filesystem and log size threshold messages, comments,
-> and man page to use MiB and GiB.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c | 61 +++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 40 insertions(+), 21 deletions(-)
 > 
-> Signed-off-by: Manognya Singuru <msinguru@redhat.com>
-
-Looks fine by me.
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-> ---
->  man/man8/mkfs.xfs.8.in |  6 +++---
->  mkfs/xfs_mkfs.c        | 14 +++++++-------
->  2 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-> index fbafc5c7..c4dee4fe 100644
-> --- a/man/man8/mkfs.xfs.8.in
-> +++ b/man/man8/mkfs.xfs.8.in
-> @@ -463,7 +463,7 @@ is required if
->  is given. Otherwise, it is only needed if the filesystem should occupy
->  less space than the size of the special file.
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 0cea458f1353..d3d44e3ff001 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -120,6 +120,22 @@ xfs_buf_free(
+>  	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
+>  }
 >  
-> -The data section must be at least 300MB in size.
-> +The data section must be at least 300MiB in size.
->  .TP
->  .BI sunit= value
->  This is used to specify the stripe unit for a RAID device or a
-> @@ -805,8 +805,8 @@ described above. The overriding minimum value for size is 512 blocks.
->  With some combinations of filesystem block size, inode size,
->  and directory block size, the minimum log size is larger than 512 blocks.
+> +static int
+> +xfs_buf_alloc_folio(
+> +	struct xfs_buf		*bp,
+> +	size_t			size,
+> +	gfp_t			gfp_mask)
+> +{
+> +	struct folio		*folio;
+> +
+> +	folio = folio_alloc(gfp_mask, get_order(size));
+> +	if (!folio)
+> +		return -ENOMEM;
+> +	bp->b_addr = folio_address(folio);
+> +	trace_xfs_buf_backing_folio(bp, _RET_IP_);
+> +	return 0;
+> +}
+> +
+>  static int
+>  xfs_buf_alloc_kmem(
+>  	struct xfs_buf		*bp,
+> @@ -148,6 +164,27 @@ xfs_buf_alloc_kmem(
+>  	return 0;
+>  }
 >  
-> -The log must be at least 64MB in size.
-> -The log cannot be more than 2GB in size.
-> +The log must be at least 64MiB in size.
-> +The log cannot be more than 2GiB in size.
->  .TP
->  .BI version= value
->  This specifies the version of the log. The current default is 2,
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index dd8a48c3..cbc703cc 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -25,10 +25,10 @@
->  #define MEGABLOCKS(count, blog)	((uint64_t)(count) << (20 - (blog)))
->  
+> +static int
+> +xfs_buf_alloc_vmalloc(
+> +	struct xfs_buf		*bp,
+> +	size_t			size,
+> +	gfp_t			gfp_mask,
+> +	xfs_buf_flags_t		flags)
+> +{
+> +	for (;;) {
+> +		bp->b_addr = __vmalloc(size, gfp_mask);
+> +		if (bp->b_addr)
+> +			break;
+> +		if (flags & XBF_READ_AHEAD)
+> +			return -ENOMEM;
+> +		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> +		memalloc_retry_wait(gfp_mask);
+> +	}
+> +
+> +	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
+> +	return 0;
+> +}
+> +
 >  /*
-> - * Realistically, the log should never be smaller than 64MB.  Studies by the
-> + * Realistically, the log should never be smaller than 64MiB.  Studies by the
->   * kernel maintainer in early 2022 have shown a dramatic reduction in long tail
->   * latency of the xlog grant head waitqueue when running a heavy metadata
-> - * update workload when the log size is at least 64MB.
-> + * update workload when the log size is at least 64MiB.
->   */
->  #define XFS_MIN_REALISTIC_LOG_BLOCKS(blog)	(MEGABLOCKS(64, (blog)))
+>   * Allocate backing memory for a buffer.
+>   *
+> @@ -175,7 +212,6 @@ xfs_buf_alloc_backing_mem(
+>  {
+>  	size_t		size = BBTOB(bp->b_length);
+>  	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
+> -	struct folio	*folio;
 >  
-> @@ -3435,19 +3435,19 @@ validate_supported(
->  		return;
->  
->  	/*
-> -	 * We don't support filesystems smaller than 300MB anymore.  Tiny
-> +	 * We don't support filesystems smaller than 300MiB anymore.  Tiny
->  	 * filesystems have never been XFS' design target.  This limit has been
->  	 * carefully calculated to prevent formatting with a log smaller than
->  	 * the "realistic" size.
->  	 *
-> -	 * If the realistic log size is 64MB, there are four AGs, and the log
-> +	 * If the realistic log size is 64MiB, there are four AGs, and the log
->  	 * AG should be at least 1/8 free after formatting, this gives us:
->  	 *
-> -	 * 64MB * (8 / 7) * 4 = 293MB
-> +	 * 64MiB * (8 / 7) * 4 = 293MiB
+>  	if (xfs_buftarg_is_mem(bp->b_target))
+>  		return xmbuf_map_backing_mem(bp);
+> @@ -216,33 +252,16 @@ xfs_buf_alloc_backing_mem(
 >  	 */
->  	if (mp->m_sb.sb_dblocks < MEGABLOCKS(300, mp->m_sb.sb_blocklog)) {
->  		fprintf(stderr,
-> - _("Filesystem must be larger than 300MB.\n"));
-> + _("Filesystem must be larger than 300MiB.\n"));
->  		usage();
+>  	if (size > PAGE_SIZE) {
+>  		if (!is_power_of_2(size))
+> -			goto fallback;
+> +			return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
+>  		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+>  		gfp_mask |= __GFP_NORETRY;
 >  	}
->  
-> @@ -3458,7 +3458,7 @@ validate_supported(
->  	if (mp->m_sb.sb_logblocks <
->  			XFS_MIN_REALISTIC_LOG_BLOCKS(mp->m_sb.sb_blocklog)) {
->  		fprintf(stderr,
-> - _("Log size must be at least 64MB.\n"));
-> + _("Log size must be at least 64MiB.\n"));
->  		usage();
+> -	folio = folio_alloc(gfp_mask, get_order(size));
+> -	if (!folio) {
+> +	if (xfs_buf_alloc_folio(bp, size, gfp_mask) < 0) {
+>  		if (size <= PAGE_SIZE)
+>  			return -ENOMEM;
+>  		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
+> -		goto fallback;
+> -	}
+> -	bp->b_addr = folio_address(folio);
+> -	trace_xfs_buf_backing_folio(bp, _RET_IP_);
+> -	return 0;
+> -
+> -fallback:
+> -	for (;;) {
+> -		bp->b_addr = __vmalloc(size, gfp_mask);
+> -		if (bp->b_addr)
+> -			break;
+> -		if (flags & XBF_READ_AHEAD)
+> -			return -ENOMEM;
+> -		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> -		memalloc_retry_wait(gfp_mask);
+> +		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
 >  	}
+> -
+> -	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
+>  	return 0;
+>  }
 >  
 > -- 
-> 2.54.0
-> 
+> 2.53.0
 > 
