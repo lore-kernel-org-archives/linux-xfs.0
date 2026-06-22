@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA8935028D
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 13:18:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D483793CE
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 13:35:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782134284; cv=none; b=gI7kT/mCziv7R7yE7QceO0khVSmvX/9PrfMen41JN8nVBcSRnYyAlsWhrYup+C+XU/N8MBOg5X8dHW86i8GhuC8A7qm1K31OBotgAm2EBxAh10yO0YoWS6BevjpP+gizcvIDmLlG3UWnXxJaiIT4vHym5yG4uXnUDIigAiZmh2g=
+	t=1782135303; cv=none; b=OOwUgAU1TSt5H+ouhe96LkwBVxra++Fn469jogWTgPOiXV+GOe4CLClhRvsxC4ttLWOfH9y9N4RpmssifkZ/rxrJA6blQPsSIq/fgD7WgnnQn9cGUOV5bTMBX8DBd3Xs8+DBk4S/o6sh2zJteZ5V0qgKfVMvnye1im0f/qzogNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782134284; c=relaxed/simple;
-	bh=SOlxIP0ht4s+RgedahJeSv6w/GpnLCwMnhtCKLrIhfw=;
+	s=arc-20240116; t=1782135303; c=relaxed/simple;
+	bh=HZuJAW2lpNwPcrWzGOwUGsfgdRl+ne/sxjc9u/+Pkbw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ordfai9cWyTAKAlA8ySXxwmAVUQethRErodU7uS/uzK2ROQfntE3yT0h0HOJFEncAMTCbhY5OpB0Gs0y6CP3Lj08mY0Giy1w/dTn/LIpKnHmuY+SZUcYK48zDps+XonmvLJinSLt0FAOxQtbMfsVLdAzV2D//lNZGPS7CbgSszU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B4x8yDtc; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=lIfRBFiNFyprlKCtK8yF65oc/LrZieVhRp2vWGTiBAh0MB998WAZ4/KHE+fq+t+zTHo7onWLQTlSBM1zY1DFSM6O0AG/xWxgV9EM932RwO1GcRrDP/niqh8NOYp2CE4lPgQKLNRekoJaX7Ygio6QpH6jWR9l6sOEcSdBZve4d1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PjY7iXDM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B4x8yDtc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 064DB1F000E9;
-	Mon, 22 Jun 2026 13:18:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PjY7iXDM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E6801F000E9;
+	Mon, 22 Jun 2026 13:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782134282;
-	bh=49Ojn2w3cfil5Oe7MGoyUcTxVpSvz92I6oFA2LewlPw=;
+	s=k20260515; t=1782135302;
+	bh=tFBjVZL+InvawuV12+7OpMJUKIUjl+7CbEQHD540Gxg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=B4x8yDtcSuxilt0ebrYOkH8LUM5HMy8tQOOway9+U+FZq+c4UEnX/Mu2fgNdzHLpH
-	 FBx3RlPtCtvpjVJeEegXhs9UAACKdKfZdZak0sCPzTIZ1Kii2gH9dtUN8IdWCG6gDq
-	 rmjA/EEXgrtboIViHZVan5sgyQnJVZLTIsi++FuwQlWQRRWswh0aJkE86szstSdTyF
-	 Qp5eu+hJ1UZtVt3wkJSfsYh9V7S0rAWPtqqKqQtZTAi+N/TpOXGAcbEAYdGGpHoDGI
-	 kuQn6cRwCKTIyHzW+8p+YPbE88i2BLHrUWCnQWuIg2l0t43KqoOZnyrm0xtfWHQ8yY
-	 6n5rLV6TsTzow==
-Date: Mon, 22 Jun 2026 15:17:59 +0200
+	b=PjY7iXDM1+rYcN5dL/2yimkcdnAHDO/nrVowo/mfZJrhZlR+78wHkbik1N/JfP9mr
+	 6CBO7QcVKNu8jP6KPY5BNpNa4edNPCyXmI8byuNmkuXKowWAup8cfI7Zs1K7SPbRyt
+	 HxohoEJDWBwhyf/6zsDuNad9cYD5NJgpXo4/SAYjSe2q8yVKdvbBQ+MCiF+8zmBTHD
+	 GjdHIxTxA3miLqKKetJDzCSwtPksTFAxmS6++v/tbf1z1iQSIRJtomhYxSRQTalzA4
+	 +KWVvQvqosr4brbnHEyMcPazz4wzNWXOSmVRzkXFF0KvrZKHSq+dbr2YGIHsxggm/p
+	 +ZVW2ebi9iXWw==
+Date: Mon, 22 Jun 2026 15:34:56 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/6] xfs: remove xfs_buf_ioend
-Message-ID: <ajk17PV_9wdM8T2Y@nidhogg.toxiclabs.cc>
+Subject: Re: [PATCH 5/6] xfs: fix handling of synchronous errors in
+ xfs_buf_submit
+Message-ID: <ajk2TZSv4ivAkM0Q@nidhogg.toxiclabs.cc>
 References: <20260622073035.1370904-1-hch@lst.de>
- <20260622073035.1370904-5-hch@lst.de>
+ <20260622073035.1370904-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,71 +43,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260622073035.1370904-5-hch@lst.de>
+In-Reply-To: <20260622073035.1370904-6-hch@lst.de>
 
-On Mon, Jun 22, 2026 at 09:30:03AM +0200, Christoph Hellwig wrote:
-> There are two callers of xfs_buf_ioend, one of which always has the
-> XBF_ASYNC flag set.  Open code the logic in both callers to prepare for a
-> bug fix.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Jun 22, 2026 at 09:30:04AM +0200, Christoph Hellwig wrote:
+> Synchronous readers and writers already run __xfs_buf_ioend from
+> xfs_buf_iowait after being woken through bp->b_iowait, so we
+> should not call it here, which can lead to double completions.
 
-Independent of the bugfix I didn't see yet, I'm happy to see this
-function gone...
+Makes sense
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+
+> 
+> Fixes: 4b90de5bc0f5 ("xfs: reduce context switches for synchronous buffered I/O")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_buf.c | 22 ++++++++--------------
->  1 file changed, 8 insertions(+), 14 deletions(-)
+>  fs/xfs/xfs_buf.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index ef2ea15a97bb..651add22deea 100644
+> index 651add22deea..ffaab0feb230 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -1146,18 +1146,6 @@ __xfs_buf_ioend(
->  	return true;
->  }
->  
-> -static void
-> -xfs_buf_ioend(
-> -	struct xfs_buf	*bp)
-> -{
+> @@ -1403,12 +1403,12 @@ xfs_buf_submit(
+>  	bp->b_flags &= ~XBF_DONE;
+>  	xfs_buf_stale(bp);
+>  end_io:
 > -	if (!__xfs_buf_ioend(bp))
 > -		return;
 > -	if (bp->b_flags & XBF_ASYNC)
 > -		xfs_buf_relse(bp);
 > -	else
-> -		complete(&bp->b_iowait);
-> -}
-> -
->  static void
->  xfs_buf_ioend_work(
->  	struct work_struct	*work)
-> @@ -1207,7 +1195,8 @@ xfs_buf_fail(
->  	bp->b_flags &= ~XBF_DONE;
->  	xfs_buf_stale(bp);
->  	xfs_buf_ioerror(bp, -EIO);
-> -	xfs_buf_ioend(bp);
-> +	if (__xfs_buf_ioend(bp))
-> +		xfs_buf_relse(bp);
->  }
->  
->  int
-> @@ -1414,7 +1403,12 @@ xfs_buf_submit(
->  	bp->b_flags &= ~XBF_DONE;
->  	xfs_buf_stale(bp);
->  end_io:
-> -	xfs_buf_ioend(bp);
-> +	if (!__xfs_buf_ioend(bp))
-> +		return;
-> +	if (bp->b_flags & XBF_ASYNC)
-> +		xfs_buf_relse(bp);
-> +	else
-> +		complete(&bp->b_iowait);
+> +	if (bp->b_flags & XBF_ASYNC) {
+> +		if (__xfs_buf_ioend(bp))
+> +			xfs_buf_relse(bp);
+> +	} else {
+>  		complete(&bp->b_iowait);
+> +	}
 >  }
 >  
 >  /*
 > -- 
 > 2.53.0
+> 
 > 
