@@ -1,44 +1,45 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CDCB360EC5
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 07:31:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13129395ACA
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 08:31:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782113461; cv=none; b=boltQ4iHx/9SkRASrQzeGBMkFXtOfeoxEVlgE1t0cFU4lNR9YV3YA6Mv2Ch7LjgCrd2FfYMhrIybLE1isL/lhCpZ7KmDKKAGQIvdv3DXuaKoR40H/drrCzrof0tw210eJ8X+LSgRJdDIpVlCLtOEUsNf3ubhl1uAzN/gRavII5g=
+	t=1782117094; cv=none; b=bxnT0LrPGZ+sOPb70kTjfYMHmL//PtT86gFeTLox6vLOTG4C1UUxhBakCAkIcOm90py4tu5Rtxk6eSEo7rnxuO9gNm8IBTUNvwfI6kT0j6JRgEU5+lAytoLvglEq9baIbEBdwLL/o2cF+yLnqVEcVhoa0zWPn3DHLnMOU3NY4Dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782113461; c=relaxed/simple;
-	bh=CqS9o3kdmiB4pVLD20+G1dtLVJSYg+Wu5qRHXRVS+WU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jd/44rrYpnye5u8FwJTDYAtO30+tShdYDygo4of3putrBaptDjdukWm/JFnE2qGVf6rMWEaUDnhwk7rVepLab9Tktv1+DCGlbwhRZB+SDPD9QDKFI+LCpMNpYJJ2wi9c7y7mxg6H7LAy70eoyJUKOnsePQPCDqGVMKUsz1FNYzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eopIgeoZ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eopIgeoZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=1oSCtM4awuOrWeGibeSRcY09VMMqApXDxy0oSEhn0qA=; b=eopIgeoZjcsdOdy4bt7Oqai6XX
-	AuNHzJraa+KjixUriMHVyhg4K/UrI7HRTM5XhQ6ONUgqD84NEH/Izntm1O3+rcYn5RmtM32dBhvqq
-	TrxBJ2/PEh8hjpjrBhD/hqvsC7EFhlgohtUkQ709scGCAmMAsS/zCjKp4qgUG0CZel6vaz5SPp4z3
-	TPA0OrQlVdGUaIu5vILpvpaNs8r65ziJDhHcpS3zeMiv2MYLyT3GAH1iraRQhQBF2uzYST6+h/3gG
-	zmFYNpAF/ptfoyoPD+5KN+Wh6G2lTmQV19B3GqUOUD0L210wzFFhlbnPyG4ToWEmlD/rC8Kuj7+Q7
-	eTgDo7uw==;
-Received: from 85-127-105-127.dsl.dynamic.surfer.at ([85.127.105.127] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wbZ7T-00000004Xf3-1VC5;
-	Mon, 22 Jun 2026 07:30:59 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 6/6] xfs: simplify __xfs_buf_ioend
-Date: Mon, 22 Jun 2026 09:30:05 +0200
-Message-ID: <20260622073035.1370904-7-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260622073035.1370904-1-hch@lst.de>
-References: <20260622073035.1370904-1-hch@lst.de>
+	s=arc-20240116; t=1782117094; c=relaxed/simple;
+	bh=2pEIHUHxT+Drq6PTJFCNCZt6B/964wPR8djrsBS5o4c=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=IKZ/J0JKYgoZ6cmA6lubavI1SAGgxOvGtP3zchp4nUCQdeJGnDI4RLD04JH3r39stviL/tW5AsXp8/FInZQdj9akuHwBKbUq/uFve+Vm08b/ueIG3rJfl+QcwtMCIWA+RLTXR/R2PlNc+O47uMWz4KDL8n+pByo24udSUz0lgTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gkLyJ1g8Nz9tq6;
+	Mon, 22 Jun 2026 10:31:20 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: linux-xfs@vger.kernel.org
+Cc: bfoster@redhat.com,
+	lukas@herbolt.com,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	dgc@kernel.org,
+	gost.dev@samsung.com,
+	pankaj.raghav@linux.dev,
+	andres@anarazel.de,
+	kundan.kumar@samsung.com,
+	hch@lst.de,
+	cem@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v7 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+Date: Mon, 22 Jun 2026 10:31:04 +0200
+Message-ID: <20260622083106.2914092-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,132 +47,78 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Rspamd-Queue-Id: 4gkLyJ1g8Nz9tq6
 
-__xfs_buf_ioend can only resubmit the buffer for asynchronous
-writes, which means the retry handling xfs_buf_iowait is not needed.
+The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
+of Zhang Yi's initial patches[1]. Postgres developer Andres also
+mentioned they would like to use this feature in Postgres [2].
 
-Because of this can stop returning a value from __xfs_buf_ioend and
-just release the buffer for async I/O that does not require retries.
+I tested the changes with fsstress and fsx based on the xfstests patch I
+sent recently to test this flag[4]. generic/363 helped me debug the
+crash I noticed when I did the initial implementation[3].
 
-Also drop the __-prefix now that the semantics are straight forward.
+Dave initially suggested to create a common helper based on
+xfs_iomap_convert_unwritten() but as it can be seen in the previous
+version, a lot of the code had to be rewritten. The changes had more in
+common with xfs_alloc_file_space(). This version reuses
+xfs_alloc_file_space() for write zeroes.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 51 ++++++++++++++++++++++++------------------------
- 1 file changed, 26 insertions(+), 25 deletions(-)
+Thanks to Christoph for all the review comments and design suggestions
+that were made both offline and online for this series.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ffaab0feb230..b66bbcab91aa 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1098,11 +1098,17 @@ xfs_buf_ioend_handle_error(
- 	return false;
- }
- 
--/* returns false if the caller needs to resubmit the I/O, else true */
--static bool
--__xfs_buf_ioend(
-+/*
-+ * Complete a buffer read or write.
-+ *
-+ * Releases the buffer if the I/O was asynchronous.
-+ */
-+static void
-+xfs_buf_ioend(
- 	struct xfs_buf	*bp)
- {
-+	bool		async = bp->b_flags & XBF_ASYNC;
-+
- 	trace_xfs_buf_iodone(bp, _RET_IP_);
- 
- 	if (bp->b_flags & XBF_READ) {
-@@ -1116,14 +1122,16 @@ __xfs_buf_ioend(
- 		if (bp->b_flags & XBF_READ_AHEAD)
- 			percpu_counter_dec(&bp->b_target->bt_readahead_count);
- 	} else {
--		if (!bp->b_error) {
-+		if (unlikely(bp->b_error)) {
-+			if (xfs_buf_ioend_handle_error(bp)) {
-+				ASSERT(async);
-+				return;
-+			}
-+		} else {
- 			bp->b_flags &= ~XBF_WRITE_FAIL;
- 			bp->b_flags |= XBF_DONE;
- 		}
- 
--		if (unlikely(bp->b_error) && xfs_buf_ioend_handle_error(bp))
--			return false;
--
- 		/* clear the retry state */
- 		bp->b_last_error = 0;
- 		bp->b_retries = 0;
-@@ -1143,18 +1151,15 @@ __xfs_buf_ioend(
- 
- 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD |
- 			 _XBF_LOGRECOVERY);
--	return true;
-+	if (async)
-+		xfs_buf_relse(bp);
- }
- 
- static void
- xfs_buf_ioend_work(
- 	struct work_struct	*work)
- {
--	struct xfs_buf		*bp =
--		container_of(work, struct xfs_buf, b_ioend_work);
--
--	if (__xfs_buf_ioend(bp))
--		xfs_buf_relse(bp);
-+	xfs_buf_ioend(container_of(work, struct xfs_buf, b_ioend_work));
- }
- 
- void
-@@ -1195,8 +1200,7 @@ xfs_buf_fail(
- 	bp->b_flags &= ~XBF_DONE;
- 	xfs_buf_stale(bp);
- 	xfs_buf_ioerror(bp, -EIO);
--	if (__xfs_buf_ioend(bp))
--		xfs_buf_relse(bp);
-+	xfs_buf_ioend(bp);
- }
- 
- int
-@@ -1305,12 +1309,11 @@ xfs_buf_iowait(
- {
- 	ASSERT(!(bp->b_flags & XBF_ASYNC));
- 
--	do {
--		trace_xfs_buf_iowait(bp, _RET_IP_);
--		wait_for_completion(&bp->b_iowait);
--		trace_xfs_buf_iowait_done(bp, _RET_IP_);
--	} while (!__xfs_buf_ioend(bp));
-+	trace_xfs_buf_iowait(bp, _RET_IP_);
-+	wait_for_completion(&bp->b_iowait);
-+	trace_xfs_buf_iowait_done(bp, _RET_IP_);
- 
-+	xfs_buf_ioend(bp);
- 	return bp->b_error;
- }
- 
-@@ -1403,12 +1406,10 @@ xfs_buf_submit(
- 	bp->b_flags &= ~XBF_DONE;
- 	xfs_buf_stale(bp);
- end_io:
--	if (bp->b_flags & XBF_ASYNC) {
--		if (__xfs_buf_ioend(bp))
--			xfs_buf_relse(bp);
--	} else {
-+	if (bp->b_flags & XBF_ASYNC)
-+		xfs_buf_ioend(bp);
-+	else
- 		complete(&bp->b_iowait);
--	}
- }
- 
- /*
+Stress test generic/363 generic/127 xfs/131 are passing. I have started
+the full xfstest suite for this series.
+
+Changes since v6:
+- Pass only offset that needs to be zeroed to alloc_file_space (Christoph).
+- Add RVB from Christoph.
+- Change the call order. Call xfs_falloc_setsize() and then call
+  xfs_alloc_file_space().
+- Remove the prep patch to allow xfs_set_filesize to take 64-bit len.
+
+Changes since v5:
+- Add a prep patch to allow xfs_set_filesize to take 64-bit len
+  (Sashiko)
+
+Changes since v4:
+- Introduce an enum for allocation mode in xfs_alloc_file_space (Christoph)
+- Use xfs_set_filesize instead of updating the on-disk size in the
+  function.
+
+Changes since v3:
+- Introduce xfs_bmap_alloc_or_convert_range() in xfs_iomap.c for easy
+  review experience (christoph)
+- Add extsz hint and rt support in xfs_bmap_alloc_or_convert_range()
+
+Changes since v2:
+- Add allow_write_zeroes to xfs_global so that we can enable this
+  feature independent of the HW underneath.
+
+Changes since v1 [5.1 5.2]:
+- Added a new function xfs_bmap_alloc_or_convert_range() based on Dave's
+  feedback.
+- Changed the xfs_falloc_write_zeroes to use
+  xfs_bmap_alloc_or_convert_range() instead of doing prealloc and
+  convert approach.
+
+[1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+[2] https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
+[3] https://lore.kernel.org/linux-xfs/6i2jvzn3lyugjlbgmjzpped3gogzyqv5mpe2uqaifz4vjpaega@pomzoq7ley77/
+[4] https://lore.kernel.org/linux-xfs/20260312195308.738189-1-p.raghav@samsung.com/
+[5.1] https://lore.kernel.org/linux-xfs/20260309180708.427553-2-lukas@herbolt.com/
+[5.2] https://lore.kernel.org/linux-xfs/abC1LvRElctaHPe5@dread/
+
+Pankaj Raghav (2):
+  xfs: add an allocation mode to xfs_alloc_file_space()
+  xfs: add support for FALLOC_FL_WRITE_ZEROES
+
+ fs/xfs/xfs_bmap_util.c | 42 +++++++++++++++++++----
+ fs/xfs/xfs_bmap_util.h |  7 +++-
+ fs/xfs/xfs_file.c      | 76 +++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 114 insertions(+), 11 deletions(-)
+
+
+base-commit: 6e24acc45ab58d39a0162b4d5f3fd001d07d868e
 -- 
-2.53.0
+2.51.2
 
