@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB7440D567
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 12:17:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFEE13009E2
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2026 12:22:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782130630; cv=none; b=DRTaN2diFv4oD1jperjAawJQZQ0/PBS7AI78eJBaq7KBH3wN4WALBLgQazUjItoImaiC6nIV8lZ8F7k2AJvatsVk/d4jmjTAktSb1/w5zBmiPAc1/4V98nPZNW/XKpFjJPmV7UfFxsA9P4FRODYZj4VfYeRp5e3Hx2ouyYd7uT8=
+	t=1782130925; cv=none; b=LVZF0b5Uq54RSc80m2h/HQdRBa30HH/v7hhGECr9Mpc8xyeC8VwW9BKfUbca/OV2RrOWH5z1G/l3dd8nN6CihENEQtzXyWkvbG8xrIy3vWqL19rasDLQB2bBRvw2/9n3ywiYGdr8Kg1FNVVLAWkU0c0TVfNQZiM3SAtIfBV0qrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782130630; c=relaxed/simple;
-	bh=WJ4+wJQlAkfVzuQ+9cpSBRbJEypugF++ekKtPcbRGko=;
+	s=arc-20240116; t=1782130925; c=relaxed/simple;
+	bh=bwfbAQ/fs+WGRkTDrCNsVDcnR/jFyeaC6KY6QOFGezQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jHH9pZgSE+NyZqzOvIADsC64b3mgVndS6kwzBjNYMsKM7alI4/rSPnSsxdGq4SeNuhDNfDqrgpVoTmZw/bGDnDRZAZB28N3zDRrJ4joO1iTUXKhq8JV7SD6vKDVuf1iTlUSA1vrcUpg3xzmp6xnc2n3YOkdOeOqPeosMXLfHJg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oUgBsiI7; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=MqjraazzqlMkamoKbk1V5rNM7acnWnmxo0G0zYofDsXjK6Qyd+19afxpf/+uY8hDyr1eOgD96LGcG2F/CjcA/19gD+eCUX/1M6474ZQWwQXHdlbncs5ySwWYtTed8HkqIOh29iWFOCsz9IOLsCUFf7CVKu/UPGlN+/Y3IlnrJZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JkbjZWA7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oUgBsiI7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F9F1F000E9;
-	Mon, 22 Jun 2026 12:17:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JkbjZWA7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD26F1F000E9;
+	Mon, 22 Jun 2026 12:22:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782130628;
-	bh=AG5jUS7us8aonCd78GS/QTz4owq0Z6AZCJl5SF+d62U=;
+	s=k20260515; t=1782130924;
+	bh=+faxlx4iMms7Y88qegrpSgi4tHdu2/Vs4MXQDbSsBPU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oUgBsiI7N7l2YVFCBgwhrK/XsBN5dRCtnpUs1/PPaEpuHh85mPQexaR09i3KQDLFy
-	 3rT6M7PLQGmeUJzGA75Z2j8VL6qim02B3JAV7H4EB/0vT928GCON7bTPCBpPvyJL3E
-	 3l5Rq2iMoWjk/usuN8LuWfsSwb3EMzK2sms750uRfpPIVLocKX9mmScM/CqYks0OMN
-	 Emi988juGzT9Oy66hxxr/aauSsHHJAL769TTxbcN5MBrkRvzxTChff8z2hE8NdKlJi
-	 iG8EF+EcrJQdKRqQo1/bfF8eTG8ed3qSU//MEbehNTbx6KPKsz03FPo3pm1erev2/B
-	 BDLssLUmEvRxg==
-Date: Mon, 22 Jun 2026 14:17:04 +0200
+	b=JkbjZWA7HaQH2uu96vzIIyrahkgPuxxhKoGlGWhwRq0LreDv6QdOPww+w+FpsTGe+
+	 GKQvK0ftcu0lsZz+IG7i5zj/m6nUVEnPyneKBddPd8XDL6ao8ASwLXH63yxHUFLnvL
+	 uaSkrJVkE4A81wkwIoNERwLm/VX99oy1J2CLz7DMkMwcySrMJwqSLLV0fjLAY17Yks
+	 bLTYY4v6Jwke3mk+LruEocVJKkV17iSi2SV5D4Nyl8hZT/lQ1gHJew5vfOwHNKoFPi
+	 mM6N5DyLyPQ2z7TtVlYBrt0EEd6SWfjyaBXdS816O+zjaqxldrrZ6jZO6dDyQGajoJ
+	 +Us1Ii4Dp4Y2g==
+Date: Mon, 22 Jun 2026 14:22:01 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: split up xfs_buf_alloc_backing_mem
-Message-ID: <ajknuzEqH6gNYA5b@nidhogg.toxiclabs.cc>
+Subject: Re: [PATCH 2/4] xfs: lift setting __GFP_NOFAIL from
+ xfs_buf_alloc_kmem to the caller
+Message-ID: <ajkovp0zXKBfEON_@nidhogg.toxiclabs.cc>
 References: <20260617055814.3842058-1-hch@lst.de>
- <20260617055814.3842058-2-hch@lst.de>
+ <20260617055814.3842058-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,120 +43,46 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260617055814.3842058-2-hch@lst.de>
+In-Reply-To: <20260617055814.3842058-3-hch@lst.de>
 
-On Wed, Jun 17, 2026 at 07:58:02AM +0200, Christoph Hellwig wrote:
-> Split out helpers for folio and vmalloc allocations to prepare for a bug
-> fix.
+On Wed, Jun 17, 2026 at 07:58:03AM +0200, Christoph Hellwig wrote:
+> The current __GFP_NOFAIL setting is wrong in some cases.  Prepare
+> for fixing that by giving control to the caller.
+
+Looks good, but would be nice to have at least one of those 'some cases'
+documented here.
+
+Independent on that:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_buf.c | 61 +++++++++++++++++++++++++++++++-----------------
->  1 file changed, 40 insertions(+), 21 deletions(-)
+>  fs/xfs/xfs_buf.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 0cea458f1353..d3d44e3ff001 100644
+> index d3d44e3ff001..dce398337ad0 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -120,6 +120,22 @@ xfs_buf_free(
->  	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
->  }
+> @@ -145,7 +145,7 @@ xfs_buf_alloc_kmem(
+>  	ASSERT(is_power_of_2(size));
+>  	ASSERT(size < PAGE_SIZE);
 >  
-> +static int
-> +xfs_buf_alloc_folio(
-> +	struct xfs_buf		*bp,
-> +	size_t			size,
-> +	gfp_t			gfp_mask)
-> +{
-> +	struct folio		*folio;
-> +
-> +	folio = folio_alloc(gfp_mask, get_order(size));
-> +	if (!folio)
-> +		return -ENOMEM;
-> +	bp->b_addr = folio_address(folio);
-> +	trace_xfs_buf_backing_folio(bp, _RET_IP_);
-> +	return 0;
-> +}
-> +
->  static int
->  xfs_buf_alloc_kmem(
->  	struct xfs_buf		*bp,
-> @@ -148,6 +164,27 @@ xfs_buf_alloc_kmem(
->  	return 0;
->  }
+> -	bp->b_addr = kmalloc(size, gfp_mask | __GFP_NOFAIL);
+> +	bp->b_addr = kmalloc(size, gfp_mask);
+>  	if (!bp->b_addr)
+>  		return -ENOMEM;
 >  
-> +static int
-> +xfs_buf_alloc_vmalloc(
-> +	struct xfs_buf		*bp,
-> +	size_t			size,
-> +	gfp_t			gfp_mask,
-> +	xfs_buf_flags_t		flags)
-> +{
-> +	for (;;) {
-> +		bp->b_addr = __vmalloc(size, gfp_mask);
-> +		if (bp->b_addr)
-> +			break;
-> +		if (flags & XBF_READ_AHEAD)
-> +			return -ENOMEM;
-> +		XFS_STATS_INC(bp->b_mount, xb_page_retries);
-> +		memalloc_retry_wait(gfp_mask);
-> +	}
-> +
-> +	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
-> +	return 0;
-> +}
-> +
->  /*
->   * Allocate backing memory for a buffer.
->   *
-> @@ -175,7 +212,6 @@ xfs_buf_alloc_backing_mem(
->  {
->  	size_t		size = BBTOB(bp->b_length);
->  	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
-> -	struct folio	*folio;
->  
->  	if (xfs_buftarg_is_mem(bp->b_target))
->  		return xmbuf_map_backing_mem(bp);
-> @@ -216,33 +252,16 @@ xfs_buf_alloc_backing_mem(
+> @@ -230,7 +230,7 @@ xfs_buf_alloc_backing_mem(
+>  	 * smaller than PAGE_SIZE buffers used by XFS.
 >  	 */
->  	if (size > PAGE_SIZE) {
->  		if (!is_power_of_2(size))
-> -			goto fallback;
-> +			return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
->  		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
->  		gfp_mask |= __GFP_NORETRY;
->  	}
-> -	folio = folio_alloc(gfp_mask, get_order(size));
-> -	if (!folio) {
-> +	if (xfs_buf_alloc_folio(bp, size, gfp_mask) < 0) {
->  		if (size <= PAGE_SIZE)
->  			return -ENOMEM;
->  		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
-> -		goto fallback;
-> -	}
-> -	bp->b_addr = folio_address(folio);
-> -	trace_xfs_buf_backing_folio(bp, _RET_IP_);
-> -	return 0;
-> -
-> -fallback:
-> -	for (;;) {
-> -		bp->b_addr = __vmalloc(size, gfp_mask);
-> -		if (bp->b_addr)
-> -			break;
-> -		if (flags & XBF_READ_AHEAD)
-> -			return -ENOMEM;
-> -		XFS_STATS_INC(bp->b_mount, xb_page_retries);
-> -		memalloc_retry_wait(gfp_mask);
-> +		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
->  	}
-> -
-> -	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
->  	return 0;
->  }
+>  	if (size < PAGE_SIZE && is_power_of_2(size))
+> -		return xfs_buf_alloc_kmem(bp, size, gfp_mask);
+> +		return xfs_buf_alloc_kmem(bp, size, gfp_mask | __GFP_NOFAIL);
 >  
+>  	/*
+>  	 * Don't bother with the retry loop for single PAGE allocations: vmalloc
 > -- 
 > 2.53.0
 > 
