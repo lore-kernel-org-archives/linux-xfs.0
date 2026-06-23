@@ -1,93 +1,93 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BFCE388879
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2026 17:04:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C3C388881
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2026 17:30:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.54
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782234277; cv=pass; b=uIJVtAqHm6Y75rZwPjLmhwy6b4AuePxA9m3N/vJZ84rINQbR5yejyfrh499qxhZH8zqndM1/P/Fn1LK0hruPRCrIP4Y/oHID1zq5JN8cpBFqXpaMW55tyuDwaoP7XT6EplBaT3j/VQEkdeZPLiopwcMU+2Cpjwb3jTiHOGY3hW0=
+	t=1782235810; cv=pass; b=uxaiIG2UmdsolmUvpybWS1SvhOAjjkLkTukOLY+EyaGrmEOWybWLwZc4mTLrURFpbsuqhjAmKwFQV+JKM5etyuk7KgwN0k3BNzk2l/X623turUwQZo7LqKFr5ZrJgV4EtMgGp7TOVi+HpW+eNjqsC1++iyrfHBE92e3v1yZOvAQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782234277; c=relaxed/simple;
-	bh=AmdxDpSAXFZg+NG1Z53JDpqr/ZSkXDFyKiUPoH63AXc=;
+	s=arc-20240116; t=1782235810; c=relaxed/simple;
+	bh=1XpXzTFHWJsw8C2JyfoXebC5Ni6jg74rJbCKW4Yfwc8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QNiWEIJxo7m3tA/f+E2Al8LW0KjLLz3yxjeY0OM8y2qAu0kWya55n0ysucl9k/vCPZB9tSz9u8bQZ4mFB0K8tbrRHv9dgxP0gw5H8xIyzIa0AKKic19GHvyaNL4cT9GM4PZxhQad/OqhQnAypNUDBsmBIEklXmMhsis0teGrajE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e4AtgucW; arc=pass smtp.client-ip=209.85.221.45
+	 To:Cc:Content-Type; b=eBua06NS6EKsOkMbJxHUJiMrxstYnEBJ+Vczcn4sSKVYzP1KJkjtTiH10af+ji2OCEhpOjJwibau96Egm1D3uX3hE45R1al1Dis/Iag6fiLVeAyiMndiFalyAamW0MnjRbICKVwXHQTa5vWf+EAcD25reX/TpipY/baArmFe3s4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WytVRz8n; arc=pass smtp.client-ip=209.85.221.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e4AtgucW"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-45f3cf907ceso56065f8f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2026 10:04:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782234275; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WytVRz8n"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-4624c1409c9so125121f8f.3
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2026 10:30:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782235807; cv=none;
         d=google.com; s=arc-20240605;
-        b=NWnc8kHl1jN0qgXnypqcXXjC1pIykuUQRTRSwIQUcpquxuCeJC2cE1etQLpENPdhVG
-         t+iXzR6K4uzfJ/B1VI9nc1Leqy6Nd3KiXhQuAWf6OR7f6x9jfr97NAI/kJsazASvgEyy
-         q5bit0RtgNYKOBEtGUPzjevCs8RyJGGi1M63VjOcEmxsffWhii5yjoTdsq1rn27hV1yM
-         ADq9BkOtVmyoqOsS75cj/MBCK9oKZKl8a9RHfU8htL1hHugG5RvUMuP03kxic7nzCSn+
-         1Arsvh4mQOibyjLXlLUk5WvgcttgM8JDtoEGgn0Zhvenbw8zJNE8OJiUUwyHRQnNyw3t
-         jx5w==
+        b=XfEWJDaAIcT0i3PHo4cZhH6WK1kmvAZPhuD24r4xIFeeICgTvoOhJsGoHKk2T/XOXr
+         fWroANpJa050a7h733xVXCzeK0xipeHbFAfZraWein0t+wEV6z7Cf+k3x7tGsoBbU8QX
+         bpw1GxDjY3qxTuAnu7cyyFidEStdV2pP1IbMhDVUODFdyv8QgMarFX8yjYkv2LuUZ/Kp
+         D/Yz7jBJkPpHBbCVO6w4OuNNoteU6pA5KrWrJv3eG0tL6Dugn+6k0ytw/Tk0N1vCLX0m
+         BNsGp9JbKMnMcV+A+tVFBSkUUK/+THsIqI0yib/dsKlq2niSjBPK24bPByl89D98C9++
+         6+eQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=EchZhDXHLnIIeOQ/eg4q+Ls2B4SjaafDmxoTrWutOys=;
-        fh=lC/kgfuF00iXAkfhUk4O3wH4JooW4ROpTnjdVZvGHnY=;
-        b=HOSyMfoyS8AOM9YJX98kFHTeW5MgSjBngZXgovDHG6KyYaqYTKZ76+rl9bhC7uqpeo
-         p9KcoIEJUTNwk99adCSSnsN8/6SY5iS4i5HhkZu9qMXh5FivAmAFW7/VynkKDSUBLdsV
-         1nkWcUnu6Tc8HOkrM0atNPQus3lQcRSZhi7vvdNelF9xLs3O+tns7gfGq3D4O1AwMjcP
-         LvGYebQhXokXgcEUeesod5v60bbh2b9eoF5Wd4grMQ7z1wWRtJ4dqFWNGIUBVf9pdYva
-         ckJIqEGYNXqhblLNDpZwrd8/Jayq3wSLDj3rfcVSaerfsxbQe9Lo6lHr5JL42GzJehWQ
-         jstQ==;
+        bh=RzrzEGZb0ltwNCVmNPEJth41Ktgi1EiQYCAOhqDS73Y=;
+        fh=U9fBM4odAxZ9V29v+44XTFZrtgGv5zLsHTVTTJCprU8=;
+        b=DQxdd6E/ym2Sm1qbqPMa8W6OLiuy8o52s7DV5bF5Rcy+IKerr38MqPrgiwuy1/mRUJ
+         WS9ItErv+AcBSU9Xg6MXZlorW/QDIOSfeddHzgktaV8iModhqtz89GHy5cRU4kwW6gGj
+         KzMjkhBf9IEvCis6eMRArLRrGZVnjRtHJcV2VscOGoXJpIlU1uq6fJrjXIv6pNzz7tuc
+         ezdB6vMCtlIGSnQ+InQ7pzkdZL0WYc4uYEmJzb29rRP76NMz/N6Mi6iowEvKN7lCvWeU
+         ED4vZ3FaRCd+R3k8MnEgzSc3i3AdSUrQWIp1xjnttPT4lWkeza8nXVsR9M/M1dnDkB7S
+         81gA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782234275; x=1782839075; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782235807; x=1782840607; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EchZhDXHLnIIeOQ/eg4q+Ls2B4SjaafDmxoTrWutOys=;
-        b=e4AtgucWYYgWpt5sMS0CnKX19VmWcar5VBqIGLC5uKuJaqiABj98ORCK++ET3US2uR
-         jksobSSTG1VEN3FLECoHySYgLzbO5H3AeXb2N0SlQznVZHlRYEeJI9dKXdBU1GPLKicM
-         onD8PFmnIJBAX6dK4jUBhRgydiZBNzj/0M1sRzZ2DybPLCwFmYhqVIbqF8eH9QOr9Mkf
-         YXOGyIs/JI1riPuTjiQ/5W/kHKYEJZmI+SRjyvLWuqDgfft2pBjaPVxQi8CDiaq4Yyu2
-         rrGCm4QdCoKWFotq2HF/pYffvFW+2Q71H59ee+lI1BEAqqLlip3xkYNtxe7tPwx6QrnO
-         l0Tg==
+        bh=RzrzEGZb0ltwNCVmNPEJth41Ktgi1EiQYCAOhqDS73Y=;
+        b=WytVRz8nYLB3avlW/jLj3IVXga/m71X/04RLBmvfCJvqQ2DeXyImIDE/DcHN5Nn1JO
+         Xr/WpSFz/6fp7RO+Ri0Ne+YIpLZsrwnIg3xHrAQ9jeqQRF4FRkc9emusRIpBzK/rEiIi
+         xtUIT4dRqYXQsb62fhxzwHhhpMZppJeV7OvvJZ+JCaJRrNmT8Id4LdjvrUBawr5Wd6vQ
+         Cu2kVDyLAPb2r4Rm7sypv0NCOUu6H8BSfsqnG8xXsTDjnWIRiaYRAu5kW21xA6j8srQZ
+         XECISBlds4LZ8cTdKAYK1rS7Lh4mkb5RKfMUxmfH6WACSS4B9L1UK5WFB7lCYf8TeGyV
+         Npng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782234275; x=1782839075;
+        d=1e100.net; s=20251104; t=1782235807; x=1782840607;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=EchZhDXHLnIIeOQ/eg4q+Ls2B4SjaafDmxoTrWutOys=;
-        b=l5/4U0tWR2fprifwxN8m1Ch1WVldwbTscfIsCsXOkq/MfaqIX6Xth+1QLiNdF1BQ9N
-         OZOgVQtjkos2628pRnYSc81fWcwKeZ2sL9+6BZEStAvAx340BJfYMEngSC8/ebhjQqve
-         meJ85E0/0H7b9SLIHvB6b/Eqg5q0kIMlSqnYLwctR1faf5jfOogtf7KUDs3bv/+QC7Lw
-         zwLimWbh/+LGbgl2hkr/K2Efi/fm4Z+L11EwyZsebAZPhvRhmtOzb64Wavkq6hgokaK4
-         vZO/cOBlSdK2dlargWXhK8jxa1Gsalplahi4mCAfvHwisgC2r1LEJympUCYGgXRKmzDX
-         /2eQ==
-X-Forwarded-Encrypted: i=1; AHgh+Ro0o9rSD14wfQYUHu3I7SiK9Pfs+kC3jaPzMpHOyQ70l+PHSzjNI19MZo/ysFNhEtlW3JWR19Wo9xM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzic/ie7LYM7JmAml8eq/q7ZmgoWvJBvyBVEBUOyLfG8HltL8kq
-	LhiJFEuM45iVQviAn+Fpifg5Bq8OFadAO+1HlG6I/PfMxcuOdCK7cvC71yXCdba00SkKJ+fAtrV
-	YR4AL4tORq1uwzm5/jwZNDhCI+JkSqcQ=
-X-Gm-Gg: AfdE7clhTnooaKHmHvhv4k/OqBlTWKs6sNWXktw0CHvCfbctwfDlqBW+F8waV84DnpL
-	IBNDMbuOLqvpDuXR5Hkt4VHPrLHD9+hS82OA/7f6ZXRkI351yjShEnmikhzu+zrRdesi3dR0gPT
-	kfeX92NK7WuKaG1h8es20Rzn7YET8Ls9FKfJ5ND4UDrz4rNQuDAsTNMOk3PcYJuctp7Oj6WHd09
-	SAm8dRq1TVu1fSfcE4+GGDvknCipKzJz9kgWUct1zWdGxLfHzQMkDAdepBgphke9wlEa6dtpgN8
-	MAp4pmOJFNl6yrnIjiSfoLzotmvvXxm1L2j2EHvc28psJJJIsGlA
-X-Received: by 2002:a05:6000:46c4:b0:464:5df5:332a with SMTP id
- ffacd0b85a97d-46add1841f7mr4198572f8f.34.1782234274518; Tue, 23 Jun 2026
- 10:04:34 -0700 (PDT)
+        bh=RzrzEGZb0ltwNCVmNPEJth41Ktgi1EiQYCAOhqDS73Y=;
+        b=J9J05a9KMY6xW32mr7OKbRMOoeAD8QewN3Hk5I4jsoEpH5+xcXSF63jHK7gw6l9Ddu
+         EO1FUbqhJ211k1e9PPFL7Q3QxTRQQJ1FrCD7+AQ0kJVD+G/Z+AUkb+C/X7/rxiyvIyJx
+         A+931+hGFbxmambfFna/pxRwj9QCk9pXFyo2KeFAi3E85ZGV9UnO+Rm+T78qsuPnMsbc
+         8LWM0jKF29VsTBDcRwitfPvGaeCuqBNfHbE2qFqOODGLQIKCRR6RzhQaJWtCHTnXpJGi
+         hIJNvZxQaqPe28ZmtuGDeq9JLlGxCyacr5sY8Qfskx5xuiGpkfl70+3zis45tPQ2G1FX
+         cwPg==
+X-Forwarded-Encrypted: i=1; AHgh+RrqaWqAAmxgK1VuK8M5n8rVzvoXUscE4vKrtehsSGUR9XHWngQnPfeorVzD4+qrIOIi14fP6WyoBzk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoXhczTloN3a365fn4hqiRMsLo5dntu301m3LRNZPHPfwxl8gt
+	V/l2XyPY3K3i4I99HX/g2MEVLZ8vfnpKTBZDqPdgADFGHtoQIyv+I7dGqZXu0aGigOxKFeeV9Yt
+	AdPFLZxyLhxCCn2UliGg/ZiIJYWwX/Qw=
+X-Gm-Gg: AfdE7ckm8VKKKrazdEQ4vjEkHwUejhm/44dXYjOGsZusnicCjHVI5Vt0WVmFIB6G9F/
+	w1AhKhfRWU7oT5k1itPhkwWwNfP6y8jvzZ4Ip2nrYLetfYnUTJzDY5ZZiCFv+0gb3lPJ1c9K+0z
+	lXVq6A0nYa7dx8CXTSlUG6dHwIQ1C3UNWjTZMLqfYpGeuExBngZC6rOyCVq7Ef9fsJDqrLzr318
+	cZys4SBXpPv6fPJB8u/bO7b3g1NAyzCgzdIXjPkbrrQZs+06BTF8AGDVntEp+gqzvnmvTEreHHZ
+	avKCNqk572GtydP2KDXWOY3ebsQ4fxobUhknltS+AbFFetzLCoUQ
+X-Received: by 2002:a05:6000:22c6:b0:460:3233:beed with SMTP id
+ ffacd0b85a97d-4666348bb1dmr24453136f8f.41.1782235807180; Tue, 23 Jun 2026
+ 10:30:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260623135208.1812933-1-hch@lst.de> <20260623135208.1812933-2-hch@lst.de>
-In-Reply-To: <20260623135208.1812933-2-hch@lst.de>
+References: <20260623135208.1812933-1-hch@lst.de> <20260623135208.1812933-3-hch@lst.de>
+In-Reply-To: <20260623135208.1812933-3-hch@lst.de>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Tue, 23 Jun 2026 10:04:22 -0700
-X-Gm-Features: AVVi8Cdq1cSEiVKuIT7rCtOjoNPEfhV6BkfHSOO37MXbTaAKd3fDSsQ7oc8pKTc
-Message-ID: <CAJnrk1bq7pJEwwDuimp6GzCfdhrjhzs=MFAdRLOAdkJWmeSg7w@mail.gmail.com>
-Subject: Re: [PATCH 1/2] iomap: consolidate bio submission
+Date: Tue, 23 Jun 2026 10:29:54 -0700
+X-Gm-Features: AVVi8Ccm_eFaYYj-vQlgAXEMOrnUjeoeLhiRjoMn01eUhrTiB_xWHROB6LeYb7s
+Message-ID: <CAJnrk1agx-qUizNzCnzvZ6Marf7u-K4EtKOak4c2MQN1sJfgNA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] iomap: submit read bio after each extent
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Kelu Ye <yekelu1@huawei.com>, 
 	Yifan Zhao <zhaoyifan28@huawei.com>, Ritesh Harjani <ritesh.list@gmail.com>, 
@@ -103,21 +103,86 @@ Content-Transfer-Encoding: quoted-printable
 On Tue, Jun 23, 2026 at 6:52=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
 e:
 >
-> Add a iomap_bio_submit_read_endio helper factored out of
-> iomap_bio_submit_read to that all ->submit_read implementations for
-> iomap_read_ops that use iomap_bio_read_folio_range can shared the
-> logic.
+> Currently the iomap buffered read path tries to build up read context
+> (i.e. bios for the typical block based case) over multiple iomaps as
+> long as the sector matches.  This does not take into account files
+> that can map to multiple different devices.  While this could be fixed
+> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
+> over iomaps actually was a problem for the not yet merged ext2 iomap
+> port, as that does want to send out I/O at the end of an indirect
+> block mapped range.
 >
-> Right now that logic is mostly trivial, but already has a bug for XFS
-> because the XFS version is too trivial:  file system integrity validation
-> needs a workqueue context and thus can't happen from the default iomap
-> bi_end_io I/O handler.  Unfortunately the iomap refactoring just before
-> fs integrity landed moved code around here and the call go misplaced,
-> meaning it never got called.  The PI information still is verified by
-> the block layer, but the offloading is less efficient (and the future
-> userspace interface can't get at it).
+> So instead of adding more checks move over to a model where a bio only
+> spans a single iomap.  Change ->submit_read to be called after each
+> iteration, and pass a force argument to indicate that the bio must
+> be submitted set on the last iteration.  Switch the bio based users
+> to always submit, while keeping the single submit for fuse.
 >
-> Fixes: 0b10a370529c ("iomap: support T10 protection information")
+> Fixes: dfeab2e95a75 ("erofs: add multiple device support")
+> Reported-by: Kelu Ye <yekelu1@huawei.com>
+> Reported-by: Yifan Zhao <zhaoyifan28@huawei.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/exfat/iomap.c       |  4 ++--
+>  fs/fuse/file.c         |  6 +++++-
+>  fs/iomap/bio.c         | 11 +++++++----
+>  fs/iomap/buffered-io.c | 23 +++++++++++++++--------
+>  fs/ntfs/aops.c         |  4 ++--
+>  fs/ntfs3/inode.c       |  4 ++--
+>  fs/xfs/xfs_aops.c      |  5 +++--
+>  include/linux/iomap.h  |  5 +++--
+>  8 files changed, 39 insertions(+), 23 deletions(-)
+>
+> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+> index 0f31e35567b4..f71aaaf60301 100644
+> --- a/fs/iomap/bio.c
+> +++ b/fs/iomap/bio.c
+> @@ -79,7 +79,8 @@ u32 iomap_finish_ioend_buffered_read(struct iomap_ioend=
+ *ioend)
+>  }
+>
+>  void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
+> -               struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io)
+> +               struct iomap_read_folio_ctx *ctx, bool force,
 
-Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
+nit: might simplify things to drop the unused force arg
+
+> +               bio_end_io_t end_io)
+>  {
+>         struct bio *bio =3D ctx->read_ctx;
+>
+> @@ -87,13 +88,15 @@ void iomap_bio_submit_read_endio(const struct iomap_i=
+ter *iter,
+>         if (iter->iomap.flags & IOMAP_F_INTEGRITY)
+>                 fs_bio_integrity_alloc(bio);
+>         submit_bio(bio);
+> +
+> +       ctx->read_ctx =3D NULL;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_bio_submit_read_endio);
+>
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 8d4806dc46d4..06a216d37548 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+>
+> @@ -642,12 +649,12 @@ void iomap_read_folio(const struct iomap_ops *ops,
+>                 fsverity_readahead(ctx->vi, folio->index,
+>                                    folio_nr_pages(folio));
+>
+> -       while ((ret =3D iomap_iter(&iter, ops)) > 0)
+> +       while ((ret =3D iomap_iter(&iter, ops)) > 0) {
+> +               iomap_submit_read(&iter, ctx, false);
+>                 iter.status =3D iomap_read_folio_iter(&iter, ctx,
+>                                 &bytes_submitted);
+
+should the submit_read happen after the iomap_read_folio_iter() /
+iomap_readahead_iter() instaed of before? From what I see, it looks
+like iomap_submit_read() would hold the iter state of the next
+mapping. It seems like in iomap_bio_submit_read_endio(), the
+iter->iomap.flags would be the next extent's flags instead of the one
+that needs to be submitted?
+
+Thanks,
+Joanne
