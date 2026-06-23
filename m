@@ -1,104 +1,180 @@
-Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9506723BD06;
-	Tue, 23 Jun 2026 02:42:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B3339022B;
+	Tue, 23 Jun 2026 04:04:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782182577; cv=none; b=ct5X9k2lqkLAfAeTtfrr8DdDhOE5FlGrPg+iJdCy+766+7PNNWlsgy2l8s/2hjG7BoMeZ3AI+bfLZ6teNBFEpGWtsT4e0gNOuPnrtCM1UNWaZzwd4Kx0jqfVTFTKrnZPkBuk7M3I3Z+tF/PSZia89OyjRLSNe90rz54j2qNiBLc=
+	t=1782187485; cv=none; b=uFnxxRe6tfe38/NcVWNXKSUrZIi1ZyvY8zacmgW3JGGsJSQXxQ4eF+Md5Fj8x6g5rwakcbHH/SaZt0ADbEnaGiCZk6aQIg2KYFK4n+VpntN5Nghdots5+I2xVUTzAgMA3BVoOpYwG5K3KTMOaf4DJpA3hYukDI9UhZ9c3HV/IA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782182577; c=relaxed/simple;
-	bh=u0doYcIZNkBG4PjKgaPAzTDjk/ocN4wKiGTjGHKWLAA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gGs/8Bgrci1CYMPmkSQMe0F8pKJQTQku2jSb/On5NJKwqLdIfOgHh2rtwA9lnE6vYKw+ZMJ0wwCgxXkwOHJPF6F1yDGxkwrtru7io41IVOYSK8h5IuPdFFMUGcif6cS5SE8NVaD4tLioiEbYYc1j39yOmdnHMulXOYETSpSZNBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=A91+Tuha; arc=none smtp.client-ip=54.204.34.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1782187485; c=relaxed/simple;
+	bh=36HmSz0nfuCjvaQ0XW7BUfHd8BrN+aGz2B0yqJ07nPM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mE2dh1UnGj6F61rj8ubquN+/zHvAOui8JLKfNfHluy3lu3vyKJKh1oTTHWWgamuNys/ro8vmb8KKr2NY9sJdbJhZfOkw0X1PmOfwt6JvIgjSD+v+ecB83jNGPt8uWFQNR5sI1E1p830jCD5So81dlwqNkregQ4DSLGblgR/Qppo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=QtCL8OW7; arc=none smtp.client-ip=115.124.30.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="A91+Tuha"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1782182523;
-	bh=vQCqQSA+ScYdaDt+wzTyrK9zjDcuYXy/rZe8ZEHoor8=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=A91+Tuha0zOy4IZKRlrO/7PhtSsf1/1FSjVnVQEwXsb6lWJdQDWoMlMENXzSCAzfA
-	 ORO/NJOJzE4d225soXfJallm8X5F4At9S88fmjAg78NeSn5UDbJZHdSGtDf6s3z7JQ
-	 9l8ffidbGqyeWWshPixba9jjzeybYLuanXUdD1Wo=
-X-QQ-mid: esmtpgz15t1782182518taa0e8291
-X-QQ-Originating-IP: dXb8rWpHSu6sETcRM8DFy/6ta9BIwUSrjdvirYg9nOk=
-Received: from localhost.localdomain ( [1.85.7.34])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Tue, 23 Jun 2026 10:41:56 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 4461836420273492138
-EX-QQ-RecipientCnt: 7
-From: jiazhenyuan <jiazhenyuan@uniontech.com>
-To: cem@kernel.org,
-	djwong@kernel.org,
-	kees@kernel.org,
-	linux-xfs@vger.kernel.org,
-	hch@infradead.org
-Cc: linux-kernel@vger.kernel.org,
-	kernel@uniontech.com
-Subject: [PATCH] xfs: fix AGFL extent count calculation in xrep_agfl_fill
-Date: Tue, 23 Jun 2026 10:41:53 +0800
-Message-Id: <20260623024153.835431-1-jiazhenyuan@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="QtCL8OW7"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1782187479; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=yqkrfYs2jEBOpbs4UxnwxjJjFItCcyIqQyhy6JXkNqo=;
+	b=QtCL8OW7CBNpYOtuz4nKXwJXrI03v/F8fG+EBIpPP9AM/BRzbxh3jKASW8u2mpeJLTNVd+R0o3AvgIssu+xlnlTu+FvM2kKVnaovMnZFc3cxOIw70c/zor3UmPc5JS4+H2pnH3unaSbVkHzRdI+Ys7zPpD9j7uTKFZE4DCnFW4I=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R921e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=jefflexu@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0X5SkNzW_1782187478;
+Received: from 30.120.78.16(mailfrom:jefflexu@linux.alibaba.com fp:SMTPD_---0X5SkNzW_1782187478 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 23 Jun 2026 12:04:38 +0800
+Message-ID: <71d4ac02-d760-49ab-a01c-e7d1a6662a18@linux.alibaba.com>
+Date: Tue, 23 Jun 2026 12:04:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] NFS: invalidate i_blocks after COMMIT to fix stale block
+ count on NFSv4
+To: Trond Myklebust <trondmy@kernel.org>, anna@kernel.org,
+ linux-nfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, joseph.qi@linux.alibaba.com,
+ linux-xfs@vger.kernel.org
+References: <20260622060038.13731-1-jefflexu@linux.alibaba.com>
+ <2d09ab9a74d1eb21c99454dba8be597612d20efa.camel@kernel.org>
+Content-Language: en-US
+From: Jingbo Xu <jefflexu@linux.alibaba.com>
+In-Reply-To: <2d09ab9a74d1eb21c99454dba8be597612d20efa.camel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-0
-X-QQ-XMAILINFO: NvZv44yBVOfed0ulvMLkJAK+EITz7XoImrdQ44rEUldBn9KSvXF8dlUl
-	qqgBAHL6XPuqpyA7Eau9o6xukkIXDDUnwY2TgutSU7d9ENJDAIUOpnnhYxhAoUZsiItfxNu
-	mdb2kyrVuOlQyMITe3qiCAGOer2zVKJwZWytmfKO/mi+vVmu3NQStTb244jGingKHIU2Z6z
-	OFoBsf9AxMgeexmLDv0zRirYRFfE3rdYjm2BSV0m9bso7bq9ZnuM8+YBcCatqIXk/aclwqA
-	z/RZ046+zzBj61cHb3nmconPYd4ixwzCTTSqALiqzfZ/e2PkwTKhh+2818wlcLuKNgm4tku
-	m4BnW+OjKyG5Bz8N40q1lCFAhup8GUO8d7erfvs5gNqQVvXJuBSwcpOlttYNTkBtwv6Uh3J
-	P0ICdLRAbvkTo4Bci33mlrCyIJ4vCNUxhN4mM9iR2ZLA2Y3vJrZcykwcRsM/2eyCGL2tOkK
-	10sPOVFPIvWNFaXNkVbw5/T712e3zgW/sQS0R/WlZOFS8U98v7nO5tKhP7soIikMOyEXcnZ
-	rBDfhBKsyQBX3w7RWhInC3TV4WQgyHthQWfSEX6oApWt8dHcUZw71nmMGbnVm/rzqwGS8CV
-	sbDZ0VVemOcTUKoRBWMLwcdoRms8axLteYkwDECSZ06xY9nuBhPYcO6wxAJcGF4HvGeIMAj
-	93YhGagJ9cfNDMH2LLOB0M2vhQi9zbEChIdTvbSlv/WoV/ZzRdW0t4ZLRfUNaxjoAZY63HY
-	L1IrfoylbzxoEu81G7qnVNsMSSRqdF0V5ZH5O8B8opwcQQgWsG7XQpQYrRK5j+vfeQwOTP0
-	07jgPl6HXFtVQlyjLaF4UE39WhMG46a5DkeFEcfj+zsWn16Ntz7tiK/YVIDK77SMCQJVeqU
-	Hz3UXw6hH+oihVz7y4jq+5A4gDVHMGeUOjdkTaH4sWT++IR2SWTiXhAtzWz2Wl5UG1hZsRi
-	gDihOgiAMA0rwOdeQ7RYNaPIMp1a9z6N1+SSmIEFW7+pOiqscPWeo+wGQxkcnXCIOOORH3I
-	cE3AeKQKKTEyXDcutgKL7buQc0pcI4eyDLirNibBdVpl1F98B/Z7KxHxBx+mejhYf2CRjip
-	11LSXs8X1g4bCixeDZLWEzQ27nvQHkoKA==
-X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
-X-QQ-RECHKSPAM: 0
 
-In xrep_agfl_fill(), the call to xagb_bitmap_set() passes
-'agbno - 1' as the length argument. However, xagb_bitmap_set()
-expects a length (number of blocks), not an end block number.
-Passing 'agbno - 1' causes used_extents to record an incorrect
-range.
++cc linux-xfs@vger.kernel.org
 
-Fix this by calculating the correct length as 'agbno - start',
-which represents the actual number of blocks filled into the AGFL.
+On 6/22/26 9:56 PM, Trond Myklebust wrote:
+> On Mon, 2026-06-22 at 14:00 +0800, Jingbo Xu wrote:
+>> NFSv4 COMMIT compound does not include GETATTR, and
+>> nfs4_commit_done_cb
+>> does not refresh inode attributes. Meanwhile, every WRITE marks
+>> NFS_INO_INVALID_BLOCKS via nfs_post_op_update_inode_force_wcc_locked.
+>>
+>> After COMMIT, i_blocks remains stale until the next stat() triggers a
+>> full revalidation. In writeback-heavy workloads where COMMITs happen
+>> without intervening stat() calls, the cached block count can stay
+>> indefinitely wrong.
+>>
+>> Mark NFS_INO_INVALID_BLOCKS on successful COMMIT completion so that
+>> the
+>> next nfs_getattr requesting STATX_BLOCKS will issue a GETATTR with
+>> SPACE_USED, fetching the correct value from the server.
+>>
+>> This matches NFSv3 behavior where nfs3_commit_done already calls
+>> nfs_refresh_inode with the wcc_data post-op attributes.
+>>
+>> Reproduce with xfstests generic/694 on NFSv4.0 loopback:
+>>
+>>   Server:
+>>     mount /dev/vdc /data/test
+>>     mount /dev/vdd /data/scratch
+>>     exportfs -o insecure,rw,sync,no_root_squash,fsid=1
+>> 127.0.0.1:/data/test
+>>     exportfs -o insecure,rw,sync,no_root_squash,fsid=2
+>> 127.0.0.1:/data/scratch
+>>
+>>   Client:
+>>     mount -t nfs -o vers=4.0 localhost:/data/test /mnt/test
+>>     mount -t nfs -o vers=4.0 localhost:/data/scratch /mnt/scratch
+>>
+>>   local.config:
+>>     export TEST_FS_MOUNT_OPTS="-o vers=4.0"
+>>     export MOUNT_OPTIONS="-o vers=4.0"
+>>     export FSTYP=nfs
+>>     export TEST_DEV=localhost:/data/test
+>>     export SCRATCH_DEV=localhost:/data/scratch
+>>     export TEST_DIR=/mnt/test
+>>     export SCRATCH_MNT=/mnt/scratch
+>>
+>> This fixes xfstests generic/694.
+>>
+>> Assisted-by: Qoder:Qwen3.7-Max
+>> Signed-off-by: Jingbo Xu <jefflexu@linux.alibaba.com>
+>> ---
+>>  fs/nfs/write.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/fs/nfs/write.c b/fs/nfs/write.c
+>> index d7c399763ad9..88c5c9f7434c 100644
+>> --- a/fs/nfs/write.c
+>> +++ b/fs/nfs/write.c
+>> @@ -1851,6 +1851,8 @@ static void nfs_commit_release_pages(struct
+>> nfs_commit_data *data)
+>>  		/* Latency breaker */
+>>  		cond_resched();
+>>  	}
+>> +	if (status >= 0)
+>> +		nfs_set_cache_invalid(data->inode,
+>> NFS_INO_INVALID_BLOCKS);
+>>  
+>>  	nfs_init_cinfo(&cinfo, data->inode, data->dreq);
+>>  	nfs_commit_end(cinfo.mds);
+> 
+> That sounds like an XFS bug, not an NFS bug. COMMIT isn't changing the
+> data contents of the file: it is just ensuring that the existing data
+> is persisted onto disk.
+> 
 
-Signed-off-by: jiazhenyuan <jiazhenyuan@uniontech.com>
----
- fs/xfs/scrub/agheader_repair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes the underlying backend filesystem is indeed xfs.
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index ae9ed5f280d0..b0ffd37afb45 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -652,7 +652,7 @@ xrep_agfl_fill(
- 	while (agbno < start + len && af->fl_off < af->flcount)
- 		af->agfl_bno[af->fl_off++] = cpu_to_be32(agbno++);
- 
--	error = xagb_bitmap_set(&af->used_extents, start, agbno - 1);
-+	error = xagb_bitmap_set(&af->used_extents, start, agbno - start);
- 	if (error)
- 		return error;
- 
+I retest it and can confirm that this failure is much likely
+reproducible on NFS upon XFS, while NFS upon EXT4 succeeds for 50
+consecutive test runs.
+
+Beside XFS itself also passes the test.
+
+
+To be honest I'm not familiar with NFS, following is what AI concludes:
+
+```
+Root Cause Timing Sequence: NFSv4.0 Stale i_blocks After syncfs
+
+
+   Client issues multiple UNSTABLE WRITEs — each WRITE compound includes
+a piggy-backed GETATTR that returns the server's current SPACE_USED. The
+client updates inode->i_blocks from the last completed WRITE's post-op
+attributes.
+
+   Server-side delayed allocation — the export's local filesystem
+(ext4/xfs) uses delayed allocation. Metadata blocks (indirect blocks /
+extent tree nodes) are not yet allocated during most WRITE handling;
+they materialize only when the local fs performs its own writeback.
+
+   Last WRITE completes before server metadata writeback (~80%
+probability in user's environment) — the final GETATTR returns
+SPACE_USED = 8388608 (data only, no metadata block). Client caches
+i_blocks = 8388608.
+
+   syncfs triggers COMMIT — nfs_write_inode(WB_SYNC_ALL) calls
+__nfs_commit_inode, which sends a COMMIT RPC to the server.
+   Server executes vfs_fsync_range — this forces the local fs writeback,
+which now allocates the metadata block. Server's true SPACE_USED becomes
+8388616 (+8 sectors = 4 KiB).
+
+   COMMIT response carries no file attributes — per RFC 7530 §16.3.3,
+COMMIT4resok contains only a write verifier. The XDR decoder
+(nfs4_xdr_dec_commit) never calls decode_getfattr.
+
+   nfs_commit_release_pages performs no attribute invalidation — it
+neither sends a follow-up GETATTR nor marks NFS_INO_INVALID_BLOCKS. The
+stale cached value persists.
+
+   Subsequent stat returns stale i_blocks — cache_validity is clean, so
+nfs_getattr serves the cached value 8388608 without revalidation.
+
+   After cycle_mount, fresh GETATTR returns 8388616 — mismatch detected,
+test fails.
+```
+
+
 -- 
-2.20.1
+Thanks,
+Jingbo
 
