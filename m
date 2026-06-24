@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC031EDA0F;
-	Wed, 24 Jun 2026 17:44:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AF0D33F589
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 17:47:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782323046; cv=none; b=rm2UIQsk8Z/JQtRs8kg4N3/VJT9mfIisZKuPOhyiFrAdiS16N0gsKF5b6Ueq+m9m+5+FI7/J05Tc1nAqqCtwCVSYkwxn6HJyWjJvOvWr87sDNyBFGTdVL6V8KyqyjAPSJSnswdToSArRdwuPPDaZMW94qzHq6gj/Dbk95p+opoQ=
+	t=1782323242; cv=none; b=av6y6ra+zM2pZaa2SVXCHRav2eYLZCZaFJTAlkHclTqS5iI3P8potdgzOAMXYIFxtNhXp2hCjPHKWE2mQi36YmblKvCpGFbpR3M8J/fYu72eWNqWIO4pWSfSkitXawu9dg9m12Oo3zlOTfS7s0URBWTYWO9BIM99RheVzuLKMcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782323046; c=relaxed/simple;
-	bh=ejFr/WxL7j84oEJrJ7vPadBIqFQuXa6rjbGKo8YgsDU=;
+	s=arc-20240116; t=1782323242; c=relaxed/simple;
+	bh=3fpzsn0lxeaSF+Oh+K427zsp4lqsWhit5SEderY9ll8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HXOu5ke7WprvcuCG8YDtHJ+hHWdQUI2F/Tui2cSPEJHyV8mZ9nWQvVdlISMVasYzj8GI74vadOIXccklGt5IirQ/lFnPOhtvEWWgsj1sneId6YaIT2foXsGK2xh5LImmpE1Q4R84fHnqVrJgCB264JgOHvWLYZB/ELCz7zCKDZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oz6HVjQ8; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=tiNrkw4qBo3iS4tDGpw1Tf+T20F847bPLsMAAWHvkjgF1tbslJmMjBaa2LMXil0ibyprb7EhWE/gOJG8nAZDGyiLbopOQyZRMzAqNvkwuxwkeoQ5g9FADSCnOKoIDPeeBgAuU2chaeJ7PRC4X4fOfr2wb8dTjUvPQKW9rMe4/2s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X3F2TWUg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oz6HVjQ8"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A9FF11F00A3A;
-	Wed, 24 Jun 2026 17:44:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X3F2TWUg"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B4D411F000E9;
+	Wed, 24 Jun 2026 17:47:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782323044;
-	bh=WfK2N2oJ3+2u8ky1p9lFxKQAgmuLNyiZ0yVYPK0yXjk=;
+	s=k20260515; t=1782323240;
+	bh=SwPri8l4jZ8bpnqlgOLb2sIGqtIEzw1gG33AXBlgwEw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Oz6HVjQ8r33PR4253lkslWCPbsuyQsRTiWn1cXDwpUpN5s9QLMvANKg69hv0XWNKL
-	 78+kf2Pg0prHjCCw9CuOR2IdGoDDqvspVUVvG+C2+HoxrKAQeddEXdKH2HRrleNwoz
-	 oH0thQMjx1UFWYdBQQhX5fXb7deKweu7CFusp/TcrOCyK36wXvImoBk1B376ILi9XR
-	 PX2FJFq/gvTuA6BMBcCBceIlzAx2NTLpjeOX0hahJOF/deCDniPAiaq/wxo1TcD5rS
-	 Jrf+VcgTx7oZfTMaNEJsQBT7IG/PDL68taoul2Ar0BVfp/vTkKgic1OvKLc2F/Ebad
-	 T4r38I5pm8bQg==
-Date: Wed, 24 Jun 2026 10:44:04 -0700
+	b=X3F2TWUgKHqECv8OTV1VQ+WGmR/gXqY1U8z7t96DQZBwNs4ec7N/m33ea4LXetxnS
+	 pxfc0GKPFK8oAVlLaFh4b3UoSyrCbGwBLhy9bKfug4PoNs3a3NbrscMna772TJ6T1k
+	 c4UcC7yYl3f4PFBKKGKP/X3Ty4yK17wucIffTRYdaFOvyOHqYTLA1PqNBR7nJJsnCh
+	 oBJQ2GYW+55omO5DSoeaiZQ5XJcmuB3Of4XTA9OArs5bE3/HIVrjxVvGeqx5eHOolr
+	 HxN3Yfw/kQOirhj8z7ce78QhAu2pZRzscfM5+OTIqf5Y/tAkxgCfTr6pR+/JUcWXdv
+	 6Pt/3GPAaVLqA==
+Date: Wed, 24 Jun 2026 10:47:20 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, Lukas Herbolt <lukas@herbolt.com>,
-	Eric Sandeen <sandeen@sandeen.net>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs/216: disable all concurrency scaling
-Message-ID: <20260624174404.GS6078@frogsfrogsfrogs>
-References: <20260619050937.444488-1-hch@lst.de>
- <20260619050937.444488-3-hch@lst.de>
+To: Pankaj Raghav <p.raghav@samsung.com>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
+	dgc@kernel.org, gost.dev@samsung.com, pankaj.raghav@linux.dev,
+	andres@anarazel.de, kundan.kumar@samsung.com, hch@lst.de,
+	cem@kernel.org, hch@infradead.org
+Subject: Re: [PATCH v7 1/2] xfs: add an allocation mode to
+ xfs_alloc_file_space()
+Message-ID: <20260624174720.GT6078@frogsfrogsfrogs>
+References: <20260622083106.2914092-1-p.raghav@samsung.com>
+ <20260622083106.2914092-2-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,42 +46,154 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260619050937.444488-3-hch@lst.de>
+In-Reply-To: <20260622083106.2914092-2-p.raghav@samsung.com>
 
-On Fri, Jun 19, 2026 at 07:09:29AM +0200, Christoph Hellwig wrote:
-> This test currently disables log concurrency scaling, but even the
-> data device concurrency scaling can create mismatching output on
-> systems with a large CPU count.
+On Mon, Jun 22, 2026 at 10:31:05AM +0200, Pankaj Raghav wrote:
+> xfs_alloc_file_space() hardcodes XFS_BMAPI_PREALLOC to preallocate
+> unwritten extents across a range.
 > 
-> Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Tested-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> In preparation for FALLOC_FL_WRITE_ZEROES, add an explicit allocation
+> mode argument, enum xfs_alloc_file_space_mode, and derive the xfs_bmapi
+> flags from it. The only mode for now is XFS_ALLOC_FILE_SPACE_PREALLOC,
+> which preallocates unwritten extents and marks the inode as preallocated
+> exactly as before, so there is no functional change.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 > ---
->  tests/xfs/216 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/xfs_bmap_util.c | 25 +++++++++++++++++++++----
+>  fs/xfs/xfs_bmap_util.h |  6 +++++-
+>  fs/xfs/xfs_file.c      |  9 ++++++---
+>  3 files changed, 32 insertions(+), 8 deletions(-)
 > 
-> diff --git a/tests/xfs/216 b/tests/xfs/216
-> index 1749647c11f7..ce8bb528410b 100755
-> --- a/tests/xfs/216
-> +++ b/tests/xfs/216
-> @@ -23,7 +23,7 @@ _cleanup()
->  _require_scratch
->  _scratch_mkfs_xfs >/dev/null 2>&1
->  if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
-> -	loop_mkfs_opts="-l concurrency=0"
-> +	loop_mkfs_opts="-d concurrency=0 -l concurrency=0 -r concurrency=0"
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 3b9f262f8e91..8dfb3c1e3759 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -642,11 +642,19 @@ xfs_free_eofblocks(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Allocate space for a file according to @mode:
+> + *
+> + * XFS_ALLOC_FILE_SPACE_PREALLOC:
+> + * Preallocate unwritten extents across the range and mark the inode as
+> + * preallocated.
 
-/me notes that -lconcurrency is not compatible with -llogdev and the
-loopdev is not formatted with SCRATCH_MKFS_OPTIONS, so this won't work
-to disable the concurrency= mkfs options if fstests is being run with
-SCRATCH_LOGDEV set.
+"Preallocate unwritten extents over holes across the range..."?
+
+Other than that, this looks good to me.
 
 --D
 
->  else
->  	loop_mkfs_opts=""
->  fi
+> + */
+>  int
+>  xfs_alloc_file_space(
+>  	struct xfs_inode	*ip,
+>  	xfs_off_t		offset,
+> -	xfs_off_t		len)
+> +	xfs_off_t		len,
+> +	enum xfs_alloc_file_space_mode mode)
+>  {
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	xfs_off_t		count;
+> @@ -657,6 +665,7 @@ xfs_alloc_file_space(
+>  	int			rt;
+>  	xfs_trans_t		*tp;
+>  	xfs_bmbt_irec_t		imaps[1], *imapp;
+> +	uint32_t		bmapi_flags, nr_exts;
+>  	int			error;
+>  
+>  	if (xfs_is_always_cow_inode(ip))
+> @@ -674,6 +683,15 @@ xfs_alloc_file_space(
+>  	if (len <= 0)
+>  		return -EINVAL;
+>  
+> +	switch (mode) {
+> +	case XFS_ALLOC_FILE_SPACE_PREALLOC:
+> +		bmapi_flags = XFS_BMAPI_PREALLOC;
+> +		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+>  	rt = XFS_IS_REALTIME_INODE(ip);
+>  	extsz = xfs_get_extsz_hint(ip);
+>  
+> @@ -733,8 +751,7 @@ xfs_alloc_file_space(
+>  		if (error)
+>  			break;
+>  
+> -		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
+> -				XFS_IEXT_ADD_NOSPLIT_CNT);
+> +		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
+>  		if (error)
+>  			goto error;
+>  
+> @@ -748,7 +765,7 @@ xfs_alloc_file_space(
+>  		 * will eventually reach the requested range.
+>  		 */
+>  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+> +				allocatesize_fsb, bmapi_flags, 0, imapp,
+>  				&nimaps);
+>  		if (error) {
+>  			if (error != -ENOSR)
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index c477b3361630..232b4c48247e 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -55,8 +55,12 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+>  			     int *is_empty);
+>  
+>  /* preallocation and hole punch interface */
+> +enum xfs_alloc_file_space_mode {
+> +	XFS_ALLOC_FILE_SPACE_PREALLOC,
+> +};
+> +
+>  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+> -		xfs_off_t len);
+> +		xfs_off_t len, enum xfs_alloc_file_space_mode mode);
+>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 845a97c9b063..e90ea6ebdc8e 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1406,7 +1406,8 @@ xfs_falloc_zero_range(
+>  		len = round_up(offset + len, blksize) -
+>  			round_down(offset, blksize);
+>  		offset = round_down(offset, blksize);
+> -		error = xfs_alloc_file_space(ip, offset, len);
+> +		error = xfs_alloc_file_space(ip, offset, len,
+> +				XFS_ALLOC_FILE_SPACE_PREALLOC);
+>  	}
+>  	if (error)
+>  		return error;
+> @@ -1432,7 +1433,8 @@ xfs_falloc_unshare_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_ALLOC_FILE_SPACE_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1460,7 +1462,8 @@ xfs_falloc_allocate_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_ALLOC_FILE_SPACE_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
 > -- 
-> 2.53.0
+> 2.51.2
 > 
 > 
