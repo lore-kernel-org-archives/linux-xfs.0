@@ -1,38 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EBB1A724C;
-	Wed, 24 Jun 2026 07:34:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C57530568F
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 07:41:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782286493; cv=none; b=e5flry/9gksi5+W3EZjoQa5g3Aicz76H6J0BTcHayJneWr8P4K/kQDwxZftR+cLBUExxMETJYXHdX/MNqXFEfKQMwERAWZYIuU1mcgXVLBTcD00oqRS19kHJyakBMosA3AVTw4r+c3kCkFhYOxhsJfxj3K/pGwfNHiFW8gPjmCw=
+	t=1782286899; cv=none; b=pBImaENlNkEfk2Cm4acnlU8J/hgnoJinVmq6sQhdrZP+7+74PVBQbqKYF6MvDFXLdtP0ByU97gL2042KQO8pjtbde9fgpQ85W1dvsiYZdeDcTrZd1UfTb6va6/NBePUlwx7WLA9Y79hrVT0kOGAi+nP/XJo0Y/uuGKb8BIabVy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782286493; c=relaxed/simple;
-	bh=1NRoBEdgPXWTcz3r0lu8OmTVYDfqthhYb1hNVfakD1M=;
+	s=arc-20240116; t=1782286899; c=relaxed/simple;
+	bh=96e6O4jNTVTIghCLCX3yQ4qzwRVJElyLsP7auPtxzNc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S0NW5XbV9LCPOb8VNLdl8qWR0hJjTn7B7kF7KiaPO9qldrxgzfZavzXpBZp4Wymh6AAXvTRo29+be1vo59nq5r2ItDTgbGyL3wtfP2xRpL3HvE731wKYpVGGV+vii9XpF1zru9+rvql+IMgoVlZ2zPB+CGe69o0fLgqTL9gRtsE=
+	 Content-Type:Content-Disposition:In-Reply-To; b=eeq6AiaBK4kf0zQixaRkhEr7ZuD090rVG5PEO4EA5jikwcGuh7D7iox9ytVhA3eyHgPAO4qClmlmn2AB0m5cJMiY1pZA6Zp4CWtZ9Q8HbtkKxIGESUn10USUEQsbDHNo7R6mUOygu+9/QWvuF2JqRUEVjvx6oOlLKcy0eZeMd2I=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id EBD9E68BEB; Wed, 24 Jun 2026 09:34:45 +0200 (CEST)
-Date: Wed, 24 Jun 2026 09:34:45 +0200
+	id 97CD768BEB; Wed, 24 Jun 2026 09:41:35 +0200 (CEST)
+Date: Wed, 24 Jun 2026 09:41:35 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, Kelu Ye <yekelu1@huawei.com>,
-	Yifan Zhao <zhaoyifan28@huawei.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Hyunchul Lee <hyc.lee@gmail.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev,
-	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/2] iomap: submit read bio after each extent
-Message-ID: <20260624073445.GA12359@lst.de>
-References: <20260623135208.1812933-1-hch@lst.de> <20260623135208.1812933-3-hch@lst.de> <CAJnrk1agx-qUizNzCnzvZ6Marf7u-K4EtKOak4c2MQN1sJfgNA@mail.gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: simplify the failure path in
+ xfs_buf_alloc_vmalloc
+Message-ID: <20260624074135.GA12896@lst.de>
+References: <20260617055814.3842058-1-hch@lst.de> <20260617055814.3842058-5-hch@lst.de> <ajkrJHFg4lYeWskS@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,37 +32,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJnrk1agx-qUizNzCnzvZ6Marf7u-K4EtKOak4c2MQN1sJfgNA@mail.gmail.com>
+In-Reply-To: <ajkrJHFg4lYeWskS@nidhogg.toxiclabs.cc>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jun 23, 2026 at 10:29:54AM -0700, Joanne Koong wrote:
-> >  void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
-> > -               struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io)
-> > +               struct iomap_read_folio_ctx *ctx, bool force,
+On Mon, Jun 22, 2026 at 02:34:10PM +0200, Carlos Maiolino wrote:
+> >  	for (;;) {
+> >  		bp->b_addr = __vmalloc(size, gfp_mask);
+> >  		if (bp->b_addr)
+> >  			break;
+> > -		if (flags & XBF_READ_AHEAD)
 > 
-> nit: might simplify things to drop the unused force arg
+> My only concern is that looking at it now, isn't obvious why GRP_NORETRY
+> has been set in the first place, perhaps worth adding a comment above
+> it? Like:
+> 		/* Set during readahead */
 
-I guess this is not directly used as a method, so we could.
-
-> >
-> > -       while ((ret = iomap_iter(&iter, ops)) > 0)
-> > +       while ((ret = iomap_iter(&iter, ops)) > 0) {
-> > +               iomap_submit_read(&iter, ctx, false);
-> >                 iter.status = iomap_read_folio_iter(&iter, ctx,
-> >                                 &bytes_submitted);
-> 
-> should the submit_read happen after the iomap_read_folio_iter() /
-> iomap_readahead_iter() instaed of before? From what I see, it looks
-> like iomap_submit_read() would hold the iter state of the next
-> mapping. It seems like in iomap_bio_submit_read_endio(), the
-> iter->iomap.flags would be the next extent's flags instead of the one
-> that needs to be submitted?
-
-Yeah, the iter state would be wrong here if anyone actually used it.
-But the only thing we actually ever use from it is the inode in XFS.
-
-So I'm tempted to instead just adopt the signature to not pass the
-iter, as nothing should rely on it.  The only interesting thing I could
-think of for the future would be to pass on private data, but that's
-probably better left for when we actually need it.
+Maybe.  But in the end we don't really care why it was set, as it clearly
+tells us not to retry, right?
 
