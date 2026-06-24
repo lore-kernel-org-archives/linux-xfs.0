@@ -1,35 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C0033A1A2D;
-	Wed, 24 Jun 2026 08:59:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED76396D15;
+	Wed, 24 Jun 2026 10:15:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782291590; cv=none; b=Bc55lRkgWEC+2MKFqS1/SdHVIa+piWj6SWtj0wuOsDrdznck9xlFC5vmCiaz+/Dmr/lpw1QNXe1OdAdFl1rjqv1UDdN9ghkw4R3orlttR/QRbYEsYUtpqXbp+QD479pTbsD9wafOaxnKNubgjkw3BQAH3/QT8I5lMJdrpNApXz0=
+	t=1782296101; cv=none; b=EcRJRGHK0eXZckzXXUZXqyoVb5Nu/LabCHQycHW3vAsoYIrchzxeWAwPheyi1fZ4T2pwbedGneYp8/vG+C2rFj0nMUGSmLjHF7mqVi5MBsC482crvMQztbRwH2YjApSyv41YYpQFZr6CciaGwwjrbxrcOu52REn4di8NWdKyvjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782291590; c=relaxed/simple;
-	bh=ETK/3fIWVJgZ66RkvKFMZ1xoiAvUnqVHg8A9UlR6oO4=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=hHLdk0ycu2OHmAfj13QPiVL5MhORtVtnq3dBCY6ji4ISmSakj7PCEVyY8Nif+7DfaYYQaVMqYSjff0wJ84dQqkDNWUT9JD+XE2BdN8/Eq8Epctp4lfSvKxSnP+FJ6IvFPg7s9x8yxiTuNPkmKGj7I1pDWHkYKIfsq3vGn7t6N5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cmfji3PW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782296101; c=relaxed/simple;
+	bh=xgu5KnJ3tj5olbPYMJ7kXMfV15BbmukKbtx+Td4+5xw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T6VkrhRGfty9R7xXfYcQjQxIqW1cw2A75Qba3ylmGKUSj+pJRveNNqw3uZechghNivsszjka9xi9hB7EtHwUqS414JEz243tk/Wwjsb6s1soIUvbIaVqepgZWztRPyyBDU1S+0AZUtnznsptq6jx9qJy8/ygRyUrzdxaCqVV6CM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JGIi9bla; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cmfji3PW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5E931F00A3D;
-	Wed, 24 Jun 2026 08:59:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JGIi9bla"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D731F000E9;
+	Wed, 24 Jun 2026 10:14:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782291587;
-	bh=DCKt4O2HlnFxHy8Mhm2C2zuPcXHOFrNOinuxD1UUcRc=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc;
-	b=Cmfji3PW0AVDGKQ4BufZEBDJWiQm1o8/rQsb7n4IPtwL2Bri4DpGeykggivNXbeKl
-	 bstR8Aj141x+SXVVytHk70wMVpKQ2bDQeC4RGdfuf925UT+hEoMCDYVxscMlqcrn3d
-	 6xnEmkWJdCUcpVMSWDpNGerH9VyGcglmIk/mUCMD0BiEP0cv0fwfWo3JgHR5YPVrnL
-	 Jte9tPT/yzkvqV00w5paETjF56VjF6ALEXGUBYhw0wOJsEeEWA+2CMVQPU75HFlWVo
-	 MQXB30pU37MXc/fscX12cEexVJBV1ND0Xny4mZBk5+ARKMHfjuwtW9baGkR7d+IuXL
-	 XUjSsQ4FUeCjg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 196D839EF964;
-	Wed, 24 Jun 2026 08:59:37 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	s=k20260515; t=1782296100;
+	bh=tsdFRqB0xYYkP6vZl31C+sWQYtsFokxL51/KbUhHBfA=;
+	h=From:To:Cc:Subject:Date;
+	b=JGIi9bla8Gd5uyaVK6N0fW6UAOuUUSjIH/jxtm/h9t54zEPtEIpBc9QFtyjBwESQi
+	 2j6CpvUBGz6ADjIVMwQI+oPk4GmHphWRgheP+lJQ3oyn8+jdZy18lqJ8NTsuoRphV7
+	 Ml1LUR7r9e5Ap06kdkNhxJomy+mWoDyGcGJl2PtTZ9WCUlTkD9oclQDZz1P6jZULpj
+	 zYxfDBY+cI8G3hdCPLnC9vr1V+Ix7x1xnn9truL10mUOQO0amYLTZLOFguEh/YNDsj
+	 /h99gjob2Zc93EUq5raMc9tcpXw+mj3TN87m1R1anKObnwq4GA5FALKk7BwmYeVKfL
+	 y+58ZV7gEYevw==
+From: cem@kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Carlos Maiolino <cem@kernel.org>,
+	stable@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Eric Sandeen <sandeen@redhat.com>,
+	Christoph Hellwig <hch@lst.de>,
+	"Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
+Subject: [PATCH] xfs: fix capabily check in xfs_setattr_nonsize
+Date: Wed, 24 Jun 2026 12:14:29 +0200
+Message-ID: <20260624101436.362533-1-cem@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,88 +45,77 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH v8 00/17] Subject: Exposing case folding
- behavior
-From: patchwork-bot+f2fs@kernel.org
-Message-Id: 
- <178229157577.2577930.354083176752004996.git-patchwork-notify@kernel.org>
-Date: Wed, 24 Jun 2026 08:59:35 +0000
-References: <20260217214741.1928576-1-cel@kernel.org>
-In-Reply-To: <20260217214741.1928576-1-cel@kernel.org>
-To: Chuck Lever <cel@kernel.org>
-Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
- pc@manguebit.org, yuezhang.mo@sony.com, cem@kernel.org,
- almaz.alexandrovich@paragon-software.com, adilger.kernel@dilger.ca,
- linux-cifs@vger.kernel.org, sfrench@samba.org, slava@dubeyko.com,
- linux-ext4@vger.kernel.org, linkinjeon@kernel.org, sprasad@microsoft.com,
- frank.li@vivo.com, ronniesahlberg@gmail.com, glaubitz@physik.fu-berlin.de,
- jaegeuk@kernel.org, hirofumi@mail.parknet.co.jp, linux-nfs@vger.kernel.org,
- tytso@mit.edu, linux-api@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
- senozhatsky@chromium.org, chuck.lever@oracle.com, hansg@kernel.org,
- anna@kernel.org, linux-fsdevel@vger.kernel.org, sj1557.seo@samsung.com,
- trondmy@kernel.org
 
-Hello:
+From: Carlos Maiolino <cem@kernel.org>
 
-This series was applied to jaegeuk/f2fs.git (dev)
-by Christian Brauner <brauner@kernel.org>:
+An user reported a bug where he managed to evade group's quota
+by changing a file's gid to a different group id the same user
+belonged to, even though quotas were enforced on both gids and the
+file's size was big enough to exceed the quota's hardlimit.
 
-On Tue, 17 Feb 2026 16:47:24 -0500 you wrote:
-> From: Chuck Lever <chuck.lever@oracle.com>
-> 
-> Following on from
-> 
-> https://lore.kernel.org/linux-nfs/20251021-zypressen-bazillus-545a44af57fd@brauner/T/#m0ba197d75b7921d994cf284f3cef3a62abb11aaa
-> 
-> I'm attempting to implement enough support in the Linux VFS to
-> enable file services like NFSD and ksmbd (and user space
-> equivalents) to provide the actual status of case folding support
-> in local file systems. The default behavior for local file systems
-> not explicitly supported in this series is to reflect the usual
-> POSIX behaviors:
-> 
-> [...]
+Commit eba0549bc7d1 replaced a capable() call by a
+has_capability_noaudit() to prevent unnecessary selinux audit messages.
+Turns out that both calls have slightly different semantics even though
+their documentation seems similar. Where in a nutshell:
 
-Here is the summary with links:
-  - [f2fs-dev,v8,01/17] fs: Move file_kattr initialization to callers
-    (no matching commit)
-  - [f2fs-dev,v8,02/17] fs: Add case sensitivity flags to file_kattr
-    https://git.kernel.org/jaegeuk/f2fs/c/3035e4454142
-  - [f2fs-dev,v8,03/17] fat: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,04/17] exfat: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,05/17] ntfs3: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,06/17] hfs: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,07/17] hfsplus: Report case sensitivity in fileattr_get
-    (no matching commit)
-  - [f2fs-dev,v8,08/17] ext4: Report case sensitivity in fileattr_get
-    (no matching commit)
-  - [f2fs-dev,v8,09/17] xfs: Report case sensitivity in fileattr_get
-    (no matching commit)
-  - [f2fs-dev,v8,10/17] cifs: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,11/17] nfs: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,12/17] f2fs: Add case sensitivity reporting to fileattr_get
-    (no matching commit)
-  - [f2fs-dev,v8,13/17] vboxsf: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,14/17] isofs: Implement fileattr_get for case sensitivity
-    (no matching commit)
-  - [f2fs-dev,v8,15/17] nfsd: Report export case-folding via NFSv3 PATHCONF
-    (no matching commit)
-  - [f2fs-dev,v8,16/17] nfsd: Implement NFSv4 FATTR4_CASE_INSENSITIVE and FATTR4_CASE_PRESERVING
-    (no matching commit)
-  - [f2fs-dev,v8,17/17] ksmbd: Report filesystem case sensitivity via FS_ATTRIBUTE_INFORMATION
-    (no matching commit)
+capable() - Tests the task's effective credentials
+has_ns_capability_noaudit() - Tests the task's real credentials
 
-You are awesome, thank you!
+This most of the time has no practical difference but in some cases like
+changing attrs (specifically group id in this case) through a NFS client
+this will allow the quota code to use XFS_QMOPT_FORCE_RES, effectively
+bypassing quota accounting checks.
+
+Using instead ns_capable_noaudit() should fix this issue and prevent
+selinux audit messages.
+
+Fixes: eba0549bc7d1 ("xfs: don't generate selinux audit messages for capability testing")
+Cc: <stable@vger.kernel.org> # v5.18
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Reported-by: Dr. Thomas Orgis <thomas.orgis@uni-hamburg.de>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+---
+
+If people do agree with the fix I do plan to send a patch to
+kernel/capability.c to ad a new capable_noaudit() helper which would
+come in handy here, but I believe we should backport this all the way
+back to 5.18 and replacing it by ns_capable_noaudit() is the easiest way
+to do it. Then if capable_noaudit() is acceptable we could just call
+this instead. This should also be a test in xfstests.
+
+The patch is still running on my testing suite, I'm sending it ahead of
+having the testing finished for discussion/review, so for now it fixes
+the problem but I am not sure it doesn't break anything else :)
+
+ fs/xfs/xfs_iops.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 325c2200c501..df0eba26dda3 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -792,6 +792,8 @@ xfs_setattr_nonsize(
+ 	kgid_t			gid = GLOBAL_ROOT_GID;
+ 	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+ 	struct xfs_dquot	*old_udqp = NULL, *old_gdqp = NULL;
++	bool			force = ns_capable_noaudit(&init_user_ns,
++							   CAP_FOWNER);
+ 
+ 	ASSERT((mask & ATTR_SIZE) == 0);
+ 
+@@ -835,7 +837,7 @@ xfs_setattr_nonsize(
+ 	}
+ 
+ 	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+-			has_capability_noaudit(current, CAP_FOWNER), &tp);
++			force, &tp);
+ 	if (error)
+ 		goto out_dqrele;
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.54.0
 
