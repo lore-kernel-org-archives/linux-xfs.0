@@ -1,134 +1,77 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB83D385D70;
-	Wed, 24 Jun 2026 06:27:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EBB1A724C;
+	Wed, 24 Jun 2026 07:34:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782282455; cv=none; b=C9Dy4EHg5y4tsHXdASMO5mgVi3OUElm86ow08wkAhUJT8OW8HDKqNujh2HnoVBoqhhn5/UEmkx54AdbZkixVg35Lx1l/DGoPIctvNsrR8zAAx6amGnvAWFOeNfeDgiHxDUT4mGfItWF1kpdfFopGeoiOMuYotSfQ6Ste/s2/SWA=
+	t=1782286493; cv=none; b=e5flry/9gksi5+W3EZjoQa5g3Aicz76H6J0BTcHayJneWr8P4K/kQDwxZftR+cLBUExxMETJYXHdX/MNqXFEfKQMwERAWZYIuU1mcgXVLBTcD00oqRS19kHJyakBMosA3AVTw4r+c3kCkFhYOxhsJfxj3K/pGwfNHiFW8gPjmCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782282455; c=relaxed/simple;
-	bh=ExL1JLp1Ke3UZLsZxaqB+SMmfn7zk+5OlHVzGtaMESI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S8jW+GEVulMhqFKJlxZhrVjesdjY24nuCLhl5+3kcLLFEe81HdZ99h/1QFPyqWPr30e2uoW+RpS97np9nd4+n4WzMGDEKZRaafJmu9ng+0d+vIqYpGJvbLtzP/H8jkjZbAZ3F9wpQAIWy5rh7NTIir/n9XgKAReXtWg9kuivSzo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Ba7Kz8YD; arc=none smtp.client-ip=54.92.39.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Ba7Kz8YD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1782282403;
-	bh=gmYOo4t6zp+ULX0y69XD/Dv1yAg1FqQkoB2lXnky0ho=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=Ba7Kz8YDSgLeb3odbk774ALQBa3xt93rWY+W38navOW1/XnX5mzEQYe2S1+jiWCZE
-	 hxq8JbhgmYy4h2JZomzskY5ffgfUZ97arMbJstzsHMx6jZw3LKHFKhpOf7dJK4fN3X
-	 6+69vC3xqV4teHPbGKS2b69MPRzDN+FUcxDoqqwk=
-X-QQ-mid: esmtpsz17t1782282387t4b5e1499
-X-QQ-Originating-IP: /jK24wufqUWTp05O6j1SmFfux982Pd5KlBXh+WfNkOI=
-Received: from uos-PC ( [113.57.152.160])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 24 Jun 2026 14:26:25 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 15835268725803703521
-EX-QQ-RecipientCnt: 7
-From: Morduan Zang <zhangdandan@uniontech.com>
-To: brauner@kernel.org,
-	hch@infradead.org
-Cc: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	djwong@kernel.org,
-	Morduan Zang <zhangdandan@uniontech.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2] iomap: guard io_size EOF trim against concurrent truncate underflow
-Date: Wed, 24 Jun 2026 14:26:22 +0800
-Message-ID: <9E38E2659B47DC2A+20260624062622.337469-1-zhangdandan@uniontech.com>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1782286493; c=relaxed/simple;
+	bh=1NRoBEdgPXWTcz3r0lu8OmTVYDfqthhYb1hNVfakD1M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S0NW5XbV9LCPOb8VNLdl8qWR0hJjTn7B7kF7KiaPO9qldrxgzfZavzXpBZp4Wymh6AAXvTRo29+be1vo59nq5r2ItDTgbGyL3wtfP2xRpL3HvE731wKYpVGGV+vii9XpF1zru9+rvql+IMgoVlZ2zPB+CGe69o0fLgqTL9gRtsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id EBD9E68BEB; Wed, 24 Jun 2026 09:34:45 +0200 (CEST)
+Date: Wed, 24 Jun 2026 09:34:45 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev,
+	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] iomap: submit read bio after each extent
+Message-ID: <20260624073445.GA12359@lst.de>
+References: <20260623135208.1812933-1-hch@lst.de> <20260623135208.1812933-3-hch@lst.de> <CAJnrk1agx-qUizNzCnzvZ6Marf7u-K4EtKOak4c2MQN1sJfgNA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
-X-QQ-XMAILINFO: MgEbn4EBW630QwTtn2GHtZaKE+qZMBPpXaceTMYGxe+CLpnPVTq1zH4+
-	H7uWDFtIiyYJxKzPIBvwOaHnIA2lgPSc7BExh2U+ojGKv2RKrqQew9Fl8n75/Y9cWDgXVh+
-	5z/dNckGePCb+Eu38pZGzqq4FUrOWEI9UvG3jm2u7covwEUIwYh1+vPslK84e2f5egOo4QC
-	CmRniLEz0Y5uohBv+lRppWM0QdXntdFbN1Ykn1332WMc6ZqIIzA2UBoY3XkQehn7jkpzLOf
-	ePdvXkef536QBpIVKyvpoiZVYqCXjHnADsqZb/w0PkHipfvFTdDEw4QcFq2RW+jlsPt73i4
-	T/PUVUr6+ZAstH5kB9vDr7vc5QTO7b8fpaE2X+MvFUGPq1j+wDxSiyoDKPuGQ+0QynTlq8r
-	0W/fG4IeLBwINIbzake6wfPNyZCF0E8UkA9kyxCAjOfyjlh6x0wV4kaXX6cb6O9dM4roPE/
-	HGz3aQpjol3wyHxgjhjbuV59o6q/aOgDgpUzdSfBKc90Z6IiMfCTuKvGHHSI7GlmTI3hFEP
-	H+cw35j0O5UtrqFXkwzLAUOUzCrkmfAl2qLk+51oDEdrcmrxKRdWyqd3sqhFlXrExBUW2Dl
-	DhW73Jm/+ThyihQx2s018q0PPuO6KyQH/qwmLL0NLbMmLL38YMVnZOjAFw+Mo8Atg9QLxQZ
-	YtMwHX5/vAQQG4aIMJPobiO29jRWZqf/1sb/joovpQ8p4HMG/l2qy4m4v9Hvr43qYR36MLF
-	IF3s8vodT6RSt/kCNEWZ+4QGWGveyXAzD1OwxG4otcepNv447SAm61Q2uWLV0pE+skXvu2r
-	ZwdNX5vYDczpuuN/itPRAAxxFcHkx60/mnkgosMC8ycNIGq8r2GsGxxeO4CvmxxcWoDtY++
-	aqe/VK04OtAoeCCb6evb+NUryXp1NBRnmAj6WZyWb+DREsM5Cnz2OyMiJrXRPfeR+M4cNwr
-	VPlyRPpJ/x7fxkSJtKFlv+WUfDsgplef3vOanor0G25QsdtaAFR0PCu5lYZ5C8dTH/xYqDO
-	5Iu/ZlALIx/ZgphaFffMKE2Mz2ZVEV2goSyRmWVrGtBru3e8a7yoiQa3kCVPoyIhvPLBpYL
-	DOV1SsVq2WqYcvnzRbmxEVJVFsZpCmbpJavoFHnsfRN8MY/DpGW1CY=
-X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJnrk1agx-qUizNzCnzvZ6Marf7u-K4EtKOak4c2MQN1sJfgNA@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-iomap: fix zero padding data issue in concurrent append writes
-changed ioend accounting so that io_size tracks only valid data
-within EOF.  This trims io_size when a writeback range extends
-past end_pos:
+On Tue, Jun 23, 2026 at 10:29:54AM -0700, Joanne Koong wrote:
+> >  void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
+> > -               struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io)
+> > +               struct iomap_read_folio_ctx *ctx, bool force,
+> 
+> nit: might simplify things to drop the unused force arg
 
-    ioend->io_size += map_len;
-    if (ioend->io_offset + ioend->io_size > end_pos)
-        ioend->io_size = end_pos - ioend->io_offset;
+I guess this is not directly used as a method, so we could.
 
-However, if end_pos ends up below ioend->io_offset, the subtraction
-becomes negative and is stored in size_t io_size, causing an unsigned
-wrap to a huge value.  This can happen when writeback continues past
-byte-level EOF up to a block-aligned range, or when a concurrent
-truncate shrinks the file after end_pos was sampled in
-iomap_writeback_handle_eof().
+> >
+> > -       while ((ret = iomap_iter(&iter, ops)) > 0)
+> > +       while ((ret = iomap_iter(&iter, ops)) > 0) {
+> > +               iomap_submit_read(&iter, ctx, false);
+> >                 iter.status = iomap_read_folio_iter(&iter, ctx,
+> >                                 &bytes_submitted);
+> 
+> should the submit_read happen after the iomap_read_folio_iter() /
+> iomap_readahead_iter() instaed of before? From what I see, it looks
+> like iomap_submit_read() would hold the iter state of the next
+> mapping. It seems like in iomap_bio_submit_read_endio(), the
+> iter->iomap.flags would be the next extent's flags instead of the one
+> that needs to be submitted?
 
-A wrapped io_size can mislead append detection and corrupt
-completion-time size handling, since filesystem end_io paths consume
-io_size for decisions such as on-disk EOF updates and unwritten/COW
-completion ranges.
+Yeah, the iter state would be wrong here if anyone actually used it.
+But the only thing we actually ever use from it is the inode in XFS.
 
-Fix this by clamping io_size to zero when EOF has moved to or before
-the ioend start offset.  This preserves the original intent of trimming
-io_size to valid in-EOF data while avoiding the underflow.
-
-Fixes: 51d20d1dacbe ("iomap: fix zero padding data issue in concurrent append writes")
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Morduan Zang <zhangdandan@uniontech.com>
----
-Changes in v2:
-- Adopt Christoph's suggested condition ordering for readability
-- No runtime reproducer yet; still working on a test setup
-
-v1: https://lore.kernel.org/all/863D407CB3ECEB04+20260618053820.506635-1-zhangdandan@uniontech.com/
----
- fs/iomap/ioend.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-index acf3cf98b23a..2d5611f6cc57 100644
---- a/fs/iomap/ioend.c
-+++ b/fs/iomap/ioend.c
-@@ -297,8 +297,12 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
- 	 * appending writes.
- 	 */
- 	ioend->io_size += map_len;
--	if (ioend->io_offset + ioend->io_size > end_pos)
--		ioend->io_size = end_pos - ioend->io_offset;
-+	if (ioend->io_offset + ioend->io_size > end_pos) {
-+		if (ioend->io_offset >= end_pos)
-+			ioend->io_size = 0;
-+		else
-+			ioend->io_size = end_pos - ioend->io_offset;
-+	}
- 
- 	wbc_account_cgroup_owner(wpc->wbc, folio, map_len);
- 	return map_len;
--- 
-2.50.1
+So I'm tempted to instead just adopt the signature to not pass the
+iter, as nothing should rely on it.  The only interesting thing I could
+think of for the future would be to pass on private data, but that's
+probably better left for when we actually need it.
 
