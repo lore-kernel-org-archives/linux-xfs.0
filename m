@@ -1,67 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE3F6322522
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 08:26:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760943932C9;
+	Wed, 24 Jun 2026 08:59:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782289591; cv=none; b=kr1t5dFEqGDpcGxDi2I9AbI42yzNrn/zvVI3/dOKxEXAPzDUmMz0r92LN+s5fzauN7iHRcMag41JlIpPSX6hoWQ/PRi7V8ygTZAlMuxXTHY392xqsTYJTU19rnXQYXSfm50C5z7xqWQjn/MY4NlxzfsmuYCUaB0Y6fRK4aHHdx4=
+	t=1782291583; cv=none; b=DPtTFj/49FB8vimbyqkAOQJ5cy8/9LS9hAVNLDpAto2TsPj4z/llkKRehM3viFGNQ8os/+vGu4ZNOjtrcaAgjyGW/6HEmdq7dM6BsbTJhOaT4bQcXgsD5g81XnnA58OoTXna7X7Ktq70rPmndSow2HimFeQ90kKH/O2Ic4lr5K0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782289591; c=relaxed/simple;
-	bh=sTjBE5iQm6kuLHU5HveUSysYJDi//IeRzOkQD7HU41E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F+y7lJ96Nh3Lv+MLdZbDrEISl3wltuOk3G12CVY29kKmaYfpbX/xqOUwmdRBrXXHB/CGhMTFy2m6TVknBs2G8Q5IZU6gvTyLAjLLE/uFqw38rkUDZ8mo3aOl1U8ROCO/Qf5/0s63YHuChtYaerKsJLXnXsXR76O0nHUHAdd+6/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fh80VGlH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782291583; c=relaxed/simple;
+	bh=4e2lvbGRAzSrAQ17eFCaDg3KhOLO9JpUk9tU+XsYGgc=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=VW/QTNDDROlc4Z++sRTN85FUy0nIyQhZ/lttrKsYqBk80TdoX2EowLJk0hdvMCnIuw7RbLkMEo/xQFPINn7n8e5gFs3VxOxhWv31cyCbzAVGg2PyIzAbqqYJ16xJyiVGWYBhJWsgNAsbpEqdSZx24thT16GkTCvxGi5oP7szJTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Td6fOIN3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fh80VGlH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C4661F000E9;
-	Wed, 24 Jun 2026 08:26:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Td6fOIN3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E76401F000E9;
+	Wed, 24 Jun 2026 08:59:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782289590;
-	bh=yYVfQxNJLFha1my4/o8fx2XRqbHh6sEBDyEDAkJVWNc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Fh80VGlHanz7jFJ4DnTkK0Xutyy8PColayLSe2a1iqkOpJRamQzNdu5RK43Fel3oF
-	 zlWuey/8f56GTC/vblE2vYFdOc0CEaExXgfMcpBjauodA6nNnaAerW818tqNXIVSNE
-	 /t1C4Doa/rPZjECzQyINANa92kmBmMRWLun7LrDieLBaNrUCXy+kqT/+iRQM3t+Ze/
-	 JoaMSiCLGQgQKDBdsrhVK80CQaN3he9mhcvFZ7KIiyxX4iacSSqt00eNIEM1cy7BEu
-	 durKVfI9mGol331H1zpMtL8VluakwG1H9Wh+bM/mzan1UzUGrDXsJ5XIPm7cAZGthQ
-	 QpOP8EkNQsnxw==
-Date: Wed, 24 Jun 2026 10:26:26 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: improve the xfs_buf_ioend_fail calling
- convention
-Message-ID: <ajuUlgquKt7puvOz@nidhogg.toxiclabs.cc>
-References: <20260622073035.1370904-1-hch@lst.de>
- <20260622073035.1370904-4-hch@lst.de>
- <ajkxAU-VxjRrHVS0@nidhogg.toxiclabs.cc>
- <20260624074206.GA12969@lst.de>
+	s=k20260515; t=1782291581;
+	bh=TM6/7W5L0lECPXJpPRC/prv4vynbdZprP5beN/B/udw=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc;
+	b=Td6fOIN3/f0VBzergs0drcUYmXQQAsvO4StGVdMIjfzMrq302z0CgE5PZLuvuGTgu
+	 y6OwsR7LXPEEFrY7QrkK2hSlHI12MXhmVem1daB0+ozFWkUYEuEItyZJ7vx5MyaS+t
+	 Oc1WA2rvp0/OSZzW0f3+n0kg+mE0TC3Ab6FQDwqtxJv9M6iyI463PwXDsZeJtaXgH8
+	 cA97HZbh6WLwIiL86WWHqng6yP/LFC+v3mboYn4sGQCZ08gXpiYOtiLe5h2IPQIEJa
+	 sokPZW3EP5W8SOl4LwWjYysGGnj4trZOS4gry4rVwbkUraPobHITXsNO5d1m/HquOK
+	 yCniGim9xfQ2Q==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 19A4A39EF964;
+	Wed, 24 Jun 2026 08:59:31 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260624074206.GA12969@lst.de>
+Content-Transfer-Encoding: 8bit
+Subject: Re: [f2fs-dev] [PATCH v14 00/15] Exposing case folding behavior
+From: patchwork-bot+f2fs@kernel.org
+Message-Id: 
+ <178229156954.2577930.8082691450605559803.git-patchwork-notify@kernel.org>
+Date: Wed, 24 Jun 2026 08:59:29 +0000
+References: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
+In-Reply-To: <20260507-case-sensitivity-v14-0-e62cc8200435@oracle.com>
+To: Chuck Lever <cel@kernel.org>
+Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+ pc@manguebit.org, yuezhang.mo@sony.com, cem@kernel.org,
+ roland.mainz@nrubsig.org, almaz.alexandrovich@paragon-software.com,
+ adilger.kernel@dilger.ca, linux-cifs@vger.kernel.org, sfrench@samba.org,
+ slava@dubeyko.com, djwong@kernel.org, linux-ext4@vger.kernel.org,
+ linkinjeon@kernel.org, stfrench@microsoft.com, sprasad@microsoft.com,
+ frank.li@vivo.com, ronniesahlberg@gmail.com, glaubitz@physik.fu-berlin.de,
+ jaegeuk@kernel.org, hirofumi@mail.parknet.co.jp, linux-nfs@vger.kernel.org,
+ tytso@mit.edu, linux-api@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+ senozhatsky@chromium.org, chuck.lever@oracle.com, hansg@kernel.org,
+ anna@kernel.org, linux-fsdevel@vger.kernel.org, sj1557.seo@samsung.com,
+ trondmy@kernel.org
 
-On Wed, Jun 24, 2026 at 09:42:06AM +0200, Christoph Hellwig wrote:
-> On Mon, Jun 22, 2026 at 02:59:05PM +0200, Carlos Maiolino wrote:
-> > On Mon, Jun 22, 2026 at 09:30:02AM +0200, Christoph Hellwig wrote:
-> > > Move setting the ASYNC flag into xfs_buf_ioend_fail_async, assert that
-> > 				  Is this a typo? I can't find this
-> > 				  definition anywhere and the code also
-> > 				  moves this into xfs_buf_ioend_fail(),
-> > 				  not into a _async variation.
+Hello:
+
+This series was applied to jaegeuk/f2fs.git (dev)
+by Christian Brauner <brauner@kernel.org>:
+
+On Thu, 07 May 2026 04:52:53 -0400 you wrote:
+> Christian, let's lock this one in. I will post subsequent changes
+> as delta patches.
 > 
-> Yeah, this could use a little update.
+> Following on from:
 > 
+> https://lore.kernel.org/linux-nfs/20251021-zypressen-bazillus-545a44af57fd@brauner/T/#m0ba197d75b7921d994cf284f3cef3a62abb11aaa
 > 
+> [...]
 
-If you'll be re-sending the whole series again, feel free to add
+Here is the summary with links:
+  - [f2fs-dev,v14,01/15] fs: Move file_kattr initialization to callers
+    https://git.kernel.org/jaegeuk/f2fs/c/14c3197ecf07
+  - [f2fs-dev,v14,02/15] fs: Add case sensitivity flags to file_kattr
+    https://git.kernel.org/jaegeuk/f2fs/c/3035e4454142
+  - [f2fs-dev,v14,03/15] fat: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/c92db2ca726f
+  - [f2fs-dev,v14,04/15] exfat: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/27e0b573dd4a
+  - [f2fs-dev,v14,05/15] ntfs3: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/eeb7b37b9700
+  - [f2fs-dev,v14,06/15] hfs: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/b6fe046c3023
+  - [f2fs-dev,v14,07/15] hfsplus: Report case sensitivity in fileattr_get
+    https://git.kernel.org/jaegeuk/f2fs/c/a6469a15eefe
+  - [f2fs-dev,v14,08/15] xfs: Report case sensitivity in fileattr_get
+    https://git.kernel.org/jaegeuk/f2fs/c/c9da43e4e5c3
+  - [f2fs-dev,v14,09/15] cifs: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/e50bc12f5a36
+  - [f2fs-dev,v14,10/15] nfs: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/92d67628a1a9
+  - [f2fs-dev,v14,11/15] vboxsf: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/ef14aa143f1d
+  - [f2fs-dev,v14,12/15] isofs: Implement fileattr_get for case sensitivity
+    https://git.kernel.org/jaegeuk/f2fs/c/7bbd51b1d748
+  - [f2fs-dev,v14,13/15] nfsd: Report export case-folding via NFSv3 PATHCONF
+    https://git.kernel.org/jaegeuk/f2fs/c/211cb2ba4877
+  - [f2fs-dev,v14,14/15] nfsd: Implement NFSv4 FATTR4_CASE_INSENSITIVE and FATTR4_CASE_PRESERVING
+    https://git.kernel.org/jaegeuk/f2fs/c/01ee7c3d2e23
+  - [f2fs-dev,v14,15/15] ksmbd: Report filesystem case sensitivity via FS_ATTRIBUTE_INFORMATION
+    https://git.kernel.org/jaegeuk/f2fs/c/0164df1d1de7
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-At the end everything looks good with these caveats
+
