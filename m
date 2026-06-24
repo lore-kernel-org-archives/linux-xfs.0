@@ -1,62 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35D4D34846A
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 17:37:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1B3C3CC7DF;
+	Wed, 24 Jun 2026 17:42:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782322669; cv=none; b=uhT1uL04o1SEHSXSqw4EGYweeQxRTX0uyZiBfitwFtzNN47ktwUHR/h6oSIvi4k2r2yzVyNrGA+Xd3ZsswEBgYQ6/OP8nxXL5Xxn0mb4CwxntRKq5lQXBYGsms8FveBeng+NYnCD8gCY/Ou7+rJ5ERLg3Dg0wUSsHELG9D0iUfY=
+	t=1782322969; cv=none; b=PIiI20ZX4AqqU4EneXjQQAwctmeUo+gK1Z/n71feRVkvhb9pncNXjfMAs69qzXMc6EdceHuvWgqPgkXYq6F+feDDpgPrtfak0m2DmTn74AhKg/7p4JUObr5EipQwBArbVZSEodyHoVqr/y4eUGGaBCbT6lCzLE1bIZHhXLY1s+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782322669; c=relaxed/simple;
-	bh=bRg4f64vWPbpNNX2XTTwDIL87qNLgOqGaUg1q0cgi3s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cpUX/e9DZoa+WB3Bk3nmmwpnQbH1w4FcHy/aDY3E6OhdLpvXmAuf7ouxrVxxW9kTvR82akbbl8k4Eathrm+TVAOiFtnNtPb9vvz7FtJ3pBUTpwzbjePcJtmAaT4xIP4kuI9RZTvJi95Iv9u/tqCZTvfQoe965IL6G7zENvnkpwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIdQmgN1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782322969; c=relaxed/simple;
+	bh=2ZycE3Xs0J5KLMwS+1EP6QccRLENONtX1HayvXH1Hbk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=atLtzgTjzruJlpnqo9/VV1fSGhToPGPu3L7m7KMFU+oK20gACSbf67YFxSEGbXp3hZnCyyFNKuy/w6/ufh1HzWiuJ5/1TFJ8KDfqk8sY3SdNBBpQcSgnW9X9nAn2YNz+kcij1qR2XMSmEGHT+YBcHDfeyINZAOv3hX4s5GDoeps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JqlOnzJa; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIdQmgN1"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C25E31F000E9;
-	Wed, 24 Jun 2026 17:37:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782322667;
-	bh=usgLuTqSyhVIg5XAZp8L4pIVhvFfvdphFCJh13WQDJY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VIdQmgN1/6PTuFl/OT4M9q1UlXA/2nS5SePbkF7ttEcKh/A046IacC3lrKOK0l97H
-	 puWZK9tDtc2bOKeUP+E5FGP4/0XRKmHwPMoFhf8mjVZhDzDqswKMm9Ia8XZoruO9hE
-	 T1YQg+QwGUsnk5lztgH5YUldcoeAjsVI5tX3sfFQ2gDIHwVsldSw0OQ2r8L7PGrfct
-	 R3H36ymPsqrP44d/LF7O5HFYtzrzgAVsYUI4bFoOlJs/GXHrObCQxl4W2a150tI1xS
-	 GIpaUpPSHBC/qWRBKRvy/mCGzCcr9eqoNUQuei0Ikz6AZLCx4HI7xMNMzIRZexohRA
-	 oKbjrRKugAgvw==
-Date: Wed, 24 Jun 2026 10:37:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: caina <caina@uniontech.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: clean up spelling and grammar errors in comments
-Message-ID: <20260624173747.GR6078@frogsfrogsfrogs>
-References: <20260616020912.11409-1-caina@uniontech.com>
- <20260617055052.7271-1-caina@uniontech.com>
- <ajve0YCxD_u62phh@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JqlOnzJa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=4ElqMcyD4SnoVaQLQg03XYigTcdoKEg/OF55QxzEAiY=; b=JqlOnzJae0InaYPAqvmaT+XGXF
+	NE3lCHDU5phMBdzAM0HLvga9mK44xqUP0uku/iiapVYmuLjOEM+VKVi+h7bwd8BB16qeT4l/lfmIg
+	2SIx6fLUOWfTVym/Me6CJgOXR1ipgT/pe0/F1t9vo8he1xfBSlllk6a/u0RpRimgPl7UA194cMa64
+	yzePfkpVxA92FFtp86Kn552jKOUeI4t/GsTykC34EA+ZlWt1C/fN6/dsKhH0qJBAuNVx75rbPSvfc
+	dd1VSfF91HTtSS3fxrHwadeNMYE0Azmzg1MOxzcSKVwVQX1CEV7zE5P9buW9h7bJ0DMTPeblo5bex
+	FJA0OTSQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wcRcT-00000008SR5-2ov3;
+	Wed, 24 Jun 2026 17:42:37 +0000
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Yuezhang Mo <yuezhang.mo@sony.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	fuse-devel@lists.linux.dev,
+	gfs2@lists.linux.dev,
+	ntfs3@lists.linux.dev
+Subject: [PATCH] iomap: Remove FGP_NOFS from iomap_get_folio()
+Date: Wed, 24 Jun 2026 18:42:26 +0100
+Message-ID: <20260624174228.2015893-1-willy@infradead.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ajve0YCxD_u62phh@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 24, 2026 at 06:42:41AM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 17, 2026 at 01:50:52PM +0800, caina wrote:
-> >  /*
-> >   * Set up an in-memory buffer cache so that we can use the xfbtree.  Allocating
-> > - * a shmem file might take loks, so we cannot be in transaction context.  Park
-> > + * a shmem file might take looks, so we cannot be in transaction context.  Park
-> 
-> I think this should be locks, not looks.
+FGP_NOFS is legacy; filesystems should be using memalloc_nofs_save/restore
+instead.  We have it here in iomap because it was buried in
+grab_cache_page_write_begin() and we didn't want to change this behaviour
+as part of the folio transition.
 
-Yes.
+I have tested this with XFS and see no issues.  Other filesystems (cc'd)
+may need to make adjustments.  Please test with lockdep enabled.
 
-The rest of the changes (aside from the "do so so that..." change) look
-ok to me.
+Cc: "Darrick J. Wong" <djwong@kernel.org> (iomap)
+Cc: Jens Axboe <axboe@kernel.dk> (block)
+Cc: Namjae Jeon <linkinjeon@kernel.org> (exfat, ntfs)
+Cc: Sungjong Seo <sj1557.seo@samsung.com> (exfat)
+Cc: Yuezhang Mo <yuezhang.mo@sony.com> (exfat)
+Cc: Miklos Szeredi <miklos@szeredi.hu> (fuse)
+Cc: Andreas Gruenbacher <agruenba@redhat.com> (gfs2)
+Cc: Hyunchul Lee <hyc.lee@gmail.com> (ntfs)
+Cc: Konstantin Komarov <almaz.alexandrovich@paragon-software.com> (ntfs3)
+Cc: Carlos Maiolino <cem@kernel.org> (xfs)
+Cc: Damien Le Moal <dlemoal@kernel.org> (zonefs)
+Cc: Naohiro Aota <naohiro.aota@wdc.com> (zonefs)
+Cc: Johannes Thumshirn <jth@kernel.org> (zonefs)
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-block@vger.kernel.org
+Cc: fuse-devel@lists.linux.dev
+Cc: gfs2@lists.linux.dev
+Cc: ntfs3@lists.linux.dev
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8d4806dc46d4..27bc2455a98d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -768,7 +768,7 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
+  */
+ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
+ {
+-	fgf_t fgp = FGP_WRITEBEGIN | FGP_NOFS;
++	fgf_t fgp = FGP_WRITEBEGIN;
+ 
+ 	if (iter->flags & IOMAP_NOWAIT)
+ 		fgp |= FGP_NOWAIT;
+-- 
+2.47.3
+
