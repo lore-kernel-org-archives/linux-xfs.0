@@ -1,89 +1,185 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtpbg151.qq.com (smtpbg151.qq.com [18.169.211.239])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AD32D7393;
-	Wed, 24 Jun 2026 13:49:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA263B0AE1;
+	Wed, 24 Jun 2026 13:58:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.169.211.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782308996; cv=none; b=IC0t3xZ1OW1i99U4lRxgMrRa4iIhvU9NM1qrnlP1PWBvG4gBae98cI3qf5pzx2uMpBcXV2KC+FVtrOnm9NnnFDoQEr0D/D6RM3CSba4MfFTYwvg0siTjsCB8FX9BOKBdoUffdcdH44FkwNcEpfUrJRtaxJlu/Zi7nYHkAs3O7f8=
+	t=1782309542; cv=none; b=hdi2VwEBuOl4hzKpSqn/TZUXC+SKYOyqRfA+8jtYQCRbPoLCQsXLrlNF81+tcp2mVljW9gkNGvfh9/Crifb8JUMmA92Ro/zoW6rGi4a0vNviG8sfT1ChDRL8KU8pY75yO1iylwpwVSznvWlCqlYTu0OOHBtbJAa8KYLiwqKJklo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782308996; c=relaxed/simple;
-	bh=QpzgjY77zUH51UqQDs9YjDnOiWXUsGV1PCcqgRmw4xk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Fy6Bc4RBAY5woO0hWAJ36b0IhHsDk8WVAGNt1fX1u5Qa9Da5iKxTKCyfR/Q5Y8uW1aurm8jpqxCNuKkGeNx5qTepGH+GZ98uWmQ4h9+cxFM9AEk1X/X3yQCCLxAlHC/QgkO5yxoYVbgH7iHjbDTC3RUDkc2vBAonEI2dUFsF6X8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DA98C68C4E; Wed, 24 Jun 2026 15:49:50 +0200 (CEST)
-Date: Wed, 24 Jun 2026 15:49:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	Filip Blagojevic <filip.blagojevic@wdc.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-fsdevel@vger.kernel.org,
+	s=arc-20240116; t=1782309542; c=relaxed/simple;
+	bh=+99QLQgaJF4upqT9gfpX2CeDtQk1MVxrvLFbYKLMKIg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ALtwieXUbSbJT94ZCGm2RPiW6Pvg2p4KYx+BX7WWYXepUKE6mPV8qi5oHrs2tyMmHFS+0DmxFQtST0edYxCjlVv/qIHP6CGgWowIvDzRMJvXNbBhQ5l9gHmeDC51MfMFDHIyJ0MO1PJLO9e1rnvm1r21WekH9ZcjkQbwJW2RLLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Wx9mXd+1; arc=none smtp.client-ip=18.169.211.239
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Wx9mXd+1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1782309484;
+	bh=HTIH+nkJqK+dRaqrOMUZtgLqrPrJYSIhbPS0TlqybAY=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=Wx9mXd+1OlXOXHOulRXCm4yIF7EaGMHiy1qoqXBXkib1S01oDvLGaJlBVKfPbLH5X
+	 hZSM00pUSaSXPdAaLURGHQhsxcApK7Tyt985vfaSHTXJY7CFZmabSPyD5/DFbZBkhw
+	 DSHZ/0uuEm3LnlLBiydZzpfX0utqWcxz89Qd+fug=
+X-QQ-mid: esmtpsz17t1782309478tfee550eb
+X-QQ-Originating-IP: DlsecvetP3RstHwax72U/AwRWCDFX9ovkvJUvGw72N0=
+Received: from localhost.localdomain ( [1.85.7.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 24 Jun 2026 21:57:56 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 13248926347998950642
+EX-QQ-RecipientCnt: 8
+From: Gou Hao <gouhao@uniontech.com>
+To: cem@kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org,
+	kees@kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	gouhaojake@163.com,
+	kernel@uniontech.com,
 	linux-xfs@vger.kernel.org
-Subject: Re: update BDI {io,ra}_pages values based on the RT device limits
-Message-ID: <20260624134950.GA6471@lst.de>
-References: <20260623142109.1838702-1-hch@lst.de> <rbrncqfmzbnj5o2yvieqtpl3dkb4qzafsai3sarmbta4fsqc6f@yruai3zv5llu>
+Subject: [PATCH] xfs: remove dead NULL check after __GFP_NOFAIL allocation
+Date: Wed, 24 Jun 2026 21:51:55 +0800
+Message-Id: <20260624135155.326834-1-gouhao@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <rbrncqfmzbnj5o2yvieqtpl3dkb4qzafsai3sarmbta4fsqc6f@yruai3zv5llu>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-2
+X-QQ-XMAILINFO: MfQ6P9s9cWJwuBgy0X/w1p7Ekp+QJ16ZPgHnzmdVNd/WZ4RKCbEC7lzz
+	6qjUM2U2yl4Je8Hsv5gT8Gpa2SHz5xQc7P8h220XpFYcCQf71TyIXDk0eVXUvRQRj96JdKf
+	a6hINydy/WlTlKMCUx7h6Anf5mSeehfLBExTZ4DRoqTHLRVyXLJsabRehB1trnQIa/2lzxx
+	e+CtFIWQ1s52JmvzWPP5f20trHEYfSJNbjSxPQzF3qg51aSWisH9lXUv1hy3waC4ihn1v6Q
+	UcHNm51JVwPyXUP3fGrcscBZl1P206vdMEAa56P6qO+7deq8uzts3L/iR1B/Vcgv8W0dYPo
+	sr4BeuMFGzRx4qZe8t4Uvw/Lv38Gop5Xa0Nlz9yACUONs3pMFmAxQUkAhUol/dSNMRC2KtZ
+	vNentX4Y11vKydmb2vNJosd9R5yJ9a7o4NkSNR6Mk5kHBVF0tGRQtEMOz78jdXSEHJXHnGT
+	43MmVdr1uc+v4gmhtEznRDaFbbweCjpgbE7s1+QOizW1bbg/vSPN+9wPJimA3w8VLKkFFE6
+	N2iw/r6tMhK9v/K3vgUSRbVTF7ZWyrRVmh/BllTOMKc+aE4Ck5IYh9fR+xxlayb2iKL0Wzq
+	cKB3FCzjA7+29M4foq2myfVYNhr1BRjibdYVv3Xmmqi+NCZbkVm/RmspelE+FVu4P8oEOgz
+	xLt+j8rIf4uyYWm2wI1cSFBU+MOEPr1A5DHXehgqvZbU6sW4KJHtC93D5J6CRPF8JqFmJWw
+	tYv4G0nIrCVrOMlqyOGRUrzWU51WYYrRBZeqisXPB2U80JicZP0NwUNyzccaSq04n6qu1J1
+	YWw8KjK31xUDry/FcLR+8jCuuEUMhwf2Bp6DUyNLSrABjN/gswJMtDSM5AB7Ev5wIEHRemR
+	v53QaLzEuN4NELZiFZR5L3rqKxEBhyxor1BtEg+w01m4yU5LL7rTLHI4SiMKebf6/UW4FuZ
+	5NQ/CLwdZZJiaIgt2fxz7DWNWDX7xy2LcNK6JAHlQXBedQyQEyvzt/XJju+T8VpVKRBXBhW
+	zWmuY3yl8fvAKuepoQ
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-QQ-RECHKSPAM: 0
 
-On Wed, Jun 24, 2026 at 02:26:35PM +0200, Jan Kara wrote:
-> A cleaner but still relatively simple way how to fix your problem would be
-> to do something similar like e.g. btrfs does. That is when you have a
-> filesystem with multiple backing devices, you create a new BDI (using
-> super_setup_bdi()) and set its parameters based on the combination of
-> devices you have.
-> 
-> The only downside to this is that blk-wbt has a layering violation in it
-> when it tries to guess whether there are task dirty-throttled for the
-> device which stops working for when the filesystem uses this synthetic bdi.
-> But I don't think that's too serious to worry about.
+kmalloc with the __GFP_NOFAIL flag will never return NULL, so the
+subsequent ENOMEM check is unreachable dead code. Remove it.
 
-The big downside of that is that it breaks the userspace ABI - any
-previous changes to BDI paramters, most importantly the read-ahead size,
-would now only apply to the BDI for s_bdev which isn't actually used
-by anything.
+Signed-off-by: Gou Hao <gouhao@uniontech.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c     | 12 ------------
+ fs/xfs/libxfs/xfs_exchmaps.c |  5 -----
+ fs/xfs/xfs_buf.c             |  3 ---
+ fs/xfs/xfs_mru_cache.c       |  8 --------
+ 4 files changed, 28 deletions(-)
 
-And yeah, the blk-wbt thing actually looks really broken and could use
-fixing..
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 0c0402a29b6b..6009ec26843d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -249,9 +249,6 @@ xfs_dir_init(
+ 		return error;
+ 
+ 	args = kzalloc_obj(*args, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!args)
+-		return -ENOMEM;
+-
+ 	args->geo = dp->i_mount->m_dir_geo;
+ 	args->dp = dp;
+ 	args->trans = tp;
+@@ -342,9 +339,6 @@ xfs_dir_createname(
+ 	}
+ 
+ 	args = kzalloc_obj(*args, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!args)
+-		return -ENOMEM;
+-
+ 	args->geo = dp->i_mount->m_dir_geo;
+ 	args->name = name->name;
+ 	args->namelen = name->len;
+@@ -503,9 +497,6 @@ xfs_dir_removename(
+ 	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
+ 
+ 	args = kzalloc_obj(*args, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!args)
+-		return -ENOMEM;
+-
+ 	args->geo = dp->i_mount->m_dir_geo;
+ 	args->name = name->name;
+ 	args->namelen = name->len;
+@@ -563,9 +554,6 @@ xfs_dir_replace(
+ 		return rval;
+ 
+ 	args = kzalloc_obj(*args, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!args)
+-		return -ENOMEM;
+-
+ 	args->geo = dp->i_mount->m_dir_geo;
+ 	args->name = name->name;
+ 	args->namelen = name->len;
+diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+index dcd0bd0b13b4..bd897676e38a 100644
+--- a/fs/xfs/libxfs/xfs_exchmaps.c
++++ b/fs/xfs/libxfs/xfs_exchmaps.c
+@@ -500,11 +500,6 @@ xfs_exchmaps_link_to_sf(
+ 	/* Read the current symlink target into a buffer. */
+ 	buf = kmalloc(ip->i_disk_size + 1,
+ 			GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+-	if (!buf) {
+-		ASSERT(0);
+-		return -ENOMEM;
+-	}
+-
+ 	error = xfs_symlink_remote_read(ip, buf);
+ 	if (error)
+ 		goto free;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 3ce12fe1c307..5583139d7478 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -130,9 +130,6 @@ xfs_buf_alloc_kmem(
+ 	ASSERT(size < PAGE_SIZE);
+ 
+ 	bp->b_addr = kmalloc(size, gfp_mask | __GFP_NOFAIL);
+-	if (!bp->b_addr)
+-		return -ENOMEM;
+-
+ 	/*
+ 	 * Slab guarantees that we get back naturally aligned allocations for
+ 	 * power of two sizes.  Keep this check as the canary in the coal mine
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index d61ec8cb126d..258c07da73e1 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -334,18 +334,10 @@ xfs_mru_cache_create(
+ 		return -EINVAL;
+ 
+ 	mru = kzalloc_obj(*mru, GFP_KERNEL | __GFP_NOFAIL);
+-	if (!mru)
+-		return -ENOMEM;
+-
+ 	/* An extra list is needed to avoid reaping up to a grp_time early. */
+ 	mru->grp_count = grp_count + 1;
+ 	mru->lists = kzalloc(mru->grp_count * sizeof(*mru->lists),
+ 				GFP_KERNEL | __GFP_NOFAIL);
+-	if (!mru->lists) {
+-		kfree(mru);
+-		return -ENOMEM;
+-	}
+-
+ 	for (grp = 0; grp < mru->grp_count; grp++)
+ 		INIT_LIST_HEAD(mru->lists + grp);
+ 
+-- 
+2.20.1
 
-> >   1) support multiple BDIs per file system.
-> > 
-> > 	This would work pretty well for XFS, as data for a given file is
-> > 	always entirely on one device, and the VFS writeback code is not
-> > 	used for metadata.  But it probably doesn't work well for other
-> > 	cases
-> 
-> Since looking up the bdi is abstracted through inode_to_bdi() (which
-> currently goes through the superblock), this would be relatively easy to do
-> but either the inode would have to store the bdi pointer or we'd have to
-> have an operation to query it. Just at this point I'm not fully convinced
-> the additional complexity / memory cost is worth it compared to what can be
-> achieved with a synthetic bdi.
-
-Same.
-
-> >   2) stop propagating these values through the BDI
-> > 
-> > 	Have a way to query these parameters from the file system, either
-> > 	through a method if we want to be fully dynamic, or through fields
-> > 	instead of going through the BDI.  The downside would be that
-> > 	sysfs modifications of the readahead size would not work after
-> > 	the file system initially queried them.
-> 
-> Similarly as above. It makes sense but I'm not sure there are strong enough
-> usecases to justify this.
-
-It would at least be a lot less complete than option 1.  And get us out of
-a bit more of all that bdi weirdness.
