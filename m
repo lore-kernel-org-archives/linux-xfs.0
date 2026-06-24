@@ -1,145 +1,142 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-188.mta0.migadu.com (out-188.mta0.migadu.com [91.218.175.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DB143BBFC7
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 14:24:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2B43D905F;
+	Wed, 24 Jun 2026 15:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782311078; cv=none; b=X3OMXlK15W+LzUGktLcFtbEsUY9Yeo/rI6H9J6SQoB+G1chuBtJRjG67ubQg7qdLUMteq3bv9kbTkMyqb8YCzqmmS8xwAiQ45y2YaSUoy0hlrcNQ/IdI7VWs2fHoVdPa+z4b+alASQ39vUQbsfKxS4v3luhjZS+xsQu4QEQ2J3c=
+	t=1782314335; cv=none; b=Ue6RFqWxc9xfa8fcw02K3jBFhY8vins58NBq6eAkZ1L1VTSjOgzhbBQGq7XIhQpAYw1QwkSGo/7avHN1FpC4BjOp3l0Sixm6Erqa4oEhUgE2/yd1bmbPbF8dJ3mo4HrLcNzVLAKA0Obe03/RWUuD3lHLhNfQCvX2dQGvOeSqSNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782311078; c=relaxed/simple;
-	bh=+GvPHtbjBfoeFHgSA3GIQrRzol9K7XiFhRwqivJDapw=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References:
-	 MIME-version:Content-type; b=As6JaAV8BkKc5fiP4NbJGyxrAfdRbpwU+1KFVqu/cS2veSpsuJGl9Sopq0QomewhHbl4GlxMonbN9g2Bv51dUuzzvGnHHpIGHTIgdI7Bun9c2028FHR0WOhZoKqMBgDKld0GxPUIy85IJxvnLcsdjjoJWpyRt3XKp5Q29yMwOew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AcMSf/jl; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782314335; c=relaxed/simple;
+	bh=RDOVrx8dKGDFgKMwpgDgmXF+JV66gRwWtkcpoJ9Ycq8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mZooq7nCj3IP8KyZaQF+3y5FOhJmkHsabhsWh5dGxpY5ZBFs5oa5YJ9OfOLmj1q2B9NffWKVsQyNYQ12v/LTBMhiaM9KSY2rx3VEhQAY9wvBTSRqRELBZnFbnlf9bMYEIlxJV3o1XS8kBBdcfC+SJH3lgTSaGwItL4mhLSQRKMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NyWSt8ap; arc=none smtp.client-ip=91.218.175.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AcMSf/jl"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2c7cfa17fedso8586305ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jun 2026 07:24:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782311076; x=1782915876; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:message-id:date
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bC7GeOhZGz0je76Vr4XAaqeVuPBssFAF57vnDxsL79M=;
-        b=AcMSf/jlCJU2ILuSt+66WbpetxY2HadsHQVxaA/1YzNOwOVJf6n4RLaG1DmmcY6C7p
-         TIlPgl5GFj2+dPxYJTMwPia9v9Oh8ViLz3dd8+7bhnGkU8x2iGj0nQxSfc+MsXKNj/AL
-         x0mJtdLNhk4c2+6dcqg5wYXcNiPXJO1vZks1nY9wk5yS5gzhdt+gneIE3OI5jHv4Xeaq
-         DiReOB/Y4FQHNP5xcG8OzvSCbTqCISOt70ReiblXb8Pac7claoinWoXJFNrsMshEt589
-         fFCCiCHURgnayZiapliKnusbAgNylNCa7+XnbSDGBFbW3uneBo7Fbi/kvv4nOj1QPDJp
-         fAXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782311076; x=1782915876;
-        h=content-transfer-encoding:mime-version:references:message-id:date
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=bC7GeOhZGz0je76Vr4XAaqeVuPBssFAF57vnDxsL79M=;
-        b=OveS1jsvm3hpK4myDSBMqGxsj7SIGiLIHn3sqHyq8P/mErBhUJpecSIMdEqI9h5IJx
-         7o5Ac1Hbkb55eiDx54B24BaM6wshOUov2xwYF481jXHLkeR+XjkLkqQ868onaiGnVTmW
-         kIDBsGV6iUX1C8Dap0Dz9BMyVyFTlSkyTU3XJTbeBWfO/BTDucL5c+Qx7A/wkE2exkaC
-         W3RhYKRkzPtCD9Gy9uS1xjPoddn+L2rQF4zJMBtllVnLpdRUWCYoGPs65jcCdoiXUv4j
-         V1sl14dXHH63QwW0Sdk1sqSyFp3Y0BWXOAijJuaWjwu91XKvYTRMLgVLmbxEJDkf53ai
-         4wFw==
-X-Forwarded-Encrypted: i=1; AHgh+Rom9nqExhNMtE2u6ZdwHGunYMBm2J5cZM4jRwMN9uZCN2J61awWTcymChmFQVyAEH4M0DgFrxI08sI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZtyBPMjiHbeJYYTFvR2WSNy1cjuO8nXmsKfgQTxff2R6I+quu
-	2i/WGuubiKHZVb+x/w5iqoY+xglaPh/1Py1HRsGZqshrOmXCt1uWNNDa
-X-Gm-Gg: AfdE7ckyAMQNHOdsiEuMzOt0XNdh+5VSsf9LjXQmsTev4UhQiTlhtZrIMm7fWbrpIEp
-	ZfIKp6sE6jjYvKtK9Ux28c/4RrvdPGgtrg4gpNx0qzLBkB0U1fFinpeZaiWmV4aahg8LYreX1Bg
-	0V4zJxr/7gyMQVyPxxRvM+5stKUJ2l1NlP3/3SUI5/+yyDCkWkLxqkb6AMvMdO5tM5QzbqAZI3L
-	PJoQt6Sy1w/WSJlktuZ6C1A2XLKdG+kG0YtJaslJiM2n5er2TzuSno94lEiu8H94cKAPPlgkc5M
-	EHFJ6zoSE4TOX2Z+gF8WNctV6mz8UFTI9LPVvsOx+yYBv+u734PDlBQmVfF+Obx8D7k5BYCRB1+
-	IRN3LvCLnGkcZeHTzXzDetAxgXgwVme5l9Ua4m0Q7O/s5q0d1bC51CORpHSH+lSGTSt9fQOx0uS
-	67gDlJ3xPl9I0Ceek=
-X-Received: by 2002:a17:903:1d0:b0:2bf:3309:ecce with SMTP id d9443c01a7336-2c7e15804acmr39177245ad.28.1782311076310;
-        Wed, 24 Jun 2026 07:24:36 -0700 (PDT)
-Received: from pve-server ([49.205.216.49])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c7439f86aesm135035155ad.49.2026.06.24.07.24.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jun 2026 07:24:35 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Salvatore Dipietro <dipiets@amazon.it>, willy@infradead.org
-Cc: dipiets@amazon.it, abuehaze@amazon.com, akpm@linux-foundation.org, alisaidi@amazon.com, blakgeof@amazon.com, brauner@kernel.org, dipietro.salvatore@gmail.com, djwong@kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org, vbabka@suse.com, David Hildenbrand (Arm) <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@kernel.org>
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
-In-Reply-To: <20260624080639.17100-1-dipiets@amazon.it>
-Date: Wed, 24 Jun 2026 17:51:18 +0530
-Message-ID: <o6h0w2m9.ritesh.list@gmail.com>
-References: <20260527162412.19922-1-dipiets@amazon.it> <20260624080639.17100-1-dipiets@amazon.it>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NyWSt8ap"
+Message-ID: <cfdb8620-ea55-4226-98bf-d006820e6270@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1782314322;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eCfveZ37ayRh458SUb8Vvs7csErWvvnNaK/RVVo+5fA=;
+	b=NyWSt8apc46t06T04zMNhMchtk3k4ctFbVCiL9c2mP9xyextgm4eGNBGZRMVtokC/pbQ24
+	vU3kdqTh4LXr1cjm4Jsn6oIw3SoC6+9ZfRZnNtDC+QkC0X8TGfqVxfmzeu+69fJRhGzIhQ
+	iIJdk2xZx2BxIFCIz9q4ErwI9vRQK1o=
+Date: Wed, 24 Jun 2026 16:18:38 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+MIME-Version: 1.0
+Subject: Re: [PATCH] fs/super: skip non-memcg-aware nr_cached_objects in memcg
+ slab shrink
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: brauner@kernel.org, jack@suse.cz, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+ linux-mm@kvack.org, hughd@google.com, boris@bur.io, clm@fb.com,
+ dsterba@suse.com, linux-btrfs@vger.kernel.org, cem@kernel.org,
+ linux-xfs@vger.kernel.org, hannes@cmpxchg.org, riel@surriel.com,
+ kernel-team@meta.com
+References: <20260609123047.1948242-1-usama.arif@linux.dev>
+ <ajrHa_JGxQvCMf8t@linux.dev>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <ajrHa_JGxQvCMf8t@linux.dev>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-
-Salvatore Dipietro <dipiets@amazon.it> writes:
-
-> Hi Ritesh, Matthew,
->
-> I wanted to kindly follow up on my summary from May 27th regarding the best path 
-> forward for this patch.
->
-
-Hi Salvatore,
-
-Sorry about the delay. I did bring this topic up in one of our internal
-ext4 community calls. And to share some context, MM community thinks we
-need a better long term fix for this problem rather than patching call
-sites and/or playing tricks like - 
-
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 4e636647100c..f2343c26dd63 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2007,8 +2007,13 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
- 			gfp_t alloc_gfp = gfp;
- 
- 			err = -ENOMEM;
--			if (order > min_order)
--				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
-+			if (order > min_order) {
-+				alloc_gfp |= __GFP_NOWARN;
-+				if (order > PAGE_ALLOC_COSTLY_ORDER)
-+					alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
-+				else
-+					alloc_gfp |= __GFP_NORETRY;
-+			}
-
-Unfortunately most of the folks might be missing free cycles
-to work on this problem right now :( - Hence the delay in addressing
-this..
+X-Migadu-Flow: FLOW_OUT
 
 
-However - I would like to bring this problem to other MM community
-members as well who might have an interest in this space. Can we look
-into the proposed solutions from Salvatore and suggest the next steps
-please? 
 
-Maybe if someone can share what is MM community looking  for here - I
-guess that will be a good start. Looking into the table I think
-Salvatore had also shared a diff for kicking kcompactd in the background
-[2].
+On 23/06/2026 19:08, Shakeel Butt wrote:
+> On Tue, Jun 09, 2026 at 05:30:47AM -0700, Usama Arif wrote:
+>> The super_block shrinker is registered with SHRINKER_MEMCG_AWARE because its
+>> dentry and inode LRUs are memcg-aware (via list_lru). But the optional
+>> ->nr_cached_objects() hooks that the shrinker also drives are not memcg-aware:
+>> btrfs extent maps and xfs inode reclaim operate on filesystem-global
+>> state, and shmem's unused-huge shrinker walks a per-superblock shrinklist.
+>> None of them filter by sc->memcg.
+> 
+> I see the underlying objects whose count is returned by ->nr_cached_objects()
+> hook is memcg charged for shmem and xfs but not for btrfs. Do you envision
+> there might be a rare scenario where we have a lot of memory charged to a memcg
+> consumed by objects which ->nr_cached_objects() tracks and that memory becomes
+> unreclaimable due to this patch?
 
-[2]: https://lore.kernel.org/all/20260506123326.17293-1-dipiets@amazon.it/
+Hello!
 
-(Sorry I still have few other things on my plate before I start look
-into this more actively. But let's hear from others, who have better
-knowledge than me on this.)
+Thanks for the review.
 
-> To recap, we benchmarked all proposed variations and shared the results:
->
-> | Patch                          | Change Location        | Avg TPS    | % vs Baseline |
-> |--------------------------------|------------------------|------------|:-------------:|
-> | Baseline (no patch)            | —                      | 101,979.75 |       —       |
-> | v1 (original, iomap caller)    | fs/iomap/buffered-io.c | 141,194.20 |    +38.45%    |
-> | Ritesh's suggestion            | mm/filemap.c           | 139,200.61 |    +36.50%    |
-> | Matthew's suggestion           | mm/filemap.c           | 143,863.82 |    +41.07%    |
-> | kcompactd background           | mm/page_alloc.c        | 134,278.47 |    +31.67%    |
->
+For XFS, xfs_inode is SLAB_ACCOUNT, so a memcg can have memory charged in
+XFS inodes sitting in XFS' internal reclaim state. But the current callback
+does not target that memcg: xfs_fs_free_cached_objects() calls
+xfs_reclaim_inodes_nr(), which walks the mount and reclaims
+XFS_ICI_RECLAIM_TAG inodes without checking sc->memcg. So non-root memcg
+reclaim was only getting an opportunistic mount-wide reclaim pass here; it
+could reclaim the target memcg's inodes by chance, but it could just as well
+reclaim inodes charged to other memcgs. This patch removes that cross-memcg
+side effect, not a correct memcg-targeted reclaim path.
 
+Those XFS inodes are still reclaimed by XFS' own reclaim worker, which is
+queued when reclaimable inodes are tagged and requeues while reclaimable
+inodes remain. With the default xfssyncd_centisecs value, that is about every
+5 seconds. The root/global superblock shrinker path also continues to call
+the XFS callbacks. This will keep the memory reclaimable.
 
--ritesh
+For shmem, shrinklist_len counts inodes whose tail large folio could be                                                                                                                                                                                                                                                                                                                                               
+split — splitting itself doesn't free anything; it just lets normal page                                                                                                                                                                                                                                                                                                                                              
+LRU reclaim the truncated tail. The folios are on the memcg-aware LRU and                                                                                                                                                                                                                                                                                
+will be aged/reclaimed there independently, so skipping the split from                                                                                                                                                                                                                                                                                   
+memcg context just delays the split?
 
+or btrfs extent maps, as you note, these objects are not memcg-charged.
+> 
+>>
+>> The mismatch shows up under memcg-heavy slab reclaim. shrink_slab_memcg()
+>> calls do_shrink_slab() once per (memcg, NUMA node) pair for every memcg
+>> whose bit is set in the per-superblock shrinker bitmap, which on a busy
+>> host means hundreds of calls per reclaim pass. Each scan queues the same
+>> global shrinker work item that's already kicked from the root path.
+>>
+>> Because btrfs/xfs global count is typically non-zero on any in-use filesystem,
+>> the returned total stays positive even if a memcg's own dentry/inode LRUs
+>> are empty. shrink_slab_memcg() therefore never clears the SB shrinker bit
+>> in the memcg bitmap, so subsequent reclaim passes from the same memcg
+>> re-enter super_cache_count() and pay for the global counter walk again.
+> 
+> What is the main concern? Is it the amount of CPU wasted or are we over
+> reclaiming or reclaiming from unrelated memcgs?
+> 
+
+The primary concern is wasted CPU. On the busy hosts where I saw this,
+hundreds of memcgs all repeating that walk per reclaim pass is what made
+it visible in profiles.
+
+Another concern is misattribution. Reclaim from memcg X ends up
+reclaiming another memcg Y, which could have an affect on Y and
+won't provide proper isolation.
+
+>>
+>> Restrict ->nr_cached_objects() to the global shrink path (sc->memcg NULL
+>> or root). The memcg-aware dentry/inode LRUs keep being counted and
+>> scanned per memcg as before; only the global fs-specific hooks are skipped.
+>> The root/global shrink path still drives those hooks; only their
+>> invocation from non-root memcg slab reclaim is removed.
+>>
+>> Signed-off-by: Usama Arif <usama.arif@linux.dev>
+> 
+> I am fine with the stopgap but it would be nice to have proper memcg awareness
+> in xfs and shmem callbacks. For btrfs, I am not sure if it makes sense to memcg
+> charge btrfs_extent_map objects but at least to decision to skip memcg reclaim
+> will be inside the fs callbacks i.e. nr_cached_objects.
+> 
+
+Agreed that this is the right long term approach. If the preference is to move this down to
+the fs own callbacks instead of fs/super.c, I can do that in the revision as well.
