@@ -1,25 +1,25 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13768258EF3;
-	Wed, 24 Jun 2026 14:06:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5510285C8B;
+	Wed, 24 Jun 2026 14:07:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782310013; cv=none; b=rus4ID8s6TU3UVKedz53oJRZ/it2N+j7JkFWVTjOWMHRkygKtR+rNUGcIU5DUI+URROrqiJ1gOhMtMqxKiMYSl/yIhQoLvp2BYexZ1Nkm2ZWUvKU8/ZYzW/5G+mni9RtwpErpg6+FdWYvbvlF6ua0G1ZN1omP2casUKl7JoQFCA=
+	t=1782310066; cv=none; b=qy7e5YY3eRmSgAs8LkSf4ZUVBVOGbtOXLrzJyAC4i6v6dAJV5lmwFezTI6ia1cWvPowSduQkmRDOXTjFsDM3+S8SuYGhyI4l2vAMokk5ZqM5lr8zYCdv0NukiM+Jof++eNOMyrKDQG7N0ncuR6KvWNF015nCQ3fiAOhcIupARRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782310013; c=relaxed/simple;
-	bh=j+0/of5+W5lMlDS7/6y6EQPFaIqV60XX3CR7d9RmbZ0=;
+	s=arc-20240116; t=1782310066; c=relaxed/simple;
+	bh=6rYZlRUd4OFPM/QOs/0jVJu9/E4RylfaFxWJZtop3GY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F+6Wi7gZsEI64A3qATLDqygdlq+QyvCwtMjjaBZcnkPaf4nlIQaNYxrk8ilkylfRClaaKMGWLjECKc0LOW31PJgYdoogsJ1sc6AMvS1owh3z8oWB7eGX6lCrKO+sjPLuIXcHfJz8Oaf4WlTz7T40BSLgJnW/8udfcyMEptWuqQI=
+	 Content-Type:Content-Disposition:In-Reply-To; b=mee/OjbN63diy307lBybRSIcapwsu3j2XjzQzB/VEVbQieFtUSkn0rcY1QN78kJX9YgZLzPS5CrZtoW/jikFu+r9ckpxcriM8hwwsn4cI0mbX0kFhwKYsBAS+yduXfFjDQtD2RoNtN299Cjzh7M39VMISFxuZHm7I8FivWxjK7c=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7FDC568B05; Wed, 24 Jun 2026 16:06:49 +0200 (CEST)
-Date: Wed, 24 Jun 2026 16:06:49 +0200
+	id 18A7E68B05; Wed, 24 Jun 2026 16:07:43 +0200 (CEST)
+Date: Wed, 24 Jun 2026 16:07:42 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@lst.de>,
+To: Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>,
 	Jens Axboe <axboe@kernel.dk>,
 	Alexander Viro <viro@zeniv.linux.org.uk>,
 	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -28,10 +28,10 @@ Cc: Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@lst.de>,
 	David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
 	Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org,
 	Gao Xiang <xiang@kernel.org>, linux-erofs@lists.ozlabs.org
-Subject: Re: [PATCH RFC v2 08/18] fs: add dedicated block device open
- helpers for filesystems
-Message-ID: <20260624140649.GC7692@lst.de>
-References: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org> <20260616-work-super-bdev_holder_global-v2-8-7df6b864028e@kernel.org> <xlfnmwv2upjia6ozd4z5l5icaewor4a6cgkafnigulndzmt6r7@rhay3h3wablo>
+Subject: Re: [PATCH RFC v2 17/18] fs: look up the superblock via the device
+ table in user_get_super()
+Message-ID: <20260624140742.GD7692@lst.de>
+References: <20260616-work-super-bdev_holder_global-v2-0-7df6b864028e@kernel.org> <20260616-work-super-bdev_holder_global-v2-17-7df6b864028e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,19 +40,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <xlfnmwv2upjia6ozd4z5l5icaewor4a6cgkafnigulndzmt6r7@rhay3h3wablo>
+In-Reply-To: <20260616-work-super-bdev_holder_global-v2-17-7df6b864028e@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jun 22, 2026 at 06:28:50PM +0200, Jan Kara wrote:
-> > +static int fs_bdev_register(struct file *bdev_file, struct super_block *sb)
-> > +{
-> > +	struct super_dev *sb_dev __free(kfree) = NULL;
-> 
-> Frankly I find the use of __free on sb_dev more confusing than helping in
-> this function. If you didn't use it, you could remove the somewhat
-> confusing retain_and_null_ptr() calls below, remove this initialization and
-> just put one kfree() into the error handling branch when super_dev_insert()
-> fails...
+On Tue, Jun 16, 2026 at 04:08:33PM +0200, Christian Brauner wrote:
+> user_get_super() still finds the superblock for a device number by
+> walking the global super_blocks list under sb_lock. Every superblock is
+> registered in the device table under its s_dev since sget_fc() inserts
+> it there, including superblocks on anonymous devices, so use the table
+> instead.
 
-It is.  __free is really annoying for anything but trivial local
-scope only variables.  
+So what is the benefit of this?  It's not like any of these are heavily
+used fast paths.
+
