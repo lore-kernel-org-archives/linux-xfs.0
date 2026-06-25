@@ -1,24 +1,25 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902BC3DD501
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 11:46:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A692C3DD501
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 11:46:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782387975; cv=none; b=NOt1NXSAbaxmSJnc+9D76A3BwfYLyoHXehk9hJcNWl698SrKkVM2gFbeOnKz75QXqoW5G9GjVV4lCwPz1dPU+GCFmFyItskqJzTwmzpA8p8HI/FPd0YWban3Imb6R5sm56rX4rlwO/TxRoO1svzIQ3ZUGHluUk46i4Xf8vTcTJw=
+	t=1782387979; cv=none; b=uV+t3omp0xFDsU7Zov5OxM0D73xLJqCAUR2u3zAum9bsle8waGPcxO27LynE9L80+YRjW24nwJZi+O0iuzJDv+cGwwwVfsozwDwxiIOQAwj/E1+c0fhvfjkI342Wx3WfopJzb52QJfjC1ymxX7lbjqTGtSG0Yy69skCmC73uFNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782387975; c=relaxed/simple;
-	bh=MQfBxYYlIx1bVFVU95wv5oj5U1wvVWpB4bFFOArJDyw=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=iI06mzxvdihHX5p0aK4NNLRkRjcu7/R6hIjTxnTeb683U3yvwyAdGziWRgv1AENiYqMFZRdBHWvd1z6FGMrifCi/AYggioQmA57tHZ9n87FG58ZAnC4B98OCcjXk7s9is0mXK/9Le1OnEgyfoqHH8j5BhmOrNRayFrg70p/hgck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.151
+	s=arc-20240116; t=1782387979; c=relaxed/simple;
+	bh=AEKUpV7yHXhM3YZm+32a8AZAW68BXsSwe67pfJ9gGh0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TPCj+yuoo1gXAXhwRKe1fIwF9KnIt66rNtnnOAmyM9zSYN7lzb4wDvgGsoqLtKQPqDwwjfSBB6/rTtCh+S2rw7OoGMChj43jd91MS7AYaQ1p9I5FcCj/Pcw/pXqUb9Ggd3Bwo5bWX+6By3cwnuaGaKng5BOjQD7BfuGmrPj3RfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.152
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gmH7Z5nHvz9tgY;
-	Thu, 25 Jun 2026 13:46:02 +0200 (CEST)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gmH7h525Tz9vHv;
+	Thu, 25 Jun 2026 13:46:08 +0200 (CEST)
 From: Pankaj Raghav <p.raghav@samsung.com>
 To: linux-xfs@vger.kernel.org
 Cc: bfoster@redhat.com,
@@ -34,10 +35,11 @@ Cc: bfoster@redhat.com,
 	hch@lst.de,
 	cem@kernel.org,
 	hch@infradead.org
-Subject: [PATCH v8 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
-Date: Thu, 25 Jun 2026 13:45:48 +0200
-Message-ID: <20260625114550.4109104-1-p.raghav@samsung.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH v8 1/2] xfs: add an allocation mode to xfs_alloc_file_space()
+Date: Thu, 25 Jun 2026 13:45:49 +0200
+Message-ID: <20260625114550.4109104-2-p.raghav@samsung.com>
+In-Reply-To: <20260625114550.4109104-1-p.raghav@samsung.com>
+References: <20260625114550.4109104-1-p.raghav@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,84 +48,143 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
-of Zhang Yi's initial patches[1]. Postgres developer Andres also
-mentioned they would like to use this feature in Postgres [2].
+xfs_alloc_file_space() hardcodes XFS_BMAPI_PREALLOC to preallocate
+unwritten extents across a range.
 
-I tested the changes with fsstress and fsx based on the xfstests patch I
-sent recently to test this flag[4]. generic/363 helped me debug the
-crash I noticed when I did the initial implementation[3].
+In preparation for FALLOC_FL_WRITE_ZEROES, add an explicit allocation
+mode argument, enum xfs_alloc_file_space_mode, and derive the xfs_bmapi
+flags from it. The only mode for now is XFS_ALLOC_FILE_SPACE_PREALLOC,
+which preallocates unwritten extents and marks the inode as preallocated
+exactly as before, so there is no functional change.
 
-Dave initially suggested to create a common helper based on
-xfs_iomap_convert_unwritten() but as it can be seen in the previous
-version, a lot of the code had to be rewritten. The changes had more in
-common with xfs_alloc_file_space(). This version reuses
-xfs_alloc_file_space() for write zeroes.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+---
+ fs/xfs/xfs_bmap_util.c | 25 +++++++++++++++++++++----
+ fs/xfs/xfs_bmap_util.h |  6 +++++-
+ fs/xfs/xfs_file.c      |  9 ++++++---
+ 3 files changed, 32 insertions(+), 8 deletions(-)
 
-Thanks to Christoph for all the review comments and design suggestions
-that were made both offline and online for this series.
-
-Stress test generic/363 generic/127 xfs/131 are passing. I have started
-the full xfstest suite for this series.
-
-I will be sending a new generic test case for testing boundary block
-corner case handling.
-
-Changes since v7:
-- Pass offset and len to xfs_alloc_file_space (Based on Sashiko's feedback).
-- Add a lot of comments to prove correctness based on Zhang's feedback.
-- Add Darrick's comment about xfs_alloc_file_space description.
-
-Changes since v6:
-- Pass only offset that needs to be zeroed to alloc_file_space (Christoph).
-- Add RVB from Christoph.
-- Change the call order. Call xfs_falloc_setsize() and then call
-  xfs_alloc_file_space().
-- Remove the prep patch to allow xfs_set_filesize to take 64-bit len.
-
-Changes since v5:
-- Add a prep patch to allow xfs_set_filesize to take 64-bit len
-  (Sashiko)
-
-Changes since v4:
-- Introduce an enum for allocation mode in xfs_alloc_file_space (Christoph)
-- Use xfs_set_filesize instead of updating the on-disk size in the
-  function.
-
-Changes since v3:
-- Introduce xfs_bmap_alloc_or_convert_range() in xfs_iomap.c for easy
-  review experience (christoph)
-- Add extsz hint and rt support in xfs_bmap_alloc_or_convert_range()
-
-Changes since v2:
-- Add allow_write_zeroes to xfs_global so that we can enable this
-  feature independent of the HW underneath.
-
-Changes since v1 [5.1 5.2]:
-- Added a new function xfs_bmap_alloc_or_convert_range() based on Dave's
-  feedback.
-- Changed the xfs_falloc_write_zeroes to use
-  xfs_bmap_alloc_or_convert_range() instead of doing prealloc and
-  convert approach.
-
-[1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
-[2] https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
-[3] https://lore.kernel.org/linux-xfs/6i2jvzn3lyugjlbgmjzpped3gogzyqv5mpe2uqaifz4vjpaega@pomzoq7ley77/
-[4] https://lore.kernel.org/linux-xfs/20260312195308.738189-1-p.raghav@samsung.com/
-[5.1] https://lore.kernel.org/linux-xfs/20260309180708.427553-2-lukas@herbolt.com/
-[5.2] https://lore.kernel.org/linux-xfs/abC1LvRElctaHPe5@dread/
-
-Pankaj Raghav (2):
-  xfs: add an allocation mode to xfs_alloc_file_space()
-  xfs: add support for FALLOC_FL_WRITE_ZEROES
-
- fs/xfs/xfs_bmap_util.c | 42 +++++++++++++++++---
- fs/xfs/xfs_bmap_util.h |  7 +++-
- fs/xfs/xfs_file.c      | 87 ++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 125 insertions(+), 11 deletions(-)
-
-
-base-commit: 6e24acc45ab58d39a0162b4d5f3fd001d07d868e
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 3b9f262f8e91..e5424d010a69 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -642,11 +642,19 @@ xfs_free_eofblocks(
+ 	return error;
+ }
+ 
++/*
++ * Allocate space for a file according to @mode:
++ *
++ * XFS_ALLOC_FILE_SPACE_PREALLOC:
++ * Preallocate unwritten extents over holes across the range and mark the inode
++ * as preallocated.
++ */
+ int
+ xfs_alloc_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		len)
++	xfs_off_t		len,
++	enum xfs_alloc_file_space_mode mode)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+@@ -657,6 +665,7 @@ xfs_alloc_file_space(
+ 	int			rt;
+ 	xfs_trans_t		*tp;
+ 	xfs_bmbt_irec_t		imaps[1], *imapp;
++	uint32_t		bmapi_flags, nr_exts;
+ 	int			error;
+ 
+ 	if (xfs_is_always_cow_inode(ip))
+@@ -674,6 +683,15 @@ xfs_alloc_file_space(
+ 	if (len <= 0)
+ 		return -EINVAL;
+ 
++	switch (mode) {
++	case XFS_ALLOC_FILE_SPACE_PREALLOC:
++		bmapi_flags = XFS_BMAPI_PREALLOC;
++		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
++		break;
++	default:
++		return -EINVAL;
++	}
++
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	extsz = xfs_get_extsz_hint(ip);
+ 
+@@ -733,8 +751,7 @@ xfs_alloc_file_space(
+ 		if (error)
+ 			break;
+ 
+-		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
+-				XFS_IEXT_ADD_NOSPLIT_CNT);
++		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
+ 		if (error)
+ 			goto error;
+ 
+@@ -748,7 +765,7 @@ xfs_alloc_file_space(
+ 		 * will eventually reach the requested range.
+ 		 */
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				allocatesize_fsb, bmapi_flags, 0, imapp,
+ 				&nimaps);
+ 		if (error) {
+ 			if (error != -ENOSR)
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index c477b3361630..232b4c48247e 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -55,8 +55,12 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 			     int *is_empty);
+ 
+ /* preallocation and hole punch interface */
++enum xfs_alloc_file_space_mode {
++	XFS_ALLOC_FILE_SPACE_PREALLOC,
++};
++
+ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+-		xfs_off_t len);
++		xfs_off_t len, enum xfs_alloc_file_space_mode mode);
+ int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 845a97c9b063..e90ea6ebdc8e 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1406,7 +1406,8 @@ xfs_falloc_zero_range(
+ 		len = round_up(offset + len, blksize) -
+ 			round_down(offset, blksize);
+ 		offset = round_down(offset, blksize);
+-		error = xfs_alloc_file_space(ip, offset, len);
++		error = xfs_alloc_file_space(ip, offset, len,
++				XFS_ALLOC_FILE_SPACE_PREALLOC);
+ 	}
+ 	if (error)
+ 		return error;
+@@ -1432,7 +1433,8 @@ xfs_falloc_unshare_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_ALLOC_FILE_SPACE_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1460,7 +1462,8 @@ xfs_falloc_allocate_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_ALLOC_FILE_SPACE_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
 -- 
 2.51.2
 
