@@ -1,25 +1,28 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A692C3DD501
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 11:46:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208963DD51B
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 11:46:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782387979; cv=none; b=uV+t3omp0xFDsU7Zov5OxM0D73xLJqCAUR2u3zAum9bsle8waGPcxO27LynE9L80+YRjW24nwJZi+O0iuzJDv+cGwwwVfsozwDwxiIOQAwj/E1+c0fhvfjkI342Wx3WfopJzb52QJfjC1ymxX7lbjqTGtSG0Yy69skCmC73uFNo=
+	t=1782387986; cv=none; b=cZs7FdtNehovy9HsF8uM35tZx9qM1r8AYhKszKQC/OUUORsCIZ2fGlnuLIy6rj1rSiQJh/vzZaTH/4d0yHEX+EHzU5eCrUlchaq/tY8FYKZw6NQ7AlcG2XIlJzMH+0w3UshNZrwXKSaVVUek4rb3Aunri30ISKsZndy629Qllj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782387979; c=relaxed/simple;
-	bh=AEKUpV7yHXhM3YZm+32a8AZAW68BXsSwe67pfJ9gGh0=;
+	s=arc-20240116; t=1782387986; c=relaxed/simple;
+	bh=t7/Gy1d1l174F+NN6JWehOQlZ1h7fftISKSSMma9jjk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TPCj+yuoo1gXAXhwRKe1fIwF9KnIt66rNtnnOAmyM9zSYN7lzb4wDvgGsoqLtKQPqDwwjfSBB6/rTtCh+S2rw7OoGMChj43jd91MS7AYaQ1p9I5FcCj/Pcw/pXqUb9Ggd3Bwo5bWX+6By3cwnuaGaKng5BOjQD7BfuGmrPj3RfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.152
+	 MIME-Version; b=Uo903ABKu7gHJC1AfgC4RqKai5n54aBbtEHXka6PLe4tLoWXG9bjTjLkS7XjmpAzoQtP3d/ReJ9RPVz0Tv9tQDLW0OliThYpAiZJ0dDIWZ4nxB+nXSr6xqMpOv9+22FXarj5W0BbjpZPc9SHryBEt3MznA6T5Zdc+OfkojY9pv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gmH7h525Tz9vHv;
-	Thu, 25 Jun 2026 13:46:08 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4gmH7p6qMCz9txj;
+	Thu, 25 Jun 2026 13:46:14 +0200 (CEST)
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
 From: Pankaj Raghav <p.raghav@samsung.com>
 To: linux-xfs@vger.kernel.org
 Cc: bfoster@redhat.com,
@@ -35,9 +38,9 @@ Cc: bfoster@redhat.com,
 	hch@lst.de,
 	cem@kernel.org,
 	hch@infradead.org
-Subject: [PATCH v8 1/2] xfs: add an allocation mode to xfs_alloc_file_space()
-Date: Thu, 25 Jun 2026 13:45:49 +0200
-Message-ID: <20260625114550.4109104-2-p.raghav@samsung.com>
+Subject: [PATCH v8 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
+Date: Thu, 25 Jun 2026 13:45:50 +0200
+Message-ID: <20260625114550.4109104-3-p.raghav@samsung.com>
 In-Reply-To: <20260625114550.4109104-1-p.raghav@samsung.com>
 References: <20260625114550.4109104-1-p.raghav@samsung.com>
 Precedence: bulk
@@ -47,144 +50,193 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4gmH7p6qMCz9txj
 
-xfs_alloc_file_space() hardcodes XFS_BMAPI_PREALLOC to preallocate
-unwritten extents across a range.
+If the underlying block device supports the unmap write zeroes
+operation, this flag allows users to quickly preallocate a file with
+written extents that contain zeroes. This is beneficial for subsequent
+overwrites as it prevents the need for unwritten-to-written extent
+conversions, thereby significantly reducing metadata updates and journal
+I/O overhead, improving overwrite performance.
 
-In preparation for FALLOC_FL_WRITE_ZEROES, add an explicit allocation
-mode argument, enum xfs_alloc_file_space_mode, and derive the xfs_bmapi
-flags from it. The only mode for now is XFS_ALLOC_FILE_SPACE_PREALLOC,
-which preallocates unwritten extents and marks the inode as preallocated
-exactly as before, so there is no functional change.
+Punch the range first so it becomes a hole, update the size via
+xfs_falloc_setsize() while it is still a hole (so its xfs_zero_range()
+skips it and avoids rezeroing), then convert it to written
+zeroed extents. A crash between the size update and the conversion is
+safe, as a hole within i_size reads back as zeroes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- fs/xfs/xfs_bmap_util.c | 25 +++++++++++++++++++++----
- fs/xfs/xfs_bmap_util.h |  6 +++++-
- fs/xfs/xfs_file.c      |  9 ++++++---
- 3 files changed, 32 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 19 ++++++++--
+ fs/xfs/xfs_bmap_util.h |  1 +
+ fs/xfs/xfs_file.c      | 78 +++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 94 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 3b9f262f8e91..e5424d010a69 100644
+index e5424d010a69..855602cb35e8 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -642,11 +642,19 @@ xfs_free_eofblocks(
- 	return error;
+@@ -643,11 +643,18 @@ xfs_free_eofblocks(
  }
  
-+/*
-+ * Allocate space for a file according to @mode:
+ /*
+- * Allocate space for a file according to @mode:
++ * Allocate space or convert extents for a file according to @mode:
+  *
+  * XFS_ALLOC_FILE_SPACE_PREALLOC:
+  * Preallocate unwritten extents over holes across the range and mark the inode
+  * as preallocated.
 + *
-+ * XFS_ALLOC_FILE_SPACE_PREALLOC:
-+ * Preallocate unwritten extents over holes across the range and mark the inode
-+ * as preallocated.
-+ */
++ * XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
++ * Allocate written extents over holes and convert unwritten extents in the
++ * range to written extents, initialising both to contain zeroes.
++ *
++ * This function does not update the file size; callers that extend the file
++ * are responsible for updating it once the extents are allocated.
+  */
  int
  xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	enum xfs_alloc_file_space_mode mode)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -657,6 +665,7 @@ xfs_alloc_file_space(
- 	int			rt;
- 	xfs_trans_t		*tp;
- 	xfs_bmbt_irec_t		imaps[1], *imapp;
-+	uint32_t		bmapi_flags, nr_exts;
- 	int			error;
- 
- 	if (xfs_is_always_cow_inode(ip))
-@@ -674,6 +683,15 @@ xfs_alloc_file_space(
- 	if (len <= 0)
- 		return -EINVAL;
- 
-+	switch (mode) {
-+	case XFS_ALLOC_FILE_SPACE_PREALLOC:
-+		bmapi_flags = XFS_BMAPI_PREALLOC;
-+		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
+@@ -688,6 +695,10 @@ xfs_alloc_file_space(
+ 		bmapi_flags = XFS_BMAPI_PREALLOC;
+ 		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
+ 		break;
++	case XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
++		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
++		nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
 +		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
- 	rt = XFS_IS_REALTIME_INODE(ip);
- 	extsz = xfs_get_extsz_hint(ip);
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -776,8 +787,10 @@ xfs_alloc_file_space(
+ 			allocatesize_fsb -= imapp->br_blockcount;
+ 		}
  
-@@ -733,8 +751,7 @@ xfs_alloc_file_space(
- 		if (error)
- 			break;
+-		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++		if (mode == XFS_ALLOC_FILE_SPACE_PREALLOC) {
++			ip->i_diflags |= XFS_DIFLAG_PREALLOC;
++			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++		}
  
--		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK,
--				XFS_IEXT_ADD_NOSPLIT_CNT);
-+		error = xfs_iext_count_extend(tp, ip, XFS_DATA_FORK, nr_exts);
- 		if (error)
- 			goto error;
- 
-@@ -748,7 +765,7 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-+				allocatesize_fsb, bmapi_flags, 0, imapp,
- 				&nimaps);
- 		if (error) {
- 			if (error != -ENOSR)
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b3361630..232b4c48247e 100644
+index 232b4c48247e..e3d506ca9610 100644
 --- a/fs/xfs/xfs_bmap_util.h
 +++ b/fs/xfs/xfs_bmap_util.h
-@@ -55,8 +55,12 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 			     int *is_empty);
- 
+@@ -57,6 +57,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
  /* preallocation and hole punch interface */
-+enum xfs_alloc_file_space_mode {
-+	XFS_ALLOC_FILE_SPACE_PREALLOC,
-+};
-+
+ enum xfs_alloc_file_space_mode {
+ 	XFS_ALLOC_FILE_SPACE_PREALLOC,
++	XFS_ALLOC_FILE_SPACE_WRITE_ZEROES,
+ };
+ 
  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+		xfs_off_t len, enum xfs_alloc_file_space_mode mode);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 845a97c9b063..e90ea6ebdc8e 100644
+index e90ea6ebdc8e..5dcb03e6de12 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1406,7 +1406,8 @@ xfs_falloc_zero_range(
- 		len = round_up(offset + len, blksize) -
- 			round_down(offset, blksize);
- 		offset = round_down(offset, blksize);
--		error = xfs_alloc_file_space(ip, offset, len);
-+		error = xfs_alloc_file_space(ip, offset, len,
-+				XFS_ALLOC_FILE_SPACE_PREALLOC);
- 	}
- 	if (error)
- 		return error;
-@@ -1432,7 +1433,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
+@@ -1368,6 +1368,79 @@ xfs_falloc_force_zero(
+ 	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
+ }
  
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_ALLOC_FILE_SPACE_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1460,7 +1462,8 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
++static int
++xfs_falloc_write_zeroes(
++	struct file		*file,
++	int			mode,
++	loff_t			offset,
++	loff_t			len,
++	struct xfs_zone_alloc_ctx *ac)
++{
++	struct inode		*inode = file_inode(file);
++	struct xfs_inode	*ip = XFS_I(inode);
++	loff_t			new_size = 0;
++	int			error;
++
++	if (xfs_is_always_cow_inode(ip) ||
++	    !bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
++		return -EOPNOTSUPP;
++
++	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
++	if (error)
++		return error;
++
++	/*
++	 *
++	 *    |----------|----------|----------|----------|----------|
++	 *    ^     ^    ^                     ^     ^    ^
++	 *    |     |    |                     |     |    |
++	 *    |   offset |                     |    end   |
++	 *    |          |                     |          |
++	 * offset_rd   offset_ru              end_rd    end_ru
++	 *
++	 * xfs_free_file_space() punches the aligned interior offset_ru -> end_rd
++	 * to holes and byte-zeroes the in-range parts of the partial edge blocks,
++	 * offset -> offset_ru and end_rd -> end.  xfs_zero_range() only touches
++	 * already-written blocks here; it skips holes and unwritten extents, so
++	 * unallocated/unwritten edge blocks are left for the allocation below.
++	 */
++	error = xfs_free_file_space(ip, offset, len, ac);
++	if (error)
++		return error;
++
++	/*
++	 * Publish the new size while the punched range is still a hole, then
++	 * fill it with written zeroes.  Like the other fallocate modes we use
++	 * xfs_falloc_setsize(), but it must run *before* we convert the range
++	 * to written extents: xfs_setattr_size() zeroes [old EOF, new size) via
++	 * xfs_zero_range(), which skips holes, so there is nothing to re-zero.
++	 * It will also writeback partial EOF block before the on-disk size is
++	 * logged.
++	 * Note: extending the size before allocating means a failure below
++	 * leaves the file larger with unallocated holes in the new range.
++	 * That is safe as holes within i_size read back as zeroes and expose
++	 * no stale data while the error is propagated to the caller.
++	 */
++	error = xfs_falloc_setsize(file, new_size);
++	if (error)
++		return error;
++
++	/*
++	 * Allocate written, zeroed extents across the range.  xfs_alloc_file_space()
++	 * rounds outward to block granularity:
++	 *  - holes (the punched interior and any unallocated edge block) are
++	 *    allocated and zeroed;
++	 *  - unwritten extents (including unwritten edge blocks) are converted to
++	 *    written and zeroed;
++	 *  - Already written edge blocks are skipped. The out-of-range bytes of
++	 *    a written edge block keep their data (offset_rd -> offset and
++	 *    end -> end_rd); their in-range bytes (offset -> offset_ru and
++	 *    end_ru -> end were already zeroed by xfs_free_file_space().
++	 */
++	return xfs_alloc_file_space(ip, offset, len,
++			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
++}
++
+ /*
+  * Punch a hole and prealloc the range.  We use a hole punch rather than
+  * unwritten extent conversion for two reasons:
+@@ -1473,7 +1546,7 @@ xfs_falloc_allocate_range(
+ 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+ 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+ 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+-		 FALLOC_FL_UNSHARE_RANGE)
++		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
  
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_ALLOC_FILE_SPACE_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
+ STATIC long
+ __xfs_file_fallocate(
+@@ -1525,6 +1598,9 @@ __xfs_file_fallocate(
+ 	case FALLOC_FL_ALLOCATE_RANGE:
+ 		error = xfs_falloc_allocate_range(file, mode, offset, len);
+ 		break;
++	case FALLOC_FL_WRITE_ZEROES:
++		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
++		break;
+ 	default:
+ 		error = -EOPNOTSUPP;
+ 		break;
 -- 
 2.51.2
 
