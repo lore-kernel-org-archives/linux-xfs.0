@@ -1,105 +1,176 @@
-Received: from pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.26.1.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F98A35AC00;
-	Thu, 25 Jun 2026 09:11:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.26.1.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F0E3CF942
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 10:44:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782378665; cv=none; b=U6SL9s6//kv2ejL+mIOiWanGAN+qb/wRTd6hU5j9IVBMxz189t8hTjw/VlQw3vImgsWB2pnQW8PXYNC1Fpoqsk2nKBiyXlnIHC6US4vkOwgg0bpjCpfXxyUGD+/QN6T30hrI6oJ84RsEPSJqzVhb9uPvjD4Hu9TtjytZ3iZnY8Y=
+	t=1782384246; cv=none; b=gUNacl2JKSbu0yD1709AEmSEMXZxmSgq9mSa95hHogbY/OUb8eiNEISaDTTarW5400u18gD66DqQTJ2CMmwKxZHQEMQkJNBklg9ZapUbkkGXdP9srBjpi8NIXwOXUdImChds/iC0fgDeaPT3ERV73Yuj1BZez5f56bAchP/4Bdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782378665; c=relaxed/simple;
-	bh=oE928MWpjpguJbmMgOw+gSkPCYeo6lVM91/zGpnGPn4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sykvUcdDmsAtfNdG8CecFfLiqQRO3496DNNazPuWRSzwDThnqZC/thHqDntvimc/nQIrWSkefPr2OqAAZW+GxXyex3N7+AVS0YEw+5bOKUkuEpjriHCzuNXAu1+gnA2aFmxv5SA9N/YaWyedzNOOBBP2KHheNesyHY8rhreC/k0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it; spf=pass smtp.mailfrom=amazon.it; dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b=JdqxJYsp; arc=none smtp.client-ip=52.26.1.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.it
+	s=arc-20240116; t=1782384246; c=relaxed/simple;
+	bh=tnZeXJHehJ+A52w8B4DoKvRqhsJXdVGIORGG61VkSbM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LXzVk8a+3y8BvMUy4zjg22xoU9su4ko/A0DKRw2e6eT5bR/FFtT/n6JpuHzVRqGSP/PXuy5Vs666Upn/l4tYYaVEP83mGg39kwocPSA74lBMFDJmYEbpnQY0rah7jVGiKytYJ7kdpQP8l3bEAZpyyCAM62il0rd248uJoFQY4+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=v5+HoMHQ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=nCoydn7r; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=v5+HoMHQ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=nCoydn7r; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.it header.i=@amazon.it header.b="JdqxJYsp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.it; i=@amazon.it; q=dns/txt; s=amazoncorp2;
-  t=1782378664; x=1813914664;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=oE928MWpjpguJbmMgOw+gSkPCYeo6lVM91/zGpnGPn4=;
-  b=JdqxJYspKNXeA1OD4UdLrFwIBaqNtaBf7KkMRp8E9VqonFQ7wqPf/JJz
-   Kff+Qv1HBYXzV98dbH29J1Nwce7rszoB/Z767H8Uif1rkKChD4MlMZSNt
-   qS5KLiW8ZlppQWuuDHl5N8BQY1T3KQ/O0Yo8pgCD++zTibTIAt/0P3cOw
-   3yRBYeYR9cVVT20hG9rDTHmAdYMRfseViMBGQygNNFnQ75cI/ESSO+kLk
-   la/FDDawATRAJdcNR/uy+xtPDrosVl1nDpuSyL2RAStDXSRFotu63KQWj
-   3K8l4pKciYEKc8i06t51sYp2vFuzOjynxMtbw1kWIOd7pS8trYAg7U92j
-   g==;
-X-CSE-ConnectionGUID: BHvSDaCTQDGldW/+GkcQGw==
-X-CSE-MsgGUID: T6GC85OPQZqEzuE/bVyVkw==
-X-IronPort-AV: E=Sophos;i="6.24,224,1774310400"; 
-   d="scan'208";a="22495960"
-Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
-  by internal-pdx-out-006.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2026 09:11:00 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:9509]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.37.116:2525] with esmtp (Farcaster)
- id 53b71abc-ee40-4912-bc3d-4b91185244a3; Thu, 25 Jun 2026 09:10:59 +0000 (UTC)
-X-Farcaster-Flow-ID: 53b71abc-ee40-4912-bc3d-4b91185244a3
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.43;
- Thu, 25 Jun 2026 09:10:59 +0000
-Received: from cdd-dev.amazon.com (172.22.139.101) by
- EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.43;
- Thu, 25 Jun 2026 09:10:58 +0000
-From: Salvatore Dipietro <dipiets@amazon.it>
-To: <hch@infradead.org>, <ritesh.list@gmail.com>
-CC: <abuehaze@amazon.com>, <akpm@linux-foundation.org>, <alisaidi@amazon.com>,
-	<blakgeof@amazon.com>, <brauner@kernel.org>, <david@kernel.org>,
-	<dipietro.salvatore@gmail.com>, <dipiets@amazon.it>, <djwong@kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>, <ljs@kernel.org>,
-	<mhocko@suse.com>, <rppt@kernel.org>, <stable@vger.kernel.org>,
-	<vbabka@kernel.org>, <vbabka@suse.com>, <willy@infradead.org>
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order allocation
-Date: Thu, 25 Jun 2026 09:10:37 +0000
-Message-ID: <20260625091039.24501-1-dipiets@amazon.it>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <ajvc7fSDngyx0X5j@infradead.org>
-References: <ajvc7fSDngyx0X5j@infradead.org>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="v5+HoMHQ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="nCoydn7r";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="v5+HoMHQ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="nCoydn7r"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id DF6DE7182E;
+	Thu, 25 Jun 2026 10:44:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1782384242; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VIWR4ZG0IOd3ZVwv89DuimxILHVqAiCjPspcDkVjjIw=;
+	b=v5+HoMHQ5jcnGevca330BQxWuIIdlcDtwmqY5Feml7DY2Cxf5n1sOjj1OD2xCuSPxrQQWi
+	5CsL0ff7t080cF0ZIe+qmg0GFoK+H4FzRb2spRNdDDiJZFLbNtKPTJcsBq+WlJhTrjGUg9
+	eLnf4fyNX3TfVGhl0oGEQMEB7vlkjew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1782384242;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VIWR4ZG0IOd3ZVwv89DuimxILHVqAiCjPspcDkVjjIw=;
+	b=nCoydn7rOmPosCH95uNSfw1ePXmT3IcMznMe0Hl1f8krkwclFbaX2A4HM9JFVv2TqqgNgS
+	T7wVG9hEFL0W68Ag==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=v5+HoMHQ;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=nCoydn7r
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1782384242; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VIWR4ZG0IOd3ZVwv89DuimxILHVqAiCjPspcDkVjjIw=;
+	b=v5+HoMHQ5jcnGevca330BQxWuIIdlcDtwmqY5Feml7DY2Cxf5n1sOjj1OD2xCuSPxrQQWi
+	5CsL0ff7t080cF0ZIe+qmg0GFoK+H4FzRb2spRNdDDiJZFLbNtKPTJcsBq+WlJhTrjGUg9
+	eLnf4fyNX3TfVGhl0oGEQMEB7vlkjew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1782384242;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VIWR4ZG0IOd3ZVwv89DuimxILHVqAiCjPspcDkVjjIw=;
+	b=nCoydn7rOmPosCH95uNSfw1ePXmT3IcMznMe0Hl1f8krkwclFbaX2A4HM9JFVv2TqqgNgS
+	T7wVG9hEFL0W68Ag==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D3029779A8;
+	Thu, 25 Jun 2026 10:44:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id YtV7M3IGPWpXPQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 25 Jun 2026 10:44:02 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 7A40DA10A3; Thu, 25 Jun 2026 12:43:54 +0200 (CEST)
+Date: Thu, 25 Jun 2026 12:43:54 +0200
+From: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org, 
+	"Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, 
+	Eric Sandeen <sandeen@redhat.com>, "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>, 
+	Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, 
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH] xfs: fix capabily check in xfs_setattr_nonsize
+Message-ID: <qcsdbdpp23fsu3cqhpjdpwusvl6onc2knnrun522ofrutxpz6j@reh3k2ofqjir>
+References: <20260624101436.362533-1-cem@kernel.org>
+ <20260624134039.GB5649@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D035UWB002.ant.amazon.com (10.13.138.97) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260624134039.GB5649@lst.de>
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: DF6DE7182E
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:dkim];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-T24gV2VkLCBKdW4gMjQsIDIwMjYgYXQgMTI6MjE6MDBQTSArMDAwMCwgUml0ZXNoIEhhcmphbmkg
-d3JvdGU6Cj4gU29ycnkgYWJvdXQgdGhlIGRlbGF5LiBJIGRpZCBicmluZyB0aGlzIHRvcGljIHVw
-IGluIG9uZSBvZiBvdXIgaW50ZXJuYWwKPiBleHQ0IGNvbW11bml0eSBjYWxscy4gQW5kIHRvIHNo
-YXJlIHNvbWUgY29udGV4dCwgTU0gY29tbXVuaXR5IHRoaW5rcyB3ZQo+IG5lZWQgYSBiZXR0ZXIg
-bG9uZyB0ZXJtIGZpeCBmb3IgdGhpcyBwcm9ibGVtIHJhdGhlciB0aGFuIHBhdGNoaW5nIGNhbGwK
-PiBzaXRlcyBhbmQvb3IgcGxheWluZyB0cmlja3MgbGlrZSAtIAoKVGhhbmtzIFJpdGVzaCBmb3Ig
-dGhlIHVwZGF0ZSBhbmQgZm9yIGJyaW5naW5nIHRoaXMgdG8gdGhlIHdpZGVyIE1NIGNvbW11bml0
-eS4gCkkgY29tcGxldGVseSB1bmRlcnN0YW5kIHRoYXQgdGhlIE1NIGNvbW11bml0eSBpcyBsb29r
-aW5nIGZvciBhIHByb3BlciBsb25nLXRlcm0KZml4IHJhdGhlciB0aGFuIHNwZWNpZmljIHBhdGNo
-aW5nLgoKCk9uIFdlZCwgSnVuIDI0LCAyMDI2IGF0IDEzOjM0OjAwUE0gKzAwMDAsIENocmlzdG9w
-aCBIZWxsd2lnIHdyb3RlOgo+IERvIHlvdSBoYXZlIG9pbnRlcnMgdG8gdGhlIHBhdGNoZXMgZm9y
-IGVhY2ggYXBwcm9hY2ggYWJvdmU/CgpZZXMg4oCUIGFsbCB0aGUgcGF0Y2hlcyBpbiB0aGUgcmVz
-dWx0IHRhYmxlIGFyZSBzaGFyZWQgd2l0aGluIHRoaXMgdGhyZWFkOgoKdjEgKG9yaWdpbmFsLCBp
-b21hcCBjYWxsZXIpOiBUaGUgb3JpZ2luYWwgUEFUQ0ggMS8xIGluIHRoaXMgc2VyaWVzClJpdGVz
-aCdzIHN1Z2dlc3Rpb24gKG1tL2ZpbGVtYXAuYyk6IFNoYXJlZCBpbiBSaXRlc2gncyByZXBseSBv
-biBNYXkgM3JkIFsxXQpNYXR0aGV3J3Mgc3VnZ2VzdGlvbiAobW0vZmlsZW1hcC5jKTogU2hhcmVk
-IGluIE1hdHRoZXcncyByZXBseSBvbiBBcHJpbCA0dGggWzJdCmtjb21wYWN0ZCBiYWNrZ3JvdW5k
-IChtbS9wYWdlX2FsbG9jLmMpOiBTaGFyZWQgaW4gbXkgcmVwbHkgb24gTWF5IDZ0aCBbM10KClsx
-XSBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyNjA0MDMxOTM1MzUuOTk3MC0xLWRpcGll
-dHNAYW1hem9uLml0L1QvI204YzNkYTFjOWZiOWU5YzY2ZDRlOGIxODQ5ZGU4MjRiMGVjZjM3Zjll
-ClsyXSBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyNjA0MDMxOTM1MzUuOTk3MC0xLWRp
-cGlldHNAYW1hem9uLml0L1QvI200YjkwY2YyODBmZjBlZmNmMTc4ZGZkOGQwNjhmMWRlM2IyNjJl
-MjhhClszXSBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyNjA0MDMxOTM1MzUuOTk3MC0x
-LWRpcGlldHNAYW1hem9uLml0L1QvI20yMjk3NzM1NTUzNWE0NTk5MDg0YTUxMTA0YTRkZjgwNmQ0
-OWM1M2QxCgotLQpTYWx2YXRvcmUKCgoKQU1BWk9OIERFVkVMT1BNRU5UIENFTlRFUiBJVEFMWSBT
-UkwsIHZpYWxlIE1vbnRlIEdyYXBwYSAzLzUsIDIwMTI0IE1pbGFubywgSXRhbGlhLCBSZWdpc3Ry
-byBkZWxsZSBJbXByZXNlIGRpIE1pbGFubyBNb256YSBCcmlhbnphIExvZGkgUkVBIG4uIDI1MDQ4
-NTksIENhcGl0YWxlIFNvY2lhbGU6IDEwLjAwMCBFVVIgaS52LiwgQ29kLiBGaXNjLiBlIFAuSVZB
-IDEwMTAwMDUwOTYxLCBTb2NpZXRhIGNvbiBTb2NpbyBVbmljbwoKCg==
+On Wed 24-06-26 15:40:39, Christoph Hellwig wrote:
+> Adding Jan and Christian for quota and user_ns knowledge.
+> 
+> On Wed, Jun 24, 2026 at 12:14:29PM +0200, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> > 
+> > An user reported a bug where he managed to evade group's quota
+> > by changing a file's gid to a different group id the same user
+> > belonged to, even though quotas were enforced on both gids and the
+> > file's size was big enough to exceed the quota's hardlimit.
+> > 
+> > Commit eba0549bc7d1 replaced a capable() call by a
+> > has_capability_noaudit() to prevent unnecessary selinux audit messages.
+> > Turns out that both calls have slightly different semantics even though
+> > their documentation seems similar. Where in a nutshell:
+> > 
+> > capable() - Tests the task's effective credentials
+> > has_ns_capability_noaudit() - Tests the task's real credentials
+> 
+> Eww..
 
+Yeah, that's a catch.
+
+> > This most of the time has no practical difference but in some cases like
+> > changing attrs (specifically group id in this case) through a NFS client
+> > this will allow the quota code to use XFS_QMOPT_FORCE_RES, effectively
+> > bypassing quota accounting checks.
+> 
+> Yeah, this does look wrong.  Do the other conversion in the above commit
+> have tthe same issue?
+> 
+> > Using instead ns_capable_noaudit() should fix this issue and prevent
+> > selinux audit messages.
+> 
+> The generic quota code manages to do without either has_capability_noaudit
+> or ns_capable_noaudit.  I think this might be hidden behind
+> inode_owner_or_capable calls.  Any idea why we're different?
+
+Actually no. Generic quota code has equivalent checks in ignore_hardlimit()
+function which does capable(CAP_SYS_RESOURCE) check. I guess the reason why
+nobody complained about generic quota code is that we call
+ignore_hardlimit() only if we are above hardlimit whereas XFS calls this
+for every transaction...
+
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
