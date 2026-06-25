@@ -1,43 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F22A28B4FA
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 17:20:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10CD63E2ABA;
+	Thu, 25 Jun 2026 17:27:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782408008; cv=none; b=jwNuhvzor0AZZCq4WC1LcH0DMPe9+2hoVyHK4LmuIEP6/Kq35Qs/+Cfqq237xiOwdIUsAGzDf5OVg6tYAuXcoFJGAHX8JXLbrP7JkA14VK1K7fzVd4SJZqdhh8Jzna8x/ctzXZAc7Mxq4iQ4HMVVVdLDT7nCA1hRSN4p7UpAiBU=
+	t=1782408462; cv=none; b=ErgRXlf1bWU/n9wDrqZPba+SvbnT/hkzGeRBytK7b13oEpRD9gXGPTjpep6OOj/W6mBlrJXTuZoOjRpJuYJf+my5M5sL1ULmJUq3lDcLDfCH89K52VpV4ggqsFHoOeS9vfldh/69ZZ1B5RE4ikWiz5Bq3flk1N+MKozIfEY3Vdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782408008; c=relaxed/simple;
-	bh=vix9C27NYHmvnnV20UdlhZy8VJ2HhVbXxJdBBW5d1vk=;
+	s=arc-20240116; t=1782408462; c=relaxed/simple;
+	bh=hbOYVXEEyUmHQJY81f3ZxGxpuaEmNUlAOvAbpCFN5yg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r8EMJ4fWuzm82h6e0fIP2jx4hnNsXXvJEtIk+X5D+Jp4s9vGgXaAJyWqNn/cROgACK5Ztc8wEdFH890GiXTumpK97AOIpz4UxcEY+9fLqGu6ELZ6iKfzeRjdwvP828ZUbmFv12qJeZUhs9CVB2l3QQc6oTJfcPoRmVIblsMJx2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBiVXPLG; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=H2VInoPrgyyuaDKefSznPWkHkzL0fVoWXlCnsui/QwTveWI61a4dcJiEND2Mf5WeH5WNEhx7WjZm63KgCVnjTa2AXmukOqVWlbRpCtZLA9L6AoqZTtaXd2ETj1X5cjTQ40ielLpTt1FTFry8mjtrDzcd0o2JheLQZrYGQ49lpsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iETBEHN+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBiVXPLG"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 933031F000E9;
-	Thu, 25 Jun 2026 17:20:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iETBEHN+"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9E6981F00A3D;
+	Thu, 25 Jun 2026 17:27:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782408006;
-	bh=Zh1WabjSFuCRgWfQ4rVpfHGNYtzxuG+yeBUgpcsd+xI=;
+	s=k20260515; t=1782408460;
+	bh=tvuLwEQoSIdOrb203mC98VZ//kFDZO0IRJjscdA56ZQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WBiVXPLGi9xcms7n4ZbCrKxzQy97WhCsxwUeRDF4bqDroChr2ZxcigjEREJHHDR1G
-	 3DfBP4h/pRFXjRe6MET9FzTAmPxIVq37hX+pmfQRrsJKuLMRhIN/zTroeXa/moEWPl
-	 iUFzPoFkFNPdV0f7jDyP9joD/Ybs3LIMgFCfIo6N4knSlpfJ9Rl+emDPr3wlE7CIJc
-	 JrJSQKcmIZ2lMtKS2mJLBC/AaNzIMIwgAuRZH+YHAIVqFrMWkRbcMCmK3PRZF8t1TD
-	 SjzglQC8sBb65ELDgVRnyAsfBh6wNeb+xP87HNGxaWr6BydN6i5S1nc9m7Nf1OnZfw
-	 d2mMOBcX5Uyzg==
-Date: Thu, 25 Jun 2026 10:20:06 -0700
+	b=iETBEHN+38kSAJ3JIL3Qq/rSXmiT7OPU4aYA8tl8c0dE8Lv/owV2YCuBjNrvAPN3O
+	 WjAa2ZhVko/j4rwJj2yX1UqXmy20zln/zPevRSO+M7SF2NjwXRSJecpUHR9QpA6ZhE
+	 BWrsgrIt9MCuNfTf4xG7eSC5HjRU74eJf8TrzAivA2PrBOpDg2K8Pd2rYSuIejsa+J
+	 kNjlMsey0+l/9zrhyvpeAk97s4BCmvS2AGj4ByxpfKmS4ufngvTBtJ5EBfGGev3/WL
+	 ta/UsPme0xV9Hy+lgtJ/AUHvEDMbg0Tui3Z/9iJTka8YxVLsuiieVWlCRnTyZGjR6Y
+	 3YUaLfHUGLZ+A==
+Date: Thu, 25 Jun 2026 10:27:40 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Pankaj Raghav <p.raghav@samsung.com>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, lukas@herbolt.com,
-	dgc@kernel.org, gost.dev@samsung.com,
-	Zhang Yi <yi.zhang@huaweicloud.com>, pankaj.raghav@linux.dev,
-	andres@anarazel.de, kundan.kumar@samsung.com, hch@lst.de,
-	cem@kernel.org, hch@infradead.org
-Subject: Re: [PATCH v8 2/2] xfs: add support for FALLOC_FL_WRITE_ZEROES
-Message-ID: <20260625172006.GC6078@frogsfrogsfrogs>
-References: <20260625114550.4109104-1-p.raghav@samsung.com>
- <20260625114550.4109104-3-p.raghav@samsung.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev,
+	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] iomap: consolidate bio submission
+Message-ID: <20260625172740.GD6078@frogsfrogsfrogs>
+References: <20260625120803.2462291-1-hch@lst.de>
+ <20260625120803.2462291-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,218 +52,167 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260625114550.4109104-3-p.raghav@samsung.com>
+In-Reply-To: <20260625120803.2462291-2-hch@lst.de>
 
-On Thu, Jun 25, 2026 at 01:45:50PM +0200, Pankaj Raghav wrote:
-> If the underlying block device supports the unmap write zeroes
-> operation, this flag allows users to quickly preallocate a file with
-> written extents that contain zeroes. This is beneficial for subsequent
-> overwrites as it prevents the need for unwritten-to-written extent
-> conversions, thereby significantly reducing metadata updates and journal
-> I/O overhead, improving overwrite performance.
+On Thu, Jun 25, 2026 at 02:07:56PM +0200, Christoph Hellwig wrote:
+> Add a iomap_bio_submit_read_endio helper factored out of
+> iomap_bio_submit_read to that all ->submit_read implementations for
+> iomap_read_ops that use iomap_bio_read_folio_range can shared the
+> logic.
 > 
-> Punch the range first so it becomes a hole, update the size via
-> xfs_falloc_setsize() while it is still a hole (so its xfs_zero_range()
-> skips it and avoids rezeroing), then convert it to written
-> zeroed extents. A crash between the size update and the conversion is
-> safe, as a hole within i_size reads back as zeroes.
+> Right now that logic is mostly trivial, but already has a bug for XFS
+> because the XFS version is too trivial:  file system integrity validation
+> needs a workqueue context and thus can't happen from the default iomap
+> bi_end_io I/O handler.  Unfortunately the iomap refactoring just before
+> fs integrity landed moved code around here and the call go misplaced,
+> meaning it never got called.  The PI information still is verified by
+> the block layer, but the offloading is less efficient (and the future
+> userspace interface can't get at it).
 > 
-> Co-developed-by: Lukas Herbolt <lukas@herbolt.com>
-> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> Fixes: 0b10a370529c ("iomap: support T10 protection information")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_bmap_util.c | 19 ++++++++--
->  fs/xfs/xfs_bmap_util.h |  1 +
->  fs/xfs/xfs_file.c      | 78 +++++++++++++++++++++++++++++++++++++++++-
->  3 files changed, 94 insertions(+), 4 deletions(-)
+>  fs/exfat/iomap.c      |  5 +----
+>  fs/iomap/bio.c        | 13 ++++++++++---
+>  fs/ntfs/aops.c        |  6 ++----
+>  fs/ntfs3/inode.c      |  5 +----
+>  fs/xfs/xfs_aops.c     |  3 +--
+>  include/linux/iomap.h |  2 ++
+>  6 files changed, 17 insertions(+), 17 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index e5424d010a69..855602cb35e8 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -643,11 +643,18 @@ xfs_free_eofblocks(
+> diff --git a/fs/exfat/iomap.c b/fs/exfat/iomap.c
+> index 1aac38e63fe6..190fc6471f84 100644
+> --- a/fs/exfat/iomap.c
+> +++ b/fs/exfat/iomap.c
+> @@ -253,10 +253,7 @@ static void exfat_iomap_read_end_io(struct bio *bio)
+>  static void exfat_iomap_bio_submit_read(const struct iomap_iter *iter,
+>  		struct iomap_read_folio_ctx *ctx)
+>  {
+> -	struct bio *bio = ctx->read_ctx;
+> -
+> -	bio->bi_end_io = exfat_iomap_read_end_io;
+> -	submit_bio(bio);
+> +	iomap_bio_submit_read_endio(iter, ctx, exfat_iomap_read_end_io);
 >  }
 >  
->  /*
-> - * Allocate space for a file according to @mode:
-> + * Allocate space or convert extents for a file according to @mode:
->   *
->   * XFS_ALLOC_FILE_SPACE_PREALLOC:
->   * Preallocate unwritten extents over holes across the range and mark the inode
->   * as preallocated.
-> + *
-> + * XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-> + * Allocate written extents over holes and convert unwritten extents in the
-> + * range to written extents, initialising both to contain zeroes.
-> + *
-> + * This function does not update the file size; callers that extend the file
-> + * are responsible for updating it once the extents are allocated.
->   */
->  int
->  xfs_alloc_file_space(
-> @@ -688,6 +695,10 @@ xfs_alloc_file_space(
->  		bmapi_flags = XFS_BMAPI_PREALLOC;
->  		nr_exts = XFS_IEXT_ADD_NOSPLIT_CNT;
->  		break;
-> +	case XFS_ALLOC_FILE_SPACE_WRITE_ZEROES:
-> +		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-> +		nr_exts = XFS_IEXT_WRITE_UNWRITTEN_CNT;
-> +		break;
->  	default:
->  		return -EINVAL;
->  	}
-> @@ -776,8 +787,10 @@ xfs_alloc_file_space(
->  			allocatesize_fsb -= imapp->br_blockcount;
->  		}
->  
-> -		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-> -		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		if (mode == XFS_ALLOC_FILE_SPACE_PREALLOC) {
-> +			ip->i_diflags |= XFS_DIFLAG_PREALLOC;
-> +			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		}
->  
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index 232b4c48247e..e3d506ca9610 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -57,6 +57,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
->  /* preallocation and hole punch interface */
->  enum xfs_alloc_file_space_mode {
->  	XFS_ALLOC_FILE_SPACE_PREALLOC,
-> +	XFS_ALLOC_FILE_SPACE_WRITE_ZEROES,
->  };
->  
->  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e90ea6ebdc8e..5dcb03e6de12 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1368,6 +1368,79 @@ xfs_falloc_force_zero(
->  	return XFS_TEST_ERROR(ip->i_mount, XFS_ERRTAG_FORCE_ZERO_RANGE);
+>  const struct iomap_read_ops exfat_iomap_bio_read_ops = {
+> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+> index 4504f4633f17..0f31e35567b4 100644
+> --- a/fs/iomap/bio.c
+> +++ b/fs/iomap/bio.c
+> @@ -78,15 +78,23 @@ u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend)
+>  	return __iomap_read_end_io(&ioend->io_bio, ioend->io_error);
 >  }
 >  
-> +static int
-> +xfs_falloc_write_zeroes(
-> +	struct file		*file,
-> +	int			mode,
-> +	loff_t			offset,
-> +	loff_t			len,
-> +	struct xfs_zone_alloc_ctx *ac)
-> +{
-> +	struct inode		*inode = file_inode(file);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	loff_t			new_size = 0;
-> +	int			error;
-> +
-> +	if (xfs_is_always_cow_inode(ip) ||
-> +	    !bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
-> +		return -EOPNOTSUPP;
-> +
-> +	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 *
-> +	 *    |----------|----------|----------|----------|----------|
-> +	 *    ^     ^    ^                     ^     ^    ^
-> +	 *    |     |    |                     |     |    |
-> +	 *    |   offset |                     |    end   |
-> +	 *    |          |                     |          |
-> +	 * offset_rd   offset_ru              end_rd    end_ru
+> -static void iomap_bio_submit_read(const struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
+> +		struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io)
+>  {
+>  	struct bio *bio = ctx->read_ctx;
+>  
+> +	bio->bi_end_io = end_io;
+>  	if (iter->iomap.flags & IOMAP_F_INTEGRITY)
+>  		fs_bio_integrity_alloc(bio);
 
-Do "_rd" and "_ru" mean "round down" and "round up"?  And is that to the
-fsblock size, or the allocation unit size?
+Ah, so the bug here is that all the pagecache readers should have been
+allocating integrity information for the bio before submitting it?  And
+because it doesn't, iomap_finish_ioend won't do the read verification?
+So the block layer does it for us, and that's why we don't use the ioend
+chaining?  And (I guess) the future userspace interface won't have any
+means to get at the integrity data?
 
-> +	 *
-> +	 * xfs_free_file_space() punches the aligned interior offset_ru -> end_rd
-> +	 * to holes and byte-zeroes the in-range parts of the partial edge blocks,
+If the answers to all four questions is "yes" then I've understood this
+fix well enough to declare
 
-xfs_free_file_space rounds inward to allocation unit granularity and
-punches out that range; and then it writes zeroes to non-hole space
-that doesn't get unmapped.
+Cc: <stable@vger.kernel.org> # v7.1
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-> +	 * offset -> offset_ru and end_rd -> end.  xfs_zero_range() only touches
-> +	 * already-written blocks here; it skips holes and unwritten extents, so
-> +	 * unallocated/unwritten edge blocks are left for the allocation below.
-> +	 */
-> +	error = xfs_free_file_space(ip, offset, len, ac);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Publish the new size while the punched range is still a hole, then
-> +	 * fill it with written zeroes.  Like the other fallocate modes we use
-> +	 * xfs_falloc_setsize(), but it must run *before* we convert the range
-> +	 * to written extents: xfs_setattr_size() zeroes [old EOF, new size) via
-> +	 * xfs_zero_range(), which skips holes, so there is nothing to re-zero.
-> +	 * It will also writeback partial EOF block before the on-disk size is
-> +	 * logged.
-> +	 * Note: extending the size before allocating means a failure below
-> +	 * leaves the file larger with unallocated holes in the new range.
-> +	 * That is safe as holes within i_size read back as zeroes and expose
-> +	 * no stale data while the error is propagated to the caller.
-> +	 */
-> +	error = xfs_falloc_setsize(file, new_size);
-> +	if (error)
-> +		return error;
-
-Hrm ok so now that we've punched out some blocks and zeroed the rest,
-now we adjust the file size, which should only entail committing the new
-file size to disk...
-
-> +
-> +	/*
-> +	 * Allocate written, zeroed extents across the range.  xfs_alloc_file_space()
-> +	 * rounds outward to block granularity:
-> +	 *  - holes (the punched interior and any unallocated edge block) are
-> +	 *    allocated and zeroed;
-> +	 *  - unwritten extents (including unwritten edge blocks) are converted to
-> +	 *    written and zeroed;
-> +	 *  - Already written edge blocks are skipped. The out-of-range bytes of
-> +	 *    a written edge block keep their data (offset_rd -> offset and
-> +	 *    end -> end_rd); their in-range bytes (offset -> offset_ru and
-> +	 *    end_ru -> end were already zeroed by xfs_free_file_space().
-> +	 */
-> +	return xfs_alloc_file_space(ip, offset, len,
-> +			XFS_ALLOC_FILE_SPACE_WRITE_ZEROES);
-
-...and now we can just do an accelerated "write zeroes to disk" which is
-conveniently always within EOF now.  I /think/ this looks ok to me now,
-though I'm curious how extensively the new fallocate mode has been
-tested with fsx and unaligned file ranges?  And rt volumes with rt
-extent size > 1 fsblock.
 
 --D
 
-> +}
+>  	submit_bio(bio);
+>  }
+> +EXPORT_SYMBOL_GPL(iomap_bio_submit_read_endio);
 > +
->  /*
->   * Punch a hole and prealloc the range.  We use a hole punch rather than
->   * unwritten extent conversion for two reasons:
-> @@ -1473,7 +1546,7 @@ xfs_falloc_allocate_range(
->  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
->  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
->  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
-> -		 FALLOC_FL_UNSHARE_RANGE)
-> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+> +static void iomap_bio_submit_read(const struct iomap_iter *iter,
+> +		struct iomap_read_folio_ctx *ctx)
+> +{
+> +	return iomap_bio_submit_read_endio(iter, ctx, iomap_read_end_io);
+> +}
 >  
->  STATIC long
->  __xfs_file_fallocate(
-> @@ -1525,6 +1598,9 @@ __xfs_file_fallocate(
->  	case FALLOC_FL_ALLOCATE_RANGE:
->  		error = xfs_falloc_allocate_range(file, mode, offset, len);
->  		break;
-> +	case FALLOC_FL_WRITE_ZEROES:
-> +		error = xfs_falloc_write_zeroes(file, mode, offset, len, ac);
-> +		break;
->  	default:
->  		error = -EOPNOTSUPP;
->  		break;
+>  static struct bio_set *iomap_read_bio_set(struct iomap_read_folio_ctx *ctx)
+>  {
+> @@ -127,7 +135,6 @@ static void iomap_read_alloc_bio(const struct iomap_iter *iter,
+>  	if (ctx->rac)
+>  		bio->bi_opf |= REQ_RAHEAD;
+>  	bio->bi_iter.bi_sector = iomap_sector(iomap, iter->pos);
+> -	bio->bi_end_io = iomap_read_end_io;
+>  	bio_add_folio_nofail(bio, folio, plen,
+>  			offset_in_folio(folio, iter->pos));
+>  	ctx->read_ctx = bio;
+> diff --git a/fs/ntfs/aops.c b/fs/ntfs/aops.c
+> index 1fbf832ad165..f2bb56506046 100644
+> --- a/fs/ntfs/aops.c
+> +++ b/fs/ntfs/aops.c
+> @@ -38,11 +38,9 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
+>  }
+>  
+>  static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
+> -	struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx)
+>  {
+> -	struct bio *bio = ctx->read_ctx;
+> -	bio->bi_end_io = ntfs_iomap_read_end_io;
+> -	submit_bio(bio);
+> +	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
+>  }
+>  
+>  static const struct iomap_read_ops ntfs_iomap_bio_read_ops = {
+> diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
+> index 42af1abe17f8..f9600aba1548 100644
+> --- a/fs/ntfs3/inode.c
+> +++ b/fs/ntfs3/inode.c
+> @@ -609,10 +609,7 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
+>  static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
+>  		struct iomap_read_folio_ctx *ctx)
+>  {
+> -	struct bio *bio = ctx->read_ctx;
+> -
+> -	bio->bi_end_io = ntfs_iomap_read_end_io;
+> -	submit_bio(bio);
+> +	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
+>  }
+>  
+>  static const struct iomap_read_ops ntfs_iomap_bio_read_ops = {
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 2a0c54256e93..51293b6f331f 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -764,8 +764,7 @@ xfs_bio_submit_read(
+>  
+>  	/* defer read completions to the ioend workqueue */
+>  	iomap_init_ioend(iter->inode, bio, ctx->read_ctx_file_offset, 0);
+> -	bio->bi_end_io = xfs_end_bio;
+> -	submit_bio(bio);
+> +	iomap_bio_submit_read_endio(iter, ctx, xfs_end_bio);
+>  }
+>  
+>  static const struct iomap_read_ops xfs_iomap_read_ops = {
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 3582ed1fe236..56b43d594e6e 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -622,6 +622,8 @@ extern struct bio_set iomap_ioend_bioset;
+>  #ifdef CONFIG_BLOCK
+>  int iomap_bio_read_folio_range(const struct iomap_iter *iter,
+>  		struct iomap_read_folio_ctx *ctx, size_t plen);
+> +void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
+> +		struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io);
+>  
+>  extern const struct iomap_read_ops iomap_bio_read_ops;
+>  
 > -- 
-> 2.51.2
+> 2.53.0
 > 
 > 
