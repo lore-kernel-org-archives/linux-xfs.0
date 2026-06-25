@@ -1,121 +1,77 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09563749F4
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 05:45:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 956613C4547;
+	Thu, 25 Jun 2026 07:38:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782366323; cv=none; b=QM0WwYQ6XBK5n+2NpgwsyUgX901TA+9OK66R32X8vuvc56CUsu03A4o9fNtC/sXrPahR/Wrmv4U/r7mR22reMH9FBj8I8/3uymvX2UEyGEmNyWAZd0StyDBb4+gtVevzwQKxRZ30SzHvCuHLTbozG6j3LBhkzc8+fRPVouoFY6w=
+	t=1782373138; cv=none; b=O5dzzGLWFCZ5jH4fRisN2POPLGd5KeoOa//Epk2r0xFYPeWxKfa/Z5d0P2DmBsGqWtP+ytoP4ut4G1CHVreHGn5JJ7NKvJDx/RVIRi3WEjaJ9N7K3RCz8ZwEb8RmEUaAddyuYEsdB3TDogp8VM6L7sr44Ikpin8jwwiog3Df4dA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782366323; c=relaxed/simple;
-	bh=eQm0rxRIgr6SZTWcotY6PXu3CmHeTJOkNaabkQU4FOs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WXmv4jxuCXstEVOBSRevutHHcMWcLbJeIOmm1wPSGk716c26xIeQCeYDgNGluaHbwZfYE2rJpUrh0pyWQGecaNjgaaDbvCIOKAIUMEwf9fZ2XGprkkEkaaIee/A4jCheGnNTvR9R0DPRBZ9QqeHdFmuchgOeJ8M8IijTgThT72g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 0561a686705911f1aa26b74ffac11d73-20260625
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
-	HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
-	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT
-	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_LOWREP
-	SRC_LOWREP, DN_TRUSTED, SRC_TRUSTED, SA_TRUSTED, SA_EXISTED
-	SN_UNTRUSTED, SN_LOWREP, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:00bac64b-d222-436e-be9a-5ba32f70211b,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.12,REQID:00bac64b-d222-436e-be9a-5ba32f70211b,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:e7bac3a,CLOUDID:dc6acf703d7f20d9326019c239d74ddd,BulkI
-	D:260625113955LUS1109K,BulkQuantity:1,Recheck:0,SF:17|19|66|78|102|127|136
-	|850|865|898,TC:nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk
-	:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,B
-	RE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 0561a686705911f1aa26b74ffac11d73-20260625
-X-User: liuhuan01@kylinos.cn
-Received: from localhost.localdomain [(123.149.0.228)] by mailgw.kylinos.cn
-	(envelope-from <liuhuan01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1129800991; Thu, 25 Jun 2026 13:45:06 +0800
-From: liuh <liuhuan01@kylinos.cn>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	liuh <liuhuan01@kylinos.cn>
-Subject: [PATCH v2] mkfs: simplify setup_proto file status checks
-Date: Thu, 25 Jun 2026 13:44:46 +0800
-Message-ID: <20260625054445.28751-2-liuhuan01@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1782373138; c=relaxed/simple;
+	bh=8nL97t/5OjmQXRAmFvJSs9g5VJVz1seCf5+vq3ov3qs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Ih7fAVvyanPQMpa9QEiBTz00IBFvvz6jdAWpoz6Zn08Qi0xGkIxZlga1zzdEcjFwa44z0PV9Hz4htJFGdE4lJ7asfSAYymD9nMH8ggeabJksphq2xCBXmXoYePZ+n1Y6GO66LRKK+FNDXp5KBa3KrqjKaXmJEUFS9RHAajhfrFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXNYKfx5; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXNYKfx5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3F171F000E9;
+	Thu, 25 Jun 2026 07:38:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782373135;
+	bh=s/yctM5cvNxDIzVGX4IzplMohkr8CH4gDLWqSKtdBU0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=fXNYKfx5l7NGvlubEIrVwS/lhY0yN7/oPPUIaCEf+jCy72eWTWPpVsyQW1r4V8wLD
+	 7jgotJJ82kiL1V7J8nnPVAIpr0GYZoQntSRihAqFnX5/2UPCl9V9vAzZsisKDfA50i
+	 Fr86szoAr2GDQukRcdsaGh2FR/dRsp8cQm/VllrchXEC8ohzvlkUO96MxpKp5Nwaxp
+	 f3RL0mT7YGF9zSnl7evrLBaNupwtjDI8h/XF5PRB4FZvtUvSDMwVXWpXNzwLgSdR9s
+	 w5t39IHdeHmzDCvDlQkSpNVGFK9QUEjdY8AR0LVd+zxj9s5seYbGGvBKw8TfKZo8D4
+	 B+YHoBUbSJhgQ==
+From: Christian Brauner <brauner@kernel.org>
+To: hch@infradead.org, Morduan Zang <zhangdandan@uniontech.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ djwong@kernel.org, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <9E38E2659B47DC2A+20260624062622.337469-1-zhangdandan@uniontech.com>
+References: <9E38E2659B47DC2A+20260624062622.337469-1-zhangdandan@uniontech.com>
+Subject: Re: [PATCH v2] iomap: guard io_size EOF trim against concurrent
+ truncate underflow
+Message-Id: <20260625-depression-mittragen-zielt-985cc0586b5b@brauner>
+Date: Thu, 25 Jun 2026 09:38:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16-dev-d9d01
+X-Developer-Signature: v=1; a=openpgp-sha256; l=922; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=8nL97t/5OjmQXRAmFvJSs9g5VJVz1seCf5+vq3ov3qs=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWTZ3ObN3TDryzWBM0UbrEL79X+XWflHpNff+L4rjOXQ5
+ 3lm87hSOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZi8J2RYUMP1/Vu/oxFUtcv
+ i+1q/L1z3t2yrRemSHltbWG69TsjcwXDP6vCSasuuSyrC5u7U+xDdzvDjQov88bvgjMP2uhWb2M
+ t5QAA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-setup_proto() calls filesize() before validating the source type with
-fstat(), even though both operations ultimately require the same file
-status information.
+On Wed, 24 Jun 2026 14:26:22 +0800, Morduan Zang wrote:
+> iomap: guard io_size EOF trim against concurrent truncate underflow
 
-Perform a single fstat() immediately after opening the source path and
-reuse the resulting metadata for both source type validation and file
-size retrieval. This simplifies the setup logic and eliminates a
-redundant metadata lookup.
+Applied to the vfs-7.3.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs-7.3.iomap branch should appear in linux-next soon.
 
-Signed-off-by: liuh <liuhuan01@kylinos.cn>
----
- mkfs/proto.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index a460aebd..72fefb6e 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -82,14 +82,17 @@ setup_proto(
- 		return result;
- 	}
- 
--	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-+	if ((fd = open(fname, O_RDONLY|O_NONBLOCK|O_CLOEXEC)) < 0) {
- 		fprintf(stderr, _("%s: failed to open %s: %s\n"),
- 			progname, fname, strerror(errno));
- 		goto out_fail;
- 	}
- 
--	if (fstat(fd, &statbuf) < 0)
--		fail(_("invalid or unreadable source path"), errno);
-+	if (fstat(fd, &statbuf) < 0) {
-+		fprintf(stderr, _("%s: failed to fstat %s: %s\n"),
-+			progname, fname, strerror(errno));
-+		goto out_fail;
-+	}
- 
- 	/*
- 	 * Handle directory inputs.
-@@ -101,6 +104,14 @@ setup_proto(
- 		return result;
- 	}
- 
-+	if (!S_ISREG(statbuf.st_mode)) {
-+		fprintf(stderr, _("%s: %s not a regular file\n"),
-+			progname, fname);
-+		goto out_fail;
-+	}
-+
-+	size = statbuf.st_size;
-+
- 	/*
- 	 * Else this is a protofile, let's handle traditionally.
- 	 */
--- 
-2.43.0
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-7.3.iomap
+
+[1/1] iomap: guard io_size EOF trim against concurrent truncate underflow
+      https://git.kernel.org/vfs/vfs/c/d5c89a26c8f3
 
