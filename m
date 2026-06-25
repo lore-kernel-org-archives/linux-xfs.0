@@ -1,99 +1,121 @@
-Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E2E20E702;
-	Thu, 25 Jun 2026 03:37:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09563749F4
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 05:45:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782358633; cv=none; b=iRw72ikHERfRKIBNnSAAxldPJnj7AzEo8bNakMxm9ELgqmbMpgkd0hOTMbcrv+ppZcoxXgJczev3o3H6JacoEcPdc2JrDuLk0Sqi2z1Xsobv0yu5kpH6dIupkBLrkk2O7j00v5Clb8cy4bA/MYjtuu2jIqguaiv1BshTOoNP5gE=
+	t=1782366323; cv=none; b=QM0WwYQ6XBK5n+2NpgwsyUgX901TA+9OK66R32X8vuvc56CUsu03A4o9fNtC/sXrPahR/Wrmv4U/r7mR22reMH9FBj8I8/3uymvX2UEyGEmNyWAZd0StyDBb4+gtVevzwQKxRZ30SzHvCuHLTbozG6j3LBhkzc8+fRPVouoFY6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782358633; c=relaxed/simple;
-	bh=04D1KDuaKBKsn+0wDWmt4G6BRiFLlHAoh32DWMX9hi4=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=KdQVQTUxbwIzS0fLSFmUiTHlXrBgxrykA5cX++Glhu//zCHZdRY6w8Qdl3Vbs1UHuPHIACvAM7cechNt17VYTrTL8rC98gqsI58JAdv+CkhMQLI5RGc9mMCRi6EGJ0wiJAP6DtPJVd9P9JguMCgVspk8IQWeebZNY+JuwmJuXJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=GnxmF/1e; arc=none smtp.client-ip=115.124.30.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="GnxmF/1e"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1782358627; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
-	bh=vJy2emAttYdxh6ktctykJOVSUN93KNEJT3ldcbOBvDA=;
-	b=GnxmF/1e/SSsJyR/3VHhornRSNMpSsY1lKtLT/znUKQg4WLbBbWDLti1rx+L7V69vW7w/SS6j04Dzs2P4PhD/f1HZO2qYUQglG2WviMoIdpJayZzdxPcJOzLmq1CF3aZpXPd1xgZNeV778iLMXzWsKmGCfxO3Xj87ZaJSXs/79M=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R631e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0X5a26FL_1782358625;
-Received: from 30.221.130.45(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0X5a26FL_1782358625 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Thu, 25 Jun 2026 11:37:06 +0800
-Message-ID: <b37bbe74-05d3-49f5-8168-620339b74bb8@linux.alibaba.com>
-Date: Thu, 25 Jun 2026 11:37:05 +0800
+	s=arc-20240116; t=1782366323; c=relaxed/simple;
+	bh=eQm0rxRIgr6SZTWcotY6PXu3CmHeTJOkNaabkQU4FOs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WXmv4jxuCXstEVOBSRevutHHcMWcLbJeIOmm1wPSGk716c26xIeQCeYDgNGluaHbwZfYE2rJpUrh0pyWQGecaNjgaaDbvCIOKAIUMEwf9fZ2XGprkkEkaaIee/A4jCheGnNTvR9R0DPRBZ9QqeHdFmuchgOeJ8M8IijTgThT72g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 0561a686705911f1aa26b74ffac11d73-20260625
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
+	HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
+	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT
+	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_UNTRUSTED, SRC_UNTRUSTED, IP_LOWREP
+	SRC_LOWREP, DN_TRUSTED, SRC_TRUSTED, SA_TRUSTED, SA_EXISTED
+	SN_UNTRUSTED, SN_LOWREP, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
+	DMARC_NOPASS, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
+	GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:00bac64b-d222-436e-be9a-5ba32f70211b,IP:10,
+	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:35
+X-CID-INFO: VERSION:1.3.12,REQID:00bac64b-d222-436e-be9a-5ba32f70211b,IP:10,UR
+	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:35
+X-CID-META: VersionHash:e7bac3a,CLOUDID:dc6acf703d7f20d9326019c239d74ddd,BulkI
+	D:260625113955LUS1109K,BulkQuantity:1,Recheck:0,SF:17|19|66|78|102|127|136
+	|850|865|898,TC:nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk
+	:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,B
+	RE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 0561a686705911f1aa26b74ffac11d73-20260625
+X-User: liuhuan01@kylinos.cn
+Received: from localhost.localdomain [(123.149.0.228)] by mailgw.kylinos.cn
+	(envelope-from <liuhuan01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1129800991; Thu, 25 Jun 2026 13:45:06 +0800
+From: liuh <liuhuan01@kylinos.cn>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	liuh <liuhuan01@kylinos.cn>
+Subject: [PATCH v2] mkfs: simplify setup_proto file status checks
+Date: Thu, 25 Jun 2026 13:44:46 +0800
+Message-ID: <20260625054445.28751-2-liuhuan01@kylinos.cn>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 0/3] iomap: convert to in-iter ->iomap_next() model
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-To: Joanne Koong <joannelkoong@gmail.com>, hch@lst.de, willy@infradead.org,
- djwong@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20260625024723.1611000-1-joannelkoong@gmail.com>
- <6446cb94-a005-4e4c-8034-d7bf2a4b402b@linux.alibaba.com>
-In-Reply-To: <6446cb94-a005-4e4c-8034-d7bf2a4b402b@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
+setup_proto() calls filesize() before validating the source type with
+fstat(), even though both operations ultimately require the same file
+status information.
 
+Perform a single fstat() immediately after opening the source path and
+reuse the resulting metadata for both source type validation and file
+size retrieval. This simplifies the setup logic and eliminates a
+redundant metadata lookup.
 
-On 2026/6/25 11:25, Gao Xiang wrote:
-> 
-> 
-> On 2026/6/25 10:47, Joanne Koong wrote:
->> This is submitted to get some feedback on what converting to an in-iter
->> ->iomap_next() model would look like. It revives Matthew's previous RFC [1],
->> which had the same goal.
->>
->> The series merges ->iomap_begin()/->iomap_end() into a single ->iomap_next()
->> callback (patches 1-2) and shows an example of devirtualizing the callbacks on
->> a hot path so the indirect call through struct iomap_ops is avoided (patch 3).
->> This series is on top of vfs.all (commit e7a6d06e3c3e8).
->>
->> A few questions:
->> * is this roughly the in-iter direction you had in mind?
->> * is removing the indirect call still worth it? My understanding is that
->>    indirect calls are cheap on modern eIBRS hardware and the conversion adds
->>    some per-filesystem boilerplate, so I'm unsure if it carries its weight. If
->>    not, do you think the in-iter model is still worth having on its own?
-> 
-> 
-> As I mentioned a year ago, I really hope this way can be proceed
-> to avoid iomap iter-callback models:
-> 
-> https://lore.kernel.org/r/20250905152118.GE1587915@frogsfrogsfrogs
-> 
-> And in that way, iomap can be more flexible as a fs IO library.
+Signed-off-by: liuh <liuhuan01@kylinos.cn>
+---
+ mkfs/proto.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-IMHO, hhe main point is not to avoid the indirect call to make it
-noticeably faster or to avoid security issues due to
-Spectre/Meltdown/...
-
-It just gives more flexibility to specific filesystems to control
-the IO path better (since each filesystem might have its own
-slightly different IO flow), rather than adding various flags/code
-in the iomap core itself to fulfill the current callback model.
-
-Thanks,
-Gao Xiang
-
-> 
-> Thanks,
-> Gao Xiang
-> 
->>
->> Thanks,
->> Joanne
->>
->> [1] https://lore.kernel.org/linux-fsdevel/20200728173216.7184-1-willy@infradead.org/T/#u
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index a460aebd..72fefb6e 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -82,14 +82,17 @@ setup_proto(
+ 		return result;
+ 	}
+ 
+-	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
++	if ((fd = open(fname, O_RDONLY|O_NONBLOCK|O_CLOEXEC)) < 0) {
+ 		fprintf(stderr, _("%s: failed to open %s: %s\n"),
+ 			progname, fname, strerror(errno));
+ 		goto out_fail;
+ 	}
+ 
+-	if (fstat(fd, &statbuf) < 0)
+-		fail(_("invalid or unreadable source path"), errno);
++	if (fstat(fd, &statbuf) < 0) {
++		fprintf(stderr, _("%s: failed to fstat %s: %s\n"),
++			progname, fname, strerror(errno));
++		goto out_fail;
++	}
+ 
+ 	/*
+ 	 * Handle directory inputs.
+@@ -101,6 +104,14 @@ setup_proto(
+ 		return result;
+ 	}
+ 
++	if (!S_ISREG(statbuf.st_mode)) {
++		fprintf(stderr, _("%s: %s not a regular file\n"),
++			progname, fname);
++		goto out_fail;
++	}
++
++	size = statbuf.st_size;
++
+ 	/*
+ 	 * Else this is a protofile, let's handle traditionally.
+ 	 */
+-- 
+2.43.0
 
