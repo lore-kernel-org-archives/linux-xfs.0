@@ -1,30 +1,32 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DF7283FFB;
-	Thu, 25 Jun 2026 13:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2298B2DF6E6;
+	Thu, 25 Jun 2026 13:09:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782392620; cv=none; b=KidXp2zqbI4gqSQu8/UTSldtcsHmes1CritFb2wzUj9RpDjNOnIe2ywxAv/+mWku8toNYykynO9K+YqL5lUPyBDALLaRmUGX4x+25RlvZuchPEFp6uBt1xS1ojPEKa5CeYJOn0LTMX/s/n0C9X+zB9mPoq/rOAKTvRLfN8bzSs0=
+	t=1782392992; cv=none; b=JMHhWFnX8cz1U9X89yw+f6C0TII4NJYr2Yzzb0FXnNZQP0dDScG3IAaWLFg1ab+ukUPHnj+uLy1z4v+OUOpo+B4873Qk2Qlehs+DjdAqIzdNyH5OdACssmKu/IagUuurKe4Qe9Mg0YvB4c8RjmtOYZ6+YJTmAHAv6I1/lhrTr7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782392620; c=relaxed/simple;
-	bh=XoVVAF/QR0fNRc8rAp3TxbaqOXY7dRbfus88K+EQKPw=;
+	s=arc-20240116; t=1782392992; c=relaxed/simple;
+	bh=+7DpwbI7bR6lFXl72qYQyngKBUMGJpeYF+kWWqUlNL0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mRJ4hXzV3zPYvEYQyWQt8ACASYAoi1s2CylKBER7a8nN+05VjJ1EGEy8Sjq17yeEhpIRR9q8M8Rq++zhTcZYXC8N286fw0tZnDoWv6k3eA9MFI2CQ5r1dppOnXjMM8OCKL1aJ2O+6YWvE2wf9yl2KIiNdjVo0/Q59KS5pBKYqPQ=
+	 Content-Type:Content-Disposition:In-Reply-To; b=Mztai79LcofIGbKaoqdalXvGxqwh0rEv8RdY6A5Jz6bHxUOZmwhHgjKeFdPx0z0cxtK3VswtciYTwbx3ug1iFOmraRo3BWRkFP5wiPbnX4TF2UXLUC6PzPYcUQ9l463Y0256PdpJHzcNh0CvhxlZ76nLyqtlwc1JIqtpV17pkQc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7C36268B05; Thu, 25 Jun 2026 15:03:36 +0200 (CEST)
-Date: Thu, 25 Jun 2026 15:03:36 +0200
+	id 9C75E68B05; Thu, 25 Jun 2026 15:09:46 +0200 (CEST)
+Date: Thu, 25 Jun 2026 15:09:46 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: hch@lst.de, willy@infradead.org, djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH v1 0/3] iomap: convert to in-iter ->iomap_next()
- model
-Message-ID: <20260625130336.GD22620@lst.de>
-References: <20260625024723.1611000-1-joannelkoong@gmail.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Filip Blagojevic <filip.blagojevic@wdc.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: update BDI {io,ra}_pages values based on the RT device limits
+Message-ID: <20260625130946.GA23875@lst.de>
+References: <20260623142109.1838702-1-hch@lst.de> <rbrncqfmzbnj5o2yvieqtpl3dkb4qzafsai3sarmbta4fsqc6f@yruai3zv5llu> <20260624134950.GA6471@lst.de> <ecyxpdw5jcqiw5lq26pi4af76tygoiqshj23hp7jkguvbn6o3z@bd3hnhglc4bo>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,22 +35,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260625024723.1611000-1-joannelkoong@gmail.com>
+In-Reply-To: <ecyxpdw5jcqiw5lq26pi4af76tygoiqshj23hp7jkguvbn6o3z@bd3hnhglc4bo>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jun 24, 2026 at 07:47:20PM -0700, Joanne Koong wrote:
-> A few questions:
-> * is this roughly the in-iter direction you had in mind?
+On Thu, Jun 25, 2026 at 01:12:05PM +0200, Jan Kara wrote:
+> Hum, right. XFS users are used to tweak
+> /sys/block/<dev>/queue/read_ahead_kb
+> which would stop influencing anything. I guess that could indeed break some
+> people's expectations.
 
-I like it.
+Yeah.
 
-> * is removing the indirect call still worth it? My understanding is that
->   indirect calls are cheap on modern eIBRS hardware and the conversion adds
->   some per-filesystem boilerplate, so I'm unsure if it carries its weight. If
->   not, do you think the in-iter model is still worth having on its own?
+> One more idea: We already cache bdi's ra_pages in struct file_ra_state on
+> file open. It wouldn't be that hard to allow filesystem to override the
+> values in its open method (currently it isn't possible only because
+> file_ra_state_init() is called after ->open). For io_pages we currently
+> always go to the bdi so we'd have to add it to struct file_ra_state.
 
-Indirect calls have always been relatively slow, even without spectre.
-So if we can easily avoid them that's always a win.  That doesn't mean we
-should do stupid things just to avoid them, but I think we have a win/win
-here.
+It has to be called after ->open because ->open can change
+file->f_mapping.  Now we could require any instance changing it to also
+call file_ra_state_init, but I think bloating every struct file with a
+new field might not win a lot of friends.  OTOH having a local copy
+of ra_pages but not io_pages is really weird.  But so is this whole
+cascading set of indirections for the readahead parameters.
 
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+---end quoted text---
