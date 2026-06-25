@@ -1,72 +1,75 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75AAC329E46;
-	Thu, 25 Jun 2026 12:12:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C373E009F;
+	Thu, 25 Jun 2026 12:12:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782389521; cv=none; b=EQu8LeGmbkYCxQx9NkKechh1zb1tcnDqw7coRbzgGvVg1DJnQmMKoyJlcduypTgBnbDjDJqE/4k+wyKnl0JfQ8DGD+aqwmspJbHinCPuJdn0jG0V3u59GPG66pNv+Ar4AUa5NgZwtBMQ21WDOC5MKM/tGMoJzEt0/PYZSMIt2mY=
+	t=1782389561; cv=none; b=E2DvzvIEpRiFUUkR3J/B4rbeNumagkp1R/nM93d1ivX00i358cK9MMsufGsMm6oCAuZ01wMd1NNCkVOO5Qzjl1WL2Q/h5S3WwAhXjhJ4uB+TL3uDwD2IWCN4M0hMUDiZpAIH73qzjIdtXK/jHYd+F4kN07EE+823We70yyopnp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782389521; c=relaxed/simple;
-	bh=KlmQV4tEVDrxf8sVOorcuSyS1DcYFMKjw0saPFmmK+w=;
+	s=arc-20240116; t=1782389561; c=relaxed/simple;
+	bh=uFEp+qIlUPtG9+DByvkEOZubewNDhx7zt0VqPDAv8gY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fwVPlKrvxVrCyd2EQB591VbfruBhy8Zoz8YSD9UDM/oucOutFKiOg8+S3ax0XP33C+QG+EdeGm10kcHUAjpUzHsL+iMTSxff7G0rVp6b+Ax9/CHbcm3KewaJjuXjHokLGdIkgcWvTCB91iZQ5N2lJKhHCU5/cVDF4mxrVGvez+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CRXNOXrV; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=kgl10Pg6XKX+Vyu8d0BKMWwHBpMcKJtprV1hXNKfDN7FXxVdvppQLsbLweQOR+vkm4vFg6WGuoa97GOyR6OnEgJut7BJRrq/81PcF2XTwufdrwSWqmPFETqIG9fYU8o119TZ8wgpqV0MMEHaUh45mV3OXzCxz6SYS5rVxQTGKS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1CyM3fA6; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CRXNOXrV"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1CyM3fA6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=HliYnva+5KN1E+V4bq3PVoEHb8bbV3JhWLB6Y70JEp4=; b=CRXNOXrV9IbbHk009wQGE7S2Zc
-	63ozwRQpJek7txIp03qIs+/lptFXVmZRQV+QouHmJ/QXoL9wBwN7XjpcHbbtemwqtWlbn8B6K1bBx
-	r1gUNMTrfaVAHMesutX96zlS2RsIJ5PLfE4Rvx3FAR0d655ALcZHKku8mc3zbNNmaTKpbwXakTdg1
-	nBHOwBaggaeQzwtuyTwr5czwLSjbtI111M6oEpJYxH+YjgmDsTS8cazxmXRwkoeIPGsUgX0qr+mjf
-	BEk8QDwwtmIxEs6/ai3Lkzl7M1H1pvXFe0N7EdsxAFbF6mVh14At8eLm+8PQsvE4bk+Au5pTMUzqv
-	2+2DySuA==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=svkW/aRLfGG744Tq4U8nr/u6yrPBiucq7dNM63t5Tmk=; b=1CyM3fA6L9AiK9520VvlMAjAbK
+	A/PE8z+2ZQH0STTPOdEyxUtRFKhnivNX5wlY84XZpsPLfRN8gl4oG1hVSGPuvwqlsRP/HBYQTITcU
+	ULykzx7o1/ORMS9SCKk3q90PaqBo48bS34jkiBiPEzsCZq7j+j5V7O6ah14/RZHT5GmMYDdw02qDp
+	6Y+5KrtlMDLkY47GM8zHIWFrS1XnVfse5sSZfhkbUkaSRNk7mL5mH65XMBOKx8cl7Ry054mO652UC
+	NW5Cfjir8XoHouknc86pHuU4wF32wpScpRQcURk9950tXXZ96/KjiTRkYhQtPNacg/qvXYRQcfKIs
+	jtKQmwbA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wciw2-00000009AIS-2CXF;
-	Thu, 25 Jun 2026 12:11:58 +0000
-Date: Thu, 25 Jun 2026 05:11:58 -0700
+	id 1wciwg-00000009AMQ-2E9H;
+	Thu, 25 Jun 2026 12:12:38 +0000
+Date: Thu, 25 Jun 2026 05:12:38 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Salvatore Dipietro <dipiets@amazon.it>
-Cc: hch@infradead.org, ritesh.list@gmail.com, abuehaze@amazon.com,
-	akpm@linux-foundation.org, alisaidi@amazon.com, blakgeof@amazon.com,
-	brauner@kernel.org, david@kernel.org, dipietro.salvatore@gmail.com,
-	djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-xfs@vger.kernel.org, ljs@kernel.org, mhocko@suse.com,
-	rppt@kernel.org, stable@vger.kernel.org, vbabka@kernel.org,
-	vbabka@suse.com, willy@infradead.org
-Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order
- allocation
-Message-ID: <aj0bDijqj1-Bjxq1@infradead.org>
-References: <ajvc7fSDngyx0X5j@infradead.org>
- <20260625091039.24501-1-dipiets@amazon.it>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>,
+	Christoph Hellwig <hch@infradead.org>,
+	Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org,
+	bfoster@redhat.com, lukas@herbolt.com,
+	"Darrick J . Wong" <djwong@kernel.org>, dgc@kernel.org,
+	gost.dev@samsung.com, andres@anarazel.de, kundan.kumar@samsung.com,
+	cem@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
+Message-ID: <aj0bNstaTvy3HOkh@infradead.org>
+References: <20260611114029.176200-4-p.raghav@samsung.com>
+ <ajFQPANpajmFuKpi@infradead.org>
+ <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
+ <557b2e5c-7c65-48de-87a9-6fba21eca99f@huaweicloud.com>
+ <0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260625091039.24501-1-dipiets@amazon.it>
+In-Reply-To: <0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jun 25, 2026 at 09:10:37AM +0000, Salvatore Dipietro wrote:
-> Yes — all the patches in the result table are shared within this thread:
+On Thu, Jun 25, 2026 at 07:16:47PM +0800, Zhang Yi wrote:
+> I've thought about this more and feel that we need to add one more
+> scenario here:
 > 
-> v1 (original, iomap caller): The original PATCH 1/1 in this series
-> Ritesh's suggestion (mm/filemap.c): Shared in Ritesh's reply on May 3rd [1]
-> Matthew's suggestion (mm/filemap.c): Shared in Matthew's reply on April 4th [2]
-> kcompactd background (mm/page_alloc.c): Shared in my reply on May 6th [3]
+> 3) If the blocks at the boundaries are in dirty unwritten or in delay
+>    allocated state, it should be handled the same way as scenario 2.
+>    Additionally, before returning, we need to flush these two boundary
+>    blocks that have been partially zeroed, to ensure that after
+>    FALLOC_FL_WRITE_ZEROES, all ranges are in the written state.
+> 
+> What do you think?
 
-The page_alloc.c change definitively seems like the right thing to do from
-the high-level POV.  It would also be nice to find a way to centralize
-the logic for which flags to set in a central place as we have quite a
-few other places that want to allocate large folios optimistically.
+Yes.  Can you send an xfstest addition the exercises these corner
+cases?
 
