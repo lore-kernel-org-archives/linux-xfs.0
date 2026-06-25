@@ -1,153 +1,129 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1C3A3D7D87;
-	Thu, 25 Jun 2026 11:16:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902BC3DD501
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 11:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782386220; cv=none; b=mQ5UNTcBRsv71teMyEiPs9Imy6yT8MyyFRXBqedg8pkrYX/AcYUHSJVbiRy7/q/J7kATCzr4/qb9R2Xd2zfhyQhq1KlTj754zYVX4CGarmiEhDFS4UK6E/isSOgspp7fqnpMdjuJSxYUah9akB3rNtexsUojw7+1xdJUi1T4RCg=
+	t=1782387975; cv=none; b=NOt1NXSAbaxmSJnc+9D76A3BwfYLyoHXehk9hJcNWl698SrKkVM2gFbeOnKz75QXqoW5G9GjVV4lCwPz1dPU+GCFmFyItskqJzTwmzpA8p8HI/FPd0YWban3Imb6R5sm56rX4rlwO/TxRoO1svzIQ3ZUGHluUk46i4Xf8vTcTJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782386220; c=relaxed/simple;
-	bh=VakRpFkP0PJup2XvzcZ8023FTsjQhHoGF3vq6iI8rCA=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=MK1yEIBOl8w3VUD+ots4o1V4btO+EZY+ipS9MtPwJZJ0pT/6w5BJu9Ci9QVRwn7+GE14UFQGk1/XZnZtcKdensGomWnrvIVuKgE7YC/k4VrgcsbOBbtQs4o+ATftgqPoWXw1SEVfq+ondnxIIlbP2X65oa+EqZXAPFHlaBknCvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gmGSh4q0nzKHMX7;
-	Thu, 25 Jun 2026 19:15:48 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id D73B440561;
-	Thu, 25 Jun 2026 19:16:49 +0800 (CST)
-Received: from [10.174.178.253] (unknown [10.174.178.253])
-	by APP1 (Coremail) with SMTP id cCh0CgAnKT4fDj1q+9s4DA--.32975S3;
-	Thu, 25 Jun 2026 19:16:49 +0800 (CST)
-Message-ID: <0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com>
-Date: Thu, 25 Jun 2026 19:16:47 +0800
+	s=arc-20240116; t=1782387975; c=relaxed/simple;
+	bh=MQfBxYYlIx1bVFVU95wv5oj5U1wvVWpB4bFFOArJDyw=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=iI06mzxvdihHX5p0aK4NNLRkRjcu7/R6hIjTxnTeb683U3yvwyAdGziWRgv1AENiYqMFZRdBHWvd1z6FGMrifCi/AYggioQmA57tHZ9n87FG58ZAnC4B98OCcjXk7s9is0mXK/9Le1OnEgyfoqHH8j5BhmOrNRayFrg70p/hgck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=pankajraghav.com; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gmH7Z5nHvz9tgY;
+	Thu, 25 Jun 2026 13:46:02 +0200 (CEST)
+From: Pankaj Raghav <p.raghav@samsung.com>
+To: linux-xfs@vger.kernel.org
+Cc: bfoster@redhat.com,
+	lukas@herbolt.com,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	p.raghav@samsung.com,
+	dgc@kernel.org,
+	gost.dev@samsung.com,
+	Zhang Yi <yi.zhang@huaweicloud.com>,
+	pankaj.raghav@linux.dev,
+	andres@anarazel.de,
+	kundan.kumar@samsung.com,
+	hch@lst.de,
+	cem@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v8 0/2] add FALLOC_FL_WRITE_ZEROES support to xfs
+Date: Thu, 25 Jun 2026 13:45:48 +0200
+Message-ID: <20260625114550.4109104-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 3/3] xfs: add support for FALLOC_FL_WRITE_ZEROES
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: "Pankaj Raghav (Samsung)" <pankaj.raghav@linux.dev>,
- Christoph Hellwig <hch@infradead.org>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, linux-xfs@vger.kernel.org,
- bfoster@redhat.com, lukas@herbolt.com, "Darrick J . Wong"
- <djwong@kernel.org>, dgc@kernel.org, gost.dev@samsung.com,
- andres@anarazel.de, kundan.kumar@samsung.com, cem@kernel.org,
- linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
-References: <20260611114029.176200-4-p.raghav@samsung.com>
- <ajFQPANpajmFuKpi@infradead.org>
- <kn5dyqdxmsydibpfcurgpom5vwqtwinrz27oenh4pekks6ybdj@wyi4zkh7mogy>
- <557b2e5c-7c65-48de-87a9-6fba21eca99f@huaweicloud.com>
-Content-Language: en-US
-In-Reply-To: <557b2e5c-7c65-48de-87a9-6fba21eca99f@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAnKT4fDj1q+9s4DA--.32975S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFy5Aw17Kr1fZFW7Ar18Xwb_yoW5GrW5pr
-	ZxWFnayFZFgryUWr1Ivw1DXwn293ykJF17u398W348ZrZ0yF17G3ZF9rW0grWDur1kAF10
-	qF45Ka4xWFy7ZrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
-	v3UUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 6/18/2026 11:22 AM, Zhang Yi wrote:
-> On 6/17/2026 5:44 PM, Pankaj Raghav (Samsung) wrote:
->> On Tue, Jun 16, 2026 at 06:31:40AM -0700, Christoph Hellwig wrote:
->>> [API questions for Zhang and -fsdevel/ -api below)
->>>
->>>> +	unsigned int		blksize = i_blocksize(inode);
->>>> +	loff_t			offset_aligned = round_down(offset, blksize);
->>>
->>> I think this actually needs to found up instead of rounding down.
->>>
->>>> +	/*
->>>> +	 * Zero the tail of the old EOF block and any space up to the new
->>>> +	 * offset.
->>>> +	 * In the usual truncate path, xfs_falloc_setsize takes care of
->>>> +	 * zeroing those blocks.
->>>> +	 */
->>>> +	if (offset_aligned > old_size) {
->>>> +		trace_xfs_zero_eof(ip, old_size, offset_aligned - old_size);
->>>> +		error = xfs_zero_range(ip, old_size, offset_aligned - old_size,
->>>> +				NULL, &did_zero);
->>>> +		if (error)
->>>> +			return error;
->>>> +	}
->>>
->>> ... then this will properly zero from the old i_size to the first block
->>> boundary after the old size.
->>
->> Hmm, right now we do this:
->>
->> |----------|----------|----------|
->>     ^      ^     ^    ^
->>     |      |     |    |
->>  old_size  |   offset |
->>            |          |
->> 	off_rd       off_ru
->>
->> At the moment, we zero out old_size to off_rd and pass offset to
->> xfs_alloc_file_space. xfs_alloc_file_space rounds down the offset to off_rd.
->>
->> What you are proposing is to zero out old_size to off_ru, and pass
->> off_ru to xfs_alloc_file_space. I don't exactly understand the
->> difference.
-> 
-> IMO, FALLOC_FL_WRITE_ZEROES should handle the unaligned cases, if the
-> 'offset' and 'end' are not block-size aligned, then:
-> 
-> 1) if the two blocks straddling the boundaries have not yet been allocated,
->    or allocated as unwritten, we should round outward the allocation range
->    and zero out all allocated blocks, including those two boundary blocks.
-> 2) if the blocks at the boundaries are already in the written state — which
->    can occur when we call FALLOC_FL_WRITE_ZEROES within the file size. We
->    should be careful here: we should only zero the ranges [offset, offset_ru)
->    and [end_rd, end) for the boundary blocks, leaving the already-written
->    portions of the boundary blocks intact.
-> 
-I've thought about this more and feel that we need to add one more
-scenario here:
+The benefits of FALLOC_FL_WRITE_ZEROES was already discussed as a part
+of Zhang Yi's initial patches[1]. Postgres developer Andres also
+mentioned they would like to use this feature in Postgres [2].
 
-3) If the blocks at the boundaries are in dirty unwritten or in delay
-   allocated state, it should be handled the same way as scenario 2.
-   Additionally, before returning, we need to flush these two boundary
-   blocks that have been partially zeroed, to ensure that after
-   FALLOC_FL_WRITE_ZEROES, all ranges are in the written state.
+I tested the changes with fsstress and fsx based on the xfstests patch I
+sent recently to test this flag[4]. generic/363 helped me debug the
+crash I noticed when I did the initial implementation[3].
 
-What do you think?
+Dave initially suggested to create a common helper based on
+xfs_iomap_convert_unwritten() but as it can be seen in the previous
+version, a lot of the code had to be rewritten. The changes had more in
+common with xfs_alloc_file_space(). This version reuses
+xfs_alloc_file_space() for write zeroes.
 
-Best Regards,
-Yi.
+Thanks to Christoph for all the review comments and design suggestions
+that were made both offline and online for this series.
+
+Stress test generic/363 generic/127 xfs/131 are passing. I have started
+the full xfstest suite for this series.
+
+I will be sending a new generic test case for testing boundary block
+corner case handling.
+
+Changes since v7:
+- Pass offset and len to xfs_alloc_file_space (Based on Sashiko's feedback).
+- Add a lot of comments to prove correctness based on Zhang's feedback.
+- Add Darrick's comment about xfs_alloc_file_space description.
+
+Changes since v6:
+- Pass only offset that needs to be zeroed to alloc_file_space (Christoph).
+- Add RVB from Christoph.
+- Change the call order. Call xfs_falloc_setsize() and then call
+  xfs_alloc_file_space().
+- Remove the prep patch to allow xfs_set_filesize to take 64-bit len.
+
+Changes since v5:
+- Add a prep patch to allow xfs_set_filesize to take 64-bit len
+  (Sashiko)
+
+Changes since v4:
+- Introduce an enum for allocation mode in xfs_alloc_file_space (Christoph)
+- Use xfs_set_filesize instead of updating the on-disk size in the
+  function.
+
+Changes since v3:
+- Introduce xfs_bmap_alloc_or_convert_range() in xfs_iomap.c for easy
+  review experience (christoph)
+- Add extsz hint and rt support in xfs_bmap_alloc_or_convert_range()
+
+Changes since v2:
+- Add allow_write_zeroes to xfs_global so that we can enable this
+  feature independent of the HW underneath.
+
+Changes since v1 [5.1 5.2]:
+- Added a new function xfs_bmap_alloc_or_convert_range() based on Dave's
+  feedback.
+- Changed the xfs_falloc_write_zeroes to use
+  xfs_bmap_alloc_or_convert_range() instead of doing prealloc and
+  convert approach.
+
+[1] https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
+[2] https://lore.kernel.org/linux-fsdevel/20260217055103.GA6174@lst.de/T/#m7935b9bab32bb5ff372507f84803b8753ad1c814
+[3] https://lore.kernel.org/linux-xfs/6i2jvzn3lyugjlbgmjzpped3gogzyqv5mpe2uqaifz4vjpaega@pomzoq7ley77/
+[4] https://lore.kernel.org/linux-xfs/20260312195308.738189-1-p.raghav@samsung.com/
+[5.1] https://lore.kernel.org/linux-xfs/20260309180708.427553-2-lukas@herbolt.com/
+[5.2] https://lore.kernel.org/linux-xfs/abC1LvRElctaHPe5@dread/
+
+Pankaj Raghav (2):
+  xfs: add an allocation mode to xfs_alloc_file_space()
+  xfs: add support for FALLOC_FL_WRITE_ZEROES
+
+ fs/xfs/xfs_bmap_util.c | 42 +++++++++++++++++---
+ fs/xfs/xfs_bmap_util.h |  7 +++-
+ fs/xfs/xfs_file.c      | 87 ++++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 125 insertions(+), 11 deletions(-)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+base-commit: 6e24acc45ab58d39a0162b4d5f3fd001d07d868e
+-- 
+2.51.2
 
