@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10CD63E2ABA;
-	Thu, 25 Jun 2026 17:27:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5173ECBE8;
+	Thu, 25 Jun 2026 17:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782408462; cv=none; b=ErgRXlf1bWU/n9wDrqZPba+SvbnT/hkzGeRBytK7b13oEpRD9gXGPTjpep6OOj/W6mBlrJXTuZoOjRpJuYJf+my5M5sL1ULmJUq3lDcLDfCH89K52VpV4ggqsFHoOeS9vfldh/69ZZ1B5RE4ikWiz5Bq3flk1N+MKozIfEY3Vdo=
+	t=1782409680; cv=none; b=URI//agd/KLlKG17RceRtGMydLKP3nbtWtuj6wwzwjnDyX+S0Tx9ltGDz6He5F7uyMHO+XOzDROogw/KbP4gccpwpoPMUgu/RBcuNF9GKZjnbwSBLO3at2gijcfUC49MgPmOyP6ZQoVwLo9O5XQP2bHfFIeEjBbS/tXqsHz+WbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782408462; c=relaxed/simple;
-	bh=hbOYVXEEyUmHQJY81f3ZxGxpuaEmNUlAOvAbpCFN5yg=;
+	s=arc-20240116; t=1782409680; c=relaxed/simple;
+	bh=6EPTlglB0y6n4mVMJ0z5MPsFCpy9YvzkZYMJEHvOMhw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H2VInoPrgyyuaDKefSznPWkHkzL0fVoWXlCnsui/QwTveWI61a4dcJiEND2Mf5WeH5WNEhx7WjZm63KgCVnjTa2AXmukOqVWlbRpCtZLA9L6AoqZTtaXd2ETj1X5cjTQ40ielLpTt1FTFry8mjtrDzcd0o2JheLQZrYGQ49lpsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iETBEHN+; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bkc7mLD+GC8H/onLiUWqy4FiAagnz9DaOmWsmPcTsNC9x2LE2A+q4jtx1tY1ZhgBbhOIKaggNLDUCQi/a/dysYxWx0ZVAut0pvWPczANqFIPXFhayuNetQSxIiHwWCYPYGz+oxtQ2un5RTP1aCUCWhtM34mMUvlvEU1NYjNm0I8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bpZGbEY9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iETBEHN+"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9E6981F00A3D;
-	Thu, 25 Jun 2026 17:27:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bpZGbEY9"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DE3DA1F000E9;
+	Thu, 25 Jun 2026 17:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782408460;
-	bh=tvuLwEQoSIdOrb203mC98VZ//kFDZO0IRJjscdA56ZQ=;
+	s=k20260515; t=1782409679;
+	bh=FOPfdwn4WT7soBv45WuCMYiLXW+L3mRRpXlE+zmI+mk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=iETBEHN+38kSAJ3JIL3Qq/rSXmiT7OPU4aYA8tl8c0dE8Lv/owV2YCuBjNrvAPN3O
-	 WjAa2ZhVko/j4rwJj2yX1UqXmy20zln/zPevRSO+M7SF2NjwXRSJecpUHR9QpA6ZhE
-	 BWrsgrIt9MCuNfTf4xG7eSC5HjRU74eJf8TrzAivA2PrBOpDg2K8Pd2rYSuIejsa+J
-	 kNjlMsey0+l/9zrhyvpeAk97s4BCmvS2AGj4ByxpfKmS4ufngvTBtJ5EBfGGev3/WL
-	 ta/UsPme0xV9Hy+lgtJ/AUHvEDMbg0Tui3Z/9iJTka8YxVLsuiieVWlCRnTyZGjR6Y
-	 3YUaLfHUGLZ+A==
-Date: Thu, 25 Jun 2026 10:27:40 -0700
+	b=bpZGbEY99hKffV7pqxuiuUXyA6GGmd/85wm1zDFkzmvlCmBLNeXBs9e2iPjDdU4rl
+	 FhEtt8uvABGrISroYt6e3B9WZgHeiw98BZEunP2sb1X4uh1stu3zO6MkzQyInYJb6V
+	 ZmA5JWwkCktygNarpzfrrmsieSkeY665h+k+DZg9fqkSjMdtf2BwyV5K7fz6VQsYaJ
+	 okWDrgLg9//QcsrCNTFE0LTMMJjE47N4dPj20nuGvfrIUAcO/RpE+boWGDiP+zqpux
+	 2gZHxb/2IZvFTnddmo4f6ogWOocS4ug4mKZW6hNoQiEJj/pJL1I9UjnPeV1cnQTJgv
+	 u1iwBL5YJzLmA==
+Date: Thu, 25 Jun 2026 10:47:58 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>, Kelu Ye <yekelu1@huawei.com>,
@@ -40,10 +40,10 @@ Cc: Christian Brauner <brauner@kernel.org>, Kelu Ye <yekelu1@huawei.com>,
 	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev,
 	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: consolidate bio submission
-Message-ID: <20260625172740.GD6078@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/2] iomap: submit read bio after each extent
+Message-ID: <20260625174758.GE6078@frogsfrogsfrogs>
 References: <20260625120803.2462291-1-hch@lst.de>
- <20260625120803.2462291-2-hch@lst.de>
+ <20260625120803.2462291-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,166 +52,217 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260625120803.2462291-2-hch@lst.de>
+In-Reply-To: <20260625120803.2462291-3-hch@lst.de>
 
-On Thu, Jun 25, 2026 at 02:07:56PM +0200, Christoph Hellwig wrote:
-> Add a iomap_bio_submit_read_endio helper factored out of
-> iomap_bio_submit_read to that all ->submit_read implementations for
-> iomap_read_ops that use iomap_bio_read_folio_range can shared the
-> logic.
-> 
-> Right now that logic is mostly trivial, but already has a bug for XFS
-> because the XFS version is too trivial:  file system integrity validation
-> needs a workqueue context and thus can't happen from the default iomap
-> bi_end_io I/O handler.  Unfortunately the iomap refactoring just before
-> fs integrity landed moved code around here and the call go misplaced,
-> meaning it never got called.  The PI information still is verified by
-> the block layer, but the offloading is less efficient (and the future
-> userspace interface can't get at it).
-> 
-> Fixes: 0b10a370529c ("iomap: support T10 protection information")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/exfat/iomap.c      |  5 +----
->  fs/iomap/bio.c        | 13 ++++++++++---
->  fs/ntfs/aops.c        |  6 ++----
->  fs/ntfs3/inode.c      |  5 +----
->  fs/xfs/xfs_aops.c     |  3 +--
->  include/linux/iomap.h |  2 ++
->  6 files changed, 17 insertions(+), 17 deletions(-)
-> 
-> diff --git a/fs/exfat/iomap.c b/fs/exfat/iomap.c
-> index 1aac38e63fe6..190fc6471f84 100644
-> --- a/fs/exfat/iomap.c
-> +++ b/fs/exfat/iomap.c
-> @@ -253,10 +253,7 @@ static void exfat_iomap_read_end_io(struct bio *bio)
->  static void exfat_iomap_bio_submit_read(const struct iomap_iter *iter,
->  		struct iomap_read_folio_ctx *ctx)
->  {
-> -	struct bio *bio = ctx->read_ctx;
-> -
-> -	bio->bi_end_io = exfat_iomap_read_end_io;
-> -	submit_bio(bio);
-> +	iomap_bio_submit_read_endio(iter, ctx, exfat_iomap_read_end_io);
->  }
->  
->  const struct iomap_read_ops exfat_iomap_bio_read_ops = {
-> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
-> index 4504f4633f17..0f31e35567b4 100644
-> --- a/fs/iomap/bio.c
-> +++ b/fs/iomap/bio.c
-> @@ -78,15 +78,23 @@ u32 iomap_finish_ioend_buffered_read(struct iomap_ioend *ioend)
->  	return __iomap_read_end_io(&ioend->io_bio, ioend->io_error);
->  }
->  
-> -static void iomap_bio_submit_read(const struct iomap_iter *iter,
-> -		struct iomap_read_folio_ctx *ctx)
-> +void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
-> +		struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io)
->  {
->  	struct bio *bio = ctx->read_ctx;
->  
-> +	bio->bi_end_io = end_io;
->  	if (iter->iomap.flags & IOMAP_F_INTEGRITY)
->  		fs_bio_integrity_alloc(bio);
+On Thu, Jun 25, 2026 at 02:07:57PM +0200, Christoph Hellwig wrote:
+> Currently the iomap buffered read path tries to build up read context
+> (i.e. bios for the typical block based case) over multiple iomaps as
+> long as the sector matches.  This does not take into account files
+> that can map to multiple different devices.  While this could be fixed
+> by a bdev check in iomap_bio_read_folio_range, the building up of I/O
+> over iomaps actually was a problem for the not yet merged ext2 iomap
+> port, as that does want to send out I/O at the end of an indirect
+> block mapped range.
 
-Ah, so the bug here is that all the pagecache readers should have been
-allocating integrity information for the bio before submitting it?  And
-because it doesn't, iomap_finish_ioend won't do the read verification?
-So the block layer does it for us, and that's why we don't use the ioend
-chaining?  And (I guess) the future userspace interface won't have any
-means to get at the integrity data?
+This really puts the onus on block-mapped filesystems (e.g. ext2) to
+merge adjacent maps into extents.  Granted they *probably* already have
+been doing that.
 
-If the answers to all four questions is "yes" then I've understood this
-fix well enough to declare
+> So instead of adding more checks move over to a model where a bio only
+> spans a single iomap.  Change ->submit_read to be called after each
+> iteration, and pass a force argument to indicate that the bio must
+> be submitted set on the last iteration.  Switch the bio based users
+> to always submit, while keeping the single submit for fuse.
 
-Cc: <stable@vger.kernel.org> # v7.1
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
+Is fuse the sole reason for the "force" parameter to exist?  I wonder if
+fuse could drop its submit_read function and call fuse_send_readpages
+after the iomap_read{ahead,folio} function returns?
 
 --D
 
->  	submit_bio(bio);
+> Fixes: dfeab2e95a75 ("erofs: add multiple device support")
+> Reported-by: Kelu Ye <yekelu1@huawei.com>
+> Reported-by: Yifan Zhao <zhaoyifan28@huawei.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: Yifan Zhao <zhaoyifan28@huawei.com>
+> ---
+>  fs/exfat/iomap.c       |  2 +-
+>  fs/fuse/file.c         |  6 +++++-
+>  fs/iomap/bio.c         |  6 ++++--
+>  fs/iomap/buffered-io.c | 21 +++++++++++++--------
+>  fs/ntfs/aops.c         |  2 +-
+>  fs/ntfs3/inode.c       |  2 +-
+>  fs/xfs/xfs_aops.c      |  3 ++-
+>  include/linux/iomap.h  |  2 +-
+>  8 files changed, 28 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/exfat/iomap.c b/fs/exfat/iomap.c
+> index 190fc6471f84..c428a949120e 100644
+> --- a/fs/exfat/iomap.c
+> +++ b/fs/exfat/iomap.c
+> @@ -251,7 +251,7 @@ static void exfat_iomap_read_end_io(struct bio *bio)
 >  }
-> +EXPORT_SYMBOL_GPL(iomap_bio_submit_read_endio);
-> +
-> +static void iomap_bio_submit_read(const struct iomap_iter *iter,
-> +		struct iomap_read_folio_ctx *ctx)
-> +{
-> +	return iomap_bio_submit_read_endio(iter, ctx, iomap_read_end_io);
-> +}
 >  
->  static struct bio_set *iomap_read_bio_set(struct iomap_read_folio_ctx *ctx)
+>  static void exfat_iomap_bio_submit_read(const struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool force)
 >  {
-> @@ -127,7 +135,6 @@ static void iomap_read_alloc_bio(const struct iomap_iter *iter,
+>  	iomap_bio_submit_read_endio(iter, ctx, exfat_iomap_read_end_io);
+>  }
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index e052a0d44dee..6fa3b1f55c95 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -982,13 +982,17 @@ static int fuse_iomap_read_folio_range_async(const struct iomap_iter *iter,
+>  }
+>  
+>  static void fuse_iomap_submit_read(const struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool force)
+>  {
+>  	struct fuse_fill_read_data *data = ctx->read_ctx;
+>  
+> +	if (!force)
+> +		return;
+> +
+>  	if (data->ia)
+>  		fuse_send_readpages(data->ia, data->file, data->nr_bytes,
+>  				    data->fc->async_read);
+> +	ctx->read_ctx = NULL;
+>  }
+>  
+>  static const struct iomap_read_ops fuse_iomap_read_ops = {
+> diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+> index 0f31e35567b4..6aca1cd0622c 100644
+> --- a/fs/iomap/bio.c
+> +++ b/fs/iomap/bio.c
+> @@ -87,11 +87,13 @@ void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
+>  	if (iter->iomap.flags & IOMAP_F_INTEGRITY)
+>  		fs_bio_integrity_alloc(bio);
+>  	submit_bio(bio);
+> +
+> +	ctx->read_ctx = NULL;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_bio_submit_read_endio);
+>  
+>  static void iomap_bio_submit_read(const struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool force)
+>  {
+>  	return iomap_bio_submit_read_endio(iter, ctx, iomap_read_end_io);
+>  }
+> @@ -116,7 +118,7 @@ static void iomap_read_alloc_bio(const struct iomap_iter *iter,
+>  
+>  	/* Submit the existing range if there was one. */
+>  	if (ctx->read_ctx)
+> -		ctx->ops->submit_read(iter, ctx);
+> +		ctx->ops->submit_read(iter, ctx, true);
+>  
+>  	/* Same as readahead_gfp_mask: */
 >  	if (ctx->rac)
->  		bio->bi_opf |= REQ_RAHEAD;
->  	bio->bi_iter.bi_sector = iomap_sector(iomap, iter->pos);
-> -	bio->bi_end_io = iomap_read_end_io;
->  	bio_add_folio_nofail(bio, folio, plen,
->  			offset_in_folio(folio, iter->pos));
->  	ctx->read_ctx = bio;
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 8d4806dc46d4..b1c3da8a97dc 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -524,6 +524,13 @@ static void iomap_read_end(struct folio *folio, size_t bytes_submitted)
+>  	}
+>  }
+>  
+> +static void iomap_submit_read(struct iomap_iter *iter,
+> +		struct iomap_read_folio_ctx *ctx, bool force)
+> +{
+> +	if (ctx->read_ctx && ctx->ops->submit_read)
+> +		ctx->ops->submit_read(iter, ctx, force);
+> +}
+> +
+>  static int iomap_read_folio_iter(struct iomap_iter *iter,
+>  		struct iomap_read_folio_ctx *ctx, size_t *bytes_submitted)
+>  {
+> @@ -642,12 +649,11 @@ void iomap_read_folio(const struct iomap_ops *ops,
+>  		fsverity_readahead(ctx->vi, folio->index,
+>  				   folio_nr_pages(folio));
+>  
+> -	while ((ret = iomap_iter(&iter, ops)) > 0)
+> +	while ((ret = iomap_iter(&iter, ops)) > 0) {
+>  		iter.status = iomap_read_folio_iter(&iter, ctx,
+>  				&bytes_submitted);
+> -
+> -	if (ctx->read_ctx && ctx->ops->submit_read)
+> -		ctx->ops->submit_read(&iter, ctx);
+> +		iomap_submit_read(&iter, ctx, !iter.iomap.length);
+> +	}
+>  
+>  	if (ctx->cur_folio)
+>  		iomap_read_end(ctx->cur_folio, bytes_submitted);
+> @@ -718,12 +724,11 @@ void iomap_readahead(const struct iomap_ops *ops,
+>  		fsverity_readahead(ctx->vi, readahead_index(rac),
+>  				readahead_count(rac));
+>  
+> -	while (iomap_iter(&iter, ops) > 0)
+> +	while (iomap_iter(&iter, ops) > 0) {
+>  		iter.status = iomap_readahead_iter(&iter, ctx,
+>  					&cur_bytes_submitted);
+> -
+> -	if (ctx->read_ctx && ctx->ops->submit_read)
+> -		ctx->ops->submit_read(&iter, ctx);
+> +		iomap_submit_read(&iter, ctx, !iter.iomap.length);
+> +	}
+>  
+>  	if (ctx->cur_folio)
+>  		iomap_read_end(ctx->cur_folio, cur_bytes_submitted);
 > diff --git a/fs/ntfs/aops.c b/fs/ntfs/aops.c
-> index 1fbf832ad165..f2bb56506046 100644
+> index f2bb56506046..f7bd55275d8c 100644
 > --- a/fs/ntfs/aops.c
 > +++ b/fs/ntfs/aops.c
-> @@ -38,11 +38,9 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
+> @@ -38,7 +38,7 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
 >  }
 >  
 >  static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
-> -	struct iomap_read_folio_ctx *ctx)
-> +		struct iomap_read_folio_ctx *ctx)
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool force)
 >  {
-> -	struct bio *bio = ctx->read_ctx;
-> -	bio->bi_end_io = ntfs_iomap_read_end_io;
-> -	submit_bio(bio);
-> +	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
+>  	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
 >  }
->  
->  static const struct iomap_read_ops ntfs_iomap_bio_read_ops = {
 > diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
-> index 42af1abe17f8..f9600aba1548 100644
+> index f9600aba1548..cd05faebb806 100644
 > --- a/fs/ntfs3/inode.c
 > +++ b/fs/ntfs3/inode.c
-> @@ -609,10 +609,7 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
->  static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
->  		struct iomap_read_folio_ctx *ctx)
->  {
-> -	struct bio *bio = ctx->read_ctx;
-> -
-> -	bio->bi_end_io = ntfs_iomap_read_end_io;
-> -	submit_bio(bio);
-> +	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
+> @@ -607,7 +607,7 @@ static void ntfs_iomap_read_end_io(struct bio *bio)
 >  }
 >  
->  static const struct iomap_read_ops ntfs_iomap_bio_read_ops = {
+>  static void ntfs_iomap_bio_submit_read(const struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool force)
+>  {
+>  	iomap_bio_submit_read_endio(iter, ctx, ntfs_iomap_read_end_io);
+>  }
 > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 2a0c54256e93..51293b6f331f 100644
+> index 51293b6f331f..1b9a55e2f4a7 100644
 > --- a/fs/xfs/xfs_aops.c
 > +++ b/fs/xfs/xfs_aops.c
-> @@ -764,8 +764,7 @@ xfs_bio_submit_read(
+> @@ -758,7 +758,8 @@ xfs_vm_bmap(
+>  static void
+>  xfs_bio_submit_read(
+>  	const struct iomap_iter		*iter,
+> -	struct iomap_read_folio_ctx	*ctx)
+> +	struct iomap_read_folio_ctx	*ctx,
+> +	bool				force)
+>  {
+>  	struct bio			*bio = ctx->read_ctx;
 >  
->  	/* defer read completions to the ioend workqueue */
->  	iomap_init_ioend(iter->inode, bio, ctx->read_ctx_file_offset, 0);
-> -	bio->bi_end_io = xfs_end_bio;
-> -	submit_bio(bio);
-> +	iomap_bio_submit_read_endio(iter, ctx, xfs_end_bio);
->  }
->  
->  static const struct iomap_read_ops xfs_iomap_read_ops = {
 > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 3582ed1fe236..56b43d594e6e 100644
+> index 56b43d594e6e..4d8893b02aaf 100644
 > --- a/include/linux/iomap.h
 > +++ b/include/linux/iomap.h
-> @@ -622,6 +622,8 @@ extern struct bio_set iomap_ioend_bioset;
->  #ifdef CONFIG_BLOCK
->  int iomap_bio_read_folio_range(const struct iomap_iter *iter,
->  		struct iomap_read_folio_ctx *ctx, size_t plen);
-> +void iomap_bio_submit_read_endio(const struct iomap_iter *iter,
-> +		struct iomap_read_folio_ctx *ctx, bio_end_io_t end_io);
+> @@ -528,7 +528,7 @@ struct iomap_read_ops {
+>  	 * This is optional.
+>  	 */
+>  	void (*submit_read)(const struct iomap_iter *iter,
+> -			struct iomap_read_folio_ctx *ctx);
+> +			struct iomap_read_folio_ctx *ctx, bool force);
 >  
->  extern const struct iomap_read_ops iomap_bio_read_ops;
->  
+>  	/*
+>  	 * Optional, allows filesystem to specify own bio_set, so new bio's
 > -- 
 > 2.53.0
 > 
