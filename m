@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F85F34A794
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 13:59:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E33E348477
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 13:59:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782395942; cv=none; b=GtaRJBoGeXD3fxVC5aTNxl8Yu4dMbMLVpMKoltnh2LrftANUdO1REYMQEIO5zVcJictwY37eTNh3y6o5Pn0paQvf2TzvG8POkPFaFmrzcX0KukV+cfoSBwPjn5HmfCqG/iUJJDXbnJe9RZaR2RbYKBryAYXet0NNNjiK/5cpQow=
+	t=1782395945; cv=none; b=drT+OgF4Q6EJhtPmDCMPkG8bECk4eADU6rAlNqy5JzPakcP/j2D7Xz73D8cSO0syo2HGUPYz+LlNJL3fXrO9WNh0kri98581YZL5CBBEP4GkByuBcKrGpxziD5UeGP+xk5wgDzHsy7t+jPTuzQwIJysaFzKntpKOlImYiE0Fjpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782395942; c=relaxed/simple;
-	bh=DMwlVrl+tfM3WbbvDRLn+dJYp5HZqnfDhsQZi8A28mg=;
+	s=arc-20240116; t=1782395945; c=relaxed/simple;
+	bh=s4S/0uUIQgDzmeaxzhEpiu20mYK4Ji5WKkgJ/PXgYAk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YqJaOC+PTFBXxb45GbQqnd8dNvDGKPh4qaoPPSljB/SNfsfdY/CMPdTUg3jmWdVFwwa4i4+mn7Zuo532+38fOfmGfmTw+hGtIPK8Aw+4XTcq+NsVsVfZ03m2wNqIAVC5/Sr7OOuGnstSWAPudBjaCMINoV/bVlbyk0zT/zjQtH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z4vRt7hP; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ix+dVtaOrdorozBlerFcSVYeWI0Z9Bc8iDw+DdrpwRHxcdxSy0iCLN3HgZlX0UX7ifr4ZOWtnRKwEeMd7WZF2cyvc8JI3lbrt06lC4aAJF0vBUZ5k/ANJcNmebMIbhP7UA0VgCnTSpk0p+1WSEqpBrt9NF6P5LpUb1I+/+Rfvi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SI97LSbM; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z4vRt7hP"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SI97LSbM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=I74Won7EjXMs+rYZK3O0O6923+eMWZeCBf9TlmY8qt0=; b=Z4vRt7hP1DazuomfsekdPv/ok4
-	Tt7Pu3oxwwvig5OT/E6JNlSnuA1DbkxAsub6KFoZiKCNexO5ATckHkdik3ZK4fhJKtN7LGHNsAHoI
-	x3WqNM+xla743hKquZqD4QKc7UnkhrhMuJaxPAs06QVgYRERc1HGZi1Tx71KHd/1n2k24Rxw6iDji
-	d3ixxMEDkEBKlDUkiFV21G+4xS5nOmvDsLuxldyHerKHfgnIpUrfppmPOM6bS6DavngpT0dBF0667
-	8LdtjJeyZBKpNQlkAwMQ0fPetStHDrgiHvhF/KP+VN1Lz7dwQxaUOGcitt7KQoQ3iAay3MFDNjgyG
-	DtlxZE/Q==;
+	bh=DpbqLuro7lTgigKyd0clJC2GM6O8YcIfCnfKKzGLq24=; b=SI97LSbM0rZq3MfPOPVC/p3i+E
+	leBOy6jGluZkrs9J3xmfO6MEFk33Jhh8oQ/g8a7Do8hiMehRiNuVgC4snf9+nQjKG0u3mmQlRFm4b
+	NJXybzDA+RB1TypNYWVulsu3ARHFT8gYMzmtSXaKwN70eLRvX70z4kvMFL43HWWQzeVw5gtuqYNH2
+	+4qpY1SAD1h0pgX38P/Rk+7Iw0Hj7DTfRmIdRodD4qjnxa2PMjjsdhh2XvAxoAkFetkk2zxYAwEwo
+	vybmAbM+Me8lsJ+ukC+KS1wZOL0PEvpbRcCSZ/fx1HmM65orGAaGu7UYlQrXP5KvRWRsDC/P/hN1S
+	JAIRsC/Q==;
 Received: from 2a02-8389-2301-9f00-3397-c9eb-6d8a-9179.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:3397:c9eb:6d8a:9179] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wckbc-00000009Gry-3RwW;
-	Thu, 25 Jun 2026 13:59:01 +0000
+	id 1wckbf-00000009Gs9-2T0Z;
+	Thu, 25 Jun 2026 13:59:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 3/6] xfs: improve the xfs_buf_ioend_fail calling convention
-Date: Thu, 25 Jun 2026 15:58:33 +0200
-Message-ID: <20260625135849.2494779-4-hch@lst.de>
+Subject: [PATCH 4/6] xfs: remove xfs_buf_ioend
+Date: Thu, 25 Jun 2026 15:58:34 +0200
+Message-ID: <20260625135849.2494779-5-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260625135849.2494779-1-hch@lst.de>
 References: <20260625135849.2494779-1-hch@lst.de>
@@ -49,89 +49,63 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Move setting the ASYNC flag into xfs_buf_ioend_fail, assert that the
-buffer is locked as expected, and drop the confusing _ioend in the
-name.
+There are two callers of xfs_buf_ioend, one of which always has the
+XBF_ASYNC flag set.  Open code the logic in both callers to prepare for a
+bug fix.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_buf.c      | 13 +++++++------
- fs/xfs/xfs_buf.h      |  2 +-
- fs/xfs/xfs_buf_item.c |  3 +--
- fs/xfs/xfs_inode.c    |  3 +--
- 4 files changed, 10 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_buf.c | 22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 5ce48d8062fa..83c74b5b7e8e 100644
+index 83c74b5b7e8e..3eea9d9ea829 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1192,17 +1192,18 @@ xfs_buf_ioerror_alert(
+@@ -1146,18 +1146,6 @@ __xfs_buf_ioend(
+ 	return true;
  }
  
- /*
-- * To simulate an I/O failure, the buffer must be locked and held with at least
-- * two references.
-+ * Fail a locked and referenced buffer outside the I/O path.
-  *
-- * The buf item reference is dropped via ioend processing. The second reference
-- * is owned by the caller and is dropped on I/O completion if the buffer is
-- * XBF_ASYNC.
-+ * The caller transfers a reference which will be released after processing the
-+ * error.
-  */
- void
--xfs_buf_ioend_fail(
-+xfs_buf_fail(
- 	struct xfs_buf	*bp)
- {
-+	ASSERT(xfs_buf_islocked(bp));
-+
-+	bp->b_flags |= XBF_ASYNC;
+-static void
+-xfs_buf_ioend(
+-	struct xfs_buf	*bp)
+-{
+-	if (!__xfs_buf_ioend(bp))
+-		return;
+-	if (bp->b_flags & XBF_ASYNC)
+-		xfs_buf_relse(bp);
+-	else
+-		complete(&bp->b_iowait);
+-}
+-
+ static void
+ xfs_buf_ioend_work(
+ 	struct work_struct	*work)
+@@ -1207,7 +1195,8 @@ xfs_buf_fail(
  	bp->b_flags &= ~XBF_DONE;
  	xfs_buf_stale(bp);
  	xfs_buf_ioerror(bp, -EIO);
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index b3cd1c7029f1..79cc9c3f0254 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -290,7 +290,7 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
- 		xfs_failaddr_t failaddr);
- #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
- extern void xfs_buf_ioerror_alert(struct xfs_buf *bp, xfs_failaddr_t fa);
--void xfs_buf_ioend_fail(struct xfs_buf *);
-+void xfs_buf_fail(struct xfs_buf *bp);
- void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
- #define xfs_buf_mark_corrupt(bp) __xfs_buf_mark_corrupt((bp), __this_address)
+-	xfs_buf_ioend(bp);
++	if (__xfs_buf_ioend(bp))
++		xfs_buf_relse(bp);
+ }
  
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 8487635579e5..1f055cd6732e 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -549,8 +549,7 @@ xfs_buf_item_unpin(
- 		 * wait for the lock and then run the IO failure completion.
- 		 */
- 		xfs_buf_lock(bp);
--		bp->b_flags |= XBF_ASYNC;
--		xfs_buf_ioend_fail(bp);
-+		xfs_buf_fail(bp);
- 		return;
- 	}
+ int
+@@ -1414,7 +1403,12 @@ xfs_buf_submit(
+ 	bp->b_flags &= ~XBF_DONE;
+ 	xfs_buf_stale(bp);
+ end_io:
+-	xfs_buf_ioend(bp);
++	if (!__xfs_buf_ioend(bp))
++		return;
++	if (bp->b_flags & XBF_ASYNC)
++		xfs_buf_relse(bp);
++	else
++		complete(&bp->b_iowait);
+ }
  
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 317eb57f989f..15279d22a894 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2646,8 +2646,7 @@ xfs_iflush_cluster(
- 		 * inode cluster buffers.
- 		 */
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--		bp->b_flags |= XBF_ASYNC;
--		xfs_buf_ioend_fail(bp);
-+		xfs_buf_fail(bp);
- 		return error;
- 	}
- 
+ /*
 -- 
 2.53.0
 
