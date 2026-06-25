@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B02228504F
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 22:55:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262E228504F
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 22:55:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782428117; cv=none; b=qcblDrD9nmfSVGfcT2jXlokGBspPsAYl6N0XUceuuBJYZ+XjZ06OLve8tMhX9WpX+7W2RZIv/0DnhYphImMR9TXOVDvUc9uxlkmmHLxgRHU7hDbTgI4lMipPrHoRRFzTsdENMGfEYTaUjFwZrtHmr6ReL+oPng8BIsWLkR9H6uQ=
+	t=1782428133; cv=none; b=W8psNtRNCTp7c/WvJHVeqo0lKIzJa24+P6zigqeWE12zYid1bMRrSXJyze70IfLuynhjBX63XtR+OJLDBWD6bl9ALYZbtvPfMiokCXQuWdlh58cNotJzRC6Q/N7kIJLyT+mhL5XyTxYvSONc/544HfurO6VBgOOcoayGsVmjhyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782428117; c=relaxed/simple;
-	bh=Uu18YYsE54GmZBstFFRGWXtIvj1vgQ/o/R8j5AvAqdo=;
+	s=arc-20240116; t=1782428133; c=relaxed/simple;
+	bh=pNkgKHhSMH76ok8TUIxBfmvKJs6me9UqH1Y7EnPRmPI=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gyJllD8b1RAPtltQmt493pCadPr0PwNvNApCXj5uLHScAowxpwL9Fb5h4HmsO5rjg5xSPBlQ3PkfREi4OwSlmKtr612sVfD13Bkb1g/fm2IpOapz1OV4TbPZK4nJUzdotquMCfyfW+KjpuW+LoX+BcNmR5tl0hVNpfJXjebCuzo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VAbrr4r5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=lLTvaoR+y2WqpuHhhexCUOMCFYx00MJCI5UaUeMsCrkH/hhmBjZqyi/zeQz7Cxhdt7bNUF4Xkx7nSoW5pEs4MS/Oyr9HvCoVQCzxYFNd0XeF/2YWNBFP1o16y/LOvxjEoIjwDeE6WyJNshHVy/ET2SXB+gJYcFkBS8wF0JxrQa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EepmgtT4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VAbrr4r5"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D5DD11F000E9;
-	Thu, 25 Jun 2026 22:55:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EepmgtT4"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 667801F000E9;
+	Thu, 25 Jun 2026 22:55:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782428115;
-	bh=XlpqDcZcoQyNFsMee/+ndjO4rpsuspjbWS9GNz0aWWU=;
+	s=k20260515; t=1782428131;
+	bh=C/wTPNwEupBl72926Rs+g+FZMxIa81CsleLM6zRMe3g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=VAbrr4r51uHmL42zoIK7KqFede6CjI1Q/Uk9E1oQ4gaBLWfaJHo0FAFrui5MoSc3r
-	 vVyyv5I42sCIfd5oCLcveKddeL25d5/suDOW97O4YRv88S7zuxZ0lDzx2oNKUyKu8o
-	 hLEnQGUZoM5FaLd8KkTNwzlUjaMOBMLP/rh3gRyhvDNkqIxG6yGHz5/XRQvGjxx+up
-	 kYs4BOwDiJeEtG2MDNGSzvJa4Kt6lmQF4OFiwGOaTm99Vt4Lun0EDD03PG4pWNUE62
-	 ucVZMkMF4MePZ6ejH4t/43cuMB3z7Yips9MpiC9pPhnGgcu6/eCbNpwwXufESd3Iyt
-	 ewNta8X/R5Ylg==
-Date: Thu, 25 Jun 2026 15:55:15 -0700
-Subject: [PATCH 4/8] xfs_scrub: fix spacemap external log device scan dev key
+	b=EepmgtT4FAFEAskoJ56IUdol3ehZQODrclK9NiJXRWJqT8vnvhwCjTYZgEm9jkIiz
+	 S8jaji0CqCcOd/iWrZicFAcL1dYJ+TOCSkjZ4ut0B92xbfbZjaZ7Nkk+UnBUDXDafm
+	 87g0h2cQD70tI9dipO0K07wqKDImebfA3mjYvLX2JFqNC/6WicgxgTRfiY3kkxtcZx
+	 cBr2DQ3PuiZ52IxqoCE6F9GjuF/I9+rOKMZsaCUq6FZj9w7vSVc5Iunfy3/9n3KSY5
+	 dRlSxCldFEifm1l3Wrg7NTOx5n8mNXLfQcKQcmtmRQEMzh7f0gv2ozzbU35BYQzReZ
+	 b7rtkGLHLdPVQ==
+Date: Thu, 25 Jun 2026 15:55:31 -0700
+Subject: [PATCH 5/8] xfs_scrub: fix estimate of work items for phase 4
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <178242801378.1981574.12871573702305819173.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <178242801396.1981574.2199805727145890150.stgit@frogsfrogsfrogs>
 In-Reply-To: <178242801268.1981574.8079691316092703702.stgit@frogsfrogsfrogs>
 References: <178242801268.1981574.8079691316092703702.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,45 +45,29 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Codex bizarrely complains about the rtstart>0 logic in scan_log_rmaps,
-because it gets confused about the difference between internal logs
-(which are scanned by scan_ag_rmaps) and external logs, which this
-function handles.  I'm ignoring the report, but we shouldn't open-code
-the synthetic device keys so let's fix that.
+Codex complains that the number of work items computed when estimating
+the amount of work for phase 4 doesn't include the FSCOUNTERS and
+QUOTACHECK items.  Add them back in.
 
-Cc: <linux-xfs@vger.kernel.org> # v6.15.0
-Fixes: 37591ef3f4f14c ("xfs_scrub: support internal RT device")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- scrub/spacemap.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ scrub/phase4.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index 8f595ad94c5991..5f6399821dc45a 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -213,7 +213,7 @@ scan_rt_rmaps(
- 	scan_dev_rmaps(ctx, ctx->fsinfo.fs_rtdev, arg);
- }
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 6bd16c23939eb4..744fd92ab195f4 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -297,6 +297,10 @@ phase4_estimate(
+ 	need_fixing = action_list_length(ctx->fs_repair_list) +
+ 		      action_list_length(ctx->file_repair_list);
  
--/* Iterate all the reverse mappings of the log device. */
-+/* Iterate all the reverse mappings of the external log device. */
- static void
- scan_log_rmaps(
- 	struct workqueue	*wq,
-@@ -222,7 +222,12 @@ scan_log_rmaps(
- {
- 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
- 
--	scan_dev_rmaps(ctx, ctx->mnt.fsgeom.rtstart ? 2 : ctx->fsinfo.fs_logdev,
-+	/*
-+	 * Internal rt sections (rtstart != 0) means we use synthetic device
-+	 * keys for external devices.
-+	 */
-+	scan_dev_rmaps(ctx, ctx->mnt.fsgeom.rtstart ? XFS_DEV_LOG :
-+						      ctx->fsinfo.fs_logdev,
- 			arg);
- }
- 
++	/* fscounters and quotacheck */
++	if (need_fixing)
++		need_fixing += 2;
++
+ 	*items = need_fixing;
+ 	*nr_threads = scrub_nproc(ctx) + 1;
+ 	*rshift = 0;
 
