@@ -1,86 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.hallyn.com (mail.hallyn.com [178.63.66.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D803BED18
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 17:09:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AAF83A759C;
+	Fri, 26 Jun 2026 17:54:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.63.66.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782493757; cv=none; b=eRlKnRYjNcqhrdM1zddLSg7rt+CdDn8en5lAcDlJ5onEE9tYlz9k6AOv2YzsaRaq9c02LZDvWQnNmSkwJwt3F+RmNagvVFVJ5Pz3211W7ve4tUzNVMrJQ+68+F29S+GKIpsVwOwm++Ci/dTAFReRo89RAZgUgDmEf5WgO2tPqnY=
+	t=1782496490; cv=none; b=MMkGV+YjanEHyEv+nmWiCyfsY2M+9hVl2M5lar2nIn8f6sfAWBF82hLcpE2/hE++ORnejI7zGhRPFySIRr8P2l5+vNBeh90QJGKWIuM/ncD/5oD6yZ2HZye62BBP5B7DkRnprR8kGk0Iy2LvhBPZ35/TS+y0iHYRfdU6TUWP6TA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782493757; c=relaxed/simple;
-	bh=WXfyiQteaFoJeR0fzQflbkAo0xWhetNg5Baf+oKP5EU=;
+	s=arc-20240116; t=1782496490; c=relaxed/simple;
+	bh=ZvifW5GkM3RqyG8r+vlWapDYa4Tif4vyCmX+yNfLQgw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XTH348S+jM7VeGb2s9qFY0EOih2atTOd5os7xq6qd5V0x3IddCRYvmxtMvlFmU3yc2lAEVnOwN3XmRWYnzhjRyv+y/ndolPA1EjxViV80NwYy0y5KKtqlQaYEr3GOjEfIBVF9Dx6fH9HVcxnDLSRqpUS1F4LPmnjIwkKJyz2+ns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZPf55aCz; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=FJiNT7P3IjJAUqA8lSHwnJ/WNmOUPJcUAQ7/UaUPrWT5+XGHyZG8r0VT998VEQeqbjh1VDQ2ZU5e2E0aIZP85jbP1FUTeBnJNBGttgcx6JA3lICGZ9ioal8wyp+CSUjghONV3Ci4UlYjDY9/9veH74qtRPCJgCYF62K423X6Oy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hallyn.com; spf=pass smtp.mailfrom=mail.hallyn.com; dkim=pass (2048-bit key) header.d=hallyn.com header.i=@hallyn.com header.b=PBtjy0cO; arc=none smtp.client-ip=178.63.66.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hallyn.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.hallyn.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZPf55aCz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 82C311F000E9;
-	Fri, 26 Jun 2026 17:09:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782493755;
-	bh=ZImoXsky9OxflOmZYad0gCNBB0sochTLvGB3cE/kLXM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZPf55aCz/Pnh4kpv+hRY5N07r3X/by6vHOs5XgfjcLE7cxZaaUgoDp50UGx4LjLVJ
-	 3+rYvvEGlrtkNHlWcCMMHacAAZ3qpe/0m10VuCwl+64NCcJmwcvEU/1gN5SDiAiOzL
-	 ZlwIPFOF5VVbI9ne1SxirwdDg+aqFCyv1EMNQS1uMOseWPn/7a1s8M2G31j8Qt8W3W
-	 3Ll/UYhrQFlgjajsv2LH5wkmvwS3t3KPnNUNdZT7Tgw+pXQuIk3cXVg6MHuxcOGm5G
-	 x41hq5e5zDpEV0UOZ4DPGGlrDPC1VY0udFlirOosR5XbtKaIGOfvFSBEPqrI/o90ON
-	 szyrS7mruuG9w==
-Date: Fri, 26 Jun 2026 10:09:14 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] xfs_scrub: fix spacemap external log device scan dev
- key
-Message-ID: <20260626170914.GZ6078@frogsfrogsfrogs>
-References: <178242801268.1981574.8079691316092703702.stgit@frogsfrogsfrogs>
- <178242801378.1981574.12871573702305819173.stgit@frogsfrogsfrogs>
- <20260626050345.GD8786@lst.de>
+	dkim=pass (2048-bit key) header.d=hallyn.com header.i=@hallyn.com header.b="PBtjy0cO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=hallyn.com; s=mail;
+	t=1782495994; bh=ZvifW5GkM3RqyG8r+vlWapDYa4Tif4vyCmX+yNfLQgw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PBtjy0cO4GOSYTPW9dQQpAC3jhHDkU0YctCNOMURVw5SK/2U0GdUVl7ALKArQi89g
+	 nyA6z1yCZ+JliCMl328Kq2PVOlz/MIt1pPpTMSh+OdxxFErpm+Jk/Y0wfXavQyc8BQ
+	 4/lyCNcvwVI2/Kv81HwPeumkSbekxubw8vqXt9Fd5mi2+zyR58Vwt6sJyxMFYiiJd+
+	 DzAzhaeFLkR8O4EjZTbj6pr/ybWZPfPb/pSg96IFeWL9w8H1sa4DkAjPzQ6WJrBILJ
+	 XB2uxSldQcDjp4I1gEUKWsdZfMH/GqvUx/oawjX0pYUMZGM9qsLA9TaE5VgtMa8WS1
+	 GWyvAZ7ToPjKQ==
+Received: by mail.hallyn.com (Postfix, from userid 1001)
+	id 611D7ECA; Fri, 26 Jun 2026 12:46:34 -0500 (CDT)
+Date: Fri, 26 Jun 2026 12:46:34 -0500
+From: "Serge E. Hallyn" <serge@hallyn.com>
+To: Paul Moore <paul@paul-moore.com>
+Cc: cem@kernel.org, linux-fsdevel@vger.kernel.org, jack@suze.cz,
+	djwong@kernel.org, hch@lst.de, serge@hallyn.com,
+	linux-security-module@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/4] capabily: Add new capable_noaudit
+Message-ID: <aj66+o90iNkPfRJ8@mail.hallyn.com>
+References: <20260626114533.102138-1-cem@kernel.org>
+ <20260626114533.102138-2-cem@kernel.org>
+ <CAHC9VhQNURc=d4AOVDF-z29fjLasCiLf120Y-N3txEBccpkfSA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260626050345.GD8786@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHC9VhQNURc=d4AOVDF-z29fjLasCiLf120Y-N3txEBccpkfSA@mail.gmail.com>
 
-On Fri, Jun 26, 2026 at 07:03:45AM +0200, Christoph Hellwig wrote:
-> On Thu, Jun 25, 2026 at 03:55:15PM -0700, Darrick J. Wong wrote:
-> > --- a/scrub/spacemap.c
-> > +++ b/scrub/spacemap.c
-> > @@ -213,7 +213,7 @@ scan_rt_rmaps(
-> >  	scan_dev_rmaps(ctx, ctx->fsinfo.fs_rtdev, arg);
-> >  }
-> >  
-> > -/* Iterate all the reverse mappings of the log device. */
-> > +/* Iterate all the reverse mappings of the external log device. */
-> >  static void
-> >  scan_log_rmaps(
-> >  	struct workqueue	*wq,
-> > @@ -222,7 +222,12 @@ scan_log_rmaps(
-> >  {
-> >  	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-> >  
-> > -	scan_dev_rmaps(ctx, ctx->mnt.fsgeom.rtstart ? 2 : ctx->fsinfo.fs_logdev,
-> > +	/*
-> > +	 * Internal rt sections (rtstart != 0) means we use synthetic device
-> > +	 * keys for external devices.
-> > +	 */
-> > +	scan_dev_rmaps(ctx, ctx->mnt.fsgeom.rtstart ? XFS_DEV_LOG :
-> > +						      ctx->fsinfo.fs_logdev,
+On Fri, Jun 26, 2026 at 11:31:06AM -0400, Paul Moore wrote:
+> On Fri, Jun 26, 2026 at 7:49 AM <cem@kernel.org> wrote:
+> >
+> > From: Carlos Maiolino <cem@kernel.org>
+> >
+> > In some situations (quota enforcement bypass in this case) we'd like to
+> > check for a specific capability without triggering spurious audit
+> > messages from security modules like selinux.
+> >
+> > Add a new helper so we don't need to use ns_capable_noaudit() directly.
+> >
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  include/linux/capability.h |  5 +++++
+> >  kernel/capability.c        | 17 +++++++++++++++++
+> >  2 files changed, 22 insertions(+)
 > 
-> Maybe this should be using to_fsmap_dev instead?  Move the call
-> to to_fsmap_dev into scan_dev_rmaps for further simplification.
+> This is Serge's call, not mine, but FWIW, I somewhat prefer to see
+> code use the ns_capable_XXX() variants directly as I like to think it
+> means some thought went into ensuring the capability check is being
+> done in the right namespace.  Yes, we all know that capable() just
+> uses the init namespace, but I like to think that having to type that
+> out in the parameter list might be a good double check ;)
 
-Yeah.  phase7 could use from_fsmap_dev, so I'll hoist both to spacemap.h
-and clean up the callsites.
+Hm, yeah, on he one hand it seems like a nice shortcut, but I still
+see people confusing what 'capable' really does, so standardizing on
+ns_capable_noaudit(&init_user_ns, x) might be worthwhile.
 
-> scan_rt_rmaps seems to have similar issues.
-
-I don't agree with that since it's only used for pre-rtgroups rt volumes
-which can't be internal, but it's trivial to clean it up along with the
-other callsites so in it goes.
-
---D
+(and then patch 3 can go)
