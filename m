@@ -1,85 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4866037CD34;
-	Fri, 26 Jun 2026 15:20:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782487210; cv=none; b=fh7gaXJDafv+CS2ein4mkMObzpWo52pDmX7j7HSkqOa/8wUqbBBeaDCEkoqYybvxCT9sQ58kL3fTHsuCGJUXewd/dlmdQcaiIXIyQpNM/sleuWTCXzseDNRwuH09jlgtsjDZnd4bLA4iiQXBR7teGBy/MJnGojXLVSsmTSo+0tU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782487210; c=relaxed/simple;
-	bh=0eZgEfoIlASB3Ybw//MDFvMUhRXYP+BO24DbAhhGpPU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=njyM963XC5bYdWHhZGALbYVA62RQRX9JEgvdCLXwahlNTt/Cyz1ovxj106dp4XA/7K+MpzXfQ6bKcp03F92tgbKPysGtD1itadMCgmzUFfsG377L3g0QFVrNKtqUXEqHp5V1UsXkCyD0lh0iWvuxLZdwwShbnhwJuFvln8FzN6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTS8sQnQ; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 506583E1D14
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 15:31:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.176
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782487881; cv=pass; b=seex7NstL5vGZQjkmT0+xM8PDNKnNJt6L228hRwryJXLgz+uNRTDwNjxsLWlR0KcwydD+P+Eo1peQh/ft69nEdAhkYobS6QdyW0O/Mn/AlVGpVZ4B+//C6ZovEi7ZhYRr5HHrRTpvX8JsOcEXWOM6IMS5Nc5KqwzT0379IqlAjY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782487881; c=relaxed/simple;
+	bh=wqSHr1EWMYBXrlSAKcagfIVqRtNYI8IHYjPj6F5FHLw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=a61ab04zTn0kQlX+penX6Ju0+LkenJM99qA9wrlpHGD8HhAh1jrev4r50q+3O+iQ8H+1CP/bf3tTbKxbILQWlgU5wdGXif+pAWBqx0jmhc88hbWaFibQn0bEkhrjk69tksi7QD9T9sQq8h5vzo/znvs+QhFwXFXyvJvopRZzm0k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=WwfMYccq; arc=pass smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTS8sQnQ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BCAFE1F000E9;
-	Fri, 26 Jun 2026 15:20:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782487208;
-	bh=YT2xcf8+bTOO81Uaz+9Jglj/L3Gdlhxxps3VCKikXG0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BTS8sQnQ87XesXqUGaQv+mCvMi4TBepLQsuP9iWNG0MlRju0qRf48Khh+3qJBHBcK
-	 /dN5t4/bGy/iUz9cLFt3ZyW/oWUF5n47n5nY/9xlOkqoCc4Ody2X5bSYpP0gbIBJf/
-	 rhLRFoINGlhK/V7MF19X4aLCay9+mBVjtm3UIjxWVq6EA2Ir2teeDCYpPFWc3oqmbE
-	 fDuiXtxC2KoWoiW9mavObekM6as5ZN0HtNOavh95Qp0/Xzlj+tG+d+plq2X8CJG8Xm
-	 vvYvoElRtkZJ2Ztw1Gi2SePmXC60S7t1744De73E3e8Uic0CWDxKbbXazp9lRBzwIj
-	 k6AvvzlAsP+Zw==
-Date: Fri, 26 Jun 2026 08:20:08 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, jack@suze.cz, hch@lst.de,
-	serge@hallyn.com, linux-security-module@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH 4/4] capability: unexport has_capability_noaudit
-Message-ID: <20260626152008.GW6078@frogsfrogsfrogs>
-References: <20260626114533.102138-1-cem@kernel.org>
- <20260626114533.102138-5-cem@kernel.org>
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="WwfMYccq"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2c6c57c5bcfso11960545ad.1
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 08:31:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782487878; cv=none;
+        d=google.com; s=arc-20260327;
+        b=dQgNtaVF1s9LFnzcaSMZe/yFQbh2Yuzq9/fNJfda/igwvYVvv1H7sXHLjQGIuZgwv1
+         JpcwOUFr1cWSBD3YCyythygsbP3f9qIaWYhf6Buf+iSDv1Ctzx4MNw/vi9U8iJfeezT8
+         P56wKJ2qLWpzFcdneuqDXnJTRa00Gl9tIw8m9WyEV4T8+FhJsgueQm13pjtAagdnChGw
+         6OcEZLRK7vsLu8wZQMzV8SNJMrK+mVFW/ENh5EVWzbXMLUDU77Yayyma4h7hx9NiEavO
+         WFOfNvPbTcWLxskprYO3pebLTy7fkGky5XMpujBoqW0bcMJhe8qPRJCubytIbjw5Z8Nm
+         iZkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=M3UX0w5EKmMEqjBcGu53wO3BCmqVyWzVn/8cvHr+BeY=;
+        fh=YFo/XqcQq2y6uZOrWkb5kK/GMU4lhAiKg2qjGzOF2fw=;
+        b=VvwOdEIu42hrfyQ1tDYYGoN2ip10tbhdb/bHoXPy11H/RlGobm/yMVI1kTBIldVV5a
+         n6VB9cs5LM1AJMOw3F1iKeTsQZV9KMWtgW5RHGDYVaRMkNoSDBWzkFNhQvuS89re+e9k
+         9gp39KDTN1lt0zXsZJkdXFRStK6FpiPfbJPCuzS6wEiGj6JMJ3mcDTz7Ntfyv6HwOmVC
+         DIqXZXlF/6dmxHQHgy09nRuzJBJD7E91KH4XXdBHbseQSo0x87FWafe0fQSZohx0Gugl
+         jqXdsC/5Wi4eJSdetD4pMBbvgTDV1TqqUcoaabIlXcFDBkjZ2b65ThgXIiEW1AotOj54
+         A3sQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore.com; s=google; t=1782487878; x=1783092678; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=M3UX0w5EKmMEqjBcGu53wO3BCmqVyWzVn/8cvHr+BeY=;
+        b=WwfMYccqsBUm52y+juQmzKEuofwm83E6WcDoFZNUzyJe0gmz4JB7GEVKXZw041gsMV
+         uc8FpKgARxiBJaydTkAoB7nahiyicI6V/fSCwGPhcuWYVWXEWURzLc/vkASlYt+73GHA
+         suEC6Lhnvm2rtiTG3Hrtg3RrTR+wwTxasPIxIciVuUcAi839yxU0NG5TrTTjLklazc5T
+         AJZ0Wnz2y6Zh/h00p/GmVmCW35Wz/C/sJoidyWn8qM/Ty86vGK5zfcGv1uIE6dSlaxkY
+         k/H6FRuNTpIFkz3h0OmTD2O7aJ87rQBiQMZ/SauMUpkQ9zyhHaWCOTDNCWJEQ7BR7Tly
+         K86A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782487878; x=1783092678;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=M3UX0w5EKmMEqjBcGu53wO3BCmqVyWzVn/8cvHr+BeY=;
+        b=cKyfRnU7RNwMuFycs5I758esMy4nWvx+4o2e4vZlVkl9diEmGq/kEHVxpiTETkKKdn
+         G8/8gdYMMa3iKlDw+FFHWx8eLsg4Cf9zoWExruPHDwfWtOkBdbKtlV38ZdXOoiLE89dZ
+         0FDKyDnatjne85MYND7Belxa7dNIH/NEdjBKcu+NVNNdMTimarBl68GkzjpRmYMjUr2k
+         PNs5zXdGNjovAfdm/hI9IpZ/1jyE1g94uRAhStOjSCkxHH4/ksIGmH7U6zCxP0NgVPqq
+         aoGocNJIHI0seBS2ABGf+ySQVxjxb0SoM57/2+DjJTWm+9Ut07QqUZ4XwFdOHaxBLZAu
+         +QQA==
+X-Forwarded-Encrypted: i=1; AHgh+RrnDO/je1rk9VxazrOEFphLhEQfxGjzy5bWE9gzeEUbX72gBbgL4MtDk06gEWoNSlOXT4l6DSN44CY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJh/y9ikVyNZZQ5QCq2KJ7OF38ziIy9HOO5+KspoxmgSIEXEfQ
+	d/7RnLtONyWhdDZFRe/wTF38zBAqPGlW3PawrCT0jdP4SM6Ukd96/whFJRaRYPKx7cXX6kRtpyd
+	a9zeWSqqvsKROGFcW0YfZoPdWEg1YowLxt2pTUYVr
+X-Gm-Gg: AfdE7clQbVuXFsyZoNBNTtgaxyyNOzR0UfwH9u8+N23aq5I45T8PZCK26lK9yMjoE22
+	8u4RiwFUDv+QGDLZR/Pw3iSTSnVtWL5aJI7xmUBvqqhNgU6Bd62UxQ/ZaGs2pbgVkIl4R59ZLuZ
+	1DgThRNQZP6dsyv/u63ceCcFE9mBwNy5VxxX5x662FAM0KPiYqX1JfVy2MQHOu7xPhYMcOI+8zn
+	WNvLNl0DfoKki0x0AtoxYRMUzRASySItcyrjyXsK+mJIvmQTBirCCIy1oswM93f/yx9tHqh
+X-Received: by 2002:a17:903:19eb:b0:2c2:62ee:5a0d with SMTP id
+ d9443c01a7336-2c7fc74ed9bmr77478525ad.14.1782487878522; Fri, 26 Jun 2026
+ 08:31:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260626114533.102138-5-cem@kernel.org>
+References: <20260626114533.102138-1-cem@kernel.org> <20260626114533.102138-2-cem@kernel.org>
+In-Reply-To: <20260626114533.102138-2-cem@kernel.org>
+From: Paul Moore <paul@paul-moore.com>
+Date: Fri, 26 Jun 2026 11:31:06 -0400
+X-Gm-Features: AVVi8CcEZMeN8u2CIiqk4TLj89kobhoxWYGuWAl5i77ATSryI4gp2OXB1rc_eGY
+Message-ID: <CAHC9VhQNURc=d4AOVDF-z29fjLasCiLf120Y-N3txEBccpkfSA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/4] capabily: Add new capable_noaudit
+To: cem@kernel.org
+Cc: linux-fsdevel@vger.kernel.org, jack@suze.cz, djwong@kernel.org, hch@lst.de, 
+	serge@hallyn.com, linux-security-module@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jun 26, 2026 at 01:45:23PM +0200, cem@kernel.org wrote:
+On Fri, Jun 26, 2026 at 7:49=E2=80=AFAM <cem@kernel.org> wrote:
+>
 > From: Carlos Maiolino <cem@kernel.org>
-> 
-> This has been originally exported to be used in xfs. Givin we are not
-> using it anymore, unexport for consistency.
-> 
+>
+> In some situations (quota enforcement bypass in this case) we'd like to
+> check for a specific capability without triggering spurious audit
+> messages from security modules like selinux.
+>
+> Add a new helper so we don't need to use ns_capable_noaudit() directly.
+>
 > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
->  kernel/capability.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/kernel/capability.c b/kernel/capability.c
-> index 2c2d1e8300bd..3d0387fb93a3 100644
-> --- a/kernel/capability.c
-> +++ b/kernel/capability.c
-> @@ -326,7 +326,6 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
->  {
->  	return has_ns_capability_noaudit(t, &init_user_ns, cap);
->  }
-> -EXPORT_SYMBOL(has_capability_noaudit);
+>  include/linux/capability.h |  5 +++++
+>  kernel/capability.c        | 17 +++++++++++++++++
+>  2 files changed, 22 insertions(+)
 
-Please update the kerneldoc for this function to mention that it only
-checks real capability, not effective capability.  I'd like to prevent
-someone else from making the same mistakes I did with these functions
-that sound the same in documentation but have very different behaviors.
+This is Serge's call, not mine, but FWIW, I somewhat prefer to see
+code use the ns_capable_XXX() variants directly as I like to think it
+means some thought went into ensuring the capability check is being
+done in the right namespace.  Yes, we all know that capable() just
+uses the init namespace, but I like to think that having to type that
+out in the parameter list might be a good double check ;)
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
->  
->  static bool ns_capable_common(struct user_namespace *ns,
->  			      int cap,
-> -- 
-> 2.54.0
-> 
-> 
+--=20
+paul-moore.com
