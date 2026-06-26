@@ -1,137 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.camora.dev (mail.camora.dev [45.63.89.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B534720E702
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2026 22:57:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA7131ACED5
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 00:28:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.63.89.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782428281; cv=none; b=RM1JF7uTyyEQ14Q9HouhcT3S9E306cs4RvAVHQeCLo7dc4J6yRueG+tufhvM9gk+n4QQt9Hi3uj2ipcsd34ArI1lGQIVg0LnXKoNbfwfLLmMKXTji3O/4BcdH2O53T+bZdg9KbfJE62WbxvH3Fiv832498yQdbuVjheq+2HDuOY=
+	t=1782433707; cv=none; b=YvM1L6q282TB7DFtF9L79KgetioktjqtF1/TEiUO+ONRNbjCmJ5ZDEwpxtWoaBGPp5H8AR0IVUCVp95P/43TRYQPXuTrN0nznZ15Jh0oY73fHP0gFVvs3us1jJ7It+1kHqkv6iI68SszWkm05iw2q0Y4qyn+p+3wDxvew2pCNbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782428281; c=relaxed/simple;
-	bh=n+e1+y2LyIABo6XUAA7bGRaxcrDi9FBAQ4fuPE9uSos=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aWLfFUXXcsizGyRrMoQ/lC3LSjyXwsMiWGxlrgDMvJim7mygdo8LlW4vo+yyKccOy7SEAdJPafhL5qF2KDw5wqSetV1nMK4mjYrp0cd3BFHR5q2zwwpUwsrmCuWoJfkx1MU5m4fyMtMp0g146z2QVfegP+QC5Zw/cv5kKEmhNe4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MTQG7hfK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782433707; c=relaxed/simple;
+	bh=d+lQja5lO1waj+4UY1TMhyJxzOgNdsyIxh/0ox8Fd2M=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Message-ID:Content-Type:
+	 MIME-Version; b=TqSWzvXgTkYIYYD27ZJhesQwFn9IlDrtaJwvMsnn1E8/31/gS1LkT+U9P8U6YbGvK8M+zyz+vhgNs6yZ4Rk3RiSksY8nJlK7WPUBc/Ir8zB07GeYvoYWGr7TLRM6b3ky4GosNdu1ctOGT/RTh/NWGBSZF6im1A9Lo2yRPydnFI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=collar.sh; spf=pass smtp.mailfrom=collar.sh; dkim=pass (2048-bit key) header.d=collar.sh header.i=@collar.sh header.b=dXF9JowI; arc=none smtp.client-ip=45.63.89.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=collar.sh
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collar.sh
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MTQG7hfK"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4EDEA1F000E9;
-	Thu, 25 Jun 2026 22:57:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782428279;
-	bh=0trF6vaacZTCAUiEbQRbGrJ3OCS34Krd87FmxptT3kc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MTQG7hfKe7NdS03KLW5T2BFtxobRjMFwCY3TGCsIYfHjOOPaQGPdRJWIgKxmxAXI8
-	 kmKHpIDu/OdZftFPbgjeXpWiW/XaQEt8fCvnyYxd63+QKga0Dz/ol6vBg2EvgBfCOJ
-	 2o6fM2hqP5s+tljwzLhPrik3ALiujFAVlgJU3eaBV/7pyNfSD6TskGLwIMM5xQmaqB
-	 fdum2EDYDBh5m+Rco+P0f+yo3l4webOHpiVtNefOMcNYQLi9RapBo8n+AzlJT9QCuH
-	 IU04H7zZPELiAe78H+nXRXZIiDaJmyWoNzDq2TkfWkEoyxXI9Bd2kQz6vws8WUQYrJ
-	 doYoAn5N67YOw==
-Date: Thu, 25 Jun 2026 15:57:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: vmfunc <celeste@collar.sh>
+	dkim=pass (2048-bit key) header.d=collar.sh header.i=@collar.sh header.b="dXF9JowI"
+From: vmfunc <celeste@collar.sh>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=collar.sh; s=mail;
+	t=1782433706;
+	h=from:from:reply-to:subject:subject:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+vRjbavyPTlXhbvgta/fR8bO9QBQU5upx3BWKkNufF0=;
+	b=dXF9JowIEiCsNcrjKAP+GI4zvAV9ENnje+212Tkx+KdGcYD5voXvUHasrDK1J5pe0X4qg+
+	xagxUTanJnmv+VEehiCjIHpmnah7iNNmhOrNIrDkIGNrI67GsiRnrKQVF0Nk9U+SCXZC0B
+	0DG+Zmk7L8jAV/3HCT0YAPdsxIf3tLMXwoLpaKk2Cmpq/gILTOK3KpT+Dpnge6pda8TcjP
+	oIQInxLWXqzfkhTNVR2+XUvgjW4VxPEuNOxyuaKaYx51snzoqFRbX7c6rM7Yzv1rtPUtns
+	SJAIyzjnyAvdj9qQk1V2x0RIogitXaGp1XP2sKe8kEGEcvy5YtPMoZXibAr/wQ==
+To: Darrick J. Wong <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	Andrey Albershteyn <aalbersh@kernel.org>
+ Andrey Albershteyn <aalbersh@kernel.org>
 Subject: Re: [PATCH] xfsdump: avoid false-positive __strcpy_chk abort on long
  dirent names
-Message-ID: <20260625225758.GN6078@frogsfrogsfrogs>
+In-Reply-To: <20260625225758.GN6078@frogsfrogsfrogs>
 References: <20260625222337.54449-1-celeste@collar.sh>
+ <20260625225758.GN6078@frogsfrogsfrogs>
+Message-ID: <178243370553.73182.935356806206037088@collar.sh>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260625222337.54449-1-celeste@collar.sh>
 
-On Thu, Jun 25, 2026 at 03:23:37PM -0700, vmfunc wrote:
-> direnthdr_t and direnthdr_v1_t end in dh_name[6], which is used as a
-> trailing variable-length buffer rather than a fixed six-byte field.
-> dump_dirent() allocates each record with malloc(sz), where
-> 
-> 	sz = offsetofmember(direnthdr*_t, dh_name) + namelen + 1
-> 
-> (rounded up to DIRENTHDR_ALIGN), and the "sz > direntbufsz" check ahead
-> of the copy guarantees the allocation is large enough to hold the name.
-> The declared [6] is part of the on-media record layout: DIRENTHDR_SZ and
-> the arch translation paths depend on it, so it cannot simply be turned
-> into a [] flexible array member.
-> 
-> When xfsdump is built with _FORTIFY_SOURCE together with
-> -fstrict-flex-arrays (increasingly the default in distributions), the
-> trailing dh_name[6] is no longer treated as a flexible array.
-> __builtin_object_size() sizes it to 6, strcpy() is rewritten to
-> __strcpy_chk(dst, src, 6), and dumping any directory entry whose name is
-> longer than five bytes aborts at runtime:
-> 
-> 	*** buffer overflow detected ***: terminated
-> 	#4  __fortify_fail
-> 	#5  __chk_fail
-> 	#6  __strcpy_chk
-> 	#7  dump_dirent
-> 
-> The copy is in fact safe; only fortify's notion of the destination size
-> is wrong. Write the name through the byte offset dump_dirent() already
-> computes, (char *)dhdrp + name_offset, instead of through the sized
-> dh_name lvalue. The destination is then a plain char * into the malloc'd
-> record, which fortify cannot sub-object-size, so the spurious check is
-> dropped while the rest of the binary keeps its hardening.
-> 
-> Signed-off-by: vmfunc <celeste@collar.sh>
-> ---
-> Andrey Albershteyn (Cc'd) tested this with fstests on the downstream
-> report and asked that it be sent upstream; the discussion and original
-> backtrace are at https://github.com/NixOS/nixpkgs/pull/533325 .
-> 
->  dump/content.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/dump/content.c b/dump/content.c
-> index 6462267..8d482cc 100644
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -5151,14 +5151,14 @@ dump_dirent(drive_t *drivep,
->  		dhdrp->dh_sz = (uint16_t)sz;
->  		dhdrp->dh_gen = (uint16_t)(gen & DENTGENMASK);
->  		if (name) {
-> -			strcpy(dhdrp->dh_name, name);
-> +			strcpy((char *)dhdrp + name_offset, name);
->  		}
->  
->  		dhdrp->dh_checksum = calc_checksum(dhdrp, DIRENTHDR_SZ);
->  
->  		xlate_direnthdr_v1(dhdrp, tmpdhdrp, 1);
->  		if (name) {
-> -			strcpy(tmpdhdrp->dh_name, name);
-> +			strcpy((char *)tmpdhdrp + name_offset, name);
+On Thu, Jun 25, 2026 at 03:57:58PM -0700, Darrick J. Wong wrote:
+> Why wouldn't you fix the structure definitions to use the proper VLA
+> syntax (dh_name[]) instead of making the code less readable?
 
-Why wouldn't you fix the structure definitions to use the proper VLA
-syntax (dh_name[]) instead of making the code less readable?
+looked at that first but dh_name[] doesnt drop in cleanly here. the
+declared size isnt slack padding, its the count of name bytes carried
+inline in the fixed-size on-media header, n read_dirent() in
+restore/content.c reads the record back out using sizeof() of that member:
 
---D
+	namep = dhdrp->dh_name + sizeof(dhdrp->dh_name);
+	memcpy(dhdrp->dh_name, dhdr_v1.dh_name, sizeof(dhdr_v1.dh_name));
 
->  		}
->  	} else {
->  		direnthdr_t *dhdrp = (direnthdr_t *)contextp->cc_mdirentbufp;
-> @@ -5169,14 +5169,14 @@ dump_dirent(drive_t *drivep,
->  		dhdrp->dh_gen = gen;
->  		dhdrp->dh_sz = (uint16_t)sz;
->  		if (name) {
-> -			strcpy(dhdrp->dh_name, name);
-> +			strcpy((char *)dhdrp + name_offset, name);
->  		}
->  
->  		dhdrp->dh_checksum = calc_checksum(dhdrp, DIRENTHDR_SZ);
->  
->  		xlate_direnthdr(dhdrp, tmpdhdrp, 1);
->  		if (name) {
-> -			strcpy(tmpdhdrp->dh_name, name);
-> +			strcpy((char *)tmpdhdrp + name_offset, name);
->  		}
->  	}
->  
-> -- 
-> 2.54.0
-> 
-> 
+sizeof() on a flex array member is a constraint violation, so dh_name[]
+wont compile without rewriting that reader. it also breaks
+assert(sizeof(direnthdr_v1_t) == DIRENTHDR_SZ): the v1 header is 16 bytes
+of fields n dh_name[8] is exactly the pad that brings it up to
+DIRENTHDR_SZ (24). as a [] member it goes to 16 n the record size moves
+with it.
+
+so a proper [] conversion means reworking the v1 on-media reader + the
+record-size invariants, felt out of proportion for fixing the fortify
+abort, so i kept this to the minimal change that preserves the layout n
+the rest of the hardening. happy to do the struct cleanup as a separate
+patch if u'd rather, just flagging its a format change not a pure
+readability one.
+
+thanks,
+celeste
