@@ -1,28 +1,28 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B2F19DF6A;
-	Fri, 26 Jun 2026 04:31:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EAAB30568D;
+	Fri, 26 Jun 2026 04:33:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782448281; cv=none; b=dO0ATqo98GaKNLDJf5DeZXwLD64W+gjhM7kpPrNnO6rjL0qJnKk4Uj3L0tY/D0bEbm77ZNv7CvFNdOR5pO2XqjBDIJBcFroDDEXrT/AKXqi6t/nJ0fD8PbqHdmav4ASeapd5Yc2SAORSr/Pse3A4y+uSU/q35ra8Utv+1xrRQz0=
+	t=1782448406; cv=none; b=G7E15O+8dL/XWADRZxkBqBQqiceZLhRWPCFq3PmqRmPtMFL2SULweTz8xyCbbqlJDDn/phXSfimOu3jGz+6MB/Ersx1APfi2MAnHisQHstwyDnQOIASkkPIlT7MRdsLzRxZ/GT3/9MJgr4bkA0BNngcMMZ8Ca+fa8OGyIwWytE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782448281; c=relaxed/simple;
-	bh=WJElwibxezKch90RFFEQGKqc8pj55AgE04u4MY3liLM=;
+	s=arc-20240116; t=1782448406; c=relaxed/simple;
+	bh=fjHVMSVZUyXFyjOhAP2+pCdwrD+9eUL55c+u3rAHLTs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=me+3OqV7vcZ0PxIagOgCtixH2rhbHKSDYRVyKxkxtTVw6OkfMMlaaTb8bQTPRiVc7f/bDgDQ45Gs7EC8LEfjp9g8OX0/8oD5aWA6pRvPVytAz/snndL/JouLnOxX8VKuG57DBDXKf+Z/++/g5t2dgHS5ysoSzJopk67nxvL9ra8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=a6bcrPMuJriySEoS4mowoBr/jCygJ7qCxJyhvy6gVEAsxM03Z3fsoLyjTm/tX0zVlvtT/Kfs8cai5P7hz45UHbQcpIjFQUyAUk+bcSlgdp4wYw1saQtq7J0JejLWiCnNPeLc5u1qC1N9FDJ9ODrvH59Dl/PexcT66Slt5+j2/Ao=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id C8F7368B05; Fri, 26 Jun 2026 06:31:17 +0200 (CEST)
-Date: Fri, 26 Jun 2026 06:31:17 +0200
+	id 398A168B05; Fri, 26 Jun 2026 06:33:20 +0200 (CEST)
+Date: Fri, 26 Jun 2026 06:33:19 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Christian Brauner <brauner@kernel.org>,
 	Kelu Ye <yekelu1@huawei.com>, Yifan Zhao <zhaoyifan28@huawei.com>,
 	Ritesh Harjani <ritesh.list@gmail.com>,
-	Joanne Koong <joannelkoong@gmail.com>,
 	Namjae Jeon <linkinjeon@kernel.org>,
 	Sungjong Seo <sj1557.seo@samsung.com>,
 	Hyunchul Lee <hyc.lee@gmail.com>,
@@ -31,8 +31,8 @@ Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
 	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH 2/2] iomap: submit read bio after each extent
-Message-ID: <20260626043117.GB8078@lst.de>
-References: <20260625120803.2462291-1-hch@lst.de> <20260625120803.2462291-3-hch@lst.de> <20260625174758.GE6078@frogsfrogsfrogs>
+Message-ID: <20260626043319.GC8078@lst.de>
+References: <20260625120803.2462291-1-hch@lst.de> <20260625120803.2462291-3-hch@lst.de> <20260625174758.GE6078@frogsfrogsfrogs> <CAJnrk1YFeirQ4g7qcVsda-8qPLeAtoiyW6ZBuJb2qDsGpxi-tg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,37 +41,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260625174758.GE6078@frogsfrogsfrogs>
+In-Reply-To: <CAJnrk1YFeirQ4g7qcVsda-8qPLeAtoiyW6ZBuJb2qDsGpxi-tg@mail.gmail.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jun 25, 2026 at 10:47:58AM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 25, 2026 at 02:07:57PM +0200, Christoph Hellwig wrote:
-> > Currently the iomap buffered read path tries to build up read context
-> > (i.e. bios for the typical block based case) over multiple iomaps as
-> > long as the sector matches.  This does not take into account files
-> > that can map to multiple different devices.  While this could be fixed
-> > by a bdev check in iomap_bio_read_folio_range, the building up of I/O
-> > over iomaps actually was a problem for the not yet merged ext2 iomap
-> > port, as that does want to send out I/O at the end of an indirect
-> > block mapped range.
-> 
-> This really puts the onus on block-mapped filesystems (e.g. ext2) to
-> merge adjacent maps into extents.  Granted they *probably* already have
-> been doing that.
+On Thu, Jun 25, 2026 at 11:32:40AM -0700, Joanne Koong wrote:
+> Yes, that works. I think that's a good idea. fuse only needs
+> submit_read logic for readahead. The change would just be:
 
-Yes.  In fact the ext2 conversion was the first ask for this change,
-because they do not want unlimited merging but kick off I/O at the
-indirect block boundary.
+A nice, I'll fold that in.
 
-> > So instead of adding more checks move over to a model where a bio only
-> > spans a single iomap.  Change ->submit_read to be called after each
-> > iteration, and pass a force argument to indicate that the bio must
-> > be submitted set on the last iteration.  Switch the bio based users
-> > to always submit, while keeping the single submit for fuse.
-> 
-> Is fuse the sole reason for the "force" parameter to exist?  I wonder if
-> fuse could drop its submit_read function and call fuse_send_readpages
-> after the iomap_read{ahead,folio} function returns?
+> If this fix needs to go into 7.2 though, maybe it makes sense to land
+> the v1 implementation [1] + the xfs integrity fix now and do the fuse
+> change later?
 
-Probably..
+In a way this is actually simpler as it doesn't require the prototype
+change.  And it'll avoid both a temporary fuse performance regression
+and a bit of churn.
 
