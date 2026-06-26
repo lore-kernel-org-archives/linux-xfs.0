@@ -1,132 +1,114 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67DD430BB9B
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 09:42:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E203EA94C;
+	Fri, 26 Jun 2026 09:53:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782466970; cv=none; b=KQ6g+r78Q5tpCe4cFSdHZRya1zdBXl+3o8Bshn2FhpyrVanaIfiNOWaQxcIBJmMt4ppLkG/80lInDXyofVlDy4yNTIGuXxdTBUu8t0eEAusYzJSae+xWM+5aYEDTG94z+WI8gPz/Jp/6V36Yl5onXd+nCnz51rKw0U4bBNToz1w=
+	t=1782467627; cv=none; b=Qco3yvqoCk3xqG4jYNQEO6MfcpjPzeSG2BS17DJycp3tNsM5fAr8gTs7lTRnZ0OXys/jzbSvh7aieYN1tDyNlHCfxgn4a04TEssaSd3wYyKPlFzrDk/IRetFBH6cRL88OnaqpxsMkA4ze+dY0eFIS7YD1JH35hYztpbb1zosppw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782466970; c=relaxed/simple;
-	bh=WKREoeKXA1Hnf6EYFBSk+6BgapGeRff/XzUGhwqro2I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=odosg5yGQjGbLB9N5jfgZPP7+7kU+Z8hvDz4bugKOJnP93ucElIWS+VyWWNmqOMzvqv0oVJ/ouCyudvOUfh5JV5599n53dDtVqrj/Ic7Qd1l0s9ZkYhJlRMwAchW890PtFCn2dTyZlP9S3Cd2djFKnWv68KtYnUGr7Wt+Mor7BY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 60d400a0714311f1aa26b74ffac11d73-20260626
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:43386124-3ff0-4ba7-9fcb-0e5fcbf6de8f,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.12,REQID:43386124-3ff0-4ba7-9fcb-0e5fcbf6de8f,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c0e53931bd40adfeddfcd87a43a23234,BulkI
-	D:260626000520RKESHILB,BulkQuantity:2,Recheck:0,SF:17|19|64|66|78|80|81|82
-	|83|102|127|136|841|865|898,TC:nil,Content:0|15|52,EDM:-3,IP:-2,URL:0,File
-	:nil,RT:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR
-	:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 60d400a0714311f1aa26b74ffac11d73-20260626
-X-User: liuhuan01@kylinos.cn
-Received: from [192.168.109.190] [(1.193.56.173)] by mailgw.kylinos.cn
-	(envelope-from <liuhuan01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
-	with ESMTP id 440931214; Fri, 26 Jun 2026 17:42:42 +0800
-Message-ID: <8cafea86-162f-4f2b-8de2-b0226c09d516@kylinos.cn>
-Date: Fri, 26 Jun 2026 17:42:39 +0800
+	s=arc-20240116; t=1782467627; c=relaxed/simple;
+	bh=ulKQOwvqfv5NwVJRwLbXwf9gv5JhK9bpJp/pOHUFpcA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Rb9AaznPMOvtNh+eIrIkOKrOQK7ImlnBLGpilP5VNDhXoTmpmUIGTFhB+1S/75X04VeIwTn58MwziBWtNilTTWJL5Fa+lnVtCRoRxZhoccIorE06GwjOV8ffQ6Vrv5cRoHk0wGBShD1HAsmaXf0phSsp+lJYL2H14m1bVn1FAY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=TiS/q2z5; arc=none smtp.client-ip=54.254.200.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="TiS/q2z5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1782467601;
+	bh=vfvLhr65iEMu3izrgUXQ0P2O7TXf2pKb5t+U41jSuVA=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=TiS/q2z5a0xDby9CKrKNPIIeSOU21B1pb4mQHk/3Lxgj+d3hQkEPo3VjeGmSSNkJ8
+	 hQpVJXRBZww4nB9v03UnP3Pu8R9JJ/TmVa60au7guH+v4UG9ZwimjmAideNTvKGI26
+	 q4J2p3Bk2QFYj2MPj5ns2BmUU2ZAUut6RNOzJByQ=
+X-QQ-mid: zesmtpsz9t1782467595t3b555466
+X-QQ-Originating-IP: BCP/nulRk57ZJbfdxseHmq4NgcrCc406oVjOklDSYZA=
+Received: from localhost.localdomain ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Fri, 26 Jun 2026 17:53:13 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 216098964550341658
+EX-QQ-RecipientCnt: 7
+From: Yingjie Gao <gaoyingjie@uniontech.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	hch@lst.de,
+	Yingjie Gao <gaoyingjie@uniontech.com>
+Subject: [PATCH] xfs: retry dqpurge when dquot buffer is busy
+Date: Fri, 26 Jun 2026 17:52:53 +0800
+Message-Id: <20260626095253.3445540-1-gaoyingjie@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mkfs: simplify setup_proto file status checks
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-References: <20260625054445.28751-2-liuhuan01@kylinos.cn>
- <20260625160509.GZ6078@frogsfrogsfrogs>
-Content-Language: en-US
-From: liuh <liuhuan01@kylinos.cn>
-In-Reply-To: <20260625160509.GZ6078@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
+X-QQ-XMAILINFO: NvKPgl6nhXeJMcLpMKyREnUDY50szK1egZTjyp8eN1O9LNRY2F53QSjH
+	e6mGvv5zpWuRiB2dQlMA1vNgc6rulJwNDwdawgXLSNvT87tOazaEOlsrTVyAf36WxIMqpYd
+	b2GQX0wEB4X6NENfE5vF8sucqLOTRsFNvillcwElvwisjSziR+ZrZtL6PgWdFJGtwnOVwiN
+	T3CxyjOe6iWO7DKzfSVedDEsJ/7BMUBbs/oEICZbqjz+hLV3oenp35xwfMEocZN3crYRUla
+	ra0NJHqgm94VOY3tlCRU0+pkqGTJ70iSFfzUnWLY/IGj5sLHemKtRbcoQmQUUW0E/+eZFrg
+	5+OQ+IvW5MqwJuFtaBrxR4rS177Vaf3IWQpy8p0fawJEtNnBGMZUOxtSbyAjwjgqBor6bVY
+	d2OZqzWyQhY6/gYYE84PEc0CoOwbllxh6kzr3RdSuYljIlXIXBR0X+DL0ivqtRR+vh30HHM
+	bvMU5RY1toynmqhFk4f/PuhwfmH1KTZOgUMZSCpJZzHSfjuxqO3XWVFVbOFU97i2eS42Mg4
+	Qdl1wmFGFVQLAnvbhTc/1jsthfk4cp/xE56bzoc1L9yz+Hgp4IhOBJXIRZctF5OhLfLAOVz
+	7AB5bDAm7kllOa73PJSnP8mmBif3kMQNGyctIZsuu8nlK1OHZMK/MA6XRlZBcAQ4HjXtn6C
+	XYrMyhpmDm21A6030E0FnTHWrfiAoJpQ0uRQTU1/yV5m9tvkPuOYPRKY/Iekm52yfLRriot
+	6heB6iyh7+lwDqTnSeiqOIDG7uGTQ+xsavv1UrIzK5u8HFeIydABRxmTwseshRqeUzfVPW7
+	fQ0gb+GD/aGkU43GRKkZsORYXbaIHznMwMDsCUyEA1YKi8rxVhBOV70J65RCXEI0NK09389
+	WhN9EHU2O6MF4oPP/2J/lZQvRmtB+kOJIYLFKR0P9YnzrOkvvtZZ16vhHTwroVfbct3JRHp
+	9vacAomIqufZTZ8HLH58secVUjtKmz+OyfkcdSoVabM/CnYSG0ahpgnXZZBH2bDwflar09y
+	WnJ86ZDjSO3mksIXnnWiNOSoGQkCmq2e5pALgkAVyPn++2dETgcKJ6YH+yFms=
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
+xfs_qm_dqpurge() marks a zero-reference dquot dead before trying to flush
+a dirty dquot. If the attached buffer is busy, xfs_dquot_use_attached_buf()
+returns -EAGAIN.
 
-在 2026/6/26 00:05, Darrick J. Wong 写道:
-> On Thu, Jun 25, 2026 at 01:44:46PM +0800, liuh wrote:
->> setup_proto() calls filesize() before validating the source type with
->> fstat(), even though both operations ultimately require the same file
->> status information.
->>
->> Perform a single fstat() immediately after opening the source path and
->> reuse the resulting metadata for both source type validation and file
->> size retrieval. This simplifies the setup logic and eliminates a
->> redundant metadata lookup.
->>
->> Signed-off-by: liuh <liuhuan01@kylinos.cn>
->> ---
->>   mkfs/proto.c | 17 ++++++++++++++---
->>   1 file changed, 14 insertions(+), 3 deletions(-)
->>
->> diff --git a/mkfs/proto.c b/mkfs/proto.c
->> index a460aebd..72fefb6e 100644
->> --- a/mkfs/proto.c
->> +++ b/mkfs/proto.c
->> @@ -82,14 +82,17 @@ setup_proto(
->>   		return result;
->>   	}
->>   
->> -	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
->> +	if ((fd = open(fname, O_RDONLY|O_NONBLOCK|O_CLOEXEC)) < 0) {
-> Why is there a random unrelated change here that wasn't in v1?  And
-> isn't even mentioned in the commit message?
->
-> --D
-O_NONBLOCK is needed because this path can open a FIFO. Without it, 
-open(O_RDONLY) blocks until a writer appears.
+The error path restores q_lockref.count but then jumps to out_funlock,
+which continues into the successful purge tail and destroys the dquot.  At
+that point the attached buffer has not been detached and the dquot log item
+may still be in the AIL.
 
-You're also right that I should have mentioned this change in the commit 
-message and the v2 changelog.
+Restore the retry behavior by dropping the locks and returning -EAGAIN
+after resurrecting the lockref.
 
-I'll fix that in the next revision and drop the unrelated O_CLOEXEC change.
->
->>   		fprintf(stderr, _("%s: failed to open %s: %s\n"),
->>   			progname, fname, strerror(errno));
->>   		goto out_fail;
->>   	}
->>   
->> -	if (fstat(fd, &statbuf) < 0)
->> -		fail(_("invalid or unreadable source path"), errno);
->> +	if (fstat(fd, &statbuf) < 0) {
->> +		fprintf(stderr, _("%s: failed to fstat %s: %s\n"),
->> +			progname, fname, strerror(errno));
->> +		goto out_fail;
->> +	}
->>   
->>   	/*
->>   	 * Handle directory inputs.
->> @@ -101,6 +104,14 @@ setup_proto(
->>   		return result;
->>   	}
->>   
->> +	if (!S_ISREG(statbuf.st_mode)) {
->> +		fprintf(stderr, _("%s: %s not a regular file\n"),
->> +			progname, fname);
->> +		goto out_fail;
->> +	}
->> +
->> +	size = statbuf.st_size;
->> +
->>   	/*
->>   	 * Else this is a protofile, let's handle traditionally.
->>   	 */
->> -- 
->> 2.43.0
->>
->>
+Link: https://lore.kernel.org/linux-xfs/20260625175519.GF6078@frogsfrogsfrogs/
+Fixes: 0c5e80bd579f ("xfs: use a lockref for the xfs_dquot reference count")
+Cc: stable@vger.kernel.org # v6.19+
+Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+---
+ fs/xfs/xfs_qm.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index aa0d2976f1c3..0622c72292d8 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -155,8 +155,12 @@ xfs_qm_dqpurge(
+ 		error = xfs_dquot_use_attached_buf(dqp, &bp);
+ 		if (error == -EAGAIN) {
+ 			/* resurrect the refcount from the dead. */
++			xfs_dqfunlock(dqp);
++			mutex_unlock(&dqp->q_qlock);
++			spin_lock(&dqp->q_lockref.lock);
+ 			dqp->q_lockref.count = 0;
+-			goto out_funlock;
++			spin_unlock(&dqp->q_lockref.lock);
++			return -EAGAIN;
+ 		}
+ 		if (!bp)
+ 			goto out_funlock;
+-- 
+2.20.1
+
