@@ -1,134 +1,71 @@
-Received: from smtpbguseast3.qq.com (smtpbguseast3.qq.com [54.243.244.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A513F8246;
-	Fri, 26 Jun 2026 13:40:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.243.244.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36D53F44EC
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Jun 2026 14:47:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782481262; cv=none; b=I1RHeGvNwdGa6Jq1xDcmgKWnaRVA4DpqeaXcZNGQ5zvspM6PFU8JiJNGVpOTAmXtShU/CGBShrtmNdX7NagXI8+OpJ27Av3W1VKsrGRwu405fDTj6a2P56cAhHygxy5NW8hIVGZMrrzax9M9veCkJkJQTyGl+D8e06+WBmBJ8pY=
+	t=1782485272; cv=none; b=SJI7+xc9WsQftGQPNBSTBrBdbQHgv+SbKGzXj+1LMHDiJ932SY1Fb+iGGXOueMx3Nv6k0PIR+SuAYC3fqod492oafRHo0VbuBymndZhawYVNjC72mvijD+apMTk0ABV4QZzJn8W0DSMT4IdOnzNc76El6TE+RMnB7tX/qUBBoVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782481262; c=relaxed/simple;
-	bh=U9XtXjILV4z/r7YsvI55jkGXRuUn2jiR5fKts5PVOoI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Zt7h2mqr7U86g8QbbPcSVnkCYPKlq4xTKDA3KPMoeP2XoP2k44DqT6stJ+xMVK4EjdZf7UZJaAsQO+B6OOrURScbJVNE37y4e8JepEzJF6JNqkF4arHF3mUkL6HZdwf+zV4Sxbp73vIB0tRo2dXTzA/FB2USBs6p7H+r/OR50js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=dobFXW+g; arc=none smtp.client-ip=54.243.244.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1782485272; c=relaxed/simple;
+	bh=oSarp3fEDincYll/GPBcH+aiMkw8U+c8C6ceAi10Ulc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pAyc6JbBEoLCZBrrADLyqeQW7gpX3RaXfdiVZ48MBiUamzfDSnxQ3cF99xKRPJufhzpfHzc90BWmMutrnzk22cTF3lnPBZy8u6FAzIRITncMoJ12PK9oOhL9oOFmnaq2fqP6+68QtF3OOPVKbKMRnzaZp+86fIIb17B6bCGIZoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b32ggrCC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="dobFXW+g"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1782481239;
-	bh=eAgCopvaldpMGs0k5dZYLTIrr2jo6F+DacT6v9UmDuU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From;
-	b=dobFXW+gNSV4WUaOXSsJ91bIfvTn5Tw94PBjDiHyTr7VqMsogDPpkfvR6BHL9v9Yl
-	 u+HiTRBSKTaGMGLHG7//ElKiEhfvvbiMQSa6eRf8aT7N682TQHKTpf2vcNBimGksN3
-	 9VE9ofBiEQhP4dYC2vi8XeZzkvS26LOl3eTGEhGA=
-X-QQ-mid: zesmtpsz5t1782481232ta0d5bee9
-X-QQ-Originating-IP: S9fkTFrrHKZanZaJvHE8dcVyXNUlA/+yfEfFy3t+Sss=
-Received: from [10.10.73.104] ( [123.114.60.34])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Fri, 26 Jun 2026 21:40:30 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 6830464697361593552
-Message-ID: <AE58834B98A995F6+a6737e62-a673-44ad-9285-5e2aef89804d@uniontech.com>
-Date: Fri, 26 Jun 2026 21:40:30 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b32ggrCC"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8050E1F000E9;
+	Fri, 26 Jun 2026 14:47:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782485270;
+	bh=FKltKYjen0eS/hZooEUy00oach4+Lq08ClJCLUN4arU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=b32ggrCCVRfpaLqImEmzPEAqQVnxKB54J9Z62yXWpvIFQJpgw7pXbGjdgNbYw7Oze
+	 Cv2GWAhbLKfRQYDNhgjmO3Y1om5drgkfyUjWaiZGSLXxqvVVUeKhYKeGiykb7GjMMN
+	 6zENbzI0OTzKwCxhhEHSAi9Ck68cdAu8EoScUxZp7zHZIOyR9wMYEC09pLWiJZQsf+
+	 6lTkyU3+YdOvPIDUI3OfilX0uYbSGpgsvzAEdE8a5du1AkNyTrsVzRr7N3rfslBC2E
+	 q8ROpWTHUaA1cA2NhnHReV2PLnMB6ZzCuaH6ox5xm3bicqg+2wPFtz5wMb/dCy7KHY
+	 3hrxcO7VWKjTw==
+Date: Fri, 26 Jun 2026 07:47:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/6] xfs: also mark the buffer stale on verifier failure
+ in xfs_buf_submit
+Message-ID: <20260626144749.GQ6078@frogsfrogsfrogs>
+References: <20260625135849.2494779-1-hch@lst.de>
+ <20260625135849.2494779-3-hch@lst.de>
+ <20260625180002.GG6078@frogsfrogsfrogs>
+ <20260626043516.GD8078@lst.de>
+ <20260626062146.GP6078@frogsfrogsfrogs>
+ <20260626062326.GA10546@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: release dquot buffer after dqflush failure
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260625131623.3261735-1-gaoyingjie@uniontech.com>
- <20260625175519.GF6078@frogsfrogsfrogs>
-From: Yingjie Gao <gaoyingjie@uniontech.com>
-Reply-To: 20260625175519.GF6078@frogsfrogsfrogs
-In-Reply-To: <20260625175519.GF6078@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
-X-QQ-XMAILINFO: MMbpVEeDwmsjS33SAXlisjqw1YtcV5D7ndTU0gRelOsy11eYAkEDCuUv
-	ivyVxu2OpICDj/Jz9A9Y2AmDBmwEtA66PwmMYqLyEb487J6SwH+iBDpxzyvVvUp/QmU5jkT
-	0MT30l/JcvRUTJ0HRs6ug7jAYifVzcgam+9yDwfgALNwpe/aAyF/jmI2CYPwrOnGC7O/nLK
-	RJHcLvIx5bRFv89bcIivhFgyVobwfCPLxe4EU+U+RuOoHggUnNNyM1KbFm7o1R5Kqt70kUk
-	fHX4kwzxgn92ne5EAe/4EzxF2T+vKqCYe+7VLMiBqJ366DcXvi4HSaFARokNuKtzhP+jzEF
-	50AInYPOcCMw3rh32L36aM7a/hjRdLmsBRY77ZtuJQZpp24LdGiGIPMZp3KNFaSl5aglh9U
-	B5dgbbFNUl64lXE1b++Rpj8IkB41lPJXJzTb+b5bMLTQN2l0co/oIcKOPifFCbsN1jzpT5y
-	Ge3+5jgSwiMEcJ91qcJ7VKEXqaJtbnHUtv/6rpSC+X+CQ59HbwdCL1FGgYN5+tuYAWHzieb
-	Gtm4Q7DGpp8OdzlU+uJPl2t0GNs8jyhlktQ5YCyQoMV44MuMaE9xDR462qMyGAow0BGvhUP
-	TgNW2SPMrVomrWwXlsYHI5nLmhboj8CCbsUA4llcSw3lkXwVXQSbyUsZ8tt69eCZjkx+HLc
-	+F1qk0qS0TKto5jzjfcIBZK2LTh5HKSV8+7RSv3pHN9t6zibHvEjnwyS+k2ZcIqjWJDlE6f
-	jE9GVnY/AaiT+obgI3iyl1ctwW5vml1qvBamBEwpqJkLeObC+dqQINbncMYeq6qf87WrHM/
-	DxZ2lqqF5DyspPc0efOJo9RrOPAdHFlY158xcJKOBL0IZhxcjZfMCrXB8o3OpObgrOJ0LB/
-	Sl+zj41eaYN3olVi+KLHijQvRbD49Y/+r5cuad/QBK4pxeMdf97DazChDx4JR5LKK4R1iTS
-	h0QHA4WkwkceiQj0nSv/yS1IWOxjz9qO7EOEUiu0azUI42y4uWLv26uBqliSDAVn6MVmc/O
-	3oPFVUQt4nXzeqr9h/vcOQi8l+ZJL4rLBg93k6oUspWcyvZIkV
-X-QQ-XMRINFO: MSVp+SPm3vtSiwei5pTfI2BzaVIKsnG2gw==
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260626062326.GA10546@lst.de>
 
-
-
-在 2026/6/26 01:55, Darrick J. Wong 写道:
-> On Thu, Jun 25, 2026 at 09:16:23PM +0800, Yingjie Gao wrote:
->> xfs_qm_dqpurge() gets a locked buffer from xfs_dquot_use_attached_buf().
->> If xfs_qm_dqflush() fails, the error path skips xfs_buf_relse() and then
->> calls xfs_dquot_detach_buf(), which tries to lock the same buffer again.
->>
->> Release the buffer after xfs_qm_dqflush() returns so the error path drops
->> the caller hold and unlocks the buffer before the dquot is detached,
->> matching the other dqflush callers.
->>
->> Fixes: a40fe30868ba ("xfs: separate dquot buffer reads from xfs_dqflush")
->> Cc: stable@vger.kernel.org # v6.13+
->> Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+On Fri, Jun 26, 2026 at 08:23:26AM +0200, Christoph Hellwig wrote:
+> On Thu, Jun 25, 2026 at 11:21:46PM -0700, Darrick J. Wong wrote:
+> > > ->verify_write is expected to set b_error when it fails (and yes,
+> > > the API in that area is awful).
+> > 
+> > Would you mind leaving a comment here, then?
+> > 
+> > 	if ((bp->b_flags & XBF_WRITE) && !xfs_buf_verify_write(bp)) {
+> > 		/* ->verify_write should have set b_error already */
+> > 		xfs_force_shutdown(...);
+> > 		goto out_ioerror;
+> > 	}
 > 
-> Looks fine, though scanning this function further, I suspect that "goto
-> out_funlock" in the "resurrect the refcount from the dead" isn't quite
-> right either.
+> Sure.
 
-Thanks for taking a look.
+With the comment added,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-I checked the "resurrect the refcount from the dead" path and sent a
-separate fix for it:
-
-https://lore.kernel.org/linux-xfs/20260626095253.3445540-1-gaoyingjie@uniontech.com/
-
-Thanks,
-Yingjie
-> 
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> --D
-> 
->> ---
->>  fs/xfs/xfs_qm.c | 5 ++---
->>  1 file changed, 2 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
->> index aa0d2976f1c3..896b24f87ac9 100644
->> --- a/fs/xfs/xfs_qm.c
->> +++ b/fs/xfs/xfs_qm.c
->> @@ -166,10 +166,9 @@ xfs_qm_dqpurge(
->>  		 * does it on success.
->>  		 */
->>  		error = xfs_qm_dqflush(dqp, bp);
->> -		if (!error) {
->> +		if (!error)
->>  			error = xfs_bwrite(bp);
->> -			xfs_buf_relse(bp);
->> -		}
->> +		xfs_buf_relse(bp);
->>  		xfs_dqflock(dqp);
->>  	}
->>  	xfs_dquot_detach_buf(dqp);
->> -- 
->> 2.20.1
->>
->>
-> 
+--D
