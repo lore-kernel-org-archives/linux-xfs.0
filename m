@@ -1,38 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CBBA2FD69E
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jun 2026 23:47:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D8A30C166;
+	Mon, 29 Jun 2026 23:49:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782776861; cv=none; b=EEuUZdzyPCz8sT3fsTcY1JE2v+Fr1LH50q/QEtHO+FlKQtIibtKRn+QDMiw7p8M9eCn8kMi8Nd68aco628FS+a38IdCEy7NSmlZfy8XP/3h4/MQ1DZy88i291RRPhKJxnXWWcSSBchsFHPjdG8Z5Z/VCacAcOCwyX2pCGlMbE7E=
+	t=1782776945; cv=none; b=n3KJuBzaqplEvycAY2FYHo2lxogmKhvKwD+3ZxPEGWhPG3OBF2qlAdIYHrFCi990ieCzyMCJdaqYfcCBIhkkfYqq0BcQbr6k9nWp8w1LnMe/+v4kH8b5k/5zWFCrOUwgslc5ueq7sJmfqVuTiiXpwroZ1cooOjcNlFBoxQaEWx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782776861; c=relaxed/simple;
-	bh=aUbCtReZ5KmZe5odfCe39eREuC1Jqw+ZJZ8rj/SUdlA=;
+	s=arc-20240116; t=1782776945; c=relaxed/simple;
+	bh=pwHCnUHSf7hYwpk0T9AW+6TJ1jEFo18xT4gss+zBufc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a/fTfSU/Q0KUew2On0MYFcuqx6FNrmzxsmTkVxBI0499P5Y8dYaW1n/KSYsilJNhPIhQ0QiPJqnDU3eSR5uZ/dHtgiNoPIkXl1KyxNUfJr4jiPaUmQV3YX9llgrRm2CnkCCNI1EwfJNWFqKTo//IVYTTmHNr8JT1YtNumGJ35AA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAs50liX; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=YXdOPQLizIFyFncJYB6FYkV4atxJ1rUtE7n4cM+ayn8K6F4g+6OYuNsnLQu8cJ7lqVvi0Lo3P0SuvBfda5ANLzvO2EGKTUyyNc5uNOfcy3lPNYveIspJEedSVGsppxwzbD+YlTQxv+peqZL3LBRavvzqmpl04otaCPgclstaPQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SNAQFbEX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAs50liX"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 16C0E1F000E9;
-	Mon, 29 Jun 2026 23:47:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SNAQFbEX"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 95CD21F000E9;
+	Mon, 29 Jun 2026 23:49:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782776860;
-	bh=kDL7grKOT2peLcZLlRj+Bb084AUoQNE/J/GnbKQ41PY=;
+	s=k20260515; t=1782776943;
+	bh=cNUkZI/ilJkqBGVT9/+b827dpSw+DXeCtGiw1GbxoaE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TAs50liXbA+BwJhgyuCtwNb717wPBQnsMiApusRAg9yneXcWl6IPPaxm03PpG5QHk
-	 I2ZNzmMFklzyKnbGCALCLq+oYf2mwtvCMbJ4cl0yY7NgSjqosi2AHB+eKDqMzjga19
-	 8TaXprq0bRwzml4bD/Aqy9Mgk3H8lU3S+SDmu6BfmvEPb6tVXT60Sn1tE6RHRhg+wU
-	 iolV7kENLk8ak0OsZLQkxS/H2piPATAKmjB4GnCH4jEEErgNP40Xg41cMXv5APcEH/
-	 GNRSXWTeRRMvNORqay47cw2gONWc9EPA74Umsx6TAIB9BHMCN/c1/fEfhDz81zrVYn
-	 lFC8oq0wfJKRA==
-Date: Mon, 29 Jun 2026 16:47:39 -0700
+	b=SNAQFbEX2Z1BX+qVuObElP5SFLn9u7Suk29aDqq4iB944wgDz03kd7abHdcaZcCwS
+	 7FEscIHy0UXm6TCPSuGuNlNgU4RM29ic0X/Q8c0VU7HZ3JB+/TjQ/Z1RoReBcZMp3O
+	 na9fsT02IPPEfZqaDl87FWXCrxOOkxGB+YfsVPJlA+5V3u50QagvjQCwoA62yZvn/E
+	 GIpR/aMwG/JfEb+14VTAabbE8KrgRNrPyarEKivF7Uj/5n5X3bmIvWhhcYXNCsV7i3
+	 XIIOoWgmijIy8oSCAFn5hqZN8LgMxwHumXXo+NWTTqW/QNGWnGEsgDGyQeZ5agqm/T
+	 WWh3A37CxqoZw==
+Date: Mon, 29 Jun 2026 16:49:03 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: liuh <liuhuan01@kylinos.cn>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] mkfs: simplify setup_proto file status checks
-Message-ID: <20260629234739.GE6078@frogsfrogsfrogs>
-References: <20260629100847.20392-2-liuhuan01@kylinos.cn>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Yingjie Gao <gaoyingjie@uniontech.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: retry dqpurge when dquot buffer is busy
+Message-ID: <20260629234903.GF6078@frogsfrogsfrogs>
+References: <20260626095253.3445540-1-gaoyingjie@uniontech.com>
+ <20260626205257.GA6078@frogsfrogsfrogs>
+ <20260629124356.GA22595@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,87 +45,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260629100847.20392-2-liuhuan01@kylinos.cn>
+In-Reply-To: <20260629124356.GA22595@lst.de>
 
-On Mon, Jun 29, 2026 at 06:08:48PM +0800, liuh wrote:
-> setup_proto() calls filesize() before validating the source type with
-> fstat(), even though both operations ultimately require the same file
-> status information.
+On Mon, Jun 29, 2026 at 02:43:56PM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 26, 2026 at 01:52:57PM -0700, Darrick J. Wong wrote:
+> > On Fri, Jun 26, 2026 at 05:52:53PM +0800, Yingjie Gao wrote:
+> > > xfs_qm_dqpurge() marks a zero-reference dquot dead before trying to flush
+> > > a dirty dquot. If the attached buffer is busy, xfs_dquot_use_attached_buf()
+> > > returns -EAGAIN.
+> > > 
+> > > The error path restores q_lockref.count but then jumps to out_funlock,
+> > > which continues into the successful purge tail and destroys the dquot.  At
+> > > that point the attached buffer has not been detached and the dquot log item
+> > > may still be in the AIL.
+> > > 
+> > > Restore the retry behavior by dropping the locks and returning -EAGAIN
+> > > after resurrecting the lockref.
+> > > 
+> > > Link: https://lore.kernel.org/linux-xfs/20260625175519.GF6078@frogsfrogsfrogs/
+> > > Fixes: 0c5e80bd579f ("xfs: use a lockref for the xfs_dquot reference count")
+> > > Cc: stable@vger.kernel.org # v6.19+
+> > > Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+> > 
+> > Yeah, that's more like what we did before 0c5e80bd579f.  I think the
+> > lockref resurrection part still looks ok, but maybe hch has an opinion?
 > 
-> Perform a single fstat() immediately after opening the source path and
-> reuse the resulting metadata for both source type validation and file
-> size retrieval. This simplifies the setup logic and eliminates a
-> redundant metadata lookup.
+> But is it the right thing?  In dqpurge we really want to kill of the
+> dquot, so doing a trylock is not very useful, so we really should not
+> do a trylock here but just lock the buffer.
 > 
-> Add O_NONBLOCK to open() to avoid blocking on special file types
-> (e.g. FIFOs or device nodes). Descriptor is only used for fstat(),
-> so semantics are unchanged.
+> Darrick, do you remember if there's any lock order inversions we need
+> to care about here?
 
-Are you sure??  The openat manpage says this about regular files:
-
-"Note that this flag has no effect for regular files and block devices;
-that is, I/O operations will (briefly) block  when  device activity  is
-required,  regardless of whether O_NONBLOCK is set.  Since O_NONBLOCK
-semantics might eventually be  implemented,  applications should not
-depend upon blocking behavior when specifying this flag for regular
-files and block devices."
-
-So while the behavior might not be different *today*, that's no
-guarantee that O_NONBLOCK won't ever get turned into RWF_NOWAIT
-tomorrow.  If people want to pass in FIFOs and sockets as "protofiles"
-that then hang, that's their problem.
-
-Please just leave the open flags alone; if you want to explore
-O_NONBLOCK then do it in a separate patch.
+I don't remember off the top of my head, other than (afaict) the trylock
+might be a remnant of not wanting to block in quotaoff purge while the
+QUOTAOFF log item is also pinning the log tail.
 
 --D
-
-> Signed-off-by: liuh <liuhuan01@kylinos.cn>
-> ---
->  mkfs/proto.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index a460aebd..c14e035f 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -82,14 +82,17 @@ setup_proto(
->  		return result;
->  	}
->  
-> -	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-> +	if ((fd = open(fname, O_RDONLY|O_NONBLOCK)) < 0) {
->  		fprintf(stderr, _("%s: failed to open %s: %s\n"),
->  			progname, fname, strerror(errno));
->  		goto out_fail;
->  	}
->  
-> -	if (fstat(fd, &statbuf) < 0)
-> -		fail(_("invalid or unreadable source path"), errno);
-> +	if (fstat(fd, &statbuf) < 0) {
-> +		fprintf(stderr, _("%s: failed to fstat %s: %s\n"),
-> +			progname, fname, strerror(errno));
-> +		goto out_fail;
-> +	}
->  
->  	/*
->  	 * Handle directory inputs.
-> @@ -101,6 +104,14 @@ setup_proto(
->  		return result;
->  	}
->  
-> +	if (!S_ISREG(statbuf.st_mode)) {
-> +		fprintf(stderr, _("%s: %s not a regular file\n"),
-> +			progname, fname);
-> +		goto out_fail;
-> +	}
-> +
-> +	size = statbuf.st_size;
-> +
->  	/*
->  	 * Else this is a protofile, let's handle traditionally.
->  	 */
-> -- 
-> 2.43.0
-> 
-> 
