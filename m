@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853263CA4B8
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jun 2026 09:04:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4E53F9263;
+	Mon, 29 Jun 2026 10:00:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782723874; cv=none; b=A1awDl4Mu/kr/uUJio3aoamdY1Fc/4UqMFgXODKUphSvhvgCVOmDS1fWFvBeV/GwUlfTHpmOSMr1bKugRcWkgkc6o0WiE1Bew5UZYgWEAo2hVUCNvLUeEI1YfaHN6djuc+GXwnz6INumzsa+8qAboQHY6G8eydXY1/VfrxArR0U=
+	t=1782727235; cv=none; b=TGlf8NZhK3jem4c+WBIoGsnAGKI0plk56buBpLG+AkEFlnBW31NmBTN7xIeZmBritJ4tDw4UKMTz78PE6HHZuabFk8iHRwtwfGMykc+4ROArS3gT0ONhy9HVrW8883BglkjNlJZokCRysOtmPo6AX9BOTfOEBi1FXtWIzy12wRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782723874; c=relaxed/simple;
-	bh=0ctbb1h7PsB3CK0HbR6e+rkj94pjbSB0t73za2UrdE0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=kotmik8Ft1ptpk51DGpFY/oYZ9jPpu4sonpFTwr2HIawXYp8kq04ytIuPM1/StRWn+2VTn7ooJvGqIcKfQ7Ys+9AA9DxjsUz17wWuiGDUzXrXASKoTKn4Ye42btBBjsJ2SUGtVMNcfXvoIvyBGW7JsvEEdS4TxrAdJQS4quv1zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E9dUCPYM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782727235; c=relaxed/simple;
+	bh=X8PtuZLzSkJ3USDH/ZZQK3OyKvWTlNkUfYXM49WvPiU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hgwb+mFqjN6ZvP7hmpVTiHzdrPvgHLX+xbnTprvaQVZfdsLnl9sOXcB5zMeiLbSgOUo9coCzzs9kbaUtXonAQr7YL9Ytm9AEhM8fnYfiWjWXMwB2EEVFgopsf0hUtXcMAuiadzz2C9a4pyxkgtg1qM10ByA7SHeunIWX7oAEZ6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YcFP6Zoq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E9dUCPYM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBFA11F000E9;
-	Mon, 29 Jun 2026 09:04:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YcFP6Zoq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5581A1F000E9;
+	Mon, 29 Jun 2026 10:00:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782723873;
-	bh=y1GWAyd4q94MmaEecotrzyujjTFdfc9MTR8ToRLsOjA=;
-	h=Date:From:To:Cc:Subject;
-	b=E9dUCPYMGN/Zbn3yIKfNI7p8YZ45d2gJq0lfjv8YNedhMqLJxEScCRQoMVA+bPyB6
-	 Or2rHm7D744MbqbFrZYBvTVSomCoW3jTJw1IOFmIZLKAiMmgb5WkI1eYpS3FUeNlZ5
-	 XC1SNyPIpkqs0T7DElHbFhdp1iR/lefnRJkAZPQTQLZkkV9GATMF4pjMhwZxJAiMWo
-	 iLGxXlFxv7fC1BlzIoEu2JNnE/lAx9bMqifJSzGLa5GWFTHRAge/pYeTbsoND7MJ/S
-	 KFiY1xcCtNW4h0tyNQwydKDlUa0xPFgJaTxyr2gwqUVUewf3lN6ymGlPfwVtEWfBic
-	 wX+zbXaBuM3tw==
-Date: Mon, 29 Jun 2026 11:04:29 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
-	liuhuan01@kylinos.cn
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 708b369bdf8f
-Message-ID: <akI1Den0ablejlqZ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+	s=k20260515; t=1782727234;
+	bh=XFbSgoT3v9Lc0N+N0KQoRYtjyHAg8Fp+UTBKlIGQhAI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YcFP6ZoqG+Kbmx7namjVkxbCxJNRv1Ayy6BYmB9EPtWvPOMqzdjSbHwFdL9LwkjPv
+	 kcpWtqEfhJ/8ZdFvPlS38zH7yfLM4U7jZ0xAd08GAvkhOanNs9NCB2PUXTaYDHpZ2z
+	 uIYc02ZvwUeP8KBhrA7U31cNjQUPZ4a0hptZQnmgietslm3lFj5gjtgOlY3appKbEF
+	 9n8pIkDJc+0BOsOwjifoqINfzIUsoIqiPl0npDxnZZD9evg333HbDk33+/pUEZiCGQ
+	 hrhqT/Kew+KcLNe4+hMsBE6pVC6KSpZ5diFBnVQ1mLuJ/VKZjDpVvSLjZVoX9uT1oT
+	 B+OhgffTCyTdA==
+Date: Mon, 29 Jun 2026 12:00:30 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Tsu-chieh Chen <tsuchieh.chen@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: clarify sb_qflags locking in xfs_qm_mount_quotas
+Message-ID: <akJBqrxeo9yU7_Tg@nidhogg.toxiclabs.cc>
+References: <20260627223910.129798-1-tsuchieh.chen@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,52 +41,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260627223910.129798-1-tsuchieh.chen@gmail.com>
 
-Hi folks,
+On Sat, Jun 27, 2026 at 06:39:10PM -0400, Tsu-chieh Chen wrote:
+> xfs_qm_mount_quotas() is only called from the mount path, so
+> m_sb_lock is not needed for serialization when updating sb_qflags.
+> 
+> The code still takes m_sb_lock around the sb_qflags update. Replace the
+> old XXX comment with an explanation that the lock is taken to keep the
+> mount-time update consistent with the runtime quota update paths.
+> 
+> No functional change.
+> 
+> Signed-off-by: Tsu-chieh Chen <tsuchieh.chen@gmail.com>
+> ---
+>  fs/xfs/xfs_qm.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index aa0d2976f1c3..c2bab12643d3 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1663,8 +1663,9 @@ xfs_qm_mount_quotas(
+>  
+>   write_changes:
+>  	/*
+> -	 * We actually don't have to acquire the m_sb_lock at all.
+> -	 * This can only be called from mount, and that's single threaded. XXX
+> +	 * Mount is single-threaded, so this does not need m_sb_lock for
+> +	 * serialization. Take it anyway to keep sb_qflags updates consistent
+> +	 * with the runtime quota update paths.
 
-The xfsprogs for-next branch in repository at:
+Why? What's the actual clarification this change makes? Indeed the XXX
+does not need to be there but I don't see any improvement in this change
+comment-wise. XXX removal could be embedded on any other patch that
+touches code around it.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The new head of the for-next branch is commit:
-
-708b369bdf8f4f9b2824b9daa54a11df253b7b5b
-
-New commits:
-
-Darrick J. Wong (11):
-      [64344c43430a] xfs_scrub: handle missing media verify ioctl failure return codes
-      [2712427c08a5] xfs_scrub: report bad file ranges correctly
-      [3e4bb144f657] xfs_scrub: handle media scans of internal rt devices correctly
-      [c001fa7d4db4] xfs_scrub: track inode scan abort state with an enum
-      [bc9371417a61] xfs_scrub: don't skip bulkstat batch when scrub_scan_user_files helper returns ESTALE
-      [b6dba3d85ae5] xfs_scrub: warn about incomplete repairs if we never get to them
-      [e2df9f9bb984] xfs_scrub: report external log space usage in phase 7
-      [243048f90dd4] xfs_scrub: account only data extent tail after an overlap
-      [baef30aabbd5] xfs_scrub: account for reflinked realtime file data
-      [a4080cef33fd] xfs_scrub: don't leak the autofsck fsproperty handle
-      [157d76940c3c] xfs_scrub: warn about difficult rtgroup repairs
-
-liuh (1):
-      [708b369bdf8f] mkfs: remove duplicate include of convert.h
-
-Code Diffstat:
-
- mkfs/xfs_mkfs.c     |  1 -
- scrub/inodes.c      | 66 ++++++++++++++++++++++++++-------------
- scrub/phase1.c      | 10 +++---
- scrub/phase2.c      |  8 +++++
- scrub/phase6.c      | 10 ++++--
- scrub/phase7.c      | 89 +++++++++++++++++++++++++++++++++++------------------
- scrub/read_verify.c |  8 ++++-
- scrub/repair.c      |  5 ++-
- scrub/spacemap.c    |  2 +-
- 9 files changed, 137 insertions(+), 62 deletions(-)
-
--- 
-- Andrey
+>  	 */
+>  	spin_lock(&mp->m_sb_lock);
+>  	sbf = mp->m_sb.sb_qflags;
+> 
+> base-commit: 804826eac53cff44f88f42989fcc601c2612c0ed
+> -- 
+> 2.43.0
+> 
+> 
