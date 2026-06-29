@@ -1,152 +1,158 @@
-Received: from mail-dy1-f171.google.com (mail-dy1-f171.google.com [74.125.82.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83AE543E9C9
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jun 2026 16:25:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D422ED872;
+	Mon, 29 Jun 2026 17:53:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782750341; cv=none; b=J37VTOzwTo7PHC6qaKKTgfdof6B6R1WBai/OayvrvIgZpEePXOQGc5Yvf7If04heavDmGYkSjw5FTF9YTBTPBvU+NLRg1n0oSaBc3ejLMvZQ7ft4RtULLaq2g2Ragp35WzYsWbedfv2tfEwBhkFIeSDmovGc+Fmu6w17pVmJQYc=
+	t=1782755626; cv=none; b=fQu/Wpii2a99YIxLsxIZu84OsXVLJPFRtnmKPDl7UmXH4iPJ/jE+Fj6to/QmGxg7221uYznDGQaTwnw4q8W2fPiigGDBdWiMPJZhvlAGbZyR3PVmKaH+vnQaQk5eGOB54OBtDghaJje+a2lDiHWXsvayuQgb7Q0WOuItneTScuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782750341; c=relaxed/simple;
-	bh=FSbXsk9nYud7GNJfxUx33nl7TSBYNPrmEM3HP9ykP70=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GmOvSTiYpl/h0G7Uu7PsY3c0Oo0Q3jEANoIXyKEy2eARS7QtiWCSzyu4tSTmc/FHsI7bAC4fnDx1tBaYKzfGvnf3QOfayOBsYHKoD0eNX3W4cZN3fH0qrMMsqrilfg8YP31sfTbP6DeLA6PicD8QNqzTx09S6OrGPQ1dDG71nhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FAdpIkPu; arc=none smtp.client-ip=74.125.82.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782755626; c=relaxed/simple;
+	bh=aRzkFR0wX1ZP1nyB5LYG9lCaxnau0wBFUUVr5JJEi6I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oFwYUKowEEkPrzov71lvimU8U/WoP9VlR2450td44C4khYFJna4LBtqaKY2kkVSdg9w/1HysVZNn8K1+0IVA8lDyZk0zIZI/+63EgQIZaCg3xzDvVw/S1oetJ9I5oRJkrtNV12CuIviPL5nOG8juTMStiff875cSz10tIkR+SU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P6koCgTg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FAdpIkPu"
-Received: by mail-dy1-f171.google.com with SMTP id 5a478bee46e88-30e9eefa268so4575856eec.1
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Jun 2026 09:25:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782750336; x=1783355136; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/Ped8crXUgzRgDMVrWKYLKANErXeLFarPuPkdA8Dgxc=;
-        b=FAdpIkPuSeZczc68NLsyAHVqe7Mkd2q3XIKDcKdiVqdOFxWKCcwPRoqS1rTz0i4P5C
-         kL858l/l8bzUPOnowYcXJmGutBcQ4UF6LyLezsABE3HzwRSiDhkVARLHm8pg5bJ+GyLQ
-         2Zv9sl1bSWV+U0FRWvSg5rrNfl61dBo9FbtH+RBTpqBC470rJ4+x9KNkxPYVEZqGpZI6
-         aM5PBjfMyRElC0hhqITHnb/IrTRq1bS6cVRFJntoNdq1ujDU0kI2IxpEkWjtmFvwUdqo
-         9QFRenUCrspg284vhz5Kg15mpg5pAOk5wsFl5do398zp4FAlqvejpCIfVassb/CIiKXs
-         jJbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782750336; x=1783355136;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/Ped8crXUgzRgDMVrWKYLKANErXeLFarPuPkdA8Dgxc=;
-        b=YkRE9ZnygdpKxuQimtelW4F4Iz6+rPKncrYlU9kQG4CnuGEKLxtBTc71fiBPADYwxT
-         pc5FB/hGvBfB24WMxwMuOsC404i8SCa0AstQDKyzPnhHbCq0ZYgFHLehcqhHRIuRJIFK
-         guyiCAZCqJo95AmvWOCFWN9Ax6yAuaptn20GP6fC3M8ST41GPEPSXU85IvcOhay0beQN
-         P6JRD65fSnblSZxTw/aulFvASIl+XH3jQzHi9xa6k7rg9ZBOEeAJM6DdOoOfrBWAihZX
-         HXx4Qarlsu7NTkr2E+o3O85sP8K/Ea0cwuBx8hWPOJTnolmhBo2iRERk6+n57DwGhGR5
-         js3A==
-X-Gm-Message-State: AOJu0Yx50IG9zwWCo4nkIXGAsO3FwQJjHY4f4MvoOKzJwKyfwYX4t1ec
-	Tp5/d/T7zFej5LEo+I4HmFl7LKG7ohtwpprrjx19vZeiFT8KGNa3dCvrxERJZVrT
-X-Gm-Gg: AfdE7cn5RKRDDpjh70HlITRdxBA4Dg8KPwbdPBwtV5MzONa13d82PIYSpFeEY6ENBg8
-	Zac65TSFYIf4NhrQvTfB+HHbgYcJDe1gSAQdJJANRJRv+YJX/c5CQmMY9FveX0YpO2qTJrWU4ru
-	6seLPUK7mf/5Fyg2p3aaqfaH9Sgu6uUrqstmcSJ/Z6TS4jxkzGb1uShMlPoqrhQ4wnGwS8l8o4i
-	pkJqVI42+QomfFqSyR/9wQWjqAaeBs7NdGpVVNGsDa2mgrhrrCdq6IFsG2xko9eFOZrRqjrUk44
-	2p4guDlzSZI9E5QN8aj1Z7JS1qOGXdpX7dEJi8+TYQ0XBcbs08m8Vm3UqXSYtBH6Lhm3el0lCgt
-	Q0bGs+UEsU/6C6Tw281nQu+mSy1Ij8l8ehtPVPIwIcrS/TdryTCoHbrgRpDrqPpVc1kSbVM9FBF
-	88FKFREIL8oMruTa51C4OBQ7XlwOYnhxnO1Dc/3N8ewmYEsLWOPH9cUINUIA==
-X-Received: by 2002:a05:7301:9c83:b0:2ef:8b91:212 with SMTP id 5a478bee46e88-30ee128cd28mr114888eec.14.1782750335620;
-        Mon, 29 Jun 2026 09:25:35 -0700 (PDT)
-Received: from fx.tailc0aff1.ts.net ([206.206.192.132])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c7c9e9214sm47191041eec.20.2026.06.29.09.25.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2026 09:25:35 -0700 (PDT)
-From: Weiming Shi <bestswngs@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Brian Foster <bfoster@redhat.com>,
-	Xiang Mei <xmei5@asu.edu>,
-	Weiming Shi <bestswngs@gmail.com>
-Subject: [PATCH] xfs: fail recovery on a committed log item with no regions
-Date: Mon, 29 Jun 2026 09:24:53 -0700
-Message-ID: <20260629162452.2566242-2-bestswngs@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P6koCgTg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB7D01F000E9;
+	Mon, 29 Jun 2026 17:53:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782755624;
+	bh=orP2jCo8G5phB1xaK0T1ycHQ3bSMb9bBoGTglr3NaEA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=P6koCgTgtlwGEtIM7HyuNMAgXzpfEkOADeQfeLeViZYi2cOBIRsTVE6iLwVQ0Nmem
+	 Mbe0sTNaCThx8V8mm8hPLNBBNdWXU32tKxpGXWIF8vOx48Zwxe4jQ54CFDP0BAFzg0
+	 QCP/Qaa/V5C5pQN5I11WgRGxXa2eyBZaRq1NtL1UK5YlO4zTqp9uxVtZGcXRcdGgZr
+	 +UtLf5JiOn3A6Hnw1MwvcrP2HKXitUr3bYNAZOoT2NIsayEPeLHTg34RHjHErbPq6L
+	 XyFRQLWaFZbxyuX+TkmELhgQIpvJ9ciarfZ3lDkbivzcZ6U/HuAx8/64t9H8mI6ULl
+	 3ryo769RquZyw==
+Date: Tue, 30 Jun 2026 01:53:38 +0800
+From: Zorro Lang <zlang@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs/21[67]: fix mkfs log concurrency detection
+Message-ID: <akKvzArcNLWKCACL@zlang-mailbox>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>, 
+	fstests@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+References: <178240619625.1665857.3954516357764795627.stgit@frogsfrogsfrogs>
+ <178240619668.1665857.17134786745403757824.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <178240619668.1665857.17134786745403757824.stgit@frogsfrogsfrogs>
 
-xlog_recover_add_to_trans() turns the first op of a transaction into a
-recovery item.  If that op is a bare transaction header
-(len == sizeof(struct xfs_trans_header)), xlog_recover_add_item() adds
-an item but attaches no region, so it sits on r_itemq with ri_cnt == 0
-and ri_buf == NULL.
+On Thu, Jun 25, 2026 at 09:51:17AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Both of these tests use _scratch_mkfs_xfs_supports_concurrency to detect
+> if they should be adding -lconcurrency=0 to the mkfs options that are
+> used to format a loop device.
+> 
+> However, this doesn't work in practice because of three factors: 1) the
+> scratch device could have an external log set up; 2) the loop device
+> does /not/ have an external log device; and 3) -lconcurrency isn't
+> compatible with -llogdev.
+> 
+> Fix this by creating a more general mkfs option detection helper and use
+> that once we have the loop device set up.
+> 
+> Cc: <fstests@vger.kernel.org> # v2026.05.17
+> Fixes: ffc8bad17e5b2f ("xfs/21{6,7} Use default -l concurrency=0 on mkfs.xfs that supports it")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/xfs    |    6 ++++++
+>  tests/xfs/216 |    9 ++++-----
+>  tests/xfs/217 |    9 ++++-----
+>  3 files changed, 14 insertions(+), 10 deletions(-)
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 88299acdd086be..81add2086866c8 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -64,6 +64,12 @@ _scratch_mkfs_xfs_opts()
+>  	echo "$MKFS_XFS_PROG $SCRATCH_OPTIONS $mkfs_opts"
+>  }
+>  
+> +# Figure out if the supplied mkfs.xfs options are supported.  A device or file
+> +# path must be specified as one of the options, though it will not be written.
+> +_mkfs_xfs_supported()
+> +{
+> +	$MKFS_XFS_PROG -f -N "$@"
+> +}
+>  
+>  _scratch_mkfs_xfs_supported()
+>  {
+> diff --git a/tests/xfs/216 b/tests/xfs/216
+> index 1749647c11f716..48657242e65daf 100755
+> --- a/tests/xfs/216
+> +++ b/tests/xfs/216
+> @@ -22,11 +22,6 @@ _cleanup()
+>  
+>  _require_scratch
+>  _scratch_mkfs_xfs >/dev/null 2>&1
+> -if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
+> -	loop_mkfs_opts="-l concurrency=0"
+> -else
+> -	loop_mkfs_opts=""
+> -fi
+>  _scratch_mount
+>  
+>  _require_loop
+> @@ -76,6 +71,10 @@ mkdir $LOOP_MNT
+>  
+>  loop_dev=$(_create_loop_device $LOOP_IMG)
+>  
+> +if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 $loop_dev &>> $seqres.full; then
+> +	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0"
 
-When the following op is a commit, xlog_recover_reorder_trans() runs
-ITEM_TYPE() on each item to look up its ops vector.  ITEM_TYPE() reads
-*(unsigned short *)item->ri_buf[0].iov_base, which faults on the
-NULL ri_buf.  The commit handlers dereference ri_buf[0] too, so reorder
-is the first place that trips over it.
+Hi Darrick,
 
-This is reachable at mount time from a crafted image whose log holds the
-op sequence START_TRANS / bare-header / COMMIT_TRANS:
+This patch conflicts with Christoph's patch:
+https://lore.kernel.org/fstests/20260618134834.237647-3-hch@lst.de/
 
- Oops: general protection fault, probably for non-canonical address
-       0xdffffc0000000000
- KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
- RIP: 0010:xlog_recover_reorder_trans (fs/xfs/xfs_log_recover.c:1836)
- Call Trace:
-  xlog_recover_reorder_trans (fs/xfs/xfs_log_recover.c:1836)
-  xlog_recover_commit_trans (fs/xfs/xfs_log_recover.c:2043)
-  xlog_recovery_process_trans (fs/xfs/xfs_log_recover.c:2308)
-  xlog_recover_process_ophdr (fs/xfs/xfs_log_recover.c:2454)
-  xlog_recover_process_data (fs/xfs/xfs_log_recover.c:2501)
-  xlog_do_recovery_pass (fs/xfs/xfs_log_recover.c:3244)
-  xlog_recover (fs/xfs/xfs_log_recover.c:3493)
-  xfs_log_mount (fs/xfs/xfs_log.c:618)
-  xfs_mountfs (fs/xfs/xfs_mount.c:1034)
-  xfs_fs_fill_super (fs/xfs/xfs_super.c:1938)
-  get_tree_bdev_flags (fs/super.c:1635)
-  vfs_get_tree (fs/super.c:1695)
-  path_mount (fs/namespace.c:4161)
-  __x64_sys_mount (fs/namespace.c:4367)
+I've merged that patch into patches-in-queue branch, if you don't have
+objections to that change, could you rebase on latest patches-in-queue
+and send this patch again with Christoph's RVB :)
 
-xfs_log_recover.c:1836 is the ITEM_TYPE() dereference inside
-xlog_find_item_ops().
+Thanks,
+Zorro
 
-A committed item always has at least its format descriptor in ri_buf[0],
-so an item with no regions means the log is corrupt.  Reject it with
--EFSCORRUPTED, like the unrecognised item type just below.
-
-Fixes: 89cebc847729 ("xfs: validate transaction header length on log recovery")
-Reported-by: Xiang Mei <xmei5@asu.edu>
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Weiming Shi <bestswngs@gmail.com>
----
- fs/xfs/xfs_log_recover.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 09e6678ca487..ccff436612ee 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1906,6 +1906,18 @@ xlog_recover_reorder_trans(
- 	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
- 		enum xlog_recover_reorder	fate = XLOG_REORDER_ITEM_LIST;
- 
-+		/* corrupt log: an item with no regions has a NULL ri_buf */
-+		if (!item->ri_cnt || !item->ri_buf) {
-+			xfs_warn(log->l_mp,
-+				"%s: committed log item has no regions",
-+				__func__);
-+			ASSERT(0);
-+			if (!list_empty(&sort_list))
-+				list_splice_init(&sort_list, &trans->r_itemq);
-+			error = -EFSCORRUPTED;
-+			break;
-+		}
-+
- 		item->ri_ops = xlog_find_item_ops(item);
- 		if (!item->ri_ops) {
- 			xfs_warn(log->l_mp,
--- 
-2.43.0
-
+> +fi
+> +
+>  # walk over standard sizes (up to 256GB)
+>  _do_mkfs 1 2 4 8 16 32 64 128 256
+>  
+> diff --git a/tests/xfs/217 b/tests/xfs/217
+> index 23aae842d1fb61..34ac8dae8ef43f 100755
+> --- a/tests/xfs/217
+> +++ b/tests/xfs/217
+> @@ -21,11 +21,6 @@ _cleanup()
+>  
+>  _require_scratch
+>  _scratch_mkfs_xfs >/dev/null 2>&1
+> -if _scratch_mkfs_xfs_supports_concurrency -l >> $seqres.full 2>&1; then
+> -	loop_mkfs_opts="-l concurrency=0 -d concurrency=0"
+> -else
+> -	loop_mkfs_opts=""
+> -fi
+>  _scratch_mount
+>  # 16T mkfs requires a bit over 2G free
+>  _require_fs_space $SCRATCH_MNT 2202000
+> @@ -63,6 +58,10 @@ fi
+>  
+>  loop_dev=$(_create_loop_device $LOOP_IMG)
+>  
+> +if _mkfs_xfs_supported $loop_mkfs_opts -l concurrency=0 -d concurrency=0 $loop_dev &>> $seqres.full; then
+> +	loop_mkfs_opts="$loop_mkfs_opts -l concurrency=0 -d concurrency=0"
+> +fi
+> +
+>  #
+>  # walk over "new" sizes supported by recent xfsprogs.
+>  # Note that the last test is for 16TB-1GB as 32bit platforms only support
+> 
