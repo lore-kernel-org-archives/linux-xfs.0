@@ -1,129 +1,80 @@
-Received: from va-1-115.ptr.blmpb.com (va-1-115.ptr.blmpb.com [209.127.230.115])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB71328631
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Jun 2026 12:16:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.230.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C58073FFFAB;
+	Mon, 29 Jun 2026 12:18:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782735373; cv=none; b=W4qZUptl1FgT1Vn+ZHkyI9Cvlez/4G2kh7ZH/f4GJGNawVQk/nP6/lB9mevlTdhWOsr/gMOy0O9qWsDHOEh1RRhas4e3JpRI21d/poBVCdfUotHCp1A5xKAURvRf6uL4q48Kj58SaD4riJwTcCOsLb+vH3xwn59uZiQf0K2kn9o=
+	t=1782735492; cv=none; b=EqtdDLYyBElKvogGkCDce9JxtJ/CJvwSMj+b1XvUsJwR2AREiQHCGgoZ/dSjw2DhfNX9RbAYldAfdSu5RDAs8VHmnXKRcg4KFlU8lAK4A6iQ5EOnm81aSINO7/O62FvDhfG+eE2zRYJkdRfUOun7xgAM1XXny63DjlzP9rUK5XA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782735373; c=relaxed/simple;
-	bh=TbUVZuA/SCu0yTZ0KrGtcaVszMM9K5uM6HRc0m9imho=;
-	h=Date:Message-Id:Content-Type:To:Mime-Version:From:In-Reply-To:Cc:
-	 Subject:References; b=nAiBOgzXlxxM+knNiBbXV4MFILQWy0x+YCjHz4yL011vOaJn9s92Td4wHK6lc0eiWgSYOKd5K3OWuZYPRE3uY5fDTJsxM8aHypefmFYe/AKmi440iKG48JViPpKPwZThucBDDCSb84BJmfPyWlcV+PR5GGYfghUn8AIX4u55TKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=lQERgKX+; arc=none smtp.client-ip=209.127.230.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1782735492; c=relaxed/simple;
+	bh=zAaeXvZX876NW4HBdu2eZaW/2BA59HGZK9czOxtwzCg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QeR1NetzOalmfFBS4HG2p2INtDR41i/B+8yj54UoIVmKFegz6MjuZWr4vewjd45LR8J3cHjKeEVmjjakhdfldMMSQTycxuAU0agqoPFXcEvDOPQqcMQc041OTwvVfr00dq3IsPCxs942KLBRnfpbK7fjZOilF+tEXt6PPXW9CmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Xa/6fOwI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="lQERgKX+"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Xa/6fOwI"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1782735366; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=59oe9MSbaFR9G77NSs6MIbFSg3wXOoWsd8NTCEqjIFw=;
- b=lQERgKX+NJmRCxgeK2Oe4xyk2lYlKScyN0ShLP2yy7yU+5ua1pxLXt/AyU+/UX4P4oFZcr
- +/CUoYp32PrxFAIdR/0Lu5X/xTtvo2x5RiJqWSy9PNhRGKTLcURckQ8KSZlATb5ZjroIzR
- b5uHzsJ9kvWUcfrus27CNlnNb/6Mj6KsfYRx3km2hM9p04STQpNzcOAJSzC8lEYPuUfUHq
- umuUZEmZPE/2OEIk+NrAxNLiJrGZ9jkVgQqHVIU2Wh+dq5K4t2gGWL0en3jf+Ckr9xLTch
- UVEqy+eT2EsW9APYrvp+crDaWcyubt8O8jL2N0X/FrzCID30ShevOrKY2krtzA==
-Date: Mon, 29 Jun 2026 20:15:51 +0800
-Message-Id: <e85e73bd-5fbe-4d11-89ba-7b42c237dd34@bytedance.com>
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a426204+5dfd2e+vger.kernel.org+changfengnan@bytedance.com>
-X-Original-From: Fengnan <changfengnan@bytedance.com>
-Content-Type: text/plain; charset=UTF-8
-To: "Joanne Koong" <joannelkoong@gmail.com>, 
-	"Christoph Hellwig" <hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=v898+QkB1UDAKWiTlcnqdkDW1C2WbAo9fOIytjJGE+U=; b=Xa/6fOwIwXnUiihMQCuFbBCt1l
+	LpE+6eJtf9J9rUjXsdqp/TyDk9l+UMjKFhyiR7+feG1+zLWMmIcL34TdcZT5hai0zCepUx7yepQJo
+	qBjiMd9vE7vLxOEKVmG7z0AAzhohqY4dsUDfSS3f9hx4gGrN8iil0CCpM7qYTUIlfvfQKjegwXYfc
+	m1fEO120AVKanyGRkZJzZ5hf12yrWyTjPBEA0Uvfx9RUZNcGsgk68qJNDqAKTS6Q5AZcog0yJC1X1
+	FkziMp68z/OvI8z43NZ36VNCqkc08xZm5Jv0uzi2lEuAUx1VsR3DPiTgNMzCtfx/FTcAMV4ytIEA3
+	XxcngfRw==;
+Received: from clnet-b08-202.ikbnet.co.at ([83.175.123.202] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1weAw0-0000000EWzb-1HZn;
+	Mon, 29 Jun 2026 12:17:56 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	fuse-devel@lists.linux.dev,
+	ntfs3@lists.linux.dev,
+	linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: don't build bios/contexts over multiple iomaps v3
+Date: Mon, 29 Jun 2026 14:17:37 +0200
+Message-ID: <20260629121750.3392300-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-From: "Fengnan" <changfengnan@bytedance.com>
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <CAJnrk1Z=o701G_gNFM2MNaQPN9_vFCxfK3FvKSjz6pf1Qwj-YA@mail.gmail.com>
-Cc: <willy@infradead.org>, <djwong@kernel.org>, 
-	<linux-fsdevel@vger.kernel.org>, <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC PATCH v1 3/3] xfs: example of devirtualizing buffered write iomap callbacks
-References: <20260625024723.1611000-1-joannelkoong@gmail.com> <20260625024723.1611000-4-joannelkoong@gmail.com> <20260625130052.GB22620@lst.de> <CAJnrk1Z=o701G_gNFM2MNaQPN9_vFCxfK3FvKSjz6pf1Qwj-YA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-=E5=9C=A8 2026/6/26 04:46, Joanne Koong =E5=86=99=E9=81=93:
-> On Thu, Jun 25, 2026 at 6:00=E2=80=AFAM Christoph Hellwig <hch@lst.de> wr=
-ote:
->> On Wed, Jun 24, 2026 at 07:47:23PM -0700, Joanne Koong wrote:
->>> This is an example of what removing the indirect call would look like.
->>> With the inlined iomap_buffered_write_inline() that gets passed
->>> xfs_buffered_write_iomap_begin() and xfs_buffered_write_iomap_end() as
->>> constant callbacks, the compiler is able to call the callbacks directly
->>> and drop the indirect call through struct iomap_ops:
->> Nice.  Btw, a more critical path would be direct I/O.
->>
->> Fengnan, maybe you can play around with this series and your direct read
->> fast path?
+Hi all,
 
-First, a brief update on my progress: I modified |iomap_dio_rw| so that=20
-the XFS direct
+this patch changes how iomap submits bios for reads.  The old behavior
+to build up bios across iomap was already considered problematic for
+a while, but we now ran into a erofs bug because of it, so it's time
+to finally fix it.
 
-I/O read path can support |iomap_next| mode, and ran 4K random read=20
-performance tests.
+It would be great to get the fix into 7.2 as the fixed bug can be
+triggered by users.
 
-Using the performance with both |iomap_next| and simple read disabled as=20
-the baseline,
+Changes since v2:
+ - drop an unused argument
+ - make sure we submit for the same iteration to not leave a landmine
+   for future changes
 
-enabling only |iomap_next| improved performance by 1.6%; enabling only=20
-simple read
-
-improved performance by 7.3%; enabling both |iomap_next| and simple read
-
-improved performance by 8.8%.
-
-In non-|iomap_next| mode, |simple read| improves performance by about 10%.
-After enabling |iomap_next|, the gain drops somewhat. The changes needed=20
-to make
-|iomap_dio_rw| support |iomap_next| are relatively large, so there may=20
-be issues in my
-current modification. I am still investigating why.
->>
->>> +     /*
->>> +      * Call inlined iomap buffered write and pass constant begin/end
->>> +      * function pointers so the compiler can devirtualize them and av=
-oid the
->>> +      * indirect call through struct iomap_ops.
->>> +      */
->>> +     iter =3D (struct iomap_iter){
->>> +             .inode          =3D inode,
->>> +             .pos            =3D iocb->ki_pos,
->>> +             .len            =3D iov_iter_count(from),
->>> +             .flags          =3D IOMAP_WRITE,
->>> +     };
->>> +     if (iocb->ki_flags & IOCB_NOWAIT)
->>> +             iter.flags |=3D IOMAP_NOWAIT;
->>> +     if (iocb->ki_flags & IOCB_DONTCACHE)
->>> +             iter.flags |=3D IOMAP_DONTCACHE;
->> We'll probably want a helper for this initializion boilerplate.
->> Or make it part of iomap_buffered_write_inline somehow?
->>
->>> +     ret =3D iomap_buffered_write_inline(&iter, from,
->>> +                     xfs_buffered_write_iomap_begin,
->>> +                     xfs_buffered_write_iomap_end,
->> So we're not even doing the _next scheme here and already get
->> results, nice!
->>
->>> +     if (ret > 0)
->>> +             iocb->ki_pos =3D iter.pos;
->> Similarly here, it would be great if we could somehow avoid
->> too much boilerplate.
->>
-> Agreed, I think this can all just be moved into
-> iomap_buffered_write_inline() and then the call would just be:
->
->    ret =3D iomap_buffered_write_inline(iocb, from,
->                  xfs_buffered_write_iomap_begin, xfs_buffered_write_iomap=
-_end,
->                  &xfs_iomap_write_ops, NULL);
->
-> I'll clean this up for v2.
->
-> Thanks,
-> Joanne
+Changes since v1:
+ - don't submit fuse context after each iteration
+ - consolidate some code to support the above
+ - fix a bug in the fs PI support found while doing the above
