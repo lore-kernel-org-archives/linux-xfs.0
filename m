@@ -1,285 +1,191 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F0E23E1692;
-	Tue, 30 Jun 2026 18:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782844821; cv=none; b=MW/KIWh/Jtg6rK3CEwtWS+G46l87+8qnTbq37PuUnaKG/9v6nwk3YaS88PDfxCWmXXa125csFoJsWv9R34rxTrK1czTCIVnY0j3QRxi6+zXc6FcV0cYbvUlQ7MI/ofH0kxwkn3DhSe63BiaeXh41pCCZxFLkJDnKUzJQ83ljCF8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782844821; c=relaxed/simple;
-	bh=rbUgvVufPGNjat2ny38shz9giGbv7u0tMuwAtcMhB4s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LprXrZDZ30G7PJDwQiaB9Ick+wi5hO0xk2CBkV24qEgccLOblBGVcxelt48uT8tTVC5xmN4Z4fN4QvOIYriSZegxtzr3mp31m7hIh6gPOijEYEci8mL3zqlL/dvWZm1aeHuJDeepyZ8QllI08mLSKsm1/GrbZfceLkRLM70UUqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cid6rJoD; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141E547A0DC
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 20:39:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.171
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782851981; cv=pass; b=IVxB9ofmpXWyp/EDPzB2yJXyqkJo24qnv+nfQVoA+2NXzeDLCw4EUd+fSJKMxKH5zIbHPoLiMoF1jgIx/kaoKUao/OE3ZocmlmS0hdmE+5C5+rZnChsM26qJFXQjf7ON4W00S3Yo3EJfC+Yn99eGlcxbrYvx4gm0duUn20l69a0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782851981; c=relaxed/simple;
+	bh=5D38aeFmFPo4QXzw9TaB4T12tNTsX9FO9UgEPQFTE7s=;
+	h=In-Reply-To:References:MIME-Version:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=f1Liq46Stz9dhjhMLllcZnGuqJjVQPhl43rSXflpVyVHQteus/CY81WOgm+CcPbXLOnmoLOlLrZGT9JisxvWeyWuvzOZCA3rAgHNvugv1Snne8XGcp1218kg7pogwvXgAljYwWyudmfsfaocc6yv+9/E0XM8uro/3ksI/Ku0IlQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RyZwKlk+; arc=pass smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cid6rJoD"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B31741F000E9;
-	Tue, 30 Jun 2026 18:40:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782844819;
-	bh=OIJaDfPl9hq1xwALMnt28I8x0v9nZLCiYw6EkBVVeJ4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cid6rJoDNeM34iMJEjiJLPc6/NL2J+VpTnh1z8ACkm9qZe/tcod8UVdysI673sEEw
-	 QwbD7WPTUwaJ6egdAWBIcTtqN3IUMlQ97dQJo6BFUsYhNyNawvvhu79PIXQEASFp10
-	 NYaSNYK+voS9jqH9SfdIPp4BiJDgb1ebhBWL/RLIYRtQwy0zwSrT3/ztpmJH11qSqj
-	 UZJeBKXr61dDDejpRJqWF7WzBOVC9RWBotGG1RCXDJys9hA7VRU3oeEvTsJ8q6u2nn
-	 De6wVj3HmU96Fqe4fKkL7Oa935CDK1QFgZxRIZqyKmKatEpx+ChdLsxA0sY+Edi8HN
-	 CQTMlTMhVzMkw==
-Date: Tue, 30 Jun 2026 11:40:18 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] formalize and fix disabling the RT subvolume
-Message-ID: <20260630184018.GB6544@frogsfrogsfrogs>
-References: <20260630113526.3601287-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RyZwKlk+"
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-804239c418bso49225887b3.0
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 13:39:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782851979; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XLvZ9qiHgyIar7mtftvhJJj6rWvvUGDbzFvcuXE71aJd3ok9FjdKHF/EyhMQmtpFCp
+         c0LPLlzL+mheWUBAYNqWG2KUFb+EBFkFIYpiEPgTBr0swefFLCOq/s1ZDgL0zArK7/h6
+         dW9ePIfTOPog6jxJtBb9Unlbgg+pcVgJ1zqDQ4i33YA/pqknzaSqk05Fga0o9IFveER9
+         H3sT/d/1eli7MZl/zuKajEE3rdQkVX/7RXqmBvnK9FxFsCdyXeoBy9Hfsq7zKss37G06
+         DYqVJFRLHJUt4nrRlt6VIbSl8QDanJdnXLtdDvvcCPhXNEANVCIdhwBj0HtmCG+E3sGH
+         fEFA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:references
+         :in-reply-to:dkim-signature;
+        bh=5D38aeFmFPo4QXzw9TaB4T12tNTsX9FO9UgEPQFTE7s=;
+        fh=neVViZNbnCuS5rbzlEoWKFuQAMPNbHyw2uIJf2Si+nQ=;
+        b=I3j14dMXv42A+6wJNNcOUlXlgo0HAZhkqkIDfDJcayPj0Oaeduv2LZxjRSNMQlkxMT
+         XVcWzDkLXDbbieDWOBeKhNcy2hbqsZxQkkUyiSL0yyCe7uRlOkaP9KCrEK9w8MiEyrfN
+         XxzQFHwJABX4XYMd0IGHBM0da6kgda/gPmTHP4hh8QBq5+pcYd8MrOPj9fBhFvzYYD2y
+         lVd6mu11+syLUDHMgXpyqeucsw1G4XJggPk778RvztjTICq9Iy4Cg2j7uxhKTPGaQ4AE
+         XrLlF9PZDGPS7mo2ncZ/cTwgTWYZw3ye1OTpXaP0BQN3oollBvDVa0MAJSVvtZm2HryR
+         cDJw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782851979; x=1783456779; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:references
+         :in-reply-to:from:to:cc:subject:date:message-id:reply-to;
+        bh=5D38aeFmFPo4QXzw9TaB4T12tNTsX9FO9UgEPQFTE7s=;
+        b=RyZwKlk+VJfBGdfqjCx1Q7d4kIgGXpu2oOfO1RaDxLvx4nnIVwLAOjGYSY/hNFqsWY
+         w2p0f8lmiKuK34iaujbzpFRBWInveNDJB+hJrb8OIygLPoUnuF9HqrA0Y3W+eQKnjkQ+
+         6vLeoR02Gh4AZruWV0H1XHCn6bUmfH2HaW3AxlC+dBgFFMqlnL7I2ICfgyIY23k9JSgF
+         CAcYO+vin/YdxacIGpJ8qORIZDDCH/u/703WUlAmJACTsb+1sk70l6wtBau/7PA1c8SA
+         Ld4/rB8XJNL0vR0W28FQc265oXFx/ZqU6AGQXOs0k3+/e9GuQbU0ceJy5aW01ts7ljRK
+         H+pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782851979; x=1783456779;
+        h=cc:to:subject:message-id:date:from:mime-version:references
+         :in-reply-to:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5D38aeFmFPo4QXzw9TaB4T12tNTsX9FO9UgEPQFTE7s=;
+        b=E7lYoiW370utpC7GmmXjhzFoutbOsT2QQuDuxI3OF9WUKTSqmJPHgXWMahmgSx9cjo
+         gWc1uFw5FhNQ7ICaOWUeaapfQfal/5Qzrpo5r+S8NJaczg+9sGGgDHYEId6p6uejXWLX
+         IhEnPABB8VuoxKeF/6lx89k+LXL5UaeEn4lFewlAeBxM8Vyxn/z98uV03NRPBpfdfiRs
+         qSwyO7rhg5lUlIzA7DAH+2pEMxscPmB630FL2EM9LgDvGsNxGg9VOfsbClv6cHq7+Zxv
+         IMnXftzGE+Ue/hu1SFzZfawYKhiA9e1ABvsOHKOr9bbmMOlheOust0pF0qyEbc1DE00p
+         +M+g==
+X-Forwarded-Encrypted: i=1; AHgh+RpdX2oLYOrhMt5VP/LT4bpft21HcstLS8tnYWuC6r0MQeJNf21I2L2hRdnZYCfh3o3AUGohUqyyFus=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKnJQKsEFNmOnP9cAd4bQHBH06YA6JtITMQfHDIIcy+6BG48Vv
+	h+dBaYO8LexRtumG2h+9lB1BgOCuZ9GGCXSVcCyKqR3mEQsr7eigaEkNjc+JaYWxz9DAhVRmOxc
+	W5avWEoyCmJFuUVNyhwuWJnUREvsFeFA=
+X-Gm-Gg: AfdE7cm2d8XdlEFqNEBqDR9VxKr+Wqo5OAIpcKv/eOL9iugp9wDSDhW/tTKHNCNGHke
+	XMVEP3EcokKnLiMhZxwiLkvHaljHgW4eF/5FAN8k33YfRmNgL9yZJ4umfTZgpJEJPm/n+f0ivdD
+	DGS4IsbD0BbYi8Yy9WFxozH73+RSI3RmT5IvE3Mh12hvTwqnEcRRRgH/JGVZrLgR/4xkTvDPZSA
+	L33Vt+Tsj9EVl0IHHq24f56CuqBarpWeD45hdpFwkjbO5udr5nYBM3deaUMB4Ci6HqrgT10
+X-Received: by 2002:a05:690c:4b04:b0:7dd:16e2:7291 with SMTP id
+ 00721157ae682-8120365d817mr19039887b3.39.1782851979033; Tue, 30 Jun 2026
+ 13:39:39 -0700 (PDT)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Tue, 30 Jun 2026 13:39:35 -0700
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Tue, 30 Jun 2026 13:39:35 -0700
+In-Reply-To: <20260630161113.GB6526@frogsfrogsfrogs>
+References: <20260630100621.7173-1-alhouseenyousef@gmail.com> <20260630161113.GB6526@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260630113526.3601287-1-hch@lst.de>
+From: Yousef Alhouseen <alhouseenyousef@gmail.com>
+Date: Tue, 30 Jun 2026 13:39:35 -0700
+X-Gm-Features: AVVi8CdvJBhb56hLbqMtooFd6yugGBtf8dueg3H7CS2QMgBj44HN8wGt5PUPelQ
+Message-ID: <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
+To: djwong@kernel.org
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Jun 30, 2026 at 01:35:26PM +0200, Christoph Hellwig wrote:
-> Various test unset SCRATCH_RTDEV to avoid dealing with metadata
-> allocations for the RT subvolume in the main device or differences
-> in RT subvolume behavior.  Besides being rather ad-hoc, this unset
-> also fails to disable the internal RT zoned subvolume.
-> 
-> Add a _disable_scratch_realtime helper that not only unsets
-> SCRATCH_RTDEV, but also disables the zoned allocator and with
-> that the internal RT subvolume.
+Yes. The KMSAN report traces the allocation through
+xfs_bmap_extents_to_btree(), which calls xfs_bmap_broot_realloc(...,
+1). With no existing root, that reaches krealloc(NULL, new_size). The
+conversion initializes the block header, first key, and end-anchored
+pointer, but does not initialize the layout/alignment gap within the
+full if_broot_bytes allocation. XFS_ILOG_DBROOT later copies that
+complete byte count into the log.
 
-What if we want to run these tests on the internal rt volume?
-I guess this means I should go look at what exactly happens on that
-QA config once I get the 7.2-rc1 rebase stabilized.
+So the observed bytes are root-layout slack from the extents-to-btree
+conversion, rather than record storage that a later insertion should
+have filled.
 
---D
+Thanks for the review.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  common/filestreams | 2 +-
->  common/rc          | 9 +++++++++
->  tests/generic/250  | 2 +-
->  tests/generic/252  | 2 +-
->  tests/generic/441  | 2 +-
->  tests/generic/484  | 2 +-
->  tests/generic/487  | 2 +-
->  tests/xfs/076      | 2 +-
->  tests/xfs/189      | 2 +-
->  tests/xfs/205      | 2 +-
->  tests/xfs/306      | 2 +-
->  tests/xfs/444      | 2 +-
->  tests/xfs/445      | 2 +-
->  tests/xfs/655      | 2 +-
->  tests/xfs/656      | 2 +-
->  15 files changed, 23 insertions(+), 14 deletions(-)
-> 
-> diff --git a/common/filestreams b/common/filestreams
-> index 838b5921520a..459de8c6b6a6 100644
-> --- a/common/filestreams
-> +++ b/common/filestreams
-> @@ -84,7 +84,7 @@ _test_streams() {
->  	# Disable the scratch rt device to avoid test failures relating to the
->  	# rt bitmap consuming free space in our small data device and throwing
->  	# off the filestreams allocator.
-> -	unset SCRATCH_RTDEV
-> +	_disable_scratch_realtime
->  
->  	# Skip these tests on zoned file systems as filestreams don't work
->  	# with the zoned allocator, and the operation below would force it into
-> diff --git a/common/rc b/common/rc
-> index 4947255479ca..d8d4d5292f8c 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2435,6 +2435,15 @@ _require_no_realtime()
->  		_notrun "Test not compatible with realtime subvolumes, skipped this test"
->  }
->  
-> +# Disable usage of internal or external scratch devices
-> +_disable_scratch_realtime()
-> +{
-> +	unset SCRATCH_RTDEV
-> +	if [ "$FSTYP" = "xfs" ]; then
-> +		MKFS_OPTIONS="${MKFS_OPTIONS//-r zoned=1}"
-> +	fi
-> +}
-> +
->  # this test requires that a specified command (executable) exists
->  # $1 - command, $2 - name for error message
->  #
-> diff --git a/tests/generic/250 b/tests/generic/250
-> index 605d7c8ade3d..32326114798c 100755
-> --- a/tests/generic/250
-> +++ b/tests/generic/250
-> @@ -29,7 +29,7 @@ _require_odirect
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  fssize=$((196 * 1048576))
->  echo "Format and mount"
-> diff --git a/tests/generic/252 b/tests/generic/252
-> index 2ad0524c2037..2e462b61fce4 100755
-> --- a/tests/generic/252
-> +++ b/tests/generic/252
-> @@ -30,7 +30,7 @@ AIO_TEST="$here/src/aio-dio-regress/aiocp"
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  fssize=$((196 * 1048576))
->  echo "Format and mount"
-> diff --git a/tests/generic/441 b/tests/generic/441
-> index cc370bea5052..c3a096926eaf 100755
-> --- a/tests/generic/441
-> +++ b/tests/generic/441
-> @@ -47,7 +47,7 @@ _require_test_program dmerror
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  echo "Format and mount"
->  _scratch_mkfs > $seqres.full 2>&1
-> diff --git a/tests/generic/484 b/tests/generic/484
-> index 0455efcb6000..e2fea8c6b18d 100755
-> --- a/tests/generic/484
-> +++ b/tests/generic/484
-> @@ -35,7 +35,7 @@ _require_xfs_io_command "syncfs"
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  echo "Format and mount"
->  _scratch_mkfs > $seqres.full 2>&1
-> diff --git a/tests/generic/487 b/tests/generic/487
-> index 364f7eb4c032..cc6c8f0e63d9 100755
-> --- a/tests/generic/487
-> +++ b/tests/generic/487
-> @@ -40,7 +40,7 @@ _require_dm_target error
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  echo "Format and mount"
->  _scratch_mkfs > $seqres.full 2>&1
-> diff --git a/tests/xfs/076 b/tests/xfs/076
-> index 2ea6459b0dbe..103ad7509e0f 100755
-> --- a/tests/xfs/076
-> +++ b/tests/xfs/076
-> @@ -66,7 +66,7 @@ _require_xfs_sparse_inodes
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  _scratch_mkfs "-d size=96m -m crc=1 -i sparse" | tee -a $seqres.full | \
->  	_filter_mkfs > /dev/null 2> $tmp.mkfs
-> diff --git a/tests/xfs/189 b/tests/xfs/189
-> index 1770023760fd..aa9712afac35 100755
-> --- a/tests/xfs/189
-> +++ b/tests/xfs/189
-> @@ -250,7 +250,7 @@ _require_no_realtime
->  _require_scratch
->  _require_noattr2
->  
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  unset SCRATCH_LOGDEV
->  
->  _scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-> diff --git a/tests/xfs/205 b/tests/xfs/205
-> index 73d51d8d602f..7d8c0e5e33dc 100755
-> --- a/tests/xfs/205
-> +++ b/tests/xfs/205
-> @@ -18,7 +18,7 @@ _require_scratch_nocheck
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  fsblksz=1024
->  _scratch_mkfs_xfs -d size=$((32768*fsblksz)) -b size=$fsblksz >> $seqres.full 2>&1
-> diff --git a/tests/xfs/306 b/tests/xfs/306
-> index d48b753632d5..60c2b486f671 100755
-> --- a/tests/xfs/306
-> +++ b/tests/xfs/306
-> @@ -26,7 +26,7 @@ _require_test_program "punch-alternating"
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  # Create a small fs with a large directory block size. We want to fill up the fs
->  # quickly and then create multi-fsb dirblocks over fragmented free space.
-> diff --git a/tests/xfs/444 b/tests/xfs/444
-> index 13c9de528ec8..949c5711e2c8 100755
-> --- a/tests/xfs/444
-> +++ b/tests/xfs/444
-> @@ -31,7 +31,7 @@ _require_scratch_xfs_crc
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming free space in our small data device and throwing off the
->  # filestreams allocator.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  mount_loop() {
->  	if ! _try_scratch_mount >> $seqres.full 2>&1; then
-> diff --git a/tests/xfs/445 b/tests/xfs/445
-> index 0ea85ad018d6..2e9b6ca1be34 100755
-> --- a/tests/xfs/445
-> +++ b/tests/xfs/445
-> @@ -42,7 +42,7 @@ _check_filestreams_support || _notrun "filestreams not available"
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming free space in our small data device and throwing off the
->  # filestreams allocator.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  # use small AGs for frequent stream switching
->  _scratch_mkfs_xfs -d agsize=20m,size=2g >> $seqres.full 2>&1
-> diff --git a/tests/xfs/655 b/tests/xfs/655
-> index a4162d70b321..d6a3d4a95cc0 100755
-> --- a/tests/xfs/655
-> +++ b/tests/xfs/655
-> @@ -26,7 +26,7 @@ _require_xfs_io_command healthmon
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  echo "Format and mount"
->  _scratch_mkfs -d agcount=1 | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-> diff --git a/tests/xfs/656 b/tests/xfs/656
-> index 3830d7193fcb..1eb82991521c 100755
-> --- a/tests/xfs/656
-> +++ b/tests/xfs/656
-> @@ -42,7 +42,7 @@ filter_healer_errors() {
->  
->  # Disable the scratch rt device to avoid test failures relating to the rt
->  # bitmap consuming all the free space in our small data device.
-> -unset SCRATCH_RTDEV
-> +_disable_scratch_realtime
->  
->  echo "Format and mount"
->  _scratch_mkfs > $seqres.full 2>&1
-> -- 
-> 2.53.0
-> 
+On Tue, 30 Jun 2026 09:11:13 -0700, "Darrick J. Wong" <djwong@kernel.org> wrote:
+> On Tue, Jun 30, 2026 at 12:06:21PM +0200, Yousef Alhouseen wrote:
+> > xfs_broot_realloc() preserves the existing in-inode btree root while
+> > growing its allocation, but leaves the added bytes uninitialized. The
+> > inode log formatter copies if_broot_bytes bytes into the journal, so those
+> > bytes reach the log record and its CRC calculation before every location
+> > has necessarily been overwritten by btree updates.
+> >
+> > Request __GFP_ZERO for the initial allocation and every subsequent
+> > allocation or reallocation, as required by krealloc() semantics. This
+> > keeps stale heap contents out of the filesystem log without a separate
+> > memset after each growth.
+> >
+> > Fixes: 6c1c55ac3c05 ("xfs: refactor the inode fork memory allocation functions")
+> > Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> > Reported-by: syzbot+97f2c05378c5d68dcb8c@syzkaller.appspotmail.com
+> > Closes: https://syzkaller.appspot.com/bug?extid=97f2c05378c5d68dcb8c
+>
+> I wonder, did you figure out exactly *which* code path was leaving
+> if_broot partially uninitialized? Somewhere out there, someone will get
+> cranky at the reduced performance that comes from zeroing (especially on
+> krealloc) when most of the codepaths will immediately zero/set the
+> buffer anyway.
+>
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Yousef Alhouseen <alhouseenyousef@gmail.com>
+>
+> In the long run I'm willing to take a small performance hit of having
+> many layered protections as is reasonably performant to avoid spilling
+> kernel memory contents to disk, though, so
+>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+>
+> (others may disagree)
+>
+> --D
+>
+> > ---
+> > Changes in v2:
+> > - Use __GFP_ZERO instead of an explicit memset after krealloc().
+> > - Apply __GFP_ZERO consistently across the allocation lifetime.
+> >
+> > fs/xfs/libxfs/xfs_inode_fork.c | 8 +++++---
+> > 1 file changed, 5 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index 606a36526ce2..dc05540fa85b 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -384,7 +384,8 @@ xfs_broot_alloc(
+> > ASSERT(ifp->if_broot == NULL);
+> >
+> > ifp->if_broot = kmalloc(new_size,
+> > - GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> > + GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL |
+> > + __GFP_ZERO);
+> > ifp->if_broot_bytes = new_size;
+> > return ifp->if_broot;
+> > }
+> > @@ -417,7 +418,8 @@ xfs_broot_realloc(
+> > if (ifp->if_broot_bytes > 0 && ifp->if_broot_bytes > new_size) {
+> > struct xfs_btree_block *old_broot = ifp->if_broot;
+> >
+> > - ifp->if_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
+> > + ifp->if_broot = kmalloc(new_size,
+> > + GFP_KERNEL | __GFP_NOFAIL | __GFP_ZERO);
+> > ifp->if_broot_bytes = new_size;
+> > memcpy(ifp->if_broot, old_broot, new_size);
+> > kfree(old_broot);
+> > @@ -429,7 +431,7 @@ xfs_broot_realloc(
+> > * object.
+> > */
+> > ifp->if_broot = krealloc(ifp->if_broot, new_size,
+> > - GFP_KERNEL | __GFP_NOFAIL);
+> > + GFP_KERNEL | __GFP_NOFAIL | __GFP_ZERO);
+> > ifp->if_broot_bytes = new_size;
+> > return ifp->if_broot;
+> > }
+> > --
+> > 2.54.0
+> >
