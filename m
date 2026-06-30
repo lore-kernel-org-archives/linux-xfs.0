@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CA4F46AEE2;
-	Tue, 30 Jun 2026 16:04:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBF047278C;
+	Tue, 30 Jun 2026 16:11:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782835492; cv=none; b=lplv2/EiQFizcOPjeYArN1KQ09bKehdNPdWcBhnV2Pa6vCUMNm2K3jZNLSGsb2UEaWGn/ltZR+oQTxk0dwmmaWY/Zu3fwN2EcOLCYbJh4Q7CNSVDX4PMZfkNpaVWpN4fIs47baPHUUIf3FKWml2KWfWw0dHnWzwH1A2m97mUWrM=
+	t=1782835875; cv=none; b=OuAPwDKSgfMiuHIpnV+WMKNUJtbzyirqjqqjARDoHIIPImsUfDzkiOmHZb+bwRzjKP3E0TU9cV3HGJVGWZavLmvBDGmK/5AJCwpDjN7rXkY6Ez1DTQOYi86l3s8aigJ2FaIK3yZlSoeYIgHVuxb5lrqxUEkkQ16/gB4ll6/gQZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782835492; c=relaxed/simple;
-	bh=m8ubQEzYN9wUMvEDdXsR8GvLoyJQsl/90h1gsmWq6IU=;
+	s=arc-20240116; t=1782835875; c=relaxed/simple;
+	bh=6HJguPcwaTGzO9viK21l1rsMKhFIl0tLTXgu8y8wIWM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EqCawST4pk+DC8x7lk1YdMqVsGz4Z0BhPWeOqIL+Cpkr8rcU1ARo/7bcbpHUE2ke9VLMjzorJlymhWTRPjMH79UfQ+UMnK2BBBSW92B86WuBEabgP+tkHza8XlUhULxQVRrRCta3/NSRxXKR07yTqYBkFAeSmVQKbxCfGD35+y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZkaMRFtR; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=XlabrvbAlYn1WIIZRbSAVeZCNIJn/+Vg8w2Gcri/WHqrwdrle0Zm2SmrG2trzremRKXomF32UrzcHQ+NNPmHvEOr9aGLugtt7A41WMHAbrCFPF/qwKQ0XIghny2QJhpw0cgEK3W1z/p4l62+KEiLtOHCQv9F8igml629AGgR9O4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MkcNtWpH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZkaMRFtR"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 252B61F00AC4;
-	Tue, 30 Jun 2026 16:04:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MkcNtWpH"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BB4F81F000E9;
+	Tue, 30 Jun 2026 16:11:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782835489;
-	bh=QesfPcZNprlavXfSBU02g5izCfA79PSfySOG273cUO4=;
+	s=k20260515; t=1782835873;
+	bh=duLwucBstRQtdnR7cqd58bPGJsHK8EN8NC60p9eEjNI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZkaMRFtRGKFKB9zCEDFe3sy+Xv9IT6JFxHfOCYFNm2h1xHdVPBOCdUH/yS8c9bq0c
-	 pBexjMkrNWtvjmZn6PzQ3H/SRjCPysIxsVt0S6bB1KhA5yOM+o3v8wYeenMW9Ewmck
-	 FdPvgDew12gBpVgH3BYAKSF7I4AXBnrxmHjvduwK+3gRe3qynCWrzGTK8pcoyXq3cE
-	 +/MoeS/yTc8nODuP9F2h9CX6FYp6fInn0rwHSGNZpil/vCBSqDgPyzoQB+Us29+Xpx
-	 pvVyNdP/HPUxsHMbu9y9Nk5UVViHeGRG7CNGTC5h5CwHOIsS57MXEtT5iRdDDF0FL1
-	 hSIPDjB46wSPQ==
-Date: Tue, 30 Jun 2026 09:04:48 -0700
+	b=MkcNtWpH1uzZ7EsKXGrdzoj4n1dVOr/WFZSMmtfoZsfM2aR1XMwCWUKEmpQQATVha
+	 t0A+y+KmvNE+2XlufllX6toNoAc8bnMwNdqa4hedXo3gE//nA/wkUlEt2U5lIOZjvE
+	 Bbk7qNku+d7FcFogYRj/yTebHe//1SXo0Bg5NcXPHTq6jYRK2dq3EOCoVTPv1VdPj0
+	 0YBaa1kmIDRk7TdLpeB2aANYC+edG11zGTsi97Na2uRi5h0LbNXIzXq9uTw0AS/41s
+	 Noa3/sjxwBA4P+v94kYpGUaECM+dvC0xyXXJbmLZe7BUbdt7bN8FDKqJiJtyC7gRrR
+	 oxhJ+u5WmZNpQ==
+Date: Tue, 30 Jun 2026 09:11:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yousef Alhouseen <alhouseenyousef@gmail.com>, f@magnolia.djwong.org
+To: Yousef Alhouseen <alhouseenyousef@gmail.com>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	syzbot+b7dfbed0c6c2b5e9fd34@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] xfs: use null daddr for unset first bad log block
-Message-ID: <20260630160448.GA6526@frogsfrogsfrogs>
-References: <20260630100607.7150-1-alhouseenyousef@gmail.com>
+	syzbot+97f2c05378c5d68dcb8c@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
+Message-ID: <20260630161113.GB6526@frogsfrogsfrogs>
+References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,67 +43,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260630100607.7150-1-alhouseenyousef@gmail.com>
+In-Reply-To: <20260630100621.7173-1-alhouseenyousef@gmail.com>
 
-On Tue, Jun 30, 2026 at 12:06:07PM +0200, Yousef Alhouseen wrote:
-> xlog_do_recovery_pass() may return before setting first_bad.  The caller
-> must distinguish that case from an error at a valid log block, including
-> block zero after the log wraps.
+On Tue, Jun 30, 2026 at 12:06:21PM +0200, Yousef Alhouseen wrote:
+> xfs_broot_realloc() preserves the existing in-inode btree root while
+> growing its allocation, but leaves the added bytes uninitialized.  The
+> inode log formatter copies if_broot_bytes bytes into the journal, so those
+> bytes reach the log record and its CRC calculation before every location
+> has necessarily been overwritten by btree updates.
 > 
-> Initialize first_bad to XFS_BUF_DADDR_NULL and test it explicitly before
-> treating the error as a torn write.
+> Request __GFP_ZERO for the initial allocation and every subsequent
+> allocation or reallocation, as required by krealloc() semantics.  This
+> keeps stale heap contents out of the filesystem log without a separate
+> memset after each growth.
 > 
-> Fixes: 7088c4136fa1 ("xfs: detect and trim torn writes during log recovery")
+> Fixes: 6c1c55ac3c05 ("xfs: refactor the inode fork memory allocation functions")
 > Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Reported-by: syzbot+b7dfbed0c6c2b5e9fd34@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=b7dfbed0c6c2b5e9fd34
+> Reported-by: syzbot+97f2c05378c5d68dcb8c@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=97f2c05378c5d68dcb8c
+
+I wonder, did you figure out exactly *which* code path was leaving
+if_broot partially uninitialized?  Somewhere out there, someone will get
+cranky at the reduced performance that comes from zeroing (especially on
+krealloc) when most of the codepaths will immediately zero/set the
+buffer anyway.
+
 > Cc: stable@vger.kernel.org
-
-Cc: <stable@vger.kernel.org> # v4.5
-
 > Signed-off-by: Yousef Alhouseen <alhouseenyousef@gmail.com>
 
-Much better now, thanks.
+In the long run I'm willing to take a small performance hit of having
+many layered protections as is reasonably performant to avoid spilling
+kernel memory contents to disk, though, so
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+(others may disagree)
 
 --D
 
 > ---
 > Changes in v2:
-> - Use XFS_BUF_DADDR_NULL instead of zero as the unset sentinel.
-> - Test the sentinel explicitly before handling a torn write.
+> - Use __GFP_ZERO instead of an explicit memset after krealloc().
+> - Apply __GFP_ZERO consistently across the allocation lifetime.
 > 
->  fs/xfs/xfs_log_recover.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_fork.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 09e6678ca487..5f984bf5698a 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1028,7 +1028,7 @@ xlog_verify_head(
->  {
->  	struct xlog_rec_header	*tmp_rhead;
->  	char			*tmp_buffer;
-> -	xfs_daddr_t		first_bad;
-> +	xfs_daddr_t		first_bad = XFS_BUF_DADDR_NULL;
->  	xfs_daddr_t		tmp_rhead_blk;
->  	int			found;
->  	int			error;
-> @@ -1057,7 +1057,8 @@ xlog_verify_head(
->  	 */
->  	error = xlog_do_recovery_pass(log, *head_blk, tmp_rhead_blk,
->  				      XLOG_RECOVER_CRCPASS, &first_bad);
-> -	if ((error == -EFSBADCRC || error == -EFSCORRUPTED) && first_bad) {
-> +	if ((error == -EFSBADCRC || error == -EFSCORRUPTED) &&
-> +	    first_bad != XFS_BUF_DADDR_NULL) {
->  		/*
->  		 * We've hit a potential torn write. Reset the error and warn
->  		 * about it.
-> @@ -3575,4 +3576,3 @@ xlog_recover_cancel(
->  	if (xlog_recovery_needed(log))
->  		xlog_recover_cancel_intents(log);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 606a36526ce2..dc05540fa85b 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -384,7 +384,8 @@ xfs_broot_alloc(
+>  	ASSERT(ifp->if_broot == NULL);
+>  
+>  	ifp->if_broot = kmalloc(new_size,
+> -				GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL);
+> +				GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOFAIL |
+> +				__GFP_ZERO);
+>  	ifp->if_broot_bytes = new_size;
+>  	return ifp->if_broot;
 >  }
-> -
+> @@ -417,7 +418,8 @@ xfs_broot_realloc(
+>  	if (ifp->if_broot_bytes > 0 && ifp->if_broot_bytes > new_size) {
+>  		struct xfs_btree_block	*old_broot = ifp->if_broot;
+>  
+> -		ifp->if_broot = kmalloc(new_size, GFP_KERNEL | __GFP_NOFAIL);
+> +		ifp->if_broot = kmalloc(new_size,
+> +					GFP_KERNEL | __GFP_NOFAIL | __GFP_ZERO);
+>  		ifp->if_broot_bytes = new_size;
+>  		memcpy(ifp->if_broot, old_broot, new_size);
+>  		kfree(old_broot);
+> @@ -429,7 +431,7 @@ xfs_broot_realloc(
+>  	 * object.
+>  	 */
+>  	ifp->if_broot = krealloc(ifp->if_broot, new_size,
+> -			GFP_KERNEL | __GFP_NOFAIL);
+> +			GFP_KERNEL | __GFP_NOFAIL | __GFP_ZERO);
+>  	ifp->if_broot_bytes = new_size;
+>  	return ifp->if_broot;
+>  }
 > -- 
 > 2.54.0
 > 
