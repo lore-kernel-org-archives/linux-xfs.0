@@ -1,84 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06371A9F97
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 00:52:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74E4F1A9F97
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 00:58:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782780775; cv=none; b=q7/i21sA3QutXARaQ5LTiILTDemcNPcjhrBU/DYEIyoWHAgY6fWgw3qRhIE9kArrDBq6vs5gnmQJBKumQXU9LdhgUoRZ6RkSY+KQRxT0r45LwvxBqdXyjMDi/ItR95Rj1pxMRUfe9flk4ps5Jv5b4szqzZLABMxKGQ7QXYR/kkM=
+	t=1782781097; cv=none; b=s6DkT5l28AjB+ve+DCmIfG6TyXa5+YOkmARhCtCOM1A+K1NkPbiJ0OYuM9jH4S/mhDyH7LK4HfwkkFbKLm/l5UDOmt1AKVRjo2DeLQRVl8D9r+y5OJO3CZsKfmC9mvH7HWqZG56bUGAI+cTJFJAp5VhC+mBv9rAPBHISgNhpVqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782780775; c=relaxed/simple;
-	bh=E7wrLzl35+ywrodpIjqLbMRv8Ge1xP/rKWw9GPzkX8o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=md98/YGdLR9oIVTAkxholmgo1oILB482JQXmxED4PEQ/PcJ5Z5hCeHMzWbkP+SF8/hmFG5LyPIGmW3fdXE/6QwDAEe51j7V0jOCQ4+M03qLHdaqWIXRYCZ8mrH8mOetCR4D3GZ6NvQ/H0wygGknVlkvekNZmEPXQaJyiG0TAVF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ws7kD88Y; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782781097; c=relaxed/simple;
+	bh=gk9/azI708G+2iSmG/sX12H1v0pV2rb5JdAsj6imxdk=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=dv999TdTMyctVRUVztNC4JWy44Htwk+TAS6zcKEtAbW3VE9cESKx3tSbitInOiOMOB9Gd42EB2m8Aft6pbgrL83daRpiviJ6wq3lz1r//9LsqhoBwsmp7pT9XUKV7nwXDxFz4i2T+gGX6PUvtLNlhex8cculH/jIUs/P3oW8LFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MIZI3j35; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ws7kD88Y"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5195C1F000E9;
-	Tue, 30 Jun 2026 00:52:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MIZI3j35"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 467A11F000E9;
+	Tue, 30 Jun 2026 00:58:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782780774;
-	bh=SZous8ceJsD1uwlsi7aNCRhst0Gl6rk9JZbmifpXIAg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ws7kD88Y4YJejaUrZPthlLNzxkxKEdUrh+yMpIs5mXQ2khmwvdfteu5LfFBXHdhF4
-	 ojF0IIIVWLjPkKhtzlkDfQmBO/m2whQwmQp2uF6P1vwob6IRCxr4KtoB8HangwaHiR
-	 LyFdJim4KajbEyKIcYzj0PZWSNpEZbl4NuRoYFX6LHJl+5r5HsFjyHACzyAd7Z2Xdt
-	 o8N9BvKkKWlRq45JdQJp6hD/GVw6JD610e+pyzu36GhBW9B75xxonfCB57NhSthL1n
-	 GXNqYB6oI3sl3tNhr+csvtcwCYIM0hyMMGYMm08cizFWWFMkqNFPUVPzWDU5DZyyxL
-	 uaUv5/KqmcbRg==
-Date: Mon, 29 Jun 2026 17:52:54 -0700
+	s=k20260515; t=1782781096;
+	bh=Jj4njENxnejAfbQZK5wkTyYnd2ewMty1q8WNbca8ZDw=;
+	h=Date:Subject:From:To:Cc;
+	b=MIZI3j35+AiSRnD6+I5O9rqBiKPNhlV2RF9BzsgsYl4una5tcI7Gao9mZBuLLJ8+k
+	 p6oMAlgJwo+XbdfBo05+jPbcP3eRGH0l01RmO8b6dwPAfrEnoOv9dArm1cpuxgkeHK
+	 v7jmPRwOFvdkaw+5cnRpHF9H2iQtfmAp25HMi7pAvYYXgVJHcYPkwr9he42NZgzG7f
+	 Uan+DpCHHthrYlDAb9syQsGjxP0pwkZ9EQOIVXFSU1W3tDfTKbrkdQDjQbA1HMWf/a
+	 M3aXIHdFvKXkA1phhDAXxBWCpfMI3hoUhn0HZVGRis/8XU+KKeFHkov0j6nqfZsVsL
+	 DSyyAhDlnZGCQ==
+Date: Mon, 29 Jun 2026 17:58:15 -0700
+Subject: [GIT PULL] xfs_scrub: codex-inspired bug fixes, part 3
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: lift setting __GFP_NOFAIL from
- xfs_buf_alloc_kmem to the caller
-Message-ID: <20260630005254.GH6078@frogsfrogsfrogs>
-References: <20260617055814.3842058-1-hch@lst.de>
- <20260617055814.3842058-3-hch@lst.de>
+To: aalbersh@kernel.org, djwong@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <178278107232.851483.5695754796170186624.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260617055814.3842058-3-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jun 17, 2026 at 07:58:03AM +0200, Christoph Hellwig wrote:
-> The current __GFP_NOFAIL setting is wrong in some cases.  Prepare
-> for fixing that by giving control to the caller.
+Hi Andrey,
 
-Simple enough...
+Please pull this branch with changes for xfsprogs for 7.1-rc1.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index d3d44e3ff001..dce398337ad0 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -145,7 +145,7 @@ xfs_buf_alloc_kmem(
->  	ASSERT(is_power_of_2(size));
->  	ASSERT(size < PAGE_SIZE);
->  
-> -	bp->b_addr = kmalloc(size, gfp_mask | __GFP_NOFAIL);
-> +	bp->b_addr = kmalloc(size, gfp_mask);
->  	if (!bp->b_addr)
->  		return -ENOMEM;
->  
-> @@ -230,7 +230,7 @@ xfs_buf_alloc_backing_mem(
->  	 * smaller than PAGE_SIZE buffers used by XFS.
->  	 */
->  	if (size < PAGE_SIZE && is_power_of_2(size))
-> -		return xfs_buf_alloc_kmem(bp, size, gfp_mask);
-> +		return xfs_buf_alloc_kmem(bp, size, gfp_mask | __GFP_NOFAIL);
->  
->  	/*
->  	 * Don't bother with the retry loop for single PAGE allocations: vmalloc
-> -- 
-> 2.53.0
-> 
-> 
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit 708b369bdf8f4f9b2824b9daa54a11df253b7b5b:
+
+mkfs: remove duplicate include of convert.h (2026-06-26 11:54:22 +0200)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/scrub-codex-fixes3_2026-06-29
+
+for you to fetch changes up to f75bb3f2d598b621c89da0894e5bd0a5e0d2c8f0:
+
+xfs_scrub: always finish cleanup, even if reporting healthy state fails (2026-06-29 17:57:06 -0700)
+
+----------------------------------------------------------------
+xfs_scrub: codex-inspired bug fixes, part 3 [1/7]
+
+Here's a third batch of xfs_scrub fixes resulting from Codex reviews.
+
+With a bit of luck, this should all go splendidly.
+
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (6):
+xfs_scrub: stop user file scan if caller already aborted
+xfs_scrub: don't flatten error numbers in read_verify_schedule_now
+xfs_scrub: actually handle NEEDSCHECK scrub items in phase 4
+xfs_scrub: don't leak phase 5 scan items after a failed workqueue_add
+xfs_scrub: fix phase 8 debug reporting
+xfs_scrub: always finish cleanup, even if reporting healthy state fails
+
+scrub/repair.h      | 14 ++++++++++++++
+scrub/inodes.c      |  6 ++++--
+scrub/phase1.c      | 11 ++++++-----
+scrub/phase5.c      |  8 ++++++--
+scrub/phase8.c      |  5 ++---
+scrub/read_verify.c |  2 +-
+scrub/repair.c      | 16 +++++++++++-----
+7 files changed, 44 insertions(+), 18 deletions(-)
+
