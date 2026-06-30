@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D8A30C166;
-	Mon, 29 Jun 2026 23:49:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 251051A9F97
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 00:52:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782776945; cv=none; b=n3KJuBzaqplEvycAY2FYHo2lxogmKhvKwD+3ZxPEGWhPG3OBF2qlAdIYHrFCi990ieCzyMCJdaqYfcCBIhkkfYqq0BcQbr6k9nWp8w1LnMe/+v4kH8b5k/5zWFCrOUwgslc5ueq7sJmfqVuTiiXpwroZ1cooOjcNlFBoxQaEWx4=
+	t=1782780744; cv=none; b=TfoUWMkwdOd0FK2W0Dahc0NstCqnKqA9Umk9N3vWUOQo86syyfFOOIZU8wFWbK4Anci53Ci991uLLLN+bl3exIVx7xyTuxQwvednoYSSCwKuF1Bas6pEnES+Iwc9bJaH0PXo6Ga+3MNa6NiCWtcMeOQdeeSsfCEjlMFjqxAMAls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782776945; c=relaxed/simple;
-	bh=pwHCnUHSf7hYwpk0T9AW+6TJ1jEFo18xT4gss+zBufc=;
+	s=arc-20240116; t=1782780744; c=relaxed/simple;
+	bh=WQ8cslHJ89s7QZAP0C5phKlsAV5RrZTXx1+3av3o+Es=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YXdOPQLizIFyFncJYB6FYkV4atxJ1rUtE7n4cM+ayn8K6F4g+6OYuNsnLQu8cJ7lqVvi0Lo3P0SuvBfda5ANLzvO2EGKTUyyNc5uNOfcy3lPNYveIspJEedSVGsppxwzbD+YlTQxv+peqZL3LBRavvzqmpl04otaCPgclstaPQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SNAQFbEX; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=oVy8Kcf6Xb09A5lNF+uxcWu3K3IiUpKC++4lZ0YiNEuagQnaxzeiJD7Nel822nJy8ccVKNc8D6MakWKVNW7vK0BOdVKj/8n282hMZ0SQVAIcBstSZY4ff2zupPHNTTI12rdas+HYui/tTV3CjCCxQ6ZS8XM9A1NzMXc7hlXU56k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CsiMThzY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SNAQFbEX"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 95CD21F000E9;
-	Mon, 29 Jun 2026 23:49:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CsiMThzY"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id AC0E21F000E9;
+	Tue, 30 Jun 2026 00:52:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782776943;
-	bh=cNUkZI/ilJkqBGVT9/+b827dpSw+DXeCtGiw1GbxoaE=;
+	s=k20260515; t=1782780742;
+	bh=1QtG2KOCMTdbE7ZBui2FlO7hR/l38knNWyHPibYTpHs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SNAQFbEX2Z1BX+qVuObElP5SFLn9u7Suk29aDqq4iB944wgDz03kd7abHdcaZcCwS
-	 7FEscIHy0UXm6TCPSuGuNlNgU4RM29ic0X/Q8c0VU7HZ3JB+/TjQ/Z1RoReBcZMp3O
-	 na9fsT02IPPEfZqaDl87FWXCrxOOkxGB+YfsVPJlA+5V3u50QagvjQCwoA62yZvn/E
-	 GIpR/aMwG/JfEb+14VTAabbE8KrgRNrPyarEKivF7Uj/5n5X3bmIvWhhcYXNCsV7i3
-	 XIIOoWgmijIy8oSCAFn5hqZN8LgMxwHumXXo+NWTTqW/QNGWnGEsgDGyQeZ5agqm/T
-	 WWh3A37CxqoZw==
-Date: Mon, 29 Jun 2026 16:49:03 -0700
+	b=CsiMThzYK6OJ2ZLatqEwk2lEorlzAzdNWAtlYZDgYHnIQQthqcH/tG2hKkjjD86zr
+	 63aSo/BB3CiXFdSfu+v/s+5ZRVI2t/4EdaxMkEZF0vXNllp7Y4RZo9Q2S/OoAw2s4P
+	 07k1X0Qr1l6DTMJynCLjBrX48DO3crVZiDx2FTfLqDLJ350ybA1va9Y2EYKhmA+GaT
+	 ONQLUDS5PnvZQt5b58lPpW65q/9KXek5ySOSlT8TFRMaiDguXoSbOYuSKOfWHfyXRo
+	 VOtvmXWWBWCj60FUQb6NTYzG3STl0JRnQZ83FRO+3KjajGTgvM61+yU/G9qBT6okaD
+	 OinLRSDHS5seg==
+Date: Mon, 29 Jun 2026 17:52:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Yingjie Gao <gaoyingjie@uniontech.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: retry dqpurge when dquot buffer is busy
-Message-ID: <20260629234903.GF6078@frogsfrogsfrogs>
-References: <20260626095253.3445540-1-gaoyingjie@uniontech.com>
- <20260626205257.GA6078@frogsfrogsfrogs>
- <20260629124356.GA22595@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: split up xfs_buf_alloc_backing_mem
+Message-ID: <20260630005222.GG6078@frogsfrogsfrogs>
+References: <20260617055814.3842058-1-hch@lst.de>
+ <20260617055814.3842058-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,40 +42,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260629124356.GA22595@lst.de>
+In-Reply-To: <20260617055814.3842058-2-hch@lst.de>
 
-On Mon, Jun 29, 2026 at 02:43:56PM +0200, Christoph Hellwig wrote:
-> On Fri, Jun 26, 2026 at 01:52:57PM -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 26, 2026 at 05:52:53PM +0800, Yingjie Gao wrote:
-> > > xfs_qm_dqpurge() marks a zero-reference dquot dead before trying to flush
-> > > a dirty dquot. If the attached buffer is busy, xfs_dquot_use_attached_buf()
-> > > returns -EAGAIN.
-> > > 
-> > > The error path restores q_lockref.count but then jumps to out_funlock,
-> > > which continues into the successful purge tail and destroys the dquot.  At
-> > > that point the attached buffer has not been detached and the dquot log item
-> > > may still be in the AIL.
-> > > 
-> > > Restore the retry behavior by dropping the locks and returning -EAGAIN
-> > > after resurrecting the lockref.
-> > > 
-> > > Link: https://lore.kernel.org/linux-xfs/20260625175519.GF6078@frogsfrogsfrogs/
-> > > Fixes: 0c5e80bd579f ("xfs: use a lockref for the xfs_dquot reference count")
-> > > Cc: stable@vger.kernel.org # v6.19+
-> > > Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
-> > 
-> > Yeah, that's more like what we did before 0c5e80bd579f.  I think the
-> > lockref resurrection part still looks ok, but maybe hch has an opinion?
+On Wed, Jun 17, 2026 at 07:58:02AM +0200, Christoph Hellwig wrote:
+> Split out helpers for folio and vmalloc allocations to prepare for a bug
+> fix.
 > 
-> But is it the right thing?  In dqpurge we really want to kill of the
-> dquot, so doing a trylock is not very useful, so we really should not
-> do a trylock here but just lock the buffer.
-> 
-> Darrick, do you remember if there's any lock order inversions we need
-> to care about here?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I don't remember off the top of my head, other than (afaict) the trylock
-might be a remnant of not wanting to block in quotaoff purge while the
-QUOTAOFF log item is also pinning the log tail.
+Ok, a simple hoist; so far so good
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_buf.c | 61 +++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 40 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 0cea458f1353..d3d44e3ff001 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -120,6 +120,22 @@ xfs_buf_free(
+>  	call_rcu(&bp->b_rcu, xfs_buf_free_callback);
+>  }
+>  
+> +static int
+> +xfs_buf_alloc_folio(
+> +	struct xfs_buf		*bp,
+> +	size_t			size,
+> +	gfp_t			gfp_mask)
+> +{
+> +	struct folio		*folio;
+> +
+> +	folio = folio_alloc(gfp_mask, get_order(size));
+> +	if (!folio)
+> +		return -ENOMEM;
+> +	bp->b_addr = folio_address(folio);
+> +	trace_xfs_buf_backing_folio(bp, _RET_IP_);
+> +	return 0;
+> +}
+> +
+>  static int
+>  xfs_buf_alloc_kmem(
+>  	struct xfs_buf		*bp,
+> @@ -148,6 +164,27 @@ xfs_buf_alloc_kmem(
+>  	return 0;
+>  }
+>  
+> +static int
+> +xfs_buf_alloc_vmalloc(
+> +	struct xfs_buf		*bp,
+> +	size_t			size,
+> +	gfp_t			gfp_mask,
+> +	xfs_buf_flags_t		flags)
+> +{
+> +	for (;;) {
+> +		bp->b_addr = __vmalloc(size, gfp_mask);
+> +		if (bp->b_addr)
+> +			break;
+> +		if (flags & XBF_READ_AHEAD)
+> +			return -ENOMEM;
+> +		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> +		memalloc_retry_wait(gfp_mask);
+> +	}
+> +
+> +	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Allocate backing memory for a buffer.
+>   *
+> @@ -175,7 +212,6 @@ xfs_buf_alloc_backing_mem(
+>  {
+>  	size_t		size = BBTOB(bp->b_length);
+>  	gfp_t		gfp_mask = GFP_KERNEL | __GFP_NOLOCKDEP | __GFP_NOWARN;
+> -	struct folio	*folio;
+>  
+>  	if (xfs_buftarg_is_mem(bp->b_target))
+>  		return xmbuf_map_backing_mem(bp);
+> @@ -216,33 +252,16 @@ xfs_buf_alloc_backing_mem(
+>  	 */
+>  	if (size > PAGE_SIZE) {
+>  		if (!is_power_of_2(size))
+> -			goto fallback;
+> +			return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
+>  		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
+>  		gfp_mask |= __GFP_NORETRY;
+>  	}
+> -	folio = folio_alloc(gfp_mask, get_order(size));
+> -	if (!folio) {
+> +	if (xfs_buf_alloc_folio(bp, size, gfp_mask) < 0) {
+>  		if (size <= PAGE_SIZE)
+>  			return -ENOMEM;
+>  		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
+> -		goto fallback;
+> -	}
+> -	bp->b_addr = folio_address(folio);
+> -	trace_xfs_buf_backing_folio(bp, _RET_IP_);
+> -	return 0;
+> -
+> -fallback:
+> -	for (;;) {
+> -		bp->b_addr = __vmalloc(size, gfp_mask);
+> -		if (bp->b_addr)
+> -			break;
+> -		if (flags & XBF_READ_AHEAD)
+> -			return -ENOMEM;
+> -		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> -		memalloc_retry_wait(gfp_mask);
+> +		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
+>  	}
+> -
+> -	trace_xfs_buf_backing_vmalloc(bp, _RET_IP_);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.53.0
+> 
+> 
