@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A33C280A20
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 01:49:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3B2258CE7
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 01:51:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782784177; cv=none; b=mh62nJ2FhsgEWLzWtiGI87GCHA0KY3KOHz97uLAqT0XD0fC8wxWr1RDBzCotYbgVuCiiBeNx0EvmtFAG/wVbSfHQ6iW4cSKo8hGmAgrJsqFvmzV0YzbiH8qC96AiConMjBZQ6FMeqhh3YgIm3Lk5wWh8BXUmwbRyCzDmI2/WK+o=
+	t=1782784271; cv=none; b=J5cOeSgN7qXtHRYBFo/3h0gYkqpc3TsNqfgATSZi2DwfCncrKIugjtVTyF1ftwGuefLcrYEZESUpp2Cum1VZmiePcLtL24zd0BmTB9AwqRmbWtZnbGrNBqPYAtCx9bh9vIUkXMRLa+BPhVmmWuA3WZohTjbmDPIM8oXfA/00Xqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782784177; c=relaxed/simple;
-	bh=iUjzjdmAYRf9VtkSrR9ofF7J6OZipVIKYCoG2sLFjhs=;
+	s=arc-20240116; t=1782784271; c=relaxed/simple;
+	bh=MSE0b9A8iFwMHpwVEnyVEfFS2j+lNulwpgExXk5CpDQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jA3SiiOiVC5ongQSRW+2YlL9tfmyuuJAUGzs+Vr5COa6MXuOTYI5ygzmOCxZQWJLGFZKA98YSbPuO9AxsQDzSce1sDwCbUxpTeIDFgdIbRJIrHLI7yzgdBtfVevHAPB6gDOUoOJRFN548oJXnZ0D9z8jbu9+q/LuwGa1oVSt87c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fBatHr+q; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=mptcB/6/OODs5tE0vpN54iICaGu/O/38dwiU746c6I5axJmELakcO6GYxjRFJcAlgPBY2oH5XG1qctXg9rth/Vs9filA0fGVj/hvnmtPGF6im0dK/Ox8nWz0X2UdkcLbJqWVigfM330T6GPJJtLFIn/Qp2PN5MPsNfWJBbNpgB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A5bqTnLA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fBatHr+q"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E05941F000E9;
-	Tue, 30 Jun 2026 01:49:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A5bqTnLA"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 292C01F000E9;
+	Tue, 30 Jun 2026 01:51:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782784176;
-	bh=ffNbxmCgnQ+4EdXjIlr7STRN7X7l8kLOWHhdCKHdWNg=;
+	s=k20260515; t=1782784270;
+	bh=pCxP5NvTFlq/IZ3BZzGc4glieCmj9xaMWbTh69EjNjk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fBatHr+q28nJ1wxAnzM4YOlMvFk7+YY5+QrNn6HWLqmxnX3Y8kJYxxureNHgj6fcW
-	 Rc636M4rWyoipxzacZKDcGJ4AoPXhzOId0cv1I5Hat7557/qZSKRKlXpHdJmGnF/ge
-	 CBvdRcxdXyFQUegVCjRVZ8NNwnobTefa4QtK8DHhBXDTwCp0YB9D8cRAmz8WtndrbQ
-	 UFZo5+OBMVw3nVtRXMW2EgInVmAi4cS8AQHCAtX91yg4KyPU6ZIJv76QlYk/L9EBwf
-	 aRd/pEPtLEsrf9t1cC3iYgpvoUUObusbZDw7UF9Qwop6cu9QKBR/NeciAk51hma6TN
-	 2keoM8TAJrqhA==
-Date: Mon, 29 Jun 2026 18:49:35 -0700
+	b=A5bqTnLAkiLq1VqVxPoWLbcc3RGZN7F7znUeAuFdDKsKpLJks7GF9dkl+Rgynb4/E
+	 p4kGMS6fVCgZVaETcP3wHtoUAjpi1A0qNW0I7pOZIZOAs/Smg9XMSz/KeHtS7UIRuS
+	 wTiuaDau2/cehY/wgkBZLl10kdjMhwa2F4PYPWKYx1s9m1BjHnbAFa6K+9pPD0rARb
+	 YBn1mBn24eMFufCGt14KPf1uVBEwqqpwMxWThNS7YJY/nTD389CierJxwx8Xa5qQ1Z
+	 yXmR4OLg7UlDVZn5y6Y1+YHbdRenx5toeMMYOIPVi7nKSent2wrUZgu1qLcnk3ipPi
+	 TkOu7DlEH+4fw==
+Date: Mon, 29 Jun 2026 18:51:09 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: fix incorrect use of gfp flags in
- xfs_buf_alloc_backing_mem
-Message-ID: <20260630014935.GI6078@frogsfrogsfrogs>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: simplify the failure path in
+ xfs_buf_alloc_vmalloc
+Message-ID: <20260630015109.GJ6078@frogsfrogsfrogs>
 References: <20260617055814.3842058-1-hch@lst.de>
- <20260617055814.3842058-4-hch@lst.de>
+ <20260617055814.3842058-5-hch@lst.de>
+ <ajkrJHFg4lYeWskS@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,113 +44,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260617055814.3842058-4-hch@lst.de>
+In-Reply-To: <ajkrJHFg4lYeWskS@nidhogg.toxiclabs.cc>
 
-On Wed, Jun 17, 2026 at 07:58:04AM +0200, Christoph Hellwig wrote:
-> xfs_buf_alloc_backing_mem currently has two issues with how the GFP_
-> flags are set:
+On Mon, Jun 22, 2026 at 02:34:10PM +0200, Carlos Maiolino wrote:
+> On Wed, Jun 17, 2026 at 07:58:05AM +0200, Christoph Hellwig wrote:
+> > Look at the __GFP_NORETRY flag set for readahead so that we don't
+> > have to pass both the gfp_t and the flags in.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_buf.c | 7 +++----
+> >  1 file changed, 3 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index eea2a8757fe1..1ed9f01b3275 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -168,14 +168,13 @@ static int
+> >  xfs_buf_alloc_vmalloc(
+> >  	struct xfs_buf		*bp,
+> >  	size_t			size,
+> > -	gfp_t			gfp_mask,
+> > -	xfs_buf_flags_t		flags)
+> > +	gfp_t			gfp_mask)
+> >  {
+> >  	for (;;) {
+> >  		bp->b_addr = __vmalloc(size, gfp_mask);
+> >  		if (bp->b_addr)
+> >  			break;
+> > -		if (flags & XBF_READ_AHEAD)
 > 
->   - when aiming for a large folio allocation, the gfp mask is adjusted
->     to try less hard, but these flags then persist for the vmalloc
->     allocation, which is bogus.
->   - the __GFP_NOFAIL for small allocations is also applied when readahead
->     force __GFP_NORETRY which doesn't make any sense.
-> 
-> Fix this by only applying __GFP_NOFAIL when __GFP_NORETRY is not set,
-> and by reordering the code so that the large folio gfp adjustments
-> are performed locally just for that allocation.
-> 
-> Fixes: 94c78cfa3bd1 ("xfs: convert buffer cache to use high order folios")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.c | 49 +++++++++++++++++++++++-------------------------
->  1 file changed, 23 insertions(+), 26 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index dce398337ad0..eea2a8757fe1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -223,22 +223,6 @@ xfs_buf_alloc_backing_mem(
->  	if (flags & XBF_READ_AHEAD)
->  		gfp_mask |= __GFP_NORETRY;
->  
-> -	/*
-> -	 * For buffers smaller than PAGE_SIZE use a kmalloc allocation if that
-> -	 * is properly aligned.  The slab allocator now guarantees an aligned
-> -	 * allocation for all power of two sizes, which matches most of the
-> -	 * smaller than PAGE_SIZE buffers used by XFS.
-> -	 */
-> -	if (size < PAGE_SIZE && is_power_of_2(size))
-> -		return xfs_buf_alloc_kmem(bp, size, gfp_mask | __GFP_NOFAIL);
-> -
-> -	/*
-> -	 * Don't bother with the retry loop for single PAGE allocations: vmalloc
-> -	 * won't do any better.
-> -	 */
-> -	if (size <= PAGE_SIZE)
-> -		gfp_mask |= __GFP_NOFAIL;
-> -
->  	/*
->  	 * Optimistically attempt a single high order folio allocation for
->  	 * larger than PAGE_SIZE buffers.
-> @@ -251,18 +235,31 @@ xfs_buf_alloc_backing_mem(
->  	 * path for them instead of wasting memory here.
->  	 */
->  	if (size > PAGE_SIZE) {
-> -		if (!is_power_of_2(size))
-> -			return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
-> -		gfp_mask &= ~__GFP_DIRECT_RECLAIM;
-> -		gfp_mask |= __GFP_NORETRY;
-> -	}
-> -	if (xfs_buf_alloc_folio(bp, size, gfp_mask) < 0) {
-> -		if (size <= PAGE_SIZE)
-> -			return -ENOMEM;
-> -		trace_xfs_buf_backing_fallback(bp, _RET_IP_);
-> +		if (is_power_of_2(size)) {
-> +			gfp_t folio_gfp = gfp_mask;
-> +
-> +			folio_gfp &= ~__GFP_DIRECT_RECLAIM;
-> +			folio_gfp |= __GFP_NORETRY;
-> +			if (xfs_buf_alloc_folio(bp, size, folio_gfp) == 0)
-> +				return 0;
-> +			trace_xfs_buf_backing_fallback(bp, _RET_IP_);
-> +		}
->  		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
->  	}
-> -	return 0;
-> +
-> +	/*
-> +	 * The slab allocator now guarantees aligned allocations for all power
-> +	 * of two sizes.  This covers most smaller XFS buffers, so just use
-> +	 * kmalloc in this case.
-> +	 *
-> +	 * Don't bother with the vmalloc fallback for allocations of page size
-> +	 * or less: vmalloc won't do any better.
-> +	 */
-> +	if (!(gfp_mask & __GFP_NORETRY))
-> +		gfp_mask |= __GFP_NOFAIL;
-> +	if (size < PAGE_SIZE && is_power_of_2(size))
-> +		return xfs_buf_alloc_kmem(bp, size, gfp_mask);
-> +	return xfs_buf_alloc_folio(bp, size, gfp_mask);
+> My only concern is that looking at it now, isn't obvious why GRP_NORETRY
+> has been set in the first place, perhaps worth adding a comment above
+> it? Like:
+> 		/* Set during readahead */
 
-Hrmm, ok.  So first we special-case buffers > PAGE_SIZE -- if they're a
-power of two, we try (not very hard) to allocate a single large folio.
-If that fails or it's not a power-of-two, then we just do vmalloc, which
-allows direct reclaim and retries.
-
-For smaller than PAGE_SIZE buffers that are powers of two, I guess we
-use the slab allocator, otherwise a full folio.  That part strikes me as
-a little strange (efficiency, I guess?), but that's what the code did
-before so I guess it's ok.
+I think it's fine as-is, because the state of being in readahead is
+something that the caller of xfs_buf_alloc_vmalloc knows, and doesn't
+need to share with xfs_buf_alloc_vmalloc itself.
 
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  }
->  
->  static int
-> -- 
-> 2.53.0
+
+> > +		if (gfp_mask & __GFP_NORETRY)
+> >  			return -ENOMEM;
+> >  		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> >  		memalloc_retry_wait(gfp_mask);
+> > @@ -244,7 +243,7 @@ xfs_buf_alloc_backing_mem(
+> >  				return 0;
+> >  			trace_xfs_buf_backing_fallback(bp, _RET_IP_);
+> >  		}
+> > -		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask, flags);
+> > +		return xfs_buf_alloc_vmalloc(bp, size, gfp_mask);
+> >  	}
 > 
+> Other than the above caveat:
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> >  
+> >  	/*
+> > -- 
+> > 2.53.0
+> > 
+> > 
 > 
