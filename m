@@ -1,46 +1,87 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405A2346AD6;
-	Tue, 30 Jun 2026 11:48:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A46E30D409
+	for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2026 15:11:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782820129; cv=none; b=TKeOAWxb+OR5qXrXoi3Tza3z481toU2qwRScnXoWCjKZC8UitQWNYBKim12q9FXsi4uiemwmGlq30xDirwoD2GoIRtOOU8S6ej0tI2j3tOU15/Fa6/qSuR3C9JXjGipNrxOGv/aFx1rWWXHgw8dpehnMLlWQ0OFCU8jxHGfJNac=
+	t=1782832319; cv=none; b=WLAce7LKiQcS40x+xdLHavbRTKiqNR4NYuRl12nxOTW+ByzGPKfiyYtYKZQygJUBQD4nGYv4QNAsCJDyIaQp6aE+GFztE+SviFTeFkYC3idi4q5Btt1JIGlkTfbvhekpQc1Ff0xWQ7PnH/B7ieZTld4puBGjvXZqV5HxSxT2Dy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782820129; c=relaxed/simple;
-	bh=sw/xZYZ7Ir7A52GOlocplivHztuhGIYD/SJF9Wzg360=;
+	s=arc-20240116; t=1782832319; c=relaxed/simple;
+	bh=Xl97sexu2b7afrKiBr4H5EC86HAhV+tqsfxcszsAL4Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o7vOPx1VXbKb8g37JQfhnwnPOWrHOC2413EIxBlSzkNxYO/0NRMziG81+ZyP+030LNhrbeCF7gR3B/FQjvXCKREUCLQFDtS47V6aVXp9vOQPE6+WVZqGJYVy2REK6XJP/NZgvDBvLgN/eb29y64fGnAHJ4hVvy6CaAkWvs3DMRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=itceAvM5; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=J/KXzdbt7CLFsFM1SvvFbCjhbEcXITYal/bYI57a6AoZzQSX4Z2ThYjQmCPRFkrAEeyrVyS5bUUQdYRudq/Tup9cG9LwODeGlf6vUxkgzVh76RhGMRHe8Obgje6mah/LfWetGDnBe86oaty1YpOiFDiG8Zh4+6anvS149ROaUO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=20oow+QW; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=cKynzAzr; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qZOdn/l0; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=0thdJM3a; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="itceAvM5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3pRI0I/sedCyfhTiQbpEge2gLbMRG4ocIB2FDj+0Hg0=; b=itceAvM5VG5GscShzJI3l+ke+H
-	/+Q4+ic+ZFnzPSc07R6c6laIlwbr5bQ7tRpj/57hdL22lQ3llaa6UbGLYFp2/AO4FSevVK6ulzXrw
-	zl0xvzpVOWUuEgilhxanrYUR0z3sm763PuSdXsJJM1bB/qwp/lIKwDWme5AGpovDWRAPmZvExGsXE
-	Ha3OpamVRs1bj8NMdK492425y369J+E0iko3x/H8AqkLxw2EOsgLF4D4OsDmBCeInlyXK/Rbgmcjg
-	NNQ9IohuRjQowF7CAdLeOY0O7v1ubzg79IWxgQuZh5tlUQ9snG+JOXcs6gzmK2fC6oKKDulRtwH//
-	2doOIZrw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1weWxH-0000000GstI-2Khv;
-	Tue, 30 Jun 2026 11:48:43 +0000
-Date: Tue, 30 Jun 2026 04:48:43 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Fengnan Chang <changfengnan@bytedance.com>
-Cc: brauner@kernel.org, djwong@kernel.org, hch@infradead.org,
-	ojaswin@linux.ibm.com, dgc@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lidiangang@bytedance.com,
-	pankaj.raghav@linux.dev
-Subject: Re: [PATCH v5 4/4] iomap: add simple dio path for small direct I/O
-Message-ID: <akOtG5_gNb8btWCx@infradead.org>
-References: <20260629120124.25223-1-changfengnan@bytedance.com>
- <20260629120124.25223-5-changfengnan@bytedance.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="20oow+QW";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="cKynzAzr";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qZOdn/l0";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="0thdJM3a"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id CF9DF75F51;
+	Tue, 30 Jun 2026 15:11:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1782832316;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EI/OgqgRY/EKWgoKaSeyLXyRRrr2pSBHkCzWMKZMlWQ=;
+	b=20oow+QWdA1/GK5mHHJMnVGKwKmHKxWAJIiuP1EUt4GF92Q4ENflMytNjqetcszR0psnJf
+	PswxZw3L2WVs3R/lix1mjPoUaOGOcIolM66dg/okLzImtbC30TyugD4N2piP9sjve34P/t
+	vVQN/WQ/U2CAbzbwEcqZAoYs6EA0OQg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1782832316;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EI/OgqgRY/EKWgoKaSeyLXyRRrr2pSBHkCzWMKZMlWQ=;
+	b=cKynzAzrrQlizVCA/c0kXgAooKxYxS7VxXSAhpU/FvhqETR4fi2SfCLGIRrWXvOdTeBb2C
+	Jl52W+STX+zSPTDA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1782832314;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EI/OgqgRY/EKWgoKaSeyLXyRRrr2pSBHkCzWMKZMlWQ=;
+	b=qZOdn/l0XraOti9Rej/qYiN/hKelGIZwgu7ZchTge+SQ8TBfjxwbDXMuwvTt3Za8FbECBf
+	Tb39ONSWP7ZdjFTqpAd4qaRp0VEmXpJigm/K0e9YYjZd5MYkA1qAtqJRu0hrR7Zz2OKcOD
+	OuIrB1mgpJXW71cTT9oyddeYMI66VIc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1782832314;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EI/OgqgRY/EKWgoKaSeyLXyRRrr2pSBHkCzWMKZMlWQ=;
+	b=0thdJM3at96HD8gKIXDgWvOsR8sxi6Tkhga6F2h0sNuOSfMteeInJHxfQNJagw2rrJUhj0
+	9EjZ7nWLpeguSZCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C22DC779A8;
+	Tue, 30 Jun 2026 15:11:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id gr85L7rcQ2pGKwAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Tue, 30 Jun 2026 15:11:54 +0000
+Date: Tue, 30 Jun 2026 17:11:45 +0200
+From: David Sterba <dsterba@suse.cz>
+To: Qu Wenruo <wqu@suse.com>
+Cc: linux-btrfs@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] btrfs: use IOMAP_DIO_BOUNCE flag instead of
+ falling back to buffered IO
+Message-ID: <20260630151145.GA2907432@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <cover.1781597506.git.wqu@suse.com>
+ <1a89047dac91b6b12d190c37cd7bb3d8328b2073.1781597506.git.wqu@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,109 +90,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260629120124.25223-5-changfengnan@bytedance.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <1a89047dac91b6b12d190c37cd7bb3d8328b2073.1781597506.git.wqu@suse.com>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spam-Flag: NO
+X-Spam-Score: -4.00
+X-Spamd-Result: default: False [-4.00 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_ALL(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:replyto,imap1.dmz-prg2.suse.org:helo,suse.com:email,twin.jikos.cz:mid];
+	RCVD_COUNT_TWO(0.00)[2];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[]
+X-Spam-Level: 
 
-On Mon, Jun 29, 2026 at 08:01:24PM +0800, Fengnan Chang wrote:
-> +#include <linux/kobject.h>
-> +#include <linux/sysfs.h>
+On Tue, Jun 16, 2026 at 05:42:37PM +0930, Qu Wenruo wrote:
+> Previously btrfs forces direct writes to fall back to buffered ones if the
+> inode has data checksum or the profile has duplication.
+> 
+> That fallback is to avoid the content being modified that the final
+> content may mismatch with the checksum or the other mirrors.
+> 
+> That brings a pretty huge performance cost, which already caused some
+> concern at that time.
+> 
+> But later upstream commit c9d114846b38 ("iomap: add a flag to bounce
+> buffer direct I/O") introduced a new method by copying the content into
+> new pages, and do all the operations based on the newly allocated pages.
+> 
+> So let btrfs to utilize the new flag for direct writes if we require
+> stable folios.
+> 
+> There is a quick benchmark, using the following fio setup:
+> 
+>  fio --name=randwrite --filename $mnt/foobar --ioengine=libaio --size=4G \
+>      --rw=randwrite --iodepth=64 --runtime=60 --time_based --direct=1 \
+>      --bs=$blocksize
+> 
+> Unit is MiB/s.
+> 
+>  Blocksize | Zero-copy (*) | Buffered |   Bounce
+> -----------+---------------+----------+-----------
+>         4K |          35.1 |     17.1 |      33.8
+>        64K |           522 |      251 |       492
+> 
+> *: This is done by reverting the commit 968f19c5b1b7 ("btrfs: always
+>    fallback to buffered write if the inode requires checksum")
+> 
+> Although with page bouncing the performance is only around 95% of
+> true-zero copy, it's still almost double the performance of buffered
+> fallback.
+> 
+> There will be a small change in behavior, since we're using
+> IOMAP_DIO_BOUNCE flag to allocate new folios, NOWAIT flag will
+> immediately fail.
+> 
+> So for true NOWAIT direct IOs, NODATASUM and RAID0/SINGLE profiles are
+> still required.
+> 
+> Signed-off-by: Qu Wenruo <wqu@suse.com>
 
-I don't think these two headers are actually used by the new code.
-
-> +struct iomap_dio_simple {
-> +	struct kiocb		*iocb;
-> +	size_t			size;
-> +	unsigned int		dio_flags;
-> +	struct work_struct	work;
-> +	/*
-> +	 * Align @bio to a cacheline boundary so that, combined with the
-> +	 * front_pad passed to bioset_init(), the bio sits at the start of
-> +	 * a cacheline in memory returned by the (HWCACHE-aligned) bio
-> +	 * slab.  This keeps the hot fields block layer touches on submit
-> +	 * and completion (bi_iter, bi_status, ...) within a single line.
-> +	 */
-> +	struct bio	bio ____cacheline_aligned_in_smp;
-
-Add an extra tab here so it aligns with the fields above the comment?
-
-> +	int error = blk_status_to_errno(bio->bi_status);
-> +	ssize_t ret = error;
-> +
-> +	if (likely(!ret)) {
-> +		ret = sr->size;
-> +		iocb->ki_pos += ret;
-> +	} else if (should_report_dio_fserror(ret)) {
-> +		fserror_report_io(inode, FSERR_DIRECTIO_READ, iocb->ki_pos,
-> +				  sr->size, ret, GFP_NOFS);
-> +	}
-> +
-> +	iomap_dio_bio_release_pages(bio, sr->dio_flags, ret < 0);
-> +	inode_dio_end(inode);
-> +	trace_iomap_dio_complete(iocb, error, ret);
-
-I think some of this could be micro-optimized a bit more and
-cleaned up at the same time:
-
-	ssize_t ret;
-
-	if (unlikely(bio->bi_status) {
-		ret = blk_status_to_errno(bio->bi_status);
-		if (should_report_dio_fserror(ret)) {
-			fserror_report_io(inode, FSERR_DIRECTIO_READ,
-					iocb->ki_pos, sr->size, ret,
-					GFP_NOFS);
-		}
-	} else {
-		ret = sr->size;
-		iocb->ki_pos += ret;
-	}
-
-	iomap_dio_bio_release_pages(bio, sr->dio_flags, ret < 0);
-	inode_dio_end(inode);
-	trace_iomap_dio_complete(iocb, ret < 0 ? ret : 0, ret);
-
-	return ret;
-
-> +
-> +static void iomap_dio_simple_complete_work(struct work_struct *work)
-> +{
-> +	struct iomap_dio_simple *sr =
-> +			container_of(work, struct iomap_dio_simple, work);
-
-A single tab indent is enough here. (and used in the next function)
-
-> +	struct bio *bio;
-> +	bool wait_for_completion = is_sync_kiocb(iocb);
-> +	ssize_t ret;
-
-Nitpick: keep variables initialized at declaration time above those
-that are not initalized.
-
-> +	/*
-> +	 * Fast path for small, block-aligned direct I/Os that map to a
-> +	 * single contiguous on-disk extent.
-> +	 *
-> +	 * @dops must be NULL: a non-NULL @dops means the caller wants its
-> +	 * ->end_io / ->submit_io hooks invoked, and in particular wants its
-> +	 * bios to be allocated from the filesystem-private @dops->bio_set
-> +	 * (whose front_pad sizes a filesystem-private wrapper around the
-> +	 * bio).  The fast path instead allocates from the shared
-> +	 * iomap_dio_simple_pool, whose front_pad matches
-> +	 * struct iomap_dio_simple; the two wrappers are not
-> +	 * interchangeable, so we must fall back to __iomap_dio_rw() in
-> +	 * that case.
-> +	 *
-> +	 * @done_before must be zero: a non-zero caller-accumulated residual
-> +	 * cannot be carried through a single-bio inline completion.
-> +	 *
-> +	 * -ENOTBLK is the private sentinel returned by iomap_dio_simple()
-> +	 * when it decides the request does not fit the fast path.
-> +	 * In that case we proceed to the generic __iomap_dio_rw() slow
-> +	 * path.  Any other errno is a real result and is propagated as-is,
-> +	 * in particular -EAGAIN for IOCB_NOWAIT must reach the caller.
-
-I think this documentation belongs above iomap_dio_simple, not
-here.  And maye it should also mention that iomap_dio_simple_supported
-enforces these limitations.  Mostly anyway, and maybe the other two
-checks should go into that as well for completeness?
-
+The block layer patches have been merged and our for-next is now based
+on 7.2-rc1 so pleaase add this one too so we can get back the dio
+performance. Thanks.
