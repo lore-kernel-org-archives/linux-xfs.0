@@ -1,102 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D10CE1A275;
-	Wed,  1 Jul 2026 13:28:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF9B356775
+	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 14:51:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782912485; cv=none; b=bM8VbOVqzJCOElfebLPsBKvRf6t+0W9Q+MjfFdNmxrP/kBMcVsjnvaVML4biZ2dGjfiWqUmWoKS7a4dZpboBYVvfDXymUidQxKF26qUA1Fo6b/c3RMGWHYXdrgS75d5IOeHWsuYILarL3zagv0gx2N5sKKKPrC99B5fXfYwnoKc=
+	t=1782917486; cv=none; b=nsncxVA4MbxnmMeWSv04r9akK6Bkhb6pG4syPho3tNtBCVPsdAEXu4v26SDdRP9eU7P/emrOePfl44ELr0K8U5ets1ypkWlGv8Z95G3c2/Z3hksz/1oAqb2KzZPL7Jd540U7WdUvF5WHg7YUChE9HkeG9XEpGKxoX2NrEMXlSGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782912485; c=relaxed/simple;
-	bh=iKscDZQfy0MtN4T97LK36aJevrKA4UAXQeqiSYbMIyY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mriY/hXyIuc+k6nE+gG/NmqbVQJO4C0wfVSAGBTK44UPRXC74RuqQVQ/casTKjpb7L0rHFK/iHtW1F5wHP92NCeWAcTdws6Jz+BEu+r/YX3tDYqPbPEHXkZcVmZ7CvUL3E3h21YipxmHYLaffliz/wcQI6Pd6QzZudac11atzL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QBkIcOoi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782917486; c=relaxed/simple;
+	bh=gowKhwTtw/CXkZHltqwqQfro3NoZnPc8s3Yq2CmhoPo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=In8OUUSg60RdKspCCPfVKxyGhXLXxgvI8yAS1Rw7KF3bTbMFaKyUeCxnG2+wGlNp0pkTd5W8Wao1u7KvKE5MvA5xekvTR0KN1TmXxCRtgNsJ1od/TNnSTPiv8dJyTZSG3u5/HGwiv9lXuFr1FEACmnifsJ2KNhOr0bWM+7JwoCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mw1hKa9P; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QBkIcOoi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE62B1F000E9;
-	Wed,  1 Jul 2026 13:28:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mw1hKa9P"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7AC021F000E9;
+	Wed,  1 Jul 2026 14:51:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782912484;
-	bh=S/ir4WC1F7FyETK8VqjWLb5Y+h//+o4RHG1aeGMPGPI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=QBkIcOoiSZQuYYK7QffAwCNm8VaK++eXTg9AS9VzPGwSsZmNe721QfD5tLz0b5Ljb
-	 ERybIPZ7UuKg70udSUh9Q7eOo7zB8AJYJB13RW0B0gKO+zjDFlqE1pfKCrU+V6INxn
-	 TlEjtN0MBdNs7Feqv9TDr/7CiYC0dt+iiVMhTx+dNJQMW8Ld8IphDTJDZjDp7Umn5F
-	 M2rvGjzuDP/DBJUpfAARQoQ8IeDuScYB4VkDJwESKSuVGxquOomHKsPgr+z5851UJb
-	 FNRZI4ms/t9yiUs2jrV1bdlAXEQSYynE3g4laKriuldFn2wUzcnPKXLr3Prazk95Xv
-	 ZeHqosXQ2hpXQ==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Kelu Ye <yekelu1@huawei.com>,
-	Yifan Zhao <zhaoyifan28@huawei.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Hyunchul Lee <hyc.lee@gmail.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	fuse-devel@lists.linux.dev,
-	ntfs3@lists.linux.dev,
-	linux-erofs@lists.ozlabs.org,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 1/3] iomap: consolidate bio submission
-Date: Wed,  1 Jul 2026 15:27:40 +0200
-Message-ID: <20260701-davon-kniegelenk-gedehnt-96476b242a09@brauner>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260629121750.3392300-2-hch@lst.de>
-References: <20260629121750.3392300-2-hch@lst.de>
+	s=k20260515; t=1782917485;
+	bh=3VPCKo7H29KMKaKHz/Z/7QdyNhft1l4CTmjU2lNi0mE=;
+	h=Date:From:To:Cc:Subject;
+	b=Mw1hKa9PlPhe7uIVkX/4NOfW1n0LxV4gAf8Uh6vI0jAi0uniT+eH94np/x8K5YUBp
+	 XQW/oPXMubN+e4GYgAlumZpR09nLMuXU01sJIaA2yr8OcOnwmfwZ75/lr81C3BMj9b
+	 3E0fRB1KvnfwFpUnTJ3FbmVfWamw6wslCblIwVkdqcHoaIWjkcUMjbeWPB5DkXftfD
+	 nmJGFlkgD29kTbrzCF6PAVlvmVrCyI+c9yoPeJWk/1tV6DlWfcpeAPK6eQCLCB8Jgu
+	 ZU2G3ang35a32WZT5A5luTkaYqQfruUsSQrvZ8Q0JrOv4nPFyL9J3WDroIE5GpOFA7
+	 LsoCOe5uif4SQ==
+Date: Wed, 1 Jul 2026 07:51:24 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Subject: [PATCH] xfs_scrub: fix spacemap scan for internal rt devices
+Message-ID: <20260701145124.GE6526@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1819; i=brauner@kernel.org; h=from:subject:message-id; bh=iKscDZQfy0MtN4T97LK36aJevrKA4UAXQeqiSYbMIyY=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS5it7RsWDc2sutssqLV0pi/oIv7G6tQj4SdWfS564sN 1S5YvS9o5SFQYyLQVZMkcWh3SRcbjlPxWajTA2YOaxMIEMYuDgFYCK3IhgZXn05sNjoiK6LmpzZ kcUpV9dIfso4M2nzmZJgzb9SPNb6lgz/9Pi6PGc+u+HOtq8gTdxvdnHqPs1ItmXMtw7+cZHdLbG KGQA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Mon, 29 Jun 2026 14:17:38 +0200, Christoph Hellwig wrote:
-> Add a iomap_bio_submit_read_endio helper factored out of
-> iomap_bio_submit_read to that all ->submit_read implementations for
-> iomap_read_ops that use iomap_bio_read_folio_range can shared the
-> logic.
-> 
-> Right now that logic is mostly trivial, but already has a bug for XFS
-> because the XFS version is too trivial:  file system integrity validation
-> needs a workqueue context and thus can't happen from the default iomap
-> bi_end_io I/O handler.  Unfortunately the iomap refactoring just before
-> fs integrity landed moved code around here and the call go misplaced,
-> meaning it never got called.  The PI information still is verified by
-> the block layer, but the offloading is less efficient (and the future
-> userspace interface can't get at it).
-> 
-> [...]
+From: Darrick J. Wong <djwong@kernel.org>
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+The scrub media scan on a filesystem with an internal rt volume still
+fails with:
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+ # xfs_scrub -dTvnx /mnt
+ Phase 6: Verify data file integrity.
+ Error: dev 7:0 rtgroup 1 fsmap: Invalid argument. (spacemap.c line 162)
+ Error: dev 7:0 rtgroup 0 fsmap: Invalid argument. (spacemap.c line 162)
+ Info: /mnt: Scrub aborted after phase 6. (xfs_scrub.c line 522)
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+(this was from xfs/586)
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+When I tried to add support for internal rt devices in commit
+37591ef3f4f14c ("xfs_scrub: support internal RT device"), I forgot that
+fsmap reports physical offsets into the underlying block device, and
+therefore expects the query keys to reflect that.  Put another way, to
+scan a single rtgroup, one must add @rtstart to the fmr_physical field
+of the query keys.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
+This hasn't been reported until now because we inadvertently also
+disabled spacemap scans of internal rt volumes until commit
+3e4bb144f657b1 ("xfs_scrub: handle media scans of internal rt devices
+correctly").
 
-[1/3] iomap: consolidate bio submission
-      https://git.kernel.org/vfs/vfs/c/044472d5ee7d
-[2/3] fuse: call fuse_send_readpages explicitly from fuse_readahead
-      https://git.kernel.org/vfs/vfs/c/3372eb0384b7
-[3/3] iomap: submit read bio after each extent
-      https://git.kernel.org/vfs/vfs/c/c1fb97d31782
+Cc: <linux-xfs@vger.kernel.org> # v6.15.0
+Fixes: 37591ef3f4f14c ("xfs_scrub: support internal RT device")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+sorry, I missed this one earlier :(
+---
+ scrub/spacemap.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+index 45ac61d0942ccb..65d716374c9eb3 100644
+--- a/scrub/spacemap.c
++++ b/scrub/spacemap.c
+@@ -148,6 +148,19 @@ scan_rtg_rmaps(
+ 	keys[1].fmr_offset = ULLONG_MAX;
+ 	keys[1].fmr_flags = UINT_MAX;
+ 
++	/*
++	 * fsmap for an internal rt volume treats physical ranges as offsets
++	 * into the underlying block device.  Shift the query range up by
++	 * @rtstart here to skip the synthetic "internal filesystem" fsmap.
++	 */
++	if (ctx->mnt.fsgeom.rtstart) {
++		uint64_t	offset = ctx->mnt.fsgeom.rtstart *
++					 ctx->mnt.fsgeom.blocksize;
++
++		keys[0].fmr_physical += offset;
++		keys[1].fmr_physical += offset;
++	}
++
+ 	if (sbx->aborted)
+ 		return;
+ 
