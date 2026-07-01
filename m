@@ -1,197 +1,165 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 968DB3E0C59
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 19:35:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271ED34678C
+	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 20:51:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782934541; cv=pass; b=GubinLhN1czAxiAqP0yE7vRhTEhm8CiBTi78OozfDfkDOLkpfmwO7IztPVVwzgBvYcnSy7RHYnyLHe7lIvaYGRy/P0M4cR/GxshAPvKlgRG48KOD8Xrgr9gEvqC1aEzqXLElTrx7M4l+4NTnT91L7RloTVnZD49q/nnXDbYZzIQ=
+	t=1782939082; cv=pass; b=AJxeKOhx2zQsMjPzcPk+SaCnr2hSJyGY6EejcaO4NCwa8tjco9jBBk5H36JR3AgIUo9XhiB+k2Ky68waLjTs0caFCO1fur0OiM9Rg2V7n8fIaUyKIaeXfexKlUJOVKioUfyLQwNmO8tpSuHdHOt7J3nfSfm+Sbe7zTrHAMCQNos=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782934541; c=relaxed/simple;
-	bh=W6CJBvffePQ1xTgxagHeLlloRE/H6DklNbAaM7XMEes=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=T4ia7crAYac6rXDfWL3/SD459UYTLa7iQefbqevRYDnX6tOlQolJJOH3fe2bWUhaJ7v04A0ZK3a5sBSVYJ4JeTjuTrpyweuov0WYfUT9CRg8+U11ZKlROGdC96cNNURIzc19YlllW6lAHRUPHmTN9mbPr0uWSbyweB8Jd2eoBKU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dkWeW4MO; arc=pass smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782939082; c=relaxed/simple;
+	bh=CXbyE5jAZaxhOqn1wsrHntSB48IwpOuSpEKralUyb4c=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=URuOWBOC42k6MYsFndTCoHLIrOX/p10JNcL17/62+CpO23nLwYaNIlBkrwBMb8j2k1/PzkYtTSVlEOieYl9PQdmj27HO94AmUiH8GEz02aU4gkRw5pdBtXB+F97xnpNK+MWPs3XwvhSp/H8flvy+mrWS2CcqDsw+hl+wMSVvqvs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=M8d67CwD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=q9NIEAjb; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dkWeW4MO"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-461edb387ddso937873f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jul 2026 12:35:38 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782934537; cv=none;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M8d67CwD";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="q9NIEAjb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1782939079;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=XF81/sKTmZ1AnlJSj3x2T7mD8T/hF0ps/9K/nqtvitg=;
+	b=M8d67CwDGJgWwxhIubBTlpkFwjw7Fz+LyeDmRbAtbDgDKJ7unua66X0YgfLWXcSg4O/Bmo
+	oYcmbo0g/MCWAwGgJteUXeTDW09mZ2YWbtj8GUSiqhklvqfMNVwbYkIcFRHdmostnV2u0m
+	WN7ignq9bbi1+9h7gUTTBY2y0K6U8b8=
+Received: from mail-yx1-f69.google.com (mail-yx1-f69.google.com
+ [74.125.224.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-10-fiRqSRe_M9amSDGNTl0mpw-1; Wed, 01 Jul 2026 16:51:18 -0400
+X-MC-Unique: fiRqSRe_M9amSDGNTl0mpw-1
+X-Mimecast-MFC-AGG-ID: fiRqSRe_M9amSDGNTl0mpw_1782939077
+Received: by mail-yx1-f69.google.com with SMTP id 956f58d0204a3-664d0ac7dd7so2890272d50.2
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jul 2026 13:51:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782939077; cv=none;
         d=google.com; s=arc-20260327;
-        b=PKyQndnLz+uDgwClfmk29o4W+6vhDAtn1Tf7Ne92tXs5teDX4rx+uBSwf5OmCF4fJG
-         KO9JsvP+794cwW8C9umZIGcJfGc+aRDt7yeK8E5+JaeU3J5LyrPkzufSmoYmCbEjA0lb
-         qEubhjQOwpVJl3Kvy/j1SMFALCdRh8C1y4TtkTvJa55I5wduHsC3dTxQeAZpF317hHqq
-         YxR2CaUIUCULL5VHqaZWwgqUJf1ip32GRWMd38/S8IuIlYs9Wbza/KotYbMn9sE7DdH7
-         +UB0WfRnTRDB3IoYocUnuBVFm9hWLbbMxbFGi6kzb5oBldlBQ4jOedAJGeXA1CqVdVlZ
-         /FPg==
+        b=B/AOMeH9XkZuYCmGryf+kwoOuhI4hfGn1ze7RdcPxGXs3uywaVP9XOIlIHrt6hc/jz
+         p1gH52emF8ntXKFEZ7n1SYdiM+vASbDUtLnzxigGJ+B8AIkNcB5hiwXmAwbMIB5BADlA
+         sSyE0bMJICFgMKsO3pwkcp914r/2qY5bx+/Bm14hlFxXZG+ZHXqxhxt9sw4gGKvtpGpg
+         7HRTEB9KwIrXfFEeJN4CKiazqMNsc+qQRc6PyE1GdTyp3SXcDlXlZbMZdrmrn+8M/qEc
+         pe/XNbQ6gaGF3vSMWd+qaDSKhMGlssmqa6YpP7XIMnM4bCYxPC/a0PlUakKsMqlrvU2Y
+         eFNA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=pGGDxr3N3ZHTVGBYFBwUmfiD25X2IVkVBZj7x5VdJpQ=;
-        fh=n+IEKpMGHrh7NC+v2vvcJbh7mR/m0VnavNJi/2+m28I=;
-        b=hX2eJhMRG9L+6WKVDrO4KytbJj1RuIJiRV8u+YW+Kp9VBH7PKuogH8MTu+JDPzwcab
-         invWkPdBVswVNSM0Qs1gZFM95MOY+LHFi/oFw0qHi3UIHzYRo/v7KuRf42M3NCUB5WZM
-         rzha/6RfBkcCAU7tDXwr62+2qpE+QAWb/iE0hm0xndquvuUjiNIQf+zV5ciP4u8WYXCt
-         wdqzFmxmnqyASY9IXDVl8ojbcC3wJHE5GS8iuJetkvtRc7gOYo07t23HoiNdi+i4VLwY
-         HxUbF2AidFudrKJ/LS32ICPoLPKhSRSlMbK+9DJky6oLdlqT5uuYLYAsXdZ/bP82bM3O
-         t9ZQ==;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=XF81/sKTmZ1AnlJSj3x2T7mD8T/hF0ps/9K/nqtvitg=;
+        fh=90z1hI90tvGHXf/61ilQFU/6cOGypzW2LKTYD1HUiPQ=;
+        b=ZOBQxUfxIJma3oQaP23f1hbsS6F0Ff9Ni1axfAYA/S70a4pSnOwOxD8VGGcZFSaJNO
+         eMmwhuIdXAOxcMODcmZIXRaLqaqXdKZFALXt3aI9atdyIXKlyK19v9hrTfNlByZkivvh
+         czYLVC9/HozHGp3pRQ30ONSR9Jv4241WMbqddQzxlQwK1tK8EHHwys0eifh4ON+8UIU5
+         HlRqpSF43fIX1S5nJ3DLVdhXUvvhQXm6/YqONf9o9dA9VEMv6BSK2Mz2192ybvIHWEet
+         2+ezoZhpVEAHcU79gd70TUBh1fuiF4IpHUU87GqAbNnXIEyMZijDp7o6YEBMzjIpFhTz
+         cEUg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782934537; x=1783539337; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pGGDxr3N3ZHTVGBYFBwUmfiD25X2IVkVBZj7x5VdJpQ=;
-        b=dkWeW4MOYHjKBIGKBMixuDTcGthkx7tZXP9qzgxCHl0Bhnw7UPL730ubvrQwSAEbaw
-         N1P6VfwhITJJgbnUb9K6TjMyMC5EMPXVByrQJSNCizIMoewbHJQxE9Boi2WHOZ2HoOtU
-         8vsQigsZL8uiD07U8I1r8mMD5o2u+HH7JuIGZZ1biooJQwvQKXDMI3eMP+qF2HyZIqtu
-         Er8v6T7q1EY5r/kHM9q+VWDlBnCeFjUFZYRTBD5dyqKKXbr/IZpfdMyqA+cSdk1+EvMl
-         ZHrcGQWI7znAwTXcwS6VvN9n4vzlYri5UNI0P1Zd3pezzoouXNDwkzrg5x4ha3faPdn4
-         hEag==
+        d=redhat.com; s=google; t=1782939077; x=1783543877; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=XF81/sKTmZ1AnlJSj3x2T7mD8T/hF0ps/9K/nqtvitg=;
+        b=q9NIEAjb6+TdqQ42s6Y0+6ts4LICBOJ2adkS/Jj5pVmCeoKUfJ82VUTmUB/yhBBHEe
+         D1cGWIpaHm+x1Kg16qUUMJGrgIH11vJJ6UW3BwUC+9xx2NDPVMMLqi4H9+T72ziQOno7
+         GGZg2uP4NPTwY7nhkhH/CPWYteewDtSYDwEvQCM9ZWAof9wc3jQeXYhwaNejpau/TZkY
+         JBUzUJu7aXJCzWVf3ziiZ2Eah4jvI5kUfCU4GntFpP5ubjwnI8K+NAMDJDAm42uos3bg
+         KUrM9GhHeH7PQl8HurS1e73jAA9bCtRLe9YM9/bmW8n30TOBLr9HwLHjOHdeN/y5xce1
+         1szQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782934537; x=1783539337;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=pGGDxr3N3ZHTVGBYFBwUmfiD25X2IVkVBZj7x5VdJpQ=;
-        b=N0oi823D1d4ecwZ8bsXwWOZPgIQjFtwjQwHxuA9UYqMLAF7R2GxAYOmXMTq9NwSY7+
-         CEEbnwB1y2vMVAPopWvskgFeoZV1WCO3Y3/YE06gRYXT10qdU6g2U3tWVsGgp0P8xp8t
-         jxJe3wp5ayKi0et14gG2C9dfde/VFG3wM6JCYPBhjfYww0Byp2fDqCeVEOYcnquRpBpr
-         tVT3aFCBof57aOtwwePtCvHHNxkB89d70YPdzwEgzauI7hb6T7Jf3Uukjqv6JPetKpQR
-         yvmo+fz+ri7xYbhZQNd4FFygoI1V5nnhlTZrp50SSAnOScVYKKSPnJ4clCZin5H4COXt
-         8jJw==
-X-Forwarded-Encrypted: i=1; AHgh+RqhhANzuRwsMcxwkMLYfU8w9ODtLEDHAQmfcT7rBTzlL9vIcpE7G6ynKGXOjghFhwk/BrLFxAXvPT8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy1WnBRofHNcRRM4hUYLtwKjrEgtW69y9E3tHssLHgzRPG9uDV4
-	I1DYiqutFIsjNGUuLESP4N0V80/1gWHmPy3B5jkUuGzgjOKcBLvSGMTCephGwMXa5o0HNUBaAZq
-	E8LYK/9Pm8Q4CPYCIgp1QUh6L4WDqIcA=
-X-Gm-Gg: AfdE7ckKxlcOGzcJMbUB6iqvzfXW2acZG9JCxfdmqujEOqfCUKZr8PjhSvXIyd+iVWR
-	XaWEw5UTc17NbE25BWMY54zCDreiD6tthc02k+QuysXjbKoXTrQFjyHu21vEj4U2OpuRB7qsc5j
-	JogZwNr4oNGlzVwM1bFUx4pbj10o91wpNqGfB2QoXoGPvVu5BJ6x66BlReSi7+83yoAFmN3N9CN
-	DRK4UfbUgkWYvCk1mBjLbHkVK3SMBiVHfXYgWvIQ2pd6Qx0dY9QOxeyE9j7kT2vMIMdfbPPlUJs
-	Mx86/FlV7hweCbfRob7dUcys4aZvDS1q6YrnwEIPFciSPWrd6/Kp
-X-Received: by 2002:a05:6000:4818:b0:474:9991:60d0 with SMTP id
- ffacd0b85a97d-477aeb5bef7mr3461724f8f.12.1782934536936; Wed, 01 Jul 2026
- 12:35:36 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1782939077; x=1783543877;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XF81/sKTmZ1AnlJSj3x2T7mD8T/hF0ps/9K/nqtvitg=;
+        b=BZ+Y5XBDEdCm9D4Siyw3mPu1JiakNmIPkOCcOM7PqsY0auAHU9mGCdRGDoATUQOkAY
+         hRdQhmoHcN8vfSAXTN13tVqyhUz3ExLBDaCdgayyQmXpzJxSPJlolGJlL+3EIV/7MjLl
+         G80henUIuM8miY97uEN1hSSk+lqD286ncKx0jTP5GeCSZvov5i1QpTEx/lIqmmEzyRzq
+         ZFA9sq9qsWYl1FRCgYgAS+F5odWwBTCbPTn5Nu1EWt/FmrKIQKQToMCGi1eJrNGXsTDS
+         gxJmWf1ZsgwCkYDlJcgYkGHQrwLgiceyz5DXjOyZvdhhnMkwa4ES9+2h9si1101iR7GK
+         o/eg==
+X-Forwarded-Encrypted: i=1; AHgh+Rp448ZCZju4n80t1phUML9kUQJ+zLmvKBZfZ4lyO6Xshq6RQCn9/d7R/jQVRaSBjzEfjTD0cV9jzM8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZWxHAyDqi278+h1eG718jQ9Pn/2YwnqbehKD3U5XtFA2Ep+m5
+	dN9IQBrwFGoPisBA5fcWve5P4u9U3THhYX4dPBeWVEiIdo04l0sqV9yqEZLr+gjCd95RPkCInDr
+	PxjhqFfRLY/y1rHXGqoJi5AQPxqKzjHrwwLvZDDN84gdl4WY0vUEkI8nBVKtv23nRqFpGraIMJK
+	VMLC6UQVYMlrl4nUrap/bCGe7Rff0YH0O2ES/J
+X-Gm-Gg: AfdE7clr+PGrvEHVFNdoKbyQIg1nQKDs37eD2KCsH2CGAPXTNO0tx9XBHaH6H+57iAV
+	1cScbrcgmeNesy2fDmCThwL2jAK1TCDWH0hLh6AFQeWJ+tILJm+T1hHhITOkMy1bo8uqvX/ffaU
+	auTNOQtJQxGH60yPEVTgDSDbNuHEhRP/EcOOQpJXOFxGpligh8W9TNkbgiIRDyE5S7ZSxkFEgoe
+	D4au9Ntp+6vOR20+VzoZ7KMMUBz9IZoPzRVWltun8ZyDovP4M9CLGg=
+X-Received: by 2002:a53:ac88:0:b0:666:2480:2b0a with SMTP id 956f58d0204a3-66624802c95mr562173d50.50.1782939077554;
+        Wed, 01 Jul 2026 13:51:17 -0700 (PDT)
+X-Received: by 2002:a53:ac88:0:b0:666:2480:2b0a with SMTP id
+ 956f58d0204a3-66624802c95mr562129d50.50.1782939077080; Wed, 01 Jul 2026
+ 13:51:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260701033253.46420-1-changfengnan@bytedance.com>
- <20260701033253.46420-4-changfengnan@bytedance.com> <akT4tJzFSfrBxqdq@infradead.org>
-In-Reply-To: <akT4tJzFSfrBxqdq@infradead.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 1 Jul 2026 12:35:24 -0700
-X-Gm-Features: AVVi8CeXAJXVfUIyr35lv5pL20q_ALlPEdtXwqos7WTDEDHtloeaTCi_lAygHvs
-Message-ID: <CAJnrk1Y3yPeXBeBNo+DjTt8eRN-mc2F9apBCUn+j=GV7GMzi4g@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] iomap: add simple dio path for small direct I/O
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Wed, 1 Jul 2026 22:51:06 +0200
+X-Gm-Features: AVVi8CfsV3cGOgb6Svx2JkIRUFiPC3HXmSBXTyt1juuiIVniLQt7WCc-miACenM
+Message-ID: <CAHc6FU4tz8-HmEf2_XKT0NT8N=rv5OMcY79PxTACkXAVLOAUpg@mail.gmail.com>
+Subject: iomap_writepages WARN_ON_ONCE(PF_MEMALLOC)
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Fengnan Chang <changfengnan@bytedance.com>, brauner@kernel.org, djwong@kernel.org, 
-	ojaswin@linux.ibm.com, dgc@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, lidiangang@bytedance.com, 
-	pankaj.raghav@linux.dev
+Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, gfs2 <gfs2@lists.linux.dev>, 
+	linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 1, 2026 at 4:23=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> Looks good:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> We'll need to sort out the interaction with the iomap_next work, though.
->
-> Joanne, is it ok to get this in first and have Fengnan help your with
-> the interactions due to the open coded iomap_begin/end calls?
->
+Hi Christoph,
 
-That sounds good, I'll rebase the next version onto these changes.
+I'm running into a problem with the following check in
+iomap_writepages() on gfs2 in RHEL-8:
 
-I think it ends up being pretty simple to get it integrated since
-->iomap_next already contains the logic to only begin the mapping at
-the start and only finish the mapping when the iter has been fully
-consumed, eg
+        /*
+         * Writeback from reclaim context should never happen except in the case
+         * of a VM regression so warn about it and refuse to write the data.
+         */
+        if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC | PF_KSWAPD)) ==
+                        PF_MEMALLOC))
+                return -EIO;
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 3ef5e9adca87..e654ec135d54 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -1035,7 +1035,7 @@ iomap_dio_simple_supported(struct kiocb *iocb,
-struct iov_iter *iter,
-  */
- static ssize_t
- iomap_dio_simple(struct kiocb *iocb, struct iov_iter *iter,
--                const struct iomap_ops *ops, void *private,
-+                iomap_next_fn iomap_next, void *private,
-                 unsigned int dio_flags)
- {
-        struct inode *inode =3D file_inode(iocb->ki_filp);
-@@ -1062,11 +1062,11 @@ iomap_dio_simple(struct kiocb *iocb, struct
-iov_iter *iter,
+In my case, reclaim is triggered by the following command:
 
-        inode_dio_begin(inode);
+  echo anything > /sys/fs/cgroup/memory/.../memory.force_empty
 
--       ret =3D ops->iomap_begin(inode, iomi.pos, count, iomi.flags,
--                              &iomi.iomap, &iomi.srcmap);
--       if (ret) {
-+       ret =3D iomap_iter(&iomi, iomap_next);
-+       if (ret <=3D 0) {
-                inode_dio_end(inode);
--               return ret;
-+               /* ret of 0 means no mapping, which should never happen */
-+               return ret ? ret : -EFAULT;
-        }
+And we end up on this code path:
 
-        if (iomi.iomap.type !=3D IOMAP_MAPPED ||
-@@ -1125,14 +1125,17 @@ iomap_dio_simple(struct kiocb *iocb, struct
-iov_iter *iter,
-                WRITE_ONCE(iocb->private, bio);
-        }
+mem_cgroup_force_empty_write -> mem_cgroup_force_empty ->
+try_to_free_mem_cgroup_pages -> do_try_to_free_pages ->
+shrink_zones -> shrink_node -> shrink_node_memcgs -> shrink_slab ->
+do_shrink_slab -> super_cache_scan -> prune_icache_sb -> dispose_list ->
+evict -> gfs2_evict_inode -> evict_linked_inode -> gfs2_log_flush ->
+gfs2_ordered_write -> filemap_fdatawrite -> __filemap_fdatawrite ->
+__filemap_fdatawrite_range -> do_writepages -> gfs2_writepages ->
+iomap_writepages
 
--       if (ops->iomap_end)
--               ops->iomap_end(inode, iomi.pos, count, count, iomi.flags,
--                              &iomi.iomap);
-+       iomap_iter_advance(&iomi, count);
-+       /*
-+        * ends the mapping if the mapping needs to be ended. no new mappin=
-gs
-+        * are fetched since the entire range of the iter has been consumed
-+        */
-+       iomap_iter(&iomi, iomap_next);
+The PF_MEMALLOC flag is set in try_to_free_mem_cgroup_pages() before
+calling do_try_to_free_pages(). We end up in gfs2_evict_inode(), and
+the filesystem is required to evict the inode. At that point, gfs2 has
+no way of recovering from an -EIO error from iomap_writepages().
 
-        if (!wait_for_completion) {
-                bio->bi_end_io =3D iomap_dio_simple_end_io;
-                submit_bio(bio);
--               trace_iomap_dio_rw_queued(inode, iomi.pos, count);
-+               trace_iomap_dio_rw_queued(inode, iocb->ki_pos, count);
-                return -EIOCBQUEUED;
-        }
+That WARN_ON_ONCE() was originally added to xfs in commit 070ecdca54dd
+("xfs: skip writeback from reclaim context") and later modified to
+allow kswapd writerback in commit d4f7a5cbd544 ("xfs: allow writeback
+from kswapd").
 
-@@ -1144,9 +1147,12 @@ iomap_dio_simple(struct kiocb *iocb, struct
-iov_iter *iter,
- out_bio_put:
-        bio_put(bio);
- out_iomap_end:
--       if (ops->iomap_end)
--               ops->iomap_end(inode, iomi.pos, count, 0, iomi.flags,
--                              &iomi.iomap);
-+       /*
-+        * on failure, iter was never advanced. ->iomap_next() will know th=
-at 0
-+        * bytes have been processed and the mapping will be ended with no =
-next
-+        * mapping fetched
-+        */
-+       iomap_iter(&iomi, iomap_next);
-        inode_dio_end(inode);
-        return ret;
- }
+Before commit c2dc7e5589a1 ("iomap: move the PF_MEMALLOC check to
+iomap_writepages"), the comment above the WARN_ON_ONCE() indicated
+that the reason for rejecting the write was to prevent stack
+overflows. But this code path triggers reclaim right at the top of the
+stack, so that's certainly not an issue here.
+
+Do you have any suggestions?
+
+The above is on RHEL-8, but a similar code path exists in cgroups v2,
+triggered via:
+
+  echo reclaim_amount > /sys/fs/cgroup/.../memory.reclaim
+
+That code path starts with:
+
+memory_reclaim -> user_proactive_reclaim -> try_to_free_mem_cgroup_pages ->
 
 Thanks,
-Joanne
+Andreas
+
