@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1928A38239B;
-	Wed,  1 Jul 2026 17:11:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD50D320CCC;
+	Wed,  1 Jul 2026 17:12:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782925884; cv=none; b=I7BMMRJcOB2kt7wJQD5cAnEbTYkkynFC5vH/Kiv8JU/PpdoqA9G3owFD7QrMZwTGoCbUEjBrgv+UJ5unKnRerlkVaQf/uDKtyA+8pTu7z94USQmAoJNB3TnAAyxN3MFRglOtw7daaqYN+qdBbxaF/20HtJsUghxfNFULCG0wuZs=
+	t=1782925981; cv=none; b=KwC8GHatAUIQsmNvNZN16T0GGWcObzZAd1rfHkkaVj360Jdxtax6dERkuTf4Va3etSfxTN4ZNi0Zj0eyu4/3nUMZ6pKyDezA4rrnKfiQo2tXtytxyxZ1u9W3js2Kso9+p1tDH6xcdP0GnrNbyH7Mxcc4Up4W85KDtrmMnCLJovM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782925884; c=relaxed/simple;
-	bh=V5rTobRcuDGj/Yg1bpYbFTc4iNH9JhKPkPh6X0owJVE=;
+	s=arc-20240116; t=1782925981; c=relaxed/simple;
+	bh=a3oR298hXo6hR+9swVaS59MZSFgj08PvwNGW21cDEmk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KSRzDvMex2a6O0rbKXTpkV9qttyur9SStXBYodkX7EOlvJXtW/xhBDn7S2novAaEl4FsEvH2NAlBaU05Zvft3q37DLNyjgeSCrq1ZVpZXczf7s1UbD3UMa1eEFz1QI+UkNrKR3msB9umbxcnZqF+G6vzRJe80jsUb1l7c2fcnrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eLk6T1xP; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SeQ+irWMvvA1ad8ipDCJJrEKxUSWlclZUHdecSxKN6DDC/oJsPDl5IeZ6o99OEFAtNQKyb6pB0u1Hm/irh4AprQHKfOTGvhcL+11qnfTgEldykNAY64SlzVLWWFdCmdY7f/+jSrddSNtxZYFLw+XskJQvkmshfEBIthjpk85STc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RUmZc0LK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eLk6T1xP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B74961F000E9;
-	Wed,  1 Jul 2026 17:11:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RUmZc0LK"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A5A1D1F000E9;
+	Wed,  1 Jul 2026 17:12:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782925882;
-	bh=dObZorwKY5QXIIvyRJ67mb+sIhgTQQ1nuYKhEabm1IY=;
+	s=k20260515; t=1782925979;
+	bh=6DQ9/H9sHmyRGibAptvPW53AFpyv4mfsMBHfwc8KyV0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=eLk6T1xPagtKVZRSbzBIhjdmyruf+ywZiv6+Yi0GhAt7ebSQGszb9JqdwVTH/x8Nv
-	 2j8FBo0nP5yyUyi1I1u28my64HyjSHN525nNfzApYyqlc8maaoW4uHeHFFTyytNBwu
-	 44Hj0G2JyYgB4eIa6Sv9Pv7MrKtHPEcbMf/qwFBqO9jcyHOW283g4mXGEWt3V+Yoxp
-	 4i23BJwSCN496LxCRwNVRF6OYQIMzPOFGkzwQWPdiKUsHnq/6Qi7yDRdSEkZipQK2r
-	 lgtEGrdCI4pk9+5jGO2MBDcP22/wLrga0xlLthUnrM6bpY4jm4Wqu1nofhnJurMEni
-	 lGX+ASfXeQNvQ==
-Date: Wed, 1 Jul 2026 10:11:22 -0700
+	b=RUmZc0LKKYKQMPDct7gBw/GyPsr9S2PXioS2JlXEdOzyyyjc6OSMuJmqa+hamtoeq
+	 2APGmkfeJDHOGNCs7KLgzDkXNu0Bo8yk96e/uwhN5r3d+VOT8NgEdBgFzpco1eM6CI
+	 ht/jmyOodCNAY58nIqsbIlVD53S7SgRUftIVtoUqeRTab3x6ZES3xg9ojT4kOUQYHk
+	 0dY6DEumfx9ZaWUb2TeqokdK7xPg2KM2Q25WNBkazPiUF2ggwQ2FetsZP5VBJjb8YN
+	 Ibj2xSgaNZSVZBVLtiiSc6c8K/pPJLPSjf/0P9YMBeo97LZbn9+gV3zolmfHkSGURV
+	 ItDlhvtJjKU9Q==
+Date: Wed, 1 Jul 2026 10:12:59 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
 	hch@infradead.org
-Subject: Re: [PATCH v7 04/11] fstests: add _require_unique_f_fsid() helper
-Message-ID: <20260701171122.GF6517@frogsfrogsfrogs>
+Subject: Re: [PATCH v7 05/11] fstests: verify fanotify isolation on cloned
+ filesystems
+Message-ID: <20260701171259.GG6517@frogsfrogsfrogs>
 References: <cover.1781694879.git.asj@kernel.org>
- <f556db45f1ffc93508a69ce9f9e567b74384210f.1781694879.git.asj@kernel.org>
+ <65f6e4b778e85bd16f16e7745eb985e2a70f44f7.1781694879.git.asj@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,91 +46,182 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f556db45f1ffc93508a69ce9f9e567b74384210f.1781694879.git.asj@kernel.org>
+In-Reply-To: <65f6e4b778e85bd16f16e7745eb985e2a70f44f7.1781694879.git.asj@kernel.org>
 
-On Wed, Jun 17, 2026 at 07:20:31PM +0800, Anand Jain wrote:
-> Add a helper to check if the target filesystem supports unique f_fsid
-> tracking across cloned or snapshot instances.
-> 
-> Certain filesystems like XFS, Btrfs, and F2FS ensure unique f_fsid
-> identifiers per filesystem instance. However, Ext4 derives its f_fsid
-> directly from its superblock UUID, which leads to identical f_fsid
-> values on cloned images until the UUID is manually modified by userspace.
-> 
-> Introduce _require_unique_f_fsid() to allow test cases requiring strict
-> f_fsid uniqueness to skip gracefully on unsupported filesystems.
+On Wed, Jun 17, 2026 at 07:20:32PM +0800, Anand Jain wrote:
+> Verify that fanotify events are correctly routed to the appropriate
+> watcher when cloned filesystems are mounted.
+> Helps verify kernel's event notification distinguishes between devices
+> sharing the same FSID/UUID.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
->  common/rc | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
+>  tests/generic/801     | 135 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/801.out |   7 +++
+>  2 files changed, 142 insertions(+)
+>  create mode 100644 tests/generic/801
+>  create mode 100644 tests/generic/801.out
 > 
-> diff --git a/common/rc b/common/rc
-> index 968ba33686f3..d95eec94f7b7 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -6310,6 +6310,27 @@ _require_fanotify_ioerrors()
->  	_notrun "$FSTYP does not support fanotify ioerrors"
->  }
->  
-> +# Ext4 derives f_fsid from the superblock UUID, meaning clones share the
-> +# same f_fsid until their UUIDs diverge. Conversely, XFS, Btrfs,
-> +# and F2FS ensure f_fsid remains unique per filesystem instance (often by
-> +# deriving it from the UUID and underlying block device.)
+> diff --git a/tests/generic/801 b/tests/generic/801
+> new file mode 100644
+> index 000000000000..3bfb87d41922
+> --- /dev/null
+> +++ b/tests/generic/801
+> @@ -0,0 +1,135 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Anand Jain <asj@kernel.org>.  All Rights Reserved.
 > +#
-> +# Across all filesystems, a UUID collision causes libblkid tools to return
-> +# non-deterministic device mappings. It is ultimately the responsibility
-> +# of the userspace utility or use-case to enforce uniqueness when a clone
-> +# diverges. For details, see mailing list thread discussions:
-> +#   Link: https://lore.kernel.org/linux-ext4/20260409131238.GC18443@macsyma-wired.lan/
-> +_require_unique_f_fsid()
+> +# FS QA Test 801
+> +# Verify fanotify FID functionality on cloned filesystems by setting up
+> +# watchers and making sure notifications are in the correct logs files.
+> +
+> +. ./common/preamble
+> +
+> +_begin_fstest auto quick mount clone
+> +
+> +_require_test
+> +_require_block_device $TEST_DEV
+> +_require_loop
+> +_require_command "$FSNOTIFYWAIT_PROG" fsnotifywait
+> +_require_unique_f_fsid
+> +
+> +_cleanup()
 > +{
-> +	# Skip the test if the filesystem does not enforce unique f_fsids
-> +	# natively. Checking this dynamically requires recreating a clone
-> +	# layout, so we use a static lookup based on FSTYP.
+> +	cd /
+> +	[[ -n $pid1 ]] && { kill -TERM "$pid1" 2> /dev/null; wait $pid1; }
+> +	[[ -n $pid2 ]] && { kill -TERM "$pid2" 2> /dev/null; wait $pid2; }
+> +
+> +	if [ "$semanage_added" = "yes" ]; then
+> +		semanage permissive -d unconfined_t >/dev/null 2>&1 || true
 
-I would switch these two comments.  The second comment above describes
-what this predicate function actually determines, whereas the first
-comment above the function justifies the internal behavior of the
-function.
-
-# Skip the test if the filesystem does not enforce unique f_fsids
-# natively. Checking this dynamically requires recreating a clone
-# layout, so we use a static lookup based on FSTYP.
-#
-# Across all filesystems, a UUID collision causes libblkid tools to return
-# non-deterministic device mappings. It is ultimately the responsibility
-# of the userspace utility or use-case to enforce uniqueness when a clone
-# diverges. For details, see mailing list thread discussions:
-#   Link: https://lore.kernel.org/linux-ext4/20260409131238.GC18443@macsyma-wired.lan/
-_require_unique_fsid(
-{
-	case "$FSTYP" in
-	ext*)
-		# Ext4 derives f_fsid from the superblock UUID, meaning
-		# clones share the same f_fsid until their UUIDs
-		# diverge.
-		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
-		;;
-	*)
-		# Conversely, XFS, Btrfs, and F2FS ensure f_fsid remains
-		# unique per filesystem instance (often by deriving it
-		# from the UUID and underlying block device.)
-		;;
-	fi
-}
+Needs to _require_command semanage, because it's not otherwise required
+by fstests.  Otherwise looks ok to me.
 
 --D
 
-> +	if [ "$FSTYP" == "ext4" ]; then
-> +		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
 > +	fi
+> +
+> +	umount $mnt1 $mnt2 2>/dev/null
+> +	_loop_image_destroy "${devs[@]}" 2> /dev/null
+> +	rm -r -f $tmp.*
 > +}
 > +
+> +# Run fsnotifywait in unbuffered mode to watch filesystem-wide create events
+> +monitor_fanotify()
+> +{
+> +	local mmnt=$1
+> +	exec stdbuf -oL $FSNOTIFYWAIT_PROG -m -F -S -e create "$mmnt" 2>&1
+> +}
 > +
->  # Computes a percentage of the available space in a filesystem and
->  # returns that quantity in MB. The percentage must not contain a percent
->  # sign ("%").
+> +# Transform f_fsid into the hi.lo format used in fanotify FID logs
+> +fsid_to_fid_parts()
+> +{
+> +	local fsid=$1
+> +	# Pad to 16 hex chars (64-bit), then split into two 32-bit halves
+> +	local padded=$(printf '%016x' "0x${fsid}")
+> +	local hi=$(printf '%x' "0x${padded:0:8}")   # strips leading zeros
+> +	local lo=$(printf '%x' "0x${padded:8:8}")   # strips leading zeros
+> +	echo "${hi}.${lo}"
+> +}
+> +
+> +# Create base loop device and its clone
+> +devs=()
+> +_loop_image_create_clone devs
+> +mkdir -p $TEST_DIR/$seq
+> +mnt1=$TEST_DIR/$seq/mnt1
+> +mnt2=$TEST_DIR/$seq/mnt2
+> +mkdir -p $mnt1
+> +mkdir -p $mnt2
+> +
+> +# Mount both base and clone filesystems using required clone mount options
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[0]} $mnt1 || \
+> +						_fail "Failed to mount dev1"
+> +_mount $(_common_dev_mount_options) $(_clone_mount_option) ${devs[1]} $mnt2 || \
+> +						_fail "Failed to mount dev2"
+> +
+> +# Fetch filesystem IDs to verify the kernel can differentiate between them
+> +fsid1=$(stat -f -c "%i" $mnt1)
+> +fsid2=$(stat -f -c "%i" $mnt2)
+> +
+> +log1=$tmp.fanotify1
+> +log2=$tmp.fanotify2
+> +
+> +pid1=""
+> +pid2=""
+> +echo "Setup FID fanotify watchers on both mnt1 and mnt2"
+> +
+> +# Permit unconfined_t domains when SELinux is enforcing to prevent fanotify
+> +# blockages
+> +semanage_added="no"
+> +if [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
+> +    if ! semanage permissive -l | grep -q "unconfined_t"; then
+> +        semanage permissive -a unconfined_t >/dev/null 2>&1 && semanage_added="yes"
+> +    fi
+> +fi
+> +
+> +# Start asynchronous fanotify monitors
+> +( monitor_fanotify "$mnt1" > "$log1" ) &
+> +pid1=$!
+> +( monitor_fanotify "$mnt2" > "$log2" ) &
+> +pid2=$!
+> +sleep 2
+> +
+> +echo "Trigger file creation on mnt1"
+> +touch $mnt1/file_on_mnt1
+> +sync
+> +sleep 1
+> +
+> +echo "Trigger file creation on mnt2"
+> +touch $mnt2/file_on_mnt2
+> +sync
+> +sleep 1
+> +
+> +echo "Verify fsid in the fanotify"
+> +kill $pid1 $pid2
+> +wait $pid1 $pid2 2>/dev/null
+> +pid1=""
+> +pid2=""
+> +
+> +e_fsid1=$(fsid_to_fid_parts "$fsid1")
+> +e_fsid2=$(fsid_to_fid_parts "$fsid2")
+> +
+> +# Dump debug details to the full log
+> +echo $fsid1 $e_fsid1 $fsid2 $e_fsid2 >> $seqres.full
+> +cat $log1 >> $seqres.full
+> +cat $log2 >> $seqres.full
+> +
+> +# Ensure monitor 1 only captured events belonging to mnt 1 and fsid 1
+> +if grep -qF "$e_fsid1" "$log1" && ! grep -qF "$e_fsid2" "$log1"; then
+> +	echo "SUCCESS: mnt1 events found"
+> +else
+> +	[ ! -s "$log1" ] && echo "  - mnt1 received no events."
+> +	grep -qF "$e_fsid2" "$log1" && echo "  - mnt1 received event from mnt2."
+> +fi
+> +
+> +# Ensure monitor 2 only captured events belonging to mnt 2 and fsid 2
+> +if grep -qF "$e_fsid2" "$log2" && ! grep -qF "$e_fsid1" "$log2"; then
+> +	echo "SUCCESS: mnt2 events found"
+> +else
+> +	[ ! -s "$log2" ] && echo "  - mnt2 received no events."
+> +	grep -qF "$e_fsid1" "$log2" && echo "  - mnt2 received event from mnt1."
+> +fi
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/801.out b/tests/generic/801.out
+> new file mode 100644
+> index 000000000000..d7b318d9f27c
+> --- /dev/null
+> +++ b/tests/generic/801.out
+> @@ -0,0 +1,7 @@
+> +QA output created by 801
+> +Setup FID fanotify watchers on both mnt1 and mnt2
+> +Trigger file creation on mnt1
+> +Trigger file creation on mnt2
+> +Verify fsid in the fanotify
+> +SUCCESS: mnt1 events found
+> +SUCCESS: mnt2 events found
 > -- 
 > 2.43.0
 > 
