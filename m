@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2560F481A84
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 12:50:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9D85480DEA;
+	Wed,  1 Jul 2026 12:50:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782910219; cv=none; b=pqbvlbiZ+rj0w1OVdJ53LeGivMlmOnFTcJSoUqXvKqwb0id/GtUvL+vLZeVSLak2X4R+QIkSNTWah2CPtIFAgfJNIYdiUttZdakwL3iCGWkD+qw+pHueBIe98toQVpFSDyoDl09a9VcXwOIZLYcEWgWwfG2+ZI+u7rNWWa0DaLg=
+	t=1782910220; cv=none; b=a1PYycTE3LQ0NSHx2VCaoRuKWVSsz+rlni/KgCIOgDCOIlf3eZY7azxOS3jNoK0CAGRxCuKnIaNp/1NFgsY1WGhLlelwzArQbqpfvfRtuF+oH5M6+j2NGvjwhvLSuXOAcCvyziP1sYdWEgm9Im9NCz5Kq4iNJvQvFxZXJIFdtXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782910219; c=relaxed/simple;
-	bh=UwIbXsl3zTzflhADvEeObzQVESyNum/W8iBAmY7Zrxc=;
+	s=arc-20240116; t=1782910220; c=relaxed/simple;
+	bh=8wIVvknSPultBsQ9tJ4WO+6FP9KWHIH7MQRmHOPnf6I=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=YbpiUpvgiLtL1KhGgg0OfvYGM7A7bAYc4FPF2EJSx8TMCT2ocJvLsoJqivcUhbJMVqPBckynTjhzVG3dzz/N56Z3/mtc2nPhWW/yzyI3EtGBlHEgNTx7neAHcebKURgce8Oi3cfHeW++5DBQbfrwu0IaUlg3/zB+VXDSFufHDr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ckpdMyQt; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=gfqgvfdND7PhX6nmpyMa70IMOyagi5IYtyyevLA6oI/WBaEB+7t4wAymWdPFws6T1F1Y+aKJxRytlC8xq2wUNaTXsDy+oPtyezK7ul0qtwQkkwLK7GHxX52ZRrVD9EOXs9Sb6BS2a+IGbVKJOmmgz/XIe9glB75tPo2sNGzaXTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mK8ou+Gb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ckpdMyQt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2291F000E9;
-	Wed,  1 Jul 2026 12:50:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mK8ou+Gb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E4B81F00A3D;
+	Wed,  1 Jul 2026 12:50:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782910217;
-	bh=vvfcjM47u1uHeGODziFNo83aSY1oBiIUgYtZIPP8CFE=;
+	s=k20260515; t=1782910219;
+	bh=/oAYLi/n7bO/TRVxKEyYF80A6IbBWdjvkJKQyKaePFI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=ckpdMyQteAOlX1Foqey0PleoWGeL3rW0MAm63SU8pxM20EYonHrAK8UKDbrAzw3en
-	 iI3sYjK7PY+t/2u7DYILj73DHMukIG2FT2zLkds/X73qM+OOa+cCNSXwO89ZcSrUlV
-	 urJI/9Y637K3wlACCePZsV6IVzdvLcffhEvGuir9adgyPt4dMnAJIn1lUJJxykaJDm
-	 zi09i17RpRFPVOmPtrJCEdU+jrm0nelEDFoBuGfeMlj6kMpCOaKudIXQf67tfZP1f0
-	 7synl6R9k4XasuscMdDMNFDloH2X1lAYa5GPf8U0XlpDSva0hW6DrdCcTQNbyOUrcF
-	 4w/QAL7o1KWQA==
+	b=mK8ou+GbXeclsT6qNpQTZ6Ct3fzrpdIE8m4hx2zz9ETobsEjazvuB3I2mmTBgor8j
+	 4dmV07iox1SATGGh1VsYMA9gyW+VIM6CAbplTlJw4hc4VNBjb1wOzZ0Vy+4P344jGm
+	 guVdFC2c0pLkuU7h0gXM7eaTtsnuUeXGYQeHVUHJQ/w0ne9Rql2yvr2WotUrnMdtrx
+	 BjyhS50rpyDcC4Cor7y1VgCLvKFKHHw71X8RDnvXVckRYRMewC+Jhqwqc3lAw2Q5D9
+	 rd8yZsRMrVc+VUxL9SqAXBsbGp/J8JE0+6wJSNiqBbB3yClrO1MQZ9VhNIC9LdwcNx
+	 ST9trK2NPQiPg==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20260625135849.2494779-1-hch@lst.de>
-References: <20260625135849.2494779-1-hch@lst.de>
-Subject: Re: xfs_buf_submit error handling fix v2
-Message-Id: <178291021512.353898.8108873850089394771.b4-ty@b4>
-Date: Wed, 01 Jul 2026 14:50:15 +0200
+To: "Darrick J. Wong" <djwong@kernel.org>, 
+ Yingjie Gao <gaoyingjie@uniontech.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+In-Reply-To: <20260625131623.3261735-1-gaoyingjie@uniontech.com>
+References: <20260625131623.3261735-1-gaoyingjie@uniontech.com>
+Subject: Re: [PATCH] xfs: release dquot buffer after dqflush failure
+Message-Id: <178291021819.353898.10550193282677454885.b4-ty@b4>
+Date: Wed, 01 Jul 2026 14:50:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,30 +46,21 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.15.2
 
-On Thu, 25 Jun 2026 15:58:30 +0200, Christoph Hellwig wrote:
-> currently xfs_buf_submit can execute the endio handling twice when failing
-> for a synchronous submission.  This series refactors the surrounding code
-> a bit to allow for a non-hacky fix and then applies that.
+On Thu, 25 Jun 2026 21:16:23 +0800, Yingjie Gao wrote:
+> xfs_qm_dqpurge() gets a locked buffer from xfs_dquot_use_attached_buf().
+> If xfs_qm_dqflush() fails, the error path skips xfs_buf_relse() and then
+> calls xfs_dquot_detach_buf(), which tries to lock the same buffer again.
 > 
-> Changes since v1:
->  - fix a commit message typo
+> Release the buffer after xfs_qm_dqflush() returns so the error path drops
+> the caller hold and unlocks the buffer before the dquot is detached,
+> matching the other dqflush callers.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/6] xfs: open code xfs_buf_ioend_fail in xfs_buf_submit
-      commit: 6769087fd856889a32caf09590703813e3763575
-[2/6] xfs: also mark the buffer stale on verifier failure in xfs_buf_submit
-      commit: 0b434b552ecd19f33e2f85ea8e55dbb65352810d
-[3/6] xfs: improve the xfs_buf_ioend_fail calling convention
-      commit: 4c8b46d832bd98eab914e2bbcd32447b584b03a7
-[4/6] xfs: remove xfs_buf_ioend
-      commit: b53177d418225b15d23b1817fac1b5c668e56c2f
-[5/6] xfs: fix handling of synchronous errors in xfs_buf_submit
-      commit: 93e21ef2a819348fce899bd1bd1303979bba3f1d
-[6/6] xfs: simplify __xfs_buf_ioend
-      commit: e4281086ae6caf006b6ef0670479eb5f96880fb9
+[1/1] xfs: release dquot buffer after dqflush failure
+      commit: 0c1b3a823a22af623d55f225fe2ac7e8b9052821
 
 Best regards,
 -- 
