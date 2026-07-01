@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036F0385D89;
-	Wed,  1 Jul 2026 17:07:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1928A38239B;
+	Wed,  1 Jul 2026 17:11:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782925635; cv=none; b=gKRxHzsxndjAV23hd1099vzsie4362Y/CMNU6WVMufR7JzsPl9IZlSPPdyCWxX/2Ouv8eXHA08vFcu9QJJq/IW9L7X2YHYZMNlc6vcn9+B4SxE8xQIzEpbPeUs4aMgQWktZsIOlwrLuAqfqvEkB6HbwViqlbAHIbuamOyKdIbp4=
+	t=1782925884; cv=none; b=I7BMMRJcOB2kt7wJQD5cAnEbTYkkynFC5vH/Kiv8JU/PpdoqA9G3owFD7QrMZwTGoCbUEjBrgv+UJ5unKnRerlkVaQf/uDKtyA+8pTu7z94USQmAoJNB3TnAAyxN3MFRglOtw7daaqYN+qdBbxaF/20HtJsUghxfNFULCG0wuZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782925635; c=relaxed/simple;
-	bh=3iisFyUjd5BnT25bYG8Yi8RdLOCy3g9Jmhn0Ujipl1Y=;
+	s=arc-20240116; t=1782925884; c=relaxed/simple;
+	bh=V5rTobRcuDGj/Yg1bpYbFTc4iNH9JhKPkPh6X0owJVE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e4lsOdHv5Kng5FuWE35XjdW4rLZySUIKJb/lqjpvw7rsck4g6YOfVMh3wX2t+BzeaZHRaPZAw7iHHjhMvrgp9lBekqA6XK+Nv3om7fTHoF60+dQby5jQ/3aDZN7+D2gvoLtCnIZJSvb5YnxbNv9zkau4szFp0gUL7773h7hEZnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AGHmrzkn; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=KSRzDvMex2a6O0rbKXTpkV9qttyur9SStXBYodkX7EOlvJXtW/xhBDn7S2novAaEl4FsEvH2NAlBaU05Zvft3q37DLNyjgeSCrq1ZVpZXczf7s1UbD3UMa1eEFz1QI+UkNrKR3msB9umbxcnZqF+G6vzRJe80jsUb1l7c2fcnrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eLk6T1xP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AGHmrzkn"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 820C61F000E9;
-	Wed,  1 Jul 2026 17:07:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eLk6T1xP"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B74961F000E9;
+	Wed,  1 Jul 2026 17:11:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782925633;
-	bh=09HWxDVeypl9bxp+WG1vrJ1WtSL6U/JuJK1E737LUCA=;
+	s=k20260515; t=1782925882;
+	bh=dObZorwKY5QXIIvyRJ67mb+sIhgTQQ1nuYKhEabm1IY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=AGHmrzknDfNiq8VGRsyT1WFe2XL3uXXaXIZCL1ui2djLdJIfnfHuKxEU5syp72KCh
-	 qyw1hcOzqCvu2hcXWvuASMVwcOvjBB5yIjrYbGUHX4hdpo6UTXoHGaraxCIpWMGD1Q
-	 P9ruQ8vDAbzuTw0vM/87Ch1imZyFfR5kGZlDtNDA0XR1l3pFlt2+jT8/FTgt7T1amF
-	 DK6cAPHT4dhE3+JKGwEgPW9uHZ/qDRQ9N0Jp8uYAlBC5sW7eydUQNJkWnd+ueuDNr9
-	 c/0Jtb1npDKnM4thmBgtBFOpo4PtB444XJwEC5ky+GhOwrv2BwLANruV8uHOedK5Uw
-	 1i9rzrCEqUExA==
-Date: Wed, 1 Jul 2026 10:07:13 -0700
+	b=eLk6T1xPagtKVZRSbzBIhjdmyruf+ywZiv6+Yi0GhAt7ebSQGszb9JqdwVTH/x8Nv
+	 2j8FBo0nP5yyUyi1I1u28my64HyjSHN525nNfzApYyqlc8maaoW4uHeHFFTyytNBwu
+	 44Hj0G2JyYgB4eIa6Sv9Pv7MrKtHPEcbMf/qwFBqO9jcyHOW283g4mXGEWt3V+Yoxp
+	 4i23BJwSCN496LxCRwNVRF6OYQIMzPOFGkzwQWPdiKUsHnq/6Qi7yDRdSEkZipQK2r
+	 lgtEGrdCI4pk9+5jGO2MBDcP22/wLrga0xlLthUnrM6bpY4jm4Wqu1nofhnJurMEni
+	 lGX+ASfXeQNvQ==
+Date: Wed, 1 Jul 2026 10:11:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Anand Jain <asj@kernel.org>
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
 	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, zlang@redhat.com,
 	hch@infradead.org
-Subject: Re: [PATCH v7 01/11] fstests: add _loop_image_create_clone() helper
-Message-ID: <20260701170713.GE6517@frogsfrogsfrogs>
+Subject: Re: [PATCH v7 04/11] fstests: add _require_unique_f_fsid() helper
+Message-ID: <20260701171122.GF6517@frogsfrogsfrogs>
 References: <cover.1781694879.git.asj@kernel.org>
- <421c7cdd5aae27b99d04dddf08c5d9df79c2f790.1781694879.git.asj@kernel.org>
+ <f556db45f1ffc93508a69ce9f9e567b74384210f.1781694879.git.asj@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,115 +45,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <421c7cdd5aae27b99d04dddf08c5d9df79c2f790.1781694879.git.asj@kernel.org>
+In-Reply-To: <f556db45f1ffc93508a69ce9f9e567b74384210f.1781694879.git.asj@kernel.org>
 
-On Wed, Jun 17, 2026 at 07:20:28PM +0800, Anand Jain wrote:
-> Introduce _loop_image_create_clone() and _loop_image_destroy() to mkfs an
-> image file and clone it to another image file, and attach a loop device to
-> them. And its destroy part.
+On Wed, Jun 17, 2026 at 07:20:31PM +0800, Anand Jain wrote:
+> Add a helper to check if the target filesystem supports unique f_fsid
+> tracking across cloned or snapshot instances.
+> 
+> Certain filesystems like XFS, Btrfs, and F2FS ensure unique f_fsid
+> identifiers per filesystem instance. However, Ext4 derives its f_fsid
+> directly from its superblock UUID, which leads to identical f_fsid
+> values on cloned images until the UUID is manually modified by userspace.
+> 
+> Introduce _require_unique_f_fsid() to allow test cases requiring strict
+> f_fsid uniqueness to skip gracefully on unsupported filesystems.
 > 
 > Signed-off-by: Anand Jain <asj@kernel.org>
 > ---
->  common/rc | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
+>  common/rc | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
 > 
 > diff --git a/common/rc b/common/rc
-> index 79189e7e6e94..d7e3e0bdfb1e 100644
+> index 968ba33686f3..d95eec94f7b7 100644
 > --- a/common/rc
 > +++ b/common/rc
-> @@ -1520,6 +1520,69 @@ _scratch_resvblks()
->  	esac
+> @@ -6310,6 +6310,27 @@ _require_fanotify_ioerrors()
+>  	_notrun "$FSTYP does not support fanotify ioerrors"
 >  }
 >  
-> +# Create a small loop image, run an optional tuning function ($2) on it,
-> +# clone it, and attach both to loop devices, returned in ($1).
-> +# Args:
-> +#   $1: Nameref to return the array of allocated loop devices [base, clone].
-> +#   $2: Optional callback function to tune the base filesystem before cloning.
-> +_loop_image_create_clone()
+> +# Ext4 derives f_fsid from the superblock UUID, meaning clones share the
+> +# same f_fsid until their UUIDs diverge. Conversely, XFS, Btrfs,
+> +# and F2FS ensure f_fsid remains unique per filesystem instance (often by
+> +# deriving it from the UUID and underlying block device.)
+> +#
+> +# Across all filesystems, a UUID collision causes libblkid tools to return
+> +# non-deterministic device mappings. It is ultimately the responsibility
+> +# of the userspace utility or use-case to enforce uniqueness when a clone
+> +# diverges. For details, see mailing list thread discussions:
+> +#   Link: https://lore.kernel.org/linux-ext4/20260409131238.GC18443@macsyma-wired.lan/
+> +_require_unique_f_fsid()
 > +{
-> +	local -n _ret=$1
-> +	local pre_clone_tune_func="$2"
-> +	local img_file=$TEST_DIR/${seq}.img
-> +	local img_file_clone=$TEST_DIR/${seq}_clone.img
-> +	local size=$(_small_fs_size_mb 128) # Smallest possible
-> +	local loop_devs
-> +
-> +	# Since we copy the block device image, we keep its size small.
-> +	_require_fs_space $TEST_DIR $((size * 1024))
-> +
-> +	_create_file_sized $((size * 1024 * 1024)) $img_file ||
-> +				_fail "Failed: Create $img_file $size"
-> +
-> +	loop_devs=$(_create_loop_device $img_file)
-> +	_ret=($loop_devs)
-> +
-> +	case $FSTYP in
-> +	xfs)
-> +		_mkfs_dev "-s size=4096" ${loop_devs[0]}
+> +	# Skip the test if the filesystem does not enforce unique f_fsids
+> +	# natively. Checking this dynamically requires recreating a clone
+> +	# layout, so we use a static lookup based on FSTYP.
 
-Not sure why you pass two separate cli arguments as a quoted string, but
-my guess is it "doesn't matter" because _try_mkfs_dev uses $* unquoted,
-which separates them again.
+I would switch these two comments.  The second comment above describes
+what this predicate function actually determines, whereas the first
+comment above the function justifies the internal behavior of the
+function.
 
-I HATE BASH.
-
-> +		;;
-> +	btrfs)
-> +		_mkfs_dev ${loop_devs[0]}
-
-And while I'm whining:    ^^^^^^^^^^^^^^^ actually should be quoted.
-Not that fstests is at all good at getting this right.
-
-> +		;;
-> +	*)
-> +		_mkfs_dev ${loop_devs[0]}
-> +		;;
-> +	esac
-> +
-> +	# Only execute if the function argument is not empty
-> +	if [ -n "$pre_clone_tune_func" ]; then
-> +		$pre_clone_tune_func ${loop_devs[0]}
-> +	fi
-> +
-> +	sync ${loop_devs[0]}
-> +	cp $img_file $img_file_clone
-
-What if cp doesn't create a reflink copy?  Can we fill up the $TEST_DIR
-despite having checked it for sufficient free space?  Especially on
-filesystems that don't support sparse holes?
-
-> +
-> +	loop_devs="$loop_devs $(_create_loop_device $img_file_clone)"
-> +
-> +	_ret=($loop_devs)
-
-Hmm.  Should this function return nonzero if any part of the clone
-creation fails?  Or are callers expected to notice that _ret only has
-one element?
+# Skip the test if the filesystem does not enforce unique f_fsids
+# natively. Checking this dynamically requires recreating a clone
+# layout, so we use a static lookup based on FSTYP.
+#
+# Across all filesystems, a UUID collision causes libblkid tools to return
+# non-deterministic device mappings. It is ultimately the responsibility
+# of the userspace utility or use-case to enforce uniqueness when a clone
+# diverges. For details, see mailing list thread discussions:
+#   Link: https://lore.kernel.org/linux-ext4/20260409131238.GC18443@macsyma-wired.lan/
+_require_unique_fsid(
+{
+	case "$FSTYP" in
+	ext*)
+		# Ext4 derives f_fsid from the superblock UUID, meaning
+		# clones share the same f_fsid until their UUIDs
+		# diverge.
+		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
+		;;
+	*)
+		# Conversely, XFS, Btrfs, and F2FS ensure f_fsid remains
+		# unique per filesystem instance (often by deriving it
+		# from the UUID and underlying block device.)
+		;;
+	fi
+}
 
 --D
 
+> +	if [ "$FSTYP" == "ext4" ]; then
+> +		_notrun "Target filesystem ($FSTYP) does not guarantee unique f_fsid on clones."
+> +	fi
 > +}
 > +
-> +# Teardown loop devices and delete their underlying backing image files.
-> +# Accepts a list of loop device paths (e.g., /dev/loop0 /dev/loop1).
-> +_loop_image_destroy()
-> +{
-> +	for d in "$@"; do
-> +		# Retrieve the path of the backing file
-> +		local f=$(losetup --noheadings --output BACK-FILE $d)
 > +
-> +		# Detach the loop device from the backing file
-> +		_destroy_loop_device "$d"
-> +
-> +		# Clean up the backing disk image file
-> +		[ -n "$f" ] && rm -f "$f"
-> +	done
-> +}
->  
->  # Repair scratch filesystem.  Returns 0 if the FS is good to go (either no
->  # errors found or errors were fixed) and nonzero otherwise; also spits out
+>  # Computes a percentage of the available space in a filesystem and
+>  # returns that quantity in MB. The percentage must not contain a percent
+>  # sign ("%").
 > -- 
 > 2.43.0
 > 
