@@ -1,97 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86C9B3CB2FD
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 12:52:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D10CE1A275;
+	Wed,  1 Jul 2026 13:28:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782910352; cv=none; b=T9FUqiW7Jr/feHHJVX3eTo5HpnF/ZJfKliA/K0WXoSIzGyfLVSZewqOLP0D3aDEkDnO6wbyFKaToFsPrPBkWt0KIXVXwpHAM3S0RYowlegd4JtLUywMyPm39PB/yh/kOnSLArvelBzuEGQi/CkO8CMewpCG25iZHKCxlptO8exQ=
+	t=1782912485; cv=none; b=bM8VbOVqzJCOElfebLPsBKvRf6t+0W9Q+MjfFdNmxrP/kBMcVsjnvaVML4biZ2dGjfiWqUmWoKS7a4dZpboBYVvfDXymUidQxKF26qUA1Fo6b/c3RMGWHYXdrgS75d5IOeHWsuYILarL3zagv0gx2N5sKKKPrC99B5fXfYwnoKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782910352; c=relaxed/simple;
-	bh=K9/zzT0f9XM2i4SHWGWRnaFaFl9Fsj/eseAyr5GKdqo=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Ygl8YgG8TGdyhtuN4adtM506/rKcRvLt7ZvKEC+08mbyjvlUo+CYoMxtDy98kip69QNihipk+DIBIU9vUwAukZgB7oqhn+tUGyZ5wcVf2IYDenxSlpbq7tTucogKva2nbl86XpV4J7Ot7YOtWI52JL6CKTS+zDrqZsZOtnKh8vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I9Dq0wy+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782912485; c=relaxed/simple;
+	bh=iKscDZQfy0MtN4T97LK36aJevrKA4UAXQeqiSYbMIyY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mriY/hXyIuc+k6nE+gG/NmqbVQJO4C0wfVSAGBTK44UPRXC74RuqQVQ/casTKjpb7L0rHFK/iHtW1F5wHP92NCeWAcTdws6Jz+BEu+r/YX3tDYqPbPEHXkZcVmZ7CvUL3E3h21YipxmHYLaffliz/wcQI6Pd6QzZudac11atzL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QBkIcOoi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I9Dq0wy+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 739981F000E9
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 12:52:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QBkIcOoi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE62B1F000E9;
+	Wed,  1 Jul 2026 13:28:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782910351;
-	bh=v5gLSRsfXshI/7qk60ez5Y9deoKg4CY6vioyyvBwzVo=;
-	h=Date:From:To:Subject;
-	b=I9Dq0wy+PacMdAiyCaiQX8SfLb9sfKRtfYSnEBgs8PWk9rjapk5e5MnYkNn1qywSi
-	 QKlO2tySurEd1xp1e6vunmnKr33io2gm0uZ0emnoiCdQLrQxHpbZGv8c9gBAsLJi2O
-	 eQYC/mDPJarNegqU+0ffZvoZtN9Eeq8a1OxiZUJhG/YCbXSK6A0W/8vR+sVUPpNVdL
-	 fcrVYso6GWgt2m9lP4w7VrTit6fQUq2lQYXsbZ7WJ/RwmcRchdk3VEVYMKyW1wGnaw
-	 DOXw+QqibtFie6eE4UZqqXGH/NK9pF9HPeus7pNzgTTWLnpWyKYwW/1eP1k7rqp7YO
-	 7UAln+GInaIkQ==
-Date: Wed, 1 Jul 2026 14:52:27 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to e4281086ae6c
-Message-ID: <akUNXDsTjZDlta81@nidhogg.toxiclabs.cc>
+	s=k20260515; t=1782912484;
+	bh=S/ir4WC1F7FyETK8VqjWLb5Y+h//+o4RHG1aeGMPGPI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=QBkIcOoiSZQuYYK7QffAwCNm8VaK++eXTg9AS9VzPGwSsZmNe721QfD5tLz0b5Ljb
+	 ERybIPZ7UuKg70udSUh9Q7eOo7zB8AJYJB13RW0B0gKO+zjDFlqE1pfKCrU+V6INxn
+	 TlEjtN0MBdNs7Feqv9TDr/7CiYC0dt+iiVMhTx+dNJQMW8Ld8IphDTJDZjDp7Umn5F
+	 M2rvGjzuDP/DBJUpfAARQoQ8IeDuScYB4VkDJwESKSuVGxquOomHKsPgr+z5851UJb
+	 FNRZI4ms/t9yiUs2jrV1bdlAXEQSYynE3g4laKriuldFn2wUzcnPKXLr3Prazk95Xv
+	 ZeHqosXQ2hpXQ==
+From: Christian Brauner <brauner@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	Kelu Ye <yekelu1@huawei.com>,
+	Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	fuse-devel@lists.linux.dev,
+	ntfs3@lists.linux.dev,
+	linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 1/3] iomap: consolidate bio submission
+Date: Wed,  1 Jul 2026 15:27:40 +0200
+Message-ID: <20260701-davon-kniegelenk-gedehnt-96476b242a09@brauner>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260629121750.3392300-2-hch@lst.de>
+References: <20260629121750.3392300-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1819; i=brauner@kernel.org; h=from:subject:message-id; bh=iKscDZQfy0MtN4T97LK36aJevrKA4UAXQeqiSYbMIyY=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS5it7RsWDc2sutssqLV0pi/oIv7G6tQj4SdWfS564sN 1S5YvS9o5SFQYyLQVZMkcWh3SRcbjlPxWajTA2YOaxMIEMYuDgFYCK3IhgZXn05sNjoiK6LmpzZ kcUpV9dIfso4M2nzmZJgzb9SPNb6lgz/9Pi6PGc+u+HOtq8gTdxvdnHqPs1ItmXMtw7+cZHdLbG KGQA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
+On Mon, 29 Jun 2026 14:17:38 +0200, Christoph Hellwig wrote:
+> Add a iomap_bio_submit_read_endio helper factored out of
+> iomap_bio_submit_read to that all ->submit_read implementations for
+> iomap_read_ops that use iomap_bio_read_folio_range can shared the
+> logic.
+> 
+> Right now that logic is mostly trivial, but already has a bug for XFS
+> because the XFS version is too trivial:  file system integrity validation
+> needs a workqueue context and thus can't happen from the default iomap
+> bi_end_io I/O handler.  Unfortunately the iomap refactoring just before
+> fs integrity landed moved code around here and the call go misplaced,
+> meaning it never got called.  The PI information still is verified by
+> the block layer, but the offloading is less efficient (and the future
+> userspace interface can't get at it).
+> 
+> [...]
 
-Hi folks,
+Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+Patches in the vfs.fixes branch should appear in linux-next soon.
 
-The for-next branch of the xfs-linux repository at:
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-has just been updated.
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.fixes
 
-The new head of the for-next branch is commit:
-
-e4281086ae6c xfs: simplify __xfs_buf_ioend
-
-14 new commits:
-
-Christoph Hellwig (10):
-      [c75283887457] xfs: split up xfs_buf_alloc_backing_mem
-      [27d7d15184d7] xfs: lift setting __GFP_NOFAIL from xfs_buf_alloc_kmem to the caller
-      [0144bcf61960] xfs: fix incorrect use of gfp flags in xfs_buf_alloc_backing_mem
-      [19dc95d4b6cf] xfs: simplify the failure path in xfs_buf_alloc_vmalloc
-      [6769087fd856] xfs: open code xfs_buf_ioend_fail in xfs_buf_submit
-      [0b434b552ecd] xfs: also mark the buffer stale on verifier failure in xfs_buf_submit
-      [4c8b46d832bd] xfs: improve the xfs_buf_ioend_fail calling convention
-      [b53177d41822] xfs: remove xfs_buf_ioend
-      [93e21ef2a819] xfs: fix handling of synchronous errors in xfs_buf_submit
-      [e4281086ae6c] xfs: simplify __xfs_buf_ioend
-
-Dawei Feng (1):
-      [45de375b2506] xfs: fix memory leak in xfs_dqinode_metadir_create()
-
-Yingjie Gao (1):
-      [0c1b3a823a22] xfs: release dquot buffer after dqflush failure
-
-Yousef Alhouseen (1):
-      [cc9af5e461ea] xfs: use null daddr for unset first bad log block
-
-jiazhenyuan (1):
-      [7f53bf79bdba] xfs: fix AGFL extent count calculation in xrep_agfl_fill
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_dquot_buf.c  |  14 ++-
- fs/xfs/scrub/agheader_repair.c |   2 +-
- fs/xfs/xfs_buf.c               | 192 ++++++++++++++++++++++-------------------
- fs/xfs/xfs_buf.h               |   2 +-
- fs/xfs/xfs_buf_item.c          |   3 +-
- fs/xfs/xfs_inode.c             |   3 +-
- fs/xfs/xfs_log_recover.c       |   6 +-
- fs/xfs/xfs_qm.c                |   5 +-
- 8 files changed, 125 insertions(+), 102 deletions(-)
+[1/3] iomap: consolidate bio submission
+      https://git.kernel.org/vfs/vfs/c/044472d5ee7d
+[2/3] fuse: call fuse_send_readpages explicitly from fuse_readahead
+      https://git.kernel.org/vfs/vfs/c/3372eb0384b7
+[3/3] iomap: submit read bio after each extent
+      https://git.kernel.org/vfs/vfs/c/c1fb97d31782
