@@ -1,134 +1,74 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A66B48AE20
-	for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2026 15:44:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782920647; cv=pass; b=jtJCAIKzy5Q5qkVxY1s5OeAn7/WV3pPpv8EMfx65LyzMG+rUetXAYXdG7cdjJ0c1JWgKVrT7BOgDq8Us7oBVDxK8eAjHFMY34ABV2BH61Kn1WC/eRwp51mYHBlbW8jsSnuhzIcdbJrGSku9G5uM2QaBjNxmi5zHJixmh8DoM4NE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782920647; c=relaxed/simple;
-	bh=CaSJxenJSmT28YCTK0WlUmpDOnHwOMdXRIXB2/4LRKc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZsLwZqJEVtZY9eBzl9OE2a+zYWN/RYA53ol5MgFW3FpzPox6ooMtboWcUtHIH7s53NW2Ae/wr9k8du8dbVEmzaUf97+ewspCyVoX0jpgAIMZITfjilpuwXMRvR4sAF4/o/Cc/rT8Rzx2lKHigQn8TqhYG7J+eAj7kvBpjsAApRQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lqwl4SSX; arc=pass smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517F43B6356;
+	Wed,  1 Jul 2026 15:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782921156; cv=none; b=LWoPYvWAUD6jQ/71pxWqLXiP6NU/zTdpHc3XVRFXAdu8rbbr1R8y0v6WMyZGSpTfEjNxstLKR+7fr4JyQd55CzWfV88fuyLz+SUrkRcBBfkbXWXqZyqNmmqdcT+PfRCQ017pGYRykFLxLFS36a8zHAYrWWwNFfkJ12iDF4ZInOA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782921156; c=relaxed/simple;
+	bh=4AISVvGNVD7Py4fxm8YaMmRaiKflYO17OaCt9NVi5KA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RXJWZ8/vXNcmtMAHcPA2pSLeB0aS5LdRCjlgZMxspxjdrsczNAdiLiLJPhqMsOVVLw4sGQ1kp81fJdRvPtIKRwQsDI47HoiJTgxWigcy9k2rlDU6foJKpygvKCIxRpk9mdo+ljGti2j3fxqae+fQxFnf6nswbXm9UWhprtEWrAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BBvYyQE8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lqwl4SSX"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c126eb4e003so63494366b.0
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jul 2026 08:44:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782920644; cv=none;
-        d=google.com; s=arc-20260327;
-        b=i3hCnWy6tIRaDKtmoWYVG/Ehp3BdRpD241nV6k5kkW6jLPpq69ZwUfLAmBaG+h3XgT
-         hsT0W5ENgBLPonhQmQBPt7Jg4CRgZKtD0VMoRGxYMPML+oa4xcRoiME+Wji6NeJQmCPm
-         9MrdYaAmyxO5PgNi4WQuXNwgeEAKlZo0tIAjzYuZtNRLYcxzzBn4NGWJIDq0SKSFgzTn
-         4owSt4O0dUtAsGvf6AzB2Bbc5//CiveQuj5prEgubcH7rdwONL//8aa1kc3Nw7M9vXxm
-         Jkchp7FfxjJqdsLU/8Q9tSwSbovFvTloJD7PLSXelqdBZoZ2jcp74F7SqNGzZoLPCVUp
-         /C4Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=eYQv4j5xeINzuX5JBtlMBdWeVqylgzJ957g/41P12i8=;
-        fh=NZWBCe3qPtPAHAAxP0ecBuryYSkuQ0PV9IsSOYb4aqc=;
-        b=cVp+uymJg1UGJZIn8WX7ot5VtZcbsYQsKZU1SKG8z/SZKg68rS6KUYXZd431iO7sVI
-         jg5XUBV/ytjaYNPM7+3pqBTZ/x6bfkcyANdA9d/a7LYRqYEdWCo9ThunVHEPz9ES6SjN
-         bfVIPavrrs2U38WIByIUoBWrcfA7t20lV54Q1xWgaVHIMkWVfKPZyX2Ut5ga10LIp28j
-         X3Qpg7TQREnAb485Sx2uawaidCR9Yc6SedwAD4ixXCeSLfQre8U897Uj5BLooWykhaFU
-         kAs/n8VRC2vPSk2E1HUH8Tdbcwkczyc0sw0xu/SnSjFUDKkFwI5aletZ5euY5wi1tcrf
-         kOPg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782920644; x=1783525444; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eYQv4j5xeINzuX5JBtlMBdWeVqylgzJ957g/41P12i8=;
-        b=lqwl4SSXD2jBF88dkv4yFaSlZCDCIyMwkGbruuC6Md5LMTDY4BfHyOb9SZORbyCt7f
-         hxbT5J7GAYdm3N6aav2yWQbUrDxD7LIsN1D3Je+yWseCkYyrVjj4Wk/9elJ41OeQoNB8
-         S8M/YCpHzH/Vy/JnBAyRc+woUn45QeqrGxP3dd8/QsNNuQBIoI8HkHj8sOe7qzUcBGO0
-         G6ZyQRfwO90QyFodGx9eLUs9G6FqtIneDrwp6uh6jqMkCO8KlPutOtwFdgziQZ8FF9tH
-         9MhzIJji8S/gU5j6/ZHQ7B6jdOE7CuYNMrUm7WJFc/dX1C2HzWH/wbAfv29dT+AkpWvl
-         Tm+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782920644; x=1783525444;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=eYQv4j5xeINzuX5JBtlMBdWeVqylgzJ957g/41P12i8=;
-        b=Ep23kJZi/fE3n42M5SlaIQ2w61AQTyaTsPfIbxki2uHQr2y0FhKCy6goopI4VrKbet
-         Mlb7s7N1w/4fUmlWBkT9gX//9ooGbco0351pcRwSrKxpDgstGpH21AlORpv8FsUDZZuW
-         p/i7q1gCAL1zXRXX5HuunDwXuy0KcT/QNZz2/zXfOhBIlUNVwKLE+orqcEbC7TgJBpIk
-         tCykSVsJZT4wqL0RvFgwZFtFJ/2NY0rSUcRoDoB4fKwI/S2dWgtne5X+QX7GKdl6RQ8J
-         vaYZDHlKtRZJcrue77bzalyfOEGnVOm38Z/AVm5ghVwWDGJno3nVH/HrLTRuOBPnu0PE
-         /hyA==
-X-Gm-Message-State: AOJu0Yxvb7RYVpp5BQHO3eC3xXISi/izSby2M/S2TQWckFZ0H7O7EXvF
-	uz+VlE0YuZQqKZLQE2D70MI4EcnYsTJ+Wxp50LY62XTdKkObSSD1NQjpEmw9HKn+wuo4lvY2U3Y
-	8H+b74PWvcCqDL414ErrMP2QKSntkMF4=
-X-Gm-Gg: AfdE7cmY8idF6mCypwdZJp6f124A5apcNJcqE/bv+/mAqgXwFHwvFF+5H4zXEMXpauK
-	a6mmMsHj8XK3oJIRfj59CPqF7iDb7PF3gxzIAwXlco4d9mwByPvu2FJLppJejO8xYIc79KbFxPz
-	lmxORm69CLh5UrjNkbQuOfRFTS1OO9xBWzKKNbWaSsnnONS+ucQHSwa26bgqgz1BXSkz2KPKH8N
-	f8E9YedqJ/VUq0QoIZ7rRiOBp2pCbB4wWnG4yre31yuXsfaBzbFOCDNNgOgPpb8r0eRkTdimf7x
-	4bvOapeet6+PwEVl1UgZ5gUs9Fko
-X-Received: by 2002:a17:906:c106:b0:c12:add8:eae7 with SMTP id
- a640c23a62f3a-c12add8edc7mr71508266b.16.1782920644186; Wed, 01 Jul 2026
- 08:44:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BBvYyQE8"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DC28E1F000E9;
+	Wed,  1 Jul 2026 15:52:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782921155;
+	bh=MPbs+nUnB4JFJqi4TLM8i756C6WNTxYSjp+9Hm2FFS0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BBvYyQE8RnCPAOq06ZVHGIDxJocYIWac5PtWQQcKcLpgJXkDh4D0YMcsI6BzYUZU1
+	 EsUe55gN77XRZQkNo+EKt1wL9LGBDzwigAcTxmQnAMsEIwsJ+H8Q7G1KkyjSIyS5OQ
+	 HiY4R6hcDanqacBwnGawh2ekV07dRT3ooqcwr/P8mikKYvfaVk0HM7DL8VcCTgLpH/
+	 HGDf0X+QTU5mMuYAYms4FLhLm0qL45yghxm/+MuxA9Xs5wyOxpazlsniIVGa32Fi4O
+	 TXOJ7vFELhdhj7w4n/xdkJsT2REZkpGumxpLBVKHBMomeRtHRFbgfRUAirD3DMB69I
+	 RGF5fOOBN+gtw==
+Date: Wed, 1 Jul 2026 08:52:34 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yousef Alhouseen <alhouseenyousef@gmail.com>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
+Message-ID: <20260701155234.GF6526@frogsfrogsfrogs>
+References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
+ <20260630161113.GB6526@frogsfrogsfrogs>
+ <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
+ <akTyUXMN4_I1fOaM@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260629162452.2566242-2-bestswngs@gmail.com> <akTzkmAwaDkAK_mM@infradead.org>
- <akT2qDLIwGHHkWIB@infradead.org>
-In-Reply-To: <akT2qDLIwGHHkWIB@infradead.org>
-From: Weiming Shi <bestswngs@gmail.com>
-Date: Wed, 1 Jul 2026 23:43:26 +0800
-X-Gm-Features: AVVi8CdqmG8lT4yvRQqbqElG1HBTADKHy504bTsOB0qkYRzC9CnTs4g09DCqBPg
-Message-ID: <CANgPUi1O7b7dPQFpnV7ifDXgQ0OO7hyovFkVzs7WtY+-ycU-FQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fail recovery on a committed log item with no regions
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, 
-	"Darrick J . Wong" <djwong@kernel.org>, Brian Foster <bfoster@redhat.com>, Xiang Mei <xmei5@asu.edu>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <akTyUXMN4_I1fOaM@infradead.org>
 
-Christoph Hellwig <hch@infradead.org> =E4=BA=8E2026=E5=B9=B47=E6=9C=881=E6=
-=97=A5=E5=91=A8=E4=B8=89 19:14=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Wed, Jul 01, 2026 at 04:01:38AM=E4=B8=8A=E5=8D=8838=E7=82=B9 -0700, Ch=
-ristoph Hellwig wrote:
-> > So maybe as a prep-patch remove the existing ASSERT(0), then as
-> > a second prep patch move the list splicing after the loop:
-> >
-> >       if (error) {
-> >               /*
-> >                * Return the remaining items back to the transaction ite=
-m list
-> >                * so they can be freed in caller.
-> >                  */
-> >               if (!list_empty(&sort_list))
-> >                       list_splice_init(&sort_list, &trans->r_itemq);
-> >       } else {
-> >               ASSERT(list_empty(&sort_list));
-> >       }
->
-> Actually just always doing the split back might be even better:
->
->         /*
->          * Return the remaining items back to the transaction item list s=
-o they
->          * can be freed in caller=E5=9C=A8=E5=91=BC=E5=8F=AB=E8=80=85=E4=
-=B8=AD.  This should only happen when we encountered=E9=81=87=E5=88=B0
->          * an error.
->          */
->         if (!list_empty(&sort_list)) {
->                 ASSERT(error);
->                 list_splice_init(&sort_list, &trans->r_itemq);
->         }
+On Wed, Jul 01, 2026 at 03:56:17AM -0700, Christoph Hellwig wrote:
+> On Tue, Jun 30, 2026 at 01:39:35PM -0700, Yousef Alhouseen wrote:
+> > Yes. The KMSAN report traces the allocation through
+> > xfs_bmap_extents_to_btree(), which calls xfs_bmap_broot_realloc(...,
+> > 1). With no existing root, that reaches krealloc(NULL, new_size). The
+> > conversion initializes the block header, first key, and end-anchored
+> > pointer, but does not initialize the layout/alignment gap within the
+> > full if_broot_bytes allocation. XFS_ILOG_DBROOT later copies that
+> > complete byte count into the log.
+> > 
+> > So the observed bytes are root-layout slack from the extents-to-btree
+> > conversion, rather than record storage that a later insertion should
+> > have filled.
+> 
+> This almost sounds like we should explicitly zero this case just for that
+> particular case.  Although Darrick was kinda heading in a different
+> direction and I don't want to start a fight here.
 
+I'm fine with either solution; I simply prefer the one that fixes all
+the current and future "oops we forgot to zero a hidden padding" bugs in
+one action.
 
-Hi Christoph,
+Carlos? :D
 
-Thanks for the review. sent v2.
+--D
