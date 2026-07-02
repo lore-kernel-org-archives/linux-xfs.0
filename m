@@ -1,31 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97F2E4BCAC8;
-	Thu,  2 Jul 2026 14:03:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485BD4C042A;
+	Thu,  2 Jul 2026 14:03:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783000990; cv=none; b=uHjntAjsQm7MEnHr9uL4kSGjnFM+toJx2TuiFpjXnrTmuYiLh7NOJIVToXYO0nngB4MowRwZOZm0EMcePMDu5AVJbWWmAorn1MhAgn08XKK6qJzi+7vXmIq7qy/PlfGGM91OFTzNkpTVPmqmjrx0tOEabdBCZ88UTZj6BuH8T98=
+	t=1783001037; cv=none; b=EID7aP2xklmQSflqU4nQIt6c3B/5P3f+DCIWTjztm3Yk6Ohoe/YxVqIeLp0uVbiCiFW4bINgctBzT+4FYpKThKXFf44YFX2kiL7GEasjQKVRgBdonq/AXdJWgSmqgF40VtdxWgKTSDjGEIS0iRVZptGDLSunQcfelveUVkdc/DI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783000990; c=relaxed/simple;
-	bh=30xaTO0qBkoU72F9kA1fyon8ERv2F7RmZ2yq3lG5cpc=;
+	s=arc-20240116; t=1783001037; c=relaxed/simple;
+	bh=hXt1CeM/ShBle43ZJQf+gxS+Z4mfotr/AlFHiOAr3JY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=spu68WD/TTqILB2Z+WWaONNNTIJGiQa4r89XAKjfX4FOQlZm+22pKo6kPM12/9xOO0d+ivauBHY7frBSyyPf4UEHX+cvAxE1J6Te5KO8iQg7PUul6FrIZYuBNdSCg1idfXOF3zJi/x9NzCpqqaRD3/yQIoYuGDQYLoFrvbylz/Q=
+	 Content-Type:Content-Disposition:In-Reply-To; b=PXa+5HbLKv2t50gYGsB3kNjGxLFSM9L0G+dYzauBesmbbGAZ0RO23LcpZf/rtiToFy40yklJmSR9eccWkMAFYwP1C7skQBIsNK2BsDQNUNG+agQXOVjAFtAJ3ZeGz0LjMVfPiOzU3/aLBaXU+LJHr0RIZ6OINf+n3mYNhtP8M3Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 5938F68C4E; Thu,  2 Jul 2026 16:03:02 +0200 (CEST)
-Date: Thu, 2 Jul 2026 16:03:01 +0200
+	id 2313968BEB; Thu,  2 Jul 2026 16:03:53 +0200 (CEST)
+Date: Thu, 2 Jul 2026 16:03:52 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, willy@infradead.org,
-	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
+To: Keith Busch <kbusch@kernel.org>
+Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org, hch@lst.de,
+	djwong@kernel.org, willy@infradead.org, hsiangkao@linux.alibaba.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	"open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
 	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 02/18] xfs: convert iomap ops to ->iomap_next()
-Message-ID: <20260702140301.GB21339@lst.de>
-References: <20260701000949.1666714-1-joannelkoong@gmail.com> <20260701000949.1666714-3-joannelkoong@gmail.com>
+Subject: Re: [PATCH v2 10/18] block: convert iomap ops to ->iomap_next()
+Message-ID: <20260702140352.GC21339@lst.de>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com> <20260701000949.1666714-11-joannelkoong@gmail.com> <akRlehPHzy-F_105@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,31 +36,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260701000949.1666714-3-joannelkoong@gmail.com>
+In-Reply-To: <akRlehPHzy-F_105@kbusch-mbp>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-> -	 * The retry mechanism is based on the ->iomap_begin method returning
-> +	 * The retry mechanism is based on the ->iomap_next method returning
+On Tue, Jun 30, 2026 at 06:55:22PM -0600, Keith Busch wrote:
+> On Tue, Jun 30, 2026 at 05:09:25PM -0700, Joanne Koong wrote:
+> >  static const struct iomap_ops blkdev_iomap_ops = {
+> > -	.iomap_begin		= blkdev_iomap_begin,
+> > +	.iomap_next		= blkdev_iomap_next,
+> >  };
+> 
+> I think it's generally safe to use the same mailing list for the entire
+> series. There's no context here on what "iomap_next" is because I'm
+> subscribed only to linux-block. I found the rest here:
 
-Nit: Maybe the drop the "->" in preparation of the last patch that would
-make it slightly misleading with the ops struct removal?
+Yeah, without that some people always get screwed over reviewing the
+series.
 
-> +static int
-> +xfs_direct_write_iomap_next(
-> +	const struct iomap_iter *iter,
-> +	struct iomap		*iomap,
-> +	struct iomap		*srcmap)
-> +{
-> +	return iomap_process(iter, iomap, srcmap, xfs_direct_write_iomap_begin,
-> +			NULL);
-> +}
+> FWIW, everything looks good to me.
+> 
+> Reviewed-by: Keith Busch <kbusch@kernel.org>
 
-I wonder if we want a "simple" version of iomap_process that only takes
-a begin callback, as most current ops seems to be that way.  Then again
-between needing at least one longer function name it's probably not
-helping much with readability.  So not sure, just dropping it here if
-anyone has a good idea or storng opinion.
-
-Otherwise looks good:
+Same here:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
