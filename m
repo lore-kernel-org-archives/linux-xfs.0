@@ -1,107 +1,90 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1934426426
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 11:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1CF43B18A;
+	Thu,  2 Jul 2026 12:11:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782993376; cv=none; b=LYSTG+CIeHRki2c4cY2TSL0Vr5dCpWOrKVg48U8H6/+tmGZxYBt3lMwRVEy2+uX2JgDjv7+l/33/tOh3Y9gYq5ClEVOPdoyPltqVWAFp5OMQbtNQadVR+oamCAoR05y3ETeYPJcgGaQ2rRLbQx6L3a+lrQboefxFrD+kbGCKkk4=
+	t=1782994304; cv=none; b=fc1pje4ACXNb+EyrGMdPM13unj78w5NDwfz686puVGNH/CIL3hSPHny6CTRncFUrG05RwSRbDRIwZFxYtBthTN3tldK4YHSYX4Ug81GLZSisRFqD4EaRBULI6D0TmmGcYfCorZ1IWKy0gP/6x9VZ6GgW0PN17GnvJeRUmZeN4C8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782993376; c=relaxed/simple;
-	bh=dvhAhSLZ2tsJwBV710PDjKYwMvjbDEn72bRWuBWRgnI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UNJbfjDYB28b7M2qDoJPL/s6HUl6VBbE5O4dmq0/g8VocJ4dZzOoISFTJ6fSOD+c54f2huPjkjxTXqFy2oBYWtx8oJvdZTW7pGdotrFgcS1PeIlvIF3unpUmx05z1h7FQG0vAbRXuTW3qICv53Aknx0zG3Snaqgt6XdwgCryMQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dysi8SNb; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782994304; c=relaxed/simple;
+	bh=UZvI23KSvbAWv2SEA0PbymAV+PkCadSSiY6n7uV2F0k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=huRjOzirKuNmh9TeFLBECx5kUmPQwBcnwtIrYQrHNfRVOmpSFSXT9eMsmm+OV3Awc4pxW9XxVtuOuIJuvTH4xQHkdoAkjaySzhdMe25FhRgJCWu1PV2pl/yjmS25g/41Zn5XRYM6wA29yIsrtFXscNdOBBuujT2+nVrk/txMMR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=liuOZaG4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dysi8SNb"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c88d1d4543fso331387a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 04:56:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782993375; x=1783598175; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=lXg2Rhbb0t7mbi9M9oI8GRYpC2vTaKnZJqTrxUfA0gA=;
-        b=dysi8SNb17xuwLFBoUdtRk4P92jeHQ4Bv+2U+lTx4JQzHi3c7M9oBoCuKdf1mnYlTL
-         qDWRnpZ6fVWg+qmjUTF0PUVz5Jo9Fqa6fWpVpa4KDKlR0YauAuWCXaBJ0IMjKKSqZrcr
-         CQzYZvvZrDO5LdkdxfMBbi6CDhExGBLmLG84BDf9pqWM64+/Y0c+NN9A8sJs+h/xpJFL
-         LIBE8NWho/8ne7zKtOMfcf3fe5mszrU1zXo6tSsCiD/6karARIh4ZJ1NomAHF1ksT/Gt
-         q9nyJYBDif7O0+7aPP4eFWJvJUNYwho830PUelc5WPTBdYYngrbf36b1gpYW7MLFCQKP
-         CXJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782993375; x=1783598175;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lXg2Rhbb0t7mbi9M9oI8GRYpC2vTaKnZJqTrxUfA0gA=;
-        b=DdxKgZPCsR+AIJLDoNY5AUfIfim0DJ//hBVlHi0b2x6pGyTpkg0thtZSDTp2bX9STZ
-         Qcel/15Wg5EFWJnFi4hBOaNYXOR2vi84E2EoO5oBsvZKzvSyRYVK6HITN7pMfwtwX87f
-         +3HFjsXtjW3DUxxTJfnHLGcMmp1ONXrBy7MET/T4/6HPEps0qKVCdOBFNm4rd92rLO1u
-         +es8wNZwlfygScVSkMV+nIfLVkSirppkigvAx6CfvRzp1MFsU/gKbdoXr9kV1QrjUpcU
-         dsqXtf6/tgx25JCsMgUciZMZeVFXcBHBLUXMln+CfojvVbtTBfG7suDwvheFfdHoDHab
-         taUg==
-X-Forwarded-Encrypted: i=1; AHgh+RpPHiXUT2YkvR2ZSe4KAFOntJWyYvyXW7J4ktkxDXgzKAvlKmcP/TO1TWTgwOkJV9HDPeP2+MdtwAU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yws+gdT4HHpdG5ESB7xZvgqS94qmvWftvgiqUl0dp/7sxrzLRW8
-	j8HoeAPjYqQP67Zgr6l/JqHG9XbCu2aCWqZ3zq/VPVabfGu0N8d3xgVb
-X-Gm-Gg: AfdE7cm11yHndYk2QCuPNxXFYEtZtHIvzEyCdl0rDJu+vyhajpKmZ5dymTHdpUmCJYA
-	KN7IJv8jQ0rZJTsmvxT0RhyzQlhNVuFO91IVeakHrItYjPzCi4kQYaD8BLcZKYpvXpvaUFsq5X2
-	skzv9ok4sInyWvupjemh2lEJG+/MRZIj1EqJmT9R4uBtrGJDm+S8LklzTnL5Ink5pv4VPDcPbj6
-	vazHhe6DL50Y52e2ol/S1N7FTaPh4YPTexBBmJhDYjVaboOvt+vQj2Kzc/IBLrYTobKhBDFW6i2
-	VgzG9vvoQuzQ3wV5REiHqEhC464simkXjcQqBWaTr9xCcyOF8SGBgRpA8V6VMK08lPVoBsYKwDC
-	iNASgthbvBODeyj178cTg9TdUBrCfZrJUrWzWf5RmLL8QfZ5CkPgODh4oWjnpKUZ4qc9GbEdWVg
-	9hhmupoROxV8wiqloXWaZ4bv2L
-X-Received: by 2002:a17:90b:5645:b0:37e:1620:dabc with SMTP id 98e67ed59e1d1-38066e2cdbbmr8785341a91.0.1782993374676;
-        Thu, 02 Jul 2026 04:56:14 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30f0bbd2362sm9417796eec.20.2026.07.02.04.56.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Jul 2026 04:56:13 -0700 (PDT)
-From: alexjlzheng@gmail.com
-X-Google-Original-From: alexjlzheng@tencent.com
-To: cem@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [PATCH] xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
-Date: Thu,  2 Jul 2026 19:56:11 +0800
-Message-ID: <20260702115611.3605810-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="liuOZaG4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFC391F000E9;
+	Thu,  2 Jul 2026 12:11:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782994303;
+	bh=nCxAISgEcjC49iBckaad9g67RdR2PRAP40w8i5UPhjM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=liuOZaG4mLRU+xtD0qhUoqKBUwt3mjLTJrhBV4a4jXp9CSLfTHhN/GY2DFEpRiVX/
+	 kTCjsO7srNQVMcDMp0rZd3ATpW0OBTG4Umbsm68jGyXVIKG/iKU1qkoECfq6K/yHyX
+	 QiQpBUf4Hr5C9RNNXlLR5AiZOUOYU5LKqo2EtR4l+za6pkAfg6FOpLiqdUbwcfBe2d
+	 EzdICmIncIgCEjL+yTVx8PADwRqBPgdGYxhbMRa/LCUlQryPpjIMnioXFpSeKFpMZE
+	 DxrvCpTzN2HIO7w+7de666OLqEJPzGNI8tuMuKw/2lRdlxvWsMTGq2YlZuAWdgbtiD
+	 vUDVyVZ/NDQXA==
+Date: Thu, 2 Jul 2026 14:11:37 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
+Subject: Re: [PATCH v3 1/5] xfs: fix capability check in xfs
+Message-ID: <akZVYNolu7tZFoJL@nidhogg.toxiclabs.cc>
+References: <20260702093324.127450-1-cem@kernel.org>
+ <20260702093324.127450-3-cem@kernel.org>
+ <20260702103052.GA6670@lst.de>
+ <akZITB_FDP1nl2_S@nidhogg.toxiclabs.cc>
+ <20260702112438.GA10565@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260702112438.GA10565@lst.de>
 
-From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Thu, Jul 02, 2026 at 01:24:38PM +0200, Christoph Hellwig wrote:
+> On Thu, Jul 02, 2026 at 01:17:29PM +0200, Carlos Maiolino wrote:
+> > On Thu, Jul 02, 2026 at 12:30:52PM +0200, Christoph Hellwig wrote:
+> > > On Thu, Jul 02, 2026 at 11:33:17AM +0200, cem@kernel.org wrote:
+> > > > index 6339f4956ecb..205fe2dae732 100644
+> > > > --- a/fs/xfs/xfs_iops.c
+> > > > +++ b/fs/xfs/xfs_iops.c
+> > > > @@ -835,7 +835,8 @@ xfs_setattr_nonsize(
+> > > >  	}
+> > > >  
+> > > >  	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+> > > > -			has_capability_noaudit(current, CAP_FOWNER), &tp);
+> > > > +					ns_capable_noaudit(&init_user_ns, CAP_FOWNER),
+> > > 
+> > 
+> > Thanks, I tried to keep the parameters aligned, but I can bring it one
+> > tab back. Do you mind if I fix it at commit time if -unlikely- no other
+> > change is required?
+> > 
+> > This is what it will look like:
+> > 
+> >         error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+> > -                       has_capability_noaudit(current, CAP_FOWNER), &tp);
+> > +                               ns_capable_noaudit(&init_user_ns, CAP_FOWNER),
+> > +                               &tp);
+> 
+> This still adds an extra tab.  Like much (but not all) of the kernel
+> we use two-tabs by default, which is also in the other two hinks.  This
+> now adds a third.  Just keep it as it was:
+> 
+> 	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+> 			ns_capable_noaudit(&init_user_ns, CAP_FOWNER), &tp);
+> 
+> 
 
-The push_seq argument to xlog_cil_push_now() carries a CIL checkpoint
-sequence number, not a log sequence number (LSN).
-
-Change the parameter type from xfs_lsn_t to xfs_csn_t to correctly
-reflect its semantics and match the surrounding types. Both types are
-int64_t under the hood, so this is a type-annotation fix with no
-behavioural change.
-
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
----
- fs/xfs/xfs_log_cil.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index edc368938f30..639f875a8fb2 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1710,7 +1710,7 @@ xlog_cil_push_background(
- static void
- xlog_cil_push_now(
- 	struct xlog	*log,
--	xfs_lsn_t	push_seq,
-+	xfs_csn_t	push_seq,
- 	bool		async)
- {
- 	struct xfs_cil	*cil = log->l_cilp;
--- 
-2.43.7
+Ok, will do!
 
