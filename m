@@ -1,37 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465D047D941;
-	Thu,  2 Jul 2026 09:35:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9114747F2FB;
+	Thu,  2 Jul 2026 09:36:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782984935; cv=none; b=B/yx37svy/F/hQrmmli8xMU8ee2iCSZtEqqsFjWkw+YlHlLhJpYPrbLSuvrm76p7vAtmxNiFAwefN5xKVq7Tx2hLUhrsQZEeya93rh9aQvdJIeXBLfsI8hLR4VN0BbVd5ZnaXP79nB3C2FF6ASbG6w5Tp3ch1rsxPGWtOnYHtCA=
+	t=1782984995; cv=none; b=kzyHZUV2W/JrP7tX4MxLLuqiQkn3PcbHhr5pLT9x6NoHiZ0K1J6+9UPxvcs86tOTHz/dOwYmsxzY9s5Ihkm51jSf4vX18+US/lW0YqsGn8gIy6ZvgY6NeOhnOCUgYYcUAproYdEfy5AGh8K0CZS7nKhO7V/eqVhXGlGwNiLzVdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782984935; c=relaxed/simple;
-	bh=uXLZVHHy3UWwhbhbhkVd97wUO4lIggrF2vt2F4/41s0=;
+	s=arc-20240116; t=1782984995; c=relaxed/simple;
+	bh=Hn1k/D1ClXZsM/kgBtPcAtcOgTvg6izGNl2wimsfMkU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E/e5Ac1P3xJO4kpyC5WeGTPT2FSAd7tzgQORk2OoxAMaaQ6UHhz3/1R8ZVNen9aUzpqLuOgsi24VZzFkoBCMFeB4KPRNM8W4Ge0+FowbPgv4VE5K7nHusppKj54mwkqSoF/YKOKpbL5+jgDv/j5opJoObOAFChV7KKcz8gFyJds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PCvkc2cs; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=sf65tBzuBQKv9LQ0aXSDFVN7jBAPqCWHSmL3sphnqJoKxqvRfket4QE70PONt7Tw6Fxg60ycJdyZnVOpyBUjXSpj/Hm7dbrZ9nGY9yevHvD3qgjFmLWYZbDRsVhK6kTWTh7i65sEV1/iAUtLTVQb2vd3RQhofvehXimsqyd5DN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dN+SAJnl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PCvkc2cs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 569791F000E9;
-	Thu,  2 Jul 2026 09:35:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dN+SAJnl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7A931F000E9;
+	Thu,  2 Jul 2026 09:36:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782984934;
-	bh=k2bwKzXdeEiP3AG887oTuV7RQ360zS1KdgoW8z2oFfs=;
+	s=k20260515; t=1782984994;
+	bh=NvufOs32I4haHGafE2VQL3eyYoeYK0iSWCEBHiuHF+8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=PCvkc2csxy/C2sQOhsOZVh+OZGuFJPhIB3M3bO2FV95273JN8DqrEdnr8zznPiEck
-	 sMP1QTiy60q4ZJRNasI0Tw26ISbfObE+tbaX/5YBNmLJGBvipHPlGDgodvDHNRXuGO
-	 PH4jLEBfgZIbw1I7je0bIi8icaeimP5YH+EWa/G5RApkk5UeXPzdRkkJIzze+fuu93
-	 gf/s0vk7x1LfJIKik4BNKFaFUjUGkFnF0+evuP9JDqJwpRKZXLc/dUb7g4LoLwSOGP
-	 u5y4nhFTw86NJxvwY7mkqfwnICMS8RCbd0Kz3QwSC/Ht4U0//airv902/FBRJ3OR3M
-	 9t7uEEZxt9x3Q==
+	b=dN+SAJnl6i61MbeGVC12bXTVR0Yd61lYyJIpGDGoy6y+r6r0XcLUnvD/OhItpNoFf
+	 lULtGRtI09dz2Wu+BWijiJMmXbpBFJIdTj0xsf6K/uOWx3RAhVZFp6xU+AibrIq1rE
+	 Ungy5XXARG1HaiYfT9KCFY5TpSAm4V1r0LVibDYUQkbdxwGTZC9WUho7JUXlBYDyuv
+	 wlOkM6GhzTTtPjpTszmEuyQC/mISEP62YwFB28whO07l/IFssKycsIgaTd0m0rbvrB
+	 mXgqT6Yrz67G38smYlnMiwgppc1y4r8CBiiNf3Kho2zhmWVYaDA1ezgDQa0o9r4D4d
+	 3cug001AxW9Qw==
 From: cem@kernel.org
 To: cem@kernel.org
-Cc: stable@vger.kernel.org,
-	Jan Kara <jack@suse.cz>,
-	Christoph Hellwig <hch@lst.de>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
+Cc: Jan Kara <jack@suse.cz>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
 	Eric Sandeen <sandeen@redhat.com>,
@@ -39,10 +36,11 @@ Cc: stable@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-security-module@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	"Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
-Subject: [PATCH v3 1/5] xfs: fix capability check in xfs
-Date: Thu,  2 Jul 2026 11:33:17 +0200
-Message-ID: <20260702093324.127450-3-cem@kernel.org>
+	Christoph Hellwig <hch@lst.de>,
+	Serge Hallyn <serge@hallyn.com>
+Subject: [PATCH v3 2/5] capability: Add new capable_noaudit
+Date: Thu,  2 Jul 2026 11:33:19 +0200
+Message-ID: <20260702093324.127450-5-cem@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260702093324.127450-1-cem@kernel.org>
 References: <20260702093324.127450-1-cem@kernel.org>
@@ -56,34 +54,16 @@ Content-Transfer-Encoding: 8bit
 
 From: Carlos Maiolino <cem@kernel.org>
 
-An user reported a bug where he managed to evade group's quota
-by changing a file's gid to a different group id the same user
-belonged to, even though quotas were enforced on both gids and the
-file's size was big enough to exceed the quota's hardlimit.
+In some situations (quota enforcement bypass in this case) we'd like to
+check for a specific capability without triggering spurious audit
+messages from security modules like selinux.
 
-Commit eba0549bc7d1 replaced a capable() call by a
-has_capability_noaudit() to prevent unnecessary selinux audit messages.
-Turns out that both calls have slightly different semantics even though
-their documentation seems similar. Where in a nutshell:
+Add a new helper so we don't need to use ns_capable_noaudit() directly.
 
-capable() - Tests the task's effective credentials
-has_ns_capability_noaudit() - Tests the task's real credentials
+V3: remove the extern declaration
 
-This most of the time has no practical difference but in some cases like
-changing attrs (specifically group id in this case) through a NFS client
-this will allow the quota code to use XFS_QMOPT_FORCE_RES, effectively
-bypassing quota accounting checks.
-
-Using instead ns_capable_noaudit() should fix this issue and prevent
-selinux audit messages.
-
-This also fix the remaining calls to has_capability_noaudit()
-
-Fixes: eba0549bc7d1 ("xfs: don't generate selinux audit messages for capability testing")
-Cc: <stable@vger.kernel.org> # v5.18
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Serge E. Hallyn <serge@hallyn.com>
 Cc: Darrick J. Wong <djwong@kernel.org>
 Cc: Dave Chinner <david@fromorbit.com>
 Cc: Eric Sandeen <sandeen@redhat.com>
@@ -92,55 +72,64 @@ Cc: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 Cc: linux-security-module@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Reported-by: Dr. Thomas Orgis <thomas.orgis@uni-hamburg.de>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Serge Hallyn <serge@hallyn.com>
 ---
- fs/xfs/xfs_fsmap.c | 2 +-
- fs/xfs/xfs_ioctl.c | 2 +-
- fs/xfs/xfs_iops.c  | 3 ++-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+ include/linux/capability.h |  5 +++++
+ kernel/capability.c        | 17 +++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index b6a3bc9f143c..7c79fbe0a74c 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -1175,7 +1175,7 @@ xfs_getfsmap(
- 		return -EINVAL;
+diff --git a/include/linux/capability.h b/include/linux/capability.h
+index 37db92b3d6f8..f8532d92fcad 100644
+--- a/include/linux/capability.h
++++ b/include/linux/capability.h
+@@ -145,6 +145,7 @@ extern bool has_capability_noaudit(struct task_struct *t, int cap);
+ extern bool has_ns_capability_noaudit(struct task_struct *t,
+ 				      struct user_namespace *ns, int cap);
+ extern bool capable(int cap);
++bool capable_noaudit(int cap);
+ extern bool ns_capable(struct user_namespace *ns, int cap);
+ extern bool ns_capable_noaudit(struct user_namespace *ns, int cap);
+ extern bool ns_capable_setid(struct user_namespace *ns, int cap);
+@@ -167,6 +168,10 @@ static inline bool capable(int cap)
+ {
+ 	return true;
+ }
++static inline bool capable_noaudit(int cap)
++{
++	return true;
++}
+ static inline bool ns_capable(struct user_namespace *ns, int cap)
+ {
+ 	return true;
+diff --git a/kernel/capability.c b/kernel/capability.c
+index 829f49ae07b9..2c2d1e8300bd 100644
+--- a/kernel/capability.c
++++ b/kernel/capability.c
+@@ -416,6 +416,23 @@ bool capable(int cap)
+ 	return ns_capable(&init_user_ns, cap);
+ }
+ EXPORT_SYMBOL(capable);
++
++/**
++ * capable_noaudit - Determine if the current task has a superior
++ * capability in effect (unaudited).
++ * @cap: The capability to be tested for
++ *
++ * This is the same as capable(), except it uses CAP_OPT_NOAUDIT as to prevent
++ * issuing spurious audit messages.
++ *
++ * This sets PF_SUPERPRIV on the task if the capability is available on the
++ * assumption that it's about to be used.
++ */
++bool capable_noaudit(int cap)
++{
++	return ns_capable_noaudit(&init_user_ns, cap);
++}
++EXPORT_SYMBOL(capable_noaudit);
+ #endif /* CONFIG_MULTIUSER */
  
- 	use_rmap = xfs_has_rmapbt(mp) &&
--		   has_capability_noaudit(current, CAP_SYS_ADMIN);
-+		   ns_capable_noaudit(&init_user_ns, CAP_SYS_ADMIN);
- 	head->fmh_entries = 0;
- 
- 	/* Set up our device handlers. */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1b53701bebea..1a8af827dde1 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -647,7 +647,7 @@ xfs_ioctl_setattr_get_trans(
- 		goto out_error;
- 
- 	error = xfs_trans_alloc_ichange(ip, NULL, NULL, pdqp,
--			has_capability_noaudit(current, CAP_FOWNER), &tp);
-+			ns_capable_noaudit(&init_user_ns, CAP_FOWNER), &tp);
- 	if (error)
- 		goto out_error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 6339f4956ecb..205fe2dae732 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -835,7 +835,8 @@ xfs_setattr_nonsize(
- 	}
- 
- 	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
--			has_capability_noaudit(current, CAP_FOWNER), &tp);
-+					ns_capable_noaudit(&init_user_ns, CAP_FOWNER),
-+					&tp);
- 	if (error)
- 		goto out_dqrele;
- 
+ /**
 -- 
 2.54.0
 
