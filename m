@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0564282F15;
-	Thu,  2 Jul 2026 03:55:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3949331355D;
+	Thu,  2 Jul 2026 03:58:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782964525; cv=none; b=Xx7b4ObrWSHW/oAagJdMigZHVHfmJUPFnLC0C/E77jeXvFOmi8ngq4lzt99wq00/r+ueOXdSS/FV3wt+P+tlroAFe+kJsZfF81t4uXIUEOkPUOXkBoIIbxVgczI+zpmXDWKnVohV0TKqNQohE3p7XH1bCtTnDiKC/hm6UIqTCOQ=
+	t=1782964681; cv=none; b=eUJHnHw+3oUCKyg2zaA6YkVuAWesUaZ/O5BvSHv5iddWZeg3qJMbVwnhFNGrEBJVwfM5mQ4u8OiRbJqVU5u4nbIuwH6y8PEwJUsprsnfKDAI7hDVaKcCkzyalS+xXH2f2RcB3zUWuOobQNzApJ+W/yI111geyRWnJYq0f/0iO3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782964525; c=relaxed/simple;
-	bh=ucNR4M5ZbTnvNLNhq1WwbHsaP8ygeHPKxx/JfYt13M8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=oGxxmn2H+t6VIKJ3QCkFt7wpl82x4tCD12QfZshBaw+UramzT62ZuEx/eOHEax/XnMGKkrUwc9ONmOAMiNs4MYUi2FsPYRpGQnSXSyPCbBh+wJRzEiW50RhAEqYm34pVYBI1hM+AHXme/eRHlagctNtrwb8YdoQx0kUUd1HFggk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A/YzlJqR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782964681; c=relaxed/simple;
+	bh=WhzWlFnu6IBC9eYJNClKpeNc/2A052zBvtJVlsgemYs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XhC305VjMiM07O3UDFRzLZYsYNJKXzqfmfAn1LTZh55zryqiBGK2XlPDRuAE0CyfcMGOrcrOLHq5pEjmMvyTakKE52ZNBGAWEMTYqX4AITZ0Q4zZ7dGZlIeDLKoUZvYsxyLJZoCXsqAcrBBwIfAY3Jyd2uolgvupRHA7VAC+B4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MheCOwVz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A/YzlJqR"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 79F131F000E9;
-	Thu,  2 Jul 2026 03:55:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MheCOwVz"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F2FA41F000E9;
+	Thu,  2 Jul 2026 03:57:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782964524;
-	bh=sX+WhOJ6FojWDnDiRQc70BjwQdY8SsB2D/aANT8Ogmc=;
-	h=Date:From:To:Cc:Subject;
-	b=A/YzlJqRcfptC5WbRVdztZGNF+Oo0+s38SexiBjjCBy0wl8RO85ViqS2NXM3AcjIs
-	 OB5vcD6BdEpHaUVtVq+eLEIS8gn7Yq2G1dadEX7PYU51qBwevzOcMem3QF17/LTQHy
-	 S2xoTimHhINQ5lWmPcsHh3DEOmsSDIIhtEJPTI7Glfp38HzBISvUZesKIsAI8qB4Sk
-	 Zey4m2edepkaAkd4o2Rqo8jB54mw+64kUH29bfBX2K1Y6V971m3VjOURIWiG3ScRIe
-	 DcLM3KjcftCeIM8Xy0+mfERxGjVfWUr8cFjc1jXX3Z+KCBHMoDGZUtRjA3SLlozaaB
-	 oV5kTHwxFWtKw==
-Date: Wed, 1 Jul 2026 20:55:23 -0700
+	s=k20260515; t=1782964680;
+	bh=36RtH3OPZV3uXCMbtG148eWFhq5Gh1ziqBmvF+CPq/s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=MheCOwVzIk/+VZSlHTP4j9DjUWDSlFAL/P+5RqGTKRnBzwyeDyThlQzpUX65KSf+p
+	 gCODxhjvJfq1L3BlwqFR7kR7pCu54sjjmkFLUK1d5UMN5iMzX/uzzv25X0YzDkslnE
+	 2ewEZ6yPaApCPbAtFA7h3Qxet3/jBLfYpeFox6PK9iAGax6bnh5L/tSgdwu5ptmU4u
+	 GIJWaNo8ZQTTk/evTC58H4mC8aODr9o17jRtySeIWUCnG3Y8m1VduYabYuvoB73dOZ
+	 suJjQVdaZrsr2jUfHuTMc+lfmsaU7fG82r3BzceEf9h5oaQUWb5DFxYdy/7b4szSxw
+	 PW0ymCjbVMK5Q==
+Date: Wed, 1 Jul 2026 20:57:59 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs/656: rearrange directio pread/pwrite for zoned
- filesystems
-Message-ID: <20260702035523.GA9381@frogsfrogsfrogs>
+Subject: [PATCH 2/2] xfs/65[56]: don't unset SCRATCH_RTDEV here
+Message-ID: <20260702035759.GB9381@frogsfrogsfrogs>
+References: <20260702035523.GA9381@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,65 +41,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260702035523.GA9381@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On zoned filesystems, a write failure shuts down the filesystem, which
-makes this test fail with:
-
- --- /run/fstests/bin/tests/xfs/656.out	2026-03-13 16:19:08.152939212 -0700
- +++ /run/fstests/logs/xfs/656.out.bad	2026-06-30 18:16:43.847849604 -0700
- @@ -1,10 +1,9 @@
-  QA output created by 656
-  Format and mount
-  pwrite: Input/output error
- -pread: Input/output error
- +stat: Input/output error
-  pread: Input/output error
-  fsync: Input/output error
-  VICTIM pos NUM len NUM: directio_write: Input/output error
- -VICTIM pos NUM len NUM: directio_read: Input/output error
-  VICTIM pos NUM len NUM: buffered_read: Input/output error
-  VICTIM pos NUM len NUM: buffered_write: Input/output error
-
-Reorder the directio pread and pwrite to avoid this unnecessary failure.
-Note that we cycle the mount between the direct and buffered io tests,
-which is why we only need to fix the directio test.
+Both of these tests claim that they have to unset SCRATCH_RTDEV to avoid
+formatting failures due to the rt bitmap consuming all the space in the
+"small" data device.  However, the format doesn't constrain the size of
+the data device, so the justification doesn't apply.  Remove the whole
+thing.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/656     |    2 +-
- tests/xfs/656.out |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ tests/xfs/655 |    4 ----
+ tests/xfs/656 |    4 ----
+ 2 files changed, 8 deletions(-)
 
+diff --git a/tests/xfs/655 b/tests/xfs/655
+index a4162d70b321f9..9d09cc00053138 100755
+--- a/tests/xfs/655
++++ b/tests/xfs/655
+@@ -24,10 +24,6 @@ _require_scratch_nocheck
+ _require_scratch_xfs_crc # can't detect minor corruption w/o crc
+ _require_xfs_io_command healthmon
+ 
+-# Disable the scratch rt device to avoid test failures relating to the rt
+-# bitmap consuming all the free space in our small data device.
+-unset SCRATCH_RTDEV
+-
+ echo "Format and mount"
+ _scratch_mkfs -d agcount=1 | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+ . $tmp.mkfs
 diff --git a/tests/xfs/656 b/tests/xfs/656
-index 3a867692502134..df91bbdacea222 100755
+index df91bbdacea222..5d2d2e55c3d21c 100755
 --- a/tests/xfs/656
 +++ b/tests/xfs/656
-@@ -65,8 +65,8 @@ $XFS_IO_PROG -c 'healthmon -c -v' $SCRATCH_MNT >> $tmp.healthmon &
- healer_pid=$!
- sleep 1	# wait for program to start up
- _dmerror_load_error_table
--$XFS_IO_PROG -d -c 'pwrite -b 256k 12k 16k' $testfile >> $seqres.full
- $XFS_IO_PROG -d -c 'pread -b 256k 10g 16k' $testfile >> $seqres.full
-+$XFS_IO_PROG -d -c 'pwrite -b 256k 12k 16k' $testfile >> $seqres.full
- _dmerror_load_working_table
+@@ -40,10 +40,6 @@ filter_healer_errors() {
+ 		uniq
+ }
  
- _dmerror_unmount
-diff --git a/tests/xfs/656.out b/tests/xfs/656.out
-index 83b2f5948a772b..4d6633060acdd0 100644
---- a/tests/xfs/656.out
-+++ b/tests/xfs/656.out
-@@ -1,10 +1,10 @@
- QA output created by 656
- Format and mount
-+pread: Input/output error
- pwrite: Input/output error
- pread: Input/output error
--pread: Input/output error
- fsync: Input/output error
--VICTIM pos NUM len NUM: directio_write: Input/output error
- VICTIM pos NUM len NUM: directio_read: Input/output error
-+VICTIM pos NUM len NUM: directio_write: Input/output error
- VICTIM pos NUM len NUM: buffered_read: Input/output error
- VICTIM pos NUM len NUM: buffered_write: Input/output error
+-# Disable the scratch rt device to avoid test failures relating to the rt
+-# bitmap consuming all the free space in our small data device.
+-unset SCRATCH_RTDEV
+-
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+ _dmerror_init no_log
