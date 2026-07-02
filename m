@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B124734CFDD
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 20:00:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E0173314C4
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 20:00:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783022425; cv=none; b=cY7r/oVMCTrQGwhugMu4rRba47liMLjPRo3O2ucHzL6R482cLibrsUNGp56Qol8OGSLPcaBsKFEmOVz6jPtW32INjcXoBOZ69/OdDrLm+uhhNVpfRAOw3eFjEjraRLN5Gm6yQcJ1r/xeZogw54+rWmNFedRFxXIYCkrg4NwQt/0=
+	t=1783022440; cv=none; b=MwYzVWM3y5jQqMBfs05nxB5QjQ7178WrTWad7iVjpBwj2za3jOjhu4kp8AE42sWLcgjMLbFkbpMUw0HPAKPds5FyO3axnsSeC0JvEO9m6ONeGGoYARbQDmsR/GL53hln73O/6tbiYQY1z5yhfZvNAmIYPuApRUB+1QxYmM1gE40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783022425; c=relaxed/simple;
-	bh=PdsoGcP94LxT9ac6aBo5El/c3gsu4cJdxUb55s0HNSs=;
+	s=arc-20240116; t=1783022440; c=relaxed/simple;
+	bh=q/EOS/0Ll7rY8q7nRq+vE4I6a9lfDmdez52yOB8thJw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b03aGjo61dr+vBh8HMDG+I3eDkfFJVdkCpExDehzQA9tFPgLZVVCN2qUXTWhWj5/2aV0fkzOevgt4ud7lsY4GePRyPoyR3DeXyND4jkBI1sCibsGHFcOzqiUhPylJ+7GqcSTN5A30NuzM11uB8uy46IXZdSoslCr36/37u6jNJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S5sAFS5g; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YB4j3Z/my/zYPf+SDBREIEkZ57FtFdan0EbIejAcV6hN7q+/xf+zNHGJ88irvrKJtR87I5C06KEHDNG/DHTGVGp5dLqiiCOUv63ccsNIPgbImratYRS0RdzyJ3KMSEVmeVEgOYmytR2Ir9bFuK9UZCwW8OkVcd9oiEsYOV0E5Dc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K66FntWm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S5sAFS5g"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A988D1F000E9;
-	Thu,  2 Jul 2026 20:00:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K66FntWm"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 722451F000E9;
+	Thu,  2 Jul 2026 20:00:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783022421;
-	bh=3mXBfEII2E2xeSXoaDjwyQ2DfFrRUmiP8hwK4s4ppOs=;
+	s=k20260515; t=1783022437;
+	bh=2uU6uUcXBQ9V3M+Oo05s7z23rXqDf1hrLLVFpx92ibg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=S5sAFS5gGsKjaNUyDxP4G2UDmgrGnY41w02NJv1O2WwuY3Jhk9xlk8GKgCThjOYQZ
-	 0IgRjMmQjlKorS/COjXGcRZXlFbZRSgcYthD5kVJhoVa+vH+Jtb97hQI5RQxwtzWeh
-	 dSttvxQMShgAraN2hiGE+4tddjeByzTuO7/xmB3l8xjhUiJl5grOVTSmMZKQfkpweD
-	 wtVnNhOXFHP795YagIOaBBrMpPSiFIDOYQYKhuxRWcsZCBz5Yr7fBb8L2x9TI5Vacd
-	 Lbpr6JAPWdLwTrWyKZG4JPvTEnqj1uDsdb5788Onqt/76m1jtF8Fy1AiJtJQZ9PPoA
-	 FQ5YP46Gms7Yg==
-Date: Thu, 02 Jul 2026 13:00:21 -0700
-Subject: [PATCH 5/5] xfs: zero directory data block padding on write
- verification
+	b=K66FntWmu8SXPuCeggF9wFJNw8aN5FOrYTvTsGRyMSx+7VmiCjcE0oqGb6AWYY+3G
+	 ky0xCe7Ko+eLWEqhrGJjKe65D1F0qdOgWYb8tHdZ8MHJp9ygVB/EZseUAOb6y6WQMM
+	 +kolyxWYJhP/3fAnZOfay3JG+PPkGNN9Nq3+jNF/Sv7LsInvEa5ez8vbzFHXPWN+rC
+	 ljkXBwbctrgEa991xdsg8mgdn33oZaN+bP4onlffMxPvptP8oII8VnKRuohGM7xfbe
+	 I60whij947Q3tp6c9ps2fIlHAddnj2bVEFi8jOgWiDPYPElWmjFCaEUdDHrXSWYFvg
+	 qMit4XLTj7Uqw==
+Date: Thu, 02 Jul 2026 13:00:37 -0700
+Subject: [PATCH 01/18] libxfs: convert diff_items helpers to cmp_int
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, dgc@kernel.org, ytohnuki@amazon.com,
- linux-xfs@vger.kernel.org
-Message-ID: <178302225998.845293.2646519648540192911.stgit@frogsfrogsfrogs>
-In-Reply-To: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
-References: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <178302226322.845537.14974268104031687429.stgit@frogsfrogsfrogs>
+In-Reply-To: <178302226213.845537.4378925114415707650.stgit@frogsfrogsfrogs>
+References: <178302226213.845537.4378925114415707650.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,52 +43,55 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Yuto Ohnuki <ytohnuki@amazon.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 8fbb1877dfa5e26bda1baf8cc6abd3f805098486
+Convert each log item type's ->diff_items implementation to use cmp_int
+like we did for the kernel a while ago.
 
-Old kernels did not zero the pad field in xfs_dir3_data_hdr when
-initializing directory data blocks, so existing filesystems may have
-non-zero padding on disk.
-
-Zero the pad field in xfs_dir3_data_write_verify alongside the existing
-LSN and checksum updates. The pad field is pure alignment padding with
-no runtime meaning, so zeroing it during write verification is safe and
-has no additional I/O cost. This lets filesystems gradually self-heal
-stale non-zero padding as directories are modified, without requiring an
-explicit repair pass.
-
-Suggested-by: Dave Chinner <dgc@kernel.org>
-Signed-off-by: Yuto Ohnuki <ytohnuki@amazon.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/xfs_dir2_data.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ libxfs/defer_item.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index fb5e4b021217a5..93540a7549ed2e 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -379,6 +379,7 @@ xfs_dir3_data_write_verify(
- 	struct xfs_mount	*mp = bp->b_mount;
- 	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
-+	struct xfs_dir3_data_hdr *datahdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 4fc2c74a548c91..5d72ee0706f0b7 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -50,7 +50,7 @@ xfs_extent_free_diff_items(
+ 	struct xfs_extent_free_item	*ra = xefi_entry(a);
+ 	struct xfs_extent_free_item	*rb = xefi_entry(b);
  
- 	fa = xfs_dir3_data_verify(bp);
-@@ -393,6 +394,11 @@ xfs_dir3_data_write_verify(
- 	if (bip)
- 		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
- 
-+	/*
-+	 * Zero padding that may be stale from old kernels.
-+	 */
-+	datahdr3->pad = 0;
-+
- 	xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
+-	return ra->xefi_group->xg_gno - rb->xefi_group->xg_gno;
++	return cmp_int(ra->xefi_group->xg_gno, rb->xefi_group->xg_gno);
  }
  
+ /* Get an EFI. */
+@@ -252,7 +252,7 @@ xfs_rmap_update_diff_items(
+ 	struct xfs_rmap_intent		*ra = ri_entry(a);
+ 	struct xfs_rmap_intent		*rb = ri_entry(b);
+ 
+-	return ra->ri_group->xg_gno - rb->ri_group->xg_gno;
++	return cmp_int(ra->ri_group->xg_gno, rb->ri_group->xg_gno);
+ }
+ 
+ /* Get an RUI. */
+@@ -404,7 +404,7 @@ xfs_refcount_update_diff_items(
+ 	struct xfs_refcount_intent	*ra = ci_entry(a);
+ 	struct xfs_refcount_intent	*rb = ci_entry(b);
+ 
+-	return ra->ri_group->xg_gno - rb->ri_group->xg_gno;
++	return cmp_int(ra->ri_group->xg_gno, rb->ri_group->xg_gno);
+ }
+ 
+ /* Get an CUI. */
+@@ -563,7 +563,7 @@ xfs_bmap_update_diff_items(
+ 	struct xfs_bmap_intent		*ba = bi_entry(a);
+ 	struct xfs_bmap_intent		*bb = bi_entry(b);
+ 
+-	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
++	return cmp_int(ba->bi_owner->i_ino, bb->bi_owner->i_ino);
+ }
+ 
+ /* Get an BUI. */
 
