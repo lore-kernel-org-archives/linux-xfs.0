@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 117123859E6
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:41:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C142B357CE9
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:41:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783021300; cv=none; b=h1b72uzNYfuRxJ6ZJPBW8QUcKMVTvh/Va4nky2qVDT13JHj38NoRZZiifBybWsV6W0CBP4iDIPFQeIivIoOS7H91raaVY+1vJpm9l266Y7U9hYRPLu28Wi67qbRM49UUQSKjMSMFIiHuXYQ5u7H/jlrchwuSvmnHfOD848yhnG8=
+	t=1783021315; cv=none; b=L6qEcC5SdzPZAXQ9UB0F/qfzZ7xCQ1BZbtbDwvfeaqkHtXkIXy5W/F4I4OiGMIBoifcumEqHqzzUe377e3J5JZPWZT0/oF/Bvdzne1AOlRWRt3y/Rb4W8qrkNCzdH5mzH671DlzYQRqRxvSEG7bu4L7Vu6GMbTSEHBWjF68vPYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783021300; c=relaxed/simple;
-	bh=nNG2fdrAbP5M7d461wvcrhikhZXcge9fk+8jev+EyhM=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=X80E9gmS+x6DHPKf3oYuw4BFggLAvfDxySTwngFpMH3zRu7SFhJimVwH0w9XtvtPKR1TB9CRIVvNViEcdw5PUvOLu3jF+vhGeUpueigXXKgBTqMjg93gfDiMTGOtG18+Rc7B74DeE4uHIXLPUsjrYUE1DGRq6CFnoPjiV4dMXpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BhqN7jel; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783021315; c=relaxed/simple;
+	bh=qRM3IFIzouav0ebSumOXBDb8jZOifPj6S6/fwgPzhOU=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=s5x+w+kHFzBaX3Vd+DEkEDZ5zhRdV32d02dCy/DknhGaNzcoGZ6+JSdWSUH28RGS09n8i3S3QrzyXCn6aY5GCXlCLEi+jg67qqe//09u5rBduMtQpjyh9lhPZ5EHHN856DBhh/O1X39UYrWuhbFMEtnvWweD3cAlkLbw9WTohh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ARq2ij9V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BhqN7jel"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CE9AB1F000E9;
-	Thu,  2 Jul 2026 19:41:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ARq2ij9V"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 55EF51F000E9;
+	Thu,  2 Jul 2026 19:41:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783021298;
-	bh=KDObBIiKCuEIKeOjNhm0/M8ZDde4JNyyKCSkkMgvUcA=;
+	s=k20260515; t=1783021314;
+	bh=kDp1mpmwyfwB5hhTEsssh0rfqRpOUpPPC1W3NSbiRVw=;
 	h=Date:Subject:From:To:Cc;
-	b=BhqN7jel+qiojQ5UdJuYTyLQt95g3KDWCPjQPyAdyl1wW0aFY++NHXkKPXIyPQIda
-	 YRebswWL3c1d+KhQ1Fgc3XxQMKQTNHOv2e+kKtnz2JpGTvJ8gttDWSymGDz6jHGzAB
-	 f9o0e1/8cdJrGRQQHwsuas+ufTLBME5dVtyrq0c38mvpL7p3czyVvrvUjdcU9WUYGd
-	 HtsKkcxqNFumCU8A3nrRGOo48SE7RFY6kEz3GPK/taiBVa7Qntn0V8rVzskCRathSA
-	 zpAoe/thQHHUzIRwF7HsTwP2xu5UK7YPr2XOfSCWPw9HP3TPcvqPAzPcVFypgvsj+l
-	 xhogbLemVd/TQ==
-Date: Thu, 02 Jul 2026 12:41:38 -0700
-Subject: [GIT PULL 1/3] mkfs.xfs: codex-inspired bug fixes
+	b=ARq2ij9V11/X0oWFw3THww5vC7IGQkvF534+9RPE0kWCJzE772ZF3BXn7BPHDeV8k
+	 j/SJ/Ayumi4N6lmIoKiOn0uRWwxx40TWtaVhV3becS+SpomKE2jkCuk9UwFiYcuAKo
+	 8ET5NIMfyPYtKABLZSmr8dxow2VDB9/H0FhmiroJp2PLYFYn/luVb7VurxLCIW6R2f
+	 W/Gfftb4qabqW/XhFKRzvMXLj9tbDuIeis5BnN64k7Xg+1TkXA4ELFdHBKnxRWdpAE
+	 ygGmw9bwG7zhLrZjENeqY5Zi+Li8UCmAH69+ub2G5e/h521Ui+guDSif8+Lmc+eXni
+	 D12nDEza74WtQ==
+Date: Thu, 02 Jul 2026 12:41:54 -0700
+Subject: [GIT PULL 2/3] mkfs.xfs: codex-inspired bug fixes, part 2
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <178302114822.828394.4589678788668515207.stg-ugh@frogsfrogsfrogs>
+Message-ID: <178302114867.828394.10574116701813141609.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,36 +50,35 @@ encounter any problems.
 
 --D
 
-The following changes since commit 7a26df144fadd9c721323a4b0ff9808473d5608e:
-
-xfs_healer: fix getmntent race in weakhandle (2026-06-30 11:51:45 +0200)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/mkfs-codex-fixes_2026-07-02
-
-for you to fetch changes up to b3268fb3d822a7ef7d647284e0dfeaeb61713011:
+The following changes since commit b3268fb3d822a7ef7d647284e0dfeaeb61713011:
 
 xfs_protofile: make nondirectory arguments actually work (2026-07-02 12:38:24 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git tags/mkfs-codex-fixes2_2026-07-02
+
+for you to fetch changes up to 8c6bf6721ac440c806d5da0d0fc93ec7ccf98da1:
+
+mkfs: PQUOTA shouldn't conflict with GQNOENFORCE (2026-07-02 12:38:24 -0700)
+
 ----------------------------------------------------------------
-mkfs.xfs: codex-inspired bug fixes [1/7]
+mkfs.xfs: codex-inspired bug fixes, part 2 [2/7]
 
 Here's a batch of mkfs.xfs fixes resulting from Codex reviews.
+These are really just the patches from yesterday that needed more tweaks.
 
 With a bit of luck, this should all go splendidly.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (4):
-mkfs: don't redefine DIRT for protofiles
-mkfs: fix PATH_MAX check
-mkfs: fix symlink target length check in create_nondir_inode
-xfs_protofile: make nondirectory arguments actually work
+Darrick J. Wong (3):
+mkfs: pass stat buf pointers around the protofile code
+mkfs: fix hardlink detection in directory import code
+mkfs: PQUOTA shouldn't conflict with GQNOENFORCE
 
-mkfs/Makefile            |  2 +-
-mkfs/proto.c             |  8 ++++----
-mkfs/xfs_protofile.py.in | 40 +++++++++++++++++++++++++---------------
-3 files changed, 30 insertions(+), 20 deletions(-)
+mkfs/proto.c    | 47 +++++++++++++++++++++++++++++------------------
+mkfs/xfs_mkfs.c |  2 +-
+2 files changed, 30 insertions(+), 19 deletions(-)
 
