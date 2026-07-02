@@ -1,47 +1,44 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0981B3C65F4;
-	Thu,  2 Jul 2026 11:05:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0535A3EB0E6;
+	Thu,  2 Jul 2026 11:17:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782990308; cv=none; b=PDgT9azgJEGdlQmFS3MJS892ugaCt9krRkaQj0dxLgax9orvsZrGEtkPqnonTKGeFtQRaPVC9L7VzBwTPPyzm+kh+6v5XGciYgJ62IFUgGjyUFX/qzMtEK5Oc+ZsXYTzHqxqOfxBN5mmj/Ii14NM4xHNHAjV++EQOTIA0D9YVsg=
+	t=1782991055; cv=none; b=CsbBjc5Eto1y6gAGLSamZQUbILtTQp6dgnV1KU5XSAEC78qfd/TraQRqsm+TPBTAhnphxXqQtL2+sAmAXMQdsaLTYx2jn36QdHOaQz8uzB/wN/1GZyBdGCTewNd+CGE0n73Ai1+OebUfDeIFgQZvLBA/Iqf3JxiZvwTbQbs3cMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782990308; c=relaxed/simple;
-	bh=jqk5UfHttM86/BYeGkqgXzA5HtroPUsk9PF9GHYXjtA=;
+	s=arc-20240116; t=1782991055; c=relaxed/simple;
+	bh=LhOXCibg9a5drTPSzz1LQIpCrkavwlW99AeY8rvjAHg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hrxfm9PzhGrkSvK/F4N+3iMTi46/NhGbrUKnmOHmaqDZyfwJ0LDG9b+eYRfN95zZXIOzVxVR/hGDq4urFH72hZqz7sopcdQXYv1uXznTI5PVSxkVsWptuUj+n+Th8LaBmnYxDjXefrP3mMDRqt1Ufp6vDzsUw8VydzDFi4aUAPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NiYajx3O; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=WmxXHFjTUfEZWMHfXjVe+ADR9sGN/+H0cMpWoXwWXTs22ALI7WVWSL1620DREwMNcvfJdLC62ov7+rBVV5R9mJLMIwrJElDyTvdYgUxrA6rMmQqz4rXfGXsaiCVeTCSev/ALtEUhQjEN3GQIZDLF3nN3JAXs76RbAqX5P8eM2oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jeTdrDsU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NiYajx3O"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=c65mGWyaqaL3mmNsdNo9EQ96visPJk+aQqf7LW+tBGo=; b=NiYajx3O4xLSEZ8/0qOxkF3L8L
-	Gospmq22NsHU6e7fnGsiYruWKDCqaHBUcDhrKs5JjABVay1j3j4utzmRRJI1g9U5Wp6hX3YyYH49C
-	jUfJpukRAUWuCjRQlYxjo6mipbtf24gj2Bg9ng49agHHtDBic1QofWSfB6itUO4pWrdOfnYLT69I+
-	alWYiK8iU4Xjlnb2TeJZzieVTq5UIPf2acGPUMr1OlGou56JwOQ2zQg3exYWagvy+FqoiN9IEPvuo
-	9xW5/prO7KCsyUjN87cRbWiYWyBqoK1Ord6pQIHLy7lC/dvtpkRzPe4Hk5VpRloUsr5h/B35fvbCx
-	wcKpFKsQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wfFEA-00000004God-2WZg;
-	Thu, 02 Jul 2026 11:05:06 +0000
-Date: Thu, 2 Jul 2026 04:05:06 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Yousef Alhouseen <alhouseenyousef@gmail.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
-Message-ID: <akZF4ib9KpSxnBQ3@infradead.org>
-References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
- <20260630161113.GB6526@frogsfrogsfrogs>
- <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
- <akTyUXMN4_I1fOaM@infradead.org>
- <20260701155234.GF6526@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jeTdrDsU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA6DD1F000E9;
+	Thu,  2 Jul 2026 11:17:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782991054;
+	bh=B6qx0fV5Kuct++leTThUpa0sfGnYf2tKGKYlTAvI5PM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jeTdrDsUpWlyRENZ5SuOv40SOfygUjbYr5ohbvCL0H6KeKqJ5xpnjqG4A7+CC3SU/
+	 SA+XzP/+GdgXLgZnBiqwBvqRB9T4Qe+xPMnpm9jM5Aqve+Bemm+XvrDTEgUFi9wtu+
+	 VGTBkz/CUtT1R5jqtJbTlHKoekOuQ9yMMCpwXxxQF1ZOwxez+DSQok0RTe76DhsD8y
+	 iVQ/7bp+Fxfkec2UKWa2G3w0myWjHdHKyxy9esAlwv7peMRJOFzCFt7VL2fZEweg6j
+	 aIAjQqtx/AWB2hYLED67A3rpurffS/rpgHV/gHC7hVmewp1lljPws0/icVyn1SXj/T
+	 /uhGO1qliYBkg==
+Date: Thu, 2 Jul 2026 13:17:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, "Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
+Subject: Re: [PATCH v3 1/5] xfs: fix capability check in xfs
+Message-ID: <akZITB_FDP1nl2_S@nidhogg.toxiclabs.cc>
+References: <20260702093324.127450-1-cem@kernel.org>
+ <20260702093324.127450-3-cem@kernel.org>
+ <20260702103052.GA6670@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,19 +47,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260701155234.GF6526@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20260702103052.GA6670@lst.de>
 
-On Wed, Jul 01, 2026 at 08:52:34AM -0700, Darrick J. Wong wrote:
-> > This almost sounds like we should explicitly zero this case just for that
-> > particular case.  Although Darrick was kinda heading in a different
-> > direction and I don't want to start a fight here.
+On Thu, Jul 02, 2026 at 12:30:52PM +0200, Christoph Hellwig wrote:
+> On Thu, Jul 02, 2026 at 11:33:17AM +0200, cem@kernel.org wrote:
+> > index 6339f4956ecb..205fe2dae732 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -835,7 +835,8 @@ xfs_setattr_nonsize(
+> >  	}
+> >  
+> >  	error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+> > -			has_capability_noaudit(current, CAP_FOWNER), &tp);
+> > +					ns_capable_noaudit(&init_user_ns, CAP_FOWNER),
 > 
-> I'm fine with either solution; I simply prefer the one that fixes all
-> the current and future "oops we forgot to zero a hidden padding" bugs in
-> one action.
 
-Maybe we should avoid creating hidden zero padding to start with? :)
-But this is a small allocation, and most of it gets overwritten
-while the cache is still hot, so I can live with the unconditional
-zeroing.  Still feels a bit odd to reach for the big hammer.
+Thanks, I tried to keep the parameters aligned, but I can bring it one
+tab back. Do you mind if I fix it at commit time if -unlikely- no other
+change is required?
+
+This is what it will look like:
+
+        error = xfs_trans_alloc_ichange(ip, udqp, gdqp, NULL,
+-                       has_capability_noaudit(current, CAP_FOWNER), &tp);
++                               ns_capable_noaudit(&init_user_ns, CAP_FOWNER),
++                               &tp);
+
+
+
+> Extra indentation and an overly long line caused by that here.
+> 
+> Otherwise looks good.
+> 
