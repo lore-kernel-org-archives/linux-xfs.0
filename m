@@ -1,89 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3949331355D;
-	Thu,  2 Jul 2026 03:58:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ED0039A7F6;
+	Thu,  2 Jul 2026 07:41:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782964681; cv=none; b=eUJHnHw+3oUCKyg2zaA6YkVuAWesUaZ/O5BvSHv5iddWZeg3qJMbVwnhFNGrEBJVwfM5mQ4u8OiRbJqVU5u4nbIuwH6y8PEwJUsprsnfKDAI7hDVaKcCkzyalS+xXH2f2RcB3zUWuOobQNzApJ+W/yI111geyRWnJYq0f/0iO3w=
+	t=1782978107; cv=none; b=dYApveEbOPCJIEMvsD4yNs58JZpWYqEWagcCexlV3TKau1KRTV5+3u5cOdOQMHaAmj+KOJxbC+lK+CFwRNXKdBsXfp2sEEfDhHZ+7+wjHelDROsiAZHORHUkkvfZUMlme4oOPEHAebkoJE3NoOW/10l46CvTPs0AADhuyvXQIJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782964681; c=relaxed/simple;
-	bh=WhzWlFnu6IBC9eYJNClKpeNc/2A052zBvtJVlsgemYs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XhC305VjMiM07O3UDFRzLZYsYNJKXzqfmfAn1LTZh55zryqiBGK2XlPDRuAE0CyfcMGOrcrOLHq5pEjmMvyTakKE52ZNBGAWEMTYqX4AITZ0Q4zZ7dGZlIeDLKoUZvYsxyLJZoCXsqAcrBBwIfAY3Jyd2uolgvupRHA7VAC+B4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MheCOwVz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782978107; c=relaxed/simple;
+	bh=rbbTGK5IEPcsoqPFchYNcH6XviR0Ovhzdz1mtknJTYY=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=j10xO1bPfAyCw12SbOOrnQGfdj7L77HBfHXI8r18wusJrx6bvLj1Gk2DeORcIC/YtZPdaXk1Etgq4v43DFpLVDJ6FBDTfqkZ9zA5HMF8hDbT0H4XllHuAnLP+0UoUOY69GvnmOZ/tPsamXyKH0f9f8exeEVoFAwgBHberrrp5zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jfYUYY7B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MheCOwVz"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F2FA41F000E9;
-	Thu,  2 Jul 2026 03:57:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jfYUYY7B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A45741F00A3D;
+	Thu,  2 Jul 2026 07:41:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782964680;
-	bh=36RtH3OPZV3uXCMbtG148eWFhq5Gh1ziqBmvF+CPq/s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MheCOwVzIk/+VZSlHTP4j9DjUWDSlFAL/P+5RqGTKRnBzwyeDyThlQzpUX65KSf+p
-	 gCODxhjvJfq1L3BlwqFR7kR7pCu54sjjmkFLUK1d5UMN5iMzX/uzzv25X0YzDkslnE
-	 2ewEZ6yPaApCPbAtFA7h3Qxet3/jBLfYpeFox6PK9iAGax6bnh5L/tSgdwu5ptmU4u
-	 GIJWaNo8ZQTTk/evTC58H4mC8aODr9o17jRtySeIWUCnG3Y8m1VduYabYuvoB73dOZ
-	 suJjQVdaZrsr2jUfHuTMc+lfmsaU7fG82r3BzceEf9h5oaQUWb5DFxYdy/7b4szSxw
-	 PW0ymCjbVMK5Q==
-Date: Wed, 1 Jul 2026 20:57:59 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs/65[56]: don't unset SCRATCH_RTDEV here
-Message-ID: <20260702035759.GB9381@frogsfrogsfrogs>
-References: <20260702035523.GA9381@frogsfrogsfrogs>
+	s=k20260515; t=1782978103;
+	bh=HQD+Zv+MCFoFX8owNBrpFDmZBtwE205TGxfDDnF3MAk=;
+	h=Subject:From:To:Cc:In-Reply-To:References:Date;
+	b=jfYUYY7BMT53WMwu8B8Vs9SmppFc4NEe81L/0n0LGa58GGwaG+d4MibP8Uj7/JlBz
+	 CMifxOeMnDfDykmYQ9F7SNT4v0ZrcjK10L5+XWXjkEegwW2ajTHzdcusLNJo+SNTzZ
+	 uR23l4vTYsT/iaLCtJBGjSn264AjROy5hxUdXb50XRT9hbWGBP99IYu+RApqa/EWzd
+	 e/SjNn6OcULi+FE4RGYks2LiEBNi5noOO0WseMF5rwtuWEwuu036vJTg54LQiSW+8K
+	 n7Kh072MH/9jt2soVBgHntGltUdNZgI1QPraT/6+IbnaAX+xauK9NEEV6Ujd199GTe
+	 4EIJ/Tl6i5cyA==
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260702035523.GA9381@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [RFC PATCH 0/4] Introduce capable_noaudit
+From: Christian Brauner <brauner@kernel.org>
+To: cem@kernel.org
+Cc: linux-fsdevel@vger.kernel.org, jack@suze.cz, djwong@kernel.org, 
+ hch@lst.de, serge@hallyn.com, linux-security-module@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+In-Reply-To: <20260626114533.102138-1-cem@kernel.org>
+References: <20260626114533.102138-1-cem@kernel.org>
+Date: Thu, 02 Jul 2026 09:41:39 +0200
+Message-Id: <20260702-alufelgen-belag-tastatur-b666a49f7fc0@brauner>
+X-Mailer: b4 0.16-dev-4217c
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1001; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=rbbTGK5IEPcsoqPFchYNcH6XviR0Ovhzdz1mtknJTYY=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS5iZlKnTwSHtjY/+1zbMWWjeqHPylPPfR62bYTH9rPn
+ Lmy3flTfUcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEXBsY/tcuKNpx6f3no4+2
+ zmE3eRSpFHDs/Knij2+2eu2+ui4vOWQWI8Oqa1I7nlbouIp33bN+WG2tvVgunTE2J3K23ZnNesZ
+ Om/gB
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2026-06-26 13:45 +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
+> 
+> In some cases - filesystems quota specifically here - we'd like to check
+> for effective capabilities without issuing spurious audit messages and
+> without the need to specify a namespace for that.
+> 
+> This series introduce capable_noaudit() which has the same goal as
+> capable() but without firing audit messages.
+> 
+> Also, this updates both generic quota and xfs quota code to use that.
+> 
+> The last patch unexports has_capability_noaudit() which was originally
+> exported to be used in xfs but turns out it does not meet our needs.
+> 
+> Note this is based on top of a current series I have to remove
+> has_capability_noaudit() calls from xfs so the xfs patch won't
+> apply cleanly without that series.
+> 
+> If adding this helper is acceptable, I'll turn this into a non-rfc
+> series with the required changes to apply properly.
+> 
+> Comments? Flames?
 
-Both of these tests claim that they have to unset SCRATCH_RTDEV to avoid
-formatting failures due to the rt bitmap consuming all the space in the
-"small" data device.  However, the format doesn't constrain the size of
-the data device, so the justification doesn't apply.  Remove the whole
-thing.
+Convert more, please.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- tests/xfs/655 |    4 ----
- tests/xfs/656 |    4 ----
- 2 files changed, 8 deletions(-)
-
-diff --git a/tests/xfs/655 b/tests/xfs/655
-index a4162d70b321f9..9d09cc00053138 100755
---- a/tests/xfs/655
-+++ b/tests/xfs/655
-@@ -24,10 +24,6 @@ _require_scratch_nocheck
- _require_scratch_xfs_crc # can't detect minor corruption w/o crc
- _require_xfs_io_command healthmon
- 
--# Disable the scratch rt device to avoid test failures relating to the rt
--# bitmap consuming all the free space in our small data device.
--unset SCRATCH_RTDEV
--
- echo "Format and mount"
- _scratch_mkfs -d agcount=1 | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
- . $tmp.mkfs
-diff --git a/tests/xfs/656 b/tests/xfs/656
-index df91bbdacea222..5d2d2e55c3d21c 100755
---- a/tests/xfs/656
-+++ b/tests/xfs/656
-@@ -40,10 +40,6 @@ filter_healer_errors() {
- 		uniq
- }
- 
--# Disable the scratch rt device to avoid test failures relating to the rt
--# bitmap consuming all the free space in our small data device.
--unset SCRATCH_RTDEV
--
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
- _dmerror_init no_log
