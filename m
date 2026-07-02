@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996033D6CD5
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:59:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869C33CFF4C
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:59:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783022377; cv=none; b=pSKCw8WI7Emq6TLmOFGHLfFpelxxqyWW2iqA1zRTTKNxjKRi8DWgv0+93E6BfvfBMsndmln2WibXFEmD9Vua+1thLc8zTAP9vBvA5BQSL7iCzyT9kLsVU9Za+BG/F5RaWW1g2G+rawgwXVIqiJp+2xm6dwvSd8QtrRpqO67k/tU=
+	t=1783022393; cv=none; b=tI72qbyXl9HHxuEHlk15d7UquvsZ0dk5fxctSaNIBPtR8D5pyTVFxwCVvz8cCAkUuV+Ejza/nLuXxMdyQYtOIWBLOCtuFdbZb3EjOhmC46geZajLU7F4pWhuCAtX1P0fxsvHhBR0uBzbIglXiz5SxlOobmfzfy+2Z4gff4ZSJkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783022377; c=relaxed/simple;
-	bh=P8mH9+LcBsLOjYhL7W9hxPmRB/fz31UYnHp/28ysAqw=;
+	s=arc-20240116; t=1783022393; c=relaxed/simple;
+	bh=Td9PuCrPd1oSCHsTu4cOxACmbS+wvuHs/0d2KaIAF7A=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Gq2e7xOYc/ZK0hfuyRPlcY/GQ7uT+K0NyRFyQljVvFT2aa+spHki/nvon6PxCVHU9IilMgA01q1C6QgLM//QR0MfQt1ZwjhIfhJT39dNmmJ5RzWK0IUW+DRbJQyqBmajPGCG/8jNp1atLgLZC+G5mKsnPA6KllkfZi19dQwpIsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIVpk3R6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=INE+ne0t6Tcc98WDLkGGRo7PDdc239F7eSeAWcE0Y4PHEBDiKEMG8NbTSAeMDWCcDNTmaDsoue31q27+JoPxZfm5HW2R1suwTsZJBX081JPBVC2y4D2REbWJ2nOtdMQposFc0ojWyurFdk7fMAL7KfUNaX06/pa/q68qFhbRPHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CwPytqrO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIVpk3R6"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 282F71F00A3A;
-	Thu,  2 Jul 2026 19:59:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CwPytqrO"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id A695B1F000E9;
+	Thu,  2 Jul 2026 19:59:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783022375;
-	bh=yjzT0tuHJljYYwb7+s54r5AKwpx/wHQLXoikH+h8AT8=;
+	s=k20260515; t=1783022390;
+	bh=Yzd9ZZdOC6PwrIQEYiBJ0iTWhb8QAdqId4Vn/NzDrZ4=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=eIVpk3R6taAd3wCQcImmR2vfTyazC6eRHE3Mtmiza9xjgpmSsxNz9pRgQNPghyCiJ
-	 T7LJ0VuXq2knkr7W8vEOC5UmBTdrhZcpftmLH//ZtQX13tn3/WRRhs51NQIK76uF73
-	 KV42pef3SvxhWzl2MZU+tPqf+xYv0wmoymJYDrKotCFG+hTz2VBkuggThrJEdaOr90
-	 NkvjabmudRe3moqIQE0TN9kf0a3fX7sDLi7wgezqYOZiaoIpnTrM15WtRG8rMf5LfT
-	 l6MFha/smsZdC7CVJymNMbAgjBlJeLJOyTKAorZK8zxQYvDwvkgcf956yfkBx+i2Qz
-	 xLlV8K6VDN3bg==
-Date: Thu, 02 Jul 2026 12:59:34 -0700
-Subject: [PATCH 2/5] xfs: switch (back) to a per-buftarg buffer hash
+	b=CwPytqrOUL/6/RIXzt8yUPj958Vt0aGRoZakWzmUoI0unTdo8Dt4RhWN2O2i3Lq3E
+	 Bjos3I3fBmcH1mD3XhEr5RndKvGZ+BQv4b+TSi/qjXtQhbFJcys/O1w5Mz7c5pPPyD
+	 gQP7xAPsD4GDPVpElKTbWOMc+aiogTUVGm3VBfjdAKhh7IMydylsK/25m7QVQJdzyH
+	 72K0gxgZbZAKP4nwAgevmHpv/M2N+H5eRtAByCx/Rh2e5z0uQowvCJ1T8xrGUCgbFK
+	 NGz3yYxEZIL0J4y76LWHBHS2IJ3jpYCncUy4lRdL342JqShSpJCJJnCPiwe3x4NooS
+	 Rzl6sj0tbUNuw==
+Date: Thu, 02 Jul 2026 12:59:50 -0700
+Subject: [PATCH 3/5] xfs: remove the meaningless XFS_ALLOC_FLAG_FREEING
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: bfoster@redhat.com, cem@kernel.org, hch@lst.de,
- syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com,
- linux-xfs@vger.kernel.org
-Message-ID: <178302225943.845293.18208584778633982562.stgit@frogsfrogsfrogs>
+Cc: alexjlzheng@tencent.com, cem@kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <178302225961.845293.2405986102744501792.stgit@frogsfrogsfrogs>
 In-Reply-To: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
 References: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,86 +43,35 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-Source kernel commit: 497560b9ef42a4ab22ada7f1ea975a89cd3c5dfa
+Source kernel commit: bfb4dc533d0abaca07013dd71e6b5c6f182232b3
 
-The per-AG buffer hashes were added when all buffer lookups took a
-per-hash look.  Since then we've made lookups entirely lockless and
-removed the need for a hash-wide lock for inserts and removals as
-well.  With this there is no need to sharding the hash, so reduce the
-used resources by using a per-buftarg hash for all buftargs.
+In xfs_refcount_finish_one(), there's no need to pass
+XFS_ALLOC_FLAG_FREEING to xfs_alloc_read_agf().
 
-Long after writing this initially, syzbot found a problem in the buffer
-cache teardown order, which this happens to fix as well by doing the
-entire buffer cache teardown in one places instead of splitting it
-between destroying the buftarg and the perag structures.
+So remove it.
 
-Link: https://lore.kernel.org/linux-xfs/aLeUdemAZ5wmtZel@dread.disaster.area/
-Reported-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_ag.h |    2 --
- libxfs/xfs_ag.c |   13 ++-----------
- 2 files changed, 2 insertions(+), 13 deletions(-)
+ libxfs/xfs_refcount.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index 3cd4790768ff91..16a9b43a3c270c 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -85,8 +85,6 @@ struct xfs_perag {
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
+index 036497dbb22b70..1d45160789f036 100644
+--- a/libxfs/xfs_refcount.c
++++ b/libxfs/xfs_refcount.c
+@@ -1412,8 +1412,7 @@ xfs_refcount_finish_one(
+ 	if (rcur == NULL) {
+ 		struct xfs_perag	*pag = to_perag(ri->ri_group);
  
--	struct xfs_buf_cache	pag_bcache;
--
- 	/* background prealloc block trimming */
- 	struct delayed_work	pag_blockgc_work;
- #endif /* __KERNEL__ */
-diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
-index fd5f902b052435..1c75ef51056789 100644
---- a/libxfs/xfs_ag.c
-+++ b/libxfs/xfs_ag.c
-@@ -108,10 +108,7 @@ xfs_perag_uninit(
- 	struct xfs_group	*xg)
- {
- #ifdef __KERNEL__
--	struct xfs_perag	*pag = to_perag(xg);
--
--	cancel_delayed_work_sync(&pag->pag_blockgc_work);
--	xfs_buf_cache_destroy(&pag->pag_bcache);
-+	cancel_delayed_work_sync(&to_perag(xg)->pag_blockgc_work);
- #endif
- }
+-		error = xfs_alloc_read_agf(pag, tp,
+-				XFS_ALLOC_FLAG_FREEING, &agbp);
++		error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
+ 		if (error)
+ 			return error;
  
-@@ -233,10 +230,6 @@ xfs_perag_alloc(
- 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- #endif /* __KERNEL__ */
- 
--	error = xfs_buf_cache_init(&pag->pag_bcache);
--	if (error)
--		goto out_free_perag;
--
- 	/*
- 	 * Pre-calculated geometry
- 	 */
-@@ -248,12 +241,10 @@ xfs_perag_alloc(
- 
- 	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
- 	if (error)
--		goto out_buf_cache_destroy;
-+		goto out_free_perag;
- 
- 	return 0;
- 
--out_buf_cache_destroy:
--	xfs_buf_cache_destroy(&pag->pag_bcache);
- out_free_perag:
- 	kfree(pag);
- 	return error;
 
