@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D01937A840;
-	Thu,  2 Jul 2026 15:31:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BD721146C
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 15:32:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783006265; cv=none; b=VPlaL1SijuAiqzowOKq6CWNPvgGbw4WiZSXpmM6MvViaQd2CxZWtGN/2RqZwnrab0hxUOQE4t2EN4xpaCJlcEdUqiNfJB57vmJznoTTICv1IFdnCJBU4H0wCNZ9/anE3rA5mDHI384sX3RpHDMBgeoq6joqFnT3u518BIxRz0s0=
+	t=1783006364; cv=none; b=YFgMzUPGJACs3FHyydk8M6EABKt9AsrBLSNufNo1fGTFr9EQm+TX2qhxhu2YaZXH+jvyaPwyWxLNocGS3rrygXU9Q4WLtk9tHePeTsFgO1klynE3A4yk9eoSG8rHdauK6hWGFPG8WmggcHF7+ub4afyHKTW07BlE8+SIspZIzos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783006265; c=relaxed/simple;
-	bh=3wCSwzw6ihpUMvgbR5ptKuzF6Xev0Hsd4W5EQsoILoQ=;
+	s=arc-20240116; t=1783006364; c=relaxed/simple;
+	bh=/EINKj2WSSFCMW63KhlSwrmYWsH1xIuocYly2REBb+k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jwwj4QZ7FmYqmIWMo+HrGAXUY4CFygKHkBEmAVjLfLvvF1Wd2d+NlUrukqRWi8nE0zQ8j//ZE7BXoHfZwJZhu2qBT1zfscOezpNdMCUMUERFh7Sh4HJluipjLfdjEp/qKHRhtT4n0CJxZ5GCxOUYYCoHTvsNzvDjAUIAGA/CEpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PwCMtRBO; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=gTDRfT+Hw99YYWP3VwN+/ktZ1pwIGz4AshX2wCqhANiRp80ZRUq9rm5usWYbm3nFqwmWvoCSHrqil/f4sw8rjTcrJuxKQRF9aTtW70koIwm+qXHIfITyd8FErBnXHzGNID1aa6GOLzq5rOpnEiA1GSspCPZCsV0mV0Ror05sdOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AGnUZ8nh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PwCMtRBO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E78C31F000E9;
-	Thu,  2 Jul 2026 15:31:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AGnUZ8nh"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4F0041F000E9;
+	Thu,  2 Jul 2026 15:32:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783006263;
-	bh=88OAjTQ/GtsnARt4KNnNaNmYL+xYbYOWeaQROWVJI+w=;
+	s=k20260515; t=1783006363;
+	bh=BDvJjoPIBH2zXl8u3TwCcJG8PyHK3PAYji0UfDsmbv0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=PwCMtRBOIdztjlCdPB1b2+k5nod5PRo6Ktw3oxoUlkIW3wQkO1e+TflCn8kvjVPnV
-	 yiG8ENuZz618En8XyBCSMhZ4va7NRDWyMBffVwmFMS89+aAvYP0yB31OEJuZW1WiVT
-	 rwp/boOS0rTZFKvyAlvqq+CyUNZC0jUHSFH3mtFy2KMO+R87OQaxe+YmuOKX9LPBae
-	 qsR/1x/N4Peo7wH9e3LXKfxGjtk1u2Cb0SssL786+5yN0G4255xDimZ2N+N7n6z5uV
-	 dhYqjGdAISuh9tMXi+9FfLpWHBHZFrIHyBzIsINvQstD5pp2sG2S/jSZ+lxDxW4/Ko
-	 qF7Doi6aymKZQ==
-Date: Thu, 2 Jul 2026 08:31:02 -0700
+	b=AGnUZ8nhhJxQgxrNtEezOMeAKs+38bqeaa/O4+UN++xIcMXgFPsQhB4cTkzmNX7ti
+	 Cw0E7jMZqY85DmlNyUtITjhGEAUYY9Z2ydvY4IKv8eG8b7exqlFhpdqfydLiD8sZI1
+	 abiN/bw0gypsIseACpY3KmOHBMy64a9O/yjT0PdmraxcktpX6R0/YLV1qmUhJKO49P
+	 5XUJ8+uM3rwXnsd1qgydHK+iokMvV2E5tx4t9TygiIwSXv3uDir343Cr3UlZqns3ve
+	 YGlpOlp4j8GX2zToucLVTzKc1VTXji1N6uDKTJpNxLFP6kf9q6Hx4HehQq8VxI3mhF
+	 e+yzvb2t06FQw==
+Date: Thu, 2 Jul 2026 08:32:42 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Yousef Alhouseen <alhouseenyousef@gmail.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
-Message-ID: <20260702153102.GA9392@frogsfrogsfrogs>
-References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
- <20260630161113.GB6526@frogsfrogsfrogs>
- <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
- <akTyUXMN4_I1fOaM@infradead.org>
- <20260701155234.GF6526@frogsfrogsfrogs>
- <akZF4ib9KpSxnBQ3@infradead.org>
+Cc: Weiming Shi <bestswngs@gmail.com>, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>, Brian Foster <bfoster@redhat.com>,
+	Xiang Mei <xmei5@asu.edu>
+Subject: Re: [PATCH v2 3/3] xfs: fail recovery on a committed log item with
+ no regions
+Message-ID: <20260702153242.GB9392@frogsfrogsfrogs>
+References: <20260701153833.3155514-2-bestswngs@gmail.com>
+ <20260701153833.3155514-5-bestswngs@gmail.com>
+ <20260701220838.GI6526@frogsfrogsfrogs>
+ <akZD87nbm6q0KXrP@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,26 +47,20 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <akZF4ib9KpSxnBQ3@infradead.org>
+In-Reply-To: <akZD87nbm6q0KXrP@infradead.org>
 
-On Thu, Jul 02, 2026 at 04:05:06AM -0700, Christoph Hellwig wrote:
-> On Wed, Jul 01, 2026 at 08:52:34AM -0700, Darrick J. Wong wrote:
-> > > This almost sounds like we should explicitly zero this case just for that
-> > > particular case.  Although Darrick was kinda heading in a different
-> > > direction and I don't want to start a fight here.
-> > 
-> > I'm fine with either solution; I simply prefer the one that fixes all
-> > the current and future "oops we forgot to zero a hidden padding" bugs in
-> > one action.
+On Thu, Jul 02, 2026 at 03:56:51AM -0700, Christoph Hellwig wrote:
+> On Wed, Jul 01, 2026 at 03:08:38PM -0700, Darrick J. Wong wrote:
+> > I agree that a totally empty log item is a sign of corruption, or at
+> > least something going seriously wrong.  Can the runtime log code ever be
+> > tricked into emitting a bare transaction header?
 > 
-> Maybe we should avoid creating hidden zero padding to start with? :)
-> But this is a small allocation, and most of it gets overwritten
-> while the cache is still hot, so I can live with the unconditional
-> zeroing.  Still feels a bit odd to reach for the big hammer.
+> I don't think so.  This looks like an automated search for bugs in the
+> parser.  And while I'm happy about tightening up all parsing, I still
+> think this should be stated in the commit log much more clearly.
 
-<shrug> If this is truly the only place where we forget to initialize
-if_broot fully then I'm ok with just doing that and not going for
-GFP_ZERO.  If we have an army of KASAN syzbotters whacking away at the
-system, then I could reevaluate my resistance to whack-a-mole.
+Yes, it could at least state whether this is a code change because the
+author hit a crash in practice vs. running some tool that pointed out a
+gap and emitted a reproducer.
 
 --D
