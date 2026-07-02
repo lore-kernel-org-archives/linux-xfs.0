@@ -1,79 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193F9317146;
-	Thu,  2 Jul 2026 16:51:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E886318EC5;
+	Thu,  2 Jul 2026 16:51:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783011079; cv=none; b=aoztfLET7ZB9xbDTxc7Rdgxmm3J1IinhQ/x8XiBgVxMBm+s5DsfhHM1N2Q2bqvDsl/qRmvWJWE3HcXxDszdkG20+FOSr1bnZLlPUeHziU31nj6QdzMQq8E9mOd6ypXFeUgI5612YQf6f6EmktkNktc7krhyxDepsJvMS1p3tqzY=
+	t=1783011107; cv=none; b=p6MhwviuSdqslV0D0Kfn/CeKIQKG6xYg9u5MmlCOV7/yzJtEt2dU7KFa5yEsURjewdFRlI2jIXJttprw7lOkV4q1paUXbO64N9GLv9T+TYEcJZLCGrpX4vi4CDBwlJN2AOxMtLKM7KTRCUla1sjxAkvDkISDaGtP/PhBrDqDjS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783011079; c=relaxed/simple;
-	bh=biYNUAbSLkMakBI2InMvj+slMvc5J5VSiUpkwej/21U=;
+	s=arc-20240116; t=1783011107; c=relaxed/simple;
+	bh=nlkb5QSgZEo5ddZ4GiOEvImLZNwNVOBr0lo1Wphn0pY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rM8CmaCCNP/7TloF7PDZGL9YjQeXPeyW2QBOBCLoLVRWMx6yIffy27XauQzN80+3Vj05Fo37lGrflmo8/bfl1JGeqDnsmAl4aFMBzMUAD0Whgz9u9fSo5rvkqXHVG60QddQKz2d0qT/QOO2thQtk2BbNCoinZtz1vWkM4cLWR6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ymepa36T; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=J+ckay8FIOKC8QzDh3OxOLDQQwfIXoWHoHr65mX9Z7vMbR22NdfDvaRzipJ3A07U2iwhfMWxLDb+l6H5InG4o7EulHKuia3QPpIRmRPudYLc3rFYKoCI/xAxNMP+LIhEsywBF3DR+hgavz9aiCnoI30McBItD5/tNe5XZzaSUTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MBt6qSsm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ymepa36T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D15C81F000E9;
-	Thu,  2 Jul 2026 16:51:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MBt6qSsm"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6085A1F000E9;
+	Thu,  2 Jul 2026 16:51:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783011078;
-	bh=ydgqm4JLD9wHorHnF+2XAPjVnBLFS4UbABn2TMKW9lg=;
+	s=k20260515; t=1783011106;
+	bh=nbaNpLRlMIlEe3KC0+ug0SaMQ1/Dk2+riEadlyDDhNU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Ymepa36TovSJKNYZV3u+xpDtmvDD0jgD8tu6oITOhStEqSB4dFm2GSNjYvX6a/XhD
-	 idd1sj/Z9E/KlApdD9cMjRLqTlqdgS1ZGfahdEB1adsC1jHUM18Idy2FDJdP+91o7q
-	 QlYswMBkWSAqfhgV/t0BjA2QDKkEneDGjH+Gl5qKC5w3Z9fiVXFpsrFrRHn8BhtWaG
-	 lcACOAbDkojouQsXQtSoi47LOb5OGkLJW+AXDJEZT+ElhlEosUQhZ2/nNXhEJR9+aI
-	 PyMC3eJrsnz1BJ5WVFaLKabv6f9zwLwtBLpgZ7fU4xVDkd9t8o3JJ3wtYAC95RX0Zj
-	 PrPeMRFBP/AuA==
-Date: Thu, 2 Jul 2026 09:51:17 -0700
+	b=MBt6qSsmxzhjp5VSaUW939eZk2nHYx8cbx3WpKoE/kXBBkZ7LVTo5XgEeSmEC9vrQ
+	 fUCh5MWgxYalCd06JrOnfO3ne+xILfLmpIOxViWlQL3LbKpvI3kLhtOru5nthmGuxB
+	 1u8yIh4a7WupBw/iIrFyIk7aLhytLQTWNrclwvonkwzruUBTOPlPtcWeYHLU+sqIDn
+	 kakGF1ac9Pq54hC2im+Pt+HGAZb3SmLaGrdfmVvhGxW2QGR+XSC1SF+fVVn/K8L07Z
+	 z7KAiiP1chwRwpUtn4RMXzdvZz/BhzgOKRk1C03l5Mm02CNqHsWvXbMOm2zaMviL5k
+	 qMcsLwn//+h4g==
+Date: Thu, 2 Jul 2026 09:51:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
-	willy@infradead.org, hsiangkao@linux.alibaba.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	Dan Williams <djbw@kernel.org>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Chunhai Guo <guochunhai@vivo.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Yuezhang Mo <yuezhang.mo@sony.com>, Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Baokun Li <libaokun@linux.alibaba.com>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	Zhang Yi <yi.zhang@huawei.com>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-	Hyunchul Lee <hyc.lee@gmail.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	"open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:BTRFS FILE SYSTEM" <linux-btrfs@vger.kernel.org>,
-	"open list:FILESYSTEM DIRECT ACCESS (DAX)" <nvdimm@lists.linux.dev>,
-	"open list:EROFS FILE SYSTEM" <linux-erofs@lists.ozlabs.org>,
-	"open list:EXT2 FILE SYSTEM" <linux-ext4@vger.kernel.org>,
-	"open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>,
-	"open list:FUSE FILESYSTEM [CORE]" <fuse-devel@lists.linux.dev>,
-	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>,
-	"open list:NTFS3 FILESYSTEM" <ntfs3@lists.linux.dev>
-Subject: Re: [PATCH v2 17/18] iomap: pass iomap_next_fn directly instead of
- struct iomap_ops
-Message-ID: <20260702165117.GK9392@frogsfrogsfrogs>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org,
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 16/18] iomap: remove ->iomap_begin()/->iomap_end()
+ legacy path
+Message-ID: <20260702165146.GL9392@frogsfrogsfrogs>
 References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-18-joannelkoong@gmail.com>
- <20260702140705.GE21339@lst.de>
+ <20260701000949.1666714-17-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,22 +45,154 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260702140705.GE21339@lst.de>
+In-Reply-To: <20260701000949.1666714-17-joannelkoong@gmail.com>
 
-On Thu, Jul 02, 2026 at 04:07:05PM +0200, Christoph Hellwig wrote:
-> Looks good:
+On Tue, Jun 30, 2026 at 05:09:31PM -0700, Joanne Koong wrote:
+> With all in-tree filesystems implementing ->iomap_next(), drop the
+> ->iomap_begin()/->iomap_end() path.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> In terms of merge logistics, I wonder if we should delay this and
-> the previous patch to the next merge window so that we can minimize the
-> cross-subsystem merge pain with more file system iomap conversion.
-> If none of them actually happen until rc6 or so, orif  the merges aren't
-> painful we could still pick them up late in the merge window.
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-I'd say everything but this patch should go in during the merge window
-for 7.3, along with clear instructions to brauner/torvalds to expect
-this patch to appear right before 7.3-rc1 gets tagged, to clean up all
-the other changes that come in.
+Yeah, the legacy path can go away. :)
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/iomap/iter.c       | 87 +++++--------------------------------------
+>  include/linux/iomap.h |  4 +-
+>  2 files changed, 11 insertions(+), 80 deletions(-)
+> 
+> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> index 1062e4e34c38..466c491bdef6 100644
+> --- a/fs/iomap/iter.c
+> +++ b/fs/iomap/iter.c
+> @@ -39,81 +39,6 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
+>  		trace_iomap_iter_srcmap(iter->inode, &iter->srcmap);
+>  }
+>  
+> -static int iomap_iter_legacy(struct iomap_iter *iter, const struct iomap_ops *ops)
+> -{
+> -	bool stale = iter->iomap.flags & IOMAP_F_STALE;
+> -	ssize_t advanced;
+> -	u64 olen;
+> -	int ret;
+> -
+> -	trace_iomap_iter(iter, ops, _RET_IP_);
+> -
+> -	if (!iter->iomap.length)
+> -		goto begin;
+> -
+> -	/*
+> -	 * Calculate how far the iter was advanced and the original length bytes
+> -	 * for ->iomap_end().
+> -	 */
+> -	advanced = iter->pos - iter->iter_start_pos;
+> -	olen = iter->len + advanced;
+> -
+> -	if (ops->iomap_end) {
+> -		ret = ops->iomap_end(iter->inode, iter->iter_start_pos,
+> -				iomap_length_trim(iter, iter->iter_start_pos,
+> -						  olen),
+> -				advanced, iter->flags, &iter->iomap);
+> -		if (ret < 0 && !advanced)
+> -			return ret;
+> -	}
+> -
+> -	/* detect old return semantics where this would advance */
+> -	if (WARN_ON_ONCE(iter->status > 0))
+> -		iter->status = -EIO;
+> -
+> -	/*
+> -	 * Use iter->len to determine whether to continue onto the next mapping.
+> -	 * Explicitly terminate on error status or if the current iter has not
+> -	 * advanced at all (i.e. no work was done for some reason) unless the
+> -	 * mapping has been marked stale and needs to be reprocessed.
+> -	 */
+> -	if (iter->status < 0)
+> -		ret = iter->status;
+> -	else if (iter->len == 0 || (!advanced && !stale))
+> -		ret = 0;
+> -	else
+> -		ret = 1;
+> -	iomap_iter_clean_fbatch(iter);
+> -	iter->status = 0;
+> -	if (ret <= 0)
+> -		return ret;
+> -
+> -	memset(&iter->iomap, 0, sizeof(iter->iomap));
+> -	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
+> -
+> -begin:
+> -	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
+> -			       &iter->iomap, &iter->srcmap);
+> -	if (ret < 0)
+> -		return ret;
+> -	iomap_iter_done(iter);
+> -	return 1;
+> -}
+> -
+> -static int iomap_iter_next(struct iomap_iter *iter, const struct iomap_ops *ops)
+> -{
+> -	int ret;
+> -
+> -	trace_iomap_iter(iter, ops, _RET_IP_);
+> -
+> -	ret = ops->iomap_next(iter, &iter->iomap, &iter->srcmap);
+> -	iter->status = 0;
+> -	if (ret > 0)
+> -		iomap_iter_done(iter);
+> -
+> -	return ret;
+> -}
+> -
+>  /**
+>   * iomap_iter - iterate over a ranges in a file
+>   * @iter: iteration structue
+> @@ -131,10 +56,16 @@ static int iomap_iter_next(struct iomap_iter *iter, const struct iomap_ops *ops)
+>   */
+>  int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
+>  {
+> -	if (ops->iomap_next)
+> -		return iomap_iter_next(iter, ops);
+> +	int ret;
+> +
+> +	trace_iomap_iter(iter, ops, _RET_IP_);
+>  
+> -	return iomap_iter_legacy(iter, ops);
+> +	ret = ops->iomap_next(iter, &iter->iomap, &iter->srcmap);
+> +	iter->status = 0;
+> +	if (ret > 0)
+> +		iomap_iter_done(iter);
+> +
+> +	return ret;
+>  }
+>  
+>  /**
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 8a78f47c557b..52d6f585b941 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -194,7 +194,7 @@ struct iomap_write_ops {
+>  };
+>  
+>  /*
+> - * Flags for iomap_begin / iomap_end.  No flag implies a read.
+> + * Flags for iomap_next.  No flag implies a read.
+>   */
+>  #define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
+>  #define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
+> @@ -254,7 +254,7 @@ struct iomap_ops {
+>   *	incremental iter advance.
+>   * @status: Status of the most recent iteration. Zero on success or a negative
+>   *	errno on error.
+> - * @flags: Zero or more of the iomap_begin flags above.
+> + * @flags: Zero or more of the iomap_next flags above.
+>   * @iomap: Map describing the I/O iteration
+>   * @srcmap: Source map for COW operations
+>   */
+> -- 
+> 2.52.0
+> 
+> 
