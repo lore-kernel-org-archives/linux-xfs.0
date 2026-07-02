@@ -1,159 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFA8E37A83A;
-	Thu,  2 Jul 2026 15:34:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783006468; cv=none; b=ODibkau6suPRB4RLgbS+Ju+zeWW0hB9S1iZlGMcI3OyDXs5TkSIZA1JW8Cq9ri3IKuAna4FuYQrUDKzQYJisI9nsotiDS1meKqmmbP5TCK+MS/4ZuyV4LhBApjJ4cG9s3q4B6b6lAm2VIu2XQSZwB1ELinG1SydgNgjVam0YYHw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783006468; c=relaxed/simple;
-	bh=gJwFdSToEpU5oEhjnM3eAHYN2M2sngYJnGxs6qz6wac=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l2MbzsyegL8nWRktp0Wps3zOqQKYMzPZmE2QfCpPy3JYtd2/SzT9EBngHDR/TVajJQ1Okp4DTOvNy3ouQ8afV55LhOBHEWnli0BAfmRiEYGk3R/Bvw6g5m43jnaMzs2anGzvgFFTXJX+xIPZZCCdnTzXZuxsP48gDl9Qo2TLFDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCBYz+SU; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA35F331EAF
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 15:46:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783007209; cv=pass; b=cMZQxAmxhkIYkMTnjjK1jH7xiWc9pdHU6U6TnXCcuNNdBRAFfjbdF3W0QhbiHu0dTxJQykP4R6nsB9AMkALsvd9lKtFRzS8htsW4uJNbGrJSQyOCvXK8vcJmup4GYx62b4oQyecTkqw1IebvlG2T1nhQQ5H4onF8Z9ftkeikGQc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783007209; c=relaxed/simple;
+	bh=b46IvgFklG/Dj+5T4d6yDxQfVAW86jxtJP+qWaWVqbA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=bjuDDmQ/BhXOxB5PYvVVqNd7xblQ2S8JWtQ5qQy6X7f2Us53y4qeRcjrCcvwt7zYqWVf1He5gjjaQLi/24m5pAP/VxIprJCJ1ysmSlN2mcY2zNRch450W3mV/l60vSEIkgosW02M7oemgAp8uKegPrZG2SO3KmRNBDBUp5Rlkwk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RadBpuHt; arc=pass smtp.client-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCBYz+SU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 39E071F000E9;
-	Thu,  2 Jul 2026 15:34:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783006467;
-	bh=gnPPqJYMij9eGIw+OczowLR1AhEfARJCNvgf9wr7i9U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LCBYz+SUFMa2YM4LmwCQY7Pq1XIWSvX7mSZW12hXqjVNO1I5vPC4AZ/YnWK5IhImd
-	 RWHaK33axAWVGGmcB10vTZnJonEkfWmJ5OnMCr75viMz++/w/Jh/laCipeeMtraXFy
-	 wEIzobKfbrg2LiZyB8iPizCY7v29lBAUnGkKXKXxfnN69+EJt1M+j1urCxjjgJi1Bs
-	 rWDdERVlDQ6yNQsjJ+EcX+9sEW/oS/vV4EMq4GaKcXJghTuM1wvX6Jy1Zpvr+mNcbr
-	 FrMDc8ZeYPDmOZEWjXaSDBI2eN+CX8AtgCKwN9zCRTwACXwmILDMCZr5dvMIupGbFQ
-	 nOX7Fzo6NW13g==
-Date: Thu, 2 Jul 2026 08:34:26 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Cen Zhang <zzzccc427@gmail.com>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, baijiaju1990@gmail.com
-Subject: Re: [PATCH] xfs: serialize zoned sysfs reads against unmount
-Message-ID: <20260702153426.GC9392@frogsfrogsfrogs>
-References: <20260702150133.2408523-1-zzzccc427@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RadBpuHt"
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-80fe8f03098so19419367b3.0
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 08:46:47 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783007207; cv=none;
+        d=google.com; s=arc-20260327;
+        b=sQG7hVaw1XUG7U48R1C/yEqIs5GfOZG0Uaw59LO0lFL0+r3PzvYsfhMcvz4BrKX/0m
+         tYvKkVu4cSHt2w/bQFJXeJwiNPlA3N9dDKRlUzFvkyW3Rmn5Q3nsczmMIAUUtRdL0L79
+         L8C/Gomu6LtK0M38QcWjKiM90FAXlJgeNb6qFMZd0Sn55w2Fkqrv+4Vk3pEY1R5slufT
+         E6MCAVfa63d3KARyP55hyXwgjL4xfasScx9ay2xbQgbZKPVI6ijTMVxB+gfkJtp9iAXC
+         fNg4HVZAszJCwsi707zxWVAwuXZftvw8v1Mcv8ueAFR4qDVxevmOVln2yzsZEJSqp/5p
+         g+FQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=b46IvgFklG/Dj+5T4d6yDxQfVAW86jxtJP+qWaWVqbA=;
+        fh=+zR7+LfMx7z/Z9Spevou1Sjby5kqabZaG16JerdcMY0=;
+        b=EQ3P38j7JrBxF1rYsil5lQWJL5bChqgid6cJy2hJtMNKbk8jgAgyjuLCaSpo1waTM7
+         4tOS7wRN+dDYeUdyuUE9V5bC1eWbO/gd9Bc4ZdJ7YdqMEyB/GIyZ697rAGLVdYdZ8Cra
+         n6dF+KEtJwOpV5beuY6Tdaxo0T3aU5NjwGM7Xs3FdNRH5uK4yP74vK1xLAlroQJb4IFY
+         YKhC/ZCNXxvppZt1q4gPOosFcpzUf3jfAIBNHmwKJNZtysXKWafNKas48WhrEQo3zeSo
+         xbVUKeAM9cZMmyOcGvhBHSP2u7hGCWYYwqfWSdICXZ0ZoctNBvlcFFOf5KfSBex0sOSU
+         gsnw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783007207; x=1783612007; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=b46IvgFklG/Dj+5T4d6yDxQfVAW86jxtJP+qWaWVqbA=;
+        b=RadBpuHtb9bsGUt1VhIVayCsb/OI/eCil/PAvCOjhGkfPmZZOglq3M6eq5RQiwZKo4
+         K2JRI7Af7FU4N5epntdnGWqhRDc5TVUjEf2MpXHCeeiW5D+4BwtPolmvU/6pVixVAirG
+         lgZDlmZzDROvaAaOX2YFa/xMds+gorlI9X4TE2pq3f3GWqZOj95pF2OnordznNZzlOuj
+         gYFFJkouKaN+N2jTe/78rNCtDgGW6e1qsnXkfzIEG5NdBc2bFsUVRTNKp1hDHvewgPLu
+         zU8ViVd98YYCSO/Xb0iJojBHtn5DdgqZjQjJa6ELPHJp6VqeWiroVNugxNOAoPmKlVwg
+         4BVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783007207; x=1783612007;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=b46IvgFklG/Dj+5T4d6yDxQfVAW86jxtJP+qWaWVqbA=;
+        b=aeaonjN3sp8N/BLkHIIK0DTAAND9/qaKLQ6RRGcEYHU019j/d+7rY/91ugyJZY1K+m
+         SO0DVvfZvK/QoVC+0UHlFhOOAnSkHLdMX2lH18eEhevjkJPYiy7Q8Ls81PUxWOak9cPy
+         FYgz0LsdEpQlE1UeWJrV1yS97J5XM3hXrSIzjB7TXNcpJ/rIlapg4HFqPIRlt31vlbNG
+         33O0uFEgaXzn/jj9/KJz4PntcOi1L+mJ2LTFRRSBqaFwOSGP5QltVAbvAVMPbwtXICeF
+         JfwYnd8uQ/+Z3I2mvhjvLe928ux+Wpsg3tprXgorBGvY3agT1u0zjWfJ+h/1l+jQNYos
+         UXYw==
+X-Forwarded-Encrypted: i=1; AHgh+RrX7pSOX9wCHhkaZPj4V2ZgfsJShd1NRG1FQLKN022oLD69QhFDoeNBhheVxoxFsEQQl0dXKNVODZg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyeZvpGAqwbs4+q6oJwMAWEcx9tbN//LLQ/5+RJfzfZwprlrAvt
+	fIgrcEVnKZFLDcRoRZbaRAOM0Bx+SvZWe1JNbbCE8MrR562EADBVZmAIUBxzoWE9AyuIt27kCsm
+	SPwEyCUJcu/qCi7o6040ClnBLLIRFURg=
+X-Gm-Gg: AfdE7clRcO94bxfWGf6Bv05ptYY9DsSVapFGzonTDdHUtuJnRtQiUFreDAWvajZeEnF
+	sk3t2MzY0oOR4Tvimxb06A2ZIAyl8KmuFdvxVsUO4ZiUY4Zs2/09xheKWR+/22pz8bmWFZfPfEI
+	nvupC7UCRFOp7/yYL7c8Ey23twpOJAp9EHkkStAhjGCkoXgLmlsQb/HT71Hr8gU3H5kYGgmeoHz
+	wjEDjRjtDArrGzMO0roeF48hIeMW+NvVMcWhrwjeCIqSi5WSFcaWbEBk5tDSZ/poZVdaW7R2aw=
+X-Received: by 2002:a05:690c:6189:b0:806:e2ad:534d with SMTP id
+ 00721157ae682-812e8ef3f80mr70063737b3.7.1783007206987; Thu, 02 Jul 2026
+ 08:46:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260702150133.2408523-1-zzzccc427@gmail.com>
+References: <20260702150133.2408523-1-zzzccc427@gmail.com> <20260702153426.GC9392@frogsfrogsfrogs>
+In-Reply-To: <20260702153426.GC9392@frogsfrogsfrogs>
+From: Cen Zhang <zzzccc427@gmail.com>
+Date: Thu, 2 Jul 2026 23:46:35 +0800
+X-Gm-Features: AVVi8CdMO9IXkjPOWiE2a2h2Z4Ujh_e4vNgEioJIfVtBuS7AIbYXjxG8NKAvGa0
+Message-ID: <CAFRLqsVATEenpZ8FBb1pMTxTay0xwS6GfmMyxZRUUjrNpUPEnQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: serialize zoned sysfs reads against unmount
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, baijiaju1990@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jul 02, 2026 at 11:01:33PM +0800, Cen Zhang wrote:
-> The zoned sysfs kobject is removed late in xfs_unmountfs(), after
-> xfs_unmount_zones() has torn down the zone allocator.  A read of
-> nr_open_zones can therefore enter through the still-live sysfs kobject
-> and dereference mp->m_zone_info after xfs_free_zone_info() has freed it.
-> 
-> Serialize the nr_open_zones show method against unmount with s_umount.
-> If unmount already owns the write side, fail the sysfs read before
-> touching m_zone_info.  If the sysfs read gets in first, the unmount path
-> must wait until the read has copied zi_nr_open_zones.  Also return
-> -ENODEV if the zoned sysfs node is visible before zone information is
-> available.
+Hi, Darrick
+>
+> Shouldn't we tear down the sysfs files that access m_zone_info before
+> freeing it?
+>
+> --D
 
-Shouldn't we tear down the sysfs files that access m_zone_info before
-freeing it?
+Thanks for the review and suggestion.
 
---D
+I'll check this and follow up with an updated patch if that is the
+right approach.
 
-> Validation reproduced this kernel report:
-> BUG: KASAN: slab-use-after-free in nr_open_zones_show+0x86/0x90
-> The buggy address belongs to the object at ffff88810b177800 which belongs
-> to the cache kmalloc-1k of size 1024
-> The buggy address is located 160 bytes inside of freed 1024-byte region
-> [ffff88810b177800, ffff88810b177c00)
-> Read of size 4
-> Call trace:
->   print_report+0xcd/0x620
->   nr_open_zones_show+0x86/0x90 (fs/xfs/xfs_sysfs.c:724)
->   srso_alias_return_thunk+0x5/0xfbef5
->   __virt_addr_valid+0x20c/0x410
->   kasan_report+0xdd/0x110
->   sysfs_kf_seq_show+0x1bd/0x380
->   seq_read_iter+0x40f/0x11b0
->   lock_release+0xba/0x260
->   mark_held_locks+0x40/0x70
->   vfs_read+0x717/0xce0
->   __up_read+0x319/0x900
->   ksys_read+0xf8/0x1c0
->   do_user_addr_fault+0x3d0/0xbc0
->   trace_hardirqs_on_prepare+0x23/0xf0
->   do_syscall_64+0xc8/0x530 (arch/x86/entry/syscall_64.c:87)
->   entry_SYSCALL_64_after_hwframe+0x74/0x7c
-> Allocated by task stack:
->   kasan_save_stack+0x33/0x60
->   kasan_save_track+0x14/0x30
->   __kasan_kmalloc+0xaa/0xb0
->   __kmalloc_cache_noprof+0x205/0x460
->   xfs_mount_zones+0x34c/0x2650
->   xfs_mountfs+0x1b97/0x1eb0
->   xfs_fs_fill_super+0xf2b/0x18a0
->   get_tree_bdev_flags+0x310/0x590
->   vfs_get_tree+0x8d/0x2e0
->   __x64_sys_fsconfig+0x61c/0xbc0
->   do_syscall_64+0xc8/0x530 (arch/x86/entry/syscall_64.c:87)
->   entry_SYSCALL_64_after_hwframe+0x74/0x7c
-> Freed by task stack:
->   kasan_save_stack+0x33/0x60
->   kasan_save_track+0x14/0x30
->   kasan_save_free_info+0x3b/0x60
->   __kasan_slab_free+0x5f/0x80
->   kfree+0x20e/0x4c0
->   xfs_unmountfs+0x2fd/0x390
->   xfs_fs_put_super+0x60/0x110
->   generic_shutdown_super+0x143/0x4b0
->   kill_block_super+0x3b/0x90
->   xfs_kill_sb+0x12/0x50
->   deactivate_locked_super+0xa7/0x160
->   cleanup_mnt+0x218/0x420
->   task_work_run+0x11a/0x1f0
->   exit_to_user_mode_loop+0x13c/0x4f0
->   do_syscall_64+0x4a9/0x530 (arch/x86/entry/syscall_64.c:87)
->   entry_SYSCALL_64_after_hwframe+0x74/0x7c
-> 
-> Fixes: 62c89988dc19 ("xfs: expose the number of open zones in sysfs")
-> Assisted-by: Codex:gpt-5.5
-> Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
-> ---
->  fs/xfs/xfs_sysfs.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 676777064c2d..1fe0014c8567 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -725,9 +725,21 @@ nr_open_zones_show(
->  	struct kobject		*kobj,
->  	char			*buf)
->  {
-> -	struct xfs_zone_info	*zi = zoned_to_mp(kobj)->m_zone_info;
-> +	struct xfs_mount	*mp = zoned_to_mp(kobj);
-> +	struct xfs_zone_info	*zi;
-> +	ssize_t			ret;
-> +
-> +	if (!down_read_trylock(&mp->m_super->s_umount))
-> +		return -ENODEV;
-> +
-> +	zi = mp->m_zone_info;
-> +	if (zi)
-> +		ret = sysfs_emit(buf, "%u\n", READ_ONCE(zi->zi_nr_open_zones));
-> +	else
-> +		ret = -ENODEV;
-> +	up_read(&mp->m_super->s_umount);
->  
-> -	return sysfs_emit(buf, "%u\n", READ_ONCE(zi->zi_nr_open_zones));
-> +	return ret;
->  }
->  XFS_SYSFS_ATTR_RO(nr_open_zones);
->  
-> -- 
-> 2.43.0
-> 
-> 
+Best regards,
+Cen Zhang
