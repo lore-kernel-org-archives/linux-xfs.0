@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B213CB2DB
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:59:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996033D6CD5
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 19:59:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783022362; cv=none; b=sNU254BTTTs8K+TFUitO9Rx5lh05gk5A5l96OOJKbCQrXycsNG+cnQamUyX6U1cfCBpzBTh3VgoP1XfJmpG7m9KUS5s5CeiD+Zg2UqxcPLPtuS9inQ3qOfEmcFYJFPhgoeus4815WY+V+7lnQLJdiaGwauFkEdx4bhRPYVj4+pQ=
+	t=1783022377; cv=none; b=pSKCw8WI7Emq6TLmOFGHLfFpelxxqyWW2iqA1zRTTKNxjKRi8DWgv0+93E6BfvfBMsndmln2WibXFEmD9Vua+1thLc8zTAP9vBvA5BQSL7iCzyT9kLsVU9Za+BG/F5RaWW1g2G+rawgwXVIqiJp+2xm6dwvSd8QtrRpqO67k/tU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783022362; c=relaxed/simple;
-	bh=ZPptHlGHwa3ki7MEMa/el5qrOeQkdwSQhrDfcYV0/Cs=;
+	s=arc-20240116; t=1783022377; c=relaxed/simple;
+	bh=P8mH9+LcBsLOjYhL7W9hxPmRB/fz31UYnHp/28ysAqw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uKbMHfCaEL/vEFcNYxSfafFwxZPvDXG3CvRV1aggt7mmV1Zc3WfLsAUIx/ZbT0d6orH9WIoWsEHpzrj5T1/vT03kuUtzgWmjjP9izpMmDWxPdH6OTU6cNYJHQ1U6tKhyT3g9culp8bI2Ns+4TTdxV5mIdTqHSUKJ/hXv0EFCEAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vdv0qJkq; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Gq2e7xOYc/ZK0hfuyRPlcY/GQ7uT+K0NyRFyQljVvFT2aa+spHki/nvon6PxCVHU9IilMgA01q1C6QgLM//QR0MfQt1ZwjhIfhJT39dNmmJ5RzWK0IUW+DRbJQyqBmajPGCG/8jNp1atLgLZC+G5mKsnPA6KllkfZi19dQwpIsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIVpk3R6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vdv0qJkq"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 95C041F000E9;
-	Thu,  2 Jul 2026 19:59:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIVpk3R6"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 282F71F00A3A;
+	Thu,  2 Jul 2026 19:59:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783022359;
-	bh=s+11tesRZw5cReY76YeCHGn2fDW/F9GLOjnW1zrBuJ8=;
+	s=k20260515; t=1783022375;
+	bh=yjzT0tuHJljYYwb7+s54r5AKwpx/wHQLXoikH+h8AT8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=Vdv0qJkq17Zwbd7MCdt5wacthvY7nqDdxuQTy7+51t9rDsTDicls11S3bWOCaGWyb
-	 aCfkpqQBc7wODfZbTUusKuXDWlwIbmCYKNzEfZ5cvV9DQuY0CtOXmbHYfxmzdbXLKv
-	 lP80RiC7oEZHZjGLrOTxv11uY/HwZ04wmH332WHPiCJ6hGUOpjkJyk37z9RrjWyinK
-	 xnW/ZTqVs0RNu9Zb7ttCZMgwLtzBMbVBrAD92uf3hRUjkmz8VrbxF/tnTzqd2glQC0
-	 11N4iJS/H+msO3YHpysRT5QDGxIKT0NwERqzdN3Qv5Wj53zmfQ9EDUPnXP0l1650XN
-	 EjaeP/id5Z9XQ==
-Date: Thu, 02 Jul 2026 12:59:19 -0700
-Subject: [PATCH 1/5] xfs: add write pointer to xfs_rtgroup_geometry
+	b=eIVpk3R6taAd3wCQcImmR2vfTyazC6eRHE3Mtmiza9xjgpmSsxNz9pRgQNPghyCiJ
+	 T7LJ0VuXq2knkr7W8vEOC5UmBTdrhZcpftmLH//ZtQX13tn3/WRRhs51NQIK76uF73
+	 KV42pef3SvxhWzl2MZU+tPqf+xYv0wmoymJYDrKotCFG+hTz2VBkuggThrJEdaOr90
+	 NkvjabmudRe3moqIQE0TN9kf0a3fX7sDLi7wgezqYOZiaoIpnTrM15WtRG8rMf5LfT
+	 l6MFha/smsZdC7CVJymNMbAgjBlJeLJOyTKAorZK8zxQYvDwvkgcf956yfkBx+i2Qz
+	 xLlV8K6VDN3bg==
+Date: Thu, 02 Jul 2026 12:59:34 -0700
+Subject: [PATCH 2/5] xfs: switch (back) to a per-buftarg buffer hash
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, hch@lst.de, wilfred.mallawa@wdc.com,
+Cc: bfoster@redhat.com, cem@kernel.org, hch@lst.de,
+ syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com,
  linux-xfs@vger.kernel.org
-Message-ID: <178302225924.845293.4268373698753480705.stgit@frogsfrogsfrogs>
+Message-ID: <178302225943.845293.18208584778633982562.stgit@frogsfrogsfrogs>
 In-Reply-To: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
 References: <178302225882.845293.16022494313921827307.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,55 +45,86 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Source kernel commit: c6ce65cb17aa9321687d1b8a842487f839e1a548
+Source kernel commit: 497560b9ef42a4ab22ada7f1ea975a89cd3c5dfa
 
-There is currently no XFS ioctl that allows userspace to retrieve the
-write pointer for a specific realtime group block for zoned XFS. On zoned
-block devices, userspace can obtain this information via zone reports from
-the underlying device. However, for zoned XFS operating on regular block
-devices, no equivalent mechanism exists.
+The per-AG buffer hashes were added when all buffer lookups took a
+per-hash look.  Since then we've made lookups entirely lockless and
+removed the need for a hash-wide lock for inserts and removals as
+well.  With this there is no need to sharding the hash, so reduce the
+used resources by using a per-buftarg hash for all buftargs.
 
-Access to the realtime group write pointer is useful to userspace
-development and analysis tools such as Zonar [1]. So extend the existing
-struct xfs_rtgroup_geometry to add a new rg_writepointer field. This field
-is valid if XFS_RTGROUP_GEOM_WRITEPOINTER flag is set. The rg_writepointer
-field specifies the location of the current writepointer as a block offset
-into the respective rtgroup.
+Long after writing this initially, syzbot found a problem in the buffer
+cache teardown order, which this happens to fix as well by doing the
+entire buffer cache teardown in one places instead of splitting it
+between destroying the buftarg and the perag structures.
 
-[1] https://lwn.net/Articles/1059364/
-
-Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Link: https://lore.kernel.org/linux-xfs/aLeUdemAZ5wmtZel@dread.disaster.area/
+Reported-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: syzbot+0391d34e801643e2809b@syzkaller.appspotmail.com
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- libxfs/xfs_fs.h |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ libxfs/xfs_ag.h |    2 --
+ libxfs/xfs_ag.c |   13 ++-----------
+ 2 files changed, 2 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index d165de607d179e..185f09f327c00c 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -995,7 +995,8 @@ struct xfs_rtgroup_geometry {
- 	__u32 rg_sick;		/* o: sick things in ag */
- 	__u32 rg_checked;	/* o: checked metadata in ag */
- 	__u32 rg_flags;		/* i/o: flags for this ag */
--	__u32 rg_reserved[27];	/* o: zero */
-+	__u32 rg_writepointer;  /* o: write pointer block offset for zoned */
-+	__u32 rg_reserved[26];	/* o: zero */
- };
- #define XFS_RTGROUP_GEOM_SICK_SUPER	(1U << 0)  /* superblock */
- #define XFS_RTGROUP_GEOM_SICK_BITMAP	(1U << 1)  /* rtbitmap */
-@@ -1003,6 +1004,8 @@ struct xfs_rtgroup_geometry {
- #define XFS_RTGROUP_GEOM_SICK_RMAPBT	(1U << 3)  /* reverse mappings */
- #define XFS_RTGROUP_GEOM_SICK_REFCNTBT	(1U << 4)  /* reference counts */
+diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
+index 3cd4790768ff91..16a9b43a3c270c 100644
+--- a/libxfs/xfs_ag.h
++++ b/libxfs/xfs_ag.h
+@@ -85,8 +85,6 @@ struct xfs_perag {
+ 	int		pag_ici_reclaimable;	/* reclaimable inodes */
+ 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
  
-+#define XFS_RTGROUP_GEOM_WRITEPOINTER  (1U << 0)  /* write pointer */
-+
- /* Health monitor event domains */
+-	struct xfs_buf_cache	pag_bcache;
+-
+ 	/* background prealloc block trimming */
+ 	struct delayed_work	pag_blockgc_work;
+ #endif /* __KERNEL__ */
+diff --git a/libxfs/xfs_ag.c b/libxfs/xfs_ag.c
+index fd5f902b052435..1c75ef51056789 100644
+--- a/libxfs/xfs_ag.c
++++ b/libxfs/xfs_ag.c
+@@ -108,10 +108,7 @@ xfs_perag_uninit(
+ 	struct xfs_group	*xg)
+ {
+ #ifdef __KERNEL__
+-	struct xfs_perag	*pag = to_perag(xg);
+-
+-	cancel_delayed_work_sync(&pag->pag_blockgc_work);
+-	xfs_buf_cache_destroy(&pag->pag_bcache);
++	cancel_delayed_work_sync(&to_perag(xg)->pag_blockgc_work);
+ #endif
+ }
  
- /* affects the whole fs */
+@@ -233,10 +230,6 @@ xfs_perag_alloc(
+ 	INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ #endif /* __KERNEL__ */
+ 
+-	error = xfs_buf_cache_init(&pag->pag_bcache);
+-	if (error)
+-		goto out_free_perag;
+-
+ 	/*
+ 	 * Pre-calculated geometry
+ 	 */
+@@ -248,12 +241,10 @@ xfs_perag_alloc(
+ 
+ 	error = xfs_group_insert(mp, pag_group(pag), index, XG_TYPE_AG);
+ 	if (error)
+-		goto out_buf_cache_destroy;
++		goto out_free_perag;
+ 
+ 	return 0;
+ 
+-out_buf_cache_destroy:
+-	xfs_buf_cache_destroy(&pag->pag_bcache);
+ out_free_perag:
+ 	kfree(pag);
+ 	return error;
 
