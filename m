@@ -1,90 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D5648A2C3;
-	Thu,  2 Jul 2026 09:39:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4804C3A9861;
+	Thu,  2 Jul 2026 10:27:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782985195; cv=none; b=n+bWaPoDn2dstsBE5JaYLt7dNnLpUEXeNNtP2W9iIKR3at4cARSBXAiYdsRUQBeJvZWnr9KaNbCtOiEcbVkt5eOMOdKRACWdbVz6n5jciQsA0PHY22lcPHic4oBDIlz8jk/yFdp1Q49KEghz2rFhSMsTII/1d63+QmPR3QQ3r5s=
+	t=1782988032; cv=none; b=KcwIKun2I5d6tsq3K8yiiOErM8NCORfeHUo0CuVOgr2UGCLEAcjYgFDlFSfxqdgBcxPARO+3z1eL8kjC2uxsp/hTrxgyHkQvjDvnRrtbypnOnIwoooay7b60+qEUqiWQ32Xv2OR0JUHVNakiO9cj/Vuvv3t3AAY8DFefADPptPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782985195; c=relaxed/simple;
-	bh=UaC8hQGS+I8KjtWbS7G5GuBhXDcQyxYhmx9kD+nYgFY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gTqb7qLCHfcI75Erd4h2kMCXdgK6XYbt6x9c4iQcCdKJnaXV/oojzfare0fIc4nDMagGZE6mMW+1rhuMM0aljhkPiA/2TKPbKjkbfkfdUt2kOs63Mn3wcxdf0VDIPnGMbYYWazkN+9jntk0KEePhFrOiUYf/rz+qQAHCu6MTHLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oLt8v8fW; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oLt8v8fW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60D291F000E9;
-	Thu,  2 Jul 2026 09:39:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782985193;
-	bh=WYCIRw2VEpiVhadO+aosOWZWEboI4uJ1AJyBmZgZTbw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oLt8v8fWrK3l+GGt3y8Om0RDM8yLZHu4P3gz4qeMHjD+IYy+nRkb9Tr0EL6uuhAXB
-	 1JxGj3uXU74Ppw5c/PxmFmMJoyBzxS6ZWm7bIJcdSTHSmAAYbos6J2Otdnqni54UEQ
-	 n275uLzeXMeizeBDch/BV1/onNNXd5A6o214xxuDnx3VupuCQ6n81Z5tPSt/sOdu9C
-	 AfFLF6U0d7mQzOb/P86uclT1L8CPM7XfhKJFiiGQ2+qX4Wg7CO8TAKlNTdhMMDrSWC
-	 QvB8oSMSqdGdKbompxDS8sOIA7o8FfSQhl6gmz74cTu+JEDD7TFQmvq/S1cVBYkLm0
-	 K6qW9IkAXBhVg==
-From: cem@kernel.org
-To: cem@kernel.org
-Cc: Jan Kara <jack@suse.cz>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	Dave Chinner <david@fromorbit.com>,
-	Eric Sandeen <sandeen@redhat.com>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 5/5] capability: unexport has_capability_noaudit
-Date: Thu,  2 Jul 2026 11:33:25 +0200
-Message-ID: <20260702093324.127450-11-cem@kernel.org>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260702093324.127450-1-cem@kernel.org>
-References: <20260702093324.127450-1-cem@kernel.org>
+	s=arc-20240116; t=1782988032; c=relaxed/simple;
+	bh=Ii8HglSf588SoGDAT6pEq7kUdME/oJt1MpciuR55l2A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fp8beeSFqgbgfHrrMK6P0kwlT4TofOzbO9frr+PlDiXvXndAYL24P53mZq91owk7l/w6dRJNmnKJey098IYPB//GloIAl334A2hYgXr6iPKEOiSa/BWy4nAVuZ/9JfOTgCEhl/7CepY3tZxBK0y9vj5uRk0V5nHILmhvm/rTa8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 35C9B68BEB; Thu,  2 Jul 2026 12:27:06 +0200 (CEST)
+Date: Thu, 2 Jul 2026 12:27:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Kelu Ye <yekelu1@huawei.com>, Yifan Zhao <zhaoyifan28@huawei.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Miklos Szeredi <miklos@szeredi.hu>, fuse-devel@lists.linux.dev,
+	ntfs3@lists.linux.dev, linux-erofs@lists.ozlabs.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 1/3] iomap: consolidate bio submission
+Message-ID: <20260702102705.GB6252@lst.de>
+References: <20260629121750.3392300-2-hch@lst.de> <20260701-davon-kniegelenk-gedehnt-96476b242a09@brauner>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260701-davon-kniegelenk-gedehnt-96476b242a09@brauner>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Carlos Maiolino <cem@kernel.org>
+On Wed, Jul 01, 2026 at 03:27:40PM +0200, Christian Brauner wrote:
+> Applied to the vfs.fixes branch of the vfs/vfs.git tree.
+> Patches in the vfs.fixes branch should appear in linux-next soon.
 
-This has been originally exported to be used in xfs. Giving we are not
-using it anymore, unexport for consistency.
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Serge E. Hallyn <serge@hallyn.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>
-Cc: Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- kernel/capability.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/kernel/capability.c b/kernel/capability.c
-index 2c2d1e8300bd..3d0387fb93a3 100644
---- a/kernel/capability.c
-+++ b/kernel/capability.c
-@@ -326,7 +326,6 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
- {
- 	return has_ns_capability_noaudit(t, &init_user_ns, cap);
- }
--EXPORT_SYMBOL(has_capability_noaudit);
- 
- static bool ns_capable_common(struct user_namespace *ns,
- 			      int cap,
--- 
-2.54.0
-
+Hmm, both this mail and the merge commit in git reference the first
+commit instead of the cower letter.  Is there an issue with your
+automation that made it miss the cover letter?
