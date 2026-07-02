@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA9732572F
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 20:00:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDF72E7365
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Jul 2026 20:01:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783022456; cv=none; b=GdZjnZhSZJYsmt0z2jL1E4rNB7Rh53oM+UYuc/CUXC9cUqTbxXKXYHCgr1VUJ5BB9SgAaBDz7l46CtP6Vf7bBn92nq5iRymQavW6FZ1FYOKlcdxY2KDy654NArDaZZEV1ZSrjbPIuSf8cJKJLFzxUfgUF6lbjZOzInt/9ByIcv8=
+	t=1783022470; cv=none; b=tI5QAtTzVIFZy8vH6xZOngb42crJpA/+sKnqkzMaGfvp+nl4VUALFLUXw3VwD5Jv6M3NJqL2ymFeOTwfDLBMANDBPHWBH1ElTgTAy+OY2KdcPgFefu2EshKex6XFV3WcXtIg/qbBWA7mr8Oyq8MZg9ahrpccw6YcDuUN2FgLxdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783022456; c=relaxed/simple;
-	bh=VPHDB+Qsh+l4mfGwRCThcaKWXM9fxi6kwcy3t+U9sco=;
+	s=arc-20240116; t=1783022470; c=relaxed/simple;
+	bh=o+oxAPPP5NTMG/U2LZDi+zksGIWOG3TcGK9Qj4sPGBc=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K9ZTv3aZsm7I9neeVh8enC1Io/ryM8M2SWIkTJ5cE8AprKe96+ASyETez7ttTJyBknIttjZPuaFe2YY9kl/M0sc1u4hHU/VG1sPFRWDXPcnWqT2/8hxlM6SndNWLaH16bf+QZR7sapWDS+cFObOGJEX5cLm6L43UR6rUSA4kgQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIYE0F4N; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=WjLLaP8pHYB6payf4Krw/nW08YX/DI300Vtg0xCRJ8JcihHSw5nzyNAQ8x5w3jj9bRRXckhxtkvf7nTC8YXuEWa+opvtXbxuvLqYPQHVhkFyJC7A0AEBWeNU/tbeWaCTAxOoR+0MEvIcjDg1qwTh+t1MLb7kfYKMfNmY18emlGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j9hVNwXB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIYE0F4N"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id EBCF71F000E9;
-	Thu,  2 Jul 2026 20:00:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j9hVNwXB"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 739181F000E9;
+	Thu,  2 Jul 2026 20:01:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783022453;
-	bh=6zChvvO19w8m8KagOpfgwTxbNby6tzj4KX+zcSshtcw=;
+	s=k20260515; t=1783022468;
+	bh=m8XZDlMR1X+WS/B85cJolEHD667p9tF70sfi0372mzs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=jIYE0F4NCT7FUL93nuxoTZIH3lAWbMnSdogoByTF5FAlA86DKS1F8BBLU1POu6zge
-	 LVUG9Y1kYF6CQoBJlTw3MP0x4qVtee27KoV+/F5uJ24QoA0aftVpam35TjTb/0XZsb
-	 VuPhAgysTW4QqEOEb7T8MBq2/LNGs5NUeFPoxskvUREkvd7ijsAmAnjPoTJ6///KwU
-	 fdL5UYxPCezfvPfXEwcvNi4C1nsjesPLDcV1L3movHU7HaIanzKMats5sQl3wsTrl9
-	 iPvzngLiXC+GrNikskErMIuAR063fzg0GuxP6YBkUFthcjR+qcZA+h4WlHFCrCapc1
-	 L9YeTz64EgvRg==
-Date: Thu, 02 Jul 2026 13:00:52 -0700
-Subject: [PATCH 02/18] xfs: Report case sensitivity in fileattr_get
+	b=j9hVNwXBXiq1Hd7V52sBAjNPRKw2w63xDemlgjsPX6cpLxMn+YQ4MAumQrTSrd4v6
+	 90u1QgHGET5HwjmSTQRs6YDTDBvvtLphmLVdDvtMWB1A8rcASBC4C1PkJWodjjNGA5
+	 +CuN0UpUuYCxUISVTaK572ITG0zJvIfdgH8ex5tAJa5f+pDA96qUGVA+AxhJoIB+o1
+	 q/wghLkboa/VOie7BVbv9Z4tS9ly0BZZaIoX7amHcauu6WXUUAXRKs6kKYWK8aJdli
+	 /er7KYb7isLoHtWSQOaoWWCf2Jgjq/Fhj9tQiXo5leSI/NCV1Jtyk6k8oFBLddOz2x
+	 AIslil64nuQGQ==
+Date: Thu, 02 Jul 2026 13:01:08 -0700
+Subject: [PATCH 03/18] xfs: fix exchmaps reservation limit check
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: brauner@kernel.org, chuck.lever@oracle.com, roland.mainz@nrubsig.org,
- linux-xfs@vger.kernel.org
-Message-ID: <178302226340.845537.8747268712174851426.stgit@frogsfrogsfrogs>
+Cc: cem@kernel.org, gaoyingjie@uniontech.com, linux-xfs@vger.kernel.org
+Message-ID: <178302226359.845537.16384694520609150281.stgit@frogsfrogsfrogs>
 In-Reply-To: <178302226213.845537.4378925114415707650.stgit@frogsfrogsfrogs>
 References: <178302226213.845537.4378925114415707650.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,82 +43,40 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Chuck Lever <cel@kernel.org>
+From: Yingjie Gao <gaoyingjie@uniontech.com>
 
-Source kernel commit: c9da43e4e5c32c2cb318e616ffa48c7148a70d49
+Source kernel commit: 0a5213bbff62b51c7d4999ac8c7e11ea57d00d45
 
-Upper layers such as NFSD need to query whether a filesystem
-is case-sensitive. Add FS_XFLAG_CASEFOLD to xfs_ip2xflags()
-when the filesystem is formatted with the ASCIICI feature
-flag. This serves both FS_IOC_FSGETXATTR (via xfs_fill_fsxattr()
-in xfs_fileattr_get()) and XFS_IOC_BULKSTAT (which populates
-bs_xflags directly from xfs_ip2xflags()), so bulkstat consumers
-and per-inode queries see a consistent view of the filesystem's
-case-folding behavior.
+xfs_exchmaps_estimate_overhead() adds the bmbt and rmapbt
+overhead to a local resblks variable, but the final UINT_MAX
+check still tests req->resblks.  That is the reservation value
+from before the overhead was added.
 
-FS_XFLAG_CASEFOLD is read-only: FS_XFLAG_RDONLY_MASK ensures
-FS_IOC_FSSETXATTR strips it, and xfs_flags2diflags() has no
-clause for CASEFOLD so the on-disk diflags are unaffected.
-The legacy FS_IOC_SETFLAGS path in xfs_fileattr_set() also
-allows FS_CASEFOLD_FL through its allowlist on ASCIICI
-filesystems so that a chattr read-modify-write cycle does
-not fail with EOPNOTSUPP.
+The computed value is stored back in req->resblks and later passed
+to xfs_trans_alloc(), whose block reservation argument is unsigned
+int.  Check the computed reservation so the existing limit applies
+to the value that will be used.
 
-XFS always preserves case. XFS is case-sensitive by default,
-but supports ASCII case-insensitive lookups when formatted
-with the ASCIICI feature flag.
-
-Reviewed-by: Roland Mainz <roland.mainz@nrubsig.org>
-Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
-Link: https://patch.msgid.link/20260507-case-sensitivity-v14-8-e62cc8200435@oracle.com
-Signed-off-by: Christian Brauner <brauner@kernel.org>
-[djwong: add some missing FS_XFLAG_ private definitions]
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Fixes: 966ceafc7a43 ("xfs: create deferred log items for file mapping exchanges")
+Signed-off-by: Yingjie Gao <gaoyingjie@uniontech.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- include/linux.h         |   17 +++++++++++++++++
- libxfs/xfs_inode_util.c |    2 ++
- 2 files changed, 19 insertions(+)
+ libxfs/xfs_exchmaps.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/include/linux.h b/include/linux.h
-index 8972c9596c75f5..a10d531cffdb04 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -258,6 +258,23 @@ struct file_attr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #endif
+diff --git a/libxfs/xfs_exchmaps.c b/libxfs/xfs_exchmaps.c
+index 5566f9faf45612..651c3784caba73 100644
+--- a/libxfs/xfs_exchmaps.c
++++ b/libxfs/xfs_exchmaps.c
+@@ -708,7 +708,7 @@ xfs_exchmaps_estimate_overhead(
+ 		return -ENOSPC;
  
-+#ifndef FS_XFLAG_VERITY
-+#define FS_XFLAG_VERITY		0x00020000	/* fs-verity enabled */
-+#endif
-+
-+/*
-+ * Case handling flags (read-only, cannot be set via ioctl).
-+ * Default (neither set) indicates POSIX semantics: case-sensitive
-+ * lookups and case-preserving storage.
-+ */
-+#ifndef FS_XFLAG_CASEFOLD
-+#define FS_XFLAG_CASEFOLD	0x00040000	/* case-insensitive lookups */
-+#endif
-+
-+#ifndef FS_XFLAG_CASENONPRESERVING
-+#define FS_XFLAG_CASENONPRESERVING 0x00080000	/* case not preserved */
-+#endif
-+
- /* Atomic Write */
- #ifndef RWF_ATOMIC
- #define RWF_ATOMIC	((__kernel_rwf_t)0x00000040)
-diff --git a/libxfs/xfs_inode_util.c b/libxfs/xfs_inode_util.c
-index ccd38f18c3ed55..fd8441bf9b83dd 100644
---- a/libxfs/xfs_inode_util.c
-+++ b/libxfs/xfs_inode_util.c
-@@ -127,6 +127,8 @@ xfs_ip2xflags(
+ 	/* Can't actually reserve more than UINT_MAX blocks. */
+-	if (req->resblks > UINT_MAX)
++	if (resblks > UINT_MAX)
+ 		return -ENOSPC;
  
- 	if (xfs_inode_has_attr_fork(ip))
- 		flags |= FS_XFLAG_HASATTR;
-+	if (xfs_has_asciici(ip->i_mount))
-+		flags |= FS_XFLAG_CASEFOLD;
- 	return flags;
- }
- 
+ 	req->resblks = resblks;
 
