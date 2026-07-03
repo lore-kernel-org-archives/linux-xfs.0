@@ -1,124 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC913161A4;
-	Fri,  3 Jul 2026 10:37:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783075048; cv=none; b=NBkBuqmD3Z5C6dTQsW77a+YcJFPPOziPoA3ob4nzYFi0JXEIw8x2g9QYDQmozRLcLVEA0UJGuHjbeCObklCztB8zGF1djZxm3mAj3mTlR9BmgBVbwzmjfhW2VoAYsaSveP50I99WnYb+0O/azEyB85v2gFiRxUEHMbc4w5uyiCk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783075048; c=relaxed/simple;
-	bh=d4s4dMLniDIuK4LTsTNvbrHzQ5sC7wrFJBhb2lMg/u0=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=hzO8GDLQc6WIhHSjeerGPh7k8fUjKV3P+oVBPa2o1gs+zNEJx+gYtkqBlQQ5HUpwLj+7mv44jiOXvB/4BAY5MGZeeyRc4VvUXBxU5NC1yv16WkrII7ia2zP+UU3CK1ipCkODCRnJj6SEesA7ax/OBI8S6aVfKX1GgUs4K/JiFvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W8LzFtRD; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B23D3CA49D
+	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 11:45:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783079154; cv=pass; b=u7Gi9LO5aUkEyiYGK33j/WyXIy9l6DUus6mPHaP93T47/kB4yh7vRN/Gt6alhOfUKNsyi27zm0re5dRn8rVNcezX1u+hqM7Fv0dXKbUqn99JLo4ZyaOIVi2Y8FVU3tNhCGqFY9p+mmfrlBlsBWEYVXv3L1Upu+JO0iy0jgSYaDw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783079154; c=relaxed/simple;
+	bh=GeUDSjrHAWkuRRsR++4INezbx04TBh6B1L1rO/GgWvo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NRbhHCrqe8UyYL8Ki6A58Sj+lpjnVxzKMsuVNUd75V35eiqCDHxWFxCppoL13385LVAbRk0niycL0zHtDeb1N/89+rRjRd1JklJ8+Nmi+Gz6//hWNl8epA8rXN4lmlQ+zrVn5BMbDc68aI3aOQ9QXz8p0W6mo5wlOhbQoGMO64U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WBYcasxf; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=gpVlvvjN; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W8LzFtRD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6CFA1F000E9;
-	Fri,  3 Jul 2026 10:37:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783075047;
-	bh=ibq5yGoOYYUKiAiXchC0WA0gL3l+/26cw0R84LkFjaY=;
-	h=Subject:From:To:Cc:In-Reply-To:References:Date;
-	b=W8LzFtRDEJ+LA4ga+f6QzIP5wIjhPrvbgSkeN5H9fdUp8ldRpYac+VP2pbFWqLIaZ
-	 VOZRYcIErzh7ZZVI1opgKNPyPdXZNYzLlXZRZvIfpIEGsP8CRSvmh6dp1f1DUAQ8eT
-	 REmssNKn6FgP95Nylwk1jyDskOejoq/ZtxJV6+SZMcueW6AmnmkTRlSc0afIY2ZaY4
-	 0j6EQgUmekHKxLsbkP1RtsOiATrm0qsMc/rLKl6p2+xyg60HQXm8THGcRmHmGEbsA5
-	 +KIVTrOUxI8EdD77tZ08aAlBNDaVgctnhdPNMu6u++MTrLUeeidjuDh4Pwu7QdGwKu
-	 L34A4eoQ9xeiA==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WBYcasxf";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="gpVlvvjN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783079152;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GeUDSjrHAWkuRRsR++4INezbx04TBh6B1L1rO/GgWvo=;
+	b=WBYcasxftFmBZ8uM45rDWAtpulSQ1NZXxQlNmU/Bcxrp97t3xeVsGvv1iMmQUwaQSMn2e9
+	PbAKWl+zMPeHpocqUrSroAkLJPW7QhjyBKAW+RfMLHITvYy5IbpfwBlOhtYZ2OyZYPrnsx
+	EIa//Qx8K9gcwGwQYMPR9tHzte3EGtw=
+Received: from mail-yw1-f199.google.com (mail-yw1-f199.google.com
+ [209.85.128.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-653-pW91sjAqPLOAff0OtrGvVw-1; Fri, 03 Jul 2026 07:45:49 -0400
+X-MC-Unique: pW91sjAqPLOAff0OtrGvVw-1
+X-Mimecast-MFC-AGG-ID: pW91sjAqPLOAff0OtrGvVw_1783079149
+Received: by mail-yw1-f199.google.com with SMTP id 00721157ae682-809ed87d66eso13382527b3.1
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jul 2026 04:45:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783079149; cv=none;
+        d=google.com; s=arc-20260327;
+        b=OA04FwP581amR8rPDPkWRxXTAcN65jE6qZTDK/ABX/YDsxr5O52qO40DuGZRfiaUY/
+         f1hIv9Hjt6Ta6DrD8jV1lrkvh4a0EFVYe+LXE4gW1RYNycxqh3CsLl96dj2J7hS7G7IZ
+         pvkOb+B1K3IFLXUWqyUHFTUeQotx+CMXudrX5XIZlWvyiGtVSe2bQb+2XvxXbTOPn8VI
+         VkXRh6fZdccSTTmi+V2YJscT89WbLzm47D4Wv8fDNV2RZA4l9jFfSjJZsI7lCGoz7FEA
+         hfuwB0JSqAn+PbtiZbZKpXttv9dKg1LSANQheqwqOcoe3YCOMIqaFP/VtUTdUcqeKdac
+         pcYA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=GeUDSjrHAWkuRRsR++4INezbx04TBh6B1L1rO/GgWvo=;
+        fh=GoJO5UN6ODLqRLDalT7TSGiztzAJlfEZhaGYPdjUjkQ=;
+        b=dx2MYtlo8EIe/saiNtOG79B753NIRfUxim3bD2JzT2eKjWsU8OS+u2V8f1XadegYoR
+         aO2AE7zde63U7sqDRhfpUc5UWoTEoX1rNnSlP03eQtAmK3MCaK05D5y6H0bnooBXa2Qh
+         8IjQ57PCqDjqql7YU9bGGEzuZTH8QU3YyQQyCB4Mcs8CcEUJhx5/67KL6gXmrGdG14m9
+         6FAf1/bziKKVqfXClgxpdZuxwyZcdhQ7ZhZKh97nvwTevcaT8Q652GFWA8yOuMo0jmFK
+         g+Ha8D8PbFxd83zAQuOg6zjen6QgpvmeK8KfMWVfrrpHo5YlwhVpVrbKFCmiFCdsohC+
+         yNCA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1783079149; x=1783683949; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=GeUDSjrHAWkuRRsR++4INezbx04TBh6B1L1rO/GgWvo=;
+        b=gpVlvvjNWqv6inkXDAzUGekF7rJksIpyQSqAz1/JeiPQZAyAdKiRY1TRQr+ZsEQTDa
+         dOvrnHlHNk2uaYstKxwjyDSXbUqclwp3hfmAJQnGydMtQz0FPre5xpoVEWVMgszZTdSB
+         b9CteiS+gWE4/uqwr86+KkDj1kWqiVwzUJtwYfERaZZBjC7n0xMubtHQXSAYlWzanc3y
+         rbOMUYpQ83tZ2fad4vMOnkztzjk0zE01NwQy+ys5zwdnaGtMQaTVFc2grTLEea62qkoC
+         SfSr7tduEQPybp0pxJYUvGKgbHJpzqXgrgxD9BLroJ+MmEQovsPbKcOYcdF1ZZotr1UQ
+         rpeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783079149; x=1783683949;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GeUDSjrHAWkuRRsR++4INezbx04TBh6B1L1rO/GgWvo=;
+        b=YETszAPupjWSqDHZAsE1FUrm70Sqw7dHC3ZaYyMMjdvy3mFDCRDzXkFai+37u4CKLb
+         wl96eAEl7HN2wx/6AbWMujxlSrcsazSCj3W2IW3G017/mZuxidFdCdL1Adc/DLex2BoA
+         vq8Fk2QfMRfiM5rGIu7uKQrqFVod/yXI2ohI0X65byEcG6vMb2w6B5gU1HWWgDppRCZC
+         DD//pnXHsMPPC50B/fPxv+H40OA1LhZ2G99nPH+oljY2KUGmmmxWD3XwwrTkFg/OflC0
+         kSXqkISQHC5dNn0HeyXthyTCaW4Jyx3PeE3LZtw0ow2sX/FDVOVT4UrpVYWtzE1H3Qty
+         MAqQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rr8FApKl+SODScaFO9ZsWYvi2zVw/SOETFYlaoZWy+MHc3xYZz1kFwj37aKTVktUJVbCPJHQvCpzVc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwY3v3dbCvaRiRxJeVUGqTx2jC/3abOfM2smA3cvsKBwSlvLUqe
+	H8sE+ZvgcQ4xXqgpnMuSkyVhKXgW9pIQvJaoVpn4VBPkGAmG3B27Xu6rhX5UTfc6Um1dRpX1cmE
+	U948bHM2y250o/b/7z0FcuIea90fnAZjWb1yZmnKEh4kX0xIE7/ouVDastVgEUBc399KydYKMz4
+	Yy16CyJv3hFg5vxbYBZyvWyhLwgPkKl5t3QrREO+hcgGgUzZE=
+X-Gm-Gg: AfdE7ckfJ11xTt5XdLhaFwsRHIrNHSwQdDr81COiExeSbvbEpcuY3Ua2CW04x9RcAnv
+	/2iBTbjfb6LYgx1tW6plpz8iyvhiYbQZbDa/I35sIm0lYzTHONASkJOxIGYIAi70zoRKPSCUgD1
+	1k81yjAcLy8nYab3lSlLTvYos9QS+/9pe8rvWrjdzvb+a8vK/CGSfJWmh2Xk75Pm3DW02tCPlBG
+	LzRb9UaUDpPkuoeJWHBt5jfDj0yz1P4vxkyq6EeT2tcwz56U/Xajjs=
+X-Received: by 2002:a05:690c:6e0f:b0:806:1ec8:9626 with SMTP id 00721157ae682-812eae80545mr104664857b3.39.1783079148659;
+        Fri, 03 Jul 2026 04:45:48 -0700 (PDT)
+X-Received: by 2002:a05:690c:6e0f:b0:806:1ec8:9626 with SMTP id
+ 00721157ae682-812eae80545mr104664337b3.39.1783079148147; Fri, 03 Jul 2026
+ 04:45:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v2 17/18] iomap: pass iomap_next_fn directly instead of
- struct iomap_ops
-From: Christian Brauner <brauner@kernel.org>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com> <20260701000949.1666714-13-joannelkoong@gmail.com>
+In-Reply-To: <20260701000949.1666714-13-joannelkoong@gmail.com>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Fri, 3 Jul 2026 13:45:36 +0200
+X-Gm-Features: AVVi8CdOnoIEUsSqGG1Lvbx5AQnAbjO-BXv_ely4Zi6OZQFZeWID1WZjNQSTcpA
+Message-ID: <CAHc6FU76J-YYRd2B=ZPN2DMabQjkzgG9qSzbP_S1s9AsSJNh=w@mail.gmail.com>
+Subject: Re: [PATCH v2 12/18] gfs2: convert iomap ops to ->iomap_next()
 To: Joanne Koong <joannelkoong@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- brauner@kernel.org, willy@infradead.org, hsiangkao@linux.alibaba.com, 
- linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
- Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>, 
- David Sterba <dsterba@suse.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
- Jan Kara <jack@suse.cz>, Dan Williams <djbw@kernel.org>, 
- Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
- Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
- Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
- Chunhai Guo <guochunhai@vivo.com>, Namjae Jeon <linkinjeon@kernel.org>, 
- Sungjong Seo <sj1557.seo@samsung.com>, Yuezhang Mo <yuezhang.mo@sony.com>, 
- Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, 
- Baokun Li <libaokun@linux.alibaba.com>, 
- Ojaswin Mujoo <ojaswin@linux.ibm.com>, 
- "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, 
- Zhang Yi <yi.zhang@huawei.com>, Jaegeuk Kim <jaegeuk@kernel.org>, 
- Miklos Szeredi <miklos@szeredi.hu>, 
- Andreas Gruenbacher <agruenba@redhat.com>, 
- Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, 
- Hyunchul Lee <hyc.lee@gmail.com>, 
- Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, 
- Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
- Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, 
- "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, 
- open list <linux-kernel@vger.kernel.org>, 
- "open list:BTRFS FILE SYSTEM" <linux-btrfs@vger.kernel.org>, 
- "open list:FILESYSTEM DIRECT ACCESS (DAX)" <nvdimm@lists.linux.dev>, 
- "open list:EROFS FILE SYSTEM" <linux-erofs@lists.ozlabs.org>, 
- "open list:EXT2 FILE SYSTEM" <linux-ext4@vger.kernel.org>, 
- "open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>, 
- "open list:FUSE FILESYSTEM [CORE]" <fuse-devel@lists.linux.dev>, 
- "open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>, 
- "open list:NTFS3 FILESYSTEM" <ntfs3@lists.linux.dev>
-In-Reply-To: <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
-References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-18-joannelkoong@gmail.com>
- <20260702140705.GE21339@lst.de> <20260702165117.GK9392@frogsfrogsfrogs>
- <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
-Date: Fri, 03 Jul 2026 12:37:14 +0200
-Message-Id: <20260703-nachrangig-gegeben-befestigen-8219a53648c7@brauner>
-X-Mailer: b4 0.16-dev-4217c
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1636; i=brauner@kernel.org;
- h=from:subject:message-id; bh=d4s4dMLniDIuK4LTsTNvbrHzQ5sC7wrFJBhb2lMg/u0=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS5T7iz7fS6t1kzwm8fcparv3KDyXRbpMKKF15fNPbwT
- dVe5OMk1lHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRtgxGhmMbHf76zT147eA7
- nZiMnzu9Q+v+PNtl5pjYUP6f6/XP/z8YGe7siubVVw14xJBz7G+cn2VOrNK0S08/rfgQ3Ddj8wq
- eCi4A
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, willy@infradead.org, 
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, 
+	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 2026-07-02 18:47 -0700, Joanne Koong wrote:
-> On Thu, Jul 2, 2026 at 9:51 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Thu, Jul 02, 2026 at 04:07:05PM +0200, Christoph Hellwig wrote:
-> > > Looks good:
-> > >
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > >
-> > > In terms of merge logistics, I wonder if we should delay this and
-> > > the previous patch to the next merge window so that we can minimize the
-> > > cross-subsystem merge pain with more file system iomap conversion.
-> > > If none of them actually happen until rc6 or so, orif  the merges aren't
-> > > painful we could still pick them up late in the merge window.
-> >
-> > I'd say everything but this patch should go in during the merge window
-> > for 7.3, along with clear instructions to brauner/torvalds to expect
-> > this patch to appear right before 7.3-rc1 gets tagged, to clean up all
-> > the other changes that come in.
-> 
-> Just to clarify, did you mean this patch and the previous one? If i'm
-> interpreting Christoph's concern correctly, I think he's worried about
-> other filesystems converting to iomap using the ->iomap_begin() /
-> ->iomap_end() functions still? That sounds like a good plan to me, for
-> v3 I'll submit everything but this patch and the last one and then
+Joanne,
 
-Ok, so we'll do the prep for vfs-7.3.iomap (aka to be merged in the
-v7.3-rc1 cycle)...
+you say in the cover letter that
 
-> submit these patches (and any cleanup ones that become necessary) to
-> Christian right before 7.3-rc1 gets tagged (which as I understand it,
-> is when the merge window is about to close).
+>This series is submitted against Christian's vfs iomap tree, and is based
+> on top of the current head of his tree (commit f2727952b21d1).
 
-and merge these _after_ v7.3-rc1 has been tagged...
+which repository and branch is that? It's not vfs.iomap in
+git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git; I don't
+have a proper merge point.
+
+Thanks,
+Andreas
 
