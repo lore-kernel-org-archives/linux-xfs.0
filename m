@@ -1,234 +1,150 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7702A23395C
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 01:37:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783042632; cv=pass; b=aeSwcp9+UG7P3xinGz+mucPGDePEYPwuHPo+c6uM0u20qmwQSK1kJtqVaDKE9UFOGeUKY/gdK03/DTlcxVrDOYRyB4/9xnA492WWgCyUSWYzJf2g2ydx3Oti23hXkqoHfT/cn/SMW6Azn7OxHetRYldwBkxuA7nyuCksjZriNGY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783042632; c=relaxed/simple;
-	bh=YMafmxr+u+dHYErOVxj/FNmniwqg1vVnRq/lLcyl4cI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KerGiUGMa6Aqm4OjpLyTolKGcrncpG8P6n8zR8ukDcGQfeu2Jc0X1Ba4tbFCT1WOGuDnffLIdTZJ5eW1crtL1UXLdvQeN8+ewSKG50eVAMPKXbSYStbHTIZwqHysnVrS6CSfwjL6mEeYGBcg/zKABTcCsc1yZm+tgJa1GRzEClY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OSLPPSxW; arc=pass smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9951738D;
+	Fri,  3 Jul 2026 01:38:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783042732; cv=none; b=e0oKA99SQa93LvWJfd5aUrdtj5wpXJEl988jiXpgdW1wEl0WgxTz2bq9lEFUz2OtzeGDvr0OCM5PoKAHFlBpPsjW5hiNje6mWDPmnRwJlllNuemkhqm33EkazmiY6OQgB43GkbelGFtzHFj7DIYlGF8amh/N/eAjm26k3xPU+Q8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783042732; c=relaxed/simple;
+	bh=mq2220Go9A5bB1xPNB6asrxJttQ3xZ9wfPRW/70Ph9g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GyhxUy6jYQCd64WmuMUxkTe9FeWsCGK9Vueag8H4PUeJZwV9XQ0Lh+yb9sq4GWEQ+WCqtSMLGmRvVkQ7DYPSHxJKRkYua9lE1592cJz/9NhA7rJFdNQtUB+t4/Ujx2iywfF1wBSbk748rRt2xTkE3hgNtlFgUvZFXjI0CdwlFoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PstlkvVE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OSLPPSxW"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-474303f3c72so37243f8f.0
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 18:37:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783042629; cv=none;
-        d=google.com; s=arc-20260327;
-        b=TaAa86hzOusjF1Ye3MuW3g9crc3BNoynq2FHKqcxzwUgP0NYhn7pkNCQEB4HsEOs2a
-         Tjh2MM+zvMWscFVPIWxGWMhK87nkTR9+aVIOUGs7RRyM3RIEJqar28oqF5fMxkzQakOP
-         lr6xKqq+Sl5BeM58+Jo42J5CuBVY8PuViCx/qdHvvg5Dj7cHuFGO8MTervvoV/fs+NEc
-         KJkg9ik99pKqF/1HGNQeuYntEbvRq3rWuyofKsuO1oHFZgysoxTtylkv/utpZetJf9ao
-         Wsbo8l85tUHNZpWMPFBbhISM9HNNiQrKgHHuuM6jPmKPYmdiU+aVsogcnkl0gehEWAyw
-         LY3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tNl1bH7dvjSHeVWsTMaZDTnFNN2LUwwSM0ajOC2Eq64=;
-        fh=TC7xAIBlyEyJ3NJYZ+fSGKS0XyE//FlRGfrlmbpllzM=;
-        b=lHCJsi64mzghw/E03O+G+0S6UgGvLVRhyVnJ2lvTOI7lWYAe7w5YSKHhWL6WH24t51
-         OhSL4sPZkSakj3V8Es3F2HmNJKEYda0/MulbuQD840Lq3SDutjDKXMiEd3P0vLTZ8qBc
-         KmuIWg1llEK12xt3da8zFi3bqxYxpFMNGL+SeD/0TskLNzvaX7T1cZ0ayQWqgaV1IKQV
-         /ZrtECS6IM8+44ox75g2HFqAuRVVh9yd+l8JBLXi/s4Eb++C9SgoQ4TuBa7XbDhh5GzC
-         7vHyXhoOUkqpBMLPkJZr/JyePYYrByQA9HDWKnFT9rsjf0Sj/Hya+bXaIwWbcoQeI67o
-         ZHaA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783042629; x=1783647429; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tNl1bH7dvjSHeVWsTMaZDTnFNN2LUwwSM0ajOC2Eq64=;
-        b=OSLPPSxWqn16s4eGDyLbORnovIBg0BtZJEBnyWUTexpYXt8jm4lfKodTxqjuVIL9a8
-         UIeaVlXFh12HjENRQT9FcNB7LBWNIifhYipV59o0X5yZl7VOhkxmJupuBO46kwiyiOkE
-         93wutWBGfTbZYmDxWO1GLUv0N6WC/TtJFAsoLtujAJoUcXmoXaWQEB7x197T0hulyg/M
-         ZC+NA03JauS5I1oypD3UhDj7Vp3kPaZmDldemIe0joGocE0Tba+pGkNt66yclJ/Y+5kl
-         Y41OTrS7TTQoZX1XtA6f/MQITHdAjywPhIYWJv8Azlp0edlR7Cag82xBZZDniRrqnpbf
-         T9rA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783042629; x=1783647429;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tNl1bH7dvjSHeVWsTMaZDTnFNN2LUwwSM0ajOC2Eq64=;
-        b=E1wZB+rDcA8YoHx8F4ZlZaO2IcEBniymkLBxD5K8os7frW7n4+Ba5vhTVZfqNnfKzA
-         hqY+hCl06kUpPeKWbtWG0e2IGiZGIWg3G/eXbwrmqWExsTrEwuJsoknXb8R9f6Wd3vfa
-         NLsOltKR+F+koCRVo3rHlD89GnyM8NtcbI26sVnkpX2S2S5vwGy0/llXXmNJEcZ4dP8v
-         vz72jcSwqC1buZtTDUYqZfuksDmI52P0o1zBsiZYqVFsCeaG5G1PwQJ4yizzttR2Pr4o
-         2tiJvQCtluhxHCVpKe0v0KECTfaUtt0QPhZMQStlycZUNKoLexIXZokFd/0Y+MNiUZHj
-         gGdg==
-X-Forwarded-Encrypted: i=1; AHgh+RougW/8l2QqY5B0FsFbCkTaqGVqzKtZgOHCD7TofIqdvTK4UfvF8sM80HOzEGTDU6c6hNgAm5cLOpQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzPMLtBYccWRrqvnGgfkC8BVqfrG9GzHyYn9yAvJxvh2WXNeWkZ
-	WyB2/iOgnruOXq9lXyqsQSYKmlAmDqIYtvjA9Aux9tPgDUSEGiCupEZB6spQ71xH8rrcpo96loG
-	bnvuEfY9UZnJC+Wdt0sq1uxcuBDT20WI=
-X-Gm-Gg: AfdE7cnOjQpmy/nBSURgsGuNuX2Umf8crO8cxVQAfUHHtg9Nh2MgbhO5qW5lq+kHlDD
-	J21zwRQF5hK08CkTyEGBfd0lvUxL9pta/L2aL2sNyCMX27VnvwfTqSApRejd8Mpb7CZTVR5AvhW
-	MXnMff5/OaMyxcHpzs9LzkMs5cdTQ8JkIepUYhi7IUbnk6lhGEtALqWGhQRpj1L1utHo8pzOKRk
-	rjYneGDhYRF8xVO0pRX41otvWEg86nyNai7f4k8qTDBLSv/y0V/nQu5ThqDRu+tGJSZwzDwFOyC
-	DZqpBVXd3KISLlOBHjks3vGBgSb6IuZJdnv4HVUf9O+SAGNlD2rt
-X-Received: by 2002:a05:6000:310a:b0:474:b860:b7b1 with SMTP id
- ffacd0b85a97d-477573bbc08mr11953399f8f.9.1783042628647; Thu, 02 Jul 2026
- 18:37:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PstlkvVE"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 289BB1F000E9;
+	Fri,  3 Jul 2026 01:38:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783042731;
+	bh=tUzVD9QggnKtRDDowC8X3tSqTwejdWgdp3st0c+YMvU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=PstlkvVEgI7aKssplK8kU5e9soyJ4pnpLXiGUdGW++UnvfJOgEeV91dhlZ7qi4cfY
+	 p+aaaRWJUK5GlDZ6xusPI9rBXSwflcbxRw8L2e9yXD9ln5F37OuNZDkirK3HxV/vsM
+	 OAudQ3+roRPZZLb+Cgu9oq/cpFOm48NoZzj2ZJOnV/vY0O9AlHz5eHAxb6MeKFgrkT
+	 2qOo9vu4lw1PFkJUuLK1Ku/zBGQFgW37W15Z3dk38rKXbxOztSu3Dd+fUGiz9kRJUE
+	 TpwtbZgMXwwO2WagY/NlN7O82Wls5oEwOirHhq02NZ0H83oS5phGTBW84XiOp1Gs6Q
+	 GL2iU/QtVOyXQ==
+Date: Thu, 2 Jul 2026 18:38:50 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org,
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 02/18] xfs: convert iomap ops to ->iomap_next()
+Message-ID: <20260703013850.GP9392@frogsfrogsfrogs>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com>
+ <20260701000949.1666714-3-joannelkoong@gmail.com>
+ <20260702164339.GI9392@frogsfrogsfrogs>
+ <CAJnrk1ZRQaFseAnz3zm31oR3KmQWje5HDJjhNbAQSAQyK9_PMA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-19-joannelkoong@gmail.com> <20260702192658.GN9392@frogsfrogsfrogs>
-In-Reply-To: <20260702192658.GN9392@frogsfrogsfrogs>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 2 Jul 2026 18:36:55 -0700
-X-Gm-Features: AVVi8CcC6fzVqkOo0UfHNUMqKEbgK9tYEuLIjcETtAi_mnO3ekDmRCY21CtHqN0
-Message-ID: <CAJnrk1YZQOQ0D6p6qYx1BPvKQaDgZsrKzLbGZzaH8tUkj_OoOQ@mail.gmail.com>
-Subject: Re: [PATCH v2 18/18] Documentation: iomap: update docs to reflect
- iomap_next model
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org, 
-	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, 
-	Shuah Khan <skhan@linuxfoundation.org>, 
-	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1ZRQaFseAnz3zm31oR3KmQWje5HDJjhNbAQSAQyK9_PMA@mail.gmail.com>
 
-On Thu, Jul 2, 2026 at 12:27=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Tue, Jun 30, 2026 at 05:09:33PM -0700, Joanne Koong wrote:
-> > Filesystems no longer pass a struct iomap_ops with separate
-> > ->iomap_begin() and ->iomap_end() callbacks.  Instead, every iomap
-> > operation takes a single iomap_next() callback directly. iomap_next()
-> > finishes the previous mapping (if any) and produces the next one. Most
-> > filesystems build it from begin and end helpers via the iomap_process()
-> > helper.
+On Thu, Jul 02, 2026 at 04:59:39PM -0700, Joanne Koong wrote:
+> On Thu, Jul 2, 2026 at 9:43 AM Darrick J. Wong <djwong@kernel.org> wrote:
 > >
-> > Update the iomap documentation to match this change.
+> > On Tue, Jun 30, 2026 at 05:09:17PM -0700, Joanne Koong wrote:
+> > > Convert xfs iomap_ops to the new ->iomap_next() callback. This uses the
+> > > iomap_process() helper, which finishes the previous mapping if needed
+> > > and produces the next one. No functional changes are intended.
+> > >
+> > > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> > > ---
+> > >  fs/xfs/xfs_file.c  |  4 +-
+> > >  fs/xfs/xfs_iomap.c | 96 +++++++++++++++++++++++++++++++++++++++++-----
+> > >  2 files changed, 88 insertions(+), 12 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 845a97c9b063..7f8bef1a9954 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -857,9 +857,9 @@ xfs_file_dio_write_atomic(
+> > >                       NULL, 0);
+> > >
+> > >       /*
+> > > -      * The retry mechanism is based on the ->iomap_begin method returning
+> > > +      * The retry mechanism is based on the ->iomap_next method returning
+> > >        * -ENOPROTOOPT, which would be when the REQ_ATOMIC-based write is not
+> > > -      * possible. The REQ_ATOMIC-based method typically not be possible if
+> > > +      * possible. The REQ_ATOMIC-based method is typically not possible if
+> > >        * the write spans multiple extents or the disk blocks are misaligned.
+> > >        */
+> > >       if (ret == -ENOPROTOOPT && dops == &xfs_direct_write_iomap_ops) {
+> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > > index 225c3de88d03..4fa1a5c985db 100644
+> > > --- a/fs/xfs/xfs_iomap.c
+> > > +++ b/fs/xfs/xfs_iomap.c
+> > > @@ -1037,8 +1037,18 @@ xfs_direct_write_iomap_begin(
+> > >       return error;
+> > >  }
+> > >
+> > > +static int
+> > > +xfs_direct_write_iomap_next(
+> > > +     const struct iomap_iter *iter,
+> > > +     struct iomap            *iomap,
+> > > +     struct iomap            *srcmap)
 > >
-> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > ---
-> >  Documentation/filesystems/iomap/design.rst    | 115 +++++++++++++-----
-> >  .../filesystems/iomap/operations.rst          |  60 +++++----
-> >  Documentation/filesystems/iomap/porting.rst   |  22 +++-
-> >  3 files changed, 132 insertions(+), 65 deletions(-)
+> > <unvarnished brainstream ahead>
 > >
-> > diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation=
-/filesystems/iomap/design.rst
-> > index 0f7672676c0b..7a37e303eea8 100644
-> > --- a/Documentation/filesystems/iomap/design.rst
-> > +++ b/Documentation/filesystems/iomap/design.rst
-> > @@ -75,7 +75,10 @@ At a high level, an iomap operation `looks like this
+> > Now that I see the callsites, I think the "next" name could use some
+> > bikeshedding <cough>.  The purpose of this function is either
 > >
-> >  1. For each byte in the operation range...
+> > (a) to look up the first mapping to start iterating;
+> > (b) to release whatever resources were attached during the current
+> >     iteration and look up the next mapping to continue iterating; or
+> > (c) to decide that it's time to stop iterating.
 > >
-> > -   1. Obtain a space mapping via ``->iomap_begin``
-> > +   1. Obtain the next space mapping via the ``iomap_next`` callback.
-> > +      From the second iteration onwards this same callback first finis=
-hes
-> > +      the previous mapping (committing or unreserving space as needed)
-> > +      and then produces the next one.
+> > From that it seems obvious to me that xfs_direct_write_iomap_next yields
+> > iomaps for iteration.  In Python those are called generator functions;
+> > in Rust they're called objects that implement the Iterator trait (or
+> > iterators for short).
 > >
-> >     2. For each sub-unit of work...
+> > How about s/iomap_next/iomap_iter/ ?
 > >
-> > @@ -86,7 +89,13 @@ At a high level, an iomap operation `looks like this
+> > Then this function would be called xfs_direct_write_iomap_iter, which
+> > IMO is a closer description of what the function does, which is to say
+> > iterates iomaps for direct writes.
 > >
-> >     3. Increment operation cursor
-> >
-> > -   4. Release the mapping via ``->iomap_end``, if necessary
-> > +iomap repeats this until the range is fully consumed.  The ``iomap_nex=
-t``
-> > +callback returns ``1`` while there is more of the range left to proces=
-s,
-> > +``0`` once it is fully consumed, and a negative errno on error.
->
-> s/and/or/
->
-> > +Filesystems rarely implement ``->iomap_next`` by hand. The ``iomap_pro=
-cess``
-> > +helper implements the finish-then-produce sequence in +terms of two sm=
-aller
-> > +callbacks, ``begin`` and ``end``. See `The Mapping Callback`_ below fo=
-r more
-> > +info.
->
-> I wonder, under what circumstances would a filesystem /not/ use
-> iomap_process()?
+> > (Yes, my brain might be polluted with thinking that "iomap next" refers
+> > to a major shift, in the sense of "linux next". :P)
+> 
+> Thanks for sharing your thoughts. The idea makes sense to me in theory
+> but I think in rust and python the "iter" naming is reserved for the
+> iterator object itself and the method / callback for advancing and
+> yielding the next item in the iteration is named "next" (eg
+> Iterator::next in rust and __next__() in python)? I wonder if the
+> s/_next/_iter gets confusing with multiple things in iomap already
+> called iter (eg the struct iomap_iter, the iomap_iter() function). I'm
+> not sure, I'm happy to rename this if that's the preference.
 
-Hmm, maybe a situation where they need to share or carry some
-filesystem-specific state / info between finishing the mapping and
-producing the next one?
+That's a good point that the functions themselves are usually some
+variant of next.
 
->
-> >  Each iomap operation will be covered in more detail below.
-> >  This library was covered previously by an `LWN article
-> > @@ -189,7 +198,7 @@ The fields are as follows:
-> >     * **IOMAP_DELALLOC**: A promise to allocate space at a later time
-> >       ("delayed allocation").
-> >       If the filesystem returns IOMAP_F_NEW here and the write fails, t=
-he
-> > -     ``->iomap_end`` function must delete the reservation.
-> > +     ``end`` function must delete the reservation.
-> >       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
+> Thanks,
+> Joanne
+> 
 > >
-> >     * **IOMAP_MAPPED**: The file range maps to specific space on the
-> > @@ -208,12 +217,12 @@ The fields are as follows:
+> > > +{
+> > > +     return iomap_process(iter, iomap, srcmap, xfs_direct_write_iomap_begin,
+> > > +                     NULL);
 > >
-> >     * **IOMAP_INLINE**: The file range maps to the memory buffer
-> >       specified by ``inline_data``.
-> > -     For write operation, the ``->iomap_end`` function presumably
-> > -     handles persisting the data.
-> > +     For write operation, the ``end`` function presumably handles
-> > +     persisting the data.
->
-> Unrelated to this patch, but this should say "For write operations, the
-> end function must persist the data" because iomap_writepages doesn't
-> handle inline data.
->
-> >       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
-> >
-> >   * ``flags`` describe the status of the space mapping.
-> > -   These flags should be set by the filesystem in ``->iomap_begin``:
-> > +   These flags should be set by the filesystem in ``begin``:
->>
-> > +``->iomap_next``
-> > +~~~~~~~~~~~~~~~~
-> > +
-> > +Each call must finish the previous mapping, if any, and then produce t=
-he
->
-> Each call?  Oh, each implementation of ->iomap_next must finish the
-> previous mapping.
->
-> > +next mapping for the current iteration position described by ``iter``.
-> > +The mapping is returned through ``iomap`` (and through ``srcmap`` for
-> > +operations that read from one mapping while writing to another; see
-> > +``begin`` below).
-> >
-> > -``->iomap_begin``
-> > +The callback returns ``1`` to continue iterating, ``0`` once the file
-> > +range has been fully consumed, and a negative errno on error.
->
-> s/and/or/
->
-> I think there should be a transition sentence here along the lines of
->
-> "Most filesystems are not expected to implement all of these behaviors
-> in ->iomap_next themselves.  They should instead call iomap_process as
-> described below."
->
-> Or demote the next section so it's more obvious that the "iomap_process"
-> and "->iomap_next" sections aren't independent?
->
+> > But then "iomap_iter" sets up a new problem: should iomap_process have a
+> > new name that goes along with that?  iomap_iter is already taken for the
+> > legacy path.  If we were emulating python I'd suggest iomap_iter_yield
+> > but this is C so we get to reinvent everything from scratch so who
+> > knows.
 
-Sounds good, I'll incorporate all the suggestions you recommended.
+Any thoughts on iomap_yield()?  Though I can live with iomap_next since
+that /is/ the least effort action. :)
 
-Thanks,
-Joanne
+--D
