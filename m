@@ -1,45 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABDF4270EC3
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 15:49:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7E7146588;
+	Fri,  3 Jul 2026 15:50:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783093748; cv=none; b=UDVi1apneCipXp21xrkgp3m+96ut72LMOGHqBfFTY0hci1EobW/uAo1mvr+fHeXGiQbZCskwG5/8McRg03n3oUixdfBB3QAfnEkQXTbJpuFO4HUsnwMT0W+eOFpXsFCtc0KzXRCNEiGz3wRWOKFd2t+YsvJ+Kovx0nv2/1FkZD8=
+	t=1783093820; cv=none; b=oi8ghzgKUWYVIrgxZDgDfGUtwSKXe9e94fh96vw8Mcm5+F3JkJp0rhxWRUjiMenbEcYw2hVakHgorfnxrcufP8JMcG//49n8ex3IPY3w2gIdLKhpfCs6S0G9FVh3RxCFm6bR7dto1hAwDUUBLqdLNs6onKFsWtVSmQtLasRBQ30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783093748; c=relaxed/simple;
-	bh=L468gknzVyQdcjizZjPHjx7VtJoudtJ0tQYXE/twAPE=;
+	s=arc-20240116; t=1783093820; c=relaxed/simple;
+	bh=2diKGbWyA/BZAV6oHrtBt8/JtkLVuPiQgkVkpmINydw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N9c0qcL/IlR15dDbMX6bCNpm5fbOzpgvesywSBzeUnqPGUrWMbFeQO0cV+D39kBz/PQbW2t/86ymDhCPMuwxy4xkI4J/+Vnfw8MWlcAMBLoDxjhAbRHhTYTIqR2jp+H+Brazu7a8O8jPjfI7QLmBU4j3rruBWEEd2GCEg0SAkbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X2sPtehp; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UA75sr3sjEHAiFSy55qlHWhFQ5Bm0AO9/4xC20YE6ETpP3GBGsqdGj/FRsQgxp3MQrYe5ICzC7myqBzueVMjO5nP8Fgk0GQl8dqmNhaF/1+uTwWA9yFZB8b9WVsTXAlB17Ycw9jXTes6np21TfvGSg6n+vlwJ1AD0AUi3rat/go=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a2WAliqF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X2sPtehp"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3EDC71F000E9;
-	Fri,  3 Jul 2026 15:49:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a2WAliqF"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5E4991F000E9;
+	Fri,  3 Jul 2026 15:50:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783093747;
-	bh=c6vEOBwQ2TWf+J2100PskIbBtyR2Owzww8Z1e7vyUUQ=;
+	s=k20260515; t=1783093819;
+	bh=UVUyVklTsq1sfhF6yM/Q6F0+MAV6Eqzi8rV2Y7Lbzyw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=X2sPtehpnSB0n1wpqj/QjwKLJcBYhLN1cU6p82oDCi+FS/Nx5kYnEUjpMuQt0v9AL
-	 vzMZ+8tDxn9NLuRCuK3Wujcae0ElcoV9oe6RK3v8z8NQuYWb1sFDLCgNzYXZLTmZYK
-	 ybVpxRI3l9SO4O/lskv/PnSyjrcPdFTzPZ+jCrrobCxhLzW8yABJAy/fuDQCjPU6Di
-	 YF+JW0rD/XdQu1cPOci0OPbUZ2Zakhm+U1bzju2ZCetrZKAstJQWMVbe1CtgDMj94p
-	 E8rR6iVA2EOSlqPDVnFmNkEXb0C/JcfKVAB4AlapYMYxxb2JvDrporksM2ZgsaNZoG
-	 Z/U6KvfSADW0A==
-Date: Fri, 3 Jul 2026 08:49:06 -0700
+	b=a2WAliqFDxSW4KgDkfmGHxyTL0cMpEQmos9nm/EWIYdK36HGJn9ixjRNXdV+XNPR9
+	 Mq3JBeODANgcwG/11dnR6OY+99Cvuuz5k7ANH/j0N9vMaXTU/LtmNRzlTFcY8ce7Gj
+	 eTqpHynS2musu5kz8/mq7lQy3PlyUbCuwnKUMUOS4DJTe7FAxOLbsst3Pt6VEhKZzu
+	 hVglCEI6tuTdfEX9UKJSyQ/Jgi9V3dVBVxbploWI2EzQmIa9fNLF/cNsie2ZGP5jHU
+	 8hbjj39XUBtwvo94dkAj3qOR+4aJ3+W1JxZ2eOyTr9QmUsyWXOzGvDwCdVW265Xr2y
+	 M7vuH1MZyPO3g==
+Date: Fri, 3 Jul 2026 08:50:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Celeste <celeste@collar.sh>, Andrey Albershteyn <aalbersh@kernel.org>,
-	linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH] xfsdump: avoid false-positive __strcpy_chk abort on long
- dirent names
-Message-ID: <20260703154906.GU9392@frogsfrogsfrogs>
-References: <20260625222337.54449-1-celeste@collar.sh>
- <20260625225758.GN6078@frogsfrogsfrogs>
- <178243370553.73182.935356806206037088@collar.sh>
- <aj4z3v6RGnSbxlEI@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
- <DJOCNHYIYK0G.17Q5FWMGKKXMC@collar.sh>
- <akezHvFoqtKWN0f4@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
+	willy@infradead.org, hsiangkao@linux.alibaba.com,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 02/18] xfs: convert iomap ops to ->iomap_next()
+Message-ID: <20260703155019.GV9392@frogsfrogsfrogs>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com>
+ <20260701000949.1666714-3-joannelkoong@gmail.com>
+ <20260702140301.GB21339@lst.de>
+ <20260702164806.GJ9392@frogsfrogsfrogs>
+ <20260703123340.GB25849@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,16 +49,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <akezHvFoqtKWN0f4@infradead.org>
+In-Reply-To: <20260703123340.GB25849@lst.de>
 
-On Fri, Jul 03, 2026 at 06:03:26AM -0700, Christoph Hellwig wrote:
-> On Thu, Jul 02, 2026 at 12:58:14PM -0700, Celeste wrote:
-> > should we then assume that this is fine to merge?
+On Fri, Jul 03, 2026 at 02:33:40PM +0200, Christoph Hellwig wrote:
+> On Thu, Jul 02, 2026 at 09:48:06AM -0700, Darrick J. Wong wrote:
+> > You /could/ use a bunch of fugly macros to simulate a default NULL
+> > iomap_end_fn parameter.
+> > 
+> > #define __default_iomap_end(a,b,...) b
+> > #define default_iomap_end(...) __default_iomap_end(,##__VA_ARGS,NULL)
+> > 
+> > #define iomap_process(iter, iomap, srcmap, iomap_begin, ...) \
+> > 	__iomap_process((iter), (iomap), (srcmap), (iomap_begin),
+> > 			default_iomap_end(__VA_ARGS__))
 > 
-> I still don't think that just papering over the misuse of the same type
-> for on-disk and in-memory uses with different characteristics is a good
-> idea.
+> Don't go there.  These variable number or argument macros are a
+> complete pain to undestand and generate horrible compiler warnings
+> whenever someone messes up their first attempt at writing some
+> code (guess who never gets the first pass right? :))
 
-I agree.
+I /did/ label that as 'fugly'; I barely understand the subtlety that
+goes on in __define_iomap_end. :)
 
 --D
