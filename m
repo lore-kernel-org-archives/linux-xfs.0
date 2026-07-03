@@ -1,127 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D953E1CEAC2;
-	Fri,  3 Jul 2026 02:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0829B1A6807;
+	Fri,  3 Jul 2026 02:22:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783044108; cv=none; b=Y3pB91pDMba1dq9/LH2vvbduEWbjqa3MnQQWoR+xYBvUJ5vciwF2b0aCc9NbuuOsT3vSAFM20RV+v5iYlM5fYyQSkew0ZVY6z78gYsW6t0hArC6XdWz8tYjI980FSEcJ6aj1Z8M2eQXLI9u+mHgzUlWvJIFe8sf4c84FkiKPYOQ=
+	t=1783045324; cv=none; b=q87GFGs56fBGqzCeFOdrzKtjt1PlI0m7BTVUJwH3nWaPmbaA8ZXkGExoKHA+Cl419z9WsyplD8XKn6/JDU2XjNep+6KQuSySMJgsr4XURko/whU8JRk8JzNlbxApUK6TiZvYvEy3tFTSIbTi0oloCYDyVsxeu9NfNbDG8ppztFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783044108; c=relaxed/simple;
-	bh=GAM+m6cWDuuutfc0N8W+w2qobBwH4/jAJw4LN4feaPw=;
+	s=arc-20240116; t=1783045324; c=relaxed/simple;
+	bh=r5x2JXzun14eBWvQXkpuhFkCOFfhtwfPHeiZz/XqDqo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZBMK6lqVEJUkp9s3QRpDbj5E/jMMgqbH+RjFDXZjocw85+YOtssYt9NVdYmR+hTt92dxtzsLBRxyBkSoI4r32j1kfRI5EgPmopJ6vT0AmiGvu5Pgw6+TlFwM8eO92675hlogxVPvo/ZqAh1Uzefnz1DT+Rw1X2pVLeb/ebYlhio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UZ+G2Lxb; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UZ+G2Lxb"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 74CBF1F000E9;
-	Fri,  3 Jul 2026 02:01:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783044107;
-	bh=oMB68yM9vnc03sy1HjctW2y/WonQpK4WbJis7WinceA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UZ+G2LxbC6hyyPY45gChM82kirEdP2W1cjQ9cB8OMLYUlkgPJvcmz/MIwlujeZotn
-	 4R/Zvspof7xaAk0X3wOEeMxwWctRoLV4NTsc8rCCvYPFhVb70Q3E9WueaPYWgiO166
-	 2xfbkdD8pCO8AIcoqCOfLU0RCSAZUSynWck7z/YdMGgn6CidZh7U3ECdLyiqSYmIa8
-	 M5P1TAt9IbsmnguwJe2hbJNiSXqqC63NyKcHW0pu+qG7lIvuTSoTWo9hiMZTxGrVTP
-	 BJg1wFffSxulJHs9pt/+Ff8RV8ItkGlqOI2T/5xJPdCI7Mb+FwKTLrcrnQUpxeWmfr
-	 1in1VDEBLw3PA==
-Date: Thu, 2 Jul 2026 19:01:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, willy@infradead.org,
-	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	Dan Williams <djbw@kernel.org>, Gao Xiang <xiang@kernel.org>,
-	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
-	Jeffle Xu <jefflexu@linux.alibaba.com>,
-	Sandeep Dhavale <dhavale@google.com>,
-	Hongbo Li <lihongbo22@huawei.com>,
-	Chunhai Guo <guochunhai@vivo.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	Yuezhang Mo <yuezhang.mo@sony.com>, Theodore Ts'o <tytso@mit.edu>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Baokun Li <libaokun@linux.alibaba.com>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-	Zhang Yi <yi.zhang@huawei.com>, Jaegeuk Kim <jaegeuk@kernel.org>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-	Hyunchul Lee <hyc.lee@gmail.com>,
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	"open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:BTRFS FILE SYSTEM" <linux-btrfs@vger.kernel.org>,
-	"open list:FILESYSTEM DIRECT ACCESS (DAX)" <nvdimm@lists.linux.dev>,
-	"open list:EROFS FILE SYSTEM" <linux-erofs@lists.ozlabs.org>,
-	"open list:EXT2 FILE SYSTEM" <linux-ext4@vger.kernel.org>,
-	"open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>,
-	"open list:FUSE FILESYSTEM [CORE]" <fuse-devel@lists.linux.dev>,
-	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>,
-	"open list:NTFS3 FILESYSTEM" <ntfs3@lists.linux.dev>
-Subject: Re: [PATCH v2 17/18] iomap: pass iomap_next_fn directly instead of
- struct iomap_ops
-Message-ID: <20260703020147.GT9392@frogsfrogsfrogs>
-References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-18-joannelkoong@gmail.com>
- <20260702140705.GE21339@lst.de>
- <20260702165117.GK9392@frogsfrogsfrogs>
- <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=uCu0txswzc+kPJMq3G9I7ispK3sMUQ1w4S14gfWjs4uH+crpOzXgBBhAbbQr4M/saUSmN83g30cYP4tQcU5VXWh3sMoEfB08Vurx2qNCw+7iOR41B6Z9dn1QNksrUGFMT8kGHd1Y1t0d5GLGRRbbPt2jFS1GyCqAyEpVPvb/+HQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: f42c7804768511f1aa26b74ffac11d73-20260703
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:d7d2da37-f7ef-4319-8d3d-8d385079c767,IP:10,
+	URL:0,TC:0,Content:7,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:17
+X-CID-INFO: VERSION:1.3.12,REQID:d7d2da37-f7ef-4319-8d3d-8d385079c767,IP:10,UR
+	L:0,TC:0,Content:7,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:17
+X-CID-META: VersionHash:e7bac3a,CLOUDID:ab91035c909b9ebe68f486d97b3ccd19,BulkI
+	D:260702183512NX1JY8MF,BulkQuantity:2,Recheck:0,SF:10|64|66|78|80|81|82|83
+	|102|127|841|865|898,TC:nil,Content:4|15|50,EDM:-3,IP:-2,URL:0,File:nil,RT
+	:nil,Bulk:40,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:
+	0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: f42c7804768511f1aa26b74ffac11d73-20260703
+X-User: sangyao@kylinos.cn
+Received: from sang-pc [(223.70.159.239)] by mailgw.kylinos.cn
+	(envelope-from <sangyao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 717538519; Fri, 03 Jul 2026 10:21:52 +0800
+Date: Fri, 3 Jul 2026 10:21:47 +0800
+From: Yao Sang <sangyao@kylinos.cn>
+To: Christoph Hellwig <hch@lst.de>
+Cc: zlang@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs/656: rearrange directio pread/pwrite for zoned
+ filesystems
+Message-ID: <20260703022147.o6ubq2ddisxe2ahi@sang-pc>
+References: <20260702035523.GA9381@frogsfrogsfrogs>
+ <20260702103504.GB6816@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
+In-Reply-To: <20260702103504.GB6816@lst.de>
 
-On Thu, Jul 02, 2026 at 06:47:43PM -0700, Joanne Koong wrote:
-> On Thu, Jul 2, 2026 at 9:51 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Thu, Jul 02, 2026 at 04:07:05PM +0200, Christoph Hellwig wrote:
-> > > Looks good:
-> > >
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > >
-> > > In terms of merge logistics, I wonder if we should delay this and
-> > > the previous patch to the next merge window so that we can minimize the
-> > > cross-subsystem merge pain with more file system iomap conversion.
-> > > If none of them actually happen until rc6 or so, orif  the merges aren't
-> > > painful we could still pick them up late in the merge window.
-> >
-> > I'd say everything but this patch should go in during the merge window
-> > for 7.3, along with clear instructions to brauner/torvalds to expect
-> > this patch to appear right before 7.3-rc1 gets tagged, to clean up all
-> > the other changes that come in.
+On Thu, Jul 02, 2026 at 12:35:04PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 01, 2026 at 08:55:23PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > On zoned filesystems, a write failure shuts down the filesystem, which
+> > makes this test fail with:
 > 
-> Just to clarify, did you mean this patch and the previous one? If i'm
-
-Er, yes, patches 16-18 in this series.
-
-> interpreting Christoph's concern correctly, I think he's worried about
-> other filesystems converting to iomap using the ->iomap_begin() /
-> ->iomap_end() functions still? That sounds like a good plan to me, for
-> v3 I'll submit everything but this patch and the last one and then
-> submit these patches (and any cleanup ones that become necessary) to
-> Christian right before 7.3-rc1 gets tagged (which as I understand it,
-> is when the merge window is about to close).
-
-Yes.  And be sure to ask both of them beforehand so there aren't any
-youknowwho-style surprises/outrages.
-
---D
-
-> Thanks,
-> Joanne
+> Looks good an increases the test coverage.  This also makes half of
+> "common: skip data write EIO survival tests on fatal configs" obsolete.
 > 
+> Darrick, Yao, Zorro:  I think we need to arrange all the tests in
+> this area into a coherent series.  Should I do that?
+Yes, please.
+
+The ordering makes sense to me. Please feel free to fold my patch into
+the series as needed.
+
+Thanks,
+Yao
