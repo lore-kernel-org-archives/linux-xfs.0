@@ -1,91 +1,511 @@
-Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
+Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816BA378D9B;
-	Fri,  3 Jul 2026 09:24:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E780835CB95;
+	Fri,  3 Jul 2026 09:35:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.194.254.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783070660; cv=none; b=vD9uptzlEQ8Yf+q6p5Vt7csuWOPLXzXWplEBhsLfr2QQNnXr5QfVi/O9JalLuqpmkYOWteGIOKyO1Git81f545LORgLEVopAI22pkUOOqYOR/zbDpX3HZhWkqmmFwcK2KR3hJNwaeaccNs8nMgQ4LzfWqf+Zm2Ue9vgytqv3cKc=
+	t=1783071309; cv=none; b=fSoXn5z8qouPGdlIxOrRliY1BzdUrzQvxLGH6hil1lf/uW6F2uLK3F4ahh8/1T9aEow003GdDOwWSrYk/vmoZkRWbT+Gta9chqYddX8shZA1H5E4WXway7mSu2AwYjR2pum2wupoZgIYFYzTlOIMouoID8/+3ybeFs9UJ8QRd1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783070660; c=relaxed/simple;
-	bh=ewGKMwhPAyyeQlJ61ZzGnHwqlkzWv20cII2TM6OZVno=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NDxo/B41wQP86fBhlWbJrZTbZJCOfKQ2/FBsk3PHbDb+eUWqf3GwOylkv6Pm1I8ogG3F8feexINF7g7tCNYLCUNq9LWrQGv6rR/Lqqqz1ILG9/1AwfKyIwGkeBl+hmt132YWEoDF1u8lJyPvB3hbKFzATFbMfFnJtqFWPt/Cbmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=UIU6daKJ; arc=none smtp.client-ip=54.206.34.216
+	s=arc-20240116; t=1783071309; c=relaxed/simple;
+	bh=51DWcIdcezoXDTLpY2Tcxu8ZKh0KMStVSa+mLqsro1M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b/Rj32mGQNbM/c2sezw6CO9PQmxOb2wFtTK0B9ZsyM3b0yPrgbrnIThkdfAfhCcWDmi64mqIPwTu+Ch0digq/063Rxm7T/khUirh8QYsNZZShO+civmy+jEW0k0tlQrOBZogIAY7S1A6s22UFNqxeL9JwR8p34a10zvNwpWtG/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=H0aB9hrM; arc=none smtp.client-ip=18.194.254.142
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="UIU6daKJ"
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="H0aB9hrM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1783070612;
-	bh=ljK3twhPT2mDzW4Ybw27zHahCubfjEvZ2zbtDTFBNcw=;
+	s=onoh2408; t=1783071258;
+	bh=4eNfiIj2j+IgBgcfnH8fW8QmupuDvDsanbAzlH5YQa8=;
 	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=UIU6daKJYHAw3iIrjNTFhSZYFT6hpEaPLikvEWutlnGs437ioJTDexESyd9jPzz6W
-	 2vT8q8ogBpp6AcBu1hVBbOQeti2W+PRL2jt1AObY20lrs7ryOSS5+ROjnvyN0AttgF
-	 hlpMmomRXyEgQe8XvIF0mfEAcRT/SE6/dZ/a4ZCo=
-X-QQ-mid: esmtpgz13t1783070603t5028dae8
-X-QQ-Originating-IP: kR92vNfWnsjsib/8h4Pnyt8K1OrsbEGkNRVLgtw6PgY=
+	b=H0aB9hrMG44MYrFTeVLxrfRwli9fyM6lNY/dJdkRdCw4A/BGRWsNr+OsKiHSd0jC3
+	 vOMANUPQzVUAecbeFRf/ICx0xxC4LJ/ZcJzWqNUhB37Ffy5+pM6N/V/Fg7v9wBo4BK
+	 1GeranlnuFI0vmfZ5eE7hL8+8vvhqD6c1KkRVbLY=
+X-QQ-mid: zesmtpgz7t1783071249t7f41d4d8
+X-QQ-Originating-IP: RWf18t8yFeJQvGhpDtgXuOFsbxVjl1M4rgM/ZdXaoUM=
 Received: from localhost.localdomain ( [1.85.7.34])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Fri, 03 Jul 2026 17:23:21 +0800 (CST)
+	id ; Fri, 03 Jul 2026 17:34:07 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 4699686752030843351
-EX-QQ-RecipientCnt: 5
+X-BIZMAIL-ID: 2303482503033954077
+EX-QQ-RecipientCnt: 6
 From: caina <caina@uniontech.com>
-To: hch@infradead.org
-Cc: djwong@kernel.org,
-	linux-xfs@vger.kernel.org,
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	hch@infradead.org,
 	linux-kernel@vger.kernel.org,
-	kernel@uniontech.com
-Subject: Re: [PATCH v2] xfs: clean up spelling and grammar errors in comments
-Date: Fri,  3 Jul 2026 17:23:21 +0800
-Message-Id: <20260703092321.1509-1-caina@uniontech.com>
+	kernel@uniontech.com,
+	caina <caina@uniontech.com>
+Subject: [PATCH v3] xfs: clean up spelling and grammar errors in comments
+Date: Fri,  3 Jul 2026 17:34:02 +0800
+Message-Id: <20260703093402.3146-1-caina@uniontech.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <ajve0YCxD_u62phh@infradead.org>
-References: <ajve0YCxD_u62phh@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=yes
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
-X-QQ-XMAILINFO: MDGUoPnBmw7sLHEnJIKL8OURRVsQOvfcb9lundJGwypxP8FwkcCG4SuR
-	p8ax++pFp5Hr51630uxjEFMl5Wtu44cQpGmUzFQOfCH1mqFzya/Gcp4YlX5D9WwqOM/Xqd0
-	TqPHXiQEU/gNT/miMkTUa0WVEe9R0GK1BYt+POISXA3VR0/PT2TtXnn9Q58Ac9VIXHT7aYR
-	4R31lA6HMxmiLQLwu0ZmrENCp/fWrtVragkZCHnC2bm7/uBqU5mBSDs0aPy9TmTbWacCMwZ
-	URZjLcTaxoJu3jexmr1AKG+LVxo0pGHx10nOdDQSHwQ1o/PTsVVq14zDJPGbWZk4kJ94uQs
-	qOgZLX9Z/nvENDVvu8r1a6qqOxTw9u852iik/m2sqgrY0pSI5b2UpQpA8uARh3tFMOCJueE
-	OmivY2RUFwGUVZoNV6msBMzIhI42tdF2IhwGgQBcVc+jKAQngW5qih8bYuPOU5iHvqib8Du
-	cKkkfpvhGd7lqjYxpDa6To1tkRXQ/y3IF21sMHHjN3s8u721kN+VLNTAj5xw5hKqPwcCjIO
-	C24r6tFcUPCxugUXMuZxoerIRDSwgJEWbTQ3Cldl0hwg8DXmI1vtIXgdrybga4tdUIejGcm
-	igcpa8WK57ZcgkQyOtRGmTwmLVJgHrTXfEGxtaETXquMypx6nqclAHsxafW3e3WrEG1sKC3
-	z0U9QfbT4ZUL6LGLbweLZ98IotBdIRr3JuKRMiYH1SdkLJhsZ1qsHydtC3obTRu3BBWTc6T
-	LzuDnNaQdfoNSpBWwQW5rEUXUobUlPV6MlFKjrcvKmzY/XvMUvYhocoTnK1kTA83wl0BxRM
-	p224MgVOSVn0FuWR1cRV2caboUt760+PfalRrDlN5YOU9tk1WdpaMI064UrAp+fN3z3YgGY
-	mH0dtBZ3mWzQWyImmq3Ko5x/gxlf/35jLwO7mi41c1MLVXr9ktJ1ym5GPr+r+IHalpSXrlI
-	ge9tY6n9PgWemu6eCaplXMYD5Dx6xOeqchfueHZs0CCoYzLKuOdZcUhhYa/pHV72V3XKnMX
-	+XDXk8tYqBH1Y38fz9
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+Feedback-ID: zesmtpgz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: NQ1ZnwTCBTIz/bgk+BEwYjF0cwy5E6S63YRWRp+9lETjr3Bb2pzEA4rb
+	GJtW5dTCxmugSV1gBk+mDvUSZRye0hpLgN0sozJJEcbLynYjBgyOOVJqMHSeMy7dfRex6rI
+	c1GEV9zOsUUZPd0KJK00BaHSCBB4CYrEleFQy9KHWImM5ABuUU1Z2g5H9lACOVRw4Ug8St3
+	1z+l1X3BepN+kg5NaBj++eZMH9zbU9+h1pWnQrYBYMfvwLpGpf0rZSH9uFlY4eqKgpeIuyA
+	NatZCHWMj3NFZV66v+r5ISbZ0s+0987MUpYIfLayiVvKTVpI7SwJuLZ35Scht8axpm9Bypv
+	aVFcemILA5snXzZKfdw2ldi+nhesHwbJuFN75F8qTFkyK83jkLu+6RLEoNYZXpxYKoblrYl
+	nIpQQpqJTlbq5qEF7TJl7VsSd1auDpDfFFPJyIWnyNjxkI/j0AshoAAiB++dCGEIJLu+km0
+	emEU3t5xw7EYrNU5VWIegd+egrI0KKWHc5t7GNotEWKPXvta221cfnBghEwTDFGHOg6AAxG
+	DyspEaBqMzDriFJ9RH9T14pfYmv6CdDaiKLd7W5Mopx1xdDfl/Xye7DmRME16JVHEG/fTS3
+	DWryTYZmtKdN+VO0GSFYVGWKpUG4Z9De8H9RT+J4EiDISlnzq2seV66TcEYLNe2++Zq+EwP
+	t7FVCgrSHGQlEn0KL95EXrN++cJt6AhVBl/0wLVKhkKuJs9dDBhbiyjsboaW8jq6KdTuy2t
+	WzRDy7ADKgqfCtp5Op/B+WpcpjVvy68nrYD+Zqkg8C0cPOMNmRFf5JiNy9HKDAy7Lx7NXfQ
+	9+vCi07/IYU5yPop6S/lP54/p4q7X/U9nAgoakSAFAjoNHQvaNEUkeurcqjn6hf14aofvYx
+	6oOEWhfBRp07+mxKJJB2gaybP4l1C5qq21nKipW52defCwEuNoS7qN4vqeU0fVDXX9CqYNu
+	k09KzLc7AT7UhHuk5BkjZzBCRNWVCBDJl+Uj4u3JfA1YWHv59g3xQZHDn2Mkg/PdqtNQnfq
+	qpjER6LOn8qAsyyqwCy5K+dTGJcmCTvuXWoDMYK8klDx+7Uz0j
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
 X-QQ-RECHKSPAM: 0
 
-On Wed, Jun 24, 2026 at 06:42:41AM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 17, 2026 at 01:50:52PM +0800, caina wrote:
-> >  /*
-> >   * Set up an in-memory buffer cache so that we can use the xfbtree.  Allocating
-> > - * a shmem file might take loks, so we cannot be in transaction context.  Park
-> > + * a shmem file might take looks, so we cannot be in transaction context.  Park
-> 
-> I think this should be locks, not looks.
+Clean up various spelling mistakes and grammar errors found in comments
+across the XFS filesystem code.
 
-Hi Christoph,
+This is a follow-up cleanup to improve code readability. No functional
+changes.
 
-Thank you for catching this. You're absolutely right – it should be
-"locks" (as in "taking locks"), not "looks". I will fix this in v3.
+Signed-off-by: caina <caina@uniontech.com>
+---
+Changes in v3:
+- Fix "looks" to "locks" in repair.c comment (suggested by Christoph Hellwig).
 
-Thanks,
-Caina
+Changes in v2:
+- Keep "do so so that" in alloc_repair.c as the original wording is correct
+  (suggested by Christoph Hellwig).
+- Fix "Does" to "Do" in btree.c comment to match the plural subject "pointers"
+  (suggested by Christoph Hellwig).
+
+ fs/xfs/libxfs/xfs_alloc.c     |  6 +++---
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_btree.c     |  6 +++---
+ fs/xfs/scrub/alloc_repair.c   |  4 ++--
+ fs/xfs/scrub/btree.c          |  2 +-
+ fs/xfs/scrub/repair.c         |  4 ++--
+ fs/xfs/xfs_bmap_util.c        |  2 +-
+ fs/xfs/xfs_buf_item_recover.c |  4 ++--
+ fs/xfs/xfs_inode.c            |  4 ++--
+ fs/xfs/xfs_inode_item.c       |  2 +-
+ fs/xfs/xfs_log.c              | 10 +++++-----
+ fs/xfs/xfs_log_cil.c          | 12 ++++++------
+ fs/xfs/xfs_log_recover.c      |  2 +-
+ fs/xfs/xfs_notify_failure.c   |  4 ++--
+ fs/xfs/xfs_trans.c            | 10 +++++-----
+ fs/xfs/xfs_trans_buf.c        |  2 +-
+ 16 files changed, 38 insertions(+), 38 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index d99602bcc16f..8695b22d88ff 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -37,7 +37,7 @@ struct workqueue_struct *xfs_alloc_wq;
+ #define	XFSA_FIXUP_CNT_OK	2
+ 
+ /*
+- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
++ * Size of the AGFL.  For CRC-enabled filesystems we steal a couple of slots in
+  * the beginning of the block for a proper header with the location information
+  * and CRC.
+  */
+@@ -770,7 +770,7 @@ xfs_alloc_fixup_trees(
+  *
+  * However, we can't even do that for v4 format filesystems because there are
+  * old versions of mkfs out there that does not initialise the AGFL to known,
+- * verifiable values. HEnce we can't tell the difference between a AGFL block
++ * verifiable values. Hence we can't tell the difference between a AGFL block
+  * allocated by mkfs and a corrupted AGFL block here on v4 filesystems.
+  *
+  * As a result, we can only fully validate AGFL block numbers when we pull them
+@@ -3608,7 +3608,7 @@ xfs_alloc_vextent_finish(
+ 	 * ABBA AGF deadlocks because a future allocation attempt in this
+ 	 * transaction may attempt to lock a lower number AGF.
+ 	 *
+-	 * We can't release the AGF until the transaction is commited, so at
++	 * We can't release the AGF until the transaction is committed, so at
+ 	 * this point we must update the "first allocation" tracker to point at
+ 	 * this AG if the tracker is empty or points to a lower AG. This allows
+ 	 * the next allocation attempt to be modified appropriately to avoid
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2b78041e8672..24be0fb6e56d 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1701,7 +1701,7 @@ xfs_attr3_leaf_add_work(
+ 			/*
+ 			 * This freemap entry starts at the old end of the
+ 			 * leaf entry array, so we need to adjust its base
+-			 * upward to accomodate the larger array.
++			 * upward to accommodate the larger array.
+ 			 */
+ 			diff = sizeof(struct xfs_attr_leaf_entry);
+ 		} else if (ichdr->freemap[i].size > 0 &&
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 7012f3570c8d..b072222c1b8d 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -398,7 +398,7 @@ xfs_btree_check_ptr(
+  * Calculate CRC on the whole btree block and stuff it into the
+  * long-form btree header.
+  *
+- * Prior to calculting the CRC, pull the LSN out of the buffer log item and put
++ * Prior to calculating the CRC, pull the LSN out of the buffer log item and put
+  * it into the buffer so recovery knows what the last modification was that made
+  * it to disk.
+  */
+@@ -436,7 +436,7 @@ xfs_btree_fsblock_verify_crc(
+  * Calculate CRC on the whole btree block and stuff it into the
+  * short-form btree header.
+  *
+- * Prior to calculting the CRC, pull the LSN out of the buffer log item and put
++ * Prior to calculating the CRC, pull the LSN out of the buffer log item and put
+  * it into the buffer so recovery knows what the last modification was that made
+  * it to disk.
+  */
+@@ -4739,7 +4739,7 @@ xfs_btree_visit_blocks(
+  * Change the owner of a btree.
+  *
+  * The mechanism we use here is ordered buffer logging. Because we don't know
+- * how many buffers were are going to need to modify, we don't really want to
++ * how many buffers we are going to need to modify, we don't really want to
+  * have to make transaction reservations for the worst case of every buffer in a
+  * full size btree as that may be more space that we can fit in the log....
+  *
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+index dce6ab0429dc..0b40de6331f7 100644
+--- a/fs/xfs/scrub/alloc_repair.c
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -338,7 +338,7 @@ xrep_cntbt_extent_cmp(
+ }
+ 
+ /*
+- * Sort the free extents by length so so that we can put the records into the
++ * Sort the free extents by length so that we can put the records into the
+  * cntbt in the correct order.  Don't let userspace kill us if we're resorting
+  * after allocating btree blocks.
+  */
+@@ -751,7 +751,7 @@ xrep_abt_build_new_trees(
+ 		goto err_cur;
+ 
+ 	/*
+-	 * If we need to re-sort the free extents by length, do so so that we
++	 * If we need to re-sort the free extents by length, do so that we
+ 	 * can put the records into the cntbt in the correct order.
+ 	 */
+ 	if (needs_resort) {
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 786b1e7c4dc3..0e90ac00717d 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -342,7 +342,7 @@ xchk_btree_block_check_siblings(
+ 	/*
+ 	 * Does the left & right sibling pointers match the adjacent
+ 	 * parent level pointers?
+-	 * (These function absorbs error codes for us.)
++	 * (These functions absorb error codes for us.)
+ 	 */
+ 	error = xchk_btree_block_check_sibling(bs, level, -1, &leftsib);
+ 	if (error)
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index ac8c592579bd..1b5a64c4583d 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -368,7 +368,7 @@ xrep_calc_ag_resblks(
+ 		 * used blocks.  However, with reflink it's possible to have
+ 		 * more than one rmap record per AG block.  We don't know how
+ 		 * many rmaps there could be in the AG, so we start off with
+-		 * what we hope is an generous over-estimation.
++		 * what we hope is a generous over-estimation.
+ 		 */
+ 		if (xfs_has_reflink(mp))
+ 			rmapbt_sz = xfs_rmapbt_calc_size(mp,
+@@ -1257,7 +1257,7 @@ xrep_metadata_inode_forks(
+ 
+ /*
+  * Set up an in-memory buffer cache so that we can use the xfbtree.  Allocating
+- * a shmem file might take loks, so we cannot be in transaction context.  Park
++ * a shmem file might take locks, so we cannot be in transaction context.  Park
+  * our resources in the scrub context and let the teardown function take care
+  * of them at the right time.
+  */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0ab00615f1ad..151c4e68e0c8 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1607,7 +1607,7 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 
+ 	/*
+-	 * Lock and join the inodes to the tansaction so that transaction commit
++	 * Lock and join the inodes to the transaction so that transaction commit
+ 	 * or cancel will unlock the inodes from this point onwards.
+ 	 */
+ 	xfs_lock_two_inodes(ip, XFS_ILOCK_EXCL, tip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 02b95b89d1b5..768358b12576 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -227,7 +227,7 @@ xlog_recover_validate_buf_type(
+ 
+ 	/*
+ 	 * We can only do post recovery validation on items on CRC enabled
+-	 * fielsystems as we need to know when the buffer was written to be able
++	 * filesystems as we need to know when the buffer was written to be able
+ 	 * to determine if we should have replayed the item. If we replay old
+ 	 * metadata over a newer buffer, then it will enter a temporarily
+ 	 * inconsistent state resulting in verification failures. Hence for now
+@@ -806,7 +806,7 @@ xlog_recover_do_primary_sb_buffer(
+  *
+  * The magic number might not match the buffer type we are going to recover
+  * (e.g. reallocated blocks), so we ignore the xfs_buf_log_format flags.  Hence
+- * extract the LSN of the existing object in the buffer based on it's current
++ * extract the LSN of the existing object in the buffer based on its current
+  * magic number.  If we don't recognise the magic number in the buffer, then
+  * return a LSN of -1 so that the caller knows it was an unrecognised block and
+  * so can recover the buffer.
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9978ac1422fc..86392ff08960 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1750,7 +1750,7 @@ xfs_ifree_cluster(
+ 		 * IO and it won't be unlocked until the cluster freeing has
+ 		 * been committed to the journal and the buffer unpinned. If it
+ 		 * is written, we want to know about it, and we want it to
+-		 * fail. We can acheive this by adding a write verifier to the
++		 * fail. We can achieve this by adding a write verifier to the
+ 		 * buffer.
+ 		 */
+ 		bp->b_flags |= XBF_DONE;
+@@ -2658,7 +2658,7 @@ xfs_irele(
+ }
+ 
+ /*
+- * Ensure all commited transactions touching the inode are written to the log.
++ * Ensure all committed transactions touching the inode are written to the log.
+  */
+ int
+ xfs_log_force_inode(
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 4ae81eed0442..bd78762c7701 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -978,7 +978,7 @@ xfs_iflush_ail_updates(
+ 
+ 		/*
+ 		 * dgc: Not sure how this happens, but it happens very
+-		 * occassionaly via generic/388.  xfs_iflush_abort() also
++		 * occasionally via generic/388.  xfs_iflush_abort() also
+ 		 * silently handles this same "under writeback but not in AIL at
+ 		 * shutdown" condition via xfs_trans_ail_delete().
+ 		 */
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f807f8f4f705..b76eb47505e7 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -415,7 +415,7 @@ xfs_log_reserve(
+  * before we tear down the AIL.
+  *
+  * We avoid processing actively referenced iclogs so that we don't run callbacks
+- * while the iclog owner might still be preparing the iclog for IO submssion.
++ * while the iclog owner might still be preparing the iclog for IO submission.
+  * These will be caught by xlog_state_iclog_release() and call this function
+  * again to process any callbacks that may have been added to that iclog.
+  */
+@@ -446,7 +446,7 @@ xlog_state_shutdown_callbacks(
+ }
+ 
+ /*
+- * Flush iclog to disk if this is the last reference to the given iclog and the
++ * Flush iclog to disk if this is the last reference to the given iclog and
+  * it is in the WANT_SYNC state.
+  *
+  * If XLOG_ICL_NEED_FUA is already set on the iclog, we need to ensure that the
+@@ -632,7 +632,7 @@ xfs_log_mount(
+ 	clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate);
+ 
+ 	/*
+-	 * Now the log has been fully initialised and we know were our
++	 * Now the log has been fully initialised and we know where our
+ 	 * space grant counters are, we can initialise the permanent ticket
+ 	 * needed for delayed logging to work.
+ 	 */
+@@ -1554,7 +1554,7 @@ xlog_write_iclog(
+ 	 * triggered during unmount, and that can occur asynchronously to the
+ 	 * unmount thread, and hence we need to ensure that completes before
+ 	 * tearing down the iclogbufs.  Hence we need to hold the buffer lock
+-	 * across the log IO to archieve that.
++	 * across the log IO to achieve that.
+ 	 */
+ 	down(&iclog->ic_sema);
+ 	if (xlog_is_shutdown(log)) {
+@@ -1747,7 +1747,7 @@ xlog_sync(
+ 	if (bno + BTOBB(count) > log->l_logBBsize)
+ 		xlog_split_iclog(log, iclog->ic_header, bno, count);
+ 
+-	/* calculcate the checksum */
++	/* calculate the checksum */
+ 	iclog->ic_header->h_crc = xlog_cksum(log, iclog->ic_header,
+ 			iclog->ic_datap, XLOG_REC_SIZE, size);
+ 	/*
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index edc368938f30..572cb864ddce 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -253,7 +253,7 @@ xlog_cil_iovec_space(
+  * the incoming modification. Then during the formatting of the item we can swap
+  * the active buffer with the new one if we can't reuse the existing buffer. We
+  * don't free the old buffer as it may be reused on the next modification if
+- * it's size is right, otherwise we'll free and reallocate it at that point.
++ * its size is right, otherwise we'll free and reallocate it at that point.
+  *
+  * This function builds a vector for the changes in each log item in the
+  * transaction. It then works out the length of the buffer needed for each log
+@@ -1223,7 +1223,7 @@ struct xlog_cil_trans_hdr {
+  *
+  * This is the only place we write a transaction header, so we also build the
+  * log opheaders that indicate the start of a log transaction and wrap the
+- * transaction header. We keep the start record in it's own log vector rather
++ * transaction header. We keep the start record in its own log vector rather
+  * than compacting them into a single region as this ends up making the logic
+  * in xlog_write() for handling empty opheaders for start, commit and unmount
+  * records much simpler.
+@@ -1369,7 +1369,7 @@ xlog_cil_cleanup_whiteouts(
+  * allocation context. However, we do not want to block on memory reclaim
+  * recursing back into the filesystem because this push may have been triggered
+  * by memory reclaim itself. Hence we really need to run under full GFP_NOFS
+- * contraints here.
++ * constraints here.
+  */
+ static void
+ xlog_cil_push_work(
+@@ -1539,7 +1539,7 @@ xlog_cil_push_work(
+ 	 * checks for this - ACTIVE can be either a past completed iclog or a
+ 	 * future iclog being filled, while WANT_SYNC through SYNC_DONE can be a
+ 	 * past or future iclog awaiting IO or ordered IO completion to be run.
+-	 * In the latter case, if it's a future iclog and we wait on it, the we
++	 * In the latter case, if it's a future iclog and we wait on it, we
+ 	 * will hang because it won't get processed through to ic_force_wait
+ 	 * wakeup until this commit_iclog is written to disk.  Hence we use the
+ 	 * iclog header lsn and compare it to the commit lsn to determine if we
+@@ -1574,7 +1574,7 @@ xlog_cil_push_work(
+ 	 *
+ 	 * If the push caller needs the commit to be immediately stable and the
+ 	 * commit_iclog is not yet marked as XLOG_STATE_WANT_SYNC to indicate it
+-	 * will be written when released, switch it's state to WANT_SYNC right
++	 * will be written when released, switch its state to WANT_SYNC right
+ 	 * now.
+ 	 */
+ 	ctx->commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
+@@ -1984,7 +1984,7 @@ xlog_cil_force_seq(
+ 
+ 	/*
+ 	 * We detected a shutdown in progress. We need to trigger the log force
+-	 * to pass through it's iclog state machine error handling, even though
++	 * to pass through its iclog state machine error handling, even though
+ 	 * we are already in a shutdown state. Hence we can't return
+ 	 * NULLCOMMITLSN here as that has special meaning to log forces (i.e.
+ 	 * LSN is already stable), so we return a zero LSN instead.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 09e6678ca487..7da909930fa8 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2293,7 +2293,7 @@ xlog_recovery_process_trans(
+ 
+ 	/*
+ 	 * Callees must not free the trans structure. We'll decide if we need to
+-	 * free it or not based on the operation being done and it's result.
++	 * free it or not based on the operation being done and its result.
+ 	 */
+ 	switch (flags) {
+ 	/* expected flag values */
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index b994ff15d5e4..86a6fe23446d 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -281,10 +281,10 @@ xfs_dax_notify_dev_failure(
+ 		xfs_info(mp, "Device is about to be removed!");
+ 		/*
+ 		 * Freeze fs to prevent new mappings from being created.
+-		 * - Keep going on if others already hold the kernel forzen.
++		 * - Keep going on if others already hold the kernel frozen.
+ 		 * - Keep going on if other errors too because this device is
+ 		 *   starting to fail.
+-		 * - If kernel frozen state is hold successfully here, thaw it
++		 * - If kernel frozen state is held successfully here, thaw it
+ 		 *   here as well at the end.
+ 		 */
+ 		kernel_frozen = xfs_dax_notify_failure_freeze(mp) == 0;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 148cc32449c1..9f093320e749 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -84,7 +84,7 @@ xfs_trans_free(
+  * permanent log reservation of the given transaction.  The remaining
+  * unused block and rt extent reservations are also inherited.  This
+  * implies that the original transaction is no longer allowed to allocate
+- * blocks.  Locks and log items, however, are no inherited.  They must
++ * blocks.  Locks and log items, however, are not inherited.  They must
+  * be added to the new transaction explicitly.
+  */
+ STATIC struct xfs_trans *
+@@ -1056,7 +1056,7 @@ xfs_trans_roll(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the inode to it, and reserve quota.
++ * Allocate a transaction, lock and join the inode to it, and reserve quota.
+  *
+  * The caller must ensure that the on-disk dquots attached to this inode have
+  * already been allocated and initialized.  The caller is responsible for
+@@ -1184,7 +1184,7 @@ xfs_trans_reserve_more_inode(
+ }
+ 
+ /*
+- * Allocate an transaction in preparation for inode creation by reserving quota
++ * Allocate a transaction in preparation for inode creation by reserving quota
+  * against the given dquots.  Callers are not required to hold any inode locks.
+  */
+ int
+@@ -1234,7 +1234,7 @@ xfs_trans_alloc_icreate(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the inode to it, and reserve quota
++ * Allocate a transaction, lock and join the inode to it, and reserve quota
+  * in preparation for inode attribute changes that include uid, gid, or prid
+  * changes.
+  *
+@@ -1348,7 +1348,7 @@ xfs_trans_alloc_ichange(
+ }
+ 
+ /*
+- * Allocate an transaction, lock and join the directory and child inodes to it,
++ * Allocate a transaction, lock and join the directory and child inodes to it,
+  * and reserve quota for a directory update.  If there isn't sufficient space,
+  * @dblocks will be set to zero for a reservationless directory update and
+  * @nospace_error will be set to a negative errno describing the space
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 95db73a37e57..f8e98f8b97e4 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -274,7 +274,7 @@ xfs_trans_read_buf_map(
+ 		 *
+ 		 * If the buffer passes verification we'll let this go, but if
+ 		 * not we have to shut down.  Let the transaction cleanup code
+-		 * release this buffer when it kills the tranaction.
++		 * release this buffer when it kills the transaction.
+ 		 */
+ 		ASSERT(bp->b_ops != NULL);
+ 		error = xfs_buf_reverify(bp, ops);
+-- 
+2.20.1
+
