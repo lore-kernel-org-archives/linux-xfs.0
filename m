@@ -1,62 +1,130 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD253371860
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 13:03:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783083808; cv=none; b=XAKdbOoqxKHBrsMSgX2SP9jHLar6R2NxS5SssGAVgQ3OPr9BMarHpLnrUyNcP0w53wpmlmKulG0j+Y/fh4TGhqw37ggo28U8bHJkNMA0nf2tZ5H/DQW1+iaxvz7PPdEpRHkehgb7Hu2bsaoW4zo+2WhvC0kDqb8xNxya0WeZFbE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783083808; c=relaxed/simple;
-	bh=kRof5LhdVkro4ovg1OeKFWlkSJn2F+mf1wd6eZ/VKJg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dk4zSN8Mv32KueC5ZegARwEVN13WVskkmvoFXETrKGLpEz9CrKAXnvy973QrFWT4MocQV40iRb8LjoOWryJnX+CN6UScDhjTtzR8hUIpruiAUSwhRVt+kowQlrpP0lcrXl6wtK0naVAxhCbOI7u3OK/MzE/LhZrDeYav/mNm2FE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R4lAzNAW; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B9073D9520
+	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 13:47:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783086425; cv=pass; b=hizk6V07Us1dU4su2WmOVr6TVaOpq0tHth16cU7mRdxOEbkkGjd9/+jGC3kfuS26jntalV3zOmqI0jhQXOx0v8ix1efA6XWLoszpe2NpM1/mKy71DTK1F2WhjhbSqIge+L6ecS0OQluujyRKZuTCX7QkQY9UKhd7m6gK/HO+D3Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783086425; c=relaxed/simple;
+	bh=G0Cun/sv5TG4it8HOQFdrnlDKaUupn6OAuYwGu89JEQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tGFbvw6W49QzHxj8n31bIYF89IcsPUR4IM+trEEfgOrEIMXAkGVhHFcuuGTvGSclY2WXjDF06x33LFBYYu8zLOZbh/l8xVUW+2TwXfJf/xNxDC9wsMCjPOIz3zQWNPA5L0oE2wahEBh/udkVVROcUS8fsVYn1JNIQ+RZ2KTyVZ0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BsHuSI9Z; arc=pass smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R4lAzNAW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kRof5LhdVkro4ovg1OeKFWlkSJn2F+mf1wd6eZ/VKJg=; b=R4lAzNAWqK8+zkfFO5L1L+kyx3
-	UkQRSzHDymmH3gmVtjrT23KHU5E8W/L8xsDXCk3Hf1Roh3j/JA8iPJRC8EJA9VUe0ik7RfyLF8z5K
-	wvotTWf2MnyVAyMEGVgANW8Pl1fZ43cCV7aeRRVWftItQpCJG9OdeOv9D83xZVoUSRt6g+p3nRCmo
-	wazBC3oN609uWt8U2/Nxxtm5VAaKEjRzR3pXkU07JYTfzKBUyT5gDQOpE0AKVHQ47T+i2Zv8Mj24e
-	Xq0HXxZIcHYxOBwp/EoxdMsNB26tGy6sPvB3c9KvVHUbzFx9qVOZMYSjuXDdbNx0ITj9lyzTOX0Km
-	qWcReXYA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wfdYE-000000072PY-0bq2;
-	Fri, 03 Jul 2026 13:03:26 +0000
-Date: Fri, 3 Jul 2026 06:03:26 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Celeste <celeste@collar.sh>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH] xfsdump: avoid false-positive __strcpy_chk abort on long
- dirent names
-Message-ID: <akezHvFoqtKWN0f4@infradead.org>
-References: <20260625222337.54449-1-celeste@collar.sh>
- <20260625225758.GN6078@frogsfrogsfrogs>
- <178243370553.73182.935356806206037088@collar.sh>
- <aj4z3v6RGnSbxlEI@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
- <DJOCNHYIYK0G.17Q5FWMGKKXMC@collar.sh>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BsHuSI9Z"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c12a430d71dso55300366b.3
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jul 2026 06:47:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783086422; cv=none;
+        d=google.com; s=arc-20260327;
+        b=iosKMbcafnMeSgkF4Ncyv4DYJBH9VpWFp3EujNbUi89nKW0Y4wr5KjgyV0vI5mYoZl
+         8aRikqlRtA2fiqKzRro28NJef6qNtiholmqL1SOEBRmg/5nWC9Byzd7hHaoVB60ypvsf
+         Rhr8EfQQrOCOisDE/mLn+VMyEhlFSosnXeF9r1wjOA+/Khkbx8ej2lCSk5JnUP/E2E56
+         tWayZEpND+ejY6jdZuI0NCDdlygvtZ5Uko0D9bV8agKPUaFWAsHUJy0M15HFk02YCWv2
+         NpVovdwpnhk+EXX5PpXeQEkDVxO5TLSXDZfCyMif2Mzdl0EzsAII9qTH93d+exsGKDKC
+         L0zw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=G0Cun/sv5TG4it8HOQFdrnlDKaUupn6OAuYwGu89JEQ=;
+        fh=SfZDTf7rKSybVYl9uMHnzRWFvK/MRQAjFYHujxRjJPg=;
+        b=GfNVsPxs6Q3jQbcVG3x/furomEJ8Tk/J4GH23faiY9zBZaqSUOM/IS2xm9JEFOLkd9
+         4VWRT2zFkHOTsUva5b2bCmcaZg7NzXKgtgQZCT9DSop7Cvr9BwAH9kqtP8UlPZFl3vIt
+         8JyKoVGlM8n3/to4AxPfVUKBFF8pFUaICErHePcrx75foMCNec0NllDYQ9aYQA/n/dn9
+         qhLjviuxsrAsYQa2DBaY1tuDUJC4Y+Dr3nFhHeSMD8l6+X/TDi0k6ktlmuOlaUqW0eGr
+         WmtHkTZ485PKXEqMnAnTKc2N/iMI6lSet/ZEVzOvIJ8cly0qeJ2IxPY9EggJd9iSh5Sc
+         GajQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783086422; x=1783691222; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G0Cun/sv5TG4it8HOQFdrnlDKaUupn6OAuYwGu89JEQ=;
+        b=BsHuSI9Z2atWPA1RAOvtGdfEu3m8HCv6u7nm6v1YFkJD6ca1qI52bFcvERVTkU5oVx
+         gDejIKa4FRNs1w8xlep+JepXVwhYSSHpoZyJJSc7gh9Ftbd7GJTNUDzTgsjpGWGIG7Gh
+         vkIqQSXRGwXnvyZ2W1pSQ2qbW/MLf3QySAt9CECPwfJOQ/qWsp1Q3zXS8mkn8oXIzlcV
+         wEWemWHFsied28qjfwQC+KLLAEk3uOyY29m3b3Ae7MHeTWTuzc1H6L+NVC6Cvldh5hzI
+         MRBx4zkeIla3IWCpu+3UlxdtQjwGkAbjUjJgtJvAqwakSN1xfUrROcDhmnqRF1pdzNo7
+         R3vw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783086422; x=1783691222;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=G0Cun/sv5TG4it8HOQFdrnlDKaUupn6OAuYwGu89JEQ=;
+        b=CrkBjIMk8NkBMwt8tTIlTcGqIpGWfH/TrmYCbUVKJedqSlHgGsBWsf/x4l894l61ZR
+         NpN+ikVwgQ8tpqM1yGwv4TDOtbJ1Jcxvil1H7mz08+/mBJx+2G14VR9vwPECQg2CkYwc
+         PDaGI1ABTgPWX7kivaHxHX/opREsM7kh2HTGbmpnNYKxTqUGyXFI8IuRXbxV6XLQZvmm
+         S1HJeYAKpOKqSn7G3ycTTIc98HYpmSt4mQBAYvm88NM8BF4NwMFmFRiR8Rxq+VFs82Bn
+         VMW5d2oDinKM6ToI93/gy+p5pWU2LYgagQTP3PVLHVquxKjk+hLP0LWhV4b9zJNKVrio
+         FoUw==
+X-Forwarded-Encrypted: i=1; AHgh+Rq7+pkTLnGztUvjhdGHfWT0pYMy7BlLNwZ5m7lwbYAJjPS5G2BarJhMWo8O7QkwaStgPAzELFKBfAg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYLKTm6PJoTSbjC854OArnxfNT/4Uyo+VQQxwtcQsy1+PqI+2m
+	Nn/kgT+XEpROcEulZbPpJ3H11EofIguFxvcUJ6aj8jWg/NviS4iKwsdrR89zMr8nxGWFhyVXEQQ
+	aUqL+NNMDQFNZPS3lKAqaVrxNiTIujR4=
+X-Gm-Gg: AfdE7cm9NbyldPyXgUbLmk1qefl6W50m+4TZSiR97bMuMIP0tIQJRX67DbXdum8cr06
+	M255HRPsDQegefWMEi/qqTtQBEWGvFlbxN3bQdjtT/pBcGezd/um49gXUoNw3Lsx5j5sLtVQXsr
+	LSMyG+PGiyaElAKQR6T1HAxyJn4LUZMHqmMJC7cC51cuYx4gBx92IT4xIf/6Iz5t3Gt5k0DOOoa
+	5dGr8R3gAbSuNkEaopAS8P+O0Fnc6W8khJebxNAgTlESflmMxQIU0BVghbBKJuZQkSQH+5qEQ==
+X-Received: by 2002:a05:6938:a08e:20b0:c0f:de3c:dce with SMTP id
+ a640c23a62f3a-c12aa136d83mr322721266b.41.1783086422164; Fri, 03 Jul 2026
+ 06:47:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DJOCNHYIYK0G.17Q5FWMGKKXMC@collar.sh>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20260701163310.GB6517@frogsfrogsfrogs> <stable-reply-xfs-235-fstests-66y-20260702213502@kernel.org>
+In-Reply-To: <stable-reply-xfs-235-fstests-66y-20260702213502@kernel.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 3 Jul 2026 15:46:50 +0200
+X-Gm-Features: AVVi8Ce43HwF7-ts3rhOcPkeuNZOA4woXfj768vFVH3SS2Roxor3ADq11c4OZCc
+Message-ID: <CAOQ4uxg8AsBL=hrHY8H+U3gPM8aHg1C2-WDXnCAe3CFCOsBQ9g@mail.gmail.com>
+Subject: Re: [PATCH 6.6 0/4] fix kernel crash for xfs/235 test
+To: Sasha Levin <sashal@kernel.org>
+Cc: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>, Carlos Maiolino <cem@kernel.org>, 
+	Fedor Pchelkin <pchelkin@ispras.ru>, stable@vger.kernel.org, xfs-stable@lists.linux.dev, 
+	Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, lvc-project@linuxtesting.org, 
+	linux-xfs@vger.kernel.org, Leah Rumancik <leah.rumancik@gmail.com>, 
+	"Theodore Ts'o" <tytso@mit.edu>, "Darrick J. Wong" <djwong@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 02, 2026 at 12:58:14PM -0700, Celeste wrote:
-> should we then assume that this is fine to merge?
+On Fri, Jul 3, 2026 at 6:07=E2=80=AFAM Sasha Levin <sashal@kernel.org> wrot=
+e:
+>
+> On Wed, Jul 01, 2026 at 09:33:10AM -0700, Darrick J. Wong wrote:
+> > On Tue, Jun 30, 2026 at 07:39:32PM -0400, Hamza Mahfooz wrote:
+> > > Any idea on potential paths forward for getting this series in
+> > > particular into 6.6.y?
+> >
+> > Run fstests, and if there are no new regressions, ask sasha/greg to
+> > queue it.
+>
+> Thanks Darrick.
+>
+> Hamza, could you apply the four patches on top of the current 6.6.y
+> tree, run fstests, and report the results here? The series was written
+> against 6.6.84-rc2 about 15 months ago, so a fresh run against today's
+> 6.6.y would both satisfy Darrick's condition and confirm the series
+> still behaves on the current tree.
+>
+> Once a clean fstests run is reported I'll queue the series up for 6.6.
 
-I still don't think that just papering over the misuse of the same type
-for on-disk and in-memory uses with different characteristics is a good
-idea.
+To be clear, it is not likely to expect a clean run.
+What we want to expect is no regression from 6.6.y to patches 6.6.y.
+A run of test group auto (-g auto) is the minimal sanity requirement.
+
+TBH, this series is quite subtle, so this bare minimum sanity is not much,
+but it's enough to make sure no silly backports mistakes were made and
+it's probably better off than leaving the known bug in LTS.
+
+Thanks,
+Amir.
