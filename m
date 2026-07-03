@@ -1,81 +1,80 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 995524C97
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 00:06:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C78A218C332
+	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 00:17:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.43
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783037202; cv=pass; b=YzyY1ETclzoA1ufwqZIclfByBBAH2IVpuzjMIwTRw+BlkwbgI3qU6tBbKqBFDST/KwshOIaOqMHocEhdArdg/s4u+6f/nwGIrYPk9iHF3CvJpezWIy4EQITqEsit6j0GFUW7NNNiLJv9mG0Ir6YtnKV0u8PqWe/K1P4Q/tX93RE=
+	t=1783037837; cv=pass; b=reXIEkXVdZ41IGYwAtNb5fo7Zeb+QPyswmcuI4K8EK9CTsU3BFij11IE2VNVDsXRyzgI/5kgkcJ7QiWuBoWtX+tuT9nviaP6xCQZjPJ0uAA/6/H0sYFYnaX/VF+I+jRBUq7GqY5BEmm8PdiMfZLAndYno02nHMcH5HFzdLuIaRQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783037202; c=relaxed/simple;
-	bh=gslqVT1C4ZAxfFgX/Lm3Op7ina+YCPCXFvipiwlHJKM=;
+	s=arc-20240116; t=1783037837; c=relaxed/simple;
+	bh=kRH5ME6cl2uOZNTf4Hz7cjp4HebVSYInnLBFWd3k8/I=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fUFgTxnHDbHImy7uWVHuEXXNMOlKHIzJVe3I9FkNO+VK/aOMULPpxS57R8WlLeUyLtlvxoNHbvR8FoTzWsS4roUdZ++nh4QpEv0C0oSIHLYfUDw6VmnHMtdhc9CbIDetDMmnbGUzE0OGZMuc4gqW/P8FbL5bGgt/sUTUlTH/y04=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AVgJB4Vt; arc=pass smtp.client-ip=209.85.128.53
+	 To:Cc:Content-Type; b=RJpzDru+K6V2Ty2UduxCS4icX/94CQE7PSfQPcuqlaMd4QPCF796LNLYrBcLA8ekovTJJ4pmK4myqhKMUns9dLu2rcC5uqBxvzQqDz0l/R1E85uWe8g6g92DXXa1fWZ00160DB8H6EMZi2LCjvYFx/mL1ChJZNEB9UIZ2dGCAlQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a253fLdl; arc=pass smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AVgJB4Vt"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-493b691cb44so16947055e9.0
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 17:06:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783037199; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a253fLdl"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-493c55d5c7aso12080285e9.1
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 17:17:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783037834; cv=none;
         d=google.com; s=arc-20260327;
-        b=e4mix6lBlTomjDDGom5eCHq5HThax+CQQFRQ0FttZPWR0zjHK/4BkfOW3gu/eUrVi+
-         pKW8KFGJ3d4a2n8oAL3BrRqWl+Tl67w36/41wSFP5X3p272ZI00H0w7yl9UW1CWn7Hrn
-         VpvLzN8iAqSLH73Ai2bNRDK3FQWtHzT8t8t5/vh7RLzdcGQdPSVFQdX73ftMI5YZZbs4
-         +TuDPTN3AEObXxjtRBp02Cumee0XKdw1K2uIz4WYCVEkSH02eyVOHCYrFp8dPbMnFc0o
-         Vr4toWMz2qRYfbB4x7Gmsse0DLN45jNN/63EpW1EC4YBOVfSxXSK46yg2gYADuFpAaIE
-         +xBQ==
+        b=jBFINqinC39RK5G98ciHbJkVJ9Rx3OnvTRNfv2QURKHhiO1td6lnMN9du1kLXNJ9sv
+         dfnTLgB8yAz8hCh4+gA3Dz2SGYPEa7m494kBAo1W+8A3Gj//rGCETAKA6OdHDGr6d2Bk
+         Zjhex7AYAIVX5+nArKkqN2bZQDbx3Z1INbW1y1i17DYQDY3QxrRf+sjLO5D7Ef7q1Zky
+         z/pfJs+AQea+nAg2VNJLVXvRve26d2zH5NQ5rNewtqibRdGZnUPUOAP2a1ko4MZVFuLl
+         j/d4HzhDnD/cx/lrDN2pyyJ+VjzrvcbEXcgBy1CSvj1u3hveg1rzzjHpEEG3ydvZfdva
+         xcxw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=S5DS9XhdwYciT3vOVgdq4aobfOtX1mJihQgroHMwxY4=;
-        fh=0NIvucazQ4/TKI+k7ebaDitMuNrAwAjFDeWH1JzAe4c=;
-        b=ExlzKc1wvNLl6Y1fVmdGBi/QZfX6SALl1DGuN4yJN+bQVw8JD4QkO0l6OlQxPU5Uhm
-         U7Er80Nf3MDt6z7KhoAtrkKMSxuaVeuwaokz/ksNj+vqCv55whcQ4/D+gI8ItN7pxA5d
-         bfy0vBxV4t7srT5s487YsjmvahXQ34X56/wuGacbt79hIFmvlNjuoss1iZhhOw8s8L9r
-         BzkCf8/9b3IWtnekVI9SZK65Jp/rRku7dwZgCimOyPQUgum19ARnIT1z60NIOQ4wPbGb
-         X9VNfu1t7f0MjNLM81WskVejoE+70t1qeOXAWULrA6Bq5gSNCviRJ7G0oVmcUwRs+1ny
-         8Zkw==;
+        bh=vU7OEUrLlyve1bXZ6P0sGV5EAt2DQDqFHvcpp7wTUdg=;
+        fh=SnjNo5MJRqMajmZ8NNuCUtUYVGecZA1bV0jrD3augMo=;
+        b=H7FkoDNxsPNkGfgxSH0kNl5bucBUaunx4UwTv4NG1vCdXeZpiAS9T/rPZIFQ7dxXLN
+         ldC71fXd7M+AZzBpz4WUxJJy3N/+3PrO1EfIIq3iZjRVtuVfa/w0nd6Ay8SPu3wEvI4R
+         tjAzn4yjxAHR1XPOkNOINiih8xEbHxHTQGsIyuxsQ/6lCMsVCkrHzgN1ZMEPfhgJdBYZ
+         mGnKxEsnMbFf86VMLv1zdzNdhzfkVhkwf2NLQGpgxYOrdN53dg3o0Bneom/LXm23bVKY
+         akkkTczimYCIHorixuRFKnwvhbPwoZQ+rtgaADrjaHjRE0lesChPefpgQ4CmSa2f9xq+
+         gi8w==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783037199; x=1783641999; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=S5DS9XhdwYciT3vOVgdq4aobfOtX1mJihQgroHMwxY4=;
-        b=AVgJB4Vtx27BcO1cdm5VPuhyft+sx1vbQjIKHjikjMs3dnbZCKjrLRwVIM0F82Vgsh
-         Zlk4TqaBr8IH1nrscltvcgU84AkaKC9lglxNZt3ZW0hHoIGEM2ds3TLsTjrMU1vziRDB
-         obwI4W3FpS3n76EF05KUJ4CRPXKvah3HjfKvZRYjJCXa2cMHm5VxSe27eir66OprVPMI
-         V1MxZ6ew2nFkEQQk9TUMIz2ElA20dBwYPcFdDYGUc5ioml+o5YzMIoa33Wn+ZiCkUeIN
-         Hq5I2o6sQ8Nuacr5iYhX9Ff7ZTUhsbObNEVb7AmMqIWQWLwU2vqGM17ukNUCra8xHT/y
-         GXMg==
+        d=gmail.com; s=20251104; t=1783037834; x=1783642634; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vU7OEUrLlyve1bXZ6P0sGV5EAt2DQDqFHvcpp7wTUdg=;
+        b=a253fLdlbH8sjLvBQuxc18I7crzBttsxvYqvDQKjdsDqmfby4HxHTiwKBeYtfQQ1p2
+         fh/NNNkiEW9X42YMwUy5BL6qjFZsgG79TS93wnUMg1ENd7lC9bWuRUojmsAlFGZlG7oR
+         SPjr+K7XCDpAgW3mCbvg+3BmePEaE825ByxEhVgqByT1XDwEnrKuSX5d/yF2BLyer5mS
+         ChzX45p2lDAQtLYtKI3ytM7J+SsLMMfkvDL4l5QHFiLAakQhDJWvXcVQTV0RU+xHFX02
+         oIR4u6PTI4Aj/4YErRx6q+umHvbfjb03WNF1DboheuhkNRvK6jK32I/h0fQL9HRfAZcY
+         tvCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783037199; x=1783641999;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=S5DS9XhdwYciT3vOVgdq4aobfOtX1mJihQgroHMwxY4=;
-        b=QVTVRTfegkUkAaPx4bNo7q/Dqj3+iTfaXlrGHHBuhZ15Pxc7t2sNum7qQ6TNASpoCM
-         pw5P7Bq5gu/FiEvaiKzZz0+S9Ja/6zjQkRHAYM52RqZ8QNqqRUnADJqqTNEJVG7O3tLt
-         Lr9UODZQwcjAA93d3kmHPR33jkg+hYLVAY4huEx52BBOi7mqF2PXc0M/jnACvn3hQFwY
-         hAj+HBoUBQEKSQKXyVJzw3Mg1s2ATZ6QZBeiY10kHQfK/2FXT5llRTjL3hlHrXoDL0hU
-         Kd25usXdcyXCiKXNjTurefm12d2Ecppuy6b4z+NDVx8tH1Px5W5pkRw4JjIl4fRkLsRs
-         Oi3g==
-X-Forwarded-Encrypted: i=1; AFNElJ+RlWmBQbK9kUm2z7c1q8J+5454U+Qd19MZ3OkqyN8w+jEBuEMmUOkV4NtI9E4Jvkc73Odoza7z/jo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzjKspYDYdtiRVZdrXbWDTNdPFRht95jhYuaXkjArUVpkHHndWQ
-	A9BRJTK31n3ByhoncAp4819AdnzAGWA4aJMoFVuIGNzG6rI6es7sug2nkKoidmjLAp4p7p+NLYo
-	ne9skNGSagC5uku7vruaK06IUU7oJ4TU=
-X-Gm-Gg: AfdE7cm/Ari2CX/LmU1OxYHy9Mtd7AsHP5CBcsuFOK+zCO3/CiJjGAer+17fEN4n9jd
-	bdewP6i+v8wt1P6UVpTFE0G8qeaLCImzolIRuClaDat6XiIgRXkMZqJVTPPQBoosALCVnCCB/ZQ
-	qwP5bsnS0mDgd0lr3s+SpiVIS4Hiq6MDM1e6K0gRlorAZD5e/pUylEYHa8gsvj1ACLJrXfmXl3f
-	tJSE/zYvei/1cWvs4A09W8D8DUwHnE10tARN/fa9nRFOtPYlxKwM11n8UPdzbeiJ16RVTnw2QZb
-	MJ5xpZsKIElwpoYnwL76hkE2iVzCYztz2gnhWpsQTkfQP/LugwrR
-X-Received: by 2002:a05:600c:5808:b0:493:aa0a:45b0 with SMTP id
- 5b1f17b1804b1-493c2b855famr82697505e9.23.1783037198482; Thu, 02 Jul 2026
- 17:06:38 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1783037834; x=1783642634;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=vU7OEUrLlyve1bXZ6P0sGV5EAt2DQDqFHvcpp7wTUdg=;
+        b=SkoAEPBdO0MzKK+JILbMhhEuwHQouJ1ASc6c7yDewA1yp+jTef9Gw+hvOV+KsauqOI
+         N2n8GAZnQIEGZzsLmklH3v9B5QEeSnnBN5JltbMZhLxXWpzHnpvofM+k2H56011bGZXv
+         jZltCvdJSUER9uyW/389y2G+g2MXKQnm3zPg/FJaVoFjbFVrOTR1fhQ58qu79V5Gd4mE
+         rHEanoyN2qWNYInQNsMbtO4+hhJrc4n+qPAxtRbbYmDVWnHcMRRGpxo91KrUif5AuQ1/
+         2E9hAu+RWpCT/47kVRc30DxHHmVu3VB5hBvNloKVGRP/f5ptzyMSDxfCUCodqkRub+of
+         ++cA==
+X-Forwarded-Encrypted: i=1; AFNElJ9gJvApJzm8iwy3D50YEO5ZMgjz5NE9DwSicwxsm+O+NO/2EjcRcwsTD4K7mS14l5aLLYCMjXZ+X/I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YytgYnNXbixh2WMmCt0iHgfRR0bkboM0hYL7kGwD/4jrrv2dLZq
+	oAyGhhpkMIz8G5dYUmy6EGkoCvApHQb3So3yhr87K2C3y2cwpSzmf+f3lBHg35QIqglNm+p4wX2
+	WtqqcW6U7ybZ98mzHwmCPZISHZCTiO9U=
+X-Gm-Gg: AfdE7cnHrV4PvHUFwyszkfClQhjWDQnKAKZnriyOtMBLxak5ehnurCDzX7nD+3W+Fh7
+	5S+YlF35jC4yjcv1U3hFWBP27DaG5yJcl3zQUJrb39BftzpgiL2N0YxxPdWPGioFTyybPgNkATT
+	mvGUSJ6/cODyw4QAVTgOglbMB7Vzj0UNvaFDp/dKyqiogDPjxdnKDD5n9yzJ95u8hALU4nj7yR3
+	k7uObEn2CNH/SH9g4lOUcGjBCyrTIg+yMyGsgt2xfMxAOOWWAWgotECtOxseia1elE4xkL+A/rB
+	PwiAnh8kyx9kV6tX6/F4KBqezktBab4WC3m6/wF9Rhjhedd53DIilix64Ofm2ZI=
+X-Received: by 2002:a05:600c:46d0:b0:493:bc4a:c6b6 with SMTP id
+ 5b1f17b1804b1-493c2ba1d3emr113298325e9.38.1783037834179; Thu, 02 Jul 2026
+ 17:17:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,38 +82,118 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-11-joannelkoong@gmail.com> <akRlehPHzy-F_105@kbusch-mbp>
-In-Reply-To: <akRlehPHzy-F_105@kbusch-mbp>
+ <20260701000949.1666714-18-joannelkoong@gmail.com> <20260702165841.GM9392@frogsfrogsfrogs>
+In-Reply-To: <20260702165841.GM9392@frogsfrogsfrogs>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 2 Jul 2026 17:06:26 -0700
-X-Gm-Features: AVVi8Cdk_C73wAd0LEg65xZ99iaBn5MPuJR0EWtJiHzmTYc6q8IOOPpqNnJDiic
-Message-ID: <CAJnrk1b2T1GiWzvBKaBg-97sEZ_9SA6EVEUO=9CknK1vS3oJ8Q@mail.gmail.com>
-Subject: Re: [PATCH v2 10/18] block: convert iomap ops to ->iomap_next()
-To: Keith Busch <kbusch@kernel.org>
-Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, willy@infradead.org, 
+Date: Thu, 2 Jul 2026 17:17:02 -0700
+X-Gm-Features: AVVi8CcxJan3XgaMiYmE7l9m1K7rjamtB3vH8NBAZsWn7x4K1BrIcNnVAJIzZPo
+Message-ID: <CAJnrk1YW0gKRVvHRC+WeKoV2vrquzaC6UkipZkQ34Z0RAQDjtg@mail.gmail.com>
+Subject: Re: [PATCH v2 17/18] iomap: pass iomap_next_fn directly instead of
+ struct iomap_ops
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org, 
 	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, 
-	"open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+	linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Chris Mason <clm@fb.com>, 
+	David Sterba <dsterba@suse.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
+	Dan Williams <djbw@kernel.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
+	Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
+	Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
+	Chunhai Guo <guochunhai@vivo.com>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Sungjong Seo <sj1557.seo@samsung.com>, Yuezhang Mo <yuezhang.mo@sony.com>, 
+	"Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, 
+	Baokun Li <libaokun@linux.alibaba.com>, Ojaswin Mujoo <ojaswin@linux.ibm.com>, 
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, Zhang Yi <yi.zhang@huawei.com>, 
+	Jaegeuk Kim <jaegeuk@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, 
+	Hyunchul Lee <hyc.lee@gmail.com>, 
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Carlos Maiolino <cem@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
+	Johannes Thumshirn <jth@kernel.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, 
+	open list <linux-kernel@vger.kernel.org>, 
+	"open list:BTRFS FILE SYSTEM" <linux-btrfs@vger.kernel.org>, 
+	"open list:FILESYSTEM DIRECT ACCESS (DAX)" <nvdimm@lists.linux.dev>, 
+	"open list:EROFS FILE SYSTEM" <linux-erofs@lists.ozlabs.org>, 
+	"open list:EXT2 FILE SYSTEM" <linux-ext4@vger.kernel.org>, 
+	"open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>, 
+	"open list:FUSE FILESYSTEM [CORE]" <fuse-devel@lists.linux.dev>, 
+	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>, "open list:NTFS3 FILESYSTEM" <ntfs3@lists.linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 30, 2026 at 5:55=E2=80=AFPM Keith Busch <kbusch@kernel.org> wro=
-te:
+On Thu, Jul 2, 2026 at 9:58=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
+wrote:
 >
-> On Tue, Jun 30, 2026 at 05:09:25PM -0700, Joanne Koong wrote:
-> >  static const struct iomap_ops blkdev_iomap_ops =3D {
-> > -     .iomap_begin            =3D blkdev_iomap_begin,
-> > +     .iomap_next             =3D blkdev_iomap_next,
-> >  };
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 3f0932e46fd6..0aa8abc438c1 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -626,7 +626,7 @@ static int iomap_read_folio_iter(struct iomap_iter =
+*iter,
+> >       return 0;
+> >  }
+> >
+> > -void iomap_read_folio(const struct iomap_ops *ops,
+> > +void iomap_read_folio(iomap_next_fn iomap_next,
 >
-> I think it's generally safe to use the same mailing list for the entire
-> series. There's no context here on what "iomap_next" is because I'm
-> subscribed only to linux-block. I found the rest here:
->
->   https://lore.kernel.org/linux-fsdevel/20260701000949.1666714-1-joannelk=
-oong@gmail.com/
+> If you took my earlier suggestion to rename the typedef to
+> iomap_iter_fn, then this parameter ought to be named iter_fn.
 
-Ahh I see, thanks for the heads up Keith. I'll do that from now on.
+Hmm... maybe at that point, it's self-explanatory enough that the arg
+could just be called "iter" instead of "iter_fn"?
+
+>
+> >               struct iomap_read_folio_ctx *ctx, void *private)
+> >  {
+> >       struct folio *folio =3D ctx->cur_folio;
+> > @@ -650,7 +650,7 @@ void iomap_read_folio(const struct iomap_ops *ops,
+> >               fsverity_readahead(ctx->vi, folio->index,
+> >                                  folio_nr_pages(folio));
+> >
+> > -     while ((ret =3D iomap_iter(&iter, ops)) > 0) {
+> > +     while ((ret =3D iomap_iter(&iter, iomap_next)) > 0) {
+> >               iter.status =3D iomap_read_folio_iter(&iter, ctx,
+> >                               &bytes_submitted);
+> >               iomap_read_submit(&iter, ctx);
+> > @@ -688,22 +688,22 @@ static int iomap_readahead_iter(struct iomap_iter=
+ *iter,
+> >
+> >  /**
+> >   * iomap_readahead - Attempt to read pages from a file.
+> > - * @ops: The operations vector for the filesystem.
+> > + * @iomap_next: The iomap_next callback for the filesystem.
+>
+> "The iomap iteration function for the filesystem" ?
+>
+> Using the term "iomap_next" in the definition for iomap_next isn't that
+> helpful.
+
+Agreed, I'll replace this with your suggestion.
+
+>
+> >       return ret;
+> > @@ -824,16 +824,16 @@ xfs_file_dio_write_atomic(
+> >       unsigned int            iolock =3D XFS_IOLOCK_SHARED;
+> >       ssize_t                 ret, ocount =3D iov_iter_count(from);
+> >       unsigned int            dio_flags =3D 0;
+> > -     const struct iomap_ops  *dops;
+> > +     iomap_next_fn           dops;
+> >
+> >       /*
+> >        * HW offload should be faster, so try that first if it is alread=
+y
+> >        * known that the write length is not too large.
+> >        */
+> >       if (ocount > xfs_inode_buftarg(ip)->bt_awu_max)
+> > -             dops =3D &xfs_atomic_write_cow_iomap_ops;
+> > +             dops =3D xfs_atomic_write_cow_iomap_next;
+> >       else
+> > -             dops =3D &xfs_direct_write_iomap_ops;
+> > +             dops =3D xfs_direct_write_iomap_next;
+>
+> Probably ought to be called iter_fn, or at least something that isn't
+> "dops".
+
+Nice spotting, I'll rename this in the next version.
 
 Thanks,
 Joanne
