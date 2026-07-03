@@ -1,126 +1,117 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9919C27E07E
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 03:05:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783047958; cv=pass; b=V9Jg1mezP39XqaD5dMQILiZZ74V8NH/jsIC4f08bII3xzfFzo044IJITjzWq7K5oyyBdlW4VfMccaxyjqnsjr2TPS21huu0KU6k5zSziIBMfgiL7UoN6ovwDaspPSz/W1SLBIcIs3Ih8f45tZGfjfBYAFpnA+ndqQkCT3nwH/vI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783047958; c=relaxed/simple;
-	bh=L+H3GdulcKLSn6s39Xisy3yxUPpEpZqQt/6NPjm2hT4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RiUNjLkF+p8IjQtl5XWl7XVecbdv0d83Ke5PovXb7RybrHlitzJvrT7DFgzdxanXbSqY3rnmEGsP27HvjkPbJSEM7YLcKowpuKGYbXFDRJwIcVtpPaCRA9unfh/GcR9BR/thPAehoKEMPd/0/5/M2RFwXOlV3iAGgjO4QnuyLF8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EeDkho1p; arc=pass smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DC2433E84
+	for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2026 03:33:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783049599; cv=none; b=jHly5ntTOJ1MMgJHZ+ZTbxNFIXPYeQtnPB4SQS1nEvMYymyBcJYtpWcElLKMnPG/WugrAplXahjG1+reV3GCX+QUk0JPydiP11iV2dVHxOC39L8tPy0r1gvAKWCqx2VFfyNKszyZjLeBEigaT4N1h0o+j95vpEnTxV1hdsC2PDg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783049599; c=relaxed/simple;
+	bh=tponrRQ90TMozf+MyLB3cGGztbGISkGwaMEp6546Ar0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OqMRiSvTGlL9PtAV6/Wjed4ajh0dvGPGpLxZMABo+9biz6Lu1ajYqnOV+sfifB3418k1/N2/mMMcx5aln4kNLvjNhRnzMsVkfGhHkwiodm0FaQ4rTr4lPVXiTpEd+W4OvgYrrewBx4a20jWE0rURKOL7Cwy3914XrZgSU9NzGE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hjb6qlEq; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EeDkho1p"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-493bc8fda98so544545e9.0
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 20:05:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783047956; cv=none;
-        d=google.com; s=arc-20260327;
-        b=GOXnClbk5xmACI6CJHDydr6ynkw+v0jNHqwUTGXSCwKS2ykQ7d121rXKpMCG7TXuU/
-         xUS1ks9b9q/xsAnVjz2rLEwxpDoEx1ToRWpj7FROxeXYSEgVhGbUn63kQpO/soxJyQky
-         clqgJ0gdyyFQxha9P3Zn33VVdfnwFHUQJ2vDwkCgOWagr/ZsPRnXWBFW9huasFhpYBRa
-         r1v6otdzVWvmLptH1BC+MY1qmzrNn9UYsSoLHJnqVlL9gBPVg4oaT2nPPKJKr5dci7ra
-         I+/ycoW5sVixhU4SKqui9msXeYwuh5Ih24sSAaW50WFarHkFsgEFT2PDXqTKLLJ04mEb
-         fx6g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=L+H3GdulcKLSn6s39Xisy3yxUPpEpZqQt/6NPjm2hT4=;
-        fh=Ce27NoyrpQCWpS3uYR4RPHZlev2vzxV1HmQD2Uxw9oo=;
-        b=D2FFUCgicdCEdWVl2xtkqDn8+ktqwNlnJfUz3GmmQk/8IQXo7AsFP23HJFpsn2REmq
-         o3xqVmTIUUKZ5t9WS7LBtFtvctcDYRVJQtV8hg1fXYZ+CeCZKouBFOwCyrj3JCJ25IpG
-         6HLlefDxgYehUoezual9ERRCDu4eSCTv2amIu8gEtzU2WMeDUgOEvusA0uvVY9pbbFOz
-         tncCtN7Bwrf5PgNvlBNcKv8eDrsch/oJksnL5cK+C1rKTNzUIbh294nfxQVc2xWtYAej
-         QZvFOySu9wjVSjaLarIt8hlh8ZH6Pv1X0Q9ZdcQShudZCReH44bf5NHduRjrbZaDbavs
-         YBGg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hjb6qlEq"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-37f816d01e3so130552a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2026 20:33:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783047956; x=1783652756; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1783049589; x=1783654389; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=L+H3GdulcKLSn6s39Xisy3yxUPpEpZqQt/6NPjm2hT4=;
-        b=EeDkho1p38ZO22WDSFypik9GdRJBnA+hMGgltuEEi7yE5dOIEj9CVMtTfHZXnCeeh5
-         5S3nGoLhb/sTUnk5InAuevla/JvQUID/1utipgwbUYEX0iHlWRZtgVke6p//pqLHct1N
-         BeLworJR14NmtSnzoMrQjZDD7QNBrCWnJVT9EsYFsyOVGXxL6760xBoOp/3PtYJgEYay
-         4LkzdbbfFhtCIq5Zulul3GTsnoTlZijODF8NTQy0/q9919N14dHXs3fRvTY/yFx7LSIM
-         jVYnCfrOrRnwp/WCXDXecj4nyLPui8a+HFQ2IDvL/fLLQiFRfbbB58e6wrwns24iukZH
-         gg6A==
+        bh=OScgIk3HVtXhi2nQlNSKs27hube3U3/KXs6uU1PNyuU=;
+        b=Hjb6qlEqVGsN3564YLAMORGaeqhIxvL9Mf6RhqjSGFJFJfYgcnd3BqgmpZHOkRwx50
+         lG53auwQHL4f6p9t4yMt9LivFtNxz9HkUzEd+G7RILgDMB2TZ2i3EYdXmYWg4iOhdBTz
+         yBfvhxXYK6JkNr+u5eHeyxXll22ACSYqlr8+lQ2TSHwv08nzHb+z+wIZ9SP+TPx7XMSz
+         Tyv582rofMGNNQj1Si+KomKO04+65bR1ANAM9h729ZZTp5TRz+KdIyX2ilwHmUNE/WOZ
+         sKjFJ+xdER5U1DSyQD7ananBptgRlcnRHyQq6sPRVpeuJuMXKgYD7XoTUCNdV3z8Qanp
+         pTWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783047956; x=1783652756;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1783049589; x=1783654389;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=L+H3GdulcKLSn6s39Xisy3yxUPpEpZqQt/6NPjm2hT4=;
-        b=ZfvO7rhO2AkSiGVs3K5p/xn6rrKIQ4oFV4Tq/1iWod16yOs29UDFWhCZJ8lnvr8r8+
-         uIbFmoizJJuJT7uwpmbtvjjOjg+xDF7j+719ukRKdgEqfzWOPy6KEMDTI/P9VjssdYnh
-         xM1Er8PULFSTDIvb7uwtJPd+68KKEGHiRqBiUsLTxhmTLXJakn2e2g8jDZ65B1c012l6
-         DdjVwt5MjTacOLmVgCM9FI7qOA7FvIPko2tZl/wzurtxmpCrZ1+9xoqdwP0q5FoKFsdE
-         T/P0LRsZuqfxd5et4hcHtMqeK2skFsfR/Opxba8KUrIJWCyA/DrXVjz/jA+KmX5qYO+h
-         5ghw==
-X-Forwarded-Encrypted: i=1; AFNElJ/hZYLXmqfwDa9MkozTGDU3hPV/KPq99tUw2kWWYb8psuza9YRG2Mt0BbTNYJShuYjnTspU1AD6R9w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5ayPFVI1sCcEFoK6zuvJvAy7wWDU1S1XiM0Y+SAsCd7DiZb8V
-	tspvvLM9x09oM+XEJ8NNvWYCb/EXIRIkGEbQnwS6Udt+clxMM17y/cOrIitx3Hkc5W1aIk6UHPv
-	ekufdJLs+iym6p7LdS0RH+W140IiU4Xs=
-X-Gm-Gg: AfdE7cksEbkx3oqYIJU7DVwtGBBMaaZH5I7AOV0a2f7eUZUkmaL/xtYWEaYkz7zx25m
-	FvEhrb5QeCHcEDajr5b+OORV5RCZ7EwFOHwXig/+paZMfNw61j6ibzQX8nm65akN2dzI3Picb+L
-	MSVTtTA2HSlDXn7E/WAOJcw5hExzzaO2WYZnsenftmAApfGXa56C2dqtd0P1E+Dz8yb4L/E6P1M
-	wrxg65qJSCOOFT0Ax0kblYpMuNeA3DSI0+VgHHQWkzu3RX4yX84z0tr/r6DYvN1s8HaPhInkVfT
-	kY0OYJ1loHlZUbefUMaPNpDH3xMwBMzsOi9fBeP7bG1Y/TEr9Kik
-X-Received: by 2002:a05:600d:840c:10b0:493:b9cd:1272 with SMTP id
- 5b1f17b1804b1-493c3cf2f50mr85170315e9.23.1783047955834; Thu, 02 Jul 2026
- 20:05:55 -0700 (PDT)
+        bh=OScgIk3HVtXhi2nQlNSKs27hube3U3/KXs6uU1PNyuU=;
+        b=macUqHwhhKojjHE2t5sKCOnxZaHSByncdGhHtH+iRxAqBWPgCm2goQtqnP6XfDFJad
+         gDKqdO3A5nFoCczio/TFmIFmDGSBsD4RL5QATbRHGymKSD69UIi6yRG6Xq6Bf0wR8G5J
+         m2vAs7UfKWnypGhuO6wOfBOLpmny291Nz411b3fFuvq+xl8pl/R1dd7biPYvz/9AVA3s
+         zTORJw3cPbNyVL6CpbrOr9Wpw/TBg2/keioC5yGWqztGbxRI07ysFeXK8FbKqdiCcqRl
+         x1SQO1ORR1hnvVIvK0OF/rE1Ml/H2ovQKPH+qzGuqXepKK4LOE7y4rSpIqYasyKQJaAE
+         uLyw==
+X-Forwarded-Encrypted: i=1; AHgh+RqeiYFp4w8WIJknj21TLq91juMXS8KItqF8WEOSn7QzI9OnU982npJYx37v/sSLsY4RP6oWE7EbIp8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxthqdM0phiIrc6uu+b3lEpF7TRKfhW6DRhhPtDZ485WglFnrUB
+	cwbUjjm2L5f/7yNFY74n0vdf6IJ+b2n2yjHfu+tM+lq36bKVXJioKKIQ
+X-Gm-Gg: AfdE7clw+JE4E4tt7zxiKLM9HTWHUHeMnuQ8X77L+8IT6z0nUWxa+mxjL4SeroSqW/Z
+	SugTM8oqdXN9objcMhQ8TJHa3NluQRs4XTmJWq9ClWLDtQX7s7px4uU2tWE1H4iuoELhkVtncbF
+	1RamrPQcwdwcFowHzeBLzD83hdPDv5G2qtAhSFb2G7gjkHyHvYv2bI2wZSy4+OMUMLXUb1G+ugn
+	Q8/JNNDNNXrvG4HytpCx5bILZV0+C4jsrkfUSvEARmbl/vPXq5ZdZJ9ltkhhdggG2B3jJZ2SakN
+	gxKWnwbWziYTbCDFPudh/oz9sfzhpA7mHzdrS5GpH/T2d3FlU/DhmL3L/Q1rS6VtrNVCj3qVBO7
+	hJXbzBtXZ8u3cM6ULj0wo4R6Aj+6qZINLZhy9qiSG6n3efLm4xbJ5QV29sDz4PK5LYuGhceGqGw
+	USxK6iQawAWxW02u33kLaffEo9
+X-Received: by 2002:a17:90b:3b52:b0:37f:9ce3:ca93 with SMTP id 98e67ed59e1d1-380aa1d7714mr10460052a91.28.1783049589379;
+        Thu, 02 Jul 2026 20:33:09 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30f0bbd223esm15398453eec.21.2026.07.02.20.33.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Jul 2026 20:33:08 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: djwong@kernel.org
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	cem@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
+Date: Fri,  3 Jul 2026 11:33:07 +0800
+Message-ID: <20260703033307.3829704-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20260702155305.GD9392@frogsfrogsfrogs>
+References: <20260702155305.GD9392@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260701033253.46420-1-changfengnan@bytedance.com>
- <20260701033253.46420-4-changfengnan@bytedance.com> <akT4tJzFSfrBxqdq@infradead.org>
- <CAJnrk1Y3yPeXBeBNo+DjTt8eRN-mc2F9apBCUn+j=GV7GMzi4g@mail.gmail.com> <akZ3GErzJSTtOn-H@infradead.org>
-In-Reply-To: <akZ3GErzJSTtOn-H@infradead.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 2 Jul 2026 20:05:42 -0700
-X-Gm-Features: AVVi8CfZKbXMpL8snbpx3vl7cTayO8vf5li7UT5PBriPQUNElwm8EQYO8_inLP4
-Message-ID: <CAJnrk1ZijiWYU8YOmRf24xxwX0kH6vCe3ta89LfoX7v7j_JYLQ@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] iomap: add simple dio path for small direct I/O
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Fengnan Chang <changfengnan@bytedance.com>, brauner@kernel.org, djwong@kernel.org, 
-	ojaswin@linux.ibm.com, dgc@kernel.org, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, lidiangang@bytedance.com, 
-	pankaj.raghav@linux.dev, Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 2, 2026 at 7:35=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> On Wed, Jul 01, 2026 at 12:35:24PM -0700, Joanne Koong wrote:
-> > I think it ends up being pretty simple to get it integrated since
-> > ->iomap_next already contains the logic to only begin the mapping at
-> > the start and only finish the mapping when the iter has been fully
-> > consumed, eg
->
-> I wonder if this adds overhead that the simple path removed.
+On Thu, Jul 02, 2026 at 08:53:05AM -0700, Darrick J. Wong wrote:
+> I wonder, did you find with some tool?  And would it be useful to add
+> __bitwise to the typedef so that static checkers will find the places
+> where we screw this up?
 
-Ah I see now, the whole point of Fengnan's series is to k eep the
-logic minimal...
+No tool -- I stumbled on it while reading the log code for an unrelated
+xfs issue, and noticed xlog_cil_push_now() was taking its CIL sequence
+argument as xfs_lsn_t.
 
-Fengnan, I think you had mentioned earlier [1] that enabling
-iomap_next brought the simple-read gain down from 10% to 7%? Thanks
-for running those numbers. Would you be able to share the changes you
-made to iomap_dio_rw to support iomap_next for those benchmarks you
-ran?
+I did try the __bitwise idea and measured it: on a clean tree "make C=2
+fs/xfs/" reports 0 sparse warnings, and adding __bitwise to both
+xfs_lsn_t and xfs_csn_t produces 286 new ones across 26 files. Only 11
+of them involve xfs_csn_t (all in xfs_log_cil.c); the other 275 are
+xfs_lsn_t.
 
-Thanks,
-Joanne
+Almost none are real bugs -- they're legitimate uses that __bitwise
+disallows: sequence numbers being compared/incremented ("degrades to
+integer"), the cycle/block splitting in _lsn_cmp()/CYCLE_LSN()/
+BLOCK_LSN() (xfs_log.h alone accounts for 120), and every trace event
+that prints an lsn/csn (~49 in xfs_trace.h).
 
-[1] https://lore.kernel.org/linux-fsdevel/e85e73bd-5fbe-4d11-89ba-7b42c237d=
-d34@bytedance.com/
+Clearing those would need a fair number of __force casts plus rework of
+the LSN helper macros, and spreading __force that widely tends to hide
+the very mistakes we'd want to catch. So my own preference would be to
+not add __bitwise: the churn and the pervasive __force casts outweigh
+the benefit of catching this fairly rare class of mistake. That said,
+I'm happy to revisit if you think a more targeted approach (e.g.
+wrapping the sequence comparisons in typed helpers) would be worthwhile.
+
+> Regardless, this is correct so
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+Thanks for the review!
+
+Jinliang Zheng
