@@ -1,47 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FAD23BD02;
-	Fri,  3 Jul 2026 02:00:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D953E1CEAC2;
+	Fri,  3 Jul 2026 02:01:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783044022; cv=none; b=mSEoiXxV2WtNRNoV6WyPYQX7tHMBFmq+T1mIgdIhNzIgIJ0GcXh31n5RD8k6WOwMxSYMQDBiDvVpqc0tn7lofdRFoJQAlGN9rwmWe3233m4RSPt16yH+wC/tkR6AeNvZcLVvZWzC3zP+1NSddBoDPgXXEaJtYtAq6ftv29NwGX4=
+	t=1783044108; cv=none; b=Y3pB91pDMba1dq9/LH2vvbduEWbjqa3MnQQWoR+xYBvUJ5vciwF2b0aCc9NbuuOsT3vSAFM20RV+v5iYlM5fYyQSkew0ZVY6z78gYsW6t0hArC6XdWz8tYjI980FSEcJ6aj1Z8M2eQXLI9u+mHgzUlWvJIFe8sf4c84FkiKPYOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783044022; c=relaxed/simple;
-	bh=rVUsf9s27g0oL4qyTJOW6ytXgxFzqPeYvnBAqT0qu8c=;
+	s=arc-20240116; t=1783044108; c=relaxed/simple;
+	bh=GAM+m6cWDuuutfc0N8W+w2qobBwH4/jAJw4LN4feaPw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MKvfZO5V2AyMcr2uoOM5d4/SGeGzCZTkoJni+JmWyfoYRsdHGyxVC7+4UqjHwssRaDXJpvr2j+bU4sFZ/BKFsuKfipCV52LyRn1426QTtUolo4iSFdehz9VzPkEzT1C4nhoCfPutQzkeo46pL8w0aj21cHdAyb3Ajh9EFTNJuCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZZwM2VLC; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZBMK6lqVEJUkp9s3QRpDbj5E/jMMgqbH+RjFDXZjocw85+YOtssYt9NVdYmR+hTt92dxtzsLBRxyBkSoI4r32j1kfRI5EgPmopJ6vT0AmiGvu5Pgw6+TlFwM8eO92675hlogxVPvo/ZqAh1Uzefnz1DT+Rw1X2pVLeb/ebYlhio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UZ+G2Lxb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZZwM2VLC"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C76591F000E9;
-	Fri,  3 Jul 2026 02:00:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UZ+G2Lxb"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 74CBF1F000E9;
+	Fri,  3 Jul 2026 02:01:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783044020;
-	bh=7KDM/4aP5qHk37jWKwwNbvJ+YWJqTEZ+9ZiwKcHjN+s=;
+	s=k20260515; t=1783044107;
+	bh=oMB68yM9vnc03sy1HjctW2y/WonQpK4WbJis7WinceA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZZwM2VLC9/Jodn6mInMpHPh8TGbxKk2cFf/75CAtFRq0KVkKGnQgwgNPLel1WcXbG
-	 ip73MshfUWjbgZsYNfH2PCMESxQnsKAqOlbrNGS+e2I/Qogbzx0Uf/oxCduYNOdSGq
-	 3GfDws/dtt/17w7BngGUFoKY5WtN60h34fYoLmTWomyHWUYbhkhT4LumyP2pTxkWez
-	 vI1BitpfhVZwfwPyDYBqOKaZKO09Y9ImG9gbZiGuSWEZuptVr8LHg3QCJH0Vi5tj2i
-	 Bhsang1BKidNlIsykVNi/GZalR65+4Os10VFvkk+Om8xLgyOTAj3CcZpZIInvu8KhM
-	 ht9ePnC0aBvfg==
-Date: Thu, 2 Jul 2026 19:00:20 -0700
+	b=UZ+G2LxbC6hyyPY45gChM82kirEdP2W1cjQ9cB8OMLYUlkgPJvcmz/MIwlujeZotn
+	 4R/Zvspof7xaAk0X3wOEeMxwWctRoLV4NTsc8rCCvYPFhVb70Q3E9WueaPYWgiO166
+	 2xfbkdD8pCO8AIcoqCOfLU0RCSAZUSynWck7z/YdMGgn6CidZh7U3ECdLyiqSYmIa8
+	 M5P1TAt9IbsmnguwJe2hbJNiSXqqC63NyKcHW0pu+qG7lIvuTSoTWo9hiMZTxGrVTP
+	 BJg1wFffSxulJHs9pt/+Ff8RV8ItkGlqOI2T/5xJPdCI7Mb+FwKTLrcrnQUpxeWmfr
+	 1in1VDEBLw3PA==
+Date: Thu, 2 Jul 2026 19:01:47 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, hch@lst.de, willy@infradead.org,
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, willy@infradead.org,
 	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 18/18] Documentation: iomap: update docs to reflect
- iomap_next model
-Message-ID: <20260703020020.GS9392@frogsfrogsfrogs>
+	linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	Dan Williams <djbw@kernel.org>, Gao Xiang <xiang@kernel.org>,
+	Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>,
+	Jeffle Xu <jefflexu@linux.alibaba.com>,
+	Sandeep Dhavale <dhavale@google.com>,
+	Hongbo Li <lihongbo22@huawei.com>,
+	Chunhai Guo <guochunhai@vivo.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Sungjong Seo <sj1557.seo@samsung.com>,
+	Yuezhang Mo <yuezhang.mo@sony.com>, Theodore Ts'o <tytso@mit.edu>,
+	Andreas Dilger <adilger.kernel@dilger.ca>,
+	Baokun Li <libaokun@linux.alibaba.com>,
+	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+	"Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+	Zhang Yi <yi.zhang@huawei.com>, Jaegeuk Kim <jaegeuk@kernel.org>,
+	Miklos Szeredi <miklos@szeredi.hu>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+	Hyunchul Lee <hyc.lee@gmail.com>,
+	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	"open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:BTRFS FILE SYSTEM" <linux-btrfs@vger.kernel.org>,
+	"open list:FILESYSTEM DIRECT ACCESS (DAX)" <nvdimm@lists.linux.dev>,
+	"open list:EROFS FILE SYSTEM" <linux-erofs@lists.ozlabs.org>,
+	"open list:EXT2 FILE SYSTEM" <linux-ext4@vger.kernel.org>,
+	"open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>,
+	"open list:FUSE FILESYSTEM [CORE]" <fuse-devel@lists.linux.dev>,
+	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>,
+	"open list:NTFS3 FILESYSTEM" <ntfs3@lists.linux.dev>
+Subject: Re: [PATCH v2 17/18] iomap: pass iomap_next_fn directly instead of
+ struct iomap_ops
+Message-ID: <20260703020147.GT9392@frogsfrogsfrogs>
 References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-19-joannelkoong@gmail.com>
- <20260702192658.GN9392@frogsfrogsfrogs>
- <CAJnrk1YZQOQ0D6p6qYx1BPvKQaDgZsrKzLbGZzaH8tUkj_OoOQ@mail.gmail.com>
+ <20260701000949.1666714-18-joannelkoong@gmail.com>
+ <20260702140705.GE21339@lst.de>
+ <20260702165117.GK9392@frogsfrogsfrogs>
+ <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,164 +84,41 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1YZQOQ0D6p6qYx1BPvKQaDgZsrKzLbGZzaH8tUkj_OoOQ@mail.gmail.com>
+In-Reply-To: <CAJnrk1b8j5WHtbHOWNXc4=QBFOxde1f2QxTOeui7Ta8O-xWcTA@mail.gmail.com>
 
-On Thu, Jul 02, 2026 at 06:36:55PM -0700, Joanne Koong wrote:
-> On Thu, Jul 2, 2026 at 12:27 PM Darrick J. Wong <djwong@kernel.org> wrote:
+On Thu, Jul 02, 2026 at 06:47:43PM -0700, Joanne Koong wrote:
+> On Thu, Jul 2, 2026 at 9:51 AM Darrick J. Wong <djwong@kernel.org> wrote:
 > >
-> > On Tue, Jun 30, 2026 at 05:09:33PM -0700, Joanne Koong wrote:
-> > > Filesystems no longer pass a struct iomap_ops with separate
-> > > ->iomap_begin() and ->iomap_end() callbacks.  Instead, every iomap
-> > > operation takes a single iomap_next() callback directly. iomap_next()
-> > > finishes the previous mapping (if any) and produces the next one. Most
-> > > filesystems build it from begin and end helpers via the iomap_process()
-> > > helper.
+> > On Thu, Jul 02, 2026 at 04:07:05PM +0200, Christoph Hellwig wrote:
+> > > Looks good:
 > > >
-> > > Update the iomap documentation to match this change.
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > >
-> > > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > > ---
-> > >  Documentation/filesystems/iomap/design.rst    | 115 +++++++++++++-----
-> > >  .../filesystems/iomap/operations.rst          |  60 +++++----
-> > >  Documentation/filesystems/iomap/porting.rst   |  22 +++-
-> > >  3 files changed, 132 insertions(+), 65 deletions(-)
-> > >
-> > > diff --git a/Documentation/filesystems/iomap/design.rst b/Documentation/filesystems/iomap/design.rst
-> > > index 0f7672676c0b..7a37e303eea8 100644
-> > > --- a/Documentation/filesystems/iomap/design.rst
-> > > +++ b/Documentation/filesystems/iomap/design.rst
-> > > @@ -75,7 +75,10 @@ At a high level, an iomap operation `looks like this
-> > >
-> > >  1. For each byte in the operation range...
-> > >
-> > > -   1. Obtain a space mapping via ``->iomap_begin``
-> > > +   1. Obtain the next space mapping via the ``iomap_next`` callback.
-> > > +      From the second iteration onwards this same callback first finishes
-> > > +      the previous mapping (committing or unreserving space as needed)
-> > > +      and then produces the next one.
-> > >
-> > >     2. For each sub-unit of work...
-> > >
-> > > @@ -86,7 +89,13 @@ At a high level, an iomap operation `looks like this
-> > >
-> > >     3. Increment operation cursor
-> > >
-> > > -   4. Release the mapping via ``->iomap_end``, if necessary
-> > > +iomap repeats this until the range is fully consumed.  The ``iomap_next``
-> > > +callback returns ``1`` while there is more of the range left to process,
-> > > +``0`` once it is fully consumed, and a negative errno on error.
+> > > In terms of merge logistics, I wonder if we should delay this and
+> > > the previous patch to the next merge window so that we can minimize the
+> > > cross-subsystem merge pain with more file system iomap conversion.
+> > > If none of them actually happen until rc6 or so, orif  the merges aren't
+> > > painful we could still pick them up late in the merge window.
 > >
-> > s/and/or/
-> >
-> > > +Filesystems rarely implement ``->iomap_next`` by hand. The ``iomap_process``
-> > > +helper implements the finish-then-produce sequence in +terms of two smaller
-> > > +callbacks, ``begin`` and ``end``. See `The Mapping Callback`_ below for more
-> > > +info.
-> >
-> > I wonder, under what circumstances would a filesystem /not/ use
-> > iomap_process()?
+> > I'd say everything but this patch should go in during the merge window
+> > for 7.3, along with clear instructions to brauner/torvalds to expect
+> > this patch to appear right before 7.3-rc1 gets tagged, to clean up all
+> > the other changes that come in.
 > 
-> Hmm, maybe a situation where they need to share or carry some
-> filesystem-specific state / info between finishing the mapping and
-> producing the next one?
+> Just to clarify, did you mean this patch and the previous one? If i'm
 
-The ->begin method can still set iomap::private and the ->end method can
-dispose of it, right?  Oh, wait, no, that doesn't work because you're
-talking about ->begin/->end passing something to the next ->begin.
+Er, yes, patches 16-18 in this series.
 
-I suppose you could make iomap_iter_continue preserve the iomap/srcmap
-private pointer across the memset(0) calls.  But all current users
-either rely on private being zeroed by iomap_iter after ->iomap_end
-returns, so that would be quite the change.
+> interpreting Christoph's concern correctly, I think he's worried about
+> other filesystems converting to iomap using the ->iomap_begin() /
+> ->iomap_end() functions still? That sounds like a good plan to me, for
+> v3 I'll submit everything but this patch and the last one and then
+> submit these patches (and any cleanup ones that become necessary) to
+> Christian right before 7.3-rc1 gets tagged (which as I understand it,
+> is when the merge window is about to close).
 
-Hm.  I was thinking that the signature for iomap_process could be
-cleaner if you didn't have to pass iomap/srcmap explicitly.
-iomap_process could do the (dangerous) casting from the (const struct
-iomap_iter *) to the (struct iomap *) pointers before calling ->begin
-and ->end.
-
-But if you do have an ->iomap_next function that doesn't use
-iomap_process, then it has to do the pointer extraction itself.  We
-already expose the innards of struct iomap_iter to callers, so maybe
-it's ok to have some gross helpers like:
-
-static inline struct iomap *iomap_iter_iomap(const struct iomap_iter *i)
-{
-	return (struct iomap *)&i->iomap;
-}
-
-static inline struct iomap *iomap_iter_srcmap(const struct iomap_iter *i)
-{
-	return (struct iomap *)&i->srcmap;
-}
-
-I'm not sure *that*'s any cleaner.  And I think it gets confusing with
-the other srcmap extraction function.
-
-Eh never mind, I've talked myself out of this. ;)
-
-> > >  Each iomap operation will be covered in more detail below.
-> > >  This library was covered previously by an `LWN article
-> > > @@ -189,7 +198,7 @@ The fields are as follows:
-> > >     * **IOMAP_DELALLOC**: A promise to allocate space at a later time
-> > >       ("delayed allocation").
-> > >       If the filesystem returns IOMAP_F_NEW here and the write fails, the
-> > > -     ``->iomap_end`` function must delete the reservation.
-> > > +     ``end`` function must delete the reservation.
-> > >       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
-> > >
-> > >     * **IOMAP_MAPPED**: The file range maps to specific space on the
-> > > @@ -208,12 +217,12 @@ The fields are as follows:
-> > >
-> > >     * **IOMAP_INLINE**: The file range maps to the memory buffer
-> > >       specified by ``inline_data``.
-> > > -     For write operation, the ``->iomap_end`` function presumably
-> > > -     handles persisting the data.
-> > > +     For write operation, the ``end`` function presumably handles
-> > > +     persisting the data.
-> >
-> > Unrelated to this patch, but this should say "For write operations, the
-> > end function must persist the data" because iomap_writepages doesn't
-> > handle inline data.
-> >
-> > >       The ``addr`` field must be set to ``IOMAP_NULL_ADDR``.
-> > >
-> > >   * ``flags`` describe the status of the space mapping.
-> > > -   These flags should be set by the filesystem in ``->iomap_begin``:
-> > > +   These flags should be set by the filesystem in ``begin``:
-> >>
-> > > +``->iomap_next``
-> > > +~~~~~~~~~~~~~~~~
-> > > +
-> > > +Each call must finish the previous mapping, if any, and then produce the
-> >
-> > Each call?  Oh, each implementation of ->iomap_next must finish the
-> > previous mapping.
-> >
-> > > +next mapping for the current iteration position described by ``iter``.
-> > > +The mapping is returned through ``iomap`` (and through ``srcmap`` for
-> > > +operations that read from one mapping while writing to another; see
-> > > +``begin`` below).
-> > >
-> > > -``->iomap_begin``
-> > > +The callback returns ``1`` to continue iterating, ``0`` once the file
-> > > +range has been fully consumed, and a negative errno on error.
-> >
-> > s/and/or/
-> >
-> > I think there should be a transition sentence here along the lines of
-> >
-> > "Most filesystems are not expected to implement all of these behaviors
-> > in ->iomap_next themselves.  They should instead call iomap_process as
-> > described below."
-> >
-> > Or demote the next section so it's more obvious that the "iomap_process"
-> > and "->iomap_next" sections aren't independent?
-> >
-> 
-> Sounds good, I'll incorporate all the suggestions you recommended.
-
-<nod>
+Yes.  And be sure to ask both of them beforehand so there aren't any
+youknowwho-style surprises/outrages.
 
 --D
 
