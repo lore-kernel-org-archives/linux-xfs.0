@@ -1,80 +1,115 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5907A1C5D7D;
-	Sat,  4 Jul 2026 00:57:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0623E28CF77;
+	Sat,  4 Jul 2026 04:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783126623; cv=none; b=HZWZsfl/aWgwnRIc6x1TyjvpR+3FGMeCFYavSBw8ziqGVcmzI86ulJokGeTaAudN8scW5IQwGcZZKUmuV4wXLL267AJXEt1Nfq0clYGyG8CbPAhNAj0K4/QE3DZF+w6RPaD+w5px0nDZ9j/BElDGtaHH6/Mi1Rx/yZaShdroAIs=
+	t=1783139896; cv=none; b=m+yxxha2ZjlCaLS3/JPwJQ4cs8n+2ufD7vI3THEmshcQjP4EQTzLyy32pWvHkkzM1YTd+RXT0Mab2D6LRGzrBS0IsiKDXkcMEvTNHEJSP6DnGzIwco72kB0b5ULO854SH5u3Fw8GASSfeF9KtT50b2hGlQlILAz88xuXbkC4BdE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783126623; c=relaxed/simple;
-	bh=N8lXNuaZTzbmWMSZiVt2o+4+ApoJD19xes+M4ax7tnk=;
+	s=arc-20240116; t=1783139896; c=relaxed/simple;
+	bh=yRJWIPYU7x9O4o82CkNjHV3Q+ojcQHdhKbof/8IUxkI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p/qVSxGvlLokRMdkExiE0AxSKO5pIWYHwoA2SF30WHWhJPT1FDFTSQUp2xufI6B/V90RUqToJMVYpBj4BIjP0HbhlWjf+AN0UGR/Z5WGZVK2C2M75rO/ixsPxmh+xDT6T7ExB84xOjqOMwCdJd947j7eFupe5XXhPr9dtXd4ke4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SYk/KA7F; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=AyhRY0e0tksHKei9UsszKPgE0ycNqZcf5OgxyZ19KwbpUqRaUE3/xZh4qWzKsUGJMcDAs8b8XiJyko9Z74noHoOTCNCkLTBj6LR3idUljpMRDjzA3FPLNdSN1CExdF1pPiyNs/IUNgW4qAFNcG6/LPNW6a5QeXfIh7r7lBfT9nI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DXfbiV6g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SYk/KA7F"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=C1EN6rIeWL899rhI3FjLhGXZyIEwiV09wTr+KM4FDTM=; b=SYk/KA7FP2Njc/3Os3mIlmBBrQ
-	1OPq+arUCKlVVRVccWIL+WJEXCjmq0Q6n7VKu2KePL3pmbUrmwD64SGtIlek7q4gVkqy8pd5ADts5
-	A7AeTdtK+imV0kXiQZepZPH9jOvXqprXb6mWAECqjK81XGx+InJubX6UQluBb7A2zfWkdt02u81hG
-	1UKpo6MRmgWCqmHoenzMBq1In+k0xYR9XLb2/ZhTXYmBYepSxthyxCkzwtxNit7Oma5UHqURansxO
-	aU6Q+iFWdT1JkjbW9fN7LEGhJu3j03o5eDDdGdJTArlb6WVj7tETonMARJ5UEl67JqCdkUYR36eCJ
-	V2QzSZ7w==;
-Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wfogl-0000000B6IQ-0SfH;
-	Sat, 04 Jul 2026 00:56:59 +0000
-Date: Sat, 4 Jul 2026 01:56:58 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, gfs2 <gfs2@lists.linux.dev>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>, linux-mm@kvack.org
-Subject: Re: iomap_writepages WARN_ON_ONCE(PF_MEMALLOC)
-Message-ID: <akhaWrUHXcubQQab@casper.infradead.org>
-References: <CAHc6FU4tz8-HmEf2_XKT0NT8N=rv5OMcY79PxTACkXAVLOAUpg@mail.gmail.com>
- <akZEjH2Hf8-RR8yQ@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DXfbiV6g"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F35141F000E9;
+	Sat,  4 Jul 2026 04:38:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783139889;
+	bh=qRAmcRU3owZQdAAKakvkU8W3SwpcXOWxnb6DylVdk9c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DXfbiV6gKXNj8Wvs9hw5qkDLynuSYspyuLQhy00fnh1MqDD/O1hx1PQASm1qyaIDy
+	 diUZyrCsQRk1bp93hnlAfbd1FTZT6khHhBvtenlfMxl0CuH6U/Na71wHsu9K0f4fZn
+	 UXwB4GH0XiZ3KdAAqrbQHIvWhTmfpjGsW7mj/f31qSQnQ9LH6XUGPKYrHNf5/AZVVw
+	 D2atEWFNjynMkgF0r00OkSjCntE8Wccsc9OXtF0Pb5Yo56hhKTK71daRZSpVB0zg4H
+	 BsP41jGwa8i/K0kfC9JXAKJ8h2da/qjBaWTXWEk9ZtRliYRbHiTK0ZNK85I5pw1YZv
+	 MkS/8BYN0ApjQ==
+Date: Fri, 3 Jul 2026 21:38:08 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, brauner@kernel.org, willy@infradead.org,
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 18/18] Documentation: iomap: update docs to reflect
+ iomap_next model
+Message-ID: <20260704043808.GC9407@frogsfrogsfrogs>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com>
+ <20260701000949.1666714-19-joannelkoong@gmail.com>
+ <20260702192658.GN9392@frogsfrogsfrogs>
+ <CAJnrk1YZQOQ0D6p6qYx1BPvKQaDgZsrKzLbGZzaH8tUkj_OoOQ@mail.gmail.com>
+ <20260703020020.GS9392@frogsfrogsfrogs>
+ <20260703124331.GA26440@lst.de>
+ <20260703161147.GB9407@frogsfrogsfrogs>
+ <CAJnrk1Zv8FEAD+T=1+ZLi6q8ztHVY1zray019QNdeLpYjTNQAQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <akZEjH2Hf8-RR8yQ@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1Zv8FEAD+T=1+ZLi6q8ztHVY1zray019QNdeLpYjTNQAQ@mail.gmail.com>
 
-On Thu, Jul 02, 2026 at 03:59:24AM -0700, Christoph Hellwig wrote:
-> On Wed, Jul 01, 2026 at 10:51:06PM +0200, Andreas Gruenbacher wrote:
-> > Do you have any suggestions?
-> > 
-> > The above is on RHEL-8, but a similar code path exists in cgroups v2,
-> > triggered via:
-> > 
-> >   echo reclaim_amount > /sys/fs/cgroup/.../memory.reclaim
-> > 
-> > That code path starts with:
-> > 
-> > memory_reclaim -> user_proactive_reclaim -> try_to_free_mem_cgroup_pages ->
+On Fri, Jul 03, 2026 at 05:34:59PM -0700, Joanne Koong wrote:
+> On Fri, Jul 3, 2026 at 9:11 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Fri, Jul 03, 2026 at 02:43:31PM +0200, Christoph Hellwig wrote:
+> > > On Thu, Jul 02, 2026 at 07:00:20PM -0700, Darrick J. Wong wrote:
+> > > > The ->begin method can still set iomap::private and the ->end method can
+> > > > dispose of it, right?  Oh, wait, no, that doesn't work because you're
+> > > > talking about ->begin/->end passing something to the next ->begin.
+> > >
+> > > Should we move ->private from struct iomap to struct iomap_iter?
+> > > That'll deal with the constness and the fact that private data
+> > > really is a per-operation thing.
 > 
-> PF_MEMALLOC is a sign of direct reclaim.  cgroup code is doing really
-> weird things when it is set and it is doing writeback.
+> I'm not sure I understand. Doesn't struct iomap_iter already have a
+> private field that holds caller-supplied per-operation context?
+> afaics, the users of iomap->private (gfs2, ntfs3, fuse-dax) do use it
+> for per-mapping data and release it in the same iteration.
 
-If we're going to blame the cgroup people for doing weird things, let's
-cc them so they stand a chance of seeing this ... original at:
+Oh right, iomap_iter::private is a private pointer that the filesystem
+can sometimes set to pass per-file-operation data to ->iomap_{begin,end}
+... that is tortuously extracted from the iomap_iter via the iomap
+pointer.
 
-https://lore.kernel.org/linux-fsdevel/CAHc6FU4tz8-HmEf2_XKT0NT8N=rv5OMcY79PxTACkXAVLOAUpg@mail.gmail.com/
+iomap::private is a private pointer that the filesystem can set to pass
+per-mapping data from ->iomap_begin to ->iomap_end.
+
+IOWS, never mind, I'm babbling nonsense.
+
+--D
+
+> > I dunno -- towards the end of the fuse-iomap development work I actually
+> > had started using iomap.private to store per-mapping private data.  But
+> > that work is dead now, so that's not a strong argument.
+> >
+> > > That also reminds me that now that we actually still keep the low-level
+> > > begin/end ops we need to switch them to a calling convention that
+> > > passes the iter instead of the ugly container_of.  This is something
+> > > I wanted deferred until we get the iter conversion, but it turns out
+> > > that now leaves them untouched..
+> 
+> That's a good point. Do you think it'd be better to include those
+> changes as part of this series or do that as a separate follow-up
+> series that targets the same merge window timeline as this one?
+> 
+> >
+> > Oh, you mean changing the signature to:
+> >
+> > typedef int (iomap_begin_fn)(struct iomap_iter *iter...);
+> >
+> > instead of passing parts of the iter as separate arguments?
+> > Yeah, that would be nice.
+> 
+> Agreed.
+> 
+> Thanks,
+> Joanne
