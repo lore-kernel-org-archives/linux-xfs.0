@@ -1,115 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BE8220F2A;
-	Fri,  3 Jul 2026 16:11:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783095109; cv=none; b=c+ZeNHRFQYMjgsvqOd8pzb0WC/KKihmF8fZgFkjIzrK9e6j5B2SsL3EOhCKk1exIlt5rBduvP+Cue009XqUJ3uelLIunFiou1EoPyEq3P1d+U9+2IGOD6r2OvUbqCjN1qu4EtoqaaqvbliB9whLqabTBLUZy7NVsP6YyFhgn0d8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783095109; c=relaxed/simple;
-	bh=Ag+w3aN8G7LasZXZ6DxH4zkyAq2rOWH2hixhLEe/p9U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UmzpZUsd3J9Y1GB1xntsQp3sYEh+JnlI5ZdCCFxE6JKsZSa9mLlFr5aCPUKMFQAE+0LkM5mNHUoYfn9g8aUr721+3QXMVrWOzWaDyXpRyJpougoPZcDQ62KxOOe7BuWMzTTxOCIQQnk/QWpKap7Av3gvCGZ969MPg/viIsuoBYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fyvcN/oa; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ACAA18AE3
+	for <linux-xfs@vger.kernel.org>; Sat,  4 Jul 2026 00:07:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783123651; cv=pass; b=PKl05S8FjemyTsu5bVxb0kWFT3wy9jP4zy0FCULeqVQFxoJoUMpO4Kv0AwkAzi4jqlFtXHmLC5p4AHvCmt+kC0FUsRfDzwKSu0c7hZC8+c1SZZKxTiVOhBsirCHQeEklTRlKCXIPq8DMdgcV4/7xfO/phYS9Shy2ZSZgUk3BSC0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783123651; c=relaxed/simple;
+	bh=vDHlcWmL4Cd5UT42ugQTjRnKNbXE5dy2ocFAsQoM96Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LD72R5dNcYbvQvGNyUWFSlZy8w+vPXzyEERDZDpCZWU89J9xzBFz773aNWu92FTbA5Y91A05WUqv9N5bAPcIF3W2aqKkLQWbLFvLtb1qxhub41QWuh1I/YBlJDTQfgzygnGVC+1un5ArVc+qLzyrou9A4aMhHhqu96zD38dgGgU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ki+A0bbK; arc=pass smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fyvcN/oa"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 380C71F000E9;
-	Fri,  3 Jul 2026 16:11:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783095108;
-	bh=4bBukqQendq6yVHOIFEDj36NSdbNq54AzlmUD7aYwng=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fyvcN/oaS053PpD7Wg9/L+vCw1zzIej6ID6Q8RyosmIfIavkJSROsS1aF+HzmUVpj
-	 UmgAcYBjepl4gJwjbpnQtxlr6Dhb/G/oZhHJqGJMx0P81pmpsp8LBdHrd/JCUsG4Dn
-	 SOEOzlfA0WEYu3Sz1oGP267oywpj5a6+EyAIzdU6vsTxMv6wQedIKaHhFCaZwgZZ5z
-	 XqPz9ebNdEH75V/jaKWWDEdEigSTbpuGrEQPsehX+GFFUXY9Z2hd0debl4IDwuvrUU
-	 E2ftZExwg6EQDParzSlgRg2fhilVc5sKJyzyruLsBpn6dmdF10xr16FPQ4I9rsWqiT
-	 PdIDP8d8j6wHQ==
-Date: Fri, 3 Jul 2026 09:11:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
-	willy@infradead.org, hsiangkao@linux.alibaba.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	"open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 18/18] Documentation: iomap: update docs to reflect
- iomap_next model
-Message-ID: <20260703161147.GB9407@frogsfrogsfrogs>
-References: <20260701000949.1666714-1-joannelkoong@gmail.com>
- <20260701000949.1666714-19-joannelkoong@gmail.com>
- <20260702192658.GN9392@frogsfrogsfrogs>
- <CAJnrk1YZQOQ0D6p6qYx1BPvKQaDgZsrKzLbGZzaH8tUkj_OoOQ@mail.gmail.com>
- <20260703020020.GS9392@frogsfrogsfrogs>
- <20260703124331.GA26440@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ki+A0bbK"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-4703bc0a99aso600244f8f.3
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jul 2026 17:07:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783123648; cv=none;
+        d=google.com; s=arc-20260327;
+        b=i+DT2c80AJYb5aL2Zc8akxAQGRCybVOGelHQy+N6JFRybBGQvHlk4CWW1aPxy8CWF4
+         AGtS9LR4hxzSzoGeEgzmpyD0t4y3jVWpr8WEZtXMW43slnhz06KlV5eE3/O6ZvyZjZW9
+         e4v7PKz8/jamvRh5i5Vv2oKEZnZ703ouMNB6YrA9t5+bCjtjkkh0Df4ejNvxrLCch/GW
+         OuvzzvyaxWdChGJVgkMQ3QzL3aEEQ2J6nE3dX1PbWZGz6Fcw5fzjzgxWYDWuJ+lHFE1H
+         /xZNFdKLwhrj3udpRaytRoGxy0On8Te6IplbSAxkxjbpbiA1RDiWL214F/ZsO2kzRNv9
+         udaw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=vDHlcWmL4Cd5UT42ugQTjRnKNbXE5dy2ocFAsQoM96Q=;
+        fh=YTc8THpYSVVzm8A6IrlZbGVx67Vv38UZtHqmuWB23mQ=;
+        b=PJDJ1oVU3m9Ajg7iiAqrhpyG/E8V8CyzZyixOZZc6Ggtl7LNs4ILAEv78rL1MduHoX
+         w/NkmQnNemVL4OggU5+unLhFZ/MCqfTvd+TBcssxndna2SxIQpzIsXMH//IuJex+np4G
+         1O7wN/l69//PAEH4coI73bFjef/2wlFb9dA/cmUUZpZAvJWHVdUwKawuMdyDcJ07f5gc
+         Kewi7UqWjtxtNb13NIn8eb07GAbvpuJx/wY4VxIs334mk2rtubjKSHrEnZZFGn2bRaTO
+         hv0FaIHJYf063WUjF+OCY1P+ucbWIK2LNVEXVVaXOYU9h5MRGmbN2oC5Zawdm4/FB2gH
+         ykww==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783123648; x=1783728448; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vDHlcWmL4Cd5UT42ugQTjRnKNbXE5dy2ocFAsQoM96Q=;
+        b=Ki+A0bbKzGZisB5V1frmhFAWaHUmml0lSbQaVT4Wc5AmhzhtZiLEbRZGydmphq8WNu
+         WrbBGAVeEXZVheyQIXek9+iwrKEFyjDmDNjeQ1/NyvUuQ5dsYdUtXTjABn+tjaAB/nM+
+         S0Wt95GY8YCt3jDhTRz8W7Q1099fwMbIhKWJ932bivc1pLQOIYh19ZE3SztF0jA7Ml2b
+         XH+TxsMIt1sDuEMNW3dxNJALZl6oiW0wYrC4CsLSyo2jPbJpAZNQcObp88gjMG61DavX
+         GCmbL0ElaaG9yqIIMsqfxzSqiMiROvFy0wb9rXwTnnpTlND5XlVL6vJf6zgLpsXYLko+
+         RYjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783123648; x=1783728448;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=vDHlcWmL4Cd5UT42ugQTjRnKNbXE5dy2ocFAsQoM96Q=;
+        b=TrVqBVDBtVWS+UoVJ7mOxkL+Kkb0PP4UHhz4NGqN1tfyhD8cQEikh8Myuowip+RZAX
+         ikxNKnKRa3Pd3ILwxTzbHa8X6xPAIiXUABhuqEK8vFeBWm0fnNFAgd88IXK1f4HFHZRC
+         zbB/spDvw8UluU9IbuSO9YOwInHcM1j4wGaWBJvdW3FzLY687EgFl9714wX3VS8SEGXQ
+         W2kHjuRdjUouGsLffuameXwh1ma4O1zBqvx3w+NF4D3ghldIbPS0m+UQt0sn7/Z/Uj0x
+         R9Wxsms5dcrRsJGgUin0rAhTLDBUzyvxa2TRWwYfpUUEVgBPH8YZDWqNz0wLLUij5Jxb
+         ghIg==
+X-Forwarded-Encrypted: i=1; AHgh+RrQjFqGjq5uh8YjSpwmZ3uGLsWbpn08zaFi6wNxWTvdsrCkuZN1H035uKcgaul3p/DgD6civ4As+FA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznHHBWx0TLWbwSlfWH14DB9f4/IpDNSipnQtWFsJBX0O1dkBjS
+	25U5R2GTSc0HYXNLRvJpC+JHoeD0kIK+GjnCvm9cq2Znh9LoKbNuJknwHPtMKK7x37Exo35TEg0
+	FkyHwXiBdgh3JR9LMTlIBSnsB/TtHLHI=
+X-Gm-Gg: AfdE7ckY3jqihx7BH/lgoLhOvg+8Lufc5N092DpKBEzZthj2ELQEPJYTIub8kGExP/5
+	fdFBuJ58xdHu5mgKj4/aWMi3RB8SsDLHHUHKmHRw6Ugb3K7FLF74op47IwpDqJ2tYuT57i43h9K
+	Cduto+yKYgf4Gnrcp2iMUsEP2PKz9OxSoCR/ilm5dQsC6mSpr2KY+pYNHJ+cZNz5jbk48aC4IDl
+	pAtYEeqK8/A3ZxIOE3b9sMRTAGzeljDSAaBT30rkKeyXtZGPQwlLVboNgKIRulRxz1vi6zmGZrs
+	+sk7pwZhEziqeSbZprJPzRSfh89aqapiehG5PwQZqoJVZfYV9iXa
+X-Received: by 2002:a5d:64c8:0:b0:472:c426:2ce9 with SMTP id
+ ffacd0b85a97d-47aa9699811mr1527073f8f.12.1783123647923; Fri, 03 Jul 2026
+ 17:07:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260703124331.GA26440@lst.de>
+References: <20260701000949.1666714-1-joannelkoong@gmail.com>
+ <20260701000949.1666714-13-joannelkoong@gmail.com> <CAHc6FU76J-YYRd2B=ZPN2DMabQjkzgG9qSzbP_S1s9AsSJNh=w@mail.gmail.com>
+In-Reply-To: <CAHc6FU76J-YYRd2B=ZPN2DMabQjkzgG9qSzbP_S1s9AsSJNh=w@mail.gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Fri, 3 Jul 2026 17:07:15 -0700
+X-Gm-Features: AVVi8CdQdofMwGUqV4tTaAHxeI2fygjInGMJJOumzbFcOuGU31GOE644YhYA5nA
+Message-ID: <CAJnrk1YmAjfSvkX5M0mu_ts_7APbp+Zfrz0KU6BMgM5fxN568g@mail.gmail.com>
+Subject: Re: [PATCH v2 12/18] gfs2: convert iomap ops to ->iomap_next()
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: brauner@kernel.org, hch@lst.de, djwong@kernel.org, willy@infradead.org, 
+	hsiangkao@linux.alibaba.com, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, 
+	"open list:GFS2 FILE SYSTEM" <gfs2@lists.linux.dev>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 03, 2026 at 02:43:31PM +0200, Christoph Hellwig wrote:
-> On Thu, Jul 02, 2026 at 07:00:20PM -0700, Darrick J. Wong wrote:
-> > The ->begin method can still set iomap::private and the ->end method can
-> > dispose of it, right?  Oh, wait, no, that doesn't work because you're
-> > talking about ->begin/->end passing something to the next ->begin.
-> 
-> Should we move ->private from struct iomap to struct iomap_iter?
-> That'll deal with the constness and the fact that private data
-> really is a per-operation thing.
+On Fri, Jul 3, 2026 at 4:45=E2=80=AFAM Andreas Gruenbacher <agruenba@redhat=
+.com> wrote:
+>
+> Joanne,
+>
+> you say in the cover letter that
+>
+> >This series is submitted against Christian's vfs iomap tree, and is base=
+d
+> > on top of the current head of his tree (commit f2727952b21d1).
+>
+> which repository and branch is that? It's not vfs.iomap in
+> git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git; I don't
+> have a proper merge point.
 
-I dunno -- towards the end of the fuse-iomap development work I actually
-had started using iomap.private to store per-mapping private data.  But
-that work is dead now, so that's not a strong argument.
+Hi Andreas,
 
-> That also reminds me that now that we actually still keep the low-level
-> begin/end ops we need to switch them to a calling convention that
-> passes the iter instead of the ugly container_of.  This is something
-> I wanted deferred until we get the iter conversion, but it turns out
-> that now leaves them untouched..
+This is on the vfs-7.3.iomap branch [1] on the vfs tree. This was on
+top of commit f2727952b21d1 ("iomap: add a separate bio_set for
+iomap_split_ioend") but it looks like that branch has since been
+rebased, as I don't see that commit hash there anymore. If it makes it
+easier, I've pushed the changes to a github repo [2] that's on top of
+v7.2-rc1 in the main linux tree. Sorry for the confusion, I'll include
+a link to a pullable branch in future versions.
 
-Oh, you mean changing the signature to:
+Thanks,
+Joanne
 
-typedef int (iomap_begin_fn)(struct iomap_iter *iter...);
-
-instead of passing parts of the iter as separate arguments?
-Yeah, that would be nice.
-
-> > Hm.  I was thinking that the signature for iomap_process could be
-> > cleaner if you didn't have to pass iomap/srcmap explicitly.
-> > iomap_process could do the (dangerous) casting from the (const struct
-> > iomap_iter *) to the (struct iomap *) pointers before calling ->begin
-> > and ->end.
-> 
-> I don't quite understand those part.
-
-Let me try again.  Instead of passing three arguments:
-
-int fubar_iomap_next(const struct iomap_iter *iter,
-	struct iomap *i, struct iomap *s)
-{
-	...
-}
-
-pass one instead:
-
-int fubar_iomap_next(const struct iomap_iter *iter)
-{
-	struct iomap *i = (struct iomap *)&iter->iomap;
-	struct iomap *s = (struct iomap *)&iter->srcmap;
-	...
-}
-
-to simplify the call sites.  The gross part of this is (1) having a
-const iomap_iter pointer to prevent filesystems from screwing around
-with the iter, and therefore (2) the need for explicit casting to remove
-the constness from the two iomappings.
-
---D
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/log/?h=3Dvf=
+s-7.3.iomap
+[2] https://github.com/joannekoong/linux/commits/iomap_iter_next_v2/
