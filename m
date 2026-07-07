@@ -1,70 +1,69 @@
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568CE42254C
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 13:59:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 125F230E829
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 14:01:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783432784; cv=none; b=G2L3vyn1vkhEMnvXzMgDtFJx33OfnLEDwUdTu+LIG5/xcereEVU59vZUDbP4ydaNovIXqG5zqo7/NP4qkC8ZpT3ZAFiUM7Z0Aul3Q7MGWmm1J30UJGJ81/LopxQADwkc5r08geNo7MXGjPIzPeRNpjg+xDDzyk2uMEazjaoHdNU=
+	t=1783432893; cv=none; b=XFM3QsG0RdmyZTQBb5D39KaE5tzGSMTv7AlD1ANg+yrQZwAYwOq2IK7jDtXqXThkH6czZO15QsR8x6N1Wfznv5wrwfEa3jJk+fHArR7SSTViW+suFD9zaoXqlSSRAVLHLchJ2FsihXsa0/ldVgmzLthgBAty1A7pSRQg4HGejnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783432784; c=relaxed/simple;
-	bh=zT/PJSB/X9vWE4hZBw6qbsjL+iFNmQr/XBpWHwP3Uo0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mXMRuOUwbI/eeHZHEi1bPmFmY0m8bseIyzh92AzgPcwhmcEaCu+2qFG+0S1XUE+WBaJqDj/vIyyZ2s6ChwXbD3NNQejLBtVzP3cznzXziVM6Dno0r6kHUfjxrafNb4d+ZwzZSSDlfIj3/d3wFkWWaY56vn9QCnRYdZhuHCfUwYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ww9MUtLC; arc=none smtp.client-ip=209.85.215.170
+	s=arc-20240116; t=1783432893; c=relaxed/simple;
+	bh=k3p/LVhY6XieXSUYhvqXUVhPUxXPhzCecfn9ETy2ZfU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ncbpCBAbnXuQfVW04NBFNfDpetFwQDn2NY8eACipF2rSfR1bHd+hRGiwjHqteKTa8uyOTOrSip8mpp6jogFRgfZ4W0ekyWLHXLXM1LYIGCvKoZDV4Xyk93/Kt8CUPkVDJX4lOxeAn96KLjFrbcX9hHYhqcjfBA1mWzMkHyS6MBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XxMaZmxz; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ww9MUtLC"
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-ca1328b8584so3337306a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2026 06:59:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XxMaZmxz"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-847917c3678so444010b3a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2026 07:01:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783432782; x=1784037582; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1783432891; x=1784037691; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LGFuF2FyGr+a/8CunO9g6M8NWPaHjvODP/XSRSVCSC0=;
-        b=Ww9MUtLCmSunDhe0ZJMPva+bLaZ+u5uDrBzjEGZMyTeqOqQDneAP4cWchiv+FqJ+21
-         +EFH1y0NGuqt39N86TtwF0PDlfRDIHBPqkfJ7k6lj2XsbKkEK9tKLNOzRliUuq7X4UEy
-         y/bMQGBkzTzP+sBq8BUFoXCgzYUVrrYRFc0RIUW4AnS/iIqtbUw8HJRZDPVQVSbcqpTF
-         drheLGAzPMT0U/7qM637/AEMeKTBodbxftWTpXZ4etvjdp9HiBVAXXUoXw8r2fiqHv3g
-         5SYYuSf1dTTyeCV4DkliA8rSnaAas9x4mGKzdSFNYY1dVoclHETzr+v617p9aD3vIfA8
-         suSA==
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1ph26z8kK868uOu08qfxJac8BJOh6HBGTI2padbyuTk=;
+        b=XxMaZmxz6SZa/SsbIjNeIcLGhrBM1fTyaTSrqmLIBB3rfbfdOm16+jLlW6u4fQJnPi
+         5ApiXR11B03kUyNV7jT7vEHcKhwy1GaaxTpABQdmZmRNCS9yDUFgwWlSgU72igR+BFKV
+         HE61bUmyVEsOZ3xF0sgMHn0/tT4/bVghztRt0SteaMjj0rB1ALugnSQ5moZYjUhs8Ugt
+         /K8hM5EGseschu/WfysVEnlYf/I8uEbswzqmckaflvgDJ6Mm0YHJNJN7w2VUrkfDHwC/
+         YLEtvdbslM8FBcEqssYgZ5koOWVbH0qrgnigy3giBZLAgZUpbC0YBPra1M1Ki2zE8B7G
+         lm7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783432782; x=1784037582;
+        d=1e100.net; s=20251104; t=1783432891; x=1784037691;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LGFuF2FyGr+a/8CunO9g6M8NWPaHjvODP/XSRSVCSC0=;
-        b=FBPQ2vBXqRgzYNDEPziearT2AMqebKEg7+30JNXArueRvoFyxiMGprlMdMoOIbwQcn
-         wgk54iMmCa6bmKRtr/8yjvbOx8wgz4pPwArg1H54Tlvnzp2KT4aUNdaf83bTCKXaxT4A
-         LqGDjSNyNmXfsW2hV7OZiDhTIVKyz8M8S8/vLCgvLRlYRZlbxV3n3bKpKvTrDNTssnGy
-         GBqjOErbHYbtYZyopued27SU3goJGd4uPz0YnafVNHktE3uUiM33iMYSxZ0BDjB4mDSj
-         4RarYUrHH1XRDdlOcnlh3coSBzFQ5U7Cnh9peewf1hMglEbvscq+T7pYQSgj3ekBJWWM
-         yC/g==
-X-Gm-Message-State: AOJu0YwtlQi655ghVXT5zTuB92gwb1ZLVl1xQy+K99kxrbvxKOqcdlFV
-	kFaNfZBNqad9Jce9KQOgnoJVC/DtKNvIsQhvL8bsTHExkg8u63pBM1NzL+5AbvMYQEA=
-X-Gm-Gg: AfdE7clyVIpyNzXasTg/mFscRa+dWfOvcg5W62Phr7BwseRuP/Pxzofz/X5Tc/fWB3N
-	1msADtoDZKsB8XyNbUKTKKY0jvBziwYNGf7YSxfSu83LDP2AIGkfDebhm5JcEzTb2ff28u3hbOh
-	7dhV3Qr1p7p4EgHn7iOS0KSXfB2Gfn8PnRJ9MEoYv0ng1rCS4VLQOIC6s8USxwvYGtDd5QZgfJ6
-	Y/1kQgItzlm87lHVJERFrRaQp8AZSvQzhbHPAG9azA/8pKzCA8J/5QFBjTZ7BVErCUYhDueYonI
-	MUFclEdw/t9td+mPm8jh98iRUbMyQvfYTqRlxq5+97Z3BtJ1Q/DWW3e3HdDG4MtqgJBGYhrXn1n
-	3LojE0Qi7BwuGV99df/ACk4VyOcyp1V7+AUK6Fog6ufbniAsWVl+AwFSShtcjWCcWMpOqLFiTLR
-	lZyOiB
-X-Received: by 2002:a05:6a20:d494:b0:398:7ed3:a001 with SMTP id adf61e73a8af0-3c08ec61813mr5974200637.2.1783432781480;
-        Tue, 07 Jul 2026 06:59:41 -0700 (PDT)
+         :message-id:reply-to;
+        bh=1ph26z8kK868uOu08qfxJac8BJOh6HBGTI2padbyuTk=;
+        b=WcFijxnnxWPP/4Zds1VsykpgDJa9pV1JrBSKxU0ylgKfifV179oTtJF5w5ADcELxAM
+         Pl4e2hZ2fupAtP1No8CQzIw+03T5r1VY2Z2hKqPBo3wsQT3GEqs3XZg2ENCPcTDwSQEd
+         RlGEZ2Pf8z55XH2om5C8g5Rh96BWCRNClwvl2yGoQtMJqMGX/nsKC0k7wzVV55hJtD+D
+         Ab3cn3nshqr6JnHiqmtCp0gsnZjs9Nq/TLC9UvgYEAvBFbR0W/j1Xg63dVDeHHGqKQWt
+         tjbHliuYCtRr+HXE4XuDBGn34AR522U3miElsr7/2Z63WsVvRbglbTRwWNm4WvQ1X+sD
+         4vxA==
+X-Gm-Message-State: AOJu0YwCe2Xxi9uLdVuSV7MZc9dDbhSXSEN00125ZihkRiXCEqvNXOKz
+	wh9x9ZHTUnI+dApoFdrVEBL/M5YFi7T4mECctYyVf3k885G0LJPXBoyrE8eTNZO9zdg=
+X-Gm-Gg: AfdE7clxreOhwF59r6i8biMYJB9VZuUsSyDRsfRQkh73H881KJhBT1plg73CgAkxa7q
+	isu7p+erJpfYbdVAt8p8bDguInLEG69x6CgIeWjwDKsNTn4DD9ZhpFtSHG1M5Nlvqm2y8xRd/RG
+	0f/3NY1fxU3yHJlSut7n5VMPvYzI3OqPaF0W3FQSMmKmG6PQnavDuFiES0CV/hKIx1Rk/wAicZx
+	oaFkWODqNgcLTZ0BL5O2yegUegET5yrYY7+eoQzHTV/z8r6NeH2E+2//A+KW7GMaiA1PkLzwUQc
+	HMgmJ6wOVJ4FoYzHbnmdYB9LJI7oDlZ+AL35EVG1XDye4eHXk+SQ2uj2+GyTe1udg6kz59cRXYL
+	R59kLU8LuhNl/nSazEdAtVN74tK+lrlBe8MwJlpLh0hTX7uQbgioMKzt59qZ+KLudgy1fYSkVdJ
+	5P3Kol
+X-Received: by 2002:a05:6a20:914e:b0:3bf:a517:cdcd with SMTP id adf61e73a8af0-3c09b0140a3mr3677488637.12.1783432889904;
+        Tue, 07 Jul 2026 07:01:29 -0700 (PDT)
 Received: from beelink.. ([186.22.57.86])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3117483dec6sm9233205eec.11.2026.07.07.06.59.39
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13b6596681fsm9900909c88.8.2026.07.07.07.01.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2026 06:59:41 -0700 (PDT)
+        Tue, 07 Jul 2026 07:01:25 -0700 (PDT)
 From: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
 To: linux-xfs@vger.kernel.org,
 	Carlos Maiolino <cem@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
 	linux-kernel@vger.kernel.org,
 	Aldo Ariel Panzardo <qwe.aldo@gmail.com>
-Subject: [PATCH] xfs: bound da-node entry count against the correct geometry
-Date: Tue,  7 Jul 2026 10:59:30 -0300
-Message-ID: <20260707135930.3214701-1-qwe.aldo@gmail.com>
+Subject: [PATCH] xfs: reject remote xattr entries with an out-of-range value length
+Date: Tue,  7 Jul 2026 11:01:18 -0300
+Message-ID: <20260707140118.3217585-1-qwe.aldo@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -74,52 +73,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xfs_da3_node_verify() bounds the node entry count against the larger of
-the directory and attribute geometries because it does not know which
-tree the block belongs to. When the directory block size exceeds the fs
-block size (e.g. mkfs.xfs -n size=64k -b size=4k), the attribute node
-buffer is a single fs block holding only m_attr_geo->node_ents entries,
-but a crafted attr node may claim a count up to m_dir_geo->node_ents.
-xfs_da3_node_lookup_int() then reads btree[] entries past the buffer
-during its binary search -- an out-of-bounds read via getxattr/listxattr
-on a mounted crafted image.
+xfs_attr3_leaf_verify_entry() validates a remote attribute entry's name
+but never bounds its on-disk value length (xfs_attr_leaf_name_remote.
+valuelen, a __be32). A crafted leaf with valuelen = 0x80000000 passes
+the verifier and the CRC.
 
-The node buffer size identifies its geometry, so bound the count against
-that geometry's node_ents rather than the maximum of the two.
+That length is later assigned into the signed int args->rmtvaluelen
+(xfs_attr3_leaf_getvalue), becoming negative, which slips past the signed
+-ERANGE check in xfs_attr_copy_value(); a getxattr() with a small buffer
+then memcpy()s a full remote block into the small kvalue buffer
+(xfs_attr_rmtval_copyout) -- a heap out-of-bounds write with
+attacker-controlled content, from an unprivileged getxattr(2) on a
+mounted crafted image.
 
-Fixes: 7ab610f9e0f1 ("xfs: move node entry counts to xfs_da_geometry")
+Reject remote entries whose value length exceeds XFS_XATTR_SIZE_MAX in
+the leaf verifier, so the malicious block is rejected at read time.
+
+Fixes: c84760659dcf ("xfs: check attribute leaf block structure")
 Signed-off-by: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
 ---
- fs/xfs/libxfs/xfs_da_btree.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 9debb95d86fa..897c31147a46 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -240,12 +240,18 @@ xfs_da3_node_verify(
- 		return __this_address;
- 
- 	/*
--	 * we don't know if the node is for and attribute or directory tree,
--	 * so only fail if the count is outside both bounds
-+	 * The block was read using either the attribute or the directory
-+	 * geometry; its buffer size tells us which one, so bound the entry
-+	 * count against that geometry's node_ents.  Only failing when the
-+	 * count exceeds max(dir, attr) let a crafted attr node claim a
-+	 * dir-sized count and overrun the smaller attr buffer.
- 	 */
--	if (ichdr.count > mp->m_dir_geo->node_ents &&
--	    ichdr.count > mp->m_attr_geo->node_ents)
-+	if (BBTOB(bp->b_length) == mp->m_attr_geo->blksize) {
-+		if (ichdr.count > mp->m_attr_geo->node_ents)
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 86c5c09a5db4..f1769289f908 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -339,6 +339,8 @@ xfs_attr3_leaf_verify_entry(
+ 		if (!(ent->flags & XFS_ATTR_INCOMPLETE) &&
+ 		    rentry->valueblk == 0)
+ 			return __this_address;
++		if (be32_to_cpu(rentry->valuelen) > XFS_XATTR_SIZE_MAX)
 +			return __this_address;
-+	} else if (ichdr.count > mp->m_dir_geo->node_ents) {
- 		return __this_address;
-+	}
+ 	}
  
- 	/* XXX: hash order check? */
- 
+ 	if (name_end > buf_end)
 -- 
 2.43.0
 
