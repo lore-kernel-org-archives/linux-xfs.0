@@ -1,76 +1,77 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFA0D42087A;
-	Tue,  7 Jul 2026 06:20:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E9D1A5B9E;
+	Tue,  7 Jul 2026 06:22:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783405235; cv=none; b=f3Gz9F4vPCvAMuZXy1ceHHRQiU1WeFDmAMTR/fdAfNDCyqaswaGE8sy8oscZ7Su+rExXMNszb0zUfjTxI+F3DjZW3jJ42OTzrmziGYIg4diEkJLBGTgsubd26tCqJGWpgsZ/3Kopt6xgeBNKkYjGaQYW+jYitg7+YnuxFKFrVGY=
+	t=1783405362; cv=none; b=F2O5LGW1atI19iOFrphaFmUWLIlWoIIMfm7p/1inQMfleR1G/D8kagjahCAVZbCxh6UyHeN4u+4x/UtDa0bj8FaOwqNRZ4C6CuNn1sWn3/0HVd1ddZ5omhWW9QfoNouvoWFTxaAWo9FBhJFUrgUkV4vyPppCM4WVEMbxwCiO/zA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783405235; c=relaxed/simple;
-	bh=uBLj+O7ae78MuWEFiTnXUGVMIHs2wcKxvw+5+TpyEFI=;
+	s=arc-20240116; t=1783405362; c=relaxed/simple;
+	bh=Yzg4aBlbECE8VfBnkYY8UUb9ZY4/YQBi8Xtp2KomfiA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aJqtpsiUq9WIzfDSbTMequF+rZtHqWH8AIMVFCxNJM4UvnqA3QnsSCBjL+1BhNdAA6ObRrBh24qf/GdprEHbCAdcoqaPAEjn8ix+firZyurewSdL2JzGWGQbDTZfWTYFJBrTW3WkKVnmE9N1Obamw2HO0kTJrGIzxr42qvQwYGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iz8MOvd6; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=X1ppaRs5xHP7+QZ6lEcp6vwoBh+1V4EKXKeT29ZB99t5n+3sA50ORsF9Qk0L4QEf1gNoUJNzwcXSnFvfIqV7hwR1n2rOHDFpEg8ONyj2AsSd+hqGbOh4pgAmTt9xZSUZN2mT85js8mh7ceV4EsLIFbT5E+Qti1QiXdFDWQooIMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=009saE9w; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iz8MOvd6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="009saE9w"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=bGKz//BeLD4xvJKFzmzgRZsAXpkOeS6YBKYjVby6CDE=; b=iz8MOvd6s83QqX0PltqG4mG7qL
-	Oyp1ZZKXVtoDwTAaFmVbjNp6b+NiYIh5gUeUTwExAp4cLq2KeAgJz4AUtv5SEl4SK73NNJvr9kkZj
-	0V74ceUPy5SroCp/l5ZH8388ZVC8V4r0kwAKlbVuW2GHx6zW2vKUYnGGanLJ4K834PinwS94WVefW
-	5NZxCP0QQocmpq2iz+Vz4AZU59gVIJlaf1cwJytw51kU9GKIIexxmOwIEmAzS+Gmy+lxjfeMhNHxD
-	EJAUhVxsJMQFCFxziznf8lgqZdNKEaxU2kxkJ7mioz+Xnq7z6lAE5DBG7Iaht/zsS75WHSjWr4VIm
-	afhF1zWg==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=4fdRQ940ITSfdxaImPyI+kZnUXdvI5OwT6MhqFhki8Q=; b=009saE9wpY/exxAAfsqMTyCdxv
+	X/cb8PjP3ymCT8/GOpLOt3iy4hccFZDXgEWHnezkm8fuLKWINsqt6Vw2lEz0R4cMkjm8Dq4SkSnt3
+	qTDRjAWPeV3QLedCumtuvoWzTC4aFifS+qm61kirjk9bmw3UTkna0EcPhB9VY/DryAud2koItS3Rz
+	p0mn2R2g+L8PhYJK6FKitrL6XOWnHIun1mxMlHQsj93ROn1H47j4bNEfHLxEJTWCsti7ZtglEF5xY
+	d6LiTohoLWgBb4q6jUWFeGDYo1jqy+OYw/suvehQP20ipVpbLNR56rgKnACIivNvvqFkXpC3LVaRP
+	IKyE2zSQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wgzAO-0000000ECLu-3Ezc;
-	Tue, 07 Jul 2026 06:20:24 +0000
-Date: Mon, 6 Jul 2026 23:20:24 -0700
+	id 1wgzCY-0000000ECcs-0ofk;
+	Tue, 07 Jul 2026 06:22:38 +0000
+Date: Mon, 6 Jul 2026 23:22:38 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Matteo Croce <technoboy85@gmail.com>, linux-xfs@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: ftruncate() after FICLONERANGE costs 300-600us/file, ~10x more
- than the clone itself
-Message-ID: <akyaqGkBmxt2JG5n@infradead.org>
-References: <CAFnufp2NJj=eXCpfoU4ZzPwSX31oUbsUr=Kstz6NedTZ3dsqZA@mail.gmail.com>
- <20260707055651.GX9392@frogsfrogsfrogs>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: hch@infradead.org, ritesh.list@gmail.com, abuehaze@amazon.com,
+	akpm@linux-foundation.org, alisaidi@amazon.com, blakgeof@amazon.com,
+	brauner@kernel.org, david@kernel.org, dipietro.salvatore@gmail.com,
+	djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org, ljs@kernel.org, mhocko@suse.com,
+	rppt@kernel.org, stable@vger.kernel.org, vbabka@kernel.org,
+	vbabka@suse.com, willy@infradead.org
+Subject: Re: [PATCH 1/1] iomap: avoid compaction for costly folio order
+ allocation
+Message-ID: <akybLlAsw7Yv1Xmb@infradead.org>
+References: <ajvc7fSDngyx0X5j@infradead.org>
+ <20260625091039.24501-1-dipiets@amazon.it>
+ <aj0bDijqj1-Bjxq1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260707055651.GX9392@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aj0bDijqj1-Bjxq1@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 06, 2026 at 10:56:51PM -0700, Darrick J. Wong wrote:
-> XFS zeroes the tail block when you truncate down, which causes an out of
-> place write.
-
-All the file systems do it (or at least should).  But somehow we
-manage to be slower.
-
-I wonder if we hit the filemap_write_and_wait_range case in
-xfs_vn_setattr_size due to a non-uptodate i_disk_size for this
-workload somehow?  Although reflink should update i_disk_size
-properly.
-
+On Thu, Jun 25, 2026 at 05:11:58AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 25, 2026 at 09:10:37AM +0000, Salvatore Dipietro wrote:
+> > Yes — all the patches in the result table are shared within this thread:
+> > 
+> > v1 (original, iomap caller): The original PATCH 1/1 in this series
+> > Ritesh's suggestion (mm/filemap.c): Shared in Ritesh's reply on May 3rd [1]
+> > Matthew's suggestion (mm/filemap.c): Shared in Matthew's reply on April 4th [2]
+> > kcompactd background (mm/page_alloc.c): Shared in my reply on May 6th [3]
 > 
-> Assuming src.dat is the fully written 90000 byte file, can you
-> 
-> $ xfs_io -c "reflink src.dat 86016 86016 0" dest.dat
-> 
-> to link only the eof-block into dest.dat and keep its file size at
-> 90000?
+> The page_alloc.c change definitively seems like the right thing to do from
+> the high-level POV.  It would also be nice to find a way to centralize
+> the logic for which flags to set in a central place as we have quite a
+> few other places that want to allocate large folios optimistically.
 
-Only doing the reflink block aligned and copying data for partial
-blocks should indeed always be faster.  But I wonder if we have
-some dragons lurking in the truncate down path.
+Can you submit a formal patch for this?  I.e. proper commit log,
+fixes tag, separate thread, etc.
 
