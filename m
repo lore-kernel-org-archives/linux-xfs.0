@@ -1,81 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D2ED3F88B5
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 11:35:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D0EA3F8231
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 11:37:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783424124; cv=none; b=b7MCu+aVZ84j1uzXWbbnWimZ7yMvyOwALOZ8snm6nTG8TuK82v3kTHOoJkkJvJBXPl2gDr9biqZ0NxiItuMsU0yHRWhkWJiU9NItTw9d3l8/ckt7+NRGFhbpUTKu5b+xaHhAhQJCABBN6gJvoaJM8YQxXR2pppz3Vg1NTsTxCFo=
+	t=1783424254; cv=none; b=JEBBNvwii29KQeKwg56W6PDByeMLtz7/YwtJu9rXTLD8UqFF+tZECSW51cPG1IyQRh94lRrTuR0N8+BHellr71JrqeK8cMa1aT+Ry2XEBpDf9NolXtCNc9QXGaRa6cpsx6BrQIOcCJ34/vG1iMFWo0Z/d8zc3sI4GL+HhkSsi8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783424124; c=relaxed/simple;
-	bh=d7NWPE0VB0H5ODLnSnXfhZS+HsHV3j0ffNgP6H0E7dI=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=IMitNl5JtM6ZEuUBdPG213YGOBSvsLZWq3xZVpbagJRQysKPqcP1N34Xitn76WNWlC5vtG716b40TuvY/WGLG5hH4lx9rxyteL0MsrQJCYTrF+7JXPEhYNkM13kOdz2Raki5UKxAo8UI9Z9pTJoWGHU5CTi9l2vpcZiE+RiM+Rs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aZsvOSqG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783424254; c=relaxed/simple;
+	bh=m4I0aHMYVV/WG7Ui//F+S2vVCTd155BjPV6gi8I8EQ4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=bG9RDKt/2erW2VyWZq0lr3A3nco56DxFZZ9g1rFmcf6C+RHY3Rig1Tfbf0JNUsA4ul6N+fX0e2pzbhHgUKDZ4xkxlP0cpZCMkF8+3GsZj2vZ0k1td5QR/S6St2cDpDb1QCnhLQCTGbf1a2F4G1B6zg7BBcH1aiZx8fRJwlkS1pA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ja55L/rn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aZsvOSqG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 541221F000E9
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 11:35:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ja55L/rn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 737271F000E9;
+	Tue,  7 Jul 2026 11:37:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783424123;
-	bh=dReXE+GoGHxb07ogKExQNNcq3X+YLJp/ZKbSu4wen4o=;
-	h=Date:From:To:Subject;
-	b=aZsvOSqGm/kjKUjHAil4i31IBsXJrcR+CAon7iJeHjBgelZJqsuTyQ2EwE+URh17J
-	 9Jr/TPxL1B3Rg/FmkHPokEn2UKWQ1TnkGM+IcpjME75/lucabwC5+rgr9uvD7/3USa
-	 K2RoU/uBfh4J0Zo+wdRp2MqREdUZP7RdcG3ytLQeqYW1ftElOkOAN4MU2gxNQ/V17D
-	 MWn89ZpMrpV1oUV8s3psS2DLF+TJIUqsZfYLf3IMETxFS+ISbs77x4QjRnXfTmO9PV
-	 U8QGJxOnfntG+Qo9oumw4nqPZrupQ9u9yIaeheNU0+85Yqn1CbPy/sjehntYe3QsPA
-	 rrqlMYPxPw4ew==
-Date: Tue, 7 Jul 2026 13:35:19 +0200
+	s=k20260515; t=1783424252;
+	bh=PKH00Ru2l8v6cl3kPzZp0C0g4KAKbJf6OJf4VbONFTI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=Ja55L/rnbVlzeCILnMBNrDAG468dCHDj5cvMiRi/xK8nwfV7q2NANIgbTLBP3B3kd
+	 ExLqpgxxUEeUOSz15JbMt30Ih+Ek0ONaB5NazjcRNGFsFPZjT0X9iW00mHoUZRTwG4
+	 +164qx/KJsJfJPf4fVJ2/KCRfas0iZzIl4W6Lqcv4hPRljd7fDXX5upAZBMTG8k8l1
+	 NuHmKFiuGme4KIRqOA4QUahXuFiLDFr17AJ1CKdtwvBpt9o/AD20XbK+KBoXbaMfVV
+	 TiIRHHbBAYny+EkEnuL9r281/w4e8u0cET8NL6cdysUkvIU2/gI/amARmnkv5uu68U
+	 2y/Zugn80x6Qw==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to de7400fc098b
-Message-ID: <akzkUvX8EZre8Xru@nidhogg.toxiclabs.cc>
+To: linux-xfs@vger.kernel.org, Weiming Shi <bestswngs@gmail.com>
+Cc: "Darrick J . Wong" <djwong@kernel.org>, 
+ Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>, 
+ Xiang Mei <xmei5@asu.edu>
+In-Reply-To: <20260702162000.3548359-1-bestswngs@gmail.com>
+References: <20260702162000.3548359-1-bestswngs@gmail.com>
+Subject: Re: [PATCH v3 0/3] xfs: fix NULL deref in log recovery reorder
+Message-Id: <178342425117.389943.13021791343607135682.b4-ty@b4>
+Date: Tue, 07 Jul 2026 13:37:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
+On Thu, 02 Jul 2026 09:19:57 -0700, Weiming Shi wrote:
+> A crafted on-disk log can commit a transaction whose only item is a bare
+> transaction header (ri_cnt == 0, ri_buf == NULL).
+> xlog_recover_reorder_trans() then runs ITEM_TYPE() on it and dereferences
+> the NULL ri_buf, faulting the kernel at mount time.
+> 
+> v3:
+>  - patches 1 and 2: picked up the Reviewed-by tags, plus the
+>    s/encountered/encounter/ fix in patch 2 that Darrick noted
+>  - patch 3: reworked the changelog per Darrick and Christoph. The empty
+>    item comes from the len == sizeof(xfs_trans_header) path; the check can
+>    only run at commit time because a split header may still get regions
+>    from later ops; and the runtime commit path never emits this, so it is
+>    only reachable on a crafted log.  It came from an AI-assisted code
+>    audit of the parser.  Added Cc: stable # v4.3.
+> 
+> [...]
 
-Hi folks,
+Applied to for-next, thanks!
 
-The for-next branch of the xfs-linux repository at:
+[1/3] xfs: drop ASSERT(0) on unrecognized log item type
+      commit: 5b4396e12cb10fa89ca0a272fae2b5408cfeaa91
+[2/3] xfs: splice unsorted log items back to the transaction after the loop
+      commit: 34dd2253414d228fc9bf8a70b5f9f83107eda3e1
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-de7400fc098b xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
-
-5 new commits:
-
-Cen Zhang (1):
-      [befe3d2705df] xfs: tie zoned sysfs lifetime to zone info
-
-Jinliang Zheng (1):
-      [de7400fc098b] xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
-
-Weiming Shi (3):
-      [5b4396e12cb1] xfs: drop ASSERT(0) on unrecognized log item type
-      [34dd2253414d] xfs: splice unsorted log items back to the transaction after the loop
-      [92d2d133c6cb] xfs: fail recovery on a committed log item with no regions
-
-Code Diffstat:
-
- fs/xfs/xfs_log_cil.c     |  2 +-
- fs/xfs/xfs_log_recover.c | 26 ++++++++++++++++++--------
- fs/xfs/xfs_sysfs.c       | 28 +++++++++++++++++-----------
- fs/xfs/xfs_sysfs.h       |  2 ++
- fs/xfs/xfs_zone_alloc.c  |  8 ++++++++
- 5 files changed, 46 insertions(+), 20 deletions(-)
