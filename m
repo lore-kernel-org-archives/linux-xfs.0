@@ -1,47 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D03C42F6F0;
-	Tue,  7 Jul 2026 16:38:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA975436BDE
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 16:42:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783442321; cv=none; b=uZaR7L2s4sfyZeUe5CoKrE64ng3h6AcTV09XfF4YwwTpRClPsPumXoiNbMlBXqb05H6iIyrB/N8I1AbGAWRvMwZmOLaoK83t1Fxuc4ihYmBF7ZrNIS/X6KViBbp5TJWavaa960KYFgddnnmEYC5np0RFeFAQMbfGvPuP1Qi79rY=
+	t=1783442523; cv=none; b=QKr6yxLwYNm53AqIE38bv+DJey63Ckhj/xbKIYPKKb8GVngHPKtuGR72CfisRwTQlybiobyjIpTYHhMdJ+XC4QqcBdlbS6vB2zSaT6lDgXeKV1ITLNMf6WLzSnahGcq9m9UQncqfR0dpMZbBEhz3bUiCbCA0iwgMp1TorPDAY8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783442321; c=relaxed/simple;
-	bh=NrG6njxIqN60UM2F1hBOjunqPtmkqWBGU+xoU4/ifVI=;
+	s=arc-20240116; t=1783442523; c=relaxed/simple;
+	bh=PEv8Wd69hWqhuW4HHTTfGIR6R508lBymWV9IXwsFe6o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JwNkFtCGDOdVovWn5b4DgGRJnfX7dWPzvF3ecYSZCXe4poUFw78z0iDMJaNyGTzLsEUx+V7PIPpGWqlcL7P8zf2Nz/OdZ2o5ru3X718fLmWdUP5IC6az5vZyhKOXt9R4RJ2T9vHiNFNyTri9qnzk5RjdWs+2aPj57U7jrliykBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7oLQGCN; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UNygRYE93GMuJBkCaNCF0veToB3rnB5GFkra4ltiSK+/oNU6ZgAcrq+bs89Di8mf+ZUzAUNkxEVrPVDt4yPvLoOQ5CLoq0GRgr1lGLo/5SK8/3+cyS0RuZv3rkYKX59azGtql86Rs7P3sxwaGOgoE1Q0blY6r+b3Fm7tGeomwhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LetYUrdh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7oLQGCN"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ECEE51F000E9;
-	Tue,  7 Jul 2026 16:38:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LetYUrdh"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7D5051F00A3A;
+	Tue,  7 Jul 2026 16:42:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783442320;
-	bh=GzU12wq3hHp79uT4RpIXALlJQl8T7tAhYCaoVzaMrT4=;
+	s=k20260515; t=1783442522;
+	bh=JRQakOxk1YzWxaDC3XjbSlSa0p4COV+vkJcdDP+EbhE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Q7oLQGCNbjiv0/ynVPqVhVnmkzW25i1LpAvvKzp9L9nWr8GfRB9mg9BAITs6XAAMG
-	 YWtKLGrEwGGOPLjvmVTMmL5bBHp2fe36hmrbqvCrE6SdJ3FLqxBbBX9VSwEKBQlViM
-	 R1e2T31DHetReoUj7Jpfutn7sIQvTKj7SwQD3XV4zeXRxpS5QNKJaI6VVBJLlVo2KT
-	 492gO9iWZZXFrqmSi3FeA1GUFWHmfod6eAiQuaINtcMTdOd6Z7lRmZXObmhE0ZB7wA
-	 mWTy5dGWzc/MVTn3i2QR/3KdOhFcSJviMNHXm2IVnJCv/qeU8t74TYeOag/QxiccJ3
-	 6kpqAj5ZWP8PA==
-Date: Tue, 7 Jul 2026 09:38:39 -0700
+	b=LetYUrdhfSX586uh7Ig/TzsKRCu8mT2X0n7m2JnM4y959SFqC+34YZ8dgqbpHmM56
+	 uSKO7ueV5i4GZQFyCAHongAtFRUC/LOk4R5ywVZ07//1BDG1Uo1sdGKepc7M2FaJr6
+	 oqV79et9DyA5qgQHYETHnZyW0L8WNFt4o5hK8DnfvCN0P6iGjK923ILh5GPhysCz/h
+	 qVAgzxQB8AUmlG3+TUyjdxCb5NYX38zPLD6uqw1gCrbaDDd6PrM3xmLAmd3kjRkIvt
+	 fdzEMNqSZaSr5ExiLS95yW7mn56lYvKc30cwHy04n+a3vJwf5WGPIAlK9FexNPeB1t
+	 pngiyUtwSZ2jw==
+Date: Tue, 7 Jul 2026 09:42:02 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Yousef Alhouseen <alhouseenyousef@gmail.com>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
-Message-ID: <20260707163839.GC9392@frogsfrogsfrogs>
-References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
- <20260630161113.GB6526@frogsfrogsfrogs>
- <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
- <akTyUXMN4_I1fOaM@infradead.org>
- <20260701155234.GF6526@frogsfrogsfrogs>
- <akZF4ib9KpSxnBQ3@infradead.org>
- <20260702153102.GA9392@frogsfrogsfrogs>
- <aky0peCyFau-S6hL@nidhogg.toxiclabs.cc>
+To: Christoph Hellwig <hch@lst.de>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_scrub: fix spacemap scan for internal rt devices
+Message-ID: <20260707164202.GD9392@frogsfrogsfrogs>
+References: <20260701145124.GE6526@frogsfrogsfrogs>
+ <20260706065035.GA25419@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,42 +42,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aky0peCyFau-S6hL@nidhogg.toxiclabs.cc>
+In-Reply-To: <20260706065035.GA25419@lst.de>
 
-On Tue, Jul 07, 2026 at 10:15:01AM +0200, Carlos Maiolino wrote:
-> On Thu, Jul 02, 2026 at 08:31:02AM -0700, Darrick J. Wong wrote:
-> > On Thu, Jul 02, 2026 at 04:05:06AM -0700, Christoph Hellwig wrote:
-> > > On Wed, Jul 01, 2026 at 08:52:34AM -0700, Darrick J. Wong wrote:
-> > > > > This almost sounds like we should explicitly zero this case just for that
-> > > > > particular case.  Although Darrick was kinda heading in a different
-> > > > > direction and I don't want to start a fight here.
-> > > > 
-> > > > I'm fine with either solution; I simply prefer the one that fixes all
-> > > > the current and future "oops we forgot to zero a hidden padding" bugs in
-> > > > one action.
-> > > 
-> > > Maybe we should avoid creating hidden zero padding to start with? :)
-> > > But this is a small allocation, and most of it gets overwritten
-> > > while the cache is still hot, so I can live with the unconditional
-> > > zeroing.  Still feels a bit odd to reach for the big hammer.
-> > 
-> > <shrug> If this is truly the only place where we forget to initialize
-> > if_broot fully then I'm ok with just doing that and not going for
-> > GFP_ZERO.  If we have an army of KASAN syzbotters whacking away at the
-> > system, then I could reevaluate my resistance to whack-a-mole.
-> > 
-> > --D
-> > 
-> 
-> Sorry, this conversation fell through the cracks.
-> 
-> I'd say the right approach here would be to measure the performance
-> penalty if we opt to go with GFP_ZERO and document it on the patch
-> description.
-> But I'd also prefer to just closing this gap and initializing if_broot
-> only here instead of GFP_ZEROing everything.
+On Mon, Jul 06, 2026 at 08:50:35AM +0200, Christoph Hellwig wrote:
+> Btw, the current xfsprogs for-next fails a lot of xfstests without
+> this.  So it would be great to get it in ASAP.
 
-Ok, let's do that then.  I concede there /are/ far fewer
-extents_to_btree calls than if_broot reallocations.
+I'm assuming Andrey saw my most recent PRs:
+
+   3. [GIT PULL 3/3] xfs_scrub: codex-inspired bug fixes, part 5
+      - by Darrick J. Wong @ 2026-07-02 19:42 UTC [8%]
+
+   2. [GIT PULL 2/3] mkfs.xfs: codex-inspired bug fixes, part 2
+      - by Darrick J. Wong @ 2026-07-02 19:41 UTC [8%]
+
+   1. [GIT PULL 1/3] mkfs.xfs: codex-inspired bug fixes
+      - by Darrick J. Wong @ 2026-07-02 19:41 UTC [8%]
+
+I promise not to send any more xfsprogs bugfixes until after 7.1 is
+tagged, to avoid holding up the release any further. :)
 
 --D
