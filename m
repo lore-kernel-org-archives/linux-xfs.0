@@ -1,89 +1,43 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1338328260
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 08:27:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CA92E2EEE;
+	Tue,  7 Jul 2026 09:25:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783412867; cv=none; b=S3BBqHNf8IPhHeMMxmOprXBQlrgLfgLHWwXOE1sGUYBSZlsM9UmyEd4AYw6pWsps8Twr2s8UsPxHMQJcR97dr+XYBAymItypW5iunqoDeQ6AfBj3KnwphnACiN75DOZe2ESJ2AcFP9EHpjjENw1Ha+PlmnzkJzzzXYtTkxdvjpk=
+	t=1783416337; cv=none; b=I2wGwsE6G7Asz0UjbvPD8bdRLyJ9aX7qHlawZtFDBrVkWZi/Pc3/AETdNQV3sPhnG0BQXpEnBfRQnLpzTp1IuBlqK2YiO81TTluNVXdHOdTPIiM77jImvyUXrHK8L9pE2z+RHs3A5kZ+K1F6YesXly+366OJGjmYsMGa+bUhO+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783412867; c=relaxed/simple;
-	bh=v0U6DXXas43EyY/8H7DN7zPIlSOjLGo702lwupEc0KI=;
+	s=arc-20240116; t=1783416337; c=relaxed/simple;
+	bh=l8zBeiHHt9RNtbBVObyGS4iR7B3WMMT8bULwgsn2SAk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DwIHoUM1cBM0ESQIg6j0VBWjJirLFGhfqGSFo/KQ0C6uCA4XfB2bMdsqDx/mJNcOeP1Sm3H/RJ04ppM0amQ5ZOH6DxJctyg6SeEbFfWgYyuCiY7Tvad14hcOCsubIVc1ikADAmXanACuMfr2jZDbNzwD5yF0wnqMCcS3jihmSac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DnX+bIPD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=r156/ul2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=D7COoRVaCRtF/2y3F4422l8wbYBzy3KOY6CqAR3gU6NJP9DTdKeUmgunNgMZfYwfO9/SY5PdKkm/VETTFpSHFuWkl+pXfqUygxvwVwaZxeXFGrvk/p43x8YEzF4bTkJe2fKSGW9y2CxkOvMaYVbGvdUXYZxR35fB5tn4Qnt+9Rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lsdf7uUC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DnX+bIPD";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="r156/ul2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783412864;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
-	b=DnX+bIPDcWXRxTAUEljgx8aP5vNBZR2202pZsqlyODDzfgipUC/46umhi7J/4VPCzpl/Wq
-	dhq7+LwGAnOpOzIKj22W2QRBY39ZjM1XQ3Zhv0Eb0fRHtawA3J/1XZfll2JumhmvZMtcuQ
-	NtMLffJysWQMIpU68ov8IgCLgab/JVM=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-377-1thc5cDJNC-Tc2FgfY3S8A-1; Tue, 07 Jul 2026 04:27:41 -0400
-X-MC-Unique: 1thc5cDJNC-Tc2FgfY3S8A-1
-X-Mimecast-MFC-AGG-ID: 1thc5cDJNC-Tc2FgfY3S8A_1783412860
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-473f4a48e9aso2312430f8f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2026 01:27:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783412860; x=1784017660; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
-        b=r156/ul2oMlnZEpQi4ec2WUqoQPcW/EjmGv4d0pEowlwtISeOUu2rpM8ly+pxw4q8j
-         4N8c5oIwhvoRV0KZjtASU5mlxYgsedWiwdv3WDyeNV3SE6WkAOAAaSI+OF0qPh7SQY08
-         RXDYfUCQNvd3jMSMG4lC/Fgdb+CXgAWmoPWblhASAu82mSLM3y4GCnZzhdw76+45IN8o
-         OTvdVt2nD9USLs7kY5ZetSYAeWgVw6e1VSIn/tXXJ4U49rvLbBbjl02wlMr/vUmUGdx9
-         g0eNjjk5wCdyqSJP3fOo77M25PMQOvJtBMjD+puZDerdpMNgQrYrrhruKxhJVL3BTtDq
-         xd7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783412860; x=1784017660;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
-        b=ILIGqnYJCY1j7rndYpUvBtiFbvd03IUx7ertq8N00bNJr0b0mVtAAHdXXqQb8YqaYx
-         iybb4DSA9F15b0Qsmgk1lIFTKE5RfgwZKsv+HqrV5o71m7Brrty0dgevShKl2oug+3ty
-         OLOWMnn+HkTxEc6tT4EvUssHKtyL2OdBa5WRHvBtbsqWFBTSJQtcAmsXQyjKFledbOCu
-         rYdSSZ9J+HnelXBnQV0pF8sRX21S9PmwvdgAp+hFCSKWjyogC/Iru1syvarugkprYQya
-         o5vshYwNcmf6pnqlOcbtJWKnlJ9ZlFckDLHVK8+zVPIeyZTdxtvPyFO0hGNOSwmnlRBO
-         Gujg==
-X-Forwarded-Encrypted: i=1; AHgh+RoulYs3fze32tQRcVfe73uhtJdrjqw7QPd5QRJGLExPzI2Oc3xcntSiwcHcKm0sKrUn13kk8hx8r50=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxORweWEuoaRPhTf8RHt+t7E0FJzdxO1T9FlNQrnUasiirrNDY+
-	4GV0Kuw9nD+1qV/EcK06jMFNUcXUe11J7x90fR7By4weGfEZ9nnlB7vKj1za4kUzOZPdeYOXv1k
-	bDgVQiDMTtNEJ1A2X8Rvucr6bflP5hxfZ4ecM+G9Io1pjhhwnCmhTNUoowiHA32FLfee8
-X-Gm-Gg: AfdE7ckG5woLEkUKpeYp8F+zAT67IJ+5XMgt3fW1Uxks92lE3NEGPH4pNScgaC2bq8J
-	jR1Gl+ejUJc43De9ZcXbde/HtdvP3wX8FKpHhqJ28R8ffyC61XJK3JoKfhH+TuO2uNZwGHYO+hi
-	jYpYuxjkqcRjoifxn3xSrSVpOaZXybAyCeOpf/uDLUXoiamQIgeA/NKyXOhxE8vfarmyzhJ8X+4
-	DUcXTPQ2FoGL/Wi1tcO3QF7sIR37R3DPgWgd9YdePfxGKQQqoCTeTki4DvpdKw4eXBoYodYcLEq
-	Li9Klp6GeQtw+uu9OviqHVIbtyPkzL57KITL2JG61WP1NlbaGzqMX8EWSkmk0o/1frOq+bjdJjP
-	vlFMNSRVHYKC1TFG8Bo8bjnYLq1oMg+g2rdabHrzhFvCqUw==
-X-Received: by 2002:a05:600c:c168:b0:493:a960:a0bf with SMTP id 5b1f17b1804b1-493df064184mr45023195e9.21.1783412858245;
-        Tue, 07 Jul 2026 01:27:38 -0700 (PDT)
-X-Received: by 2002:a05:600c:c168:b0:493:a960:a0bf with SMTP id 5b1f17b1804b1-493df064184mr45022665e9.21.1783412857625;
-        Tue, 07 Jul 2026 01:27:37 -0700 (PDT)
-Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493e0fc1348sm38192395e9.14.2026.07.07.01.27.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2026 01:27:37 -0700 (PDT)
-Date: Tue, 7 Jul 2026 10:27:35 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: liuh <liuhuan01@kylinos.cn>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
-	djwong@kernel.org, hch@lst.de
-Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 708b369bdf8f
-Message-ID: <aky4SXW-YJ_MRdC0@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <akI1Den0ablejlqZ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
- <fd36dd71-6a06-4d81-9bde-b230e9ef1029@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lsdf7uUC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7BD71F000E9;
+	Tue,  7 Jul 2026 09:25:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783416336;
+	bh=/s6dQCG8Vq9qzFkSO18vHf5c+R2dhjuaEKt5KWL8DuA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=lsdf7uUCABm3bz8vixwqLG3XO8rFvp2hj/PR3FvHClBF58wwlXutRul2MEEU6UJaU
+	 FiS6x4imxyW8nS+tPJksBN/rAo2IeIrNCc7syoSCjqfpFu6B3W6oAWvzeLDT0fSHek
+	 mBXkp436ZSLiSrOObWXIGAmhiPc6xYSHi6yNB2K/tFT+W8hD9JeOFSIq9MBChaA5JT
+	 16DPf7bf1pLs2tc6j/dQtwmK38PkMhdp/o+PygTNjPwwezQ8jOYP5+5jau1yVpo58J
+	 KbyZBjST0s+BqTD8/QIEfx95XBjaFJV18L0oCe55gByuhekcnEaMJer1OolosHzIOp
+	 L5i2OeAMPFThA==
+Date: Tue, 7 Jul 2026 11:25:30 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, 
+	Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
+	Serge Hallyn <serge@hallyn.com>
+Subject: Re: [PATCH v3 2/5] capability: Add new capable_noaudit
+Message-ID: <akzF7UJj4xZqVpHO@nidhogg.toxiclabs.cc>
+References: <20260702093324.127450-1-cem@kernel.org>
+ <20260702093324.127450-5-cem@kernel.org>
+ <20260702155605.GE9392@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -92,22 +46,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fd36dd71-6a06-4d81-9bde-b230e9ef1029@kylinos.cn>
+In-Reply-To: <20260702155605.GE9392@frogsfrogsfrogs>
 
-On 2026-07-03 16:03:48, liuh wrote:
-> Hi Andrey,
+On Thu, Jul 02, 2026 at 08:56:05AM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 02, 2026 at 11:33:19AM +0200, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> > 
+> > In some situations (quota enforcement bypass in this case) we'd like to
+> > check for a specific capability without triggering spurious audit
+> > messages from security modules like selinux.
+> > 
+> > Add a new helper so we don't need to use ns_capable_noaudit() directly.
+> > 
+> > V3: remove the extern declaration
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > Cc: Jan Kara <jack@suse.cz>
+> > Cc: Darrick J. Wong <djwong@kernel.org>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Cc: Eric Sandeen <sandeen@redhat.com>
+> > Cc: Dr. Thomas Orgis" <thomas.orgis@uni-hamburg.de>
+> > Cc: linux-xfs@vger.kernel.org
+> > Cc: linux-fsdevel@vger.kernel.org
+> > Cc: linux-security-module@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Serge Hallyn <serge@hallyn.com>
+> > ---
+> >  include/linux/capability.h |  5 +++++
+> >  kernel/capability.c        | 17 +++++++++++++++++
+> >  2 files changed, 22 insertions(+)
+> > 
+> > diff --git a/include/linux/capability.h b/include/linux/capability.h
+> > index 37db92b3d6f8..f8532d92fcad 100644
+> > --- a/include/linux/capability.h
+> > +++ b/include/linux/capability.h
+> > @@ -145,6 +145,7 @@ extern bool has_capability_noaudit(struct task_struct *t, int cap);
+> >  extern bool has_ns_capability_noaudit(struct task_struct *t,
+> >  				      struct user_namespace *ns, int cap);
+> >  extern bool capable(int cap);
+> > +bool capable_noaudit(int cap);
+> >  extern bool ns_capable(struct user_namespace *ns, int cap);
+> >  extern bool ns_capable_noaudit(struct user_namespace *ns, int cap);
+> >  extern bool ns_capable_setid(struct user_namespace *ns, int cap);
+> > @@ -167,6 +168,10 @@ static inline bool capable(int cap)
+> >  {
+> >  	return true;
+> >  }
+> > +static inline bool capable_noaudit(int cap)
+> > +{
+> > +	return true;
+> > +}
+> >  static inline bool ns_capable(struct user_namespace *ns, int cap)
+> >  {
+> >  	return true;
+> > diff --git a/kernel/capability.c b/kernel/capability.c
+> > index 829f49ae07b9..2c2d1e8300bd 100644
+> > --- a/kernel/capability.c
+> > +++ b/kernel/capability.c
+> > @@ -416,6 +416,23 @@ bool capable(int cap)
+> >  	return ns_capable(&init_user_ns, cap);
+> >  }
+> >  EXPORT_SYMBOL(capable);
+> > +
+> > +/**
+> > + * capable_noaudit - Determine if the current task has a superior
+> > + * capability in effect (unaudited).
+> > + * @cap: The capability to be tested for
+> > + *
+> > + * This is the same as capable(), except it uses CAP_OPT_NOAUDIT as to prevent
+> > + * issuing spurious audit messages.
+> > + *
+> > + * This sets PF_SUPERPRIV on the task if the capability is available on the
+> > + * assumption that it's about to be used.
 > 
-> Thanks for the update.
-> 
-> I noticed that my reviewed patch below does not seem to be included in this
-> for-next update:
-> 
-> [PATCH] fsr: preserve xfrog_bulkstat error codes
-> 
-> Could you please check if it was missed?
+> Same complaint about the documentation as last time:
+> https://lore.kernel.org/linux-fsdevel/20260626151656.GT6078@frogsfrogsfrogs/
 
-Sorry, I missed it, thanks for ping
+Right. I assumed "capability in effect" would suffice that, but I can
+add some extra comment here.
 
--- 
-- Andrey
-
+> 
+> --D
+> 
+> > + */
+> > +bool capable_noaudit(int cap)
+> > +{
+> > +	return ns_capable_noaudit(&init_user_ns, cap);
+> > +}
+> > +EXPORT_SYMBOL(capable_noaudit);
+> >  #endif /* CONFIG_MULTIUSER */
+> >  
+> >  /**
+> > -- 
+> > 2.54.0
+> > 
+> > 
+> 
