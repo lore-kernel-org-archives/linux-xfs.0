@@ -1,40 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB649435AAC;
-	Tue,  7 Jul 2026 16:36:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D03C42F6F0;
+	Tue,  7 Jul 2026 16:38:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783442171; cv=none; b=mFosU7DKAqOcLWOwdOhn1K3JpEGVL/Ajk2S/n4uZKWif3+JB6SoTjqjzgIfRMAZCahDu8ecyBoI+efmCYQRFJe/wTFcOWQ3e09Bob5DuwzgnL7Ga7MusJrqyl5sML//bQ04bZY7GjRFT828SKZ7DFTTOBQ8r9PQKL8OqhcX2phU=
+	t=1783442321; cv=none; b=uZaR7L2s4sfyZeUe5CoKrE64ng3h6AcTV09XfF4YwwTpRClPsPumXoiNbMlBXqb05H6iIyrB/N8I1AbGAWRvMwZmOLaoK83t1Fxuc4ihYmBF7ZrNIS/X6KViBbp5TJWavaa960KYFgddnnmEYC5np0RFeFAQMbfGvPuP1Qi79rY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783442171; c=relaxed/simple;
-	bh=ardfAPNs7uyUKHWm4UwwSQ7IvCm/Z4e3Z4Rq93viROM=;
+	s=arc-20240116; t=1783442321; c=relaxed/simple;
+	bh=NrG6njxIqN60UM2F1hBOjunqPtmkqWBGU+xoU4/ifVI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j+h91h6F4gCQ6CVR/1oplxFebO0jR+SpADQKER+JTJ7AN/o/Mxp0fSLehbnFbR+A8aWikE3uP8LnLjHMkZzGyvvVI3COR2DdeTH8hQWVmq860ANH+qUM9PSZd6B62I6SKfEmKugBNik/JSNSo4QHOqw+APOiwOcJmS6TqePkiN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nkC2MkU5; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=JwNkFtCGDOdVovWn5b4DgGRJnfX7dWPzvF3ecYSZCXe4poUFw78z0iDMJaNyGTzLsEUx+V7PIPpGWqlcL7P8zf2Nz/OdZ2o5ru3X718fLmWdUP5IC6az5vZyhKOXt9R4RJ2T9vHiNFNyTri9qnzk5RjdWs+2aPj57U7jrliykBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7oLQGCN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nkC2MkU5"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6863F1F000E9;
-	Tue,  7 Jul 2026 16:36:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7oLQGCN"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id ECEE51F000E9;
+	Tue,  7 Jul 2026 16:38:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783442169;
-	bh=7UZvSphkQ/LL4Wb1y/b3m3KsjuSdzo7sgsKPfHtillw=;
+	s=k20260515; t=1783442320;
+	bh=GzU12wq3hHp79uT4RpIXALlJQl8T7tAhYCaoVzaMrT4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nkC2MkU5Cc1aN4yUIBR8Yr2XXVmNqgS43msEWt1EnxrnyZS8ewNHXqiqMgysZw4cF
-	 PPyPAYnbQtvnikRyai1RI/XoI+OeMHaW2jI3HrSrwRpMlqTj2YYyHkHl5th7j7ZzC5
-	 D6AT6Z/ayIH/30AIyhPpmyvrc1xeMHc/2nX1EsZfyAe0Ehwp1oGgUOwRJ6ysWjJLR/
-	 pLgMs/hvrnthhABkVspbhLer2NTVxvJ1zhaBUdMGKREQtQnFOjK5ItV8bpaVodtdr5
-	 DLD4miXUuG9bBl6ZvqndmI/2NkbOmqAh0QeUM3wtwJX8RgBuwmFjKiA3WvRaq4X8yQ
-	 r9UOuVYxELdAw==
-Date: Tue, 7 Jul 2026 09:36:09 -0700
+	b=Q7oLQGCNbjiv0/ynVPqVhVnmkzW25i1LpAvvKzp9L9nWr8GfRB9mg9BAITs6XAAMG
+	 YWtKLGrEwGGOPLjvmVTMmL5bBHp2fe36hmrbqvCrE6SdJ3FLqxBbBX9VSwEKBQlViM
+	 R1e2T31DHetReoUj7Jpfutn7sIQvTKj7SwQD3XV4zeXRxpS5QNKJaI6VVBJLlVo2KT
+	 492gO9iWZZXFrqmSi3FeA1GUFWHmfod6eAiQuaINtcMTdOd6Z7lRmZXObmhE0ZB7wA
+	 mWTy5dGWzc/MVTn3i2QR/3KdOhFcSJviMNHXm2IVnJCv/qeU8t74TYeOag/QxiccJ3
+	 6kpqAj5ZWP8PA==
+Date: Tue, 7 Jul 2026 09:38:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: reject remote xattr entries with an out-of-range
- value length
-Message-ID: <20260707163609.GB9392@frogsfrogsfrogs>
-References: <20260707140118.3217585-1-qwe.aldo@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Yousef Alhouseen <alhouseenyousef@gmail.com>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: zero newly allocated btree root space
+Message-ID: <20260707163839.GC9392@frogsfrogsfrogs>
+References: <20260630100621.7173-1-alhouseenyousef@gmail.com>
+ <20260630161113.GB6526@frogsfrogsfrogs>
+ <CAMuQ4bXGcSf2=MVknbgt709Jkv4fgiCx9UEocSEFTDkzPY5bFg@mail.gmail.com>
+ <akTyUXMN4_I1fOaM@infradead.org>
+ <20260701155234.GF6526@frogsfrogsfrogs>
+ <akZF4ib9KpSxnBQ3@infradead.org>
+ <20260702153102.GA9392@frogsfrogsfrogs>
+ <aky0peCyFau-S6hL@nidhogg.toxiclabs.cc>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,56 +50,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260707140118.3217585-1-qwe.aldo@gmail.com>
+In-Reply-To: <aky0peCyFau-S6hL@nidhogg.toxiclabs.cc>
 
-On Tue, Jul 07, 2026 at 11:01:18AM -0300, Aldo Ariel Panzardo wrote:
-> xfs_attr3_leaf_verify_entry() validates a remote attribute entry's name
-> but never bounds its on-disk value length (xfs_attr_leaf_name_remote.
-> valuelen, a __be32). A crafted leaf with valuelen = 0x80000000 passes
-> the verifier and the CRC.
+On Tue, Jul 07, 2026 at 10:15:01AM +0200, Carlos Maiolino wrote:
+> On Thu, Jul 02, 2026 at 08:31:02AM -0700, Darrick J. Wong wrote:
+> > On Thu, Jul 02, 2026 at 04:05:06AM -0700, Christoph Hellwig wrote:
+> > > On Wed, Jul 01, 2026 at 08:52:34AM -0700, Darrick J. Wong wrote:
+> > > > > This almost sounds like we should explicitly zero this case just for that
+> > > > > particular case.  Although Darrick was kinda heading in a different
+> > > > > direction and I don't want to start a fight here.
+> > > > 
+> > > > I'm fine with either solution; I simply prefer the one that fixes all
+> > > > the current and future "oops we forgot to zero a hidden padding" bugs in
+> > > > one action.
+> > > 
+> > > Maybe we should avoid creating hidden zero padding to start with? :)
+> > > But this is a small allocation, and most of it gets overwritten
+> > > while the cache is still hot, so I can live with the unconditional
+> > > zeroing.  Still feels a bit odd to reach for the big hammer.
+> > 
+> > <shrug> If this is truly the only place where we forget to initialize
+> > if_broot fully then I'm ok with just doing that and not going for
+> > GFP_ZERO.  If we have an army of KASAN syzbotters whacking away at the
+> > system, then I could reevaluate my resistance to whack-a-mole.
+> > 
+> > --D
+> > 
 > 
-> That length is later assigned into the signed int args->rmtvaluelen
-> (xfs_attr3_leaf_getvalue), becoming negative, which slips past the signed
-> -ERANGE check in xfs_attr_copy_value(); a getxattr() with a small buffer
-
-Shouldn't you fix the signed value check in xfs_attr_copy_value, then?
-
-> then memcpy()s a full remote block into the small kvalue buffer
-> (xfs_attr_rmtval_copyout) -- a heap out-of-bounds write with
-> attacker-controlled content, from an unprivileged getxattr(2) on a
-> mounted crafted image.
+> Sorry, this conversation fell through the cracks.
 > 
-> Reject remote entries whose value length exceeds XFS_XATTR_SIZE_MAX in
-> the leaf verifier, so the malicious block is rejected at read time.
-> 
-> Fixes: c84760659dcf ("xfs: check attribute leaf block structure")
-> Signed-off-by: Aldo Ariel Panzardo <qwe.aldo@gmail.com>
+> I'd say the right approach here would be to measure the performance
+> penalty if we opt to go with GFP_ZERO and document it on the patch
+> description.
+> But I'd also prefer to just closing this gap and initializing if_broot
+> only here instead of GFP_ZEROing everything.
 
-This ought to cc stable.
-
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 86c5c09a5db4..f1769289f908 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -339,6 +339,8 @@ xfs_attr3_leaf_verify_entry(
->  		if (!(ent->flags & XFS_ATTR_INCOMPLETE) &&
->  		    rentry->valueblk == 0)
->  			return __this_address;
-> +		if (be32_to_cpu(rentry->valuelen) > XFS_XATTR_SIZE_MAX)
-> +			return __this_address;
-
-This looks correct though.
+Ok, let's do that then.  I concede there /are/ far fewer
+extents_to_btree calls than if_broot reallocations.
 
 --D
-
->  	}
->  
->  	if (name_end > buf_end)
-> -- 
-> 2.43.0
-> 
-> 
