@@ -1,173 +1,112 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3BB3126CA
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 08:25:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1338328260
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Jul 2026 08:27:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783412737; cv=none; b=bXw9wjz6YfmKrvUvn8f3o4ZovSb0lV7A1W8n4efDL24hJ8m0Dc4E/8rURnUs6JB/HQwokCeQ/SpUMrn2gVbKSATcnsR2oX9E1hh+/Eb051K8ehCzfljXSFzVN72BoANZxA7nxryq5wqLfXDgPYWx3cjUPsTmFv4u0+iMQBM6erc=
+	t=1783412867; cv=none; b=S3BBqHNf8IPhHeMMxmOprXBQlrgLfgLHWwXOE1sGUYBSZlsM9UmyEd4AYw6pWsps8Twr2s8UsPxHMQJcR97dr+XYBAymItypW5iunqoDeQ6AfBj3KnwphnACiN75DOZe2ESJ2AcFP9EHpjjENw1Ha+PlmnzkJzzzXYtTkxdvjpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783412737; c=relaxed/simple;
-	bh=+K4GXGCvopiluNaYoa1PTj8AiLBt7EJxutYVMXcQhLc=;
+	s=arc-20240116; t=1783412867; c=relaxed/simple;
+	bh=v0U6DXXas43EyY/8H7DN7zPIlSOjLGo702lwupEc0KI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B1WPPUfDnO8I66swdgYhozkqaHV+V4hp5qU71H5Otwov8SaFB/Bt0kMbQ+KAO+RWLUy7yJAcjSwm8QFr6DnTX7zqkXgYyhACTo9ETKHCYF8LuwWK7phCy/1ous/T92UasOWtKEXM/cM8huhbtoFvL8WOTcpffXu/Vue1gPrbXo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ra1QvYzl; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=lxSxrLeZ; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=DwIHoUM1cBM0ESQIg6j0VBWjJirLFGhfqGSFo/KQ0C6uCA4XfB2bMdsqDx/mJNcOeP1Sm3H/RJ04ppM0amQ5ZOH6DxJctyg6SeEbFfWgYyuCiY7Tvad14hcOCsubIVc1ikADAmXanACuMfr2jZDbNzwD5yF0wnqMCcS3jihmSac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DnX+bIPD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=r156/ul2; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ra1QvYzl";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="lxSxrLeZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DnX+bIPD";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="r156/ul2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783412734;
+	s=mimecast20190719; t=1783412864;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=B+RB88ts8tgiAlM1T0uWvjj+uwV7Ll7oA/Iu5zXJORY=;
-	b=Ra1QvYzlb6p/WhrxHHbkfJ9Cl+ix/gt7O4E0mmaKUeqIMKViwynya8MNlnRPQecqrurVCt
-	SBTkQpuz16XHKeCxn9YIefndlHExqTaghTy4p9z9ZDQrHyvznnyOSVpk4d0VrXz7UxNbp5
-	ICxdcuA6dmlcDKFCKRzFowrXLOpBUlI=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
+	b=DnX+bIPDcWXRxTAUEljgx8aP5vNBZR2202pZsqlyODDzfgipUC/46umhi7J/4VPCzpl/Wq
+	dhq7+LwGAnOpOzIKj22W2QRBY39ZjM1XQ3Zhv0Eb0fRHtawA3J/1XZfll2JumhmvZMtcuQ
+	NtMLffJysWQMIpU68ov8IgCLgab/JVM=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-217-G4jXVYz1MsCtxp151CMWEg-1; Tue, 07 Jul 2026 04:25:33 -0400
-X-MC-Unique: G4jXVYz1MsCtxp151CMWEg-1
-X-Mimecast-MFC-AGG-ID: G4jXVYz1MsCtxp151CMWEg_1783412732
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c158b6e31aaso47207166b.0
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2026 01:25:32 -0700 (PDT)
+ us-mta-377-1thc5cDJNC-Tc2FgfY3S8A-1; Tue, 07 Jul 2026 04:27:41 -0400
+X-MC-Unique: 1thc5cDJNC-Tc2FgfY3S8A-1
+X-Mimecast-MFC-AGG-ID: 1thc5cDJNC-Tc2FgfY3S8A_1783412860
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-473f4a48e9aso2312430f8f.2
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2026 01:27:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783412732; x=1784017532; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=B+RB88ts8tgiAlM1T0uWvjj+uwV7Ll7oA/Iu5zXJORY=;
-        b=lxSxrLeZZXGZIjGEviaTfVpxm2gWnS/Rptqkjgo0v5RtE5c2EYdeGjU4qhCD/oePSo
-         0qpaCy/oikCkNcbwv+iceAbkT5VvmyJgcu/s5sE4S606yZjua9bspmwW0uA56talxYhN
-         erfEbvzVEVV1C9vrsqvadlApdjy8HyAVGgo+aBaEXiV52qND+v3DaVaZ8mo/HBnlfIJC
-         eF98r40z5W3GB5HtERJ+dU8/7uWqWjszuserMnuw8Gun5KiEdP6fR2fZ5dPpsP6aZuNV
-         kxZ7FhCZaxwfC4zYOVp3j1WKrOfPhEbzCQJYJGnUbn3D4rz7T03NYbPbLS7YhFJhdOUZ
-         6j8A==
+        d=redhat.com; s=google; t=1783412860; x=1784017660; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
+        b=r156/ul2oMlnZEpQi4ec2WUqoQPcW/EjmGv4d0pEowlwtISeOUu2rpM8ly+pxw4q8j
+         4N8c5oIwhvoRV0KZjtASU5mlxYgsedWiwdv3WDyeNV3SE6WkAOAAaSI+OF0qPh7SQY08
+         RXDYfUCQNvd3jMSMG4lC/Fgdb+CXgAWmoPWblhASAu82mSLM3y4GCnZzhdw76+45IN8o
+         OTvdVt2nD9USLs7kY5ZetSYAeWgVw6e1VSIn/tXXJ4U49rvLbBbjl02wlMr/vUmUGdx9
+         g0eNjjk5wCdyqSJP3fOo77M25PMQOvJtBMjD+puZDerdpMNgQrYrrhruKxhJVL3BTtDq
+         xd7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783412732; x=1784017532;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=B+RB88ts8tgiAlM1T0uWvjj+uwV7Ll7oA/Iu5zXJORY=;
-        b=pdk6oHA/iIvhGVFtB4GN4YmLwKZVxsWpYk07ByZol7j7wBYv3GnVRzDVJkdWgYCXHX
-         ZZpwoQkwYCpiPvwYjVKoWlqS+QsGRviS24YhHLYRRzHqgBnDwJsIzEiZY3WgHKJzpwpX
-         mf+8VhVVsxhc0fCDWIOrhewTFakxlf17Y5RzYqL/lr9edDP2VUdzJwxiC8eKoMqoHXIq
-         BgWB8tymJbL9u5mbT35mk4HcrSFma/Fo5cchhUzOBvbUaKpBBU2SwyaT5fwcU5Q+CthZ
-         p7ApsV5ryhDhenh/xRvuAtvyizhX04vcjG0qHIOseZV+K5thLoNR4No6zgedZ/1XDaPY
-         eWtQ==
-X-Forwarded-Encrypted: i=1; AHgh+Ro4Ui4PYk8lZDeL89Xj4XNDM1w0a67UDVjZowWssrK3cpJ/1u2z3eHkuko78b/sIKH9cSkt9/l3MR0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6EdZR5+xfdhzaHt78IVLg5AVNPtty6QeGsth6+VoNIO7Qp/jq
-	U3vEgUb6gc7vYukFfR/Ki8peKZwN5vf3AP4xE5MDB3GdqrIGSxD2Ev5q5+jL5wsfF1bnPjohIKP
-	QlWHGO4Rae77QD19VwYj/5ACjm9vm2PQxfJ43YhhbxrtedTwAT9qd3XrkeK1B
-X-Gm-Gg: AfdE7cn0Af4X7bwAjgmA3NOjUspO0rrTyL5rDEs6MaEUjuskTdFJDbkwH2d8ydars4y
-	NWABq9ejkN4enQeMZCZeVV1o/ieF1YJj/930UJOrNEIjWv7QCGjCZJsw570Rgf5gZMuwze161/X
-	6VKuT0/vXypCNQIqxINU3myodmhYDQIZecM9HAYq9cwRBqnIB7/pex0lv9SOGT2NKavjMtpcmWb
-	OA7kLhR62p0JUef/qTH/RzOhI3nCI0k/UNhYsQnfT9LgGGRSamAtyaenzk6v5wDFxm1dCObHshq
-	cBxbtErSvetdqbQCzuwXyAfgtuEChvfm7KyEonSGmMiBaYeErJtxJ5rvPCl/USD4/JiovW/7qSV
-	3SmukMx1YcbwvSpEfjCLIuZhghXGhCOzdyKPZx+Np4hZWcw==
-X-Received: by 2002:a17:906:f593:b0:c12:5ac7:b346 with SMTP id a640c23a62f3a-c15aebcc919mr91014666b.21.1783412731764;
-        Tue, 07 Jul 2026 01:25:31 -0700 (PDT)
-X-Received: by 2002:a17:906:f593:b0:c12:5ac7:b346 with SMTP id a640c23a62f3a-c15aebcc919mr91013266b.21.1783412731125;
-        Tue, 07 Jul 2026 01:25:31 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1783412860; x=1784017660;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fOoff4828cS2wMclFc2Xe6/VcHPWYKN0eDc8EyFJTnI=;
+        b=ILIGqnYJCY1j7rndYpUvBtiFbvd03IUx7ertq8N00bNJr0b0mVtAAHdXXqQb8YqaYx
+         iybb4DSA9F15b0Qsmgk1lIFTKE5RfgwZKsv+HqrV5o71m7Brrty0dgevShKl2oug+3ty
+         OLOWMnn+HkTxEc6tT4EvUssHKtyL2OdBa5WRHvBtbsqWFBTSJQtcAmsXQyjKFledbOCu
+         rYdSSZ9J+HnelXBnQV0pF8sRX21S9PmwvdgAp+hFCSKWjyogC/Iru1syvarugkprYQya
+         o5vshYwNcmf6pnqlOcbtJWKnlJ9ZlFckDLHVK8+zVPIeyZTdxtvPyFO0hGNOSwmnlRBO
+         Gujg==
+X-Forwarded-Encrypted: i=1; AHgh+RoulYs3fze32tQRcVfe73uhtJdrjqw7QPd5QRJGLExPzI2Oc3xcntSiwcHcKm0sKrUn13kk8hx8r50=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxORweWEuoaRPhTf8RHt+t7E0FJzdxO1T9FlNQrnUasiirrNDY+
+	4GV0Kuw9nD+1qV/EcK06jMFNUcXUe11J7x90fR7By4weGfEZ9nnlB7vKj1za4kUzOZPdeYOXv1k
+	bDgVQiDMTtNEJ1A2X8Rvucr6bflP5hxfZ4ecM+G9Io1pjhhwnCmhTNUoowiHA32FLfee8
+X-Gm-Gg: AfdE7ckG5woLEkUKpeYp8F+zAT67IJ+5XMgt3fW1Uxks92lE3NEGPH4pNScgaC2bq8J
+	jR1Gl+ejUJc43De9ZcXbde/HtdvP3wX8FKpHhqJ28R8ffyC61XJK3JoKfhH+TuO2uNZwGHYO+hi
+	jYpYuxjkqcRjoifxn3xSrSVpOaZXybAyCeOpf/uDLUXoiamQIgeA/NKyXOhxE8vfarmyzhJ8X+4
+	DUcXTPQ2FoGL/Wi1tcO3QF7sIR37R3DPgWgd9YdePfxGKQQqoCTeTki4DvpdKw4eXBoYodYcLEq
+	Li9Klp6GeQtw+uu9OviqHVIbtyPkzL57KITL2JG61WP1NlbaGzqMX8EWSkmk0o/1frOq+bjdJjP
+	vlFMNSRVHYKC1TFG8Bo8bjnYLq1oMg+g2rdabHrzhFvCqUw==
+X-Received: by 2002:a05:600c:c168:b0:493:a960:a0bf with SMTP id 5b1f17b1804b1-493df064184mr45023195e9.21.1783412858245;
+        Tue, 07 Jul 2026 01:27:38 -0700 (PDT)
+X-Received: by 2002:a05:600c:c168:b0:493:a960:a0bf with SMTP id 5b1f17b1804b1-493df064184mr45022665e9.21.1783412857625;
+        Tue, 07 Jul 2026 01:27:37 -0700 (PDT)
 Received: from aalbersh-thinkpadx1carbongen13.rmtcz.csb ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c15ad844895sm79662866b.16.2026.07.07.01.25.30
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493e0fc1348sm38192395e9.14.2026.07.07.01.27.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2026 01:25:30 -0700 (PDT)
-Date: Tue, 7 Jul 2026 10:25:29 +0200
+        Tue, 07 Jul 2026 01:27:37 -0700 (PDT)
+Date: Tue, 7 Jul 2026 10:27:35 +0200
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: liuh <liuhuan01@kylinos.cn>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4] mkfs: simplify setup_proto file status checks
-Message-ID: <aky20cYIiJz_mqv3@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
-References: <20260703084004.9811-2-liuhuan01@kylinos.cn>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org, 
+	djwong@kernel.org, hch@lst.de
+Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 708b369bdf8f
+Message-ID: <aky4SXW-YJ_MRdC0@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+References: <akI1Den0ablejlqZ@aalbersh-thinkpadx1carbongen13.rmtcz.csb>
+ <fd36dd71-6a06-4d81-9bde-b230e9ef1029@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260703084004.9811-2-liuhuan01@kylinos.cn>
+In-Reply-To: <fd36dd71-6a06-4d81-9bde-b230e9ef1029@kylinos.cn>
 
-On 2026-07-03 16:40:05, liuh wrote:
-> setup_proto() calls filesize() before validating the source type with
-> fstat(), even though both operations ultimately require the same file
-> status information.
+On 2026-07-03 16:03:48, liuh wrote:
+> Hi Andrey,
 > 
-> Perform a single fstat() immediately after opening the source path and
-> reuse the resulting metadata for both source type validation and file
-> size retrieval. This simplifies the setup logic and eliminates a
-> redundant metadata lookup.
+> Thanks for the update.
 > 
-> Signed-off-by: liuh <liuhuan01@kylinos.cn>
-> ---
->  mkfs/proto.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
+> I noticed that my reviewed patch below does not seem to be included in this
+> for-next update:
 > 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index a460aebd..5f7a9b15 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -82,14 +82,17 @@ setup_proto(
->  		return result;
->  	}
->  
-> -	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-> +	if ((fd = open(fname, O_RDONLY)) < 0) {
->  		fprintf(stderr, _("%s: failed to open %s: %s\n"),
->  			progname, fname, strerror(errno));
->  		goto out_fail;
->  	}
->  
-> -	if (fstat(fd, &statbuf) < 0)
-> -		fail(_("invalid or unreadable source path"), errno);
-> +	if (fstat(fd, &statbuf) < 0) {
-> +		fprintf(stderr, _("%s: failed to fstat %s: %s\n"),
-> +			progname, fname, strerror(errno));
-> +		goto out_fail;
-> +	}
->  
->  	/*
->  	 * Handle directory inputs.
-> @@ -101,6 +104,14 @@ setup_proto(
->  		return result;
->  	}
->  
-> +	if (!S_ISREG(statbuf.st_mode)) {
-> +		fprintf(stderr, _("%s: %s not a regular file\n"),
-> +			progname, fname);
-> +		goto out_fail;
-> +	}
-> +
-> +	size = statbuf.st_size;
+> [PATCH] fsr: preserve xfrog_bulkstat error codes
+> 
+> Could you please check if it was missed?
 
-This seems to expose glibc's fortify check below in the read():
-
-    [CC]     proto.o
-In file included from glibc-2.40-224-dev/include/features.h:511,
-                 from glibc-2.40-224-dev/include/bits/libc-header-start.h:33,
-                 from glibc-2.40-224-dev/include/stdio.h:28,
-                 from ../include/platform_defs.h:9,
-                 from ../include/libxfs.h:18,
-                 from proto.c:7:
-In function ‘read’,
-    inlined from ‘setup_proto’ at proto.c:119:6:
-glibc-2.40-224-dev/include/bits/unistd.h:32:10: warning: ‘__read_alias’ specified size 18446744073709551614 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
-   32 |   return __glibc_fortify (read, __nbytes, sizeof (char),
-      |          ^~~~~~~~~~~~~~~
-glibc-2.40-224-dev/include/bits/unistd-decl.h: In function ‘setup_proto’:
-glibc-2.40-224-dev/include/bits/unistd-decl.h:29:16: note: in a call to function ‘__read_alias’ declared with attribute ‘access (write_only, 2, 3)’
-   29 | extern ssize_t __REDIRECT_FORTIFY (__read_alias, (int __fd, void *__buf,
-      |    
-
-Converting size to unsinged seem to solve it, as size is not set to
--1 anymore
+Sorry, I missed it, thanks for ping
 
 -- 
 - Andrey
