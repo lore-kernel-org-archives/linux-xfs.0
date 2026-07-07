@@ -1,214 +1,322 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3201C305674
-	for <linux-xfs@vger.kernel.org>; Mon,  6 Jul 2026 21:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783374346; cv=pass; b=blJTIMDTvw5nPGWLqufiAAjO9UzVgf33x9vGQr+M53+J32dzMBnkyQud4Ne6hzpEsjuQ3Q9rM/gHLNXNsPkMyxKTKPZ46jqQPVsPQ6G09CjheW4+qFE53B+nML0DgOzfJ/FkFtkT+ABdY/CcDQeNobj3apS5r+pdH0Iyt+hmyac=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783374346; c=relaxed/simple;
-	bh=o1+Klzgz9qbXKn1OqhRpGG81QS23X3rQB9XhGpOBG/A=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=c05dNm14atAuZv7ux/pzCgab1H/FKv3IvWMj3bjESPoDr5nYoYDmWFz2Yon4GcwPKPHsEH1UsKfzaLDOOM/wcTRbq9B3/wvBKC54Nun5XYugTtJsbJ7xCze3G5XzYJ3kgqbYmaShcIfIHc+7CagMtUXSEgDrJJQfJXXAZ+t7d0k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I8CSmuhD; arc=pass smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I8CSmuhD"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-68bd9fce347so6643372a12.2
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Jul 2026 14:45:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783374343; cv=none;
-        d=google.com; s=arc-20260327;
-        b=KEHxAsEOwfgWXpWf3nuA7GiL2+uKG0RV5S9zH5+KWM7x0mUinRtN8+9oNc8poOxv76
-         WPJ9ElfX44SaBgKnKtpx0hW//kwJtBgHuPZ0we/8OiW1D6yKbzq3Z03+RrFbIrj1Qw0c
-         jTQyj3uTRK8cJAmMabmXPUovG+XjF8mZwxUqd0SA0CgcMvaE6GeKZY0LcUq7AcX7Iop9
-         4ys1nsmunQMl5TFTDORpb2gFOjzWv4JbtJI4WH+6mkz5pyh45dj7+9C4TAO6KOSV1ReA
-         tYY6kbbVE+2BXrBc8585vGJMaOhzOYWf/gRDtnm7U3LqQYsR7vlqNnPaWtdEeEG31LXY
-         DS6Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=2DPvSyU7YJFM/rt0Z4vyBYnfq0fpp8XvXcIGy6cOSSU=;
-        fh=d2aANL2YEMEYIGn9/M4ayneJ/wPj6wvbQ/U5R5HZhQg=;
-        b=bWovvRoZi/f4CEzxS15Kqntp5Dl8nuSbOtTaFbsaIPhQvWV2VulFcZmNflJT5O6k09
-         ii1n6tfutxOg3RKG8+rvuiOxPkOsBqItEYtYPBdlX9gaSEXWntHp8u/W5q/sFQj6C2C+
-         kgj9LaaQBOpnzrQuSwrm9kV+1lBwNzvui3C3awrymidtU0bLpV4n8yoxtisjPP3Fqnv0
-         1VLyaNu+/S2K6FjP8kPPwtDijaBp3fLGsU6Wuzbf6DMxBopCDzWEz5FajDpOi8rPYARX
-         3utVWOzK4ZM5xz3qe5y9DgyzH+4Y7VbkSEZGTMJyVJU+w37/3n0zoELpNfCis/6dIbu6
-         RUNA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783374343; x=1783979143; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=2DPvSyU7YJFM/rt0Z4vyBYnfq0fpp8XvXcIGy6cOSSU=;
-        b=I8CSmuhDS52cKPame0URyLJ+IJyZMvTJZ2t2s/VHUremWP2GxPE6PnBPM5NMfNvSTG
-         bgwNxdTw+lGirhBOrloyKbsOBOCSdvngDgLOs3WnXsTeGC+1XCDVCHgjtWmVMKiKKulN
-         B+EQ5XjuWjojm8SCOAl57FDLKGDjNSw++llmIbqcE5cx/8TIO6o/tZHUT7Po9ejfouXs
-         8v0mrAK+ZD+rxU8M8ix5Cps44dZtVkUf97r3N+ezmT2x6ONYcb6cQv2JfPQl3W0z2wc4
-         ZzVDp9s/hAzXy5wW48DKhbL9rVw81el55JS6Lm7gLHK6Gt2LFuFxK31XB/OD2rAa25MF
-         JzFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783374343; x=1783979143;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2DPvSyU7YJFM/rt0Z4vyBYnfq0fpp8XvXcIGy6cOSSU=;
-        b=ltdkALWmpwH02g1Cc7h5UbpzdpYZCbu0QDFeq2dlSTkeo0ebxBU/9agLTr58i0Sg3C
-         RbZ4ZEOAgGhjNa1vEl+8ngq/dNzEBoQ7huu0Zb6w5r89TzyehB9SSZ0D2Q1uNsTKXHqh
-         8HCrnpokxyyGlrFXLzGWydKxj+sV9B/NTArdTT68KivsCZOqeX6Yvpt/Nujb41+zwE0j
-         YFdk71bTahqBvF3rwbxWv2GPi7D8y8K9z5rBM7gepEnj4XtQY6JMo033DFWWWcpZ9Hlb
-         jMmdgiyFpJ0thrOFCR41/gpGgARhO/CCMkeWBYehnIijBfrbNXhsO/i427F2z9HmMP8i
-         TNbw==
-X-Gm-Message-State: AOJu0YyVpNK63cnId3XGeF6aVBQ5quHPGH8D/l99lnwJ2fQWLOvbexP8
-	tM566sUgzyh0Ixb/peYbh51SN8akJ+ZDPS8twCaS8SxnbdYECBSfyOgk7BDdnLedVnbfhLITMok
-	TlDjD9M8z74OvtQk8GmXlYwL9kj27Xg5Rwr9R
-X-Gm-Gg: AfdE7ckBVsnYbxyMIqQnBk2oo5s31GpYNumELIDtxDsijGvya3ycpO8y2SWD6yWhkT8
-	yXcMhVKICJvNR5lKNSJhEVluEcGNgtBwZiWFvyaAgX1LwqNw9s5+ymgh1ea2OSKTEk8Zu/9zSXl
-	t6lpqwI0W+3fHCjHW925NeGaO2FBu+k0Yy6hopeXn2PYdfDEYxPImiO/KLBPjIifZ5Kx9xxn3fe
-	lXgoDDiHTBVvVnxFmGbR45n8aaeOOOwu3XzqKw7VklxSyE+q5paK4N7SQ/17kSFVSx791OfLA==
-X-Received: by 2002:a05:6402:a209:10b0:698:b60b:d8f4 with SMTP id
- 4fb4d7f45d1cf-69a856476eamr1030049a12.6.1783374343341; Mon, 06 Jul 2026
- 14:45:43 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CB5E35F603;
+	Tue,  7 Jul 2026 03:08:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783393726; cv=none; b=ISAz/+EOS5TvOX+1wAoZ+icAaXMVZ80cki4FK+ZmdXxJhqQGolJLn3rLi9hIc+fas32G0x0DQ56ULaqjmOQStWlDupWc5wzDuh5GP/fb3eikHFTXRwcE8saeodukK8gSlrmfgcp5/ukqrTKFanHGwiHbJ1C2yA7ECNAr+19LXu8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783393726; c=relaxed/simple;
+	bh=gBOvYUaWTkHTMr92D/PWHFQwJ0xr/cljt/YENQet5Ow=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Fw33iseE+UaT33zJ4J/bwRfE88+9OqFYPXlxToGlN2Mt9eISDzWR2iNsin/YnOU2WJiJ0wYlgNr6HrUFsZH9zTB2V/8unFxUUZu5oMBFOdsOMymasALgT3bV++GL4fMevU6stZ2GdtbwdTGRPkysX6H+ahAmYI48q8MNFokPv2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gvR4l12ZFzKHMKn;
+	Tue,  7 Jul 2026 11:08:23 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id CF7F84058F;
+	Tue,  7 Jul 2026 11:08:41 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgD3B3S4bUxqVhlVAQ--.61205S3;
+	Tue, 07 Jul 2026 11:08:41 +0800 (CST)
+Message-ID: <ca21b3c4-e1df-4ba7-8e9c-5d221337c86b@huaweicloud.com>
+Date: Tue, 7 Jul 2026 11:08:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Matteo Croce <technoboy85@gmail.com>
-Date: Mon, 6 Jul 2026 23:45:07 +0200
-X-Gm-Features: AVVi8CdDfhD7Xm4G59sme1-7LbgHTN8A47jfw6jwlAW2z63pAzpcCNgHOdP7-3c
-Message-ID: <CAFnufp2NJj=eXCpfoU4ZzPwSX31oUbsUr=Kstz6NedTZ3dsqZA@mail.gmail.com>
-Subject: ftruncate() after FICLONERANGE costs 300-600us/file, ~10x more than
- the clone itself
-To: linux-xfs@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] generic/795: add unaligned boundary test cases for
+ WRITE_ZEROES
+To: Pankaj Raghav <p.raghav@samsung.com>, zlang@redhat.com
+Cc: fstests@vger.kernel.org, hch@lst.de, djwong@kernel.org,
+ yi.zhang@huawei.com, pankaj.raghav@linux.dev, linux-xfs@vger.kernel.org
+References: <20260703125422.3110429-1-p.raghav@samsung.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20260703125422.3110429-1-p.raghav@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgD3B3S4bUxqVhlVAQ--.61205S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuw47uFyrZw15uw1rtr1DJrb_yoWfArykpF
+	WFk3W5trZ7Ja47Z3yxCF1DZr95CwsY9FW2vr4vgryjyF98Wrn7KF4Ygry8trWkXr4fJ3Z2
+	vrs8J34UGw12kFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7
+	CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8C
+	rVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4
+	IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0E
+	wIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E74
+	80Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0
+	I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04
+	k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7Cj
+	xVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hi,
+On 7/3/2026 8:54 PM, Pankaj Raghav wrote:
+> During the review of WRITE_ZEROES support to XFS, Zhang Yi pointed out
+> some important semantics for the boundary blocks when WRITE_ZEROES
+> command is used.[1]
+> 
+> The test cases check the boundary blocks when they are in different
+> states and WRITE_ZEROES are issued that straddle the boundary. Along with that,
+> test cases have been added when a EoF straddles an allocation unit.
+> 
+> [1] https://lore.kernel.org/linux-xfs/0b7f1a4f-da1c-4297-8099-98d738070ab7@huaweicloud.com/
+> 
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 
-while adding reflink support to GNU tar I found that on XFS a
-FICLONERANGE followed by a shrinking ftruncate() is pathologically
-expensive: 300-600us for the truncate, plus another ~100us at close()
-for the post-EOF cleanup, around 10x the cost of the clone itself.
-The file has no dirty pages at that point, so this is not writeback:
-it looks like synchronous per-file metadata work. BtrFS (the only
-other mainstream filesystem with reflinks, so my only comparison
-point) does the same shrink in a flat ~15us.
+Thank you for this test! Some comments below.
 
-Any program cloning a non-block-aligned range out of a larger file
-hits this (in my case, tar extracting a member from an archive):
-FICLONERANGE requires block-aligned lengths (unless the range ends at
-the source EOF), so the only option is to clone the length rounded up
-to the fs block and truncate to the real size. Whole-file cloners
-like cp --reflink use FICLONE and are not affected, which is probably
-why nobody noticed so far. Extracting a linux source tree (~93k
-files) this way with tar --reflink on XFS is 3.4x SLOWER than a
-regular copy (68s vs 20s); the same binary on BtrFS, on another
-partition of the same spinning disk, is 1.7x faster than the copy.
+> ---
+>  common/rc             |   2 +-
+>  tests/generic/795     | 172 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/795.out |  16 ++++
+>  3 files changed, 189 insertions(+), 1 deletion(-)
+>  create mode 100755 tests/generic/795
+>  create mode 100644 tests/generic/795.out
+> 
+> diff --git a/common/rc b/common/rc
+> index 79189e7e..5e59968f 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3008,7 +3008,7 @@ _require_xfs_io_command()
+>  		testio=`$XFS_IO_PROG -F -f -c "$command $param 0 1m" $testfile 2>&1`
+>  		param_checked="$param"
+>  		;;
+> -	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
+> +	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare" | "fwzero")
+>  		local blocksize=$(_get_file_block_size $TEST_DIR)
+>  		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 $((5 * $blocksize))" \
+>  			-c "fsync" -c "$command $blocksize $((2 * $blocksize))" \
+> diff --git a/tests/generic/795 b/tests/generic/795
+> new file mode 100755
+> index 00000000..2f812f61
+> --- /dev/null
+> +++ b/tests/generic/795
+> @@ -0,0 +1,172 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2026 Samsung Electronics.  All Rights Reserved.
+> +#
+> +# FS QA Test 795
+> +#
+> +# Verify FALLOC_FL_WRITE_ZEROES (xfs_io "fwzero") on an unaligned range,
+> +# exercising every state the two boundary allocation units can be in.
+> +#
+> +# WRITE_ZEROES must leave the whole requested range backed by *written*
+> +# (zeroed) extents while preserving the out-of-range bytes of the partial
+> +# boundary units. The possible scenarios are: written_edges, hole_edges,
+> +# unwritten_edges and delalloc_edges.
 
-The core of the issue reproduces with xfs_io alone (on a freshly
-created filesystem with mkfs defaults, rmapbt=1):
+unwritten_edges needs to distinguish between dirty and clean scenarios.
+The expected result for clean should be tmp.zero, while the expected
+result for dirty should be tmp.pattern.
 
-  $ dd if=/dev/urandom of=src.dat bs=1M count=1; sync
-  $ strace -T -e trace=ioctl,ftruncate xfs_io -f \
-        -c "reflink src.dat 0 0 90112" -c "truncate 90000" dest.dat
-  ioctl(3, FICLONERANGE, {src_fd=4, src_offset=0, src_length=90112,
-        dest_offset=0}) = 0 <0.000089>
-  ftruncate(3, 90000) = 0 <0.000446>        <-- shrink by 112 bytes
+> +#
+> +# It then covers the EOF cases: a WRITE_ZEROES that *extends* the file to a
+> +# non-unit-aligned size, followed by a further extension. WRITE_ZEROES must
+> +# never leave written blocks beyond EOF.
+> +
+> +. ./common/preamble
+> +_begin_fstest auto quick prealloc fiemap
+> +
+> +testfile=$TEST_DIR/$seq.testfile
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.*
+> +	rm -f $testfile
+> +}
+> +
+> +. ./common/filter
+> +. ./common/punch
+> +
+> +_require_test
+> +_require_xfs_io_command "fwzero"
+> +_require_xfs_io_command "falloc"
+> +_require_xfs_io_command "fiemap"
+> +_require_xfs_io_command "truncate"
+> +
+> +# The allocation unit: rt extent size on an rt config, otherwise the block
+> +# size. Deriving the range from this makes the head/tail units straddle rt
+> +# extents when rextsize > 1.
+> +u=$(_get_file_block_size $TEST_DIR)
+> +
+> +# The fs block size. On rt with rextsize > 1 the allocation unit u is the rt
+> +# extent (u > b). A WRITE_ZEROES that extends EOF must only write out to the
+> +# block-rounded EOF and leave the rest of the straddling rt extent unwritten,
+> +# rather than written past EOF.
+> +b=$(_get_block_size $TEST_DIR)
+> +
+> +# Unaligned range within EOF: start 1.5 units in, span 4 units, so both the
+> +# head unit [u, 2u) and the tail unit [5u, 6u) are only partially covered,
+> +# with fully covered units in between and data on both sides.
+> +off=$((u + u / 2))
+> +len=$((4 * u))
+> +filesz=$((8 * u))
+> +pattern=0xab
+> +
+> +# Expected images.  For the written/delalloc cases the pattern surrounds the
+> +# zeroed range; for the hole/unwritten cases the file reads back all zeroes.
+> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $tmp.pattern >> $seqres.full 2>&1
+> +$XFS_IO_PROG -c "pwrite -S 0 $off $len" $tmp.pattern >> $seqres.full 2>&1
+> +$XFS_IO_PROG -f -c "truncate $filesz" $tmp.zero >> $seqres.full 2>&1
+> +
+> +# Assert the whole requested range is backed by written extents immediately
+> +# after fwzero (before any sync/remount): no holes, no unwritten.
+> +_check_range_written()
+> +{
+> +	local file=$1
+> +	local bad
+> +
+> +	bad=$($XFS_IO_PROG -c "fiemap -v $off $len" "$file" | \
+> +		_filter_fiemap | grep -E -c 'hole|unwritten')
+> +	if [ "$bad" -eq 0 ]; then
+> +		echo "extents: range fully written"
+> +	else
+> +		echo "extents: FAIL - $bad hole/unwritten extent(s) in range"
+> +		$XFS_IO_PROG -c "fiemap -v $off $len" "$file" | _filter_fiemap
+> +	fi
+> +}
+> +
 
-and the control, a no-op truncate at the exact cloned size:
+The implementation of the fiemap command in xfs_io always adds the
+FIEMAP_FLAG_SYNC, which performs a sync operation before querying the
+map information, and thus cannot reflect the true result after write
+zeroes. For example, if the file system does not accurately convert
+delalloc to written after WRITE_ZEROES, this issue will be hidden here.
+Perhaps use filefrag -v instead or expand xfs_io?
 
-  $ xfs_io -f -c "reflink src.dat 0 0 90112" -c "truncate 90112" ...
-  ioctl(3, FICLONERANGE, ...) = 0 <0.000088>
-  ftruncate(3, 90112) = 0 <0.000030>
+> +_check_data()
+> +{
+> +	local file=$1
+> +	local want=$2
+> +
+> +	if cmp -s "$file" "$want"; then
+> +		echo "data: matches expected image"
+> +	else
+> +		echo "data: FAIL - mismatch against expected image"
+> +		cmp "$file" "$want" | head
+> +	fi
+> +}
+> +
+> +# Assert [start, start+len) has no written extents (unwritten/hole only).  Used
+> +# to verify the tail of the straddling rt extent, past the block-rounded EOF,
+> +# was left unwritten.  len <= 0 means u == block size (no rt tail) -> nothing to
+> +# check, but still emit the line so the output is config-independent.
+> +_check_eof_tail()
+> +{
+> +	local file=$1 start=$2 len=$3 bad
+> +
+> +	if [ "$len" -le 0 ]; then
+> +		echo "extents: eof tail unwritten"
+> +		return
+> +	fi
+> +	bad=$($XFS_IO_PROG -c "fiemap -v $start $len" "$file" | \
+> +		_filter_fiemap | grep -E -c 'data')
+> +	if [ "$bad" -eq 0 ]; then
+> +		echo "extents: eof tail unwritten"
+> +	else
+> +		echo "extents: FAIL - $bad written extent(s) past block-rounded EOF"
+> +		$XFS_IO_PROG -c "fiemap -v $start $len" "$file" | _filter_fiemap
+> +	fi
+> +}
+> +
+> +_run_case()
+> +{
+> +	local name=$1
+> +	local want=$2
+> +
+> +	echo "=== $name ==="
+> +
+> +	$XFS_IO_PROG -c "fwzero $off $len" $testfile >> $seqres.full 2>&1
+> +
+> +	echo "== $name fiemap after fwzero ==" >> $seqres.full
+> +	$XFS_IO_PROG -c "fiemap -v" $testfile >> $seqres.full 2>&1
+> +
+> +	_check_range_written $testfile
+> +	_test_cycle_mount
+> +	_check_data $testfile $want
+> +
+> +	rm -f $testfile
+> +}
+> +
+> +# 1) Boundary units already written, within i_size.
+> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" -c fsync $testfile \
+> +	>> $seqres.full 2>&1
+> +_run_case "written_edges" $tmp.pattern
+> +
+> +# 2) Boundary units are holes (sparse file).
+> +$XFS_IO_PROG -f -c "truncate $filesz" $testfile >> $seqres.full 2>&1
+> +_run_case "hole_edges" $tmp.zero
+> +
+> +# 3) Boundary units are unwritten preallocation.
+> +$XFS_IO_PROG -f -c "falloc 0 $filesz" $testfile >> $seqres.full 2>&1
+> +_run_case "unwritten_edges" $tmp.zero
+> +
+> +# 4) Boundary units are dirty/delalloc:
+> +$XFS_IO_PROG -f -c "pwrite -S $pattern 0 $filesz" $testfile >> $seqres.full 2>&1
+> +_run_case "delalloc_edges" $tmp.pattern
+> +
 
-For the statistics over many files, the reproducer below creates
-20000 files of SIZE bytes from a common (fsync'ed) source file,
-timing each syscall. Modes:
+As mentioned above, add a case: "Boundary units are dirty unwritten"
+here.
 
-  write        plain write() of the content
-  write-trunc  write() rounded up to the block, then ftruncate()
-  clone-tail   FICLONERANGE of the whole blocks, then write() of
-               the final partial block (no truncate)
-  clone-trunc  FICLONERANGE rounded up to the block, then
-               ftruncate() to the real size
+Thanks,
+Yi.
 
-XFS with mkfs defaults (rmapbt=1), per-file cost of the ftruncate in
-clone-trunc, plus the neighboring syscalls for context (us):
+> +# 5) EOF cases. A WRITE_ZEROES that extends the file to a non-unit-aligned
+> +#    size, followed by a further extend.
+> +eof=$((3 * u + 1))
+> +
+> +echo "=== eof_then_truncate ==="
+> +$XFS_IO_PROG -f -c "fwzero 0 $eof" $testfile >> $seqres.full 2>&1
+> +# The write must stop at the block-rounded EOF; the rest of the rt extent that
+> +# straddles EOF must be unwritten, not written past EOF.  Round EOF up to the
+> +# fs block size (b is a power of two) the same way as generic/219.
+> +eof_ru=$(( (eof + b - 1) & ~(b - 1) ))
+> +_check_eof_tail $testfile $eof_ru $((4 * u - eof_ru))
+> +
+> +$XFS_IO_PROG -c "truncate $filesz" $testfile >> $seqres.full 2>&1
+> +_test_cycle_mount
+> +_check_data $testfile $tmp.zero
+> +rm -f $testfile
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/795.out b/tests/generic/795.out
+> new file mode 100644
+> index 00000000..7183bfa9
+> --- /dev/null
+> +++ b/tests/generic/795.out
+> @@ -0,0 +1,16 @@
+> +QA output created by 795
+> +=== written_edges ===
+> +extents: range fully written
+> +data: matches expected image
+> +=== hole_edges ===
+> +extents: range fully written
+> +data: matches expected image
+> +=== unwritten_edges ===
+> +extents: range fully written
+> +data: matches expected image
+> +=== delalloc_edges ===
+> +extents: range fully written
+> +data: matches expected image
+> +=== eof_then_truncate ===
+> +extents: eof tail unwritten
+> +data: matches expected image
+> 
+> base-commit: ffc8bad17e5b2f56e48dbac43f7c5ae8ac368fe5
 
-  size      clone   trunc   close     whole loop
-  1000       40.2   294.2    82.4        9.10s
-  5000       60.8   285.5    95.5        9.61s
-  20000      61.8   416.0    99.4       12.31s
-  65536      50.1     7.3     2.7        1.86s   <-- block-aligned,
-  90000      62.9   306.7    94.1       10.06s       truncate is a no-op
-
-The 65536 control row (exact multiple of the block size) shows the
-whole overhead vanishing when the truncate does not shrink into the
-cloned extent; at 90000 (21 blocks + 3984 bytes) it is back.
-
-To rule out the reverse-mapping btree, I recreated the fs on the same
-partition with -m rmapbt=0 and reran the matrix:
-
-  size      clone   trunc   close     whole loop
-  1000       21.8   295.8    52.0        8.14s
-  5000       27.1   332.8    56.2        9.09s
-  20000      27.1   366.6    58.4        9.81s
-  65536      19.7     6.7     2.6        1.21s
-  90000      27.1   574.3    57.0       13.94s
-
-The clone and the close get cheaper without rmapbt, but the truncate
-does not improve at all; if anything it grows with the number of
-cloned blocks (~13us per block from 1 to 22 blocks). So the rmap
-btree is not where the cost is.
-
-For reference, on the same mkfs-default filesystem:
-
-  - clone-tail (no truncate): clone ~50us, tail write ~12us, close
-    ~7us, at every size. A prototype of tar using this scheme turns
-    the 3.4x slowdown into a 1.6x speedup on XFS, so a userspace
-    workaround exists, but it should not be needed.
-  - The clone path is otherwise excellent: at size=90000, plain
-    write pays 11.6s of writeback at syncfs time, the clone modes
-    ~0.1s.
-  - BtrFS clone-trunc for comparison: trunc ~15us and close ~2.3us,
-    flat from 1k to 90k.
-
-Unrelated, maybe: the write-trunc mode (not shown in the tables
-above) also shows that on XFS an ftruncate on a file with dirty
-delalloc data synchronously flushes it (the deferred writeback cost
-moves into the truncate, sync time drops to ~0.1s), even when the
-truncate does not change the size: at size=65536 the no-op ftruncate
-costs 514us on the freshly written file, versus the 7.3us that the
-same no-op costs on a clean cloned file in the table above. BtrFS
-only pays this for an actual shrink, not for the no-op (19.6us).
-This does not apply to the clone case above, where the cloned file
-has nothing dirty, which is why the 300-600us look like pure
-metadata work.
-
-Environment:
-  kernel 7.1.2 vanilla
-  All filesystems were freshly created on the same partition of a
-  spinning HDD, with mkfs defaults.
-  meta-data: isize=512 agcount=4
-             sectsz=4096 crc=1 finobt=1, sparse=1, rmapbt=1
-             reflink=1 bigtime=1 inobtcount=1 nrext64=1
-  mount: rw,noatime,inode64,logbufs=8,logbsize=32k,noquota
-  data:  bsize=4096
-
-The benchmark and its driver script are here:
-
-  https://gist.github.com/teknoraver/67b50ce366d7cf430bb7f82a8018acfa
-
-(gcc -O2 -o clone_bench clone_bench.c; the script runs the whole
-mode/size matrix in fresh subdirectories of the given target dir.)
-
-Happy to run further tests (tracepoints, perf, other mkfs/mount
-options) if useful.
-
-Regards,
--- 
-Matteo Croce
-
-per aspera ad upstream
