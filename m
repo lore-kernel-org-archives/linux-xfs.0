@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6762445BD4E
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2026 12:57:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 105B345104C;
+	Wed,  8 Jul 2026 12:57:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783515458; cv=none; b=cWBz/E1TUdy5p/v3YT9YsP05HDV76mjny9y1ZAL1/tIS5udDpKJRSjxIkz9o0gMYgXzfVCAuRhiDxl6qo2qdwzDcc8iGhQbDrFk0modg4DLG3KFFZcF0XBopR557v+fMrujkdUulpFWNI5oIJynt+JQ6jHiZMMMxkXE89cNQTeI=
+	t=1783515478; cv=none; b=Ncgc4pXRbkwEhtLqsTA0lUKMx0m6xRWCs4Eq5S7e5MnillU8tLNkXumyz+2b9685yRB9dxfm059rr+G5EPRN6W8mhAfKPdH0C5mPlmLOoeg0oUY0cuxFopTlhIrEzRSew73ZXkOZM4QBwRPEs1YF6R3HMLR0llRzhr8j6dHPhuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783515458; c=relaxed/simple;
-	bh=qx28WPOpX5RtI8lHPd51gJ3ZRiBxsQrbnvWGpt+DWno=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=X341257Oi1myKF7Layb4lCOwGAHfLX2sW752E5F6u0Ft7DPKtFrbYWsXEq8vsyfT6NfuorE8K+ZEnBMr6MRgKahamkYW6qtXRUoPsVkaJ7t1mqW1pDVJ1tzVA4BDGVR6sFdLGPJca9BoNYYZJ96vp39CQDu2SZXit3ZYhUwJ8qQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RzJKv68I; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783515478; c=relaxed/simple;
+	bh=2nsy+U8/jvKFoEkZxvZyqeFRNpW/H0zUM/v60PSDbhE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f345Y3rUtEQq2H3k/xiweNo2rn5N1yMkJYK7KdDerW+ga7YqtDQR+cdArFEeSh8tbVBXculFrw0nyrGhLufXdhoxCkRB3nGId1YImjlfeEMP09EnRF1Myqwl0UJ0AnOJwM0bRSMnHvw59IPiOzcCrui8FFp1GOWgAdwbK529Z0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P3dKqu8e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RzJKv68I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 732171F000E9
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2026 12:57:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P3dKqu8e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A7D61F000E9;
+	Wed,  8 Jul 2026 12:57:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783515457;
-	bh=02VJzBdN7UU6/TqteGi1salrQZykJGM0T+j8oscV05Y=;
-	h=Date:From:To:Subject;
-	b=RzJKv68I1GPTA2iEDoUnWz+Rjnou4xIm4upHI++gysp/+iARldctLz5GB2fbhSp0+
-	 dqCI2r5RU4R47uIAF6HGjGRwWzg7RcIZBdoZrIh5KQ0scOPB+5c+knc4kLVkp6Euwv
-	 z793ErFKPYCLqaXusVMhpI7uv3jk1DvKfCUQv0eR+c0nMSRbWU7zBaJmCiI8UhqXbV
-	 Eqzers10TH4IhNUQqWr9+MOPXmAUBqmX9jQk/0+N9MUjI5aMaM/+0QOCJsL9cxA13r
-	 J3CxHiDpGi96FGmRgDm5DFWgvcnBOYCPeoSWd3XgO9F51B/z7S9jttaXBJBcPRyRk7
-	 XpW/nOIywT/uQ==
-Date: Wed, 8 Jul 2026 14:57:33 +0200
+	s=k20260515; t=1783515476;
+	bh=/u7xOFWq0MPHcv4h5HiuOVhg7bQiqrwHhTVc9XaeB8Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=P3dKqu8er7liiFlmlziRsMnzTn9DXUfsSa9FTlxumgklYti+tHVbkYmP64P03QZA/
+	 NuCkgMvO1InGR1y1Qqru4oVrMrdLko8s5PaWl8KPue0qqtXrDwYTr4/M7FwG5+e/g7
+	 I5Xx/vzymQXT73nyrb1HRZipPTVCy/M9Vp+0ft+oFFVDfLxqEex+IRglCT27MrqyA0
+	 qvo4COEomnsIVjS59Pd4BazXmF0nY06PO+IFdLeS5Ai8dCtsQAugvW1ziRC05dbf+s
+	 1oJKanT7cdlYG4o/5ooEPpRg+6Y83iwJjmq7O5GwfKmZUPCgM/3UnkZrjZUQuzmXYW
+	 ofOYs75v0rnGQ==
+Date: Wed, 8 Jul 2026 14:57:52 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next *REBASED* to f88caa121eac
-Message-ID: <ak5IzfllG96zjEd9@nidhogg.toxiclabs.cc>
+To: Mark Brown <broonie@kernel.org>
+Cc: David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Subject: Re: Missing signoff in the xfs tree
+Message-ID: <ak5JQyi_1aAvttiv@nidhogg.toxiclabs.cc>
+References: <ak4uhSXlLF3Gr576@sirena.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,41 +42,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <ak4uhSXlLF3Gr576@sirena.org.uk>
 
+On Wed, Jul 08, 2026 at 12:03:33PM +0100, Mark Brown wrote:
+> Commit
+> 
+>   92d2d133c6cb3 ("xfs: fail recovery on a committed log item with no regions")
+> 
+> is missing a Signed-off-by from its committer
 
-Hi folks,
+Updated it, thanks for the heads up
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been *REBASED*.
-
-This is the very same update as the previous announce, only change is a
-missing Signed-off tag from one of the patches.
-
-The new head of the for-next branch is commit:
-
-f88caa121eac xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
-
-5 new commits:
-
-Cen Zhang (1):
-      [d128ffd2baa7] xfs: tie zoned sysfs lifetime to zone info
-
-Jinliang Zheng (1):
-      [f88caa121eac] xfs: use xfs_csn_t for xlog_cil_push_now() push_seq parameter
-
-Weiming Shi (3):
-      [5b4396e12cb1] xfs: drop ASSERT(0) on unrecognized log item type
-      [34dd2253414d] xfs: splice unsorted log items back to the transaction after the loop
-      [2094dab19d45] xfs: fail recovery on a committed log item with no regions
-
-Code Diffstat:
-
- fs/xfs/xfs_log_cil.c     |  2 +-
- fs/xfs/xfs_log_recover.c | 26 ++++++++++++++++++--------
- fs/xfs/xfs_sysfs.c       | 28 +++++++++++++++++-----------
- fs/xfs/xfs_sysfs.h       |  2 ++
- fs/xfs/xfs_zone_alloc.c  |  8 ++++++++
- 5 files changed, 46 insertions(+), 20 deletions(-)
