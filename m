@@ -1,48 +1,48 @@
 Received: from sender-op-o14.zoho.eu (sender-op-o14.zoho.eu [136.143.169.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE7C233955;
-	Wed,  8 Jul 2026 22:46:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=136.143.169.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18D436E497;
+	Wed,  8 Jul 2026 22:58:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783550822; cv=fail; b=mcIw8YdvJnlTw2otbKA9qTrfJqfBOoZwgKB2tyNuo05lTy6Ydol2SIjd5oH5FXnFXV/NumNxgOmJ6Z0dd3uP+BfBHrcoLq0VcUuG+YWdpnGjxvEkHWS7RVH4Jd1BgSs0Z3IHtaxwbw4B4mzDuLsmjei+bpjpTL8qWJfFwbpgUQI=
+	t=1783551510; cv=pass; b=PI8QptP7BV5SdKonyFcOkz1x1I4SDMi+7aER/L6SUUsZKHJVhl3qpu6yZSKyqUt7wj1PBoVeAGdASHso3t+BJWoJSBpr7xOqQnrUEYNhzHNliKwqfJcKyvd3yGGpu5CAHt9gXCsezz1ldfmIyNnXfw3eJ5EEDs2ZvjIScrFdb8s=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783550822; c=relaxed/simple;
-	bh=nuflfa/JMZtrKryS5kNFbAPHIoUCjDn6vGPQiOD0A8U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FbmV7PqKKUrLNeQLH1diiMfc72guldTX4Ra7F1yH1YdX7mDIlfVdec/eYJTs2zBLmS7zavJ32lkNBtW/BHFOumczeCjGSsLiWKFZZLA7czpHgU2meoJLOqHYXm4/+l2vH6Xq260XSBvbOGDrYENzeVSPmut4cTBZH3qJvxj45+U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai; spf=pass smtp.mailfrom=auditcode.ai; dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b=gLbiQuWq; arc=fail smtp.client-ip=136.143.169.14
+	s=arc-20240116; t=1783551510; c=relaxed/simple;
+	bh=VLjkFrWgCIob8o/O1KWG/iAXwV9ZRpIg4fm1G3xE9kI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nYtYVSzntaLWR2mTWBhta+/4F1/N3q9ORbyYD7YGG/jXlVtaJc8o5XFtAny0ZtvV5v8dkWnAsB2db+SHzc5jzyFKY5Xrde3BvBXHzLSE2XjdFn3o1dU+/i3agrgsAziDD4PFcvnUQQ2p+ohiq7OtTyvyjYOyEXF7Sfjc5J/XFGI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai; spf=pass smtp.mailfrom=auditcode.ai; dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b=YvjUXrCV; arc=pass smtp.client-ip=136.143.169.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auditcode.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b="gLbiQuWq"
-ARC-Seal: i=1; a=rsa-sha256; t=1783550806; cv=none; 
+	dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b="YvjUXrCV"
+ARC-Seal: i=1; a=rsa-sha256; t=1783551500; cv=none; 
 	d=zohomail.eu; s=zohoarc; 
-	b=lhu8EZCXz1af5zWWVNCqzi62Bpuxq7/fCZVN4HcBjizKJSt7UaL4EwQ+MYcjz8EwI8B98yb0JD0KuQcJ7aex5bj99e5Ltu/og4LAPHtszKqyuj9ecMNasADQzknllEJwT6l1ayBPI1itE8wVkiBCODfvrASDi0OHmVWhnwovdlw=
+	b=B358wxnbpe+FJvVhVnIfQR6nUeD0NVaQd1vmfBQzul73WnWhrNO+bFJ3UNxHukcv9ffW6XPGTRo73KBDppmWy60cmmRlevdAOsg+0xa2ekMifIOdMXuOzuiHzpF+j7k8kxoNt8Fqo0FdHmAIKyz6j7DsXESX6ib+nSLUepL6o+c=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1783550806; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:To:To:Message-Id:Reply-To:Subject; 
-	bh=VEinpIaJCAXBHJTwA2+fKD8XKFX3u30ybEPtQox1mWA=; 
-	b=i7+4S7QSW3uQxmwYwFVK6FpHd4IKQ0Ji497TkHYYidYulXtsYNHBX9jPGLF6AekVYIxodmdnSE5Qs2e0RvadjJuEy/Bk/6s/NADSOkHhpU2rHWOhVAb3eRIaBg3gmTgsQz+YfR2oyr0x6Vaxc6Wo57hXsBOIvqwPc2z8dsiDBeo=
+	t=1783551500; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=Lu6xH0wFJCLSeNQ17VPjjwqn18LJ/RAwHmO958eeQtI=; 
+	b=Qr5RY3Qkid8Trn72qj+s/bMGaHHGHICrWfMEoDTC/q6UWyeNtdNd9FlYTWgjMfZgqHIrT1NIQtrIqtb9HYBxIi3uvgvC1Z+mXORJ2DVgd5z+H3y47HkYx65kBoRUdQkFCQ3vZkfREl6gzIhgYKzlraIs7imycDsQhOVViF7noQw=
 ARC-Authentication-Results: i=1; mx.zohomail.eu;
 	dkim=pass  header.i=auditcode.ai;
 	spf=pass  smtp.mailfrom=security@auditcode.ai;
 	dmarc=pass header.from=<security@auditcode.ai>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783550806;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783551500;
 	s=zmail; d=auditcode.ai; i=security@auditcode.ai;
 	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=VEinpIaJCAXBHJTwA2+fKD8XKFX3u30ybEPtQox1mWA=;
-	b=gLbiQuWq30tKkrK06XEqk4p/ybD/W+Scrum+PkTdQLdqp/Swu4a5AjoZF7Q61skP
-	t21YL/H7mTX+nYtbsYqraMl0nzZGiy563jX1+LVstiMd9eIiufNBcFubpSmBXXB4MwP
-	9yKKKPcgz7Sw9ySseJvh7RKXFC3F9rj4KScXOJgY=
-Received: by mx.zoho.eu with SMTPS id 1783550803024679.3771164013115;
-	Thu, 9 Jul 2026 00:46:43 +0200 (CEST)
+	bh=Lu6xH0wFJCLSeNQ17VPjjwqn18LJ/RAwHmO958eeQtI=;
+	b=YvjUXrCVZKIHhsl6WCnnRrb0XARVNZCmYhLTHtfqhBRuCWei3wH2ye8p7r5nPtXS
+	vpKnFyz8KBmJrFep4Gb2ucU/fZXIttvSzZv9mhIysys8egsTjiuueeqMAh1KCmIMOxl
+	AHd2xtIhMBcMjYPtOk5opuYIz2kUZ5KVR+BbsBD0=
+Received: by mx.zoho.eu with SMTPS id 1783551499229535.5740914169622;
+	Thu, 9 Jul 2026 00:58:19 +0200 (CEST)
 From: Ibrahim Hashimov <security@auditcode.ai>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: 
-Date: Thu,  9 Jul 2026 00:46:40 +0200
-Message-ID: <20260708224640.1400-1-security@auditcode.ai>
+Subject: [PATCH v2] xfs: bounds-check buffer log item's dirty bitmap
+Date: Thu,  9 Jul 2026 00:58:14 +0200
+Message-ID: <20260708225814.2568-1-security@auditcode.ai>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -52,11 +52,6 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-ZohoMailClient: External
-
-From 9164c8d0d80694186447a0c0055c7a170f594a79 Mon Sep 17 00:00:00 2001
-From: Ibrahim Hashimov <security@auditcode.ai>
-Date: Wed, 8 Jul 2026 14:46:15 +0200
-Subject: [PATCH] xfs: bounds-check buffer log item's dirty bitmap
 
 xlog_recover_do_reg_buffer() replays each dirty region a buffer log
 item's bitmap describes into the in-core buffer read for that log
@@ -154,6 +149,9 @@ Cc: stable@vger.kernel.org
 Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
 Assisted-by: AuditCode-AI:2026.07
 ---
+v2: no functional change; v1 was sent with an empty Subject line due to
+    a local git send-email glitch (leading blank line in the patch file).
+
  fs/xfs/xfs_buf_item_recover.c | 48 ++++++++++++++++++++++++++++-------
  1 file changed, 39 insertions(+), 9 deletions(-)
 
