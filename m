@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE7094C6F04
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2026 17:45:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33A3B2459EA;
+	Wed,  8 Jul 2026 17:57:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783532703; cv=none; b=IUXPSARgZnvLkZuftaxbYRUTlWyiRI3p8V+Sw/LrKpN0QYOGCondxy5M1AyouWfRCT41jwDojLdxGvGHHwOlYGRwCcoKwmtkeEs840vhKTwGNUrPS4eWVjTwEFqJ5zZgSddBpWmHDT6cQLvup//NoXAt77eBXh2ugQJgtoX1REc=
+	t=1783533465; cv=none; b=r8dD7YX5Eri5K/e0/stKE4h5kUdHA6y4kB+3Fe2jeQ/le2C7pNJFHQ+LioW47UlH0nwhj2HvlYqLr9tkzFYuk5wa0erHTBiY/gYGTo/mFUDOWfP8Un4FAowIhxHIjfci1W3Ts4siWg5t2A/0feUiHkawHFpRXRidkGboilE1fr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783532703; c=relaxed/simple;
-	bh=0/WAoO3EVGRoBh6aWbxUDXHoSVwAwyew5RFoBbIad0g=;
+	s=arc-20240116; t=1783533465; c=relaxed/simple;
+	bh=W9m83feI2MN3NakV4AI5z98Wxj8EM++dFgxKsLp7dRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tG1Dn+fzGNQ1YcpiP4uSgo+pfHiuDreRYT2qA7zRTkPj8lbovvE87e6QILGkDDBhTYUjzZmd6cihTbvIFyAxQJ1d6W8b3IuziRsbzUhQWrjOlWMEiG8cfno0pmER/YkAFMGXGcUZ87bAKCm/62IKvqeKQB2rUmJqGkSgKTMUfwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TRAA+lB+; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=bG01l7Z7yVoyX1BYIej01p0eP24OLfeoupyNoUWUU2yh4Qytcip4p3s21E4WPSUlb8HZw82xnKTIoppZyQfEjHH/AcqcV/boUV4P8hAgdLwEVI6VVMY+zTujpE1YWtJaI7HzgD9QORyUcEG0PHtjF7IfoyOlS2py/dx2bJ9kcbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cGLSeddA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TRAA+lB+"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 380041F000E9;
-	Wed,  8 Jul 2026 17:45:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cGLSeddA"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CAD761F000E9;
+	Wed,  8 Jul 2026 17:57:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783532701;
-	bh=SwKpdQg+TPoFl0kEnbfxWAKb8dF4h7VBO+whPvmQ6lI=;
+	s=k20260515; t=1783533463;
+	bh=MbX21ZndWDGPuQwpsJkukVtQmhmNbCxepuwSUPCB+kk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TRAA+lB+svlscf8gwO+x1pQQ2gjHRj4Hd3hwYTVLEMKKqmBayu1Oe1VxTjiGZRdZn
-	 Os/1XilmMW/Wd36+wVDF0GwtxueGNI2ugr47WF11MZewXeWM+BiNJJgk5KWDvHFMAa
-	 0b2VU35obGrLS9T34qXu0ofRCKjJ8Ww02jlg/m63MUnEycooozqDEUe0qyDyURT6LJ
-	 GsRTIx8uJQa2X5FK2Ex0fZMCar9S0fT0wCbWvclvFQGNV7rulBoBBKa+bA84stP/og
-	 QEfME43gCX9+5nwctooyj0dHK5sjmEULJQROJpzlIc9ci9bnUDRlS+S1xttKDEx0AW
-	 hIB4k6gu8nSzA==
-Date: Wed, 8 Jul 2026 10:45:00 -0700
+	b=cGLSeddAdopBC6pKZwA7ZL8ydsZFEujFX+Gz5+7uYMZP3Ab41Taaykgx4kz/AIyUZ
+	 KH0fxzv+FTAyAZgvd6dnOINBi/av8PcTrw3vsbtbKbYex5nooeKL+Lo8iGS+0dI3Sc
+	 bfnSL+eRZ1vsIhbLpk9KWlJL+infnUqWKgQpyWpH115TeO2X37UoFOCj0LKrSPsPoN
+	 g7SLll7eTEY7nxkbWMLDnXU6nzPnTwTK13qamvaI81N2aAEvM091Iu9AGNeqtBe7Ui
+	 PzUlK0lVlVaJ6OhRz57+EQ3so/9zn8CIi9F0LOeHWW4ZoefCwAATqjQQwp0pZd1xj6
+	 mw0m7G1gsD2cw==
+Date: Wed, 8 Jul 2026 10:57:43 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org
-Cc: cem@kernel.org, cmaiolino@redhat.com, hch@lst.de,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH v1.1 18/18] xfs: move XFS_LSN_CMP to xfs_log_format.h
-Message-ID: <20260708174500.GH9392@frogsfrogsfrogs>
-References: <178302226213.845537.4378925114415707650.stgit@frogsfrogsfrogs>
- <178302226639.845537.7466057755976951539.stgit@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: don't replace the wrong part of the cow fork
+Message-ID: <20260708175743.GI9392@frogsfrogsfrogs>
+References: <178346726054.1271589.14164163317011378817.stgit@frogsfrogsfrogs>
+ <178346726108.1271589.7681324440256265003.stgit@frogsfrogsfrogs>
+ <20260708091220.GA5902@lst.de>
+ <20260708152516.GG9392@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,79 +44,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178302226639.845537.7466057755976951539.stgit@frogsfrogsfrogs>
+In-Reply-To: <20260708152516.GG9392@frogsfrogsfrogs>
 
-From: Christoph Hellwig <hch@lst.de>
+On Wed, Jul 08, 2026 at 08:25:16AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 08, 2026 at 11:12:20AM +0200, Christoph Hellwig wrote:
+> > On Tue, Jul 07, 2026 at 10:03:24PM -0700, Darrick J. Wong wrote:
+> > >  static inline void
+> > >  xrep_cow_replace_mapping(
+> > > +	struct xfs_inode	*ip,
+> > > +	struct xfs_iext_cursor	*icur,
+> > > +	struct xfs_bmbt_irec	*got,
+> > > +	struct xfs_bmbt_irec	*rep)
+> > 
+> > This looks like something that should sit in xfs_bmap.c (or at
+> > least xfs_bmap_util.c) and not in random scrub code.
 
-Source kernel commit: 202ff980a464198616e53e85e5276e68c00a1031
+To push back on this: there's only one user of this, why not keep it
+local to the scrub code?  AFAICT there's nowhere else in xfs that needs
+to replace a subset of an existing cow fork mapping with another
+mapping.
 
-Because CYCLE_LSN/BLOCK_LSN are defined in xfs_log_format.h, XFS_LSN_CMP
-forces a xfs_log_format.h dependency in xfs_log.h.  Move XFS_LSN_CMP
-to xfs_log_format.h and drop the macro/inline indirection to clean up
-our header mess a little bit.
+--D
 
-This also helps xfsprogs, which doesn't have xfs_log.h, but needs
-XFS_LSN_CMP.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
----
-v1.1: remove old code from xfs_trans.h per review comment
----
- include/xfs_trans.h     |   18 ------------------
- libxfs/xfs_log_format.h |   13 +++++++++++++
- 2 files changed, 13 insertions(+), 18 deletions(-)
-
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index d4b546a0e3d026..9102bc6f5b27f3 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -164,22 +164,4 @@ libxfs_trans_read_buf(
- #define xfs_ail_get_push_target(ail)    \
- 		((log) == (log) ? NULLCOMMITLSN : NULLCOMMITLSN)
- 
--/* from xfs_log.h */
--/*
-- * By comparing each component, we don't have to worry about extra
-- * endian issues in treating two 32 bit numbers as one 64 bit number
-- */
--static inline xfs_lsn_t _lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
--{
--	if (CYCLE_LSN(lsn1) != CYCLE_LSN(lsn2))
--		return (CYCLE_LSN(lsn1)<CYCLE_LSN(lsn2))? -999 : 999;
--
--	if (BLOCK_LSN(lsn1) != BLOCK_LSN(lsn2))
--		return (BLOCK_LSN(lsn1)<BLOCK_LSN(lsn2))? -999 : 999;
--
--	return 0;
--}
--
--#define XFS_LSN_CMP(a, b)			_lsn_cmp(a, b)
--
- #endif	/* __XFS_TRANS_H__ */
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 3f5a24dda90701..a4e1b3eb425cda 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -52,6 +52,19 @@ typedef uint32_t xlog_tid_t;
- #define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
- #define BLOCK_LSN(lsn) ((uint)(lsn))
- 
-+/*
-+ * By comparing each component, we don't have to worry about extra endian issues
-+ * in treating two 32 bit numbers as one 64 bit number
-+ */
-+static inline xfs_lsn_t XFS_LSN_CMP(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
-+{
-+	if (CYCLE_LSN(lsn1) != CYCLE_LSN(lsn2))
-+		return CYCLE_LSN(lsn1) < CYCLE_LSN(lsn2) ? -999 : 999;
-+	if (BLOCK_LSN(lsn1) != BLOCK_LSN(lsn2))
-+		return BLOCK_LSN(lsn1) < BLOCK_LSN(lsn2) ? -999 : 999;
-+	return 0;
-+}
-+
- /* this is used in a spot where we might otherwise double-endian-flip */
- #define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
- 
+> > And I really wonder how we can get good test coverage for this, including
+> > for the original bug that this tries to address.
+> 
+> I'll post the debug patch I made that hijacks the errortag knob to make
+> it randomly shrink the range passed to mark_cow_range instead of the
+> entire iext record.
+> 
+> The original bug that this tries to address was a pile of bug fixes to
+> the xfs cow code that you posted for 5.1 that we neglected to backport
+> to 4.14, resulting in corruption of the cow fork mappings.
+> 
+> --D
+> 
