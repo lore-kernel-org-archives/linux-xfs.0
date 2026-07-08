@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6DB31F03DE;
-	Wed,  8 Jul 2026 05:04:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31E3E1E51E0;
+	Wed,  8 Jul 2026 05:04:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783487052; cv=none; b=ui3+1CBXPvKe9FvYS5nooO2N3/HnujY2BSpau6QbSHWUixHYrCMePfBnN1UEQRIb1Yu1ZdJ9DLkq/2UjinjsNNgmU9JG8EOjkmQnG0aogxEIOwjtJotUE6yHSbc3N5XUNNuifoRdm+Nrg+cO/GqtjZYUfFpT/4YGZ/AkDPszgYc=
+	t=1783487068; cv=none; b=MRB9GAk9MFGVq/0MBmYXUeiQ9tXdC9WelXO+hz0046q6pB3o4HcZPBUhfIkcEgGbDvMfRX4xJ/zuIQjaEJ/yZ2dpP7E6qrRxQtVarPUmJ9qsxAPSDiDVYVFSsKc51C7xZFUCu19ItYH1MuKXXOXeqNKbY7+rPmTuC0cp7OwLQYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783487052; c=relaxed/simple;
-	bh=9A+j52buKom8wscb3LJmeaWCnRVLIdP/ScNfpF7e+8M=;
+	s=arc-20240116; t=1783487068; c=relaxed/simple;
+	bh=OoDeBw1d3MtqV8UiZirvMaP4yCQa+/SgK1mAqDvxKLA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d5/x/LVqYCiwnIv5n8YqCYQLkju/9/FuzoHmUE4L0b0GNbyAtwRUrce15wHMMExUae/isC753YZPgMUU9LWf6tzOtbnWypCmTVVI/dNHSpgCOGh7AWC4Qfr/6lmiKInZ+1+Rs2unRBbDOLnBJ1xyjGoMylZ1KcsvZS5yBeAtDpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iXJmASWP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=KOz9v1VO8hAAvYMWbz+IhvCJ6upzVUQVKO36nad9QTmLurRaNP91Ti+Z2wbxiqL+653eSRsG2S5z+LqnLkM3XZ8zvhgXazXqW8yXk0Z88gTJU1xATkNuqzvCgEzCEPqMwY0vAKUDhTJooeqCizZMyfRP4HEWDgjlG+vpQV2NDME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nKCg9/KM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iXJmASWP"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6480E1F00A3A;
-	Wed,  8 Jul 2026 05:04:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nKCg9/KM"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E31E11F000E9;
+	Wed,  8 Jul 2026 05:04:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783487051;
-	bh=SlLSsRQfJL5UIG16SoumnFnA/gGViGaM9Ev74e/o61A=;
+	s=k20260515; t=1783487067;
+	bh=z0eP1PC+9/ib/5UkCbwQ8BdVWAE/6FSGiiBAAI3MK1s=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=iXJmASWPOUdG/0FNWnED4unXLaQzGKFemqr1qht4bIQ05lcbvyAvlCB/7oQLTgGy/
-	 tUFaS9O6iL9m42cB4XkjPsjyJ3II/fU6bKihcNzpBU1SlNwMF6qr+K+n8Hy6gHjRrA
-	 tV88PIrW7+9KBJ8BtGdOYzwzweMFlOBUXjM7owSda8ef+H0xH23ZTXU6X7/9Zr0kmj
-	 vHm/thwemtG3m4gxxDMsCVmJieInCbCgF2M3MJ8xIpZWMHDUAAcqKQwBwsl2DWU0TN
-	 9+hAWan/v+uKpikJNaFSwh3hz436kOEGFKbv5uMMh1naXeOgaqQ6UzOsurwdUMP+Q/
-	 s4gnHEXNImzNg==
-Date: Tue, 07 Jul 2026 22:04:11 -0700
-Subject: [PATCH 4/6] xfs: use the rt version of the cow staging checker
+	b=nKCg9/KM6APsBdXr7vZ4ODSM8u8z/NRhQR1oeRcXneazA5ak+FIYdGfvBqYTlT29s
+	 4au4+Vxfc5iLuhLdCO2vYgM3pvw6P3Y6goc5faP/CkEl5zwg3uuvKytm160vj2sn1k
+	 uaABLzpJf48k5W4fB/t/tBEx2XZ6/sRQEf4xNVDb4qyRcFtqUBIA926n/Gm3ImoDRi
+	 nOkgDsctdQ8MJhxP+u8fFIMQ7QQS9QOgDpmfeIU1x4z682u5by04cwQ1k4wsqfkkD6
+	 lkw0TlMKSEoQD7BoYSeeL7HNyie56ShIoPpsSeXZFihA97VV+yyZJBdPL3b5oUqS8c
+	 ENUUEU3NYZFGg==
+Date: Tue, 07 Jul 2026 22:04:26 -0700
+Subject: [PATCH 5/6] xfs: write the rg superblock when fixing it
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, cem@kernel.org
 Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178346726172.1271589.16407045175223390003.stgit@frogsfrogsfrogs>
+Message-ID: <178346726193.1271589.8429966417697809477.stgit@frogsfrogsfrogs>
 In-Reply-To: <178346726054.1271589.14164163317011378817.stgit@frogsfrogsfrogs>
 References: <178346726054.1271589.14164163317011378817.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,30 +45,34 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-LOLLM also noticed that xchk_rtrmapbt_xref ought to be using the rtdev
-version of the "is this a cow extent?" helper function, not the datadev
-one.
+The rtgroup superblock fixer should write the rtgroup superblock.
+LOLLM noticed this, oops. :/
 
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 91683bb3f264c0 ("xfs: cross-reference checks with the rt refcount btree")
+Cc: <stable@vger.kernel.org> # v6.13
+Fixes: 1433f8f9cead37 ("xfs: repair realtime group superblock")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Assisted-by: LOLLM # finding obvious bugs
 ---
- fs/xfs/scrub/rtrmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/scrub/rgsuper.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
-index 043be93c714884..b3b2cf17ba2c08 100644
---- a/fs/xfs/scrub/rtrmap.c
-+++ b/fs/xfs/scrub/rtrmap.c
-@@ -209,7 +209,7 @@ xchk_rtrmapbt_xref(
- 			xfs_rgbno_to_rtb(sc->sr.rtg, irec->rm_startblock),
- 			irec->rm_blockcount);
- 	if (irec->rm_owner == XFS_RMAP_OWN_COW)
--		xchk_xref_is_cow_staging(sc, irec->rm_startblock,
-+		xchk_xref_is_rt_cow_staging(sc, irec->rm_startblock,
- 				irec->rm_blockcount);
- 	else
- 		xchk_rtrmapbt_xref_rtrefc(sc, irec);
+diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
+index 482f899a518a85..a52d37c33ca15a 100644
+--- a/fs/xfs/scrub/rgsuper.c
++++ b/fs/xfs/scrub/rgsuper.c
+@@ -80,9 +80,13 @@ int
+ xrep_rgsuperblock(
+ 	struct xfs_scrub	*sc)
+ {
++	struct xfs_buf		*sb_bp;
++
+ 	ASSERT(rtg_rgno(sc->sr.rtg) == 0);
+ 
+ 	xfs_log_sb(sc->tp);
++	sb_bp = xfs_trans_getsb(sc->tp);
++	xfs_log_rtsb(sc->tp, sb_bp);
+ 	return 0;
+ }
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
 
