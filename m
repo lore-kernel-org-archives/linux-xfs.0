@@ -1,48 +1,72 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FA0C40913A;
-	Wed,  8 Jul 2026 09:16:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3834430CC3;
+	Wed,  8 Jul 2026 11:03:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783502200; cv=none; b=EMuVHsav/HAoipOseeiIozn0VGeIyGNJRY7PzsFa5z9SEf9FjM/FSNGg2HMqbhKIZ7evcCu0s1hZUEqOz9IIa+nkNXygwEVUA1nY2TD0EsyRoXmfDSQZnfnJWXCzpZxCTkmrx078okWA5DIQt9dJCH1a1iiDypLUkCwPu28QJ5M=
+	t=1783508626; cv=none; b=KqcdnRnDImYoCPSD8d39w9lF18q2f2goNAd2dLcgLYTY4xzFY4FQHEA4oYRnO4TpoWZAlhB4e8dBpz2R9RMS9xwGi5imfoA3zyvoAQUuMO0X8j5Al1mC8mDkWmbEKDtBxWib2N4IQ4LJMxQZE2BDv9GaFrv8y4GVrRmeUV3GIPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783502200; c=relaxed/simple;
-	bh=aWoJHM2+vZIo96on1TSCXf3EjwOkuqA/GG6hutk2LKY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZtjsQI3rG+PpSKp7NuoMOwfmRTVsnHeCa5tjZ6s4RsntTWaJdNen3ipsRls/QiLzExvwLWQpODpdTBHQTYQZlun9+TIlFE9B2YdqNnQ/dCJwTlJ4NYVJVCSqFrikR2IvdTYvwCCs/uWmDsQ+Q7u9CbQsiEiRBzYpD7qSak+WSfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 93E0568B05; Wed,  8 Jul 2026 11:16:36 +0200 (CEST)
-Date: Wed, 8 Jul 2026 11:16:36 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, cem@kernel.org, stable@vger.kernel.org,
+	s=arc-20240116; t=1783508626; c=relaxed/simple;
+	bh=yHUAgSb1eEb16AxJ3bFNu0aKeWlymPSXV9A6YO9rDbY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=mcAxMrYWNUt0buFwS3Lw3OGVy2/vOh+6O9eaN0DnYF0PKazD4zqHX/l6D7rNZsm4BViELffNkeSzCpENcfCKULA2pRt/q0sYEVdOL4qi6xjNFL3dL5IDx5Eh3NQD7XRDD7bIar1nB39sSrfaa0LTv7bctpqSfAnJBhXXezytJik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dXz0W/Ni; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dXz0W/Ni"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C70181F000E9;
+	Wed,  8 Jul 2026 11:03:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783508617;
+	bh=gZgEIFbhhHDurNxAcIf/gZP35cPhQ7y90F4O//WE7lg=;
+	h=Date:From:To:Cc:Subject;
+	b=dXz0W/Ni0nRLCN/+Wowigmkq5xcYjB/Z1V5QQAspVDxd4Xmq54rpqhtXeDRoJZLQa
+	 5gQsw7OsGNbU0ZAbXdpndmkavssK7UeY+PMd+Tmw3mQe8hzN/KrZOlWoLaLJEyulpA
+	 pYYcczBdp0MeO6q36cgIfUvHZIz6Z45j7jTH6KIrXlgx8dOFSKpe5lR1/cCPDTfKj8
+	 w5eOt3ZKSU8HHQS+qAqd/zKgJD51qrF0vHtP7W0FS7N/Vfgk7gHcSy+2RijvuK315S
+	 MMsTaLtMmUcYTkPpM4h5ToU873XYMSi4Ye3h83+wk242qIp8eJ9Z+4MqBw81F4tnWP
+	 K74zi4ohn58Dg==
+Date: Wed, 8 Jul 2026 12:03:33 +0100
+From: Mark Brown <broonie@kernel.org>
+To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: grab rtrmap btree when checking rgsuper
-Message-ID: <20260708091636.GE5902@lst.de>
-References: <178346726054.1271589.14164163317011378817.stgit@frogsfrogsfrogs> <178346726213.1271589.14188309471369607201.stgit@frogsfrogsfrogs>
+Cc: linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Subject: Missing signoff in the xfs tree
+Message-ID: <ak4uhSXlLF3Gr576@sirena.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ltQvj/Dg9EBdH3wv"
+Content-Disposition: inline
+
+
+--ltQvj/Dg9EBdH3wv
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <178346726213.1271589.14188309471369607201.stgit@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jul 07, 2026 at 10:04:42PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> LOLLM noticed that we aren't grabbing the rtrmap btree when we check the
-> realtime group superblock.  As a result, none of the cross-referencing
-> checks have ever run.  Fix this.
+Commit
 
-Looks good:
+  92d2d133c6cb3 ("xfs: fail recovery on a committed log item with no regions")
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+is missing a Signed-off-by from its committer
 
+--ltQvj/Dg9EBdH3wv
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmpOLoQACgkQJNaLcl1U
+h9Cw5gf9HgrJw/QU3D1goK8S3V8Nz+v1sVnAarTvOnh9jLW2un7ixu7+0lNdVMVV
+M0zp4YihK14dgaPHxuNqLEhkUYYpYXqkhtdsNX2MAVGEcDXpxQus234amq3HTW4r
+YuNqGbUTLuyxv3tH7SufUvGqQColVqe5BQCXHBbOSQagDtzHP2YtXuYv7QTyjqlz
+0XApgBd3Y6XQdvPVY0QDlF4VFs2WGtVT8Ykg0pUX0vsnnqtO4tSx0N68rUPTl+sc
+TXm9fPVYGydV73HK8dgBUAhEEzSBonjlNXIWW4CW7blISGFMXn5sUtaREyP52cgR
+aXeNmcOFH+Dcg7mkbQLpu6AXkFy5fw==
+=jehh
+-----END PGP SIGNATURE-----
+
+--ltQvj/Dg9EBdH3wv--
