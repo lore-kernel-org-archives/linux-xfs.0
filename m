@@ -1,94 +1,94 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A223C3DA7C5
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2026 20:49:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CA293D093B
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2026 20:57:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783543764; cv=pass; b=juAa8wDdeVAu0cIloLp6+BHBHb12k+ew3dKNaJ51BKVqXG6qyy3hh+BlJMWAv3fsecYmLsj6LP1huLQQbbt1MNVOndvZln1z/v1XqRNuX9hqka5Xu5AkI55mWox+FGNgY8oF6VxMlzi68XbJyaaHERC4gsx32gL68Zp2eokDgD4=
+	t=1783544247; cv=pass; b=u14xazAaaEOl6B/GlnV8oGnwfAuCk8qQOx4tmteQjzx4+vxLPuPjALa7uyAXT4HHSjLr0uowvmp26dDgchkJUL26jIEg5MTSW85uIm46RO3S98eVLZsZrscT1dekB4R2FR+DHgyNaPjpoztw9VBmj1wXxat0QXgDrfuf4sg1n/A=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783543764; c=relaxed/simple;
-	bh=Q9VW6dWLsKZN9qsm4oRde88bufG6z6b2KVMtuc1sieo=;
+	s=arc-20240116; t=1783544247; c=relaxed/simple;
+	bh=fQxqZpmVN2OjS/KTdRomuIujK83Xx3uJi3ZT6vlrZ5Q=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NksQCUohw6TIvlj47Ut69HNPdt+6aQAko3jdlM8cVgx81djVzoXvGCVIudsU8Bcq8Npx/l7WRTev7ua32l4bgrJIeJrOWnO+mn3Meg2diP//hoR53rE3T8UCk65nnDtMoPBbDv9Hlh6onjWeOvEmagERASyxjubnwCjwhumhgrM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J6YI35d4; arc=pass smtp.client-ip=209.85.221.54
+	 To:Cc:Content-Type; b=dOvhXPkx2yr9rsOcqBlGlblqZFaS/pxeYdrEA8w3dz6FKETBXbzJVhG9GVawXk/8Ym6++mCU47CDbw8LerME17lgkWvlbi3460UXqBkfJ7uNLh04XrBTCJMhGka53q1RwVqUMm9v1MxilCHnXhceD+P2mlj2EiASWHr+sQ5uCPU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VRGL3DYF; arc=pass smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J6YI35d4"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-4720d22c94aso1057044f8f.1
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jul 2026 13:49:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783543761; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VRGL3DYF"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-4759b4f0897so689046f8f.1
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Jul 2026 13:57:25 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1783544244; cv=none;
         d=google.com; s=arc-20260327;
-        b=C7V04BhqHK2fpnORX9De13AQL6puzpMoOc+n89yHzbTHvJVIFK/1LYKVZ9jWxXGhew
-         ayb0GjOgGM/ZG07eHQ/kx8KqVdnIAk6RSCdXXdLf4eeOsqtQ/53+youQY760mrJqc44n
-         qeph7C77yBS2h7BWAL0u5g2mBr4dwxsQ+pNGKEw55tnKPxPq6rocssozLBoAtij/dFyp
-         f3ZJRHyORpHiKDPqMO5LxDp22CPUqfO6EeyYvme2eUhI4lsIln/jDSot+0FcZ+ncgK2D
-         +tfZsHn1iYvt5Tw9ePjLLHfD6qUyTlVPHswsGa2dbp3nAdAqZ/QkonB5PeYMhDJziU1r
-         EPSA==
+        b=aSfljyfxLU7Vje9xKPKgn+eSBaTcaNuVLyUK7cN50cEjn8Qo9qAzEMkVQ6na1pfUle
+         0qpG+1+M6nzy2Np/ci476O00I8+79BKvfiki4WwzqFsVSWdv1uu98IrLnOjVUBHwm46p
+         z9xGiH4G2nInj+Svb3yZ/pmoOPUMAkUeLp801U1YTtPZNklMnR0MaAWc/XHfoZDb5oUy
+         AAcsm5WLjjLWsAlB9CzHSGgAEi88FlbFRlHHajy81vYdiQFm+4sw8/jjvkOe6vXJw7Eh
+         IHqfc/BcICKpoa+K+cZg9g6aB8i0p+o/cZQ9/ltdCCiV4gVFqmXmyU/a4LpLHERxlakU
+         Uocg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=Q9VW6dWLsKZN9qsm4oRde88bufG6z6b2KVMtuc1sieo=;
-        fh=MQSrGJkyZ6Rd8HqIzl4dYC7yU+6R9NIPMYmo7YOA5jM=;
-        b=HIkpW8xh6sTRxy0Hu7zv7/06n5/azdmIBX3v2VClcxma/y9kflfMS2/0tf+XeLBe8y
-         HgRvrukdhfQF6JBd4VAVTq3RKabiElcv753LViwMjRST0taZvMo8F1JvHe5BE9F5+nC8
-         vDY81z9b7se/5ZQbuqNPuAJeGGAIoujmwDM/+vBhoWej8Coc0puX0L3ZsLFUpoZgbg+m
-         8pRGMYRWt/fR+dfdRG5I+gHTLaruYMl0TFTmchFnEhOQxq14qmTueQy/BxG2R3HgFFb7
-         Y5bcY9BWkZJqGvQmU/w9VzBYd869paJjiTQi/UmMlnL4yJBBDVThY6+7pTWMMP+FQyv0
-         Bo3A==;
+        bh=fQxqZpmVN2OjS/KTdRomuIujK83Xx3uJi3ZT6vlrZ5Q=;
+        fh=TKXNRPH1SdQxNaruGIZyaYy23b46rq7/dxTx6UJnMEk=;
+        b=rGqApKkkUCItlgxlyCONY6eoQwa8aGVScKxwEUpaLWA/H8tAPYQEyrdIZFHGUpr91m
+         Amqu116a4zqeiwzzjlvDoz2SzZFtvgCbSjCh014DkiV6qvJLdM0pVSu7QtXfpMcPmsZC
+         Lb73kw51DZH3LPBU8oVytS1lyG/U74SMphV+W7f+pbjKSKziAgsSVMDGNM7ApC6lfXuR
+         kFV0algbXNS21Tee0aSv7kZv+AtMZ7ROeWatI5dXSudiyZkfN9+b49PvhGJmn8DVl5b1
+         HQ94yzn+T+L+bsD+bQcin4ubdAe38egIgO/bLGc4HtuoTyuRo2Bjv+Y4rtkLhoz5X0jh
+         o88Q==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783543761; x=1784148561; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1783544244; x=1784149044; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Q9VW6dWLsKZN9qsm4oRde88bufG6z6b2KVMtuc1sieo=;
-        b=J6YI35d4A591y/l9NV+Z0NQvnoPUQbpRN8Whh9nwKsuE5uIsFRhwicE5lsSaX9SW+E
-         Di+WL2TwrbqJ/0H7Nr5HJnC/3YMrSeXN/ygtovw2u7gMqtdOCmkfpLvrYv/ROXE8w4cE
-         QpkTY6N5Xi4BScXm6jseBFnoOZMDjOW5nCqANjxyyrPi3V3fRHUp6Puso7TfhsIwe9vO
-         MOR6wrS3qy0zcvJ3yxZ0DJG2NgX40A1doEjW60MlFFLm728bTAwC5MuTROKaxYGHP0Lf
-         3lDH3c9jWHE+fWaYLIttP0mHGLmT0UV72dftoUNPsN0759LG/3yRdb/5C4g9XjDJUWZV
-         SAfA==
+        bh=fQxqZpmVN2OjS/KTdRomuIujK83Xx3uJi3ZT6vlrZ5Q=;
+        b=VRGL3DYF3/HWVEPQi7js832v1iGwNNDxbVIjK2dD/vjclbwE7Q+2/dIWXK/OovusOG
+         zS5AKlAaNWBdp785L5E0BUmEy2qVjTMdECIWVBy9b4MuZijB8M4srfZlOx59GhblSRse
+         4mHQ/wfv9+5p34DqzI/Vygjgonp5w3jF3xtaGDtGEoT2oz6bAM/BO8NQ1Ywx90EdbnR3
+         1vvIbj9Kj/7tVK0XcKg8X3s2403H1aGOHVBtIMrmA/gzhnd6GEmW/nVUOjnMsxb/qn29
+         5UWPHdpFL37BJWWrnrGpwQWuGKUCC7VSyRnM0wrTiGDsgjw7wEJQSudH1V+cqA/2v9fW
+         13vg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783543761; x=1784148561;
+        d=1e100.net; s=20251104; t=1783544244; x=1784149044;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Q9VW6dWLsKZN9qsm4oRde88bufG6z6b2KVMtuc1sieo=;
-        b=eDnd0LTA91ljc8GdlbOfu2b7/fmn7/peBnM5IwmoCKr2VOQUxGXLs/egalIAEa5p0y
-         lVJU+bLrM1ctxsogHV8rNa0m4yBI+Oh0nPmnL0K4XOIvWQFdLHqnFI83y+DkioOsdPNi
-         9hPbGop6a6Hurw/YURlgTx+HG9w7XiuoFz4coVrSdoQLPdPORmCrl3XaH1SRrWoy1MFg
-         QTWilxTzFUKlPxN+dAWe01u7CbguWB/Kya9a31VClv2btyTr1TEfYsCO0Tlc5YYEqEDm
-         bw9mBo3PTJy5owBt4j3DPexvi18a3mGYW1JX7nVsDXt/ysKHpDbh+uUEm0lqZVxoQsvU
-         qSZg==
-X-Forwarded-Encrypted: i=1; AHgh+RoChwhey6dnDyhN9m5cLB1gkEJT5arX4XhGw+KSeuERArF0AAqw3q0zjb51t5FM2Ag8/I+ehZvHzdk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzb7t+gZFzz6qgZrntlJzI3EdoADBgSN7tYAhw2Mv6CWIAU0GyP
-	ky/qY0NUxo/tZkeBfoVdYlAx9jtxWfRaGzGrSGnlxudoYeF5IxAHsjvEwv/JS8TP+I/589WKN2g
-	ARV671udadfU7Hv3iB/ff04bQSSq3dqc=
-X-Gm-Gg: AfdE7ckszVtXoUq7pllJ+SuBsFyaQbjfAP9fAaf61HyuMiJoScQwZr+YrsuDakZwkZy
-	mceNyWSB/Ds+mkUZspHX80en3F6j327rT8ABjthyeBgEK06tNIrpfi4/LHImpIYavffCn+hK09J
-	llQBg5sG82CjZavCMoxuCl/8i5LrdAhC+Gl3k7fMSBBbVaT6w0z/fCpcJySf2+7xth/Cf6kaKjt
-	0g/Cnv75wXzXFbIJ1pejyKXTsm/vKyrzFbiZtOpeoF1ETV7DsVRilriH44SjbdvM0TMlhlJnHPe
-	WSZ3clq/gpkk46sGFmowkvR32ZOvOLtrIl2/Tb2rZaijsUajXMLqYwAoVsOKsXQ=
-X-Received: by 2002:a5d:5f46:0:b0:45e:f439:9def with SMTP id
- ffacd0b85a97d-47df0748abcmr4605746f8f.15.1783543761001; Wed, 08 Jul 2026
- 13:49:21 -0700 (PDT)
+        bh=fQxqZpmVN2OjS/KTdRomuIujK83Xx3uJi3ZT6vlrZ5Q=;
+        b=F9R9x9/p+YjXaMtddhWu4khuzSvBBOVmnTz5AdlRCY6cAqzXQ+NYLazIOITRA5adAi
+         8J5y720uVKQ8bRyjpn3jtiZGP/pqUQQ7MJnE6kqpa20pL4ngmnEr5L5NhKPLOAU42SlB
+         Kme7M5oQvpw1DLR1AVWWqlRNWDg0ZCYJABbzLH/JsMfq4XzT3lo2OzfjfCYBXG5js7SL
+         X6tqlSrGIvAIVBIPdjbu5isPDwmXUdYieOJKbO7nh21tK85gNaO+xMEchwVZ3yl3VRK4
+         rhBn62fxJgAcP2qcp6h9dYPk8QkF9Kju88JKkKgYgmsWePBM/OwQHhTVURvrpTHP6QRe
+         A/AQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoDiBsI5JU+A4EtuASx3oW7ViJT/NZwcQ8WDLgSy1BZjK2a6RtZmuBe1GvcIuijHt1PG/yGcbj0tgw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIdRToF0n6es8VVTa1IBGOr0Q7UtqQ/VLBUnlGf6ByFy+OUres
+	uCux9Fc7st0aBGxwnrtAhsaaHG4xceZErp2A1rUZGK/MyPOGEEqI4pijugA8URT/gRp1BSxUQY3
+	EAqYV2Gpxrr3tFw++2zEyi9j2DsCB3xQ=
+X-Gm-Gg: AfdE7cnP4UnRvez1QxBkFC3Qtwxb3XoOUk1h04Uxk3/v0Z6HdxG22Qa7ygz6GQlLyEn
+	nh4Dd+GiAdgW0hjDMXFOknYbLze1t/32QevapvqO2qbGe9uK/iy1wTGk52PQN8t/iSwmnxE85WA
+	fcJXoW2Eqb8Ou9DNFcFqLQrTOqCFSA0KnLabLXGAUbDPUGDppt3d3jVz2QBRoUEYdTeqPpcFREx
+	AmLKTRK2Gsmft6AxeQ5a9ij3Z82yHEgYDYZIlMv1MK4DYJdPb9iLAIta4wC83EzHgkymTL0R5S4
+	isPpZpYwJsQilS4338FAF2H8FjxxbQ6MVao1dW5pYqWBAOaUqlK3
+X-Received: by 2002:a05:6000:2004:b0:47a:c103:8a2e with SMTP id
+ ffacd0b85a97d-47df0808ff0mr4522829f8f.45.1783544244470; Wed, 08 Jul 2026
+ 13:57:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260520030357.679687-1-yi.zhang@huaweicloud.com> <20260520030357.679687-6-yi.zhang@huaweicloud.com>
-In-Reply-To: <20260520030357.679687-6-yi.zhang@huaweicloud.com>
+References: <20260520030357.679687-1-yi.zhang@huaweicloud.com> <20260520030357.679687-2-yi.zhang@huaweicloud.com>
+In-Reply-To: <20260520030357.679687-2-yi.zhang@huaweicloud.com>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 8 Jul 2026 13:49:09 -0700
-X-Gm-Features: AUfX_mznUJrD1oBo5FB4GQ9nk03mR1fYO3mPw7ij3a7Di9C6mAcrn22LiWqCwR4
-Message-ID: <CAJnrk1Ykp94kZr5tfXrb0j6O=-gLM3vAL0V7ziAxm39oKOmv_g@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] iomap: add comments for ifs_clear/set_range_dirty()
+Date: Wed, 8 Jul 2026 13:57:12 -0700
+X-Gm-Features: AUfX_myQ8YTw0YdCEbZNt9d5CTUFLRbMZHIi911QIv69S8S5We_R1LPqmYg6pLQ
+Message-ID: <CAJnrk1ZnO50z7C_e0y-0SVUXtd5S39VMsWfzuwD4LEHmuZw_wg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/5] iomap: correct the range of a partial dirty clear
 To: Zhang Yi <yi.zhang@huaweicloud.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, brauner@kernel.org, djwong@kernel.org, 
@@ -97,18 +97,36 @@ Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 19, 2026 at 8:15=E2=80=AFPM Zhang Yi <yi.zhang@huaweicloud.com>=
+On Tue, May 19, 2026 at 8:09=E2=80=AFPM Zhang Yi <yi.zhang@huaweicloud.com>=
  wrote:
 >
 > From: Zhang Yi <yi.zhang@huawei.com>
 >
-> The range alignment strategy differs between ifs_clear_range_dirty() and
-> ifs_set_range_dirty(). The former rounds inwards to clear only
-> fully-covered blocks, while the latter rounds outwards to mark any
-> partially-touched block as dirty. Add comments to document this
-> asymmetry in block range calculation.
+> The block range calculation in ifs_clear_range_dirty() is incorrect when
+> partially clearing a range in a folio. We cannot clear the dirty bit of
+> the first block or the last block if the start or end offset is not
+> blocksize-aligned. This has not yet caused any issues since we always
+> clear a whole folio in iomap_writeback_folio().
+
+If this isn't currently reachable, does this still need the stable@
+tag? My understanding from the stable document [1] is that "it must
+either fix a real bug that bothers people or just add a device ID"?
+[1]
+
 >
-> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> Fix this by rounding up the first block to blocksize alignment, and
+> calculate the last block by rounding down (using truncation). Correct
+> the nr_blks calculation accordingly.
+>
+> Fixes: 4ce02c679722 ("iomap: Add per-block dirty state tracking to improv=
+e performance")
+> Cc: <stable@vger.kernel.org> # v6.6
 > Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 
 Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
+
+Thanks,
+Joanne
+
+[1] https://www.kernel.org/doc/Documentation/process/stable-kernel-rules.rs=
+t
