@@ -1,158 +1,182 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4BB3CB2DF
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 06:26:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C51928466C;
+	Thu,  9 Jul 2026 07:13:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783578418; cv=none; b=tHjET4YGy2ik+esCKEBj8Pn7UFJvWak8T8FgT9RaUIrepxZmLj1R4bwq1btD8pBUKYYyxU7b8T0kMmrgMWSC1jRc8ENuyyVLJOpt28UfRwTiX4sluxZwLbqdiUXtuTrAOcGK8X50cIxucyEX9tuNSaRcgGZMTdraWhyeDe6iqDQ=
+	t=1783581238; cv=none; b=G9LIByUI+bgCSm4G9Mv9iKVhKVCm4XTZTAfZIDyEAF4zRs5vztj0cT8yO7Jhal2wCtovJMbaEBAfrofPUvX2w1IIhQ9kZvcnp4RRSQ8S9woxMuQW1PF1MGaO7lXGGGFPhvmwPt6S31y0+dcWZb6BAbQlelCtYM30Qpv6hm+gOzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783578418; c=relaxed/simple;
-	bh=f4085wpgeHY2EXKrc97t4Zu5evbO07duIfIpVYHCKmI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CU2hZ5lxBPoAfwqJRIGHIG3W3MP/ysUq5RnsE7Pr+e9DXH1Fp/0E1rWd7y1Qqfn80x4MdlKD6nuo77+vtM4Otck9Z0z7lhKiySqON+QDoxc8ma8Yu9Gpuku/GE4FWmduIcbdZ8pqIuQbTTgNfyS6wgY/1040rZdKBEADnQMg7E8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iTAZEAH1; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=XgkZkmni; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iTAZEAH1";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="XgkZkmni"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783578408;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=PuqStaiSbRQsVsWgk7EHZfKWUiW4l5xja6N2MV8cWZ4=;
-	b=iTAZEAH1olT4nQgrUyS3O8XhVyhnFthT0K/yHl6qeDgl1HKVxjxhWK6RAqr5ozIWF5CsE3
-	rXyypWaYR6wjFh/2E/KJcG1rJLI0ZGruaaIybbGo07aT9T7r8g5j3OM4L703yaQ403gPfn
-	zHjvMjKuCW7tNKljcj+tRJl7+TGBrX8=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-377-V1K3RpkdP-axCqHdpbwWMg-1; Thu, 09 Jul 2026 02:26:46 -0400
-X-MC-Unique: V1K3RpkdP-axCqHdpbwWMg-1
-X-Mimecast-MFC-AGG-ID: V1K3RpkdP-axCqHdpbwWMg_1783578406
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-92e8004d60eso331410885a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jul 2026 23:26:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783578406; x=1784183206; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=PuqStaiSbRQsVsWgk7EHZfKWUiW4l5xja6N2MV8cWZ4=;
-        b=XgkZkmniJdT49Xvvo2WGu+fQmmUK77kiPhuL2pQ8+hqZ3N1Jm51ohmIw+F568ghf+J
-         gfzr8ET9Gyp2ZjxrIGtvAQ5doNZTCa4Y19EYXYp6zk9FSUAxLrPmKrKHy3sUdsAdEib0
-         iXVYG3N1Mh4w1cOz5J5dTqTkmgPLlA4V9bWZRPbwPlXplJbDdyvV0dwGbHyO70ccGBxI
-         4wUKdRPZ9TEPEK2orjiaXgBaj2kmYFZc9EJKnJwd28vuFJNY/qCgoBUGhQvBD+C0f/eC
-         R5MhRUcinonuzOIEA1sN2n3jpCWPPZm18xQmTvoY4TBgWEqGYnOO7IH/9ubxIOQu7giH
-         FaDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783578406; x=1784183206;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=PuqStaiSbRQsVsWgk7EHZfKWUiW4l5xja6N2MV8cWZ4=;
-        b=bkOVCU4H8krryN/O39e8gj3kMiXqqyh/vM9UrEl180sxGePtT+/eGL8ttik3DQmQxj
-         8MxdAFjNGtpf1V/VEZKB1RwMHO8aTdlPzpjwEKcCQxnyeLhAFPrH/yPPpqCPHH5uALZa
-         vrktAewocbGaBgR46VTARPGmrpZbb3knN65CVAhIR2h4l2gqqWReo2ptQbIGkHYqEjdA
-         LZtQ7VoiuQ415WjAqBOfIbUlB3T7/QOuk9v2s6RsT5rLobMkuIpPaeV7eqsXGdSraJDL
-         vvlp47QHsAOg3eCDDS7k7fD0EKFOT2f1QFEfeR9ySJrnC+jU2E9adEN1Dlbado2A2y/N
-         t6ng==
-X-Gm-Message-State: AOJu0YwO3ZHxqarKo6Vif3UkREbdsObex3Q+Mp8ZYfJtRtndc1qlQhJS
-	O/c2RDHGZd0/buRigheWxF3nGxD7i8ZkebScJgLYNKZidMCwFU+8/sMl7ZKWuxlq+bkR26Bl2Jq
-	cYmwJSAPWp/e7u9AgWxiavxnYmDMljl0GWyvEl5pJctY+SOiJV/JBEoKK6gflusdKEiseI3gLQd
-	KePkkAwpH40eASJxwcKuKqu6AVZEETT4PhZC3uwbmezNJtOPTT
-X-Gm-Gg: AfdE7cmEEGMUvbTdz/p8YcGx/5TI4uZR4LtZP4IUuXWb4g7fEUi/pkzjerllZu0lryB
-	LnaZUlXfceH30KI7SL/WIt424amLxkCAMFCp85KP/as4aY92qrHGw+m09nfO54lo4HSnYs+Q3J3
-	1b7DFNnhp40eAJtJNGcKtCGfk8RrxGblJOkV3dfhLagUjNykxh7Eb//sUyls0cJZyWBo05m5CWF
-	ADy68GUaEs7Fc6u6HoxK2qtASHfz2M8Wsa/i8BsyMMIxB9L4R2tgoWNmxx2anvYowyjQVWgFUPr
-	w/bmIqt3xwrjJZk/9J0g0hVOStiW7DZFASxZSzaR9wtLn4+7pvVsXPkLxNfFxEdzPvLt5xdm7xo
-	s+6T6apCwKbz2LTgIkE7wgg5dW+QECgvcd4/bu3xZbYEHP++lfo1VwaDcmEy9HugFN317Yx5DSh
-	Qi
-X-Received: by 2002:a05:620a:1d05:b0:92e:6a8d:38ba with SMTP id af79cd13be357-92ecf6c7189mr534435085a.56.1783578406161;
-        Wed, 08 Jul 2026 23:26:46 -0700 (PDT)
-X-Received: by 2002:a05:620a:1d05:b0:92e:6a8d:38ba with SMTP id af79cd13be357-92ecf6c7189mr534431985a.56.1783578405621;
-        Wed, 08 Jul 2026 23:26:45 -0700 (PDT)
-Received: from upstream-xfs-test ([66.187.232.140])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-92e90c92634sm1601832985a.27.2026.07.08.23.26.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 23:26:45 -0700 (PDT)
-From: Ravi Singh <ravising@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: dchinner@redhat.com,
-	bfoster@redhat.com,
-	hch@lst.de,
-	djwong@kernel.org,
-	cem@kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs: punch COW fork delalloc on COW writeback failure
-Date: Thu,  9 Jul 2026 06:26:22 +0000
-Message-ID: <20260709062622.2939412-1-ravising@redhat.com>
-X-Mailer: git-send-email 2.54.0
+	s=arc-20240116; t=1783581238; c=relaxed/simple;
+	bh=R8lVV5vWxQj/RmwYu2B8fvViBt/ERGXV0vxKvH55bO8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NthyrG1oyXVYPC6V7EzB5qgAhvgfopInDPFql3zrOckUu5Q3MUvs2HgpEVJIISJCmVMiR9L5lfiik60B3zS0mK7lzP6XdpJGM9lLPieec+IHfPQ3ahxO6uRFZ3PxPdp1jI0weONwr/J5CPbsWSmWiT1NK62k5Xer8X5vm8CJKtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 69E5C68AFE; Thu,  9 Jul 2026 09:13:52 +0200 (CEST)
+Date: Thu, 9 Jul 2026 09:13:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <kbusch@meta.com>
+Cc: linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	axboe@kernel.dk, jack@suse.cz, brauner@kernel.org, cem@kernel.org,
+	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fs: report direct io constraints through file_getattr
+Message-ID: <20260709071352.GA20180@lst.de>
+References: <20260708011843.1036846-1-kbusch@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260708011843.1036846-1-kbusch@meta.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-When a COW writeback I/O fails, xfs_end_ioend_write() cancels the COW
-fork extents and punches out any overlapping delalloc blocks.  Currently
-the delalloc punch targets XFS_DATA_FORK, but on the error path
-xfs_reflink_end_cow() is never called, so the COW fork extents have not
-been moved to the data fork yet.  Any overlapping delalloc that needs to
-be cleaned up is therefore still in the COW fork.
+On Tue, Jul 07, 2026 at 06:18:43PM -0700, Keith Busch wrote:
+> From: Keith Busch <kbusch@kernel.org>
+> 
+> Memory alignment constraints for direct io can vary depending on the
+> backing storage hardware. Provide support through file_getattr to report
+> the attributes necessary for applications to know how to construct valid
+> read and write requests.
 
-Punching the data fork is incorrect because it can remove delalloc
-reservations that belong to a concurrent buffered write.  In particular,
-the convert_delay path in xfs_buffered_write_iomap_begin() drops the
-ILOCK before calling xfs_bmapi_convert_delalloc(), and a concurrent COW
-writeback failure punching data fork delalloc during this window causes
-xfs_bmapi_convert_one_delalloc() to find the extent missing and trigger
-a WARN_ON_ONCE(whichfork != XFS_COW_FORK).
+This probably wants to be split in one patch for the new UAPI,
+one for the helper and one for each user.
 
-This is the same class of wrong-fork issue fixed by commit f6f91d290c8b
-("xfs: punch delalloc extents from the COW fork for COW writes") for the
-xfs_buffered_write_iomap_end() path.
+And especially the UAPI one needs a much more detailed commit log
+explaining it, including why this duplicates some of the informastion
+already in statx and documenting the semantics for all the fields.
 
-Fix xfs_end_ioend_write() to punch delalloc from XFS_COW_FORK instead
-of XFS_DATA_FORK for IOMAP_IOEND_SHARED ioends.
+Andrey, is there a man page or other official documentation for
+file_setattr/file_getattr?
 
-Fixes: 5ca5916b6bc9 ("xfs: punch out data fork delalloc blocks on COW writeback failure")
-Signed-off-by: Ravi Singh <ravising@redhat.com>
----
- fs/xfs/xfs_aops.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> +/*
+> + * Handle DIO alignment for block devices via fileattr.
+> + */
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 51293b6f331f..8268a3f80398 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -131,11 +131,11 @@ xfs_end_ioend_write(
- 	}
+Maybe note that this purely about the block device constraints,
+and file systems may expose additional ones?
 
- 	/*
--	 * Clean up all COW blocks and underlying data fork delalloc blocks on
--	 * I/O error. The delalloc punch is required because this ioend was
--	 * mapped to blocks in the COW fork and the associated pages are no
--	 * longer dirty. If we don't remove delalloc blocks here, they become
--	 * stale and can corrupt free space accounting on unmount.
-+	 * Clean up COW blocks and COW fork delalloc blocks on I/O error.
-+	 * On the error path xfs_reflink_end_cow() is never called, so the
-+	 * COW fork extents have not been moved to the data fork yet.  Any
-+	 * overlapping delalloc that needs to be cleaned up is therefore
-+	 * still in the COW fork.
- 	 */
- 	error = blk_status_to_errno(ioend->io_bio.bi_status);
- 	if (unlikely(error)) {
-@@ -153,7 +153,7 @@ xfs_end_ioend_write(
- 		if (ioend->io_flags & IOMAP_IOEND_SHARED) {
- 			ASSERT(!is_zoned);
- 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
--			xfs_bmap_punch_delalloc_range(ip, XFS_DATA_FORK, offset,
-+			xfs_bmap_punch_delalloc_range(ip, XFS_COW_FORK, offset,
- 					offset + size, NULL);
- 		}
- 		goto done;
---
-2.39.3
+> +void bdev_fileattr(const struct inode *inode, struct file_kattr *fa)
+> +{
+> +	struct block_device *bdev;
+> +
+> +	memset(fa, 0, sizeof(*fa));
+> +	fa->fsx_valid = true;
+> +	fa->flags_valid = true;
+
+Doing the basic file_kattr initialization here feels dangerous
+if we want to be able to call this from file system implementations.
+I'd rather leave the initialization to the caller.
+
+> +
+> +	bdev = blkdev_get_no_open(inode->i_rdev, false);
+> +	if (!bdev)
+> +		return;
+
+.. and explicitly pass in the block device.  ->i_rdev always is
+i_sb->s_dev, which might not be the relevant backing device, e.g. for XFS
+it could be that or the block device in m_rtdev_targp.
+
+If i_rdev is i_sb->s_dev we can just use sb->s_bdev without needing a new
+open.
+
+> +	fa->fsx_dio_mem_align = bdev_dma_alignment(bdev) + 1;
+> +	fa->fsx_dio_offset_align = bdev_logical_block_size(bdev);
+> +	fa->fsx_dio_read_offset_align = bdev_logical_block_size(bdev);
+> +	fa->fsx_dio_virt_boundary_align = bdev_virt_boundary_alignment(bdev);
+> +	fa->fsx_max_segments = bdev_max_segments(bdev);
+
+How is the max_segments value defined in a way that is meaningful to
+userspace?
+
+> @@ -1005,6 +1006,27 @@ int ext4_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
+>  	if (ext4_has_feature_project(inode->i_sb))
+>  		fa->fsx_projid = from_kprojid(&init_user_ns, ei->i_projid);
+>  
+> +	if (S_ISREG(inode->i_mode)) {
+
+You'll probably want to split this into a helper to keep it easily
+readable.
+
+> +		u32 dio_align = ext4_dio_alignment(inode);
+> +
+> +		if (dio_align != 0) {
+
+
+> +			struct block_device *bdev = inode->i_sb->s_bdev;
+> +
+> +			if (dio_align == 1) {
+> +				fa->fsx_dio_mem_align = bdev_dma_alignment(bdev) + 1;
+> +				fa->fsx_dio_offset_align = bdev_logical_block_size(bdev);
+> +				fa->fsx_dio_read_offset_align = bdev_logical_block_size(bdev);
+> +			} else {
+> +				fa->fsx_dio_mem_align = dio_align;
+> +				fa->fsx_dio_offset_align = dio_align;
+> +				fa->fsx_dio_read_offset_align = dio_align;
+> +			}
+
+Call bdev_fileattr and override the relevant field as needed?
+
+Question to the ext4 maintainers: why does ext4_dio_alignment
+affect the in-memory alignment?  If it does so, it should probably
+also affect the virt boundry alignment..
+
+> +	if (S_ISREG(inode->i_mode)) {
+> +		unsigned int bsize = i_blocksize(inode);
+> +		struct block_device *bdev = inode->i_sb->s_bdev;
+> +
+> +		if (!f2fs_force_buffered_io(inode, WRITE)) {
+
+Same comments as for ext4.  Also f2fs does support multiple devices,
+but I'm not sure how data is placed on them, or if a file can be
+on multiple devices.  We'll need input from the f2fs
+maintainers/contributors here.
+
+> @@ -88,8 +89,12 @@ int vfs_fileattr_get(struct dentry *dentry, struct file_kattr *fa)
+>  	struct inode *inode = d_inode(dentry);
+>  	int error;
+>  
+> -	if (!inode->i_op->fileattr_get)
+> -		return -ENOIOCTLCMD;
+> +	if (!inode->i_op->fileattr_get) {
+> +		if (!S_ISBLK(inode->i_mode))
+> +			return -ENOIOCTLCMD;
+> +		bdev_fileattr(inode, fa);
+> +		return 0;
+
+Don't we also want to fill out the attributes for block devices
+on file systems that provide a ->fileattr_get?.   Also if we fill
+out something, we need the security_inode_file_getattr as well.
+
+>  /**
+> @@ -145,6 +155,8 @@ static int file_attr_to_fileattr(const struct file_attr *fattr,
+>  
+>  	if (fattr->fa_xflags & ~mask)
+>  		return -EINVAL;
+> +	if (fattr->fa_pad)
+> +		return -EINVAL;
+
+How is this related?
+
+> +	if (whichfork == XFS_DATA_FORK && S_ISREG(VFS_I(ip)->i_mode)) {
+
+This probably wants a separate helper.
+
+> +		struct xfs_buftarg *target = xfs_inode_buftarg(ip);
+> +		struct block_device *bdev = target->bt_bdev;
+
+.. and if the generic helpers gets an explicitl bdev we can use it
+here and just override one value for for xfs_is_cow_inode().
+
+> +static inline unsigned int bdev_virt_boundary_alignment(struct block_device *bdev)
+
+Overly long line.
 
