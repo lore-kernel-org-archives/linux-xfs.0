@@ -1,86 +1,38 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5474340E8FE
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 10:40:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82DB1351C02
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 11:00:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783593638; cv=none; b=nW0JBfCmjev5cs9uBKHREYx+nQv/6JjnNW7pHEmjCvdnQFNpDaR1yarwQ4F1iXXGVig8ma1ii+I49N9TLbMGUXlpBZ/KRIaFRyQClbBji4x230v924Bp3Ppq51Yl97Dv4E9FuG7f93Uv9YVJ5mg5pbnqgGwNNvaaWSpspUKFtq0=
+	t=1783594828; cv=none; b=AGnqjfgWNbhk0RhGcc1XtcnXzqs3t+jKf6d182lr7pS1kCpU48RXikCN3uorldHtij4//BBErvXAsP3q7iqKDJFGwmbNN0zLtEBqgcYh3u+yglHCxPrAEOHODVG/guVU+nMYSlWqouF+uWLE7VhOLgMyq/w5qPD/VzlHoEPhb9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783593638; c=relaxed/simple;
-	bh=KOkyf5hIdccqFsYkbaGvv2UJzJTTaV5EHJfb8FZsdWo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Zb1ZPIQGOeHveBWhahQyxFRuf3k/1Xv1w2T31fAhR20kGMPLY54wZUdL4H9BneRQlbyQqmrV/o0dkguhYDZ2g/DEtcflLYZ32FZ6K/aOD//aSz6dOu8eDxsf0m02Cl9hcT+8/9i2eyT+PVkzV2oG+FJp4idZpt0QsTv86QBalRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S7k2HCh2; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=oFv7nhL6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1783594828; c=relaxed/simple;
+	bh=mqyzOAe8ojW0sXIrguNkzp9H0ns6VfH92FyGYfFZa7s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mKQ+la5pFdgXiDiLt1Hf5gqV/7FWmRVrEFh+UbqZnqMTNx+0hD12IRhHmOGDvQIjCv1QGvOsXew6LYW69TrrlhC8QBIFdIpplpysSM09RTmb9HppvxtFblSr/xBNLSZ6Cqp0u90fud3ia9Mxyqr/AHatDq927e/oycIT2TriizM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nvhfxCEJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S7k2HCh2";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="oFv7nhL6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783593636;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=JDXXOZGXzD1jbm8e256OV8Pcd54w4r38xACw+ZjV2Hc=;
-	b=S7k2HCh2SjZbvH58eMX162GY8zgYXM9JmCOlJSMbHqAPaHsRO993UpObJ2GmmAmjztOU+T
-	pECUuKCPk8KvduZzGBPhvEfqqiERUo6Cj3PXw6QVSaklf+qH2n/7qohLNct1c8V9hBpRuM
-	rEOeSJHZXYB864FZ5mzIfUvsPwZ1JxY=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-74-loDdTOWHMiOnkBAygMZJjg-1; Thu, 09 Jul 2026 06:40:35 -0400
-X-MC-Unique: loDdTOWHMiOnkBAygMZJjg-1
-X-Mimecast-MFC-AGG-ID: loDdTOWHMiOnkBAygMZJjg_1783593634
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c891ed872ddso2952903a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Jul 2026 03:40:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783593634; x=1784198434; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=JDXXOZGXzD1jbm8e256OV8Pcd54w4r38xACw+ZjV2Hc=;
-        b=oFv7nhL6NaK6ORYdEiI/Ta9VhHcKxOEI/+NgipdXUdkcn3ef07hPwuFvYWiyqZajwd
-         HYQTg2oPh/2vmrhYnIl7B8nzX1gvaR334QoQjMbGafRvoSnAMf1p6+g5ol2SwpJSISFn
-         FReIFiUTww2ZutRY2A4vlGpvgmBC+B23hYpzjIY8hGyg7eTG4BO6zJBUzoYHP/Mo6/QM
-         TYizxRHSWKWQ/sbuQpVDeHGIJIgOK0ukuTKNyVKDvthvzAE6pzdnGfWlPcm6iewneQhM
-         JcQ2iJCo+W0lSm1W3CN8FSk57sRh/eQHlwqIJvu5s3846YVmzef8t0wfUk7toB00wEuu
-         ELFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783593634; x=1784198434;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JDXXOZGXzD1jbm8e256OV8Pcd54w4r38xACw+ZjV2Hc=;
-        b=JC2Fojxqo0C2WPsXUUZ2csAbfETUaSyi1j13koT4VeOd7rsCTOQ+SmZll/IRQE9Q6u
-         QsxOISI8R0zQfI4slJ3FcZ5CGQrWiYGuy/BjzyAY7N9ToiXRPEzmLWQEtQAowFvhjqP4
-         7rfDshc8Vcfe0S/llVV/SEwoaA0BYWLZ0gz/k0rLhrXjanJc2yF8camjLbRNIcCDY+M0
-         SOx/efs75lekGhW1bVnwDh8parIx6Dk1QNYqpQhjy1IQ6JrxPqtcF23qFgHYz0sGunwM
-         +F3zI8wc9288FhjJNKwlS/NeYOw6zFy+qllxpuh8w3l9ygPxiVY4aiCSfZnnEKhkY1eb
-         6sVA==
-X-Gm-Message-State: AOJu0YwCjWow/lp9UygwaYsT2bqSb4ZYWWRg8DA7kjhgFMPmJuZ+4Ky6
-	0foQMF3sIGKH9kkxC99C4TxuSP8aGe+aijMy1CxZAgOT384jjqWGeiQzhIIeXJZV8QtenL4Id3z
-	Sye5g0XYxBm0g3ri18BRcREaH18wg6clQs4HK90eXny3IuU+xvZ3tqUeuWbcdeGug0QivhmJH7I
-	+NhcPXV9SecMs1DR2X/U12rZaUEGDb7Srpve0CYy+DaUR9hg==
-X-Gm-Gg: AfdE7ckBfLkMZCW0wxjtVLqkUbN0skVFxaiairKmsn7aBL+EUsl4A1P80eVnmTNjw4Z
-	0AAwTxpTGqYGdrkzydu/aGUYwzYLbP39l+OMTX8pnpNgo4HusL9RGy2z3j6D+2YjdCRx7jcAdw4
-	+1G78p7IRO7hbTuVhAZPOllqFvEC63letSkZ3KqPCT3eMdPoh9ybk1ol7sVsPhcMuasm9dXYhAU
-	vO512Vp2bDr+wPs+C6L1Xo+l23d8E+1+ECGsO8gFY4MwFKg3YEzCExGJEnbIFkV0T81uA/jfpGD
-	v3nDcm8udetUYZwUCkH/SSQZUJ93ZhO4Er6PqhDQzUGFhoNUApIwO5KM0tL7Bnfeamrb3VdMtIo
-	cMZAn+rVUoCyV7TDM34ki6B9Gln+ehtOWkUyVzJ7jn2ppNOo=
-X-Received: by 2002:a05:6a21:329e:b0:3bf:d1f9:b1df with SMTP id adf61e73a8af0-3c0bcc241abmr8292384637.54.1783593633890;
-        Thu, 09 Jul 2026 03:40:33 -0700 (PDT)
-X-Received: by 2002:a05:6a21:329e:b0:3bf:d1f9:b1df with SMTP id adf61e73a8af0-3c0bcc241abmr8292341637.54.1783593633360;
-        Thu, 09 Jul 2026 03:40:33 -0700 (PDT)
-Received: from msinguru-thinkpadp1gen4i.bengluru.csb ([115.110.236.142])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13b659d7c8bsm31533656c88.12.2026.07.09.03.40.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2026 03:40:32 -0700 (PDT)
-From: Manognya Singuru <msinguru@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nvhfxCEJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBBEC1F000E9;
+	Thu,  9 Jul 2026 11:00:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783594827;
+	bh=+70x/XAd6Rx5z+fbhIiKYsWLg6ac/BE5nF1dqAa510c=;
+	h=From:To:Cc:Subject:Date;
+	b=nvhfxCEJ0YUYUXDVn4iZvPe7rfytpUMN/EihpFxuuQF9N12I++zx45aaioEnaewvy
+	 HOuddWVnNUQmLqPoky/MaF1FVTLUh6WWflWJn/AH5lBDaFM0whdy3A3HyxtOBpi6dv
+	 pNI1Frij74v5d0MENGsHJiOO9+VTFPvobLA5Ejtjjat88uAupY4i5ButnI8KtZpuKr
+	 oWSU3/hhjjO4/GQZG09knpmRTGJA21AbDD6mctlUymVJZSwFxX1cp7sQc/GtUEAwxE
+	 qshzjnHPv+1sPbhPQMwxolo4kGkHvCzIB+GaDZjseL+7tSAVr8WAoxjMad/r3kqIQR
+	 zsuE0Z5LiOsMg==
+From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
-Cc: aalbersh@redhat.com,
-	Manognya Singuru <msinguru@redhat.com>
-Subject: [PATCH] mdrestore: fix extent length overflow in v2 restore path
-Date: Thu,  9 Jul 2026 16:09:15 +0530
-Message-ID: <20260709103915.275363-1-msinguru@redhat.com>
+Cc: dgc@kernel.org,
+	hch@lst.de,
+	djwong@kernel.org
+Subject: [RFC PATCH] xfs: add new policy guidelines for llm-assisted patches
+Date: Thu,  9 Jul 2026 12:59:56 +0200
+Message-ID: <20260709110006.94905-1-cem@kernel.org>
 X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -90,65 +42,104 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Aisle Research reported that a crafted metadump v2 extent
-length can overflow the signed int used for length,
-leading to incorrect size calculations and a
-potential heap buffer over-read in restore_meta_extent().
+From: Carlos Maiolino <cem@kernel.org>
 
-Change the length type to uint64_t and ensure all size
-arithmetic in 64-bit before converting to size_t for I/O
-calls.
+Hi, this idea came from some observations on the current inflow of patches
+sent to xfs, amount of time we've been spending reviewing patches, lack of
+testing coverage for them and sporadically bollocks patches that make no
+sense or even do not compile.
 
-Signed-off-by: Manognya Singuru <msinguru@redhat.com>
+A talk I had with Dave earlier today made me come up with an INITIAL
+DRAFT of what should IMHO make 'reviewable' any LLM-assisted patch
+submitted to the list.
+
+Most of the information there is also valid for non-LLM assisted code,
+but LLM-assisted code makes these policies exceptionally important
+giving LLMs make the code generation way faster and easier than we have
+time to follow through.
+
+We do have tooling now like Sashiko to help with a gross review of
+patches and some general policies, but none of those tooling/policies
+target xfs specifically so I thought we ought to have a specific policy
+in place, specially regarding testing-coverage as submitting
+LLM-assisted patches also implies the same tooling can be used to create
+fully-functional testing coverage in xfstests.
+
+I'll appreciate your thoughts on this.
+
+Cheers
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
- mdrestore/xfs_mdrestore.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ ...m-assisted-patch-submission-guidelines.rst | 59 +++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
 
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index f10c4bef..9c7f77e0 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -395,11 +395,9 @@ restore_meta_extent(
- 	char		*device,
- 	void		*buf,
- 	uint64_t	offset,
--	int		len)
-+	uint64_t		len)
- {
--	int		io_size;
--
--	io_size = min(len, MDR_IO_BUF_SIZE);
-+	size_t io_size = min(len, MDR_IO_BUF_SIZE);
- 
- 	do {
- 		if (fread(buf, io_size, 1, md_fp) != 1)
-@@ -428,7 +426,7 @@ restore_v2(
- 	int64_t			mb_read = 0;
- 	int64_t			bytes_read;
- 	uint64_t		offset;
--	int			len;
-+	uint64_t			len;
- 
- 	block_buffer = malloc(MDR_IO_BUF_SIZE);
- 	if (block_buffer == NULL)
-@@ -442,7 +440,7 @@ restore_v2(
- 			XME_ADDR_DATA_DEVICE)
- 		fatal("Invalid superblock disk address/length\n");
- 
--	len = BBTOB(be32_to_cpu(xme.xme_len));
-+	len = BBTOB((uint64_t)be32_to_cpu(xme.xme_len));
- 
- 	if (fread(block_buffer, len, 1, md_fp) != 1)
- 		fatal("error reading from metadump file\n");
-@@ -503,7 +501,7 @@ restore_v2(
- 			break;
- 		}
- 
--		len = BBTOB(be32_to_cpu(xme.xme_len));
-+		len = BBTOB((uint64_t)be32_to_cpu(xme.xme_len));
- 
- 		restore_meta_extent(md_fp, fd, device, block_buffer, offset,
- 				len);
+diff --git a/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+new file mode 100644
+index 000000000000..1f7921789988
+--- /dev/null
++++ b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+@@ -0,0 +1,59 @@
++.. SPDX-License-Identifier: GPL-2.0
++.. _xfs_llm_assisted_patch_submission_guidelines:
++
++============================
++XFS LLM-Assisted patch submission guidelines
++============================
++
++Introduction
++============
++
++LLMs are a great tool for improving code quality when well used. But they also
++have been creating a lot of extra workload for developers with the increasing
++patch flow. Requiring much more time with reviewing and testing changes.
++
++Some patches submited fixes obvious bugs and are welcome, while other patches
++being submitted have obviously flaws, create regressions caught by xfstests,
++fixes theoretical bugs that may never be hit in real world (even though are
++worth fixing) and sometimes do not even build.
++
++So the goal of the policies described by this document is two-fold:
++
++	- Increase XFS's code quality ensuring all code modifications are
++	  properly tested and have extra coverage
++	- Reduce developers/maintainers workload with the extra income of
++	  machine-generated patches.
++
++Patch description
++-----------------
++
++Patches description should be carefully trimmed by the patch submitter removing
++all extra and unnecessary data from it.
++LLMs tend to generate extra-long documentation full of unnecessary information
++that won't help neither the reviewer nor anybody looking into the git history
++in the future, and these consumes a lot of time during review.
++It's the patch submitter responsibility to trim it down to a concise, easily
++readable document, removing all the extra unnecessary information from it.
++
++This also helps adding extra guardrails that the patch submitter fully understands
++what the patch is doing without letting the LLM loose.
++
++Patch changes
++-------------
++
++The patch submitter is fully responsible for the changes and must understand what
++the paitch does. And it should be in full agreement with the patch description.
++
++Testing the changes
++---------------
++
++LLM-generated patches should be coupled with a fully-functional xfstests test case
++which exercises the bug being fixed by the patch. This will not only improve testing
++coverage but also provide extra help for reviewers and the maintainer to properly
++review and test the changes being made.
++
++Also, every patch/series submitted must be exercised through xfstests suite
++- at least - through the auto group (and others depending on the change) as a way
++to add extra coverage through the already existing regression cases and help
++reviewers/maintainers through the integration process.
++
 -- 
 2.54.0
 
