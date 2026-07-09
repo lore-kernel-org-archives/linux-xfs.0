@@ -1,91 +1,96 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD6E3DD526
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 07:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30833E6385;
+	Thu,  9 Jul 2026 07:58:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783583779; cv=none; b=cfQWSbnsM6lkR3hgSjtlYUx1JXKR5F5DQJor5UdJX7zgKz4GJmEpTJjmvwcQs/fbOMcrzUitT6N3u7rcO4T+uxflnHzonRwvBzypWTxKP/1Z335h9qxf94Ot3Gs45tcd30xKCyuvPw9xCpB/0QLxtSKpNDEO0AO3GHJ1F5lItfA=
+	t=1783583923; cv=none; b=URwcfb7W5yrkgEHyOqAURu5O5JkKgs0j28Cu3leZyn6igcCR6KPXw1YhPom4msqni/KPeZEwJUAKB0fn6pa4nQJnoatCy7udIk2JOYvteMSVAtYarzTCr6+eoATLjUjrXV4alWNn0v/6qs+w7iQ7ZL0qNlzZrt2JPsSbLwiUZX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783583779; c=relaxed/simple;
-	bh=ZyPkeEjAPTZKBAM2+pdZUg0hudEnqsBm0FoXOORISNQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tGQy8CmcxHeqT4odthNJcuFiN7rxlhXOeH2CBtk5vgKhWs8ECs0/pibOOsgzTF630yA1sACUntz1hC4Nt0b4EisANlos2PeJY0zsZycNFRNTA41bsBei+OPmEdp3l6xfGYK9EgFIX6+GWoukGLKQQKpZB62VFsFlTox1TVSLKbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XWV/3fjI; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1783583923; c=relaxed/simple;
+	bh=zQBi9PjmujlZEokl7lWhFpsdfBtRR5smJhPbDu3EhnE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rn8PJGbPLrIbpC6BsRnUCHiuyx/Twn6wgunuwhu5srH8TD757TO6GPq4hfPPQJKDtuFw3V0EkJ5Pod7s+oOgiL8ddBWfZKh+ZL+NfBX/ufQqfohhMTnmj/N3wOWa3y2LSsMIu6HeZxLxK/LPRigDCIMQvC5Nb2/3Ip/njvxZYgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YvWIoR/Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XWV/3fjI"
-Message-ID: <3bec72fe-c096-4db8-b33c-50846de16f42@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1783583775;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dxjNhaSxR077DomcJkxIfl4/gzaGKkc6ytKBIS5SPmw=;
-	b=XWV/3fjIqN2XHVXej6xwmxBYJZxJGGhuzilD7lIsPi4i3KFUht2X45k74WToi1+AO2ZTbM
-	JPXY8d+aGdYPngnqFPHZcJNZnYFoXdTnDCdriH2xp1Iub9kTkKqWVU1L7qnl0q/UZB799y
-	94kzwgCir3XBZd6Uik5VQervFkAYB9s=
-Date: Thu, 9 Jul 2026 09:55:53 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YvWIoR/Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 408161F000E9;
+	Thu,  9 Jul 2026 07:58:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783583922;
+	bh=1xW3wSzALhpnylvKBiWezOHXl5YI3hvalyi3nH0EXMk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YvWIoR/Zn7VSZwhIoENJ1Ebc/mMuwdXOPO9jlS8TvnQ7Kx4T+18LDqFBdqXvTxSzr
+	 hiumpKyW1/SjgqClEQA3KhQN4zRqAoaULvNKVQL32a/PoNwzBA9xaZTvChiUmwqpDy
+	 DSZnbuCewG2M/ga7C+XjdsD09F+0/U1Fl/vAASWIiXGh/ifWC03GBI1LuKY4mgPmMo
+	 XHcyqzUDNlSQ//o0KqfPi3OmGcZCCLalUzw08t/jpnIYyPBICHZTrhytny5YDBe4PU
+	 qBNWhfv2SYy0I2u1XVtCd7SHxFRRrx3eXTjBLcVzZNme6GDsVpf3JpW0tMaH+wLe+k
+	 qHm6OlBJs5Cow==
+Date: Thu, 9 Jul 2026 17:58:33 +1000
+From: Dave Chinner <dgc@kernel.org>
+To: Ravi Singh <ravising@redhat.com>
+Cc: linux-xfs@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com,
+	hch@lst.de, djwong@kernel.org, cem@kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] xfs: punch COW fork delalloc on COW writeback failure
+Message-ID: <ak9UqRfSB_O7vDVM@dread>
+References: <20260709062622.2939412-1-ravising@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] generic/795: add unaligned boundary test cases for
- WRITE_ZEROES
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, zlang@redhat.com,
- fstests@vger.kernel.org, djwong@kernel.org, yi.zhang@huawei.com,
- linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20260703125422.3110429-1-p.raghav@samsung.com>
- <ca21b3c4-e1df-4ba7-8e9c-5d221337c86b@huaweicloud.com>
- <20260707051015.GA13010@lst.de>
- <e52af771-da66-48e3-a6a0-b0c31dc8b3a9@huaweicloud.com>
- <aafea4b8-8e52-421f-92d6-e15bd7767168@linux.dev>
- <82e2b175-7961-4133-94f6-209f97cbafe7@huaweicloud.com>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <82e2b175-7961-4133-94f6-209f97cbafe7@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260709062622.2939412-1-ravising@redhat.com>
 
-
->>
->> I had a similar question as Christoph. But I will include dirty unwritten
->> test case as well, as ext4 impl may slightly differ.
->>
->> Thanks for the point about the FIEMAP. I will change it to use filefrag.
->>
->> I will send the patches soon.
+On Thu, Jul 09, 2026 at 06:26:22AM +0000, Ravi Singh wrote:
+> When a COW writeback I/O fails, xfs_end_ioend_write() cancels the COW
+> fork extents and punches out any overlapping delalloc blocks.  Currently
+> the delalloc punch targets XFS_DATA_FORK, but on the error path
+> xfs_reflink_end_cow() is never called, so the COW fork extents have not
+> been moved to the data fork yet.  Any overlapping delalloc that needs to
+> be cleaned up is therefore still in the COW fork.
 > 
-> Thank you!
+> Punching the data fork is incorrect because it can remove delalloc
+> reservations that belong to a concurrent buffered write.  In particular,
+> the convert_delay path in xfs_buffered_write_iomap_begin() drops the
+> ILOCK before calling xfs_bmapi_convert_delalloc(), and a concurrent COW
+> writeback failure punching data fork delalloc during this window causes
+> xfs_bmapi_convert_one_delalloc() to find the extent missing and trigger
+> a WARN_ON_ONCE(whichfork != XFS_COW_FORK).
 > 
->>
->> Btw, I tested ext4 and it failed the test. I assume there is a fix on the way for ext4? And did you
->> also test this for bigalloc configuration? I ran into some issues with bigrtalloc (alloc size >
->> block size). I am wondering if you hit a similar issue in ext4 for biglloc configs.
->>
-> 
-> Yes, there are issues in the current ext4 that need to be fixed, and I
-> have already sent out the fixed patch set [1]. I have run several
-> rounds of this test on my machine, including bigalloc scenarios, and
-> everything looks fine by now.
-> 
-> After applying this patch set, does the issue you encountered still
-> exist?
-> 
+> This is the same class of wrong-fork issue fixed by commit f6f91d290c8b
+> ("xfs: punch delalloc extents from the COW fork for COW writes") for the
+> xfs_buffered_write_iomap_end() path.
 
-I still haven't tried your patchset. I tried running this test on upstream 
-kernel and noticed a failure. Then when I saw the ext4 mailing list and there 
-were some discussion already ongoing regarding this issue.
+I know I suggested that punching the wrong fork -might- be the cause
+of the bug you were trying to reproduce after noticing that commit
+reference in your analysis, but I don't think my hypothesis was
+correct.
 
-I can give your patchset a try as well :)
+I've had reason to look at xfs_reflink_cancel_cow_range() very
+closely today, and I think you should, too. i.e. work out what the
+COW fork should contain after it finishes running on the range the
+IO spanned.
 
---
-Pankaj
+Then....
 
+> Fix xfs_end_ioend_write() to punch delalloc from XFS_COW_FORK instead
+> of XFS_DATA_FORK for IOMAP_IOEND_SHARED ioends.
+
+... it should become clear that COW fork doesn't actually contain
+any delalloc extents over the given range after the cancel operation
+returns.
+
+So even if punching the data fork is wrong or triggering some other
+data fork extent manipulation race, replacing it with a cow fork
+punch is not a fix for whatever the underlying issue might be.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+dgc@kernel.org
