@@ -1,77 +1,266 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A40B364943;
-	Thu,  9 Jul 2026 15:24:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0072E7657
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 16:33:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783610663; cv=none; b=jI55J3KIg9zvOFNjgIh1JtFLM5CwHkLQd7yCleKvtDda6HkBtd4drFQdjZSkwhZBupdNBbT/ZDekfRyDYEE8k43VAeKbOZwuZ0W104APFrp9BUShMGrP9no0hLTevWUV6c6Bm5+7JAWijOgL/4pLOGNPzBy8uDIKCS+pWxp0QNQ=
+	t=1783614834; cv=none; b=UBQ0pCjUg36MLc9rGXb1w493VhXoWzcrJJJlI1/LCjQok2wyNpOSVUYR03yFvE+t47YwE0ly3gAQJyKetJHQqAqqFZFlGNxNCokbGavxpyBXUTkuQ3iByEHFoYp/iRbu3Jidp9PyYulm/zNGAKUMXpJO47kdVpmdqoNfLKlV74c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783610663; c=relaxed/simple;
-	bh=5mjdH0IwSgLcKtXeERr+/mIGjtFwhrbdsGq/uiVRLRo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YJ7h1qauP4pMx3z6DTH3QcflJVWPLe11aYmMaF6uJuotJc4o+6/gprjy8q1exrcqxDJOm9WBCZfV7BmnY2nBkeTIPwSsxjLfkF2yYIjjfpp0HdNEbg5V6N4eYPxmG+2fgNfhlVvU/wEeKs5Oozo8+B+McZL1TLMgxaKYxoM2SIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X8X1dAuT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783614834; c=relaxed/simple;
+	bh=kucr5RE5YSb47a2uSXKSjzxF43WI7688Xq7aN70sphY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=O9Z53+A7YH/ddraSwWHuugSSoyYS0wzAkAD3gP+2TY/Y5LAVBKRC2MYCB4zMLYmP9f6fDpeQDKucMXBeSGyQIX42oO9bYsI8kJWGicxso3c7bnAcVv8r0jzHpVNARn5kht+FedkmcnXar8oEZCScR7ipirkB9h8odqzLL8CWtWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O2yHsaeX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X8X1dAuT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 729AF1F00A3D;
-	Thu,  9 Jul 2026 15:24:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O2yHsaeX"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 00DF91F000E9;
+	Thu,  9 Jul 2026 16:33:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783610661;
-	bh=09hgstD4XclulGwtefgitBwx0Obi+sf0BErgBu+x930=;
-	h=From:To:Cc:Subject:Date;
-	b=X8X1dAuTxsuUVWSwRR+tZDWbWknDSzls0V8EpwqtshgnP+XoueSFTjqu7SQyswWgT
-	 UVmhMH5PX6Btb+3jObKe5EoPKvQv2hHUBO2jyCsJFNIUESPNmxshhnrfAwvhA7UIoh
-	 gwc9rQ49QsEdSMQ0q8ii5KxQsi1l5Fu54nt2i4tGGSkBEOVP1p0JX4ftCin5YVYCvn
-	 5KfsZ+6E/w8vLC5U4PFiGExKgPdF9A6nbNhTFXT+f1E5dIwXiLUlVNvuy6pdMEk1qT
-	 o33Io7TGrbwZBJ85fYV5Yi1E4vFZxQqVOxXlWEme9ui50ShcULz6RF0TAFYIB6aoi7
-	 ZglytDdwqEmEQ==
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org,
-	djwong@kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] xfs: fix null pointer dereference in tracepoint
-Date: Thu,  9 Jul 2026 17:24:07 +0200
-Message-ID: <20260709152407.2968448-2-aalbersh@kernel.org>
-X-Mailer: git-send-email 2.54.0
+	s=k20260515; t=1783614833;
+	bh=hkit26ASOIydUP/beKbl0yP0LOkh2GPAh7tk3cBNtVU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=O2yHsaeXcAXp65HSAg9p5eaMwTFsl3IdLNoib4TDb9OdhP7GL+MvXy8iv9xr32/pX
+	 1nJjvmM4VlklQVc7qFsYqNWk48+8BbYOQR2Omt37ipxz1Kq5gKS0Je97las8snHHlV
+	 VIywi2Ky6caqygxU2ndFCMYS78yEFU/I081CryxodMKluIVywgC8WkCadnDnhB4APR
+	 O2mFdR3tzVPH5T95n2CVPIry8IAtPVjp7eSo8GXi1IRM4La3rA/pkzCdf1Lp6XMg8Z
+	 5qvE2/Iz4+womWPUD7QdZQTKxGaLszbIVYd1o2JKC6vwfaybdQ/TgZeNEQ2UZfIQmC
+	 pvpepMn1EgFKw==
+Date: Thu, 9 Jul 2026 09:33:52 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, dgc@kernel.org, hch@lst.de
+Subject: Re: [RFC PATCH] xfs: add new policy guidelines for llm-assisted
+ patches
+Message-ID: <20260709163352.GD15210@frogsfrogsfrogs>
+References: <20260709110006.94905-1-cem@kernel.org>
+ <ab8c9529-103d-4e25-b062-1700544a0bdb@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ab8c9529-103d-4e25-b062-1700544a0bdb@sandeen.net>
 
-If dfp is not NULL we exit early here, when dfp is NULL it's allocated
-in xfs_defer_alloc() but not assigned. The tracepoint tries to
-dereference members of dfp struct.
+On Thu, Jul 09, 2026 at 07:30:41AM -0500, Eric Sandeen wrote:
+> On 7/9/26 6:59 AM, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> > 
+> > Hi, this idea came from some observations on the current inflow of patches
+> > sent to xfs, amount of time we've been spending reviewing patches, lack of
+> > testing coverage for them and sporadically bollocks patches that make no
+> > sense or even do not compile.
+> > 
+> > A talk I had with Dave earlier today made me come up with an INITIAL
+> > DRAFT of what should IMHO make 'reviewable' any LLM-assisted patch
+> > submitted to the list.
+> > 
+> > Most of the information there is also valid for non-LLM assisted code,
+> > but LLM-assisted code makes these policies exceptionally important
+> > giving LLMs make the code generation way faster and easier than we have
+> > time to follow through.
+> > 
+> > We do have tooling now like Sashiko to help with a gross review of
+> > patches and some general policies, but none of those tooling/policies
+> > target xfs specifically so I thought we ought to have a specific policy
+> > in place, specially regarding testing-coverage as submitting
+> > LLM-assisted patches also implies the same tooling can be used to create
+> > fully-functional testing coverage in xfstests.
+> > 
+> > I'll appreciate your thoughts on this.
+> 
+> I like it.
+> 
+> (applying my pedantic liberal arts native English speaker editorial preferences,
+> you can take it or leave it)
+> 
+> > Cheers
+> > 
+> > Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> > ---
+> >  ...m-assisted-patch-submission-guidelines.rst | 59 +++++++++++++++++++
+> >  1 file changed, 59 insertions(+)
+> >  create mode 100644 Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> > 
+> > diff --git a/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> > new file mode 100644
+> > index 000000000000..1f7921789988
+> > --- /dev/null
+> > +++ b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> > @@ -0,0 +1,59 @@
+> > +.. SPDX-License-Identifier: GPL-2.0
+> > +.. _xfs_llm_assisted_patch_submission_guidelines:
+> > +
+> > +============================
+> > +XFS LLM-Assisted patch submission guidelines
+> > +============================
+> > +
+> > +Introduction
+> > +============
+> 
+> > +LLMs are a great tool for improving code quality when well used. But they also
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: <stable@vger.kernel.org> # v6.8
-Fixes: 3f3cec031099c3 ("xfs: force small EFIs for reaping btree extents")
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
+I'd change that to "...when used well."  I dunno if this is a local
+colloquialism but to me "used well" means "used in a beneficial manner"
+whereas "well used" just means "used very much".
 
-Notes:
-    Add Fixes:, Cc: and RvB
+> > +have been creating a lot of extra workload for developers with the increasing
+> 
+> have the potential to create an extra workload for the XFS developer community with
 
- fs/xfs/libxfs/xfs_defer.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+"But the increasing patch flow creates a lot of extra work for the XFS
+developer community." ?
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index c6909716b041..89501e8bd2f8 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -878,7 +878,7 @@ xfs_defer_add_barrier(
- 	if (dfp)
- 		return;
- 
--	xfs_defer_alloc(&tp->t_dfops, &xfs_barrier_defer_type);
-+	dfp = xfs_defer_alloc(&tp->t_dfops, &xfs_barrier_defer_type);
- 
- 	trace_xfs_defer_add_item(tp->t_mountp, dfp, NULL);
- }
--- 
-2.54.0
+> > +patch flow. Requiring much more time with reviewing and testing changes.
+> > +
+> > +Some patches submited fixes obvious bugs and are welcome, while other patches
+> 
+> Some LLM generated patches fix obvious bugs and are welcome, while others
+> have obvious flaws, create regressions caught by xfstests, fix theoretical bugs
+> that may never be hit in the real world, and sometimes do not even build.
 
+I agree.
+
+> > +being submitted have obviously flaws, create regressions caught by xfstests,
+> > +fixes theoretical bugs that may never be hit in real world (even though are
+> > +worth fixing) and sometimes do not even build.
+> > +
+> > +So the goal of the policies described by this document is two-fold:
+> 
+> The goal of the policies described by 
+
+Agree here too.
+
+> > +
+> > +	- Increase XFS's code quality ensuring all code modifications are
+> > +	  properly tested and have extra coverage
+> 
+
+"Increase XFS's code quality by ensuring..." ?
+
+> sufficient coverage?
+
+Yes.
+
+> > +	- Reduce developers/maintainers workload with the extra income of
+> > +	  machine-generated patches.
+> 
+> Reduce developer / maintainer workload with the extra influx of
+
+Hah, I wish I got extra income from all this LOLLM slop. ;)
+
+> > +
+> > +Patch description
+> > +-----------------
+> > +
+> > +Patches description should be carefully trimmed by the patch submitter removing
+> > +all extra and unnecessary data from it.
+> 
+> Patch descriptions should be succinct and clear.
+
+"The patch description should state clearly the specific reasons why the
+change is being made.  It should not be a summary of the changes in the
+diff." ?
+
+> > +LLMs tend to generate extra-long documentation full of unnecessary information
+> > +that won't help neither the reviewer nor anybody looking into the git history
+> 
+> that won't help the reviewer or anyone reading git history in the future, 
+
+(Agree)
+
+> > +in the future, and these consumes a lot of time during review.
+> 
+> and these consume a lot of time during review.
+
+"Reading the unnecessarily wordy documentation consumes too much time
+during reviews." ?
+
+> > +It's the patch submitter responsibility to trim it down to a concise, easily
+> 
+> It's the patch submitter's responsibility to ...
+
+(Agree)
+
+> > +readable document, removing all the extra unnecessary information from it.
+> 
+> Strike "removing all the extra unnecessary information from it" which is extra
+> and unnecessary. ;) 
+
+Yes.
+
+> > + 
+> > +This also helps adding extra guardrails that the patch submitter fully understands
+> > +what the patch is doing without letting the LLM loose.
+> 
+> (this is a little unclear to me)
+
+How about:
+
+"These guidelines are a means for the person submitting the patch to
+demonstrate that they fully understand the changes in the diff.
+Reviewers may ask follow-up questions if they are not convinced of this
+point.  The person submitting the change is always fully responsible for
+those changes."
+
+(and then drop the next section)
+
+> > +
+> > +Patch changes
+
+Do you mean the diff part?
+
+> > +-------------
+> > +
+> > +The patch submitter is fully responsible for the changes and must understand what
+> > +the paitch does. And it should be in full agreement with the patch description.
+
+Don't start a sentence with "And".
+
+I also can't tell what "it" refers to -- does that mean the diff should
+agree with the description?  Or that the submitter themself should?
+
+"The patch diff must match the patch description."
+
+> "patch" - but also not entirely sure what this means or how to better word it.
+> "Patch changes" is a bit of an odd heading. In general I 100% agree with
+> "you, the human, had better understand what the patch is doing before you submit it."
+> > +
+> > +Testing the changes
+> > +---------------
+> > +
+> > +LLM-generated patches should be coupled with a fully-functional xfstests test case
+
+"...should be submitted with..." ?
+
+(also, don't we call it fstests nowadays?)
+
+> > +which exercises the bug being fixed by the patch. This will not only improve testing
+> > +coverage but also provide extra help for reviewers and the maintainer to properly
+> > +review and test the changes being made.
+> 
+> This will also help you, the submitter, have confidence that your patch is doing
+> what you expect it to do.
+
+"...the person submitting the patch..." ?
+
+> > +Also, every patch/series submitted must be exercised through xfstests suite
+> > +- at least - through the auto group (and others depending on the change) as a way
+> > +to add extra coverage through the already existing regression cases and help
+> > +reviewers/maintainers through the integration process.
+
+What about patches to online fsck, in which case the auto group may or
+may not cover it other than incidentally through xfs/28[56]? ;)
+
+How about:
+
+"Every patch submitted must be exercised through the fstests suite
+because good test coverage makes review and maintenance processes
+easier.  Ideally, the change should be exercised by a fstest case in the
+"auto" group, but another group may be more appropriate depending on the
+change."
+
+--D
