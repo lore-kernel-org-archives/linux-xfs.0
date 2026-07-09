@@ -1,181 +1,240 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3A53FCB3A
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 12:02:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783598551; cv=pass; b=S8YhJCzNqhNz0oBGSX6Ec5zL4D+6dJSCCgV5kPmwey0kBOqYs87sM64AdL/nqxJJE9rpl2r78VoADJRw5tcJpfvzGqyWm1dmZ9pwE2yPy16W8bH9QQ4teXaSZsmwEhOrdOPq8vwzqdnRgaIGEs02K72IxVEcRtbFVFkkuqog5M4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783598551; c=relaxed/simple;
-	bh=ri5Y8I53n/fbTrDmRJaZc+MoEb7JWs8yFkilYJlYPmU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UrH6UHvRKf21PqYxIeXm+SfVxhr1CjKnVGZcGvxe57m+7pexT/4HSYx/R66gvg6+IOuJs8iSOv+8UzN4gfZA1FENJNla94TfpD6K/hg/+dEXXGTSsRd2dUzBDOCAz3PIPRnK72Sxarl5EVzRaIcxjGDI0qt0nuHkw7L4boBT1Lo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ElSbnVfi; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ScuAtsjS; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4102423A88
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2026 12:30:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783600245; cv=none; b=iFCOoSq2PELPagXrx1da7apOZwGqNpbvO+f1aj3Qospx99bm2qiru0xp1VwRDhsk62IXyvXY80R5gja+gLt/5iTL9gT/8lyUn/tWLoJRLLG8GqLyelXxX0ohZW4AZN5OT8OT8CDqZC+ChlOceSqkrJS3rs28xmSMRXMg/agy0cY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783600245; c=relaxed/simple;
+	bh=ZSdEEa9C8wyZoDlfkq5emB+B6HJPUg5VG1FSxGoftas=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cwgDmFc9+lqYDBcfuDONvsx4dVHOTfbdPXj5i1uaEy9fDa6Nd8ur4kYwGs2o5N0XakVKsH0WaAbvhOtyIhy8hqrWzXUkr3jGSu7+bF93IyEdFVV5cMN2aAR8eBgLw8WGi2l19eVyj4v9QnvwhhCVKy+h4tTRLaSD7/WeQG/3Fec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=flk6cc4C; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=cOyQC+aL; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ElSbnVfi";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ScuAtsjS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783598543;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=klhrskk2BFrUSOAnaJscRnKKJOGyjkDmCm2PlrUHhiQ=;
-	b=ElSbnVfiH+tbmR3j/WLut6FKCQ/NOkzZi89eLB+a/w7cpytINIGis0H/GHmJcLwg23RIfr
-	Dn0fwkS8PrJTsYc7ShcYtms4VDs11PK4s44HpoImz9uiEumantccF9NAm3bJsL6qUJ6AmQ
-	jH6TpOdysB8EBXkefGiDCDs1L2Klx8E=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-477-zU5g0zGdP7y0qVDfWFu4uw-1; Thu, 09 Jul 2026 08:02:21 -0400
-X-MC-Unique: zU5g0zGdP7y0qVDfWFu4uw-1
-X-Mimecast-MFC-AGG-ID: zU5g0zGdP7y0qVDfWFu4uw_1783598541
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-698b9b2edc8so808784a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Jul 2026 05:02:21 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1783598540; cv=none;
-        d=google.com; s=arc-20260327;
-        b=BAAiLDJ3PfimbKC/7HiFd/L1rprXvhOAIhA0KSfrkyuGydlRjs/6yVWHUXKnTt7tx2
-         qMcWrlWy3aIbv4/xGCSlEG9vCU6l45ZX2z4bJLBaL2f27+MHNTXP3YYjuSSfyx+hwJ5W
-         n6VDLjW9qNlbJ97uVplp3fvdn/EjoJuSskkEfn//OmR4DQF7JTBNPi67gCMt31Q0Gx4s
-         355Hm7rdiL21SZLjIv7XreuBwfU458b29ZL+i+Nc9XX/nhVnj5UorCKfTr0UvmaTu1tv
-         7X93LCXtFdwvVRr6hS8plWxOlMvaeu1JsjCiM+BBBl/YY58JTKA1y4SUuKiQ9DKi2900
-         Uepw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=klhrskk2BFrUSOAnaJscRnKKJOGyjkDmCm2PlrUHhiQ=;
-        fh=7Z7MCb3Q+8zvoRpcQxffAlihjvuHUK3mkfFrB8kzZsY=;
-        b=KHYWPtCPEPKZvGDXuh3m4oC7Y/jpIA23AhMcIGONxO7XFWd98CSDyWOLR5clPB+oCs
-         /X3VbSEmtavKG5uvWCPIFxKtodFwf62vNg67dVeJhc7ZMYMiLMBGqOtx4SwuYh2VpFyV
-         XagXaoGvGxwWz8DaebJzhI1smb9uKSubFGOM3TvewtJduavc3NnIbMvw6NNt7kEzPhky
-         LZt9Bvc7orWNlcQplwUSoa39yif6+o2KEfXf/nzdkoKWEJ68WoqqAQlzYGq1346oZNKf
-         2h82NUpi+9CZ3W4hM+7Z4uJMQ7Nnj70oF6w/UPGWCc0CqbzX6DMvJUdLo8n9Bmv/0iZv
-         NAHQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783598540; x=1784203340; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=klhrskk2BFrUSOAnaJscRnKKJOGyjkDmCm2PlrUHhiQ=;
-        b=ScuAtsjSHG/NYNfXFMF63nsVUyEQEPx6X9Uw+aqQexnf3SuWHAkWhmScmFdVKL2iQ9
-         /lMvzZj4OW7Ej9JLcwekcKVOxaeFHDSbHtWLZ7vd2nKWN0JhL9SFp4ynILiqIOLCk1kN
-         Owf8iFByzy4pY2pRS4SAjruSWKCuM7RilWLuAunMltWHGocMnxK9jazIl/TM/hj8V8oA
-         oRP+EPnv1RdkPo3l/51xH4n8e4wt/PfFEitRg69aoeqpIw78V+hhtNGfXFfMnNNbG4S/
-         iXD0tTILhyJHghpzL83yDX/cU0pMJ5ltmhJgO5Ai8M1n3AWqgPUi0mjMLuCYisfjU49a
-         HIlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783598540; x=1784203340;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=klhrskk2BFrUSOAnaJscRnKKJOGyjkDmCm2PlrUHhiQ=;
-        b=HrAJLEsohmgRbVLtm7blz6UJTpe/gxJQhW1hoixNF6cDCitpa7DOID+Izq7ZHMTftI
-         d3f03dmsWxN4FjLwC4sc5AEjy05WP2di2mNbfD0s8D+I1t/yY6zKvBuiboYxmtGjFRIO
-         +4A3/Bnwook5aJWvLp9h03jwpguDWuPC7Z1t2+1nTFAivk+5xHYD2caPapUqHf6M70ru
-         gbonJoik/2/9nLQ3bpP+rTzJU7/nmpxIstacJiTPIPtgmQQGo3NsjTfvqo1XOzi5Sody
-         CVY4QiwUh9DW4/3lu2FdyfKvPjb5Nb/a+drngKCc7YD4lQs6tytenTPPC4VMpqCNtdF8
-         EGRA==
-X-Gm-Message-State: AOJu0YysTsqgrjrlQ7n+93jIfBVzuX7euKTZZEcaCqcHdhWLxIUgJQOE
-	gJg/ZnXADneceFnjNDINhfFBzgo5XXZyKIRfNXOPKf7w3YRpsw/TqrzpyelAe1bppZTySmO6UZv
-	zT4vXhASnEbwI7q4Q5/4UnrEKhP3s7d2au7rqDtXuLWAcX/vyHu5y4YcLNj/p/gqGSaCz/DvOVF
-	Q/cAsK2ieKiv/vHezHXDlElqRx+aWiaAkdU1Zd
-X-Gm-Gg: AfdE7cng1asL0c4NdDFH/90+ytRlvy/kANHfJs2ost7GCoob6YMi/tTrj3qRiFc+pt1
-	7nphGVdPB/Ew0N4MiVuwTslG2T5cezszmOE4D7d6v7rm06rvDbo7S0gH6AfBxLpKF00ipX6O06x
-	zKAwzvYtc06ehq74LqmCR6xtIoUzDW9YETMh+AkcgKsWWVO8yTJvjXyRajYuU5tw4MBQvOBDHbD
-	uFEMzRCiDAlq0+FPblSUjk67pP/1hHhPxa5yP7saYUZgFAlFD9a8mU=
-X-Received: by 2002:a05:6402:3788:b0:698:3ce6:767f with SMTP id 4fb4d7f45d1cf-69ab445dd6amr2838648a12.12.1783598540419;
-        Thu, 09 Jul 2026 05:02:20 -0700 (PDT)
-X-Received: by 2002:a05:6402:3788:b0:698:3ce6:767f with SMTP id
- 4fb4d7f45d1cf-69ab445dd6amr2838610a12.12.1783598539939; Thu, 09 Jul 2026
- 05:02:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="flk6cc4C";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="cOyQC+aL"
+Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 2591E7A009F;
+	Thu,  9 Jul 2026 08:30:43 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-08.internal (MEProxy); Thu, 09 Jul 2026 08:30:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1783600243;
+	 x=1783686643; bh=f0B0Hc0Za6Qlamb6tXd9r12ImZVSQNOwF5K6/RBulAw=; b=
+	flk6cc4CjSX6ca2TpLIkXhBemw+RKY0FbaCLdHbVKhtSu4DEwhZMvS59sODMBlB2
+	MC+45fmWEJ27llbvKqfZpD/db6iSZCxxvxU8/v0iIRZkkfCGmXfaxRs1x8LzAPIU
+	TBNoekzOwwqC3pajr5Lr5BQRU2f13GA2deV54IGBXmaC79ABs/MB2ENDyypnm07A
+	WIH8tuqYQUqODOkGMc+f05u+tKiSj7RgR8bAXe7lilDBor7EfP0TBHal4UHNQi5d
+	qYZ6bgEvJK9bl41s7uVRlqnaEe10O79nuadER5m/e0JgUkF5piAU2dZELDls297T
+	RonZ1RqtZnqY7CZhNN6qjQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1783600243; x=
+	1783686643; bh=f0B0Hc0Za6Qlamb6tXd9r12ImZVSQNOwF5K6/RBulAw=; b=c
+	OyQC+aLa1Az4vRY+UYT/lcdPbNlLAc/nSs86Pqh4Ex4GWyQfEDuuvQ87sAxUh5rh
+	Dluw/kapX3/aLxyRgTsrhpe2avsBwkrxtRNC18BNtN1vPW/uywAxHUGInoC1N/7F
+	KT+nBvHMVmklqHuQnl1IoddyN12s0g0NyAcWo4hDZ36yw1GovE72kuAbXHb/OaiE
+	OupUkX9GoCnW3Ba/RKM9poaLhdw20VCwC9jEuisjkO69AkCg+Y4427SWA64jXVSw
+	+XgLL0xCCE47f3KOkrsGE1W+x3qagw/WvpmIDvHoafzOKY67IslB5CSxDGw8e/ZD
+	uqa3vlaDUAwCu7HmzLVAQ==
+X-ME-Sender: <xms:cpRPah2lumBYm4Y13YehWFUoSwPDwLJsRgNE6Y_MMqqoIuzVwCCMZw>
+    <xme:cpRPau9BuVe30WZllFPVO8g5LyddX-MrALMG7T57-UpSP_ELCLiLrMu19Go1RRK5W
+    uM7ybMN-NhExddg-o0kj5X3DpqOkY93WWA9Sbt1eiecMKpRmKqo6bo>
+X-ME-Received: <xmr:cpRPaqNfhHjFpqHZXcgpAvy5jIstbI3t5qyvIMtKguc0XyP5iHqEpzOgiDojvQPQvVhJpaZGhVoRk6JnsphvcUSwPNw>
+X-ME-Proxy-Cause: dmFkZTFz3lso744GA7zQ6AI9BOnZSbM6lEFyeZdQsJwpesRsfHwGGy5B7PB2NbmFxu1rT4
+    RJ4sjZaFGqaBvO6xeNX0od2KrBnagL2FuMLzobZ2XZ+OrIR9hL3H32a/jb35WhKUFhNpdb
+    IZTfllyFHkDatR5XXYQ00S+dvS6iqtjkQjyMcLCeDv2sdEzA039bFgYh0LhBO9rktpCYUQ
+    U0GtPFJL1xQuartuAJWawABPIOTmFRvJopTmpFSKlsQ24C+2Ge45qjS7lJ515ILdwXC+XH
+    OZWdW915oosEvcnElnPrluzWEF58mPg7jc8r5ISyeZBeANIvNxA7HxkI1xWfptugaMe1q5
+    sEkV0Z93wwvxScX2wUStrbflQuNEc+Vrx1RtxX+STwUEDXZg0bRHyd94lSDiekTixJuHXA
+    OYlIJlK4Yle2XXKmPTjPTg0gw8fjMfFdFjg2lO7L0xVdISLni23rySWNw2fER9iyrcfR7b
+    HTtlooRLJehMWw/YBvLnMqkP+23JdOl3ldMiP8mjx2KlFwgxlazOu4KQ9qFVbZqxxSk9cK
+    0A750uafhza1nYJquHc9sq0Y6zghvN+E7L0hZ9UUpNd7pz2rqbvHTXO1gRCIerAHSyxe+k
+    yUU5hDqvbQgXiaQlLhPhtCjE4PKLtRflAurBIj32+UTK/8ncJXqTJtYWzRcA
+X-ME-Proxy: <xmx:cpRPaqdULkio1e-EwHTzmftE06Iojs34p7IXfByMqmO3YKCKsBkHOA>
+    <xmx:cpRPahXS0WzkZ1MeGbjrRz2OzvdtqC6rGjeJ01FbyutOM4zrqNXyKw>
+    <xmx:cpRPaqiqbb12swutw_3i9CJcFyiU9pPS0usrqiFuBB43L7tIuFKcXg>
+    <xmx:cpRPao_hHYipAuqyW_NVuvR1sldZtnuyg2n-VmRG2rADl8iCma9wbw>
+    <xmx:cpRPavZpzsfgb7g-zEDwGYNQnOuEdTgU7yeU7skkJHxRnui0ILB0VmdE>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 9 Jul 2026 08:30:42 -0400 (EDT)
+Message-ID: <ab8c9529-103d-4e25-b062-1700544a0bdb@sandeen.net>
+Date: Thu, 9 Jul 2026 07:30:41 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260709062622.2939412-1-ravising@redhat.com> <ak9UqRfSB_O7vDVM@dread>
-In-Reply-To: <ak9UqRfSB_O7vDVM@dread>
-From: Ravi Singh <ravising@redhat.com>
-Date: Thu, 9 Jul 2026 17:32:08 +0530
-X-Gm-Features: AUfX_mwZEQk8JKKKAMSNrn7Grs4IbBwv1IY32hLR0L-jP3Rk0HjGQhM_5z2e7J4
-Message-ID: <CAF-d4OuEMZWeKn1DLA8gCCycb68TMVacUmLDeH2yZivVbbg7Kw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: punch COW fork delalloc on COW writeback failure
-To: Dave Chinner <dgc@kernel.org>
-Cc: linux-xfs@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com, 
-	hch@lst.de, djwong@kernel.org, cem@kernel.org, linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH] xfs: add new policy guidelines for llm-assisted
+ patches
+To: cem@kernel.org, linux-xfs@vger.kernel.org
+Cc: dgc@kernel.org, hch@lst.de, djwong@kernel.org
+References: <20260709110006.94905-1-cem@kernel.org>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20260709110006.94905-1-cem@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jul 9, 2026 at 1:28=E2=80=AFPM Dave Chinner <dgc@kernel.org> wrote:
->
-> On Thu, Jul 09, 2026 at 06:26:22AM +0000, Ravi Singh wrote:
-> > When a COW writeback I/O fails, xfs_end_ioend_write() cancels the COW
-> > fork extents and punches out any overlapping delalloc blocks.  Currentl=
-y
-> > the delalloc punch targets XFS_DATA_FORK, but on the error path
-> > xfs_reflink_end_cow() is never called, so the COW fork extents have not
-> > been moved to the data fork yet.  Any overlapping delalloc that needs t=
-o
-> > be cleaned up is therefore still in the COW fork.
-> >
-> > Punching the data fork is incorrect because it can remove delalloc
-> > reservations that belong to a concurrent buffered write.  In particular=
-,
-> > the convert_delay path in xfs_buffered_write_iomap_begin() drops the
-> > ILOCK before calling xfs_bmapi_convert_delalloc(), and a concurrent COW
-> > writeback failure punching data fork delalloc during this window causes
-> > xfs_bmapi_convert_one_delalloc() to find the extent missing and trigger
-> > a WARN_ON_ONCE(whichfork !=3D XFS_COW_FORK).
-> >
-> > This is the same class of wrong-fork issue fixed by commit f6f91d290c8b
-> > ("xfs: punch delalloc extents from the COW fork for COW writes") for th=
-e
-> > xfs_buffered_write_iomap_end() path.
->
-> I know I suggested that punching the wrong fork -might- be the cause
-> of the bug you were trying to reproduce after noticing that commit
-> reference in your analysis, but I don't think my hypothesis was
-> correct.
->
-> I've had reason to look at xfs_reflink_cancel_cow_range() very
-> closely today, and I think you should, too. i.e. work out what the
-> COW fork should contain after it finishes running on the range the
-> IO spanned.
->
-> Then....
->
-> > Fix xfs_end_ioend_write() to punch delalloc from XFS_COW_FORK instead
-> > of XFS_DATA_FORK for IOMAP_IOEND_SHARED ioends.
->
-> ... it should become clear that COW fork doesn't actually contain
-> any delalloc extents over the given range after the cancel operation
-> returns.
->
-> So even if punching the data fork is wrong or triggering some other
-> data fork extent manipulation race, replacing it with a cow fork
-> punch is not a fix for whatever the underlying issue might be.
->
+On 7/9/26 6:59 AM, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
+> 
+> Hi, this idea came from some observations on the current inflow of patches
+> sent to xfs, amount of time we've been spending reviewing patches, lack of
+> testing coverage for them and sporadically bollocks patches that make no
+> sense or even do not compile.
+> 
+> A talk I had with Dave earlier today made me come up with an INITIAL
+> DRAFT of what should IMHO make 'reviewable' any LLM-assisted patch
+> submitted to the list.
+> 
+> Most of the information there is also valid for non-LLM assisted code,
+> but LLM-assisted code makes these policies exceptionally important
+> giving LLMs make the code generation way faster and easier than we have
+> time to follow through.
+> 
+> We do have tooling now like Sashiko to help with a gross review of
+> patches and some general policies, but none of those tooling/policies
+> target xfs specifically so I thought we ought to have a specific policy
+> in place, specially regarding testing-coverage as submitting
+> LLM-assisted patches also implies the same tooling can be used to create
+> fully-functional testing coverage in xfstests.
+> 
+> I'll appreciate your thoughts on this.
 
-Thanks Dave. You're right I should have looked at
-xfs_reflink_cancel_cow_range() more carefully before posting.
-cancel_cow_blocks() removes both delalloc and real extents from
-the COW fork when cancel_real is true, so there's nothing left in
-the COW fork to punch after it returns.
+I like it.
 
-I'll go back and look at this more closely.
+(applying my pedantic liberal arts native English speaker editorial preferences,
+you can take it or leave it)
 
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> dgc@kernel.org
->
+> Cheers
+> 
+> Signed-off-by: Carlos Maiolino <cem@kernel.org>
+> ---
+>  ...m-assisted-patch-submission-guidelines.rst | 59 +++++++++++++++++++
+>  1 file changed, 59 insertions(+)
+>  create mode 100644 Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> 
+> diff --git a/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> new file mode 100644
+> index 000000000000..1f7921789988
+> --- /dev/null
+> +++ b/Documentation/filesystems/xfs/xfs-llm-assisted-patch-submission-guidelines.rst
+> @@ -0,0 +1,59 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +.. _xfs_llm_assisted_patch_submission_guidelines:
+> +
+> +============================
+> +XFS LLM-Assisted patch submission guidelines
+> +============================
+> +
+> +Introduction
+> +============
+
+> +LLMs are a great tool for improving code quality when well used. But they also
+> +have been creating a lot of extra workload for developers with the increasing
+
+have the potential to create an extra workload for the XFS developer community with
+
+> +patch flow. Requiring much more time with reviewing and testing changes.
+> +
+> +Some patches submited fixes obvious bugs and are welcome, while other patches
+
+Some LLM generated patches fix obvious bugs and are welcome, while others
+have obvious flaws, create regressions caught by xfstests, fix theoretical bugs
+that may never be hit in the real world, and sometimes do not even build.
+
+> +being submitted have obviously flaws, create regressions caught by xfstests,
+> +fixes theoretical bugs that may never be hit in real world (even though are
+> +worth fixing) and sometimes do not even build.
+> +
+> +So the goal of the policies described by this document is two-fold:
+
+The goal of the policies described by 
+
+> +
+> +	- Increase XFS's code quality ensuring all code modifications are
+> +	  properly tested and have extra coverage
+
+sufficient coverage?
+
+> +	- Reduce developers/maintainers workload with the extra income of
+> +	  machine-generated patches.
+
+Reduce developer / maintainer workload with the extra influx of
+
+> +
+> +Patch description
+> +-----------------
+> +
+> +Patches description should be carefully trimmed by the patch submitter removing
+> +all extra and unnecessary data from it.
+
+Patch descriptions should be succinct and clear.
+
+> +LLMs tend to generate extra-long documentation full of unnecessary information
+> +that won't help neither the reviewer nor anybody looking into the git history
+
+that won't help the reviewer or anyone reading git history in the future, 
+
+> +in the future, and these consumes a lot of time during review.
+
+and these consume a lot of time during review.
+
+> +It's the patch submitter responsibility to trim it down to a concise, easily
+
+It's the patch submitter's responsibility to ...
+
+> +readable document, removing all the extra unnecessary information from it.
+
+Strike "removing all the extra unnecessary information from it" which is extra
+and unnecessary. ;) 
+
+> + 
+> +This also helps adding extra guardrails that the patch submitter fully understands
+> +what the patch is doing without letting the LLM loose.
+
+(this is a little unclear to me)
+
+> +
+> +Patch changes
+> +-------------
+> +
+> +The patch submitter is fully responsible for the changes and must understand what
+> +the paitch does. And it should be in full agreement with the patch description.
+
+"patch" - but also not entirely sure what this means or how to better word it.
+"Patch changes" is a bit of an odd heading. In general I 100% agree with
+"you, the human, had better understand what the patch is doing before you submit it."
+
+> +
+> +Testing the changes
+> +---------------
+> +
+> +LLM-generated patches should be coupled with a fully-functional xfstests test case
+> +which exercises the bug being fixed by the patch. This will not only improve testing
+> +coverage but also provide extra help for reviewers and the maintainer to properly
+> +review and test the changes being made.
+
+This will also help you, the submitter, have confidence that your patch is doing
+what you expect it to do.
+
+> +
+> +Also, every patch/series submitted must be exercised through xfstests suite
+> +- at least - through the auto group (and others depending on the change) as a way
+> +to add extra coverage through the already existing regression cases and help
+> +reviewers/maintainers through the integration process.
+> +
 
