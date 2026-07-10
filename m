@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F343C278F;
-	Fri, 10 Jul 2026 08:53:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2673DA5D5;
+	Fri, 10 Jul 2026 08:53:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783673635; cv=none; b=JZbWw4GqDTfzRtIYmLg4V07bdAsBTJfb6HTEnwL8HwKpF48xeMeOpz960vWS0jZdV1K7fKdqSzKwxm0H7m03N4IytSlLGHwuR76idrqBB3idbEBJOyRF88f69nEpkXfkjKRDT83zjDzHpICWnvKGYkNqH7FDWkXbTi1yFxmI03Q=
+	t=1783673639; cv=none; b=IdPwxj5ywEYi1mJYPVtDBiMaysMGmNNGQqdLiscMSPVaZ8mvFcUDDA+THFJ8Po6ZAh5lixnC/zq2EBekzvfNBjl2qfHMULNCBop6e5Lkljrqqqt+SOmRZVBmIJfMAhPu1Ucea1Lnc0HNexfvZbXv3Fve1ek1N9b7QjWOzBCMBTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783673635; c=relaxed/simple;
-	bh=D8pvOb9i84Gt/+h+XnKvul7Yx8ta1LxwPWNa1Y/y9W8=;
+	s=arc-20240116; t=1783673639; c=relaxed/simple;
+	bh=mDosfPzgYC16cJ0LllsDGXsNTYYjFfv6DY7gE1CkfM4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mErl2bqKn04Qk+YSyi4nUPadMW3L/C0+/FSLRerh86I7A4qwkLd0m7TMjNMo8xTjDaDQz6oUnNuN0kJU7Ecn2o2pej4UyIIlI5YvbR1MgmO7aLS6Acq1JoV5zJkQ4dYR8Dpj4cXbhCtFdDMovgVlbLq9YXnRU9iYpVKzYI0X9MM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fOPGIi2q; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=RtnukxMADjU/bf1bO7gHFYQkY8rMtQJHlAsSFKqEiZuE8eOAblCQR0zGM43lgzyYyo91YLIV2a0PhJLMhtQZntoOjrDHc7UuLc5bubQ9eTxz0HS7a0Bsus4CvcQoLjviWWvTHQ4g5cQiH4ClMj+SkEHobsZ22UAL9JkDnq8uerE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i4NhtQ8d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fOPGIi2q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02C9E1F00A3E;
-	Fri, 10 Jul 2026 08:53:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i4NhtQ8d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7A31F000E9;
+	Fri, 10 Jul 2026 08:53:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783673634;
-	bh=wjtx2lzB3uvb4xU+DIuox4Zw+1tx5e8JwgBOS4wBSrM=;
+	s=k20260515; t=1783673637;
+	bh=jo5kGnyg/lTwyLsYWmslZGu/Gmp+gDx1qOE4iRmbEpQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fOPGIi2qT/sDSUu1YE04vKmbro26o2XNX87EpoLSHZ3+O7hcik009cJCb7S5J7fMY
-	 v+rKRa2zqfBXE+UIOFnKDKbZUrntwXpfq415MoxBdLiOsfOyNKhocJCVmwLFLrmjD6
-	 jQ9zwTMbFkrBmSPTJD7b4eO8PJYhs3Il4cvjKC/QcaaDEAfN0zh6Aw/JNaEegHIC7r
-	 2bQL7Juuo2BShXDLOQsfRSu1Tynw5LRMJupkDupzUok7+M4x+TmekBERhqQOxAofBG
-	 /jeU1WsJp1zbEw47ibS360In0xhg7L7SEnY5uDIP6uYKpvJDLgma/1FDaJ4ZQX3AZj
-	 SmVS2/vV6NCYw==
+	b=i4NhtQ8dgLSb2clPBJ6pyZZIG8kVplbYzbikMotAkQZTeawEsy+DMjdi+z/ug04TV
+	 3NmXbu39TrWwWD00k7yWvsbRDqXTJA+W38/wa3tmVIMtrLMnYZBlRVakVEt4hnfVge
+	 hL+W/Bpmj/ZtBWWcCTUpaHf/OkSNjo2YHKjpXK6kZm0Em9rZka3aZ4xZ2LZcxFseSE
+	 P+7Hl/RwGzER1dvRQov23Y0hL6kXbjRLNo0pKAfzsKEsvD3q8OOLRgS1CEk51Wjn3n
+	 9rV1TtB1XVqAEaUIFV8lEpa8zrMspjf2XTJOw+N3mLbCqaB5q7XGvDHEMb9aFA+6UH
+	 3FsHGziw5docw==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v11 10/20] xfs: don't report dio_mem_align and dio_offset_align for fsverity files
-Date: Fri, 10 Jul 2026 10:52:38 +0200
-Message-ID: <20260710085256.3464201-11-aalbersh@kernel.org>
+Subject: [PATCH v11 11/20] xfs: disable direct read path for fs-verity files
+Date: Fri, 10 Jul 2026 10:52:39 +0200
+Message-ID: <20260710085256.3464201-12-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260710085256.3464201-1-aalbersh@kernel.org>
 References: <20260710085256.3464201-1-aalbersh@kernel.org>
@@ -51,38 +51,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Sashiko.dev reported that while fsverity files falls back to the
-buffered IO for Direct I/O, they should not report non-zero values in
-dio_mem_align and dio_offset_align, meaning it's not supported.
+The direct path is not supported on verity files. Attempts to use direct
+I/O path on such files should fall back to buffered I/O path.
 
+Add a fall back to buffered I/O at two place, in a common fast path and
+latter when lock is acquired. The second check prevents TOCTOU issue
+with reading fsverity_active() status and resetting IOCB_DIRECT flag.
+
+If one thread saw fsverity_active() to be false, and then second thread
+acquired XFS_IOLOCK_EXCL and enabled fsverity. The first thread will go
+through the DIO path.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- fs/xfs/xfs_iops.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ fs/xfs/xfs_file.c | 59 +++++++++++++++++++++++++++++++----------------
+ 1 file changed, 39 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 55667cc762f8..70637cdcc299 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -35,6 +35,7 @@
- #include <linux/security.h>
- #include <linux/iversion.h>
- #include <linux/fiemap.h>
-+#include <linux/fsverity.h>
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e3f4353b3b78..cba194d678fc 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -246,6 +246,25 @@ static const struct iomap_dio_ops xfs_dio_read_bounce_ops = {
+ 	.bio_set	= &iomap_ioend_bioset,
+ };
  
- /*
-  * Directories have different lock order w.r.t. mmap_lock compared to regular
-@@ -580,6 +581,10 @@ xfs_report_dioalign(
- 	struct block_device	*bdev = target->bt_bdev;
- 
- 	stat->result_mask |= STATX_DIOALIGN | STATX_DIO_READ_ALIGN;
++STATIC ssize_t
++xfs_file_buffered_read(
++	struct kiocb		*iocb,
++	struct iov_iter		*to)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
++	ssize_t			ret;
 +
-+	if (fsverity_active(VFS_I(ip)))
-+		return;
++	trace_xfs_file_buffered_read(iocb, to);
 +
- 	stat->dio_mem_align = bdev_dma_alignment(bdev) + 1;
++	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
++	if (ret)
++		return ret;
++	ret = generic_file_read_iter(iocb, to);
++	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++
++	return ret;
++}
++
+ STATIC ssize_t
+ xfs_file_dio_read(
+ 	struct kiocb		*iocb,
+@@ -266,6 +285,16 @@ xfs_file_dio_read(
+ 	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
+ 	if (ret)
+ 		return ret;
++	/*
++	 * Re-check verity status after acquiring lock. This prevents TOCTOU in
++	 * xfs_file_read_iter() while falling back from DIO to buffered I/O as
++	 * now we are holding a lock
++	 */
++	if (fsverity_active(VFS_I(ip))) {
++		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++		iocb->ki_flags &= ~IOCB_DIRECT;
++		return xfs_file_buffered_read(iocb, to);
++	}
+ 	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+ 		dio_ops = &xfs_dio_read_bounce_ops;
+ 		dio_flags |= IOMAP_DIO_BOUNCE;
+@@ -282,7 +311,8 @@ xfs_file_dax_read(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*to)
+ {
+-	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
++	struct inode		*inode = iocb->ki_filp->f_mapping->host;
++	struct xfs_inode	*ip = XFS_I(inode);
+ 	ssize_t			ret = 0;
  
- 	/*
+ 	trace_xfs_file_dax_read(iocb, to);
+@@ -300,25 +330,6 @@ xfs_file_dax_read(
+ 	return ret;
+ }
+ 
+-STATIC ssize_t
+-xfs_file_buffered_read(
+-	struct kiocb		*iocb,
+-	struct iov_iter		*to)
+-{
+-	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+-	ssize_t			ret;
+-
+-	trace_xfs_file_buffered_read(iocb, to);
+-
+-	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
+-	if (ret)
+-		return ret;
+-	ret = generic_file_read_iter(iocb, to);
+-	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-
+-	return ret;
+-}
+-
+ STATIC ssize_t
+ xfs_file_read_iter(
+ 	struct kiocb		*iocb,
+@@ -333,6 +344,14 @@ xfs_file_read_iter(
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
++	/*
++	 * In case fs-verity is enabled, we also fallback to the buffered read
++	 * from the direct read path. Therefore, IOCB_DIRECT is set and need to
++	 * be cleared (see generic_file_read_iter())
++	 */
++	if (fsverity_active(inode))
++		iocb->ki_flags &= ~IOCB_DIRECT;
++
+ 	if (IS_DAX(inode))
+ 		ret = xfs_file_dax_read(iocb, to);
+ 	else if (iocb->ki_flags & IOCB_DIRECT)
 -- 
 2.54.0
 
