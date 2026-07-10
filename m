@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5AF823DE;
-	Fri, 10 Jul 2026 08:53:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 122BE27E07E;
+	Fri, 10 Jul 2026 08:53:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783673612; cv=none; b=Vyn2zSpmV2cVujNBtozTwzOiaa7s0lRR+cuKZSIojtLpxmy+w+iRlOBfP4xPD/O7g5xfjEXSl+x63epS4KYRB/GVOlMqq7dRHtUrdExLrw5FeOLzU/HTVnH/+1y4vKTf6Pe8rUKEat+rrdNmJebSa1obvWkzfjxFRDcZYVQhlnY=
+	t=1783673615; cv=none; b=B6kR0K7Oauxg30Ntk8/IjEs7b23ZrjoJYNvMGnJFSgiES4FpmA+ynyYnJ0jhrhvXa59i+M+C+LpJ6dBqBGA4rATXGdPHzgkCf86mg9j249byd4sQiOCSUgpQrpksYDztNTGgq8RKn2yE0mCFOIzrTgeipQJ5hJ96jmqrFP562P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783673612; c=relaxed/simple;
-	bh=koL5JEzCiRkG/G3J5KeYw/fhC7PQNkfGJUXQmn9MaK8=;
+	s=arc-20240116; t=1783673615; c=relaxed/simple;
+	bh=XL3o9W2kzR+eqNV9dmhcwvOuPQyNlCR3vYBSO9JDnVg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uK8p2yLm2NtsN+ml8YX4epMuSp+jJ73r61wjB/OxRif4Va2O4aLIWgZMK9ttvItlwHIE4oakFEVQbKPkdHIR7Qd4JGSEWvFY8sh7SGND1yYw7R7HT9ASC9qwpawnnoyp0Q3+SSoUx6dwHk8287JEtQ5T2Om6uHlEcXiCfQ/H++I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RNC3rkF8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=XO3Ak/3CZ3YBqIfOuQH8bBPIzkoOj+R9xOLdjZsaQyTeDtYOleTzc4tT+78H6F5sBm1e0cQ+kJOWomStvKnzvhPZAq4V/ok1mWJC/kK3FIEv35z7RPoSvsMiWS/+fzXsf5ddflYPfiUyyBhiZcpyAmwiyzJWBq62jqXZ4j4D8hE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5YR2yXm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RNC3rkF8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 553911F00A3E;
-	Fri, 10 Jul 2026 08:53:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5YR2yXm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 566E01F000E9;
+	Fri, 10 Jul 2026 08:53:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783673610;
-	bh=IA66KD2Om75bu0eBgUIzf65HS6s2gELQcRJU2+ySoSU=;
+	s=k20260515; t=1783673613;
+	bh=i0Rsh4cPeB/WILyk3ZVofd79y/gOW8f0+5qtEc82UTk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RNC3rkF8UG7ABgkdWzv8/LtMKC4JTUExVsuNpNG/Hbfltr8EnUovjtc5gBXr0ReRU
-	 Y8S4VAZcv+fS4FD2COYtTrMuWsR7CdB73+RYBUBhp3VDzl059aq4cqHf7ME4kIbwFx
-	 b0EvVZzm1pr+nzQvqQAoryl8HVL806xHrvacypKFXQfvUt5kcgXcC6GrYvZ2ovIhEm
-	 BMmCffnXUYVu+cUFrH9dLdadlKSixDa5ca1q9T/qSgIK94CLXAyuQPKKo4s/9Rc9pJ
-	 zop8z29sQ9Ii3L5ESbfz825gP+oARsEy/tLn/KlH8EJQqHLGcMq90uwCyMRUkSAvWC
-	 zgy9Ba1BpfiLA==
+	b=a5YR2yXm/5RdQGcb4HriaonTtFe8f/XAGOjh7oyksYL8E3mj/s2tX5c1balxcGn1q
+	 2iqag8RwGw8YR179ktaTo9gqE1h1nUqw7UHez7WrxoP0MHbaeGhRmxWN3W27kG7f/x
+	 /MPWSKH6e6Okip85hRlEdIm2zuz9IFBB3ZI26FMPjRNmSP0z11h28h+m2Z8yce+5DE
+	 u4eBwqk0PL/3uIYDharmjps6BElhiGrUGs3z4V8X5Ydu4PStzV2PPRs0Kb7BtWy5Po
+	 ZG/Dr7V7bDSZL8jQvJu2d/rcN2FCsdIE1o82p/Q5XiLBpuWawJjNPpzckJWJ8AbCqV
+	 E3GSBDi60FNyg==
 From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
 	fsverity@lists.linux.dev,
@@ -37,9 +37,9 @@ Cc: Andrey Albershteyn <aalbersh@kernel.org>,
 	linux-f2fs-devel@lists.sourceforge.net,
 	linux-btrfs@vger.kernel.org,
 	djwong@kernel.org
-Subject: [PATCH v11 02/20] fsverity: expose ensure_fsverity_info()
-Date: Fri, 10 Jul 2026 10:52:30 +0200
-Message-ID: <20260710085256.3464201-3-aalbersh@kernel.org>
+Subject: [PATCH v11 03/20] fsverity: pass digest size and hash of the all-zeroes block to ->write
+Date: Fri, 10 Jul 2026 10:52:31 +0200
+Message-ID: <20260710085256.3464201-4-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260710085256.3464201-1-aalbersh@kernel.org>
 References: <20260710085256.3464201-1-aalbersh@kernel.org>
@@ -51,76 +51,111 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This function will be used by XFS's scrub to force fsverity activation,
-therefore, to read fsverity context.
+Let filesystem iterate over hashes in the block and check if these are
+hashes of zeroed data blocks. XFS will use this to decide if it want to
+store tree block full of these hashes.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Acked-by: Eric Biggers <ebiggers@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Acked-by: Eric Biggers <ebiggers@kernel.org>
 ---
- fs/verity/open.c         | 22 ++++++++++++++++++++--
- include/linux/fsverity.h |  2 ++
- 2 files changed, 22 insertions(+), 2 deletions(-)
+ fs/btrfs/verity.c        | 6 +++++-
+ fs/ext4/verity.c         | 4 +++-
+ fs/f2fs/verity.c         | 4 +++-
+ fs/verity/enable.c       | 4 +++-
+ include/linux/fsverity.h | 6 +++++-
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/fs/verity/open.c b/fs/verity/open.c
-index d0c56a7faa3b..875e8850ccba 100644
---- a/fs/verity/open.c
-+++ b/fs/verity/open.c
-@@ -347,7 +347,24 @@ int fsverity_get_descriptor(struct inode *inode,
- 	return 0;
- }
- 
--static int ensure_verity_info(struct inode *inode)
-+/**
-+ * fsverity_ensure_verity_info() - cache verity info if it's not already cached
-+ * @inode: the inode for which verity info should be cached
-+ *
-+ * Ensure this inode has verity info attached to it, it's assumed the inode
-+ * already has fsverity enabled. Read fsverity descriptor and creates verity
-+ * based on that.
-+ *
-+ * This needs to be called at least once before any of the inode's data
-+ * can be verified (and thus read at all) or the inode's fsverity digest
-+ * retrieved.  fsverity_file_open() calls this already, which handles
-+ * normal file accesses.  If a filesystem does any internal (i.e. not
-+ * associated with a file descriptor) reads of the file's data or
-+ * fsverity digest, it must call this explicitly before doing so.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+int fsverity_ensure_verity_info(struct inode *inode)
+diff --git a/fs/btrfs/verity.c b/fs/btrfs/verity.c
+index 983365a73541..bd79e343ae23 100644
+--- a/fs/btrfs/verity.c
++++ b/fs/btrfs/verity.c
+@@ -773,11 +773,15 @@ static struct page *btrfs_read_merkle_tree_page(struct inode *inode,
+  * @buf:	Merkle tree block to write
+  * @pos:	the position of the block in the Merkle tree (in bytes)
+  * @size:	the Merkle tree block size (in bytes)
++ * @zero_digest:	the hash of the all-zeroes block
++ * @digest_size:	size of zero_digest, in bytes
+  *
+  * Returns 0 on success or negative error code on failure
+  */
+ static int btrfs_write_merkle_tree_block(struct file *file, const void *buf,
+-					 u64 pos, unsigned int size)
++					 u64 pos, unsigned int size,
++					 const u8 *zero_digest,
++					 unsigned int digest_size)
  {
- 	struct fsverity_info *vi = fsverity_get_info(inode), *found;
- 	struct fsverity_descriptor *desc;
-@@ -383,12 +400,13 @@ static int ensure_verity_info(struct inode *inode)
- 	kfree(desc);
- 	return err;
+ 	struct inode *inode = file_inode(file);
+ 	loff_t merkle_pos = merkle_file_pos(inode);
+diff --git a/fs/ext4/verity.c b/fs/ext4/verity.c
+index ca61da53f313..347945ac23a4 100644
+--- a/fs/ext4/verity.c
++++ b/fs/ext4/verity.c
+@@ -374,7 +374,9 @@ static void ext4_readahead_merkle_tree(struct inode *inode, pgoff_t index,
  }
-+EXPORT_SYMBOL_GPL(fsverity_ensure_verity_info);
  
- int __fsverity_file_open(struct inode *inode, struct file *filp)
+ static int ext4_write_merkle_tree_block(struct file *file, const void *buf,
+-					u64 pos, unsigned int size)
++					u64 pos, unsigned int size,
++					const u8 *zero_digest,
++					unsigned int digest_size)
  {
- 	if (filp->f_mode & FMODE_WRITE)
- 		return -EPERM;
--	return ensure_verity_info(inode);
-+	return fsverity_ensure_verity_info(inode);
- }
- EXPORT_SYMBOL_GPL(__fsverity_file_open);
+ 	pos += ext4_verity_metadata_pos(file_inode(file));
  
+diff --git a/fs/f2fs/verity.c b/fs/f2fs/verity.c
+index 39f482515445..cc4158fc841d 100644
+--- a/fs/f2fs/verity.c
++++ b/fs/f2fs/verity.c
+@@ -272,7 +272,9 @@ static void f2fs_readahead_merkle_tree(struct inode *inode, pgoff_t index,
+ }
+ 
+ static int f2fs_write_merkle_tree_block(struct file *file, const void *buf,
+-					u64 pos, unsigned int size)
++					u64 pos, unsigned int size,
++					const u8 *zero_digest,
++					unsigned int digest_size)
+ {
+ 	pos += f2fs_verity_metadata_pos(file_inode(file));
+ 
+diff --git a/fs/verity/enable.c b/fs/verity/enable.c
+index 42dfed1ce0ce..ad4ff71d7dd9 100644
+--- a/fs/verity/enable.c
++++ b/fs/verity/enable.c
+@@ -50,7 +50,9 @@ static int write_merkle_tree_block(struct file *file, const u8 *buf,
+ 	int err;
+ 
+ 	err = inode->i_sb->s_vop->write_merkle_tree_block(file, buf, pos,
+-							  params->block_size);
++							  params->block_size,
++							  params->zero_digest,
++							  params->digest_size);
+ 	if (err)
+ 		fsverity_err(inode, "Error %d writing Merkle tree block %lu",
+ 			     err, index);
 diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index 6c467ded9751..3c3250f6f272 100644
+index 3c3250f6f272..9e7d946676b9 100644
 --- a/include/linux/fsverity.h
 +++ b/include/linux/fsverity.h
-@@ -317,6 +317,8 @@ static inline int fsverity_file_open(struct inode *inode, struct file *filp)
- 	return 0;
- }
+@@ -124,6 +124,8 @@ struct fsverity_operations {
+ 	 * @buf: the Merkle tree block to write
+ 	 * @pos: the position of the block in the Merkle tree (in bytes)
+ 	 * @size: the Merkle tree block size (in bytes)
++	 * @zero_digest: the hash of the all-zeroes block
++	 * @digest_size: size of zero_digest, in bytes
+ 	 *
+ 	 * This is only called between ->begin_enable_verity() and
+ 	 * ->end_enable_verity().
+@@ -131,7 +133,9 @@ struct fsverity_operations {
+ 	 * Return: 0 on success, -errno on failure
+ 	 */
+ 	int (*write_merkle_tree_block)(struct file *file, const void *buf,
+-				       u64 pos, unsigned int size);
++				       u64 pos, unsigned int size,
++				       const u8 *zero_digest,
++				       unsigned int digest_size);
+ };
  
-+int fsverity_ensure_verity_info(struct inode *inode);
-+
- void fsverity_cleanup_inode(struct inode *inode);
- 
- struct page *generic_read_merkle_tree_page(struct inode *inode, pgoff_t index);
+ #ifdef CONFIG_FS_VERITY
 -- 
 2.54.0
 
