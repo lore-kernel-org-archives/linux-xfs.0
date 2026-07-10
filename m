@@ -1,52 +1,46 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED83376BFB;
-	Fri, 10 Jul 2026 18:03:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B65D23BB104;
+	Fri, 10 Jul 2026 21:21:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783706600; cv=none; b=RfOntIWhwNC15co8bw7YHuqRYYjU/V0GpZsc/mYGentNtpd9YRG2oilUQYIh7lHHw71PgpquRaetCs8DhRuWQgxOx/4ClJAQJ+Kyao/xC6ThyuvxfBX7BGOfmrFWz2sl4/gFZytbCUsNU4HhhruVmZWX/T/wNfgjfk+ZI0BzkAc=
+	t=1783718462; cv=none; b=qU6dZFIpjBEG7kY8lS33MP73BJRumHyPta34kbPZjECjJUNVeryaGcCp7axIaNT8hFhaP7xQXiO8QHDvhbFYbXlXn/39eqVbffjRMoqXnbGOuZr3XE4yI8x6n/bsTyj9Xv2YVOPVZQBEdiK4IPX8ohsKYQepiBqICR9Kf7f1m+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783706600; c=relaxed/simple;
-	bh=jQ2ENi7efQIv9R2EbZKSeryq1m1JjIZToHHAmccFRis=;
+	s=arc-20240116; t=1783718462; c=relaxed/simple;
+	bh=Yu7FaItOyQ97Y3H+g+6UdGzrpiu9kbL3S+vFEvpdqxI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QOljFmmquBzBSPffiC7GdzzlwQ9D4QdfFzxqSFc/cqHYpNZmAIf9fTiJ68oiVzemZJFbJOAOvEjUgzxfEpbdYUzDmPjC5n9yeNvys1WT/55fuEgRa6BYhK62/vHqeb3Qt0mtuYGzS+R5uSeHSqgR42ZI3LcFKKpaTBEcHLfawXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vrVhH6CZ; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=qUDp+K5l/HaSYtiQMaISSUv2LIhB1dP8YeE6ZEuvuqfMohCCKEDwDKPCtxSH0SL5QNQLWtMVBany89HZAW5ljhtMS/nDsHGH2YBu6L0SEqpUJ5swMdnOFkt+RWR6UfjF4u7Jx5WutYQlrwHKE2CDSVaP1Dw0JyS/3Ox8aZAnzjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KvOgHlBC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vrVhH6CZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=aavlYHK65oZ9/GvkqG4vhVx7lYGAHZXQDwnk4WMg/dU=; b=vrVhH6CZ43iMT+yYcxyiUFLLu7
-	6n+lRXruBnU93GSLongig8SFlKm3AgZwxoDzqo0wCFEhLVi87OcdBvy8aEyLkK6uObGGpp63VQwi0
-	hSuIpfQAUdKbz4EsnK6t5wjQvkQ/25WKWlk+JecIt/nOtDbO71fPl9LF/Y/NWdanurlhHNyyBxsjK
-	XSgbg9xirVLA2JFSb6mTgsgwyUUGEvEy/Tq4u2cqbUgu7cHfzICrLfyLQIGbF4vEvE/JodppgC3p9
-	nGpQPd0upaeQCTcahdsyxydddO8e2FVnQstNr/bwE9fIu3MRbNdbcIipOiQ0Iglr3voabEDxdG1xk
-	h5/yoyDA==;
-Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wiFZA-00000007b0h-2b7J;
-	Fri, 10 Jul 2026 18:03:12 +0000
-Date: Fri, 10 Jul 2026 19:03:12 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Salvatore Dipietro <dipiets@amazon.it>
-Cc: linux-mm@kvack.org, hch@infradead.org, ritesh.list@gmail.com,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KvOgHlBC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08441F00A3A;
+	Fri, 10 Jul 2026 21:21:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783718461;
+	bh=5BQm0+FF2Y11s+9pd0PZFqqp7gSzrclRG7lcSdtnYbk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=KvOgHlBCxTMds7JGf88d1FDy0YLjxJWrUGe88FDcoMMVE9ACDdP836QVj9SdrDLaH
+	 9oUVKLK6vXnvpxnivKL9c6lrKEiPWPpdbMBJZPqEeKxpqwG/8BAWbw7nVEXp+KPTOX
+	 eoAFUhz46f8RgCfAXENpOQlQNb1JLoeB4yEBoMpc13GxbJGSN2zDQUzRE1NhB6942E
+	 ofjSvALajEVdj5j4mr5F0fZpHsGbErhJ3tLVtzm15rlBKvdS9gBbV2Va18Le0QcA1i
+	 xxPB08sFruQQkl7l26toezxuDsEf5GWHmXZRKwawskj8LrmxLPaV01HDJDMS1xGgEM
+	 vCYHjd3jA1Gxw==
+Date: Fri, 10 Jul 2026 17:20:58 -0400
+From: Eric Biggers <ebiggers@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	dgc@kernel.org, vbabka@suse.cz, djwong@kernel.org,
-	brauner@kernel.org, alisaidi@amazon.com, blakgeof@amazon.com,
-	abuehaze@amazon.com, dipietro.salvatore@gmail.com,
-	stable@vger.kernel.org, Vlastimil Babka <vbabka@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>,
-	Brendan Jackman <jackmanb@google.com>,
-	Johannes Weiner <hannes@cmpxchg.org>, Zi Yan <ziy@nvidia.com>
-Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly
- __GFP_NORETRY allocations
-Message-ID: <alEz4Chf7Ibyg-ZG@casper.infradead.org>
-References: <20260710143437.12379-1-dipiets@amazon.it>
+	axboe@kernel.dk, brauner@kernel.org, cem@kernel.org,
+	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH] fs: report direct io constraints through file_getattr
+Message-ID: <20260710212058.GA1911@quark>
+References: <20260708011843.1036846-1-kbusch@meta.com>
+ <20260709071352.GA20180@lst.de>
+ <neamg3phll7hjwd765ddtqebtxasdvkoskff75dqzmgzv2xy5i@mf4agr6yoizn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,55 +49,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260710143437.12379-1-dipiets@amazon.it>
+In-Reply-To: <neamg3phll7hjwd765ddtqebtxasdvkoskff75dqzmgzv2xy5i@mf4agr6yoizn>
 
-On Fri, Jul 10, 2026 at 02:34:37PM +0000, Salvatore Dipietro wrote:
-> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
-> introduced high-order folio allocations in the iomap buffered write
-> path.
+On Thu, Jul 09, 2026 at 11:14:47AM +0200, Jan Kara wrote:
+> On Thu 09-07-26 09:13:52, Christoph Hellwig wrote:
+> > On Tue, Jul 07, 2026 at 06:18:43PM -0700, Keith Busch wrote:
+> > > +		u32 dio_align = ext4_dio_alignment(inode);
+> > > +
+> > > +		if (dio_align != 0) {
+> > 
+> > 
+> > > +			struct block_device *bdev = inode->i_sb->s_bdev;
+> > > +
+> > > +			if (dio_align == 1) {
+> > > +				fa->fsx_dio_mem_align = bdev_dma_alignment(bdev) + 1;
+> > > +				fa->fsx_dio_offset_align = bdev_logical_block_size(bdev);
+> > > +				fa->fsx_dio_read_offset_align = bdev_logical_block_size(bdev);
+> > > +			} else {
+> > > +				fa->fsx_dio_mem_align = dio_align;
+> > > +				fa->fsx_dio_offset_align = dio_align;
+> > > +				fa->fsx_dio_read_offset_align = dio_align;
+> > > +			}
+> > 
+> > Call bdev_fileattr and override the relevant field as needed?
+> > 
+> > Question to the ext4 maintainers: why does ext4_dio_alignment
+> > affect the in-memory alignment?  If it does so, it should probably
+> > also affect the virt boundry alignment..
+> 
+> I guess that is mostly a historical accident. ext4_dio_alignment() returns
+> 1 (iomap alignment is used and that's different for memory and file offset
+> alignment), 0 (dio not supported, memory and file offset alignment is
+> indeed the same), and blocksize (a special case which can happen for
+> fscrypt if it supports dio and where I believe memory alignment
+> requirements may be in fact different). I'm adding Eric to CC to answer
+> what actual requirements fscrypt has for memory buffers for direct IO. I'd
+> expect with inline encryption we would have the same requirements as
+> ordinary iomap direct IO and for other code paths I'm not sure... Eric?
 
-https://lore.kernel.org/linux-mm/aeZzP6iQel-tkZOu@casper.infradead.org/
+Please see Documentation/filesystems/fscrypt.rst:
 
-I just had a go at implementing what I thought might be the right design
-(having a folio_alloc_orders(min, max, gfp)), but that's not really what
-__filemap_get_folio_mpol() wants because it needs to integrate the actual
-adding of folios to the page cache into the retry loop.
+    The I/O request must be fully aligned to the filesystem block size.
+    This means that the file position the I/O is targeting, the lengths
+    of all I/O segments, and the memory addresses of all I/O buffers
+    must be multiples of this value.  Note that the filesystem block
+    size may be greater than the logical block size of the block device.
 
-So instead, let's try this.  The idea is that we want to try direct reclaim
-_twice_.  Once gently (ie with NORETRY specified) when we're trying to
-allocate the maximum order folio.  But now that we've tried that once,
-there's no point trying direct reclaim for other sizes, we just want to
-ask the page allocator if it can give us memory of any subsequent size.
+We go over this about once a year, whenever someone suggests that the
+memory alignment requirement is not needed.  blk-crypto-fallback needs
+it, the block layer itself needs it, and at least some storage drivers
+need it.
 
-Until we come to the minimum order.  Then we want to try exactly as hard
-as we were originally asked to try.  So revert to the original gfp flags
-and don't set the NOWARN or NORETRY flags.
+To support less memory alignment, we'd need to:
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 58eb9d240643..23eecaf9b328 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1983,6 +1983,7 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
- 	if (!folio && (fgp_flags & FGP_CREAT)) {
- 		unsigned int min_order = mapping_min_folio_order(mapping);
- 		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
-+		gfp_t alloc_gfp = gfp | __GFP_NORETRY | __GFP_NOWARN;
- 		int err;
- 		index = mapping_align_index(mapping, index);
- 
-@@ -2004,12 +2005,11 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
- 			order = __ffs(index);
- 
- 		do {
--			gfp_t alloc_gfp = gfp;
--
- 			err = -ENOMEM;
--			if (order > min_order)
--				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
-+			if (order == min_order)
-+				alloc_gfp = gfp;
- 			folio = filemap_alloc_folio(alloc_gfp, order, policy);
-+			alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
- 			if (!folio)
- 				continue;
- 
+   - Make some fairly complex updates to blk-crypto-fallback to support
+     en/decrypting data units split across pages.  Note that there's no
+     way to do this with zero overhead on other requests.
+
+   - Update the block layer to not split crypto data units across bvecs,
+     regardless of memory alignment.  This also would add more overhead
+     to all requests.
+
+   - Test the hardware support on each eMMC and UFS host controller
+     individually and opt in the ones that actually correctly handle
+     crypto data units split across DMA segments.  We already know it
+     does *not* work on at least one.
+
+   - And finally update the filesystems as the last step, not the first.
+
+So far I haven't seen the point.  Yes, applications can benefit from the
+lower alignment in theory.  But especially with encryption/decryption,
+it isn't at all easy to support.  This has apparently been getting
+learned the hard way, as (for example) alignment was initially relaxed
+for dm-crypt without testing it, and it had to be reverted
+(https://lore.kernel.org/dm-devel/20221103152559.1909328-1-kbusch@meta.com/).
+
+- Eric
