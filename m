@@ -1,97 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB27378D84;
-	Fri, 10 Jul 2026 05:23:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9042D7DCF;
+	Fri, 10 Jul 2026 05:27:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783661027; cv=none; b=miFG6u9qvg8fg1AEa1o852Rc22U6694cLndRKTpUNh1rqd03Xqyq5+dYbXGBr/SXtrTd5r8/peUcWEKF749sWNxDCfuaO+ZOUTajJtSMmXEAvCTfQqsxoE21NC0dCn8fyliBO7JiLboqv+95nwUoVw0VL2FUkqQd/Lm1BoZvkuI=
+	t=1783661276; cv=none; b=hBjKKWxMqibMR0w+DjXPXzuc6Gf+M+c22ffILJDZD8zR0YYIFau1XVRBi+21WhnJs154FQRrAEuuqrlXIRuSptf4SWJIvxHv55nCHpbbk5RSZcvK11bcncFma35wxrDw6XbeHzk9vY2Y8waw3ZOtI9opJi8+X1NYSNwAdIM8gS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783661027; c=relaxed/simple;
-	bh=XZXBrAeICcTrqGjWR2W+8miethNUnuOfQPyZWVCQ5Fg=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=l9jq9R6kpWO1wMY/R5O+y/pxnijT2TaeTDmEK9tjws9a1Ltess20DYwmObWtr7oQMTe2ZYDcoBKkmGc1dLp2RerzXmX75pelJ2Jegz0U6oD3FOgyW8r/Zx90W1H7z55+gKTzFxdhFZsqPcHRMw5TUNyjZZeR+EwjmLX2vzfcz7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FNgnjLpU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783661276; c=relaxed/simple;
+	bh=JWuWBKfPVtgAcABwCSrDBa+625CffJKhHI+CifJoqTg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MPMbeTiFTt/C/CnKqQM+ekDrjgwMIxyXN80Gvwj05+XxHCH7m9GG/suPVzjES+UaVMlmk2UVtqeX7JG0eJNuDCYqT5V0KTLSjp+FGQZ6SRMxPLYgT9mQZ7QG2H8YwunRoGTbPqx8YM6MBuj2+KUEEV3+VY503a30Ls9dtR8Mj/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LeYK495I; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FNgnjLpU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id DEEEE1F000E9;
-	Fri, 10 Jul 2026 05:23:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783661025;
-	bh=5PV5w+3RRKozs7/plCeNFPREm1AXWoTk3eR6cu9jv7Q=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References;
-	b=FNgnjLpUvUZc195fRuJLMuA1DmlI63tOO0xpYta/3i9iVl6FwoZuKtVT4guMKcL7i
-	 Fe9mubxcuyKU1rJq4516Nz6bhrhi/Wu+FKWynNLFSMonV8pESt8yYui4fgArw7Agfa
-	 SkIG5lSKTcHQJCwEWBCOQhZ9oY6BkbCLNQecCR7I01I4ci2Rsi2e0E6ulGSpHVhcKr
-	 Ufty3DXwOfCV8QmlP/zEMD4xG5FCRNfAUbS7J3BDCpKLUvdBLacgS9YQWH4vaWXCDj
-	 ++O9aNHTn8cQ6eaecvzEVe45R7RapZdhHBtJqbie96A0fq7A1jOST9cPGd8K1aeuAK
-	 ZuSBMErnucwTw==
-Date: Thu, 09 Jul 2026 22:23:45 -0700
-Subject: [PATCH 8/8] xfs: grab rtrmap btree when checking rgsuper
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org, hch@lst.de
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <178366081161.1173468.10755055144321092019.stgit@frogsfrogsfrogs>
-In-Reply-To: <178366080946.1173468.2461850065055339934.stgit@frogsfrogsfrogs>
-References: <178366080946.1173468.2461850065055339934.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LeYK495I"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=jeLUM/uUGphGKAnWajvaikeeaZYEyYOiYuHCGGRQxKY=; b=LeYK495Iv2xCHrJ/9Cv1+FCjZI
+	jpc5hx7moT9zITkkM5q3+2G/yvi7t3qSywS6lgjZU5e5veDMHmwnjPqr7CEf4ik9sHMvcJdyn/RJB
+	rVrXdCcBTOvDoT4Bnpf3Ie9YqcKxDQu99PcKcpWYGkNpxOXoaw/qY/tIZu9MWjdU5mc67lROVQSco
+	6X4VzGJpmmnsjtMli6l1vY1lppW06xWr/XBfLpg5fyq2dwxBLfJLa1MOkwuMAhxgcjLZxUOFmxBa3
+	HOdhs+3whe3wFzYpj2HVCibRGWsLHuvpvbSngv1l4bjR1ZoJAYosENwNrJY6sD5INr2Eq9yaph9kt
+	LPuMrv1w==;
+Received: from [2001:4bb8:2cc:d72d:4dff:292f:a943:a4b9] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wi3mA-00000004CIF-2exR;
+	Fri, 10 Jul 2026 05:27:51 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: scratch rtdev handling improvements
+Date: Fri, 10 Jul 2026 07:27:32 +0200
+Message-ID: <20260710052747.1841555-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-LOLLM noticed that we aren't grabbing the rtrmap btree when we check the
-realtime group superblock.  As a result, none of the cross-referencing
-checks have ever run.  Fix this.
-
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 428e4884656db9 ("xfs: allow queued realtime intents to drain before scrubbing")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Assisted-by: LOLLM # finding obvious bugs
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/scrub/rgsuper.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/scrub/rgsuper.c b/fs/xfs/scrub/rgsuper.c
-index a52d37c33ca15a..c92212d8eb11b0 100644
---- a/fs/xfs/scrub/rgsuper.c
-+++ b/fs/xfs/scrub/rgsuper.c
-@@ -23,6 +23,8 @@ int
- xchk_setup_rgsuperblock(
- 	struct xfs_scrub	*sc)
- {
-+	if (xchk_need_intent_drain(sc))
-+		xchk_fsgates_enable(sc, XCHK_FSGATES_DRAIN);
- 	return xchk_trans_alloc(sc, 0);
- }
- 
-@@ -43,6 +45,7 @@ xchk_rgsuperblock(
- 	struct xfs_scrub	*sc)
- {
- 	xfs_rgnumber_t		rgno = sc->sm->sm_agno;
-+	unsigned int		flags;
- 	int			error;
- 
- 	/*
-@@ -63,7 +66,12 @@ xchk_rgsuperblock(
- 	if (!xchk_xref_process_error(sc, 0, 0, &error))
- 		return error;
- 
--	error = xchk_rtgroup_lock(sc, &sc->sr, XFS_RTGLOCK_BITMAP_SHARED);
-+	if (xfs_has_rtrmapbt(sc->mp))
-+		flags = XFS_RTGLOCK_BITMAP | XFS_RTGLOCK_RMAP;
-+	else
-+		flags = XFS_RTGLOCK_BITMAP_SHARED;
-+
-+	error = xchk_rtgroup_lock(sc, &sc->sr, flags);
- 	if (error)
- 		return error;
- 
-
+this series improves handling of the scratch rtdev.  It is a combination
+of Darrick's earlier patches for xfs/655 and xfs/656 and my earlier
+patch for a common helper so that they don't conflict.
