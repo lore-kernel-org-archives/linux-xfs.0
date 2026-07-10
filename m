@@ -1,43 +1,33 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80452DEA9D;
-	Thu,  9 Jul 2026 16:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B0A1A5B9D;
+	Fri, 10 Jul 2026 04:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783615533; cv=none; b=R+3h/N2zGwWutPoYF5K/P5P6dtXFa1Tg4glZNe3m01XIElyVebn67hk+myoMKfIzZaTDhvczJrXi5pnjHcpS+0JeY+Bn5DXYJ41FYiGmf+hPqCk648dnf0Xt1ljcOXfe7Pre9HS3QJQrSZEwlrpiuJ4nxQ0ft4hqeb7Ww6QYO3g=
+	t=1783658132; cv=none; b=JRSiK529UBo6R5c75VvLOJLLs4YUPdZmgo1dyS3UEIQ2QX0EL7u86GiRwqiGis/Win1WJCclWk8sn+d0gatIkTXYqc3atznYew4pEQaP7ZxX9s18Q+CBbpTUtsdj69ET6XYtkFPKNPGN0eMPikyomsEPpkAJBwrCA/Byk+u7uGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783615533; c=relaxed/simple;
-	bh=z6iuGu0wex3B78eriiKYr6JMMGbJvRWhL6lGMileugY=;
+	s=arc-20240116; t=1783658132; c=relaxed/simple;
+	bh=t78A5rSeEI3MRsSV+lVKitFPJppqUsyVSaYrK5HAwuo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NZ6+BPAyoXofIENEzV7pUclRQ8QIT3qjBh/+bC4mykm93+RB3SZQ7be9CvQ3cF+WANKChfzWiwattJ6WjfDBO0H2k9lTybCIKqa2bSsGsi/E3Q2dcWBVMJIgLe908MwyyluDRSsqZ3AQQZAYf35Vz6fBsEpqc3pSSx49EkCE0gY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgYyLkOU; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgYyLkOU"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 04ADF1F000E9;
-	Thu,  9 Jul 2026 16:45:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783615532;
-	bh=wV00Vl0MiDr3tSINkDZ/92OQYlqFmmYFNOocSOCzejM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mgYyLkOUHqT1T2QKuxK3J8dHCNYrqpgAqy6Vd+n0qkOyhoV51BTu8+OZyhfZLCCxa
-	 Zd+8oJj6D29p57BQmDDxjQsd23TlGp8ZuDhUkE5C4tk62LOzrcYHMtU2zL6G8u9WYE
-	 ADOJAUVnFGCQz5p5baBWmbY+nvqH5+u/rN9elDAsm83ZHYti2Azvm363I+HAqJhGqD
-	 /O8wbXLYaYl+VXt1I/1rv0932rUdHeVOQGY1D0Gw9JNvGZvmgHHEa8JbLflgA8yLe7
-	 5H4A2EDuyYTtWB58pzQP2PAvIiKQIkIQ7/Kq/b5120ivrFFaLj2lubxa45lkOU2Ysu
-	 mhaP+ZG2BsFbg==
-Date: Thu, 9 Jul 2026 09:45:31 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: don't replace the wrong part of the cow fork
-Message-ID: <20260709164531.GE15228@frogsfrogsfrogs>
-References: <178346726054.1271589.14164163317011378817.stgit@frogsfrogsfrogs>
- <178346726108.1271589.7681324440256265003.stgit@frogsfrogsfrogs>
- <20260708091220.GA5902@lst.de>
- <20260708152516.GG9392@frogsfrogsfrogs>
- <20260708175743.GI9392@frogsfrogsfrogs>
- <20260709044738.GA15144@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=MKcihQvMgk6OTFq+mXR7bFE4UEZaNIsn0ucAr9AuJ5UQ9S2nY2t1yo0kceyT7QvCFdvdBy8dyXRDpIULJaczpdYdajm9jETOUcIY9TqrNdiuooENJqBVK00uRkZLizgJQ0mEJIQVF/a7pybMF+FkLZLs5fa8pIOJWdzcXzpQBQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B66A068B05; Fri, 10 Jul 2026 06:35:19 +0200 (CEST)
+Date: Fri, 10 Jul 2026 06:35:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	axboe@kernel.dk, jack@suse.cz, brauner@kernel.org, cem@kernel.org,
+	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu
+Subject: Re: [PATCH] fs: report direct io constraints through file_getattr
+Message-ID: <20260710043519.GA6205@lst.de>
+References: <20260708011843.1036846-1-kbusch@meta.com> <20260709071352.GA20180@lst.de> <ak-mQqt-a-jy6ZoV@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,31 +36,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260709044738.GA15144@lst.de>
+In-Reply-To: <ak-mQqt-a-jy6ZoV@kbusch-mbp>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jul 09, 2026 at 06:47:38AM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 08, 2026 at 10:57:43AM -0700, Darrick J. Wong wrote:
-> > On Wed, Jul 08, 2026 at 08:25:16AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 08, 2026 at 11:12:20AM +0200, Christoph Hellwig wrote:
-> > > > On Tue, Jul 07, 2026 at 10:03:24PM -0700, Darrick J. Wong wrote:
-> > > > >  static inline void
-> > > > >  xrep_cow_replace_mapping(
-> > > > > +	struct xfs_inode	*ip,
-> > > > > +	struct xfs_iext_cursor	*icur,
-> > > > > +	struct xfs_bmbt_irec	*got,
-> > > > > +	struct xfs_bmbt_irec	*rep)
-> > > > 
-> > > > This looks like something that should sit in xfs_bmap.c (or at
-> > > > least xfs_bmap_util.c) and not in random scrub code.
+On Thu, Jul 09, 2026 at 07:46:42AM -0600, Keith Busch wrote:
+> On Thu, Jul 09, 2026 at 09:13:52AM +0200, Christoph Hellwig wrote:
+> > On Tue, Jul 07, 2026 at 06:18:43PM -0700, Keith Busch wrote:
 > > 
-> > To push back on this: there's only one user of this, why not keep it
-> > local to the scrub code?  AFAICT there's nowhere else in xfs that needs
-> > to replace a subset of an existing cow fork mapping with another
-> > mapping.
+> > > +	fa->fsx_dio_mem_align = bdev_dma_alignment(bdev) + 1;
+> > > +	fa->fsx_dio_offset_align = bdev_logical_block_size(bdev);
+> > > +	fa->fsx_dio_read_offset_align = bdev_logical_block_size(bdev);
+> > > +	fa->fsx_dio_virt_boundary_align = bdev_virt_boundary_alignment(bdev);
+> > > +	fa->fsx_max_segments = bdev_max_segments(bdev);
+> > 
+> > How is the max_segments value defined in a way that is meaningful to
+> > userspace?
 > 
-> Mostly so that all the code doing hairy operations on subsets of
-> bmbt_irecs is kept together...
+> It tells you how many sub-sector vectors you can submit in your
+> readv/writev before it needs to add up to a logical block size.
+> 
+> Ex: 4k logical block size, 4 byte DMA, 256 max segments. You can define
+> 4-byte iov's in your command, but you'll hit the max segment count
+> before you have a valid IO if they're all that small.
 
-Ok.  I'll do the move as a separate patch though.
+Ah, makes sense.  But besides the missing documentation I think
+max_segments is a bit of a misleading name for that.
 
---D
+Something like max_vecs_per_block (although we don't expose blocks
+in the UAPI) or max_vecs_per_granularity (I think grammar wants a word
+with me for that, though...) might be a bit more suitable.
+
+> > > @@ -145,6 +155,8 @@ static int file_attr_to_fileattr(const struct file_attr *fattr,
+> > >  
+> > >  	if (fattr->fa_xflags & ~mask)
+> > >  		return -EINVAL;
+> > > +	if (fattr->fa_pad)
+> > > +		return -EINVAL;
+> > 
+> > How is this related?
+> 
+> I had to add a padding field to the struct to account for the implicit
+> hole in 64-bit and to ensure the struct is the same size for 32-bit.
+> It's a reserved field, so we have to ensure the current kernel doesn't
+> support any value here in case we define this field for something else
+> in the future.
+
+Ah, right.
