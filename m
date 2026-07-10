@@ -1,45 +1,52 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7EC363C5B;
-	Fri, 10 Jul 2026 15:22:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED83376BFB;
+	Fri, 10 Jul 2026 18:03:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783696955; cv=none; b=g00qFfOcQI7v311xrMTEHperVHbxIiilXiXO6R+xLH4LtjBURW+4DJ1ovj9OK8smKbMALeXlFxHjcBLDfjyXF12UZ/7UWpNG9Fuvdc1q01l1i/OXW2Yo/iZxSVD1yhTdtqC90dSeud+MYTnh5WZed7lo5ZuY+PPGIRikGwNuZpE=
+	t=1783706600; cv=none; b=RfOntIWhwNC15co8bw7YHuqRYYjU/V0GpZsc/mYGentNtpd9YRG2oilUQYIh7lHHw71PgpquRaetCs8DhRuWQgxOx/4ClJAQJ+Kyao/xC6ThyuvxfBX7BGOfmrFWz2sl4/gFZytbCUsNU4HhhruVmZWX/T/wNfgjfk+ZI0BzkAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783696955; c=relaxed/simple;
-	bh=8gzFoNNR4YwjlaVrX0OmmylnRCGx7JLjJgNqHpDhGus=;
+	s=arc-20240116; t=1783706600; c=relaxed/simple;
+	bh=jQ2ENi7efQIv9R2EbZKSeryq1m1JjIZToHHAmccFRis=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=re7BE0OkUHmK9l8IDDmxLPRhoBBuD+x8a1b77kc4g3NrpW5BsUAcscro3QuZwzro34TCN3sdOdjmKztemwThY9MJJrw5uSOAnFNeh0/v0G392bHlXR/QES0lq1SwbstsbZB04skZAuWcPUCATtq1juQnGyDpdJKMO7mtNglnrMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UClDCNbC; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=QOljFmmquBzBSPffiC7GdzzlwQ9D4QdfFzxqSFc/cqHYpNZmAIf9fTiJ68oiVzemZJFbJOAOvEjUgzxfEpbdYUzDmPjC5n9yeNvys1WT/55fuEgRa6BYhK62/vHqeb3Qt0mtuYGzS+R5uSeHSqgR42ZI3LcFKKpaTBEcHLfawXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vrVhH6CZ; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UClDCNbC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B83291F000E9;
-	Fri, 10 Jul 2026 15:22:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783696953;
-	bh=BZBmbz6+BQI2Kzh1iUDOvyORAvj/yICrOCZDo+Rp0kw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UClDCNbCQfNVRQhm1i8d0xb29cuN0tYD1gSYn7nGQxcwS7UY+Fj+hD+7dJGoKu6Zg
-	 5dYucbOrXi+v7T24cB56Kj8GAb1o3zBc9NpvUvN5qN3+YfFzwGuu96lk54Lzoit87D
-	 P/hGUwB9WQjR82lZLQWwQitL+/Bv5Y8BZH6R/S5wyEVMfzdFEcixq45ps9RC5QDPjc
-	 iSoPzj/1r4B8qaXm++3azwoC4Yb8dd/t/FKEfXkTGZYSqWjTHmfxIksx4hz8WTp+TP
-	 xjssz+2VAgXF7xqPMcYBg54aH6eutuE3PC4QXMK3tooi3O/AVmgdjEBLUn+HPAXBxF
-	 9d+WnwGLCmO8A==
-Date: Fri, 10 Jul 2026 09:22:31 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vrVhH6CZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=aavlYHK65oZ9/GvkqG4vhVx7lYGAHZXQDwnk4WMg/dU=; b=vrVhH6CZ43iMT+yYcxyiUFLLu7
+	6n+lRXruBnU93GSLongig8SFlKm3AgZwxoDzqo0wCFEhLVi87OcdBvy8aEyLkK6uObGGpp63VQwi0
+	hSuIpfQAUdKbz4EsnK6t5wjQvkQ/25WKWlk+JecIt/nOtDbO71fPl9LF/Y/NWdanurlhHNyyBxsjK
+	XSgbg9xirVLA2JFSb6mTgsgwyUUGEvEy/Tq4u2cqbUgu7cHfzICrLfyLQIGbF4vEvE/JodppgC3p9
+	nGpQPd0upaeQCTcahdsyxydddO8e2FVnQstNr/bwE9fIu3MRbNdbcIipOiQ0Iglr3voabEDxdG1xk
+	h5/yoyDA==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wiFZA-00000007b0h-2b7J;
+	Fri, 10 Jul 2026 18:03:12 +0000
+Date: Fri, 10 Jul 2026 19:03:12 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Salvatore Dipietro <dipiets@amazon.it>
+Cc: linux-mm@kvack.org, hch@infradead.org, ritesh.list@gmail.com,
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	axboe@kernel.dk, jack@suse.cz, brauner@kernel.org, cem@kernel.org,
-	jaegeuk@kernel.org, aalbersh@kernel.org, tytso@mit.edu
-Subject: Re: [PATCH] fs: report direct io constraints through file_getattr
-Message-ID: <alEON9EQ3BAX_D35@kbusch-mbp>
-References: <20260708011843.1036846-1-kbusch@meta.com>
- <20260709071352.GA20180@lst.de>
- <ak-mQqt-a-jy6ZoV@kbusch-mbp>
- <20260710043519.GA6205@lst.de>
+	dgc@kernel.org, vbabka@suse.cz, djwong@kernel.org,
+	brauner@kernel.org, alisaidi@amazon.com, blakgeof@amazon.com,
+	abuehaze@amazon.com, dipietro.salvatore@gmail.com,
+	stable@vger.kernel.org, Vlastimil Babka <vbabka@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Brendan Jackman <jackmanb@google.com>,
+	Johannes Weiner <hannes@cmpxchg.org>, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v3] mm/page_alloc: avoid direct compaction for costly
+ __GFP_NORETRY allocations
+Message-ID: <alEz4Chf7Ibyg-ZG@casper.infradead.org>
+References: <20260710143437.12379-1-dipiets@amazon.it>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,38 +55,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260710043519.GA6205@lst.de>
+In-Reply-To: <20260710143437.12379-1-dipiets@amazon.it>
 
-On Fri, Jul 10, 2026 at 06:35:19AM +0200, Christoph Hellwig wrote:
-> On Thu, Jul 09, 2026 at 07:46:42AM -0600, Keith Busch wrote:
-> > On Thu, Jul 09, 2026 at 09:13:52AM +0200, Christoph Hellwig wrote:
-> > > On Tue, Jul 07, 2026 at 06:18:43PM -0700, Keith Busch wrote:
-> > > 
-> > > > +	fa->fsx_dio_mem_align = bdev_dma_alignment(bdev) + 1;
-> > > > +	fa->fsx_dio_offset_align = bdev_logical_block_size(bdev);
-> > > > +	fa->fsx_dio_read_offset_align = bdev_logical_block_size(bdev);
-> > > > +	fa->fsx_dio_virt_boundary_align = bdev_virt_boundary_alignment(bdev);
-> > > > +	fa->fsx_max_segments = bdev_max_segments(bdev);
-> > > 
-> > > How is the max_segments value defined in a way that is meaningful to
-> > > userspace?
-> > 
-> > It tells you how many sub-sector vectors you can submit in your
-> > readv/writev before it needs to add up to a logical block size.
-> > 
-> > Ex: 4k logical block size, 4 byte DMA, 256 max segments. You can define
-> > 4-byte iov's in your command, but you'll hit the max segment count
-> > before you have a valid IO if they're all that small.
-> 
-> Ah, makes sense.  But besides the missing documentation I think
-> max_segments is a bit of a misleading name for that.
-> 
-> Something like max_vecs_per_block (although we don't expose blocks
-> in the UAPI) or max_vecs_per_granularity (I think grammar wants a word
-> with me for that, though...) might be a bit more suitable.
+On Fri, Jul 10, 2026 at 02:34:37PM +0000, Salvatore Dipietro wrote:
+> Commit 5d8edfb900d5 ("iomap: Copy larger chunks from userspace")
+> introduced high-order folio allocations in the iomap buffered write
+> path.
 
-The granularity it has to add up to is defined by the
-fsx_dio_offset_align attribute. This is a bit long, but to make that
-relationship clear, how about:
+https://lore.kernel.org/linux-mm/aeZzP6iQel-tkZOu@casper.infradead.org/
 
-  fsx_dio_max_vecs_per_offset_align
+I just had a go at implementing what I thought might be the right design
+(having a folio_alloc_orders(min, max, gfp)), but that's not really what
+__filemap_get_folio_mpol() wants because it needs to integrate the actual
+adding of folios to the page cache into the retry loop.
+
+So instead, let's try this.  The idea is that we want to try direct reclaim
+_twice_.  Once gently (ie with NORETRY specified) when we're trying to
+allocate the maximum order folio.  But now that we've tried that once,
+there's no point trying direct reclaim for other sizes, we just want to
+ask the page allocator if it can give us memory of any subsequent size.
+
+Until we come to the minimum order.  Then we want to try exactly as hard
+as we were originally asked to try.  So revert to the original gfp flags
+and don't set the NOWARN or NORETRY flags.
+
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 58eb9d240643..23eecaf9b328 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1983,6 +1983,7 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
+ 	if (!folio && (fgp_flags & FGP_CREAT)) {
+ 		unsigned int min_order = mapping_min_folio_order(mapping);
+ 		unsigned int order = max(min_order, FGF_GET_ORDER(fgp_flags));
++		gfp_t alloc_gfp = gfp | __GFP_NORETRY | __GFP_NOWARN;
+ 		int err;
+ 		index = mapping_align_index(mapping, index);
+ 
+@@ -2004,12 +2005,11 @@ struct folio *__filemap_get_folio_mpol(struct address_space *mapping,
+ 			order = __ffs(index);
+ 
+ 		do {
+-			gfp_t alloc_gfp = gfp;
+-
+ 			err = -ENOMEM;
+-			if (order > min_order)
+-				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
++			if (order == min_order)
++				alloc_gfp = gfp;
+ 			folio = filemap_alloc_folio(alloc_gfp, order, policy);
++			alloc_gfp &= ~__GFP_DIRECT_RECLAIM;
+ 			if (!folio)
+ 				continue;
+ 
