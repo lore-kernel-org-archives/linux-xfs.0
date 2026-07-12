@@ -1,172 +1,139 @@
-Received: from mail-oi1-f205.google.com (mail-oi1-f205.google.com [209.85.167.205])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F27D449985
-	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 19:00:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3639145B27
+	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 22:08:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783882831; cv=none; b=m3Vh3SE82N7g6aRIQBwBX9hC0fbegtYUwYuXTexlSKlGOdtGYSUrgJzdPPI2+bH017fyr7a40OB8Uv5m1uwxlrUzAcK78psXLa+WUh04WfxDDPrZ/HmCtYbB4h2KdxZV+8bfsNuyw+UxZovrbOA1ZIeADbrRN9A/AK3maJIzkmM=
+	t=1783894139; cv=none; b=ZHvdED9LTnKS7j3Lwwq/xh7HNaAIHmK1KrQ/KWk5omEYLjCxkXWNFeW32y0ykLSGRCzlCbqH0RnXsePbpmMbraDoB5mS6Lqh6zXOiHQ3x3czvu6VKx3ZCrcFqVFNLpoWiS7B+EcO+GxMbrh2AR3mINNLAr7bsOlHX2p4A4HG3fE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783882831; c=relaxed/simple;
-	bh=BllOnMAYTBujHoNK2zJTD2rBGNqzSQ2aK4e9hVD1GPA=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=qD3C2yIAnFN+R15qrXgNYnBW7Q8lVZx+bskQstEOTTxln2HsraZMIl1n2k/qpQsItU48sTcAGvgUJLVzJD+fQO74e9Y75ckK6J63hE6BevHbr1wh41leOXAgaofT+jsVSOf3KAXVIiAXysfc/vlkYHB8ICpuFZiH2omFTv47uLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f205.google.com with SMTP id 5614622812f47-4a36606e230so3657530b6e.2
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 12:00:30 -0700 (PDT)
+	s=arc-20240116; t=1783894139; c=relaxed/simple;
+	bh=4BuUyPARn/tz3lsDji72T9JUUe3DM1Pt0tBK6CMeVoY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YrbvmsRhZ64LmxEQatAQ/NlqcqU/F2aDqmUSz8mC7VConHcYcEcEQr7ty5u54bXAMXBUcro6480noxwDYWMobnaR9ql4vptmW7i/MKIj+ZSbmANOiUH77MSrzoucR+N4Mw+xtUy8Vuv0qjTyTXgPDWeOrYPifb2Ez5Nbkzgg67U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=lvfcki/m; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asu.edu
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="lvfcki/m"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2ca64c3ce5fso28822555ad.3
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 15:08:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=asu.edu; s=google; t=1783894137; x=1784498937; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=DL9w1+Cjadf8xCjP1+t/5nY7oqPs2u0aMgQpWvEYT3U=;
+        b=lvfcki/meoukVb5r0i8x3095dmV/CLivCb3YzBDo4vD+JM0AUXGZyoQRKlS/+xOlNJ
+         UkAjZ1m6wtQ0dXt+H9l7IO3QdHdP4c3Itm8mNmVHxOd03iw0a8yw2Ojs0JdvQBcWFPF2
+         21UYPRQHEA3C/htowzYw7SX2yiURiT7r4MhXOTbRt9dMa6UHY9Rb635sc+sMGjNkim8m
+         LuWm3w1/pUyV0fbLKb3Ab2AffihCdBVDqyevlszqC0NkZT5QTNt6ptZzG8bkX75JVUna
+         0hnWdk/uOJTB1NwHc6U2yj7JHyHXkzIJryuVukrK/bMyVpDSK7VZxpE3Wpz4X9Sk7USV
+         oM5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783882829; x=1784487629;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ghtKxJ3OaQI/PmJfXiDpHLhe8efrgfgSBHpJrRdJftU=;
-        b=ltkvi26TjS51G8x6v5BfPzH9tOybawDz+5yin+kAk8KIdUUKQ1DNC4BmF8IINN5/ck
-         AjyjR6JQ+2qAGR2lNOkT8wi01hr/K8PFDohmfDVW403kZYUwdMV+oJ/4SQxCQdDHuJfu
-         V/l/6JhcwThXFoxg2IqWGgcJwGcH5DhmD2rD2kpYfrGzjdmyr/TJjPcOjPIn2Yq35m+t
-         PAIJ8BPi4FmdgSoxJq3ROmFvK2mEnF7e7IwD7wHN9/HBzDKZhi1GskVdMDeO0XWvuZbr
-         T0VjcuYyvIWsBehidLfy3pceEsqixx4JmwX7zoQs0Li4Cn6F9lLvmUfoVkexVeNVv/OR
-         ashQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+u0wuX1n17LyI3JgQiepGkPMzxr6nhL7v19Jlekfy3sxLKQ1mtvT6gaUV6GDFHVnHPnXTeyv2A+nQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwKgSSdmQperx+WmvPFs+Gg78HQkshPmNvB0iIdlGb13A3Se62i
-	o/4sc28nHAn40tE8DRfYACLr2NVx1ttDbyR/6MXC8R6Z+B+BVERvgzWS/NThkns8ejfi177F6D+
-	OoJkPRgyyUA4UA8RIj2CyAvbGXnw6Efw5tu698kZSLg5UnRQywX2Asn+GSaE=
+        d=1e100.net; s=20251104; t=1783894137; x=1784498937;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DL9w1+Cjadf8xCjP1+t/5nY7oqPs2u0aMgQpWvEYT3U=;
+        b=qwsT3YkytwSkn96wd7Vo8qNwzE+qFFLHprGgeRLVPquuATvW6K5kuhdO/szstB4Bqx
+         yGOXFbh2hMGBNqVgWRcKHuFbFQhIwPTEyfYaqcojQlC0T2L66pDTbYHlBQmbv7MoUbpq
+         z+7g5p4XuQwPhqv4mv1/Cv3YTCDb2Jqfsbtbfom1A93VyuwlvImLvWDC6X7SfufXauXH
+         9MXxpY5TYx3xI873MQy7hvd0sN2M8mDaa1OPKSF76ZlODN4a3XPiUXfjCbYJqoODG1Id
+         9oywk1xlwUN6LYI1mSeOWC74QRMJX0pNKljXzJ11So0jW0m6yf6U9hXY0SX5fh6mq6In
+         6ikQ==
+X-Gm-Message-State: AOJu0Yx55f+dt0gL4C9GOCvFuSt56X9BOCMXEIcCHpCfdSQT33MUvpNE
+	zgeB16nD7syNgd6fyt4uZLSmto+f9csRAuu867A30YNxZQaaqH/HF1cd9FsU8ICHo2E+3opOMem
+	ClSo=
+X-Gm-Gg: AfdE7cmOWDW7MZJLbkt0zlSDOz1oKUCW0c5EGmtKo6ekI5AgvMJpZpWPqCqv6li3/vB
+	ic1WGTGmsrkWLDJjWrocMOm5L3r+65du3G+Wk44BM2boXlr5nWGo0GYJxZb0w4myoV3QlP5t9lv
+	oHV2pxOrMyqmRdl6Qyv5wv3QUQbTH8ueBLJ3A4Xb5hLsac6dh+XIM1m+Dpaxi8kaKlSrECfTFDX
+	woNHwaIsb/VjSwf62MYqzYDGaRMOLje29IPtUCo3YZqbeaVGwfqjTe3zoUTqy8Jv9oyuLtlLhow
+	ypqo1wJOa+v+SSe7NA1ncZF4K8CcxmPjaqRFP2+X2GU868Au9jKco3m1vP57ywAphztELSKIS19
+	KGJsVgAVr2BXNIzT4RsPtYN281bB7IndQoXwgP2b9Mff3JNU9WD/1SvFNzXJN/3G+O+Ca3cDSiW
+	gNNFejFbU=
+X-Received: by 2002:a17:902:f683:b0:2ca:481:de45 with SMTP id d9443c01a7336-2ce9e7ac3d4mr66677185ad.6.1783894137334;
+        Sun, 12 Jul 2026 15:08:57 -0700 (PDT)
+Received: from p1.. ([2607:fb90:eca4:601:96a2:dc03:fbca:601e])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bdb775sm89285145ad.2.2026.07.12.15.08.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 12 Jul 2026 15:08:57 -0700 (PDT)
+From: Xiang Mei <xmei5@asu.edu>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bestswngs@gmail.com,
+	Xiang Mei <xmei5@asu.edu>
+Subject: [PATCH] xfs: reject log continuation for a header-only item in recovery
+Date: Sun, 12 Jul 2026 15:08:54 -0700
+Message-ID: <20260712220854.3131445-1-xmei5@asu.edu>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:1916:b0:494:fa8b:d061 with SMTP id
- 5614622812f47-4a42ae86b61mr4551576b6e.29.1783882829321; Sun, 12 Jul 2026
- 12:00:29 -0700 (PDT)
-Date: Sun, 12 Jul 2026 12:00:29 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a53e44d.574492cf.19a3b.0013.GAE@google.com>
-Subject: [syzbot] [xfs?] kernel BUG in xrep_tempfile_rele
-From: syzbot <syzbot+a7f8b4c78caca340c561@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hello,
+On an XLOG_WAS_CONT_TRANS op, xlog_recover_add_to_cont_trans() extends the
+tail item's last region via item->ri_buf[item->ri_cnt-1] without checking
+that the item has one. A header-only item, created by
+xlog_recover_add_to_trans() when a transaction's first op is a bare
+sizeof(struct xfs_trans_header) op carrying XFS_TRANS_HEADER_MAGIC, sits on
+r_itemq with ri_cnt == 0 and ri_buf == NULL. A crafted log whose ops are
+XLOG_START_TRANS, that header op, then XLOG_WAS_CONT_TRANS thus
+dereferences ((struct kvec *)NULL)[-1] and faults during mount(2) log
+recovery of an untrusted XFS image.
 
-syzbot found the following issue on:
+A valid XLOG_WAS_CONT_TRANS only follows a region written with
+XLOG_CONTINUE_TRANS, so ri_cnt >= 1 always holds for a real log. Reject the
+ri_cnt == 0 case as corruption with -EFSCORRUPTED, which the caller already
+propagates to abort recovery.
 
-HEAD commit:    0e35b9b6ec0f Merge tag 'mm-hotfixes-stable-2026-07-06-17-4..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=14e7f832580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=20c9876b0f77b546
-dashboard link: https://syzkaller.appspot.com/bug?extid=a7f8b4c78caca340c561
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+  BUG: unable to handle page fault for address: fffffffffffffff0
+  #PF: supervisor read access in kernel mode
+  Oops: 0000 [#1] SMP KASAN NOPTI
+  RIP: 0010:xlog_recover_add_to_cont_trans (fs/xfs/xfs_log_recover.c:2135)
+  Call Trace:
+   xlog_recovery_process_trans (fs/xfs/xfs_log_recover.c:2306)
+   xlog_recover_process_data (fs/xfs/xfs_log_recover.c:2500)
+   xlog_do_recovery_pass (fs/xfs/xfs_log_recover.c:3243)
+   xlog_do_log_recovery (fs/xfs/xfs_log_recover.c:3331)
+   xlog_do_recover (fs/xfs/xfs_log_recover.c:3368)
+   xlog_recover (fs/xfs/xfs_log_recover.c:3493)
+   xfs_log_mount (fs/xfs/xfs_log.c:617)
+   xfs_mountfs (fs/xfs/xfs_mount.c:1031)
+   xfs_fs_fill_super (fs/xfs/xfs_super.c:1940)
+   get_tree_bdev_flags (fs/super.c:1634)
+   vfs_get_tree (fs/super.c:1694)
+   fc_mount (fs/namespace.c:1198)
+   path_mount (fs/namespace.c:4161)
+   __x64_sys_mount (fs/namespace.c:4367)
+   do_syscall_64 (arch/x86/entry/syscall_64.c:94)
+   entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
+  Kernel panic - not syncing: Fatal exception
 
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-0e35b9b6.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/2a17ca6db8f5/vmlinux-0e35b9b6.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/c885024dccba/bzImage-0e35b9b6.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+a7f8b4c78caca340c561@syzkaller.appspotmail.com
-
-loop0: detected capacity change from 0 to 32768
-=======================================================
-WARNING: The mand mount option has been deprecated and
-         and is ignored by this kernel. Remove the mand
-         option from the mount to silence this warning.
-=======================================================
-XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-XFS (loop0): Ending clean mount
-XFS (loop0): Quotacheck needed: Please wait.
-XFS (loop0): Quotacheck: Done.
-loop0: detected capacity change from 32768 to 32767
-XFS (loop0): Metadata CRC error detected at xfs_dquot_buf_verify_crc+0x281/0x300 fs/xfs/libxfs/xfs_dquot_buf.c:180, xfs_dquot block 0x4920 xfs_dquot_buf_verify_crc
-XFS (loop0): Unmount and run xfs_repair
-XFS (loop0): First 128 bytes of corrupted metadata buffer:
-00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000020: 00 00 00 00 00 00 08 00 00 00 00 00 00 00 09 00  ................
-00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000060: 00 00 00 14 bb 9d fa 00 00 00 00 00 00 00 00 bf  ................
-00000070: dc 47 fc 10 d8 4e ed a5 62 11 a8 31 b3 f7 91 44  .G...N..b..1...D
-XFS (loop0): metadata I/O error in "xfs_dquot_attach_buf+0x20c/0x3d0" at daddr 0x4920 len 4 error 74
-XFS (loop0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x47f/0x820 fs/xfs/xfs_trans_buf.c:280 (fs/xfs/xfs_trans_buf.c:280).  Shutting down filesystem.
-XFS (loop0): Please unmount the filesystem and rectify the problem(s)
-VFS_BUG_ON_INODE(inode_state_read_once(inode) & (I_FREEING | I_CLEAR)): inode:ffff888042718910 fs:xfs mode:120000 opflags:0x20 flags:0x1200 state:0x300 count:0
-------------[ cut here ]------------
-kernel BUG at fs/inode.c:2039!
-Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
-CPU: 0 UID: 0 PID: 5323 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:iput+0xecc/0xf00 fs/inode.c:2039
-Code: fb 75 ff 48 89 df 48 c7 c6 a0 eb fe 8b e8 2c 29 00 00 90 0f 0b e8 d4 fb 75 ff 48 89 df 48 c7 c6 00 ee fe 8b e8 15 29 00 00 90 <0f> 0b e8 bd fb 75 ff 48 89 df 48 c7 c6 40 fd fe 8b e8 fe 28 00 00
-RSP: 0018:ffffc9000e7e7560 EFLAGS: 00010246
-RAX: c4ce6ffeb2b29e00 RBX: ffff888042718910 RCX: c4ce6ffeb2b29e00
-RDX: ffffc9000eb19000 RSI: 0000000000008085 RDI: 0000000000008086
-RBP: dffffc0000000000 R08: ffffc9000e7e7147 R09: 1ffff92001cfce28
-R10: dffffc0000000000 R11: fffff52001cfce29 R12: 0000000000000300
-R13: 1ffff110084e3161 R14: 0000000000000300 R15: 1ffffffff20af900
-FS:  00007ffbf46256c0(0000) GS:ffff88808c54e000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fcaff4b1636 CR3: 0000000012d79000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- xrep_tempfile_rele+0xd5/0x140 fs/xfs/scrub/tempfile.c:403
- xchk_teardown+0x397/0x810 fs/xfs/scrub/scrub.c:270
- xfs_scrub_metadata+0x13b2/0x1910 fs/xfs/scrub/scrub.c:766
- xfs_ioc_scrubv_metadata+0x7ac/0xb70 fs/xfs/scrub/scrub.c:981
- xfs_file_ioctl+0x916/0x1590 fs/xfs/xfs_ioctl.c:1308
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7ffbf379de59
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffbf4624fe8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007ffbf3a25fa0 RCX: 00007ffbf379de59
-RDX: 0000200000000000 RSI: 00000000c0285840 RDI: 0000000000000004
-RBP: 00007ffbf3833e6f R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007ffbf3a26038 R14: 00007ffbf3a25fa0 R15: 00007ffce4f66e88
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:iput+0xecc/0xf00 fs/inode.c:2039
-Code: fb 75 ff 48 89 df 48 c7 c6 a0 eb fe 8b e8 2c 29 00 00 90 0f 0b e8 d4 fb 75 ff 48 89 df 48 c7 c6 00 ee fe 8b e8 15 29 00 00 90 <0f> 0b e8 bd fb 75 ff 48 89 df 48 c7 c6 40 fd fe 8b e8 fe 28 00 00
-RSP: 0018:ffffc9000e7e7560 EFLAGS: 00010246
-RAX: c4ce6ffeb2b29e00 RBX: ffff888042718910 RCX: c4ce6ffeb2b29e00
-RDX: ffffc9000eb19000 RSI: 0000000000008085 RDI: 0000000000008086
-RBP: dffffc0000000000 R08: ffffc9000e7e7147 R09: 1ffff92001cfce28
-R10: dffffc0000000000 R11: fffff52001cfce29 R12: 0000000000000300
-R13: 1ffff110084e3161 R14: 0000000000000300 R15: 1ffffffff20af900
-FS:  00007ffbf46256c0(0000) GS:ffff88808c54e000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000560754415168 CR3: 0000000012d79000 CR4: 0000000000352ef0
-
-
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Reported-by: Weiming Shi <bestswngs@gmail.com>
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: Xiang Mei <xmei5@asu.edu>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ fs/xfs/xfs_log_recover.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 5f984bf5698a..fa8e04bf1aac 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2131,6 +2131,9 @@ xlog_recover_add_to_cont_trans(
+ 	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
+ 			  ri_list);
+ 
++	if (item->ri_cnt == 0)
++		return -EFSCORRUPTED;
++
+ 	old_ptr = item->ri_buf[item->ri_cnt-1].iov_base;
+ 	old_len = item->ri_buf[item->ri_cnt-1].iov_len;
+ 
+-- 
+2.43.0
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
