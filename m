@@ -1,138 +1,248 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f206.google.com (mail-oi1-f206.google.com [209.85.167.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69F53033F8;
-	Sun, 12 Jul 2026 16:27:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A591929ACCD
+	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 18:49:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783873630; cv=none; b=ISDCBzq5gLBDUGzbvrJCu7u0ywdnn/SQcpJth+ZsM0CFV6e3XjkY0JDkzqS2bjTXDVee+4/wWW81D2EZ0LKFTjGg3NmGT9bZ+457bv1g+AOMMTh6uerejaIXr5ORFHjUrk/i0WCHhm7TOt72xK45x9fEeSzFbhsvmXGzHH/wB7g=
+	t=1783882182; cv=none; b=KBit7R6g4ZBU1XAe4ISbEU6UztKJGgjIUdgPBSL2Ehf6lPDp2tmdqXsGWYmsVHDmlJh0XHDjMRXikRlpvKqaLgKO2E+Bf9KnaiGKjN4Ng+m7AWnLHWDjtbIFUWfkR6k4SMfbt0+6GRcoQ67o1MHr7L8Efiev/ZJvgvGOZvM7jPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783873630; c=relaxed/simple;
-	bh=+EciH/6Rpxc1clbCZYUbGwXv1njlqenAAgyceY56NUk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sa3mfVjUVUXOe9PkC82G4ZZq7tJ4Nvh3j8ET/a46h1sdwkvIHmaOCZLtoSF+2v8ahVU06Id/3bMO/gnJDG/2W6yg0lzyxo+tznOQMDRJyzaagWKzegD01T/83ovvvYQ1s8mHb9aDFeKrapsiDchhY5+YcWQG9abjR1LuL23ZuNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SdX23S1T; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SdX23S1T"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5C7101F000E9;
-	Sun, 12 Jul 2026 16:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783873629;
-	bh=RC/THiJpZp8/jjGKO8rwcQkaq7cloWYIYmJuHz3s7Uk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SdX23S1TYYHQeFPE+6dlea+rvtWuzYiPIZAIXfHa+A/CeMtupU5bJXMSaKW+TxQOC
-	 WcZmh1W8y4qiYBSQmV76YxDRkYlkmRWesGIGQKEirFt05QuSjRnj37phYc6HPRErgJ
-	 LhD/DYT4wZfCklypJuyHvVQbCG5Gk8BN5x3dUj5kYLhxroqsJrDwKz1lijF8tnmo3x
-	 gw18Ip21U8yzLbKVyY0cnXrsnpdVpvbR8ck+9QKtcmGfXBukUhik0ggSP0UeJP0Yki
-	 GxNKJbYj7e38lSfiNnsEcEOZmikQInNEiomBfNBdsXd8JT07oUoxaPz7MJIYfk267o
-	 IuntJxlnCBe9A==
-Date: Sun, 12 Jul 2026 09:27:09 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Xiang Mei <xmei5@asu.edu>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bestswngs@gmail.com
-Subject: Re: [PATCH] xfs: fix off-by-one in rtrefcount btree root level
- validation
-Message-ID: <20260712162709.GA7195@frogsfrogsfrogs>
-References: <20260712002644.2519804-1-xmei5@asu.edu>
+	s=arc-20240116; t=1783882182; c=relaxed/simple;
+	bh=U/Nn4wHvOsW3xC6GnOx/hZfKlEwVZiFYmxvm8SKCmWQ=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=tlbB4ZT9mekg2vDSEQ1FAdEh3OZz8rPkaN2aPv1HFz7CsttNRAazw6+g1iC9UpuxGOEyJG8cblCHLxaAt2AkEKLSb6SRewfAOTbU8QV6HWdxM4FjwyQquxBbr8wRfSLBRC9kIqUPLqRGDmJNErrEHY2yZ/FlzEs8QbslxlEKXtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f206.google.com with SMTP id 5614622812f47-49f3a97f1caso2691130b6e.0
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 11:49:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783882179; x=1784486979;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=zv+UWdhAnDCA2XUrVR4E7pUtYoXyHbuwGTRef4D6ZWM=;
+        b=rLo7hMebSehuiWI5tyB6CKYmN0F671n5c8mWAld4vbJdBbPl3w0UNCA/QTvSHlavxI
+         H2OvgPPw03c71+XR01lIJWutkASzeZajSQ9TgnDqbgGlg2fF7EH8SMUd4r6hidej89uj
+         fTfFi3ToJEvCqR8XXWLoFhcLl7Cf/tmXho+tlM5e4m3M3PLT6dM1Z2ZliSpPfDgOncUi
+         mLVI9IfYw7m/BTX+jAuV3y0DV2uKDeVLifXQKfN+8p/7HdXfmA+6ISliaG32aD6PLipK
+         3n91/hcKFKL6U1npHUZGQxh/ACqgk6iwxfY1lKUidltqaSaDj7EjJEF5wKgah/FA52RY
+         JWJA==
+X-Forwarded-Encrypted: i=1; AFNElJ/abv7yHS1KwPuyBCIMQs19B2xGe+UubUjFH9vEHcAnMwKdQAhUS1cOeKpYuPKB+slFs6k6Wpum+DU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2gG2Rsn8u2JnmYFnKFX/q/7Pahy2CHFszeZL6rTCaiogfQPll
+	PQ6ixn5CVf+QbYyt5Q93I49RX9dtgEGSGs561EvB2cIoXDiiP43beky6M4ZKr3el9tKGA6O6jYr
+	JHDx/ydk2zdw/X9sDg+YqHD9O9BcSgpgQ9+Qs5SmjfVrweyE32A/XUWF+b4Q=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260712002644.2519804-1-xmei5@asu.edu>
+X-Received: by 2002:a05:6808:3507:b0:496:b7c:23a6 with SMTP id
+ 5614622812f47-4a42afafb7fmr4514609b6e.38.1783882179745; Sun, 12 Jul 2026
+ 11:49:39 -0700 (PDT)
+Date: Sun, 12 Jul 2026 11:49:39 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a53e1c3.278cdcd2.e885.001f.GAE@google.com>
+Subject: [syzbot] [xfs?] possible deadlock in xfs_dquot_disk_alloc (2)
+From: syzbot <syzbot+59178abfeb0ea3f0ab20@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, Jul 11, 2026 at 05:26:44PM -0700, Xiang Mei wrote:
-> xfs_rtrefcountbt_compute_maxlevels() sets
-> 
-> 	mp->m_rtrefc_maxlevels = min(d_maxlevels, r_maxlevels) + 1;
-> 
-> where the trailing "+ 1" already accounts for the inode-root level, so the
-> deepest valid on-disk root level is m_rtrefc_maxlevels - 1 and a cursor must
-> satisfy bc_nlevels <= bc_maxlevels (= m_rtrefc_maxlevels).
-> 
-> The two on-disk validation paths, xfs_rtrefcountbt_verify() and
-> xfs_iformat_rtrefcount(), check the root level with ">" instead of ">=", so a
-> crafted rtreflink (metadir + realtime + reflink) image whose
-> /rtgroups/N.refcount inode has bb_level == m_rtrefc_maxlevels is accepted on
-> mount. xfs_rtrefcountbt_init_cursor() then sets bc_nlevels = bb_level + 1,
-> exceeding bc_maxlevels by one. Since the xfs_rtrefcountbt_cur slab object is
-> sized for exactly bc_maxlevels entries, the first btree op on such a cursor
-> indexes bc_levels[m_rtrefc_maxlevels] past the end of the object. This is
-> reached by the first rtrefcount cursor built after mount, via log/CoW
-> recovery (xfs_reflink_recover_cow() during xfs_mountfs()) or an
-> FS_IOC_GETFSMAP over the realtime device.
-> 
-> Reject a root level equal to m_rtrefc_maxlevels, matching the ">=" form
-> already used by the sibling data-device refcount/rmap verifiers and the
-> in-memory rtrmap verifier.
-> 
->   BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
->   Write of size 2 at addr ffff888018391658 by task exploit/144
->    xfs_btree_lookup (fs/xfs/libxfs/xfs_btree.c:2101)
->    xfs_btree_query_range (fs/xfs/libxfs/xfs_btree.c:5308)
->    xfs_refcount_recover_cow_leftovers (fs/xfs/libxfs/xfs_refcount.c:2113)
->    xfs_reflink_recover_cow (fs/xfs/xfs_reflink.c:1085)
->    xlog_recover_finish (fs/xfs/xfs_log_recover.c:3551)
->    xfs_mountfs (fs/xfs/xfs_mount.c:1158)
->    xfs_fs_fill_super (fs/xfs/xfs_super.c:1940)
->    get_tree_bdev_flags (fs/super.c:1634)
->    vfs_get_tree (fs/super.c:1694)
->    path_mount (fs/namespace.c:4161)
->    __x64_sys_mount (fs/namespace.c:4367)
->    entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
->   The buggy address belongs to the cache xfs_rtrefcountbt_cur of size 216
->   The buggy address is located 8 bytes to the right of
->    allocated 216-byte region [ffff888018391578, ffff888018391650)
->   Kernel panic - not syncing: Fatal exception
-> 
-> Fixes: 9abe03a0e4f9 ("xfs: introduce realtime refcount btree ondisk definitions")
+Hello,
 
-Just one fixes tag is fine, thanks.
+syzbot found the following issue on:
 
-Cc: <stable@vger.kernel.org> # v6.14
-Fixes: 9abe03a0e4f978 ("xfs: introduce realtime refcount btree ondisk definitions")
+HEAD commit:    0e35b9b6ec0f Merge tag 'mm-hotfixes-stable-2026-07-06-17-4..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=134d6739580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=20c9876b0f77b546
+dashboard link: https://syzkaller.appspot.com/bug?extid=59178abfeb0ea3f0ab20
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
 
-> Fixes: f0415af60f48 ("xfs: wire up a new metafile type for the realtime refcount")
-> Reported-by: Weiming Shi <bestswngs@gmail.com>
-> Assisted-by: Claude:claude-opus-4-8
-> Signed-off-by: Xiang Mei <xmei5@asu.edu>
+Unfortunately, I don't have any reproducer for this issue yet.
 
-I think this is correct, so
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-0e35b9b6.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/2a17ca6db8f5/vmlinux-0e35b9b6.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/c885024dccba/bzImage-0e35b9b6.xz
 
---D
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+59178abfeb0ea3f0ab20@syzkaller.appspotmail.com
 
-> ---
->  fs/xfs/libxfs/xfs_rtrefcount_btree.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-> index f27b80a199ba..22acc1411aac 100644
-> --- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-> +++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
-> @@ -201,7 +201,7 @@ xfs_rtrefcountbt_verify(
->  	if (fa)
->  		return fa;
->  	level = be16_to_cpu(block->bb_level);
-> -	if (level > mp->m_rtrefc_maxlevels)
-> +	if (level >= mp->m_rtrefc_maxlevels)
->  		return __this_address;
->  
->  	return xfs_btree_fsblock_verify(bp, mp->m_rtrefc_mxr[level != 0]);
-> @@ -651,7 +651,7 @@ xfs_iformat_rtrefcount(
->  	numrecs = be16_to_cpu(dfp->bb_numrecs);
->  	level = be16_to_cpu(dfp->bb_level);
->  
-> -	if (level > mp->m_rtrefc_maxlevels ||
-> +	if (level >= mp->m_rtrefc_maxlevels ||
->  	    xfs_rtrefcount_droot_space_calc(level, numrecs) > dsize) {
->  		xfs_inode_mark_sick(ip, XFS_SICK_INO_CORE);
->  		return -EFSCORRUPTED;
-> -- 
-> 2.43.0
-> 
-> 
+loop0: detected capacity change from 0 to 32768
+XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+XFS (loop0): Ending clean mount
+XFS (loop0): Quotacheck needed: Please wait.
+XFS (loop0): Quotacheck: Done.
+loop0: detected capacity change from 32768 to 0
+
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+syz.0.0/5333 is trying to acquire lock:
+ffffffff8ec86c80 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/linux/sched/mm.h:317 [inline]
+ffffffff8ec86c80 (fs_reclaim){+.+.}-{0:0}, at: slab_pre_alloc_hook mm/slub.c:4565 [inline]
+ffffffff8ec86c80 (fs_reclaim){+.+.}-{0:0}, at: slab_alloc_node mm/slub.c:4925 [inline]
+ffffffff8ec86c80 (fs_reclaim){+.+.}-{0:0}, at: kmem_cache_alloc_noprof+0x64/0x5f0 mm/slub.c:4959
+
+but task is already holding lock:
+ffff88801f853b00 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_dquot_disk_alloc+0x2cf/0xae0 fs/xfs/xfs_dquot.c:363
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&xfs_nondir_ilock_class){++++}-{4:4}:
+       down_write_nested+0x9d/0x210 kernel/locking/rwsem.c:1757
+       xfs_reclaim_inode fs/xfs/xfs_icache.c:1046 [inline]
+       xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1738 [inline]
+       xfs_icwalk_ag+0x12b7/0x1980 fs/xfs/xfs_icache.c:1820
+       xfs_icwalk fs/xfs/xfs_icache.c:1868 [inline]
+       xfs_reclaim_inodes_nr+0x1e5/0x260 fs/xfs/xfs_icache.c:1112
+       super_cache_scan+0x40e/0x4a0 fs/super.c:229
+       do_shrink_slab+0x6d0/0x10e0 mm/shrinker.c:443
+       shrink_slab+0xea4/0x1220 mm/shrinker.c:674
+       shrink_one+0x2a2/0x730 mm/vmscan.c:5026
+       shrink_many mm/vmscan.c:5087 [inline]
+       lru_gen_shrink_node mm/vmscan.c:5165 [inline]
+       shrink_node+0x3303/0x3b60 mm/vmscan.c:6154
+       kswapd_shrink_node mm/vmscan.c:7008 [inline]
+       balance_pgdat mm/vmscan.c:7186 [inline]
+       kswapd+0x17b6/0x31c0 mm/vmscan.c:7462
+       kthread+0x388/0x470 kernel/kthread.c:436
+       ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #0 (fs_reclaim){+.+.}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3165 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3284 [inline]
+       validate_chain kernel/locking/lockdep.c:3908 [inline]
+       __lock_acquire+0x1520/0x2cf0 kernel/locking/lockdep.c:5237
+       lock_acquire+0x106/0x350 kernel/locking/lockdep.c:5868
+       __fs_reclaim_acquire mm/page_alloc.c:4329 [inline]
+       fs_reclaim_acquire+0x71/0x100 mm/page_alloc.c:4343
+       might_alloc include/linux/sched/mm.h:317 [inline]
+       slab_pre_alloc_hook mm/slub.c:4565 [inline]
+       slab_alloc_node mm/slub.c:4925 [inline]
+       kmem_cache_alloc_noprof+0x64/0x5f0 mm/slub.c:4959
+       xfs_buf_item_init+0x6a/0x6e0 fs/xfs/xfs_buf_item.c:872
+       _xfs_trans_bjoin+0x46/0x110 fs/xfs/xfs_trans_buf.c:75
+       xfs_trans_bjoin+0x2e/0x220 fs/xfs/xfs_trans_buf.c:102
+       xfs_defer_restore_resources+0x32f/0x7c0 fs/xfs/libxfs/xfs_defer.c:451
+       xfs_defer_trans_roll+0x1a9/0x5e0 fs/xfs/libxfs/xfs_defer.c:481
+       xfs_defer_finish_noroll+0x844/0x1320 fs/xfs/libxfs/xfs_defer.c:688
+       xfs_trans_commit+0x10b/0x1c0 fs/xfs/xfs_trans.c:919
+       xfs_dquot_disk_alloc+0x7a2/0xae0 fs/xfs/xfs_dquot.c:435
+       xfs_qm_dqread+0xfe/0x520 fs/xfs/xfs_dquot.c:720
+       xfs_qm_dqget+0x18a/0x3d0 fs/xfs/xfs_dquot.c:922
+       xfs_qm_vop_dqalloc+0x472/0xaa0 fs/xfs/xfs_qm.c:1887
+       xfs_setattr_nonsize+0x3a1/0xca0 fs/xfs/xfs_iops.c:831
+       xfs_vn_setattr+0x29e/0x310 fs/xfs/xfs_iops.c:1161
+       notify_change+0xbba/0xea0 fs/attr.c:556
+       chown_common+0x41c/0x630 fs/open.c:776
+       vfs_fchown fs/open.c:841 [inline]
+       ksys_fchown+0xe9/0x160 fs/open.c:853
+       __do_sys_fchown fs/open.c:858 [inline]
+       __se_sys_fchown fs/open.c:856 [inline]
+       __x64_sys_fchown+0x7a/0x90 fs/open.c:856
+       do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+       do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+other info that might help us debug this:
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&xfs_nondir_ilock_class);
+                               lock(fs_reclaim);
+                               lock(&xfs_nondir_ilock_class);
+  lock(fs_reclaim);
+
+ *** DEADLOCK ***
+
+4 locks held by syz.0.0/5333:
+ #0: ffff888042324450 (sb_writers#12){.+.+}-{0:0}, at: mnt_want_write_file+0x60/0x200 fs/namespace.c:538
+ #1: ffff88801f8552d0 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{4:4}, at: inode_lock_killable include/linux/fs.h:1029 [inline]
+ #1: ffff88801f8552d0 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{4:4}, at: chown_common+0x313/0x630 fs/open.c:764
+ #2: ffff888042324640 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc+0xcf/0x990 fs/xfs/xfs_trans.c:254
+ #3: ffff88801f853b00 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_dquot_disk_alloc+0x2cf/0xae0 fs/xfs/xfs_dquot.c:363
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 5333 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
+ print_circular_bug+0x2e1/0x300 kernel/locking/lockdep.c:2043
+ check_noncircular+0x12e/0x150 kernel/locking/lockdep.c:2175
+ check_prev_add kernel/locking/lockdep.c:3165 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3284 [inline]
+ validate_chain kernel/locking/lockdep.c:3908 [inline]
+ __lock_acquire+0x1520/0x2cf0 kernel/locking/lockdep.c:5237
+ lock_acquire+0x106/0x350 kernel/locking/lockdep.c:5868
+ __fs_reclaim_acquire mm/page_alloc.c:4329 [inline]
+ fs_reclaim_acquire+0x71/0x100 mm/page_alloc.c:4343
+ might_alloc include/linux/sched/mm.h:317 [inline]
+ slab_pre_alloc_hook mm/slub.c:4565 [inline]
+ slab_alloc_node mm/slub.c:4925 [inline]
+ kmem_cache_alloc_noprof+0x64/0x5f0 mm/slub.c:4959
+ xfs_buf_item_init+0x6a/0x6e0 fs/xfs/xfs_buf_item.c:872
+ _xfs_trans_bjoin+0x46/0x110 fs/xfs/xfs_trans_buf.c:75
+ xfs_trans_bjoin+0x2e/0x220 fs/xfs/xfs_trans_buf.c:102
+ xfs_defer_restore_resources+0x32f/0x7c0 fs/xfs/libxfs/xfs_defer.c:451
+ xfs_defer_trans_roll+0x1a9/0x5e0 fs/xfs/libxfs/xfs_defer.c:481
+ xfs_defer_finish_noroll+0x844/0x1320 fs/xfs/libxfs/xfs_defer.c:688
+ xfs_trans_commit+0x10b/0x1c0 fs/xfs/xfs_trans.c:919
+ xfs_dquot_disk_alloc+0x7a2/0xae0 fs/xfs/xfs_dquot.c:435
+ xfs_qm_dqread+0xfe/0x520 fs/xfs/xfs_dquot.c:720
+ xfs_qm_dqget+0x18a/0x3d0 fs/xfs/xfs_dquot.c:922
+ xfs_qm_vop_dqalloc+0x472/0xaa0 fs/xfs/xfs_qm.c:1887
+ xfs_setattr_nonsize+0x3a1/0xca0 fs/xfs/xfs_iops.c:831
+ xfs_vn_setattr+0x29e/0x310 fs/xfs/xfs_iops.c:1161
+ notify_change+0xbba/0xea0 fs/attr.c:556
+ chown_common+0x41c/0x630 fs/open.c:776
+ vfs_fchown fs/open.c:841 [inline]
+ ksys_fchown+0xe9/0x160 fs/open.c:853
+ __do_sys_fchown fs/open.c:858 [inline]
+ __se_sys_fchown fs/open.c:856 [inline]
+ __x64_sys_fchown+0x7a/0x90 fs/open.c:856
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f0044f9de59
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f0045e1afe8 EFLAGS: 00000246 ORIG_RAX: 000000000000005d
+RAX: ffffffffffffffda RBX: 00007f0045225fa0 RCX: 00007f0044f9de59
+RDX: 000000000000000a RSI: 000000003a736e6f RDI: 0000000000000006
+RBP: 00007f0045033e6f R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f0045226038 R14: 00007f0045225fa0 R15: 00007fff82a814a8
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
