@@ -1,59 +1,60 @@
-Received: from out203-205-221-236.mail.qq.com (out203-205-221-236.mail.qq.com [203.205.221.236])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77ED2BD5B9;
-	Sun, 12 Jul 2026 03:43:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.236
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2AE8248F73
+	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 09:33:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783827795; cv=none; b=Cq9//oB5yRJvb6WBQVLDOZBsF5jAcEooGL2A07t/D6Xm+/3J/kX/TEYUBz6dEukhHwDS27QfM3QKEbSHiC4hufi6yGOh0t2nwpze0/4Pg0BeEpGYAbvk1A4D4BUwUkh8GwsNA0jlhrDs7K7Fk1TeGqH0zOh87l51IKGNMG1fB9I=
+	t=1783848838; cv=none; b=NHlPo+Bh5U66i4XMsEioJn6lJVEnzE1Ka9f+w9dlfLiq11LqcEDUHHLeiEuK3Vf/ulG9nSuEuWuYswwuAIGsgNsHFGX5+J1jafxPCxSt3qiT82oMzVwDP4N3bTfA+aYY7/2d/HZiv06KBJcLJ2eVExKQpriSVKfzJLYVhyzxHB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783827795; c=relaxed/simple;
-	bh=ieZGQpzAl7ZkRjjBSOv5eE37RVyMQFxLduBwLkMwokI=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=XNIiGma5oOdcloKL0yC2ZWw8eb6pEuTb+8lbY2Mc+JA5bUNhgBGad71xMdpRphZi2+hLvvYeVS9q4C5oyB0EgKv9v1fVpAgbs/g87U1uDQxUGLM8prd1UHFODrkddEaK/AYE4A408ikYPv40q3brbKMqxfJkc0PQ//pyOxnaafM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=oNA2LhDn; arc=none smtp.client-ip=203.205.221.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1783848838; c=relaxed/simple;
+	bh=Kzr0f7whU/0hLhvyl4zjXC7pBQgUb7oOdkV8zd+EVXs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qmwyg+GD1a2B0LYVbsQI34gvxdpgmQHhB2q1NiRZ5Z0CscTpoB+ihU7+vWNAK14+LB0CJHyU69T2Ub5zGH2RMHTwSsygN6wvaHWxmW5R+SMHyY3CHbYzs4wcvnFsEEElxkKeK+ZVhxv/z4lSgbkVjvPm5I9sDoFTHJl2kwEYWPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=TcTJidyb; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="oNA2LhDn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1783827783; bh=1jt5f7gn0PgrU+QrmBPvl4Z/Eul/vK8t5Mvlq46/TjQ=;
-	h=From:To:Cc:Subject:Date;
-	b=oNA2LhDncmWM74ZVkBgH87e0oWgv9dURDqnp0J+jXzbM99LvZO5m6F7tFW40qCGyz
-	 2c+oFxohCkSskFZXAcXZLBzonFU79Mijtwf8JcNu+mfYeJv0C/xGq99hQ/eFHcruvs
-	 pBT/8Hd/og/7RD1emY37T/rGOSC7gElnbp5QL0vM=
-Received: from ubuntu.. ([218.196.207.7])
-	by newxmesmtplogicsvrsza73-0.qq.com (NewEsmtp) with SMTP
-	id AC09C290; Sun, 12 Jul 2026 11:43:00 +0800
-X-QQ-mid: xmsmtpt1783827780t6v69yj7d
-Message-ID: <tencent_542687AA9C474951C4132E84DAED17622105@qq.com>
-X-QQ-XMAILINFO: NmhoXJR/eu5x3cfTIJojw6goN4j77+ZTDryok1QZb3HuoFDn/cVP6ZDiQWBCYe
-	 IeeNDdIjD6ZnxpQlPIMlZiDhOSj7VZwpHZD1E+QPjiwq/IG9/uY4+JaKGHv+8RHAtJVPAFgOEJ41
-	 kKlF8ZSFVuObQ0AdunMVgsI+u/4MknPe3U2k9cO050rXDPV3ehAlnyIFGuVzzymGoaf2SV1U4Ae6
-	 4haIUsJk04xLew63/0+YdvFYl8t2wWVLE2P8jKoURWky9CghLDtYJ5aKpmrc3ZQSOvXt1LEIkBMN
-	 g1Qk/U/TCYt8B93Wx2BkhZzqALm8cChlsFc3bKP5KpSPwlcm9SeRmADM/aepDKEbnzvbTyZg+XLu
-	 dIbkc6F+g713wYIbwfEd1dIH9Uk6oxy5iR9Ku3q2Q/yjhB+2RcmJFN2pmqu7VdaFlGEtw2BbfZ5M
-	 J0aK0/xOu9vFUOIM36TLuE6dAIe1y3IiokDe7cXGeCVA3ecRDTtGQvku7VjRVkjI5wvfg4yCaY7V
-	 m+NPNELmqjKVk9l8z9e/0okYWqvWm1X9FOwHDKkC4PIzJT14KTGB4rzf1jStsCrhHq8uG8+UrNw6
-	 BHkplN/XDBgJQOYOMkyg4EdEJAHBQwGLO7n5EtH8r31rtMJdAldojjaTlYxhbH7aamGmMHLYHA7c
-	 grSVr14VJBHe03ijDl2qo40NxC6RTaTYtFgfKLMF9XdkZqVGhvtmJf1rTZPpizkjlzkE+F+vz7q2
-	 1+b0B/fAZXR3aby0hdjK2KDDE3FvvlstVy4oig4Ndad3DssaXK9XvwJX8odtlV9w+9TdTR4ofI1Z
-	 Pmy7FNloX7kuonqaU7GTUBEfKI+/nOmhb4Oy+dtJh9GLmVXy4ClOCYqzyTkbntg3RCHXVK+55JNU
-	 uP/g1kYs6P5wX57dZaWaup3OnAUaTmXJ+BZKZKnu5WThgzQEayOs2drUoyzRjQM+Bc2SIhOekiGL
-	 h7MXdoPN/9cvVUWGpLF9XdXwI3s0apN6oceOaop0FXqUUt2wb69ICdyoun1D6fuOkUyvIYkONcQ0
-	 O1cRN8BOnqsQ147jz/ogzkqWxIgZEtuwJzppYP3Rl13umGfvk+C/PJNf8wbak=
-X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
-From: Guanghui Yang <3497809730@qq.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TcTJidyb"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1783848838; x=1815384838;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Kzr0f7whU/0hLhvyl4zjXC7pBQgUb7oOdkV8zd+EVXs=;
+  b=TcTJidybnXL5duO2fr8F5DNos6WNmihJCPLY/GQblDm4rpZGCCcd2axj
+   IbBL1G6OncGaZwhJJnw3qsDc8mMljEUiU8wdEEb16e+sr57c/OwP5zWW+
+   /KoJop6zDZx1/ZU3GAN+HBMe2U2s1ZQCFOwWdyLMCLim5e9/5X6xBg6j9
+   0NkIl7yrC5+g3A0bwIgtn9lGT+zltEWLcPPWHknIu/Mfde8GaPgx8PUjc
+   ZdWDlvPI9y9FHPcbass3yXj/O/94ScbWlf603MbUlEH3+VyiE7dD7oy4u
+   3jUPfeKJiDqeYbSzduajO2vrP48xKdprTrsL8bh7D8ePdclg85yzju4vQ
+   w==;
+X-CSE-ConnectionGUID: GsuwV/PGQOW3YUs7QsRUIw==
+X-CSE-MsgGUID: yVlB+ZGRROOMJ1afQNh65g==
+X-IronPort-AV: E=Sophos;i="6.25,154,1779120000"; 
+   d="scan'208";a="150568562"
+Received: from unknown (HELO uls-op-esad2-o.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Jul 2026 17:33:52 +0800
+X-CSE-ConnectionGUID: Hpm5n9YsSRSHWZI8+BnZrw==
+X-CSE-MsgGUID: kpV5ORPhQyKNZ7D6Ig6LmA==
+IronPort-SDR: 6a535f60_t7eroIOQ7QhouI6gcGHVgvomMnDlpdxtJI3gE9GmlFpj+Jf
+ WwgIfefF+RcJO9TQDqylcKdEEiD3i0e8KWd8E6g==
+Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
+  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jul 2026 02:33:20 -0700
+X-CSE-ConnectionGUID: BV/yG+YkQv2+Kol25Zqi2Q==
+X-CSE-MsgGUID: DI3Qfj9ERKuYJTkdOkHkVg==
+WDCIronportException: Internal
+Received: from wdap-fln31fg1cp.ad.shared (HELO neo.wdc.com) ([10.224.28.153])
+  by uls-op-esai1-o.wdc.com with ESMTP; 12 Jul 2026 02:33:19 -0700
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: linux-xfs@vger.kernel.org
-Cc: Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Guanghui Yang <3497809730@qq.com>
-Subject: [PATCH] xfs: propagate errors from xfs_rtginode_load
-Date: Sun, 12 Jul 2026 03:42:56 +0000
-X-OQ-MSGID: <20260712034256.1700970-1-3497809730@qq.com>
-X-Mailer: git-send-email 2.34.1
+Cc: Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 0/3] xfs: consolidate metadir creation code
+Date: Sun, 12 Jul 2026 11:33:14 +0200
+Message-ID: <20260712093317.782831-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,34 +63,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-xfs_rtginode_ensure() treats every xfs_rtginode_load() error other than
--ENOENT as success.  This can leave the realtime group inode unset after an
-I/O, allocation, or corruption error.  Growfs then continues as though the
-inode had been loaded.
+The XFS metadata directory tree has grown several nearly identical
+open-coded copies of the "create a metadata inode" sequence: allocate the
+creation transaction, create and link the inode, do a bit of type
+specific inode setup, commit, and finish or tear down the inode on both
+the success and error paths.
 
-Only -ENOENT means that the inode needs to be created.  Return all other
-errors to the growfs caller.
+Factor that boilerplate into a single helper, xfs_metadir_create_file(),
+which takes the file mode and an optional callback to finish initializing
+the new inode inside the creation transaction, and convert the existing
+users - xfs_metadir_mkdir(), the quota inodes and the rtgroup inodes -
+over to it.
 
-Fixes: ae897e0bed0f ("xfs: support creating per-RTG files in growfs")
-Cc: stable@vger.kernel.org
-Signed-off-by: Guanghui Yang <3497809730@qq.com>
----
- fs/xfs/xfs_rtalloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Having a single helper also makes it straightforward to add new metadata
+inode types without copying the sequence yet again.
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7a3f97686989..84efe5a8fb11 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -737,7 +737,7 @@ xfs_rtginode_ensure(
- 	xfs_trans_cancel(tp);
- 
- 	if (error != -ENOENT)
--		return 0;
-+		return error;
- 	return xfs_rtginode_create(rtg, type, true);
- }
- 
+No functional change intended otherwise.
+
+Johannes Thumshirn (3):
+  xfs: add xfs_metadir_create_file helper
+  xfs: create quota metadir inodes using xfs_metadir_create_file
+  xfs: create rtgroup metadir inodes using xfs_metadir_create_file
+
+ fs/xfs/libxfs/xfs_dquot_buf.c | 29 +++++++-----------
+ fs/xfs/libxfs/xfs_metadir.c   | 58 ++++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_metadir.h   |  6 ++++
+ fs/xfs/libxfs/xfs_rtgroup.c   | 58 ++++++++++++++++-------------------
+ 4 files changed, 80 insertions(+), 71 deletions(-)
+
 -- 
-2.34.1
+2.54.0
 
