@@ -1,60 +1,60 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF71372686
-	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 09:33:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91AB537474A
+	for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 09:33:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783848839; cv=none; b=XFTOWTJlJI/hP//F+or6SNvtkpX2spG7UA3X0WO0LhBJ5nOXzcttwopvRiPqTPrCSxrajy6t+r01D48rgBeGvFwC3kIwtRafbeK+41piQh5k5looMfp17JP/Kgde55pbdLVJhlT+IPcXUP2Pq47UVEsCR0XemBWvgw5apB3X7/8=
+	t=1783848840; cv=none; b=G65W47ubGRth7+g3j7wuO66K+LqjG62t7eCEtU63VvcQfWA/nWfshgzzBndCwpYZaujmlXj6hmNvocsGs8+oVx43jIgDlop4uOgvey5Rr9pxL+KRbEzI8lJ/dsmkmdVc3xcxDGMI3IgQNaSjs4+V7Twsj7nyqbhGfFTbuArE//4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783848839; c=relaxed/simple;
-	bh=R7RE8Gvk8FU1osNJLSicfNxbpLHZprRvIY0jdoiXivo=;
+	s=arc-20240116; t=1783848840; c=relaxed/simple;
+	bh=0shO5eV0jg31BPSR8en0pyGFAKIWRgb58k+80GNk62E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JV6P9LPpd3d3HcRHbQdAQEeozpX2IFpEJ9poicqF5P1QgXAZqKaE0j0wMaI0jqj3KRFtEunOHN8yaHCUPEpMyTMcHZakFwps3g6oI0CfgSO+Uz6eodd7HKsmifjyAPcH5aoKvQo/1pgLJobHHRxPEIhDjFjIw3+2HRtIKIOD45M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=YdMSIQgi; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=e0zKjxFKXqQ9MAvoHbgxcYUPoJfz0a1FakisfmkYg5v7sZvBNcfeT5FmfqHEMMC9f7oTdi9hZyWvzeyJvkGiNiPGJ7gHY8QcbBQxpvVFuwlMukPf7lPtgD8DqJxN6FYX/RpLnonppjPjlUvkjsCYgZKXalEqHXrcQ+zCc1QA5/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=kXH7bzH0; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YdMSIQgi"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kXH7bzH0"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1783848840; x=1815384840;
+  t=1783848841; x=1815384841;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=R7RE8Gvk8FU1osNJLSicfNxbpLHZprRvIY0jdoiXivo=;
-  b=YdMSIQgi5Xig3QS/64uebk9W3i8Hkyw/n4AoYLPqH/Guo5vJZwX9jEBB
-   kcB0FvOIeAU/XqPuwNjgc/mCj+ICL8e/FJ0o7NrhzJ+Nu3KAbTo+0duf8
-   wvttrg3ISXk0lFSyZf8lHp+cEwmyyDSS8H/djPxvnyL40DGkvwQOj2FhC
-   5RHiyiPoO9ihTcaKcDqTWYdtiNPSrL29aCS/iD+voEv1nSv7gJGav84x7
-   XgrP4Jwd21EeCOKBvu6+kHx2ztYArrhUYGXfDj2xaqXZGY7zYx8Yd2wj4
-   pbZ+QFNaPT3nbv0qeXWuVrwBDLsxMyQgeyM65r4/6gHh3UQccdkRTCW9z
+  bh=0shO5eV0jg31BPSR8en0pyGFAKIWRgb58k+80GNk62E=;
+  b=kXH7bzH0IhxQ4Pr83yD3f06JQ3134Vs3SCpnWniMmMndOtPkkzltxGa4
+   gvE+h5cJLNpGbsNnccpLzPeKRZt02h1ePoxuRif2bVsPGZfXaEsTwp9Cd
+   w5xy6Gipd+jiGBBW9bp0dyXaf+k85+j+5S7JoE4oxB62QpU5iTofaM/5u
+   sD71EHiMFmsEe1gfdMs/86WDa1SlookHPBZz42Zz3EQ5P4ea+R1r3HttV
+   Rb78kGntjh4SuKliQeT97/Sw9ZBpSULSLGXMLYtsEd7spRkKJ3PJStTon
+   3NfxyXwfHNv0hTw2Je8/5WqtX1NhN+sUbFSMkiU0uVyMygQOw3K+0mEdU
    A==;
-X-CSE-ConnectionGUID: vLbrF7A0SQKpX9g/qSo/Qw==
-X-CSE-MsgGUID: MG3W7Xq3QrKgS3txUk2OIQ==
+X-CSE-ConnectionGUID: VKhL//G9QrW/gImEVesqKQ==
+X-CSE-MsgGUID: oGOzYl6zSlaX6UY1bys/Lw==
 X-IronPort-AV: E=Sophos;i="6.25,154,1779120000"; 
-   d="scan'208";a="150568564"
+   d="scan'208";a="150568565"
 Received: from unknown (HELO uls-op-esad2-o.wdc.com) ([199.255.45.15])
   by ob1.hgst.iphmx.com with ESMTP; 12 Jul 2026 17:33:52 +0800
-X-CSE-ConnectionGUID: p2I7EGjMR7KTtAxkDvGXUw==
-X-CSE-MsgGUID: RdK7IJPBRvycEwky96EPgQ==
-IronPort-SDR: 6a535f64_x4hrChZqXWVLT+3wPTKo+xHUGaM/wIyP67NwKKmxdHgsDEp
- kF3uPXrDh7nDRDEpf1lG6h3M8u74uZrmlRFHbvA==
+X-CSE-ConnectionGUID: GK4VX4p9Tdi/cgIkx1DlGQ==
+X-CSE-MsgGUID: 9+7XKSEWSMiu3I9ct7Mmww==
+IronPort-SDR: 6a535f66_38JXFbHPDKQNzll/YLvxr6ionxh/K1AGUz8nXTEaAD5qhtQ
+ Oam8mSGWsmRQnYUdnOVKg3lI1uz806Kdx7qY2Rw==
 Received: from uls-op-esai1-o.wdc.com ([10.248.3.45])
-  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jul 2026 02:33:24 -0700
-X-CSE-ConnectionGUID: OsCazBrcQ424qS5XPfT5OA==
-X-CSE-MsgGUID: aDhjnbCGTOuxREhdqvyhKw==
+  by uls-op-esad2-o.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jul 2026 02:33:26 -0700
+X-CSE-ConnectionGUID: 369Gs4KZQoOCoBiR9bTr6A==
+X-CSE-MsgGUID: NzY3gQsKRdKWSQmCYEJ2ZA==
 WDCIronportException: Internal
 Received: from wdap-fln31fg1cp.ad.shared (HELO neo.wdc.com) ([10.224.28.153])
-  by uls-op-esai1-o.wdc.com with ESMTP; 12 Jul 2026 02:33:23 -0700
+  by uls-op-esai1-o.wdc.com with ESMTP; 12 Jul 2026 02:33:25 -0700
 From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To: linux-xfs@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 2/3] xfs: create quota metadir inodes using xfs_metadir_create_file
-Date: Sun, 12 Jul 2026 11:33:16 +0200
-Message-ID: <20260712093317.782831-3-johannes.thumshirn@wdc.com>
+Subject: [PATCH 3/3] xfs: create rtgroup metadir inodes using xfs_metadir_create_file
+Date: Sun, 12 Jul 2026 11:33:17 +0200
+Message-ID: <20260712093317.782831-4-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260712093317.782831-1-johannes.thumshirn@wdc.com>
 References: <20260712093317.782831-1-johannes.thumshirn@wdc.com>
@@ -67,61 +67,96 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 Now that we have xfs_metadir_create_file() use it in
-xfs_dqinode_metadir_create().
+xfs_rtginode_create().
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c | 29 +++++++++++------------------
- 1 file changed, 11 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_rtgroup.c | 58 +++++++++++++++++--------------------
+ 1 file changed, 26 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index ce767b40482f..f960474bed3d 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -416,6 +416,15 @@ xfs_dqinode_load(
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+index caecc1e1f723..b6844b9af390 100644
+--- a/fs/xfs/libxfs/xfs_rtgroup.c
++++ b/fs/xfs/libxfs/xfs_rtgroup.c
+@@ -547,6 +547,25 @@ xfs_rtginode_irele(
+ 	*ipp = NULL;
  }
  
++struct xfs_rtginode_create {
++	struct xfs_rtgroup		*rtg;
++	enum xfs_rtg_inodes		type;
++	bool				init;
++};
++
 +static int
-+xfs_dqinode_init(
++xfs_rtginode_init(
 +	struct xfs_metadir_update	*upd,
 +	void				*priv)
 +{
-+	xfs_trans_log_inode(upd->tp, upd->ip, XFS_ILOG_CORE);
-+	return 0;
++	struct xfs_rtginode_create	*rc = priv;
++	const struct xfs_rtginode_ops	*ops = &xfs_rtginode_ops[rc->type];
++
++	xfs_rtginode_lockdep_setup(upd->ip, rtg_rgno(rc->rtg), rc->type);
++	upd->ip->i_projid = rtg_rgno(rc->rtg);
++	return ops->create(rc->rtg, upd->ip, upd->tp, rc->init);
 +}
 +
- /* Create a metadata directory quota inode. */
+ /* Add a metadata inode for a realtime rmap btree. */
  int
- xfs_dqinode_metadir_create(
-@@ -428,25 +437,9 @@ xfs_dqinode_metadir_create(
- 		.metafile_type		= xfs_dqinode_metafile_type(type),
- 		.path			= xfs_dqinode_path(type),
- 	};
--	int				error;
+ xfs_rtginode_create(
+@@ -556,6 +575,11 @@ xfs_rtginode_create(
+ {
+ 	const struct xfs_rtginode_ops	*ops = &xfs_rtginode_ops[type];
+ 	struct xfs_mount		*mp = rtg_mount(rtg);
++	struct xfs_rtginode_create	rc = {
++		.rtg			= rtg,
++		.type			= type,
++		.init			= init,
++	};
+ 	struct xfs_metadir_update	upd = {
+ 		.dp			= mp->m_rtdirip,
+ 		.metafile_type		= ops->metafile_type,
+@@ -574,38 +598,8 @@ xfs_rtginode_create(
+ 	if (!upd.path)
+ 		return -ENOMEM;
  
 -	error = xfs_metadir_start_create(&upd);
 -	if (error)
--		return error;
+-		goto out_path;
 -
 -	error = xfs_metadir_create(&upd, S_IFREG);
 -	if (error)
--		return error;
+-		goto out_cancel;
 -
--	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
+-	xfs_rtginode_lockdep_setup(upd.ip, rtg_rgno(rtg), type);
+-
+-	upd.ip->i_projid = rtg_rgno(rtg);
+-	error = ops->create(rtg, upd.ip, upd.tp, init);
+-	if (error)
+-		goto out_cancel;
 -
 -	error = xfs_metadir_commit(&upd);
 -	if (error)
--		return error;
+-		goto out_path;
 -
+-	kfree(upd.path);
 -	xfs_finish_inode_setup(upd.ip);
--	*ipp = upd.ip;
+-	rtg->rtg_inodes[type] = upd.ip;
 -	return 0;
-+	return xfs_metadir_create_file(&upd, S_IFREG, xfs_dqinode_init, NULL,
-+			ipp);
+-
+-out_cancel:
+-	xfs_metadir_cancel(&upd, error);
+-	/* Have to finish setting up the inode to ensure it's deleted. */
+-	if (upd.ip) {
+-		xfs_finish_inode_setup(upd.ip);
+-		xfs_irele(upd.ip);
+-	}
+-out_path:
++	error = xfs_metadir_create_file(&upd, S_IFREG, xfs_rtginode_init, &rc,
++			&rtg->rtg_inodes[type]);
+ 	kfree(upd.path);
+ 	return error;
  }
- 
- #ifndef __KERNEL__
 -- 
 2.54.0
 
