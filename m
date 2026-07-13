@@ -1,51 +1,88 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B53102FE0F;
-	Mon, 13 Jul 2026 03:55:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.166.238
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C533655FD
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 06:18:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783914919; cv=none; b=UGblsKSnXpNWaMjV2vJ7IIo/2vnZYaoK+uNCtoLYhhuVTTklJvC0HDKa1FOdFi5/Uv2aVQA0tFvbt0mCKzc3BvIFHMRNL83qhUy7CFEOzrKMOJFUXIGyQYnldKD7Jyph922/oD8YpwCgUp5bgmyBURNejYe3ZxFfbRESEnXGjI8=
+	t=1783923523; cv=none; b=g3sw0I7LcZHgcJhxO6FCsGsp0A9JEF3d1tbbPgs2AbtN/8498v3SRHzkhu2JqaidrxCB/W5xE/mcXkxFooYDzUy5/AmqEDp2Il2S9zPAqMcxS1Huc5cGOeiyCc7zvDtJW9GYoXp973wXk/KuYYFxDVR0Uz1Fn9qEJL8rFMFw//k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783914919; c=relaxed/simple;
-	bh=WenNaULncWqcvZY47A8ESh0mMMbI6efAG0Ty2bGVuKI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O/lcrNsVYHJaEYCzlkCWZ0J+ht2u7FbPKBpeGXbNYmH/hDycAqiSsrWvpWG+2vI3zQEeBmk5LqZLEJLpbgBNStxbJZPbhLJd9etjhUToWscgNacXRqldjCRmognL0dL11zJwOCGY123n0AlprqBFQoXqoYZe6U9PMgSASB5fNVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=HRyGIr/q; arc=none smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+	s=arc-20240116; t=1783923523; c=relaxed/simple;
+	bh=+MrWXRIfwc0Zv78dZOd2Eyfpm6bFVinB6uiwmCQIHu0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kKELLuI+W2b71EfCe7FYWtDE6CCbvCESM50a44wfEiNl6TQ69H/3GiUnMXjoN73oDa3ITsjc5a2nmj9LW7wGyxFsoAhqP0i/PRjQ+d4b2w6w7EThjJa8zIcodxYvnlDfuvKKOU+Do+vpBWSlFIYJvuBtLJlf3AUktdi9eYtqTks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=P1JHr3Y6; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=kSrOpCVP; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="HRyGIr/q"
-Received: from pps.filterd (m0250810.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66D3OZ8B2798054;
-	Sun, 12 Jul 2026 20:55:08 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:message-id:mime-version:subject:to; s=PPS06212021; bh=LgEx4yp5a
-	axkUnLJtOZoceAc2wsPpWd0pcLngC8fhSE=; b=HRyGIr/qDm1NBBISW9l5qC4OG
-	DPSDBWit52csmP82JBt5DwgHiAKwWDRWbimQiGZWMMzGn9aO5pYkObtU3+9oVeaD
-	jXT8i9oHnYotO7kLrLbt3ggTztV7PKdirbJzCJGUjcmTT8/TIx48raLIidLhWval
-	dYkz+heu9X84JJJ2TCBy2v1+KjKE6kiCpg9d5wLQ9TzoKQ3R/mbO818zfr7OUTfl
-	efQeoGo6qT8NIqzXkpeGvRiq68XHWOnM7/S4ItVn4yRnaObxhV/4UzajY1YZ5GYL
-	ikJH0lVe/wzT0jVclmblbkUbIODQBNJu6jqdOmYEzLME/z1P8cCl0ea43ickA==
-Received: from ala-exchng02.corp.ad.wrs.com (ala-exchng02.wrs.com [128.224.246.37])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4fbh40sk7u-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Sun, 12 Jul 2026 20:55:08 -0700 (PDT)
-Received: from ala-exchng01.corp.ad.wrs.com (10.11.224.121) by
- ALA-EXCHNG02.corp.ad.wrs.com (10.11.224.122) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.61; Sun, 12 Jul 2026 20:55:07 -0700
-Received: from pek-yzhou-d3.wrs.com (10.11.232.110) by
- ala-exchng01.corp.ad.wrs.com (10.11.224.121) with Microsoft SMTP Server id
- 15.1.2507.61 via Frontend Transport; Sun, 12 Jul 2026 20:55:06 -0700
-From: Yun Zhou <yun.zhou@windriver.com>
-To: <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <yun.zhou@windriver.com>
-Subject: [PATCH] xfs: restore nofs context unconditionally in xfs_trans_roll
-Date: Mon, 13 Jul 2026 11:55:05 +0800
-Message-ID: <20260713035505.1635191-1-yun.zhou@windriver.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P1JHr3Y6";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="kSrOpCVP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1783923521;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=8LSB2dymbFEEsJzcflJNoLJ+AlzGMYHxA3bqXgSK7oU=;
+	b=P1JHr3Y6AKmYEpASNOMJN7cR7ieX/yUzGQQ3U/k71L+fD1WkLrjImyVRxXHoRA3x1oQ170
+	t2QAS/VDJRLUg0jQVCyJXxb1ZI/AX62Kt1AGMEoqMKm7SVPY3T8X9amknva12tMK0yaW8W
+	OOmK5lL9n/nybRf6m7q1MCGFjnzii4s=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-189-2pogujIFOaeQXUkrK6EVxw-1; Mon, 13 Jul 2026 02:18:39 -0400
+X-MC-Unique: 2pogujIFOaeQXUkrK6EVxw-1
+X-Mimecast-MFC-AGG-ID: 2pogujIFOaeQXUkrK6EVxw_1783923518
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-37d4f23eb37so4685514a91.0
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2026 23:18:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1783923518; x=1784528318; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=8LSB2dymbFEEsJzcflJNoLJ+AlzGMYHxA3bqXgSK7oU=;
+        b=kSrOpCVPxpEJGrBZ4tKjv4GJpBYQFnNy2DP8fCYLo/OHERVkWezoiPe1A2EX8w49qq
+         mzU0JcQDP/3E0v1RQYL1ULKenvSeJcU1/gQAnRqqOqPqQ4ngyH113HfR5IrcU3UQn8Jm
+         mj3p/dd6hON2nr9stgiZW7vUdbQk5SaALswbUNFx1AZKp5Y1gKp8QyMF3HhKqaIyTGC9
+         P1a59+z3apwFgDrOH1CX7DU5ZjAg52ANq7hBo/Kf8jEHVQYyOTvQH2Ezh5LO5slPgu7M
+         Nro2RJiynLONl9s3MyNWdcX/CGs0esoDvyKU3SCpq7UAGWpuvcbNP5ZkUziHuXLIhIVY
+         FqlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783923518; x=1784528318;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=8LSB2dymbFEEsJzcflJNoLJ+AlzGMYHxA3bqXgSK7oU=;
+        b=rEDrbjxrul2v3BZkZjTOon6JFmsx02scgSD3W/bZEsEizOBjFqvqH9GJTj6L5P6+NC
+         lpuORrhB4J87qv3izAKbEjuPoXm0j0MByJwC8Q/UFMdy6J6BeaKfGXsl3DJEsL8XxLqQ
+         wInTx7pvM5Hbl3wLjZosUjwe5bfCj5sb0e6Nz79x6oA5oiX714fs5ZdAAaXwCMuCGgve
+         iaPm7i1HLbc/7Tn+2KSMYw9ffJvMbyLthiLWzRUdbIewYcC6rplOWv2MgCG41HclOTtJ
+         ZlpmPUUfcAOidIepEA61wjHH8b/DukUz3itlEj9v/3rlzDZDZ/mIOxR9JyAQ7GMIKlFU
+         jpVA==
+X-Gm-Message-State: AOJu0YzOhCFMgHkfXEy/iDj6zWoL8RAblMq9BEFeMenhu2G5GfABoOSc
+	M1jsZkM/BUxaGOyu1QpVzv/YzwES2Lg/T99seGpCT6V8GR/T/ozviOfr2zd8kD5P9mojTjQftIF
+	a+sY2p6Cpwy8VmEDQ3B2qo8+ipMil1AfYdgL+DESH3F/99eCSj55lb2d2FDQfz/lxbbJMz00W/O
+	v2BZ55O1ru+0iLDfN7BSlgW2+44PIXW0nklOT5PgmRLFxXkg==
+X-Gm-Gg: AfdE7clVPw9UkbxoTXrRDbT0nOdZkD5NrCxCEN4ebnV6w7sYYoWdgc2Z9/9txRWU6XZ
+	yjJHVe4uqn7WUwOisKv/P64Lfa1399v+Y3dtJrFZ1iFbQNcsTVRrBsOblTn8QJ/GksnyninOWzI
+	8YfnTN7ahRWaAX865arTB+AY4V1/qEeZKU3yceOC2Cm1ikTitXjXMgHMOuHpu/0NFujKUheEs5O
+	Y5ngC3nw07cngA3wSoQr5KDu6TYBYeEdcYDq6drQLdcuSx19tEBLVB5jDHlqpPjjXzZ4W27l0Bq
+	VMIxdBn9L8mcG9g7FEbxGLqDKR82KVW9lqaZ5/YxCJw2q+g9v1cSGsfbWiJ8a+uTnsxQAnRlV5G
+	lZmD/cpTv1WHYiZNsjSJ43qxm0Yeo5BFtTdRGXurPB/kDWbQ=
+X-Received: by 2002:a17:90b:5384:b0:389:8f6c:4d58 with SMTP id 98e67ed59e1d1-38dc777c40cmr8000161a91.34.1783923518352;
+        Sun, 12 Jul 2026 23:18:38 -0700 (PDT)
+X-Received: by 2002:a17:90b:5384:b0:389:8f6c:4d58 with SMTP id 98e67ed59e1d1-38dc777c40cmr8000124a91.34.1783923517772;
+        Sun, 12 Jul 2026 23:18:37 -0700 (PDT)
+Received: from msinguru-thinkpadp1gen4i.bengluru.csb ([115.110.236.142])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-313b4cbafa1sm44943800eec.6.2026.07.12.23.18.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 12 Jul 2026 23:18:37 -0700 (PDT)
+From: Manognya Singuru <msinguru@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: aalbersh@redhat.com,
+	Manognya Singuru <msinguru@redhat.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH v2] mdrestore: fix extent length overflow in v2 restore path
+Date: Mon, 13 Jul 2026 11:48:08 +0530
+Message-ID: <20260713061808.22518-1-msinguru@redhat.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,93 +90,70 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDAzNiBTYWx0ZWRfX/KVTWWGQAnAg
- Z9kgzPT4pyIhp69VV2rtcd8jgi7aDHhQJrD5NVddMLw3LopSQt2hVDwNg8m4+ioBHQTHGDriXL6
- /6KAht52DO8rcjuw3JfmaL7ZKytJLgf1MuAZEbUIZR2tQhfPMWtEz1R45QKXuV2N7qyWrWTPEta
- i47I7EE2j+DDAzSE6nePIsKK8oFK81dzneC/4SN3o0CYc9/hy1iJHLkrcoDaQr4pi0GwnL6NAU3
- yOllkgPRd6ecsFOm5p2Ghm2PVzlRpNceJFRfv0d7vLr0sbB5EqMZmV2vl2G0XZvQx6CKTn7oD4o
- y36ecJmyz+pwLe17lPXEHwIUUtBi8zmZh4WxR67ZNGdnp9KeywTJtcMPTZDBa6np22ci7nLJsKe
- I7g4stnafKuAkOKou1gJizIEkLgLBbivqj36Ep75B/LLC1WGm1bRAZRYFefdTfUYdbcQlaGz+rl
- FmGVxxnCXuU/5XULjgA==
-X-Proofpoint-ORIG-GUID: 0qPYxYbTZcNnivjzD7ja35Z0CwYGCotO
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDAzNiBTYWx0ZWRfXxMlgfPt1NOhV
- 82ETA6M5pP330srV+16mSuskYFXKbVMzx/S06ikH3MiBDpXv831JwShChjKDj9DNJroILUGDZM9
- JRKBBhuWOIp18tB9WSuY7Ay9WNOotizzRWq6Gse39pkVe/N5VzL5
-X-Authority-Analysis: v=2.4 cv=JbGMa0KV c=1 sm=1 tr=0 ts=6a54619c cx=c_pps
- a=Lg6ja3A245NiLSnFpY5YKQ==:117 a=Lg6ja3A245NiLSnFpY5YKQ==:17
- a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22
- a=HK-ge7EqtdluswH-FwHe:22 a=edf1wS77AAAA:8 a=hSkVLCK3AAAA:8 a=t7CeM3EgAAAA:8
- a=f6HC1ILcO5oyKfBqgOoA:9 a=DcSpbTIhAlouE1Uv7lRv:22 a=cQPPKAXgyycSBL8etih5:22
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-GUID: 0qPYxYbTZcNnivjzD7ja35Z0CwYGCotO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-13_01,2026-07-10_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 suspectscore=0 clxscore=1011
- lowpriorityscore=0 adultscore=0 phishscore=0 malwarescore=0 bulkscore=0
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607130036
 
-When __xfs_trans_commit() fails in xfs_trans_roll(), the NOFS context
-is cleared but only restored in the success path.  This leaves the
-error path without nofs protection, causing a circular lock dependency
-between xfs_nondir_ilock_class and fs_reclaim:
+Aisle Research reported that a crafted metadump v2 extent
+length can overflow the signed int used for length,
+leading to incorrect size calculations and a
+potential heap buffer over-read in restore_meta_extent().
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(&xfs_nondir_ilock_class);
-                               lock(fs_reclaim);
-                               lock(&xfs_nondir_ilock_class);
-  lock(fs_reclaim);
+Change the length type to uint64_t and ensure all size
+arithmetic in 64-bit before converting to size_t for I/O
+calls.
 
-Fix this by moving xfs_trans_set_context() before the error check so
-that nofs context is always restored on the new transaction.
-
-Reported-by: syzbot+59178abfeb0ea3f0ab20@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=59178abfeb0ea3f0ab20
-Fixes: a1ca658d649a ("xfs: fix incorrect context handling in xfs_trans_roll")
-Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Manognya Singuru <msinguru@redhat.com>
 ---
- fs/xfs/xfs_trans.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Changes since v1:
+- Fixed indentation
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 7bfbd9f6f0df..1b36cf12d4e3 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1029,6 +1029,15 @@ xfs_trans_roll(
- 	 * duplicate transaction that gets returned.
- 	 */
- 	error = __xfs_trans_commit(tp, true);
-+
-+	tp = *tpp;
-+	/*
-+	 * __xfs_trans_commit cleared the NOFS flag by calling into
-+	 * xfs_trans_free.  Set it again here before doing memory
-+	 * allocations.
-+	 */
-+	xfs_trans_set_context(tp);
-+
- 	if (error)
- 		return error;
+ mdrestore/xfs_mdrestore.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index f10c4bef..3368a005 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -395,11 +395,9 @@ restore_meta_extent(
+ 	char		*device,
+ 	void		*buf,
+ 	uint64_t	offset,
+-	int		len)
++	uint64_t	len)
+ {
+-	int		io_size;
+-
+-	io_size = min(len, MDR_IO_BUF_SIZE);
++	size_t io_size = min(len, MDR_IO_BUF_SIZE);
  
-@@ -1040,13 +1049,6 @@ xfs_trans_roll(
- 	 * either nothing be locked across this call, or that anything that is
- 	 * locked be logged in the prior and the next transactions.
- 	 */
--	tp = *tpp;
--	/*
--	 * __xfs_trans_commit cleared the NOFS flag by calling into
--	 * xfs_trans_free.  Set it again here before doing memory
--	 * allocations.
--	 */
--	xfs_trans_set_context(tp);
- 	error = xfs_log_regrant(tp->t_mountp, tp->t_ticket);
- 	if (error)
- 		return error;
+ 	do {
+ 		if (fread(buf, io_size, 1, md_fp) != 1)
+@@ -428,7 +426,7 @@ restore_v2(
+ 	int64_t			mb_read = 0;
+ 	int64_t			bytes_read;
+ 	uint64_t		offset;
+-	int			len;
++	uint64_t		len;
+ 
+ 	block_buffer = malloc(MDR_IO_BUF_SIZE);
+ 	if (block_buffer == NULL)
+@@ -442,7 +440,7 @@ restore_v2(
+ 			XME_ADDR_DATA_DEVICE)
+ 		fatal("Invalid superblock disk address/length\n");
+ 
+-	len = BBTOB(be32_to_cpu(xme.xme_len));
++	len = BBTOB((uint64_t)be32_to_cpu(xme.xme_len));
+ 
+ 	if (fread(block_buffer, len, 1, md_fp) != 1)
+ 		fatal("error reading from metadump file\n");
+@@ -503,7 +501,7 @@ restore_v2(
+ 			break;
+ 		}
+ 
+-		len = BBTOB(be32_to_cpu(xme.xme_len));
++		len = BBTOB((uint64_t)be32_to_cpu(xme.xme_len));
+ 
+ 		restore_meta_extent(md_fp, fd, device, block_buffer, offset,
+ 				len);
 -- 
-2.43.0
+2.54.0
 
