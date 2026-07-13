@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179753B83E8
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 22:52:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B83553546C5
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 22:54:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783983147; cv=none; b=P3vOgDPlhYqWfbovMYpTYYWaXxtY8odtJlmtsdUzHwH9pJcBrzTdC4JTKl9fw0Ia88/4mFP18jOD/+6qCsFrG8+UEMskVEvC13zemTahwSm2b34jMUzXVDqIC989IespXjeLg30xcbquDxEnoan1eGrx6j/CxwdjE2CjKg/YiJ4=
+	t=1783983292; cv=none; b=DAnZJC+mD9Gy/UJXfHlIqQZRAjOEVEb4B6F1+S+YZ7Xj8//qH25B1II/ThkWzlruSlW+5Xy16IF/6BG9gNCR52aWIXATgtsN0aDH3BKf0xHo8+w4chruUMFu6vUPQWZ/ZrmilzOaFfAbTB3alzZ8uZDFJbz5vOfPmfuRywfMFQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783983147; c=relaxed/simple;
-	bh=dSHlskzE+GDGqjne8z+h8WJ3IwKgpG4Kbue4opZG9bg=;
+	s=arc-20240116; t=1783983292; c=relaxed/simple;
+	bh=+Dn+/XdNH+HVMEX9DuPFmjXFQX4qo91Umo4ju2mULlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gylenq8wMrCk/0CmJCS7domBhLf1LCsZ27eN/+JJIOaSr5DIGkmdTlj/rUlluPAbe2WvgF0WTxaGLyzQasQRolvRPfXQQVHbnYTnC2Je1KYxOyj/AbKKF5cLAQ6zj6cQqSGS6d+yecTReic3jry3Ed+vx4kpkWIY6Rb27qeu4uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f0/2atGY; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dm8E7niZgbbG+4HLKTehYgMTN+PYiPXiNkEbu0amVUWoV0cEYBp6j7WCKbGMAcZ0sMOMdHM37eGOso+xbx/7WY5vfDHnToJKi+Js3mbXhW9t8PW+DJTBto81NL6OlhttxnKi3bHsz9Zf5WIaMGIZQNaVlDw2iWk2l49jA/VgWYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QbCpsQwl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0/2atGY"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9F8A81F000E9;
-	Mon, 13 Jul 2026 22:52:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QbCpsQwl"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4A1271F000E9;
+	Mon, 13 Jul 2026 22:54:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783983145;
-	bh=CWbM++ZnK979WFr3rUU2I53CjEqbP7yyHdrMT/t3m6w=;
+	s=k20260515; t=1783983291;
+	bh=TmEmZ2JWlEtBfyPp3tc6fAcalulnWHoWk03EIwL5jZY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=f0/2atGY4D8Poh6D3stls7vJ1bD9Q2lQUbSToLYCwyee70eGUmupdMYMea1fOjPW5
-	 +R3463UNDuIDSe2Vi4UmU0A3X6xm9QAmBsNfXwUMXegRJL3bADhSwtWB+7w1uqARZb
-	 iY/TTjQOC305/pPyDuTye6ySqnXP5UlmEfmTJGY+c0KGTcDa22JxEy+5FsFwllqqyV
-	 psJ87czzHcVSW7nzV9M+nsVtH/yhsJihW6d4365ifME51Gn0Hw7Q13exUWyu0c8VRS
-	 jMn57p4Jif1j1ZP7NQWkVSypILk0Cwlf74o5NPr4exE+vJIREx7nszi9xy604l8vHB
-	 URs9q9Hb6WpPQ==
-Date: Mon, 13 Jul 2026 15:52:25 -0700
+	b=QbCpsQwlqapFtlWWEE5UpKF+tT0OHhTTGE6WzQm+XyNaTek02s40izD9iZ8MHbweW
+	 W0NKbyzgAl5qTRNdJGwoc5FteeqP2Yigdu4ihI+B44ERuPzNZe63FSdszky9QbmsLk
+	 GGSPx7KTjn7NnJDfS02A3Pa1cthJoi+hAElJBG8oeQIHJiTOGQES1P46vIhUNRJMSD
+	 oCBfOTq3Z6Fyzj341ht34pnCFMFWKJogfAkPa2804oC5pGJVunYw6wGYxbXGzCxuyf
+	 Dxa/CLzX07Dcmr8JfPu7Iq36FCUvi4OVZXMkWuYryCYlFvvFUgXQj9wS5uZoij4nmp
+	 ihV3czY0zEHOQ==
+Date: Mon, 13 Jul 2026 15:54:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
 	Carlos Maiolino <cem@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v2 2/4] xfs: create quota metadir inodes using
+Subject: Re: [PATCH v2 3/4] xfs: create rtgroup metadir inodes using
  xfs_metadir_create_file
-Message-ID: <20260713225225.GJ7195@frogsfrogsfrogs>
+Message-ID: <20260713225450.GK7195@frogsfrogsfrogs>
 References: <20260713124250.3978-1-johannes.thumshirn@wdc.com>
- <20260713124250.3978-3-johannes.thumshirn@wdc.com>
+ <20260713124250.3978-4-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,82 +45,110 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260713124250.3978-3-johannes.thumshirn@wdc.com>
+In-Reply-To: <20260713124250.3978-4-johannes.thumshirn@wdc.com>
 
-On Mon, Jul 13, 2026 at 02:42:48PM +0200, Johannes Thumshirn wrote:
+On Mon, Jul 13, 2026 at 02:42:49PM +0200, Johannes Thumshirn wrote:
 > Now that we have xfs_metadir_create_file() use it in
-> xfs_dqinode_metadir_create().
+> xfs_rtginode_create().
 > 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  fs/xfs/libxfs/xfs_rtgroup.c | 58 +++++++++++++++++--------------------
+>  1 file changed, 26 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.c b/fs/xfs/libxfs/xfs_rtgroup.c
+> index c85d50953218..fe7222bbe449 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.c
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.c
+> @@ -517,6 +517,25 @@ xfs_rtginode_irele(
+>  	*ipp = NULL;
+>  }
+>  
+> +struct xfs_rtginode_create {
+> +	struct xfs_rtgroup		*rtg;
+> +	enum xfs_rtg_inodes		type;
+> +	bool				init;
+> +};
+> +
+> +static int
+> +xfs_rtginode_init(
+> +	struct xfs_metadir_update	*upd,
+> +	void				*priv)
+> +{
+> +	struct xfs_rtginode_create	*rc = priv;
+> +	const struct xfs_rtginode_ops	*ops = &xfs_rtginode_ops[rc->type];
+> +
+> +	xfs_rtginode_lockdep_setup(upd->ip, rtg_rgno(rc->rtg), rc->type);
+> +	upd->ip->i_projid = rtg_rgno(rc->rtg);
+> +	return ops->create(rc->rtg, upd->ip, upd->tp, rc->init);
 
-Looks good to me,
+Though I guess we already have ->create for rtgroup inodes.  I can't
+think of a good (re)naming scheme for both ... but the parameters are at
+least different so I guess this is fine.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c | 39 ++++++++++-------------------------
->  1 file changed, 11 insertions(+), 28 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index bbada0d3cc08..f960474bed3d 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -416,6 +416,15 @@ xfs_dqinode_load(
->  	return 0;
->  }
->  
-> +static int
-> +xfs_dqinode_init(
-> +	struct xfs_metadir_update	*upd,
-> +	void				*priv)
-> +{
-> +	xfs_trans_log_inode(upd->tp, upd->ip, XFS_ILOG_CORE);
-> +	return 0;
 > +}
 > +
->  /* Create a metadata directory quota inode. */
+>  /* Add a metadata inode for a realtime rmap btree. */
 >  int
->  xfs_dqinode_metadir_create(
-> @@ -428,35 +437,9 @@ xfs_dqinode_metadir_create(
->  		.metafile_type		= xfs_dqinode_metafile_type(type),
->  		.path			= xfs_dqinode_path(type),
->  	};
-> -	int				error;
+>  xfs_rtginode_create(
+> @@ -526,6 +545,11 @@ xfs_rtginode_create(
+>  {
+>  	const struct xfs_rtginode_ops	*ops = &xfs_rtginode_ops[type];
+>  	struct xfs_mount		*mp = rtg_mount(rtg);
+> +	struct xfs_rtginode_create	rc = {
+> +		.rtg			= rtg,
+> +		.type			= type,
+> +		.init			= init,
+> +	};
+>  	struct xfs_metadir_update	upd = {
+>  		.dp			= mp->m_rtdirip,
+>  		.metafile_type		= ops->metafile_type,
+> @@ -544,38 +568,8 @@ xfs_rtginode_create(
+>  	if (!upd.path)
+>  		return -ENOMEM;
 >  
 > -	error = xfs_metadir_start_create(&upd);
 > -	if (error)
-> -		return error;
+> -		goto out_path;
 > -
 > -	error = xfs_metadir_create(&upd, S_IFREG);
 > -	if (error)
 > -		goto out_cancel;
 > -
-> -	xfs_trans_log_inode(upd.tp, upd.ip, XFS_ILOG_CORE);
+> -	xfs_rtginode_lockdep_setup(upd.ip, rtg_rgno(rtg), type);
+> -
+> -	upd.ip->i_projid = rtg_rgno(rtg);
+> -	error = ops->create(rtg, upd.ip, upd.tp, init);
+> -	if (error)
+> -		goto out_cancel;
 > -
 > -	error = xfs_metadir_commit(&upd);
 > -	if (error)
-> -		goto out_irele;
+> -		goto out_path;
 > -
+> -	kfree(upd.path);
 > -	xfs_finish_inode_setup(upd.ip);
-> -	*ipp = upd.ip;
+> -	rtg->rtg_inodes[type] = upd.ip;
 > -	return 0;
 > -
 > -out_cancel:
 > -	xfs_metadir_cancel(&upd, error);
-> -out_irele:
 > -	/* Have to finish setting up the inode to ensure it's deleted. */
 > -	if (upd.ip) {
 > -		xfs_finish_inode_setup(upd.ip);
 > -		xfs_irele(upd.ip);
 > -	}
-> -	return error;
-> +	return xfs_metadir_create_file(&upd, S_IFREG, xfs_dqinode_init, NULL,
-> +			ipp);
+> -out_path:
+> +	error = xfs_metadir_create_file(&upd, S_IFREG, xfs_rtginode_init, &rc,
+> +			&rtg->rtg_inodes[type]);
+>  	kfree(upd.path);
+>  	return error;
 >  }
->  
->  #ifndef __KERNEL__
 > -- 
 > 2.54.0
 > 
