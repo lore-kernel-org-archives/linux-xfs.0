@@ -1,26 +1,27 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD80A390237;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA533909B3;
 	Mon, 13 Jul 2026 07:37:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783928247; cv=none; b=XHHauyzuKQl7trbDUkvEY59GJQUfRV3XXEqB1fkx4nnzy2OBdaO/yTiAnsl270bjba0DvpbdYuwZCPJOVVzzDmdkpOZ+68km+U7VuNCslWk9fWI5+RuLt3v7yoLgKHxs+Fjphpt0vOeRIdtj//+XwxaxVx9lLxGSBvHtMatVkWs=
+	t=1783928247; cv=none; b=XbTfkmK7YXBBGrfGe694ahj2x6L83PfDYgc6oYzD9ZAObszl8fEnpPVrZWSUqsoKKCHJBdqrSZyztwursdx10u7NXtRTP8Xr0yYdqcHbPZ4IKZBHVY4LdKpcdC3BF399K+ai6xG121vJjjC2e7FBtOiSX4oE6Av+T1np5BySf5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783928247; c=relaxed/simple;
-	bh=kXdLVb6ndLGpax5uwJZ+z+XlSDVQ1Z18TjlIPmZuRaA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YC0JwYcHGRnClSYAKfUzDGNKYms/dTODroqLQFB9DJ266JMJXLwtiBTXKGZ16gF9DXj+kN9lKbvdrpNtfkLucE9Rr6mjvtK1+I7Qo4fuHyK/n38vFJko6DsjMr28rUc2MWJPlnRx1nTKvqRzh9ClTYq7yxccOxXQ6PG9htsOpg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	bh=YtnlLqhXgYDdZxE3metyZH94VSc+qGIla6ZkTmVDt/w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AC+oB/1FNYKlwiiKlSuJkGynVzsmRq41Ef8k4MHBqkiiHHmOWFCe8Hq0U/4L4IKbqrT8Fo5T4hPqahxw8PjiKCh0W7+MAUO29tnpOd1EzwDTDRDI3MosGaWXhWiS8Vf7/1brfqratH6k599Wcchijnlmp4QL543qNf6XOkVYls0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gzDm53WdvzYQthf;
-	Mon, 13 Jul 2026 15:37:09 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4gzDlp0TkpzKHMN8;
+	Mon, 13 Jul 2026 15:36:54 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id B0A2A405FB;
+	by mail.maildlp.com (Postfix) with ESMTP id C454F40571;
 	Mon, 13 Jul 2026 15:37:22 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgDH1nKmlVRq7pA+BA--.39618S4;
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgDH1nKmlVRq7pA+BA--.39618S5;
 	Mon, 13 Jul 2026 15:37:22 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-fsdevel@vger.kernel.org,
@@ -36,10 +37,12 @@ Cc: linux-ext4@vger.kernel.org,
 	chengzhihao1@huawei.com,
 	yangerkun@huawei.com,
 	yukuai@fnnas.com
-Subject: [PATCH v3 0/5] iomap: trivial fixes for ext4 conversion
-Date: Mon, 13 Jul 2026 15:29:01 +0800
-Message-ID: <20260713072906.1726059-1-yi.zhang@huaweicloud.com>
+Subject: [PATCH v3 1/5] iomap: correct the range of a partial dirty clear
+Date: Mon, 13 Jul 2026 15:29:02 +0800
+Message-ID: <20260713072906.1726059-2-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260713072906.1726059-1-yi.zhang@huaweicloud.com>
+References: <20260713072906.1726059-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,74 +50,72 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDH1nKmlVRq7pA+BA--.39618S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7uFyfZr1kur4xurWkAF4Utwb_yoW8Cw15pF
-	Z3Ka15Gr4UGry3G3yfAFWxXr1Yv3WfXr48Wa13Gwn5ZF45AF18WF4xKa15ZryDGrWrCrWF
-	qr1jv3Z3CFyqyrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-TRANSID:cCh0CgDH1nKmlVRq7pA+BA--.39618S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7ury5ArW5Wr4DKF1xuryDJrb_yoW8Zr13pF
+	s3KF45KrWDX348u3WkZFWrXFn8Ka9rWFWxJrW3Grn3Wa15XF1FgF1v9ay5uFyUKrZrAF10
+	vF13KryxCr4DArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1l84
+	ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JU4OJ5UUUUU=
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-Hi,
+The block range calculation in ifs_clear_range_dirty() is incorrect when
+partially clearing a range in a folio. We cannot clear the dirty bit of
+the first block or the last block if the start or end offset is not
+blocksize-aligned. This has not yet caused any issues since we always
+clear a whole folio in iomap_writeback_folio().
 
-This is the v3 revision of the trivial iomap fixes for the ext4
-conversion. There are no code changes relative to v2.
+Fix this by rounding up the first block to blocksize alignment, and
+calculate the last block by rounding down (using truncation). Correct
+the nr_blks calculation accordingly.
 
-Changes since v2:
- - Collect RVB tags from Darrick and Joanne.
- - Remove CC stable tag in patch 01 as Joanne suggested.
-Changes since v1:
- - Add fix tags to patch 01 and 04.
- - In patch 04, change ifs_set_range_uptodate() to always fall through
-   to ifs_is_fully_uptodate(), preventing a false-positive uptodate
-   mask.
- - Add patch 05, add comments for ifs_clear/set_range_dirty().
+Fixes: 4ce02c679722 ("iomap: Add per-block dirty state tracking to improve performance")
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/iomap/buffered-io.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-v2: https://lore.kernel.org/linux-fsdevel/20260520030357.679687-1-yi.zhang@huaweicloud.com/
-v1: https://lore.kernel.org/linux-fsdevel/20260514062955.1183976-1-yi.zhang@huaweicloud.com/
-
-
-Original Cover-letter:
-
-This patch series contains a few trivial iomap-related fixes in
-preparation for converting ext4 buffered I/O to use iomap. 
-
-The first three patches are taken from my ext4 conversion series [1], as
-suggested by Christoph. The fourth patch fixes a bug originally reported
-by Sashiko during review of my series; although unrelated to the ext4
-conversion, it is worth fixing on its own. Please see the following
-patches for detail. The fifth patch add comments for
-ifs_clear/set_range_dirty(), and the last patch avoids merging ioends
-that have different private data.
-
-Thanks,
-Yi.
-
-[1] https://lore.kernel.org/linux-ext4/20260511072344.191271-1-yi.zhang@huaweicloud.com/
-
-Zhang Yi (5):
-  iomap: correct the range of a partial dirty clear
-  iomap: support invalidating partial folios
-  iomap: fix incorrect did_zero setting in iomap_zero_iter()
-  iomap: fix out-of-bounds bitmap_set() with zero-length range
-  iomap: add comments for ifs_clear/set_range_dirty()
-
- fs/iomap/buffered-io.c | 58 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 44 insertions(+), 14 deletions(-)
-
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d55b936e6986..48878bc4ff62 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -176,13 +176,17 @@ static void ifs_clear_range_dirty(struct folio *folio,
+ {
+ 	struct inode *inode = folio->mapping->host;
+ 	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+-	unsigned int first_blk = (off >> inode->i_blkbits);
+-	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+-	unsigned int nr_blks = last_blk - first_blk + 1;
++	unsigned int first_blk = round_up(off, i_blocksize(inode)) >>
++				 inode->i_blkbits;
++	unsigned int last_blk = (off + len) >> inode->i_blkbits;
+ 	unsigned long flags;
+ 
++	if (first_blk >= last_blk)
++		return;
++
+ 	spin_lock_irqsave(&ifs->state_lock, flags);
+-	bitmap_clear(ifs->state, first_blk + blks_per_folio, nr_blks);
++	bitmap_clear(ifs->state, first_blk + blks_per_folio,
++		     last_blk - first_blk);
+ 	spin_unlock_irqrestore(&ifs->state_lock, flags);
+ }
+ 
 -- 
 2.52.0
 
