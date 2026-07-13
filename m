@@ -1,75 +1,94 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB40C42B31A
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 13:21:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 238664252CB;
+	Mon, 13 Jul 2026 13:28:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783948916; cv=none; b=jdqJa3x20v5r4+klNuHAZK9tddpK27vnHRdTvnpwLUAHN0i+mCsx1bONB5IWEsQGuyRcTytGRQZHn2kDHwgcdrbfzn7wpbFwTspuaW1xmUMY5/BAKBiMfjnRlSKk5DyMJmuFAvY/IskmGdAD/7w5ihNK5muqOXSk2KFL15SssDo=
+	t=1783949324; cv=none; b=powC0Ra7bVU4x7GGaCftvztfRcR8QOWtm1mEu5scsSdZafk5Ri0CxXJA1qeKY2fdlcNVhvB8/B/9OtUV0LY+2QWpSVZEHL5UpdBdzBr1FeMXo6OyZQX3UNa9vqsiRr7JfOleqofga57JTa3wbewmtXe+3GE2i5a2J479B+MsYWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783948916; c=relaxed/simple;
-	bh=Y00l/aSmPOJBHXtT2VBY6pzYYLDYF4f40DvYsjUxc28=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H+phrbwKGWKSycpallFI964njT5ojCTrM99hNrbRjHnvQjc8s/deCK8QoUsgyEiJig0b7EAuA9FdWRABe685CWIc6MJ8lajTsSdsT/lpzkzwyD0EQtayc9hZ+PDkbgtRAwzlyjGrNaFGd1duoK2N1iLhrSZBwGiAE2L6CAhe0Ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Cov13TH/; arc=none smtp.client-ip=95.215.58.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1783949324; c=relaxed/simple;
+	bh=uhRlB6VHuwSZa3/lNVCqNPJIh60YCKv36/hOkbecbl8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cjjp7mNh2egoWgPyWOUANE4biGVa8w9JxTzl+3V0bgppHGEn4USEbU9EyLNLS6QsOmr/O3SJc+qVp/ShY4tj0dn14IZ7+6bINwDPp9r0b3egaZzTu+YeOiFM8YjeSn6Vgj/DwC1FL8IXMlyQCJTyZUzym5litwT/eM93AzNMrgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=E7cUGVrU; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Cov13TH/"
-Message-ID: <db3ed600-8a4a-4932-9e4e-2f5a5d27cdd9@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1783948903;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FbcdiqhBJyEUTJK4S+yiy3XNkF/rw3bRMaKqh1gl8bc=;
-	b=Cov13TH/mP0LQyWsxmG9YTHikhR72V4sUNZvXvGhgKIareSiwn1d9oP2yjuoAqBEyrFOov
-	ug9ZU7Bj99oKW48EXUC2NTAV/tnxonGMYfJf5NTl6Ppijqjecq62wFeDeQG8jKkRUWm7ZK
-	Hu8aL9Vd8CapV94IgiiWvkDUX28Yg/Q=
-Date: Mon, 13 Jul 2026 15:21:36 +0200
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E7cUGVrU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=2ElgFSqCDKo/YlY7HXgzTLHmuYFu++0ngFU0qaSYCGQ=; b=E7cUGVrUVRbFAupI7nUjixDuTU
+	Vct7AgAjwtxLfxBGHG14ak610O2Y7sM8e0N/TsDuQO/eUZhQFdjWlyOs3XLIsZCWqi6XJ3regraJZ
+	hL6mwKhmjhxAJA7IppiClPut0Bm7wC3ZxbyyeHDsFK8mgdnt84xAoOjdQRjal2j5AGk1j/zaLTVz/
+	JFWBtR0JEzD8nz4sNvVaxphCebYmeWVLWSVwa/NAEkmCnGbYE6CIDDlEIwgmnccptQOO5nKwdyrmh
+	/hmKZcMGzo27UggXiZPQO8B4BEsXOv5sOfqBdAk+btgWessPudkjkEYzEP20oCY57XA+3aIY/dmV/
+	Z+rkQKOw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wjGi6-00000009PDO-30Hn;
+	Mon, 13 Jul 2026 13:28:38 +0000
+Date: Mon, 13 Jul 2026 06:28:38 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Zhou, Yun" <yun.zhou@windriver.com>
+Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: restore nofs context unconditionally in
+ xfs_trans_roll
+Message-ID: <alToBmAN_HyeXth9@infradead.org>
+References: <20260713035505.1635191-1-yun.zhou@windriver.com>
+ <alSrO3aDTuZkX0K9@infradead.org>
+ <7a053113-f678-486e-a78b-8f5e94e73acb@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] generic/795: add unaligned boundary test cases for
- WRITE_ZEROES
-To: Christoph Hellwig <hch@lst.de>, Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Pankaj Raghav <p.raghav@samsung.com>, zlang@kernel.org,
- linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org,
- yi.zhang@huawei.com, Ext4 Developers List <linux-ext4@vger.kernel.org>
-References: <20260709083048.3849610-1-p.raghav@samsung.com>
- <1adabe60-17d5-49ff-a6e6-33f90debf6fe@huaweicloud.com>
- <20260713100414.GA11013@lst.de>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Pankaj Raghav <pankaj.raghav@linux.dev>
-In-Reply-To: <20260713100414.GA11013@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7a053113-f678-486e-a78b-8f5e94e73acb@windriver.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-
->> Unfortunately, I've found a bug in filefrag that causes delalloc extents
->> to be reported with a length of 0. This means this test case can miss
->> delalloc extents. The issue is in misc/filefrag.c's print_extent_info(),
->> where ext_len is incorrectly set to 0 for the FIEMAP_EXTENT_UNKNOWN or
->> EXT4_FIEMAP_EXTENT_HOLE cases. Could you please send a patch to fix this
->> as well?
+On Mon, Jul 13, 2026 at 06:06:38PM +0800, Zhou, Yun wrote:
 > 
-> We can't really rely on having a bleeding edge filefrag for xfstests
-> (well, at least without a feature check for it, but even that
-> would not a good usability story).  I guess at least for now
-> we might have to add  a little tool that just calls FIEMAP for
-> us to xfstests?
 > 
+> On 7/13/26 17:09, Christoph Hellwig wrote:
+> > 
+> > On Mon, Jul 13, 2026 at 11:55:05AM +0800, Yun Zhou wrote:
+> > > 
+> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > index 7bfbd9f6f0df..1b36cf12d4e3 100644
+> > > --- a/fs/xfs/xfs_trans.c
+> > > +++ b/fs/xfs/xfs_trans.c
+> > > @@ -1029,6 +1029,15 @@ xfs_trans_roll(
+> > >         * duplicate transaction that gets returned.
+> > >         */
+> > >        error = __xfs_trans_commit(tp, true);
+> > > +
+> > > +     tp = *tpp;
+> > > +     /*
+> > > +      * __xfs_trans_commit cleared the NOFS flag by calling into
+> > > +      * xfs_trans_free.  Set it again here before doing memory
+> > > +      * allocations.
+> > > +      */
+> > > +     xfs_trans_set_context(tp);
+> > 
+> > The tp assignment above now returns the incorrect transaction when
+> > __xfs_trans_commit fails, so you can't do this.
+> > 
+> > Otherwise yes, this call should move up.  I don't really see how
+> > it fixes the syzbot report, though.
+> > 
+> 
+> Thank you very much for your reply. The tp here is a local variable only
+> used for convenience within the function. The caller always gets the new
+> transaction through *tpp, which was set by xfs_trans_dup() before the commit
+> call. Moving tp = *tpp before the error check doesn't change what the caller
+> sees - *tpp still points to the new (dup'd) transaction regardless.
 
-What about adding an option to io/filemap.c to take a flag that allows calling
-fiemap without FIEMAP_FLAG_SYNC? So this test could depend on xfs_io fiemap command
-with the flag support enabled? I can revert this test to the previous version which uses
-xfs io fiemap instead of filefrag.
+Ah, right.  Tis should be fine:
 
---
-Pankaj
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
