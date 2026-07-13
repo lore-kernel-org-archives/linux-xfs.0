@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B54A241C8C;
-	Mon, 13 Jul 2026 22:04:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7399535DA78
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2026 22:51:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783980278; cv=none; b=h2McWNp0tgE/iTrBItVbh8M6SeQajg4168ydQbygfAux3UosqSYtNJ3LakRZliugErARvuIGHPlRyWqp1Qh6h1k03Rq+CbwNAhmV/WNd6/nmsppqdURByPP0oxvuiwg9J9qYb54BcFp/8F9uoiVDX3dGRIVc2KDjlZja4mY2tAY=
+	t=1783983104; cv=none; b=U5UzMhQ9phjJetkFZlnfWJH4aHyFGwWyaU+QZw9OfiQzNZR+W5qRdR+2WBP0ZiAO5EitG4SIMrJ5g2/akvm+mNeDWm4gKyrE+4BIYj/jcAwwjG0hNPgxP1LI79qazW5mk+uhYKnavBCxwVnCeazWsHv31izHdDjxLIWvUfv4KR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783980278; c=relaxed/simple;
-	bh=lOjHHHhHSCk0KlTlcldesAsiR5WMw3Nx33ZhUhrIm7c=;
+	s=arc-20240116; t=1783983104; c=relaxed/simple;
+	bh=Eb0EhnPRO+VfJ25//S0RcpAy7rrYcn/49SsNA9SBRHM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ANyr5mwzP4t/eb5EFloydCdL+HBsLQmgvb5RbwwbmWLVjUQUZtxeSOYSRppWBGG7R+/X/luzzkeLgNawAf16WIlwc+anebR1hA1TcP8t85+CSib0lxSTUvpoBsAofCzUUGlou0pOrMh8OX1OqMp+qnu/ilHESnsdVat7EXkCAqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAWWY4Si; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=D3taKhgyL5kU2QcWyVMPpJ2gE8vw5cNtqkpEAvwAXkmE+c3/tdmL9RKRNiuPCCYuwQ8iy//4qZBz1B/7U16ilYagM0LfvGvKOCYZHUi3LyDGqyvLckrfC1yD3j/TrvERYMZ0FNNXrTuGTw/qdh0LXXbtors5wekgXCfDGadZ+JM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/kUgDoS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAWWY4Si"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7EED01F000E9;
-	Mon, 13 Jul 2026 22:04:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/kUgDoS"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 08CB11F000E9;
+	Mon, 13 Jul 2026 22:51:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783980276;
-	bh=K4w6MBU2HLY5O3DseZreGSBHfkbxmEqw2kSQjXn800A=;
+	s=k20260515; t=1783983103;
+	bh=caBQuDRfhY7br+NGl4tJXSuY+AQvHiyxWp+GCLnQGe4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hAWWY4Si4AejLGuI/Q0JRYmEcAB8++q8Bq+VbnDyIcL+yromTRCGUTV31HqBEScVj
-	 XkQON5WsIg2ko4KWxo8cSAKNtWCrTCATMHkS9OvUfkvjYexBlS+juwWnUPJswAlNLP
-	 WTF37jUtHyColhdK5gbVcjttOh1uPCnyPzOnh3fX3lHX4RnN2CxCmfbUwtHHWVXA76
-	 CkVuCnvyIfHD7p0ROicySwUCS9enhG6jCA5/A3SeSauW0U6nFujduu8hQHNneEpVfS
-	 TP8M4TkgjaFMsXKwDv2YgBh88Rl8/hRC8yjdPnEJ1yA53aWVru/DqDE+vSByYm5i03
-	 H31ODMWNtXcug==
-Date: Mon, 13 Jul 2026 15:04:36 -0700
+	b=X/kUgDoShYBFoo0f4Iv7WhIFFrj5+K5KpR3Gy+9rBA5kd2G2cBTBmrdVgd8XJ1DQR
+	 +EfSpQROy1oRRyvl7+sS46cKTn6luebvmNsBYQA+GFslDCJbE3u0A9818W+AZEqq8f
+	 TxxJi93obpEmKlOYvNDEFr5qYsV0kAH8h4jM2xtMvBnBT3vUpAeZLd5txDFd6D6jX+
+	 2K+NGa3jeGQvKEnw1x3G5CVrtpDxx6PxvOtAYzcyDzf1ibFvO6IRrcSOQB8TdpQYAE
+	 da+saGy8Gjxvb87GpY5Spzv7EfCVQg3CF2wyki3CWlVoleBwvkMW1Mg5mTUBhFfmtZ
+	 BFB6xJSwzEQOA==
+Date: Mon, 13 Jul 2026 15:51:42 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yun Zhou <yun.zhou@windriver.com>
-Cc: cem@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't hold buffer locks across sync transaction
- commit in xfs_sync_sb_buf
-Message-ID: <20260713220436.GH7195@frogsfrogsfrogs>
-References: <20260713145002.1627608-1-yun.zhou@windriver.com>
+To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH v2 1/4] xfs: add xfs_metadir_create_file helper
+Message-ID: <20260713225142.GI7195@frogsfrogsfrogs>
+References: <20260713124250.3978-1-johannes.thumshirn@wdc.com>
+ <20260713124250.3978-2-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,96 +44,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260713145002.1627608-1-yun.zhou@windriver.com>
+In-Reply-To: <20260713124250.3978-2-johannes.thumshirn@wdc.com>
 
-On Mon, Jul 13, 2026 at 10:50:02PM +0800, Yun Zhou wrote:
-> xfs_sync_sb_buf() holds sb/rtsb buffer locks across a synchronous
-> xfs_trans_commit(), which flushes the CIL push workqueue internally.
-> If shutdown occurs during the CIL push, xfs_buf_item_unpin() needs to
-> lock these buffers to fail them, causing a deadlock:
+On Mon, Jul 13, 2026 at 02:42:47PM +0200, Johannes Thumshirn wrote:
+> Factor the metadata inode create/commit/cleanup lifecycle out of
+> xfs_metadir_mkdir into a reusable helper that takes an optional callback
+> to initialize the new inode, and convert xfs_metadir_mkdir to it.
 > 
->   setlabel:          holds buf lock -> flush_workqueue(xfs-cil)
->   CIL push worker:   xfs_buf_item_unpin -> xfs_buf_lock(same buf)
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  fs/xfs/libxfs/xfs_metadir.c | 58 +++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_metadir.h |  6 ++++
+>  2 files changed, 43 insertions(+), 21 deletions(-)
 > 
-> Remove the xfs_trans_bhold() calls so that commit releases the buffer
-> locks normally.  After the sync commit, re-acquire the buffers via
-> mp->m_sb_bp / mp->m_rtsb_bp for the on-disk writeback.
+> diff --git a/fs/xfs/libxfs/xfs_metadir.c b/fs/xfs/libxfs/xfs_metadir.c
+> index 74c4596ee4cf..0d6a153bc9e9 100644
+> --- a/fs/xfs/libxfs/xfs_metadir.c
+> +++ b/fs/xfs/libxfs/xfs_metadir.c
+> @@ -438,48 +438,64 @@ xfs_metadir_cancel(
+>  	xfs_metadir_teardown(upd, error);
+>  }
+>  
+> -/* Create a metadata for the last component of the path. */
+>  int
+> -xfs_metadir_mkdir(
+> -	struct xfs_inode		*dp,
+> -	const char			*path,
+> +xfs_metadir_create_file(
+> +	struct xfs_metadir_update	*upd,
+> +	umode_t				mode,
+> +	xfs_metadir_createfn		create,
+> +	void				*priv,
+>  	struct xfs_inode		**ipp)
+>  {
+> -	struct xfs_metadir_update	upd = {
+> -		.dp			= dp,
+> -		.path			= path,
+> -		.metafile_type		= XFS_METAFILE_DIR,
+> -	};
+>  	int				error;
+>  
+> -	if (xfs_is_shutdown(dp->i_mount))
+> +	if (xfs_is_shutdown(upd->dp->i_mount))
+>  		return -EIO;
+>  
+> -	/* Allocate a transaction to create the last directory. */
+> -	error = xfs_metadir_start_create(&upd);
+> +	error = xfs_metadir_start_create(upd);
+>  	if (error)
+>  		return error;
+>  
+> -	/* Create the subdirectory and take our reference. */
+> -	error = xfs_metadir_create(&upd, S_IFDIR);
+> +	error = xfs_metadir_create(upd, mode);
+>  	if (error)
+>  		goto out_cancel;
+>  
+> -	error = xfs_metadir_commit(&upd);
+> +	if (create) {
+> +		error = create(upd, priv);
+> +		if (error)
+> +			goto out_cancel;
+> +	}
+> +
+> +	error = xfs_metadir_commit(upd);
+>  	if (error)
+>  		goto out_irele;
+>  
+> -	xfs_finish_inode_setup(upd.ip);
+> -	*ipp = upd.ip;
+> +	xfs_finish_inode_setup(upd->ip);
+> +	*ipp = upd->ip;
+>  	return 0;
+>  
+>  out_cancel:
+> -	xfs_metadir_cancel(&upd, error);
+> +	xfs_metadir_cancel(upd, error);
+>  out_irele:
+>  	/* Have to finish setting up the inode to ensure it's deleted. */
+> -	if (upd.ip) {
+> -		xfs_finish_inode_setup(upd.ip);
+> -		xfs_irele(upd.ip);
+> +	if (upd->ip) {
+> +		xfs_finish_inode_setup(upd->ip);
+> +		xfs_irele(upd->ip);
+>  	}
+>  	return error;
+>  }
+> +
+> +/* Create a metadata for the last component of the path. */
+> +int
+> +xfs_metadir_mkdir(
+> +	struct xfs_inode		*dp,
+> +	const char			*path,
+> +	struct xfs_inode		**ipp)
+> +{
+> +	struct xfs_metadir_update	upd = {
+> +		.dp			= dp,
+> +		.path			= path,
+> +		.metafile_type		= XFS_METAFILE_DIR,
+> +	};
+> +
+> +	return xfs_metadir_create_file(&upd, S_IFDIR, NULL, NULL, ipp);
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_metadir.h b/fs/xfs/libxfs/xfs_metadir.h
+> index bfecac7d3d14..a795a2d0e3fe 100644
+> --- a/fs/xfs/libxfs/xfs_metadir.h
+> +++ b/fs/xfs/libxfs/xfs_metadir.h
+> @@ -35,6 +35,12 @@ int xfs_metadir_load(struct xfs_trans *tp, struct xfs_inode *dp,
+>  int xfs_metadir_start_create(struct xfs_metadir_update *upd);
+>  int xfs_metadir_create(struct xfs_metadir_update *upd, umode_t mode);
+>  
+> +typedef int (*xfs_metadir_createfn)(struct xfs_metadir_update *upd, void *priv);
+> +
+> +int xfs_metadir_create_file(struct xfs_metadir_update *upd, umode_t mode,
+> +		xfs_metadir_createfn create, void *priv,
 
-Is there a risk of writing out the wrong superblock contents if
-something else grabs the buffer lock(s) between the xfs_trans_commit and
-the xfs_buf_lock calls?  Can we walk off a garbage
-xfs_mount::m_{rt,}sb_bp pointer if the filesystem is being torn down, or
-does something prevent that?
+I'd have called these both "_create_fn" and "create_fn" for consistency
+but otherwise this looks fine to me.
+
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Fixes: f7664b31975b ("xfs: implement online get/set fs label")
-> Reported-by: syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
-> Signed-off-by: Yun Zhou <yun.zhou@windriver.com>
-> ---
->  fs/xfs/libxfs/xfs_sb.c | 37 +++++++++++++++++++------------------
->  1 file changed, 19 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 47322adb7690..fbb4505b1e9e 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -1471,7 +1471,6 @@ xfs_sync_sb_buf(
->  {
->  	struct xfs_trans	*tp;
->  	struct xfs_buf		*bp;
-> -	struct xfs_buf		*rtsb_bp = NULL;
->  	int			error;
->  
->  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
-> @@ -1480,26 +1479,28 @@ xfs_sync_sb_buf(
->  
->  	bp = xfs_trans_getsb(tp);
->  	xfs_log_sb(tp);
-> -	xfs_trans_bhold(tp, bp);
-> -	if (update_rtsb) {
-> -		rtsb_bp = xfs_log_rtsb(tp, bp);
-> -		if (rtsb_bp)
-> -			xfs_trans_bhold(tp, rtsb_bp);
-> -	}
-> +	if (update_rtsb)
-> +		xfs_log_rtsb(tp, bp);
->  	xfs_trans_set_sync(tp);
->  	error = xfs_trans_commit(tp);
->  	if (error)
-> -		goto out;
-> -	/*
-> -	 * write out the sb buffer to get the changes to disk
-> -	 */
-> -	error = xfs_bwrite(bp);
-> -	if (!error && rtsb_bp)
-> -		error = xfs_bwrite(rtsb_bp);
-> -out:
-> -	if (rtsb_bp)
-> -		xfs_buf_relse(rtsb_bp);
-> -	xfs_buf_relse(bp);
-> +		return error;
+> +		struct xfs_inode **ipp);
 > +
-> +	/* Re-acquire and write the sb and rtsb to disk. */
-> +	xfs_buf_lock(mp->m_sb_bp);
-> +	xfs_buf_hold(mp->m_sb_bp);
-> +	error = xfs_bwrite(mp->m_sb_bp);
-> +	xfs_buf_relse(mp->m_sb_bp);
-> +	if (error)
-> +		return error;
-> +
-> +	if (update_rtsb && mp->m_rtsb_bp) {
-> +		xfs_buf_lock(mp->m_rtsb_bp);
-> +		xfs_buf_hold(mp->m_rtsb_bp);
-> +		error = xfs_bwrite(mp->m_rtsb_bp);
-> +		xfs_buf_relse(mp->m_rtsb_bp);
-> +	}
-> +
->  	return error;
->  }
+>  int xfs_metadir_start_link(struct xfs_metadir_update *upd);
+>  int xfs_metadir_link(struct xfs_metadir_update *upd);
 >  
 > -- 
-> 2.43.0
+> 2.54.0
 > 
 > 
